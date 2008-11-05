@@ -37,7 +37,7 @@ import org.hibernate.envers.Audited;
  */
 @Entity
 @SecondaryTable(name = "secondary")
-@SecondaryAuditTable(secondaryTableName = "secondary", secondaryVersionsTableName = "sec_versions")
+@SecondaryAuditTable(secondaryTableName = "secondary", secondaryAuditTableName = "sec_versions")
 @Audited
 public class SecondaryNamingTestEntity {
     @Id

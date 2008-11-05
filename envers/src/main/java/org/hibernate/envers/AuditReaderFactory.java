@@ -42,11 +42,11 @@ public class AuditReaderFactory {
     private AuditReaderFactory() { }
 
     /**
-     * Create a versions reader associated with an open session.
+     * Create an audit reader associated with an open session.
      * <b>WARNING:</b> Using Envers with Hibernate (not with Hibernate Entity Manager/JPA) is experimental,
      * if possible, use {@link AuditReaderFactory#get(javax.persistence.EntityManager)}.
      * @param session An open session.
-     * @return A versions reader associated with the given sesison. It shouldn't be used
+     * @return An audit reader associated with the given sesison. It shouldn't be used
      * after the session is closed.
      * @throws AuditException When the given required listeners aren't installed.
      */
@@ -70,9 +70,9 @@ public class AuditReaderFactory {
     }
 
     /**
-     * Create a versions reader associated with an open entity manager.
+     * Create an audit reader associated with an open entity manager.
      * @param entityManager An open entity manager.
-     * @return A versions reader associated with the given entity manager. It shouldn't be used
+     * @return An audit reader associated with the given entity manager. It shouldn't be used
      * after the entity manager is closed.
      * @throws AuditException When the given entity manager is not based on Hibernate, or if the required
      * listeners aren't installed.

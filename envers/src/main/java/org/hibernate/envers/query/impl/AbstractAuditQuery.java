@@ -73,7 +73,7 @@ public abstract class AbstractAuditQuery implements AuditQuery {
         entityInstantiator = new EntityInstantiator(verCfg, versionsReader);
 
         entityName = cls.getName();
-        versionsEntityName = verCfg.getAuditEntCfg().getVersionsEntityName(entityName);
+        versionsEntityName = verCfg.getAuditEntCfg().getAuditEntityName(entityName);
 
         qb = new QueryBuilder(versionsEntityName, "e");
     }

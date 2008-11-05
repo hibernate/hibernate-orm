@@ -36,5 +36,5 @@ import java.lang.annotation.Target;
 public @interface SecondaryAuditTable {
     String secondaryTableName();
 
-    String secondaryVersionsTableName();
+    String secondaryAuditTableName();
 }

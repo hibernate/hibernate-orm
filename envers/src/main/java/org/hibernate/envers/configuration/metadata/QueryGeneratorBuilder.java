@@ -44,15 +44,15 @@ public final class QueryGeneratorBuilder {
     private final GlobalConfiguration globalCfg;
     private final AuditEntitiesConfiguration verEntCfg;
     private final MiddleIdData referencingIdData;
-    private final String versionsMiddleEntityName;
+    private final String auditMiddleEntityName;
     private final List<MiddleIdData> idDatas;
 
     QueryGeneratorBuilder(GlobalConfiguration globalCfg, AuditEntitiesConfiguration verEntCfg,
-                          MiddleIdData referencingIdData, String versionsMiddleEntityName) {
+                          MiddleIdData referencingIdData, String auditMiddleEntityName) {
         this.globalCfg = globalCfg;
         this.verEntCfg = verEntCfg;
         this.referencingIdData = referencingIdData;
-        this.versionsMiddleEntityName = versionsMiddleEntityName;
+        this.auditMiddleEntityName = auditMiddleEntityName;
 
         idDatas = new ArrayList<MiddleIdData>();
     }
@@ -63,13 +63,13 @@ public final class QueryGeneratorBuilder {
 
     RelationQueryGenerator build(MiddleComponentData... componentDatas) {
         if (idDatas.size() == 0) {
-            return new OneEntityQueryGenerator(verEntCfg, versionsMiddleEntityName, referencingIdData,
+            return new OneEntityQueryGenerator(verEntCfg, auditMiddleEntityName, referencingIdData,
                     componentDatas);
         } else if (idDatas.size() == 1) {
-            return new TwoEntityQueryGenerator(globalCfg, verEntCfg, versionsMiddleEntityName, referencingIdData,
+            return new TwoEntityQueryGenerator(globalCfg, verEntCfg, auditMiddleEntityName, referencingIdData,
                     idDatas.get(0), componentDatas);
         } else if (idDatas.size() == 2) {
-            return new ThreeEntityQueryGenerator(globalCfg, verEntCfg, versionsMiddleEntityName, referencingIdData, 
+            return new ThreeEntityQueryGenerator(globalCfg, verEntCfg, auditMiddleEntityName, referencingIdData,
                     idDatas.get(0), idDatas.get(1), componentDatas);
         } else {
             throw new IllegalStateException("Illegal number of related entities.");

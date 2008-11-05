@@ -24,11 +24,11 @@
 package org.hibernate.envers.query;
 
 import org.hibernate.envers.configuration.AuditConfiguration;
-import org.hibernate.envers.query.criteria.RevisionVersionsExpression;
+import org.hibernate.envers.query.criteria.RevisionAuditExpression;
 import org.hibernate.envers.query.criteria.AuditCriterion;
-import org.hibernate.envers.query.order.RevisionVersionsOrder;
+import org.hibernate.envers.query.order.RevisionAuditOrder;
 import org.hibernate.envers.query.order.AuditOrder;
-import org.hibernate.envers.query.projection.RevisionVersionsProjection;
+import org.hibernate.envers.query.projection.RevisionAuditProjection;
 import org.hibernate.envers.query.projection.AuditProjection;
 import org.hibernate.envers.tools.Triple;
 
@@ -43,77 +43,77 @@ public class RevisionProperty implements AuditProjection {
      * Apply a "greater than" constraint on the revision number
      */
     public static AuditCriterion gt(Integer revision) {
-        return new RevisionVersionsExpression(revision, ">");
+        return new RevisionAuditExpression(revision, ">");
     }
 
     /**
      * Apply a "greater than or equal" constraint on the revision number
      */
     public static AuditCriterion ge(Integer revision) {
-        return new RevisionVersionsExpression(revision, ">=");
+        return new RevisionAuditExpression(revision, ">=");
     }
 
     /**
      * Apply a "less than" constraint on the revision number
      */
     public static AuditCriterion lt(Integer revision) {
-        return new RevisionVersionsExpression(revision, "<");
+        return new RevisionAuditExpression(revision, "<");
     }
 
     /**
      * Apply a "less than or equal" constraint on the revision number
      */
     public static AuditCriterion le(Integer revision) {
-        return new RevisionVersionsExpression(revision, "<=");
+        return new RevisionAuditExpression(revision, "<=");
     }
 
     /**
      * Sort the results by revision in ascending order
      */
     public static AuditOrder asc() {
-        return new RevisionVersionsOrder(true);
+        return new RevisionAuditOrder(true);
     }
 
     /**
      * Sort the results by revision in descending order
      */
     public static AuditOrder desc() {
-        return new RevisionVersionsOrder(false);
+        return new RevisionAuditOrder(false);
     }
 
     /**
      * Select the maximum revision
      */
     public static AuditProjection max() {
-        return new RevisionVersionsProjection(RevisionVersionsProjection.ProjectionType.MAX);
+        return new RevisionAuditProjection(RevisionAuditProjection.ProjectionType.MAX);
     }
 
     /**
      * Select the minimum revision
      */
     public static AuditProjection min() {
-        return new RevisionVersionsProjection(RevisionVersionsProjection.ProjectionType.MIN);
+        return new RevisionAuditProjection(RevisionAuditProjection.ProjectionType.MIN);
     }
 
     /**
      * Count revisions
      */
     public static AuditProjection count() {
-        return new RevisionVersionsProjection(RevisionVersionsProjection.ProjectionType.COUNT);
+        return new RevisionAuditProjection(RevisionAuditProjection.ProjectionType.COUNT);
     }
 
     /**
      * Count distinct revisions
      */
     public static AuditProjection countDistinct() {
-        return new RevisionVersionsProjection(RevisionVersionsProjection.ProjectionType.COUNT_DISTINCT);
+        return new RevisionAuditProjection(RevisionAuditProjection.ProjectionType.COUNT_DISTINCT);
     }
 
     /**
      * Distinct revisions
      */
     public static AuditProjection distinct() {
-        return new RevisionVersionsProjection(RevisionVersionsProjection.ProjectionType.DISTINCT);
+        return new RevisionAuditProjection(RevisionAuditProjection.ProjectionType.DISTINCT);
     }
 
     /**

@@ -58,7 +58,7 @@ public class AddWorkUnit extends AbstractAuditWorkUnit implements AuditWorkUnit 
 
         verCfg.getEntCfg().get(getEntityName()).getPropertyMapper().map(data, propertyNames, state, null);
 
-        session.save(verCfg.getAuditEntCfg().getVersionsEntityName(getEntityName()), data);
+        session.save(verCfg.getAuditEntCfg().getAuditEntityName(getEntityName()), data);
 
         setPerformed(data);
     }

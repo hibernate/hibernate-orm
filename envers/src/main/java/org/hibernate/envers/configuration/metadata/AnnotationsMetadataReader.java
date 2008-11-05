@@ -111,7 +111,7 @@ public final class AnnotationsMetadataReader {
         } else {
             // if the optimistic locking field has to be unversioned and the current property
             // is the optimistic locking field, don't audit it
-            if (globalCfg.isUnversionedOptimisticLockingField()) {
+            if (globalCfg.isDoNotAuditOptimisticLockingField()) {
                 Version jpaVer = property.getAnnotation(Version.class);
                 if (jpaVer != null) {
                     return false;
@@ -206,7 +206,7 @@ public final class AnnotationsMetadataReader {
         }
     }
 
-    private void addVersionsTable(XClass clazz) {
+    private void addAuditTable(XClass clazz) {
         AuditTable auditTable = clazz.getAnnotation(AuditTable.class);
         if (auditTable != null) {
             auditData.setAuditTable(auditTable);
@@ -215,19 +215,19 @@ public final class AnnotationsMetadataReader {
         }
     }
 
-    private void addVersionsSecondaryTables(XClass clazz) {
+    private void addAuditSecondaryTables(XClass clazz) {
         // Getting information on secondary tables
         SecondaryAuditTable secondaryVersionsTable1 = clazz.getAnnotation(SecondaryAuditTable.class);
         if (secondaryVersionsTable1 != null) {
             auditData.getSecondaryTableDictionary().put(secondaryVersionsTable1.secondaryTableName(),
-                    secondaryVersionsTable1.secondaryVersionsTableName());
+                    secondaryVersionsTable1.secondaryAuditTableName());
         }
 
-        SecondaryAuditTables secondaryVersionsTables = clazz.getAnnotation(SecondaryAuditTables.class);
-        if (secondaryVersionsTables != null) {
-            for (SecondaryAuditTable secondaryVersionsTable2 : secondaryVersionsTables.value()) {
-                auditData.getSecondaryTableDictionary().put(secondaryVersionsTable2.secondaryTableName(),
-                        secondaryVersionsTable2.secondaryVersionsTableName());
+        SecondaryAuditTables secondaryAuditTables = clazz.getAnnotation(SecondaryAuditTables.class);
+        if (secondaryAuditTables != null) {
+            for (SecondaryAuditTable secondaryAuditTable2 : secondaryAuditTables.value()) {
+                auditData.getSecondaryTableDictionary().put(secondaryAuditTable2.secondaryTableName(),
+                        secondaryAuditTable2.secondaryAuditTableName());
             }
         }
     }
@@ -244,8 +244,8 @@ public final class AnnotationsMetadataReader {
 
             readDefaultAudited(clazz);
             addPropertiesFromClass(clazz);
-            addVersionsTable(clazz);
-            addVersionsSecondaryTables(clazz);
+            addAuditTable(clazz);
+            addAuditSecondaryTables(clazz);
         } catch (ClassNotFoundException e) {
             throw new MappingException(e);
         }

@@ -54,7 +54,7 @@ public class CollectionChangeWorkUnit extends AbstractAuditWorkUnit implements A
 
         verCfg.getEntCfg().get(getEntityName()).getPropertyMapper().mapToMapFromEntity(data, entity, null);
 
-        session.save(verCfg.getAuditEntCfg().getVersionsEntityName(getEntityName()), data);
+        session.save(verCfg.getAuditEntCfg().getAuditEntityName(getEntityName()), data);
 
         setPerformed(data);
     }

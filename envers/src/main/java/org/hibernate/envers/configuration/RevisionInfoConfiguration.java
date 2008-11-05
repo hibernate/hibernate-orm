@@ -177,7 +177,7 @@ public class RevisionInfoConfiguration {
                     throw new MappingException("Only one entity may be annotated with @RevisionEntity!");
                 }
 
-                // Checking if custom revision entity isn't versioned
+                // Checking if custom revision entity isn't audited
                 if (clazz.getAnnotation(Audited.class) != null) {
                     throw new MappingException("An entity annotated with @RevisionEntity cannot be audited!");
                 }

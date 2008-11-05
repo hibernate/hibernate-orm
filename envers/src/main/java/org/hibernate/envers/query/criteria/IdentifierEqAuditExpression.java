@@ -21,19 +21,24 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.envers;
+package org.hibernate.envers.query.criteria;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import org.hibernate.envers.configuration.AuditConfiguration;
+import org.hibernate.envers.tools.query.Parameters;
+import org.hibernate.envers.tools.query.QueryBuilder;
 
 /**
- * When applied to a field, indicates that this field should not be audited.
- * @author Sebastian Komander
+ * @author Adam Warski (adam at warski dot org)
  */
-@Retention(RetentionPolicy.RUNTIME)
-@Target({ElementType.METHOD, ElementType.FIELD})
-public @interface NotAudited {
+public class IdentifierEqAuditExpression implements AuditCriterion {
+    private Object id;
 
+    public IdentifierEqAuditExpression(Object id) {
+        this.id = id;
+    }
+
+    public void addToQuery(AuditConfiguration verCfg, String entityName, QueryBuilder qb, Parameters parameters) {
+        verCfg.getEntCfg().get(entityName).getIdMapper()
+                .addIdEqualsToQuery(parameters, id, verCfg.getAuditEntCfg().getOriginalIdPropName(), true);
+    }
 }

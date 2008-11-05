@@ -43,175 +43,175 @@ public class AuditRestrictions {
 	 * Apply an "equal" constraint to the identifier property.
 	 */
 	public static AuditCriterion idEq(Object value) {
-		return new IdentifierEqVersionsExpression(value);
+		return new IdentifierEqAuditExpression(value);
 	}
     
     /**
 	 * Apply an "equal" constraint to the named property
 	 */
 	public static AuditCriterion eq(String propertyName, Object value) {
-		return new SimpleVersionsExpression(propertyName, value, "=");
+		return new SimpleAuditExpression(propertyName, value, "=");
 	}
 
     /**
 	 * Apply a "not equal" constraint to the named property
 	 */
 	public static AuditCriterion ne(String propertyName, Object value) {
-		return new SimpleVersionsExpression(propertyName, value, "<>");
+		return new SimpleAuditExpression(propertyName, value, "<>");
 	}
 
     /**
 	 * Apply an "equal" constraint on an id of a related entity
 	 */
 	public static AuditCriterion relatedIdEq(String propertyName, Object id) {
-		return new RelatedVersionsExpression(propertyName, id, true);
+		return new RelatedAuditExpression(propertyName, id, true);
 	}
 
     /**
 	 * Apply a "not equal" constraint to the named property
 	 */
 	public static AuditCriterion relatedIdNe(String propertyName, Object id) {
-		return new RelatedVersionsExpression(propertyName, id, false);
+		return new RelatedAuditExpression(propertyName, id, false);
 	}
 
     /**
 	 * Apply a "like" constraint to the named property
 	 */
 	public static AuditCriterion like(String propertyName, Object value) {
-		return new SimpleVersionsExpression(propertyName, value, " like ");
+		return new SimpleAuditExpression(propertyName, value, " like ");
 	}
 
     /**
 	 * Apply a "like" constraint to the named property
 	 */
 	public static AuditCriterion like(String propertyName, String value, MatchMode matchMode) {
-		return new SimpleVersionsExpression(propertyName, matchMode.toMatchString(value), " like " );
+		return new SimpleAuditExpression(propertyName, matchMode.toMatchString(value), " like " );
 	}
 
     /**
 	 * Apply a "greater than" constraint to the named property
 	 */
 	public static AuditCriterion gt(String propertyName, Object value) {
-		return new SimpleVersionsExpression(propertyName, value, ">");
+		return new SimpleAuditExpression(propertyName, value, ">");
 	}
 
     /**
 	 * Apply a "less than" constraint to the named property
 	 */
 	public static AuditCriterion lt(String propertyName, Object value) {
-		return new SimpleVersionsExpression(propertyName, value, "<");
+		return new SimpleAuditExpression(propertyName, value, "<");
 	}
 
     /**
 	 * Apply a "less than or equal" constraint to the named property
 	 */
 	public static AuditCriterion le(String propertyName, Object value) {
-		return new SimpleVersionsExpression(propertyName, value, "<=");
+		return new SimpleAuditExpression(propertyName, value, "<=");
 	}
 
     /**
 	 * Apply a "greater than or equal" constraint to the named property
 	 */
 	public static AuditCriterion ge(String propertyName, Object value) {
-		return new SimpleVersionsExpression(propertyName, value, ">=");
+		return new SimpleAuditExpression(propertyName, value, ">=");
 	}
 
     /**
 	 * Apply a "between" constraint to the named property
 	 */
 	public static AuditCriterion between(String propertyName, Object lo, Object hi) {
-		return new BetweenVersionsExpression(propertyName, lo, hi);
+		return new BetweenAuditExpression(propertyName, lo, hi);
 	}
 
     /**
 	 * Apply an "in" constraint to the named property
 	 */
 	public static AuditCriterion in(String propertyName, Object[] values) {
-		return new InVersionsExpression(propertyName, values);
+		return new InAuditExpression(propertyName, values);
 	}
 
     /**
 	 * Apply an "in" constraint to the named property
 	 */
 	public static AuditCriterion in(String propertyName, Collection values) {
-		return new InVersionsExpression(propertyName, values.toArray());
+		return new InAuditExpression(propertyName, values.toArray());
 	}
 
     /**
 	 * Apply an "is null" constraint to the named property
 	 */
 	public static AuditCriterion isNull(String propertyName) {
-		return new NullVersionsExpression(propertyName);
+		return new NullAuditExpression(propertyName);
 	}
 
     /**
 	 * Apply an "equal" constraint to two properties
 	 */
 	public static AuditCriterion eqProperty(String propertyName, String otherPropertyName) {
-		return new PropertyVersionsExpression(propertyName, otherPropertyName, "=");
+		return new PropertyAuditExpression(propertyName, otherPropertyName, "=");
 	}
 
     /**
 	 * Apply a "not equal" constraint to two properties
 	 */
 	public static AuditCriterion neProperty(String propertyName, String otherPropertyName) {
-		return new PropertyVersionsExpression(propertyName, otherPropertyName, "<>");
+		return new PropertyAuditExpression(propertyName, otherPropertyName, "<>");
 	}
     
     /**
 	 * Apply a "less than" constraint to two properties
 	 */
 	public static AuditCriterion ltProperty(String propertyName, String otherPropertyName) {
-		return new PropertyVersionsExpression(propertyName, otherPropertyName, "<");
+		return new PropertyAuditExpression(propertyName, otherPropertyName, "<");
 	}
 
     /**
 	 * Apply a "less than or equal" constraint to two properties
 	 */
 	public static AuditCriterion leProperty(String propertyName, String otherPropertyName) {
-		return new PropertyVersionsExpression(propertyName, otherPropertyName, "<=");
+		return new PropertyAuditExpression(propertyName, otherPropertyName, "<=");
 	}
 
     /**
 	 * Apply a "greater than" constraint to two properties
 	 */
 	public static AuditCriterion gtProperty(String propertyName, String otherPropertyName) {
-		return new PropertyVersionsExpression(propertyName, otherPropertyName, ">");
+		return new PropertyAuditExpression(propertyName, otherPropertyName, ">");
 	}
 
     /**
 	 * Apply a "greater than or equal" constraint to two properties
 	 */
 	public static AuditCriterion geProperty(String propertyName, String otherPropertyName) {
-		return new PropertyVersionsExpression(propertyName, otherPropertyName, ">=");
+		return new PropertyAuditExpression(propertyName, otherPropertyName, ">=");
 	}
 
     /**
 	 * Apply an "is not null" constraint to the named property
 	 */
 	public static AuditCriterion isNotNull(String propertyName) {
-		return new NotNullVersionsExpression(propertyName);
+		return new NotNullAuditExpression(propertyName);
 	}
 
     /**
 	 * Return the conjuction of two expressions
 	 */
 	public static AuditCriterion and(AuditCriterion lhs, AuditCriterion rhs) {
-		return new LogicalVersionsExpression(lhs, rhs, "and");
+		return new LogicalAuditExpression(lhs, rhs, "and");
 	}
 
     /**
 	 * Return the disjuction of two expressions
 	 */
 	public static AuditCriterion or(AuditCriterion lhs, AuditCriterion rhs) {
-		return new LogicalVersionsExpression(lhs, rhs, "or");
+		return new LogicalAuditExpression(lhs, rhs, "or");
 	}
 
     /**
 	 * Return the negation of an expression
 	 */
 	public static AuditCriterion not(AuditCriterion expression) {
-		return new NotVersionsExpression(expression);
+		return new NotAuditExpression(expression);
 	}
 
 	/**
@@ -231,16 +231,16 @@ public class AuditRestrictions {
     /**
      * Apply a "maximalize property" constraint.
      */
-    public static AggregatedFieldVersionsExpression maximizeProperty(String propertyName) {
-        return new AggregatedFieldVersionsExpression(propertyName,
-                AggregatedFieldVersionsExpression.AggregatedMode.MAX);
+    public static AggregatedFieldAuditExpression maximizeProperty(String propertyName) {
+        return new AggregatedFieldAuditExpression(propertyName,
+                AggregatedFieldAuditExpression.AggregatedMode.MAX);
     }
 
     /**
      * Apply a "minimize property" constraint.
      */
-    public static AggregatedFieldVersionsExpression minimizeProperty(String propertyName) {
-        return new AggregatedFieldVersionsExpression(propertyName,
-                AggregatedFieldVersionsExpression.AggregatedMode.MIN);
+    public static AggregatedFieldAuditExpression minimizeProperty(String propertyName) {
+        return new AggregatedFieldAuditExpression(propertyName,
+                AggregatedFieldAuditExpression.AggregatedMode.MIN);
     }
 }

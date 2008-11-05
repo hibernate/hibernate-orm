@@ -32,8 +32,8 @@ import java.util.Properties;
  * @author Adam Warski (adam at warski dot org)
  */
 public class AuditEntitiesConfiguration {
-    private final String versionsTablePrefix;
-    private final String versionsTableSuffix;
+    private final String auditTablePrefix;
+    private final String auditTableSuffix;
 
     private final String originalIdPropName;
 
@@ -45,13 +45,13 @@ public class AuditEntitiesConfiguration {
 
     private final String revisionInfoEntityName;
 
-    private final Map<String, String> customVersionsTablesNames;
+    private final Map<String, String> customAuditTablesNames;
 
     public AuditEntitiesConfiguration(Properties properties, String revisionInfoEntityName) {
         this.revisionInfoEntityName = revisionInfoEntityName;
 
-        versionsTablePrefix = properties.getProperty("org.hibernate.envers.auditTablePrefix", "");
-        versionsTableSuffix = properties.getProperty("org.hibernate.envers.auditTableSuffix", "_AUD");
+        auditTablePrefix = properties.getProperty("org.hibernate.envers.auditTablePrefix", "");
+        auditTableSuffix = properties.getProperty("org.hibernate.envers.auditTableSuffix", "_AUD");
 
         originalIdPropName = "originalId";
 
@@ -60,7 +60,7 @@ public class AuditEntitiesConfiguration {
         revisionTypePropName = properties.getProperty("org.hibernate.envers.revisionTypeFieldName", "REVTYPE");
         revisionTypePropType = "byte";
 
-        customVersionsTablesNames = new HashMap<String, String>();
+        customAuditTablesNames = new HashMap<String, String>();
 
         revisionPropPath = originalIdPropName + "." + revisionPropName + ".id";
     }
@@ -91,20 +91,20 @@ public class AuditEntitiesConfiguration {
 
     //
 
-    public void addCustomVersionsTableName(String entityName, String tableName) {
-        customVersionsTablesNames.put(entityName, tableName);
+    public void addCustomAuditTableName(String entityName, String tableName) {
+        customAuditTablesNames.put(entityName, tableName);
     }
 
     //
 
-    public String getVersionsEntityName(String entityName) {
-        return versionsTablePrefix + entityName + versionsTableSuffix;
+    public String getAuditEntityName(String entityName) {
+        return auditTablePrefix + entityName + auditTableSuffix;
     }
 
-    public String getVersionsTableName(String entityName, String tableName) {
-        String customHistoryTableName = customVersionsTablesNames.get(entityName);
+    public String getAuditTableName(String entityName, String tableName) {
+        String customHistoryTableName = customAuditTablesNames.get(entityName);
         if (customHistoryTableName == null) {
-            return versionsTablePrefix + tableName + versionsTableSuffix;
+            return auditTablePrefix + tableName + auditTableSuffix;
         }
 
         return customHistoryTableName;

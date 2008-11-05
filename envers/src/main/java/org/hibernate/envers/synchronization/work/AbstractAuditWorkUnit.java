@@ -79,7 +79,7 @@ public abstract class AbstractAuditWorkUnit implements AuditWorkUnit {
 
     public void undo(Session session) {
         if (isPerformed()) {
-            session.delete(verCfg.getAuditEntCfg().getVersionsEntityName(getEntityName()), performedData);
+            session.delete(verCfg.getAuditEntCfg().getAuditEntityName(getEntityName()), performedData);
             session.flush();
         }
     }

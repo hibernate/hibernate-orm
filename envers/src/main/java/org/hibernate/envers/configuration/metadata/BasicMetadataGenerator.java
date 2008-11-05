@@ -151,7 +151,7 @@ public final class BasicMetadataGenerator {
                 }
 
                 if (component_mapping == null) {
-                    throw new VersionsException("Element for component not found during second pass!");
+                    throw new AuditException("Element for component not found during second pass!");
                 }
             } else {
             */

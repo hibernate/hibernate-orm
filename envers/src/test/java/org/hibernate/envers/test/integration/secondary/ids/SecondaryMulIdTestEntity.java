@@ -38,7 +38,7 @@ import org.hibernate.envers.test.entities.ids.MulId;
  */
 @Entity
 @SecondaryTable(name = "secondary")
-@SecondaryAuditTable(secondaryTableName = "secondary", secondaryVersionsTableName = "sec_mulid_versions")
+@SecondaryAuditTable(secondaryTableName = "secondary", secondaryAuditTableName = "sec_mulid_versions")
 @Audited
 @IdClass(MulId.class)
 public class SecondaryMulIdTestEntity {

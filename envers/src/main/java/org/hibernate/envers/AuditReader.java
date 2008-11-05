@@ -40,7 +40,7 @@ public interface AuditReader {
      * @param primaryKey Primary key of the entity.
      * @param revision Revision in which to get the entity.
      * @return The found entity instance at the given revision (its properties may be partially filled
-     * if not all properties are versioned) or null, if an entity with that id didn't exist at that
+     * if not all properties are audited) or null, if an entity with that id didn't exist at that
      * revision.
      * @throws IllegalArgumentException If cls or primaryKey is null or revision is less or equal to 0.
      * @throws NotAuditedException When entities of the given class are not audited.

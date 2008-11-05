@@ -34,7 +34,7 @@ public class GlobalConfiguration {
     private final boolean generateRevisionsForCollections;
 
     // Should the optimistic locking property of an entity be considered unversioned
-    private final boolean unversionedOptimisticLockingField;
+    private final boolean doNotAuditOptimisticLockingField;
 
     /*
      Which operator to use in correlated subqueries (when we want a property to be equal to the result of
@@ -51,7 +51,7 @@ public class GlobalConfiguration {
 
         String ignoreOptimisticLockingPropertyStr = properties.getProperty("org.hibernate.envers.doNotAuditOptimisticLockingField",
                 "true");
-        unversionedOptimisticLockingField = Boolean.parseBoolean(ignoreOptimisticLockingPropertyStr);
+        doNotAuditOptimisticLockingField = Boolean.parseBoolean(ignoreOptimisticLockingPropertyStr);
 
         correlatedSubqueryOperator = "org.hibernate.dialect.HSQLDialect".equals(
                 properties.getProperty("hibernate.dialect")) ? "in" : "=";
@@ -61,8 +61,8 @@ public class GlobalConfiguration {
         return generateRevisionsForCollections;
     }
 
-    public boolean isUnversionedOptimisticLockingField() {
-        return unversionedOptimisticLockingField;
+    public boolean isDoNotAuditOptimisticLockingField() {
+        return doNotAuditOptimisticLockingField;
     }
 
     public String getCorrelatedSubqueryOperator() {

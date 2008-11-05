@@ -55,7 +55,7 @@ public final class MiddleIdData {
         this.originalMapper = mappingData.getIdMapper();
         this.prefixedMapper = mappingData.getIdMapper().prefixMappedProperties(prefix);
         this.entityName = entityName;
-        this.versionsEntityName = verEntCfg.getVersionsEntityName(entityName);
+        this.versionsEntityName = verEntCfg.getAuditEntityName(entityName);
     }
 
     public IdMapper getOriginalMapper() {

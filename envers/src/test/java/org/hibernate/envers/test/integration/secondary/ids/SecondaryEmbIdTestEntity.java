@@ -37,7 +37,7 @@ import org.hibernate.envers.test.entities.ids.EmbId;
  */
 @Entity
 @SecondaryTable(name = "secondary")
-@SecondaryAuditTable(secondaryTableName = "secondary", secondaryVersionsTableName = "sec_embid_versions")
+@SecondaryAuditTable(secondaryTableName = "secondary", secondaryAuditTableName = "sec_embid_versions")
 @Audited
 public class SecondaryEmbIdTestEntity {
     @Id

@@ -57,7 +57,7 @@ public class EntitiesConfigurator {
     public EntitiesConfigurations configure(Configuration cfg, ReflectionManager reflectionManager,
                                             GlobalConfiguration globalCfg, AuditEntitiesConfiguration verEntCfg,
                                             Document revisionInfoXmlMapping, Element revisionInfoRelationMapping) {
-        AuditMetadataGenerator versionsMetaGen = new AuditMetadataGenerator(cfg, globalCfg, verEntCfg,
+        AuditMetadataGenerator auditMetaGen = new AuditMetadataGenerator(cfg, globalCfg, verEntCfg,
                 revisionInfoRelationMapping);
         DOMWriter writer = new DOMWriter();
 
@@ -80,11 +80,11 @@ public class EntitiesConfigurator {
                 pcDatas.put(pc, auditData);
 
                 if (!StringTools.isEmpty(auditData.getAuditTable().value())) {
-                    verEntCfg.addCustomVersionsTableName(pc.getEntityName(), auditData.getAuditTable().value());
+                    verEntCfg.addCustomAuditTableName(pc.getEntityName(), auditData.getAuditTable().value());
                 }
 
                 EntityXmlMappingData xmlMappingData = new EntityXmlMappingData();
-                versionsMetaGen.generateFirstPass(pc, auditData, xmlMappingData);
+                auditMetaGen.generateFirstPass(pc, auditData, xmlMappingData);
                 xmlMappings.put(pc, xmlMappingData);
             }
         }
@@ -93,7 +93,7 @@ public class EntitiesConfigurator {
         for (Map.Entry<PersistentClass, PersistentClassAuditingData> pcDatasEntry : pcDatas.entrySet()) {
             EntityXmlMappingData xmlMappingData = xmlMappings.get(pcDatasEntry.getKey());
 
-            versionsMetaGen.generateSecondPass(pcDatasEntry.getKey(), pcDatasEntry.getValue(), xmlMappingData);
+            auditMetaGen.generateSecondPass(pcDatasEntry.getKey(), pcDatasEntry.getValue(), xmlMappingData);
 
             try {
                 cfg.addDocument(writer.write(xmlMappingData.getMainXmlMapping()));
@@ -123,7 +123,7 @@ public class EntitiesConfigurator {
             }
         }
 
-        return new EntitiesConfigurations(versionsMetaGen.getEntitiesConfigurations());
+        return new EntitiesConfigurations(auditMetaGen.getEntitiesConfigurations());
     }
 
     // todo

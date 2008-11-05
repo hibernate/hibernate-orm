@@ -50,8 +50,8 @@ import org.hibernate.type.Type;
 public final class IdMetadataGenerator {
     private final AuditMetadataGenerator mainGenerator;
 
-    IdMetadataGenerator(AuditMetadataGenerator versionsMetadataGenerator) {
-        mainGenerator = versionsMetadataGenerator;
+    IdMetadataGenerator(AuditMetadataGenerator auditMetadataGenerator) {
+        mainGenerator = auditMetadataGenerator;
     }
 
     @SuppressWarnings({"unchecked"})

@@ -56,7 +56,7 @@ public class ModWorkUnit extends AbstractAuditWorkUnit implements AuditWorkUnit 
     public void perform(Session session, Object revisionData) {
         fillDataWithId(data, revisionData, RevisionType.MOD);
 
-        session.save(verCfg.getAuditEntCfg().getVersionsEntityName(getEntityName()), data);
+        session.save(verCfg.getAuditEntCfg().getAuditEntityName(getEntityName()), data);
 
         setPerformed(data);
     }

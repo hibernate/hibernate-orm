@@ -55,7 +55,7 @@ import org.hibernate.envers.entities.mapper.relation.lazy.proxy.MapProxy;
 import org.hibernate.envers.entities.mapper.relation.lazy.proxy.SetProxy;
 import org.hibernate.envers.entities.mapper.relation.lazy.proxy.SortedMapProxy;
 import org.hibernate.envers.entities.mapper.relation.lazy.proxy.SortedSetProxy;
-import org.hibernate.envers.entities.mapper.relation.query.OneVersionsEntityQueryGenerator;
+import org.hibernate.envers.entities.mapper.relation.query.OneAuditEntityQueryGenerator;
 import org.hibernate.envers.entities.mapper.relation.query.RelationQueryGenerator;
 import org.hibernate.envers.tools.StringTools;
 import org.hibernate.envers.tools.Tools;
@@ -124,7 +124,7 @@ public final class CollectionMetadataGenerator {
 
         referencingEntityConfiguration = mainGenerator.getEntitiesConfigurations().get(referencingEntityName);
         if (referencingEntityConfiguration == null) {
-            throw new MappingException("Unable to read versioning configuration for " + referencingEntityName + "!");
+            throw new MappingException("Unable to read auditing configuration for " + referencingEntityName + "!");
         }
 
         referencedEntityName = getReferencedEntityName(propertyValue.getElement());
@@ -182,7 +182,7 @@ public final class CollectionMetadataGenerator {
         MiddleComponentData indexComponentData = addIndex(null, null);
 
         // Generating the query generator - it should read directly from the related entity.
-        RelationQueryGenerator queryGenerator = new OneVersionsEntityQueryGenerator(mainGenerator.getGlobalCfg(),
+        RelationQueryGenerator queryGenerator = new OneAuditEntityQueryGenerator(mainGenerator.getGlobalCfg(),
                 mainGenerator.getVerEntCfg(), referencingIdData, referencedEntityName,
                 referencedIdMapping.getIdMapper());
 
@@ -233,22 +233,22 @@ public final class CollectionMetadataGenerator {
     @SuppressWarnings({"unchecked"})
     private void addWithMiddleTable() {
         // Generating the name of the middle table
-        String versionsMiddleTableName;
-        String versionsMiddleEntityName;
+        String auditMiddleTableName;
+        String auditMiddleEntityName;
         if (!StringTools.isEmpty(persistentPropertyAuditingData.getJoinTable().name())) {
-            versionsMiddleTableName = persistentPropertyAuditingData.getJoinTable().name();
-            versionsMiddleEntityName = persistentPropertyAuditingData.getJoinTable().name();
+            auditMiddleTableName = persistentPropertyAuditingData.getJoinTable().name();
+            auditMiddleEntityName = persistentPropertyAuditingData.getJoinTable().name();
         } else {
             String middleTableName = getMiddleTableName(propertyValue, referencingEntityName);
-            versionsMiddleTableName = mainGenerator.getVerEntCfg().getVersionsTableName(null, middleTableName);
-            versionsMiddleEntityName = mainGenerator.getVerEntCfg().getVersionsEntityName(middleTableName);
+            auditMiddleTableName = mainGenerator.getVerEntCfg().getAuditTableName(null, middleTableName);
+            auditMiddleEntityName = mainGenerator.getVerEntCfg().getAuditEntityName(middleTableName);
         }
 
         // Generating the XML mapping for the middle entity, only if the relation isn't inverse.
         // If the relation is inverse, will be later checked by comparing middleEntityXml with null.
         Element middleEntityXml;
         if (!propertyValue.isInverse()) {
-            middleEntityXml = createMiddleEntityXml(versionsMiddleTableName, versionsMiddleEntityName);
+            middleEntityXml = createMiddleEntityXml(auditMiddleTableName, auditMiddleEntityName);
         } else {
             middleEntityXml = null;
         }
@@ -287,7 +287,7 @@ public final class CollectionMetadataGenerator {
         // references some entities (either from the element or index). At the end, this will be used to build
         // a query generator to read the raw data collection from the middle table.
         QueryGeneratorBuilder queryGeneratorBuilder = new QueryGeneratorBuilder(mainGenerator.getGlobalCfg(),
-                mainGenerator.getVerEntCfg(), referencingIdData, versionsMiddleEntityName);
+                mainGenerator.getVerEntCfg(), referencingIdData, auditMiddleEntityName);
 
         // Adding the XML mapping for the referencing entity, if the relation isn't inverse.
         if (middleEntityXml != null) {
@@ -316,7 +316,7 @@ public final class CollectionMetadataGenerator {
 
         // Creating common data
         CommonCollectionMapperData commonCollectionMapperData = new CommonCollectionMapperData(
-                mainGenerator.getVerEntCfg(), versionsMiddleEntityName,
+                mainGenerator.getVerEntCfg(), auditMiddleEntityName,
                 persistentPropertyAuditingData.getPropertyData(),
                 referencingIdData, queryGenerator);
 
@@ -461,14 +461,14 @@ public final class CollectionMetadataGenerator {
         }
     }
 
-    private Element createMiddleEntityXml(String versionsMiddleTableName, String versionsMiddleEntityName) {
+    private Element createMiddleEntityXml(String auditMiddleTableName, String auditMiddleEntityName) {
         String schema = StringTools.isEmpty(persistentPropertyAuditingData.getJoinTable().schema()) ?
                 propertyValue.getCollectionTable().getSchema() : persistentPropertyAuditingData.getJoinTable().schema();
         String catalog = StringTools.isEmpty(persistentPropertyAuditingData.getJoinTable().catalog()) ?
                 propertyValue.getCollectionTable().getCatalog() : persistentPropertyAuditingData.getJoinTable().catalog();
 
         Element middleEntityXml = MetadataTools.createEntity(xmlMappingData.newAdditionalMapping(),
-                versionsMiddleEntityName, versionsMiddleTableName, schema, catalog, null);
+                auditMiddleEntityName, auditMiddleTableName, schema, catalog, null);
         Element middleEntityXmlId = middleEntityXml.addElement("composite-id");
 
         middleEntityXmlId.addAttribute("name", mainGenerator.getVerEntCfg().getOriginalIdPropName());

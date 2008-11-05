@@ -44,8 +44,8 @@ import org.hibernate.mapping.Value;
 public final class ToOneRelationMetadataGenerator {
     private final AuditMetadataGenerator mainGenerator;
 
-    ToOneRelationMetadataGenerator(AuditMetadataGenerator versionsMetadataGenerator) {
-        mainGenerator = versionsMetadataGenerator;
+    ToOneRelationMetadataGenerator(AuditMetadataGenerator auditMetadataGenerator) {
+        mainGenerator = auditMetadataGenerator;
     }
 
     @SuppressWarnings({"unchecked"})
@@ -55,7 +55,7 @@ public final class ToOneRelationMetadataGenerator {
 
         EntityConfiguration configuration = mainGenerator.getEntitiesConfigurations().get(referencedEntityName);
         if (configuration == null) {
-            throw new MappingException("A versioned relation to a non-versioned entity " + referencedEntityName + "!");
+            throw new MappingException("An audited relation to a non-audited entity " + referencedEntityName + "!");
         }
 
         IdMappingData idMapping = configuration.getIdMappingData();
@@ -91,13 +91,13 @@ public final class ToOneRelationMetadataGenerator {
 
         EntityConfiguration configuration = mainGenerator.getEntitiesConfigurations().get(entityName);
         if (configuration == null) {
-            throw new MappingException("A versioned relation to a non-versioned entity " + entityName + "!");
+            throw new MappingException("An audited relation to a non-audited entity " + entityName + "!");
         }
 
         IdMappingData ownedIdMapping = configuration.getIdMappingData();
 
         if (ownedIdMapping == null) {
-            throw new MappingException("A versioned relation to a non-versioned entity " + entityName + "!");
+            throw new MappingException("An audited relation to a non-audited entity " + entityName + "!");
         }
 
         String lastPropertyPrefix = owningReferencePropertyName + "_";

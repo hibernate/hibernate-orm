@@ -195,16 +195,23 @@ public class AuditEventListener implements PostInsertEventListener, PostUpdateEv
 
     public void onPreUpdateCollection(PreCollectionUpdateEvent event) {
         CollectionEntry collectionEntry = getCollectionEntry(event);
-        onCollectionAction(event, event.getCollection(), collectionEntry.getSnapshot(), collectionEntry);
+        if (!collectionEntry.getLoadedPersister().isInverse()) {
+            onCollectionAction(event, event.getCollection(), collectionEntry.getSnapshot(), collectionEntry);
+        }
     }
 
     public void onPreRemoveCollection(PreCollectionRemoveEvent event) {
         CollectionEntry collectionEntry = getCollectionEntry(event);
-        onCollectionAction(event, null, collectionEntry.getSnapshot(), collectionEntry);
+        if (!collectionEntry.getLoadedPersister().isInverse()) {
+            onCollectionAction(event, null, collectionEntry.getSnapshot(), collectionEntry);
+        }
     }
 
     public void onPostRecreateCollection(PostCollectionRecreateEvent event) {
-        onCollectionAction(event, event.getCollection(), null, getCollectionEntry(event));
+        CollectionEntry collectionEntry = getCollectionEntry(event);
+        if (!collectionEntry.getLoadedPersister().isInverse()) {
+            onCollectionAction(event, event.getCollection(), null, collectionEntry);
+        }
     }
 
     @SuppressWarnings({"unchecked"})

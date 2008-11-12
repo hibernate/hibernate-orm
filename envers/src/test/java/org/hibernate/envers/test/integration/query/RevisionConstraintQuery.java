@@ -29,8 +29,10 @@ import javax.persistence.EntityManager;
 
 import org.hibernate.envers.query.RevisionProperty;
 import org.hibernate.envers.query.AuditRestrictions;
+import org.hibernate.envers.query.RevisionTypeProperty;
 import org.hibernate.envers.test.AbstractEntityTest;
 import org.hibernate.envers.test.entities.StrIntTestEntity;
+import org.hibernate.envers.RevisionType;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
@@ -183,5 +185,33 @@ public class RevisionConstraintQuery extends AbstractEntityTest {
                 .getSingleResult();
 
         assert (Long) result == 4;
+    }
+
+    @Test
+    public void testRevisionTypeEqQuery() {
+        // The query shouldn't be ordered as always, otherwise - we get an exception.
+        List results = getAuditReader().createQuery()
+                .forRevisionsOfEntity(StrIntTestEntity.class, true, true)
+                .add(AuditRestrictions.idEq(id1))
+                .add(RevisionTypeProperty.eq(RevisionType.MOD))
+                .getResultList();
+        
+        assert results.size() == 3;
+        assert results.get(0).equals(new StrIntTestEntity("d", 10, id1));
+        assert results.get(1).equals(new StrIntTestEntity("d", 1, id1));
+        assert results.get(2).equals(new StrIntTestEntity("d", 5, id1));
+    }
+
+    @Test
+    public void testRevisionTypeNeQuery() {
+        // The query shouldn't be ordered as always, otherwise - we get an exception.
+        List results = getAuditReader().createQuery()
+                .forRevisionsOfEntity(StrIntTestEntity.class, true, true)
+                .add(AuditRestrictions.idEq(id1))
+                .add(RevisionTypeProperty.ne(RevisionType.MOD))
+                .getResultList();
+
+        assert results.size() == 1;
+        assert results.get(0).equals(new StrIntTestEntity("a", 10, id1));
     }
 }

@@ -21,44 +21,26 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.envers.query;
+
+package org.hibernate.envers.query.criteria;
 
 import org.hibernate.envers.configuration.AuditConfiguration;
-import org.hibernate.envers.query.projection.AuditProjection;
-import org.hibernate.envers.query.criteria.AuditCriterion;
-import org.hibernate.envers.query.criteria.RevisionTypeAuditExpression;
-import org.hibernate.envers.tools.Triple;
-import org.hibernate.envers.RevisionType;
+import org.hibernate.envers.tools.query.Parameters;
+import org.hibernate.envers.tools.query.QueryBuilder;
 
 /**
  * @author Adam Warski (adam at warski dot org)
  */
-@SuppressWarnings({"JavaDoc"})
-public class RevisionTypeProperty implements AuditProjection {
-    private RevisionTypeProperty() { }
+public class RevisionTypeAuditExpression implements AuditCriterion {
+    private Object value;
+    private String op;
 
-    /**
-     * Apply a "equal" constraint on the revision type
-     */
-    public static AuditCriterion eq(RevisionType type) {
-        return new RevisionTypeAuditExpression(type, "=");
+    public RevisionTypeAuditExpression(Object value, String op) {
+        this.value = value;
+        this.op = op;
     }
 
-    /**
-     * Apply a "not equal" constraint on the revision type
-     */
-    public static AuditCriterion ne(RevisionType type) {
-        return new RevisionTypeAuditExpression(type, "<>");
-    }
-
-    /**
-     * Projection on the revision type
-     */
-    public static AuditProjection revisionType() {
-        return new RevisionTypeProperty();
-    }
-
-    public Triple<String, String, Boolean> getData(AuditConfiguration verCfg) {
-        return Triple.make(null, verCfg.getAuditEntCfg().getRevisionTypePropName(), false);
+    public void addToQuery(AuditConfiguration verCfg, String entityName, QueryBuilder qb, Parameters parameters) {
+        parameters.addWhereWithParam(verCfg.getAuditEntCfg().getRevisionTypePropName(), op, value);
     }
 }

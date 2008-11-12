@@ -40,6 +40,20 @@ public class RevisionProperty implements AuditProjection {
     private RevisionProperty() { }
 
     /**
+     * Apply a "equal" constraint on the revision number
+     */
+    public static AuditCriterion eq(Integer revision) {
+        return new RevisionAuditExpression(revision, "=");
+    }
+
+    /**
+     * Apply a "not equal" constraint on the revision number
+     */
+    public static AuditCriterion ne(Integer revision) {
+        return new RevisionAuditExpression(revision, "<>");
+    }
+
+    /**
      * Apply a "greater than" constraint on the revision number
      */
     public static AuditCriterion gt(Integer revision) {

@@ -24,9 +24,9 @@
 package org.hibernate.envers.synchronization;
 
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.hibernate.envers.revisioninfo.RevisionInfoGenerator;
-import org.hibernate.envers.tools.ConcurrentReferenceHashMap;
 
 import org.hibernate.Transaction;
 import org.hibernate.event.EventSource;
@@ -35,13 +35,11 @@ import org.hibernate.event.EventSource;
  * @author Adam Warski (adam at warski dot org)
  */
 public class AuditSyncManager {
-    private final Map<Transaction, AuditSync> versionsSyncs;
+    private final Map<Transaction, AuditSync> auditSyncs;
     private final RevisionInfoGenerator revisionInfoGenerator;
 
     public AuditSyncManager(RevisionInfoGenerator revisionInfoGenerator) {
-        versionsSyncs = new ConcurrentReferenceHashMap<Transaction, AuditSync>(10,
-                ConcurrentReferenceHashMap.ReferenceType.WEAK,
-                ConcurrentReferenceHashMap.ReferenceType.STRONG);
+        auditSyncs = new ConcurrentHashMap<Transaction, AuditSync>();
 
         this.revisionInfoGenerator = revisionInfoGenerator;
     }
@@ -49,10 +47,11 @@ public class AuditSyncManager {
     public AuditSync get(EventSource session) {
         Transaction transaction = session.getTransaction();
 
-        AuditSync verSync = versionsSyncs.get(transaction);
+        AuditSync verSync = auditSyncs.get(transaction);
         if (verSync == null) {
+            // No worries about registering a transaction twice - a transaction is single thread
             verSync = new AuditSync(this, session, revisionInfoGenerator);
-            versionsSyncs.put(transaction, verSync);
+            auditSyncs.put(transaction, verSync);
 
             transaction.registerSynchronization(verSync);
         }
@@ -61,6 +60,6 @@ public class AuditSyncManager {
     }
 
     public void remove(Transaction transaction) {
-        versionsSyncs.remove(transaction);
+        auditSyncs.remove(transaction);
     }
 }

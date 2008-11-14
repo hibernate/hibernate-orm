@@ -41,6 +41,7 @@ import org.hibernate.envers.tools.Tools;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.collection.PersistentCollection;
 import org.hibernate.engine.CollectionEntry;
+import org.hibernate.engine.SessionImplementor;
 import org.hibernate.event.AbstractCollectionEvent;
 import org.hibernate.event.Initializable;
 import org.hibernate.event.PostCollectionRecreateEvent;
@@ -66,7 +67,8 @@ public class AuditEventListener implements PostInsertEventListener, PostUpdateEv
     private AuditConfiguration verCfg;
 
     private void generateBidirectionalCollectionChangeWorkUnits(AuditSync verSync, EntityPersister entityPersister,
-                                                                String entityName, Object[] newState, Object[] oldState) {
+                                                                String entityName, Object[] newState, Object[] oldState,
+                                                                SessionImplementor session) {
         // Checking if this is enabled in configuration ...
         if (!verCfg.getGlobalCfg().isGenerateRevisionsForCollections()) {
             return;
@@ -86,18 +88,26 @@ public class AuditEventListener implements PostInsertEventListener, PostUpdateEv
                 Object newValue = newState == null ? null : newState[i];
 
                 if (!Tools.objectsEqual(oldValue, newValue)) {
-                    IdMapper idMapper = verCfg.getEntCfg().get(relDesc.getToEntityName()).getIdMapper();
-
                     // We have to generate changes both in the old collection (size decreses) and new collection
                     // (size increases).
                     if (newValue != null) {
+                        // relDesc.getToEntityName() doesn't always return the entity name of the value - in case
+                        // of subclasses, this will be root class, no the actual class. So it can't be used here.
+                        String toEntityName = session.guessEntityName(newValue);
+
+                        IdMapper idMapper = verCfg.getEntCfg().get(toEntityName).getIdMapper();
+
                         Serializable id = (Serializable) idMapper.mapToIdFromEntity(newValue);
-                        verSync.addWorkUnit(new CollectionChangeWorkUnit(relDesc.getToEntityName(), verCfg, id, newValue));
+                        verSync.addWorkUnit(new CollectionChangeWorkUnit(toEntityName, verCfg, id, newValue));
                     }
 
                     if (oldValue != null) {
+                        String toEntityName = session.guessEntityName(oldValue);
+
+                        IdMapper idMapper = verCfg.getEntCfg().get(toEntityName).getIdMapper();
+
                         Serializable id = (Serializable) idMapper.mapToIdFromEntity(oldValue);
-                        verSync.addWorkUnit(new CollectionChangeWorkUnit(relDesc.getToEntityName(), verCfg, id, oldValue));
+                        verSync.addWorkUnit(new CollectionChangeWorkUnit(toEntityName, verCfg, id, oldValue));
                     }
                 }
             }
@@ -113,7 +123,8 @@ public class AuditEventListener implements PostInsertEventListener, PostUpdateEv
             verSync.addWorkUnit(new AddWorkUnit(event.getPersister().getEntityName(), verCfg, event.getId(),
                     event.getPersister(), event.getState()));
 
-            generateBidirectionalCollectionChangeWorkUnits(verSync, event.getPersister(), entityName, event.getState(), null);
+            generateBidirectionalCollectionChangeWorkUnits(verSync, event.getPersister(), entityName, event.getState(),
+                    null, event.getSession());
         }
     }
 
@@ -126,7 +137,8 @@ public class AuditEventListener implements PostInsertEventListener, PostUpdateEv
             verSync.addWorkUnit(new ModWorkUnit(event.getPersister().getEntityName(), verCfg, event.getId(),
                     event.getPersister(), event.getState(), event.getOldState()));
 
-            generateBidirectionalCollectionChangeWorkUnits(verSync, event.getPersister(), entityName, event.getState(), event.getOldState());
+            generateBidirectionalCollectionChangeWorkUnits(verSync, event.getPersister(), entityName, event.getState(),
+                    event.getOldState(), event.getSession());
         }
     }
 
@@ -138,7 +150,8 @@ public class AuditEventListener implements PostInsertEventListener, PostUpdateEv
 
             verSync.addWorkUnit(new DelWorkUnit(event.getPersister().getEntityName(), verCfg, event.getId()));
 
-            generateBidirectionalCollectionChangeWorkUnits(verSync, event.getPersister(), entityName, null, event.getDeletedState());
+            generateBidirectionalCollectionChangeWorkUnits(verSync, event.getPersister(), entityName, null,
+                    event.getDeletedState(), event.getSession());
         }
     }
 

@@ -15,6 +15,7 @@
             <package name="org.hibernate.envers.test.integration.ids" />
             <package name="org.hibernate.envers.test.integration.inheritance.single" />
             <package name="org.hibernate.envers.test.integration.inheritance.single.childrelation" />
+            <package name="org.hibernate.envers.test.integration.inheritance.single.inheritedrelation" />
             <package name="org.hibernate.envers.test.integration.inheritance.single.relation" />
             <package name="org.hibernate.envers.test.integration.manytomany" />
             <package name="org.hibernate.envers.test.integration.manytomany.ternary" />

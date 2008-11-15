@@ -1,4 +1,4 @@
-package org.hibernate.envers.test.integration.inheritance.single.inheritedrelation;
+package org.hibernate.envers.test.integration.inheritance.single.notownedrelation;
 
 import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;

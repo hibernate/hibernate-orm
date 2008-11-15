@@ -35,7 +35,7 @@ import org.hibernate.ejb.Ejb3Configuration;
 /**
  * @author Adam Warski (adam at warski dot org)
  */
-public class ChildVersioning extends AbstractEntityTest {
+public class ChildAuditing extends AbstractEntityTest {
     private Integer id1;
 
     public void configure(Ejb3Configuration cfg) {

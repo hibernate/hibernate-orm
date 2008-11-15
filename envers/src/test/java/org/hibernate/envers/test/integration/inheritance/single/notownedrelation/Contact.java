@@ -1,4 +1,4 @@
-package org.hibernate.envers.test.integration.inheritance.single.inheritedrelation;
+package org.hibernate.envers.test.integration.inheritance.single.notownedrelation;
 
 import java.io.Serializable;
 import java.util.Set;

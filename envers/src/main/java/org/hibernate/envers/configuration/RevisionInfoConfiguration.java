@@ -32,6 +32,7 @@ import org.hibernate.envers.Audited;
 import org.hibernate.envers.*;
 import org.hibernate.envers.entities.PropertyData;
 import org.hibernate.envers.configuration.metadata.MetadataTools;
+import org.hibernate.envers.configuration.metadata.AuditTableData;
 import org.hibernate.envers.revisioninfo.DefaultRevisionInfoGenerator;
 import org.hibernate.envers.revisioninfo.RevisionInfoGenerator;
 import org.hibernate.envers.revisioninfo.RevisionInfoNumberReader;
@@ -68,7 +69,7 @@ public class RevisionInfoConfiguration {
     private Document generateDefaultRevisionInfoXmlMapping() {
         Document document = DocumentHelper.createDocument();
 
-        Element class_mapping = MetadataTools.createEntity(document, null, null, null, null, null);
+        Element class_mapping = MetadataTools.createEntity(document, new AuditTableData(null, null, null, null), null);
 
         class_mapping.addAttribute("name", revisionInfoEntityName);
         class_mapping.addAttribute("table", "REVINFO");

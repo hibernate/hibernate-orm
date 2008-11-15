@@ -79,47 +79,43 @@ public class MetadataTools {
         return column_mapping;
     }
 
-    private static Element createEntityCommon(Document document, String type, String entityName,
-                                              String tableName, String schema, String catalog,
+    private static Element createEntityCommon(Document document, String type, AuditTableData auditTableData,
                                               String discriminatorValue) {
         Element hibernate_mapping = document.addElement("hibernate-mapping");
         hibernate_mapping.addAttribute("auto-import", "false");
 
         Element class_mapping = hibernate_mapping.addElement(type);
 
-        if (entityName != null) {
-            class_mapping.addAttribute("entity-name", entityName);
+        if (auditTableData.getAuditEntityName() != null) {
+            class_mapping.addAttribute("entity-name", auditTableData.getAuditEntityName());
         }
 
         if (discriminatorValue != null) {
             class_mapping.addAttribute("discriminator-value", discriminatorValue);
         }
 
-        if (!StringTools.isEmpty(tableName)) {
-            class_mapping.addAttribute("table", tableName);
+        if (!StringTools.isEmpty(auditTableData.getAuditTableName())) {
+            class_mapping.addAttribute("table", auditTableData.getAuditTableName());
         }
 
-        if (!StringTools.isEmpty(schema)) {
-            class_mapping.addAttribute("schema", schema);
+        if (!StringTools.isEmpty(auditTableData.getSchema())) {
+            class_mapping.addAttribute("schema", auditTableData.getSchema());
         }
 
-        if (!StringTools.isEmpty(catalog)) {
-            class_mapping.addAttribute("catalog", catalog);
+        if (!StringTools.isEmpty(auditTableData.getCatalog())) {
+            class_mapping.addAttribute("catalog", auditTableData.getCatalog());
         }
 
         return class_mapping;
     }
 
-    public static Element createEntity(Document document, String entityName, String tableName,
-                                       String schema, String catalog, String discriminatorValue) {
-        return createEntityCommon(document, "class", entityName, tableName, schema, catalog, discriminatorValue);
+    public static Element createEntity(Document document, AuditTableData auditTableData, String discriminatorValue) {
+        return createEntityCommon(document, "class", auditTableData, discriminatorValue);
     }
 
-    public static Element createSubclassEntity(Document document, String entityName, String tableName,
-                                               String schema, String catalog, String extendsEntityName,
-                                               String discriminatorValue) {
-        Element class_mapping = createEntityCommon(document, "subclass", entityName, tableName, schema, catalog,
-                discriminatorValue);
+    public static Element createSubclassEntity(Document document, String subclassType, AuditTableData auditTableData,
+                                               String extendsEntityName, String discriminatorValue) {
+        Element class_mapping = createEntityCommon(document, subclassType, auditTableData, discriminatorValue);
 
         class_mapping.addAttribute("extends", extendsEntityName);
 

@@ -468,7 +468,7 @@ public final class CollectionMetadataGenerator {
                 propertyValue.getCollectionTable().getCatalog() : persistentPropertyAuditingData.getJoinTable().catalog();
 
         Element middleEntityXml = MetadataTools.createEntity(xmlMappingData.newAdditionalMapping(),
-                auditMiddleEntityName, auditMiddleTableName, schema, catalog, null);
+                new AuditTableData(auditMiddleEntityName, auditMiddleTableName, schema, catalog), null);
         Element middleEntityXmlId = middleEntityXml.addElement("composite-id");
 
         middleEntityXmlId.addAttribute("name", mainGenerator.getVerEntCfg().getOriginalIdPropName());

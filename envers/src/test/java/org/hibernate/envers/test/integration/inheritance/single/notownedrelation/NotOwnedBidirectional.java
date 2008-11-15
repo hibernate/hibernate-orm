@@ -22,7 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 
-package org.hibernate.envers.test.integration.inheritance.single.inheritedrelation;
+package org.hibernate.envers.test.integration.inheritance.single.notownedrelation;
 
 import java.util.Arrays;
 import javax.persistence.EntityManager;
@@ -37,7 +37,7 @@ import org.hibernate.ejb.Ejb3Configuration;
 /**
  * @author Adam Warski (adam at warski dot org)
  */
-public class InheritedBidirectional extends AbstractEntityTest {
+public class NotOwnedBidirectional extends AbstractEntityTest {
     private Long pc_id;
     private Long a1_id;
     private Long a2_id;

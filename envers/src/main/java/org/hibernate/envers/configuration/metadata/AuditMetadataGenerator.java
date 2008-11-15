@@ -37,6 +37,7 @@ import org.hibernate.envers.entities.mapper.ExtendedPropertyMapper;
 import org.hibernate.envers.entities.mapper.MultiPropertyMapper;
 import org.hibernate.envers.entities.mapper.SubclassPropertyMapper;
 import org.hibernate.envers.tools.StringTools;
+import org.hibernate.envers.tools.Triple;
 
 import org.hibernate.MappingException;
 import org.hibernate.cfg.Configuration;
@@ -210,6 +211,47 @@ public final class AuditMetadataGenerator {
     }
 
     @SuppressWarnings({"unchecked"})
+    private Triple<Element, ExtendedPropertyMapper, String> generateMappingData(
+            PersistentClass pc, EntityXmlMappingData xmlMappingData, AuditTableData auditTableData,
+            IdMappingData idMapper) {
+        Element class_mapping = MetadataTools.createEntity(xmlMappingData.getMainXmlMapping(), auditTableData,
+                pc.getDiscriminatorValue());
+        ExtendedPropertyMapper propertyMapper = new MultiPropertyMapper();
+
+        // Checking if there is a discriminator column
+        if (pc.getDiscriminator() != null) {
+            Element discriminator_element = class_mapping.addElement("discriminator");
+            MetadataTools.addColumns(discriminator_element, pc.getDiscriminator().getColumnIterator());
+            discriminator_element.addAttribute("type", pc.getDiscriminator().getType().getName());
+        }
+
+        // Adding the id mapping
+        class_mapping.add((Element) idMapper.getXmlMapping().clone());
+
+        // Adding the "revision type" property
+        addRevisionType(class_mapping);
+
+        return Triple.make(class_mapping, propertyMapper, null);
+    }
+
+    private Triple<Element, ExtendedPropertyMapper, String> generateInheritanceMappingData(
+            PersistentClass pc, EntityXmlMappingData xmlMappingData, AuditTableData auditTableData,
+            String inheritanceMappingType) {
+        String extendsEntityName = verEntCfg.getAuditEntityName(pc.getSuperclass().getEntityName());
+        Element class_mapping = MetadataTools.createSubclassEntity(xmlMappingData.getMainXmlMapping(),
+                inheritanceMappingType, auditTableData, extendsEntityName, pc.getDiscriminatorValue());
+
+        // The id and revision type is already mapped in the parent
+
+        // Getting the property mapper of the parent - when mapping properties, they need to be included
+        String parentEntityName = pc.getSuperclass().getEntityName();
+        ExtendedPropertyMapper parentPropertyMapper = entitiesConfigurations.get(parentEntityName).getPropertyMapper();
+        ExtendedPropertyMapper propertyMapper = new SubclassPropertyMapper(new MultiPropertyMapper(), parentPropertyMapper);
+
+        return Triple.make(class_mapping, propertyMapper, parentEntityName);
+    }
+
+    @SuppressWarnings({"unchecked"})
     public void generateFirstPass(PersistentClass pc, PersistentClassAuditingData auditingData,
                                   EntityXmlMappingData xmlMappingData) {
         String schema = auditingData.getAuditTable().schema();
@@ -226,55 +268,46 @@ public final class AuditMetadataGenerator {
         String auditEntityName = verEntCfg.getAuditEntityName(entityName);
         String auditTableName = verEntCfg.getAuditTableName(entityName, pc.getTable().getName());
 
+        AuditTableData auditTableData = new AuditTableData(auditEntityName, auditTableName, schema, catalog);
+
         // Generating a mapping for the id
         IdMappingData idMapper = idMetadataGenerator.addId(pc);
 
-        Element class_mapping;
-        ExtendedPropertyMapper propertyMapper;
-
         InheritanceType inheritanceType = InheritanceType.get(pc);
-        String parentEntityName = null;
 
+        // These properties will be read from the mapping data
+        final Element class_mapping;
+        final ExtendedPropertyMapper propertyMapper;
+        final String parentEntityName;
+
+        final Triple<Element, ExtendedPropertyMapper, String> mappingData;
+
+        // Reading the mapping data depending on inheritance type (if any)
         switch (inheritanceType) {
             case NONE:
-                class_mapping = MetadataTools.createEntity(xmlMappingData.getMainXmlMapping(), auditEntityName, auditTableName,
-                        schema, catalog, pc.getDiscriminatorValue());
-                propertyMapper = new MultiPropertyMapper();
-
-                // Checking if there is a discriminator column
-                if (pc.getDiscriminator() != null) {
-                    Element discriminator_element = class_mapping.addElement("discriminator");
-                    MetadataTools.addColumns(discriminator_element, pc.getDiscriminator().getColumnIterator());
-                    discriminator_element.addAttribute("type", pc.getDiscriminator().getType().getName());
-                }
-
-                // Adding the id mapping
-                class_mapping.add((Element) idMapper.getXmlMapping().clone());
-
-                // Adding the "revision type" property
-                addRevisionType(class_mapping);
-
+                mappingData = generateMappingData(pc, xmlMappingData, auditTableData, idMapper);
                 break;
+
             case SINGLE:
-                String extendsEntityName = verEntCfg.getAuditEntityName(pc.getSuperclass().getEntityName());
-                class_mapping = MetadataTools.createSubclassEntity(xmlMappingData.getMainXmlMapping(), auditEntityName,
-                        auditTableName, schema, catalog, extendsEntityName, pc.getDiscriminatorValue());
-
-                // The id and revision type is already mapped in the parent
-
-                // Getting the property mapper of the parent - when mapping properties, they need to be included
-                parentEntityName = pc.getSuperclass().getEntityName();
-                ExtendedPropertyMapper parentPropertyMapper = entitiesConfigurations.get(parentEntityName).getPropertyMapper();
-                propertyMapper = new SubclassPropertyMapper(new MultiPropertyMapper(), parentPropertyMapper);
-
+                mappingData = generateInheritanceMappingData(pc, xmlMappingData, auditTableData, "subclass");
                 break;
+
             case JOINED:
                 throw new MappingException("Joined inheritance strategy not supported for auditing!");
+
             case TABLE_PER_CLASS:
-                throw new MappingException("Table-per-class inheritance strategy not supported for auditing!");
+                mappingData = generateInheritanceMappingData(pc, xmlMappingData, auditTableData, "union-subclass");
+                break;
+
             default:
                 throw new AssertionError("Impossible enum value.");
         }
+
+        class_mapping = mappingData.getFirst();
+        propertyMapper = mappingData.getSecond();
+        parentEntityName = mappingData.getThird();
+
+        xmlMappingData.setClassMapping(class_mapping);
 
         // Mapping unjoined properties
         addProperties(class_mapping, (Iterator<Property>) pc.getUnjoinedPropertyIterator(), propertyMapper,
@@ -299,10 +332,7 @@ public final class AuditMetadataGenerator {
         CompositeMapperBuilder propertyMapper = entitiesConfigurations.get(entityName).getPropertyMapper();
 
         // Mapping unjoined properties
-        Element parent = xmlMappingData.getMainXmlMapping().getRootElement().element("class");
-        if (parent == null) {
-            parent = xmlMappingData.getMainXmlMapping().getRootElement().element("subclass");
-        }
+        Element parent = xmlMappingData.getClassMapping();
 
         addProperties(parent, (Iterator<Property>) pc.getUnjoinedPropertyIterator(),
                 propertyMapper, auditingData, entityName, xmlMappingData, false);

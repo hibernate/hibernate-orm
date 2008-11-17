@@ -76,11 +76,6 @@
                     relations in components
                 </para>
             </listitem>
-            <listitem>
-                <para>
-                    joined and table-per-class inheritance
-                </para>
-            </listitem>
         </orderedlist>
 
     </sect1>

@@ -59,8 +59,7 @@
     <orderedlist>
         <listitem>
             <para>
-                auditing of all mappings defined by the JPA specification, except joined and
-                table-per-class inheritance
+                auditing of all mappings defined by the JPA specification
             </para>
         </listitem>
         <listitem>

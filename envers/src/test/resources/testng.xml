@@ -13,6 +13,10 @@
             <package name="org.hibernate.envers.test.integration.data" />
             <package name="org.hibernate.envers.test.integration.flush" />
             <package name="org.hibernate.envers.test.integration.ids" />
+            <package name="org.hibernate.envers.test.integration.inheritance.joined" />
+            <package name="org.hibernate.envers.test.integration.inheritance.joined.childrelation" />
+            <package name="org.hibernate.envers.test.integration.inheritance.joined.notownedrelation" />
+            <package name="org.hibernate.envers.test.integration.inheritance.joined.relation" />
             <package name="org.hibernate.envers.test.integration.inheritance.single" />
             <package name="org.hibernate.envers.test.integration.inheritance.single.childrelation" />
             <package name="org.hibernate.envers.test.integration.inheritance.single.notownedrelation" />

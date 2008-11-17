@@ -293,7 +293,13 @@ public final class AuditMetadataGenerator {
                 break;
 
             case JOINED:
-                throw new MappingException("Joined inheritance strategy not supported for auditing!");
+                mappingData = generateInheritanceMappingData(pc, xmlMappingData, auditTableData, "joined-subclass");
+
+                // Adding the "key" element with all columns + the revision number column
+                Element keyMapping = mappingData.getFirst().addElement("key");
+                MetadataTools.addColumns(keyMapping, pc.getIdentifierProperty().getColumnIterator());
+                MetadataTools.addColumn(keyMapping, verEntCfg.getRevisionPropName(), null);
+                break;
 
             case TABLE_PER_CLASS:
                 mappingData = generateInheritanceMappingData(pc, xmlMappingData, auditTableData, "union-subclass");

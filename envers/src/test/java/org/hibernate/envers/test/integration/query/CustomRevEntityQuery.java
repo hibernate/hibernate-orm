@@ -26,7 +26,7 @@ package org.hibernate.envers.test.integration.query;
 import java.util.List;
 import javax.persistence.EntityManager;
 
-import org.hibernate.envers.query.AuditRestrictions;
+import org.hibernate.envers.query.AuditEntity;
 import org.hibernate.envers.test.AbstractEntityTest;
 import org.hibernate.envers.test.entities.StrIntTestEntity;
 import org.hibernate.envers.test.entities.reventity.CustomRevEntity;
@@ -42,6 +42,7 @@ import org.hibernate.ejb.Ejb3Configuration;
 public class CustomRevEntityQuery extends AbstractEntityTest {
     private Integer id1;
     private Integer id2;
+    private Long timestamp;
 
     public void configure(Ejb3Configuration cfg) {
         cfg.addAnnotatedClass(CustomRevEntity.class);
@@ -49,7 +50,7 @@ public class CustomRevEntityQuery extends AbstractEntityTest {
     }
 
     @BeforeClass(dependsOnMethods = "init")
-    public void initData() {
+    public void initData() throws InterruptedException {
         // Revision 1
         EntityManager em = getEntityManager();
         em.getTransaction().begin();
@@ -65,6 +66,12 @@ public class CustomRevEntityQuery extends AbstractEntityTest {
 
         em.getTransaction().commit();
 
+        Thread.sleep(100);
+
+        timestamp = System.currentTimeMillis();
+
+        Thread.sleep(100);
+
         // Revision 2
         em.getTransaction().begin();
 
@@ -79,7 +86,7 @@ public class CustomRevEntityQuery extends AbstractEntityTest {
     public void testRevisionsOfId1Query() {
         List<Object[]> result = getAuditReader().createQuery()
                 .forRevisionsOfEntity(StrIntTestEntity.class, false, true)
-                .add(AuditRestrictions.idEq(id1))
+                .add(AuditEntity.id().eq(id1))
                 .getResultList();
 
         assert result.get(0)[0].equals(new StrIntTestEntity("a", 10, id1));
@@ -95,11 +102,25 @@ public class CustomRevEntityQuery extends AbstractEntityTest {
     public void testRevisionsOfId2Query() {
         List<Object[]> result = getAuditReader().createQuery()
                 .forRevisionsOfEntity(StrIntTestEntity.class, false, true)
-                .add(AuditRestrictions.idEq(id2))
+                .add(AuditEntity.id().eq(id2))
                 .getResultList();
 
         assert result.get(0)[0].equals(new StrIntTestEntity("b", 15, id2));
         assert result.get(0)[1] instanceof CustomRevEntity;
         assert ((CustomRevEntity) result.get(0)[1]).getCustomId() == 1;
+    }
+
+    @Test
+    public void testRevisionPropertyRestriction() {
+        List<Object[]> result = getAuditReader().createQuery()
+                .forRevisionsOfEntity(StrIntTestEntity.class, false, true)
+                .add(AuditEntity.id().eq(id1))
+                .add(AuditEntity.revisionProperty("customTimestamp").ge(timestamp))
+                .getResultList();
+
+        assert result.get(0)[0].equals(new StrIntTestEntity("c", 10, id1));
+        assert result.get(0)[1] instanceof CustomRevEntity;
+        assert ((CustomRevEntity) result.get(0)[1]).getCustomId() == 2;  
+        assert ((CustomRevEntity) result.get(0)[1]).getCustomTimestamp() >= timestamp;
     }
 }

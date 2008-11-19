@@ -31,8 +31,7 @@ import org.hibernate.envers.configuration.AuditConfiguration;
 import org.hibernate.envers.exception.NotAuditedException;
 import org.hibernate.envers.exception.RevisionDoesNotExistException;
 import org.hibernate.envers.exception.AuditException;
-import org.hibernate.envers.query.RevisionProperty;
-import org.hibernate.envers.query.AuditRestrictions;
+import org.hibernate.envers.query.AuditEntity;
 import static org.hibernate.envers.tools.ArgumentsTools.checkNotNull;
 import static org.hibernate.envers.tools.ArgumentsTools.checkPositive;
 
@@ -101,7 +100,7 @@ public class AuditReaderImpl implements AuditReaderImplementor {
         try {
             // The result is put into the cache by the entity instantiator called from the query
             result = createQuery().forEntitiesAtRevision(cls, revision)
-                .add(AuditRestrictions.idEq(primaryKey)).getSingleResult();
+                .add(AuditEntity.id().eq(primaryKey)).getSingleResult();
         } catch (NoResultException e) {
             result = null;
         } catch (NonUniqueResultException e) {
@@ -126,8 +125,8 @@ public class AuditReaderImpl implements AuditReaderImplementor {
         }
 
         return createQuery().forRevisionsOfEntity(cls, false, true)
-                .addProjection(RevisionProperty.revisionNumber())
-                .add(AuditRestrictions.idEq(primaryKey))
+                .addProjection(AuditEntity.revisionNumber())
+                .add(AuditEntity.id().eq(primaryKey))
                 .getResultList();
     }
 

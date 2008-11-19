@@ -27,8 +27,7 @@ import java.util.Arrays;
 import java.util.List;
 import javax.persistence.EntityManager;
 
-import org.hibernate.envers.query.RevisionProperty;
-import org.hibernate.envers.query.AuditRestrictions;
+import org.hibernate.envers.query.AuditEntity;
 import org.hibernate.envers.test.AbstractEntityTest;
 import org.hibernate.envers.test.entities.StrIntTestEntity;
 import org.testng.annotations.BeforeClass;
@@ -103,9 +102,9 @@ public class MaximalizePropertyQuery extends AbstractEntityTest {
     public void testMaximizeWithIdEq() {
         List revs_id1 = getAuditReader().createQuery()
                 .forRevisionsOfEntity(StrIntTestEntity.class, false, true)
-                .addProjection(RevisionProperty.revisionNumber())
-                .add(AuditRestrictions.maximizeProperty("number")
-                    .add(AuditRestrictions.idEq(id2)))
+                .addProjection(AuditEntity.revisionNumber())
+                .add(AuditEntity.property("number").maximize()
+                    .add(AuditEntity.id().eq(id2)))
                 .getResultList();
 
         assert Arrays.asList(2, 3, 4).equals(revs_id1);
@@ -115,11 +114,24 @@ public class MaximalizePropertyQuery extends AbstractEntityTest {
     public void testMinimizeWithPropertyEq() {
         List result = getAuditReader().createQuery()
                 .forRevisionsOfEntity(StrIntTestEntity.class, false, true)
-                .addProjection(RevisionProperty.revisionNumber())
-                .add(AuditRestrictions.minimizeProperty("number")
-                    .add(AuditRestrictions.eq("str1", "a")))
+                .addProjection(AuditEntity.revisionNumber())
+                .add(AuditEntity.property("number").minimize()
+                    .add(AuditEntity.property("str1").eq("a")))
                 .getResultList();
 
         assert Arrays.asList(1).equals(result);
+    }
+
+    @Test
+    public void testMaximizeRevision() {
+        List result = getAuditReader().createQuery()
+                .forRevisionsOfEntity(StrIntTestEntity.class, false, true)
+                .addProjection(AuditEntity.revisionNumber())
+                .add(AuditEntity.revisionNumber().maximize()
+                    .add(AuditEntity.property("number").eq(10)))
+                .getResultList();
+
+        System.out.println(result);
+        assert Arrays.asList(2).equals(result);
     }
 }

@@ -54,7 +54,7 @@ public abstract class AbstractAuditWorkUnit implements AuditWorkUnit {
         AuditEntitiesConfiguration entitiesCfg = verCfg.getAuditEntCfg();
 
         Map<String, Object> originalId = new HashMap<String, Object>();
-        originalId.put(entitiesCfg.getRevisionPropName(), revision);
+        originalId.put(entitiesCfg.getRevisionFieldName(), revision);
 
         verCfg.getEntCfg().get(getEntityName()).getIdMapper().mapToMapFromId(originalId, id);
         data.put(entitiesCfg.getRevisionTypePropName(), revisionType);

@@ -78,7 +78,7 @@ public final class ThreeEntityQueryGenerator implements RelationQueryGenerator {
          *     e.revision_type != DEL AND
          *     f.revision_type != DEL
          */
-        String revisionPropertyPath = verEntCfg.getRevisionPropPath();
+        String revisionPropertyPath = verEntCfg.getRevisionNumberPath();
         String originalIdPropertyName = verEntCfg.getOriginalIdPropName();
 
         String eeOriginalIdPropertyPath = "ee." + originalIdPropertyName;

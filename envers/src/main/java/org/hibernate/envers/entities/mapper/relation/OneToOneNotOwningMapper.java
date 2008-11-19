@@ -33,7 +33,7 @@ import org.hibernate.envers.entities.mapper.PersistentCollectionChangeData;
 import org.hibernate.envers.entities.mapper.PropertyMapper;
 import org.hibernate.envers.entities.PropertyData;
 import org.hibernate.envers.exception.AuditException;
-import org.hibernate.envers.query.AuditRestrictions;
+import org.hibernate.envers.query.AuditEntity;
 import org.hibernate.envers.reader.AuditReaderImplementor;
 import org.hibernate.envers.tools.reflection.ReflectionTools;
 
@@ -71,7 +71,7 @@ public class OneToOneNotOwningMapper implements PropertyMapper {
 
         try {
             value = versionsReader.createQuery().forEntitiesAtRevision(entityClass, revision)
-                    .add(AuditRestrictions.relatedIdEq(owningReferencePropertyName, primaryKey)).getSingleResult();
+                    .add(AuditEntity.relatedId(owningReferencePropertyName).eq(primaryKey)).getSingleResult();
         } catch (NoResultException e) {
             value = null;
         } catch (NonUniqueResultException e) {

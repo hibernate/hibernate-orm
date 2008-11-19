@@ -61,7 +61,7 @@ public final class OneEntityQueryGenerator implements RelationQueryGenerator {
          * (only non-deleted entities and associations)
          *     ee.revision_type != DEL
          */
-        String revisionPropertyPath = verEntCfg.getRevisionPropPath();
+        String revisionPropertyPath = verEntCfg.getRevisionNumberPath();
         String originalIdPropertyName = verEntCfg.getOriginalIdPropName();
 
         // SELECT new list(ee) FROM middleEntity ee

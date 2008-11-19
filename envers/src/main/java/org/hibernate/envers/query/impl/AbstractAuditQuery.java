@@ -121,12 +121,6 @@ public abstract class AbstractAuditQuery implements AuditQuery {
 
     // Projection and order
 
-    public AuditQuery addProjection(String function, String propertyName) {
-        hasProjection = true;
-        qb.addProjection(function, propertyName, false);
-        return this;
-    }
-
     public AuditQuery addProjection(AuditProjection projection) {
         Triple<String, String, Boolean> projectionData = projection.getData(verCfg);
         hasProjection = true;
@@ -134,15 +128,12 @@ public abstract class AbstractAuditQuery implements AuditQuery {
         return this;
     }
 
-    public AuditQuery addOrder(String propertyName, boolean asc) {
-        hasOrder = true;
-        qb.addOrder(propertyName, asc);
-        return this;
-    }
-
     public AuditQuery addOrder(AuditOrder order) {
+        hasOrder = true;
+
         Pair<String, Boolean> orderData = order.getData(verCfg);
-        return addOrder(orderData.getFirst(), orderData.getSecond());
+        qb.addOrder(orderData.getFirst(), orderData.getSecond());
+        return this;
     }
 
     // Query properties

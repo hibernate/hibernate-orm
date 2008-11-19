@@ -21,32 +21,30 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.envers.query.criteria;
+
+package org.hibernate.envers.query.projection;
 
 import org.hibernate.envers.configuration.AuditConfiguration;
-import org.hibernate.envers.entities.RelationDescription;
-import org.hibernate.envers.tools.query.Parameters;
-import org.hibernate.envers.tools.query.QueryBuilder;
+import org.hibernate.envers.tools.Triple;
 import org.hibernate.envers.query.property.PropertyNameGetter;
 
 /**
  * @author Adam Warski (adam at warski dot org)
  */
-public class NotNullAuditExpression implements AuditCriterion {
-    private PropertyNameGetter propertyNameGetter;
+public class PropertyAuditProjection implements AuditProjection {
+    private final PropertyNameGetter propertyNameGetter;
+    private final String function;
+    private final boolean distinct;
 
-    public NotNullAuditExpression(PropertyNameGetter propertyNameGetter) {
+    public PropertyAuditProjection(PropertyNameGetter propertyNameGetter, String function, boolean distinct) {
         this.propertyNameGetter = propertyNameGetter;
+        this.function = function;
+        this.distinct = distinct;
     }
 
-    public void addToQuery(AuditConfiguration auditCfg, String entityName, QueryBuilder qb, Parameters parameters) {
+    public Triple<String, String, Boolean> getData(AuditConfiguration auditCfg) {
         String propertyName = propertyNameGetter.get(auditCfg);
-        RelationDescription relatedEntity = CriteriaTools.getRelatedEntity(auditCfg, entityName, propertyName);
 
-        if (relatedEntity == null) {
-            parameters.addWhereWithParam(propertyName, "<>", null);
-        } else {
-            relatedEntity.getIdMapper().addIdEqualsToQuery(parameters, null, propertyName, false);
-        }
+        return Triple.make(function, propertyName, distinct);
     }
 }

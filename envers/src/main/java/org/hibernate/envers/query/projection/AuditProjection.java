@@ -31,9 +31,8 @@ import org.hibernate.envers.tools.Triple;
  */
 public interface AuditProjection {
     /**
-     *
-     * @param verCfg Configuration.
+     * @param auditCfg Configuration.
      * @return A triple: (function name - possibly null, property name, add distinct?).
      */
-    Triple<String, String, Boolean> getData(AuditConfiguration verCfg);
+    Triple<String, String, Boolean> getData(AuditConfiguration auditCfg);
 }

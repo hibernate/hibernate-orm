@@ -27,6 +27,7 @@ import javax.persistence.EntityManager;
 
 import org.hibernate.envers.test.AbstractEntityTest;
 import org.hibernate.envers.test.entities.IntTestEntity;
+import org.hibernate.envers.query.AuditEntity;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
@@ -83,20 +84,20 @@ public class AggregateQuery extends AbstractEntityTest {
     public void testEntitiesAvgMaxQuery() {
         Object[] ver1 = (Object[]) getAuditReader().createQuery()
                 .forEntitiesAtRevision(IntTestEntity.class, 1)
-                .addProjection("max", "number")
-                .addProjection("avg", "number")
+                .addProjection(AuditEntity.property("number").max())
+                .addProjection(AuditEntity.property("number").function("avg"))
                 .getSingleResult();
 
         Object[] ver2 = (Object[]) getAuditReader().createQuery()
                 .forEntitiesAtRevision(IntTestEntity.class, 2)
-                .addProjection("max", "number")
-                .addProjection("avg", "number")
+                .addProjection(AuditEntity.property("number").max())
+                .addProjection(AuditEntity.property("number").function("avg"))
                 .getSingleResult();
 
         Object[] ver3 = (Object[]) getAuditReader().createQuery()
                 .forEntitiesAtRevision(IntTestEntity.class, 3)
-                .addProjection("max", "number")
-                .addProjection("avg", "number")
+                .addProjection(AuditEntity.property("number").max())
+                .addProjection(AuditEntity.property("number").function("avg"))
                 .getSingleResult();
 
         assert (Integer) ver1[0] == 10;

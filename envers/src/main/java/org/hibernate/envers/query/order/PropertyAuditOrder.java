@@ -21,44 +21,26 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.envers.query;
+
+package org.hibernate.envers.query.order;
 
 import org.hibernate.envers.configuration.AuditConfiguration;
-import org.hibernate.envers.query.projection.AuditProjection;
-import org.hibernate.envers.query.criteria.AuditCriterion;
-import org.hibernate.envers.query.criteria.RevisionTypeAuditExpression;
-import org.hibernate.envers.tools.Triple;
-import org.hibernate.envers.RevisionType;
+import org.hibernate.envers.tools.Pair;
+import org.hibernate.envers.query.property.PropertyNameGetter;
 
 /**
  * @author Adam Warski (adam at warski dot org)
  */
-@SuppressWarnings({"JavaDoc"})
-public class RevisionTypeProperty implements AuditProjection {
-    private RevisionTypeProperty() { }
+public class PropertyAuditOrder implements AuditOrder {
+    private final PropertyNameGetter propertyNameGetter;
+    private final boolean asc;
 
-    /**
-     * Apply a "equal" constraint on the revision type
-     */
-    public static AuditCriterion eq(RevisionType type) {
-        return new RevisionTypeAuditExpression(type, "=");
+    public PropertyAuditOrder(PropertyNameGetter propertyNameGetter, boolean asc) {
+        this.propertyNameGetter = propertyNameGetter;
+        this.asc = asc;
     }
 
-    /**
-     * Apply a "not equal" constraint on the revision type
-     */
-    public static AuditCriterion ne(RevisionType type) {
-        return new RevisionTypeAuditExpression(type, "<>");
-    }
-
-    /**
-     * Projection on the revision type
-     */
-    public static AuditProjection revisionType() {
-        return new RevisionTypeProperty();
-    }
-
-    public Triple<String, String, Boolean> getData(AuditConfiguration verCfg) {
-        return Triple.make(null, verCfg.getAuditEntCfg().getRevisionTypePropName(), false);
+    public Pair<String, Boolean> getData(AuditConfiguration auditCfg) {
+        return Pair.make(propertyNameGetter.get(auditCfg), asc);
     }
 }

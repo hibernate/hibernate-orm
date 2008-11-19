@@ -63,7 +63,7 @@ public class PersistentCollectionChangeWorkUnit extends AbstractAuditWorkUnit im
         for (PersistentCollectionChangeData persistentCollectionChangeData : collectionChanges) {
             // Setting the revision number
             ((Map<String, Object>) persistentCollectionChangeData.getData().get(entitiesCfg.getOriginalIdPropName()))
-                    .put(entitiesCfg.getRevisionPropName(), revisionData);
+                    .put(entitiesCfg.getRevisionFieldName(), revisionData);
 
             session.save(persistentCollectionChangeData.getEntityName(), persistentCollectionChangeData.getData());
         }

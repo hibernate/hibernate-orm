@@ -57,7 +57,7 @@ public class RevisionsOfEntityQuery extends AbstractAuditQuery {
         AuditEntitiesConfiguration verEntCfg = verCfg.getAuditEntCfg();
 
         String originalId = verEntCfg.getOriginalIdPropName();
-        String revisionPropertyName = verEntCfg.getRevisionPropName();
+        String revisionPropertyName = verEntCfg.getRevisionFieldName();
 
         Object revisionInfoObject = ((Map) versionsEntity.get(originalId)).get(revisionPropertyName);
 
@@ -92,13 +92,13 @@ public class RevisionsOfEntityQuery extends AbstractAuditQuery {
         }
 
         if (!hasProjection && !hasOrder) {
-            String revisionPropertyPath = verEntCfg.getRevisionPropPath();
+            String revisionPropertyPath = verEntCfg.getRevisionNumberPath();
             qb.addOrder(revisionPropertyPath, true);
         }
 
         if (!selectEntitiesOnly) {
             qb.addFrom(verCfg.getAuditEntCfg().getRevisionInfoEntityName(), "r");
-            qb.getRootParameters().addWhere(verCfg.getAuditEntCfg().getRevisionPropPath(), true, "=", "r.id", false);
+            qb.getRootParameters().addWhere(verCfg.getAuditEntCfg().getRevisionNumberPath(), true, "=", "r.id", false);
         }
 
         List<Object> queryResult = buildAndExecuteQuery();

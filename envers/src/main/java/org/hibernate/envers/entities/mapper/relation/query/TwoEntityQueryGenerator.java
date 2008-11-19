@@ -71,7 +71,7 @@ public final class TwoEntityQueryGenerator implements RelationQueryGenerator {
          *     ee.revision_type != DEL AND
          *     e.revision_type != DEL
          */
-        String revisionPropertyPath = verEntCfg.getRevisionPropPath();
+        String revisionPropertyPath = verEntCfg.getRevisionNumberPath();
         String originalIdPropertyName = verEntCfg.getOriginalIdPropName();
 
         String eeOriginalIdPropertyPath = "ee." + originalIdPropertyName;

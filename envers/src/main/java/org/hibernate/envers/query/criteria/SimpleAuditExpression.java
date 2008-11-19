@@ -28,23 +28,26 @@ import org.hibernate.envers.entities.RelationDescription;
 import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.tools.query.Parameters;
 import org.hibernate.envers.tools.query.QueryBuilder;
+import org.hibernate.envers.query.property.PropertyNameGetter;
 
 /**
  * @author Adam Warski (adam at warski dot org)
  */
 public class SimpleAuditExpression implements AuditCriterion {
-    private String propertyName;
+    private PropertyNameGetter propertyNameGetter;
     private Object value;
     private String op;
 
-    public SimpleAuditExpression(String propertyName, Object value, String op) {
-        this.propertyName = propertyName;
+    public SimpleAuditExpression(PropertyNameGetter propertyNameGetter, Object value, String op) {
+        this.propertyNameGetter = propertyNameGetter;
         this.value = value;
         this.op = op;
     }
 
-    public void addToQuery(AuditConfiguration verCfg, String entityName, QueryBuilder qb, Parameters parameters) {
-        RelationDescription relatedEntity = CriteriaTools.getRelatedEntity(verCfg, entityName, propertyName);
+    public void addToQuery(AuditConfiguration auditCfg, String entityName, QueryBuilder qb, Parameters parameters) {
+        String propertyName = propertyNameGetter.get(auditCfg);
+
+        RelationDescription relatedEntity = CriteriaTools.getRelatedEntity(auditCfg, entityName, propertyName);
 
         if (relatedEntity == null) {
             parameters.addWhereWithParam(propertyName, op, value);

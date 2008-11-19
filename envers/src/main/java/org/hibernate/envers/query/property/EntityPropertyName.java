@@ -21,40 +21,23 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.envers.query.projection;
+
+package org.hibernate.envers.query.property;
 
 import org.hibernate.envers.configuration.AuditConfiguration;
-import org.hibernate.envers.tools.Triple;
 
 /**
+ * Used for specifying restrictions on a property of an audited entity.
  * @author Adam Warski (adam at warski dot org)
  */
-public class RevisionAuditProjection implements AuditProjection {
-    public static enum ProjectionType {
-        MAX,
-        MIN,
-        COUNT,
-        COUNT_DISTINCT,
-        DISTINCT
+public class EntityPropertyName implements PropertyNameGetter {
+    private final String propertyName;
+
+    public EntityPropertyName(String propertyName) {
+        this.propertyName = propertyName;
     }
 
-    private final ProjectionType type;
-
-    public RevisionAuditProjection(ProjectionType type) {
-        this.type = type;
-    }
-
-    public Triple<String, String, Boolean> getData(AuditConfiguration verCfg) {
-        String revisionPropPath = verCfg.getAuditEntCfg().getRevisionPropPath();
-
-        switch (type) {
-            case MAX: return Triple.make("max", revisionPropPath, false);
-            case MIN: return Triple.make("min", revisionPropPath, false);
-            case COUNT: return Triple.make("count", revisionPropPath, false);
-            case COUNT_DISTINCT: return Triple.make("count", revisionPropPath, true); 
-            case DISTINCT: return Triple.make(null, revisionPropPath, true);
-        }
-
-        throw new IllegalArgumentException("Unknown type " + type + ".");
+    public String get(AuditConfiguration auditCfg) {
+        return propertyName;
     }
 }

@@ -37,8 +37,9 @@ public class AuditEntitiesConfiguration {
 
     private final String originalIdPropName;
 
-    private final String revisionPropName;
-    private final String revisionPropPath;
+    private final String revisionFieldName;
+    private final String revisionNumberPath;
+    private final String revisionPropBasePath;
 
     private final String revisionTypePropName;
     private final String revisionTypePropType;
@@ -55,26 +56,35 @@ public class AuditEntitiesConfiguration {
 
         originalIdPropName = "originalId";
 
-        revisionPropName = properties.getProperty("org.hibernate.envers.revisionFieldName", "REV");
+        revisionFieldName = properties.getProperty("org.hibernate.envers.revisionFieldName", "REV");
 
         revisionTypePropName = properties.getProperty("org.hibernate.envers.revisionTypeFieldName", "REVTYPE");
         revisionTypePropType = "byte";
 
         customAuditTablesNames = new HashMap<String, String>();
 
-        revisionPropPath = originalIdPropName + "." + revisionPropName + ".id";
+        revisionNumberPath = originalIdPropName + "." + revisionFieldName + ".id";
+        revisionPropBasePath = originalIdPropName + "." + revisionFieldName + ".";
     }
 
     public String getOriginalIdPropName() {
         return originalIdPropName;
     }
 
-    public String getRevisionPropName() {
-        return revisionPropName;
+    public String getRevisionFieldName() {
+        return revisionFieldName;
     }
 
-    public String getRevisionPropPath() {
-        return revisionPropPath;
+    public String getRevisionNumberPath() {
+        return revisionNumberPath;
+    }
+
+    /**
+     * @param propertyName Property of the revision entity.
+     * @return A path to the given property of the revision entity associated with an audit entity.
+     */
+    public String getRevisionPropPath(String propertyName) {
+        return revisionPropBasePath + propertyName;
     }
 
     public String getRevisionTypePropName() {

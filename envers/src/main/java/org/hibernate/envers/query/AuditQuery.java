@@ -47,11 +47,7 @@ public interface AuditQuery {
 
     AuditQuery add(AuditCriterion criterion);
 
-    AuditQuery addProjection(String function, String propertyName);
-
     AuditQuery addProjection(AuditProjection projection);
-
-    AuditQuery addOrder(String propertyName, boolean asc);
 
     AuditQuery addOrder(AuditOrder order);
 

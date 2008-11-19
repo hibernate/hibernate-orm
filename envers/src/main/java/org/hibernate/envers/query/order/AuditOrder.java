@@ -31,8 +31,8 @@ import org.hibernate.envers.tools.Pair;
  */
 public interface AuditOrder {
     /**
-     * @param verCfg Configuration.
+     * @param auditCfg Configuration.
      * @return A pair: (property name, ascending?).
      */
-    Pair<String, Boolean> getData(AuditConfiguration verCfg);
+    Pair<String, Boolean> getData(AuditConfiguration auditCfg);
 }

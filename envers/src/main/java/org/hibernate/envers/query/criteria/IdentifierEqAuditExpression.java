@@ -28,17 +28,20 @@ import org.hibernate.envers.tools.query.Parameters;
 import org.hibernate.envers.tools.query.QueryBuilder;
 
 /**
+ * A criterion that expresses that the id of an entity is equal or not equal to some specified value.
  * @author Adam Warski (adam at warski dot org)
  */
 public class IdentifierEqAuditExpression implements AuditCriterion {
-    private Object id;
+    private final Object id;
+    private final boolean equals;
 
-    public IdentifierEqAuditExpression(Object id) {
+    public IdentifierEqAuditExpression(Object id, boolean equals) {
         this.id = id;
+        this.equals = equals;
     }
 
     public void addToQuery(AuditConfiguration verCfg, String entityName, QueryBuilder qb, Parameters parameters) {
         verCfg.getEntCfg().get(entityName).getIdMapper()
-                .addIdEqualsToQuery(parameters, id, verCfg.getAuditEntCfg().getOriginalIdPropName(), true);
+                .addIdEqualsToQuery(parameters, id, verCfg.getAuditEntCfg().getOriginalIdPropName(), equals);
     }
 }

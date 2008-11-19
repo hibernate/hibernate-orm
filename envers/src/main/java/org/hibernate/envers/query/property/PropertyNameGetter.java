@@ -21,23 +21,19 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.envers.query.order;
+
+package org.hibernate.envers.query.property;
 
 import org.hibernate.envers.configuration.AuditConfiguration;
-import org.hibernate.envers.tools.Pair;
 
 /**
+ * Provides a function to get the name of a property, which is used in a query, to apply some restrictions on it.
  * @author Adam Warski (adam at warski dot org)
  */
-public class RevisionAuditOrder implements AuditOrder {
-    private final boolean asc;
-
-    public RevisionAuditOrder(boolean asc) {
-        this.asc = asc;
-    }
-
-    public Pair<String, Boolean> getData(AuditConfiguration verCfg) {
-        String revisionPropPath = verCfg.getAuditEntCfg().getRevisionPropPath();
-        return Pair.make(revisionPropPath, asc);
-    }
+public interface PropertyNameGetter {
+    /**
+     * @param auditCfg Audit configuration.
+     * @return Name of the property, to be used in a query.
+     */
+    public String get(AuditConfiguration auditCfg);
 }

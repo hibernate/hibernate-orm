@@ -61,7 +61,7 @@ public class EntitiesAtRevisionQuery extends AbstractAuditQuery {
 
         AuditEntitiesConfiguration verEntCfg = verCfg.getAuditEntCfg();
 
-        String revisionPropertyPath = verEntCfg.getRevisionPropPath();
+        String revisionPropertyPath = verEntCfg.getRevisionNumberPath();
         String originalIdPropertyName = verEntCfg.getOriginalIdPropName();
 
         // SELECT max(e2.revision)

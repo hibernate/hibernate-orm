@@ -21,32 +21,17 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.envers.query.criteria;
+
+package org.hibernate.envers.query.property;
 
 import org.hibernate.envers.configuration.AuditConfiguration;
-import org.hibernate.envers.entities.RelationDescription;
-import org.hibernate.envers.tools.query.Parameters;
-import org.hibernate.envers.tools.query.QueryBuilder;
-import org.hibernate.envers.query.property.PropertyNameGetter;
 
 /**
+ * Used for specifying restrictions on the revision number, corresponding to an audit entity.
  * @author Adam Warski (adam at warski dot org)
  */
-public class NotNullAuditExpression implements AuditCriterion {
-    private PropertyNameGetter propertyNameGetter;
-
-    public NotNullAuditExpression(PropertyNameGetter propertyNameGetter) {
-        this.propertyNameGetter = propertyNameGetter;
-    }
-
-    public void addToQuery(AuditConfiguration auditCfg, String entityName, QueryBuilder qb, Parameters parameters) {
-        String propertyName = propertyNameGetter.get(auditCfg);
-        RelationDescription relatedEntity = CriteriaTools.getRelatedEntity(auditCfg, entityName, propertyName);
-
-        if (relatedEntity == null) {
-            parameters.addWhereWithParam(propertyName, "<>", null);
-        } else {
-            relatedEntity.getIdMapper().addIdEqualsToQuery(parameters, null, propertyName, false);
-        }
+public class RevisionNumberPropertyName implements PropertyNameGetter {
+    public String get(AuditConfiguration auditCfg) {
+        return auditCfg.getAuditEntCfg().getRevisionNumberPath();
     }
 }

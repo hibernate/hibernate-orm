@@ -28,7 +28,7 @@ import java.util.List;
 import java.util.Set;
 import javax.persistence.EntityManager;
 
-import org.hibernate.envers.query.AuditRestrictions;
+import org.hibernate.envers.query.AuditEntity;
 import org.hibernate.envers.test.AbstractEntityTest;
 import org.hibernate.envers.test.entities.ids.MulId;
 import org.hibernate.envers.test.entities.onetomany.ids.SetRefEdMulIdEntity;
@@ -105,32 +105,32 @@ public class MulIdOneToManyQuery extends AbstractEntityTest {
     public void testEntitiesReferencedToId3() {
         Set rev1_related = new HashSet(getAuditReader().createQuery()
                 .forEntitiesAtRevision(SetRefIngMulIdEntity.class, 1)
-                .add(AuditRestrictions.relatedIdEq("reference", id3))
+                .add(AuditEntity.relatedId("reference").eq(id3))
                 .getResultList());
 
         Set rev1 = new HashSet(getAuditReader().createQuery()
                 .forEntitiesAtRevision(SetRefIngMulIdEntity.class, 1)
-                .add(AuditRestrictions.eq("reference", new SetRefEdMulIdEntity(id3, null)))
+                .add(AuditEntity.property("reference").eq(new SetRefEdMulIdEntity(id3, null)))
                 .getResultList());
 
         Set rev2_related = new HashSet(getAuditReader().createQuery()
                 .forEntitiesAtRevision(SetRefIngMulIdEntity.class, 2)
-                .add(AuditRestrictions.relatedIdEq("reference", id3))
+                .add(AuditEntity.relatedId("reference").eq(id3))
                 .getResultList());
 
         Set rev2 = new HashSet(getAuditReader().createQuery()
                 .forEntitiesAtRevision(SetRefIngMulIdEntity.class, 2)
-                .add(AuditRestrictions.eq("reference", new SetRefEdMulIdEntity(id3, null)))
+                .add(AuditEntity.property("reference").eq(new SetRefEdMulIdEntity(id3, null)))
                 .getResultList());
 
         Set rev3_related = new HashSet(getAuditReader().createQuery()
                 .forEntitiesAtRevision(SetRefIngMulIdEntity.class, 3)
-                .add(AuditRestrictions.relatedIdEq("reference", id3))
+                .add(AuditEntity.relatedId("reference").eq(id3))
                 .getResultList());
 
         Set rev3 = new HashSet(getAuditReader().createQuery()
                 .forEntitiesAtRevision(SetRefIngMulIdEntity.class, 3)
-                .add(AuditRestrictions.eq("reference", new SetRefEdMulIdEntity(id3, null)))
+                .add(AuditEntity.property("reference").eq(new SetRefEdMulIdEntity(id3, null)))
                 .getResultList());
 
         assert rev1.equals(rev1_related);
@@ -147,17 +147,17 @@ public class MulIdOneToManyQuery extends AbstractEntityTest {
     public void testEntitiesReferencedToId4() {
         Set rev1_related = new HashSet(getAuditReader().createQuery()
                 .forEntitiesAtRevision(SetRefIngMulIdEntity.class, 1)
-                .add(AuditRestrictions.relatedIdEq("reference", id4))
+                .add(AuditEntity.relatedId("reference").eq(id4))
                 .getResultList());
 
         Set rev2_related = new HashSet(getAuditReader().createQuery()
                 .forEntitiesAtRevision(SetRefIngMulIdEntity.class, 2)
-                .add(AuditRestrictions.relatedIdEq("reference", id4))
+                .add(AuditEntity.relatedId("reference").eq(id4))
                 .getResultList());
 
         Set rev3_related = new HashSet(getAuditReader().createQuery()
                 .forEntitiesAtRevision(SetRefIngMulIdEntity.class, 3)
-                .add(AuditRestrictions.relatedIdEq("reference", id4))
+                .add(AuditEntity.relatedId("reference").eq(id4))
                 .getResultList());
 
         assert rev1_related.equals(TestTools.makeSet());
@@ -169,20 +169,20 @@ public class MulIdOneToManyQuery extends AbstractEntityTest {
     public void testEntitiesReferencedByIng1ToId3() {
         List rev1_related = getAuditReader().createQuery()
                 .forEntitiesAtRevision(SetRefIngMulIdEntity.class, 1)
-                .add(AuditRestrictions.relatedIdEq("reference", id3))
-                .add(AuditRestrictions.idEq(id1))
+                .add(AuditEntity.relatedId("reference").eq(id3))
+                .add(AuditEntity.id().eq(id1))
                 .getResultList();
 
         Object rev2_related = getAuditReader().createQuery()
                 .forEntitiesAtRevision(SetRefIngMulIdEntity.class, 2)
-                .add(AuditRestrictions.relatedIdEq("reference", id3))
-                .add(AuditRestrictions.idEq(id1))
+                .add(AuditEntity.relatedId("reference").eq(id3))
+                .add(AuditEntity.id().eq(id1))
                 .getSingleResult();
 
         Object rev3_related = getAuditReader().createQuery()
                 .forEntitiesAtRevision(SetRefIngMulIdEntity.class, 3)
-                .add(AuditRestrictions.relatedIdEq("reference", id3))
-                .add(AuditRestrictions.idEq(id1))
+                .add(AuditEntity.relatedId("reference").eq(id3))
+                .add(AuditEntity.id().eq(id1))
                 .getSingleResult();
 
         assert rev1_related.size() == 0;
@@ -194,20 +194,20 @@ public class MulIdOneToManyQuery extends AbstractEntityTest {
     public void testEntitiesReferencedByIng2ToId3() {
         List rev1_related = getAuditReader().createQuery()
                 .forEntitiesAtRevision(SetRefIngMulIdEntity.class, 1)
-                .add(AuditRestrictions.relatedIdEq("reference", id3))
-                .add(AuditRestrictions.idEq(id2))
+                .add(AuditEntity.relatedId("reference").eq(id3))
+                .add(AuditEntity.id().eq(id2))
                 .getResultList();
 
         List rev2_related = getAuditReader().createQuery()
                 .forEntitiesAtRevision(SetRefIngMulIdEntity.class, 2)
-                .add(AuditRestrictions.relatedIdEq("reference", id3))
-                .add(AuditRestrictions.idEq(id2))
+                .add(AuditEntity.relatedId("reference").eq(id3))
+                .add(AuditEntity.id().eq(id2))
                 .getResultList();
 
         Object rev3_related = getAuditReader().createQuery()
                 .forEntitiesAtRevision(SetRefIngMulIdEntity.class, 3)
-                .add(AuditRestrictions.relatedIdEq("reference", id3))
-                .add(AuditRestrictions.idEq(id2))
+                .add(AuditEntity.relatedId("reference").eq(id3))
+                .add(AuditEntity.id().eq(id2))
                 .getSingleResult();
 
         assert rev1_related.size() == 0;

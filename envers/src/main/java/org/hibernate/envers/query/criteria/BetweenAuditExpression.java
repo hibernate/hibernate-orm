@@ -26,23 +26,25 @@ package org.hibernate.envers.query.criteria;
 import org.hibernate.envers.configuration.AuditConfiguration;
 import org.hibernate.envers.tools.query.Parameters;
 import org.hibernate.envers.tools.query.QueryBuilder;
+import org.hibernate.envers.query.property.PropertyNameGetter;
 
 /**
  * @author Adam Warski (adam at warski dot org)
  */
 public class BetweenAuditExpression implements AuditCriterion {
-    private String propertyName;
+    private PropertyNameGetter propertyNameGetter;
     private Object lo;
     private Object hi;
 
-    public BetweenAuditExpression(String propertyName, Object lo, Object hi) {
-        this.propertyName = propertyName;
+    public BetweenAuditExpression(PropertyNameGetter propertyNameGetter, Object lo, Object hi) {
+        this.propertyNameGetter = propertyNameGetter;
         this.lo = lo;
         this.hi = hi;
     }
 
-    public void addToQuery(AuditConfiguration verCfg, String entityName, QueryBuilder qb, Parameters parameters) {
-        CriteriaTools.checkPropertyNotARelation(verCfg, entityName, propertyName);
+    public void addToQuery(AuditConfiguration auditCfg, String entityName, QueryBuilder qb, Parameters parameters) {
+        String propertyName = propertyNameGetter.get(auditCfg);
+        CriteriaTools.checkPropertyNotARelation(auditCfg, entityName, propertyName);
         parameters.addWhereWithParam(propertyName, ">=", lo);
         parameters.addWhereWithParam(propertyName, "<=", hi);
     }

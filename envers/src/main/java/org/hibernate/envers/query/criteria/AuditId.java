@@ -21,32 +21,41 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
+
 package org.hibernate.envers.query.criteria;
 
-import org.hibernate.envers.configuration.AuditConfiguration;
-import org.hibernate.envers.entities.RelationDescription;
-import org.hibernate.envers.tools.query.Parameters;
-import org.hibernate.envers.tools.query.QueryBuilder;
-import org.hibernate.envers.query.property.PropertyNameGetter;
+import org.hibernate.envers.query.projection.AuditProjection;
+import org.hibernate.envers.query.projection.PropertyAuditProjection;
+import org.hibernate.envers.query.property.OriginalIdPropertyName;
 
 /**
+ * Create restrictions and projections for the id of an audited entity.
  * @author Adam Warski (adam at warski dot org)
  */
-public class NotNullAuditExpression implements AuditCriterion {
-    private PropertyNameGetter propertyNameGetter;
+@SuppressWarnings({"JavaDoc"})
+public class AuditId {
+    /**
+	 * Apply an "equal" constraint
+	 */
+	public AuditCriterion eq(Object id) {
+		return new IdentifierEqAuditExpression(id, true);
+	}
 
-    public NotNullAuditExpression(PropertyNameGetter propertyNameGetter) {
-        this.propertyNameGetter = propertyNameGetter;
-    }
+    /**
+	 * Apply a "not equal" constraint
+	 */
+	public AuditCriterion ne(Object id) {
+		return new IdentifierEqAuditExpression(id, false);
+	}
 
-    public void addToQuery(AuditConfiguration auditCfg, String entityName, QueryBuilder qb, Parameters parameters) {
-        String propertyName = propertyNameGetter.get(auditCfg);
-        RelationDescription relatedEntity = CriteriaTools.getRelatedEntity(auditCfg, entityName, propertyName);
+    // Projections
 
-        if (relatedEntity == null) {
-            parameters.addWhereWithParam(propertyName, "<>", null);
-        } else {
-            relatedEntity.getIdMapper().addIdEqualsToQuery(parameters, null, propertyName, false);
-        }
+    /**
+     * Projection counting the values
+     * TODO: idPropertyName isn't needed, should be read from the configuration
+     * @param idPropertyName Name of the identifier property
+     */
+    public AuditProjection count(String idPropertyName) {
+        return new PropertyAuditProjection(new OriginalIdPropertyName(idPropertyName), "count", false);
     }
 }

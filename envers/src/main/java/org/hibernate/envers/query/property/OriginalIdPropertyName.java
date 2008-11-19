@@ -21,32 +21,24 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.envers.query.criteria;
+
+package org.hibernate.envers.query.property;
 
 import org.hibernate.envers.configuration.AuditConfiguration;
-import org.hibernate.envers.entities.RelationDescription;
-import org.hibernate.envers.tools.query.Parameters;
-import org.hibernate.envers.tools.query.QueryBuilder;
-import org.hibernate.envers.query.property.PropertyNameGetter;
 
 /**
+ * Used for specifying restrictions on the identifier.
+ * TODO: idPropertyName should be read basing on auditCfg + entityName
  * @author Adam Warski (adam at warski dot org)
  */
-public class NotNullAuditExpression implements AuditCriterion {
-    private PropertyNameGetter propertyNameGetter;
+public class OriginalIdPropertyName implements PropertyNameGetter {
+    private final String idPropertyName;
 
-    public NotNullAuditExpression(PropertyNameGetter propertyNameGetter) {
-        this.propertyNameGetter = propertyNameGetter;
+    public OriginalIdPropertyName(String idPropertyName) {
+        this.idPropertyName = idPropertyName;
     }
 
-    public void addToQuery(AuditConfiguration auditCfg, String entityName, QueryBuilder qb, Parameters parameters) {
-        String propertyName = propertyNameGetter.get(auditCfg);
-        RelationDescription relatedEntity = CriteriaTools.getRelatedEntity(auditCfg, entityName, propertyName);
-
-        if (relatedEntity == null) {
-            parameters.addWhereWithParam(propertyName, "<>", null);
-        } else {
-            relatedEntity.getIdMapper().addIdEqualsToQuery(parameters, null, propertyName, false);
-        }
+    public String get(AuditConfiguration auditCfg) {
+        return auditCfg.getAuditEntCfg().getOriginalIdPropName() + "." + idPropertyName;
     }
 }

@@ -23,39 +23,42 @@
  */
 package org.hibernate.envers.query.criteria;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.hibernate.envers.configuration.AuditConfiguration;
-import org.hibernate.envers.tools.query.Parameters;
+import org.hibernate.envers.query.property.PropertyNameGetter;
 import org.hibernate.envers.tools.query.QueryBuilder;
+import org.hibernate.envers.tools.query.Parameters;
+
+import java.util.List;
+import java.util.ArrayList;
 
 /**
  * @author Adam Warski (adam at warski dot org)
  */
-public class AggregatedFieldAuditExpression implements AuditCriterion, ExtendableCriterion {
+public class AggregatedAuditExpression implements AuditCriterion, ExtendableCriterion {
+    private PropertyNameGetter propertyNameGetter;
+    private AggregatedMode mode;
+    private List<AuditCriterion> criterions;
+
+    public AggregatedAuditExpression(PropertyNameGetter propertyNameGetter, AggregatedMode mode) {
+        this.propertyNameGetter = propertyNameGetter;
+        this.mode = mode;
+        criterions = new ArrayList<AuditCriterion>();
+    }
+
     public static enum AggregatedMode {
         MAX,
         MIN
     }
 
-    private String propertyName;
-    private AggregatedMode mode;
-    private List<AuditCriterion> criterions;
-
-    public AggregatedFieldAuditExpression(String propertyName, AggregatedMode mode) {
-        this.propertyName = propertyName;
-        this.mode = mode;
-        criterions = new ArrayList<AuditCriterion>();
-    }
-
-    public AggregatedFieldAuditExpression add(AuditCriterion criterion) {
+    public AggregatedAuditExpression add(AuditCriterion criterion) {
         criterions.add(criterion);
         return this;
     }
 
-    public void addToQuery(AuditConfiguration verCfg, String entityName, QueryBuilder qb, Parameters parameters) {
-        CriteriaTools.checkPropertyNotARelation(verCfg, entityName, propertyName);
+    public void addToQuery(AuditConfiguration auditCfg, String entityName, QueryBuilder qb, Parameters parameters) {
+        String propertyName = propertyNameGetter.get(auditCfg);
+
+        CriteriaTools.checkPropertyNotARelation(auditCfg, entityName, propertyName);
 
         // This will be the aggregated query, containing all the specified conditions
         QueryBuilder subQb = qb.newSubQueryBuilder();
@@ -63,8 +66,8 @@ public class AggregatedFieldAuditExpression implements AuditCriterion, Extendabl
         // Adding all specified conditions both to the main query, as well as to the
         // aggregated one.
         for (AuditCriterion versionsCriteria : criterions) {
-            versionsCriteria.addToQuery(verCfg, entityName, qb, parameters);
-            versionsCriteria.addToQuery(verCfg, entityName, subQb, subQb.getRootParameters());
+            versionsCriteria.addToQuery(auditCfg, entityName, qb, parameters);
+            versionsCriteria.addToQuery(auditCfg, entityName, subQb, subQb.getRootParameters());
         }
 
         // Setting the desired projection of the aggregated query

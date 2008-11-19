@@ -28,23 +28,26 @@ import org.hibernate.envers.entities.RelationDescription;
 import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.tools.query.Parameters;
 import org.hibernate.envers.tools.query.QueryBuilder;
+import org.hibernate.envers.query.property.PropertyNameGetter;
 
 /**
  * @author Adam Warski (adam at warski dot org)
  */
 public class RelatedAuditExpression implements AuditCriterion {
-    private String propertyName;
-    private Object id;
-    private boolean equals;
+    private final PropertyNameGetter propertyNameGetter;
+    private final Object id;
+    private final boolean equals;
 
-    public RelatedAuditExpression(String propertyName, Object id, boolean equals) {
-        this.propertyName = propertyName;
+    public RelatedAuditExpression(PropertyNameGetter propertyNameGetter, Object id, boolean equals) {
+        this.propertyNameGetter = propertyNameGetter;
         this.id = id;
         this.equals = equals;
     }
 
-    public void addToQuery(AuditConfiguration verCfg, String entityName, QueryBuilder qb, Parameters parameters) {
-        RelationDescription relatedEntity = CriteriaTools.getRelatedEntity(verCfg, entityName, propertyName);
+    public void addToQuery(AuditConfiguration auditCfg, String entityName, QueryBuilder qb, Parameters parameters) {
+        String propertyName = propertyNameGetter.get(auditCfg);
+        
+        RelationDescription relatedEntity = CriteriaTools.getRelatedEntity(auditCfg, entityName, propertyName);
 
         if (relatedEntity == null) {
             throw new AuditException("This criterion can only be used on a property that is " +

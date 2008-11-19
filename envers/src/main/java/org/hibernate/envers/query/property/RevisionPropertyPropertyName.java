@@ -21,25 +21,23 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.envers.query.criteria;
+
+package org.hibernate.envers.query.property;
 
 import org.hibernate.envers.configuration.AuditConfiguration;
-import org.hibernate.envers.tools.query.Parameters;
-import org.hibernate.envers.tools.query.QueryBuilder;
 
 /**
+ * Used for specifying restrictions on a property of the revision entity, which is associated with an audit entity.
  * @author Adam Warski (adam at warski dot org)
  */
-public class RevisionAuditExpression implements AuditCriterion {
-    private Object value;
-    private String op;
+public class RevisionPropertyPropertyName implements PropertyNameGetter {
+    private final String propertyName;
 
-    public RevisionAuditExpression(Object value, String op) {
-        this.value = value;
-        this.op = op;
+    public RevisionPropertyPropertyName(String propertyName) {
+        this.propertyName = propertyName;
     }
 
-    public void addToQuery(AuditConfiguration verCfg, String entityName, QueryBuilder qb, Parameters parameters) {
-        parameters.addWhereWithParam(verCfg.getAuditEntCfg().getRevisionPropPath(), op, value);
+    public String get(AuditConfiguration auditCfg) {
+        return auditCfg.getAuditEntCfg().getRevisionPropPath(propertyName);
     }
 }

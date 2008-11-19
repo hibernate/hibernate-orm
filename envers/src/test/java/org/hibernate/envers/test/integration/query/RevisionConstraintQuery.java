@@ -27,9 +27,7 @@ import java.util.Arrays;
 import java.util.List;
 import javax.persistence.EntityManager;
 
-import org.hibernate.envers.query.RevisionProperty;
-import org.hibernate.envers.query.AuditRestrictions;
-import org.hibernate.envers.query.RevisionTypeProperty;
+import org.hibernate.envers.query.AuditEntity;
 import org.hibernate.envers.test.AbstractEntityTest;
 import org.hibernate.envers.test.entities.StrIntTestEntity;
 import org.hibernate.envers.RevisionType;
@@ -104,8 +102,8 @@ public class RevisionConstraintQuery extends AbstractEntityTest {
     public void testRevisionsLtQuery() {
         List result = getAuditReader().createQuery()
                 .forRevisionsOfEntity(StrIntTestEntity.class, false, true)
-                .addProjection(RevisionProperty.distinct())
-                .add(RevisionProperty.lt(3))
+                .addProjection(AuditEntity.revisionNumber().distinct())
+                .add(AuditEntity.revisionNumber().lt(3))
                 .getResultList();
 
         assert Arrays.asList(1, 2).equals(result);
@@ -115,8 +113,8 @@ public class RevisionConstraintQuery extends AbstractEntityTest {
     public void testRevisionsGeQuery() {
         List result = getAuditReader().createQuery()
                 .forRevisionsOfEntity(StrIntTestEntity.class, false, true)
-                .addProjection(RevisionProperty.distinct())
-                .add(RevisionProperty.ge(2))
+                .addProjection(AuditEntity.revisionNumber().distinct())
+                .add(AuditEntity.revisionNumber().ge(2))
                 .getResultList();
 
         assert Arrays.asList(2, 3, 4).equals(result);
@@ -126,9 +124,9 @@ public class RevisionConstraintQuery extends AbstractEntityTest {
     public void testRevisionsLeWithPropertyQuery() {
         List result = getAuditReader().createQuery()
                 .forRevisionsOfEntity(StrIntTestEntity.class, false, true)
-                .addProjection(RevisionProperty.revisionNumber())
-                .add(RevisionProperty.le(3))
-                .add(AuditRestrictions.eq("str1", "a"))
+                .addProjection(AuditEntity.revisionNumber())
+                .add(AuditEntity.revisionNumber().le(3))
+                .add(AuditEntity.property("str1").eq("a"))
                 .getResultList();
 
         assert Arrays.asList(1).equals(result);
@@ -138,9 +136,9 @@ public class RevisionConstraintQuery extends AbstractEntityTest {
     public void testRevisionsGtWithPropertyQuery() {
         List result = getAuditReader().createQuery()
                 .forRevisionsOfEntity(StrIntTestEntity.class, false, true)
-                .addProjection(RevisionProperty.revisionNumber())
-                .add(RevisionProperty.gt(1))
-                .add(AuditRestrictions.lt("number", 10))
+                .addProjection(AuditEntity.revisionNumber())
+                .add(AuditEntity.revisionNumber().gt(1))
+                .add(AuditEntity.property("number").lt(10))
                 .getResultList();
 
         assert Arrays.asList(3, 4).equals(result);
@@ -150,11 +148,11 @@ public class RevisionConstraintQuery extends AbstractEntityTest {
     public void testRevisionProjectionQuery() {
         Object[] result = (Object[]) getAuditReader().createQuery()
                 .forRevisionsOfEntity(StrIntTestEntity.class, false, true)
-                .addProjection(RevisionProperty.max())
-                .addProjection(RevisionProperty.count())
-                .addProjection(RevisionProperty.countDistinct())
-                .addProjection(RevisionProperty.min())
-                .add(AuditRestrictions.idEq(id1))
+                .addProjection(AuditEntity.revisionNumber().max())
+                .addProjection(AuditEntity.revisionNumber().count())
+                .addProjection(AuditEntity.revisionNumber().countDistinct())
+                .addProjection(AuditEntity.revisionNumber().min())
+                .add(AuditEntity.id().eq(id1))
                 .getSingleResult();
 
         assert (Integer) result[0] == 4;
@@ -167,9 +165,9 @@ public class RevisionConstraintQuery extends AbstractEntityTest {
     public void testRevisionOrderQuery() {
         List result = getAuditReader().createQuery()
                 .forRevisionsOfEntity(StrIntTestEntity.class, false, true)
-                .addProjection(RevisionProperty.revisionNumber())
-                .add(AuditRestrictions.idEq(id1))
-                .addOrder(RevisionProperty.desc())
+                .addProjection(AuditEntity.revisionNumber())
+                .add(AuditEntity.id().eq(id1))
+                .addOrder(AuditEntity.revisionNumber().desc())
                 .getResultList();
 
         assert Arrays.asList(4, 3, 2, 1).equals(result);
@@ -180,8 +178,8 @@ public class RevisionConstraintQuery extends AbstractEntityTest {
         // The query shouldn't be ordered as always, otherwise - we get an exception.
         Object result = getAuditReader().createQuery()
                 .forRevisionsOfEntity(StrIntTestEntity.class, false, true)
-                .addProjection(RevisionProperty.count())
-                .add(AuditRestrictions.idEq(id1))
+                .addProjection(AuditEntity.revisionNumber().count())
+                .add(AuditEntity.id().eq(id1))
                 .getSingleResult();
 
         assert (Long) result == 4;
@@ -192,8 +190,8 @@ public class RevisionConstraintQuery extends AbstractEntityTest {
         // The query shouldn't be ordered as always, otherwise - we get an exception.
         List results = getAuditReader().createQuery()
                 .forRevisionsOfEntity(StrIntTestEntity.class, true, true)
-                .add(AuditRestrictions.idEq(id1))
-                .add(RevisionTypeProperty.eq(RevisionType.MOD))
+                .add(AuditEntity.id().eq(id1))
+                .add(AuditEntity.revisionType().eq(RevisionType.MOD))
                 .getResultList();
         
         assert results.size() == 3;
@@ -207,8 +205,8 @@ public class RevisionConstraintQuery extends AbstractEntityTest {
         // The query shouldn't be ordered as always, otherwise - we get an exception.
         List results = getAuditReader().createQuery()
                 .forRevisionsOfEntity(StrIntTestEntity.class, true, true)
-                .add(AuditRestrictions.idEq(id1))
-                .add(RevisionTypeProperty.ne(RevisionType.MOD))
+                .add(AuditEntity.id().eq(id1))
+                .add(AuditEntity.revisionType().ne(RevisionType.MOD))
                 .getResultList();
 
         assert results.size() == 1;

@@ -28,7 +28,7 @@ import javax.persistence.EntityManager;
 
 import org.hibernate.envers.DefaultRevisionEntity;
 import org.hibernate.envers.RevisionType;
-import org.hibernate.envers.query.AuditRestrictions;
+import org.hibernate.envers.query.AuditEntity;
 import org.hibernate.envers.test.AbstractEntityTest;
 import org.hibernate.envers.test.entities.StrIntTestEntity;
 import org.testng.annotations.BeforeClass;
@@ -79,16 +79,16 @@ public class DeletedEntities extends AbstractEntityTest {
             .getResultList().size() == 1;
 
         assert (Long) getAuditReader().createQuery().forEntitiesAtRevision(StrIntTestEntity.class, 1)
-            .addProjection("count", "originalId.id").getResultList().get(0) == 2;
+            .addProjection(AuditEntity.id().count("id")).getResultList().get(0) == 2;
         assert (Long) getAuditReader().createQuery().forEntitiesAtRevision(StrIntTestEntity.class, 2)
-            .addProjection("count", "originalId.id").getResultList().get(0) == 1;
+            .addProjection(AuditEntity.id().count("id")).getResultList().get(0) == 1;
     }
 
     @Test
     public void testRevisionsOfEntityWithoutDelete() {
         List result = getAuditReader().createQuery()
                 .forRevisionsOfEntity(StrIntTestEntity.class, false, false)
-                .add(AuditRestrictions.idEq(id2))
+                .add(AuditEntity.id().eq(id2))
                 .getResultList();
 
         assert result.size() == 1;

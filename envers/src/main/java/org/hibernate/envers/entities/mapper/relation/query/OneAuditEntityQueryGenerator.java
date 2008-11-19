@@ -62,7 +62,7 @@ public final class OneAuditEntityQueryGenerator implements RelationQueryGenerato
          * (only non-deleted entities)
          *     e.revision_type != DEL
          */
-        String revisionPropertyPath = verEntCfg.getRevisionPropPath();
+        String revisionPropertyPath = verEntCfg.getRevisionNumberPath();
         String originalIdPropertyName = verEntCfg.getOriginalIdPropName();
 
         String versionsReferencedEntityName = verEntCfg.getAuditEntityName(referencedEntityName);

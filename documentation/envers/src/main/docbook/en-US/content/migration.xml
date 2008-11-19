@@ -49,6 +49,11 @@
             and so on.
         </para>
 
+        <para>
+            Also, the query interface has changed slightly, mainly in the part for specifying restrictions,
+            projections and order. Please refer to the API for further details.
+        </para>
+
     </sect1>
 
     <sect1 id="migrations-configuration">

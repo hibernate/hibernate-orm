@@ -68,9 +68,5 @@
         data is correct (the testHistoryOfXxx methods).
     </para>
 
-    <para>
-        The results of the tests can be found in the "doc/report" directory.
-    </para>
-
 </chapter>
 

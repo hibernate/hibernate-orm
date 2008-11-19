@@ -19,12 +19,12 @@
  *
  * Red Hat Author(s): Adam Warski
  */
-package org.jboss.envers.demo;
+package org.hibernate.envers.demo;
 
-import org.jboss.envers.VersionsReader;
-import org.jboss.envers.VersionsReaderFactory;
-import org.jboss.envers.DefaultRevisionEntity;
-import org.jboss.envers.query.VersionsRestrictions;
+import org.hibernate.envers.query.AuditEntity;
+import org.hibernate.envers.DefaultRevisionEntity;
+import org.hibernate.envers.AuditReader;
+import org.hibernate.envers.AuditReaderFactory;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
@@ -83,11 +83,11 @@ public class TestConsole {
     }
 
     private void printPersonHistory(StringBuilder sb, int personId) {
-        VersionsReader reader = VersionsReaderFactory.get(entityManager);
+        AuditReader reader = AuditReaderFactory.get(entityManager);
 
         List personHistory = reader.createQuery()
                 .forRevisionsOfEntity(Person.class, false, true)
-                .add(VersionsRestrictions.idEq(personId))
+                .add(AuditEntity.id().eq(personId))
                 .getResultList();
 
         if (personHistory.size() == 0) {
@@ -104,7 +104,7 @@ public class TestConsole {
     }
 
     private void printPersonAtRevision(StringBuilder sb, int personId, int revision) {
-        VersionsReader reader = VersionsReaderFactory.get(entityManager);
+        AuditReader reader = AuditReaderFactory.get(entityManager);
 
         Person p = reader.find(Person.class, personId, revision);
         if (p == null) {
@@ -220,11 +220,11 @@ public class TestConsole {
     }
 
     private void printAddressHistory(StringBuilder sb, int addressId) {
-        VersionsReader reader = VersionsReaderFactory.get(entityManager);
+        AuditReader reader = AuditReaderFactory.get(entityManager);
 
         List addressHistory = reader.createQuery()
                 .forRevisionsOfEntity(Address.class, false, true)
-                .add(VersionsRestrictions.idEq(addressId))
+                .add(AuditEntity.id().eq(addressId))
                 .getResultList();
 
         if (addressHistory.size() == 0) {
@@ -241,7 +241,7 @@ public class TestConsole {
     }
 
     private void printAddressAtRevision(StringBuilder sb, int addressId, int revision) {
-        VersionsReader reader = VersionsReaderFactory.get(entityManager);
+        AuditReader reader = AuditReaderFactory.get(entityManager);
 
         Address a = reader.find(Address.class, addressId, revision);
         if (a == null) {

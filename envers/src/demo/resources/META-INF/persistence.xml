@@ -22,9 +22,19 @@
             <!--<property name="hibernate.show_sql" value="true"/>
             <property name="hibernate.format_sql" value="true"/>-->
             
-            <property name="hibernate.ejb.event.post-insert" value="org.hibernate.envers.event.AuditEventListener" />
-            <property name="hibernate.ejb.event.post-update" value="org.hibernate.envers.event.AuditEventListener" />
-            <property name="hibernate.ejb.event.post-delete" value="org.hibernate.envers.event.AuditEventListener" />
+            <property name="hibernate.ejb.event.post-insert"
+                      value="org.hibernate.envers.event.AuditEventListener" />
+            <property name="hibernate.ejb.event.post-update"
+                      value="org.hibernate.envers.event.AuditEventListener" />
+            <property name="hibernate.ejb.event.post-delete"
+                      value="org.hibernate.envers.event.AuditEventListener" />
+            <property name="hibernate.ejb.event.pre-collection-update"
+                      value="org.hibernate.envers.event.AuditEventListener" />
+            <property name="hibernate.ejb.event.pre-collection-remove"
+                      value="org.hibernate.envers.event.AuditEventListener" />
+            <property name="hibernate.ejb.event.post-collection-recreate"
+                      value="org.hibernate.envers.event.AuditEventListener" />
+            
         </properties>
     </persistence-unit>
 </persistence>

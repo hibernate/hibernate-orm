@@ -19,9 +19,9 @@
  *
  * Red Hat Author(s): Adam Warski
  */
-package org.jboss.envers.demo;
+package org.hibernate.envers.demo;
 
-import org.jboss.envers.Versioned;
+import org.hibernate.envers.Audited;
 
 import javax.persistence.*;
 import java.util.Set;
@@ -35,16 +35,16 @@ public class Address {
     @GeneratedValue
     private int id;
 
-    @Versioned
+    @Audited
     private String streetName;
 
-    @Versioned
+    @Audited
     private Integer houseNumber;
 
-    @Versioned
+    @Audited
     private Integer flatNumber;
 
-    @Versioned
+    @Audited
     @OneToMany(mappedBy = "address")
     private Set<Person> persons;
 

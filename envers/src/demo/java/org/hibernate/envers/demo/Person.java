@@ -19,9 +19,9 @@
  *
  * Red Hat Author(s): Adam Warski
  */
-package org.jboss.envers.demo;
+package org.hibernate.envers.demo;
 
-import org.jboss.envers.Versioned;
+import org.hibernate.envers.Audited;
 
 import javax.persistence.*;
 
@@ -34,13 +34,13 @@ public class Person {
     @GeneratedValue
     private int id;
 
-    @Versioned
+    @Audited
     private String name;
 
-    @Versioned
+    @Audited
     private String surname;
 
-    @Versioned
+    @Audited
     @ManyToOne
     private Address address;
 

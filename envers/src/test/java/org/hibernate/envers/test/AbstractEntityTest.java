@@ -29,10 +29,13 @@ import javax.persistence.EntityManagerFactory;
 
 import org.hibernate.envers.AuditReader;
 import org.hibernate.envers.AuditReaderFactory;
+import org.hibernate.envers.event.AuditEventListener;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.AfterClass;
 
 import org.hibernate.ejb.Ejb3Configuration;
+import org.hibernate.event.*;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -42,27 +45,61 @@ public abstract class AbstractEntityTest {
     private EntityManager entityManager;
     private AuditReader auditReader;
     private Ejb3Configuration cfg;
+    private boolean audited;
 
     public abstract void configure(Ejb3Configuration cfg);
 
-    @BeforeMethod
-    public void newEntityManager() {
+    protected void initListeners() {
+        AuditEventListener listener = new AuditEventListener();
+        cfg.getEventListeners().setPostInsertEventListeners(new PostInsertEventListener[] { listener });
+        cfg.getEventListeners().setPostUpdateEventListeners(new PostUpdateEventListener[] { listener });
+        cfg.getEventListeners().setPostDeleteEventListeners(new PostDeleteEventListener[] { listener });
+        cfg.getEventListeners().setPreCollectionUpdateEventListeners(new PreCollectionUpdateEventListener[] { listener });
+        cfg.getEventListeners().setPreCollectionRemoveEventListeners(new PreCollectionRemoveEventListener[] { listener });
+        cfg.getEventListeners().setPostCollectionRecreateEventListeners(new PostCollectionRecreateEventListener[] { listener });
+    }
+
+    private void closeEntityManager() {
         if (entityManager != null) {
             entityManager.close();
+            entityManager = null;
         }
+    }
+
+    @BeforeMethod
+    public void newEntityManager() {
+        closeEntityManager();
         
         entityManager = emf.createEntityManager();
-        auditReader = AuditReaderFactory.get(entityManager);
+
+        if (audited) {
+            auditReader = AuditReaderFactory.get(entityManager);
+        }
     }
 
     @BeforeClass
     public void init() throws IOException {
+        init(true);
+    }
+
+    protected void init(boolean audited) throws IOException {
+        this.audited = audited;
+
         cfg = new Ejb3Configuration();
+        if (audited) {
+            initListeners();
+        }
         cfg.configure("hibernate.test.cfg.xml");
         configure(cfg);
         emf = cfg.buildEntityManagerFactory();
 
         newEntityManager();
+    }
+
+    @AfterClass
+    public void close() {
+        closeEntityManager();
+        emf.close();
     }
 
     public EntityManager getEntityManager() {

@@ -24,7 +24,10 @@
 package org.hibernate.envers.test.performance;
 
 import org.hibernate.envers.test.AbstractEntityTest;
-import org.hibernate.envers.tools.Pair;
+
+import java.io.IOException;
+import java.util.List;
+import java.util.ArrayList;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -34,49 +37,72 @@ public abstract class AbstractPerformanceTest extends AbstractEntityTest {
         return (milliseconds/1000) + "." + (milliseconds%1000);
     }
 
-    protected long measureTime(Runnable r) {
-        long start = System.currentTimeMillis();
-        r.run();
-        return System.currentTimeMillis() - start;
+    protected abstract void doTest();
+
+    private void printResults(long unaudited, long audited) {
+        System.out.println("Unaudited: " + getSecondsString(unaudited));
+        System.out.println("  Audited: " + getSecondsString(audited));
+        System.out.println("    Delta: " + getSecondsString(audited-unaudited));
+        System.out.println("   Factor: " + (double)audited/unaudited);
     }
 
-    protected abstract Pair<Long, Long> doTest();
+    private long startTime;
+    private long runTotal;
 
-    protected abstract String getName();
-
-    private long totalUnversioned;
-    private long totalVersioned;
-
-    private void printResults(long unversioned, long versioned) {
-        System.out.println("Unversioned: " + getSecondsString(unversioned));
-        System.out.println("  Versioned: " + getSecondsString(versioned));
-        System.out.println("      Delta: " + getSecondsString(versioned-unversioned));
-        System.out.println("     Factor: " + (double)versioned/unversioned);
+    protected void start() {
+        startTime = System.currentTimeMillis();
     }
 
-    private void test(boolean count) {
-        Pair<Long, Long> result = doTest();
-        long unversioned = result.getFirst();
-        long versioned = result.getSecond();
-
-        totalUnversioned += unversioned;
-        totalVersioned += versioned;
-
-        printResults(unversioned, versioned);
+    protected void stop() {
+        long stopTime = System.currentTimeMillis();
+        runTotal += stopTime - startTime;
     }
 
-    public void run(int numberOfRuns) {
+    protected void reset() {
+        runTotal = 0;
+    }
+
+    public long run(int numberOfRuns, List<Long> results) {
+        long total = 0;
         for (int i=0; i<=numberOfRuns; i++) {
-            System.out.println("");
-            System.out.println(getName() + " TEST, RUN " + i);
-            test(i != 0);
+            System.out.println();
+            System.out.println("RUN " + i);
+            reset();
+            doTest();
+            results.add(runTotal);
+            total += runTotal;
+
+            newEntityManager();
+
+            /*System.gc();
+            System.gc();
+            System.gc();
+            System.out.println(Runtime.getRuntime().freeMemory() + ", " + Runtime.getRuntime().totalMemory() + ", "
+                    + (Runtime.getRuntime().totalMemory()-Runtime.getRuntime().freeMemory()));*/
         }
 
-        totalUnversioned /= numberOfRuns;
-        totalVersioned /= numberOfRuns;
+        return total;
+    }
 
-        System.out.println("");
-        System.out.println(getName() + " TEST, AVERAGE");
-        printResults(totalUnversioned, totalVersioned);
+    public void test(int numberOfRuns) throws IOException {
+        List<Long> unauditedRuns = new ArrayList<Long>();
+        List<Long> auditedRuns = new ArrayList<Long>();
+
+        init(true);
+        long audited = run(numberOfRuns, auditedRuns);
+        close();
+
+        init(false);
+        long unaudited = run(numberOfRuns, unauditedRuns);
+        close();
+
+        for (int i=0; i<=numberOfRuns; i++) {
+            System.out.println("RUN " + i);
+            printResults(unauditedRuns.get(i), auditedRuns.get(i));
+            System.out.println();
+        }
+
+        System.out.println("TOTAL");
+        printResults(unaudited, audited);
     }
 }

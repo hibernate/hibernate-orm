@@ -17,13 +17,15 @@
         <property name="connection.username">sa</property>
         <property name="connection.password"></property>
 
-        <!--<property name="dialect">org.hibernate.dialect.MySQLDialect</property>
+        <!--<property name="dialect">org.hibernate.dialect.MySQL5InnoDBDialect</property>
         <property name="connection.url">jdbc:mysql:///hibernate_tests?useUnicode=true&amp;characterEncoding=UTF-8</property>
         <property name="connection.driver_class">com.mysql.jdbc.Driver</property>
         <property name="connection.username">root</property>
-        <property name="connection.password"></property>-->
+        <property name="connection.password"></property>
 
-        <event type="post-insert">
+        <property name="hibernate.jdbc.batch_size">100</property>-->
+
+        <!--<event type="post-insert">
             <listener class="org.hibernate.envers.event.AuditEventListener" />
         </event>
         <event type="post-update">
@@ -40,6 +42,6 @@
         </event>
         <event type="post-collection-recreate">
             <listener class="org.hibernate.envers.event.AuditEventListener" />
-        </event>
+        </event>-->
     </session-factory>
 </hibernate-configuration>

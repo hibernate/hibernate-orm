@@ -28,13 +28,16 @@ import java.util.Comparator;
 import java.util.Map;
 import java.util.Set;
 import java.util.SortedMap;
+import java.io.Serializable;
 
 import org.hibernate.envers.entities.mapper.relation.lazy.initializor.Initializor;
 
 /**
  * @author Adam Warski (adam at warski dot org)
  */
-public class SortedMapProxy<K, V> implements SortedMap<K, V> {
+public class SortedMapProxy<K, V> implements SortedMap<K, V>, Serializable {
+    private static final long serialVersionUID = 2645817952901452375L;
+
     private Initializor<SortedMap<K, V>> initializor;
     protected SortedMap<K, V> delegate;
 

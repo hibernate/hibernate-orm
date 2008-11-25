@@ -26,11 +26,14 @@ package org.hibernate.envers.entities.mapper.relation.lazy.proxy;
 import java.util.Collection;
 import java.util.List;
 import java.util.ListIterator;
+import java.io.Serializable;
 
 /**
  * @author Adam Warski (adam at warski dot org)
  */
-public class ListProxy<U> extends CollectionProxy<U, List<U>> implements List<U> {
+public class ListProxy<U> extends CollectionProxy<U, List<U>> implements List<U>, Serializable {
+    private static final long serialVersionUID = -5479232938279790987L;
+
     public ListProxy(org.hibernate.envers.entities.mapper.relation.lazy.initializor.Initializor<List<U>> initializor) {
         super(initializor);
     }

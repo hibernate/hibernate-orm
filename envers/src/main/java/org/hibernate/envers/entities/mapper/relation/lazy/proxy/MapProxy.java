@@ -26,13 +26,16 @@ package org.hibernate.envers.entities.mapper.relation.lazy.proxy;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
+import java.io.Serializable;
 
 import org.hibernate.envers.entities.mapper.relation.lazy.initializor.Initializor;
 
 /**
  * @author Adam Warski (adam at warski dot org)
  */
-public class MapProxy<K, V> implements Map<K, V> {
+public class MapProxy<K, V> implements Map<K, V>, Serializable {
+    private static final long serialVersionUID = 8418037541773074646L;
+
     private Initializor<Map<K, V>> initializor;
     protected Map<K, V> delegate;
 

@@ -35,6 +35,9 @@ public abstract class CollectionProxy<U, T extends Collection<U>> implements Col
     private org.hibernate.envers.entities.mapper.relation.lazy.initializor.Initializor<T> initializor;
     protected T delegate;
 
+    protected CollectionProxy() {
+    }
+
     public CollectionProxy(Initializor<T> initializor) {
         this.initializor = initializor;
     }

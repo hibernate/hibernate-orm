@@ -32,6 +32,9 @@ import java.io.Serializable;
 public class SetProxy<U> extends CollectionProxy<U, Set<U>> implements Set<U>, Serializable {
     private static final long serialVersionUID = 131464133074137701L;
 
+    public SetProxy() {
+    }
+
     public SetProxy(org.hibernate.envers.entities.mapper.relation.lazy.initializor.Initializor<Set<U>> initializor) {
         super(initializor);
     }

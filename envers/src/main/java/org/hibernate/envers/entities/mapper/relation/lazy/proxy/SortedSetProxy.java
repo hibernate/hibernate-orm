@@ -33,6 +33,9 @@ import java.io.Serializable;
 public class SortedSetProxy<U> extends CollectionProxy<U, SortedSet<U>> implements SortedSet<U>, Serializable {
     private static final long serialVersionUID = 2092884107178125905L;
 
+    public SortedSetProxy() {
+    }
+
     public SortedSetProxy(org.hibernate.envers.entities.mapper.relation.lazy.initializor.Initializor<SortedSet<U>> initializor) {
         super(initializor);
     }

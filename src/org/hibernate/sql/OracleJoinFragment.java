@@ -91,7 +91,7 @@ public class OracleJoinFragment extends JoinFragment {
 			addLeftOuterJoinCondition( on );
 		}
 		else {
-			throw new UnsupportedOperationException( "join type not supported by OracleJoinFragment (use Oracle9Dialect)" );
+			throw new UnsupportedOperationException( "join type not supported by OracleJoinFragment (use Oracle9iDialect)" );
 		}
 	}
 

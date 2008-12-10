@@ -18,7 +18,6 @@ import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.Oracle8iDialect;
-import org.hibernate.dialect.Oracle9Dialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.dialect.function.SQLFunction;
@@ -671,7 +670,6 @@ public class HQLTest extends QueryTranslatorTestCase {
 	}
 
 	public void testGroupByFunction() {
-		if ( getDialect() instanceof Oracle9Dialect ) return;
 		if ( getDialect() instanceof Oracle8iDialect ) return; // the new hiearchy...
 		if ( getDialect() instanceof PostgreSQLDialect ) return;
 		assertTranslation( "select count(*) from Human h group by year(h.birthdate)" );
@@ -850,7 +848,6 @@ public class HQLTest extends QueryTranslatorTestCase {
 	public void testClassProperty() throws Exception {
 		// This test causes failures on theta-join dialects because the SQL is different.
 		// The queries are semantically the same however.
-		if ( getDialect() instanceof Oracle9Dialect ) return;
 		if ( getDialect() instanceof Oracle8iDialect ) return;
 		assertTranslation( "from Animal a where a.mother.class = Reptile" );
 	}
@@ -1126,7 +1123,6 @@ public class HQLTest extends QueryTranslatorTestCase {
 		// This test causes failures on theta-join dialects because the SQL is different.  The old parser
 		// duplicates the condition, whereas the new parser does not.  The queries are semantically the
 		// same however.
-		if ( getDialect() instanceof Oracle9Dialect ) return;
 		if ( getDialect() instanceof Oracle8iDialect ) return;
 		assertTranslation( "select an.mother.bodyWeight from Animal an join an.mother m where an.mother.bodyWeight > 10" );
 		assertTranslation( "select an.mother.bodyWeight from Animal an where an.mother.bodyWeight > 10" );

@@ -26,7 +26,6 @@ import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.InterbaseDialect;
 import org.hibernate.dialect.MckoiDialect;
 import org.hibernate.dialect.MySQLDialect;
-import org.hibernate.dialect.Oracle9Dialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.dialect.TimesTenDialect;
 import org.hibernate.dialect.function.SQLFunction;
@@ -176,7 +175,6 @@ public class SQLFunctionsInterSystemsTest extends DatabaseSpecificFunctionalTest
 	}
 
 	public void testBroken() throws Exception {
-		if (getDialect() instanceof Oracle9Dialect) return;
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
 		Broken b = new Fixed();

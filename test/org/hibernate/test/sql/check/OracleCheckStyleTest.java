@@ -3,7 +3,7 @@ package org.hibernate.test.sql.check;
 import junit.framework.Test;
 
 import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.Oracle9Dialect;
+import org.hibernate.dialect.Oracle9iDialect;
 import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
 
 /**
@@ -21,7 +21,7 @@ public class OracleCheckStyleTest extends ResultCheckStyleTest {
 	}
 
 	public boolean appliesTo(Dialect dialect) {
-		return dialect instanceof Oracle9Dialect;
+		return dialect instanceof Oracle9iDialect;
 	}
 
 	public static Test suite() {

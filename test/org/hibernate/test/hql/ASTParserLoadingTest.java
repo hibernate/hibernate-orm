@@ -30,7 +30,6 @@ import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.Oracle8iDialect;
-import org.hibernate.dialect.Oracle9Dialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.SybaseDialect;
@@ -1209,7 +1208,7 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 			String dateStr1 = (String) session.createQuery("select str(current_date) from Animal").uniqueResult();
 			String dateStr2 = (String) session.createQuery("select str(year(current_date))||'-'||str(month(current_date))||'-'||str(day(current_date)) from Animal").uniqueResult();
 			System.out.println(dateStr1 + '=' + dateStr2);
-			if ( ! ( getDialect() instanceof Oracle9Dialect || getDialect() instanceof Oracle8iDialect ) ) { //Oracle renders the name of the month :(
+			if ( ! ( getDialect() instanceof Oracle8iDialect ) ) { //Oracle renders the name of the month :(
 				String[] dp1 = StringHelper.split("-", dateStr1);
 				String[] dp2 = StringHelper.split("-", dateStr2);
 				for (int i=0; i<3; i++) {

@@ -10,8 +10,8 @@ import junit.framework.Test;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.engine.SessionFactoryImplementor;
-import org.hibernate.dialect.Oracle9Dialect;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.Oracle9iDialect;
 import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
 import org.hibernate.junit.functional.DatabaseSpecificFunctionalTestCase;
 
@@ -37,7 +37,7 @@ public class RowIdTest extends DatabaseSpecificFunctionalTestCase {
 	}
 
 	public boolean appliesTo(Dialect dialect) {
-		return dialect instanceof Oracle9Dialect;
+		return dialect instanceof Oracle9iDialect;
 	}
 
 	public boolean createSchema() {

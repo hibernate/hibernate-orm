@@ -8,7 +8,6 @@ import junit.framework.Test;
 import org.hibernate.LockMode;
 import org.hibernate.classic.Session;
 import org.hibernate.dialect.HSQLDialect;
-import org.hibernate.dialect.OracleDialect;
 import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
 
 /**
@@ -29,7 +28,7 @@ public class IJTest extends LegacyTestCase {
 	}
 
 	public void testFormulaDiscriminator() throws Exception {
-		if ( ( getDialect() instanceof OracleDialect ) || ( getDialect() instanceof HSQLDialect ) ) return;
+		if ( getDialect() instanceof HSQLDialect ) return;
 		Session s = getSessions().openSession();
 		I i = new I();
 		i.setName( "i" );

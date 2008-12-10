@@ -32,7 +32,7 @@ public abstract class UnitTestCase extends junit.framework.TestCase {
 		try {
 			log.info( "Starting test [" + fullTestName() + "]" );
 			super.runBare();
-			if ( doValidate ) {
+			if ( !isTestSkipped() && doValidate ) {
 				throw new FailureExpectedTestPassedException();
 			}
 		}
@@ -56,6 +56,18 @@ public abstract class UnitTestCase extends junit.framework.TestCase {
 		public FailureExpectedTestPassedException() {
 			super( "Test marked as FailureExpected, but did not fail!" );
 		}
+	}
+
+	/**
+	 * Is this test skipped?
+	 *
+	 * TODO: This method should no longer be needed FunctionalTestClassTestSuite.addTest() is
+	 * changed to only include non-skipped tests.
+	 *
+	 * @return true, if the test is skipped; false, otherwise.
+	 */
+	protected boolean isTestSkipped() {
+		return false;
 	}
 
 	protected void skipExpectedFailure(Throwable error) {

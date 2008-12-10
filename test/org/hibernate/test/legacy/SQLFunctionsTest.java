@@ -23,10 +23,9 @@ import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.InterbaseDialect;
 import org.hibernate.dialect.MckoiDialect;
 import org.hibernate.dialect.MySQLDialect;
-import org.hibernate.dialect.Oracle9Dialect;
-import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.dialect.TimesTenDialect;
+import org.hibernate.dialect.Oracle9iDialect;
 import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
 
@@ -80,9 +79,9 @@ public class SQLFunctionsTest extends LegacyTestCase {
 			s.find("select count(*) from Simple s").size() == 1
 		);
 
-		if ( getDialect() instanceof OracleDialect) {
+		if ( getDialect() instanceof Oracle9iDialect ) {
 			// Check Oracle Dialect mix of dialect functions - no args (no parenthesis and single arg functions
-			java.util.List rset = s.find("select s.name, sysdate(), trunc(s.pay), round(s.pay) from Simple s");
+			java.util.List rset = s.find("select s.name, sysdate, trunc(s.pay), round(s.pay) from Simple s");
 			assertNotNull("Name string should have been returned",(((Object[])rset.get(0))[0]));
 			assertNotNull("Todays Date should have been returned",(((Object[])rset.get(0))[1]));
 			assertEquals("trunc(45.8) result was incorrect ", new Float(45), ( (Object[]) rset.get(0) )[2] );
@@ -97,7 +96,7 @@ public class SQLFunctionsTest extends LegacyTestCase {
 
 			// Test a larger depth 3 function example - Not a useful combo other than for testing
 			assertTrue(
-				s.find("select trunc(round(sysdate())) from Simple s").size() == 1
+				s.find("select trunc(round(sysdate)) from Simple s").size() == 1
 			);
 
 			// Test the oracle standard NVL funtion as a test of multi-param functions...
@@ -181,7 +180,6 @@ public class SQLFunctionsTest extends LegacyTestCase {
 		s.close();
 	}
 	public void testBroken() throws Exception {
-		if (getDialect() instanceof Oracle9Dialect) return;
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
 		Broken b = new Fixed();

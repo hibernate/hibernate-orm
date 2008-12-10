@@ -8,8 +8,13 @@ import org.hibernate.junit.SkipLog;
  * @author Steve Ebersole
  */
 public abstract class DatabaseSpecificFunctionalTestCase extends FunctionalTestCase {
+
 	public DatabaseSpecificFunctionalTestCase(String string) {
 		super( string );
+	}
+
+	protected boolean isTestSkipped() {
+		return ! appliesTo( getDialect() );
 	}
 
 	protected void runTest() throws Throwable {

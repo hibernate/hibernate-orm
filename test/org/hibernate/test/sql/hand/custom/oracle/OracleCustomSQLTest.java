@@ -3,9 +3,8 @@ package org.hibernate.test.sql.hand.custom.oracle;
 
 import junit.framework.Test;
 
-import org.hibernate.dialect.DataDirectOracle9Dialect;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.Oracle9Dialect;
+import org.hibernate.dialect.Oracle9iDialect;
 import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
 import org.hibernate.test.sql.hand.custom.CustomStoredProcTestSupport;
 
@@ -29,7 +28,7 @@ public class OracleCustomSQLTest extends CustomStoredProcTestSupport {
 	}
 
 	public boolean appliesTo(Dialect dialect) {
-		return ( dialect instanceof Oracle9Dialect ) && !( dialect instanceof DataDirectOracle9Dialect );
+		return ( dialect instanceof Oracle9iDialect );
 	}
 
 }

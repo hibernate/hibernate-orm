@@ -3547,12 +3547,12 @@ public class Customer implements Serializable {
             Additionally, these database objects can be optionally scoped such that they only
             apply when certain dialects are used.
         </para>
-        <programlisting><![CDATA[<hibernate-mapping>
+        <programlisting revision="1"><![CDATA[<hibernate-mapping>
     ...
     <database-object>
         <definition class="MyTriggerDefinition"/>
-        <dialect-scope name="org.hibernate.dialect.Oracle9Dialect"/>
-        <dialect-scope name="org.hibernate.dialect.OracleDialect"/>
+        <dialect-scope name="org.hibernate.dialect.Oracle9iDialect"/>
+        <dialect-scope name="org.hibernate.dialect.Oracle10gDialect"/>
     </database-object>
 </hibernate-mapping>]]></programlisting>
     </sect1>

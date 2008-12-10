@@ -1028,7 +1028,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                 other properties listed above, saving you the effort of specifying them manually.
             </para>
 
-            <table frame="topbot" id="sql-dialects" revision="2">
+            <table frame="topbot" id="sql-dialects" revision="3">
                 <title>Hibernate SQL Dialects (<literal>hibernate.dialect</literal>)</title>
                 <tgroup cols="2">
                     <colspec colwidth="1*"/>
@@ -1062,10 +1062,13 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                             <entry>MySQL with MyISAM</entry> <entry><literal>org.hibernate.dialect.MySQLMyISAMDialect</literal></entry>
                         </row>
                         <row>
-                            <entry>Oracle (any version)</entry> <entry><literal>org.hibernate.dialect.OracleDialect</literal></entry>
+                            <entry>Oracle 8i</entry> <entry><literal>org.hibernate.dialect.Oracle8iDialect</literal></entry>
                         </row>
                         <row>
-                            <entry>Oracle 9i/10g</entry> <entry><literal>org.hibernate.dialect.Oracle9Dialect</literal></entry>
+                            <entry>Oracle 9i</entry> <entry><literal>org.hibernate.dialect.Oracle9iDialect</literal></entry>
+                        </row>
+                        <row>
+                            <entry>Oracle 10g</entry> <entry><literal>org.hibernate.dialect.Oracle10gDialect</literal></entry>
                         </row>
                         <row>
                             <entry>Sybase</entry> <entry><literal>org.hibernate.dialect.SybaseDialect</literal></entry>

@@ -42,6 +42,7 @@ public class FlushAndTransactionTest extends TestCase {
 		em.getTransaction().begin();
 		em.remove( em.find( Book.class, book.id ) );
 		em.getTransaction().commit();
+		em.close();
 	}
 
 //	public void testTransactionalOperationsWhenTransactional() throws Exception {

@@ -116,6 +116,7 @@ public class CallbacksTest extends TestCase {
 		em.flush();
 		assertNotNull( rc.getCreationDate() );
 		em.getTransaction().rollback();
+		em.close();
 	}
 
 	public void testCallBackListenersHierarchy() throws Exception {

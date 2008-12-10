@@ -99,6 +99,7 @@ public class ExceptionTest extends TestCase {
 		catch( PersistenceException e ) {
 			Throwable t = e.getCause();
 			assertTrue("Should be a constraint violation", t instanceof ConstraintViolationException);
+			em.getTransaction().rollback();
 		}
 		finally {
 			em.close();

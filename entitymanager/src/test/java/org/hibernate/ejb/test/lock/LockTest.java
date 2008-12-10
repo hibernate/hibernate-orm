@@ -30,6 +30,8 @@ public class LockTest extends TestCase {
 		assertEquals( "surname", lock.getName() );
 		em.remove( lock );
 		em.getTransaction().commit();
+		
+		em.close();
 	}
 
 	public void testLockWrite() throws Exception {

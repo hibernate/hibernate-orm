@@ -66,6 +66,9 @@ public class FlushTest extends TestCase {
 		for (Decorate value : founds) {
 			assertTrue( names.contains( value.getPet().getName() ) );
 		}
+		manager.getTransaction().rollback();
+		
+		manager.close();
 		
 	}
 

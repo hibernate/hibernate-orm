@@ -18,7 +18,7 @@ import org.hibernate.annotations.IndexColumn;
 @Entity
 public class Race {
 	@Id @GeneratedValue public Integer id;
-	@IndexColumn( name="index" ) @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+	@IndexColumn( name="index_" ) @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
 	@org.hibernate.annotations.Cascade( { org.hibernate.annotations.CascadeType.ALL, org.hibernate.annotations.CascadeType.DELETE_ORPHAN }) 
 	public List<Competitor> competitors = new ArrayList<Competitor>();
 	public String name;

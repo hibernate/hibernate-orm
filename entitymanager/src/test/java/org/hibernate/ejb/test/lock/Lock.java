@@ -9,7 +9,7 @@ import javax.persistence.Version;
 /**
  * @author Emmanuel Bernard
  */
-@Entity
+@Entity(name="Lock_")
 public class Lock {
 	private Integer id;
 	private Integer version;

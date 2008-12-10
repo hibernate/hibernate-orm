@@ -1,6 +1,7 @@
 //$Id$
 package org.hibernate.ejb.test.ops;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
@@ -14,5 +15,6 @@ public class Workload {
 	@GeneratedValue
 	public Integer id;
 	public String name;
+	@Column(name="load_")
 	public Integer load;
 }

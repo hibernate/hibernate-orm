@@ -1,6 +1,7 @@
 //$Id$
 package org.hibernate.ejb.test.inheritance;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 
 /**
@@ -10,6 +11,7 @@ import javax.persistence.Entity;
 public class Strawberry extends Fruit {
 	private Long size;
 
+	@Column(name="size_")
 	public Long getSize() {
 		return size;
 	}

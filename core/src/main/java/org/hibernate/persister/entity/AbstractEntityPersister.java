@@ -2884,8 +2884,8 @@ public abstract class AbstractEntityPersister
 		String[] columnAliases = getSubclassColumnAliasClosure();
 		String[] columns = getSubclassColumnClosure();
 		for ( int i = 0; i < subclassColumnNumbers.length; i++ ) {
-			if ( subclassColumnSelectableClosure[i] ) {
-				int columnNumber = subclassColumnNumbers[i];
+			int columnNumber = subclassColumnNumbers[i];
+			if ( subclassColumnSelectableClosure[columnNumber] ) {
 				final String subalias = generateTableAlias( getRootAlias(), columnTableNumbers[columnNumber] );
 				selectFragment.addColumn( subalias, columns[columnNumber], columnAliases[columnNumber] );
 			}

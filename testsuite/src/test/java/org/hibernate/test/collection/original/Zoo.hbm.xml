@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping package="org.hibernate.test.collection.original">
+
+	<class name="Zoo">
+		<id name="id" type="long">
+			<generator class="native" />
+		</id>
+		<list name="animals" cascade="save-update,delete">
+			<key column="Zoo_id" not-null="true" />
+			<list-index column="list_index" />
+			<one-to-many class="Animal" not-found="ignore" />
+		</list>
+	</class>
+
+	<class name="Animal" discriminator-value="ANIMAL">
+		<id name="id" column="ID" type="long">
+			<generator class="native" />
+		</id>
+		<discriminator column="discriminator" type="string" />
+		<property name="name"/>
+		<many-to-one name="zoo" class="Zoo" cascade="save-update,delete" />
+	</class>
+
+	<subclass name="Mammal" discriminator-value="MAMMAL" extends="Animal">
+		<join fetch="select" table="AnimalMammal">
+			<key column="Animal_id" />
+			<property name="mammalName" />
+			<property name="mammalName2" />
+			<property name="mammalName3" />
+		</join>
+	</subclass>
+
+</hibernate-mapping>

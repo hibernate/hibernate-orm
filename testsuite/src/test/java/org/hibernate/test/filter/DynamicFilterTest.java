@@ -27,6 +27,7 @@ import org.hibernate.criterion.Restrictions;
 import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Property;
 import org.hibernate.criterion.Subqueries;
+import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.impl.SessionFactoryImpl;
 import org.hibernate.junit.functional.FunctionalTestCase;
@@ -70,6 +71,10 @@ public class DynamicFilterTest extends FunctionalTestCase {
 	}
 
 	public void testSqlSyntaxOfFiltersWithUnions() {
+		// HHH-3637 - Union in where doesn't works for Sybase, need to evict test case
+		if ( ( getDialect() instanceof SybaseDialect) ) {
+			return;
+		}
 		Session session = openSession();
 		session.enableFilter( "unioned" );
 		session.createQuery( "from Category" ).list();

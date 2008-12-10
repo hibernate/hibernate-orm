@@ -20,7 +20,6 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.hql.ast.tree;
 
@@ -28,6 +27,7 @@ import org.hibernate.type.Type;
 import org.hibernate.Hibernate;
 import org.hibernate.TypeMismatchException;
 import org.hibernate.HibernateException;
+import org.hibernate.param.ParameterSpecification;
 import org.hibernate.util.StringHelper;
 import org.hibernate.hql.antlr.HqlSqlTokenTypes;
 import org.hibernate.engine.SessionFactoryImplementor;
@@ -117,9 +117,18 @@ public class BinaryLogicOperatorNode extends HqlSqlWalkerNode implements BinaryO
 		String[] lhsElementTexts = extractMutationTexts( getLeftHandOperand(), valueElements );
 		String[] rhsElementTexts = extractMutationTexts( getRightHandOperand(), valueElements );
 
+		ParameterSpecification lhsEmbeddedCompositeParameterSpecification =
+				getLeftHandOperand() == null || ( !ParameterNode.class.isInstance( getLeftHandOperand() ) )
+						? null
+						: ( ( ParameterNode ) getLeftHandOperand() ).getHqlParameterSpecification();
+
+		ParameterSpecification rhsEmbeddedCompositeParameterSpecification =
+				getRightHandOperand() == null || ( !ParameterNode.class.isInstance( getRightHandOperand() ) )
+						? null
+						: ( ( ParameterNode ) getRightHandOperand() ).getHqlParameterSpecification();
+
 		AST container = this;
 		for ( int i = valueElements - 1; i > 0; i-- ) {
-
 			if ( i == 1 ) {
 				AST op1 = getASTFactory().create( comparisonType, comparisonText );
 				AST lhs1 = getASTFactory().create( HqlSqlTokenTypes.SQL_TOKEN, lhsElementTexts[0] );
@@ -133,6 +142,16 @@ public class BinaryLogicOperatorNode extends HqlSqlWalkerNode implements BinaryO
 				op2.setFirstChild( lhs2 );
 				lhs2.setNextSibling( rhs2 );
 				op1.setNextSibling( op2 );
+
+				// "pass along" our initial embedded parameter node(s) to the first generated
+				// sql fragment so that it can be handled later for parameter binding...
+				SqlFragment fragment = ( SqlFragment ) lhs1;
+				if ( lhsEmbeddedCompositeParameterSpecification != null ) {
+					fragment.addEmbeddedParameter( lhsEmbeddedCompositeParameterSpecification );
+				}
+				if ( rhsEmbeddedCompositeParameterSpecification != null ) {
+					fragment.addEmbeddedParameter( rhsEmbeddedCompositeParameterSpecification );
+				}
 			}
 			else {
 				AST op = getASTFactory().create( comparisonType, comparisonText );

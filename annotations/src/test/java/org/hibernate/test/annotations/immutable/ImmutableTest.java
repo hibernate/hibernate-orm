@@ -60,6 +60,7 @@ public class ImmutableTest extends TestCase {
 		germany = (Country) s.get(Country.class, country.getId());
 		assertNotNull(germany);
 		assertEquals("Name should not have changed", "Germany", germany.getName());
+		tx.commit();
 		s.close();
 		
 //		// try deletion

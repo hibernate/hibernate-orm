@@ -23,6 +23,8 @@
  */
 package org.hibernate.test.cid;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Set;
 
@@ -44,8 +46,11 @@ import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
  */
 public class CompositeIdWithGeneratorTest extends FunctionalTestCase {
 	
+	private DateFormat df;
+	
 	public CompositeIdWithGeneratorTest(String str) {
 		super(str);
+		df = SimpleDateFormat.getDateTimeInstance(DateFormat.LONG, DateFormat.LONG);
 	}
 
 	public String[] getMappings() {
@@ -84,7 +89,7 @@ public class CompositeIdWithGeneratorTest extends FunctionalTestCase {
 		PurchaseRecord find = (PurchaseRecord) s.get(PurchaseRecord.class, generatedId);
 		assertNotNull(find);
 		assertEquals( generatedId, find.getId() );
-		assertEquals( timestamp, find.getTimestamp() );
+		assertEquals( df.format(timestamp), df.format(find.getTimestamp()) );
 
 		t.commit();
 		s.close();
@@ -118,7 +123,7 @@ public class CompositeIdWithGeneratorTest extends FunctionalTestCase {
 		int num1 = id1.getPurchaseNumber();
 		int num2 = id2.getPurchaseNumber();
 		
-		assertEquals( timestamp2, find2.getTimestamp() );
+		assertEquals( df.format(timestamp2), df.format(find2.getTimestamp()) );
 		assertFalse( id1.equals(id2) );
 		assertFalse( seq1.equals(seq2) );
 		assertFalse(num1 == num2);
@@ -156,7 +161,7 @@ public class CompositeIdWithGeneratorTest extends FunctionalTestCase {
 
 		// see that we get the original id, and the original timestamp
 		assertEquals( generatedId, find.getId() );
-		assertEquals( persistedTimestamp, find.getTimestamp() );
+		assertEquals( df.format(persistedTimestamp), df.format(find.getTimestamp()) );
 		
 		s = openSession();
 		t = s.beginTransaction();
@@ -178,7 +183,7 @@ public class CompositeIdWithGeneratorTest extends FunctionalTestCase {
 
 		// see that we get the original id, and the new timestamp
 		assertEquals( generatedId, find2.getId() );
-		assertEquals( newTimestamp, find2.getTimestamp() );
+		assertEquals( df.format(newTimestamp), df.format(find2.getTimestamp()) );
 	}
 
 	/**
@@ -225,9 +230,9 @@ public class CompositeIdWithGeneratorTest extends FunctionalTestCase {
 		// see that we get the original ids (and timestamps)
 		// i.e. weren't changed by changing the detached object
 		assertEquals( generatedId1, find1.getId() );
-		assertEquals( timestamp1, find1.getTimestamp() );
+		assertEquals( df.format(timestamp1), df.format(find1.getTimestamp()) );
 		assertEquals( generatedId2, find2.getId() );
-		assertEquals( timestamp2, find2.getTimestamp() );
+		assertEquals( df.format(timestamp2), df.format(find2.getTimestamp()) );
 		
 		s = openSession();
 		t = s.beginTransaction();
@@ -254,7 +259,7 @@ public class CompositeIdWithGeneratorTest extends FunctionalTestCase {
 		s.close();
 
 		// see that we get the original id (2), and the new timestamp (1)
-		assertEquals( timestamp1, find2.getTimestamp() );
+		assertEquals( df.format(timestamp1), df.format(find2.getTimestamp()) );
 		assertEquals( generatedId2, find2.getId() );
 	}
 
@@ -294,7 +299,7 @@ public class CompositeIdWithGeneratorTest extends FunctionalTestCase {
 
 		// see that we get the *same* id, and the new timestamp
 		assertSame( generatedId, record.getId() );
-		assertEquals( timestamp2, record.getTimestamp() );
+		assertEquals( df.format(timestamp2), df.format(record.getTimestamp()) );
 	}
 
 	/**
@@ -327,7 +332,7 @@ public class CompositeIdWithGeneratorTest extends FunctionalTestCase {
 		
 		// show that the correct timestamp and ids were loaded
 		assertEquals( id, toLoad.getId() );
-		assertEquals( timestamp, toLoad.getTimestamp() );
+		assertEquals( df.format(timestamp), df.format(toLoad.getTimestamp()) );
 	}
 	
 	/**
@@ -364,7 +369,7 @@ public class CompositeIdWithGeneratorTest extends FunctionalTestCase {
 		s.close();
 		
 		assertEquals( generatedId, persistent.getId() );
-		assertEquals( timestamp1, persistent.getTimestamp() );
+		assertEquals( df.format(timestamp1), df.format(persistent.getTimestamp()) );
 	}
 	
 	/**
@@ -398,7 +403,7 @@ public class CompositeIdWithGeneratorTest extends FunctionalTestCase {
 		PurchaseRecord persistent = (PurchaseRecord) s.get(PurchaseRecord.class, generatedId);
 		
 		// show that the timestamp hasn't changed
-		assertEquals( timestamp1, persistent.getTimestamp() );
+		assertEquals( df.format(timestamp1), df.format(persistent.getTimestamp()) );
 		
 		s.merge(detached);
 		
@@ -417,7 +422,7 @@ public class CompositeIdWithGeneratorTest extends FunctionalTestCase {
 		t.commit();
 		s.close();
 		
-		assertEquals( timestamp2, persistent.getTimestamp() );
+		assertEquals( df.format(timestamp2), df.format(persistent.getTimestamp()) );
 	}
 	
 	/**

@@ -12,6 +12,8 @@ import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.hibernate.cfg.Environment;
 import org.hibernate.ejb.HibernatePersistence;
 
@@ -22,6 +24,7 @@ import org.hibernate.ejb.HibernatePersistence;
 public abstract class TestCase extends junit.framework.TestCase {
 	protected EntityManagerFactory factory;
 	protected EntityManager em;
+	private static Log log = LogFactory.getLog( TestCase.class );
 
 	public TestCase() {
 		super();
@@ -44,10 +47,22 @@ public abstract class TestCase extends junit.framework.TestCase {
 		try {
 			em = getOrCreateEntityManager();
 			super.runTest();
+			if (em.getTransaction().isActive()) {
+				em.getTransaction().rollback();
+				fail("You left an open transaction! Fix your test case. For now, we are closing it for you.");
+			}
+
 		} catch (Throwable t) {
 			if (em.getTransaction().isActive())  
 				em.getTransaction().rollback();
 			throw t;
+		} finally {
+			if (em.isOpen()) {
+				// as we open an EM before the test runs, it will still be open if the test uses a custom EM.
+				// or, the person may have forgotten to close. So, do not raise a "fail", but log the fact.
+				em.close(); 
+				log.warn("The EntityManager is not closed. Closing it.");
+			}
 		}
 	}
 	

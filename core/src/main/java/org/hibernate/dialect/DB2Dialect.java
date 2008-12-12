@@ -195,6 +195,10 @@ public class DB2Dialect extends Dialect {
 		return true;
 	}
 
+	public boolean supportsPooledSequences() {
+		return true;
+	}
+
 	public String getQuerySequencesString() {
 		return "select seqname from sysibm.syssequences";
 	}

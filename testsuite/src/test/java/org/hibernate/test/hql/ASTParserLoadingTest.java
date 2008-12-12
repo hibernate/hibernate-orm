@@ -1841,7 +1841,7 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 		hql = "select locate('cat', a.description, 2) from Animal a";
 		session.createQuery(hql).list();
 
-		if ( !( getDialect() instanceof DB2Dialect || getDialect() instanceof SybaseDialect) ) {
+		if ( !( getDialect() instanceof DB2Dialect ) ) {
 			hql = "from Animal a where trim(trailing '_' from a.description) = 'cat'";
 			session.createQuery(hql).list();
 
@@ -1863,17 +1863,15 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 		hql = "from Animal a where abs(a.bodyWeight) = sqrt(a.bodyWeight)";
 		session.createQuery(hql).list();
 
-		if ( !( getDialect() instanceof SybaseDialect) ) {
-			hql = "from Animal a where mod(16, 4) = 4";
-			session.createQuery(hql).list();
+		hql = "from Animal a where mod(16, 4) = 4";
+		session.createQuery(hql).list();
 
-			hql = "select bit_length(a.bodyWeight) from Animal a";
-			session.createQuery(hql).list();
+		hql = "from Animal a where bit_length(a.bodyWeight) = 24";
+		session.createQuery(hql).list();
 
-			hql = "from Animal a where bit_length(a.bodyWeight) = 24";
-			session.createQuery(hql).list();
-		}
-		
+		hql = "select bit_length(a.bodyWeight) from Animal a";
+		session.createQuery(hql).list();
+
 		/*hql = "select object(a) from Animal a where CURRENT_DATE = :p1 or CURRENT_TIME = :p2 or CURRENT_TIMESTAMP = :p3";
 		session.createQuery(hql).list();*/
 

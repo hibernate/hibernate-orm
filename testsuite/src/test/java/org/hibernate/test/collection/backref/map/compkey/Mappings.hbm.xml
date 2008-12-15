@@ -31,7 +31,7 @@
         <map name="parts" table="Parts" cascade="all,delete-orphan" fetch="join">
             <key column="productName" not-null="true"/>
             <composite-map-key class="MapKey">
-                <key-property name="role"/>
+                <key-property name="role" column="role_"/>
             </composite-map-key>
             <one-to-many class="Part"/>
         </map>

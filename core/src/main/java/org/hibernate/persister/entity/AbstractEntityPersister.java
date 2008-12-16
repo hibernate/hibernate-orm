@@ -3154,7 +3154,7 @@ public abstract class AbstractEntityPersister
 				propsToUpdate[property] = true;
 			}
 		}
-		if ( isVersioned() ) {
+		if ( isVersioned() && updateability[getVersionProperty() ]) {
 			propsToUpdate[ getVersionProperty() ] =
 				Versioning.isVersionIncrementRequired( dirtyProperties, hasDirtyCollection, getPropertyVersionability() );
 		}

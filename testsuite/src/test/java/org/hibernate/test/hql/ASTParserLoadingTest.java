@@ -1194,13 +1194,18 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 		Animal an = new Animal();
 		an.setBodyWeight(123.45f);
 		session.persist(an);
-		String str = (String) session.createQuery("select str(an.bodyWeight) from Animal an where str(an.bodyWeight) like '123%' or str(an.bodyWeight) like '1.23%'").uniqueResult();
+		String str = (String) session.createQuery("select str(an.bodyWeight) from Animal an where str(an.bodyWeight) like '%1%'").uniqueResult();
 		if ( getDialect() instanceof DB2Dialect ) {
 			assertTrue( str.startsWith("1.234") );
 		}
-		else if ( getDialect() instanceof SQLServerDialect ) {
-			// no assertion as SQLServer always returns nulls here; even trying directly against the
-			// database, it seems to have problems with str() in the where clause...
+		else if ( getDialect() instanceof SybaseDialect ) {
+			// str(val) on sybase assumes a default of 10 characters with no decimal point or decimal values
+			// str(val) on sybase result is right-justified
+			assertEquals( str.length(), 10 );
+			assertTrue( str.endsWith("123") );
+			str = (String) session.createQuery("select str(an.bodyWeight, 8, 3) from Animal an where str(an.bodyWeight, 8, 3) like '%1%'").uniqueResult();
+			assertEquals( str.length(), 8 );
+			assertTrue( str.endsWith( "123.450" ) );
 		}
 		else {
 			assertTrue( str.startsWith("123.4") );

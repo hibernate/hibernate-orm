@@ -243,6 +243,10 @@ public class SybaseDialect extends Dialect {
 
 	// Overridden informational metadata ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+        public boolean supportsCascadeDelete() {
+                return false;
+        }
+
 	public boolean supportsEmptyInList() {
 		return false;
 	}

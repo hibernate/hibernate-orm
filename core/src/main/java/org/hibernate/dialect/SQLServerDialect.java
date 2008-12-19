@@ -138,6 +138,10 @@ public class SQLServerDialect extends SybaseDialect {
 		return false;
 	}
 
+        public boolean supportsCascadeDelete() {
+                return true;
+        }
+
 	public boolean supportsCircularCascadeDeleteConstraints() {
 		// SQL Server (at least up through 2005) does not support defining
 		// cascade delete constraints which can circel back to the mutating

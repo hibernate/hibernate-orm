@@ -23,7 +23,7 @@ public class NativeQueryTest extends AbstractJPATest {
 	public void testJpaStylePositionalParametersInNativeSql() {
 		Session s = openSession();
 		s.beginTransaction();
-		s.createSQLQuery( "select NAME from EJB3_ITEM where ITEM_ID = ?1" ).setParameter( "1", "123" ).list();
+		s.createSQLQuery( "select NAME from EJB3_ITEM where ITEM_ID = ?1" ).setParameter( "1", new Long( 123 ) ).list();
 		s.getTransaction().commit();
 		s.close();
 	}

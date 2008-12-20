@@ -88,7 +88,11 @@ public class SybaseDialect extends Dialect {
 		registerFunction( "month", new StandardSQLFunction("month", Hibernate.INTEGER) );
 		registerFunction( "year", new StandardSQLFunction("year", Hibernate.INTEGER) );
 		registerFunction( "datename", new StandardSQLFunction("datename", Hibernate.STRING) );
-
+		registerFunction( "second", new SQLFunctionTemplate(Hibernate.INTEGER, "datepart(second, ?1)") );
+		registerFunction( "minute", new SQLFunctionTemplate(Hibernate.INTEGER, "datepart(minute, ?1)") );
+		registerFunction( "hour", new SQLFunctionTemplate(Hibernate.INTEGER, "datepart(hour, ?1)") );
+		registerFunction( "extract", new SQLFunctionTemplate( Hibernate.INTEGER, "datepart(?1, ?3)" ) );
+ 
 		registerFunction( "abs", new StandardSQLFunction("abs") );
 		registerFunction( "sign", new StandardSQLFunction("sign", Hibernate.INTEGER) );
 

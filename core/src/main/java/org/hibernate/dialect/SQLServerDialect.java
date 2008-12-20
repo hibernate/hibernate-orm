@@ -43,12 +43,8 @@ public class SQLServerDialect extends SybaseDialect {
 		registerColumnType( Types.VARBINARY, "image" );
 		registerColumnType( Types.VARBINARY, 8000, "varbinary($l)" );
 
-		registerFunction( "second", new SQLFunctionTemplate( Hibernate.INTEGER, "datepart(second, ?1)" ) );
-		registerFunction( "minute", new SQLFunctionTemplate( Hibernate.INTEGER, "datepart(minute, ?1)" ) );
-		registerFunction( "hour", new SQLFunctionTemplate( Hibernate.INTEGER, "datepart(hour, ?1)" ) );
 		registerFunction( "locate", new StandardSQLFunction( "charindex", Hibernate.INTEGER ) );
 
-		registerFunction( "extract", new SQLFunctionTemplate( Hibernate.INTEGER, "datepart(?1, ?3)" ) );
 		registerFunction( "mod", new SQLFunctionTemplate( Hibernate.INTEGER, "?1 % ?2" ) );
 		registerFunction( "bit_length", new SQLFunctionTemplate( Hibernate.INTEGER, "datalength(?1) * 8" ) );
 

@@ -107,6 +107,10 @@ public class AggressiveReleaseTest extends ConnectionManagementTestCase {
 			// expected behavior
 		}
 
+		// getting the first row only because Sybase throws NullPointerException
+		// if data is not read before closing the ResultSet
+		sr.next();
+
 		// Closing the ScrollableResults does currently force the batcher to
 		// aggressively release the connection
 		sr.close();

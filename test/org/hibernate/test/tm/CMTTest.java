@@ -443,17 +443,18 @@ public class CMTTest extends FunctionalTestCase {
 		DummyTransactionManager.INSTANCE.begin();
 		s = getSessions().getCurrentSession();
 		results = s.createQuery( "from Item" ).scroll();
-		while ( !results.isLast() ) {
-			results.next();
+		while ( results.next() ) {
+			// do nothing
 		}
+
 		DummyTransactionManager.INSTANCE.getTransaction().commit();
 
 		// Next, scroll the entire result (closing)
 		DummyTransactionManager.INSTANCE.begin();
 		s = getSessions().getCurrentSession();
 		results = s.createQuery( "from Item" ).scroll();
-		while ( !results.isLast() ) {
-			results.next();
+		while ( results.next() ) {
+			// do nothing
 		}
 		results.close();
 		DummyTransactionManager.INSTANCE.getTransaction().commit();

@@ -45,7 +45,7 @@ public class ComplexInsertPerformance extends AbstractPerformanceTest {
         cfg.addAnnotatedClass(ChildEntity2.class);
     }
 
-    private final static int NUMBER_INSERTS = 100;
+    private final static int NUMBER_INSERTS = 1000;
 
     private long idCounter = 0;
 

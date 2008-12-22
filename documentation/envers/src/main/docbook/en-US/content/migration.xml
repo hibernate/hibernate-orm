@@ -51,7 +51,7 @@
 
         <para>
             Also, the query interface has changed slightly, mainly in the part for specifying restrictions,
-            projections and order. Please refer to the API for further details.
+            projections and order. Please refer to the Javadoc for further details.
         </para>
 
     </sect1>
@@ -91,7 +91,7 @@
 
    &lt;!-- Envers listeners --&gt;
 
-   &lt;property name="org.hibernate.envers.versionsTableSuffix" value="_versions" /&gt;
+   &lt;property name="org.hibernate.envers.auditTableSuffix" value="_versions" /&gt;
    &lt;property name="org.hibernate.envers.revisionFieldName" value="_revision" /&gt;
    &lt;property name="org.hibernate.envers.revisionTypeFieldName" value="_rev_type" /&gt;
    &lt;!-- other envers properties --&gt;
@@ -149,8 +149,6 @@ public class ExampleRevEntity {
     @RevisionTimestamp
     @Column(name="revision_timestamp")
     private long timestamp;
-
-    private String username;
 
     // Getters, setters, equals, hashCode ...
 }]]></programlisting>

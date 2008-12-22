@@ -186,10 +186,12 @@ public final class AnnotationsMetadataReader {
 
         if (defaultAudited != null) {
             defaultStore = defaultAudited.modStore();
+			auditData.setDefaultAudited(true);
         } else {
             Versioned defaultVersioned = clazz.getAnnotation(Versioned.class);
             if (defaultVersioned != null) {
                 defaultStore = translateModStore(defaultVersioned.modStore());
+				auditData.setDefaultAudited(true);
             }
         }
     }

@@ -49,7 +49,7 @@ public abstract class AbstractEntityTest {
 
     public abstract void configure(Ejb3Configuration cfg);
 
-    protected void initListeners() {
+    private void initListeners() {
         AuditEventListener listener = new AuditEventListener();
         cfg.getEventListeners().setPostInsertEventListeners(new PostInsertEventListener[] { listener });
         cfg.getEventListeners().setPostUpdateEventListeners(new PostUpdateEventListener[] { listener });

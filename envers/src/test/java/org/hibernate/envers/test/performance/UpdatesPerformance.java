@@ -40,7 +40,7 @@ public class UpdatesPerformance extends AbstractPerformanceTest {
         cfg.addAnnotatedClass(StrTestEntity.class);
     }
 
-    private final static int NUMBER_UPDATES = 500;
+    private final static int NUMBER_UPDATES = 5000;
     private final static int NUMBER_ENTITIES = 10;
 
     private Random random = new Random();

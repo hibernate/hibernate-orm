@@ -41,6 +41,11 @@ public class PersistentClassAuditingData {
     private Map<String, PersistentPropertyAuditingData> properties;
     private AuditTable auditTable;
     private Map<String, String> secondaryTableDictionary;
+	/**
+	 * True if the class is audited globally (this helps to cover the cases when there are no fields in the class,
+	 * but it's still audited).
+	 */
+	private boolean defaultAudited;
 
     public Map<String, PersistentPropertyAuditingData> getProperties() {
         return properties;
@@ -62,8 +67,12 @@ public class PersistentClassAuditingData {
         this.auditTable = auditTable;
     }
 
-    public boolean isAudited() {
-        if (properties.size() > 0) {
+	public void setDefaultAudited(boolean defaultAudited) {
+		this.defaultAudited = defaultAudited;
+	}
+
+	public boolean isAudited() {
+        if (defaultAudited || properties.size() > 0) {
             return true;
         } else {
             return false;

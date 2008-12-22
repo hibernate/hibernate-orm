@@ -21,40 +21,23 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.envers.test.performance;
 
-import java.io.IOException;
-import javax.persistence.EntityManager;
+package org.hibernate.envers.test.integration.inheritance.joined.emptychild;
 
-import org.hibernate.envers.test.entities.StrTestEntity;
+import javax.persistence.Entity;
 
-import org.hibernate.ejb.Ejb3Configuration;
+import org.hibernate.envers.Audited;
 
 /**
  * @author Adam Warski (adam at warski dot org)
  */
-public class InsertsPerformance extends AbstractPerformanceTest {
-    public void configure(Ejb3Configuration cfg) {
-        cfg.addAnnotatedClass(StrTestEntity.class);
-    }
+@Entity
+@Audited
+public class EmptyChildEntity extends ParentEntity {
+	public EmptyChildEntity() {
+	}
 
-    private final static int NUMBER_INSERTS = 5000;
-
-    protected void doTest() {
-        for (int i=0; i<NUMBER_INSERTS; i++) {
-            newEntityManager();
-            EntityManager entityManager = getEntityManager();
-            
-            entityManager.getTransaction().begin();
-            start();
-            entityManager.persist(new StrTestEntity("x" + i));
-            entityManager.getTransaction().commit();
-            stop();
-        }
-    }
-
-    public static void main(String[] args) throws IOException {
-        InsertsPerformance insertsPerformance = new InsertsPerformance();
-        insertsPerformance.test(3);
-    }
+	public EmptyChildEntity(Integer id, String data) {
+		super(id, data);
+	}
 }

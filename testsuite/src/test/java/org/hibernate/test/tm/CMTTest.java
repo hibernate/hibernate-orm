@@ -442,8 +442,8 @@ public class CMTTest extends FunctionalTestCase {
 		SimpleJtaTransactionManagerImpl.getInstance().begin();
 		s = getSessions().getCurrentSession();
 		results = s.createQuery( "from Item" ).scroll();
-		while ( !results.isLast() ) {
-			results.next();
+		while ( results.next() ) {
+			// do nothing
 		}
 		SimpleJtaTransactionManagerImpl.getInstance().getTransaction().commit();
 
@@ -451,8 +451,8 @@ public class CMTTest extends FunctionalTestCase {
 		SimpleJtaTransactionManagerImpl.getInstance().begin();
 		s = getSessions().getCurrentSession();
 		results = s.createQuery( "from Item" ).scroll();
-		while ( !results.isLast() ) {
-			results.next();
+		while ( results.next() ) {
+			// do nothing
 		}
 		results.close();
 		SimpleJtaTransactionManagerImpl.getInstance().getTransaction().commit();

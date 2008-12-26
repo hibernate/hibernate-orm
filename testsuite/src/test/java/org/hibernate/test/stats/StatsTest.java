@@ -1,4 +1,4 @@
-//$Id: StatsTest.java 10977 2006-12-12 23:28:04Z steve.ebersole@jboss.com $
+//$Id: StatsTest.java 15731 2008-12-26 23:42:56Z gbadner $
 package org.hibernate.test.stats;
 
 import java.util.HashSet;
@@ -165,6 +165,11 @@ public class StatsTest extends FunctionalTestCase {
 		// same deal with scroll()...
 		assertEquals( "unexpected execution count", 3, continentStats.getExecutionCount() );
 		assertEquals( "unexpected row count", results, continentStats.getExecutionRowCount() );
+		// scroll through data because Sybase throws NullPointerException
+		// if data is not read before closing the ResultSet
+		while ( scrollableResults.next() ) {
+			// do nothing
+		}
 		scrollableResults.close();
 		tx.commit();
 		s.close();

@@ -1,4 +1,4 @@
-//$Id: OnDeleteTest.java 10977 2006-12-12 23:28:04Z steve.ebersole@jboss.com $
+//$Id: OnDeleteTest.java 15728 2008-12-26 22:59:25Z gbadner $
 package org.hibernate.test.ondelete;
 
 import java.util.List;
@@ -78,7 +78,7 @@ public class OnDeleteTest extends FunctionalTestCase {
 		t.commit();
 
 		assertEquals( statistics.getEntityDeleteCount(), 2 );
-		if ( !(getDialect() instanceof MySQLDialect) || (getDialect() instanceof MySQLInnoDBDialect) ) {
+		if ( getDialect().supportsCascadeDelete() ) {
 			assertEquals( statistics.getPrepareStatementCount(), 1 );
 		}
 		

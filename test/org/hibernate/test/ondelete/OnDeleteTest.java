@@ -78,7 +78,7 @@ public class OnDeleteTest extends FunctionalTestCase {
 		t.commit();
 
 		assertEquals( statistics.getEntityDeleteCount(), 2 );
-		if ( !(getDialect() instanceof MySQLDialect) || (getDialect() instanceof MySQLInnoDBDialect) ) {
+		if ( getDialect().supportsCascadeDelete() ) {
 			assertEquals( statistics.getPrepareStatementCount(), 1 );
 		}
 		

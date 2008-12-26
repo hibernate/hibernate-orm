@@ -165,6 +165,11 @@ public class StatsTest extends FunctionalTestCase {
 		// same deal with scroll()...
 		assertEquals( "unexpected execution count", 3, continentStats.getExecutionCount() );
 		assertEquals( "unexpected row count", results, continentStats.getExecutionRowCount() );
+		// scroll through data because Sybase throws NullPointerException
+		// if data is not read before closing the ResultSet
+		while ( scrollableResults.next() ) {
+			// do nothing
+		}
 		scrollableResults.close();
 		tx.commit();
 		s.close();

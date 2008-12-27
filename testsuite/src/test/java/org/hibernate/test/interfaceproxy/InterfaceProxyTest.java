@@ -1,4 +1,4 @@
-//$Id: InterfaceProxyTest.java 10977 2006-12-12 23:28:04Z steve.ebersole@jboss.com $
+//$Id: InterfaceProxyTest.java 15736 2008-12-27 00:49:42Z gbadner $
 package org.hibernate.test.interfaceproxy;
 
 import junit.framework.Test;
@@ -47,7 +47,9 @@ public class InterfaceProxyTest extends FunctionalTestCase {
 		SecureDocument d2 = new SecureDocumentImpl();
 		d2.setName("Secret");
 		d2.setContent( Hibernate.createBlob( "wxyz wxyz".getBytes() ) );
-		d2.setPermissionBits( (byte) 664 );
+		// Sybase only allows 7-bits in a byte to be inserted into a tinyint 
+		// column (0 <= val < 128)		
+		d2.setPermissionBits( (byte) 127 );
 		d2.setOwner("gavin");
 		Long d2id = (Long) s.save(d2);
 		t.commit();

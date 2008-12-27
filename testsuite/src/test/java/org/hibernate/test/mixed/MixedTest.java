@@ -1,4 +1,4 @@
-//$Id: MixedTest.java 10977 2006-12-12 23:28:04Z steve.ebersole@jboss.com $
+//$Id: MixedTest.java 15736 2008-12-27 00:49:42Z gbadner $
 package org.hibernate.test.mixed;
 
 import junit.framework.Test;
@@ -47,7 +47,9 @@ public class MixedTest extends FunctionalTestCase {
 		SecureDocument d2 = new SecureDocument();
 		d2.setName( "Secret" );
 		d2.setContent( Hibernate.createBlob( "wxyz wxyz".getBytes() ) );
-		d2.setPermissionBits( (byte) 664 );
+		// Sybase only allows 7-bits in a byte to be inserted into a tinyint 
+		// column (0 <= val < 128)
+		d2.setPermissionBits( (byte) 127 );
 		d2.setOwner( "gavin" );
 		d2.setParent( f );
 		Long d2id = (Long) s.save( d2 );
@@ -92,7 +94,9 @@ public class MixedTest extends FunctionalTestCase {
 		assertNotNull( d2.getContent() );
 		assertEquals( "max", d2.getOwner() );
 		assertEquals( "/", d2.getParent().getName() );
-		assertEquals( (byte) 664, d2.getPermissionBits() );
+		// Sybase only allows 7-bits in a byte to be inserted into a tinyint 
+		// column (0 <= val < 128)
+		assertEquals( (byte) 127, d2.getPermissionBits() );
 		assertNotNull( d2.getCreated() );
 		assertNotNull( d2.getModified() );
 

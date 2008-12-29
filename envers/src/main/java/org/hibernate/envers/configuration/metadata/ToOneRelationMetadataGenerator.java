@@ -50,7 +50,7 @@ public final class ToOneRelationMetadataGenerator {
 
     @SuppressWarnings({"unchecked"})
     void addToOne(Element parent, PersistentPropertyAuditingData persistentPropertyAuditingData, Value value,
-                  CompositeMapperBuilder mapper, String entityName) {
+                  CompositeMapperBuilder mapper, String entityName, boolean insertable) {
         String referencedEntityName = ((ToOne) value).getReferencedEntityName();
 
         EntityConfiguration configuration = mainGenerator.getEntitiesConfigurations().get(referencedEntityName);
@@ -74,7 +74,7 @@ public final class ToOneRelationMetadataGenerator {
         properties.addAttribute("name", persistentPropertyAuditingData.getName());
 
         MetadataTools.prefixNamesInPropertyElement(properties, lastPropertyPrefix,
-                MetadataTools.getColumnNameIterator(value.getColumnIterator()), false);
+                MetadataTools.getColumnNameIterator(value.getColumnIterator()), false, insertable);
         parent.add(properties);
 
         // Adding mapper for the id

@@ -119,7 +119,7 @@ public final class AuditMetadataGenerator {
             // only second pass
             if (!firstPass) {
                 toOneRelationMetadataGenerator.addToOne(parent, persistentPropertyAuditingData, value, currentMapper,
-                        entityName);
+                        entityName, insertable);
             }
         } else if (type instanceof OneToOneType) {
             // only second pass

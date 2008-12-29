@@ -163,7 +163,7 @@ public class MetadataTools {
 
     @SuppressWarnings({"unchecked"})
     public static void prefixNamesInPropertyElement(Element element, String prefix, ColumnNameIterator columnNameIterator,
-                                                    boolean changeToKey) {
+                                                    boolean changeToKey, boolean insertable) {
         Iterator<Element> properties = element.elementIterator();
         while (properties.hasNext()) {
             Element property = properties.next();
@@ -179,6 +179,9 @@ public class MetadataTools {
                 if (changeToKey) {
                     property.setName("key-property");
                 }
+
+				Attribute insert = property.attribute("insert");
+				insert.setText(Boolean.toString(insertable));
             }
         }
     }

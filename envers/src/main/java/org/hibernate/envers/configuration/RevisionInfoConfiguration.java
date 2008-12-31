@@ -59,8 +59,8 @@ public class RevisionInfoConfiguration {
 
     public RevisionInfoConfiguration() {
         revisionInfoEntityName = "org.hibernate.envers.DefaultRevisionEntity";
-        revisionInfoIdData = new PropertyData("id", "field", null);
-        revisionInfoTimestampData = new PropertyData("timestamp", "field", null);
+        revisionInfoIdData = new PropertyData("id", "id", "field", null);
+        revisionInfoTimestampData = new PropertyData("timestamp", "timestamp", "field", null);
         revisionInfoTimestampType = "long";
 
         revisionPropType = "integer";
@@ -109,11 +109,11 @@ public class RevisionInfoConfiguration {
                 XClass revisionNumberClass = property.getType();
                 if (reflectionManager.equals(revisionNumberClass, Integer.class) ||
                         reflectionManager.equals(revisionNumberClass, Integer.TYPE)) {
-                    revisionInfoIdData = new PropertyData(property.getName(), accessType, null);
+                    revisionInfoIdData = new PropertyData(property.getName(), property.getName(), accessType, null);
                     revisionNumberFound.set();
                 } else if (reflectionManager.equals(revisionNumberClass, Long.class) ||
                         reflectionManager.equals(revisionNumberClass, Long.TYPE)) {
-                    revisionInfoIdData = new PropertyData(property.getName(), accessType, null);
+                    revisionInfoIdData = new PropertyData(property.getName(), property.getName(), accessType, null);
                     revisionNumberFound.set();
 
                     // The default is integer
@@ -132,7 +132,7 @@ public class RevisionInfoConfiguration {
                 XClass revisionTimestampClass = property.getType();
                 if (reflectionManager.equals(revisionTimestampClass, Long.class) ||
                         reflectionManager.equals(revisionTimestampClass, Long.TYPE)) {
-                    revisionInfoTimestampData = new PropertyData(property.getName(), accessType, null);
+                    revisionInfoTimestampData = new PropertyData(property.getName(), property.getName(), accessType, null);
                     revisionTimestampFound.set();
                 } else {
                     throw new MappingException("The field annotated with @RevisionTimestamp must be of type " +

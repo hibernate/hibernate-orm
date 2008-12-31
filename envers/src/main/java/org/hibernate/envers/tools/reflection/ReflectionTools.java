@@ -59,7 +59,7 @@ public class ReflectionTools {
     }
 
     public static Getter getGetter(Class cls, PropertyData propertyData) {
-        return getGetter(cls, propertyData.getName(), propertyData.getAccessType());
+        return getGetter(cls, propertyData.getBeanName(), propertyData.getAccessType());
     }
 
     public static Getter getGetter(Class cls, String propertyName, String accessorType) {
@@ -75,10 +75,10 @@ public class ReflectionTools {
     }
 
     public static Setter getSetter(Class cls, PropertyData propertyData) {
-        return getSetter(cls, propertyData.getName(), propertyData.getAccessType());
+        return getSetter(cls, propertyData.getBeanName(), propertyData.getAccessType());
     }
 
-    public static Setter getSetter(Class cls, String propertyName, String accessorType) {
+    private static Setter getSetter(Class cls, String propertyName, String accessorType) {
         Pair<Class, String> key = make(cls, propertyName);
         Setter value = setterCache.get(key);
         if (value == null) {

@@ -88,6 +88,6 @@ public class PersistentPropertyAuditingData {
     }
 
     public PropertyData getPropertyData() {
-        return new PropertyData(name, accessType, store);
+        return new PropertyData(name, name, accessType, store);
     }
 }

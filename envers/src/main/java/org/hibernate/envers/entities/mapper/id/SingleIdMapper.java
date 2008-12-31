@@ -38,19 +38,12 @@ import org.hibernate.property.Setter;
  * @author Adam Warski (adam at warski dot org)
  */
 public class SingleIdMapper extends AbstractIdMapper implements SimpleIdMapperBuilder {
-    private String beanPropertyName;
     private PropertyData propertyData;
 
     public SingleIdMapper() {
     }
 
-    public SingleIdMapper(String beanPropertyName, PropertyData propertyData) {
-        this.beanPropertyName = beanPropertyName;
-        this.propertyData = propertyData;
-    }
-
     public SingleIdMapper(PropertyData propertyData) {
-        this.beanPropertyName = propertyData.getName();
         this.propertyData = propertyData;
     }
 
@@ -60,7 +53,6 @@ public class SingleIdMapper extends AbstractIdMapper implements SimpleIdMapperBu
         }
 
         this.propertyData = propertyData;
-        this.beanPropertyName = propertyData.getName();
     }
 
     public void mapToEntityFromMap(Object obj, Map data) {
@@ -68,7 +60,7 @@ public class SingleIdMapper extends AbstractIdMapper implements SimpleIdMapperBu
             return;
         }
 
-        Setter setter = ReflectionTools.getSetter(obj.getClass(), beanPropertyName, propertyData.getAccessType());
+        Setter setter = ReflectionTools.getSetter(obj.getClass(), propertyData);
         setter.set(obj, data.get(propertyData.getName()), null);
     }
 
@@ -85,7 +77,7 @@ public class SingleIdMapper extends AbstractIdMapper implements SimpleIdMapperBu
             return null;
         }
 
-        Getter getter = ReflectionTools.getGetter(data.getClass(), beanPropertyName, propertyData.getAccessType());
+        Getter getter = ReflectionTools.getGetter(data.getClass(), propertyData);
         return getter.get(data);
     }
 
@@ -99,7 +91,7 @@ public class SingleIdMapper extends AbstractIdMapper implements SimpleIdMapperBu
         if (obj == null) {
             data.put(propertyData.getName(), null);
         } else {
-            Getter getter = ReflectionTools.getGetter(obj.getClass(), beanPropertyName, propertyData.getAccessType());
+            Getter getter = ReflectionTools.getGetter(obj.getClass(), propertyData);
             data.put(propertyData.getName(), getter.get(obj));
         }
     }
@@ -109,14 +101,13 @@ public class SingleIdMapper extends AbstractIdMapper implements SimpleIdMapperBu
             return;
         }
 
-        Getter getter = ReflectionTools.getGetter(objFrom.getClass(), beanPropertyName, propertyData.getAccessType());
-        Setter setter = ReflectionTools.getSetter(objTo.getClass(), beanPropertyName, propertyData.getAccessType());
+        Getter getter = ReflectionTools.getGetter(objFrom.getClass(), propertyData);
+        Setter setter = ReflectionTools.getSetter(objTo.getClass(), propertyData);
         setter.set(objTo, getter.get(objFrom), null);
     }
 
     public IdMapper prefixMappedProperties(String prefix) {
-        return new SingleIdMapper(propertyData.getName(),
-                new PropertyData(prefix + propertyData.getName(), propertyData));
+        return new SingleIdMapper(new PropertyData(prefix + propertyData.getName(), propertyData));
     }
 
     public List<QueryParameterData> mapToQueryParametersFromId(Object obj) {

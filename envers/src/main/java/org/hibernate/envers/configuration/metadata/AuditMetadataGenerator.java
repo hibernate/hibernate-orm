@@ -46,10 +46,7 @@ import org.hibernate.mapping.Join;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Value;
-import org.hibernate.type.CollectionType;
-import org.hibernate.type.ManyToOneType;
-import org.hibernate.type.OneToOneType;
-import org.hibernate.type.Type;
+import org.hibernate.type.*;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -62,6 +59,7 @@ public final class AuditMetadataGenerator {
     private final Element revisionInfoRelationMapping;
 
     private final BasicMetadataGenerator basicMetadataGenerator;
+	private final ComponentMetadataGenerator componentMetadataGenerator;
     private final IdMetadataGenerator idMetadataGenerator;
     private final ToOneRelationMetadataGenerator toOneRelationMetadataGenerator;
 
@@ -79,6 +77,7 @@ public final class AuditMetadataGenerator {
         this.revisionInfoRelationMapping = revisionInfoRelationMapping;
 
         this.basicMetadataGenerator = new BasicMetadataGenerator();
+		this.componentMetadataGenerator = new ComponentMetadataGenerator(this);
         this.idMetadataGenerator = new IdMetadataGenerator(this);
         this.toOneRelationMetadataGenerator = new ToOneRelationMetadataGenerator(this);
 
@@ -109,13 +108,17 @@ public final class AuditMetadataGenerator {
         // only first pass
         if (firstPass) {
             if (basicMetadataGenerator.addBasic(parent, persistentPropertyAuditingData, value, currentMapper,
-                    entityName, insertable, false)) {
+                    insertable, false)) {
                 // The property was mapped by the basic generator.
                 return;
             }
         }
 
-        if (type instanceof ManyToOneType) {
+		if (type instanceof ComponentType) {
+			// both passes
+			componentMetadataGenerator.addComponent(parent, persistentPropertyAuditingData, value, currentMapper,
+					entityName, xmlMappingData, firstPass);
+		} else if (type instanceof ManyToOneType) {
             // only second pass
             if (!firstPass) {
                 toOneRelationMetadataGenerator.addToOne(parent, persistentPropertyAuditingData, value, currentMapper,

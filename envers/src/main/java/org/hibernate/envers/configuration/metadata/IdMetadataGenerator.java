@@ -62,7 +62,7 @@ public final class IdMetadataGenerator {
             if (!"_identifierMapper".equals(property.getName())) {
                 if (propertyType instanceof ImmutableType) {
                     // Last but one parameter: ids are always insertable
-                    mainGenerator.getBasicMetadataGenerator().addBasicNoComponent(parent,
+                    mainGenerator.getBasicMetadataGenerator().addBasic(parent,
                             getIdPersistentPropertyAuditingData(property),
                             property.getValue(), mapper, true, key);
                 } else {
@@ -107,12 +107,12 @@ public final class IdMetadataGenerator {
             mapper = new SingleIdMapper();
 
             // Last but one parameter: ids are always insertable
-            mainGenerator.getBasicMetadataGenerator().addBasicNoComponent(rel_id_mapping,
+            mainGenerator.getBasicMetadataGenerator().addBasic(rel_id_mapping,
                     getIdPersistentPropertyAuditingData(id_prop),
                     id_prop.getValue(), mapper, true, false);
 
             // null mapper - the mapping where already added the first time, now we only want to generate the xml
-            mainGenerator.getBasicMetadataGenerator().addBasicNoComponent(orig_id_mapping,
+            mainGenerator.getBasicMetadataGenerator().addBasic(orig_id_mapping,
                     getIdPersistentPropertyAuditingData(id_prop),
                     id_prop.getValue(), null, true, true);
         }
@@ -126,7 +126,8 @@ public final class IdMetadataGenerator {
     }
 
     private PropertyData getIdPropertyData(Property property) {
-        return new PropertyData(property.getName(), property.getPropertyAccessorName(), ModificationStore.FULL);
+        return new PropertyData(property.getName(), property.getName(), property.getPropertyAccessorName(),
+				ModificationStore.FULL);
     }
 
     private PersistentPropertyAuditingData getIdPersistentPropertyAuditingData(Property property) {

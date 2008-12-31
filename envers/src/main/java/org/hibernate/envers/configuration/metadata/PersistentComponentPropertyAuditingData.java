@@ -20,15 +20,27 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
+ *
  */
-package org.hibernate.envers.entities.mapper;
+package org.hibernate.envers.configuration.metadata;
 
+import org.hibernate.envers.ModificationStore;
 import org.hibernate.envers.entities.PropertyData;
 
 /**
  * @author Adam Warski (adam at warski dot org)
  */
-public interface CompositeMapperBuilder extends SimpleMapperBuilder {    
-    public CompositeMapperBuilder addComponent(PropertyData propertyData);
-    public void addComposite(PropertyData propertyData, PropertyMapper propertyMapper);
+public class PersistentComponentPropertyAuditingData extends PersistentPropertyAuditingData {
+	private final String beanName;
+
+    public PersistentComponentPropertyAuditingData(String name, String beanName, String accessType,
+												   ModificationStore store) {
+        super(name, accessType, store);
+
+		this.beanName = beanName;
+    }
+
+    public PropertyData getPropertyData() {
+        return new PropertyData(getName(), beanName, getAccessType(), getStore());
+	}
 }

@@ -60,8 +60,7 @@ public class MultipleIdMapper extends AbstractCompositeIdMapper implements Simpl
 
         for (PropertyData propertyData : ids.keySet()) {
             String propertyName = propertyData.getName();
-            ret.ids.put(propertyData, new SingleIdMapper(propertyName,
-                    new PropertyData(prefix + propertyName, propertyData)));
+            ret.ids.put(propertyData, new SingleIdMapper(new PropertyData(prefix + propertyName, propertyData)));
         }
 
         return ret;

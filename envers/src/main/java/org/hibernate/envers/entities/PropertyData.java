@@ -31,6 +31,10 @@ import org.hibernate.envers.ModificationStore;
  */
 public class PropertyData {
     private final String name;
+	/**
+	 * Name of the property in the bean.
+	 */
+	private final String beanName;
     private final String accessType;
     private final ModificationStore store;
 
@@ -41,17 +45,20 @@ public class PropertyData {
      */
     public PropertyData(String newName, PropertyData propertyData) {
         this.name = newName;
+		this.beanName = propertyData.beanName;
         this.accessType = propertyData.accessType;
         this.store = propertyData.store;
     }
 
     /**
      * @param name Name of the property.
+	 * @param beanName Name of the property in the bean.
      * @param accessType Accessor type for this property.
      * @param store How this property should be stored.
      */
-    public PropertyData(String name, String accessType, ModificationStore store) {
+    public PropertyData(String name, String beanName, String accessType, ModificationStore store) {
         this.name = name;
+		this.beanName = beanName;
         this.accessType = accessType;
         this.store = store;
     }
@@ -60,11 +67,39 @@ public class PropertyData {
         return name;
     }
 
-    public String getAccessType() {
+	public String getBeanName() {
+		return beanName;
+	}
+
+	public String getAccessType() {
         return accessType;
     }
 
     public ModificationStore getStore() {
         return store;
     }
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+
+		PropertyData that = (PropertyData) o;
+
+		if (accessType != null ? !accessType.equals(that.accessType) : that.accessType != null) return false;
+		if (beanName != null ? !beanName.equals(that.beanName) : that.beanName != null) return false;
+		if (name != null ? !name.equals(that.name) : that.name != null) return false;
+		if (store != that.store) return false;
+
+		return true;
+	}
+
+	@Override
+	public int hashCode() {
+		int result = name != null ? name.hashCode() : 0;
+		result = 31 * result + (beanName != null ? beanName.hashCode() : 0);
+		result = 31 * result + (accessType != null ? accessType.hashCode() : 0);
+		result = 31 * result + (store != null ? store.hashCode() : 0);
+		return result;
+	}
 }

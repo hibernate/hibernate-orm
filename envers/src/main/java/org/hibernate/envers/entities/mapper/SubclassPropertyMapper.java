@@ -70,18 +70,22 @@ public class SubclassPropertyMapper implements ExtendedPropertyMapper {
                                                                                     PersistentCollection newColl, 
                                                                                     Serializable oldColl,
                                                                                     Serializable id) {
-        List<PersistentCollectionChangeData> collectionChanges = parentMapper.mapCollectionChanges(
+        List<PersistentCollectionChangeData> parentCollectionChanges = parentMapper.mapCollectionChanges(
                 referencingPropertyName, newColl, oldColl, id);
 
-        if (collectionChanges == null) {
-            return main.mapCollectionChanges(referencingPropertyName, newColl, oldColl, id);
+		List<PersistentCollectionChangeData> mainCollectionChanges = main.mapCollectionChanges(
+				referencingPropertyName, newColl, oldColl, id);
+
+        if (parentCollectionChanges == null) {
+            return mainCollectionChanges;
         } else {
-            return collectionChanges;
+            parentCollectionChanges.addAll(mainCollectionChanges);
+			return parentCollectionChanges;
         }
     }
 
-    public CompositeMapperBuilder addComposite(PropertyData propertyData) {
-        return main.addComposite(propertyData);
+    public CompositeMapperBuilder addComponent(PropertyData propertyData) {
+        return main.addComponent(propertyData);
     }
 
     public void addComposite(PropertyData propertyData, PropertyMapper propertyMapper) {

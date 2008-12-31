@@ -400,7 +400,7 @@ public final class CollectionMetadataGenerator {
                     queryGeneratorBuilder.getCurrentIndex());
         } else {
             // Last but one parameter: collection components are always insertable
-            boolean mapped = mainGenerator.getBasicMetadataGenerator().addBasicNoComponent(xmlMapping,
+            boolean mapped = mainGenerator.getBasicMetadataGenerator().addBasic(xmlMapping,
                     new PersistentPropertyAuditingData(prefix, "field", ModificationStore.FULL), value, null,
                     true, true);
 

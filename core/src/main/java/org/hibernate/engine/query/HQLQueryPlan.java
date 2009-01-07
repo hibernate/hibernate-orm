@@ -205,7 +205,7 @@ public class HQLQueryPlan implements Serializable {
 				final int size = tmp.size();
 				for ( int x = 0; x < size; x++ ) {
 					final Object result = tmp.get( x );
-					if ( distinction.add( result ) ) {
+					if ( ! distinction.add( result ) ) {
 						continue;
 					}
 					includedCount++;

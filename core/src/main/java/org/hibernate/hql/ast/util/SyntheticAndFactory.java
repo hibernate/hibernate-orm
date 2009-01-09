@@ -36,11 +36,9 @@ import org.hibernate.hql.ast.HqlSqlWalker;
 import org.hibernate.persister.entity.Queryable;
 import org.hibernate.sql.JoinFragment;
 import org.hibernate.util.StringHelper;
-import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.type.Type;
 import org.hibernate.param.CollectionFilterKeyParameterSpecification;
 
-import antlr.ASTFactory;
 import antlr.collections.AST;
 
 import org.slf4j.Logger;
@@ -96,6 +94,11 @@ public class SyntheticAndFactory implements HqlSqlTokenTypes {
 		SqlFragment fragment = ( SqlFragment ) create( SQL_TOKEN, whereFragment );
 		fragment.setJoinFragment( joinFragment );
 		fragment.setFromElement( fromElement );
+
+		if ( fromElement.getIndexCollectionSelectorParamSpec() != null ) {
+			fragment.addEmbeddedParameter( fromElement.getIndexCollectionSelectorParamSpec() );
+			fromElement.setIndexCollectionSelectorParamSpec( null );
+		}
 
 		if ( hqlSqlWalker.isFilter() ) {
 			if ( whereFragment.indexOf( '?' ) >= 0 ) {

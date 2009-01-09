@@ -97,6 +97,11 @@ public class SyntheticAndFactory implements HqlSqlTokenTypes {
 		fragment.setJoinFragment( joinFragment );
 		fragment.setFromElement( fromElement );
 
+		if ( fromElement.getIndexCollectionSelectorParamSpec() != null ) {
+			fragment.addEmbeddedParameter( fromElement.getIndexCollectionSelectorParamSpec() );
+			fromElement.setIndexCollectionSelectorParamSpec( null );
+		}
+
 		if ( hqlSqlWalker.isFilter() ) {
 			if ( whereFragment.indexOf( '?' ) >= 0 ) {
 				Type collectionFilterKeyType = hqlSqlWalker.getSessionFactoryHelper()

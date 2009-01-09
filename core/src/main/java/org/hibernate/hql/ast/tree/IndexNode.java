@@ -116,13 +116,14 @@ public class IndexNode extends FromReferenceNode {
 			}
 		}
 
+		// The 'from element' that represents the elements of the collection.
+		setFromElement( fromElement );
+
 		// Add the condition to the join sequence that qualifies the indexed element.
-		AST index = collectionNode.getNextSibling();	// The index should be a constant, which will have been processed already.
-		if ( index == null ) {
+		AST selector = collectionNode.getNextSibling();
+		if ( selector == null ) {
 			throw new QueryException( "No index value!" );
 		}
-
-		setFromElement( fromElement );							// The 'from element' that represents the elements of the collection.
 
 		// Sometimes use the element table alias, sometimes use the... umm... collection table alias (many to many)
 		String collectionTableAlias = elementTable;
@@ -139,19 +140,18 @@ public class IndexNode extends FromReferenceNode {
 		}
 		SqlGenerator gen = new SqlGenerator( getSessionFactoryHelper().getFactory() );
 		try {
-			gen.simpleExpr( index ); //TODO: used to be exprNoParens! was this needed?
+			gen.simpleExpr( selector ); //TODO: used to be exprNoParens! was this needed?
 		}
 		catch ( RecognitionException e ) {
 			throw new QueryException( e.getMessage(), e );
 		}
-		String expression = gen.getSQL();
-		joinSequence.addCondition( collectionTableAlias + '.' + indexCols[0] + " = " + expression );
+		String selectorExpression = gen.getSQL();
+		joinSequence.addCondition( collectionTableAlias + '.' + indexCols[0] + " = " + selectorExpression );
 
 		// Now, set the text for this node.  It should be the element columns.
 		String[] elementColumns = queryableCollection.getElementColumnNames( elementTable );
 		setText( elementColumns[0] );
 		setResolved();
 	}
-
 
 }

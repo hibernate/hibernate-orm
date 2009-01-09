@@ -68,6 +68,7 @@ import org.hibernate.hql.ast.tree.SelectExpression;
 import org.hibernate.hql.ast.tree.UpdateStatement;
 import org.hibernate.hql.ast.tree.Node;
 import org.hibernate.hql.ast.tree.OperatorNode;
+import org.hibernate.hql.ast.tree.ParameterContainer;
 import org.hibernate.hql.ast.util.ASTPrinter;
 import org.hibernate.hql.ast.util.ASTUtil;
 import org.hibernate.hql.ast.util.AliasGenerator;
@@ -355,7 +356,7 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 			if ( log.isDebugEnabled() ) {
 				log.debug( "handleWithFragment() : " + getASTPrinter().showAsString( hqlSqlWithNode, "-- with clause --" ) );
 			}
-			WithClauseVisitor visitor = new WithClauseVisitor();
+			WithClauseVisitor visitor = new WithClauseVisitor( fromElement );
 			NodeTraverser traverser = new NodeTraverser( visitor );
 			traverser.traverseDepthFirst( hqlSqlWithNode );
 			FromElement referencedFromElement = visitor.getReferencedFromElement();
@@ -379,8 +380,13 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 	}
 
 	private static class WithClauseVisitor implements NodeTraverser.VisitationStrategy {
+		private final FromElement joinFragment;
 		private FromElement referencedFromElement;
 		private String joinAlias;
+
+		public WithClauseVisitor(FromElement fromElement) {
+			this.joinFragment = fromElement;
+		}
 
 		public void visit(AST node) {
 			// todo : currently expects that the individual with expressions apply to the same sql table join.
@@ -393,7 +399,6 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 			//          2) here we would need to track each comparison individually, along with
 			//              the join alias to which it applies and then pass that information
 			//              back to the FromElement so it can pass it along to the JoinSequence
-
 			if ( node instanceof DotNode ) {
 				DotNode dotNode = ( DotNode ) node;
 				FromElement fromElement = dotNode.getFromElement();
@@ -414,6 +419,25 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 					}
 				}
 			}
+			else if ( node instanceof ParameterNode ) {
+				applyParameterSpecification( ( ( ParameterNode ) node ).getHqlParameterSpecification() );
+			}
+			else if ( node instanceof ParameterContainer ) {
+				applyParameterSpecifications( ( ParameterContainer ) node );
+			}
+		}
+
+		private void applyParameterSpecifications(ParameterContainer parameterContainer) {
+			if ( parameterContainer.hasEmbeddedParameters() ) {
+				ParameterSpecification[] specs = parameterContainer.getEmbeddedParameters();
+				for ( int i = 0; i < specs.length; i++ ) {
+					applyParameterSpecification( specs[i] );
+				}
+			}
+		}
+
+		private void applyParameterSpecification(ParameterSpecification paramSpec) {
+			joinFragment.addEmbeddedParameter( paramSpec );
 		}
 
 		private String extractAppliedAlias(DotNode dotNode) {

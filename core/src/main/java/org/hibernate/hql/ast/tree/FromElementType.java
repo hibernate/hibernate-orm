@@ -28,6 +28,7 @@ import java.util.Map;
 
 import org.hibernate.MappingException;
 import org.hibernate.QueryException;
+import org.hibernate.param.ParameterSpecification;
 import org.hibernate.util.ArrayHelper;
 import org.hibernate.engine.JoinSequence;
 import org.hibernate.hql.CollectionProperties;
@@ -62,6 +63,7 @@ class FromElementType {
 	private CollectionPropertyMapping collectionPropertyMapping;
 	private JoinSequence joinSequence;
 	private String collectionSuffix;
+	private ParameterSpecification indexCollectionSelectorParamSpec;
 
 	public FromElementType(FromElement fromElement, EntityPersister persister, EntityType entityType) {
 		this.fromElement = fromElement;
@@ -434,5 +436,13 @@ class FromElementType {
 
 	public boolean isEntity() {
 		return persister != null;
+	}
+
+	public ParameterSpecification getIndexCollectionSelectorParamSpec() {
+		return indexCollectionSelectorParamSpec;
+	}
+
+	public void setIndexCollectionSelectorParamSpec(ParameterSpecification indexCollectionSelectorParamSpec) {
+		this.indexCollectionSelectorParamSpec = indexCollectionSelectorParamSpec;
 	}
 }

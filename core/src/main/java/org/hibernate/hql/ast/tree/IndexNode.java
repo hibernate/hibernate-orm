@@ -24,8 +24,16 @@
  */
 package org.hibernate.hql.ast.tree;
 
+import java.util.List;
+import java.util.Iterator;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+
 import org.hibernate.QueryException;
+import org.hibernate.param.ParameterSpecification;
 import org.hibernate.engine.JoinSequence;
+import org.hibernate.engine.QueryParameters;
+import org.hibernate.engine.SessionImplementor;
 import org.hibernate.hql.ast.SqlGenerator;
 import org.hibernate.hql.ast.util.SessionFactoryHelper;
 import org.hibernate.persister.collection.QueryableCollection;
@@ -147,6 +155,24 @@ public class IndexNode extends FromReferenceNode {
 		}
 		String selectorExpression = gen.getSQL();
 		joinSequence.addCondition( collectionTableAlias + '.' + indexCols[0] + " = " + selectorExpression );
+		List paramSpecs = gen.getCollectedParameters();
+		if ( paramSpecs != null ) {
+			switch ( paramSpecs.size() ) {
+				case 0 :
+					// nothing to do
+					break;
+				case 1 :
+					ParameterSpecification paramSpec = ( ParameterSpecification ) paramSpecs.get( 0 );
+					paramSpec.setExpectedType( queryableCollection.getIndexType() );
+					fromElement.setIndexCollectionSelectorParamSpec( paramSpec );
+					break;
+				default:
+					fromElement.setIndexCollectionSelectorParamSpec(
+							new AggregatedIndexCollectionSelectorParameterSpecifications( paramSpecs )
+					);
+					break;
+			}
+		}
 
 		// Now, set the text for this node.  It should be the element columns.
 		String[] elementColumns = queryableCollection.getElementColumnNames( elementTable );
@@ -154,4 +180,45 @@ public class IndexNode extends FromReferenceNode {
 		setResolved();
 	}
 
+	/**
+	 * In the (rare?) case where the index selector contains multiple parameters...
+	 */
+	private static class AggregatedIndexCollectionSelectorParameterSpecifications implements ParameterSpecification {
+		private final List paramSpecs;
+
+		public AggregatedIndexCollectionSelectorParameterSpecifications(List paramSpecs) {
+			this.paramSpecs = paramSpecs;
+		}
+
+		public int bind(PreparedStatement statement, QueryParameters qp, SessionImplementor session, int position)
+		throws SQLException {
+			int bindCount = 0;
+			Iterator itr = paramSpecs.iterator();
+			while ( itr.hasNext() ) {
+				final ParameterSpecification paramSpec = ( ParameterSpecification ) itr.next();
+				bindCount += paramSpec.bind( statement, qp, session, position + bindCount );
+			}
+			return bindCount;
+		}
+
+		public Type getExpectedType() {
+			return null;
+		}
+
+		public void setExpectedType(Type expectedType) {
+		}
+
+		public String renderDisplayInfo() {
+			return "index-selector [" + collectDisplayInfo() + "]" ;
+		}
+
+		private String collectDisplayInfo() {
+			StringBuffer buffer = new StringBuffer();
+			Iterator itr = paramSpecs.iterator();
+			while ( itr.hasNext() ) {
+				buffer.append( ( ( ParameterSpecification ) itr.next() ).renderDisplayInfo() );
+			}
+			return buffer.toString();
+		}
+	}
 }

@@ -1,6 +1,8 @@
 //$Id$
 package org.hibernate.test.annotations;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.List;
@@ -17,9 +19,11 @@ import org.hibernate.Transaction;
  * @author Emmanuel Bernard
  */
 public class EntityTest extends TestCase {
-
+	private DateFormat df;
+	
 	public EntityTest(String x) {
 		super( x );
+		df = SimpleDateFormat.getDateTimeInstance(DateFormat.LONG, DateFormat.LONG);
 	}
 
 	public void testLoad() throws Exception {
@@ -337,10 +341,10 @@ public class EntityTest extends TestCase {
 		Flight copyAirFrance = (Flight) q.uniqueResult();
 		assertNotNull( copyAirFrance );
 		assertEquals(
-				new Date( 05, 06, 21 ),
-				copyAirFrance.getDepartureDate()
+				df.format(new Date( 05, 06, 21 )).toString(),
+				df.format(copyAirFrance.getDepartureDate()).toString()
 		);
-		assertEquals( copyAirFrance.getBuyDate().getTime() / 1000 , airFrance.getBuyDate().getTime() / 1000 );
+		assertEquals( df.format(airFrance.getBuyDate()), df.format(copyAirFrance.getBuyDate()));
 
 		s.delete( copyAirFrance );
 		tx.commit();

@@ -305,7 +305,7 @@ public class QueryTest extends TestCase {
 		em.flush();
 		em.clear();
 		Query q = em.createQuery(
-				"select i from Item i where i.descr = :descr or (i.descr is null and :descr is null)"
+				"select i from Item i where i.descr = :descr or (i.descr is null and cast(:descr as string) is null)"
 		);
 		//Query q = em.createQuery( "select i from Item i where (i.descr is null and :descr is null) or (i.descr = :descr");
 		q.setParameter( "descr", "dd" );

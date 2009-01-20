@@ -43,7 +43,7 @@ public class Simple extends AbstractEntityTest {
         cfg.addAnnotatedClass(IntTestEntity.class);
     }
 
-    @BeforeClass(dependsOnMethods = "init")
+    @Test
     public void initData() {
         EntityManager em = getEntityManager();
         em.getTransaction().begin();
@@ -58,12 +58,12 @@ public class Simple extends AbstractEntityTest {
         em.getTransaction().commit();
     }
 
-    @Test
+    @Test(dependsOnMethods = "initData")
     public void testRevisionsCounts() {
         assert Arrays.asList(1, 2).equals(getAuditReader().getRevisions(IntTestEntity.class, id1));
     }
 
-    @Test
+    @Test(dependsOnMethods = "initData")
     public void testHistoryOfId1() {
         IntTestEntity ver1 = new IntTestEntity(10, id1);
         IntTestEntity ver2 = new IntTestEntity(20, id1);

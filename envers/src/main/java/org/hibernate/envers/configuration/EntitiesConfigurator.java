@@ -37,9 +37,9 @@ import org.dom4j.Element;
 import org.dom4j.io.DOMWriter;
 import org.dom4j.io.OutputFormat;
 import org.dom4j.io.XMLWriter;
-import org.hibernate.envers.configuration.metadata.AnnotationsMetadataReader;
+import org.hibernate.envers.configuration.metadata.reader.AnnotationsMetadataReader;
 import org.hibernate.envers.configuration.metadata.EntityXmlMappingData;
-import org.hibernate.envers.configuration.metadata.PersistentClassAuditingData;
+import org.hibernate.envers.configuration.metadata.reader.ClassAuditingData;
 import org.hibernate.envers.configuration.metadata.AuditMetadataGenerator;
 import org.hibernate.envers.entities.EntitiesConfigurations;
 import org.hibernate.envers.tools.StringTools;
@@ -64,8 +64,8 @@ public class EntitiesConfigurator {
         // Sorting the persistent class topologically - superclass always before subclass
         Iterator<PersistentClass> classes = GraphTopologicalSort.sort(new PersistentClassGraphDefiner(cfg)).iterator();
 
-        Map<PersistentClass, PersistentClassAuditingData> pcDatas =
-                new HashMap<PersistentClass, PersistentClassAuditingData>();
+        Map<PersistentClass, ClassAuditingData> pcDatas =
+                new HashMap<PersistentClass, ClassAuditingData>();
         Map<PersistentClass, EntityXmlMappingData> xmlMappings = new HashMap<PersistentClass, EntityXmlMappingData>();
 
         // First pass
@@ -74,7 +74,7 @@ public class EntitiesConfigurator {
             // Collecting information from annotations on the persistent class pc
             AnnotationsMetadataReader annotationsMetadataReader =
                     new AnnotationsMetadataReader(globalCfg, reflectionManager, pc);
-            PersistentClassAuditingData auditData = annotationsMetadataReader.getAuditData();
+            ClassAuditingData auditData = annotationsMetadataReader.getAuditData();
 
             if (auditData.isAudited()) {
                 pcDatas.put(pc, auditData);
@@ -90,7 +90,7 @@ public class EntitiesConfigurator {
         }
 
         // Second pass
-        for (Map.Entry<PersistentClass, PersistentClassAuditingData> pcDatasEntry : pcDatas.entrySet()) {
+        for (Map.Entry<PersistentClass, ClassAuditingData> pcDatasEntry : pcDatas.entrySet()) {
             EntityXmlMappingData xmlMappingData = xmlMappings.get(pcDatasEntry.getKey());
 
             auditMetaGen.generateSecondPass(pcDatasEntry.getKey(), pcDatasEntry.getValue(), xmlMappingData);

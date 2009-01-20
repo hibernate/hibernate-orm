@@ -42,7 +42,7 @@ public class MixedAccessType extends AbstractEntityTest {
         cfg.addAnnotatedClass(MixedAccessTypeEntity.class);
     }
 
-    @BeforeClass(dependsOnMethods = "init")
+    @Test
     public void initData() {
         EntityManager em = getEntityManager();
         em.getTransaction().begin();
@@ -57,12 +57,12 @@ public class MixedAccessType extends AbstractEntityTest {
         em.getTransaction().commit();
     }
 
-    @Test
+    @Test(dependsOnMethods = "initData")
     public void testRevisionsCounts() {
         assert Arrays.asList(1, 2).equals(getAuditReader().getRevisions(MixedAccessTypeEntity.class, id1));
     }
 
-    @Test
+    @Test(dependsOnMethods = "initData")
     public void testHistoryOfId1() {
         MixedAccessTypeEntity ver1 = new MixedAccessTypeEntity(id1, "data");
         MixedAccessTypeEntity ver2 = new MixedAccessTypeEntity(id1, "data2");

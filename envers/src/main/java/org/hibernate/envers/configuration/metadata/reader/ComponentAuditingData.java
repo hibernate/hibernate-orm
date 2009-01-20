@@ -22,25 +22,28 @@
  * Boston, MA  02110-1301  USA
  *
  */
-package org.hibernate.envers.configuration.metadata;
+package org.hibernate.envers.configuration.metadata.reader;
 
-import org.hibernate.envers.ModificationStore;
-import org.hibernate.envers.entities.PropertyData;
+import static org.hibernate.envers.tools.Tools.*;
+
+import java.util.Map;
 
 /**
+ * Audit mapping meta-data for component.
  * @author Adam Warski (adam at warski dot org)
  */
-public class PersistentComponentPropertyAuditingData extends PersistentPropertyAuditingData {
-	private final String beanName;
+public class ComponentAuditingData extends PropertyAuditingData implements AuditedPropertiesHolder {
+	private final Map<String, PropertyAuditingData> properties;
 
-    public PersistentComponentPropertyAuditingData(String name, String beanName, String accessType,
-												   ModificationStore store) {
-        super(name, accessType, store);
-
-		this.beanName = beanName;
-    }
-
-    public PropertyData getPropertyData() {
-        return new PropertyData(getName(), beanName, getAccessType(), getStore());
+	public ComponentAuditingData() {
+		this.properties = newHashMap();
 	}
+
+	public void addPropertyAuditingData(String propertyName, PropertyAuditingData auditingData) {
+		properties.put(propertyName, auditingData);
+	}
+
+    public PropertyAuditingData getPropertyAuditingData(String propertyName) {
+        return properties.get(propertyName);
+    }
 }

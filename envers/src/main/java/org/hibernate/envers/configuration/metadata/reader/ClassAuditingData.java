@@ -21,37 +21,39 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.envers.configuration.metadata;
+package org.hibernate.envers.configuration.metadata.reader;
 
 import java.util.Map;
 
 import org.hibernate.envers.AuditTable;
-import org.hibernate.envers.tools.Tools;
+import static org.hibernate.envers.tools.Tools.*;
 
 /**
  * @author Adam Warski (adam at warski dot org)
  * @author Sebastian Komander
 */
-public class PersistentClassAuditingData {
-    public PersistentClassAuditingData() {
-        properties = Tools.newHashMap();
-        secondaryTableDictionary = Tools.newHashMap();
-    }
+public class ClassAuditingData implements AuditedPropertiesHolder {
+    private final Map<String, PropertyAuditingData> properties;
+    private final Map<String, String> secondaryTableDictionary;
 
-    private Map<String, PersistentPropertyAuditingData> properties;
     private AuditTable auditTable;
-    private Map<String, String> secondaryTableDictionary;
+
 	/**
 	 * True if the class is audited globally (this helps to cover the cases when there are no fields in the class,
 	 * but it's still audited).
 	 */
 	private boolean defaultAudited;
 
-    public Map<String, PersistentPropertyAuditingData> getProperties() {
-        return properties;
+    public ClassAuditingData() {
+        properties = newHashMap();
+        secondaryTableDictionary = newHashMap();
     }
 
-    public PersistentPropertyAuditingData getPropertyAuditingData(String propertyName) {
+	public void addPropertyAuditingData(String propertyName, PropertyAuditingData auditingData) {
+		properties.put(propertyName, auditingData);
+	}
+
+    public PropertyAuditingData getPropertyAuditingData(String propertyName) {
         return properties.get(propertyName);
     }
 
@@ -72,10 +74,6 @@ public class PersistentClassAuditingData {
 	}
 
 	public boolean isAudited() {
-        if (defaultAudited || properties.size() > 0) {
-            return true;
-        } else {
-            return false;
-        }
+        return defaultAudited || properties.size() > 0;
     }
 }

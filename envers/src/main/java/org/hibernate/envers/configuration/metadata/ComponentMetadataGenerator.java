@@ -5,7 +5,8 @@ import org.hibernate.mapping.Value;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Property;
 import org.hibernate.envers.entities.mapper.CompositeMapperBuilder;
-import org.hibernate.envers.ModificationStore;
+import org.hibernate.envers.configuration.metadata.reader.ComponentAuditingData;
+import org.hibernate.envers.configuration.metadata.reader.PropertyAuditingData;
 
 import java.util.Iterator;
 
@@ -21,25 +22,24 @@ public final class ComponentMetadataGenerator {
 	}
 
 	@SuppressWarnings({"unchecked"})
-	public void addComponent(Element parent, PersistentPropertyAuditingData persistentPropertyAuditingData,
+	public void addComponent(Element parent, PropertyAuditingData propertyAuditingData,
 							 Value value, CompositeMapperBuilder mapper, String entityName,
 							 EntityXmlMappingData xmlMappingData, boolean firstPass) {
 		Component prop_component = (Component) value;
 
-		CompositeMapperBuilder componentMapper = mapper.addComponent(persistentPropertyAuditingData.getPropertyData());
+		CompositeMapperBuilder componentMapper = mapper.addComponent(propertyAuditingData.getPropertyData());
+
+		// The property auditing data must be for a component.
+		ComponentAuditingData componentAuditingData = (ComponentAuditingData) propertyAuditingData;
 
 		// Adding all properties of the component
 		Iterator<Property> properties = (Iterator<Property>) prop_component.getPropertyIterator();
 		while (properties.hasNext()) {
 			Property property = properties.next();
-			// The name of the property in the entity will consist of the name of the component property concatenated
-			// with the name of the property in the bean, to avoid conflicts.
-			PersistentPropertyAuditingData propertyAuditingData = new PersistentComponentPropertyAuditingData(
-					persistentPropertyAuditingData.getName() + "_" + property.getName(),
-					property.getName(), property.getPropertyAccessorName(), ModificationStore.FULL);
 
-			mainGenerator.addValue(parent, property.getValue(), componentMapper,
-					entityName, xmlMappingData, propertyAuditingData, property.isInsertable(), firstPass);
+			mainGenerator.addValue(parent, property.getValue(), componentMapper, entityName, xmlMappingData,
+					componentAuditingData.getPropertyAuditingData(property.getName()),
+					property.isInsertable(), firstPass);
 		}
 	}
 }

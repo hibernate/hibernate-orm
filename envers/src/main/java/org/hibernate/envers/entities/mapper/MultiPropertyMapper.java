@@ -32,6 +32,7 @@ import org.hibernate.envers.configuration.AuditConfiguration;
 import org.hibernate.envers.reader.AuditReaderImplementor;
 import org.hibernate.envers.tools.reflection.ReflectionTools;
 import org.hibernate.envers.tools.Tools;
+import org.hibernate.envers.tools.MappingTools;
 
 import org.hibernate.collection.PersistentCollection;
 import org.hibernate.property.Getter;
@@ -120,9 +121,30 @@ public class MultiPropertyMapper implements ExtendedPropertyMapper {
                                                                                     PersistentCollection newColl,
                                                                                     Serializable oldColl,
                                                                                     Serializable id) {
+		// Name of the properyt, to which we will delegate the mapping.
+		String delegatePropertyName;
+
+		// Checking if the property name doesn't reference a collection in a component - then the name will containa a .
+		int dotIndex = referencingPropertyName.indexOf('.');
+		if (dotIndex != -1) {
+			// Computing the name of the component
+			String componentName = referencingPropertyName.substring(0, dotIndex);
+			// And the name of the property in the component
+			String propertyInComponentName = MappingTools.createComponentPrefix(componentName)
+					+ referencingPropertyName.substring(dotIndex+1);
+
+			// We need to get the mapper for the component.
+			referencingPropertyName = componentName;
+			// As this is a component, we delegate to the property in the component.
+			delegatePropertyName = propertyInComponentName;
+		} else {
+			// If this is not a component, we delegate to the same property.
+			delegatePropertyName = referencingPropertyName;
+		}
+
         PropertyMapper mapper = properties.get(propertyDatas.get(referencingPropertyName));
         if (mapper != null) {
-            return mapper.mapCollectionChanges(referencingPropertyName, newColl, oldColl, id);
+            return mapper.mapCollectionChanges(delegatePropertyName, newColl, oldColl, id);
         } else {
             return null;
         }

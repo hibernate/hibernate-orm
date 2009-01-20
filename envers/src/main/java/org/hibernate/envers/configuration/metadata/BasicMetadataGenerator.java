@@ -28,6 +28,7 @@ import java.util.Properties;
 
 import org.dom4j.Element;
 import org.hibernate.envers.entities.mapper.SimpleMapperBuilder;
+import org.hibernate.envers.configuration.metadata.reader.PropertyAuditingData;
 
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.SimpleValue;
@@ -43,16 +44,16 @@ import org.hibernate.type.Type;
  * @author Adam Warski (adam at warski dot org)
  */
 public final class BasicMetadataGenerator {
-	boolean addBasic(Element parent, PersistentPropertyAuditingData persistentPropertyAuditingData,
+	boolean addBasic(Element parent, PropertyAuditingData propertyAuditingData,
 					 Value value, SimpleMapperBuilder mapper, boolean insertable, boolean key) {
 		Type type = value.getType();
 
 		if (type instanceof ImmutableType || type instanceof MutableType) {
-			addSimpleValue(parent, persistentPropertyAuditingData, value, mapper, insertable, key);
+			addSimpleValue(parent, propertyAuditingData, value, mapper, insertable, key);
 		} else if (type instanceof CustomType || type instanceof CompositeCustomType) {
-			addCustomValue(parent, persistentPropertyAuditingData, value, mapper, insertable, key);
+			addCustomValue(parent, propertyAuditingData, value, mapper, insertable, key);
 		} else if ("org.hibernate.type.PrimitiveByteArrayBlobType".equals(type.getClass().getName())) {
-			addSimpleValue(parent, persistentPropertyAuditingData, value, mapper, insertable, key);
+			addSimpleValue(parent, propertyAuditingData, value, mapper, insertable, key);
 		} else {
 			return false;
 		}
@@ -61,25 +62,25 @@ public final class BasicMetadataGenerator {
 	}
 
 	@SuppressWarnings({"unchecked"})
-	private void addSimpleValue(Element parent, PersistentPropertyAuditingData persistentPropertyAuditingData,
+	private void addSimpleValue(Element parent, PropertyAuditingData propertyAuditingData,
 								Value value, SimpleMapperBuilder mapper, boolean insertable, boolean key) {
 		if (parent != null) {
-			Element prop_mapping = MetadataTools.addProperty(parent, persistentPropertyAuditingData.getName(),
+			Element prop_mapping = MetadataTools.addProperty(parent, propertyAuditingData.getName(),
 					value.getType().getName(), insertable, key);
 			MetadataTools.addColumns(prop_mapping, (Iterator<Column>) value.getColumnIterator());
 		}
 
 		// A null mapper means that we only want to add xml mappings
 		if (mapper != null) {
-			mapper.add(persistentPropertyAuditingData.getPropertyData());
+			mapper.add(propertyAuditingData.getPropertyData());
 		}
 	}
 
 	@SuppressWarnings({"unchecked"})
-	private void addCustomValue(Element parent, PersistentPropertyAuditingData persistentPropertyAuditingData,
+	private void addCustomValue(Element parent, PropertyAuditingData propertyAuditingData,
 								Value value, SimpleMapperBuilder mapper, boolean insertable, boolean key) {
 		if (parent != null) {
-			Element prop_mapping = MetadataTools.addProperty(parent, persistentPropertyAuditingData.getName(),
+			Element prop_mapping = MetadataTools.addProperty(parent, propertyAuditingData.getName(),
 					null, insertable, key);
 
 			//CustomType propertyType = (CustomType) value.getType();
@@ -102,7 +103,7 @@ public final class BasicMetadataGenerator {
 		}
 
 		if (mapper != null) {
-			mapper.add(persistentPropertyAuditingData.getPropertyData());
+			mapper.add(propertyAuditingData.getPropertyData());
 		}
 	}
 }

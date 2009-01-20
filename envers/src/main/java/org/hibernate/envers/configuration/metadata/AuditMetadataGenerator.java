@@ -30,6 +30,8 @@ import java.util.Map;
 import org.dom4j.Element;
 import org.hibernate.envers.configuration.GlobalConfiguration;
 import org.hibernate.envers.configuration.AuditEntitiesConfiguration;
+import org.hibernate.envers.configuration.metadata.reader.ClassAuditingData;
+import org.hibernate.envers.configuration.metadata.reader.PropertyAuditingData;
 import org.hibernate.envers.entities.EntityConfiguration;
 import org.hibernate.envers.entities.IdMappingData;
 import org.hibernate.envers.entities.mapper.CompositeMapperBuilder;
@@ -100,14 +102,14 @@ public final class AuditMetadataGenerator {
     }
 
     @SuppressWarnings({"unchecked"})
-    void addValue(Element parent,  Value value,  CompositeMapperBuilder currentMapper, String entityName,
-                  EntityXmlMappingData xmlMappingData,  PersistentPropertyAuditingData persistentPropertyAuditingData,
+    void addValue(Element parent, Value value, CompositeMapperBuilder currentMapper, String entityName,
+                  EntityXmlMappingData xmlMappingData, PropertyAuditingData propertyAuditingData,
                   boolean insertable, boolean firstPass) {
         Type type = value.getType();
 
         // only first pass
         if (firstPass) {
-            if (basicMetadataGenerator.addBasic(parent, persistentPropertyAuditingData, value, currentMapper,
+            if (basicMetadataGenerator.addBasic(parent, propertyAuditingData, value, currentMapper,
                     insertable, false)) {
                 // The property was mapped by the basic generator.
                 return;
@@ -116,18 +118,18 @@ public final class AuditMetadataGenerator {
 
 		if (type instanceof ComponentType) {
 			// both passes
-			componentMetadataGenerator.addComponent(parent, persistentPropertyAuditingData, value, currentMapper,
+			componentMetadataGenerator.addComponent(parent, propertyAuditingData, value, currentMapper,
 					entityName, xmlMappingData, firstPass);
 		} else if (type instanceof ManyToOneType) {
             // only second pass
             if (!firstPass) {
-                toOneRelationMetadataGenerator.addToOne(parent, persistentPropertyAuditingData, value, currentMapper,
+                toOneRelationMetadataGenerator.addToOne(parent, propertyAuditingData, value, currentMapper,
                         entityName, insertable);
             }
         } else if (type instanceof OneToOneType) {
             // only second pass
             if (!firstPass) {
-                toOneRelationMetadataGenerator.addOneToOneNotOwning(persistentPropertyAuditingData, value,
+                toOneRelationMetadataGenerator.addOneToOneNotOwning(propertyAuditingData, value,
                         currentMapper, entityName);
             }
         } else if (type instanceof CollectionType) {
@@ -135,35 +137,35 @@ public final class AuditMetadataGenerator {
             if (!firstPass) {
                 CollectionMetadataGenerator collectionMetadataGenerator = new CollectionMetadataGenerator(this,
                         (Collection) value, currentMapper, entityName, xmlMappingData,
-                        persistentPropertyAuditingData);
+						propertyAuditingData);
                 collectionMetadataGenerator.addCollection();
             }
         } else {
             if (firstPass) {
                 // If we got here in the first pass, it means the basic mapper didn't map it, and none of the
                 // above branches either.
-                throwUnsupportedTypeException(type, entityName, persistentPropertyAuditingData.getName());
+                throwUnsupportedTypeException(type, entityName, propertyAuditingData.getName());
             }
         }
     }
 
     @SuppressWarnings({"unchecked"})
     private void addProperties(Element parent, Iterator<Property> properties, CompositeMapperBuilder currentMapper,
-                               PersistentClassAuditingData auditingData, String entityName, EntityXmlMappingData xmlMappingData,
+                               ClassAuditingData auditingData, String entityName, EntityXmlMappingData xmlMappingData,
                                boolean firstPass) {
         while (properties.hasNext()) {
             Property property = properties.next();
             String propertyName = property.getName();
-            if (auditingData.getPropertyAuditingData(propertyName) != null) {
-                addValue(parent, property.getValue(), currentMapper, entityName,
-                        xmlMappingData, auditingData.getPropertyAuditingData(propertyName),
-                        property.isInsertable(), firstPass);
+			PropertyAuditingData propertyAuditingData = auditingData.getPropertyAuditingData(propertyName);
+            if (propertyAuditingData != null) {
+				addValue(parent, property.getValue(), currentMapper, entityName, xmlMappingData, propertyAuditingData,
+						property.isInsertable(), firstPass);
             }
         }
     }
 
     @SuppressWarnings({"unchecked"})
-    private void createJoins(PersistentClass pc, Element parent, PersistentClassAuditingData auditingData) {
+    private void createJoins(PersistentClass pc, Element parent, ClassAuditingData auditingData) {
         Iterator<Join> joins = pc.getJoinIterator();
 
         Map<Join, Element> joinElements = new HashMap<Join, Element>();
@@ -200,7 +202,7 @@ public final class AuditMetadataGenerator {
     }
 
     @SuppressWarnings({"unchecked"})
-    private void addJoins(PersistentClass pc, CompositeMapperBuilder currentMapper, PersistentClassAuditingData auditingData,
+    private void addJoins(PersistentClass pc, CompositeMapperBuilder currentMapper, ClassAuditingData auditingData,
                           String entityName, EntityXmlMappingData xmlMappingData,boolean firstPass) {
         Iterator<Join> joins = pc.getJoinIterator();
 
@@ -255,7 +257,7 @@ public final class AuditMetadataGenerator {
     }
 
     @SuppressWarnings({"unchecked"})
-    public void generateFirstPass(PersistentClass pc, PersistentClassAuditingData auditingData,
+    public void generateFirstPass(PersistentClass pc, ClassAuditingData auditingData,
                                   EntityXmlMappingData xmlMappingData) {
         String schema = auditingData.getAuditTable().schema();
         if (StringTools.isEmpty(schema)) {
@@ -334,7 +336,7 @@ public final class AuditMetadataGenerator {
     }
 
     @SuppressWarnings({"unchecked"})
-    public void generateSecondPass(PersistentClass pc, PersistentClassAuditingData auditingData,
+    public void generateSecondPass(PersistentClass pc, ClassAuditingData auditingData,
                                    EntityXmlMappingData xmlMappingData) {
         String entityName = pc.getEntityName();
 

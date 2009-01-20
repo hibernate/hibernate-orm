@@ -22,7 +22,7 @@
  * Boston, MA  02110-1301  USA
  *
  */
-package org.hibernate.envers.configuration.metadata;
+package org.hibernate.envers.configuration.metadata.reader;
 
 import org.hibernate.envers.ModificationStore;
 import org.hibernate.envers.AuditJoinTable;
@@ -31,23 +31,25 @@ import org.hibernate.envers.entities.PropertyData;
 /**
  * @author Adam Warski (adam at warski dot org)
  */
-public class PersistentPropertyAuditingData {
+public class PropertyAuditingData {
     private String name;
+	private String beanName;
     private ModificationStore store;
     private String mapKey;
     private AuditJoinTable joinTable;
     private String accessType;
 
-    public PersistentPropertyAuditingData() {
+    public PropertyAuditingData() {
     }
 
-    public PersistentPropertyAuditingData(String name, String accessType, ModificationStore store) {
+    public PropertyAuditingData(String name, String accessType, ModificationStore store) {
         this.name = name;
+		this.beanName = name;
         this.accessType = accessType;
         this.store = store;
     }
 
-    public String getName() {
+	public String getName() {
         return name;
     }
 
@@ -55,7 +57,15 @@ public class PersistentPropertyAuditingData {
         this.name = name;
     }
 
-    public ModificationStore getStore() {
+	public String getBeanName() {
+		return beanName;
+	}
+
+	public void setBeanName(String beanName) {
+		this.beanName = beanName;
+	}
+
+	public ModificationStore getStore() {
         return store;
     }
 
@@ -88,6 +98,6 @@ public class PersistentPropertyAuditingData {
     }
 
     public PropertyData getPropertyData() {
-        return new PropertyData(name, name, accessType, store);
+        return new PropertyData(name, beanName, accessType, store);
     }
 }

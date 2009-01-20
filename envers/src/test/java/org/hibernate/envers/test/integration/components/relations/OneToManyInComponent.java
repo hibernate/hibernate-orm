@@ -31,6 +31,7 @@ import org.hibernate.envers.test.entities.components.relations.OneToManyComponen
 import org.hibernate.envers.test.entities.components.relations.OneToManyComponent;
 import org.hibernate.envers.test.entities.StrTestEntity;
 import org.testng.annotations.Test;
+import org.testng.annotations.BeforeClass;
 
 import org.hibernate.ejb.Ejb3Configuration;
 
@@ -47,7 +48,7 @@ public class OneToManyInComponent extends AbstractEntityTest {
 		cfg.addAnnotatedClass(StrTestEntity.class);
     }
 
-    @Test
+    @BeforeClass(dependsOnMethods = "init")
     public void initData() {
         // Revision 1
         EntityManager em = getEntityManager();
@@ -89,12 +90,12 @@ public class OneToManyInComponent extends AbstractEntityTest {
 		ste_id2 = ste2.getId();
     }
 
-    @Test(dependsOnMethods = "initData")
+    @Test
     public void testRevisionsCounts() {
         assert Arrays.asList(2, 3).equals(getAuditReader().getRevisions(OneToManyComponentTestEntity.class, otmcte_id1));
     }
 
-    @Test(dependsOnMethods = "initData")
+    @Test
     public void testHistoryOfId1() {
 		StrTestEntity ste1 = getEntityManager().find(StrTestEntity.class, ste_id1);
 		StrTestEntity ste2 = getEntityManager().find(StrTestEntity.class, ste_id2);

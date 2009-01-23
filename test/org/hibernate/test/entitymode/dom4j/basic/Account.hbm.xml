@@ -38,7 +38,7 @@
         <id name="accountId" type="string" node="@id"/>
         <many-to-one name="customer" column="customerId" entity-name="Customer" cascade="all" embed-xml="true" />
         <!--not-null="true"-->
-        <property name="balance" type="big_decimal" node="balance" precision="10" scale="0" />
+        <property name="balance" type="big_decimal" node="balance" precision="10" scale="2" />
     </class>
 
     <class entity-name="Location" node="location">

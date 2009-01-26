@@ -387,13 +387,17 @@ public class Oracle8iDialect extends Dialect {
 		}
 
 	};
+	
+	String getOracleTypesClassName() {
+		return "oracle.jdbc.driver.OracleTypes";
+	}
 
 	// not final-static to avoid possible classcast exceptions if using different oracle drivers.
 	int oracletypes_cursor_value = 0;
 	public int registerResultSetOutParameter(java.sql.CallableStatement statement,int col) throws SQLException {
 		if(oracletypes_cursor_value==0) {
 			try {
-				Class types = ReflectHelper.classForName("oracle.jdbc.driver.OracleTypes");
+				Class types = ReflectHelper.classForName(getOracleTypesClassName());
 				oracletypes_cursor_value = types.getField("CURSOR").getInt(types.newInstance());
 			} catch (Exception se) {
 				throw new HibernateException("Problem while trying to load or access OracleTypes.CURSOR value",se);

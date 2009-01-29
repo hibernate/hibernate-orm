@@ -29,36 +29,36 @@
     <title>Example: Parent/Child</title>
 
     <para>
-        One of the very first things that new users try to do with Hibernate is to model a parent / child type 
-        relationship. There are two different approaches to this. For various reasons the most convenient 
+        One of the first things that new users want to do with Hibernate is to model a parent/child type 
+        relationship. There are two different approaches to this. The most convenient 
         approach, especially for new users, is to model both <literal>Parent</literal> and <literal>Child</literal> 
         as entity classes with a <literal>&lt;one-to-many&gt;</literal> association from <literal>Parent</literal> 
-        to <literal>Child</literal>. (The alternative approach is to declare the <literal>Child</literal> as a 
-        <literal>&lt;composite-element&gt;</literal>.) Now, it turns out that default semantics of a one to many 
-        association (in Hibernate) are much less close to the usual semantics of a parent / child relationship than 
-        those of a composite element mapping. We will explain how to use a <emphasis>bidirectional one to many 
-        association with cascades</emphasis> to model a parent / child relationship efficiently and elegantly. 
-        It's not at all difficult!
+        to <literal>Child</literal>. The alternative approach is to declare the <literal>Child</literal> as a 
+        <literal>&lt;composite-element&gt;</literal>. The default semantics of a one-to-many 
+        association in Hibernate are much less close to the usual semantics of a parent/child relationship than 
+        those of a composite element mapping. We will explain how to use a <emphasis>bidirectional one-to-many 
+        association with cascades</emphasis> to model a parent/child relationship efficiently and elegantly. 
+        
     </para>
     
     <sect1 id="example-parentchild-collections">
         <title>A note about collections</title>
 
         <para>
-            Hibernate collections are considered to be a logical part of their owning entity; never of the
-            contained entities. This is a crucial distinction! It has the following consequences:
+            Hibernate collections are considered to be a logical part of their owning entity and not of the
+            contained entities. Be aware that this is a critical distinction that has the following consequences:
         </para>
 
         <itemizedlist>
             <listitem>
             <para>
-                When we remove / add an object from / to a collection, the version number of the collection owner
+                When you remove/add an object from/to a collection, the version number of the collection owner
                 is incremented.
             </para>
             </listitem>
             <listitem>
             <para>
-                If an object that was removed from a collection is an instance of a value type (eg, a composite
+                If an object that was removed from a collection is an instance of a value type (e.g. a composite
                 element), that object will cease to be persistent and its state will be completely removed from
                 the database. Likewise, adding a value type instance to the collection will cause its state to be
                 immediately persistent.
@@ -66,9 +66,9 @@
             </listitem>
             <listitem>
             <para>
-                On the other hand, if an entity is removed from a collection (a one-to-many or many-to-many
-                association), it will not be deleted, by default. This behaviour is completely consistent - a
-                change to the internal state of another entity should not cause the associated entity to vanish!
+                Conversely, if an entity is removed from a collection (a one-to-many or many-to-many
+                association), it will not be deleted by default. This behavior is completely consistent; a
+                change to the internal state of another entity should not cause the associated entity to vanish.
                 Likewise, adding an entity to a collection does not cause that entity to become persistent, by
                 default.
             </para>
@@ -76,9 +76,9 @@
         </itemizedlist>
 
         <para>
-            Instead, the default behaviour is that adding an entity to a collection merely creates a link between
-            the two entities, while removing it removes the link. This is very appropriate for all sorts of cases.
-            Where it is not appropriate at all is the case of a parent / child relationship, where the life of the
+            Adding an entity to a collection, by default, merely creates a link between
+            the two entities. Removing the entity will remove the link. This is appropriate for all sorts of cases.
+            However, it is not appropriate in the case of a parent/child relationship. In this case, the life of the
             child is bound to the life cycle of the parent.
         </para>
     
@@ -98,7 +98,7 @@
 </set>]]></programlisting>
     
         <para>
-            If we were to execute the following code
+            If we were to execute the following code:
         </para>
 
         <programlisting><![CDATA[Parent p = .....;
@@ -125,7 +125,7 @@ session.flush();]]></programlisting>
     
         <para>
             This is not only inefficient, but also violates any <literal>NOT NULL</literal> constraint on the
-            <literal>parent_id</literal> column. We can fix the nullability constraint violation by specifying
+            <literal>parent_id</literal> column. You can fix the nullability constraint violation by specifying
             <literal>not-null="true"</literal> in the collection mapping:
         </para>
 
@@ -138,21 +138,21 @@ session.flush();]]></programlisting>
         	However, this is not the recommended solution.
        	</para>
        	<para>
-            The underlying cause of this behaviour is that the link (the foreign key <literal>parent_id</literal>) 
+            The underlying cause of this behavior is that the link (the foreign key <literal>parent_id</literal>) 
             from <literal>p</literal> to <literal>c</literal> is not considered part of the state of the 
-            <literal>Child</literal> object and is therefore not created in the <literal>INSERT</literal>. So the 
+            <literal>Child</literal> object and is therefore not created in the <literal>INSERT</literal>. The 
             solution is to make the link part of the <literal>Child</literal> mapping.
         </para>
 
         <programlisting><![CDATA[<many-to-one name="parent" column="parent_id" not-null="true"/>]]></programlisting>
 
         <para>
-            (We also need to add the <literal>parent</literal> property to the <literal>Child</literal> class.)
+            You also need to add the <literal>parent</literal> property to the <literal>Child</literal> class.
         </para>
 
         <para>
             Now that the <literal>Child</literal> entity is managing the state of the link, we tell the collection 
-            not to update the link. We use the <literal>inverse</literal> attribute.
+            not to update the link. We use the <literal>inverse</literal> attribute to do this:
         </para>
 
         <programlisting><![CDATA[<set name="children" inverse="true">
@@ -161,7 +161,7 @@ session.flush();]]></programlisting>
 </set>]]></programlisting>
 
         <para>
-            The following code would be used to add a new <literal>Child</literal>
+            The following code would be used to add a new <literal>Child</literal>:
         </para>
 
         <programlisting><![CDATA[Parent p = (Parent) session.load(Parent.class, pid);
@@ -172,11 +172,11 @@ session.save(c);
 session.flush();]]></programlisting>
 
         <para>
-            And now, only one SQL <literal>INSERT</literal> would be issued!
+            Only one SQL <literal>INSERT</literal> would now be issued.
         </para>
 
         <para>
-            To tighten things up a bit, we could create an <literal>addChild()</literal> method of
+            You could also create an <literal>addChild()</literal> method of
             <literal>Parent</literal>.
         </para>
 
@@ -186,7 +186,7 @@ session.flush();]]></programlisting>
 }]]></programlisting>
 
         <para>
-            Now, the code to add a <literal>Child</literal> looks like
+            The code to add a <literal>Child</literal> looks like this:
         </para>
 
         <programlisting><![CDATA[Parent p = (Parent) session.load(Parent.class, pid);
@@ -201,7 +201,7 @@ session.flush();]]></programlisting>
          <title>Cascading life cycle</title>
      
          <para>
-             The explicit call to <literal>save()</literal> is still annoying. We will address this by
+             You can address the frustrations of the explicit call to <literal>save()</literal> by
              using cascades.
          </para>
 
@@ -211,7 +211,7 @@ session.flush();]]></programlisting>
 </set>]]></programlisting>
      
          <para>
-             This simplifies the code above to
+             This simplifies the code above to:
          </para>
 
         <programlisting><![CDATA[Parent p = (Parent) session.load(Parent.class, pid);
@@ -220,7 +220,7 @@ p.addChild(c);
 session.flush();]]></programlisting>
      
          <para>
-             Similarly, we don't need to iterate over the children when saving or deleting a <literal>Parent</literal>.
+             Similarly, we do not need to iterate over the children when saving or deleting a <literal>Parent</literal>.
              The following removes <literal>p</literal> and all its children from the database.
          </para>
 
@@ -229,7 +229,7 @@ session.delete(p);
 session.flush();]]></programlisting>
      
          <para>
-             However, this code
+             However, the following code:
          </para>
 
          <programlisting><![CDATA[Parent p = (Parent) session.load(Parent.class, pid);
@@ -239,8 +239,8 @@ c.setParent(null);
 session.flush();]]></programlisting>
      
          <para>
-             will not remove <literal>c</literal> from the database; it will ony remove the link to <literal>p</literal>
-             (and cause a <literal>NOT NULL</literal> constraint violation, in this case). You need to explicitly
+             will not remove <literal>c</literal> from the database. In this case, it will only remove the link to <literal>p</literal>
+             and cause a <literal>NOT NULL</literal> constraint violation. You need to explicitly
              <literal>delete()</literal> the <literal>Child</literal>.
          </para>
 
@@ -251,8 +251,8 @@ session.delete(c);
 session.flush();]]></programlisting>
 
          <para>
-             Now, in our case, a <literal>Child</literal> can't really exist without its parent. So if we remove
-             a <literal>Child</literal> from the collection, we really do want it to be deleted. For this, we must
+             In our case, a <literal>Child</literal> cannot exist without its parent. So if we remove
+             a <literal>Child</literal> from the collection, we do want it to be deleted. To do this, we must
              use <literal>cascade="all-delete-orphan"</literal>.
          </para>
 
@@ -262,8 +262,8 @@ session.flush();]]></programlisting>
 </set>]]></programlisting>
 
          <para>
-             Note: even though the collection mapping specifies <literal>inverse="true"</literal>, cascades are 
-             still processed by iterating the collection elements. So if you require that an object be saved, 
+             Even though the collection mapping specifies <literal>inverse="true"</literal>, cascades are 
+             still processed by iterating the collection elements. If you need an object be saved, 
              deleted or updated by cascade, you must add it to the collection. It is not enough to simply call
              <literal>setParent()</literal>.
          </para>
@@ -275,10 +275,10 @@ session.flush();]]></programlisting>
      
          <para>
              Suppose we loaded up a <literal>Parent</literal> in one <literal>Session</literal>, made some changes 
-             in a UI action and wish to persist these changes in a new session by calling <literal>update()</literal>. 
-             The <literal>Parent</literal> will contain a collection of childen and, since cascading update is enabled, 
+             in a UI action and wanted to persist these changes in a new session by calling <literal>update()</literal>. 
+             The <literal>Parent</literal> will contain a collection of children and, since the cascading update is enabled, 
              Hibernate needs to know which children are newly instantiated and which represent existing rows in the 
-             database. Lets assume that both <literal>Parent</literal> and <literal>Child</literal> have genenerated
+             database. We will also assume that both <literal>Parent</literal> and <literal>Child</literal> have generated
              identifier properties of type <literal>Long</literal>. Hibernate will use the identifier and 
              version/timestamp property value to determine which of the children are new. (See
              <xref linkend="objectstate-saveorupdate"/>.) <emphasis>In Hibernate3, it is no longer necessary to specify
@@ -287,7 +287,7 @@ session.flush();]]></programlisting>
 
          <para>
              The following code will update <literal>parent</literal> and <literal>child</literal> and insert 
-             <literal>newChild</literal>.
+             <literal>newChild</literal>:
          </para>
 
          <programlisting><![CDATA[//parent and child were both loaded in a previous session
@@ -298,9 +298,9 @@ session.update(parent);
 session.flush();]]></programlisting>
      
          <para>
-             Well, that's all very well for the case of a generated identifier, but what about assigned identifiers
-             and composite identifiers? This is more difficult, since Hibernate can't use the identifier property to
-             distinguish between a newly instantiated object (with an identifier assigned by the user) and an 
+             This may be suitable for the case of a generated identifier, but what about assigned identifiers
+             and composite identifiers? This is more difficult, since Hibernate cannot use the identifier property to
+             distinguish between a newly instantiated object, with an identifier assigned by the user, and an 
              object loaded in a previous session. In this case, Hibernate will either use the timestamp or version 
              property, or will actually query the second-level cache or, worst case, the database, to see if the 
              row exists.
@@ -363,7 +363,7 @@ public boolean onSave(Object entity,
 }]]></programlisting>
 
 		<para>
-			Don't worry; in Hibernate3 you don't need to write any of this kind of code if you don't want to.
+			Do not worry; in Hibernate3 you do not need to write any of this kind of code if you do not want to.
 		</para>
      -->
      </sect1>
@@ -372,15 +372,15 @@ public boolean onSave(Object entity,
          <title>Conclusion</title>
 
          <para>
-             There is quite a bit to digest here and it might look confusing first time around. However, in practice, 
-             it all works out very nicely. Most Hibernate applications use the parent / child pattern in many places.
+             The sections we have just covered can be a bit confusing. However, in practice, 
+             it all works out nicely. Most Hibernate applications use the parent/child pattern in many places.
          </para>
 
          <para>
              We mentioned an alternative in the first paragraph. None of the above issues exist in the case of
-             <literal>&lt;composite-element&gt;</literal> mappings, which have exactly the semantics of a parent / child
-             relationship. Unfortunately, there are two big limitations to composite element classes: composite elements 
-             may not own collections, and they should not be the child of any entity other than the unique parent.
+             <literal>&lt;composite-element&gt;</literal> mappings, which have exactly the semantics of a parent/child
+             relationship. Unfortunately, there are two big limitations with composite element classes: composite elements 
+             cannot own collections and they should not be the child of any entity other than the unique parent.
          </para>
      
      </sect1>

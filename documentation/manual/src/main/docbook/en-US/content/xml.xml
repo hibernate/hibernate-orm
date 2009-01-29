@@ -29,17 +29,17 @@
     <title>XML Mapping</title>
 
     <para><emphasis>
-        Note that this is an experimental feature in Hibernate 3.0 and is under
-        extremely active development.
+        XML Mapping is an experimental feature in Hibernate 3.0 and is currently under
+        active development.
     </emphasis></para>
 
     <sect1 id="xml-intro" revision="1">
         <title>Working with XML data</title>
 
         <para>
-            Hibernate lets you work with persistent XML data in much the same way
+            Hibernate allows you to work with persistent XML data in much the same way
             you work with persistent POJOs. A parsed XML tree can be thought of
-            as just another way to represent the relational data at the object level,
+            as another way of representing the relational data at the object level,
             instead of POJOs.
         </para>
 
@@ -59,9 +59,9 @@
         </para>
         
         <para>
-            A single mapping may be used to simultaneously map properties of a class
+            A single mapping can be used to simultaneously map properties of a class
             and nodes of an XML document to the database, or, if there is no class to map, 
-            it may be used to map just the XML.
+            it can be used to map just the XML.
         </para>
         
         <sect2 id="xml-intro-mapping">
@@ -126,8 +126,8 @@
         
             <para>
                 This mapping allows you to access the data as a dom4j tree, or as a graph of
-                property name/value pairs (java <literal>Map</literal>s). The property names
-                are purely logical constructs that may be referred to in HQL queries.
+                property name/value pairs or java <literal>Map</literal>s. The property names
+                are purely logical constructs that can be referred to in HQL queries.
             </para>
 
         </sect2>
@@ -138,25 +138,25 @@
         <title>XML mapping metadata</title>
 
         <para>
-            Many Hibernate mapping elements accept the <literal>node</literal> attribute.
-            This let's you specify the name of an XML attribute or element that holds the
+            A range of Hibernate mapping elements accept the <literal>node</literal> attribute.
+            This lets you specify the name of an XML attribute or element that holds the
             property or entity data. The format of the <literal>node</literal> attribute
             must be one of the following:
         </para>
         
         <itemizedlist spacing="compact">
         <listitem>
-            <para><literal>"element-name"</literal> - map to the named XML element</para>
+            <para><literal>"element-name"</literal>: map to the named XML element</para>
         </listitem>
         <listitem>
-            <para><literal>"@attribute-name"</literal> - map to the named XML attribute</para>
+            <para><literal>"@attribute-name"</literal>: map to the named XML attribute</para>
         </listitem>
         <listitem>
-            <para><literal>"."</literal> - map to the parent element</para>
+            <para><literal>"."</literal>: map to the parent element</para>
         </listitem>
         <listitem>
             <para>
-                <literal>"element-name/@attribute-name"</literal> - 
+                <literal>"element-name/@attribute-name"</literal>:
                 map to the named attribute of the named element
             </para>
         </listitem>
@@ -169,12 +169,12 @@
             will be embedded directly in the XML tree for the entity that owns the association.
             Otherwise, if <literal>embed-xml="false"</literal>, then only the referenced 
             identifier value will appear in the XML for single point associations and 
-            collections will simply not appear at all.
+            collections will not appear at all.
         </para>
         
         <para>
-            You should be careful not to leave <literal>embed-xml="true"</literal> for
-            too many associations, since XML does not deal well with circularity!
+            Do not leave <literal>embed-xml="true"</literal> for
+            too many associations, since XML does not deal well with circularity.
         </para>
         
         <programlisting><![CDATA[<class name="Customer" 
@@ -213,14 +213,14 @@
 </class>]]></programlisting>
 
         <para>
-            in this case, we have decided to embed the collection of account ids, but not
+            In this case, the collection of account ids is embedded, but not
             the actual account data. The following HQL query:
         </para>
         
         <programlisting><![CDATA[from Customer c left join fetch c.accounts where c.lastName like :lastName]]></programlisting>
         
         <para>
-            Would return datasets such as this:
+            would return datasets such as this:
         </para>
         
         <programlisting><![CDATA[<customer id="123456789">
@@ -263,7 +263,7 @@
         <title>Manipulating XML data</title>
         
         <para>
-            Let's rearead and update XML documents in the application. We do this by
+            You can also re-read and update XML documents in the application. You can do this by
             obtaining a dom4j session:
         </para>
         
@@ -303,8 +303,8 @@ tx.commit();
 session.close();]]></programlisting>
 
         <para>
-            It is extremely useful to combine this feature with Hibernate's <literal>replicate()</literal>
-            operation to implement XML-based data import/export.
+            When implementing XML-based data import/export, it is useful to combine this feature with Hibernate's <literal>replicate()</literal>
+            operation.
         </para>
        
     </sect1>

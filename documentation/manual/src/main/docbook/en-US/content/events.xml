@@ -29,9 +29,9 @@
     <title>Interceptors and events</title>
 
     <para>
-        It is often useful for the application to react to certain events that occur
-        inside Hibernate. This allows implementation of certain kinds of generic 
-        functionality, and extension of Hibernate functionality.
+        It is useful for the application to react to certain events that occur
+        inside Hibernate. This allows for the implementation of generic 
+        functionality and the extension of Hibernate functionality.
     </para>
 
     <sect1 id="objectstate-interceptors" revision="3">
@@ -39,7 +39,7 @@
 
         <para>
             The <literal>Interceptor</literal> interface provides callbacks from the session to the 
-            application allowing the application to inspect and/or manipulate properties of a
+            application, allowing the application to inspect and/or manipulate properties of a
             persistent object before it is saved, updated, deleted or loaded. One 
             possible use for this is to track auditing information. For example, the following 
             <literal>Interceptor</literal> automatically sets the  <literal>createTimestamp</literal> 
@@ -49,7 +49,7 @@
         </para>
 
         <para>
-            You may either implement <literal>Interceptor</literal> directly or (better) extend
+            You can either implement <literal>Interceptor</literal> directly or extend
             <literal>EmptyInterceptor</literal>.
         </para>
 
@@ -137,7 +137,7 @@ public class AuditInterceptor extends EmptyInterceptor {
 }]]></programlisting>
 
         <para>
-            Interceptors come in two flavors: <literal>Session</literal>-scoped and
+            There are two kinds of inteceptors: <literal>Session</literal>-scoped and
             <literal>SessionFactory</literal>-scoped.
         </para>
 
@@ -151,11 +151,11 @@ public class AuditInterceptor extends EmptyInterceptor {
 
         <para>
             A <literal>SessionFactory</literal>-scoped interceptor is registered with the <literal>Configuration</literal>
-            object prior to building the <literal>SessionFactory</literal>.  In this case, the supplied interceptor
-            will be applied to all sessions opened from that <literal>SessionFactory</literal>; this is true unless
-            a session is opened explicitly specifying the interceptor to use.  <literal>SessionFactory</literal>-scoped
-            interceptors must be thread safe, taking care to not store session-specific state since multiple
-            sessions will use this interceptor (potentially) concurrently.
+            object prior to building the <literal>SessionFactory</literal>.  Unless
+            a session is opened explicitly specifying the interceptor to use, the supplied interceptor
+            will be applied to all sessions opened from that <literal>SessionFactory</literal>.  <literal>SessionFactory</literal>-scoped
+            interceptors must be thread safe. Ensure that you do not store session-specific states, since multiple
+            sessions will use this interceptor potentially concurrently.
         </para>
     
         <programlisting><![CDATA[new Configuration().setInterceptor( new AuditInterceptor() );]]></programlisting>
@@ -166,38 +166,38 @@ public class AuditInterceptor extends EmptyInterceptor {
         <title>Event system</title>
 
         <para>
-            If you have to react to particular events in your persistence layer, you may
+            If you have to react to particular events in your persistence layer, you can
             also use the Hibernate3 <emphasis>event</emphasis> architecture. The event
-            system can be used in addition or as a replacement for interceptors.
+            system can be used in addition, or as a replacement, for interceptors.
         </para>
 
         <para>
-            Essentially all of the methods of the <literal>Session</literal> interface correlate
-            to an event. You have a <literal>LoadEvent</literal>, a <literal>FlushEvent</literal>, etc
-            (consult the XML configuration-file DTD or the <literal>org.hibernate.event</literal>
-            package for the full list of defined event types). When a request is made of one of
+            All the methods of the <literal>Session</literal> interface correlate
+            to an event. You have a <literal>LoadEvent</literal>, a <literal>FlushEvent</literal>, etc.
+            Consult the XML configuration-file DTD or the <literal>org.hibernate.event</literal>
+            package for the full list of defined event types. When a request is made of one of
             these methods, the Hibernate <literal>Session</literal> generates an appropriate
             event and passes it to the configured event listeners for that type. Out-of-the-box,
             these listeners implement the same processing in which those methods always resulted.
             However, you are free to implement a customization of one of the listener interfaces
-            (i.e., the <literal>LoadEvent</literal> is processed by the registered implemenation
+            (i.e., the <literal>LoadEvent</literal> is processed by the registered implementation
             of the <literal>LoadEventListener</literal> interface), in which case their
             implementation would be responsible for processing any <literal>load()</literal> requests
             made of the <literal>Session</literal>.
         </para>
 
         <para>
-            The listeners should be considered effectively singletons; meaning, they are shared between
-            requests, and thus should not save any state as instance variables.
+            The listeners should be considered singletons. This means they are shared between
+            requests, and should not save any state as instance variables.
         </para>
 
         <para>
-            A custom listener should implement the appropriate interface for the event it wants to
+            A custom listener implements the appropriate interface for the event it wants to
             process and/or extend one of the convenience base classes (or even the default event
             listeners used by Hibernate out-of-the-box as these are declared non-final for this
             purpose). Custom listeners can either be registered programmatically through the
             <literal>Configuration</literal> object, or specified in the Hibernate configuration
-            XML (declarative configuration through the properties file is not supported). Here's an
+            XML. Declarative configuration through the properties file is not supported. Here is an
             example of a custom load event listener:
         </para>
 
@@ -227,7 +227,7 @@ public class AuditInterceptor extends EmptyInterceptor {
 </hibernate-configuration>]]></programlisting>
 
         <para>
-            Instead, you may register it programmatically:
+            Instead, you can register it programmatically:
         </para>
 
         <programlisting><![CDATA[Configuration cfg = new Configuration();
@@ -237,13 +237,13 @@ cfg.EventListeners().setLoadEventListeners(stack);]]></programlisting>
         <para>
             Listeners registered declaratively cannot share instances. If the same class name is
             used in multiple <literal>&lt;listener/&gt;</literal> elements, each reference will
-            result in a separate instance of that class. If you need the capability to share
+            result in a separate instance of that class. If you need to share
             listener instances between listener types you must use the programmatic registration
             approach.
         </para>
 
         <para>
-            Why implement an interface and define the specific type during configuration? Well, a
+            Why implement an interface and define the specific type during configuration? A
             listener implementation could implement multiple event listener interfaces. Having the
             type additionally defined during registration makes it easier to turn custom listeners on
             or off during configuration.
@@ -255,8 +255,8 @@ cfg.EventListeners().setLoadEventListeners(stack);]]></programlisting>
         <title>Hibernate declarative security</title>
         <para>
             Usually, declarative security in Hibernate applications is managed in a session facade
-            layer. Now, Hibernate3 allows certain actions to be permissioned via JACC, and authorized 
-            via JAAS. This is optional functionality built on top of the event architecture.
+            layer. Hibernate3 allows certain actions to be permissioned via JACC, and authorized 
+            via JAAS. This is an optional functionality that is built on top of the event architecture.
         </para>
         
         <para>
@@ -270,13 +270,13 @@ cfg.EventListeners().setLoadEventListeners(stack);]]></programlisting>
 <listener type="pre-load" class="org.hibernate.secure.JACCPreLoadEventListener"/>]]></programlisting>
 
         <para>
-            Note that <literal>&lt;listener type="..." class="..."/&gt;</literal> is just a shorthand
+            Note that <literal>&lt;listener type="..." class="..."/&gt;</literal> is shorthand
             for <literal>&lt;event type="..."&gt;&lt;listener class="..."/&gt;&lt;/event&gt;</literal>
             when there is exactly one listener for a particular event type.
         </para>
 
         <para>
-            Next, still in <literal>hibernate.cfg.xml</literal>, bind the permissions to roles:
+            Next, while still in <literal>hibernate.cfg.xml</literal>, bind the permissions to roles:
         </para>
         
         <programlisting><![CDATA[<grant role="admin" entity-name="User" actions="insert,update,read"/>

@@ -30,57 +30,57 @@
 
     <para>
         Roundtrip engineering with Hibernate is possible using a set of Eclipse plugins,
-        commandline tools, as well as Ant tasks.
+        commandline tools, and Ant tasks.
     </para>
 
     <para>
-        The <emphasis>Hibernate Tools</emphasis> currently include plugins for the Eclipse
+        <emphasis>Hibernate Tools</emphasis> currently include plugins for the Eclipse
         IDE as well as Ant tasks for reverse engineering of existing databases:
     </para>
 
     <itemizedlist>
         <listitem><para>
-            <emphasis>Mapping Editor:</emphasis> An editor for Hibernate XML mapping files,
-            supporting auto-completion and syntax highlighting. It also supports semantic
-            auto-completion for class names and property/field names, making it much more versatile than a normal XML editor.
+            <emphasis>Mapping Editor:</emphasis> an editor for Hibernate XML mapping files that
+            supports auto-completion and syntax highlighting. It also supports semantic
+            auto-completion for class names and property/field names, making it more versatile than a normal XML editor.
         </para></listitem>
         <listitem><para>
-            <emphasis>Console:</emphasis> The console is a new view in Eclipse. In addition to
-            a tree overview of your console configurations, you also get an interactive view
+            <emphasis>Console:</emphasis> the console is a new view in Eclipse. In addition to
+            a tree overview of your console configurations, you are also provided with an interactive view
             of your persistent classes and their relationships. The console allows you to
             execute HQL queries against your database and browse the result directly in
             Eclipse.
         </para></listitem>
         <listitem><para>
-            <emphasis>Development Wizards:</emphasis> Several wizards are provided with the
-            Hibernate Eclipse tools; you can use a wizard to quickly generate Hibernate configuration
-            (cfg.xml) files, or you may even completely reverse engineer an existing database schema
+            <emphasis>Development Wizards:</emphasis> several wizards are provided with the
+            Hibernate Eclipse tools. You can use a wizard to quickly generate Hibernate configuration
+            (cfg.xml) files, or to reverse engineer an existing database schema
             into POJO source files and Hibernate mapping files. The reverse engineering wizard
             supports customizable templates.
         </para></listitem>
         <listitem><para>
-            <emphasis>Ant Tasks:</emphasis>
+<!--            <emphasis>Ant Tasks:</emphasis> -->
         </para></listitem>
 
     </itemizedlist>
 
     <para>
-        Please refer to the <emphasis>Hibernate Tools</emphasis> package and it's documentation
+        Please refer to the <emphasis>Hibernate Tools</emphasis> package documentation
         for more information.
     </para>
 
     <para>
-        However, the Hibernate main package comes bundled with an integrated tool (it can even
-        be used from "inside" Hibernate on-the-fly): <emphasis>SchemaExport</emphasis> aka
-        <literal>hbm2ddl</literal>.
+        However, the Hibernate main package comes bundled with an integrated tool : <emphasis>SchemaExport</emphasis> aka
+        <literal>hbm2ddl</literal>.It can even
+        be used from "inside" Hibernate.
     </para>
 
     <sect1 id="toolsetguide-s1" revision="2">
         <title>Automatic schema generation</title>
 
         <para>
-            DDL may be generated from your mapping files by a Hibernate utility. The generated
-            schema includes referential integrity constraints (primary and foreign keys) for
+            DDL can be generated from your mapping files by a Hibernate utility. The generated
+            schema includes referential integrity constraints, primary and foreign keys, for
             entity and collection tables. Tables and sequences are also created for mapped
             identifier generators.
         </para>
@@ -88,11 +88,11 @@
         <para>
             You <emphasis>must</emphasis> specify a SQL <literal>Dialect</literal> via the 
             <literal>hibernate.dialect</literal> property when using this tool, as DDL
-            is highly vendor specific.
+            is highly vendor-specific.
         </para>
 
         <para>
-            First, customize your mapping files to improve the generated schema.
+            First, you must customize your mapping files to improve the generated schema. The next section covers schema customization.  
         </para>
 
         <sect2 id="toolsetguide-s1-2" revision="3">
@@ -100,7 +100,7 @@
 
             <para>
                 Many Hibernate mapping elements define optional attributes named <literal>length</literal>,
-                <literal>precision</literal> and <literal>scale</literal>. You may set the length, precision 
+                <literal>precision</literal> and <literal>scale</literal>. You can set the length, precision 
                 and scale of a column with this attribute. 
                 
             </para>
@@ -109,9 +109,9 @@
             <programlisting><![CDATA[<property name="balance" precision="12" scale="2"/>]]></programlisting>
 
             <para>
-                Some tags also accept a <literal>not-null</literal> attribute (for generating a 
-                <literal>NOT NULL</literal> constraint on table columns) and a <literal>unique</literal> 
-                attribute (for generating <literal>UNIQUE</literal> constraint on table columns).
+                Some tags also accept a <literal>not-null</literal> attribute for generating a 
+                <literal>NOT NULL</literal> constraint on table columns, and a <literal>unique</literal> 
+                attribute for generating <literal>UNIQUE</literal> constraint on table columns.
             </para>
 
             <programlisting><![CDATA[<many-to-one name="bar" column="barId" not-null="true"/>]]></programlisting>
@@ -119,10 +119,10 @@
             <programlisting><![CDATA[<element column="serialNumber" type="long" not-null="true" unique="true"/>]]></programlisting>
 
             <para>
-                A <literal>unique-key</literal> attribute may be used to group columns in
-                a single unique key constraint. Currently, the specified value of the 
+                A <literal>unique-key</literal> attribute can be used to group columns in
+                a single, unique key constraint. Currently, the specified value of the 
                 <literal>unique-key</literal> attribute is <emphasis>not</emphasis> used 
-                to name the constraint in the generated DDL, only to group the columns in 
+                to name the constraint in the generated DDL. It is only used to group the columns in 
                 the mapping file.
             </para>
             
@@ -131,15 +131,15 @@
 
             <para>
                 An <literal>index</literal> attribute specifies the name of an index that
-                will be created using the mapped column or columns. Multiple columns may be 
-                grouped into the same index, simply by specifying the same index name. 
+                will be created using the mapped column or columns. Multiple columns can be 
+                grouped into the same index by simply specifying the same index name. 
             </para>
 
             <programlisting><![CDATA[<property name="lastName" index="CustName"/>
 <property name="firstName" index="CustName"/>]]></programlisting>
 
             <para>
-                A <literal>foreign-key</literal> attribute may be used to override the name 
+                A <literal>foreign-key</literal> attribute can be used to override the name 
                 of any generated foreign key constraint.
             </para>
             
@@ -157,9 +157,9 @@
 </property>]]></programlisting>
 
             <para>
-                The <literal>default</literal> attribute lets you specify a default value for
-                a column (you should assign the same value to the mapped property before
-                saving a new instance of the mapped class).
+                The <literal>default</literal> attribute allows you to specify a default value for
+                a column.You should assign the same value to the mapped property before
+                saving a new instance of the mapped class.
             </para>
 
             <programlisting><![CDATA[<property name="credits" type="integer" insert="false">
@@ -193,6 +193,8 @@
 </class>]]></programlisting>
             
 
+	<para>The following table summarizes these optional attributes.</para>
+
             <table frame="topbot" id="schemattributes-summary" revision="2">
                 <title>Summary</title>
                 <tgroup cols="3">
@@ -225,7 +227,7 @@
                         <row>
                             <entry><literal>not-null</literal></entry>
                             <entry><literal>true|false</literal></entry>
-                            <entry>specfies that the column should be non-nullable</entry>
+                            <entry>specifies that the column should be non-nullable</entry>
                         </row>
                         <row>
                             <entry><literal>unique</literal></entry>
@@ -299,7 +301,7 @@
             <para>
                 This results in a <literal>comment on table</literal> or 
                 <literal>comment on column</literal> statement in the generated
-                DDL (where supported).
+                DDL where supported.
             </para>
 
         </sect2>
@@ -311,8 +313,10 @@
                 The <literal>SchemaExport</literal> tool writes a DDL script to standard out and/or
                 executes the DDL statements.
             </para>
-
-            <para>
+		
+	<para>The following table displays the <literal>SchemaExport</literal> command line options</para>
+        
+    	<para>
                 <literal>java -cp </literal><emphasis>hibernate_classpaths</emphasis>
                 <literal>org.hibernate.tool.hbm2ddl.SchemaExport</literal> <emphasis>options mapping_files</emphasis>
             </para>
@@ -331,7 +335,7 @@
                     <tbody>
                         <row>
                             <entry><literal>--quiet</literal></entry>
-                            <entry>don't output the script to stdout</entry>
+                            <entry>do not output the script to stdout</entry>
                         </row>
                         <row>
                             <entry><literal>--drop</literal></entry>
@@ -343,7 +347,7 @@
                         </row>
                         <row>
                             <entry><literal>--text</literal></entry>
-                            <entry>don't export to the database</entry>
+                            <entry>do not export to the database</entry>
                         </row>
                         <row>
                             <entry><literal>--output=my_schema.ddl</literal></entry>
@@ -374,7 +378,7 @@
             </table>
 
             <para>
-                You may even embed <literal>SchemaExport</literal> in your application:
+                You can even embed <literal>SchemaExport</literal> in your application:
             </para>
 
             <programlisting><![CDATA[Configuration cfg = ....;
@@ -386,7 +390,7 @@ new SchemaExport(cfg).create(false, true);]]></programlisting>
             <title>Properties</title>
 
             <para>
-                Database properties may be specified
+                Database properties can be specified:
             </para>
 
             <itemizedlist spacing="compact">
@@ -475,7 +479,7 @@ new SchemaExport(cfg).create(false, true);]]></programlisting>
 
             <para>
                 The <literal>SchemaUpdate</literal> tool will update an existing schema with "incremental" changes.
-                Note that <literal>SchemaUpdate</literal> depends heavily upon the JDBC metadata API, so it will
+                The <literal>SchemaUpdate</literal> depends upon the JDBC metadata API and, as such, will
                 not work with all JDBC drivers.
             </para>
 
@@ -498,11 +502,11 @@ new SchemaExport(cfg).create(false, true);]]></programlisting>
                     <tbody>
                         <row>
                             <entry><literal>--quiet</literal></entry>
-                            <entry>don't output the script to stdout</entry>
+                            <entry>do not output the script to stdout</entry>
                         </row>
                         <row>
                             <entry><literal>--text</literal></entry>
-                            <entry>don't export the script to the database</entry>
+                            <entry>do not export the script to the database</entry>
                         </row>
                         <row>
                             <entry><literal>--naming=eg.MyNamingStrategy</literal></entry>
@@ -521,7 +525,7 @@ new SchemaExport(cfg).create(false, true);]]></programlisting>
             </table>
 
             <para>
-                You may embed <literal>SchemaUpdate</literal> in your application:
+                You can embed <literal>SchemaUpdate</literal> in your application:
             </para>
 
             <programlisting><![CDATA[Configuration cfg = ....;
@@ -557,15 +561,15 @@ new SchemaUpdate(cfg).execute(false);]]></programlisting>
 
             <para>
                 The <literal>SchemaValidator</literal> tool will validate that the existing database schema "matches"
-                your mapping documents. Note that <literal>SchemaValidator</literal> depends heavily upon the JDBC 
-                metadata API, so it will not work with all JDBC drivers. This tool is extremely useful for testing.
+                your mapping documents. The <literal>SchemaValidator</literal> depends heavily upon the JDBC 
+                metadata API and, as such, will not work with all JDBC drivers. This tool is extremely useful for testing.
             </para>
 
             <para>
                 <literal>java -cp </literal><emphasis>hibernate_classpaths</emphasis>
                 <literal>org.hibernate.tool.hbm2ddl.SchemaValidator</literal> <emphasis>options mapping_files</emphasis>
             </para>
-
+<para>The following table displays the <literal>SchemaValidator</literal> command line options:
             <table frame="topbot">
                 <title><literal>SchemaValidator</literal> Command Line Options</title>
                 <tgroup cols="2">
@@ -595,7 +599,7 @@ new SchemaUpdate(cfg).execute(false);]]></programlisting>
             </table>
 
             <para>
-                You may embed <literal>SchemaValidator</literal> in your application:
+                You can embed <literal>SchemaValidator</literal> in your application:
             </para>
 
             <programlisting><![CDATA[Configuration cfg = ....;

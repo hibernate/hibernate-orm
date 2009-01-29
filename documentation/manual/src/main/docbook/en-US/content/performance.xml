@@ -32,9 +32,9 @@
         <title>Fetching strategies</title>
 
         <para>
-            A <emphasis>fetching strategy</emphasis> is the strategy Hibernate will use for 
-            retrieving associated objects if the application needs to navigate the association. 
-            Fetch strategies may be declared in the O/R mapping metadata, or over-ridden by a 
+            Hibernate uses a <emphasis>fetching strategy</emphasis> to
+            retrieve associated objects if the application needs to navigate the association. 
+            Fetch strategies can be declared in the O/R mapping metadata, or over-ridden by a 
             particular HQL or <literal>Criteria</literal> query.
         </para>
 
@@ -45,35 +45,35 @@
         <itemizedlist>
              <listitem>
                 <para>
-                    <emphasis>Join fetching</emphasis> - Hibernate retrieves the
+                    <emphasis>Join fetching</emphasis>: Hibernate retrieves the
                     associated instance or collection in the same <literal>SELECT</literal>,
                     using an <literal>OUTER JOIN</literal>.
                 </para>
             </listitem>
             <listitem>
                 <para>
-                    <emphasis>Select fetching</emphasis> - a second <literal>SELECT</literal>
+                    <emphasis>Select fetching</emphasis>: a second <literal>SELECT</literal>
                     is used to retrieve the associated entity or collection. Unless
                     you explicitly disable lazy fetching by specifying <literal>lazy="false"</literal>, 
-                    this second select will only be executed when you actually access the
+                    this second select will only be executed when you access the
                     association.
                 </para>
             </listitem>
             <listitem>
                 <para>
-                    <emphasis>Subselect fetching</emphasis> - a second <literal>SELECT</literal>
+                    <emphasis>Subselect fetching</emphasis>: a second <literal>SELECT</literal>
                     is used to retrieve the associated collections for all entities retrieved in a
                     previous query or fetch. Unless you explicitly disable lazy fetching by specifying 
                     <literal>lazy="false"</literal>, this second select will only be executed when you 
-                    actually access the association.
+                    access the association.
                 </para>
             </listitem>
             <listitem>
                 <para>
-                    <emphasis>Batch fetching</emphasis> - an optimization strategy
-                    for select fetching - Hibernate retrieves a batch of entity instances 
-                    or collections in a single <literal>SELECT</literal>, by specifying 
-                    a list of primary keys or foreign keys.
+                    <emphasis>Batch fetching</emphasis>: an optimization strategy
+                    for select fetching. Hibernate retrieves a batch of entity instances 
+                    or collections in a single <literal>SELECT</literal> by specifying 
+                    a list of primary or foreign keys.
                 </para>
             </listitem>
         </itemizedlist>
@@ -85,45 +85,45 @@
         <itemizedlist>
              <listitem>
                 <para>
-                    <emphasis>Immediate fetching</emphasis> - an association, collection or
-                    attribute is fetched immediately, when the owner is loaded.
+                    <emphasis>Immediate fetching</emphasis>: an association, collection or
+                    attribute is fetched immediately when the owner is loaded.
                 </para>
             </listitem>
             <listitem>
                 <para>
-                    <emphasis>Lazy collection fetching</emphasis> - a collection is fetched 
-                    when the application invokes an operation upon that collection. (This
-                    is the default for collections.)
+                    <emphasis>Lazy collection fetching</emphasis>: a collection is fetched 
+                    when the application invokes an operation upon that collection. This
+                    is the default for collections.
                 </para>
             </listitem>
             <listitem>
                 <para>
-                    <emphasis>"Extra-lazy" collection fetching</emphasis> - individual
+                    <emphasis>"Extra-lazy" collection fetching</emphasis>: individual
                     elements of the collection are accessed from the database as needed.
                     Hibernate tries not to fetch the whole collection into memory unless
-                    absolutely needed (suitable for very large collections)
+                    absolutely needed. It is suitable for large collections.
                 </para>
             </listitem>
             <listitem>
                 <para>
-                    <emphasis>Proxy fetching</emphasis> - a single-valued association is 
+                    <emphasis>Proxy fetching</emphasis>: a single-valued association is 
                     fetched when a method other than the identifier getter is invoked
                     upon the associated object.
                 </para>
             </listitem>
             <listitem>
                 <para>
-                    <emphasis>"No-proxy" fetching</emphasis> - a single-valued association is 
+                    <emphasis>"No-proxy" fetching</emphasis>: a single-valued association is 
                     fetched when the instance variable is accessed. Compared to proxy fetching, 
-                    this approach is less lazy (the association is fetched even when only the 
-                    identifier is accessed) but more transparent, since no proxy is visible to 
+                    this approach is less lazy; the association is fetched even when only the 
+                    identifier is accessed.  It is also more transparent, since no proxy is visible to 
                     the application. This approach requires buildtime bytecode instrumentation 
                     and is rarely necessary.
                 </para>
             </listitem>
             <listitem>
                 <para>
-                    <emphasis>Lazy attribute fetching</emphasis> - an attribute or single
+                    <emphasis>Lazy attribute fetching</emphasis>: an attribute or single
                     valued association is fetched when the instance variable is accessed. 
                     This approach requires buildtime bytecode instrumentation and is rarely 
                     necessary.
@@ -133,8 +133,8 @@
         
         <para>
             We have two orthogonal notions here: <emphasis>when</emphasis> is the association
-            fetched, and <emphasis>how</emphasis> is it fetched (what SQL is used). Don't
-            confuse them! We use <literal>fetch</literal> to tune performance. We may use 
+            fetched and <emphasis>how</emphasis> is it fetched. It is important that you do not
+            confuse them. We use <literal>fetch</literal> to tune performance. We can use 
             <literal>lazy</literal> to define a contract for what data is always available 
             in any detached instance of a particular class.
         </para>
@@ -144,19 +144,19 @@
             
             <para>
                 By default, Hibernate3 uses lazy select fetching for collections and lazy proxy
-                fetching for single-valued associations. These defaults make sense for almost
-                all associations in almost all applications. 
+                fetching for single-valued associations. These defaults make sense for most
+                associations in the majority of applications. 
             </para>
             
             <para>
-                <emphasis>Note:</emphasis> if you set 
+                If you set 
                 <literal>hibernate.default_batch_fetch_size</literal>, Hibernate will use the 
-                batch fetch optimization for lazy fetching (this optimization may also be enabled 
-                at a more granular level).
+                batch fetch optimization for lazy fetching. This optimization can also be enabled 
+                at a more granular level.
             </para>
             
             <para>
-                However, lazy fetching poses one problem that you must be aware of. Access to a 
+                Please be aware that access to a 
                 lazy association outside of the context of an open Hibernate session will result 
                 in an exception. For example:
             </para>
@@ -177,22 +177,22 @@ Integer accessLevel = (Integer) permissions.get("accounts");  // Error!]]></prog
                 Since the permissions collection was not initialized when the 
                 <literal>Session</literal> was closed, the collection will not be able to 
                 load its state. <emphasis>Hibernate does not support lazy initialization 
-                for detached objects</emphasis>. The fix is to move the code that reads 
+                for detached objects</emphasis>. This can be fixed by moving the code that reads 
                 from the collection to just before the transaction is committed.
             </para>
     
             <para>
-                Alternatively, we could use a non-lazy collection or association, 
+                Alternatively, you can use a non-lazy collection or association, 
                 by specifying <literal>lazy="false"</literal> for the association mapping.
                 However, it is intended that lazy initialization be used for almost all 
                 collections and associations. If you define too many non-lazy associations 
-                in your object model, Hibernate will end up needing to fetch the entire 
-                database into memory in every transaction!
+                in your object model, Hibernate will fetch the entire 
+                database into memory in every transaction.
             </para>
     
             <para>
-                On the other hand, we often want to choose join fetching (which is non-lazy by 
-                nature) instead of select fetching in a particular transaction. We'll now see
+                On the other hand, you can use join fetching, which is non-lazy by 
+                nature, instead of select fetching in a particular transaction. We will now explain
                 how to customize the fetching strategy. In Hibernate3, the mechanisms for
                 choosing a fetch strategy are identical for single-valued associations and
                 collections.
@@ -244,13 +244,13 @@ Integer accessLevel = (Integer) permissions.get("accounts");  // Error!]]></prog
         </itemizedlist>
 
             <para>
-                No matter what fetching strategy you use, the defined non-lazy graph is guaranteed
-                to be loaded into memory. Note that this might result in several immediate selects
+                Irrespective of the fetching strategy you use, the defined non-lazy graph is guaranteed
+                to be loaded into memory. This might, however, result in several immediate selects
                 being used to execute a particular HQL query.
             </para>
 
             <para>
-                Usually, we don't use the mapping document to customize fetching. Instead, we
+                Usually, the mapping document is not used to customize fetching. Instead, we
                 keep the default behavior, and override it for a particular transaction, using 
                 <literal>left join fetch</literal> in HQL. This tells Hibernate to fetch 
                 the association eagerly in the first select, using an outer join. In the
@@ -259,9 +259,9 @@ Integer accessLevel = (Integer) permissions.get("accounts");  // Error!]]></prog
             </para>
             
             <para>
-                If you ever feel like you wish you could change the fetching strategy used by
-                <literal>get()</literal> or <literal>load()</literal>, simply use a 
-                <literal>Criteria</literal> query, for example:
+                If you want to change the fetching strategy used by
+                <literal>get()</literal> or <literal>load()</literal>, you can use a 
+                <literal>Criteria</literal> query. For example:
             </para>
             
             <programlisting><![CDATA[User user = (User) session.createCriteria(User.class)
@@ -270,11 +270,11 @@ Integer accessLevel = (Integer) permissions.get("accounts");  // Error!]]></prog
                 .uniqueResult();]]></programlisting>
                 
             <para>
-                (This is Hibernate's equivalent of what some ORM solutions call a "fetch plan".)
+                This is Hibernate's equivalent of what some ORM solutions call a "fetch plan".
             </para>
 
             <para>
-                A completely different way to avoid problems with N+1 selects is to use the 
+                A completely different approach to problems with N+1 selects is to use the 
                 second-level cache.
             </para>
 
@@ -288,11 +288,11 @@ Integer accessLevel = (Integer) permissions.get("accounts");  // Error!]]></prog
                 of persistent collections. However, a different mechanism is needed for lazy
                 behavior in single-ended associations. The target entity of the association must
                 be proxied. Hibernate implements lazy initializing proxies for persistent objects
-                using runtime bytecode enhancement (via the excellent CGLIB library).
+                using runtime bytecode enhancement which is accessed via the CGLIB library.
             </para>
 
             <para>
-                By default, Hibernate3 generates proxies (at startup) for all persistent classes
+                At startup, Hibernate3 generates proxies by default for all persistent classes
                 and uses them to enable lazy fetching of <literal>many-to-one</literal> and
                 <literal>one-to-one</literal> associations.
             </para>
@@ -300,13 +300,12 @@ Integer accessLevel = (Integer) permissions.get("accounts");  // Error!]]></prog
             <para>
                 The mapping file may declare an interface to use as the proxy interface for that
                 class, with the <literal>proxy</literal> attribute. By default, Hibernate uses a subclass
-                of the class. <emphasis>Note that the proxied class must implement a default constructor
-                with at least package visibility. We recommend this constructor for all persistent classes!</emphasis>
+                of the class. <emphasis>The proxied class must implement a default constructor
+                with at least package visibility. This constructor is recommended for all persistent classes</emphasis>.
             </para>
 
             <para>
-                There are some gotchas to be aware of when extending this approach to polymorphic
-                classes, eg.
+                There are potential problems to note when extending this approach to polymorphic classes.For example:
             </para>
 
             <programlisting><![CDATA[<class name="Cat" proxy="Cat">
@@ -329,7 +328,7 @@ if ( cat.isDomesticCat() ) {                  // hit the db to initialize the pr
 }]]></programlisting>
 
             <para>
-                Secondly, it is possible to break proxy <literal>==</literal>.
+                Secondly, it is possible to break proxy <literal>==</literal>:
             </para>
 
             <programlisting><![CDATA[Cat cat = (Cat) session.load(Cat.class, id);            // instantiate a Cat proxy
@@ -346,20 +345,22 @@ System.out.println(cat==dc);                            // false]]></programlist
 System.out.println( dc.getWeight() );  // 11.0]]></programlisting>
 
             <para>
-                Third, you may not use a CGLIB proxy for a <literal>final</literal> class or a class
+                Third, you cannot use a CGLIB proxy for a <literal>final</literal> class or a class
                 with any <literal>final</literal> methods.
             </para>
 
             <para>
-                Finally, if your persistent object acquires any resources upon instantiation (eg. in
+                Finally, if your persistent object acquires any resources upon instantiation (e.g. in
                 initializers or default constructor), then those resources will also be acquired by
                 the proxy. The proxy class is an actual subclass of the persistent class.
             </para>
 
             <para>
                 These problems are all due to fundamental limitations in Java's single inheritance model.
-                If you wish to avoid these problems your persistent classes must each implement an interface
-                that declares its business methods. You should specify these interfaces in the mapping file. eg.
+                To avoid these problems your persistent classes must each implement an interface
+                that declares its business methods. You should specify these interfaces in the mapping file where 
+		<literal>CatImpl</literal> implements the interface <literal>Cat</literal> and <literal>DomesticCatImpl</literal>
+	        implements the interface <literal>DomesticCat</literal>. For example: 
             </para>
 
             <programlisting><![CDATA[<class name="CatImpl" proxy="Cat">
@@ -370,36 +371,40 @@ System.out.println( dc.getWeight() );  // 11.0]]></programlisting>
 </class>]]></programlisting>
 
             <para>
-                where <literal>CatImpl</literal> implements the interface <literal>Cat</literal> and
-                <literal>DomesticCatImpl</literal> implements the interface <literal>DomesticCat</literal>. Then
-                proxies for instances of <literal>Cat</literal> and <literal>DomesticCat</literal> may be returned
-                by <literal>load()</literal> or <literal>iterate()</literal>. (Note that <literal>list()</literal>
-                does not usually return proxies.)
+                Then proxies for instances of <literal>Cat</literal> and <literal>DomesticCat</literal> can be returned
+                by <literal>load()</literal> or <literal>iterate()</literal>. 
             </para>
 
             <programlisting><![CDATA[Cat cat = (Cat) session.load(CatImpl.class, catid);
 Iterator iter = session.createQuery("from CatImpl as cat where cat.name='fritz'").iterate();
 Cat fritz = (Cat) iter.next();]]></programlisting>
 
-            <para>
+            
+	    <note><title>Note</title>
+	    <para>
+		<literal>list()</literal> does not usually return proxies.
+	    </para>
+	    </note>
+	    
+	     <para>
                 Relationships are also lazily initialized. This means you must declare any properties to be of
                 type <literal>Cat</literal>, not <literal>CatImpl</literal>.
             </para>
 
             <para>
-                Certain operations do <emphasis>not</emphasis> require proxy initialization
+                Certain operations do <emphasis>not</emphasis> require proxy initialization:
             </para>
 
             <itemizedlist spacing="compact">
                 <listitem>
                     <para>
-                        <literal>equals()</literal>, if the persistent class does not override
+                        <literal>equals()</literal>: if the persistent class does not override
                         <literal>equals()</literal>
                     </para>
                 </listitem>
                 <listitem>
                     <para>
-                        <literal>hashCode()</literal>, if the persistent class does not override
+                        <literal>hashCode()</literal>: if the persistent class does not override
                         <literal>hashCode()</literal>
                     </para>
                 </listitem>
@@ -417,8 +422,8 @@ Cat fritz = (Cat) iter.next();]]></programlisting>
             
             <para>
                 By choosing <literal>lazy="no-proxy"</literal> instead of the default 
-                <literal>lazy="proxy"</literal>, we can avoid the problems associated with typecasting.
-                However, we will require buildtime bytecode instrumentation, and all operations
+                <literal>lazy="proxy"</literal>, you can avoid problems associated with typecasting.
+                However, buildtime bytecode instrumentation is required, and all operations
                 will result in immediate proxy initialization.
             </para>
 
@@ -429,19 +434,19 @@ Cat fritz = (Cat) iter.next();]]></programlisting>
 
             <para>
                 A <literal>LazyInitializationException</literal> will be thrown by Hibernate if an uninitialized 
-                collection or proxy is accessed outside of the scope of the <literal>Session</literal>, ie. when 
+                collection or proxy is accessed outside of the scope of the <literal>Session</literal>, i.e., when 
                 the entity owning the collection or having the reference to the proxy is in the detached state.
             </para>
 
             <para>
-                Sometimes we need to ensure that a proxy or collection is initialized before closing the
-                <literal>Session</literal>. Of course, we can alway force initialization by calling
+                Sometimes a proxy or collection needs to be initialized before closing the
+                <literal>Session</literal>. You can force initialization by calling
                 <literal>cat.getSex()</literal> or <literal>cat.getKittens().size()</literal>, for example.
-                But that is confusing to readers of the code and is not convenient for generic code.
+                However, this can be confusing to readers of the code and it is not convenient for generic code.
             </para>
 
             <para>
-                The static methods <literal>Hibernate.initialize()</literal> and <literal>Hibernate.isInitialized()</literal>
+                The static methods <literal>Hibernate.initialize()</literal> and <literal>Hibernate.isInitialized()</literal>,
                 provide the application with a convenient way of working with lazily initialized collections or
                 proxies. <literal>Hibernate.initialize(cat)</literal> will force the initialization of a proxy,
                 <literal>cat</literal>, as long as its <literal>Session</literal> is still open.
@@ -450,7 +455,7 @@ Cat fritz = (Cat) iter.next();]]></programlisting>
             </para>
 
             <para>
-                Another option is to keep the <literal>Session</literal> open until all needed
+                Another option is to keep the <literal>Session</literal> open until all required
                 collections and proxies have been loaded. In some application architectures,
                 particularly where the code that accesses data using Hibernate, and the code that
                 uses it are in different application layers or different physical processes, it 
@@ -462,7 +467,7 @@ Cat fritz = (Cat) iter.next();]]></programlisting>
                 <listitem>
                     <para>
                         In a web-based application, a servlet filter can be used to close the
-                        <literal>Session</literal> only at the very end of a user request, once
+                        <literal>Session</literal> only at the end of a user request, once
                         the rendering of the view is complete (the <emphasis>Open Session in
                         View</emphasis> pattern).  Of course, this places heavy demands on the 
                         correctness of the exception handling of your application infrastructure. 
@@ -475,7 +480,7 @@ Cat fritz = (Cat) iter.next();]]></programlisting>
                 <listitem>
                     <para>
                         In an application with a separate business tier, the business logic must
-                        "prepare" all collections that will be needed by the web tier before
+                        "prepare" all collections that the web tier needs before
                         returning. This means that the business tier should load all the data and
                         return all the data already initialized to the presentation/web tier that
                         is required for a particular use case. Usually, the application calls
@@ -489,18 +494,18 @@ Cat fritz = (Cat) iter.next();]]></programlisting>
                 </listitem>
                 <listitem>
                     <para>
-                        You may also attach a previously loaded object to a new <literal>Session</literal>
+                        You can also attach a previously loaded object to a new <literal>Session</literal>
                         with <literal>merge()</literal> or <literal>lock()</literal> before
-                        accessing uninitialized collections (or other proxies). No, Hibernate does not,
-                        and certainly <emphasis>should</emphasis> not do this automatically, since it 
-                        would introduce ad hoc transaction semantics!
+                        accessing uninitialized collections or other proxies. Hibernate does not,
+                        and certainly <emphasis>should</emphasis> not, do this automatically since it 
+                        would introduce impromptu transaction semantics.
                     </para>
                 </listitem>
             </itemizedlist>
 
             <para>
-                Sometimes you don't want to initialize a large collection, but still need some
-                information about it (like its size) or a subset of the data.
+                Sometimes you do not want to initialize a large collection, but still need some
+                information about it, like its size, for example, or a subset of the data.
             </para>
 
             <para>
@@ -522,29 +527,29 @@ Cat fritz = (Cat) iter.next();]]></programlisting>
             <title>Using batch fetching</title>
 
             <para>
-                Hibernate can make efficient use of batch fetching, that is, Hibernate can load several uninitialized
-                proxies if one proxy is accessed (or collections. Batch fetching is an optimization of the lazy select
-                fetching strategy. There are two ways you can tune batch fetching: on the class and the collection level.
+                Using batch fetching, Hibernate can load several uninitialized
+                proxies if one proxy is accessed. Batch fetching is an optimization of the lazy select
+                fetching strategy. There are two ways you can configure batch fetching: on the class level and the collection level.
             </para>
 
             <para>
-                Batch fetching for classes/entities is easier to understand. Imagine you have the following situation
-                at runtime: You have 25 <literal>Cat</literal> instances loaded in a <literal>Session</literal>, each
+                Batch fetching for classes/entities is easier to understand. Consider the following example:
+                at runtime you have 25 <literal>Cat</literal> instances loaded in a <literal>Session</literal>, and each
                 <literal>Cat</literal> has a reference to its <literal>owner</literal>, a <literal>Person</literal>.
                 The <literal>Person</literal> class is mapped with a proxy, <literal>lazy="true"</literal>. If you now
-                iterate through all cats and call <literal>getOwner()</literal> on each, Hibernate will by default
-                execute 25 <literal>SELECT</literal> statements, to retrieve the proxied owners. You can tune this
+                iterate through all cats and call <literal>getOwner()</literal> on each, Hibernate will, by default,
+                execute 25 <literal>SELECT</literal> statements to retrieve the proxied owners. You can tune this
                 behavior by specifying a <literal>batch-size</literal> in the mapping of <literal>Person</literal>:
             </para>
 
             <programlisting><![CDATA[<class name="Person" batch-size="10">...</class>]]></programlisting>
 
             <para>
-                Hibernate will now execute only three queries, the pattern is 10, 10, 5.
+                Hibernate will now execute only three queries: the pattern is 10, 10, 5.
             </para>
 
             <para>
-                You may also enable batch fetching of collections. For example, if each <literal>Person</literal> has
+                You can also enable batch fetching of collections. For example, if each <literal>Person</literal> has
                 a lazy collection of <literal>Cat</literal>s, and 10 persons are currently loaded in the
                 <literal>Session</literal>, iterating through all persons will generate 10 <literal>SELECT</literal>s,
                 one for every call to <literal>getCats()</literal>. If you enable batch fetching for the
@@ -565,9 +570,9 @@ Cat fritz = (Cat) iter.next();]]></programlisting>
             </para>
 
             <para>
-                Batch fetching of collections is particularly useful if you have a nested tree of items, ie.
-                the typical bill-of-materials pattern. (Although a <emphasis>nested set</emphasis> or a
-                <emphasis>materialized path</emphasis> might be a better option for read-mostly trees.)
+                Batch fetching of collections is particularly useful if you have a nested tree of items, i.e.
+                the typical bill-of-materials pattern. However, a <emphasis>nested set</emphasis> or a
+                <emphasis>materialized path</emphasis> might be a better option for read-mostly trees.
             </para>
 
         </sect2>
@@ -576,9 +581,9 @@ Cat fritz = (Cat) iter.next();]]></programlisting>
             <title>Using subselect fetching</title>
 
             <para>
-                If one lazy collection or single-valued proxy has to be fetched, Hibernate loads all of
+                If one lazy collection or single-valued proxy has to be fetched, Hibernate will load all of
                 them, re-running the original query in a subselect. This works in the same way as
-                batch-fetching, without the piecemeal loading.
+                batch-fetching but without the piecemeal loading.
             </para>
             
             <!-- TODO: Write more about this -->
@@ -591,10 +596,10 @@ Cat fritz = (Cat) iter.next();]]></programlisting>
             <para>
                 Hibernate3 supports the lazy fetching of individual properties. This optimization technique
                 is also known as <emphasis>fetch groups</emphasis>. Please note that this is mostly a
-                marketing feature, as in practice, optimizing row reads is much more important than
-                optimization of column reads. However, only loading some properties of a class might
-                be useful in extreme cases, when legacy tables have hundreds of columns and the data model
-                can not be improved.
+                marketing feature; optimizing row reads is much more important than
+                optimization of column reads. However, only loading some properties of a class could
+                be useful in extreme cases. For example, when legacy tables have hundreds of columns and the data model
+                cannot be improved.
             </para>
 
             <para>
@@ -612,9 +617,9 @@ Cat fritz = (Cat) iter.next();]]></programlisting>
 </class>]]></programlisting>
 
             <para>
-                Lazy property loading requires buildtime bytecode instrumentation! If your persistent
-                classes are not enhanced, Hibernate will silently ignore lazy property settings and
-                fall back to immediate fetching.
+                Lazy property loading requires buildtime bytecode instrumentation. If your persistent
+                classes are not enhanced, Hibernate will ignore lazy property settings and
+                return to immediate fetching.
             </para>
 
             <para>
@@ -636,14 +641,14 @@ Cat fritz = (Cat) iter.next();]]></programlisting>
 </target>]]></programlisting>
 
             <para>
-                A different (better?) way to avoid unnecessary column reads, at least for
-                read-only transactions is to use the projection features of HQL or Criteria
+                A different way of avoiding unnecessary column reads, at least for
+                read-only transactions, is to use the projection features of HQL or Criteria
                 queries. This avoids the need for buildtime bytecode processing and is
                 certainly a preferred solution.
             </para>
             
             <para>
-                You may force the usual eager fetching of properties using <literal>fetch all
+                You can force the usual eager fetching of properties using <literal>fetch all
                 properties</literal> in HQL.
             </para>
 
@@ -657,19 +662,19 @@ Cat fritz = (Cat) iter.next();]]></programlisting>
         <para>
             A Hibernate <literal>Session</literal> is a transaction-level cache of persistent data. It is
             possible to configure a cluster or JVM-level (<literal>SessionFactory</literal>-level) cache on 
-            a class-by-class and collection-by-collection basis. You may even plug in a clustered cache. Be 
-            careful. Caches are never aware of changes made to the persistent store by another application 
-            (though they may be configured to regularly expire cached data).
+            a class-by-class and collection-by-collection basis. You can even plug in a clustered cache. Be 
+            aware that caches are not aware of changes made to the persistent store by another application. 
+            They can, however, be configured to regularly expire cached data.
         </para>
         
         <para revision="1">
             You have the option to tell Hibernate which caching implementation to use by
             specifying the name of a class that implements <literal>org.hibernate.cache.CacheProvider</literal>
             using the property <literal>hibernate.cache.provider_class</literal>.  Hibernate
-            comes bundled with a number of built-in integrations with open-source cache providers
-            (listed below); additionally, you could implement your own and plug it in as
-            outlined above.  Note that versions prior to 3.2 defaulted to use EhCache as the
-            default cache provider; that is no longer the case as of 3.2.
+            is bundled with a number of built-in integrations with the open-source cache providers
+            that are listed below. You can also implement your own and plug it in as
+            outlined above. Note that versions prior to 3.2 use EhCache as the default
+            cache provider.
         </para>
 
         <table frame="topbot" id="cacheproviders" revision="1">
@@ -767,16 +772,16 @@ Cat fritz = (Cat) iter.next();]]></programlisting>
                     </callout>                   
                     <callout arearefs="cache2">
                         <para>
-                            <literal>region</literal> (optional, defaults to the class or
-                            collection role name) specifies the name of the second level cache 
+                            <literal>region</literal> (optional: defaults to the class or
+                            collection role name): specifies the name of the second level cache 
                             region
                         </para>
                     </callout>                   
                     <callout arearefs="cache3">
                         <para>
-                            <literal>include</literal> (optional, defaults to <literal>all</literal>) 
-                            <literal>non-lazy</literal> specifies that properties of the entity mapped
-                            with <literal>lazy="true"</literal> may not be cached when attribute-level
+                            <literal>include</literal> (optional: defaults to <literal>all</literal>) 
+                            <literal>non-lazy</literal>: specifies that properties of the entity mapped
+                            with <literal>lazy="true"</literal> cannot be cached when attribute-level
                             lazy fetching is enabled
                         </para>
                     </callout>                   
@@ -784,7 +789,7 @@ Cat fritz = (Cat) iter.next();]]></programlisting>
             </programlistingco>
             
             <para>
-                Alternatively (preferably?), you may specify <literal>&lt;class-cache&gt;</literal> and 
+                Alternatively, you can specify <literal>&lt;class-cache&gt;</literal> and 
                 <literal>&lt;collection-cache&gt;</literal> elements in <literal>hibernate.cfg.xml</literal>.
             </para>
             
@@ -798,9 +803,9 @@ Cat fritz = (Cat) iter.next();]]></programlisting>
             <title>Strategy: read only</title>
 
             <para>
-                If your application needs to read but never modify instances of a persistent class, a 
-                <literal>read-only</literal> cache may be used. This is the simplest and best performing
-                strategy. It's even perfectly safe for use in a cluster.
+                If your application needs to read, but not modify, instances of a persistent class, a 
+                <literal>read-only</literal> cache can be used. This is the simplest and optimal performing
+                strategy. It is even safe for use in a cluster.
             </para>
 
             <programlisting><![CDATA[<class name="eg.Immutable" mutable="false">
@@ -818,11 +823,11 @@ Cat fritz = (Cat) iter.next();]]></programlisting>
                 If the application needs to update data, a <literal>read-write</literal> cache might be appropriate. 
                 This cache strategy should never be used if serializable transaction isolation level is required. 
                 If the cache is used in a JTA environment, you must specify the property 
-                <literal>hibernate.transaction.manager_lookup_class</literal>, naming a strategy for obtaining the 
+                <literal>hibernate.transaction.manager_lookup_class</literal> and naming a strategy for obtaining the 
                 JTA <literal>TransactionManager</literal>. In other environments, you should ensure that the transaction 
                 is completed when <literal>Session.close()</literal> or <literal>Session.disconnect()</literal> is called. 
-                If you wish to use this strategy in a cluster, you should ensure that the underlying cache implementation 
-                supports locking. The built-in cache providers do <emphasis>not</emphasis>.
+                If you want to use this strategy in a cluster, you should ensure that the underlying cache implementation 
+                supports locking. The built-in cache providers <emphasis>do not</emphasis> support locking.
             </para>
 
             <programlisting><![CDATA[<class name="eg.Cat" .... >
@@ -840,8 +845,8 @@ Cat fritz = (Cat) iter.next();]]></programlisting>
             <title>Strategy: nonstrict read/write</title>
 
             <para>
-                If the application only occasionally needs to update data (ie. if it is extremely unlikely that two 
-                transactions would try to update the same item simultaneously) and strict transaction isolation is
+                If the application only occasionally needs to update data (i.e. if it is extremely unlikely that two 
+                transactions would try to update the same item simultaneously), and strict transaction isolation is
                 not required, a <literal>nonstrict-read-write</literal> cache might be appropriate. If the cache is 
                 used in a JTA environment, you must specify <literal>hibernate.transaction.manager_lookup_class</literal>. 
                 In other environments, you should ensure that the transaction is completed when 
@@ -855,7 +860,7 @@ Cat fritz = (Cat) iter.next();]]></programlisting>
 
             <para>
                 The <literal>transactional</literal> cache strategy provides support for fully transactional cache
-                providers such as JBoss TreeCache. Such a cache may only be used in a JTA environment and you must 
+                providers such as JBoss TreeCache. Such a cache can only be used in a JTA environment and you must 
                 specify <literal>hibernate.transaction.manager_lookup_class</literal>. 
             </para>
 
@@ -947,16 +952,16 @@ Cat fritz = (Cat) iter.next();]]></programlisting>
 
         <para>
             Whenever you pass an object to <literal>save()</literal>, <literal>update()</literal>
-            or <literal>saveOrUpdate()</literal> and whenever you retrieve an object using 
+            or <literal>saveOrUpdate()</literal>, and whenever you retrieve an object using 
             <literal>load()</literal>, <literal>get()</literal>, <literal>list()</literal>, 
             <literal>iterate()</literal> or <literal>scroll()</literal>, that object is added 
             to the internal cache of the <literal>Session</literal>. 
         </para>
         <para>
             When <literal>flush()</literal> is subsequently called, the state of that object will 
-            be synchronized with the database. If you do not want this synchronization to occur or 
+            be synchronized with the database. If you do not want this synchronization to occur, or 
             if you are processing a huge number of objects and need to manage memory efficiently, 
-            the <literal>evict()</literal> method may be used to remove the object and its collections 
+            the <literal>evict()</literal> method can be used to remove the object and its collections 
             from the first-level cache.
         </para>
         
@@ -973,7 +978,7 @@ while ( cats.next() ) {
         </para>
         
         <para>
-            To completely evict all objects from the session cache, call <literal>Session.clear()</literal>
+            To evict all objects from the session cache, call <literal>Session.clear()</literal>
         </para>
         
         <para>
@@ -989,31 +994,31 @@ sessionFactory.evictCollection("Cat.kittens"); //evict all kitten collections]]>
 
         <para>
             The <literal>CacheMode</literal> controls how a particular session interacts with the second-level
-            cache.
+            cache:
         </para>
         
         <itemizedlist>
         <listitem>
         <para>
-            <literal>CacheMode.NORMAL</literal> - read items from and write items to the second-level cache
+            <literal>CacheMode.NORMAL</literal>: will read items from and write items to the second-level cache
         </para>
         </listitem>
         <listitem>
         <para>
-            <literal>CacheMode.GET</literal> - read items from the second-level cache, but don't write to
+            <literal>CacheMode.GET</literal>: will read items from the second-level cache. Do not write to
             the second-level cache except when updating data
         </para>
         </listitem>
         <listitem>
         <para>
-            <literal>CacheMode.PUT</literal> - write items to the second-level cache, but don't read from
+            <literal>CacheMode.PUT</literal>: will write items to the second-level cache. Do not read from
             the second-level cache
         </para>
         </listitem>
         <listitem>
         <para>
-            <literal>CacheMode.REFRESH</literal> - write items to the second-level cache, but don't read from
-            the second-level cache, bypass the effect of <literal>hibernate.cache.use_minimal_puts</literal>, forcing
+            <literal>CacheMode.REFRESH</literal>: will write items to the second-level cache. Do not read from
+            the second-level cache.  Bypass the effect of <literal>hibernate.cache.use_minimal_puts</literal> forcing
             a refresh of the second-level cache for all items read from the database
         </para>
         </listitem>
@@ -1029,8 +1034,8 @@ sessionFactory.evictCollection("Cat.kittens"); //evict all kitten collections]]>
         .getEntries();]]></programlisting>
         
         <para>
-            You'll need to enable statistics, and, optionally, force Hibernate to keep the cache entries in a
-            more human-understandable format:
+            You will need to enable statistics and, optionally, force Hibernate to keep the cache entries in a
+            more readable format:
         </para>
         
         <programlisting><![CDATA[hibernate.generate_statistics true
@@ -1042,31 +1047,31 @@ hibernate.cache.use_structured_entries true]]></programlisting>
         <title>The Query Cache</title>
 
         <para>
-            Query result sets may also be cached. This is only useful for queries that are run
-            frequently with the same parameters. To use the query cache you must first enable it:
+            Query result sets can also be cached. This is only useful for queries that are run
+            frequently with the same parameters. You will first need to enable the query cache:
         </para>
 
         <programlisting><![CDATA[hibernate.cache.use_query_cache true]]></programlisting>       
         
         <para>
-            This setting causes the creation of two new cache regions - one holding cached query 
+            This setting creates two new cache regions: one holding cached query 
             result sets (<literal>org.hibernate.cache.StandardQueryCache</literal>), the other 
             holding timestamps of the most recent updates to queryable tables 
             (<literal>org.hibernate.cache.UpdateTimestampsCache</literal>). Note that the query
             cache does not cache the state of the actual entities in the result set; it caches 
-            only identifier values and results of value type. So the query cache should always be
+            only identifier values and results of value type. The query cache should always be
             used in conjunction with the second-level cache.
         </para>
         
         <para>
-            Most queries do not benefit from caching, so by default queries are not cached. To
+            Most queries do not benefit from caching, so by default, queries are not cached. To
             enable caching, call <literal>Query.setCacheable(true)</literal>. This call allows
             the query to look for existing cache results or add its results to the cache when
             it is executed.
         </para>
         
         <para>
-            If you require fine-grained control over query cache expiration policies, you may
+            If you require fine-grained control over query cache expiration policies, you can
             specify a named cache region for a particular query by calling 
             <literal>Query.setCacheRegion()</literal>.
         </para>
@@ -1093,9 +1098,9 @@ hibernate.cache.use_structured_entries true]]></programlisting>
         <title>Understanding Collection performance</title>
 
         <para>
-            We've already spent quite some time talking about collections.
-            In this section we will highlight a couple more issues about
-            how collections behave at runtime.
+            In the previous sections we have covered collections and their applications.
+            In this section we explore some more issues in relation to
+            collections at runtime.
         </para>
 
         <sect2 id="performance-collections-taxonomy">
@@ -1108,10 +1113,10 @@ hibernate.cache.use_structured_entries true]]></programlisting>
                 <para>collections of values</para>
             </listitem>
             <listitem>
-                <para>one to many associations</para>
+                <para>one-to-many associations</para>
             </listitem>
             <listitem>
-                <para>many to many associations</para>
+                <para>many-to-many associations</para>
             </listitem>
             </itemizedlist>
 
@@ -1137,42 +1142,42 @@ hibernate.cache.use_structured_entries true]]></programlisting>
             </itemizedlist>
 
             <para>
-                All indexed collections (maps, lists, arrays) have a primary key consisting
+                All indexed collections (maps, lists, and arrays) have a primary key consisting
                 of the <literal>&lt;key&gt;</literal> and <literal>&lt;index&gt;</literal>
-                columns. In this case collection updates are usually extremely efficient -
-                the primary key may be efficiently indexed and a particular row may be efficiently
+                columns. In this case, collection updates are extremely efficient.
+                The primary key can be efficiently indexed and a particular row can be efficiently
                 located when Hibernate tries to update or delete it.
             </para>
                         
             <para>
                 Sets have a primary key consisting of <literal>&lt;key&gt;</literal> and element
-                columns. This may be less efficient for some types of collection element, particularly
-                composite elements or large text or binary fields; the database may not be able to index
-                a complex primary key as efficiently.  On the other hand, for one to many or many to many
+                columns. This can be less efficient for some types of collection element, particularly
+                composite elements or large text or binary fields, as the database may not be able to index
+                a complex primary key as efficiently.  However, for one-to-many or many-to-many
                 associations, particularly in the case of synthetic identifiers, it is likely to be just
-                as efficient. (Side-note: if you want <literal>SchemaExport</literal> to actually create
-                the primary key of a <literal>&lt;set&gt;</literal> for you, you must declare all columns
-                as <literal>not-null="true"</literal>.)
+                as efficient. If you want <literal>SchemaExport</literal> to actually create
+                the primary key of a <literal>&lt;set&gt;</literal>, you must declare all columns
+                as <literal>not-null="true"</literal>.
             </para>
 
             <para>
                 <literal>&lt;idbag&gt;</literal> mappings define a surrogate key, so they are
-                always very efficient to update. In fact, they are the best case.
+                efficient to update. In fact, they are the best case.
             </para>
             
             <para>
-                Bags are the worst case. Since a bag permits duplicate element values and has no
-                index column, no primary key may be defined. Hibernate has no way of distinguishing
+                Bags are the worst case since they permit duplicate element values and, as they have no
+                index column, no primary key can be defined. Hibernate has no way of distinguishing
                 between duplicate rows. Hibernate resolves this problem by completely removing
-                (in a single <literal>DELETE</literal>) and recreating the collection whenever it
-                changes. This might be very inefficient.
+                in a single <literal>DELETE</literal> and recreating the collection whenever it
+                changes. This can be inefficient.
             </para>
 
             <para>
-                Note that for a one-to-many association, the "primary key" may not be the physical
-                primary key of the database table - but even in this case, the above classification
-                is still useful. (It still reflects how Hibernate "locates" individual rows of the
-                collection.)
+                For a one-to-many association, the "primary key" may not be the physical
+                primary key of the database table. Even in this case, the above classification
+                is still useful. It reflects how Hibernate "locates" individual rows of the
+                collection.
             </para>
 
         </sect2>
@@ -1182,29 +1187,29 @@ hibernate.cache.use_structured_entries true]]></programlisting>
 
             <para>
                 From the discussion above, it should be clear that indexed collections
-                and (usually) sets allow the most efficient operation in terms of adding,
+                and sets allow the most efficient operation in terms of adding,
                 removing and updating elements.
             </para>
 
             <para>
                 There is, arguably, one more advantage that indexed collections have over sets for
-                many to many associations or collections of values. Because of the structure of a
-                <literal>Set</literal>, Hibernate doesn't ever <literal>UPDATE</literal> a row when
+                many-to-many associations or collections of values. Because of the structure of a
+                <literal>Set</literal>, Hibernate does not <literal>UPDATE</literal> a row when
                 an element is "changed". Changes to a <literal>Set</literal> always work via
-                <literal>INSERT</literal> and <literal>DELETE</literal> (of individual rows). Once
-                again, this consideration does not apply to one to many associations.
+                <literal>INSERT</literal> and <literal>DELETE</literal> of individual rows. Once
+                again, this consideration does not apply to one-to-many associations.
             </para>
 
             <para>
-                After observing that arrays cannot be lazy, we would conclude that lists, maps and 
+                After observing that arrays cannot be lazy, you can conclude that lists, maps and 
                 idbags are the most performant (non-inverse) collection types, with sets not far 
-                behind. Sets are expected to be the most common kind of collection in Hibernate 
+                behind. You can expect sets to be the most common kind of collection in Hibernate 
                 applications. This is because the "set" semantics are most natural in the relational
                 model.
             </para>
 
             <para>
-                However, in well-designed Hibernate domain models, we usually see that most collections
+                However, in well-designed Hibernate domain models, most collections
                 are in fact one-to-many associations with <literal>inverse="true"</literal>. For these
                 associations, the update is handled by the many-to-one end of the association, and so
                 considerations of collection update performance simply do not apply.
@@ -1216,13 +1221,13 @@ hibernate.cache.use_structured_entries true]]></programlisting>
             <title>Bags and lists are the most efficient inverse collections</title>
 
             <para>
-                Just before you ditch bags forever, there is a particular case in which bags (and also lists)
-                are much more performant than sets. For a collection with <literal>inverse="true"</literal>
-                (the standard bidirectional one-to-many relationship idiom, for example) we can add elements
-                to a bag or list without needing to initialize (fetch) the bag elements! This is because
+                There is a particular case, however, in which bags, and also lists,
+                are much more performant than sets. For a collection with <literal>inverse="true"</literal>,
+                the standard bidirectional one-to-many relationship idiom, for example, we can add elements
+                to a bag or list without needing to initialize (fetch) the bag elements. This is because, unlike a <literal>set</literal>,
                 <literal>Collection.add()</literal> or <literal>Collection.addAll()</literal> must always
-                return true for a bag or <literal>List</literal> (unlike a <literal>Set</literal>). This can
-                make the following common code much faster.
+                return true for a bag or <literal>List</literal>. This can
+                make the following common code much faster:
             </para>
 
             <programlisting><![CDATA[Parent p = (Parent) sess.load(Parent.class, id);
@@ -1237,16 +1242,16 @@ sess.flush();]]></programlisting>
             <title>One shot delete</title>
 
             <para>
-                Occasionally, deleting collection elements one by one can be extremely inefficient. Hibernate
-                isn't completely stupid, so it knows not to do that in the case of an newly-empty collection
+                Deleting collection elements one by one can sometimes be extremely inefficient. Hibernate
+                knows not to do that in the case of an newly-empty collection
                 (if you called <literal>list.clear()</literal>, for example). In this case, Hibernate will
-                issue a single <literal>DELETE</literal> and we are done!
+                issue a single <literal>DELETE</literal>. 
             </para>
 
             <para>
-                Suppose we add a single element to a collection of size twenty and then remove two elements.
+                Suppose you added a single element to a collection of size twenty and then remove two elements.
                 Hibernate will issue one <literal>INSERT</literal> statement and two <literal>DELETE</literal>
-                statements (unless the collection is a bag). This is certainly desirable.
+                statements, unless the collection is a bag. This is certainly desirable.
             </para>
 
             <para>
@@ -1259,25 +1264,25 @@ sess.flush();]]></programlisting>
                 <para>delete eighteen rows one by one and then insert three rows</para>
             </listitem>
             <listitem>
-                <para>remove the whole collection (in one SQL <literal>DELETE</literal>) and insert
-                all five current elements (one by one)</para>
+                <para>remove the whole collection in one SQL <literal>DELETE</literal> and insert
+                all five current elements one by one</para>
             </listitem>
             </itemizedlist>
 
             <para>
-                Hibernate isn't smart enough to know that the second option is probably quicker in this case.
-                (And it would probably be undesirable for Hibernate to be that smart; such behaviour might
-                confuse database triggers, etc.)
+                Hibernate cannot know that the second option is probably quicker.
+                It would probably be undesirable for Hibernate to be that intuitive as such behavior might
+                confuse database triggers, etc.
             </para>
 
             <para>
-                Fortunately, you can force this behaviour (ie. the second strategy) at any time by discarding
-                (ie. dereferencing) the original collection and returning a newly instantiated collection with
-                all the current elements. This can be very useful and powerful from time to time.
+                Fortunately, you can force this behavior (i.e. the second strategy) at any time by discarding
+                (i.e. dereferencing) the original collection and returning a newly instantiated collection with
+                all the current elements. 
             </para>
             
             <para>
-                Of course, one-shot-delete does not apply to collections mapped <literal>inverse="true"</literal>.
+                One-shot-delete does not apply to collections mapped <literal>inverse="true"</literal>.
             </para>
 
         </sect2>
@@ -1304,7 +1309,7 @@ sess.flush();]]></programlisting>
 
             <para>
                 Hibernate can also use JMX to publish metrics if you enable the
-                <literal>StatisticsService</literal> MBean. You may enable a single MBean for all your
+                <literal>StatisticsService</literal> MBean. You can enable a single MBean for all your
                 <literal>SessionFactory</literal> or one per factory. See the following code for
                 minimalistic configuration examples:
             </para>
@@ -1329,13 +1334,13 @@ ObjectName on = new ObjectName("hibernate", tb); // MBean object name
 StatisticsService stats = new StatisticsService(); // MBean implementation
 server.registerMBean(stats, on); // Register the MBean on the server]]></programlisting>
 
-            <para>
-                TODO: This doesn't make sense: In the first case, we retrieve and use the MBean directly. In the second one, we must give
+            <!--<para>
+                TODO: This does not make sense: In the first case, we retrieve and use the MBean directly. In the second one, we must give
                 the JNDI name in which the session factory is held before using it. Use
                 <literal>hibernateStatsBean.setSessionFactoryJNDIName("my/JNDI/Name")</literal>
-            </para>
+            </para>-->
             <para>
-                You can (de)activate the monitoring for a <literal>SessionFactory</literal>
+                You can activate and deactivate the monitoring for a <literal>SessionFactory</literal>:
             </para>
             <itemizedlist>
                 <listitem>
@@ -1365,8 +1370,8 @@ server.registerMBean(stats, on); // Register the MBean on the server]]></program
             <title>Metrics</title>
 
             <para>
-                Hibernate provides a number of metrics, from very basic to the specialized information
-                only relevant in certain scenarios. All available counters are described in the
+                Hibernate provides a number of metrics, from basic information to more specialized information
+                that is only relevant in certain scenarios. All available counters are described in the
                 <literal>Statistics</literal> interface API, in three categories:
             </para>
             <itemizedlist>
@@ -1378,8 +1383,8 @@ server.registerMBean(stats, on); // Register the MBean on the server]]></program
                 </listitem>
                 <listitem>
                     <para>
-                        Metrics related to he entities, collections, queries, and caches as a
-                        whole (aka global metrics),
+                        Metrics related to the entities, collections, queries, and caches as a
+                        whole (aka global metrics).
                     </para>
                 </listitem>
                 <listitem>
@@ -1392,9 +1397,9 @@ server.registerMBean(stats, on); // Register the MBean on the server]]></program
 
             <para>
                 For example, you can check the cache hit, miss, and put ratio of entities, collections
-                and queries, and the average time a query needs. Beware that the number of milliseconds
-                is subject to approximation in Java. Hibernate is tied to the JVM precision, on some
-                platforms this might even only be accurate to 10 seconds.
+                and queries, and the average time a query needs. Be aware that the number of milliseconds
+                is subject to approximation in Java. Hibernate is tied to the JVM precision and on some
+                platforms this might only be accurate to 10 seconds.
             </para>
 
             <para>
@@ -1404,7 +1409,7 @@ server.registerMBean(stats, on); // Register the MBean on the server]]></program
                 refer to the <literal>Statistics</literal>, <literal>EntityStatistics</literal>,
                 <literal>CollectionStatistics</literal>, <literal>SecondLevelCacheStatistics</literal>,
                 and <literal>QueryStatistics</literal> API Javadoc for more information. The following
-                code shows a simple example:
+                code is a simple example:
             </para>
 
             <programlisting><![CDATA[Statistics stats = HibernateUtil.sessionFactory.getStatistics();
@@ -1425,8 +1430,8 @@ long changes =
 log.info(Cat.class.getName() + " changed " + changes + "times"  );]]></programlisting>
 
             <para>
-                To work on all entities, collections, queries and region caches, you can retrieve
-                the list of names of entities, collections, queries and region caches with the
+                You can work on all entities, collections, queries and region caches, by retrieving
+                the list of names of entities, collections, queries and region caches using the
                 following methods: <literal>getQueries()</literal>, <literal>getEntityNames()</literal>,
                 <literal>getCollectionRoleNames()</literal>, and
                 <literal>getSecondLevelCacheRegionNames()</literal>.

@@ -26,10 +26,10 @@
 <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
 
 <chapter id="inheritance">
-    <title>Inheritance Mapping</title>
+    <title>Inheritance mapping</title>
 
     <sect1 id="inheritance-strategies" revision="3">
-        <title>The Three Strategies</title>
+        <title>The three strategies</title>
 
         <para>
             Hibernate supports the three basic inheritance mapping strategies:
@@ -68,25 +68,25 @@
         
         <para>
             It is possible to use different mapping strategies for different
-            branches of the same inheritance hierarchy, and then make use of implicit
+            branches of the same inheritance hierarchy. You can then make use of implicit
             polymorphism to achieve polymorphism across the whole hierarchy. However, 
             Hibernate does not support mixing <literal>&lt;subclass&gt;</literal>,
-            and <literal>&lt;joined-subclass&gt;</literal> and 
+            <literal>&lt;joined-subclass&gt;</literal> and 
             <literal>&lt;union-subclass&gt;</literal> mappings under the same root
             <literal>&lt;class&gt;</literal> element. It is possible to mix together
-            the table per hierarchy and table per subclass strategies, under the
+            the table per hierarchy and table per subclass strategies under the
             the same <literal>&lt;class&gt;</literal> element, by combining the 
             <literal>&lt;subclass&gt;</literal> and <literal>&lt;join&gt;</literal>
-            elements (see below).
+            elements (see below for an example).
         </para>
 
         <para>
              It is possible to define <literal>subclass</literal>, <literal>union-subclass</literal>,
-             and <literal>joined-subclass</literal> mappings in separate mapping documents, directly beneath
-             <literal>hibernate-mapping</literal>. This allows you to extend a class hierachy just by adding
+             and <literal>joined-subclass</literal> mappings in separate mapping documents directly beneath
+             <literal>hibernate-mapping</literal>. This allows you to extend a class hierarchy by adding
              a new mapping file. You must specify an <literal>extends</literal> attribute in the subclass mapping,
-             naming a previously mapped superclass. Note: Previously this feature made the ordering of the mapping
-             documents important. Since Hibernate3, the ordering of mapping files does not matter when using the
+             naming a previously mapped superclass. Previously this feature made the ordering of the mapping
+             documents important. Since Hibernate3, the ordering of mapping files is irrelevant when using the
              extends keyword. The ordering inside a single mapping file still needs to be defined as superclasses
              before subclasses.
          </para>
@@ -103,10 +103,10 @@
         <title>Table per class hierarchy</title>
 
         <para>
-            Suppose we have an interface <literal>Payment</literal>, with implementors
+            Suppose we have an interface <literal>Payment</literal> with the implementors
             <literal>CreditCardPayment</literal>, <literal>CashPayment</literal>,
-            <literal>ChequePayment</literal>. The table per hierarchy mapping would
-            look like:
+            and <literal>ChequePayment</literal>. The table per hierarchy mapping would
+            display in the following way:
         </para>
 
         <programlisting><![CDATA[<class name="Payment" table="PAYMENT">
@@ -129,9 +129,9 @@
 </class>]]></programlisting>
 
         <para>
-            Exactly one table is required. There is one big limitation of this mapping 
+            Exactly one table is required. There is a limitation of this mapping 
             strategy: columns declared by the subclasses, such as <literal>CCTYPE</literal>, 
-            may not have <literal>NOT NULL</literal> constraints.
+            cannot have <literal>NOT NULL</literal> constraints.
         </para>
         
         </sect2>
@@ -140,7 +140,7 @@
         <title>Table per subclass</title>
 
         <para>
-            A table per subclass mapping would look like:
+            A table per subclass mapping looks like this:
         </para>
 
         <programlisting><![CDATA[<class name="Payment" table="PAYMENT">
@@ -166,25 +166,25 @@
 
         <para>
             Four tables are required. The three subclass tables have primary
-            key associations to the superclass table (so the relational model
-            is actually a one-to-one association).
+            key associations to the superclass table so the relational model
+            is actually a one-to-one association.
         </para>
 
         </sect2>
 
         <sect2 id="inheritance-tablepersubclass-discriminator" revision="2">
-        <title>Table per subclass, using a discriminator</title>
+        <title>Table per subclass: using a discriminator</title>
 
         <para>
-            Note that Hibernate's implementation of table per subclass requires
-            no discriminator column. Other object/relational mappers use a
-            different implementation of table per subclass which requires a type
+            Hibernate's implementation of table per subclass
+            does not require a discriminator column. Other object/relational mappers use a
+            different implementation of table per subclass that requires a type
             discriminator column in the superclass table. The approach taken by
-            Hibernate is much more difficult to implement but arguably more
-            correct from a relational point of view. If you would like to use
+            Hibernate is much more difficult to implement, but arguably more
+            correct from a relational point of view. If you want to use
             a discriminator column with the table per subclass strategy, you
-            may combine the use of <literal>&lt;subclass&gt;</literal> and 
-            <literal>&lt;join&gt;</literal>, as follow:
+            can combine the use of <literal>&lt;subclass&gt;</literal> and 
+            <literal>&lt;join&gt;</literal>, as follows:
         </para>
 
         <programlisting><![CDATA[<class name="Payment" table="PAYMENT">
@@ -227,8 +227,8 @@
         <title>Mixing table per class hierarchy with table per subclass</title>
 
         <para>
-            You may even mix the table per hierarchy and table per subclass strategies
-            using this approach:
+            You can even mix the table per hierarchy and table per subclass strategies
+            using the following approach:
         </para>
 
         <programlisting><![CDATA[<class name="Payment" table="PAYMENT">
@@ -266,8 +266,8 @@
         <title>Table per concrete class</title>
 
         <para>
-            There are two ways we could go about mapping the table per concrete class
-            strategy. The first is to use <literal>&lt;union-subclass&gt;</literal>.
+            There are two ways we can map the table per concrete class
+            strategy. First, you can use <literal>&lt;union-subclass&gt;</literal>.
         </para>
 
         <programlisting><![CDATA[<class name="Payment">
@@ -296,23 +296,23 @@
         <para>
             The limitation of this approach is that if a property is mapped on the 
             superclass, the column name must be the same on all subclass tables.
-            (We might relax this in a future release of Hibernate.) The identity
-			generator strategy is not allowed in union subclass inheritance, indeed
-			the primary key seed has to be shared accross all unioned subclasses
-			of a hierarchy.
+            The identity generator strategy is not allowed in union subclass inheritance.
+	The primary key seed has to be shared across all unioned subclasses
+	of a hierarchy.
+	
         </para>
 
         <para>
             If your superclass is abstract, map it with <literal>abstract="true"</literal>.
-            Of course, if it is not abstract, an additional table (defaults to
-            <literal>PAYMENT</literal> in the example above) is needed to hold instances
+            If it is not abstract, an additional table (it defaults to
+            <literal>PAYMENT</literal> in the example above), is needed to hold instances
             of the superclass.
         </para>
 
         </sect2>
 
         <sect2 id="inheritance-tableperconcreate-polymorphism">
-        <title>Table per concrete class, using implicit polymorphism</title>
+        <title>Table per concrete class using implicit polymorphism</title>
 
         <para>
             An alternative approach is to make use of implicit polymorphism:
@@ -343,12 +343,12 @@
 </class>]]></programlisting>
            
         <para>
-            Notice that nowhere do we mention the <literal>Payment</literal> interface 
-            explicitly. Also notice that properties of <literal>Payment</literal> are 
+            Notice that the <literal>Payment</literal> interface 
+            is not mentioned explicitly. Also notice that properties of <literal>Payment</literal> are 
             mapped in each of the subclasses. If you want to avoid duplication, consider
             using XML entities
-            (e.g. <literal>[ &lt;!ENTITY allproperties SYSTEM "allproperties.xml"&gt; ]</literal>
-            in the <literal>DOCTYPE</literal> declartion and 
+            (for example, <literal>[ &lt;!ENTITY allproperties SYSTEM "allproperties.xml"&gt; ]</literal>
+            in the <literal>DOCTYPE</literal> declaration and 
             <literal>&amp;allproperties;</literal> in the mapping).
         </para>
         
@@ -372,15 +372,15 @@
            
         </sect2>
 
-        <sect2 id="inheritace-mixingpolymorphism">
+        <sect2 id="inheritance-mixingpolymorphism">
         <title>Mixing implicit polymorphism with other inheritance mappings</title>
 
         <para>
-            There is one further thing to notice about this mapping. Since the subclasses 
-            are each mapped in their own <literal>&lt;class&gt;</literal> element (and since
+            Since the subclasses 
+            are each mapped in their own <literal>&lt;class&gt;</literal> element, and since
             <literal>Payment</literal> is just an interface), each of the subclasses could 
-            easily be part of another inheritance hierarchy! (And you can still use polymorphic
-            queries against the <literal>Payment</literal> interface.)
+            easily be part of another inheritance hierarchy. You can still use polymorphic
+            queries against the <literal>Payment</literal> interface.
        </para>
 
         <programlisting><![CDATA[<class name="CreditCardPayment" table="CREDIT_PAYMENT">
@@ -412,12 +412,12 @@
 </class>]]></programlisting>
 
         <para>
-            Once again, we don't mention <literal>Payment</literal> explicitly. If we
-            execute a query against the <literal>Payment</literal> interface - for
-            example, <literal>from Payment</literal> - Hibernate
+            Once again, <literal>Payment</literal> is not mentioned explicitly. If we
+            execute a query against the <literal>Payment</literal> interface, for
+            example <literal>from Payment</literal>, Hibernate
             automatically returns instances of <literal>CreditCardPayment</literal>
             (and its subclasses, since they also implement <literal>Payment</literal>),
-            <literal>CashPayment</literal> and <literal>ChequePayment</literal> but
+            <literal>CashPayment</literal> and <literal>ChequePayment</literal>, but
             not instances of <literal>NonelectronicTransaction</literal>.
         </para>
         
@@ -429,7 +429,7 @@
         <title>Limitations</title>
 
         <para>
-            There are certain limitations to the "implicit polymorphism" approach to
+            There are limitations to the "implicit polymorphism" approach to
             the table per concrete-class mapping strategy. There are somewhat less
             restrictive limitations to <literal>&lt;union-subclass&gt;</literal>
             mappings.

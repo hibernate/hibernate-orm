@@ -26,14 +26,14 @@
 <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
 
 <chapter id="collections">
-    <title>Collection Mapping</title>
+    <title>Collection mapping</title>
 
     <sect1 id="collections-persistent" revision="3">
         <title>Persistent collections</title>
         
         <para>
             Hibernate requires that persistent collection-valued fields be declared
-            as an interface type, for example:
+            as an interface type. For example:
         </para>
         
         <programlisting><![CDATA[public class Product {
@@ -50,19 +50,19 @@
             The actual interface might be <literal>java.util.Set</literal>,
             <literal>java.util.Collection</literal>, <literal>java.util.List</literal>,
             <literal>java.util.Map</literal>, <literal>java.util.SortedSet</literal>,
-            <literal>java.util.SortedMap</literal> or ... anything you like! (Where 
-            "anything you like" means you will have to write an implementation of 
+            <literal>java.util.SortedMap</literal> or anything you like  
+            ("anything you like" means you will have to write an implementation of 
             <literal>org.hibernate.usertype.UserCollectionType</literal>.)
         </para>
         
         <para>
-            Notice how we initialized the instance variable with an instance of
+            Notice how the instance variable was initialized with an instance of
             <literal>HashSet</literal>. This is the best way to initialize collection
             valued properties of newly instantiated (non-persistent) instances. When
-            you make the instance persistent - by calling <literal>persist()</literal>,
-            for example - Hibernate will actually replace the <literal>HashSet</literal>
+            you make the instance persistent, by calling <literal>persist()</literal>
+            for example, Hibernate will actually replace the <literal>HashSet</literal>
             with an instance of Hibernate's own implementation of <literal>Set</literal>.
-            Watch out for errors like this:
+            Be aware of the following errors:
         </para>
         
         <programlisting><![CDATA[Cat cat = new DomesticCat();
@@ -79,24 +79,24 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
             The persistent collections injected by Hibernate behave like
             <literal>HashMap</literal>, <literal>HashSet</literal>,
             <literal>TreeMap</literal>, <literal>TreeSet</literal> or
-            <literal>ArrayList</literal>, depending upon the interface type.
+            <literal>ArrayList</literal>, depending on the interface type.
         </para>
 
         <para>
             Collections instances have the usual behavior of value types. They are 
             automatically persisted when referenced by a persistent object and 
-            automatically deleted when unreferenced. If a collection is passed from one
+            are automatically deleted when unreferenced. If a collection is passed from one
             persistent object to another, its elements might be moved from one table to
-            another. Two entities may not share a reference to the same collection 
+            another. Two entities cannot share a reference to the same collection 
             instance. Due to the underlying relational model, collection-valued properties
-            do not support null value semantics; Hibernate does not distinguish between 
+            do not support null value semantics. Hibernate does not distinguish between 
             a null collection reference and an empty collection.
         </para>
 
         <para>
-            You shouldn't have to worry much about any of this. Use persistent collections 
-            the same way you use ordinary Java collections. Just make sure you understand 
-            the semantics of bidirectional associations (discussed later).
+            Use persistent collections 
+            the same way you use ordinary Java collections. However, please ensure you understand 
+            the semantics of bidirectional associations (these are discussed later).
         </para>
 
     </sect1>
@@ -106,15 +106,15 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
 
         <tip>
             <para>
-                There are quite a range of mappings that can be generated for collections, covering
+                There are quite a range of mappings that can be generated for collections that cover
                 many common relational models. We suggest you experiment with the schema generation tool
-                to get a feeling for how various mapping declarations translate to database tables.
+                so that you understand how various mapping declarations translate to database tables.
             </para>
         </tip>
 
         <para>
             The Hibernate mapping element used for mapping a collection depends upon
-            the type of the interface. For example, a <literal>&lt;set&gt;</literal> 
+            the type of interface. For example, a <literal>&lt;set&gt;</literal> 
             element is used for mapping properties of type <literal>Set</literal>.
         </para>
         
@@ -177,94 +177,94 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
             <calloutlist>
                 <callout arearefs="mappingcollection1">
                     <para>
-                        <literal>name</literal> the collection property name
+                        <literal>name</literal>: the collection property name
                     </para>
                 </callout>
                 <callout arearefs="mappingcollection2">
                     <para>
-                        <literal>table</literal> (optional - defaults to property name) the
-                        name of the collection table (not used for one-to-many associations)
+                        <literal>table</literal> (optional - defaults to property name): the
+                        name of the collection table. It is not used for one-to-many associations.
                     </para>
                 </callout>
                 <callout arearefs="mappingcollection3">
                     <para>
-                        <literal>schema</literal> (optional) the name of a table schema to
+                        <literal>schema</literal> (optional): the name of a table schema to
                         override the schema declared on the root element
                     </para>
                 </callout>
                 <callout arearefs="mappingcollection4">
                     <para>
-                        <literal>lazy</literal> (optional - defaults to <literal>true</literal>)
-                        may be used to disable lazy fetching and specify that the association is 
-                        always eagerly fetched, or to enable "extra-lazy" fetching where most 
-                        operations do not initialize the collection (suitable for very large 
-                        collections)
+                        <literal>lazy</literal> (optional - defaults to <literal>true</literal>):
+                        disables lazy fetching and specifies that the association is 
+                        always eagerly fetched. It can also be used to enable "extra-lazy" fetching where most 
+                        operations do not initialize the collection. This is suitable for large 
+                        collections.
                     </para>
                 </callout>
                 <callout arearefs="mappingcollection5">
                     <para>
-                        <literal>inverse</literal> (optional - defaults to <literal>false</literal>)
-                        mark this collection as the "inverse" end of a bidirectional association
+                        <literal>inverse</literal> (optional - defaults to <literal>false</literal>):
+                        marks this collection as the "inverse" end of a bidirectional association.
                     </para>
                 </callout>
                 <callout arearefs="mappingcollection6">
                     <para>
-                        <literal>cascade</literal> (optional - defaults to <literal>none</literal>)
-                        enable operations to cascade to child entities
+                        <literal>cascade</literal> (optional - defaults to <literal>none</literal>):
+                        enables operations to cascade to child entities.
                     </para>
                 </callout>
                 <callout arearefs="mappingcollection7">
                     <para>
-                        <literal>sort</literal> (optional) specify a sorted collection with
-                        <literal>natural</literal> sort order, or a given comparator class
+                        <literal>sort</literal> (optional): specifies a sorted collection with
+                        <literal>natural</literal> sort order or a given comparator class.
                     </para>
                 </callout>
                 <callout arearefs="mappingcollection8">
                     <para>
-                        <literal>order-by</literal> (optional, JDK1.4 only) specify a table column (or columns)
+                        <literal>order-by</literal> (optional, JDK1.4 only): specifies a table column or columns
                         that define the iteration order of the <literal>Map</literal>, <literal>Set</literal>
-                        or bag, together with an optional <literal>asc</literal> or <literal>desc</literal>
+                        or bag, together with an optional <literal>asc</literal> or <literal>desc</literal>.
                     </para>
                 </callout>
                 <callout arearefs="mappingcollection9">
                     <para>
-                        <literal>where</literal> (optional) specify an arbitrary SQL <literal>WHERE</literal>
-                        condition to be used when retrieving or removing the collection (useful if the
-                        collection should contain only a subset of the available data)
+                        <literal>where</literal> (optional): specifies an arbitrary SQL <literal>WHERE</literal>
+                        condition that is used when retrieving or removing the collection. This is useful if the
+                        collection needs to contain only a subset of the available data.
                     </para>
                 </callout>
                 <callout arearefs="mappingcollection10">
                     <para>
-                        <literal>fetch</literal> (optional, defaults to <literal>select</literal>) Choose
+                        <literal>fetch</literal> (optional, defaults to <literal>select</literal>): chooses
                         between outer-join fetching, fetching by sequential select, and fetching by sequential
                         subselect.
                     </para>
                 </callout>
                 <callout arearefs="mappingcollection11">
                     <para>
-                        <literal>batch-size</literal> (optional, defaults to <literal>1</literal>) specify a
+                        <literal>batch-size</literal> (optional, defaults to <literal>1</literal>): specifies a
                         "batch size" for lazily fetching instances of this collection.
                     </para>
                 </callout>
                 <callout arearefs="mappingcollection12">
                     <para>
-                        <literal>access</literal> (optional - defaults to <literal>property</literal>): The
-                        strategy Hibernate should use for accessing the collection property value.
+                        <literal>access</literal> (optional - defaults to <literal>property</literal>): the
+                        strategy Hibernate uses for accessing the collection property value.
                     </para>
                 </callout>
                 <callout arearefs="mappingcollection13">
                     <para>
                         <literal>optimistic-lock</literal> (optional - defaults to <literal>true</literal>): 
-                        Species that changes to the state of the collection results in increment of the
-                        owning entity's version. (For one to many associations, it is often reasonable to
-                        disable this setting.)
+                        specifies that changes to the state of the collection results in increments of the
+                        owning entity's version. For one-to-many associations you may want to
+                        disable this setting.
                     </para>
                 </callout>
                 <callout arearefs="mappingcollection14">
                     <para>
                         <literal>mutable</literal> (optional - defaults to <literal>true</literal>): 
-                        A value of <literal>false</literal> specifies that the elements of the 
-                        collection never change (a minor performance optimization in some cases).
+                        a value of <literal>false</literal> specifies that the elements of the 
+                        collection never change. This allows for minor performance optimization in some cases.
                     </para>
                 </callout>
             </calloutlist>
@@ -276,22 +276,22 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
             <para>
                 Collection instances are distinguished in the database by the foreign key of
                 the entity that owns the collection. This foreign key is referred to as the
-                <emphasis>collection key column</emphasis> (or columns) of the collection 
+                <emphasis>collection key column</emphasis>, or columns, of the collection 
                 table. The collection key column is mapped by the <literal>&lt;key&gt;</literal> 
                 element. 
             </para>
     
             <para>
-                There may be a nullability constraint on the foreign key column. For most
-                collections, this is implied. For unidirectional one to many associations,
-                the foreign key column is nullable by default, so you might need to specify
+                There can be a nullability constraint on the foreign key column. For most
+                collections, this is implied. For unidirectional one-to-many associations,
+                the foreign key column is nullable by default, so you may need to specify
                 <literal>not-null="true"</literal>.
             </para>
     
             <programlisting><![CDATA[<key column="productSerialNumber" not-null="true"/>]]></programlisting>
     
             <para>
-                The foreign key constraint may use <literal>ON DELETE CASCADE</literal>.
+                The foreign key constraint can use <literal>ON DELETE CASCADE</literal>.
             </para>
     
             <programlisting><![CDATA[<key column="productSerialNumber" on-delete="cascade"/>]]></programlisting>
@@ -307,12 +307,12 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
             <title>Collection elements</title>
     
             <para>
-                Collections may contain almost any other Hibernate type, including all basic types,
-                custom types, components, and of course, references to other entities. This is an
-                important distinction: an object in a collection might be handled with "value" 
-                semantics (its life cycle fully depends on the collection owner) or it might be a
-                reference to another entity, with its own life cycle. In the latter case, only the 
-                "link" between the two objects is considered to be state held by the collection. 
+                Collections can contain almost any other Hibernate type, including: basic types,
+                custom types, components and references to other entities. This is an
+                important distinction. An object in a collection might be handled with "value" 
+                semantics (its life cycle fully depends on the collection owner), or it might be a
+                reference to another entity with its own life cycle. In the latter case, only the 
+                "link" between the two objects is considered to be a state held by the collection. 
             </para>
                 
             <para>
@@ -331,15 +331,15 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
     
             <para>
                 All collection mappings, except those with set and bag semantics, need an
-                <emphasis>index column</emphasis> in the collection table - a column that maps to an
+                <emphasis>index column</emphasis> in the collection table. An index column is a column that maps to an
                 array index, or <literal>List</literal> index, or <literal>Map</literal> key. The
                 index of a <literal>Map</literal> may be of any basic type, mapped with 
-                <literal>&lt;map-key&gt;</literal>, it may be an entity reference mapped with 
-                <literal>&lt;map-key-many-to-many&gt;</literal>, or it may be a composite type,
+                <literal>&lt;map-key&gt;</literal>. It can be an entity reference mapped with 
+                <literal>&lt;map-key-many-to-many&gt;</literal>, or it can be a composite type
                 mapped with <literal>&lt;composite-map-key&gt;</literal>. The index of an array or 
                 list is always of type <literal>integer</literal> and is mapped using the 
                 <literal>&lt;list-index&gt;</literal> element. The mapped column contains 
-                sequential integers (numbered from zero, by default).
+                sequential integers that are numbered from zero by default.
             </para>
 
         <programlistingco>
@@ -353,13 +353,13 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
             <calloutlist>
                 <callout arearefs="index1">
                     <para>
-                        <literal>column_name</literal> (required): The name of the column holding the
+                        <literal>column_name</literal> (required): the name of the column holding the
                         collection index values.
                     </para>
                 </callout>
                 <callout arearefs="index1">
                     <para>
-                        <literal>base</literal> (optional, defaults to <literal>0</literal>): The value
+                        <literal>base</literal> (optional - defaults to <literal>0</literal>): the value
                         of the index column that corresponds to the first element of the list or array.
                     </para>
                 </callout>
@@ -381,19 +381,19 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
             <calloutlist>
                 <callout arearefs="mapkey1">
                     <para>
-                        <literal>column</literal> (optional): The name of the column holding the
+                        <literal>column</literal> (optional): the name of the column holding the
                         collection index values.
                     </para>
                 </callout>
                 <callout arearefs="mapkey2">
                     <para>
-                        <literal>formula</literal> (optional): A SQL formula used to evaluate the
+                        <literal>formula</literal> (optional): a SQL formula used to evaluate the
                         key of the map.
                     </para>
                 </callout>
                 <callout arearefs="mapkey3">
                     <para>
-                        <literal>type</literal> (reguired): The type of the map keys.
+                        <literal>type</literal> (required): the type of the map keys.
                     </para>
                 </callout>
             </calloutlist>
@@ -413,19 +413,19 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
             <calloutlist>
                 <callout arearefs="indexmanytomany1">
                     <para>
-                        <literal>column</literal> (optional): The name of the foreign key
+                        <literal>column</literal> (optional): the name of the foreign key
                         column for the collection index values.
                     </para>
                 </callout>
                 <callout arearefs="indexmanytomany2">
                     <para>
-                        <literal>formula</literal> (optional): A SQL formula used to evaluate the
+                        <literal>formula</literal> (optional): a SQ formula used to evaluate the
                         foreign key of the map key.
                     </para>
                 </callout>
                 <callout arearefs="indexmanytomany3">
                     <para>
-                        <literal>class</literal> (required): The entity class used as the map key.
+                        <literal>class</literal> (required): the entity class used as the map key.
                     </para>
                 </callout>
             </calloutlist>
@@ -433,9 +433,9 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
 
 
             <para>
-                If your table doesn't have an index column, and you still wish to use <literal>List</literal> 
-                as the property type, you should map the property as a Hibernate <emphasis>&lt;bag&gt;</emphasis>.
-                A bag does not retain its order when it is retrieved from the database, but it may be 
+                If your table does not have an index column, and you still wish to use <literal>List</literal> 
+                as the property type, you can map the property as a Hibernate <emphasis>&lt;bag&gt;</emphasis>.
+                A bag does not retain its order when it is retrieved from the database, but it can be 
                 optionally sorted or ordered.
             </para>
             
@@ -445,14 +445,14 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
         <title>Collections of values and many-to-many associations</title>
 
         <para>
-            Any collection of values or many-to-many association requires a dedicated 
+            Any collection of values or many-to-many associations requires a dedicated 
             <emphasis>collection table</emphasis> with a foreign key column or columns, 
-            <emphasis>collection element column</emphasis> or columns and possibly 
+            <emphasis>collection element column</emphasis> or columns, and possibly 
             an index column or columns.
         </para>
 
         <para>
-            For a collection of values, we use the <literal>&lt;element&gt;</literal> tag.
+            For a collection of values use the <literal>&lt;element&gt;</literal> tag. For example:
         </para>
 
         <programlistingco>
@@ -475,19 +475,19 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
             <calloutlist>
                 <callout arearefs="element1b">
                     <para>
-                        <literal>column</literal> (optional): The name of the column holding the
+                        <literal>column</literal> (optional): the name of the column holding the
                         collection element values.
                     </para>
                 </callout>
                 <callout arearefs="element2b">
                     <para>
-                        <literal>formula</literal> (optional): An SQL formula used to evaluate the
+                        <literal>formula</literal> (optional): an SQL formula used to evaluate the
                         element.
                     </para>
                 </callout>
                 <callout arearefs="element3b">
                     <para>
-                        <literal>type</literal> (required): The type of the collection element.
+                        <literal>type</literal> (required): the type of the collection element.
                     </para>
                 </callout>
             </calloutlist>
@@ -524,54 +524,54 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
             <calloutlist>
                 <callout arearefs="manytomany1">
                     <para>
-                        <literal>column</literal> (optional): The name of the element foreign key column.
+                        <literal>column</literal> (optional): the name of the element foreign key column.
                     </para>
                 </callout>
                 <callout arearefs="manytomany2">
                     <para>
-                        <literal>formula</literal> (optional): An SQL formula used to evaluate the element
+                        <literal>formula</literal> (optional): an SQL formula used to evaluate the element
                         foreign key value.
                     </para>
                 </callout>
                 <callout arearefs="manytomany3">
                     <para>
-                        <literal>class</literal> (required): The name of the associated class.
+                        <literal>class</literal> (required): the name of the associated class.
                     </para>
                 </callout>
                 <callout arearefs="manytomany4">
                     <para>
                         <literal>fetch</literal> (optional - defaults to <literal>join</literal>):
                         enables outer-join or sequential select fetching for this association. This
-                        is a special case; for full eager fetching (in a single <literal>SELECT</literal>)
+                        is a special case; for full eager fetching in a single <literal>SELECT</literal>
                         of an entity and its many-to-many relationships to other entities, you would
-                        enable <literal>join</literal> fetching not only of the collection itself,
+                        enable <literal>join</literal> fetching,not only of the collection itself,
                         but also with this attribute on the <literal>&lt;many-to-many&gt;</literal>
                         nested element.
                     </para>
                 </callout>
                 <callout arearefs="manytomany5">
                     <para>
-                        <literal>unique</literal> (optional): Enable the DDL generation of a unique
+                        <literal>unique</literal> (optional): enables the DDL generation of a unique
                         constraint for the foreign-key column. This makes the association multiplicity
-                        effectively one to many.
+                        effectively one-to-many.
                     </para>
                 </callout>
 	            <callout arearefs="manytomany6">
 	                <para>
 	                    <literal>not-found</literal> (optional - defaults to <literal>exception</literal>): 
-	                    Specifies how foreign keys that reference missing rows will be handled: 
+	                    specifies how foreign keys that reference missing rows will be handled: 
 	                    <literal>ignore</literal> will treat a missing row as a null association.
 	                </para>
 	            </callout>
                 <callout arearefs="manytomany7">
                     <para>
-                        <literal>entity-name</literal> (optional): The entity name of the associated class,
+                        <literal>entity-name</literal> (optional): the entity name of the associated class,
                         as an alternative to <literal>class</literal>.
                     </para>
                 </callout>
                 <callout arearefs="manytomany8">
                     <para>
-                        <literal>property-ref</literal>: (optional) The name of a property of the associated 
+                        <literal>property-ref</literal> (optional): the name of a property of the associated 
                         class that is joined to this foreign key. If not specified, the primary key of
                         the associated class is used.
                     </para>                
@@ -579,8 +579,11 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
             </calloutlist>
         </programlistingco>
 
+	<para>
+		Here are some examples.
+	</para>
         <para>
-            Some examples, first, a set of strings:
+            A set of strings:
         </para>
 
         <programlisting><![CDATA[<set name="names" table="person_names">
@@ -589,8 +592,8 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
 </set>]]></programlisting>
 
         <para>
-            A bag containing integers (with an iteration order determined by the
-            <literal>order-by</literal> attribute):
+            A bag containing integers with an iteration order determined by the
+            <literal>order-by</literal> attribute:
         </para>
 
         <programlisting><![CDATA[<bag name="sizes" 
@@ -601,7 +604,7 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
 </bag>]]></programlisting>
 
         <para>
-            An array of entities - in this case, a many to many association:
+            An array of entities, in this case, a many-to-many association:
         </para>
 
         <programlisting><![CDATA[<array name="addresses" 
@@ -626,7 +629,7 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
 </map>]]></programlisting>
 
         <para>
-            A list of components (discussed in the next chapter):
+            A list of components (this is discussed in the next chapter):
         </para>
 
         <programlisting><![CDATA[<list name="carComponents" 
@@ -646,30 +649,30 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
         <title>One-to-many associations</title>
 
         <para>
-            A <emphasis>one to many association</emphasis> links the tables of two classes
-            via a foreign key, with no intervening collection table. This mapping loses 
+            A <emphasis>one-to-many association</emphasis> links the tables of two classes
+            via a foreign key with no intervening collection table. This mapping loses 
             certain semantics of normal Java collections:
         </para>
 
         <itemizedlist spacing="compact">
             <listitem>
                 <para>
-                    An instance of the contained entity class may not belong to more than
-                    one instance of the collection
+                    An instance of the contained entity class cannot belong to more than
+                    one instance of the collection.
                 </para>
             </listitem>
             <listitem>
                 <para>
-                    An instance of the contained entity class may not appear at more than
-                    one value of the collection index
+                    An instance of the contained entity class cannot appear at more than
+                    one value of the collection index.
                 </para>
             </listitem>
         </itemizedlist>
 
         <para>
             An association from <literal>Product</literal> to <literal>Part</literal> requires 
-            existence of a foreign key column and possibly an index column to the <literal>Part</literal> 
-            table. A <literal>&lt;one-to-many&gt;</literal> tag indicates that this is a one to many 
+            the existence of a foreign key column and possibly an index column to the <literal>Part</literal> 
+            table. A <literal>&lt;one-to-many&gt;</literal> tag indicates that this is a one-to-many 
             association.
         </para>
 
@@ -689,19 +692,19 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
             <calloutlist>
                 <callout arearefs="onetomany1">
                     <para>
-                        <literal>class</literal> (required): The name of the associated class.
+                        <literal>class</literal> (required): the name of the associated class.
                     </para>
                 </callout>
 		        <callout arearefs="onetomany2">
 		            <para>
 		                <literal>not-found</literal> (optional - defaults to <literal>exception</literal>): 
-		                Specifies how cached identifiers that reference missing rows will be handled: 
+		                specifies how cached identifiers that reference missing rows will be handled.
 		                <literal>ignore</literal> will treat a missing row as a null association.
 		            </para>
 		        </callout>
                 <callout arearefs="onetomany3">
                     <para>
-                        <literal>entity-name</literal> (optional): The entity name of the associated class,
+                        <literal>entity-name</literal> (optional): the entity name of the associated class,
                         as an alternative to <literal>class</literal>.
                     </para>
                 </callout>
@@ -709,24 +712,26 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
        </programlistingco>
   
         <para>
-            Notice that the <literal>&lt;one-to-many&gt;</literal> element does not need to
+            The <literal>&lt;one-to-many&gt;</literal> element does not need to
             declare any columns. Nor is it necessary to specify the <literal>table</literal>
             name anywhere.
         </para>
 
-        <para>
-            <emphasis>Very important note:</emphasis> If the foreign key column of a 
+	<warning>  
+	<para>
+            If the foreign key column of a 
             <literal>&lt;one-to-many&gt;</literal> association is declared <literal>NOT NULL</literal>, 
             you must declare the <literal>&lt;key&gt;</literal> mapping 
             <literal>not-null="true"</literal> or <emphasis>use a bidirectional association</emphasis> 
             with the collection mapping marked <literal>inverse="true"</literal>. See the discussion 
-            of bidirectional associations later in this chapter.
+            of bidirectional associations later in this chapter for more information.
         </para>
-        
+     	</warning>
+   
         <para>
-            This example shows a map of <literal>Part</literal> entities by name (where
-            <literal>partName</literal> is a persistent property of <literal>Part</literal>).
-            Notice the use of a formula-based index.
+            The following example shows a map of <literal>Part</literal> entities by name, where
+            <literal>partName</literal> is a persistent property of <literal>Part</literal>.
+            Notice the use of a formula-based index:
         </para>
 
         <programlisting><![CDATA[<map name="parts"
@@ -775,12 +780,12 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
         </para>
 
         <para>
-            If you want the database itself to order the collection elements use the
+            If you want the database itself to order the collection elements, use the
             <literal>order-by</literal> attribute of <literal>set</literal>, <literal>bag</literal>
             or <literal>map</literal> mappings. This solution is only available under
-            JDK 1.4 or higher (it is implemented using <literal>LinkedHashSet</literal> or
-            <literal>LinkedHashMap</literal>). This performs the ordering in the SQL query, 
-            not in memory.
+            JDK 1.4 or higher and is implemented using <literal>LinkedHashSet</literal> or
+            <literal>LinkedHashMap</literal>. This performs the ordering in the SQL query and 
+            not in the memory.
         </para>
 
         <programlisting><![CDATA[<set name="aliases" table="person_aliases" order-by="lower(name) asc">
@@ -794,14 +799,17 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
     <element column="hol_date type="date"/>
 </map>]]></programlisting>
 
-        <para>
-            Note that the value of the <literal>order-by</literal> attribute is an SQL ordering, not
-            a HQL ordering!
+        <note>
+	<title>Note</title>
+	<para>
+            The value of the <literal>order-by</literal> attribute is an SQL ordering, not
+            an HQL ordering.
         </para>
+	</note>
 
         <para>
-            Associations may even be sorted by some arbitrary criteria at runtime using a collection
-            <literal>filter()</literal>.
+            Associations can even be sorted by arbitrary criteria at runtime using a collection
+            <literal>filter()</literal>:
         </para>
 
         <programlisting><![CDATA[sortedUsers = s.createFilter( group.getUsers(), "order by this.name" ).list();]]></programlisting>
@@ -821,7 +829,7 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
                     <term>one-to-many</term>
                     <listitem>
                         <para>
-                            set or bag valued at one end, single-valued at the other
+                            set or bag valued at one end and single-valued at the other
                         </para>
                     </listitem>
                 </varlistentry>
@@ -838,14 +846,14 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
         </para>
 
         <para>
-            You may specify a bidirectional many-to-many association simply by mapping two
+            You can specify a bidirectional many-to-many association by mapping two
             many-to-many associations to the same database table and declaring one end as
-            <emphasis>inverse</emphasis> (which one is your choice, but it can not be an
-            indexed collection).
+            <emphasis>inverse</emphasis>. You cannot select an
+            indexed collection.
         </para>
 
         <para>
-            Here's an example of a bidirectional many-to-many association; each category can
+            Here is an example of a bidirectional many-to-many association that illustrates how each category can
             have many items and each item can be in many categories:
         </para>
 
@@ -872,9 +880,9 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
         <para>
             Changes made only to the inverse end of the association are <emphasis>not</emphasis>
             persisted. This means that Hibernate has two representations in memory for every
-            bidirectional association, one link from A to B and another link from B to A. This
-            is easier to understand if you think about the Java object model and how we create
-            a many-to-many relationship in Java:
+            bidirectional association: one link from A to B and another link from B to A. This
+            is easier to understand if you think about the Java object model and how
+            a many-to-many relationship in Javais created:
         </para>
 
         <programlisting><![CDATA[
@@ -889,7 +897,7 @@ session.persist(category);               // The relationship will be saved]]></p
         </para>
 
         <para>
-            You may define a bidirectional one-to-many association by mapping a one-to-many association
+            You can define a bidirectional one-to-many association by mapping a one-to-many association
             to the same table column(s) as a many-to-one association and declaring the many-valued
             end <literal>inverse="true"</literal>.
         </para>
@@ -913,8 +921,8 @@ session.persist(category);               // The relationship will be saved]]></p
 </class>]]></programlisting>
 
         <para>
-            Mapping one end of an association with <literal>inverse="true"</literal> doesn't
-            affect the operation of cascades, these are orthogonal concepts!
+            Mapping one end of an association with <literal>inverse="true"</literal> does not
+            affect the operation of cascades as these are orthogonal concepts.
         </para>
 
     </sect2>
@@ -923,8 +931,8 @@ session.persist(category);               // The relationship will be saved]]></p
         <title>Bidirectional associations with indexed collections</title>
         <para>
             A bidirectional association where one end is represented as a <literal>&lt;list&gt;</literal>
-            or <literal>&lt;map&gt;</literal> requires special consideration. If there is a property of
-            the child class which maps to the index column, no problem, we can continue using 
+            or <literal>&lt;map&gt;</literal>, requires special consideration. If there is a property of
+            the child class that maps to the index column you can use 
             <literal>inverse="true"</literal> on the collection mapping:
         </para>
         
@@ -951,10 +959,10 @@ session.persist(category);               // The relationship will be saved]]></p
 </class>]]></programlisting>
 
         <para>
-            But, if there is no such property on the child class, we can't think of the association as
-            truly bidirectional (there is information available at one end of the association that is
-            not available at the other end). In this case, we can't map the collection 
-            <literal>inverse="true"</literal>. Instead, we could use the following mapping:
+            If there is no such property on the child class, the association cannot be considered
+            truly bidirectional. That is, there is information available at one end of the association that is
+            not available at the other end. In this case, you cannot map the collection 
+            <literal>inverse="true"</literal>. Instead, you could use the following mapping:
         </para>
 
         <programlisting><![CDATA[<class name="Parent">
@@ -982,7 +990,7 @@ session.persist(category);               // The relationship will be saved]]></p
 
        <para>
            Note that in this mapping, the collection-valued end of the association is responsible for 
-           updates to the foreign key. TODO: Does this really result in some unnecessary update statements?
+           updates to the foreign key. <!--TODO: Does this really result in some unnecessary update statements?-->
        </para>
 
     </sect2>
@@ -991,7 +999,7 @@ session.persist(category);               // The relationship will be saved]]></p
         <title>Ternary associations</title>
 
         <para>
-            There are three possible approaches to mapping a ternary association. One is to use a 
+            There are three possible approaches to mapping a ternary association. One approach is to use a 
             <literal>Map</literal> with an association as its index:
         </para>
 
@@ -1008,12 +1016,12 @@ session.persist(category);               // The relationship will be saved]]></p
 </map>]]></programlisting>
             
         <para>
-            A second approach is to simply remodel the association as an entity class. This
-            is the approach we use most commonly.
+            A second approach is to remodel the association as an entity class. This
+            is the most common approach.
         </para>
         
         <para>
-            A final alternative is to use composite elements, which we will discuss later. 
+            A final alternative is to use composite elements, which will be discussed later. 
         </para>
         
     </sect2>
@@ -1022,19 +1030,18 @@ session.persist(category);               // The relationship will be saved]]></p
         <title><literal>Using an &lt;idbag&gt;</literal></title>
 
         <para>
-            If you've fully embraced our view that composite keys are a bad thing and that
-            entities should have synthetic identifiers (surrogate keys), then you might
-            find it a bit odd that the many to many associations and collections of values
-            that we've shown so far all map to tables with composite keys! Now, this point
-            is quite arguable; a pure association table doesn't seem to benefit much from
-            a surrogate key (though a collection of composite values <emphasis>might</emphasis>).
-            Nevertheless, Hibernate provides a feature that allows you to map many to many
+            The majority of the many-to-many associations and collections of values
+            shown previously all map to tables with composite keys, even though it has been have suggested 
+	    that entities should have synthetic identifiers (surrogate keys). A
+            pure association table does not seem to benefit much from
+            a surrogate key, although a collection of composite values <emphasis>might</emphasis>.
+            It is for this reason that Hibernate provides a feature that allows you to map many-to-many
             associations and collections of values to a table with a surrogate key.
         </para>
 
         <para>
             The <literal>&lt;idbag&gt;</literal> element lets you map a <literal>List</literal>
-            (or <literal>Collection</literal>) with bag semantics.
+            (or <literal>Collection</literal>) with bag semantics. For example:
         </para>
 
 <programlisting><![CDATA[<idbag name="lovers" table="LOVERS">
@@ -1046,17 +1053,16 @@ session.persist(category);               // The relationship will be saved]]></p
 </idbag>]]></programlisting>
 
         <para>
-            As you can see, an <literal>&lt;idbag&gt;</literal> has a synthetic id generator,
-            just like an entity class! A different surrogate key is assigned to each collection
-            row. Hibernate does not provide any mechanism to discover the surrogate key value
-            of a particular row, however.
+            An <literal>&lt;idbag&gt;</literal> has a synthetic id generator,
+            just like an entity class. A different surrogate key is assigned to each collection
+            row. Hibernate does not, however, provide any mechanism for discovering the surrogate key value
+            of a particular row.
         </para>
 
         <para>
-            Note that the update performance of an <literal>&lt;idbag&gt;</literal> is
-            <emphasis>much</emphasis> better than a regular <literal>&lt;bag&gt;</literal>!
+            The update performance of an <literal>&lt;idbag&gt;</literal> supersedes a regular <literal>&lt;bag&gt;</literal>.
             Hibernate can locate individual rows efficiently and update or delete them
-            individually, just like a list, map or set.
+            individually, similar to a list, map or set.
         </para>
 
         <para>
@@ -1086,8 +1092,11 @@ session.persist(category);               // The relationship will be saved]]></p
         <title>Collection examples</title>
 
         <para>
-            The previous sections are pretty confusing. So lets look at an example. This
-            class:
+            This section covers collection examples. 
+	</para>
+
+	<para>
+	    The following class has a collection of <literal>Child</literal> instances:
         </para>
 
         <programlisting><![CDATA[package eg;
@@ -1108,9 +1117,9 @@ public class Parent {
 }]]></programlisting>
 
         <para>
-            has a collection of <literal>Child</literal> instances. If each
-            child has at most one parent, the most natural mapping is a 
+            If each child has, at most, one parent, the most natural mapping is a 
             one-to-many association:
+            
         </para>
 
         <programlisting><![CDATA[<hibernate-mapping>
@@ -1181,7 +1190,7 @@ create table child ( id bigint not null
 alter table child add constraint childfk0 (parent_id) references parent]]></programlisting>
 
         <para>
-            Alternatively, if you absolutely insist that this association should be unidirectional,
+            Alternatively, if this association must be unidirectional
             you can declare the <literal>NOT NULL</literal> constraint on the <literal>&lt;key&gt;</literal>
             mapping:
         </para>
@@ -1208,7 +1217,7 @@ alter table child add constraint childfk0 (parent_id) references parent]]></prog
 </hibernate-mapping>]]></programlisting>
 
         <para>
-            On the other hand, if a child might have multiple parents, a many-to-many
+            On the other hand, if a child has multiple parents, a many-to-many
             association is appropriate:
         </para>
 
@@ -1246,12 +1255,12 @@ alter table childset add constraint childsetfk0 (parent_id) references parent
 alter table childset add constraint childsetfk1 (child_id) references child]]></programlisting>
 
         <para>
-            For more examples and a complete walk-through a parent/child relationship mapping,
-            see <xref linkend="example-parentchild"/>.
+            For more examples and a complete explanation of a parent/child relationship mapping,
+            see <xref linkend="example-parentchild"/> for more information.
         </para>
         
         <para>
-            Even more exotic association mappings are possible, we will catalog all possibilities
+            Even more complex association mappings are covered
             in the next chapter.
         </para>
 

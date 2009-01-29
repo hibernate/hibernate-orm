@@ -64,7 +64,7 @@ List cats = crit.list();]]></programlisting>
     .list();]]></programlisting>
     
         <para>
-            Restrictions may be grouped logically.
+            Restrictions can be grouped logically.
         </para>
 
         <programlisting><![CDATA[List cats = sess.createCriteria(Cat.class)
@@ -86,8 +86,8 @@ List cats = crit.list();]]></programlisting>
     .list();]]></programlisting>
     
         <para>
-            There are quite a range of built-in criterion types (<literal>Restrictions</literal>
-            subclasses), but one that is especially useful lets you specify SQL directly.
+            There are a range of built-in criterion types (<literal>Restrictions</literal>
+            subclasses). One of the most useful allows you to specify SQL directly.
         </para>
 
         <programlisting><![CDATA[List cats = sess.createCriteria(Cat.class)
@@ -100,9 +100,9 @@ List cats = crit.list();]]></programlisting>
         </para>
         
         <para>
-            An alternative approach to obtaining a criterion is to get it from a 
+            You can also obtain a criterion from a 
             <literal>Property</literal> instance. You can create a <literal>Property</literal>
-            by calling <literal>Property.forName()</literal>.
+            by calling <literal>Property.forName()</literal>:
         </para>
     
         <programlisting><![CDATA[
@@ -123,7 +123,7 @@ List cats = sess.createCriteria(Cat.class)
         <title>Ordering the results</title>
 
         <para>
-            You may order the results using <literal>org.hibernate.criterion.Order</literal>.
+            You can order the results using <literal>org.hibernate.criterion.Order</literal>.
         </para>
 
         <programlisting><![CDATA[List cats = sess.createCriteria(Cat.class)
@@ -146,8 +146,8 @@ List cats = sess.createCriteria(Cat.class)
         <title>Associations</title>
 
         <para>
-            You may easily specify constraints upon related entities by navigating
-            associations using <literal>createCriteria()</literal>.
+            By navigating
+            associations using <literal>createCriteria()</literal> you can specify constraints upon related entities:
         </para>
 
         <programlisting><![CDATA[List cats = sess.createCriteria(Cat.class)
@@ -157,13 +157,13 @@ List cats = sess.createCriteria(Cat.class)
     .list();]]></programlisting>
 
         <para>
-            note that the second <literal>createCriteria()</literal> returns a new
-            instance of <literal>Criteria</literal>, which refers to the elements of
+            The second <literal>createCriteria()</literal> returns a new
+            instance of <literal>Criteria</literal> that refers to the elements of
             the <literal>kittens</literal> collection.
         </para>
 
         <para>
-            The following, alternate form is useful in certain circumstances.
+            There is also an alternate form that is useful in certain circumstances:
         </para>
 
         <programlisting><![CDATA[List cats = sess.createCriteria(Cat.class)
@@ -178,9 +178,9 @@ List cats = sess.createCriteria(Cat.class)
         </para>
 
         <para>
-            Note that the kittens collections held by the <literal>Cat</literal> instances
+            The kittens collections held by the <literal>Cat</literal> instances
             returned by the previous two queries are <emphasis>not</emphasis> pre-filtered
-            by the criteria! If you wish to retrieve just the kittens that match the
+            by the criteria. If you want to retrieve just the kittens that match the
             criteria, you must use a <literal>ResultTransformer</literal>.
         </para>
 
@@ -202,7 +202,7 @@ while ( iter.hasNext() ) {
         <title>Dynamic association fetching</title>
 
         <para>
-            You may specify association fetching semantics at runtime using
+            You can specify association fetching semantics at runtime using
             <literal>setFetchMode()</literal>.
         </para>
 
@@ -268,7 +268,7 @@ List results = session.createCriteria(Cat.class)
         <title>Projections, aggregation and grouping</title>
         <para>
             The class <literal>org.hibernate.criterion.Projections</literal> is a
-            factory for <literal>Projection</literal> instances. We apply a
+            factory for <literal>Projection</literal> instances. You can apply a
             projection to a query by calling <literal>setProjection()</literal>.
         </para>
         
@@ -293,8 +293,8 @@ List results = session.createCriteria(Cat.class)
         </para>
     
         <para>
-            An alias may optionally be assigned to a projection, so that the projected value
-            may be referred to in restrictions or orderings. Here are two different ways to
+            An alias can be assigned to a projection so that the projected value
+            can be referred to in restrictions or orderings. Here are two different ways to
             do this:
         </para>
 
@@ -361,8 +361,8 @@ List results = session.createCriteria(Cat.class)
     <sect1 id="querycriteria-detachedqueries">
         <title>Detached queries and subqueries</title>
         <para>
-            The <literal>DetachedCriteria</literal> class lets you create a query outside the scope 
-            of a session, and then later execute it using some arbitrary <literal>Session</literal>.
+            The <literal>DetachedCriteria</literal> class allows you to create a query outside the scope 
+            of a session and then execute it using an arbitrary <literal>Session</literal>.
         </para>
         
         <programlisting><![CDATA[DetachedCriteria query = DetachedCriteria.forClass(Cat.class)
@@ -375,8 +375,8 @@ txn.commit();
 session.close();]]></programlisting>
 
         <para>
-            A <literal>DetachedCriteria</literal> may also be used to express a subquery. Criterion
-            instances involving subqueries may be obtained via <literal>Subqueries</literal> or
+            A <literal>DetachedCriteria</literal> can also be used to express a subquery. Criterion
+            instances involving subqueries can be obtained via <literal>Subqueries</literal> or
             <literal>Property</literal>.            
         </para>
         
@@ -393,7 +393,7 @@ session.createCriteria(Cat.class)
     .list();]]></programlisting>
     
         <para>
-            Even correlated subqueries are possible:
+            Correlated subqueries are also possible:
         </para>
         
         <programlisting><![CDATA[DetachedCriteria avgWeightForSex = DetachedCriteria.forClass(Cat.class, "cat2")
@@ -413,16 +413,16 @@ session.createCriteria(Cat.class, "cat")
         <title>Queries by natural identifier</title>
         
         <para>
-            For most queries, including criteria queries, the query cache is not very efficient,
-            because query cache invalidation occurs too frequently. However, there is one special
-            kind of query where we can optimize the cache invalidation algorithm: lookups by a 
+            For most queries, including criteria queries, the query cache is not efficient
+            because query cache invalidation occurs too frequently. However, there is a special
+            kind of query where you can optimize the cache invalidation algorithm: lookups by a 
             constant natural key. In some applications, this kind of query occurs frequently.
             The criteria API provides special provision for this use case.
         </para>
         
         <para>
-            First, you should map the natural key of your entity using 
-            <literal>&lt;natural-id&gt;</literal>, and enable use of the second-level cache.
+            First, map the natural key of your entity using 
+            <literal>&lt;natural-id&gt;</literal> and enable use of the second-level cache.
         </para>
 
         <programlisting><![CDATA[<class name="User">
@@ -438,16 +438,13 @@ session.createCriteria(Cat.class, "cat")
 </class>]]></programlisting>
     
         <para>
-            Note that this functionality is not intended for use with entities with 
+            This functionality is not intended for use with entities with 
             <emphasis>mutable</emphasis> natural keys.
         </para>
         
         <para>
-            Next, enable the Hibernate query cache.
-        </para>
-        
-        <para>
-            Now, <literal>Restrictions.naturalId()</literal> allows us to make use of
+            Once you have enabled the Hibernate query cache, 
+            the <literal>Restrictions.naturalId()</literal> allows you to make use of
             the more efficient cache algorithm.
         </para>
        

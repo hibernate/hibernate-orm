@@ -29,28 +29,28 @@
     <title>HQL: The Hibernate Query Language</title>
 
     <para>
-        Hibernate is equipped with an extremely powerful query language that (quite intentionally)
-        looks very much like SQL. But don't be fooled by the syntax; HQL is fully object-oriented,
-        understanding notions like inheritence, polymorphism and association.
+        Hibernate uses a powerful query language (HQL) that is similar in appearance to
+        SQL. Compared with SQL, however, HQL is fully object-oriented
+        and understands notions like inheritance, polymorphism and association.
     </para>
 
     <sect1 id="queryhql-casesensitivity">
         <title>Case Sensitivity</title>
 
         <para>
-            Queries are case-insensitive, except for names of Java classes and properties.
+            With the exception of names of Java classes and properties, queries are case-insensitive.
             So <literal>SeLeCT</literal> is the same as
             <literal>sELEct</literal> is the same as
-            <literal>SELECT</literal> but
+            <literal>SELECT</literal>, but
             <literal>org.hibernate.eg.FOO</literal> is not
-            <literal>org.hibernate.eg.Foo</literal> and
+            <literal>org.hibernate.eg.Foo</literal>, and
             <literal>foo.barSet</literal> is not
             <literal>foo.BARSET</literal>.
         </para>
 
         <para>
             This manual uses lowercase HQL keywords. Some users find queries with uppercase keywords
-            more readable, but we find this convention ugly when embedded in Java code.
+            more readable, but this convention is unsuitable for queries embedded in Java code.
         </para>
 
     </sect1>
@@ -65,40 +65,40 @@
         <programlisting><![CDATA[from eg.Cat]]></programlisting>
 
         <para>
-            which simply returns all instances of the class <literal>eg.Cat</literal>.
-            We don't usually need to qualify the class name, since <literal>auto-import</literal>
-            is the default. So we almost always just write:
+            This returns all instances of the class <literal>eg.Cat</literal>.
+            You do not usually need to qualify the class name, since <literal>auto-import</literal>
+            is the default. For example:
         </para>
 
         <programlisting><![CDATA[from Cat]]></programlisting>
 
         <para>
-            Most of the time, you will need to assign an <emphasis>alias</emphasis>, since
-            you will want to refer to the <literal>Cat</literal> in other parts of the
-            query.
+            
+            In order to refer to the <literal>Cat</literal> in other parts of the
+            query, you will need to assign an <emphasis>alias</emphasis>. For example:
         </para>
 
         <programlisting><![CDATA[from Cat as cat]]></programlisting>
 
         <para>
             This query assigns the alias <literal>cat</literal> to <literal>Cat</literal>
-            instances, so we could use that alias later in the query. The <literal>as</literal>
-            keyword is optional; we could also write:
+            instances, so you can use that alias later in the query. The <literal>as</literal>
+            keyword is optional. You could also write:
         </para>
 
         <programlisting><![CDATA[from Cat cat]]></programlisting>
 
         <para>
-            Multiple classes may appear, resulting in a cartesian product or "cross" join.
+            Multiple classes can appear, resulting in a cartesian product or "cross" join.
         </para>
 
         <programlisting><![CDATA[from Formula, Parameter]]></programlisting>
         <programlisting><![CDATA[from Formula as form, Parameter as param]]></programlisting>
 
         <para>
-            It is considered good practice to name query aliases using an initial lowercase,
+            It is good practice to name query aliases using an initial lowercase as this is
             consistent with Java naming standards for local variables
-            (eg. <literal>domesticCat</literal>).
+            (e.g. <literal>domesticCat</literal>).
         </para>
 
     </sect1>
@@ -107,8 +107,8 @@
         <title>Associations and joins</title>
 
         <para>
-            We may also assign aliases to associated entities, or even to elements of a
-            collection of values, using a <literal>join</literal>.
+            You can also assign aliases to associated entities or to elements of a
+            collection of values using a <literal>join</literal>. For example:
         </para>
 
         <programlisting><![CDATA[from Cat as cat
@@ -120,7 +120,7 @@
         <programlisting><![CDATA[from Formula form full join form.parameter param]]></programlisting>
 
         <para>
-            The supported join types are borrowed from ANSI SQL
+            The supported join types are borrowed from ANSI SQL:
         </para>
 
         <itemizedlist spacing="compact">
@@ -165,8 +165,8 @@
         with kitten.bodyWeight > 10.0]]></programlisting>
 
         <para>
-            In addition, a "fetch" join allows associations or collections of values to be
-            initialized along with their parent objects, using a single select. This is particularly
+            A "fetch" join allows associations or collections of values to be
+            initialized along with their parent objects using a single select. This is particularly
             useful in the case of a collection. It effectively overrides the outer join and
             lazy declarations of the mapping file for associations and collections. See
             <xref linkend="performance-fetching"/> for more information.
@@ -178,9 +178,9 @@
 
         <para>
             A fetch join does not usually need to assign an alias, because the associated objects
-            should not be used in the <literal>where</literal> clause (or any other clause). Also,
-            the associated objects are not returned directly in the query results. Instead, they may
-            be accessed via the parent object. The only reason we might need an alias is if we are
+            should not be used in the <literal>where</literal> clause (or any other clause). 
+            The associated objects are also not returned directly in the query results. Instead, they may
+            be accessed via the parent object. The only reason you might need an alias is if you are
             recursively join fetching a further collection:
         </para>
 
@@ -190,24 +190,24 @@
     left join fetch child.kittens]]></programlisting>
 
         <para>
-            Note that the <literal>fetch</literal> construct may not be used in queries called using
-            <literal>iterate()</literal> (though <literal>scroll()</literal> can be used). Nor should
-            <literal>fetch</literal> be used together with <literal>setMaxResults()</literal> or
-            <literal>setFirstResult()</literal> as these operations are based on the result rows, which
+            The <literal>fetch</literal> construct cannot be used in queries called using
+            <literal>iterate()</literal> (though <literal>scroll()</literal> can be used). 
+            <literal>Fetch</literal> should be used together with <literal>setMaxResults()</literal> or
+            <literal>setFirstResult()</literal>, as these operations are based on the result rows which
             usually contain duplicates for eager collection fetching, hence, the number of rows is not what
-            you'd expect.
-            Nor may <literal>fetch</literal> be used together with an ad hoc <literal>with</literal> condition.
+            you would expect.
+            <literal>Fetch</literal> should also not be used together with impromptu <literal>with</literal> condition.
             It is possible to create a cartesian product by join fetching more than one collection in a
-            query, so take care in this case. Join fetching multiple collection roles also sometimes gives
-            unexpected results for bag mappings, so be careful about how you formulate your queries in this
+            query, so take care in this case. Join fetching multiple collection roles can produce
+            unexpected results for bag mappings, so user discretion is advised when formulating queries in this
             case. Finally, note that <literal>full join fetch</literal> and <literal>right join fetch</literal>
             are not meaningful.
         </para>
 
         <para>
             If you are using property-level lazy fetching (with bytecode instrumentation), it is
-            possible to force Hibernate to fetch the lazy properties immediately (in the first
-            query) using <literal>fetch all properties</literal>.
+            possible to force Hibernate to fetch the lazy properties in the first query immediately
+            using <literal>fetch all properties</literal>.
         </para>
 
         <programlisting><![CDATA[from Document fetch all properties order by name]]></programlisting>
@@ -223,7 +223,7 @@
 		</para>
 
 	    <para>
-		    The queries shown in the previous section all use the <literal>explicit</literal> form where
+		    The queries shown in the previous section all use the <literal>explicit</literal> form, that is, where
 		    the join keyword is explicitly used in the from clause.  This is the recommended form.
 	    </para>
 
@@ -238,47 +238,50 @@
 	</sect1>
 
     <sect1 id="queryhql-identifier-property">
-        <title>Refering to identifier property</title>
+        <title>Referring to identifier property</title>
 
         <para>
-            There are, generally speaking, 2 ways to refer to an entity's identifier property:
+            There are 2 ways to refer to an entity's identifier property:
         </para>
         <itemizedlist spacing="compact">
             <listitem>
                 <para>
                     The special property (lowercase) <literal>id</literal> may be used to reference the identifier
-                    property of an entity <emphasis>provided that entity does not define a non-identifier property
+                    property of an entity <emphasis>provided that the entity does not define a non-identifier property
                     named id</emphasis>.
                 </para>
             </listitem>
             <listitem>
                 <para>
-                    If the entity defines a named identifier property, you may use that property name.
+                    If the entity defines a named identifier property, you can use that property name.
                 </para>
             </listitem>
         </itemizedlist>
 
         <para>
-            References to composite identifier properties follow the same naming rules.  If the
+            References to composite identifier properties follow the same naming rules. If the
             entity has a non-identifier property named id, the composite identifier property can only
-            be referenced by its defined named; otherwise, the special <literal>id</literal> property
-            can be used to rerference the identifier property.
+            be referenced by its defined named. Otherwise, the special <literal>id</literal> property
+            can be used to reference the identifier property.
         </para>
 
+	<important>
         <para>
-            Note: this has changed significantly starting in version 3.2.2.  In previous versions,
-            <literal>id</literal> <emphasis>always</emphasis> referred to the identifier property no
-            matter what its actual name.  A ramification of that decision was that non-identifier
+            Please note that, starting in version 3.2.2, this has changed significantly. In previous versions,
+            <literal>id</literal>  <emphasis>always</emphasis> referred to the identifier property
+            regardless of its actual name.  A ramification of that decision was that non-identifier
             properties named <literal>id</literal> could never be referenced in Hibernate queries.
         </para>
-    </sect1>
+	</important>  
+
+  </sect1>
 
     <sect1 id="queryhql-select">
         <title>The select clause</title>
 
         <para>
             The <literal>select</literal> clause picks which objects and properties to return in
-            the query result set. Consider:
+            the query result set. Consider the following:
         </para>
 
         <programlisting><![CDATA[select mate
@@ -287,13 +290,13 @@ from Cat as cat
 
         <para>
             The query will select <literal>mate</literal>s of other <literal>Cat</literal>s.
-            Actually, you may express this query more compactly as:
+            You can express this query more compactly as:
         </para>
 
         <programlisting><![CDATA[select cat.mate from Cat cat]]></programlisting>
 
         <para>
-            Queries may return properties of any value type including properties of component type:
+            Queries can return properties of any value type including properties of component type:
         </para>
 
         <programlisting><![CDATA[select cat.name from DomesticCat cat
@@ -302,8 +305,8 @@ where cat.name like 'fri%']]></programlisting>
         <programlisting><![CDATA[select cust.name.firstName from Customer as cust]]></programlisting>
 
         <para>
-            Queries may return multiple objects and/or properties as an array of type
-            <literal>Object[]</literal>,
+            Queries can return multiple objects and/or properties as an array of type
+            <literal>Object[]</literal>:
         </para>
 
         <programlisting><![CDATA[select mother, offspr, mate.name
@@ -312,7 +315,7 @@ from DomesticCat as mother
     left outer join mother.kittens as offspr]]></programlisting>
 
         <para>
-            or as a <literal>List</literal>,
+            Or as a <literal>List</literal>:
         </para>
 
         <programlisting><![CDATA[select new list(mother, offspr, mate.name)
@@ -321,7 +324,7 @@ from DomesticCat as mother
     left outer join mother.kittens as offspr]]></programlisting>
 
         <para>
-            or as an actual typesafe Java object,
+            Or - assuming that the class <literal>Family</literal> has an appropriate constructor - as an actual typesafe Java object:
         </para>
 
         <programlisting><![CDATA[select new Family(mother, mate, offspr)
@@ -329,12 +332,9 @@ from DomesticCat as mother
     join mother.mate as mate
     left join mother.kittens as offspr]]></programlisting>
 
+      
         <para>
-            assuming that the class <literal>Family</literal> has an appropriate constructor.
-        </para>
-
-        <para>
-            You may assign aliases to selected expressions using <literal>as</literal>:
+            You can assign aliases to selected expressions using <literal>as</literal>:
         </para>
 
         <programlisting><![CDATA[select max(bodyWeight) as max, min(bodyWeight) as min, count(*) as n
@@ -357,7 +357,7 @@ from Cat cat]]></programlisting>
         <title>Aggregate functions</title>
 
         <para>
-            HQL queries may even return the results of aggregate functions on properties:
+            HQL queries can even return the results of aggregate functions on properties:
         </para>
 
         <programlisting><![CDATA[select avg(cat.weight), sum(cat.weight), max(cat.weight), count(cat)
@@ -365,7 +365,7 @@ from Cat cat]]></programlisting>
 
 <!-- NO LONGER SUPPORTED
         <para>
-            Collections may also appear inside aggregate functions in the <literal>select</literal>
+            Collections can also appear inside aggregate functions in the <literal>select</literal>
             clause.
         </para>
 
@@ -374,7 +374,7 @@ from Cat cat group by cat]]></programlisting>
 -->
 
         <para>
-            The supported aggregate functions are
+            The supported aggregate functions are:
         </para>
 
         <itemizedlist spacing="compact">
@@ -396,7 +396,7 @@ from Cat cat group by cat]]></programlisting>
         </itemizedlist>
 
         <para>
-            You may use arithmetic operators, concatenation, and recognized SQL functions
+            You can use arithmetic operators, concatenation, and recognized SQL functions
             in the select clause:
         </para>
 
@@ -408,7 +408,7 @@ group by cat.id, cat.weight]]></programlisting>
         <programlisting><![CDATA[select firstName||' '||initial||' '||upper(lastName) from Person]]></programlisting>
 
         <para>
-            The <literal>distinct</literal> and <literal>all</literal> keywords may be used and
+            The <literal>distinct</literal> and <literal>all</literal> keywords can be used and
             have the same semantics as in SQL.
         </para>
 
@@ -429,7 +429,7 @@ select count(distinct cat.name), count(cat) from Cat cat]]></programlisting>
 
         <para>
             returns instances not only of <literal>Cat</literal>, but also of subclasses like
-            <literal>DomesticCat</literal>. Hibernate queries may name <emphasis>any</emphasis> Java
+            <literal>DomesticCat</literal>. Hibernate queries can name <emphasis>any</emphasis> Java
             class or interface in the <literal>from</literal> clause. The query will return instances
             of all persistent classes that extend that class or implement the interface. The following
             query would return all persistent objects:
@@ -445,9 +445,9 @@ select count(distinct cat.name), count(cat) from Cat cat]]></programlisting>
         <programlisting><![CDATA[from Named n, Named m where n.name = m.name]]></programlisting>
 
         <para>
-            Note that these last two queries will require more than one SQL <literal>SELECT</literal>. This
+            These last two queries will require more than one SQL <literal>SELECT</literal>. This
             means that the <literal>order by</literal> clause does not correctly order the whole result set.
-            (It also means you can't call these queries using <literal>Query.scroll()</literal>.)
+            It also means you cannot call these queries using <literal>Query.scroll()</literal>.
         </para>
 
     </sect1>
@@ -456,8 +456,8 @@ select count(distinct cat.name), count(cat) from Cat cat]]></programlisting>
         <title>The where clause</title>
 
         <para>
-            The <literal>where</literal> clause allows you to narrow the list of instances returned.
-            If no alias exists, you may refer to properties by name:
+            The <literal>where</literal> clause allows you to refine the list of instances returned.
+            If no alias exists, you can refer to properties by name:
         </para>
 
         <programlisting><![CDATA[from Cat where name='Fritz']]></programlisting>
@@ -469,38 +469,40 @@ select count(distinct cat.name), count(cat) from Cat cat]]></programlisting>
         <programlisting><![CDATA[from Cat as cat where cat.name='Fritz']]></programlisting>
 
         <para>
-            returns instances of <literal>Cat</literal> named 'Fritz'.
+            This returns instances of <literal>Cat</literal> named 'Fritz'.
         </para>
 
+	<para>
+	The following query:
         <programlisting><![CDATA[select foo
 from Foo foo, Bar bar
 where foo.startDate = bar.date]]></programlisting>
 
         <para>
-            will return all instances of <literal>Foo</literal> for which
-            there exists an instance of <literal>bar</literal> with a
+            returns all instances of <literal>Foo</literal> with an
+            instance of <literal>bar</literal> with a
             <literal>date</literal> property equal to the
             <literal>startDate</literal> property of the
             <literal>Foo</literal>. Compound path expressions make the
-            <literal>where</literal> clause extremely powerful. Consider:
+            <literal>where</literal> clause extremely powerful. Consider the following:
         </para>
 
         <programlisting><![CDATA[from Cat cat where cat.mate.name is not null]]></programlisting>
 
         <para>
-            This query translates to an SQL query with a table (inner) join. If you were to write
-            something like
+            This query translates to an SQL query with a table (inner) join. For example:
+            
         </para>
 
         <programlisting><![CDATA[from Foo foo
 where foo.bar.baz.customer.address.city is not null]]></programlisting>
 
         <para>
-            you would end up with a query that would require four table joins in SQL.
+            would result in a query that would require four table joins in SQL.
         </para>
 
         <para>
-            The <literal>=</literal> operator may be used to compare not only properties, but also
+            The <literal>=</literal> operator can be used to compare not only properties, but also
             instances:
         </para>
 
@@ -511,7 +513,7 @@ from Cat cat, Cat mate
 where cat.mate = mate]]></programlisting>
 
         <para>
-            The special property (lowercase) <literal>id</literal> may be used to reference the
+            The special property (lowercase) <literal>id</literal> can be used to reference the
             unique identifier of an object. See <xref linkend="queryhql-identifier-property"/>
             for more information.
         </para>
@@ -521,14 +523,13 @@ where cat.mate = mate]]></programlisting>
 from Cat as cat where cat.mate.id = 69]]></programlisting>
 
         <para>
-            The second query is efficient. No table join is required!
+            The second query is efficient and does not require a table join.
         </para>
 
         <para>
-            Properties of composite identifiers may also be used. Suppose <literal>Person</literal>
-            has a composite identifier consisting of <literal>country</literal> and
-            <literal>medicareNumber</literal>.  Again, see <xref linkend="queryhql-identifier-property"/>
-            for more information regarding referencing identifier properties.
+            Properties of composite identifiers can also be used. Consider the following example where <literal>Person</literal>
+            has composite identifiers consisting of <literal>country</literal> and
+            <literal>medicareNumber</literal>:
         </para>
 
         <programlisting><![CDATA[from bank.Person person
@@ -540,11 +541,16 @@ where account.owner.id.country = 'AU'
     and account.owner.id.medicareNumber = 123456]]></programlisting>
 
         <para>
-            Once again, the second query requires no table join.
+            Once again, the second query does not require a table join.
         </para>
-
-        <para>
-            Likewise, the special property <literal>class</literal> accesses the discriminator value
+	
+	<para>
+	See <xref linkend="queryhql-identifier-property"/>
+            for more information regarding referencing identifier properties)
+	</para>
+        
+	<para>
+            The special property <literal>class</literal> accesses the discriminator value
             of an instance in the case of polymorphic persistence. A Java class name embedded in the
             where clause will be translated to its discriminator value.
         </para>
@@ -552,21 +558,21 @@ where account.owner.id.country = 'AU'
         <programlisting><![CDATA[from Cat cat where cat.class = DomesticCat]]></programlisting>
 
         <para>
-            You may also use components or composite user types, or properties of said
-            component types. See <xref linkend="queryhql-components"/> for more details.
+            You can also use components or composite user types, or properties of said
+            component types. See <xref linkend="queryhql-components"/> for more information.
         </para>
 
         <para>
-            An "any" type has the special properties <literal>id</literal> and <literal>class</literal>,
-            allowing us to express a join in the following way (where <literal>AuditLog.item</literal>
-            is a property mapped with <literal>&lt;any&gt;</literal>).
+            An "any" type has the special properties <literal>id</literal> and <literal>class</literal> that allows you
+            to express a join in the following way (where <literal>AuditLog.item</literal>
+            is a property mapped with <literal>&lt;any&gt;</literal>):
         </para>
 
         <programlisting><![CDATA[from AuditLog log, Payment payment
 where log.item.class = 'Payment' and log.item.id = payment.id]]></programlisting>
 
         <para>
-            Notice that <literal>log.item.class</literal> and <literal>payment.class</literal>
+            The <literal>log.item.class</literal> and <literal>payment.class</literal>
             would refer to the values of completely different database columns in the above query.
         </para>
 
@@ -576,19 +582,19 @@ where log.item.class = 'Payment' and log.item.id = payment.id]]></programlisting
         <title>Expressions</title>
 
         <para>
-            Expressions allowed in the <literal>where</literal> clause include
-            most of the kind of things you could write in SQL:
+            Expressions used in the <literal>where</literal> clause include the following:
+            
         </para>
 
         <itemizedlist spacing="compact">
             <listitem>
                 <para>
-                    mathematical operators <literal>+, -, *, /</literal>
+                    mathematical operators: <literal>+, -, *, /</literal>
                 </para>
             </listitem>
             <listitem>
                 <para>
-                    binary comparison operators <literal>=, &gt;=, &lt;=, &lt;&gt;, !=, like</literal>
+                    binary comparison operators: <literal>=, &gt;=, &lt;=, &lt;&gt;, !=, like</literal>
                 </para>
             </listitem>
             <listitem>
@@ -598,7 +604,7 @@ where log.item.class = 'Payment' and log.item.id = payment.id]]></programlisting
             </listitem>
             <listitem>
                 <para>
-                    Parentheses <literal>( )</literal>, indicating grouping
+                    Parentheses <literal>( )</literal> that indicates grouping
                 </para>
             </listitem>
             <listitem>
@@ -627,7 +633,7 @@ where log.item.class = 'Payment' and log.item.id = payment.id]]></programlisting
             </listitem>
             <listitem>
                 <para>
-                    <literal>current_date()</literal>, <literal>current_time()</literal>,
+                    <literal>current_date()</literal>, <literal>current_time()</literal>, and
                     <literal>current_timestamp()</literal>
                 </para>
             </listitem>
@@ -635,7 +641,7 @@ where log.item.class = 'Payment' and log.item.id = payment.id]]></programlisting
                 <para>
 					<literal>second(...)</literal>, <literal>minute(...)</literal>,
 					<literal>hour(...)</literal>, <literal>day(...)</literal>,
-					<literal>month(...)</literal>, <literal>year(...)</literal>,
+					<literal>month(...)</literal>, and <literal>year(...)</literal>
                 </para>
             </listitem>
             <listitem>
@@ -674,13 +680,13 @@ where log.item.class = 'Payment' and log.item.id = payment.id]]></programlisting
                     HQL functions that take collection-valued path expressions: <literal>size(),
                     minelement(), maxelement(), minindex(), maxindex()</literal>, along with the
                     special <literal>elements()</literal> and <literal>indices</literal> functions
-                    which may be quantified using <literal>some, all, exists, any, in</literal>.
+                    that can be quantified using <literal>some, all, exists, any, in</literal>.
                 </para>
             </listitem>
             <listitem>
                 <para>
                     Any database-supported SQL scalar function like <literal>sign()</literal>,
-                    <literal>trunc()</literal>, <literal>rtrim()</literal>, <literal>sin()</literal>
+                    <literal>trunc()</literal>, <literal>rtrim()</literal>, and <literal>sin()</literal>
                 </para>
             </listitem>
             <listitem>
@@ -690,7 +696,7 @@ where log.item.class = 'Payment' and log.item.id = payment.id]]></programlisting
             </listitem>
             <listitem>
                 <para>
-                    named parameters <literal>:name</literal>, <literal>:start_date</literal>, <literal>:x1</literal>
+                    named parameters <literal>:name</literal>, <literal>:start_date</literal>, and <literal>:x1</literal>
                 </para>
             </listitem>
             <listitem>
@@ -707,7 +713,7 @@ where log.item.class = 'Payment' and log.item.id = payment.id]]></programlisting
         </itemizedlist>
 
         <para>
-            <literal>in</literal> and <literal>between</literal> may be used as follows:
+            <literal>in</literal> and <literal>between</literal> can be used as follows:
         </para>
 
         <programlisting><![CDATA[from DomesticCat cat where cat.name between 'A' and 'B']]></programlisting>
@@ -715,7 +721,7 @@ where log.item.class = 'Payment' and log.item.id = payment.id]]></programlisting
         <programlisting><![CDATA[from DomesticCat cat where cat.name in ( 'Foo', 'Bar', 'Baz' )]]></programlisting>
 
         <para>
-            and the negated forms may be written
+            The negated forms can be written as follows:
         </para>
 
         <programlisting><![CDATA[from DomesticCat cat where cat.name not between 'A' and 'B']]></programlisting>
@@ -723,12 +729,12 @@ where log.item.class = 'Payment' and log.item.id = payment.id]]></programlisting
         <programlisting><![CDATA[from DomesticCat cat where cat.name not in ( 'Foo', 'Bar', 'Baz' )]]></programlisting>
 
         <para>
-            Likewise, <literal>is null</literal> and <literal>is not null</literal> may be used to test
+            Similarly, <literal>is null</literal> and <literal>is not null</literal> can be used to test
             for null values.
         </para>
 
         <para>
-            Booleans may be easily used in expressions by declaring HQL query substitutions in Hibernate
+            Booleans can be easily used in expressions by declaring HQL query substitutions in Hibernate
             configuration:
         </para>
 
@@ -742,7 +748,7 @@ where log.item.class = 'Payment' and log.item.id = payment.id]]></programlisting
         <programlisting><![CDATA[from Cat cat where cat.alive = true]]></programlisting>
 
         <para>
-            You may test the size of a collection with the special property <literal>size</literal>, or
+            You can test the size of a collection with the special property <literal>size</literal> or
             the special <literal>size()</literal> function.
         </para>
 
@@ -751,11 +757,11 @@ where log.item.class = 'Payment' and log.item.id = payment.id]]></programlisting
         <programlisting><![CDATA[from Cat cat where size(cat.kittens) > 0]]></programlisting>
 
         <para>
-            For indexed collections, you may refer to the minimum and maximum indices using
+            For indexed collections, you can refer to the minimum and maximum indices using
             <literal>minindex</literal> and <literal>maxindex</literal> functions. Similarly,
-            you may refer to the minimum and maximum elements of a collection of basic type
+            you can refer to the minimum and maximum elements of a collection of basic type
             using the <literal>minelement</literal> and <literal>maxelement</literal>
-            functions.
+            functions. For example:
         </para>
 
         <programlisting><![CDATA[from Calendar cal where maxelement(cal.holidays) > current_date]]></programlisting>
@@ -767,7 +773,7 @@ where log.item.class = 'Payment' and log.item.id = payment.id]]></programlisting
         <para>
             The SQL functions <literal>any, some, all, exists, in</literal> are supported when passed the element
             or index set of a collection (<literal>elements</literal> and <literal>indices</literal> functions)
-            or the result of a subquery (see below).
+            or the result of a subquery (see below):
         </para>
 
         <programlisting><![CDATA[select mother from Cat as mother, Cat as kit
@@ -785,13 +791,13 @@ where p.name = some elements(list.names)]]></programlisting>
         <para>
             Note that these constructs - <literal>size</literal>, <literal>elements</literal>,
             <literal>indices</literal>, <literal>minindex</literal>, <literal>maxindex</literal>,
-            <literal>minelement</literal>, <literal>maxelement</literal> - may only be used in
+            <literal>minelement</literal>, <literal>maxelement</literal> - can only be used in
             the where clause in Hibernate3.
         </para>
 
         <para>
-            Elements of indexed collections (arrays, lists, maps) may be referred to by
-            index (in a where clause only):
+            Elements of indexed collections (arrays, lists, and maps) can be referred to by
+            index in a where clause only:
         </para>
 
         <programlisting><![CDATA[from Order order where order.items[0].id = 1234]]></programlisting>
@@ -807,14 +813,14 @@ where order.items[ order.deliveredItemIndices[0] ] = item and order.id = 11]]></
 where order.items[ maxindex(order.items) ] = item and order.id = 11]]></programlisting>
 
         <para>
-            The expression inside <literal>[]</literal> may even be an arithmetic expression.
+            The expression inside <literal>[]</literal> can even be an arithmetic expression:
         </para>
 
         <programlisting><![CDATA[select item from Item item, Order order
 where order.items[ size(order.items) - 1 ] = item]]></programlisting>
 
         <para>
-            HQL also provides the built-in <literal>index()</literal> function, for elements
+            HQL also provides the built-in <literal>index()</literal> function for elements
             of a one-to-many association or collection of values.
         </para>
 
@@ -823,13 +829,13 @@ where order.items[ size(order.items) - 1 ] = item]]></programlisting>
 where index(item) < 5]]></programlisting>
 
         <para>
-            Scalar SQL functions supported by the underlying database may be used
+            Scalar SQL functions supported by the underlying database can be used:
         </para>
 
         <programlisting><![CDATA[from DomesticCat cat where upper(cat.name) like 'FRI%']]></programlisting>
 
         <para>
-            If you are not yet convinced by all this, think how much longer and less readable the
+            Consider how much longer and less readable the
             following query would be in SQL:
         </para>
 
@@ -869,7 +875,7 @@ WHERE prod.name = 'widget'
         <title>The order by clause</title>
 
         <para>
-            The list returned by a query may be ordered by any property of a returned class or components:
+            The list returned by a query can be ordered by any property of a returned class or components:
         </para>
 
         <programlisting><![CDATA[from DomesticCat cat
@@ -885,7 +891,7 @@ order by cat.name asc, cat.weight desc, cat.birthdate]]></programlisting>
         <title>The group by clause</title>
 
         <para>
-            A query that returns aggregate values may be grouped by any property of a returned class or components:
+            A query that returns aggregate values can be grouped by any property of a returned class or components:
         </para>
 
         <programlisting><![CDATA[select cat.color, sum(cat.weight), count(cat)
@@ -907,8 +913,8 @@ having cat.color in (eg.Color.TABBY, eg.Color.BLACK)]]></programlisting>
 
         <para>
             SQL functions and aggregate functions are allowed in the <literal>having</literal>
-            and <literal>order by</literal> clauses, if supported by the underlying database
-            (eg. not in MySQL).
+            and <literal>order by</literal> clauses if they are supported by the underlying database
+            (i.e., not in MySQL).
         </para>
 
         <programlisting><![CDATA[select cat
@@ -919,10 +925,10 @@ having avg(kitten.weight) > 100
 order by count(kitten) asc, sum(kitten.weight) desc]]></programlisting>
 
         <para>
-            Note that neither the <literal>group by</literal> clause nor the
-            <literal>order by</literal> clause may contain arithmetic expressions.
-            Also note that Hibernate currently does not expand a grouped entity,
-            so you can't write <literal>group by cat</literal> if all properties
+            Neither the <literal>group by</literal> clause nor the
+            <literal>order by</literal> clause can contain arithmetic expressions.
+            Hibernate also does not currently expand a grouped entity,
+            so you cannot write <literal>group by cat</literal> if all properties
             of <literal>cat</literal> are non-aggregated. You have to list all
             non-aggregated properties explicitly.
         </para>
@@ -962,12 +968,12 @@ where cat.name not in (
 from Cat as cat]]></programlisting>
 
         <para>
-            Note that HQL subqueries may occur only in the select or where clauses.
+            Note that HQL subqueries can occur only in the select or where clauses.
         </para>
 
         <para>
             Note that subqueries can also utilize <literal>row value constructor</literal> syntax.  See
-            <xref linkend="queryhql-tuple"/> for more details.
+            <xref linkend="queryhql-tuple"/> for more information.
         </para>
 
     </sect1>
@@ -977,13 +983,13 @@ from Cat as cat]]></programlisting>
 
         <para>
             Hibernate queries can be quite powerful and complex. In fact, the power of the query language
-            is one of Hibernate's main selling points. Here are some example queries very similar to queries
-            that I used on a recent project. Note that most queries you will write are much simpler than these!
+            is one of Hibernate's main strengths. The following example queries are similar to queries
+            that have been used on recent projects. Please note that most queries you will write will be much simpler than the following examples.
         </para>
 
         <para>
-            The following query returns the order id, number of items and total value of the order for all
-            unpaid orders for a particular customer and given minimum total value, ordering the results by
+            The following query returns the order id, number of items, the given minimum total value and the total value of the order for all
+            unpaid orders for a particular customer. The results are ordered by
             total value. In determining the prices, it uses the current catalog. The resulting SQL query,
             against the <literal>ORDER</literal>, <literal>ORDER_LINE</literal>, <literal>PRODUCT</literal>,
             <literal>CATALOG</literal> and <literal>PRICE</literal> tables has four inner joins and an
@@ -1053,7 +1059,7 @@ group by status.name, status.sortOrder
 order by status.sortOrder]]></programlisting>
 
         <para>
-            If I would have mapped the <literal>statusChanges</literal> collection as a list, instead of a set,
+            If the <literal>statusChanges</literal> collection was mapped as a list, instead of a set,
             the query would have been much simpler to write.
         </para>
 
@@ -1101,7 +1107,7 @@ order by account.type.sortOrder, account.accountNumber, payment.dueDate]]></prog
         <para>
             HQL now supports <literal>update</literal>, <literal>delete</literal> and
             <literal>insert ... select ...</literal> statements.
-            See <xref linkend="batch-direct"/> for details.
+            See <xref linkend="batch-direct"/> for more information.
         </para>
     </sect1>
 
@@ -1109,7 +1115,7 @@ order by account.type.sortOrder, account.accountNumber, payment.dueDate]]></prog
         <title>Tips &amp; Tricks</title>
 
         <para>
-            You can count the number of query results without actually returning them:
+            You can count the number of query results without returning them:
         </para>
 
         <programlisting><![CDATA[( (Integer) session.createQuery("select count(*) from ....").iterate().next() ).intValue()]]></programlisting>
@@ -1132,7 +1138,7 @@ order by count(msg)]]></programlisting>
         <programlisting><![CDATA[from User usr where size(usr.messages) >= 1]]></programlisting>
 
         <para>
-            If your database doesn't support subselects, use the following query:
+            If your database does not support subselects, use the following query:
         </para>
 
         <programlisting><![CDATA[select usr.id, usr.name
@@ -1141,8 +1147,9 @@ from User usr.name
 group by usr.id, usr.name
 having count(msg) >= 1]]></programlisting>
 
+
         <para>
-            As this solution can't return a <literal>User</literal> with zero messages
+            As this solution cannot return a <literal>User</literal> with zero messages
             because of the inner join, the following form is also useful:
         </para>
 
@@ -1170,7 +1177,7 @@ q.setFirstResult(PAGE_SIZE * pageNumber);
 List page = q.list();]]></programlisting>
 
         <para>
-            Collection elements may be ordered or grouped using a query filter:
+            Collection elements can be ordered or grouped using a query filter:
         </para>
 
         <programlisting><![CDATA[Collection orderedCollection = s.filter( collection, "order by this.amount" );
@@ -1188,8 +1195,8 @@ Collection counts = s.filter( collection, "select this.type, count(this) group b
         <title>Components</title>
 
         <para>
-            Components might be used in just about every way that simple value types can be used in HQL
-            queries.  They can appear in the <literal>select</literal> clause:
+            Components can be used similarly to the simple value types that are used in HQL
+            queries.  They can appear in the <literal>select</literal> clause as follows:
         </para>
 
         <programlisting><![CDATA[select p.name from Person p]]></programlisting>
@@ -1219,16 +1226,16 @@ Collection counts = s.filter( collection, "select this.type, count(this) group b
         <title>Row value constructor syntax</title>
 
         <para>
-            HQL supports the use of ANSI SQL <literal>row value constructor</literal> syntax (sometimes
-            called <literal>tuple</literal> syntax), even though the underlying database may not support
-            that notion.  Here we are generally referring to multi-valued comparisons, typically associated
+            HQL supports the use of ANSI SQL <literal>row value constructor</literal> syntax, sometimes
+            referred to AS <literal>tuple</literal> syntax, even though the underlying database may not support
+            that notion.  Here, we are generally referring to multi-valued comparisons, typically associated
             with components.  Consider an entity Person which defines a name component:
         </para>
 
         <programlisting><![CDATA[from Person p where p.name.first='John' and p.name.last='Jingleheimer-Schmidt']]></programlisting>
 
         <para>
-            That's valid syntax, although a little verbose.  It be nice to make this a bit more concise and use
+            That is valid syntax although it is a little verbose.  You can make this more concise by using
             <literal>row value constructor</literal> syntax:
         </para>
 
@@ -1241,8 +1248,8 @@ Collection counts = s.filter( collection, "select this.type, count(this) group b
         <programlisting><![CDATA[select p.name from Person p]]></programlisting>
 
         <para>
-            Another time using <literal>row value constructor</literal> syntax can be beneficial
-            is when using subqueries needing to compare against multiple values:
+            Using <literal>row value constructor</literal> syntax can also be beneficial
+            when using subqueries that need to compare against multiple values:
         </para>
 
         <programlisting><![CDATA[from Cat as cat
@@ -1251,7 +1258,7 @@ where not ( cat.name, cat.color ) in (
 )]]></programlisting>
 
         <para>
-            One thing to consider when deciding if you want to use this syntax is that the query will
+            One thing to consider when deciding if you want to use this syntax, is that the query will
             be dependent upon the ordering of the component sub-properties in the metadata.
         </para>
 

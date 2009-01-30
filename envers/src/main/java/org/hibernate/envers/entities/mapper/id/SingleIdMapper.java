@@ -33,6 +33,7 @@ import org.hibernate.envers.tools.reflection.ReflectionTools;
 
 import org.hibernate.property.Getter;
 import org.hibernate.property.Setter;
+import org.hibernate.proxy.HibernateProxy;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -77,8 +78,13 @@ public class SingleIdMapper extends AbstractIdMapper implements SimpleIdMapperBu
             return null;
         }
 
-        Getter getter = ReflectionTools.getGetter(data.getClass(), propertyData);
-        return getter.get(data);
+        if(data instanceof HibernateProxy) {
+        	HibernateProxy hibernateProxy = (HibernateProxy) data;
+        	return hibernateProxy.getHibernateLazyInitializer().getIdentifier();
+        } else {
+        	Getter getter = ReflectionTools.getGetter(data.getClass(), propertyData);
+            return getter.get(data);
+        }
     }
 
     public void mapToMapFromId(Map<String, Object> data, Object obj) {
@@ -91,8 +97,13 @@ public class SingleIdMapper extends AbstractIdMapper implements SimpleIdMapperBu
         if (obj == null) {
             data.put(propertyData.getName(), null);
         } else {
-            Getter getter = ReflectionTools.getGetter(obj.getClass(), propertyData);
-            data.put(propertyData.getName(), getter.get(obj));
+            if(obj instanceof HibernateProxy) {
+            	HibernateProxy hibernateProxy = (HibernateProxy)obj;
+            	data.put(propertyData.getName(), hibernateProxy.getHibernateLazyInitializer().getIdentifier());
+            } else {
+            	Getter getter = ReflectionTools.getGetter(obj.getClass(), propertyData);
+            	data.put(propertyData.getName(), getter.get(obj));
+            }
         }
     }
 

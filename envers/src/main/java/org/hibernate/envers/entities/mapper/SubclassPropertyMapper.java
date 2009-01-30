@@ -79,7 +79,9 @@ public class SubclassPropertyMapper implements ExtendedPropertyMapper {
         if (parentCollectionChanges == null) {
             return mainCollectionChanges;
         } else {
-            parentCollectionChanges.addAll(mainCollectionChanges);
+        	if(mainCollectionChanges != null) {
+                parentCollectionChanges.addAll(mainCollectionChanges);
+        	}
 			return parentCollectionChanges;
         }
     }

@@ -57,6 +57,7 @@ import org.hibernate.event.PreCollectionRemoveEventListener;
 import org.hibernate.event.PreCollectionUpdateEvent;
 import org.hibernate.event.PreCollectionUpdateEventListener;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.proxy.HibernateProxy;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -64,6 +65,8 @@ import org.hibernate.persister.entity.EntityPersister;
 public class AuditEventListener implements PostInsertEventListener, PostUpdateEventListener,
         PostDeleteEventListener, PreCollectionUpdateEventListener, PreCollectionRemoveEventListener,
         PostCollectionRecreateEventListener, Initializable {
+	private static final long serialVersionUID = -2499904286323112715L;
+
     private AuditConfiguration verCfg;
 
     private void generateBidirectionalCollectionChangeWorkUnits(AuditSync verSync, EntityPersister entityPersister,
@@ -93,7 +96,14 @@ public class AuditEventListener implements PostInsertEventListener, PostUpdateEv
                     if (newValue != null) {
                         // relDesc.getToEntityName() doesn't always return the entity name of the value - in case
                         // of subclasses, this will be root class, no the actual class. So it can't be used here.
-                        String toEntityName = session.guessEntityName(newValue);
+                        String toEntityName;
+                        if(newValue instanceof HibernateProxy) {
+                    	    HibernateProxy hibernateProxy = (HibernateProxy) newValue;
+                    	    toEntityName = session.bestGuessEntityName(newValue);
+                    	    newValue = hibernateProxy.getHibernateLazyInitializer().getImplementation();
+                    	} else {
+                    		toEntityName =  session.guessEntityName(newValue);
+                    	}
 
                         IdMapper idMapper = verCfg.getEntCfg().get(toEntityName).getIdMapper();
 
@@ -102,8 +112,15 @@ public class AuditEventListener implements PostInsertEventListener, PostUpdateEv
                     }
 
                     if (oldValue != null) {
-                        String toEntityName = session.guessEntityName(oldValue);
-
+                    	String toEntityName;
+                    	if(oldValue instanceof HibernateProxy) {
+                    	    HibernateProxy hibernateProxy = (HibernateProxy) oldValue;
+                    	    toEntityName = session.bestGuessEntityName(oldValue);
+                    	    oldValue = hibernateProxy.getHibernateLazyInitializer().getImplementation();
+                    	} else {
+                    		toEntityName =  session.guessEntityName(oldValue);
+                    	}
+                        
                         IdMapper idMapper = verCfg.getEntCfg().get(toEntityName).getIdMapper();
 
                         Serializable id = (Serializable) idMapper.mapToIdFromEntity(oldValue);

@@ -32,6 +32,7 @@ import org.hibernate.envers.entities.mapper.id.IdMapper;
 import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.reader.AuditReaderImplementor;
 import org.hibernate.envers.tools.reflection.ReflectionTools;
+import org.hibernate.util.ReflectHelper;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -80,7 +81,7 @@ public class EntityInstantiator {
         Object ret;
         try {
             Class<?> cls = ReflectionTools.loadClass(entityName);
-            ret = cls.newInstance();
+            ret = ReflectHelper.getDefaultConstructor(cls).newInstance();
         } catch (Exception e) {
             throw new AuditException(e);
         }

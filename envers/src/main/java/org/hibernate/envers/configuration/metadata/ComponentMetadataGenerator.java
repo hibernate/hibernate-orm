@@ -37,9 +37,14 @@ public final class ComponentMetadataGenerator {
 		while (properties.hasNext()) {
 			Property property = properties.next();
 
-			mainGenerator.addValue(parent, property.getValue(), componentMapper, entityName, xmlMappingData,
-					componentAuditingData.getPropertyAuditingData(property.getName()),
-					property.isInsertable(), firstPass);
+			PropertyAuditingData componentPropertyAuditingData =
+					componentAuditingData.getPropertyAuditingData(property.getName());
+
+			// Checking if that property is audited
+			if (componentPropertyAuditingData != null) {
+				mainGenerator.addValue(parent, property.getValue(), componentMapper, entityName, xmlMappingData,
+						componentPropertyAuditingData, property.isInsertable(), firstPass);
+			}
 		}
 	}
 }

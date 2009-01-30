@@ -46,7 +46,7 @@ public class PersistentCollectionChangeWorkUnit extends AbstractAuditWorkUnit im
                                               Serializable snapshot, Serializable id) {
         super(entityName, verCfg, null);
 
-        referencingPropertyName = role.substring(role.lastIndexOf(".") + 1);
+        referencingPropertyName = role.substring(entityName.length() + 1);
 
         collectionChanges = verCfg.getEntCfg().get(getEntityName()).getPropertyMapper()
                 .mapCollectionChanges(referencingPropertyName, collection, snapshot, id);

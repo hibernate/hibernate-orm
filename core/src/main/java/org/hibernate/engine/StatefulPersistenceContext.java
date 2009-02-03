@@ -204,7 +204,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		Iterator itr = proxiesByKey.values().iterator();
 		while ( itr.hasNext() ) {
 			final LazyInitializer li = ( ( HibernateProxy ) itr.next() ).getHibernateLazyInitializer();
-			li.setSession( null );
+			li.unsetSession();
 		}
 		Map.Entry[] collectionEntryArray = IdentityMap.concurrentEntries( collectionEntries );
 		for ( int i = 0; i < collectionEntryArray.length; i++ ) {

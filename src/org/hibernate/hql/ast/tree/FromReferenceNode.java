@@ -7,6 +7,8 @@ import antlr.collections.AST;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import org.hibernate.hql.ast.util.DisplayableNode;
+
 /**
  * Represents a reference to a FROM element, for example a class alias in a WHERE clause.
  *

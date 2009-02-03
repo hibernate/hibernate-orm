@@ -4,6 +4,8 @@ package org.hibernate.hql.ast.tree;
 import antlr.SemanticException;
 import antlr.collections.AST;
 
+import org.hibernate.hql.ast.util.DisplayableNode;
+
 /**
  * Represents 'elements()' or 'indices()'.
  *

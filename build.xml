@@ -172,8 +172,8 @@
         </taskdef>
         <mkdir dir="${dir.out.antlr-package}" />
 		<antlrtask target="${dir.grammar}/hql.g" outputdirectory="${dir.out.antlr-package}" />
-		<antlrtask target="${dir.grammar}/hql-sql.g" outputdirectory="${dir.out.antlr-package}" />
-		<antlrtask target="${dir.grammar}/sql-gen.g" outputdirectory="${dir.out.antlr-package}" />
+		<antlrtask target="${dir.grammar}/hql-sql.g" outputdirectory="${dir.out.antlr-package}" tracetreewalker="true" />
+		<antlrtask target="${dir.grammar}/sql-gen.g" outputdirectory="${dir.out.antlr-package}" tracetreewalker="true" />
 		<touch file="${dir.out.antlr-package}/.antlr_run"/>
 	</target>
 

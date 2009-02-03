@@ -434,7 +434,13 @@ public class DotNode extends FromReferenceNode implements DisplayableNode, Selec
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-		if ( elem == null ) {
+		boolean found = elem != null;
+		// even though we might find a pre-existing element by join path, for FromElements originating in a from-clause
+		// we should only ever use the found element if the aliases match (null != null here).  Implied joins are
+		// always (?) ok to reuse.
+		boolean useFoundFromElement = found && ( elem.isImplied() || areSame( classAlias, elem.getClassAlias() ) );
+
+		if ( ! useFoundFromElement ) {
 			// If this is an implied join in a from element, then use the impled join type which is part of the
 			// tree parser's state (set by the gramamar actions).
 			JoinSequence joinSequence = getSessionFactoryHelper()
@@ -458,11 +464,17 @@ public class DotNode extends FromReferenceNode implements DisplayableNode, Selec
 			);
 		}
 		else {
-			currentFromClause.addDuplicateAlias(classAlias, elem);
+			// NOTE : addDuplicateAlias() already performs nullness checks on the alias.
+			currentFromClause.addDuplicateAlias( classAlias, elem );
 		}
 		setImpliedJoin( elem );
 		getWalker().addQuerySpaces( elem.getEntityPersister().getQuerySpaces() );
 		setFromElement( elem );	// This 'dot' expression now refers to the resulting from element.
+	}
+
+	private boolean areSame(String alias1, String alias2) {
+		// again, null != null here
+		return !StringHelper.isEmpty( alias1 ) && !StringHelper.isEmpty( alias2 ) && alias1.equals( alias2 );
 	}
 
 	private void setImpliedJoin(FromElement elem) {

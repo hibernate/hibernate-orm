@@ -5,9 +5,9 @@ import org.hibernate.QueryException;
 import org.hibernate.engine.JoinSequence;
 import org.hibernate.hql.CollectionProperties;
 import org.hibernate.hql.antlr.SqlTokenTypes;
-import org.hibernate.hql.ast.util.ASTPrinter;
 import org.hibernate.hql.ast.util.ASTUtil;
 import org.hibernate.hql.ast.util.ColumnHelper;
+import org.hibernate.hql.ast.util.DisplayableNode;
 import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.sql.JoinFragment;
@@ -117,7 +117,7 @@ public class DotNode extends FromReferenceNode implements DisplayableNode, Selec
 		StringBuffer buf = new StringBuffer();
 		FromElement fromElement = getFromElement();
 		buf.append( "{propertyName=" ).append( propertyName );
-		buf.append( ",dereferenceType=" ).append( ASTPrinter.getConstantName( getClass(), dereferenceType ) );
+		buf.append( ",dereferenceType=" ).append( getWalker().getASTPrinter().getTokenTypeName( dereferenceType ) );
 		buf.append( ",propertyPath=" ).append( propertyPath );
 		buf.append( ",path=" ).append( getPath() );
 		if ( fromElement != null ) {
@@ -412,10 +412,8 @@ public class DotNode extends FromReferenceNode implements DisplayableNode, Selec
 ///////////////////////////////////////////////////////////////////////////////
 
 		boolean found = elem != null;
-		// even though we might find a pre-existing element by join path, for FromElements originating in a from-clause
-		// we should only ever use the found element if the aliases match (null != null here).  Implied joins are
-		// always (?) ok to reuse.
-		boolean useFoundFromElement = found && ( elem.isImplied() || areSame( classAlias, elem.getClassAlias() ) );
+		// even though we might find a pre-existing element by join path, we may not be able to reuse it...
+		boolean useFoundFromElement = found && canReuse( elem, classAlias );
 
 		if ( ! useFoundFromElement ) {
 			// If this is an implied join in a from element, then use the impled join type which is part of the
@@ -449,9 +447,28 @@ public class DotNode extends FromReferenceNode implements DisplayableNode, Selec
 		setFromElement( elem );	// This 'dot' expression now refers to the resulting from element.
 	}
 
+	private boolean canReuse(FromElement fromElement, String requestedAlias) {
+		// implicit joins are always(?) ok to reuse
+		if ( isImplicitJoin( fromElement ) ) {
+			return true;
+		}
+
+		// if the from-clauses are the same, we can be a little more aggressive in terms of what we reuse
+		if ( fromElement.getFromClause() == getWalker().getCurrentFromClause() ) {
+			return true;
+		}
+
+		// otherwise (subquery case) dont reuse the fromElement if we are processing the from-clause of the subquery
+		return getWalker().getCurrentClauseType() != SqlTokenTypes.FROM;
+	}
+
+	private boolean isImplicitJoin(FromElement fromElement) {
+		return fromElement.isImplied();
+	}
+
 	private boolean areSame(String alias1, String alias2) {
 		// again, null != null here
-		return !StringHelper.isEmpty( alias1 ) && !StringHelper.isEmpty( alias2 ) && alias1.equals( alias2 );
+		return StringHelper.isNotEmpty( alias1 ) && StringHelper.isNotEmpty( alias2 ) && alias1.equals( alias2 );
 	}
 
 	private void setImpliedJoin(FromElement elem) {

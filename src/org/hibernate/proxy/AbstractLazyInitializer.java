@@ -4,26 +4,24 @@ import java.io.Serializable;
 
 import org.hibernate.HibernateException;
 import org.hibernate.LazyInitializationException;
-import org.hibernate.ObjectNotFoundException;
 import org.hibernate.engine.EntityKey;
 import org.hibernate.engine.SessionImplementor;
 
 /**
- * Convenience base class for lazy initialization handlers.  Centralizes the
- * basic plumbing of doing lazy initialization freeing subclasses to
- * acts as essentially adapters to their intended entity mode and/or
+ * Convenience base class for lazy initialization handlers.  Centralizes the basic plumbing of doing lazy
+ * initialization freeing subclasses to acts as essentially adapters to their intended entity mode and/or
  * proxy generation strategy.
  *
  * @author Gavin King
  */
 public abstract class AbstractLazyInitializer implements LazyInitializer {
-	
-	private Object target;
-	private boolean initialized;
 	private String entityName;
 	private Serializable id;
-	private transient SessionImplementor session;
+	private Object target;
+	private boolean initialized;
 	private boolean unwrap;
+
+	private transient SessionImplementor session;
 
 	/**
 	 * For serialization from the non-pojo initializers (HHH-3309)
@@ -31,32 +29,79 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 	protected AbstractLazyInitializer() {
 	}
 
+	/**
+	 * Main constructor.
+	 *
+	 * @param entityName The name of the entity being proxied.
+	 * @param id The identifier of the entity being proxied.
+	 * @param session The session owning the proxy.
+	 */
 	protected AbstractLazyInitializer(String entityName, Serializable id, SessionImplementor session) {
+		this.entityName = entityName;
 		this.id = id;
 		this.session = session;
-		this.entityName = entityName;
 	}
 
-	public final Serializable getIdentifier() {
-		return id;
-	}
-
-	public final void setIdentifier(Serializable id) {
-		this.id = id;
-	}
-
+	/**
+	 * {@inheritDoc}
+	 */
 	public final String getEntityName() {
 		return entityName;
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
+	public final Serializable getIdentifier() {
+		return id;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public final void setIdentifier(Serializable id) {
+		this.id = id;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
 	public final boolean isUninitialized() {
 		return !initialized;
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	public final SessionImplementor getSession() {
 		return session;
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
+	public final void setSession(SessionImplementor s) throws HibernateException {
+		if ( s != session ) {
+			if ( isConnectedToSession() ) {
+				//TODO: perhaps this should be some other RuntimeException...
+				throw new HibernateException("illegally attempted to associate a proxy with two open Sessions");
+			}
+			else {
+				session = s;
+			}
+		}
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public void unsetSession() {
+		session = null;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
 	public final void initialize() throws HibernateException {
 		if (!initialized) {
 			if ( session==null ) {
@@ -87,27 +132,15 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 		}
 	}
 
-	public final void setSession(SessionImplementor s) throws HibernateException {
-		if (s!=session) {
-			if ( isConnectedToSession() ) {
-				//TODO: perhaps this should be some other RuntimeException...
-				throw new HibernateException("illegally attempted to associate a proxy with two open Sessions");
-			}
-			else {
-				session = s;
-			}
-		}
-	}
-
+	/**
+	 * Getter for property 'connectedToSession'.
+	 *
+	 * @return Value for property 'connectedToSession'.
+	 */
 	protected final boolean isConnectedToSession() {
 		return session!=null && 
 				session.isOpen() && 
 				session.getPersistenceContext().containsProxy(this);
-	}
-	
-	public final void setImplementation(Object target) {
-		this.target = target;
-		initialized = true;
 	}
 
 	/**
@@ -116,6 +149,14 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 	public final Object getImplementation() {
 		initialize();
 		return target;
+	}
+	
+	/**
+	 * {@inheritDoc}
+	 */
+	public final void setImplementation(Object target) {
+		this.target = target;
+		initialized = true;
 	}
 
 	/**
@@ -127,18 +168,31 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 				getIdentifier(),
 				s.getFactory().getEntityPersister( getEntityName() ),
 				s.getEntityMode()
-			);
+		);
 		return s.getPersistenceContext().getEntity( entityKey );
 	}
 
+	/**
+	 * Getter for property 'target'.
+	 * <p/>
+	 * Same as {@link #getImplementation()} except that this method will not force initialization.
+	 *
+	 * @return Value for property 'target'.
+	 */
 	protected final Object getTarget() {
 		return target;
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	public boolean isUnwrap() {
 		return unwrap;
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	public void setUnwrap(boolean unwrap) {
 		this.unwrap = unwrap;
 	}

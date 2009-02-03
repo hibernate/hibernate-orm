@@ -83,7 +83,7 @@ public class DefaultEvictEventListener implements EvictEventListener {
 					doEvict( entity, key, e.getPersister(), event.getSession() );
 				}
 			}
-			li.setSession( null );
+			li.unsetSession();
 		}
 		else {
 			EntityEntry e = persistenceContext.removeEntry( object );

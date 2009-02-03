@@ -37,6 +37,7 @@ import org.slf4j.LoggerFactory;
 import org.hibernate.hql.antlr.HqlSqlTokenTypes;
 import org.hibernate.hql.ast.util.ASTIterator;
 import org.hibernate.hql.ast.util.ASTUtil;
+import org.hibernate.hql.ast.util.DisplayableNode;
 
 import antlr.SemanticException;
 import antlr.collections.AST;

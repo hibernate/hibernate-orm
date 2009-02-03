@@ -26,6 +26,8 @@ package org.hibernate.hql.ast.tree;
 
 import java.util.Iterator;
 
+import org.hibernate.hql.ast.util.DisplayableNode;
+
 /**
  * Convenience implementation of Statement to centralize common functionality.
  *

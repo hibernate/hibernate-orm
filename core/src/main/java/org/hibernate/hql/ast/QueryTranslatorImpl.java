@@ -287,8 +287,7 @@ public class QueryTranslatorImpl implements FilterTranslator {
 
 	void showHqlAst(AST hqlAst) {
 		if ( AST_LOG.isDebugEnabled() ) {
-			ASTPrinter printer = new ASTPrinter( HqlTokenTypes.class );
-			printer.setShowClassNames( false ); // The class names aren't interesting in the first tree.
+			ASTPrinter printer = new ASTPrinter( HqlTokenTypes.class, false );
 			AST_LOG.debug( printer.showAsString( hqlAst, "--- HQL AST ---" ) );
 		}
 	}

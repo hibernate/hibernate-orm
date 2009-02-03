@@ -94,6 +94,7 @@ import org.hibernate.type.VersionType;
 import org.hibernate.type.DbTimestampType;
 import org.hibernate.usertype.UserVersionType;
 import org.hibernate.util.ArrayHelper;
+import org.hibernate.util.StringHelper;
 
 import antlr.ASTFactory;
 import antlr.RecognitionException;
@@ -169,6 +170,40 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 	}
 
 
+	// handle trace logging ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    private int traceDepth = 0;
+
+	public void traceIn(String ruleName, AST tree) {
+		if ( inputState.guessing > 0 ) {
+			return;
+		}
+		String prefix = StringHelper.repeat( '-', (traceDepth++ * 2) ) + "-> ";
+		String traceText = ruleName + " (" + buildTraceNodeName(tree) + ")";
+		trace( prefix + traceText );
+	}
+
+	private String buildTraceNodeName(AST tree) {
+		return tree == null
+				? "???"
+				: tree.getText() + " [" + printer.getTokenTypeName( tree.getType() ) + "]";
+	}
+
+	public void traceOut(String ruleName, AST tree) {
+		if ( inputState.guessing > 0 ) {
+			return;
+		}
+		String prefix = "<-" + StringHelper.repeat( '-', (--traceDepth * 2) ) + " ";
+		trace( prefix + ruleName );
+	}
+
+	private void trace(String msg) {
+		log.trace( msg );
+	}
+
+
+	// semantic action handling ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 	protected void prepareFromClauseInputTree(AST fromClauseInput) {
 		if ( !isSubQuery() ) {
 //			// inject param specifications to account for dynamic filter param values
@@ -207,7 +242,7 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 
 				String collectionElementEntityName = persister.getElementPersister().getEntityName();
 				ASTFactory inputAstFactory = hqlParser.getASTFactory();
-				AST fromElement = ASTUtil.create( inputAstFactory, HqlTokenTypes.FILTER_ENTITY, collectionElementEntityName );
+				AST fromElement = inputAstFactory.create( FILTER_ENTITY, collectionElementEntityName );
 				ASTUtil.createSibling( inputAstFactory, HqlTokenTypes.ALIAS, "this", fromElement );
 				fromClauseInput.addChild( fromElement );
 				// Show the modified AST.

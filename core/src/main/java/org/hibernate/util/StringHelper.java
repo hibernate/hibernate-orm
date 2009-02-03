@@ -27,6 +27,7 @@ package org.hibernate.util;
 import java.util.Iterator;
 import java.util.StringTokenizer;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 public final class StringHelper {
 
@@ -85,6 +86,11 @@ public final class StringHelper {
 		return buf.toString();
 	}
 
+	public static String repeat(char character, int times) {
+		char[] buffer = new char[times];
+		Arrays.fill( buffer, character );
+		return new String( buffer );
+	}
 
 	public static String replace(String template, String placeholder, String replacement) {
 		return replace( template, placeholder, replacement, false );

@@ -35,6 +35,7 @@ import org.hibernate.hql.QueryTranslator;
 import org.hibernate.hql.CollectionProperties;
 import org.hibernate.hql.antlr.SqlTokenTypes;
 import org.hibernate.hql.ast.util.ASTUtil;
+import org.hibernate.hql.ast.util.DisplayableNode;
 import org.hibernate.hql.ast.HqlSqlWalker;
 import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.persister.entity.EntityPersister;

@@ -140,7 +140,7 @@ public class DotNode extends FromReferenceNode implements DisplayableNode, Selec
 		StringBuffer buf = new StringBuffer();
 		FromElement fromElement = getFromElement();
 		buf.append( "{propertyName=" ).append( propertyName );
-		buf.append( ",dereferenceType=" ).append( ASTPrinter.getConstantName( getClass(), dereferenceType ) );
+		buf.append( ",dereferenceType=" ).append( getWalker().getASTPrinter().getTokenTypeName( dereferenceType ) );
 		buf.append( ",propertyPath=" ).append( propertyPath );
 		buf.append( ",path=" ).append( getPath() );
 		if ( fromElement != null ) {

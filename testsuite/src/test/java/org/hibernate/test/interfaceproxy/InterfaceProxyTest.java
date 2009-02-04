@@ -6,7 +6,6 @@ import junit.framework.Test;
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.junit.functional.FunctionalTestCase;
 import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
 
@@ -33,8 +32,8 @@ public class InterfaceProxyTest extends FunctionalTestCase {
 	
 	public void testInterfaceProxies() {
 		
-		if ( getDialect() instanceof PostgreSQLDialect ) {
-			// TODO : why?
+		if ( ! getDialect().supportsExpectedLobUsagePattern() ) {
+			reportSkip( "database/driver does not support expected LOB usage pattern", "LOB support" );
 			return;
 		}
 		

@@ -235,7 +235,8 @@
 
 	<!-- The following is a workaround for HHH-3685 so that SchemaExport --> 
 	<!-- changes the transaction mode of simpleScalar to "chained" -->
-	<database-object>		<create>
+	<database-object>
+		<create>
 		sp_procxmode simpleScalar, 'chained'
 		</create>
 		<!-- no drop command corresponding to "sp_procxmode ..." -->

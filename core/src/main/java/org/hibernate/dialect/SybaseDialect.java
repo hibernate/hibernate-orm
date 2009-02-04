@@ -126,6 +126,9 @@ public class SybaseDialect extends Dialect {
 		registerFunction( "trim", new SQLFunctionTemplate( Hibernate.STRING, "ltrim(rtrim(?1))") );
 		registerFunction( "locate", new CharIndexFunction() );
 
+		registerFunction( "mod", new SQLFunctionTemplate( Hibernate.INTEGER, "?1 % ?2" ) );
+		registerFunction( "bit_length", new SQLFunctionTemplate( Hibernate.INTEGER, "datalength(?1) * 8" ) );
+
 		getDefaultProperties().setProperty(Environment.STATEMENT_BATCH_SIZE, NO_BATCH);
 	}
 

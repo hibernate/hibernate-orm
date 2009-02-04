@@ -4,6 +4,9 @@ package org.hibernate.test.lob;
 import junit.framework.Test;
 
 import org.hibernate.Session;
+import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.SybaseDialect;
+import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.junit.functional.FunctionalTestCase;
 import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
 
@@ -26,11 +29,17 @@ public class SerializableTypeTest extends FunctionalTestCase {
 		return new FunctionalTestClassTestSuite( SerializableTypeTest.class );
 	}
 
+
 	public String getCacheConcurrencyStrategy() {
 		return null;
 	}
 
 	public void testNewSerializableType() {
+		// Sybase ASE does not support ResultSet.getBlob(String)
+		if ( getDialect() instanceof SybaseDialect && ! ( getDialect() instanceof SQLServerDialect ) ) {
+			return;
+		}
+
 		final String payloadText = "Initial payload";
 
 		Session s = openSession();

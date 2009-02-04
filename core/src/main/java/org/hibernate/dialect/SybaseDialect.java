@@ -251,6 +251,10 @@ public class SybaseDialect extends Dialect {
                 return false;
         }
 
+	public boolean supportsExpectedLobUsagePattern() {
+		return false;
+	}
+
 	public boolean supportsEmptyInList() {
 		return false;
 	}

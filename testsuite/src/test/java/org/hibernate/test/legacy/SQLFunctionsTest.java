@@ -27,6 +27,7 @@ import org.hibernate.dialect.Oracle9Dialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.dialect.TimesTenDialect;
+import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
 
@@ -498,6 +499,14 @@ public class SQLFunctionsTest extends LegacyTestCase {
 		//s.refresh(b);
 		//assertTrue( b.getClob() instanceof ClobImpl );
 		s.flush();
+
+		// Sybase ASE does not support ResultSet.getBlob(String)
+		if ( getDialect() instanceof SybaseDialect && ! ( getDialect() instanceof SQLServerDialect ) ) {
+			s.connection().rollback();
+			s.close();
+			return;
+		}
+
 		s.refresh(b);
 		//b.getBlob().setBytes( 2, "abc".getBytes() );
 		b.getClob().getSubString(2, 3);

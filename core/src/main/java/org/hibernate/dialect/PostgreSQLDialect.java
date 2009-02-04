@@ -180,9 +180,9 @@ public class PostgreSQLDialect extends Dialect {
 
 	public String getLimitString(String sql, boolean hasOffset) {
 		return new StringBuffer( sql.length()+20 )
-			.append(sql)
-			.append(hasOffset ? " limit ? offset ?" : " limit ?")
-			.toString();
+				.append( sql )
+				.append( hasOffset ? " limit ? offset ?" : " limit ?" )
+				.toString();
 	}
 
 	public boolean bindLimitParametersInReverseOrder() {

@@ -65,7 +65,7 @@ public class SQLServerDialect extends SybaseDialect {
 
 	public String getLimitString(String querySelect, int offset, int limit) {
 		if ( offset > 0 ) {
-			throw new UnsupportedOperationException( "sql server has no offset" );
+			throw new UnsupportedOperationException( "query result offset is not supported" );
 		}
 		return new StringBuffer( querySelect.length() + 8 )
 				.append( querySelect )

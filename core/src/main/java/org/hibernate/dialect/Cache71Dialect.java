@@ -598,7 +598,7 @@ public class Cache71Dialect extends Dialect {
 
 	public String getLimitString(String sql, boolean hasOffset) {
 		if ( hasOffset ) {
-			throw new UnsupportedOperationException( "An offset may not be specified to <TOP n> in Cache SQL" );
+			throw new UnsupportedOperationException( "query result offset is not supported" );
 		}
 
 		// This does not support the Cache SQL 'DISTINCT BY (comma-list)' extensions,

@@ -174,12 +174,12 @@ public class TimesTenDialect extends Dialect {
 
 	public String getLimitString(String querySelect, int offset, int limit) {
 		if ( offset > 0 ) {
-			throw new UnsupportedOperationException( "TimesTen does not support offset" );
+			throw new UnsupportedOperationException( "query result offset is not supported" );
 		}
-		return new StringBuffer( querySelect.length()+8 )
-			.append(querySelect)
-			.insert( 6, " first " + limit )
-			.toString();
+		return new StringBuffer( querySelect.length() + 8 )
+				.append( querySelect )
+				.insert( 6, " first " + limit )
+				.toString();
 	}
 
 	public boolean supportsCurrentTimestampSelection() {

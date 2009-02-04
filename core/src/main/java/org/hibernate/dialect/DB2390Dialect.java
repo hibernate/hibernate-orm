@@ -48,21 +48,24 @@ public class DB2390Dialect extends DB2Dialect {
 		return false;
 	}
 
-	public String getLimitString(String sql, int offset, int limit) {
-		return new StringBuffer(sql.length() + 40)
-			.append(sql)
-			.append(" fetch first ")
-			.append(limit)
-			.append(" rows only ")
-			.toString();
-	}
-
 	public boolean useMaxForLimit() {
 		return true;
 	}
 
 	public boolean supportsVariableLimit() {
 		return false;
+	}
+
+	public String getLimitString(String sql, int offset, int limit) {
+		if ( offset > 0 ) {
+			throw new UnsupportedOperationException( "query result offset is not supported" );
+		}
+		return new StringBuffer( sql.length() + 40 )
+				.append( sql )
+				.append( " fetch first " )
+				.append( limit )
+				.append( " rows only " )
+				.toString();
 	}
 
 }

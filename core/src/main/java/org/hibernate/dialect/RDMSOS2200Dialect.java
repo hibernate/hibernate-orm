@@ -314,13 +314,15 @@ public class RDMSOS2200Dialect extends Dialect {
 	}
 
     public String getLimitString(String sql, int offset, int limit) {
-        if (offset>0) throw new UnsupportedOperationException("RDMS does not support paged queries");
-		return new StringBuffer(sql.length() + 40)
-			.append(sql)
-			.append(" fetch first ")
-			.append(limit)
-			.append(" rows only ")
-			.toString();
+		if ( offset > 0 ) {
+			throw new UnsupportedOperationException( "query result offset is not supported" );
+		}
+		return new StringBuffer( sql.length() + 40 )
+				.append( sql )
+				.append( " fetch first " )
+				.append( limit )
+				.append( " rows only " )
+				.toString();
 	}
 
 	public boolean supportsVariableLimit() {

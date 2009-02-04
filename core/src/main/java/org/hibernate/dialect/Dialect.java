@@ -870,6 +870,25 @@ public abstract class Dialect {
 		throw new UnsupportedOperationException( "paged queries not supported" );
 	}
 
+	/**
+	 * Hibernate APIs explcitly state that setFirstResult() should be a zero-based offset. Here we allow the
+	 * Dialect a chance to convert that value based on what the underlying db or driver will expect.
+	 * <p/>
+	 * NOTE: what gets passed into {@link #getLimitString(String,int,int)} is the zero-based offset.  Dialects which
+	 * do not {@link #supportsVariableLimit} should take care to perform any needed {@link #convertToFirstRowValue}
+	 * calls prior to injecting the limit values into the SQL string.
+	 *
+	 * @param zeroBasedFirstResult The user-supplied, zero-based first row offset.
+	 *
+	 * @return The corresponding db/dialect specific offset.
+	 *
+	 * @see org.hibernate.Query#setFirstResult
+	 * @see org.hibernate.Criteria#setFirstResult
+	 */
+	public int convertToFirstRowValue(int zeroBasedFirstResult) {
+		return zeroBasedFirstResult;
+	}
+
 
 	// lock acquisition support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

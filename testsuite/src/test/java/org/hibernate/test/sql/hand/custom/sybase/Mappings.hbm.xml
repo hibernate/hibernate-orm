@@ -193,7 +193,17 @@
 		DROP PROCEDURE selectAllEmployments
 		</drop>
 	</database-object>
-	
+
+	<!-- The following is a workaround for HHH-3685 so that SchemaExport --> 
+	<!-- changes the transaction mode of selectAllEmployments to "chained" -->
+	<database-object>
+		<create>
+		sp_procxmode selectAllEmployments, 'chained'
+		</create>
+		<!-- no drop command corresponding to "sp_procxmode ..." -->
+		<drop/>
+	</database-object>
+
 	<database-object>
 		<create>
 		CREATE PROCEDURE paramHandling @j int, @i int AS
@@ -204,6 +214,16 @@
 		</drop>
 	</database-object>
 	
+	<!-- The following is a workaround for HHH-3685 so that SchemaExport --> 
+	<!-- changes the transaction mode of paramHandling to "chained" -->
+	<database-object>
+		<create>
+		sp_procxmode paramHandling, 'chained'
+		</create>
+		<!-- no drop command corresponding to "sp_procxmode ..." -->
+	<drop/>
+	</database-object>
+
 	<database-object>
 		<create>
 		CREATE PROCEDURE simpleScalar @number int AS
@@ -214,4 +234,14 @@
 		</drop>
 	</database-object>
 	
+	<!-- The following is a workaround for HHH-3685 so that SchemaExport --> 
+	<!-- changes the transaction mode of simpleScalar to "chained" -->
+	<database-object>
+		<create>
+		sp_procxmode simpleScalar, 'chained'
+		</create>
+		<!-- no drop command corresponding to "sp_procxmode ..." -->
+		<drop/>
+	</database-object>
+
 </hibernate-mapping>

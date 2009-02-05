@@ -32,9 +32,9 @@ import org.hibernate.sql.JoinFragment;
 import org.hibernate.util.StringHelper;
 
 /**
- * Cach&eacute; 2007.1 dialect. This class is required in order to use Hibernate with Intersystems Caché SQL.<br>
+ * Cach&eacute; 2007.1 dialect. This class is required in order to use Hibernate with Intersystems Cachï¿½ SQL.<br>
  * <br>
- * Compatible with Caché 2007.1.
+ * Compatible with Cachï¿½ 2007.1.
  * <br>
  * <head>
  * <title>Cach&eacute; and Hibernate</title>
@@ -189,8 +189,8 @@ import org.hibernate.util.StringHelper;
 public class Cache71Dialect extends Dialect {
 
 	/**
-	 * Creates new <code>Caché71Dialect</code> instance. Sets up the JDBC /
-	 * Caché type mappings.
+	 * Creates new <code>Cachï¿½71Dialect</code> instance. Sets up the JDBC /
+	 * Cachï¿½ type mappings.
 	 */
 	public Cache71Dialect() {
 		super();
@@ -575,7 +575,7 @@ public class Cache71Dialect extends Dialect {
 
 	public String getLimitString(String sql, boolean hasOffset) {
 		if ( hasOffset ) {
-			throw new UnsupportedOperationException( "An offset may not be specified to <TOP n> in Cache SQL" );
+			throw new UnsupportedOperationException( "query result offset is not supported" );
 		}
 
 		// This does not support the Cache SQL 'DISTINCT BY (comma-list)' extensions,

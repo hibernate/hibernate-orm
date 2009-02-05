@@ -33,6 +33,9 @@ import org.hibernate.dialect.Oracle8iDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.SybaseDialect;
+import org.hibernate.dialect.Sybase11Dialect;
+import org.hibernate.dialect.SybaseASE15Dialect;
+import org.hibernate.dialect.SybaseAnywhereDialect;
 import org.hibernate.hql.ast.ASTQueryTranslatorFactory;
 import org.hibernate.junit.functional.FunctionalTestCase;
 import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
@@ -1218,7 +1221,7 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 		if ( getDialect() instanceof DB2Dialect ) {
 			assertTrue( str.startsWith("1.234") );
 		}
-		else if ( getDialect() instanceof SybaseDialect ) {
+		else if ( getDialect() instanceof SybaseDialect || getDialect() instanceof Sybase11Dialect || getDialect() instanceof SybaseASE15Dialect || getDialect() instanceof SybaseAnywhereDialect || getDialect() instanceof SQLServerDialect ) {
 			// str(val) on sybase assumes a default of 10 characters with no decimal point or decimal values
 			// str(val) on sybase result is right-justified
 			assertEquals( str.length(), 10 );
@@ -1230,7 +1233,7 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 		else {
 			assertTrue( str.startsWith("123.4") );
 		}
-		if ( ! ( getDialect() instanceof SybaseDialect ) ) {
+		if ( ! ( getDialect() instanceof SybaseDialect ) && ! ( getDialect() instanceof Sybase11Dialect ) && ! ( getDialect() instanceof SybaseASE15Dialect ) && ! ( getDialect() instanceof SybaseAnywhereDialect ) && ! ( getDialect() instanceof SQLServerDialect ) ) {
 			// In TransactSQL (the variant spoken by Sybase and SQLServer), the str() function
 			// is explicitly intended for numeric values only...
 			String dateStr1 = (String) session.createQuery("select str(current_date) from Animal").uniqueResult();

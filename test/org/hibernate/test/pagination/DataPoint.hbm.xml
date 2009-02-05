@@ -12,7 +12,8 @@
 		<id name="id">
 			<generator class="increment"/>
 		</id>
-		<property name="x">
+        <property name="sequence" not-null="true" column="seqval" type="int" />
+        <property name="x">
 			<column name="xval" not-null="true" precision="20" scale="19" unique-key="xy"/>
 		</property>
 		<property name="y">

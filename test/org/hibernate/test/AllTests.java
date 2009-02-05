@@ -44,6 +44,7 @@ import org.hibernate.test.cut.CompositeUserTypeTest;
 import org.hibernate.test.deletetransient.DeleteTransientEntityTest;
 import org.hibernate.test.dialect.functional.cache.SQLFunctionsInterSystemsTest;
 import org.hibernate.test.dialect.unit.lockhint.SQLServerLockHintsTest;
+import org.hibernate.test.dialect.unit.lockhint.SybaseASE15LockHintsTest;
 import org.hibernate.test.dialect.unit.lockhint.SybaseLockHintsTest;
 import org.hibernate.test.discriminator.DiscriminatorTest;
 import org.hibernate.test.dynamicentity.interceptor.InterceptorDynamicEntityTest;
@@ -500,6 +501,7 @@ public class AllTests {
 			suite.addTest( LazyKeyManyToOneTest.suite() );
 			suite.addTest( EagerKeyManyToOneTest.suite() );
 			suite.addTest( SQLFunctionsInterSystemsTest.suite() );
+			suite.addTest( SybaseASE15LockHintsTest.suite() );
 			suite.addTest( SybaseLockHintsTest.suite() );
 			suite.addTest( SQLServerLockHintsTest.suite() );
 			suite.addTest( InsertOrderingTest.suite() );

@@ -1497,6 +1497,10 @@ public abstract class Loader {
 		}
 	}
 
+	private int interpretFirstRow(int zeroBasedFirstResult) {
+		return getFactory().getDialect().convertToFirstRowValue( zeroBasedFirstResult );
+	}
+
 	/**
 	 * Should we pre-process the SQL string, adding a dialect-specific
 	 * LIMIT clause.
@@ -1606,7 +1610,7 @@ public abstract class Loader {
 	 * @return The appropriate value to bind into the limit clause.
 	 */
 	private static int getMaxOrLimit(final RowSelection selection, final Dialect dialect) {
-		final int firstRow = getFirstRow( selection );
+		final int firstRow = dialect.convertToFirstRowValue( getFirstRow( selection ) );
 		final int lastRow = selection.getMaxRows().intValue();
 		if ( dialect.useMaxForLimit() ) {
 			return lastRow + firstRow;
@@ -1636,7 +1640,7 @@ public abstract class Loader {
 		if ( !hasMaxRows( selection ) ) {
 			throw new AssertionFailure( "no max results set" );
 		}
-		int firstRow = getFirstRow( selection );
+		int firstRow = interpretFirstRow( getFirstRow( selection ) );
 		int lastRow = getMaxOrLimit( selection, dialect );
 		boolean hasFirstRow = dialect.supportsLimitOffset() && ( firstRow > 0 || dialect.forceLimitUsage() );
 		boolean reverse = dialect.bindLimitParametersInReverseOrder();
@@ -1654,7 +1658,7 @@ public abstract class Loader {
 			final PreparedStatement st,
 			final RowSelection selection) throws SQLException {
 		if ( hasMaxRows( selection ) ) {
-			st.setMaxRows( selection.getMaxRows().intValue() + getFirstRow( selection ) );
+			st.setMaxRows( selection.getMaxRows().intValue() + interpretFirstRow( getFirstRow( selection ) ) );
 		}
 	}
 

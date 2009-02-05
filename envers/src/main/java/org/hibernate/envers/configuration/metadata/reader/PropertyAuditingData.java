@@ -24,6 +24,11 @@
  */
 package org.hibernate.envers.configuration.metadata.reader;
 
+import java.util.List;
+import java.util.ArrayList;
+
+import org.hibernate.envers.AuditOverride;
+import org.hibernate.envers.AuditOverrides;
 import org.hibernate.envers.ModificationStore;
 import org.hibernate.envers.AuditJoinTable;
 import org.hibernate.envers.entities.PropertyData;
@@ -38,6 +43,7 @@ public class PropertyAuditingData {
     private String mapKey;
     private AuditJoinTable joinTable;
     private String accessType;
+    private final List<AuditOverride> auditJoinTableOverrides = new ArrayList<AuditOverride>(0);
 
     public PropertyAuditingData() {
     }
@@ -100,4 +106,33 @@ public class PropertyAuditingData {
     public PropertyData getPropertyData() {
         return new PropertyData(name, beanName, accessType, store);
     }
+
+	public List<AuditOverride> getAuditingOverrides() {
+		return auditJoinTableOverrides; 
+	}
+
+	public void addAuditingOverride(AuditOverride annotation) {
+		if (annotation != null) {
+			String overrideName = annotation.name();
+			boolean present = false;
+			for (AuditOverride current : auditJoinTableOverrides) {
+				if (current.name().equals(overrideName)) {
+					present = true;
+					break;
+				}
+			}
+			if (!present) {
+				auditJoinTableOverrides.add(annotation);
+			}
+		}
+	}
+
+	public void addAuditingOverrides(AuditOverrides annotationOverrides) {
+		if (annotationOverrides != null) {
+			for (AuditOverride annotation : annotationOverrides.value()) {
+				addAuditingOverride(annotation);
+			}
+		}
+	}
+
 }

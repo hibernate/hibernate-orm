@@ -1,25 +1,30 @@
 package org.hibernate.envers.configuration.metadata.reader;
 
+import static org.hibernate.envers.tools.Tools.newHashSet;
+
+import java.lang.annotation.Annotation;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
+
+import javax.persistence.JoinColumn;
+import javax.persistence.MapKey;
+import javax.persistence.Version;
+
+import org.hibernate.annotations.common.reflection.XClass;
+import org.hibernate.annotations.common.reflection.XProperty;
+import org.hibernate.envers.AuditJoinTable;
+import org.hibernate.envers.AuditOverride;
+import org.hibernate.envers.AuditOverrides;
+import org.hibernate.envers.Audited;
 import org.hibernate.envers.ModificationStore;
 import org.hibernate.envers.NotAudited;
-import org.hibernate.envers.Audited;
-import org.hibernate.envers.AuditJoinTable;
 import org.hibernate.envers.configuration.GlobalConfiguration;
-import static org.hibernate.envers.tools.Tools.*;
 import org.hibernate.envers.tools.MappingTools;
-import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Component;
+import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Value;
-import org.hibernate.annotations.common.reflection.XProperty;
-import org.hibernate.annotations.common.reflection.XClass;
 import org.jboss.envers.Versioned;
-
-import javax.persistence.Version;
-import javax.persistence.MapKey;
-import javax.persistence.JoinColumn;
-import java.util.Iterator;
-import java.util.Set;
-import java.lang.annotation.Annotation;
 
 /**
  * Reads persistent properties form a
@@ -28,6 +33,7 @@ import java.lang.annotation.Annotation;
  * {@link org.hibernate.envers.configuration.metadata.reader.AuditedPropertiesHolder},
  * filling all the auditing data.
  * @author Adam Warski (adam at warski dot org)
+ * @author Erik-Berndt Scheper
  */
 public class AuditedPropertiesReader {
 	private final ModificationStore defaultStore;
@@ -97,7 +103,6 @@ public class AuditedPropertiesReader {
 					ComponentAuditingData componentData = new ComponentAuditingData();
 					isAudited = fillPropertyData(property, componentData, accessType);
 
-					// TODO: component stuff
 					PersistentPropertiesSource componentPropertiesSource = new ComponentPropertiesSource(
 							property.getType(), (Component) propertyValue);
 					new AuditedPropertiesReader(ModificationStore.FULL, componentPropertiesSource, componentData,
@@ -164,6 +169,10 @@ public class AuditedPropertiesReader {
 		propertyData.setAccessType(accessType);
 
 		addPropertyJoinTables(property, propertyData);
+		addPropertyAuditingOverrides(property, propertyData);
+		if (!processPropertyAuditingOverrides(property, propertyData)) {
+			return false; // not audited due to AuditOverride annotation
+		}
 		addPropertyMapKey(property, propertyData);
 
 		return true;
@@ -177,12 +186,61 @@ public class AuditedPropertiesReader {
 	}
 
 	private void addPropertyJoinTables(XProperty property, PropertyAuditingData propertyData) {
+		// first set the join table based on the AuditJoinTable annotation
 		AuditJoinTable joinTable = property.getAnnotation(AuditJoinTable.class);
 		if (joinTable != null) {
 			propertyData.setJoinTable(joinTable);
 		} else {
 			propertyData.setJoinTable(DEFAULT_AUDIT_JOIN_TABLE);
 		}
+	}
+
+	/***
+	 * Add the {@link org.hibernate.envers.AuditOverride} annotations.
+	 * 
+	 * @param property the property being processed
+	 * @param propertyData the Envers auditing data for this property
+	 */
+	private void addPropertyAuditingOverrides(XProperty property, PropertyAuditingData propertyData) {
+		AuditOverride annotationOverride = property.getAnnotation(AuditOverride.class);
+		if (annotationOverride != null) {
+			propertyData.addAuditingOverride(annotationOverride);
+		}
+		AuditOverrides annotationOverrides = property.getAnnotation(AuditOverrides.class);
+		if (annotationOverrides != null) {
+			propertyData.addAuditingOverrides(annotationOverrides);
+		}
+	}
+
+	/**
+	 * Process the {@link org.hibernate.envers.AuditOverride} annotations for this property.
+	 * 
+	 * @param property
+	 *            the property for which the {@link org.hibernate.envers.AuditOverride}
+	 *            annotations are being processed
+	 * @param propertyData
+	 *            the Envers auditing data for this property
+	 * @return {@code false} if isAudited() of the override annotation was set to 
+	 */
+	private boolean processPropertyAuditingOverrides(XProperty property, PropertyAuditingData propertyData) {
+		// if this property is part of a component, process all override annotations
+		if (this.auditedPropertiesHolder instanceof ComponentAuditingData) {
+			List<AuditOverride> overrides = ((ComponentAuditingData) this.auditedPropertiesHolder).getAuditingOverrides();
+			for (AuditOverride override : overrides) {
+				if (property.getName().equals(override.name())) {
+					// the override applies to this property
+					if (!override.isAudited()) {
+						return false; 
+					} else {
+						if (override.auditJoinTable() != null) {
+							propertyData.setJoinTable(override.auditJoinTable());
+						}
+					}
+				}
+			}
+			
+		}
+		return true;
 	}
 
 	private static AuditJoinTable DEFAULT_AUDIT_JOIN_TABLE = new AuditJoinTable() {

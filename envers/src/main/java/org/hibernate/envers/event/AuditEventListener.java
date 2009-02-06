@@ -57,6 +57,7 @@ import org.hibernate.event.PreCollectionRemoveEventListener;
 import org.hibernate.event.PreCollectionUpdateEvent;
 import org.hibernate.event.PreCollectionUpdateEventListener;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.persister.collection.AbstractCollectionPersister;
 import org.hibernate.proxy.HibernateProxy;
 
 /**
@@ -206,7 +207,7 @@ public class AuditEventListener implements PostInsertEventListener, PostUpdateEv
             AuditSync verSync = verCfg.getSyncManager().get(event.getSession());
 
             PersistentCollectionChangeWorkUnit workUnit = new PersistentCollectionChangeWorkUnit(entityName, verCfg,
-                    newColl, collectionEntry.getRole(), oldColl, event.getAffectedOwnerIdOrNull());
+                    newColl, collectionEntry, oldColl, event.getAffectedOwnerIdOrNull());
             verSync.addWorkUnit(workUnit);
 
             if (workUnit.containsWork()) {

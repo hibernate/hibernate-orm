@@ -19,6 +19,7 @@
             <package name="org.hibernate.envers.test.integration.inheritance.joined.emptychild" />
             <package name="org.hibernate.envers.test.integration.inheritance.joined.notownedrelation" />
             <package name="org.hibernate.envers.test.integration.inheritance.joined.relation" />
+            <package name="org.hibernate.envers.test.integration.inheritance.joined.relation.unidirectional" />
             <package name="org.hibernate.envers.test.integration.inheritance.single" />
             <package name="org.hibernate.envers.test.integration.inheritance.single.childrelation" />
             <package name="org.hibernate.envers.test.integration.inheritance.single.notownedrelation" />

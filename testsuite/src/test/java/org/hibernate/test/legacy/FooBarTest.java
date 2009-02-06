@@ -58,6 +58,8 @@ import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.SAPDBDialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.SybaseDialect;
+import org.hibernate.dialect.Sybase11Dialect;
+import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.dialect.TimesTenDialect;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
@@ -2136,7 +2138,8 @@ public class FooBarTest extends LegacyTestCase {
 			s.find("select count(*) from Baz as baz where 1 in indices(baz.fooArray)");
 			s.find("select count(*) from Bar as bar where 'abc' in elements(bar.baz.fooArray)");
 			s.find("select count(*) from Bar as bar where 1 in indices(bar.baz.fooArray)");
-			if ( !(getDialect() instanceof DB2Dialect) &&  !(getDialect() instanceof Oracle9Dialect) && !(getDialect() instanceof Oracle8iDialect ) && !( getDialect() instanceof SybaseDialect && !(getDialect() instanceof SQLServerDialect ) ) ) {
+			if ( !(getDialect() instanceof DB2Dialect) &&  !(getDialect() instanceof Oracle9Dialect) && !(getDialect() instanceof Oracle8iDialect ) && !( getDialect() instanceof SybaseDialect ) && !( getDialect() instanceof Sybase11Dialect ) && !( getDialect() instanceof SybaseASE15Dialect )) {
+				// SybaseAnywhereDialect supports implicit conversions from strings to ints
 				s.find("select count(*) from Bar as bar, bar.component.glarch.proxyArray as g where g.id in indices(bar.baz.fooArray)");
 				s.find("select max( elements(bar.baz.fooArray) ) from Bar as bar, bar.component.glarch.proxyArray as g where g.id in indices(bar.baz.fooArray)");
 			}

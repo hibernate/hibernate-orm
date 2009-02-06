@@ -43,8 +43,12 @@ public class SQLServerDialect extends SybaseDialect {
 		registerColumnType( Types.VARBINARY, "image" );
 		registerColumnType( Types.VARBINARY, 8000, "varbinary($l)" );
 
+		registerFunction( "second", new SQLFunctionTemplate( Hibernate.INTEGER, "datepart(second, ?1)" ) );
+		registerFunction( "minute", new SQLFunctionTemplate( Hibernate.INTEGER, "datepart(minute, ?1)" ) );
+		registerFunction( "hour", new SQLFunctionTemplate( Hibernate.INTEGER, "datepart(hour, ?1)" ) );
 		registerFunction( "locate", new StandardSQLFunction( "charindex", Hibernate.INTEGER ) );
 
+		registerFunction( "extract", new SQLFunctionTemplate( Hibernate.INTEGER, "datepart(?1, ?3)" ) );
 		registerFunction( "mod", new SQLFunctionTemplate( Hibernate.INTEGER, "?1 % ?2" ) );
 		registerFunction( "bit_length", new SQLFunctionTemplate( Hibernate.INTEGER, "datalength(?1) * 8" ) );
 
@@ -65,7 +69,7 @@ public class SQLServerDialect extends SybaseDialect {
 
 	public String getLimitString(String querySelect, int offset, int limit) {
 		if ( offset > 0 ) {
-			throw new UnsupportedOperationException( "sql server has no offset" );
+			throw new UnsupportedOperationException( "query result offset is not supported" );
 		}
 		return new StringBuffer( querySelect.length() + 8 )
 				.append( querySelect )
@@ -134,19 +138,11 @@ public class SQLServerDialect extends SybaseDialect {
 		return false;
 	}
 
-	public boolean supportsCascadeDelete() {
-		return true;
-	}
-
 	public boolean supportsCircularCascadeDeleteConstraints() {
 		// SQL Server (at least up through 2005) does not support defining
 		// cascade delete constraints which can circel back to the mutating
 		// table
 		return false;
-	}
-
-	public boolean supportsExpectedLobUsagePattern() {
-		return true;
 	}
 
 	public boolean supportsLobValueChangePropogation() {

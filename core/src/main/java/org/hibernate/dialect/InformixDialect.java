@@ -107,28 +107,27 @@ public class InformixDialect extends Dialect {
 	 * @return String
 	 */
 	public String getAddForeignKeyConstraintString(
-			String constraintName, 
-			String[] foreignKey, 
-			String referencedTable, 
-			String[] primaryKey, boolean referencesPrimaryKey
-	) {
-		StringBuffer result = new StringBuffer(30);
-		
-		result.append(" add constraint ")
-			.append(" foreign key (")
-			.append( StringHelper.join(", ", foreignKey) )
-			.append(") references ")
-			.append(referencedTable);
-		
-		if(!referencesPrimaryKey) {
-			result.append(" (")
-			   .append( StringHelper.join(", ", primaryKey) )
-			   .append(')');
+			String constraintName,
+			String[] foreignKey,
+			String referencedTable,
+			String[] primaryKey,
+			boolean referencesPrimaryKey) {
+		StringBuffer result = new StringBuffer( 30 )
+				.append( " add constraint " )
+				.append( " foreign key (" )
+				.append( StringHelper.join( ", ", foreignKey ) )
+				.append( ") references " )
+				.append( referencedTable );
+
+		if ( !referencesPrimaryKey ) {
+			result.append( " (" )
+					.append( StringHelper.join( ", ", primaryKey ) )
+					.append( ')' );
 		}
 
-		result.append(" constraint ").append(constraintName);
-			
-			return result.toString();
+		result.append( " constraint " ).append( constraintName );
+
+		return result.toString();
 	}
 
 	/**
@@ -172,11 +171,13 @@ public class InformixDialect extends Dialect {
 	}
 
 	public String getLimitString(String querySelect, int offset, int limit) {
-		if (offset>0) throw new UnsupportedOperationException("informix has no offset");
-		return new StringBuffer( querySelect.length()+8 )
-			.append(querySelect)
-			.insert( querySelect.toLowerCase().indexOf( "select" ) + 6, " first " + limit )
-			.toString();
+		if ( offset > 0 ) {
+			throw new UnsupportedOperationException( "query result offset is not supported" );
+		}
+		return new StringBuffer( querySelect.length() + 8 )
+				.append( querySelect )
+				.insert( querySelect.toLowerCase().indexOf( "select" ) + 6, " first " + limit )
+				.toString();
 	}
 
 	public boolean supportsVariableLimit() {

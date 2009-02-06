@@ -236,37 +236,11 @@ public class MySQLDialect extends Dialect {
 	}
 
 	public String getLimitString(String sql, boolean hasOffset) {
-		return new StringBuffer( sql.length()+20 )
-			.append(sql)
-			.append( hasOffset ? " limit ?, ?" : " limit ?")
-			.toString();
+		return new StringBuffer( sql.length() + 20 )
+				.append( sql )
+				.append( hasOffset ? " limit ?, ?" : " limit ?" )
+				.toString();
 	}
-	
-	/*
-	 * Temporary, until MySQL fix Connector/J bug
-	 */
-	/*public String getLimitString(String sql, int offset, int limit) {
-		StringBuffer buf = new StringBuffer( sql.length()+20 )
-			.append(sql);
-		if (offset>0) {
-			buf.append(" limit ")
-				.append(offset)
-				.append(", ")
-				.append(limit);
-		}
-		else {
-			buf.append(" limit ")
-				.append(limit);
-		}
-		return buf.toString();
-	}*/
-
-	/*
-	 * Temporary, until MySQL fix Connector/J bug
-	 */
-	/*public boolean supportsVariableLimit() {
-		return false;
-	}*/
 
 	public char closeQuote() {
 		return '`';

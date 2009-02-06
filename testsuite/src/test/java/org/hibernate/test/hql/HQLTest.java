@@ -20,7 +20,11 @@ import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.Oracle9Dialect;
 import org.hibernate.dialect.PostgreSQLDialect;
+import org.hibernate.dialect.SQLServerDialect;
+import org.hibernate.dialect.SybaseAnywhereDialect;
 import org.hibernate.dialect.SybaseDialect;
+import org.hibernate.dialect.Sybase11Dialect;
+import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.dialect.Oracle8iDialect;
 import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.engine.SessionFactoryImplementor;
@@ -219,11 +223,14 @@ public class HQLTest extends QueryTranslatorTestCase {
 		assertTranslation("from Animal a where abs(:param - a.bodyWeight) < 2.0");
 		assertTranslation("from Animal where abs(:x - :y) < 2.0");
 		assertTranslation("from Animal where lower(upper(:foo)) like 'f%'");
-		if ( ! ( getDialect() instanceof SybaseDialect ) ) {
-			// SybaseDialect maps the length function -> len; classic translator does not consider that *when nested*
+		if ( ! ( getDialect() instanceof SybaseDialect ) &&  ! ( getDialect() instanceof Sybase11Dialect ) &&  ! ( getDialect() instanceof SybaseASE15Dialect ) && ! ( getDialect() instanceof SQLServerDialect ) ) {
+			// Transact-SQL dialects (except SybaseAnywhereDialect) map the length function -> len; 
+			// classic translator does not consider that *when nested*;
+			// SybaseAnywhereDialect supports the length function
+
 			assertTranslation("from Animal a where abs(abs(a.bodyWeight - 1.0 + :param) * abs(length('ffobar')-3)) = 3.0");
 		}
-		if ( !( getDialect() instanceof MySQLDialect || getDialect() instanceof SybaseDialect ) ) {
+		if ( !( getDialect() instanceof MySQLDialect ) && ! ( getDialect() instanceof SybaseDialect ) && ! ( getDialect() instanceof Sybase11Dialect ) && !( getDialect() instanceof SybaseASE15Dialect ) && ! ( getDialect() instanceof SybaseAnywhereDialect ) && ! ( getDialect() instanceof SQLServerDialect ) ) {
 			assertTranslation("from Animal where lower(upper('foo') || upper(:bar)) like 'f%'");
 		}
 		if ( getDialect() instanceof PostgreSQLDialect ) {
@@ -594,7 +601,8 @@ public class HQLTest extends QueryTranslatorTestCase {
 	}
 
 	public void testConcatenation() {
-		if ( getDialect() instanceof MySQLDialect || getDialect() instanceof SybaseDialect ) {
+		if ( getDialect() instanceof MySQLDialect || getDialect() instanceof SybaseDialect || getDialect() instanceof Sybase11Dialect || getDialect() instanceof SybaseASE15Dialect || getDialect() instanceof SybaseAnywhereDialect || getDialect() instanceof SQLServerDialect ) {
+			// SybaseASE15Dialect and SybaseAnywhereDialect support '||'
 			// MySQL uses concat(x, y, z)
 			// SQL Server replaces '||' with '+'
 			//

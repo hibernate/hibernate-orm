@@ -25,11 +25,11 @@
 package org.hibernate.dialect;
 
 /**
-* An SQL dialect for DB2/400
-* @author Peter DeGregorio (pdegregorio)
-* This class provides support for DB2 Universal Database for iSeries,
-* also known as DB2/400.
-*/
+ * An SQL dialect for DB2/400.  This class provides support for DB2 Universal Database for iSeries,
+ * also known as DB2/400.
+ *
+ * @author Peter DeGregorio (pdegregorio)
+ */
 public class DB2400Dialect extends DB2Dialect {
 
 	public boolean supportsSequences() {
@@ -48,21 +48,24 @@ public class DB2400Dialect extends DB2Dialect {
 		return false;
 	}
 
-	public String getLimitString(String sql, int offset, int limit) {
-		return new StringBuffer(sql.length() + 40)
-			.append(sql)
-			.append(" fetch first ")
-			.append(limit)
-			.append(" rows only ")
-			.toString();
-	}
-
 	public boolean useMaxForLimit() {
 		return true;
 	}
 
 	public boolean supportsVariableLimit() {
 		return false;
+	}
+
+	public String getLimitString(String sql, int offset, int limit) {
+		if ( offset > 0 ) {
+			throw new UnsupportedOperationException( "query result offset is not supported" );
+		}
+		return new StringBuffer( sql.length() + 40 )
+				.append( sql )
+				.append( " fetch first " )
+				.append( limit )
+				.append( " rows only " )
+				.toString();
 	}
 
 }

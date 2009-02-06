@@ -26,6 +26,9 @@ import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.Oracle9Dialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.SybaseDialect;
+import org.hibernate.dialect.Sybase11Dialect;
+import org.hibernate.dialect.SybaseASE15Dialect;
+import org.hibernate.dialect.SybaseAnywhereDialect;
 import org.hibernate.dialect.TimesTenDialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.function.SQLFunction;
@@ -370,7 +373,7 @@ public class SQLFunctionsTest extends LegacyTestCase {
 				s.find("from Simple s where not( upper( s.name ) ='yada' or 1=2 or 'foo'='bar' or not('foo'='foo') or 'foo' like 'bar' )").size()==1
 			);
 		}
-		if ( !(getDialect() instanceof MySQLDialect) && !(getDialect() instanceof SybaseDialect) && !(getDialect() instanceof MckoiDialect) && !(getDialect() instanceof InterbaseDialect) && !(getDialect() instanceof TimesTenDialect) ) { //My SQL has a funny concatenation operator
+		if ( !(getDialect() instanceof MySQLDialect) && !(getDialect() instanceof SybaseDialect) && !(getDialect() instanceof SQLServerDialect) && !(getDialect() instanceof MckoiDialect) && !(getDialect() instanceof InterbaseDialect) && !(getDialect() instanceof TimesTenDialect) ) { //My SQL has a funny concatenation operator
 			assertTrue(
 				s.find("from Simple s where lower( s.name || ' foo' ) ='simple 1 foo'").size()==1
 			);
@@ -500,8 +503,8 @@ public class SQLFunctionsTest extends LegacyTestCase {
 		//assertTrue( b.getClob() instanceof ClobImpl );
 		s.flush();
 
-		// Sybase ASE does not support ResultSet.getBlob(String)
-		if ( getDialect() instanceof SybaseDialect && ! ( getDialect() instanceof SQLServerDialect ) ) {
+		// Sybase does not support ResultSet.getBlob(String)
+		if ( getDialect() instanceof SybaseDialect || getDialect() instanceof Sybase11Dialect || getDialect() instanceof SybaseASE15Dialect || getDialect() instanceof SybaseAnywhereDialect ) {
 			s.connection().rollback();
 			s.close();
 			return;

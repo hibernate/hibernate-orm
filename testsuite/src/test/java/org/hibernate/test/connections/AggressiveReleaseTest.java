@@ -107,7 +107,7 @@ public class AggressiveReleaseTest extends ConnectionManagementTestCase {
 			// expected behavior
 		}
 
-		// getting the first row only because Sybase throws NullPointerException
+		// getting the first row only because SybaseASE15Dialect throws NullPointerException
 		// if data is not read before closing the ResultSet
 		sr.next();
 

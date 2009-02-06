@@ -31,7 +31,7 @@ import org.hibernate.sql.Sybase11JoinFragment;
  * A SQL dialect suitable for use with Sybase 11.9.2 (specifically: avoids ANSI JOIN syntax)
  * @author Colm O' Flaherty
  */
-public class Sybase11Dialect extends SybaseDialect  {
+public class Sybase11Dialect extends AbstractTransactSQLDialect  {
 	public Sybase11Dialect() {
 		super();
 	}

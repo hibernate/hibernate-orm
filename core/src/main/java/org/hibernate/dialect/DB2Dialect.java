@@ -247,21 +247,20 @@ public class DB2Dialect extends Dialect {
 	}
 
 	public String getLimitString(String sql, boolean hasOffset) {
-
 		int startOfSelect = sql.toLowerCase().indexOf("select");
 
 		StringBuffer pagingSelect = new StringBuffer( sql.length()+100 )
-					.append( sql.substring(0, startOfSelect) ) //add the comment
-					.append("select * from ( select ") //nest the main query in an outer select
-					.append( getRowNumber(sql) ); //add the rownnumber bit into the outer query select list
+				.append( sql.substring(0, startOfSelect) )	// add the comment
+				.append("select * from ( select ") 			// nest the main query in an outer select
+				.append( getRowNumber(sql) ); 				// add the rownnumber bit into the outer query select list
 
 		if ( hasDistinct(sql) ) {
-			pagingSelect.append(" row_.* from ( ") //add another (inner) nested select
-				.append( sql.substring(startOfSelect) ) //add the main query
-				.append(" ) as row_"); //close off the inner nested select
+			pagingSelect.append(" row_.* from ( ")			// add another (inner) nested select
+					.append( sql.substring(startOfSelect) ) // add the main query
+					.append(" ) as row_"); 					// close off the inner nested select
 		}
 		else {
-			pagingSelect.append( sql.substring( startOfSelect + 6 ) ); //add the main query
+			pagingSelect.append( sql.substring( startOfSelect + 6 ) ); // add the main query
 		}
 
 		pagingSelect.append(" ) as temp_ where rownumber_ ");
@@ -275,6 +274,18 @@ public class DB2Dialect extends Dialect {
 		}
 
 		return pagingSelect.toString();
+	}
+
+	/**
+	 * DB2 does have a one-based offset, however this was actually already handled in the limiot string building
+	 * (the '?+1' bit).  To not mess up inheritors, I'll leave that part alone and not touch the offset here.
+	 *
+	 * @param zeroBasedFirstResult The user-supplied, zero-based offset
+	 *
+	 * @return zeroBasedFirstResult
+	 */
+	public int convertToFirstRowValue(int zeroBasedFirstResult) {
+		return zeroBasedFirstResult;
 	}
 
 	private static boolean hasDistinct(String sql) {

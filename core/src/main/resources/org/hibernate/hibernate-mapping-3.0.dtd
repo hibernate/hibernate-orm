@@ -806,6 +806,7 @@ Composite elements may not hold nested collections. -->
 <!ELEMENT composite-element ( 
 	(meta*),
 	parent?,
+	tuplizer*,
 	(property|many-to-one|any|nested-composite-element)* 
 )>
 	<!ATTLIST composite-element class CDATA #REQUIRED>
@@ -813,6 +814,7 @@ Composite elements may not hold nested collections. -->
 
 <!ELEMENT nested-composite-element ( 
 	parent?,
+	tuplizer*,
 	(property|many-to-one|any|nested-composite-element)* 
 )>
 	<!ATTLIST nested-composite-element class CDATA #REQUIRED>

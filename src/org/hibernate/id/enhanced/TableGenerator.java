@@ -493,7 +493,7 @@ public class TableGenerator extends TransactionHelper implements PersistentIdent
 						.append( segmentColumnName )
 						.append( ' ' )
 						.append( dialect.getTypeName( Types.VARCHAR, segmentValueLength, 0, 0 ) )
-						.append( ",  " )
+						.append( " not null, " )
 						.append( valueColumnName )
 						.append( ' ' )
 						.append( dialect.getTypeName( Types.BIGINT ) )

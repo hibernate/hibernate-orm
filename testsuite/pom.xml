@@ -283,6 +283,25 @@
             </properties>
         </profile>
 
+        <profile>
+            <id>sybase15</id>
+            <dependencies>
+                <dependency>
+                    <groupId>com.sybase</groupId>
+                    <artifactId>jconnect</artifactId>
+                    <version>6.0.5</version>
+                </dependency>
+            </dependencies>
+            <properties>
+                <db.dialect>org.hibernate.dialect.SybaseASE15Dialect</db.dialect>
+                <jdbc.driver>com.sybase.jdbc3.jdbc.SybDriver</jdbc.driver>
+                <jdbc.url>jdbc:sybase:Tds:dev77.qa.atl2.redhat.com:5000/hibernate</jdbc.url>
+                <jdbc.user>hibernate</jdbc.user>
+                <jdbc.pass>hibernate</jdbc.pass>
+                <jdbc.isolation />
+            </properties>
+        </profile>
+
         <!-- The SQLServer2005 (jTDS) test envionment -->
         <profile>
             <id>sqlserver-jtds</id>

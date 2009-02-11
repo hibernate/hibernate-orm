@@ -5,6 +5,10 @@ import junit.framework.Test;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.SybaseDialect;
+import org.hibernate.dialect.Sybase11Dialect;
+import org.hibernate.dialect.SybaseAnywhereDialect;
+import org.hibernate.dialect.SybaseASE15Dialect;
+import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
 
 /**
@@ -25,7 +29,9 @@ public class TimestampGeneratedValuesWithCachingTest extends AbstractGeneratedPr
 	public boolean appliesTo(Dialect dialect) {
 		// this test is specific to Sybase/SQLServer as it is testing support
 		// for their TIMESTAMP datatype...
-		return ( dialect instanceof SybaseDialect );
+		return ( dialect instanceof SybaseDialect || dialect instanceof Sybase11Dialect ||
+			dialect instanceof SybaseAnywhereDialect || dialect instanceof SybaseASE15Dialect ||
+			dialect instanceof SQLServerDialect);
 	}
 
 	public static Test suite() {

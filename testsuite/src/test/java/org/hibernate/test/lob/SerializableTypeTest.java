@@ -6,7 +6,9 @@ import junit.framework.Test;
 import org.hibernate.Session;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.SybaseDialect;
-import org.hibernate.dialect.SQLServerDialect;
+import org.hibernate.dialect.Sybase11Dialect;
+import org.hibernate.dialect.SybaseASE15Dialect;
+import org.hibernate.dialect.SybaseAnywhereDialect;
 import org.hibernate.junit.functional.FunctionalTestCase;
 import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
 
@@ -35,8 +37,8 @@ public class SerializableTypeTest extends FunctionalTestCase {
 	}
 
 	public void testNewSerializableType() {
-		// Sybase ASE does not support ResultSet.getBlob(String)
-		if ( getDialect() instanceof SybaseDialect && ! ( getDialect() instanceof SQLServerDialect ) ) {
+		// Sybase dialects do not support ResultSet.getBlob(String)
+		if ( getDialect() instanceof SybaseDialect || getDialect() instanceof Sybase11Dialect || getDialect() instanceof SybaseASE15Dialect || getDialect() instanceof SybaseAnywhereDialect ) {
 			return;
 		}
 

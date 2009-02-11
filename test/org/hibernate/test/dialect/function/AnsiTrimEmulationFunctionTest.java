@@ -26,9 +26,11 @@ package org.hibernate.test.dialect.function;
 import java.util.List;
 import java.util.ArrayList;
 
+import junit.framework.Test;
 import junit.framework.TestCase;
 
 import org.hibernate.dialect.function.AnsiTrimEmulationFunction;
+import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
 
 /**
  * TODO : javadoc
@@ -37,6 +39,10 @@ import org.hibernate.dialect.function.AnsiTrimEmulationFunction;
  */
 public class AnsiTrimEmulationFunctionTest extends TestCase {
 	private static final String trimSource = "a.column";
+
+	public static Test suite() {
+		return new FunctionalTestClassTestSuite( AnsiTrimEmulationFunctionTest.class );
+	}
 
 	public void testBasicSqlServerProcessing() {
 		AnsiTrimEmulationFunction function = new AnsiTrimEmulationFunction();

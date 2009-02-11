@@ -42,6 +42,7 @@ import org.hibernate.test.criteria.CriteriaQueryTest;
 import org.hibernate.test.cuk.CompositePropertyRefTest;
 import org.hibernate.test.cut.CompositeUserTypeTest;
 import org.hibernate.test.deletetransient.DeleteTransientEntityTest;
+import org.hibernate.test.dialect.function.AnsiTrimEmulationFunctionTest;
 import org.hibernate.test.dialect.functional.cache.SQLFunctionsInterSystemsTest;
 import org.hibernate.test.dialect.unit.lockhint.SQLServerLockHintsTest;
 import org.hibernate.test.dialect.unit.lockhint.SybaseASE15LockHintsTest;
@@ -500,6 +501,7 @@ public class AllTests {
 			suite.addTest( KeyManyToOneTest.suite() );
 			suite.addTest( LazyKeyManyToOneTest.suite() );
 			suite.addTest( EagerKeyManyToOneTest.suite() );
+			suite.addTest( AnsiTrimEmulationFunctionTest.suite() );
 			suite.addTest( SQLFunctionsInterSystemsTest.suite() );
 			suite.addTest( SybaseASE15LockHintsTest.suite() );
 			suite.addTest( SybaseLockHintsTest.suite() );

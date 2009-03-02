@@ -114,13 +114,16 @@ public abstract class AbstractCollectionMapper<T> implements PropertyMapper {
 
         Set<Object> added = new HashSet<Object>();
         if (newColl != null) { added.addAll(newCollection); }
-        if (oldColl != null) { added.removeAll(oldCollection); }
+		// Re-hashing the old collection as the hash codes of the elements there may have changed, and the
+		// removeAll in AbstractSet has an implementation that is hashcode-change sensitive (as opposed to addAll).
+        if (oldColl != null) { added.removeAll(new HashSet(oldCollection)); }
 
         addCollectionChanges(collectionChanges, added, RevisionType.ADD, id);
 
         Set<Object> deleted = new HashSet<Object>();
         if (oldColl != null) { deleted.addAll(oldCollection); }
-        if (newColl != null) { deleted.removeAll(newCollection); }
+		// The same as above - re-hashing new collection.
+        if (newColl != null) { deleted.removeAll(new HashSet(newCollection)); }
 
         addCollectionChanges(collectionChanges, deleted, RevisionType.DEL, id);
 

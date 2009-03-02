@@ -251,7 +251,7 @@ public class AuditedPropertiesReader {
 		public Class<? extends Annotation> annotationType() { return this.getClass(); }
 	};
 
-	private class ComponentPropertiesSource implements PersistentPropertiesSource {
+	private static class ComponentPropertiesSource implements PersistentPropertiesSource {
 		private final XClass xclass;
 		private final Component component;
 

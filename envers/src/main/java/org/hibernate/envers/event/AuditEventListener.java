@@ -57,7 +57,6 @@ import org.hibernate.event.PreCollectionRemoveEventListener;
 import org.hibernate.event.PreCollectionUpdateEvent;
 import org.hibernate.event.PreCollectionUpdateEventListener;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.persister.collection.AbstractCollectionPersister;
 import org.hibernate.proxy.HibernateProxy;
 
 /**

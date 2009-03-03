@@ -118,7 +118,7 @@ public final class AnnotationsMetadataReader {
 			}
 
 			new AuditedPropertiesReader(defaultStore, new PersistentClassPropertiesSource(xclass), auditData,
-					globalCfg, "").read();
+					globalCfg, reflectionManager, "").read();
 
 			addAuditTable(xclass);
 			addAuditSecondaryTables(xclass);

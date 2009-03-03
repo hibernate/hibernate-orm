@@ -56,13 +56,13 @@ public class MultiPropertyMapper implements ExtendedPropertyMapper {
         propertyDatas.put(propertyData.getName(), propertyData);
     }
 
-    public CompositeMapperBuilder addComponent(PropertyData propertyData) {
+    public CompositeMapperBuilder addComponent(PropertyData propertyData, String componentClassName) {
         if (properties.get(propertyData) != null) {
 			// This is needed for second pass to work properly in the components mapper
             return (CompositeMapperBuilder) properties.get(propertyData);
         }
 
-        ComponentPropertyMapper componentMapperBuilder = new ComponentPropertyMapper(propertyData);
+        ComponentPropertyMapper componentMapperBuilder = new ComponentPropertyMapper(propertyData, componentClassName);
 		addComposite(propertyData, componentMapperBuilder);
 
         return componentMapperBuilder;

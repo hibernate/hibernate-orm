@@ -27,7 +27,8 @@ public final class ComponentMetadataGenerator {
 							 EntityXmlMappingData xmlMappingData, boolean firstPass) {
 		Component prop_component = (Component) value;
 
-		CompositeMapperBuilder componentMapper = mapper.addComponent(propertyAuditingData.getPropertyData());
+		CompositeMapperBuilder componentMapper = mapper.addComponent(propertyAuditingData.getPropertyData(),
+				prop_component.getComponentClassName());
 
 		// The property auditing data must be for a component.
 		ComponentAuditingData componentAuditingData = (ComponentAuditingData) propertyAuditingData;

@@ -86,8 +86,8 @@ public class SubclassPropertyMapper implements ExtendedPropertyMapper {
         }
     }
 
-    public CompositeMapperBuilder addComponent(PropertyData propertyData) {
-        return main.addComponent(propertyData);
+    public CompositeMapperBuilder addComponent(PropertyData propertyData, String componentClassName) {
+        return main.addComponent(propertyData, componentClassName);
     }
 
     public void addComposite(PropertyData propertyData, PropertyMapper propertyMapper) {

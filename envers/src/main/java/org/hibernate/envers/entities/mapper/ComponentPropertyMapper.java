@@ -34,7 +34,6 @@ import org.hibernate.envers.reader.AuditReaderImplementor;
 import org.hibernate.envers.tools.reflection.ReflectionTools;
 
 import org.hibernate.collection.PersistentCollection;
-import org.hibernate.property.Getter;
 import org.hibernate.property.Setter;
 import org.hibernate.util.ReflectHelper;
 
@@ -42,20 +41,22 @@ import org.hibernate.util.ReflectHelper;
  * @author Adam Warski (adam at warski dot org)
  */
 public class ComponentPropertyMapper implements PropertyMapper, CompositeMapperBuilder {
-    private PropertyData propertyData;
-    private ExtendedPropertyMapper delegate;
+    private final PropertyData propertyData;
+    private final ExtendedPropertyMapper delegate;
+	private final String componentClassName;
 
-    public ComponentPropertyMapper(PropertyData propertyData) {
+    public ComponentPropertyMapper(PropertyData propertyData, String componentClassName) {
         this.propertyData = propertyData;
         this.delegate = new MultiPropertyMapper();
+		this.componentClassName = componentClassName;
     }
 
 	public void add(PropertyData propertyData) {
         delegate.add(propertyData);
     }
 
-    public CompositeMapperBuilder addComponent(PropertyData propertyData) {
-        return delegate.addComponent(propertyData);
+    public CompositeMapperBuilder addComponent(PropertyData propertyData, String componentClassName) {
+        return delegate.addComponent(propertyData, componentClassName);
     }
 
     public void addComposite(PropertyData propertyData, PropertyMapper propertyMapper) {
@@ -71,11 +72,11 @@ public class ComponentPropertyMapper implements PropertyMapper, CompositeMapperB
             return;
         }
 
-        Getter getter = ReflectionTools.getGetter(obj.getClass(), propertyData);
         Setter setter = ReflectionTools.getSetter(obj.getClass(), propertyData);
 
         try {
-            Object subObj = ReflectHelper.getDefaultConstructor(getter.getReturnType()).newInstance();
+            Object subObj = ReflectHelper.getDefaultConstructor(
+					Thread.currentThread().getContextClassLoader().loadClass(componentClassName)).newInstance();
             setter.set(obj, subObj, null);
             delegate.mapToEntityFromMap(verCfg, subObj, data, primaryKey, versionsReader, revision);
         } catch (Exception e) {

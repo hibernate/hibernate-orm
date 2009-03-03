@@ -13,6 +13,7 @@ import javax.persistence.Version;
 
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
+import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.envers.AuditJoinTable;
 import org.hibernate.envers.AuditOverride;
 import org.hibernate.envers.AuditOverrides;
@@ -24,6 +25,7 @@ import org.hibernate.envers.tools.MappingTools;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Value;
+import org.hibernate.MappingException;
 import org.jboss.envers.Versioned;
 
 /**
@@ -40,6 +42,7 @@ public class AuditedPropertiesReader {
 	private final PersistentPropertiesSource persistentPropertiesSource;
 	private final AuditedPropertiesHolder auditedPropertiesHolder;
 	private final GlobalConfiguration globalCfg;
+	private final ReflectionManager reflectionManager;
 	private final String propertyNamePrefix;
 
 	private final Set<String> propertyAccessedPersistentProperties;
@@ -49,11 +52,13 @@ public class AuditedPropertiesReader {
 								   PersistentPropertiesSource persistentPropertiesSource,
 								   AuditedPropertiesHolder auditedPropertiesHolder,
 								   GlobalConfiguration globalCfg,
+								   ReflectionManager reflectionManager,
 								   String propertyNamePrefix) {
 		this.defaultStore = defaultStore;
 		this.persistentPropertiesSource = persistentPropertiesSource;
 		this.auditedPropertiesHolder = auditedPropertiesHolder;
 		this.globalCfg = globalCfg;
+		this.reflectionManager = reflectionManager;
 		this.propertyNamePrefix = propertyNamePrefix;
 
 		propertyAccessedPersistentProperties = newHashSet();
@@ -104,9 +109,10 @@ public class AuditedPropertiesReader {
 					isAudited = fillPropertyData(property, componentData, accessType);
 
 					PersistentPropertiesSource componentPropertiesSource = new ComponentPropertiesSource(
-							property.getType(), (Component) propertyValue);
+							(Component) propertyValue);
 					new AuditedPropertiesReader(ModificationStore.FULL, componentPropertiesSource, componentData,
-							globalCfg, propertyNamePrefix+ MappingTools.createComponentPrefix(property.getName()))
+							globalCfg, reflectionManager,
+							propertyNamePrefix + MappingTools.createComponentPrefix(property.getName()))
 							.read();
 
 					propertyData = componentData;
@@ -251,12 +257,17 @@ public class AuditedPropertiesReader {
 		public Class<? extends Annotation> annotationType() { return this.getClass(); }
 	};
 
-	private static class ComponentPropertiesSource implements PersistentPropertiesSource {
+	private class ComponentPropertiesSource implements PersistentPropertiesSource {
 		private final XClass xclass;
 		private final Component component;
 
-		private ComponentPropertiesSource(XClass xclass, Component component) {
-			this.xclass = xclass;
+		private ComponentPropertiesSource(Component component) {
+			try {
+				this.xclass = reflectionManager.classForName(component.getComponentClassName(), this.getClass());
+			} catch (ClassNotFoundException e) {
+				throw new MappingException(e);
+			}
+			
 			this.component = component;
 		}
 

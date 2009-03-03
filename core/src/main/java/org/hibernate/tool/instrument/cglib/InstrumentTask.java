@@ -24,17 +24,10 @@
  */
 package org.hibernate.tool.instrument.cglib;
 
-import org.hibernate.bytecode.util.BasicClassFilter;
-import org.hibernate.bytecode.util.ClassDescriptor;
-import org.hibernate.bytecode.cglib.BytecodeProviderImpl;
-import org.hibernate.bytecode.ClassTransformer;
+import org.hibernate.bytecode.buildtime.CGLIBInstrumenter;
+import org.hibernate.bytecode.buildtime.Instrumenter;
+import org.hibernate.bytecode.buildtime.Logger;
 import org.hibernate.tool.instrument.BasicInstrumentationTask;
-import org.hibernate.repackage.cglib.asm.ClassReader;
-
-import java.io.ByteArrayInputStream;
-
-import org.hibernate.repackage.cglib.core.ClassNameReader;
-import org.hibernate.repackage.cglib.transform.impl.InterceptFieldEnabled;
 
 /**
  * An Ant task for instrumenting persistent classes in order to enable
@@ -50,7 +43,7 @@ import org.hibernate.repackage.cglib.transform.impl.InterceptFieldEnabled;
  * required Hibernate and CGLIB libraries.
  * <p/>
  * And then use it like:<pre>
- * <instrument verbose="true">
+ * <instrument>
  *     <fileset dir="${testclasses.dir}/org/hibernate/test">
  *         <include name="yadda/yadda/**"/>
  *         ...
@@ -62,7 +55,7 @@ import org.hibernate.repackage.cglib.transform.impl.InterceptFieldEnabled;
  * <p/>
  * Optionally you can chose to enable "Extended Instrumentation" if desired
  * by specifying the extended attriubute on the task:<pre>
- * <instrument verbose="true" extended="true">
+ * <instrument extended="true">
  *     ...
  * </instrument>
  * </pre>
@@ -72,58 +65,7 @@ import org.hibernate.repackage.cglib.transform.impl.InterceptFieldEnabled;
  * @author Steve Ebersole
  */
 public class InstrumentTask extends BasicInstrumentationTask {
-
-	private static final BasicClassFilter CLASS_FILTER = new BasicClassFilter();
-
-	private final BytecodeProviderImpl provider = new BytecodeProviderImpl();
-
-
-	protected ClassDescriptor getClassDescriptor(byte[] byecode) throws Exception {
-		return new CustomClassDescriptor( byecode );
+	protected Instrumenter buildInstrumenter(Logger logger, Instrumenter.Options options) {
+		return new CGLIBInstrumenter( logger, options );
 	}
-
-	protected ClassTransformer getClassTransformer(ClassDescriptor descriptor) {
-		if ( descriptor.isInstrumented() ) {
-			logger.verbose( "class [" + descriptor.getName() + "] already instrumented" );
-			return null;
-		}
-		else {
-			return provider.getTransformer( CLASS_FILTER, new CustomFieldFilter( descriptor ) );
-		}
-	}
-
-	private static class CustomClassDescriptor implements ClassDescriptor {
-		private final byte[] bytecode;
-		private final String name;
-		private final boolean isInstrumented;
-
-		public CustomClassDescriptor(byte[] bytecode) throws Exception {
-			this.bytecode = bytecode;
-			ClassReader reader = new ClassReader( new ByteArrayInputStream( bytecode ) );
-			String[] names = ClassNameReader.getClassInfo( reader );
-			this.name = names[0];
-			boolean instrumented = false;
-			for ( int i = 1; i < names.length; i++ ) {
-				if ( InterceptFieldEnabled.class.getName().equals( names[i] ) ) {
-					instrumented = true;
-					break;
-				}
-			}
-			this.isInstrumented = instrumented;
-		}
-
-		public String getName() {
-			return name;
-		}
-
-		public boolean isInstrumented() {
-			return isInstrumented;
-		}
-
-		public byte[] getBytes() {
-			return bytecode;
-		}
-	}
-
-
 }

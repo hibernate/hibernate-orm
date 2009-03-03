@@ -122,18 +122,18 @@
                         <goals>
                             <goal>enforce</goal>
                         </goals>
-                        <configuration>
-                            <rules>
-                                <requireJavaVersion>
-                                    <version>[1.5,)</version>
-                                </requireJavaVersion>
-                                <requireMavenVersion>
-                                    <version>(2.0.7,)</version>
-                                </requireMavenVersion>
-                            </rules>
-                        </configuration>
                     </execution>
                 </executions>
+                <configuration>
+                    <rules>
+                        <requireJavaVersion>
+                            <version>[1.5,)</version>
+                        </requireJavaVersion>
+                        <requireMavenVersion>
+                            <version>(2.0.7,)</version>
+                        </requireMavenVersion>
+                    </rules>
+                </configuration>
             </plugin>
             <!-- by default, compile to JDK 1.4 compatibility (individual modules and/or user can override) -->
             <plugin>

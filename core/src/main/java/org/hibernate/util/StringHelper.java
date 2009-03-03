@@ -93,13 +93,16 @@ public final class StringHelper {
 	public static String[] replace(String templates[], String placeholder, String replacement) {
 		String[] result = new String[templates.length];
 		for ( int i =0; i<templates.length; i++ ) {
-			result[i] = replace( templates[i], placeholder, replacement );;
+			result[i] = replace( templates[i], placeholder, replacement );
 		}
 		return result;
 	}
 
 	public static String replace(String template, String placeholder, String replacement, boolean wholeWords) {
-		int loc = template == null ? -1 : template.indexOf( placeholder );
+		if ( template == null ) {
+			return template;
+		}
+		int loc = template.indexOf( placeholder );
 		if ( loc < 0 ) {
 			return template;
 		}
@@ -119,6 +122,9 @@ public final class StringHelper {
 
 
 	public static String replaceOnce(String template, String placeholder, String replacement) {
+		if ( template == null ) {
+			return template; // returnign null!
+		}
         int loc = template == null ? -1 : template.indexOf( placeholder );
 		if ( loc < 0 ) {
 			return template;
@@ -435,12 +441,12 @@ public final class StringHelper {
 			return name;
 		}
 		else {
-			return new StringBuilder( name.length() + 2 ).append('`').append( name ).append( '`' ).toString();
+			return new StringBuffer( name.length() + 2 ).append('`').append( name ).append( '`' ).toString();
 		}
 	}
 
 	/**
-	 * Return the unquoted version of name (stripping the start and end '`' chanracters if present).
+	 * Return the unquoted version of name (stripping the start and end '`' characters if present).
 	 *
 	 * @param name The name to be unquoted.
 	 * @return The unquoted version.

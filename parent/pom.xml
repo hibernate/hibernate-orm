@@ -234,7 +234,7 @@
                 <artifactId>maven-pmd-plugin</artifactId>
                 <version>2.2</version>
                 <configuration>
-                    <linkXref>true</linkXref>
+                    <linkXRef>true</linkXRef>
                     <minimumTokens>100</minimumTokens>
                     <targetJdk>1.4</targetJdk>
                 </configuration>
@@ -288,19 +288,13 @@
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>jcl-over-slf4j</artifactId>
-            <version>1.5.2</version>
+            <version>${slf4jVersion}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-log4j12</artifactId>
-            <version>1.5.2</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>log4j</groupId>
-            <artifactId>log4j</artifactId>
-            <version>1.2.14</version>
+            <version>${slf4jVersion}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -323,7 +317,7 @@
             <dependency>
                 <groupId>org.slf4j</groupId>
                 <artifactId>slf4j-api</artifactId>
-                <version>1.5.2</version>
+                <version>${slf4jVersion}</version>
             </dependency>
             <dependency>
                 <groupId>antlr</groupId>
@@ -358,4 +352,7 @@
         </snapshotRepository>
     </distributionManagement>
 
+    <properties>
+        <slf4jVersion>1.5.6</slf4jVersion>
+    </properties>
 </project>

@@ -41,6 +41,8 @@
         <name>Hibernate.org</name>
         <url>http://hibernate.org</url>
     </organization>
+    <developers>
+    </developers>
 
     <licenses>
         <license>
@@ -287,19 +289,13 @@
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>jcl-over-slf4j</artifactId>
-            <version>1.5.2</version>
+            <version>${slf4jVersion}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-log4j12</artifactId>
-            <version>1.5.2</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>log4j</groupId>
-            <artifactId>log4j</artifactId>
-            <version>1.2.14</version>
+            <version>${slf4jVersion}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -322,7 +318,7 @@
             <dependency>
                 <groupId>org.slf4j</groupId>
                 <artifactId>slf4j-api</artifactId>
-                <version>1.5.2</version>
+                <version>${slf4jVersion}</version>
             </dependency>
             <dependency>
                 <groupId>antlr</groupId>
@@ -357,4 +353,7 @@
         </snapshotRepository>
     </distributionManagement>
 
+    <properties>
+        <slf4jVersion>1.5.6</slf4jVersion>
+    </properties>
 </project>

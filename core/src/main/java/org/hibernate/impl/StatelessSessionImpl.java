@@ -1,7 +1,5 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2009, Red Hat Middleware LLC or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Middleware LLC.
@@ -20,7 +18,6 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.impl;
 
@@ -264,13 +261,21 @@ public class StatelessSessionImpl extends AbstractSessionImpl
 	        boolean eager,
 	        boolean nullable) throws HibernateException {
 		errorIfClosed();
-		EntityPersister persister = getFactory().getEntityPersister(entityName);
-		if ( !eager && persister.hasProxy() ) {
-			return persister.createProxy(id, this);
+		EntityPersister persister = getFactory().getEntityPersister( entityName );
+		// first, try to load it from the temp PC associated to this SS
+		Object loaded = temporaryPersistenceContext.getEntity( new EntityKey( id, persister, getEntityMode() ) );
+		if ( loaded != null ) {
+			// we found it in the temp PC.  Should indicate we are in the midst of processing a result set
+			// containing eager fetches via join fetch
+			return loaded;
 		}
-		Object loaded = temporaryPersistenceContext.getEntity( new EntityKey(id, persister, EntityMode.POJO) );
-		//TODO: if not loaded, throw an exception
-		return loaded==null ? get( entityName, id ) : loaded;
+		if ( !eager && persister.hasProxy() ) {
+			// if the metadata allowed proxy creation and caller did not request forceful eager loading,
+			// generate a proxy
+			return persister.createProxy( id, this );
+		}
+		// otherwise immediately materialize it
+		return get( entityName, id );
 	}
 
 	public Iterator iterate(String query, QueryParameters queryParameters) throws HibernateException {

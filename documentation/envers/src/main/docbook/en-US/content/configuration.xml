@@ -189,6 +189,11 @@
     </para>
 
     <para>
+        If you'd like to override auditing behaviour of some fields/properties in an embedded component, you can use
+        the <literal>@AuditOverride(s)</literal> annotation on the place where you use the component.
+    </para>
+
+    <para>
         If you want to audit a relation mapped with <literal>@OneToMany+@JoinColumn</literal>,
         please see <xref linkend="exceptions"/> for a description of the additional
         <literal>@AuditJoinTable</literal>  annotation that you'll probably want to use.

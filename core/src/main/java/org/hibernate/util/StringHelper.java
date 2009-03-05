@@ -162,6 +162,75 @@ public final class StringHelper {
 		return ( loc < 0 ) ? "" : qualifiedName.substring( 0, loc );
 	}
 
+	/**
+	 * Collapses a name.  Mainly intended for use with classnames, where an example might serve best to explain.
+	 * Imagine you have a class named <samp>'org.hibernate.util.StringHelper'</samp>; calling collapse on that
+	 * classname will result in <samp>'o.h.u.StringHelper'<samp>.
+	 *
+	 * @param name The name to collapse.
+	 * @return The collapsed name.
+	 */
+	public static String collapse(String name) {
+		int breakPoint = name.lastIndexOf( '.' );
+		if ( breakPoint < 0 ) {
+			return name;
+		}
+		return collapseQualifier( name.substring( 0, breakPoint ), true ) + name.substring( breakPoint ); // includes last '.'
+	}
+
+	/**
+	 * Given a qualifier, collapse it.
+	 *
+	 * @param qualifier The qualifier to collapse.
+	 * @param includeDots Should we include the dots in the collapsed form?
+	 *
+	 * @return The collapsed form.
+	 */
+	public static String collapseQualifier(String qualifier, boolean includeDots) {
+		StringTokenizer tokenizer = new StringTokenizer( qualifier, "." );
+		String collapsed = Character.toString( tokenizer.nextToken().charAt( 0 ) );
+		while ( tokenizer.hasMoreTokens() ) {
+			if ( includeDots ) {
+				collapsed += '.';
+			}
+			collapsed += tokenizer.nextToken().charAt( 0 );
+		}
+		return collapsed;
+	}
+
+	/**
+	 * Partially unqualifies a qualified name.  For example, with a base of 'org.hibernate' the name
+	 * 'org.hibernate.util.StringHelper' would become 'util.StringHelper'.
+	 *
+	 * @param name The (potentially) qualified name.
+	 * @param qualifierBase The qualifier base.
+	 *
+	 * @return The name itself, or the partially unqualified form if it begins with the qualifier base.
+	 */
+	public static String partiallyUnqualify(String name, String qualifierBase) {
+		if ( ! name.startsWith( qualifierBase ) ) {
+			return name;
+		}
+		return name.substring( qualifierBase.length() + 1 ); // +1 to start after the following '.'
+	}
+
+	/**
+	 * Cross between {@link #collapse} and {@link #partiallyUnqualify}.  Functions much like {@link #collapse}
+	 * except that only the qualifierBase is collapsed.  For example, with a base of 'org.hibernate' the name
+	 * 'org.hibernate.util.StringHelper' would become 'o.h.util.StringHelper'.
+	 *
+	 * @param name The (potentially) qualified name.
+	 * @param qualifierBase The qualifier base.
+	 *
+	 * @return The name itself if it does not begin with the qualifierBase, or the properly collapsed form otherwise.
+	 */
+	public static String collapseQualifierBase(String name, String qualifierBase) {
+		if ( ! name.startsWith( qualifierBase ) ) {
+			return collapse( name );
+		}
+		return collapseQualifier( qualifierBase, true ) + name.substring( qualifierBase.length() );
+	}
+
 	public static String[] suffix(String[] columns, String suffix) {
 		if ( suffix == null ) return columns;
 		String[] qualified = new String[columns.length];

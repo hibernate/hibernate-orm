@@ -1,12 +1,11 @@
 // $Id: TriggerGeneratedValuesWithCachingTest.java 10977 2006-12-12 23:28:04Z steve.ebersole@jboss.com $
 package org.hibernate.test.generated;
 
-import org.hibernate.dialect.Oracle9Dialect;
+import org.hibernate.dialect.Oracle9iDialect;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
 
 import junit.framework.Test;
-import junit.framework.TestSuite;
 
 /**
  * Implementation of TriggerGeneratedValuesWithoutCachingTest.
@@ -26,7 +25,7 @@ public class TriggerGeneratedValuesWithCachingTest extends AbstractGeneratedProp
 	public boolean appliesTo(Dialect dialect) {
 		// currently have only defined triggers for oracle...
 		// TODO : add more triggers for dialects which allow mods in triggers...
-		return ( dialect instanceof Oracle9Dialect );
+		return ( dialect instanceof Oracle9iDialect );
 	}
 
 	public static Test suite() {

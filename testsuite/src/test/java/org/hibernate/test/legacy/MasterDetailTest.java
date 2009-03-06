@@ -22,7 +22,6 @@ import org.hibernate.criterion.Restrictions;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.MckoiDialect;
 import org.hibernate.dialect.MySQLDialect;
-import org.hibernate.dialect.Oracle9Dialect;
 import org.hibernate.dialect.SAPDBDialect;
 import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
 import org.hibernate.mapping.MetaAttribute;
@@ -316,7 +315,7 @@ public class MasterDetailTest extends LegacyTestCase {
 		assertTrue( "generated id returned", s.save(d2)!=null);
 		master.addDetail(d1);
 		master.addDetail(d2);
-		if ( !(getDialect() instanceof MySQLDialect) && !(getDialect() instanceof Oracle9Dialect) && !(getDialect() instanceof SAPDBDialect) && !(getDialect() instanceof MckoiDialect) && !(getDialect() instanceof org.hibernate.dialect.TimesTenDialect)) {
+		if ( !(getDialect() instanceof MySQLDialect) && !(getDialect() instanceof SAPDBDialect) && !(getDialect() instanceof MckoiDialect) && !(getDialect() instanceof org.hibernate.dialect.TimesTenDialect)) {
 			assertTrue(
 				"query",
 				s.find("from Detail d, Master m where m = d.master and size(m.outgoing) = 0 and size(m.incoming) = 0").size()==2

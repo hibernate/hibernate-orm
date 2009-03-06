@@ -4,9 +4,8 @@ import junit.framework.Test;
 
 import org.hibernate.Session;
 import org.hibernate.cfg.Configuration;
-import org.hibernate.dialect.DataDirectOracle9Dialect;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.Oracle9Dialect;
+import org.hibernate.dialect.Oracle9iDialect;
 import org.hibernate.junit.functional.DatabaseSpecificFunctionalTestCase;
 import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
 
@@ -25,7 +24,7 @@ public class SequenceIdentityTest extends DatabaseSpecificFunctionalTestCase {
 	public boolean appliesTo(Dialect dialect) {
 		// the DataDirect driver for Oracle known to not support
 		// JDBC3 getGeneratedKeys...
-		return ( dialect instanceof Oracle9Dialect ) && ( ! ( dialect instanceof DataDirectOracle9Dialect ) ) ;
+		return ( dialect instanceof Oracle9iDialect );
 	}
 
 	public String[] getMappings() {

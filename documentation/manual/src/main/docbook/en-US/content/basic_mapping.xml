@@ -3585,8 +3585,8 @@ public class Customer implements Serializable {
     ...
     <database-object>
         <definition class="MyTriggerDefinition"/>
-        <dialect-scope name="org.hibernate.dialect.Oracle9Dialect"/>
-        <dialect-scope name="org.hibernate.dialect.OracleDialect"/>
+        <dialect-scope name="org.hibernate.dialect.Oracle9iDialect"/>
+        <dialect-scope name="org.hibernate.dialect.Oracle10gDialect"/>
     </database-object>
 </hibernate-mapping>]]></programlisting>
     </sect1>

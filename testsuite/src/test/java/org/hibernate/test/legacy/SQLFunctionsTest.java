@@ -23,14 +23,13 @@ import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.InterbaseDialect;
 import org.hibernate.dialect.MckoiDialect;
 import org.hibernate.dialect.MySQLDialect;
-import org.hibernate.dialect.Oracle9Dialect;
-import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.dialect.Sybase11Dialect;
 import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.dialect.SybaseAnywhereDialect;
 import org.hibernate.dialect.TimesTenDialect;
 import org.hibernate.dialect.SQLServerDialect;
+import org.hibernate.dialect.Oracle9iDialect;
 import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
 
@@ -84,7 +83,7 @@ public class SQLFunctionsTest extends LegacyTestCase {
 			s.find("select count(*) from Simple s").size() == 1
 		);
 
-		if ( getDialect() instanceof OracleDialect) {
+		if ( getDialect() instanceof Oracle9iDialect ) {
 			// Check Oracle Dialect mix of dialect functions - no args (no parenthesis and single arg functions
 			java.util.List rset = s.find("select s.name, sysdate(), trunc(s.pay), round(s.pay) from Simple s");
 			assertNotNull("Name string should have been returned",(((Object[])rset.get(0))[0]));
@@ -162,11 +161,11 @@ public class SQLFunctionsTest extends LegacyTestCase {
 		Map parameters = new HashMap();
 		parameters.put("name", simple.getName());
 		parameters.put("count", new Integer(simple.getCount()));
-		
+
 		Query q = s.createQuery("from Simple s where s.name=:name and s.count=:count");
 		q.setProperties(((Map)parameters));
 		assertTrue( q.list().get(0)==simple );
-		
+
 		List l = new ArrayList();
 		l.add("Simple 1");
 		l.add("Slimeball");
@@ -185,7 +184,6 @@ public class SQLFunctionsTest extends LegacyTestCase {
 		s.close();
 	}
 	public void testBroken() throws Exception {
-		if (getDialect() instanceof Oracle9Dialect) return;
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
 		Broken b = new Fixed();

@@ -4,7 +4,7 @@ package org.hibernate.test.generated;
 import junit.framework.Test;
 
 import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.Oracle9Dialect;
+import org.hibernate.dialect.Oracle9iDialect;
 import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
 
 /**
@@ -25,7 +25,7 @@ public class TriggerGeneratedValuesWithoutCachingTest extends AbstractGeneratedP
 	public boolean appliesTo(Dialect dialect) {
 		// currently have only defined triggers for oracle...
 		// TODO : add more triggers for dialects which allow mods in triggers...
-		return ( dialect instanceof Oracle9Dialect );
+		return ( dialect instanceof Oracle9iDialect );
 	}
 
 	public String getCacheConcurrencyStrategy() {

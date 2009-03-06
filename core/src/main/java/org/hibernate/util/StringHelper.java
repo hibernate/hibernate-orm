@@ -99,13 +99,16 @@ public final class StringHelper {
 	public static String[] replace(String templates[], String placeholder, String replacement) {
 		String[] result = new String[templates.length];
 		for ( int i =0; i<templates.length; i++ ) {
-			result[i] = replace( templates[i], placeholder, replacement );;
+			result[i] = replace( templates[i], placeholder, replacement );
 		}
 		return result;
 	}
 
 	public static String replace(String template, String placeholder, String replacement, boolean wholeWords) {
-		int loc = template == null ? -1 : template.indexOf( placeholder );
+		if ( template == null ) {
+			return template; // returnign null!
+		}
+        int loc = template.indexOf( placeholder );
 		if ( loc < 0 ) {
 			return template;
 		}
@@ -125,7 +128,10 @@ public final class StringHelper {
 
 
 	public static String replaceOnce(String template, String placeholder, String replacement) {
-        int loc = template == null ? -1 : template.indexOf( placeholder );
+		if ( template == null ) {
+			return template; // returnign null!
+		}
+        int loc = template.indexOf( placeholder );
 		if ( loc < 0 ) {
 			return template;
 		}
@@ -171,6 +177,9 @@ public final class StringHelper {
 	 * @return The collapsed name.
 	 */
 	public static String collapse(String name) {
+		if ( name == null ) {
+			return null;
+		}
 		int breakPoint = name.lastIndexOf( '.' );
 		if ( breakPoint < 0 ) {
 			return name;
@@ -208,10 +217,27 @@ public final class StringHelper {
 	 * @return The name itself, or the partially unqualified form if it begins with the qualifier base.
 	 */
 	public static String partiallyUnqualify(String name, String qualifierBase) {
-		if ( ! name.startsWith( qualifierBase ) ) {
+		if ( name == null || ! name.startsWith( qualifierBase ) ) {
 			return name;
 		}
 		return name.substring( qualifierBase.length() + 1 ); // +1 to include the following '.'
+	}
+
+	/**
+	 * Cross between {@link #collapse} and {@link #partiallyUnqualify}.  Functions much like {@link #collapse}
+	 * except that only the qualifierBase is collapsed.  For example, with a base of 'org.hibernate' the name
+	 * 'org.hibernate.util.StringHelper' would become 'o.h.util.StringHelper'.
+	 *
+	 * @param name The (potentially) qualified name.
+	 * @param qualifierBase The qualifier base.
+	 *
+	 * @return The name itself if it does not begin with the qualifierBase, or the properly collapsed form otherwise.
+	 */
+	public static String collapseQualifierBase(String name, String qualifierBase) {
+		if ( name == null || ! name.startsWith( qualifierBase ) ) {
+			return collapse( name );
+		}
+		return collapseQualifier( qualifierBase, true ) + name.substring( qualifierBase.length() );
 	}
 
 	public static String[] suffix(String[] columns, String suffix) {
@@ -391,10 +417,13 @@ public final class StringHelper {
 	}
 
 	/**
-	 * Generate a nice alias for the given class name or collection role
-	 * name and unique integer. Subclasses of Loader do <em>not</em> have 
-	 * to use aliases of this form.
-	 * @return an alias of the form <tt>foo1_</tt>
+	 * Generate a nice alias for the given class name or collection role name and unique integer. Subclasses of
+	 * Loader do <em>not</em> have to use aliases of this form.
+	 *
+	 * @param description The base name (usually an entity-name or collection-role)
+	 * @param unique A uniquing value
+	 *
+	 * @return an alias of the form <samp>foo1_</samp>
 	 */
 	public static String generateAlias(String description, int unique) {
 		return generateAliasRoot(description) +

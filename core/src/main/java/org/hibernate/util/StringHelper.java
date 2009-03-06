@@ -125,7 +125,7 @@ public final class StringHelper {
 		if ( template == null ) {
 			return template; // returnign null!
 		}
-        int loc = template == null ? -1 : template.indexOf( placeholder );
+        int loc = template.indexOf( placeholder );
 		if ( loc < 0 ) {
 			return template;
 		}
@@ -171,6 +171,9 @@ public final class StringHelper {
 	 * @return The collapsed name.
 	 */
 	public static String collapse(String name) {
+		if ( name == null ) {
+			return null;
+		}
 		int breakPoint = name.lastIndexOf( '.' );
 		if ( breakPoint < 0 ) {
 			return name;
@@ -208,7 +211,7 @@ public final class StringHelper {
 	 * @return The name itself, or the partially unqualified form if it begins with the qualifier base.
 	 */
 	public static String partiallyUnqualify(String name, String qualifierBase) {
-		if ( ! name.startsWith( qualifierBase ) ) {
+		if ( name == null || ! name.startsWith( qualifierBase ) ) {
 			return name;
 		}
 		return name.substring( qualifierBase.length() + 1 ); // +1 to start after the following '.'
@@ -225,7 +228,7 @@ public final class StringHelper {
 	 * @return The name itself if it does not begin with the qualifierBase, or the properly collapsed form otherwise.
 	 */
 	public static String collapseQualifierBase(String name, String qualifierBase) {
-		if ( ! name.startsWith( qualifierBase ) ) {
+		if ( name == null || ! name.startsWith( qualifierBase ) ) {
 			return collapse( name );
 		}
 		return collapseQualifier( qualifierBase, true ) + name.substring( qualifierBase.length() );
@@ -408,10 +411,13 @@ public final class StringHelper {
 	}
 
 	/**
-	 * Generate a nice alias for the given class name or collection role
-	 * name and unique integer. Subclasses of Loader do <em>not</em> have 
-	 * to use aliases of this form.
-	 * @return an alias of the form <tt>foo1_</tt>
+	 * Generate a nice alias for the given class name or collection role name and unique integer. Subclasses of
+	 * Loader do <em>not</em> have to use aliases of this form.
+	 *
+	 * @param description The base name (usually an entity-name or collection-role)
+	 * @param unique A uniquing value
+	 *
+	 * @return an alias of the form <samp>foo1_</samp>
 	 */
 	public static String generateAlias(String description, int unique) {
 		return generateAliasRoot(description) +

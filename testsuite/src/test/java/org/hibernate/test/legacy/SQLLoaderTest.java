@@ -14,8 +14,6 @@ import org.hibernate.Transaction;
 import org.hibernate.classic.Session;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.MySQLDialect;
-import org.hibernate.dialect.Oracle9Dialect;
-import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.TimesTenDialect;
 import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
@@ -47,7 +45,6 @@ public class SQLLoaderTest extends LegacyTestCase {
 	}
 
 	public void testTS() throws Exception {
-		if (getDialect() instanceof Oracle9Dialect) return;
 		Session session = openSession();
 		Transaction txn = session.beginTransaction();
 		Simple sim = new Simple();
@@ -150,7 +147,6 @@ public class SQLLoaderTest extends LegacyTestCase {
 		s.close();
 		
 		if ( getDialect() instanceof MySQLDialect ) return;
-		if ( getDialect() instanceof OracleDialect ) return; // todo : this fails on Oracle8 also
 
 		s = openSession();
 
@@ -341,11 +337,7 @@ public class SQLLoaderTest extends LegacyTestCase {
 		session = openSession();
 
 		Query query;
-		if ( getDialect() instanceof OracleDialect ) {
-			// Oracle8 does not support X/Open extension functions :)
-			query = session.createSQLQuery("select identifier_column as {a.id}, clazz_discriminata as {a.class}, count_ as {a.count}, name as {a.name} from TA where upper(name) like upper('max')", "a", A.class);
-		}
-		else if( getDialect() instanceof TimesTenDialect) {
+		if( getDialect() instanceof TimesTenDialect) {
             // TimesTen does not permit general expressions (like UPPER) in the second part of a LIKE expression,
             // so we execute a similar test 
             query = session.createSQLQuery("select identifier_column as {a.id}, clazz_discriminata as {a.class}, count_ as {a.count}, name as {a.name} from TA where {fn ucase(name)} like 'MAX'", "a", A.class);

@@ -14,18 +14,16 @@ import junit.framework.Test;
 
 import org.hibernate.Hibernate;
 import org.hibernate.QueryException;
-import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.MySQLDialect;
-import org.hibernate.dialect.Oracle9Dialect;
+import org.hibernate.dialect.Oracle8iDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.SQLServerDialect;
-import org.hibernate.dialect.SybaseAnywhereDialect;
-import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.dialect.Sybase11Dialect;
 import org.hibernate.dialect.SybaseASE15Dialect;
-import org.hibernate.dialect.Oracle8iDialect;
+import org.hibernate.dialect.SybaseAnywhereDialect;
+import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.query.HQLQueryPlan;
@@ -38,9 +36,10 @@ import org.hibernate.hql.ast.QuerySyntaxException;
 import org.hibernate.hql.ast.QueryTranslatorImpl;
 import org.hibernate.hql.ast.tree.ConstructorNode;
 import org.hibernate.hql.ast.tree.DotNode;
+import org.hibernate.hql.ast.tree.FromReferenceNode;
 import org.hibernate.hql.ast.tree.IndexNode;
 import org.hibernate.hql.ast.tree.SelectClause;
-import org.hibernate.hql.ast.tree.FromReferenceNode;
+import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
 
 /**
  * Tests cases where the AST based query translator and the 'classic' query translator generate identical SQL.
@@ -677,7 +676,6 @@ public class HQLTest extends QueryTranslatorTestCase {
 	}
 
 	public void testGroupByFunction() {
-		if ( getDialect() instanceof Oracle9Dialect ) return;
 		if ( getDialect() instanceof Oracle8iDialect ) return; // the new hiearchy...
 		if ( getDialect() instanceof PostgreSQLDialect ) return;
 		assertTranslation( "select count(*) from Human h group by year(h.birthdate)" );
@@ -856,7 +854,6 @@ public class HQLTest extends QueryTranslatorTestCase {
 	public void testClassProperty() throws Exception {
 		// This test causes failures on theta-join dialects because the SQL is different.
 		// The queries are semantically the same however.
-		if ( getDialect() instanceof Oracle9Dialect ) return;
 		if ( getDialect() instanceof Oracle8iDialect ) return;
 		assertTranslation( "from Animal a where a.mother.class = Reptile" );
 	}
@@ -1132,7 +1129,6 @@ public class HQLTest extends QueryTranslatorTestCase {
 		// This test causes failures on theta-join dialects because the SQL is different.  The old parser
 		// duplicates the condition, whereas the new parser does not.  The queries are semantically the
 		// same however.
-		if ( getDialect() instanceof Oracle9Dialect ) return;
 		if ( getDialect() instanceof Oracle8iDialect ) return;
 		assertTranslation( "select an.mother.bodyWeight from Animal an join an.mother m where an.mother.bodyWeight > 10" );
 		assertTranslation( "select an.mother.bodyWeight from Animal an where an.mother.bodyWeight > 10" );

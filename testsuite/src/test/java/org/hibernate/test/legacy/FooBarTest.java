@@ -51,19 +51,18 @@ import org.hibernate.dialect.InterbaseDialect;
 import org.hibernate.dialect.MckoiDialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.Oracle8iDialect;
-import org.hibernate.dialect.Oracle9Dialect;
-import org.hibernate.dialect.OracleDialect;
+//import org.hibernate.dialect.Oracle9Dialect;
+//import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PointbaseDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.SAPDBDialect;
-import org.hibernate.dialect.SQLServerDialect;
-import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.dialect.Sybase11Dialect;
 import org.hibernate.dialect.SybaseASE15Dialect;
+import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.dialect.TimesTenDialect;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
-import org.hibernate.mapping.RootClass;
+//import org.hibernate.mapping.RootClass;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.type.Type;
 import org.hibernate.util.JoinedIterator;
@@ -97,13 +96,6 @@ public class FooBarTest extends LegacyTestCase {
 			"legacy/Simple.hbm.xml",
 			"legacy/XY.hbm.xml"
 		};
-	}
-
-	public void configure(Configuration cfg) {
-		super.configure( cfg );
-		if ( Dialect.getDialect() instanceof OracleDialect ) {
-			( (RootClass) cfg.getClassMapping("org.hibernate.test.legacy.Foo") ).setForceDiscriminator(false);
-		}
 	}
 
 	public static Test suite() {
@@ -682,7 +674,7 @@ public class FooBarTest extends LegacyTestCase {
 		s.find("from Foo foo where foo.integer not between 1 and 5 and foo.string not in ('cde', 'abc') and foo.string is not null and foo.integer<=3");
 
 		s.find("from Baz baz inner join baz.collectionComponent.nested.foos foo where foo.string is null");
-		if ( !(getDialect() instanceof MySQLDialect) && !(getDialect() instanceof MckoiDialect) && !(getDialect() instanceof SAPDBDialect) && !(getDialect() instanceof PointbaseDialect) /*&& !(dialect instanceof Oracle9Dialect)*/ )  {
+		if ( !(getDialect() instanceof MySQLDialect) && !(getDialect() instanceof MckoiDialect) && !(getDialect() instanceof SAPDBDialect) && !(getDialect() instanceof PointbaseDialect) )  {
 			s.find("from Baz baz inner join baz.fooSet where '1' in (from baz.fooSet foo where foo.string is not null)");
 			s.find("from Baz baz where 'a' in elements(baz.collectionComponent.nested.foos) and 1.0 in elements(baz.collectionComponent.nested.floats)");
 			s.find("from Baz baz where 'b' in elements(baz.collectionComponent.nested.foos) and 1.0 in elements(baz.collectionComponent.nested.floats)");
@@ -2138,7 +2130,7 @@ public class FooBarTest extends LegacyTestCase {
 			s.find("select count(*) from Baz as baz where 1 in indices(baz.fooArray)");
 			s.find("select count(*) from Bar as bar where 'abc' in elements(bar.baz.fooArray)");
 			s.find("select count(*) from Bar as bar where 1 in indices(bar.baz.fooArray)");
-			if ( !(getDialect() instanceof DB2Dialect) &&  !(getDialect() instanceof Oracle9Dialect) && !(getDialect() instanceof Oracle8iDialect ) && !( getDialect() instanceof SybaseDialect ) && !( getDialect() instanceof Sybase11Dialect ) && !( getDialect() instanceof SybaseASE15Dialect )) {
+			if ( !(getDialect() instanceof DB2Dialect) &&  !(getDialect() instanceof Oracle8iDialect ) && !( getDialect() instanceof SybaseDialect ) && !( getDialect() instanceof Sybase11Dialect ) && !( getDialect() instanceof SybaseASE15Dialect )) {
 				// SybaseAnywhereDialect supports implicit conversions from strings to ints
 				s.find("select count(*) from Bar as bar, bar.component.glarch.proxyArray as g where g.id in indices(bar.baz.fooArray)");
 				s.find("select max( elements(bar.baz.fooArray) ) from Bar as bar, bar.component.glarch.proxyArray as g where g.id in indices(bar.baz.fooArray)");
@@ -3304,73 +3296,81 @@ public class FooBarTest extends LegacyTestCase {
 	}
 
 	public void testScrollableIterator() throws Exception {
-		if ( getDialect() instanceof DB2Dialect || getDialect() instanceof OracleDialect || getDialect() instanceof SybaseDialect || getDialect() instanceof HSQLDialect ) {
-			Session s = openSession();
-			Transaction txn = s.beginTransaction();
-			s.save( new Foo() );
-			s.save( new Foo() );
-			s.save( new Foo() );
-			s.save( new Bar() );
-			Query query = s.createQuery("select f, f.integer from Foo f");
-			assertTrue( query.getReturnTypes().length==2 );
-			ScrollableResults iter = query.scroll();
-			assertTrue( iter.next() );
-			assertTrue( iter.scroll(1) );
-			FooProxy f2 = (FooProxy) iter.get()[0];
-			assertTrue( f2!=null );
-			assertTrue( iter.scroll(-1) );
-			Object f1 = iter.get(0);
-			iter.next();
-			assertTrue( f1!=null && iter.get(0)==f2 );
-			iter.getInteger(1);
-
-			assertTrue( !iter.scroll(100) );
-			assertTrue( iter.first() );
-			assertTrue( iter.scroll(3) );
-			Object f4 = iter.get(0);
-			assertTrue( f4!=null );
-			assertTrue( !iter.next() );
-			assertTrue( iter.first() );
-			assertTrue( iter.get(0)==f1 );
-			assertTrue( iter.last() );
-			assertTrue( iter.get(0)==f4 );
-			assertTrue( iter.previous() );
-			txn.commit();
-			s.close();
-
-			s = openSession();
-			txn = s.beginTransaction();
-			query = s.createQuery("select f, f.integer from Foo f");
-			assertTrue( query.getReturnTypes().length==2 );
-			iter = query.scroll();
-			assertTrue( iter.next() );
-			assertTrue( iter.scroll(1) );
-			f2 = (FooProxy) iter.get()[0];
-			assertTrue( f2!=null );
-			assertTrue( f2.getString()!=null  && f2.getComponent().getImportantDates().length > 0 );
-			assertTrue( iter.scroll(-1) );
-			f1 = iter.get(0);
-			iter.next();
-			assertTrue( f1!=null && iter.get(0)==f2 );
-			iter.getInteger(1);
-
-			assertTrue( !iter.scroll(100) );
-			assertTrue( iter.first() );
-			assertTrue( iter.scroll(3) );
-			f4 = iter.get(0);
-			assertTrue( f4!=null );
-			assertTrue( !iter.next() );
-			assertTrue( iter.first() );
-			assertTrue( iter.get(0)==f1 );
-			assertTrue( iter.last() );
-			assertTrue( iter.get(0)==f4 );
-			assertTrue( iter.previous() );
-			assertTrue( s.delete("from Foo")==4 );
-			s.flush();
-			assertTrue( s.find("from java.lang.Object").size()==0 );
-			txn.commit();
-			s.close();
+		// skip if not one of these named dialects
+		boolean match = getDialect() instanceof DB2Dialect
+				|| getDialect() instanceof SybaseDialect
+				|| getDialect() instanceof HSQLDialect
+				|| getDialect() instanceof Oracle8iDialect // 9i/10g too because of inheritence...
+				;
+		if ( ! match ) {
+			return;
 		}
+
+		Session s = openSession();
+		Transaction txn = s.beginTransaction();
+		s.save( new Foo() );
+		s.save( new Foo() );
+		s.save( new Foo() );
+		s.save( new Bar() );
+		Query query = s.createQuery("select f, f.integer from Foo f");
+		assertTrue( query.getReturnTypes().length==2 );
+		ScrollableResults iter = query.scroll();
+		assertTrue( iter.next() );
+		assertTrue( iter.scroll(1) );
+		FooProxy f2 = (FooProxy) iter.get()[0];
+		assertTrue( f2!=null );
+		assertTrue( iter.scroll(-1) );
+		Object f1 = iter.get(0);
+		iter.next();
+		assertTrue( f1!=null && iter.get(0)==f2 );
+		iter.getInteger(1);
+
+		assertTrue( !iter.scroll(100) );
+		assertTrue( iter.first() );
+		assertTrue( iter.scroll(3) );
+		Object f4 = iter.get(0);
+		assertTrue( f4!=null );
+		assertTrue( !iter.next() );
+		assertTrue( iter.first() );
+		assertTrue( iter.get(0)==f1 );
+		assertTrue( iter.last() );
+		assertTrue( iter.get(0)==f4 );
+		assertTrue( iter.previous() );
+		txn.commit();
+		s.close();
+
+		s = openSession();
+		txn = s.beginTransaction();
+		query = s.createQuery("select f, f.integer from Foo f");
+		assertTrue( query.getReturnTypes().length==2 );
+		iter = query.scroll();
+		assertTrue( iter.next() );
+		assertTrue( iter.scroll(1) );
+		f2 = (FooProxy) iter.get()[0];
+		assertTrue( f2!=null );
+		assertTrue( f2.getString()!=null  && f2.getComponent().getImportantDates().length > 0 );
+		assertTrue( iter.scroll(-1) );
+		f1 = iter.get(0);
+		iter.next();
+		assertTrue( f1!=null && iter.get(0)==f2 );
+		iter.getInteger(1);
+
+		assertTrue( !iter.scroll(100) );
+		assertTrue( iter.first() );
+		assertTrue( iter.scroll(3) );
+		f4 = iter.get(0);
+		assertTrue( f4!=null );
+		assertTrue( !iter.next() );
+		assertTrue( iter.first() );
+		assertTrue( iter.get(0)==f1 );
+		assertTrue( iter.last() );
+		assertTrue( iter.get(0)==f4 );
+		assertTrue( iter.previous() );
+		assertTrue( s.delete("from Foo")==4 );
+		s.flush();
+		assertTrue( s.find("from java.lang.Object").size()==0 );
+		txn.commit();
+		s.close();
 	}
 
 	public void testMultiColumnQueries() throws Exception {

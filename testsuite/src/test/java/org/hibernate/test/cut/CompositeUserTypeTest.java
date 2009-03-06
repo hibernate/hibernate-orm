@@ -9,7 +9,6 @@ import junit.framework.Test;
 
 import org.hibernate.Session;
 import org.hibernate.dialect.HSQLDialect;
-import org.hibernate.dialect.Oracle9Dialect;
 import org.hibernate.junit.functional.FunctionalTestCase;
 import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
 
@@ -45,7 +44,7 @@ public class CompositeUserTypeTest extends FunctionalTestCase {
 		result = s.createQuery("from Transaction tran where tran.value.amount > 1.0 and tran.value.currency = 'AUD'").list();
 		assertEquals( result.size(), 1 );
 		
-		if ( !(getDialect() instanceof HSQLDialect) && ! (getDialect() instanceof Oracle9Dialect) ) {
+		if ( !(getDialect() instanceof HSQLDialect) ) {
 		
 			result = s.createQuery("from Transaction txn where txn.value = (1.5, 'AUD')").list();
 			assertEquals( result.size(), 1 );

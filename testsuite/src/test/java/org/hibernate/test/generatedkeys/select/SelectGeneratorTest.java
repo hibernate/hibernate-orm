@@ -3,9 +3,8 @@ package org.hibernate.test.generatedkeys.select;
 import junit.framework.Test;
 
 import org.hibernate.Session;
-import org.hibernate.dialect.DataDirectOracle9Dialect;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.Oracle9Dialect;
+import org.hibernate.dialect.Oracle9iDialect;
 import org.hibernate.junit.functional.DatabaseSpecificFunctionalTestCase;
 import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
 
@@ -24,7 +23,7 @@ public class SelectGeneratorTest extends DatabaseSpecificFunctionalTestCase {
 	}
 
 	public boolean appliesTo(Dialect dialect) {
-		return ( dialect instanceof Oracle9Dialect );
+		return ( dialect instanceof Oracle9iDialect );
 	}
 
 	public static Test suite() {
@@ -32,10 +31,6 @@ public class SelectGeneratorTest extends DatabaseSpecificFunctionalTestCase {
 	}
 
 	public void testJDBC3GetGeneratedKeysSupportOnOracle() {
-		if ( getDialect() instanceof DataDirectOracle9Dialect ) {
-			reportSkip( "DataDirect drivers known to not support JDBC3 getGeneratedKeys for Oracle", "oracle getGeneratedKeys support" );
-			return;
-		}
 		Session session = openSession();
 		session.beginTransaction();
 

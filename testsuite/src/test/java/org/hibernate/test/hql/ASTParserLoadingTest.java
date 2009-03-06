@@ -13,6 +13,8 @@ import java.util.List;
 import java.util.Map;
 
 import junit.framework.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
@@ -27,14 +29,14 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.MySQLDialect;
-import org.hibernate.dialect.Oracle9Dialect;
+import org.hibernate.dialect.Oracle8iDialect;
+
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.SQLServerDialect;
-import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.dialect.Sybase11Dialect;
 import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.dialect.SybaseAnywhereDialect;
-import org.hibernate.dialect.Oracle8iDialect;
+import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.hql.ast.ASTQueryTranslatorFactory;
 import org.hibernate.junit.functional.FunctionalTestCase;
 import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
@@ -53,9 +55,6 @@ import org.hibernate.type.ComponentType;
 import org.hibernate.type.ManyToOneType;
 import org.hibernate.type.Type;
 import org.hibernate.util.StringHelper;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Tests the integration of the new AST parser into the loading of query results using
@@ -1242,7 +1241,7 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 			String dateStr1 = (String) session.createQuery("select str(current_date) from Animal").uniqueResult();
 			String dateStr2 = (String) session.createQuery("select str(year(current_date))||'-'||str(month(current_date))||'-'||str(day(current_date)) from Animal").uniqueResult();
 			System.out.println(dateStr1 + '=' + dateStr2);
-			if ( ! ( getDialect() instanceof Oracle9Dialect || getDialect() instanceof Oracle8iDialect ) ) { //Oracle renders the name of the month :(
+			if ( ! ( getDialect() instanceof Oracle8iDialect ) ) { //Oracle renders the name of the month :(
 				String[] dp1 = StringHelper.split("-", dateStr1);
 				String[] dp2 = StringHelper.split("-", dateStr2);
 				for (int i=0; i<3; i++) {

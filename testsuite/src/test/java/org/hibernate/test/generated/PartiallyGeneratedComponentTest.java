@@ -5,7 +5,7 @@ import junit.framework.Test;
 import org.hibernate.junit.functional.DatabaseSpecificFunctionalTestCase;
 import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.Oracle9Dialect;
+import org.hibernate.dialect.Oracle9iDialect;
 import org.hibernate.Session;
 
 /**
@@ -27,7 +27,7 @@ public class PartiallyGeneratedComponentTest extends DatabaseSpecificFunctionalT
 	}
 
 	public boolean appliesTo(Dialect dialect) {
-		return dialect instanceof Oracle9Dialect;
+		return dialect instanceof Oracle9iDialect;
 	}
 
 	public void testPartialComponentGeneration() {

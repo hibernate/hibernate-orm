@@ -13,8 +13,8 @@
     <artifactId>hibernate-jbosscache2</artifactId>
     <packaging>jar</packaging>
 
-    <name>Hibernate JBossCache2.x Integration</name>
-    <description>Integration of Hibernate with JBossCache (based on JBossCache2.x APIs)</description>
+    <name>Hibernate JBossCache3.x Integration</name>
+    <description>Integration of Hibernate with JBossCache 3 (based on JBossCache2.x+ APIs)</description>
 
     <dependencies>
         <dependency>
@@ -25,7 +25,7 @@
         <dependency>
             <groupId>org.jboss.cache</groupId>
             <artifactId>jbosscache-core</artifactId>
-            <version>2.2.0.GA</version> 
+            <version>3.0.3.GA</version> 
         </dependency>
         
         <!-- test dependencies -->

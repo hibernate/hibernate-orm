@@ -67,7 +67,7 @@ public abstract class AbstractRegionImplTestCase extends AbstractJBossCacheTestC
     public void testActivationDeactivation() throws Exception {
         
         // Set up a cache to monitor affects of starting the region
-        Cache remoteCache = new DefaultCacheFactory().createCache(SharedCacheInstanceManager.DEFAULT_CACHE_RESOURCE, false);
+        Cache remoteCache = DefaultCacheFactory.getInstance().createCache(SharedCacheInstanceManager.DEFAULT_CACHE_RESOURCE, false);
         
         // This test assumes replication; verify that's correct
         assertEquals("Cache is REPL_SYNC", "REPL_SYNC", remoteCache.getConfiguration().getCacheModeString());

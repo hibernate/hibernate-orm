@@ -26,9 +26,7 @@
 
 <!-- ===================================================================== -->
 <!--                                                                       -->
-<!--  Sample JBoss Cache Service Configuration                               -->
-<!--  Recommended for use as Hibernate's 2nd Level Cache                   -->
-<!--  For use with JBossCache >= 2.0.0 ONLY!!!                             -->
+<!--  Sample TreeCache Service Configuration                               -->
 <!--                                                                       -->
 <!-- ===================================================================== -->
 
@@ -48,41 +46,26 @@
         <depends>jboss:service=TransactionManager</depends>
 
         <!--
-            TransactionManager configuration not required for Hibernate!
-            Hibernate will plug in its own transaction manager integration.
-        -->
-
-
-        <!--
             Node locking scheme:
                 OPTIMISTIC
                 PESSIMISTIC
                 MVCC (default)
         -->
-        <attribute name="NodeLockingScheme">OPTIMISTIC</attribute>
+        <attribute name="NodeLockingScheme">MVCC</attribute>
 
         <!--
-            Note that this attribute is IGNORED if your NodeLockingScheme above is OPTIMISTIC.
-
-            Isolation level : SERIALIZABLE
-                              REPEATABLE_READ (default)
-                              READ_COMMITTED
-                              READ_UNCOMMITTED
-                              NONE
+            TransactionManager configuration not required for Hibernate!
+            Hibernate will plug in its own transaction manager integration.
         -->
-        <attribute name="IsolationLevel">REPEATABLE_READ</attribute>
+
+        <attribute name="IsolationLevel">READ_COMMITTED</attribute>
 
         <!--
              Valid modes are LOCAL
                              REPL_ASYNC
                              REPL_SYNC
-                             INVALIDATION_ASYNC
-                             INVALIDATION_SYNC
-
-             INVALIDATION_ASYNC is highly recommended as the mode for use
-             with clustered second-level caches.
         -->
-        <attribute name="CacheMode">REPL_SYNC</attribute>
+        <attribute name="CacheMode">LOCAL</attribute>
 
         <!-- Name of cluster. Needs to be the same for all clusters, in order
              to find each other
@@ -96,7 +79,7 @@
                 <!-- UDP: On Windows machines, because of the media sense feature
                  being broken with multicast (even after disabling media sense)
                  set the loopback attribute to true -->
-                <UDP mcast_addr="228.1.2.3" mcast_port="48866"
+                <UDP mcast_addr="228.1.2.3" mcast_port="45566"
                     ip_ttl="64" ip_mcast="true"
                     mcast_send_buf_size="150000" mcast_recv_buf_size="80000"
                     ucast_send_buf_size="150000" ucast_recv_buf_size="80000"
@@ -104,22 +87,27 @@
                 <PING timeout="2000" num_initial_members="3"/>
                 <MERGE2 min_interval="10000" max_interval="20000"/>
                 <FD shun="true"/>
-                <FD_SOCK/>
                 <VERIFY_SUSPECT timeout="1500"/>
                 <pbcast.NAKACK gc_lag="50" retransmit_timeout="600,1200,2400,4800"/>
-                <UNICAST timeout="600,1200,2400" min_threshold="10"/>
                 <pbcast.STABLE desired_avg_gossip="20000"/>
+                <UNICAST timeout="600,1200,2400" min_threshold="10"/>
                 <FRAG frag_size="8192"/>
                 <pbcast.GMS join_timeout="5000" shun="true" print_local_addr="true"/>
                 <pbcast.STATE_TRANSFER/>
             </config>
         </attribute>
+      
+      <!-- Must be true if any entity deployment uses a scoped classloader -->
+      <attribute name="UseRegionBasedMarshalling">true</attribute>
+      <!-- Must match the value of "useRegionBasedMarshalling" -->
+      <attribute name="InactiveOnStartup">true</attribute>
 
         <!--
-         Whether or not to fetch state on joining a cluster
-         NOTE this used to be called FetchStateOnStartup and has been renamed to be more descriptive.
+            The max amount of time (in milliseconds) we wait until the
+            initial state (ie. the contents of the cache) are retrieved from
+            existing members in a clustered environment
         -->
-        <attribute name="FetchInMemoryState">false</attribute>
+        <attribute name="StateRetrievalTimeout">20000</attribute>
 
         <!--
             Number of milliseconds to wait until all responses for a
@@ -129,14 +117,6 @@
 
         <!-- Max number of milliseconds to wait for a lock acquisition -->
         <attribute name="LockAcquisitionTimeout">15000</attribute>
-
-       <!--
-          Indicate whether to use marshalling or not. Set this to true if you are running under a scoped
-          class loader, e.g., inside an application server. Default is "false".
-       -->
-       <attribute name="UseRegionBasedMarshalling">true</attribute>
-       <!-- Must match the value of "useRegionBasedMarshalling" -->
-       <attribute name="InactiveOnStartup">true</attribute>
 
         <!-- For now. disable asynchronous RPC marshalling/sending -->
         <attribute name="SerializationExecutorPoolSize">0</attribute>
@@ -159,6 +139,7 @@
           </region>
         </config>
      </attribute>
+  </mbean>
 
-    </mbean>
+
 </server>

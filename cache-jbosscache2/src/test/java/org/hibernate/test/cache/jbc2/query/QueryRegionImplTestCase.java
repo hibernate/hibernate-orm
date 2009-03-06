@@ -94,6 +94,10 @@ public class QueryRegionImplTestCase extends AbstractGeneralDataRegionTestCase {
     public void testPutDoesNotBlockGetPessimistic() throws Exception {
         putDoesNotBlockGetTest("pessimistic-shared");
     }
+        
+    public void testPutDoesNotBlockGetMVCC() throws Exception {
+        putDoesNotBlockGetTest("mvcc-shared");
+    }
     
     private void putDoesNotBlockGetTest(String configName) throws Exception {
         
@@ -188,6 +192,10 @@ public class QueryRegionImplTestCase extends AbstractGeneralDataRegionTestCase {
     
     public void testGetDoesNotBlockPutPessimisticRepeatableRead() throws Exception {
         getDoesNotBlockPutTest("pessimistic-shared-repeatable");
+    }
+    
+    public void testGetDoesNotBlockPutMVCC() throws Exception {
+        getDoesNotBlockPutTest("mvcc-shared");
     }
     
     private void getDoesNotBlockPutTest(String configName) throws Exception {

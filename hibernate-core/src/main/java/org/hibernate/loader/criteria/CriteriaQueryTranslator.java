@@ -31,6 +31,7 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.StringTokenizer;
 
@@ -51,8 +52,10 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.TypedValue;
 import org.hibernate.hql.internal.ast.util.SessionFactoryHelper;
 import org.hibernate.internal.CriteriaImpl;
+import org.hibernate.internal.CriteriaImpl.Subcriteria;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
+import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.Loadable;
 import org.hibernate.persister.entity.PropertyMapping;
 import org.hibernate.persister.entity.Queryable;
@@ -144,6 +147,22 @@ public class CriteriaQueryTranslator implements CriteriaQuery {
 		while ( iter.hasNext() ) {
 			CriteriaInfoProvider info = ( CriteriaInfoProvider )iter.next();
 			result.addAll( Arrays.asList( info.getSpaces() ) );
+		}
+		iter = associationPathCriteriaMap.entrySet().iterator();
+		while ( iter.hasNext() ) {
+			@SuppressWarnings("unchecked")
+			Map.Entry<String, CriteriaImpl.Subcriteria> entry = (Entry<String, Subcriteria>) iter.next();
+			String path = entry.getKey();
+			CriteriaImpl.Subcriteria crit = entry.getValue();
+			int index = path.lastIndexOf( '.' );
+			if ( index > 0 ) {
+				path = path.substring( index + 1, path.length() );
+			}
+			CriteriaInfoProvider info = (CriteriaInfoProvider) criteriaInfoMap.get( crit.getParent() );
+			CollectionPersister persister = (CollectionPersister) getFactory().getAllCollectionMetadata().get( info.getName() + "." + path );
+			if ( persister != null ) {
+				result.addAll( Arrays.asList( persister.getCollectionSpaces() ) );
+			}
 		}
 		return result;
 	}

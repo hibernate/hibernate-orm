@@ -60,7 +60,7 @@ public class PessimisticSessionRefreshTest extends DualNodeTestCaseBase
 
    static int test = 0;
    
-   private Cache localCache;
+   private Cache<Object, Object> localCache;
    
    /**
     * Create a new PessimisticSessionRefreshTest.
@@ -100,7 +100,7 @@ public class PessimisticSessionRefreshTest extends DualNodeTestCaseBase
    }
 
    @Override
-   protected Class getCacheRegionFactory()
+   protected Class<?> getCacheRegionFactory()
    {
       return TestJBossCacheRegionFactory.class;
    }

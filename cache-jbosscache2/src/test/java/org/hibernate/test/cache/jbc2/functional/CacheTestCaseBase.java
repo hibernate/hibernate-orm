@@ -23,7 +23,6 @@
  */
 package org.hibernate.test.cache.jbc2.functional;
 
-import org.hibernate.cache.RegionFactory;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.Mappings;
@@ -73,7 +72,7 @@ public abstract class CacheTestCaseBase extends FunctionalTestCase {
         cfg.setProperty(Environment.CONNECTION_PROVIDER, getConnectionProviderClass().getName());
         cfg.setProperty(Environment.TRANSACTION_MANAGER_STRATEGY, getTransactionManagerLookupClass().getName());
         
-        Class transactionFactory = getTransactionFactoryClass();
+        Class<?> transactionFactory = getTransactionFactoryClass();
         if (transactionFactory != null)
             cfg.setProperty( Environment.TRANSACTION_STRATEGY, transactionFactory.getName() );
         
@@ -101,19 +100,19 @@ public abstract class CacheTestCaseBase extends FunctionalTestCase {
      */
     protected abstract void configureCacheFactory(Configuration cfg);
 
-    protected abstract Class getCacheRegionFactory();
+    protected abstract Class<?> getCacheRegionFactory();
 
     protected abstract boolean getUseQueryCache();
     
-    protected Class getConnectionProviderClass() {
+    protected Class<?> getConnectionProviderClass() {
         return org.hibernate.test.tm.ConnectionProviderImpl.class;
     }
     
-    protected Class getTransactionManagerLookupClass() {
+    protected Class<?> getTransactionManagerLookupClass() {
         return org.hibernate.test.tm.TransactionManagerLookupImpl.class;
     }
     
-    protected Class getTransactionFactoryClass() {
+    protected Class<?> getTransactionFactoryClass() {
         return null;
     }
 

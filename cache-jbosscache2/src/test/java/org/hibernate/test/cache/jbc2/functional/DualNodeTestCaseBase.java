@@ -87,17 +87,17 @@ public abstract class DualNodeTestCaseBase extends CacheTestCaseBase
    }
    
    @Override
-   protected Class getConnectionProviderClass() {
+   protected Class<?> getConnectionProviderClass() {
        return DualNodeConnectionProviderImpl.class;
    }
    
    @Override
-   protected Class getTransactionManagerLookupClass() {
+   protected Class<?> getTransactionManagerLookupClass() {
        return DualNodeTransactionManagerLookup.class;
    }   
    
    @Override
-   protected Class getTransactionFactoryClass() {
+   protected Class<?> getTransactionFactoryClass() {
        return CMTTransactionFactory.class;
    }
 

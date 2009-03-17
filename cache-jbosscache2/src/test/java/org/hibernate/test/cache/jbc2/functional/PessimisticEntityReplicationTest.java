@@ -24,21 +24,17 @@
 package org.hibernate.test.cache.jbc2.functional;
 
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Set;
 
 import javax.transaction.TransactionManager;
 
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
-import org.hibernate.cache.RegionFactory;
 import org.hibernate.cache.jbc2.builder.MultiplexingCacheInstanceManager;
 import org.hibernate.cfg.Configuration;
-import org.hibernate.cfg.Environment;
 import org.hibernate.test.cache.jbc2.functional.util.DualNodeTestUtil;
 import org.hibernate.test.cache.jbc2.functional.util.TestCacheInstanceManager;
 import org.hibernate.test.cache.jbc2.functional.util.TestJBossCacheRegionFactory;
-import org.hibernate.transaction.CMTTransactionFactory;
 import org.jboss.cache.Cache;
 import org.jboss.cache.CacheManager;
 import org.jboss.cache.Fqn;
@@ -70,7 +66,7 @@ extends DualNodeTestCaseBase
    }
 
    @Override
-   protected Class getCacheRegionFactory()
+   protected Class<?> getCacheRegionFactory()
    {
       return TestJBossCacheRegionFactory.class;
    }
@@ -100,7 +96,7 @@ extends DualNodeTestCaseBase
       // Bind a listener to the "local" cache
       // Our region factory makes its CacheManager available to us
       CacheManager localManager = TestCacheInstanceManager.getTestCacheManager(DualNodeTestUtil.LOCAL);
-      Cache localCache = localManager.getCache(getEntityCacheConfigName(), true);
+      Cache<Object, Object> localCache = localManager.getCache(getEntityCacheConfigName(), true);
       MyListener localListener = new MyListener();
       localCache.addCacheListener(localListener);
       
@@ -108,7 +104,7 @@ extends DualNodeTestCaseBase
       
       // Bind a listener to the "remote" cache
       CacheManager remoteManager = TestCacheInstanceManager.getTestCacheManager(DualNodeTestUtil.REMOTE);
-      Cache remoteCache = remoteManager.getCache(getEntityCacheConfigName(), true);
+      Cache<Object, Object> remoteCache = remoteManager.getCache(getEntityCacheConfigName(), true);
       MyListener remoteListener = new MyListener();
       remoteCache.addCacheListener(remoteListener);      
       
@@ -191,7 +187,7 @@ extends DualNodeTestCaseBase
          
          IdContainer ids = new IdContainer();
          ids.customerId = customer.getId();
-         Set contactIds = new HashSet();
+         Set<Integer> contactIds = new HashSet<Integer>();
          contactIds.add(kabir.getId());
          contactIds.add(bill.getId());
          ids.contactIds = contactIds;
@@ -226,8 +222,8 @@ extends DualNodeTestCaseBase
          Session session = sessionFactory.getCurrentSession();
          Customer customer = (Customer) session.get(Customer.class, id);
          // Access all the contacts
-         for (Iterator it = customer.getContacts().iterator(); it.hasNext();) {
-            ((Contact) it.next()).getName();
+         for (Contact contact : customer.getContacts()) {
+            contact.getName();
          }
          tm.commit();
          return customer;
@@ -257,9 +253,8 @@ extends DualNodeTestCaseBase
          Customer c = (Customer) session.get(Customer.class, CUSTOMER_ID);
          if (c != null)
          {
-            Set contacts = c.getContacts();
-            for (Iterator it = contacts.iterator(); it.hasNext();)
-               session.delete(it.next());
+            for (Contact contact : c.getContacts())
+               session.delete(contact);
             c.setContacts(null);
             session.delete(c);
          }
@@ -278,11 +273,10 @@ extends DualNodeTestCaseBase
       }
    }
    
-   private void assertLoadedFromCache(MyListener listener, Integer custId, Set contactIds)
+   private void assertLoadedFromCache(MyListener listener, Integer custId, Set<Integer> contactIds)
    {
       assertTrue("Customer#" + custId + " was in cache", listener.visited.contains("Customer#" + custId));
-      for (Iterator it = contactIds.iterator(); it.hasNext();) {
-          Integer contactId = (Integer) it.next();
+      for (Integer contactId : contactIds) {
           assertTrue("Contact#"+ contactId + " was in cache", listener.visited.contains("Contact#"+ contactId));
           assertTrue("Contact#"+ contactId + " was in cache", listener.visited.contains("Contact#"+ contactId));
       }
@@ -307,6 +301,7 @@ extends DualNodeTestCaseBase
          
          if (!event.isPre())
          {
+            @SuppressWarnings("unchecked")
             Fqn fqn = event.getFqn();
             System.out.println("MyListener - Visiting node " + fqn.toString());
             String name = fqn.toString();
@@ -325,6 +320,6 @@ extends DualNodeTestCaseBase
    
    private class IdContainer {
       Integer customerId;
-      Set contactIds;
+      Set<Integer> contactIds;
    }
 }

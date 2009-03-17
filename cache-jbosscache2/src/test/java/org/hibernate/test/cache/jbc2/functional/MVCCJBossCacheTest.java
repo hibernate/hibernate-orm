@@ -32,7 +32,7 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
 
 /**
- * Basic functional test of a pessimistic locking entity + query cache.
+ * Basic functional test of a MVCC locking entity + query cache.
  * 
  * @author Brian Stansberry
  */

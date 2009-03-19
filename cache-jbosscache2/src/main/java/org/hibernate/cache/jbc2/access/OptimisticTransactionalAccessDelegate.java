@@ -23,11 +23,12 @@
  */
 package org.hibernate.cache.jbc2.access;
 
+import javax.transaction.Transaction;
+
 import org.hibernate.cache.CacheDataDescription;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.access.CollectionRegionAccessStrategy;
 import org.hibernate.cache.access.EntityRegionAccessStrategy;
-import org.hibernate.cache.jbc2.BasicRegionAdapter;
 import org.hibernate.cache.jbc2.TransactionalDataRegionAdapter;
 import org.hibernate.cache.jbc2.util.CacheHelper;
 import org.hibernate.cache.jbc2.util.DataVersionAdapter;
@@ -63,43 +64,42 @@ public class OptimisticTransactionalAccessDelegate extends TransactionalAccessDe
      */
     @Override
     public void evict(Object key) throws CacheException {
-        
+        pendingPuts.remove(key);
         region.ensureRegionRootExists();
 
         Option opt = NonLockingDataVersion.getInvocationOption();
         CacheHelper.remove(cache, regionFqn, key, opt);
-    }
-
-    /**
-     * Overrides the {@link TransactionalAccessDelegate#evictAll() superclass}
-     * by adding a {@link NonLockingDataVersion} to the invocation.
-     */
-    @Override
-    public void evictAll() throws CacheException {
-
-        evictOrRemoveAll();
-    }    
+    } 
     
-    /**
-     * Overrides the {@link TransactionalAccessDelegate#get(Object, long) superclass}
-     * by {@link BasicRegionAdapter#ensureRegionRootExists() ensuring the root
-     * node for the region exists} before making the call.
-     */
+    
+
     @Override
-    public Object get(Object key, long txTimestamp) throws CacheException
+    public void evictAll() throws CacheException
     {
-        region.ensureRegionRootExists();
-        
-        return CacheHelper.get(cache, regionFqn, key);
+       pendingPuts.clear();
+       Transaction tx = region.suspend();
+       try {        
+          region.ensureRegionRootExists();
+          Option opt = NonLockingDataVersion.getInvocationOption();
+          CacheHelper.sendEvictAllNotification(cache, regionFqn, region.getMemberId(), opt);
+       }
+       finally {
+          region.resume(tx);
+       }
     }
 
-    /**
+   /**
      * Overrides the
      * {@link TransactionalAccessDelegate#insert(Object, Object, Object) superclass}
      * by adding a {@link DataVersion} to the invocation.
      */
     @Override
     public boolean insert(Object key, Object value, Object version) throws CacheException {
+       
+        pendingPuts.remove(key);
+        
+        if (!region.checkValid())
+            return false;
         
         region.ensureRegionRootExists();
 
@@ -111,6 +111,12 @@ public class OptimisticTransactionalAccessDelegate extends TransactionalAccessDe
     @Override
     public boolean putFromLoad(Object key, Object value, long txTimestamp, Object version, boolean minimalPutOverride)
             throws CacheException {
+       
+        if (!region.checkValid())
+            return false;
+        
+        if (!isPutValid(key))
+           return false;
         
         region.ensureRegionRootExists();
 
@@ -123,6 +129,12 @@ public class OptimisticTransactionalAccessDelegate extends TransactionalAccessDe
 
     @Override
     public boolean putFromLoad(Object key, Object value, long txTimestamp, Object version) throws CacheException {
+       
+        if (!region.checkValid())
+            return false;
+        
+        if (!isPutValid(key))
+           return false;
         
         region.ensureRegionRootExists();
 
@@ -132,6 +144,12 @@ public class OptimisticTransactionalAccessDelegate extends TransactionalAccessDe
 
     @Override
     public void remove(Object key) throws CacheException {
+       
+        pendingPuts.remove(key);
+        
+        // We remove whether or not the region is valid. Other nodes
+        // may have already restored the region so they need to
+        // be informed of the change.
         
         region.ensureRegionRootExists();
 
@@ -141,13 +159,20 @@ public class OptimisticTransactionalAccessDelegate extends TransactionalAccessDe
 
     @Override
     public void removeAll() throws CacheException {
-
-        evictOrRemoveAll();  
+       pendingPuts.clear();
+       Option opt = NonLockingDataVersion.getInvocationOption();
+       CacheHelper.removeAll(cache, regionFqn, opt);
     }
 
     @Override
     public boolean update(Object key, Object value, Object currentVersion, Object previousVersion)
             throws CacheException {
+       
+        pendingPuts.remove(key);
+        
+        // We update whether or not the region is valid. Other nodes
+        // may have already restored the region so they need to
+        // be informed of the change.
         
         region.ensureRegionRootExists();
 
@@ -164,12 +189,6 @@ public class OptimisticTransactionalAccessDelegate extends TransactionalAccessDe
         Option opt = new Option();
         opt.setDataVersion(dv);
         return opt;
-    }
-
-    private void evictOrRemoveAll() {
-       
-        Option opt = NonLockingDataVersion.getInvocationOption();
-        CacheHelper.removeAll(cache, regionFqn, opt);
     }
 
 }

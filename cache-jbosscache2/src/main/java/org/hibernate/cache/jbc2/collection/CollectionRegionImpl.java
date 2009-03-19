@@ -26,6 +26,7 @@ package org.hibernate.cache.jbc2.collection;
 import org.jboss.cache.Cache;
 import org.jboss.cache.Fqn;
 import org.jboss.cache.config.Configuration.NodeLockingScheme;
+import org.jboss.cache.notifications.annotation.CacheListener;
 
 import org.hibernate.cache.CacheDataDescription;
 import org.hibernate.cache.CacheException;
@@ -39,6 +40,7 @@ import org.hibernate.cache.jbc2.TransactionalDataRegionAdapter;
  * 
  * @author Steve Ebersole
  */
+@CacheListener
 public class CollectionRegionImpl extends TransactionalDataRegionAdapter implements CollectionRegion {
 
     public static final String TYPE = "COLL";

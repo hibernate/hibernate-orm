@@ -23,9 +23,13 @@
  */
 package org.hibernate.cache.jbc2;
 
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicReference;
 
 import javax.transaction.SystemException;
 import javax.transaction.Transaction;
@@ -42,7 +46,12 @@ import org.jboss.cache.NodeSPI;
 import org.jboss.cache.config.Configuration;
 import org.jboss.cache.config.Option;
 import org.jboss.cache.config.Configuration.NodeLockingScheme;
-import org.jboss.cache.notifications.annotation.CacheListener;
+import org.jboss.cache.notifications.annotation.NodeInvalidated;
+import org.jboss.cache.notifications.annotation.NodeModified;
+import org.jboss.cache.notifications.annotation.ViewChanged;
+import org.jboss.cache.notifications.event.NodeInvalidatedEvent;
+import org.jboss.cache.notifications.event.NodeModifiedEvent;
+import org.jboss.cache.notifications.event.ViewChangedEvent;
 import org.jboss.cache.optimistic.DataVersion;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,30 +62,52 @@ import org.slf4j.LoggerFactory;
  * 
  * @author Steve Ebersole
  */
-@CacheListener
 public abstract class BasicRegionAdapter implements Region {
    
+    private enum InvalidateState { INVALID, CLEARING, VALID };
     
     public static final String ITEM = CacheHelper.ITEM;
 
     protected final Cache jbcCache;
     protected final String regionName;
     protected final Fqn regionFqn;
+    protected final Fqn internalFqn;
     protected Node regionRoot;
     protected final boolean optimistic;
     protected final TransactionManager transactionManager;
     protected final Logger log;
     protected final Object regionRootMutex = new Object();
+    protected final Object memberId;
+    protected final boolean replication;
+    protected final Object invalidationMutex = new Object();
+    protected final AtomicReference<InvalidateState> invalidateState = 
+       new AtomicReference<InvalidateState>(InvalidateState.VALID);
+    protected final Set<Object> currentView = new HashSet<Object>();
 
 //    protected RegionRootListener listener;
     
     public BasicRegionAdapter(Cache jbcCache, String regionName, String regionPrefix) {
+
+        this.log = LoggerFactory.getLogger(getClass());
+        
         this.jbcCache = jbcCache;
         this.transactionManager = jbcCache.getConfiguration().getRuntimeConfig().getTransactionManager();
         this.regionName = regionName;
         this.regionFqn = createRegionFqn(regionName, regionPrefix);
-        optimistic = jbcCache.getConfiguration().getNodeLockingScheme() == NodeLockingScheme.OPTIMISTIC;
-        log = LoggerFactory.getLogger(getClass());
+        this.internalFqn = CacheHelper.getInternalFqn(regionFqn);
+        this.optimistic = jbcCache.getConfiguration().getNodeLockingScheme() == NodeLockingScheme.OPTIMISTIC;
+        this.memberId = jbcCache.getLocalAddress();
+        this.replication = CacheHelper.isClusteredReplication(jbcCache);
+        
+        this.jbcCache.addCacheListener(this);
+        
+        synchronized (currentView) {
+           List view = jbcCache.getMembers();
+           if (view != null) {
+              currentView.addAll(view);
+           }
+        }
+        
         activateLocalClusterNode();
         
         log.debug("Created Region for " + regionName + " -- regionPrefix is " + regionPrefix);
@@ -129,13 +160,13 @@ public abstract class BasicRegionAdapter implements Region {
             if (!regionRoot.isResident()) {
                regionRoot.setResident(true);
             }
+            establishInternalNodes();
         }
         catch (Exception e) {
             throw new CacheException(e.getMessage(), e);
         }
         finally {
-            if (tx != null)
-               resume(tx);
+            resume(tx);
         }
         
     }
@@ -154,6 +185,7 @@ public abstract class BasicRegionAdapter implements Region {
             // For pessimistic locking, we just want to toss out our ref
             // to any old invalid root node and get the latest (may be null)            
             if (!optimistic) {
+               establishInternalNodes();
                regionRoot = jbcCache.getRoot().getChild( regionFqn );
                return;
             }
@@ -181,12 +213,31 @@ public abstract class BasicRegionAdapter implements Region {
                  }
                  // Never evict this node
                  newRoot.setResident(true);
+                 establishInternalNodes();
             }
             finally {
                 resume(tx);
                 regionRoot = newRoot;
             }
         }
+    }
+
+    private void establishInternalNodes()
+    {
+       synchronized (currentView) {
+          Transaction tx = suspend();
+          try {
+             for (Object member : currentView) {
+                DataVersion version = optimistic ? NonLockingDataVersion.INSTANCE : null;
+                Fqn f = Fqn.fromRelativeElements(internalFqn, member);
+                CacheHelper.addNode(jbcCache, f, true, false, version);
+             }
+          }
+          finally {
+             resume(tx);
+          }
+       }
+       
     }
 
     public String getName() {
@@ -199,6 +250,11 @@ public abstract class BasicRegionAdapter implements Region {
 
     public Fqn getRegionFqn() {
         return regionFqn;
+    }
+    
+    public Object getMemberId()
+    {
+       return this.memberId;
     }
     
     /**
@@ -218,6 +274,37 @@ public abstract class BasicRegionAdapter implements Region {
        // Fix up the resident flag
        if (regionRoot != null && regionRoot.isValid() && !regionRoot.isResident())
           regionRoot.setResident(true);
+    }
+    
+    public boolean checkValid()
+    {
+       boolean valid = invalidateState.get() == InvalidateState.VALID;
+       
+       if (!valid) {
+          synchronized (invalidationMutex) {
+             if (invalidateState.compareAndSet(InvalidateState.INVALID, InvalidateState.CLEARING)) {
+                Transaction tx = suspend();
+                try {
+                   Option opt = new Option();
+                   opt.setLockAcquisitionTimeout(1);
+                   opt.setCacheModeLocal(true);
+                   CacheHelper.removeAll(jbcCache, regionFqn, opt);
+                   invalidateState.compareAndSet(InvalidateState.CLEARING, InvalidateState.VALID);
+                }
+                catch (Exception e) {
+                   if (log.isTraceEnabled()) {
+                      log.trace("Could not invalidate region: " + e.getLocalizedMessage());
+                   }
+                }
+                finally {
+                   resume(tx);
+                }
+             }
+          }
+          valid = invalidateState.get() == InvalidateState.VALID;
+       }
+       
+       return valid;   
     }
 
     public void destroy() throws CacheException {
@@ -242,10 +329,9 @@ public abstract class BasicRegionAdapter implements Region {
         } catch (Exception e) {
             throw new CacheException(e);
         }
-//        finally {
-//            if (listener != null)
-//                jbcCache.removeCacheListener(listener);
-//        }
+        finally {
+            jbcCache.removeCacheListener(this);
+        }
     }
 
     protected void deactivateLocalNode() {
@@ -262,12 +348,21 @@ public abstract class BasicRegionAdapter implements Region {
     }
 
     public long getElementCountInMemory() {
-        try {
-            Set childrenNames = CacheHelper.getChildrenNames(jbcCache, regionFqn);
-            return childrenNames.size();
-        } catch (Exception e) {
-            throw new CacheException(e);
+        if (checkValid()) {
+           try {
+               Set childrenNames = CacheHelper.getChildrenNames(jbcCache, regionFqn);
+               int size = childrenNames.size();
+               if (childrenNames.contains(CacheHelper.Internal.NODE)) {
+                  size--;
+               }
+               return size;
+           } catch (Exception e) {
+               throw new CacheException(e);
+           }
         }
+        else {
+           return 0;
+        }           
     }
 
     public long getElementCountOnDisk() {
@@ -275,17 +370,24 @@ public abstract class BasicRegionAdapter implements Region {
     }
 
     public Map toMap() {
-        try {
-            Map result = new HashMap();
-            Set childrenNames = CacheHelper.getChildrenNames(jbcCache, regionFqn);
-            for (Object childName : childrenNames) {
-                result.put(childName, CacheHelper.get(jbcCache,regionFqn, childName));
-            }
-            return result;
-        } catch (CacheException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new CacheException(e);
+        if (checkValid()) {
+           try {
+               Map result = new HashMap();
+               Set childrenNames = CacheHelper.getChildrenNames(jbcCache, regionFqn);
+               for (Object childName : childrenNames) {
+                   if (CacheHelper.Internal.NODE != childName) {
+                      result.put(childName, CacheHelper.get(jbcCache,regionFqn, childName));
+                   }
+               }
+               return result;
+           } catch (CacheException e) {
+               throw e;
+           } catch (Exception e) {
+               throw new CacheException(e);
+           }
+        }
+        else {
+           return Collections.emptyMap();
         }
     }
 
@@ -320,6 +422,20 @@ public abstract class BasicRegionAdapter implements Region {
             resume(tx);
         }
     }
+    
+    public Object getOwnerForPut()
+    {
+       Transaction tx = null;
+       try {
+           if (transactionManager != null) {
+               tx = transactionManager.getTransaction();
+           }
+       } catch (SystemException se) {
+           throw new CacheException("Could not obtain transaction", se);
+       }
+       return tx == null ? Thread.currentThread() : tx;
+       
+    }
 
     /**
      * Tell the TransactionManager to suspend any ongoing transaction.
@@ -327,7 +443,7 @@ public abstract class BasicRegionAdapter implements Region {
      * @return the transaction that was suspended, or <code>null</code> if
      *         there wasn't one
      */
-    protected Transaction suspend() {
+    public Transaction suspend() {
         Transaction tx = null;
         try {
             if (transactionManager != null) {
@@ -345,7 +461,7 @@ public abstract class BasicRegionAdapter implements Region {
      * @param tx
      *            the transaction to suspend. May be <code>null</code>.
      */
-    protected void resume(Transaction tx) {
+    public void resume(Transaction tx) {
         try {
             if (tx != null)
                 transactionManager.resume(tx);
@@ -404,17 +520,52 @@ public abstract class BasicRegionAdapter implements Region {
         return escaped;
     }
     
-//    @CacheListener
-//    public class RegionRootListener {
-//        
-//        @NodeCreated
-//        public void nodeCreated(NodeCreatedEvent event) {
-//            if (!event.isPre() && event.getFqn().equals(getRegionFqn())) {
-//                log.debug("Node created for " + getRegionFqn());
-//                Node regionRoot = jbcCache.getRoot().getChild(getRegionFqn());
-//                regionRoot.setResident(true);
-//            }
-//        }
-//        
-//    }
+    @NodeModified
+    public void nodeModified(NodeModifiedEvent event)
+    {
+       handleEvictAllModification(event);
+    }
+    
+    protected boolean handleEvictAllModification(NodeModifiedEvent event) {
+       
+       if (!event.isPre() && (replication || event.isOriginLocal()) && event.getData().containsKey(ITEM))
+       {
+          if (event.getFqn().isChildOf(internalFqn))
+          {
+             invalidateState.set(InvalidateState.INVALID);
+             return true;
+          }
+       }
+       return false;       
+    }
+    
+    @NodeInvalidated
+    public void nodeInvalidated(NodeInvalidatedEvent event)
+    {
+       handleEvictAllInvalidation(event);
+    }
+    
+    protected boolean handleEvictAllInvalidation(NodeInvalidatedEvent event)
+    {
+       if (!event.isPre() && event.getFqn().isChildOf(internalFqn))
+       {
+          invalidateState.set(InvalidateState.INVALID);
+          return true;
+       }      
+       return false;
+    }
+    
+    @ViewChanged
+    public void viewChanged(ViewChangedEvent event) {
+       
+       synchronized (currentView) {
+          List view = event.getNewView().getMembers();
+          if (view != null) {
+             currentView.addAll(view);
+             establishInternalNodes();
+          }
+       }
+       
+    }
+   
 }

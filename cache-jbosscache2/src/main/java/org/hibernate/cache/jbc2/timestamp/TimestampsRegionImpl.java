@@ -41,6 +41,7 @@ import org.jboss.cache.config.Option;
 import org.jboss.cache.notifications.annotation.CacheListener;
 import org.jboss.cache.notifications.annotation.NodeModified;
 import org.jboss.cache.notifications.annotation.NodeRemoved;
+import org.jboss.cache.notifications.event.NodeInvalidatedEvent;
 import org.jboss.cache.notifications.event.NodeModifiedEvent;
 import org.jboss.cache.notifications.event.NodeRemovedEvent;
 
@@ -95,14 +96,21 @@ public class TimestampsRegionImpl extends TransactionalDataRegionAdapter impleme
 
     public void evictAll() throws CacheException {
         // TODO Is this a valid operation on a timestamps cache?
-        Option opt = getNonLockingDataVersionOption(true);
-        CacheHelper.removeAll(getCacheInstance(), getRegionFqn(), opt);
+        Transaction tx = suspend();
+        try {        
+           ensureRegionRootExists();
+           Option opt = getNonLockingDataVersionOption(true);
+           CacheHelper.sendEvictAllNotification(jbcCache, regionFqn, getMemberId(), opt);
+        }
+        finally {
+           resume(tx);
+        }        
     }
 
     public Object get(Object key) throws CacheException {
 
         Object value = localCache.get(key);
-        if (value == null) {
+        if (value == null && checkValid()) {
            
             ensureRegionRootExists();
             
@@ -147,14 +155,15 @@ public class TimestampsRegionImpl extends TransactionalDataRegionAdapter impleme
      */
     @NodeModified
     public void nodeModified(NodeModifiedEvent event) {
-        if (event.isPre())
-            return;
-
-        Fqn fqn = event.getFqn();
-        Fqn regFqn = getRegionFqn();
-        if (fqn.size() == regFqn.size() + 1 && fqn.isChildOf(regFqn)) {
-            Object key = fqn.get(regFqn.size());
-            localCache.put(key, event.getData().get(ITEM));
+       
+        if (!handleEvictAllModification(event) && !event.isPre()) {
+   
+           Fqn fqn = event.getFqn();
+           Fqn regFqn = getRegionFqn();
+           if (fqn.size() == regFqn.size() + 1 && fqn.isChildOf(regFqn)) {
+               Object key = fqn.get(regFqn.size());
+               localCache.put(key, event.getData().get(ITEM));
+           }
         }
     }
 
@@ -178,8 +187,30 @@ public class TimestampsRegionImpl extends TransactionalDataRegionAdapter impleme
             localCache.clear();
         }
     }
+    
+    
 
-    /**
+    @Override
+   protected boolean handleEvictAllInvalidation(NodeInvalidatedEvent event)
+   {
+      boolean result = super.handleEvictAllInvalidation(event);
+      if (result) {
+         localCache.clear();
+      }
+      return result;
+   }
+
+   @Override
+   protected boolean handleEvictAllModification(NodeModifiedEvent event)
+   {
+      boolean result = super.handleEvictAllModification(event);
+      if (result) {
+         localCache.clear();
+      }
+      return result;
+   }
+
+   /**
      * Brings all data from the distributed cache into our local cache.
      */
     private void populateLocalCache() {

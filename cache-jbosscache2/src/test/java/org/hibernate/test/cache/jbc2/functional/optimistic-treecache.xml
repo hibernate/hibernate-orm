@@ -125,10 +125,10 @@
             Number of milliseconds to wait until all responses for a
             synchronous call have been received.
         -->
-        <attribute name="SyncReplTimeout">20000</attribute>
+        <attribute name="SyncReplTimeout">10000</attribute>
 
         <!-- Max number of milliseconds to wait for a lock acquisition -->
-        <attribute name="LockAcquisitionTimeout">15000</attribute>
+        <attribute name="LockAcquisitionTimeout">5000</attribute>
 
        <!--
           Indicate whether to use marshalling or not. Set this to true if you are running under a scoped

@@ -31,6 +31,7 @@ import org.hibernate.cache.CollectionRegion;
 import org.hibernate.cache.Region;
 import org.hibernate.cache.RegionFactory;
 import org.hibernate.cache.access.AccessType;
+import org.hibernate.cache.access.CollectionRegionAccessStrategy;
 import org.hibernate.cache.jbc2.BasicRegionAdapter;
 import org.hibernate.cache.jbc2.CacheInstanceManager;
 import org.hibernate.cache.jbc2.JBossCacheRegionFactory;
@@ -103,7 +104,10 @@ public class CollectionRegionImplTestCase extends AbstractEntityCollectionRegion
 
     @Override
     protected void putInRegion(Region region, Object key, Object value) {
-        ((CollectionRegion) region).buildAccessStrategy(AccessType.TRANSACTIONAL).putFromLoad(key, value, System.currentTimeMillis(), new Integer(1));
+        CollectionRegionAccessStrategy strategy = ((CollectionRegion) region).buildAccessStrategy(AccessType.TRANSACTIONAL);
+        // putFromLoad is ignored if not preceded by a get, so do a get
+        strategy.get(key, System.currentTimeMillis());
+        strategy.putFromLoad(key, value, System.currentTimeMillis(), new Integer(1));
     }
 
     @Override

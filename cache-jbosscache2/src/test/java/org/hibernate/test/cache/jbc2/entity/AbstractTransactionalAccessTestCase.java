@@ -56,6 +56,7 @@ public abstract class AbstractTransactionalAccessTestCase extends AbstractEntity
        
         final String KEY = KEY_BASE + testCount++;
         
+        localAccessStrategy.get(KEY, System.currentTimeMillis());
         localAccessStrategy.putFromLoad(KEY, VALUE1, System.currentTimeMillis(), new Integer(1));
                
         final CountDownLatch pferLatch = new CountDownLatch(1);
@@ -63,7 +64,7 @@ public abstract class AbstractTransactionalAccessTestCase extends AbstractEntity
         final CountDownLatch commitLatch = new CountDownLatch(1);
         final CountDownLatch completionLatch = new CountDownLatch(1);
         
-        Thread blocker = new Thread() {          
+        Thread blocker = new Thread("Blocker") {          
             
             public void run() {
                 
@@ -95,7 +96,7 @@ public abstract class AbstractTransactionalAccessTestCase extends AbstractEntity
             }
         };
         
-        Thread putter = new Thread() {          
+        Thread putter = new Thread("Putter") {          
             
             public void run() {
                 

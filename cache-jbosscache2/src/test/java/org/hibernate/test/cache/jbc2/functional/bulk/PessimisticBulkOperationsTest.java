@@ -31,6 +31,7 @@ import org.hibernate.cache.jbc2.MultiplexedJBossCacheRegionFactory;
 import org.hibernate.cache.jbc2.builder.MultiplexingCacheInstanceManager;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.classic.Session;
+import org.hibernate.stat.SecondLevelCacheStatistics;
 import org.hibernate.test.cache.jbc2.functional.CacheTestCaseBase;
 import org.hibernate.test.cache.jbc2.functional.Contact;
 import org.hibernate.test.cache.jbc2.functional.Customer;
@@ -90,7 +91,12 @@ extends CacheTestCaseBase
          assertNotNull("Red Hat contacts exist", rhContacts);
          assertEquals("Created expected number of Red Hat contacts", 10, rhContacts.size());
          
+         SecondLevelCacheStatistics contactSlcs = getEnvironment().getSessionFactory().getStatistics().getSecondLevelCacheStatistics(
+               getPrefixedRegionName(Contact.class.getName()));
+         assertEquals(contactSlcs.getElementCountInMemory(), 20);
+         
          assertEquals("Deleted all Red Hat contacts", 10, deleteContacts());
+         assertEquals(0, contactSlcs.getElementCountInMemory());
          
          List<Integer> jbContacts = getContactsByCustomer("JBoss");
          assertNotNull("JBoss contacts exist", jbContacts);
@@ -108,6 +114,7 @@ extends CacheTestCaseBase
          }
          
          updateContacts("Kabir", "Updated");
+         assertEquals(contactSlcs.getElementCountInMemory(), 0);
          for (Integer id : jbContacts)
          {
             Contact contact = getContact(id);
@@ -118,6 +125,21 @@ extends CacheTestCaseBase
          }
          
          List<Integer> updated = getContactsByTLF("Updated");
+         assertNotNull("Got updated contacts", updated);
+         assertEquals("Updated contacts", 5, updated.size());
+         
+         updateContactsWithOneManual("Kabir", "UpdatedAgain");
+         assertEquals(contactSlcs.getElementCountInMemory(), 0);
+         for (Integer id : jbContacts)
+         {
+            Contact contact = getContact(id);
+            assertNotNull("JBoss contact " + id + " exists", contact);
+            String expected = ("Kabir".equals(contact.getName())) ? "UpdatedAgain" : "2222";
+            assertEquals("JBoss contact " + id + " has correct TLF",
+                         expected, contact.getTlf());
+         }
+         
+         updated = getContactsByTLF("UpdatedAgain");
          assertNotNull("Got updated contacts", updated);
          assertEquals("Updated contacts", 5, updated.size());
       }
@@ -218,6 +240,34 @@ extends CacheTestCaseBase
       try {
           
           Session session = getSessions().getCurrentSession();
+          int rowsAffected = session.createQuery(updateHQL)
+                                .setFlushMode(FlushMode.AUTO)
+                                .setParameter("cNewTLF", newTLF)
+                                .setParameter("cName", name)
+                                .executeUpdate();
+          SimpleJtaTransactionManagerImpl.getInstance().commit();
+          return rowsAffected;       
+      }
+      catch (Exception e) {
+          SimpleJtaTransactionManagerImpl.getInstance().rollback();
+          throw e;         
+      }     
+   }
+
+   public int updateContactsWithOneManual(String name, String newTLF) throws Exception
+   {
+      String queryHQL = "from Contact c where c.name = :cName";
+      String updateHQL = "update Contact set tlf = :cNewTLF where name = :cName";
+
+      SimpleJtaTransactionManagerImpl.getInstance().begin();
+      try {
+          
+          Session session = getSessions().getCurrentSession();
+          
+          @SuppressWarnings("unchecked")
+          List<Contact> list = session.createQuery(queryHQL).setParameter("cName", name).list();
+          list.get(0).setTlf(newTLF);
+          
           int rowsAffected = session.createQuery(updateHQL)
                                 .setFlushMode(FlushMode.AUTO)
                                 .setParameter("cNewTLF", newTLF)

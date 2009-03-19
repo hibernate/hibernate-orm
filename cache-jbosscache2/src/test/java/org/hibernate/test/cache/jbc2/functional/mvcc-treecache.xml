@@ -113,13 +113,15 @@
             Number of milliseconds to wait until all responses for a
             synchronous call have been received.
         -->
-        <attribute name="SyncReplTimeout">20000</attribute>
+        <attribute name="SyncReplTimeout">10000</attribute>
 
         <!-- Max number of milliseconds to wait for a lock acquisition -->
-        <attribute name="LockAcquisitionTimeout">15000</attribute>
+        <attribute name="LockAcquisitionTimeout">5000</attribute>
 
         <!-- For now. disable asynchronous RPC marshalling/sending -->
         <attribute name="SerializationExecutorPoolSize">0</attribute>
+        
+        <attribute name="UseLockStriping">false</attribute>
 
       <!--  Specific eviction policy configurations. This is LRU -->
       <attribute name="EvictionPolicyConfig">

@@ -23,7 +23,6 @@
  */
 package org.hibernate.test.cache.jbc2.entity;
 
-import java.util.Iterator;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -487,7 +486,9 @@ public abstract class AbstractEntityRegionAccessStrategyTestCase extends Abstrac
         final String KEY = KEY_BASE + testCount++;
 
         // Set up initial state
+        localAccessStrategy.get(KEY, System.currentTimeMillis());
         localAccessStrategy.putFromLoad(KEY, VALUE1, System.currentTimeMillis(), new Integer(1));
+        remoteAccessStrategy.get(KEY, System.currentTimeMillis());
         remoteAccessStrategy.putFromLoad(KEY, VALUE1, System.currentTimeMillis(), new Integer(1));
 
         // Let the async put propagate
@@ -702,31 +703,21 @@ public abstract class AbstractEntityRegionAccessStrategyTestCase extends Abstrac
         assertNull(localAccessStrategy.get(KEY, System.currentTimeMillis()));
 
         regionRoot = localCache.getRoot().getChild(regionFqn);
-        if (isUsingOptimisticLocking()) {
-            assertFalse(regionRoot == null);
-            assertEquals(0, getValidChildrenCount(regionRoot));
-            assertTrue(regionRoot.isValid());
-            assertTrue(regionRoot.isResident());
-        }
-        else {
-            assertTrue("region root is removed", regionRoot == null || !regionRoot.isValid());
-        }
+        assertFalse(regionRoot == null);
+        assertEquals(0, getValidChildrenCount(regionRoot));
+        assertTrue(regionRoot.isValid());
+        assertTrue(regionRoot.isResident());
 
         // Re-establishing the region root on the local node doesn't
         // propagate it to other nodes. Do a get on the remote node to re-establish
         assertEquals(null, remoteAccessStrategy.get(KEY, System.currentTimeMillis()));
 
         regionRoot = remoteCache.getRoot().getChild(regionFqn);
-        if (isUsingOptimisticLocking()) {
-           assertFalse(regionRoot == null);
-           assertTrue(regionRoot.isValid());
-           assertTrue(regionRoot.isResident());
-           // Not invalidation, so we didn't insert a child above
-           assertEquals(0, getValidChildrenCount(regionRoot));
-       }
-       else {
-          assertTrue("region root is removed", regionRoot == null || !regionRoot.isValid());
-       }
+        assertFalse(regionRoot == null);
+        assertTrue(regionRoot.isValid());
+        assertTrue(regionRoot.isResident());
+        // Not invalidation, so we didn't insert a child above
+        assertEquals(0, getValidChildrenCount(regionRoot));
 
         // Test whether the get above messes up the optimistic version
         remoteAccessStrategy.putFromLoad(KEY, VALUE1, System.currentTimeMillis(), new Integer(1));
@@ -747,16 +738,6 @@ public abstract class AbstractEntityRegionAccessStrategyTestCase extends Abstrac
         assertEquals("remote is correct", VALUE1, remoteAccessStrategy.get(KEY, System.currentTimeMillis()));
     }
 
-    private int getValidChildrenCount(Node node) {
-        int result = 0;
-        for (Iterator it = node.getChildren().iterator(); it.hasNext(); ) {
-           if (((Node) it.next()).isValid()) {
-              result++;
-           }
-        }
-        return result;
-    }
-
     protected void rollback() {
         try {
             BatchModeTransactionManager.getInstance().rollback();
@@ -764,7 +745,6 @@ public abstract class AbstractEntityRegionAccessStrategyTestCase extends Abstrac
         catch (Exception e) {
             log.error(e.getMessage(), e);
         }
-
     }
 
     private static class AccessStrategyTestSetup extends TestSetup {

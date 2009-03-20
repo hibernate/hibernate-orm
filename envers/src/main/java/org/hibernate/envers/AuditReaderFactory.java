@@ -43,15 +43,18 @@ public class AuditReaderFactory {
 
     /**
      * Create an audit reader associated with an open session.
-     * <b>WARNING:</b> Using Envers with Hibernate (not with Hibernate Entity Manager/JPA) is experimental,
-     * if possible, use {@link AuditReaderFactory#get(javax.persistence.EntityManager)}.
      * @param session An open session.
      * @return An audit reader associated with the given sesison. It shouldn't be used
      * after the session is closed.
      * @throws AuditException When the given required listeners aren't installed.
      */
     public static AuditReader get(Session session) throws AuditException {
-        SessionImplementor sessionImpl = (SessionImplementor) session;
+        SessionImplementor sessionImpl;
+		if (!(session instanceof SessionImplementor)) {
+			sessionImpl = (SessionImplementor) session.getSessionFactory().getCurrentSession();
+		} else {
+			sessionImpl = (SessionImplementor) session;
+		}
 
         EventListeners listeners = sessionImpl.getListeners();
 
@@ -83,6 +86,7 @@ public class AuditReaderFactory {
         }
 
         if (entityManager.getDelegate() instanceof EntityManager) {
+			entityManager = (EntityManager) entityManager.getDelegate();
             if (entityManager.getDelegate() instanceof Session) {
                 return get((Session) entityManager.getDelegate());
             }

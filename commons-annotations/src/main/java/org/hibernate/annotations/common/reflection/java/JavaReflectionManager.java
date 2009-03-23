@@ -37,6 +37,8 @@ import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XMethod;
 import org.hibernate.annotations.common.reflection.XPackage;
 import org.hibernate.annotations.common.reflection.XProperty;
+import org.hibernate.annotations.common.reflection.MetadataProviderInjector;
+import org.hibernate.annotations.common.reflection.MetadataProvider;
 import org.hibernate.annotations.common.reflection.java.generics.IdentityTypeEnvironment;
 import org.hibernate.annotations.common.reflection.java.generics.TypeEnvironment;
 import org.hibernate.annotations.common.reflection.java.generics.TypeEnvironmentFactory;
@@ -52,7 +54,20 @@ import org.hibernate.annotations.common.Version;
  * @author Davide Marchignoli
  * @author Emmanuel Bernard
  */
-public class JavaReflectionManager implements ReflectionManager {
+public class JavaReflectionManager implements ReflectionManager, MetadataProviderInjector {
+
+	private MetadataProvider metadataProvider;
+
+	public MetadataProvider getMetadataProvider() {
+		if (metadataProvider == null) {
+			setMetadataProvider( new JavaMetadataProvider() );
+		}
+		return metadataProvider;
+	}
+
+	public void setMetadataProvider(MetadataProvider metadataProvider) {
+		this.metadataProvider = metadataProvider;
+	}
 
 	static {
 		Version.touch();
@@ -204,10 +219,11 @@ public class JavaReflectionManager implements ReflectionManager {
 	}
 
     public AnnotationReader buildAnnotationReader(AnnotatedElement annotatedElement) {
-        return new JavaAnnotationReader(annotatedElement);
+        return getMetadataProvider().getAnnotationReader( annotatedElement );
     }
     
     public Map getDefaults() {
-        return new HashMap();
+        return getMetadataProvider().getDefaults();
     }
+
 }

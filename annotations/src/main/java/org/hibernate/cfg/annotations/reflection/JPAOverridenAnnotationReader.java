@@ -127,8 +127,8 @@ import org.slf4j.LoggerFactory;
  * @author Emmanuel Bernard
  */
 @SuppressWarnings("unchecked")
-public class EJB3OverridenAnnotationReader implements AnnotationReader {
-	private Logger log = LoggerFactory.getLogger( EJB3OverridenAnnotationReader.class );
+public class JPAOverridenAnnotationReader implements AnnotationReader {
+	private Logger log = LoggerFactory.getLogger( JPAOverridenAnnotationReader.class );
 	private static final Map<Class, String> annotationToXml;
 	private static final String SCHEMA_VALIDATION = "Activate schema validation for more informations";
 	private static final Filter FILTER = new Filter() {
@@ -218,7 +218,7 @@ public class EJB3OverridenAnnotationReader implements AnnotationReader {
 		METHOD
 	}
 
-	public EJB3OverridenAnnotationReader(AnnotatedElement el, XMLContext xmlContext) {
+	public JPAOverridenAnnotationReader(AnnotatedElement el, XMLContext xmlContext) {
 		this.element = el;
 		this.xmlContext = xmlContext;
 		if ( el instanceof Class ) {
@@ -1399,7 +1399,7 @@ public class EJB3OverridenAnnotationReader implements AnnotationReader {
 				try {
 					clazz = ReflectHelper.classForName(
 							XMLContext.buildSafeClassName( clazzName, defaults ),
-							EJB3OverridenAnnotationReader.class
+							JPAOverridenAnnotationReader.class
 					);
 				}
 				catch (ClassNotFoundException e) {
@@ -1436,7 +1436,7 @@ public class EJB3OverridenAnnotationReader implements AnnotationReader {
 				try {
 					clazz = ReflectHelper.classForName(
 							XMLContext.buildSafeClassName( clazzName, defaults ),
-							EJB3OverridenAnnotationReader.class
+							JPAOverridenAnnotationReader.class
 					);
 				}
 				catch (ClassNotFoundException e) {
@@ -1572,7 +1572,7 @@ public class EJB3OverridenAnnotationReader implements AnnotationReader {
 				try {
 					clazz = ReflectHelper.classForName(
 							XMLContext.buildSafeClassName( clazzName, defaults ),
-							EJB3OverridenAnnotationReader.class
+							JPAOverridenAnnotationReader.class
 					);
 				}
 				catch (ClassNotFoundException e) {

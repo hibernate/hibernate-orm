@@ -41,46 +41,49 @@ import java.util.Properties;
 import java.util.ResourceBundle;
 import java.util.Set;
 import java.util.StringTokenizer;
-
+import javax.persistence.Embeddable;
 import javax.persistence.Entity;
 import javax.persistence.MappedSuperclass;
-import javax.persistence.Embeddable;
 
 import org.dom4j.Attribute;
 import org.dom4j.Document;
 import org.dom4j.DocumentException;
 import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
-import org.hibernate.AnnotationException;
-import org.hibernate.HibernateException;
-import org.hibernate.Interceptor;
-import org.hibernate.MappingException;
-import org.hibernate.SessionFactory;
-import org.hibernate.DuplicateMappingException;
-import org.hibernate.engine.NamedQueryDefinition;
-import org.hibernate.engine.NamedSQLQueryDefinition;
-import org.hibernate.engine.ResultSetMappingDefinition;
-import org.hibernate.annotations.AnyMetaDef;
-import org.hibernate.annotations.common.reflection.ReflectionManager;
-import org.hibernate.annotations.common.reflection.XClass;
-import org.hibernate.cfg.annotations.Version;
-import org.hibernate.cfg.annotations.reflection.EJB3ReflectionManager;
-import org.hibernate.event.EventListeners;
-import org.hibernate.event.PreInsertEventListener;
-import org.hibernate.event.PreUpdateEventListener;
-import org.hibernate.mapping.Column;
-import org.hibernate.mapping.Join;
-import org.hibernate.mapping.PersistentClass;
-import org.hibernate.mapping.Table;
-import org.hibernate.mapping.UniqueKey;
-import org.hibernate.mapping.IdGenerator;
-import org.hibernate.util.JoinedIterator;
-import org.hibernate.util.ReflectHelper;
-import org.hibernate.util.StringHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
+
+import org.hibernate.AnnotationException;
+import org.hibernate.DuplicateMappingException;
+import org.hibernate.HibernateException;
+import org.hibernate.Interceptor;
+import org.hibernate.MappingException;
+import org.hibernate.SessionFactory;
+import org.hibernate.annotations.AnyMetaDef;
+import org.hibernate.annotations.common.reflection.MetadataProvider;
+import org.hibernate.annotations.common.reflection.MetadataProviderInjector;
+import org.hibernate.annotations.common.reflection.ReflectionManager;
+import org.hibernate.annotations.common.reflection.XClass;
+import org.hibernate.annotations.common.reflection.java.JavaReflectionManager;
+import org.hibernate.cfg.annotations.Version;
+import org.hibernate.cfg.annotations.reflection.JPAMetadataProvider;
+import org.hibernate.engine.NamedQueryDefinition;
+import org.hibernate.engine.NamedSQLQueryDefinition;
+import org.hibernate.engine.ResultSetMappingDefinition;
+import org.hibernate.event.EventListeners;
+import org.hibernate.event.PreInsertEventListener;
+import org.hibernate.event.PreUpdateEventListener;
+import org.hibernate.mapping.Column;
+import org.hibernate.mapping.IdGenerator;
+import org.hibernate.mapping.Join;
+import org.hibernate.mapping.PersistentClass;
+import org.hibernate.mapping.Table;
+import org.hibernate.mapping.UniqueKey;
+import org.hibernate.util.JoinedIterator;
+import org.hibernate.util.ReflectHelper;
+import org.hibernate.util.StringHelper;
 
 /**
  * Similar to the {@link Configuration} object but handles EJB3 and Hibernate
@@ -250,7 +253,9 @@ public class AnnotationConfiguration extends Configuration {
 		namingStrategy = EJB3NamingStrategy.INSTANCE;
 		setEntityResolver( new EJB3DTDEntityResolver() );
 		anyMetaDefs = new HashMap<String, AnyMetaDef>();
-		reflectionManager = new EJB3ReflectionManager();
+		reflectionManager = new JavaReflectionManager();
+		((MetadataProviderInjector) reflectionManager).setMetadataProvider( new JPAMetadataProvider() );
+
 	}
 
 	@Override
@@ -688,7 +693,9 @@ public class AnnotationConfiguration extends Configuration {
 				hbmDocuments.add( doc );
 			}
 			else {
-				List<String> classnames = ( (EJB3ReflectionManager) reflectionManager ).getXMLContext().addDocument( doc );
+				final MetadataProvider metadataProvider = ( ( MetadataProviderInjector ) reflectionManager ).getMetadataProvider();
+				JPAMetadataProvider jpaMetadataProvider = (JPAMetadataProvider) metadataProvider;
+				List<String> classnames = jpaMetadataProvider.getXMLContext().addDocument( doc );
 				for (String classname : classnames) {
 					try {
 						annotatedClasses.add( reflectionManager.classForName( classname, this.getClass() ) );

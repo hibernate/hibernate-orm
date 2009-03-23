@@ -35,9 +35,6 @@ import org.hibernate.annotations.common.reflection.XAnnotatedElement;
  */
 abstract class JavaXAnnotatedElement implements XAnnotatedElement {
 
-	// responsible for extracting annotations
-	private AnnotationReader annotationReader;
-
 	private final JavaReflectionManager factory;
 
 	private final AnnotatedElement annotatedElement;
@@ -52,10 +49,7 @@ abstract class JavaXAnnotatedElement implements XAnnotatedElement {
 	}
 
 	private AnnotationReader getAnnotationReader() {
-        if (annotationReader == null) {
-            annotationReader = factory.buildAnnotationReader(annotatedElement);
-        }
-        return annotationReader;
+        return factory.buildAnnotationReader(annotatedElement);
 	}
 
 	public <T extends Annotation> T getAnnotation(Class<T> annotationType) {

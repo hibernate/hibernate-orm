@@ -38,23 +38,23 @@ public class EntityManagerImpl extends AbstractEntityManagerImpl {
 		this.sessionFactory = sessionFactory;
 		this.open = true;
 		this.discardOnClose = discardOnClose;
-		Object localSic = null;
-		if (properties != null) localSic = properties.get( HibernatePersistence.SESSION_INTERCEPTOR );
-		if ( localSic != null ) {
-			if (localSic instanceof Class) {
-				sessionInterceptorClass = (Class) localSic;
+		Object localSessionInterceptor = null;
+		if (properties != null) localSessionInterceptor = properties.get( HibernatePersistence.SESSION_INTERCEPTOR );
+		if ( localSessionInterceptor != null ) {
+			if (localSessionInterceptor instanceof Class) {
+				sessionInterceptorClass = (Class) localSessionInterceptor;
 			}
-			else if (localSic instanceof String) {
+			else if (localSessionInterceptor instanceof String) {
 				try {
 					sessionInterceptorClass =
-							ReflectHelper.classForName( (String) localSic, EntityManagerImpl.class );
+							ReflectHelper.classForName( (String) localSessionInterceptor, EntityManagerImpl.class );
 				}
 				catch (ClassNotFoundException e) {
-					throw new PersistenceException("Unable to instanciate interceptor: " + localSic, e);
+					throw new PersistenceException("Unable to instanciate interceptor: " + localSessionInterceptor, e);
 				}
 			}
 			else {
-				throw new PersistenceException("Unable to instanciate interceptor: " + localSic);
+				throw new PersistenceException("Unable to instanciate interceptor: " + localSessionInterceptor);
 			}
 		}
 		this.sessionInterceptorClass = sessionInterceptorClass;

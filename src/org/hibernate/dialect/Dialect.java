@@ -52,7 +52,6 @@ import org.hibernate.engine.Mapping;
 import org.hibernate.exception.SQLExceptionConverter;
 import org.hibernate.exception.SQLStateConverter;
 import org.hibernate.exception.ViolatedConstraintNameExtracter;
-import org.hibernate.exception.SQLStateExceptionConverterJDBC4;
 import org.hibernate.id.IdentityGenerator;
 import org.hibernate.id.SequenceGenerator;
 import org.hibernate.id.TableHiLoGenerator;
@@ -1224,14 +1223,9 @@ public abstract class Dialect {
 	 */
 	public SQLExceptionConverter buildSQLExceptionConverter() {
 		// The default SQLExceptionConverter for all dialects is based on SQLState
-		// since SQLErrorCode is extremely vendor-specific.  If JDBC4 is supported,
-		// then the default SQLExceptionConverter will convert based on JDBC4
-		// SQLException if the SQLState is not recognized. Specific Dialects
+		// since SQLErrorCode is extremely vendor-specific.  Specific Dialects
 		// may override to return whatever is most appropriate for that vendor.
-		return ( Environment.jvmSupportsJDBC4() ?
-				new SQLStateExceptionConverterJDBC4( getViolatedConstraintNameExtracter() ) :
-				new SQLStateConverter( getViolatedConstraintNameExtracter() )
-		);
+		return new SQLStateConverter( getViolatedConstraintNameExtracter() );
 	}
 
 	private static final ViolatedConstraintNameExtracter EXTRACTER = new ViolatedConstraintNameExtracter() {

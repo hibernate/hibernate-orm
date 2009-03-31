@@ -48,7 +48,7 @@ import org.hibernate.hql.HolderInstantiator;
 import org.hibernate.impl.FetchingScrollableResultsImpl;
 import org.hibernate.impl.ScrollableResultsImpl;
 import org.hibernate.jdbc.ColumnNameCache;
-import org.hibernate.jdbc.ResultSetWrapperProxy;
+import org.hibernate.jdbc.ResultSetWrapper;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Loadable;
@@ -1818,7 +1818,7 @@ public abstract class Loader {
 		if ( session.getFactory().getSettings().isWrapResultSetsEnabled() ) {
 			try {
 				log.debug("Wrapping result set [" + rs + "]");
-				return ResultSetWrapperProxy.generateProxy( rs, retreiveColumnNameToIndexCache( rs ) );
+				return new ResultSetWrapper( rs, retreiveColumnNameToIndexCache( rs ) );
 			}
 			catch(SQLException e) {
 				log.info("Error wrapping result set", e);

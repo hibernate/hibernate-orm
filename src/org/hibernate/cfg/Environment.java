@@ -111,14 +111,9 @@ import org.hibernate.util.PropertiesHelper;
  *   this property when using user supplied connections)</td>
  * </tr>
  * <tr>
- *   <td><tt>hibernate.jdbc.use_get_generated_keys</tt></td>
+ *   <td><tt>hibernate.jdbc.use_getGeneratedKeys</tt></td>
  *   <td>enable use of JDBC3 PreparedStatement.getGeneratedKeys() to retrieve
  *   natively generated keys after insert. Requires JDBC3+ driver and JRE1.4+</td>
- * </tr>
- * <tr>
- *   <td><tt>hibernate.jdbc.use_connection_for_lob_creation</tt></td>
- *   <td>enable use of JDBC4 Connection.createBlob() and Connection.createClob() to
- *   create Blobs and Clobs. Requires JDBC4+ driver and JRE1.6+</td>
  * </tr>
  * <tr>
  *   <td><tt>hibernate.hbm2ddl.auto</tt></td>
@@ -266,13 +261,6 @@ public final class Environment {
 	 * JDBC driver supports getGeneratedKeys().
 	 */
 	public static final String USE_GET_GENERATED_KEYS = "hibernate.jdbc.use_get_generated_keys";
-	/**
-	 * Tells the JDBC driver to attempt to create Blobs and Clobs using JDBC 4.0
-	 * Connection.createBlob() and Connection.createClob(), respectively.
-	 * Performance may be better if this property is set to true and the underlying JDBC driver
-	 * supports these Connection methods.
-	 */
-	public static final String USE_CONNECTION_FOR_LOB_CREATION = "hibernate.jdbc.use_connection_for_lob_creation";
 	/**
 	 * Gives the JDBC driver a hint as to the number of rows that should be fetched from the database
 	 * when more rows are needed. If <tt>0</tt>, JDBC driver default settings will be used.
@@ -490,7 +478,6 @@ public final class Environment {
 	private static final boolean JVM_HAS_TIMESTAMP_BUG;
 	private static final boolean JVM_HAS_JDK14_TIMESTAMP;
 	private static final boolean JVM_SUPPORTS_GET_GENERATED_KEYS;
-	private static final boolean JVM_SUPPORTS_JDBC4;
 
 	private static final Properties GLOBAL_PROPERTIES;
 	private static final HashMap ISOLATION_LEVELS = new HashMap();
@@ -591,18 +578,6 @@ public final class Environment {
 		JVM_SUPPORTS_GET_GENERATED_KEYS = getGeneratedKeysSupport;
 		if (!JVM_SUPPORTS_GET_GENERATED_KEYS) log.info("JVM does not support Statement.getGeneratedKeys()");
 
-		boolean jvmSupportsJDBC4;
-		try {
-			Connection.class.getMethod("createBlob", null);
-			Connection.class.getMethod("createClob", null);
-			jvmSupportsJDBC4 = true;
-		}
-		catch (NoSuchMethodException nsme) {
-			jvmSupportsJDBC4 = false;
-		}
-		JVM_SUPPORTS_JDBC4 = jvmSupportsJDBC4;
-		if (!JVM_SUPPORTS_JDBC4 ) log.info("JVM does not support JDBC4");
-
 		boolean linkedHashSupport;
 		try {
 			Class.forName("java.util.LinkedHashSet");
@@ -656,10 +631,6 @@ public final class Environment {
 
 	public static boolean jvmSupportsGetGeneratedKeys() {
 		return JVM_SUPPORTS_GET_GENERATED_KEYS;
-	}
-
-	public static boolean jvmSupportsJDBC4() {
-		return JVM_SUPPORTS_JDBC4;
 	}
 
 	/**

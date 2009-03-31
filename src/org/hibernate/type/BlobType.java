@@ -42,7 +42,6 @@ import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.lob.BlobImpl;
 import org.hibernate.lob.SerializableBlob;
-import org.hibernate.lob.SerializableBlobProxy;
 import org.hibernate.util.ArrayHelper;
 
 /**
@@ -80,7 +79,7 @@ public class BlobType extends AbstractType {
 
 	public Object get(ResultSet rs, String name) throws HibernateException, SQLException {
 		Blob value = rs.getBlob(name);
-		return rs.wasNull() ? null : SerializableBlobProxy.generateProxy(value);
+		return rs.wasNull() ? null : new SerializableBlob(value);
 	}
 
 	public Class getReturnedClass() {

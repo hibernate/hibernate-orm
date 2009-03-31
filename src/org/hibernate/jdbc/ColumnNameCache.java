@@ -25,7 +25,6 @@
 package org.hibernate.jdbc;
 
 import java.sql.SQLException;
-import java.sql.ResultSet;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -43,13 +42,13 @@ public class ColumnNameCache {
 		this.columnNameToIndexCache = new HashMap( columnCount );
 	}
 
-	public int getIndexForColumnName(String columnName, ResultSet rs) throws SQLException {
+	public int getIndexForColumnName(String columnName, ResultSetWrapper rs)throws SQLException {
 		Integer cached = ( Integer ) columnNameToIndexCache.get( columnName );
 		if ( cached != null ) {
 			return cached.intValue();
 		}
 		else {
-			int index = rs.findColumn( columnName );
+			int index = rs.getTarget().findColumn( columnName );
 			columnNameToIndexCache.put( columnName, new Integer(index) );
 			return index;
 		}

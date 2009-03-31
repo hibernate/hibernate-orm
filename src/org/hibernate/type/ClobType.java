@@ -43,7 +43,6 @@ import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.lob.ClobImpl;
 import org.hibernate.lob.SerializableClob;
-import org.hibernate.lob.SerializableClobProxy;
 import org.hibernate.util.ArrayHelper;
 
 /**
@@ -81,7 +80,7 @@ public class ClobType extends AbstractType {
 
 	public Object get(ResultSet rs, String name) throws HibernateException, SQLException {
 		Clob value = rs.getClob(name);
-		return rs.wasNull() ? null : SerializableClobProxy.generateProxy(value);
+		return rs.wasNull() ? null : new SerializableClob(value);
 	}
 
 	public Class getReturnedClass() {

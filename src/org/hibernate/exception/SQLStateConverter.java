@@ -24,7 +24,6 @@ public class SQLStateConverter implements SQLExceptionConverter {
 	private static final Set DATA_CATEGORIES = new HashSet();
 	private static final Set INTEGRITY_VIOLATION_CATEGORIES = new HashSet();
 	private static final Set CONNECTION_CATEGORIES = new HashSet();
-	private static final Set TRANSACTION_ROLLBACK_CATEGORIES = new HashSet();
 
 	static {
 		SQL_GRAMMAR_CATEGORIES.add( "07" );
@@ -43,17 +42,10 @@ public class SQLStateConverter implements SQLExceptionConverter {
 		INTEGRITY_VIOLATION_CATEGORIES.add( "44" );
 
 		CONNECTION_CATEGORIES.add( "08" );
-		CONNECTION_CATEGORIES.add( "28" );
-
-		TRANSACTION_ROLLBACK_CATEGORIES.add( "40" );
 	}
 
 	public SQLStateConverter(ViolatedConstraintNameExtracter extracter) {
 		this.extracter = extracter;
-	}
-
-	protected String getViolatedConstraintName(SQLException sqlException) {
-		return extracter.extractConstraintName( sqlException );
 	}
 
 	/**
@@ -75,7 +67,7 @@ public class SQLStateConverter implements SQLExceptionConverter {
 					return new SQLGrammarException( message, sqlException, sql );
 				}
 				else if ( INTEGRITY_VIOLATION_CATEGORIES.contains( sqlStateClassCode ) ) {
-					String constraintName = getViolatedConstraintName( sqlException );
+					String constraintName = extracter.extractConstraintName( sqlException );
 					return new ConstraintViolationException( message, sqlException, sql, constraintName );
 				}
 				else if ( CONNECTION_CATEGORIES.contains( sqlStateClassCode ) ) {
@@ -83,9 +75,6 @@ public class SQLStateConverter implements SQLExceptionConverter {
 				}
 				else if ( DATA_CATEGORIES.contains( sqlStateClassCode ) ) {
 					return new DataException( message, sqlException, sql );
-				}
-				else if ( TRANSACTION_ROLLBACK_CATEGORIES.contains( sqlStateClassCode ) ) {
-					return new TransactionRollbackException( message, sqlException, sql );
 				}
 			}
 

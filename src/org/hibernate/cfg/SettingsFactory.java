@@ -71,7 +71,6 @@ public class SettingsFactory implements Serializable {
 		boolean metaSupportsBatchUpdates = false;
 		boolean metaReportsDDLCausesTxnCommit = false;
 		boolean metaReportsDDLInTxnSupported = true;
-		boolean driverConnectionHasLobCreationMethods = false;
 
 		// 'hibernate.temp.use_jdbc_metadata_defaults' is a temporary magic value.
 		// The need for it is intended to be alleviated with 3.3 developement, thus it is
@@ -109,31 +108,7 @@ public class SettingsFactory implements Serializable {
 						}
 					}
 
-					if ( Environment.jvmSupportsJDBC4() ) {
-						try {
-							// this block doesn't actually use the DatabaseMetaData, but it does use the
-							// driver Connection Class to determine if methods are present.
-							Class c = conn.getClass();
-							if ( Connection.class.equals( c.getMethod( "createBlob", null ).getDeclaringClass() ) ||
-								Connection.class.equals( c.getMethod( "createClob", null ).getDeclaringClass() ) ) {
-								driverConnectionHasLobCreationMethods = false;
-							}
-							else {
-								// the driver's Connection class has all three methods;
-								// can't tell if the driver actually supports these methods w/o calling them,
-								// but don't want to actually create a LOB here.
-								driverConnectionHasLobCreationMethods = true;
-							}
-						}
-						catch (AbstractMethodError ame) {
-							driverConnectionHasLobCreationMethods = false;
-						}
-						catch (Exception e) {
-							driverConnectionHasLobCreationMethods = false;
-						}
-					}
 				}
-
 				finally {
 					connections.closeConnection(conn);
 				}
@@ -194,10 +169,6 @@ public class SettingsFactory implements Serializable {
 		boolean useGetGeneratedKeys = PropertiesHelper.getBoolean(Environment.USE_GET_GENERATED_KEYS, properties, metaSupportsGetGeneratedKeys);
 		log.info("JDBC3 getGeneratedKeys(): " + enabledDisabled(useGetGeneratedKeys) );
 		settings.setGetGeneratedKeysEnabled(useGetGeneratedKeys);
-
-		boolean useConnectionForLobCreation = PropertiesHelper.getBoolean(Environment.USE_CONNECTION_FOR_LOB_CREATION, properties, driverConnectionHasLobCreationMethods);
-		log.info("JDBC4 Connection.createBlob() and Connection.createClob(): " + enabledDisabled(useConnectionForLobCreation) );
-		settings.setUseConnectionForLobCreationEnabled(useConnectionForLobCreation);
 
 		Integer statementFetchSize = PropertiesHelper.getInteger(Environment.STATEMENT_FETCH_SIZE, properties);
 		if (statementFetchSize!=null) log.info("JDBC result set fetch size: " + statementFetchSize);

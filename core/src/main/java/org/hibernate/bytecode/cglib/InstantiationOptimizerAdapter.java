@@ -25,7 +25,7 @@
 package org.hibernate.bytecode.cglib;
 
 import org.hibernate.bytecode.ReflectionOptimizer;
-import org.hibernate.repackage.cglib.reflect.FastClass;
+import net.sf.cglib.reflect.FastClass;
 import org.hibernate.InstantiationException;
 
 import java.io.Serializable;

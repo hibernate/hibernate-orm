@@ -27,7 +27,7 @@ package org.hibernate.intercept.cglib;
 import java.io.Serializable;
 import java.util.Set;
 
-import org.hibernate.repackage.cglib.transform.impl.InterceptFieldCallback;
+import net.sf.cglib.transform.impl.InterceptFieldCallback;
 
 import org.hibernate.intercept.AbstractFieldInterceptor;
 import org.hibernate.engine.SessionImplementor;

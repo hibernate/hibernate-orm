@@ -28,11 +28,11 @@ import java.io.Serializable;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
-import org.hibernate.repackage.cglib.proxy.Callback;
-import org.hibernate.repackage.cglib.proxy.CallbackFilter;
-import org.hibernate.repackage.cglib.proxy.Enhancer;
-import org.hibernate.repackage.cglib.proxy.InvocationHandler;
-import org.hibernate.repackage.cglib.proxy.NoOp;
+import net.sf.cglib.proxy.Callback;
+import net.sf.cglib.proxy.CallbackFilter;
+import net.sf.cglib.proxy.Enhancer;
+import net.sf.cglib.proxy.InvocationHandler;
+import net.sf.cglib.proxy.NoOp;
 
 import org.hibernate.HibernateException;
 import org.hibernate.LazyInitializationException;

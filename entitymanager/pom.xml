@@ -62,6 +62,10 @@
             <artifactId>hibernate-annotations</artifactId>
         </dependency>
         <dependency>
+            <groupId>cglib</groupId>
+            <artifactId>cglib</artifactId>
+        </dependency>
+        <dependency>
             <groupId>javassist</groupId>
             <artifactId>javassist</artifactId>
         </dependency>
@@ -83,6 +87,11 @@
                 <groupId>org.hibernate</groupId>
                 <artifactId>hibernate-annotations</artifactId>
                 <version>${version}</version>
+            </dependency>
+            <dependency>
+                <groupId>cglib</groupId>
+                <artifactId>cglib</artifactId>
+                <version>2.2</version>
             </dependency>
             <dependency>
                 <groupId>javassist</groupId>

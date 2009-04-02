@@ -26,9 +26,9 @@ package org.hibernate.bytecode.cglib;
 
 import java.lang.reflect.Modifier;
 
-import org.hibernate.repackage.cglib.beans.BulkBean;
-import org.hibernate.repackage.cglib.beans.BulkBeanException;
-import org.hibernate.repackage.cglib.reflect.FastClass;
+import net.sf.cglib.beans.BulkBean;
+import net.sf.cglib.beans.BulkBeanException;
+import net.sf.cglib.reflect.FastClass;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.hibernate.bytecode.BytecodeProvider;

@@ -34,9 +34,9 @@
             <version>3.4.GA</version>
         </dependency>
         <dependency>
-            <groupId>org.hibernate</groupId>
-            <artifactId>hibernate-cglib-repack</artifactId>
-            <version>2.1_3</version>
+            <groupId>cglib</groupId>
+            <artifactId>cglib</artifactId>
+            <version>2.2</version>
         </dependency>
         <!-- optional dom4j dependency; needed here for dom4j (de)serialization -->
         <dependency>

@@ -26,7 +26,7 @@ package org.hibernate.intercept.cglib;
 
 import org.hibernate.intercept.FieldInterceptor;
 import org.hibernate.engine.SessionImplementor;
-import org.hibernate.repackage.cglib.transform.impl.InterceptFieldEnabled;
+import net.sf.cglib.transform.impl.InterceptFieldEnabled;
 
 import java.util.Set;
 

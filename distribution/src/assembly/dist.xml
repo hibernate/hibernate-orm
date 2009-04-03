@@ -139,7 +139,7 @@
         <dependencySet>
             <outputDirectory>lib/bytecode/cglib</outputDirectory>
             <includes>
-                <include>org.hibernate:hibernate-cglib-repack</include>
+                <include>cglib:cglib</include>
             </includes>
         </dependencySet>
 

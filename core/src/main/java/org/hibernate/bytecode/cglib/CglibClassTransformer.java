@@ -29,25 +29,23 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.ByteArrayOutputStream;
 
-import org.hibernate.repackage.cglib.transform.ClassTransformer;
-import org.hibernate.repackage.cglib.transform.TransformingClassGenerator;
-import org.hibernate.repackage.cglib.transform.ClassReaderGenerator;
-import org.hibernate.repackage.cglib.transform.impl.InterceptFieldEnabled;
-import org.hibernate.repackage.cglib.transform.impl.InterceptFieldFilter;
-import org.hibernate.repackage.cglib.transform.impl.InterceptFieldTransformer;
-import org.hibernate.repackage.cglib.core.ClassNameReader;
-import org.hibernate.repackage.cglib.core.DebuggingClassWriter;
+import net.sf.cglib.transform.ClassTransformer;
+import net.sf.cglib.transform.TransformingClassGenerator;
+import net.sf.cglib.transform.ClassReaderGenerator;
+import net.sf.cglib.transform.impl.InterceptFieldEnabled;
+import net.sf.cglib.transform.impl.InterceptFieldFilter;
+import net.sf.cglib.transform.impl.InterceptFieldTransformer;
+import net.sf.cglib.core.ClassNameReader;
+import net.sf.cglib.core.DebuggingClassWriter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.hibernate.bytecode.AbstractClassTransformerImpl;
 import org.hibernate.bytecode.util.FieldFilter;
 import org.hibernate.bytecode.util.ClassFilter;
 import org.hibernate.HibernateException;
-import org.hibernate.repackage.cglib.asm.Attribute;
-import org.hibernate.repackage.cglib.asm.Type;
-import org.hibernate.repackage.cglib.asm.ClassReader;
-import org.hibernate.repackage.cglib.asm.ClassWriter;
-import org.hibernate.repackage.cglib.asm.attrs.Attributes;
+import org.objectweb.asm.Type;
+import org.objectweb.asm.ClassReader;
+import org.objectweb.asm.ClassWriter;
 
 /**
  * Enhance the classes allowing them to implements InterceptFieldEnabled
@@ -79,7 +77,7 @@ public class CglibClassTransformer extends AbstractClassTransformerImpl {
 		}
 
 		String[] names = ClassNameReader.getClassInfo( reader );
-		ClassWriter w = new DebuggingClassWriter( true );
+		ClassWriter w = new DebuggingClassWriter( ClassWriter.COMPUTE_MAXS  );
 		ClassTransformer t = getClassTransformer( names );
 		if ( t != null ) {
 			if ( log.isDebugEnabled() ) {
@@ -90,7 +88,7 @@ public class CglibClassTransformer extends AbstractClassTransformerImpl {
 			try {
 				reader = new ClassReader( new ByteArrayInputStream( classfileBuffer ) );
 				new TransformingClassGenerator(
-						new ClassReaderGenerator( reader, attributes(), skipDebug() ), t
+						new ClassReaderGenerator( reader, skipDebug() ), t
 				).generateClass( w );
 				out = new ByteArrayOutputStream();
 				out.write( w.toByteArray() );
@@ -106,13 +104,8 @@ public class CglibClassTransformer extends AbstractClassTransformerImpl {
 		return classfileBuffer;
 	}
 
-
-	private Attribute[] attributes() {
-		return Attributes.getDefaultAttributes();
-	}
-
-	private boolean skipDebug() {
-		return false;
+	private int skipDebug() {
+		return ClassReader.SKIP_DEBUG;
 	}
 
 	private ClassTransformer getClassTransformer(final String[] classInfo) {

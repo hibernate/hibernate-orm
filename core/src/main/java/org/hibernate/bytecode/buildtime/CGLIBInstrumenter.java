@@ -30,9 +30,9 @@ import org.hibernate.bytecode.util.ClassDescriptor;
 import org.hibernate.bytecode.util.BasicClassFilter;
 import org.hibernate.bytecode.ClassTransformer;
 import org.hibernate.bytecode.cglib.BytecodeProviderImpl;
-import org.hibernate.repackage.cglib.asm.ClassReader;
-import org.hibernate.repackage.cglib.core.ClassNameReader;
-import org.hibernate.repackage.cglib.transform.impl.InterceptFieldEnabled;
+import org.objectweb.asm.ClassReader;
+import net.sf.cglib.core.ClassNameReader;
+import net.sf.cglib.transform.impl.InterceptFieldEnabled;
 
 /**
  * Strategy for performing build-time instrumentation of persistent classes in order to enable

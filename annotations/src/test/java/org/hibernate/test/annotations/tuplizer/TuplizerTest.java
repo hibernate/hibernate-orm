@@ -10,7 +10,7 @@ import org.hibernate.Session;
 public class TuplizerTest extends TestCase {
 	public void testEntityTuplizer() throws Exception {
 		Cuisine cuisine = ProxyHelper.newCuisineProxy( null );
-		cuisine.setName( "Française" );
+		cuisine.setName( "Francaise" );
 		Country country = ProxyHelper.newCountryProxy( null );
 		country.setName( "France" );
 		cuisine.setCountry( country );
@@ -21,7 +21,7 @@ public class TuplizerTest extends TestCase {
 		s.clear();
 		cuisine = (Cuisine) s.get(Cuisine.class, cuisine.getId() );
 		assertNotNull( cuisine );
-		assertEquals( "Française", cuisine.getName() );
+		assertEquals( "Francaise", cuisine.getName() );
 		assertEquals( "France", country.getName() );
 		s.getTransaction().rollback();
 		s.close();

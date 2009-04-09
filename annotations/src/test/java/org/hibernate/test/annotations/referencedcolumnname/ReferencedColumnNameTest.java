@@ -20,7 +20,7 @@ public class ReferencedColumnNameTest extends TestCase {
 		Postman pm = new Postman( "Bob", "A01" );
 		House house = new House();
 		house.setPostman( pm );
-		house.setAddress( "Rue des prés" );
+		house.setAddress( "Rue des pres" );
 		s.persist( pm );
 		s.persist( house );
 		tx.commit();

@@ -24,7 +24,7 @@ import org.hibernate.annotations.Loader;
 @Entity
 @Table(name="CHAOS")
 @SQLInsert( sql="INSERT INTO CHAOS(name, nick_name, chaos_size, id) VALUES(upper(?),?,?,?)")
-@SQLUpdate( sql="UPDATE CHAOS SET name = upper(?), nick_name = ?, cha0s_size = ? WHERE id = ?")
+@SQLUpdate( sql="UPDATE CHAOS SET name = upper(?), nick_name = ?, chaos_size = ? WHERE id = ?")
 @SQLDelete( sql="DELETE CHAOS WHERE id = ?")
 @SQLDeleteAll( sql="DELETE CHAOS")
 @Loader(namedQuery = "chaos")

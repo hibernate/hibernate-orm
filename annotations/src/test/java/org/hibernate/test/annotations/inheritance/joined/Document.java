@@ -12,7 +12,7 @@ import org.hibernate.annotations.ForeignKey;
 @Entity
 @ForeignKey(name = "FK_DOCU_FILE")
 public class Document extends File {
-	@Column(nullable = false)
+	@Column(nullable = false, name="xsize")
 	private int size;
 
 	Document() {

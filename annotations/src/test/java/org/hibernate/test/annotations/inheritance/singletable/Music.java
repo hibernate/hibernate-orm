@@ -3,6 +3,8 @@ package org.hibernate.test.annotations.inheritance.singletable;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.DiscriminatorColumn;
+import javax.persistence.DiscriminatorType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.Table;
@@ -14,6 +16,7 @@ import org.hibernate.annotations.DiscriminatorFormula;
  * @author Emmanuel Bernard
  */
 @Entity
+@DiscriminatorColumn(discriminatorType=DiscriminatorType.INTEGER)
 @DiscriminatorFormula("case when zik_type is null then 0 else zik_type end")
 @Table(uniqueConstraints = @UniqueConstraint(columnNames = {"avgBeat", "starred"} ))
 public abstract class Music {

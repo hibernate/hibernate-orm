@@ -45,7 +45,7 @@ public class Ejb3XmlTest extends TestCase {
 		s.getTransaction().begin();
 		Lighter l = new Lighter();
 		l.name = "Blue";
-		l.power = "400°F";
+		l.power = "400F";
 		s.persist( l );
 		s.flush();
 		s.getTransaction().rollback();

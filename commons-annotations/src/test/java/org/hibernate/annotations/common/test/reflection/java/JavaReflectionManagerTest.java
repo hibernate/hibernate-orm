@@ -1,6 +1,5 @@
 package org.hibernate.annotations.common.test.reflection.java;
 
-import com.sun.org.apache.xpath.internal.operations.Number;
 import junit.framework.TestCase;
 import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.annotations.common.reflection.XClass;

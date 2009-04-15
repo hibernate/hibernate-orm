@@ -67,7 +67,7 @@ public class OneToManyTest extends TestCase {
 		chmpsElysees.setStreetName( "Champs Elysees" );
 		chmpsElysees.setCity( paris );
 		Street grandeArmee = new Street();
-		grandeArmee.setStreetName( "Grande Armée" );
+		grandeArmee.setStreetName( "Grande Armee" );
 		grandeArmee.setCity( paris );
 		s.persist( rochechoir );
 		s.persist( chmpsElysees );

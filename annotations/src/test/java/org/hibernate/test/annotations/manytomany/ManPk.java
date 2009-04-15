@@ -3,6 +3,7 @@ package org.hibernate.test.annotations.manytomany;
 
 import java.io.Serializable;
 import javax.persistence.Embeddable;
+import javax.persistence.Column;
 
 /**
  * @author Emmanuel Bernard
@@ -47,10 +48,12 @@ public class ManPk implements Serializable {
 		this.lastName = lastName;
 	}
 
+	@Column(length=128)
 	public String getFirstName() {
 		return firstName;
 	}
 
+	@Column(length=128)
 	public String getLastName() {
 		return lastName;
 	}

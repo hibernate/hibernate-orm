@@ -2,6 +2,7 @@
 package org.hibernate.test.annotations.manytomany;
 
 import java.io.Serializable;
+import javax.persistence.Column;
 
 /**
  * @author Emmanuel Bernard
@@ -10,6 +11,7 @@ public class CatPk implements Serializable {
 	private String name;
 	private String thoroughbred;
 
+	@Column(length=128)
 	public String getThoroughbred() {
 		return thoroughbred;
 	}
@@ -18,6 +20,7 @@ public class CatPk implements Serializable {
 		this.thoroughbred = thoroughbred;
 	}
 
+	@Column(length=128)
 	public String getName() {
 		return name;
 	}

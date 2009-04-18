@@ -41,21 +41,7 @@ public abstract class AbstractJarVisitor implements JarVisitor {
 	 * Build a jar visitor from its jar string path
 	 */
 	private AbstractJarVisitor(String jarPath) {
-		URL jarUrl;
-		try {
-			//is it an url
-			jarUrl = new URL( jarPath );
-		}
-		catch (MalformedURLException e) {
-			try {
-				//consider it as a file path
-				jarUrl = new URL( "file:" + jarPath );
-			}
-			catch (MalformedURLException ee) {
-				throw new IllegalArgumentException( "Unable to find jar:" + jarPath, ee );
-			}
-		}
-		this.jarUrl = jarUrl;
+		this.jarUrl = JarVisitorFactory.getURLFromPath( jarPath );
 		unqualify();
 	}
 

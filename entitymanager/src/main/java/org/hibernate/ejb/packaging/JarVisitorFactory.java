@@ -26,6 +26,7 @@ public class JarVisitorFactory {
 	 * @param entry file known to be in the JAR
 	 * @return the JAR URL
 	 * @throws IllegalArgumentException if none URL is found
+	 * TODO move to a ScannerHelper service?
 	 */
 	public static URL getJarURLFromURLEntry(URL url, String entry) throws IllegalArgumentException {
 		URL jarUrl;
@@ -71,6 +72,30 @@ public class JarVisitorFactory {
 			);
 		}
 		log.trace("JAR URL from URL Entry: {} >> {}", url, jarUrl);
+		return jarUrl;
+	}
+
+	/**
+	 * get the URL from a given path string
+	 *
+	 * @throws IllegalArgumentException is something goes wrong
+	 * TODO move to a ScannerHelper service?
+	 */
+	public static URL getURLFromPath(String jarPath) {
+		URL jarUrl;
+		try {
+			//is it an url
+			jarUrl = new URL( jarPath );
+		}
+		catch ( MalformedURLException e) {
+			try {
+				//consider it as a file path
+				jarUrl = new URL( "file:" + jarPath );
+			}
+			catch (MalformedURLException ee) {
+				throw new IllegalArgumentException( "Unable to find jar:" + jarPath, ee );
+			}
+		}
 		return jarUrl;
 	}
 

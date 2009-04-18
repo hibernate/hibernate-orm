@@ -21,6 +21,8 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.StringTokenizer;
+import java.util.HashSet;
+import java.lang.annotation.Annotation;
 import javax.naming.BinaryRefAddr;
 import javax.naming.NamingException;
 import javax.naming.Reference;
@@ -52,16 +54,12 @@ import org.hibernate.cfg.SettingsFactory;
 import org.hibernate.cfg.annotations.reflection.XMLContext;
 import org.hibernate.ejb.connection.InjectedDataSourceConnectionProvider;
 import org.hibernate.ejb.instrument.InterceptFieldClassFileTransformer;
-import org.hibernate.ejb.packaging.JarVisitor;
 import org.hibernate.ejb.packaging.NamedInputStream;
 import org.hibernate.ejb.packaging.PersistenceMetadata;
 import org.hibernate.ejb.packaging.PersistenceXmlLoader;
-import org.hibernate.ejb.packaging.Filter;
 import org.hibernate.ejb.packaging.JarVisitorFactory;
-import org.hibernate.ejb.packaging.Entry;
-import org.hibernate.ejb.packaging.FileFilter;
-import org.hibernate.ejb.packaging.PackageFilter;
-import org.hibernate.ejb.packaging.ClassFilter;
+import org.hibernate.ejb.packaging.Scanner;
+import org.hibernate.ejb.packaging.NativeScanner;
 import org.hibernate.ejb.transaction.JoinableCMTTransactionFactory;
 import org.hibernate.ejb.util.ConfigurationHelper;
 import org.hibernate.ejb.util.LogHelper;
@@ -232,23 +230,41 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 					) ) {
 						//correct provider
 
-						//lazy compute the visitor if possible to avoid useless exceptions if an unexpected state happens
-						JarVisitor visitor = null;
-
+						//lazy load the scanner to avoid unnecessary IOExceptions
+						Scanner scanner = null;
+						URL jarURL = null;
 						if ( metadata.getName() == null ) {
-							visitor = getMainJarVisitor( url, metadata, integration );
-							metadata.setName( visitor.getUnqualifiedJarName() );
+							scanner = buildScanner();
+							jarURL = JarVisitorFactory.getJarURLFromURLEntry( url, "/META-INF/persistence.xml" );
+							metadata.setName( scanner.getUnqualifiedJarName(jarURL) );
 						}
 						if ( persistenceUnitName == null && xmls.hasMoreElements() ) {
 							throw new PersistenceException( "No name provided and several persistence units found" );
 						}
 						else if ( persistenceUnitName == null || metadata.getName().equals( persistenceUnitName ) ) {
-							if (visitor == null) visitor = getMainJarVisitor( url, metadata, integration );
-							addMetadataFromVisitor( visitor, metadata );
-							Filter[] otherXmlFilter = getFilters( metadata, integration, false );
+							if (scanner == null) {
+								scanner = buildScanner();
+								jarURL = JarVisitorFactory.getJarURLFromURLEntry( url, "/META-INF/persistence.xml" );
+							}
+							//scan main JAR
+							ScanningContext mainJarScanCtx = new ScanningContext()
+									.scanner( scanner )
+									.url( jarURL )
+									.explicitMappingFiles( metadata.getMappingFiles() )
+									.searchOrm( true );
+							setDetectedArtifactsOnScanningContext( mainJarScanCtx, metadata.getProps(), integration,
+																				metadata.getExcludeUnlistedClasses() );
+							addMetadataFromScan( mainJarScanCtx, metadata );
+
+							ScanningContext otherJarScanCtx = new ScanningContext()
+									.scanner( scanner )
+									.explicitMappingFiles( metadata.getMappingFiles() )
+									.searchOrm( true );
+							setDetectedArtifactsOnScanningContext( otherJarScanCtx, metadata.getProps(), integration,
+																				false );
 							for ( String jarFile : metadata.getJarFiles() ) {
-								visitor = JarVisitorFactory.getVisitor( jarFile, otherXmlFilter );
-								addMetadataFromVisitor( visitor, metadata );
+								otherJarScanCtx.url( JarVisitorFactory.getURLFromPath( jarFile ) );
+								addMetadataFromScan( otherJarScanCtx, metadata );
 							}
 							return configure( metadata, integration );
 						}
@@ -267,38 +283,88 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 		}
 	}
 
-	//method used in a non managed environment
-	private JarVisitor getMainJarVisitor(URL url, PersistenceMetadata metadata, Map integration) {
-		URL jarURL = JarVisitorFactory.getJarURLFromURLEntry( url, "/META-INF/persistence.xml" );
-		Filter[] persistenceXmlFilter = getFilters( metadata, integration, metadata.getExcludeUnlistedClasses() );
-		return JarVisitorFactory.getVisitor( jarURL, persistenceXmlFilter );
+	private NativeScanner buildScanner() {
+		return new NativeScanner();
 	}
 
-	private static void addMetadataFromVisitor(JarVisitor visitor, PersistenceMetadata metadata) throws IOException {
+	private static class ScanningContext {
+		//boolean excludeUnlistedClasses;
+		private Scanner scanner;
+		private URL url;
+		private List<String> explicitMappingFiles;
+		private boolean detectClasses;
+		private boolean detectHbmFiles;
+		private boolean searchOrm;
+
+		public ScanningContext scanner(Scanner scanner) {
+			this.scanner = scanner;
+			return this;
+		}
+
+		public ScanningContext url(URL url) {
+			this.url = url;
+			return this;
+		}
+
+		public ScanningContext explicitMappingFiles(List<String> explicitMappingFiles) {
+			this.explicitMappingFiles = explicitMappingFiles;
+			return this;
+		}
+
+		public ScanningContext detectClasses(boolean detectClasses) {
+			this.detectClasses = detectClasses;
+			return this;
+		}
+
+		public ScanningContext detectHbmFiles(boolean detectHbmFiles) {
+			this.detectHbmFiles = detectHbmFiles;
+			return this;
+		}
+
+		public ScanningContext searchOrm(boolean searchOrm) {
+			this.searchOrm = searchOrm;
+			return this;
+		}
+	}
+
+	private static void addMetadataFromScan(ScanningContext scanningContext, PersistenceMetadata metadata) throws IOException {
 		List<String> classes = metadata.getClasses();
 		List<String> packages = metadata.getPackages();
 		List<NamedInputStream> hbmFiles = metadata.getHbmfiles();
 		List<String> mappingFiles = metadata.getMappingFiles();
-		addScannedEntries( visitor, classes, packages, hbmFiles, mappingFiles );
+		addScannedEntries( scanningContext, classes, packages, hbmFiles, mappingFiles );
 	}
 
-	private static void addScannedEntries(JarVisitor visitor, List<String> classes, List<String> packages, List<NamedInputStream> hbmFiles, List<String> mappingFiles) throws IOException {
-		Filter[] filters = visitor.getFilters();
-		Set[] entries = visitor.getMatchingEntries();
-		int size = filters.length;
-		for ( int index = 0; index < size ; index++ ) {
-			for (Object o : entries[index]) {
-				Entry entry = (Entry) o;
-				if ( filters[index] instanceof ClassFilter ) {
-					classes.add( entry.getName() );
-				}
-				else if ( filters[index] instanceof PackageFilter ) {
-					packages.add( entry.getName() );
-				}
-				else if ( filters[index] instanceof FileFilter ) {
-					hbmFiles.add( new NamedInputStream( entry.getName(), entry.getInputStream() ) );
-					if (mappingFiles != null) mappingFiles.remove( entry.getName() );
-				}
+	private static void addScannedEntries(ScanningContext scanningContext, List<String> classes, List<String> packages, List<NamedInputStream> hbmFiles, List<String> mappingFiles) throws IOException {
+		Scanner scanner = scanningContext.scanner;
+		if (scanningContext.detectClasses) {
+			Set<Class<? extends Annotation>> annotationsToExclude = new HashSet<Class<? extends Annotation>>(3);
+			annotationsToExclude.add( Entity.class );
+			annotationsToExclude.add( MappedSuperclass.class );
+			annotationsToExclude.add( Embeddable.class );
+			Set<Class<?>> matchingClasses = scanner.getClassesInJar( scanningContext.url, annotationsToExclude );
+			for (Class<?> clazz : matchingClasses) {
+				classes.add( clazz.getName() );
+			}
+
+			Set<Package> matchingPackages = scanner.getPackagesInJar( scanningContext.url, new HashSet<Class<? extends Annotation>>(0) );
+			for (Package pkg : matchingPackages) {
+				packages.add( pkg.getName() );
+			}
+		}
+		Set<String> patterns = new HashSet<String>();
+		if (scanningContext.searchOrm) {
+			patterns.add( META_INF_ORM_XML );
+		}
+		if (scanningContext.detectHbmFiles) {
+			patterns.add( "**/*.hbm.xml" );
+		}
+		if ( mappingFiles != null) patterns.addAll( mappingFiles );
+		if (patterns.size() !=0) {
+			Set<NamedInputStream> files = scanner.getFilesInJar( scanningContext.url, patterns );
+			for (NamedInputStream file : files) {
+				hbmFiles.add( file );
+				if (mappingFiles != null) mappingFiles.remove( file.getName() );
 			}
 		}
 	}
@@ -352,12 +418,22 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 			//Should always be true if the container is not dump
 			boolean searchForORMFiles = ! xmlFiles.contains( META_INF_ORM_XML );
 
-			boolean[] detectArtifactForOtherJars = getDetectedArtifacts( info.getProperties(), null, false );
-			boolean[] detectArtifactForMainJar = getDetectedArtifacts( info.getProperties(), null, info.excludeUnlistedClasses() );
+			ScanningContext context = new ScanningContext();
+			context.scanner( buildScanner() )
+					.searchOrm( searchForORMFiles )
+					.explicitMappingFiles( null ); //URLs provided by the container already
+
+			//context for other JARs
+			setDetectedArtifactsOnScanningContext(context, info.getProperties(), null, false );
 			for ( URL jar : info.getJarFileUrls() ) {
-				scanForClasses( jar, packages, entities, hbmFiles, detectArtifactForOtherJars, searchForORMFiles );
+				context.url(jar);
+				scanForClasses( context, packages, entities, hbmFiles );
 			}
-			scanForClasses( info.getPersistenceUnitRootUrl(), packages, entities, hbmFiles, detectArtifactForMainJar, searchForORMFiles );
+
+			//main jar
+			context.url( info.getPersistenceUnitRootUrl() );
+			setDetectedArtifactsOnScanningContext( context, info.getProperties(), null, info.excludeUnlistedClasses() );
+			scanForClasses( context, packages, entities, hbmFiles );
 
 			Properties properties = info.getProperties() != null ?
 					info.getProperties() :
@@ -536,88 +612,54 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 		return this;
 	}
 
-	private boolean[] getDetectedArtifacts(Properties properties, Map overridenProperties, boolean excludeIfNotOverriden) {
-		boolean[] result = new boolean[2];
-		result[0] = false; //detect classes
-		result[1] = false; //detect hbm
-		String detect = overridenProperties != null ?
+	/**
+	 * Set ScanningContext detectClasses and detectHbmFiles according to context
+	 */
+	private void setDetectedArtifactsOnScanningContext(ScanningContext context,
+													   Properties properties,
+													   Map overridenProperties,
+													   boolean excludeIfNotOverriden) {
+
+		boolean detectClasses = false;
+		boolean detectHbm = false;
+		String detectSetting = overridenProperties != null ?
 				(String) overridenProperties.get( HibernatePersistence.AUTODETECTION ) :
 				null;
-		detect = detect == null ?
+		detectSetting = detectSetting == null ?
 				properties.getProperty( HibernatePersistence.AUTODETECTION) :
-				detect;
-		if (detect == null && excludeIfNotOverriden) {
+				detectSetting;
+		if ( detectSetting == null && excludeIfNotOverriden) {
 			//not overriden through HibernatePersistence.AUTODETECTION so we comply with the spec excludeUnlistedClasses
-			return result;
+			context.detectClasses( false ).detectHbmFiles( false );
+			return;
 		}
-		else if (detect == null){
-			detect = "class,hbm";
+
+		if ( detectSetting == null){
+			detectSetting = "class,hbm";
 		}
-		StringTokenizer st = new StringTokenizer( detect, ", ", false );
+		StringTokenizer st = new StringTokenizer( detectSetting, ", ", false );
 		while ( st.hasMoreElements() ) {
 			String element = (String) st.nextElement();
-			if ( "class".equalsIgnoreCase( element ) ) result[0] = true;
-			if ( "hbm".equalsIgnoreCase( element ) ) result[1] = true;
+			if ( "class".equalsIgnoreCase( element ) ) detectClasses = true;
+			if ( "hbm".equalsIgnoreCase( element ) ) detectHbm = true;
 		}
-		log.debug( "Detect class: {}; detect hbm: {}", result[0], result[1] );
-		return result;
+		log.debug( "Detect class: {}; detect hbm: {}", detectClasses, detectHbm );
+		context.detectClasses( detectClasses ).detectHbmFiles( detectHbm );
 	}
 
-	private Filter[] getFilters(PersistenceMetadata metadata, Map overridenProperties, boolean excludeIfNotOverriden) {
-		Properties properties = metadata.getProps();
-		final List<String> mappingFiles = metadata.getMappingFiles();
-		boolean[] detectedArtifacts = getDetectedArtifacts( properties, overridenProperties, excludeIfNotOverriden );
-
-		return getFilters( detectedArtifacts, true, mappingFiles );
-	}
-
-	private Filter[] getFilters(final boolean[] detectedArtifacts, final boolean searchORM, final List<String> mappingFiles) {
-		final int mappingFilesSize = mappingFiles != null ? mappingFiles.size() : 0;
-		int size = ( detectedArtifacts[0] ? 2 : 0 ) + ( (searchORM || detectedArtifacts[1] || mappingFilesSize > 0 ) ? 1 : 0);
-		Filter[] filters = new Filter[size];
-		if ( detectedArtifacts[0] ) {
-			filters[0] = new PackageFilter( false, null ) {
-				public boolean accept(String javaElementName) {
-					return true;
-				}
-			};
-			filters[1] = new ClassFilter(
-					false, new Class[]{
-					Entity.class,
-					MappedSuperclass.class,
-					Embeddable.class}
-			) {
-				public boolean accept(String javaElementName) {
-					return true;
-				}
-			};
-		}
-		if ( detectedArtifacts[1] || searchORM || mappingFilesSize > 0) {
-			filters[size - 1] = new FileFilter( true ) {
-				public boolean accept(String javaElementName) {
-					return ( detectedArtifacts[1] && javaElementName.endsWith( "hbm.xml" ) )
-							|| ( searchORM && javaElementName.endsWith( META_INF_ORM_XML ) )
-							|| ( mappingFilesSize > 0 && mappingFiles.contains( javaElementName ) );
-				}
-			};
-		}
-		return filters;
-	}
-
-	private void scanForClasses(URL jar, List<String> packages, List<String> entities, List<NamedInputStream> hbmFiles, boolean[] detectedArtifacts, boolean searchORM) {
-		if (jar == null) {
+	private void scanForClasses(ScanningContext scanningContext, List<String> packages, List<String> entities, List<NamedInputStream> hbmFiles) {
+		if (scanningContext.url == null) {
 			log.error( "Container is providing a null PersistenceUnitRootUrl: discovery impossible");
 			return;
 		}
 		try {
-			JarVisitor visitor = JarVisitorFactory.getVisitor( jar, getFilters( detectedArtifacts, searchORM, null ) );
-			addScannedEntries( visitor, entities, packages, hbmFiles, null );
+			addScannedEntries( scanningContext, entities, packages, hbmFiles, null );
 		}
 		catch (RuntimeException e) {
-			throw new RuntimeException( "error trying to scan <jar-file>: " + jar.toString(), e );
+			throw new RuntimeException( "error trying to scan <jar-file>: " + scanningContext.url.toString(), e );
 		}
 		catch( IOException e ) {
-			throw new RuntimeException( "Error while reading " + jar.toString(), e );
+			throw new RuntimeException( "Error while reading " + scanningContext.url.toString(), e );
 		}
 	}
 

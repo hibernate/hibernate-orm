@@ -113,9 +113,15 @@ public abstract class EJB3TestCase extends junit.framework.TestCase {
 	}
 
 	protected void setUp() throws Exception {
-		if ( getSessions() == null || lastTestClass != getClass() ) {
+		if ( getSessions() == null || lastTestClass != getClass() || getSessions().isClosed() ) {
 			buildSessionFactory( getMappings() );
 			lastTestClass = getClass();
+		}
+	}
+	
+	protected void tearDown() throws Exception {
+		if (getSessions() != null && !getSessions().isClosed()) {
+			getSessions().close();
 		}
 	}
 

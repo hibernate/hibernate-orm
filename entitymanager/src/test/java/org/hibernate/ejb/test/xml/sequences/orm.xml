@@ -13,7 +13,7 @@
             <cascade-persist/>
         </persistence-unit-defaults>
     </persistence-unit-metadata>
-    <package>org.hibernate.ejb.test.xml</package>
+    <package>org.hibernate.ejb.test.xml.sequences</package>
     <entity class="Light" metadata-complete="true" access="FIELD">
         <attributes>
             <id name="name">
@@ -26,7 +26,7 @@
             metadata-complete="false">
         <attributes>
             <id name="id">
-                <generated-value  strategy="AUTO"/>
+                <generated-value strategy="SEQUENCE"/>
             </id>
         </attributes>
     </entity>

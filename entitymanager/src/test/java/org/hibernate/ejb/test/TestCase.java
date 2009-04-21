@@ -15,6 +15,7 @@ import javax.persistence.Persistence;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.cfg.Environment;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.ejb.HibernatePersistence;
 
 
@@ -146,4 +147,33 @@ public abstract class TestCase extends junit.framework.TestCase {
 		}
 		return config;
 	}
+
+	@Override
+	public void runBare() throws Throwable {
+		
+		if (!appliesTo(Dialect.getDialect())) 
+			return;
+		
+		Throwable exception = null;
+		setUp();
+		try {
+			runTest();
+		} catch (Throwable running) {
+			exception = running;
+		} finally {
+			try {
+				tearDown();
+			} catch (Throwable tearingDown) {
+				if (exception == null)
+					exception = tearingDown;
+			}
+		}
+		if (exception != null)
+			throw exception;
+	}
+
+	public boolean appliesTo(Dialect dialect) {
+		return true;
+	}
+
 }

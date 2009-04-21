@@ -334,7 +334,7 @@ public class QueryTest extends TestCase {
 
 		assertEquals(
 				1, em.createNativeQuery(
-				"update Item i set i.descr = 'Logitech Mouse' where i.name = 'Mouse'"
+				"update Item set descr = 'Logitech Mouse' where name = 'Mouse'"
 		).executeUpdate()
 		);
 		item = em.find( Item.class, item.getName() );

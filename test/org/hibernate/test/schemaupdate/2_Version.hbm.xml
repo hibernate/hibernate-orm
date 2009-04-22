@@ -5,11 +5,10 @@
 
 <hibernate-mapping package="org.hibernate.test.schemaupdate">
 
-	<class name="Version" schema="PUBLIC">
+	<class name="Version">
 		<id name="id">
 			<generator class="org.hibernate.id.TableHiLoGenerator">
                 <param name="table">uid_table</param>
-<!--                 <param name="schema">PUBLIC</param>                -->
                 <param name="column">next_hi_value_column</param>
         	</generator>
 		</id>

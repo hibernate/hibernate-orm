@@ -38,6 +38,7 @@ import org.hibernate.envers.reader.AuditReaderImplementor;
 import org.hibernate.envers.tools.reflection.ReflectionTools;
 
 import org.hibernate.NonUniqueResultException;
+import org.hibernate.engine.SessionImplementor;
 import org.hibernate.collection.PersistentCollection;
 import org.hibernate.property.Setter;
 
@@ -56,7 +57,7 @@ public class OneToOneNotOwningMapper implements PropertyMapper {
         this.propertyData = propertyData;
     }
 
-    public boolean mapToMapFromEntity(Map<String, Object> data, Object newObj, Object oldObj) {
+    public boolean mapToMapFromEntity(SessionImplementor session, Map<String, Object> data, Object newObj, Object oldObj) {
         return false;
     }
 

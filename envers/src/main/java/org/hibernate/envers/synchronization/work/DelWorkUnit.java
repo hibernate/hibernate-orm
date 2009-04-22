@@ -31,13 +31,14 @@ import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.configuration.AuditConfiguration;
 
 import org.hibernate.Session;
+import org.hibernate.engine.SessionImplementor;
 
 /**
  * @author Adam Warski (adam at warski dot org)
  */
 public class DelWorkUnit extends AbstractAuditWorkUnit implements AuditWorkUnit {
-    public DelWorkUnit(String entityName, AuditConfiguration verCfg, Serializable id) {
-        super(entityName, verCfg, id);
+    public DelWorkUnit(SessionImplementor sessionImplementor, String entityName, AuditConfiguration verCfg, Serializable id) {
+        super(sessionImplementor, entityName, verCfg, id);
     }
 
     public boolean containsWork() {

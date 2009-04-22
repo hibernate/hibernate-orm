@@ -32,11 +32,13 @@ import org.hibernate.envers.configuration.AuditConfiguration;
 import org.hibernate.envers.configuration.AuditEntitiesConfiguration;
 
 import org.hibernate.Session;
+import org.hibernate.engine.SessionImplementor;
 
 /**
  * @author Adam Warski (adam at warski dot org)
  */
 public abstract class AbstractAuditWorkUnit implements AuditWorkUnit {
+	protected final SessionImplementor sessionImplementor;
     protected final AuditConfiguration verCfg;
     protected final Serializable id;
 
@@ -44,7 +46,9 @@ public abstract class AbstractAuditWorkUnit implements AuditWorkUnit {
 
     private Object performedData;
 
-    protected AbstractAuditWorkUnit(String entityName, AuditConfiguration verCfg, Serializable id) {
+    protected AbstractAuditWorkUnit(SessionImplementor sessionImplementor, String entityName, AuditConfiguration verCfg,
+									Serializable id) {
+		this.sessionImplementor = sessionImplementor;
         this.verCfg = verCfg;
         this.id = id;
         this.entityName = entityName;

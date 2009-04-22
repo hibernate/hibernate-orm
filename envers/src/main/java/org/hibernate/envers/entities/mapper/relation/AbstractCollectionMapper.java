@@ -45,6 +45,7 @@ import org.hibernate.envers.tools.reflection.ReflectionTools;
 
 import org.hibernate.collection.PersistentCollection;
 import org.hibernate.property.Setter;
+import org.hibernate.engine.SessionImplementor;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -130,7 +131,7 @@ public abstract class AbstractCollectionMapper<T> implements PropertyMapper {
         return collectionChanges;
     }
 
-    public boolean mapToMapFromEntity(Map<String, Object> data, Object newObj, Object oldObj) {
+    public boolean mapToMapFromEntity(SessionImplementor session, Map<String, Object> data, Object newObj, Object oldObj) {
         // Changes are mapped in the "mapCollectionChanges" method.
         return false;
     }

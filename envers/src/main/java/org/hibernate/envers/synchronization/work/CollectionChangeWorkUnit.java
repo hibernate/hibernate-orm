@@ -31,6 +31,7 @@ import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.configuration.AuditConfiguration;
 
 import org.hibernate.Session;
+import org.hibernate.engine.SessionImplementor;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -38,8 +39,9 @@ import org.hibernate.Session;
 public class CollectionChangeWorkUnit extends AbstractAuditWorkUnit implements AuditWorkUnit {
     private final Object entity;
 
-    public CollectionChangeWorkUnit(String entityName, AuditConfiguration verCfg, Serializable id, Object entity) {
-        super(entityName, verCfg, id);
+    public CollectionChangeWorkUnit(SessionImplementor session, String entityName, AuditConfiguration verCfg,
+									Serializable id, Object entity) {
+        super(session, entityName, verCfg, id);
 
         this.entity = entity;
     }
@@ -52,7 +54,8 @@ public class CollectionChangeWorkUnit extends AbstractAuditWorkUnit implements A
         Map<String, Object> data = new HashMap<String, Object>();
         fillDataWithId(data, revisionData, RevisionType.MOD);
 
-        verCfg.getEntCfg().get(getEntityName()).getPropertyMapper().mapToMapFromEntity(data, entity, null);
+        verCfg.getEntCfg().get(getEntityName()).getPropertyMapper().mapToMapFromEntity(sessionImplementor,
+				data, entity, null);
 
         session.save(verCfg.getAuditEntCfg().getAuditEntityName(getEntityName()), data);
 

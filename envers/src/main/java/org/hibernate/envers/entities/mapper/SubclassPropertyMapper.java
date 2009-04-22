@@ -32,6 +32,7 @@ import org.hibernate.envers.configuration.AuditConfiguration;
 import org.hibernate.envers.reader.AuditReaderImplementor;
 
 import org.hibernate.collection.PersistentCollection;
+import org.hibernate.engine.SessionImplementor;
 
 /**
  * A mapper which maps from a parent mapper and a "main" one, but adds only to the "main". The "main" mapper
@@ -47,16 +48,16 @@ public class SubclassPropertyMapper implements ExtendedPropertyMapper {
         this.parentMapper = parentMapper;
     }
 
-    public boolean map(Map<String, Object> data, String[] propertyNames, Object[] newState, Object[] oldState) {
-        boolean parentDiffs = parentMapper.map(data, propertyNames, newState, oldState);
-        boolean mainDiffs = main.map(data, propertyNames, newState, oldState);
+    public boolean map(SessionImplementor session, Map<String, Object> data, String[] propertyNames, Object[] newState, Object[] oldState) {
+        boolean parentDiffs = parentMapper.map(session, data, propertyNames, newState, oldState);
+        boolean mainDiffs = main.map(session, data, propertyNames, newState, oldState);
 
         return parentDiffs || mainDiffs;
     }
 
-    public boolean mapToMapFromEntity(Map<String, Object> data, Object newObj, Object oldObj) {
-        boolean parentDiffs = parentMapper.mapToMapFromEntity(data, newObj, oldObj);
-        boolean mainDiffs = main.mapToMapFromEntity(data, newObj, oldObj);
+    public boolean mapToMapFromEntity(SessionImplementor session, Map<String, Object> data, Object newObj, Object oldObj) {
+        boolean parentDiffs = parentMapper.mapToMapFromEntity(session, data, newObj, oldObj);
+        boolean mainDiffs = main.mapToMapFromEntity(session, data, newObj, oldObj);
 
         return parentDiffs || mainDiffs;
     }

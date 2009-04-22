@@ -31,6 +31,7 @@ import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.configuration.AuditConfiguration;
 
 import org.hibernate.Session;
+import org.hibernate.engine.SessionImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 
 /**
@@ -40,9 +41,9 @@ public class AddWorkUnit extends AbstractAuditWorkUnit implements AuditWorkUnit 
     private final Object[] state;
     private final String[] propertyNames;
 
-    public AddWorkUnit(String entityName, AuditConfiguration verCfg, Serializable id,
-                       EntityPersister entityPersister, Object[] state) {
-        super(entityName, verCfg, id);
+    public AddWorkUnit(SessionImplementor sessionImplementor, String entityName, AuditConfiguration verCfg,
+					   Serializable id, EntityPersister entityPersister, Object[] state) {
+        super(sessionImplementor, entityName, verCfg, id);
 
         this.state = state;
         this.propertyNames = entityPersister.getPropertyNames();
@@ -56,7 +57,8 @@ public class AddWorkUnit extends AbstractAuditWorkUnit implements AuditWorkUnit 
         Map<String, Object> data = new HashMap<String, Object>();
         fillDataWithId(data, revisionData, RevisionType.ADD);
 
-        verCfg.getEntCfg().get(getEntityName()).getPropertyMapper().map(data, propertyNames, state, null);
+        verCfg.getEntCfg().get(getEntityName()).getPropertyMapper().map(sessionImplementor, data,
+				propertyNames, state, null);
 
         session.save(verCfg.getAuditEntCfg().getAuditEntityName(getEntityName()), data);
 

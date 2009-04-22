@@ -31,6 +31,7 @@ import org.hibernate.envers.configuration.AuditConfiguration;
 import org.hibernate.envers.reader.AuditReaderImplementor;
 
 import org.hibernate.collection.PersistentCollection;
+import org.hibernate.engine.SessionImplementor;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -38,12 +39,13 @@ import org.hibernate.collection.PersistentCollection;
 public interface PropertyMapper {
     /**
      * Maps properties to the given map, basing on differences between properties of new and old objects.
-     * @param data Data to map to.
-     * @param newObj New state of the entity.
-     * @param oldObj Old state of the entity.
-     * @return True if there are any differences between the states represented by newObj and oldObj.
+     * @param session The current session.
+	 * @param data Data to map to.
+	 * @param newObj New state of the entity.
+	 * @param oldObj Old state of the entity.
+	 * @return True if there are any differences between the states represented by newObj and oldObj.
      */
-    boolean mapToMapFromEntity(Map<String, Object> data, Object newObj, Object oldObj);
+    boolean mapToMapFromEntity(SessionImplementor session, Map<String, Object> data, Object newObj, Object oldObj);
 
     /**
      * Maps properties from the given map to the given object.

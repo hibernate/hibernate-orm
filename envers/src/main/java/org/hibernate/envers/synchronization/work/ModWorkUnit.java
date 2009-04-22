@@ -31,6 +31,7 @@ import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.configuration.AuditConfiguration;
 
 import org.hibernate.Session;
+import org.hibernate.engine.SessionImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 
 /**
@@ -40,13 +41,13 @@ public class ModWorkUnit extends AbstractAuditWorkUnit implements AuditWorkUnit 
     private final Map<String, Object> data;
     private final boolean changes;        
 
-    public ModWorkUnit(String entityName, AuditConfiguration verCfg, Serializable id,
-                       EntityPersister entityPersister, Object[] newState, Object[] oldState) {
-        super(entityName, verCfg, id);
+    public ModWorkUnit(SessionImplementor sessionImplementor, String entityName, AuditConfiguration verCfg, 
+					   Serializable id, EntityPersister entityPersister, Object[] newState, Object[] oldState) {
+        super(sessionImplementor, entityName, verCfg, id);
 
         data = new HashMap<String, Object>();
-        changes = verCfg.getEntCfg().get(getEntityName()).getPropertyMapper().map(data, entityPersister.getPropertyNames(),
-                newState, oldState);
+        changes = verCfg.getEntCfg().get(getEntityName()).getPropertyMapper().map(sessionImplementor, data,
+				entityPersister.getPropertyNames(), newState, oldState);
     }
 
     public boolean containsWork() {

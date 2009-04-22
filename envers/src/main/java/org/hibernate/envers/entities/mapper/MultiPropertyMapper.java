@@ -36,6 +36,7 @@ import org.hibernate.envers.tools.MappingTools;
 
 import org.hibernate.collection.PersistentCollection;
 import org.hibernate.property.Getter;
+import org.hibernate.engine.SessionImplementor;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -75,13 +76,13 @@ public class MultiPropertyMapper implements ExtendedPropertyMapper {
 
     private Object getAtIndexOrNull(Object[] array, int index) { return array == null ? null : array[index]; }
 
-    public boolean map(Map<String, Object> data, String[] propertyNames, Object[] newState, Object[] oldState) {
+    public boolean map(SessionImplementor session, Map<String, Object> data, String[] propertyNames, Object[] newState, Object[] oldState) {
         boolean ret = false;
         for (int i=0; i<propertyNames.length; i++) {
             String propertyName = propertyNames[i];
 
             if (propertyDatas.containsKey(propertyName)) {
-                ret |= properties.get(propertyDatas.get(propertyName)).mapToMapFromEntity(data,
+                ret |= properties.get(propertyDatas.get(propertyName)).mapToMapFromEntity(session, data,
                         getAtIndexOrNull(newState, i),
                         getAtIndexOrNull(oldState, i));
             }
@@ -90,7 +91,7 @@ public class MultiPropertyMapper implements ExtendedPropertyMapper {
         return ret;
     }
 
-    public boolean mapToMapFromEntity(Map<String, Object> data, Object newObj, Object oldObj) {
+    public boolean mapToMapFromEntity(SessionImplementor session, Map<String, Object> data, Object newObj, Object oldObj) {
         boolean ret = false;
         for (PropertyData propertyData : properties.keySet()) {
             Getter getter;
@@ -102,7 +103,7 @@ public class MultiPropertyMapper implements ExtendedPropertyMapper {
                 return false;
             }
 
-            ret |= properties.get(propertyData).mapToMapFromEntity(data,
+            ret |= properties.get(propertyData).mapToMapFromEntity(session, data,
                     newObj == null ? null : getter.get(newObj),
                     oldObj == null ? null : getter.get(oldObj));
         }

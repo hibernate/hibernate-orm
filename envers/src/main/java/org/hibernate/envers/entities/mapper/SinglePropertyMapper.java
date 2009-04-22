@@ -36,6 +36,7 @@ import org.hibernate.envers.tools.reflection.ReflectionTools;
 
 import org.hibernate.collection.PersistentCollection;
 import org.hibernate.property.Setter;
+import org.hibernate.engine.SessionImplementor;
 
 /**
  * TODO: diff
@@ -54,7 +55,7 @@ public class SinglePropertyMapper implements PropertyMapper, SimpleMapperBuilder
         this.propertyData = propertyData;
     }
 
-    public boolean mapToMapFromEntity(Map<String, Object> data, Object newObj, Object oldObj) {
+    public boolean mapToMapFromEntity(SessionImplementor session, Map<String, Object> data, Object newObj, Object oldObj) {
         data.put(propertyData.getName(), newObj);
 
         return !Tools.objectsEqual(newObj, oldObj);

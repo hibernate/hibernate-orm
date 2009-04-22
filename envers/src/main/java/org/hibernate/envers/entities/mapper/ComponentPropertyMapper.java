@@ -36,6 +36,7 @@ import org.hibernate.envers.tools.reflection.ReflectionTools;
 import org.hibernate.collection.PersistentCollection;
 import org.hibernate.property.Setter;
 import org.hibernate.util.ReflectHelper;
+import org.hibernate.engine.SessionImplementor;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -63,8 +64,8 @@ public class ComponentPropertyMapper implements PropertyMapper, CompositeMapperB
         delegate.addComposite(propertyData, propertyMapper);
     }
 
-    public boolean mapToMapFromEntity(Map<String, Object> data, Object newObj, Object oldObj) {
-        return delegate.mapToMapFromEntity(data, newObj, oldObj);
+    public boolean mapToMapFromEntity(SessionImplementor session, Map<String, Object> data, Object newObj, Object oldObj) {
+        return delegate.mapToMapFromEntity(session, data, newObj, oldObj);
     }
 
     public void mapToEntityFromMap(AuditConfiguration verCfg, Object obj, Map data, Object primaryKey, AuditReaderImplementor versionsReader, Number revision) {

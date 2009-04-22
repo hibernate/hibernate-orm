@@ -45,6 +45,7 @@
             <package name="org.hibernate.envers.test.integration.properties" />
             <package name="org.hibernate.envers.test.integration.query" />
             <package name="org.hibernate.envers.test.integration.query.ids" />
+            <package name="org.hibernate.envers.test.integration.reference" />
             <package name="org.hibernate.envers.test.integration.reventity" />
             <package name="org.hibernate.envers.test.integration.revfordate" />
             <package name="org.hibernate.envers.test.integration.sameids" />

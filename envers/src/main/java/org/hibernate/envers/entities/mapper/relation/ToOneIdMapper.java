@@ -40,6 +40,7 @@ import org.hibernate.envers.tools.reflection.ReflectionTools;
 
 import org.hibernate.collection.PersistentCollection;
 import org.hibernate.property.Setter;
+import org.hibernate.engine.SessionImplementor;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -55,13 +56,13 @@ public class ToOneIdMapper implements PropertyMapper {
         this.referencedEntityName = referencedEntityName;
     }
 
-    public boolean mapToMapFromEntity(Map<String, Object> data, Object newObj, Object oldObj) {
+    public boolean mapToMapFromEntity(SessionImplementor session, Map<String, Object> data, Object newObj, Object oldObj) {
         HashMap<String, Object> newData = new HashMap<String, Object>();
         data.put(propertyData.getName(), newData);
 
         delegate.mapToMapFromEntity(newData, newObj);
 
-        return !Tools.objectsEqual(newObj, oldObj);
+        return !Tools.entitiesEqual(session, newObj, oldObj);
     }
 
     public void mapToEntityFromMap(AuditConfiguration verCfg, Object obj, Map data, Object primaryKey,

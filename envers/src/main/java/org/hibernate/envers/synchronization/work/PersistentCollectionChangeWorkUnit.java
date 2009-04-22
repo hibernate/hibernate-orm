@@ -34,6 +34,7 @@ import org.hibernate.envers.entities.mapper.PersistentCollectionChangeData;
 import org.hibernate.Session;
 import org.hibernate.persister.collection.AbstractCollectionPersister;
 import org.hibernate.engine.CollectionEntry;
+import org.hibernate.engine.SessionImplementor;
 import org.hibernate.collection.PersistentCollection;
 
 /**
@@ -43,10 +44,10 @@ public class PersistentCollectionChangeWorkUnit extends AbstractAuditWorkUnit im
     private final List<PersistentCollectionChangeData> collectionChanges;
     private final String referencingPropertyName;
 
-    public PersistentCollectionChangeWorkUnit(String entityName, AuditConfiguration verCfg,
-                                              PersistentCollection collection, CollectionEntry collectionEntry,
-                                              Serializable snapshot, Serializable id) {
-        super(entityName, verCfg, null);
+    public PersistentCollectionChangeWorkUnit(SessionImplementor sessionImplementor, String entityName,
+											  AuditConfiguration verCfg, PersistentCollection collection,
+											  CollectionEntry collectionEntry, Serializable snapshot, Serializable id) {
+        super(sessionImplementor, entityName, verCfg, null);
 
 		String ownerEntityName = ((AbstractCollectionPersister) collectionEntry.getLoadedPersister()).getOwnerEntityName();
 		referencingPropertyName = collectionEntry.getRole().substring(ownerEntityName.length() + 1);

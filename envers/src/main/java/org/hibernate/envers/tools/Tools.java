@@ -23,6 +23,10 @@
  */
 package org.hibernate.envers.tools;
 
+import org.hibernate.proxy.HibernateProxy;
+import org.hibernate.engine.SessionImplementor;
+import org.hibernate.Session;
+
 import java.util.*;
 
 /**
@@ -40,6 +44,42 @@ public class Tools {
     public static <K,V> Map<K,V> newLinkedHashMap() {
         return new LinkedHashMap<K,V>();
     }
+
+	public static boolean entitiesEqual(SessionImplementor session, Object obj1, Object obj2) {
+        Object id1 = getIdentifier(session, obj1);
+		Object id2 = getIdentifier(session, obj2);
+
+        return objectsEqual(id1, id2);
+    }
+
+	public static Object getIdentifier(SessionImplementor session, Object obj) {
+		if (obj == null) {
+			return null;
+		}
+
+		if (obj instanceof HibernateProxy) {
+			HibernateProxy hibernateProxy = (HibernateProxy) obj;
+			return hibernateProxy.getHibernateLazyInitializer().getIdentifier();
+		}
+
+
+		return session.getEntityPersister(null, obj).getIdentifier(obj, session.getEntityMode());
+	}
+
+	public static Object getTargetFromProxy(HibernateProxy proxy) {
+		if (!proxy.getHibernateLazyInitializer().isUninitialized()) {
+			return proxy.getHibernateLazyInitializer().getImplementation();
+		}
+
+		Session tempSession = proxy.getHibernateLazyInitializer().getSession().getFactory().openTemporarySession();
+		try {
+			proxy.getHibernateLazyInitializer().setSession((SessionImplementor) tempSession);
+			proxy.getHibernateLazyInitializer().initialize();
+			return proxy.getHibernateLazyInitializer().getImplementation();
+		} finally {
+			tempSession.close();
+		}
+	}
 
     public static boolean objectsEqual(Object obj1, Object obj2) {
         if (obj1 == null) {

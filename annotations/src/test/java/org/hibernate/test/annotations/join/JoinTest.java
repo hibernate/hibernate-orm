@@ -95,6 +95,7 @@ public class JoinTest extends TestCase {
 		Life life = new Life();
 		Cat cat = new Cat();
 		cat.setName( "kitty" );
+		cat.setStoryPart2( "and the story continues" );
 		life.duration = 15;
 		life.fullDescription = "Long long description";
 		life.owner = cat;

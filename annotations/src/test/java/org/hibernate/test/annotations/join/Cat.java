@@ -83,7 +83,7 @@ public class Cat implements Serializable {
 		return storyPart1;
 	}
 
-	@Column(table = "Cat2")
+	@Column(table = "Cat2", nullable = false)
 	public String getStoryPart2() {
 		return storyPart2;
 	}

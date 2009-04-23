@@ -18,10 +18,11 @@ import javax.persistence.UniqueConstraint;
 public class Sky implements Serializable {
 	@Id
 	protected Long id;
-	@Column(unique = true, columnDefinition = "varchar(250)")
+	@Column(unique = true, columnDefinition = "varchar(250)", nullable = false)
 	protected String color;
+	@Column(nullable = false)
 	protected String day;
-	@Column(name = "MONTH")
+	@Column(name = "MONTH", nullable = false)
 	protected String month;
 	static protected String area;
 }

@@ -260,6 +260,8 @@ public class EntityTest extends TestCase {
 		sky.id = new Long( 1 );
 		sky.color = "black";
 		Sky.area = "Paris";
+		sky.day = "23";
+		sky.month = "1";
 		s.save( sky );
 		tx.commit();
 		s.close();

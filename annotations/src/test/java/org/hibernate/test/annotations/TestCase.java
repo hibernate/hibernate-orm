@@ -68,15 +68,15 @@ public abstract class TestCase extends junit.framework.TestCase {
 			if ( recreateSchema() ) {
 				cfg.setProperty(Environment.HBM2DDL_AUTO, "create-drop");
 			}
-			for ( int i = 0; i < packages.length; i++ ) {
-				getCfg().addPackage(packages[i]);
+			for ( String aPackage : packages ) {
+				getCfg().addPackage( aPackage );
 			}
-			for ( int i = 0; i < classes.length; i++ ) {
-				getCfg().addAnnotatedClass(classes[i]);
+			for ( Class<?> aClass : classes ) {
+				getCfg().addAnnotatedClass( aClass );
 			}
-			for ( int i = 0; i < xmlFiles.length; i++ ) {
-				InputStream is = Thread.currentThread().getContextClassLoader().getResourceAsStream(xmlFiles[i]);
-				getCfg().addInputStream(is);
+			for ( String xmlFile : xmlFiles ) {
+				InputStream is = Thread.currentThread().getContextClassLoader().getResourceAsStream( xmlFile );
+				getCfg().addInputStream( is );
 			}
 			setDialect(Dialect.getDialect());
 			setSessions(getCfg().buildSessionFactory( /* new TestInterceptor() */));
@@ -134,7 +134,7 @@ public abstract class TestCase extends junit.framework.TestCase {
 		}
 	}
 
-	private void runTestMethod( Method runMethod ) throws Throwable, IllegalAccessException {
+	private void runTestMethod( Method runMethod ) throws Throwable {
 		try {
 			runMethod.invoke(this, new Class[0]);
 		} catch ( InvocationTargetException e ) {

@@ -9,6 +9,7 @@ import java.util.List;
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.cfg.Configuration;
 import org.hibernate.stat.Statistics;
 import org.hibernate.test.annotations.A320;
 import org.hibernate.test.annotations.A320b;
@@ -100,11 +101,11 @@ public class QueryAndSQLTest extends TestCase {
 		q.setParameter( 0, 9990 );
 		List result = q.list();
 		assertEquals( 1, result.size() );
-		Night n2 = (Night) result.get( 0 );
+		Night n2 = ( Night ) result.get( 0 );
 		assertEquals( n2.getDuration(), n.getDuration() );
 		List areas = s.getNamedQuery( "getAreaByNative" ).list();
 		assertTrue( 1 == areas.size() );
-		assertEquals( area.getName(), ( (Area) areas.get( 0 ) ).getName() );
+		assertEquals( area.getName(), ( ( Area ) areas.get( 0 ) ).getName() );
 		tx.commit();
 		s.close();
 	}
@@ -139,7 +140,7 @@ public class QueryAndSQLTest extends TestCase {
 		assertEquals( 1, stats.getQueryCachePutCount() );
 		q.list();
 		assertEquals( 1, stats.getQueryCacheHitCount() );
-		Night n2 = (Night) ( (Object[]) result.get( 0 ) )[0];
+		Night n2 = ( Night ) ( ( Object[] ) result.get( 0 ) )[0];
 		assertEquals( n2.getDuration(), n.getDuration() );
 		tx.commit();
 		s.close();
@@ -162,7 +163,7 @@ public class QueryAndSQLTest extends TestCase {
 		Query q = s.getNamedQuery( "implicitSample" );
 		List result = q.list();
 		assertEquals( 1, result.size() );
-		assertEquals( ship.getModel(), ( (SpaceShip) result.get( 0 ) ).getModel() );
+		assertEquals( ship.getModel(), ( ( SpaceShip ) result.get( 0 ) ).getModel() );
 		s.delete( result.get( 0 ) );
 		tx.commit();
 		s.close();
@@ -192,8 +193,8 @@ public class QueryAndSQLTest extends TestCase {
 		Query q = s.getNamedQuery( "compositekey" );
 		List result = q.list();
 		assertEquals( 1, result.size() );
-		Object[] row = (Object[]) result.get( 0 );
-		SpaceShip spaceShip = (SpaceShip) row[0];
+		Object[] row = ( Object[] ) result.get( 0 );
+		SpaceShip spaceShip = ( SpaceShip ) row[0];
 		assertEquals( ship.getModel(), spaceShip.getModel() );
 		assertNotNull( spaceShip.getDimensions() );
 		assertEquals( ship.getDimensions().getWidth(), spaceShip.getDimensions().getWidth() );
@@ -270,9 +271,9 @@ public class QueryAndSQLTest extends TestCase {
 		s = openSession();
 		tx = s.beginTransaction();
 		Query query = s.getNamedQuery( "plane.byId" ).setParameter( "id", plane.getId() );
-		plane = (Plane) query.uniqueResult();
+		plane = ( Plane ) query.uniqueResult();
 		assertEquals( 1, getSessions().getStatistics().getQueryCachePutCount() );
-		plane = (Plane) s.getNamedQuery( "plane.byId" ).setParameter( "id", plane.getId() ).uniqueResult();
+		plane = ( Plane ) s.getNamedQuery( "plane.byId" ).setParameter( "id", plane.getId() ).uniqueResult();
 		assertEquals( 1, getSessions().getStatistics().getQueryCacheHitCount() );
 		tx.commit();
 		s.close();
@@ -304,7 +305,7 @@ public class QueryAndSQLTest extends TestCase {
 		s.clear();
 		s.getSessionFactory().evict( Chaos.class );
 
-		Chaos resultChaos = (Chaos) s.load( Chaos.class, chaos.getId() );
+		Chaos resultChaos = ( Chaos ) s.load( Chaos.class, chaos.getId() );
 		assertEquals( upperName, resultChaos.getName() );
 		assertEquals( "nickname", resultChaos.getNickname() );
 
@@ -326,23 +327,23 @@ public class QueryAndSQLTest extends TestCase {
 		CasimirParticle p = new CasimirParticle();
 		p.setId( 1l );
 		s.persist( p );
-		chaos.getParticles().add(p);
+		chaos.getParticles().add( p );
 		p = new CasimirParticle();
 		p.setId( 2l );
 		s.persist( p );
-		chaos.getParticles().add(p);
+		chaos.getParticles().add( p );
 		s.flush();
 		s.clear();
 		s.getSessionFactory().evict( Chaos.class );
 
-		Chaos resultChaos = (Chaos) s.load( Chaos.class, chaos.getId() );
+		Chaos resultChaos = ( Chaos ) s.load( Chaos.class, chaos.getId() );
 		assertEquals( 2, resultChaos.getParticles().size() );
 		resultChaos.getParticles().remove( resultChaos.getParticles().iterator().next() );
 		resultChaos.getParticles().remove( resultChaos.getParticles().iterator().next() );
 		s.flush();
 
 		s.clear();
-		resultChaos = (Chaos) s.load( Chaos.class, chaos.getId() );
+		resultChaos = ( Chaos ) s.load( Chaos.class, chaos.getId() );
 		assertEquals( 0, resultChaos.getParticles().size() );
 
 		tx.rollback();
@@ -350,7 +351,7 @@ public class QueryAndSQLTest extends TestCase {
 	}
 
 	protected Class[] getMappings() {
-		return new Class[]{
+		return new Class[] {
 				Plane.class,
 				A320.class,
 				A320b.class,
@@ -366,15 +367,19 @@ public class QueryAndSQLTest extends TestCase {
 	}
 
 	protected String[] getAnnotatedPackages() {
-		return new String[]{
+		return new String[] {
 				"org.hibernate.test.annotations.query"
 		};
 	}
 
 	@Override
 	protected String[] getXmlFiles() {
-		return new String[]{
+		return new String[] {
 				"org/hibernate/test/annotations/query/orm.xml"
 		};
+	}
+
+	protected void configure(Configuration cfg) {
+		cfg.setProperty( "hibernate.cache.use_query_cache", "true" );
 	}
 }

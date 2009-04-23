@@ -30,7 +30,6 @@ import java.lang.reflect.Member;
  * Complete duplication of {@link org.hibernate.util.ReflectHelper}.
  *
  * @author Emmanuel Bernard
- * @deprecated Use {@link org.hibernate.util.ReflectHelper} instead.
  */
 public final class ReflectHelper {
 	public static boolean overridesEquals(Class clazz) {
@@ -42,7 +41,7 @@ public final class ReflectHelper {
 	}
 
 	public static Class classForName(String name) throws ClassNotFoundException {
-		return org.hibernate.util.ReflectHelper.classForName( name );
+		return ReflectHelper.classForName( name );
 	}
 
 	public static Class classForName(String name, Class caller) throws ClassNotFoundException {

@@ -44,8 +44,8 @@ import org.hibernate.annotations.common.reflection.java.generics.TypeEnvironment
 import org.hibernate.annotations.common.reflection.java.generics.TypeEnvironmentFactory;
 import org.hibernate.annotations.common.reflection.java.generics.TypeSwitch;
 import org.hibernate.annotations.common.reflection.java.generics.TypeUtils;
-import org.hibernate.util.ReflectHelper;
 import org.hibernate.annotations.common.Version;
+import org.hibernate.annotations.common.util.ReflectHelper;
 
 /**
  * The factory for all the objects in this package.

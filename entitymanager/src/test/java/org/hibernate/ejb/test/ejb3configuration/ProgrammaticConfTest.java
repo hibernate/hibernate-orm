@@ -24,6 +24,7 @@ public class ProgrammaticConfTest extends junit.framework.TestCase {
 		Ejb3Configuration conf = new Ejb3Configuration();
 		conf.addAnnotatedClass( Cat.class );
 		conf.addAnnotatedClass( Kitten.class );
+		conf.addProperties(getProperties());
 		EntityManagerFactory emf = conf.buildEntityManagerFactory();
 		EntityManager em = emf.createEntityManager();
 		Cat cat = new Cat();
@@ -42,6 +43,7 @@ public class ProgrammaticConfTest extends junit.framework.TestCase {
 	public void testProgrammaticCfg() throws Exception {
 		Ejb3Configuration conf = new Ejb3Configuration();
 		conf.configure( "org/hibernate/ejb/test/ejb3configuration/hibernate.cfg.xml" );
+		conf.addProperties(getProperties());
 		EntityManagerFactory emf = conf.buildEntityManagerFactory();
 		EntityManager em = emf.createEntityManager();
 		Cat cat = new Cat();

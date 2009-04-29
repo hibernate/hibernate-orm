@@ -316,9 +316,9 @@
             <properties>
                 <db.dialect>org.hibernate.dialect.MySQL5InnoDBDialect</db.dialect>
                 <jdbc.driver>com.mysql.jdbc.Driver</jdbc.driver>
-                <jdbc.url>jdbc:mysql://dev02.qa.atl.jboss.com/platformae</jdbc.url>
-                <jdbc.user>platformae</jdbc.user>
-                <jdbc.pass>platformae</jdbc.pass>
+                <jdbc.url>jdbc:mysql://dev02.qa.atl.jboss.com/hibbrtru</jdbc.url>
+                <jdbc.user>hibbrtru</jdbc.user>
+                <jdbc.pass>hibbrtru</jdbc.pass>
                 <jdbc.isolation />
             </properties>
         </profile>
@@ -337,9 +337,9 @@
             <properties>
                 <db.dialect>org.hibernate.dialect.PostgreSQLDialect</db.dialect>
                 <jdbc.driver>org.postgresql.Driver</jdbc.driver>
-                <jdbc.url>jdbc:postgresql://dev01.qa.atl.jboss.com:5432:platformae</jdbc.url>
-                <jdbc.user>platformae</jdbc.user>
-                <jdbc.pass>platformae</jdbc.pass>
+                <jdbc.url>jdbc:postgresql://dev01.qa.atl.jboss.com:5432:hibbrtru</jdbc.url>
+                <jdbc.user>hibbrtru</jdbc.user>
+                <jdbc.pass>hibbrtru</jdbc.pass>
                 <jdbc.isolation />
             </properties>
         </profile>
@@ -368,9 +368,9 @@
             <properties>
                 <db.dialect>org.hibernate.dialect.DB2Dialect</db.dialect>
                 <jdbc.driver>com.ibm.db2.jcc.DB2Driver</jdbc.driver>
-                <jdbc.url>jdbc:db2://dev32.qa.atl.jboss.com:50000/jbossqa</jdbc.url>
-                <jdbc.user>pltfrmae</jdbc.user>
-                <jdbc.pass>pltfrmae</jdbc.pass>
+                <jdbc.url>jdbc:db2://dev32.qa.atl.jboss.com:50000/hibbrtru</jdbc.url>
+                <jdbc.user>hibbrtru</jdbc.user>
+                <jdbc.pass>hibbrtru</jdbc.pass>
                 <jdbc.isolation />
             </properties>
         </profile>
@@ -393,9 +393,9 @@
             <properties>
                 <db.dialect>org.hibernate.dialect.DB2Dialect</db.dialect>
                 <jdbc.driver>com.ibm.db2.jcc.DB2Driver</jdbc.driver>
-                <jdbc.url>jdbc:db2://dev67.qa.atl.jboss.com:50000/jbossqa</jdbc.url>
-                <jdbc.user>pltfrmae</jdbc.user>
-                <jdbc.pass>pltfrmae</jdbc.pass>
+                <jdbc.url>jdbc:db2://dev67.qa.atl.jboss.com:50000/hibbrtru</jdbc.url>
+                <jdbc.user>hibbrtru</jdbc.user>
+                <jdbc.pass>hibbrtru</jdbc.pass>
                 <jdbc.isolation />
             </properties>
         </profile>
@@ -415,8 +415,8 @@
                 <db.dialect>org.hibernate.dialect.Oracle9iDialect</db.dialect>
                 <jdbc.driver>oracle.jdbc.driver.OracleDriver</jdbc.driver>
                 <jdbc.url>jdbc:oracle:thin:@dev20.qa.atl.jboss.com:1521:qa</jdbc.url>
-                <jdbc.user>platformae</jdbc.user>
-                <jdbc.pass>platformae</jdbc.pass>
+                <jdbc.user>hibbrtru</jdbc.user>
+                <jdbc.pass>hibbrtru</jdbc.pass>
                 <jdbc.isolation />
             </properties>
         </profile>
@@ -436,8 +436,8 @@
                 <db.dialect>org.hibernate.dialect.Oracle10gDialect</db.dialect>
                 <jdbc.driver>oracle.jdbc.driver.OracleDriver</jdbc.driver>
                 <jdbc.url>jdbc:oracle:thin:@dev01.qa.atl.jboss.com:1521:qadb01</jdbc.url>
-                <jdbc.user>hibernate</jdbc.user>
-                <jdbc.pass>hibernate</jdbc.pass>
+                <jdbc.user>hibbrtru</jdbc.user>
+                <jdbc.pass>hibbrtru</jdbc.pass>
                 <jdbc.isolation />
             </properties>
         </profile>
@@ -455,9 +455,9 @@
             <properties>
                 <db.dialect>org.hibernate.dialect.SybaseASE15Dialect</db.dialect>
                 <jdbc.driver>com.sybase.jdbc3.jdbc.SybDriver</jdbc.driver>
-                <jdbc.url>jdbc:sybase:Tds:dev77.qa.atl2.redhat.com:5000/platformae</jdbc.url>
-                <jdbc.user>platformae</jdbc.user>
-                <jdbc.pass>platformae</jdbc.pass>
+                <jdbc.url>jdbc:sybase:Tds:dev77.qa.atl2.redhat.com:5000/hibbrtru</jdbc.url>
+                <jdbc.user>hibbrtru</jdbc.user>
+                <jdbc.pass>hibbrtru</jdbc.pass>
                 <jdbc.isolation />
             </properties>
         </profile>
@@ -476,8 +476,8 @@
                 <db.dialect>org.hibernate.dialect.SQLServerDialect</db.dialect>
                 <jdbc.driver>com.microsoft.sqlserver.jdbc.SQLServerDriver</jdbc.driver>
                 <jdbc.url>jdbc:sqlserver://dev30.qa.atl.jboss.com:3918</jdbc.url>
-                <jdbc.user>platformae</jdbc.user>
-                <jdbc.pass>platformae</jdbc.pass>
+                <jdbc.user>hibbrtru</jdbc.user>
+                <jdbc.pass>hibbrtru</jdbc.pass>
                 <jdbc.isolation>4096</jdbc.isolation>
             </properties>
         </profile>

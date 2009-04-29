@@ -69,6 +69,7 @@ import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.java.JavaReflectionManager;
 import org.hibernate.cfg.annotations.Version;
 import org.hibernate.cfg.annotations.reflection.JPAMetadataProvider;
+import org.hibernate.cfg.beanvalidation.BeanValidationActivator;
 import org.hibernate.engine.NamedQueryDefinition;
 import org.hibernate.engine.NamedSQLQueryDefinition;
 import org.hibernate.engine.ResultSetMappingDefinition;
@@ -800,6 +801,13 @@ public class AnnotationConfiguration extends Configuration {
 	}
 
 	public SessionFactory buildSessionFactory() throws HibernateException {
+		enableLegacyHibernateValidator();
+		enableBeanValidation();
+		enableHibernateSearch(); 
+		return super.buildSessionFactory();
+	}
+
+	private void enableLegacyHibernateValidator() {
 		//add validator events if the jar is available
 		boolean enableValidatorListeners = !"false".equalsIgnoreCase( getProperty( "hibernate.validator.autoregister_listeners" ) );
 		Class validateEventListenerClass = null;
@@ -868,10 +876,10 @@ public class AnnotationConfiguration extends Configuration {
 				}
 			}
 		}
-		
-		enableHibernateSearch(); 
-		
-		return super.buildSessionFactory();
+	}
+
+	private void enableBeanValidation() {
+		BeanValidationActivator.activateBeanValidation( getEventListeners(), getProperties() );
 	}
 
 	/**

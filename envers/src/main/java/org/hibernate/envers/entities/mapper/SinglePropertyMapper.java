@@ -36,7 +36,9 @@ import org.hibernate.envers.tools.reflection.ReflectionTools;
 
 import org.hibernate.collection.PersistentCollection;
 import org.hibernate.property.Setter;
+import org.hibernate.property.DirectPropertyAccessor;
 import org.hibernate.engine.SessionImplementor;
+import org.hibernate.HibernateException;
 
 /**
  * TODO: diff
@@ -68,8 +70,26 @@ public class SinglePropertyMapper implements PropertyMapper, SimpleMapperBuilder
         }
 
         Setter setter = ReflectionTools.getSetter(obj.getClass(), propertyData);
-        setter.set(obj, data.get(propertyData.getName()), null);
+		Object value = data.get(propertyData.getName());
+		// We only set a null value if the field is not primite. Otherwise, we leave it intact.
+		if (value != null || !isPrimitive(setter, propertyData, obj.getClass())) {
+        	setter.set(obj, value, null);
+		}
     }
+
+	private boolean isPrimitive(Setter setter, PropertyData propertyData, Class<?> cls) {
+		if (setter instanceof DirectPropertyAccessor.DirectSetter) {
+			// In a direct setter, getMethod() returns null
+			// Trying to look up the field
+			try {
+				return cls.getDeclaredField(propertyData.getBeanName()).getType().isPrimitive();
+			} catch (NoSuchFieldException e) {
+				throw new HibernateException(e);
+			}
+		} else {
+			return setter.getMethod().getParameterTypes()[0].isPrimitive();
+		}
+	}
 
     public List<PersistentCollectionChangeData> mapCollectionChanges(String referencingPropertyName,
                                                                      PersistentCollection newColl,

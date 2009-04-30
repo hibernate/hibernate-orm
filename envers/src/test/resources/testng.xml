@@ -42,6 +42,7 @@
             <package name="org.hibernate.envers.test.integration.onetoone.bidirectional" />
             <package name="org.hibernate.envers.test.integration.onetoone.bidirectional.ids" />
             <package name="org.hibernate.envers.test.integration.onetoone.unidirectional" />
+            <package name="org.hibernate.envers.test.integration.primitive" />
             <package name="org.hibernate.envers.test.integration.properties" />
             <package name="org.hibernate.envers.test.integration.query" />
             <package name="org.hibernate.envers.test.integration.query.ids" />

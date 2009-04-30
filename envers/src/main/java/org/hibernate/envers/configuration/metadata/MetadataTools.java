@@ -68,12 +68,22 @@ public class MetadataTools {
         return prop_mapping;
     }
 
-    public static Element addColumn(Element parent, String name, Integer length) {
+    public static Element addColumn(Element parent, String name, Integer length, Integer scale, Integer precision,
+									String sqlType) {
         Element column_mapping = parent.addElement("column");
 
         column_mapping.addAttribute("name", name);
         if (length != null) {
             column_mapping.addAttribute("length", length.toString());
+        }
+		if (scale != 0) {
+			column_mapping.addAttribute("scale", Integer.toString(scale));
+		}
+		if (precision != 0) {
+			column_mapping.addAttribute("precision", Integer.toString(precision));
+		}
+		if (sqlType != null) {
+            column_mapping.addAttribute("sql-type", sqlType);
         }
 
         return column_mapping;
@@ -142,7 +152,8 @@ public class MetadataTools {
     public static void addColumns(Element any_mapping, Iterator<Column> columns) {
         while (columns.hasNext()) {
             Column column = columns.next();
-            addColumn(any_mapping, column.getName(), column.getLength());
+            addColumn(any_mapping, column.getName(), column.getLength(), column.getScale(), column.getPrecision(),
+					column.getSqlType());
         }
     }
 

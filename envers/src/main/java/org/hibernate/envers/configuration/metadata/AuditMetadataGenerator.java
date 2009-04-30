@@ -90,7 +90,7 @@ public final class AuditMetadataGenerator {
     void addRevisionInfoRelation(Element any_mapping) {
         Element rev_mapping = (Element) revisionInfoRelationMapping.clone();
         rev_mapping.addAttribute("name", verEntCfg.getRevisionFieldName());
-        MetadataTools.addColumn(rev_mapping, verEntCfg.getRevisionFieldName(), null);
+        MetadataTools.addColumn(rev_mapping, verEntCfg.getRevisionFieldName(), null, 0, 0, null);
 
         any_mapping.add(rev_mapping);
     }
@@ -197,7 +197,7 @@ public final class AuditMetadataGenerator {
 
             Element joinKey = joinElement.addElement("key");
             MetadataTools.addColumns(joinKey, join.getKey().getColumnIterator());
-            MetadataTools.addColumn(joinKey, verEntCfg.getRevisionFieldName(), null);
+            MetadataTools.addColumn(joinKey, verEntCfg.getRevisionFieldName(), null, 0, 0, null);
         }
     }
 
@@ -303,7 +303,7 @@ public final class AuditMetadataGenerator {
                 // Adding the "key" element with all columns + the revision number column
                 Element keyMapping = mappingData.getFirst().addElement("key");
                 MetadataTools.addColumns(keyMapping, pc.getIdentifierProperty().getColumnIterator());
-                MetadataTools.addColumn(keyMapping, verEntCfg.getRevisionFieldName(), null);
+                MetadataTools.addColumn(keyMapping, verEntCfg.getRevisionFieldName(), null, 0, 0, null);
                 break;
 
             case TABLE_PER_CLASS:

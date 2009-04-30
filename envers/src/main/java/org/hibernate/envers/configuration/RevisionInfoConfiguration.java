@@ -76,11 +76,11 @@ public class RevisionInfoConfiguration {
 
         Element idProperty = MetadataTools.addNativelyGeneratedId(class_mapping, revisionInfoIdData.getName(),
                 revisionPropType);
-        MetadataTools.addColumn(idProperty, "REV", null);
+        MetadataTools.addColumn(idProperty, "REV", null, 0, 0, null);
 
         Element timestampProperty = MetadataTools.addProperty(class_mapping, revisionInfoTimestampData.getName(),
                 revisionInfoTimestampType, true, false);
-        MetadataTools.addColumn(timestampProperty, "REVTSTMP", null);
+        MetadataTools.addColumn(timestampProperty, "REVTSTMP", null, 0, 0, null);
 
         return document;
     }

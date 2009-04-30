@@ -34,10 +34,12 @@ import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.query.AuditEntity;
 import static org.hibernate.envers.tools.ArgumentsTools.checkNotNull;
 import static org.hibernate.envers.tools.ArgumentsTools.checkPositive;
+import org.hibernate.envers.synchronization.AuditSync;
 
 import org.hibernate.NonUniqueResultException;
 import org.hibernate.Query;
 import org.hibernate.Session;
+import org.hibernate.event.EventSource;
 import org.hibernate.engine.SessionImplementor;
 import org.jboss.envers.query.VersionsQueryCreator;
 
@@ -190,7 +192,20 @@ public class AuditReaderImpl implements AuditReaderImplementor {
         }
     }
 
-    public VersionsQueryCreator createQuery() {
+	@SuppressWarnings({"unchecked"})
+	public <T> T getCurrentRevision(Class<T> revisionEntityClass, boolean persist) {
+		if (!(session instanceof EventSource)) {
+			throw new IllegalArgumentException("The provided session is not an EventSource!");
+		}
+
+		// Obtaining the current audit sync
+		AuditSync auditSync = verCfg.getSyncManager().get((EventSource) session);
+
+		// And getting the current revision data
+		return (T) auditSync.getCurrentRevisionData(session, persist);
+	}
+
+	public VersionsQueryCreator createQuery() {
         return new VersionsQueryCreator(verCfg, this);
     }
 }

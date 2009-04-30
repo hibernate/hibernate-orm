@@ -111,9 +111,8 @@ public class AuditSync implements Synchronization {
     }
 
     private void executeInSession(Session session) {
-        if (revisionData == null) {
-            revisionData = revisionInfoGenerator.generate(session);
-        }
+		// Making sure the revision data is persisted.
+        getCurrentRevisionData(session, true);
 
         AuditWorkUnit vwu;
 
@@ -126,6 +125,20 @@ public class AuditSync implements Synchronization {
             vwu.perform(session, revisionData);
         }
     }
+
+	public Object getCurrentRevisionData(Session session, boolean persist) {
+		// Generating the revision data if not yet generated
+		if (revisionData == null) {
+            revisionData = revisionInfoGenerator.generate();
+        }
+
+		// Saving the revision data, if not yet saved and persist is true
+		if (!session.contains(revisionData) && persist) {
+			revisionInfoGenerator.saveRevisionData(session, revisionData);
+		}
+
+		return revisionData;
+	}
 
     public void beforeCompletion() {
         if (workUnits.size() == 0 && undoQueue.size() == 0) {

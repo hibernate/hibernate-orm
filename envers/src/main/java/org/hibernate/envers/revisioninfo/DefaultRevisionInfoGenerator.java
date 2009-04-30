@@ -63,14 +63,18 @@ public class DefaultRevisionInfoGenerator implements RevisionInfoGenerator {
         }
     }
 
-    private Object newRevision() {
-        Object revisionInfo;
+	public void saveRevisionData(Session session, Object revisionData) {
+        session.save(revisionInfoEntityName, revisionData);
+	}
+
+    public Object generate() {
+		Object revisionInfo;
         try {
             revisionInfo = revisionInfoClass.newInstance();
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-        
+
         revisionTimestampSetter.set(revisionInfo, System.currentTimeMillis(), null);
 
         if (listener != null) {
@@ -78,11 +82,5 @@ public class DefaultRevisionInfoGenerator implements RevisionInfoGenerator {
         }
 
         return revisionInfo;
-    }
-
-    public Object generate(Session session) {
-        Object revisionData = newRevision();
-        session.save(revisionInfoEntityName, revisionData);
-        return revisionData;
     }
 }

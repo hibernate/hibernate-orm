@@ -29,5 +29,6 @@ import org.hibernate.Session;
  * @author Adam Warski (adam at warski dot org)
  */
 public interface RevisionInfoGenerator {
-    Object generate(Session session);
+	void saveRevisionData(Session session, Object revisionData);
+    Object generate();
 }

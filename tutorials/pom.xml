@@ -258,7 +258,7 @@
             <properties>
                 <db.dialect>org.hibernate.dialect.DB2Dialect</db.dialect>
                 <jdbc.driver>com.ibm.db2.jcc.DB2Driver</jdbc.driver>
-                <jdbc.url>jdbc:db2://dev32.qa.atl.jboss.com:50000/hibbrtru</jdbc.url>
+                <jdbc.url>jdbc:db2://dev32.qa.atl.jboss.com:50000/jbossqa</jdbc.url>
                 <jdbc.user>hibbrtru</jdbc.user>
                 <jdbc.pass>hibbrtru</jdbc.pass>
                 <jdbc.isolation />
@@ -283,7 +283,7 @@
             <properties>
                 <db.dialect>org.hibernate.dialect.DB2Dialect</db.dialect>
                 <jdbc.driver>com.ibm.db2.jcc.DB2Driver</jdbc.driver>
-                <jdbc.url>jdbc:db2://dev67.qa.atl.jboss.com:50000/hibbrtru</jdbc.url>
+                <jdbc.url>jdbc:db2://dev67.qa.atl.jboss.com:50000/jbossqa</jdbc.url>
                 <jdbc.user>hibbrtru</jdbc.user>
                 <jdbc.pass>hibbrtru</jdbc.pass>
                 <jdbc.isolation />

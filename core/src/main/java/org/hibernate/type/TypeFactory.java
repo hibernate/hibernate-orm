@@ -90,7 +90,10 @@ public final class TypeFactory {
 		basics.put( Hibernate.TRUE_FALSE.getName(), Hibernate.TRUE_FALSE );
 		basics.put( Hibernate.YES_NO.getName(), Hibernate.YES_NO );
 		basics.put( Hibernate.BINARY.getName(), Hibernate.BINARY );
+		basics.put( Hibernate.IMAGE.getName(), Hibernate.IMAGE );
 		basics.put( Hibernate.TEXT.getName(), Hibernate.TEXT );
+		basics.put( Hibernate.MATERIALIZED_BLOB.getName(), Hibernate.MATERIALIZED_BLOB );
+		basics.put( Hibernate.MATERIALIZED_CLOB.getName(), Hibernate.MATERIALIZED_CLOB );
 		basics.put( Hibernate.BLOB.getName(), Hibernate.BLOB );
 		basics.put( Hibernate.CLOB.getName(), Hibernate.CLOB );
 		basics.put( Hibernate.BIG_DECIMAL.getName(), Hibernate.BIG_DECIMAL );

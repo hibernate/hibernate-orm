@@ -42,6 +42,8 @@ public class SQLServerDialect extends SybaseDialect {
 	public SQLServerDialect() {
 		registerColumnType( Types.VARBINARY, "image" );
 		registerColumnType( Types.VARBINARY, 8000, "varbinary($l)" );
+		registerColumnType( Types.LONGVARBINARY, "image" );
+		registerColumnType( Types.LONGVARCHAR, "text" );
 
 		registerFunction( "second", new SQLFunctionTemplate( Hibernate.INTEGER, "datepart(second, ?1)" ) );
 		registerFunction( "minute", new SQLFunctionTemplate( Hibernate.INTEGER, "datepart(minute, ?1)" ) );

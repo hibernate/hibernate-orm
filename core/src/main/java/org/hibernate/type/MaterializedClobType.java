@@ -28,23 +28,15 @@ package org.hibernate.type;
 import java.sql.Types;
 
 /**
- * <tt>text</tt>: A type that maps an SQL LONGVARCHAR to a Java String.
+ * <tt>materialized_clob</tt>: A type that maps an SQL CLOB to a Java String.
  *
  * @author Gail Badner
  */
-public class TextType extends AbstractLongStringType {
+public class MaterializedClobType extends AbstractLongStringType {
 
 	public int sqlType() {
-		return Types.LONGVARCHAR;
+		return Types.CLOB;
 	}
 
-	public String getName() { return "text"; }
-
+	public String getName() { return "materialized_clob"; }
 }
-
-
-
-
-
-
-

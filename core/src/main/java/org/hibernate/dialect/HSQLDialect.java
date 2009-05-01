@@ -81,6 +81,8 @@ public class HSQLDialect extends Dialect {
 		//HSQL has no Blob/Clob support .... but just put these here for now!
 		registerColumnType( Types.BLOB, "longvarbinary" );
 		registerColumnType( Types.CLOB, "longvarchar" );
+		registerColumnType( Types.LONGVARBINARY, "longvarbinary" );
+		registerColumnType( Types.LONGVARCHAR, "longvarchar" );
 
 		registerFunction( "ascii", new StandardSQLFunction( "ascii", Hibernate.INTEGER ) );
 		registerFunction( "char", new StandardSQLFunction( "char", Hibernate.CHARACTER ) );

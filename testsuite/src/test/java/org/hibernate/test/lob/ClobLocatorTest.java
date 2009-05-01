@@ -1,3 +1,28 @@
+//$Id: $
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Middleware LLC.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ *
+ */
 package org.hibernate.test.lob;
 
 import java.sql.Clob;
@@ -13,16 +38,16 @@ import org.hibernate.junit.functional.DatabaseSpecificFunctionalTestCase;
 import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
 
 /**
- * Test various access scenarios for eager and lazy materialization
- * of CLOB data, as well as bounded and unbounded materialization
- * and mutation.
+ * Tests lazy materialization of data mapped by
+ * {@link org.hibernate.type.ClobType} as well as bounded and unbounded
+ * materialization and mutation.
  *
  * @author Steve Ebersole
  */
-public class ClobTest extends DatabaseSpecificFunctionalTestCase {
+public class ClobLocatorTest extends DatabaseSpecificFunctionalTestCase {
 	private static final int CLOB_SIZE = 10000;
 
-	public ClobTest(String name) {
+	public ClobLocatorTest(String name) {
 		super( name );
 	}
 
@@ -31,7 +56,7 @@ public class ClobTest extends DatabaseSpecificFunctionalTestCase {
 	}
 
 	public static Test suite() {
-		return new FunctionalTestClassTestSuite( ClobTest.class );
+		return new FunctionalTestClassTestSuite( ClobLocatorTest.class );
 	}
 
 	public boolean appliesTo(Dialect dialect) {
@@ -40,37 +65,6 @@ public class ClobTest extends DatabaseSpecificFunctionalTestCase {
 			return false;
 		}
 		return true;
-	}
-
-	public void testBoundedMaterializedClobAccess() {
-		String original = buildRecursively( CLOB_SIZE, 'x' );
-		String changed = buildRecursively( CLOB_SIZE, 'y' );
-
-		Session s = openSession();
-		s.beginTransaction();
-		LobHolder entity = new LobHolder();
-		entity.setMaterializedClob( original );
-		s.save( entity );
-		s.getTransaction().commit();
-		s.close();
-
-		s = openSession();
-		s.beginTransaction();
-		entity = ( LobHolder ) s.get( LobHolder.class, entity.getId() );
-		assertEquals( CLOB_SIZE, entity.getMaterializedClob().length() );
-		assertEquals( original, entity.getMaterializedClob() );
-		entity.setMaterializedClob( changed );
-		s.getTransaction().commit();
-		s.close();
-
-		s = openSession();
-		s.beginTransaction();
-		entity = ( LobHolder ) s.get( LobHolder.class, entity.getId() );
-		assertEquals( CLOB_SIZE, entity.getMaterializedClob().length() );
-		assertEquals( changed, entity.getMaterializedClob() );
-		s.delete( entity );
-		s.getTransaction().commit();
-		s.close();
 	}
 
 	public void testBoundedClobLocatorAccess() throws Throwable {

@@ -59,6 +59,8 @@ public class MySQLDialect extends Dialect {
 		registerColumnType( Types.VARBINARY, 16777215, "mediumblob" );
 		registerColumnType( Types.VARBINARY, 65535, "blob" );
 		registerColumnType( Types.VARBINARY, 255, "tinyblob" );
+		registerColumnType( Types.LONGVARBINARY, "longblob" );
+		registerColumnType( Types.LONGVARBINARY, 16777215, "mediumblob" );
 		registerColumnType( Types.NUMERIC, "decimal($p,$s)" );
 		registerColumnType( Types.BLOB, "longblob" );
 //		registerColumnType( Types.BLOB, 16777215, "mediumblob" );
@@ -181,6 +183,7 @@ public class MySQLDialect extends Dialect {
 //		registerColumnType( Types.VARCHAR, 16777215, "mediumtext" );
 //		registerColumnType( Types.VARCHAR, 65535, "text" );
 		registerColumnType( Types.VARCHAR, 255, "varchar($l)" );
+		registerColumnType( Types.LONGVARCHAR, "longtext" );
 	}
 
 	public String getAddColumnString() {

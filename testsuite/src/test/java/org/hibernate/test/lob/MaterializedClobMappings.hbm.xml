@@ -5,14 +5,12 @@
 
 <hibernate-mapping package="org.hibernate.test.lob">
 
-	<class name="LobHolder" table="LOB_ENTITY">
+	<class name="LongStringHolder" table="LOB_ENTITY_MAT_CLOB">
 		<id name="id" type="long" column="ID">
 			<generator class="increment"/>
 		</id>
 
-        <property name="clobLocator" column="CLOB_DATA" type="clob" length="15000" />
-
-        <property name="blobLocator" column="BLOB_DATA" type="blob" length="15000" />
+		<property name="longString" column="LONG_STR" type="materialized_clob" length="15000"/>
     </class>
 
 </hibernate-mapping>

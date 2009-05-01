@@ -61,6 +61,8 @@ public class DB2Dialect extends Dialect {
 		registerColumnType( Types.NUMERIC, "numeric($p,$s)" );
 		registerColumnType( Types.BLOB, "blob($l)" );
 		registerColumnType( Types.CLOB, "clob($l)" );
+		registerColumnType( Types.LONGVARCHAR, "long varchar" );
+		registerColumnType( Types.LONGVARBINARY, "long varchar for bit data" );
 
 		registerFunction("abs", new StandardSQLFunction("abs") );
 		registerFunction("absval", new StandardSQLFunction("absval") );

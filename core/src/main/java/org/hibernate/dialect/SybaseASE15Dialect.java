@@ -50,6 +50,10 @@ import org.hibernate.dialect.function.VarArgsSQLFunction;
 public class SybaseASE15Dialect extends AbstractTransactSQLDialect {
 	public SybaseASE15Dialect() {
 		super();
+
+		registerColumnType( Types.LONGVARBINARY, "image" );
+		registerColumnType( Types.LONGVARCHAR, "text" );
+
 		registerFunction( "second", new SQLFunctionTemplate(Hibernate.INTEGER, "datepart(second, ?1)") );
 		registerFunction( "minute", new SQLFunctionTemplate(Hibernate.INTEGER, "datepart(minute, ?1)") );
 		registerFunction( "hour", new SQLFunctionTemplate(Hibernate.INTEGER, "datepart(hour, ?1)") );

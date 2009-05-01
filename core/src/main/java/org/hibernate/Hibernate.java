@@ -79,6 +79,9 @@ import org.hibernate.type.YesNoType;
 import org.hibernate.type.CharArrayType;
 import org.hibernate.type.WrapperBinaryType;
 import org.hibernate.type.CharacterArrayType;
+import org.hibernate.type.MaterializedBlobType;
+import org.hibernate.type.ImageType;
+import org.hibernate.type.MaterializedClobType;
 import org.hibernate.usertype.CompositeUserType;
 
 /**
@@ -178,9 +181,21 @@ public final class Hibernate {
 	 */
 	public static final NullableType CHARACTER_ARRAY = new CharacterArrayType();
 	/**
+	 * Hibernate <tt>image</tt> type.
+	 */
+	public static final NullableType IMAGE = new ImageType();
+	/**
 	 * Hibernate <tt>text</tt> type.
 	 */
 	public static final NullableType TEXT = new TextType();
+	/**
+	 * Hibernate <tt>materialized_blob</tt> type.
+	 */
+	public static final NullableType MATERIALIZED_BLOB = new MaterializedBlobType();
+	/**
+	 * Hibernate <tt>materialized_clob</tt> type.
+	 */
+	public static final NullableType MATERIALIZED_CLOB = new MaterializedClobType();
 	/**
 	 * Hibernate <tt>blob</tt> type.
 	 */

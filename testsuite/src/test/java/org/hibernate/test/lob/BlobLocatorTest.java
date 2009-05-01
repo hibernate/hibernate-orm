@@ -1,3 +1,28 @@
+//$Id: $
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Middleware LLC.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ *
+ */
 package org.hibernate.test.lob;
 
 import java.sql.Blob;
@@ -14,14 +39,16 @@ import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
 import org.hibernate.util.ArrayHelper;
 
 /**
- * {@inheritDoc}
+ * Tests lazy materialization of data mapped by
+ * {@link org.hibernate.type.BlobType}, as well as bounded and unbounded
+ * materialization and mutation.
  *
  * @author Steve Ebersole
  */
-public class BlobTest extends DatabaseSpecificFunctionalTestCase {
+public class BlobLocatorTest extends DatabaseSpecificFunctionalTestCase {
 	private static final int BLOB_SIZE = 10000;
 
-	public BlobTest(String name) {
+	public BlobLocatorTest(String name) {
 		super( name );
 	}
 
@@ -30,7 +57,7 @@ public class BlobTest extends DatabaseSpecificFunctionalTestCase {
 	}
 
 	public static Test suite() {
-		return new FunctionalTestClassTestSuite( BlobTest.class );
+		return new FunctionalTestClassTestSuite( BlobLocatorTest.class );
 	}
 
 	public boolean appliesTo(Dialect dialect) {
@@ -39,37 +66,6 @@ public class BlobTest extends DatabaseSpecificFunctionalTestCase {
 			return false;
 		}
 		return true;
-	}
-
-	public void testBoundedMaterializedBlobAccess() {
-		byte[] original = buildRecursively( BLOB_SIZE, true );
-		byte[] changed = buildRecursively( BLOB_SIZE, false );
-
-		Session s = openSession();
-		s.beginTransaction();
-		LobHolder entity = new LobHolder();
-		entity.setMaterializedBlob( original );
-		s.save( entity );
-		s.getTransaction().commit();
-		s.close();
-
-		s = openSession();
-		s.beginTransaction();
-		entity = ( LobHolder ) s.get( LobHolder.class, entity.getId() );
-		assertEquals( BLOB_SIZE, entity.getMaterializedBlob().length );
-		assertEquals( original, entity.getMaterializedBlob() );
-		entity.setMaterializedBlob( changed );
-		s.getTransaction().commit();
-		s.close();
-
-		s = openSession();
-		s.beginTransaction();
-		entity = ( LobHolder ) s.get( LobHolder.class, entity.getId() );
-		assertEquals( BLOB_SIZE, entity.getMaterializedBlob().length );
-		assertEquals( changed, entity.getMaterializedBlob() );
-		s.delete( entity );
-		s.getTransaction().commit();
-		s.close();
 	}
 
 	public void testBoundedBlobLocatorAccess() throws Throwable {

@@ -28,23 +28,17 @@ package org.hibernate.type;
 import java.sql.Types;
 
 /**
- * <tt>text</tt>: A type that maps an SQL LONGVARCHAR to a Java String.
+ * <tt>image</tt>: A type that maps an SQL LONGVARBINARY to Java byte[].
  *
  * @author Gail Badner
  */
-public class TextType extends AbstractLongStringType {
+public class ImageType extends AbstractLongBinaryType {
 
 	public int sqlType() {
-		return Types.LONGVARCHAR;
+		return Types.LONGVARBINARY;
 	}
 
-	public String getName() { return "text"; }
-
+	public String getName() {
+		return "image";
+	}
 }
-
-
-
-
-
-
-

@@ -36,5 +36,6 @@ public class MySQL5Dialect extends MySQLDialect {
 		registerColumnType( Types.VARCHAR, "longtext" );
 //		registerColumnType( Types.VARCHAR, 16777215, "mediumtext" );
 		registerColumnType( Types.VARCHAR, 65535, "varchar($l)" );
+		registerColumnType( Types.LONGVARCHAR, "longtext" );
 	}
 }

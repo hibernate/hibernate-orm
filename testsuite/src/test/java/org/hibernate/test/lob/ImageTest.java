@@ -23,28 +23,29 @@
  * Boston, MA  02110-1301  USA
  *
  */
-package org.hibernate.type;
+package org.hibernate.test.lob;
 
-import java.sql.Types;
+import junit.framework.Test;
+
+import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
 
 /**
- * <tt>text</tt>: A type that maps an SQL LONGVARCHAR to a Java String.
+ * Tests eager materialization and mutation of data mapped by
+ * {@link org.hibernate.type.ImageType}.
  *
  * @author Gail Badner
  */
-public class TextType extends AbstractLongStringType {
+public class ImageTest extends LongByteArrayTest {
 
-	public int sqlType() {
-		return Types.LONGVARCHAR;
+	public ImageTest(String name) {
+		super( name );
 	}
 
-	public String getName() { return "text"; }
+	public String[] getMappings() {
+		return new String[] { "lob/ImageMappings.hbm.xml" };
+	}
 
+	public static Test suite() {
+		return new FunctionalTestClassTestSuite( ImageTest.class );
+	}
 }
-
-
-
-
-
-
-

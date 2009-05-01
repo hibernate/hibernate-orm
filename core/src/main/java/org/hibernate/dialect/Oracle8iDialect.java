@@ -98,6 +98,9 @@ public class Oracle8iDialect extends Dialect {
 
 		registerColumnType( Types.BLOB, "blob" );
 		registerColumnType( Types.CLOB, "clob" );
+
+		registerColumnType( Types.LONGVARCHAR, "long" );
+		registerColumnType( Types.LONGVARBINARY, "long raw" );		
 	}
 
 	protected void registerReverseHibernateTypeMappings() {

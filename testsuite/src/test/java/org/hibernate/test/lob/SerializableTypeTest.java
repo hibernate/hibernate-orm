@@ -24,7 +24,7 @@ public class SerializableTypeTest extends FunctionalTestCase {
 	}
 
 	public String[] getMappings() {
-		return new String[] { "lob/LobMappings.hbm.xml" };
+		return new String[] { "lob/SerializableMappings.hbm.xml" };
 	}
 
 	public static Test suite() {
@@ -37,30 +37,49 @@ public class SerializableTypeTest extends FunctionalTestCase {
 	}
 
 	public void testNewSerializableType() {
-		// Sybase dialects do not support ResultSet.getBlob(String)
-		if ( getDialect() instanceof SybaseDialect || getDialect() instanceof Sybase11Dialect || getDialect() instanceof SybaseASE15Dialect || getDialect() instanceof SybaseAnywhereDialect ) {
-			return;
-		}
-
-		final String payloadText = "Initial payload";
+		final String initialPayloadText = "Initial payload";
+		final String changedPayloadText = "Changed payload";
 
 		Session s = openSession();
 		s.beginTransaction();
-		LobHolder holder = new LobHolder();
-		holder.setSerialData( new SerializableData( payloadText ) );
+		SerializableHolder holder = new SerializableHolder();
 		s.save( holder );
 		s.getTransaction().commit();
 		s.close();
 
 		s = openSession();
 		s.beginTransaction();
-		holder = ( LobHolder ) s.get( LobHolder.class, holder.getId() );
+		holder = ( SerializableHolder ) s.get( SerializableHolder.class, holder.getId() );
+		assertNull( holder.getSerialData() );
+		holder.setSerialData( new SerializableData( initialPayloadText ) );
+		s.getTransaction().commit();
+		s.close();
+
+		s = openSession();
+		s.beginTransaction();
+		holder = ( SerializableHolder ) s.get( SerializableHolder.class, holder.getId() );
 		SerializableData serialData = ( SerializableData ) holder.getSerialData();
-		assertEquals( payloadText, serialData.getPayload() );
+		assertEquals( initialPayloadText, serialData.getPayload() );
+		holder.setSerialData( new SerializableData( changedPayloadText ) );
+		s.getTransaction().commit();
+		s.close();
+
+		s = openSession();
+		s.beginTransaction();
+		holder = ( SerializableHolder ) s.get( SerializableHolder.class, holder.getId() );
+		serialData = ( SerializableData ) holder.getSerialData();
+		assertEquals( changedPayloadText, serialData.getPayload() );
+		holder.setSerialData( null );
+		s.getTransaction().commit();
+		s.close();
+
+		s = openSession();
+		s.beginTransaction();
+		holder = ( SerializableHolder ) s.get( SerializableHolder.class, holder.getId() );
+		assertNull( holder.getSerialData() );
 		s.delete( holder );
 		s.getTransaction().commit();
 		s.close();
 	}
-
 
 }

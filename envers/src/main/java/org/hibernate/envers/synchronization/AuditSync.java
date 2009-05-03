@@ -145,26 +145,32 @@ public class AuditSync implements Synchronization {
             return;
         }
 
-        // see: http://www.jboss.com/index.html?module=bb&op=viewtopic&p=4178431
-        if (FlushMode.isManualFlushMode(session.getFlushMode()) || session.isClosed()) {
-            Session temporarySession = null;
-            try {
-                temporarySession = session.getFactory().openTemporarySession();
+		try {
+			// see: http://www.jboss.com/index.html?module=bb&op=viewtopic&p=4178431
+			if (FlushMode.isManualFlushMode(session.getFlushMode()) || session.isClosed()) {
+				Session temporarySession = null;
+				try {
+					temporarySession = session.getFactory().openTemporarySession();
 
-                executeInSession(temporarySession);
+					executeInSession(temporarySession);
 
-                temporarySession.flush();
-            } finally {
-                if (temporarySession != null) {
-                    temporarySession.close();
-                }
-            }
-        } else {
-            executeInSession(session);
+					temporarySession.flush();
+				} finally {
+					if (temporarySession != null) {
+						temporarySession.close();
+					}
+				}
+			} else {
+				executeInSession(session);
 
-            // Explicity flushing the session, as the auto-flush may have already happened.
-            session.flush();
-        }
+				// Explicity flushing the session, as the auto-flush may have already happened.
+				session.flush();
+			}
+		} catch (RuntimeException e) {
+			// Rolling back the transaction in case of any exceptions
+			session.getTransaction().rollback();
+			throw e;
+		}
     }
 
     public void afterCompletion(int i) {

@@ -42,9 +42,11 @@ import org.hibernate.type.Type;
 public final class Nullability {
 	
 	private final SessionImplementor session;
-	
+	private final boolean checkNullability;
+
 	public Nullability(SessionImplementor session) {
 		this.session = session;
+		this.checkNullability = session.getFactory().getSettings().isCheckNullability();
 	}
 	/**
 	 * Check nullability of the class persister properties
@@ -60,60 +62,65 @@ public final class Nullability {
 			final EntityPersister persister,
 			final boolean isUpdate) 
 	throws PropertyValueException, HibernateException {
-
 		/*
-		  * Algorithm
-		  * Check for any level one nullability breaks
-		  * Look at non null components to
-		  *   recursively check next level of nullability breaks
-		  * Look at Collections contraining component to
-		  *   recursively check next level of nullability breaks
-		  *
-		  *
-		  * In the previous implementation, not-null stuffs where checked
-		  * filtering by level one only updateable
-		  * or insertable columns. So setting a sub component as update="false"
-		  * has no effect on not-null check if the main component had good checkeability
-		  * In this implementation, we keep this feature.
-		  * However, I never see any documentation mentioning that, but it's for
-		  * sure a limitation.
-		  */
+		 * Typically when Bean Validation is on, we don't want to validate null values
+		 * at the Hibernate Core level. Hence the checkNullability setting.
+		 */
+		if ( checkNullability ) {
+			/*
+			  * Algorithm
+			  * Check for any level one nullability breaks
+			  * Look at non null components to
+			  *   recursively check next level of nullability breaks
+			  * Look at Collections contraining component to
+			  *   recursively check next level of nullability breaks
+			  *
+			  *
+			  * In the previous implementation, not-null stuffs where checked
+			  * filtering by level one only updateable
+			  * or insertable columns. So setting a sub component as update="false"
+			  * has no effect on not-null check if the main component had good checkeability
+			  * In this implementation, we keep this feature.
+			  * However, I never see any documentation mentioning that, but it's for
+			  * sure a limitation.
+			  */
 
-		final boolean[] nullability = persister.getPropertyNullability();
-		final boolean[] checkability = isUpdate ?
-			persister.getPropertyUpdateability() :
-			persister.getPropertyInsertability();
-		final Type[] propertyTypes = persister.getPropertyTypes();
+			final boolean[] nullability = persister.getPropertyNullability();
+			final boolean[] checkability = isUpdate ?
+				persister.getPropertyUpdateability() :
+				persister.getPropertyInsertability();
+			final Type[] propertyTypes = persister.getPropertyTypes();
 
-		for ( int i = 0; i < values.length; i++ ) {
-			
-			if ( checkability[i] && values[i]!=LazyPropertyInitializer.UNFETCHED_PROPERTY ) {
-				final Object value = values[i];
-				if ( !nullability[i] && value == null ) {
-					
-					//check basic level one nullablilty
-					throw new PropertyValueException(
-							"not-null property references a null or transient value",
-							persister.getEntityName(),
-							persister.getPropertyNames()[i]
-						);
-					
-				}
-				else if ( value != null ) {
-					
-					//values is not null and is checkable, we'll look deeper
-					String breakProperties = checkSubElementsNullability( propertyTypes[i], value );
-					if ( breakProperties != null ) {
+			for ( int i = 0; i < values.length; i++ ) {
+
+				if ( checkability[i] && values[i]!=LazyPropertyInitializer.UNFETCHED_PROPERTY ) {
+					final Object value = values[i];
+					if ( !nullability[i] && value == null ) {
+
+						//check basic level one nullablilty
 						throw new PropertyValueException(
-							"not-null property references a null or transient value",
-							persister.getEntityName(),
-							buildPropertyPath( persister.getPropertyNames()[i], breakProperties )
-						);
+								"not-null property references a null or transient value",
+								persister.getEntityName(),
+								persister.getPropertyNames()[i]
+							);
+
 					}
-					
+					else if ( value != null ) {
+
+						//values is not null and is checkable, we'll look deeper
+						String breakProperties = checkSubElementsNullability( propertyTypes[i], value );
+						if ( breakProperties != null ) {
+							throw new PropertyValueException(
+								"not-null property references a null or transient value",
+								persister.getEntityName(),
+								buildPropertyPath( persister.getPropertyNames()[i], breakProperties )
+							);
+						}
+
+					}
 				}
+
 			}
-			
 		}
 	}
 

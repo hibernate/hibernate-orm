@@ -328,6 +328,11 @@ public class SettingsFactory implements Serializable {
 		log.info( "Named query checking : " + enabledDisabled( namedQueryChecking ) );
 		settings.setNamedQueryStartupCheckingEnabled( namedQueryChecking );
 
+		boolean checkNullability = PropertiesHelper.getBoolean(Environment.CHECK_NULLABILITY, properties, true);
+		log.info( "Check Nullability in Core (should be disabled when Bean Validation is on): " + enabledDisabled(useStatistics) );
+		settings.setCheckNullability(checkNullability);
+
+
 //		String provider = properties.getProperty( Environment.BYTECODE_PROVIDER );
 //		log.info( "Bytecode provider name : " + provider );
 //		BytecodeProvider bytecodeProvider = buildBytecodeProvider( provider );

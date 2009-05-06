@@ -503,6 +503,14 @@ public final class Environment {
      */
     public static final String JACC_CONTEXTID = "hibernate.jacc_context_id";
 
+	/**
+	 * Enable nullability checking.
+	 * Raises an exception if a property marked as not-null is null.
+	 * Default to true.
+	 */
+	public static final String CHECK_NULLABILITY = "hibernate.check_nullability";
+
+
 	public static final String BYTECODE_PROVIDER = "hibernate.bytecode.provider";
 
 	public static final String JPAQL_STRICT_COMPLIANCE= "hibernate.query.jpaql_strict_compliance";

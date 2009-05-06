@@ -95,6 +95,7 @@ public final class Settings {
 	private boolean strictJPAQLCompliance;
 	private boolean namedQueryStartupCheckingEnabled;
 	private EntityTuplizerFactory entityTuplizerFactory;
+	private boolean checkNullability;
 //	private ComponentTuplizerFactory componentTuplizerFactory; todo : HHH-3517 and HHH-1907
 //	private BytecodeProvider bytecodeProvider;
 
@@ -489,7 +490,15 @@ public final class Settings {
 		this.entityTuplizerFactory = entityTuplizerFactory;
 	}
 
-//	void setComponentTuplizerFactory(ComponentTuplizerFactory componentTuplizerFactory) {
+	public boolean isCheckNullability() {
+		return checkNullability;
+	}
+
+	public void setCheckNullability(boolean checkNullability) {
+		this.checkNullability = checkNullability;
+	}
+
+	//	void setComponentTuplizerFactory(ComponentTuplizerFactory componentTuplizerFactory) {
 //		this.componentTuplizerFactory = componentTuplizerFactory;
 //	}
 

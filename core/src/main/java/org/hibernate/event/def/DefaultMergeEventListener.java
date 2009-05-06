@@ -93,8 +93,8 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener
 				// TODO: cache the entity name somewhere so that it is available to this exception
 				// entity name will not be available for non-POJO entities
 			}
-			if ( entry.getStatus() != Status.MANAGED ) {
-				throw new AssertionFailure( "Merged entity does not have status set to MANAGED; "+entry+" status="+entry.getStatus() );
+			if ( entry.getStatus() != Status.MANAGED && entry.getStatus() != Status.READ_ONLY ) {
+				throw new AssertionFailure( "Merged entity does not have status set to MANAGED or READ_ONLY; "+entry+" status="+entry.getStatus() );
 			}
 		}
 	}

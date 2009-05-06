@@ -1,4 +1,28 @@
 //$Id: ReadOnlyTest.java 10977 2006-12-12 23:28:04Z steve.ebersole@jboss.com $
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Middleware LLC.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ *
+ */
 package org.hibernate.test.readonly;
 
 import java.math.BigDecimal;
@@ -147,6 +171,40 @@ public class ReadOnlyTest extends FunctionalTestCase {
 		s.delete( holder );
 		s.getTransaction().commit();
 		s.close();
+	}
+
+	public void testMergeWithReadOnlyEntity() {
+
+		Session s = openSession();
+		s.setCacheMode(CacheMode.IGNORE);
+		Transaction t = s.beginTransaction();
+		DataPoint dp = new DataPoint();
+		dp.setX( new BigDecimal(0.1d).setScale(19, BigDecimal.ROUND_DOWN) );
+		dp.setY( new BigDecimal( Math.cos( dp.getX().doubleValue() ) ).setScale(19, BigDecimal.ROUND_DOWN) );
+		s.save(dp);
+		t.commit();
+		s.close();
+
+		dp.setDescription( "description" );
+
+		s = openSession();
+		s.setCacheMode(CacheMode.IGNORE);
+		t = s.beginTransaction();
+		DataPoint dpManaged = ( DataPoint ) s.get( DataPoint.class, new Long( dp.getId() ) );
+		s.setReadOnly( dpManaged, true );
+		DataPoint dpMerged = ( DataPoint ) s.merge( dp );
+		assertSame( dpManaged, dpMerged );
+		t.commit();
+		s.close();
+
+		s = openSession();
+		t = s.beginTransaction();
+		dpManaged = ( DataPoint ) s.get( DataPoint.class, new Long( dp.getId() ) );
+		assertNull( dpManaged.getDescription() );
+		s.delete( dpManaged );
+		t.commit();
+		s.close();
+
 	}
 }
 

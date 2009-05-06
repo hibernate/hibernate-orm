@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.HashMap;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.concurrent.ConcurrentHashMap;
 import javax.validation.ValidatorFactory;
 import javax.validation.ConstraintViolation;
 import javax.validation.TraversableResolver;
@@ -21,6 +22,8 @@ import org.hibernate.event.PreUpdateEvent;
 import org.hibernate.event.PreDeleteEvent;
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
+import org.hibernate.engine.SessionFactoryImplementor;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.util.ReflectHelper;
 
 /**
@@ -29,83 +32,45 @@ import org.hibernate.util.ReflectHelper;
 //FIXME review exception model
 public class BeanValidationEventListener implements
 		PreInsertEventListener, PreUpdateEventListener, PreDeleteEventListener {
-	private static final String JPA_GROUP_PREFIX = "javax.persistence.validation.group.";
-	private static final Class<?>[] DEFAULT_GROUPS = new Class<?>[] { Default.class };
-	private static final Class<?>[] EMPTY_GROUPS = new Class<?>[] { };
+
 
 	private ValidatorFactory factory;
-	private TraversableResolver tr;
-	private Map<Operation, Class<?>[]> groupsPerOperation = new HashMap<Operation, Class<?>[]>(3);
+	private ConcurrentHashMap<EntityPersister, Set<String>> associationsPerEntityPersister =
+			new ConcurrentHashMap<EntityPersister, Set<String>>();
+	private GroupsPerOperation groupsPerOperation;
 
 
 	public BeanValidationEventListener(ValidatorFactory factory, Properties properties) {
 		this.factory = factory;
-		setGroupsForOperation( Operation.INSERT, properties );
-		setGroupsForOperation( Operation.UPDATE, properties );
-		setGroupsForOperation( Operation.DELETE, properties );
+		groupsPerOperation = new GroupsPerOperation(properties);
 	}
 
-	private void setGroupsForOperation(Operation operation, Properties properties) {
-		Object property = properties.get( JPA_GROUP_PREFIX + operation.getGroupPropertyName() );
 
-		Class<?>[] groups;
-		if ( property == null ) {
-			groups = operation == Operation.DELETE ? EMPTY_GROUPS : DEFAULT_GROUPS;
-		}
-		else {
-			if ( property instanceof String ) {
-				String stringProperty = (String) property;
-				String[] groupNames = stringProperty.split( "," );
-				if ( groupNames.length == 1 && groupNames[0].equals( "" ) ) {
-					groups = EMPTY_GROUPS;
-				}
-				else {
-					List<Class<?>> groupsList = new ArrayList<Class<?>>(groupNames.length);
-					for (String groupName : groupNames) {
-						String cleanedGroupName = groupName.trim();
-						if ( cleanedGroupName.length() > 0) {
-							try {
-								groupsList.add( ReflectHelper.classForName( cleanedGroupName ) );
-							}
-							catch ( ClassNotFoundException e ) {
-								throw new HibernateException( "Unable to load class " + cleanedGroupName, e );
-							}
-						}
-
-					}
-					groups = groupsList.toArray( new Class<?>[groupsList.size()] );
-				}
-			}
-			else if ( property instanceof Class<?>[] ) {
-				groups = (Class<?>[]) property;
-			}
-			else {
-				//null is bad and excluded by instanceof => exception is raised
-				throw new HibernateException( JPA_GROUP_PREFIX + operation.getGroupPropertyName() + " is of unknown type: String or Class<?>[] only");
-			}
-		}
-		groupsPerOperation.put( operation, groups );
-	}
 
 	public boolean onPreInsert(PreInsertEvent event) {
-		validate( event.getEntity(), event.getSession().getEntityMode(), Operation.INSERT );
+		validate( event.getEntity(), event.getSession().getEntityMode(), event.getPersister(),
+				event.getSession().getFactory(), GroupsPerOperation.Operation.INSERT );
 		return false;
 	}
 
 	public boolean onPreUpdate(PreUpdateEvent event) {
-		validate( event.getEntity(), event.getSession().getEntityMode(), Operation.UPDATE );
+		validate( event.getEntity(), event.getSession().getEntityMode(), event.getPersister(),
+				event.getSession().getFactory(), GroupsPerOperation.Operation.UPDATE );
 		return false;
 	}
 
 	public boolean onPreDelete(PreDeleteEvent event) {
-		validate( event.getEntity(), event.getSession().getEntityMode(), Operation.DELETE );
+		validate( event.getEntity(), event.getSession().getEntityMode(), event.getPersister(),
+				event.getSession().getFactory(),  GroupsPerOperation.Operation.DELETE );
 		return false;
 	}
 
-	private <T> void validate(T object, EntityMode mode, Operation operation) {
+	private <T> void validate(T object, EntityMode mode, EntityPersister persister,
+							  SessionFactoryImplementor sessionFactory, GroupsPerOperation.Operation operation) {
 		if ( object == null || mode != EntityMode.POJO ) return;
+		TraversableResolver tr = new HibernateTraversableResolver( persister, associationsPerEntityPersister, sessionFactory );
 		Validator validator = factory.usingContext()
-										//.traversableResolver( tr )
+										.traversableResolver( tr )
 										.getValidator();
 		final Class<?>[] groups = groupsPerOperation.get( operation );
 		if ( groups.length > 0 ) {
@@ -117,7 +82,7 @@ public class BeanValidationEventListener implements
 				//FIXME add Set<ConstraintViolation<?>>
 				throw new ConstraintViolationException(
 						"Invalid object at " + operation.getName() + " time for groups " + toString( groups ),
-						(Set<ConstraintViolation>) unsafeViolations);
+						(Set<ConstraintViolation<?>>) unsafeViolations);
 			}
 		}
 	}
@@ -131,26 +96,6 @@ public class BeanValidationEventListener implements
 		return toString.toString();
 	}
 
-	private static enum Operation {
-		INSERT("persist", "pre-persist"),
-		UPDATE("update", "pre-update"),
-		DELETE("remove", "pre-remove");
 
-		private String exposedName;
-		private String groupPropertyName;
-
-		Operation(String exposedName, String groupProperty) {
-			this.exposedName = exposedName;
-			this.groupPropertyName = groupProperty;
-		}
-
-		public String getName() {
-			return exposedName;
-		}
-
-		public String getGroupPropertyName() {
-			return groupPropertyName;
-		}
-	}
 
 }

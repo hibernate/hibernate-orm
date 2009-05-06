@@ -396,6 +396,11 @@ public class AnnotationConfiguration extends Configuration {
 				}
 			}
 		}
+		applyDDLOnBeanValidation( (Collection<PersistentClass>) classes.values(), getProperties() );
+	}
+
+	private void applyDDLOnBeanValidation(Collection<PersistentClass> persistentClasses, Properties properties) {
+		BeanValidationActivator.applyDDL( persistentClasses, properties );
 	}
 
 	/**

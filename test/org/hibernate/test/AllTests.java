@@ -188,6 +188,7 @@ import org.hibernate.test.propertyref.inheritence.union.UnionSubclassPropertyRef
 import org.hibernate.test.proxy.ProxyTest;
 import org.hibernate.test.querycache.QueryCacheTest;
 import org.hibernate.test.readonly.ReadOnlyTest;
+import org.hibernate.test.readonly.ReadOnlyVersionedNodesTest;
 import org.hibernate.test.reattachment.CollectionReattachmentTest;
 import org.hibernate.test.reattachment.ProxyReattachmentTest;
 import org.hibernate.test.rowid.RowIdTest;
@@ -304,6 +305,7 @@ public class AllTests {
 			suite.addTest( EmbeddedCompositeIdTest.suite() );
 			suite.addTest( ImmutableTest.suite() );
 			suite.addTest( ReadOnlyTest.suite() );
+			suite.addTest( ReadOnlyVersionedNodesTest.suite() );
 			suite.addTest( IdClassTest.suite() );
 			suite.addTest( ArrayTest.suite() );
 			suite.addTest( TernaryTest.suite() );

@@ -6,17 +6,16 @@ package org.hibernate.test.annotations.generics;
  * @author Edward Costello
  * @author Paolo Perrotta
  */
+
 import java.util.HashSet;
 import java.util.Set;
-
+import javax.persistence.ElementCollection;
 import javax.persistence.Embeddable;
 import javax.persistence.Embedded;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-
-import org.hibernate.annotations.CollectionOfElements;
 
 public class Classes {
 
@@ -41,7 +40,7 @@ public class Classes {
 		@GeneratedValue(strategy=GenerationType.AUTO)
 		Long id;
 		
-		@CollectionOfElements
+		@ElementCollection
 		Set<Edition<String>> editions = new HashSet<Edition<String>>();
 	}
 }

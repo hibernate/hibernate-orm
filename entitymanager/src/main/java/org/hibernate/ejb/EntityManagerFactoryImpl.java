@@ -2,8 +2,12 @@
 package org.hibernate.ejb;
 
 import java.util.Map;
+import java.util.Set;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContextType;
+import javax.persistence.Cache;
+import javax.persistence.metamodel.Metamodel;
+import javax.persistence.criteria.QueryBuilder;
 import javax.persistence.spi.PersistenceUnitTransactionType;
 
 import org.hibernate.SessionFactory;
@@ -42,8 +46,33 @@ public class EntityManagerFactoryImpl implements HibernateEntityManagerFactory {
 		);
 	}
 
+	public QueryBuilder getQueryBuilder() {
+		//FIXME
+		return null;  //To change body of implemented methods use File | Settings | File Templates.
+	}
+
+	public Metamodel getMetamodel() {
+		//FIXME
+		return null;  //To change body of implemented methods use File | Settings | File Templates.
+	}
+
 	public void close() {
 		sessionFactory.close();
+	}
+
+	public Map<String, Object> getProperties() {
+		//FIXME
+		return null;  //To change body of implemented methods use File | Settings | File Templates.
+	}
+
+	public Set<String> getSupportedProperties() {
+		//FIXME
+		return null;  //To change body of implemented methods use File | Settings | File Templates.
+	}
+
+	public Cache getCache() {
+		//FIXME
+		return null;  //To change body of implemented methods use File | Settings | File Templates.
 	}
 
 	public boolean isOpen() {

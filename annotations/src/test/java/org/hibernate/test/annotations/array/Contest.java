@@ -7,6 +7,7 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.OneToMany;
+import javax.persistence.ElementCollection;
 
 import org.hibernate.annotations.CollectionOfElements;
 import org.hibernate.annotations.IndexColumn;
@@ -40,7 +41,7 @@ public class Contest {
 		this.results = results;
 	}
 	
-	@CollectionOfElements
+	@ElementCollection
 	@IndexColumn(name = "pos", base=1)
 	public Month[] getHeldIn() {
 		return heldIn;

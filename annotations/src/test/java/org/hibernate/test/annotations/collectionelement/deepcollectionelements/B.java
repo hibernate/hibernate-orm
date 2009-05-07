@@ -3,10 +3,8 @@ package org.hibernate.test.annotations.collectionelement.deepcollectionelements;
 
 import java.util.List;
 import javax.persistence.Embeddable;
-import javax.persistence.Transient;
 import javax.persistence.OneToMany;
 
-import org.hibernate.annotations.CollectionOfElements;
 import org.hibernate.annotations.IndexColumn;
 
 @Embeddable

@@ -4,12 +4,11 @@ package org.hibernate.test.annotations.collectionelement;
 import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
-
+import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 
-import org.hibernate.annotations.CollectionOfElements;
 import org.hibernate.annotations.MapKey;
 import org.hibernate.annotations.Sort;
 import org.hibernate.annotations.SortType;
@@ -25,7 +24,7 @@ public class Matrix {
 	private Integer id;
 	
 	@MapKey(type = @Type(type="integer") )
-	@CollectionOfElements
+	@ElementCollection
 	@Sort(type = SortType.NATURAL) 
 	@Type(type = "float")
 	private SortedMap<Integer, Float> values = new TreeMap<Integer, Float>();

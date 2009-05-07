@@ -219,7 +219,7 @@ public class PackagedEntityManagerTest extends TestCase {
 	public void testListeners() throws Exception {
 		EntityManagerFactory emf = Persistence.createEntityManagerFactory( "manager1", new HashMap() );
 		EntityManager em = emf.createEntityManager();
-		EventListeners eventListeners = ( (SessionImplementor) em.getDelegate() ).getListeners();
+		EventListeners eventListeners = em.unwrap(SessionImplementor.class).getListeners();
 		assertEquals(
 				"Explicit pre-insert event through hibernate.ejb.event.pre-insert does not work",
 				eventListeners.getPreInsertEventListeners().length,

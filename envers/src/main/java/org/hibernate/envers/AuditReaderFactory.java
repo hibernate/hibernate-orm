@@ -24,14 +24,14 @@
 package org.hibernate.envers;
 
 import javax.persistence.EntityManager;
+import javax.persistence.PersistenceException;
 
+import org.hibernate.Session;
+import org.hibernate.engine.SessionImplementor;
 import org.hibernate.envers.event.AuditEventListener;
 import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.reader.AuditReaderImpl;
 import static org.hibernate.envers.tools.ArraysTools.arrayIncludesInstanceOf;
-
-import org.hibernate.Session;
-import org.hibernate.engine.SessionImplementor;
 import org.hibernate.event.EventListeners;
 import org.hibernate.event.PostInsertEventListener;
 
@@ -81,17 +81,11 @@ public class AuditReaderFactory {
      * listeners aren't installed.
      */
     public static AuditReader get(EntityManager entityManager) throws AuditException {
-        if (entityManager.getDelegate() instanceof Session) {
-            return get((Session) entityManager.getDelegate());
-        }
-
-        if (entityManager.getDelegate() instanceof EntityManager) {
-			entityManager = (EntityManager) entityManager.getDelegate();
-            if (entityManager.getDelegate() instanceof Session) {
-                return get((Session) entityManager.getDelegate());
-            }
-        }
-
-        throw new AuditException("Hibernate EntityManager not present!");
+        try {
+			return get( entityManager.unwrap(Session.class) );
+		}
+		catch ( PersistenceException e ) {
+			throw new AuditException("Hibernate EntityManager not present!");
+		} 
     }
 }

@@ -8,6 +8,8 @@ import java.util.Properties;
 import javax.persistence.spi.ClassTransformer;
 import javax.persistence.spi.PersistenceUnitInfo;
 import javax.persistence.spi.PersistenceUnitTransactionType;
+import javax.persistence.Caching;
+import javax.persistence.ValidationMode;
 import javax.sql.DataSource;
 
 import org.hibernate.cfg.Environment;
@@ -71,6 +73,10 @@ public class PersistenceUnitInfoImpl implements PersistenceUnitInfo {
 		return properties;
 	}
 
+	public String PersistenceXMLSchemaVersion() {
+		return null;  //To change body of implemented methods use File | Settings | File Templates.
+	}
+
 	public ClassLoader getClassLoader() {
 		return Thread.currentThread().getContextClassLoader();
 	}
@@ -85,6 +91,16 @@ public class PersistenceUnitInfoImpl implements PersistenceUnitInfo {
 
 	public boolean excludeUnlistedClasses() {
 		return true;
+	}
+
+	public Caching getCaching() {
+		//FIXME
+		return null;  //To change body of implemented methods use File | Settings | File Templates.
+	}
+
+	public ValidationMode getValidationMode() {
+		//FIXME
+		return null;  //To change body of implemented methods use File | Settings | File Templates.
 	}
 
 	public void addTransformer(ClassTransformer transformer) {

@@ -1,4 +1,4 @@
-// $Id:$
+// $Id$
 /*
  * JBoss, the OpenSource EJB server Distributable under LGPL license. See terms of license at
  * gnu.org.
@@ -10,6 +10,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.Map;
+import java.util.Set;
 
 import javax.persistence.EntityNotFoundException;
 import javax.persistence.EntityTransaction;
@@ -22,6 +23,10 @@ import javax.persistence.PersistenceContextType;
 import javax.persistence.PersistenceException;
 import javax.persistence.Query;
 import javax.persistence.TransactionRequiredException;
+import javax.persistence.EntityManagerFactory;
+import javax.persistence.metamodel.Metamodel;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.QueryBuilder;
 import javax.persistence.spi.PersistenceUnitTransactionType;
 import javax.transaction.Status;
 import javax.transaction.Synchronization;
@@ -96,6 +101,10 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 			throwPersistenceException( he );
 			return null;
 		}
+	}
+
+	public Query createQuery(CriteriaQuery criteriaQuery) {
+		return null;  //To change body of implemented methods use File | Settings | File Templates.
 	}
 
 	public Query createNamedQuery(String name) {
@@ -204,6 +213,21 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 		}
 	}
 
+	public <T> T find(Class<T> tClass, Object o, Map<String, Object> stringObjectMap) {
+		//FIXME
+		return null;  //To change body of implemented methods use File | Settings | File Templates.
+	}
+
+	public <T> T find(Class<T> tClass, Object o, LockModeType lockModeType) {
+		//FIXME
+		return null;  //To change body of implemented methods use File | Settings | File Templates.
+	}
+
+	public <T> T find(Class<T> tClass, Object o, LockModeType lockModeType, Map<String, Object> stringObjectMap) {
+		//FIXME
+		return null;  //To change body of implemented methods use File | Settings | File Templates.
+	}
+
 	private void checkTransactionNeeded() {
 		if ( persistenceContextType == PersistenceContextType.TRANSACTION && ! isTransactionInProgress() ) {
 			//no need to mark as rollback, no tx in progress
@@ -277,6 +301,21 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 		}
 	}
 
+	public void refresh(Object o, Map<String, Object> stringObjectMap) {
+		//FIXME
+		//To change body of implemented methods use File | Settings | File Templates.
+	}
+
+	public void refresh(Object o, LockModeType lockModeType) {
+		//FIXME
+		//To change body of implemented methods use File | Settings | File Templates.
+	}
+
+	public void refresh(Object o, LockModeType lockModeType, Map<String, Object> stringObjectMap) {
+		//FIXME
+		//To change body of implemented methods use File | Settings | File Templates.
+	}
+
 	public boolean contains(Object entity) {
 		try {
 			if ( entity != null
@@ -293,6 +332,26 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 			throwPersistenceException( he );
 			return false;
 		}
+	}
+
+	public LockModeType getLockMode(Object o) {
+		//FIXME
+		return null;  //To change body of implemented methods use File | Settings | File Templates.
+	}
+
+	public void setProperty(String s, Object o) {
+		//FIXME
+		//To change body of implemented methods use File | Settings | File Templates.
+	}
+
+	public Map<String, Object> getProperties() {
+		//FIXME
+		return null;  //To change body of implemented methods use File | Settings | File Templates.
+	}
+
+	public Set<String> getSupportedProperties() {
+		//FIXME
+		return null;  //To change body of implemented methods use File | Settings | File Templates.
 	}
 
 	public void flush() {
@@ -326,6 +385,21 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 		return tx;
 	}
 
+	public EntityManagerFactory getEntityManagerFactory() {
+		//FIXME
+		return null;  //To change body of implemented methods use File | Settings | File Templates.
+	}
+
+	public QueryBuilder getQueryBuilder() {
+		//FIXME
+		return null;  //To change body of implemented methods use File | Settings | File Templates.
+	}
+
+	public Metamodel getMetamodel() {
+		//FIXME
+		return null;  //To change body of implemented methods use File | Settings | File Templates.
+	}
+
 	public void setFlushMode(FlushModeType flushModeType) {
 		this.flushModeType = flushModeType;
 		if ( flushModeType == FlushModeType.AUTO ) {
@@ -347,6 +421,10 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 		catch (HibernateException he) {
 			throwPersistenceException( he );
 		}
+	}
+
+	public void detach(Object entity) {
+		getSession().evict( entity );
 	}
 
 	public FlushModeType getFlushMode() {
@@ -385,6 +463,11 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 		catch (HibernateException he) {
 			throwPersistenceException( he );
 		}
+	}
+
+	public void lock(Object o, LockModeType lockModeType, Map<String, Object> stringObjectMap) {
+		//FIXME
+		//To change body of implemented methods use File | Settings | File Templates.
 	}
 
 	private LockMode getLockMode(LockModeType lockMode) {
@@ -429,6 +512,13 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 
 	public void joinTransaction() {
 		joinTransaction( false );
+	}
+
+	public <T> T unwrap(Class<T> clazz) {
+		if (clazz.equals( Session.class ) ) return (T) getSession();
+		if (clazz.equals( SessionImplementor.class  ) ) return (T) getSession();
+		//FIXME
+		return null;  //To change body of implemented methods use File | Settings | File Templates.
 	}
 
 	private void joinTransaction(boolean ignoreNotJoining) {

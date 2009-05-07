@@ -25,6 +25,7 @@
 package org.jboss.envers;
 
 import javax.persistence.EntityManager;
+import javax.persistence.PersistenceException;
 
 import org.hibernate.envers.event.AuditEventListener;
 import org.hibernate.envers.reader.AuditReaderImpl;
@@ -81,16 +82,11 @@ public class VersionsReaderFactory {
      * listeners aren't installed.
      */
     public static VersionsReader get(EntityManager entityManager) throws VersionsException {
-        if (entityManager.getDelegate() instanceof Session) {
-            return get((Session) entityManager.getDelegate());
-        }
-
-        if (entityManager.getDelegate() instanceof EntityManager) {
-            if (entityManager.getDelegate() instanceof Session) {
-                return get((Session) entityManager.getDelegate());
-            }
-        }
-
-        throw new VersionsException("Hibernate EntityManager not present!");
+		try {
+			return get( entityManager.unwrap(Session.class) );
+		}
+		catch ( PersistenceException e ) {
+			throw new VersionsException("Hibernate EntityManager not present!");
+		} 
     }
 }

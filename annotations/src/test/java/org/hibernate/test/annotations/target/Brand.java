@@ -1,15 +1,15 @@
 //$Id$
 package org.hibernate.test.annotations.target;
 
-import java.util.Map;
 import java.util.HashMap;
+import java.util.Map;
+import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
-import javax.persistence.Id;
 import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
 import javax.persistence.ManyToMany;
 
 import org.hibernate.annotations.MapKey;
-import org.hibernate.annotations.CollectionOfElements;
 import org.hibernate.annotations.MapKeyManyToMany;
 
 /**
@@ -25,7 +25,7 @@ public class Brand {
 	@MapKey(targetElement = SizeImpl.class)
 	private Map<Size, Luggage> luggagesBySize = new HashMap<Size, Luggage>();
 
-	@CollectionOfElements(targetElement = SizeImpl.class)
+	@ElementCollection(targetClass = SizeImpl.class)
 	@MapKeyManyToMany(targetEntity = LuggageImpl.class)
 	private Map<Luggage, Size> sizePerLuggage = new HashMap<Luggage, Size>();
 

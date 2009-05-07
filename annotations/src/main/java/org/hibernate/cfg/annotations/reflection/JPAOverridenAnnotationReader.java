@@ -102,6 +102,7 @@ import javax.persistence.TemporalType;
 import javax.persistence.Transient;
 import javax.persistence.UniqueConstraint;
 import javax.persistence.Version;
+import javax.persistence.ElementCollection;
 
 import org.dom4j.Attribute;
 import org.dom4j.Element;
@@ -563,7 +564,8 @@ public class JPAOverridenAnnotationReader implements AnnotationReader {
 		defaultToJoinTable = defaultToJoinTable &&
 				( ( annotationClass == ManyToMany.class && StringHelper.isEmpty( ( (ManyToMany) annotation ).mappedBy() ) )
 						|| ( annotationClass == OneToMany.class && StringHelper.isEmpty( ( (OneToMany) annotation ).mappedBy() ) )
-						|| ( annotationClass == CollectionOfElements.class )
+						|| ( annotationClass == CollectionOfElements.class ) //legacy Hibernate
+						|| ( annotationClass == ElementCollection.class )
 				);
 		final Class<JoinTable> annotationType = JoinTable.class;
 		if ( defaultToJoinTable
@@ -699,7 +701,41 @@ public class JPAOverridenAnnotationReader implements AnnotationReader {
 				annotation = getJavaAnnotation( Columns.class );
 				addIfNotNull( annotationList, annotation );
 			}
-			else if ( isJavaAnnotationPresent( CollectionOfElements.class ) ) {
+			else if ( isJavaAnnotationPresent( ElementCollection.class ) ) { //JPA2
+				annotation = overridesDefaultsInJoinTable( getJavaAnnotation( ElementCollection.class ), defaults );
+				addIfNotNull( annotationList, annotation );
+				annotation = getJavaAnnotation( JoinColumn.class );
+				addIfNotNull( annotationList, annotation );
+				annotation = getJavaAnnotation( JoinColumns.class );
+				addIfNotNull( annotationList, annotation );
+				annotation = getJavaAnnotation( PrimaryKeyJoinColumn.class );
+				addIfNotNull( annotationList, annotation );
+				annotation = getJavaAnnotation( PrimaryKeyJoinColumns.class );
+				addIfNotNull( annotationList, annotation );
+				annotation = getJavaAnnotation( MapKey.class );
+				addIfNotNull( annotationList, annotation );
+				annotation = getJavaAnnotation( OrderBy.class );
+				addIfNotNull( annotationList, annotation );
+				annotation = getJavaAnnotation( AttributeOverride.class );
+				addIfNotNull( annotationList, annotation );
+				annotation = getJavaAnnotation( AttributeOverrides.class );
+				addIfNotNull( annotationList, annotation );
+				annotation = getJavaAnnotation( AssociationOverride.class );
+				addIfNotNull( annotationList, annotation );
+				annotation = getJavaAnnotation( AssociationOverrides.class );
+				addIfNotNull( annotationList, annotation );
+				annotation = getJavaAnnotation( Lob.class );
+				addIfNotNull( annotationList, annotation );
+				annotation = getJavaAnnotation( Enumerated.class );
+				addIfNotNull( annotationList, annotation );
+				annotation = getJavaAnnotation( Temporal.class );
+				addIfNotNull( annotationList, annotation );
+				annotation = getJavaAnnotation( Column.class );
+				addIfNotNull( annotationList, annotation );
+				annotation = getJavaAnnotation( Columns.class );
+				addIfNotNull( annotationList, annotation );
+			}
+			else if ( isJavaAnnotationPresent( CollectionOfElements.class ) ) { //legacy Hibernate
 				annotation = overridesDefaultsInJoinTable( getJavaAnnotation( CollectionOfElements.class ), defaults );
 				addIfNotNull( annotationList, annotation );
 				annotation = getJavaAnnotation( JoinColumn.class );

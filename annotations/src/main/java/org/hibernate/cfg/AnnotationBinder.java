@@ -70,6 +70,7 @@ import javax.persistence.Table;
 import javax.persistence.TableGenerator;
 import javax.persistence.Transient;
 import javax.persistence.Version;
+import javax.persistence.ElementCollection;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
@@ -1238,7 +1239,9 @@ public final class AnnotationBinder {
 		}
 		else if ( joinColumns == null &&
 				( property.isAnnotationPresent( OneToMany.class )
-						|| property.isAnnotationPresent( CollectionOfElements.class ) ) ) {
+						|| property.isAnnotationPresent( CollectionOfElements.class ) //legacy Hibernate
+						|| property.isAnnotationPresent( ElementCollection.class )
+				) ) {
 			OneToMany oneToMany = property.getAnnotation( OneToMany.class );
 			String mappedBy = oneToMany != null ?
 					oneToMany.mappedBy() :
@@ -1454,11 +1457,13 @@ public final class AnnotationBinder {
 		}
 		else if ( property.isAnnotationPresent( OneToMany.class )
 				|| property.isAnnotationPresent( ManyToMany.class )
-				|| property.isAnnotationPresent( CollectionOfElements.class )
+				|| property.isAnnotationPresent( CollectionOfElements.class ) //legacy Hibernate
+				|| property.isAnnotationPresent( ElementCollection.class )
 				|| property.isAnnotationPresent( ManyToAny.class ) ) {
 			OneToMany oneToManyAnn = property.getAnnotation( OneToMany.class );
 			ManyToMany manyToManyAnn = property.getAnnotation( ManyToMany.class );
-			CollectionOfElements collectionOfElementsAnn = property.getAnnotation( CollectionOfElements.class );
+			ElementCollection elementCollectionAnn = property.getAnnotation( ElementCollection.class );
+			CollectionOfElements collectionOfElementsAnn = property.getAnnotation( CollectionOfElements.class ); //legacy hibernate
 			org.hibernate.annotations.IndexColumn indexAnn = property.getAnnotation(
 					org.hibernate.annotations.IndexColumn.class
 			);
@@ -1585,7 +1590,9 @@ public final class AnnotationBinder {
 				collectionBinder.setCascadeStrategy( getCascadeStrategy( oneToManyAnn.cascade(), hibernateCascade ) );
 				collectionBinder.setOneToMany( true );
 			}
-			else if ( collectionOfElementsAnn != null ) {
+			else if ( elementCollectionAnn != null
+					|| collectionOfElementsAnn != null //Hibernate legacy
+					) {
 				for (Ejb3JoinColumn column : joinColumns) {
 					if ( column.isSecondary() ) {
 						throw new NotYetImplementedException( "Collections having FK in secondary table" );
@@ -1593,8 +1600,11 @@ public final class AnnotationBinder {
 				}
 				collectionBinder.setFkJoinColumns( joinColumns );
 				mappedBy = "";
+				final Class<?> targetElement = elementCollectionAnn != null ?
+						elementCollectionAnn.targetClass() :
+						collectionOfElementsAnn.targetElement();
 				collectionBinder.setTargetEntity(
-						mappings.getReflectionManager().toXClass( collectionOfElementsAnn.targetElement() )
+						mappings.getReflectionManager().toXClass( targetElement )
 				);
 				//collectionBinder.setCascadeStrategy( getCascadeStrategy( embeddedCollectionAnn.cascade(), hibernateCascade ) );
 				collectionBinder.setOneToMany( true );

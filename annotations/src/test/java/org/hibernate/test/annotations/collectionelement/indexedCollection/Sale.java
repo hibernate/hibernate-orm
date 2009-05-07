@@ -23,7 +23,7 @@ import org.hibernate.annotations.GenericGenerator;
 public class Sale {
 	@Id @GeneratedValue private Integer id;
 
-	@CollectionOfElements
+	@CollectionOfElements //TODO migrate to @ElementCollection, what about @CollectionId
     @JoinTable(
         name = "contact",
         joinColumns = @JoinColumn(name = "n_key_person"))

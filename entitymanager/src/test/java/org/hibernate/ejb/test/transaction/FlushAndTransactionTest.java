@@ -271,7 +271,7 @@ public class FlushAndTransactionTest extends TestCase {
 		em.flush();
 		em.clear();
 		book.setName( "kitty kid2"); //non updated version
-		( (Session) em.getDelegate() ).update( book );
+		em.unwrap( Session.class ).update( book );
 		try {
 			em.getTransaction().commit();
 			fail( "Commit should be rollbacked" );

@@ -6,6 +6,7 @@ package org.hibernate.test.annotations.collectionelement.deepcollectionelements;
  */
 
 import java.util.List;
+import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -13,7 +14,6 @@ import javax.persistence.Id;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
-import org.hibernate.annotations.CollectionOfElements;
 import org.hibernate.annotations.IndexColumn;
 
 @Entity
@@ -23,7 +23,7 @@ public class A {
 	@GeneratedValue( strategy = GenerationType.SEQUENCE, generator = "aSequence" )
 	@SequenceGenerator( name = "aSequence", sequenceName = "seq_A" )
 	private int id;
-	@CollectionOfElements
+	@ElementCollection
 	@IndexColumn( name = "ndx" )
 	private List<B> listOfB;
 

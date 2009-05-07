@@ -16,6 +16,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
+import javax.persistence.ElementCollection;
 
 import org.hibernate.annotations.CollectionOfElements;
 import org.hibernate.annotations.IndexColumn;
@@ -66,7 +67,7 @@ public class Boy {
 		this.lastName = lastName;
 	}
 
-	@CollectionOfElements
+	@CollectionOfElements //keep hibernate legacy for test purposes
 	public Set<String> getNickNames() {
 		return nickNames;
 	}
@@ -75,7 +76,7 @@ public class Boy {
 		this.nickNames = nickName;
 	}
 
-	@CollectionOfElements
+	@ElementCollection
 	@JoinTable(name = "ScorePerNickName", joinColumns = @JoinColumn(name = "BoyId"))
 	@Column(name = "score", nullable = false)
 	public Map<String, Integer> getScorePerNickName() {
@@ -86,7 +87,7 @@ public class Boy {
 		this.scorePerNickName = scorePerNickName;
 	}
 
-	@CollectionOfElements
+	@ElementCollection
 	@JoinTable(
 			name = "BoyFavoriteNumbers",
 			joinColumns = @JoinColumn(name = "BoyId")
@@ -101,7 +102,7 @@ public class Boy {
 		this.favoriteNumbers = favoriteNumbers;
 	}
 
-	@CollectionOfElements
+	@CollectionOfElements //TODO migration to ElementCollection "element.serial"??
 	@AttributeOverride(name = "element.serial", column = @Column(name = "serial_nbr"))
 	public Set<Toy> getFavoriteToys() {
 		return favoriteToys;
@@ -111,7 +112,7 @@ public class Boy {
 		this.favoriteToys = favoriteToys;
 	}
 
-	@CollectionOfElements
+	@ElementCollection
 	@Enumerated(EnumType.STRING)
 	public Set<Character> getCharacters() {
 		return characters;
@@ -121,7 +122,7 @@ public class Boy {
 		this.characters = characters;
 	}
 
-	@CollectionOfElements(fetch = FetchType.EAGER)
+	@ElementCollection(fetch = FetchType.EAGER)
 	//@Where(clause = "b_likes=false")
 	public Set<CountryAttitude> getCountryAttitudes() {
 		return countryAttitudes;

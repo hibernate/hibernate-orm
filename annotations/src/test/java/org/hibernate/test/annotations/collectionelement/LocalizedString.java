@@ -1,18 +1,18 @@
 //$Id$
 package org.hibernate.test.annotations.collectionelement;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Locale;
 import java.io.Serializable;
+import java.util.HashMap;
+import java.util.Locale;
+import java.util.Map;
 import javax.persistence.Column;
+import javax.persistence.ElementCollection;
 import javax.persistence.Embeddable;
 
-import org.hibernate.annotations.CollectionOfElements;
 import org.hibernate.annotations.Fetch;
-import org.hibernate.annotations.MapKey;
 import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.Filter;
+import org.hibernate.annotations.MapKey;
 
 /**
  * @author Emmanuel Bernard
@@ -32,7 +32,7 @@ public class LocalizedString implements Serializable {
 	private Map<String, String> variations =
 			new HashMap<String, String>( 1 );
 
-	@CollectionOfElements
+	@ElementCollection
 	@MapKey( columns = @Column( name = "language_code" ) )
 	@Fetch( FetchMode.JOIN )
 	@Filter( name = "selectedLocale",

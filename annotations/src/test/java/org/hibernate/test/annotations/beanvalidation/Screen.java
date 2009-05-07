@@ -8,6 +8,7 @@ import javax.persistence.ManyToMany;
 import javax.persistence.Id;
 import javax.persistence.GeneratedValue;
 import javax.persistence.CascadeType;
+import javax.persistence.ElementCollection;
 import javax.validation.constraints.NotNull;
 import javax.validation.Valid;
 
@@ -54,7 +55,8 @@ public class Screen {
 		this.powerSupply = powerSupply;
 	}
 
-	@CollectionOfElements @Valid
+	@ElementCollection
+	@Valid
 	public Set<DisplayConnector> getConnectors() {
 		return connectors;
 	}

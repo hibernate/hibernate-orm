@@ -72,7 +72,7 @@ public class CascadePersistTest extends TestCase {
 				c2.setB2( anotherB2 );
 			}
 		}
-		Statistics statistics = ( (Session) em.getDelegate() ).getSessionFactory().getStatistics();
+		Statistics statistics = em.unwrap(Session.class).getSessionFactory().getStatistics();
 		statistics.setStatisticsEnabled( true );
 		statistics.clear();
 		em.persist( c2 );

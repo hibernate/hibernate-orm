@@ -34,7 +34,7 @@ public class Atmosphere {
 	@JoinTable(name = "Gas_per_key")
 	public Map<GasKey, Gas> gasesPerKey = new HashMap<GasKey, Gas>();
 
-	@CollectionOfElements
+	@CollectionOfElements //TODO migrate to @ElementCollection ;  @MapKeyManyToMany ??
 	@Column(name="composition_rate")
 	@MapKeyManyToMany(joinColumns = @JoinColumn(name="gas_id"))
 	@JoinTable(name = "Composition", joinColumns = @JoinColumn(name = "atmosphere_id"))

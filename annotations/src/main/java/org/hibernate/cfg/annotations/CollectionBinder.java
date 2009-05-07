@@ -38,6 +38,7 @@ import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
 import javax.persistence.MapKey;
 import javax.persistence.OneToMany;
+import javax.persistence.ElementCollection;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
@@ -449,7 +450,9 @@ public abstract class CollectionBinder {
 				tableBinder, mappings
 		);
 		if ( collectionType.isAnnotationPresent( Embeddable.class )
-				|| property.isAnnotationPresent( CollectionOfElements.class ) ) {
+				|| property.isAnnotationPresent( CollectionOfElements.class ) //legacy hibernate
+				|| property.isAnnotationPresent( ElementCollection.class ) //JPA 2
+				) {
 			// do it right away, otherwise @ManyToon on composite element call addSecondPass 
 			// and raise a ConcurrentModificationException
 			//sp.doSecondPass( CollectionHelper.EMPTY_MAP );
@@ -483,7 +486,8 @@ public abstract class CollectionBinder {
 		Fetch fetch = property.getAnnotation( Fetch.class );
 		OneToMany oneToMany = property.getAnnotation( OneToMany.class );
 		ManyToMany manyToMany = property.getAnnotation( ManyToMany.class );
-		CollectionOfElements elements = property.getAnnotation( CollectionOfElements.class );
+		CollectionOfElements collectionOfElements = property.getAnnotation( CollectionOfElements.class ); //legacy hibernate
+		ElementCollection elementCollection = property.getAnnotation( ElementCollection.class ); //jpa 2
 		ManyToAny manyToAny = property.getAnnotation( ManyToAny.class );
 		FetchType fetchType;
 		if ( oneToMany != null ) {
@@ -492,8 +496,11 @@ public abstract class CollectionBinder {
 		else if ( manyToMany != null ) {
 			fetchType = manyToMany.fetch();
 		}
-		else if ( elements != null ) {
-			fetchType = elements.fetch();
+		else if ( elementCollection != null ) {
+			fetchType = elementCollection.fetch();
+		}
+		else if ( collectionOfElements != null ) {
+			fetchType = collectionOfElements.fetch();
 		}
 		else if ( manyToAny != null ) {
 			fetchType = FetchType.LAZY;

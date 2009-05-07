@@ -7,6 +7,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.Map;
 import javax.persistence.FlushModeType;
 import javax.persistence.NoResultException;
 import javax.persistence.NonUniqueResultException;
@@ -14,6 +15,7 @@ import javax.persistence.Query;
 import javax.persistence.TemporalType;
 import static javax.persistence.TemporalType.*;
 import javax.persistence.TransactionRequiredException;
+import javax.persistence.LockModeType;
 
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
@@ -32,6 +34,7 @@ public class QueryImpl implements Query, HibernateQuery {
 	private HibernateEntityManagerImplementor em;
 	private Boolean isPositional = null;
 	private int maxResults = -1;
+	private int firstResult;
 
 	public QueryImpl(org.hibernate.Query query, AbstractEntityManagerImpl em) {
 		this.query = query;
@@ -143,6 +146,10 @@ public class QueryImpl implements Query, HibernateQuery {
 		return this;
 	}
 
+	public int getMaxResults() {
+		return maxResults == -1 ? Integer.MAX_VALUE : maxResults; //stupid spec MAX_VALUE??
+	}
+
 	public Query setFirstResult(int firstResult) {
 		if ( firstResult < 0 ) {
 			throw new IllegalArgumentException(
@@ -152,7 +159,12 @@ public class QueryImpl implements Query, HibernateQuery {
 			);
 		}
 		query.setFirstResult( firstResult );
+		this.firstResult = firstResult;
 		return this;
+	}
+
+	public int getFirstResult() {
+		return firstResult;
 	}
 
 	public Query setHint(String hintName, Object value) {
@@ -190,6 +202,16 @@ public class QueryImpl implements Query, HibernateQuery {
 			throw new IllegalArgumentException( "Value for hint" );
 		}
 		return this;
+	}
+
+	public Map<String, Object> getHints() {
+		//FIXME
+		return null;  //To change body of implemented methods use File | Settings | File Templates.
+	}
+
+	public Set<String> getSupportedHints() {
+		//FIXME
+		return null;  //To change body of implemented methods use File | Settings | File Templates.
 	}
 
 	public Query setParameter(String name, Object value) {
@@ -351,6 +373,16 @@ public class QueryImpl implements Query, HibernateQuery {
 		}
 	}
 
+	public Map<String, Object> getNamedParameters() {
+		//FIXME
+		return null;  //To change body of implemented methods use File | Settings | File Templates.
+	}
+
+	public List getPositionalParameters() {
+		//FIXME
+		return null;  //To change body of implemented methods use File | Settings | File Templates.
+	}
+
 	public Query setFlushMode(FlushModeType flushMode) {
 		if ( flushMode == FlushModeType.AUTO ) {
 			query.setFlushMode( FlushMode.AUTO );
@@ -359,5 +391,25 @@ public class QueryImpl implements Query, HibernateQuery {
 			query.setFlushMode( FlushMode.COMMIT );
 		}
 		return this;
+	}
+
+	public FlushModeType getFlushMode() {
+		//FIXME
+		return null;  //To change body of implemented methods use File | Settings | File Templates.
+	}
+
+	public Query setLockMode(LockModeType lockModeType) {
+		//FIXME
+		return null;  //To change body of implemented methods use File | Settings | File Templates.
+	}
+
+	public LockModeType getLockMode() {
+		//FIXME
+		return null;  //To change body of implemented methods use File | Settings | File Templates.
+	}
+
+	public <T> T unwrap(Class<T> tClass) {
+		//FIXME
+		return null;  //To change body of implemented methods use File | Settings | File Templates.
 	}
 }

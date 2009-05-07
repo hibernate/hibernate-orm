@@ -14,7 +14,7 @@
   ~ This program is distributed in the hope that it will be useful,
   ~ but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
   ~ or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
-  ~ for more details.
+  ~ for more details.                              
   ~
   ~ You should have received a copy of the GNU Lesser General Public License
   ~ along with this distribution; if not, write to:
@@ -113,12 +113,12 @@
             <dependency>
                 <groupId>org.hibernate</groupId>
                 <artifactId>hibernate-validator</artifactId>
-                <version>4.0.0.Beta1</version>
+                <version>4.0.0.Beta2-SNAPSHOT</version>
             </dependency>
             <dependency>
                 <groupId>javax.validation</groupId>
                 <artifactId>validation-api</artifactId>
-                <version>1.0.CR2</version>
+                <version>1.0.CR3-SNAPSHOT</version>
             </dependency>
 
         </dependencies>
@@ -159,6 +159,11 @@
                         </goals>
                     </execution>
                 </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.twdata.maven</groupId>
+                <artifactId>maven-cli-plugin</artifactId>
+                <version>0.6.3.CR2</version>
             </plugin>
         </plugins>
     </build>

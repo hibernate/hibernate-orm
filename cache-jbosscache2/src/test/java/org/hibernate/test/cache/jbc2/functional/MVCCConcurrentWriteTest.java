@@ -202,7 +202,7 @@ public class MVCCConcurrentWriteTest extends CacheTestCaseBase {
      * 
      * @throws Exception
      */
-    public void testManyUsersFailureExpected() throws Exception {
+    public void testManyUsers() throws Exception {
 
         //setup - create users
         for (int i = 0; i < USER_COUNT; i++) {

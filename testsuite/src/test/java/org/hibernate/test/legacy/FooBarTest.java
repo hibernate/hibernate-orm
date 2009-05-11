@@ -34,7 +34,6 @@ import org.hibernate.Query;
 import org.hibernate.QueryException;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Transaction;
-import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.classic.Session;
 import org.hibernate.connection.ConnectionProvider;
@@ -45,14 +44,11 @@ import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.DerbyDialect;
-import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.InterbaseDialect;
 import org.hibernate.dialect.MckoiDialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.Oracle8iDialect;
-//import org.hibernate.dialect.Oracle9Dialect;
-//import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PointbaseDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.SAPDBDialect;
@@ -62,14 +58,17 @@ import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.dialect.TimesTenDialect;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
-//import org.hibernate.mapping.RootClass;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.type.Type;
 import org.hibernate.util.JoinedIterator;
 import org.hibernate.util.SerializationHelper;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 
 public class FooBarTest extends LegacyTestCase {
+	private static final Logger log = LoggerFactory.getLogger( FooBarTest.class );
 
 	public FooBarTest(String arg) {
 		super(arg);
@@ -108,6 +107,7 @@ public class FooBarTest extends LegacyTestCase {
 
 	public void testSaveOrUpdateCopyAny() throws Exception {
 		Session s = openSession();
+		s.beginTransaction();
 		Bar bar = new Bar();
 		One one = new One();
 		bar.setObject(one);
@@ -117,20 +117,22 @@ public class FooBarTest extends LegacyTestCase {
 		s.delete(g);
 		s.flush();
 		assertTrue( s.contains(one) );
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 
 		s = openSession();
+		s.beginTransaction();
 		Bar bar2 = (Bar) s.saveOrUpdateCopy(bar);
 		s.flush();
 		s.delete(bar2);
 		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 	}
 
 	public void testRefreshProxy() throws Exception {
 		Session s = openSession();
+		s.beginTransaction();
 		Glarch g = new Glarch();
 		Serializable gid = s.save(g);
 		s.flush();
@@ -140,17 +142,17 @@ public class FooBarTest extends LegacyTestCase {
 		s.refresh(gp);
 		s.delete(gp);
 		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 	}
 
 	public void testOnCascadeDelete() throws Exception {
-
 		if ( ! supportsCircularCascadeDelete() ) {
 			return;
 		}
 
 		Session s = openSession();
+		s.beginTransaction();
 		Baz baz = new Baz();
 		baz.subs = new ArrayList();
 		Baz sub = new Baz();
@@ -159,17 +161,19 @@ public class FooBarTest extends LegacyTestCase {
 		s.save(baz);
 		s.flush();
 		assertTrue( s.createQuery("from Baz").list().size()==2 );
-		s.connection().commit();
+		s.getTransaction().commit();
+		s.beginTransaction();
 		s.delete(baz);
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
+		s.beginTransaction();
 		assertTrue( s.createQuery("from Baz").list().size()==0 );
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 	}
 
 	public void testRemoveFromIdbag() throws Exception {
 		Session s = openSession();
+		s.beginTransaction();
 		Baz baz = new Baz();
 		baz.setByteBag( new ArrayList() );
 		byte[] bytes = { 12, 13 };
@@ -184,41 +188,42 @@ public class FooBarTest extends LegacyTestCase {
 		baz.getByteBag().add(bytes);
 		s.flush();
 		s.delete(baz);
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 	}
 
 	public void testLoad() throws Exception {
 		Session s = openSession();
+		s.beginTransaction();
 		Qux q = new Qux();
 		s.save(q);
 		BarProxy b = new Bar();
 		s.save(b);
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
+
 		s = openSession();
+		s.beginTransaction();
 		q = (Qux) s.load(Qux.class, q.getKey() );
 		b = (BarProxy) s.load( Foo.class, b.getKey() );
 		b.getKey();
 		assertFalse( Hibernate.isInitialized(b) );
 		b.getBarString();
 		assertTrue( Hibernate.isInitialized(b) );
-		BarProxy b2 = (BarProxy) s.load( Bar.class, new String( b.getKey() ) );
+		BarProxy b2 = (BarProxy) s.load( Bar.class, b.getKey() );
 		Qux q2 = (Qux) s.load( Qux.class, q.getKey() );
 		assertTrue( "loaded same object", q==q2 );
 		assertTrue( "loaded same object", b==b2 );
 		assertTrue( Math.round( b.getFormula() ) == b.getInt()/2 );
 		s.delete(q2);
 		s.delete(b2);
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 	}
 
 	public void testJoin() throws Exception {
 		Session s = openSession();
+		s.beginTransaction();
 		Foo foo = new Foo();
 		foo.setJoinedProp("foo");
 		s.save(foo);
@@ -227,25 +232,25 @@ public class FooBarTest extends LegacyTestCase {
 		s.flush();
 		String fid = foo.getKey();
 		s.delete(foo);
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 
 		s = openSession();
+		s.beginTransaction();
 		Foo foo2 = new Foo();
 		foo2.setJoinedProp("foo");
 		s.save(foo2);
-		s.find("select foo.id from Foo foo where foo.joinedProp = 'foo'");
+		s.createQuery( "select foo.id from Foo foo where foo.joinedProp = 'foo'" ).list();
 		assertNull( s.get(Foo.class, fid) );
 		s.delete(foo2);
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 
 	}
 
 	public void testDereferenceLazyCollection() throws Exception {
 		Session s = openSession();
+		s.beginTransaction();
 		Baz baz = new Baz();
 		baz.setFooSet( new HashSet() );
 		Foo foo = new Foo();
@@ -253,31 +258,31 @@ public class FooBarTest extends LegacyTestCase {
 		s.save(foo);
 		s.save(baz);
 		foo.setBytes( "foobar".getBytes() );
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 
 		s = openSession();
+		s.beginTransaction();
 		foo = (Foo) s.get( Foo.class, foo.getKey() );
 		assertTrue( Hibernate.isInitialized( foo.getBytes() ) );
 		assertTrue( foo.getBytes().length==6 );
 		baz = (Baz) s.get( Baz.class, baz.getCode() );
 		assertTrue( baz.getFooSet().size()==1 );
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 
 		getSessions().evictCollection("org.hibernate.test.legacy.Baz.fooSet");
 
 		s = openSession();
+		s.beginTransaction();
 		baz = (Baz) s.get( Baz.class, baz.getCode() );
 		assertFalse( Hibernate.isInitialized( baz.getFooSet() ) );
 		baz.setFooSet(null);
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 
 		s = openSession();
+		s.beginTransaction();
 		foo = (Foo) s.get( Foo.class, foo.getKey() );
 		assertTrue( foo.getBytes().length==6 );
 		baz = (Baz) s.get( Baz.class, baz.getCode() );
@@ -285,13 +290,13 @@ public class FooBarTest extends LegacyTestCase {
 		assertTrue( baz.getFooSet().size()==0 );
 		s.delete(baz);
 		s.delete(foo);
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 	}
 
 	public void testMoveLazyCollection() throws Exception {
 		Session s = openSession();
+		s.beginTransaction();
 		Baz baz = new Baz();
 		Baz baz2 = new Baz();
 		baz.setFooSet( new HashSet() );
@@ -301,34 +306,34 @@ public class FooBarTest extends LegacyTestCase {
 		s.save(baz);
 		s.save(baz2);
 		foo.setBytes( "foobar".getBytes() );
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 
 		s = openSession();
+		s.beginTransaction();
 		foo = (Foo) s.get( Foo.class, foo.getKey() );
 		assertTrue( Hibernate.isInitialized( foo.getBytes() ) );
 		assertTrue( foo.getBytes().length==6 );
 		baz = (Baz) s.get( Baz.class, baz.getCode() );
 		assertTrue( baz.getFooSet().size()==1 );
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 
 		getSessions().evictCollection("org.hibernate.test.legacy.Baz.fooSet");
 
 		s = openSession();
+		s.beginTransaction();
 		baz = (Baz) s.get( Baz.class, baz.getCode() );
 		assertFalse( Hibernate.isInitialized( baz.getFooSet() ) );
 		baz2 = (Baz) s.get( Baz.class, baz2.getCode() );
 		baz2.setFooSet( baz.getFooSet() );
 		baz.setFooSet(null);
 		assertFalse( Hibernate.isInitialized( baz2.getFooSet() ) );
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 
 		s = openSession();
+		s.beginTransaction();
 		foo = (Foo) s.get( Foo.class, foo.getKey() );
 		assertTrue( foo.getBytes().length==6 );
 		baz = (Baz) s.get( Baz.class, baz.getCode() );
@@ -340,27 +345,27 @@ public class FooBarTest extends LegacyTestCase {
 		s.delete(baz);
 		s.delete(baz2);
 		s.delete(foo);
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 	}
 
 	public void testCriteriaCollection() throws Exception {
 		Session s = openSession();
+		s.beginTransaction();
 		Baz bb = (Baz) s.createCriteria(Baz.class).uniqueResult();
 		assertTrue(bb==null);
 		Baz baz = new Baz();
 		s.save(baz);
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
+
 		s = openSession();
+		s.beginTransaction();
 		Baz b = (Baz) s.createCriteria(Baz.class).uniqueResult();
 		assertTrue( Hibernate.isInitialized( b.getTopGlarchez() ) );
 		assertTrue( b.getTopGlarchez().size()==0 );
 		s.delete(b);
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 	}
 
@@ -373,64 +378,75 @@ public class FooBarTest extends LegacyTestCase {
 		s.save(foo2);
 		foo.setFoo(foo2);
 
-		List list = s.find("from Foo foo inner join fetch foo.foo");
+		List list = s.createQuery( "from Foo foo inner join fetch foo.foo" ).list();
 		Foo foof = (Foo) list.get(0);
 		assertTrue( Hibernate.isInitialized( foof.getFoo() ) );
 
-		list = s.find("from Baz baz left outer join fetch baz.fooToGlarch");
+		s.createQuery( "from Baz baz left outer join fetch baz.fooToGlarch" ).list();
 
-		list = s.find(
-			"select foo, bar from Foo foo left outer join foo.foo bar where foo = ?",
-			foo,
-			Hibernate.entity(Foo.class)
-		);
+		list = s.createQuery( "select foo, bar from Foo foo left outer join foo.foo bar where foo = ?" )
+				.setParameter( 0, foo, Hibernate.entity(Foo.class) )
+				.list();
 		Object[] row1 = (Object[]) list.get(0);
 		assertTrue( row1[0]==foo && row1[1]==foo2 );
 
-		s.find("select foo.foo.foo.string from Foo foo where foo.foo = 'bar'");
-		s.find("select foo.foo.foo.foo.string from Foo foo where foo.foo = 'bar'");
-		s.find("select foo from Foo foo where foo.foo.foo = 'bar'");
-		s.find("select foo.foo.foo.foo.string from Foo foo where foo.foo.foo = 'bar'");
-		s.find("select foo.foo.foo.string from Foo foo where foo.foo.foo.foo.string = 'bar'");
-		if ( ! (getDialect() instanceof HSQLDialect) ) s.find("select foo.string from Foo foo where foo.foo.foo.foo = foo.foo.foo");
-		s.find("select foo.string from Foo foo where foo.foo.foo = 'bar' and foo.foo.foo.foo = 'baz'");
-		s.find("select foo.string from Foo foo where foo.foo.foo.foo.string = 'a' and foo.foo.string = 'b'");
+		s.createQuery( "select foo.foo.foo.string from Foo foo where foo.foo = 'bar'" ).list();
+		s.createQuery( "select foo.foo.foo.foo.string from Foo foo where foo.foo = 'bar'" ).list();
+		s.createQuery( "select foo from Foo foo where foo.foo.foo = 'bar'" ).list();
+		s.createQuery( "select foo.foo.foo.foo.string from Foo foo where foo.foo.foo = 'bar'" ).list();
+		s.createQuery( "select foo.foo.foo.string from Foo foo where foo.foo.foo.foo.string = 'bar'" ).list();
+		if ( ! (getDialect() instanceof HSQLDialect) )
+			s.createQuery( "select foo.string from Foo foo where foo.foo.foo.foo = foo.foo.foo" ).list();
+		s.createQuery( "select foo.string from Foo foo where foo.foo.foo = 'bar' and foo.foo.foo.foo = 'baz'" ).list();
+		s.createQuery( "select foo.string from Foo foo where foo.foo.foo.foo.string = 'a' and foo.foo.string = 'b'" )
+				.list();
 
-		s.find("from Bar bar, foo in elements(bar.baz.fooArray)");
+		s.createQuery( "from Bar bar, foo in elements(bar.baz.fooArray)" ).list();
 
 		//s.find("from Baz as baz where baz.topComponents[baz].name = 'bazzz'");
 
 		if ( (getDialect() instanceof DB2Dialect) && !(getDialect() instanceof DerbyDialect) ) {
-			s.find("from Foo foo where lower( foo.foo.string ) = 'foo'");
-			s.find("from Foo foo where lower( (foo.foo.string || 'foo') || 'bar' ) = 'foo'");
-			s.find("from Foo foo where repeat( (foo.foo.string || 'foo') || 'bar', 2 ) = 'foo'");
-			s.find("from Bar foo where foo.foo.integer is not null and repeat( (foo.foo.string || 'foo') || 'bar', (5+5)/2 ) = 'foo'");
-			s.find("from Bar foo where foo.foo.integer is not null or repeat( (foo.foo.string || 'foo') || 'bar', (5+5)/2 ) = 'foo'");
+			s.createQuery( "from Foo foo where lower( foo.foo.string ) = 'foo'" ).list();
+			s.createQuery( "from Foo foo where lower( (foo.foo.string || 'foo') || 'bar' ) = 'foo'" ).list();
+			s.createQuery( "from Foo foo where repeat( (foo.foo.string || 'foo') || 'bar', 2 ) = 'foo'" ).list();
+			s.createQuery(
+					"from Bar foo where foo.foo.integer is not null and repeat( (foo.foo.string || 'foo') || 'bar', (5+5)/2 ) = 'foo'"
+			).list();
+			s.createQuery(
+					"from Bar foo where foo.foo.integer is not null or repeat( (foo.foo.string || 'foo') || 'bar', (5+5)/2 ) = 'foo'"
+			).list();
 		}
-		if (getDialect() instanceof SybaseDialect) {  
-			s.iterate("select baz from Baz as baz join baz.fooArray foo group by baz order by sum(foo.float)");
+		if (getDialect() instanceof SybaseDialect) {
+			s.createQuery( "select baz from Baz as baz join baz.fooArray foo group by baz order by sum(foo.float)" )
+					.iterate();
 		}
 
-		s.find("from Foo as foo where foo.component.glarch.name is not null");
-		s.find("from Foo as foo left outer join foo.component.glarch as glarch where glarch.name = 'foo'");
+		s.createQuery( "from Foo as foo where foo.component.glarch.name is not null" ).list();
+		s.createQuery( "from Foo as foo left outer join foo.component.glarch as glarch where glarch.name = 'foo'" )
+				.list();
 
-		list = s.find("from Foo");
+		list = s.createQuery( "from Foo" ).list();
 		assertTrue( list.size()==2 && list.get(0) instanceof FooProxy );
-		list = s.find("from Foo foo left outer join foo.foo");
+		list = s.createQuery( "from Foo foo left outer join foo.foo" ).list();
 		assertTrue( list.size()==2 && ( (Object[]) list.get(0) )[0] instanceof FooProxy );
 
 		s.createQuery("from Bar, Bar").list();
 		s.createQuery("from Foo, Bar").list();
-		s.find("from Baz baz left join baz.fooToGlarch, Bar bar join bar.foo");
-		s.find("from Baz baz left join baz.fooToGlarch join baz.fooSet");
-		s.find("from Baz baz left join baz.fooToGlarch join fetch baz.fooSet foo left join fetch foo.foo");
+		s.createQuery( "from Baz baz left join baz.fooToGlarch, Bar bar join bar.foo" ).list();
+		s.createQuery( "from Baz baz left join baz.fooToGlarch join baz.fooSet" ).list();
+		s.createQuery( "from Baz baz left join baz.fooToGlarch join fetch baz.fooSet foo left join fetch foo.foo" )
+				.list();
 
-		list = s.find("from Foo foo where foo.string='osama bin laden' and foo.boolean = true order by foo.string asc, foo.component.count desc");
+		list = s.createQuery(
+				"from Foo foo where foo.string='osama bin laden' and foo.boolean = true order by foo.string asc, foo.component.count desc"
+		).list();
 		assertTrue( "empty query", list.size()==0 );
-		Iterator iter = s.iterate("from Foo foo where foo.string='osama bin laden' order by foo.string asc, foo.component.count desc");
+		Iterator iter = s.createQuery(
+				"from Foo foo where foo.string='osama bin laden' order by foo.string asc, foo.component.count desc"
+		).iterate();
 		assertTrue( "empty iterator", !iter.hasNext() );
 
-		list = s.find("select foo.foo from Foo foo");
+		list = s.createQuery( "select foo.foo from Foo foo" ).list();
 		assertTrue( "query", list.size()==1 );
 		assertTrue( "returned object", list.get(0)==foo.getFoo() );
 		foo.getFoo().setFoo(foo);
@@ -446,63 +462,85 @@ public class FooBarTest extends LegacyTestCase {
 		)  {
 			// && !db.equals("weblogic") {
 			if ( !( getDialect() instanceof InterbaseDialect ) ) {
-				list = s.find("from Foo foo where ? = some elements(foo.component.importantDates)", new Date(), Hibernate.DATE);
+				list = s.createQuery( "from Foo foo where ? = some elements(foo.component.importantDates)" )
+						.setParameter( 0, new Date(), Hibernate.DATE )
+						.list();
 				assertTrue( "component query", list.size()==2 );
 			}
 			if( !( getDialect() instanceof TimesTenDialect)) {
-				list = s.find("from Foo foo where size(foo.component.importantDates) = 3"); //WAS: 4
+				list = s.createQuery( "from Foo foo where size(foo.component.importantDates) = 3" ).list(); //WAS: 4
 				assertTrue( "component query", list.size()==2 );
-				list = s.find("from Foo foo where 0 = size(foo.component.importantDates)");
+				list = s.createQuery( "from Foo foo where 0 = size(foo.component.importantDates)" ).list();
 				assertTrue( "component query", list.size()==0 );
 			}
-			list = s.find("from Foo foo where exists elements(foo.component.importantDates)");
+			list = s.createQuery( "from Foo foo where exists elements(foo.component.importantDates)" ).list();
 			assertTrue( "component query", list.size()==2 );
-			s.find("from Foo foo where not exists (from Bar bar where bar.id = foo.id)");
+			s.createQuery( "from Foo foo where not exists (from Bar bar where bar.id = foo.id)" ).list();
 
-			s.find("select foo.foo from Foo foo where foo = some(select x from Foo x where x.long > foo.foo.long)");
-			s.find("select foo.foo from Foo foo where foo = some(from Foo x where (x.long > foo.foo.long))");
+			s.createQuery(
+					"select foo.foo from Foo foo where foo = some(select x from Foo x where x.long > foo.foo.long)"
+			).list();
+			s.createQuery( "select foo.foo from Foo foo where foo = some(from Foo x where (x.long > foo.foo.long))" )
+					.list();
 			if ( !( getDialect() instanceof TimesTenDialect)) {
-				s.find("select foo.foo from Foo foo where foo.long = some( select max(x.long) from Foo x where (x.long > foo.foo.long) group by x.foo )");
+				s.createQuery(
+						"select foo.foo from Foo foo where foo.long = some( select max(x.long) from Foo x where (x.long > foo.foo.long) group by x.foo )"
+				).list();
 			}
-			s.find("from Foo foo where foo = some(select x from Foo x where x.long > foo.foo.long) and foo.foo.string='baz'");
-			s.find("from Foo foo where foo.foo.string='baz' and foo = some(select x from Foo x where x.long > foo.foo.long)");
-			s.find("from Foo foo where foo = some(select x from Foo x where x.long > foo.foo.long)");
+			s.createQuery(
+					"from Foo foo where foo = some(select x from Foo x where x.long > foo.foo.long) and foo.foo.string='baz'"
+			).list();
+			s.createQuery(
+					"from Foo foo where foo.foo.string='baz' and foo = some(select x from Foo x where x.long > foo.foo.long)"
+			).list();
+			s.createQuery( "from Foo foo where foo = some(select x from Foo x where x.long > foo.foo.long)" ).list();
 
-			s.iterate("select foo.string, foo.date, foo.foo.string, foo.id from Foo foo, Baz baz where foo in elements(baz.fooArray) and foo.string like 'foo'");
+			s.createQuery(
+					"select foo.string, foo.date, foo.foo.string, foo.id from Foo foo, Baz baz where foo in elements(baz.fooArray) and foo.string like 'foo'"
+			).iterate();
 		}
-		list = s.find("from Foo foo where foo.component.count is null order by foo.component.count");
+		list = s.createQuery( "from Foo foo where foo.component.count is null order by foo.component.count" ).list();
 		assertTrue( "component query", list.size()==0 );
-		list = s.find("from Foo foo where foo.component.name='foo'");
+		list = s.createQuery( "from Foo foo where foo.component.name='foo'" ).list();
 		assertTrue( "component query", list.size()==2 );
-		list = s.find("select distinct foo.component.name, foo.component.name from Foo foo where foo.component.name='foo'");
+		list = s.createQuery(
+				"select distinct foo.component.name, foo.component.name from Foo foo where foo.component.name='foo'"
+		).list();
 		assertTrue( "component query", list.size()==1 );
-		list = s.find("select distinct foo.component.name, foo.id from Foo foo where foo.component.name='foo'");
+		list = s.createQuery( "select distinct foo.component.name, foo.id from Foo foo where foo.component.name='foo'" )
+				.list();
 		assertTrue( "component query", list.size()==2 );
-		list = s.find("select foo.foo from Foo foo");
+		list = s.createQuery( "select foo.foo from Foo foo" ).list();
 		assertTrue( "query", list.size()==2 );
-		list = s.find("from Foo foo where foo.id=?", foo.getKey(), Hibernate.STRING);
+		list = s.createQuery( "from Foo foo where foo.id=?" )
+				.setParameter( 0, foo.getKey(), Hibernate.STRING )
+				.list();
 		assertTrue( "id query", list.size()==1 );
-		list = s.find("from Foo foo where foo.key=?", foo.getKey(), Hibernate.STRING);
+		list = s.createQuery( "from Foo foo where foo.key=?" )
+				.setParameter( 0, foo.getKey(), Hibernate.STRING )
+				.list();
 		assertTrue( "named id query", list.size()==1 );
 		assertTrue( "id query", list.get(0)==foo );
-		list = s.find("select foo.foo from Foo foo where foo.string='fizard'");
+		list = s.createQuery( "select foo.foo from Foo foo where foo.string='fizard'" ).list();
 		assertTrue( "query", list.size()==1 );
 		assertTrue( "returned object", list.get(0)==foo.getFoo() );
-		list = s.find("from Foo foo where foo.component.subcomponent.name='bar'");
+		list = s.createQuery( "from Foo foo where foo.component.subcomponent.name='bar'" ).list();
 		assertTrue( "components of components", list.size()==2 );
-		list = s.find("select foo.foo from Foo foo where foo.foo.id=?", foo.getFoo().getKey(), Hibernate.STRING);
+		list = s.createQuery( "select foo.foo from Foo foo where foo.foo.id=?" )
+				.setParameter( 0, foo.getFoo().getKey(), Hibernate.STRING )
+				.list();
 		assertTrue( "by id query", list.size()==1 );
 		assertTrue( "by id returned object", list.get(0)==foo.getFoo() );
 
-		s.find( "from Foo foo where foo.foo = ?", foo.getFoo(), Hibernate.entity(Foo.class) );
+		s.createQuery( "from Foo foo where foo.foo = ?" ).setParameter( 0, foo.getFoo(), Hibernate.entity(Foo.class) ).list();
 
-		assertTrue( !s.iterate("from Bar bar where bar.string='a string' or bar.string='a string'").hasNext() );
+		assertTrue( !s.createQuery( "from Bar bar where bar.string='a string' or bar.string='a string'" )
+				.iterate()
+				.hasNext() );
 
-		iter = s.iterate(
-			"select foo.component.name, elements(foo.component.importantDates) from Foo foo where foo.foo.id=?",
-			foo.getFoo().getKey(),
-			Hibernate.STRING
-		);
+		iter = s.createQuery( "select foo.component.name, elements(foo.component.importantDates) from Foo foo where foo.foo.id=?" )
+				.setParameter( 0, foo.getFoo().getKey(), Hibernate.STRING )
+				.iterate();
 		int i=0;
 		while ( iter.hasNext() ) {
 			i++;
@@ -510,29 +548,28 @@ public class FooBarTest extends LegacyTestCase {
 			assertTrue( row[0] instanceof String && ( row[1]==null || row[1] instanceof Date ) );
 		}
 		assertTrue(i==3); //WAS: 4
-		iter = s.iterate(
-			"select max( elements(foo.component.importantDates) ) from Foo foo group by foo.id"
-		);
+		iter = s.createQuery( "select max( elements(foo.component.importantDates) ) from Foo foo group by foo.id" )
+				.iterate();
 		assertTrue( iter.next() instanceof Date );
 
-		list = s.find(
-			"select foo.foo.foo.foo from Foo foo, Foo foo2 where"
-			+ " foo = foo2.foo and not not ( not foo.string='fizard' )"
-			+ " and foo2.string between 'a' and (foo.foo.string)"
-			+ ( ( getDialect() instanceof HSQLDialect || getDialect() instanceof InterbaseDialect || getDialect() instanceof TimesTenDialect)?
-				" and ( foo2.string in ( 'fiz', 'blah') or 1=1 )"
-				:
-				" and ( foo2.string in ( 'fiz', 'blah', foo.foo.string, foo.string, foo2.string ) )"
-			)
-		);
+		list = s.createQuery(
+				"select foo.foo.foo.foo from Foo foo, Foo foo2 where"
+						+ " foo = foo2.foo and not not ( not foo.string='fizard' )"
+						+ " and foo2.string between 'a' and (foo.foo.string)"
+						+ ( ( getDialect() instanceof HSQLDialect || getDialect() instanceof InterbaseDialect || getDialect() instanceof TimesTenDialect ) ?
+						" and ( foo2.string in ( 'fiz', 'blah') or 1=1 )"
+						:
+						" and ( foo2.string in ( 'fiz', 'blah', foo.foo.string, foo.string, foo2.string ) )"
+				)
+		).list();
 		assertTrue( "complex query", list.size()==1 );
 		assertTrue( "returned object", list.get(0)==foo );
 		foo.setString("from BoogieDown  -tinsel town  =!@#$^&*())");
-		list = s.find("from Foo foo where foo.string='from BoogieDown  -tinsel town  =!@#$^&*())'");
+		list = s.createQuery( "from Foo foo where foo.string='from BoogieDown  -tinsel town  =!@#$^&*())'" ).list();
 		assertTrue( "single quotes", list.size()==1 );
-		list = s.find("from Foo foo where not foo.string='foo''bar'");
+		list = s.createQuery( "from Foo foo where not foo.string='foo''bar'" ).list();
 		assertTrue( "single quotes", list.size()==2 );
-		list = s.find("from Foo foo where foo.component.glarch.next is null");
+		list = s.createQuery( "from Foo foo where foo.component.glarch.next is null" ).list();
 		assertTrue( "query association in component", list.size()==2 );
 		Bar bar = new Bar();
 		Baz baz = new Baz();
@@ -543,31 +580,37 @@ public class FooBarTest extends LegacyTestCase {
 		baz.getManyToAny().add(foo);
 		s.save(bar);
 		s.save(baz);
-		list = s.find(" from Bar bar where bar.baz.count=667 and bar.baz.count!=123 and not bar.baz.name='1-E-1'");
+		list = s.createQuery(
+				" from Bar bar where bar.baz.count=667 and bar.baz.count!=123 and not bar.baz.name='1-E-1'"
+		).list();
 		assertTrue( "query many-to-one", list.size()==1 );
-		list = s.find(" from Bar i where i.baz.name='Bazza'");
+		list = s.createQuery( " from Bar i where i.baz.name='Bazza'" ).list();
 		assertTrue( "query many-to-one", list.size()==1 );
 
-		Iterator rs = s.iterate("select count(distinct foo.foo) from Foo foo");
+		Iterator rs = s.createQuery( "select count(distinct foo.foo) from Foo foo" ).iterate();
 		assertTrue( "count", ( (Long) rs.next() ).longValue()==2 );
 		assertTrue( !rs.hasNext() );
-		rs = s.iterate("select count(foo.foo.boolean) from Foo foo");
+		rs = s.createQuery( "select count(foo.foo.boolean) from Foo foo" ).iterate();
 		assertTrue( "count", ( (Long) rs.next() ).longValue()==2 );
 		assertTrue( !rs.hasNext() );
-		rs = s.iterate("select count(*), foo.int from Foo foo group by foo.int");
+		rs = s.createQuery( "select count(*), foo.int from Foo foo group by foo.int" ).iterate();
 		assertTrue( "count(*) group by", ( (Object[]) rs.next() )[0].equals( new Long(3) ) );
 		assertTrue( !rs.hasNext() );
-		rs = s.iterate("select sum(foo.foo.int) from Foo foo");
+		rs = s.createQuery( "select sum(foo.foo.int) from Foo foo" ).iterate();
 		assertTrue( "sum", ( (Long) rs.next() ).longValue()==4 );
 		assertTrue( !rs.hasNext() );
-		rs = s.iterate("select count(foo) from Foo foo where foo.id=?", foo.getKey(), Hibernate.STRING);
+		rs = s.createQuery( "select count(foo) from Foo foo where foo.id=?" )
+				.setParameter( 0, foo.getKey(), Hibernate.STRING )
+				.iterate();
 		assertTrue( "id query count", ( (Long) rs.next() ).longValue()==1 );
 		assertTrue( !rs.hasNext() );
 
-		list = s.find( "from Foo foo where foo.boolean = ?", new Boolean(true), Hibernate.BOOLEAN );
+		s.createQuery( "from Foo foo where foo.boolean = ?" )
+				.setParameter( 0, new Boolean(true), Hibernate.BOOLEAN )
+				.list();
 
-		list = s.find("select new Foo(fo.x) from Fo fo");
-		list = s.find("select new Foo(fo.integer) from Foo fo");
+		s.createQuery( "select new Foo(fo.x) from Fo fo" ).list();
+		s.createQuery( "select new Foo(fo.integer) from Foo fo" ).list();
 
 		list = s.createQuery("select new Foo(fo.x) from Foo fo")
 			//.setComment("projection test")
@@ -580,7 +623,7 @@ public class FooBarTest extends LegacyTestCase {
 			.list();
 		assertTrue(list.size()==3);
 
-		rs = s.iterate("select new Foo(fo.x) from Foo fo");
+		rs = s.createQuery( "select new Foo(fo.x) from Foo fo" ).iterate();
 		assertTrue( "projection iterate (results)", rs.hasNext() );
 		assertTrue( "projection iterate (return check)", Foo.class.isAssignableFrom( rs.next().getClass() ) );
 
@@ -588,7 +631,7 @@ public class FooBarTest extends LegacyTestCase {
 		assertTrue( "projection scroll (results)", sr.next() );
 		assertTrue( "projection scroll (return check)", Foo.class.isAssignableFrom( sr.get(0).getClass() ) );
 
-		list = s.find("select foo.long, foo.component.name, foo, foo.foo from Foo foo");
+		list = s.createQuery( "select foo.long, foo.component.name, foo, foo.foo from Foo foo" ).list();
 		rs = list.iterator();
 		int count=0;
 		while ( rs.hasNext() ) {
@@ -600,7 +643,8 @@ public class FooBarTest extends LegacyTestCase {
 			assertTrue( row[3] instanceof Foo );
 		}
 		assertTrue(count!=0);
-		list = s.find("select avg(foo.float), max(foo.component.name), count(distinct foo.id) from Foo foo");
+		list = s.createQuery( "select avg(foo.float), max(foo.component.name), count(distinct foo.id) from Foo foo" )
+				.list();
 		rs = list.iterator();
 		count=0;
 		while ( rs.hasNext() ) {
@@ -611,7 +655,7 @@ public class FooBarTest extends LegacyTestCase {
 			assertTrue( row[2] instanceof Long );
 		}
 		assertTrue(count!=0);
-		list = s.find("select foo.long, foo.component, foo, foo.foo from Foo foo");
+		list = s.createQuery( "select foo.long, foo.component, foo, foo.foo from Foo foo" ).list();
 		rs = list.iterator();
 		count=0;
 		while ( rs.hasNext() ) {
@@ -627,16 +671,16 @@ public class FooBarTest extends LegacyTestCase {
 		s.save( new Holder("ice T") );
 		s.save( new Holder("ice cube") );
 
-		assertTrue( s.find("from java.lang.Object as o").size()==15 );
-		assertTrue( s.find("from Named").size()==7 );
-		assertTrue( s.find("from Named n where n.name is not null").size()==4 );
-		iter = s.iterate("from Named n");
+		assertTrue( s.createQuery( "from java.lang.Object as o" ).list().size()==15 );
+		assertTrue( s.createQuery( "from Named" ).list().size()==7 );
+		assertTrue( s.createQuery( "from Named n where n.name is not null" ).list().size()==4 );
+		iter = s.createQuery( "from Named n" ).iterate();
 		while ( iter.hasNext() ) {
 			assertTrue( iter.next() instanceof Named );
 		}
 
 		s.save( new Holder("bar") );
-		iter = s.iterate("from Named n0, Named n1 where n0.name = n1.name");
+		iter = s.createQuery( "from Named n0, Named n1 where n0.name = n1.name" ).iterate();
 		int cnt = 0;
 		while ( iter.hasNext() ) {
 			Object[] row = (Object[]) iter.next();
@@ -644,14 +688,14 @@ public class FooBarTest extends LegacyTestCase {
 		}
 		if ( !(getDialect() instanceof HSQLDialect) ) {
 			assertTrue(cnt==2);
-			assertTrue( s.find("from Named n0, Named n1 where n0.name = n1.name").size()==7 );
+			assertTrue( s.createQuery( "from Named n0, Named n1 where n0.name = n1.name" ).list().size()==7 );
 		}
 
 		Query qu = s.createQuery("from Named n where n.name = :name");
 		qu.getReturnTypes();
 		qu.getNamedParameters();
 
-		iter = s.iterate("from java.lang.Object");
+		iter = s.createQuery( "from java.lang.Object" ).iterate();
 		int c = 0;
 		while ( iter.hasNext() ) {
 			iter.next();
@@ -659,46 +703,65 @@ public class FooBarTest extends LegacyTestCase {
 		}
 		assertTrue(c==16);
 
-		s.iterate("select baz.code, min(baz.count) from Baz baz group by baz.code");
+		s.createQuery( "select baz.code, min(baz.count) from Baz baz group by baz.code" ).iterate();
 
-		iter = s.iterate("selecT baz from Baz baz where baz.stringDateMap['foo'] is not null or baz.stringDateMap['bar'] = ?", new Date(), Hibernate.DATE);
+		iter = s.createQuery( "selecT baz from Baz baz where baz.stringDateMap['foo'] is not null or baz.stringDateMap['bar'] = ?" )
+				.setParameter( 0, new Date(), Hibernate.DATE )
+				.iterate();
 		assertFalse( iter.hasNext() );
-		list = s.find("select baz from Baz baz where baz.stringDateMap['now'] is not null");
+		list = s.createQuery( "select baz from Baz baz where baz.stringDateMap['now'] is not null" ).list();
 		assertTrue( list.size()==1 );
-		list = s.find("select baz from Baz baz where baz.stringDateMap['now'] is not null and baz.stringDateMap['big bang'] < baz.stringDateMap['now']");
+		list = s.createQuery(
+				"select baz from Baz baz where baz.stringDateMap['now'] is not null and baz.stringDateMap['big bang'] < baz.stringDateMap['now']"
+		).list();
 		assertTrue( list.size()==1 );
-		list = s.find("select index(date) from Baz baz join baz.stringDateMap date");
+		list = s.createQuery( "select index(date) from Baz baz join baz.stringDateMap date" ).list();
 		System.out.println(list);
 		assertTrue( list.size()==2 );
 
-		s.find("from Foo foo where foo.integer not between 1 and 5 and foo.string not in ('cde', 'abc') and foo.string is not null and foo.integer<=3");
+		s.createQuery(
+				"from Foo foo where foo.integer not between 1 and 5 and foo.string not in ('cde', 'abc') and foo.string is not null and foo.integer<=3"
+		).list();
 
-		s.find("from Baz baz inner join baz.collectionComponent.nested.foos foo where foo.string is null");
+		s.createQuery( "from Baz baz inner join baz.collectionComponent.nested.foos foo where foo.string is null" )
+				.list();
 		if ( !(getDialect() instanceof MySQLDialect) && !(getDialect() instanceof MckoiDialect) && !(getDialect() instanceof SAPDBDialect) && !(getDialect() instanceof PointbaseDialect) )  {
-			s.find("from Baz baz inner join baz.fooSet where '1' in (from baz.fooSet foo where foo.string is not null)");
-			s.find("from Baz baz where 'a' in elements(baz.collectionComponent.nested.foos) and 1.0 in elements(baz.collectionComponent.nested.floats)");
-			s.find("from Baz baz where 'b' in elements(baz.collectionComponent.nested.foos) and 1.0 in elements(baz.collectionComponent.nested.floats)");
+			s.createQuery(
+					"from Baz baz inner join baz.fooSet where '1' in (from baz.fooSet foo where foo.string is not null)"
+			).list();
+			s.createQuery(
+					"from Baz baz where 'a' in elements(baz.collectionComponent.nested.foos) and 1.0 in elements(baz.collectionComponent.nested.floats)"
+			).list();
+			s.createQuery(
+					"from Baz baz where 'b' in elements(baz.collectionComponent.nested.foos) and 1.0 in elements(baz.collectionComponent.nested.floats)"
+			).list();
 		}
 
-		s.find("from Foo foo join foo.foo where foo.foo in ('1','2','3')");
-		if ( !(getDialect() instanceof HSQLDialect) ) s.find("from Foo foo left join foo.foo where foo.foo in ('1','2','3')");
-		s.find("select foo.foo from Foo foo where foo.foo in ('1','2','3')");
-		s.find("select foo.foo.string from Foo foo where foo.foo in ('1','2','3')");
-		s.find("select foo.foo.string from Foo foo where foo.foo.string in ('1','2','3')");
-		s.find("select foo.foo.long from Foo foo where foo.foo.string in ('1','2','3')");
-		s.find("select count(*) from Foo foo where foo.foo.string in ('1','2','3') or foo.foo.long in (1,2,3)");
-		s.find("select count(*) from Foo foo where foo.foo.string in ('1','2','3') group by foo.foo.long");
+		s.createQuery( "from Foo foo join foo.foo where foo.foo in ('1','2','3')" ).list();
+		if ( !(getDialect() instanceof HSQLDialect) )
+			s.createQuery( "from Foo foo left join foo.foo where foo.foo in ('1','2','3')" ).list();
+		s.createQuery( "select foo.foo from Foo foo where foo.foo in ('1','2','3')" ).list();
+		s.createQuery( "select foo.foo.string from Foo foo where foo.foo in ('1','2','3')" ).list();
+		s.createQuery( "select foo.foo.string from Foo foo where foo.foo.string in ('1','2','3')" ).list();
+		s.createQuery( "select foo.foo.long from Foo foo where foo.foo.string in ('1','2','3')" ).list();
+		s.createQuery( "select count(*) from Foo foo where foo.foo.string in ('1','2','3') or foo.foo.long in (1,2,3)" )
+				.list();
+		s.createQuery( "select count(*) from Foo foo where foo.foo.string in ('1','2','3') group by foo.foo.long" )
+				.list();
 
-		s.find("from Foo foo1 left join foo1.foo foo2 left join foo2.foo where foo1.string is not null");
-		s.find("from Foo foo1 left join foo1.foo.foo where foo1.string is not null");
-		s.find("from Foo foo1 left join foo1.foo foo2 left join foo1.foo.foo foo3 where foo1.string is not null");
+		s.createQuery( "from Foo foo1 left join foo1.foo foo2 left join foo2.foo where foo1.string is not null" )
+				.list();
+		s.createQuery( "from Foo foo1 left join foo1.foo.foo where foo1.string is not null" ).list();
+		s.createQuery( "from Foo foo1 left join foo1.foo foo2 left join foo1.foo.foo foo3 where foo1.string is not null" )
+				.list();
 
-		s.find("select foo.formula from Foo foo where foo.formula > 0");
+		s.createQuery( "select foo.formula from Foo foo where foo.formula > 0" ).list();
 
-		int len = s.find("from Foo as foo join foo.foo as foo2 where foo2.id >'a' or foo2.id <'a'").size();
+		int len = s.createQuery( "from Foo as foo join foo.foo as foo2 where foo2.id >'a' or foo2.id <'a'" ).list().size();
 		assertTrue(len==2);
 
 		s.delete("from Holder");
+
 		txn.commit();
 		s.close();
 
@@ -708,22 +771,31 @@ public class FooBarTest extends LegacyTestCase {
 		assertTrue( Hibernate.isInitialized( baz.getManyToAny() ) );
 		assertTrue( baz.getManyToAny().size()==2 );
 		BarProxy barp = (BarProxy) baz.getManyToAny().get(0);
-		s.find("from Baz baz join baz.manyToAny");
-		assertTrue( s.find("select baz from Baz baz join baz.manyToAny a where index(a) = 0").size()==1 );
+		s.createQuery( "from Baz baz join baz.manyToAny" ).list();
+		assertTrue( s.createQuery( "select baz from Baz baz join baz.manyToAny a where index(a) = 0" ).list().size()==1 );
 
 		FooProxy foop = (FooProxy) s.get( Foo.class, foo.getKey() );
 		assertTrue( foop == baz.getManyToAny().get(1) );
 
 		barp.setBaz(baz);
-		assertTrue( s.find("select bar from Bar bar where bar.baz.stringDateMap['now'] is not null").size()==1 );
-		assertTrue( s.find("select bar from Bar bar join bar.baz b where b.stringDateMap['big bang'] < b.stringDateMap['now'] and b.stringDateMap['now'] is not null").size()==1 );
-		assertTrue( s.find("select bar from Bar bar where bar.baz.stringDateMap['big bang'] < bar.baz.stringDateMap['now'] and bar.baz.stringDateMap['now'] is not null").size()==1 );
+		assertTrue(
+				s.createQuery( "select bar from Bar bar where bar.baz.stringDateMap['now'] is not null" ).list().size()==1 );
+		assertTrue(
+				s.createQuery(
+						"select bar from Bar bar join bar.baz b where b.stringDateMap['big bang'] < b.stringDateMap['now'] and b.stringDateMap['now'] is not null"
+				).list()
+						.size()==1 );
+		assertTrue(
+				s.createQuery(
+						"select bar from Bar bar where bar.baz.stringDateMap['big bang'] < bar.baz.stringDateMap['now'] and bar.baz.stringDateMap['now'] is not null"
+				).list()
+						.size()==1 );
 
-		list = s.find("select foo.string, foo.component, foo.id from Bar foo");
+		list = s.createQuery( "select foo.string, foo.component, foo.id from Bar foo" ).list();
 		assertTrue ( ( (FooComponent) ( (Object[]) list.get(0) )[1] ).getName().equals("foo") );
-		list = s.find("select elements(baz.components) from Baz baz");
+		list = s.createQuery( "select elements(baz.components) from Baz baz" ).list();
 		assertTrue( list.size()==2 );
-		list = s.find("select bc.name from Baz baz join baz.components bc");
+		list = s.createQuery( "select bc.name from Baz baz join baz.components bc" ).list();
 		assertTrue( list.size()==2 );
 		//list = s.find("select bc from Baz baz join baz.components bc");
 
@@ -739,59 +811,64 @@ public class FooBarTest extends LegacyTestCase {
 
 	public void testCascadeDeleteDetached() throws Exception {
 		Session s = openSession();
+		s.beginTransaction();
 		Baz baz = new Baz();
 		List list = new ArrayList();
 		list.add( new Fee() );
 		baz.setFees(list);
 		s.save(baz);
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 
 		s = openSession();
+		s.beginTransaction();
 		baz = (Baz) s.get( Baz.class, baz.getCode() );
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 
 		assertFalse( Hibernate.isInitialized( baz.getFees() ) );
 
 		s = openSession();
+		s.beginTransaction();
 		s.delete(baz);
 		s.flush();
-		assertFalse( s.iterate("from Fee").hasNext() );
-		s.connection().commit();
+		assertFalse( s.createQuery( "from Fee" ).iterate().hasNext() );
+		s.getTransaction().commit();
 		s.close();
 
 		s = openSession();
+		s.beginTransaction();
 		baz = new Baz();
 		list = new ArrayList();
 		list.add( new Fee() );
 		list.add( new Fee() );
 		baz.setFees(list);
 		s.save(baz);
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 
 		s = openSession();
+		s.beginTransaction();
 		baz = (Baz) s.get( Baz.class, baz.getCode() );
 		Hibernate.initialize( baz.getFees() );
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 
 		assertTrue( baz.getFees().size()==2 );
 
 		s = openSession();
+		s.beginTransaction();
 		s.delete(baz);
 		s.flush();
-		assertFalse( s.iterate("from Fee").hasNext() );
-		s.connection().commit();
+		assertFalse( s.createQuery( "from Fee" ).iterate().hasNext() );
+		s.getTransaction().commit();
 		s.close();
 
 	}
 
 	public void testForeignKeys() throws Exception {
 		Session s = openSession();
+		s.beginTransaction();
 		Baz baz = new Baz();
 		Foo foo = new Foo();
 		List bag = new ArrayList();
@@ -799,44 +876,44 @@ public class FooBarTest extends LegacyTestCase {
 		baz.setIdFooBag(bag);
 		baz.setFoo(foo);
 		s.save(baz);
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 
 		s = openSession();
+		s.beginTransaction();
 		baz = (Baz) s.load( Baz.class, baz.getCode() );
 		s.delete(baz);
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 	}
 
 	public void testNonlazyCollection() throws Exception {
 		Session s = openSession();
+		s.beginTransaction();
 		Baz baz = new Baz();
 		s.save(baz);
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 
 		s = openSession();
+		s.beginTransaction();
 		baz = (Baz) s.createCriteria(Baz.class)
 			//.setComment("criteria test")
-			.setFetchMode("stringDateMap", FetchMode.EAGER)
+			.setFetchMode( "stringDateMap", FetchMode.JOIN )
 			.uniqueResult();
 		assertTrue( Hibernate.isInitialized( baz.getFooToGlarch() ) );
 		assertTrue( Hibernate.isInitialized( baz.getFooComponentToFoo() ) );
 		assertTrue( !Hibernate.isInitialized( baz.getStringSet() ) );
 		assertTrue( Hibernate.isInitialized( baz.getStringDateMap() ) );
 		s.delete(baz);
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 
 	}
 
 	public void testReuseDeletedCollection() throws Exception {
 		Session s = openSession();
+		s.beginTransaction();
 		Baz baz = new Baz();
 		baz.setDefaults();
 		s.save(baz);
@@ -845,8 +922,7 @@ public class FooBarTest extends LegacyTestCase {
 		Baz baz2 = new Baz();
 		baz2.setStringArray( new String[] {"x-y-z"} );
 		s.save(baz2);
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 
 		baz2.setStringSet( baz.getStringSet() );
@@ -854,18 +930,18 @@ public class FooBarTest extends LegacyTestCase {
 		baz2.setFooArray( baz.getFooArray() );
 
 		s = openSession();
+		s.beginTransaction();
 		s.update(baz2);
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 
 		s = openSession();
+		s.beginTransaction();
 		baz2 = (Baz) s.load( Baz.class, baz2.getCode() );
 		assertTrue( baz2.getStringArray().length==3 );
 		assertTrue( baz2.getStringSet().size()==3 );
 		s.delete(baz2);
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 
 
@@ -873,6 +949,7 @@ public class FooBarTest extends LegacyTestCase {
 
 	public void testPropertyRef() throws Exception {
 		Session s = openSession();
+		s.beginTransaction();
 		Holder h = new Holder();
 		h.setName("foo");
 		Holder h2 = new Holder();
@@ -882,27 +959,29 @@ public class FooBarTest extends LegacyTestCase {
 		Qux q = new Qux();
 		q.setHolder(h2);
 		Serializable qid = s.save(q);
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 
 		s = openSession();
+		s.beginTransaction();
 		h = (Holder) s.load(Holder.class, hid);
 		assertEquals( h.getName(), "foo");
 		assertEquals( h.getOtherHolder().getName(), "bar");
-		Object[] res = (Object[]) s.find("from Holder h join h.otherHolder oh where h.otherHolder.name = 'bar'").get(0);
+		Object[] res = (Object[]) s.createQuery( "from Holder h join h.otherHolder oh where h.otherHolder.name = 'bar'" )
+				.list()
+				.get(0);
 		assertTrue( res[0]==h );
 		q = (Qux) s.get(Qux.class, qid);
 		assertTrue( q.getHolder() == h.getOtherHolder() );
 		s.delete(h);
 		s.delete(q);
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 	}
 
 	public void testQueryCollectionOfValues() throws Exception {
 		Session s = openSession();
+		s.beginTransaction();
 		Baz baz = new Baz();
 		baz.setDefaults();
 		s.save(baz);
@@ -910,48 +989,41 @@ public class FooBarTest extends LegacyTestCase {
 		Serializable gid = s.save(g);
 
 		if ( !(getDialect() instanceof MySQLDialect) && !(getDialect() instanceof HSQLDialect) /*&& !(dialect instanceof MckoiDialect)*/ && !(getDialect() instanceof SAPDBDialect) && !(getDialect() instanceof PointbaseDialect) && !(getDialect() instanceof TimesTenDialect) ) {
-			s.filter( baz.getFooArray(), "where size(this.bytes) > 0");
-			s.filter( baz.getFooArray(), "where 0 in elements(this.bytes)");
+			s.createFilter( baz.getFooArray(), "where size(this.bytes) > 0" ).list();
+			s.createFilter( baz.getFooArray(), "where 0 in elements(this.bytes)" ).list();
 		}
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 
 		s = openSession();
-		//s.find("from Baz baz where baz.fooSet.string = 'foo'");
-		//s.find("from Baz baz where baz.fooArray.string = 'foo'");
-		//s.find("from Baz baz where baz.fooSet.foo.string = 'foo'");
-		//s.find("from Baz baz join baz.fooSet.foo foo where foo.string = 'foo'");
-		s.find("from Baz baz join baz.fooSet foo join foo.foo.foo foo2 where foo2.string = 'foo'");
-		s.find("from Baz baz join baz.fooArray foo join foo.foo.foo foo2 where foo2.string = 'foo'");
-		s.find("from Baz baz join baz.stringDateMap date where index(date) = 'foo'");
-		s.find("from Baz baz join baz.topGlarchez g where index(g) = 'A'");
-		s.find("select index(g) from Baz baz join baz.topGlarchez g");
+		s.beginTransaction();
+		s.createQuery( "from Baz baz join baz.fooSet foo join foo.foo.foo foo2 where foo2.string = 'foo'" ).list();
+		s.createQuery( "from Baz baz join baz.fooArray foo join foo.foo.foo foo2 where foo2.string = 'foo'" ).list();
+		s.createQuery( "from Baz baz join baz.stringDateMap date where index(date) = 'foo'" ).list();
+		s.createQuery( "from Baz baz join baz.topGlarchez g where index(g) = 'A'" ).list();
+		s.createQuery( "select index(g) from Baz baz join baz.topGlarchez g" ).list();
 
-		assertTrue( s.find("from Baz baz left join baz.stringSet").size()==3 );
-		baz = (Baz) s.find("from Baz baz join baz.stringSet str where str='foo'").get(0);
+		assertTrue( s.createQuery( "from Baz baz left join baz.stringSet" ).list().size()==3 );
+		baz = (Baz) s.createQuery( "from Baz baz join baz.stringSet str where str='foo'" ).list().get(0);
 		assertTrue( !Hibernate.isInitialized( baz.getStringSet() ) );
-		baz = (Baz) s.find("from Baz baz left join fetch baz.stringSet").get(0);
+		baz = (Baz) s.createQuery( "from Baz baz left join fetch baz.stringSet" ).list().get(0);
 		assertTrue( Hibernate.isInitialized( baz.getStringSet() ) );
-		assertTrue( s.find("from Baz baz join baz.stringSet string where string='foo'").size()==1 );
-		assertTrue( s.find("from Baz baz inner join baz.components comp where comp.name='foo'").size()==1 );
+		assertTrue( s.createQuery( "from Baz baz join baz.stringSet string where string='foo'" ).list().size()==1 );
+		assertTrue( s.createQuery( "from Baz baz inner join baz.components comp where comp.name='foo'" ).list().size()==1 );
 		//List bss = s.find("select baz, ss from Baz baz inner join baz.stringSet ss");
-		s.find("from Glarch g inner join g.fooComponents comp where comp.fee is not null");
-		s.find("from Glarch g inner join g.fooComponents comp join comp.fee fee where fee.count > 0");
-		s.find("from Glarch g inner join g.fooComponents comp where comp.fee.count is not null");
+		s.createQuery( "from Glarch g inner join g.fooComponents comp where comp.fee is not null" ).list();
+		s.createQuery( "from Glarch g inner join g.fooComponents comp join comp.fee fee where fee.count > 0" ).list();
+		s.createQuery( "from Glarch g inner join g.fooComponents comp where comp.fee.count is not null" ).list();
 
 		s.delete(baz);
-		//s.delete("from Glarch g");
 		s.delete( s.get(Glarch.class, gid) );
-		s.flush();
-
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
-
 	}
 
 	public void testBatchLoad() throws Exception {
 		Session s = openSession();
+		s.beginTransaction();
 		Baz baz = new Baz();
 		SortedSet stringSet = new TreeSet();
 		stringSet.add("foo");
@@ -980,11 +1052,11 @@ public class FooBarTest extends LegacyTestCase {
 		stringSet.add("baz");
 		baz3.setStringSet(stringSet);
 		s.save(baz3);
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 
 		s = openSession();
+		s.beginTransaction();
 		baz = (Baz) s.load( Baz.class, baz.getCode() );
 		baz2 = (Baz) s.load( Baz.class, baz2.getCode() );
 		baz3 = (Baz) s.load( Baz.class, baz3.getCode() );
@@ -1001,14 +1073,14 @@ public class FooBarTest extends LegacyTestCase {
 		s.delete(baz3);
 		Iterator iter = new JoinedIterator( new Iterator[] { baz.getFooSet().iterator(), baz2.getFooSet().iterator() } );
 		while ( iter.hasNext() ) s.delete( iter.next() );
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 
 	}
 
 	public void testFetchInitializedCollection() throws Exception {
 		Session s = openSession();
+		s.beginTransaction();
 		Baz baz = new Baz();
 		Collection fooBag = new ArrayList();
 		fooBag.add( new Foo() );
@@ -1017,26 +1089,27 @@ public class FooBarTest extends LegacyTestCase {
 		s.save(baz);
 		s.flush();
 		fooBag = baz.getFooBag();
-		s.find("from Baz baz left join fetch baz.fooBag");
+		s.createQuery( "from Baz baz left join fetch baz.fooBag" ).list();
 		assertTrue( fooBag==baz.getFooBag() );
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 
 		s = openSession();
+		s.beginTransaction();
 		baz = (Baz) s.load( Baz.class, baz.getCode() );
 		Object bag = baz.getFooBag();
 		assertFalse( Hibernate.isInitialized(bag) );
-		s.find("from Baz baz left join fetch baz.fooBag");
+		s.createQuery( "from Baz baz left join fetch baz.fooBag" ).list();
 		assertTrue( bag==baz.getFooBag() );
 		assertTrue( baz.getFooBag().size()==2 );
 		s.delete(baz);
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 	}
 
 	public void testLateCollectionAdd() throws Exception {
 		Session s = openSession();
+		s.beginTransaction();
 		Baz baz = new Baz();
 		List l = new ArrayList();
 		baz.setStringList(l);
@@ -1045,70 +1118,69 @@ public class FooBarTest extends LegacyTestCase {
 		l.add("bar");
 		s.flush();
 		l.add("baz");
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 
 		s = openSession();
+		s.beginTransaction();
 		baz = (Baz) s.load(Baz.class, id);
 		assertTrue( baz.getStringList().size()==3 && baz.getStringList().contains("bar") );
 		s.delete(baz);
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 
 	}
 
 	public void testUpdate() throws Exception {
 		Session s = openSession();
+		s.beginTransaction();
 		Foo foo = new Foo();
 		s.save(foo);
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 
 		foo = (Foo) SerializationHelper.deserialize( SerializationHelper.serialize(foo) );
 
 		s = openSession();
+		s.beginTransaction();
 		FooProxy foo2 = (FooProxy) s.load( Foo.class, foo.getKey() );
 		foo2.setString("dirty");
 		foo2.setBoolean( new Boolean(false) );
 		foo2.setBytes( new byte[] { 1,2,3} );
 		foo2.setDate(null);
 		foo2.setShort( new Short("69") );
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 
 		s = openSession();
+		s.beginTransaction();
 		foo2.setString("dirty again");
 		s.update(foo2);
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 
 		s = openSession();
+		s.beginTransaction();
 		foo2.setString("dirty again 2");
 		s.update(foo2);
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 
 		s = openSession();
+		s.beginTransaction();
 		Foo foo3 = new Foo();
 		s.load( foo3, foo.getKey() );
 		// There is an interbase bug that causes null integers to return as 0, also numeric precision is <= 15
 		assertTrue( "update", foo2.equalsFoo(foo3) );
 		s.delete(foo3);
-		s.delete("from Glarch");
-		s.flush();
-		s.connection().commit();
+		doDelete( s, "from Glarch" );
+		s.getTransaction().commit();
 		s.close();
-
 	}
 
 	public void testListRemove() throws Exception {
 		Session s = openSession();
+		s.beginTransaction();
 		Baz b = new Baz();
 		List stringList = new ArrayList();
 		List feeList = new ArrayList();
@@ -1137,14 +1209,14 @@ public class FooBarTest extends LegacyTestCase {
 			"foo".equals( stringList.get(0) )
 		);
 		s.delete(b);
-		s.delete("from Fee");
-		s.flush();
-		s.connection().commit();
+		doDelete( s, "from Fee" );
+		s.getTransaction().commit();
 		s.close();
 	}
 
 	public void testFetchInitializedCollectionDupe() throws Exception {
 		Session s = openSession();
+		s.beginTransaction();
 		Baz baz = new Baz();
 		Collection fooBag = new ArrayList();
 		fooBag.add( new Foo() );
@@ -1153,29 +1225,30 @@ public class FooBarTest extends LegacyTestCase {
 		s.save(baz);
 		s.flush();
 		fooBag = baz.getFooBag();
-		s.find("from Baz baz left join fetch baz.fooBag");
+		s.createQuery( "from Baz baz left join fetch baz.fooBag" ).list();
 		assertTrue( Hibernate.isInitialized(fooBag) );
 		assertTrue( fooBag==baz.getFooBag() );
 		assertTrue( baz.getFooBag().size()==2 );
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 
 		s = openSession();
+		s.beginTransaction();
 		baz = (Baz) s.load( Baz.class, baz.getCode() );
 		Object bag = baz.getFooBag();
 		assertFalse( Hibernate.isInitialized(bag) );
-		s.find("from Baz baz left join fetch baz.fooBag");
+		s.createQuery( "from Baz baz left join fetch baz.fooBag" ).list();
 		assertTrue( Hibernate.isInitialized(bag) );
 		assertTrue( bag==baz.getFooBag() );
 		assertTrue( baz.getFooBag().size()==2 );
 		s.delete(baz);
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 	}
 
 	public void testSortables() throws Exception {
 		Session s = openSession();
+		s.beginTransaction();
 		Baz b = new Baz();
 		b.setName("name");
 		SortedSet ss = new TreeSet();
@@ -1184,13 +1257,13 @@ public class FooBarTest extends LegacyTestCase {
 		ss.add( new Sortable("baz") );
 		b.setSortablez(ss);
 		s.save(b);
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 
 		s = openSession();
+		s.beginTransaction();
 		Criteria cr = s.createCriteria(Baz.class);
-		cr.setFetchMode("topGlarchez", FetchMode.LAZY);
+		cr.setFetchMode( "topGlarchez", FetchMode.SELECT );
 		List result = cr
 			.addOrder( Order.asc("name") )
 			.list();
@@ -1198,33 +1271,35 @@ public class FooBarTest extends LegacyTestCase {
 		b = (Baz) result.get(0);
 		assertTrue( b.getSortablez().size()==3 );
 		assertEquals( ( (Sortable) b.getSortablez().iterator().next() ).getName(), "bar" );
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 
 		s = openSession();
+		s.beginTransaction();
 		result = s.createQuery("from Baz baz left join fetch baz.sortablez order by baz.name asc")
 			.list();
 		b = (Baz) result.get(0);
 		assertTrue( b.getSortablez().size()==3 );
 		assertEquals( ( (Sortable) b.getSortablez().iterator().next() ).getName(), "bar" );
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 
 		s = openSession();
+		s.beginTransaction();
 		result = s.createQuery("from Baz baz order by baz.name asc")
 			.list();
 		b = (Baz) result.get(0);
 		assertTrue( b.getSortablez().size()==3 );
 		assertEquals( ( (Sortable) b.getSortablez().iterator().next() ).getName(), "bar" );
 		s.delete(b);
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 
 	}
 
 	public void testFetchList() throws Exception {
 		Session s = openSession();
+		s.beginTransaction();
 		Baz baz = new Baz();
 		s.save(baz);
 		Foo foo = new Foo();
@@ -1238,18 +1313,18 @@ public class FooBarTest extends LegacyTestCase {
 			list.add(fee);
 		}
 		baz.setFees(list);
-		list = s.find("from Foo foo, Baz baz left join fetch baz.fees");
+		list = s.createQuery( "from Foo foo, Baz baz left join fetch baz.fees" ).list();
 		assertTrue( Hibernate.isInitialized( ( (Baz) ( (Object[]) list.get(0) )[1] ).getFees() ) );
 		s.delete(foo);
 		s.delete(foo2);
 		s.delete(baz);
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 	}
 
 	public void testBagOneToMany() throws Exception {
 		Session s = openSession();
+		s.beginTransaction();
 		Baz baz = new Baz();
 		List list = new ArrayList();
 		baz.setBazez(list);
@@ -1263,13 +1338,11 @@ public class FooBarTest extends LegacyTestCase {
 		s.delete( list.remove(1) );
 		s.flush();
 		s.delete(baz);
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 	}
 
 	public void testQueryLockMode() throws Exception {
-
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
 		Bar bar = new Bar();
@@ -1292,7 +1365,7 @@ public class FooBarTest extends LegacyTestCase {
 		s.reconnect();
 		tx = s.beginTransaction();
 		assertTrue( s.getCurrentLockMode(b)==LockMode.NONE );
-		s.find("from Foo foo");
+		s.createQuery( "from Foo foo" ).list();
 		assertTrue( s.getCurrentLockMode(b)==LockMode.NONE );
 		q = s.createQuery("from Foo foo");
 		q.setLockMode("foo", LockMode.READ);
@@ -1327,34 +1400,34 @@ public class FooBarTest extends LegacyTestCase {
 	}
 
 	public void testManyToManyBag() throws Exception {
-
 		Session s = openSession();
+		s.beginTransaction();
 		Baz baz = new Baz();
 		Serializable id = s.save(baz);
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 
 		s = openSession();
+		s.beginTransaction();
 		baz = (Baz) s.load(Baz.class, id);
 		baz.getFooBag().add( new Foo() );
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 
 		s = openSession();
+		s.beginTransaction();
 		baz = (Baz) s.load(Baz.class, id);
 		assertTrue( !Hibernate.isInitialized( baz.getFooBag() ) );
 		assertTrue( baz.getFooBag().size()==1 );
 		if ( !(getDialect() instanceof HSQLDialect) ) assertTrue( Hibernate.isInitialized( baz.getFooBag().iterator().next() ) );
 		s.delete(baz);
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 	}
 
 	public void testIdBag() throws Exception {
 		Session s = openSession();
+		s.beginTransaction();
 		Baz baz = new Baz();
 		s.save(baz);
 		List l = new ArrayList();
@@ -1373,11 +1446,11 @@ public class FooBarTest extends LegacyTestCase {
 		s.flush();
 		s.delete( l.remove(3) );
 		bytes[1]='o';
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 
 		s = openSession();
+		s.beginTransaction();
 		baz = (Baz) s.load(Baz.class, baz.getCode());
 		assertTrue( baz.getIdFooBag().size()==3 );
 		assertTrue( baz.getByteBag().size()==3 );
@@ -1388,11 +1461,11 @@ public class FooBarTest extends LegacyTestCase {
 		baz.getByteBag().add(bytes);
 		baz.getByteBag().add(bytes);
 		assertTrue( baz.getByteBag().size()==5 );
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 
 		s = openSession();
+		s.beginTransaction();
 		baz = (Baz) s.load(Baz.class, baz.getCode());
 		assertTrue( baz.getIdFooBag().size()==0 );
 		assertTrue( baz.getByteBag().size()==5 );
@@ -1400,17 +1473,16 @@ public class FooBarTest extends LegacyTestCase {
 		iter = baz.getByteBag().iterator();
 		iter.next();
 		iter.remove();
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 
 		s = openSession();
+		s.beginTransaction();
 		baz = (Baz) s.load(Baz.class, baz.getCode());
 		assertTrue( baz.getIdFooBag().size()==1 );
 		assertTrue( baz.getByteBag().size()==4 );
 		s.delete(baz);
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 	}
 
@@ -1419,10 +1491,12 @@ public class FooBarTest extends LegacyTestCase {
 	}
 
 	public void testForceOuterJoin() throws Exception {
-
-		if ( isOuterJoinFetchingDisabled() ) return;
+		if ( isOuterJoinFetchingDisabled() ) {
+			return;
+		}
 
 		Session s = openSession();
+		s.beginTransaction();
 		Glarch g = new Glarch();
 		FooComponent fc = new FooComponent();
 		fc.setGlarch(g);
@@ -1433,13 +1507,13 @@ public class FooBarTest extends LegacyTestCase {
 		s.save(f2);
 		Serializable id = s.save(f);
 		Serializable gid = s.getIdentifier( f.getComponent().getGlarch() );
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 
 		getSessions().evict(Foo.class);
 
 		s = openSession();
+		s.beginTransaction();
 		f = (FooProxy) s.load(Foo.class, id);
 		assertFalse( Hibernate.isInitialized(f) );
 		assertTrue( Hibernate.isInitialized( f.getComponent().getGlarch() ) ); //outer-join="true"
@@ -1447,18 +1521,19 @@ public class FooBarTest extends LegacyTestCase {
 		assertEquals( s.getIdentifier( f.getComponent().getGlarch() ), gid );
 		s.delete(f);
 		s.delete( f.getFoo() );
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 	}
 
 	public void testEmptyCollection() throws Exception {
 		Session s = openSession();
+		s.beginTransaction();
 		Serializable id = s.save( new Baz() );
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
+
 		s = openSession();
+		s.beginTransaction();
 		Baz baz = (Baz) s.load(Baz.class, id);
 		Set foos = baz.getFooSet();
 		assertTrue( foos.size()==0 );
@@ -1468,13 +1543,13 @@ public class FooBarTest extends LegacyTestCase {
 		s.flush();
 		s.delete(foo);
 		s.delete(baz);
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 	}
 
 	public void testOneToOneGenerator() throws Exception {
 		Session s = openSession();
+		s.beginTransaction();
 		X x = new X();
 		Y y = new Y();
 		x.setY(y);
@@ -1485,11 +1560,12 @@ public class FooBarTest extends LegacyTestCase {
 		assertEquals( id, s.save(x) );
 		s.flush();
 		assertTrue( s.contains(y) && s.contains(x) );
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 		assertEquals( new Long(x.getId()), y.getId() );
 
 		s = openSession();
+		s.beginTransaction();
 		x = new X();
 		y = new Y();
 		x.setY(y);
@@ -1498,11 +1574,12 @@ public class FooBarTest extends LegacyTestCase {
 		s.save(y);
 		s.flush();
 		assertTrue( s.contains(y) && s.contains(x) );
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 		assertEquals( new Long(x.getId()), y.getId() );
 
 		s = openSession();
+		s.beginTransaction();
 		x = new X();
 		y = new Y();
 		x.setY(y);
@@ -1514,9 +1591,8 @@ public class FooBarTest extends LegacyTestCase {
 		assertEquals( id, new Long( x.getId() ) );
 		s.flush();
 		assertTrue( s.contains(y) && s.contains(x) );
-		s.delete("from X x");
-		s.flush();
-		s.connection().commit();
+		doDelete( s, "from X x" );
+		s.getTransaction().commit();
 		s.close();
 
 	}
@@ -1556,7 +1632,7 @@ public class FooBarTest extends LegacyTestCase {
 			count++;
 		}
 		assertTrue(count==3);
-		assertTrue( s.delete("from Foo foo")==10 );
+		assertEquals( 10, doDelete( s, "from Foo foo" ) );
 		txn.commit();
 		s.close();
 	}
@@ -1567,39 +1643,43 @@ public class FooBarTest extends LegacyTestCase {
 		m.count = 12;
 		m.glarch = (Glarch) g;
 		g.setMultiple(m);
+
 		Session s = openSession();
+		s.beginTransaction();
 		Serializable gid = s.save(g);
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 
 		s = openSession();
-		g = (Glarch) s.find("from Glarch g where g.multiple.count=12").get(0);
-		s.connection().commit();
+		s.beginTransaction();
+		//g = (Glarch) s.createQuery( "from Glarch g where g.multiple.count=12" ).list().get(0);
+		s.createQuery( "from Glarch g where g.multiple.count=12" ).list().get(0);
+		s.getTransaction().commit();
 		s.close();
 		
 		s = openSession();
-		g = (Glarch) s.find("from Glarch g where g.multiple.glarch=g and g.multiple.count=12").get(0);
+		s.beginTransaction();
+		g = (Glarch) s.createQuery( "from Glarch g where g.multiple.glarch=g and g.multiple.count=12" ).list().get(0);
 		assertTrue( g.getMultiple()!=null );
 		assertEquals( g.getMultiple().count, 12 );
 		assertSame(g.getMultiple().glarch, g);
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 
 		s = openSession();
+		s.beginTransaction();
 		g = (GlarchProxy) s.load(Glarch.class, gid);
 		assertTrue( g.getMultiple()!=null );
 		assertEquals( g.getMultiple().count, 12 );
 		assertSame(g.getMultiple().glarch, g);
 		s.delete(g);
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 	}
 
 	public void testSaveAddDelete() throws Exception {
 		Session s = openSession();
+		s.beginTransaction();
 		Baz baz = new Baz();
 		Set bars = new HashSet();
 		baz.setCascadingBars(bars);
@@ -1608,7 +1688,7 @@ public class FooBarTest extends LegacyTestCase {
 		baz.getCascadingBars().add( new Bar() );
 		s.delete(baz);
 		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 	}
 
@@ -1628,7 +1708,9 @@ public class FooBarTest extends LegacyTestCase {
 		s.save(baz);
 		s.save(bar2);
 
-		List list = s.find("from Bar bar left join bar.baz baz left join baz.cascadingBars b where bar.name like 'Bar %'");
+		List list = s.createQuery(
+				"from Bar bar left join bar.baz baz left join baz.cascadingBars b where bar.name like 'Bar %'"
+		).list();
 		Object row = list.iterator().next();
 		assertTrue( row instanceof Object[] && ( (Object[]) row ).length==3 );
 
@@ -1753,42 +1835,45 @@ public class FooBarTest extends LegacyTestCase {
 	}
 	public void testDyna() throws Exception {
 		Session s = openSession();
+		s.beginTransaction();
 		GlarchProxy g = new Glarch();
 		g.setName("G");
 		Serializable id = s.save(g);
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 
 		s = openSession();
+		s.beginTransaction();
 		g = (GlarchProxy) s.load(Glarch.class, id);
 		assertTrue( g.getName().equals("G") );
 		assertTrue( g.getDynaBean().get("foo").equals("foo") && g.getDynaBean().get("bar").equals( new Integer(66) ) );
 		assertTrue( ! (g instanceof Glarch) );
 		g.getDynaBean().put("foo", "bar");
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 
 		s = openSession();
+		s.beginTransaction();
 		g = (GlarchProxy) s.load(Glarch.class, id);
 		assertTrue( g.getDynaBean().get("foo").equals("bar") && g.getDynaBean().get("bar").equals( new Integer(66) ) );
 		g.setDynaBean(null);
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 
 		s = openSession();
+		s.beginTransaction();
 		g = (GlarchProxy) s.load(Glarch.class, id);
 		assertTrue( g.getDynaBean()==null );
 		s.delete(g);
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 	}
 
 	public void testFindByCriteria() throws Exception {
-		if ( getDialect() instanceof DB2Dialect ) return;
+		if ( getDialect() instanceof DB2Dialect ) {
+			return;
+		}
+
 		Session s = openSession();
 		Transaction txn = s.beginTransaction();
 		Foo f = new Foo();
@@ -1867,12 +1952,12 @@ public class FooBarTest extends LegacyTestCase {
 			.list();
 		assertTrue( list.size()==0 );
 		list = s.createCriteria(Foo.class)
-			.setFetchMode("component.importantDates", FetchMode.EAGER)
+			.setFetchMode( "component.importantDates", FetchMode.JOIN )
 			.list();
 		assertTrue( list.size()==3 );
 
 		list = s.createCriteria(Foo.class)
-			.setFetchMode("component.importantDates", FetchMode.EAGER)
+			.setFetchMode( "component.importantDates", FetchMode.JOIN )
 			.setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY)
 			.list();
 		assertTrue( list.size()==1 );
@@ -1889,11 +1974,11 @@ public class FooBarTest extends LegacyTestCase {
 			.add( Restrictions.like( "string", f.getString() ) )
 			.add( Restrictions.in( "boolean", new Boolean[] { f.getBoolean(), f.getBoolean() } ) )
 			.add( Restrictions.isNotNull("foo") )
-			.setFetchMode("foo", FetchMode.EAGER)
-			.setFetchMode("baz", FetchMode.LAZY)
-			.setFetchMode("component.glarch", FetchMode.LAZY)
-			.setFetchMode("foo.baz", FetchMode.LAZY)
-			.setFetchMode("foo.component.glarch", FetchMode.LAZY)
+			.setFetchMode( "foo", FetchMode.JOIN )
+			.setFetchMode( "baz", FetchMode.SELECT )
+			.setFetchMode( "component.glarch", FetchMode.SELECT )
+			.setFetchMode( "foo.baz", FetchMode.SELECT )
+			.setFetchMode( "foo.component.glarch", FetchMode.SELECT )
 			.list();
 		f = (Foo) list.get(0);
 		assertTrue( Hibernate.isInitialized( f.getFoo() ) );
@@ -1914,14 +1999,14 @@ public class FooBarTest extends LegacyTestCase {
 
 	public void testAfterDelete() throws Exception {
 		Session s = openSession();
+		s.beginTransaction();
 		Foo foo = new Foo();
 		s.save(foo);
 		s.flush();
 		s.delete(foo);
 		s.save(foo);
 		s.delete(foo);
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 	}
 
@@ -1932,31 +2017,32 @@ public class FooBarTest extends LegacyTestCase {
 		Foo[] arr = new Foo[10];
 		arr[0] = foo1;
 		arr[9] = foo2;
+
 		Session s = openSession();
+		s.beginTransaction();
 		s.save(foo1);
 		s.save(foo2);
 		baz.setFooArray(arr);
 		s.save(baz);
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 
 		s = openSession();
+		s.beginTransaction();
 		baz = (Baz) s.load( Baz.class, baz.getCode() );
 		assertTrue( baz.getFooArray().length==1 );
-		assertTrue( s.find("from Baz baz join baz.fooArray foo").size()==1 );
-		assertTrue( s.find("from Foo foo").size()==2 );
-		assertTrue( s.filter( baz.getFooArray(), "" ).size()==1 );
+		assertTrue( s.createQuery( "from Baz baz join baz.fooArray foo" ).list().size()==1 );
+		assertTrue( s.createQuery( "from Foo foo" ).list().size()==2 );
+		assertTrue( s.createFilter( baz.getFooArray(), "" ).list().size()==1 );
 		//assertTrue( s.delete("from java.lang.Object o")==9 );
-		s.delete("from Foo foo");
+		doDelete( s, "from Foo foo" );
 		String bazid = baz.getCode();
 		s.delete(baz);
 		int rows=s.connection().createStatement().executeUpdate(
 			"delete from fooArray where id_='" + bazid + "' and i>=8"
 		);
 		assertTrue(rows==1);
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 	}
 
@@ -1985,24 +2071,24 @@ public class FooBarTest extends LegacyTestCase {
 
 	public void testCollectionCache() throws Exception {
 		Session s = openSession();
+		s.beginTransaction();
 		Baz baz = new Baz();
 		baz.setDefaults();
 		s.save(baz);
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 
 		s = openSession();
+		s.beginTransaction();
 		s.load( Baz.class, baz.getCode() );
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 
 		s = openSession();
+		s.beginTransaction();
 		baz = (Baz) s.load( Baz.class, baz.getCode() );
 		s.delete(baz);
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 	}
 
@@ -2028,19 +2114,24 @@ public class FooBarTest extends LegacyTestCase {
 
 		s = openSession();
 		t = s.beginTransaction();
-		assertTrue( s.find(
-			"from Stuff as s where s.foo.id = ? and s.id.id = ? and s.moreStuff.id.intId = ? and s.moreStuff.id.stringId = ?",
-			new Object[] { bar, new Long(1234), new Integer(12), "id" },
-			new Type[] { Hibernate.entity(Foo.class), Hibernate.LONG, Hibernate.INTEGER, Hibernate.STRING }
-		).size()==1 );
-		assertTrue( s.find(
-			"from Stuff as s where s.foo.id = ? and s.id.id = ? and s.moreStuff.name = ?",
-			new Object[] { bar, new Long(1234), "More Stuff" },
-			new Type[] { Hibernate.entity(Foo.class), Hibernate.LONG, Hibernate.STRING }
-		).size()==1 );
-		s.find("from Stuff as s where s.foo.string is not null");
+		List results = s.createQuery(
+				"from Stuff as s where s.foo.id = ? and s.id.id = ? and s.moreStuff.id.intId = ? and s.moreStuff.id.stringId = ?"
+		)
+				.setParameter( 0, bar, Hibernate.entity(Foo.class) )
+				.setParameter( 1, new Long(1234), Hibernate.LONG )
+				.setParameter( 2, new Integer(12), Hibernate.INTEGER )
+				.setParameter( 3, "id", Hibernate.STRING )
+				.list();
+		assertEquals( 1, results.size() );
+		results = s.createQuery( "from Stuff as s where s.foo.id = ? and s.id.id = ? and s.moreStuff.name = ?" )
+				.setParameter( 0, bar, Hibernate.entity(Foo.class) )
+				.setParameter( 1, new Long(1234), Hibernate.LONG )
+				.setParameter( 2, "More Stuff", Hibernate.STRING )
+				.list();
+		assertEquals( 1, results.size() );
+		s.createQuery( "from Stuff as s where s.foo.string is not null" ).list();
 		assertTrue(
-			s.find("from Stuff as s where s.foo > '0' order by s.foo").size()==1
+				s.createQuery( "from Stuff as s where s.foo > '0' order by s.foo" ).list().size()==1
 		);
 		//s.createCriteria(Stuff.class).createCriteria("id.foo").add( Expression.isNull("foo") ).list();
 		t.commit();
@@ -2062,8 +2153,8 @@ public class FooBarTest extends LegacyTestCase {
 		s.load(stuff, stuff);
 		assertTrue( stuff.getProperty().equals( TimeZone.getDefault() ) );
 		assertTrue( stuff.getMoreStuff().getName().equals("More Stuff") );
-		s.delete("from MoreStuff");
-		s.delete("from Foo foo");
+		doDelete( s, "from MoreStuff" );
+		doDelete( s, "from Foo foo" );
 		t.commit();
 		s.close();
 	}
@@ -2085,10 +2176,9 @@ public class FooBarTest extends LegacyTestCase {
 		baz = (Baz) s.load( Baz.class, baz.getCode() );
 		assertTrue( baz.getFees().size()==2 );
 		s.delete(baz);
-		assertTrue( !s.iterate("from Fee fee").hasNext() );
+		assertTrue( !s.createQuery( "from Fee fee" ).iterate().hasNext() );
 		t.commit();
 		s.close();
-
 	}
 
 	public void testCollectionsInSelect() throws Exception {
@@ -2108,7 +2198,7 @@ public class FooBarTest extends LegacyTestCase {
 		bar.setBaz(baz);
 		s.save(bar);
 
-		List list = s.find("select new Result(foo.string, foo.long, foo.integer) from Foo foo");
+		List list = s.createQuery( "select new Result(foo.string, foo.long, foo.integer) from Foo foo" ).list();
 		assertTrue( list.size()==2 && ( list.get(0) instanceof Result ) && ( list.get(1) instanceof Result ) );
 		/*list = s.find("select new Result( baz.name, foo.long, count(elements(baz.fooArray)) ) from Baz baz join baz.fooArray foo group by baz.name, foo.long");
 		assertTrue( list.size()==1 && ( list.get(0) instanceof Result ) );
@@ -2116,7 +2206,9 @@ public class FooBarTest extends LegacyTestCase {
 		assertEquals( r.getName(), baz.getName() );
 		assertEquals( r.getCount(), 1 );
 		assertEquals( r.getAmount(), foos[1].getLong().longValue() );*/
-		list = s.find("select new Result( baz.name, max(foo.long), count(foo) ) from Baz baz join baz.fooArray foo group by baz.name");
+		list = s.createQuery(
+				"select new Result( baz.name, max(foo.long), count(foo) ) from Baz baz join baz.fooArray foo group by baz.name"
+		).list();
 		assertTrue( list.size()==1 && ( list.get(0) instanceof Result ) );
 		Result r = ((Result) list.get(0) );
 		assertEquals( r.getName(), baz.getName() );
@@ -2127,84 +2219,121 @@ public class FooBarTest extends LegacyTestCase {
 		//s.find("select max( elements(bar.baz.fooArray) ) from Bar as bar");
 		//The following test is disabled for databases with no subselects...also for Interbase (not sure why).
 		if ( !(getDialect() instanceof MySQLDialect) && !(getDialect() instanceof HSQLDialect) /*&& !(dialect instanceof MckoiDialect)*/ && !(getDialect() instanceof SAPDBDialect) && !(getDialect() instanceof PointbaseDialect) )  {
-			s.find("select count(*) from Baz as baz where 1 in indices(baz.fooArray)");
-			s.find("select count(*) from Bar as bar where 'abc' in elements(bar.baz.fooArray)");
-			s.find("select count(*) from Bar as bar where 1 in indices(bar.baz.fooArray)");
+			s.createQuery( "select count(*) from Baz as baz where 1 in indices(baz.fooArray)" ).list();
+			s.createQuery( "select count(*) from Bar as bar where 'abc' in elements(bar.baz.fooArray)" ).list();
+			s.createQuery( "select count(*) from Bar as bar where 1 in indices(bar.baz.fooArray)" ).list();
 			if ( !(getDialect() instanceof DB2Dialect) &&  !(getDialect() instanceof Oracle8iDialect ) && !( getDialect() instanceof SybaseDialect ) && !( getDialect() instanceof Sybase11Dialect ) && !( getDialect() instanceof SybaseASE15Dialect )) {
 				// SybaseAnywhereDialect supports implicit conversions from strings to ints
-				s.find("select count(*) from Bar as bar, bar.component.glarch.proxyArray as g where g.id in indices(bar.baz.fooArray)");
-				s.find("select max( elements(bar.baz.fooArray) ) from Bar as bar, bar.component.glarch.proxyArray as g where g.id in indices(bar.baz.fooArray)");
+				s.createQuery(
+						"select count(*) from Bar as bar, bar.component.glarch.proxyArray as g where g.id in indices(bar.baz.fooArray)"
+				).list();
+				s.createQuery(
+						"select max( elements(bar.baz.fooArray) ) from Bar as bar, bar.component.glarch.proxyArray as g where g.id in indices(bar.baz.fooArray)"
+				).list();
 			}
-			s.find("select count(*) from Bar as bar where '1' in (from bar.component.glarch.proxyArray g where g.name='foo')");
-			s.find("select count(*) from Bar as bar where '1' in (from bar.component.glarch.proxyArray g where g.name='foo')");
-			s.find("select count(*) from Bar as bar left outer join bar.component.glarch.proxyArray as pg where '1' in (from bar.component.glarch.proxyArray)");
+			s.createQuery(
+					"select count(*) from Bar as bar where '1' in (from bar.component.glarch.proxyArray g where g.name='foo')"
+			).list();
+			s.createQuery(
+					"select count(*) from Bar as bar where '1' in (from bar.component.glarch.proxyArray g where g.name='foo')"
+			).list();
+			s.createQuery(
+					"select count(*) from Bar as bar left outer join bar.component.glarch.proxyArray as pg where '1' in (from bar.component.glarch.proxyArray)"
+			).list();
 		}
 
-		list = s.find("from Baz baz left join baz.fooToGlarch join fetch baz.fooArray foo left join fetch foo.foo");
+		list = s.createQuery(
+				"from Baz baz left join baz.fooToGlarch join fetch baz.fooArray foo left join fetch foo.foo"
+		).list();
 		assertTrue( list.size()==1 && ( (Object[]) list.get(0) ).length==2 );
 
-		s.find("select baz.name from Bar bar inner join bar.baz baz inner join baz.fooSet foo where baz.name = bar.string");
-		s.find("SELECT baz.name FROM Bar AS bar INNER JOIN bar.baz AS baz INNER JOIN baz.fooSet AS foo WHERE baz.name = bar.string");
+		s.createQuery(
+				"select baz.name from Bar bar inner join bar.baz baz inner join baz.fooSet foo where baz.name = bar.string"
+		).list();
+		s.createQuery(
+				"SELECT baz.name FROM Bar AS bar INNER JOIN bar.baz AS baz INNER JOIN baz.fooSet AS foo WHERE baz.name = bar.string"
+		).list();
 
-		if ( !( getDialect() instanceof HSQLDialect ) ) s.find("select baz.name from Bar bar join bar.baz baz left outer join baz.fooSet foo where baz.name = bar.string");
+		if ( !( getDialect() instanceof HSQLDialect ) ) s.createQuery(
+				"select baz.name from Bar bar join bar.baz baz left outer join baz.fooSet foo where baz.name = bar.string"
+		).list();
 
-		s.find("select baz.name from Bar bar join bar.baz baz join baz.fooSet foo where baz.name = bar.string");
-		s.find("SELECT baz.name FROM Bar AS bar JOIN bar.baz AS baz JOIN baz.fooSet AS foo WHERE baz.name = bar.string");
+		s.createQuery( "select baz.name from Bar bar join bar.baz baz join baz.fooSet foo where baz.name = bar.string" )
+				.list();
+		s.createQuery(
+				"SELECT baz.name FROM Bar AS bar JOIN bar.baz AS baz JOIN baz.fooSet AS foo WHERE baz.name = bar.string"
+		).list();
 
 		if ( !( getDialect() instanceof HSQLDialect ) ) {
-			s.find("select baz.name from Bar bar left join bar.baz baz left join baz.fooSet foo where baz.name = bar.string");
-			s.find("select foo.string from Bar bar left join bar.baz.fooSet foo where bar.string = foo.string");
+			s.createQuery(
+					"select baz.name from Bar bar left join bar.baz baz left join baz.fooSet foo where baz.name = bar.string"
+			).list();
+			s.createQuery( "select foo.string from Bar bar left join bar.baz.fooSet foo where bar.string = foo.string" )
+					.list();
 		}
 
-		s.find("select baz.name from Bar bar left join bar.baz baz left join baz.fooArray foo where baz.name = bar.string");
-		s.find("select foo.string from Bar bar left join bar.baz.fooArray foo where bar.string = foo.string");
+		s.createQuery(
+				"select baz.name from Bar bar left join bar.baz baz left join baz.fooArray foo where baz.name = bar.string"
+		).list();
+		s.createQuery( "select foo.string from Bar bar left join bar.baz.fooArray foo where bar.string = foo.string" )
+				.list();
 
-		s.find("select bar.string, foo.string from Bar bar inner join bar.baz as baz inner join baz.fooSet as foo where baz.name = 'name'");
-		s.find("select foo from Bar bar inner join bar.baz as baz inner join baz.fooSet as foo");
-		s.find("select foo from Bar bar inner join bar.baz.fooSet as foo");
+		s.createQuery(
+				"select bar.string, foo.string from Bar bar inner join bar.baz as baz inner join baz.fooSet as foo where baz.name = 'name'"
+		).list();
+		s.createQuery( "select foo from Bar bar inner join bar.baz as baz inner join baz.fooSet as foo" ).list();
+		s.createQuery( "select foo from Bar bar inner join bar.baz.fooSet as foo" ).list();
 
-		s.find("select bar.string, foo.string from Bar bar join bar.baz as baz join baz.fooSet as foo where baz.name = 'name'");
-		s.find("select foo from Bar bar join bar.baz as baz join baz.fooSet as foo");
-		s.find("select foo from Bar bar join bar.baz.fooSet as foo");
+		s.createQuery(
+				"select bar.string, foo.string from Bar bar join bar.baz as baz join baz.fooSet as foo where baz.name = 'name'"
+		).list();
+		s.createQuery( "select foo from Bar bar join bar.baz as baz join baz.fooSet as foo" ).list();
+		s.createQuery( "select foo from Bar bar join bar.baz.fooSet as foo" ).list();
 
-		assertTrue( s.find("from Bar bar join bar.baz.fooArray foo").size()==1 );
+		assertTrue( s.createQuery( "from Bar bar join bar.baz.fooArray foo" ).list().size()==1 );
 
-		assertTrue( s.find("from Bar bar join bar.baz.fooSet foo").size()==0 );
-		assertTrue( s.find("from Bar bar join bar.baz.fooArray foo").size()==1 );
+		assertTrue( s.createQuery( "from Bar bar join bar.baz.fooSet foo" ).list().size()==0 );
+		assertTrue( s.createQuery( "from Bar bar join bar.baz.fooArray foo" ).list().size()==1 );
 
 		s.delete(bar);
 
 		if ( getDialect() instanceof DB2Dialect || getDialect() instanceof PostgreSQLDialect ) {
-			s.iterate("select one from One one join one.manies many group by one order by count(many)");
-			s.iterate("select one from One one join one.manies many group by one having count(many) < 5");
+			s.createQuery( "select one from One one join one.manies many group by one order by count(many)" ).iterate();
+			s.createQuery( "select one from One one join one.manies many group by one having count(many) < 5" )
+					.iterate();
 		}
 
-		s.find("from One one join one.manies many where one.id = 1 and many.id = 1");
-		s.iterate("select one.id, elements(one.manies) from One one");
-		s.iterate("select max( elements(one.manies) ) from One one");
-		s.find("select one, elements(one.manies) from One one");
-		//s.iterate("select one, max( elements(one.manies) ) from One one group by one");
-		Iterator iter = s.iterate("select elements(baz.fooArray) from Baz baz where baz.id=?", baz.getCode(), Hibernate.STRING);
-		//WAS: assertTrue( iter.next()==null && iter.next()==foos[1] && !iter.hasNext() );
+		s.createQuery( "from One one join one.manies many where one.id = 1 and many.id = 1" ).list();
+		s.createQuery( "select one.id, elements(one.manies) from One one" ).iterate();
+		s.createQuery( "select max( elements(one.manies) ) from One one" ).iterate();
+		s.createQuery( "select one, elements(one.manies) from One one" ).list();
+		Iterator iter = s.createQuery( "select elements(baz.fooArray) from Baz baz where baz.id=?" )
+				.setParameter( 0, baz.getCode(), Hibernate.STRING )
+				.iterate();
 		assertTrue( iter.next()==foos[1] && !iter.hasNext() );
-		list = s.find("select elements(baz.fooArray) from Baz baz where baz.id=?", baz.getCode(), Hibernate.STRING);
-		//WAS: assertTrue( list.size()==2 );
-		assertTrue( list.size()==1 );
-		iter = s.iterate("select indices(baz.fooArray) from Baz baz where baz.id=?", baz.getCode(), Hibernate.STRING);
-		//WAS: assertTrue( iter.next().equals( new Integer(0) ) && iter.next().equals( new Integer(1) ) && !iter.hasNext() );
+		list = s.createQuery( "select elements(baz.fooArray) from Baz baz where baz.id=?" )
+				.setParameter( 0, baz.getCode(), Hibernate.STRING )
+				.list();
+		assertEquals( 1, list.size() );
+		iter = s.createQuery( "select indices(baz.fooArray) from Baz baz where baz.id=?" )
+				.setParameter( 0, baz.getCode(), Hibernate.STRING )
+				.iterate();
 		assertTrue( iter.next().equals( new Integer(1) ) && !iter.hasNext() );
 
-		//assertTrue( s.iterate("select max( elements(baz.timeArray) ) from Baz baz where baz.id=?", baz.getCode(), Hibernate.STRING).next() instanceof Time );
-		//assertTrue( s.iterate("select max( elements(baz.stringSet) ) from Baz baz where baz.id=?", baz.getCode(), Hibernate.STRING).next().equals("foo") );
-		assertTrue( s.iterate("select size(baz.stringSet) from Baz baz where baz.id=?", baz.getCode(), Hibernate.STRING).next().equals( new Integer(3) ) );
-		//s.find("from One one where sum one.manies.elements =0 or 1 = min one.manies.elements");
+		iter = s.createQuery( "select size(baz.stringSet) from Baz baz where baz.id=?" )
+				.setParameter( 0, baz.getCode(), Hibernate.STRING )
+				.iterate();
+		assertEquals( new Integer(3), iter.next() );
 
-		s.find("from Foo foo where foo.component.glarch.id is not null");
+		s.createQuery( "from Foo foo where foo.component.glarch.id is not null" ).list();
 
-		//iter = s.iterate("select baz, max( elements(baz.timeArray) ) from Baz baz group by baz");
-		//while ( iter.hasNext() ) { Object[] arr = (Object[]) iter.next(); System.out.println( arr[0] + " " + arr[1] ); }
-		iter = s.iterate("select baz, size(baz.stringSet), count( distinct elements(baz.stringSet) ), max( elements(baz.stringSet) ) from Baz baz group by baz");
-		while ( iter.hasNext() ) { Object[] arr = (Object[]) iter.next(); System.out.println( arr[0] + " " + arr[1] + " " + arr[2] + " " + arr[3] ); }
+		iter = s.createQuery(
+				"select baz, size(baz.stringSet), count( distinct elements(baz.stringSet) ), max( elements(baz.stringSet) ) from Baz baz group by baz"
+		).iterate();
+		while ( iter.hasNext() ) {
+			Object[] arr = (Object[]) iter.next();
+			log.info( arr[0] + " " + arr[1] + " " + arr[2] + " " + arr[3] );
+		}
 		
 		s.delete(baz);
 		s.delete(baz2);
@@ -2221,30 +2350,30 @@ public class FooBarTest extends LegacyTestCase {
 		s.save(baz);
 		s.flush();
 		baz.getStringArray()[0] = "a new value";
-		Iterator iter = s.iterate("from Baz baz");//no flush
+		Iterator iter = s.createQuery( "from Baz baz" ).iterate();//no flush
 		assertTrue( iter.next()==baz );
-		iter = s.iterate("select elements(baz.stringArray) from Baz baz");
+		iter = s.createQuery( "select elements(baz.stringArray) from Baz baz" ).iterate();
 		boolean found = false;
 		while ( iter.hasNext() ) {
 			if ( iter.next().equals("a new value") ) found = true;
 		}
 		assertTrue(found);
 		baz.setStringArray(null);
-		s.iterate("from Baz baz"); //no flush
-		iter = s.iterate("select elements(baz.stringArray) from Baz baz");
+		s.createQuery( "from Baz baz" ).iterate(); //no flush
+		iter = s.createQuery( "select elements(baz.stringArray) from Baz baz" ).iterate();
 		assertTrue( !iter.hasNext() );
 		baz.getStringList().add("1E1");
-		iter = s.iterate("from Foo foo");//no flush
+		iter = s.createQuery( "from Foo foo" ).iterate();//no flush
 		assertTrue( !iter.hasNext() );
-		iter = s.iterate("select elements(baz.stringList) from Baz baz");
+		iter = s.createQuery( "select elements(baz.stringList) from Baz baz" ).iterate();
 		found = false;
 		while ( iter.hasNext() ) {
 			if ( iter.next().equals("1E1") ) found = true;
 		}
 		assertTrue(found);
 		baz.getStringList().remove("1E1");
-		iter = s.iterate("select elements(baz.stringArray) from Baz baz"); //no flush
-		iter = s.iterate("select elements(baz.stringList) from Baz baz");
+		iter = s.createQuery( "select elements(baz.stringArray) from Baz baz" ).iterate(); //no flush
+		iter = s.createQuery( "select elements(baz.stringList) from Baz baz" ).iterate();
 		found = false;
 		while ( iter.hasNext() ) {
 			if ( iter.next().equals("1E1") ) found = true;
@@ -2254,14 +2383,14 @@ public class FooBarTest extends LegacyTestCase {
 		List newList = new ArrayList();
 		newList.add("value");
 		baz.setStringList(newList);
-		iter = s.iterate("from Foo foo");//no flush
+		iter = s.createQuery( "from Foo foo" ).iterate();//no flush
 		baz.setStringList(null);
-		iter = s.iterate("select elements(baz.stringList) from Baz baz");
+		iter = s.createQuery( "select elements(baz.stringList) from Baz baz" ).iterate();
 		assertTrue( !iter.hasNext() );
 
 		baz.setStringList(newList);
-		iter = s.iterate("from Foo foo");//no flush
-		iter = s.iterate("select elements(baz.stringList) from Baz baz");
+		iter = s.createQuery( "from Foo foo" ).iterate();//no flush
+		iter = s.createQuery( "select elements(baz.stringList) from Baz baz" ).iterate();
 		assertTrue( iter.hasNext() );
 
 		s.delete(baz);
@@ -2272,9 +2401,9 @@ public class FooBarTest extends LegacyTestCase {
 	public void testPersistCollections() throws Exception {
 		Session s = openSession();
 		Transaction txn = s.beginTransaction();
-		assertTrue( ( (Long) s.iterate("select count(*) from Bar").next() ).longValue()==0 );
-		assertTrue( s.iterate("select count(*) from Bar b").next().equals( new Long(0) ) );
-		assertFalse( s.iterate("from Glarch g").hasNext() );
+		assertEquals( 0, ( (Long) s.createQuery( "select count(*) from Bar" ).iterate().next() ).longValue() );
+		assertTrue( s.createQuery( "select count(*) from Bar b" ).iterate().next().equals( new Long(0) ) );
+		assertFalse( s.createQuery( "from Glarch g" ).iterate().hasNext() );
 
 		Baz baz = new Baz();
 		s.save(baz);
@@ -2287,14 +2416,13 @@ public class FooBarTest extends LegacyTestCase {
 		sgm.put( "a", new Glarch() );
 		sgm.put( "b", new Glarch() );
 		baz.setStringGlarchMap(sgm);
-		//System.out.println( s.print(baz) );
 		txn.commit();
 		s.close();
 
 		s = openSession();
 		txn = s.beginTransaction();
-		assertTrue( ( (Long) s.iterate("select count(*) from Bar").next() ).longValue()==1 );
-		baz = (Baz) ( (Object[]) s.find("select baz, baz from Baz baz").get(0) )[1];
+		assertTrue( ( (Long) s.createQuery( "select count(*) from Bar" ).iterate().next() ).longValue()==1 );
+		baz = (Baz) ( (Object[]) s.createQuery( "select baz, baz from Baz baz" ).list().get(0) )[1];
 		assertTrue( baz.getCascadingBars().size()==1 );
 		//System.out.println( s.print(baz) );
 		Foo foo = new Foo();
@@ -2315,23 +2443,25 @@ public class FooBarTest extends LegacyTestCase {
 
 		//The following test is disabled databases with no subselects
 		if ( !(getDialect() instanceof MySQLDialect) && !(getDialect() instanceof HSQLDialect) && !(getDialect() instanceof PointbaseDialect) )  {
-			List list = s.find("select foo from Foo foo, Baz baz where foo in elements(baz.fooArray) and 3 = some elements(baz.intArray) and 4 > all indices(baz.intArray)");
+			List list = s.createQuery(
+					"select foo from Foo foo, Baz baz where foo in elements(baz.fooArray) and 3 = some elements(baz.intArray) and 4 > all indices(baz.intArray)"
+			).list();
 			assertTrue( "collection.elements find", list.size()==2 );
 		}
 		if (!(getDialect() instanceof SAPDBDialect) ) { // SAPDB doesn't like distinct with binary type
-			List list = s.find("select distinct foo from Baz baz join baz.fooArray foo");
+			List list = s.createQuery( "select distinct foo from Baz baz join baz.fooArray foo" ).list();
 			assertTrue( "collection.elements find", list.size()==2 );
 		}
 
-		List list = s.find("select foo from Baz baz join baz.fooSet foo");
+		List list = s.createQuery( "select foo from Baz baz join baz.fooSet foo" ).list();
 		assertTrue( "association.elements find", list.size()==1 );
 		txn.commit();
 		s.close();
 
 		s = openSession();
 		txn = s.beginTransaction();
-		assertTrue( ( (Long) s.iterate("select count(*) from Bar").next() ).longValue()==1 );
-		baz = (Baz) s.find("select baz from Baz baz order by baz").get(0);
+		assertTrue( ( (Long) s.createQuery( "select count(*) from Bar" ).iterate().next() ).longValue()==1 );
+		baz = (Baz) s.createQuery( "select baz from Baz baz order by baz" ).list().get(0);
 		assertTrue( "collection of custom types - added element", baz.getCustoms().size()==4 && baz.getCustoms().get(0)!=null );
 		assertTrue ( "component of component in collection", baz.getComponents()[1].getSubcomponent()!=null );
 		assertTrue( baz.getComponents()[1].getBaz()==baz );
@@ -2350,7 +2480,7 @@ public class FooBarTest extends LegacyTestCase {
 
 		s = openSession();
 		txn = s.beginTransaction();
-		baz = (Baz) s.find("select baz from Baz baz order by baz").get(0);
+		baz = (Baz) s.createQuery( "select baz from Baz baz order by baz" ).list().get(0);
 		assertTrue( baz.getStringSet().size()==2 );
 		assertTrue( baz.getStringSet().first().equals("one") );
 		assertTrue( baz.getStringSet().last().equals("two") );
@@ -2362,7 +2492,7 @@ public class FooBarTest extends LegacyTestCase {
 
 		s = openSession();
 		txn = s.beginTransaction();
-		assertTrue( ( (Long) s.iterate("select count(*) from Bar").next() ).longValue()==1 );
+		assertTrue( ( (Long) s.createQuery( "select count(*) from Bar" ).iterate().next() ).longValue()==1 );
 		baz = (Baz) s.load(Baz.class, baz.getCode());
 		assertTrue( baz.getCascadingBars().size()==1 );
 		Bar bar = new Bar();
@@ -2392,13 +2522,13 @@ public class FooBarTest extends LegacyTestCase {
 
 		s = openSession();
 		txn = s.beginTransaction();
-		baz = (Baz) s.find("select baz from Baz baz order by baz").get(0);
+		baz = (Baz) s.createQuery( "select baz from Baz baz order by baz" ).list().get(0);
 		assertTrue( baz.getCascadingBars().size()==1 );
 
 		Session s2 = openSession();
 		Transaction txn2 = s2.beginTransaction();
-		assertTrue( ( (Long) s2.iterate("select count(*) from Bar").next() ).longValue()==3 );
-		Baz baz2 = (Baz) s2.find("select baz from Baz baz order by baz").get(0);
+		assertTrue( ( (Long) s2.createQuery( "select count(*) from Bar" ).iterate().next() ).longValue()==3 );
+		Baz baz2 = (Baz) s2.createQuery( "select baz from Baz baz order by baz" ).list().get(0);
 		Object o = baz2.getFooComponentToFoo().get( new FooComponent("name", 123, null, null) );
 		assertTrue(
 			o==baz2.getFooComponentToFoo().get( new FooComponent("nameName", 12, null, null) ) && o!=null
@@ -2441,8 +2571,8 @@ public class FooBarTest extends LegacyTestCase {
 
 		s = openSession();
 		txn = s.beginTransaction();
-		assertTrue( ( (Long) s.iterate("select count(*) from Bar").next() ).longValue()==3 );
-		baz = (Baz) s.find("select baz from Baz baz order by baz").get(0);
+		assertTrue( ( (Long) s.createQuery( "select count(*) from Bar" ).iterate().next() ).longValue()==3 );
+		baz = (Baz) s.createQuery( "select baz from Baz baz order by baz" ).list().get(0);
 		assertTrue( baz.getTopGlarchez().size()==2 );
 		assertTrue( baz.getCascadingBars().size()==1 );
 		txn.commit();
@@ -2455,13 +2585,13 @@ public class FooBarTest extends LegacyTestCase {
 		s2.reconnect();
 		txn2 = s2.beginTransaction();
 		baz = (Baz) s2.load(Baz.class, baz.getCode());
-		assertTrue( ( (Long) s2.iterate("select count(*) from Bar").next() ).longValue()==3 );
+		assertTrue( ( (Long) s2.createQuery( "select count(*) from Bar" ).iterate().next() ).longValue()==3 );
 		s2.delete(baz);
 		s2.delete( baz.getTopGlarchez().get( new Character('G') ) );
 		s2.delete( baz.getTopGlarchez().get( new Character('H') ) );
 		int rows = s2.connection().createStatement().executeUpdate("update " + getDialect().openQuote() + "glarchez" + getDialect().closeQuote() + " set baz_map_id=null where baz_map_index='a'");
 		assertTrue(rows==1);
-		assertTrue( s2.delete("from Bar bar")==2 );
+		assertEquals( 2, doDelete( s2, "from Bar bar" ) );
 		FooProxy[] arr = baz.getFooArray();
 		assertTrue( "new array of objects", arr.length==4 && arr[1].getKey().equals( foo.getKey() ) );
 		for ( int i=1; i<arr.length; i++ ) {
@@ -2470,7 +2600,7 @@ public class FooBarTest extends LegacyTestCase {
 
 		s2.load( Qux.class, new Long(666) ); //nonexistent
 
-		assertTrue( s2.delete("from Glarch g")==1 );
+		assertEquals( 1, doDelete( s2, "from Glarch g" ) );
 		txn2.commit();
 
 		s2.disconnect();
@@ -2485,62 +2615,66 @@ public class FooBarTest extends LegacyTestCase {
 
 	public void testSaveFlush() throws Exception {
 		Session s = openSession();
+		s.beginTransaction();
 		Fee fee = new Fee();
 		s.save( fee, "key" );
 		fee.setFi("blah");
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
+
 		s = openSession();
+		s.beginTransaction();
 		fee = (Fee) s.load( Fee.class, fee.getKey() );
 		assertTrue( "blah".equals( fee.getFi() ) );
 		assertTrue( "key".equals( fee.getKey() ) );
 		s.delete(fee);
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 
 	}
 
 	public void testCreateUpdate() throws Exception {
 		Session s = openSession();
+		s.beginTransaction();
 		Foo foo = new Foo();
 		s.save(foo);
 		foo.setString("dirty");
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
+
 		s = openSession();
+		s.beginTransaction();
 		Foo foo2 = new Foo();
 		s.load( foo2, foo.getKey() );
 		// There is an interbase bug that causes null integers to return as 0, also numeric precision is <= 15
 		assertTrue( "create-update", foo.equalsFoo(foo2) );
 		//System.out.println( s.print(foo2) );
 		s.delete(foo2);
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 
 		s = openSession();
+		s.beginTransaction();
 		foo = new Foo();
 		s.save(foo, "assignedid");
 		foo.setString("dirty");
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
+
 		s = openSession();
+		s.beginTransaction();
 		s.load(foo2, "assignedid");
 		// There is an interbase bug that causes null integers to return as 0, also numeric precision is <= 15
 		assertTrue( "create-update", foo.equalsFoo(foo2) );
 		//System.out.println( s.print(foo2) );
 		s.delete(foo2);
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 	}
 
 	public void testUpdateCollections() throws Exception {
 		Session s = openSession();
+		s.beginTransaction();
 		Holder baz = new Holder();
 		baz.setName("123");
 		Foo f1 = new Foo();
@@ -2558,8 +2692,7 @@ public class FooBarTest extends LegacyTestCase {
 		s.save(f3);
 		s.save(o);
 		s.save(baz);
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 
 		baz.getOnes().set(0, null);
@@ -2569,12 +2702,13 @@ public class FooBarTest extends LegacyTestCase {
 		foos[1] = f1;
 
 		s = openSession();
+		s.beginTransaction();
 		s.saveOrUpdate(baz);
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 
 		s = openSession();
+		s.beginTransaction();
 		Holder h = (Holder) s.load(Holder.class, baz.getId());
 		assertTrue( h.getOnes().get(0)==null );
 		assertTrue( h.getOnes().get(1)!=null );
@@ -2582,7 +2716,7 @@ public class FooBarTest extends LegacyTestCase {
 		assertTrue( h.getFooArray()[1]!=null);
 		assertTrue( h.getFooArray()[2]!=null);
 		assertTrue( h.getFoos().size()==2 );
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 
 		baz.getFoos().remove(f1);
@@ -2590,38 +2724,40 @@ public class FooBarTest extends LegacyTestCase {
 		baz.getFooArray()[0]=null;
 		baz.getFooArray()[0]=null;
 		baz.getFooArray()[0]=null;
-		s = openSession();
-		s.saveOrUpdate(baz);
-		s.delete("from Foo");
-		baz.getOnes().remove(o);
-		s.delete("from One");
-		s.delete(baz);
-		s.flush();
-		s.connection().commit();
-		s.close();
 
+		s = openSession();
+		s.beginTransaction();
+		s.saveOrUpdate(baz);
+		doDelete( s, "from Foo" );
+		baz.getOnes().remove(o);
+		doDelete( s, "from One" );
+		s.delete(baz);
+		s.getTransaction().commit();
+		s.close();
 	}
 
 	public void testCreate() throws Exception {
 		Session s = openSession();
+		s.beginTransaction();
 		Foo foo = new Foo();
 		s.save(foo);
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
+
 		s = openSession();
+		s.beginTransaction();
 		Foo foo2 = new Foo();
 		s.load( foo2, foo.getKey() );
 		// There is an interbase bug that causes null integers to return as 0, also numeric precision is <= 15
 		assertTrue( "create", foo.equalsFoo(foo2) );
 		s.delete(foo2);
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 	}
 
 	public void testCallback() throws Exception {
 		Session s = openSession();
+		s.beginTransaction();
 		Qux q = new Qux("0");
 		s.save(q);
 		q.setChild( new Qux("1") );
@@ -2635,43 +2771,45 @@ public class FooBarTest extends LegacyTestCase {
 		q4.setChild(q3);
 		s.save(q4);
 		s.save(q2);
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
+
 		s = openSession();
-		List l = s.find("from Qux");
+		s.beginTransaction();
+		List l = s.createQuery( "from Qux" ).list();
 		assertTrue( "", l.size()==5);
 		s.delete( l.get(0) );
 		s.delete( l.get(1) );
 		s.delete( l.get(2) );
 		s.delete( l.get(3) );
 		s.delete( l.get(4) );
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 	}
 
 	public void testPolymorphism() throws Exception {
 		Session s = openSession();
+		s.beginTransaction();
 		Bar bar = new Bar();
 		s.save(bar);
 		bar.setBarString("bar bar");
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
+
 		s = openSession();
+		s.beginTransaction();
 		FooProxy foo = (FooProxy) s.load( Foo.class, bar.getKey() );
 		assertTrue( "polymorphic", foo instanceof BarProxy );
 		assertTrue( "subclass property", ( (BarProxy) foo ).getBarString().equals( bar.getBarString() ) );
 		//System.out.println( s.print(foo) );
 		s.delete(foo);
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 	}
 
 	public void testRemoveContains() throws Exception {
 		Session s = openSession();
+		s.beginTransaction();
 		Baz baz = new Baz();
 		baz.setDefaults();
 		s.save(baz);
@@ -2682,14 +2820,13 @@ public class FooBarTest extends LegacyTestCase {
 		Baz baz2 = (Baz) s.load( Baz.class, baz.getCode() );
 		assertFalse(baz==baz2);
 		s.delete(baz2);
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 	}
 
 	public void testCollectionOfSelf() throws Exception {
-
 		Session s = openSession();
+		s.beginTransaction();
 		Bar bar = new Bar();
 		s.save(bar);
 		bar.setAbstracts( new HashSet() );
@@ -2698,11 +2835,13 @@ public class FooBarTest extends LegacyTestCase {
 		bar.getAbstracts().add(bar2);
 		bar.setFoo(bar);
 		s.save(bar2);
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
+
 		bar.setAbstracts(null);
+
 		s = openSession();
+		s.beginTransaction();
 		s.load( bar, bar.getKey() );
 		assertTrue( "collection contains self", bar.getAbstracts().size()==2 && bar.getAbstracts().contains(bar) );
 		assertTrue( "association to self", bar.getFoo()==bar );
@@ -2710,8 +2849,7 @@ public class FooBarTest extends LegacyTestCase {
 		while ( iter.hasNext() ) {
 			s.delete( iter.next() );
 		}
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 	}
 
@@ -2728,18 +2866,18 @@ public class FooBarTest extends LegacyTestCase {
 		foo.setString("foo bar");
 		s.save( new Foo() );
 		s.save( new Bar() );
-		List list1 = s.find("select foo from Foo foo where foo.string='foo bar'");
+		List list1 = s.createQuery( "select foo from Foo foo where foo.string='foo bar'" ).list();
 		assertTrue( "find size", list1.size()==1 );
 		assertTrue( "find ==", list1.get(0)==foo );
-		List list2 = s.find("from Foo foo order by foo.string, foo.date");
+		List list2 = s.createQuery( "from Foo foo order by foo.string, foo.date" ).list();
 		assertTrue( "find size", list2.size()==4 );
 
-		list1 = s.find("from Foo foo where foo.class='B'");
+		list1 = s.createQuery( "from Foo foo where foo.class='B'" ).list();
 		assertTrue( "class special property", list1.size()==2);
-		list1 = s.find("from Foo foo where foo.class=Bar");
+		list1 = s.createQuery( "from Foo foo where foo.class=Bar" ).list();
 		assertTrue( "class special property", list1.size()==2);
-		list1 = s.find("from Foo foo where foo.class=Bar");
-		list2 = s.find("select bar from Bar bar, Foo foo where bar.string = foo.string and not bar=foo");
+		list1 = s.createQuery( "from Foo foo where foo.class=Bar" ).list();
+		list2 = s.createQuery( "select bar from Bar bar, Foo foo where bar.string = foo.string and not bar=foo" ).list();
 		assertTrue( "class special property", list1.size()==2);
 		assertTrue( "select from a subclass", list2.size()==1);
 		Trivial t = new Trivial();
@@ -2749,25 +2887,27 @@ public class FooBarTest extends LegacyTestCase {
 
 		s = openSession();
 		txn = s.beginTransaction();
-		list1 = s.find("from Foo foo where foo.string='foo bar'");
+		list1 = s.createQuery( "from Foo foo where foo.string='foo bar'" ).list();
 		assertTrue( "find size", list1.size()==1 );
 		// There is an interbase bug that causes null integers to return as 0, also numeric precision is <= 15
 		assertTrue( "find equals", ( (Foo) list1.get(0) ).equalsFoo(foo) );
-		list2 = s.find("select foo from Foo foo");
+		list2 = s.createQuery( "select foo from Foo foo" ).list();
 		assertTrue( "find size", list2.size()==5 );
-		List list3 = s.find("from Bar bar where bar.barString='bar bar'");
+		List list3 = s.createQuery( "from Bar bar where bar.barString='bar bar'" ).list();
 		assertTrue( "find size", list3.size()==1 );
 		assertTrue( "find same instance", list2.contains( list1.get(0) ) && list2.contains( list2.get(0) ) );
-		assertTrue( s.find("from Trivial").size()==1 );
-		s.delete("from Trivial");
+		assertTrue( s.createQuery( "from Trivial" ).list().size()==1 );
+		doDelete( s, "from Trivial" );
 
-		list2 = s.find("from Foo foo where foo.date = ?", new java.sql.Date(123), Hibernate.DATE);
+		list2 = s.createQuery( "from Foo foo where foo.date = ?" )
+				.setParameter( 0, new java.sql.Date(123), Hibernate.DATE )
+				.list();
 		assertTrue ( "find by date", list2.size()==4 );
 		Iterator iter = list2.iterator();
 		while ( iter.hasNext() ) {
 			s.delete( iter.next() );
 		}
-		list2 = s.find("from Foo foo");
+		list2 = s.createQuery( "from Foo foo" ).list();
 		assertTrue( "find deleted", list2.size()==0);
 		txn.commit();
 		s.close();
@@ -2775,6 +2915,7 @@ public class FooBarTest extends LegacyTestCase {
 
 	public void testDeleteRecursive() throws Exception {
 		Session s = openSession();
+		s.beginTransaction();
 		Foo x = new Foo();
 		Foo y = new Foo();
 		x.setFoo(y);
@@ -2784,45 +2925,14 @@ public class FooBarTest extends LegacyTestCase {
 		s.flush();
 		s.delete(y);
 		s.delete(x);
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 	}
-
-	/*public void testSubcollections() throws Exception {
-		Session s = sessionsopenSession();
-		Baz baz = new Baz();
-		s.save(baz);
-		baz.setDefaults();
-		s.flush();
-		s.connection().commit();
-		s.close();
-		s = sessionsopenSession();
-		baz = (Baz) s.load( Baz.class, baz.getCode() );
-		Set[] setArray = baz.getSetArray();
-		baz.setSetArray(null);
-		baz.setAnotherSetArray(setArray);
-		baz.setAnotherSetList( baz.getSetList() );
-		baz.setSetList(null);
-		s.flush();
-		s.connection().commit();
-		s.close();
-		s = sessionsopenSession();
-		baz = (Baz) s.load( Baz.class, baz.getCode() );
-		assertTrue( baz.getAnotherSetArray().length==2 && baz.getAnotherSetArray()[0]!=null, "subcollection moved property");
-		assertTrue( baz.getSetArray()==null, "subcollection moved property");
-		assertTrue( baz.getAnotherSetList().size()==4 && baz.getAnotherSetList().get(2)!=null, "subcollection moved role");
-		assertTrue( baz.getSetList()==null, "subcollection moved role");
-		s.delete(baz);
-		s.flush();
-		s.connection().commit();
-		s.close();
-	}*/
-
 
 	public void testReachability() throws Exception {
 		//first for unkeyed collections
 		Session s = openSession();
+		s.beginTransaction();
 		Baz baz1 = new Baz();
 		s.save(baz1);
 		Baz baz2 = new Baz();
@@ -2832,20 +2942,20 @@ public class FooBarTest extends LegacyTestCase {
 		Foo foo = new Foo();
 		s.save(foo);
 		baz1.getFooSet().add(foo);
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 
 		s = openSession();
+		s.beginTransaction();
 		baz2 = (Baz) s.load( Baz.class, baz2.getCode() );
 		baz1 = (Baz) s.load( Baz.class, baz1.getCode() );
 		baz2.setFooSet( baz1.getFooSet() ); baz1.setFooSet(null);
 		baz2.setIntArray( baz1.getIntArray() ); baz1.setIntArray(null);
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 
 		s = openSession();
+		s.beginTransaction();
 		baz2 = (Baz) s.load( Baz.class, baz2.getCode() );
 		baz1 = (Baz) s.load( Baz.class, baz1.getCode() );
 		assertTrue( "unkeyed reachability", baz2.getIntArray().length==4 );
@@ -2857,43 +2967,44 @@ public class FooBarTest extends LegacyTestCase {
 		s.delete(fp);
 		s.delete(baz1);
 		s.delete(baz2);
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 
 		//now for collections of collections
 		s = openSession();
+		s.beginTransaction();
 		baz1 = new Baz();
 		s.save(baz1);
 		baz2 = new Baz();
 		s.save(baz2);
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
+
 		s = openSession();
+		s.beginTransaction();
 		baz2 = (Baz) s.load( Baz.class, baz2.getCode() );
 		baz1 = (Baz) s.load( Baz.class, baz1.getCode() );
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
+
 		s = openSession();
+		s.beginTransaction();
 		baz2 = (Baz) s.load( Baz.class, baz2.getCode() );
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
+
 		s = openSession();
+		s.beginTransaction();
 		baz2 = (Baz) s.load( Baz.class, baz2.getCode() );
 		baz1 = (Baz) s.load( Baz.class, baz1.getCode() );
-		//System.out.println( s.print(baz1) + s.print(baz2) );
-		//System.out.println( s.print(baz1) + s.print(baz2) );
 		s.delete(baz1);
 		s.delete(baz2);
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 
 		//now for keyed collections
 		s = openSession();
+		s.beginTransaction();
 		baz1 = new Baz();
 		s.save(baz1);
 		baz2 = new Baz();
@@ -2905,25 +3016,26 @@ public class FooBarTest extends LegacyTestCase {
 		baz1.setStringDateMap( new TreeMap() );
 		baz1.getStringDateMap().put("today", new Date( System.currentTimeMillis() ) );
 		baz1.getStringDateMap().put("tomorrow", new Date( System.currentTimeMillis() + 86400000 ) );
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
+
 		s = openSession();
+		s.beginTransaction();
 		baz2 = (Baz) s.load( Baz.class, baz2.getCode() );
 		baz1 = (Baz) s.load( Baz.class, baz1.getCode() );
 		baz2.setFooArray( baz1.getFooArray() ); baz1.setFooArray(null);
 		baz2.setStringDateMap( baz1.getStringDateMap() ); baz1.setStringDateMap(null);
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
+
 		s = openSession();
+		s.beginTransaction();
 		baz2 = (Baz) s.load( Baz.class, baz2.getCode() );
 		baz1 = (Baz) s.load( Baz.class, baz1.getCode() );
 		assertTrue( "reachability", baz2.getStringDateMap().size()==2 );
 		assertTrue( "reachability", baz2.getFooArray().length==3 );
 		assertTrue( "reachability", baz1.getStringDateMap().size()==0 );
 		assertTrue( "reachability", baz1.getFooArray().length==0 );
-		//System.out.println( s.print(baz1) + s.print(baz2) );
 		assertTrue( "null element", baz2.getFooArray()[1]==null );
 		assertTrue( "non-null element", baz2.getStringDateMap().get("today")!=null );
 		assertTrue( "non-null element", baz2.getStringDateMap().get("tomorrow")!=null );
@@ -2933,49 +3045,52 @@ public class FooBarTest extends LegacyTestCase {
 		s.delete(baz1);
 		s.delete(baz2);
 		s.flush();
-		assertTrue( s.find("from java.lang.Object").size()==0 );
-		s.connection().commit();
+		assertTrue( s.createQuery( "from java.lang.Object" ).list().size()==0 );
+		s.getTransaction().commit();
 		s.close();
 	}
 
 	public void testPersistentLifecycle() throws Exception {
 		Session s = openSession();
+		s.beginTransaction();
 		Qux q = new Qux();
 		s.save(q);
 		q.setStuff("foo bar baz qux");
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
+
 		s = openSession();
+		s.beginTransaction();
 		q = (Qux) s.load( Qux.class, q.getKey() );
 		assertTrue( "lifecycle create", q.getCreated() );
 		assertTrue( "lifecycle load", q.getLoaded() );
 		assertTrue( "lifecycle subobject", q.getFoo()!=null );
 		s.delete(q);
 		assertTrue( "lifecycle delete", q.getDeleted() );
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
+
 		s = openSession();
-		assertTrue( "subdeletion", s.find("from Foo foo").size()==0);
-		s.flush();
-		s.connection().commit();
+		s.beginTransaction();
+		assertTrue( "subdeletion", s.createQuery( "from Foo foo" ).list().size()==0);
+		s.getTransaction().commit();
 		s.close();
 	}
 
 	public void testIterators() throws Exception {
 		Session s = openSession();
+		s.beginTransaction();
 		for ( int i=0; i<10; i++ ) {
 			Qux q = new Qux();
 			Object qid = s.save(q);
 			assertTrue("not null", qid!=null);
 		}
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 
 		s = openSession();
-		Iterator iter = s.iterate("from Qux q where q.stuff is null");
+		s.beginTransaction();
+		Iterator iter = s.createQuery( "from Qux q where q.stuff is null" ).iterate();
 		int count=0;
 		while ( iter.hasNext() ) {
 			Qux q = (Qux) iter.next();
@@ -2984,24 +3099,20 @@ public class FooBarTest extends LegacyTestCase {
 			count++;
 		}
 		assertTrue("iterate", count==10);
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 
 		s = openSession();
-		assertTrue(
-			"delete by query",
-			s.delete("from Qux q where q.stuff=?", "foo", Hibernate.STRING)==8
-		);
-		s.flush();
-		s.connection().commit();
+		s.beginTransaction();
+		assertEquals( 8, doDelete( s, "from Qux q where q.stuff=?", "foo", Hibernate.STRING ) );
+		s.getTransaction().commit();
 		s.close();
 
 		s = openSession();
-		iter = s.iterate("from Qux q");
+		s.beginTransaction();
+		iter = s.createQuery( "from Qux q" ).iterate();
 		assertTrue( "empty iterator", !iter.hasNext() );
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 	}
 
@@ -3031,7 +3142,7 @@ public class FooBarTest extends LegacyTestCase {
 		g.setName("foo");
 		assertTrue(
 			"find by version",
-			s.find("from Glarch g where g.version=2").size()==1
+				s.createQuery( "from Glarch g where g.version=2" ).list().size()==1
 		);
 		g.setName("bar");
 		txn.commit();
@@ -3122,7 +3233,7 @@ public class FooBarTest extends LegacyTestCase {
 		assertTrue( "versioned collection after", g.getVersion()==4 );
 		s.delete(g);
 		s.flush();
-		assertTrue( s.find("from java.lang.Object").size()==0 );
+		assertTrue( s.createQuery( "from java.lang.Object" ).list().size()==0 );
 		s.connection().commit();
 		s.close();
 	}
@@ -3221,27 +3332,27 @@ public class FooBarTest extends LegacyTestCase {
 			last = next;
 			last.setOrder( (short) (i+1) );
 		}
-		Iterator iter = s.iterate("from Glarch g");
+		Iterator iter = s.createQuery( "from Glarch g" ).iterate();
 		while ( iter.hasNext() ) {
 			iter.next();
 		}
-		List list = s.find("from Glarch g");
+		List list = s.createQuery( "from Glarch g" ).list();
 		assertTrue( "recursive find", list.size()==6 );
 		txn.commit();
 		s.close();
 
 		s = openSession();
 		txn = s.beginTransaction();
-		list = s.find("from Glarch g");
+		list = s.createQuery( "from Glarch g" ).list();
 		assertTrue( "recursive iter", list.size()==6 );
-		list = s.find("from Glarch g where g.next is not null");
+		list = s.createQuery( "from Glarch g where g.next is not null" ).list();
 		assertTrue( "recursive iter", list.size()==5 );
 		txn.commit();
 		s.close();
 
 		s = openSession();
 		txn = s.beginTransaction();
-		iter = s.iterate("from Glarch g order by g.order asc");
+		iter = s.createQuery( "from Glarch g order by g.order asc" ).iterate();
 		while ( iter.hasNext() ) {
 			GlarchProxy g = (GlarchProxy) iter.next();
 			assertTrue( "not null", g!=null );
@@ -3263,18 +3374,18 @@ public class FooBarTest extends LegacyTestCase {
 			flast = flast.getFoo();
 			flast.setString( "foo" + (i+1) );
 		}
-		iter = s.iterate("from Foo foo");
+		iter = s.createQuery( "from Foo foo" ).iterate();
 		while ( iter.hasNext() ) {
 			iter.next();
 		}
-		list = s.find("from Foo foo");
+		list = s.createQuery( "from Foo foo" ).list();
 		assertTrue( "recursive find", list.size()==6 );
 		txn.commit();
 		s.close();
 
 		s = openSession();
 		txn = s.beginTransaction();
-		list = s.find("from Foo foo");
+		list = s.createQuery( "from Foo foo" ).list();
 		assertTrue( "recursive iter", list.size()==6 );
 		iter = list.iterator();
 		while ( iter.hasNext() ) {
@@ -3285,7 +3396,7 @@ public class FooBarTest extends LegacyTestCase {
 
 		s = openSession();
 		txn = s.beginTransaction();
-		iter = s.iterate("from Foo foo order by foo.string asc");
+		iter = s.createQuery( "from Foo foo order by foo.string asc" ).iterate();
 		while ( iter.hasNext() ) {
 			BarProxy bar = (BarProxy) iter.next();
 			assertTrue( "not null", bar!=null );
@@ -3368,7 +3479,7 @@ public class FooBarTest extends LegacyTestCase {
 		assertTrue( iter.previous() );
 		assertTrue( s.delete("from Foo")==4 );
 		s.flush();
-		assertTrue( s.find("from java.lang.Object").size()==0 );
+		assertTrue( s.createQuery( "from java.lang.Object" ).list().size()==0 );
 		txn.commit();
 		s.close();
 	}
@@ -3381,23 +3492,28 @@ public class FooBarTest extends LegacyTestCase {
 		Foo foo1 = new Foo();
 		s.save(foo1);
 		foo.setFoo(foo1);
-		List l = s.find("select parent, child from Foo parent, Foo child where parent.foo = child");
+		List l = s.createQuery( "select parent, child from Foo parent, Foo child where parent.foo = child" ).list();
 		assertTrue( "multi-column find", l.size()==1 );
 
-		Iterator rs = s.iterate("select count(distinct child.id), count(distinct parent.id) from Foo parent, Foo child where parent.foo = child");
+		Iterator rs = s.createQuery(
+				"select count(distinct child.id), count(distinct parent.id) from Foo parent, Foo child where parent.foo = child"
+		).iterate();
 		Object[] row = (Object[]) rs.next();
 		assertTrue( "multi-column count", ( (Long) row[0] ).intValue()==1 );
 		assertTrue( "multi-column count", ( (Long) row[1] ).intValue()==1 );
 		assertTrue( !rs.hasNext() );
 
-		rs = s.iterate("select child.id, parent.id, child.long from Foo parent, Foo child where parent.foo = child");
+		rs = s.createQuery( "select child.id, parent.id, child.long from Foo parent, Foo child where parent.foo = child" )
+				.iterate();
 		row = (Object[]) rs.next();
 		assertTrue( "multi-column id", row[0].equals( foo.getFoo().getKey() ) );
 		assertTrue( "multi-column id", row[1].equals( foo.getKey() ) );
 		assertTrue( "multi-column property", row[2].equals( foo.getFoo().getLong() ) );
 		assertTrue( !rs.hasNext() );
 
-		rs = s.iterate("select child.id, parent.id, child.long, child, parent.foo from Foo parent, Foo child where parent.foo = child");
+		rs = s.createQuery(
+				"select child.id, parent.id, child.long, child, parent.foo from Foo parent, Foo child where parent.foo = child"
+		).iterate();
 		row = (Object[]) rs.next();
 		assertTrue(
 			foo.getFoo().getKey().equals( row[0] ) &&
@@ -3415,7 +3531,9 @@ public class FooBarTest extends LegacyTestCase {
 		
 		s = openSession();
 		txn = s.beginTransaction();
-		Iterator iter = s.iterate("select parent, child from Foo parent, Foo child where parent.foo = child and parent.string='a string'");
+		Iterator iter = s.createQuery(
+				"select parent, child from Foo parent, Foo child where parent.foo = child and parent.string='a string'"
+		).iterate();
 		int deletions=0;
 		while ( iter.hasNext() ) {
 			Object[] pnc = (Object[]) iter.next();
@@ -3449,7 +3567,7 @@ public class FooBarTest extends LegacyTestCase {
 		s.close();
 		s = openSession();
 		tx = s.beginTransaction();
-		assertTrue( s.find("from Fee fee").size()==0 );
+		assertTrue( s.createQuery( "from Fee fee" ).list().size()==0 );
 		tx.commit();
 		s.close();
 	}
@@ -3477,13 +3595,14 @@ public class FooBarTest extends LegacyTestCase {
 		s.close();
 		s = openSession();
 		tx = s.beginTransaction();
-		assertTrue( s.find("from Fee fee").size()==0 );
+		assertTrue( s.createQuery( "from Fee fee" ).list().size()==0 );
 		tx.commit();
 		s.close();
 	}
 
 	public void testUpdateOrder() throws Exception {
 		Session s = openSession();
+		s.beginTransaction();
 		Fee fee1 = new Fee();
 		s.save(fee1);
 		Fee fee2 = new Fee();
@@ -3496,11 +3615,11 @@ public class FooBarTest extends LegacyTestCase {
 		fee2.setAnotherFee(fee3);
 		s.save(fee3);
 		s.save(fee2);
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 
 		s = openSession();
+		s.beginTransaction();
 		fee1.setCount(10);
 		fee2.setCount(20);
 		fee3.setCount(30);
@@ -3511,19 +3630,19 @@ public class FooBarTest extends LegacyTestCase {
 		s.delete(fee1);
 		s.delete(fee2);
 		s.delete(fee3);
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 
 		s = openSession();
-		Transaction tx = s.beginTransaction();
-		assertTrue( s.find("from Fee fee").size()==0 );
-		tx.commit();
+		s.beginTransaction();
+		assertTrue( s.createQuery( "from Fee fee" ).list().size()==0 );
+		s.getTransaction().commit();
 		s.close();
 	}
 
 	public void testUpdateFromTransient() throws Exception {
 		Session s = openSession();
+		s.beginTransaction();
 		Fee fee1 = new Fee();
 		s.save(fee1);
 		Fee fee2 = new Fee();
@@ -3536,94 +3655,99 @@ public class FooBarTest extends LegacyTestCase {
 		fee2.setAnotherFee(fee3);
 		s.save(fee3);
 		s.save(fee2);
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 
 		fee1.setFi("changed");
+
 		s = openSession();
+		s.beginTransaction();
 		s.saveOrUpdate(fee1);
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 
 		Qux q = new Qux("quxxy");
 		q.setTheKey(0);
 		fee1.setQux(q);
+
 		s = openSession();
+		s.beginTransaction();
 		s.saveOrUpdate(fee1);
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 
-
 		s = openSession();
+		s.beginTransaction();
 		fee1 = (Fee) s.load( Fee.class, fee1.getKey() );
 		assertTrue( "updated from transient", fee1.getFi().equals("changed") );
 		assertTrue( "unsaved value", fee1.getQux()!=null );
 		s.delete( fee1.getQux() );
 		fee1.setQux(null);
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 
 		fee2.setFi("CHANGED");
 		fee2.getFees().add("an element");
 		fee1.setFi("changed again");
+
 		s = openSession();
+		s.beginTransaction();
 		s.saveOrUpdate(fee2);
 		s.update( fee1, fee1.getKey() );
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 
 		s = openSession();
+		s.beginTransaction();
 		Fee fee = new Fee();
 		s.load( fee, fee2.getKey() );
 		fee1 = (Fee) s.load( Fee.class, fee1.getKey() );
 		assertTrue( "updated from transient", fee1.getFi().equals("changed again") );
 		assertTrue( "updated from transient", fee.getFi().equals("CHANGED") );
 		assertTrue( "updated collection", fee.getFees().contains("an element") );
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 
 		fee.getFees().clear();
 		fee.getFees().add("new element");
 		fee1.setFee(null);
+
 		s = openSession();
+		s.beginTransaction();
 		s.saveOrUpdate(fee);
 		s.saveOrUpdate(fee1);
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 
 		s = openSession();
+		s.beginTransaction();
 		s.load( fee, fee.getKey() );
 		assertTrue( "update", fee.getAnotherFee()!=null );
 		assertTrue( "update", fee.getFee()!=null );
 		assertTrue( "update", fee.getAnotherFee().getFee()==fee.getFee() );
 		assertTrue( "updated collection", fee.getFees().contains("new element") );
 		assertTrue( "updated collection", !fee.getFees().contains("an element") );
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 
 		fee.setQux( new Qux("quxy") );
+
 		s = openSession();
+		s.beginTransaction();
 		s.saveOrUpdate(fee);
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 
 		fee.getQux().setStuff("xxx");
+
 		s = openSession();
+		s.beginTransaction();
 		s.saveOrUpdate(fee);
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 
 		s = openSession();
+		s.beginTransaction();
 		s.load( fee, fee.getKey() );
 		assertTrue( "cascade update", fee.getQux()!=null );
 		assertTrue( "cascade update", fee.getQux().getStuff().equals("xxx") );
@@ -3632,38 +3756,38 @@ public class FooBarTest extends LegacyTestCase {
 		assertTrue( "update", fee.getAnotherFee().getFee()==fee.getFee() );
 		fee.getAnotherFee().setAnotherFee(null);
 		s.delete(fee);
-		s.delete("from Fee fee");
-		s.flush();
-		s.connection().commit();
+		doDelete( s, "from Fee fee" );
+		s.getTransaction().commit();
 		s.close();
 
 		s = openSession();
-		Transaction tx = s.beginTransaction();
-		assertTrue( s.find("from Fee fee").size()==0 );
-		tx.commit();
+		s.beginTransaction();
+		assertTrue( s.createQuery( "from Fee fee" ).list().size()==0 );
+		s.getTransaction().commit();
 		s.close();
 	}
 
 	public void testArraysOfTimes() throws Exception {
 		Session s = openSession();
+		s.beginTransaction();
 		Baz baz = new Baz() ;
 		s.save(baz);
 		baz.setDefaults();
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
-		s = openSession();
 
+		s = openSession();
+		s.beginTransaction();
 		baz.getTimeArray()[2] = new Date(123);
 		baz.getTimeArray()[3] = new java.sql.Time(1234);
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
+
 		s = openSession();
+		s.beginTransaction();
 		baz = (Baz) s.load( Baz.class, baz.getCode() );
 		s.delete(baz);
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 	}
 
@@ -3711,7 +3835,7 @@ public class FooBarTest extends LegacyTestCase {
 		foo = new Foo();
 		s.save(foo);
 		foo.setCustom( new String[] { "one", "two" } );
-		assertTrue( s.find("from Foo foo where foo.custom.s1 = 'one'").get(0)==foo );
+		assertTrue( s.createQuery( "from Foo foo where foo.custom.s1 = 'one'" ).list().get(0)==foo );
 		s.delete(foo);
 		txn.commit();
 		s.close();
@@ -3720,36 +3844,37 @@ public class FooBarTest extends LegacyTestCase {
 
 	public void testNoForeignKeyViolations() throws Exception {
 		Session s = openSession();
+		s.beginTransaction();
 		Glarch g1 = new Glarch();
 		Glarch g2 = new Glarch();
 		g1.setNext(g2);
 		g2.setNext(g1);
 		s.save(g1);
 		s.save(g2);
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
+
 		s = openSession();
-		List l = s.find("from Glarch g where g.next is not null");
+		s.beginTransaction();
+		List l = s.createQuery( "from Glarch g where g.next is not null" ).list();
 		s.delete( l.get(0) );
 		s.delete( l.get(1) );
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 	}
 
 	public void testLazyCollections() throws Exception {
 		Session s = openSession();
+		s.beginTransaction();
 		Qux q = new Qux();
 		s.save(q);
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 
 		s = openSession();
+		s.beginTransaction();
 		q = (Qux) s.load( Qux.class, q.getKey() );
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 
 		System.out.println("Two exceptions are supposed to occur:");
@@ -3772,52 +3897,55 @@ public class FooBarTest extends LegacyTestCase {
 		assertTrue( "lazy collection with many-to-many", ok );
 
 		s = openSession();
+		s.beginTransaction();
 		q = (Qux) s.load( Qux.class, q.getKey() );
 		s.delete(q);
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 	}
 
 	public void testNewSessionLifecycle() throws Exception {
 		Session s = openSession();
+		s.beginTransaction();
 		Serializable fid = null;
 		try {
 			Foo f = new Foo();
 			s.save(f);
 			fid = s.getIdentifier(f);
-			s.flush();
-			s.connection().commit();
+			s.getTransaction().commit();
 		}
 		catch (Exception e) {
-			s.connection().rollback();
+			s.getTransaction().rollback();
 			throw e;
 		}
 		finally {
 			s.close();
 		}
+
 		s = openSession();
+		s.beginTransaction();
 		try {
 			Foo f = new Foo();
 			s.delete(f);
-			s.flush();
-			s.connection().commit();
+			s.getTransaction().commit();
 		}
 		catch (Exception e) {
-			s.connection().rollback();
+			s.getTransaction().rollback();
 		}
 		finally {
 			s.close();
 		}
+
 		s = openSession();
+		s.beginTransaction();
 		try {
 			Foo f = (Foo) s.load(Foo.class, fid, LockMode.UPGRADE);
 			s.delete(f);
 			s.flush();
-			s.connection().commit();
+			s.getTransaction().commit();
 		}
 		catch (Exception e) {
-			s.connection().rollback();
+			s.getTransaction().rollback();
 			throw e;
 		}
 		finally {
@@ -3827,50 +3955,56 @@ public class FooBarTest extends LegacyTestCase {
 
 	public void testDisconnect() throws Exception {
 		Session s = openSession();
+		s.beginTransaction();
 		Foo foo = new Foo();
 		Foo foo2 = new Foo();
 		s.save(foo);
 		s.save(foo2);
 		foo2.setFoo(foo);
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
+
 		s.disconnect();
 		s.reconnect();
+
 		s.delete(foo);
 		foo2.setFoo(null);
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
+
 		s.disconnect();
 		s.reconnect();
+
 		s.delete(foo2);
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 	}
 
 
 
 	public void testOrderBy() throws Exception {
-
 		Session s = openSession();
-		Transaction tx = s.beginTransaction();
+		s.beginTransaction();
 		Foo foo = new Foo();
 		s.save(foo);
-		List list = s.find("select foo from Foo foo, Fee fee where foo.dependent = fee order by foo.string desc, foo.component.count asc, fee.id");
+		List list = s.createQuery(
+				"select foo from Foo foo, Fee fee where foo.dependent = fee order by foo.string desc, foo.component.count asc, fee.id"
+		).list();
 		assertTrue( "order by", list.size()==1 );
 		Foo foo2 = new Foo();
 		s.save(foo2);
 		foo.setFoo(foo2);
-		list = s.find("select foo.foo, foo.dependent from Foo foo order by foo.foo.string desc, foo.component.count asc, foo.dependent.id");
+		list = s.createQuery(
+				"select foo.foo, foo.dependent from Foo foo order by foo.foo.string desc, foo.component.count asc, foo.dependent.id"
+		).list();
 		assertTrue( "order by", list.size()==1 );
-		list = s.find("select foo from Foo foo order by foo.dependent.id, foo.dependent.fi");
+		list = s.createQuery( "select foo from Foo foo order by foo.dependent.id, foo.dependent.fi" ).list();
 		assertTrue( "order by", list.size()==2 );
 		s.delete(foo);
 		s.delete(foo2);
-		tx.commit();
+		s.getTransaction().commit();
 		s.close();
 
 		s = openSession();
+		s.beginTransaction();
 		Many manyB = new Many();
 		s.save(manyB);
 		One oneB = new One();
@@ -3883,63 +4017,30 @@ public class FooBarTest extends LegacyTestCase {
 		s.save(oneA);
 		oneA.setValue("a");
 		manyA.setOne(oneA);
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 
 		s = openSession();
-		Iterator it = s.iterate(
-			"SELECT one FROM " +
-			One.class.getName() +
-			" one ORDER BY one.value ASC"
-		);
-		int count = 0;
-		while ( it.hasNext() ) {
-			One one = (One)it.next();
-			switch (count) {
-				case 0:
-				assertTrue("ordering failed", "a".equals(one.getValue()));
-				break;
-				case 1:
-				assertTrue("ordering failed", "b".equals(one.getValue()));
-				break;
-				default:
-				assertTrue("more than two elements", false);
-				break;
-			}
-			count ++;
-		}
-		s.flush();
-		s.connection().commit();
+		s.beginTransaction();
+		List results = s.createQuery( "SELECT one FROM " + One.class.getName() + " one ORDER BY one.value ASC" ).list();
+		assertEquals( 2, results.size() );
+		assertEquals( "'a' isn't first element", "a", ( (One) results.get(0) ).getValue() );
+		assertEquals( "'b' isn't second element", "b", ( (One) results.get(2) ).getValue() );
+		s.getTransaction().commit();
 		s.close();
 
 		s = openSession();
-		it = s.iterate(
-			"SELECT many.one FROM " +
-			Many.class.getName() +
-			" many ORDER BY many.one.value ASC, many.one.id"
-		);
-		count = 0;
-		while ( it.hasNext() ) {
-			One one = (One)it.next();
-			switch (count) {
-				case 0:
-				assertTrue("'a' isn't first element", "a".equals(one.getValue()));
-				break;
-				case 1:
-				assertTrue("'b' isn't second element", "b".equals(one.getValue()));
-				break;
-				default:
-				assertTrue("more than two elements", false);
-				break;
-			}
-			count ++;
-		}
-		s.flush();
-		s.connection().commit();
+		results = s.createQuery( "SELECT many.one FROM " + Many.class.getName() + " many ORDER BY many.one.value ASC, many.one.id" )
+				.list();
+		assertEquals( 2, results.size() );
+		assertEquals( 2, results.size() );
+		assertEquals( "'a' isn't first element", "a", ( (One) results.get(0) ).getValue() );
+		assertEquals( "'b' isn't second element", "b", ( (One) results.get(2) ).getValue() );
+		s.getTransaction().commit();
 		s.close();
 
 		s = openSession();
+		s.beginTransaction();
 		oneA = (One)s.load(One.class, oneA.getKey());
 		manyA = (Many)s.load(Many.class, manyA.getKey());
 		oneB = (One)s.load(One.class, oneB.getKey());
@@ -3948,90 +4049,57 @@ public class FooBarTest extends LegacyTestCase {
 		s.delete(oneA);
 		s.delete(manyB);
 		s.delete(oneB);
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 	}
 
 	public void testManyToOne() throws Exception {
 		Session s = openSession();
+		s.beginTransaction();
 		One one = new One();
 		s.save(one);
 		one.setValue("yada");
 		Many many = new Many();
 		many.setOne(one);
 		s.save(many);
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 
 		s = openSession();
+		s.beginTransaction();
 		one = (One) s.load( One.class, one.getKey() );
 		one.getManies().size();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 
-
 		s = openSession();
+		s.beginTransaction();
 		many = (Many) s.load( Many.class, many.getKey() );
 		assertTrue( "many-to-one assoc", many.getOne()!=null );
 		s.delete( many.getOne() );
 		s.delete(many);
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 	}
 
 	public void testSaveDelete() throws Exception {
 		Session s = openSession();
+		s.beginTransaction();
 		Foo f = new Foo();
 		s.save(f);
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 
 		s = openSession();
+		s.beginTransaction();
 		s.delete( s.load( Foo.class, f.getKey() ) );
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 	}
 
-	/*public void testIdNotFound() throws Exception {
-		// The following test is only enabled for MySQL which has no foreign key constraints.
-		// I disabled this test cos it didn't clean up after itself so other tests failed
-		if (db.equals("mysql")) {
-			Session s = sessionsopenSession();
-			Glarch g = (Glarch) s.create(Glarch.class);
-			Glarch g2 = (Glarch) s.create(Glarch.class);
-			g.setNext(g2);
-			Serializable gid = s.getID(g);
-			Serializable g2id = s.getID(g2);
-			s.commit();
-
-			s = sessionsopenSession();
-			g2 = (Glarch) s.load( Glarch.class, g2id );
-			s.delete(g2);
-			s.commit();
-
-			s = sessionsopenSession();
-			boolean ok = false;
-			try {
-				g = (Glarch) s.load( Glarch.class, gid );
-			}
-			catch (HibernateException e) {
-				ok = "id not found or provided object was wrong class".equals(e.getMessage());
-			}
-			catch (java.lang.StackOverflowError soe) {
-				ok = false;
-			}
-			assertTrue( ok, "id not found");
-			s.cancel();
-		}
-	}*/
-
 	public void testProxyArray() throws Exception {
 		Session s = openSession();
+		s.beginTransaction();
 		GlarchProxy g = new Glarch();
 		Glarch g1 = new Glarch();
 		Glarch g2 = new Glarch();
@@ -4047,25 +4115,23 @@ public class FooBarTest extends LegacyTestCase {
 		s.save(g1);
 		s.save(g2);
 		Serializable id = s.getIdentifier(g);
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 
 		s = openSession();
+		s.beginTransaction();
 		g = (GlarchProxy) s.load(Glarch.class, id);
 		assertTrue( "array of proxies", g.getProxyArray().length==2 );
 		assertTrue( "array of proxies", g.getProxyArray()[0]!=null );
 		assertTrue("deferred load test",g.getProxyArray()[1].getProxyArray()[0]==null );
 		assertTrue("deferred load test",g.getProxyArray()[1].getProxyArray()[2]==g );
 		assertTrue( "set of proxies", g.getProxySet().size()==2 );
-		Iterator iter = s.iterate("from Glarch g");
+		Iterator iter = s.createQuery( "from Glarch g" ).iterate();
 		while ( iter.hasNext() ) {
 			iter.next();
 			iter.remove();
 		}
-
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.disconnect();
 		SerializationHelper.deserialize( SerializationHelper.serialize(s) );
 		s.close();
@@ -4073,57 +4139,60 @@ public class FooBarTest extends LegacyTestCase {
 
 	public void testCache() throws Exception {
 		Session s = openSession();
+		s.beginTransaction();
 		Immutable im = new Immutable();
 		s.save(im);
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
+
 		s = openSession();
+		s.beginTransaction();
 		s.load( im, im.getId() );
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
+
 		s = openSession();
+		s.beginTransaction();
 		s.load( im, im.getId() );
-		assertTrue(
-			"cached object identity",
-			s.find(
-				"from Immutable im where im = ?",
+		assertEquals(
+				"cached object identity",
 				im,
-				Hibernate.entity(Immutable.class)
-			).get(0)==im &&
-			im == s.load( Immutable.class, im.getId() )
+				s.createQuery( "from Immutable im where im = ?" ).setParameter( 0, im, Hibernate.entity(Immutable.class) ).uniqueResult()
 		);
 		s.connection().createStatement().executeUpdate("delete from immut");
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 	}
 
 	public void testFindLoad() throws Exception {
 		Session s = openSession();
+		s.beginTransaction();
 		FooProxy foo = new Foo();
 		s.save(foo);
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
+
 		s = openSession();
-		foo = (FooProxy) s.find("from Foo foo").get(0);
+		s.beginTransaction();
+		foo = (FooProxy) s.createQuery( "from Foo foo" ).list().get(0);
 		FooProxy foo2 = (FooProxy) s.load( Foo.class, foo.getKey() );
 		assertTrue("find returns same object as load", foo==foo2);
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
+
 		s = openSession();
+		s.beginTransaction();
 		foo2 = (FooProxy) s.load( Foo.class, foo.getKey() );
-		foo = (FooProxy) s.find("from Foo foo").get(0);
+		foo = (FooProxy) s.createQuery( "from Foo foo" ).list().get(0);
 		assertTrue("find returns same object as load", foo==foo2);
-		s.delete("from Foo foo");
-		s.flush();
-		s.connection().commit();
+		doDelete( s, "from Foo foo" );
+		s.getTransaction().commit();
 		s.close();
 	}
 
 	public void testRefresh() throws Exception {
 		Session s = openSession();
+		s.beginTransaction();
 		Foo foo = new Foo();
 		s.save(foo);
 		s.flush();
@@ -4136,8 +4205,7 @@ public class FooBarTest extends LegacyTestCase {
 			assertTrue( s.getCurrentLockMode(foo)==LockMode.UPGRADE );
 		}
 		s.delete(foo);
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 	}
 
@@ -4146,9 +4214,9 @@ public class FooBarTest extends LegacyTestCase {
 		Transaction txn = s.beginTransaction();
 		FooProxy foo = new Foo();
 		s.save(foo);
-		assertTrue( "autoflush create", s.find("from Foo foo").size()==1 );
+		assertTrue( "autoflush create", s.createQuery( "from Foo foo" ).list().size()==1 );
 		foo.setChar( new Character('X') );
-		assertTrue( "autoflush update", s.find("from Foo foo where foo.char='X'").size()==1 );
+		assertTrue( "autoflush update", s.createQuery( "from Foo foo where foo.char='X'" ).list().size()==1 );
 		txn.commit();
 		s.close();
 
@@ -4159,46 +4227,52 @@ public class FooBarTest extends LegacyTestCase {
 		//assertTrue( s.find("from Foo foo where not foo.char='X'").size()==1, "autoflush update" );
 		if ( !(getDialect() instanceof MySQLDialect) && !(getDialect() instanceof HSQLDialect) && !(getDialect() instanceof PointbaseDialect) )  {
 			foo.setBytes( "osama".getBytes() );
-			assertTrue( "autoflush collection update", s.find("from Foo foo where 111 in elements(foo.bytes)").size()==1 );
+			assertTrue( "autoflush collection update",
+					s.createQuery( "from Foo foo where 111 in elements(foo.bytes)" ).list().size()==1 );
 			foo.getBytes()[0] = 69;
-			assertTrue( "autoflush collection update", s.find("from Foo foo where 69 in elements(foo.bytes)").size()==1 );
+			assertTrue( "autoflush collection update",
+					s.createQuery( "from Foo foo where 69 in elements(foo.bytes)" ).list()
+							.size()==1 );
 		}
 		s.delete(foo);
-		assertTrue( "autoflush delete", s.find("from Foo foo").size()==0 );
+		assertTrue( "autoflush delete", s.createQuery( "from Foo foo" ).list().size()==0 );
 		txn.commit();
 		s.close();
 	}
 
 	public void testVeto() throws Exception {
 		Session s = openSession();
+		s.beginTransaction();
 		Vetoer v = new Vetoer();
 		s.save(v); Serializable id = s.save(v);
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 		s = openSession();
-		s.update(v, id); s.update(v, id);
-		s.delete(v); s.delete(v);
-		s.flush();
-		s.connection().commit();
+		s.update(v, id);
+		s.update(v, id);
+		s.delete(v);
+		s.delete(v);
+		s.getTransaction().commit();
 		s.close();
 	}
 
 	public void testSerializableType() throws Exception {
 		Session s = openSession();
+		s.beginTransaction();
 		Vetoer v = new Vetoer();
 		v.setStrings( new String[] { "foo", "bar", "baz" } );
 		s.save(v); Serializable id = s.save(v);
 		v.getStrings()[1] = "osama";
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
+
 		s = openSession();
+		s.beginTransaction();
 		v = (Vetoer) s.load(Vetoer.class, id);
 		assertTrue( "serializable type", v.getStrings()[1].equals("osama") );
 		s.delete(v); s.delete(v);
 		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 	}
 
@@ -4215,17 +4289,17 @@ public class FooBarTest extends LegacyTestCase {
 		tx = s.beginTransaction();
 		baz = (Baz) s.load(Baz.class, baz.getCode());
 		baz.getStringArray()[0] = "bark";
-		Iterator i = s.iterate("select elements(baz.stringArray) from Baz baz");
+		Iterator i = s.createQuery( "select elements(baz.stringArray) from Baz baz" ).iterate();
 		boolean found = false;
 		while ( i.hasNext() ) {
 			if ( "bark".equals( i.next() ) ) found = true;
 		}
 		assertTrue(found);
 		baz.setStringArray(null);
-		i = s.iterate("select distinct elements(baz.stringArray) from Baz baz");
+		i = s.createQuery( "select distinct elements(baz.stringArray) from Baz baz" ).iterate();
 		assertTrue( !i.hasNext() );
 		baz.setStringArray( new String[] { "foo", "bar" } );
-		i = s.iterate("select elements(baz.stringArray) from Baz baz");
+		i = s.createQuery( "select elements(baz.stringArray) from Baz baz" ).iterate();
 		assertTrue( i.hasNext() );
 
 		Foo foo = new Foo();
@@ -4233,7 +4307,7 @@ public class FooBarTest extends LegacyTestCase {
 		s.flush();
 		baz.setFooArray( new Foo[] {foo} );
 
-		i = s.iterate("select foo from Baz baz join baz.fooArray foo");
+		i = s.createQuery( "select foo from Baz baz join baz.fooArray foo" ).iterate();
 		found = false;
 		while ( i.hasNext() ) {
 			if ( foo==i.next() ) found = true;
@@ -4241,31 +4315,31 @@ public class FooBarTest extends LegacyTestCase {
 		assertTrue(found);
 
 		baz.getFooArray()[0] = null;
-		i = s.iterate("select foo from Baz baz join baz.fooArray foo");
+		i = s.createQuery( "select foo from Baz baz join baz.fooArray foo" ).iterate();
 		assertTrue( !i.hasNext() );
 		baz.getFooArray()[0] = foo;
-		i = s.iterate("select elements(baz.fooArray) from Baz baz");
+		i = s.createQuery( "select elements(baz.fooArray) from Baz baz" ).iterate();
 		assertTrue( i.hasNext() );
 
-		if ( !(getDialect() instanceof MySQLDialect) && !(getDialect() instanceof HSQLDialect) && !(getDialect() instanceof InterbaseDialect) && !(getDialect() instanceof PointbaseDialect) && !(getDialect() instanceof SAPDBDialect) )  {
+		if ( !(getDialect() instanceof MySQLDialect)
+				&& !(getDialect() instanceof HSQLDialect)
+				&& !(getDialect() instanceof InterbaseDialect)
+				&& !(getDialect() instanceof PointbaseDialect)
+				&& !(getDialect() instanceof SAPDBDialect) )  {
 			baz.getFooArray()[0] = null;
-			i = s.iterate(
-				"from Baz baz where ? in elements(baz.fooArray)",
-				foo, Hibernate.entity(Foo.class)
-			);
+			i = s.createQuery( "from Baz baz where ? in elements(baz.fooArray)" )
+					.setParameter( 0, foo, Hibernate.entity( Foo.class ) )
+					.iterate();
 			assertTrue( !i.hasNext() );
 			baz.getFooArray()[0] = foo;
-			i = s.iterate(
-				"select foo from Foo foo where foo in "
-				+ "(select elt from Baz baz join baz.fooArray elt)"
-			);
+			i = s.createQuery( "select foo from Foo foo where foo in (select elt from Baz baz join baz.fooArray elt)" )
+					.iterate();
 			assertTrue( i.hasNext() );
 		}
 		s.delete(foo);
 		s.delete(baz);
 		tx.commit();
 		s.close();
-
 	}
 
 	public void testUserProvidedConnection() throws Exception {
@@ -4273,13 +4347,13 @@ public class FooBarTest extends LegacyTestCase {
 		dcp.configure( Environment.getProperties() );
 		Session s = getSessions().openSession( dcp.getConnection() );
 		Transaction tx = s.beginTransaction();
-		s.find("from Fo");
+		s.createQuery( "from Fo" ).list();
 		tx.commit();
 		Connection c = s.disconnect();
 		assertTrue( c!=null );
 		s.reconnect(c);
 		tx = s.beginTransaction();
-		s.find("from Fo");
+		s.createQuery( "from Fo" ).list();
 		tx.commit();
 		assertTrue( s.close()==c );
 		c.close();
@@ -4287,24 +4361,26 @@ public class FooBarTest extends LegacyTestCase {
 
 	public void testCachedCollection() throws Exception {
 		Session s = openSession();
+		s.beginTransaction();
 		Baz baz = new Baz();
 		baz.setDefaults();
 		s.save(baz);
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
+
 		s = openSession();
+		s.beginTransaction();
 		baz = (Baz) s.load( Baz.class, baz.getCode() );
 		( (FooComponent) baz.getTopComponents().get(0) ).setCount(99);
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
+
 		s = openSession();
+		s.beginTransaction();
 		baz = (Baz) s.load( Baz.class, baz.getCode() );
 		assertTrue( ( (FooComponent) baz.getTopComponents().get(0) ).getCount()==99 );
 		s.delete(baz);
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 	}
 
@@ -4321,7 +4397,7 @@ public class FooBarTest extends LegacyTestCase {
 		//s.flush();
 		//s.connection().commit();
 		assertTrue(
-			s.iterate("from Foo foo where foo.dependent.qux.foo.string = 'foo2'").hasNext()
+				s.createQuery( "from Foo foo where foo.dependent.qux.foo.string = 'foo2'" ).iterate().hasNext()
 		);
 		s.delete(foo);
 		txn.commit();
@@ -4330,6 +4406,7 @@ public class FooBarTest extends LegacyTestCase {
 
 	public void testLoadAfterDelete() throws Exception {
 		Session s = openSession();
+		s.beginTransaction();
 		Foo foo = new Foo();
 		Serializable id = s.save(foo);
 		s.flush();
@@ -4373,67 +4450,69 @@ public class FooBarTest extends LegacyTestCase {
 			err=true;
 		}
 		assertTrue(err);
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 	}
 
 	public void testObjectType() throws Exception {
 		Session s = openSession();
+		s.beginTransaction();
 		GlarchProxy g = new Glarch();
 		Foo foo = new Foo();
 		g.setAny(foo);
 		Serializable gid = s.save(g);
 		s.save(foo);
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
+
 		s = openSession();
+		s.beginTransaction();
 		g = (GlarchProxy) s.load(Glarch.class, gid);
 		assertTrue( g.getAny()!=null && g.getAny() instanceof FooProxy );
 		s.delete( g.getAny() );
 		s.delete(g);
-		//s.delete( g.getAny() );
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 	}
 
 
 	public void testAny() throws Exception {
 		Session s = openSession();
+		s.beginTransaction();
 		One one = new One();
 		BarProxy foo = new Bar();
 		foo.setObject(one);
-		//Serializable oid = s.save(one);
 		Serializable fid = s.save(foo);
 		Serializable oid = one.getKey();
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
+
 		s = openSession();
-		assertTrue( s.find(
-			"from Bar bar where bar.object.id = ? and bar.object.class = ?",
-			new Object[] { oid, new Character('O') },
-			new Type[] { Hibernate.LONG, Hibernate.CHARACTER }
-		).size()==1 );
-		assertTrue( s.find(
-			"select one from One one, Bar bar where bar.object.id = one.id and bar.object.class = 'O'"
-		).size()==1 );
-		s.flush();
-		s.connection().commit();
+		s.beginTransaction();
+		List results = s.createQuery( "from Bar bar where bar.object.id = ? and bar.object.class = ?" )
+				.setParameter( 0, oid, Hibernate.LONG )
+				.setParameter( 1, new Character('O'), Hibernate.CHARACTER )
+				.list();
+		assertEquals( 1, results.size() );
+		results = s.createQuery( "select one from One one, Bar bar where bar.object.id = one.id and bar.object.class = 'O'" )
+				.list();
+		assertEquals( 1, results.size() );
+		s.getTransaction().commit();
 		s.close();
+
 		s = openSession();
+		s.beginTransaction();
 		foo = (BarProxy) s.load(Foo.class, fid);
 		assertTrue( foo.getObject()!=null && foo.getObject() instanceof One && s.getIdentifier( foo.getObject() ).equals(oid) );
 		//s.delete( foo.getObject() );
 		s.delete(foo);
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 	}
 
 	public void testEmbeddedCompositeID() throws Exception {
 		Session s = openSession();
+		s.beginTransaction();
 		Location l = new Location();
 		l.setCountryCode("AU");
 		l.setDescription("foo bar");
@@ -4442,26 +4521,31 @@ public class FooBarTest extends LegacyTestCase {
 		l.setStreetNumber(300);
 		l.setCity("Melbourne");
 		s.save(l);
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
+
 		s = openSession();
+		s.beginTransaction();
 		s.setFlushMode(FlushMode.MANUAL);
-		l = (Location) s.find("from Location l where l.countryCode = 'AU' and l.description='foo bar'").get(0);
+		l = (Location) s.createQuery( "from Location l where l.countryCode = 'AU' and l.description='foo bar'" )
+				.list()
+				.get(0);
 		assertTrue( l.getCountryCode().equals("AU") );
 		assertTrue( l.getCity().equals("Melbourne") );
 		assertTrue( l.getLocale().equals( Locale.getDefault() ) );
 		assertTrue( s.createCriteria(Location.class).add( Restrictions.eq( "streetNumber", new Integer(300) ) ).list().size()==1 );
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 
 		s = openSession();
+		s.beginTransaction();
 		l.setDescription("sick're");
 		s.update(l);
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
+
 		s = openSession();
+		s.beginTransaction();
 		l = new Location();
 		l.setCountryCode("AU");
 		l.setDescription("foo bar");
@@ -4472,8 +4556,7 @@ public class FooBarTest extends LegacyTestCase {
 		assertTrue( l==s.load(Location.class, l) );
 		assertTrue( l.getLocale().equals( Locale.getDefault() ) );
 		s.delete(l);
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 	}
 
@@ -4502,7 +4585,7 @@ public class FooBarTest extends LegacyTestCase {
 		assertTrue( baz.getCascadingBars().iterator().next()!=null );
 		baz.getCascadingBars().clear(); //test all-delete-orphan;
 		s.flush();
-		assertTrue( s.find("from Bar bar").size()==0 );
+		assertTrue( s.createQuery( "from Bar bar" ).list().size()==0 );
 		s.delete(baz);
 		t.commit();
 		s.close();
@@ -4528,7 +4611,7 @@ public class FooBarTest extends LegacyTestCase {
 		bars = baz.getCascadingBars();
 		assertEquals( 4, bars.size() );
 		bars.remove( bars.iterator().next() );
-		assertEquals( 3, s.find("From Bar bar").size() );
+		assertEquals( 3, s.createQuery( "From Bar bar" ).list().size() );
 		t.commit();
 		s.close();
 
@@ -4540,7 +4623,7 @@ public class FooBarTest extends LegacyTestCase {
 		bars.remove( bars.iterator().next() );
 		s.delete(baz);
 		bars.remove( bars.iterator().next() );
-		assertEquals( 0, s.find("From Bar bar").size() );
+		assertEquals( 0, s.createQuery( "From Bar bar" ).list().size() );
 		t.commit();
 		s.close();
 
@@ -4574,8 +4657,8 @@ public class FooBarTest extends LegacyTestCase {
 		s = openSession();
 		t = s.beginTransaction();
 		s.update(baz);
-		assertEquals( 2, s.find("From Bar bar").size() );
-		assertEquals( 3, s.find("From Foo foo").size() );
+		assertEquals( 2, s.createQuery( "From Bar bar" ).list().size() );
+		assertEquals( 3, s.createQuery( "From Foo foo" ).list().size() );
 		t.commit();
 		s.close();
 
@@ -4584,10 +4667,10 @@ public class FooBarTest extends LegacyTestCase {
 		t = s.beginTransaction();
 		s.update(baz);
 		bars.remove( bars.iterator().next() );
-		assertEquals( 1, s.find("From Foo foo").size() );
+		assertEquals( 1, s.createQuery( "From Foo foo" ).list().size() );
 		s.delete(baz);
 		//s.flush();
-		assertEquals( 0, s.find("From Foo foo").size() );
+		assertEquals( 0, s.createQuery( "From Foo foo" ).list().size() );
 		t.commit();
 		s.close();
 
@@ -4595,6 +4678,7 @@ public class FooBarTest extends LegacyTestCase {
 
 	public void testProxiesInCollections() throws Exception {
 		Session s = openSession();
+		s.beginTransaction();
 		Baz baz = new Baz();
 		Bar bar = new Bar();
 		Bar bar2 = new Bar();
@@ -4615,11 +4699,11 @@ public class FooBarTest extends LegacyTestCase {
 		baz.setFooBag(list);
 		Serializable id = s.save(baz);
 		Serializable bid = ( (Bar) baz.getCascadingBars().iterator().next() ).getKey();
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 
 		s = openSession();
+		s.beginTransaction();
 		BarProxy barprox = (BarProxy) s.load(Bar.class, bid);
 		BarProxy bar2prox = (BarProxy) s.load(Bar.class, bar2id);
 		assertTrue(bar2prox instanceof HibernateProxy);
@@ -4633,10 +4717,9 @@ public class FooBarTest extends LegacyTestCase {
 		assertTrue( baz.getFooArray()[1]==bar2prox );
 		if ( !isOuterJoinFetchingDisabled() ) assertTrue( !(baz.getFooBag().iterator().next() instanceof HibernateProxy) ); //many-to-many outer-join="true"
 		assertTrue( !(baz.getFooSet().iterator().next() instanceof HibernateProxy) ); //one-to-many
-		s.delete("from Baz");
-		s.delete("from Foo");
-		s.flush();
-		s.connection().commit();
+		doDelete( s, "from Baz" );
+		doDelete( s, "from Foo" );
+		s.getTransaction().commit();
 		s.close();
 	}
 
@@ -4665,7 +4748,7 @@ public class FooBarTest extends LegacyTestCase {
 		assertTrue( q.list().size()==10 );
 		q.setMaxResults(5);
 		assertTrue( q.list().size()==5 );
-		s.delete("from Foo");
+		doDelete( s, "from Foo" );
 		txn.commit();
 		s.close();
 

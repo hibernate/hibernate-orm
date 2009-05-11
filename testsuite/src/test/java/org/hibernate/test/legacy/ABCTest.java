@@ -42,7 +42,7 @@ public class ABCTest extends LegacyTestCase {
 		s.clear();
 		getSessions().evict(D.class);
 		getSessions().evict(A.class);
-		assertTrue( s.find("from D d join d.reverse r join d.inverse i where i = r").size()==1 );
+		assertTrue( s.createQuery( "from D d join d.reverse r join d.inverse i where i = r" ).list().size()==1 );
 		t.commit();
 		s.close();
 	}
@@ -75,7 +75,7 @@ public class ABCTest extends LegacyTestCase {
 		d.setId( c1.getId() );
 		s.save(d);
 
-		assertTrue( s.find("from C2 c where 1=1 or 1=1").size()==0 );
+		assertTrue( s.createQuery( "from C2 c where 1=1 or 1=1" ).list().size()==0 );
 
 		t.commit();
 		s.close();

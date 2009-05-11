@@ -63,10 +63,10 @@ public class IJTest extends LegacyTestCase {
 		s.close();
 
 		s = getSessions().openSession();
-		assertTrue( s.find("from I").size()==2 );
-		assertTrue( s.find("from J").size()==1 );
-		assertTrue( s.find("from I i where i.class = 0").size()==1 );
-		assertTrue( s.find("from I i where i.class = 1").size()==1 );
+		assertTrue( s.createQuery( "from I" ).list().size()==2 );
+		assertTrue( s.createQuery( "from J" ).list().size()==1 );
+		assertTrue( s.createQuery( "from I i where i.class = 0" ).list().size()==1 );
+		assertTrue( s.createQuery( "from I i where i.class = 1" ).list().size()==1 );
 		s.connection().commit();
 		s.close();
 

@@ -70,11 +70,11 @@ public class IJ2Test extends LegacyTestCase {
 		getSessions().evict(I.class);
 
 		s = getSessions().openSession();
-		assertTrue( s.find("from I").size()==2 );
-		assertTrue( s.find("from J").size()==1 );
-		assertTrue( s.find("from J j where j.amount > 0 and j.name is not null").size()==1 );
-		assertTrue( s.find("from I i where i.class = org.hibernate.test.legacy.I").size()==1 );
-		assertTrue( s.find("from I i where i.class = J").size()==1 );
+		assertTrue( s.createQuery( "from I" ).list().size()==2 );
+		assertTrue( s.createQuery( "from J" ).list().size()==1 );
+		assertTrue( s.createQuery( "from J j where j.amount > 0 and j.name is not null" ).list().size()==1 );
+		assertTrue( s.createQuery( "from I i where i.class = org.hibernate.test.legacy.I" ).list().size()==1 );
+		assertTrue( s.createQuery( "from I i where i.class = J" ).list().size()==1 );
 		s.connection().commit();
 		s.close();
 
@@ -108,9 +108,9 @@ public class IJ2Test extends LegacyTestCase {
 		getSessions().evict(I.class);
 
 		s = getSessions().openSession();
-		assertTrue( s.find("from K k inner join k.is i where i.name = 'j'").size()==1 );
-		assertTrue( s.find("from K k inner join k.is i where i.name = 'i'").size()==1 );
-		assertTrue( s.find("from K k left join fetch k.is").size()==2 );
+		assertTrue( s.createQuery( "from K k inner join k.is i where i.name = 'j'" ).list().size()==1 );
+		assertTrue( s.createQuery( "from K k inner join k.is i where i.name = 'i'" ).list().size()==1 );
+		assertTrue( s.createQuery( "from K k left join fetch k.is" ).list().size()==2 );
 		s.connection().commit();
 		s.close();
 

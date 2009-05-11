@@ -95,6 +95,7 @@ public class FumTest extends LegacyTestCase {
 
 	public void testCriteriaCollection() throws Exception {
 		Session s = openSession();
+		s.beginTransaction();
 		Fum fum = new Fum( fumKey("fum") );
 		fum.setFum("a value");
 		fum.getMapComponent().getFummap().put("self", fum);
@@ -102,10 +103,11 @@ public class FumTest extends LegacyTestCase {
 		fum.getMapComponent().getStringmap().put("string2", "a notha staring");
 		fum.getMapComponent().setCount(1);
 		s.save(fum);
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
+
 		s = openSession();
+		s.beginTransaction();
 		Fum b = (Fum) s.createCriteria(Fum.class).add(
 			Restrictions.in("fum", new String[] { "a value", "no value" } )
 		)
@@ -114,8 +116,7 @@ public class FumTest extends LegacyTestCase {
 		assertTrue( b.getMapComponent().getFummap().size()==1 );
 		assertTrue( b.getMapComponent().getStringmap().size()==2 );
 		s.delete(b);
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 	}
 
@@ -166,7 +167,7 @@ public class FumTest extends LegacyTestCase {
 		base = s.createCriteria(Fum.class)
 			.add( Restrictions.like("fum", "f%") )
 			.setResultTransformer(Criteria.ALIAS_TO_ENTITY_MAP)
-			.setFetchMode("friends", FetchMode.EAGER);
+			.setFetchMode( "friends", FetchMode.JOIN );
 		base.createCriteria("fo", "fo")
 			.add( Restrictions.eq( "fum", fum.getFo().getFum() ) );
 		map = (Map) base.list().get(0);
@@ -203,7 +204,9 @@ public class FumTest extends LegacyTestCase {
 		s.delete(fum);
 		s.delete( fum.getFo() );
 		Iterator iter = fum.getFriends().iterator();
-		while ( iter.hasNext() ) s.delete( iter.next() );
+		while ( iter.hasNext() ) {
+			s.delete( iter.next() );
+		}
 		txn.commit();
 		s.close();
 	}
@@ -226,7 +229,6 @@ public class FumTest extends LegacyTestCase {
 	}
 	
 	public void testBeanResultTransformer() throws HibernateException, SQLException {
-		
 		Session s = openSession();
 		Transaction transaction = s.beginTransaction();
 		Fum fum = new Fum( fumKey("fum") );
@@ -271,7 +273,6 @@ public class FumTest extends LegacyTestCase {
 		s.flush();
 		transaction.commit();
 		s.close();
-		
 	}
 	
 	
@@ -284,9 +285,9 @@ public class FumTest extends LegacyTestCase {
 		fum = new Fum( fumKey("fi") );
 		fum.setFum("fee fi fo");
 		s.save(fum);
-		List list = s.find("select fum.id from Fum as fum where not fum.fum='FRIEND'");
+		List list = s.createQuery( "select fum.id from Fum as fum where not fum.fum='FRIEND'" ).list();
 		assertTrue( "list identifiers", list.size()==2);
-		Iterator iter = s.iterate("select fum.id from Fum fum where not fum.fum='FRIEND'");
+		Iterator iter = s.createQuery( "select fum.id from Fum fum where not fum.fum='FRIEND'" ).iterate();
 		int i=0;
 		while ( iter.hasNext() ) {
 			assertTrue( "iterate identifiers",  iter.next() instanceof FumCompositeID);
@@ -302,7 +303,6 @@ public class FumTest extends LegacyTestCase {
 
 
 	public FumCompositeID fumKey(String str) {
-
 		return fumKey(str,false);
 	}
 
@@ -320,7 +320,7 @@ public class FumTest extends LegacyTestCase {
 		else {
 			id.setDate( new Date() );
 		}
-		id.setString( new String(str) );
+		id.setString( str );
 
 		if (aCompositeQueryTest) {
 			id.setShort( fumKeyShort++ );
@@ -353,11 +353,11 @@ public class FumTest extends LegacyTestCase {
 		s.save(fum2);
 		assertTrue(
 			"find composite keyed objects",
-			s.find("from Fum fum where not fum.fum='FRIEND'").size()==2
+				s.createQuery( "from Fum fum where not fum.fum='FRIEND'" ).list().size()==2
 		);
 		assertTrue(
 			"find composite keyed object",
-			s.find("select fum from Fum fum where fum.fum='fee fi fo'").get(0)==fum
+				s.createQuery( "select fum from Fum fum where fum.fum='fee fi fo'" ).list().get(0)==fum
 		);
 		fum.setFo(null);
 		txn.commit();
@@ -365,7 +365,7 @@ public class FumTest extends LegacyTestCase {
 
 		s = openSession();
 		txn = s.beginTransaction();
-		Iterator iter = s.iterate("from Fum fum where not fum.fum='FRIEND'");
+		Iterator iter = s.createQuery( "from Fum fum where not fum.fum='FRIEND'" ).iterate();
 		int i = 0;
 		while ( iter.hasNext() ) {
 			fum = (Fum) iter.next();
@@ -401,6 +401,7 @@ public class FumTest extends LegacyTestCase {
 
 	public void testCompositeIDQuery() throws Exception {
 		Session s = openSession();
+		s.beginTransaction();
 		Fum fee = new Fum( fumKey("fee",true) );
 		fee.setFum("fee");
 		s.save(fee);
@@ -414,38 +415,40 @@ public class FumTest extends LegacyTestCase {
 		Fum fum = new Fum( fumKey("fum",true) );
 		fum.setFum("fum");
 		s.save(fum);
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 
 		s = openSession();
+		s.beginTransaction();
 		// Try to find the Fum object "fo" that we inserted searching by the string in the id
-		List vList = s.find("from Fum fum where fum.id.string='fo'"  );
+		List vList = s.createQuery( "from Fum fum where fum.id.string='fo'" ).list();
 		assertTrue( "find by composite key query (find fo object)", vList.size() == 1 );
 		fum = (Fum)vList.get(0);
 		assertTrue( "find by composite key query (check fo object)", fum.getId().getString().equals("fo") );
 
 		// Try to find the Fum object "fi" that we inserted searching by the date in the id
-		vList = s.find("from Fum fum where fum.id.short = ?",new Short(fiShort),Hibernate.SHORT);
-		assertTrue( "find by composite key query (find fi object)", vList.size() == 1 );
+		vList = s.createQuery( "from Fum fum where fum.id.short = ?" )
+				.setParameter( 0, new Short(fiShort), Hibernate.SHORT )
+				.list();
+		assertEquals( "find by composite key query (find fi object)", 1, vList.size() );
 		fi = (Fum)vList.get(0);
-		assertTrue( "find by composite key query (check fi object)", fi.getId().getString().equals("fi") );
+		assertEquals( "find by composite key query (check fi object)", "fi", fi.getId().getString() );
 
 		// Make sure we can return all of the objects by searching by the date id
-		assertTrue(
-			"find by composite key query with arguments",
-			s.find("from Fum fum where fum.id.date <= ? and not fum.fum='FRIEND'",new Date(),Hibernate.DATE).size()==4
-		);
-		s.flush();
-		s.connection().commit();
+		vList = s.createQuery( "from Fum fum where fum.id.date <= ? and not fum.fum='FRIEND'" )
+				.setParameter( 0, new Date(), Hibernate.DATE )
+				.list();
+		assertEquals( "find by composite key query with arguments", 4, vList.size() );
+		s.getTransaction().commit();
 		s.close();
 
 		s = openSession();
+		s.beginTransaction();
 		assertTrue(
-			s.iterate("select fum.id.short, fum.id.date, fum.id.string from Fum fum").hasNext()
+				s.createQuery( "select fum.id.short, fum.id.date, fum.id.string from Fum fum" ).iterate().hasNext()
 		);
 		assertTrue(
-			s.iterate("select fum.id from Fum fum").hasNext()
+				s.createQuery( "select fum.id from Fum fum" ).iterate().hasNext()
 		);
 		Query qu = s.createQuery("select fum.fum, fum , fum.fum, fum.id.date from Fum fum");
 		Type[] types = qu.getReturnTypes();
@@ -466,34 +469,36 @@ public class FumTest extends LegacyTestCase {
 		assertTrue( "iterate on composite key", j==8 );
 
 		fum = (Fum) s.load( Fum.class, fum.getId() );
-		s.filter( fum.getQuxArray(), "where this.foo is null" );
-		s.filter( fum.getQuxArray(), "where this.foo.id = ?", "fooid", Hibernate.STRING );
+		s.createFilter( fum.getQuxArray(), "where this.foo is null" ).list();
+		s.createFilter( fum.getQuxArray(), "where this.foo.id = ?" )
+				.setParameter( 0, "fooid", Hibernate.STRING )
+				.list();
 		Query f = s.createFilter( fum.getQuxArray(), "where this.foo.id = :fooId" );
 		f.setString("fooId", "abc");
 		assertFalse( f.iterate().hasNext() );
 
-		iter = s.iterate("from Fum fum where not fum.fum='FRIEND'");
+		iter = s.createQuery( "from Fum fum where not fum.fum='FRIEND'" ).iterate();
 		int i = 0;
 		while ( iter.hasNext() ) {
 			fum = (Fum) iter.next();
-			//iter.remove();
 			s.delete(fum);
 			i++;
 		}
 		assertTrue( "iterate on composite key", i==4 );
 		s.flush();
 
-		s.iterate("from Fum fu, Fum fo where fu.fo.id.string = fo.id.string and fo.fum is not null");
+		s.createQuery( "from Fum fu, Fum fo where fu.fo.id.string = fo.id.string and fo.fum is not null" ).iterate();
 
-		s.find("from Fumm f1 inner join f1.fum f2");
+		s.createQuery( "from Fumm f1 inner join f1.fum f2" ).list();
 
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 	}
 
 
 	public void testCompositeIDCollections() throws Exception {
 		Session s = openSession();
+		s.beginTransaction();
 		Fum fum1 = new Fum( fumKey("fum1") );
 		Fum fum2 = new Fum( fumKey("fum2") );
 		fum1.setFum("fee fo fi");
@@ -509,11 +514,11 @@ public class FumTest extends LegacyTestCase {
 		q.setFums(set);
 		q.setMoreFums(list);
 		fum1.setQuxArray( new Qux[] {q} );
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 
 		s = openSession();
+		s.beginTransaction();
 		q = (Qux) s.load( Qux.class, q.getKey() );
 		assertTrue( "collection of fums", q.getFums().size()==2 );
 		assertTrue( "collection of fums", q.getMoreFums().size()==1 );
@@ -526,14 +531,14 @@ public class FumTest extends LegacyTestCase {
 		f = (Fum) iter.next();
 		s.delete(f);
 		s.delete(q);
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 	}
 
 
 	public void testDeleteOwner() throws Exception {
 		Session s = openSession();
+		s.beginTransaction();
 		Qux q = new Qux();
 		s.save(q);
 		Fum f1 = new Fum( fumKey("f1") );
@@ -550,20 +555,20 @@ public class FumTest extends LegacyTestCase {
 		q.setMoreFums(list);
 		s.save(f1);
 		s.save(f2);
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 
 		s = openSession();
+		s.beginTransaction();
 		q = (Qux) s.load( Qux.class, q.getKey(), LockMode.UPGRADE );
 		s.lock( q, LockMode.UPGRADE );
 		s.delete(q);
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 
 		s = openSession();
-		list = s.find("from Fum fum where not fum.fum='FRIEND'");
+		s.beginTransaction();
+		list = s.createQuery( "from Fum fum where not fum.fum='FRIEND'" ).list();
 		assertTrue( "deleted owner", list.size()==2 );
 		s.lock( list.get(0), LockMode.UPGRADE );
 		s.lock( list.get(1), LockMode.UPGRADE );
@@ -571,14 +576,14 @@ public class FumTest extends LegacyTestCase {
 		while ( iter.hasNext() ) {
 			s.delete( iter.next() );
 		}
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 	}
 
 
 	public void testCompositeIDs() throws Exception {
 		Session s = openSession();
+		s.beginTransaction();
 		Fo fo = Fo.newFo();
 		Properties props = new Properties();
 		props.setProperty("foo", "bar");
@@ -588,11 +593,11 @@ public class FumTest extends LegacyTestCase {
 		s.save( fo, fumKey("an instance of fo") );
 		s.flush();
 		props.setProperty("x", "y");
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 
 		s = openSession();
+		s.beginTransaction();
 		fo = (Fo) s.load( Fo.class, fumKey("an instance of fo") );
 		props = (Properties) fo.getSerial();
 		assertTrue( props.getProperty("foo").equals("bar") );
@@ -600,15 +605,15 @@ public class FumTest extends LegacyTestCase {
 		assertTrue( props.getProperty("x").equals("y") );
 		assertTrue( fo.getBuf()[0]=='a' );
 		fo.getBuf()[1]=(byte)126;
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 
 		s = openSession();
+		s.beginTransaction();
 		fo = (Fo) s.load( Fo.class, fumKey("an instance of fo") );
 		assertTrue( fo.getBuf()[1]==126 );
 		assertTrue(
-			s.iterate("from Fo fo where fo.id.string like 'an instance of fo'").next()==fo
+				s.createQuery( "from Fo fo where fo.id.string like 'an instance of fo'" ).iterate().next()==fo
 		);
 		s.delete(fo);
 		s.flush();
@@ -619,12 +624,13 @@ public class FumTest extends LegacyTestCase {
 		catch (Exception e) {
 			//System.out.println( e.getMessage() );
 		}
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 	}
 
 	public void testKeyManyToOne() throws Exception {
 		Session s = openSession();
+		s.beginTransaction();
 		Inner sup = new Inner();
 		InnerKey sid = new InnerKey();
 		sup.setDudu("dudu");
@@ -647,75 +653,84 @@ public class FumTest extends LegacyTestCase {
 		s.save(sup);
 		s.save(m);
 		s.save(d);
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 
 		s = openSession();
-		Inner in = (Inner) s.find("from Inner").get(0);
+		s.beginTransaction();
+		Inner in = (Inner) s.createQuery( "from Inner" ).list().get(0);
 		assertTrue( in.getMiddles().size()==1 );
-		s.flush();
-		s.connection().commit();
-		s.close();
-		s = openSession();
-		assertTrue( s.find("from Inner _inner join _inner.middles middle").size()==1 );
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 
 		s = openSession();
+		s.beginTransaction();
+		assertTrue( s.createQuery( "from Inner _inner join _inner.middles middle" ).list().size()==1 );
+		s.getTransaction().commit();
+		s.close();
+
+		s = openSession();
+		s.beginTransaction();
 		d = (Outer) s.load(Outer.class, did);
 		assertTrue( d.getId().getMaster().getId().getSup().getDudu().equals("dudu") );
 		s.delete(d);
 		s.delete( d.getId().getMaster() );
 		s.save( d.getId().getMaster() );
 		s.save(d);
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 
 		s = openSession();
-		d = (Outer) s.find("from Outer o where o.id.detailId = ?", d.getId().getDetailId(), Hibernate.STRING ).get(0);
-		s.find("from Outer o where o.id.master.id.sup.dudu is not null");
-		s.find("from Outer o where o.id.master.id.sup.id.akey is not null");
-		s.find("from Inner i where i.backOut.id.master.id.sup.id.akey = i.id.bkey");
-		List l = s.find("select o.id.master.id.sup.dudu from Outer o where o.id.master.id.sup.dudu is not null");
+		s.beginTransaction();
+		d = (Outer) s.createQuery( "from Outer o where o.id.detailId = ?" )
+				.setParameter( 0, d.getId().getDetailId(), Hibernate.STRING )
+				.list()
+				.get(0);
+		s.createQuery( "from Outer o where o.id.master.id.sup.dudu is not null" ).list();
+		s.createQuery( "from Outer o where o.id.master.id.sup.id.akey is not null" ).list();
+		s.createQuery( "from Inner i where i.backOut.id.master.id.sup.id.akey = i.id.bkey" ).list();
+		List l = s.createQuery( "select o.id.master.id.sup.dudu from Outer o where o.id.master.id.sup.dudu is not null" )
+				.list();
 		assertTrue(l.size()==1);
-		l = s.find("select o.id.master.id.sup.id.akey from Outer o where o.id.master.id.sup.id.akey is not null");
+		l = s.createQuery( "select o.id.master.id.sup.id.akey from Outer o where o.id.master.id.sup.id.akey is not null" )
+				.list();
 		assertTrue(l.size()==1);
-		s.find("select i.backOut.id.master.id.sup.id.akey from Inner i where i.backOut.id.master.id.sup.id.akey = i.id.bkey");
-		s.find("from Outer o where o.id.master.bla = ''");
-		s.find("from Outer o where o.id.master.id.one = ''");
-		s.find("from Inner inn where inn.id.bkey is not null and inn.backOut.id.master.id.sup.id.akey > 'a'");
-		s.find("from Outer as o left join o.id.master m left join m.id.sup where o.bubu is not null");
-		s.find("from Outer as o left join o.id.master.id.sup s where o.bubu is not null");
-		s.find("from Outer as o left join o.id.master m left join o.id.master.id.sup s where o.bubu is not null");
+		s.createQuery(
+				"select i.backOut.id.master.id.sup.id.akey from Inner i where i.backOut.id.master.id.sup.id.akey = i.id.bkey"
+		).list();
+		s.createQuery( "from Outer o where o.id.master.bla = ''" ).list();
+		s.createQuery( "from Outer o where o.id.master.id.one = ''" ).list();
+		s.createQuery( "from Inner inn where inn.id.bkey is not null and inn.backOut.id.master.id.sup.id.akey > 'a'" )
+				.list();
+		s.createQuery( "from Outer as o left join o.id.master m left join m.id.sup where o.bubu is not null" ).list();
+		s.createQuery( "from Outer as o left join o.id.master.id.sup s where o.bubu is not null" ).list();
+		s.createQuery( "from Outer as o left join o.id.master m left join o.id.master.id.sup s where o.bubu is not null" )
+				.list();
 		s.delete(d);
 		s.delete( d.getId().getMaster() );
 		s.delete( d.getId().getMaster().getId().getSup() );
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 	}
 
 	public void testCompositeKeyPathExpressions() throws Exception {
 		Session s = openSession();
-		s.find("select fum1.fo from Fum fum1 where fum1.fo.fum is not null");
-		s.find("from Fum fum1 where fum1.fo.fum is not null order by fum1.fo.fum");
+		s.beginTransaction();
+		s.createQuery( "select fum1.fo from Fum fum1 where fum1.fo.fum is not null" ).list();
+		s.createQuery( "from Fum fum1 where fum1.fo.fum is not null order by fum1.fo.fum" ).list();
 		if ( !(getDialect() instanceof MySQLDialect) && !(getDialect() instanceof HSQLDialect) && !(getDialect() instanceof MckoiDialect) && !(getDialect() instanceof PointbaseDialect) ) {
-			s.find("from Fum fum1 where exists elements(fum1.friends)");
+			s.createQuery( "from Fum fum1 where exists elements(fum1.friends)" ).list();
 			if(!(getDialect() instanceof TimesTenDialect)) { // can't execute because TimesTen can't do subqueries combined with aggreations
-				s.find("from Fum fum1 where size(fum1.friends) = 0");
+				s.createQuery( "from Fum fum1 where size(fum1.friends) = 0" ).list();
 			}
 		}
-		s.find("select elements(fum1.friends) from Fum fum1");
-		s.find("from Fum fum1, fr in elements( fum1.friends )");
-		s.connection().commit();
+		s.createQuery( "select elements(fum1.friends) from Fum fum1" ).list();
+		s.createQuery( "from Fum fum1, fr in elements( fum1.friends )" ).list();
+		s.getTransaction().commit();
 		s.close();
 	}
 
 	public void testUnflushedSessionSerialization() throws Exception {
-
 		///////////////////////////////////////////////////////////////////////////
 		// Test insertions across serializations
 		Session s = getSessions().openSession();

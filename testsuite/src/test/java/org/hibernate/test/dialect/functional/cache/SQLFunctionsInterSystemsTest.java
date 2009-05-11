@@ -73,7 +73,7 @@ public class SQLFunctionsInterSystemsTest extends DatabaseSpecificFunctionalTest
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
 
-		Iterator iter = s.iterate("select max(s.count) from Simple s");
+		Iterator iter = s.createQuery( "select max(s.count) from Simple s" ).iterate();
 
 		if ( getDialect() instanceof MySQLDialect ) assertTrue( iter.hasNext() && iter.next()==null );
 
@@ -86,20 +86,20 @@ public class SQLFunctionsInterSystemsTest extends DatabaseSpecificFunctionalTest
 
 		// Test to make sure allocating an specified object operates correctly.
 		assertTrue(
-			s.find("select new org.hibernate.test.legacy.S(s.count, s.address) from Simple s").size() == 1
+				s.createQuery( "select new org.hibernate.test.legacy.S(s.count, s.address) from Simple s" ).list().size() == 1
 		);
 
 		// Quick check the base dialect functions operate correctly
 		assertTrue(
-			s.find("select max(s.count) from Simple s").size() == 1
+				s.createQuery( "select max(s.count) from Simple s" ).list().size() == 1
 		);
 		assertTrue(
-			s.find("select count(*) from Simple s").size() == 1
+				s.createQuery( "select count(*) from Simple s" ).list().size() == 1
 		);
 
 		if ( getDialect() instanceof Cache71Dialect) {
 			// Check Oracle Dialect mix of dialect functions - no args (no parenthesis and single arg functions
-			java.util.List rset = s.find("select s.name, sysdate, floor(s.pay), round(s.pay,0) from Simple s");
+			List rset = s.createQuery( "select s.name, sysdate, floor(s.pay), round(s.pay,0) from Simple s" ).list();
 			assertNotNull("Name string should have been returned",(((Object[])rset.get(0))[0]));
 			assertNotNull("Todays Date should have been returned",(((Object[])rset.get(0))[1]));
 			assertEquals("floor(45.8) result was incorrect ", new Integer(45), ( (Object[]) rset.get(0) )[2] );
@@ -109,12 +109,12 @@ public class SQLFunctionsInterSystemsTest extends DatabaseSpecificFunctionalTest
 			s.update(simple);
 
 			// Test type conversions while using nested functions (Float to Int).
-			rset = s.find("select abs(round(s.pay,0)) from Simple s");
+			rset = s.createQuery( "select abs(round(s.pay,0)) from Simple s" ).list();
 			assertEquals("abs(round(-45.8)) result was incorrect ", new Float(46), rset.get(0));
 
 			// Test a larger depth 3 function example - Not a useful combo other than for testing
 			assertTrue(
-				s.find("select floor(round(sysdate,1)) from Simple s").size() == 1
+					s.createQuery( "select floor(round(sysdate,1)) from Simple s" ).list().size() == 1
 			);
 
 			// Test the oracle standard NVL funtion as a test of multi-param functions...
@@ -126,7 +126,9 @@ public class SQLFunctionsInterSystemsTest extends DatabaseSpecificFunctionalTest
 
 		if ( (getDialect() instanceof Cache71Dialect) ) {
 			// Test the hsql standard MOD funtion as a test of multi-param functions...
-			Double value = (Double) s.find("select MOD(s.count, 2) from Simple as s where s.id = 10" ).get(0);
+			Double value = (Double) s.createQuery( "select MOD(s.count, 2) from Simple as s where s.id = 10" )
+					.list()
+					.get(0);
 			assertTrue( 0 == value.intValue() );
         }
 
@@ -349,22 +351,25 @@ public class SQLFunctionsInterSystemsTest extends DatabaseSpecificFunctionalTest
 		s.save(simple, new Long(10) );
 
 		if ( getDialect() instanceof Cache71Dialect) {
-			s.find("from Simple s where repeat('foo', 3) = 'foofoofoo'");
-			s.find("from Simple s where repeat(s.name, 3) = 'foofoofoo'");
-			s.find("from Simple s where repeat( lower(s.name), (3 + (1-1)) / 2) = 'foofoofoo'");
+			s.createQuery( "from Simple s where repeat('foo', 3) = 'foofoofoo'" ).list();
+			s.createQuery( "from Simple s where repeat(s.name, 3) = 'foofoofoo'" ).list();
+			s.createQuery( "from Simple s where repeat( lower(s.name), (3 + (1-1)) / 2) = 'foofoofoo'" ).list();
 		}
 
 		assertTrue(
-			s.find("from Simple s where upper( s.name ) ='SIMPLE 1'").size()==1
+				s.createQuery( "from Simple s where upper( s.name ) ='SIMPLE 1'" ).list().size()==1
 		);
 		if ( !(getDialect() instanceof HSQLDialect) ) {
 			assertTrue(
-				s.find("from Simple s where not( upper( s.name ) ='yada' or 1=2 or 'foo'='bar' or not('foo'='foo') or 'foo' like 'bar' )").size()==1
+					s.createQuery(
+							"from Simple s where not( upper( s.name ) ='yada' or 1=2 or 'foo'='bar' or not('foo'='foo') or 'foo' like 'bar' )"
+					).list()
+							.size()==1
 			);
 		}
 		if ( !(getDialect() instanceof MySQLDialect) && !(getDialect() instanceof SybaseDialect) && !(getDialect() instanceof MckoiDialect) && !(getDialect() instanceof InterbaseDialect) && !(getDialect() instanceof TimesTenDialect) ) { //My SQL has a funny concatenation operator
 			assertTrue(
-				s.find("from Simple s where lower( s.name || ' foo' ) ='simple 1 foo'").size()==1
+					s.createQuery( "from Simple s where lower( s.name || ' foo' ) ='simple 1 foo'" ).list().size()==1
 			);
 		}
         /* + is not concat in Cache
@@ -376,7 +381,7 @@ public class SQLFunctionsInterSystemsTest extends DatabaseSpecificFunctionalTest
 		*/
 		if ( (getDialect() instanceof Cache71Dialect) ) {
 			assertTrue(
-				s.find("from Simple s where lower( concat(s.name, ' foo') ) ='simple 1 foo'").size()==1
+					s.createQuery( "from Simple s where lower( concat(s.name, ' foo') ) ='simple 1 foo'" ).list().size()==1
 			);
 		}
 
@@ -387,44 +392,61 @@ public class SQLFunctionsInterSystemsTest extends DatabaseSpecificFunctionalTest
 		s.save( other, new Long(20) );
 		//s.find("from Simple s where s.name ## 'cat|rat|bag'");
 		assertTrue(
-			s.find("from Simple s where upper( s.other.name ) ='SIMPLE 2'").size()==1
+				s.createQuery( "from Simple s where upper( s.other.name ) ='SIMPLE 2'" ).list().size()==1
 		);
 		assertTrue(
-			s.find("from Simple s where not ( upper( s.other.name ) ='SIMPLE 2' )").size()==0
+				s.createQuery( "from Simple s where not ( upper( s.other.name ) ='SIMPLE 2' )" ).list().size()==0
 		);
 		assertTrue(
-			s.find("select distinct s from Simple s where ( ( s.other.count + 3 ) = (15*2)/2 and s.count = 69) or ( ( s.other.count + 2 ) / 7 ) = 2").size()==1
+				s.createQuery(
+						"select distinct s from Simple s where ( ( s.other.count + 3 ) = (15*2)/2 and s.count = 69) or ( ( s.other.count + 2 ) / 7 ) = 2"
+				).list()
+						.size()==1
 		);
 		assertTrue(
-			s.find("select s from Simple s where ( ( s.other.count + 3 ) = (15*2)/2 and s.count = 69) or ( ( s.other.count + 2 ) / 7 ) = 2 order by s.other.count").size()==1
+				s.createQuery(
+						"select s from Simple s where ( ( s.other.count + 3 ) = (15*2)/2 and s.count = 69) or ( ( s.other.count + 2 ) / 7 ) = 2 order by s.other.count"
+				).list()
+						.size()==1
 		);
 		Simple min = new Simple();
 		min.setCount(-1);
 		s.save(min, new Long(30) );
 		if ( ! (getDialect() instanceof MySQLDialect) && ! (getDialect() instanceof HSQLDialect) ) { //My SQL has no subqueries
 			assertTrue(
-				s.find("from Simple s where s.count > ( select min(sim.count) from Simple sim )").size()==2
+					s.createQuery( "from Simple s where s.count > ( select min(sim.count) from Simple sim )" )
+							.list()
+							.size()==2
 			);
 			t.commit();
 			t = s.beginTransaction();
 			assertTrue(
-				s.find("from Simple s where s = some( select sim from Simple sim where sim.count>=0 ) and s.count >= 0").size()==2
+					s.createQuery(
+							"from Simple s where s = some( select sim from Simple sim where sim.count>=0 ) and s.count >= 0"
+					).list()
+							.size()==2
 			);
 			assertTrue(
-				s.find("from Simple s where s = some( select sim from Simple sim where sim.other.count=s.other.count ) and s.other.count > 0").size()==1
+					s.createQuery(
+							"from Simple s where s = some( select sim from Simple sim where sim.other.count=s.other.count ) and s.other.count > 0"
+					).list()
+							.size()==1
 			);
 		}
 
-		Iterator iter = s.iterate("select sum(s.count) from Simple s group by s.count having sum(s.count) > 10");
+		Iterator iter = s.createQuery( "select sum(s.count) from Simple s group by s.count having sum(s.count) > 10" )
+				.iterate();
 		assertTrue( iter.hasNext() );
 		assertEquals( new Long(12), iter.next() );
 		assertTrue( !iter.hasNext() );
 		if ( ! (getDialect() instanceof MySQLDialect) ) {
-			iter = s.iterate("select s.count from Simple s group by s.count having s.count = 12");
+			iter = s.createQuery( "select s.count from Simple s group by s.count having s.count = 12" ).iterate();
 			assertTrue( iter.hasNext() );
 		}
 
-		s.iterate("select s.id, s.count, count(t), max(t.date) from Simple s, Simple t where s.count = t.count group by s.id, s.count order by s.count");
+		s.createQuery(
+				"select s.id, s.count, count(t), max(t.date) from Simple s, Simple t where s.count = t.count group by s.id, s.count order by s.count"
+		).iterate();
 
 		Query q = s.createQuery("from Simple s");
 		q.setMaxResults(10);
@@ -486,6 +508,7 @@ public class SQLFunctionsInterSystemsTest extends DatabaseSpecificFunctionalTest
 	public void testBlobClob() throws Exception {
 
 		Session s = openSession();
+		s.beginTransaction();
 		Blobber b = new Blobber();
 		b.setBlob( Hibernate.createBlob( "foo/bar/baz".getBytes() ) );
 		b.setClob( Hibernate.createClob("foo/bar/baz") );
@@ -499,10 +522,11 @@ public class SQLFunctionsInterSystemsTest extends DatabaseSpecificFunctionalTest
         b.getClob().getSubString(2, 3);
 		//b.getClob().setString(2, "abc");
 		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 
 		s = openSession();
+		s.beginTransaction();
 		b = (Blobber) s.load( Blobber.class, new Integer( b.getId() ) );
 		Blobber b2 = new Blobber();
 		s.save(b2);
@@ -512,22 +536,24 @@ public class SQLFunctionsInterSystemsTest extends DatabaseSpecificFunctionalTest
 		b.getClob().getSubString(1, 6);
 		//b.getClob().setString(1, "qwerty");
 		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 
 		s = openSession();
+		s.beginTransaction();
 		b = (Blobber) s.load( Blobber.class, new Integer( b.getId() ) );
 		b.setClob( Hibernate.createClob("xcvfxvc xcvbx cvbx cvbx cvbxcvbxcvbxcvb") );
 		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 
 		s = openSession();
+		s.beginTransaction();
 		b = (Blobber) s.load( Blobber.class, new Integer( b.getId() ) );
 		assertTrue( b.getClob().getSubString(1, 7).equals("xcvfxvc") );
 		//b.getClob().setString(5, "1234567890");
 		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 
 
@@ -580,7 +606,7 @@ public class SQLFunctionsInterSystemsTest extends DatabaseSpecificFunctionalTest
 
 		s = openSession();
 		t = s.beginTransaction();
-		List result = s.find(query);
+		List result = s.createQuery( query ).list();
 		assertTrue( result.size() == 1 );
 		assertTrue(result.get(0) instanceof Simple);
 		s.delete( result.get(0) );
@@ -704,29 +730,60 @@ public class SQLFunctionsInterSystemsTest extends DatabaseSpecificFunctionalTest
         assertTrue( test.getDate1().equals(testvalue));
         test = (TestInterSystemsFunctionsClass) s.get(TestInterSystemsFunctionsClass.class, new Long(10), LockMode.UPGRADE);
         assertTrue( test.getDate1().equals(testvalue));
-        Date value = (Date) s.find("select nvl(o.date,o.dateText) from TestInterSystemsFunctionsClass as o" ).get(0);
+        Date value = (Date) s.createQuery( "select nvl(o.date,o.dateText) from TestInterSystemsFunctionsClass as o" )
+				.list()
+				.get(0);
         assertTrue( value.equals(testvalue));
-        Object nv = s.find("select nullif(o.dateText,o.dateText) from TestInterSystemsFunctionsClass as o" ).get(0);
+        Object nv = s.createQuery( "select nullif(o.dateText,o.dateText) from TestInterSystemsFunctionsClass as o" )
+				.list()
+				.get(0);
         assertTrue( nv == null);
-        String dateText = (String) s.find("select nvl(o.dateText,o.date) from TestInterSystemsFunctionsClass as o" ).get(0);
+        String dateText = (String) s.createQuery(
+				"select nvl(o.dateText,o.date) from TestInterSystemsFunctionsClass as o"
+		).list()
+				.get(0);
         assertTrue( dateText.equals("1977-07-03"));
-        value = (Date) s.find("select ifnull(o.date,o.date1) from TestInterSystemsFunctionsClass as o" ).get(0);
+        value = (Date) s.createQuery( "select ifnull(o.date,o.date1) from TestInterSystemsFunctionsClass as o" )
+				.list()
+				.get(0);
         assertTrue( value.equals(testvalue));
-        value = (Date) s.find("select ifnull(o.date3,o.date,o.date1) from TestInterSystemsFunctionsClass as o" ).get(0);
+        value = (Date) s.createQuery( "select ifnull(o.date3,o.date,o.date1) from TestInterSystemsFunctionsClass as o" )
+				.list()
+				.get(0);
         assertTrue( value.equals(testvalue));
-        Integer pos = (Integer) s.find("select position('07', o.dateText) from TestInterSystemsFunctionsClass as o" ).get(0);
+        Integer pos = (Integer) s.createQuery(
+				"select position('07', o.dateText) from TestInterSystemsFunctionsClass as o"
+		).list()
+				.get(0);
         assertTrue(pos.intValue() == 6);
-        String st = (String) s.find("select convert(o.date1, SQL_TIME) from TestInterSystemsFunctionsClass as o" ).get(0);
+        String st = (String) s.createQuery( "select convert(o.date1, SQL_TIME) from TestInterSystemsFunctionsClass as o" )
+				.list()
+				.get(0);
         assertTrue( st.equals("00:00:00"));
-        java.sql.Time tm = (java.sql.Time) s.find("select cast(o.date1, time) from TestInterSystemsFunctionsClass as o" ).get(0);
+        java.sql.Time tm = (java.sql.Time) s.createQuery(
+				"select cast(o.date1, time) from TestInterSystemsFunctionsClass as o"
+		).list()
+				.get(0);
         assertTrue( tm.toString().equals("00:00:00"));
-        Double diff = (Double)s.find("select timestampdiff(SQL_TSI_FRAC_SECOND, o.date3, o.date1) from TestInterSystemsFunctionsClass as o" ).get(0);
+        Double diff = (Double) s.createQuery(
+				"select timestampdiff(SQL_TSI_FRAC_SECOND, o.date3, o.date1) from TestInterSystemsFunctionsClass as o"
+		).list()
+				.get(0);
         assertTrue(diff.doubleValue() != 0.0);
-        diff = (Double)s.find("select timestampdiff(SQL_TSI_MONTH, o.date3, o.date1) from TestInterSystemsFunctionsClass as o" ).get(0);
+        diff = (Double) s.createQuery(
+				"select timestampdiff(SQL_TSI_MONTH, o.date3, o.date1) from TestInterSystemsFunctionsClass as o"
+		).list()
+				.get(0);
         assertTrue(diff.doubleValue() == 16.0);
-        diff = (Double)s.find("select timestampdiff(SQL_TSI_WEEK, o.date3, o.date1) from TestInterSystemsFunctionsClass as o" ).get(0);
+        diff = (Double) s.createQuery(
+				"select timestampdiff(SQL_TSI_WEEK, o.date3, o.date1) from TestInterSystemsFunctionsClass as o"
+		).list()
+				.get(0);
         assertTrue(diff.doubleValue() >= 16*4);
-        diff = (Double)s.find("select timestampdiff(SQL_TSI_YEAR, o.date3, o.date1) from TestInterSystemsFunctionsClass as o" ).get(0);
+        diff = (Double) s.createQuery(
+				"select timestampdiff(SQL_TSI_YEAR, o.date3, o.date1) from TestInterSystemsFunctionsClass as o"
+		).list()
+				.get(0);
         assertTrue(diff.doubleValue() == 1.0);
 
         t.commit();

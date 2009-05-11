@@ -55,7 +55,7 @@ public class ABCProxyTest extends LegacyTestCase {
 
 		s = openSession();
 		t = s.beginTransaction();
-		List list = s.find("from B");
+		List list = s.createQuery( "from B" ).list();
 		assertTrue( list.size()==2 );
 		t.commit();
 		s.close();
@@ -200,8 +200,8 @@ public class ABCProxyTest extends LegacyTestCase {
 		t = s.beginTransaction();
 		s.save( new B() );
 		s.save( new A() );
-		assertTrue( s.find("from B").size()==1 );
-		assertTrue( s.find("from A").size()==2 );
+		assertTrue( s.createQuery( "from B" ).list().size()==1 );
+		assertTrue( s.createQuery( "from A" ).list().size()==2 );
 		s.delete("from A");
 		t.commit();
 		s.close();
@@ -253,14 +253,14 @@ public class ABCProxyTest extends LegacyTestCase {
 		t = s.beginTransaction();
 		List l = s.find( "from E e, A a where e.reverse = a.forward and a = ?", a, Hibernate.entity(A.class) );
 		assertTrue( l.size()==1 );
-		l = s.find( "from E e join fetch e.reverse" );
+		l = s.createQuery( "from E e join fetch e.reverse" ).list();
 		assertTrue( l.size()==2 );
 		t.commit();
 		s.close();
 
 		s = openSession();
 		t = s.beginTransaction();
-		l = s.find( "from E e" );
+		l = s.createQuery( "from E e" ).list();
 		assertTrue( l.size()==2 );
 		E e = (E) l.get(0);
 		assertTrue( e==e.getReverse().getForward() );
@@ -283,7 +283,7 @@ public class ABCProxyTest extends LegacyTestCase {
 
 		s = openSession();
 		t = s.beginTransaction();
-		l = s.find( "from E e" );
+		l = s.createQuery( "from E e" ).list();
 		assertTrue( l.size()==0 );
 		t.commit();
 		s.close();

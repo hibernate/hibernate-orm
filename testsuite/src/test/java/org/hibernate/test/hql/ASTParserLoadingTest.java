@@ -1638,7 +1638,9 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 		assertTrue( "Incorrect return type", obj instanceof List );
 		assertEquals( "Incorrect return type", ( (List) obj ).size(), 2 );
 
-		iter = ((org.hibernate.classic.Session)session).iterate( "select new list(an.description, an.bodyWeight) from Animal an" );
+		iter = ( ( org.hibernate.classic.Session ) session ).createQuery(
+				"select new list(an.description, an.bodyWeight) from Animal an"
+		).iterate();
 		assertTrue( "Incorrect result size", iter.hasNext() );
 		obj = iter.next();
 		assertTrue( "Incorrect return type", obj instanceof List );

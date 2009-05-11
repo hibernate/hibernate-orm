@@ -270,7 +270,7 @@ public class DynamicFilterTest extends FunctionalTestCase {
 		session.enableFilter("region").setParameter("region", "APAC");
 
 		DetachedCriteria lineItemSubquery = DetachedCriteria.forClass(LineItem.class)
-				.add(Restrictions.ge("quantity", 1L))
+				.add(Restrictions.ge( "quantity", new Long(1L) ))
 				.createCriteria("product")
 				.add(Restrictions.eq("name", "Acme Hair Gel"))
 				.setProjection(Property.forName("id"));
@@ -291,7 +291,7 @@ public class DynamicFilterTest extends FunctionalTestCase {
 				.setProjection(Property.forName("id"));
 
 		lineItemSubquery = DetachedCriteria.forClass(LineItem.class)
-				.add(Restrictions.ge("quantity", 1L))
+				.add(Restrictions.ge("quantity", new Long(1L) ))
 				.createCriteria("product")
 				.add(Subqueries.propertyIn("id", productSubquery))
 				.setProjection(Property.forName("id"));

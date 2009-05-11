@@ -67,6 +67,7 @@ public class ParentChildTest extends LegacyTestCase {
 
 	public void testReplicate() throws Exception {
 		Session s = openSession();
+		s.beginTransaction();
 		Container baz = new Container();
 		Contained f = new Contained();
 		List list = new ArrayList();
@@ -77,30 +78,29 @@ public class ParentChildTest extends LegacyTestCase {
 		baz.setBag(list2);
 		s.save(f);
 		s.save(baz);
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
+
 		s = openSession();
 		s.replicate(baz, ReplicationMode.OVERWRITE);
-		
 		// HHH-2378
 		SessionImpl x = (SessionImpl)s;
 		EntityEntry entry = x.getPersistenceContext().getEntry( baz );
 		assertNull(entry.getVersion());
-		
-		s.flush();
-		s.connection().commit();
+		// ~~~~~~~
+		s.getTransaction().commit();
 		s.close();
+
 		s = openSession();
 		s.replicate(baz, ReplicationMode.IGNORE);
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
+
 		s = openSession();
+		s.beginTransaction();
 		s.delete(baz);
 		s.delete(f);
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 	}
 
@@ -108,7 +108,7 @@ public class ParentChildTest extends LegacyTestCase {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
 		Serializable id = s.save( new Parent() );
-		assertTrue( s.find("from Parent p left join fetch p.child").size()==1 );
+		assertTrue( s.createQuery( "from Parent p left join fetch p.child" ).list().size()==1 );
 		t.commit();
 		s.close();
 
@@ -116,8 +116,8 @@ public class ParentChildTest extends LegacyTestCase {
 		t = s.beginTransaction();
 		Parent p = (Parent) s.createQuery("from Parent p left join fetch p.child").uniqueResult();
 		assertTrue( p.getChild()==null );
-		s.find("from Parent p join p.child c where c.x > 0");
-		s.find("from Child c join c.parent p where p.x > 0");
+		s.createQuery( "from Parent p join p.child c where c.x > 0" ).list();
+		s.createQuery( "from Child c join c.parent p where p.x > 0" ).list();
 		t.commit();
 		s.close();
 
@@ -177,7 +177,7 @@ public class ParentChildTest extends LegacyTestCase {
 		s.delete(foo);
 		s.delete( s.get(Foo.class, id2) );
 		s.delete( s.get(Foo.class, "xyzid") );
-		assertTrue( s.delete("from java.lang.Object")==3 );
+		assertEquals( 2, doDelete( s, "from java.lang.Object" ) );
 		t.commit();
 		s.close();
 		
@@ -322,9 +322,9 @@ public class ParentChildTest extends LegacyTestCase {
 		assertTrue( Hibernate.isInitialized(baz.getTopGlarchez()) ); //cos it is nonlazy
 		assertTrue( !Hibernate.isInitialized(baz.getFooSet()) );
 		
-		list = s.createCriteria(Child.class).setFetchMode("parent", FetchMode.JOIN).list();
-		
-		s.delete("from Glarch g");
+		s.createCriteria(Child.class).setFetchMode("parent", FetchMode.JOIN).list();
+
+		doDelete( s, "from Glarch g" );
 		s.delete( s.get(Foo.class, foo1.getKey() ) );
 		s.delete( s.get(Foo.class, foo2.getKey() ) );
 		s.delete(baz);
@@ -429,57 +429,60 @@ public class ParentChildTest extends LegacyTestCase {
 		sx.setName("s");
 		s.save( sx, new Long(5) );
 		assertTrue(
-			s.find("select c from ContainerX c, Simple s where c.oneToMany[2] = s")
-			.size() == 1
+				s.createQuery( "select c from ContainerX c, Simple s where c.oneToMany[2] = s" ).list()
+						.size() == 1
 		);
 		assertTrue(
-			s.find("select c from ContainerX c, Simple s where c.manyToMany[2] = s")
-			.size() == 1
+				s.createQuery( "select c from ContainerX c, Simple s where c.manyToMany[2] = s" ).list()
+						.size() == 1
 		);
 		assertTrue(
-			s.find("select c from ContainerX c, Simple s where s = c.oneToMany[2]")
-			.size() == 1
+				s.createQuery( "select c from ContainerX c, Simple s where s = c.oneToMany[2]" ).list()
+						.size() == 1
 		);
 		assertTrue(
-			s.find("select c from ContainerX c, Simple s where s = c.manyToMany[2]")
-			.size() == 1
+				s.createQuery( "select c from ContainerX c, Simple s where s = c.manyToMany[2]" ).list()
+						.size() == 1
 		);
 		assertTrue(
-			s.find("select c from ContainerX c where c.oneToMany[0].name = 's'")
-			.size() == 1
+				s.createQuery( "select c from ContainerX c where c.oneToMany[0].name = 's'" ).list()
+						.size() == 1
 		);
 		assertTrue(
-			s.find("select c from ContainerX c where c.manyToMany[0].name = 's'")
-			.size() == 1
+				s.createQuery( "select c from ContainerX c where c.manyToMany[0].name = 's'" ).list()
+						.size() == 1
 		);
 		assertTrue(
-			s.find("select c from ContainerX c where 's' = c.oneToMany[2 - 2].name")
-			.size() == 1
+				s.createQuery( "select c from ContainerX c where 's' = c.oneToMany[2 - 2].name" ).list()
+						.size() == 1
 		);
 		assertTrue(
-			s.find("select c from ContainerX c where 's' = c.manyToMany[(3+1)/4-1].name")
-			.size() == 1
+				s.createQuery( "select c from ContainerX c where 's' = c.manyToMany[(3+1)/4-1].name" ).list()
+						.size() == 1
 		);
 		assertTrue(
-			s.find("select c from ContainerX c where c.oneToMany[ c.manyToMany[0].count ].name = 's'")
-			.size() == 1
+				s.createQuery( "select c from ContainerX c where c.oneToMany[ c.manyToMany[0].count ].name = 's'" )
+						.list()
+						.size() == 1
 		);
 		assertTrue(
-			s.find("select c from ContainerX c where c.manyToMany[ c.oneToMany[0].count ].name = 's'")
-			.size() == 1
+				s.createQuery( "select c from ContainerX c where c.manyToMany[ c.oneToMany[0].count ].name = 's'" )
+						.list()
+						.size() == 1
 		);
 		if ( ! ( getDialect() instanceof MySQLDialect ) && !(getDialect() instanceof org.hibernate.dialect.TimesTenDialect) ) {
 			assertTrue(
-				s.find("select c from ContainerX c where c.manyToMany[ maxindex(c.manyToMany) ].count = 2")
-				.size() == 1
+					s.createQuery( "select c from ContainerX c where c.manyToMany[ maxindex(c.manyToMany) ].count = 2" )
+							.list()
+							.size() == 1
 			);
 		}
 		assertTrue( s.contains(cd) );
 		if ( !(getDialect() instanceof MySQLDialect) && !(getDialect() instanceof HSQLDialect) )  {
-			s.filter( c.getBag(), "where 0 in elements(this.bag)" );
-			s.filter( c.getBag(), "where 0 in elements(this.lazyBag)" );
+			s.createFilter( c.getBag(), "where 0 in elements(this.bag)" ).list();
+			s.createFilter( c.getBag(), "where 0 in elements(this.lazyBag)" ).list();
 		}
-		s.find("select count(comp.name) from ContainerX c join c.components comp");
+		s.createQuery( "select count(comp.name) from ContainerX c join c.components comp" ).list();
 		s.delete(cd);
 		s.delete(c);
 		s.delete(s1);
@@ -521,19 +524,19 @@ public class ParentChildTest extends LegacyTestCase {
 		assertTrue( "1-1 update", c.getCount()==32 );
 		assertTrue(
 			"1-1 query",
-			s.find("from Child c where c.parent.count=66").size()==1
+				s.createQuery( "from Child c where c.parent.count=66" ).list().size()==1
 		);
 		assertTrue(
 			"1-1 query",
-			( (Object[]) s.find("from Parent p join p.child c where p.count=66").get(0) ).length==2
+			( (Object[]) s.createQuery( "from Parent p join p.child c where p.count=66" ).list().get(0) ).length==2
 		);
-		s.find("select c, c.parent from Child c order by c.parent.count");
-		s.find("select c, c.parent from Child c where c.parent.count=66 order by c.parent.count");
-		s.iterate("select c, c.parent, c.parent.count from Child c order by c.parent.count");
-		assertTrue(
-			"1-1 query",
-			s.find("FROM Parent AS p WHERE p.count = ?", new Integer(66), Hibernate.INTEGER).size()==1
-		);
+		s.createQuery( "select c, c.parent from Child c order by c.parent.count" ).list();
+		s.createQuery( "select c, c.parent from Child c where c.parent.count=66 order by c.parent.count" ).list();
+		s.createQuery( "select c, c.parent, c.parent.count from Child c order by c.parent.count" ).iterate();
+		List result = s.createQuery( "FROM Parent AS p WHERE p.count = ?" )
+				.setParameter( 0, new Integer(66), Hibernate.INTEGER )
+				.list();
+		assertEquals( "1-1 query", 1, result.size() );
 		s.delete(c); s.delete(p);
 		t.commit();
 		s.close();
@@ -566,7 +569,6 @@ public class ParentChildTest extends LegacyTestCase {
 	}
 
 	public void testManyToMany() throws Exception {
-
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
 		Container c = new Container();
@@ -606,9 +608,9 @@ public class ParentChildTest extends LegacyTestCase {
 		assertTrue( c.getManyToMany().size()==1 );
 		c1 = (Contained) s.load( Contained.class, new Long(c1.getId()) );
 		assertTrue( c1.getBag().size()==0 );
-		assertTrue( s.delete("from ContainerX c")==1 );
-		assertTrue( s.delete("from Contained")==1 );
-		assertTrue( s.delete("from Simple")==2 );
+		assertEquals( 1, doDelete( s, "from ContainerX c" ) );
+		assertEquals( 1, doDelete( s, "from Contained" ) );
+		assertEquals( 2, doDelete( s, "from Simple" ) );
 		t.commit();
 		s.close();
 	}
@@ -657,7 +659,9 @@ public class ParentChildTest extends LegacyTestCase {
 		t = s.beginTransaction();
 		Long count = (Long) s.createQuery("select count(*) from ContainerX as c join c.components as ce join ce.simple as s where ce.name='foo'").uniqueResult();
 		assertTrue( count.intValue()==1 );
-		List res = s.find("select c, s from ContainerX as c join c.components as ce join ce.simple as s where ce.name='foo'");
+		List res = s.createQuery(
+				"select c, s from ContainerX as c join c.components as ce join ce.simple as s where ce.name='foo'"
+		).list();
 		assertTrue(res.size()==1);
 		t.commit();
 		s.close();
@@ -734,9 +738,9 @@ public class ParentChildTest extends LegacyTestCase {
 		c.getManyToMany().clear();
 		c.getComposites().clear();
 		c.getComponents().clear();
-		s.delete("from Simple");
-		s.delete("from Many");
-		s.delete("from One");
+		doDelete( s, "from Simple" );
+		doDelete( s, "from Many" );
+		doDelete( s, "from One" );
 		t.commit();
 		s.close();
 
@@ -761,23 +765,24 @@ public class ParentChildTest extends LegacyTestCase {
 		cic.setOne( new One() );
 		list.add(cic);
 		Session s = openSession();
+		s.beginTransaction();
 		s.save(c);
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 		
 		s=openSession();
-		c = (Container) s.iterate("from ContainerX c").next();
+		s.beginTransaction();
+		c = (Container) s.createQuery( "from ContainerX c" ).iterate().next();
 		cic = (Container.ContainerInnerClass) c.getCascades().iterator().next();
 		assertTrue( cic.getMany()!=null && cic.getOne()!=null );
 		assertTrue( c.getCascades().size()==1 );
 		s.delete(c);
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 
 		c = new Container();
 		s = openSession();
+		s.beginTransaction();
 		s.save(c);
 		list = new ArrayList();
 		c.setCascades(list);
@@ -785,23 +790,21 @@ public class ParentChildTest extends LegacyTestCase {
 		cic.setMany( new Many() );
 		cic.setOne( new One() );
 		list.add(cic);
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 		
 		s=openSession();
-		c = (Container) s.iterate("from ContainerX c").next();
+		s.beginTransaction();
+		c = (Container) s.createQuery( "from ContainerX c" ).iterate().next();
 		cic = (Container.ContainerInnerClass) c.getCascades().iterator().next();
 		assertTrue( cic.getMany()!=null && cic.getOne()!=null );
 		assertTrue( c.getCascades().size()==1 );
 		s.delete(c);
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 	}
 
 	public void testBag() throws Exception {
-
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
 		Container c = new Container();
@@ -822,14 +825,14 @@ public class ParentChildTest extends LegacyTestCase {
 
 		s = openSession();
 		t = s.beginTransaction();
-		c = (Container) s.find("from ContainerX c").get(0);
+		c = (Container) s.createQuery( "from ContainerX c" ).list().get(0);
 		c.getLazyBag().size();
 		t.commit();
 		s.close();
 
 		s = openSession();
 		t = s.beginTransaction();
-		c = (Container) s.find("from ContainerX c").get(0);
+		c = (Container) s.createQuery( "from ContainerX c" ).list().get(0);
 		Contained c3 = new Contained();
 		//c.getBag().add(c3);
 		//c3.getBag().add(c);
@@ -840,7 +843,7 @@ public class ParentChildTest extends LegacyTestCase {
 
 		s = openSession();
 		t = s.beginTransaction();
-		c = (Container) s.find("from ContainerX c").get(0);
+		c = (Container) s.createQuery( "from ContainerX c" ).list().get(0);
 		Contained c4 = new Contained();
 		c.getLazyBag().add(c4);
 		c4.getLazyBag().add(c);
@@ -851,7 +854,7 @@ public class ParentChildTest extends LegacyTestCase {
 
 		s = openSession();
 		t = s.beginTransaction();
-		c = (Container) s.find("from ContainerX c").get(0);
+		c = (Container) s.createQuery( "from ContainerX c" ).list().get(0);
 		Iterator i = c.getBag().iterator();
 		int j=0;
 		while ( i.hasNext() ) {
@@ -873,7 +876,6 @@ public class ParentChildTest extends LegacyTestCase {
 		s.delete( s.load(Contained.class, new Long( c3.getId() ) ) );
 		t.commit();
 		s.close();
-
 	}
 
 	public void testCircularCascade() throws Exception {
@@ -913,15 +915,17 @@ public class ParentChildTest extends LegacyTestCase {
 		assertTrue( c.getOther().getClazz()==Qux.class);
 		assertTrue( c.getOther().getOther().getOther()==c);
 		assertTrue( c.getAnyEntity()==c.getOther() );
-		assertTrue( s.delete("from Universe")==3 );
+		assertEquals( 3, doDelete( s, "from Universe" ) );
 		tx.commit();
 		s.close();
 	}
 
 	public void testDeleteEmpty() throws Exception {
 		Session s = openSession();
-		assertTrue( s.delete("from Simple")==0 );
-		assertTrue( s.delete("from Universe")==0 );
+		s.beginTransaction();
+		assertEquals( 0, doDelete( s, "from Simple" ) );
+		assertEquals( 0, doDelete( s, "from Universe" ) );
+		s.getTransaction().commit();
 		s.close();
 	}
 
@@ -1004,26 +1008,26 @@ public class ParentChildTest extends LegacyTestCase {
 
 	public void testObjectType() throws Exception {
 		Session s = openSession();
+		s.beginTransaction();
 		Parent g = new Parent();
 		Foo foo = new Foo();
 		g.setAny(foo);
 		s.save(g);
 		s.save(foo);
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
+
 		s = openSession();
+		s.beginTransaction();
 		g = (Parent) s.load( Parent.class, new Long( g.getId() ) );
 		assertTrue( g.getAny()!=null && g.getAny() instanceof FooProxy );
 		s.delete( g.getAny() );
 		s.delete(g);
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 	}
 
 	public void testLoadAfterNonExists() throws HibernateException, SQLException {
-
 		Session session = openSession();
 		if ( (getDialect() instanceof MySQLDialect) ) {
 			session.connection().setTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
@@ -1038,8 +1042,9 @@ public class ParentChildTest extends LegacyTestCase {
 			// this is correct
 		}
 
-		// Next, lets create that entity under the covers
+		// Next, lets create that entity "under the covers"
 		Session anotherSession = getSessions().openSession();
+		anotherSession.beginTransaction();
 		Simple myNewSimple = new Simple();
 		myNewSimple.setName("My under the radar Simple entity");
 		myNewSimple.setAddress("SessionCacheTest.testLoadAfterNonExists");
@@ -1047,29 +1052,19 @@ public class ParentChildTest extends LegacyTestCase {
 		myNewSimple.setDate( new Date() );
 		myNewSimple.setPay( new Float(100000000) );
 		anotherSession.save( myNewSimple, new Long(-1) );
-		anotherSession.flush();
-		anotherSession.connection().commit();
+		anotherSession.getTransaction().commit();
 		anotherSession.close();
 
-		// Verify that the original session is still able to see the new entry...
-		//try {
-			session.load( Simple.class, new Long(-1) );
-			/*fail();
-		}
-		catch(ObjectNotFoundException onfe) {
-		}*/
-
-		// Now, lets clear the original session at which point it should be able to see
-		// the new entity
+		// Now, lets make sure the original session can see the created row...
 		session.clear();
 		try {
-			Simple dummy = (Simple) session.load( Simple.class, new Long(-1) );
+			Simple dummy = (Simple) session.get( Simple.class, new Long(-1) );
 			assertNotNull("Unable to locate entity Simple with id = -1", dummy);
 		}
 		catch(ObjectNotFoundException onfe) {
 			fail("Unable to locate entity Simple with id = -1");
 		}
-		session.connection().commit();
+		session.getTransaction().commit();
 		session.close();
 	}
 

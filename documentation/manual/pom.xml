@@ -23,6 +23,7 @@
                 <artifactId>maven-jdocbook-plugin</artifactId>
                 <version>2.1.2</version>
                 <extensions>true</extensions>
+
                 <executions>
                     <execution>
                         <!--
@@ -36,6 +37,7 @@
                         </goals>
                     </execution>
                 </executions>
+<!--
                 <dependencies>
                     <dependency>
                         <groupId>org.hibernate</groupId>
@@ -44,6 +46,27 @@
                         <type>jdocbook-style</type>
                     </dependency>
                 </dependencies>
+-->
+                <dependencies>
+		            <dependency>
+                        <groupId>org.jboss</groupId>
+                        <artifactId>jbossorg-docbook-xslt</artifactId>
+                        <version>1.1.0</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>org.jboss</groupId>
+                        <artifactId>jbossorg-jdocbook-style</artifactId>
+                        <version>1.1.0</version>
+                        <type>jdocbook-style</type>
+                    </dependency>
+		            <dependency>
+			            <groupId>org.jboss.tools</groupId>
+			            <artifactId>jbosstools-docbook-xslt</artifactId>
+			            <version>1.0.0-SNAPSHOT</version>
+		            </dependency>
+                </dependencies>
+
+
                 <configuration>
                     <sourceDocumentName>Hibernate_Reference.xml</sourceDocumentName>
                     <masterTranslation>en-US</masterTranslation>

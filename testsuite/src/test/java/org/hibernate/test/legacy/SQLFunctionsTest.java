@@ -59,7 +59,7 @@ public class SQLFunctionsTest extends LegacyTestCase {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
 
-		Iterator iter = s.iterate("select max(s.count) from Simple s");
+		Iterator iter = s.createQuery( "select max(s.count) from Simple s" ).iterate();
 
 		if ( getDialect() instanceof MySQLDialect ) assertTrue( iter.hasNext() && iter.next()==null );
 
@@ -72,20 +72,20 @@ public class SQLFunctionsTest extends LegacyTestCase {
 
 		// Test to make sure allocating an specified object operates correctly.
 		assertTrue(
-			s.find("select new org.hibernate.test.legacy.S(s.count, s.address) from Simple s").size() == 1
+				s.createQuery( "select new org.hibernate.test.legacy.S(s.count, s.address) from Simple s" ).list().size() == 1
 		);
 
 		// Quick check the base dialect functions operate correctly
 		assertTrue(
-			s.find("select max(s.count) from Simple s").size() == 1
+				s.createQuery( "select max(s.count) from Simple s" ).list().size() == 1
 		);
 		assertTrue(
-			s.find("select count(*) from Simple s").size() == 1
+				s.createQuery( "select count(*) from Simple s" ).list().size() == 1
 		);
 
 		if ( getDialect() instanceof Oracle9iDialect ) {
 			// Check Oracle Dialect mix of dialect functions - no args (no parenthesis and single arg functions
-			java.util.List rset = s.find("select s.name, sysdate(), trunc(s.pay), round(s.pay) from Simple s");
+			List rset = s.createQuery( "select s.name, sysdate(), trunc(s.pay), round(s.pay) from Simple s" ).list();
 			assertNotNull("Name string should have been returned",(((Object[])rset.get(0))[0]));
 			assertNotNull("Todays Date should have been returned",(((Object[])rset.get(0))[1]));
 			assertEquals("trunc(45.8) result was incorrect ", new Float(45), ( (Object[]) rset.get(0) )[2] );
@@ -95,24 +95,29 @@ public class SQLFunctionsTest extends LegacyTestCase {
 			s.update(simple);
 
 			// Test type conversions while using nested functions (Float to Int).
-			rset = s.find("select abs(round(s.pay)) from Simple s");
+			rset = s.createQuery( "select abs(round(s.pay)) from Simple s" ).list();
 			assertEquals("abs(round(-45.8)) result was incorrect ", new Float(46), rset.get(0));
 
 			// Test a larger depth 3 function example - Not a useful combo other than for testing
 			assertTrue(
-				s.find("select trunc(round(sysdate())) from Simple s").size() == 1
+					s.createQuery( "select trunc(round(sysdate())) from Simple s" ).list().size() == 1
 			);
 
 			// Test the oracle standard NVL funtion as a test of multi-param functions...
 			simple.setPay(null);
 			s.update(simple);
-			Integer value = (Integer) s.find("select MOD( NVL(s.pay, 5000), 2 ) from Simple as s where s.id = 10").get(0);
+			Integer value = (Integer) s.createQuery(
+					"select MOD( NVL(s.pay, 5000), 2 ) from Simple as s where s.id = 10"
+			).list()
+					.get(0);
 			assertTrue( 0 == value.intValue() );
 		}
 
 		if ( (getDialect() instanceof HSQLDialect) ) {
 			// Test the hsql standard MOD funtion as a test of multi-param functions...
-			Integer value = (Integer) s.find("select MOD(s.count, 2) from Simple as s where s.id = 10" ).get(0);
+			Integer value = (Integer) s.createQuery( "select MOD(s.count, 2) from Simple as s where s.id = 10" )
+					.list()
+					.get(0);
 			assertTrue( 0 == value.intValue() );
 		}
 
@@ -358,32 +363,35 @@ public class SQLFunctionsTest extends LegacyTestCase {
 		s.save(simple, new Long(10) );
 
 		if ( getDialect() instanceof DB2Dialect) {
-			s.find("from Simple s where repeat('foo', 3) = 'foofoofoo'");
-			s.find("from Simple s where repeat(s.name, 3) = 'foofoofoo'");
-			s.find("from Simple s where repeat( lower(s.name), 3 + (1-1) / 2) = 'foofoofoo'");
+			s.createQuery( "from Simple s where repeat('foo', 3) = 'foofoofoo'" ).list();
+			s.createQuery( "from Simple s where repeat(s.name, 3) = 'foofoofoo'" ).list();
+			s.createQuery( "from Simple s where repeat( lower(s.name), 3 + (1-1) / 2) = 'foofoofoo'" ).list();
 		}
 
 		assertTrue(
-			s.find("from Simple s where upper( s.name ) ='SIMPLE 1'").size()==1
+				s.createQuery( "from Simple s where upper( s.name ) ='SIMPLE 1'" ).list().size()==1
 		);
 		if ( !(getDialect() instanceof HSQLDialect) ) {
 			assertTrue(
-				s.find("from Simple s where not( upper( s.name ) ='yada' or 1=2 or 'foo'='bar' or not('foo'='foo') or 'foo' like 'bar' )").size()==1
+					s.createQuery(
+							"from Simple s where not( upper( s.name ) ='yada' or 1=2 or 'foo'='bar' or not('foo'='foo') or 'foo' like 'bar' )"
+					).list()
+							.size()==1
 			);
 		}
 		if ( !(getDialect() instanceof MySQLDialect) && !(getDialect() instanceof SybaseDialect) && !(getDialect() instanceof SQLServerDialect) && !(getDialect() instanceof MckoiDialect) && !(getDialect() instanceof InterbaseDialect) && !(getDialect() instanceof TimesTenDialect) ) { //My SQL has a funny concatenation operator
 			assertTrue(
-				s.find("from Simple s where lower( s.name || ' foo' ) ='simple 1 foo'").size()==1
+					s.createQuery( "from Simple s where lower( s.name || ' foo' ) ='simple 1 foo'" ).list().size()==1
 			);
 		}
 		if ( (getDialect() instanceof SybaseDialect) ) {
 			assertTrue(
-				s.find("from Simple s where lower( s.name + ' foo' ) ='simple 1 foo'").size()==1
+					s.createQuery( "from Simple s where lower( s.name + ' foo' ) ='simple 1 foo'" ).list().size()==1
 			);
 		}
 		if ( (getDialect() instanceof MckoiDialect) || (getDialect() instanceof TimesTenDialect)) {
 			assertTrue(
-				s.find("from Simple s where lower( concat(s.name, ' foo') ) ='simple 1 foo'").size()==1
+					s.createQuery( "from Simple s where lower( concat(s.name, ' foo') ) ='simple 1 foo'" ).list().size()==1
 			);
 		}
 
@@ -394,44 +402,61 @@ public class SQLFunctionsTest extends LegacyTestCase {
 		s.save( other, new Long(20) );
 		//s.find("from Simple s where s.name ## 'cat|rat|bag'");
 		assertTrue(
-			s.find("from Simple s where upper( s.other.name ) ='SIMPLE 2'").size()==1
+				s.createQuery( "from Simple s where upper( s.other.name ) ='SIMPLE 2'" ).list().size()==1
 		);
 		assertTrue(
-			s.find("from Simple s where not ( upper( s.other.name ) ='SIMPLE 2' )").size()==0
+				s.createQuery( "from Simple s where not ( upper( s.other.name ) ='SIMPLE 2' )" ).list().size()==0
 		);
 		assertTrue(
-			s.find("select distinct s from Simple s where ( ( s.other.count + 3 ) = (15*2)/2 and s.count = 69) or ( ( s.other.count + 2 ) / 7 ) = 2").size()==1
+				s.createQuery(
+						"select distinct s from Simple s where ( ( s.other.count + 3 ) = (15*2)/2 and s.count = 69) or ( ( s.other.count + 2 ) / 7 ) = 2"
+				).list()
+						.size()==1
 		);
 		assertTrue(
-			s.find("select s from Simple s where ( ( s.other.count + 3 ) = (15*2)/2 and s.count = 69) or ( ( s.other.count + 2 ) / 7 ) = 2 order by s.other.count").size()==1
+				s.createQuery(
+						"select s from Simple s where ( ( s.other.count + 3 ) = (15*2)/2 and s.count = 69) or ( ( s.other.count + 2 ) / 7 ) = 2 order by s.other.count"
+				).list()
+						.size()==1
 		);
 		Simple min = new Simple();
 		min.setCount(-1);
 		s.save(min, new Long(30) );
 		if ( ! (getDialect() instanceof MySQLDialect) && ! (getDialect() instanceof HSQLDialect) ) { //My SQL has no subqueries
 			assertTrue(
-				s.find("from Simple s where s.count > ( select min(sim.count) from Simple sim )").size()==2
+					s.createQuery( "from Simple s where s.count > ( select min(sim.count) from Simple sim )" )
+							.list()
+							.size()==2
 			);
 			t.commit();
 			t = s.beginTransaction();
 			assertTrue(
-				s.find("from Simple s where s = some( select sim from Simple sim where sim.count>=0 ) and s.count >= 0").size()==2
+					s.createQuery(
+							"from Simple s where s = some( select sim from Simple sim where sim.count>=0 ) and s.count >= 0"
+					).list()
+							.size()==2
 			);
 			assertTrue(
-				s.find("from Simple s where s = some( select sim from Simple sim where sim.other.count=s.other.count ) and s.other.count > 0").size()==1
+					s.createQuery(
+							"from Simple s where s = some( select sim from Simple sim where sim.other.count=s.other.count ) and s.other.count > 0"
+					).list()
+							.size()==1
 			);
 		}
 
-		Iterator iter = s.iterate("select sum(s.count) from Simple s group by s.count having sum(s.count) > 10");
+		Iterator iter = s.createQuery( "select sum(s.count) from Simple s group by s.count having sum(s.count) > 10" )
+				.iterate();
 		assertTrue( iter.hasNext() );
 		assertEquals( new Long(12), iter.next() );
 		assertTrue( !iter.hasNext() );
 		if ( ! (getDialect() instanceof MySQLDialect) ) {
-			iter = s.iterate("select s.count from Simple s group by s.count having s.count = 12");
+			iter = s.createQuery( "select s.count from Simple s group by s.count having s.count = 12" ).iterate();
 			assertTrue( iter.hasNext() );
 		}
 
-		s.iterate("select s.id, s.count, count(t), max(t.date) from Simple s, Simple t where s.count = t.count group by s.id, s.count order by s.count");
+		s.createQuery(
+				"select s.id, s.count, count(t), max(t.date) from Simple s, Simple t where s.count = t.count group by s.id, s.count order by s.count"
+		).iterate();
 
 		Query q = s.createQuery("from Simple s");
 		q.setMaxResults(10);
@@ -594,7 +619,7 @@ public class SQLFunctionsTest extends LegacyTestCase {
 
 		s = openSession();
 		t = s.beginTransaction();
-		List result = s.find(query);
+		List result = s.createQuery( query ).list();
 		assertTrue( result.size() == 1 );
 		assertTrue(result.get(0) instanceof Simple);
 		s.delete( result.get(0) );

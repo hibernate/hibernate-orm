@@ -166,11 +166,11 @@ public class MasterDetailTest extends LegacyTestCase {
 
 		s = openSession();
 		t = s.beginTransaction();
-		List list = s.find("from Up up order by up.id2 asc");
+		List list = s.createQuery( "from Up up order by up.id2 asc" ).list();
 		assertTrue( list.size()==2 );
 		assertFalse( list.get(0) instanceof Down );
 		assertTrue( list.get(1) instanceof Down );
-		list = s.find("from Down down");
+		list = s.createQuery( "from Down down" ).list();
 		assertTrue( list.size()==1 );
 		assertTrue( list.get(0) instanceof Down );
 		//list = s.find("from Up down where down.class = Down");
@@ -195,7 +195,7 @@ public class MasterDetailTest extends LegacyTestCase {
 		s.close();
 		s = openSession();
 		t = s.beginTransaction();
-		Iterator i = s.iterate("from Master");
+		Iterator i = s.createQuery( "from Master" ).iterate();
 		m = (Master) i.next();
 		assertTrue( m.getOtherMaster()==m );
 		if (getDialect() instanceof HSQLDialect) { m.setOtherMaster(null); s.flush(); }
@@ -273,7 +273,7 @@ public class MasterDetailTest extends LegacyTestCase {
 		s.close();
 		s = openSession();
 		t = s.beginTransaction();
-		s.find("from Several");
+		s.createQuery( "from Several" ).list();
 		t.commit();
 		s.close();
 		s = openSession();
@@ -287,12 +287,12 @@ public class MasterDetailTest extends LegacyTestCase {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
 		if ( !(getDialect() instanceof MySQLDialect) && !(getDialect() instanceof SAPDBDialect) && !(getDialect() instanceof MckoiDialect) ) {
-			s.iterate("FROM Master m WHERE NOT EXISTS ( FROM m.details d WHERE NOT d.i=5 )");
-			s.iterate("FROM Master m WHERE NOT 5 IN ( SELECT d.i FROM m.details AS d )");
+			s.createQuery( "FROM Master m WHERE NOT EXISTS ( FROM m.details d WHERE NOT d.i=5 )" ).iterate();
+			s.createQuery( "FROM Master m WHERE NOT 5 IN ( SELECT d.i FROM m.details AS d )" ).iterate();
 		}
-		s.iterate("SELECT m FROM Master m JOIN m.details d WHERE d.i=5");
-		s.find("SELECT m FROM Master m JOIN m.details d WHERE d.i=5");
-		s.find("SELECT m.id FROM Master AS m JOIN m.details AS d WHERE d.i=5");
+		s.createQuery( "SELECT m FROM Master m JOIN m.details d WHERE d.i=5" ).iterate();
+		s.createQuery( "SELECT m FROM Master m JOIN m.details d WHERE d.i=5" ).list();
+		s.createQuery( "SELECT m.id FROM Master AS m JOIN m.details AS d WHERE d.i=5" ).list();
 		t.commit();
 		s.close();
 	}
@@ -318,7 +318,9 @@ public class MasterDetailTest extends LegacyTestCase {
 		if ( !(getDialect() instanceof MySQLDialect) && !(getDialect() instanceof SAPDBDialect) && !(getDialect() instanceof MckoiDialect) && !(getDialect() instanceof org.hibernate.dialect.TimesTenDialect)) {
 			assertTrue(
 				"query",
-				s.find("from Detail d, Master m where m = d.master and size(m.outgoing) = 0 and size(m.incoming) = 0").size()==2
+					s.createQuery(
+							"from Detail d, Master m where m = d.master and size(m.outgoing) = 0 and size(m.incoming) = 0"
+					).list().size()==2
 			);
 		}
 		t.commit();
@@ -348,17 +350,17 @@ public class MasterDetailTest extends LegacyTestCase {
 
 		s = openSession();
 		t = s.beginTransaction();
-		assertTrue( s.find("select elements(master.details) from Master master").size()==2 );
+		assertTrue( s.createQuery( "select elements(master.details) from Master master" ).list().size()==2 );
 		t.commit();
 		s.close();
 
 		s = openSession();
 		t = s.beginTransaction();
-		List list = s.find("from Master m left join fetch m.details");
+		List list = s.createQuery( "from Master m left join fetch m.details" ).list();
 		Master m = (Master) list.get(0);
 		assertTrue( Hibernate.isInitialized( m.getDetails() ) );
 		assertTrue( m.getDetails().size()==2 );
-		list = s.find("from Detail d inner join fetch d.master");
+		list = s.createQuery( "from Detail d inner join fetch d.master" ).list();
 		Detail dt = (Detail) list.get(0);
 		Serializable dtid = s.getIdentifier(dt);
 		assertTrue( dt.getMaster()==m );
@@ -370,7 +372,8 @@ public class MasterDetailTest extends LegacyTestCase {
 
 		s = openSession();
 		t = s.beginTransaction();
-		list = s.find("select m from Master m1, Master m left join fetch m.details where m.name=m1.name");
+		list = s.createQuery( "select m from Master m1, Master m left join fetch m.details where m.name=m1.name" )
+				.list();
 		assertTrue( Hibernate.isInitialized( ( (Master) list.get(0) ).getDetails() ) );
 		dt = (Detail) s.load(Detail.class, dtid);
 		assertTrue( ( (Master) list.get(0) ).getDetails().contains(dt) );
@@ -379,7 +382,9 @@ public class MasterDetailTest extends LegacyTestCase {
 
 		s = openSession();
 		t = s.beginTransaction();
-		list = s.find("select m, m1.name from Master m1, Master m left join fetch m.details where m.name=m1.name");
+		list = s.createQuery(
+				"select m, m1.name from Master m1, Master m left join fetch m.details where m.name=m1.name"
+		).list();
 		assertTrue( Hibernate.isInitialized( ( (Master) ( (Object[]) list.get(0) )[0] ).getDetails() ) );
 		dt = (Detail) s.load(Detail.class, dtid);
 		assertTrue( ( (Master) ( (Object[]) list.get(0) )[0] ).getDetails().contains(dt) );
@@ -395,8 +400,8 @@ public class MasterDetailTest extends LegacyTestCase {
 		Detail dd = (Detail) s.load(Detail.class, did);
 		master = dd.getMaster();
 		assertTrue( "detail-master", master.getDetails().contains(dd) );
-		assertTrue( s.filter( master.getDetails(), "order by this.i desc").size()==2 );
-		assertTrue( s.filter( master.getDetails(), "select this where this.id > -1").size()==2 );
+		assertTrue( s.createFilter( master.getDetails(), "order by this.i desc" ).list().size()==2 );
+		assertTrue( s.createFilter( master.getDetails(), "select this where this.id > -1" ).list().size()==2 );
 		Query q = s.createFilter( master.getDetails(), "where this.id > :id" );
 		q.setInteger("id", -1);
 		assertTrue( q.list().size()==2 );
@@ -413,18 +418,21 @@ public class MasterDetailTest extends LegacyTestCase {
 		q.setParameterList("ids", list);
 		assertTrue( q.list().size()==1 );
 		assertTrue( q.iterate().hasNext() );
-		assertTrue( s.filter( master.getDetails(), "where this.id > -1").size()==2 );
-		assertTrue( s.filter( master.getDetails(), "select this.master where this.id > -1").size()==2 );
-		assertTrue( s.filter( master.getDetails(), "select m from Master m where this.id > -1 and this.master=m").size()==2 );
-		assertTrue( s.filter( master.getIncoming(), "where this.id > -1 and this.name is not null").size()==0 );
+		assertTrue( s.createFilter( master.getDetails(), "where this.id > -1" ).list().size()==2 );
+		assertTrue( s.createFilter( master.getDetails(), "select this.master where this.id > -1" ).list().size()==2 );
+		assertTrue(
+				s.createFilter( master.getDetails(), "select m from Master m where this.id > -1 and this.master=m" )
+						.list()
+						.size()==2 );
+		assertTrue( s.createFilter( master.getIncoming(), "where this.id > -1 and this.name is not null" ).list().size()==0 );
 
 		assertTrue( s.createFilter( master.getDetails(), "select max(this.i)" ).iterate().next() instanceof Integer );
 		assertTrue( s.createFilter( master.getDetails(), "select max(this.i) group by this.id" ).iterate().next() instanceof Integer );
 		assertTrue( s.createFilter( master.getDetails(), "select count(*)" ).iterate().next() instanceof Long );
 
 		assertTrue( s.createFilter( master.getDetails(), "select this.master" ).list().size()==2 );
-		assertTrue( s.filter( master.getMoreDetails(), "" ).size()==0 );
-		assertTrue( s.filter( master.getIncoming(), "" ).size()==0 );
+		assertTrue( s.createFilter( master.getMoreDetails(), "" ).list().size()==0 );
+		assertTrue( s.createFilter( master.getIncoming(), "" ).list().size()==0 );
 
 		Query f = s.createFilter( master.getDetails(), "select max(this.i) where this.i < :top and this.i>=:bottom" );
 		f.setInteger("top", 100);
@@ -474,7 +482,7 @@ public class MasterDetailTest extends LegacyTestCase {
 		master1.addIncoming(master3);
 		master3.addOutgoing(master1);
 		Serializable m1id = s.getIdentifier(master1);
-		assertTrue( s.filter( master1.getIncoming(), "where this.id > 0 and this.name is not null").size()==2 );
+		assertTrue( s.createFilter( master1.getIncoming(), "where this.id > 0 and this.name is not null" ).list().size()==2 );
 		s.flush();
 		s.connection().commit();
 		s.close();
@@ -596,8 +604,8 @@ public class MasterDetailTest extends LegacyTestCase {
 		m = (Master) s.load( Master.class, mid );
 		assertTrue( ( (Detail) m.getMoreDetails().iterator().next() ).getSubDetails().size()!=0 );
 		s.delete(m);
-		assertTrue( s.find("from SubDetail").size()==0 );
-		assertTrue( s.find("from Detail d").size()==0 );
+		assertTrue( s.createQuery( "from SubDetail" ).list().size()==0 );
+		assertTrue( s.createQuery( "from Detail d" ).list().size()==0 );
 		s.delete( s.load(Master.class, m0id) );
 		txn.commit();
 		s.close();
@@ -796,7 +804,8 @@ public class MasterDetailTest extends LegacyTestCase {
 		assertTrue( list.get(1)!=null && list.get(0)==null );
 
 		assertTrue(
-			s.iterate("from Category c where c.name = org.hibernate.test.legacy.Category.ROOT_CATEGORY").hasNext()
+				s.createQuery( "from Category c where c.name = org.hibernate.test.legacy.Category.ROOT_CATEGORY" )
+						.iterate().hasNext()
 		);
 		s.delete(c);
 		s.flush();

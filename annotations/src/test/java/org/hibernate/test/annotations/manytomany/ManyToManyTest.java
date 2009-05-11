@@ -7,15 +7,12 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Set;
 
 import org.hibernate.Hibernate;
 import org.hibernate.JDBCException;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.dialect.HSQLDialect;
-import org.hibernate.test.annotations.RequiresDialect;
 import org.hibernate.test.annotations.TestCase;
 
 /**
@@ -81,7 +78,6 @@ public class ManyToManyTest extends TestCase {
 		s.close();
 	}
 
-	@RequiresDialect(HSQLDialect.class)
 	public void testDefaultCompositePk() throws Exception {
 		Session s;
 		Transaction tx;
@@ -424,7 +420,6 @@ public class ManyToManyTest extends TestCase {
 		s.close();
 	}
 
-	@RequiresDialect(HSQLDialect.class)
 	public void testCompositePk() throws Exception {
 		Session s;
 		Transaction tx;

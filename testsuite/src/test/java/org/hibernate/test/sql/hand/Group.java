@@ -21,44 +21,46 @@
  */
 package org.hibernate.test.sql.hand;
 
+import java.util.List;
+import java.util.ArrayList;
+
 /**
- * @author Gavin King
+ * TODO : javadoc
+ *
+ * @author Steve Ebersole
  */
-public class Person {
+public class Group {
 	private Long id;
+	private List persons = new ArrayList();
 	private String name;
 
-	public Person(String name) {
+	public Group() {
+	}
+
+	public Group(String name) {
 		this.name = name;
 	}
 
-	public Person() {
-	}
-
-	/**
-	 * @return Returns the id.
-	 */
 	public Long getId() {
 		return id;
 	}
 
-	/**
-	 * @param id The id to set.
-	 */
 	public void setId(Long id) {
 		this.id = id;
 	}
 
-	/**
-	 * @return Returns the name.
-	 */
+	public List getPersons() {
+		return persons;
+	}
+
+	public void setPersons(List persons) {
+		this.persons = persons;
+	}
+
 	public String getName() {
 		return name;
 	}
 
-	/**
-	 * @param name The name to set.
-	 */
 	public void setName(String name) {
 		this.name = name;
 	}

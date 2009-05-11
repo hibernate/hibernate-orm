@@ -23,6 +23,7 @@ import org.hibernate.test.sql.hand.Order;
 import org.hibernate.test.sql.hand.Dimension;
 import org.hibernate.test.sql.hand.SpaceShip;
 import org.hibernate.test.sql.hand.Speech;
+import org.hibernate.test.sql.hand.Group;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.junit.functional.FunctionalTestCase;
@@ -608,6 +609,63 @@ public class NativeSQLQueriesTest extends FunctionalTestCase {
 		else {
 			return Double.valueOf( value.toString() ).doubleValue();
 		}
+	}
+
+	public void testAddJoinForManyToMany() {
+		Session s = openSession();
+		Transaction t = s.beginTransaction();
+		Person gavin = new Person( "Gavin" );
+		Person max = new Person( "Max" );
+		Person pete = new Person( "Pete" );
+
+		Group hibernate = new Group( "Hibernate" );
+		Group seam = new Group( "Seam" );
+
+		s.persist( gavin );
+		s.persist( max );
+		s.persist( pete );
+		s.persist( seam );
+		s.persist( hibernate );
+
+		hibernate.getPersons().add( gavin );
+		hibernate.getPersons().add( max );
+		seam.getPersons().add( gavin );
+		seam.getPersons().add( pete );
+
+		s.flush();
+		s.clear();
+
+		// todo : see http://opensource.atlassian.com/projects/hibernate/browse/HHH-3908
+//		String sqlStr = "SELECT {groupp.*} , {gp.*} " +
+//				"FROM GROUPP groupp, GROUP_PERSON gp, PERSON person WHERE groupp.ID = gp.GROUP_ID and person.PERID = gp.PERSON_ID";
+//
+//		List l = s.createSQLQuery( sqlStr )
+//				.addEntity("groupp", Group.class)
+//				.addJoin("gp","groupp.persons")
+//				.list();
+		List l = s.getNamedQuery( "manyToManyFetch" ).list();
+		//assertEquals( 2, l.size() );
+
+		t.commit();
+		s.close();
+
+		s = openSession();
+		t = s.beginTransaction();
+
+		seam.getPersons().remove( gavin );
+		seam.getPersons().remove( pete );
+
+		hibernate.getPersons().remove( gavin );
+		hibernate.getPersons().remove( max );
+
+		s.delete( seam );
+		s.delete( hibernate );
+		s.delete( gavin );
+		s.delete( max );
+		s.delete( pete );
+
+		t.commit();
+		s.close();
 	}
 
 	private static class UpperCasedAliasToEntityMapResultTransformer extends BasicTransformerAdapter implements Serializable {

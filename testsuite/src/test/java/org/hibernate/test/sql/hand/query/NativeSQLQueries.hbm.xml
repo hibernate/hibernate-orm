@@ -28,7 +28,19 @@
 			<generator class="increment"/>
 		</id>
 		<property name="name" column="NAME" not-null="true"/>
-		
+	</class>
+
+	<class name="Group" table="GROUPP">
+		<id name="id" unsaved-value="0" column="ID">
+			<generator class="increment"/>
+		</id>
+		<property name="name" column="NAME" not-null="true"/>
+		<list name="persons" table="GROUP_PERSON"
+			cascade="none" inverse="false" lazy="true">
+			<key column="GROUP_ID"	/>
+			<list-index column="POS" />
+			<many-to-many class="Person" column="PERSON_ID" />
+		</list>
 	</class>
 	
 	<class name="Employment" table="EMPLOYMENT">
@@ -258,5 +270,33 @@
 		FROM ORGANIZATION org
 			LEFT OUTER JOIN EMPLOYMENT emp ON org.ORGID = emp.EMPLOYER
 	</sql-query>
+
+	<sql-query name="manyToManyFetch">
+        <![CDATA[
+        	SELECT 	groupp.ID as group_id,
+        			groupp.NAME as group_name,
+        			group_person.PERSON_ID as group_person_personId,
+        			group_person.GROUP_ID as group_person_groupId,
+        			group_person.POS as group_person_pos,
+        			person.PERID as person_id,
+        			person.NAME as person_name
+			FROM 	GROUPP groupp,
+					GROUP_PERSON group_person,
+					PERSON person
+			WHERE 	groupp.ID = group_person.GROUP_ID
+					and person.PERID = group_person.PERSON_ID
+       ]]>
+        <return alias="groupp" class="Group">
+            <return-property name="id" column="group_id" />
+            <return-property name="name" column="group_name" />
+        </return>
+        <return-join alias="group_person" property="groupp.persons">
+            <return-property name="key" column="group_person_groupId" />
+            <return-property name="index" column="group_person_pos" />
+            <return-property name="element" column="person_id" />
+            <return-property name="element.id" column="person_id" />
+            <return-property name="element.name" column="person_name" />
+        </return-join>
+    </sql-query>
 
 </hibernate-mapping>

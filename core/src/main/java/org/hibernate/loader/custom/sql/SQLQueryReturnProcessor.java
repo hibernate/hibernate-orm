@@ -397,7 +397,7 @@ public class SQLQueryReturnProcessor {
 		alias2CollectionSuffix.put( alias, suffix );
 		collectionPropertyResultMaps.put( alias, propertyResults );
 
-		if ( collectionPersister.isOneToMany() ) {
+		if ( collectionPersister.isOneToMany() || collectionPersister.isManyToMany() ) {
 			SQLLoadable persister = ( SQLLoadable ) collectionPersister.getElementPersister();
 			addPersister( alias, filter( propertyResults ), persister );
 		}

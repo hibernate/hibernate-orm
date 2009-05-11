@@ -21,7 +21,6 @@ public class Frame implements Serializable {
 	private Long id;
 	@OneToMany( mappedBy = "frame" )
 	private Set<Lens> lenses;
-	@Column( unique = true )
 	private String name;
 	@Formula("lower(name)")
 	private String lowerName;

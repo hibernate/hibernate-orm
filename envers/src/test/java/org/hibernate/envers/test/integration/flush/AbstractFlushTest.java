@@ -25,7 +25,6 @@ package org.hibernate.envers.test.integration.flush;
 
 import java.io.IOException;
 import javax.persistence.EntityManager;
-import javax.persistence.PersistenceException;
 
 import org.hibernate.envers.test.AbstractEntityTest;
 import org.hibernate.envers.test.entities.StrTestEntity;
@@ -46,12 +45,18 @@ public abstract class AbstractFlushTest extends AbstractEntityTest {
     }
 
     private static Session getSession(EntityManager em) {
-		try {
-        	return em.unwrap( Session.class );
-		}
-		catch ( PersistenceException e ) {
-			throw new RuntimeException("Invalid entity manager", e);
-		}
+        Object delegate = em.getDelegate();
+        if (delegate instanceof Session) {
+            return (Session) delegate;
+        } else if (delegate instanceof EntityManager) {
+            Object delegate2 = ((EntityManager) delegate).getDelegate();
+
+            if (delegate2 instanceof Session) {
+                return (Session) delegate2;
+            }
+        }
+
+        throw new RuntimeException("Invalid entity manager");
     }
 
     @BeforeClass(dependsOnMethods = "init")

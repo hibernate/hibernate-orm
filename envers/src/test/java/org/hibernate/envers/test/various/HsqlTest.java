@@ -100,7 +100,7 @@ public class HsqlTest {
 
         entityManager.getTransaction().begin();
 
-        Session sesion = entityManager.unwrap(Session.class);
+        Session sesion = (Session) entityManager.getDelegate();
         System.out.println(sesion.createQuery(
                 "select e from org.hibernate.envers.demo.Person_versions e " +
                         "where " +

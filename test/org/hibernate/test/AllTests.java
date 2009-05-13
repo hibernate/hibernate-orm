@@ -22,6 +22,8 @@ import org.hibernate.test.cache.CacheSuite;
 import org.hibernate.test.cascade.BidirectionalOneToManyCascadeTest;
 import org.hibernate.test.cascade.MultiPathCascadeTest;
 import org.hibernate.test.cascade.RefreshTest;
+import org.hibernate.test.cascade.circle.CascadeMergeToChildBeforeParentTest;
+import org.hibernate.test.cascade.circle.MultiPathCircleCascadeTest;
 import org.hibernate.test.cfg.ListenerTest;
 import org.hibernate.test.cid.CompositeIdTest;
 import org.hibernate.test.collection.bag.PersistentBagTest;
@@ -404,6 +406,8 @@ public class AllTests {
 			suite.addTest( BidirectionalOneToManyCascadeTest.suite() );
 			suite.addTest( RefreshTest.suite() );
 			suite.addTest( MultiPathCascadeTest.suite() );
+			suite.addTest( CascadeMergeToChildBeforeParentTest.suite() );
+			suite.addTest( MultiPathCircleCascadeTest.suite() );
 			suite.addTest( ListenerTest.suite() );
 			suite.addTest( BrokenCollectionEventTest.suite() );
 			suite.addTest( BidirectionalManyToManyBagToSetCollectionEventTest.suite() );

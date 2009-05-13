@@ -390,24 +390,48 @@ public class Oracle8iDialect extends Dialect {
 		}
 
 	};
-	
-	String getOracleTypesClassName() {
-		return "oracle.jdbc.driver.OracleTypes";
-	}
+
+	public static final String ORACLE_TYPES_CLASS_NAME = "oracle.jdbc.OracleTypes";
+	public static final String DEPRECATED_ORACLE_TYPES_CLASS_NAME = "oracle.jdbc.driver.OracleTypes";
+
+	public static final int INIT_ORACLETYPES_CURSOR_VALUE = -99;
 
 	// not final-static to avoid possible classcast exceptions if using different oracle drivers.
-	int oracletypes_cursor_value = 0;
-	public int registerResultSetOutParameter(java.sql.CallableStatement statement,int col) throws SQLException {
-		if(oracletypes_cursor_value==0) {
+	private int oracleCursorTypeSqlType = INIT_ORACLETYPES_CURSOR_VALUE;
+
+	public int getOracleCursorTypeSqlType() {
+		if ( oracleCursorTypeSqlType == INIT_ORACLETYPES_CURSOR_VALUE ) {
+			// todo : is there really any reason to kkeep trying if this fails once?
+			oracleCursorTypeSqlType = extractOracleCursorTypeValue();
+		}
+		return oracleCursorTypeSqlType;
+	}
+
+	protected int extractOracleCursorTypeValue() {
+		Class oracleTypesClass;
+		try {
+			oracleTypesClass = ReflectHelper.classForName( ORACLE_TYPES_CLASS_NAME );
+		}
+		catch ( ClassNotFoundException cnfe ) {
 			try {
-				Class types = ReflectHelper.classForName(getOracleTypesClassName());
-				oracletypes_cursor_value = types.getField("CURSOR").getInt(types.newInstance());
-			} catch (Exception se) {
-				throw new HibernateException("Problem while trying to load or access OracleTypes.CURSOR value",se);
+				oracleTypesClass = ReflectHelper.classForName( DEPRECATED_ORACLE_TYPES_CLASS_NAME );
+			}
+			catch ( ClassNotFoundException e ) {
+				throw new HibernateException( "Unable to locate OracleTypes class", e );
 			}
 		}
+
+		try {
+			return oracleTypesClass.getField( "CURSOR" ).getInt( null );
+		}
+		catch ( Exception se ) {
+			throw new HibernateException( "Unable to access OracleTypes.CURSOR value", se );
+		}
+	}
+
+	public int registerResultSetOutParameter(CallableStatement statement, int col) throws SQLException {
 		//	register the type of the out param - an Oracle specific type
-		statement.registerOutParameter(col, oracletypes_cursor_value);
+		statement.registerOutParameter( col, getOracleCursorTypeSqlType() );
 		col++;
 		return col;
 	}

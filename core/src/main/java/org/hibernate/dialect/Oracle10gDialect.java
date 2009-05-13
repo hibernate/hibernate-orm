@@ -47,13 +47,4 @@ public class Oracle10gDialect extends Oracle9iDialect {
 	public JoinFragment createOuterJoinFragment() {
 		return new ANSIJoinFragment();
 	}
-
-	/*
-	 * The package "oracle.jdbc.driver" was retired in 9.0.1 but works fine up
-	 * through 10g. So as not to mess with 9i, we're changing it in 10g -- we
-	 * may not need an 11g Dialect at all.
-	 */
-	String getOracleTypesClassName() {
-		return "oracle.jdbc.OracleTypes";
-	}
 }

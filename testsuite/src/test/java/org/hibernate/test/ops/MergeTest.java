@@ -187,7 +187,7 @@ public class MergeTest extends AbstractOperationTestCase {
 		// as a control measure, now update the node while it is detached and
 		// make sure we get an update as a result...
 		( ( Node ) parent.getChildren().iterator().next() ).setDescription( "child's new description" );
-		parent.getChildren().add( new Node( "second child" ) );
+		parent.addChild( new Node( "second child" ) );
 		s = openSession();
 		s.beginTransaction();
 		parent = ( Node ) s.merge( parent );

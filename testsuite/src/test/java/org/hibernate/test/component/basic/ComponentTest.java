@@ -16,6 +16,7 @@ import org.hibernate.cfg.Mappings;
 import org.hibernate.criterion.Property;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.function.SQLFunction;
+import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.junit.functional.FunctionalTestCase;
 import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
 import org.hibernate.mapping.Component;
@@ -157,8 +158,34 @@ public class ComponentTest extends FunctionalTestCase {
 
 		s.createQuery( "from Employee e where e.person = :p and 1 = 1 and 2=2" ).setParameter( "p", emp.getPerson() ).list();
 		s.createQuery( "from Employee e where :p = e.person" ).setParameter( "p", emp.getPerson() ).list();
-		s.createQuery( "from Employee e where e.person = ('steve', current_timestamp)" ).list();
+		// The following fails on Sybase due to HHH-3510. When HHH-3510 
+		// is fixed, the check for SybaseASE15Dialect should be removed.
+		if ( ! ( getDialect() instanceof SybaseASE15Dialect ) ) {
+			s.createQuery( "from Employee e where e.person = ('steve', current_timestamp)" ).list();
+		}
 
+		s.delete( emp );
+		t.commit();
+		s.close();
+	}
+
+	// Sybase should translate "current_timestamp" in HQL to "getdate()";
+	// This fails currently due to HHH-3510. The following test should be 
+	// deleted and testComponentQueries() should be updated (as noted
+	// in that test case) when HHH-3510 is fixed.
+	public void testComponentQueryMethodNoParensFailureExpected() {
+		if ( ! ( getDialect() instanceof SybaseASE15Dialect ) ) {
+			fail( "Dialect does not apply to test that is expected to fail; force failure" );
+		}
+		Session s = openSession();
+		Transaction t = s.beginTransaction();
+		Employee emp = new Employee();
+		emp.setHireDate( new Date() );
+		emp.setPerson( new Person() );
+		emp.getPerson().setName( "steve" );
+		emp.getPerson().setDob( new Date() );
+		s.save( emp );
+		s.createQuery( "from Employee e where e.person = ('steve', current_timestamp)" ).list();
 		s.delete( emp );
 		t.commit();
 		s.close();

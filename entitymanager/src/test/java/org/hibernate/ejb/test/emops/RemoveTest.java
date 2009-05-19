@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.persistence.EntityManager;
+import javax.persistence.OptimisticLockException;
 import java.util.Map;
 
 /**
@@ -75,8 +76,7 @@ public class RemoveTest extends TestCase {
 			fail("should have an optimistic lock exception");
 		}
          
-        //catch( OptimisticLockException e ) {
-		catch( Exception e ) {
+        catch( OptimisticLockException e ) {
 			log.debug("success");
 		}
 		finally {

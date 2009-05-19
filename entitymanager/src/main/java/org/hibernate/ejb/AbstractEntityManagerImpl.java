@@ -11,7 +11,7 @@ import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.Map;
 import java.util.Set;
-
+import javax.persistence.EntityManagerFactory;
 import javax.persistence.EntityNotFoundException;
 import javax.persistence.EntityTransaction;
 import javax.persistence.FlushModeType;
@@ -23,15 +23,17 @@ import javax.persistence.PersistenceContextType;
 import javax.persistence.PersistenceException;
 import javax.persistence.Query;
 import javax.persistence.TransactionRequiredException;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.metamodel.Metamodel;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.QueryBuilder;
+import javax.persistence.metamodel.Metamodel;
 import javax.persistence.spi.PersistenceUnitTransactionType;
 import javax.transaction.Status;
 import javax.transaction.Synchronization;
 import javax.transaction.SystemException;
 import javax.transaction.TransactionManager;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.FlushMode;
@@ -58,8 +60,6 @@ import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.transaction.TransactionFactory;
 import org.hibernate.util.CollectionHelper;
 import org.hibernate.util.JTAHelper;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * @author <a href="mailto:gavin@hibernate.org">Gavin King</a>
@@ -84,9 +84,11 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 
 	protected void postInit() {
 		//register in Sync if needed
-		if ( PersistenceUnitTransactionType.JTA.equals( transactionType ) ) joinTransaction( true );
+		if ( PersistenceUnitTransactionType.JTA.equals( transactionType ) ) {
+			joinTransaction( true );
+		}
 		Object flushMode = properties.get( "org.hibernate.flushMode" );
-		if (flushMode != null) {
+		if ( flushMode != null ) {
 			getSession().setFlushMode( ConfigurationHelper.getFlushMode( flushMode ) );
 		}
 		this.properties = null;
@@ -97,7 +99,7 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 		try {
 			return new QueryImpl( getSession().createQuery( ejbqlString ), this );
 		}
-		catch (HibernateException he) {
+		catch ( HibernateException he ) {
 			throwPersistenceException( he );
 			return null;
 		}
@@ -113,13 +115,13 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 		try {
 			namedQuery = getSession().getNamedQuery( name );
 		}
-		catch (MappingException e) {
-			throw new IllegalArgumentException("Named query not found: " + name);
+		catch ( MappingException e ) {
+			throw new IllegalArgumentException( "Named query not found: " + name );
 		}
 		try {
 			return new QueryImpl( namedQuery, this );
 		}
-		catch (HibernateException he) {
+		catch ( HibernateException he ) {
 			throwPersistenceException( he );
 			return null;
 		}
@@ -131,7 +133,7 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 			SQLQuery q = getSession().createSQLQuery( sqlString );
 			return new QueryImpl( q, this );
 		}
-		catch (HibernateException he) {
+		catch ( HibernateException he ) {
 			throwPersistenceException( he );
 			return null;
 		}
@@ -144,7 +146,7 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 			q.addEntity( "alias1", resultClass.getName(), LockMode.READ );
 			return new QueryImpl( q, this );
 		}
-		catch (HibernateException he) {
+		catch ( HibernateException he ) {
 			throwPersistenceException( he );
 			return null;
 		}
@@ -157,7 +159,7 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 			q.setResultSetMapping( resultSetMapping );
 			return new QueryImpl( q, this );
 		}
-		catch (HibernateException he) {
+		catch ( HibernateException he ) {
 			throwPersistenceException( he );
 			return null;
 		}
@@ -167,18 +169,18 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 	public <T> T getReference(Class<T> entityClass, Object primaryKey) {
 		//adjustFlushMode();
 		try {
-			return (T) getSession().load( entityClass, (Serializable) primaryKey );
+			return ( T ) getSession().load( entityClass, ( Serializable ) primaryKey );
 		}
-		catch (MappingException e) {
+		catch ( MappingException e ) {
 			throw new IllegalArgumentException( e.getMessage(), e );
 		}
-		catch (TypeMismatchException e ) {
+		catch ( TypeMismatchException e ) {
 			throw new IllegalArgumentException( e.getMessage(), e );
 		}
-		catch (ClassCastException e) {
+		catch ( ClassCastException e ) {
 			throw new IllegalArgumentException( e.getMessage(), e );
 		}
-		catch (HibernateException he) {
+		catch ( HibernateException he ) {
 			throwPersistenceException( he );
 			return null;
 		}
@@ -188,26 +190,26 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 	public <A> A find(Class<A> entityClass, Object primaryKey) {
 		//adjustFlushMode();
 		try {
-			return (A) getSession().get( entityClass, (Serializable) primaryKey );
+			return ( A ) getSession().get( entityClass, ( Serializable ) primaryKey );
 		}
-		catch (ObjectDeletedException e) {
+		catch ( ObjectDeletedException e ) {
 			//the spec is silent about people doing remove() find() on the same PC
 			return null;
 		}
-		catch (ObjectNotFoundException e) {
+		catch ( ObjectNotFoundException e ) {
 			//should not happen on the entity itself with get
 			throw new IllegalArgumentException( e.getMessage(), e );
 		}
-		catch (MappingException e) {
+		catch ( MappingException e ) {
 			throw new IllegalArgumentException( e.getMessage(), e );
 		}
-		catch (TypeMismatchException e ) {
+		catch ( TypeMismatchException e ) {
 			throw new IllegalArgumentException( e.getMessage(), e );
 		}
-		catch (ClassCastException e) {
+		catch ( ClassCastException e ) {
 			throw new IllegalArgumentException( e.getMessage(), e );
 		}
-		catch (HibernateException he) {
+		catch ( HibernateException he ) {
 			throwPersistenceException( he );
 			return null;
 		}
@@ -229,7 +231,7 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 	}
 
 	private void checkTransactionNeeded() {
-		if ( persistenceContextType == PersistenceContextType.TRANSACTION && ! isTransactionInProgress() ) {
+		if ( persistenceContextType == PersistenceContextType.TRANSACTION && !isTransactionInProgress() ) {
 			//no need to mark as rollback, no tx in progress
 			throw new TransactionRequiredException(
 					"no transaction is in progress for a TRANSACTION type persistence context"
@@ -243,10 +245,10 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 		try {
 			getSession().persist( entity );
 		}
-		catch (MappingException e) {
+		catch ( MappingException e ) {
 			throw new IllegalArgumentException( e.getMessage() );
 		}
-		catch (HibernateException he) {
+		catch ( HibernateException he ) {
 			throwPersistenceException( he );
 		}
 	}
@@ -256,15 +258,15 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 		checkTransactionNeeded();
 		//adjustFlushMode();
 		try {
-			return (A) getSession().merge( entity );
+			return ( A ) getSession().merge( entity );
 		}
-		catch (ObjectDeletedException sse) {
+		catch ( ObjectDeletedException sse ) {
 			throw new IllegalArgumentException( sse );
 		}
-		catch (MappingException e) {
+		catch ( MappingException e ) {
 			throw new IllegalArgumentException( e.getMessage(), e );
 		}
-		catch (HibernateException he) {
+		catch ( HibernateException he ) {
 			throwPersistenceException( he );
 			return null;
 		}
@@ -276,10 +278,10 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 		try {
 			getSession().delete( entity );
 		}
-		catch (MappingException e) {
+		catch ( MappingException e ) {
 			throw new IllegalArgumentException( e.getMessage(), e );
 		}
-		catch (HibernateException he) {
+		catch ( HibernateException he ) {
 			throwPersistenceException( he );
 		}
 	}
@@ -288,15 +290,15 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 		checkTransactionNeeded();
 		//adjustFlushMode();
 		try {
-			if ( ! getSession().contains( entity ) ) {
+			if ( !getSession().contains( entity ) ) {
 				throw new IllegalArgumentException( "Entity not managed" );
 			}
 			getSession().refresh( entity );
 		}
-		catch (MappingException e) {
+		catch ( MappingException e ) {
 			throw new IllegalArgumentException( e.getMessage(), e );
 		}
-		catch (HibernateException he) {
+		catch ( HibernateException he ) {
 			throwPersistenceException( he );
 		}
 	}
@@ -319,16 +321,16 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 	public boolean contains(Object entity) {
 		try {
 			if ( entity != null
-					&& ! ( entity instanceof HibernateProxy )
+					&& !( entity instanceof HibernateProxy )
 					&& getSession().getSessionFactory().getClassMetadata( entity.getClass() ) == null ) {
 				throw new IllegalArgumentException( "Not an entity:" + entity.getClass() );
 			}
 			return getSession().contains( entity );
 		}
-		catch (MappingException e) {
+		catch ( MappingException e ) {
 			throw new IllegalArgumentException( e.getMessage(), e );
 		}
-		catch (HibernateException he) {
+		catch ( HibernateException he ) {
 			throwPersistenceException( he );
 			return false;
 		}
@@ -356,19 +358,20 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 
 	public void flush() {
 		try {
-			if ( ! isTransactionInProgress() ) {
+			if ( !isTransactionInProgress() ) {
 				throw new TransactionRequiredException( "no transaction is in progress" );
 			}
 			//adjustFlushMode();
 			getSession().flush();
 		}
-		catch (HibernateException he) {
+		catch ( HibernateException he ) {
 			throwPersistenceException( he );
 		}
 	}
 
 	/**
 	 * return a Session
+	 *
 	 * @throws IllegalStateException if the entity manager is closed
 	 */
 	public abstract Session getSession();
@@ -418,7 +421,7 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 		try {
 			getSession().clear();
 		}
-		catch (HibernateException he) {
+		catch ( HibernateException he ) {
 			throwPersistenceException( he );
 		}
 	}
@@ -453,14 +456,16 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 
 	public void lock(Object entity, LockModeType lockMode) {
 		try {
-			if ( ! isTransactionInProgress() ) {
+			if ( !isTransactionInProgress() ) {
 				throw new TransactionRequiredException( "no transaction is in progress" );
 			}
 			//adjustFlushMode();
-			if ( !contains( entity ) ) throw new IllegalArgumentException( "entity not in the persistence context" );
+			if ( !contains( entity ) ) {
+				throw new IllegalArgumentException( "entity not in the persistence context" );
+			}
 			getSession().lock( entity, getLockMode( lockMode ) );
 		}
-		catch (HibernateException he) {
+		catch ( HibernateException he ) {
 			throwPersistenceException( he );
 		}
 	}
@@ -482,11 +487,11 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 	}
 
 	public boolean isTransactionInProgress() {
-		return ( (SessionImplementor) getRawSession() ).isTransactionInProgress();
+		return ( ( SessionImplementor ) getRawSession() ).isTransactionInProgress();
 	}
 
 	protected void markAsRollback() {
-		log.debug( "mark transaction for rollback");
+		log.debug( "mark transaction for rollback" );
 		if ( tx.isActive() ) {
 			tx.setRollbackOnly();
 		}
@@ -494,7 +499,7 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 			//no explicit use of the tx. boudaries methods
 			if ( PersistenceUnitTransactionType.JTA == transactionType ) {
 				TransactionManager transactionManager =
-						( (SessionFactoryImplementor) getRawSession().getSessionFactory() ).getTransactionManager();
+						( ( SessionFactoryImplementor ) getRawSession().getSessionFactory() ).getTransactionManager();
 				if ( transactionManager == null ) {
 					throw new PersistenceException(
 							"Using a JTA persistence context wo setting hibernate.transaction.manager_lookup_class"
@@ -503,7 +508,7 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 				try {
 					transactionManager.setRollbackOnly();
 				}
-				catch (SystemException e) {
+				catch ( SystemException e ) {
 					throw new PersistenceException( "Unable to set the JTA transaction as RollbackOnly", e );
 				}
 			}
@@ -515,8 +520,12 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 	}
 
 	public <T> T unwrap(Class<T> clazz) {
-		if (clazz.equals( Session.class ) ) return (T) getSession();
-		if (clazz.equals( SessionImplementor.class  ) ) return (T) getSession();
+		if ( clazz.equals( Session.class ) ) {
+			return ( T ) getSession();
+		}
+		if ( clazz.equals( SessionImplementor.class ) ) {
+			return ( T ) getSession();
+		}
 		//FIXME
 		return null;  //To change body of implemented methods use File | Settings | File Templates.
 	}
@@ -531,7 +540,7 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 				final Transaction transaction = session.getTransaction();
 				if ( transaction != null && transaction instanceof JoinableCMTTransaction ) {
 					//can't handle it if not a joinnable transaction
-					final JoinableCMTTransaction joinableCMTTransaction = (JoinableCMTTransaction) transaction;
+					final JoinableCMTTransaction joinableCMTTransaction = ( JoinableCMTTransaction ) transaction;
 
 					if ( joinableCMTTransaction.getStatus() == JoinableCMTTransaction.JoinStatus.JOINED ) {
 						log.debug( "Transaction already joined" );
@@ -550,8 +559,7 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 							);
 						}
 					}
-					else
-					if ( joinableCMTTransaction.getStatus() == JoinableCMTTransaction.JoinStatus.MARKED_FOR_JOINED ) {
+					else if ( joinableCMTTransaction.getStatus() == JoinableCMTTransaction.JoinStatus.MARKED_FOR_JOINED ) {
 						throw new AssertionFailure( "Transaction MARKED_FOR_JOINED after isOpen() call" );
 					}
 					//flush before completion and
@@ -563,18 +571,21 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 									boolean flush = false;
 									TransactionFactory.Context ctx = null;
 									try {
-										ctx = (TransactionFactory.Context) session;
-										JoinableCMTTransaction joinable = (JoinableCMTTransaction) session.getTransaction();
+										ctx = ( TransactionFactory.Context ) session;
+										JoinableCMTTransaction joinable = ( JoinableCMTTransaction ) session.getTransaction();
 										javax.transaction.Transaction transaction = joinable.getTransaction();
-										if ( transaction == null )
-											log.warn( "Transaction not available on beforeCompletionPhase: assuming valid" );
+										if ( transaction == null ) {
+											log.warn(
+													"Transaction not available on beforeCompletionPhase: assuming valid"
+											);
+										}
 										flush = !ctx.isFlushModeNever() &&
 												//ctx.isFlushBeforeCompletionEnabled() &&
 												//TODO probably make it ! isFlushBeforecompletion()
 												( transaction == null || !JTAHelper.isRollback( transaction.getStatus() ) );
-												//transaction == null workaround a JBoss TMBug
+										//transaction == null workaround a JBoss TMBug
 									}
-									catch (SystemException se) {
+									catch ( SystemException se ) {
 										log.error( "could not determine transaction status", se );
 										//throwPersistenceException will mark the transaction as rollbacked
 										throwPersistenceException(
@@ -584,7 +595,7 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 												)
 										);
 									}
-									catch (HibernateException he) {
+									catch ( HibernateException he ) {
 										throwPersistenceException( he );
 									}
 
@@ -597,10 +608,10 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 											log.trace( "skipping managed flushing" );
 										}
 									}
-									catch (RuntimeException re) {
+									catch ( RuntimeException re ) {
 										//throwPersistenceException will mark the transaction as rollbacked
 										if ( re instanceof HibernateException ) {
-											throwPersistenceException( (HibernateException) re );
+											throwPersistenceException( ( HibernateException ) re );
 										}
 										else {
 											throwPersistenceException( new PersistenceException( re ) );
@@ -618,11 +629,11 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 										}
 										if ( session.isOpen() ) {
 											//only reset if the session is opened since you can't get the Transaction otherwise
-											JoinableCMTTransaction joinable = (JoinableCMTTransaction) session.getTransaction();
+											JoinableCMTTransaction joinable = ( JoinableCMTTransaction ) session.getTransaction();
 											joinable.resetStatus();
 										}
 									}
-									catch (HibernateException e) {
+									catch ( HibernateException e ) {
 										throwPersistenceException( e );
 									}
 								}
@@ -633,12 +644,14 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 					log.warn( "Cannot join transaction: do not override {}", Environment.TRANSACTION_STRATEGY );
 				}
 			}
-			catch (HibernateException he) {
+			catch ( HibernateException he ) {
 				throwPersistenceException( he );
 			}
 		}
 		else {
-			if ( !ignoreNotJoining ) log.warn( "Calling joinTransaction() on a non JTA EntityManager" );
+			if ( !ignoreNotJoining ) {
+				log.warn( "Calling joinTransaction() on a non JTA EntityManager" );
+			}
 		}
 	}
 
@@ -661,13 +674,13 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 	}
 
 	public void throwPersistenceException(PersistenceException e) {
-		if ( ! ( e instanceof NoResultException || e instanceof NonUniqueResultException ) ) {
+		if ( !( e instanceof NoResultException || e instanceof NonUniqueResultException ) ) {
 			try {
 				markAsRollback();
 			}
-			catch (Exception ne) {
+			catch ( Exception ne ) {
 				//we do not want the subsequent exception to swallow the original one
-				log.error( "Unable to mark for rollback on PersistenceException: ", ne);
+				log.error( "Unable to mark for rollback on PersistenceException: ", ne );
 			}
 		}
 		throw e;
@@ -675,7 +688,7 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 
 	public void throwPersistenceException(HibernateException e) {
 		if ( e instanceof StaleStateException ) {
-			PersistenceException pe = wrapStaleStateException( (StaleStateException) e );
+			PersistenceException pe = wrapStaleStateException( ( StaleStateException ) e );
 			throwPersistenceException( pe );
 		}
 		else if ( e instanceof ObjectNotFoundException ) {
@@ -694,9 +707,9 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 			try {
 				markAsRollback();
 			}
-			catch (Exception ne) {
+			catch ( Exception ne ) {
 				//we do not want the subsequent exception to swallow the original one
-				log.error( "Unable to mark for rollback on TransientObjectException: ", ne);
+				log.error( "Unable to mark for rollback on TransientObjectException: ", ne );
 			}
 			throw new IllegalStateException( e ); //Spec 3.2.3 Synchronization rules
 		}
@@ -708,15 +721,20 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 	public PersistenceException wrapStaleStateException(StaleStateException e) {
 		PersistenceException pe;
 		if ( e instanceof StaleObjectStateException ) {
-			StaleObjectStateException sose = (StaleObjectStateException) e;
+			StaleObjectStateException sose = ( StaleObjectStateException ) e;
 			Serializable identifier = sose.getIdentifier();
-			if (identifier != null) {
-				Object entity = getRawSession().load( sose.getEntityName(), identifier );
-				if ( entity instanceof Serializable ) {
-					//avoid some user errors regarding boundary crossing
-					pe = new OptimisticLockException( null, e, entity );
+			if ( identifier != null ) {
+				try {
+					Object entity = getRawSession().load( sose.getEntityName(), identifier );
+					if ( entity instanceof Serializable ) {
+						//avoid some user errors regarding boundary crossing
+						pe = new OptimisticLockException( null, e, entity );
+					}
+					else {
+						pe = new OptimisticLockException( e );
+					}
 				}
-				else {
+				catch ( EntityNotFoundException enfe ) {
 					pe = new OptimisticLockException( e );
 				}
 			}

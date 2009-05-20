@@ -23,6 +23,8 @@
  */
 package org.hibernate.test.cache.jbc2.functional;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.HashSet;
 import java.util.Random;
 import java.util.Set;
@@ -42,7 +44,6 @@ import org.hibernate.cache.RegionFactory;
 import org.hibernate.cache.jbc2.JBossCacheRegionFactory;
 import org.hibernate.cache.jbc2.builder.SharedCacheInstanceManager;
 import org.hibernate.cfg.Configuration;
-import org.hibernate.exception.ExceptionUtils;
 import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
 import org.hibernate.stat.SecondLevelCacheStatistics;
 import org.hibernate.test.cache.jbc2.functional.util.DualNodeConnectionProviderImpl;
@@ -579,13 +580,21 @@ public class MVCCConcurrentWriteTest extends CacheTestCaseBase {
                     "[customerId=" + getCustomerId() +
                     " iterationsCompleted=" + getCompletedIterations() +
                     " completedAll=" + isSuccess() +
-                    " causeOfFailure=" + (this.causeOfFailure != null ? ExceptionUtils.getStackTrace(causeOfFailure) : "") + "] ";
+                    " causeOfFailure=" + (this.causeOfFailure != null ? getStackTrace(causeOfFailure) : "") + "] ";
         }
     }
 
+
+	public static String getStackTrace(Throwable throwable) {
+		StringWriter sw = new StringWriter();
+		PrintWriter pw = new PrintWriter( sw, true );
+		throwable.printStackTrace( pw );
+		return sw.getBuffer().toString();
+	}
+
     /**
      * sleep between 0 and THINK_TIME_MILLIS.
-     * @throws RuntimeException if sleep is interruped or TERMINATE_ALL_USERS flag was set to true i
+     * @throws RuntimeException if sleep is interrupted or TERMINATE_ALL_USERS flag was set to true i
 n the meantime
      */
     private void thinkRandomTime() {

@@ -161,6 +161,11 @@ public final class CollectionMetadataGenerator {
         EntityConfiguration referencedEntityConfiguration = mainGenerator.getEntitiesConfigurations()
                 .get(referencedEntityName);
 
+		if (referencedEntityConfiguration == null) {
+			throwRelationNotAudited(referencedEntityName);
+			// Impossible to get here.
+            throw new AssertionError();
+		}
         IdMappingData referencedIdMapping = referencedEntityConfiguration.getIdMappingData();
         IdMappingData referencingIdMapping = referencingEntityConfiguration.getIdMappingData();
 
@@ -378,8 +383,14 @@ public final class CollectionMetadataGenerator {
             String prefixRelated = prefix + "_";
 
             String referencedEntityName = getReferencedEntityName(value);
-            IdMappingData referencedIdMapping = mainGenerator.getEntitiesConfigurations()
-                    .get(referencedEntityName).getIdMappingData();
+			EntityConfiguration referencedEntityConfiguration = mainGenerator.getEntitiesConfigurations()
+                    .get(referencedEntityName);
+			if (referencedEntityConfiguration == null) {
+				throwRelationNotAudited(referencedEntityName);
+				// Impossible to get here.
+                throw new AssertionError();
+			}
+            IdMappingData referencedIdMapping = referencedEntityConfiguration.getIdMappingData();
 
             // Adding related-entity (in this case: the referenced entities id) id mapping to the xml only if the
             // relation isn't inverse (so when <code>xmlMapping</code> is not null).
@@ -520,4 +531,9 @@ public final class CollectionMetadataGenerator {
         throw new MappingException("Unable to read the mapped by attribute for " + propertyName + " in "
                 + referencingEntityName + "!");
     }
+
+	private void throwRelationNotAudited(String referencedEntityName) {
+		throw new MappingException("An audited relation from " + referencingEntityName +
+				" to a non-audited entity: " + referencedEntityName);
+	}
 }

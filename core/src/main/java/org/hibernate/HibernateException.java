@@ -24,18 +24,17 @@
  */
 package org.hibernate;
 
-import org.hibernate.exception.NestableRuntimeException;
-
 /**
- * Any exception that occurs inside the persistence layer
- * or JDBC driver. <tt>SQLException</tt>s are always wrapped
- * by instances of <tt>JDBCException</tt>.
- *
+ * The base {@link Throwable} type for Hibernate.
+ * <p/>
+ * Note that all {@link java.sql.SQLException SQLExceptions} will be wrapped in some form of 
+ * {@link JDBCException}.
+ * 
  * @see JDBCException
+ * 
  * @author Gavin King
  */
-
-public class HibernateException extends NestableRuntimeException {
+public class HibernateException extends RuntimeException {
 
 	public HibernateException(Throwable root) {
 		super(root);

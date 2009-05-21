@@ -33,8 +33,8 @@ import org.hibernate.tool.ant.AnnotationConfigurationTask;
  */
 public class AnnotationConfigurationTaskWithEnvers extends AnnotationConfigurationTask {
     protected void doConfiguration(Configuration configuration) {
-        AuditConfiguration.getFor(configuration);
-
-        super.doConfiguration(configuration);
+		super.doConfiguration(configuration);
+		configuration.buildMappings();
+		AuditConfiguration.getFor(configuration);
     }
 }

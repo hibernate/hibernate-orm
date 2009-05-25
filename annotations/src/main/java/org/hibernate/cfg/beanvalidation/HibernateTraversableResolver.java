@@ -59,7 +59,7 @@ public class HibernateTraversableResolver implements TraversableResolver {
 		}
 	}
 
-	private String getCleanPathWoBraket(String traversableProperty, String pathToTraversableObject) {
+	private String getCleanPathWoBracket(String traversableProperty, String pathToTraversableObject) {
 		String path = pathToTraversableObject.equals( "" ) ?
 				traversableProperty :
 				pathToTraversableObject + "." + traversableProperty;
@@ -86,7 +86,7 @@ public class HibernateTraversableResolver implements TraversableResolver {
 						  Class<?> rootBeanType,
 						  String pathToTraversableObject,
 						  ElementType elementType) {
-		String path = getCleanPathWoBraket( traversableProperty, pathToTraversableObject );
+		String path = getCleanPathWoBracket( traversableProperty, pathToTraversableObject );
 		return ! associations.contains(path);
 	}
 }

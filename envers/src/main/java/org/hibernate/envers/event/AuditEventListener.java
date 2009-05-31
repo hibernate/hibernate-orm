@@ -242,7 +242,7 @@ public class AuditEventListener implements PostInsertEventListener, PostUpdateEv
 
     public void onPreRemoveCollection(PreCollectionRemoveEvent event) {
         CollectionEntry collectionEntry = getCollectionEntry(event);
-        if (!collectionEntry.getLoadedPersister().isInverse()) {
+        if (collectionEntry != null && !collectionEntry.getLoadedPersister().isInverse()) {
             onCollectionAction(event, null, collectionEntry.getSnapshot(), collectionEntry);
         }
     }

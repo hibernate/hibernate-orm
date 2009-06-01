@@ -86,8 +86,10 @@ public class H2Dialect extends Dialect {
 
 		// select topic, syntax from information_schema.help
 		// where section like 'Function%' order by section, topic
+		//
+		// see also ->  http://www.h2database.com/html/functions.html
 
-//        registerFunction("abs", new StandardSQLFunction("abs"));
+		// Numeric Functions ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		registerFunction( "acos", new StandardSQLFunction( "acos", Hibernate.DOUBLE ) );
 		registerFunction( "asin", new StandardSQLFunction( "asin", Hibernate.DOUBLE ) );
 		registerFunction( "atan", new StandardSQLFunction( "atan", Hibernate.DOUBLE ) );
@@ -97,13 +99,17 @@ public class H2Dialect extends Dialect {
 		registerFunction( "bitxor", new StandardSQLFunction( "bitxor", Hibernate.INTEGER ) );
 		registerFunction( "ceiling", new StandardSQLFunction( "ceiling", Hibernate.DOUBLE ) );
 		registerFunction( "cos", new StandardSQLFunction( "cos", Hibernate.DOUBLE ) );
+		registerFunction( "compress", new StandardSQLFunction( "compress", Hibernate.BINARY ) );
 		registerFunction( "cot", new StandardSQLFunction( "cot", Hibernate.DOUBLE ) );
+		registerFunction( "decrypt", new StandardSQLFunction( "decrypt", Hibernate.BINARY ) );
 		registerFunction( "degrees", new StandardSQLFunction( "degrees", Hibernate.DOUBLE ) );
+		registerFunction( "encrypt", new StandardSQLFunction( "encrypt", Hibernate.BINARY ) );
 		registerFunction( "exp", new StandardSQLFunction( "exp", Hibernate.DOUBLE ) );
+		registerFunction( "expand", new StandardSQLFunction( "compress", Hibernate.BINARY ) );
 		registerFunction( "floor", new StandardSQLFunction( "floor", Hibernate.DOUBLE ) );
+		registerFunction( "hash", new StandardSQLFunction( "hash", Hibernate.BINARY ) );
 		registerFunction( "log", new StandardSQLFunction( "log", Hibernate.DOUBLE ) );
 		registerFunction( "log10", new StandardSQLFunction( "log10", Hibernate.DOUBLE ) );
-//        registerFunction("mod", new StandardSQLFunction("mod", Hibernate.INTEGER));
 		registerFunction( "pi", new NoArgSQLFunction( "pi", Hibernate.DOUBLE ) );
 		registerFunction( "power", new StandardSQLFunction( "power", Hibernate.DOUBLE ) );
 		registerFunction( "radians", new StandardSQLFunction( "radians", Hibernate.DOUBLE ) );
@@ -112,28 +118,17 @@ public class H2Dialect extends Dialect {
 		registerFunction( "roundmagic", new StandardSQLFunction( "roundmagic", Hibernate.DOUBLE ) );
 		registerFunction( "sign", new StandardSQLFunction( "sign", Hibernate.INTEGER ) );
 		registerFunction( "sin", new StandardSQLFunction( "sin", Hibernate.DOUBLE ) );
-//        registerFunction("sqrt", new StandardSQLFunction("sqrt", Hibernate.DOUBLE));
 		registerFunction( "tan", new StandardSQLFunction( "tan", Hibernate.DOUBLE ) );
 		registerFunction( "truncate", new StandardSQLFunction( "truncate", Hibernate.DOUBLE ) );
 
-		registerFunction( "compress", new StandardSQLFunction( "compress", Hibernate.BINARY ) );
-		registerFunction( "expand", new StandardSQLFunction( "compress", Hibernate.BINARY ) );
-		registerFunction( "decrypt", new StandardSQLFunction( "decrypt", Hibernate.BINARY ) );
-		registerFunction( "encrypt", new StandardSQLFunction( "encrypt", Hibernate.BINARY ) );
-		registerFunction( "hash", new StandardSQLFunction( "hash", Hibernate.BINARY ) );
-
+		// String Functions ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		registerFunction( "ascii", new StandardSQLFunction( "ascii", Hibernate.INTEGER ) );
-//        registerFunction("bit_length", new StandardSQLFunction("bit_length", Hibernate.INTEGER));
 		registerFunction( "char", new StandardSQLFunction( "char", Hibernate.CHARACTER ) );
 		registerFunction( "concat", new VarArgsSQLFunction( Hibernate.STRING, "(", "||", ")" ) );
 		registerFunction( "difference", new StandardSQLFunction( "difference", Hibernate.INTEGER ) );
 		registerFunction( "hextoraw", new StandardSQLFunction( "hextoraw", Hibernate.STRING ) );
-		registerFunction( "lower", new StandardSQLFunction( "lower", Hibernate.STRING ) );
 		registerFunction( "insert", new StandardSQLFunction( "lower", Hibernate.STRING ) );
 		registerFunction( "left", new StandardSQLFunction( "left", Hibernate.STRING ) );
-//        registerFunction("length", new StandardSQLFunction("length", Hibernate.INTEGER));
-//        registerFunction("locate", new StandardSQLFunction("locate", Hibernate.INTEGER));
-//        registerFunction("lower", new StandardSQLFunction("lower", Hibernate.STRING));
 		registerFunction( "lcase", new StandardSQLFunction( "lcase", Hibernate.STRING ) );
 		registerFunction( "ltrim", new StandardSQLFunction( "ltrim", Hibernate.STRING ) );
 		registerFunction( "octet_length", new StandardSQLFunction( "octet_length", Hibernate.INTEGER ) );
@@ -147,13 +142,14 @@ public class H2Dialect extends Dialect {
 		registerFunction( "space", new StandardSQLFunction( "space", Hibernate.STRING ) );
 		registerFunction( "stringencode", new StandardSQLFunction( "stringencode", Hibernate.STRING ) );
 		registerFunction( "stringdecode", new StandardSQLFunction( "stringdecode", Hibernate.STRING ) );
-//        registerFunction("substring", new StandardSQLFunction("substring", Hibernate.STRING));
-//        registerFunction("upper", new StandardSQLFunction("upper", Hibernate.STRING));
-		registerFunction( "ucase", new StandardSQLFunction( "ucase", Hibernate.STRING ) );
-
 		registerFunction( "stringtoutf8", new StandardSQLFunction( "stringtoutf8", Hibernate.BINARY ) );
+		registerFunction( "ucase", new StandardSQLFunction( "ucase", Hibernate.STRING ) );
 		registerFunction( "utf8tostring", new StandardSQLFunction( "utf8tostring", Hibernate.STRING ) );
 
+		// Time and Date Functions ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+		registerFunction( "curdate", new NoArgSQLFunction( "curdate", Hibernate.DATE ) );
+		registerFunction( "curtime", new NoArgSQLFunction( "curtime", Hibernate.TIME ) );
+		registerFunction( "curtimestamp", new NoArgSQLFunction( "curtimestamp", Hibernate.TIME ) );
 		registerFunction( "current_date", new NoArgSQLFunction( "current_date", Hibernate.DATE ) );
 		registerFunction( "current_time", new NoArgSQLFunction( "current_time", Hibernate.TIME ) );
 		registerFunction( "current_timestamp", new NoArgSQLFunction( "current_timestamp", Hibernate.TIMESTAMP ) );
@@ -162,20 +158,12 @@ public class H2Dialect extends Dialect {
 		registerFunction( "dayofmonth", new StandardSQLFunction( "dayofmonth", Hibernate.INTEGER ) );
 		registerFunction( "dayofweek", new StandardSQLFunction( "dayofweek", Hibernate.INTEGER ) );
 		registerFunction( "dayofyear", new StandardSQLFunction( "dayofyear", Hibernate.INTEGER ) );
-//        registerFunction("hour", new StandardSQLFunction("hour", Hibernate.INTEGER));
-//        registerFunction("minute", new StandardSQLFunction("minute", Hibernate.INTEGER));
-//        registerFunction("month", new StandardSQLFunction("month", Hibernate.INTEGER));
 		registerFunction( "monthname", new StandardSQLFunction( "monthname", Hibernate.STRING ) );
-		registerFunction( "quarter", new StandardSQLFunction( "quarter", Hibernate.INTEGER ) );
-//        registerFunction("second", new StandardSQLFunction("second", Hibernate.INTEGER));
-		registerFunction( "week", new StandardSQLFunction( "week", Hibernate.INTEGER ) );
-//        registerFunction("year", new StandardSQLFunction("year", Hibernate.INTEGER));
-
-		registerFunction( "curdate", new NoArgSQLFunction( "curdate", Hibernate.DATE ) );
-		registerFunction( "curtime", new NoArgSQLFunction( "curtime", Hibernate.TIME ) );
-		registerFunction( "curtimestamp", new NoArgSQLFunction( "curtimestamp", Hibernate.TIME ) );
 		registerFunction( "now", new NoArgSQLFunction( "now", Hibernate.TIMESTAMP ) );
+		registerFunction( "quarter", new StandardSQLFunction( "quarter", Hibernate.INTEGER ) );
+		registerFunction( "week", new StandardSQLFunction( "week", Hibernate.INTEGER ) );
 
+		// System Functions ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		registerFunction( "database", new NoArgSQLFunction( "database", Hibernate.STRING ) );
 		registerFunction( "user", new NoArgSQLFunction( "user", Hibernate.STRING ) );
 

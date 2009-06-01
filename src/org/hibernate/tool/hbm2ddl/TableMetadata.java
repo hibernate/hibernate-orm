@@ -5,8 +5,10 @@ import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
+import org.hibernate.mapping.ForeignKey;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -67,6 +69,17 @@ public class TableMetadata {
 	public ForeignKeyMetadata getForeignKeyMetadata(String keyName) {
 		return (ForeignKeyMetadata) foreignKeys.get( keyName.toLowerCase() );
 	}
+	
+	public ForeignKeyMetadata getForeignKeyMetadata(ForeignKey fk) {
+		Iterator it = foreignKeys.values().iterator();
+		while ( it.hasNext() ) {
+			ForeignKeyMetadata existingFk = (ForeignKeyMetadata) it.next();
+			if (existingFk.matches(fk)) {
+				return existingFk;
+			}
+		}
+		return null;
+	}
 
 	public IndexMetadata getIndexMetadata(String indexName) {
 		return (IndexMetadata) indexes.get( indexName.toLowerCase() );
@@ -83,7 +96,7 @@ public class TableMetadata {
 			foreignKeys.put( info.getName().toLowerCase(), info );
 		}
 
-		info.addColumn( getColumnMetadata( rs.getString("FKCOLUMN_NAME") ) );
+		info.addReference( rs );
 	}
 
 	private void addIndex(ResultSet rs) throws SQLException {

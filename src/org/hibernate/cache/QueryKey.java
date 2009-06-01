@@ -91,19 +91,25 @@ public class QueryKey implements Serializable {
 		}
 
 		// disassemble named parameters
-		Map namedParameters = CollectionHelper.mapOfSize( queryParameters.getNamedParameters().size() );
-		Iterator itr = queryParameters.getNamedParameters().entrySet().iterator();
-		while ( itr.hasNext() ) {
-			final Map.Entry namedParameterEntry = ( Map.Entry ) itr.next();
-			final TypedValue original = ( TypedValue ) namedParameterEntry.getValue();
-			namedParameters.put(
-					namedParameterEntry.getKey(),
-					new TypedValue(
-							original.getType(),
-							original.getType().disassemble( original.getValue(), session, null ),
-							session.getEntityMode()
-					)
-			);
+		final Map namedParameters;
+		if ( queryParameters.getNamedParameters() == null ) {
+			namedParameters = null;
+		}
+		else {
+			namedParameters = CollectionHelper.mapOfSize( queryParameters.getNamedParameters().size() );
+			Iterator itr = queryParameters.getNamedParameters().entrySet().iterator();
+			while ( itr.hasNext() ) {
+				final Map.Entry namedParameterEntry = ( Map.Entry ) itr.next();
+				final TypedValue original = ( TypedValue ) namedParameterEntry.getValue();
+				namedParameters.put(
+						namedParameterEntry.getKey(),
+						new TypedValue(
+								original.getType(),
+								original.getType().disassemble( original.getValue(), session, null ),
+								session.getEntityMode()
+						)
+				);
+			}
 		}
 
 		// decode row selection...

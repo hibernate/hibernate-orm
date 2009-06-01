@@ -20,7 +20,6 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.cache;
 
@@ -41,20 +40,24 @@ import org.hibernate.util.EqualsHelper;
 import org.hibernate.util.CollectionHelper;
 
 /**
- * A key that identifies a particular query with bound parameter values
+ * A key that identifies a particular query with bound parameter values.  This is the object Hibernate uses
+ * as its key into its query cache.
+ *
  * @author Gavin King
+ * @author Steve Ebersole
  */
 public class QueryKey implements Serializable {
 	private final String sqlQueryString;
-	private final Type[] types;
-	private final Object[] values;
+	private final Type[] positionalParameterTypes;
+	private final Object[] positionalParameterValues;
+	private final Map namedParameters;
 	private final Integer firstRow;
 	private final Integer maxRows;
-	private final Map namedParameters;
 	private final EntityMode entityMode;
-	private final Set filters;
+	private final Set filterKeys;
 	
-	// the user provided resulttransformer, not the one used with "select new". Here to avoid mangling transformed/non-transformed results.
+	// the user provided resulttransformer, not the one used with "select new". Here to avoid mangling
+	// transformed/non-transformed results.
 	private final ResultTransformer customTransformer;
 
 	/**
@@ -63,10 +66,20 @@ public class QueryKey implements Serializable {
 	 */
 	private transient int hashCode;
 
+	/**
+	 * Generates a QueryKey.
+	 *
+	 * @param queryString The sql query string.
+	 * @param queryParameters The query parameters
+	 * @param filterKeys The keys of any enabled filters.
+	 * @param session The current session.
+	 *
+	 * @return The generate query cache key.
+	 */
 	public static QueryKey generateQueryKey(
 			String queryString,
 			QueryParameters queryParameters,
-			Set filters,
+			Set filterKeys,
 			SessionImplementor session) {
 		// disassemble positional parameters
 		final int positionalParameterCount = queryParameters.getPositionalParameterTypes().length;
@@ -113,54 +126,55 @@ public class QueryKey implements Serializable {
 				namedParameters,
 				firstRow,
 				maxRows,
-				filters,
+				filterKeys,
 				session.getEntityMode(),
 				queryParameters.getResultTransformer()
 		);
 	}
 
-	/*package*/ QueryKey(
+	/**
+	 * Package-protected constructor.
+	 *
+	 * @param sqlQueryString The sql query string.
+	 * @param positionalParameterTypes Positional parameter types.
+	 * @param positionalParameterValues Positional parameter values.
+	 * @param namedParameters Named parameters.
+	 * @param firstRow First row selection, if any.
+	 * @param maxRows Max-rows selection, if any.
+	 * @param filterKeys Enabled filter keys, if any.
+	 * @param entityMode The entity mode.
+	 * @param customTransformer Custom result transformer, if one.
+	 */
+	QueryKey(
 			String sqlQueryString,
-			Type[] types,
-			Object[] values,
+			Type[] positionalParameterTypes,
+			Object[] positionalParameterValues,
 			Map namedParameters,
 			Integer firstRow,
 			Integer maxRows, 
-			Set filters,
+			Set filterKeys,
 			EntityMode entityMode,
 			ResultTransformer customTransformer) {
 		this.sqlQueryString = sqlQueryString;
-		this.types = types;
-		this.values = values;
+		this.positionalParameterTypes = positionalParameterTypes;
+		this.positionalParameterValues = positionalParameterValues;
 		this.namedParameters = namedParameters;
 		this.firstRow = firstRow;
 		this.maxRows = maxRows;
 		this.entityMode = entityMode;
-		this.filters = filters;
+		this.filterKeys = filterKeys;
 		this.customTransformer = customTransformer;
 		this.hashCode = generateHashCode();
 	}
 
-//	public QueryKey(String queryString, QueryParameters queryParameters, Set filters, EntityMode entityMode) {
-//		this.sqlQueryString = queryString;
-//		this.types = queryParameters.getPositionalParameterTypes();
-//		this.values = queryParameters.getPositionalParameterValues();
-//		RowSelection selection = queryParameters.getRowSelection();
-//		if (selection!=null) {
-//			firstRow = selection.getFirstRow();
-//			maxRows = selection.getMaxRows();
-//		}
-//		else {
-//			firstRow = null;
-//			maxRows = null;
-//		}
-//		this.namedParameters = queryParameters.getNamedParameters();
-//		this.entityMode = entityMode;
-//		this.filters = filters;
-//		this.customTransformer = queryParameters.getResultTransformer();
-//		this.hashCode = generateHashCode();
-//	}
-
+	/**
+	 * Deserialization hook used to re-init the cached hashcode which is needed for proper clustering support.
+	 *
+	 * @param in The object input stream.
+	 *
+	 * @throws IOException Thrown by normal deserialization
+	 * @throws ClassNotFoundException Thrown by normal deserialization
+	 */
 	private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {
 		in.defaultReadObject();
 		this.hashCode = generateHashCode();
@@ -170,16 +184,19 @@ public class QueryKey implements Serializable {
 		int result = 13;
 		result = 37 * result + ( firstRow==null ? 0 : firstRow.hashCode() );
 		result = 37 * result + ( maxRows==null ? 0 : maxRows.hashCode() );
-		for ( int i=0; i<values.length; i++ ) {
-			result = 37 * result + ( values[i]==null ? 0 : types[i].getHashCode( values[i], entityMode ) );
+		for ( int i=0; i< positionalParameterValues.length; i++ ) {
+			result = 37 * result + ( positionalParameterValues[i]==null ? 0 : positionalParameterTypes[i].getHashCode( positionalParameterValues[i], entityMode ) );
 		}
 		result = 37 * result + ( namedParameters==null ? 0 : namedParameters.hashCode() );
-		result = 37 * result + ( filters==null ? 0 : filters.hashCode() );
+		result = 37 * result + ( filterKeys ==null ? 0 : filterKeys.hashCode() );
 		result = 37 * result + ( customTransformer==null ? 0 : customTransformer.hashCode() );
 		result = 37 * result + sqlQueryString.hashCode();
 		return result;
 	}
-	
+
+	/**
+	 * {@inheritDoc}
+	 */
 	public boolean equals(Object other) {
 		if ( !( other instanceof QueryKey ) ) {
 			return false;
@@ -194,54 +211,57 @@ public class QueryKey implements Serializable {
 		if ( !EqualsHelper.equals( customTransformer, that.customTransformer ) ) {
 			return false;
 		}
-		if ( types == null ) {
-			if ( that.types != null ) {
+		if ( positionalParameterTypes == null ) {
+			if ( that.positionalParameterTypes != null ) {
 				return false;
 			}
 		}
 		else {
-			if ( that.types == null ) {
+			if ( that.positionalParameterTypes == null ) {
 				return false;
 			}
-			if ( types.length != that.types.length ) {
+			if ( positionalParameterTypes.length != that.positionalParameterTypes.length ) {
 				return false;
 			}
-			for ( int i = 0; i < types.length; i++ ) {
-				if ( types[i].getReturnedClass() != that.types[i].getReturnedClass() ) {
+			for ( int i = 0; i < positionalParameterTypes.length; i++ ) {
+				if ( positionalParameterTypes[i].getReturnedClass() != that.positionalParameterTypes[i].getReturnedClass() ) {
 					return false;
 				}
-				if ( !types[i].isEqual( values[i], that.values[i], entityMode ) ) {
+				if ( !positionalParameterTypes[i].isEqual( positionalParameterValues[i], that.positionalParameterValues[i], entityMode ) ) {
 					return false;
 				}
 			}
 		}
 
-		return EqualsHelper.equals( filters, that.filters )
+		return EqualsHelper.equals( filterKeys, that.filterKeys )
 				&& EqualsHelper.equals( namedParameters, that.namedParameters );
 	}
-	
+
+	/**
+	 * {@inheritDoc}
+	 */
 	public int hashCode() {
 		return hashCode;
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	public String toString() {
 		StringBuffer buf = new StringBuffer()
 				.append( "sql: " )
 				.append( sqlQueryString );
-		if ( values != null ) {
+		if ( positionalParameterValues != null ) {
 			buf.append( "; parameters: " );
-			for ( int i = 0; i < values.length; i++ ) {
-				buf.append( values[i] )
-						.append( ", " );
+			for ( int i = 0; i < positionalParameterValues.length; i++ ) {
+				buf.append( positionalParameterValues[i] ).append( ", " );
 			}
 		}
 		if ( namedParameters != null ) {
-			buf.append( "; named parameters: " )
-					.append( namedParameters );
+			buf.append( "; named parameters: " ).append( namedParameters );
 		}
-		if ( filters != null ) {
-			buf.append( "; filters: " )
-					.append( filters );
+		if ( filterKeys != null ) {
+			buf.append( "; filterKeys: " ).append( filterKeys );
 		}
 		if ( firstRow != null ) {
 			buf.append( "; first row: " ).append( firstRow );

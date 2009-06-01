@@ -42,4 +42,8 @@ public final class CollectionHelper {
 	
 	private CollectionHelper() {}
 
+	public static Map mapOfSize(int size) {
+		final int currentSize = (int) (size / 0.75f);
+		return new HashMap( Math.max( currentSize+ 1, 16), 0.75f );
+	}
 }

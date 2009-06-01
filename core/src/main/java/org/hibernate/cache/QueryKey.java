@@ -28,13 +28,17 @@ import java.io.Serializable;
 import java.io.IOException;
 import java.util.Map;
 import java.util.Set;
+import java.util.Iterator;
 
 import org.hibernate.EntityMode;
 import org.hibernate.engine.QueryParameters;
 import org.hibernate.engine.RowSelection;
+import org.hibernate.engine.SessionImplementor;
+import org.hibernate.engine.TypedValue;
 import org.hibernate.transform.ResultTransformer;
 import org.hibernate.type.Type;
 import org.hibernate.util.EqualsHelper;
+import org.hibernate.util.CollectionHelper;
 
 /**
  * A key that identifies a particular query with bound parameter values
@@ -59,12 +63,41 @@ public class QueryKey implements Serializable {
 	 */
 	private transient int hashCode;
 
-	public QueryKey(String queryString, QueryParameters queryParameters, Set filters, EntityMode entityMode) {
-		this.sqlQueryString = queryString;
-		this.types = queryParameters.getPositionalParameterTypes();
-		this.values = queryParameters.getPositionalParameterValues();
-		RowSelection selection = queryParameters.getRowSelection();
-		if (selection!=null) {
+	public static QueryKey generateQueryKey(
+			String queryString,
+			QueryParameters queryParameters,
+			Set filters,
+			SessionImplementor session) {
+		// disassemble positional parameters
+		final int positionalParameterCount = queryParameters.getPositionalParameterTypes().length;
+		final Type[] types = new Type[positionalParameterCount];
+		final Object[] values = new Object[positionalParameterCount];
+		for ( int i = 0; i < positionalParameterCount; i++ ) {
+			types[i] = queryParameters.getPositionalParameterTypes()[i];
+			values[i] = types[i].disassemble( queryParameters.getPositionalParameterValues()[i], session, null );
+		}
+
+		// disassemble named parameters
+		Map namedParameters = CollectionHelper.mapOfSize( queryParameters.getNamedParameters().size() );
+		Iterator itr = queryParameters.getNamedParameters().entrySet().iterator();
+		while ( itr.hasNext() ) {
+			final Map.Entry namedParameterEntry = ( Map.Entry ) itr.next();
+			final TypedValue original = ( TypedValue ) namedParameterEntry.getValue();
+			namedParameters.put(
+					namedParameterEntry.getKey(),
+					new TypedValue(
+							original.getType(),
+							original.getType().disassemble( original.getValue(), session, null ),
+							session.getEntityMode()
+					)
+			);
+		}
+
+		// decode row selection...
+		final RowSelection selection = queryParameters.getRowSelection();
+		final Integer firstRow;
+		final Integer maxRows;
+		if ( selection != null ) {
 			firstRow = selection.getFirstRow();
 			maxRows = selection.getMaxRows();
 		}
@@ -72,12 +105,61 @@ public class QueryKey implements Serializable {
 			firstRow = null;
 			maxRows = null;
 		}
-		this.namedParameters = queryParameters.getNamedParameters();
+
+		return new QueryKey(
+				queryString,
+				types,
+				values,
+				namedParameters,
+				firstRow,
+				maxRows,
+				filters,
+				session.getEntityMode(),
+				queryParameters.getResultTransformer()
+		);
+	}
+
+	/*package*/ QueryKey(
+			String sqlQueryString,
+			Type[] types,
+			Object[] values,
+			Map namedParameters,
+			Integer firstRow,
+			Integer maxRows, 
+			Set filters,
+			EntityMode entityMode,
+			ResultTransformer customTransformer) {
+		this.sqlQueryString = sqlQueryString;
+		this.types = types;
+		this.values = values;
+		this.namedParameters = namedParameters;
+		this.firstRow = firstRow;
+		this.maxRows = maxRows;
 		this.entityMode = entityMode;
 		this.filters = filters;
-		this.customTransformer = queryParameters.getResultTransformer();
+		this.customTransformer = customTransformer;
 		this.hashCode = generateHashCode();
 	}
+
+//	public QueryKey(String queryString, QueryParameters queryParameters, Set filters, EntityMode entityMode) {
+//		this.sqlQueryString = queryString;
+//		this.types = queryParameters.getPositionalParameterTypes();
+//		this.values = queryParameters.getPositionalParameterValues();
+//		RowSelection selection = queryParameters.getRowSelection();
+//		if (selection!=null) {
+//			firstRow = selection.getFirstRow();
+//			maxRows = selection.getMaxRows();
+//		}
+//		else {
+//			firstRow = null;
+//			maxRows = null;
+//		}
+//		this.namedParameters = queryParameters.getNamedParameters();
+//		this.entityMode = entityMode;
+//		this.filters = filters;
+//		this.customTransformer = queryParameters.getResultTransformer();
+//		this.hashCode = generateHashCode();
+//	}
 
 	private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {
 		in.defaultReadObject();
@@ -99,25 +181,43 @@ public class QueryKey implements Serializable {
 	}
 	
 	public boolean equals(Object other) {
-		if (!(other instanceof QueryKey)) return false;
-		QueryKey that = (QueryKey) other;
-		if ( !sqlQueryString.equals(that.sqlQueryString) ) return false;
-		if ( !EqualsHelper.equals(firstRow, that.firstRow) || !EqualsHelper.equals(maxRows, that.maxRows) ) return false;
-		if ( !EqualsHelper.equals(customTransformer, that.customTransformer) ) return false;
-		if (types==null) {
-			if (that.types!=null) return false;
+		if ( !( other instanceof QueryKey ) ) {
+			return false;
 		}
-		else {
-			if (that.types==null) return false;
-			if ( types.length!=that.types.length ) return false;
-			for ( int i=0; i<types.length; i++ ) {
-				if ( types[i].getReturnedClass() != that.types[i].getReturnedClass() ) return false;
-				if ( !types[i].isEqual( values[i], that.values[i], entityMode ) ) return false;
+		QueryKey that = ( QueryKey ) other;
+		if ( !sqlQueryString.equals( that.sqlQueryString ) ) {
+			return false;
+		}
+		if ( !EqualsHelper.equals( firstRow, that.firstRow ) || !EqualsHelper.equals( maxRows, that.maxRows ) ) {
+			return false;
+		}
+		if ( !EqualsHelper.equals( customTransformer, that.customTransformer ) ) {
+			return false;
+		}
+		if ( types == null ) {
+			if ( that.types != null ) {
+				return false;
 			}
 		}
-		if ( !EqualsHelper.equals(filters, that.filters) ) return false;
-		if ( !EqualsHelper.equals(namedParameters, that.namedParameters) ) return false;
-		return true;
+		else {
+			if ( that.types == null ) {
+				return false;
+			}
+			if ( types.length != that.types.length ) {
+				return false;
+			}
+			for ( int i = 0; i < types.length; i++ ) {
+				if ( types[i].getReturnedClass() != that.types[i].getReturnedClass() ) {
+					return false;
+				}
+				if ( !types[i].isEqual( values[i], that.values[i], entityMode ) ) {
+					return false;
+				}
+			}
+		}
+
+		return EqualsHelper.equals( filters, that.filters )
+				&& EqualsHelper.equals( namedParameters, that.namedParameters );
 	}
 	
 	public int hashCode() {
@@ -126,26 +226,32 @@ public class QueryKey implements Serializable {
 
 	public String toString() {
 		StringBuffer buf = new StringBuffer()
-			.append("sql: ")
-			.append(sqlQueryString);
-		if (values!=null) {
-			buf.append("; parameters: ");
-			for (int i=0; i<values.length; i++) {
+				.append( "sql: " )
+				.append( sqlQueryString );
+		if ( values != null ) {
+			buf.append( "; parameters: " );
+			for ( int i = 0; i < values.length; i++ ) {
 				buf.append( values[i] )
-					.append(", ");
+						.append( ", " );
 			}
 		}
-		if (namedParameters!=null) {
-			buf.append("; named parameters: ")
-				.append(namedParameters);
+		if ( namedParameters != null ) {
+			buf.append( "; named parameters: " )
+					.append( namedParameters );
 		}
-		if (filters!=null) {
-			buf.append("; filters: ")
-				.append(filters);
+		if ( filters != null ) {
+			buf.append( "; filters: " )
+					.append( filters );
 		}
-		if (firstRow!=null) buf.append("; first row: ").append(firstRow);
-		if (maxRows!=null) buf.append("; max rows: ").append(maxRows);
-		if (customTransformer!=null) buf.append("; transformer: ").append(customTransformer);
+		if ( firstRow != null ) {
+			buf.append( "; first row: " ).append( firstRow );
+		}
+		if ( maxRows != null ) {
+			buf.append( "; max rows: " ).append( maxRows );
+		}
+		if ( customTransformer != null ) {
+			buf.append( "; transformer: " ).append( customTransformer );
+		}
 		return buf.toString();
 	}
 	

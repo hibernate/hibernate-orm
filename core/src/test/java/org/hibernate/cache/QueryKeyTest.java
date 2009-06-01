@@ -29,7 +29,6 @@ import java.util.HashMap;
 
 import junit.framework.TestCase;
 
-import org.hibernate.engine.QueryParameters;
 import org.hibernate.EntityMode;
 import org.hibernate.transform.RootEntityResultTransformer;
 import org.hibernate.transform.ResultTransformer;
@@ -49,33 +48,29 @@ public class QueryKeyTest extends TestCase {
 	private static final String QUERY_STRING = "the query string";
 
 	public void testSerializedEquality() {
-		doTest( buildBasicKey( new QueryParameters() ) );
+		doTest( buildBasicKey( null ) );
 	}
 
 	public void testSerializedEqualityWithResultTransformer() {
-		doTest( buildBasicKey( buildQueryParameters( RootEntityResultTransformer.INSTANCE ) ) );
-		doTest( buildBasicKey( buildQueryParameters( DistinctRootEntityResultTransformer.INSTANCE ) ) );
-		doTest( buildBasicKey( buildQueryParameters( DistinctResultTransformer.INSTANCE ) ) );
-		doTest( buildBasicKey( buildQueryParameters( AliasToEntityMapResultTransformer.INSTANCE ) ) );
-		doTest( buildBasicKey( buildQueryParameters( PassThroughResultTransformer.INSTANCE ) ) );
+		doTest( buildBasicKey( RootEntityResultTransformer.INSTANCE ) );
+		doTest( buildBasicKey( DistinctRootEntityResultTransformer.INSTANCE ) );
+		doTest( buildBasicKey( DistinctResultTransformer.INSTANCE ) );
+		doTest( buildBasicKey( AliasToEntityMapResultTransformer.INSTANCE ) );
+		doTest( buildBasicKey( PassThroughResultTransformer.INSTANCE ) );
 	}
 
-	private QueryParameters buildQueryParameters(ResultTransformer resultTransformer) {
-		return new QueryParameters(
-				ArrayHelper.EMPTY_TYPE_ARRAY, 		// param types
-				ArrayHelper.EMPTY_OBJECT_ARRAY,		// param values
-				Collections.EMPTY_MAP,				// lock modes
-				null,								// row selection
-				false,								// cacheable?
-				"",									// cache region
-				"", 								// SQL comment
-				false,								// is natural key lookup?
-				resultTransformer					// the result transformer, duh! ;)
+	private QueryKey buildBasicKey(ResultTransformer resultTransformer) {
+		return new QueryKey(
+				QUERY_STRING,
+				ArrayHelper.EMPTY_TYPE_ARRAY, 		// positional param types
+				ArrayHelper.EMPTY_OBJECT_ARRAY,		// positional param values
+				Collections.EMPTY_MAP,				// named params
+				null,								// firstRow selection
+				null,								// maxRows selection
+				Collections.EMPTY_SET, 				// filter keys
+				EntityMode.POJO,					// entity mode
+				resultTransformer					// the result transformer
 		);
-	}
-
-	private QueryKey buildBasicKey(QueryParameters queryParameters) {
-		return new QueryKey( QUERY_STRING, queryParameters, Collections.EMPTY_SET, EntityMode.POJO );
 	}
 
 	private void doTest(QueryKey key) {

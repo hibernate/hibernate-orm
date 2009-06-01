@@ -20,7 +20,6 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.tool.hbm2ddl;
 
@@ -29,16 +28,20 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Iterator;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.hibernate.mapping.ForeignKey;
+
 /**
  * JDBC table metadata
- * @author Christoph Sturm, Max Rydahl Andersen
+ *
+ * @author Christoph Sturm
+ * @author Max Rydahl Andersen
  */
 public class TableMetadata {
-	
 	private static final Logger log = LoggerFactory.getLogger(TableMetadata.class);
 	
 	private final String catalog;
@@ -91,6 +94,17 @@ public class TableMetadata {
 		return (ForeignKeyMetadata) foreignKeys.get( keyName.toLowerCase() );
 	}
 
+	public ForeignKeyMetadata getForeignKeyMetadata(ForeignKey fk) {
+		Iterator it = foreignKeys.values().iterator();
+		while ( it.hasNext() ) {
+			ForeignKeyMetadata existingFk = ( ForeignKeyMetadata ) it.next();
+			if ( existingFk.matches( fk ) ) {
+				return existingFk;
+			}
+		}
+		return null;
+	}
+
 	public IndexMetadata getIndexMetadata(String indexName) {
 		return (IndexMetadata) indexes.get( indexName.toLowerCase() );
 	}
@@ -98,7 +112,9 @@ public class TableMetadata {
 	private void addForeignKey(ResultSet rs) throws SQLException {
 		String fk = rs.getString("FK_NAME");
 
-		if (fk == null) return;
+		if (fk == null) {
+			return;
+		}
 
 		ForeignKeyMetadata info = getForeignKeyMetadata(fk);
 		if (info == null) {
@@ -106,13 +122,15 @@ public class TableMetadata {
 			foreignKeys.put( info.getName().toLowerCase(), info );
 		}
 
-		info.addColumn( getColumnMetadata( rs.getString("FKCOLUMN_NAME") ) );
+		info.addReference( rs );
 	}
 
 	private void addIndex(ResultSet rs) throws SQLException {
 		String index = rs.getString("INDEX_NAME");
 
-		if (index == null) return;
+		if (index == null) {
+			return;
+		}
 
 		IndexMetadata info = getIndexMetadata(index);
 		if (info == null) {
@@ -126,7 +144,9 @@ public class TableMetadata {
 	public void addColumn(ResultSet rs) throws SQLException {
 		String column = rs.getString("COLUMN_NAME");
 
-		if (column==null) return;
+		if (column==null) {
+			return;
+		}
 
 		if ( getColumnMetadata(column) == null ) {
 			ColumnMetadata info = new ColumnMetadata(rs);
@@ -139,10 +159,14 @@ public class TableMetadata {
 
 		try {
 			rs = meta.getImportedKeys(catalog, schema, name);
-			while ( rs.next() ) addForeignKey(rs);
+			while ( rs.next() ) {
+				addForeignKey(rs);
+			}
 		}
 		finally {
-			if (rs != null) rs.close();
+			if (rs != null) {
+				rs.close();
+			}
 		}
 	}
 
@@ -153,12 +177,16 @@ public class TableMetadata {
 			rs = meta.getIndexInfo(catalog, schema, name, false, true);
 			
 			while ( rs.next() ) {
-				if ( rs.getShort("TYPE") == DatabaseMetaData.tableIndexStatistic ) continue;
+				if ( rs.getShort("TYPE") == DatabaseMetaData.tableIndexStatistic ) {
+					continue;
+				}
 				addIndex(rs);
 			}
 		}
 		finally {
-			if (rs != null) rs.close();
+			if (rs != null) {
+				rs.close();
+			}
 		}
 	}
 
@@ -167,10 +195,14 @@ public class TableMetadata {
 		
 		try {
 			rs = meta.getColumns(catalog, schema, name, "%");
-			while ( rs.next() ) addColumn(rs);
+			while ( rs.next() ) {
+				addColumn(rs);
+			}
 		}
 		finally  {
-			if (rs != null) rs.close();
+			if (rs != null) {
+				rs.close();
+			}
 		}
 	}
 	

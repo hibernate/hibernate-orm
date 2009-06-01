@@ -2117,15 +2117,15 @@ public abstract class Loader {
 		QueryCache queryCache = factory.getQueryCache( queryParameters.getCacheRegion() );
 		
 		Set filterKeys = FilterKey.createFilterKeys( 
-				session.getEnabledFilters(), 
+				session.getEnabledFilters(),
 				session.getEntityMode() 
-			);
-		QueryKey key = new QueryKey( 
+		);
+		QueryKey key = QueryKey.generateQueryKey(
 				getSQLString(), 
 				queryParameters, 
 				filterKeys, 
-				session.getEntityMode() 
-			);
+				session
+		);
 		
 		List result = getResultFromQueryCache( 
 				session, 
@@ -2134,7 +2134,7 @@ public abstract class Loader {
 				resultTypes, 
 				queryCache, 
 				key 
-			);
+		);
 
 		if ( result == null ) {
 			result = doList( session, queryParameters );
@@ -2146,7 +2146,7 @@ public abstract class Loader {
 					queryCache, 
 					key, 
 					result 
-				);
+			);
 		}
 
 		return getResultList( result, queryParameters.getResultTransformer() );

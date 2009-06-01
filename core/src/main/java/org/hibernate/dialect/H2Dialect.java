@@ -20,7 +20,6 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.dialect;
 
@@ -40,30 +39,32 @@ import org.hibernate.util.ReflectHelper;
  * A dialect compatible with the H2 database.
  * 
  * @author Thomas Mueller
- *
  */
 public class H2Dialect extends Dialect {
 
     private String querySequenceString;
+
     public H2Dialect() {
         super();
-               
-        querySequenceString = "select sequence_name from information_schema.sequences";
-        try {
-        	// HHH-2300
-            Class constants = ReflectHelper.classForName( "org.h2.engine.Constants" );
-            Integer build = (Integer)constants.getDeclaredField("BUILD_ID" ).get(null);
-            int buildid = build.intValue();
-            if(buildid < 32) {
-                querySequenceString = "select name from information_schema.sequences";
-            }
-        } catch(Throwable e) {
-            // ignore (probably H2 not in the classpath)
-        }
-        registerColumnType(Types.BOOLEAN, "boolean");
+
+		querySequenceString = "select sequence_name from information_schema.sequences";
+		try {
+			// HHH-2300
+			Class constants = ReflectHelper.classForName( "org.h2.engine.Constants" );
+			Integer build = ( Integer ) constants.getDeclaredField( "BUILD_ID" ).get( null );
+			int buildid = build.intValue();
+			if ( buildid < 32 ) {
+				querySequenceString = "select name from information_schema.sequences";
+			}
+		}
+		catch ( Throwable e ) {
+			// ignore (probably H2 not in the classpath)
+		}
+
+		registerColumnType(Types.BOOLEAN, "boolean");
         registerColumnType(Types.BIGINT, "bigint");
         registerColumnType(Types.BINARY, "binary");
-        registerColumnType(Types.BIT, "bit");
+        registerColumnType(Types.BIT, "boolean");
         registerColumnType(Types.CHAR, "char($l)");
         registerColumnType(Types.DATE, "date");
         registerColumnType(Types.DECIMAL, "decimal($p,$s)");
@@ -165,7 +166,7 @@ public class H2Dialect extends Dialect {
 //        registerFunction("minute", new StandardSQLFunction("minute", Hibernate.INTEGER));
 //        registerFunction("month", new StandardSQLFunction("month", Hibernate.INTEGER));
         registerFunction("monthname", new StandardSQLFunction("monthname", Hibernate.STRING));
-        registerFunction("quater", new StandardSQLFunction("quater", Hibernate.INTEGER));
+        registerFunction("quarter", new StandardSQLFunction("quarter", Hibernate.INTEGER));
 //        registerFunction("second", new StandardSQLFunction("second", Hibernate.INTEGER));
         registerFunction("week", new StandardSQLFunction("week", Hibernate.INTEGER));
 //        registerFunction("year", new StandardSQLFunction("year", Hibernate.INTEGER));
@@ -179,7 +180,6 @@ public class H2Dialect extends Dialect {
         registerFunction("user", new NoArgSQLFunction("user", Hibernate.STRING));
 
         getDefaultProperties().setProperty(Environment.STATEMENT_BATCH_SIZE, DEFAULT_BATCH_SIZE);
-
     }
 
     public String getAddColumnString() {
@@ -215,11 +215,11 @@ public class H2Dialect extends Dialect {
     }
 
     public String getLimitString(String sql, boolean hasOffset) {
-        return new StringBuffer(sql.length() + 20).
-            append(sql).
-            append(hasOffset ? " limit ? offset ?" : " limit ?").
-            toString();
-    }
+		return new StringBuffer( sql.length() + 20 )
+				.append( sql )
+				.append( hasOffset ? " limit ? offset ?" : " limit ?" )
+				.toString();
+	}
     
     public boolean bindLimitParametersInReverseOrder() {
         return true;
@@ -266,7 +266,6 @@ public class H2Dialect extends Dialect {
     }
 
     private static ViolatedConstraintNameExtracter EXTRACTER = new TemplatedViolatedConstraintNameExtracter() {
-
         /**
          * Extract the name of the violated constraint from the given SQLException.
          *
@@ -274,19 +273,18 @@ public class H2Dialect extends Dialect {
          * @return The extracted constraint name.
          */
         public String extractConstraintName(SQLException sqle) {
-            String constraintName = null;
-            // 23000: Check constraint violation: {0}
-            // 23001: Unique index or primary key violation: {0}
-            if(sqle.getSQLState().startsWith("23")) {
-                String message = sqle.getMessage();
-                int idx = message.indexOf("violation: ");
-                if(idx > 0) {
-                    constraintName = message.substring(idx + "violation: ".length());
-                }
-            }
-            return constraintName;
+			String constraintName = null;
+			// 23000: Check constraint violation: {0}
+			// 23001: Unique index or primary key violation: {0}
+			if ( sqle.getSQLState().startsWith( "23" ) ) {
+				final String message = sqle.getMessage();
+				int idx = message.indexOf( "violation: " );
+				if ( idx > 0 ) {
+					constraintName = message.substring( idx + "violation: ".length() );
+				}
+			}
+			return constraintName;
         }
-
     };
 
     public boolean supportsTemporaryTables() {

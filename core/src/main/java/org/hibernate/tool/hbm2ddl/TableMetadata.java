@@ -29,9 +29,12 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Iterator;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import org.hibernate.mapping.ForeignKey;
 
 /**
  * JDBC table metadata
@@ -91,6 +94,17 @@ public class TableMetadata {
 		return (ForeignKeyMetadata) foreignKeys.get( keyName.toLowerCase() );
 	}
 
+	public ForeignKeyMetadata getForeignKeyMetadata(ForeignKey fk) {
+		Iterator it = foreignKeys.values().iterator();
+		while ( it.hasNext() ) {
+			ForeignKeyMetadata existingFk = ( ForeignKeyMetadata ) it.next();
+			if ( existingFk.matches( fk ) ) {
+				return existingFk;
+			}
+		}
+		return null;
+	}
+
 	public IndexMetadata getIndexMetadata(String indexName) {
 		return (IndexMetadata) indexes.get( indexName.toLowerCase() );
 	}
@@ -106,7 +120,7 @@ public class TableMetadata {
 			foreignKeys.put( info.getName().toLowerCase(), info );
 		}
 
-		info.addColumn( getColumnMetadata( rs.getString("FKCOLUMN_NAME") ) );
+		info.addReference( rs );
 	}
 
 	private void addIndex(ResultSet rs) throws SQLException {

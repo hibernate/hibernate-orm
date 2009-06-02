@@ -123,6 +123,11 @@ public class WithClauseTest extends FunctionalTestCase {
 				.list();
 		assertTrue( "ad-hoc on did not take effect", list.isEmpty() );
 
+		// http://opensource.atlassian.com/projects/hibernate/browse/HHH-1930
+		list = s.createQuery( "from Human h inner join h.nickNames as nicknames with nicknames = 'abc'" )
+				.list();
+		assertTrue( "ad-hoc on did not take effect", list.isEmpty() );
+
 		txn.commit();
 		s.close();
 

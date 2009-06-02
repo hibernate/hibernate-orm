@@ -70,7 +70,7 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener
 	private static final Logger log = LoggerFactory.getLogger(DefaultMergeEventListener.class);
 	
 	protected Map getMergeMap(Object anything) {
-		return ( ( CopyCache ) anything ).getMergeMap();
+		return ( ( EventCache ) anything ).invertMap();
 	}
 
 	/**
@@ -80,7 +80,7 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener
 	 * @throws HibernateException
 	 */
 	public void onMerge(MergeEvent event) throws HibernateException {
-		CopyCache copyCache = new CopyCache();
+		EventCache copyCache = new EventCache();
 		onMerge( event, copyCache );
 		// TODO: iteratively get transient entities and retry merge until one of the following conditions:
 		//       1) transientCopyCache.size() == 0
@@ -110,8 +110,8 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener
 		copyCache = null;
 	}
 
-	protected CopyCache getTransientCopyCache(MergeEvent event, CopyCache copyCache) {
-		CopyCache transientCopyCache = new CopyCache();
+	protected EventCache getTransientCopyCache(MergeEvent event, EventCache copyCache) {
+		EventCache transientCopyCache = new EventCache();
 		for ( Iterator it=copyCache.entrySet().iterator(); it.hasNext(); ) {
 			Map.Entry mapEntry = ( Map.Entry ) it.next();
 			Object entity = mapEntry.getKey();
@@ -131,7 +131,7 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener
 				);
 			}
 			else if ( copyEntry.getStatus() == Status.SAVING ) {
-				transientCopyCache.put( entity, copy, copyCache.isIncludedInMerge( entity ) );
+				transientCopyCache.put( entity, copy, copyCache.isOperatedOn( entity ) );
 			}
 			else if ( copyEntry.getStatus() != Status.MANAGED && copyEntry.getStatus() != Status.READ_ONLY ) {
 				throw new AssertionFailure( "Merged entity does not have status set to MANAGED or READ_ONLY; "+copy+" status="+copyEntry.getStatus() );
@@ -140,7 +140,7 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener
 		return transientCopyCache;
 	}
 
-	protected void retryMergeTransientEntities(MergeEvent event, Map transientCopyCache, CopyCache copyCache) {
+	protected void retryMergeTransientEntities(MergeEvent event, Map transientCopyCache, EventCache copyCache) {
 		// TODO: The order in which entities are saved may matter (e.g., a particular transient entity
 		//       may need to be saved before other transient entities can be saved;
 		//       Keep retrying the batch of transient entities until either:
@@ -169,7 +169,7 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener
 	 */
 	public void onMerge(MergeEvent event, Map copiedAlready) throws HibernateException {
 
-		final CopyCache copyCache = ( CopyCache ) copiedAlready;
+		final EventCache copyCache = ( EventCache ) copiedAlready;
 		final EventSource source = event.getSession();
 		final Object original = event.getOriginal();
 
@@ -192,14 +192,14 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener
 			}
 
 			if ( copyCache.containsKey( entity ) &&
-					( copyCache.isIncludedInMerge( entity ) ) ) {
+					( copyCache.isOperatedOn( entity ) ) ) {
 				log.trace("already in merge process");
 				event.setResult( entity );				
 			}
 			else {
 				if ( copyCache.containsKey( entity ) ) {
 					log.trace("already in copyCache; setting in merge process");					
-					copyCache.setIncludedInMerge( entity, true );
+					copyCache.setOperatedOn( entity, true );
 				}
 				event.setEntity( entity );
 				int entityState = -1;
@@ -261,7 +261,7 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener
 		final EventSource source = event.getSession();
 		final EntityPersister persister = source.getEntityPersister( event.getEntityName(), entity );
 
-		( ( CopyCache ) copyCache ).put( entity, entity, true  );  //before cascade!
+		( ( EventCache ) copyCache ).put( entity, entity, true  );  //before cascade!
 		
 		cascadeOnMerge(source, persister, entity, copyCache);
 		copyValues(persister, entity, entity, source, copyCache);
@@ -295,7 +295,7 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener
 			persister.setIdentifier( copyCache.get( entity ), id, source.getEntityMode() );
 		}
 		else {
-			( ( CopyCache ) copyCache ).put( entity, persister.instantiate( id, source.getEntityMode() ), true ); //before cascade!
+			( ( EventCache ) copyCache ).put( entity, persister.instantiate( id, source.getEntityMode() ), true ); //before cascade!
 			//TODO: should this be Session.instantiate(Persister, ...)?
 		}
 		final Object copy = copyCache.get( entity );
@@ -333,7 +333,7 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener
 						"' from original entity is not in copyCache; " + propertyName + " =["+propertyFromEntity+"]");
 				throw ex;
 			}
-			if ( ( ( CopyCache ) copyCache ).isIncludedInMerge( propertyFromEntity ) ) {
+			if ( ( ( EventCache ) copyCache ).isOperatedOn( propertyFromEntity ) ) {
 				log.trace( "property '" + copyEntry.getEntityName() + "." + propertyName +
 						"' from original entity is in copyCache and is in the process of being merged; " +
 						propertyName + " =["+propertyFromEntity+"]");
@@ -397,7 +397,7 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener
 			entityIsTransient(event, copyCache);
 		}
 		else {
-			( ( CopyCache ) copyCache ).put( entity, result, true ); //before cascade!
+			( ( EventCache ) copyCache ).put( entity, result, true ); //before cascade!
 	
 			final Object target = source.getPersistenceContext().unproxy(result);
 			if ( target == entity ) {

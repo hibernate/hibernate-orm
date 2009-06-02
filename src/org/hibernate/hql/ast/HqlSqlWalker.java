@@ -10,6 +10,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Arrays;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -43,7 +44,6 @@ import org.hibernate.hql.ast.tree.RestrictableStatement;
 import org.hibernate.hql.ast.tree.SelectClause;
 import org.hibernate.hql.ast.tree.SelectExpression;
 import org.hibernate.hql.ast.tree.UpdateStatement;
-import org.hibernate.hql.ast.tree.Node;
 import org.hibernate.hql.ast.tree.OperatorNode;
 import org.hibernate.hql.ast.tree.ParameterContainer;
 import org.hibernate.hql.ast.util.ASTPrinter;
@@ -361,8 +361,7 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 		}
 	}
 
-	private void handleWithFragment(FromElement fromElement, AST hqlWithNode) throws SemanticException
-	{
+	private void handleWithFragment(FromElement fromElement, AST hqlWithNode) throws SemanticException {
 		try {
 			withClause( hqlWithNode );
 			AST hqlSqlWithNode = returnAST;
@@ -372,13 +371,22 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 			WithClauseVisitor visitor = new WithClauseVisitor( fromElement );
 			NodeTraverser traverser = new NodeTraverser( visitor );
 			traverser.traverseDepthFirst( hqlSqlWithNode );
-			FromElement referencedFromElement = visitor.getReferencedFromElement();
-			if ( referencedFromElement != fromElement ) {
-				throw new InvalidWithClauseException( "with-clause expressions did not reference from-clause element to which the with-clause was associated" );
+
+			String withClauseJoinAlias = visitor.getJoinAlias();
+			if ( withClauseJoinAlias == null ) {
+				withClauseJoinAlias = fromElement.getCollectionTableAlias();
 			}
+			else {
+				FromElement referencedFromElement = visitor.getReferencedFromElement();
+				if ( referencedFromElement != fromElement ) {
+					throw new InvalidWithClauseException( "with-clause expressions did not reference from-clause element to which the with-clause was associated" );
+				}
+			}
+
 			SqlGenerator sql = new SqlGenerator( getSessionFactoryHelper().getFactory() );
 			sql.whereExpr( hqlSqlWithNode.getFirstChild() );
-			fromElement.setWithClauseFragment( visitor.getJoinAlias(), "(" + sql.getSQL() + ")" );
+
+			fromElement.setWithClauseFragment( withClauseJoinAlias, "(" + sql.getSQL() + ")" );
 		}
 		catch( SemanticException e ) {
 			throw e;
@@ -866,8 +874,8 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 		}
 		ParameterNode parameter = ( ParameterNode ) astFactory.create( PARAM, "?" );
 		PositionalParameterSpecification paramSpec = new PositionalParameterSpecification(
-				( ( Node ) inputNode ).getLine(),
-		        ( ( Node ) inputNode ).getColumn(),
+				inputNode.getLine(),
+		        inputNode.getColumn(),
 				positionalParameterCount++
 		);
 		parameter.setHqlParameterSpecification( paramSpec );
@@ -885,8 +893,8 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 		parameter.setText( "?" );
 
 		NamedParameterSpecification paramSpec = new NamedParameterSpecification(
-				( ( Node ) delimiterNode ).getLine(),
-		        ( ( Node ) delimiterNode ).getColumn(),
+				delimiterNode.getLine(),
+		        delimiterNode.getColumn(),
 				name
 		);
 		parameter.setHqlParameterSpecification( paramSpec );
@@ -961,9 +969,7 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 	}
 
 	public void addQuerySpaces(Serializable[] spaces) {
-		for ( int i = 0; i < spaces.length; i++ ) {
-			querySpaces.add( spaces[i] );
-		}
+		querySpaces.addAll( Arrays.asList( spaces ) );
 	}
 
 	public Type[] getReturnTypes() {

@@ -6,6 +6,93 @@ refer to the particular case on JIRA using the issue tracking number to learn
 more about each case.
 
 
+Changes in version 3.2.7 (2009.06.03)
+-------------------------------------------
+
+** Bug
+    * [HHH-1930] - QuerySyntaxException "with-clause expressions did not reference from-clause element to which the with-clause was associated"
+    * [HHH-2021] - org.hibernate.cache.QueryKey has a fragile equals() method
+    * [HHH-2146] - NullpointerException in DefaultDeleteEventListener.deleteTransientEntity
+    * [HHH-2604] - Isolator.JdbcDelegate masks the exception if it isn't possible to open a connection.
+    * [HHH-2694] - create-drop with c3p0 causes SQLException
+    * [HHH-2745] - NullPointerException when eager fetching joined many-to-many with native SQL query
+    * [HHH-3006] - ConcurrentModificationException in AbstractBatcher results in infinite loop
+    * [HHH-3046] - Merge fails on complicated data structure because of cycle references
+    * [HHH-3111] - WebSphereExtendedJTATransactionLookup$TransactionManagerAdapter.getStatus() implemented incorrect
+    * [HHH-3216] - Incorrect parse result in ParameterParser
+    * [HHH-3229] - Merge can fail when there is a transient entity reachable by multiple paths and at least one path does not cascade on merge
+    * [HHH-3231] - org.hibernate.id.enhanced.TableGenerator throws "IllegalArgumentException: alias not found: tbl" under Oracle
+    * [HHH-3282] - DB2Dialect should report supportsLobValueChangePropogation() == false
+    * [HHH-3309] - Serialize/Deserialize problem in AbstractLazyInitializer with entitymode.MAP.
+    * [HHH-3378] - DB2CustomSQLTest fails, need "RESULT SETS 1" in proc definitions
+    * [HHH-3409] - ResultTransformers need smarter equals() and hashCode() impls
+    * [HHH-3481] - JTATransactionFactory bug when Transaction cannot be found in JNDI
+    * [HHH-3483] - org.hibernate.test.hql.ScrollableCollectionFetchingTest#testScrollingJoinFetchesForward unsupported by DB2
+    * [HHH-3496] -  DB2 hanging on JPALockTest and CMTTest
+    * [HHH-3501] -  ASTParserLoadingTest testing unsupported queries for DB2
+    * [HHH-3506] - enabled filters should apply to HQL update/delete statements
+    * [HHH-3508] - Sybase Dialect - Override supportsCascadeDelete to return "false"
+    * [HHH-3519] - account for parameters in select clause of INSERT-SELECT for DB2
+    * [HHH-3584] - Generate SQL when Dynamic Update is true is including version field even when marked as updateable=false
+    * [HHH-3621] - Assertion failure in MigrationTest
+    * [HHH-3636] - Attempt to read invalid column when loading collection of subclasses mapped with table-per-subclass with discriminator
+    * [HHH-3640] - Some standard SQL functions are not implemented in Sybase
+    * [HHH-3662] - Merging read-only entities causes AssertionError("Merged entity does not have status set to MANAGED...")
+    * [HHH-3668] - Sybase does not support implicit conversion from character types to numeric types causes failing unit tests
+    * [HHH-3670] - Invalid test for str() for SQL Server and Sybase
+    * [HHH-3672] - Sybase - second(), minute(), hour(), and extract() cause GenericJDBCException
+    * [HHH-3675] - Limitations on Sybase ResultSet implementation cause unit test failures
+    * [HHH-3679] - Sybase conversion of Java byte to tinyint fails with 8-bit values causing unit test failures
+    * [HHH-3680] - Sybase - composite primary key in unit test exceeds maximum for index causing failure
+    * [HHH-3693] - Implicit Polymorphic query + pagination returning zero result
+    * [HHH-3696] - Sybase - unit tests fail when numeric values overflow in precision or scale on insert
+    * [HHH-3698] - Problem with HQL parameter bindings as indexed collection selectors
+    * [HHH-3699] - Problem with HQL parameter bindings for parameters in WITH join clause
+    * [HHH-3701] - SQL function "trim" is not available in Sybase Dialect
+    * [HHH-3749] - Only reuse FromElements originating from from-clause if their aliases match
+    * [HHH-3810] - Transient entities can be inserted twice on merge
+    * [HHH-3912] - Change for HHH-3159 causes InstantiationException
+
+** Improvement
+    * [HHH-1234] - allow tuplizers the opportunity to influence getSubclassEntityPersister() processing
+    * [HHH-2686] - Include a primary key in the sequence table used by id.enhanced.TableGenerator
+    * [HHH-3131] - Add a method to ActionQueue to tell whether there are currently entries in the executions collection
+    * [HHH-3159] - Oracle 11g - desupport of oracle.jdbc.driver
+    * [HHH-3249] - Make o.h.id.enhanced.TableGenerator more extension-friendly
+    * [HHH-3275] - Allow pluggable tuplizers for composite elements
+    * [HHH-3283] - protect BulkManipulationTest#testInsertWithGeneratedTimestampVersion where Dialect#supportsParametersInInsertSelect == false
+    * [HHH-3357] - improve performance of session.clear()
+    * [HHH-3358] - Enable JTATransactionFactory and JTATransaction factory to work without JNDI
+    * [HHH-3383] - QueryKey is storing references to entities instead of identifiers
+    * [HHH-3424] - concat() with param binding fails function on derby
+    * [HHH-3454] - Allow enhanced.TableGenerator to segment itself per entity as default
+    * [HHH-3456] - Make o.h.id.enhanced.SequenceStyleGenerator more extension-friendly
+    * [HHH-3471] - Provide true-false type that maps to int values
+    * [HHH-3515] - Introduce EntityNameResolver interface
+    * [HHH-3517] - Allow definition of the default tuplizer class to use
+    * [HHH-3518] - Remove Suite classes from testsuite module
+    * [HHH-3532] - schema update task should look for foreign key signature
+    * [HHH-3712] - Reorganize the Sybase dialect class hierarchy, add SybaseASE15Dialect, and mark SybaseDialect as deprecated
+    * [HHH-3750] - Allow dialects to handle difference in how Query.setFirstResult() should be interpreted
+    * [HHH-3751] - Enable Antlr tree parser tracing for HqlSqlWalker and SqlGenerator (tree parsers)
+    * [HHH-3886] - Update database credentials for QA Lab
+
+** New Feature
+    * [HHH-3343] - Postgres Plus Dialect
+
+** Patch
+    * [HHH-530] - Allow application of filters on subqueries
+    * [HHH-3294] - Version incorrectly incremented for unchanged persistent entity that is parent of a one to many relationship
+    * [HHH-3401] - H2 Database Dialect Fixes
+    * [HHH-3450] - Include SingletonEhCacheProvider as an additional caching provider (Greg Luck)
+    * [HHH-3650] - TableGenerator doesn't marks the "primary key" as not null, causing errors in some RDBMS's which expects the PK to be not-null
+
+** Task
+    * [HHH-3214] - Update unit tests and config files to use non-depracated Oracle dialects
+    * [HHH-3760] - Document EntityNameResolver
+
+
+
 Changes in version 3.2.6 (2008.02.07)
 -------------------------------------------
 

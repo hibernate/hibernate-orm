@@ -1,6 +1,6 @@
 Hibernate - Relational Persistence for Idiomatic Java
 =====================================================
-version 3.2.6, Feb 7, 2008
+version 3.2.7, June 3, 2009
 
 Instructions
 ------------

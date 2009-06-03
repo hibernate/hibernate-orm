@@ -22,8 +22,8 @@
 	<property name="name2" value="hibernate3"/>
 	<property name="version.major" value="3"/>
 	<property name="version.minor" value="2"/>
-	<property name="version.micro" value="7"/>
-    <property name="version.qualifier" value="ga"/>
+	<property name="version.micro" value="8"/>
+    <property name="version.qualifier" value="SNAPSHOT"/>
     <property name="version.full" value="${version.major}.${version.minor}.${version.micro}.${version.qualifier}"/>
     <property name="version.major_minor" value="${version.major}.${version.minor}"/>
     <property name="fullname" value="${name}-${version.full}"/>

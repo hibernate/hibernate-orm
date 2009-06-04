@@ -5,9 +5,11 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+
 import javax.persistence.AttributeOverride;
 import javax.persistence.AttributeOverrides;
 import javax.persistence.Column;
+import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
@@ -16,10 +18,10 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
-import javax.persistence.ElementCollection;
 
 import org.hibernate.annotations.CollectionOfElements;
 import org.hibernate.annotations.IndexColumn;
+import org.hibernate.annotations.MapKey;
 
 /**
  * @author Emmanuel Bernard
@@ -79,6 +81,7 @@ public class Boy {
 	@ElementCollection
 	@JoinTable(name = "ScorePerNickName", joinColumns = @JoinColumn(name = "BoyId"))
 	@Column(name = "score", nullable = false)
+	@MapKey(columns=@Column( name = "mapkey", nullable=false ))
 	public Map<String, Integer> getScorePerNickName() {
 		return scorePerNickName;
 	}

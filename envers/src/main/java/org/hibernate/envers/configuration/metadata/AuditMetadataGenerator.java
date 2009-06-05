@@ -164,6 +164,19 @@ public final class AuditMetadataGenerator {
         }
     }
 
+	private boolean checkPropertiesAudited(Iterator<Property> properties, ClassAuditingData auditingData) {
+		while (properties.hasNext()) {
+			Property property = properties.next();
+            String propertyName = property.getName();
+			PropertyAuditingData propertyAuditingData = auditingData.getPropertyAuditingData(propertyName);
+            if (propertyAuditingData == null) {
+				return false;
+			}
+		}
+
+		return true;
+	}
+
     @SuppressWarnings({"unchecked"})
     private void createJoins(PersistentClass pc, Element parent, ClassAuditingData auditingData) {
         Iterator<Join> joins = pc.getJoinIterator();
@@ -173,6 +186,11 @@ public final class AuditMetadataGenerator {
 
         while (joins.hasNext()) {
             Join join = joins.next();
+
+			// Checking if all of the join properties are audited
+			if (!checkPropertiesAudited(join.getPropertyIterator(), auditingData)) {
+				continue;
+			}
 
             // Determining the table name. If there is no entry in the dictionary, just constructing the table name
             // as if it was an entity (by appending/prepending configured strings).
@@ -210,8 +228,10 @@ public final class AuditMetadataGenerator {
             Join join = joins.next();
             Element joinElement = entitiesJoins.get(entityName).get(join);
 
-            addProperties(joinElement, join.getPropertyIterator(), currentMapper, auditingData, entityName,
-                    xmlMappingData, firstPass);
+			if (joinElement != null) {
+            	addProperties(joinElement, join.getPropertyIterator(), currentMapper, auditingData, entityName,
+                	    xmlMappingData, firstPass);
+			}
         }
     }
 

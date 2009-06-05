@@ -3966,6 +3966,7 @@ public class FooBarTest extends LegacyTestCase {
 		s.disconnect();
 		s.reconnect();
 
+		s.beginTransaction();
 		s.delete(foo);
 		foo2.setFoo(null);
 		s.getTransaction().commit();
@@ -3973,6 +3974,7 @@ public class FooBarTest extends LegacyTestCase {
 		s.disconnect();
 		s.reconnect();
 
+		s.beginTransaction();
 		s.delete(foo2);
 		s.getTransaction().commit();
 		s.close();
@@ -4025,17 +4027,18 @@ public class FooBarTest extends LegacyTestCase {
 		List results = s.createQuery( "SELECT one FROM " + One.class.getName() + " one ORDER BY one.value ASC" ).list();
 		assertEquals( 2, results.size() );
 		assertEquals( "'a' isn't first element", "a", ( (One) results.get(0) ).getValue() );
-		assertEquals( "'b' isn't second element", "b", ( (One) results.get(2) ).getValue() );
+		assertEquals( "'b' isn't second element", "b", ( (One) results.get(1) ).getValue() );
 		s.getTransaction().commit();
 		s.close();
 
 		s = openSession();
+		s.beginTransaction();
 		results = s.createQuery( "SELECT many.one FROM " + Many.class.getName() + " many ORDER BY many.one.value ASC, many.one.id" )
 				.list();
 		assertEquals( 2, results.size() );
 		assertEquals( 2, results.size() );
 		assertEquals( "'a' isn't first element", "a", ( (One) results.get(0) ).getValue() );
-		assertEquals( "'b' isn't second element", "b", ( (One) results.get(2) ).getValue() );
+		assertEquals( "'b' isn't second element", "b", ( (One) results.get(1) ).getValue() );
 		s.getTransaction().commit();
 		s.close();
 
@@ -4248,6 +4251,7 @@ public class FooBarTest extends LegacyTestCase {
 		s.getTransaction().commit();
 		s.close();
 		s = openSession();
+		s.beginTransaction();
 		s.update(v, id);
 		s.update(v, id);
 		s.delete(v);

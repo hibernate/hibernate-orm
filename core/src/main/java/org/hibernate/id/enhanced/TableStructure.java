@@ -68,7 +68,7 @@ public class TableStructure extends TransactionHelper implements DatabaseStructu
 		this.incrementSize = incrementSize;
 		this.valueColumnName = valueColumnName;
 
-		selectQuery = "select " + valueColumnName + " id_val" +
+		selectQuery = "select " + valueColumnName + " as id_val" +
 				" from " + dialect.appendLockHint( LockMode.UPGRADE, tableName ) +
 				dialect.getForUpdateString();
 

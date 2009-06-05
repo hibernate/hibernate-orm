@@ -609,6 +609,7 @@ public class MultiTableTest extends LegacyTestCase {
 		s.close();
 
 		s = openSession();
+		s.beginTransaction();
 		s.delete( s.load(Lower.class, id) );
 		s.getTransaction().commit();
 		s.close();

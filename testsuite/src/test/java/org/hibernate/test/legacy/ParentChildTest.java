@@ -82,6 +82,7 @@ public class ParentChildTest extends LegacyTestCase {
 		s.close();
 
 		s = openSession();
+		s.beginTransaction();
 		s.replicate(baz, ReplicationMode.OVERWRITE);
 		// HHH-2378
 		SessionImpl x = (SessionImpl)s;
@@ -92,6 +93,7 @@ public class ParentChildTest extends LegacyTestCase {
 		s.close();
 
 		s = openSession();
+		s.beginTransaction();
 		s.replicate(baz, ReplicationMode.IGNORE);
 		s.getTransaction().commit();
 		s.close();
@@ -1032,6 +1034,7 @@ public class ParentChildTest extends LegacyTestCase {
 		if ( (getDialect() instanceof MySQLDialect) ) {
 			session.connection().setTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
 		}
+		session.getTransaction().begin();
 
 		// First, prime the fixture session to think the entity does not exist
 		try {

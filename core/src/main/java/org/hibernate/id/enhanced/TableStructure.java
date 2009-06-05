@@ -20,7 +20,6 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.id.enhanced;
 
@@ -68,7 +67,7 @@ public class TableStructure extends TransactionHelper implements DatabaseStructu
 		this.incrementSize = incrementSize;
 		this.valueColumnName = valueColumnName;
 
-		selectQuery = "select " + valueColumnName + " id_val" +
+		selectQuery = "select " + valueColumnName + " as id_val" +
 				" from " + dialect.appendLockHint( LockMode.UPGRADE, tableName ) +
 				dialect.getForUpdateString();
 

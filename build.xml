@@ -700,6 +700,7 @@
     <target name="javadoc" description="Compile the Javadoc API documentation to dist dir" depends="splash,antlr">
 		<mkdir dir="${dir.out.doc}/api"/>
 		<javadoc classpathref="path.lib"
+                source="${javac.source}"
                 destdir="${dir.out.doc}/api"
                 use="true"
                 protected="true"

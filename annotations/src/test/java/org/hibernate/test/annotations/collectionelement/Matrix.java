@@ -4,8 +4,6 @@ package org.hibernate.test.annotations.collectionelement;
 import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
-
-import javax.persistence.Column;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -25,7 +23,7 @@ public class Matrix {
 	@GeneratedValue
 	private Integer id;
 	
-	@MapKey(type = @Type(type="integer"), columns=@Column( name = "mapkey", nullable=false ) )
+	@MapKey(type = @Type(type="integer") )
 	@ElementCollection
 	@Sort(type = SortType.NATURAL) 
 	@Type(type = "float")

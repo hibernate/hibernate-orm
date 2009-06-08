@@ -24,11 +24,13 @@
  */
 package org.hibernate.loader;
 
+import java.util.Set;
+import java.util.HashSet;
+
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.persister.entity.Loadable;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.type.BagType;
-import org.hibernate.HibernateException;
 
 /**
  * Uses the default mapping from property to result set column 
@@ -68,13 +70,16 @@ public abstract class BasicLoader extends Loader {
 		}
 
 		CollectionPersister[] collectionPersisters = getCollectionPersisters();
-		int bagCount = 0;
+		Set bagRoles = null;
 		if ( collectionPersisters != null ) {
 			String[] collectionSuffixes = getCollectionSuffixes();
 			collectionDescriptors = new CollectionAliases[collectionPersisters.length];
 			for ( int i = 0; i < collectionPersisters.length; i++ ) {
 				if ( isBag( collectionPersisters[i] ) ) {
-					bagCount++;
+					if ( bagRoles == null ) {
+						bagRoles = new HashSet();
+					}
+					bagRoles.add( collectionPersisters[i].getRole() );
 				}
 				collectionDescriptors[i] = new GeneratedCollectionAliases(
 						collectionPersisters[i],
@@ -85,8 +90,8 @@ public abstract class BasicLoader extends Loader {
 		else {
 			collectionDescriptors = null;
 		}
-		if ( bagCount > 1 ) {
-			throw new HibernateException( "cannot simultaneously fetch multiple bags" );
+		if ( bagRoles != null && bagRoles.size() > 1 ) {
+			throw new MultipleBagFetchException( bagRoles );
 		}
 	}
 
@@ -98,6 +103,10 @@ public abstract class BasicLoader extends Loader {
 	 * Utility method that generates 0_, 1_ suffixes. Subclasses don't
 	 * necessarily need to use this algorithm, but it is intended that
 	 * they will in most cases.
+	 *
+	 * @param length The number of suffixes to generate
+	 *
+	 * @return The array of generated suffixes (with length=length).
 	 */
 	public static String[] generateSuffixes(int length) {
 		return generateSuffixes( 0, length );

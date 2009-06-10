@@ -30,8 +30,8 @@
 
     <para>
         Working with object-oriented software and a relational database can be cumbersome
-        and time consuming in today's enterprise environments. Hibernate is an object/relational
-        mapping tool for Java environments. The term object/relational mapping (ORM) refers to
+        and time consuming in today's enterprise environments. Hibernate is an Object/Relational
+        Mapping tool for Java environments. The term Object/Relational Mapping (ORM) refers to
         the technique of mapping a data representation from an object model to a relational
         data model with a SQL-based schema.
     </para>
@@ -86,12 +86,12 @@
         </listitem>
         <listitem>
             <para>
-                Use this reference documentation as your primary source of information.
-                Consider reading <emphasis>Java Persistence with Hibernate</emphasis>
-                (http://www.manning.com/bauer2) if you need more help with application
-                design, or if you prefer a step-by-step tutorial. Also visit
-                http://caveatemptor.hibernate.org and download the example application
-                for Java Persistence with Hibernate.
+                Use this reference documentation as your primary source of
+                information.  Consider reading <biblioref linkend="biblio-JPwH"/>
+                if you need more help with application design, or if you prefer
+                a step-by-step tutorial. Also visit
+                <ulink url="http://caveatemptor.hibernate.org"/> and download
+                the example application from <biblioref linkend="biblio-JPwH"/>.
             </para>
         </listitem>
         <listitem>
@@ -101,8 +101,8 @@
         </listitem>
         <listitem>
             <para>
-                Third party demos, examples, and tutorials are linked on the Hibernate
-                website.
+                Links to third party demos, examples, and tutorials are maintained
+                on the Hibernate website.
             </para>
         </listitem>
         <listitem>

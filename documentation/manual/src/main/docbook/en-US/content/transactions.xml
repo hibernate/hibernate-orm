@@ -92,6 +92,23 @@
             <title>Unit of work</title>
 
             <para>
+                First, let's define a unit of work.  A unit of work is a
+                design pattern described by Martin Fowler as
+                <quote>
+                    [maintaining] a list of objects affected by a business
+                    transaction and coordinates the writing out of changes
+                    and the resolution of concurrency problems.
+                </quote><citation>PoEAA</citation>
+                In other words, its a series of operations we wish to carry out
+                against the database together.  Basically, it is a transaction,
+                though fulfilling a unit of work will often span multiple
+                physical database transactions (see <xref linkend="transactions-basics-apptx"/>).
+                So really we are talking about a more abstract notion of a
+                transaction.  The term "business transaction" is also sometimes
+                used in lieu of unit of work.
+            </para>
+
+            <para>
                 Do not use the <emphasis>session-per-operation</emphasis> antipattern:
                 do not open and close a <literal>Session</literal> for every simple database call in
                 a single thread. The same is true for database transactions. Database calls

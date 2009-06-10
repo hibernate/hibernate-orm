@@ -91,6 +91,8 @@
 
     <xi:include href="content/best_practices.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
 
+    <xi:include href="content/portability.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+
     <xi:include href="content/bibliography.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
 
 </book>

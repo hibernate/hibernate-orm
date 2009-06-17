@@ -1,20 +1,20 @@
 package org.hibernate.test.annotations.beanvalidation;
 
 import java.math.BigDecimal;
-import javax.validation.ConstraintViolationException;
 import javax.validation.ConstraintViolation;
+import javax.validation.ConstraintViolationException;
 
-import org.hibernate.test.annotations.TestCase;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
+import org.hibernate.test.annotations.TestCase;
 
 /**
  * @author Emmanuel Bernard
  */
 public class HibernateTraversableResolverTest extends TestCase {
 	public void testNonLazyAssocFieldWithConstraintsFailureExpected() {
-		Session s = openSession(  );
+		Session s = openSession();
 		Transaction tx = s.beginTransaction();
 
 		Screen screen = new Screen();
@@ -22,7 +22,7 @@ public class HibernateTraversableResolverTest extends TestCase {
 		try {
 			s.persist( screen );
 			s.flush();
-			fail("@NotNull on a non lazy association is not evaluated");
+			fail( "@NotNull on a non lazy association is not evaluated" );
 		}
 		catch ( ConstraintViolationException e ) {
 			assertEquals( 1, e.getConstraintViolations().size() );
@@ -33,7 +33,7 @@ public class HibernateTraversableResolverTest extends TestCase {
 	}
 
 	public void testEmbedded() {
-		Session s = openSession(  );
+		Session s = openSession();
 		Transaction tx = s.beginTransaction();
 
 		Screen screen = new Screen();
@@ -46,7 +46,7 @@ public class HibernateTraversableResolverTest extends TestCase {
 		try {
 			s.persist( screen );
 			s.flush();
-			fail("@NotNull on empedded property is not evaluated");
+			fail( "@NotNull on empedded property is not evaluated" );
 		}
 		catch ( ConstraintViolationException e ) {
 			assertEquals( 1, e.getConstraintViolations().size() );
@@ -60,7 +60,7 @@ public class HibernateTraversableResolverTest extends TestCase {
 	}
 
 	public void testToOneAssocNotValidated() {
-		Session s = openSession(  );
+		Session s = openSession();
 		Transaction tx = s.beginTransaction();
 
 		Screen screen = new Screen();
@@ -71,7 +71,7 @@ public class HibernateTraversableResolverTest extends TestCase {
 		try {
 			s.persist( screen );
 			s.flush();
-			fail("Associated objects should not be validated");
+			fail( "Associated objects should not be validated" );
 		}
 		catch ( ConstraintViolationException e ) {
 			assertEquals( 1, e.getConstraintViolations().size() );
@@ -84,7 +84,7 @@ public class HibernateTraversableResolverTest extends TestCase {
 	}
 
 	public void testCollectionAssocNotValidated() {
-		Session s = openSession(  );
+		Session s = openSession();
 		Transaction tx = s.beginTransaction();
 
 		Screen screen = new Screen();
@@ -100,7 +100,7 @@ public class HibernateTraversableResolverTest extends TestCase {
 		try {
 			s.persist( screen );
 			s.flush();
-			fail("Associated objects should not be validated");
+			fail( "Associated objects should not be validated" );
 		}
 		catch ( ConstraintViolationException e ) {
 			assertEquals( 1, e.getConstraintViolations().size() );
@@ -113,7 +113,7 @@ public class HibernateTraversableResolverTest extends TestCase {
 	}
 
 	public void testEmbeddedCollection() {
-		Session s = openSession(  );
+		Session s = openSession();
 		Transaction tx = s.beginTransaction();
 
 		Screen screen = new Screen();
@@ -125,14 +125,13 @@ public class HibernateTraversableResolverTest extends TestCase {
 		try {
 			s.persist( screen );
 			s.flush();
-			fail("Collection of embedded objects should be validated");
+			fail( "Collection of embedded objects should be validated" );
 		}
 		catch ( ConstraintViolationException e ) {
 			assertEquals( 1, e.getConstraintViolations().size() );
 			final ConstraintViolation constraintViolation = e.getConstraintViolations().iterator().next();
 			assertEquals( Screen.class, constraintViolation.getRootBeanClass() );
-			// connectors[0] should be connectors expect failure when bug is fixed in HV
-			assertEquals( "connectors[0].number", constraintViolation.getPropertyPath() );
+			assertEquals( "connectors[].number", constraintViolation.getPropertyPath() );
 		}
 
 		tx.rollback();
@@ -140,7 +139,7 @@ public class HibernateTraversableResolverTest extends TestCase {
 	}
 
 	public void testAssocInEmbeddedNotValidated() {
-		Session s = openSession(  );
+		Session s = openSession();
 		Transaction tx = s.beginTransaction();
 
 		Screen screen = new Screen();
@@ -160,7 +159,7 @@ public class HibernateTraversableResolverTest extends TestCase {
 			display.setBrand( null );
 			s.persist( screen );
 			s.flush();
-			fail("Collection of embedded objects should be validated");
+			fail( "Collection of embedded objects should be validated" );
 		}
 		catch ( ConstraintViolationException e ) {
 			assertEquals( 1, e.getConstraintViolations().size() );

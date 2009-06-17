@@ -37,7 +37,7 @@ import org.hibernate.dialect.function.AnsiTrimEmulationFunction;
  *
  * @author Gavin King
  */
-public class SQLServerDialect extends SybaseDialect {
+public class SQLServerDialect extends AbstractTransactSQLDialect {
 
 	public SQLServerDialect() {
 		registerColumnType( Types.VARBINARY, "image" );

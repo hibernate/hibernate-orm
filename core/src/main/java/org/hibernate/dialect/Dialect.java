@@ -216,6 +216,8 @@ public abstract class Dialect {
 		registerHibernateType( Types.TIMESTAMP, Hibernate.TIMESTAMP.getName() );
 		registerHibernateType( Types.VARCHAR, Hibernate.STRING.getName() );
 		registerHibernateType( Types.VARBINARY, Hibernate.BINARY.getName() );
+		registerHibernateType( Types.LONGVARCHAR, Hibernate.TEXT.getName() );
+		registerHibernateType( Types.LONGVARBINARY, Hibernate.IMAGE.getName() );
 		registerHibernateType( Types.NUMERIC, Hibernate.BIG_DECIMAL.getName() );
 		registerHibernateType( Types.DECIMAL, Hibernate.BIG_DECIMAL.getName() );
 		registerHibernateType( Types.BLOB, Hibernate.BLOB.getName() );

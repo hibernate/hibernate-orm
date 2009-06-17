@@ -5,21 +5,20 @@
 
 <!-- 
     This mapping demonstrates the use of Hibernate with all-handwritten SQL!
-
-    This version is for MySQL
+     
+    NOTE: this version is for SQLServer
 -->
-
 <hibernate-mapping package="org.hibernate.test.sql.hand" default-access="field">
 
-	<class name="Organization">
-		<id name="id" unsaved-value="0" column="orgid">
+	<class name="Organization" table="ORGANIZATION">
+		<id name="id" unsaved-value="0" column="ORGID">
 			<generator class="increment"/>
 		</id>
-		<property name="name" not-null="true"/>
+		<property name="name" not-null="true" column="NAME"/>
 		<set name="employments" 
 			inverse="true"
 			order-by="DUMMY">
-			<key column="employer"/> <!-- only needed for DDL generation -->
+			<key column="EMPLOYER"/> <!-- only needed for DDL generation -->
 			<one-to-many class="Employment"/>
 			<loader query-ref="organizationEmployments"/>
 		</set>
@@ -31,27 +30,27 @@
 		<sql-delete>DELETE FROM ORGANIZATION WHERE ORGID=?</sql-delete>
 	</class>
 	
-	<class name="Person">
-		<id name="id" unsaved-value="0" column="perid">
+	<class name="Person" table="PERSON">
+		<id name="id" unsaved-value="0" column="PERID">
 			<generator class="increment"/>
 		</id>
-		<property name="name" not-null="true"/>
+		<property name="name" not-null="true" column="NAME"/>
 		<loader query-ref="person"/>
 		<sql-insert>INSERT INTO PERSON (NAME, PERID) VALUES ( UPPER(?), ? )</sql-insert>
 		<sql-update>UPDATE PERSON SET NAME=UPPER(?) WHERE PERID=?</sql-update>
 		<sql-delete>DELETE FROM PERSON WHERE PERID=?</sql-delete>
 	</class>
 	
-	<class name="Employment">
-		<id name="employmentId" unsaved-value="0" column="empid">
+	<class name="Employment" table="EMPLOYMENT">
+		<id name="employmentId" unsaved-value="0" column="EMPID">
 			<generator class="increment"/>
 		</id>
-		<many-to-one name="employee" not-null="true" update="false"/>
-		<many-to-one name="employer" not-null="true" update="false"/>
-		<property name="startDate" not-null="true" update="false" insert="false"/>
-		<property name="endDate" insert="false"/>
-		<property name="regionCode" update="false"/>
-	  <property name="salary" type="org.hibernate.test.sql.hand.MonetaryAmountUserType">
+		<many-to-one name="employee" column="EMPLOYEE" not-null="true" update="false"/>
+		<many-to-one name="employer" column="EMPLOYER" not-null="true" update="false"/>
+		<property name="startDate" column="STARTDATE" not-null="true" update="false" insert="false"/>
+		<property name="endDate" column="ENDDATE" insert="false"/>
+		<property name="regionCode" column="REGIONCODE" update="false"/>
+        <property name="salary" type="org.hibernate.test.sql.hand.MonetaryAmountUserType">
 			<column name="VALUE" sql-type="float"/>
 			<column name="CURRENCY"/>			
 		</property>
@@ -59,7 +58,7 @@
    		<sql-insert>
 			INSERT INTO EMPLOYMENT 
 				(EMPLOYEE, EMPLOYER, STARTDATE, REGIONCODE, VALUE, CURRENCY, EMPID) 
-				VALUES (?, ?, now(), UPPER(?), ?, ?, ?)
+				VALUES (?, ?, getdate(), UPPER(?), ?, ?, ?)
 		</sql-insert>
 		<sql-update>UPDATE EMPLOYMENT SET ENDDATE=?, VALUE=?, CURRENCY=? WHERE EMPID=?</sql-update> 
 		<sql-delete>DELETE FROM EMPLOYMENT WHERE EMPID=?</sql-delete> 
@@ -94,7 +93,7 @@
         <sql-update>UPDATE IMAGEHOLDER SET PHOTO=? WHERE ID=?</sql-update>
         <sql-delete>DELETE FROM IMAGEHOLDER WHERE ID=?</sql-delete>
     </class>
-    
+
     <resultset name="org-emp-regionCode">
         <return-scalar column="regionCode" type="string"/>
         <return alias="org" class="Organization"/>
@@ -122,7 +121,6 @@
 	</sql-query>
 
 
-
 	<!--sql-query name="organization">
 		<return alias="org" class="Organization"/>
 		SELECT NAME AS {org.name}, ORGID AS {org.id} FROM ORGANIZATION
@@ -136,6 +134,10 @@
 		INNER JOIN EMPLOYMENT e ON e.EMPLOYER = org.ORGID
 	</sql-query>
 	
+	
+	
+
+	
 	<sql-query name="employment">
 		<return alias="emp" class="Employment"/>
 		SELECT EMPLOYEE AS {emp.employee}, EMPLOYER AS {emp.employer}, 
@@ -145,7 +147,6 @@
 		WHERE EMPID = ?
 	</sql-query>
 
-	
 	<sql-query name="organizationEmployments">
 		<load-collection alias="empcol" role="Organization.employments"/>
 		SELECT {empcol.*}
@@ -176,8 +177,8 @@
 	</sql-query>
 
 	<sql-query name="simpleScalar" callable="true">
-	 <return-scalar column="name" type="string"/>
-	 <return-scalar column="value" type="long"/>
+		<return-scalar column="name" type="string"/>
+		<return-scalar column="value" type="long"/>
 		{ call simpleScalar(:number) }
 	</sql-query>
 
@@ -220,10 +221,10 @@
         <return alias="h" class="ImageHolder" lock-mode="upgrade"/>
         SELECT ID AS {h.id}, PHOTO AS {h.photo} FROM IMAGEHOLDER WHERE ID=? /*FOR UPDATE*/
     </sql-query>
-
+    
 	<database-object>
 		<create>
-		CREATE PROCEDURE selectAllEmployments ()
+		CREATE PROCEDURE selectAllEmployments AS
 			SELECT EMPLOYEE, EMPLOYER, STARTDATE, ENDDATE, 
 			REGIONCODE, EMPID, VALUE, CURRENCY
 			FROM EMPLOYMENT
@@ -232,25 +233,55 @@
 		DROP PROCEDURE selectAllEmployments
 		</drop>
 	</database-object>
-	
+
+	<!-- The following is a workaround for HHH-3685 so that SchemaExport --> 
+	<!-- changes the transaction mode of selectAllEmployments to "chained" -->
 	<database-object>
 		<create>
-		CREATE PROCEDURE paramHandling (j int, i int) 
-			SELECT j AS value, i AS value2
+		sp_procxmode selectAllEmployments, 'chained'
+		</create>
+		<!-- no drop command corresponding to "sp_procxmode ..." -->
+		<drop/>
+	</database-object>
+
+	<database-object>
+		<create>
+		CREATE PROCEDURE paramHandling @j int, @i int AS
+			SELECT @j as value, @i as value2
 		</create>
 		<drop>
 		DROP PROCEDURE paramHandling
 		</drop>
 	</database-object>
 	
+	<!-- The following is a workaround for HHH-3685 so that SchemaExport --> 
+	<!-- changes the transaction mode of paramHandling to "chained" -->
 	<database-object>
 		<create>
-		CREATE PROCEDURE simpleScalar (number int) 
-			SELECT number AS value, 'getAll' AS name
+		sp_procxmode paramHandling, 'chained'
+		</create>
+		<!-- no drop command corresponding to "sp_procxmode ..." -->
+	<drop/>
+	</database-object>
+
+	<database-object>
+		<create>
+		CREATE PROCEDURE simpleScalar @number int AS
+			SELECT @number as value, 'getAll' as name
 		</create>
 		<drop>
 		DROP PROCEDURE simpleScalar
 		</drop>
 	</database-object>
 	
+	<!-- The following is a workaround for HHH-3685 so that SchemaExport --> 
+	<!-- changes the transaction mode of simpleScalar to "chained" -->
+	<database-object>
+		<create>
+		sp_procxmode simpleScalar, 'chained'
+		</create>
+		<!-- no drop command corresponding to "sp_procxmode ..." -->
+		<drop/>
+	</database-object>
+
 </hibernate-mapping>

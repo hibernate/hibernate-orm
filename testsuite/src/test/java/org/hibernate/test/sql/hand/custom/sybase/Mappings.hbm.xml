@@ -6,7 +6,7 @@
 <!-- 
     This mapping demonstrates the use of Hibernate with all-handwritten SQL!
      
-    NOTE: this version is for Sybase/SQLServer
+    NOTE: this version is for Sybase
 -->
 <hibernate-mapping package="org.hibernate.test.sql.hand" default-access="field">
 
@@ -63,6 +63,36 @@
 		<sql-update>UPDATE EMPLOYMENT SET ENDDATE=?, VALUE=?, CURRENCY=? WHERE EMPID=?</sql-update> 
 		<sql-delete>DELETE FROM EMPLOYMENT WHERE EMPID=?</sql-delete> 
 	</class>
+
+    <class name="TextHolder">
+        <id name="id" column="id">
+            <generator class="increment"/>
+        </id>
+        <property name="description" type="text" length="15000"/>
+        <loader query-ref="textholder"/>
+        <sql-insert>
+            INSERT INTO TEXTHOLDER
+            (DESCRIPTION, ID)
+            VALUES (?, ?)
+        </sql-insert>
+        <sql-update>UPDATE TEXTHOLDER SET DESCRIPTION=? WHERE ID=?</sql-update>
+        <sql-delete>DELETE FROM TEXTHOLDER WHERE ID=?</sql-delete>
+    </class>
+
+    <class name="ImageHolder">
+        <id name="id" column="id">
+            <generator class="increment"/>
+        </id>
+        <property name="photo" type="image" length="15000"/>
+        <loader query-ref="imageholder"/>
+        <sql-insert>
+            INSERT INTO IMAGEHOLDER
+            (PHOTO, ID)
+            VALUES (?, ?)
+        </sql-insert>
+        <sql-update>UPDATE IMAGEHOLDER SET PHOTO=? WHERE ID=?</sql-update>
+        <sql-delete>DELETE FROM IMAGEHOLDER WHERE ID=?</sql-delete>
+    </class>
 
     <resultset name="org-emp-regionCode">
         <return-scalar column="regionCode" type="string"/>
@@ -181,7 +211,17 @@
 		</return>
 		{ call selectAllEmployments() }
 	</sql-query>
-	
+
+    <sql-query name="textholder">
+        <return alias="h" class="TextHolder" lock-mode="upgrade"/>
+        SELECT ID AS {h.id}, DESCRIPTION AS {h.description} FROM TEXTHOLDER WHERE ID=? /*FOR UPDATE*/
+    </sql-query>
+
+    <sql-query name="imageholder">
+        <return alias="h" class="ImageHolder" lock-mode="upgrade"/>
+        SELECT ID AS {h.id}, PHOTO AS {h.photo} FROM IMAGEHOLDER WHERE ID=? /*FOR UPDATE*/
+    </sql-query>    
+
 	<database-object>
 		<create>
 		CREATE PROCEDURE selectAllEmployments AS

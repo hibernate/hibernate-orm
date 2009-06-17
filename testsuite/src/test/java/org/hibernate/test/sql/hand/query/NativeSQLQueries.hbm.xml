@@ -117,6 +117,20 @@
         <property name="length" column="flength"/>
     </class>
 
+    <class name="TextHolder">
+        <id name="id" column="id">
+            <generator class="increment"/>
+        </id>
+        <property name="description" type="text" length="15000"/>
+    </class>
+
+    <class name="ImageHolder">
+        <id name="id" column="id">
+            <generator class="increment"/>
+        </id>
+        <property name="photo" type="image" length="15000"/>
+    </class>    
+
     <resultset name="org-emp-regionCode">
         <return-scalar column="regionCode" type="string"/>
         <return alias="org" class="Organization"/>

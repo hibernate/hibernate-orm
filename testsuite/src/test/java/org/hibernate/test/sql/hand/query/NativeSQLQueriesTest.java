@@ -15,6 +15,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.util.ArrayHelper;
 import org.hibernate.test.sql.hand.Organization;
 import org.hibernate.test.sql.hand.Person;
 import org.hibernate.test.sql.hand.Employment;
@@ -24,6 +25,8 @@ import org.hibernate.test.sql.hand.Dimension;
 import org.hibernate.test.sql.hand.SpaceShip;
 import org.hibernate.test.sql.hand.Speech;
 import org.hibernate.test.sql.hand.Group;
+import org.hibernate.test.sql.hand.TextHolder;
+import org.hibernate.test.sql.hand.ImageHolder;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.junit.functional.FunctionalTestCase;
@@ -94,6 +97,14 @@ public class NativeSQLQueriesTest extends FunctionalTestCase {
 		       "from ORGANIZATION org " +
 		       "    join EMPLOYMENT emp on org.ORGID = emp.EMPLOYER " +
 		       "    join PERSON pers on pers.PERID = emp.EMPLOYEE ";
+	}
+
+	protected String getDescriptionsSQL() {
+		return "select DESCRIPTION from TEXTHOLDER";
+	}
+
+	protected String getPhotosSQL() {
+		return "select PHOTO from IMAGEHOLDER";
 	}
 
 	public void testFailOnNoAddEntityOrScalar() {
@@ -666,6 +677,66 @@ public class NativeSQLQueriesTest extends FunctionalTestCase {
 
 		t.commit();
 		s.close();
+	}
+
+	public void testTextTypeInSQLQuery() {
+		Session s = openSession();
+		Transaction t = s.beginTransaction();
+		String description = buildLongString( 15000, 'a' );
+		TextHolder holder = new TextHolder( description );
+		s.persist( holder );
+		t.commit();
+		s.close();
+
+		s = openSession();
+		t = s.beginTransaction();
+		String descriptionRead = ( String ) s.createSQLQuery( getDescriptionsSQL() )
+				.uniqueResult();
+		assertEquals( description, descriptionRead );
+		s.delete( holder );
+		t.commit();
+		s.close();
+	}
+
+	public void testImageTypeInSQLQuery() {
+		Session s = openSession();
+		Transaction t = s.beginTransaction();
+		byte[] photo = buildLongByteArray( 15000, true );
+		ImageHolder holder = new ImageHolder( photo );
+		s.persist( holder );
+		t.commit();
+		s.close();
+
+		s = openSession();
+		t = s.beginTransaction();
+		byte[] photoRead = ( byte[] ) s.createSQLQuery( getPhotosSQL() )
+				.uniqueResult();
+		assertTrue( ArrayHelper.isEquals( photo, photoRead ) );
+		s.delete( holder );
+		t.commit();
+		s.close();
+	}
+
+	private String buildLongString(int size, char baseChar) {
+		StringBuffer buff = new StringBuffer();
+		for( int i = 0; i < size; i++ ) {
+			buff.append( baseChar );
+		}
+		return buff.toString();
+	}
+
+	private byte[] buildLongByteArray(int size, boolean on) {
+		byte[] data = new byte[size];
+		data[0] = mask( on );
+		for ( int i = 0; i < size; i++ ) {
+			data[i] = mask( on );
+			on = !on;
+		}
+		return data;
+	}
+
+	private byte mask(boolean on) {
+		return on ? ( byte ) 1 : ( byte ) 0;
 	}
 
 	private static class UpperCasedAliasToEntityMapResultTransformer extends BasicTransformerAdapter implements Serializable {

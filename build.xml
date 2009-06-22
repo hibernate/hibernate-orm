@@ -575,7 +575,9 @@
                 <attribute name="Implementation-Title" value="Hibernate3"/>
                 <attribute name="Implementation-Version" value="${version.full}"/>
                 <attribute name="Implementation-Vendor" value="hibernate.org"/>
+                <attribute name="Implementation-URL" value="http://hibernate.org" />
                 <attribute name="Hibernate-Version" value="${version.full}"/>
+                <attribute name="Main-Class" value="org.hibernate.Version" />
 			</manifest>
 		</jar>
 

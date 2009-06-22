@@ -157,7 +157,7 @@
                             <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
                         </manifest>
                         <manifestEntries>
-                            <Implementation-URL>${pom.url}</Implementation-URL>
+                            <Implementation-URL>http://hibernate.org</Implementation-URL>
                         </manifestEntries>
                     </archive>
                 </configuration>

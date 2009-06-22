@@ -38,6 +38,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.hibernate.HibernateException;
+import org.hibernate.Version;
 import org.hibernate.bytecode.BytecodeProvider;
 import org.hibernate.util.ConfigHelper;
 import org.hibernate.util.PropertiesHelper;
@@ -175,9 +176,6 @@ import org.hibernate.util.PropertiesHelper;
  * @author Gavin King
  */
 public final class Environment {
-
-	public static final String VERSION = "3.3.0.GA";
-
 	/**
 	 * <tt>ConnectionProvider</tt> implementor to use when obtaining connections
 	 */
@@ -557,7 +555,7 @@ public final class Environment {
 
 	static {
 
-		log.info("Hibernate " + VERSION);
+		log.info( "Hibernate " + Version.getVersionString() );
 
 		RENAMED_PROPERTIES.put( "hibernate.cglib.use_reflection_optimizer", USE_REFLECTION_OPTIMIZER );
 

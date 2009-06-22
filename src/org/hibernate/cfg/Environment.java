@@ -15,6 +15,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import org.hibernate.HibernateException;
+import org.hibernate.Version;
 import org.hibernate.bytecode.BytecodeProvider;
 import org.hibernate.util.ConfigHelper;
 import org.hibernate.util.PropertiesHelper;
@@ -153,7 +154,14 @@ import org.hibernate.util.PropertiesHelper;
  */
 public final class Environment {
 
-	public static final String VERSION = "3.2.8-SNAPSHOT";
+	/**
+	 * The Hibernate version.
+	 *
+	 * @deprecated To be removed in 3.5.  Use Version#getVersionString instead.  See
+	 * <a href="http://java.sun.com/docs/books/jls/third_edition/html/binaryComp.html#13.4.9">Java Language Specification</a>
+	 * for details about compile-time constant expression for the reasons why this is being removed.
+	 */
+	public static final String VERSION = Version.getVersionString();
 
 	/**
 	 * <tt>ConnectionProvider</tt> implementor to use when obtaining connections

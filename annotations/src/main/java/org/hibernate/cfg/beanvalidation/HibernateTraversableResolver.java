@@ -5,16 +5,22 @@ import java.util.Set;
 import java.util.HashSet;
 import java.util.concurrent.ConcurrentHashMap;
 import javax.validation.TraversableResolver;
+import javax.validation.Path;
 
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.Hibernate;
+import org.hibernate.annotations.common.AssertionFailure;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.type.Type;
-import org.hibernate.type.ComponentType;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.AbstractComponentType;
 
 /**
+ * Use Hibernate metadata to ignore cascade on entities.
+ * cascade on embeddable objects or collection of embeddable objects are accepted
+ *
+ * Also use Hibernate's native isInitialized method call.
+ * 
  * @author Emmanuel Bernard
  */
 public class HibernateTraversableResolver implements TraversableResolver {
@@ -59,34 +65,39 @@ public class HibernateTraversableResolver implements TraversableResolver {
 		}
 	}
 
-	private String getCleanPathWoBracket(String traversableProperty, String pathToTraversableObject) {
-		String path = pathToTraversableObject.equals( "" ) ?
-				traversableProperty :
-				pathToTraversableObject + "." + traversableProperty;
-		String[] paths = path.split( "\\[.*\\]" );
-		path = "";
-		for (String subpath : paths) {
-			path += subpath;
+	private String getStringBasedPath(Path.Node traversableProperty, Path pathToTraversableObject) {
+		StringBuilder path = new StringBuilder( );
+		for ( Path.Node node : pathToTraversableObject ) {
+			if (node.getName() != null) {
+				path.append( node.getName() ).append( "." );
+			}
 		}
-		return path;
+		if ( traversableProperty.getName() == null ) {
+			throw new AssertionFailure(
+					"TraversableResolver being passed a traversableProperty with null name. pathToTraversableObject: "
+							+ path.toString() );
+		}
+		path.append( traversableProperty.getName() );
+
+		return path.toString();
 	}
 
 	public boolean isReachable(Object traversableObject,
-						  String traversableProperty,
-						  Class<?> rootBeanType,
-						  String pathToTraversableObject,
-						  ElementType elementType) {
+							   Path.Node traversableProperty,
+							   Class<?> rootBeanType,
+							   Path pathToTraversableObject,
+							   ElementType elementType) {
 		//lazy, don't load
 		return Hibernate.isInitialized( traversableObject )
-				&& Hibernate.isPropertyInitialized( traversableObject, traversableProperty );
+				&& Hibernate.isPropertyInitialized( traversableObject, traversableProperty.getName() );
 	}
 
 	public boolean isCascadable(Object traversableObject,
-						  String traversableProperty,
+						  Path.Node traversableProperty,
 						  Class<?> rootBeanType,
-						  String pathToTraversableObject,
+						  Path pathToTraversableObject,
 						  ElementType elementType) {
-		String path = getCleanPathWoBracket( traversableProperty, pathToTraversableObject );
+		String path = getStringBasedPath( traversableProperty, pathToTraversableObject );
 		return ! associations.contains(path);
 	}
 }

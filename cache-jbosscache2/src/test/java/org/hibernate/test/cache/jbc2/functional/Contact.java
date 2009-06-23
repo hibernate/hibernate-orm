@@ -24,9 +24,6 @@
 package org.hibernate.test.cache.jbc2.functional;
 
 import java.io.Serializable;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
 
 /**
  * Entity that has a many-to-one relationship to a Customer
@@ -46,7 +43,6 @@ public class Contact implements Serializable
       
    }
    
-   @Id
    public Integer getId()
    {
       return id;
@@ -77,8 +73,6 @@ public class Contact implements Serializable
       this.tlf = tlf;
    }
    
-   @ManyToOne
-   @JoinColumn(name="CUST_ID")
    public Customer getCustomer()
    {
       return customer;

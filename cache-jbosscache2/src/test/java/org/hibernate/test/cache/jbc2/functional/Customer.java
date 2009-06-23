@@ -26,8 +26,6 @@ package org.hibernate.test.cache.jbc2.functional;
 import java.io.Serializable;
 import java.util.Set;
 
-import javax.persistence.Id;
-
 /**
  * Company customer
  *
@@ -47,7 +45,6 @@ public class Customer implements Serializable
    {
    }
 
-   @Id
    public Integer getId()
    {
       return id;

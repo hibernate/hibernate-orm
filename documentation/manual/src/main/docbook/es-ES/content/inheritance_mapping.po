@@ -883,7 +883,7 @@ msgstr "Recuperaci&#x00f3;n por uni&#x00f3;n externa (outer join)"
 #: inheritance_mapping.xml:314
 #, no-c-format
 msgid "table per class-hierarchy"
-msgstr "<entry>tabla por jerarqu&#x00ed;a de clases</entry>"
+msgstr "tabla por jerarqu&#x00ed;a de clases"
 
 #. Tag: literal
 #: inheritance_mapping.xml:315 inheritance_mapping.xml:326

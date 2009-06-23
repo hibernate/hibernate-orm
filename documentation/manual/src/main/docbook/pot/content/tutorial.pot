@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2009-06-10 21:02+0000\n"
+"POT-Creation-Date: 2009-06-23 18:41+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <kde-i18n-doc@kde.org>\n"
@@ -775,7 +775,7 @@ msgstr ""
 #. Tag: para
 #: tutorial.xml:609
 #, no-c-format
-msgid "Here, we are using a Hibernate Query Language (HQL) query to load all existing <literal>Event</literal> objects from the database. Hibernate will generate the appropriate SQL, send it to the database and populate <literal>Event</literal> objects with the data. You can create more complex queries with HQL. See <xref linkend=\"query-hql\"/> for more information."
+msgid "Here, we are using a Hibernate Query Language (HQL) query to load all existing <literal>Event</literal> objects from the database. Hibernate will generate the appropriate SQL, send it to the database and populate <literal>Event</literal> objects with the data. You can create more complex queries with HQL. See <xref linkend=\"queryhql\"/> for more information."
 msgstr ""
 
 #. Tag: para

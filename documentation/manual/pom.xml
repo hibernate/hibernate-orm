@@ -33,6 +33,11 @@
 
                 <dependencies>
                     <dependency>
+                        <groupId>net.sf.docbook</groupId>
+                        <artifactId>docbook</artifactId>
+                        <version>1.72.0</version>
+                    </dependency>
+                    <dependency>
                         <groupId>org.hibernate</groupId>
                         <artifactId>hibernate-jdocbook-style</artifactId>
                         <version>2.0.0</version>

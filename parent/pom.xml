@@ -366,6 +366,6 @@
     </distributionManagement>
 
     <properties>
-        <slf4jVersion>1.5.6</slf4jVersion>
+        <slf4jVersion>1.5.8</slf4jVersion>
     </properties>
 </project>

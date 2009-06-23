@@ -295,6 +295,7 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 
 		s.delete( top );
 		s.delete( next );
+		s.delete( other );
 		s.getTransaction().commit();
 		s.close();
 	}

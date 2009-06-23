@@ -107,4 +107,24 @@
         </plugins>
     </build>
 
+
+    <properties>
+        <skipTranslations>true</skipTranslations>
+    </properties>
+
+    <profiles>
+        <profile>
+            <id>processTransations</id>
+            <activation>
+                <property>
+                    <name>processTransations</name>
+                    <value>true</value>
+                </property>
+            </activation>
+            <properties>
+                <skipTranslations>false</skipTranslations>
+            </properties>
+        </profile>
+    </profiles>
+
 </project>

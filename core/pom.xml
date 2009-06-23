@@ -30,6 +30,18 @@
             <artifactId>dom4j</artifactId>
         </dependency>
 
+        <!-- optional deps for bytecode providers until those are finally properly scoped -->
+        <dependency>
+            <groupId>javassist</groupId>
+            <artifactId>javassist</artifactId>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>cglib</groupId>
+            <artifactId>cglib</artifactId>
+            <optional>true</optional>
+        </dependency>
+
         <dependency>
             <!-- YUCK, YUCK, YUCK!!!! -->
             <groupId>javax.transaction</groupId>
@@ -53,20 +65,6 @@
             <artifactId>ant</artifactId>
             <version>1.6.5</version>
             <scope>provided</scope>
-        </dependency>
-
-        <!-- optional deps for bytecode providers until those are finally properly scoped -->
-        <dependency>
-            <groupId>javassist</groupId>
-            <artifactId>javassist</artifactId>
-            <version>3.4.GA</version>
-            <optional>true</optional>
-        </dependency>
-        <dependency>
-            <groupId>cglib</groupId>
-            <artifactId>cglib</artifactId>
-            <version>2.2</version>
-            <optional>true</optional>
         </dependency>
     </dependencies>
 

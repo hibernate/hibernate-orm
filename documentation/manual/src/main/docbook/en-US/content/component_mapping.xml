@@ -179,12 +179,12 @@
 </set>]]></programlisting>
 
 	<important>
-	<para>
+    	<para>
             If you define a <literal>Set</literal> of composite elements, it is 
             important to implement <literal>equals()</literal> and 
             <literal>hashCode()</literal> correctly.
+        </para>
 	</important>      
-  	</para>
 
         <para>
             Composite elements can contain components but not collections. If your
@@ -347,17 +347,17 @@
     <column name="customerId"/>
 </many-to-one>]]></programlisting>
 
-	<note>
-	</title>
-		Note
-	</title>        
-	<para>
-            The <literal>&lt;column&gt;</literal> tag is an alternative to the 
-            <literal>column</literal> attribute everywhere.
-        </para>
-	</note>
-        
-<para>
+        <tip>
+            <para>
+                The <literal>column</literal> element is an alternative to the
+                <literal>column</literal> attribute everywhere.  Using the
+                <literal>column</literal> element just gives more declaration
+                options, which are mostly useful when utilizing
+                <literal>hbm2ddl</literal>
+            </para>
+        </tip>
+
+        <para>
             A <literal>many-to-many</literal> association to <literal>OrderLine</literal> also
             uses the composite foreign key:
         </para>

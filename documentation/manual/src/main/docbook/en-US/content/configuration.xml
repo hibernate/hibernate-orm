@@ -561,10 +561,8 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
         <table frame="topbot" id="configuration-jdbc-properties" revision="8">
             <title>Hibernate JDBC and Connection Properties</title>
             <tgroup cols="2">
-<!--
                 <colspec colname="c1" colwidth="1*"/>
                 <colspec colname="c2" colwidth="1*"/>
--->
                 <thead>
                     <row>
                         <entry>Property name</entry>
@@ -678,18 +676,18 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                         </entry>
                     </row>
                     <row>
-                    <entry>
-                        <property>hibernate.connection.isolation</property>
-                    </entry>
-                    <entry>
-                        Sets the JDBC transaction isolation level. Check <interfacename>java.sql.Connection</interfacename>
-                        for meaningful values, but note that most databases do not support all isolation levels and some
-                        define additional, non-standard isolations.
-                        <para>
-                            <emphasis role="strong">e.g.</emphasis> 
-                            <literal>1, 2, 4, 8</literal>
-                        </para>
-                    </entry>
+                        <entry>
+                            <property>hibernate.connection.isolation</property>
+                        </entry>
+                        <entry>
+                            Sets the JDBC transaction isolation level. Check <interfacename>java.sql.Connection</interfacename>
+                            for meaningful values, but note that most databases do not support all isolation levels and some
+                            define additional, non-standard isolations.
+                            <para>
+                                <emphasis role="strong">e.g.</emphasis>
+                                <literal>1, 2, 4, 8</literal>
+                            </para>
+                        </entry>
                     </row>
                     <row>
                         <entry>
@@ -1053,10 +1051,8 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
             <table frame="topbot" id="sql-dialects" revision="3">
                 <title>Hibernate SQL Dialects (<literal>hibernate.dialect</literal>)</title>
                 <tgroup cols="2">
-<!--
                     <colspec colwidth="1*"/>
                     <colspec colwidth="2.5*"/>
--->
                     <thead>
                         <row>
                             <entry>RDBMS</entry>
@@ -1664,7 +1660,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
             <para>
                 The easiest way to handle <literal>Sessions</literal> and transactions is
                 Hibernate's automatic "current" <literal>Session</literal> management.
-                For a discussion of contextual sessions see <link linkend="architecture-current-session"></link>.
+                For a discussion of contextual sessions see <xref linkend="architecture-current-session"/>.
                 Using the <literal>"jta"</literal> session context, if there is no Hibernate
                 <literal>Session</literal> associated with the current JTA transaction, one will
 	            be started and associated with that JTA transaction the first time you call

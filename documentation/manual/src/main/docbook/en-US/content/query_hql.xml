@@ -472,13 +472,11 @@ select count(distinct cat.name), count(cat) from Cat cat]]></programlisting>
             This returns instances of <literal>Cat</literal> named 'Fritz'.
         </para>
 
-	<para>
-	The following query:
+        <para>
+            The following query:
         <programlisting><![CDATA[select foo
 from Foo foo, Bar bar
 where foo.startDate = bar.date]]></programlisting>
-
-        <para>
             returns all instances of <literal>Foo</literal> with an
             instance of <literal>bar</literal> with a
             <literal>date</literal> property equal to the

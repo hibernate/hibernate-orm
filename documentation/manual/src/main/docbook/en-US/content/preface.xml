@@ -129,4 +129,12 @@
          JBoss Enterprise Middleware System (JEMS) suite of products.
      </para>
 
+    <section>
+        <title>Feedback</title>
+        <para>
+            Use <ulink url="http://opensource.atlassian.com/projects/hibernate">Hibernate JIRA</ulink>
+            to report errors or request enhacements to this documentation.
+        </para>
+    </section>
+
 </preface>

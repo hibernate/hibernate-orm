@@ -23,7 +23,7 @@
  */
 package org.hibernate.loader;
 
-import java.util.Set;
+import java.util.List;
 
 import org.hibernate.HibernateException;
 
@@ -34,19 +34,19 @@ import org.hibernate.HibernateException;
 * @author Steve Ebersole
 */
 public class MultipleBagFetchException extends HibernateException {
-	private final Set bagRoles;
+	private final List bagRoles;
 
-	public MultipleBagFetchException(Set bagRoles) {
+	public MultipleBagFetchException(List bagRoles) {
 		super( "cannot simultaneously fetch multiple bags" );
 		this.bagRoles = bagRoles;
 	}
 
 	/**
-	 * Retrieves the set of collection roles for the bags encountered.
+	 * Retrieves the collection-roles for the bags encountered.
 	 *
 	 * @return The bag collection roles.
 	 */
-	public Set getBagRoles() {
+	public List getBagRoles() {
 		return bagRoles;
 	}
 }

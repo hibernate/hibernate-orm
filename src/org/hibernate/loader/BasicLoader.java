@@ -1,8 +1,8 @@
 //$Id$
 package org.hibernate.loader;
 
-import java.util.Set;
-import java.util.HashSet;
+import java.util.List;
+import java.util.ArrayList;
 
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.persister.entity.Loadable;
@@ -47,14 +47,14 @@ public abstract class BasicLoader extends Loader {
 		}
 
 		CollectionPersister[] collectionPersisters = getCollectionPersisters();
-		Set bagRoles = null;
+		List bagRoles = null;
 		if ( collectionPersisters != null ) {
 			String[] collectionSuffixes = getCollectionSuffixes();
 			collectionDescriptors = new CollectionAliases[collectionPersisters.length];
 			for ( int i = 0; i < collectionPersisters.length; i++ ) {
 				if ( isBag( collectionPersisters[i] ) ) {
 					if ( bagRoles == null ) {
-						bagRoles = new HashSet();
+						bagRoles = new ArrayList();
 					}
 					bagRoles.add( collectionPersisters[i].getRole() );
 				}

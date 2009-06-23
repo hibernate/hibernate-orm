@@ -88,7 +88,7 @@ msgid ""
 "instructions. The source code for the tutorial is included in the "
 "distribution in the <literal>doc/reference/tutorial/</literal> directory."
 msgstr ""
-"Lee <xref linkend=\"quickstart\"/> para un tutorial de 30 minutos, usando "
+"Lee <xref linkend=\"tutorial\"/> para un tutorial de 30 minutos, usando "
 "Tomcat."
 
 #. Tag: para

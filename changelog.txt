@@ -6,7 +6,7 @@ refer to the particular case on JIRA using the issue tracking number to learn
 more about each case.
 
 
-Changes in version 3.3.1.GA (2009.06.24)
+Changes in version 3.3.2.GA (2009.06.24)
 -------------------------------------------
 
 ** Bug

@@ -31,24 +31,6 @@ import java.io.Serializable;
  * @author Brian Stansberry
  * @version $Revision: 60233 $
  */
-//   @NamedQuery(name="account.totalbalance.default",query="select account.balance from Account as account where account.accountHolder = ?1",
-//               hints={@QueryHint(name="org.hibernate.cacheable",value="true")}),
-//   @NamedQuery(name="account.totalbalance.namedregion",query="select account.balance from Account as account where account.accountHolder = ?1",
-//               hints={@QueryHint(name="org.hibernate.cacheRegion",value="AccountRegion"),
-//                      @QueryHint(name="org.hibernate.cacheable",value="true")
-//                     }),
-//   @NamedQuery(name="account.branch.default",query="select account.branch from Account as account where account.accountHolder = ?1",
-//               hints={@QueryHint(name="org.hibernate.cacheable",value="true")}),
-//   @NamedQuery(name="account.branch.namedregion",query="select account.branch from Account as account where account.accountHolder = ?1",
-//               hints={@QueryHint(name="org.hibernate.cacheRegion",value="AccountRegion"),
-//                      @QueryHint(name="org.hibernate.cacheable",value="true")
-//                     }),
-//   @NamedQuery(name="account.bybranch.default",query="select account from Account as account where account.branch = ?1",
-//               hints={@QueryHint(name="org.hibernate.cacheable",value="true")}),
-//   @NamedQuery(name="account.bybranch.namedregion",query="select account from Account as account where account.branch = ?1",
-//               hints={@QueryHint(name="org.hibernate.cacheRegion",value="AccountRegion"),
-//                      @QueryHint(name="org.hibernate.cacheable",value="true")
-//                     })
 public class Account implements Serializable
 {
    

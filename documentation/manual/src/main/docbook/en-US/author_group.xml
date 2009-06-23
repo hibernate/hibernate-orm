@@ -1,8 +1,7 @@
-<?xml version='1.0' encoding="UTF-8"?>
 <!--
   ~ Hibernate, Relational Persistence for Idiomatic Java
   ~
-  ~ Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+  ~ Copyright (c) 2009, Red Hat Middleware LLC or third-party contributors as
   ~ indicated by the @author tags or express copyright attribution
   ~ statements applied by the authors.  All third-party contributions are
   ~ distributed under license by Red Hat Middleware LLC.
@@ -22,12 +21,47 @@
   ~ 51 Franklin Street, Fifth Floor
   ~ Boston, MA  02110-1301  USA
   -->
+<!DOCTYPE authorgroup PUBLIC "-//OASIS//DTD DocBook XML V4.3//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
 
-<!DOCTYPE authorgroup PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+<authorgroup>
+   <author>
+      <firstname>Gavin</firstname>
+      <surname>King</surname>
+   </author>
+   <author>
+      <firstname>Christian</firstname>
+      <surname>Bauer</surname>
+   </author>
+   <author>
+      <firstname>Max</firstname>
+      <othername>Rydahl</othername>
+      <surname>Andersen</surname>
+   </author>
+   <author>
+      <firstname>Emmanuel</firstname>
+      <surname>Bernard</surname>
+   </author>
+   <author>
+      <firstname>Steve</firstname>
+      <surname>Ebersole</surname>
+   </author>
 
-<authorgroup id="AuthorGroup">
+   <othercredit>
+      <firstname>James</firstname>
+      <surname>Cobb</surname>
+      <affiliation>
+         <shortaffil>Graphic Design</shortaffil>
+      </affiliation>
+   </othercredit>
+   <othercredit>
+      <firstname>Cheyenne</firstname>
+      <surname>Weaver</surname>
+      <affiliation>
+         <shortaffil>Graphic Design</shortaffil>
+      </affiliation>
+   </othercredit>
 
-    <!-- 
+    <!--
         #######################################################################
         # Spanish
         #######################################################################
@@ -37,7 +71,7 @@
         <email>kreimer@bbs.frc.utn.edu.ar</email>
     </othercredit>
 
-    <!-- 
+    <!--
         #######################################################################
         # French
         #######################################################################
@@ -71,7 +105,7 @@
         <surname>Patricio</surname>
     </othercredit>
 
-    <!-- 
+    <!--
         #######################################################################
         # Portugese
         #######################################################################
@@ -136,7 +170,7 @@
         <email>wandersonxs@gmail.com</email>
     </othercredit>
 
-    <!-- 
+    <!--
         #######################################################################
         # Chinese
         #######################################################################

@@ -30,7 +30,7 @@ package org.hibernate;
  */
 public class Version {
 	public static String getVersionString() {
-		return "3.5.0-SNAPSHOT";
+		return "[WORKING]";
 	}
 
 	public static void main(String[] args) {

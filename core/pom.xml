@@ -86,6 +86,32 @@
                 </executions>
             </plugin>
             <plugin>
+                <groupId>org.jboss.maven.plugins</groupId>
+                <artifactId>maven-injection-plugin</artifactId>
+                <version>1.0.0</version>
+                <executions>
+                    <execution>
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>bytecode</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <bytecodeInjections>
+                        <bytecodeInjection>
+                            <expression>${pom.version}</expression>
+                            <targetMembers>
+                            	<methodBodyReturn>
+                            	    <className>org.hibernate.Version</className>
+                            	    <methodName>getVersionString</methodName>>
+                            	</methodBodyReturn>
+                            </targetMembers>
+                        </bytecodeInjection>
+                    </bytecodeInjections>
+                </configuration>
+            </plugin>
+            <plugin>
                 <artifactId>maven-jar-plugin</artifactId>
                 <configuration>
                     <archive>

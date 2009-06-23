@@ -6,6 +6,99 @@ refer to the particular case on JIRA using the issue tracking number to learn
 more about each case.
 
 
+Changes in version 3.3.1.GA (2009.06.24)
+-------------------------------------------
+
+** Bug
+    * [HHH-1930] - QuerySyntaxException "with-clause expressions did not reference from-clause element to which the with-clause was associated"
+    * [HHH-2146] - NullpointerException in DefaultDeleteEventListener.deleteTransientEntity
+    * [HHH-2745] - NullPointerException when eager fetching joined many-to-many with native SQL query
+    * [HHH-3046] - Merge fails on complicated data structure because of cycle references
+    * [HHH-3216] - Incorrect parse result in ParameterParser
+    * [HHH-3351] - Dynamic entity model and inheritance - exception when trying to persist
+    * [HHH-3481] - JTATransactionFactory bug when Transaction cannot be found in JNDI
+    * [HHH-3483] - org.hibernate.test.hql.ScrollableCollectionFetchingTest#testScrollingJoinFetchesForward unsupported by DB2
+    * [HHH-3496] -  DB2 hanging on JPALockTest and CMTTest
+    * [HHH-3501] -  ASTParserLoadingTest testing unsupported queries for DB2
+    * [HHH-3506] - enabled filters should apply to HQL update/delete statements
+    * [HHH-3508] - Sybase Dialect - Override supportsCascadeDelete to return "false"
+    * [HHH-3519] - account for parameters in select clause of INSERT-SELECT for DB2
+    * [HHH-3528] - FETCH JOIN query doesn't work in a StatelessSession
+    * [HHH-3584] - Generate SQL when Dynamic Update is true is including version field even when marked as updateable=false
+    * [HHH-3621] - Assertion failure in MigrationTest
+    * [HHH-3636] - Attempt to read invalid column when loading collection of subclasses mapped with table-per-subclass with discriminator
+    * [HHH-3640] - Some standard SQL functions are not implemented in Sybase
+    * [HHH-3652] - CompositeIdWithGeneratorTest needs a standard way to compare timestamps
+    * [HHH-3662] - Merging read-only entities causes AssertionError("Merged entity does not have status set to MANAGED...")
+    * [HHH-3668] - Sybase does not support implicit conversion from character types to numeric types causes failing unit tests
+    * [HHH-3670] - Invalid test for str() for SQL Server and Sybase
+    * [HHH-3672] - Sybase - second(), minute(), hour(), and extract() cause GenericJDBCException
+    * [HHH-3675] - Limitations on Sybase ResultSet implementation cause unit test failures
+    * [HHH-3679] - Sybase conversion of Java byte to tinyint fails with 8-bit values causing unit test failures
+    * [HHH-3680] - Sybase - composite primary key in unit test exceeds maximum for index causing failure
+    * [HHH-3693] - Implicit Polymorphic query + pagination returning zero result
+    * [HHH-3696] - Sybase - unit tests fail when numeric values overflow in precision or scale on insert
+    * [HHH-3698] - Problem with HQL parameter bindings as indexed collection selectors
+    * [HHH-3699] - Problem with HQL parameter bindings for parameters in WITH join clause
+    * [HHH-3701] - SQL function "trim" is not available in Sybase Dialect
+    * [HHH-3749] - Only reuse FromElements originating from from-clause if their aliases match
+    * [HHH-3810] - Transient entities can be inserted twice on merge
+    * [HHH-3874] - Packaging type in hibernate-maven-plugin/pom.xml makes maven build fail
+    * [HHH-3880] - org.hibernate.id.enhanced.TableStructure missing "as" keyword in select statment column renames; required for PostgreSQL
+    * [HHH-3912] - Change for HHH-3159 causes InstantiationException
+    * [HHH-3918] - Use standard JDK exception nesting
+    * [HHH-3980] - Fix for HHH-2980 introduced bug that allows the same bag collection role to be fetched multiple times
+
+** Improvement
+    * [HHH-1234] - allow tuplizers the opportunity to influence getSubclassEntityPersister() processing
+    * [HHH-2592] - force hibernate to generate use offset qeury when offset is zero
+    * [HHH-2980] - Error "org.hibernate.HibernateException: cannot simultaneously fetch multiple bags" not specific enough
+    * [HHH-3159] - Oracle 11g - desupport of oracle.jdbc.driver
+    * [HHH-3275] - Allow pluggable tuplizers for composite elements
+    * [HHH-3276] - review proposed new doc styling
+    * [HHH-3357] - improve performance of session.clear()
+    * [HHH-3383] - QueryKey is storing references to entities instead of identifiers
+    * [HHH-3515] - Introduce EntityNameResolver interface
+    * [HHH-3517] - Allow definition of the default tuplizer class to use
+    * [HHH-3518] - Remove Suite classes from testsuite module
+    * [HHH-3525] - Clean up reflection code trying to determine JDK 1.4 capabilities
+    * [HHH-3532] - schema update task should look for foreign key signature
+    * [HHH-3712] - Reorganize the Sybase dialect class hierarchy, add SybaseASE15Dialect, and mark SybaseDialect as deprecated
+    * [HHH-3737] - Support Hibernate 3.3 branch in Envers until 3.4.0GA is out
+    * [HHH-3750] - Allow dialects to handle difference in how Query.setFirstResult() should be interpreted
+    * [HHH-3751] - Enable Antlr tree parser tracing for HqlSqlWalker and SqlGenerator (tree parsers)
+    * [HHH-3753] - Upgrade to SLF4J version 1.5.8
+    * [HHH-3832] - Upgrade to cglib-2.2.jar
+    * [HHH-3886] - Update database credentials for QA Lab
+    * [HHH-3944] - Document known database portability strategies
+    * [HHH-3978] - Expose Hibernate version via non-compile-time constant expression
+    * [HHH-3982] - Apply build version to org.hibernate.Version
+
+** New Feature
+    * [HHH-3343] - Postgres Plus Dialect
+    * [HHH-3781] - Echo version information to the console in main()
+
+** Patch
+    * [HHH-530] - Allow application of filters on subqueries
+    * [HHH-2933] - allow custom resolution of Dialect (Tomoto Shimizu Washio)
+    * [HHH-3401] - H2 Database Dialect Fixes
+    * [HHH-3450] - Include SingletonEhCacheProvider as an additional caching provider (Greg Luck)
+    * [HHH-3639] - Sybase keywords - rename columns
+    * [HHH-3649] - DB2Dialect inherits supportsPooledSequences() as false, but it does support
+    * [HHH-3650] - TableGenerator doesn't marks the "primary key" as not null, causing errors in some RDBMS's which expects the PK to be not-null
+    * [HHH-3742] - Documentation corrections
+
+** Task
+    * [HHH-3214] - Update unit tests and config files to use non-depracated Oracle dialects
+    * [HHH-3760] - Document EntityNameResolver
+    * [HHH-3761] - Document DialectResolver
+    * [HHH-3953] - Update tutorial chapter
+    * [HHH-3979] - Upgrade to javassist 3.9.0
+    * [HHH-3981] - Upgrade to jDocBook 2.2.0
+    * [HHH-3986] - Upgrade to JBossCache 3.1.0 (3.3 branch)
+    * [HHH-3987] - prep 3.3.2 release
+
+
 Changes in version 3.3.1.GA (2008.09.10)
 -------------------------------------------
 

@@ -90,7 +90,7 @@
             database is recognized; etc.  To register one or more resolvers, simply specify them (seperated by
             commas, tabs or spaces) using the 'hibernate.dialect_resolvers' configuration setting (see the
             <constant>DIALECT_RESOLVERS</constant> constant on
-            <ooclass><package>org.hibernate.cfg</package><classname>Environment</classname></ooclass>).
+            <classname>org.hibernate.cfg.Environment</classname>).
         </para>
     </sect1>
 

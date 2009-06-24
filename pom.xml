@@ -32,7 +32,7 @@
     <parent>
         <groupId>org.hibernate</groupId>
         <artifactId>hibernate-parent</artifactId>
-        <version>3.3.2</version>
+        <version>3.3.3-SNAPSHOT</version>
         <relativePath>parent/pom.xml</relativePath>
     </parent>
 
@@ -70,9 +70,9 @@
         from Branch_3_3/hibernate (the artifactId of this aggregator module).
     -->
     <scm>
-        <connection>scm:svn:https://svn.jboss.org/repos/hibernate/core/tags/hibernate-3.3.2</connection>
-        <developerConnection>scm:svn:https://svn.jboss.org/repos/hibernate/core/tags/hibernate-3.3.2</developerConnection>
-        <url>https://svn.jboss.org/repos/hibernate/core/tags/hibernate-3.3.2</url>
+        <connection>scm:svn:https://svn.jboss.org/repos/hibernate/core/branches/Branch_3_3</connection>
+        <developerConnection>scm:svn:https://svn.jboss.org/repos/hibernate/core/branches/Branch_3_3</developerConnection>
+        <url>https://svn.jboss.org/repos/hibernate/core/branches/Branch_3_3</url>
     </scm>
 
     <build>

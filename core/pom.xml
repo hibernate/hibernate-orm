@@ -5,7 +5,7 @@
     <parent>
         <groupId>org.hibernate</groupId>
         <artifactId>hibernate-parent</artifactId>
-        <version>3.3.3-SNAPSHOT</version>
+        <version>3.3.2-SNAPSHOT</version>
         <relativePath>../parent/pom.xml</relativePath>
     </parent>
 
@@ -105,7 +105,7 @@
                             <targetMembers>
                             	<methodBodyReturn>
                             	    <className>org.hibernate.Version</className>
-                            	    <methodName>getVersionString</methodName>&gt;
+                            	    <methodName>getVersionString</methodName>>
                             	</methodBodyReturn>
                             </targetMembers>
                         </bytecodeInjection>

@@ -94,7 +94,7 @@ class TypeSafeActivator {
 			catch ( ClassNotFoundException e ) {
 				throw new AssertionFailure( "Entity class not found", e);
 			}
-			
+
 			try {
 				applyDDL( "", persistentClass, clazz, factory, groups, true );
 			}
@@ -215,7 +215,7 @@ class TypeSafeActivator {
 
 	private static void applySize(Property property, ConstraintDescriptor<?> descriptor, PropertyDescriptor propertyDesc) {
 		if ( Size.class.equals( descriptor.getAnnotation().annotationType() )
-				&& String.class.equals( propertyDesc.getType() ) ) {
+				&& String.class.equals( propertyDesc.getElementClass() ) ) {
 			@SuppressWarnings( "unchecked" )
 			ConstraintDescriptor<Size> sizeConstraint = (ConstraintDescriptor<Size>) descriptor;
 			int max = sizeConstraint.getAnnotation().max();

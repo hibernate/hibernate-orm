@@ -52,7 +52,8 @@ public class HibernateTraversableResolverTest extends TestCase {
 			assertEquals( 1, e.getConstraintViolations().size() );
 			ConstraintViolation<?> cv = e.getConstraintViolations().iterator().next();
 			assertEquals( Screen.class, cv.getRootBeanClass() );
-			assertEquals( "stopButton.name", cv.getPropertyPath() );
+			// toString works since hibernate validator's Path implementation works accordingly. Should do a Path comparison though
+			assertEquals( "stopButton.name", cv.getPropertyPath().toString() );
 		}
 
 		tx.rollback();
@@ -131,7 +132,8 @@ public class HibernateTraversableResolverTest extends TestCase {
 			assertEquals( 1, e.getConstraintViolations().size() );
 			final ConstraintViolation constraintViolation = e.getConstraintViolations().iterator().next();
 			assertEquals( Screen.class, constraintViolation.getRootBeanClass() );
-			assertEquals( "connectors[].number", constraintViolation.getPropertyPath() );
+			// toString works since hibernate validator's Path implementation works accordingly. Should do a Path comparison though
+			assertEquals( "connectors[].number", constraintViolation.getPropertyPath().toString() );
 		}
 
 		tx.rollback();

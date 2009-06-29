@@ -1063,6 +1063,7 @@ public class ParentChildTest extends LegacyTestCase {
 		try {
 			Simple dummy = (Simple) session.get( Simple.class, new Long(-1) );
 			assertNotNull("Unable to locate entity Simple with id = -1", dummy);
+			session.delete( dummy );
 		}
 		catch(ObjectNotFoundException onfe) {
 			fail("Unable to locate entity Simple with id = -1");

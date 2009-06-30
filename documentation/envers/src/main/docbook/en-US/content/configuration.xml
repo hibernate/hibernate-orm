@@ -133,6 +133,21 @@
                         (their history won't be stored; it normally doesn't make sense to store it).
                     </entry>
                 </row>
+                <row>
+                    <entry>
+                        <property>org.hibernate.envers.storeDataAtDelete</property>
+                    </entry>
+                    <entry>
+                        false
+                    </entry>
+                    <entry>
+                        Should the entity data be stored in the revision when the entity is deleted (instead of only
+                        storing the id and all other properties as null). This is not normally needed, as the data is
+                        present in the last-but-one revision. Sometimes, however, it is easier and more efficient to
+                        access it in the last revision (then the data that the entity contained before deletion is
+                        stored twice).
+                    </entry>
+                </row>
             </tbody>
         </tgroup>
     </table>

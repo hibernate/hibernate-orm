@@ -36,6 +36,9 @@ public class GlobalConfiguration {
     // Should the optimistic locking property of an entity be considered unversioned
     private final boolean doNotAuditOptimisticLockingField;
 
+	// Should entity data be stored when it is deleted
+	private final boolean storeDataAtDelete;
+
     /*
      Which operator to use in correlated subqueries (when we want a property to be equal to the result of
      a correlated subquery, for example: e.p <operator> (select max(e2.p) where e2.p2 = e.p2 ...).
@@ -53,6 +56,9 @@ public class GlobalConfiguration {
                 "true");
         doNotAuditOptimisticLockingField = Boolean.parseBoolean(ignoreOptimisticLockingPropertyStr);
 
+		String storeDataDeletedEntityStr = properties.getProperty("org.hibernate.envers.storeDataAtDelete", "false");
+		storeDataAtDelete = Boolean.parseBoolean(storeDataDeletedEntityStr);
+
         correlatedSubqueryOperator = "org.hibernate.dialect.HSQLDialect".equals(
                 properties.getProperty("hibernate.dialect")) ? "in" : "=";
     }
@@ -68,4 +74,8 @@ public class GlobalConfiguration {
     public String getCorrelatedSubqueryOperator() {
         return correlatedSubqueryOperator;
     }
+
+	public boolean isStoreDataAtDelete() {
+		return storeDataAtDelete;
+	}
 }

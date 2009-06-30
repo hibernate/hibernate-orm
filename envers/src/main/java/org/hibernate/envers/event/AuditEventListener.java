@@ -174,7 +174,7 @@ public class AuditEventListener implements PostInsertEventListener, PostUpdateEv
             AuditSync verSync = verCfg.getSyncManager().get(event.getSession());
 
             verSync.addWorkUnit(new DelWorkUnit(event.getSession(), event.getPersister().getEntityName(), verCfg,
-					event.getId()));
+					event.getId(), event.getPersister(), event.getDeletedState()));
 
             generateBidirectionalCollectionChangeWorkUnits(verSync, event.getPersister(), entityName, null,
                     event.getDeletedState(), event.getSession());

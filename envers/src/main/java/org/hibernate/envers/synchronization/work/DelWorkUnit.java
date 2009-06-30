@@ -31,14 +31,22 @@ import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.configuration.AuditConfiguration;
 
 import org.hibernate.Session;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.engine.SessionImplementor;
 
 /**
  * @author Adam Warski (adam at warski dot org)
  */
 public class DelWorkUnit extends AbstractAuditWorkUnit implements AuditWorkUnit {
-    public DelWorkUnit(SessionImplementor sessionImplementor, String entityName, AuditConfiguration verCfg, Serializable id) {
+    private final Object[] state;
+    private final String[] propertyNames;
+
+    public DelWorkUnit(SessionImplementor sessionImplementor, String entityName, AuditConfiguration verCfg,
+					   Serializable id, EntityPersister entityPersister, Object[] state) {
         super(sessionImplementor, entityName, verCfg, id);
+
+        this.state = state;
+        this.propertyNames = entityPersister.getPropertyNames();
     }
 
     public boolean containsWork() {
@@ -48,6 +56,11 @@ public class DelWorkUnit extends AbstractAuditWorkUnit implements AuditWorkUnit 
     public void perform(Session session, Object revisionData) {
         Map<String, Object> data = new HashMap<String, Object>();
         fillDataWithId(data, revisionData, RevisionType.DEL);
+
+		if (verCfg.getGlobalCfg().isStoreDataAtDelete()) {
+			verCfg.getEntCfg().get(getEntityName()).getPropertyMapper().map(sessionImplementor, data,
+					propertyNames, state, state);
+		}
 
         session.save(verCfg.getAuditEntCfg().getAuditEntityName(getEntityName()), data);
 

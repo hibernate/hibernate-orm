@@ -25,6 +25,7 @@ package org.hibernate.envers;
 
 import java.text.DateFormat;
 import java.util.Date;
+import java.io.Serializable;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.MappedSuperclass;
@@ -34,7 +35,9 @@ import javax.persistence.Transient;
  * @author Adam Warski (adam at warski dot org)
  */
 @MappedSuperclass
-public class DefaultRevisionEntity {
+public class DefaultRevisionEntity implements Serializable {
+	private static final long serialVersionUID = 8530213963961662300L;
+	
     @Id
     @GeneratedValue
     @RevisionNumber

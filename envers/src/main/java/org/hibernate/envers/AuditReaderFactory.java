@@ -86,10 +86,7 @@ public class AuditReaderFactory {
         }
 
         if (entityManager.getDelegate() instanceof EntityManager) {
-			entityManager = (EntityManager) entityManager.getDelegate();
-            if (entityManager.getDelegate() instanceof Session) {
-                return get((Session) entityManager.getDelegate());
-            }
+            return get((EntityManager) entityManager.getDelegate());
         }
 
         throw new AuditException("Hibernate EntityManager not present!");

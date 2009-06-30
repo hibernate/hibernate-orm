@@ -25,6 +25,7 @@
 package org.hibernate.id.factory;
 
 import java.util.Properties;
+import java.io.Serializable;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -55,10 +56,10 @@ import org.hibernate.MappingException;
  *
  * @author Steve Ebersole
  */
-public class DefaultIdentifierGeneratorFactory implements IdentifierGeneratorFactory {
+public class DefaultIdentifierGeneratorFactory implements IdentifierGeneratorFactory, Serializable {
 	private static final Logger log = LoggerFactory.getLogger( DefaultIdentifierGeneratorFactory.class );
 
-	private Dialect dialect;
+	private transient Dialect dialect;
 	private FastHashMap generatorStrategyToClassNameMap = new FastHashMap();
 
 	/**

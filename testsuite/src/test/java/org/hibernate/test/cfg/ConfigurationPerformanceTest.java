@@ -54,9 +54,13 @@ public class ConfigurationPerformanceTest extends UnitTestCase {
 		mappingBaseDir = new File( compilationBaseDir, "org/hibernate/test" );
 		workPackageDir = new File( compilationBaseDir, workPackageName.replace( '.', '/' ) );
 		if ( workPackageDir.exists() ) {
+			//noinspection ResultOfMethodCallIgnored
 			workPackageDir.delete();
 		}
-		workPackageDir.mkdirs();
+		boolean created = workPackageDir.mkdirs();
+		if ( !created ) {
+			System.err.println( "Unable to create workPackageDir during setup" );
+		}
 	}
 
 	protected void tearDown() throws Exception {
@@ -120,37 +124,27 @@ public class ConfigurationPerformanceTest extends UnitTestCase {
 	}
 
 	public void testLoadingAndSerializationOfConfiguration() throws Throwable {
-		String prefix = mappingBaseDir.getAbsolutePath() + '/';
+		final File cachedCfgFile = new File( workPackageDir, "hibernate.cfg.bin" );
 		try {
-			// first time
-			System.err.println( "###FIRST SAVELOAD###" );
-			SessionFactory factory = saveAndLoad( prefix, FILES, "hibernate.cfg.bin" );
-			factory.close();
-			// second time to validate
-			System.err.println( "###SECOND SAVELOAD###" );
-			factory = saveAndLoad( prefix, FILES, "hibernate.cfg.bin" );
-			factory.close();
+			System.err.println( "#### Preparing serialized configuration ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" );
+			prepareSerializedConfiguration( mappingBaseDir, FILES, cachedCfgFile );
+			System.err.println( "#### Preparing serialized configuration complete ~~~~~~~~~~~~~~~~~~~~~~~~" );
+
+			// now make sure we can reload the serialized configuration...
+			System.err.println( "#### Reading serialized configuration ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" );
+			readSerializedConfiguration( cachedCfgFile );
+			System.err.println( "#### Reading serialized configuration complete ~~~~~~~~~~~~~~~~~~~~~~~~~~" );
 		}
 		finally {
 			System.err.println( "###CLEANING UP###" );
-			File file = null;
-			try {
-				// clean up
-				file = new File( "hibernate.cfg.bin" );
-				file.delete();
+			if ( ! cachedCfgFile.delete() ) {
+				System.err.println( "Unable to cleanup file " + cachedCfgFile.getAbsolutePath() );
 			}
-			catch ( Throwable t ) {
-				System.err.println( "Unable to cleanup [" + file + "] : " + t );
-			}
-
+			//noinspection ForLoopReplaceableByForEach
 			for ( int i = 0; i < FILES.length; i++ ) {
-				try {
-					String fileName = FILES[i];
-					file = new File( prefix, fileName + ".bin" );
-					file.delete();
-				}
-				catch ( Throwable t ) {
-					System.err.println( "Unable to cleanup [" + file + "] : " + t );
+				File file = new File( mappingBaseDir, FILES[i] + ".bin" );
+				if ( ! file.delete() ) {
+					System.err.println( "Unable to cleanup file " + file.getAbsolutePath() );
 				}
 			}
 		}
@@ -163,66 +157,100 @@ public class ConfigurationPerformanceTest extends UnitTestCase {
 			return;
 		}
 
-		SessionFactory factory = saveAndLoad(
-				workPackageDir.getAbsolutePath() + '/',
+		long start = System.currentTimeMillis();
+		Configuration configuration = buildConfigurationFromCacheableFiles(
+				workPackageDir,
 				workPackageDir.list(
-					new FilenameFilter() {
-						public boolean accept(File dir, String name) {
-							return name.endsWith( ".hbm.xml" );
+						new FilenameFilter() {
+							public boolean accept(File dir, String name) {
+								return name.endsWith( ".hbm.xml" );
+							}
 						}
-					}
-				),
-				"hibernateperftest.cfg.bin"
+				)
+		);
+		SessionFactory factory = configuration.buildSessionFactory();
+		long initial = System.currentTimeMillis() - start;
+		factory.close();
+
+		start = System.currentTimeMillis();
+		configuration = buildConfigurationFromCacheableFiles(
+				workPackageDir,
+				workPackageDir.list(
+						new FilenameFilter() {
+							public boolean accept(File dir, String name) {
+								return name.endsWith( ".hbm.xml" );
+							}
+						}
+				)
+		);
+		factory = configuration.buildSessionFactory();
+		long subsequent = System.currentTimeMillis() - start;
+
+		// Let's make sure the mappings were read in correctly (in termas of they are operational).
+		Session session = factory.openSession();
+		session.beginTransaction();
+		session.createQuery( "from Test1" ).list();
+		session.getTransaction().commit();
+		session.close();
+		factory.close();
+
+		System.err.println( "Initial SessionFactory load time : " + initial );
+		System.err.println( "Subsequent SessionFactory load time : " + subsequent );
+	}
+
+	private void prepareSerializedConfiguration(
+			File mappingFileBase,
+			String[] files,
+			File cachedCfgFile) throws IOException {
+		Configuration cfg = buildConfigurationFromCacheableFiles( mappingFileBase, files );
+
+		ObjectOutputStream os = new ObjectOutputStream( new FileOutputStream( cachedCfgFile ) );
+		os.writeObject( cfg ); // need to serialize Configuration *before* building sf since it would require non-mappings and cfg types to be serializable
+		os.flush();
+		os.close();
+
+		timeBuildingSessionFactory( cfg );
+	}
+
+	private Configuration buildConfigurationFromCacheableFiles(File mappingFileBase, String[] files) {
+		long start = System.currentTimeMillis();
+		Configuration cfg = new Configuration();
+		cfg.setProperty( Environment.HBM2DDL_AUTO, "create-drop" );
+		System.err.println(
+				"Created configuration: " + ( System.currentTimeMillis() - start ) / 1000.0 + " sec."
 		);
 
-		Session session = factory.openSession();
-		session.createQuery( "from Test1" ).list();
+		start = System.currentTimeMillis();
+		//noinspection ForLoopReplaceableByForEach
+		for ( int i = 0; i < files.length; i++ ) {
+			cfg.addCacheableFile( new File( mappingFileBase, files[i] ) );
+		}
+		System.err.println(
+				"Added " + ( files.length ) + " resources: " +
+						( System.currentTimeMillis() - start ) / 1000.0 + " sec."
+		);
+		return cfg;
+	}
 
+	private void timeBuildingSessionFactory(Configuration configuration) {
+		long start = System.currentTimeMillis();
+		System.err.println( "Start build of session factory" );
+		SessionFactory factory = configuration.buildSessionFactory();
+		System.err.println( "Built session factory :" + ( System.currentTimeMillis() - start ) / 1000.0 + " sec." );
 		factory.close();
 	}
 
-	private SessionFactory saveAndLoad(String prefix, String[] files, String cfgName) throws Throwable {
-		System.err.println( "saveAndLoad from " + prefix + " with cfg = " + cfgName );
-		File cachedCfgFile = new File( workPackageDir, cfgName );
+	private void readSerializedConfiguration(File cachedCfgFile) throws ClassNotFoundException, IOException {
+		long start = System.currentTimeMillis();
+		ObjectInputStream is = new ObjectInputStream( new FileInputStream( cachedCfgFile ) );
+		Configuration cfg = ( Configuration ) is.readObject();
+		is.close();
+		System.err.println(
+				"Loaded serializable configuration :" +
+						( System.currentTimeMillis() - start ) / 1000.0 + " sec."
+		);
 
-		Configuration cfg;
-		long start;
-
-		if ( !cachedCfgFile.exists() ) {
-			start = System.currentTimeMillis();
-			cfg = new Configuration();
-			cfg.setProperty( Environment.HBM2DDL_AUTO, "create-drop" );
-			System.err.println( "Created configuration: " + ( System.currentTimeMillis() - start ) / 1000.0 + " sec." );
-
-			start = System.currentTimeMillis();
-			for ( int i = 0; i < files.length; i++ ) {
-				String file = files[i];
-				cfg.addCacheableFile( new File( prefix + file ) );
-			}
-			System.err.println(
-					"Added " + ( files.length ) + " resources: " +
-							( System.currentTimeMillis() - start ) / 1000.0 + " sec."
-			);
-
-			ObjectOutputStream os = new ObjectOutputStream( new FileOutputStream( cachedCfgFile ) );
-			os.writeObject( cfg ); // need to serialize Configuration *before* building sf since it would require non-mappings and cfg types to be serializable
-			os.flush();
-			os.close();
-
-		}
-		else {
-			start = System.currentTimeMillis();
-			ObjectInputStream is = new ObjectInputStream( new FileInputStream( cachedCfgFile ) );
-			cfg = ( Configuration ) is.readObject();
-			is.close();
-			System.err
-					.println( "Loaded serializable configuration:" + ( System.currentTimeMillis() - start ) / 1000.0 + " sec." );
-		}
-		start = System.currentTimeMillis();
-		System.err.println( "Start build of session factory" );
-		SessionFactory factory = cfg.buildSessionFactory();
-		System.err.println( "Build session factory:" + ( System.currentTimeMillis() - start ) / 1000.0 + " sec." );
-		return factory;
+		timeBuildingSessionFactory( cfg );
 	}
 
 	public void generateTestFiles() throws Throwable {
@@ -232,9 +260,6 @@ public class ConfigurationPerformanceTest extends UnitTestCase {
 			File javaFile = new File( workPackageDir, name + ".java" );
 			File hbmFile = new File( workPackageDir, name + ".hbm.xml" );
 			filesToCompile += ( javaFile.getAbsolutePath() + " " );
-
-			javaFile.getParentFile().mkdirs();
-			hbmFile.getParentFile().mkdirs();
 
 			System.out.println( "Generating " + javaFile.getAbsolutePath() );
 			PrintWriter javaWriter = null;

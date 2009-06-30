@@ -194,7 +194,7 @@
             <properties>
                 <db.dialect>org.hibernate.dialect.MySQL5InnoDBDialect</db.dialect>
                 <jdbc.driver>com.mysql.jdbc.Driver</jdbc.driver>
-                <jdbc.url>jdbc:mysql://dev02.qa.atl.jboss.com/hibbrtru</jdbc.url>
+                <jdbc.url>jdbc:mysql://vmg08.mw.lab.eng.bos.redhat.com/hibbrtru</jdbc.url>
                 <jdbc.user>hibbrtru</jdbc.user>
                 <jdbc.pass>hibbrtru</jdbc.pass>
                 <jdbc.isolation />

@@ -602,11 +602,14 @@ public class JoinWalker {
 	 * is the "first" join in a series
 	 */
 	protected int getJoinType(boolean nullable, int currentDepth) {
-		//TODO: this is too conservative; if all preceding joins were 
+		//TODO: this is too conservative; if all preceding joins were
 		//      also inner joins, we could use an inner join here
-		return !nullable && currentDepth==0 ? 
-					JoinFragment.INNER_JOIN : 
-					JoinFragment.LEFT_OUTER_JOIN;
+		//
+		// IMPL NOTE : currentDepth might be less-than zero if this is the
+		// 		root of a many-to-many collection initializer
+		return !nullable && currentDepth <= 0
+				? JoinFragment.INNER_JOIN
+				: JoinFragment.LEFT_OUTER_JOIN;
 	}
 
 	protected boolean isTooDeep(int currentDepth) {

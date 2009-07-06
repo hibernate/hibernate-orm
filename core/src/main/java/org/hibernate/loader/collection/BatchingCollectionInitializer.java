@@ -56,6 +56,18 @@ public class BatchingCollectionInitializer implements CollectionInitializer {
 		this.collectionPersister = collPersister;
 	}
 
+	public CollectionPersister getCollectionPersister() {
+		return collectionPersister;
+	}
+
+	public Loader[] getLoaders() {
+		return loaders;
+	}
+
+	public int[] getBatchSizes() {
+		return batchSizes;
+	}
+
 	public void initialize(Serializable id, SessionImplementor session)
 	throws HibernateException {
 		

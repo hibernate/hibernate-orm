@@ -3,6 +3,7 @@ package org.hibernate.ejb;
 
 import java.util.Map;
 import java.util.Set;
+import java.io.Serializable;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContextType;
 import javax.persistence.Cache;
@@ -71,8 +72,7 @@ public class EntityManagerFactoryImpl implements HibernateEntityManagerFactory {
 	}
 
 	public Cache getCache() {
-		//FIXME
-		return null;  //To change body of implemented methods use File | Settings | File Templates.
+		return new JPACache( sessionFactory );
 	}
 
 	public boolean isOpen() {
@@ -83,4 +83,33 @@ public class EntityManagerFactoryImpl implements HibernateEntityManagerFactory {
 		return sessionFactory;
 	}
 
+	private static class JPACache implements Cache {
+		private SessionFactory sessionFactory;
+
+		private JPACache(SessionFactory sessionFactory) {
+			this.sessionFactory = sessionFactory;
+		}
+
+		public boolean contains(Class aClass, Object o) {
+			throw new UnsupportedOperationException( "not yet implemented - HHH-4021" );
+		}
+
+		public void evict(Class entityType, Object id) {
+			sessionFactory.evict( entityType, ( Serializable ) id );
+		}
+
+		public void evict(Class entityType) {
+			sessionFactory.evict( entityType );
+		}
+
+		public void evictAll() {
+			for ( String entityName : (Set<String>) sessionFactory.getAllClassMetadata().entrySet() ) {
+				sessionFactory.evictEntity( entityName );
+			}
+			for ( String collectionName : (Set<String>) sessionFactory.getAllCollectionMetadata().entrySet() ) {
+				sessionFactory.evictCollection( collectionName );	
+			}
+			sessionFactory.evictQueries();
+		}
+	}
 }

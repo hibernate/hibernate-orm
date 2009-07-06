@@ -427,7 +427,12 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 	}
 
 	public void detach(Object entity) {
-		getSession().evict( entity );
+		try {
+			getSession().evict( entity );
+		}
+		catch ( HibernateException he ) {
+			throwPersistenceException( he );
+		}
 	}
 
 	public FlushModeType getFlushMode() {

@@ -1832,4 +1832,14 @@ public abstract class AbstractCollectionPersister
 	protected Dialect getDialect() {
 		return dialect;
 	}
+
+	/**
+	 * Intended for internal use only.  In fact really only currently used from 
+	 * test suite for assertion purposes.
+	 *
+	 * @return The default collection initializer for this persister/collection.
+	 */
+	public CollectionInitializer getInitializer() {
+		return initializer;
+	}
 }

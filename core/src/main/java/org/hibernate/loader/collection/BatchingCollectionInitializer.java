@@ -25,7 +25,6 @@
 package org.hibernate.loader.collection;
 
 import java.io.Serializable;
-import java.util.Map;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
@@ -46,7 +45,6 @@ import org.hibernate.util.ArrayHelper;
  * @author Gavin King
  */
 public class BatchingCollectionInitializer implements CollectionInitializer {
-
 	private final Loader[] loaders;
 	private final int[] batchSizes;
 	private final CollectionPersister collectionPersister;
@@ -55,6 +53,18 @@ public class BatchingCollectionInitializer implements CollectionInitializer {
 		this.loaders = loaders;
 		this.batchSizes = batchSizes;
 		this.collectionPersister = collPersister;
+	}
+
+	public CollectionPersister getCollectionPersister() {
+		return collectionPersister;
+	}
+
+	public Loader[] getLoaders() {
+		return loaders;
+	}
+
+	public int[] getBatchSizes() {
+		return batchSizes;
 	}
 
 	public void initialize(Serializable id, SessionImplementor session)

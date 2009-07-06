@@ -199,11 +199,6 @@ public class SAPDBDialect extends Dialect {
 		return "select sequence_name from domain.sequences";
 	}
 
-	public JoinFragment createOuterJoinFragment() {
-		return new OracleJoinFragment();
-	}
-
-
 	public boolean supportsSequences() {
 		return true;
 	}

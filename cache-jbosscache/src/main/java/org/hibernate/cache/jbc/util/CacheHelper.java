@@ -21,7 +21,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.cache.jbc2.util;
+package org.hibernate.cache.jbc.util;
 
 import java.util.Collections;
 import java.util.Set;

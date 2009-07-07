@@ -21,7 +21,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.cache.jbc2;
+package org.hibernate.cache.jbc;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -37,8 +37,8 @@ import javax.transaction.TransactionManager;
 
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.Region;
-import org.hibernate.cache.jbc2.util.CacheHelper;
-import org.hibernate.cache.jbc2.util.NonLockingDataVersion;
+import org.hibernate.cache.jbc.util.CacheHelper;
+import org.hibernate.cache.jbc.util.NonLockingDataVersion;
 import org.jboss.cache.Cache;
 import org.jboss.cache.Fqn;
 import org.jboss.cache.Node;

@@ -1,0 +1,323 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>org.hibernate</groupId>
+    <artifactId>hibernate-jpamodelgen</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
+
+    <name>JPA 2 Static-Metamodel Generator</name>
+    <description>Annotation Processor to generate JPA 2 static metamodel classes</description>
+
+    <inceptionYear>2009</inceptionYear>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.hibernate.java-persistence</groupId>
+            <artifactId>jpa-api</artifactId>
+            <version>2.0-cr-1</version>
+        </dependency>
+        <dependency>
+            <groupId>org.testng</groupId>
+            <artifactId>testng</artifactId>
+            <version>5.8</version>
+            <classifier>jdk15</classifier>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <licenses>
+        <license>
+            <name>Apache License, Version 2.0</name>
+            <url>license.txt</url>
+        </license>
+    </licenses>
+
+    <scm>
+        <connection>scm:svn:https://svn.jboss.org/repos/hibernate/jpamodelgen/trunk</connection>
+        <url>http://fisheye.jboss.org/browse/Hibernate/jpamodelgen/trunk</url>
+    </scm>
+
+    <developers>
+        <developer>
+            <id>epbernard</id>
+            <name>Emmanuel Bernard</name>
+            <email>emmanuel@hibernate.org</email>
+            <url>http://in.relation.to/Bloggers/Emmanuel</url>
+        </developer>        
+        <developer>
+            <id>hardy.ferentschik</id>
+            <name>Hardy Ferentschik</name>
+            <email>hferents@redhat.com</email>
+            <organization>JBoss, a division of Red Hat</organization>
+            <url>http://in.relation.to/Bloggers/Hardy</url>
+        </developer>
+        <developer>
+            <id>max.andersen@jboss.com</id>
+            <name>Max Andersen</name>
+            <email>max.andersen@redhat.com</email>
+            <url>http://in.relation.to/Bloggers/Max</url>
+        </developer>
+    </developers>
+
+    <build>
+        <defaultGoal>test</defaultGoal>
+
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+            </resource>
+            <resource>
+                <directory>src/main/xsd</directory>
+            </resource>
+        </resources>
+
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>2.0.2</version>
+                <configuration>
+                    <source>1.6</source>
+                    <target>1.6</target>
+                    <compilerArgument>-proc:none</compilerArgument>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>process_annotations</id>
+                        <phase>process-test-resources</phase>
+                        <configuration>
+                            <tasks>
+                                <property name="build.compiler" value="extJavac"/>
+                                <property name="target.dir" value="${project.build.directory}/generated-src/jpamodelgen"/>
+                                <mkdir dir="${target.dir}"/>
+                                <javac srcdir="${project.build.testSourceDirectory}"
+                                       destdir="${target.dir}"
+                                       failonerror="false"
+                                       excludes="test/**">
+                                    <compilerarg value="-proc:only"/>
+                                    <classpath>
+                                        <path refid="maven.test.classpath"/>
+                                    </classpath>
+                                </javac>
+                            </tasks>
+                            <testSourceRoot>${project.build.directory}/generated-src/jpamodelgen</testSourceRoot>
+                        </configuration>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>jaxb2-maven-plugin</artifactId>
+                <version>1.2</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>xjc</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <packageName>org.hibernate.jpamodelgen.xml.jaxb</packageName>
+                    <outputDirectory>${basedir}/target/generated-sources</outputDirectory>
+                    <extension>true</extension>
+                </configuration>
+            </plugin>
+            <plugin>
+                <inherited>true</inherited>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>attach-sources</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <suiteXmlFiles>
+                        <suiteXmlFile>${basedir}/src/test/suite/unit-tests.xml</suiteXmlFile>
+                    </suiteXmlFiles>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-report-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>generate-test-report</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>report-only</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <outputDirectory>${project.build.directory}/surefire-reports</outputDirectory>
+                    <outputName>test-report</outputName>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>2.2</version>
+                <configuration>
+                    <archive>
+                        <manifestEntries>
+                            <Implementation-Title>${pom.artifactId}</Implementation-Title>
+                            <Implementation-Version>${pom.version}</Implementation-Version>
+                            <Implementation-Vendor>${pom.groupId}</Implementation-Vendor>
+                            <Implementation-Vendor-Id>${pom.groupId}</Implementation-Vendor-Id>
+                            <Implementation-URL>${pom.url}</Implementation-URL>
+                            <Specification-Title>JPA2 Model Generator</Specification-Title>
+                        </manifestEntries>
+                    </archive>
+                </configuration>
+            </plugin>
+            <plugin>
+                <artifactId>maven-source-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>attach-sources</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <configuration>
+                    <descriptors>
+                        <descriptor>src/main/assembly/dist.xml</descriptor>
+                    </descriptors>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>make-assembly</id>
+                        <phase>site</phase>
+                        <goals>
+                            <goal>assembly</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>            
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-release-plugin</artifactId>
+                <version>2.0-beta-9</version>
+                <configuration>
+                    <autoVersionSubmodules>true</autoVersionSubmodules>
+                    <allowTimestampedSnapshots>true</allowTimestampedSnapshots>
+                    <remoteTagging>true</remoteTagging>
+                    <goals>package deploy</goals>
+                </configuration>
+            </plugin>
+        </plugins>
+
+        <extensions>
+            <!-- scm based deployments (jboss release repo) -->
+            <extension>
+                <groupId>org.apache.maven.wagon</groupId>
+                <artifactId>wagon-scm</artifactId>
+                <version>1.0-beta-6</version>
+            </extension>
+            <extension>
+                <groupId>org.apache.maven.scm</groupId>
+                <artifactId>maven-scm-manager-plexus</artifactId>
+                <version>1.0</version>
+            </extension>
+            <extension>
+                <groupId>org.apache.maven.scm</groupId>
+                <artifactId>maven-scm-provider-svnexe</artifactId>
+                <version>1.0</version>
+            </extension>
+        </extensions>
+    </build>
+
+    <distributionManagement>
+        <repository>
+            <id>repository.jboss.org</id>
+            <name>JBoss Release Repository</name>
+            <url>scm:svn:https://svn.jboss.org/repos/repository.jboss.org/maven2</url>
+        </repository>
+        <snapshotRepository>
+            <id>snapshots.jboss.org</id>
+            <name>JBoss Snapshot Repository</name>
+            <url>dav:https://snapshots.jboss.org/maven2</url>
+        </snapshotRepository>
+    </distributionManagement>
+
+    <reporting>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-project-info-reports-plugin</artifactId>
+                <version>2.0.1</version>
+            </plugin>
+            <plugin>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <reportSets>
+                    <reportSet>
+                        <id>html</id>
+                        <configuration>
+                            <tags>
+                                <tag>
+                                    <name>todo</name>
+                                    <placement>a</placement>
+                                    <head>ToDo:</head>
+                                </tag>
+                            </tags>
+                        </configuration>
+                        <reports>
+                            <report>javadoc</report>
+                        </reports>
+                    </reportSet>
+                </reportSets>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>jxr-maven-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <artifactId>maven-surefire-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <artifactId>maven-clover-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-pmd-plugin</artifactId>
+                <configuration>
+                    <targetJdk>1.5</targetJdk>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>taglist-maven-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>changelog-maven-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>changes-maven-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </reporting>
+</project>

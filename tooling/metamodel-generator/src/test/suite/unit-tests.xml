@@ -1,0 +1,9 @@
+<!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd" >
+
+<suite name="Hibernate Model Generator Tests" verbose="1">
+    <test name="Unit tests">
+        <packages>
+            <package name="test"/>
+        </packages>
+    </test>
+</suite>

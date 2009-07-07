@@ -342,6 +342,25 @@ public abstract class BasicRegionAdapter implements Region {
         }
     }
 
+	public boolean contains(Object key) {
+		if ( !checkValid() ) {
+			return false;
+		}
+
+		try {
+			Option opt = new Option();
+            opt.setLockAcquisitionTimeout(100);
+            CacheHelper.setInvocationOption( jbcCache, opt );
+			return CacheHelper.getAllowingTimeout( jbcCache, regionFqn, key ) != null;
+		}
+		catch ( CacheException ce ) {
+			throw ce;
+		}
+		catch ( Throwable t ) {
+			throw new CacheException( t );
+		}
+	}
+
     public long getSizeInMemory() {
         // not supported
         return -1;
@@ -356,7 +375,11 @@ public abstract class BasicRegionAdapter implements Region {
                   size--;
                }
                return size;
-           } catch (Exception e) {
+           }
+		   catch ( CacheException ce ) {
+			   throw ce;
+		   }
+		   catch (Exception e) {
                throw new CacheException(e);
            }
         }

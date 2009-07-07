@@ -50,6 +50,20 @@ public interface Region {
 	public void destroy() throws CacheException;
 
 	/**
+	 * Determine whether this region contains data for the given key.
+	 * <p/>
+	 * The semantic here is whether the cache contains data visible for the
+	 * current call context.  This should be viewed as a "best effort", meaning
+	 * blocking should be avoid if possible.
+	 *
+	 * @param key The cache key
+	 *
+	 * @return True if the underlying cache contains corresponding data; false
+	 * otherwise.
+	 */
+	public boolean contains(Object key);
+
+	/**
 	 * The number of bytes is this cache region currently consuming in memory.
 	 *
 	 * @return The number of bytes consumed by this region; -1 if unknown or

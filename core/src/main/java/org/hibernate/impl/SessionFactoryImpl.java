@@ -60,6 +60,7 @@ import org.hibernate.SessionFactory;
 import org.hibernate.StatelessSession;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.EntityNameResolver;
+import org.hibernate.Cache;
 import org.hibernate.tuple.entity.EntityTuplizer;
 import org.hibernate.cache.CacheKey;
 import org.hibernate.cache.CollectionRegion;
@@ -877,6 +878,15 @@ public final class SessionFactoryImpl implements SessionFactory, SessionFactoryI
 		return collectionMetadata;
 	}
 
+	public Type getReferencedPropertyType(String className, String propertyName)
+		throws MappingException {
+		return getEntityPersister(className).getPropertyType(propertyName);
+	}
+
+	public ConnectionProvider getConnectionProvider() {
+		return settings.getConnectionProvider();
+	}
+
 	/**
 	 * Closes the session factory, releasing all held resources.
 	 *
@@ -946,76 +956,183 @@ public final class SessionFactoryImpl implements SessionFactory, SessionFactoryI
 		eventListeners.destroyListeners();
 	}
 
-	public void evictEntity(String entityName, Serializable id) throws HibernateException {
-		EntityPersister p = getEntityPersister( entityName );
-		if ( p.hasCache() ) {
-			if ( log.isDebugEnabled() ) {
-				log.debug( "evicting second-level cache: " + MessageHelper.infoString(p, id, this) );
-			}
-			CacheKey cacheKey = new CacheKey( id, p.getIdentifierType(), p.getRootEntityName(), EntityMode.POJO, this );
-			p.getCacheAccessStrategy().evict( cacheKey );
+	private final Cache cacheAccess = new CacheImpl();
+
+	private class CacheImpl implements Cache {
+		public boolean containsEntity(Class entityClass, Serializable identifier) {
+			return containsEntity( entityClass.getName(), identifier );
 		}
+
+		public boolean containsEntity(String entityName, Serializable identifier) {
+			// todo : need a contains() method on the underlying regions
+			throw new UnsupportedOperationException( "not yet implemented - HHH-4021" );
+		}
+
+		public void evictEntity(Class entityClass, Serializable identifier) {
+			evictEntity( entityClass.getName(), identifier );
+		}
+
+		public void evictEntity(String entityName, Serializable identifier) {
+			EntityPersister p = getEntityPersister( entityName );
+			if ( p.hasCache() ) {
+				if ( log.isDebugEnabled() ) {
+					log.debug( 
+							"evicting second-level cache: " +
+									MessageHelper.infoString( p, identifier, SessionFactoryImpl.this )
+					);
+				}
+				CacheKey cacheKey = new CacheKey(
+						identifier,
+						p.getIdentifierType(),
+						p.getRootEntityName(),
+						EntityMode.POJO,
+						SessionFactoryImpl.this
+				);
+				p.getCacheAccessStrategy().evict( cacheKey );
+			}
+		}
+
+		public void evictEntityRegion(Class entityClass) {
+			evictEntityRegion( entityClass.getName() );
+		}
+
+		public void evictEntityRegion(String entityName) {
+			EntityPersister p = getEntityPersister( entityName );
+			if ( p.hasCache() ) {
+				if ( log.isDebugEnabled() ) {
+					log.debug( "evicting second-level cache: " + p.getEntityName() );
+				}
+				p.getCacheAccessStrategy().evictAll();
+			}
+		}
+
+		public void evictEntityRegions() {
+			Iterator entityNames = entityPersisters.keySet().iterator();
+			while ( entityNames.hasNext() ) {
+				evictEntityRegion( ( String ) entityNames.next() );
+			}
+		}
+
+		public boolean containsCollection(String role, Serializable ownerIdentifier) {
+			// todo : need a contains() method on the underlying regions
+			return false;
+		}
+
+		public void evictCollection(String role, Serializable ownerIdentifier) {
+			CollectionPersister p = getCollectionPersister( role );
+			if ( p.hasCache() ) {
+				if ( log.isDebugEnabled() ) {
+					log.debug(
+							"evicting second-level cache: " +
+									MessageHelper.collectionInfoString(p, ownerIdentifier, SessionFactoryImpl.this)
+					);
+				}
+				CacheKey cacheKey = new CacheKey(
+						ownerIdentifier,
+						p.getKeyType(),
+						p.getRole(),
+						EntityMode.POJO,
+						SessionFactoryImpl.this
+				);
+				p.getCacheAccessStrategy().evict( cacheKey );
+			}
+		}
+
+		public void evictCollectionRegion(String role) {
+			CollectionPersister p = getCollectionPersister( role );
+			if ( p.hasCache() ) {
+				if ( log.isDebugEnabled() ) {
+					log.debug( "evicting second-level cache: " + p.getRole() );
+				}
+				p.getCacheAccessStrategy().evictAll();
+			}
+		}
+
+		public void evictCollectionRegions() {
+			Iterator collectionRoles = collectionPersisters.keySet().iterator();
+			while ( collectionRoles.hasNext() ) {
+				evictCollectionRegion( ( String ) collectionRoles.next() );
+			}
+		}
+
+		public boolean containsQuery(String regionName) {
+			// todo : need a contains() method on the underlying regions
+			return false;
+		}
+
+		public void evictDefaultQueryRegion() {
+			if ( settings.isQueryCacheEnabled() ) {
+				queryCache.clear();
+			}
+		}
+
+		public void evictQueryRegion(String regionName) {
+			if ( regionName == null ) {
+				throw new NullPointerException(
+						"Region-name cannot be null (use Cache#evictDefaultQueryRegion to evict the default query cache)"
+				);
+			}
+			else {
+				synchronized ( allCacheRegions ) {
+					if ( settings.isQueryCacheEnabled() ) {
+						QueryCache namedQueryCache = ( QueryCache ) queryCaches.get( regionName );
+						if ( namedQueryCache != null ) {
+							namedQueryCache.clear();
+							// TODO : cleanup entries in queryCaches + allCacheRegions ?
+						}
+					}
+				}
+			}
+		}
+
+		public void evictQueryRegions() {
+			synchronized ( allCacheRegions ) {
+				Iterator regions = queryCaches.values().iterator();
+				while ( regions.hasNext() ) {
+					QueryCache cache = ( QueryCache ) regions.next();
+					cache.clear();
+					// TODO : cleanup entries in queryCaches + allCacheRegions ?
+				}
+			}
+		}
+	}
+
+	public Cache getCache() {
+		return cacheAccess;
+	}
+
+	public void evictEntity(String entityName, Serializable id) throws HibernateException {
+		getCache().evictEntity( entityName, id );
 	}
 
 	public void evictEntity(String entityName) throws HibernateException {
-		EntityPersister p = getEntityPersister( entityName );
-		if ( p.hasCache() ) {
-			if ( log.isDebugEnabled() ) {
-				log.debug( "evicting second-level cache: " + p.getEntityName() );
-			}
-			p.getCacheAccessStrategy().evictAll();
-		}
+		getCache().evictEntityRegion( entityName );
 	}
 
 	public void evict(Class persistentClass, Serializable id) throws HibernateException {
-		EntityPersister p = getEntityPersister( persistentClass.getName() );
-		if ( p.hasCache() ) {
-			if ( log.isDebugEnabled() ) {
-				log.debug( "evicting second-level cache: " + MessageHelper.infoString(p, id, this) );
-			}
-			CacheKey cacheKey = new CacheKey( id, p.getIdentifierType(), p.getRootEntityName(), EntityMode.POJO, this );
-			p.getCacheAccessStrategy().evict( cacheKey );
-		}
+		getCache().evictEntity( persistentClass, id );
 	}
 
 	public void evict(Class persistentClass) throws HibernateException {
-		EntityPersister p = getEntityPersister( persistentClass.getName() );
-		if ( p.hasCache() ) {
-			if ( log.isDebugEnabled() ) {
-				log.debug( "evicting second-level cache: " + p.getEntityName() );
-			}
-			p.getCacheAccessStrategy().evictAll();
-		}
+		getCache().evictEntityRegion( persistentClass );
 	}
 
 	public void evictCollection(String roleName, Serializable id) throws HibernateException {
-		CollectionPersister p = getCollectionPersister( roleName );
-		if ( p.hasCache() ) {
-			if ( log.isDebugEnabled() ) {
-				log.debug( "evicting second-level cache: " + MessageHelper.collectionInfoString(p, id, this) );
-			}
-			CacheKey cacheKey = new CacheKey( id, p.getKeyType(), p.getRole(), EntityMode.POJO, this );
-			p.getCacheAccessStrategy().evict( cacheKey );
-		}
+		getCache().evictCollection( roleName, id );
 	}
 
 	public void evictCollection(String roleName) throws HibernateException {
-		CollectionPersister p = getCollectionPersister( roleName );
-		if ( p.hasCache() ) {
-			if ( log.isDebugEnabled() ) {
-				log.debug( "evicting second-level cache: " + p.getRole() );
-			}
-			p.getCacheAccessStrategy().evictAll();
+		getCache().evictCollectionRegion( roleName );
+	}
+
+	public void evictQueries() throws HibernateException {
+		if ( settings.isQueryCacheEnabled() ) {
+			queryCache.clear();
 		}
 	}
 
-	public Type getReferencedPropertyType(String className, String propertyName)
-		throws MappingException {
-		return getEntityPersister(className).getPropertyType(propertyName);
-	}
-
-	public ConnectionProvider getConnectionProvider() {
-		return settings.getConnectionProvider();
+	public void evictQueries(String regionName) throws HibernateException {
+		getCache().evictQueryRegion( regionName );
 	}
 
 	public UpdateTimestampsCache getUpdateTimestampsCache() {
@@ -1068,28 +1185,6 @@ public final class SessionFactoryImpl implements SessionFactory, SessionFactoryI
 
 	public StatisticsImplementor getStatisticsImplementor() {
 		return statistics;
-	}
-
-	public void evictQueries() throws HibernateException {
-		if ( settings.isQueryCacheEnabled() ) {
-			queryCache.clear();
-		}
-	}
-
-	public void evictQueries(String cacheRegion) throws HibernateException {
-		if (cacheRegion==null) {
-			throw new NullPointerException("use the zero-argument form to evict the default query cache");
-		}
-		else {
-			synchronized (allCacheRegions) {
-				if ( settings.isQueryCacheEnabled() ) {
-					QueryCache currentQueryCache = (QueryCache) queryCaches.get(cacheRegion);
-					if ( currentQueryCache != null ) {
-						currentQueryCache.clear();
-					}
-				}
-			}
-		}
 	}
 
 	public FilterDefinition getFilterDefinition(String filterName) throws HibernateException {

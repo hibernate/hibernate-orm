@@ -57,6 +57,11 @@ public abstract class BaseRegionAdapter implements Region {
 		underlyingCache.destroy();
 	}
 
+	public boolean contains(Object key) {
+		// safer to utilize the toMap() as oposed to say get(key) != null
+		return underlyingCache.toMap().containsKey( key );
+	}
+
 	public long getSizeInMemory() {
 		return underlyingCache.getSizeInMemory();
 	}

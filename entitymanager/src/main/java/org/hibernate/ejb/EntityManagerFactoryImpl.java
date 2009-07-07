@@ -90,26 +90,23 @@ public class EntityManagerFactoryImpl implements HibernateEntityManagerFactory {
 			this.sessionFactory = sessionFactory;
 		}
 
-		public boolean contains(Class aClass, Object o) {
-			throw new UnsupportedOperationException( "not yet implemented - HHH-4021" );
+		public boolean contains(Class entityClass, Object identifier) {
+			return sessionFactory.getCache().containsEntity( entityClass, ( Serializable ) identifier );
 		}
 
-		public void evict(Class entityType, Object id) {
-			sessionFactory.evict( entityType, ( Serializable ) id );
+		public void evict(Class entityClass, Object identifier) {
+			sessionFactory.getCache().evictEntity( entityClass, ( Serializable ) identifier );
 		}
 
-		public void evict(Class entityType) {
-			sessionFactory.evict( entityType );
+		public void evict(Class entityClass) {
+			sessionFactory.getCache().evictEntityRegion( entityClass );
 		}
 
 		public void evictAll() {
-			for ( String entityName : (Set<String>) sessionFactory.getAllClassMetadata().entrySet() ) {
-				sessionFactory.evictEntity( entityName );
-			}
-			for ( String collectionName : (Set<String>) sessionFactory.getAllCollectionMetadata().entrySet() ) {
-				sessionFactory.evictCollection( collectionName );	
-			}
-			sessionFactory.evictQueries();
+			sessionFactory.getCache().evictEntityRegions();
+// TODO : if we want to allow an optional clearing of all cache data, the additional calls would be:
+//			sessionFactory.getCache().evictCollectionRegions();
+//			sessionFactory.getCache().evictQueryRegions();
 		}
 	}
 }

@@ -19,6 +19,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
 import org.hibernate.SessionFactory;
 import org.hibernate.StatelessSession;
+import org.hibernate.Cache;
 import org.hibernate.engine.FilterDefinition;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.UUIDHexGenerator;
@@ -142,6 +143,10 @@ public class SessionFactoryStub implements SessionFactory {
 	
 	public boolean isClosed() {
 		return false;
+	}
+
+	public Cache getCache() {
+		return getImpl().getCache();
 	}
 
 	public void evict(Class persistentClass, Serializable id)

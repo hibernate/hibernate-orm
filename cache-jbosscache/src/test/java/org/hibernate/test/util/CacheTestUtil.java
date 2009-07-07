@@ -32,13 +32,13 @@ import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
-import org.hibernate.cache.jbc2.JBossCacheRegionFactory;
-import org.hibernate.cache.jbc2.SharedJBossCacheRegionFactory;
-import org.hibernate.cache.jbc2.builder.SharedCacheInstanceManager;
+import org.hibernate.cache.jbc.JBossCacheRegionFactory;
+import org.hibernate.cache.jbc.SharedJBossCacheRegionFactory;
+import org.hibernate.cache.jbc.builder.SharedCacheInstanceManager;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.Settings;
-import org.hibernate.test.tm.jbc2.BatchModeTransactionManagerLookup;
+import org.hibernate.test.tm.jbc.BatchModeTransactionManagerLookup;
 
 /**
  * Utilities for cache testing.

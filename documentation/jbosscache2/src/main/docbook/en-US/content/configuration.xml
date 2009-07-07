@@ -88,8 +88,8 @@
                      configuration option.
                     </para>
                     
-              <programlisting><![CDATA[hibernate.cache.region.factory_class=
-   org.hibernate.cache.jbc2.MultiplexedJBossCacheRegionFactory]]></programlisting>
+              <programlisting><![CDATA[<![CDATA[hibernate.cache.region.factory_class=
+   org.hibernate.cache.jbc.MultiplexedJBossCacheRegionFactory]]>]]></programlisting>
                     
                     <para>
                      To determine the correct factory class, you must decide
@@ -130,7 +130,7 @@
             
             <variablelist>
                <varlistentry>
-                 <term><literal>org.hibernate.cache.jbc2.SharedJBossCacheRegionFactory</literal></term>
+                 <term><literal>org.hibernate.cache.jbc.SharedJBossCacheRegionFactory</literal></term>
                  <listitem>
                  <para>
                     Instantiates a single JBoss Cache instance for use with all
@@ -139,7 +139,7 @@
                  </listitem>
                </varlistentry>
                <varlistentry>
-                 <term><literal>org.hibernate.cache.jbc2.JndiSharedJBossCacheRegionFactory</literal></term>
+                 <term><literal>org.hibernate.cache.jbc.JndiSharedJBossCacheRegionFactory</literal></term>
                  <listitem>
                  <para>
                     Uses a single JBoss Cache instance for all cache data types.
@@ -151,7 +151,7 @@
                  </listitem>
                </varlistentry>
                <varlistentry>
-                 <term><literal>org.hibernate.cache.jbc2.MultiplexedJBossCacheRegionFactory</literal></term>
+                 <term><literal>org.hibernate.cache.jbc.MultiplexedJBossCacheRegionFactory</literal></term>
                  <listitem>
                  <para>
                     Supports using multiple JBoss Cache instances with different
@@ -163,7 +163,7 @@
                  </listitem>
                </varlistentry>
                <varlistentry>
-                 <term><literal>org.hibernate.cache.jbc2.JndiMultiplexedJBossCacheRegionFactory</literal></term>
+                 <term><literal>org.hibernate.cache.jbc.JndiMultiplexedJBossCacheRegionFactory</literal></term>
                  <listitem>
                  <para>
                     Functions like <literal>JndiMultiplexedJBossCacheRegionFactory</literal>,
@@ -342,10 +342,10 @@
              just configure the defaults, with query caching enabled:
            </para>
            
-         <programlisting><![CDATA[hibernate.cache.use_second_level_cache=true
+         <programlisting><![CDATA[<![CDATA[hibernate.cache.use_second_level_cache=true
 hibernate.cache.use_query_cache=true
 hibernate.cache.region.factory_class=
-   org.hibernate.cache.jbc2.MultiplexedJBossCacheRegionFactory]]></programlisting>
+   org.hibernate.cache.jbc.MultiplexedJBossCacheRegionFactory]]>]]></programlisting>
       
       <para>
        You would end up using two JBoss Cache instances:
@@ -976,7 +976,7 @@ hibernate.cache.region.factory_class=
        
        <para>
          The <literal>jgroups-stacks.xml</literal> file found in the
-         <literal>org.hibernate.cache.jbc2.builder</literal> package
+         <literal>org.hibernate.cache.jbc.builder</literal> package
          in the <literal>hibernate-jbosscache2.jar</literal> provides a good
          set of standard JGroups configurations; these should be suitable for
          most needs.  If you need to create your own configuration set, we

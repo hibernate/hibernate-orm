@@ -795,7 +795,7 @@
                    Provide a set of named JBoss Cache configurations in an XML
                    file (or just use the default set included in the 
                    <literal>jbc2-configs.xml</literal> file found in the
-                   <literal>org.hibernate.cache.jbc2.builder</literal> package
+                   <literal>org.hibernate.cache.jbc.builder</literal> package
                    in <literal>hibernate-jbosscache2.jar</literal>).
                   </para>
                </listitem>
@@ -871,7 +871,7 @@
                    Provide a set of named JGroups configurations in an XML file
                    (or just use the default set included in the 
                    <literal>jgroups-stacks.xml</literal> file found in the
-                   <literal>org.hibernate.cache.jbc2.builder</literal> package
+                   <literal>org.hibernate.cache.jbc.builder</literal> package
                    in the <literal>hibernate-jbosscache2.jar</literal>).
                   </para>
                </listitem>

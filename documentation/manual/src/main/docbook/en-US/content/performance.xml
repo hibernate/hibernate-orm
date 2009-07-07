@@ -732,7 +732,7 @@ Cat fritz = (Cat) iter.next();]]></programlisting>
             </row>
             <row>
                 <entry>JBoss Cache 2</entry>
-                <entry><literal>org.hibernate.cache.jbc2.JBossCacheRegionFactory</literal></entry>
+                <entry><literal>org.hibernate.cache.jbc.JBossCacheRegionFactory</literal></entry>
                 <entry>clustered (ip multicast), transactional</entry>
                 <entry>yes (replication or invalidation)</entry>
                 <entry>yes (clock sync req.)</entry>

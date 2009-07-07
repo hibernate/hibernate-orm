@@ -146,7 +146,7 @@ TimestampsRegion buildTimestampsRegion(String regionName,
              <para>As part of its startup process, the region factory delegates
                responsibility for providing JBoss Cache instances to an
                implementation of the 
-               <literal>org.hibernate.cache.jbc2.CacheInstanceManager</literal>
+               <literal>org.hibernate.cache.jbc.CacheInstanceManager</literal>
                interface.  The region factory separately requests a JBoss Cache 
                instance for entities, one for collections, one for queries and one
                for timestamps.  Whether the <literal>CacheInstanceManager</literal>

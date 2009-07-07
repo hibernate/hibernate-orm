@@ -98,7 +98,7 @@
          is the group communication library used by JBoss Cache for intra-cluster 
          communication.</para></footnote>, need to be on the classpath.  The
          <literal>hibernate-jbosscache2.jar</literal> includes standard 
-         configuration files in the <literal>org.hibernate.cache.jbc2.builder</literal>
+         configuration files in the <literal>org.hibernate.cache.jbc.builder</literal>
          package.  The <literal>jbc2-configs.xml</literal> file is for JBoss 
          Cache and the <literal>jgroups-stacks.xml</literal> file is for JGroups.
          See <xref linkend="jbc-config"/> and <xref linkend="jgroups-config"/>
@@ -161,8 +161,8 @@
                 Second Level Cache implementation:
               </para>
               
-              <programlisting><![CDATA[hibernate.cache.region.factory_class=
-   org.hibernate.cache.jbc2.MultiplexedJBossCacheRegionFactory]]></programlisting>
+              <programlisting><![CDATA[<![CDATA[hibernate.cache.region.factory_class=
+   org.hibernate.cache.jbc.MultiplexedJBossCacheRegionFactory]]>]]></programlisting>
               
               <para>
                 There are a number of values that can be provided for the 

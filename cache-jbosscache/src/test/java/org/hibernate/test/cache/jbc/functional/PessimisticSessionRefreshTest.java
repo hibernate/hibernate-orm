@@ -118,7 +118,7 @@ public class PessimisticSessionRefreshTest extends DualNodeTestCaseBase
    @Override
    public String[] getMappings()
    {
-      return new String[] { "cache/jbc2/functional/classloader/Account.hbm.xml" };
+      return new String[] { "cache/jbc/functional/classloader/Account.hbm.xml" };
    }
    
    @Override

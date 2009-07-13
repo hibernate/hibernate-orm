@@ -36,8 +36,8 @@ import org.jgroups.JChannelFactory;
  */
 public class CacheManagerTestSetup extends TestSetup
 {
-   public static final String DEF_CACHE_FACTORY_RESOURCE = "org/hibernate/cache/jbc2/builder/jbc2-configs.xml";    
-   public static final String DEF_JGROUPS_RESOURCE = "org/hibernate/cache/jbc2/builder/jgroups-stacks.xml";
+   public static final String DEF_CACHE_FACTORY_RESOURCE = "org/hibernate/cache/jbc/builder/jbc2-configs.xml";
+   public static final String DEF_JGROUPS_RESOURCE = "org/hibernate/cache/jbc/builder/jgroups-stacks.xml";
    
    private final String jbcConfig;
    private final String jgConfig;

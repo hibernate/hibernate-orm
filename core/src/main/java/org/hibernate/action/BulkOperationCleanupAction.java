@@ -25,8 +25,12 @@
 package org.hibernate.action;
 
 import org.hibernate.HibernateException;
+import org.hibernate.cache.access.SoftLock;
+import org.hibernate.cache.access.EntityRegionAccessStrategy;
+import org.hibernate.cache.access.CollectionRegionAccessStrategy;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Queryable;
+import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.SessionImplementor;
 
@@ -36,49 +40,84 @@ import java.util.Set;
 import java.util.Iterator;
 import java.util.HashSet;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 /**
- * Implementation of BulkOperationCleanupAction.
+ * An {@link org.hibernate.engine.ActionQueue} {@link Executable} for ensuring
+ * shared cache cleanup in relation to performed bulk HQL queries.
+ * <p/>
+ * NOTE: currently this executes for <tt>INSERT</tt> queries as well as
+ * <tt>UPDATE</tt> and <tt>DELETE</tt> queries.  For <tt>INSERT</tt> it is
+ * really not needed as we'd have no invalid entity/collection data to
+ * cleanup (we'd still nee to invalidate the appropriate update-timestamps
+ * regions) as a result of this query.
  *
  * @author Steve Ebersole
  */
 public class BulkOperationCleanupAction implements Executable, Serializable {
+	private final Serializable[] affectedTableSpaces;
 
-	private final SessionImplementor session;
+	private final Set entityCleanups = new HashSet();
+	private final Set collectionCleanups = new HashSet();
 
-	private final Set affectedEntityNames = new HashSet();
-	private final Set affectedCollectionRoles = new HashSet();
-	private final Serializable[] spaces;
-
-	public BulkOperationCleanupAction(SessionImplementor session, Queryable[] affectedQueryables) {
-		this.session = session;
-		// TODO : probably better to calculate these and pass them in, as it'll be more performant
+	/**
+	 * Constructs an action to cleanup "affected cache regions" based on the
+	 * affected entity persisters.  The affected regions are defined as the
+	 * region (if any) of the entity persisters themselves, plus the
+	 * collection regions for any collection in which those entity
+	 * persisters participate as elements/keys/etc.
+	 *
+	 * @param session The session to which this request is tied.
+	 * @param affectedQueryables The affected entity persisters.
+	 */
+	public BulkOperationCleanupAction(
+			SessionImplementor session,
+			Queryable[] affectedQueryables) {
+		SessionFactoryImplementor factory = session.getFactory();
 		ArrayList tmpSpaces = new ArrayList();
 		for ( int i = 0; i < affectedQueryables.length; i++ ) {
+			tmpSpaces.addAll( Arrays.asList( affectedQueryables[i].getQuerySpaces() ) );
 			if ( affectedQueryables[i].hasCache() ) {
-				affectedEntityNames.add( affectedQueryables[i].getEntityName() );
+				entityCleanups.add(
+						new EntityCleanup(
+								affectedQueryables[i].getCacheAccessStrategy()
+						)
+				);
 			}
-			Set roles = session.getFactory().getCollectionRolesByEntityParticipant( affectedQueryables[i].getEntityName() );
+			Set roles = factory.getCollectionRolesByEntityParticipant( affectedQueryables[i].getEntityName() );
 			if ( roles != null ) {
-				affectedCollectionRoles.addAll( roles );
-			}
-			for ( int y = 0; y < affectedQueryables[i].getQuerySpaces().length; y++ ) {
-				tmpSpaces.add( affectedQueryables[i].getQuerySpaces()[y] );
+				Iterator itr = roles.iterator();
+				while ( itr.hasNext() ) {
+					String role = ( String ) itr.next();
+					CollectionPersister collectionPersister = factory.getCollectionPersister( role );
+					if ( collectionPersister.hasCache() ) {
+						collectionCleanups.add(
+								new CollectionCleanup(
+										collectionPersister.getCacheAccessStrategy()
+								)
+						);
+					}
+				}
 			}
 		}
-		this.spaces = new Serializable[ tmpSpaces.size() ];
-		for ( int i = 0; i < tmpSpaces.size(); i++ ) {
-			this.spaces[i] = ( Serializable ) tmpSpaces.get( i );
-		}
-	}
-	
-	/** Create an action that will evict collection and entity regions based on queryspaces (table names).
-	 *  TODO: cache the autodetected information and pass it in instead.
-	 **/
-	public BulkOperationCleanupAction(SessionImplementor session, Set querySpaces) {
-		this.session = session;
 
-		Set tmpSpaces = new HashSet(querySpaces);
+		this.affectedTableSpaces = ( Serializable[] ) tmpSpaces.toArray( new Serializable[ tmpSpaces.size() ] );
+	}
+
+	/**
+	 * Constructs an action to cleanup "affected cache regions" based on a
+	 * set of affected table spaces.  This differs from {@link #BulkOperationCleanupAction(SessionImplementor, Queryable[])}
+	 * in that here we have the affected <strong>table names</strong>.  From those
+	 * we deduce the entity persisters whcih are affected based on the defined
+	 * {@link EntityPersister#getQuerySpaces() table spaces}; and from there, we
+	 * determine the affected collection regions based on any collections
+	 * in which those entity persisters participate as elements/keys/etc.
+	 *
+	 * @param session The session to which this request is tied.
+	 * @param tableSpaces The table spaces.
+	 */
+	public BulkOperationCleanupAction(SessionImplementor session, Set tableSpaces) {
+		Set tmpSpaces = new HashSet(tableSpaces);
 		SessionFactoryImplementor factory = session.getFactory();
 		Iterator iterator = factory.getAllClassMetadata().entrySet().iterator();
 		while ( iterator.hasNext() ) {
@@ -87,41 +126,66 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 			EntityPersister persister = factory.getEntityPersister( entityName );
 			Serializable[] entitySpaces = persister.getQuerySpaces();
 
-			if (affectedEntity( querySpaces, entitySpaces )) {
+			if ( affectedEntity( tableSpaces, entitySpaces ) ) {
+				tmpSpaces.addAll( Arrays.asList( entitySpaces ) );
 				if ( persister.hasCache() ) {
-					affectedEntityNames.add( persister.getEntityName() );
+					entityCleanups.add(
+							new EntityCleanup(
+									persister.getCacheAccessStrategy()
+							)
+					);
 				}
 				Set roles = session.getFactory().getCollectionRolesByEntityParticipant( persister.getEntityName() );
 				if ( roles != null ) {
-					affectedCollectionRoles.addAll( roles );
-				}
-				for ( int y = 0; y < entitySpaces.length; y++ ) {
-					tmpSpaces.add( entitySpaces[y] );
+					Iterator itr = roles.iterator();
+					while ( itr.hasNext() ) {
+						String role = ( String ) itr.next();
+						CollectionPersister collectionPersister = factory.getCollectionPersister( role );
+						if ( collectionPersister.hasCache() ) {
+							collectionCleanups.add(
+									new CollectionCleanup(
+											collectionPersister.getCacheAccessStrategy()
+									)
+							);
+						}
+					}
 				}
 			}
-
 		}
-		this.spaces = (Serializable[]) tmpSpaces.toArray( new Serializable[tmpSpaces.size()] );		
+
+		this.affectedTableSpaces = ( Serializable[] ) tmpSpaces.toArray( new Serializable[ tmpSpaces.size() ] );
 	}
 
 
-	/** returns true if no queryspaces or if there are a match */
-	private boolean affectedEntity(Set querySpaces, Serializable[] entitySpaces) {
-		if(querySpaces==null || querySpaces.isEmpty()) {
+	/**
+	 * Check to determine whether the table spaces reported by an entity
+	 * persister match against the defined affected table spaces.
+	 *
+	 * @param affectedTableSpaces The table spaces reported to be affected by
+	 * the query.
+	 * @param checkTableSpaces The table spaces (from the entity persister)
+	 * to check against the affected table spaces.
+	 *
+	 * @return True if there are affected table spaces and any of the incoming
+	 * check table spaces occur in that set.
+	 */
+	private boolean affectedEntity(
+			Set affectedTableSpaces,
+			Serializable[] checkTableSpaces) {
+		if ( affectedTableSpaces == null || affectedTableSpaces.isEmpty() ) {
 			return true;
 		}
-		
-		for ( int i = 0; i < entitySpaces.length; i++ ) {
-			if ( querySpaces.contains( entitySpaces[i] ) ) {
+
+		for ( int i = 0; i < checkTableSpaces.length; i++ ) {
+			if ( affectedTableSpaces.contains( checkTableSpaces[i] ) ) {
 				return true;
 			}
 		}
 		return false;
 	}
 
-	public void init() {
-		evictEntityRegions();
-		evictCollectionRegions();
+	public Serializable[] getPropertySpaces() {
+		return affectedTableSpaces;
 	}
 
 	public boolean hasAfterTransactionCompletion() {
@@ -129,12 +193,17 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 	}
 
 	public void afterTransactionCompletion(boolean success) throws HibernateException {
-		evictEntityRegions();
-		evictCollectionRegions();
-	}
+		Iterator itr = entityCleanups.iterator();
+		while ( itr.hasNext() ) {
+			final EntityCleanup cleanup = ( EntityCleanup ) itr.next();
+			cleanup.release();
+		}
 
-	public Serializable[] getPropertySpaces() {
-		return spaces;
+		itr = collectionCleanups.iterator();
+		while ( itr.hasNext() ) {
+			final CollectionCleanup cleanup = ( CollectionCleanup ) itr.next();
+			cleanup.release();
+		}
 	}
 
 	public void beforeExecutions() throws HibernateException {
@@ -145,23 +214,33 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 		// nothing to do		
 	}
 
-	private void evictEntityRegions() {
-		if ( affectedEntityNames != null ) {
-			Iterator itr = affectedEntityNames.iterator();
-			while ( itr.hasNext() ) {
-				final String entityName = ( String ) itr.next();
-				session.getFactory().evictEntity( entityName );
-			}
+	private static class EntityCleanup {
+		private final EntityRegionAccessStrategy cacheAccess;
+		private final SoftLock cacheLock;
+
+		private EntityCleanup(EntityRegionAccessStrategy cacheAccess) {
+			this.cacheAccess = cacheAccess;
+			this.cacheLock = cacheAccess.lockRegion();
+			cacheAccess.removeAll();
+		}
+
+		private void release() {
+			cacheAccess.unlockRegion( cacheLock );
 		}
 	}
 
-	private void evictCollectionRegions() {
-		if ( affectedCollectionRoles != null ) {
-			Iterator itr = affectedCollectionRoles.iterator();
-			while ( itr.hasNext() ) {
-				final String roleName = ( String ) itr.next();
-				session.getFactory().evictCollection( roleName );
-			}
+	private static class CollectionCleanup {
+		private final CollectionRegionAccessStrategy cacheAccess;
+		private final SoftLock cacheLock;
+
+		private CollectionCleanup(CollectionRegionAccessStrategy cacheAccess) {
+			this.cacheAccess = cacheAccess;
+			this.cacheLock = cacheAccess.lockRegion();
+			cacheAccess.removeAll();
+		}
+
+		private void release() {
+			cacheAccess.unlockRegion( cacheLock );
 		}
 	}
 }

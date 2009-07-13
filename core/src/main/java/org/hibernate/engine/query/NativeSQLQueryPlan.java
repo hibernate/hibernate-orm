@@ -49,7 +49,7 @@ import org.hibernate.util.ArrayHelper;
 
 /**
  * Defines a query execution plan for a native-SQL query.
- * 
+ *
  * @author Steve Ebersole
  */
 public class NativeSQLQueryPlan implements Serializable {
@@ -95,18 +95,28 @@ public class NativeSQLQueryPlan implements Serializable {
 	}
 
 	/**
-	 * Bind positional parameter values to the <tt>PreparedStatement</tt>
-	 * (these are parameters specified by a JDBC-style ?).
+	 * Perform binding of all the JDBC bind parameter values based on the user-defined
+	 * positional query parameters (these are the '?'-style hibernate query
+	 * params) into the JDBC {@link PreparedStatement}.
+	 *
+	 * @param st The prepared statement to which to bind the parameter values.
+	 * @param queryParameters The query parameters specified by the application.
+	 * @param start JDBC paramer binds are positional, so this is the position
+	 * from which to start binding.
+	 * @param session The session from which the query originated.
+	 *
+	 * @return The number of JDBC bind positions accounted for during execution.
+	 *
+	 * @throws SQLException Some form of JDBC error binding the values.
+	 * @throws HibernateException Generally indicates a mapping problem or type mismatch.
 	 */
-	private int bindPositionalParameters(final PreparedStatement st,
-			final QueryParameters queryParameters, final int start,
-			final SessionImplementor session) throws SQLException,
-			HibernateException {
-
-		final Object[] values = queryParameters
-				.getFilteredPositionalParameterValues();
-		final Type[] types = queryParameters
-				.getFilteredPositionalParameterTypes();
+	private int bindPositionalParameters(
+			final PreparedStatement st,
+			final QueryParameters queryParameters,
+			final int start,
+			final SessionImplementor session) throws SQLException {
+		final Object[] values = queryParameters.getFilteredPositionalParameterValues();
+		final Type[] types = queryParameters.getFilteredPositionalParameterTypes();
 		int span = 0;
 		for (int i = 0; i < values.length; i++) {
 			types[i].nullSafeSet( st, values[i], start + span, session );
@@ -116,15 +126,25 @@ public class NativeSQLQueryPlan implements Serializable {
 	}
 
 	/**
-	 * Bind named parameters to the <tt>PreparedStatement</tt>. This has an
-	 * empty implementation on this superclass and should be implemented by
-	 * subclasses (queries) which allow named parameters.
+	 * Perform binding of all the JDBC bind parameter values based on the user-defined
+	 * named query parameters into the JDBC {@link PreparedStatement}.
+	 *
+	 * @param ps The prepared statement to which to bind the parameter values.
+	 * @param namedParams The named query parameters specified by the application.
+	 * @param start JDBC paramer binds are positional, so this is the position
+	 * from which to start binding.
+	 * @param session The session from which the query originated.
+	 *
+	 * @return The number of JDBC bind positions accounted for during execution.
+	 *
+	 * @throws SQLException Some form of JDBC error binding the values.
+	 * @throws HibernateException Generally indicates a mapping problem or type mismatch.
 	 */
-	private int bindNamedParameters(final PreparedStatement ps,
-			final Map namedParams, final int start,
-			final SessionImplementor session) throws SQLException,
-			HibernateException {
-
+	private int bindNamedParameters(
+			final PreparedStatement ps,
+			final Map namedParams,
+			final int start,
+			final SessionImplementor session) throws SQLException {
 		if ( namedParams != null ) {
 			// assumes that types are all of span 1
 			Iterator iter = namedParams.entrySet().iterator();
@@ -155,22 +175,23 @@ public class NativeSQLQueryPlan implements Serializable {
 	protected void coordinateSharedCacheCleanup(SessionImplementor session) {
 		BulkOperationCleanupAction action = new BulkOperationCleanupAction( session, getCustomQuery().getQuerySpaces() );
 
-		action.init();
-
 		if ( session.isEventSource() ) {
 			( ( EventSource ) session ).getActionQueue().addAction( action );
+		}
+		else {
+			action.afterTransactionCompletion( true );
 		}
 	}
 
 	public int performExecuteUpdate(QueryParameters queryParameters,
 			SessionImplementor session) throws HibernateException {
-		
+
 		coordinateSharedCacheCleanup( session );
-		
+
 		if(queryParameters.isCallable()) {
 			throw new IllegalArgumentException("callable not yet supported for native queries");
 		}
-		
+
 		int result = 0;
 		PreparedStatement ps;
 		try {
@@ -191,8 +212,8 @@ public class NativeSQLQueryPlan implements Serializable {
 			finally {
 				if ( ps != null ) {
 					session.getBatcher().closeStatement( ps );
-				}				
-			}			
+				}
+			}
 		}
 		catch (SQLException sqle) {
 			throw JDBCExceptionHelper.convert( session.getFactory()
@@ -202,5 +223,5 @@ public class NativeSQLQueryPlan implements Serializable {
 
 		return result;
 	}
-	
+
 }

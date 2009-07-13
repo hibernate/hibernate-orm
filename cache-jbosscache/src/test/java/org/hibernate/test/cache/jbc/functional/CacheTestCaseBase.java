@@ -53,7 +53,11 @@ public abstract class CacheTestCaseBase extends FunctionalTestCase {
     }
 
     public String[] getMappings() {
-        return new String[] { "cache/jbc2/functional/Item.hbm.xml", "cache/jbc2/functional/Customer.hbm.xml", "cache/jbc2/functional/Contact.hbm.xml" };
+        return new String[] {
+				"cache/jbc/functional/Item.hbm.xml",
+				"cache/jbc/functional/Customer.hbm.xml",
+				"cache/jbc/functional/Contact.hbm.xml"
+		};
     }
 
     public void configure(Configuration cfg) {
@@ -96,7 +100,7 @@ public abstract class CacheTestCaseBase extends FunctionalTestCase {
     /**
      * Apply any region-factory specific configurations.
      * 
-     * @param the Configuration to update.
+     * @param cfg the Configuration to update.
      */
     protected abstract void configureCacheFactory(Configuration cfg);
 

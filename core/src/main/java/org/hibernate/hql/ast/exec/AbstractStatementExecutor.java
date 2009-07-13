@@ -240,10 +240,11 @@ public abstract class AbstractStatementExecutor implements StatementExecutor {
 	protected void coordinateSharedCacheCleanup(SessionImplementor session) {
 		BulkOperationCleanupAction action = new BulkOperationCleanupAction( session, getAffectedQueryables() );
 
-		action.init();
-
 		if ( session.isEventSource() ) {
 			( ( EventSource ) session ).getActionQueue().addAction( action );
+		}
+		else {
+			action.afterTransactionCompletion( true );
 		}
 	}
 

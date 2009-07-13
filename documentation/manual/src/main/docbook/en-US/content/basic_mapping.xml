@@ -944,7 +944,7 @@
         </sect2>
 
         <sect2 id="mapping-declaration-id-enhanced">
-            <title>Enhanced identifier generators</title>composite
+            <title>Enhanced identifier generators</title>
 
             <para>
                 Starting with release 3.2.3, there are 2 new generators which represent a re-thinking of 2 different
@@ -2284,7 +2284,7 @@
                             <literal>update</literal>: do the mapped columns appear in SQL
                             <literal>UPDATEs</literal>?
                         </para>
-                    </callout>n
+                    </callout>
                     <callout arearefs="properties4">
                             <para>
                                 <literal>optimistic-lock</literal> (optional - defaults to <literal>true</literal>):
@@ -2762,7 +2762,7 @@
                             key.
                         </para>
                     </callout>
-                    <callout arearefs="key6">file:///usr/share/doc/HTML/en-US/index.html
+                    <callout arearefs="key6">
                         <para>
                             <literal>unique</literal> (optional): specifies that the foreign key should have
                             a unique constraint. This is implied whenever the foreign key is also the primary key.
@@ -2942,7 +2942,7 @@
                         <para>
                             <literal>access</literal> (optional - defaults to <literal>property</literal>): the
                             strategy Hibernate uses for accessing the property value.
-                        </para>file:///usr/share/doc/HTML/en-US/index.html
+                        </para>
                     </callout>
                     <callout arearefs="any6">
                         <para>

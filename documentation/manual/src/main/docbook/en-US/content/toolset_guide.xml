@@ -569,7 +569,8 @@ new SchemaUpdate(cfg).execute(false);]]></programlisting>
                 <literal>java -cp </literal><emphasis>hibernate_classpaths</emphasis>
                 <literal>org.hibernate.tool.hbm2ddl.SchemaValidator</literal> <emphasis>options mapping_files</emphasis>
             </para>
-<para>The following table displays the <literal>SchemaValidator</literal> command line options:
+			<para>The following table displays the <literal>SchemaValidator</literal> command line options:
+			</para>
             <table frame="topbot">
                 <title><literal>SchemaValidator</literal> Command Line Options</title>
                 <tgroup cols="2">

@@ -1,33 +1,43 @@
 #, fuzzy
 msgid ""
 msgstr ""
+"Report-Msgid-Bugs-To: http://bugs.kde.org\n"
+"POT-Creation-Date: 2009-07-14 19:55+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
-"Content-Type: text/plain; charset=utf-8\n"
+"Content-Type: text/plain; charset=UTF-8\n"
 
-#: index.docbook:5
+#. Tag: title
+#: component_mapping.xml:29
+#, no-c-format
 msgid "Component Mapping"
 msgstr "Mapeo de Componentes"
 
-#: index.docbook:7
+#. Tag: para
+#: component_mapping.xml:31
+#, fuzzy, no-c-format
 msgid ""
 "The notion of a <emphasis>component</emphasis> is re-used in several "
-"different contexts, for different purposes, throughout Hibernate."
+"different contexts and purposes throughout Hibernate."
 msgstr ""
 "La noci&#x00f3;n de un <emphasis>componente</emphasis> es reusada en muchos "
 "contextos diferentes, para prop&#x00f3;sitos diferentes, a trav&#x00e9;s de "
 "Hibernate."
 
-#: index.docbook:13
+#. Tag: title
+#: component_mapping.xml:37
+#, no-c-format
 msgid "Dependent objects"
 msgstr "Objetos dependientes"
 
-#: index.docbook:15
+#. Tag: para
+#: component_mapping.xml:39
+#, fuzzy, no-c-format
 msgid ""
-"A component is a contained object that is persisted as a value type, not an "
-"entity reference. The term \"component\" refers to the object-oriented "
-"notion of composition (not to architecture-level components). For example, "
-"you might model a person like this:"
+"A component is a contained object that is persisted as a value type and not "
+"an entity reference. The term \"component\" refers to the object-oriented "
+"notion of composition and not to architecture-level components. For example, "
+"you can model a person like this:"
 msgstr ""
 "Un componente es un objeto contenido que es persistido como un tipo de "
 "valor, no una referencia de entidad. El t&#x00e9;rmino \"componente\" hace "
@@ -35,7 +45,9 @@ msgstr ""
 "a componentes a nivel de arquitectura). Por ejemplo, podr&#x00ed;as modelar "
 "una persona como:"
 
-#: index.docbook:21
+#. Tag: programlisting
+#: component_mapping.xml:45
+#, no-c-format
 msgid ""
 "<![CDATA[public class Person {\n"
 "    private java.util.Date birthday;\n"
@@ -89,7 +101,9 @@ msgstr ""
 "    ......\n"
 "}]]>"
 
-#: index.docbook:23
+#. Tag: programlisting
+#: component_mapping.xml:47
+#, no-c-format
 msgid ""
 "<![CDATA[public class Name {\n"
 "    char initial;\n"
@@ -139,23 +153,29 @@ msgstr ""
 "    }\n"
 "}]]>"
 
-#: index.docbook:25
+#. Tag: para
+#: component_mapping.xml:49
+#, fuzzy, no-c-format
 msgid ""
-"Now <literal>Name</literal> may be persisted as a component of "
-"<literal>Person</literal>. Notice that <literal>Name</literal> defines "
-"getter and setter methods for its persistent properties, but doesn't need to "
-"declare any interfaces or identifier properties."
+"Now <literal>Name</literal> can be persisted as a component of "
+"<literal>Person</literal>. <literal>Name</literal> defines getter and setter "
+"methods for its persistent properties, but it does not need to declare any "
+"interfaces or identifier properties."
 msgstr ""
 "Ahora <literal>Name</literal> puede ser persistido como un componente de "
 "<literal>Person</literal>. Observa que <literal>Name</literal> define "
 "m&#x00e9;todos getter y setter para sus propiedades persistentes, pero no "
 "necesita declarar ninguna interface ni propiedades identificadoras."
 
-#: index.docbook:32
-msgid "Our Hibernate mapping would look like:"
+#. Tag: para
+#: component_mapping.xml:56
+#, fuzzy, no-c-format
+msgid "Our Hibernate mapping would look like this:"
 msgstr "Nuestro mapeo de Hibernate se ver&#x00ed;a as&#x00ed;:"
 
-#: index.docbook:36
+#. Tag: programlisting
+#: component_mapping.xml:60
+#, no-c-format
 msgid ""
 "<![CDATA[<class name=\"eg.Person\" table=\"person\">\n"
 "    <id name=\"Key\" column=\"pid\" type=\"string\">\n"
@@ -183,7 +203,9 @@ msgstr ""
 "    </component>\n"
 "</class>]]>"
 
-#: index.docbook:38
+#. Tag: para
+#: component_mapping.xml:62
+#, no-c-format
 msgid ""
 "The person table would have the columns <literal>pid</literal>, "
 "<literal>birthday</literal>, <literal>initial</literal>, <literal>first</"
@@ -193,15 +215,17 @@ msgstr ""
 "<literal>birthday</literal>, <literal>initial</literal>, <literal>first</"
 "literal> y <literal>last</literal>."
 
-#: index.docbook:46
+#. Tag: para
+#: component_mapping.xml:70
+#, fuzzy, no-c-format
 msgid ""
-"Like all value types, components do not support shared references. In other "
+"Like value types, components do not support shared references. In other "
 "words, two persons could have the same name, but the two person objects "
-"would contain two independent name ojects, only \"the same\" by value. The "
-"null value semantics of a component are <emphasis>ad hoc</emphasis>. When "
-"reloading the containing object, Hibernate will assume that if all component "
-"columns are null, then the entire component is null. This should be okay for "
-"most purposes."
+"would contain two independent name objects that were only \"the same\" by "
+"value. The null value semantics of a component are <emphasis>ad hoc</"
+"emphasis>. When reloading the containing object, Hibernate will assume that "
+"if all component columns are null, then the entire component is null. This "
+"is suitable for most purposes."
 msgstr ""
 "Como todos los tipos de valor, los componentes no soportan referencias "
 "compartidas. En otras palabras, dos personas pueden tener el mismo nombre, "
@@ -212,12 +236,14 @@ msgstr ""
 "columnas del componente son nulas, el componente entero es nulo. Esto debe "
 "estar bien para la mayor&#x00ed;a de prop&#x00f3;sitos."
 
-#: index.docbook:55
+#. Tag: para
+#: component_mapping.xml:78
+#, fuzzy, no-c-format
 msgid ""
-"The properties of a component may be of any Hibernate type (collections, "
+"The properties of a component can be of any Hibernate type (collections, "
 "many-to-one associations, other components, etc). Nested components should "
 "<emphasis>not</emphasis> be considered an exotic usage. Hibernate is "
-"intended to support a very fine-grained object model."
+"intended to support a fine-grained object model."
 msgstr ""
 "Las propiedades de un componentes pueden ser de cualquier tipo de Hibernate "
 "(colecciones, muchos-a-uno, asociaciones, otros componentes, etc). Los "
@@ -225,7 +251,9 @@ msgstr ""
 "ex&#x00f3;tico. Hibernate est&#x00e1; concebido para soportar un modelo de "
 "objetos granularizado en fino."
 
-#: index.docbook:62
+#. Tag: para
+#: component_mapping.xml:85
+#, no-c-format
 msgid ""
 "The <literal>&lt;component&gt;</literal> element allows a <literal>&lt;"
 "parent&gt;</literal> subelement that maps a property of the component class "
@@ -235,7 +263,9 @@ msgstr ""
 "<literal>&lt;parent&gt;</literal> que mapee una propiedad de la clase del "
 "componente como una referencia de regreso a la entidad contenedora."
 
-#: index.docbook:68
+#. Tag: programlisting
+#: component_mapping.xml:91
+#, no-c-format
 msgid ""
 "<![CDATA[<class name=\"eg.Person\" table=\"person\">\n"
 "    <id name=\"Key\" column=\"pid\" type=\"string\">\n"
@@ -265,23 +295,29 @@ msgstr ""
 "    </component>\n"
 "</class>]]>"
 
-#: index.docbook:73
+#. Tag: title
+#: component_mapping.xml:96
+#, no-c-format
 msgid "Collections of dependent objects"
 msgstr "Colecciones de objetos dependientes"
 
-#: index.docbook:75
+#. Tag: para
+#: component_mapping.xml:98
+#, fuzzy, no-c-format
 msgid ""
-"Collections of components are supported (eg. an array of type <literal>Name</"
-"literal>). Declare your component collection by replacing the <literal>&lt;"
-"element&gt;</literal> tag with a <literal>&lt;composite-element&gt;</"
-"literal> tag."
+"Collections of components are supported (e.g. an array of type "
+"<literal>Name</literal>). Declare your component collection by replacing the "
+"<literal>&lt;element&gt;</literal> tag with a <literal>&lt;composite-"
+"element&gt;</literal> tag:"
 msgstr ""
 "Las colecciones de componentes est&#x00e1;n soportadas (por ejemplo, un "
 "array de tipo <literal>Name</literal>). Declara tu colecci&#x00f3;n de "
 "componentes remplazando la etiqueta <literal>&lt;element&gt;</literal> por "
 "una etiqueta <literal>&lt;composite-element&gt;</literal>."
 
-#: index.docbook:82
+#. Tag: programlisting
+#: component_mapping.xml:105
+#, no-c-format
 msgid ""
 "<![CDATA[<set name=\"someNames\" table=\"some_names\" lazy=\"true\">\n"
 "    <key column=\"id\"/>\n"
@@ -301,26 +337,29 @@ msgstr ""
 "    </composite-element>\n"
 "</set>]]>"
 
-#: index.docbook:84
+#. Tag: para
+#: component_mapping.xml:108
+#, fuzzy, no-c-format
 msgid ""
-"Note: if you define a <literal>Set</literal> of composite elements, it is "
-"very important to implement <literal>equals()</literal> and <literal>hashCode"
-"()</literal> correctly."
+"If you define a <literal>Set</literal> of composite elements, it is "
+"important to implement <literal>equals()</literal> and <literal>hashCode()</"
+"literal> correctly."
 msgstr ""
 "Nota: si defines un <literal>Set</literal> de elementos compuestos, es muy "
 "importante implementar <literal>equals()</literal> y <literal>hashCode()</"
 "literal> correctamente."
 
-#: index.docbook:90
+#. Tag: para
+#: component_mapping.xml:115
+#, fuzzy, no-c-format
 msgid ""
-"Composite elements may contain components but not collections. If your "
-"composite element itself contains components, use the <literal>&lt;nested-"
-"composite-element&gt;</literal> tag. This is a pretty exotic case - a "
-"collection of components which themselves have components. By this stage you "
-"should be asking yourself if a one-to-many association is more appropriate. "
-"Try remodelling the composite element as an entity - but note that even "
-"though the Java model is the same, the relational model and persistence "
-"semantics are still slightly different."
+"Composite elements can contain components but not collections. If your "
+"composite element contains components, use the <literal>&lt;nested-composite-"
+"element&gt;</literal> tag. This case is a collection of components which "
+"themselves have components. You may want to consider if a one-to-many "
+"association is more appropriate. Remodel the composite element as an entity, "
+"but be aware that even though the Java model is the same, the relational "
+"model and persistence semantics are still slightly different."
 msgstr ""
 "Los elementos compuestos pueden contener componentes pero no colecciones. Si "
 "tu elemento compuesto contiene a su vez componentes, usa la etiqueta "
@@ -332,16 +371,17 @@ msgstr ""
 "es el mismo, el modelo relacional y la sem&#x00e1;ntica de persistencia "
 "siguen siendo ligeramente diferentes."
 
-#: index.docbook:102
+#. Tag: para
+#: component_mapping.xml:127
+#, fuzzy, no-c-format
 msgid ""
-"Please note that a composite element mapping doesn't support null-able "
-"properties if you're using a <literal>&lt;set&gt;</literal>. Hibernate has "
-"to use each columns value to identify a record when deleting objects (there "
-"is no separate primary key column in the composite element table), which is "
-"not possible with null values. You have to either use only not-null "
-"properties in a composite-element or choose a <literal>&lt;list&gt;</"
-"literal>, <literal>&lt;map&gt;</literal>, <literal>&lt;bag&gt;</literal> or "
-"<literal>&lt;idbag&gt;</literal>."
+"A composite element mapping does not support null-able properties if you are "
+"using a <literal>&lt;set&gt;</literal>. There is no separate primary key "
+"column in the composite element table. Hibernate uses each column's value to "
+"identify a record when deleting objects, which is not possible with null "
+"values. You have to either use only not-null properties in a composite-"
+"element or choose a <literal>&lt;list&gt;</literal>, <literal>&lt;map&gt;</"
+"literal>, <literal>&lt;bag&gt;</literal> or <literal>&lt;idbag&gt;</literal>."
 msgstr ""
 "Por favor observa que un mapeo de elemento compuesto no soporta propiedades "
 "nulables si est&#x00e1;s usando un <literal>&lt;set&gt;</literal>. Hibernate "
@@ -352,13 +392,15 @@ msgstr ""
 "<literal>&lt;list&gt;</literal>, <literal>&lt;map&gt;</literal>, "
 "<literal>&lt;bag&gt;</literal> o <literal>&lt;idbag&gt;</literal>."
 
-#: index.docbook:113
+#. Tag: para
+#: component_mapping.xml:138
+#, fuzzy, no-c-format
 msgid ""
 "A special case of a composite element is a composite element with a nested "
-"<literal>&lt;many-to-one&gt;</literal> element. A mapping like this allows "
-"you to map extra columns of a many-to-many association table to the "
-"composite element class. The following is a many-to-many association from "
-"<literal>Order</literal> to <literal>Item</literal> where "
+"<literal>&lt;many-to-one&gt;</literal> element. This mapping allows you to "
+"map extra columns of a many-to-many association table to the composite "
+"element class. The following is a many-to-many association from "
+"<literal>Order</literal> to <literal>Item</literal>, where "
 "<literal>purchaseDate</literal>, <literal>price</literal> and "
 "<literal>quantity</literal> are properties of the association:"
 msgstr ""
@@ -371,7 +413,9 @@ msgstr ""
 "<literal>price</literal> y <literal>quantity</literal> son propiedades de la "
 "asociaci&#x00f3;n:"
 
-#: index.docbook:123
+#. Tag: programlisting
+#: component_mapping.xml:148
+#, no-c-format
 msgid ""
 "<![CDATA[<class name=\"eg.Order\" .... >\n"
 "    ....\n"
@@ -401,13 +445,15 @@ msgstr ""
 "    </set>\n"
 "</class>]]>"
 
-#: index.docbook:125
+#. Tag: para
+#: component_mapping.xml:150
+#, fuzzy, no-c-format
 msgid ""
-"Of course, there can't be a reference to the purchae on the other side, for "
-"bidirectional association navigation. Remember that components are value "
-"types and don't allow shared references. A single <literal>Purchase</"
-"literal> can be in the set of an <literal>Order</literal>, but it can't be "
-"referenced by the <literal>Item</literal> at the same time."
+"There cannot be a reference to the purchase on the other side for "
+"bidirectional association navigation. Components are value types and do not "
+"allow shared references. A single <literal>Purchase</literal> can be in the "
+"set of an <literal>Order</literal>, but it cannot be referenced by the "
+"<literal>Item</literal> at the same time."
 msgstr ""
 "Por supuesto, no puede haber una referencia a la compra del otro lado para "
 "la navegaci&#x00f3;n bidireccional de la asociaci&#x00f3;n. Recuerda que los "
@@ -416,11 +462,15 @@ msgstr ""
 "<literal>Order</literal>, pero no puede ser referenciada por el "
 "<literal>Item</literal> al mismo tiempo."
 
-#: index.docbook:133
+#. Tag: para
+#: component_mapping.xml:158
+#, no-c-format
 msgid "Even ternary (or quaternary, etc) associations are possible:"
 msgstr "Incluso son posibles las asociaciones ternarias (o cuaternarias, etc):"
 
-#: index.docbook:135
+#. Tag: programlisting
+#: component_mapping.xml:160
+#, no-c-format
 msgid ""
 "<![CDATA[<class name=\"eg.Order\" .... >\n"
 "    ....\n"
@@ -444,22 +494,28 @@ msgstr ""
 "    </set>\n"
 "</class>]]>"
 
-#: index.docbook:137
+#. Tag: para
+#: component_mapping.xml:162
+#, fuzzy, no-c-format
 msgid ""
-"Composite elements may appear in queries using the same syntax as "
+"Composite elements can appear in queries using the same syntax as "
 "associations to other entities."
 msgstr ""
 "Los elementos compuestos pueden aparecer en consultas usando la misma "
 "sint&#x00e1;xis que las asociaciones a otras entidades."
 
-#: index.docbook:145
+#. Tag: title
+#: component_mapping.xml:170
+#, no-c-format
 msgid "Components as Map indices"
 msgstr "Componentes como &#x00ed;ndices de Map"
 
-#: index.docbook:147
+#. Tag: para
+#: component_mapping.xml:172
+#, fuzzy, no-c-format
 msgid ""
-"The <literal>&lt;composite-map-key&gt;</literal> element lets you map a "
-"component class as the key of a <literal>Map</literal>. Make sure you "
+"The <literal>&lt;composite-map-key&gt;</literal> element allows you to map a "
+"component class as the key of a <literal>Map</literal>. Ensure that you "
 "override <literal>hashCode()</literal> and <literal>equals()</literal> "
 "correctly on the component class."
 msgstr ""
@@ -468,52 +524,72 @@ msgstr ""
 "rate que sobrescribes <literal>hashCode()</literal> y <literal>equals()</"
 "literal> correctamente en la clase componente."
 
-#: index.docbook:156
+#. Tag: title
+#: component_mapping.xml:181
+#, no-c-format
 msgid "Components as composite identifiers"
 msgstr "Componentes como identificadores compuestos"
 
-#: index.docbook:158
+#. Tag: para
+#: component_mapping.xml:183
+#, fuzzy, no-c-format
 msgid ""
-"You may use a component as an identifier of an entity class. Your component "
+"You can use a component as an identifier of an entity class. Your component "
 "class must satisfy certain requirements:"
 msgstr ""
 "Puedes usar un componente como un identidicador de una clase entidad. Tu "
 "clase componente debe satisfacer ciertos requerimientos:"
 
-#: index.docbook:165
+#. Tag: para
+#: component_mapping.xml:190
+#, no-c-format
 msgid "It must implement <literal>java.io.Serializable</literal>."
 msgstr "Debe implementar <literal>java.io.Serializable</literal>."
 
-#: index.docbook:170
+#. Tag: para
+#: component_mapping.xml:195
+#, fuzzy, no-c-format
 msgid ""
 "It must re-implement <literal>equals()</literal> and <literal>hashCode()</"
-"literal>, consistently with the database's notion of composite key equality."
+"literal> consistently with the database's notion of composite key equality."
 msgstr ""
 "Debe re-implementar <literal>equals()</literal> y <literal>hashCode()</"
 "literal>, consistentemente con la noci&#x00f3;n de base de datos de igualdad "
 "de clave compuesta."
 
-#: index.docbook:179
+#. Tag: title
+#: component_mapping.xml:204
+#, no-c-format
+msgid "Note"
+msgstr ""
+
+#. Tag: para
+#: component_mapping.xml:205
+#, fuzzy, no-c-format
 msgid ""
-"Note: in Hibernate3, the second requirement is not an absolutely hard "
-"requirement of Hibernate. But do it anyway."
+"In Hibernate3, although the second requirement is not an absolutely hard "
+"requirement of Hibernate, it is recommended."
 msgstr ""
 "Nota: en Hibernat3, el segundo requerimiento no es absolutamente un "
 "requerimiento r&#x00ed;gido de Hibernate. Pero de todas formas, h&#x00e1;zlo."
 
-#: index.docbook:183
+#. Tag: para
+#: component_mapping.xml:211
+#, fuzzy, no-c-format
 msgid ""
-"You can't use an <literal>IdentifierGenerator</literal> to generate "
+"You cannot use an <literal>IdentifierGenerator</literal> to generate "
 "composite keys. Instead the application must assign its own identifiers."
 msgstr ""
 "No puedes usar un <literal>IdentifierGenerator</literal> para generar claves "
 "compuestas. La aplicaci&#x00f3;n debe, en cambio, asignar sus propios "
 "identificadores."
 
-#: index.docbook:188
+#. Tag: para
+#: component_mapping.xml:216
+#, fuzzy, no-c-format
 msgid ""
-"Use the <literal>&lt;composite-id&gt;</literal> tag (with nested "
-"<literal>&lt;key-property&gt;</literal> elements) in place of the usual "
+"Use the <literal>&lt;composite-id&gt;</literal> tag, with nested "
+"<literal>&lt;key-property&gt;</literal> elements, in place of the usual "
 "<literal>&lt;id&gt;</literal> declaration. For example, the "
 "<literal>OrderLine</literal> class has a primary key that depends upon the "
 "(composite) primary key of <literal>Order</literal>."
@@ -524,25 +600,27 @@ msgstr ""
 "<literal>OrderLine</literal> tiene una clave primaria que depende de la "
 "clave primaria (compuesta) de <literal>Order</literal>."
 
-#: index.docbook:196
+#. Tag: programlisting
+#: component_mapping.xml:224
+#, fuzzy, no-c-format
 msgid ""
 "<![CDATA[<class name=\"OrderLine\">\n"
-"    \n"
+"\n"
 "    <composite-id name=\"id\" class=\"OrderLineId\">\n"
 "        <key-property name=\"lineId\"/>\n"
 "        <key-property name=\"orderId\"/>\n"
 "        <key-property name=\"customerId\"/>\n"
 "    </composite-id>\n"
-"    \n"
+"\n"
 "    <property name=\"name\"/>\n"
-"    \n"
+"\n"
 "    <many-to-one name=\"order\" class=\"Order\"\n"
 "            insert=\"false\" update=\"false\">\n"
 "        <column name=\"orderId\"/>\n"
 "        <column name=\"customerId\"/>\n"
 "    </many-to-one>\n"
 "    ....\n"
-"    \n"
+"\n"
 "</class>]]>"
 msgstr ""
 "<![CDATA[<class name=\"OrderLine\">\n"
@@ -564,18 +642,22 @@ msgstr ""
 "    \n"
 "</class>]]>"
 
-#: index.docbook:198
+#. Tag: para
+#: component_mapping.xml:226
+#, fuzzy, no-c-format
 msgid ""
-"Now, any foreign keys referencing the <literal>OrderLine</literal> table are "
-"also composite. You must declare this in your mappings for other classes. An "
-"association to <literal>OrderLine</literal> would be mapped like this:"
+"Any foreign keys referencing the <literal>OrderLine</literal> table are now "
+"composite. Declare this in your mappings for other classes. An association "
+"to <literal>OrderLine</literal> is mapped like this:"
 msgstr ""
 "Ahora, cualquier clave for&#x00e1;nea que referencie la tabla de "
 "<literal>OrderLine</literal> es tambi&#x00e9;n compuesta. Debes declarar "
 "esto en tus mapeos de otras clases. Una asociaci&#x00f3;n a "
 "<literal>OrderLine</literal> ser&#x00ed;a mapeado as&#x00ed;:"
 
-#: index.docbook:204
+#. Tag: programlisting
+#: component_mapping.xml:232
+#, no-c-format
 msgid ""
 "<![CDATA[<many-to-one name=\"orderLine\" class=\"OrderLine\">\n"
 "<!-- the \"class\" attribute is optional, as usual -->\n"
@@ -591,15 +673,19 @@ msgstr ""
 "    <column name=\"customerId\"/>\n"
 "</many-to-one>]]>"
 
-#: index.docbook:206
+#. Tag: para
+#: component_mapping.xml:235
+#, no-c-format
 msgid ""
-"(Note that the <literal>&lt;column&gt;</literal> tag is an alternative to "
-"the <literal>column</literal> attribute everywhere.)"
+"The <literal>column</literal> element is an alternative to the "
+"<literal>column</literal> attribute everywhere. Using the <literal>column</"
+"literal> element just gives more declaration options, which are mostly "
+"useful when utilizing <literal>hbm2ddl</literal>"
 msgstr ""
-"(Nota que la etiqueta <literal>&lt;column&gt;</literal> es una alternativa "
-"al atributo <literal>column</literal> en cualquier sitio.)"
 
-#: index.docbook:211
+#. Tag: para
+#: component_mapping.xml:244
+#, no-c-format
 msgid ""
 "A <literal>many-to-many</literal> association to <literal>OrderLine</"
 "literal> also uses the composite foreign key:"
@@ -608,7 +694,9 @@ msgstr ""
 "<literal>OrderLine</literal> tambi&#x00e9;n usa la clave for&#x00e1;nea "
 "compuesta:"
 
-#: index.docbook:216
+#. Tag: programlisting
+#: component_mapping.xml:249
+#, no-c-format
 msgid ""
 "<![CDATA[<set name=\"undeliveredOrderLines\">\n"
 "    <key column name=\"warehouseId\"/>\n"
@@ -628,7 +716,9 @@ msgstr ""
 "    </many-to-many>\n"
 "</set>]]>"
 
-#: index.docbook:218
+#. Tag: para
+#: component_mapping.xml:251
+#, no-c-format
 msgid ""
 "The collection of <literal>OrderLine</literal>s in <literal>Order</literal> "
 "would use:"
@@ -636,7 +726,9 @@ msgstr ""
 "La colecci&#x00f3;n de <literal>OrderLine</literal>s en <literal>Order</"
 "literal> usar&#x00ed;a:"
 
-#: index.docbook:223
+#. Tag: programlisting
+#: component_mapping.xml:256
+#, no-c-format
 msgid ""
 "<![CDATA[<set name=\"orderLines\" inverse=\"true\">\n"
 "    <key>\n"
@@ -654,15 +746,17 @@ msgstr ""
 "    <one-to-many class=\"OrderLine\"/>\n"
 "</set>]]>"
 
-#: index.docbook:225
-msgid ""
-"(The <literal>&lt;one-to-many&gt;</literal> element, as usual, declares no "
-"columns.)"
+#. Tag: para
+#: component_mapping.xml:258
+#, fuzzy, no-c-format
+msgid "The <literal>&lt;one-to-many&gt;</literal> element declares no columns."
 msgstr ""
 "(El elemento <literal>&lt;one-to-many&gt;</literal>, como es usual, no "
 "declara columnas.)"
 
-#: index.docbook:229
+#. Tag: para
+#: component_mapping.xml:262
+#, no-c-format
 msgid ""
 "If <literal>OrderLine</literal> itself owns a collection, it also has a "
 "composite foreign key."
@@ -670,7 +764,9 @@ msgstr ""
 "Si <literal>OrderLine</literal> posee una colecci&#x00f3;n por s&#x00ed; "
 "misma, tiene tambi&#x00e9;n una clave for&#x00e1;nea compuesta."
 
-#: index.docbook:234
+#. Tag: programlisting
+#: component_mapping.xml:267
+#, no-c-format
 msgid ""
 "<![CDATA[<class name=\"OrderLine\">\n"
 "    ....\n"
@@ -704,15 +800,21 @@ msgstr ""
 "    </set>\n"
 "</class>]]>"
 
-#: index.docbook:239
+#. Tag: title
+#: component_mapping.xml:272
+#, no-c-format
 msgid "Dynamic components"
 msgstr "Componentes din&#x00e1;micos"
 
-#: index.docbook:241
-msgid "You may even map a property of type <literal>Map</literal>:"
+#. Tag: para
+#: component_mapping.xml:274
+#, fuzzy, no-c-format
+msgid "You can also map a property of type <literal>Map</literal>:"
 msgstr "Puedes incluso mapear una propiedad de tipo <literal>Map</literal>:"
 
-#: index.docbook:245
+#. Tag: programlisting
+#: component_mapping.xml:278
+#, no-c-format
 msgid ""
 "<![CDATA[<dynamic-component name=\"userAttributes\">\n"
 "    <property name=\"foo\" column=\"FOO\" type=\"string\"/>\n"
@@ -726,15 +828,17 @@ msgstr ""
 "    <many-to-one name=\"baz\" class=\"Baz\" column=\"BAZ_ID\"/>\n"
 "</dynamic-component>]]>"
 
-#: index.docbook:247
+#. Tag: para
+#: component_mapping.xml:280
+#, fuzzy, no-c-format
 msgid ""
 "The semantics of a <literal>&lt;dynamic-component&gt;</literal> mapping are "
 "identical to <literal>&lt;component&gt;</literal>. The advantage of this "
 "kind of mapping is the ability to determine the actual properties of the "
-"bean at deployment time, just by editing the mapping document. Runtime "
+"bean at deployment time just by editing the mapping document. Runtime "
 "manipulation of the mapping document is also possible, using a DOM parser. "
-"Even better, you can access (and change) Hibernate's configuration-time "
-"metamodel via the <literal>Configuration</literal> object."
+"You can also access, and change, Hibernate's configuration-time metamodel "
+"via the <literal>Configuration</literal> object."
 msgstr ""
 "La sem&#x00e1;ntica de un mapeo <literal>&lt;dynamic-component&gt;</literal> "
 "es &#x00ed;dentica a la de <literal>&lt;component&gt;</literal>. La ventaja "
@@ -746,8 +850,15 @@ msgstr ""
 "configuraci&#x00f3;n de Hibernate por medio del objeto "
 "<literal>Configuration</literal>."
 
-msgid "ROLES_OF_TRANSLATORS"
-msgstr "<!--TRANS:ROLES_OF_TRANSLATORS-->"
+#~ msgid ""
+#~ "(Note that the <literal>&lt;column&gt;</literal> tag is an alternative to "
+#~ "the <literal>column</literal> attribute everywhere.)"
+#~ msgstr ""
+#~ "(Nota que la etiqueta <literal>&lt;column&gt;</literal> es una "
+#~ "alternativa al atributo <literal>column</literal> en cualquier sitio.)"
 
-msgid "CREDIT_FOR_TRANSLATORS"
-msgstr "<!--TRANS:CREDIT_FOR_TRANSLATORS-->"
+#~ msgid "ROLES_OF_TRANSLATORS"
+#~ msgstr "<!--TRANS:ROLES_OF_TRANSLATORS-->"
+
+#~ msgid "CREDIT_FOR_TRANSLATORS"
+#~ msgstr "<!--TRANS:CREDIT_FOR_TRANSLATORS-->"

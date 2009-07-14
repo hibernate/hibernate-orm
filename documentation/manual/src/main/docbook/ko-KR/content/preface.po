@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2007-10-25 07:47+0000\n"
+"POT-Creation-Date: 2009-07-14 19:56+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -11,19 +11,19 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 
 #. Tag: title
-#: preface.xml:21
+#: preface.xml:29
 #, no-c-format
 msgid "Preface"
 msgstr "머리말"
 
 #. Tag: para
-#: preface.xml:23
-#, no-c-format
+#: preface.xml:31
+#, fuzzy, no-c-format
 msgid ""
 "Working with object-oriented software and a relational database can be "
 "cumbersome and time consuming in today's enterprise environments. Hibernate "
-"is an object/relational mapping tool for Java environments. The term object/"
-"relational mapping (ORM) refers to the technique of mapping a data "
+"is an Object/Relational Mapping tool for Java environments. The term Object/"
+"Relational Mapping (ORM) refers to the technique of mapping a data "
 "representation from an object model to a relational data model with a SQL-"
 "based schema."
 msgstr ""
@@ -34,13 +34,13 @@ msgstr ""
 "하는 기술을 언급한다."
 
 #. Tag: para
-#: preface.xml:31
-#, no-c-format
+#: preface.xml:39
+#, fuzzy, no-c-format
 msgid ""
 "Hibernate not only takes care of the mapping from Java classes to database "
 "tables (and from Java data types to SQL data types), but also provides data "
-"query and retrieval facilities and can significantly reduce development time "
-"otherwise spent with manual data handling in SQL and JDBC."
+"query and retrieval facilities. It can also significantly reduce development "
+"time otherwise spent with manual data handling in SQL and JDBC."
 msgstr ""
 "Hibernate는 자바 클래스들로부터 데이터베이스로의 매핑(그리고 자바 데이터 타입"
 "들로부터 SQL 데이터 타입들로의 매핑)을 처리할 뿐만 아니라, 또한 데이터 질의"
@@ -48,10 +48,10 @@ msgstr ""
 "시간을 현저하게 단축시켜줄 수 있다."
 
 #. Tag: para
-#: preface.xml:38
-#, no-c-format
+#: preface.xml:46
+#, fuzzy, no-c-format
 msgid ""
-"Hibernates goal is to relieve the developer from 95 percent of common data "
+"Hibernate's goal is to relieve the developer from 95 percent of common data "
 "persistence related programming tasks. Hibernate may not be the best "
 "solution for data-centric applications that only use stored-procedures to "
 "implement the business logic in the database, it is most useful with object-"
@@ -69,7 +69,7 @@ msgstr ""
 "객체들의 그래프로 결과 셋을 변환하는 공통된 태스크를 도와줄 것이다."
 
 #. Tag: para
-#: preface.xml:48
+#: preface.xml:56
 #, no-c-format
 msgid ""
 "If you are new to Hibernate and Object/Relational Mapping or even Java, "
@@ -79,7 +79,7 @@ msgstr ""
 "면, 다음 단계들을 따르기 바란다:"
 
 #. Tag: para
-#: preface.xml:55
+#: preface.xml:63
 #, no-c-format
 msgid ""
 "Read <xref linkend=\"tutorial\"/> for a tutorial with step-by-step "
@@ -91,7 +91,7 @@ msgstr ""
 "tutorial/</literal> 디렉토리에 포함되어 있다."
 
 #. Tag: para
-#: preface.xml:63
+#: preface.xml:71
 #, no-c-format
 msgid ""
 "Read <xref linkend=\"architecture\"/> to understand the environments where "
@@ -101,15 +101,15 @@ msgstr ""
 "를 읽어라."
 
 #. Tag: para
-#: preface.xml:69
-#, no-c-format
+#: preface.xml:77
+#, fuzzy, no-c-format
 msgid ""
-"Have a look at the <literal>eg/</literal> directory in the Hibernate "
-"distribution, it contains a simple standalone application. Copy your JDBC "
-"driver to the <literal>lib/</literal> directory and edit <literal>etc/"
-"hibernate.properties</literal>, specifying correct values for your database. "
-"From a command prompt in the distribution directory, type <literal>ant eg</"
-"literal> (using Ant), or under Windows, type <literal>build eg</literal>."
+"View the <literal>eg/</literal> directory in the Hibernate distribution. It "
+"contains a simple standalone application. Copy your JDBC driver to the "
+"<literal>lib/</literal> directory and edit <literal>etc/hibernate."
+"properties</literal>, specifying correct values for your database. From a "
+"command prompt in the distribution directory, type <literal>ant eg</literal> "
+"(using Ant), or under Windows, type <literal>build eg</literal>."
 msgstr ""
 "Hibernate 배포본 내의 <literal>eg/</literal> 디렉토리를 살펴 보라. 이 디렉토"
 "리는 간단한 스탠드얼론 어플리케이션을 포함하고 있다. 당신의 JDBC 드라이버를 "
@@ -120,15 +120,15 @@ msgstr ""
 "이프 하라."
 
 #. Tag: para
-#: preface.xml:80
-#, no-c-format
+#: preface.xml:88
+#, fuzzy, no-c-format
 msgid ""
 "Use this reference documentation as your primary source of information. "
-"Consider reading <emphasis>Java Persistence with Hibernate</emphasis> "
-"(http://www.manning.com/bauer2) if you need more help with application "
-"design or if you prefer a step-by-step tutorial. Also visit http://"
-"caveatemptor.hibernate.org and download the example application for Java "
-"Persistence with Hibernate."
+"Consider reading <biblioref linkend=\"biblio-JPwH\"></biblioref> if you need "
+"more help with application design, or if you prefer a step-by-step tutorial. "
+"Also visit <ulink url=\"http://caveatemptor.hibernate.org\"></ulink> and "
+"download the example application from <biblioref linkend=\"biblio-JPwH\"></"
+"biblioref>."
 msgstr ""
 "당신의 주된 정보의 소스로서 이 참조 문서를 사용하라. 만일 어플리케이션 설계"
 "에 대해 더 많은 도움을 필요로 하거나 당신이 단계적인 튜토리얼을 선호한다면 "
@@ -137,23 +137,23 @@ msgstr ""
 "여 Java Persistence with Hibernate용 예제 어플리케이션을 다운로드 하라."
 
 #. Tag: para
-#: preface.xml:90
+#: preface.xml:98
 #, no-c-format
 msgid "FAQs are answered on the Hibernate website."
 msgstr "FAQ들은 Hibernate 웹 사이트 상에 답변되어 있다."
 
 #. Tag: para
-#: preface.xml:95
-#, no-c-format
+#: preface.xml:103
+#, fuzzy, no-c-format
 msgid ""
-"Third party demos, examples, and tutorials are linked on the Hibernate "
-"website."
+"Links to third party demos, examples, and tutorials are maintained on the "
+"Hibernate website."
 msgstr ""
 "제 3의 데모들, 예제들, 그리고 튜토리얼들은 Hibernate 웹 사이트 상에 링크되어 "
 "있다."
 
 #. Tag: para
-#: preface.xml:101
+#: preface.xml:109
 #, no-c-format
 msgid ""
 "The Community Area on the Hibernate website is a good resource for design "
@@ -164,11 +164,11 @@ msgstr ""
 "(Tomcat, JBoss AS, Struts, EJB 등.)에 관한 좋은 리소스이다."
 
 #. Tag: para
-#: preface.xml:109
-#, no-c-format
+#: preface.xml:117
+#, fuzzy, no-c-format
 msgid ""
 "If you have questions, use the user forum linked on the Hibernate website. "
-"We also provide a JIRA issue trackings system for bug reports and feature "
+"We also provide a JIRA issue tracking system for bug reports and feature "
 "requests. If you are interested in the development of Hibernate, join the "
 "developer mailing list. If you are interested in translating this "
 "documentation into your language, contact us on the developer mailing list."
@@ -180,7 +180,7 @@ msgstr ""
 "에 접촉하라."
 
 #. Tag: para
-#: preface.xml:117
+#: preface.xml:125
 #, no-c-format
 msgid ""
 "Commercial development support, production support, and training for "

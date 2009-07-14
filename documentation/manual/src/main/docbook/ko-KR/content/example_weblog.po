@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2007-10-25 07:47+0000\n"
+"POT-Creation-Date: 2009-07-14 19:56+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -11,31 +11,31 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 
 #. Tag: title
-#: example_weblog.xml:5
+#: example_weblog.xml:29
 #, no-c-format
 msgid "Example: Weblog Application"
 msgstr "예제: Weblog 어플리케이션"
 
 #. Tag: title
-#: example_weblog.xml:8
+#: example_weblog.xml:32
 #, no-c-format
 msgid "Persistent Classes"
 msgstr "영속 클래스들"
 
 #. Tag: para
-#: example_weblog.xml:10
-#, no-c-format
+#: example_weblog.xml:34
+#, fuzzy, no-c-format
 msgid ""
-"The persistent classes represent a weblog, and an item posted in a weblog. "
-"They are to be modelled as a standard parent/child relationship, but we will "
-"use an ordered bag, instead of a set."
+"The persistent classes here represent a weblog and an item posted in a "
+"weblog. They are to be modelled as a standard parent/child relationship, but "
+"we will use an ordered bag, instead of a set:"
 msgstr ""
 "영속 클래스들은 웹로그, 그리고 웹 로그 내에 게시된 항목을 표현한다.그것들은 "
 "표준 부모/자식 관계로 모형화 될 것이지만, 우리는 set 대신에 순서지워진 bag를 "
 "사용할 것이다."
 
 #. Tag: programlisting
-#: example_weblog.xml:16
+#: example_weblog.xml:40
 #, no-c-format
 msgid ""
 "<![CDATA[package eg;\n"
@@ -69,7 +69,7 @@ msgid ""
 msgstr ""
 
 #. Tag: programlisting
-#: example_weblog.xml:18
+#: example_weblog.xml:42
 #, no-c-format
 msgid ""
 "<![CDATA[package eg;\n"
@@ -118,19 +118,19 @@ msgid ""
 msgstr ""
 
 #. Tag: title
-#: example_weblog.xml:23
+#: example_weblog.xml:47
 #, no-c-format
 msgid "Hibernate Mappings"
 msgstr "Hibernate 매핑들"
 
 #. Tag: para
-#: example_weblog.xml:25
-#, no-c-format
-msgid "The XML mappings should now be quite straightforward."
+#: example_weblog.xml:49
+#, fuzzy, no-c-format
+msgid "The XML mappings are now straightforward. For example:"
 msgstr "XML 매핑들은 이제 매우 간단해질 것이다."
 
 #. Tag: programlisting
-#: example_weblog.xml:29
+#: example_weblog.xml:53
 #, no-c-format
 msgid ""
 "<![CDATA[<?xml version=\"1.0\"?>\n"
@@ -175,7 +175,7 @@ msgid ""
 msgstr ""
 
 #. Tag: programlisting
-#: example_weblog.xml:31
+#: example_weblog.xml:55
 #, no-c-format
 msgid ""
 "<![CDATA[<?xml version=\"1.0\"?>\n"
@@ -224,23 +224,23 @@ msgid ""
 msgstr ""
 
 #. Tag: title
-#: example_weblog.xml:36
+#: example_weblog.xml:60
 #, no-c-format
 msgid "Hibernate Code"
 msgstr "Hibernate 코드"
 
 #. Tag: para
-#: example_weblog.xml:38
-#, no-c-format
+#: example_weblog.xml:62
+#, fuzzy, no-c-format
 msgid ""
 "The following class demonstrates some of the kinds of things we can do with "
-"these classes, using Hibernate."
+"these classes using Hibernate:"
 msgstr ""
 "다음 클래스는 우리가 Hibernate를 사용하여 이들 클래스들로 행할 수 있는 몇몇 "
 "종류의 것들을 설명한다."
 
 #. Tag: programlisting
-#: example_weblog.xml:43
+#: example_weblog.xml:67
 #, no-c-format
 msgid ""
 "<![CDATA[package eg;\n"

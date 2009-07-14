@@ -1,36 +1,52 @@
 #, fuzzy
 msgid ""
 msgstr ""
+"Report-Msgid-Bugs-To: http://bugs.kde.org\n"
+"POT-Creation-Date: 2009-07-14 19:56+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
-"Content-Type: text/plain; charset=utf-8\n"
+"Content-Type: text/plain; charset=UTF-8\n"
 
-#: index.docbook:5
-msgid "Inheritance Mapping"
+#. Tag: title
+#: inheritance_mapping.xml:29
+#, fuzzy, no-c-format
+msgid "Inheritance mapping"
 msgstr "Mapeo de Herencia"
 
-#: index.docbook:8
-msgid "The Three Strategies"
+#. Tag: title
+#: inheritance_mapping.xml:32
+#, fuzzy, no-c-format
+msgid "The three strategies"
 msgstr "Las Tres Estrategias"
 
-#: index.docbook:10
+#. Tag: para
+#: inheritance_mapping.xml:34
+#, no-c-format
 msgid "Hibernate supports the three basic inheritance mapping strategies:"
 msgstr ""
 "Hibernate soporta las tres estrategias b&#x00e1;sicas de mapeo de herencia:"
 
-#: index.docbook:16
+#. Tag: para
+#: inheritance_mapping.xml:40
+#, no-c-format
 msgid "table per class hierarchy"
 msgstr "<para>tabla por jerarqu&#x00ed;a de clases</para>"
 
-#: index.docbook:21
+#. Tag: para
+#: inheritance_mapping.xml:45
+#, no-c-format
 msgid "<para>table per subclass</para>"
 msgstr "<para>tabla por subclase</para>"
 
-#: index.docbook:26
+#. Tag: para
+#: inheritance_mapping.xml:50
+#, no-c-format
 msgid "table per concrete class"
 msgstr "tabla por clase concreta"
 
-#: index.docbook:32
+#. Tag: para
+#: inheritance_mapping.xml:56
+#, no-c-format
 msgid ""
 "In addition, Hibernate supports a fourth, slightly different kind of "
 "polymorphism:"
@@ -38,22 +54,26 @@ msgstr ""
 "En adici&#x00f3;n, Hibernate soporta un cuarto, ligeramente diferente tipo "
 "de polimorfismo:"
 
-#: index.docbook:39
+#. Tag: para
+#: inheritance_mapping.xml:63
+#, no-c-format
 msgid "implicit polymorphism"
 msgstr "polimorfismo impl&#x00ed;cito"
 
-#: index.docbook:45
+#. Tag: para
+#: inheritance_mapping.xml:69
+#, fuzzy, no-c-format
 msgid ""
 "It is possible to use different mapping strategies for different branches of "
-"the same inheritance hierarchy, and then make use of implicit polymorphism "
-"to achieve polymorphism across the whole hierarchy. However, Hibernate does "
-"not support mixing <literal>&lt;subclass&gt;</literal>, and <literal>&lt;"
-"joined-subclass&gt;</literal> and <literal>&lt;union-subclass&gt;</literal> "
-"mappings under the same root <literal>&lt;class&gt;</literal> element. It is "
-"possible to mix together the table per hierarchy and table per subclass "
-"strategies, under the the same <literal>&lt;class&gt;</literal> element, by "
-"combining the <literal>&lt;subclass&gt;</literal> and <literal>&lt;join&gt;</"
-"literal> elements (see below)."
+"the same inheritance hierarchy. You can then make use of implicit "
+"polymorphism to achieve polymorphism across the whole hierarchy. However, "
+"Hibernate does not support mixing <literal>&lt;subclass&gt;</literal>, "
+"<literal>&lt;joined-subclass&gt;</literal> and <literal>&lt;union-"
+"subclass&gt;</literal> mappings under the same root <literal>&lt;class&gt;</"
+"literal> element. It is possible to mix together the table per hierarchy and "
+"table per subclass strategies under the the same <literal>&lt;class&gt;</"
+"literal> element, by combining the <literal>&lt;subclass&gt;</literal> and "
+"<literal>&lt;join&gt;</literal> elements (see below for an example)."
 msgstr ""
 "UNTRANSLATED! It is possible to define <literal>subclass</literal>, "
 "<literal>union-subclass</literal>, and <literal>joined-subclass</literal> "
@@ -66,18 +86,20 @@ msgstr ""
 "when using the extends keyword. The ordering inside a single mapping file "
 "still needs to be defined as superclasses before subclasses."
 
-#: index.docbook:59
+#. Tag: para
+#: inheritance_mapping.xml:83
+#, fuzzy, no-c-format
 msgid ""
 "It is possible to define <literal>subclass</literal>, <literal>union-"
 "subclass</literal>, and <literal>joined-subclass</literal> mappings in "
-"separate mapping documents, directly beneath <literal>hibernate-mapping</"
-"literal>. This allows you to extend a class hierachy just by adding a new "
+"separate mapping documents directly beneath <literal>hibernate-mapping</"
+"literal>. This allows you to extend a class hierarchy by adding a new "
 "mapping file. You must specify an <literal>extends</literal> attribute in "
-"the subclass mapping, naming a previously mapped superclass. Note: "
-"Previously this feature made the ordering of the mapping documents "
-"important. Since Hibernate3, the ordering of mapping files does not matter "
-"when using the extends keyword. The ordering inside a single mapping file "
-"still needs to be defined as superclasses before subclasses."
+"the subclass mapping, naming a previously mapped superclass. Previously this "
+"feature made the ordering of the mapping documents important. Since "
+"Hibernate3, the ordering of mapping files is irrelevant when using the "
+"extends keyword. The ordering inside a single mapping file still needs to be "
+"defined as superclasses before subclasses."
 msgstr ""
 "<![CDATA[\n"
 "                                 <hibernate-mapping>\n"
@@ -88,7 +110,9 @@ msgstr ""
 "                                         </subclass>\n"
 " </hibernate-mapping>]]>"
 
-#: index.docbook:70
+#. Tag: programlisting
+#: inheritance_mapping.xml:94
+#, no-c-format
 msgid ""
 "<![CDATA[\n"
 " <hibernate-mapping>\n"
@@ -110,23 +134,29 @@ msgstr ""
 "combinando los elementos <literal>&lt;subclass&gt;</literal> y <literal>&lt;"
 "join&gt;</literal> (ver debajo)."
 
-#: index.docbook:74
+#. Tag: title
+#: inheritance_mapping.xml:98
+#, no-c-format
 msgid "Table per class hierarchy"
 msgstr "Tabla por jerarqu&#x00ed;a de clases"
 
-#: index.docbook:76
+#. Tag: para
+#: inheritance_mapping.xml:100
+#, fuzzy, no-c-format
 msgid ""
-"Suppose we have an interface <literal>Payment</literal>, with implementors "
-"<literal>CreditCardPayment</literal>, <literal>CashPayment</literal>, "
-"<literal>ChequePayment</literal>. The table per hierarchy mapping would look "
-"like:"
+"Suppose we have an interface <literal>Payment</literal> with the "
+"implementors <literal>CreditCardPayment</literal>, <literal>CashPayment</"
+"literal>, and <literal>ChequePayment</literal>. The table per hierarchy "
+"mapping would display in the following way:"
 msgstr ""
 "Sup&#x00f3;n que tenemos una interface <literal>Payment</literal>, con los "
 "implementadores <literal>CreditCardPayment</literal>, <literal>CashPayment</"
 "literal>, <literal>ChequePayment</literal>. El mapeo de tabla por "
 "jerarqu&#x00ed;a se ver&#x00ed;a as&#x00ed;:"
 
-#: index.docbook:83
+#. Tag: programlisting
+#: inheritance_mapping.xml:107
+#, no-c-format
 msgid ""
 "<![CDATA[<class name=\"Payment\" table=\"PAYMENT\">\n"
 "    <id name=\"id\" type=\"long\" column=\"PAYMENT_ID\">\n"
@@ -166,26 +196,34 @@ msgstr ""
 "    </subclass>\n"
 "</class>]]>"
 
-#: index.docbook:85
+#. Tag: para
+#: inheritance_mapping.xml:109
+#, fuzzy, no-c-format
 msgid ""
-"Exactly one table is required. There is one big limitation of this mapping "
+"Exactly one table is required. There is a limitation of this mapping "
 "strategy: columns declared by the subclasses, such as <literal>CCTYPE</"
-"literal>, may not have <literal>NOT NULL</literal> constraints."
+"literal>, cannot have <literal>NOT NULL</literal> constraints."
 msgstr ""
 "Se requiere exactamente una tabla. Hay una gran limitaci&#x00f3;n de esta "
 "estrategia de mapeo: las columnas declaradas por las subclases, como "
 "<literal>CCTYPE</literal>, no pueden tener restricciones <literal>NOT NULL</"
 "literal>."
 
-#: index.docbook:94
+#. Tag: title
+#: inheritance_mapping.xml:118
+#, no-c-format
 msgid "Table per subclass"
 msgstr "Tabla por subclase"
 
-#: index.docbook:96
-msgid "A table per subclass mapping would look like:"
+#. Tag: para
+#: inheritance_mapping.xml:120
+#, fuzzy, no-c-format
+msgid "A table per subclass mapping looks like this:"
 msgstr "Un mapeo de tabla por sublclase se ver&#x00ed;a as&#x00ed;:"
 
-#: index.docbook:100
+#. Tag: programlisting
+#: inheritance_mapping.xml:124
+#, no-c-format
 msgid ""
 "<![CDATA[<class name=\"Payment\" table=\"PAYMENT\">\n"
 "    <id name=\"id\" type=\"long\" column=\"PAYMENT_ID\">\n"
@@ -229,30 +267,36 @@ msgstr ""
 "    </joined-subclass>\n"
 "</class>]]>"
 
-#: index.docbook:102
+#. Tag: para
+#: inheritance_mapping.xml:126
+#, fuzzy, no-c-format
 msgid ""
 "Four tables are required. The three subclass tables have primary key "
-"associations to the superclass table (so the relational model is actually a "
-"one-to-one association)."
+"associations to the superclass table so the relational model is actually a "
+"one-to-one association."
 msgstr ""
 "Se requieren cuatro tablas. Las tres tablas de subclase tienen asociaciones "
 "de clave primaria a la tabla de superclase (de modo que en el modelo "
 "relacional es realmente una asociaci&#x00f3;n uno-a-uno)."
 
-#: index.docbook:111
-msgid "Table per subclass, using a discriminator"
+#. Tag: title
+#: inheritance_mapping.xml:135
+#, fuzzy, no-c-format
+msgid "Table per subclass: using a discriminator"
 msgstr "Tabla por subclase, usando un discriminador"
 
-#: index.docbook:113
+#. Tag: para
+#: inheritance_mapping.xml:137
+#, fuzzy, no-c-format
 msgid ""
-"Note that Hibernate's implementation of table per subclass requires no "
+"Hibernate's implementation of table per subclass does not require a "
 "discriminator column. Other object/relational mappers use a different "
-"implementation of table per subclass which requires a type discriminator "
+"implementation of table per subclass that requires a type discriminator "
 "column in the superclass table. The approach taken by Hibernate is much more "
-"difficult to implement but arguably more correct from a relational point of "
-"view. If you would like to use a discriminator column with the table per "
-"subclass strategy, you may combine the use of <literal>&lt;subclass&gt;</"
-"literal> and <literal>&lt;join&gt;</literal>, as follow:"
+"difficult to implement, but arguably more correct from a relational point of "
+"view. If you want to use a discriminator column with the table per subclass "
+"strategy, you can combine the use of <literal>&lt;subclass&gt;</literal> and "
+"<literal>&lt;join&gt;</literal>, as follows:"
 msgstr ""
 "Observa que la implementaci&#x00f3;n de Hibernate de tabla por subclase no "
 "requiere ninguna columna discriminadora. Otros mapeadores objeto/relacional "
@@ -264,7 +308,9 @@ msgstr ""
 "combinar el uso de <literal>&lt;subclass&gt;</literal> y <literal>&lt;"
 "join&gt;</literal>, como sigue:"
 
-#: index.docbook:125
+#. Tag: programlisting
+#: inheritance_mapping.xml:149
+#, no-c-format
 msgid ""
 "<![CDATA[<class name=\"Payment\" table=\"PAYMENT\">\n"
 "    <id name=\"id\" type=\"long\" column=\"PAYMENT_ID\">\n"
@@ -322,7 +368,9 @@ msgstr ""
 "    </subclass>\n"
 "</class>]]>"
 
-#: index.docbook:127
+#. Tag: para
+#: inheritance_mapping.xml:151
+#, no-c-format
 msgid ""
 "The optional <literal>fetch=\"select\"</literal> declaration tells Hibernate "
 "not to fetch the <literal>ChequePayment</literal> subclass data using an "
@@ -333,19 +381,25 @@ msgstr ""
 "literal> usando una uni&#x00f3;n externa (outer join) al consultar la "
 "superclase."
 
-#: index.docbook:136
+#. Tag: title
+#: inheritance_mapping.xml:160
+#, no-c-format
 msgid "Mixing table per class hierarchy with table per subclass"
 msgstr "Mezclando tabla por jerarqu&#x00ed;a de clases con tabla por subclase"
 
-#: index.docbook:138
+#. Tag: para
+#: inheritance_mapping.xml:162
+#, fuzzy, no-c-format
 msgid ""
-"You may even mix the table per hierarchy and table per subclass strategies "
-"using this approach:"
+"You can even mix the table per hierarchy and table per subclass strategies "
+"using the following approach:"
 msgstr ""
 "Puedes incluso mezclar las estrategias de tabla po jerarqu&#x00ed;a y tabla "
 "por subclase usando este enfoque:"
 
-#: index.docbook:143
+#. Tag: programlisting
+#: inheritance_mapping.xml:167
+#, no-c-format
 msgid ""
 "<![CDATA[<class name=\"Payment\" table=\"PAYMENT\">\n"
 "    <id name=\"id\" type=\"long\" column=\"PAYMENT_ID\">\n"
@@ -389,7 +443,9 @@ msgstr ""
 "    </subclass>\n"
 "</class>]]>"
 
-#: index.docbook:145
+#. Tag: para
+#: inheritance_mapping.xml:169
+#, no-c-format
 msgid ""
 "For any of these mapping strategies, a polymorphic association to the root "
 "<literal>Payment</literal> class is mapped using <literal>&lt;many-to-one&gt;"
@@ -399,7 +455,9 @@ msgstr ""
 "polim&#x00f3;rfica a la clase ra&#x00ed;z <literal>Payment</literal> es "
 "mapeada usando <literal>&lt;many-to-one&gt;</literal>."
 
-#: index.docbook:151
+#. Tag: programlisting
+#: inheritance_mapping.xml:175
+#, no-c-format
 msgid ""
 "<![CDATA[<many-to-one name=\"payment\" column=\"PAYMENT_ID\" class=\"Payment"
 "\"/>]]>"
@@ -407,19 +465,25 @@ msgstr ""
 "<![CDATA[<many-to-one name=\"payment\" column=\"PAYMENT_ID\" class=\"Payment"
 "\"/>]]>"
 
-#: index.docbook:156
+#. Tag: title
+#: inheritance_mapping.xml:180
+#, no-c-format
 msgid "Table per concrete class"
 msgstr "Tabla por clase concreta"
 
-#: index.docbook:158
+#. Tag: para
+#: inheritance_mapping.xml:182
+#, fuzzy, no-c-format
 msgid ""
-"There are two ways we could go about mapping the table per concrete class "
-"strategy. The first is to use <literal>&lt;union-subclass&gt;</literal>."
+"There are two ways we can map the table per concrete class strategy. First, "
+"you can use <literal>&lt;union-subclass&gt;</literal>."
 msgstr ""
 "Podr&#x00ed;amos ir de dos maneras a la estrategia de mapeo de tabla por "
 "clase concreta. La primera es usar <literal>&lt;union-subclass&gt;</literal>."
 
-#: index.docbook:163
+#. Tag: programlisting
+#: inheritance_mapping.xml:187
+#, no-c-format
 msgid ""
 "<![CDATA[<class name=\"Payment\">\n"
 "    <id name=\"id\" type=\"long\" column=\"PAYMENT_ID\">\n"
@@ -457,7 +521,9 @@ msgstr ""
 "    </union-subclass>\n"
 "</class>]]>"
 
-#: index.docbook:165
+#. Tag: para
+#: inheritance_mapping.xml:189
+#, no-c-format
 msgid ""
 "Three tables are involved for the subclasses. Each table defines columns for "
 "all properties of the class, including inherited properties."
@@ -465,13 +531,15 @@ msgstr ""
 "Est&#x00e1;n implicadas tres tablas. Cada tabla define columnas para todas "
 "las propiedades de la clase, inccluyendo las propiedades heredadas."
 
-#: index.docbook:170
+#. Tag: para
+#: inheritance_mapping.xml:194
+#, fuzzy, no-c-format
 msgid ""
 "The limitation of this approach is that if a property is mapped on the "
-"superclass, the column name must be the same on all subclass tables. (We "
-"might relax this in a future release of Hibernate.) The identity generator "
-"strategy is not allowed in union subclass inheritance, indeed the primary "
-"key seed has to be shared accross all unioned subclasses of a hierarchy."
+"superclass, the column name must be the same on all subclass tables. The "
+"identity generator strategy is not allowed in union subclass inheritance. "
+"The primary key seed has to be shared across all unioned subclasses of a "
+"hierarchy."
 msgstr ""
 "La limitaci&#x00f3;n de este enfoque es que si una propiedad es mapeada en "
 "la superclase, el nombre de columna debe ser el mismo en todas las tablas de "
@@ -481,27 +549,35 @@ msgstr ""
 "clave primaria tiene que ser compartida a trav&#x00e9;s de todas las "
 "subclases unidas de una jerarqu&#x00ed;a."
 
-#: index.docbook:179
+#. Tag: para
+#: inheritance_mapping.xml:203
+#, fuzzy, no-c-format
 msgid ""
 "If your superclass is abstract, map it with <literal>abstract=\"true\"</"
-"literal>. Of course, if it is not abstract, an additional table (defaults to "
-"<literal>PAYMENT</literal> in the example above) is needed to hold instances "
-"of the superclass."
+"literal>. If it is not abstract, an additional table (it defaults to "
+"<literal>PAYMENT</literal> in the example above), is needed to hold "
+"instances of the superclass."
 msgstr ""
 "UNTRANSLATED! If your superclass is abstract, map it with <literal>abstract="
 "\"true\"</literal>. Of course, if it is not abstract, an additional table "
 "(defaults to <literal>PAYMENT</literal> in the example above) is needed to "
 "hold instances of the superclass."
 
-#: index.docbook:189
-msgid "Table per concrete class, using implicit polymorphism"
+#. Tag: title
+#: inheritance_mapping.xml:213
+#, fuzzy, no-c-format
+msgid "Table per concrete class using implicit polymorphism"
 msgstr "Tabla por clase concreta, usando polimorfismo impl&#x00ed;cito"
 
-#: index.docbook:191
+#. Tag: para
+#: inheritance_mapping.xml:215
+#, no-c-format
 msgid "An alternative approach is to make use of implicit polymorphism:"
 msgstr "Un enfoque alternativo es hacer uso de polimorfismo impl&#x00ed;cito:"
 
-#: index.docbook:195
+#. Tag: programlisting
+#: inheritance_mapping.xml:219
+#, no-c-format
 msgid ""
 "<![CDATA[<class name=\"CreditCardPayment\" table=\"CREDIT_PAYMENT\">\n"
 "    <id name=\"id\" type=\"long\" column=\"CREDIT_PAYMENT_ID\">\n"
@@ -551,14 +627,16 @@ msgstr ""
 "    ...\n"
 "</class>]]>"
 
-#: index.docbook:197
+#. Tag: para
+#: inheritance_mapping.xml:221
+#, fuzzy, no-c-format
 msgid ""
-"Notice that nowhere do we mention the <literal>Payment</literal> interface "
+"Notice that the <literal>Payment</literal> interface is not mentioned "
 "explicitly. Also notice that properties of <literal>Payment</literal> are "
 "mapped in each of the subclasses. If you want to avoid duplication, consider "
-"using XML entities (e.g. <literal>[ &lt;!ENTITY allproperties SYSTEM "
+"using XML entities (for example, <literal>[ &lt;!ENTITY allproperties SYSTEM "
 "\"allproperties.xml\"&gt; ]</literal> in the <literal>DOCTYPE</literal> "
-"declartion and <literal>&amp;allproperties;</literal> in the mapping)."
+"declaration and <literal>&amp;allproperties;</literal> in the mapping)."
 msgstr ""
 "Nota que en ning&#x00fa;n sitio mencionamos la interface <literal>Payment</"
 "literal> expl&#x00ed;citamente. Nota adem&#x00e1;s que las propiedades de "
@@ -568,7 +646,9 @@ msgstr ""
 "\"&gt; ]</literal> en la declaraci&#x00f3;n <literal>DOCTYPE</literal> y "
 "<literal>&amp;allproperties;</literal> en el mapeo)."
 
-#: index.docbook:207
+#. Tag: para
+#: inheritance_mapping.xml:231
+#, no-c-format
 msgid ""
 "The disadvantage of this approach is that Hibernate does not generate SQL "
 "<literal>UNION</literal>s when performing polymorphic queries."
@@ -576,7 +656,9 @@ msgstr ""
 "La desventaja de este enfoque es que Hibernate no genera <literal>UNION</"
 "literal>s de SQL al realizar consultas polim&#x00f3;rficas."
 
-#: index.docbook:212
+#. Tag: para
+#: inheritance_mapping.xml:236
+#, no-c-format
 msgid ""
 "For this mapping strategy, a polymorphic association to <literal>Payment</"
 "literal> is usually mapped using <literal>&lt;any&gt;</literal>."
@@ -585,7 +667,9 @@ msgstr ""
 "<literal>Payment</literal> es mapeada generalmente usando <literal>&lt;"
 "any&gt;</literal>."
 
-#: index.docbook:217
+#. Tag: programlisting
+#: inheritance_mapping.xml:241
+#, no-c-format
 msgid ""
 "<![CDATA[<any name=\"payment\" meta-type=\"string\" id-type=\"long\">\n"
 "    <meta-value value=\"CREDIT\" class=\"CreditCardPayment\"/>\n"
@@ -603,18 +687,21 @@ msgstr ""
 "    <column name=\"PAYMENT_ID\"/>\n"
 "</any>]]>"
 
-#: index.docbook:222
+#. Tag: title
+#: inheritance_mapping.xml:246
+#, no-c-format
 msgid "Mixing implicit polymorphism with other inheritance mappings"
 msgstr "Mezclando polimorfismo impl&#x00ed;cito con otros mapeos de herencia"
 
-#: index.docbook:224
+#. Tag: para
+#: inheritance_mapping.xml:248
+#, fuzzy, no-c-format
 msgid ""
-"There is one further thing to notice about this mapping. Since the "
-"subclasses are each mapped in their own <literal>&lt;class&gt;</literal> "
-"element (and since <literal>Payment</literal> is just an interface), each of "
-"the subclasses could easily be part of another inheritance hierarchy! (And "
-"you can still use polymorphic queries against the <literal>Payment</literal> "
-"interface.)"
+"Since the subclasses are each mapped in their own <literal>&lt;class&gt;</"
+"literal> element, and since <literal>Payment</literal> is just an "
+"interface), each of the subclasses could easily be part of another "
+"inheritance hierarchy. You can still use polymorphic queries against the "
+"<literal>Payment</literal> interface."
 msgstr ""
 "Hay una cosa m&#x00e1;s por notar acerca de este mapeo. Ya que las subclases "
 "se mapean cada una en su propio elemento <literal>&lt;class&gt;</literal> (y "
@@ -623,7 +710,9 @@ msgstr ""
 "(Y todav&#x00ed;a puedes seguir usando consultas polim&#x00f3;rficas contra "
 "la interface <literal>Payment</literal>.)"
 
-#: index.docbook:232
+#. Tag: programlisting
+#: inheritance_mapping.xml:256
+#, no-c-format
 msgid ""
 "<![CDATA[<class name=\"CreditCardPayment\" table=\"CREDIT_PAYMENT\">\n"
 "    <id name=\"id\" type=\"long\" column=\"CREDIT_PAYMENT_ID\">\n"
@@ -681,14 +770,16 @@ msgstr ""
 "    </joined-subclass>\n"
 "</class>]]>"
 
-#: index.docbook:234
+#. Tag: para
+#: inheritance_mapping.xml:258
+#, fuzzy, no-c-format
 msgid ""
-"Once again, we don't mention <literal>Payment</literal> explicitly. If we "
-"execute a query against the <literal>Payment</literal> interface - for "
-"example, <literal>from Payment</literal> - Hibernate automatically returns "
+"Once again, <literal>Payment</literal> is not mentioned explicitly. If we "
+"execute a query against the <literal>Payment</literal> interface, for "
+"example <literal>from Payment</literal>, Hibernate automatically returns "
 "instances of <literal>CreditCardPayment</literal> (and its subclasses, since "
 "they also implement <literal>Payment</literal>), <literal>CashPayment</"
-"literal> and <literal>ChequePayment</literal> but not instances of "
+"literal> and <literal>ChequePayment</literal>, but not instances of "
 "<literal>NonelectronicTransaction</literal>."
 msgstr ""
 "Una vez m&#x00e1;s, no mencionamos a <literal>Payment</literal> expl&#x00ed;"
@@ -699,23 +790,28 @@ msgstr ""
 "literal>), <literal>CashPayment</literal> y <literal>ChequePayment</literal> "
 "pero no instancias de <literal>NonelectronicTransaction</literal>."
 
-#: index.docbook:249
+#. Tag: title
+#: inheritance_mapping.xml:273
+#, no-c-format
 msgid "Limitations"
 msgstr "Limitaciones"
 
-#: index.docbook:251
+#. Tag: para
+#: inheritance_mapping.xml:275
+#, fuzzy, no-c-format
 msgid ""
-"There are certain limitations to the \"implicit polymorphism\" approach to "
-"the table per concrete-class mapping strategy. There are somewhat less "
-"restrictive limitations to <literal>&lt;union-subclass&gt;</literal> "
-"mappings."
+"There are limitations to the \"implicit polymorphism\" approach to the table "
+"per concrete-class mapping strategy. There are somewhat less restrictive "
+"limitations to <literal>&lt;union-subclass&gt;</literal> mappings."
 msgstr ""
 "Existen ciertas limitaciones al enfoque de \"polimorfismo impl&#x00ed;cito\" "
 "en la estrategia de mapeo de tabla por clase concreta. Existen limitaciones "
 "algo menos restrictivas a los mapeos <literal>&lt;union-subclass&gt;</"
 "literal>."
 
-#: index.docbook:258
+#. Tag: para
+#: inheritance_mapping.xml:282
+#, no-c-format
 msgid ""
 "The following table shows the limitations of table per concrete-class "
 "mappings, and of implicit polymorphism, in Hibernate."
@@ -723,91 +819,142 @@ msgstr ""
 "La siguiente tabla muestra las limitaciones de mapeos de tabla por clase "
 "concreta, y de polmorfismo impl&#x00ed;cito, en Hibernate."
 
-#: index.docbook:264
+#. Tag: title
+#: inheritance_mapping.xml:288
+#, no-c-format
 msgid "Features of inheritance mappings"
 msgstr "Funcionalidades de mapeo de herencia"
 
-#: index.docbook:276
+#. Tag: entry
+#: inheritance_mapping.xml:301
+#, no-c-format
 msgid "Inheritance strategy"
 msgstr "Estrategia de herencia"
 
-#: index.docbook:277
+#. Tag: entry
+#: inheritance_mapping.xml:302
+#, no-c-format
 msgid "Polymorphic many-to-one"
 msgstr "muchos-a-uno polim&#x00f3;rfica"
 
-#: index.docbook:278
+#. Tag: entry
+#: inheritance_mapping.xml:303
+#, no-c-format
 msgid "Polymorphic one-to-one"
 msgstr "uno-a-uno polim&#x00f3;rfica"
 
-#: index.docbook:279
+#. Tag: entry
+#: inheritance_mapping.xml:304
+#, no-c-format
 msgid "Polymorphic one-to-many"
 msgstr "uno-a-muchos polim&#x00f3;rfica"
 
-#: index.docbook:280
+#. Tag: entry
+#: inheritance_mapping.xml:305
+#, no-c-format
 msgid "Polymorphic many-to-many"
 msgstr "mushos-a-muchos polim&#x00f3;rfica"
 
-#: index.docbook:281
+#. Tag: entry
+#: inheritance_mapping.xml:306
+#, no-c-format
 msgid "Polymorphic <literal>load()/get()</literal>"
 msgstr "<literal>load()/get()</literal> polim&#x00f3;rficos"
 
-#: index.docbook:282
+#. Tag: entry
+#: inheritance_mapping.xml:307
+#, no-c-format
 msgid "Polymorphic queries"
 msgstr "Consultas polim&#x00f3;rficas"
 
-#: index.docbook:283
+#. Tag: entry
+#: inheritance_mapping.xml:308
+#, no-c-format
 msgid "Polymorphic joins"
 msgstr "Uniones polim&#x00f3;rficas"
 
-#: index.docbook:284
+#. Tag: entry
+#: inheritance_mapping.xml:309
+#, no-c-format
 msgid "Outer join fetching"
 msgstr "Recuperaci&#x00f3;n por uni&#x00f3;n externa (outer join)"
 
-#: index.docbook:289
+#. Tag: entry
+#: inheritance_mapping.xml:314
+#, no-c-format
 msgid "table per class-hierarchy"
 msgstr "<entry>tabla por jerarqu&#x00ed;a de clases</entry>"
 
-#: index.docbook:290, index.docbook:301, index.docbook:312
+#. Tag: literal
+#: inheritance_mapping.xml:315 inheritance_mapping.xml:326
+#: inheritance_mapping.xml:337
+#, no-c-format
 msgid "&lt;many-to-one&gt;"
 msgstr "&lt;many-to-one&gt;"
 
-#: index.docbook:291, index.docbook:302, index.docbook:313
+#. Tag: literal
+#: inheritance_mapping.xml:316 inheritance_mapping.xml:327
+#: inheritance_mapping.xml:338
+#, no-c-format
 msgid "&lt;one-to-one&gt;"
 msgstr "&lt;one-to-one&gt;"
 
-#: index.docbook:292, index.docbook:303
+#. Tag: literal
+#: inheritance_mapping.xml:317 inheritance_mapping.xml:328
+#, no-c-format
 msgid "&lt;one-to-many&gt;"
 msgstr "&lt;one-to-many&gt;"
 
-#: index.docbook:293, index.docbook:304, index.docbook:315
+#. Tag: literal
+#: inheritance_mapping.xml:318 inheritance_mapping.xml:329
+#: inheritance_mapping.xml:340
+#, no-c-format
 msgid "&lt;many-to-many&gt;"
 msgstr "&lt;many-to-many&gt;"
 
-#: index.docbook:294, index.docbook:305, index.docbook:316
+#. Tag: literal
+#: inheritance_mapping.xml:319 inheritance_mapping.xml:330
+#: inheritance_mapping.xml:341
+#, no-c-format
 msgid "s.get(Payment.class, id)"
 msgstr "s.get(Payment.class, id)"
 
-#: index.docbook:295, index.docbook:306, index.docbook:317, index.docbook:328
+#. Tag: literal
+#: inheritance_mapping.xml:320 inheritance_mapping.xml:331
+#: inheritance_mapping.xml:342 inheritance_mapping.xml:353
+#, no-c-format
 msgid "from Payment p"
 msgstr "from Payment p"
 
-#: index.docbook:296, index.docbook:307, index.docbook:318
+#. Tag: literal
+#: inheritance_mapping.xml:321 inheritance_mapping.xml:332
+#: inheritance_mapping.xml:343
+#, no-c-format
 msgid "from Order o join o.payment p"
 msgstr "from Order o join o.payment p"
 
-#: index.docbook:297, index.docbook:308, index.docbook:319
+#. Tag: emphasis
+#: inheritance_mapping.xml:322 inheritance_mapping.xml:333
+#: inheritance_mapping.xml:344
+#, no-c-format
 msgid "supported"
 msgstr "soportada"
 
-#: index.docbook:300
+#. Tag: entry
+#: inheritance_mapping.xml:325
+#, no-c-format
 msgid "<entry>table per subclass</entry>"
 msgstr "<entry>tabla por subclase</entry>"
 
-#: index.docbook:311
+#. Tag: entry
+#: inheritance_mapping.xml:336
+#, no-c-format
 msgid "table per concrete-class (union-subclass)"
 msgstr "tabla por clase concreta (union-subclass)"
 
-#: index.docbook:314
+#. Tag: entry
+#: inheritance_mapping.xml:339
+#, no-c-format
 msgid ""
 "<literal>&lt;one-to-many&gt;</literal> (for <literal>inverse=\"true\"</"
 "literal> only)"
@@ -815,30 +962,41 @@ msgstr ""
 "<literal>&lt;one-to-many&gt;</literal> (para <literal>inverse=\"true\"</"
 "literal> solamente)"
 
-#: index.docbook:322
+#. Tag: entry
+#: inheritance_mapping.xml:347
+#, no-c-format
 msgid "table per concrete class (implicit polymorphism)"
 msgstr "tabla por clase concreta (polimorfismo impl&#x00ed;cito)"
 
-#: index.docbook:323
+#. Tag: literal
+#: inheritance_mapping.xml:348
+#, no-c-format
 msgid "&lt;any&gt;"
 msgstr "&lt;any&gt;"
 
-#: index.docbook:324, index.docbook:325, index.docbook:329, index.docbook:330
+#. Tag: emphasis
+#: inheritance_mapping.xml:349 inheritance_mapping.xml:350
+#: inheritance_mapping.xml:354 inheritance_mapping.xml:355
+#, no-c-format
 msgid "not supported"
 msgstr "no soportada"
 
-#: index.docbook:326
+#. Tag: literal
+#: inheritance_mapping.xml:351
+#, no-c-format
 msgid "&lt;many-to-any&gt;"
 msgstr "&lt;many-to-any&gt;"
 
-#: index.docbook:327
+#. Tag: literal
+#: inheritance_mapping.xml:352
+#, no-c-format
 msgid ""
 "s.createCriteria(Payment.class).add( Restrictions.idEq(id) ).uniqueResult()"
 msgstr ""
 "s.createCriteria(Payment.class).add( Restrictions.idEq(id) ).uniqueResult()"
 
-msgid "ROLES_OF_TRANSLATORS"
-msgstr "<!--TRANS:ROLES_OF_TRANSLATORS-->"
+#~ msgid "ROLES_OF_TRANSLATORS"
+#~ msgstr "<!--TRANS:ROLES_OF_TRANSLATORS-->"
 
-msgid "CREDIT_FOR_TRANSLATORS"
-msgstr "<!--TRANS:CREDIT_FOR_TRANSLATORS-->"
+#~ msgid "CREDIT_FOR_TRANSLATORS"
+#~ msgstr "<!--TRANS:CREDIT_FOR_TRANSLATORS-->"

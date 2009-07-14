@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2008-08-14 15:28+0000\n"
+"POT-Creation-Date: 2009-07-14 19:56+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,10 +18,10 @@ msgstr "Mapping XML"
 
 #. Tag: emphasis
 #: xml.xml:31
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
-"Note that this is an experimental feature in Hibernate 3.0 and is under "
-"extremely active development."
+"XML Mapping is an experimental feature in Hibernate 3.0 and is currently "
+"under active development."
 msgstr ""
 "Notez que cette fonctionnalité est expérimentale dans Hibernate 3.0 et est "
 "en développement extrêmement actif."
@@ -34,12 +34,12 @@ msgstr "Travailler avec des données XML"
 
 #. Tag: para
 #: xml.xml:39
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
-"Hibernate lets you work with persistent XML data in much the same way you "
-"work with persistent POJOs. A parsed XML tree can be thought of as just "
-"another way to represent the relational data at the object level, instead of "
-"POJOs."
+"Hibernate allows you to work with persistent XML data in much the same way "
+"you work with persistent POJOs. A parsed XML tree can be thought of as "
+"another way of representing the relational data at the object level, instead "
+"of POJOs."
 msgstr ""
 "Hibernate vous laisse travailler avec des données XML persistantes de la "
 "même manière que vous travaillez avec des POJOs persistants. Un arbre XML "
@@ -79,11 +79,11 @@ msgstr ""
 
 #. Tag: para
 #: xml.xml:61
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
-"A single mapping may be used to simultaneously map properties of a class and "
+"A single mapping can be used to simultaneously map properties of a class and "
 "nodes of an XML document to the database, or, if there is no class to map, "
-"it may be used to map just the XML."
+"it can be used to map just the XML."
 msgstr ""
 "Un simple mapping peut être utilisé pour simultanément mapper les propriétés "
 "d'une classe et les noeuds d'un document XML vers la base de données, ou, si "
@@ -171,11 +171,11 @@ msgstr ""
 
 #. Tag: para
 #: xml.xml:86
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
 "This mapping allows you to access the data as a dom4j tree, or as a graph of "
-"property name/value pairs (java <literal>Map</literal>s). The property names "
-"are purely logical constructs that may be referred to in HQL queries."
+"property name/value pairs or java <literal>Map</literal>s. The property "
+"names are purely logical constructs that can be referred to in HQL queries."
 msgstr ""
 "Ce mapping vous permet d'accéder aux données comme un arbre dom4j, ou comme "
 "un graphe de paire nom de propriété/valeur (<literal>Map</literal>s java). "
@@ -190,10 +190,10 @@ msgstr "Métadonnées du mapping XML"
 
 #. Tag: para
 #: xml.xml:99
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
-"Many Hibernate mapping elements accept the <literal>node</literal> "
-"attribute. This let's you specify the name of an XML attribute or element "
+"A range of Hibernate mapping elements accept the <literal>node</literal> "
+"attribute. This lets you specify the name of an XML attribute or element "
 "that holds the property or entity data. The format of the <literal>node</"
 "literal> attribute must be one of the following:"
 msgstr ""
@@ -204,28 +204,28 @@ msgstr ""
 
 #. Tag: para
 #: xml.xml:108
-#, no-c-format
-msgid "<literal>\"element-name\"</literal> - map to the named XML element"
+#, fuzzy, no-c-format
+msgid "<literal>\"element-name\"</literal>: map to the named XML element"
 msgstr "<literal>\"element-name\"</literal> - mappe vers l'élément XML nommé"
 
 #. Tag: para
 #: xml.xml:111
-#, no-c-format
-msgid "<literal>\"@attribute-name\"</literal> - map to the named XML attribute"
+#, fuzzy, no-c-format
+msgid "<literal>\"@attribute-name\"</literal>: map to the named XML attribute"
 msgstr ""
 "<literal>\"@attribute-name\"</literal> - mappe vers l'attribut XML nommé"
 
 #. Tag: para
 #: xml.xml:114
-#, no-c-format
-msgid "<literal>\".\"</literal> - map to the parent element"
+#, fuzzy, no-c-format
+msgid "<literal>\".\"</literal>: map to the parent element"
 msgstr "<literal>\".\"</literal> - mappe vers le parent de l'élément"
 
 #. Tag: para
 #: xml.xml:117
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
-"<literal>\"element-name/@attribute-name\"</literal> - map to the named "
+"<literal>\"element-name/@attribute-name\"</literal>: map to the named "
 "attribute of the named element"
 msgstr ""
 "<literal>\"element-name/@attribute-name\"</literal> - mappe vers l'élément "
@@ -233,7 +233,7 @@ msgstr ""
 
 #. Tag: para
 #: xml.xml:124
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
 "For collections and single valued associations, there is an additional "
 "<literal>embed-xml</literal> attribute. If <literal>embed-xml=\"true\"</"
@@ -241,7 +241,7 @@ msgid ""
 "of value type) will be embedded directly in the XML tree for the entity that "
 "owns the association. Otherwise, if <literal>embed-xml=\"false\"</literal>, "
 "then only the referenced identifier value will appear in the XML for single "
-"point associations and collections will simply not appear at all."
+"point associations and collections will not appear at all."
 msgstr ""
 "Pour des collections et de simples associations valuées, il y a un attribut "
 "<literal>embed-xml</literal> supplémentaire. Si <literal>embed-xml=\"true\"</"
@@ -254,10 +254,10 @@ msgstr ""
 
 #. Tag: para
 #: xml.xml:134
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
-"You should be careful not to leave <literal>embed-xml=\"true\"</literal> for "
-"too many associations, since XML does not deal well with circularity!"
+"Do not leave <literal>embed-xml=\"true\"</literal> for too many "
+"associations, since XML does not deal well with circularity."
 msgstr ""
 "Vous devriez faire attention à ne pas laisser <literal>embed-xml=\"true\"</"
 "literal> pour trop d'associations, puisque XML ne traite pas bien les liens "
@@ -305,10 +305,10 @@ msgstr ""
 
 #. Tag: para
 #: xml.xml:141
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
-"in this case, we have decided to embed the collection of account ids, but "
-"not the actual account data. The following HQL query:"
+"In this case, the collection of account ids is embedded, but not the actual "
+"account data. The following HQL query:"
 msgstr ""
 "dans ce cas, nous avons décidé d'embarquer la collection d'identifiants de "
 "compte, mais pas les données actuelles du compte. La requête HQL suivante :"
@@ -323,8 +323,8 @@ msgstr ""
 
 #. Tag: para
 #: xml.xml:148
-#, no-c-format
-msgid "Would return datasets such as this:"
+#, fuzzy, no-c-format
+msgid "would return datasets such as this:"
 msgstr "devrait retourner l'ensemble de données suivant :"
 
 #. Tag: programlisting
@@ -384,10 +384,10 @@ msgstr "Manipuler des données XML"
 
 #. Tag: para
 #: xml.xml:167
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
-"Let's rearead and update XML documents in the application. We do this by "
-"obtaining a dom4j session:"
+"You can also re-read and update XML documents in the application. You can do "
+"this by obtaining a dom4j session:"
 msgstr ""
 "Relisons et mettons à jour des documents XML dans l'application. Nous "
 "faisons ça en obtenant une session dom4j :"
@@ -440,11 +440,10 @@ msgstr ""
 
 #. Tag: para
 #: xml.xml:176
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
-"It is extremely useful to combine this feature with Hibernate's "
-"<literal>replicate()</literal> operation to implement XML-based data import/"
-"export."
+"When implementing XML-based data import/export, it is useful to combine this "
+"feature with Hibernate's <literal>replicate()</literal> operation."
 msgstr ""
 "Il est extrêmement utile de combiner cette fonctionnalité avec l'opération "
 "<literal>replicate()</literal> d'Hibernate pour implémenter des imports/"

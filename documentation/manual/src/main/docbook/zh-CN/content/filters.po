@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2008-08-14 15:28+0000\n"
+"POT-Creation-Date: 2009-07-14 19:56+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,11 +18,11 @@ msgstr "过滤数据"
 
 #. Tag: para
 #: filters.xml:31
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
 "Hibernate3 provides an innovative new approach to handling data with "
 "\"visibility\" rules. A <emphasis>Hibernate filter</emphasis> is a global, "
-"named, parameterized filter that may be enabled or disabled for a particular "
+"named, parameterized filter that can be enabled or disabled for a particular "
 "Hibernate session."
 msgstr ""
 "Hibernate3 提供了一种创新的方式来处理具有“显性(visibility)”规则的数据，那就是"
@@ -38,16 +38,16 @@ msgstr "Hibernate 过滤器(filters)"
 
 #. Tag: para
 #: filters.xml:40
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
-"Hibernate3 adds the ability to pre-define filter criteria and attach those "
-"filters at both a class and a collection level. A filter criteria is the "
-"ability to define a restriction clause very similiar to the existing \"where"
-"\" attribute available on the class and various collection elements. Except "
-"these filter conditions can be parameterized. The application can then make "
-"the decision at runtime whether given filters should be enabled and what "
-"their parameter values should be. Filters can be used like database views, "
-"but parameterized inside the application."
+"Hibernate3 has the ability to pre-define filter criteria and attach those "
+"filters at both a class level and a collection level. A filter criteria "
+"allows you to define a restriction clause similar to the existing \"where\" "
+"attribute available on the class and various collection elements. These "
+"filter conditions, however, can be parameterized. The application can then "
+"decide at runtime whether certain filters should be enabled and what their "
+"parameter values should be. Filters can be used like database views, but "
+"they are parameterized inside the application."
 msgstr ""
 "Hibernate3新增了对某个类或者集合使用预先定义的过滤器条件(filter criteria)的功"
 "能。过滤器条件相当于定义一个 非常类似于类和各种集合上的“where”属性的约束子"
@@ -79,8 +79,8 @@ msgstr ""
 
 #. Tag: para
 #: filters.xml:58
-#, no-c-format
-msgid "Then, this filter can be attached to a class:"
+#, fuzzy, no-c-format
+msgid "This filter can then be attached to a class:"
 msgstr "定义好之后，就可以在某个类中使用这个过滤器："
 
 #. Tag: programlisting
@@ -96,8 +96,8 @@ msgstr ""
 
 #. Tag: para
 #: filters.xml:64
-#, no-c-format
-msgid "or, to a collection:"
+#, fuzzy, no-c-format
+msgid "Or, to a collection:"
 msgstr "也可以在某个集合使用它："
 
 #. Tag: programlisting
@@ -112,8 +112,8 @@ msgstr ""
 
 #. Tag: para
 #: filters.xml:70
-#, no-c-format
-msgid "or, even to both (or multiples of each) at the same time."
+#, fuzzy, no-c-format
+msgid "Or, to both or multiples of each at the same time."
 msgstr ""
 "可以在多个类或集合中使用某个过滤器；某个类或者集合中也可以使用多个过滤器。"
 
@@ -124,11 +124,11 @@ msgid ""
 "The methods on <literal>Session</literal> are: <literal>enableFilter(String "
 "filterName)</literal>, <literal>getEnabledFilter(String filterName)</"
 "literal>, and <literal>disableFilter(String filterName)</literal>. By "
-"default, filters are <emphasis>not</emphasis> enabled for a given session; "
-"they must be explcitly enabled through use of the <literal>Session."
-"enableFilter()</literal> method, which returns an instance of the "
-"<literal>Filter</literal> interface. Using the simple filter defined above, "
-"this would look like:"
+"default, filters are <emphasis>not</emphasis> enabled for a given session. "
+"Filters must be enabled through use of the <literal>Session.enableFilter()</"
+"literal> method, which returns an instance of the <literal>Filter</literal> "
+"interface. If you used the simple filter defined above, it would look like "
+"this:"
 msgstr ""
 "<literal>Session</literal>对象中会用到的方法有：<literal>enableFilter(String "
 "filterName)</literal>, <literal>getEnabledFilter(String filterName)</"
@@ -147,19 +147,20 @@ msgstr ""
 
 #. Tag: para
 #: filters.xml:85
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
-"Note that methods on the org.hibernate.Filter interface do allow the method-"
-"chaining common to much of Hibernate."
+"Methods on the org.hibernate.Filter interface do allow the method-chaining "
+"common to much of Hibernate."
 msgstr ""
 "注意，org.hibernate.Filter的方法允许链式方法调用。（类似上面例子中启用Filter"
 "之后设定Filter参数这个“方法链”） Hibernate的其他部分也大多有这个特性。"
 
 #. Tag: para
 #: filters.xml:89
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
-"A full example, using temporal data with an effective record date pattern:"
+"The following is a full example, using temporal data with an effective "
+"record date pattern:"
 msgstr "下面是一个比较完整的例子，使用了记录生效日期模式过滤有时效的数据："
 
 #. Tag: programlisting
@@ -202,11 +203,10 @@ msgstr ""
 
 #. Tag: para
 #: filters.xml:95
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
-"Then, in order to ensure that you always get back currently effective "
-"records, simply enable the filter on the session prior to retrieving "
-"employee data:"
+"In order to ensure that you are provided with currently effective records, "
+"enable the filter on the session prior to retrieving employee data:"
 msgstr ""
 "定义好后，如果想要保证取回的都是目前处于生效期的记录，只需在获取雇员数据的操"
 "作之前先开启过滤器即可："
@@ -227,24 +227,24 @@ msgstr ""
 
 #. Tag: para
 #: filters.xml:102
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
-"In the HQL above, even though we only explicitly mentioned a salary "
-"constraint on the results, because of the enabled filter the query will "
-"return only currently active employees who have a salary greater than a "
-"million dollars."
+"Even though a salary constraint was mentioned explicitly on the results in "
+"the above HQL, because of the enabled filter, the query will return only "
+"currently active employees who have a salary greater than one million "
+"dollars."
 msgstr ""
 "在上面的HQL中，虽然我们仅仅显式的使用了一个薪水条件，但因为启用了过滤器，查询"
 "将仅返回那些目前雇用 关系处于生效期的，并且薪水高于一百万美刀的雇员的数据。"
 
 #. Tag: para
 #: filters.xml:108
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
-"Note: if you plan on using filters with outer joining (either through HQL or "
-"load fetching) be careful of the direction of the condition expression. Its "
-"safest to set this up for left outer joining; in general, place the "
-"parameter first followed by the column name(s) after the operator."
+"If you want to use filters with outer joining, either through HQL or load "
+"fetching, be careful of the direction of the condition expression. It is "
+"safest to set this up for left outer joining. Place the parameter first "
+"followed by the column name(s) after the operator."
 msgstr ""
 "注意：如果你打算在使用外连接（或者通过HQL或load fetching）的同时使用过滤器，"
 "要注意条件表达式的方向（左还是右）。 最安全的方式是使用左外连接（left outer "
@@ -252,13 +252,13 @@ msgstr ""
 
 #. Tag: para
 #: filters.xml:115
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
-"After being defined a filter might be attached to multiple entities and/or "
-"collections each with its own condition. That can be tedious when the "
-"conditions are the same each time. Thus <literal>&lt;filter-def/&gt;</"
-"literal> allows defining a default condition, either as an attribute or "
-"CDATA:"
+"After being defined, a filter might be attached to multiple entities and/or "
+"collections each with its own condition. This can be problematic when the "
+"conditions are the same each time. Using <literal>&lt;filter-def/&gt;</"
+"literal> allows you to definine a default condition, either as an attribute "
+"or CDATA:"
 msgstr ""
 "在Filter定义之后,它可能被附加到多个实体和/或集合类,每个都有自己的条件。假若这"
 "些条件都是一样的，每次都要定义就显得很繁琐。因此，<literal>&lt;filter-def/"
@@ -275,12 +275,12 @@ msgstr ""
 
 #. Tag: para
 #: filters.xml:124
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
-"This default condition will then be used whenever the filter is attached to "
-"something without specifying a condition. Note that this means you can give "
-"a specific condition as part of the attachment of the filter which overrides "
-"the default condition in that particular case."
+"This default condition will be used whenever the filter is attached to "
+"something without specifying a condition. This means you can give a specific "
+"condition as part of the attachment of the filter that overrides the default "
+"condition in that particular case."
 msgstr ""
 "当这个filter被附加到任何目的地，而又没有指明条件时，这个条件就会被使用。注"
 "意，换句话说，你可以通过给filter附加特别的条件来重载默认条件。"

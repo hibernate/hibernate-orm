@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2007-10-25 07:47+0000\n"
+"POT-Creation-Date: 2009-07-14 19:55+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -11,29 +11,29 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 
 #. Tag: title
-#: collection_mapping.xml:5
-#, no-c-format
-msgid "Collection Mapping"
-msgstr "콜렉션 매핑"
+#: collection_mapping.xml:29
+#, fuzzy, no-c-format
+msgid "Collection mapping"
+msgstr "콜렉션 매핑들"
 
 #. Tag: title
-#: collection_mapping.xml:8
+#: collection_mapping.xml:32
 #, no-c-format
 msgid "Persistent collections"
 msgstr "영속 콜렉션들"
 
 #. Tag: para
-#: collection_mapping.xml:10
-#, no-c-format
+#: collection_mapping.xml:34
+#, fuzzy, no-c-format
 msgid ""
 "Hibernate requires that persistent collection-valued fields be declared as "
-"an interface type, for example:"
+"an interface type. For example:"
 msgstr ""
 "예를 들어 Hibernate는 영속 콜렉션-값을 가진 필드들이 인터페이스 타입으로서 선"
 "언될 것을 필요로 한다:"
 
 #. Tag: programlisting
-#: collection_mapping.xml:15
+#: collection_mapping.xml:39
 #, no-c-format
 msgid ""
 "<![CDATA[public class Product {\n"
@@ -48,15 +48,15 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: collection_mapping.xml:17
-#, no-c-format
+#: collection_mapping.xml:41
+#, fuzzy, no-c-format
 msgid ""
 "The actual interface might be <literal>java.util.Set</literal>, "
 "<literal>java.util.Collection</literal>, <literal>java.util.List</literal>, "
 "<literal>java.util.Map</literal>, <literal>java.util.SortedSet</literal>, "
-"<literal>java.util.SortedMap</literal> or ... anything you like! (Where "
-"\"anything you like\" means you will have to write an implementation of "
-"<literal>org.hibernate.usertype.UserCollectionType</literal>.)"
+"<literal>java.util.SortedMap</literal> or anything you like (\"anything you "
+"like\" means you will have to write an implementation of <literal>org."
+"hibernate.usertype.UserCollectionType</literal>.)"
 msgstr ""
 "실제 인터페이스는 <literal>java.util.Set</literal>, <literal>java.util."
 "Collection</literal>, <literal>java.util.List</literal>, <literal>java.util."
@@ -66,16 +66,16 @@ msgstr ""
 "UserCollectionType</literal>에 대한 구현을 작성해야 함을 의미한다.)"
 
 #. Tag: para
-#: collection_mapping.xml:26
-#, no-c-format
+#: collection_mapping.xml:50
+#, fuzzy, no-c-format
 msgid ""
-"Notice how we initialized the instance variable with an instance of "
+"Notice how the instance variable was initialized with an instance of "
 "<literal>HashSet</literal>. This is the best way to initialize collection "
 "valued properties of newly instantiated (non-persistent) instances. When you "
-"make the instance persistent - by calling <literal>persist()</literal>, for "
-"example - Hibernate will actually replace the <literal>HashSet</literal> "
-"with an instance of Hibernate's own implementation of <literal>Set</"
-"literal>. Watch out for errors like this:"
+"make the instance persistent, by calling <literal>persist()</literal> for "
+"example, Hibernate will actually replace the <literal>HashSet</literal> with "
+"an instance of Hibernate's own implementation of <literal>Set</literal>. Be "
+"aware of the following errors:"
 msgstr ""
 "우리가 <literal>HashSet</literal>의 인스턴스를 가진 인스턴스 변수를 초기화 시"
 "켰던 방법을 주목하라. 이것은 새로이 초기화 된(비-영속) 인스턴스들을 가진 콜렉"
@@ -86,7 +86,7 @@ msgstr ""
 "하라:"
 
 #. Tag: programlisting
-#: collection_mapping.xml:36
+#: collection_mapping.xml:60
 #, no-c-format
 msgid ""
 "<![CDATA[Cat cat = new DomesticCat();\n"
@@ -101,13 +101,13 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: collection_mapping.xml:38
-#, no-c-format
+#: collection_mapping.xml:62
+#, fuzzy, no-c-format
 msgid ""
 "The persistent collections injected by Hibernate behave like "
 "<literal>HashMap</literal>, <literal>HashSet</literal>, <literal>TreeMap</"
 "literal>, <literal>TreeSet</literal> or <literal>ArrayList</literal>, "
-"depending upon the interface type."
+"depending on the interface type."
 msgstr ""
 "Hibernate에 의해 도입된 영속 콜렉션들은 인터페이스 타입에 따라 "
 "<literal>HashMap</literal>, <literal>HashSet</literal>, <literal>TreeMap</"
@@ -115,16 +115,16 @@ msgstr ""
 "이 행위한다."
 
 #. Tag: para
-#: collection_mapping.xml:45
-#, no-c-format
+#: collection_mapping.xml:69
+#, fuzzy, no-c-format
 msgid ""
 "Collections instances have the usual behavior of value types. They are "
-"automatically persisted when referenced by a persistent object and "
+"automatically persisted when referenced by a persistent object and are "
 "automatically deleted when unreferenced. If a collection is passed from one "
 "persistent object to another, its elements might be moved from one table to "
-"another. Two entities may not share a reference to the same collection "
+"another. Two entities cannot share a reference to the same collection "
 "instance. Due to the underlying relational model, collection-valued "
-"properties do not support null value semantics; Hibernate does not "
+"properties do not support null value semantics. Hibernate does not "
 "distinguish between a null collection reference and an empty collection."
 msgstr ""
 "콜렉션 인스턴스들은 value 타입들을 가진 통상의 특징을 갖는다. 그것들은 영속 "
@@ -136,12 +136,12 @@ msgstr ""
 "Hibernate는 null 콜렉션 참조와 공백의 콜렉션 사이를 구별 짓지 않는다."
 
 #. Tag: para
-#: collection_mapping.xml:56
-#, no-c-format
+#: collection_mapping.xml:80
+#, fuzzy, no-c-format
 msgid ""
-"You shouldn't have to worry much about any of this. Use persistent "
-"collections the same way you use ordinary Java collections. Just make sure "
-"you understand the semantics of bidirectional associations (discussed later)."
+"Use persistent collections the same way you use ordinary Java collections. "
+"However, please ensure you understand the semantics of bidirectional "
+"associations (these are discussed later)."
 msgstr ""
 "당신은 이것의 어떤 것에 대해 너무 많이 걱정하지 않아도 될 것이다. 당신이 통상"
 "의 자바 콜렉션들을 사용하는 것과 동일한 방법으로 영속 콜렉션들을 사용하라. 단"
@@ -149,25 +149,38 @@ msgstr ""
 "됨)."
 
 #. Tag: title
-#: collection_mapping.xml:65
+#: collection_mapping.xml:89
 #, no-c-format
 msgid "Collection mappings"
 msgstr "콜렉션 매핑들"
 
 #. Tag: para
-#: collection_mapping.xml:67
-#, no-c-format
+#: collection_mapping.xml:92
+#, fuzzy, no-c-format
+msgid ""
+"There are quite a range of mappings that can be generated for collections "
+"that cover many common relational models. We suggest you experiment with the "
+"schema generation tool so that you understand how various mapping "
+"declarations translate to database tables."
+msgstr ""
+"많은 공통된 관계형 모형들을 다루는, 콜렉션들에 대해 생성될 수 있는 매핑들의 "
+"영역이 꽤 존재한다. 여러가지 매핑 선언들이 데이터베이스 테이블들로 변환되는 "
+"방법을 당신이 느끼려면 스키마 생성 도구로 실험할 것을 우리는 제안한다."
+
+#. Tag: para
+#: collection_mapping.xml:99
+#, fuzzy, no-c-format
 msgid ""
 "The Hibernate mapping element used for mapping a collection depends upon the "
-"type of the interface. For example, a <literal>&lt;set&gt;</literal> element "
-"is used for mapping properties of type <literal>Set</literal>."
+"type of interface. For example, a <literal>&lt;set&gt;</literal> element is "
+"used for mapping properties of type <literal>Set</literal>."
 msgstr ""
 "콜렉션을 매핑하는데 사용되는 Hiberante 매핑 요소는 인터페이스의 타입에 의존한"
 "다. 예를 들어<literal>&lt;set&gt;</literal> 요소는 <literal>Set</literal> 타"
 "입의 매핑 프로퍼티들에 사용된다"
 
 #. Tag: programlisting
-#: collection_mapping.xml:73
+#: collection_mapping.xml:105
 #, no-c-format
 msgid ""
 "<![CDATA[<class name=\"Product\">\n"
@@ -180,7 +193,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: collection_mapping.xml:75
+#: collection_mapping.xml:107
 #, no-c-format
 msgid ""
 "Apart from <literal>&lt;set&gt;</literal>, there is also <literal>&lt;"
@@ -195,7 +208,7 @@ msgstr ""
 "요소들이 존재한다. <literal>&lt;map&gt;</literal> 요소가 대표적이다:"
 
 #. Tag: programlisting
-#: collection_mapping.xml:100
+#: collection_mapping.xml:132
 #, no-c-format
 msgid ""
 "<![CDATA[<map\n"
@@ -224,39 +237,40 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: collection_mapping.xml:103
-#, no-c-format
-msgid "<literal>name</literal> the collection property name"
+#: collection_mapping.xml:135
+#, fuzzy, no-c-format
+msgid "<literal>name</literal>: the collection property name"
 msgstr "<literal>name</literal> 콜렉션 프로퍼티 이름"
 
 #. Tag: para
-#: collection_mapping.xml:108
-#, no-c-format
+#: collection_mapping.xml:140
+#, fuzzy, no-c-format
 msgid ""
-"<literal>table</literal> (optional - defaults to property name) the name of "
-"the collection table (not used for one-to-many associations)"
+"<literal>table</literal> (optional - defaults to property name): the name of "
+"the collection table. It is not used for one-to-many associations."
 msgstr ""
 "<literal>table</literal> (옵션 - 디폴트는 프로퍼티 이름) 콜렉션 테이블의 이름"
 "(one-to-many 연관관계들에 대해서는 사용되지 않음)"
 
 #. Tag: para
-#: collection_mapping.xml:114
-#, no-c-format
+#: collection_mapping.xml:146
+#, fuzzy, no-c-format
 msgid ""
-"<literal>schema</literal> (optional) the name of a table schema to override "
+"<literal>schema</literal> (optional): the name of a table schema to override "
 "the schema declared on the root element"
 msgstr ""
 "<literal>schema</literal> (옵션) 루트 요소 상에 선언된 스키마를 오버라이드 시"
 "키는 테이블 스키마의 이름"
 
 #. Tag: para
-#: collection_mapping.xml:120
-#, no-c-format
+#: collection_mapping.xml:152
+#, fuzzy, no-c-format
 msgid ""
-"<literal>lazy</literal> (optional - defaults to <literal>true</literal>) may "
-"be used to disable lazy fetching and specify that the association is always "
-"eagerly fetched, or to enable \"extra-lazy\" fetching where most operations "
-"do not initialize the collection (suitable for very large collections)"
+"<literal>lazy</literal> (optional - defaults to <literal>true</literal>): "
+"disables lazy fetching and specifies that the association is always eagerly "
+"fetched. It can also be used to enable \"extra-lazy\" fetching where most "
+"operations do not initialize the collection. This is suitable for large "
+"collections."
 msgstr ""
 "<literal>lazy</literal> (옵션 - 디폴트는 <literal>true</literal>)는 lazy 페칭"
 "을 사용 불가능하도록 하고 그 연관이 항상 eagerly 페치됨을 지정하는데 , 또는 "
@@ -264,66 +278,68 @@ msgstr ""
 "용 가능하도록 하는데(매우 큰 콜렉션들에 적당함) 사용될 수 있다"
 
 #. Tag: para
-#: collection_mapping.xml:129
-#, no-c-format
+#: collection_mapping.xml:161
+#, fuzzy, no-c-format
 msgid ""
-"<literal>inverse</literal> (optional - defaults to <literal>false</literal>) "
-"mark this collection as the \"inverse\" end of a bidirectional association"
+"<literal>inverse</literal> (optional - defaults to <literal>false</"
+"literal>): marks this collection as the \"inverse\" end of a bidirectional "
+"association."
 msgstr ""
 "<literal>inverse</literal> (옵션 - 디폴트는 <literal>false</literal>) 이 콜렉"
 "션을 양방향 연관관계의 \"inverse\" 끝(end)으로 표시한다"
 
 #. Tag: para
-#: collection_mapping.xml:135
-#, no-c-format
+#: collection_mapping.xml:167
+#, fuzzy, no-c-format
 msgid ""
-"<literal>cascade</literal> (optional - defaults to <literal>none</literal>) "
-"enable operations to cascade to child entities"
+"<literal>cascade</literal> (optional - defaults to <literal>none</literal>): "
+"enables operations to cascade to child entities."
 msgstr ""
 "<literal>cascade</literal> (옵션 - 디폴트는 <literal>none</literal>) 오퍼레이"
 "션들이 자식 엔티티들에 대해 케스케이드하는 것을 이용 가능하게 한다"
 
 #. Tag: para
-#: collection_mapping.xml:141
-#, no-c-format
+#: collection_mapping.xml:173
+#, fuzzy, no-c-format
 msgid ""
-"<literal>sort</literal> (optional) specify a sorted collection with "
-"<literal>natural</literal> sort order, or a given comparator class"
+"<literal>sort</literal> (optional): specifies a sorted collection with "
+"<literal>natural</literal> sort order or a given comparator class."
 msgstr ""
 "<literal>sort</literal> (옵션) <literal>natural</literal> 정렬 순서로 정렬된"
 "(sorted) 콜렉션 또는 주어진 comparator 클래스를 지정한다"
 
 #. Tag: para
-#: collection_mapping.xml:147
-#, no-c-format
+#: collection_mapping.xml:179
+#, fuzzy, no-c-format
 msgid ""
-"<literal>order-by</literal> (optional, JDK1.4 only) specify a table column "
-"(or columns) that define the iteration order of the <literal>Map</literal>, "
-"<literal>Set</literal> or bag, together with an optional <literal>asc</"
-"literal> or <literal>desc</literal>"
+"<literal>order-by</literal> (optional, JDK1.4 only): specifies a table "
+"column or columns that define the iteration order of the <literal>Map</"
+"literal>, <literal>Set</literal> or bag, together with an optional "
+"<literal>asc</literal> or <literal>desc</literal>."
 msgstr ""
 "<literal>order-by</literal> (옵션, JDK1.4에서만) <literal>asc</literal> 또는 "
 "<literal>desc</literal> 옵션과 함께 <literal>Map</literal>, <literal>Set</"
 "literal> 또는 bag의 반복 순서를 정의하는 테이블 컬럼(또는 컬럼들)을 지정한다"
 
 #. Tag: para
-#: collection_mapping.xml:154
-#, no-c-format
+#: collection_mapping.xml:186
+#, fuzzy, no-c-format
 msgid ""
-"<literal>where</literal> (optional) specify an arbitrary SQL <literal>WHERE</"
-"literal> condition to be used when retrieving or removing the collection "
-"(useful if the collection should contain only a subset of the available data)"
+"<literal>where</literal> (optional): specifies an arbitrary SQL "
+"<literal>WHERE</literal> condition that is used when retrieving or removing "
+"the collection. This is useful if the collection needs to contain only a "
+"subset of the available data."
 msgstr ""
 "<literal>where</literal> (옵션) 콜렉션을 검색하거나 제거할 때 사용될 임의적"
 "인 SQL <literal>WHERE</literal> 조건을 지정한다 (콜렉션이 오직 이용 가능한 데"
 "이터의 부분집합 만을 포함할 경우에 유용하다)"
 
 #. Tag: para
-#: collection_mapping.xml:161
-#, no-c-format
+#: collection_mapping.xml:193
+#, fuzzy, no-c-format
 msgid ""
-"<literal>fetch</literal> (optional, defaults to <literal>select</literal>) "
-"Choose between outer-join fetching, fetching by sequential select, and "
+"<literal>fetch</literal> (optional, defaults to <literal>select</literal>): "
+"chooses between outer-join fetching, fetching by sequential select, and "
 "fetching by sequential subselect."
 msgstr ""
 "<literal>fetch</literal> (옵션, 디폴트는 <literal>select</literal>) outer-"
@@ -331,34 +347,34 @@ msgstr ""
 "선택하라."
 
 #. Tag: para
-#: collection_mapping.xml:168
-#, no-c-format
+#: collection_mapping.xml:200
+#, fuzzy, no-c-format
 msgid ""
-"<literal>batch-size</literal> (optional, defaults to <literal>1</literal>) "
-"specify a \"batch size\" for lazily fetching instances of this collection."
+"<literal>batch-size</literal> (optional, defaults to <literal>1</literal>): "
+"specifies a \"batch size\" for lazily fetching instances of this collection."
 msgstr ""
 "<literal>batch-size</literal> (옵션, 디폴트는 <literal>1</literal>) 이 콜렉션"
 "의 lazily fetching 인스턴스에 대해 \"배치 사이즈\"를 지정하라."
 
 #. Tag: para
-#: collection_mapping.xml:174
-#, no-c-format
+#: collection_mapping.xml:206
+#, fuzzy, no-c-format
 msgid ""
 "<literal>access</literal> (optional - defaults to <literal>property</"
-"literal>): The strategy Hibernate should use for accessing the collection "
-"property value."
+"literal>): the strategy Hibernate uses for accessing the collection property "
+"value."
 msgstr ""
 "<literal>access</literal> (옵션 - 디폴트는 <literal>property</literal>): "
 "Hibernate가 콜렉션 프로퍼티 값에 접근하는데 사용할 방도."
 
 #. Tag: para
-#: collection_mapping.xml:180
-#, no-c-format
+#: collection_mapping.xml:212
+#, fuzzy, no-c-format
 msgid ""
 "<literal>optimistic-lock</literal> (optional - defaults to <literal>true</"
-"literal>): Species that changes to the state of the collection results in "
-"increment of the owning entity's version. (For one to many associations, it "
-"is often reasonable to disable this setting.)"
+"literal>): specifies that changes to the state of the collection results in "
+"increments of the owning entity's version. For one-to-many associations you "
+"may want to disable this setting."
 msgstr ""
 "<literal>optimistic-lock</literal> (옵션 - 디폴트는 <literal>true</"
 "literal>): 콜렉션의 상태에 대한 변경들이 소유하는 엔티티의 버전의 증가로 귀결"
@@ -366,30 +382,31 @@ msgstr ""
 "하는 것이 종종 합당하다.)"
 
 #. Tag: para
-#: collection_mapping.xml:188
-#, no-c-format
+#: collection_mapping.xml:220
+#, fuzzy, no-c-format
 msgid ""
 "<literal>mutable</literal> (optional - defaults to <literal>true</literal>): "
-"A value of <literal>false</literal> specifies that the elements of the "
-"collection never change (a minor performance optimization in some cases)."
+"a value of <literal>false</literal> specifies that the elements of the "
+"collection never change. This allows for minor performance optimization in "
+"some cases."
 msgstr ""
 "<literal>mutable</literal> (옵션 - 디폴트는 <literal>true</literal>): "
 "<literal>false</literal> 값은 콜렉션의 요소들이 결코 변경되지 않음을 지정한"
 "다. (몇몇 경우들에서 마이너 퍼포먼스 최적화)."
 
 #. Tag: title
-#: collection_mapping.xml:198
+#: collection_mapping.xml:230
 #, no-c-format
 msgid "Collection foreign keys"
 msgstr "콜렉션 foreign 키들"
 
 #. Tag: para
-#: collection_mapping.xml:200
-#, no-c-format
+#: collection_mapping.xml:232
+#, fuzzy, no-c-format
 msgid ""
 "Collection instances are distinguished in the database by the foreign key of "
 "the entity that owns the collection. This foreign key is referred to as the "
-"<emphasis>collection key column</emphasis> (or columns) of the collection "
+"<emphasis>collection key column</emphasis>, or columns, of the collection "
 "table. The collection key column is mapped by the <literal>&lt;key&gt;</"
 "literal> element."
 msgstr ""
@@ -399,12 +416,12 @@ msgstr ""
 "<literal>&lt;key&gt;</literal> 요소에 의해 매핑된다."
 
 #. Tag: para
-#: collection_mapping.xml:208
-#, no-c-format
+#: collection_mapping.xml:240
+#, fuzzy, no-c-format
 msgid ""
-"There may be a nullability constraint on the foreign key column. For most "
-"collections, this is implied. For unidirectional one to many associations, "
-"the foreign key column is nullable by default, so you might need to specify "
+"There can be a nullability constraint on the foreign key column. For most "
+"collections, this is implied. For unidirectional one-to-many associations, "
+"the foreign key column is nullable by default, so you may need to specify "
 "<literal>not-null=\"true\"</literal>."
 msgstr ""
 "foreign 키 컬럼에 대한 null 허용 가능 컨스트레인트가 존재할 수 있다. 대부분"
@@ -413,28 +430,28 @@ msgstr ""
 "\"true\"</literal>를 지정할 필요가 있을 수 있다."
 
 #. Tag: programlisting
-#: collection_mapping.xml:215
+#: collection_mapping.xml:247
 #, no-c-format
 msgid "<![CDATA[<key column=\"productSerialNumber\" not-null=\"true\"/>]]>"
 msgstr ""
 
 #. Tag: para
-#: collection_mapping.xml:217
-#, no-c-format
+#: collection_mapping.xml:249
+#, fuzzy, no-c-format
 msgid ""
-"The foreign key constraint may use <literal>ON DELETE CASCADE</literal>."
+"The foreign key constraint can use <literal>ON DELETE CASCADE</literal>."
 msgstr ""
 "foreign 키 컨스트레인트는 <literal>ON DELETE CASCADE</literal>를 사용할 수도 "
 "있다."
 
 #. Tag: programlisting
-#: collection_mapping.xml:221
+#: collection_mapping.xml:253
 #, no-c-format
 msgid "<![CDATA[<key column=\"productSerialNumber\" on-delete=\"cascade\"/>]]>"
 msgstr ""
 
 #. Tag: para
-#: collection_mapping.xml:223
+#: collection_mapping.xml:255
 #, no-c-format
 msgid ""
 "See the previous chapter for a full definition of the <literal>&lt;key&gt;</"
@@ -442,22 +459,22 @@ msgid ""
 msgstr "<literal>&lt;key&gt;</literal> 요소에 대한 전체 정의는 앞 장을 보라."
 
 #. Tag: title
-#: collection_mapping.xml:231
+#: collection_mapping.xml:263
 #, no-c-format
 msgid "Collection elements"
 msgstr "콜렉션 요소들"
 
 #. Tag: para
-#: collection_mapping.xml:233
-#, no-c-format
+#: collection_mapping.xml:265
+#, fuzzy, no-c-format
 msgid ""
-"Collections may contain almost any other Hibernate type, including all basic "
-"types, custom types, components, and of course, references to other "
-"entities. This is an important distinction: an object in a collection might "
-"be handled with \"value\" semantics (its life cycle fully depends on the "
-"collection owner) or it might be a reference to another entity, with its own "
-"life cycle. In the latter case, only the \"link\" between the two objects is "
-"considered to be state held by the collection."
+"Collections can contain almost any other Hibernate type, including: basic "
+"types, custom types, components and references to other entities. This is an "
+"important distinction. An object in a collection might be handled with "
+"\"value\" semantics (its life cycle fully depends on the collection owner), "
+"or it might be a reference to another entity with its own life cycle. In the "
+"latter case, only the \"link\" between the two objects is considered to be a "
+"state held by the collection."
 msgstr ""
 "콜렉션들은 모든 기본 타입들, 컴포넌트들, 그리고 물론 다른 엔티티들에 대한 참"
 "조들을 포함하여 거의 대부분의 어떤 다른 Hibernate 타입을 포함할 수도 있다. 이"
@@ -467,7 +484,7 @@ msgstr ""
 "들 사이의 \"링크\" 만이 그 콜렉션에 의해 소유된 상태로 간주된다."
 
 #. Tag: para
-#: collection_mapping.xml:242
+#: collection_mapping.xml:274
 #, no-c-format
 msgid ""
 "The contained type is referred to as the <emphasis>collection element type</"
@@ -485,26 +502,26 @@ msgstr ""
 "데 사용된다."
 
 #. Tag: title
-#: collection_mapping.xml:254
+#: collection_mapping.xml:286
 #, no-c-format
 msgid "Indexed collections"
 msgstr "인덱싱 된 콜렉션들"
 
 #. Tag: para
-#: collection_mapping.xml:256
-#, no-c-format
+#: collection_mapping.xml:288
+#, fuzzy, no-c-format
 msgid ""
 "All collection mappings, except those with set and bag semantics, need an "
-"<emphasis>index column</emphasis> in the collection table - a column that "
-"maps to an array index, or <literal>List</literal> index, or <literal>Map</"
-"literal> key. The index of a <literal>Map</literal> may be of any basic "
-"type, mapped with <literal>&lt;map-key&gt;</literal>, it may be an entity "
-"reference mapped with <literal>&lt;map-key-many-to-many&gt;</literal>, or it "
-"may be a composite type, mapped with <literal>&lt;composite-map-key&gt;</"
-"literal>. The index of an array or list is always of type <literal>integer</"
-"literal> and is mapped using the <literal>&lt;list-index&gt;</literal> "
-"element. The mapped column contains sequential integers (numbered from zero, "
-"by default)."
+"<emphasis>index column</emphasis> in the collection table. An index column "
+"is a column that maps to an array index, or <literal>List</literal> index, "
+"or <literal>Map</literal> key. The index of a <literal>Map</literal> may be "
+"of any basic type, mapped with <literal>&lt;map-key&gt;</literal>. It can be "
+"an entity reference mapped with <literal>&lt;map-key-many-to-many&gt;</"
+"literal>, or it can be a composite type mapped with <literal>&lt;composite-"
+"map-key&gt;</literal>. The index of an array or list is always of type "
+"<literal>integer</literal> and is mapped using the <literal>&lt;list-"
+"index&gt;</literal> element. The mapped column contains sequential integers "
+"that are numbered from zero by default."
 msgstr ""
 "set 과 bag 의미들을 가진 것들을 제외하면, 모든 콜렉션 매핑들은 콜렉션 테이블 "
 "내에 <emphasis>인덱스 컬럼</emphasis>- 배열 인덱스, 또는 <literal>List</"
@@ -518,7 +535,7 @@ msgstr ""
 "(디폴트로 0에서 시작하는 번호가 붙여짐)."
 
 #. Tag: sect2
-#: collection_mapping.xml:267
+#: collection_mapping.xml:299
 #, no-c-format
 msgid ""
 "<programlistingco> <areaspec> <area id=\"index1\" coords=\"2 45\"/> <area id="
@@ -526,10 +543,10 @@ msgid ""
 "index \n"
 "        column=\"column_name\"\n"
 "        base=\"0|1|...\"/>]]></programlisting> <calloutlist> <callout "
-"arearefs=\"index1\"> <para> <literal>column_name</literal> (required): The "
+"arearefs=\"index1\"> <para> <literal>column_name</literal> (required): the "
 "name of the column holding the collection index values. </para> </callout> "
-"<callout arearefs=\"index1\"> <para> <literal>base</literal> (optional, "
-"defaults to <literal>0</literal>): The value of the index column that "
+"<callout arearefs=\"index1\"> <para> <literal>base</literal> (optional - "
+"defaults to <literal>0</literal>): the value of the index column that "
 "corresponds to the first element of the list or array. </para> </callout> </"
 "calloutlist> </programlistingco> <programlistingco> <areaspec> <area id="
 "\"mapkey1\" coords=\"2 45\"/> <area id=\"mapkey2\" coords=\"3 45\"/> <area "
@@ -540,11 +557,11 @@ msgid ""
 "        type=\"type_name\"\n"
 "        node=\"@attribute-name\"\n"
 "        length=\"N\"/>]]></programlisting> <calloutlist> <callout arearefs="
-"\"mapkey1\"> <para> <literal>column</literal> (optional): The name of the "
+"\"mapkey1\"> <para> <literal>column</literal> (optional): the name of the "
 "column holding the collection index values. </para> </callout> <callout "
-"arearefs=\"mapkey2\"> <para> <literal>formula</literal> (optional): A SQL "
+"arearefs=\"mapkey2\"> <para> <literal>formula</literal> (optional): a SQL "
 "formula used to evaluate the key of the map. </para> </callout> <callout "
-"arearefs=\"mapkey3\"> <para> <literal>type</literal> (reguired): The type of "
+"arearefs=\"mapkey3\"> <para> <literal>type</literal> (required): the type of "
 "the map keys. </para> </callout> </calloutlist> </programlistingco> "
 "<programlistingco> <areaspec> <area id=\"indexmanytomany1\" coords=\"2 45\"/"
 "> <area id=\"indexmanytomany2\" coords=\"3 45\"/> <area id=\"indexmanytomany3"
@@ -554,24 +571,24 @@ msgid ""
 "        formula=\"any SQL expression\"\n"
 "        class=\"ClassName\"\n"
 "/>]]></programlisting> <calloutlist> <callout arearefs=\"indexmanytomany1\"> "
-"<para> <literal>column</literal> (optional): The name of the foreign key "
+"<para> <literal>column</literal> (optional): the name of the foreign key "
 "column for the collection index values. </para> </callout> <callout arearefs="
-"\"indexmanytomany2\"> <para> <literal>formula</literal> (optional): A SQL "
+"\"indexmanytomany2\"> <para> <literal>formula</literal> (optional): a SQ "
 "formula used to evaluate the foreign key of the map key. </para> </callout> "
 "<callout arearefs=\"indexmanytomany3\"> <para> <literal>class</literal> "
-"(required): The entity class used as the map key. </para> </callout> </"
+"(required): the entity class used as the map key. </para> </callout> </"
 "calloutlist> </programlistingco>"
 msgstr ""
 
 #. Tag: para
-#: collection_mapping.xml:348
-#, no-c-format
+#: collection_mapping.xml:380
+#, fuzzy, no-c-format
 msgid ""
-"If your table doesn't have an index column, and you still wish to use "
-"<literal>List</literal> as the property type, you should map the property as "
-"a Hibernate <emphasis>&lt;bag&gt;</emphasis>. A bag does not retain its "
-"order when it is retrieved from the database, but it may be optionally "
-"sorted or ordered."
+"If your table does not have an index column, and you still wish to use "
+"<literal>List</literal> as the property type, you can map the property as a "
+"Hibernate <emphasis>&lt;bag&gt;</emphasis>. A bag does not retain its order "
+"when it is retrieved from the database, but it can be optionally sorted or "
+"ordered."
 msgstr ""
 "만일 당신의 테이블이 인덱스 컬럼을 가지 않고, 당신이 여전히 프로퍼티 타입으로"
 "서 <literal>List</literal>를 사용하고자 원할 경우, 당신은 그 프로퍼티를 "
@@ -579,32 +596,19 @@ msgstr ""
 "베이스로부터 검색될 때 그것은 그것의 순서를 보유하지 않지만, 그것은 선택적으"
 "로 정렬(sorting)되거나 ordering될 수도 있다."
 
-#. Tag: para
-#: collection_mapping.xml:357
-#, no-c-format
-msgid ""
-"There are quite a range of mappings that can be generated for collections, "
-"covering many common relational models. We suggest you experiment with the "
-"schema generation tool to get a feeling for how various mapping declarations "
-"translate to database tables."
-msgstr ""
-"많은 공통된 관계형 모형들을 다루는, 콜렉션들에 대해 생성될 수 있는 매핑들의 "
-"영역이 꽤 존재한다. 여러가지 매핑 선언들이 데이터베이스 테이블들로 변환되는 "
-"방법을 당신이 느끼려면 스키마 생성 도구로 실험할 것을 우리는 제안한다."
-
 #. Tag: title
-#: collection_mapping.xml:364
+#: collection_mapping.xml:390
 #, no-c-format
 msgid "Collections of values and many-to-many associations"
 msgstr "값들을 가진 콜렉션들과 many-to-many 연관들"
 
 #. Tag: para
-#: collection_mapping.xml:366
-#, no-c-format
+#: collection_mapping.xml:392
+#, fuzzy, no-c-format
 msgid ""
-"Any collection of values or many-to-many association requires a dedicated "
+"Any collection of values or many-to-many associations requires a dedicated "
 "<emphasis>collection table</emphasis> with a foreign key column or columns, "
-"<emphasis>collection element column</emphasis> or columns and possibly an "
+"<emphasis>collection element column</emphasis> or columns, and possibly an "
 "index column or columns."
 msgstr ""
 "어떤 값들을 가진 콜렉션 또는 many-to-many 연관은 foreign 키 컬럼이나 컬럼들, "
@@ -612,17 +616,17 @@ msgstr ""
 "들이나 컬럼들을 가진 전용 <emphasis>콜렉션 테이블</emphasis>을 필요로 한다."
 
 #. Tag: para
-#: collection_mapping.xml:373
-#, no-c-format
+#: collection_mapping.xml:399
+#, fuzzy, no-c-format
 msgid ""
-"For a collection of values, we use the <literal>&lt;element&gt;</literal> "
-"tag."
+"For a collection of values use the <literal>&lt;element&gt;</literal> tag. "
+"For example:"
 msgstr ""
 "값들을 가진 콜렉션의 경우, 우리는 <literal>&lt;element&gt;</literal> 태그를 "
 "사용한다."
 
 #. Tag: sect2
-#: collection_mapping.xml:375
+#: collection_mapping.xml:401
 #, no-c-format
 msgid ""
 "<programlistingco> <areaspec> <area id=\"element1b\" coords=\"2 50\"/> <area "
@@ -638,11 +642,11 @@ msgid ""
 "        unique=\"true|false\"\n"
 "        node=\"element-name\"\n"
 "/>]]></programlisting> <calloutlist> <callout arearefs=\"element1b\"> <para> "
-"<literal>column</literal> (optional): The name of the column holding the "
+"<literal>column</literal> (optional): the name of the column holding the "
 "collection element values. </para> </callout> <callout arearefs=\"element2b"
-"\"> <para> <literal>formula</literal> (optional): An SQL formula used to "
+"\"> <para> <literal>formula</literal> (optional): an SQL formula used to "
 "evaluate the element. </para> </callout> <callout arearefs=\"element3b\"> "
-"<para> <literal>type</literal> (required): The type of the collection "
+"<para> <literal>type</literal> (required): the type of the collection "
 "element. </para> </callout> </calloutlist> </programlistingco> <para> A "
 "<emphasis>many-to-many association</emphasis> is specified using the "
 "<literal>&lt;many-to-many&gt;</literal> element. </para> <programlistingco> "
@@ -663,43 +667,49 @@ msgid ""
 "        node=\"element-name\"\n"
 "        embed-xml=\"true|false\"\n"
 "    />]]></programlisting> <calloutlist> <callout arearefs=\"manytomany1\"> "
-"<para> <literal>column</literal> (optional): The name of the element foreign "
+"<para> <literal>column</literal> (optional): the name of the element foreign "
 "key column. </para> </callout> <callout arearefs=\"manytomany2\"> <para> "
-"<literal>formula</literal> (optional): An SQL formula used to evaluate the "
+"<literal>formula</literal> (optional): an SQL formula used to evaluate the "
 "element foreign key value. </para> </callout> <callout arearefs=\"manytomany3"
-"\"> <para> <literal>class</literal> (required): The name of the associated "
+"\"> <para> <literal>class</literal> (required): the name of the associated "
 "class. </para> </callout> <callout arearefs=\"manytomany4\"> <para> "
 "<literal>fetch</literal> (optional - defaults to <literal>join</literal>): "
 "enables outer-join or sequential select fetching for this association. This "
-"is a special case; for full eager fetching (in a single <literal>SELECT</"
-"literal>) of an entity and its many-to-many relationships to other entities, "
-"you would enable <literal>join</literal> fetching not only of the collection "
+"is a special case; for full eager fetching in a single <literal>SELECT</"
+"literal> of an entity and its many-to-many relationships to other entities, "
+"you would enable <literal>join</literal> fetching,not only of the collection "
 "itself, but also with this attribute on the <literal>&lt;many-to-many&gt;</"
 "literal> nested element. </para> </callout> <callout arearefs=\"manytomany5"
-"\"> <para> <literal>unique</literal> (optional): Enable the DDL generation "
+"\"> <para> <literal>unique</literal> (optional): enables the DDL generation "
 "of a unique constraint for the foreign-key column. This makes the "
-"association multiplicity effectively one to many. </para> </callout> "
+"association multiplicity effectively one-to-many. </para> </callout> "
 "<callout arearefs=\"manytomany6\"> <para> <literal>not-found</literal> "
-"(optional - defaults to <literal>exception</literal>): Specifies how foreign "
+"(optional - defaults to <literal>exception</literal>): specifies how foreign "
 "keys that reference missing rows will be handled: <literal>ignore</literal> "
 "will treat a missing row as a null association. </para> </callout> <callout "
 "arearefs=\"manytomany7\"> <para> <literal>entity-name</literal> (optional): "
-"The entity name of the associated class, as an alternative to "
+"the entity name of the associated class, as an alternative to "
 "<literal>class</literal>. </para> </callout> <callout arearefs=\"manytomany8"
-"\"> <para> <literal>property-ref</literal>: (optional) The name of a "
+"\"> <para> <literal>property-ref</literal> (optional): the name of a "
 "property of the associated class that is joined to this foreign key. If not "
 "specified, the primary key of the associated class is used. </para> </"
 "callout> </calloutlist> </programlistingco>"
 msgstr ""
 
 #. Tag: para
-#: collection_mapping.xml:480
+#: collection_mapping.xml:506
 #, no-c-format
-msgid "Some examples, first, a set of strings:"
-msgstr "몇몇 예제들, 먼저 문자열들을 가진 set:"
+msgid "Here are some examples."
+msgstr ""
+
+#. Tag: para
+#: collection_mapping.xml:509
+#, no-c-format
+msgid "A set of strings:"
+msgstr ""
 
 #. Tag: programlisting
-#: collection_mapping.xml:484
+#: collection_mapping.xml:513
 #, no-c-format
 msgid ""
 "<![CDATA[<set name=\"names\" table=\"person_names\">\n"
@@ -709,17 +719,17 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: collection_mapping.xml:486
-#, no-c-format
+#: collection_mapping.xml:515
+#, fuzzy, no-c-format
 msgid ""
-"A bag containing integers (with an iteration order determined by the "
-"<literal>order-by</literal> attribute):"
+"A bag containing integers with an iteration order determined by the "
+"<literal>order-by</literal> attribute:"
 msgstr ""
 "(<literal>order-by</literal> 속성에 의해 결정되는 반복 순서를 가진) 정수들을 "
 "포함하는 bag :"
 
 #. Tag: programlisting
-#: collection_mapping.xml:491
+#: collection_mapping.xml:520
 #, no-c-format
 msgid ""
 "<![CDATA[<bag name=\"sizes\" \n"
@@ -731,13 +741,13 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: collection_mapping.xml:493
-#, no-c-format
-msgid "An array of entities - in this case, a many to many association:"
+#: collection_mapping.xml:522
+#, fuzzy, no-c-format
+msgid "An array of entities, in this case, a many-to-many association:"
 msgstr "엔티티들을 가진 배열 - 이 경우에, many to many 연관 :"
 
 #. Tag: programlisting
-#: collection_mapping.xml:497
+#: collection_mapping.xml:526
 #, no-c-format
 msgid ""
 "<![CDATA[<array name=\"addresses\" \n"
@@ -750,13 +760,13 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: collection_mapping.xml:499
+#: collection_mapping.xml:528
 #, no-c-format
 msgid "A map from string indices to dates:"
 msgstr "날짜들에 대한 문자열 인덱스들을 가진 map :"
 
 #. Tag: programlisting
-#: collection_mapping.xml:503
+#: collection_mapping.xml:532
 #, no-c-format
 msgid ""
 "<![CDATA[<map name=\"holidays\" \n"
@@ -770,13 +780,13 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: collection_mapping.xml:505
-#, no-c-format
-msgid "A list of components (discussed in the next chapter):"
+#: collection_mapping.xml:534
+#, fuzzy, no-c-format
+msgid "A list of components (this is discussed in the next chapter):"
 msgstr "컴포넌트들의 리스트(다음 장에서 논의됨):"
 
 #. Tag: programlisting
-#: collection_mapping.xml:509
+#: collection_mapping.xml:538
 #, no-c-format
 msgid ""
 "<![CDATA[<list name=\"carComponents\" \n"
@@ -792,51 +802,51 @@ msgid ""
 msgstr ""
 
 #. Tag: title
-#: collection_mapping.xml:514
+#: collection_mapping.xml:543
 #, no-c-format
 msgid "One-to-many associations"
 msgstr "One-to-many 연관들"
 
 #. Tag: para
-#: collection_mapping.xml:516
-#, no-c-format
+#: collection_mapping.xml:545
+#, fuzzy, no-c-format
 msgid ""
-"A <emphasis>one to many association</emphasis> links the tables of two "
-"classes via a foreign key, with no intervening collection table. This "
-"mapping loses certain semantics of normal Java collections:"
+"A <emphasis>one-to-many association</emphasis> links the tables of two "
+"classes via a foreign key with no intervening collection table. This mapping "
+"loses certain semantics of normal Java collections:"
 msgstr ""
 "<emphasis>one to many 연관</emphasis>은 중재하는 콜렉션 테이블 없이 foreign "
 "키를 통해 두 개의 클래스들의 테이블들을 연결시킨다. 이 매핑은 통상의 자바 콜"
 "렉션들의 어떤 의미를 상실한다:"
 
 #. Tag: para
-#: collection_mapping.xml:524
-#, no-c-format
+#: collection_mapping.xml:553
+#, fuzzy, no-c-format
 msgid ""
-"An instance of the contained entity class may not belong to more than one "
-"instance of the collection"
+"An instance of the contained entity class cannot belong to more than one "
+"instance of the collection."
 msgstr ""
 "포함된 엔티티 클래스의 인스턴스는 그 콜렉션의 하나 이상의 인스턴스에 속하지 "
 "않을 수 있다"
 
 #. Tag: para
-#: collection_mapping.xml:530
-#, no-c-format
+#: collection_mapping.xml:559
+#, fuzzy, no-c-format
 msgid ""
-"An instance of the contained entity class may not appear at more than one "
-"value of the collection index"
+"An instance of the contained entity class cannot appear at more than one "
+"value of the collection index."
 msgstr ""
 "포함된 엔티티 클래스의 인스턴스는 콜렉션 인덱스의 하나 이상의 값에서 나타나"
 "지 않을 수 있다"
 
 #. Tag: para
-#: collection_mapping.xml:537
-#, no-c-format
+#: collection_mapping.xml:566
+#, fuzzy, no-c-format
 msgid ""
 "An association from <literal>Product</literal> to <literal>Part</literal> "
-"requires existence of a foreign key column and possibly an index column to "
-"the <literal>Part</literal> table. A <literal>&lt;one-to-many&gt;</literal> "
-"tag indicates that this is a one to many association."
+"requires the existence of a foreign key column and possibly an index column "
+"to the <literal>Part</literal> table. A <literal>&lt;one-to-many&gt;</"
+"literal> tag indicates that this is a one-to-many association."
 msgstr ""
 "<literal>Product</literal>로부터 <literal>Part</literal>로의 연관은 foreign "
 "키 컬럼과 <literal>Part</literal> 테이블에 대한 인덱스 컬럼의 존재를 필요로 "
@@ -844,7 +854,7 @@ msgstr ""
 "을 나타낸다."
 
 #. Tag: programlisting
-#: collection_mapping.xml:550
+#: collection_mapping.xml:579
 #, no-c-format
 msgid ""
 "<![CDATA[<one-to-many \n"
@@ -857,18 +867,18 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: collection_mapping.xml:553
-#, no-c-format
-msgid "<literal>class</literal> (required): The name of the associated class."
+#: collection_mapping.xml:582
+#, fuzzy, no-c-format
+msgid "<literal>class</literal> (required): the name of the associated class."
 msgstr "<literal>class</literal> (필수): 연관된 클래스의 이름."
 
 #. Tag: para
-#: collection_mapping.xml:558
-#, no-c-format
+#: collection_mapping.xml:587
+#, fuzzy, no-c-format
 msgid ""
 "<literal>not-found</literal> (optional - defaults to <literal>exception</"
-"literal>): Specifies how cached identifiers that reference missing rows will "
-"be handled: <literal>ignore</literal> will treat a missing row as a null "
+"literal>): specifies how cached identifiers that reference missing rows will "
+"be handled. <literal>ignore</literal> will treat a missing row as a null "
 "association."
 msgstr ""
 "<literal>not-found</literal> (옵션 - 디폴트는 <literal>exception</literal>): "
@@ -876,10 +886,10 @@ msgstr ""
 "<literal>ignore</literal>는 누락된 한 행을 한 개의 연관으로 다룰 것이다."
 
 #. Tag: para
-#: collection_mapping.xml:565
+#: collection_mapping.xml:594
 #, fuzzy, no-c-format
 msgid ""
-"<literal>entity-name</literal> (optional): The entity name of the associated "
+"<literal>entity-name</literal> (optional): the entity name of the associated "
 "class, as an alternative to <literal>class</literal>."
 msgstr ""
 "#-#-#-#-#  - (PACKAGE VERSION)  #-#-#-#-#\n"
@@ -890,28 +900,27 @@ msgstr ""
 "로서, 연관된 클래스의 엔티티 이름."
 
 #. Tag: para
-#: collection_mapping.xml:573
-#, no-c-format
+#: collection_mapping.xml:602
+#, fuzzy, no-c-format
 msgid ""
-"Notice that the <literal>&lt;one-to-many&gt;</literal> element does not need "
-"to declare any columns. Nor is it necessary to specify the <literal>table</"
-"literal> name anywhere."
+"The <literal>&lt;one-to-many&gt;</literal> element does not need to declare "
+"any columns. Nor is it necessary to specify the <literal>table</literal> "
+"name anywhere."
 msgstr ""
 "<literal>&lt;one-to-many&gt;</literal> 요소는 어떤 컬럼들을 선언하는데 필요하"
 "지 않음을 주목하라. 어딘가에 <literal>table</literal> 이름을 지정하는 것도 필"
 "수적이지 않다."
 
 #. Tag: para
-#: collection_mapping.xml:579
-#, no-c-format
+#: collection_mapping.xml:609
+#, fuzzy, no-c-format
 msgid ""
-"<emphasis>Very important note:</emphasis> If the foreign key column of a "
-"<literal>&lt;one-to-many&gt;</literal> association is declared <literal>NOT "
-"NULL</literal>, you must declare the <literal>&lt;key&gt;</literal> mapping "
-"<literal>not-null=\"true\"</literal> or <emphasis>use a bidirectional "
-"association</emphasis> with the collection mapping marked <literal>inverse="
-"\"true\"</literal>. See the discussion of bidirectional associations later "
-"in this chapter."
+"If the foreign key column of a <literal>&lt;one-to-many&gt;</literal> "
+"association is declared <literal>NOT NULL</literal>, you must declare the "
+"<literal>&lt;key&gt;</literal> mapping <literal>not-null=\"true\"</literal> "
+"or <emphasis>use a bidirectional association</emphasis> with the collection "
+"mapping marked <literal>inverse=\"true\"</literal>. See the discussion of "
+"bidirectional associations later in this chapter for more information."
 msgstr ""
 "<emphasis>매우 중요한 노트</emphasis>: 만일 <literal>&lt;one-to-many&gt;</"
 "literal> 연관의 foreign 키 컬럼이 <literal>NOT NULL</literal>로 선언될 경우, "
@@ -921,19 +930,19 @@ msgstr ""
 "들에 대한 논의는 이 장의 뒷부분을 보라."
 
 #. Tag: para
-#: collection_mapping.xml:588
-#, no-c-format
+#: collection_mapping.xml:619
+#, fuzzy, no-c-format
 msgid ""
-"This example shows a map of <literal>Part</literal> entities by name (where "
-"<literal>partName</literal> is a persistent property of <literal>Part</"
-"literal>). Notice the use of a formula-based index."
+"The following example shows a map of <literal>Part</literal> entities by "
+"name, where <literal>partName</literal> is a persistent property of "
+"<literal>Part</literal>. Notice the use of a formula-based index:"
 msgstr ""
 "이 예제는 name으로 <literal>Part</literal> 엔티티들을 가진 map을 보여준다(여"
 "기서 <literal>partName</literal>은 <literal>Part</literal>의 영속 프로퍼티이"
 "다). formula-기반 index의 사용을 주목하라."
 
 #. Tag: programlisting
-#: collection_mapping.xml:594
+#: collection_mapping.xml:625
 #, no-c-format
 msgid ""
 "<![CDATA[<map name=\"parts\"\n"
@@ -945,19 +954,19 @@ msgid ""
 msgstr ""
 
 #. Tag: title
-#: collection_mapping.xml:600
+#: collection_mapping.xml:631
 #, no-c-format
 msgid "Advanced collection mappings"
 msgstr "개선된 콜렉션 매핑들"
 
 #. Tag: title
-#: collection_mapping.xml:603
+#: collection_mapping.xml:634
 #, no-c-format
 msgid "Sorted collections"
 msgstr "Sorted 콜렉션들"
 
 #. Tag: para
-#: collection_mapping.xml:605
+#: collection_mapping.xml:636
 #, no-c-format
 msgid ""
 "Hibernate supports collections implementing <literal>java.util.SortedMap</"
@@ -969,7 +978,7 @@ msgstr ""
 "나의 comparator를 지정해야 한다:"
 
 #. Tag: programlisting
-#: collection_mapping.xml:610
+#: collection_mapping.xml:641
 #, no-c-format
 msgid ""
 "<![CDATA[<set name=\"aliases\" \n"
@@ -987,7 +996,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: collection_mapping.xml:612
+#: collection_mapping.xml:643
 #, no-c-format
 msgid ""
 "Allowed values of the <literal>sort</literal> attribute are "
@@ -999,7 +1008,7 @@ msgstr ""
 "구현하는 클래스의 이름이다."
 
 #. Tag: para
-#: collection_mapping.xml:618
+#: collection_mapping.xml:649
 #, no-c-format
 msgid ""
 "Sorted collections actually behave like <literal>java.util.TreeSet</literal> "
@@ -1009,15 +1018,15 @@ msgstr ""
 "util.TreeMap</literal>처럼 행동한다."
 
 #. Tag: para
-#: collection_mapping.xml:623
-#, no-c-format
+#: collection_mapping.xml:654
+#, fuzzy, no-c-format
 msgid ""
-"If you want the database itself to order the collection elements use the "
+"If you want the database itself to order the collection elements, use the "
 "<literal>order-by</literal> attribute of <literal>set</literal>, "
 "<literal>bag</literal> or <literal>map</literal> mappings. This solution is "
-"only available under JDK 1.4 or higher (it is implemented using "
-"<literal>LinkedHashSet</literal> or <literal>LinkedHashMap</literal>). This "
-"performs the ordering in the SQL query, not in memory."
+"only available under JDK 1.4 or higher and is implemented using "
+"<literal>LinkedHashSet</literal> or <literal>LinkedHashMap</literal>. This "
+"performs the ordering in the SQL query and not in the memory."
 msgstr ""
 "만일 당신이 데이터베이스 그 자체가 콜렉션 요소들을 순서지우도록(order)원할 경"
 "우 <literal>set</literal>, <literal>bag</literal> 또는<literal>map</literal> "
@@ -1027,7 +1036,7 @@ msgstr ""
 "가 아닌, SQL 질의 내에서 순서지움(ordering)을 수행한다."
 
 #. Tag: programlisting
-#: collection_mapping.xml:632
+#: collection_mapping.xml:663
 #, no-c-format
 msgid ""
 "<![CDATA[<set name=\"aliases\" table=\"person_aliases\" order-by=\"lower"
@@ -1043,28 +1052,34 @@ msgid ""
 "</map>]]>"
 msgstr ""
 
-#. Tag: para
-#: collection_mapping.xml:634
+#. Tag: title
+#: collection_mapping.xml:666
 #, no-c-format
+msgid "Note"
+msgstr ""
+
+#. Tag: para
+#: collection_mapping.xml:667
+#, fuzzy, no-c-format
 msgid ""
-"Note that the value of the <literal>order-by</literal> attribute is an SQL "
-"ordering, not a HQL ordering!"
+"The value of the <literal>order-by</literal> attribute is an SQL ordering, "
+"not an HQL ordering."
 msgstr ""
 "<literal>order-by</literal> 속성의 값은 HQL 순서지움(ordering)이 아니라 SQL "
 "순서지움(ordering)임을 노트하라!"
 
 #. Tag: para
-#: collection_mapping.xml:639
-#, no-c-format
+#: collection_mapping.xml:673
+#, fuzzy, no-c-format
 msgid ""
-"Associations may even be sorted by some arbitrary criteria at runtime using "
-"a collection <literal>filter()</literal>."
+"Associations can even be sorted by arbitrary criteria at runtime using a "
+"collection <literal>filter()</literal>:"
 msgstr ""
 "연관들은 콜렉션 <literal>filter()</literal>를 사용하여 실행 시에 어떤 임의의 "
 "criteria(기준)을 사용하여 정렬(sort)될 수도 있다."
 
 #. Tag: programlisting
-#: collection_mapping.xml:644
+#: collection_mapping.xml:678
 #, no-c-format
 msgid ""
 "<![CDATA[sortedUsers = s.createFilter( group.getUsers(), \"order by this.name"
@@ -1072,13 +1087,13 @@ msgid ""
 msgstr ""
 
 #. Tag: title
-#: collection_mapping.xml:649
+#: collection_mapping.xml:683
 #, no-c-format
 msgid "Bidirectional associations"
 msgstr "양방향 연관들"
 
 #. Tag: para
-#: collection_mapping.xml:651
+#: collection_mapping.xml:685
 #, fuzzy, no-c-format
 msgid ""
 "A <emphasis>bidirectional association</emphasis> allows navigation from both "
@@ -1089,37 +1104,36 @@ msgstr ""
 "을 허용한다. 두 가지 종류의 양방향 연관들이 지원된다: <placeholder-1/>"
 
 #. Tag: term
-#: collection_mapping.xml:658
+#: collection_mapping.xml:692
 #, no-c-format
 msgid "one-to-many"
 msgstr "one-to-many"
 
 #. Tag: para
-#: collection_mapping.xml:660
-#, no-c-format
-msgid "set or bag valued at one end, single-valued at the other"
+#: collection_mapping.xml:694
+#, fuzzy, no-c-format
+msgid "set or bag valued at one end and single-valued at the other"
 msgstr "한쪽 끝에 set 또는 bag 값을 갖고, 다른 쪽 긑에 단일 값을 가진 연관"
 
 #. Tag: term
-#: collection_mapping.xml:666
+#: collection_mapping.xml:700
 #, no-c-format
 msgid "many-to-many"
 msgstr "many-to-many"
 
 #. Tag: para
-#: collection_mapping.xml:668
+#: collection_mapping.xml:702
 #, no-c-format
 msgid "set or bag valued at both ends"
 msgstr "양 끝에서 set 또는 bag 값을 가진 연관"
 
 #. Tag: para
-#: collection_mapping.xml:677
-#, no-c-format
+#: collection_mapping.xml:711
+#, fuzzy, no-c-format
 msgid ""
-"You may specify a bidirectional many-to-many association simply by mapping "
-"two many-to-many associations to the same database table and declaring one "
-"end as <emphasis>inverse</emphasis> (which one is your choice, but it can "
-"not be an indexed collection)."
+"You can specify a bidirectional many-to-many association by mapping two many-"
+"to-many associations to the same database table and declaring one end as "
+"<emphasis>inverse</emphasis>. You cannot select an indexed collection."
 msgstr ""
 "당신은 동일한 두 개의 many-to-many 연관들을 동일한 데이터베이스 테이블로 간단"
 "하게 매핑하고 한 쪽 끝을 <emphasis>inverse</emphasis>(당신의 선택은 하나이지"
@@ -1127,17 +1141,18 @@ msgstr ""
 "many 연관을 지정할 수도 있다."
 
 #. Tag: para
-#: collection_mapping.xml:684
-#, no-c-format
+#: collection_mapping.xml:718
+#, fuzzy, no-c-format
 msgid ""
-"Here's an example of a bidirectional many-to-many association; each category "
-"can have many items and each item can be in many categories:"
+"Here is an example of a bidirectional many-to-many association that "
+"illustrates how each category can have many items and each item can be in "
+"many categories:"
 msgstr ""
 "다음은 양방향 many-to-many 연관에 관한 예제이다; 각각의 카테고리는 많은 아이"
 "템들을 가질 수 있고 각각의 아이템은 많은 카테고리들 속에 있을 수 있다:"
 
 #. Tag: programlisting
-#: collection_mapping.xml:689
+#: collection_mapping.xml:723
 #, no-c-format
 msgid ""
 "<![CDATA[<class name=\"Category\">\n"
@@ -1162,14 +1177,14 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: collection_mapping.xml:691
-#, no-c-format
+#: collection_mapping.xml:725
+#, fuzzy, no-c-format
 msgid ""
 "Changes made only to the inverse end of the association are <emphasis>not</"
 "emphasis> persisted. This means that Hibernate has two representations in "
-"memory for every bidirectional association, one link from A to B and another "
+"memory for every bidirectional association: one link from A to B and another "
 "link from B to A. This is easier to understand if you think about the Java "
-"object model and how we create a many-to-many relationship in Java:"
+"object model and how a many-to-many relationship in Javais created:"
 msgstr ""
 "연관의 inverse 끝(end)에 대해서만 행해진 변경들은 영속화 되지 <emphasis>않는"
 "다</emphasis>. 이것은 Hibernate가 모든 양방향 연관에 대해 메모리 내에 두 개"
@@ -1178,7 +1193,7 @@ msgstr ""
 "many 관계를 생성시키는 방법에 대해 생각하면 이것은 이해하기가 더 쉽다:"
 
 #. Tag: programlisting
-#: collection_mapping.xml:699
+#: collection_mapping.xml:733
 #, no-c-format
 msgid ""
 "<![CDATA[\n"
@@ -1193,7 +1208,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: collection_mapping.xml:701
+#: collection_mapping.xml:735
 #, no-c-format
 msgid ""
 "The non-inverse side is used to save the in-memory representation to the "
@@ -1201,10 +1216,10 @@ msgid ""
 msgstr "non-inverse 측은 메모리 내 표상을 데이터베이스로 저장하는데 사용된다."
 
 #. Tag: para
-#: collection_mapping.xml:705
-#, no-c-format
+#: collection_mapping.xml:739
+#, fuzzy, no-c-format
 msgid ""
-"You may define a bidirectional one-to-many association by mapping a one-to-"
+"You can define a bidirectional one-to-many association by mapping a one-to-"
 "many association to the same table column(s) as a many-to-one association "
 "and declaring the many-valued end <literal>inverse=\"true\"</literal>."
 msgstr ""
@@ -1213,7 +1228,7 @@ msgstr ""
 "literal>로 선언함으로써 하나의 양방향 연관을 정의할 수도 있다."
 
 #. Tag: programlisting
-#: collection_mapping.xml:711
+#: collection_mapping.xml:745
 #, no-c-format
 msgid ""
 "<![CDATA[<class name=\"Parent\">\n"
@@ -1236,31 +1251,31 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: collection_mapping.xml:713
-#, no-c-format
+#: collection_mapping.xml:747
+#, fuzzy, no-c-format
 msgid ""
 "Mapping one end of an association with <literal>inverse=\"true\"</literal> "
-"doesn't affect the operation of cascades, these are orthogonal concepts!"
+"does not affect the operation of cascades as these are orthogonal concepts."
 msgstr ""
 "연관의 한쪽 끝을 <literal>inverse=\"true\"</literal>로 매핑하는 것은 cascade"
 "들을 가진 오퍼레이션에 영향을 주지 않으며, 이것들은 orthogonal(직교) 개념들이"
 "다!"
 
 #. Tag: title
-#: collection_mapping.xml:721
+#: collection_mapping.xml:755
 #, no-c-format
 msgid "Bidirectional associations with indexed collections"
 msgstr "인덱싱된 콜렉션들을 가진 양방향 연관들"
 
 #. Tag: para
-#: collection_mapping.xml:722
-#, no-c-format
+#: collection_mapping.xml:756
+#, fuzzy, no-c-format
 msgid ""
 "A bidirectional association where one end is represented as a <literal>&lt;"
-"list&gt;</literal> or <literal>&lt;map&gt;</literal> requires special "
-"consideration. If there is a property of the child class which maps to the "
-"index column, no problem, we can continue using <literal>inverse=\"true\"</"
-"literal> on the collection mapping:"
+"list&gt;</literal> or <literal>&lt;map&gt;</literal>, requires special "
+"consideration. If there is a property of the child class that maps to the "
+"index column you can use <literal>inverse=\"true\"</literal> on the "
+"collection mapping:"
 msgstr ""
 "한쪽 끝이 하나의 <literal>&lt;list&gt;</literal> 또는 <literal>&lt;map&gt;</"
 "literal>으로서 표현되는 양방향 연관은 특별한 검토를 필요로 한다. 만일 인덱스 "
@@ -1269,7 +1284,7 @@ msgstr ""
 "있다:"
 
 #. Tag: programlisting
-#: collection_mapping.xml:729
+#: collection_mapping.xml:763
 #, no-c-format
 msgid ""
 "<![CDATA[<class name=\"Parent\">\n"
@@ -1296,14 +1311,14 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: collection_mapping.xml:731
-#, no-c-format
+#: collection_mapping.xml:765
+#, fuzzy, no-c-format
 msgid ""
-"But, if there is no such property on the child class, we can't think of the "
-"association as truly bidirectional (there is information available at one "
-"end of the association that is not available at the other end). In this "
-"case, we can't map the collection <literal>inverse=\"true\"</literal>. "
-"Instead, we could use the following mapping:"
+"If there is no such property on the child class, the association cannot be "
+"considered truly bidirectional. That is, there is information available at "
+"one end of the association that is not available at the other end. In this "
+"case, you cannot map the collection <literal>inverse=\"true\"</literal>. "
+"Instead, you could use the following mapping:"
 msgstr ""
 "그러나 만일 child 클래스 상에 그런 프로퍼티가 존재하지 않을 경우, 우리는 그 "
 "연관을 진정하게 양방향으로 간주할 수 없다 (다른 쪽 끝에서 이용가능하지 않은 "
@@ -1312,7 +1327,7 @@ msgstr ""
 "핑을 사용할 수 있다:"
 
 #. Tag: programlisting
-#: collection_mapping.xml:738
+#: collection_mapping.xml:772
 #, no-c-format
 msgid ""
 "<![CDATA[<class name=\"Parent\">\n"
@@ -1340,34 +1355,33 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: collection_mapping.xml:740
-#, no-c-format
+#: collection_mapping.xml:774
+#, fuzzy, no-c-format
 msgid ""
 "Note that in this mapping, the collection-valued end of the association is "
-"responsible for updates to the foreign key. TODO: Does this really result in "
-"some unnecessary update statements?"
+"responsible for updates to the foreign key."
 msgstr ""
 "이 매핑에서 그 연관의 콜렉션 값을 가진 끝이 foreign 키에 대한 업데이트 책임"
 "이 있음을 노트하라."
 
 #. Tag: title
-#: collection_mapping.xml:748
+#: collection_mapping.xml:782
 #, no-c-format
 msgid "Ternary associations"
 msgstr "Ternary associations(세겹 연관들)"
 
 #. Tag: para
-#: collection_mapping.xml:750
-#, no-c-format
+#: collection_mapping.xml:784
+#, fuzzy, no-c-format
 msgid ""
-"There are three possible approaches to mapping a ternary association. One is "
-"to use a <literal>Map</literal> with an association as its index:"
+"There are three possible approaches to mapping a ternary association. One "
+"approach is to use a <literal>Map</literal> with an association as its index:"
 msgstr ""
 "세 겹의 연관을 매핑하는 세 가지 가능한 접근법들이 존재한다. 하나의 접근법은 "
 "그것의 인덱스로서 연관관계를 가진 <literal>Map</literal>을 사용하는 것이다:"
 
 #. Tag: programlisting
-#: collection_mapping.xml:755
+#: collection_mapping.xml:789
 #, no-c-format
 msgid ""
 "<![CDATA[<map name=\"contracts\">\n"
@@ -1378,7 +1392,7 @@ msgid ""
 msgstr ""
 
 #. Tag: programlisting
-#: collection_mapping.xml:757
+#: collection_mapping.xml:791
 #, no-c-format
 msgid ""
 "<![CDATA[<map name=\"connections\">\n"
@@ -1389,43 +1403,42 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: collection_mapping.xml:759
-#, no-c-format
+#: collection_mapping.xml:793
+#, fuzzy, no-c-format
 msgid ""
-"A second approach is to simply remodel the association as an entity class. "
-"This is the approach we use most commonly."
+"A second approach is to remodel the association as an entity class. This is "
+"the most common approach."
 msgstr ""
 "두 번째 접근법은 그 연관을 엔티티 클래스로서 단순하게 리모델링 하는 것이다. "
 "이것은 우리가 가장 공통적으로 사용하는 접근법이다."
 
 #. Tag: para
-#: collection_mapping.xml:764
-#, no-c-format
+#: collection_mapping.xml:798
+#, fuzzy, no-c-format
 msgid ""
-"A final alternative is to use composite elements, which we will discuss "
+"A final alternative is to use composite elements, which will be discussed "
 "later."
 msgstr ""
 "마지막 대안은 우리가 나중에 논의하게 될 composite 요소들을 사용하는 것이다."
 
 #. Tag: literal
-#: collection_mapping.xml:771
+#: collection_mapping.xml:805
 #, no-c-format
 msgid "Using an &lt;idbag&gt;"
 msgstr "<literal>&lt;idbag&gt;</literal> 사용하기"
 
 #. Tag: para
-#: collection_mapping.xml:773
-#, no-c-format
+#: collection_mapping.xml:807
+#, fuzzy, no-c-format
 msgid ""
-"If you've fully embraced our view that composite keys are a bad thing and "
-"that entities should have synthetic identifiers (surrogate keys), then you "
-"might find it a bit odd that the many to many associations and collections "
-"of values that we've shown so far all map to tables with composite keys! "
-"Now, this point is quite arguable; a pure association table doesn't seem to "
-"benefit much from a surrogate key (though a collection of composite values "
-"<emphasis>might</emphasis>). Nevertheless, Hibernate provides a feature that "
-"allows you to map many to many associations and collections of values to a "
-"table with a surrogate key."
+"The majority of the many-to-many associations and collections of values "
+"shown previously all map to tables with composite keys, even though it has "
+"been have suggested that entities should have synthetic identifiers "
+"(surrogate keys). A pure association table does not seem to benefit much "
+"from a surrogate key, although a collection of composite values "
+"<emphasis>might</emphasis>. It is for this reason that Hibernate provides a "
+"feature that allows you to map many-to-many associations and collections of "
+"values to a table with a surrogate key."
 msgstr ""
 "만일 당신이 composite 키들이 나쁜 것이고 엔티티들이 합성 식별자들(대용 키들, "
 "surrogate keys)을 가져야 한다는 우리의 견해를 전적으로 수용할 경우, 당신은 우"
@@ -1438,18 +1451,18 @@ msgstr ""
 "는 것을 당신에게 허용해주는 특징을 제공한다."
 
 #. Tag: para
-#: collection_mapping.xml:784
-#, no-c-format
+#: collection_mapping.xml:817
+#, fuzzy, no-c-format
 msgid ""
 "The <literal>&lt;idbag&gt;</literal> element lets you map a <literal>List</"
-"literal> (or <literal>Collection</literal>) with bag semantics."
+"literal> (or <literal>Collection</literal>) with bag semantics. For example:"
 msgstr ""
 "<literal>&lt;idbag&gt;</literal> 요소는 bag 의미를 가진 <literal>List</"
 "literal>(또는 <literal>Collection</literal>)을 매핑하도록 당신에게 허용해준"
 "다."
 
 #. Tag: programlisting
-#: collection_mapping.xml:789
+#: collection_mapping.xml:822
 #, no-c-format
 msgid ""
 "<![CDATA[<idbag name=\"lovers\" table=\"LOVERS\">\n"
@@ -1462,13 +1475,13 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: collection_mapping.xml:791
-#, no-c-format
+#: collection_mapping.xml:824
+#, fuzzy, no-c-format
 msgid ""
-"As you can see, an <literal>&lt;idbag&gt;</literal> has a synthetic id "
-"generator, just like an entity class! A different surrogate key is assigned "
-"to each collection row. Hibernate does not provide any mechanism to discover "
-"the surrogate key value of a particular row, however."
+"An <literal>&lt;idbag&gt;</literal> has a synthetic id generator, just like "
+"an entity class. A different surrogate key is assigned to each collection "
+"row. Hibernate does not, however, provide any mechanism for discovering the "
+"surrogate key value of a particular row."
 msgstr ""
 "당신이 볼 수 있듯이, <literal>&lt;idbag&gt;</literal>은 마치 엔티티 클래스인"
 "양 synthetic id generator(합성 id 생성기)를 갖는다! 다른 대용 키는 각각의 콜"
@@ -1476,13 +1489,13 @@ msgstr ""
 "즘을 제공하지 않는다."
 
 #. Tag: para
-#: collection_mapping.xml:798
-#, no-c-format
+#: collection_mapping.xml:831
+#, fuzzy, no-c-format
 msgid ""
-"Note that the update performance of an <literal>&lt;idbag&gt;</literal> is "
-"<emphasis>much</emphasis> better than a regular <literal>&lt;bag&gt;</"
-"literal>! Hibernate can locate individual rows efficiently and update or "
-"delete them individually, just like a list, map or set."
+"The update performance of an <literal>&lt;idbag&gt;</literal> supersedes a "
+"regular <literal>&lt;bag&gt;</literal>. Hibernate can locate individual rows "
+"efficiently and update or delete them individually, similar to a list, map "
+"or set."
 msgstr ""
 "<literal>&lt;idbag&gt;</literal>의 업데이트 퍼포먼스는 정규 <literal>&lt;"
 "bag&gt;</literal> 보다 훨씬 좋다는 점을 노트하라! Hibernate는 마치 list, "
@@ -1490,7 +1503,7 @@ msgstr ""
 "로 업데이트 하거나 삭제시킬 수 있다."
 
 #. Tag: para
-#: collection_mapping.xml:805
+#: collection_mapping.xml:837
 #, no-c-format
 msgid ""
 "In the current implementation, the <literal>native</literal> identifier "
@@ -1501,21 +1514,26 @@ msgstr ""
 "idbag&gt;</literal> 콜렉션 식별자들에 대해 지원되지 않는다."
 
 #. Tag: title
-#: collection_mapping.xml:829
+#: collection_mapping.xml:861
 #, no-c-format
 msgid "Collection examples"
 msgstr "콜렉션 예제들"
 
 #. Tag: para
-#: collection_mapping.xml:831
+#: collection_mapping.xml:863
+#, fuzzy, no-c-format
+msgid "This section covers collection examples."
+msgstr "콜렉션 예제들"
+
+#. Tag: para
+#: collection_mapping.xml:867
 #, no-c-format
 msgid ""
-"The previous sections are pretty confusing. So lets look at an example. This "
-"class:"
-msgstr "앞의 절들은 꽤 혼동스럽다. 따라서 예제를 살펴보자. 다음 클래스:"
+"The following class has a collection of <literal>Child</literal> instances:"
+msgstr ""
 
 #. Tag: programlisting
-#: collection_mapping.xml:836
+#: collection_mapping.xml:871
 #, no-c-format
 msgid ""
 "<![CDATA[package eg;\n"
@@ -1537,18 +1555,18 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: collection_mapping.xml:838
-#, no-c-format
+#: collection_mapping.xml:873
+#, fuzzy, no-c-format
 msgid ""
-"has a collection of <literal>Child</literal> instances. If each child has at "
-"most one parent, the most natural mapping is a one-to-many association:"
+"If each child has, at most, one parent, the most natural mapping is a one-to-"
+"many association:"
 msgstr ""
 "는 <literal>Child</literal> 인스턴스들을 가진 하나의 콜렉션을 갖고 있다. 만"
 "일 각각의 자식이 최소한 한 개의 부모를 가질 경우, 대부분의 고유한 매핑은 one-"
 "to-many 연관이다:"
 
 #. Tag: programlisting
-#: collection_mapping.xml:844
+#: collection_mapping.xml:879
 #, no-c-format
 msgid ""
 "<![CDATA[<hibernate-mapping>\n"
@@ -1574,13 +1592,13 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: collection_mapping.xml:846
+#: collection_mapping.xml:881
 #, no-c-format
 msgid "This maps to the following table definitions:"
 msgstr "이것은 다음 테이블 정의들로 매핑된다:"
 
 #. Tag: programlisting
-#: collection_mapping.xml:850
+#: collection_mapping.xml:885
 #, no-c-format
 msgid ""
 "<![CDATA[create table parent ( id bigint not null primary key )\n"
@@ -1590,7 +1608,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: collection_mapping.xml:852
+#: collection_mapping.xml:887
 #, no-c-format
 msgid ""
 "If the parent is <emphasis>required</emphasis>, use a bidirectional one-to-"
@@ -1600,7 +1618,7 @@ msgstr ""
 "사용하라:"
 
 #. Tag: programlisting
-#: collection_mapping.xml:857
+#: collection_mapping.xml:892
 #, no-c-format
 msgid ""
 "<![CDATA[<hibernate-mapping>\n"
@@ -1628,13 +1646,13 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: collection_mapping.xml:859
+#: collection_mapping.xml:894
 #, no-c-format
 msgid "Notice the <literal>NOT NULL</literal> constraint:"
 msgstr "<literal>NOT NULL</literal> 컨스트레인트를 주목하라:"
 
 #. Tag: programlisting
-#: collection_mapping.xml:863
+#: collection_mapping.xml:898
 #, no-c-format
 msgid ""
 "<![CDATA[create table parent ( id bigint not null primary key )\n"
@@ -1646,19 +1664,19 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: collection_mapping.xml:865
-#, no-c-format
+#: collection_mapping.xml:900
+#, fuzzy, no-c-format
 msgid ""
-"Alternatively, if you absolutely insist that this association should be "
-"unidirectional, you can declare the <literal>NOT NULL</literal> constraint "
-"on the <literal>&lt;key&gt;</literal> mapping:"
+"Alternatively, if this association must be unidirectional you can declare "
+"the <literal>NOT NULL</literal> constraint on the <literal>&lt;key&gt;</"
+"literal> mapping:"
 msgstr ""
 "대안적으로, 만일 당신이 이 연관관계가 단방향이어야 함을 절대적으로 역설할 경"
 "우, 당신은 <literal>&lt;key&gt;</literal> 매핑 상에 <literal>NOT NULL</"
 "literal> 컨스트레인트를 선언할 수 있다:"
 
 #. Tag: programlisting
-#: collection_mapping.xml:871
+#: collection_mapping.xml:906
 #, no-c-format
 msgid ""
 "<![CDATA[<hibernate-mapping>\n"
@@ -1684,17 +1702,17 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: collection_mapping.xml:873
-#, no-c-format
+#: collection_mapping.xml:908
+#, fuzzy, no-c-format
 msgid ""
-"On the other hand, if a child might have multiple parents, a many-to-many "
+"On the other hand, if a child has multiple parents, a many-to-many "
 "association is appropriate:"
 msgstr ""
 "반면에, 만일 자식이 여러 부모들을 가질 수 있을 경우, many-to-many 연관이 적절"
 "하다:"
 
 #. Tag: programlisting
-#: collection_mapping.xml:878
+#: collection_mapping.xml:913
 #, no-c-format
 msgid ""
 "<![CDATA[<hibernate-mapping>\n"
@@ -1720,13 +1738,13 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: collection_mapping.xml:880
+#: collection_mapping.xml:915
 #, no-c-format
 msgid "Table definitions:"
 msgstr "테이블 정의들:"
 
 #. Tag: programlisting
-#: collection_mapping.xml:884
+#: collection_mapping.xml:919
 #, no-c-format
 msgid ""
 "<![CDATA[create table parent ( id bigint not null primary key )\n"
@@ -1741,24 +1759,33 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: collection_mapping.xml:886
-#, no-c-format
+#: collection_mapping.xml:921
+#, fuzzy, no-c-format
 msgid ""
-"For more examples and a complete walk-through a parent/child relationship "
-"mapping, see <xref linkend=\"example-parentchild\"/>."
+"For more examples and a complete explanation of a parent/child relationship "
+"mapping, see <xref linkend=\"example-parentchild\"/> for more information."
 msgstr ""
 "부모/자식 관계 매핑을 연습하는 더 많은 예제들과 전체 리허설은 <xref linkend="
 "\"example-parentchild\"/>를 보라."
 
 #. Tag: para
-#: collection_mapping.xml:891
-#, no-c-format
-msgid ""
-"Even more exotic association mappings are possible, we will catalog all "
-"possibilities in the next chapter."
+#: collection_mapping.xml:926
+#, fuzzy, no-c-format
+msgid "Even more complex association mappings are covered in the next chapter."
 msgstr ""
 "비록 더 많은 신종 연관 매핑들이 가능할지라도, 우리는 다음 장에서 모든 가능성"
 "들을 분류할 것이다."
+
+#~ msgid "Collection Mapping"
+#~ msgstr "콜렉션 매핑"
+
+#~ msgid "Some examples, first, a set of strings:"
+#~ msgstr "몇몇 예제들, 먼저 문자열들을 가진 set:"
+
+#~ msgid ""
+#~ "The previous sections are pretty confusing. So lets look at an example. "
+#~ "This class:"
+#~ msgstr "앞의 절들은 꽤 혼동스럽다. 따라서 예제를 살펴보자. 다음 클래스:"
 
 #~ msgid ""
 #~ "<literal>column_name</literal> (required): The name of the column holding "

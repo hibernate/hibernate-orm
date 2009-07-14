@@ -846,7 +846,7 @@ public class EventManager {
                 Here, we are using a Hibernate Query Language (HQL) query to load all existing
                 <literal>Event</literal> objects from the database. Hibernate will generate the
                 appropriate SQL, send it to the database and populate <literal>Event</literal> objects
-                with the data. You can create more complex queries with HQL. See <xref linkend="query-hql"/>
+                with the data. You can create more complex queries with HQL. See <xref linkend="queryhql"/>
                 for more information.
             </para>
 

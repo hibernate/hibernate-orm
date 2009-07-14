@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2008-08-14 15:28+0000\n"
+"POT-Creation-Date: 2009-07-14 19:56+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,10 +18,10 @@ msgstr "XML映射"
 
 #. Tag: emphasis
 #: xml.xml:31
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
-"Note that this is an experimental feature in Hibernate 3.0 and is under "
-"extremely active development."
+"XML Mapping is an experimental feature in Hibernate 3.0 and is currently "
+"under active development."
 msgstr "注意这是Hibernate 3.0的一个实验性的特性。这一特性仍在积极开发中。"
 
 #. Tag: title
@@ -32,12 +32,12 @@ msgstr "用XML数据进行工作"
 
 #. Tag: para
 #: xml.xml:39
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
-"Hibernate lets you work with persistent XML data in much the same way you "
-"work with persistent POJOs. A parsed XML tree can be thought of as just "
-"another way to represent the relational data at the object level, instead of "
-"POJOs."
+"Hibernate allows you to work with persistent XML data in much the same way "
+"you work with persistent POJOs. A parsed XML tree can be thought of as "
+"another way of representing the relational data at the object level, instead "
+"of POJOs."
 msgstr ""
 "Hibernate使得你可以用XML数据来进行工作，恰如你用持久化的POJO进行工作那样。解"
 "析过的XML树 可以被认为是代替POJO的另外一种在对象层面上表示关系型数据的途径."
@@ -72,11 +72,11 @@ msgstr ""
 
 #. Tag: para
 #: xml.xml:61
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
-"A single mapping may be used to simultaneously map properties of a class and "
+"A single mapping can be used to simultaneously map properties of a class and "
 "nodes of an XML document to the database, or, if there is no class to map, "
-"it may be used to map just the XML."
+"it can be used to map just the XML."
 msgstr ""
 "一个单一的映射就可以将类的属性和XML文档的节点同时映射到数据库。如果不需要映射"
 "类， 它也可以用来只映射XML文档。"
@@ -162,11 +162,11 @@ msgstr ""
 
 #. Tag: para
 #: xml.xml:86
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
 "This mapping allows you to access the data as a dom4j tree, or as a graph of "
-"property name/value pairs (java <literal>Map</literal>s). The property names "
-"are purely logical constructs that may be referred to in HQL queries."
+"property name/value pairs or java <literal>Map</literal>s. The property "
+"names are purely logical constructs that can be referred to in HQL queries."
 msgstr ""
 "这个映射使得你既可以把数据作为一棵dom4j树那样访问，又可以作为由属性键值对"
 "(java <literal>Map</literal>s) 组成的图那样访问。属性名字纯粹是逻辑上的结构，"
@@ -180,10 +180,10 @@ msgstr "XML映射元数据"
 
 #. Tag: para
 #: xml.xml:99
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
-"Many Hibernate mapping elements accept the <literal>node</literal> "
-"attribute. This let's you specify the name of an XML attribute or element "
+"A range of Hibernate mapping elements accept the <literal>node</literal> "
+"attribute. This lets you specify the name of an XML attribute or element "
 "that holds the property or entity data. The format of the <literal>node</"
 "literal> attribute must be one of the following:"
 msgstr ""
@@ -193,27 +193,27 @@ msgstr ""
 
 #. Tag: para
 #: xml.xml:108
-#, no-c-format
-msgid "<literal>\"element-name\"</literal> - map to the named XML element"
+#, fuzzy, no-c-format
+msgid "<literal>\"element-name\"</literal>: map to the named XML element"
 msgstr "<literal>\"element-name\"</literal> - 映射为指定的XML元素"
 
 #. Tag: para
 #: xml.xml:111
-#, no-c-format
-msgid "<literal>\"@attribute-name\"</literal> - map to the named XML attribute"
+#, fuzzy, no-c-format
+msgid "<literal>\"@attribute-name\"</literal>: map to the named XML attribute"
 msgstr "<literal>\"@attribute-name\"</literal> - 映射为指定的XML属性"
 
 #. Tag: para
 #: xml.xml:114
-#, no-c-format
-msgid "<literal>\".\"</literal> - map to the parent element"
+#, fuzzy, no-c-format
+msgid "<literal>\".\"</literal>: map to the parent element"
 msgstr "<literal>\".\"</literal> - 映射为父元素"
 
 #. Tag: para
 #: xml.xml:117
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
-"<literal>\"element-name/@attribute-name\"</literal> - map to the named "
+"<literal>\"element-name/@attribute-name\"</literal>: map to the named "
 "attribute of the named element"
 msgstr ""
 "<literal>\"element-name/@attribute-name\"</literal> - 映射为指定元素的指定属"
@@ -221,7 +221,7 @@ msgstr ""
 
 #. Tag: para
 #: xml.xml:124
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
 "For collections and single valued associations, there is an additional "
 "<literal>embed-xml</literal> attribute. If <literal>embed-xml=\"true\"</"
@@ -229,7 +229,7 @@ msgid ""
 "of value type) will be embedded directly in the XML tree for the entity that "
 "owns the association. Otherwise, if <literal>embed-xml=\"false\"</literal>, "
 "then only the referenced identifier value will appear in the XML for single "
-"point associations and collections will simply not appear at all."
+"point associations and collections will not appear at all."
 msgstr ""
 "对于集合和单值的关联，有一个额外的<literal>embed-xml</literal>属性可用。 这个"
 "属性的缺省值是真(<literal>embed-xml=\"true\"</literal>)。如果<literal>embed-"
@@ -240,10 +240,10 @@ msgstr ""
 
 #. Tag: para
 #: xml.xml:134
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
-"You should be careful not to leave <literal>embed-xml=\"true\"</literal> for "
-"too many associations, since XML does not deal well with circularity!"
+"Do not leave <literal>embed-xml=\"true\"</literal> for too many "
+"associations, since XML does not deal well with circularity."
 msgstr ""
 "你应该小心，不要让太多关联的embed-xml属性为真(<literal>embed-xml=\"true\"</"
 "literal>)，因为XML不能很好地处理 循环引用!"
@@ -290,10 +290,10 @@ msgstr ""
 
 #. Tag: para
 #: xml.xml:141
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
-"in this case, we have decided to embed the collection of account ids, but "
-"not the actual account data. The following HQL query:"
+"In this case, the collection of account ids is embedded, but not the actual "
+"account data. The following HQL query:"
 msgstr ""
 "在这个例子中，我们决定嵌入帐目号码(account id)的集合，但不嵌入实际的帐目数"
 "据。下面的HQL查询："
@@ -308,8 +308,8 @@ msgstr ""
 
 #. Tag: para
 #: xml.xml:148
-#, no-c-format
-msgid "Would return datasets such as this:"
+#, fuzzy, no-c-format
+msgid "would return datasets such as this:"
 msgstr "返回的数据集将是这样："
 
 #. Tag: programlisting
@@ -368,10 +368,10 @@ msgstr "操作XML数据"
 
 #. Tag: para
 #: xml.xml:167
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
-"Let's rearead and update XML documents in the application. We do this by "
-"obtaining a dom4j session:"
+"You can also re-read and update XML documents in the application. You can do "
+"this by obtaining a dom4j session:"
 msgstr ""
 "让我们来读入和更新应用程序中的XML文档。通过获取一个dom4j会话可以做到这一点："
 
@@ -423,11 +423,10 @@ msgstr ""
 
 #. Tag: para
 #: xml.xml:176
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
-"It is extremely useful to combine this feature with Hibernate's "
-"<literal>replicate()</literal> operation to implement XML-based data import/"
-"export."
+"When implementing XML-based data import/export, it is useful to combine this "
+"feature with Hibernate's <literal>replicate()</literal> operation."
 msgstr ""
 "将这一特色与Hibernate的<literal>replicate()</literal>操作结合起来对于实现的基"
 "于XML的数据导入/导出将非常有用."

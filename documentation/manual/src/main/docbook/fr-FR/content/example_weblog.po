@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2008-08-14 15:28+0000\n"
+"POT-Creation-Date: 2009-07-14 19:56+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -24,11 +24,11 @@ msgstr "Classes persistantes"
 
 #. Tag: para
 #: example_weblog.xml:34
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
-"The persistent classes represent a weblog, and an item posted in a weblog. "
-"They are to be modelled as a standard parent/child relationship, but we will "
-"use an ordered bag, instead of a set."
+"The persistent classes here represent a weblog and an item posted in a "
+"weblog. They are to be modelled as a standard parent/child relationship, but "
+"we will use an ordered bag, instead of a set:"
 msgstr ""
 "Les classes persistantes representent un weblog, et un article posté dans un "
 "weblog. Il seront modélisés comme une relation père/fils standard, mais nous "
@@ -125,8 +125,8 @@ msgstr "Mappings Hibernate"
 
 #. Tag: para
 #: example_weblog.xml:49
-#, no-c-format
-msgid "The XML mappings should now be quite straightforward."
+#, fuzzy, no-c-format
+msgid "The XML mappings are now straightforward. For example:"
 msgstr "Le mapping XML doit maintenant être relativement simple à vos yeux."
 
 #. Tag: programlisting
@@ -231,10 +231,10 @@ msgstr "Code Hibernate"
 
 #. Tag: para
 #: example_weblog.xml:62
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
 "The following class demonstrates some of the kinds of things we can do with "
-"these classes, using Hibernate."
+"these classes using Hibernate:"
 msgstr ""
 "La classe suivante montre quelques utilisations que nous pouvons faire de "
 "ces classes."

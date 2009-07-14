@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2007-10-25 07:47+0000\n"
+"POT-Creation-Date: 2009-07-14 19:56+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -11,25 +11,25 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 
 #. Tag: title
-#: performance.xml:5
+#: performance.xml:29
 #, no-c-format
 msgid "Improving performance"
 msgstr "Aumentando a performance"
 
 #. Tag: title
-#: performance.xml:8
+#: performance.xml:32
 #, no-c-format
 msgid "Fetching strategies"
 msgstr "Estratégias de Fetching"
 
 #. Tag: para
-#: performance.xml:10
-#, no-c-format
+#: performance.xml:34
+#, fuzzy, no-c-format
 msgid ""
-"A <emphasis>fetching strategy</emphasis> is the strategy Hibernate will use "
-"for retrieving associated objects if the application needs to navigate the "
-"association. Fetch strategies may be declared in the O/R mapping metadata, "
-"or over-ridden by a particular HQL or <literal>Criteria</literal> query."
+"Hibernate uses a <emphasis>fetching strategy</emphasis> to retrieve "
+"associated objects if the application needs to navigate the association. "
+"Fetch strategies can be declared in the O/R mapping metadata, or over-ridden "
+"by a particular HQL or <literal>Criteria</literal> query."
 msgstr ""
 "Uma <emphasis>estratégia de fetching</emphasis> é a estratégia que o "
 "Hibernate irá usar para buscar objetos associados se a aplicação precisar "
@@ -38,16 +38,16 @@ msgstr ""
 "<literal>Criteria</literal>."
 
 #. Tag: para
-#: performance.xml:17
+#: performance.xml:41
 #, no-c-format
 msgid "Hibernate3 defines the following fetching strategies:"
 msgstr "Hibernate3 define as seguintes estratégias de fetching:"
 
 #. Tag: para
-#: performance.xml:23
-#, no-c-format
+#: performance.xml:47
+#, fuzzy, no-c-format
 msgid ""
-"<emphasis>Join fetching</emphasis> - Hibernate retrieves the associated "
+"<emphasis>Join fetching</emphasis>: Hibernate retrieves the associated "
 "instance or collection in the same <literal>SELECT</literal>, using an "
 "<literal>OUTER JOIN</literal>."
 msgstr ""
@@ -56,13 +56,13 @@ msgstr ""
 "literal>."
 
 #. Tag: para
-#: performance.xml:30
-#, no-c-format
+#: performance.xml:54
+#, fuzzy, no-c-format
 msgid ""
-"<emphasis>Select fetching</emphasis> - a second <literal>SELECT</literal> is "
+"<emphasis>Select fetching</emphasis>: a second <literal>SELECT</literal> is "
 "used to retrieve the associated entity or collection. Unless you explicitly "
 "disable lazy fetching by specifying <literal>lazy=\"false\"</literal>, this "
-"second select will only be executed when you actually access the association."
+"second select will only be executed when you access the association."
 msgstr ""
 "<emphasis>Select fetching</emphasis> - um segundo <literal>SELECT</literal> "
 "é usado para buscar a entidade ou coleção associada. A menos que você "
@@ -70,14 +70,14 @@ msgstr ""
 "esse segundo SELECT será executado apenas quando você acessar a associação."
 
 #. Tag: para
-#: performance.xml:39
-#, no-c-format
+#: performance.xml:63
+#, fuzzy, no-c-format
 msgid ""
-"<emphasis>Subselect fetching</emphasis> - a second <literal>SELECT</literal> "
+"<emphasis>Subselect fetching</emphasis>: a second <literal>SELECT</literal> "
 "is used to retrieve the associated collections for all entities retrieved in "
 "a previous query or fetch. Unless you explicitly disable lazy fetching by "
 "specifying <literal>lazy=\"false\"</literal>, this second select will only "
-"be executed when you actually access the association."
+"be executed when you access the association."
 msgstr ""
 "<emphasis>Subselect fetching</emphasis> - um segundo <literal>SELECT</"
 "literal> será usado para buscar as coleções associadas de todas as entidades "
@@ -86,12 +86,12 @@ msgstr ""
 "SELECT será executado apenas quando você acessar a associação."
 
 #. Tag: para
-#: performance.xml:48
-#, no-c-format
+#: performance.xml:72
+#, fuzzy, no-c-format
 msgid ""
-"<emphasis>Batch fetching</emphasis> - an optimization strategy for select "
-"fetching - Hibernate retrieves a batch of entity instances or collections in "
-"a single <literal>SELECT</literal>, by specifying a list of primary keys or "
+"<emphasis>Batch fetching</emphasis>: an optimization strategy for select "
+"fetching. Hibernate retrieves a batch of entity instances or collections in "
+"a single <literal>SELECT</literal> by specifying a list of primary or "
 "foreign keys."
 msgstr ""
 "<emphasis>Batch fetching</emphasis> - uma opção de otimização para o Select "
@@ -100,17 +100,17 @@ msgstr ""
 "ou chaves estrangeiras."
 
 #. Tag: para
-#: performance.xml:57
+#: performance.xml:81
 #, no-c-format
 msgid "Hibernate also distinguishes between:"
 msgstr "O Hibernate distingue também entre:"
 
 #. Tag: para
-#: performance.xml:63
-#, no-c-format
+#: performance.xml:87
+#, fuzzy, no-c-format
 msgid ""
-"<emphasis>Immediate fetching</emphasis> - an association, collection or "
-"attribute is fetched immediately, when the owner is loaded."
+"<emphasis>Immediate fetching</emphasis>: an association, collection or "
+"attribute is fetched immediately when the owner is loaded."
 msgstr ""
 "<emphasis>Immediate fetching</emphasis> - uma associação, coleção ou "
 "atributo é buscado como ela é carregada (Qual SQL é usado). Não se confuda "
@@ -120,25 +120,25 @@ msgstr ""
 "carregado."
 
 #. Tag: para
-#: performance.xml:69
-#, no-c-format
+#: performance.xml:93
+#, fuzzy, no-c-format
 msgid ""
-"<emphasis>Lazy collection fetching</emphasis> - a collection is fetched when "
-"the application invokes an operation upon that collection. (This is the "
-"default for collections.)"
+"<emphasis>Lazy collection fetching</emphasis>: a collection is fetched when "
+"the application invokes an operation upon that collection. This is the "
+"default for collections."
 msgstr ""
 "<emphasis>Lazy collection fetching</emphasis> - a coleção é buscada quando a "
 "aplicação invoca uma operação sobre aquela coleção (Esse é o padrão para "
 "coleções)"
 
 #. Tag: para
-#: performance.xml:76
-#, no-c-format
+#: performance.xml:100
+#, fuzzy, no-c-format
 msgid ""
-"<emphasis>\"Extra-lazy\" collection fetching</emphasis> - individual "
-"elements of the collection are accessed from the database as needed. "
-"Hibernate tries not to fetch the whole collection into memory unless "
-"absolutely needed (suitable for very large collections)"
+"<emphasis>\"Extra-lazy\" collection fetching</emphasis>: individual elements "
+"of the collection are accessed from the database as needed. Hibernate tries "
+"not to fetch the whole collection into memory unless absolutely needed. It "
+"is suitable for large collections."
 msgstr ""
 "<emphasis>\"Extra-lazy\" collection fetching</emphasis> - elementos "
 "individuais de uma coleção são acessados do banco de dados quando preciso. O "
@@ -146,10 +146,10 @@ msgstr ""
 "seja absolutamente preciso. (indicado para coleções muito grandes)"
 
 #. Tag: para
-#: performance.xml:84
-#, no-c-format
+#: performance.xml:108
+#, fuzzy, no-c-format
 msgid ""
-"<emphasis>Proxy fetching</emphasis> - a single-valued association is fetched "
+"<emphasis>Proxy fetching</emphasis>: a single-valued association is fetched "
 "when a method other than the identifier getter is invoked upon the "
 "associated object."
 msgstr ""
@@ -158,15 +158,15 @@ msgstr ""
 "objeto associado."
 
 #. Tag: para
-#: performance.xml:91
-#, no-c-format
+#: performance.xml:115
+#, fuzzy, no-c-format
 msgid ""
-"<emphasis>\"No-proxy\" fetching</emphasis> - a single-valued association is "
+"<emphasis>\"No-proxy\" fetching</emphasis>: a single-valued association is "
 "fetched when the instance variable is accessed. Compared to proxy fetching, "
-"this approach is less lazy (the association is fetched even when only the "
-"identifier is accessed) but more transparent, since no proxy is visible to "
-"the application. This approach requires buildtime bytecode instrumentation "
-"and is rarely necessary."
+"this approach is less lazy; the association is fetched even when only the "
+"identifier is accessed. It is also more transparent, since no proxy is "
+"visible to the application. This approach requires buildtime bytecode "
+"instrumentation and is rarely necessary."
 msgstr ""
 "<emphasis>\"No-proxy\" fetching</emphasis> - uma associação de um valor é "
 "carregada quando a variável da instância é carregada. Comparada com a proxy "
@@ -176,10 +176,10 @@ msgstr ""
 "de bytecodes em build-time e é raramente necessário."
 
 #. Tag: para
-#: performance.xml:101
-#, no-c-format
+#: performance.xml:125
+#, fuzzy, no-c-format
 msgid ""
-"<emphasis>Lazy attribute fetching</emphasis> - an attribute or single valued "
+"<emphasis>Lazy attribute fetching</emphasis>: an attribute or single valued "
 "association is fetched when the instance variable is accessed. This approach "
 "requires buildtime bytecode instrumentation and is rarely necessary."
 msgstr ""
@@ -188,14 +188,15 @@ msgstr ""
 "requer instrumentação de bytecodes em build-time e é raramente necessário."
 
 #. Tag: para
-#: performance.xml:110
-#, no-c-format
+#: performance.xml:134
+#, fuzzy, no-c-format
 msgid ""
 "We have two orthogonal notions here: <emphasis>when</emphasis> is the "
-"association fetched, and <emphasis>how</emphasis> is it fetched (what SQL is "
-"used). Don't confuse them! We use <literal>fetch</literal> to tune "
-"performance. We may use <literal>lazy</literal> to define a contract for "
-"what data is always available in any detached instance of a particular class."
+"association fetched and <emphasis>how</emphasis> is it fetched. It is "
+"important that you do not confuse them. We use <literal>fetch</literal> to "
+"tune performance. We can use <literal>lazy</literal> to define a contract "
+"for what data is always available in any detached instance of a particular "
+"class."
 msgstr ""
 "Nós temos aqui duas noções ortogonais: <emphasis>quando</emphasis> a "
 "associação é carregada e <emphasis>como </emphasis> ela é carregada (Qual "
@@ -205,31 +206,30 @@ msgstr ""
 "classe qualquer."
 
 #. Tag: title
-#: performance.xml:119
+#: performance.xml:143
 #, no-c-format
 msgid "Working with lazy associations"
 msgstr "Inicializando coleções e proxies"
 
 #. Tag: para
-#: performance.xml:121
-#, no-c-format
+#: performance.xml:145
+#, fuzzy, no-c-format
 msgid ""
 "By default, Hibernate3 uses lazy select fetching for collections and lazy "
 "proxy fetching for single-valued associations. These defaults make sense for "
-"almost all associations in almost all applications."
+"most associations in the majority of applications."
 msgstr ""
 "Por padrão, o Hibernate3 usa busca preguiçosa para coleções e busca "
 "preguiçosa com proxy para associações de um valor. Esses padrões fazem "
 "sentido para quase todas as associações em quase todas a aplicações."
 
 #. Tag: para
-#: performance.xml:127
-#, no-c-format
+#: performance.xml:151
+#, fuzzy, no-c-format
 msgid ""
-"<emphasis>Note:</emphasis> if you set <literal>hibernate."
-"default_batch_fetch_size</literal>, Hibernate will use the batch fetch "
-"optimization for lazy fetching (this optimization may also be enabled at a "
-"more granular level)."
+"If you set <literal>hibernate.default_batch_fetch_size</literal>, Hibernate "
+"will use the batch fetch optimization for lazy fetching. This optimization "
+"can also be enabled at a more granular level."
 msgstr ""
 "<emphasis>Veja:</emphasis> se voce setar <literal>hibernate."
 "default_batch_fetch_size</literal>, O Hibernate irá usar otimização de "
@@ -237,19 +237,18 @@ msgstr ""
 "também habilitada em um nível mais fino)."
 
 #. Tag: para
-#: performance.xml:134
-#, no-c-format
+#: performance.xml:158
+#, fuzzy, no-c-format
 msgid ""
-"However, lazy fetching poses one problem that you must be aware of. Access "
-"to a lazy association outside of the context of an open Hibernate session "
-"will result in an exception. For example:"
+"Please be aware that access to a lazy association outside of the context of "
+"an open Hibernate session will result in an exception. For example:"
 msgstr ""
 "Porém, a busca preguiçosa tem um problema que você precisar saber. Acesso a "
 "associações preguiçosas fora do contexto de uma sessão aberta do Hibernate "
 "irá resultar numa exceção. Por exemplo:"
 
 #. Tag: programlisting
-#: performance.xml:140
+#: performance.xml:164
 #, no-c-format
 msgid ""
 "<![CDATA[s = sessions.openSession();\n"
@@ -266,14 +265,14 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: performance.xml:142
-#, no-c-format
+#: performance.xml:166
+#, fuzzy, no-c-format
 msgid ""
 "Since the permissions collection was not initialized when the "
 "<literal>Session</literal> was closed, the collection will not be able to "
 "load its state. <emphasis>Hibernate does not support lazy initialization for "
-"detached objects</emphasis>. The fix is to move the code that reads from the "
-"collection to just before the transaction is committed."
+"detached objects</emphasis>. This can be fixed by moving the code that reads "
+"from the collection to just before the transaction is committed."
 msgstr ""
 "Como a coleção de permissões não foi inicializada quando a <literal>Session</"
 "literal> foi fechada, a coleção não poderá carregar o seu estado. O "
@@ -282,15 +281,15 @@ msgstr ""
 "antes da transação ser comitada."
 
 #. Tag: para
-#: performance.xml:150
-#, no-c-format
+#: performance.xml:174
+#, fuzzy, no-c-format
 msgid ""
-"Alternatively, we could use a non-lazy collection or association, by "
+"Alternatively, you can use a non-lazy collection or association, by "
 "specifying <literal>lazy=\"false\"</literal> for the association mapping. "
 "However, it is intended that lazy initialization be used for almost all "
 "collections and associations. If you define too many non-lazy associations "
-"in your object model, Hibernate will end up needing to fetch the entire "
-"database into memory in every transaction!"
+"in your object model, Hibernate will fetch the entire database into memory "
+"in every transaction."
 msgstr ""
 "Alternativamente, nós podemos usar uma coleção ou associação não preguiçosa, "
 "especificando <literal>lazy=\"false\"</literal> para o mapeamento da "
@@ -300,14 +299,14 @@ msgstr ""
 "precisar carregar o banco de dados inteiro na memória em cada transação!"
 
 #. Tag: para
-#: performance.xml:159
-#, no-c-format
+#: performance.xml:183
+#, fuzzy, no-c-format
 msgid ""
-"On the other hand, we often want to choose join fetching (which is non-lazy "
-"by nature) instead of select fetching in a particular transaction. We'll now "
-"see how to customize the fetching strategy. In Hibernate3, the mechanisms "
-"for choosing a fetch strategy are identical for single-valued associations "
-"and collections."
+"On the other hand, you can use join fetching, which is non-lazy by nature, "
+"instead of select fetching in a particular transaction. We will now explain "
+"how to customize the fetching strategy. In Hibernate3, the mechanisms for "
+"choosing a fetch strategy are identical for single-valued associations and "
+"collections."
 msgstr ""
 "Por outro lado, nós geralmente escolhemos join fetching (que é não "
 "preguiçosa por natureza) ao invés de select fetching em uma transação "
@@ -316,13 +315,13 @@ msgstr ""
 "identicos para as associações simples e para coleções."
 
 #. Tag: title
-#: performance.xml:170
+#: performance.xml:194
 #, no-c-format
 msgid "Tuning fetch strategies"
 msgstr "Personalizando as estratégias de busca"
 
 #. Tag: para
-#: performance.xml:172
+#: performance.xml:196
 #, no-c-format
 msgid ""
 "Select fetching (the default) is extremely vulnerable to N+1 selects "
@@ -333,7 +332,7 @@ msgstr ""
 "mapeamento:"
 
 #. Tag: programlisting
-#: performance.xml:177
+#: performance.xml:201
 #, no-c-format
 msgid ""
 "<![CDATA[<set name=\"permissions\" \n"
@@ -344,13 +343,13 @@ msgid ""
 msgstr ""
 
 #. Tag: programlisting
-#: performance.xml:179
+#: performance.xml:203
 #, no-c-format
 msgid "<![CDATA[<many-to-one name=\"mother\" class=\"Cat\" fetch=\"join\"/>]]>"
 msgstr ""
 
 #. Tag: para
-#: performance.xml:181
+#: performance.xml:205
 #, no-c-format
 msgid ""
 "The <literal>fetch</literal> strategy defined in the mapping document "
@@ -360,36 +359,36 @@ msgstr ""
 "afeta:"
 
 #. Tag: para
-#: performance.xml:187
+#: performance.xml:211
 #, no-c-format
 msgid "retrieval via <literal>get()</literal> or <literal>load()</literal>"
 msgstr "recupera via <literal>get()</literal> ou <literal>load()</literal>"
 
 #. Tag: para
-#: performance.xml:192
+#: performance.xml:216
 #, no-c-format
 msgid "retrieval that happens implicitly when an association is navigated"
 msgstr ""
 "Recuperações que acontecem implicitamente quando navegamos por uma associação"
 
 #. Tag: para
-#: performance.xml:197
+#: performance.xml:221
 #, no-c-format
 msgid "<literal>Criteria</literal> queries"
 msgstr "<literal>Criteria</literal> queries"
 
 #. Tag: para
-#: performance.xml:202
+#: performance.xml:226
 #, no-c-format
 msgid "HQL queries if <literal>subselect</literal> fetching is used"
 msgstr "buscas por HQL se buscar por <literal>subselect</literal> for usado"
 
 #. Tag: para
-#: performance.xml:208
-#, no-c-format
+#: performance.xml:232
+#, fuzzy, no-c-format
 msgid ""
-"No matter what fetching strategy you use, the defined non-lazy graph is "
-"guaranteed to be loaded into memory. Note that this might result in several "
+"Irrespective of the fetching strategy you use, the defined non-lazy graph is "
+"guaranteed to be loaded into memory. This might, however, result in several "
 "immediate selects being used to execute a particular HQL query."
 msgstr ""
 "Independentemente da estratégia de busca que você usar, o grafo não "
@@ -398,11 +397,11 @@ msgstr ""
 "particular."
 
 #. Tag: para
-#: performance.xml:214
-#, no-c-format
+#: performance.xml:238
+#, fuzzy, no-c-format
 msgid ""
-"Usually, we don't use the mapping document to customize fetching. Instead, "
-"we keep the default behavior, and override it for a particular transaction, "
+"Usually, the mapping document is not used to customize fetching. Instead, we "
+"keep the default behavior, and override it for a particular transaction, "
 "using <literal>left join fetch</literal> in HQL. This tells Hibernate to "
 "fetch the association eagerly in the first select, using an outer join. In "
 "the <literal>Criteria</literal> query API, you would use "
@@ -416,19 +415,19 @@ msgstr ""
 "você irá usar <literal>setFetchMode(FetchMode.JOIN)</literal>."
 
 #. Tag: para
-#: performance.xml:223
-#, no-c-format
+#: performance.xml:247
+#, fuzzy, no-c-format
 msgid ""
-"If you ever feel like you wish you could change the fetching strategy used "
-"by <literal>get()</literal> or <literal>load()</literal>, simply use a "
-"<literal>Criteria</literal> query, for example:"
+"If you want to change the fetching strategy used by <literal>get()</literal> "
+"or <literal>load()</literal>, you can use a <literal>Criteria</literal> "
+"query. For example:"
 msgstr ""
 "Se você quiser mudar a estratégia de busca usada pelo <literal>get()</"
 "literal> ou <literal>load()</literal>, simplesmente use uma query "
 "<literal>Criteria</literal>, por exemplo:"
 
 #. Tag: programlisting
-#: performance.xml:229
+#: performance.xml:253
 #, no-c-format
 msgid ""
 "<![CDATA[User user = (User) session.createCriteria(User.class)\n"
@@ -438,41 +437,41 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: performance.xml:231
-#, no-c-format
+#: performance.xml:255
+#, fuzzy, no-c-format
 msgid ""
-"(This is Hibernate's equivalent of what some ORM solutions call a \"fetch "
-"plan\".)"
+"This is Hibernate's equivalent of what some ORM solutions call a \"fetch plan"
+"\"."
 msgstr ""
 "(Isto é o equivalente do Hibernate para o que algumas soluções ORM chamam de "
 "\"plano de busca\")"
 
 #. Tag: para
-#: performance.xml:235
-#, no-c-format
+#: performance.xml:259
+#, fuzzy, no-c-format
 msgid ""
-"A completely different way to avoid problems with N+1 selects is to use the "
+"A completely different approach to problems with N+1 selects is to use the "
 "second-level cache."
 msgstr ""
 "Um meio totalmente diferente de evitar problemas com selects N+1 é usar um "
 "cache de segundo nível."
 
 #. Tag: title
-#: performance.xml:243
+#: performance.xml:267
 #, no-c-format
 msgid "Single-ended association proxies"
 msgstr "Proxies de associação single-ended"
 
 #. Tag: para
-#: performance.xml:245
-#, no-c-format
+#: performance.xml:269
+#, fuzzy, no-c-format
 msgid ""
 "Lazy fetching for collections is implemented using Hibernate's own "
 "implementation of persistent collections. However, a different mechanism is "
 "needed for lazy behavior in single-ended associations. The target entity of "
 "the association must be proxied. Hibernate implements lazy initializing "
-"proxies for persistent objects using runtime bytecode enhancement (via the "
-"excellent CGLIB library)."
+"proxies for persistent objects using runtime bytecode enhancement which is "
+"accessed via the CGLIB library."
 msgstr ""
 "A recuperação preguiçosa para coleções é implementada usando uma "
 "implementação própria do Hibernate para coleções persistentes. Porém, um "
@@ -483,10 +482,10 @@ msgstr ""
 "biblioteca CGLIB)."
 
 #. Tag: para
-#: performance.xml:253
-#, no-c-format
+#: performance.xml:277
+#, fuzzy, no-c-format
 msgid ""
-"By default, Hibernate3 generates proxies (at startup) for all persistent "
+"At startup, Hibernate3 generates proxies by default for all persistent "
 "classes and uses them to enable lazy fetching of <literal>many-to-one</"
 "literal> and <literal>one-to-one</literal> associations."
 msgstr ""
@@ -495,14 +494,14 @@ msgstr ""
 "associações <literal>many-to-one</literal> e <literal>one-to-one</literal>."
 
 #. Tag: para
-#: performance.xml:259
-#, no-c-format
+#: performance.xml:283
+#, fuzzy, no-c-format
 msgid ""
 "The mapping file may declare an interface to use as the proxy interface for "
 "that class, with the <literal>proxy</literal> attribute. By default, "
-"Hibernate uses a subclass of the class. <emphasis>Note that the proxied "
-"class must implement a default constructor with at least package visibility. "
-"We recommend this constructor for all persistent classes!</emphasis>"
+"Hibernate uses a subclass of the class. <emphasis>The proxied class must "
+"implement a default constructor with at least package visibility. This "
+"constructor is recommended for all persistent classes</emphasis>."
 msgstr ""
 "O arquivo de mapeamento deve declaram uma interface para usar como interface "
 "de proxy para aquela classe, com o atributo <literal>proxy</literal>. Por "
@@ -512,17 +511,17 @@ msgstr ""
 "todas as classes persistentes!</emphasis>"
 
 #. Tag: para
-#: performance.xml:266
-#, no-c-format
+#: performance.xml:290
+#, fuzzy, no-c-format
 msgid ""
-"There are some gotchas to be aware of when extending this approach to "
-"polymorphic classes, eg."
+"There are potential problems to note when extending this approach to "
+"polymorphic classes.For example:"
 msgstr ""
 "Existe alguns truques que você deve saber quando extender esse comportamento "
 "para classes polimórficas, dessa maneira:"
 
 #. Tag: programlisting
-#: performance.xml:271
+#: performance.xml:294
 #, no-c-format
 msgid ""
 "<![CDATA[<class name=\"Cat\" proxy=\"Cat\">\n"
@@ -534,7 +533,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: performance.xml:273
+#: performance.xml:296
 #, no-c-format
 msgid ""
 "Firstly, instances of <literal>Cat</literal> will never be castable to "
@@ -546,7 +545,7 @@ msgstr ""
 "uma estância de <literal>DomesticCat</literal>:"
 
 #. Tag: programlisting
-#: performance.xml:279
+#: performance.xml:302
 #, no-c-format
 msgid ""
 "<![CDATA[Cat cat = (Cat) session.load(Cat.class, id);  // instantiate a "
@@ -559,13 +558,13 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: performance.xml:281
-#, no-c-format
-msgid "Secondly, it is possible to break proxy <literal>==</literal>."
+#: performance.xml:304
+#, fuzzy, no-c-format
+msgid "Secondly, it is possible to break proxy <literal>==</literal>:"
 msgstr "É possível quebrar o proxy <literal>==</literal>."
 
 #. Tag: programlisting
-#: performance.xml:285
+#: performance.xml:308
 #, no-c-format
 msgid ""
 "<![CDATA[Cat cat = (Cat) session.load(Cat.class, id);            // "
@@ -577,7 +576,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: performance.xml:287
+#: performance.xml:310
 #, no-c-format
 msgid ""
 "However, the situation is not quite as bad as it looks. Even though we now "
@@ -589,7 +588,7 @@ msgstr ""
 "objeto"
 
 #. Tag: programlisting
-#: performance.xml:292
+#: performance.xml:315
 #, no-c-format
 msgid ""
 "<![CDATA[cat.setWeight(11.0);  // hit the db to initialize the proxy\n"
@@ -597,22 +596,22 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: performance.xml:294
-#, no-c-format
+#: performance.xml:317
+#, fuzzy, no-c-format
 msgid ""
-"Third, you may not use a CGLIB proxy for a <literal>final</literal> class or "
+"Third, you cannot use a CGLIB proxy for a <literal>final</literal> class or "
 "a class with any <literal>final</literal> methods."
 msgstr ""
 "Terceiro, Você não pode usar um proxy CGLIB em uma classe <literal>final</"
 "literal> ou com qualquer método <literal>final</literal>."
 
 #. Tag: para
-#: performance.xml:299
-#, no-c-format
+#: performance.xml:322
+#, fuzzy, no-c-format
 msgid ""
 "Finally, if your persistent object acquires any resources upon instantiation "
-"(eg. in initializers or default constructor), then those resources will also "
-"be acquired by the proxy. The proxy class is an actual subclass of the "
+"(e.g. in initializers or default constructor), then those resources will "
+"also be acquired by the proxy. The proxy class is an actual subclass of the "
 "persistent class."
 msgstr ""
 "Finalmente, se o seu objeto persistente adquirir qualquer recursto durante a "
@@ -621,13 +620,16 @@ msgstr ""
 "classe persistente."
 
 #. Tag: para
-#: performance.xml:305
-#, no-c-format
+#: performance.xml:328
+#, fuzzy, no-c-format
 msgid ""
 "These problems are all due to fundamental limitations in Java's single "
-"inheritance model. If you wish to avoid these problems your persistent "
-"classes must each implement an interface that declares its business methods. "
-"You should specify these interfaces in the mapping file. eg."
+"inheritance model. To avoid these problems your persistent classes must each "
+"implement an interface that declares its business methods. You should "
+"specify these interfaces in the mapping file where <literal>CatImpl</"
+"literal> implements the interface <literal>Cat</literal> and "
+"<literal>DomesticCatImpl</literal> implements the interface "
+"<literal>DomesticCat</literal>. For example:"
 msgstr ""
 "Esses problemas são todos devido a limitação fundamental do modelo de "
 "herança simples do Java. Se você quiser evitar esse problemas em suas "
@@ -636,7 +638,7 @@ msgstr ""
 "mapeamento. Ex:"
 
 #. Tag: programlisting
-#: performance.xml:311
+#: performance.xml:336
 #, no-c-format
 msgid ""
 "<![CDATA[<class name=\"CatImpl\" proxy=\"Cat\">\n"
@@ -648,25 +650,19 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: performance.xml:313
-#, no-c-format
+#: performance.xml:338
+#, fuzzy, no-c-format
 msgid ""
-"where <literal>CatImpl</literal> implements the interface <literal>Cat</"
-"literal> and <literal>DomesticCatImpl</literal> implements the interface "
-"<literal>DomesticCat</literal>. Then proxies for instances of <literal>Cat</"
-"literal> and <literal>DomesticCat</literal> may be returned by <literal>load"
-"()</literal> or <literal>iterate()</literal>. (Note that <literal>list()</"
-"literal> does not usually return proxies.)"
+"Then proxies for instances of <literal>Cat</literal> and "
+"<literal>DomesticCat</literal> can be returned by <literal>load()</literal> "
+"or <literal>iterate()</literal>."
 msgstr ""
-"onde <literal>CatImpl</literal> implementa a interface <literal>Cat</"
-"literal> e <literal>DomesticCatImpl</literal> implementa a interface "
-"<literal>DomesticCat</literal>. Então proxies para instâncias de "
-"<literal>Cat</literal> e <literal>DomesticCat</literal> serão retornadas por "
-"<literal>load()</literal> ou <literal>iterate()</literal>. (Note que "
-"<literal>list()</literal> geralmente não retorna proxies)."
+"Primeiramente, instâncias de <literal>Cat</literal> nunca seráo convertidas "
+"para <literal>DomesticCat</literal>, mesmo que a instância em questão seja "
+"uma estância de <literal>DomesticCat</literal>:"
 
 #. Tag: programlisting
-#: performance.xml:321
+#: performance.xml:343
 #, no-c-format
 msgid ""
 "<![CDATA[Cat cat = (Cat) session.load(CatImpl.class, catid);\n"
@@ -675,8 +671,20 @@ msgid ""
 "Cat fritz = (Cat) iter.next();]]>"
 msgstr ""
 
+#. Tag: title
+#: performance.xml:346
+#, no-c-format
+msgid "Note"
+msgstr ""
+
 #. Tag: para
-#: performance.xml:323
+#: performance.xml:347
+#, fuzzy, no-c-format
+msgid "<literal>list()</literal> does not usually return proxies."
+msgstr "<literal>Criteria</literal> queries"
+
+#. Tag: para
+#: performance.xml:352
 #, no-c-format
 msgid ""
 "Relationships are also lazily initialized. This means you must declare any "
@@ -688,41 +696,41 @@ msgstr ""
 "literal>, e não <literal>CatImpl</literal>."
 
 #. Tag: para
-#: performance.xml:328
-#, no-c-format
+#: performance.xml:357
+#, fuzzy, no-c-format
 msgid ""
-"Certain operations do <emphasis>not</emphasis> require proxy initialization"
+"Certain operations do <emphasis>not</emphasis> require proxy initialization:"
 msgstr ""
 "Algumas operações <emphasis>não</emphasis> requerem inicialização por proxy:"
 
 #. Tag: para
-#: performance.xml:334
-#, no-c-format
+#: performance.xml:363
+#, fuzzy, no-c-format
 msgid ""
-"<literal>equals()</literal>, if the persistent class does not override "
+"<literal>equals()</literal>: if the persistent class does not override "
 "<literal>equals()</literal>"
 msgstr ""
 "<literal>equals()</literal>, se a classe persistente não sobrescrever "
 "<literal>equals()</literal>"
 
 #. Tag: para
-#: performance.xml:340
-#, no-c-format
+#: performance.xml:369
+#, fuzzy, no-c-format
 msgid ""
-"<literal>hashCode()</literal>, if the persistent class does not override "
+"<literal>hashCode()</literal>: if the persistent class does not override "
 "<literal>hashCode()</literal>"
 msgstr ""
 "<literal>hashCode()</literal>, se a classe persistente não sobrescrever "
 "<literal>hashCode()</literal>"
 
 #. Tag: para
-#: performance.xml:346
+#: performance.xml:375
 #, no-c-format
 msgid "The identifier getter method"
 msgstr "O método getter do identificador"
 
 #. Tag: para
-#: performance.xml:352
+#: performance.xml:381
 #, no-c-format
 msgid ""
 "Hibernate will detect persistent classes that override <literal>equals()</"
@@ -732,13 +740,13 @@ msgstr ""
 "<literal>equals()</literal> ou <literal>hashCode()</literal>."
 
 #. Tag: para
-#: performance.xml:357
-#, no-c-format
+#: performance.xml:386
+#, fuzzy, no-c-format
 msgid ""
 "By choosing <literal>lazy=\"no-proxy\"</literal> instead of the default "
-"<literal>lazy=\"proxy\"</literal>, we can avoid the problems associated with "
-"typecasting. However, we will require buildtime bytecode instrumentation, "
-"and all operations will result in immediate proxy initialization."
+"<literal>lazy=\"proxy\"</literal>, you can avoid problems associated with "
+"typecasting. However, buildtime bytecode instrumentation is required, and "
+"all operations will result in immediate proxy initialization."
 msgstr ""
 "Escolhendo <literal>lazy=\"no-proxy\"</literal> ao invés do padrão "
 "<literal>lazy=\"proxy\"</literal>, podemos evitar problemas associados com "
@@ -747,19 +755,19 @@ msgstr ""
 "imediatas."
 
 #. Tag: title
-#: performance.xml:367
+#: performance.xml:396
 #, no-c-format
 msgid "Initializing collections and proxies"
 msgstr "Inicializando coleções e proxies"
 
 #. Tag: para
-#: performance.xml:369
-#, no-c-format
+#: performance.xml:398
+#, fuzzy, no-c-format
 msgid ""
 "A <literal>LazyInitializationException</literal> will be thrown by Hibernate "
 "if an uninitialized collection or proxy is accessed outside of the scope of "
-"the <literal>Session</literal>, ie. when the entity owning the collection or "
-"having the reference to the proxy is in the detached state."
+"the <literal>Session</literal>, i.e., when the entity owning the collection "
+"or having the reference to the proxy is in the detached state."
 msgstr ""
 "Será lançada uma <literal>LazyInitializationException</literal> se uma "
 "coleção não inicializada ou proxy é acessado fora do escopo da "
@@ -767,14 +775,14 @@ msgstr ""
 "ou tem a referência ao proxy estiver no estado destachado."
 
 #. Tag: para
-#: performance.xml:375
-#, no-c-format
+#: performance.xml:404
+#, fuzzy, no-c-format
 msgid ""
-"Sometimes we need to ensure that a proxy or collection is initialized before "
-"closing the <literal>Session</literal>. Of course, we can alway force "
-"initialization by calling <literal>cat.getSex()</literal> or <literal>cat."
-"getKittens().size()</literal>, for example. But that is confusing to readers "
-"of the code and is not convenient for generic code."
+"Sometimes a proxy or collection needs to be initialized before closing the "
+"<literal>Session</literal>. You can force initialization by calling "
+"<literal>cat.getSex()</literal> or <literal>cat.getKittens().size()</"
+"literal>, for example. However, this can be confusing to readers of the code "
+"and it is not convenient for generic code."
 msgstr ""
 "Algumas vezes precisamos garantir qie o proxy ou coleção é inicializado "
 "antes de se fechar a <literal>Session</literal>. Claro que sempre podemos "
@@ -783,11 +791,11 @@ msgstr ""
 "confuso para quem lê o código e não é conveniente para códigos genéricos."
 
 #. Tag: para
-#: performance.xml:382
-#, no-c-format
+#: performance.xml:411
+#, fuzzy, no-c-format
 msgid ""
 "The static methods <literal>Hibernate.initialize()</literal> and "
-"<literal>Hibernate.isInitialized()</literal> provide the application with a "
+"<literal>Hibernate.isInitialized()</literal>, provide the application with a "
 "convenient way of working with lazily initialized collections or proxies. "
 "<literal>Hibernate.initialize(cat)</literal> will force the initialization "
 "of a proxy, <literal>cat</literal>, as long as its <literal>Session</"
@@ -804,11 +812,11 @@ msgstr ""
 "kittens."
 
 #. Tag: para
-#: performance.xml:391
-#, no-c-format
+#: performance.xml:420
+#, fuzzy, no-c-format
 msgid ""
 "Another option is to keep the <literal>Session</literal> open until all "
-"needed collections and proxies have been loaded. In some application "
+"required collections and proxies have been loaded. In some application "
 "architectures, particularly where the code that accesses data using "
 "Hibernate, and the code that uses it are in different application layers or "
 "different physical processes, it can be a problem to ensure that the "
@@ -824,11 +832,11 @@ msgstr ""
 "inicializada. Existem dois caminhos básicos para lidar com esse problema:"
 
 #. Tag: para
-#: performance.xml:402
-#, no-c-format
+#: performance.xml:431
+#, fuzzy, no-c-format
 msgid ""
 "In a web-based application, a servlet filter can be used to close the "
-"<literal>Session</literal> only at the very end of a user request, once the "
+"<literal>Session</literal> only at the end of a user request, once the "
 "rendering of the view is complete (the <emphasis>Open Session in View</"
 "emphasis> pattern). Of course, this places heavy demands on the correctness "
 "of the exception handling of your application infrastructure. It is vitally "
@@ -848,21 +856,20 @@ msgstr ""
 "View\""
 
 #. Tag: para
-#: performance.xml:415
-#, no-c-format
+#: performance.xml:444
+#, fuzzy, no-c-format
 msgid ""
 "In an application with a separate business tier, the business logic must "
-"\"prepare\" all collections that will be needed by the web tier before "
-"returning. This means that the business tier should load all the data and "
-"return all the data already initialized to the presentation/web tier that is "
-"required for a particular use case. Usually, the application calls "
-"<literal>Hibernate.initialize()</literal> for each collection that will be "
-"needed in the web tier (this call must occur before the session is closed) "
-"or retrieves the collection eagerly using a Hibernate query with a "
-"<literal>FETCH</literal> clause or a <literal>FetchMode.JOIN</literal> in "
-"<literal>Criteria</literal>. This is usually easier if you adopt the "
-"<emphasis>Command</emphasis> pattern instead of a <emphasis>Session Facade</"
-"emphasis>."
+"\"prepare\" all collections that the web tier needs before returning. This "
+"means that the business tier should load all the data and return all the "
+"data already initialized to the presentation/web tier that is required for a "
+"particular use case. Usually, the application calls <literal>Hibernate."
+"initialize()</literal> for each collection that will be needed in the web "
+"tier (this call must occur before the session is closed) or retrieves the "
+"collection eagerly using a Hibernate query with a <literal>FETCH</literal> "
+"clause or a <literal>FetchMode.JOIN</literal> in <literal>Criteria</"
+"literal>. This is usually easier if you adopt the <emphasis>Command</"
+"emphasis> pattern instead of a <emphasis>Session Facade</emphasis>."
 msgstr ""
 "Em uma aplicação com uma camada de negócios separada, a lógica de negócios "
 "deve \"preparar\" todas as coleções que serão usadas pela camada web antes "
@@ -877,14 +884,14 @@ msgstr ""
 "<emphasis>Session Facade</emphasis>."
 
 #. Tag: para
-#: performance.xml:430
-#, no-c-format
+#: performance.xml:459
+#, fuzzy, no-c-format
 msgid ""
-"You may also attach a previously loaded object to a new <literal>Session</"
+"You can also attach a previously loaded object to a new <literal>Session</"
 "literal> with <literal>merge()</literal> or <literal>lock()</literal> before "
-"accessing uninitialized collections (or other proxies). No, Hibernate does "
-"not, and certainly <emphasis>should</emphasis> not do this automatically, "
-"since it would introduce ad hoc transaction semantics!"
+"accessing uninitialized collections or other proxies. Hibernate does not, "
+"and certainly <emphasis>should</emphasis> not, do this automatically since "
+"it would introduce impromptu transaction semantics."
 msgstr ""
 "Você também pode anexar um objeto prevaimente carregado em uma nova "
 "<literal>Session</literal><literal>merge()</literal> or <literal>lock()</"
@@ -893,17 +900,18 @@ msgstr ""
 "automaticamente pois isso introduziria semantica em transações ad hoc."
 
 #. Tag: para
-#: performance.xml:440
-#, no-c-format
+#: performance.xml:469
+#, fuzzy, no-c-format
 msgid ""
-"Sometimes you don't want to initialize a large collection, but still need "
-"some information about it (like its size) or a subset of the data."
+"Sometimes you do not want to initialize a large collection, but still need "
+"some information about it, like its size, for example, or a subset of the "
+"data."
 msgstr ""
 "As vezes você não quer inicializar uma coleção muito grande, mas precisa de "
 "algumas informações (como o tamanho) ou alguns de seus dados."
 
 #. Tag: para
-#: performance.xml:445
+#: performance.xml:474
 #, no-c-format
 msgid ""
 "You can use a collection filter to get the size of a collection without "
@@ -912,7 +920,7 @@ msgstr ""
 "Você pode usar um filtro de coleção para saber seu tamanho sem a inicializar:"
 
 #. Tag: programlisting
-#: performance.xml:449
+#: performance.xml:478
 #, no-c-format
 msgid ""
 "<![CDATA[( (Integer) s.createFilter( collection, \"select count(*)\" ).list"
@@ -920,7 +928,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: performance.xml:451
+#: performance.xml:480
 #, no-c-format
 msgid ""
 "The <literal>createFilter()</literal> method is also used to efficiently "
@@ -932,7 +940,7 @@ msgstr ""
 "inteira:"
 
 #. Tag: programlisting
-#: performance.xml:456
+#: performance.xml:485
 #, no-c-format
 msgid ""
 "<![CDATA[s.createFilter( lazyCollection, \"\").setFirstResult(0)."
@@ -940,20 +948,19 @@ msgid ""
 msgstr ""
 
 #. Tag: title
-#: performance.xml:461
+#: performance.xml:490
 #, no-c-format
 msgid "Using batch fetching"
 msgstr "Usando busca em lote"
 
 #. Tag: para
-#: performance.xml:463
-#, no-c-format
+#: performance.xml:492
+#, fuzzy, no-c-format
 msgid ""
-"Hibernate can make efficient use of batch fetching, that is, Hibernate can "
-"load several uninitialized proxies if one proxy is accessed (or collections. "
-"Batch fetching is an optimization of the lazy select fetching strategy. "
-"There are two ways you can tune batch fetching: on the class and the "
-"collection level."
+"Using batch fetching, Hibernate can load several uninitialized proxies if "
+"one proxy is accessed. Batch fetching is an optimization of the lazy select "
+"fetching strategy. There are two ways you can configure batch fetching: on "
+"the class level and the collection level."
 msgstr ""
 "O Hibernate pode fazer uso eficiente de busca em lote, isto é, o Hibernate "
 "pode carregar diversos proxies não inicializados se um proxy é acessado (ou "
@@ -962,19 +969,19 @@ msgstr ""
 "nível da classe ou no nível da coleção."
 
 #. Tag: para
-#: performance.xml:469
-#, no-c-format
+#: performance.xml:498
+#, fuzzy, no-c-format
 msgid ""
-"Batch fetching for classes/entities is easier to understand. Imagine you "
-"have the following situation at runtime: You have 25 <literal>Cat</literal> "
-"instances loaded in a <literal>Session</literal>, each <literal>Cat</"
-"literal> has a reference to its <literal>owner</literal>, a <literal>Person</"
-"literal>. The <literal>Person</literal> class is mapped with a proxy, "
-"<literal>lazy=\"true\"</literal>. If you now iterate through all cats and "
-"call <literal>getOwner()</literal> on each, Hibernate will by default "
-"execute 25 <literal>SELECT</literal> statements, to retrieve the proxied "
-"owners. You can tune this behavior by specifying a <literal>batch-size</"
-"literal> in the mapping of <literal>Person</literal>:"
+"Batch fetching for classes/entities is easier to understand. Consider the "
+"following example: at runtime you have 25 <literal>Cat</literal> instances "
+"loaded in a <literal>Session</literal>, and each <literal>Cat</literal> has "
+"a reference to its <literal>owner</literal>, a <literal>Person</literal>. "
+"The <literal>Person</literal> class is mapped with a proxy, <literal>lazy="
+"\"true\"</literal>. If you now iterate through all cats and call "
+"<literal>getOwner()</literal> on each, Hibernate will, by default, execute "
+"25 <literal>SELECT</literal> statements to retrieve the proxied owners. You "
+"can tune this behavior by specifying a <literal>batch-size</literal> in the "
+"mapping of <literal>Person</literal>:"
 msgstr ""
 "A recuperação em lote para classes/entidades é mais fácil de entender. "
 "Imagine que você tem a seguinte situação em tempo de execução: Você tem 25 "
@@ -989,27 +996,27 @@ msgstr ""
 "no mapeamento da classe <literal>Person</literal>:"
 
 #. Tag: programlisting
-#: performance.xml:479
+#: performance.xml:508
 #, no-c-format
 msgid "<![CDATA[<class name=\"Person\" batch-size=\"10\">...</class>]]>"
 msgstr ""
 
 #. Tag: para
-#: performance.xml:481
-#, no-c-format
+#: performance.xml:510
+#, fuzzy, no-c-format
 msgid ""
-"Hibernate will now execute only three queries, the pattern is 10, 10, 5."
+"Hibernate will now execute only three queries: the pattern is 10, 10, 5."
 msgstr ""
 "O Hibernate irá executar agora apenas três consultas, buscando por vez, 10, "
 "10 e 5 Person."
 
 #. Tag: para
-#: performance.xml:485
-#, no-c-format
+#: performance.xml:514
+#, fuzzy, no-c-format
 msgid ""
-"You may also enable batch fetching of collections. For example, if each "
+"You can also enable batch fetching of collections. For example, if each "
 "<literal>Person</literal> has a lazy collection of <literal>Cat</literal>s, "
-"and 10 persons are currently loaded in the <literal>Sesssion</literal>, "
+"and 10 persons are currently loaded in the <literal>Session</literal>, "
 "iterating through all persons will generate 10 <literal>SELECT</literal>s, "
 "one for every call to <literal>getCats()</literal>. If you enable batch "
 "fetching for the <literal>cats</literal> collection in the mapping of "
@@ -1025,7 +1032,7 @@ msgstr ""
 "pré carga das coleções:"
 
 #. Tag: programlisting
-#: performance.xml:494
+#: performance.xml:523
 #, no-c-format
 msgid ""
 "<![CDATA[<class name=\"Person\">\n"
@@ -1036,7 +1043,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: performance.xml:496
+#: performance.xml:525
 #, no-c-format
 msgid ""
 "With a <literal>batch-size</literal> of 3, Hibernate will load 3, 3, 3, 1 "
@@ -1050,13 +1057,13 @@ msgstr ""
 "<literal>Session</literal>."
 
 #. Tag: para
-#: performance.xml:502
-#, no-c-format
+#: performance.xml:531
+#, fuzzy, no-c-format
 msgid ""
 "Batch fetching of collections is particularly useful if you have a nested "
-"tree of items, ie. the typical bill-of-materials pattern. (Although a "
+"tree of items, i.e. the typical bill-of-materials pattern. However, a "
 "<emphasis>nested set</emphasis> or a <emphasis>materialized path</emphasis> "
-"might be a better option for read-mostly trees.)"
+"might be a better option for read-mostly trees."
 msgstr ""
 "A busca em lote de coleções é particularmente útil quando você tem uma "
 "árvore encadeada de items, ex. o típico padrão bill-of-materials (Se bem que "
@@ -1065,40 +1072,40 @@ msgstr ""
 "leitura)"
 
 #. Tag: title
-#: performance.xml:511
+#: performance.xml:540
 #, no-c-format
 msgid "Using subselect fetching"
 msgstr "Usando subselect fetching"
 
 #. Tag: para
-#: performance.xml:513
-#, no-c-format
+#: performance.xml:542
+#, fuzzy, no-c-format
 msgid ""
 "If one lazy collection or single-valued proxy has to be fetched, Hibernate "
-"loads all of them, re-running the original query in a subselect. This works "
-"in the same way as batch-fetching, without the piecemeal loading."
+"will load all of them, re-running the original query in a subselect. This "
+"works in the same way as batch-fetching but without the piecemeal loading."
 msgstr ""
 "Se uma coleção ou proxy simples precisa ser recuperado, o Hibernate carrega "
 "todos eles rodando novamente a query original em um subselect. Isso funciona "
 "da mesma maneira que busca em lote, sem carregar tanto."
 
 #. Tag: title
-#: performance.xml:524
+#: performance.xml:553
 #, no-c-format
 msgid "Using lazy property fetching"
 msgstr "Usando busca preguiçosa de propriedade"
 
 #. Tag: para
-#: performance.xml:526
-#, no-c-format
+#: performance.xml:555
+#, fuzzy, no-c-format
 msgid ""
 "Hibernate3 supports the lazy fetching of individual properties. This "
 "optimization technique is also known as <emphasis>fetch groups</emphasis>. "
-"Please note that this is mostly a marketing feature, as in practice, "
-"optimizing row reads is much more important than optimization of column "
-"reads. However, only loading some properties of a class might be useful in "
-"extreme cases, when legacy tables have hundreds of columns and the data "
-"model can not be improved."
+"Please note that this is mostly a marketing feature; optimizing row reads is "
+"much more important than optimization of column reads. However, only loading "
+"some properties of a class could be useful in extreme cases. For example, "
+"when legacy tables have hundreds of columns and the data model cannot be "
+"improved."
 msgstr ""
 "O Hibernate3 suporta a carga posterior de propriedades individuais. Essa "
 "técnica de otimização também conhecida como <emphasis>fetch groups</"
@@ -1109,7 +1116,7 @@ msgstr ""
 "centenas de colunas e o modelo de dados não pode ser melhorado."
 
 #. Tag: para
-#: performance.xml:535
+#: performance.xml:564
 #, no-c-format
 msgid ""
 "To enable lazy property loading, set the <literal>lazy</literal> attribute "
@@ -1119,7 +1126,7 @@ msgstr ""
 "<literal>lazy</literal> no seu mapeamento de propriedade:"
 
 #. Tag: programlisting
-#: performance.xml:540
+#: performance.xml:569
 #, no-c-format
 msgid ""
 "<![CDATA[<class name=\"Document\">\n"
@@ -1135,25 +1142,25 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: performance.xml:542
-#, no-c-format
+#: performance.xml:571
+#, fuzzy, no-c-format
 msgid ""
-"Lazy property loading requires buildtime bytecode instrumentation! If your "
-"persistent classes are not enhanced, Hibernate will silently ignore lazy "
-"property settings and fall back to immediate fetching."
+"Lazy property loading requires buildtime bytecode instrumentation. If your "
+"persistent classes are not enhanced, Hibernate will ignore lazy property "
+"settings and return to immediate fetching."
 msgstr ""
 "A carga posterior de propriedades requer instrumentação de bytecode! Se suas "
 "classes persistentes não forem melhoradas, o Hibernate irá ignorar "
 "silenciosamente essa configuração e usará busca imediatamente."
 
 #. Tag: para
-#: performance.xml:548
+#: performance.xml:577
 #, no-c-format
 msgid "For bytecode instrumentation, use the following Ant task:"
 msgstr "Para instrumentação de bytecode, use a seguinte tarefa do Ant:"
 
 #. Tag: programlisting
-#: performance.xml:552
+#: performance.xml:581
 #, no-c-format
 msgid ""
 "<![CDATA[<target name=\"instrument\" depends=\"compile\">\n"
@@ -1173,13 +1180,13 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: performance.xml:554
-#, no-c-format
+#: performance.xml:583
+#, fuzzy, no-c-format
 msgid ""
-"A different (better?) way to avoid unnecessary column reads, at least for "
-"read-only transactions is to use the projection features of HQL or Criteria "
-"queries. This avoids the need for buildtime bytecode processing and is "
-"certainly a prefered solution."
+"A different way of avoiding unnecessary column reads, at least for read-only "
+"transactions, is to use the projection features of HQL or Criteria queries. "
+"This avoids the need for buildtime bytecode processing and is certainly a "
+"preferred solution."
 msgstr ""
 "A different (better?) way to avoid unnecessary column reads, at least for "
 "read-only transactions is to use the projection features of HQL or Criteria "
@@ -1187,32 +1194,32 @@ msgstr ""
 "certainly a prefered solution."
 
 #. Tag: para
-#: performance.xml:561
-#, no-c-format
+#: performance.xml:590
+#, fuzzy, no-c-format
 msgid ""
-"You may force the usual eager fetching of properties using <literal>fetch "
+"You can force the usual eager fetching of properties using <literal>fetch "
 "all properties</literal> in HQL."
 msgstr ""
 "You may force the usual eager fetching of properties using <literal>fetch "
 "all properties</literal> in HQL."
 
 #. Tag: title
-#: performance.xml:571
+#: performance.xml:600
 #, no-c-format
 msgid "The Second Level Cache"
 msgstr "The Second Level Cache"
 
 #. Tag: para
-#: performance.xml:573
-#, no-c-format
+#: performance.xml:602
+#, fuzzy, no-c-format
 msgid ""
 "A Hibernate <literal>Session</literal> is a transaction-level cache of "
 "persistent data. It is possible to configure a cluster or JVM-level "
 "(<literal>SessionFactory</literal>-level) cache on a class-by-class and "
-"collection-by-collection basis. You may even plug in a clustered cache. Be "
-"careful. Caches are never aware of changes made to the persistent store by "
-"another application (though they may be configured to regularly expire "
-"cached data)."
+"collection-by-collection basis. You can even plug in a clustered cache. Be "
+"aware that caches are not aware of changes made to the persistent store by "
+"another application. They can, however, be configured to regularly expire "
+"cached data."
 msgstr ""
 "A Hibernate <literal>Session</literal> is a transaction-level cache of "
 "persistent data. It is possible to configure a cluster or JVM-level "
@@ -1223,17 +1230,16 @@ msgstr ""
 "cached data)."
 
 #. Tag: para
-#: performance.xml:581
-#, no-c-format
+#: performance.xml:610
+#, fuzzy, no-c-format
 msgid ""
 "You have the option to tell Hibernate which caching implementation to use by "
 "specifying the name of a class that implements <literal>org.hibernate.cache."
 "CacheProvider</literal> using the property <literal>hibernate.cache."
-"provider_class</literal>. Hibernate comes bundled with a number of built-in "
-"integrations with open-source cache providers (listed below); additionally, "
-"you could implement your own and plug it in as outlined above. Note that "
-"versions prior to 3.2 defaulted to use EhCache as the default cache "
-"provider; that is no longer the case as of 3.2."
+"provider_class</literal>. Hibernate is bundled with a number of built-in "
+"integrations with the open-source cache providers that are listed below. You "
+"can also implement your own and plug it in as outlined above. Note that "
+"versions prior to 3.2 use EhCache as the default cache provider."
 msgstr ""
 "You have the option to tell Hibernate which caching implementation to use by "
 "specifying the name of a class that implements <literal>org.hibernate.cache."
@@ -1245,162 +1251,180 @@ msgstr ""
 "provider; that is no longer the case as of 3.2."
 
 #. Tag: title
-#: performance.xml:592
+#: performance.xml:621
 #, no-c-format
 msgid "Cache Providers"
 msgstr "Cache Providers"
 
 #. Tag: entry
-#: performance.xml:601 performance.xml:774
+#: performance.xml:630 performance.xml:818
 #, no-c-format
 msgid "Cache"
 msgstr "Cache"
 
 #. Tag: entry
-#: performance.xml:602
+#: performance.xml:631
 #, no-c-format
 msgid "Provider class"
 msgstr "Provider class"
 
 #. Tag: entry
-#: performance.xml:603
+#: performance.xml:632
 #, no-c-format
 msgid "Type"
 msgstr "Type"
 
 #. Tag: entry
-#: performance.xml:604
+#: performance.xml:633
 #, no-c-format
 msgid "Cluster Safe"
 msgstr "Cluster Safe"
 
 #. Tag: entry
-#: performance.xml:605
+#: performance.xml:634
 #, no-c-format
 msgid "Query Cache Supported"
 msgstr "Query Cache Supported"
 
 #. Tag: entry
-#: performance.xml:610 performance.xml:783
+#: performance.xml:639 performance.xml:827
 #, no-c-format
 msgid "Hashtable (not intended for production use)"
 msgstr "Hashtable (not intended for production use)"
 
 #. Tag: literal
-#: performance.xml:611
+#: performance.xml:640
 #, no-c-format
 msgid "org.hibernate.cache.HashtableCacheProvider"
 msgstr "org.hibernate.cache.HashtableCacheProvider"
 
 #. Tag: entry
-#: performance.xml:612
+#: performance.xml:641
 #, no-c-format
 msgid "memory"
 msgstr "memory"
 
 #. Tag: entry
-#: performance.xml:614 performance.xml:621 performance.xml:628
-#: performance.xml:784 performance.xml:785 performance.xml:786
-#: performance.xml:791 performance.xml:792 performance.xml:793
-#: performance.xml:798 performance.xml:799 performance.xml:800
-#: performance.xml:805 performance.xml:806 performance.xml:812
-#: performance.xml:815
+#: performance.xml:643 performance.xml:650 performance.xml:657
+#: performance.xml:828 performance.xml:829 performance.xml:830
+#: performance.xml:835 performance.xml:836 performance.xml:837
+#: performance.xml:842 performance.xml:843 performance.xml:844
+#: performance.xml:849 performance.xml:850 performance.xml:856
+#: performance.xml:859 performance.xml:863 performance.xml:866
 #, no-c-format
 msgid "<entry>yes</entry>"
 msgstr ""
 
 #. Tag: entry
-#: performance.xml:617 performance.xml:790
+#: performance.xml:646 performance.xml:834
 #, no-c-format
 msgid "EHCache"
 msgstr "EHCache"
 
 #. Tag: literal
-#: performance.xml:618
+#: performance.xml:647
 #, no-c-format
 msgid "org.hibernate.cache.EhCacheProvider"
 msgstr "org.hibernate.cache.EhCacheProvider"
 
 #. Tag: entry
-#: performance.xml:619 performance.xml:626
+#: performance.xml:648 performance.xml:655
 #, no-c-format
 msgid "memory, disk"
 msgstr "memory, disk"
 
 #. Tag: entry
-#: performance.xml:624 performance.xml:797
+#: performance.xml:653 performance.xml:841
 #, no-c-format
 msgid "OSCache"
 msgstr "OSCache"
 
 #. Tag: literal
-#: performance.xml:625
+#: performance.xml:654
 #, no-c-format
 msgid "org.hibernate.cache.OSCacheProvider"
 msgstr "org.hibernate.cache.OSCacheProvider"
 
 #. Tag: entry
-#: performance.xml:631 performance.xml:804
+#: performance.xml:660 performance.xml:848
 #, no-c-format
 msgid "SwarmCache"
 msgstr "SwarmCache"
 
 #. Tag: literal
-#: performance.xml:632
+#: performance.xml:661
 #, no-c-format
 msgid "org.hibernate.cache.SwarmCacheProvider"
 msgstr "org.hibernate.cache.SwarmCacheProvider"
 
 #. Tag: entry
-#: performance.xml:633
+#: performance.xml:662
 #, no-c-format
 msgid "clustered (ip multicast)"
 msgstr "clustered (ip multicast)"
 
 #. Tag: entry
-#: performance.xml:634
+#: performance.xml:663
 #, no-c-format
 msgid "yes (clustered invalidation)"
 msgstr "yes (clustered invalidation)"
 
 #. Tag: entry
-#: performance.xml:638 performance.xml:811
-#, no-c-format
-msgid "JBoss TreeCache"
+#: performance.xml:667 performance.xml:855
+#, fuzzy, no-c-format
+msgid "JBoss Cache 1.x"
 msgstr "JBoss TreeCache"
 
 #. Tag: literal
-#: performance.xml:639
+#: performance.xml:668
 #, no-c-format
 msgid "org.hibernate.cache.TreeCacheProvider"
 msgstr "org.hibernate.cache.TreeCacheProvider"
 
 #. Tag: entry
-#: performance.xml:640
+#: performance.xml:669 performance.xml:676
 #, no-c-format
 msgid "clustered (ip multicast), transactional"
 msgstr "clustered (ip multicast), transactional"
 
 #. Tag: entry
-#: performance.xml:641
+#: performance.xml:670
 #, no-c-format
 msgid "yes (replication)"
 msgstr "yes (replication)"
 
 #. Tag: entry
-#: performance.xml:642
+#: performance.xml:671 performance.xml:678
 #, no-c-format
 msgid "yes (clock sync req.)"
 msgstr "yes (clock sync req.)"
 
+#. Tag: entry
+#: performance.xml:674 performance.xml:862
+#, fuzzy, no-c-format
+msgid "JBoss Cache 2"
+msgstr "JBoss TreeCache"
+
+#. Tag: literal
+#: performance.xml:675
+#, fuzzy, no-c-format
+msgid "org.hibernate.cache.jbc.JBossCacheRegionFactory"
+msgstr "org.hibernate.cache.EhCacheProvider"
+
+#. Tag: entry
+#: performance.xml:677
+#, fuzzy, no-c-format
+msgid "yes (replication or invalidation)"
+msgstr "yes (clustered invalidation)"
+
 #. Tag: title
-#: performance.xml:649
+#: performance.xml:685
 #, no-c-format
 msgid "Cache mappings"
 msgstr "Cache mappings"
 
 #. Tag: para
-#: performance.xml:651
+#: performance.xml:687
 #, no-c-format
 msgid ""
 "The <literal>&lt;cache&gt;</literal> element of a class or collection "
@@ -1410,7 +1434,7 @@ msgstr ""
 "mapping has the following form:"
 
 #. Tag: programlisting
-#: performance.xml:662
+#: performance.xml:698
 #, no-c-format
 msgid ""
 "<![CDATA[<cache \n"
@@ -1421,7 +1445,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: performance.xml:665
+#: performance.xml:701
 #, no-c-format
 msgid ""
 "<literal>usage</literal> (required) specifies the caching strategy: "
@@ -1433,22 +1457,22 @@ msgstr ""
 "<literal>nonstrict-read-write</literal> or <literal>read-only</literal>"
 
 #. Tag: para
-#: performance.xml:674
-#, no-c-format
+#: performance.xml:710
+#, fuzzy, no-c-format
 msgid ""
-"<literal>region</literal> (optional, defaults to the class or collection "
-"role name) specifies the name of the second level cache region"
+"<literal>region</literal> (optional: defaults to the class or collection "
+"role name): specifies the name of the second level cache region"
 msgstr ""
 "<literal>region</literal> (optional, defaults to the class or collection "
 "role name) specifies the name of the second level cache region"
 
 #. Tag: para
-#: performance.xml:681
-#, no-c-format
+#: performance.xml:717
+#, fuzzy, no-c-format
 msgid ""
-"<literal>include</literal> (optional, defaults to <literal>all</literal>) "
-"<literal>non-lazy</literal> specifies that properties of the entity mapped "
-"with <literal>lazy=\"true\"</literal> may not be cached when attribute-level "
+"<literal>include</literal> (optional: defaults to <literal>all</literal>) "
+"<literal>non-lazy</literal>: specifies that properties of the entity mapped "
+"with <literal>lazy=\"true\"</literal> cannot be cached when attribute-level "
 "lazy fetching is enabled"
 msgstr ""
 "<literal>include</literal> (optional, defaults to <literal>all</literal>) "
@@ -1457,19 +1481,19 @@ msgstr ""
 "lazy fetching is enabled"
 
 #. Tag: para
-#: performance.xml:691
-#, no-c-format
+#: performance.xml:727
+#, fuzzy, no-c-format
 msgid ""
-"Alternatively (preferrably?), you may specify <literal>&lt;class-cache&gt;</"
-"literal> and <literal>&lt;collection-cache&gt;</literal> elements in "
-"<literal>hibernate.cfg.xml</literal>."
+"Alternatively, you can specify <literal>&lt;class-cache&gt;</literal> and "
+"<literal>&lt;collection-cache&gt;</literal> elements in <literal>hibernate."
+"cfg.xml</literal>."
 msgstr ""
 "Alternatively (preferrably?), you may specify <literal>&lt;class-cache&gt;</"
 "literal> and <literal>&lt;collection-cache&gt;</literal> elements in "
 "<literal>hibernate.cfg.xml</literal>."
 
 #. Tag: para
-#: performance.xml:696
+#: performance.xml:732
 #, no-c-format
 msgid ""
 "The <literal>usage</literal> attribute specifies a <emphasis>cache "
@@ -1479,18 +1503,18 @@ msgstr ""
 "concurrency strategy</emphasis>."
 
 #. Tag: title
-#: performance.xml:703
+#: performance.xml:739
 #, no-c-format
 msgid "Strategy: read only"
 msgstr "Strategy: read only"
 
 #. Tag: para
-#: performance.xml:705
-#, no-c-format
+#: performance.xml:741
+#, fuzzy, no-c-format
 msgid ""
-"If your application needs to read but never modify instances of a persistent "
-"class, a <literal>read-only</literal> cache may be used. This is the "
-"simplest and best performing strategy. It's even perfectly safe for use in a "
+"If your application needs to read, but not modify, instances of a persistent "
+"class, a <literal>read-only</literal> cache can be used. This is the "
+"simplest and optimal performing strategy. It is even safe for use in a "
 "cluster."
 msgstr ""
 "If your application needs to read but never modify instances of a persistent "
@@ -1499,7 +1523,7 @@ msgstr ""
 "cluster."
 
 #. Tag: programlisting
-#: performance.xml:711
+#: performance.xml:747
 #, no-c-format
 msgid ""
 "<![CDATA[<class name=\"eg.Immutable\" mutable=\"false\">\n"
@@ -1509,26 +1533,26 @@ msgid ""
 msgstr ""
 
 #. Tag: title
-#: performance.xml:717
+#: performance.xml:753
 #, no-c-format
 msgid "Strategy: read/write"
 msgstr "Strategy: read/write"
 
 #. Tag: para
-#: performance.xml:719
-#, no-c-format
+#: performance.xml:755
+#, fuzzy, no-c-format
 msgid ""
 "If the application needs to update data, a <literal>read-write</literal> "
 "cache might be appropriate. This cache strategy should never be used if "
 "serializable transaction isolation level is required. If the cache is used "
 "in a JTA environment, you must specify the property <literal>hibernate."
-"transaction.manager_lookup_class</literal>, naming a strategy for obtaining "
-"the JTA <literal>TransactionManager</literal>. In other environments, you "
-"should ensure that the transaction is completed when <literal>Session.close()"
-"</literal> or <literal>Session.disconnect()</literal> is called. If you wish "
-"to use this strategy in a cluster, you should ensure that the underlying "
-"cache implementation supports locking. The built-in cache providers do "
-"<emphasis>not</emphasis>."
+"transaction.manager_lookup_class</literal> and naming a strategy for "
+"obtaining the JTA <literal>TransactionManager</literal>. In other "
+"environments, you should ensure that the transaction is completed when "
+"<literal>Session.close()</literal> or <literal>Session.disconnect()</"
+"literal> is called. If you want to use this strategy in a cluster, you "
+"should ensure that the underlying cache implementation supports locking. The "
+"built-in cache providers <emphasis>do not</emphasis> support locking."
 msgstr ""
 "If the application needs to update data, a <literal>read-write</literal> "
 "cache might be appropriate. This cache strategy should never be used if "
@@ -1543,7 +1567,7 @@ msgstr ""
 "<emphasis>not</emphasis>."
 
 #. Tag: programlisting
-#: performance.xml:730
+#: performance.xml:766
 #, no-c-format
 msgid ""
 "<![CDATA[<class name=\"eg.Cat\" .... >\n"
@@ -1557,18 +1581,18 @@ msgid ""
 msgstr ""
 
 #. Tag: title
-#: performance.xml:735
+#: performance.xml:771
 #, no-c-format
 msgid "Strategy: nonstrict read/write"
 msgstr "Strategy: nonstrict read/write"
 
 #. Tag: para
-#: performance.xml:737
-#, no-c-format
+#: performance.xml:773
+#, fuzzy, no-c-format
 msgid ""
-"If the application only occasionally needs to update data (ie. if it is "
+"If the application only occasionally needs to update data (i.e. if it is "
 "extremely unlikely that two transactions would try to update the same item "
-"simultaneously) and strict transaction isolation is not required, a "
+"simultaneously), and strict transaction isolation is not required, a "
 "<literal>nonstrict-read-write</literal> cache might be appropriate. If the "
 "cache is used in a JTA environment, you must specify <literal>hibernate."
 "transaction.manager_lookup_class</literal>. In other environments, you "
@@ -1585,18 +1609,18 @@ msgstr ""
 "</literal> or <literal>Session.disconnect()</literal> is called."
 
 #. Tag: title
-#: performance.xml:749
+#: performance.xml:785
 #, no-c-format
 msgid "Strategy: transactional"
 msgstr "Strategy: transactional"
 
 #. Tag: para
-#: performance.xml:751
-#, no-c-format
+#: performance.xml:787
+#, fuzzy, no-c-format
 msgid ""
 "The <literal>transactional</literal> cache strategy provides support for "
 "fully transactional cache providers such as JBoss TreeCache. Such a cache "
-"may only be used in a JTA environment and you must specify "
+"can only be used in a JTA environment and you must specify "
 "<literal>hibernate.transaction.manager_lookup_class</literal>."
 msgstr ""
 "The <literal>transactional</literal> cache strategy provides support for "
@@ -1604,11 +1628,26 @@ msgstr ""
 "may only be used in a JTA environment and you must specify "
 "<literal>hibernate.transaction.manager_lookup_class</literal>."
 
+#. Tag: title
+#: performance.xml:796
+#, fuzzy, no-c-format
+msgid "Cache-provider/concurrency-strategy compatibility"
+msgstr "Cache Concurrency Strategy Support"
+
 #. Tag: para
-#: performance.xml:759
-#, no-c-format
+#: performance.xml:799
+#, fuzzy, no-c-format
 msgid ""
+"None of the cache providers support all of the cache concurrency strategies."
+msgstr ""
 "None of the cache providers support all of the cache concurrency strategies. "
+"The following table shows which providers are compatible with which "
+"concurrency strategies."
+
+#. Tag: para
+#: performance.xml:804
+#, fuzzy, no-c-format
+msgid ""
 "The following table shows which providers are compatible with which "
 "concurrency strategies."
 msgstr ""
@@ -1617,47 +1656,47 @@ msgstr ""
 "concurrency strategies."
 
 #. Tag: title
-#: performance.xml:765
+#: performance.xml:809
 #, no-c-format
 msgid "Cache Concurrency Strategy Support"
 msgstr "Cache Concurrency Strategy Support"
 
 #. Tag: entry
-#: performance.xml:775
+#: performance.xml:819
 #, no-c-format
 msgid "read-only"
 msgstr "read-only"
 
 #. Tag: entry
-#: performance.xml:776
+#: performance.xml:820
 #, no-c-format
 msgid "nonstrict-read-write"
 msgstr "nonstrict-read-write"
 
 #. Tag: entry
-#: performance.xml:777
+#: performance.xml:821
 #, no-c-format
 msgid "read-write"
 msgstr "read-write"
 
 #. Tag: entry
-#: performance.xml:778
+#: performance.xml:822
 #, no-c-format
 msgid "transactional"
 msgstr "transactional"
 
 #. Tag: title
-#: performance.xml:824
+#: performance.xml:877
 #, no-c-format
 msgid "Managing the caches"
 msgstr "Managing the caches"
 
 #. Tag: para
-#: performance.xml:826
-#, no-c-format
+#: performance.xml:879
+#, fuzzy, no-c-format
 msgid ""
 "Whenever you pass an object to <literal>save()</literal>, <literal>update()</"
-"literal> or <literal>saveOrUpdate()</literal> and whenever you retrieve an "
+"literal> or <literal>saveOrUpdate()</literal>, and whenever you retrieve an "
 "object using <literal>load()</literal>, <literal>get()</literal>, "
 "<literal>list()</literal>, <literal>iterate()</literal> or <literal>scroll()"
 "</literal>, that object is added to the internal cache of the "
@@ -1671,14 +1710,14 @@ msgstr ""
 "<literal>Session</literal>."
 
 #. Tag: para
-#: performance.xml:833
-#, no-c-format
+#: performance.xml:886
+#, fuzzy, no-c-format
 msgid ""
 "When <literal>flush()</literal> is subsequently called, the state of that "
 "object will be synchronized with the database. If you do not want this "
-"synchronization to occur or if you are processing a huge number of objects "
+"synchronization to occur, or if you are processing a huge number of objects "
 "and need to manage memory efficiently, the <literal>evict()</literal> method "
-"may be used to remove the object and its collections from the first-level "
+"can be used to remove the object and its collections from the first-level "
 "cache."
 msgstr ""
 "When <literal>flush()</literal> is subsequently called, the state of that "
@@ -1689,7 +1728,7 @@ msgstr ""
 "cache."
 
 #. Tag: programlisting
-#: performance.xml:841
+#: performance.xml:894
 #, no-c-format
 msgid ""
 "<![CDATA[ScrollableResult cats = sess.createQuery(\"from Cat as cat\").scroll"
@@ -1702,7 +1741,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: performance.xml:843
+#: performance.xml:896
 #, no-c-format
 msgid ""
 "The <literal>Session</literal> also provides a <literal>contains()</literal> "
@@ -1712,17 +1751,17 @@ msgstr ""
 "method to determine if an instance belongs to the session cache."
 
 #. Tag: para
-#: performance.xml:848
-#, no-c-format
+#: performance.xml:901
+#, fuzzy, no-c-format
 msgid ""
-"To completely evict all objects from the session cache, call "
-"<literal>Session.clear()</literal>"
+"To evict all objects from the session cache, call <literal>Session.clear()</"
+"literal>"
 msgstr ""
 "To completely evict all objects from the session cache, call "
 "<literal>Session.clear()</literal>"
 
 #. Tag: para
-#: performance.xml:852
+#: performance.xml:905
 #, no-c-format
 msgid ""
 "For the second-level cache, there are methods defined on "
@@ -1734,7 +1773,7 @@ msgstr ""
 "instance, entire class, collection instance or entire collection role."
 
 #. Tag: programlisting
-#: performance.xml:858
+#: performance.xml:911
 #, no-c-format
 msgid ""
 "<![CDATA[sessionFactory.evict(Cat.class, catId); //evict a particular Cat\n"
@@ -1746,61 +1785,61 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: performance.xml:860
-#, no-c-format
+#: performance.xml:913
+#, fuzzy, no-c-format
 msgid ""
 "The <literal>CacheMode</literal> controls how a particular session interacts "
-"with the second-level cache."
+"with the second-level cache:"
 msgstr ""
 "The <literal>CacheMode</literal> controls how a particular session interacts "
 "with the second-level cache."
 
 #. Tag: para
-#: performance.xml:867
-#, no-c-format
+#: performance.xml:920
+#, fuzzy, no-c-format
 msgid ""
-"<literal>CacheMode.NORMAL</literal> - read items from and write items to the "
-"second-level cache"
+"<literal>CacheMode.NORMAL</literal>: will read items from and write items to "
+"the second-level cache"
 msgstr ""
 "<literal>CacheMode.NORMAL</literal> - read items from and write items to the "
 "second-level cache"
 
 #. Tag: para
-#: performance.xml:872
-#, no-c-format
+#: performance.xml:925
+#, fuzzy, no-c-format
 msgid ""
-"<literal>CacheMode.GET</literal> - read items from the second-level cache, "
-"but don't write to the second-level cache except when updating data"
+"<literal>CacheMode.GET</literal>: will read items from the second-level "
+"cache. Do not write to the second-level cache except when updating data"
 msgstr ""
 "<literal>CacheMode.GET</literal> - read items from the second-level cache, "
 "but don't write to the second-level cache except when updating data"
 
 #. Tag: para
-#: performance.xml:878
-#, no-c-format
+#: performance.xml:931
+#, fuzzy, no-c-format
 msgid ""
-"<literal>CacheMode.PUT</literal> - write items to the second-level cache, "
-"but don't read from the second-level cache"
+"<literal>CacheMode.PUT</literal>: will write items to the second-level "
+"cache. Do not read from the second-level cache"
 msgstr ""
 "<literal>CacheMode.PUT</literal> - write items to the second-level cache, "
 "but don't read from the second-level cache"
 
 #. Tag: para
-#: performance.xml:884
-#, no-c-format
+#: performance.xml:937
+#, fuzzy, no-c-format
 msgid ""
+"<literal>CacheMode.REFRESH</literal>: will write items to the second-level "
+"cache. Do not read from the second-level cache. Bypass the effect of "
+"<literal>hibernate.cache.use_minimal_puts</literal> forcing a refresh of the "
+"second-level cache for all items read from the database"
+msgstr ""
 "<literal>CacheMode.REFRESH</literal> - write items to the second-level "
 "cache, but don't read from the second-level cache, bypass the effect of "
 "<literal>hibernate.cache.use_minimal_puts</literal>, forcing a refresh of "
 "the second-level cache for all items read from the database"
-msgstr ""
-"<literal>CacheMode.REFRESH</literal> - write items to the second-level "
-"cache, but don't read from the second-level cache, bypass the effect of "
-"<literal>hibernate.cache.use_minimal_puts</literal>, forcing a refresh of "
-"the second-level cache for all items read from the database"
 
 #. Tag: para
-#: performance.xml:892
+#: performance.xml:945
 #, no-c-format
 msgid ""
 "To browse the contents of a second-level or query cache region, use the "
@@ -1810,7 +1849,7 @@ msgstr ""
 "<literal>Statistics</literal> API:"
 
 #. Tag: programlisting
-#: performance.xml:897
+#: performance.xml:950
 #, no-c-format
 msgid ""
 "<![CDATA[Map cacheEntries = sessionFactory.getStatistics()\n"
@@ -1819,17 +1858,17 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: performance.xml:899
-#, no-c-format
+#: performance.xml:952
+#, fuzzy, no-c-format
 msgid ""
-"You'll need to enable statistics, and, optionally, force Hibernate to keep "
-"the cache entries in a more human-understandable format:"
+"You will need to enable statistics and, optionally, force Hibernate to keep "
+"the cache entries in a more readable format:"
 msgstr ""
 "You'll need to enable statistics, and, optionally, force Hibernate to keep "
 "the cache entries in a more human-understandable format:"
 
 #. Tag: programlisting
-#: performance.xml:904
+#: performance.xml:957
 #, no-c-format
 msgid ""
 "<![CDATA[hibernate.generate_statistics true\n"
@@ -1837,41 +1876,40 @@ msgid ""
 msgstr ""
 
 #. Tag: title
-#: performance.xml:909
+#: performance.xml:962
 #, no-c-format
 msgid "The Query Cache"
 msgstr "The Query Cache"
 
 #. Tag: para
-#: performance.xml:911
-#, no-c-format
+#: performance.xml:964
+#, fuzzy, no-c-format
 msgid ""
-"Query result sets may also be cached. This is only useful for queries that "
-"are run frequently with the same parameters. To use the query cache you must "
-"first enable it:"
+"Query result sets can also be cached. This is only useful for queries that "
+"are run frequently with the same parameters. You will first need to enable "
+"the query cache:"
 msgstr ""
 "Query result sets may also be cached. This is only useful for queries that "
 "are run frequently with the same parameters. To use the query cache you must "
 "first enable it:"
 
 #. Tag: programlisting
-#: performance.xml:916
+#: performance.xml:969
 #, no-c-format
 msgid "<![CDATA[hibernate.cache.use_query_cache true]]>"
 msgstr ""
 
 #. Tag: para
-#: performance.xml:918
-#, no-c-format
+#: performance.xml:971
+#, fuzzy, no-c-format
 msgid ""
-"This setting causes the creation of two new cache regions - one holding "
-"cached query result sets (<literal>org.hibernate.cache.StandardQueryCache</"
-"literal>), the other holding timestamps of the most recent updates to "
-"queryable tables (<literal>org.hibernate.cache.UpdateTimestampsCache</"
-"literal>). Note that the query cache does not cache the state of the actual "
-"entities in the result set; it caches only identifier values and results of "
-"value type. So the query cache should always be used in conjunction with the "
-"second-level cache."
+"This setting creates two new cache regions: one holding cached query result "
+"sets (<literal>org.hibernate.cache.StandardQueryCache</literal>), the other "
+"holding timestamps of the most recent updates to queryable tables "
+"(<literal>org.hibernate.cache.UpdateTimestampsCache</literal>). Note that "
+"the query cache does not cache the state of the actual entities in the "
+"result set; it caches only identifier values and results of value type. The "
+"query cache should always be used in conjunction with the second-level cache."
 msgstr ""
 "This setting causes the creation of two new cache regions - one holding "
 "cached query result sets (<literal>org.hibernate.cache.StandardQueryCache</"
@@ -1883,10 +1921,10 @@ msgstr ""
 "second-level cache."
 
 #. Tag: para
-#: performance.xml:928
-#, no-c-format
+#: performance.xml:981
+#, fuzzy, no-c-format
 msgid ""
-"Most queries do not benefit from caching, so by default queries are not "
+"Most queries do not benefit from caching, so by default, queries are not "
 "cached. To enable caching, call <literal>Query.setCacheable(true)</literal>. "
 "This call allows the query to look for existing cache results or add its "
 "results to the cache when it is executed."
@@ -1897,11 +1935,11 @@ msgstr ""
 "results to the cache when it is executed."
 
 #. Tag: para
-#: performance.xml:935
-#, no-c-format
+#: performance.xml:988
+#, fuzzy, no-c-format
 msgid ""
 "If you require fine-grained control over query cache expiration policies, "
-"you may specify a named cache region for a particular query by calling "
+"you can specify a named cache region for a particular query by calling "
 "<literal>Query.setCacheRegion()</literal>."
 msgstr ""
 "If you require fine-grained control over query cache expiration policies, "
@@ -1909,7 +1947,7 @@ msgstr ""
 "<literal>Query.setCacheRegion()</literal>."
 
 #. Tag: programlisting
-#: performance.xml:941
+#: performance.xml:994
 #, no-c-format
 msgid ""
 "<![CDATA[List blogs = sess.createQuery(\"from Blog blog where blog.blogger "
@@ -1922,7 +1960,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: performance.xml:943
+#: performance.xml:996
 #, no-c-format
 msgid ""
 "If the query should force a refresh of its query cache region, you should "
@@ -1942,260 +1980,256 @@ msgstr ""
 "<literal>SessionFactory.evictQueries()</literal>."
 
 #. Tag: title
-#: performance.xml:955
+#: performance.xml:1008
 #, no-c-format
 msgid "Understanding Collection performance"
 msgstr "Understanding Collection performance"
 
 #. Tag: para
-#: performance.xml:957
+#: performance.xml:1010
 #, no-c-format
 msgid ""
-"We've already spent quite some time talking about collections. In this "
-"section we will highlight a couple more issues about how collections behave "
-"at runtime."
+"In the previous sections we have covered collections and their applications. "
+"In this section we explore some more issues in relation to collections at "
+"runtime."
 msgstr ""
-"We've already spent quite some time talking about collections. In this "
-"section we will highlight a couple more issues about how collections behave "
-"at runtime."
 
 #. Tag: title
-#: performance.xml:964
+#: performance.xml:1017
 #, no-c-format
 msgid "Taxonomy"
 msgstr "Taxonomy"
 
 #. Tag: para
-#: performance.xml:966
+#: performance.xml:1019
 #, no-c-format
 msgid "Hibernate defines three basic kinds of collections:"
 msgstr "Hibernate defines three basic kinds of collections:"
 
 #. Tag: para
-#: performance.xml:970
+#: performance.xml:1023
 #, no-c-format
 msgid "collections of values"
 msgstr "collections of values"
 
 #. Tag: para
-#: performance.xml:973
-#, no-c-format
-msgid "one to many associations"
+#: performance.xml:1026
+#, fuzzy, no-c-format
+msgid "one-to-many associations"
 msgstr "one to many associations"
 
 #. Tag: para
-#: performance.xml:976
-#, no-c-format
-msgid "many to many associations"
+#: performance.xml:1029
+#, fuzzy, no-c-format
+msgid "many-to-many associations"
 msgstr "many to many associations"
-
-#. Tag: para
-#: performance.xml:980
-#, no-c-format
-msgid ""
-"This classification distinguishes the various table and foreign key "
-"relationships but does not tell us quite everything we need to know about "
-"the relational model. To fully understand the relational structure and "
-"performance characteristics, we must also consider the structure of the "
-"primary key that is used by Hibernate to update or delete collection rows. "
-"This suggests the following classification:"
-msgstr ""
-"This classification distinguishes the various table and foreign key "
-"relationships but does not tell us quite everything we need to know about "
-"the relational model. To fully understand the relational structure and "
-"performance characteristics, we must also consider the structure of the "
-"primary key that is used by Hibernate to update or delete collection rows. "
-"This suggests the following classification:"
-
-#. Tag: para
-#: performance.xml:991
-#, no-c-format
-msgid "indexed collections"
-msgstr "indexed collections"
-
-#. Tag: para
-#: performance.xml:994
-#, no-c-format
-msgid "sets"
-msgstr "sets"
-
-#. Tag: para
-#: performance.xml:997
-#, no-c-format
-msgid "bags"
-msgstr "bags"
-
-#. Tag: para
-#: performance.xml:1001
-#, no-c-format
-msgid ""
-"All indexed collections (maps, lists, arrays) have a primary key consisting "
-"of the <literal>&lt;key&gt;</literal> and <literal>&lt;index&gt;</literal> "
-"columns. In this case collection updates are usually extremely efficient - "
-"the primary key may be efficiently indexed and a particular row may be "
-"efficiently located when Hibernate tries to update or delete it."
-msgstr ""
-"All indexed collections (maps, lists, arrays) have a primary key consisting "
-"of the <literal>&lt;key&gt;</literal> and <literal>&lt;index&gt;</literal> "
-"columns. In this case collection updates are usually extremely efficient - "
-"the primary key may be efficiently indexed and a particular row may be "
-"efficiently located when Hibernate tries to update or delete it."
-
-#. Tag: para
-#: performance.xml:1009
-#, no-c-format
-msgid ""
-"Sets have a primary key consisting of <literal>&lt;key&gt;</literal> and "
-"element columns. This may be less efficient for some types of collection "
-"element, particularly composite elements or large text or binary fields; the "
-"database may not be able to index a complex primary key as efficently. On "
-"the other hand, for one to many or many to many associations, particularly "
-"in the case of synthetic identifiers, it is likely to be just as efficient. "
-"(Side-note: if you want <literal>SchemaExport</literal> to actually create "
-"the primary key of a <literal>&lt;set&gt;</literal> for you, you must "
-"declare all columns as <literal>not-null=\"true\"</literal>.)"
-msgstr ""
-"Sets have a primary key consisting of <literal>&lt;key&gt;</literal> and "
-"element columns. This may be less efficient for some types of collection "
-"element, particularly composite elements or large text or binary fields; the "
-"database may not be able to index a complex primary key as efficently. On "
-"the other hand, for one to many or many to many associations, particularly "
-"in the case of synthetic identifiers, it is likely to be just as efficient. "
-"(Side-note: if you want <literal>SchemaExport</literal> to actually create "
-"the primary key of a <literal>&lt;set&gt;</literal> for you, you must "
-"declare all columns as <literal>not-null=\"true\"</literal>.)"
-
-#. Tag: para
-#: performance.xml:1020
-#, no-c-format
-msgid ""
-"<literal>&lt;idbag&gt;</literal> mappings define a surrogate key, so they "
-"are always very efficient to update. In fact, they are the best case."
-msgstr ""
-"<literal>&lt;idbag&gt;</literal> mappings define a surrogate key, so they "
-"are always very efficient to update. In fact, they are the best case."
-
-#. Tag: para
-#: performance.xml:1025
-#, no-c-format
-msgid ""
-"Bags are the worst case. Since a bag permits duplicate element values and "
-"has no index column, no primary key may be defined. Hibernate has no way of "
-"distinguishing between duplicate rows. Hibernate resolves this problem by "
-"completely removing (in a single <literal>DELETE</literal>) and recreating "
-"the collection whenever it changes. This might be very inefficient."
-msgstr ""
-"Bags are the worst case. Since a bag permits duplicate element values and "
-"has no index column, no primary key may be defined. Hibernate has no way of "
-"distinguishing between duplicate rows. Hibernate resolves this problem by "
-"completely removing (in a single <literal>DELETE</literal>) and recreating "
-"the collection whenever it changes. This might be very inefficient."
 
 #. Tag: para
 #: performance.xml:1033
 #, no-c-format
 msgid ""
-"Note that for a one-to-many association, the \"primary key\" may not be the "
-"physical primary key of the database table - but even in this case, the "
-"above classification is still useful. (It still reflects how Hibernate "
-"\"locates\" individual rows of the collection.)"
+"This classification distinguishes the various table and foreign key "
+"relationships but does not tell us quite everything we need to know about "
+"the relational model. To fully understand the relational structure and "
+"performance characteristics, we must also consider the structure of the "
+"primary key that is used by Hibernate to update or delete collection rows. "
+"This suggests the following classification:"
 msgstr ""
-"Note that for a one-to-many association, the \"primary key\" may not be the "
-"physical primary key of the database table - but even in this case, the "
-"above classification is still useful. (It still reflects how Hibernate "
-"\"locates\" individual rows of the collection.)"
-
-#. Tag: title
-#: performance.xml:1043
-#, no-c-format
-msgid ""
-"Lists, maps, idbags and sets are the most efficient collections to update"
-msgstr ""
-"Lists, maps, idbags and sets are the most efficient collections to update"
+"This classification distinguishes the various table and foreign key "
+"relationships but does not tell us quite everything we need to know about "
+"the relational model. To fully understand the relational structure and "
+"performance characteristics, we must also consider the structure of the "
+"primary key that is used by Hibernate to update or delete collection rows. "
+"This suggests the following classification:"
 
 #. Tag: para
-#: performance.xml:1045
+#: performance.xml:1044
 #, no-c-format
-msgid ""
-"From the discussion above, it should be clear that indexed collections and "
-"(usually) sets allow the most efficient operation in terms of adding, "
-"removing and updating elements."
-msgstr ""
-"From the discussion above, it should be clear that indexed collections and "
-"(usually) sets allow the most efficient operation in terms of adding, "
-"removing and updating elements."
+msgid "indexed collections"
+msgstr "indexed collections"
 
 #. Tag: para
-#: performance.xml:1051
+#: performance.xml:1047
 #, no-c-format
-msgid ""
-"There is, arguably, one more advantage that indexed collections have over "
-"sets for many to many associations or collections of values. Because of the "
-"structure of a <literal>Set</literal>, Hibernate doesn't ever "
-"<literal>UPDATE</literal> a row when an element is \"changed\". Changes to a "
-"<literal>Set</literal> always work via <literal>INSERT</literal> and "
-"<literal>DELETE</literal> (of individual rows). Once again, this "
-"consideration does not apply to one to many associations."
-msgstr ""
-"There is, arguably, one more advantage that indexed collections have over "
-"sets for many to many associations or collections of values. Because of the "
-"structure of a <literal>Set</literal>, Hibernate doesn't ever "
-"<literal>UPDATE</literal> a row when an element is \"changed\". Changes to a "
-"<literal>Set</literal> always work via <literal>INSERT</literal> and "
-"<literal>DELETE</literal> (of individual rows). Once again, this "
-"consideration does not apply to one to many associations."
+msgid "sets"
+msgstr "sets"
 
 #. Tag: para
-#: performance.xml:1060
+#: performance.xml:1050
 #, no-c-format
-msgid ""
-"After observing that arrays cannot be lazy, we would conclude that lists, "
-"maps and idbags are the most performant (non-inverse) collection types, with "
-"sets not far behind. Sets are expected to be the most common kind of "
-"collection in Hibernate applications. This is because the \"set\" semantics "
-"are most natural in the relational model."
-msgstr ""
-"After observing that arrays cannot be lazy, we would conclude that lists, "
-"maps and idbags are the most performant (non-inverse) collection types, with "
-"sets not far behind. Sets are expected to be the most common kind of "
-"collection in Hibernate applications. This is because the \"set\" semantics "
-"are most natural in the relational model."
+msgid "bags"
+msgstr "bags"
 
 #. Tag: para
-#: performance.xml:1068
-#, no-c-format
+#: performance.xml:1054
+#, fuzzy, no-c-format
 msgid ""
-"However, in well-designed Hibernate domain models, we usually see that most "
-"collections are in fact one-to-many associations with <literal>inverse=\"true"
-"\"</literal>. For these associations, the update is handled by the many-to-"
-"one end of the association, and so considerations of collection update "
-"performance simply do not apply."
+"All indexed collections (maps, lists, and arrays) have a primary key "
+"consisting of the <literal>&lt;key&gt;</literal> and <literal>&lt;index&gt;</"
+"literal> columns. In this case, collection updates are extremely efficient. "
+"The primary key can be efficiently indexed and a particular row can be "
+"efficiently located when Hibernate tries to update or delete it."
 msgstr ""
-"However, in well-designed Hibernate domain models, we usually see that most "
-"collections are in fact one-to-many associations with <literal>inverse=\"true"
-"\"</literal>. For these associations, the update is handled by the many-to-"
-"one end of the association, and so considerations of collection update "
-"performance simply do not apply."
+"All indexed collections (maps, lists, arrays) have a primary key consisting "
+"of the <literal>&lt;key&gt;</literal> and <literal>&lt;index&gt;</literal> "
+"columns. In this case collection updates are usually extremely efficient - "
+"the primary key may be efficiently indexed and a particular row may be "
+"efficiently located when Hibernate tries to update or delete it."
 
-#. Tag: title
+#. Tag: para
+#: performance.xml:1062
+#, fuzzy, no-c-format
+msgid ""
+"Sets have a primary key consisting of <literal>&lt;key&gt;</literal> and "
+"element columns. This can be less efficient for some types of collection "
+"element, particularly composite elements or large text or binary fields, as "
+"the database may not be able to index a complex primary key as efficiently. "
+"However, for one-to-many or many-to-many associations, particularly in the "
+"case of synthetic identifiers, it is likely to be just as efficient. If you "
+"want <literal>SchemaExport</literal> to actually create the primary key of a "
+"<literal>&lt;set&gt;</literal>, you must declare all columns as <literal>not-"
+"null=\"true\"</literal>."
+msgstr ""
+"Sets have a primary key consisting of <literal>&lt;key&gt;</literal> and "
+"element columns. This may be less efficient for some types of collection "
+"element, particularly composite elements or large text or binary fields; the "
+"database may not be able to index a complex primary key as efficently. On "
+"the other hand, for one to many or many to many associations, particularly "
+"in the case of synthetic identifiers, it is likely to be just as efficient. "
+"(Side-note: if you want <literal>SchemaExport</literal> to actually create "
+"the primary key of a <literal>&lt;set&gt;</literal> for you, you must "
+"declare all columns as <literal>not-null=\"true\"</literal>.)"
+
+#. Tag: para
+#: performance.xml:1073
+#, fuzzy, no-c-format
+msgid ""
+"<literal>&lt;idbag&gt;</literal> mappings define a surrogate key, so they "
+"are efficient to update. In fact, they are the best case."
+msgstr ""
+"<literal>&lt;idbag&gt;</literal> mappings define a surrogate key, so they "
+"are always very efficient to update. In fact, they are the best case."
+
+#. Tag: para
 #: performance.xml:1078
+#, fuzzy, no-c-format
+msgid ""
+"Bags are the worst case since they permit duplicate element values and, as "
+"they have no index column, no primary key can be defined. Hibernate has no "
+"way of distinguishing between duplicate rows. Hibernate resolves this "
+"problem by completely removing in a single <literal>DELETE</literal> and "
+"recreating the collection whenever it changes. This can be inefficient."
+msgstr ""
+"Bags are the worst case. Since a bag permits duplicate element values and "
+"has no index column, no primary key may be defined. Hibernate has no way of "
+"distinguishing between duplicate rows. Hibernate resolves this problem by "
+"completely removing (in a single <literal>DELETE</literal>) and recreating "
+"the collection whenever it changes. This might be very inefficient."
+
+#. Tag: para
+#: performance.xml:1086
+#, fuzzy, no-c-format
+msgid ""
+"For a one-to-many association, the \"primary key\" may not be the physical "
+"primary key of the database table. Even in this case, the above "
+"classification is still useful. It reflects how Hibernate \"locates\" "
+"individual rows of the collection."
+msgstr ""
+"Note that for a one-to-many association, the \"primary key\" may not be the "
+"physical primary key of the database table - but even in this case, the "
+"above classification is still useful. (It still reflects how Hibernate "
+"\"locates\" individual rows of the collection.)"
+
+#. Tag: title
+#: performance.xml:1096
+#, no-c-format
+msgid ""
+"Lists, maps, idbags and sets are the most efficient collections to update"
+msgstr ""
+"Lists, maps, idbags and sets are the most efficient collections to update"
+
+#. Tag: para
+#: performance.xml:1098
+#, fuzzy, no-c-format
+msgid ""
+"From the discussion above, it should be clear that indexed collections and "
+"sets allow the most efficient operation in terms of adding, removing and "
+"updating elements."
+msgstr ""
+"From the discussion above, it should be clear that indexed collections and "
+"(usually) sets allow the most efficient operation in terms of adding, "
+"removing and updating elements."
+
+#. Tag: para
+#: performance.xml:1104
+#, fuzzy, no-c-format
+msgid ""
+"There is, arguably, one more advantage that indexed collections have over "
+"sets for many-to-many associations or collections of values. Because of the "
+"structure of a <literal>Set</literal>, Hibernate does not <literal>UPDATE</"
+"literal> a row when an element is \"changed\". Changes to a <literal>Set</"
+"literal> always work via <literal>INSERT</literal> and <literal>DELETE</"
+"literal> of individual rows. Once again, this consideration does not apply "
+"to one-to-many associations."
+msgstr ""
+"There is, arguably, one more advantage that indexed collections have over "
+"sets for many to many associations or collections of values. Because of the "
+"structure of a <literal>Set</literal>, Hibernate doesn't ever "
+"<literal>UPDATE</literal> a row when an element is \"changed\". Changes to a "
+"<literal>Set</literal> always work via <literal>INSERT</literal> and "
+"<literal>DELETE</literal> (of individual rows). Once again, this "
+"consideration does not apply to one to many associations."
+
+#. Tag: para
+#: performance.xml:1113
+#, fuzzy, no-c-format
+msgid ""
+"After observing that arrays cannot be lazy, you can conclude that lists, "
+"maps and idbags are the most performant (non-inverse) collection types, with "
+"sets not far behind. You can expect sets to be the most common kind of "
+"collection in Hibernate applications. This is because the \"set\" semantics "
+"are most natural in the relational model."
+msgstr ""
+"After observing that arrays cannot be lazy, we would conclude that lists, "
+"maps and idbags are the most performant (non-inverse) collection types, with "
+"sets not far behind. Sets are expected to be the most common kind of "
+"collection in Hibernate applications. This is because the \"set\" semantics "
+"are most natural in the relational model."
+
+#. Tag: para
+#: performance.xml:1121
+#, fuzzy, no-c-format
+msgid ""
+"However, in well-designed Hibernate domain models, most collections are in "
+"fact one-to-many associations with <literal>inverse=\"true\"</literal>. For "
+"these associations, the update is handled by the many-to-one end of the "
+"association, and so considerations of collection update performance simply "
+"do not apply."
+msgstr ""
+"However, in well-designed Hibernate domain models, we usually see that most "
+"collections are in fact one-to-many associations with <literal>inverse=\"true"
+"\"</literal>. For these associations, the update is handled by the many-to-"
+"one end of the association, and so considerations of collection update "
+"performance simply do not apply."
+
+#. Tag: title
+#: performance.xml:1131
 #, no-c-format
 msgid "Bags and lists are the most efficient inverse collections"
 msgstr "Bags and lists are the most efficient inverse collections"
 
 #. Tag: para
-#: performance.xml:1080
-#, no-c-format
+#: performance.xml:1133
+#, fuzzy, no-c-format
 msgid ""
-"Just before you ditch bags forever, there is a particular case in which bags "
-"(and also lists) are much more performant than sets. For a collection with "
-"<literal>inverse=\"true\"</literal> (the standard bidirectional one-to-many "
-"relationship idiom, for example) we can add elements to a bag or list "
-"without needing to initialize (fetch) the bag elements! This is because "
+"There is a particular case, however, in which bags, and also lists, are much "
+"more performant than sets. For a collection with <literal>inverse=\"true\"</"
+"literal>, the standard bidirectional one-to-many relationship idiom, for "
+"example, we can add elements to a bag or list without needing to initialize "
+"(fetch) the bag elements. This is because, unlike a <literal>set</literal>, "
 "<literal>Collection.add()</literal> or <literal>Collection.addAll()</"
-"literal> must always return true for a bag or <literal>List</literal> "
-"(unlike a <literal>Set</literal>). This can make the following common code "
-"much faster."
+"literal> must always return true for a bag or <literal>List</literal>. This "
+"can make the following common code much faster:"
 msgstr ""
 "Just before you ditch bags forever, there is a particular case in which bags "
 "(and also lists) are much more performant than sets. For a collection with "
@@ -2208,7 +2242,7 @@ msgstr ""
 "much faster."
 
 #. Tag: programlisting
-#: performance.xml:1090
+#: performance.xml:1143
 #, no-c-format
 msgid ""
 "<![CDATA[Parent p = (Parent) sess.load(Parent.class, id);\n"
@@ -2219,147 +2253,145 @@ msgid ""
 msgstr ""
 
 #. Tag: title
-#: performance.xml:1095
+#: performance.xml:1148
 #, no-c-format
 msgid "One shot delete"
 msgstr "One shot delete"
 
 #. Tag: para
-#: performance.xml:1097
-#, no-c-format
+#: performance.xml:1150
+#, fuzzy, no-c-format
 msgid ""
-"Occasionally, deleting collection elements one by one can be extremely "
-"inefficient. Hibernate isn't completely stupid, so it knows not to do that "
-"in the case of an newly-empty collection (if you called <literal>list.clear()"
-"</literal>, for example). In this case, Hibernate will issue a single "
-"<literal>DELETE</literal> and we are done!"
+"Deleting collection elements one by one can sometimes be extremely "
+"inefficient. Hibernate knows not to do that in the case of an newly-empty "
+"collection (if you called <literal>list.clear()</literal>, for example). In "
+"this case, Hibernate will issue a single <literal>DELETE</literal>."
 msgstr ""
 "Occasionally, deleting collection elements one by one can be extremely "
 "inefficient. Hibernate isn't completely stupid, so it knows not to do that "
 "in the case of an newly-empty collection (if you called <literal>list.clear()"
 "</literal>, for example). In this case, Hibernate will issue a single "
 "<literal>DELETE</literal> and we are done!"
-
-#. Tag: para
-#: performance.xml:1104
-#, no-c-format
-msgid ""
-"Suppose we add a single element to a collection of size twenty and then "
-"remove two elements. Hibernate will issue one <literal>INSERT</literal> "
-"statement and two <literal>DELETE</literal> statements (unless the "
-"collection is a bag). This is certainly desirable."
-msgstr ""
-"Suppose we add a single element to a collection of size twenty and then "
-"remove two elements. Hibernate will issue one <literal>INSERT</literal> "
-"statement and two <literal>DELETE</literal> statements (unless the "
-"collection is a bag). This is certainly desirable."
-
-#. Tag: para
-#: performance.xml:1110
-#, no-c-format
-msgid ""
-"However, suppose that we remove eighteen elements, leaving two and then add "
-"thee new elements. There are two possible ways to proceed"
-msgstr ""
-"However, suppose that we remove eighteen elements, leaving two and then add "
-"thee new elements. There are two possible ways to proceed"
-
-#. Tag: para
-#: performance.xml:1117
-#, no-c-format
-msgid "delete eighteen rows one by one and then insert three rows"
-msgstr "delete eighteen rows one by one and then insert three rows"
-
-#. Tag: para
-#: performance.xml:1120
-#, no-c-format
-msgid ""
-"remove the whole collection (in one SQL <literal>DELETE</literal>) and "
-"insert all five current elements (one by one)"
-msgstr ""
-"remove the whole collection (in one SQL <literal>DELETE</literal>) and "
-"insert all five current elements (one by one)"
-
-#. Tag: para
-#: performance.xml:1125
-#, no-c-format
-msgid ""
-"Hibernate isn't smart enough to know that the second option is probably "
-"quicker in this case. (And it would probably be undesirable for Hibernate to "
-"be that smart; such behaviour might confuse database triggers, etc.)"
-msgstr ""
-"Hibernate isn't smart enough to know that the second option is probably "
-"quicker in this case. (And it would probably be undesirable for Hibernate to "
-"be that smart; such behaviour might confuse database triggers, etc.)"
-
-#. Tag: para
-#: performance.xml:1131
-#, no-c-format
-msgid ""
-"Fortunately, you can force this behaviour (ie. the second strategy) at any "
-"time by discarding (ie. dereferencing) the original collection and returning "
-"a newly instantiated collection with all the current elements. This can be "
-"very useful and powerful from time to time."
-msgstr ""
-"Fortunately, you can force this behaviour (ie. the second strategy) at any "
-"time by discarding (ie. dereferencing) the original collection and returning "
-"a newly instantiated collection with all the current elements. This can be "
-"very useful and powerful from time to time."
-
-#. Tag: para
-#: performance.xml:1137
-#, no-c-format
-msgid ""
-"Of course, one-shot-delete does not apply to collections mapped "
-"<literal>inverse=\"true\"</literal>."
-msgstr ""
-"Of course, one-shot-delete does not apply to collections mapped "
-"<literal>inverse=\"true\"</literal>."
-
-#. Tag: title
-#: performance.xml:1146
-#, no-c-format
-msgid "Monitoring performance"
-msgstr "Monitoring performance"
-
-#. Tag: para
-#: performance.xml:1148
-#, no-c-format
-msgid ""
-"Optimization is not much use without monitoring and access to performance "
-"numbers. Hibernate provides a full range of figures about its internal "
-"operations. Statistics in Hibernate are available per "
-"<literal>SessionFactory</literal>."
-msgstr ""
-"Optimization is not much use without monitoring and access to performance "
-"numbers. Hibernate provides a full range of figures about its internal "
-"operations. Statistics in Hibernate are available per "
-"<literal>SessionFactory</literal>."
-
-#. Tag: title
-#: performance.xml:1155
-#, no-c-format
-msgid "Monitoring a SessionFactory"
-msgstr "Monitoring a SessionFactory"
 
 #. Tag: para
 #: performance.xml:1157
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
-"You can access <literal>SessionFactory</literal> metrics in two ways. Your "
-"first option is to call <literal>sessionFactory.getStatistics()</literal> "
-"and read or display the <literal>Statistics</literal> yourself."
+"Suppose you added a single element to a collection of size twenty and then "
+"remove two elements. Hibernate will issue one <literal>INSERT</literal> "
+"statement and two <literal>DELETE</literal> statements, unless the "
+"collection is a bag. This is certainly desirable."
 msgstr ""
-"You can access <literal>SessionFactory</literal> metrics in two ways. Your "
-"first option is to call <literal>sessionFactory.getStatistics()</literal> "
-"and read or display the <literal>Statistics</literal> yourself."
+"Suppose we add a single element to a collection of size twenty and then "
+"remove two elements. Hibernate will issue one <literal>INSERT</literal> "
+"statement and two <literal>DELETE</literal> statements (unless the "
+"collection is a bag). This is certainly desirable."
 
 #. Tag: para
 #: performance.xml:1163
 #, no-c-format
 msgid ""
+"However, suppose that we remove eighteen elements, leaving two and then add "
+"thee new elements. There are two possible ways to proceed"
+msgstr ""
+"However, suppose that we remove eighteen elements, leaving two and then add "
+"thee new elements. There are two possible ways to proceed"
+
+#. Tag: para
+#: performance.xml:1170
+#, no-c-format
+msgid "delete eighteen rows one by one and then insert three rows"
+msgstr "delete eighteen rows one by one and then insert three rows"
+
+#. Tag: para
+#: performance.xml:1173
+#, fuzzy, no-c-format
+msgid ""
+"remove the whole collection in one SQL <literal>DELETE</literal> and insert "
+"all five current elements one by one"
+msgstr ""
+"remove the whole collection (in one SQL <literal>DELETE</literal>) and "
+"insert all five current elements (one by one)"
+
+#. Tag: para
+#: performance.xml:1178
+#, fuzzy, no-c-format
+msgid ""
+"Hibernate cannot know that the second option is probably quicker. It would "
+"probably be undesirable for Hibernate to be that intuitive as such behavior "
+"might confuse database triggers, etc."
+msgstr ""
+"Hibernate isn't smart enough to know that the second option is probably "
+"quicker in this case. (And it would probably be undesirable for Hibernate to "
+"be that smart; such behaviour might confuse database triggers, etc.)"
+
+#. Tag: para
+#: performance.xml:1184
+#, fuzzy, no-c-format
+msgid ""
+"Fortunately, you can force this behavior (i.e. the second strategy) at any "
+"time by discarding (i.e. dereferencing) the original collection and "
+"returning a newly instantiated collection with all the current elements."
+msgstr ""
+"Fortunately, you can force this behaviour (ie. the second strategy) at any "
+"time by discarding (ie. dereferencing) the original collection and returning "
+"a newly instantiated collection with all the current elements. This can be "
+"very useful and powerful from time to time."
+
+#. Tag: para
+#: performance.xml:1190
+#, fuzzy, no-c-format
+msgid ""
+"One-shot-delete does not apply to collections mapped <literal>inverse=\"true"
+"\"</literal>."
+msgstr ""
+"Of course, one-shot-delete does not apply to collections mapped "
+"<literal>inverse=\"true\"</literal>."
+
+#. Tag: title
+#: performance.xml:1199
+#, no-c-format
+msgid "Monitoring performance"
+msgstr "Monitoring performance"
+
+#. Tag: para
+#: performance.xml:1201
+#, no-c-format
+msgid ""
+"Optimization is not much use without monitoring and access to performance "
+"numbers. Hibernate provides a full range of figures about its internal "
+"operations. Statistics in Hibernate are available per "
+"<literal>SessionFactory</literal>."
+msgstr ""
+"Optimization is not much use without monitoring and access to performance "
+"numbers. Hibernate provides a full range of figures about its internal "
+"operations. Statistics in Hibernate are available per "
+"<literal>SessionFactory</literal>."
+
+#. Tag: title
+#: performance.xml:1208
+#, no-c-format
+msgid "Monitoring a SessionFactory"
+msgstr "Monitoring a SessionFactory"
+
+#. Tag: para
+#: performance.xml:1210
+#, no-c-format
+msgid ""
+"You can access <literal>SessionFactory</literal> metrics in two ways. Your "
+"first option is to call <literal>sessionFactory.getStatistics()</literal> "
+"and read or display the <literal>Statistics</literal> yourself."
+msgstr ""
+"You can access <literal>SessionFactory</literal> metrics in two ways. Your "
+"first option is to call <literal>sessionFactory.getStatistics()</literal> "
+"and read or display the <literal>Statistics</literal> yourself."
+
+#. Tag: para
+#: performance.xml:1216
+#, fuzzy, no-c-format
+msgid ""
 "Hibernate can also use JMX to publish metrics if you enable the "
-"<literal>StatisticsService</literal> MBean. You may enable a single MBean "
+"<literal>StatisticsService</literal> MBean. You can enable a single MBean "
 "for all your <literal>SessionFactory</literal> or one per factory. See the "
 "following code for minimalistic configuration examples:"
 msgstr ""
@@ -2369,7 +2401,7 @@ msgstr ""
 "following code for minimalistic configuration examples:"
 
 #. Tag: programlisting
-#: performance.xml:1170
+#: performance.xml:1223
 #, no-c-format
 msgid ""
 "<![CDATA[// MBean service registration for a specific SessionFactory\n"
@@ -2385,7 +2417,7 @@ msgid ""
 msgstr ""
 
 #. Tag: programlisting
-#: performance.xml:1173
+#: performance.xml:1226
 #, no-c-format
 msgid ""
 "<![CDATA[// MBean service registration for all SessionFactory's\n"
@@ -2399,29 +2431,16 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: performance.xml:1175
-#, no-c-format
+#: performance.xml:1233
+#, fuzzy, no-c-format
 msgid ""
-"TODO: This doesn't make sense: In the first case, we retrieve and use the "
-"MBean directly. In the second one, we must give the JNDI name in which the "
-"session factory is held before using it. Use <literal>hibernateStatsBean."
-"setSessionFactoryJNDIName(\"my/JNDI/Name\")</literal>"
-msgstr ""
-"TODO: This doesn't make sense: In the first case, we retrieve and use the "
-"MBean directly. In the second one, we must give the JNDI name in which the "
-"session factory is held before using it. Use <literal>hibernateStatsBean."
-"setSessionFactoryJNDIName(\"my/JNDI/Name\")</literal>"
-
-#. Tag: para
-#: performance.xml:1180
-#, no-c-format
-msgid ""
-"You can (de)activate the monitoring for a <literal>SessionFactory</literal>"
+"You can activate and deactivate the monitoring for a "
+"<literal>SessionFactory</literal>:"
 msgstr ""
 "You can (de)activate the monitoring for a <literal>SessionFactory</literal>"
 
 #. Tag: para
-#: performance.xml:1185
+#: performance.xml:1238
 #, no-c-format
 msgid ""
 "at configuration time, set <literal>hibernate.generate_statistics</literal> "
@@ -2431,7 +2450,7 @@ msgstr ""
 "to <literal>false</literal>"
 
 #. Tag: para
-#: performance.xml:1192
+#: performance.xml:1245
 #, no-c-format
 msgid ""
 "at runtime: <literal>sf.getStatistics().setStatisticsEnabled(true)</literal> "
@@ -2441,11 +2460,11 @@ msgstr ""
 "or <literal>hibernateStatsBean.setStatisticsEnabled(true)</literal>"
 
 #. Tag: para
-#: performance.xml:1199
-#, no-c-format
+#: performance.xml:1252
+#, fuzzy, no-c-format
 msgid ""
-"Statistics can be reset programatically using the <literal>clear()</literal> "
-"method. A summary can be sent to a logger (info level) using the "
+"Statistics can be reset programmatically using the <literal>clear()</"
+"literal> method. A summary can be sent to a logger (info level) using the "
 "<literal>logSummary()</literal> method."
 msgstr ""
 "Statistics can be reset programatically using the <literal>clear()</literal> "
@@ -2453,19 +2472,19 @@ msgstr ""
 "<literal>logSummary()</literal> method."
 
 #. Tag: title
-#: performance.xml:1208
+#: performance.xml:1261
 #, no-c-format
 msgid "Metrics"
 msgstr "Metrics"
 
 #. Tag: para
-#: performance.xml:1210
-#, no-c-format
+#: performance.xml:1263
+#, fuzzy, no-c-format
 msgid ""
-"Hibernate provides a number of metrics, from very basic to the specialized "
-"information only relevant in certain scenarios. All available counters are "
-"described in the <literal>Statistics</literal> interface API, in three "
-"categories:"
+"Hibernate provides a number of metrics, from basic information to more "
+"specialized information that is only relevant in certain scenarios. All "
+"available counters are described in the <literal>Statistics</literal> "
+"interface API, in three categories:"
 msgstr ""
 "Hibernate provides a number of metrics, from very basic to the specialized "
 "information only relevant in certain scenarios. All available counters are "
@@ -2473,7 +2492,7 @@ msgstr ""
 "categories:"
 
 #. Tag: para
-#: performance.xml:1217
+#: performance.xml:1270
 #, no-c-format
 msgid ""
 "Metrics related to the general <literal>Session</literal> usage, such as "
@@ -2483,17 +2502,17 @@ msgstr ""
 "number of open sessions, retrieved JDBC connections, etc."
 
 #. Tag: para
-#: performance.xml:1223
-#, no-c-format
+#: performance.xml:1276
+#, fuzzy, no-c-format
 msgid ""
-"Metrics related to he entities, collections, queries, and caches as a whole "
-"(aka global metrics),"
+"Metrics related to the entities, collections, queries, and caches as a whole "
+"(aka global metrics)."
 msgstr ""
 "Metrics related to he entities, collections, queries, and caches as a whole "
 "(aka global metrics),"
 
 #. Tag: para
-#: performance.xml:1229
+#: performance.xml:1282
 #, no-c-format
 msgid ""
 "Detailed metrics related to a particular entity, collection, query or cache "
@@ -2503,14 +2522,14 @@ msgstr ""
 "region."
 
 #. Tag: para
-#: performance.xml:1236
-#, no-c-format
+#: performance.xml:1289
+#, fuzzy, no-c-format
 msgid ""
-"For exampl,e you can check the cache hit, miss, and put ratio of entities, "
-"collections and queries, and the average time a query needs. Beware that the "
-"number of milliseconds is subject to approximation in Java. Hibernate is "
-"tied to the JVM precision, on some platforms this might even only be "
-"accurate to 10 seconds."
+"For example, you can check the cache hit, miss, and put ratio of entities, "
+"collections and queries, and the average time a query needs. Be aware that "
+"the number of milliseconds is subject to approximation in Java. Hibernate is "
+"tied to the JVM precision and on some platforms this might only be accurate "
+"to 10 seconds."
 msgstr ""
 "For exampl,e you can check the cache hit, miss, and put ratio of entities, "
 "collections and queries, and the average time a query needs. Beware that the "
@@ -2519,8 +2538,8 @@ msgstr ""
 "accurate to 10 seconds."
 
 #. Tag: para
-#: performance.xml:1243
-#, no-c-format
+#: performance.xml:1296
+#, fuzzy, no-c-format
 msgid ""
 "Simple getters are used to access the global metrics (i.e. not tied to a "
 "particular entity, collection, cache region, etc.). You can access the "
@@ -2529,7 +2548,7 @@ msgid ""
 "<literal>Statistics</literal>, <literal>EntityStatistics</literal>, "
 "<literal>CollectionStatistics</literal>, "
 "<literal>SecondLevelCacheStatistics</literal>, and <literal>QueryStatistics</"
-"literal> API Javadoc for more information. The following code shows a simple "
+"literal> API Javadoc for more information. The following code is a simple "
 "example:"
 msgstr ""
 "Simple getters are used to access the global metrics (i.e. not tied to a "
@@ -2543,7 +2562,7 @@ msgstr ""
 "example:"
 
 #. Tag: programlisting
-#: performance.xml:1253
+#: performance.xml:1306
 #, no-c-format
 msgid ""
 "<![CDATA[Statistics stats = HibernateUtil.sessionFactory.getStatistics();\n"
@@ -2565,12 +2584,12 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: performance.xml:1255
-#, no-c-format
+#: performance.xml:1308
+#, fuzzy, no-c-format
 msgid ""
-"To work on all entities, collections, queries and region caches, you can "
-"retrieve the list of names of entities, collections, queries and region "
-"caches with the following methods: <literal>getQueries()</literal>, "
+"You can work on all entities, collections, queries and region caches, by "
+"retrieving the list of names of entities, collections, queries and region "
+"caches using the following methods: <literal>getQueries()</literal>, "
 "<literal>getEntityNames()</literal>, <literal>getCollectionRoleNames()</"
 "literal>, and <literal>getSecondLevelCacheRegionNames()</literal>."
 msgstr ""
@@ -2579,6 +2598,43 @@ msgstr ""
 "caches with the following methods: <literal>getQueries()</literal>, "
 "<literal>getEntityNames()</literal>, <literal>getCollectionRoleNames()</"
 "literal>, and <literal>getSecondLevelCacheRegionNames()</literal>."
+
+#~ msgid ""
+#~ "where <literal>CatImpl</literal> implements the interface <literal>Cat</"
+#~ "literal> and <literal>DomesticCatImpl</literal> implements the interface "
+#~ "<literal>DomesticCat</literal>. Then proxies for instances of "
+#~ "<literal>Cat</literal> and <literal>DomesticCat</literal> may be returned "
+#~ "by <literal>load()</literal> or <literal>iterate()</literal>. (Note that "
+#~ "<literal>list()</literal> does not usually return proxies.)"
+#~ msgstr ""
+#~ "onde <literal>CatImpl</literal> implementa a interface <literal>Cat</"
+#~ "literal> e <literal>DomesticCatImpl</literal> implementa a interface "
+#~ "<literal>DomesticCat</literal>. Então proxies para instâncias de "
+#~ "<literal>Cat</literal> e <literal>DomesticCat</literal> serão retornadas "
+#~ "por <literal>load()</literal> ou <literal>iterate()</literal>. (Note que "
+#~ "<literal>list()</literal> geralmente não retorna proxies)."
+
+#~ msgid ""
+#~ "We've already spent quite some time talking about collections. In this "
+#~ "section we will highlight a couple more issues about how collections "
+#~ "behave at runtime."
+#~ msgstr ""
+#~ "We've already spent quite some time talking about collections. In this "
+#~ "section we will highlight a couple more issues about how collections "
+#~ "behave at runtime."
+
+#~ msgid ""
+#~ "TODO: This doesn't make sense: In the first case, we retrieve and use the "
+#~ "MBean directly. In the second one, we must give the JNDI name in which "
+#~ "the session factory is held before using it. Use "
+#~ "<literal>hibernateStatsBean.setSessionFactoryJNDIName(\"my/JNDI/Name\")</"
+#~ "literal>"
+#~ msgstr ""
+#~ "TODO: This doesn't make sense: In the first case, we retrieve and use the "
+#~ "MBean directly. In the second one, we must give the JNDI name in which "
+#~ "the session factory is held before using it. Use "
+#~ "<literal>hibernateStatsBean.setSessionFactoryJNDIName(\"my/JNDI/Name\")</"
+#~ "literal>"
 
 #~ msgid "yes"
 #~ msgstr "yes"

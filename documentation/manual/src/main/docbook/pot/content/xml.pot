@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2008-08-14 15:28+0000\n"
+"POT-Creation-Date: 2009-07-14 19:56+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <kde-i18n-doc@kde.org>\n"
@@ -23,7 +23,7 @@ msgstr ""
 #. Tag: emphasis
 #: xml.xml:31
 #, no-c-format
-msgid "Note that this is an experimental feature in Hibernate 3.0 and is under extremely active development."
+msgid "XML Mapping is an experimental feature in Hibernate 3.0 and is currently under active development."
 msgstr ""
 
 #. Tag: title
@@ -35,7 +35,7 @@ msgstr ""
 #. Tag: para
 #: xml.xml:39
 #, no-c-format
-msgid "Hibernate lets you work with persistent XML data in much the same way you work with persistent POJOs. A parsed XML tree can be thought of as just another way to represent the relational data at the object level, instead of POJOs."
+msgid "Hibernate allows you to work with persistent XML data in much the same way you work with persistent POJOs. A parsed XML tree can be thought of as another way of representing the relational data at the object level, instead of POJOs."
 msgstr ""
 
 #. Tag: para
@@ -53,7 +53,7 @@ msgstr ""
 #. Tag: para
 #: xml.xml:61
 #, no-c-format
-msgid "A single mapping may be used to simultaneously map properties of a class and nodes of an XML document to the database, or, if there is no class to map, it may be used to map just the XML."
+msgid "A single mapping can be used to simultaneously map properties of a class and nodes of an XML document to the database, or, if there is no class to map, it can be used to map just the XML."
 msgstr ""
 
 #. Tag: title
@@ -138,7 +138,7 @@ msgstr ""
 #. Tag: para
 #: xml.xml:86
 #, no-c-format
-msgid "This mapping allows you to access the data as a dom4j tree, or as a graph of property name/value pairs (java <literal>Map</literal>s). The property names are purely logical constructs that may be referred to in HQL queries."
+msgid "This mapping allows you to access the data as a dom4j tree, or as a graph of property name/value pairs or java <literal>Map</literal>s. The property names are purely logical constructs that can be referred to in HQL queries."
 msgstr ""
 
 #. Tag: title
@@ -150,43 +150,43 @@ msgstr ""
 #. Tag: para
 #: xml.xml:99
 #, no-c-format
-msgid "Many Hibernate mapping elements accept the <literal>node</literal> attribute. This let's you specify the name of an XML attribute or element that holds the property or entity data. The format of the <literal>node</literal> attribute must be one of the following:"
+msgid "A range of Hibernate mapping elements accept the <literal>node</literal> attribute. This lets you specify the name of an XML attribute or element that holds the property or entity data. The format of the <literal>node</literal> attribute must be one of the following:"
 msgstr ""
 
 #. Tag: para
 #: xml.xml:108
 #, no-c-format
-msgid "<literal>\"element-name\"</literal> - map to the named XML element"
+msgid "<literal>\"element-name\"</literal>: map to the named XML element"
 msgstr ""
 
 #. Tag: para
 #: xml.xml:111
 #, no-c-format
-msgid "<literal>\"@attribute-name\"</literal> - map to the named XML attribute"
+msgid "<literal>\"@attribute-name\"</literal>: map to the named XML attribute"
 msgstr ""
 
 #. Tag: para
 #: xml.xml:114
 #, no-c-format
-msgid "<literal>\".\"</literal> - map to the parent element"
+msgid "<literal>\".\"</literal>: map to the parent element"
 msgstr ""
 
 #. Tag: para
 #: xml.xml:117
 #, no-c-format
-msgid "<literal>\"element-name/@attribute-name\"</literal> - map to the named attribute of the named element"
+msgid "<literal>\"element-name/@attribute-name\"</literal>: map to the named attribute of the named element"
 msgstr ""
 
 #. Tag: para
 #: xml.xml:124
 #, no-c-format
-msgid "For collections and single valued associations, there is an additional <literal>embed-xml</literal> attribute. If <literal>embed-xml=\"true\"</literal>, the default, the XML tree for the associated entity (or collection of value type) will be embedded directly in the XML tree for the entity that owns the association. Otherwise, if <literal>embed-xml=\"false\"</literal>, then only the referenced identifier value will appear in the XML for single point associations and collections will simply not appear at all."
+msgid "For collections and single valued associations, there is an additional <literal>embed-xml</literal> attribute. If <literal>embed-xml=\"true\"</literal>, the default, the XML tree for the associated entity (or collection of value type) will be embedded directly in the XML tree for the entity that owns the association. Otherwise, if <literal>embed-xml=\"false\"</literal>, then only the referenced identifier value will appear in the XML for single point associations and collections will not appear at all."
 msgstr ""
 
 #. Tag: para
 #: xml.xml:134
 #, no-c-format
-msgid "You should be careful not to leave <literal>embed-xml=\"true\"</literal> for too many associations, since XML does not deal well with circularity!"
+msgid "Do not leave <literal>embed-xml=\"true\"</literal> for too many associations, since XML does not deal well with circularity."
 msgstr ""
 
 #. Tag: programlisting
@@ -232,7 +232,7 @@ msgstr ""
 #. Tag: para
 #: xml.xml:141
 #, no-c-format
-msgid "in this case, we have decided to embed the collection of account ids, but not the actual account data. The following HQL query:"
+msgid "In this case, the collection of account ids is embedded, but not the actual account data. The following HQL query:"
 msgstr ""
 
 #. Tag: programlisting
@@ -244,7 +244,7 @@ msgstr ""
 #. Tag: para
 #: xml.xml:148
 #, no-c-format
-msgid "Would return datasets such as this:"
+msgid "would return datasets such as this:"
 msgstr ""
 
 #. Tag: programlisting
@@ -300,7 +300,7 @@ msgstr ""
 #. Tag: para
 #: xml.xml:167
 #, no-c-format
-msgid "Let's rearead and update XML documents in the application. We do this by obtaining a dom4j session:"
+msgid "You can also re-read and update XML documents in the application. You can do this by obtaining a dom4j session:"
 msgstr ""
 
 #. Tag: programlisting
@@ -351,6 +351,6 @@ msgstr ""
 #. Tag: para
 #: xml.xml:176
 #, no-c-format
-msgid "It is extremely useful to combine this feature with Hibernate's <literal>replicate()</literal> operation to implement XML-based data import/export."
+msgid "When implementing XML-based data import/export, it is useful to combine this feature with Hibernate's <literal>replicate()</literal> operation."
 msgstr ""
 

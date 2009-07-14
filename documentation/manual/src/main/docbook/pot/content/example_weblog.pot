@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2008-08-14 15:28+0000\n"
+"POT-Creation-Date: 2009-07-14 19:56+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <kde-i18n-doc@kde.org>\n"
@@ -29,7 +29,7 @@ msgstr ""
 #. Tag: para
 #: example_weblog.xml:34
 #, no-c-format
-msgid "The persistent classes represent a weblog, and an item posted in a weblog. They are to be modelled as a standard parent/child relationship, but we will use an ordered bag, instead of a set."
+msgid "The persistent classes here represent a weblog and an item posted in a weblog. They are to be modelled as a standard parent/child relationship, but we will use an ordered bag, instead of a set:"
 msgstr ""
 
 #. Tag: programlisting
@@ -124,7 +124,7 @@ msgstr ""
 #. Tag: para
 #: example_weblog.xml:49
 #, no-c-format
-msgid "The XML mappings should now be quite straightforward."
+msgid "The XML mappings are now straightforward. For example:"
 msgstr ""
 
 #. Tag: programlisting
@@ -230,7 +230,7 @@ msgstr ""
 #. Tag: para
 #: example_weblog.xml:62
 #, no-c-format
-msgid "The following class demonstrates some of the kinds of things we can do with these classes, using Hibernate."
+msgid "The following class demonstrates some of the kinds of things we can do with these classes using Hibernate:"
 msgstr ""
 
 #. Tag: programlisting

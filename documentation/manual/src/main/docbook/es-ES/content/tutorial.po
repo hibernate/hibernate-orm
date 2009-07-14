@@ -1,155 +1,202 @@
 #, fuzzy
 msgid ""
 msgstr ""
+"Report-Msgid-Bugs-To: http://bugs.kde.org\n"
+"POT-Creation-Date: 2009-07-14 19:56+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
-"Content-Type: text/plain; charset=utf-8\n"
+"Content-Type: text/plain; charset=UTF-8\n"
 
-#: index.docbook:7
-msgid "Introduction to Hibernate"
-msgstr "Introducci&#x00f3;n a Hibernate"
-
-#: index.docbook:10
-msgid "Preface"
-msgstr "Prefacio"
-
-#: index.docbook:12
-msgid ""
-"This chapter is an introductory tutorial for new users of Hibernate. We "
-"start with a simple command line application using an in-memory database and "
-"develop it in easy to understand steps."
+#. Tag: title
+#: tutorial.xml:31
+#, no-c-format
+msgid "Tutorial"
 msgstr ""
-"Este cap&#x00ed;tulo es un tutorial introductorio de Hibernate. Comenzamos "
-"con una aplicaci&#x00f3;n simple de l&#x00ed;nea de comandos usando un base "
-"de datos en-memoria y desarroll&#x00e1;ndola en f&#x00e1;cil para entender "
-"los pasos."
 
-#: index.docbook:18
+#. Tag: para
+#: tutorial.xml:33
+#, no-c-format
 msgid ""
-"This tutorial is intended for new users of Hibernate but requires Java and "
-"SQL knowledge. It is based on a tutorial by Michael Gloegl, the third-party "
-"libraries we name are for JDK 1.4 and 5.0. You might need others for JDK 1.3."
+"Intended for new users, this chapter provides an step-by-step introduction "
+"to Hibernate, starting with a simple application using an in-memory "
+"database. The tutorial is based on an earlier tutorial developed by Michael "
+"Gloegl. All code is contained in the <filename>tutorials/web</filename> "
+"directory of the project source."
 msgstr ""
-"Este tutorial est&#x00e1; concebido para usuarios nuevos de Hibernate pero "
-"requiere conocimiento en Java y SQL. Est&#x00e1; basado en un tutorial de "
-"Michael Gloegl. Las bibliotecas de terceros que mencionamos son para JDK 1.4 "
-"y 5.0. Podr&#x00ed;as necesitar otras para JDK 1.3."
 
-#: index.docbook:24
+#. Tag: para
+#: tutorial.xml:42
+#, no-c-format
 msgid ""
-"The source code for the tutorial is included in the distribution in the "
-"<literal>doc/reference/tutorial/</literal> directory."
+"This tutorial expects the user have knowledge of both Java and SQL. If you "
+"have a limited knowledge of JAVA or SQL, it is advised that you start with a "
+"good introduction to that technology prior to attempting to learn Hibernate."
 msgstr ""
-"UNTRANSLATED!!! The source code for the tutorial is included in the "
-"distribution in the <literal>doc/reference/tutorial/</literal> directory."
 
-#: index.docbook:32
+#. Tag: para
+#: tutorial.xml:51
+#, no-c-format
+msgid ""
+"The distribution contains another example application under the "
+"<filename>tutorial/eg</filename> project source directory."
+msgstr ""
+
+#. Tag: title
+#: tutorial.xml:59
+#, no-c-format
 msgid "Part 1 - The first Hibernate Application"
 msgstr "Parte 1 - La primera Aplicaci&#x00f3;n Hibernate"
 
-#: index.docbook:34
+#. Tag: para
+#: tutorial.xml:61
+#, fuzzy, no-c-format
 msgid ""
-"First, we'll create a simple console-based Hibernate application. We use an "
-"Java database (HSQL DB), so we do not have to install any database server."
-msgstr ""
-"Primero, crearemos una aplicaci&#x00f3;n simple de Hibenate basada en "
-"consola. Usamos usamos una base de datos en-memoria (HSQL DB), de modo que "
-"no necesitamos instalar ning&#x00fa;n servidor de base de datos."
-
-#: index.docbook:39
-msgid ""
-"Let's assume we need a small database application that can store events we "
-"want to attend, and information about the hosts of these events."
+"For this example, we will set up a small database application that can store "
+"events we want to attend and information about the host(s) of these events."
 msgstr ""
 "Asumamos que necesitamos una aplicaci&#x00f3;n peque&#x00f1;a de base de "
 "datos que pueda almacenar eventos que queremos atender, e informaci&#x00f3;n "
 "acerca de los hostales de estos eventos."
 
-#: index.docbook:44
+#. Tag: para
+#: tutorial.xml:67
+#, no-c-format
 msgid ""
-"The first thing we do, is set up our development directory and put all the "
-"Java libraries we need into it. Download the Hibernate distribution from the "
-"Hibernate website. Extract the package and place all required libraries "
-"found in <literal>/lib</literal> into into the <literal>/lib</literal> "
-"directory of your new development working directory. It should look like "
-"this:"
+"Although you can use whatever database you feel comfortable using, we will "
+"use <ulink url=\"http://hsqldb.org/\">HSQLDB</ulink> (an in-memory, Java "
+"database) to avoid describing installation/setup of any particular database "
+"servers."
 msgstr ""
-"La primera cosa que hacemos, es armar nuestro directorio de desarrollo y "
-"poner en &#x00e9;l todas las bibliotecas Java que necesitamos. Descarga la "
-"distribuci&#x00f3;n de Hibernate del sitio web de Hibernate. Extrae el "
-"paquete y coloca todas las bibliotecas requeridas encontradas en <literal>/"
-"lib</literal> dentro del directorio <literal>/lib</literal> de nuestro nuevo "
-"directorio de desarrollo de trabajo. Debe asemejarse a esto:"
 
-#: index.docbook:52
-msgid ""
-"<![CDATA[.\n"
-"+lib\n"
-"  antlr.jar\n"
-"  cglib.jar\n"
-"  asm.jar\n"
-"  asm-attrs.jars\n"
-"  commons-collections.jar\n"
-"  commons-logging.jar\n"
-"  hibernate3.jar\n"
-"  jta.jar\n"
-"  dom4j.jar\n"
-"  log4j.jar ]]>"
+#. Tag: title
+#: tutorial.xml:76
+#, no-c-format
+msgid "Setup"
 msgstr ""
-"<![CDATA[.\n"
-"+lib\n"
-"  antlr.jar\n"
-"  cglib-full.jar\n"
-"  asm.jar\n"
-"  asm-attrs.jars\n"
-"  commons-collections.jar\n"
-"  commons-logging.jar\n"
-"  ehcache.jar\n"
-"  hibernate3.jar\n"
-"  jta.jar\n"
-"  dom4j.jar\n"
-"  log4j.jar ]]>"
 
-#: index.docbook:54
+#. Tag: para
+#: tutorial.xml:78
+#, no-c-format
 msgid ""
-"This is the minimum set of required libraries (note that we also copied "
-"hibernate3.jar, the main archive) for Hibernate <emphasis>at the time of "
-"writing</emphasis>. The Hibernate release you are using might require more "
-"or less libraries. See the <literal>README.txt</literal> file in the "
-"<literal>lib/</literal> directory of the Hibernate distribution for more "
-"information about required and optional third-party libraries. (Actually, "
-"Log4j is not required but preferred by many developers.)"
+"The first thing we need to do is to set up the development environment. We "
+"will be using the \"standard layout\" advocated by alot of build tools such "
+"as <ulink url=\"http://maven.org\">Maven</ulink>. Maven, in particular, has "
+"a good resource describing this <ulink url=\"http://maven.apache.org/guides/"
+"introduction/introduction-to-the-standard-directory-layout.html\">layout</"
+"ulink>. As this tutorial is to be a web application, we will be creating and "
+"making use of <filename>src/main/java</filename>, <filename>src/main/"
+"resources</filename> and <filename>src/main/webapp</filename> directories."
 msgstr ""
-"Este es el conjunto m&#x00ed;nimo de bibliotecas requeridas para Hibernate "
-"(observa que tambi&#x00e9;n hemos copiado hibernate3.jar, el fichero "
-"principal). Ver el fichero <literal>README.txt</literal> en el directorio "
-"<literal>lib/</literal> de la distribuci&#x00f3;n de Hibernate para m&#x00e1;"
-"s informaci&#x00f3;n sobre bibliotecas de terceros requeridas y opcionales. "
-"(Realmente, Log4J no es requerida aunque preferida por muchos "
-"desarrolladores)."
 
-#: index.docbook:63
+#. Tag: para
+#: tutorial.xml:88
+#, no-c-format
 msgid ""
-"Next we create a class that represents the event we want to store in "
-"database."
+"We will be using Maven in this tutorial, taking advantage of its transitive "
+"dependency management capabilities as well as the ability of many IDEs to "
+"automatically set up a project for us based on the maven descriptor."
+msgstr ""
+
+#. Tag: programlisting
+#: tutorial.xml:94
+#, no-c-format
+msgid ""
+"<![CDATA[<project xmlns=\"http://maven.apache.org/POM/4.0.0\"\n"
+"         xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n"
+"         xsi:schemaLocation=\"http://maven.apache.org/POM/4.0.0 http://maven."
+"apache.org/xsd/maven-4.0.0.xsd\">\n"
+"\n"
+"    <modelVersion>4.0.0</modelVersion>\n"
+"\n"
+"    <groupId>org.hibernate.tutorials</groupId>\n"
+"    <artifactId>hibernate-tutorial</artifactId>\n"
+"    <version>1.0.0-SNAPSHOT</version>\n"
+"    <name>First Hibernate Tutorial</name>\n"
+"\n"
+"    <build>\n"
+"         <!-- we dont want the version to be part of the generated war file "
+"name -->\n"
+"         <finalName>${artifactId}</finalName>\n"
+"    </build>\n"
+"\n"
+"    <dependencies>\n"
+"        <dependency>\n"
+"            <groupId>org.hibernate</groupId>\n"
+"            <artifactId>hibernate-core</artifactId>\n"
+"        </dependency>\n"
+"\n"
+"        <!-- Because this is a web app, we also have a dependency on the "
+"servlet api. -->\n"
+"        <dependency>\n"
+"            <groupId>javax.servlet</groupId>\n"
+"            <artifactId>servlet-api</artifactId>\n"
+"        </dependency>\n"
+"\n"
+"        <!-- Hibernate uses slf4j for logging, for our purposes here use the "
+"simple backend -->\n"
+"        <dependency>\n"
+"            <groupId>org.slf4j</groupId>\n"
+"            <artifactId>slf4j-simple</artifactId>\n"
+"        </dependency>\n"
+"\n"
+"        <!-- Hibernate gives you a choice of bytecode providers between "
+"cglib and javassist -->\n"
+"        <dependency>\n"
+"            <groupId>javassist</groupId>\n"
+"            <artifactId>javassist</artifactId>\n"
+"        </dependency>\n"
+"    </dependencies>\n"
+"\n"
+"</project>]]>"
+msgstr ""
+
+#. Tag: para
+#: tutorial.xml:97
+#, no-c-format
+msgid ""
+"It is not a requirement to use Maven. If you wish to use something else to "
+"build this tutoial (such as Ant), the layout will remain the same. The only "
+"change is that you will need to manually account for all the needed "
+"dependencies. If you use something like <ulink url=\"http://ant.apache.org/"
+"ivy/\">Ivy</ulink> providing transitive dependency management you would "
+"still use the dependencies mentioned below. Otherwise, you'd need to grab "
+"<emphasis>all</emphasis> dependencies, both explicit and transitive, and add "
+"them to the project's classpath. If working from the Hibernate distribution "
+"bundle, this would mean <filename>hibernate3.jar</filename>, all artifacts "
+"in the <filename>lib/required</filename> directory and all files from either "
+"the <filename>lib/bytecode/cglib</filename> or <filename>lib/bytecode/"
+"javassist</filename> directory; additionally you will need both the servlet-"
+"api jar and one of the slf4j logging backends."
+msgstr ""
+
+#. Tag: para
+#: tutorial.xml:114
+#, no-c-format
+msgid ""
+"Save this file as <filename>pom.xml</filename> in the project root directory."
+msgstr ""
+
+#. Tag: title
+#: tutorial.xml:121
+#, no-c-format
+msgid "The first class"
+msgstr "La primera clase"
+
+#. Tag: para
+#: tutorial.xml:123
+#, fuzzy, no-c-format
+msgid ""
+"Next, we create a class that represents the event we want to store in the "
+"database; it is a simple JavaBean class with some properties:"
 msgstr ""
 "Por siguiente, creamos una clase que represente el evento que queremos "
 "almacenar en base de datos."
 
-#: index.docbook:68
-msgid "The first class"
-msgstr "La primera clase"
-
-#: index.docbook:70
+#. Tag: programlisting
+#: tutorial.xml:128
+#, fuzzy, no-c-format
 msgid ""
-"Our first persistent class is a simple JavaBean class with some properties:"
-msgstr ""
-"Nuestra primera clase persistente es un JavaBean simple con algunas "
-"propiedades:"
-
-#: index.docbook:74
-msgid ""
-"<![CDATA[package events;\n"
+"<![CDATA[package org.hibernate.tutorial.domain;\n"
 "\n"
 "import java.util.Date;\n"
 "\n"
@@ -221,14 +268,15 @@ msgstr ""
 "    }\n"
 "}]]>"
 
-#: index.docbook:76
+#. Tag: para
+#: tutorial.xml:130
+#, fuzzy, no-c-format
 msgid ""
-"You can see that this class uses standard JavaBean naming conventions for "
-"property getter and setter methods, as well as private visibility for the "
-"fields. This is a recommended design - but not required. Hibernate can also "
-"access fields directly, the benefit of accessor methods is robustness for "
-"refactoring. The no-argument constructor is required to instantiate an "
-"object of this class through reflection."
+"This class uses standard JavaBean naming conventions for property getter and "
+"setter methods, as well as private visibility for the fields. Although this "
+"is the recommended design, it is not required. Hibernate can also access "
+"fields directly, the benefit of accessor methods is robustness for "
+"refactoring."
 msgstr ""
 "Puedes ver que esta clase usa las convenciones de nombrado est&#x00e1;ndar "
 "de JavaBean para m&#x00e9;todos getter y setter de propiedad, as&#x00ed; "
@@ -237,19 +285,21 @@ msgstr ""
 "los campos directamente; el beneficio de los m&#x00e9;todos de acceso es la "
 "robustez para la refactorizaci&#x00f3;n."
 
-#: index.docbook:84
+#. Tag: para
+#: tutorial.xml:138
+#, fuzzy, no-c-format
 msgid ""
 "The <literal>id</literal> property holds a unique identifier value for a "
 "particular event. All persistent entity classes (there are less important "
 "dependent classes as well) will need such an identifier property if we want "
-"to use the full feature set of Hibernate. In fact, most applications (esp. "
-"web applications) need to distinguish objects by identifier, so you should "
-"consider this a feature rather than a limitation. However, we usually don't "
-"manipulate the identity of an object, hence the setter method should be "
-"private. Only Hibernate will assign identifiers when an object is saved. You "
-"can see that Hibernate can access public, private, and protected accessor "
-"methods, as well as (public, private, protected) fields directly. The choice "
-"is up to you and you can match it to fit your application design."
+"to use the full feature set of Hibernate. In fact, most applications, "
+"especially web applications, need to distinguish objects by identifier, so "
+"you should consider this a feature rather than a limitation. However, we "
+"usually do not manipulate the identity of an object, hence the setter method "
+"should be private. Only Hibernate will assign identifiers when an object is "
+"saved. Hibernate can access public, private, and protected accessor methods, "
+"as well as public, private and protected fields directly. The choice is up "
+"to you and you can match it to fit your application design."
 msgstr ""
 "La propiedad <literal>id</literal> tiene un valor &#x00fa;nico de "
 "identificador para un evento en particular. Todas las clase de entidad "
@@ -267,12 +317,14 @@ msgstr ""
 "est&#x00e1; en ti, y puedes ajustarla a tu dise&#x00f1;o de aplicaci&#x00f3;"
 "n."
 
-#: index.docbook:96
+#. Tag: para
+#: tutorial.xml:153
+#, fuzzy, no-c-format
 msgid ""
 "The no-argument constructor is a requirement for all persistent classes; "
 "Hibernate has to create objects for you, using Java Reflection. The "
-"constructor can be private, however, package visibility is required for "
-"runtime proxy generation and efficient data retrieval without bytecode "
+"constructor can be private, however package or public visibility is required "
+"for runtime proxy generation and efficient data retrieval without bytecode "
 "instrumentation."
 msgstr ""
 "El constructor sin argumentos es un requerimiento para todas las clases "
@@ -282,42 +334,23 @@ msgstr ""
 "tiempo de ejecuci&#x00f3;n y la recuperaci&#x00f3;n de datos sin "
 "instrumentaci&#x00f3;n del bytecode."
 
-#: index.docbook:103
+#. Tag: para
+#: tutorial.xml:161
+#, no-c-format
 msgid ""
-"Place this Java source file in a directory called <literal>src</literal> in "
-"the development folder, and in its correct package. The directory should now "
-"look like this:"
+"Save this file to the <filename>src/main/java/org/hibernate/tutorial/domain</"
+"filename> directory."
 msgstr ""
-"Coloca este fichero de c&#x00f3;digo Java en un directorio llamado "
-"<literal>src</literal> en la carpeta de desarrollo. El directorio ahora debe "
-"verse como esto:"
 
-#: index.docbook:108
-msgid ""
-"<![CDATA[.\n"
-"+lib\n"
-"  <Hibernate and third-party libraries>\n"
-"+src\n"
-"  +events\n"
-"    Event.java]]>"
-msgstr ""
-"<![CDATA[.\n"
-"+lib\n"
-"  <Hibernate and third-party libraries>\n"
-"+src\n"
-"  Event.java]]>"
-
-#: index.docbook:110
-msgid "In the next step, we tell Hibernate about this persistent class."
-msgstr ""
-"En el pr&#x00f3;ximo paso, le decimos a Hibernate sobre esta clase "
-"persistente."
-
-#: index.docbook:117
+#. Tag: title
+#: tutorial.xml:168
+#, no-c-format
 msgid "The mapping file"
 msgstr "El fichero de mapeo"
 
-#: index.docbook:119
+#. Tag: para
+#: tutorial.xml:170
+#, no-c-format
 msgid ""
 "Hibernate needs to know how to load and store objects of the persistent "
 "class. This is where the Hibernate mapping file comes into play. The mapping "
@@ -329,18 +362,22 @@ msgstr ""
 "juego. El fichero de mapeo le dice a Hibernate a qu&#x00e9; tabla en la base "
 "de datos tiene que acceder, y qu&#x00e9; columnas en esta tabla debe usar."
 
-#: index.docbook:126
+#. Tag: para
+#: tutorial.xml:178
+#, no-c-format
 msgid "The basic structure of a mapping file looks like this:"
 msgstr "La estructura b&#x00e1;sica de un fichero de mapeo se parece a esto:"
 
-#: index.docbook:130
+#. Tag: programlisting
+#: tutorial.xml:182
+#, fuzzy, no-c-format
 msgid ""
 "<![CDATA[<?xml version=\"1.0\"?>\n"
 "<!DOCTYPE hibernate-mapping PUBLIC\n"
 "        \"-//Hibernate/Hibernate Mapping DTD 3.0//EN\"\n"
 "        \"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd\">\n"
 "\n"
-"<hibernate-mapping>\n"
+"<hibernate-mapping package=\"org.hibernate.tutorial.domain\">\n"
 "[...]\n"
 "</hibernate-mapping>]]>"
 msgstr ""
@@ -353,16 +390,18 @@ msgstr ""
 "[...]\n"
 "</hibernate-mapping>]]>"
 
-#: index.docbook:132
+#. Tag: para
+#: tutorial.xml:184
+#, fuzzy, no-c-format
 msgid ""
-"Note that the Hibernate DTD is very sophisticated. You can use it for auto-"
-"completion of XML mapping elements and attributes in your editor or IDE. You "
-"also should open up the DTD file in your text editor - it's the easiest way "
-"to get an overview of all elements and attributes and to see the defaults, "
-"as well as some comments. Note that Hibernate will not load the DTD file "
-"from the web, but first look it up from the classpath of the application. "
-"The DTD file is included in <literal>hibernate3.jar</literal> as well as in "
-"the <literal>src/</literal> directory of the Hibernate distribution."
+"Hibernate DTD is sophisticated. You can use it for auto-completion of XML "
+"mapping elements and attributes in your editor or IDE. Opening up the DTD "
+"file in your text editor is the easiest way to get an overview of all "
+"elements and attributes, and to view the defaults, as well as some comments. "
+"Hibernate will not load the DTD file from the web, but first look it up from "
+"the classpath of the application. The DTD file is included in "
+"<filename>hibernate-core.jar</filename> (it is also included in the "
+"<filename>hibernate3.jar</filename>, if using the distribution bundle)."
 msgstr ""
 "Observa que el DTD de Hibernate es muy sofisticado. Puedes usarlo para "
 "autocompleci&#x00f3;n de los elementos y atributos XML de mapeo en tu editor "
@@ -375,20 +414,24 @@ msgstr ""
 "<literal>hibernate3.jar</literal> as&#x00ed; como tambi&#x00e9;n en el "
 "directorio <literal>src/</literal> de la distribuci&#x00f3;n de Hibernate."
 
-#: index.docbook:143
+#. Tag: para
+#: tutorial.xml:197
+#, fuzzy, no-c-format
 msgid ""
 "We will omit the DTD declaration in future examples to shorten the code. It "
-"is of course not optional."
+"is, of course, not optional."
 msgstr ""
 "Omitiremos la declaraci&#x00f3;n de DTD en futuros ejemplos para acortar el "
 "c&#x00f3;digo. Por supuesto, no es opcional."
 
-#: index.docbook:148
+#. Tag: para
+#: tutorial.xml:203
+#, fuzzy, no-c-format
 msgid ""
 "Between the two <literal>hibernate-mapping</literal> tags, include a "
 "<literal>class</literal> element. All persistent entity classes (again, "
 "there might be dependent classes later on, which are not first-class "
-"entities) need such a mapping, to a table in the SQL database:"
+"entities) need a mapping to a table in the SQL database:"
 msgstr ""
 "Entre las dos etiquetas <literal>hibernate-mapping</literal>, incluye un "
 "elemento <literal>class</literal>. Todas las clases de entidad persistentes "
@@ -396,11 +439,13 @@ msgstr ""
 "no sean entidades de-primera-clase) necesitan dicho mapeo a una tabla en la "
 "base de datos SQL:"
 
-#: index.docbook:155
+#. Tag: programlisting
+#: tutorial.xml:210
+#, fuzzy, no-c-format
 msgid ""
-"<![CDATA[<hibernate-mapping>\n"
+"<![CDATA[<hibernate-mapping package=\"org.hibernate.tutorial.domain\">\n"
 "\n"
-"    <class name=\"events.Event\" table=\"EVENTS\">\n"
+"    <class name=\"Event\" table=\"EVENTS\">\n"
 "\n"
 "    </class>\n"
 "\n"
@@ -414,15 +459,16 @@ msgstr ""
 "\n"
 "</hibernate-mapping>]]>"
 
-#: index.docbook:157
+#. Tag: para
+#: tutorial.xml:212
+#, fuzzy, no-c-format
 msgid ""
-"So far we told Hibernate how to persist and load object of class "
-"<literal>Event</literal> to the table <literal>EVENTS</literal>, each "
-"instance represented by a row in that table. Now we continue with a mapping "
-"of the unique identifier property to the tables primary key. In addition, as "
-"we don't want to care about handling this identifier, we configure "
-"Hibernate's identifier generation strategy for a surrogate primary key "
-"column:"
+"So far we have told Hibernate how to persist and load object of class "
+"<literal>Event</literal> to the table <literal>EVENTS</literal>. Each "
+"instance is now represented by a row in that table. Now we can continue by "
+"mapping the unique identifier property to the tables primary key. As we do "
+"not want to care about handling this identifier, we configure Hibernate's "
+"identifier generation strategy for a surrogate primary key column:"
 msgstr ""
 "Hasta ahora dijimos a Hibernate c&#x00f3;mo persistir y cargar el objeto de "
 "clase <literal>Event</literal> a la tabla <literal>EVENTS</literal>, cada "
@@ -432,11 +478,13 @@ msgstr ""
 "identificador, configuramos la estrategia de generaci&#x00f3;n de "
 "identificadores para una columna clave primaria delegada:"
 
-#: index.docbook:165
+#. Tag: programlisting
+#: tutorial.xml:222
+#, fuzzy, no-c-format
 msgid ""
-"<![CDATA[<hibernate-mapping>\n"
+"<![CDATA[<hibernate-mapping package=\"org.hibernate.tutorial.domain\">\n"
 "\n"
-"    <class name=\"events.Event\" table=\"EVENTS\">\n"
+"    <class name=\"Event\" table=\"EVENTS\">\n"
 "        <id name=\"id\" column=\"EVENT_ID\">\n"
 "            <generator class=\"native\"/>\n"
 "        </id>\n"
@@ -454,49 +502,58 @@ msgstr ""
 "\n"
 "</hibernate-mapping>]]>"
 
-#: index.docbook:167
+#. Tag: para
+#: tutorial.xml:224
+#, no-c-format
 msgid ""
-"The <literal>id</literal> element is the declaration of the identifer "
-"property, <literal>name=\"id\"</literal> declares the name of the Java "
-"property - Hibernate will use the getter and setter methods to access the "
-"property. The column attribute tells Hibernate which column of the "
-"<literal>EVENTS</literal> table we use for this primary key. The nested "
-"<literal>generator</literal> element specifies the identifier generation "
-"strategy, in this case we used <literal>native</literal>, which picks the "
-"best strategy depending on the configured database (dialect). Hibernate "
-"supports database generated, globally unique, as well as application "
-"assigned identifiers (or any strategy you have written an extension for)."
+"The <literal>id</literal> element is the declaration of the identifier "
+"property. The <literal>name=\"id\"</literal> mapping attribute declares the "
+"name of the JavaBean property and tells Hibernate to use the <literal>getId()"
+"</literal> and <literal>setId()</literal> methods to access the property. "
+"The column attribute tells Hibernate which column of the <literal>EVENTS</"
+"literal> table holds the primary key value."
 msgstr ""
-"El elemento <literal>id</literal> el la declaraci&#x00f3;n de la propiedad "
-"identificadora, <literal>name=\"id\"</literal> declara el nombre de la "
-"propiedad Java. Hibernate usar&#x00e1; los m&#x00e9;todos getter y setter "
-"para acceder a la propiedad. El attributo de columna dice a Hibernate "
-"cu&#x00e1;l columna de la tabla <literal>EVENTS</literal> usamos para esta "
-"clave primaria. El elemento anidado <literal>generator</literal> especifica "
-"la estrategia de generaci&#x00f3;n de identificadores, en este caso usamos "
-"<literal>increment</literal>, que es un m&#x00e9;todo muy simple de "
-"incremento de n&#x00fa;mero en-memoria &#x00fa;til mayormente para testeo (y "
-"tutoriales). Hibernate tambi&#x0e9;n soporta identificadores generados por "
-"base de datos, globalmente &#x00fa;nicos, as&#x00ed; como tambi&#x00e9;n "
-"asignados por aplicaci&#x00f3;n (o cualquier estrategia para la que hayas "
-"escrito una extensi&#x00f3;n)."
 
-#: index.docbook:180
+#. Tag: para
+#: tutorial.xml:234
+#, no-c-format
 msgid ""
-"Finally we include declarations for the persistent properties of the class "
-"in the mapping file. By default, no properties of the class are considered "
-"persistent:"
+"The nested <literal>generator</literal> element specifies the identifier "
+"generation strategy (aka how are identifier values generated?). In this case "
+"we choose <literal>native</literal>, which offers a level of portability "
+"depending on the configured database dialect. Hibernate supports database "
+"generated, globally unique, as well as application assigned, identifiers. "
+"Identifier value generation is also one of Hibernate's many extension points "
+"and you can plugin in your own strategy."
+msgstr ""
+
+#. Tag: para
+#: tutorial.xml:246
+#, no-c-format
+msgid ""
+"<literal>native</literal> is no longer consider the best strategy in terms "
+"of portability. for further discussion, see"
+msgstr ""
+
+#. Tag: para
+#: tutorial.xml:252
+#, fuzzy, no-c-format
+msgid ""
+"Lastly, we need to tell Hibernate about the remaining entity class "
+"properties. By default, no properties of the class are considered persistent:"
 msgstr ""
 "Finalmente inclu&#x00ed;mos declaraciones para las propiedades persistentes "
 "de la clases en el fichero de mapeo. Por defecto, ninguna propiedad de la "
 "clase se considera persistente:"
 
-#: index.docbook:186
+#. Tag: programlisting
+#: tutorial.xml:258
+#, fuzzy, no-c-format
 msgid ""
 "<![CDATA[\n"
-"<hibernate-mapping>\n"
+"<hibernate-mapping package=\"org.hibernate.tutorial.domain\">\n"
 "\n"
-"    <class name=\"events.Event\" table=\"EVENTS\">\n"
+"    <class name=\"Event\" table=\"EVENTS\">\n"
 "        <id name=\"id\" column=\"EVENT_ID\">\n"
 "            <generator class=\"native\"/>\n"
 "        </id>\n"
@@ -519,26 +576,30 @@ msgstr ""
 "\n"
 "</hibernate-mapping>]]>"
 
-#: index.docbook:188
+#. Tag: para
+#: tutorial.xml:260
+#, fuzzy, no-c-format
 msgid ""
-"Just as with the <literal>id</literal> element, the <literal>name</literal> "
+"Similar to the <literal>id</literal> element, the <literal>name</literal> "
 "attribute of the <literal>property</literal> element tells Hibernate which "
-"getter and setter methods to use. So, in this case, Hibernate will look for "
-"<literal>getDate()/setDate()</literal>, as well as <literal>getTitle()/"
-"setTitle()</literal>."
+"getter and setter methods to use. In this case, Hibernate will search for "
+"<literal>getDate()</literal>, <literal>setDate()</literal>, <literal>getTitle"
+"()</literal> and <literal>setTitle()</literal> methods."
 msgstr ""
 "Al igual que con el elemento <literal>id</literal>, el atributo "
 "<literal>name</literal> del elemento <literal>property</literal> dice a "
 "Hibernate c&#x00e1;les m&#x00e9;todos getter y setter usar."
 
-#: index.docbook:195
+#. Tag: para
+#: tutorial.xml:271
+#, fuzzy, no-c-format
 msgid ""
 "Why does the <literal>date</literal> property mapping include the "
-"<literal>column</literal> attribute, but the <literal>title</literal> "
-"doesn't? Without the <literal>column</literal> attribute Hibernate by "
-"default uses the property name as the column name. This works fine for "
-"<literal>title</literal>. However, <literal>date</literal> is a reserved "
-"keyword in most database, so we better map it to a different name."
+"<literal>column</literal> attribute, but the <literal>title</literal> does "
+"not? Without the <literal>column</literal> attribute, Hibernate by default "
+"uses the property name as the column name. This works for <literal>title</"
+"literal>, however, <literal>date</literal> is a reserved keyword in most "
+"databases so you will need to map it to a different name."
 msgstr ""
 "¿Por qu&#x00e9; el mapeo de la propiedad <literal>date</literal> incluye el "
 "atributo <literal>column</literal>, pero el de la de <literal>title</"
@@ -548,23 +609,24 @@ msgstr ""
 "es una palabra reservada en la mayor&#x00ed;a de las bases de datos, "
 "as&#x00ed; que mejor la mapeamos a un nombre diferente."
 
-#: index.docbook:204
+#. Tag: para
+#: tutorial.xml:281
+#, fuzzy, no-c-format
 msgid ""
-"The next interesting thing is that the <literal>title</literal> mapping also "
-"lacks a <literal>type</literal> attribute. The types we declare and use in "
-"the mapping files are not, as you might expect, Java data types. They are "
-"also not SQL database types. These types are so called <emphasis>Hibernate "
-"mapping types</emphasis>, converters which can translate from Java to SQL "
-"data types and vice versa. Again, Hibernate will try to determine the "
-"correct conversion and mapping type itself if the <literal>type</literal> "
-"attribute is not present in the mapping. In some cases this automatic "
-"detection (using Reflection on the Java class) might not have the default "
-"you expect or need. This is the case with the <literal>date</literal> "
-"property. Hibernate can't know if the property (which is of <literal>java."
-"util.Date</literal>) should map to a SQL <literal>date</literal>, "
-"<literal>timestamp</literal>, or <literal>time</literal> column. We preserve "
-"full date and time information by mapping the property with a "
-"<literal>timestamp</literal> converter."
+"The <literal>title</literal> mapping also lacks a <literal>type</literal> "
+"attribute. The types declared and used in the mapping files are not Java "
+"data types; they are not SQL database types either. These types are called "
+"<emphasis>Hibernate mapping types</emphasis>, converters which can translate "
+"from Java to SQL data types and vice versa. Again, Hibernate will try to "
+"determine the correct conversion and mapping type itself if the "
+"<literal>type</literal> attribute is not present in the mapping. In some "
+"cases this automatic detection using Reflection on the Java class might not "
+"have the default you expect or need. This is the case with the "
+"<literal>date</literal> property. Hibernate cannot know if the property, "
+"which is of <literal>java.util.Date</literal>, should map to a SQL "
+"<literal>date</literal>, <literal>timestamp</literal>, or <literal>time</"
+"literal> column. Full date and time information is preserved by mapping the "
+"property with a <literal>timestamp</literal> converter."
 msgstr ""
 "La pr&#x00f3;xima cosa interesante es que el mapeo de <literal>title</"
 "literal> carece de un atributo <literal>type</literal>. Los tipos que "
@@ -583,106 +645,91 @@ msgstr ""
 "informaci&#x00f3;n completa de fecha y hora mapeando la propiedad con un "
 "<literal>timestamp</literal>."
 
-#: index.docbook:220
+#. Tag: para
+#: tutorial.xml:297
+#, no-c-format
 msgid ""
-"This mapping file should be saved as <literal>Event.hbm.xml</literal>, right "
-"in the directory next to the <literal>Event</literal> Java class source "
-"file. The naming of mapping files can be arbitrary, however the <literal>hbm."
-"xml</literal> suffix is a convention in the Hibernate developer community. "
-"The directory structure should now look like this:"
+"Hibernate makes this mapping type determination using reflection when the "
+"mapping files are processed. This can take time and resources, so if startup "
+"performance is important you should consider explicitly defining the type to "
+"use."
 msgstr ""
-"Este fichero de mapeo debe ser salvado como <literal>Event.hbm.xml</"
-"literal>, justo en el directorio pr&#x00f3;ximo al fichero de c&#x00f3;digo "
-"fuente de la clase Java <literal>Event</literal>. El nombrado de los "
-"ficheros de mapeo puede ser arbitrario, sin embargo, el sufijo <literal>hbm."
-"xml</literal> se ha vuelto una convenci&#x00f3;n el la comunidad de "
-"desarrolladores de Hibernate. La estructura de directorio debe ahora verse "
-"como esto:"
 
-#: index.docbook:228
+#. Tag: para
+#: tutorial.xml:304
+#, no-c-format
 msgid ""
-"<![CDATA[.\n"
-"+lib\n"
-"  <Hibernate and third-party libraries>\n"
-"+src\n"
-"  +events\n"
-"    Event.java\n"
-"    Event.hbm.xml]]>"
+"Save this mapping file as <filename>src/main/resources/org/hibernate/"
+"tutorial/domain/Event.hbm.xml</filename>."
 msgstr ""
-"<![CDATA[.\n"
-"+lib\n"
-"  <Hibernate and third-party libraries>\n"
-"+src\n"
-"  Event.java\n"
-"  Event.hbm.xml]]>"
 
-#: index.docbook:230
-msgid "We continue with the main configuration of Hibernate."
-msgstr "Continuamos con la configuraci&#x00f3;n principal de Hibernate."
-
-#: index.docbook:237
+#. Tag: title
+#: tutorial.xml:312
+#, no-c-format
 msgid "Hibernate configuration"
 msgstr "Configuraci&#x00f3;n de Hibernate"
 
-#: index.docbook:239
+#. Tag: para
+#: tutorial.xml:314
+#, no-c-format
 msgid ""
-"We now have a persistent class and its mapping file in place. It is time to "
-"configure Hibernate. Before we do this, we will need a database. HSQL DB, a "
-"java-based SQL DBMS, can be downloaded from the HSQL DB website(http://"
-"hsqldb.org/). Actually, you only need the <literal>hsqldb.jar</literal> from "
-"this download. Place this file in the <literal>lib/</literal> directory of "
-"the development folder."
+"At this point, you should have the persistent class and its mapping file in "
+"place. It is now time to configure Hibernate. First let's set up HSQLDB to "
+"run in \"server mode\""
 msgstr ""
-"Tenemos ahora una clase persistente y su fichero de mapeo en su sitio. Es "
-"momento de configurar Hibernate. Antes que hagamos esto, necesitaremos una "
-"base de datos. HSQL DB, un DBMS SQL en-memoria basado en Java, puede ser "
-"descargado del sitio web de HSQL DB. Realmente, de esta descarga s&#x00f3;lo "
-"necesitas el <literal>hsqldb.jar</literal>. Coloca este fichero en el "
-"directorio <literal>lib/</literal> de la carpeta de desarrollo."
 
-#: index.docbook:247
+#. Tag: para
+#: tutorial.xml:321
+#, no-c-format
+msgid "We do this do that the data remains between runs."
+msgstr ""
+
+#. Tag: para
+#: tutorial.xml:326
+#, fuzzy, no-c-format
 msgid ""
-"Create a directory called <literal>data</literal> in the root of the "
-"development directory - this is where HSQL DB will store its data files. Now "
-"start the database by running <literal>java -classpath ../lib/hsqldb.jar org."
-"hsqldb.Server</literal> in this data directory. You can see it start up and "
-"bind to a TCP/IP socket, this is where our application will connect later. "
-"If you want to start with a fresh database during this tutorial, shutdown "
-"HSQL DB (press <literal>CTRL + C</literal> in the window), delete all files "
-"in the <literal>data/</literal> directory, and start HSQL DB again."
+"We will utilize the Maven exec plugin to launch the HSQLDB server by "
+"running: <command> mvn exec:java -Dexec.mainClass=\"org.hsqldb.Server\" -"
+"Dexec.args=\"-database.0 file:target/data/tutorial\"</command> You will see "
+"it start up and bind to a TCP/IP socket; this is where our application will "
+"connect later. If you want to start with a fresh database during this "
+"tutorial, shutdown HSQLDB, delete all files in the <filename>target/data</"
+"filename> directory, and start HSQLDB again."
 msgstr ""
 "Crea un directorio llamado <literal>data</literal> en la ra&#x00ed;z del "
 "directorio de desarrollo. All&#x00ed; es donde HSQL DB almacenar&#x00e1; sus "
 "ficheros de datos."
 
-#: index.docbook:257
+#. Tag: para
+#: tutorial.xml:337
+#, no-c-format
 msgid ""
-"Hibernate is the layer in your application which connects to this database, "
-"so it needs connection information. The connections are made through a JDBC "
-"connection pool, which we also have to configure. The Hibernate distribution "
-"contains several open source JDBC connection pooling tools, but will use the "
-"Hibernate built-in connection pool for this tutorial. Note that you have to "
-"copy the required library into your classpath and use different connection "
-"pooling settings if you want to use a production-quality third party JDBC "
-"pooling software."
+"Hibernate will be connecting to the database on behalf of your application, "
+"so it needs to know how to obtain connections. For this tutorial we will be "
+"using a standalone connection pool (as opposed to a <interfacename>javax.sql."
+"DataSource</interfacename>). Hibernate comes with support for two third-"
+"party open source JDBC connection pools: <ulink url=\"https://sourceforge."
+"net/projects/c3p0\">c3p0</ulink> and <ulink url=\"http://proxool.sourceforge."
+"net/\">proxool</ulink>. However, we will be using the Hibernate built-in "
+"connection pool for this tutorial."
 msgstr ""
-"Hibernate es la capa en tu aplicaci&#x00f3;n que se conecta a esta base de "
-"datos, de modo que necesita informaci&#x00f3;n de conexi&#x00f3;n. Las "
-"conexiones se hacen a trav&#x00e9;s de un pool de conexiones JDBC, que "
-"tamb&#x00e9;n tenemos que configurar. La distribuci&#x00f3;n de Hibernate "
-"contiene muchas herramientas de pooling de conexiones JDBC de c&#x00f3;digo "
-"abierto, pero para este tutorial usaremos el pool de conexiones prefabricado "
-"dentro de Hibernate. Observa que tienes que copiar la biblioteca requerida "
-"en tu classpath y usar diferentes configuraciones de pooling de conexiones "
-"si quieres usar un software de pooling JDBC de terceros de calidad de "
-"producci&#x00f3;n."
 
-#: index.docbook:267
+#. Tag: para
+#: tutorial.xml:348
+#, no-c-format
+msgid ""
+"The built-in Hibernate connection pool is in no way intended for production "
+"use. It lacks several features found on any decent connection pool."
+msgstr ""
+
+#. Tag: para
+#: tutorial.xml:354
+#, fuzzy, no-c-format
 msgid ""
 "For Hibernate's configuration, we can use a simple <literal>hibernate."
-"properties</literal> file, a slightly more sophisticated <literal>hibernate."
-"cfg.xml</literal> file, or even complete programmatic setup. Most users "
-"prefer the XML configuration file:"
+"properties</literal> file, a more sophisticated <literal>hibernate.cfg.xml</"
+"literal> file, or even complete programmatic setup. Most users prefer the "
+"XML configuration file:"
 msgstr ""
 "Para la configuraci&#x00f3;n de Hibernate, podemos usar un fichero "
 "<literal>hibernate.properties</literal> simple, un fichero "
@@ -691,7 +738,9 @@ msgstr ""
 "mayor&#x00ed;a de los usuarios prefieren el fichero de configuraci&#x00f3;n "
 "XML:"
 
-#: index.docbook:273
+#. Tag: programlisting
+#: tutorial.xml:360
+#, fuzzy, no-c-format
 msgid ""
 "<![CDATA[<?xml version='1.0' encoding='utf-8'?>\n"
 "<!DOCTYPE hibernate-configuration PUBLIC\n"
@@ -729,9 +778,9 @@ msgid ""
 "        <property name=\"show_sql\">true</property>\n"
 "\n"
 "        <!-- Drop and re-create the database schema on startup -->\n"
-"        <property name=\"hbm2ddl.auto\">create</property>\n"
+"        <property name=\"hbm2ddl.auto\">update</property>\n"
 "\n"
-"        <mapping resource=\"events/Event.hbm.xml\"/>\n"
+"        <mapping resource=\"org/hibernate/tutorial/domain/Event.hbm.xml\"/>\n"
 "\n"
 "    </session-factory>\n"
 "\n"
@@ -774,13 +823,20 @@ msgstr ""
 "\n"
 "</hibernate-configuration>]]>"
 
-#: index.docbook:275
+#. Tag: para
+#: tutorial.xml:363
+#, no-c-format
+msgid "Notice that this configuration file specifies a different DTD"
+msgstr ""
+
+#. Tag: para
+#: tutorial.xml:366
+#, fuzzy, no-c-format
 msgid ""
-"Note that this XML configuration uses a different DTD. We configure "
-"Hibernate's <literal>SessionFactory</literal> - a global factory responsible "
-"for a particular database. If you have several databases, use several "
-"<literal>&lt;session-factory&gt;</literal> configurations, usually in "
-"several configuration files (for easier startup)."
+"You configure Hibernate's <literal>SessionFactory</literal>. SessionFactory "
+"is a global factory responsible for a particular database. If you have "
+"several databases, for easier startup you should use several <literal>&lt;"
+"session-factory&gt;</literal> configurations in several configuration files."
 msgstr ""
 "Observa que esta configuraci&#x00f3;n XML usa un DTD diferente. Configuramos "
 "la <literal>SessionFactory</literal> de Hibernate, una f&#x00e1;brica global "
@@ -789,18 +845,34 @@ msgstr ""
 "literal> , usualmente en varios ficheros de configuraci&#x00f3;n (para un "
 "arranque m&#x00e1;s f&#x00e1;cil)."
 
-#: index.docbook:283
+#. Tag: para
+#: tutorial.xml:373
+#, no-c-format
 msgid ""
 "The first four <literal>property</literal> elements contain the necessary "
 "configuration for the JDBC connection. The dialect <literal>property</"
-"literal> element specifies the particular SQL variant Hibernate generates. "
-"Hibernate's automatic session management for persistence contexts will come "
-"in handy as you will soon see. The <literal>hbm2ddl.auto</literal> option "
-"turns on automatic generation of database schemas - directly into the "
-"database. This can of course also be turned off (by removing the config "
-"option) or redirected to a file with the help of the <literal>SchemaExport</"
-"literal> Ant task. Finally, we add the mapping file(s) for persistent "
-"classes to the configuration."
+"literal> element specifies the particular SQL variant Hibernate generates."
+msgstr ""
+
+#. Tag: para
+#: tutorial.xml:380
+#, no-c-format
+msgid ""
+"In most cases, Hibernate is able to properly determine which dialect to use. "
+"See <xref linkend=\"portability-dialectresolver\"/> for more information."
+msgstr ""
+
+#. Tag: para
+#: tutorial.xml:386
+#, fuzzy, no-c-format
+msgid ""
+"Hibernate's automatic session management for persistence contexts is "
+"particularly useful in this context. The <literal>hbm2ddl.auto</literal> "
+"option turns on automatic generation of database schemas directly into the "
+"database. This can also be turned off by removing the configuration option, "
+"or redirected to a file with the help of the <literal>SchemaExport</literal> "
+"Ant task. Finally, add the mapping file(s) for persistent classes to the "
+"configuration."
 msgstr ""
 "Los primeros cuatro elementos <literal>property</literal> contienen la "
 "configuraci&#x00f3;n necesaria para la conexi&#x00f3;n JDBC. El elemento de "
@@ -812,143 +884,64 @@ msgstr ""
 "con la ayuda de la tarea de Ant <literal>SchemaExport</literal>. Finalmente, "
 "agregamos el(los) fichero(s) de mapeo para clases persistentes."
 
-#: index.docbook:296
+#. Tag: para
+#: tutorial.xml:395
+#, no-c-format
 msgid ""
-"Copy this file into the source directory, so it will end up in the root of "
-"the classpath. Hibernate automatically looks for a file called "
-"<literal>hibernate.cfg.xml</literal> in the root of the classpath, on "
-"startup."
+"Save this file as <filename>hibernate.cfg.xml</filename> into the "
+"<filename>src/main/resources</filename> directory."
 msgstr ""
-"Copia este fichero dentro del directorio de c&#x00f3;digo fuente, de modo "
-"que termine ubicado en la rai&#x00ed;z del classpath. Hibernate busca "
-"autom&#x00e1;ticamente un fichero llamado <literal>hibernate.cfg.xml</"
-"literal> en la ra&#x00ed;z del classpath al arrancar."
 
-#: index.docbook:305
-msgid "Building with Ant"
+#. Tag: title
+#: tutorial.xml:403
+#, fuzzy, no-c-format
+msgid "Building with Maven"
 msgstr "Construyendo con Ant"
 
-#: index.docbook:307
+#. Tag: para
+#: tutorial.xml:405
+#, no-c-format
 msgid ""
-"We'll now build the tutorial with Ant. You will need to have Ant installed - "
-"get it from the <ulink url=\"http://ant.apache.org/bindownload.cgi\">Ant "
-"download page</ulink>. How to install Ant will not be covered here. Please "
-"refer to the <ulink url=\"http://ant.apache.org/manual/index.html\">Ant "
-"manual</ulink>. After you have installed Ant, we can start to create the "
-"buildfile. It will be called <literal>build.xml</literal> and placed "
-"directly in the development directory."
+"We will now build the tutorial with Maven. You will need to have Maven "
+"installed; it is available from the <ulink url=\"http://maven.apache.org/"
+"download.html\">Maven download page</ulink>. Maven will read the <filename>/"
+"pom.xml</filename> file we created earlier and know how to perform some "
+"basic project tasks. First, lets run the <literal>compile</literal> goal to "
+"make sure we can compile everything so far:"
 msgstr ""
-"Construiremos ahora el tutorial con Ant. Necesitar&#x00e1;s tener Ant "
-"instalado. Obt&#x00e9;nlo de <ulink url=\"http://ant.apache.org/bindownload."
-"cgi\">P&#x00e1;gina de descarga de Ant</ulink>. No se cubrir&#x00e1; "
-"aqu&#x00ed; c&#x00f3;mo instalar Ant. Por favor refi&#x00e9;rete al <ulink "
-"url=\"http://ant.apache.org/manual/index.html\"> Manual de Ant</ulink>. "
-"Despu&#x00e9;s que hayas instalado Ant, podemos comenzar a crear el "
-"buildfile. Ser&#x00e1; llamado <literal>build.xml</literal> y colocado "
-"directamente en el directorio de desarrollo."
 
-#: index.docbook:316
-msgid "A basic build file looks like this:"
-msgstr "Reparar Ant"
-
-#: index.docbook:320
+#. Tag: programlisting
+#: tutorial.xml:415
+#, no-c-format
 msgid ""
-"<![CDATA[<project name=\"hibernate-tutorial\" default=\"compile\">\n"
-"\n"
-"    <property name=\"sourcedir\" value=\"${basedir}/src\"/>\n"
-"    <property name=\"targetdir\" value=\"${basedir}/bin\"/>\n"
-"    <property name=\"librarydir\" value=\"${basedir}/lib\"/>\n"
-"\n"
-"    <path id=\"libraries\">\n"
-"        <fileset dir=\"${librarydir}\">\n"
-"            <include name=\"*.jar\"/>\n"
-"        </fileset>\n"
-"    </path>\n"
-"\n"
-"    <target name=\"clean\">\n"
-"        <delete dir=\"${targetdir}\"/>\n"
-"        <mkdir dir=\"${targetdir}\"/>\n"
-"    </target>\n"
-"\n"
-"    <target name=\"compile\" depends=\"clean, copy-resources\">\n"
-"      <javac srcdir=\"${sourcedir}\"\n"
-"             destdir=\"${targetdir}\"\n"
-"             classpathref=\"libraries\"/>\n"
-"    </target>\n"
-"\n"
-"    <target name=\"copy-resources\">\n"
-"        <copy todir=\"${targetdir}\">\n"
-"            <fileset dir=\"${sourcedir}\">\n"
-"                <exclude name=\"**/*.java\"/>\n"
-"            </fileset>\n"
-"        </copy>\n"
-"    </target>\n"
-"\n"
-"</project>]]>"
+"<![CDATA[[hibernateTutorial]$ mvn compile\n"
+"[INFO] Scanning for projects...\n"
+"[INFO] "
+"------------------------------------------------------------------------\n"
+"[INFO] Building First Hibernate Tutorial\n"
+"[INFO]    task-segment: [compile]\n"
+"[INFO] "
+"------------------------------------------------------------------------\n"
+"[INFO] [resources:resources]\n"
+"[INFO] Using default encoding to copy filtered resources.\n"
+"[INFO] [compiler:compile]\n"
+"[INFO] Compiling 1 source file to /home/steve/projects/sandbox/"
+"hibernateTutorial/target/classes\n"
+"[INFO] "
+"------------------------------------------------------------------------\n"
+"[INFO] BUILD SUCCESSFUL\n"
+"[INFO] "
+"------------------------------------------------------------------------\n"
+"[INFO] Total time: 2 seconds\n"
+"[INFO] Finished at: Tue Jun 09 12:25:25 CDT 2009\n"
+"[INFO] Final Memory: 5M/547M\n"
+"[INFO] "
+"------------------------------------------------------------------------]]>"
 msgstr ""
-"Observa que la distribuci&#x00f3;n de Ant est&#x00e1; por defecto rota (como "
-"se describe en el FAQ de Ant) y tiene que ser reparado por ti, por ejemplo, "
-"si quisieras usar JUnit desde dentro de tu fichero de construcci&#x00f3;n. "
-"Para hacer que funcione la tarea de JUnit (no lo necesitaremos en este "
-"tutorial), copia junit.jar a <literal>ANT_HOME/lib</literal> o quita el "
-"trozo de plugin <literal>ANT_HOME/lib/ant-junit.jar</literal>."
 
-#: index.docbook:322
-msgid ""
-"This will tell Ant to add all files in the lib directory ending with "
-"<literal>.jar</literal> to the classpath used for compilation. It will also "
-"copy all non-Java source files to the target directory, e.g. configuration "
-"and Hibernate mapping files. If you now run Ant, you should get this output:"
-msgstr "Un fichero de construcci&#x00f3;n b&#x00e1;sico se ve como esto:"
-
-#: index.docbook:329
-msgid ""
-"<![CDATA[C:\\hibernateTutorial\\>ant\n"
-"Buildfile: build.xml\n"
-"\n"
-"copy-resources:\n"
-"     [copy] Copying 2 files to C:\\hibernateTutorial\\bin\n"
-"\n"
-"compile:\n"
-"    [javac] Compiling 1 source file to C:\\hibernateTutorial\\bin\n"
-"\n"
-"BUILD SUCCESSFUL\n"
-"Total time: 1 second ]]>"
-msgstr ""
-"<![CDATA[<project name=\"hibernate-tutorial\" default=\"compile\">\n"
-"\n"
-"    <property name=\"sourcedir\" value=\"${basedir}/src\"/>\n"
-"    <property name=\"targetdir\" value=\"${basedir}/bin\"/>\n"
-"    <property name=\"librarydir\" value=\"${basedir}/lib\"/>\n"
-"\n"
-"    <path id=\"libraries\">\n"
-"        <fileset dir=\"${librarydir}\">\n"
-"            <include name=\"*.jar\"/>\n"
-"        </fileset>\n"
-"    </path>\n"
-"\n"
-"    <target name=\"clean\">\n"
-"        <delete dir=\"${targetdir}\"/>\n"
-"        <mkdir dir=\"${targetdir}\"/>\n"
-"    </target>\n"
-"\n"
-"    <target name=\"compile\" depends=\"clean, copy-resources\">\n"
-"      <javac srcdir=\"${sourcedir}\"\n"
-"             destdir=\"${targetdir}\"\n"
-"             classpathref=\"libraries\"/>\n"
-"    </target>\n"
-"\n"
-"    <target name=\"copy-resources\">\n"
-"        <copy todir=\"${targetdir}\">\n"
-"            <fileset dir=\"${sourcedir}\">\n"
-"                <exclude name=\"**/*.java\"/>\n"
-"            </fileset>\n"
-"        </copy>\n"
-"    </target>\n"
-"\n"
-"</project>]]>"
-
-#: index.docbook:334
+#. Tag: title
+#: tutorial.xml:420
+#, no-c-format
 msgid "Startup and helpers"
 msgstr ""
 "Esto dir&#x00e1; a Ant que agregue todos los ficheros en el directorio lib "
@@ -958,16 +951,20 @@ msgstr ""
 "configuraci&#x00f3;n y mapeos de Hibernate. Si ahora corres Ant, debes "
 "obtener esta salida:"
 
-#: index.docbook:336
+#. Tag: para
+#: tutorial.xml:422
+#, fuzzy, no-c-format
 msgid ""
-"It's time to load and store some <literal>Event</literal> objects, but first "
-"we have to complete the setup with some infrastructure code. We have to "
-"startup Hibernate. This startup includes building a global "
-"<literal>SessionFactory</literal> object and to store it somewhere for easy "
-"access in application code. A <literal>SessionFactory</literal> can open up "
-"new <literal>Session</literal>'s. A <literal>Session</literal> represents a "
-"single-threaded unit of work, the <literal>SessionFactory</literal> is a "
-"thread-safe global object, instantiated once."
+"It is time to load and store some <literal>Event</literal> objects, but "
+"first you have to complete the setup with some infrastructure code. You have "
+"to startup Hibernate by building a global <interfacename>org.hibernate."
+"SessionFactory</interfacename> object and storing it somewhere for easy "
+"access in application code. A <interfacename>org.hibernate.SessionFactory</"
+"interfacename> is used to obtain <interfacename>org.hibernate.Session</"
+"interfacename> instances. A <interfacename>org.hibernate.Session</"
+"interfacename> represents a single-threaded unit of work. The "
+"<interfacename>org.hibernate.SessionFactory</interfacename> is a thread-safe "
+"global object that is instantiated once."
 msgstr ""
 "<![CDATA[C:\\hibernateTutorial\\>ant\n"
 "Buildfile: build.xml\n"
@@ -981,30 +978,35 @@ msgstr ""
 "BUILD SUCCESSFUL\n"
 "Total time: 1 second ]]>"
 
-#: index.docbook:346
+#. Tag: para
+#: tutorial.xml:436
+#, fuzzy, no-c-format
 msgid ""
-"We'll create a <literal>HibernateUtil</literal> helper class which takes "
-"care of startup and makes accessing a <literal>SessionFactory</literal> "
-"convenient. Let's have a look at the implementation:"
+"We will create a <literal>HibernateUtil</literal> helper class that takes "
+"care of startup and makes accessing the <interfacename>org.hibernate."
+"SessionFactory</interfacename> more convenient."
 msgstr "Arranque y ayudantes"
 
-#: index.docbook:352
+#. Tag: programlisting
+#: tutorial.xml:442
+#, fuzzy, no-c-format
 msgid ""
-"<![CDATA[package util;\n"
+"<![CDATA[package org.hibernate.tutorial.util;\n"
 "\n"
-"import org.hibernate.*;\n"
-"import org.hibernate.cfg.*;\n"
+"import org.hibernate.SessionFactory;\n"
+"import org.hibernate.cfg.Configuration;\n"
 "\n"
 "public class HibernateUtil {\n"
 "\n"
-"    private static final SessionFactory sessionFactory;\n"
+"    private static final SessionFactory sessionFactory = buildSessionFactory"
+"();\n"
 "\n"
-"    static {\n"
+"    private static SessionFactory buildSessionFactory() {\n"
 "        try {\n"
 "            // Create the SessionFactory from hibernate.cfg.xml\n"
-"            sessionFactory = new Configuration().configure()."
-"buildSessionFactory();\n"
-"        } catch (Throwable ex) {\n"
+"            return new Configuration().configure().buildSessionFactory();\n"
+"        }\n"
+"        catch (Throwable ex) {\n"
 "            // Make sure you log the exception, as it might be swallowed\n"
 "            System.err.println(\"Initial SessionFactory creation failed.\" + "
 "ex);\n"
@@ -1029,13 +1031,24 @@ msgstr ""
 "<literal>SessionFactory</literal> es un objeto global seguro entre hebras, "
 "instanciado una sola vez."
 
-#: index.docbook:354
+#. Tag: para
+#: tutorial.xml:444
+#, no-c-format
 msgid ""
-"This class does not only produce the global <literal>SessionFactory</"
-"literal> in its static initializer (called once by the JVM when the class is "
-"loaded), but also hides the fact that it uses a static singleton. It might "
-"as well lookup the <literal>SessionFactory</literal> from JNDI in an "
-"application server."
+"Save this code as <filename>src/main/java/org/hibernate/tutorial/util/"
+"HibernateUtil.java</filename>"
+msgstr ""
+
+#. Tag: para
+#: tutorial.xml:449
+#, fuzzy, no-c-format
+msgid ""
+"This class not only produces the global <interfacename>org.hibernate."
+"SessionFactory</interfacename> reference in its static initializer; it also "
+"hides the fact that it uses a static singleton. We might just as well have "
+"looked up the <interfacename>org.hibernate.SessionFactory</interfacename> "
+"reference from JNDI in an application server or any other location for that "
+"matter."
 msgstr ""
 "Crearemos una clase de ayuda <literal>HibernateUtil</literal> que cuide del "
 "arranque y haga conveniente el manejo de <literal>Session</literal>. El "
@@ -1044,14 +1057,16 @@ msgstr ""
 "unidad de trabajo actual asociada a la hebra actual. Echemos una mirada a la "
 "implementaci&#x00f3;n:"
 
-#: index.docbook:361
+#. Tag: para
+#: tutorial.xml:458
+#, fuzzy, no-c-format
 msgid ""
-"If you give the <literal>SessionFactory</literal> a name in your "
-"configuration file, Hibernate will in fact try to bind it to JNDI after it "
-"has been built. To avoid this code completely you could also use JMX "
+"If you give the <interfacename>org.hibernate.SessionFactory</interfacename> "
+"a name in your configuration, Hibernate will try to bind it to JNDI under "
+"that name after it has been built. Another, better option is to use a JMX "
 "deployment and let the JMX-capable container instantiate and bind a "
-"<literal>HibernateService</literal> to JNDI. These advanced options are "
-"discussed in the Hibernate reference documentation."
+"<literal>HibernateService</literal> to JNDI. Such advanced options are "
+"discussed later."
 msgstr ""
 "<![CDATA[import org.hibernate.*;\n"
 "import org.hibernate.cfg.*;\n"
@@ -1094,66 +1109,28 @@ msgstr ""
 "    }\n"
 "}]]>"
 
-#: index.docbook:370
+#. Tag: para
+#: tutorial.xml:467
+#, fuzzy, no-c-format
 msgid ""
-"Place <literal>HibernateUtil.java</literal> in the development source "
-"directory, in a package next to <literal>events</literal>:"
-msgstr ""
-"Esta clase no &#x00f3;lo produce la <literal>SessionFactory</literal> global "
-"en su inicializador static (llamado s&#x00f3;lo una vez por la JVM al cargar "
-"la clase), sino que tambi&#x00e9;n tiene una variable <literal>ThreadLocal</"
-"literal> para tener la <literal>Session</literal> para la hebra actual. No "
-"importa cu&#x00e1;ndo llames a <literal>HibernateUtil.currentSession()</"
-"literal>, siempre devolver&#x00e1; la misma unidad de trabajo de Hibernate "
-"en la misma hebra. Una llamada a <literal>HibernateUtil.closeSession()</"
-"literal> termina la unidad de trabajo actualmente asociada a la hebra."
-
-#: index.docbook:375
-msgid ""
-"<![CDATA[.\n"
-"+lib\n"
-"  <Hibernate and third-party libraries>\n"
-"+src\n"
-"  +events\n"
-"    Event.java\n"
-"    Event.hbm.xml\n"
-"  +util\n"
-"    HibernateUtil.java\n"
-"  hibernate.cfg.xml\n"
-"+data\n"
-"build.xml]]>"
-msgstr ""
-"Aseg&#x00fa;rate de entender el concepto Java de una variable local a una "
-"hebra antes de usar esta ayuda. Una clase <literal>HibernateUtil</literal> "
-"m&#x00e1;s potente puede encontrarse en <literal>CaveatEmptor</literal>, "
-"http://caveatemptor.hibernate.org/, as&#x00ed; como en el libro \"Java "
-"Persistence with Hibernate\". Observa que esta clase no es necesaria si "
-"despliegas Hibernate en un servidor de aplicaciones J2EE: una "
-"<literal>Session</literal> ser&#x00e1; autom&#x00e1;ticamente ligada a la "
-"transacci&#x00f3;n JTA actual, y puedes buscar la <literal>SessionFactory</"
-"literal> a trav&#x00e9;s de JNDI. Si usas JBoss AS, Hibernate puede ser "
-"desplegado como un servicio de sistema manejado y autom&#x00e1;ticamente "
-"ligar&#x00e1; la <literal>SessionFactory</literal> a un nombre JNDI."
-
-#: index.docbook:377
-msgid ""
-"This should again compile without problems. We finally need to configure a "
-"logging system - Hibernate uses commons logging and leaves you the choice "
-"between Log4j and JDK 1.4 logging. Most developers prefer Log4j: copy "
-"<literal>log4j.properties</literal> from the Hibernate distribution (it's in "
-"the <literal>etc/</literal> directory) to your <literal>src</literal> "
-"directory, next to <literal>hibernate.cfg.xml</literal>. Have a look at the "
-"example configuration and change the settings if you like to have more "
-"verbose output. By default, only Hibernate startup message are shown on "
-"stdout."
+"You now need to configure a logging system. Hibernate uses commons logging "
+"and provides two choices: Log4j and JDK 1.4 logging. Most developers prefer "
+"Log4j: copy <literal>log4j.properties</literal> from the Hibernate "
+"distribution in the <literal>etc/</literal> directory to your <literal>src</"
+"literal> directory, next to <literal>hibernate.cfg.xml</literal>. If you "
+"prefer to have more verbose output than that provided in the example "
+"configuration, you can change the settings. By default, only the Hibernate "
+"startup message is shown on stdout."
 msgstr ""
 "Coloca <literal>HibernateUtil.java</literal> en el directorio de fuentes de "
 "desarrollo, junto a <literal>Event.java</literal>:"
 
-#: index.docbook:387
+#. Tag: para
+#: tutorial.xml:477
+#, fuzzy, no-c-format
 msgid ""
-"The tutorial infrastructure is complete - and we are ready to do some real "
-"work with Hibernate."
+"The tutorial infrastructure is complete and you are now ready to do some "
+"real work with Hibernate."
 msgstr ""
 "<![CDATA[.\n"
 "+lib\n"
@@ -1166,7 +1143,9 @@ msgstr ""
 "+data\n"
 "build.xml]]>"
 
-#: index.docbook:395
+#. Tag: title
+#: tutorial.xml:485
+#, no-c-format
 msgid "Loading and storing objects"
 msgstr ""
 "Esto tambi&#x00e9;n debe compilar sin problemas. Finalmente necesitamos "
@@ -1180,23 +1159,29 @@ msgstr ""
 "salida m&#x00e1;s verborr&#x00e1;gica. Por defecto, s&#x00f3;lo se muestra "
 "el mensaje de arranque de Hibernate en la salida."
 
-#: index.docbook:397
+#. Tag: para
+#: tutorial.xml:487
+#, fuzzy, no-c-format
 msgid ""
-"Finally, we can use Hibernate to load and store objects. We write an "
-"<literal>EventManager</literal> class with a <literal>main()</literal> "
-"method:"
+"We are now ready to start doing some real worjk with Hibernate. Let's start "
+"by writing an <literal>EventManager</literal> class with a <literal>main()</"
+"literal> method:"
 msgstr ""
 "La infraestructura del tutorial est&#x00e1; completa, y estamos listos para "
 "hacer alg&#x00fa;n trabajo real con Hibernate."
 
-#: index.docbook:402
+#. Tag: programlisting
+#: tutorial.xml:493
+#, fuzzy, no-c-format
 msgid ""
-"<![CDATA[package events;\n"
+"<![CDATA[package org.hibernate.tutorial;\n"
+"\n"
 "import org.hibernate.Session;\n"
 "\n"
-"import java.util.Date;\n"
+"import java.util.*;\n"
 "\n"
-"import util.HibernateUtil;\n"
+"import org.hibernate.tutorial.domain.Event;\n"
+"import org.hibernate.tutorial.util.HibernateUtil;\n"
 "\n"
 "public class EventManager {\n"
 "\n"
@@ -1211,16 +1196,13 @@ msgid ""
 "    }\n"
 "\n"
 "    private void createAndStoreEvent(String title, Date theDate) {\n"
-"\n"
 "        Session session = HibernateUtil.getSessionFactory().getCurrentSession"
 "();\n"
-"\n"
 "        session.beginTransaction();\n"
 "\n"
 "        Event theEvent = new Event();\n"
 "        theEvent.setTitle(title);\n"
 "        theEvent.setDate(theDate);\n"
-"\n"
 "        session.save(theEvent);\n"
 "\n"
 "        session.getTransaction().commit();\n"
@@ -1229,25 +1211,31 @@ msgid ""
 "}]]>"
 msgstr "Cargando y almacenando objetos"
 
-#: index.docbook:404
+#. Tag: para
+#: tutorial.xml:495
+#, fuzzy, no-c-format
 msgid ""
-"We create a new <literal>Event</literal> object, and hand it over to "
-"Hibernate. Hibernate now takes care of the SQL and executes <literal>INSERT</"
-"literal>s on the database. Let's have a look at the <literal>Session</"
-"literal> and <literal>Transaction</literal>-handling code before we run this."
+"In <literal>createAndStoreEvent()</literal> we created a new <literal>Event</"
+"literal> object and handed it over to Hibernate. At that point, Hibernate "
+"takes care of the SQL and executes an <literal>INSERT</literal> on the "
+"database."
 msgstr ""
 "Finalmente, podemos usar Hibernate para cargar y almacenar objetos. "
 "Escribimos una clase <literal>EventManager</literal> con un m&#x00e9;todo "
 "<literal>main()</literal>:"
 
-#: index.docbook:411
+#. Tag: para
+#: tutorial.xml:502
+#, fuzzy, no-c-format
 msgid ""
-"A <literal>Session</literal> is a single unit of work. For now we'll keep "
-"things simple and assume a one-to-one granularity between a Hibernate "
-"<literal>Session</literal> and a database transaction. To shield our code "
-"from the actual underlying transaction system (in this case plain JDBC, but "
-"it could also run with JTA) we use the <literal>Transaction</literal> API "
-"that is available on the Hibernate <literal>Session</literal>."
+"A <interface>org.hibernate.Session</interface> is designed to represent a "
+"single unit of work (a single atmoic piece of work to be performed). For now "
+"we will keep things simple and assume a one-to-one granularity between a "
+"Hibernate <interface>org.hibernate.Session</interface> and a database "
+"transaction. To shield our code from the actual underlying transaction "
+"system we use the Hibernate <interfacename>org.hibernate.Transaction</"
+"interfacename> API. In this particular case we are using JDBC-based "
+"transactional semantics, but it could also run with JTA."
 msgstr ""
 "<![CDATA[import org.hibernate.Transaction;\n"
 "import org.hibernate.Session;\n"
@@ -1268,35 +1256,44 @@ msgstr ""
 "\n"
 "}]]>"
 
-#: index.docbook:419
+#. Tag: para
+#: tutorial.xml:515
+#, fuzzy, no-c-format
 msgid ""
 "What does <literal>sessionFactory.getCurrentSession()</literal> do? First, "
-"you can call it as many times and anywhere you like, once you get hold of "
-"your <literal>SessionFactory</literal> (easy thanks to "
-"<literal>HibernateUtil</literal>). The <literal>getCurrentSession()</"
-"literal> method always returns the \"current\" unit of work. Remember that "
-"we switched the configuration option for this mechanism to \"thread\" in "
-"<literal>hibernate.cfg.xml</literal>? Hence, the current unit of work is "
-"bound to the current Java thread that executes our application. However, "
-"this is not the full picture, you also have to consider scope, when a unit "
-"of work begins and when it ends."
+"you can call it as many times and anywhere you like once you get hold of "
+"your <interfacename>org.hibernate.SessionFactory</interfacename>. The "
+"<literal>getCurrentSession()</literal> method always returns the \"current\" "
+"unit of work. Remember that we switched the configuration option for this "
+"mechanism to \"thread\" in our <filename>src/main/resources/hibernate.cfg."
+"xml</filename>? Due to that setting, the context of a current unit of work "
+"is bound to the current Java thread that executes the application."
 msgstr ""
 "Leemos algunos argumentos de la l&#x00ed;nea de comandos, y si el primer "
 "argumento es \"store\", creamos y almacenamos un nuevo Event:"
 
-#: index.docbook:430
+#. Tag: para
+#: tutorial.xml:529
+#, no-c-format
 msgid ""
-"A <literal>Session</literal> begins when it is first needed, when the first "
-"call to <literal>getCurrentSession()</literal> is made. It is then bound by "
-"Hibernate to the current thread. When the transaction ends, either through "
-"commit or rollback, Hibernate automatically unbinds the <literal>Session</"
-"literal> from the thread and closes it for you. If you call "
-"<literal>getCurrentSession()</literal> again, you get a new "
-"<literal>Session</literal> and can start a new unit of work. This "
-"<emphasis>thread-bound</emphasis> programming model is the most popular way "
-"of using Hibernate, as it allows flexible layering of your code (transaction "
-"demarcation code can be separated from data access code, we'll do this later "
-"in this tutorial)."
+"Hibernate offers three methods of current session tracking. The \"thread\" "
+"based method is not intended for production use; it is merely useful for "
+"prototyping and tutorials such as this one. Current session tracking is "
+"discussed in more detail later on."
+msgstr ""
+
+#. Tag: para
+#: tutorial.xml:538
+#, fuzzy, no-c-format
+msgid ""
+"A <interface>org.hibernate.Session</interface> begins when the first call to "
+"<literal>getCurrentSession()</literal> is made for the current thread. It is "
+"then bound by Hibernate to the current thread. When the transaction ends, "
+"either through commit or rollback, Hibernate automatically unbinds the "
+"<interface>org.hibernate.Session</interface> from the thread and closes it "
+"for you. If you call <literal>getCurrentSession()</literal> again, you get a "
+"new <interface>org.hibernate.Session</interface> and can start a new unit of "
+"work."
 msgstr ""
 "<![CDATA[private void createAndStoreEvent(String title, Date theDate) {\n"
 "    Session session = HibernateUtil.currentSession();\n"
@@ -1312,18 +1309,21 @@ msgstr ""
 "    HibernateUtil.closeSession();\n"
 "}]]>"
 
-#: index.docbook:441
+#. Tag: para
+#: tutorial.xml:551
+#, fuzzy, no-c-format
 msgid ""
-"Related to the unit of work scope, should the Hibernate <literal>Session</"
-"literal> be used to execute one or several database operations? The above "
-"example uses one <literal>Session</literal> for one operation. This is pure "
-"coincidence, the example is just not complex enough to show any other "
-"approach. The scope of a Hibernate <literal>Session</literal> is flexible "
-"but you should never design your application to use a new Hibernate "
-"<literal>Session</literal> for <emphasis>every</emphasis> database "
-"operation. So even if you see it a few more times in the following (very "
-"trivial) examples, consider <emphasis>session-per-operation</emphasis> an "
-"anti-pattern. A real (web) application is shown later in this tutorial."
+"Related to the unit of work scope, should the Hibernate <interface>org."
+"hibernate.Session</interface> be used to execute one or several database "
+"operations? The above example uses one <interface>org.hibernate.Session</"
+"interface> for one operation. However this is pure coincidence; the example "
+"is just not complex enough to show any other approach. The scope of a "
+"Hibernate <interface>org.hibernate.Session</interface> is flexible but you "
+"should never design your application to use a new Hibernate <interface>org."
+"hibernate.Session</interface> for <emphasis>every</emphasis> database "
+"operation. Even though it is used in the following examples, consider "
+"<emphasis>session-per-operation</emphasis> an anti-pattern. A real web "
+"application is shown later in the tutorial which will help illustrate this."
 msgstr ""
 "Creamos un nuevo objeto <literal>Event</literal>, y se lo damos a Hibernate. "
 "Hibernate cuida ahora del SQL y ejecuta <literal>INSERT</literal>s en la "
@@ -1331,11 +1331,13 @@ msgstr ""
 "<literal>Session</literal> y <literal>Transaction</literal> antes de "
 "ejecutar esto."
 
-#: index.docbook:452
+#. Tag: para
+#: tutorial.xml:568
+#, fuzzy, no-c-format
 msgid ""
-"Have a look at <xref linkend=\"transactions\"/> for more information about "
-"transaction handling and demarcation. We also skipped any error handling and "
-"rollback in the previous example."
+"See <xref linkend=\"transactions\"/> for more information about transaction "
+"handling and demarcation. The previous example also skipped any error "
+"handling and rollback."
 msgstr ""
 "Una <literal>Session</literal> es una sola unidad de trabajo. Podr&#x00ed;a "
 "sorprenderte que tengamos una API adicional, <literal>Transaction</literal>. "
@@ -1352,65 +1354,32 @@ msgstr ""
 "granularidad uno-a-uno entre una <literal>Session</literal> y una "
 "<literal>Transaction</literal>."
 
-#: index.docbook:458
+#. Tag: para
+#: tutorial.xml:574
+#, no-c-format
 msgid ""
-"To run this first routine we have to add a callable target to the Ant build "
-"file:"
+"To run this, we will make use of the Maven exec plugin to call our class "
+"with the necessary classpath setup: <command>mvn exec:java -Dexec.mainClass="
+"\"org.hibernate.tutorial.EventManager\" -Dexec.args=\"store\"</command>"
 msgstr ""
-"¿Qu&#x00e9; es lo que hacen <literal>Transaction.begin()</literal> y "
-"<literal>commit()</literal>? ¿D&#x00f3;nde est&#x00e1; el rollback en caso "
-"que algo vaya mal? La API de <literal>Transaction</literal> de Hibernate es "
-"opcional realmente, pero la usamos por conveniencia y portabilidad. Si "
-"manejases la transacci&#x00f3;n de base de datos por ti mismo (por ejemplo, "
-"llamando a <literal>session.connection.commit()</literal>), ligar&#x00ed;as "
-"el c&#x00f3;digo a un entorno de despliegue particular, en este JDBC directo "
-"no manejado. Estableciendo la f&#x00e1;brica de <literal>Transaction</"
-"literal> en tu configuraci&#x00f3;n de Hibernate puedes desplegar tu capa de "
-"persistencia en cualquier sitio. Echa una mirada al <xref linkend="
-"\"transactions\"/> para m&#x00e1;s informaci&#x00f3;n sobre manejo y "
-"demarcaci&#x00f3;n de transacciones. Hemos saltado tambi&#x00e9;n cualquier "
-"manejo de excepciones y rollback en este ejemplo."
 
-#: index.docbook:462
+#. Tag: para
+#: tutorial.xml:581
+#, no-c-format
+msgid "You may need to perform <command>mvn compile</command> first."
+msgstr ""
+
+#. Tag: para
+#: tutorial.xml:586
+#, fuzzy, no-c-format
 msgid ""
-"<![CDATA[<target name=\"run\" depends=\"compile\">\n"
-"    <java fork=\"true\" classname=\"events.EventManager\" classpathref="
-"\"libraries\">\n"
-"        <classpath path=\"${targetdir}\"/>\n"
-"        <arg value=\"${action}\"/>\n"
-"    </java>\n"
-"</target>]]>"
-msgstr ""
-"Para ejecutar la primera rutina tenemos que agregar un objetivo llamable al "
-"fichero de construcci&#x00f3;n de Ant:"
-
-#: index.docbook:464
-msgid ""
-"The value of the <literal>action</literal> argument is set on the command "
-"line when calling the target:"
-msgstr ""
-"<![CDATA[<target name=\"run\" depends=\"compile\">\n"
-"    <java fork=\"true\" classname=\"EventManager\" classpathref=\"libraries"
-"\">\n"
-"        <classpath path=\"${targetdir}\"/>\n"
-"        <arg value=\"${action}\"/>\n"
-"    </java>\n"
-"</target>]]>"
-
-#: index.docbook:469
-msgid "<![CDATA[C:\\hibernateTutorial\\>ant run -Daction=store]]>"
-msgstr ""
-"El valor del argumento <literal>action</literal> es establecido por l&#x00ed;"
-"nea de comandos al llamar al objetivo:"
-
-#: index.docbook:471
-msgid ""
-"You should see, after compilation, Hibernate starting up and, depending on "
-"your configuration, lots of log output. At the end you will find the "
-"following line:"
+"You should see Hibernate starting up and, depending on your configuration, "
+"lots of log output. Towards the end, the following line will be displayed:"
 msgstr "<![CDATA[C:\\hibernateTutorial\\>ant run -Daction=store]]>"
 
-#: index.docbook:476
+#. Tag: programlisting
+#: tutorial.xml:591
+#, no-c-format
 msgid ""
 "<![CDATA[[java] Hibernate: insert into EVENTS (EVENT_DATE, title, EVENT_ID) "
 "values (?, ?, ?)]]>"
@@ -1419,45 +1388,47 @@ msgstr ""
 "y, dependiendo de tu configuraci&#x00f3;n mucha salida de registro (log). Al "
 "final encontrar&#x00e1;s la siguiente l&#x00ed;nea:"
 
-#: index.docbook:478
-msgid ""
-"This is the <literal>INSERT</literal> executed by Hibernate, the question "
-"marks represent JDBC bind parameters. To see the values bound as arguments, "
-"or to reduce the verbosity of the log, check your <literal>log4j.properties</"
-"literal>."
+#. Tag: para
+#: tutorial.xml:593
+#, no-c-format
+msgid "This is the <literal>INSERT</literal> executed by Hibernate."
 msgstr ""
-"<![CDATA[[java] Hibernate: insert into EVENTS (EVENT_DATE, title, EVENT_ID) "
-"values (?, ?, ?)]]>"
 
-#: index.docbook:484
-msgid ""
-"Now we'd like to list stored events as well, so we add an option to the main "
-"method:"
+#. Tag: para
+#: tutorial.xml:597
+#, fuzzy, no-c-format
+msgid "To list stored events an option is added to the main method:"
 msgstr ""
 "Esta es la <literal>INSERT</literal> ejecutada por Hibernate, los signos de "
 "preguntas representan par&#x00e1;metros de ligado JDBC. Para ver los valores "
 "ligados como argumentos, o para reducir la verborragia del registro, chequea "
 "tu <literal>log4j.properties</literal>."
 
-#: index.docbook:488
+#. Tag: programlisting
+#: tutorial.xml:601
+#, fuzzy, no-c-format
 msgid ""
-"<![CDATA[if (args[0].equals(\"store\")) {\n"
-"    mgr.createAndStoreEvent(\"My Event\", new Date());\n"
-"}\n"
-"else if (args[0].equals(\"list\")) {\n"
-"    List events = mgr.listEvents();\n"
-"    for (int i = 0; i < events.size(); i++) {\n"
-"        Event theEvent = (Event) events.get(i);\n"
-"        System.out.println(\"Event: \" + theEvent.getTitle() +\n"
-"                           \" Time: \" + theEvent.getDate());\n"
-"    }\n"
-"}]]>"
+"<![CDATA[        if (args[0].equals(\"store\")) {\n"
+"            mgr.createAndStoreEvent(\"My Event\", new Date());\n"
+"        }\n"
+"        else if (args[0].equals(\"list\")) {\n"
+"            List events = mgr.listEvents();\n"
+"            for (int i = 0; i < events.size(); i++) {\n"
+"                Event theEvent = (Event) events.get(i);\n"
+"                System.out.println(\n"
+"                        \"Event: \" + theEvent.getTitle() + \" Time: \" + "
+"theEvent.getDate()\n"
+"                );\n"
+"            }\n"
+"        }]]>"
 msgstr ""
 "Ahora quisi&#x00e9;ramos listar acontecimientos almacenados tambi&#x00e9;n, "
 "as&#x00ed; que agregamos una opci&#x00f3;n al m&#x00e9;todo principal:"
 
-#: index.docbook:490
-msgid "We also add a new <literal>listEvents() method</literal>:"
+#. Tag: para
+#: tutorial.xml:603
+#, fuzzy, no-c-format
+msgid "A new <literal>listEvents() method is also added</literal>:"
 msgstr ""
 "<![CDATA[if (args[0].equals(\"store\")) {\n"
 "    mgr.createAndStoreEvent(\"My Event\", new Date());\n"
@@ -1471,32 +1442,31 @@ msgstr ""
 "    }\n"
 "}]]>"
 
-#: index.docbook:494
+#. Tag: programlisting
+#: tutorial.xml:607
+#, fuzzy, no-c-format
 msgid ""
-"<![CDATA[private List listEvents() {\n"
-"\n"
-"    Session session = HibernateUtil.getSessionFactory().getCurrentSession"
+"<![CDATA[    private List listEvents() {\n"
+"        Session session = HibernateUtil.getSessionFactory().getCurrentSession"
 "();\n"
-"\n"
-"    session.beginTransaction();\n"
-"\n"
-"    List result = session.createQuery(\"from Event\").list();\n"
-"\n"
-"    session.getTransaction().commit();\n"
-"\n"
-"    return result;\n"
-"}]]>"
+"        session.beginTransaction();\n"
+"        List result = session.createQuery(\"from Event\").list();\n"
+"        session.getTransaction().commit();\n"
+"        return result;\n"
+"    }]]>"
 msgstr ""
 "Agregamos tambi&#x00e9;n un nuevo m&#x00e9;todo <literal>listEvents()</"
 "literal>:"
 
-#: index.docbook:496
+#. Tag: para
+#: tutorial.xml:609
+#, fuzzy, no-c-format
 msgid ""
-"What we do here is use an HQL (Hibernate Query Language) query to load all "
+"Here, we are using a Hibernate Query Language (HQL) query to load all "
 "existing <literal>Event</literal> objects from the database. Hibernate will "
 "generate the appropriate SQL, send it to the database and populate "
 "<literal>Event</literal> objects with the data. You can create more complex "
-"queries with HQL, of course."
+"queries with HQL. See <xref linkend=\"queryhql\"/> for more information."
 msgstr ""
 "<![CDATA[private List listEvents() {\n"
 "    Session session = HibernateUtil.currentSession();\n"
@@ -1510,65 +1480,18 @@ msgstr ""
 "    return result;\n"
 "}]]>"
 
-#: index.docbook:503
-msgid "Now, to execute and test all of this, follow these steps:"
-msgstr ""
-"Lo que hacemos aqu&#x00ed; es usar una consulta HQL (Lenguaje de Consulta de "
-"Hibernate o Hibernate Query Language) para cargar todos los objetos "
-"<literal>Event</literal> existentes de la base de datos. Hibernate "
-"generar&#x00e1; el SQL apropiado, lo enviar&#x00e1; a la base de datosy "
-"poblar&#x00e1; los objetos <literal>Event</literal> con datos. Puedes, por "
-"supuesto, crear consultas m&#x00e1;s complejas con HQL."
-
-#: index.docbook:509
+#. Tag: para
+#: tutorial.xml:617
+#, no-c-format
 msgid ""
-"Run <literal>ant run -Daction=store</literal> to store something into the "
-"database and, of course, to generate the database schema before through "
-"hbm2ddl."
-msgstr "Now, to execute and test all of this, follow these steps:"
-
-#: index.docbook:515
-msgid ""
-"Now disable hbm2ddl by commenting out the property in your "
-"<literal>hibernate.cfg.xml</literal> file. Usually you only leave it turned "
-"on in continous unit testing, but another run of hbm2ddl would "
-"<emphasis>drop</emphasis> everything you have stored - the <literal>create</"
-"literal> configuration setting actually translates into \"drop all tables "
-"from the schema, then re-create all tables, when the SessionFactory is build"
-"\"."
+"Now we can call our new functionality, again using the Maven exec plugin: "
+"<command>mvn exec:java -Dexec.mainClass=\"org.hibernate.tutorial.EventManager"
+"\" -Dexec.args=\"list\"</command>"
 msgstr ""
-"Run <literal>ant run -Daction=store</literal> to store something into the "
-"database and, of course, to generate the database schema before through "
-"hbm2ddl."
 
-#: index.docbook:525
-msgid ""
-"If you now call Ant with <literal>-Daction=list</literal>, you should see "
-"the events you have stored so far. You can of course also call the "
-"<literal>store</literal> action a few times more."
-msgstr ""
-"Now disable hbm2ddl by commenting out the property in your "
-"<literal>hibernate.cfg.xml</literal> file. Usually you only leave it turned "
-"on in continous unit testing, but another run of hbm2ddl would "
-"<emphasis>drop</emphasis> everything you have stored - the <literal>create</"
-"literal> configuration setting actually translates into \"drop all tables "
-"from the schema, then re-create all tables, when the SessionFactory is build"
-"\"."
-
-#: index.docbook:531
-msgid ""
-"Note: Most new Hibernate users fail at this point and we see questions about "
-"<emphasis>Table not found</emphasis> error messages regularly. However, if "
-"you follow the steps outlined above you will not have this problem, as "
-"hbm2ddl creates the database schema on the first run, and subsequent "
-"application restarts will use this schema. If you change the mapping and/or "
-"database schema, you have to re-enable hbm2ddl once again."
-msgstr ""
-"If you now call Ant with <literal>-Daction=list</literal>, you should see "
-"the events you have stored so far. You can of course also call the "
-"<literal>store</literal> action a few times more."
-
-#: index.docbook:544
+#. Tag: title
+#: tutorial.xml:627
+#, no-c-format
 msgid "Part 2 - Mapping associations"
 msgstr ""
 "Note: Most new Hibernate users fail at this point and we see questions about "
@@ -1578,14 +1501,19 @@ msgstr ""
 "application restarts will use this schema. If you change the mapping and/or "
 "database schema, you have to re-enable hbm2ddl once again."
 
-#: index.docbook:546
+#. Tag: para
+#: tutorial.xml:629
+#, fuzzy, no-c-format
 msgid ""
-"We mapped a persistent entity class to a table. Let's build on this and add "
-"some class associations. First we'll add people to our application, and "
-"store a list of events they participate in."
+"So far we have mapped a single persistent entity class to a table in "
+"isolation. Let's expand on that a bit and add some class associations. We "
+"will add people to the application and store a list of events in which they "
+"participate."
 msgstr "Part 2 - Mapeando asociaciones"
 
-#: index.docbook:552
+#. Tag: title
+#: tutorial.xml:637
+#, no-c-format
 msgid "Mapping the Person class"
 msgstr ""
 "Hemos mapeado un clase de entidad persistente a una tabla. Construyamos "
@@ -1593,13 +1521,17 @@ msgstr ""
 "personas a nuestra aplicaci&#x00f3;n, y almacenaremos una lista de eventos "
 "en las que participan."
 
-#: index.docbook:554
-msgid "The first cut of the <literal>Person</literal> class is simple:"
+#. Tag: para
+#: tutorial.xml:639
+#, fuzzy, no-c-format
+msgid "The first cut of the <literal>Person</literal> class looks like this:"
 msgstr "Mapeando la clase Person"
 
-#: index.docbook:558
+#. Tag: programlisting
+#: tutorial.xml:643
+#, fuzzy, no-c-format
 msgid ""
-"<![CDATA[package events;\n"
+"<![CDATA[package org.hibernate.tutorial.domain;\n"
 "\n"
 "public class Person {\n"
 "\n"
@@ -1615,29 +1547,29 @@ msgid ""
 "}]]>"
 msgstr "El primer corte de la clase <literal>Person</literal> es simple:"
 
-#: index.docbook:560
+#. Tag: para
+#: tutorial.xml:645
+#, no-c-format
 msgid ""
-"Create a new mapping file called <literal>Person.hbm.xml</literal> (don't "
-"forget the DTD reference at the top):"
+"Save this to a file named <filename>src/main/java/org/hibernate/tutorial/"
+"domain/Person.java</filename>"
 msgstr ""
-"<![CDATA[public class Person {\n"
-"\n"
-"    private Long id;\n"
-"    private int age;\n"
-"    private String firstname;\n"
-"    private String lastname;\n"
-"\n"
-"    Person() {}\n"
-"\n"
-"    // Accessor methods for all properties, private setter for 'id'\n"
-"\n"
-"}]]>"
 
-#: index.docbook:565
+#. Tag: para
+#: tutorial.xml:650
+#, no-c-format
 msgid ""
-"<![CDATA[<hibernate-mapping>\n"
+"Next, create the new mapping file as <filename>src/main/resources/org/"
+"hibernate/tutorial/domain/Person.hbm.xml</filename>"
+msgstr ""
+
+#. Tag: programlisting
+#: tutorial.xml:655
+#, fuzzy, no-c-format
+msgid ""
+"<![CDATA[<hibernate-mapping package=\"org.hibernate.tutorial.domain\">\n"
 "\n"
-"    <class name=\"events.Person\" table=\"PERSON\">\n"
+"    <class name=\"Person\" table=\"PERSON\">\n"
 "        <id name=\"id\" column=\"PERSON_ID\">\n"
 "            <generator class=\"native\"/>\n"
 "        </id>\n"
@@ -1649,7 +1581,9 @@ msgid ""
 "</hibernate-mapping>]]>"
 msgstr "Crea un fichero de mapeo llamado <literal>Person.hbm.xml</literal>:"
 
-#: index.docbook:567
+#. Tag: para
+#: tutorial.xml:657
+#, no-c-format
 msgid "Finally, add the new mapping to Hibernate's configuration:"
 msgstr ""
 "<![CDATA[<hibernate-mapping>\n"
@@ -1665,25 +1599,30 @@ msgstr ""
 "\n"
 "</hibernate-mapping>]]>"
 
-#: index.docbook:571
+#. Tag: programlisting
+#: tutorial.xml:661
+#, no-c-format
 msgid ""
 "<![CDATA[<mapping resource=\"events/Event.hbm.xml\"/>\n"
 "<mapping resource=\"events/Person.hbm.xml\"/>]]>"
 msgstr ""
 "Finalmente, agrega el nuevo mapeo a la configuraci&#x00f3;n de Hibernate:"
 
-#: index.docbook:573
+#. Tag: para
+#: tutorial.xml:663
+#, fuzzy, no-c-format
 msgid ""
-"We'll now create an association between these two entities. Obviously, "
-"persons can participate in events, and events have participants. The design "
-"questions we have to deal with are: directionality, multiplicity, and "
-"collection behavior."
+"Create an association between these two entities. Persons can participate in "
+"events, and events have participants. The design questions you have to deal "
+"with are: directionality, multiplicity, and collection behavior."
 msgstr ""
 "<![CDATA[        <mapping resource=\"Event.hbm.xml\"/>\n"
 "        <mapping resource=\"Person.hbm.xml\"/>\n"
 "]]>"
 
-#: index.docbook:583
+#. Tag: title
+#: tutorial.xml:673
+#, no-c-format
 msgid "A unidirectional Set-based association"
 msgstr ""
 "Crearemos ahora una asociaci&#x00f3;n entre estas dos entidades. Obviamente, "
@@ -1691,30 +1630,22 @@ msgstr ""
 "participantes. Las cuestiones de dise&#x00f1;o con que tenemos que tratar "
 "son: direccionalidad, multiplicidad y comportamiento de colecci&#x00f3;n."
 
-#: index.docbook:585
+#. Tag: para
+#: tutorial.xml:675
+#, fuzzy, no-c-format
 msgid ""
-"We'll add a collection of events to the <literal>Person</literal> class. "
-"That way we can easily navigate to the events for a particular person, "
-"without executing an explicit query - by calling <literal>aPerson.getEvents()"
-"</literal>. We use a Java collection, a <literal>Set</literal>, because the "
-"collection will not contain duplicate elements and the ordering is not "
-"relevant for us."
+"By adding a collection of events to the <literal>Person</literal> class, you "
+"can easily navigate to the events for a particular person, without executing "
+"an explicit query - by calling <literal>Person#getEvents</literal>. Multi-"
+"valued associations are represented in Hibernate by one of the Java "
+"Collection Framework contracts; here we choose a <interfacename>java.util."
+"Set</interfacename> because the collection will not contain duplicate "
+"elements and the ordering is not relevant to our examples:"
 msgstr "Una asociaci&#x00f3;n unidireccional basada en Set"
 
-#: index.docbook:592
-msgid ""
-"We need a unidirectional, many-valued associations, implemented with a "
-"<literal>Set</literal>. Let's write the code for this in the Java classes "
-"and then map it:"
-msgstr ""
-"Agregaremos una colecci&#x00f3;n de eventos a la clase <literal>Person</"
-"literal>. De esta forma podemos navegar facilmente a los eventos de una "
-"persona en particular, sin ejecutar una consulta expl&#x00ed;cita, llamando "
-"a <literal>aPerson.getEvents()</literal>. Usamos una colecci&#x00f3;n Java, "
-"un <literal>Set</literal>, porque la colecci&#x00f3;n no contendr&#x00e1; "
-"elementos duplicados y el ordenamiento no nos es relevante."
-
-#: index.docbook:597
+#. Tag: programlisting
+#: tutorial.xml:686
+#, no-c-format
 msgid ""
 "<![CDATA[public class Person {\n"
 "\n"
@@ -1733,18 +1664,19 @@ msgstr ""
 "multivaluadas, implementadas con un <literal>Set</literal>. Escribamos el "
 "c&#x00f3;digo para esto en las clases Java y luego lo mapeemos:"
 
-#: index.docbook:599
+#. Tag: para
+#: tutorial.xml:688
+#, fuzzy, no-c-format
 msgid ""
-"Before we map this association, think about the other side. Clearly, we "
-"could just keep this unidirectional. Or, we could create another collection "
-"on the <literal>Event</literal>, if we want to be able to navigate it bi-"
-"directional, i.e. <literal>anEvent.getParticipants()</literal>. This is not "
-"necessary, from a functional perspective. You could always execute an "
-"explicit query to retrieve the participants for a particular event. This is "
-"a design choice left to you, but what is clear from this discussion is the "
-"multiplicity of the association: \"many\" valued on both sides, we call this "
-"a <emphasis>many-to-many</emphasis> association. Hence, we use Hibernate's "
-"many-to-many mapping:"
+"Before mapping this association, let's consider the other side. We could "
+"just keep this unidirectional or create another collection on the "
+"<literal>Event</literal>, if we wanted to be able to navigate it from both "
+"directions. This is not necessary, from a functional perspective. You can "
+"always execute an explicit query to retrieve the participants for a "
+"particular event. This is a design choice left to you, but what is clear "
+"from this discussion is the multiplicity of the association: \"many\" valued "
+"on both sides is called a <emphasis>many-to-many</emphasis> association. "
+"Hence, we use Hibernate's many-to-many mapping:"
 msgstr ""
 "<![CDATA[public class Person {\n"
 "\n"
@@ -1759,9 +1691,11 @@ msgstr ""
 "    }\n"
 "}]]>"
 
-#: index.docbook:610
+#. Tag: programlisting
+#: tutorial.xml:701
+#, fuzzy, no-c-format
 msgid ""
-"<![CDATA[<class name=\"events.Person\" table=\"PERSON\">\n"
+"<![CDATA[<class name=\"Person\" table=\"PERSON\">\n"
 "    <id name=\"id\" column=\"PERSON_ID\">\n"
 "        <generator class=\"native\"/>\n"
 "    </id>\n"
@@ -1771,7 +1705,7 @@ msgid ""
 "\n"
 "    <set name=\"events\" table=\"PERSON_EVENT\">\n"
 "        <key column=\"PERSON_ID\"/>\n"
-"        <many-to-many column=\"EVENT_ID\" class=\"events.Event\"/>\n"
+"        <many-to-many column=\"EVENT_ID\" class=\"Event\"/>\n"
 "    </set>\n"
 "\n"
 "</class>]]>"
@@ -1786,20 +1720,21 @@ msgstr ""
 "llamamos a esto una asociaci&#x00f3;n <emphasis>muchos-a-muchos</emphasis>. "
 "Por lo tanto, usamos un mapeo many-to-many de Hibernate:"
 
-#: index.docbook:612
+#. Tag: para
+#: tutorial.xml:703
+#, fuzzy, no-c-format
 msgid ""
-"Hibernate supports all kinds of collection mappings, a <literal>&lt;set&gt;</"
-"literal> being most common. For a many-to-many association (or <emphasis>n:"
-"m</emphasis> entity relationship), an association table is needed. Each row "
+"Hibernate supports a broad range of collection mappings, a <literal>set</"
+"literal> being most common. For a many-to-many association, or <emphasis>n:"
+"m</emphasis> entity relationship, an association table is required. Each row "
 "in this table represents a link between a person and an event. The table "
-"name is configured with the <literal>table</literal> attribute of the "
+"name is decalred using the <literal>table</literal> attribute of the "
 "<literal>set</literal> element. The identifier column name in the "
-"association, for the person's side, is defined with the <literal>&lt;key&gt;"
-"</literal> element, the column name for the event's side with the "
-"<literal>column</literal> attribute of the <literal>&lt;many-to-many&gt;</"
-"literal>. You also have to tell Hibernate the class of the objects in your "
-"collection (correct: the class on the other side of the collection of "
-"references)."
+"association, for the person side, is defined with the <literal>key</literal> "
+"element, the column name for the event's side with the <literal>column</"
+"literal> attribute of the <literal>many-to-many</literal>. You also have to "
+"tell Hibernate the class of the objects in your collection (the class on the "
+"other side of the collection of references)."
 msgstr ""
 "<![CDATA[<class name=\"Person\" table=\"PERSON\">\n"
 "    <id name=\"id\" column=\"PERSON_ID\">\n"
@@ -1816,7 +1751,9 @@ msgstr ""
 "\n"
 "</class>]]>"
 
-#: index.docbook:624
+#. Tag: para
+#: tutorial.xml:719
+#, no-c-format
 msgid "The database schema for this mapping is therefore:"
 msgstr ""
 "Hibernate soporta todo tipo de mapeos de colecci&#x00f3;n, siendo el "
@@ -1833,7 +1770,9 @@ msgstr ""
 "de los objetos en tu colecci&#x00f3;n (correcto: la clase del otro lado de "
 "la colecci&#x00f3;n de referencias)."
 
-#: index.docbook:628
+#. Tag: programlisting
+#: tutorial.xml:723
+#, no-c-format
 msgid ""
 "<![CDATA[\n"
 "    _____________        __________________\n"
@@ -1850,7 +1789,9 @@ msgid ""
 " ]]>"
 msgstr "El esquema de base de datos para este mapeo es, por lo tanto:"
 
-#: index.docbook:633
+#. Tag: title
+#: tutorial.xml:728
+#, no-c-format
 msgid "Working the association"
 msgstr ""
 "<![CDATA[\n"
@@ -1867,49 +1808,50 @@ msgstr ""
 "                                                  |_____________|\n"
 " ]]>"
 
-#: index.docbook:635
+#. Tag: para
+#: tutorial.xml:730
+#, fuzzy, no-c-format
 msgid ""
-"Let's bring some people and events together in a new method in "
+"Now we will bring some people and events together in a new method in "
 "<literal>EventManager</literal>:"
 msgstr "Trabajando la asociaci&#x00f3;n"
 
-#: index.docbook:639
+#. Tag: programlisting
+#: tutorial.xml:734
+#, fuzzy, no-c-format
 msgid ""
-"<![CDATA[private void addPersonToEvent(Long personId, Long eventId) {\n"
-"\n"
-"    Session session = HibernateUtil.getSessionFactory().getCurrentSession"
+"<![CDATA[    private void addPersonToEvent(Long personId, Long eventId) {\n"
+"        Session session = HibernateUtil.getSessionFactory().getCurrentSession"
 "();\n"
-"    session.beginTransaction();\n"
+"        session.beginTransaction();\n"
 "\n"
-"    Person aPerson = (Person) session.load(Person.class, personId);\n"
-"    Event anEvent = (Event) session.load(Event.class, eventId);\n"
+"        Person aPerson = (Person) session.load(Person.class, personId);\n"
+"        Event anEvent = (Event) session.load(Event.class, eventId);\n"
+"        aPerson.getEvents().add(anEvent);\n"
 "\n"
-"    aPerson.getEvents().add(anEvent);\n"
-"\n"
-"    session.getTransaction().commit();\n"
-"}]]>"
+"        session.getTransaction().commit();\n"
+"    }]]>"
 msgstr ""
 "Traigamos alguna gente y eventos juntos en un nuevo m&#x00e9;todo en "
 "<literal>EventManager</literal>:"
 
-#: index.docbook:641
+#. Tag: para
+#: tutorial.xml:736
+#, fuzzy, no-c-format
 msgid ""
 "After loading a <literal>Person</literal> and an <literal>Event</literal>, "
-"simply modify the collection using the normal collection methods. As you can "
-"see, there is no explicit call to <literal>update()</literal> or "
-"<literal>save()</literal>, Hibernate automatically detects that the "
-"collection has been modified and needs to be updated. This is called "
-"<emphasis>automatic dirty checking</emphasis>, and you can also try it by "
-"modifying the name or the date property of any of your objects. As long as "
-"they are in <emphasis>persistent</emphasis> state, that is, bound to a "
-"particular Hibernate <literal>Session</literal> (i.e. they have been just "
-"loaded or saved in a unit of work), Hibernate monitors any changes and "
-"executes SQL in a write-behind fashion. The process of synchronizing the "
-"memory state with the database, usually only at the end of a unit of work, "
-"is called <emphasis>flushing</emphasis>. In our code, the unit of work ends "
-"with a commit (or rollback) of the database transaction - as defined by the "
-"<literal>thread</literal> configuration option for the "
-"<literal>CurrentSessionContext</literal> class."
+"simply modify the collection using the normal collection methods. There is "
+"no explicit call to <literal>update()</literal> or <literal>save()</"
+"literal>; Hibernate automatically detects that the collection has been "
+"modified and needs to be updated. This is called <emphasis>automatic dirty "
+"checking</emphasis>. You can also try it by modifying the name or the date "
+"property of any of your objects. As long as they are in "
+"<emphasis>persistent</emphasis> state, that is, bound to a particular "
+"Hibernate <interfacename>org.hibernate.Session</interfacename>, Hibernate "
+"monitors any changes and executes SQL in a write-behind fashion. The process "
+"of synchronizing the memory state with the database, usually only at the end "
+"of a unit of work, is called <emphasis>flushing</emphasis>. In our code, the "
+"unit of work ends with a commit, or rollback, of the database transaction."
 msgstr ""
 "<![CDATA[private void addPersonToEvent(Long personId, Long eventId) {\n"
 "    Session session = HibernateUtil.currentSession();\n"
@@ -1924,13 +1866,15 @@ msgstr ""
 "    HibernateUtil.closeSession();\n"
 "}]]>"
 
-#: index.docbook:656
+#. Tag: para
+#: tutorial.xml:755
+#, fuzzy, no-c-format
 msgid ""
-"You might of course load person and event in different units of work. Or you "
-"modify an object outside of a <literal>Session</literal>, when it is not in "
-"persistent state (if it was persistent before, we call this state "
-"<emphasis>detached</emphasis>). You can even modify a collection when it is "
-"detached:"
+"You can load person and event in different units of work. Or you can modify "
+"an object outside of a <interfacename>org.hibernate.Session</interfacename>, "
+"when it is not in persistent state (if it was persistent before, this state "
+"is called <emphasis>detached</emphasis>). You can even modify a collection "
+"when it is detached:"
 msgstr ""
 "Despu&#x00e9;s de cargar una <literal>Person</literal> y un <literal>Event</"
 "literal>, simplemente modifica la colecci&#x00f3;n usando sus m&#x00e9;todos "
@@ -1948,40 +1892,39 @@ msgstr ""
 "datos, usualmente s&#x00f3;lo al final de una unidad de trabajo, es llamado "
 "<emphasis>limpieza (flushing)</emphasis>."
 
-#: index.docbook:663
+#. Tag: programlisting
+#: tutorial.xml:764
+#, fuzzy, no-c-format
 msgid ""
-"<![CDATA[private void addPersonToEvent(Long personId, Long eventId) {\n"
-"\n"
-"    Session session = HibernateUtil.getSessionFactory().getCurrentSession"
+"<![CDATA[    private void addPersonToEvent(Long personId, Long eventId) {\n"
+"        Session session = HibernateUtil.getSessionFactory().getCurrentSession"
 "();\n"
-"    session.beginTransaction();\n"
+"        session.beginTransaction();\n"
 "\n"
-"    Person aPerson = (Person) session\n"
-"            .createQuery(\"select p from Person p left join fetch p.events "
-"where p.id = :pid\")\n"
-"            .setParameter(\"pid\", personId)\n"
-"            .uniqueResult(); // Eager fetch the collection so we can use it "
+"        Person aPerson = (Person) session\n"
+"                .createQuery(\"select p from Person p left join fetch p."
+"events where p.id = :pid\")\n"
+"                .setParameter(\"pid\", personId)\n"
+"                .uniqueResult(); // Eager fetch the collection so we can use "
+"it detached\n"
+"        Event anEvent = (Event) session.load(Event.class, eventId);\n"
+"\n"
+"        session.getTransaction().commit();\n"
+"\n"
+"        // End of first unit of work\n"
+"\n"
+"        aPerson.getEvents().add(anEvent); // aPerson (and its collection) is "
 "detached\n"
 "\n"
-"    Event anEvent = (Event) session.load(Event.class, eventId);\n"
+"        // Begin second unit of work\n"
 "\n"
-"    session.getTransaction().commit();\n"
+"        Session session2 = HibernateUtil.getSessionFactory()."
+"getCurrentSession();\n"
+"        session2.beginTransaction();\n"
+"        session2.update(aPerson); // Reattachment of aPerson\n"
 "\n"
-"    // End of first unit of work\n"
-"\n"
-"    aPerson.getEvents().add(anEvent); // aPerson (and its collection) is "
-"detached\n"
-"\n"
-"    // Begin second unit of work\n"
-"\n"
-"    Session session2 = HibernateUtil.getSessionFactory().getCurrentSession"
-"();\n"
-"    session2.beginTransaction();\n"
-"\n"
-"    session2.update(aPerson); // Reattachment of aPerson\n"
-"\n"
-"    session2.getTransaction().commit();\n"
-"}]]>"
+"        session2.getTransaction().commit();\n"
+"    }]]>"
 msgstr ""
 "Podr&#x00ed;as, por supuesto, cargar persona y evento en unidades de trabajo "
 "diferentes. O modificas un objeto fuera de una <literal>Session</literal>, "
@@ -1989,13 +1932,15 @@ msgstr ""
 "llamamos a este estado <emphasis>separado (detached) </emphasis>). En "
 "c&#x00f3;digo (no muy realista), esto se ver&#x00ed;a como sigue:"
 
-#: index.docbook:665
+#. Tag: para
+#: tutorial.xml:766
+#, fuzzy, no-c-format
 msgid ""
 "The call to <literal>update</literal> makes a detached object persistent "
-"again, you could say it binds it to a new unit of work, so any modifications "
-"you made to it while detached can be saved to the database. This includes "
-"any modifications (additions/deletions) you made to a collection of that "
-"entity object."
+"again by binding it to a new unit of work, so any modifications you made to "
+"it while detached can be saved to the database. This includes any "
+"modifications (additions/deletions) you made to a collection of that entity "
+"object."
 msgstr ""
 "<![CDATA[    private void addPersonToEvent(Long personId, Long eventId) {\n"
 "\n"
@@ -2020,30 +1965,34 @@ msgstr ""
 "    }\n"
 "]]>"
 
-#: index.docbook:672
+#. Tag: para
+#: tutorial.xml:775
+#, fuzzy, no-c-format
 msgid ""
-"Well, this is not much use in our current situation, but it's an important "
-"concept you can design into your own application. For now, complete this "
-"exercise by adding a new action to the <literal>EventManager</literal>'s "
-"main method and call it from the command line. If you need the identifiers "
-"of a person and an event - the <literal>save()</literal> method returns it "
-"(you might have to modify some of the previous methods to return that "
-"identifier):"
+"This is not much use in our example, but it is an important concept you can "
+"incorporate into your own application. Complete this exercise by adding a "
+"new action to the main method of the <literal>EventManager</literal> and "
+"call it from the command line. If you need the identifiers of a person and "
+"an event - the <literal>save()</literal> method returns it (you might have "
+"to modify some of the previous methods to return that identifier):"
 msgstr ""
 "La llamada a <literal>update</literal> hace a un objeto persistente de "
 "nuevo, podr&#x00ed;as decir que la liga a una nueva unidad de trabajo, de "
 "modo que cualquier modificaci&#x00f3;n que le hagas mientras est&#x00e9; "
 "separado puede ser salvada a base de datos."
 
-#: index.docbook:680
+#. Tag: programlisting
+#: tutorial.xml:783
+#, fuzzy, no-c-format
 msgid ""
-"<![CDATA[else if (args[0].equals(\"addpersontoevent\")) {\n"
-"    Long eventId = mgr.createAndStoreEvent(\"My Event\", new Date());\n"
-"    Long personId = mgr.createAndStorePerson(\"Foo\", \"Bar\");\n"
-"    mgr.addPersonToEvent(personId, eventId);\n"
-"    System.out.println(\"Added person \" + personId + \" to event \" + "
-"eventId);\n"
-"}]]>"
+"<![CDATA[        else if (args[0].equals(\"addpersontoevent\")) {\n"
+"            Long eventId = mgr.createAndStoreEvent(\"My Event\", new Date"
+"());\n"
+"            Long personId = mgr.createAndStorePerson(\"Foo\", \"Bar\");\n"
+"            mgr.addPersonToEvent(personId, eventId);\n"
+"            System.out.println(\"Added person \" + personId + \" to event \" "
+"+ eventId);\n"
+"        }]]>"
 msgstr ""
 "Bueno, esto no es muy usado en nuestra situaci&#x00f3;n actual, pero es un "
 "concepto importante que puedes dise&#x00f1;ar en tu propia aplicaci&#x00f3;"
@@ -2052,20 +2001,22 @@ msgstr ""
 "la l&#x00ed;nea de comandos. Si necesitas los identificadores de una persona "
 "o evento, el m&#x00e9;todo <literal>save()</literal> los devuelve."
 
-#: index.docbook:682
+#. Tag: para
+#: tutorial.xml:785
+#, fuzzy, no-c-format
 msgid ""
-"This was an example of an association between two equally important classes, "
+"This is an example of an association between two equally important classes : "
 "two entities. As mentioned earlier, there are other classes and types in a "
 "typical model, usually \"less important\". Some you have already seen, like "
-"an <literal>int</literal> or a <literal>String</literal>. We call these "
-"classes <emphasis>value types</emphasis>, and their instances "
+"an <literal>int</literal> or a <classname>java.lang.String</classname>. We "
+"call these classes <emphasis>value types</emphasis>, and their instances "
 "<emphasis>depend</emphasis> on a particular entity. Instances of these types "
-"don't have their own identity, nor are they shared between entities (two "
-"persons don't reference the same <literal>firstname</literal> object, even "
-"if they have the same first name). Of course, value types can not only be "
-"found in the JDK (in fact, in a Hibernate application all JDK classes are "
-"considered value types), but you can also write dependent classes yourself, "
-"<literal>Address</literal> or <literal>MonetaryAmount</literal>, for example."
+"do not have their own identity, nor are they shared between entities. Two "
+"persons do not reference the same <literal>firstname</literal> object, even "
+"if they have the same first name. Value types cannot only be found in the "
+"JDK , but you can also write dependent classes yourself such as an "
+"<literal>Address</literal> or <literal>MonetaryAmount</literal> class. In "
+"fact, in a Hibernate application all JDK classes are considered value types."
 msgstr ""
 "Esto fue un ejemplo de una asociaci&#x00f3;n entre dos clases igualmente "
 "importantes, dos entidades. Como se ha mencionado anteriormente, hay otras "
@@ -2082,9 +2033,11 @@ msgstr ""
 "puedes escribir por ti mismo clases dependientes, por ejemplo, "
 "<literal>Address</literal> o <literal>MonetaryAmount</literal>."
 
-#: index.docbook:695
+#. Tag: para
+#: tutorial.xml:803
+#, fuzzy, no-c-format
 msgid ""
-"You can also design a collection of value types. This is conceptually very "
+"You can also design a collection of value types. This is conceptually "
 "different from a collection of references to other entities, but looks "
 "almost the same in Java."
 msgstr ""
@@ -2092,24 +2045,35 @@ msgstr ""
 "Esto es conceptualmente muy diferente de una colecci&#x00f3;n de referencias "
 "a otras entidades, pero se ve casi lo mismo en Java."
 
-#: index.docbook:703
+#. Tag: title
+#: tutorial.xml:812
+#, no-c-format
 msgid "Collection of values"
 msgstr "Colecci&#x00f3;n de valores"
 
-#: index.docbook:705
+#. Tag: para
+#: tutorial.xml:814
+#, no-c-format
 msgid ""
-"We add a collection of value typed objects to the <literal>Person</literal> "
-"entity. We want to store email addresses, so the type we use is "
-"<literal>String</literal>, and the collection is again a <literal>Set</"
-"literal>:"
+"Let's add a collection of email addresses to the <literal>Person</literal> "
+"entity. This will be represented as a <interfacename>java.util.Set</"
+"interfacename> of <classname>java.lang.String</classname> instances:"
 msgstr ""
-"Agregamos una colecci&#x00f3;n de objetos tipificados en valor a la entidad "
-"<literal>Person</literal>. Queremos almacenar direcciones de email, de modo "
-"que el tipo que usamos es <literal>String</literal>, y la colecci&#x00f3;n "
-"es nuevamente un <literal>Set</literal>:"
 
-#: index.docbook:710
+#. Tag: programlisting
+#: tutorial.xml:820
+#, fuzzy, no-c-format
 msgid ""
+"<![CDATA[    private Set emailAddresses = new HashSet();\n"
+"\n"
+"    public Set getEmailAddresses() {\n"
+"        return emailAddresses;\n"
+"    }\n"
+"\n"
+"    public void setEmailAddresses(Set emailAddresses) {\n"
+"        this.emailAddresses = emailAddresses;\n"
+"    }]]>"
+msgstr ""
 "<![CDATA[private Set emailAddresses = new HashSet();\n"
 "\n"
 "public Set getEmailAddresses() {\n"
@@ -2119,45 +2083,42 @@ msgid ""
 "public void setEmailAddresses(Set emailAddresses) {\n"
 "    this.emailAddresses = emailAddresses;\n"
 "}]]>"
-msgstr ""
-"<![CDATA[private Set emailAddresses = new HashSet();\n"
-"\n"
-"public Set getEmailAddresses() {\n"
-"    return emailAddresses;\n"
-"}\n"
-"\n"
-"public void setEmailAddresses(Set emailAddresses) {\n"
-"    this.emailAddresses = emailAddresses;\n"
-"}]]>"
 
-#: index.docbook:712
-msgid "The mapping of this <literal>Set</literal>:"
+#. Tag: para
+#: tutorial.xml:822
+#, fuzzy, no-c-format
+msgid "The mapping of this <literal>Set</literal> is as follows:"
 msgstr "El mapeo de este <literal>Set</literal>:"
 
-#: index.docbook:716
+#. Tag: programlisting
+#: tutorial.xml:826
+#, fuzzy, no-c-format
 msgid ""
-"<![CDATA[<set name=\"emailAddresses\" table=\"PERSON_EMAIL_ADDR\">\n"
-"    <key column=\"PERSON_ID\"/>\n"
-"    <element type=\"string\" column=\"EMAIL_ADDR\"/>\n"
-"</set>]]>"
+"<![CDATA[        <set name=\"emailAddresses\" table=\"PERSON_EMAIL_ADDR\">\n"
+"            <key column=\"PERSON_ID\"/>\n"
+"            <element type=\"string\" column=\"EMAIL_ADDR\"/>\n"
+"        </set>]]>"
 msgstr ""
 "<![CDATA[<set name=\"emailAddresses\" table=\"PERSON_EMAIL_ADDR\">\n"
 "    <key column=\"PERSON_ID\"/>\n"
 "    <element type=\"string\" column=\"EMAIL_ADDR\"/>\n"
 "</set>]]>"
 
-#: index.docbook:718
+#. Tag: para
+#: tutorial.xml:828
+#, fuzzy, no-c-format
 msgid ""
-"The difference compared with the earlier mapping is the <literal>element</"
-"literal> part, which tells Hibernate that the collection does not contain "
-"references to another entity, but a collection of elements of type "
-"<literal>String</literal> (the lowercase name tells you it's a Hibernate "
-"mapping type/converter). Once again, the <literal>table</literal> attribute "
-"of the <literal>set</literal> element determines the table name for the "
-"collection. The <literal>key</literal> element defines the foreign-key "
-"column name in the collection table. The <literal>column</literal> attribute "
-"in the <literal>element</literal> element defines the column name where the "
-"<literal>String</literal> values will actually be stored."
+"The difference compared with the earlier mapping is the use of the "
+"<literal>element</literal> part which tells Hibernate that the collection "
+"does not contain references to another entity, but is rather a collection "
+"whose elements are values types, here specifically of type <literal>string</"
+"literal>. The lowercase name tells you it is a Hibernate mapping type/"
+"converter. Again the <literal>table</literal> attribute of the <literal>set</"
+"literal> element determines the table name for the collection. The "
+"<literal>key</literal> element defines the foreign-key column name in the "
+"collection table. The <literal>column</literal> attribute in the "
+"<literal>element</literal> element defines the column name where the email "
+"address values will actually be stored."
 msgstr ""
 "La diferencia comparada con el mapeo anterior es la parte <literal>element</"
 "literal>, que le dice a Hibernate que la colecci&#x00f3;n no contiene "
@@ -2171,11 +2132,15 @@ msgstr ""
 "<literal>element</literal> define el nombre de columna donde realmente "
 "ser&#x00e1;n almacenados los valores <literal>String</literal>."
 
-#: index.docbook:728
-msgid "Have a look at the updated schema:"
+#. Tag: para
+#: tutorial.xml:844
+#, fuzzy, no-c-format
+msgid "Here is the updated schema:"
 msgstr "Echa una mirada al esquema actualizado:"
 
-#: index.docbook:732
+#. Tag: programlisting
+#: tutorial.xml:848
+#, no-c-format
 msgid ""
 "<![CDATA[\n"
 "  _____________        __________________\n"
@@ -2219,10 +2184,12 @@ msgstr ""
 "                                                |_____________|\n"
 " ]]>"
 
-#: index.docbook:734
+#. Tag: para
+#: tutorial.xml:850
+#, fuzzy, no-c-format
 msgid ""
 "You can see that the primary key of the collection table is in fact a "
-"composite key, using both columns. This also implies that there can't be "
+"composite key that uses both columns. This also implies that there cannot be "
 "duplicate email addresses per person, which is exactly the semantics we need "
 "for a set in Java."
 msgstr ""
@@ -2231,10 +2198,12 @@ msgstr ""
 "no pueden haber direcciones de email duplicadas por persona, que es "
 "exactamente la sem&#x00e1;ntica que necesitamos para un conjunto en Java."
 
-#: index.docbook:740
+#. Tag: para
+#: tutorial.xml:856
+#, fuzzy, no-c-format
 msgid ""
-"You can now try and add elements to this collection, just like we did before "
-"by linking persons and events. It's the same code in Java:"
+"You can now try to add elements to this collection, just like we did before "
+"by linking persons and events. It is the same code in Java:"
 msgstr ""
 "<![CDATA[private void addEmailToPerson(Long personId, String emailAddress) "
 "{\n"
@@ -2255,51 +2224,55 @@ msgstr ""
 "();\n"
 "}]]>"
 
-#: index.docbook:745
+#. Tag: programlisting
+#: tutorial.xml:861
+#, fuzzy, no-c-format
 msgid ""
-"<![CDATA[private void addEmailToPerson(Long personId, String emailAddress) "
-"{\n"
-"\n"
-"    Session session = HibernateUtil.getSessionFactory().getCurrentSession"
+"<![CDATA[    private void addEmailToPerson(Long personId, String "
+"emailAddress) {\n"
+"        Session session = HibernateUtil.getSessionFactory().getCurrentSession"
 "();\n"
-"    session.beginTransaction();\n"
+"        session.beginTransaction();\n"
 "\n"
-"    Person aPerson = (Person) session.load(Person.class, personId);\n"
+"        Person aPerson = (Person) session.load(Person.class, personId);\n"
+"        // adding to the emailAddress collection might trigger a lazy load "
+"of the collection\n"
+"        aPerson.getEmailAddresses().add(emailAddress);\n"
 "\n"
-"    // The getEmailAddresses() might trigger a lazy load of the collection\n"
-"    aPerson.getEmailAddresses().add(emailAddress);\n"
-"\n"
-"    session.getTransaction().commit();\n"
-"}]]>"
+"        session.getTransaction().commit();\n"
+"    }]]>"
 msgstr ""
 "Puedes ahora intentar y agregar elementos a esta colecci&#x00f3;n, al igual "
 "que hicimos antes enlazando personas y eventos. Es el mismo c&#x00f3;digo en "
 "Java."
 
-#: index.docbook:747
+#. Tag: para
+#: tutorial.xml:863
+#, fuzzy, no-c-format
 msgid ""
-"This time we didnt' use a <emphasis>fetch</emphasis> query to initialize the "
-"collection. Hence, the call to its getter method will trigger an additional "
-"select to initialize it, so we can add an element to it. Monitor the SQL log "
-"and try to optimize this with an eager fetch."
+"This time we did not use a <emphasis>fetch</emphasis> query to initialize "
+"the collection. Monitor the SQL log and try to optimize this with an eager "
+"fetch."
 msgstr ""
 "This time we didnt' use a <emphasis>fetch</emphasis> query to initialize the "
 "collection. Hence, the call to its getter method will trigger an additional "
 "select to initialize it, so we can add an element to it. Monitor the SQL log "
 "and try to optimize this with an eager fetch."
 
-#: index.docbook:757
+#. Tag: title
+#: tutorial.xml:872
+#, no-c-format
 msgid "Bi-directional associations"
 msgstr "Asociaciones bidireccionales"
 
-#: index.docbook:759
+#. Tag: para
+#: tutorial.xml:874
+#, fuzzy, no-c-format
 msgid ""
-"Next we are going to map a bi-directional association - making the "
-"association between person and event work from both sides in Java. Of "
-"course, the database schema doesn't change, we still have many-to-many "
-"multiplicity. A relational database is more flexible than a network "
-"programming language, so it doesn't need anything like a navigation "
-"direction - data can be viewed and retrieved in any possible way."
+"Next you will map a bi-directional association. You will make the "
+"association between person and event work from both sides in Java. The "
+"database schema does not change, so you will still have many-to-many "
+"multiplicity."
 msgstr ""
 "A continuacion vamos a mapear una asociaci&#x00f3;n bidireccional, haciendo "
 "que la asociaci&#x00f3;n entre persona y evento funcione desde ambos lados "
@@ -2310,25 +2283,38 @@ msgstr ""
 "navegaci&#x00f3;n; los datos pueden ser vistos y recuperados en cualquier "
 "forma posible."
 
-#: index.docbook:767
+#. Tag: para
+#: tutorial.xml:882
+#, no-c-format
+msgid ""
+"A relational database is more flexible than a network programming language, "
+"in that it does not need a navigation direction; data can be viewed and "
+"retrieved in any possible way."
+msgstr ""
+
+#. Tag: para
+#: tutorial.xml:890
+#, fuzzy, no-c-format
 msgid ""
 "First, add a collection of participants to the <literal>Event</literal> "
-"Event class:"
+"class:"
 msgstr ""
 "Primero agrega una colecci&#x00f3;n de participantes a la clase de eventos "
 "<literal>Event</literal>:"
 
-#: index.docbook:771
+#. Tag: programlisting
+#: tutorial.xml:895
+#, fuzzy, no-c-format
 msgid ""
-"<![CDATA[private Set participants = new HashSet();\n"
+"<![CDATA[    private Set participants = new HashSet();\n"
 "\n"
-"public Set getParticipants() {\n"
-"    return participants;\n"
-"}\n"
+"    public Set getParticipants() {\n"
+"        return participants;\n"
+"    }\n"
 "\n"
-"public void setParticipants(Set participants) {\n"
-"    this.participants = participants;\n"
-"}]]>"
+"    public void setParticipants(Set participants) {\n"
+"        this.participants = participants;\n"
+"    }]]>"
 msgstr ""
 "<![CDATA[private Set participants = new HashSet();\n"
 "\n"
@@ -2340,21 +2326,24 @@ msgstr ""
 "    this.participants = participants;\n"
 "}]]>"
 
-#: index.docbook:773
+#. Tag: para
+#: tutorial.xml:897
+#, fuzzy, no-c-format
 msgid ""
-"Now map this side of the association too, in <literal>Event.hbm.xml</"
-"literal>."
+"Now map this side of the association in <literal>Event.hbm.xml</literal>."
 msgstr ""
 "Ahora mapea este lado de la asociaci&#x00f3;n tambi&#x00e9;n, en "
 "<literal>Event.hbm.xml</literal>."
 
-#: index.docbook:777
+#. Tag: programlisting
+#: tutorial.xml:901
+#, fuzzy, no-c-format
 msgid ""
-"<![CDATA[<set name=\"participants\" table=\"PERSON_EVENT\" inverse=\"true"
-"\">\n"
-"    <key column=\"EVENT_ID\"/>\n"
-"    <many-to-many column=\"PERSON_ID\" class=\"events.Person\"/>\n"
-"</set>]]>"
+"<![CDATA[        <set name=\"participants\" table=\"PERSON_EVENT\" inverse="
+"\"true\">\n"
+"            <key column=\"EVENT_ID\"/>\n"
+"            <many-to-many column=\"PERSON_ID\" class=\"events.Person\"/>\n"
+"        </set>]]>"
 msgstr ""
 "<![CDATA[<set name=\"participants\" table=\"PERSON_EVENT\" inverse=\"true"
 "\">\n"
@@ -2362,14 +2351,16 @@ msgstr ""
 "    <many-to-many column=\"PERSON_ID\" class=\"Person\"/>\n"
 "</set>]]>"
 
-#: index.docbook:779
+#. Tag: para
+#: tutorial.xml:903
+#, fuzzy, no-c-format
 msgid ""
-"As you see, these are normal <literal>set</literal> mappings in both mapping "
-"documents. Notice that the column names in <literal>key</literal> and "
-"<literal>many-to-many</literal> are swapped in both mapping documents. The "
-"most important addition here is the <literal>inverse=\"true\"</literal> "
-"attribute in the <literal>set</literal> element of the <literal>Event</"
-"literal>'s collection mapping."
+"These are normal <literal>set</literal> mappings in both mapping documents. "
+"Notice that the column names in <literal>key</literal> and <literal>many-to-"
+"many</literal> swap in both mapping documents. The most important addition "
+"here is the <literal>inverse=\"true\"</literal> attribute in the "
+"<literal>set</literal> element of the <literal>Event</literal>'s collection "
+"mapping."
 msgstr ""
 "Como ves, estos son mapeos normales de <literal>set</literal> en ambos "
 "documentos de mapeo. Nota que los nombres de columnas en <literal>key</"
@@ -2378,12 +2369,14 @@ msgstr ""
 "el atributo <literal>inverse=\"true\"</literal> en el elemento <literal>set</"
 "literal> del mapeo de colecci&#x00f3;n de <literal>Event</literal>."
 
-#: index.docbook:787
+#. Tag: para
+#: tutorial.xml:911
+#, fuzzy, no-c-format
 msgid ""
-"What this means is that Hibernate should take the other side - the "
-"<literal>Person</literal> class - when it needs to find out information "
-"about the link between the two. This will be a lot easier to understand once "
-"you see how the bi-directional link between our two entities is created ."
+"What this means is that Hibernate should take the other side, the "
+"<literal>Person</literal> class, when it needs to find out information about "
+"the link between the two. This will be a lot easier to understand once you "
+"see how the bi-directional link between our two entities is created."
 msgstr ""
 "Lo que esto significa es que Hibernate debe tomar el otro lado - la clase "
 "<literal>Person</literal> - cuando necesite descubrir informaci&#x00f3;n "
@@ -2391,21 +2384,25 @@ msgstr ""
 "cil de entender una vez que veas c&#x00f3;mo se crea el enlace bidireccional "
 "entre nuestras dos entidades."
 
-#: index.docbook:796
+#. Tag: title
+#: tutorial.xml:920
+#, no-c-format
 msgid "Working bi-directional links"
 msgstr "Trabajando enlaces bidireccionales"
 
-#: index.docbook:798
+#. Tag: para
+#: tutorial.xml:922
+#, fuzzy, no-c-format
 msgid ""
 "First, keep in mind that Hibernate does not affect normal Java semantics. "
 "How did we create a link between a <literal>Person</literal> and an "
-"<literal>Event</literal> in the unidirectional example? We added an instance "
+"<literal>Event</literal> in the unidirectional example? You add an instance "
 "of <literal>Event</literal> to the collection of event references, of an "
-"instance of <literal>Person</literal>. So, obviously, if we want to make "
-"this link working bi-directional, we have to do the same on the other side - "
-"adding a <literal>Person</literal> reference to the collection in an "
-"<literal>Event</literal>. This \"setting the link on both sides\" is "
-"absolutely necessary and you should never forget doing it."
+"instance of <literal>Person</literal>. If you want to make this link bi-"
+"directional, you have to do the same on the other side by adding a "
+"<literal>Person</literal> reference to the collection in an <literal>Event</"
+"literal>. This process of \"setting the link on both sides\" is absolutely "
+"necessary with bi-directional links."
 msgstr ""
 "Primero, ten en mente que Hhibernate no afecta la sem&#x00e1;ntica normal de "
 "Java. ¿C&#x00f3;mo hemos creado un enlace entre una <literal>Person</"
@@ -2418,34 +2415,38 @@ msgstr ""
 "<literal>Event</literal>. Este \"establecer el enlace a ambos lados\" es "
 "absolutamente necesario y nunca debes olvidar hacerlo."
 
-#: index.docbook:808
+#. Tag: para
+#: tutorial.xml:932
+#, fuzzy, no-c-format
 msgid ""
-"Many developers program defensive and create link management methods to "
-"correctly set both sides, e.g. in <literal>Person</literal>:"
+"Many developers program defensively and create link management methods to "
+"correctly set both sides (for example, in <literal>Person</literal>):"
 msgstr ""
 "Muchos desarrolladores programan a la defensiva y crean m&#x00e9;todos de "
 "manejo de un enlace para establecer correctamente ambos lados, por ejemplo "
 "en <literal>Person</literal>:"
 
-#: index.docbook:813
+#. Tag: programlisting
+#: tutorial.xml:937
+#, fuzzy, no-c-format
 msgid ""
-"<![CDATA[protected Set getEvents() {\n"
-"    return events;\n"
-"}\n"
+"<![CDATA[    protected Set getEvents() {\n"
+"        return events;\n"
+"    }\n"
 "\n"
-"protected void setEvents(Set events) {\n"
-"    this.events = events;\n"
-"}\n"
+"    protected void setEvents(Set events) {\n"
+"        this.events = events;\n"
+"    }\n"
 "\n"
-"public void addToEvent(Event event) {\n"
-"    this.getEvents().add(event);\n"
-"    event.getParticipants().add(this);\n"
-"}\n"
+"    public void addToEvent(Event event) {\n"
+"        this.getEvents().add(event);\n"
+"        event.getParticipants().add(this);\n"
+"    }\n"
 "\n"
-"public void removeFromEvent(Event event) {\n"
-"    this.getEvents().remove(event);\n"
-"    event.getParticipants().remove(this);\n"
-"}]]>"
+"    public void removeFromEvent(Event event) {\n"
+"        this.getEvents().remove(event);\n"
+"        event.getParticipants().remove(this);\n"
+"    }]]>"
 msgstr ""
 "<![CDATA[protected Set getEvents() {\n"
 "    return events;\n"
@@ -2465,13 +2466,14 @@ msgstr ""
 "    event.getParticipants().remove(this);\n"
 "}]]>"
 
-#: index.docbook:815
+#. Tag: para
+#: tutorial.xml:939
+#, fuzzy, no-c-format
 msgid ""
-"Notice that the get and set methods for the collection are now protected - "
-"this allows classes in the same package and subclasses to still access the "
-"methods, but prevents everybody else from messing with the collections "
-"directly (well, almost). You should probably do the same with the collection "
-"on the other side."
+"The get and set methods for the collection are now protected. This allows "
+"classes in the same package and subclasses to still access the methods, but "
+"prevents everybody else from altering the collections directly. Repeat the "
+"steps for the collection on the other side."
 msgstr ""
 "Nota que los m&#x00e9;todos get y set para esta colecci&#x00f3;n son ahora "
 "protegidos. Esto le permite a clases en el mismo paquete y a subclases "
@@ -2479,22 +2481,22 @@ msgstr ""
 "ensuciarse con la colecci&#x00f3;n directamente (bueno, casi). Probablemente "
 "debas hacer lo mismo con la colecci&#x00f3;n al otro lado."
 
-#: index.docbook:822
+#. Tag: para
+#: tutorial.xml:946
+#, fuzzy, no-c-format
 msgid ""
 "What about the <literal>inverse</literal> mapping attribute? For you, and "
 "for Java, a bi-directional link is simply a matter of setting the references "
-"on both sides correctly. Hibernate however doesn't have enough information "
-"to correctly arrange SQL <literal>INSERT</literal> and <literal>UPDATE</"
-"literal> statements (to avoid constraint violations), and needs some help to "
-"handle bi-directional associations properly. Making one side of the "
-"association <literal>inverse</literal> tells Hibernate to basically ignore "
-"it, to consider it a <emphasis>mirror</emphasis> of the other side. That's "
-"all that is necessary for Hibernate to work out all of the issues when "
-"transformation a directional navigation model to a SQL database schema. The "
-"rules you have to remember are straightforward: All bi-directional "
-"associations need one side as <literal>inverse</literal>. In a one-to-many "
-"association it has to be the many-side, in many-to-many association you can "
-"pick either side, there is no difference."
+"on both sides correctly. Hibernate, however, does not have enough "
+"information to correctly arrange SQL <literal>INSERT</literal> and "
+"<literal>UPDATE</literal> statements (to avoid constraint violations). "
+"Making one side of the association <literal>inverse</literal> tells "
+"Hibernate to consider it a <emphasis>mirror</emphasis> of the other side. "
+"That is all that is necessary for Hibernate to resolve any issues that arise "
+"when transforming a directional navigation model to a SQL database schema. "
+"The rules are straightforward: all bi-directional associations need one side "
+"as <literal>inverse</literal>. In a one-to-many association it has to be the "
+"many-side, and in many-to-many association you can select either side."
 msgstr ""
 "Y ¿qu&#x00e9; del atributo de mapeo <literal>inverse</literal>? Para ti, y "
 "para Java, un enlace bidireccional es simplemente cuesti&#x00f3;n de "
@@ -2513,19 +2515,19 @@ msgstr ""
 "ser el lado-de-muchos. En una asociaci&#x00f3;n muchos-a-muchos, puedes "
 "tomar cualquier lado, no hay diferencia."
 
-#: index.docbook:837
-msgid "Let's turn this into a small web application."
-msgstr "Let's turn this into a small web application."
-
-#: index.docbook:844
+#. Tag: title
+#: tutorial.xml:962
+#, no-c-format
 msgid "Part 3 - The EventManager web application"
 msgstr "Part 3 - The EventManager web application"
 
-#: index.docbook:846
+#. Tag: para
+#: tutorial.xml:964
+#, fuzzy, no-c-format
 msgid ""
 "A Hibernate web application uses <literal>Session</literal> and "
 "<literal>Transaction</literal> almost like a standalone application. "
-"However, some common patterns are useful. We now write an "
+"However, some common patterns are useful. You can now write an "
 "<literal>EventManagerServlet</literal>. This servlet can list all events "
 "stored in the database, and it provides an HTML form to enter new events."
 msgstr ""
@@ -2535,70 +2537,62 @@ msgstr ""
 "<literal>EventManagerServlet</literal>. This servlet can list all events "
 "stored in the database, and it provides an HTML form to enter new events."
 
-#: index.docbook:854
+#. Tag: title
+#: tutorial.xml:972
+#, no-c-format
 msgid "Writing the basic servlet"
 msgstr "Writing the basic servlet"
 
-#: index.docbook:856
+#. Tag: para
+#: tutorial.xml:974
+#, fuzzy, no-c-format
 msgid ""
-"Create a new class in your source directory, in the <literal>events</"
-"literal> package:"
+"First we need create our basic processing servlet. Since our servlet only "
+"handles HTTP <literal>GET</literal> requests, we will only implement the "
+"<literal>doGet()</literal> method:"
 msgstr ""
-"Create a new class in your source directory, in the <literal>events</"
-"literal> package:"
+"The servlet handles HTTP <literal>GET</literal> requests only, hence, the "
+"method we implement is <literal>doGet()</literal>:"
 
-#: index.docbook:861
+#. Tag: programlisting
+#: tutorial.xml:980
+#, fuzzy, no-c-format
 msgid ""
-"<![CDATA[package events;\n"
+"<![CDATA[package org.hibernate.tutorial.web;\n"
 "\n"
 "// Imports\n"
 "\n"
 "public class EventManagerServlet extends HttpServlet {\n"
 "\n"
-"    // Servlet code\n"
-"}]]>"
-msgstr ""
-"<![CDATA[package events;\n"
-"                                                 \n"
-"                                                 // Imports\n"
-"                                                 \n"
-"                                                 public class "
-"EventManagerServlet extends HttpServlet {\n"
-"                                                 \n"
-"                                                 // Servlet code\n"
-"                                                 }]]>"
-
-#: index.docbook:863
-msgid ""
-"The servlet handles HTTP <literal>GET</literal> requests only, hence, the "
-"method we implement is <literal>doGet()</literal>:"
-msgstr ""
-"The servlet handles HTTP <literal>GET</literal> requests only, hence, the "
-"method we implement is <literal>doGet()</literal>:"
-
-#: index.docbook:868
-msgid ""
-"<![CDATA[protected void doGet(HttpServletRequest request,\n"
-"                     HttpServletResponse response)\n"
-"        throws ServletException, IOException {\n"
+"    protected void doGet(\n"
+"            HttpServletRequest request,\n"
+"            HttpServletResponse response) throws ServletException, "
+"IOException {\n"
 "\n"
-"    SimpleDateFormat dateFormatter = new SimpleDateFormat(\"dd.MM.yyyy\");\n"
+"        SimpleDateFormat dateFormatter = new SimpleDateFormat( \"dd.MM.yyyy"
+"\" );\n"
 "\n"
-"    try {\n"
-"        // Begin unit of work\n"
-"        HibernateUtil.getSessionFactory()\n"
-"                .getCurrentSession().beginTransaction();\n"
+"        try {\n"
+"            // Begin unit of work\n"
+"            HibernateUtil.getSessionFactory().getCurrentSession()."
+"beginTransaction();\n"
 "\n"
-"        // Process request and render page...\n"
+"            // Process request and render page...\n"
 "\n"
-"        // End unit of work\n"
-"        HibernateUtil.getSessionFactory()\n"
-"                .getCurrentSession().getTransaction().commit();\n"
-"\n"
-"    } catch (Exception ex) {\n"
-"        HibernateUtil.getSessionFactory()\n"
-"                .getCurrentSession().getTransaction().rollback();\n"
-"        throw new ServletException(ex);\n"
+"            // End unit of work\n"
+"            HibernateUtil.getSessionFactory().getCurrentSession()."
+"getTransaction().commit();\n"
+"        }\n"
+"        catch (Exception ex) {\n"
+"            HibernateUtil.getSessionFactory().getCurrentSession()."
+"getTransaction().rollback();\n"
+"            if ( ServletException.class.isInstance( ex ) ) {\n"
+"                throw ( ServletException ) ex;\n"
+"            }\n"
+"            else {\n"
+"                throw new ServletException( ex );\n"
+"            }\n"
+"        }\n"
 "    }\n"
 "\n"
 "}]]>"
@@ -2639,15 +2633,24 @@ msgstr ""
 "                                                   \n"
 "                                                   }]]>"
 
-#: index.docbook:870
+#. Tag: para
+#: tutorial.xml:982
+#, no-c-format
 msgid ""
-"The pattern we are applying here is called <emphasis>session-per-request</"
-"emphasis>. When a request hits the servlet, a new Hibernate "
-"<literal>Session</literal> is opened through the first call to "
-"<literal>getCurrentSession()</literal> on the <literal>SessionFactory</"
-"literal>. Then a database transaction is started&mdash;all data access as to "
-"occur inside a transaction, no matter if data is read or written (we don't "
-"use the auto-commit mode in applications)."
+"Save this servlet as <filename>src/main/java/org/hibernate/tutorial/web/"
+"EventManagerServlet.java</filename>"
+msgstr ""
+
+#. Tag: para
+#: tutorial.xml:987
+#, fuzzy, no-c-format
+msgid ""
+"The pattern applied here is called <emphasis>session-per-request</emphasis>. "
+"When a request hits the servlet, a new Hibernate <literal>Session</literal> "
+"is opened through the first call to <literal>getCurrentSession()</literal> "
+"on the <literal>SessionFactory</literal>. A database transaction is then "
+"started. All data access occurs inside a transaction irrespective of whether "
+"the data is read or written. Do not use the auto-commit mode in applications."
 msgstr ""
 "The pattern we are applying here is called <emphasis>session-per-request</"
 "emphasis>. When a request hits the servlet, a new Hibernate "
@@ -2657,7 +2660,9 @@ msgstr ""
 "occur inside a transaction, no matter if data is read or written (we don't "
 "use the auto-commit mode in applications)."
 
-#: index.docbook:879
+#. Tag: para
+#: tutorial.xml:996
+#, no-c-format
 msgid ""
 "Do <emphasis>not</emphasis> use a new Hibernate <literal>Session</literal> "
 "for every database operation. Use one Hibernate <literal>Session</literal> "
@@ -2669,16 +2674,29 @@ msgstr ""
 "that is scoped to the whole request. Use <literal>getCurrentSession()</"
 "literal>, so that it is automatically bound to the current Java thread."
 
-#: index.docbook:886
+#. Tag: para
+#: tutorial.xml:1003
+#, fuzzy, no-c-format
 msgid ""
 "Next, the possible actions of the request are processed and the response "
-"HTML is rendered. We'll get to that part soon."
+"HTML is rendered. We will get to that part soon."
 msgstr ""
 "Next, the possible actions of the request are processed and the response "
 "HTML is rendered. We'll get to that part soon."
 
-#: index.docbook:891
+#. Tag: para
+#: tutorial.xml:1008
+#, fuzzy, no-c-format
 msgid ""
+"Finally, the unit of work ends when processing and rendering are complete. "
+"If any problems occurred during processing or rendering, an exception will "
+"be thrown and the database transaction rolled back. This completes the "
+"<literal>session-per-request</literal> pattern. Instead of the transaction "
+"demarcation code in every servlet, you could also write a servlet filter. "
+"See the Hibernate website and Wiki for more information about this pattern "
+"called <emphasis>Open Session in View</emphasis>. You will need it as soon "
+"as you consider rendering your view in JSP, not in a servlet."
+msgstr ""
 "Finally, the unit of work ends when processing and rendering is complete. If "
 "any problem occured during processing or rendering, an exception will be "
 "thrown and the database transaction rolled back. This completes the "
@@ -2687,54 +2705,56 @@ msgid ""
 "the Hibernate website and Wiki for more information about this pattern, "
 "called <emphasis>Open Session in View</emphasis>&mdash;you'll need it as "
 "soon as you consider rendering your view in JSP, not in a servlet."
-msgstr ""
-"Finally, the unit of work ends when processing and rendering is complete. If "
-"any problem occured during processing or rendering, an exception will be "
-"thrown and the database transaction rolled back. This completes the "
-"<literal>session-per-request</literal> pattern. Instead of the transaction "
-"demarcation code in every servlet you could also write a servlet filter. See "
-"the Hibernate website and Wiki for more information about this pattern, "
-"called <emphasis>Open Session in View</emphasis>&mdash;you'll need it as "
-"soon as you consider rendering your view in JSP, not in a servlet."
 
-#: index.docbook:905
+#. Tag: title
+#: tutorial.xml:1022
+#, no-c-format
 msgid "Processing and rendering"
 msgstr "Processing and rendering"
 
-#: index.docbook:907
+#. Tag: para
+#: tutorial.xml:1024
+#, fuzzy, no-c-format
 msgid ""
-"Let's implement the processing of the request and rendering of the page."
+"Now you can implement the processing of the request and the rendering of the "
+"page."
 msgstr ""
 "Let's implement the processing of the request and rendering of the page."
 
-#: index.docbook:911
+#. Tag: programlisting
+#: tutorial.xml:1028
+#, fuzzy, no-c-format
 msgid ""
-"<![CDATA[// Write HTML header\n"
-"PrintWriter out = response.getWriter();\n"
-"out.println(\"<html><head><title>Event Manager</title></head><body>\");\n"
+"<![CDATA[        // Write HTML header\n"
+"        PrintWriter out = response.getWriter();\n"
+"        out.println(\"<html><head><title>Event Manager</title></head><body>"
+"\");\n"
 "\n"
-"// Handle actions\n"
-"if ( \"store\".equals(request.getParameter(\"action\")) ) {\n"
+"        // Handle actions\n"
+"        if ( \"store\".equals(request.getParameter(\"action\")) ) {\n"
 "\n"
-"    String eventTitle = request.getParameter(\"eventTitle\");\n"
-"    String eventDate = request.getParameter(\"eventDate\");\n"
+"            String eventTitle = request.getParameter(\"eventTitle\");\n"
+"            String eventDate = request.getParameter(\"eventDate\");\n"
 "\n"
-"    if ( \"\".equals(eventTitle) || \"\".equals(eventDate) ) {\n"
-"        out.println(\"<b><i>Please enter event title and date.</i></b>\");\n"
-"    } else {\n"
-"        createAndStoreEvent(eventTitle, dateFormatter.parse(eventDate));\n"
-"        out.println(\"<b><i>Added event.</i></b>\");\n"
-"    }\n"
-"}\n"
+"            if ( \"\".equals(eventTitle) || \"\".equals(eventDate) ) {\n"
+"                out.println(\"<b><i>Please enter event title and date.</i></"
+"b>\");\n"
+"            }\n"
+"            else {\n"
+"                createAndStoreEvent(eventTitle, dateFormatter.parse"
+"(eventDate));\n"
+"                out.println(\"<b><i>Added event.</i></b>\");\n"
+"            }\n"
+"        }\n"
 "\n"
-"// Print page\n"
-"printEventForm(out);\n"
-"listEvents(out, dateFormatter);\n"
+"        // Print page\n"
+"       printEventForm(out);\n"
+"       listEvents(out, dateFormatter);\n"
 "\n"
-"// Write HTML footer\n"
-"out.println(\"</body></html>\");\n"
-"out.flush();\n"
-"out.close();]]>"
+"       // Write HTML footer\n"
+"       out.println(\"</body></html>\");\n"
+"       out.flush();\n"
+"       out.close();]]>"
 msgstr ""
 "<![CDATA[// Write HTML header\n"
 "                                            PrintWriter out = response."
@@ -2777,13 +2797,15 @@ msgstr ""
 "                                            out.flush();\n"
 "                                            out.close();]]>"
 
-#: index.docbook:913
+#. Tag: para
+#: tutorial.xml:1030
+#, fuzzy, no-c-format
 msgid ""
-"Granted, this coding style with a mix of Java and HTML would not scale in a "
-"more complex application&mdash;keep in mind that we are only illustrating "
-"basic Hibernate concepts in this tutorial. The code prints an HTML header "
-"and a footer. Inside this page, an HTML form for event entry and a list of "
-"all events in the database are printed. The first method is trivial and only "
+"This coding style, with a mix of Java and HTML, would not scale in a more "
+"complex application&mdash;keep in mind that we are only illustrating basic "
+"Hibernate concepts in this tutorial. The code prints an HTML header and a "
+"footer. Inside this page, an HTML form for event entry and a list of all "
+"events in the database are printed. The first method is trivial and only "
 "outputs HTML:"
 msgstr ""
 "Granted, this coding style with a mix of Java and HTML would not scale in a "
@@ -2793,17 +2815,21 @@ msgstr ""
 "all events in the database are printed. The first method is trivial and only "
 "outputs HTML:"
 
-#: index.docbook:922
+#. Tag: programlisting
+#: tutorial.xml:1039
+#, fuzzy, no-c-format
 msgid ""
-"<![CDATA[private void printEventForm(PrintWriter out) {\n"
-"    out.println(\"<h2>Add new event:</h2>\");\n"
-"    out.println(\"<form>\");\n"
-"    out.println(\"Title: <input name='eventTitle' length='50'/><br/>\");\n"
-"    out.println(\"Date (e.g. 24.12.2009): <input name='eventDate' "
+"<![CDATA[    private void printEventForm(PrintWriter out) {\n"
+"        out.println(\"<h2>Add new event:</h2>\");\n"
+"        out.println(\"<form>\");\n"
+"        out.println(\"Title: <input name='eventTitle' length='50'/><br/>"
+"\");\n"
+"        out.println(\"Date (e.g. 24.12.2009): <input name='eventDate' "
 "length='10'/><br/>\");\n"
-"    out.println(\"<input type='submit' name='action' value='store'/>\");\n"
-"    out.println(\"</form>\");\n"
-"}]]>"
+"        out.println(\"<input type='submit' name='action' value='store'/>"
+"\");\n"
+"        out.println(\"</form>\");\n"
+"    }]]>"
 msgstr ""
 "<![CDATA[private void printEventForm(PrintWriter out) {\n"
 "                                                                     out."
@@ -2821,7 +2847,9 @@ msgstr ""
 "println(\"</form>\");\n"
 "                                                                     }]]>"
 
-#: index.docbook:924
+#. Tag: para
+#: tutorial.xml:1041
+#, no-c-format
 msgid ""
 "The <literal>listEvents()</literal> method uses the Hibernate "
 "<literal>Session</literal> bound to the current thread to execute a query:"
@@ -2829,32 +2857,34 @@ msgstr ""
 "The <literal>listEvents()</literal> method uses the Hibernate "
 "<literal>Session</literal> bound to the current thread to execute a query:"
 
-#: index.docbook:930
+#. Tag: programlisting
+#: tutorial.xml:1047
+#, fuzzy, no-c-format
 msgid ""
-"<![CDATA[private void listEvents(PrintWriter out, SimpleDateFormat "
+"<![CDATA[    private void listEvents(PrintWriter out, SimpleDateFormat "
 "dateFormatter) {\n"
 "\n"
-"    List result = HibernateUtil.getSessionFactory()\n"
-"                    .getCurrentSession().createCriteria(Event.class).list"
-"();\n"
-"    if (result.size() > 0) {\n"
-"        out.println(\"<h2>Events in database:</h2>\");\n"
-"        out.println(\"<table border='1'>\");\n"
-"        out.println(\"<tr>\");\n"
-"        out.println(\"<th>Event title</th>\");\n"
-"        out.println(\"<th>Event date</th>\");\n"
-"        out.println(\"</tr>\");\n"
-"        for (Iterator it = result.iterator(); it.hasNext();) {\n"
-"            Event event = (Event) it.next();\n"
+"        List result = HibernateUtil.getSessionFactory()\n"
+"                .getCurrentSession().createCriteria(Event.class).list();\n"
+"        if (result.size() > 0) {\n"
+"            out.println(\"<h2>Events in database:</h2>\");\n"
+"            out.println(\"<table border='1'>\");\n"
 "            out.println(\"<tr>\");\n"
-"            out.println(\"<td>\" + event.getTitle() + \"</td>\");\n"
-"            out.println(\"<td>\" + dateFormatter.format(event.getDate()) + "
-"\"</td>\");\n"
+"            out.println(\"<th>Event title</th>\");\n"
+"            out.println(\"<th>Event date</th>\");\n"
 "            out.println(\"</tr>\");\n"
+"            Iterator it = result.iterator();\n"
+"            while (it.hasNext()) {\n"
+"                Event event = (Event) it.next();\n"
+"                out.println(\"<tr>\");\n"
+"                out.println(\"<td>\" + event.getTitle() + \"</td>\");\n"
+"                out.println(\"<td>\" + dateFormatter.format(event.getDate()) "
+"+ \"</td>\");\n"
+"                out.println(\"</tr>\");\n"
+"            }\n"
+"            out.println(\"</table>\");\n"
 "        }\n"
-"        out.println(\"</table>\");\n"
-"    }\n"
-"}]]>"
+"    }]]>"
 msgstr ""
 "<![CDATA[private void listEvents(PrintWriter out, SimpleDateFormat "
 "dateFormatter) {\n"
@@ -2895,7 +2925,9 @@ msgstr ""
 "                                                                }\n"
 "                                                                }]]>"
 
-#: index.docbook:932
+#. Tag: para
+#: tutorial.xml:1049
+#, no-c-format
 msgid ""
 "Finally, the <literal>store</literal> action is dispatched to the "
 "<literal>createAndStoreEvent()</literal> method, which also uses the "
@@ -2905,16 +2937,19 @@ msgstr ""
 "<literal>createAndStoreEvent()</literal> method, which also uses the "
 "<literal>Session</literal> of the current thread:"
 
-#: index.docbook:938
+#. Tag: programlisting
+#: tutorial.xml:1055
+#, fuzzy, no-c-format
 msgid ""
-"<![CDATA[protected void createAndStoreEvent(String title, Date theDate) {\n"
-"    Event theEvent = new Event();\n"
-"    theEvent.setTitle(title);\n"
-"    theEvent.setDate(theDate);\n"
+"<![CDATA[    protected void createAndStoreEvent(String title, Date theDate) "
+"{\n"
+"        Event theEvent = new Event();\n"
+"        theEvent.setTitle(title);\n"
+"        theEvent.setDate(theDate);\n"
 "\n"
-"    HibernateUtil.getSessionFactory()\n"
-"                    .getCurrentSession().save(theEvent);\n"
-"}]]>"
+"        HibernateUtil.getSessionFactory()\n"
+"                .getCurrentSession().save(theEvent);\n"
+"    }]]>"
 msgstr ""
 "<![CDATA[protected void createAndStoreEvent(String title, Date theDate) {\n"
 "                                                                                Event "
@@ -2931,16 +2966,18 @@ msgstr ""
 "                                                                                }]]"
 ">"
 
-#: index.docbook:940
+#. Tag: para
+#: tutorial.xml:1057
+#, fuzzy, no-c-format
 msgid ""
-"That's it, the servlet is complete. A request to the servlet will be "
-"processed in a single <literal>Session</literal> and <literal>Transaction</"
-"literal>. As earlier in the standalone application, Hibernate can "
-"automatically bind these ojects to the current thread of execution. This "
-"gives you the freedom to layer your code and access the "
-"<literal>SessionFactory</literal> in any way you like. Usually you'd use a "
-"more sophisticated design and move the data access code into data access "
-"objects (the DAO pattern). See the Hibernate Wiki for more examples."
+"The servlet is now complete. A request to the servlet will be processed in a "
+"single <literal>Session</literal> and <literal>Transaction</literal>. As "
+"earlier in the standalone application, Hibernate can automatically bind "
+"these objects to the current thread of execution. This gives you the freedom "
+"to layer your code and access the <literal>SessionFactory</literal> in any "
+"way you like. Usually you would use a more sophisticated design and move the "
+"data access code into data access objects (the DAO pattern). See the "
+"Hibernate Wiki for more examples."
 msgstr ""
 "That's it, the servlet is complete. A request to the servlet will be "
 "processed in a single <literal>Session</literal> and <literal>Transaction</"
@@ -2951,58 +2988,24 @@ msgstr ""
 "more sophisticated design and move the data access code into data access "
 "objects (the DAO pattern). See the Hibernate Wiki for more examples."
 
-#: index.docbook:954
+#. Tag: title
+#: tutorial.xml:1071
+#, no-c-format
 msgid "Deploying and testing"
 msgstr "Deploying and testing"
 
-#: index.docbook:956
+#. Tag: para
+#: tutorial.xml:1073
+#, no-c-format
 msgid ""
-"To deploy this application you have to create a web archive, a WAR. Add the "
-"following Ant target to your <literal>build.xml</literal>:"
+"To deploy this application for testing we must create a Web ARchive (WAR). "
+"First we must define the WAR descriptor as <filename>src/main/webapp/WEB-INF/"
+"web.xml</filename>"
 msgstr ""
-"To deploy this application you have to create a web archive, a WAR. Add the "
-"following Ant target to your <literal>build.xml</literal>:"
 
-#: index.docbook:961
-msgid ""
-"<![CDATA[<target name=\"war\" depends=\"compile\">\n"
-"    <war destfile=\"hibernate-tutorial.war\" webxml=\"web.xml\">\n"
-"        <lib dir=\"${librarydir}\">\n"
-"          <exclude name=\"jsdk*.jar\"/>\n"
-"        </lib>\n"
-"\n"
-"        <classes dir=\"${targetdir}\"/>\n"
-"    </war>\n"
-"</target>]]>"
-msgstr ""
-"<![CDATA[<target name=\"war\" depends=\"compile\">\n"
-"                                                                        <war "
-"destfile=\"hibernate-tutorial.war\" webxml=\"web.xml\">\n"
-"                                                                                <lib "
-"dir=\"${librarydir}\">\n"
-"                                                                                <exclude "
-"name=\"jsdk*.jar\"/>\n"
-"                                                                        </"
-"lib>\n"
-"                                                                        \n"
-"                                                                        <classes "
-"dir=\"${targetdir}\"/>\n"
-"                                                                </war>\n"
-"                                                        </target>]]>"
-
-#: index.docbook:963
-msgid ""
-"This target creates a file called <literal>hibernate-tutorial.war</literal> "
-"in your project directory. It packages all libraries and the <literal>web."
-"xml</literal> descriptor, which is expected in the base directory of your "
-"project:"
-msgstr ""
-"This target creates a file called <literal>hibernate-tutorial.war</literal> "
-"in your project directory. It packages all libraries and the <literal>web."
-"xml</literal> descriptor, which is expected in the base directory of your "
-"project:"
-
-#: index.docbook:969
+#. Tag: programlisting
+#: tutorial.xml:1079
+#, fuzzy, no-c-format
 msgid ""
 "<![CDATA[<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
 "<web-app version=\"2.4\"\n"
@@ -3013,7 +3016,8 @@ msgid ""
 "\n"
 "    <servlet>\n"
 "        <servlet-name>Event Manager</servlet-name>\n"
-"        <servlet-class>events.EventManagerServlet</servlet-class>\n"
+"        <servlet-class>org.hibernate.tutorial.web.EventManagerServlet</"
+"servlet-class>\n"
 "    </servlet>\n"
 "\n"
 "    <servlet-mapping>\n"
@@ -3050,27 +3054,13 @@ msgstr ""
 "mapping>\n"
 "                                                        </web-app>]]>"
 
-#: index.docbook:971
+#. Tag: para
+#: tutorial.xml:1081
+#, fuzzy, no-c-format
 msgid ""
-"Before you compile and deploy the web application, note that an additional "
-"library is required: <literal>jsdk.jar</literal>. This is the Java servlet "
-"development kit, if you don't have this library already, get it from the Sun "
-"website and copy it to your library directory. However, it will be only used "
-"for compliation and excluded from the WAR package."
-msgstr ""
-"Before you compile and deploy the web application, note that an additional "
-"library is required: <literal>jsdk.jar</literal>. This is the Java servlet "
-"development kit, if you don't have this library already, get it from the Sun "
-"website and copy it to your library directory. However, it will be only used "
-"for compliation and excluded from the WAR package."
-
-#: index.docbook:979
-msgid ""
-"To build and deploy call <literal>ant war</literal> in your project "
-"directory and copy the <literal>hibernate-tutorial.war</literal> file into "
-"your Tomcat <literal>webapp</literal> directory. If you don't have Tomcat "
-"installed, download it and follow the installation instructions. You don't "
-"have to change any Tomcat configuration to deploy this application though."
+"To build and deploy call <literal>mvn package</literal> in your project "
+"directory and copy the <filename>hibernate-tutorial.war</filename> file into "
+"your Tomcat <filename>webapps</filename> directory."
 msgstr ""
 "To build and deploy call <literal>ant war</literal> in your project "
 "directory and copy the <literal>hibernate-tutorial.war</literal> file into "
@@ -3078,7 +3068,18 @@ msgstr ""
 "installed, download it and follow the installation instructions. You don't "
 "have to change any Tomcat configuration to deploy this application though."
 
-#: index.docbook:987
+#. Tag: para
+#: tutorial.xml:1088
+#, no-c-format
+msgid ""
+"If you do not have Tomcat installed, download it from <ulink url=\"http://"
+"tomcat.apache.org/\"></ulink> and follow the installation instructions. Our "
+"application requires no changes to the standard Tomcat configuration."
+msgstr ""
+
+#. Tag: para
+#: tutorial.xml:1096
+#, no-c-format
 msgid ""
 "Once deployed and Tomcat is running, access the application at "
 "<literal>http://localhost:8080/hibernate-tutorial/eventmanager</literal>. "
@@ -3094,44 +3095,691 @@ msgstr ""
 "<literal>HibernateUtil</literal> is called) and to get the detailed output "
 "if any exceptions occurs."
 
-#: index.docbook:1000
+#. Tag: title
+#: tutorial.xml:1109
+#, no-c-format
 msgid "Summary"
 msgstr "Summary"
 
-#: index.docbook:1002
+#. Tag: para
+#: tutorial.xml:1111
+#, fuzzy, no-c-format
 msgid ""
 "This tutorial covered the basics of writing a simple standalone Hibernate "
-"application and a small web application."
+"application and a small web application. More tutorials are available from "
+"the Hibernate <ulink url=\"http://hibernate.org\">website</ulink>."
 msgstr ""
 "Este tutorial cubri&#x00f3; los fundamentos de escribir una simple "
 "aplicaci&#x00f3;n independiente de Hibernate."
 
-#: index.docbook:1007
-msgid ""
-"If you already feel confident with Hibernate, continue browsing through the "
-"reference documentation table of contents for topics you find interesting - "
-"most asked are transactional processing (<xref linkend=\"transactions\"/>), "
-"fetch performance (<xref linkend=\"performance\"/>), or the usage of the API "
-"(<xref linkend=\"objectstate\"/>) and the query features (<xref linkend="
-"\"objectstate-querying\"/>)."
-msgstr ""
-"Si ya te sientes confidente con Hibernate, contin&#x00fa;a navegando a "
-"trav&#x00e9;s de la tabla de contenidos de la documentaci&#x00f3;n de "
-"referencia para los temas que encuentres interesantes. Los m&#x00e1;s "
-"consultados son procesamiento transaccional (<xref linkend=\"transactions\"/"
-">), rendimiento de recuperaci&#x00f3;n (<xref linkend=\"performance\"/>), o "
-"el uso de la API (<xref linkend=\"objectstate\"/>) y las funcionalidades de "
-"consulta (<xref linkend=\"objectstate-querying\"/>)."
+#~ msgid "Introduction to Hibernate"
+#~ msgstr "Introducci&#x00f3;n a Hibernate"
 
-#: index.docbook:1015
-msgid ""
-"Don't forget to check the Hibernate website for more (specialized) tutorials."
-msgstr ""
-"No olvides chequear el sitio web de Hibernate por m&#x00e1;s "
-"(especializados) tutoriales."
+#~ msgid "Preface"
+#~ msgstr "Prefacio"
 
-msgid "ROLES_OF_TRANSLATORS"
-msgstr "<!--TRANS:ROLES_OF_TRANSLATORS-->"
+#~ msgid ""
+#~ "This chapter is an introductory tutorial for new users of Hibernate. We "
+#~ "start with a simple command line application using an in-memory database "
+#~ "and develop it in easy to understand steps."
+#~ msgstr ""
+#~ "Este cap&#x00ed;tulo es un tutorial introductorio de Hibernate. "
+#~ "Comenzamos con una aplicaci&#x00f3;n simple de l&#x00ed;nea de comandos "
+#~ "usando un base de datos en-memoria y desarroll&#x00e1;ndola en f&#x00e1;"
+#~ "cil para entender los pasos."
 
-msgid "CREDIT_FOR_TRANSLATORS"
-msgstr "<!--TRANS:CREDIT_FOR_TRANSLATORS-->"
+#~ msgid ""
+#~ "This tutorial is intended for new users of Hibernate but requires Java "
+#~ "and SQL knowledge. It is based on a tutorial by Michael Gloegl, the third-"
+#~ "party libraries we name are for JDK 1.4 and 5.0. You might need others "
+#~ "for JDK 1.3."
+#~ msgstr ""
+#~ "Este tutorial est&#x00e1; concebido para usuarios nuevos de Hibernate "
+#~ "pero requiere conocimiento en Java y SQL. Est&#x00e1; basado en un "
+#~ "tutorial de Michael Gloegl. Las bibliotecas de terceros que mencionamos "
+#~ "son para JDK 1.4 y 5.0. Podr&#x00ed;as necesitar otras para JDK 1.3."
+
+#~ msgid ""
+#~ "The source code for the tutorial is included in the distribution in the "
+#~ "<literal>doc/reference/tutorial/</literal> directory."
+#~ msgstr ""
+#~ "UNTRANSLATED!!! The source code for the tutorial is included in the "
+#~ "distribution in the <literal>doc/reference/tutorial/</literal> directory."
+
+#~ msgid ""
+#~ "First, we'll create a simple console-based Hibernate application. We use "
+#~ "an Java database (HSQL DB), so we do not have to install any database "
+#~ "server."
+#~ msgstr ""
+#~ "Primero, crearemos una aplicaci&#x00f3;n simple de Hibenate basada en "
+#~ "consola. Usamos usamos una base de datos en-memoria (HSQL DB), de modo "
+#~ "que no necesitamos instalar ning&#x00fa;n servidor de base de datos."
+
+#~ msgid ""
+#~ "The first thing we do, is set up our development directory and put all "
+#~ "the Java libraries we need into it. Download the Hibernate distribution "
+#~ "from the Hibernate website. Extract the package and place all required "
+#~ "libraries found in <literal>/lib</literal> into into the <literal>/lib</"
+#~ "literal> directory of your new development working directory. It should "
+#~ "look like this:"
+#~ msgstr ""
+#~ "La primera cosa que hacemos, es armar nuestro directorio de desarrollo y "
+#~ "poner en &#x00e9;l todas las bibliotecas Java que necesitamos. Descarga "
+#~ "la distribuci&#x00f3;n de Hibernate del sitio web de Hibernate. Extrae el "
+#~ "paquete y coloca todas las bibliotecas requeridas encontradas en "
+#~ "<literal>/lib</literal> dentro del directorio <literal>/lib</literal> de "
+#~ "nuestro nuevo directorio de desarrollo de trabajo. Debe asemejarse a esto:"
+
+#~ msgid ""
+#~ "<![CDATA[.\n"
+#~ "+lib\n"
+#~ "  antlr.jar\n"
+#~ "  cglib.jar\n"
+#~ "  asm.jar\n"
+#~ "  asm-attrs.jars\n"
+#~ "  commons-collections.jar\n"
+#~ "  commons-logging.jar\n"
+#~ "  hibernate3.jar\n"
+#~ "  jta.jar\n"
+#~ "  dom4j.jar\n"
+#~ "  log4j.jar ]]>"
+#~ msgstr ""
+#~ "<![CDATA[.\n"
+#~ "+lib\n"
+#~ "  antlr.jar\n"
+#~ "  cglib-full.jar\n"
+#~ "  asm.jar\n"
+#~ "  asm-attrs.jars\n"
+#~ "  commons-collections.jar\n"
+#~ "  commons-logging.jar\n"
+#~ "  ehcache.jar\n"
+#~ "  hibernate3.jar\n"
+#~ "  jta.jar\n"
+#~ "  dom4j.jar\n"
+#~ "  log4j.jar ]]>"
+
+#~ msgid ""
+#~ "This is the minimum set of required libraries (note that we also copied "
+#~ "hibernate3.jar, the main archive) for Hibernate <emphasis>at the time of "
+#~ "writing</emphasis>. The Hibernate release you are using might require "
+#~ "more or less libraries. See the <literal>README.txt</literal> file in the "
+#~ "<literal>lib/</literal> directory of the Hibernate distribution for more "
+#~ "information about required and optional third-party libraries. (Actually, "
+#~ "Log4j is not required but preferred by many developers.)"
+#~ msgstr ""
+#~ "Este es el conjunto m&#x00ed;nimo de bibliotecas requeridas para "
+#~ "Hibernate (observa que tambi&#x00e9;n hemos copiado hibernate3.jar, el "
+#~ "fichero principal). Ver el fichero <literal>README.txt</literal> en el "
+#~ "directorio <literal>lib/</literal> de la distribuci&#x00f3;n de Hibernate "
+#~ "para m&#x00e1;s informaci&#x00f3;n sobre bibliotecas de terceros "
+#~ "requeridas y opcionales. (Realmente, Log4J no es requerida aunque "
+#~ "preferida por muchos desarrolladores)."
+
+#~ msgid ""
+#~ "Our first persistent class is a simple JavaBean class with some "
+#~ "properties:"
+#~ msgstr ""
+#~ "Nuestra primera clase persistente es un JavaBean simple con algunas "
+#~ "propiedades:"
+
+#~ msgid ""
+#~ "Place this Java source file in a directory called <literal>src</literal> "
+#~ "in the development folder, and in its correct package. The directory "
+#~ "should now look like this:"
+#~ msgstr ""
+#~ "Coloca este fichero de c&#x00f3;digo Java en un directorio llamado "
+#~ "<literal>src</literal> en la carpeta de desarrollo. El directorio ahora "
+#~ "debe verse como esto:"
+
+#~ msgid ""
+#~ "<![CDATA[.\n"
+#~ "+lib\n"
+#~ "  <Hibernate and third-party libraries>\n"
+#~ "+src\n"
+#~ "  +events\n"
+#~ "    Event.java]]>"
+#~ msgstr ""
+#~ "<![CDATA[.\n"
+#~ "+lib\n"
+#~ "  <Hibernate and third-party libraries>\n"
+#~ "+src\n"
+#~ "  Event.java]]>"
+
+#~ msgid "In the next step, we tell Hibernate about this persistent class."
+#~ msgstr ""
+#~ "En el pr&#x00f3;ximo paso, le decimos a Hibernate sobre esta clase "
+#~ "persistente."
+
+#~ msgid ""
+#~ "The <literal>id</literal> element is the declaration of the identifer "
+#~ "property, <literal>name=\"id\"</literal> declares the name of the Java "
+#~ "property - Hibernate will use the getter and setter methods to access the "
+#~ "property. The column attribute tells Hibernate which column of the "
+#~ "<literal>EVENTS</literal> table we use for this primary key. The nested "
+#~ "<literal>generator</literal> element specifies the identifier generation "
+#~ "strategy, in this case we used <literal>native</literal>, which picks the "
+#~ "best strategy depending on the configured database (dialect). Hibernate "
+#~ "supports database generated, globally unique, as well as application "
+#~ "assigned identifiers (or any strategy you have written an extension for)."
+#~ msgstr ""
+#~ "El elemento <literal>id</literal> el la declaraci&#x00f3;n de la "
+#~ "propiedad identificadora, <literal>name=\"id\"</literal> declara el "
+#~ "nombre de la propiedad Java. Hibernate usar&#x00e1; los m&#x00e9;todos "
+#~ "getter y setter para acceder a la propiedad. El attributo de columna dice "
+#~ "a Hibernate cu&#x00e1;l columna de la tabla <literal>EVENTS</literal> "
+#~ "usamos para esta clave primaria. El elemento anidado <literal>generator</"
+#~ "literal> especifica la estrategia de generaci&#x00f3;n de "
+#~ "identificadores, en este caso usamos <literal>increment</literal>, que es "
+#~ "un m&#x00e9;todo muy simple de incremento de n&#x00fa;mero en-memoria "
+#~ "&#x00fa;til mayormente para testeo (y tutoriales). Hibernate tambi&#x0e9;"
+#~ "n soporta identificadores generados por base de datos, globalmente "
+#~ "&#x00fa;nicos, as&#x00ed; como tambi&#x00e9;n asignados por "
+#~ "aplicaci&#x00f3;n (o cualquier estrategia para la que hayas escrito una "
+#~ "extensi&#x00f3;n)."
+
+#~ msgid ""
+#~ "This mapping file should be saved as <literal>Event.hbm.xml</literal>, "
+#~ "right in the directory next to the <literal>Event</literal> Java class "
+#~ "source file. The naming of mapping files can be arbitrary, however the "
+#~ "<literal>hbm.xml</literal> suffix is a convention in the Hibernate "
+#~ "developer community. The directory structure should now look like this:"
+#~ msgstr ""
+#~ "Este fichero de mapeo debe ser salvado como <literal>Event.hbm.xml</"
+#~ "literal>, justo en el directorio pr&#x00f3;ximo al fichero de c&#x00f3;"
+#~ "digo fuente de la clase Java <literal>Event</literal>. El nombrado de los "
+#~ "ficheros de mapeo puede ser arbitrario, sin embargo, el sufijo "
+#~ "<literal>hbm.xml</literal> se ha vuelto una convenci&#x00f3;n el la "
+#~ "comunidad de desarrolladores de Hibernate. La estructura de directorio "
+#~ "debe ahora verse como esto:"
+
+#~ msgid ""
+#~ "<![CDATA[.\n"
+#~ "+lib\n"
+#~ "  <Hibernate and third-party libraries>\n"
+#~ "+src\n"
+#~ "  +events\n"
+#~ "    Event.java\n"
+#~ "    Event.hbm.xml]]>"
+#~ msgstr ""
+#~ "<![CDATA[.\n"
+#~ "+lib\n"
+#~ "  <Hibernate and third-party libraries>\n"
+#~ "+src\n"
+#~ "  Event.java\n"
+#~ "  Event.hbm.xml]]>"
+
+#~ msgid "We continue with the main configuration of Hibernate."
+#~ msgstr "Continuamos con la configuraci&#x00f3;n principal de Hibernate."
+
+#~ msgid ""
+#~ "We now have a persistent class and its mapping file in place. It is time "
+#~ "to configure Hibernate. Before we do this, we will need a database. HSQL "
+#~ "DB, a java-based SQL DBMS, can be downloaded from the HSQL DB website"
+#~ "(http://hsqldb.org/). Actually, you only need the <literal>hsqldb.jar</"
+#~ "literal> from this download. Place this file in the <literal>lib/</"
+#~ "literal> directory of the development folder."
+#~ msgstr ""
+#~ "Tenemos ahora una clase persistente y su fichero de mapeo en su sitio. Es "
+#~ "momento de configurar Hibernate. Antes que hagamos esto, necesitaremos "
+#~ "una base de datos. HSQL DB, un DBMS SQL en-memoria basado en Java, puede "
+#~ "ser descargado del sitio web de HSQL DB. Realmente, de esta descarga "
+#~ "s&#x00f3;lo necesitas el <literal>hsqldb.jar</literal>. Coloca este "
+#~ "fichero en el directorio <literal>lib/</literal> de la carpeta de "
+#~ "desarrollo."
+
+#~ msgid ""
+#~ "Hibernate is the layer in your application which connects to this "
+#~ "database, so it needs connection information. The connections are made "
+#~ "through a JDBC connection pool, which we also have to configure. The "
+#~ "Hibernate distribution contains several open source JDBC connection "
+#~ "pooling tools, but will use the Hibernate built-in connection pool for "
+#~ "this tutorial. Note that you have to copy the required library into your "
+#~ "classpath and use different connection pooling settings if you want to "
+#~ "use a production-quality third party JDBC pooling software."
+#~ msgstr ""
+#~ "Hibernate es la capa en tu aplicaci&#x00f3;n que se conecta a esta base "
+#~ "de datos, de modo que necesita informaci&#x00f3;n de conexi&#x00f3;n. Las "
+#~ "conexiones se hacen a trav&#x00e9;s de un pool de conexiones JDBC, que "
+#~ "tamb&#x00e9;n tenemos que configurar. La distribuci&#x00f3;n de Hibernate "
+#~ "contiene muchas herramientas de pooling de conexiones JDBC de c&#x00f3;"
+#~ "digo abierto, pero para este tutorial usaremos el pool de conexiones "
+#~ "prefabricado dentro de Hibernate. Observa que tienes que copiar la "
+#~ "biblioteca requerida en tu classpath y usar diferentes configuraciones de "
+#~ "pooling de conexiones si quieres usar un software de pooling JDBC de "
+#~ "terceros de calidad de producci&#x00f3;n."
+
+#~ msgid ""
+#~ "Copy this file into the source directory, so it will end up in the root "
+#~ "of the classpath. Hibernate automatically looks for a file called "
+#~ "<literal>hibernate.cfg.xml</literal> in the root of the classpath, on "
+#~ "startup."
+#~ msgstr ""
+#~ "Copia este fichero dentro del directorio de c&#x00f3;digo fuente, de modo "
+#~ "que termine ubicado en la rai&#x00ed;z del classpath. Hibernate busca "
+#~ "autom&#x00e1;ticamente un fichero llamado <literal>hibernate.cfg.xml</"
+#~ "literal> en la ra&#x00ed;z del classpath al arrancar."
+
+#~ msgid ""
+#~ "We'll now build the tutorial with Ant. You will need to have Ant "
+#~ "installed - get it from the <ulink url=\"http://ant.apache.org/"
+#~ "bindownload.cgi\">Ant download page</ulink>. How to install Ant will not "
+#~ "be covered here. Please refer to the <ulink url=\"http://ant.apache.org/"
+#~ "manual/index.html\">Ant manual</ulink>. After you have installed Ant, we "
+#~ "can start to create the buildfile. It will be called <literal>build.xml</"
+#~ "literal> and placed directly in the development directory."
+#~ msgstr ""
+#~ "Construiremos ahora el tutorial con Ant. Necesitar&#x00e1;s tener Ant "
+#~ "instalado. Obt&#x00e9;nlo de <ulink url=\"http://ant.apache.org/"
+#~ "bindownload.cgi\">P&#x00e1;gina de descarga de Ant</ulink>. No se "
+#~ "cubrir&#x00e1; aqu&#x00ed; c&#x00f3;mo instalar Ant. Por favor "
+#~ "refi&#x00e9;rete al <ulink url=\"http://ant.apache.org/manual/index.html"
+#~ "\"> Manual de Ant</ulink>. Despu&#x00e9;s que hayas instalado Ant, "
+#~ "podemos comenzar a crear el buildfile. Ser&#x00e1; llamado <literal>build."
+#~ "xml</literal> y colocado directamente en el directorio de desarrollo."
+
+#~ msgid "A basic build file looks like this:"
+#~ msgstr "Reparar Ant"
+
+#~ msgid ""
+#~ "<![CDATA[<project name=\"hibernate-tutorial\" default=\"compile\">\n"
+#~ "\n"
+#~ "    <property name=\"sourcedir\" value=\"${basedir}/src\"/>\n"
+#~ "    <property name=\"targetdir\" value=\"${basedir}/bin\"/>\n"
+#~ "    <property name=\"librarydir\" value=\"${basedir}/lib\"/>\n"
+#~ "\n"
+#~ "    <path id=\"libraries\">\n"
+#~ "        <fileset dir=\"${librarydir}\">\n"
+#~ "            <include name=\"*.jar\"/>\n"
+#~ "        </fileset>\n"
+#~ "    </path>\n"
+#~ "\n"
+#~ "    <target name=\"clean\">\n"
+#~ "        <delete dir=\"${targetdir}\"/>\n"
+#~ "        <mkdir dir=\"${targetdir}\"/>\n"
+#~ "    </target>\n"
+#~ "\n"
+#~ "    <target name=\"compile\" depends=\"clean, copy-resources\">\n"
+#~ "      <javac srcdir=\"${sourcedir}\"\n"
+#~ "             destdir=\"${targetdir}\"\n"
+#~ "             classpathref=\"libraries\"/>\n"
+#~ "    </target>\n"
+#~ "\n"
+#~ "    <target name=\"copy-resources\">\n"
+#~ "        <copy todir=\"${targetdir}\">\n"
+#~ "            <fileset dir=\"${sourcedir}\">\n"
+#~ "                <exclude name=\"**/*.java\"/>\n"
+#~ "            </fileset>\n"
+#~ "        </copy>\n"
+#~ "    </target>\n"
+#~ "\n"
+#~ "</project>]]>"
+#~ msgstr ""
+#~ "Observa que la distribuci&#x00f3;n de Ant est&#x00e1; por defecto rota "
+#~ "(como se describe en el FAQ de Ant) y tiene que ser reparado por ti, por "
+#~ "ejemplo, si quisieras usar JUnit desde dentro de tu fichero de "
+#~ "construcci&#x00f3;n. Para hacer que funcione la tarea de JUnit (no lo "
+#~ "necesitaremos en este tutorial), copia junit.jar a <literal>ANT_HOME/lib</"
+#~ "literal> o quita el trozo de plugin <literal>ANT_HOME/lib/ant-junit.jar</"
+#~ "literal>."
+
+#~ msgid ""
+#~ "This will tell Ant to add all files in the lib directory ending with "
+#~ "<literal>.jar</literal> to the classpath used for compilation. It will "
+#~ "also copy all non-Java source files to the target directory, e.g. "
+#~ "configuration and Hibernate mapping files. If you now run Ant, you should "
+#~ "get this output:"
+#~ msgstr "Un fichero de construcci&#x00f3;n b&#x00e1;sico se ve como esto:"
+
+#~ msgid ""
+#~ "<![CDATA[C:\\hibernateTutorial\\>ant\n"
+#~ "Buildfile: build.xml\n"
+#~ "\n"
+#~ "copy-resources:\n"
+#~ "     [copy] Copying 2 files to C:\\hibernateTutorial\\bin\n"
+#~ "\n"
+#~ "compile:\n"
+#~ "    [javac] Compiling 1 source file to C:\\hibernateTutorial\\bin\n"
+#~ "\n"
+#~ "BUILD SUCCESSFUL\n"
+#~ "Total time: 1 second ]]>"
+#~ msgstr ""
+#~ "<![CDATA[<project name=\"hibernate-tutorial\" default=\"compile\">\n"
+#~ "\n"
+#~ "    <property name=\"sourcedir\" value=\"${basedir}/src\"/>\n"
+#~ "    <property name=\"targetdir\" value=\"${basedir}/bin\"/>\n"
+#~ "    <property name=\"librarydir\" value=\"${basedir}/lib\"/>\n"
+#~ "\n"
+#~ "    <path id=\"libraries\">\n"
+#~ "        <fileset dir=\"${librarydir}\">\n"
+#~ "            <include name=\"*.jar\"/>\n"
+#~ "        </fileset>\n"
+#~ "    </path>\n"
+#~ "\n"
+#~ "    <target name=\"clean\">\n"
+#~ "        <delete dir=\"${targetdir}\"/>\n"
+#~ "        <mkdir dir=\"${targetdir}\"/>\n"
+#~ "    </target>\n"
+#~ "\n"
+#~ "    <target name=\"compile\" depends=\"clean, copy-resources\">\n"
+#~ "      <javac srcdir=\"${sourcedir}\"\n"
+#~ "             destdir=\"${targetdir}\"\n"
+#~ "             classpathref=\"libraries\"/>\n"
+#~ "    </target>\n"
+#~ "\n"
+#~ "    <target name=\"copy-resources\">\n"
+#~ "        <copy todir=\"${targetdir}\">\n"
+#~ "            <fileset dir=\"${sourcedir}\">\n"
+#~ "                <exclude name=\"**/*.java\"/>\n"
+#~ "            </fileset>\n"
+#~ "        </copy>\n"
+#~ "    </target>\n"
+#~ "\n"
+#~ "</project>]]>"
+
+#~ msgid ""
+#~ "Place <literal>HibernateUtil.java</literal> in the development source "
+#~ "directory, in a package next to <literal>events</literal>:"
+#~ msgstr ""
+#~ "Esta clase no &#x00f3;lo produce la <literal>SessionFactory</literal> "
+#~ "global en su inicializador static (llamado s&#x00f3;lo una vez por la JVM "
+#~ "al cargar la clase), sino que tambi&#x00e9;n tiene una variable "
+#~ "<literal>ThreadLocal</literal> para tener la <literal>Session</literal> "
+#~ "para la hebra actual. No importa cu&#x00e1;ndo llames a "
+#~ "<literal>HibernateUtil.currentSession()</literal>, siempre "
+#~ "devolver&#x00e1; la misma unidad de trabajo de Hibernate en la misma "
+#~ "hebra. Una llamada a <literal>HibernateUtil.closeSession()</literal> "
+#~ "termina la unidad de trabajo actualmente asociada a la hebra."
+
+#~ msgid ""
+#~ "<![CDATA[.\n"
+#~ "+lib\n"
+#~ "  <Hibernate and third-party libraries>\n"
+#~ "+src\n"
+#~ "  +events\n"
+#~ "    Event.java\n"
+#~ "    Event.hbm.xml\n"
+#~ "  +util\n"
+#~ "    HibernateUtil.java\n"
+#~ "  hibernate.cfg.xml\n"
+#~ "+data\n"
+#~ "build.xml]]>"
+#~ msgstr ""
+#~ "Aseg&#x00fa;rate de entender el concepto Java de una variable local a una "
+#~ "hebra antes de usar esta ayuda. Una clase <literal>HibernateUtil</"
+#~ "literal> m&#x00e1;s potente puede encontrarse en <literal>CaveatEmptor</"
+#~ "literal>, http://caveatemptor.hibernate.org/, as&#x00ed; como en el libro "
+#~ "\"Java Persistence with Hibernate\". Observa que esta clase no es "
+#~ "necesaria si despliegas Hibernate en un servidor de aplicaciones J2EE: "
+#~ "una <literal>Session</literal> ser&#x00e1; autom&#x00e1;ticamente ligada "
+#~ "a la transacci&#x00f3;n JTA actual, y puedes buscar la "
+#~ "<literal>SessionFactory</literal> a trav&#x00e9;s de JNDI. Si usas JBoss "
+#~ "AS, Hibernate puede ser desplegado como un servicio de sistema manejado y "
+#~ "autom&#x00e1;ticamente ligar&#x00e1; la <literal>SessionFactory</literal> "
+#~ "a un nombre JNDI."
+
+#~ msgid ""
+#~ "To run this first routine we have to add a callable target to the Ant "
+#~ "build file:"
+#~ msgstr ""
+#~ "¿Qu&#x00e9; es lo que hacen <literal>Transaction.begin()</literal> y "
+#~ "<literal>commit()</literal>? ¿D&#x00f3;nde est&#x00e1; el rollback en "
+#~ "caso que algo vaya mal? La API de <literal>Transaction</literal> de "
+#~ "Hibernate es opcional realmente, pero la usamos por conveniencia y "
+#~ "portabilidad. Si manejases la transacci&#x00f3;n de base de datos por ti "
+#~ "mismo (por ejemplo, llamando a <literal>session.connection.commit()</"
+#~ "literal>), ligar&#x00ed;as el c&#x00f3;digo a un entorno de despliegue "
+#~ "particular, en este JDBC directo no manejado. Estableciendo la f&#x00e1;"
+#~ "brica de <literal>Transaction</literal> en tu configuraci&#x00f3;n de "
+#~ "Hibernate puedes desplegar tu capa de persistencia en cualquier sitio. "
+#~ "Echa una mirada al <xref linkend=\"transactions\"/> para m&#x00e1;s "
+#~ "informaci&#x00f3;n sobre manejo y demarcaci&#x00f3;n de transacciones. "
+#~ "Hemos saltado tambi&#x00e9;n cualquier manejo de excepciones y rollback "
+#~ "en este ejemplo."
+
+#~ msgid ""
+#~ "<![CDATA[<target name=\"run\" depends=\"compile\">\n"
+#~ "    <java fork=\"true\" classname=\"events.EventManager\" classpathref="
+#~ "\"libraries\">\n"
+#~ "        <classpath path=\"${targetdir}\"/>\n"
+#~ "        <arg value=\"${action}\"/>\n"
+#~ "    </java>\n"
+#~ "</target>]]>"
+#~ msgstr ""
+#~ "Para ejecutar la primera rutina tenemos que agregar un objetivo llamable "
+#~ "al fichero de construcci&#x00f3;n de Ant:"
+
+#~ msgid ""
+#~ "The value of the <literal>action</literal> argument is set on the command "
+#~ "line when calling the target:"
+#~ msgstr ""
+#~ "<![CDATA[<target name=\"run\" depends=\"compile\">\n"
+#~ "    <java fork=\"true\" classname=\"EventManager\" classpathref="
+#~ "\"libraries\">\n"
+#~ "        <classpath path=\"${targetdir}\"/>\n"
+#~ "        <arg value=\"${action}\"/>\n"
+#~ "    </java>\n"
+#~ "</target>]]>"
+
+#~ msgid "<![CDATA[C:\\hibernateTutorial\\>ant run -Daction=store]]>"
+#~ msgstr ""
+#~ "El valor del argumento <literal>action</literal> es establecido por "
+#~ "l&#x00ed;nea de comandos al llamar al objetivo:"
+
+#~ msgid ""
+#~ "This is the <literal>INSERT</literal> executed by Hibernate, the question "
+#~ "marks represent JDBC bind parameters. To see the values bound as "
+#~ "arguments, or to reduce the verbosity of the log, check your "
+#~ "<literal>log4j.properties</literal>."
+#~ msgstr ""
+#~ "<![CDATA[[java] Hibernate: insert into EVENTS (EVENT_DATE, title, "
+#~ "EVENT_ID) values (?, ?, ?)]]>"
+
+#~ msgid "Now, to execute and test all of this, follow these steps:"
+#~ msgstr ""
+#~ "Lo que hacemos aqu&#x00ed; es usar una consulta HQL (Lenguaje de Consulta "
+#~ "de Hibernate o Hibernate Query Language) para cargar todos los objetos "
+#~ "<literal>Event</literal> existentes de la base de datos. Hibernate "
+#~ "generar&#x00e1; el SQL apropiado, lo enviar&#x00e1; a la base de datosy "
+#~ "poblar&#x00e1; los objetos <literal>Event</literal> con datos. Puedes, "
+#~ "por supuesto, crear consultas m&#x00e1;s complejas con HQL."
+
+#~ msgid ""
+#~ "Run <literal>ant run -Daction=store</literal> to store something into the "
+#~ "database and, of course, to generate the database schema before through "
+#~ "hbm2ddl."
+#~ msgstr "Now, to execute and test all of this, follow these steps:"
+
+#~ msgid ""
+#~ "Now disable hbm2ddl by commenting out the property in your "
+#~ "<literal>hibernate.cfg.xml</literal> file. Usually you only leave it "
+#~ "turned on in continous unit testing, but another run of hbm2ddl would "
+#~ "<emphasis>drop</emphasis> everything you have stored - the "
+#~ "<literal>create</literal> configuration setting actually translates into "
+#~ "\"drop all tables from the schema, then re-create all tables, when the "
+#~ "SessionFactory is build\"."
+#~ msgstr ""
+#~ "Run <literal>ant run -Daction=store</literal> to store something into the "
+#~ "database and, of course, to generate the database schema before through "
+#~ "hbm2ddl."
+
+#~ msgid ""
+#~ "If you now call Ant with <literal>-Daction=list</literal>, you should see "
+#~ "the events you have stored so far. You can of course also call the "
+#~ "<literal>store</literal> action a few times more."
+#~ msgstr ""
+#~ "Now disable hbm2ddl by commenting out the property in your "
+#~ "<literal>hibernate.cfg.xml</literal> file. Usually you only leave it "
+#~ "turned on in continous unit testing, but another run of hbm2ddl would "
+#~ "<emphasis>drop</emphasis> everything you have stored - the "
+#~ "<literal>create</literal> configuration setting actually translates into "
+#~ "\"drop all tables from the schema, then re-create all tables, when the "
+#~ "SessionFactory is build\"."
+
+#~ msgid ""
+#~ "Note: Most new Hibernate users fail at this point and we see questions "
+#~ "about <emphasis>Table not found</emphasis> error messages regularly. "
+#~ "However, if you follow the steps outlined above you will not have this "
+#~ "problem, as hbm2ddl creates the database schema on the first run, and "
+#~ "subsequent application restarts will use this schema. If you change the "
+#~ "mapping and/or database schema, you have to re-enable hbm2ddl once again."
+#~ msgstr ""
+#~ "If you now call Ant with <literal>-Daction=list</literal>, you should see "
+#~ "the events you have stored so far. You can of course also call the "
+#~ "<literal>store</literal> action a few times more."
+
+#~ msgid ""
+#~ "Create a new mapping file called <literal>Person.hbm.xml</literal> (don't "
+#~ "forget the DTD reference at the top):"
+#~ msgstr ""
+#~ "<![CDATA[public class Person {\n"
+#~ "\n"
+#~ "    private Long id;\n"
+#~ "    private int age;\n"
+#~ "    private String firstname;\n"
+#~ "    private String lastname;\n"
+#~ "\n"
+#~ "    Person() {}\n"
+#~ "\n"
+#~ "    // Accessor methods for all properties, private setter for 'id'\n"
+#~ "\n"
+#~ "}]]>"
+
+#~ msgid ""
+#~ "We need a unidirectional, many-valued associations, implemented with a "
+#~ "<literal>Set</literal>. Let's write the code for this in the Java classes "
+#~ "and then map it:"
+#~ msgstr ""
+#~ "Agregaremos una colecci&#x00f3;n de eventos a la clase <literal>Person</"
+#~ "literal>. De esta forma podemos navegar facilmente a los eventos de una "
+#~ "persona en particular, sin ejecutar una consulta expl&#x00ed;cita, "
+#~ "llamando a <literal>aPerson.getEvents()</literal>. Usamos una "
+#~ "colecci&#x00f3;n Java, un <literal>Set</literal>, porque la "
+#~ "colecci&#x00f3;n no contendr&#x00e1; elementos duplicados y el "
+#~ "ordenamiento no nos es relevante."
+
+#~ msgid ""
+#~ "We add a collection of value typed objects to the <literal>Person</"
+#~ "literal> entity. We want to store email addresses, so the type we use is "
+#~ "<literal>String</literal>, and the collection is again a <literal>Set</"
+#~ "literal>:"
+#~ msgstr ""
+#~ "Agregamos una colecci&#x00f3;n de objetos tipificados en valor a la "
+#~ "entidad <literal>Person</literal>. Queremos almacenar direcciones de "
+#~ "email, de modo que el tipo que usamos es <literal>String</literal>, y la "
+#~ "colecci&#x00f3;n es nuevamente un <literal>Set</literal>:"
+
+#~ msgid "Let's turn this into a small web application."
+#~ msgstr "Let's turn this into a small web application."
+
+#~ msgid ""
+#~ "Create a new class in your source directory, in the <literal>events</"
+#~ "literal> package:"
+#~ msgstr ""
+#~ "Create a new class in your source directory, in the <literal>events</"
+#~ "literal> package:"
+
+#~ msgid ""
+#~ "<![CDATA[package events;\n"
+#~ "\n"
+#~ "// Imports\n"
+#~ "\n"
+#~ "public class EventManagerServlet extends HttpServlet {\n"
+#~ "\n"
+#~ "    // Servlet code\n"
+#~ "}]]>"
+#~ msgstr ""
+#~ "<![CDATA[package events;\n"
+#~ "                                                 \n"
+#~ "                                                 // Imports\n"
+#~ "                                                 \n"
+#~ "                                                 public class "
+#~ "EventManagerServlet extends HttpServlet {\n"
+#~ "                                                 \n"
+#~ "                                                 // Servlet code\n"
+#~ "                                                 }]]>"
+
+#~ msgid ""
+#~ "To deploy this application you have to create a web archive, a WAR. Add "
+#~ "the following Ant target to your <literal>build.xml</literal>:"
+#~ msgstr ""
+#~ "To deploy this application you have to create a web archive, a WAR. Add "
+#~ "the following Ant target to your <literal>build.xml</literal>:"
+
+#~ msgid ""
+#~ "<![CDATA[<target name=\"war\" depends=\"compile\">\n"
+#~ "    <war destfile=\"hibernate-tutorial.war\" webxml=\"web.xml\">\n"
+#~ "        <lib dir=\"${librarydir}\">\n"
+#~ "          <exclude name=\"jsdk*.jar\"/>\n"
+#~ "        </lib>\n"
+#~ "\n"
+#~ "        <classes dir=\"${targetdir}\"/>\n"
+#~ "    </war>\n"
+#~ "</target>]]>"
+#~ msgstr ""
+#~ "<![CDATA[<target name=\"war\" depends=\"compile\">\n"
+#~ "                                                                        <war "
+#~ "destfile=\"hibernate-tutorial.war\" webxml=\"web.xml\">\n"
+#~ "                                                                                <lib "
+#~ "dir=\"${librarydir}\">\n"
+#~ "                                                                                <exclude "
+#~ "name=\"jsdk*.jar\"/>\n"
+#~ "                                                                        </"
+#~ "lib>\n"
+#~ "                                                                        \n"
+#~ "                                                                        <classes "
+#~ "dir=\"${targetdir}\"/>\n"
+#~ "                                                                </war>\n"
+#~ "                                                        </target>]]>"
+
+#~ msgid ""
+#~ "This target creates a file called <literal>hibernate-tutorial.war</"
+#~ "literal> in your project directory. It packages all libraries and the "
+#~ "<literal>web.xml</literal> descriptor, which is expected in the base "
+#~ "directory of your project:"
+#~ msgstr ""
+#~ "This target creates a file called <literal>hibernate-tutorial.war</"
+#~ "literal> in your project directory. It packages all libraries and the "
+#~ "<literal>web.xml</literal> descriptor, which is expected in the base "
+#~ "directory of your project:"
+
+#~ msgid ""
+#~ "Before you compile and deploy the web application, note that an "
+#~ "additional library is required: <literal>jsdk.jar</literal>. This is the "
+#~ "Java servlet development kit, if you don't have this library already, get "
+#~ "it from the Sun website and copy it to your library directory. However, "
+#~ "it will be only used for compliation and excluded from the WAR package."
+#~ msgstr ""
+#~ "Before you compile and deploy the web application, note that an "
+#~ "additional library is required: <literal>jsdk.jar</literal>. This is the "
+#~ "Java servlet development kit, if you don't have this library already, get "
+#~ "it from the Sun website and copy it to your library directory. However, "
+#~ "it will be only used for compliation and excluded from the WAR package."
+
+#~ msgid ""
+#~ "If you already feel confident with Hibernate, continue browsing through "
+#~ "the reference documentation table of contents for topics you find "
+#~ "interesting - most asked are transactional processing (<xref linkend="
+#~ "\"transactions\"/>), fetch performance (<xref linkend=\"performance\"/>), "
+#~ "or the usage of the API (<xref linkend=\"objectstate\"/>) and the query "
+#~ "features (<xref linkend=\"objectstate-querying\"/>)."
+#~ msgstr ""
+#~ "Si ya te sientes confidente con Hibernate, contin&#x00fa;a navegando a "
+#~ "trav&#x00e9;s de la tabla de contenidos de la documentaci&#x00f3;n de "
+#~ "referencia para los temas que encuentres interesantes. Los m&#x00e1;s "
+#~ "consultados son procesamiento transaccional (<xref linkend=\"transactions"
+#~ "\"/>), rendimiento de recuperaci&#x00f3;n (<xref linkend=\"performance\"/"
+#~ ">), o el uso de la API (<xref linkend=\"objectstate\"/>) y las "
+#~ "funcionalidades de consulta (<xref linkend=\"objectstate-querying\"/>)."
+
+#~ msgid ""
+#~ "Don't forget to check the Hibernate website for more (specialized) "
+#~ "tutorials."
+#~ msgstr ""
+#~ "No olvides chequear el sitio web de Hibernate por m&#x00e1;s "
+#~ "(especializados) tutoriales."
+
+#~ msgid "ROLES_OF_TRANSLATORS"
+#~ msgstr "<!--TRANS:ROLES_OF_TRANSLATORS-->"
+
+#~ msgid "CREDIT_FOR_TRANSLATORS"
+#~ msgstr "<!--TRANS:CREDIT_FOR_TRANSLATORS-->"

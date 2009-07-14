@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2007-10-25 07:47+0000\n"
+"POT-Creation-Date: 2009-07-14 19:55+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -11,24 +11,24 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 
 #. Tag: title
-#: association_mapping.xml:6
+#: association_mapping.xml:30
 #, no-c-format
 msgid "Association Mappings"
 msgstr "연관 매핑들"
 
 #. Tag: title
-#: association_mapping.xml:9
+#: association_mapping.xml:33
 #, no-c-format
 msgid "Introduction"
 msgstr "개요"
 
 #. Tag: para
-#: association_mapping.xml:11
-#, no-c-format
+#: association_mapping.xml:35
+#, fuzzy, no-c-format
 msgid ""
-"Association mappings are the often most difficult thing to get right. In "
-"this section we'll go through the canonical cases one by one, starting with "
-"unidirectional mappings, and then considering the bidirectional cases. We'll "
+"Association mappings are often the most difficult thing to implement "
+"correctly. In this section we examine some canonical cases one by one, "
+"starting with unidirectional mappings and then bidirectional cases. We will "
 "use <literal>Person</literal> and <literal>Address</literal> in all the "
 "examples."
 msgstr ""
@@ -38,22 +38,22 @@ msgstr ""
 "literal>과 <literal>Address</literal>를 사용할 것이다."
 
 #. Tag: para
-#: association_mapping.xml:19
-#, no-c-format
+#: association_mapping.xml:43
+#, fuzzy, no-c-format
 msgid ""
-"We'll classify associations by whether or not they map to an intervening "
-"join table, and by multiplicity."
+"Associations will be classified by multiplicity and whether or not they map "
+"to an intervening join table."
 msgstr ""
 "우리는 연관들을 중재하는 join 테이블로 매핑시킬 것인지 여부에 따라, 그리고 "
 "multiplicity(다중성)에 따라 연관들을 분류할 것이다."
 
 #. Tag: para
-#: association_mapping.xml:24
-#, no-c-format
+#: association_mapping.xml:48
+#, fuzzy, no-c-format
 msgid ""
-"Nullable foreign keys are not considered good practice in traditional data "
-"modelling, so all our examples use not null foreign keys. This is not a "
-"requirement of Hibernate, and the mappings will all work if you drop the "
+"Nullable foreign keys are not considered to be good practice in traditional "
+"data modelling, so our examples do not use nullable foreign keys. This is "
+"not a requirement of Hibernate, and the mappings will work if you drop the "
 "nullability constraints."
 msgstr ""
 "null 허용 가능한 foreign 키들은 전통적인 데이터 모델링에서 좋은 실례로 간주되"
@@ -62,19 +62,19 @@ msgstr ""
 "경우 매핑들은 모두 동작할 것이다."
 
 #. Tag: title
-#: association_mapping.xml:34
+#: association_mapping.xml:58
 #, no-c-format
 msgid "Unidirectional associations"
 msgstr "단방향 연관들"
 
 #. Tag: title
-#: association_mapping.xml:37 association_mapping.xml:108
-#, no-c-format
-msgid "many to one"
+#: association_mapping.xml:61 association_mapping.xml:132
+#, fuzzy, no-c-format
+msgid "Many-to-one"
 msgstr "many to one"
 
 #. Tag: para
-#: association_mapping.xml:39
+#: association_mapping.xml:63
 #, no-c-format
 msgid ""
 "A <emphasis>unidirectional many-to-one association</emphasis> is the most "
@@ -84,7 +84,7 @@ msgstr ""
 "관이다."
 
 #. Tag: programlisting
-#: association_mapping.xml:44
+#: association_mapping.xml:68
 #, no-c-format
 msgid ""
 "<![CDATA[<class name=\"Person\">\n"
@@ -104,7 +104,7 @@ msgid ""
 msgstr ""
 
 #. Tag: programlisting
-#: association_mapping.xml:45 association_mapping.xml:161
+#: association_mapping.xml:69 association_mapping.xml:185
 #, no-c-format
 msgid ""
 "<![CDATA[\n"
@@ -115,14 +115,14 @@ msgid ""
 msgstr ""
 
 #. Tag: title
-#: association_mapping.xml:50 association_mapping.xml:121
-#: association_mapping.xml:185 association_mapping.xml:225
-#, no-c-format
-msgid "one to one"
+#: association_mapping.xml:74 association_mapping.xml:145
+#: association_mapping.xml:210
+#, fuzzy, no-c-format
+msgid "One-to-one"
 msgstr "one to one"
 
 #. Tag: para
-#: association_mapping.xml:52
+#: association_mapping.xml:76
 #, no-c-format
 msgid ""
 "A <emphasis>unidirectional one-to-one association on a foreign key</"
@@ -133,7 +133,7 @@ msgstr ""
 "emphasis> 유일한 차이점은 컬럼 유일(unique) 컨스트레인트이다."
 
 #. Tag: programlisting
-#: association_mapping.xml:57
+#: association_mapping.xml:81
 #, no-c-format
 msgid ""
 "<![CDATA[<class name=\"Person\">\n"
@@ -154,7 +154,7 @@ msgid ""
 msgstr ""
 
 #. Tag: programlisting
-#: association_mapping.xml:58 association_mapping.xml:193
+#: association_mapping.xml:82 association_mapping.xml:218
 #, no-c-format
 msgid ""
 "<![CDATA[\n"
@@ -165,19 +165,19 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: association_mapping.xml:60
-#, no-c-format
+#: association_mapping.xml:84
+#, fuzzy, no-c-format
 msgid ""
 "A <emphasis>unidirectional one-to-one association on a primary key</"
-"emphasis> usually uses a special id generator. (Notice that we've reversed "
-"the direction of the association in this example.)"
+"emphasis> usually uses a special id generator In this example, however, we "
+"have reversed the direction of the association:"
 msgstr ""
 "<emphasis>하나의 프라이머리 키에 대한 단방향 one-to-one 연관</emphasis>은 대"
 "개 특별한 id 생성기를 사용한다. (이 예제에서 연관의 방향이 역전되었음을 주목"
 "하라.)"
 
 #. Tag: programlisting
-#: association_mapping.xml:66
+#: association_mapping.xml:90
 #, no-c-format
 msgid ""
 "<![CDATA[<class name=\"Person\">\n"
@@ -197,7 +197,7 @@ msgid ""
 msgstr ""
 
 #. Tag: programlisting
-#: association_mapping.xml:67 association_mapping.xml:201
+#: association_mapping.xml:91 association_mapping.xml:226
 #, no-c-format
 msgid ""
 "<![CDATA[\n"
@@ -207,23 +207,23 @@ msgid ""
 msgstr ""
 
 #. Tag: title
-#: association_mapping.xml:72 association_mapping.xml:94
-#, no-c-format
-msgid "one to many"
+#: association_mapping.xml:96 association_mapping.xml:118
+#, fuzzy, no-c-format
+msgid "One-to-many"
 msgstr "one to many"
 
 #. Tag: para
-#: association_mapping.xml:74
-#, no-c-format
+#: association_mapping.xml:98
+#, fuzzy, no-c-format
 msgid ""
 "A <emphasis>unidirectional one-to-many association on a foreign key</"
-"emphasis> is a very unusual case, and is not really recommended."
+"emphasis> is an unusual case, and is not recommended."
 msgstr ""
 "<emphasis>하나의 foreign 키에 대한 단방향 one-to-many 연관</emphasis>은 매우 "
 "색다른 경우이고, 실제로 권장되지 않는다."
 
 #. Tag: programlisting
-#: association_mapping.xml:79
+#: association_mapping.xml:103
 #, no-c-format
 msgid ""
 "<![CDATA[<class name=\"Person\">\n"
@@ -245,7 +245,7 @@ msgid ""
 msgstr ""
 
 #. Tag: programlisting
-#: association_mapping.xml:80
+#: association_mapping.xml:104
 #, no-c-format
 msgid ""
 "<![CDATA[\n"
@@ -256,34 +256,33 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: association_mapping.xml:82
-#, no-c-format
-msgid "We think it's better to use a join table for this kind of association."
+#: association_mapping.xml:106
+#, fuzzy, no-c-format
+msgid "You should instead use a join table for this kind of association."
 msgstr ""
 "우리는 이런 종류의 연관에 대해 하나의 join 테이블을 사용하는 것이 더 좋다고 "
 "생각한다."
 
 #. Tag: title
-#: association_mapping.xml:91
+#: association_mapping.xml:115
 #, no-c-format
 msgid "Unidirectional associations with join tables"
 msgstr "join 테이블들에 대한 단방향 연관들"
 
 #. Tag: para
-#: association_mapping.xml:96
-#, no-c-format
+#: association_mapping.xml:120
+#, fuzzy, no-c-format
 msgid ""
 "A <emphasis>unidirectional one-to-many association on a join table</"
-"emphasis> is much preferred. Notice that by specifying <literal>unique=\"true"
-"\"</literal>, we have changed the multiplicity from many-to-many to one-to-"
-"many."
+"emphasis> is the preferred option. Specifying <literal>unique=\"true\"</"
+"literal>, changes the multiplicity from many-to-many to one-to-many."
 msgstr ""
 "<emphasis>하나의 join 테이블에 대한 단방향 one-to-many 연관</emphasis>이 보"
 "다 더 선호된다. <literal>unique=\"true\"</literal>를 지정함으로써 우리는 "
 "many-to-many에서 one-to-many로 아중성(multiplicity)를 변경시켰음을 주목하라."
 
 #. Tag: programlisting
-#: association_mapping.xml:102
+#: association_mapping.xml:126
 #, no-c-format
 msgid ""
 "<![CDATA[<class name=\"Person\">\n"
@@ -306,7 +305,7 @@ msgid ""
 msgstr ""
 
 #. Tag: programlisting
-#: association_mapping.xml:103
+#: association_mapping.xml:127
 #, no-c-format
 msgid ""
 "<![CDATA[\n"
@@ -318,17 +317,17 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: association_mapping.xml:110
-#, no-c-format
+#: association_mapping.xml:134
+#, fuzzy, no-c-format
 msgid ""
 "A <emphasis>unidirectional many-to-one association on a join table</"
-"emphasis> is quite common when the association is optional."
+"emphasis> is common when the association is optional. For example:"
 msgstr ""
 "<emphasis>하나의 join 테이블에 대한 단방향 many-to-one 연관</emphasis>은 그 "
 "연관이 선택적일 때 매우 공통적이다."
 
 #. Tag: programlisting
-#: association_mapping.xml:115
+#: association_mapping.xml:139
 #, no-c-format
 msgid ""
 "<![CDATA[<class name=\"Person\">\n"
@@ -352,7 +351,7 @@ msgid ""
 msgstr ""
 
 #. Tag: programlisting
-#: association_mapping.xml:116
+#: association_mapping.xml:140
 #, no-c-format
 msgid ""
 "<![CDATA[\n"
@@ -364,17 +363,17 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: association_mapping.xml:123
-#, no-c-format
+#: association_mapping.xml:147
+#, fuzzy, no-c-format
 msgid ""
 "A <emphasis>unidirectional one-to-one association on a join table</emphasis> "
-"is extremely unusual, but possible."
+"is possible, but extremely unusual."
 msgstr ""
 "<emphasis>하나의 join 테이블에 대한 단방향 one-to-one 연관</emphasis>은 극히 "
 "통상적이지 않지만 가능하다."
 
 #. Tag: programlisting
-#: association_mapping.xml:128
+#: association_mapping.xml:152
 #, no-c-format
 msgid ""
 "<![CDATA[<class name=\"Person\">\n"
@@ -400,7 +399,7 @@ msgid ""
 msgstr ""
 
 #. Tag: programlisting
-#: association_mapping.xml:129 association_mapping.xml:233
+#: association_mapping.xml:153 association_mapping.xml:258
 #, no-c-format
 msgid ""
 "<![CDATA[\n"
@@ -412,22 +411,22 @@ msgid ""
 msgstr ""
 
 #. Tag: title
-#: association_mapping.xml:134 association_mapping.xml:238
-#, no-c-format
-msgid "many to many"
+#: association_mapping.xml:158 association_mapping.xml:263
+#, fuzzy, no-c-format
+msgid "Many-to-many"
 msgstr "many to many"
 
 #. Tag: para
-#: association_mapping.xml:136
-#, no-c-format
+#: association_mapping.xml:160
+#, fuzzy, no-c-format
 msgid ""
-"Finally, we have a <emphasis>unidirectional many-to-many association</"
-"emphasis>."
+"Finally, here is an example of a <emphasis>unidirectional many-to-many "
+"association</emphasis>."
 msgstr ""
 "마지막으로, 우리는 <emphasis>단방향 many-to-many 연관</emphasis>을 갖는다."
 
 #. Tag: programlisting
-#: association_mapping.xml:140
+#: association_mapping.xml:164
 #, no-c-format
 msgid ""
 "<![CDATA[<class name=\"Person\">\n"
@@ -449,7 +448,7 @@ msgid ""
 msgstr ""
 
 #. Tag: programlisting
-#: association_mapping.xml:141 association_mapping.xml:246
+#: association_mapping.xml:165 association_mapping.xml:271
 #, no-c-format
 msgid ""
 "<![CDATA[\n"
@@ -461,29 +460,30 @@ msgid ""
 msgstr ""
 
 #. Tag: title
-#: association_mapping.xml:148
+#: association_mapping.xml:172
 #, no-c-format
 msgid "Bidirectional associations"
 msgstr "양방향 연관들"
 
 #. Tag: title
-#: association_mapping.xml:151 association_mapping.xml:211
-#, no-c-format
-msgid "one to many / many to one"
+#: association_mapping.xml:175 association_mapping.xml:236
+#, fuzzy, no-c-format
+msgid "one-to-many / many-to-one"
 msgstr "one to many / many to one"
 
 #. Tag: para
-#: association_mapping.xml:153
-#, no-c-format
+#: association_mapping.xml:177
+#, fuzzy, no-c-format
 msgid ""
 "A <emphasis>bidirectional many-to-one association</emphasis> is the most "
-"common kind of association. (This is the standard parent/child relationship.)"
+"common kind of association. The following example illustrates the standard "
+"parent/child relationship."
 msgstr ""
 "<emphasis>양방향 many-to-one 연관</emphasis>은 가장 공통된 종류의 연관이다."
 "(이것은 표준 부모/자식 관계이다. )"
 
 #. Tag: programlisting
-#: association_mapping.xml:159
+#: association_mapping.xml:183
 #, no-c-format
 msgid ""
 "<![CDATA[<class name=\"Person\">\n"
@@ -507,15 +507,15 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: association_mapping.xml:163
-#, no-c-format
+#: association_mapping.xml:187
+#, fuzzy, no-c-format
 msgid ""
-"If you use a <literal>List</literal> (or other indexed collection) you need "
-"to set the <literal>key</literal> column of the foreign key to <literal>not "
-"null</literal>, and let Hibernate manage the association from the "
-"collections side to maintain the index of each element (making the other "
-"side virtually inverse by setting <literal>update=\"false\"</literal> and "
-"<literal>insert=\"false\"</literal>):"
+"If you use a <literal>List</literal>, or other indexed collection, set the "
+"<literal>key</literal> column of the foreign key to <literal>not null</"
+"literal>. Hibernate will manage the association from the collections side to "
+"maintain the index of each element, making the other side virtually inverse "
+"by setting <literal>update=\"false\"</literal> and <literal>insert=\"false"
+"\"</literal>:"
 msgstr ""
 "만일 당신이 <literal>List</literal>(또는 다른 인덱싱 된 콜렉션)을 사용할 경"
 "우 당신은 foreign key의 <literal>key</literal> 컬럼을 <literal>not null</"
@@ -525,7 +525,7 @@ msgstr ""
 "으로부터 연관을 관리하도록 할 필요가 있다:"
 
 #. Tag: programlisting
-#: association_mapping.xml:171
+#: association_mapping.xml:195
 #, no-c-format
 msgid ""
 "<![CDATA[<class name=\"Person\">\n"
@@ -550,13 +550,13 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: association_mapping.xml:173
-#, no-c-format
+#: association_mapping.xml:197
+#, fuzzy, no-c-format
 msgid ""
-"It is important that you define <literal>not-null=\"true\"</literal> on the "
-"<literal>&lt;key&gt;</literal> element of the collection mapping if the "
-"underlying foreign key column is <literal>NOT NULL</literal>. Don't only "
-"declare <literal>not-null=\"true\"</literal> on a possible nested "
+"If the underlying foreign key column is <literal>NOT NULL</literal>, it is "
+"important that you define <literal>not-null=\"true\"</literal> on the "
+"<literal>&lt;key&gt;</literal> element of the collection mapping. Do not "
+"only declare <literal>not-null=\"true\"</literal> on a possible nested "
 "<literal>&lt;column&gt;</literal> element, but on the <literal>&lt;key&gt;</"
 "literal> element."
 msgstr ""
@@ -567,16 +567,16 @@ msgstr ""
 "</literal> 요소 상에 선언하라."
 
 #. Tag: para
-#: association_mapping.xml:187
-#, no-c-format
+#: association_mapping.xml:212
+#, fuzzy, no-c-format
 msgid ""
 "A <emphasis>bidirectional one-to-one association on a foreign key</emphasis> "
-"is quite common."
+"is common:"
 msgstr ""
 "<emphasis>foreign에 대한 양방향 one-to-one 연관</emphasis>은 꽤 공통적이다."
 
 #. Tag: programlisting
-#: association_mapping.xml:192
+#: association_mapping.xml:217
 #, no-c-format
 msgid ""
 "<![CDATA[<class name=\"Person\">\n"
@@ -599,17 +599,17 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: association_mapping.xml:195
-#, no-c-format
+#: association_mapping.xml:220
+#, fuzzy, no-c-format
 msgid ""
 "A <emphasis>bidirectional one-to-one association on a primary key</emphasis> "
-"uses the special id generator."
+"uses the special id generator:"
 msgstr ""
 "<emphasis>하나의 프라이머리 키에 대한 양방향 one-to-one 연관</emphasis>은 특"
 "별한 id 생성기를 사용한다."
 
 #. Tag: programlisting
-#: association_mapping.xml:200
+#: association_mapping.xml:225
 #, no-c-format
 msgid ""
 "<![CDATA[<class name=\"Person\">\n"
@@ -631,25 +631,26 @@ msgid ""
 msgstr ""
 
 #. Tag: title
-#: association_mapping.xml:208
+#: association_mapping.xml:233
 #, no-c-format
 msgid "Bidirectional associations with join tables"
 msgstr "join 테이블들에 대한 양방향 연관들"
 
 #. Tag: para
-#: association_mapping.xml:213
-#, no-c-format
+#: association_mapping.xml:238
+#, fuzzy, no-c-format
 msgid ""
-"A <emphasis>bidirectional one-to-many association on a join table</"
-"emphasis>. Note that the <literal>inverse=\"true\"</literal> can go on "
-"either end of the association, on the collection, or on the join."
+"The following is an example of a <emphasis>bidirectional one-to-many "
+"association on a join table</emphasis>. The <literal>inverse=\"true\"</"
+"literal> can go on either end of the association, on the collection, or on "
+"the join."
 msgstr ""
 "<emphasis>하나의 join 테이블에 대한 양방향 one-to-many 연관</emphasis>. "
 "<literal>inverse=\"true\"</literal>는 연관의 어느 쪽 끝이든 콜렉션 측으로 또"
 "는 join 측으로 갈 수 있다."
 
 #. Tag: programlisting
-#: association_mapping.xml:219
+#: association_mapping.xml:244
 #, no-c-format
 msgid ""
 "<![CDATA[<class name=\"Person\">\n"
@@ -681,7 +682,7 @@ msgid ""
 msgstr ""
 
 #. Tag: programlisting
-#: association_mapping.xml:220
+#: association_mapping.xml:245
 #, no-c-format
 msgid ""
 "<![CDATA[\n"
@@ -692,18 +693,24 @@ msgid ""
 "        ]]>"
 msgstr ""
 
-#. Tag: para
-#: association_mapping.xml:227
+#. Tag: title
+#: association_mapping.xml:250
 #, no-c-format
+msgid "one to one"
+msgstr "one to one"
+
+#. Tag: para
+#: association_mapping.xml:252
+#, fuzzy, no-c-format
 msgid ""
 "A <emphasis>bidirectional one-to-one association on a join table</emphasis> "
-"is extremely unusual, but possible."
+"is possible, but extremely unusual."
 msgstr ""
 "<emphasis>하나의 join 테이블에 대한 양방향 one-to-one 연관</emphasis>은 극히 "
 "통상적이지 않지만, 가능하다."
 
 #. Tag: programlisting
-#: association_mapping.xml:232
+#: association_mapping.xml:257
 #, no-c-format
 msgid ""
 "<![CDATA[<class name=\"Person\">\n"
@@ -739,17 +746,17 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: association_mapping.xml:240
-#, no-c-format
+#: association_mapping.xml:265
+#, fuzzy, no-c-format
 msgid ""
-"Finally, we have a <emphasis>bidirectional many-to-many association</"
+"Here is an example of a <emphasis>bidirectional many-to-many association</"
 "emphasis>."
 msgstr ""
 "마지막으로, 우리는 하나의 <emphasis>양방향 many-to-many 연관</emphasis>을 갖"
 "는다."
 
 #. Tag: programlisting
-#: association_mapping.xml:244
+#: association_mapping.xml:269
 #, no-c-format
 msgid ""
 "<![CDATA[<class name=\"Person\">\n"
@@ -776,21 +783,21 @@ msgid ""
 msgstr ""
 
 #. Tag: title
-#: association_mapping.xml:253
+#: association_mapping.xml:278
 #, no-c-format
 msgid "More complex association mappings"
 msgstr "보다 복잡한 연관 매핑들"
 
 #. Tag: para
-#: association_mapping.xml:255
-#, no-c-format
+#: association_mapping.xml:280
+#, fuzzy, no-c-format
 msgid ""
 "More complex association joins are <emphasis>extremely</emphasis> rare. "
-"Hibernate makes it possible to handle more complex situations using SQL "
-"fragments embedded in the mapping document. For example, if a table with "
-"historical account information data defines <literal>accountNumber</"
-"literal>, <literal>effectiveEndDate</literal> and "
-"<literal>effectiveStartDate</literal>columns, mapped as follows:"
+"Hibernate handles more complex situations by using SQL fragments embedded in "
+"the mapping document. For example, if a table with historical account "
+"information data defines <literal>accountNumber</literal>, "
+"<literal>effectiveEndDate</literal> and <literal>effectiveStartDate</"
+"literal>columns, it would be mapped as follows:"
 msgstr ""
 "보다 복잡한 연관 조인들은 <emphasis>극기</emphasis> 드물다. Hibernate는 매핑 "
 "문서들 내에 삽입된 SQL 조각들을 사용하여 보다 복잡한 상황을 처리하는 것을 가"
@@ -800,7 +807,7 @@ msgstr ""
 "핑된다:"
 
 #. Tag: programlisting
-#: association_mapping.xml:264
+#: association_mapping.xml:289
 #, no-c-format
 msgid ""
 "<![CDATA[<properties name=\"currentAccountKey\">\n"
@@ -815,18 +822,18 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: association_mapping.xml:266
-#, no-c-format
+#: association_mapping.xml:291
+#, fuzzy, no-c-format
 msgid ""
-"Then we can map an association to the <emphasis>current</emphasis> instance "
-"(the one with null <literal>effectiveEndDate</literal>) using:"
+"You can then map an association to the <emphasis>current</emphasis> "
+"instance, the one with null <literal>effectiveEndDate</literal>, by using:"
 msgstr ""
 "그때 우리는 다음을 사용하여 하나의 연관을 <emphasis>현재</emphasis> 인스턴스 "
 "(null <literal>effectiveEndDate</literal>을 가진 인스턴스)로 매핑시킬 수 있"
 "다:"
 
 #. Tag: programlisting
-#: association_mapping.xml:271
+#: association_mapping.xml:296
 #, no-c-format
 msgid ""
 "<![CDATA[<many-to-one name=\"currentAccountInfo\" \n"
@@ -838,15 +845,15 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: association_mapping.xml:273
-#, no-c-format
+#: association_mapping.xml:298
+#, fuzzy, no-c-format
 msgid ""
 "In a more complex example, imagine that the association between "
 "<literal>Employee</literal> and <literal>Organization</literal> is "
 "maintained in an <literal>Employment</literal> table full of historical "
-"employment data. Then an association to the employee's <emphasis>most "
-"recent</emphasis> employer (the one with the most recent <literal>startDate</"
-"literal>) might be mapped this way:"
+"employment data. An association to the employee's <emphasis>most recent</"
+"emphasis> employer, the one with the most recent <literal>startDate</"
+"literal>, could be mapped in the following way:"
 msgstr ""
 "보다 복잡한 예제에서, <literal>Employee</literal>와 <literal>Organization</"
 "literal> 사이의 연관이 전체 고용 내역 데이터를 가진 <literal>Employment</"
@@ -855,7 +862,7 @@ msgstr ""
 "literal>를 갖고 있는 것)이 다음 방법으로 매핑될 수 있다:"
 
 #. Tag: programlisting
-#: association_mapping.xml:281
+#: association_mapping.xml:306
 #, no-c-format
 msgid ""
 "<![CDATA[<join>\n"
@@ -873,11 +880,11 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: association_mapping.xml:283
-#, no-c-format
+#: association_mapping.xml:308
+#, fuzzy, no-c-format
 msgid ""
-"You can get quite creative with this functionality, but it is usually more "
-"practical to handle these kinds of cases using HQL or a criteria query."
+"This functionality allows a degree of creativity and flexibility, but it is "
+"more practical to handle these kinds of cases using HQL or a criteria query."
 msgstr ""
 "당신은 이 기능으로 아주 생산성을 얻을 수 있지만, 그것은 대개 HQL 또는 "
 "criteria 질의를 사용하여 이들 종류의 경우들을 처리하는 것이 보다 실용적이다."

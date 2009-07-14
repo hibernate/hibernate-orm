@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2008-08-14 15:28+0000\n"
+"POT-Creation-Date: 2009-07-14 19:56+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,12 +18,12 @@ msgstr "Préface"
 
 #. Tag: para
 #: preface.xml:31
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
 "Working with object-oriented software and a relational database can be "
 "cumbersome and time consuming in today's enterprise environments. Hibernate "
-"is an object/relational mapping tool for Java environments. The term object/"
-"relational mapping (ORM) refers to the technique of mapping a data "
+"is an Object/Relational Mapping tool for Java environments. The term Object/"
+"Relational Mapping (ORM) refers to the technique of mapping a data "
 "representation from an object model to a relational data model with a SQL-"
 "based schema."
 msgstr ""
@@ -36,12 +36,12 @@ msgstr ""
 
 #. Tag: para
 #: preface.xml:39
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
 "Hibernate not only takes care of the mapping from Java classes to database "
 "tables (and from Java data types to SQL data types), but also provides data "
-"query and retrieval facilities and can significantly reduce development time "
-"otherwise spent with manual data handling in SQL and JDBC."
+"query and retrieval facilities. It can also significantly reduce development "
+"time otherwise spent with manual data handling in SQL and JDBC."
 msgstr ""
 "Non seulement, Hibernate s'occupe du transfert des classes Java dans les "
 "tables de la base de données (et des types de données Java dans les types de "
@@ -52,9 +52,9 @@ msgstr ""
 
 #. Tag: para
 #: preface.xml:46
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
-"Hibernates goal is to relieve the developer from 95 percent of common data "
+"Hibernate's goal is to relieve the developer from 95 percent of common data "
 "persistence related programming tasks. Hibernate may not be the best "
 "solution for data-centric applications that only use stored-procedures to "
 "implement the business logic in the database, it is most useful with object-"
@@ -107,14 +107,14 @@ msgstr ""
 
 #. Tag: para
 #: preface.xml:77
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
-"Have a look at the <literal>eg/</literal> directory in the Hibernate "
-"distribution, it contains a simple standalone application. Copy your JDBC "
-"driver to the <literal>lib/</literal> directory and edit <literal>etc/"
-"hibernate.properties</literal>, specifying correct values for your database. "
-"From a command prompt in the distribution directory, type <literal>ant eg</"
-"literal> (using Ant), or under Windows, type <literal>build eg</literal>."
+"View the <literal>eg/</literal> directory in the Hibernate distribution. It "
+"contains a simple standalone application. Copy your JDBC driver to the "
+"<literal>lib/</literal> directory and edit <literal>etc/hibernate."
+"properties</literal>, specifying correct values for your database. From a "
+"command prompt in the distribution directory, type <literal>ant eg</literal> "
+"(using Ant), or under Windows, type <literal>build eg</literal>."
 msgstr ""
 "Regardez le répertoire <literal>eg</literal> de la distribution Hibernate, "
 "il contient une application simple et autonome. Copiez votre pilote JDBC "
@@ -126,14 +126,14 @@ msgstr ""
 
 #. Tag: para
 #: preface.xml:88
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
 "Use this reference documentation as your primary source of information. "
-"Consider reading <emphasis>Java Persistence with Hibernate</emphasis> "
-"(http://www.manning.com/bauer2) if you need more help with application "
-"design or if you prefer a step-by-step tutorial. Also visit http://"
-"caveatemptor.hibernate.org and download the example application for Java "
-"Persistence with Hibernate."
+"Consider reading <biblioref linkend=\"biblio-JPwH\"></biblioref> if you need "
+"more help with application design, or if you prefer a step-by-step tutorial. "
+"Also visit <ulink url=\"http://caveatemptor.hibernate.org\"></ulink> and "
+"download the example application from <biblioref linkend=\"biblio-JPwH\"></"
+"biblioref>."
 msgstr ""
 "Faîtes de cette documentation de référence votre principale source "
 "d'information. Pensez à lire <emphasis>Java Persistence with Hibernate</"
@@ -152,10 +152,10 @@ msgstr ""
 
 #. Tag: para
 #: preface.xml:103
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
-"Third party demos, examples, and tutorials are linked on the Hibernate "
-"website."
+"Links to third party demos, examples, and tutorials are maintained on the "
+"Hibernate website."
 msgstr ""
 "Des démos, exemples et tutoriaux de tierces personnes sont référencés sur le "
 "site web Hibernate."
@@ -175,10 +175,10 @@ msgstr ""
 
 #. Tag: para
 #: preface.xml:117
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
 "If you have questions, use the user forum linked on the Hibernate website. "
-"We also provide a JIRA issue trackings system for bug reports and feature "
+"We also provide a JIRA issue tracking system for bug reports and feature "
 "requests. If you are interested in the development of Hibernate, join the "
 "developer mailing list. If you are interested in translating this "
 "documentation into your language, contact us on the developer mailing list."

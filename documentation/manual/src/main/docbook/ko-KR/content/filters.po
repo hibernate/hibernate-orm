@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2007-10-25 07:47+0000\n"
+"POT-Creation-Date: 2009-07-14 19:56+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -11,18 +11,18 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 
 #. Tag: title
-#: filters.xml:5
+#: filters.xml:29
 #, no-c-format
 msgid "Filtering data"
 msgstr "데이터 필터링하기"
 
 #. Tag: para
-#: filters.xml:7
-#, no-c-format
+#: filters.xml:31
+#, fuzzy, no-c-format
 msgid ""
 "Hibernate3 provides an innovative new approach to handling data with "
 "\"visibility\" rules. A <emphasis>Hibernate filter</emphasis> is a global, "
-"named, parameterized filter that may be enabled or disabled for a particular "
+"named, parameterized filter that can be enabled or disabled for a particular "
 "Hibernate session."
 msgstr ""
 "Hibernate3은 혁신적인 \"가시성(visibility)\" 규칙들로서 데이터를 처리하는 새"
@@ -31,23 +31,23 @@ msgstr ""
 "라미터화 된 필터이다."
 
 #. Tag: title
-#: filters.xml:14
+#: filters.xml:38
 #, no-c-format
 msgid "Hibernate filters"
 msgstr "Hibernate 필터들"
 
 #. Tag: para
-#: filters.xml:16
-#, no-c-format
+#: filters.xml:40
+#, fuzzy, no-c-format
 msgid ""
-"Hibernate3 adds the ability to pre-define filter criteria and attach those "
-"filters at both a class and a collection level. A filter criteria is the "
-"ability to define a restriction clause very similiar to the existing \"where"
-"\" attribute available on the class and various collection elements. Except "
-"these filter conditions can be parameterized. The application can then make "
-"the decision at runtime whether given filters should be enabled and what "
-"their parameter values should be. Filters can be used like database views, "
-"but parameterized inside the application."
+"Hibernate3 has the ability to pre-define filter criteria and attach those "
+"filters at both a class level and a collection level. A filter criteria "
+"allows you to define a restriction clause similar to the existing \"where\" "
+"attribute available on the class and various collection elements. These "
+"filter conditions, however, can be parameterized. The application can then "
+"decide at runtime whether certain filters should be enabled and what their "
+"parameter values should be. Filters can be used like database views, but "
+"they are parameterized inside the application."
 msgstr ""
 "Hibernate3은 필터 기준(criteria)을 미리 정의하고 클래스 레벨과 콜렉션 레벨 양"
 "자에서 그들 필터들을 첨부할 능력을 추가시킨다. 필터 기준(criteria)은 클래스 "
@@ -59,7 +59,7 @@ msgstr ""
 "화 된다."
 
 #. Tag: para
-#: filters.xml:26
+#: filters.xml:50
 #, no-c-format
 msgid ""
 "In order to use filters, they must first be defined and then attached to the "
@@ -72,7 +72,7 @@ msgstr ""
 "literal> 요소 내부에 <literal>&lt;filter-def/&gt;</literal> 요소를 사용하라:"
 
 #. Tag: programlisting
-#: filters.xml:32
+#: filters.xml:56
 #, no-c-format
 msgid ""
 "<![CDATA[<filter-def name=\"myFilter\">\n"
@@ -81,13 +81,13 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: filters.xml:34
-#, no-c-format
-msgid "Then, this filter can be attached to a class:"
+#: filters.xml:58
+#, fuzzy, no-c-format
+msgid "This filter can then be attached to a class:"
 msgstr "그때 이 필터는 클래스에 첨가될 수 있다:"
 
 #. Tag: programlisting
-#: filters.xml:38
+#: filters.xml:62
 #, no-c-format
 msgid ""
 "<![CDATA[<class name=\"myClass\" ...>\n"
@@ -98,13 +98,13 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: filters.xml:40
-#, no-c-format
-msgid "or, to a collection:"
+#: filters.xml:64
+#, fuzzy, no-c-format
+msgid "Or, to a collection:"
 msgstr "또는 콜렉션에 첨가될 수 있다:"
 
 #. Tag: programlisting
-#: filters.xml:44
+#: filters.xml:68
 #, no-c-format
 msgid ""
 "<![CDATA[<set ...>\n"
@@ -114,23 +114,23 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: filters.xml:46
-#, no-c-format
-msgid "or, even to both (or multiples of each) at the same time."
+#: filters.xml:70
+#, fuzzy, no-c-format
+msgid "Or, to both or multiples of each at the same time."
 msgstr "또는 동시에 양자에(또는 각각의 여러번) 첨가될 수 있다."
 
 #. Tag: para
-#: filters.xml:50
-#, no-c-format
+#: filters.xml:74
+#, fuzzy, no-c-format
 msgid ""
 "The methods on <literal>Session</literal> are: <literal>enableFilter(String "
 "filterName)</literal>, <literal>getEnabledFilter(String filterName)</"
 "literal>, and <literal>disableFilter(String filterName)</literal>. By "
-"default, filters are <emphasis>not</emphasis> enabled for a given session; "
-"they must be explcitly enabled through use of the <literal>Session."
-"enabledFilter()</literal> method, which returns an instance of the "
-"<literal>Filter</literal> interface. Using the simple filter defined above, "
-"this would look like:"
+"default, filters are <emphasis>not</emphasis> enabled for a given session. "
+"Filters must be enabled through use of the <literal>Session.enableFilter()</"
+"literal> method, which returns an instance of the <literal>Filter</literal> "
+"interface. If you used the simple filter defined above, it would look like "
+"this:"
 msgstr ""
 "<literal>Session</literal> 상의 메소드들은 다음과 같다: <literal>enableFilter"
 "(String filterName)</literal>, <literal>getEnabledFilter(String filterName)</"
@@ -142,7 +142,7 @@ msgstr ""
 "한 필터를 사용하면, 이것은 다음과 같을 것이다:"
 
 #. Tag: programlisting
-#: filters.xml:59
+#: filters.xml:83
 #, no-c-format
 msgid ""
 "<![CDATA[session.enableFilter(\"myFilter\").setParameter(\"myFilterParam\", "
@@ -150,24 +150,25 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: filters.xml:61
-#, no-c-format
+#: filters.xml:85
+#, fuzzy, no-c-format
 msgid ""
-"Note that methods on the org.hibernate.Filter interface do allow the method-"
-"chaining common to much of Hibernate."
+"Methods on the org.hibernate.Filter interface do allow the method-chaining "
+"common to much of Hibernate."
 msgstr ""
 "org.hibernate.Filter 인터페이스 상의 메소드들은 Hibernate에 매우 공통된 "
 "method-chaining을 허용한다는 점을 노트하라."
 
 #. Tag: para
-#: filters.xml:65
-#, no-c-format
+#: filters.xml:89
+#, fuzzy, no-c-format
 msgid ""
-"A full example, using temporal data with an effective record date pattern:"
+"The following is a full example, using temporal data with an effective "
+"record date pattern:"
 msgstr "유효한 기록 날짜 패턴을 가진 시간 데이터를 사용하는 전체 예제 :"
 
 #. Tag: programlisting
-#: filters.xml:69
+#: filters.xml:93
 #, no-c-format
 msgid ""
 "<![CDATA[<filter-def name=\"effectiveDate\">\n"
@@ -205,18 +206,17 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: filters.xml:71
-#, no-c-format
+#: filters.xml:95
+#, fuzzy, no-c-format
 msgid ""
-"Then, in order to ensure that you always get back currently effective "
-"records, simply enable the filter on the session prior to retrieving "
-"employee data:"
+"In order to ensure that you are provided with currently effective records, "
+"enable the filter on the session prior to retrieving employee data:"
 msgstr ""
 "그때 당신이 현재 유효한 레코드들을 항상 얻는 것을 확실히 하기 위해, employee "
 "데이터를 검색하기 전에 세션 상에 필터를 간단하게 이용 가능하게 하라:"
 
 #. Tag: programlisting
-#: filters.xml:76
+#: filters.xml:100
 #, no-c-format
 msgid ""
 "<![CDATA[Session session = ...;\n"
@@ -230,26 +230,26 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: filters.xml:78
-#, no-c-format
+#: filters.xml:102
+#, fuzzy, no-c-format
 msgid ""
-"In the HQL above, even though we only explicitly mentioned a salary "
-"constraint on the results, because of the enabled filter the query will "
-"return only currently active employees who have a salary greater than a "
-"million dollars."
+"Even though a salary constraint was mentioned explicitly on the results in "
+"the above HQL, because of the enabled filter, the query will return only "
+"currently active employees who have a salary greater than one million "
+"dollars."
 msgstr ""
 "위의 HQL 에서, 심지어 비록 우리가 결과들에 대한 봉급 컨스트레인트를 명시적으"
 "로 언급만 했을지라도, 이용 가능한 필터 때문에 그 질의는 봉급이 백만달러 이상"
 "인 현재 채용중인 직원들만을 반환할 것이다."
 
 #. Tag: para
-#: filters.xml:84
-#, no-c-format
+#: filters.xml:108
+#, fuzzy, no-c-format
 msgid ""
-"Note: if you plan on using filters with outer joining (either through HQL or "
-"load fetching) be careful of the direction of the condition expression. Its "
-"safest to set this up for left outer joining; in general, place the "
-"parameter first followed by the column name(s) after the operator."
+"If you want to use filters with outer joining, either through HQL or load "
+"fetching, be careful of the direction of the condition expression. It is "
+"safest to set this up for left outer joining. Place the parameter first "
+"followed by the column name(s) after the operator."
 msgstr ""
 "노트: 만일 당신이 outer 조인에 대해 필터들을 사용할 계획이라면 (HQL이든 로드 "
 "페칭이든) 조건 표현식의 방향을 주의하라. 이것을 left outer join으로 설정하는 "
@@ -257,14 +257,14 @@ msgstr ""
 "첫번째에 파라미터를 위치지워라."
 
 #. Tag: para
-#: filters.xml:91
-#, no-c-format
+#: filters.xml:115
+#, fuzzy, no-c-format
 msgid ""
-"After being defined a filter might be attached to multiple entities and/or "
-"collections each with its own condition. That can be tedious when the "
-"conditions are the same each time. Thus <literal>&lt;filter-def/&gt;</"
-"literal> allows defining a default condition, either as an attribute or "
-"CDATA:"
+"After being defined, a filter might be attached to multiple entities and/or "
+"collections each with its own condition. This can be problematic when the "
+"conditions are the same each time. Using <literal>&lt;filter-def/&gt;</"
+"literal> allows you to definine a default condition, either as an attribute "
+"or CDATA:"
 msgstr ""
 "필터가 정의된 후에는 그것 자신의 조건에 대해 각각 여러 개의 엔티티들 그리고/"
 "또는 콜렉션들에 첨가될 수 있다. 조건들이 매번 동일할 때 그것은 지루할 수 있"
@@ -272,7 +272,7 @@ msgstr ""
 "느것이든 디폴트 조건을 정의하는 것을 허용해준다:"
 
 #. Tag: programlisting
-#: filters.xml:98
+#: filters.xml:122
 #, no-c-format
 msgid ""
 "<![CDATA[<filter-def name=\"myFilter\" condition=\"abc > xyz\">...</filter-"
@@ -281,13 +281,13 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: filters.xml:100
-#, no-c-format
+#: filters.xml:124
+#, fuzzy, no-c-format
 msgid ""
-"This default condition will then be used whenever the filter is attached to "
-"something without specifying a condition. Note that this means you can give "
-"a specific condition as part of the attachment of the filter which overrides "
-"the default condition in that particular case."
+"This default condition will be used whenever the filter is attached to "
+"something without specifying a condition. This means you can give a specific "
+"condition as part of the attachment of the filter that overrides the default "
+"condition in that particular case."
 msgstr ""
 "그때 이 디폴트 조건은 그 필터가 어떤 조건을 지정함이 없이 어떤 것에 첨가될때"
 "마다 사용될 수 있다. 이것은 당신이 특정한 경우에 디폴트 조건을 오버라이드 시"

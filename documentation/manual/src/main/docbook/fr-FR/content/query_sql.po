@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2008-08-14 15:28+0000\n"
+"POT-Creation-Date: 2009-07-14 19:56+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,10 +18,10 @@ msgstr "SQL natif"
 
 #. Tag: para
 #: query_sql.xml:31
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
-"You may also express queries in the native SQL dialect of your database. "
-"This is useful if you want to utilize database specific features such as "
+"You can also express queries in the native SQL dialect of your database. "
+"This is useful if you want to utilize database-specific features such as "
 "query hints or the <literal>CONNECT</literal> keyword in Oracle. It also "
 "provides a clean migration path from a direct SQL/JDBC based application to "
 "Hibernate."
@@ -35,10 +35,10 @@ msgstr ""
 
 #. Tag: para
 #: query_sql.xml:37
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
-"Hibernate3 allows you to specify handwritten SQL (including stored "
-"procedures) for all create, update, delete, and load operations."
+"Hibernate3 allows you to specify handwritten SQL, including stored "
+"procedures, for all create, update, delete, and load operations."
 msgstr ""
 "Hibernate3 vous permet de spécifier du SQL écrit à la main (incluant les "
 "procédures stockées) pour toutes les opérations de création, mise à jour, "
@@ -52,12 +52,12 @@ msgstr "Utiliser une <literal>SQLQuery</literal>"
 
 #. Tag: para
 #: query_sql.xml:43
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
 "Execution of native SQL queries is controlled via the <literal>SQLQuery</"
 "literal> interface, which is obtained by calling <literal>Session."
-"createSQLQuery()</literal>. The following describes how to use this API for "
-"querying."
+"createSQLQuery()</literal>. The following sections describe how to use this "
+"API for querying."
 msgstr ""
 "L'exécution des requêtes en SQL natif est contrôlée par l'interface "
 "<literal>SQLQuery</literal>, laquelle est obtenue en appelant "
@@ -87,10 +87,10 @@ msgstr ""
 
 #. Tag: para
 #: query_sql.xml:56
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
-"These will both return a List of Object arrays (Object[]) with scalar values "
-"for each column in the CATS table. Hibernate will use ResultSetMetadata to "
+"These will return a List of Object arrays (Object[]) with scalar values for "
+"each column in the CATS table. Hibernate will use ResultSetMetadata to "
 "deduce the actual order and types of the returned scalar values."
 msgstr ""
 "These will both return a List of Object arrays (Object[]) with scalar values "
@@ -99,11 +99,11 @@ msgstr ""
 
 #. Tag: para
 #: query_sql.xml:61
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
-"To avoid the overhead of using <literal>ResultSetMetadata</literal> or "
-"simply to be more explicit in what is returned one can use <literal>addScalar"
-"()</literal>."
+"To avoid the overhead of using <literal>ResultSetMetadata</literal>, or "
+"simply to be more explicit in what is returned, one can use "
+"<literal>addScalar()</literal>:"
 msgstr ""
 "To avoid the overhead of using <literal>ResultSetMetadata</literal> or "
 "simply to be more explicit in what is returned one can use <literal>addScalar"
@@ -121,13 +121,13 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: query_sql.xml:67 query_sql.xml:113 query_sql.xml:194 query_sql.xml:345
+#: query_sql.xml:67 query_sql.xml:113 query_sql.xml:198 query_sql.xml:349
 #, no-c-format
 msgid "This query specified:"
 msgstr "This query specified:"
 
 #. Tag: para
-#: query_sql.xml:71 query_sql.xml:117 query_sql.xml:349
+#: query_sql.xml:71 query_sql.xml:117 query_sql.xml:353
 #, no-c-format
 msgid "the SQL query string"
 msgstr "the SQL query string"
@@ -142,7 +142,7 @@ msgstr "the columns and types to return"
 #: query_sql.xml:79
 #, fuzzy, no-c-format
 msgid ""
-"This will still return Object arrays, but now it will not use "
+"This will return Object arrays, but now it will not use "
 "<literal>ResultSetMetadata</literal> but will instead explicitly get the ID, "
 "NAME and BIRTHDATE column as respectively a Long, String and a Short from "
 "the underlying resultset. This also means that only these three columns will "
@@ -179,11 +179,11 @@ msgstr ""
 
 #. Tag: para
 #: query_sql.xml:92
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
 "This is essentially the same query as before, but now "
-"<literal>ResultSetMetaData</literal> is used to decide the type of NAME and "
-"BIRTHDATE where as the type of ID is explicitly specified."
+"<literal>ResultSetMetaData</literal> is used to determine the type of NAME "
+"and BIRTHDATE, where as the type of ID is explicitly specified."
 msgstr ""
 "This is essentially the same query as before, but now "
 "<literal>ResultSetMetaData</literal> is used to decide the type of NAME and "
@@ -191,11 +191,11 @@ msgstr ""
 
 #. Tag: para
 #: query_sql.xml:96
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
 "How the java.sql.Types returned from ResultSetMetaData is mapped to "
 "Hibernate types is controlled by the Dialect. If a specific type is not "
-"mapped or does not result in the expected type it is possible to customize "
+"mapped, or does not result in the expected type, it is possible to customize "
 "it via calls to <literal>registerHibernateType</literal> in the Dialect."
 msgstr ""
 "How the java.sql.Types returned from ResultSetMetaData is mapped to "
@@ -317,14 +317,14 @@ msgstr ""
 
 #. Tag: para
 #: query_sql.xml:152
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
-"In this example the returned <literal>Cat</literal>'s will have their "
+"In this example, the returned <literal>Cat</literal>'s will have their "
 "<literal>dog</literal> property fully initialized without any extra "
-"roundtrip to the database. Notice that we added a alias name (\"cat\") to be "
-"able to specify the target property path of the join. It is possible to do "
-"the same eager joining for collections, e.g. if the <literal>Cat</literal> "
-"had a one-to-many to <literal>Dog</literal> instead."
+"roundtrip to the database. Notice that you added an alias name (\"cat\") to "
+"be able to specify the target property path of the join. It is possible to "
+"do the same eager joining for collections, e.g. if the <literal>Cat</"
+"literal> had a one-to-many to <literal>Dog</literal> instead."
 msgstr ""
 "In this example the returned <literal>Cat</literal>'s will have their "
 "<literal>dog</literal> property fully initialized without any extra "
@@ -346,12 +346,12 @@ msgstr ""
 
 #. Tag: para
 #: query_sql.xml:162
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
-"At this stage we are reaching the limits of what is possible with native "
-"queries without starting to enhance the sql queries to make them usable in "
-"Hibernate; the problems starts to arise when returning multiple entities of "
-"the same type or when the default alias/column names are not enough."
+"At this stage you are reaching the limits of what is possible with native "
+"queries, without starting to enhance the sql queries to make them usable in "
+"Hibernate. Problems can arise when returning multiple entities of the same "
+"type or when the default alias/column names are not enough."
 msgstr ""
 "At this stage we are reaching the limits of what is possible with native "
 "queries without starting to enhance the sql queries to make them usable in "
@@ -366,11 +366,11 @@ msgstr "Returning multiple entities"
 
 #. Tag: para
 #: query_sql.xml:172
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
-"Until now the result set column names are assumed to be the same as the "
+"Until now, the result set column names are assumed to be the same as the "
 "column names specified in the mapping document. This can be problematic for "
-"SQL queries which join multiple tables, since the same column names may "
+"SQL queries that join multiple tables, since the same column names can "
 "appear in more than one table."
 msgstr ""
 "Until now the result set column names are assumed to be the same as the "
@@ -400,15 +400,15 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: query_sql.xml:182
+#: query_sql.xml:184
 #, fuzzy, no-c-format
 msgid ""
-"The intention for this query is to return two Cat instances per row, a cat "
-"and its mother. This will fail since there is a conflict of names since they "
-"are mapped to the same column names and on some databases the returned "
-"column aliases will most likely be on the form \"c.ID\", \"c.NAME\", etc. "
-"which are not equal to the columns specified in the mappings (\"ID\" and "
-"\"NAME\")."
+"The query was intended to return two Cat instances per row: a cat and its "
+"mother. The query will, however, fail because there is a conflict of names; "
+"the instances are mapped to the same column names. Also, on some databases "
+"the returned column aliases will most likely be on the form \"c.ID\", \"c."
+"NAME\", etc. which are not equal to the columns specified in the mappings "
+"(\"ID\" and \"NAME\")."
 msgstr ""
 "The intention for this query is to return two Cat instances per row, a cat "
 "and its mother. This will fail since there is a conflict of names since they "
@@ -418,13 +418,13 @@ msgstr ""
 "\"NAME\")."
 
 #. Tag: para
-#: query_sql.xml:189
+#: query_sql.xml:193
 #, no-c-format
 msgid "The following form is not vulnerable to column name duplication:"
 msgstr "The following form is not vulnerable to column name duplication:"
 
 #. Tag: programlisting
-#: query_sql.xml:192
+#: query_sql.xml:196
 #, no-c-format
 msgid ""
 "<![CDATA[sess.createSQLQuery(\"SELECT {cat.*}, {mother.*}  FROM CATS c, CATS "
@@ -435,7 +435,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: query_sql.xml:198
+#: query_sql.xml:202
 #, no-c-format
 msgid ""
 "the SQL query string, with placeholders for Hibernate to inject column "
@@ -445,23 +445,22 @@ msgstr ""
 "aliases"
 
 #. Tag: para
-#: query_sql.xml:203
+#: query_sql.xml:207
 #, no-c-format
 msgid "the entities returned by the query"
 msgstr "the entities returned by the query"
 
 #. Tag: para
-#: query_sql.xml:207
+#: query_sql.xml:211
 #, fuzzy, no-c-format
 msgid ""
 "The {cat.*} and {mother.*} notation used above is a shorthand for \"all "
-"properties\". Alternatively, you may list the columns explicitly, but even "
-"in this case we let Hibernate inject the SQL column aliases for each "
-"property. The placeholder for a column alias is just the property name "
-"qualified by the table alias. In the following example, we retrieve Cats and "
-"their mothers from a different table (cat_log) to the one declared in the "
-"mapping metadata. Notice that we may even use the property aliases in the "
-"where clause if we like."
+"properties\". Alternatively, you can list the columns explicitly, but even "
+"in this case Hibernate injects the SQL column aliases for each property. The "
+"placeholder for a column alias is just the property name qualified by the "
+"table alias. In the following example, you retrieve Cats and their mothers "
+"from a different table (cat_log) to the one declared in the mapping "
+"metadata. You can even use the property aliases in the where clause."
 msgstr ""
 "The {cat.*} and {mother.*} notation used above is a shorthand for \"all "
 "properties\". Alternatively, you may list the columns explicity, but even in "
@@ -473,7 +472,7 @@ msgstr ""
 "clause if we like."
 
 #. Tag: programlisting
-#: query_sql.xml:216
+#: query_sql.xml:220
 #, no-c-format
 msgid ""
 "<![CDATA[String sql = \"SELECT ID as {c.id}, NAME as {c.name}, \" + \n"
@@ -488,19 +487,19 @@ msgid ""
 msgstr ""
 
 #. Tag: title
-#: query_sql.xml:219
+#: query_sql.xml:223
 #, no-c-format
 msgid "Alias and property references"
 msgstr "Alias and property references"
 
 #. Tag: para
-#: query_sql.xml:221
-#, no-c-format
+#: query_sql.xml:225
+#, fuzzy, no-c-format
 msgid ""
-"For most cases the above alias injection is needed, but for queries relating "
-"to more complex mappings like composite properties, inheritance "
-"discriminators, collections etc. there are some specific aliases to use to "
-"allow Hibernate to inject the proper aliases."
+"In most cases the above alias injection is needed. For queries relating to "
+"more complex mappings, like composite properties, inheritance "
+"discriminators, collections etc., you can use specific aliases that allow "
+"Hibernate to inject the proper aliases."
 msgstr ""
 "For most cases the above alias injection is needed, but for queries relating "
 "to more complex mappings like composite properties, inheritance "
@@ -508,233 +507,234 @@ msgstr ""
 "allow Hibernate to inject the proper aliases."
 
 #. Tag: para
-#: query_sql.xml:226
-#, no-c-format
+#: query_sql.xml:230
+#, fuzzy, no-c-format
 msgid ""
-"The following table shows the different possibilities of using the alias "
-"injection. Note: the alias names in the result are examples, each alias will "
-"have a unique and probably different name when used."
+"The following table shows the different ways you can use the alias "
+"injection. Please note that the alias names in the result are simply "
+"examples; each alias will have a unique and probably different name when "
+"used."
 msgstr ""
 "The following table shows the different possibilities of using the alias "
 "injection. Note: the alias names in the result are examples, each alias will "
 "have a unique and probably different name when used."
 
 #. Tag: title
-#: query_sql.xml:232
+#: query_sql.xml:236
 #, no-c-format
 msgid "Alias injection names"
 msgstr "Alias injection names"
 
 #. Tag: entry
-#: query_sql.xml:243
+#: query_sql.xml:247
 #, no-c-format
 msgid "Description"
 msgstr "Description"
 
 #. Tag: entry
-#: query_sql.xml:245
+#: query_sql.xml:249
 #, no-c-format
 msgid "Syntax"
 msgstr "Syntax"
 
 #. Tag: entry
-#: query_sql.xml:247
+#: query_sql.xml:251
 #, no-c-format
 msgid "Example"
 msgstr "Example"
 
 #. Tag: entry
-#: query_sql.xml:253
+#: query_sql.xml:257
 #, no-c-format
 msgid "A simple property"
 msgstr "A simple property"
 
 #. Tag: literal
-#: query_sql.xml:255
+#: query_sql.xml:259
 #, no-c-format
 msgid "{[aliasname].[propertyname]"
 msgstr "{[aliasname].[propertyname]"
 
 #. Tag: literal
-#: query_sql.xml:257
+#: query_sql.xml:261
 #, no-c-format
 msgid "A_NAME as {item.name}"
 msgstr "A_NAME as {item.name}"
 
 #. Tag: entry
-#: query_sql.xml:261
+#: query_sql.xml:265
 #, no-c-format
 msgid "A composite property"
 msgstr "A composite property"
 
 #. Tag: literal
-#: query_sql.xml:263
+#: query_sql.xml:267
 #, no-c-format
 msgid "{[aliasname].[componentname].[propertyname]}"
 msgstr "{[aliasname].[componentname].[propertyname]}"
 
 #. Tag: literal
-#: query_sql.xml:265
+#: query_sql.xml:269
 #, no-c-format
 msgid "CURRENCY as {item.amount.currency}, VALUE as {item.amount.value}"
 msgstr "CURRENCY as {item.amount.currency}, VALUE as {item.amount.value}"
 
 #. Tag: entry
-#: query_sql.xml:270
+#: query_sql.xml:274
 #, no-c-format
 msgid "Discriminator of an entity"
 msgstr "Discriminator of an entity"
 
 #. Tag: literal
-#: query_sql.xml:272
+#: query_sql.xml:276
 #, no-c-format
 msgid "{[aliasname].class}"
 msgstr "{[aliasname].class}"
 
 #. Tag: literal
-#: query_sql.xml:274
+#: query_sql.xml:278
 #, no-c-format
 msgid "DISC as {item.class}"
 msgstr "DISC as {item.class}"
 
 #. Tag: entry
-#: query_sql.xml:278
+#: query_sql.xml:282
 #, no-c-format
 msgid "All properties of an entity"
 msgstr "All properties of an entity"
 
 #. Tag: literal
-#: query_sql.xml:280 query_sql.xml:328
+#: query_sql.xml:284 query_sql.xml:332
 #, no-c-format
 msgid "{[aliasname].*}"
 msgstr "{[aliasname].*}"
 
 #. Tag: literal
-#: query_sql.xml:282
+#: query_sql.xml:286
 #, no-c-format
 msgid "{item.*}"
 msgstr "{item.*}"
 
 #. Tag: entry
-#: query_sql.xml:286
+#: query_sql.xml:290
 #, no-c-format
 msgid "A collection key"
 msgstr "A collection key"
 
 #. Tag: literal
-#: query_sql.xml:288
+#: query_sql.xml:292
 #, no-c-format
 msgid "{[aliasname].key}"
 msgstr "{[aliasname].key}"
 
 #. Tag: literal
-#: query_sql.xml:290
+#: query_sql.xml:294
 #, no-c-format
 msgid "ORGID as {coll.key}"
 msgstr "ORGID as {coll.key}"
 
 #. Tag: entry
-#: query_sql.xml:294
+#: query_sql.xml:298
 #, no-c-format
 msgid "The id of an collection"
 msgstr "The id of an collection"
 
 #. Tag: literal
-#: query_sql.xml:296
+#: query_sql.xml:300
 #, no-c-format
 msgid "{[aliasname].id}"
 msgstr "{[aliasname].id}"
 
 #. Tag: literal
-#: query_sql.xml:298
+#: query_sql.xml:302
 #, no-c-format
 msgid "EMPID as {coll.id}"
 msgstr "EMPID as {coll.id}"
 
 #. Tag: entry
-#: query_sql.xml:302
+#: query_sql.xml:306
 #, no-c-format
 msgid "The element of an collection"
 msgstr "The element of an collection"
 
 #. Tag: literal
-#: query_sql.xml:304
+#: query_sql.xml:308
 #, no-c-format
 msgid "{[aliasname].element}"
 msgstr "{[aliasname].element}"
 
 #. Tag: literal
-#: query_sql.xml:306
+#: query_sql.xml:310
 #, no-c-format
 msgid "XID as {coll.element}"
 msgstr "XID as {coll.element}"
 
 #. Tag: entry
-#: query_sql.xml:310
-#, no-c-format
-msgid "roperty of the element in the collection"
+#: query_sql.xml:314
+#, fuzzy, no-c-format
+msgid "property of the element in the collection"
 msgstr "roperty of the element in the collection"
 
 #. Tag: literal
-#: query_sql.xml:312
+#: query_sql.xml:316
 #, no-c-format
 msgid "{[aliasname].element.[propertyname]}"
 msgstr "{[aliasname].element.[propertyname]}"
 
 #. Tag: literal
-#: query_sql.xml:314
+#: query_sql.xml:318
 #, no-c-format
 msgid "NAME as {coll.element.name}"
 msgstr "NAME as {coll.element.name}"
 
 #. Tag: entry
-#: query_sql.xml:318
+#: query_sql.xml:322
 #, no-c-format
 msgid "All properties of the element in the collection"
 msgstr "All properties of the element in the collection"
 
 #. Tag: literal
-#: query_sql.xml:320
+#: query_sql.xml:324
 #, no-c-format
 msgid "{[aliasname].element.*}"
 msgstr "{[aliasname].element.*}"
 
 #. Tag: literal
-#: query_sql.xml:322
+#: query_sql.xml:326
 #, no-c-format
 msgid "{coll.element.*}"
 msgstr "{coll.element.*}"
 
 #. Tag: entry
-#: query_sql.xml:326
+#: query_sql.xml:330
 #, no-c-format
 msgid "All properties of the the collection"
 msgstr "All properties of the the collection"
 
 #. Tag: literal
-#: query_sql.xml:330
+#: query_sql.xml:334
 #, no-c-format
 msgid "{coll.*}"
 msgstr "{coll.*}"
 
 #. Tag: title
-#: query_sql.xml:339
+#: query_sql.xml:343
 #, no-c-format
 msgid "Returning non-managed entities"
 msgstr "Returning non-managed entities"
 
 #. Tag: para
-#: query_sql.xml:341
-#, no-c-format
+#: query_sql.xml:345
+#, fuzzy, no-c-format
 msgid ""
-"It is possible to apply a ResultTransformer to native sql queries. Allowing "
-"it to e.g. return non-managed entities."
+"It is possible to apply a ResultTransformer to native SQL queries, allowing "
+"it to return non-managed entities."
 msgstr ""
 "It is possible to apply a ResultTransformer to native sql queries. Allowing "
 "it to e.g. return non-managed entities."
 
 #. Tag: programlisting
-#: query_sql.xml:343
+#: query_sql.xml:347
 #, no-c-format
 msgid ""
 "<![CDATA[sess.createSQLQuery(\"SELECT NAME, BIRTHDATE FROM CATS\")\n"
@@ -742,13 +742,13 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: query_sql.xml:353
+#: query_sql.xml:357
 #, no-c-format
 msgid "a result transformer"
 msgstr "a result transformer"
 
 #. Tag: para
-#: query_sql.xml:357
+#: query_sql.xml:361
 #, no-c-format
 msgid ""
 "The above query will return a list of <literal>CatDTO</literal> which has "
@@ -760,17 +760,17 @@ msgstr ""
 "corresponding properties or fields."
 
 #. Tag: title
-#: query_sql.xml:364
+#: query_sql.xml:368
 #, no-c-format
 msgid "Handling inheritance"
 msgstr "Handling inheritance"
 
 #. Tag: para
-#: query_sql.xml:366
-#, no-c-format
+#: query_sql.xml:370
+#, fuzzy, no-c-format
 msgid ""
-"Native sql queries which query for entities that is mapped as part of an "
-"inheritance must include all properties for the baseclass and all it "
+"Native SQL queries which query for entities that are mapped as part of an "
+"inheritance must include all properties for the baseclass and all its "
 "subclasses."
 msgstr ""
 "Native sql queries which query for entities that is mapped as part of an "
@@ -778,19 +778,19 @@ msgstr ""
 "subclasses."
 
 #. Tag: title
-#: query_sql.xml:372
+#: query_sql.xml:376
 #, no-c-format
 msgid "Parameters"
 msgstr "Parameters"
 
 #. Tag: para
-#: query_sql.xml:374
-#, no-c-format
-msgid "Native sql queries support positional as well as named parameters:"
+#: query_sql.xml:378
+#, fuzzy, no-c-format
+msgid "Native SQL queries support positional as well as named parameters:"
 msgstr "Native sql queries support positional as well as named parameters:"
 
 #. Tag: programlisting
-#: query_sql.xml:377
+#: query_sql.xml:381
 #, no-c-format
 msgid ""
 "<![CDATA[Query query = sess.createSQLQuery(\"SELECT * FROM CATS WHERE NAME "
@@ -803,17 +803,17 @@ msgid ""
 msgstr ""
 
 #. Tag: title
-#: query_sql.xml:385
+#: query_sql.xml:389
 #, no-c-format
 msgid "Named SQL queries"
 msgstr "Requêtes SQL nommées"
 
 #. Tag: para
-#: query_sql.xml:387
-#, no-c-format
+#: query_sql.xml:391
+#, fuzzy, no-c-format
 msgid ""
-"Named SQL queries may be defined in the mapping document and called in "
-"exactly the same way as a named HQL query. In this case, we do "
+"Named SQL queries can be defined in the mapping document and called in "
+"exactly the same way as a named HQL query. In this case, you do "
 "<emphasis>not</emphasis> need to call <literal>addEntity()</literal>."
 msgstr ""
 "Les requêtes SQL nommées peuvent être définies dans le document de mapping "
@@ -822,7 +822,7 @@ msgstr ""
 "<literal>addEntity()</literal>."
 
 #. Tag: programlisting
-#: query_sql.xml:392
+#: query_sql.xml:396
 #, no-c-format
 msgid ""
 "<![CDATA[<sql-query name=\"persons\">\n"
@@ -836,7 +836,7 @@ msgid ""
 msgstr ""
 
 #. Tag: programlisting
-#: query_sql.xml:394
+#: query_sql.xml:398
 #, no-c-format
 msgid ""
 "<![CDATA[List people = sess.getNamedQuery(\"persons\")\n"
@@ -846,19 +846,19 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: query_sql.xml:396
-#, no-c-format
+#: query_sql.xml:400
+#, fuzzy, no-c-format
 msgid ""
-"The <literal>&lt;return-join&gt;</literal> and <literal>&lt;load-"
-"collection&gt;</literal> elements are used to join associations and define "
-"queries which initialize collections, respectively."
+"The <literal>&lt;return-join&gt;</literal> element is use to join "
+"associations and the <literal>&lt;load-collection&gt;</literal> element is "
+"used to define queries which initialize collections,"
 msgstr ""
 "Les éléments <literal>&lt;return-join&gt;</literal> et <literal>&lt;load-"
 "collection&gt;</literal> sont respectivement utilisés pour lier des "
 "associations et définir des requêtes qui initialisent des collections."
 
 #. Tag: programlisting
-#: query_sql.xml:401
+#: query_sql.xml:404
 #, no-c-format
 msgid ""
 "<![CDATA[<sql-query name=\"personsWith\">\n"
@@ -879,7 +879,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: query_sql.xml:403
+#: query_sql.xml:406
 #, no-c-format
 msgid ""
 "A named SQL query may return a scalar value. You must declare the column "
@@ -891,7 +891,7 @@ msgstr ""
 "<literal>&lt;return-scalar&gt;</literal> :"
 
 #. Tag: programlisting
-#: query_sql.xml:407
+#: query_sql.xml:410
 #, no-c-format
 msgid ""
 "<![CDATA[<sql-query name=\"mySqlQuery\">\n"
@@ -904,12 +904,13 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: query_sql.xml:409
+#: query_sql.xml:412
 #, fuzzy, no-c-format
 msgid ""
-"You can externalize the resultset mapping informations in a <literal>&lt;"
-"resultset&gt;</literal> element to either reuse them across several named "
-"queries or through the <literal>setResultSetMapping()</literal> API."
+"You can externalize the resultset mapping information in a <literal>&lt;"
+"resultset&gt;</literal> element which will allow you to either reuse them "
+"across several named queries or through the <literal>setResultSetMapping()</"
+"literal> API."
 msgstr ""
 "Vous pouvez externaliser les informations de mapping des résultats dans un "
 "élément <literal>&lt;resultset&gt;</literal> pour soit les réutiliser dans "
@@ -917,7 +918,7 @@ msgstr ""
 "<literal>setResultSetMapping()</literal>."
 
 #. Tag: programlisting
-#: query_sql.xml:414
+#: query_sql.xml:417
 #, no-c-format
 msgid ""
 "<![CDATA[<resultset name=\"personAddress\">\n"
@@ -941,17 +942,17 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: query_sql.xml:416
-#, no-c-format
+#: query_sql.xml:419
+#, fuzzy, no-c-format
 msgid ""
-"You can alternatively use the resultset mapping information in your hbm "
+"You can, alternatively, use the resultset mapping information in your hbm "
 "files directly in java code."
 msgstr ""
 "You can alternatively use the resultset mapping information in your hbm "
 "files directly in java code."
 
 #. Tag: programlisting
-#: query_sql.xml:419
+#: query_sql.xml:422
 #, no-c-format
 msgid ""
 "<![CDATA[List cats = sess.createSQLQuery(\n"
@@ -963,7 +964,7 @@ msgid ""
 msgstr ""
 
 #. Tag: title
-#: query_sql.xml:422
+#: query_sql.xml:425
 #, no-c-format
 msgid "Using return-property to explicitly specify column/alias names"
 msgstr ""
@@ -971,12 +972,12 @@ msgstr ""
 "colonnes/alias"
 
 #. Tag: para
-#: query_sql.xml:425
-#, no-c-format
+#: query_sql.xml:428
+#, fuzzy, no-c-format
 msgid ""
-"With <literal>&lt;return-property&gt;</literal> you can explicitly tell "
-"Hibernate what column aliases to use, instead of using the <literal>{}</"
-"literal>-syntax to let Hibernate inject its own aliases."
+"You can explicitly tell Hibernate what column aliases to use with "
+"<literal>&lt;return-property&gt;</literal>, instead of using the <literal>{}"
+"</literal>-syntax to let Hibernate inject its own aliases.For example:"
 msgstr ""
 "Avec <literal>&lt;return-property&gt;</literal> vous pouvez explicitement "
 "dire à Hibernate quels alias de colonne utiliser, plutot que d'employer la "
@@ -984,7 +985,7 @@ msgstr ""
 "alias."
 
 #. Tag: programlisting
-#: query_sql.xml:430
+#: query_sql.xml:433
 #, no-c-format
 msgid ""
 "<![CDATA[<sql-query name=\"mySqlQuery\">\n"
@@ -1002,11 +1003,11 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: query_sql.xml:432
-#, no-c-format
+#: query_sql.xml:435
+#, fuzzy, no-c-format
 msgid ""
 "<literal>&lt;return-property&gt;</literal> also works with multiple columns. "
-"This solves a limitation with the <literal>{}</literal>-syntax which can not "
+"This solves a limitation with the <literal>{}</literal>-syntax which cannot "
 "allow fine grained control of multi-column properties."
 msgstr ""
 "<literal>&lt;return-property&gt;</literal> fonctionne aussi avec de multiple "
@@ -1014,7 +1015,7 @@ msgstr ""
 "ne peut pas permettre une bonne granularité des propriétés multi-colonnes."
 
 #. Tag: programlisting
-#: query_sql.xml:437
+#: query_sql.xml:440
 #, no-c-format
 msgid ""
 "<![CDATA[<sql-query name=\"organizationCurrentEmployments\">\n"
@@ -1035,12 +1036,12 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: query_sql.xml:439
-#, no-c-format
+#: query_sql.xml:442
+#, fuzzy, no-c-format
 msgid ""
-"Notice that in this example we used <literal>&lt;return-property&gt;</"
-"literal> in combination with the <literal>{}</literal>-syntax for injection. "
-"Allowing users to choose how they want to refer column and properties."
+"In this example <literal>&lt;return-property&gt;</literal> was used in "
+"combination with the <literal>{}</literal>-syntax for injection. This allows "
+"users to choose how they want to refer column and properties."
 msgstr ""
 "Notez que dans cet exemple nous avons utilisé <literal>&lt;return-"
 "property&gt;</literal> en combinaison avec la syntaxe <literal>{}</literal> "
@@ -1048,7 +1049,7 @@ msgstr ""
 "veulent référencer les colonnes et les propriétés."
 
 #. Tag: para
-#: query_sql.xml:444
+#: query_sql.xml:447
 #, no-c-format
 msgid ""
 "If your mapping has a discriminator you must use <literal>&lt;return-"
@@ -1058,20 +1059,20 @@ msgstr ""
 "discriminator&gt;</literal> pour spécifier la colonne discriminante."
 
 #. Tag: title
-#: query_sql.xml:450
+#: query_sql.xml:453
 #, no-c-format
 msgid "Using stored procedures for querying"
 msgstr "Utilisation de procédures stockées pour les requêtes"
 
 #. Tag: para
-#: query_sql.xml:452
-#, no-c-format
+#: query_sql.xml:455
+#, fuzzy, no-c-format
 msgid ""
-"Hibernate 3 introduces support for queries via stored procedures and "
-"functions. Most of the following documentation is equivalent for both. The "
-"stored procedure/function must return a resultset as the first out-parameter "
-"to be able to work with Hibernate. An example of such a stored function in "
-"Oracle 9 and higher is as follows:"
+"Hibernate3 provides support for queries via stored procedures and functions. "
+"Most of the following documentation is equivalent for both. The stored "
+"procedure/function must return a resultset as the first out-parameter to be "
+"able to work with Hibernate. An example of such a stored function in Oracle "
+"9 and higher is as follows:"
 msgstr ""
 "Hibernate 3 introduit le support des requêtes via procédures stockées et les "
 "fonctions. La documentation suivante est valable pour les deux. Les "
@@ -1081,7 +1082,7 @@ msgstr ""
 "stockée en Oracle 9 et version supérieure :"
 
 #. Tag: programlisting
-#: query_sql.xml:458
+#: query_sql.xml:461
 #, no-c-format
 msgid ""
 "<![CDATA[CREATE OR REPLACE FUNCTION selectAllEmployments\n"
@@ -1099,7 +1100,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: query_sql.xml:460
+#: query_sql.xml:463
 #, no-c-format
 msgid "To use this query in Hibernate you need to map it via a named query."
 msgstr ""
@@ -1107,7 +1108,7 @@ msgstr ""
 "une requête nommée."
 
 #. Tag: programlisting
-#: query_sql.xml:463
+#: query_sql.xml:466
 #, no-c-format
 msgid ""
 "<![CDATA[<sql-query name=\"selectAllEmployees_SP\" callable=\"true\">\n"
@@ -1128,30 +1129,30 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: query_sql.xml:465
-#, no-c-format
+#: query_sql.xml:468
+#, fuzzy, no-c-format
 msgid ""
-"Notice stored procedures currently only return scalars and entities. "
-"<literal>&lt;return-join&gt;</literal> and <literal>&lt;load-collection&gt;</"
-"literal> are not supported."
+"Stored procedures currently only return scalars and entities. <literal>&lt;"
+"return-join&gt;</literal> and <literal>&lt;load-collection&gt;</literal> are "
+"not supported."
 msgstr ""
 "Notez que les procédures stockées retournent, pour le moment, seulement des "
 "scalaires et des entités. <literal>&lt;return-join&gt;</literal> et "
 "<literal>&lt;load-collection&gt;</literal> ne sont pas supportés."
 
 #. Tag: title
-#: query_sql.xml:470
+#: query_sql.xml:473
 #, no-c-format
 msgid "Rules/limitations for using stored procedures"
 msgstr "Règles/limitations lors de l'utilisation des procédures stockées"
 
 #. Tag: para
-#: query_sql.xml:472
-#, no-c-format
+#: query_sql.xml:475
+#, fuzzy, no-c-format
 msgid ""
-"To use stored procedures with Hibernate the procedures/functions have to "
-"follow some rules. If they do not follow those rules they are not usable "
-"with Hibernate. If you still want to use these procedures you have to "
+"You cannot use stored procedures with Hibernate unless you follow some "
+"procedure/function rules. If they do not follow those rules they are not "
+"usable with Hibernate. If you still want to use these procedures you have to "
 "execute them via <literal>session.connection()</literal>. The rules are "
 "different for each database, since database vendors have different stored "
 "procedure semantics/syntax."
@@ -1165,20 +1166,20 @@ msgstr ""
 "pour les procédures stockées."
 
 #. Tag: para
-#: query_sql.xml:479
-#, no-c-format
+#: query_sql.xml:482
+#, fuzzy, no-c-format
 msgid ""
-"Stored procedure queries can't be paged with <literal>setFirstResult()/"
+"Stored procedure queries cannot be paged with <literal>setFirstResult()/"
 "setMaxResults()</literal>."
 msgstr ""
 "Les requêtes de procédures stockées ne peuvent pas être paginées avec "
 "<literal>setFirstResult()/setMaxResults()</literal>."
 
 #. Tag: para
-#: query_sql.xml:482
-#, no-c-format
+#: query_sql.xml:485
+#, fuzzy, no-c-format
 msgid ""
-"Recommended call form is standard SQL92: <literal>{ ? = call functionName"
+"The recommended call form is standard SQL92: <literal>{ ? = call functionName"
 "(&lt;parameters&gt;) }</literal> or <literal>{ ? = call procedureName(&lt;"
 "parameters&gt;}</literal>. Native call syntax is not supported."
 msgstr ""
@@ -1187,20 +1188,20 @@ msgstr ""
 "parameters&gt;}</literal>. Native call syntax is not supported."
 
 #. Tag: para
-#: query_sql.xml:487
+#: query_sql.xml:490
 #, no-c-format
 msgid "For Oracle the following rules apply:"
 msgstr "Pour Oracle les règles suivantes s'appliquent :"
 
 #. Tag: para
-#: query_sql.xml:491
-#, no-c-format
+#: query_sql.xml:494
+#, fuzzy, no-c-format
 msgid ""
 "A function must return a result set. The first parameter of a procedure must "
 "be an <literal>OUT</literal> that returns a result set. This is done by "
 "using a <literal>SYS_REFCURSOR</literal> type in Oracle 9 or 10. In Oracle "
-"you need to define a <literal>REF CURSOR</literal> type, see Oracle "
-"literature."
+"you need to define a <literal>REF CURSOR</literal> type. See Oracle "
+"literature for further information."
 msgstr ""
 "La procédure doit retourner un ensemble de résultats. Le prmeier paramètre "
 "d'une procédure doit être un <literal>OUT</literal> qui retourne un ensemble "
@@ -1209,19 +1210,19 @@ msgstr ""
 "type <literal>REF CURSOR</literal>."
 
 #. Tag: para
-#: query_sql.xml:500
+#: query_sql.xml:503
 #, no-c-format
 msgid "For Sybase or MS SQL server the following rules apply:"
 msgstr "Pour Sybase ou MS SQL server les règles suivantes s'appliquent :"
 
 #. Tag: para
-#: query_sql.xml:504
-#, no-c-format
+#: query_sql.xml:507
+#, fuzzy, no-c-format
 msgid ""
-"The procedure must return a result set. Note that since these servers can/"
-"will return multiple result sets and update counts, Hibernate will iterate "
-"the results and take the first result that is a result set as its return "
-"value. Everything else will be discarded."
+"The procedure must return a result set. Note that since these servers can "
+"return multiple result sets and update counts, Hibernate will iterate the "
+"results and take the first result that is a result set as its return value. "
+"Everything else will be discarded."
 msgstr ""
 "La procédure doit retourner un ensemble de résultats. Notez que comme ces "
 "serveurs peuvent retourner de multiples ensembles de résultats et mettre à "
@@ -1230,7 +1231,7 @@ msgstr ""
 "reste sera ignoré."
 
 #. Tag: para
-#: query_sql.xml:512
+#: query_sql.xml:515
 #, no-c-format
 msgid ""
 "If you can enable <literal>SET NOCOUNT ON</literal> in your procedure it "
@@ -1241,13 +1242,13 @@ msgstr ""
 "obligation."
 
 #. Tag: title
-#: query_sql.xml:522
+#: query_sql.xml:525
 #, no-c-format
 msgid "Custom SQL for create, update and delete"
 msgstr "SQL personnalisé pour créer, mettre à jour et effacer"
 
 #. Tag: para
-#: query_sql.xml:524
+#: query_sql.xml:527
 #, no-c-format
 msgid ""
 "Hibernate3 can use custom SQL statements for create, update, and delete "
@@ -1266,7 +1267,7 @@ msgstr ""
 "<literal>&lt;sql-update&gt;</literal> surchargent ces chaînes de caractères :"
 
 #. Tag: programlisting
-#: query_sql.xml:532
+#: query_sql.xml:535
 #, no-c-format
 msgid ""
 "<![CDATA[<class name=\"Person\">\n"
@@ -1282,12 +1283,12 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: query_sql.xml:534
-#, no-c-format
+#: query_sql.xml:537
+#, fuzzy, no-c-format
 msgid ""
-"The SQL is directly executed in your database, so you are free to use any "
-"dialect you like. This will of course reduce the portability of your mapping "
-"if you use database specific SQL."
+"The SQL is directly executed in your database, so you can use any dialect "
+"you like. This will reduce the portability of your mapping if you use "
+"database specific SQL."
 msgstr ""
 "Le SQL est directement exécuté dans votre base de données, donc vous êtes "
 "libre d'utiliser le dialecte que vous souhaitez. Cela réduira bien sûr la "
@@ -1295,7 +1296,7 @@ msgstr ""
 "de données."
 
 #. Tag: para
-#: query_sql.xml:538
+#: query_sql.xml:541
 #, no-c-format
 msgid ""
 "Stored procedures are supported if the <literal>callable</literal> attribute "
@@ -1305,7 +1306,7 @@ msgstr ""
 "literal> est paramétré :"
 
 #. Tag: programlisting
-#: query_sql.xml:541
+#: query_sql.xml:544
 #, no-c-format
 msgid ""
 "<![CDATA[<class name=\"Person\">\n"
@@ -1321,25 +1322,25 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: query_sql.xml:543
-#, no-c-format
+#: query_sql.xml:546
+#, fuzzy, no-c-format
 msgid ""
-"The order of the positional parameters are currently vital, as they must be "
-"in the same sequence as Hibernate expects them."
+"The order of the positional parameters is vital, as they must be in the same "
+"sequence as Hibernate expects them."
 msgstr ""
 "L'ordre des paramètres positionnels est actuellement vital, car ils doivent "
 "être dans la même séquence qu'Hibernate les attend."
 
 #. Tag: para
-#: query_sql.xml:546
-#, no-c-format
+#: query_sql.xml:549
+#, fuzzy, no-c-format
 msgid ""
-"You can see the expected order by enabling debug logging for the "
+"You can view the expected order by enabling debug logging for the "
 "<literal>org.hibernate.persister.entity</literal> level. With this level "
-"enabled Hibernate will print out the static SQL that is used to create, "
-"update, delete etc. entities. (To see the expected sequence, remember to not "
-"include your custom SQL in the mapping files as that will override the "
-"Hibernate generated static sql.)"
+"enabled, Hibernate will print out the static SQL that is used to create, "
+"update, delete etc. entities. To view the expected sequence, do not include "
+"your custom SQL in the mapping files, as this will override the Hibernate "
+"generated static SQL."
 msgstr ""
 "Vous pouvez voir l'ordre attendu en activant les journaux de debug pour le "
 "niveau <literal>org.hibernate.persister.entity</literal> level. Avec ce "
@@ -1350,14 +1351,13 @@ msgstr ""
 "Hibernate.)"
 
 #. Tag: para
-#: query_sql.xml:553
-#, no-c-format
+#: query_sql.xml:556
+#, fuzzy, no-c-format
 msgid ""
-"The stored procedures are in most cases (read: better do it than not) "
-"required to return the number of rows inserted/updated/deleted, as Hibernate "
-"has some runtime checks for the success of the statement. Hibernate always "
-"registers the first statement parameter as a numeric output parameter for "
-"the CUD operations:"
+"The stored procedures are in most cases required to return the number of "
+"rows inserted, updated and deleted, as Hibernate has some runtime checks for "
+"the success of the statement. Hibernate always registers the first statement "
+"parameter as a numeric output parameter for the CUD operations:"
 msgstr ""
 "Les procédures stockées sont dans la plupart des cas (lire : il vaut mieux "
 "le faire) requises pour retourner le nombre de lignes insérées/mises à jour/"
@@ -1366,7 +1366,7 @@ msgstr ""
 "expression comme un paramètre de sortie numérique pour les opérations CUD :"
 
 #. Tag: programlisting
-#: query_sql.xml:559
+#: query_sql.xml:562
 #, no-c-format
 msgid ""
 "<![CDATA[CREATE OR REPLACE FUNCTION updatePerson (uid IN NUMBER, uname IN "
@@ -1386,21 +1386,21 @@ msgid ""
 msgstr ""
 
 #. Tag: title
-#: query_sql.xml:563
+#: query_sql.xml:566
 #, no-c-format
 msgid "Custom SQL for loading"
 msgstr "SQL personnalisé pour le chargement"
 
 #. Tag: para
-#: query_sql.xml:565
-#, no-c-format
-msgid "You may also declare your own SQL (or HQL) queries for entity loading:"
+#: query_sql.xml:568
+#, fuzzy, no-c-format
+msgid "You can also declare your own SQL (or HQL) queries for entity loading:"
 msgstr ""
 "Vous pouvez aussi déclarer vos propres requêtes SQL (ou HQL) pour le "
 "chargement d'entité :"
 
 #. Tag: programlisting
-#: query_sql.xml:568
+#: query_sql.xml:571
 #, no-c-format
 msgid ""
 "<![CDATA[<sql-query name=\"person\">\n"
@@ -1413,17 +1413,17 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: query_sql.xml:570
-#, no-c-format
+#: query_sql.xml:573
+#, fuzzy, no-c-format
 msgid ""
-"This is just a named query declaration, as discussed earlier. You may "
+"This is just a named query declaration, as discussed earlier. You can "
 "reference this named query in a class mapping:"
 msgstr ""
 "Ceci est juste une déclaration de requête nommée, comme vu plus tôt. Vous "
 "pouvez référencer cette requête nommée dans un mapping de classe :"
 
 #. Tag: programlisting
-#: query_sql.xml:573
+#: query_sql.xml:576
 #, no-c-format
 msgid ""
 "<![CDATA[<class name=\"Person\">\n"
@@ -1436,20 +1436,20 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: query_sql.xml:575
+#: query_sql.xml:578
 #, no-c-format
 msgid "This even works with stored procedures."
 msgstr "Ceci fonctionne même avec des procédures stockées."
 
 #. Tag: para
-#: query_sql.xml:577
-#, no-c-format
-msgid "You may even define a query for collection loading:"
+#: query_sql.xml:580
+#, fuzzy, no-c-format
+msgid "You can even define a query for collection loading:"
 msgstr ""
 "Vous pouvez même définir une requête pour le chargement d'une collection :"
 
 #. Tag: programlisting
-#: query_sql.xml:579
+#: query_sql.xml:582
 #, no-c-format
 msgid ""
 "<![CDATA[<set name=\"employments\" inverse=\"true\">\n"
@@ -1460,7 +1460,7 @@ msgid ""
 msgstr ""
 
 #. Tag: programlisting
-#: query_sql.xml:581
+#: query_sql.xml:584
 #, no-c-format
 msgid ""
 "<![CDATA[<sql-query name=\"employments\">\n"
@@ -1473,17 +1473,17 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: query_sql.xml:583
-#, no-c-format
+#: query_sql.xml:586
+#, fuzzy, no-c-format
 msgid ""
-"You could even define an entity loader that loads a collection by join "
+"You can also define an entity loader that loads a collection by join "
 "fetching:"
 msgstr ""
 "Vous pourriez même définir un chargeur d'entité qui charge une collection "
 "par jointure :"
 
 #. Tag: programlisting
-#: query_sql.xml:586
+#: query_sql.xml:589
 #, no-c-format
 msgid ""
 "<![CDATA[<sql-query name=\"person\">\n"

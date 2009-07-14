@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2008-08-14 15:28+0000\n"
+"POT-Creation-Date: 2009-07-14 19:56+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <kde-i18n-doc@kde.org>\n"
@@ -23,7 +23,7 @@ msgstr ""
 #. Tag: para
 #: session_api.xml:31
 #, no-c-format
-msgid "Hibernate is a full object/relational mapping solution that not only shields the developer from the details of the underlying database management system, but also offers <emphasis>state management</emphasis> of objects. This is, contrary to the management of SQL <literal>statements</literal> in common JDBC/SQL persistence layers, a very natural object-oriented view of persistence in Java applications."
+msgid "Hibernate is a full object/relational mapping solution that not only shields the developer from the details of the underlying database management system, but also offers <emphasis>state management</emphasis> of objects. This is, contrary to the management of SQL <literal>statements</literal> in common JDBC/SQL persistence layers, a natural object-oriented view of persistence in Java applications."
 msgstr ""
 
 #. Tag: para
@@ -47,25 +47,25 @@ msgstr ""
 #. Tag: para
 #: session_api.xml:56
 #, no-c-format
-msgid "<emphasis>Transient</emphasis> - an object is transient if it has just been instantiated using the <literal>new</literal> operator, and it is not associated with a Hibernate <literal>Session</literal>. It has no persistent representation in the database and no identifier value has been assigned. Transient instances will be destroyed by the garbage collector if the application doesn't hold a reference anymore. Use the Hibernate <literal>Session</literal> to make an object persistent (and let Hibernate take care of the SQL statements that need to be executed for this transition)."
+msgid "<emphasis>Transient</emphasis> - an object is transient if it has just been instantiated using the <literal>new</literal> operator, and it is not associated with a Hibernate <literal>Session</literal>. It has no persistent representation in the database and no identifier value has been assigned. Transient instances will be destroyed by the garbage collector if the application does not hold a reference anymore. Use the Hibernate <literal>Session</literal> to make an object persistent (and let Hibernate take care of the SQL statements that need to be executed for this transition)."
 msgstr ""
 
 #. Tag: para
 #: session_api.xml:68
 #, no-c-format
-msgid "<emphasis>Persistent</emphasis> - a persistent instance has a representation in the database and an identifier value. It might just have been saved or loaded, however, it is by definition in the scope of a <literal>Session</literal>. Hibernate will detect any changes made to an object in persistent state and synchronize the state with the database when the unit of work completes. Developers don't execute manual <literal>UPDATE</literal> statements, or <literal>DELETE</literal> statements when an object should be made transient."
+msgid "<emphasis>Persistent</emphasis> - a persistent instance has a representation in the database and an identifier value. It might just have been saved or loaded, however, it is by definition in the scope of a <literal>Session</literal>. Hibernate will detect any changes made to an object in persistent state and synchronize the state with the database when the unit of work completes. Developers do not execute manual <literal>UPDATE</literal> statements, or <literal>DELETE</literal> statements when an object should be made transient."
 msgstr ""
 
 #. Tag: para
 #: session_api.xml:79
 #, no-c-format
-msgid "<emphasis>Detached</emphasis> - a detached instance is an object that has been persistent, but its <literal>Session</literal> has been closed. The reference to the object is still valid, of course, and the detached instance might even be modified in this state. A detached instance can be reattached to a new <literal>Session</literal> at a later point in time, making it (and all the modifications) persistent again. This feature enables a programming model for long running units of work that require user think-time. We call them <emphasis>application transactions</emphasis>, i.e. a unit of work from the point of view of the user."
+msgid "<emphasis>Detached</emphasis> - a detached instance is an object that has been persistent, but its <literal>Session</literal> has been closed. The reference to the object is still valid, of course, and the detached instance might even be modified in this state. A detached instance can be reattached to a new <literal>Session</literal> at a later point in time, making it (and all the modifications) persistent again. This feature enables a programming model for long running units of work that require user think-time. We call them <emphasis>application transactions</emphasis>, i.e., a unit of work from the point of view of the user."
 msgstr ""
 
 #. Tag: para
 #: session_api.xml:93
 #, no-c-format
-msgid "We'll now discuss the states and state transitions (and the Hibernate methods that trigger a transition) in more detail."
+msgid "We will now discuss the states and state transitions (and the Hibernate methods that trigger a transition) in more detail."
 msgstr ""
 
 #. Tag: title
@@ -94,13 +94,13 @@ msgstr ""
 #. Tag: para
 #: session_api.xml:112
 #, no-c-format
-msgid "If <literal>Cat</literal> has a generated identifier, the identifier is generated and assigned to the <literal>cat</literal> when <literal>save()</literal> is called. If <literal>Cat</literal> has an <literal>assigned</literal> identifier, or a composite key, the identifier should be assigned to the <literal>cat</literal> instance before calling <literal>save()</literal>. You may also use <literal>persist()</literal> instead of <literal>save()</literal>, with the semantics defined in the EJB3 early draft."
+msgid "If <literal>Cat</literal> has a generated identifier, the identifier is generated and assigned to the <literal>cat</literal> when <literal>save()</literal> is called. If <literal>Cat</literal> has an <literal>assigned</literal> identifier, or a composite key, the identifier should be assigned to the <literal>cat</literal> instance before calling <literal>save()</literal>. You can also use <literal>persist()</literal> instead of <literal>save()</literal>, with the semantics defined in the EJB3 early draft."
 msgstr ""
 
 #. Tag: para
 #: session_api.xml:124
 #, no-c-format
-msgid "<literal>persist()</literal> makes a transient instance persistent. However, it doesn't guarantee that the identifier value will be assigned to the persistent instance immediately, the assignment might happen at flush time. <literal>persist()</literal> also guarantees that it will not execute an <literal>INSERT</literal> statement if it is called outside of transaction boundaries. This is useful in long-running conversations with an extended Session/persistence context."
+msgid "<literal>persist()</literal> makes a transient instance persistent. However, it does not guarantee that the identifier value will be assigned to the persistent instance immediately, the assignment might happen at flush time. <literal>persist()</literal> also guarantees that it will not execute an <literal>INSERT</literal> statement if it is called outside of transaction boundaries. This is useful in long-running conversations with an extended Session/persistence context."
 msgstr ""
 
 #. Tag: para
@@ -112,7 +112,7 @@ msgstr ""
 #. Tag: para
 #: session_api.xml:145
 #, no-c-format
-msgid "Alternatively, you may assign the identifier using an overloaded version of <literal>save()</literal>."
+msgid "Alternatively, you can assign the identifier using an overloaded version of <literal>save()</literal>."
 msgstr ""
 
 #. Tag: programlisting
@@ -131,13 +131,13 @@ msgstr ""
 #. Tag: para
 #: session_api.xml:152
 #, no-c-format
-msgid "If the object you make persistent has associated objects (e.g. the <literal>kittens</literal> collection in the previous example), these objects may be made persistent in any order you like unless you have a <literal>NOT NULL</literal> constraint upon a foreign key column. There is never a risk of violating foreign key constraints. However, you might violate a <literal>NOT NULL</literal> constraint if you <literal>save()</literal> the objects in the wrong order."
+msgid "If the object you make persistent has associated objects (e.g. the <literal>kittens</literal> collection in the previous example), these objects can be made persistent in any order you like unless you have a <literal>NOT NULL</literal> constraint upon a foreign key column. There is never a risk of violating foreign key constraints. However, you might violate a <literal>NOT NULL</literal> constraint if you <literal>save()</literal> the objects in the wrong order."
 msgstr ""
 
 #. Tag: para
 #: session_api.xml:162
 #, no-c-format
-msgid "Usually you don't bother with this detail, as you'll very likely use Hibernate's <emphasis>transitive persistence</emphasis> feature to save the associated objects automatically. Then, even <literal>NOT NULL</literal> constraint violations don't occur - Hibernate will take care of everything. Transitive persistence is discussed later in this chapter."
+msgid "Usually you do not bother with this detail, as you will normally use Hibernate's <emphasis>transitive persistence</emphasis> feature to save the associated objects automatically. Then, even <literal>NOT NULL</literal> constraint violations do not occur - Hibernate will take care of everything. Transitive persistence is discussed later in this chapter."
 msgstr ""
 
 #. Tag: title
@@ -149,7 +149,7 @@ msgstr ""
 #. Tag: para
 #: session_api.xml:175
 #, no-c-format
-msgid "The <literal>load()</literal> methods of <literal>Session</literal> gives you a way to retrieve a persistent instance if you already know its identifier. <literal>load()</literal> takes a class object and will load the state into a newly instantiated instance of that class, in persistent state."
+msgid "The <literal>load()</literal> methods of <literal>Session</literal> provide a way of retrieving a persistent instance if you know its identifier. <literal>load()</literal> takes a class object and loads the state into a newly instantiated instance of that class in a persistent state."
 msgstr ""
 
 #. Tag: programlisting
@@ -186,13 +186,13 @@ msgstr ""
 #. Tag: para
 #: session_api.xml:192
 #, no-c-format
-msgid "Note that <literal>load()</literal> will throw an unrecoverable exception if there is no matching database row. If the class is mapped with a proxy, <literal>load()</literal> just returns an uninitialized proxy and does not actually hit the database until you invoke a method of the proxy. This behaviour is very useful if you wish to create an association to an object without actually loading it from the database. It also allows multiple instances to be loaded as a batch if <literal>batch-size</literal> is defined for the class mapping."
+msgid "Be aware that <literal>load()</literal> will throw an unrecoverable exception if there is no matching database row. If the class is mapped with a proxy, <literal>load()</literal> just returns an uninitialized proxy and does not actually hit the database until you invoke a method of the proxy. This is useful if you wish to create an association to an object without actually loading it from the database. It also allows multiple instances to be loaded as a batch if <literal>batch-size</literal> is defined for the class mapping."
 msgstr ""
 
 #. Tag: para
 #: session_api.xml:203
 #, no-c-format
-msgid "If you are not certain that a matching row exists, you should use the <literal>get()</literal> method, which hits the database immediately and returns null if there is no matching row."
+msgid "If you are not certain that a matching row exists, you should use the <literal>get()</literal> method which hits the database immediately and returns null if there is no matching row."
 msgstr ""
 
 #. Tag: programlisting
@@ -210,7 +210,7 @@ msgstr ""
 #. Tag: para
 #: session_api.xml:211
 #, no-c-format
-msgid "You may even load an object using an SQL <literal>SELECT ... FOR UPDATE</literal>, using a <literal>LockMode</literal>. See the API documentation for more information."
+msgid "You can even load an object using an SQL <literal>SELECT ... FOR UPDATE</literal>, using a <literal>LockMode</literal>. See the API documentation for more information."
 msgstr ""
 
 #. Tag: programlisting
@@ -222,7 +222,7 @@ msgstr ""
 #. Tag: para
 #: session_api.xml:218
 #, no-c-format
-msgid "Note that any associated instances or contained collections are <emphasis>not</emphasis> selected <literal>FOR UPDATE</literal>, unless you decide to specify <literal>lock</literal> or <literal>all</literal> as a cascade style for the association."
+msgid "Any associated instances or contained collections will <emphasis>not</emphasis> be selected <literal>FOR UPDATE</literal>, unless you decide to specify <literal>lock</literal> or <literal>all</literal> as a cascade style for the association."
 msgstr ""
 
 #. Tag: para
@@ -243,7 +243,7 @@ msgstr ""
 #. Tag: para
 #: session_api.xml:233
 #, no-c-format
-msgid "An important question usually appears at this point: How much does Hibernate load from the database and how many SQL <literal>SELECT</literal>s will it use? This depends on the <emphasis>fetching strategy</emphasis> and is explained in <xref linkend=\"performance-fetching\"/>."
+msgid "How much does Hibernate load from the database and how many SQL <literal>SELECT</literal>s will it use? This depends on the <emphasis>fetching strategy</emphasis>. This is explained in <xref linkend=\"performance-fetching\"/>."
 msgstr ""
 
 #. Tag: title
@@ -255,7 +255,7 @@ msgstr ""
 #. Tag: para
 #: session_api.xml:245
 #, no-c-format
-msgid "If you don't know the identifiers of the objects you are looking for, you need a query. Hibernate supports an easy-to-use but powerful object oriented query language (HQL). For programmatic query creation, Hibernate supports a sophisticated Criteria and Example query feature (QBC and QBE). You may also express your query in the native SQL of your database, with optional support from Hibernate for result set conversion into objects."
+msgid "If you do not know the identifiers of the objects you are looking for, you need a query. Hibernate supports an easy-to-use but powerful object oriented query language (HQL). For programmatic query creation, Hibernate supports a sophisticated Criteria and Example query feature (QBC and QBE). You can also express your query in the native SQL of your database, with optional support from Hibernate for result set conversion into objects."
 msgstr ""
 
 #. Tag: title
@@ -302,7 +302,7 @@ msgstr ""
 #. Tag: para
 #: session_api.xml:266
 #, no-c-format
-msgid "A query is usually executed by invoking <literal>list()</literal>, the result of the query will be loaded completely into a collection in memory. Entity instances retrieved by a query are in persistent state. The <literal>uniqueResult()</literal> method offers a shortcut if you know your query will only return a single object. Note that queries that make use of eager fetching of collections usually return duplicates of the root objects (but with their collections initialized). You can filter these duplicates simply through a <literal>Set</literal>."
+msgid "A query is usually executed by invoking <literal>list()</literal>. The result of the query will be loaded completely into a collection in memory. Entity instances retrieved by a query are in a persistent state. The <literal>uniqueResult()</literal> method offers a shortcut if you know your query will only return a single object. Queries that make use of eager fetching of collections usually return duplicates of the root objects, but with their collections initialized. You can filter these duplicates through a <literal>Set</literal>."
 msgstr ""
 
 #. Tag: title
@@ -314,7 +314,7 @@ msgstr ""
 #. Tag: para
 #: session_api.xml:280
 #, no-c-format
-msgid "Occasionally, you might be able to achieve better performance by executing the query using the <literal>iterate()</literal> method. This will only usually be the case if you expect that the actual entity instances returned by the query will already be in the session or second-level cache. If they are not already cached, <literal>iterate()</literal> will be slower than <literal>list()</literal> and might require many database hits for a simple query, usually <emphasis>1</emphasis> for the initial select which only returns identifiers, and <emphasis>n</emphasis> additional selects to initialize the actual instances."
+msgid "Occasionally, you might be able to achieve better performance by executing the query using the <literal>iterate()</literal> method. This will usually be the case if you expect that the actual entity instances returned by the query will already be in the session or second-level cache. If they are not already cached, <literal>iterate()</literal> will be slower than <literal>list()</literal> and might require many database hits for a simple query, usually <emphasis>1</emphasis> for the initial select which only returns identifiers, and <emphasis>n</emphasis> additional selects to initialize the actual instances."
 msgstr ""
 
 #. Tag: programlisting
@@ -344,7 +344,7 @@ msgstr ""
 #. Tag: para
 #: session_api.xml:298
 #, no-c-format
-msgid "Hibernate queries sometimes return tuples of objects, in which case each tuple is returned as an array:"
+msgid "Hibernate queries sometimes return tuples of objects. Each tuple is returned as an array:"
 msgstr ""
 
 #. Tag: programlisting
@@ -373,7 +373,7 @@ msgstr ""
 #. Tag: para
 #: session_api.xml:310
 #, no-c-format
-msgid "Queries may specify a property of a class in the <literal>select</literal> clause. They may even call SQL aggregate functions. Properties or aggregates are considered \"scalar\" results (and not entities in persistent state)."
+msgid "Queries can specify a property of a class in the <literal>select</literal> clause. They can even call SQL aggregate functions. Properties or aggregates are considered \"scalar\" results and not entities in persistent state."
 msgstr ""
 
 #. Tag: programlisting
@@ -404,7 +404,7 @@ msgstr ""
 #. Tag: para
 #: session_api.xml:323
 #, no-c-format
-msgid "Methods on <literal>Query</literal> are provided for binding values to named parameters or JDBC-style <literal>?</literal> parameters. <emphasis>Contrary to JDBC, Hibernate numbers parameters from zero.</emphasis> Named parameters are identifiers of the form <literal>:name</literal> in the query string. The advantages of named parameters are:"
+msgid "Methods on <literal>Query</literal> are provided for binding values to named parameters or JDBC-style <literal>?</literal> parameters. <emphasis>Contrary to JDBC, Hibernate numbers parameters from zero.</emphasis> Named parameters are identifiers of the form <literal>:name</literal> in the query string. The advantages of named parameters are as follows:"
 msgstr ""
 
 #. Tag: para
@@ -416,7 +416,7 @@ msgstr ""
 #. Tag: para
 #: session_api.xml:339
 #, no-c-format
-msgid "they may occur multiple times in the same query"
+msgid "they can occur multiple times in the same query"
 msgstr ""
 
 #. Tag: para
@@ -467,7 +467,7 @@ msgstr ""
 #. Tag: para
 #: session_api.xml:361
 #, no-c-format
-msgid "If you need to specify bounds upon your result set (the maximum number of rows you want to retrieve and / or the first row you want to retrieve) you should use methods of the <literal>Query</literal> interface:"
+msgid "If you need to specify bounds upon your result set, that is, the maximum number of rows you want to retrieve and/or the first row you want to retrieve, you can use methods of the <literal>Query</literal> interface:"
 msgstr ""
 
 #. Tag: programlisting
@@ -495,7 +495,7 @@ msgstr ""
 #. Tag: para
 #: session_api.xml:379
 #, no-c-format
-msgid "If your JDBC driver supports scrollable <literal>ResultSet</literal>s, the <literal>Query</literal> interface may be used to obtain a <literal>ScrollableResults</literal> object, which allows flexible navigation of the query results."
+msgid "If your JDBC driver supports scrollable <literal>ResultSet</literal>s, the <literal>Query</literal> interface can be used to obtain a <literal>ScrollableResults</literal> object that allows flexible navigation of the query results."
 msgstr ""
 
 #. Tag: programlisting
@@ -528,7 +528,7 @@ msgstr ""
 #. Tag: para
 #: session_api.xml:388
 #, no-c-format
-msgid "Note that an open database connection (and cursor) is required for this functionality, use <literal>setMaxResult()</literal>/<literal>setFirstResult()</literal> if you need offline pagination functionality."
+msgid "Note that an open database connection and cursor is required for this functionality. Use <literal>setMaxResult()</literal>/<literal>setFirstResult()</literal> if you need offline pagination functionality."
 msgstr ""
 
 #. Tag: title
@@ -540,7 +540,7 @@ msgstr ""
 #. Tag: para
 #: session_api.xml:399
 #, no-c-format
-msgid "You may also define named queries in the mapping document. (Remember to use a <literal>CDATA</literal> section if your query contains characters that could be interpreted as markup.)"
+msgid "You can also define named queries in the mapping document. Remember to use a <literal>CDATA</literal> section if your query contains characters that could be interpreted as markup."
 msgstr ""
 
 #. Tag: programlisting
@@ -573,13 +573,13 @@ msgstr ""
 #. Tag: para
 #: session_api.xml:413
 #, no-c-format
-msgid "Note that the actual program code is independent of the query language that is used, you may also define native SQL queries in metadata, or migrate existing queries to Hibernate by placing them in mapping files."
+msgid "The actual program code is independent of the query language that is used. You can also define native SQL queries in metadata, or migrate existing queries to Hibernate by placing them in mapping files."
 msgstr ""
 
 #. Tag: para
 #: session_api.xml:419
 #, no-c-format
-msgid "Also note that a query declaration inside a <literal>&lt;hibernate-mapping&gt;</literal> element requires a global unique name for the query, while a query declaration inside a <literal>&lt;class&gt;</literal> element is made unique automatically by prepending the fully qualified name of the class, for example <literal>eg.Cat.ByNameAndMaximumWeight</literal>."
+msgid "Also note that a query declaration inside a <literal>&lt;hibernate-mapping&gt;</literal> element requires a global unique name for the query, while a query declaration inside a <literal>&lt;class&gt;</literal> element is made unique automatically by prepending the fully qualified name of the class. For example <literal>eg.Cat.ByNameAndMaximumWeight</literal>."
 msgstr ""
 
 #. Tag: title
@@ -591,7 +591,7 @@ msgstr ""
 #. Tag: para
 #: session_api.xml:433
 #, no-c-format
-msgid "A collection <emphasis>filter</emphasis> is a special type of query that may be applied to a persistent collection or array. The query string may refer to <literal>this</literal>, meaning the current collection element."
+msgid "A collection <emphasis>filter</emphasis> is a special type of query that can be applied to a persistent collection or array. The query string can refer to <literal>this</literal>, meaning the current collection element."
 msgstr ""
 
 #. Tag: programlisting
@@ -609,13 +609,13 @@ msgstr ""
 #. Tag: para
 #: session_api.xml:441
 #, no-c-format
-msgid "The returned collection is considered a bag, and it's a copy of the given collection. The original collection is not modified (this is contrary to the implication of the name \"filter\", but consistent with expected behavior)."
+msgid "The returned collection is considered a bag that is a copy of the given collection. The original collection is not modified. This is contrary to the implication of the name \"filter\", but consistent with expected behavior."
 msgstr ""
 
 #. Tag: para
 #: session_api.xml:447
 #, no-c-format
-msgid "Observe that filters do not require a <literal>from</literal> clause (though they may have one if required). Filters are not limited to returning the collection elements themselves."
+msgid "Observe that filters do not require a <literal>from</literal> clause, although they can have one if required. Filters are not limited to returning the collection elements themselves."
 msgstr ""
 
 #. Tag: programlisting
@@ -631,7 +631,7 @@ msgstr ""
 #. Tag: para
 #: session_api.xml:454
 #, no-c-format
-msgid "Even an empty filter query is useful, e.g. to load a subset of elements in a huge collection:"
+msgid "Even an empty filter query is useful, e.g. to load a subset of elements in a large collection:"
 msgstr ""
 
 #. Tag: programlisting
@@ -653,7 +653,7 @@ msgstr ""
 #. Tag: para
 #: session_api.xml:466
 #, no-c-format
-msgid "HQL is extremely powerful but some developers prefer to build queries dynamically, using an object-oriented API, rather than building query strings. Hibernate provides an intuitive <literal>Criteria</literal> query API for these cases:"
+msgid "HQL is extremely powerful, but some developers prefer to build queries dynamically using an object-oriented API, rather than building query strings. Hibernate provides an intuitive <literal>Criteria</literal> query API for these cases:"
 msgstr ""
 
 #. Tag: programlisting
@@ -681,7 +681,7 @@ msgstr ""
 #. Tag: para
 #: session_api.xml:484
 #, no-c-format
-msgid "You may express a query in SQL, using <literal>createSQLQuery()</literal> and let Hibernate take care of the mapping from result sets to objects. Note that you may at any time call <literal>session.connection()</literal> and use the JDBC <literal>Connection</literal> directly. If you chose to use the Hibernate API, you must enclose SQL aliases in braces:"
+msgid "You can express a query in SQL, using <literal>createSQLQuery()</literal> and let Hibernate manage the mapping from result sets to objects. You can at any time call <literal>session.connection()</literal> and use the JDBC <literal>Connection</literal> directly. If you choose to use the Hibernate API, you must enclose SQL aliases in braces:"
 msgstr ""
 
 #. Tag: programlisting
@@ -708,7 +708,7 @@ msgstr ""
 #. Tag: para
 #: session_api.xml:496
 #, no-c-format
-msgid "SQL queries may contain named and positional parameters, just like Hibernate queries. More information about native SQL queries in Hibernate can be found in <xref linkend=\"querysql\"/>."
+msgid "SQL queries can contain named and positional parameters, just like Hibernate queries. More information about native SQL queries in Hibernate can be found in <xref linkend=\"querysql\"/>."
 msgstr ""
 
 #. Tag: title
@@ -720,7 +720,7 @@ msgstr ""
 #. Tag: para
 #: session_api.xml:509
 #, no-c-format
-msgid "<emphasis>Transactional persistent instances</emphasis> (ie. objects loaded, saved, created or queried by the <literal>Session</literal>) may be manipulated by the application and any changes to persistent state will be persisted when the <literal>Session</literal> is <emphasis>flushed</emphasis> (discussed later in this chapter). There is no need to call a particular method (like <literal>update()</literal>, which has a different purpose) to make your modifications persistent. So the most straightforward way to update the state of an object is to <literal>load()</literal> it, and then manipulate it directly, while the <literal>Session</literal> is open:"
+msgid "<emphasis>Transactional persistent instances</emphasis> (i.e. objects loaded, saved, created or queried by the <literal>Session</literal>) can be manipulated by the application, and any changes to persistent state will be persisted when the <literal>Session</literal> is <emphasis>flushed</emphasis>. This is discussed later in this chapter. There is no need to call a particular method (like <literal>update()</literal>, which has a different purpose) to make your modifications persistent. The most straightforward way to update the state of an object is to <literal>load()</literal> it and then manipulate it directly while the <literal>Session</literal> is open:"
 msgstr ""
 
 #. Tag: programlisting
@@ -735,35 +735,35 @@ msgstr ""
 #. Tag: para
 #: session_api.xml:522
 #, no-c-format
-msgid "Sometimes this programming model is inefficient since it would require both an SQL <literal>SELECT</literal> (to load an object) and an SQL <literal>UPDATE</literal> (to persist its updated state) in the same session. Therefore Hibernate offers an alternate approach, using detached instances."
+msgid "Sometimes this programming model is inefficient, as it requires in the same session both an SQL <literal>SELECT</literal> to load an object and an SQL <literal>UPDATE</literal> to persist its updated state. Hibernate offers an alternate approach by using detached instances."
 msgstr ""
 
-#. Tag: emphasis
-#: session_api.xml:530
+#. Tag: para
+#: session_api.xml:529
 #, no-c-format
-msgid "Note that Hibernate does not offer its own API for direct execution of <literal>UPDATE</literal> or <literal>DELETE</literal> statements. Hibernate is a <emphasis>state management</emphasis> service, you don't have to think in <emphasis>statements</emphasis> to use it. JDBC is a perfect API for executing SQL statements, you can get a JDBC <literal>Connection</literal> at any time by calling <literal>session.connection()</literal>. Furthermore, the notion of mass operations conflicts with object/relational mapping for online transaction processing-oriented applications. Future versions of Hibernate may however provide special mass operation functions. See <xref linkend=\"batch\"/> for some possible batch operation tricks."
+msgid "Hibernate does not offer its own API for direct execution of <literal>UPDATE</literal> or <literal>DELETE</literal> statements. Hibernate is a <emphasis>state management</emphasis> service, you do not have to think in <emphasis>statements</emphasis> to use it. JDBC is a perfect API for executing SQL statements, you can get a JDBC <literal>Connection</literal> at any time by calling <literal>session.connection()</literal>. Furthermore, the notion of mass operations conflicts with object/relational mapping for online transaction processing-oriented applications. Future versions of Hibernate can, however, provide special mass operation functions. See <xref linkend=\"batch\"/> for some possible batch operation tricks."
 msgstr ""
 
 #. Tag: title
-#: session_api.xml:545
+#: session_api.xml:546
 #, no-c-format
 msgid "Modifying detached objects"
 msgstr ""
 
 #. Tag: para
-#: session_api.xml:547
+#: session_api.xml:548
 #, no-c-format
 msgid "Many applications need to retrieve an object in one transaction, send it to the UI layer for manipulation, then save the changes in a new transaction. Applications that use this kind of approach in a high-concurrency environment usually use versioned data to ensure isolation for the \"long\" unit of work."
 msgstr ""
 
 #. Tag: para
-#: session_api.xml:554
+#: session_api.xml:555
 #, no-c-format
 msgid "Hibernate supports this model by providing for reattachment of detached instances using the <literal>Session.update()</literal> or <literal>Session.merge()</literal> methods:"
 msgstr ""
 
 #. Tag: programlisting
-#: session_api.xml:560
+#: session_api.xml:561
 #, no-c-format
 msgid ""
       "<![CDATA[// in the first session\n"
@@ -780,31 +780,31 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: session_api.xml:562
+#: session_api.xml:563
 #, no-c-format
 msgid "If the <literal>Cat</literal> with identifier <literal>catId</literal> had already been loaded by <literal>secondSession</literal> when the application tried to reattach it, an exception would have been thrown."
 msgstr ""
 
 #. Tag: para
-#: session_api.xml:568
+#: session_api.xml:569
 #, no-c-format
-msgid "Use <literal>update()</literal> if you are sure that the session does not contain an already persistent instance with the same identifier, and <literal>merge()</literal> if you want to merge your modifications at any time without consideration of the state of the session. In other words, <literal>update()</literal> is usually the first method you would call in a fresh session, ensuring that reattachment of your detached instances is the first operation that is executed."
+msgid "Use <literal>update()</literal> if you are certain that the session does not contain an already persistent instance with the same identifier. Use <literal>merge()</literal> if you want to merge your modifications at any time without consideration of the state of the session. In other words, <literal>update()</literal> is usually the first method you would call in a fresh session, ensuring that the reattachment of your detached instances is the first operation that is executed."
 msgstr ""
 
 #. Tag: para
-#: session_api.xml:577
+#: session_api.xml:578
 #, no-c-format
-msgid "The application should individually <literal>update()</literal> detached instances reachable from the given detached instance if and <emphasis>only</emphasis> if it wants their state also updated. This can be automated of course, using <emphasis>transitive persistence</emphasis>, see <xref linkend=\"objectstate-transitive\"/>."
+msgid "The application should individually <literal>update()</literal> detached instances that are reachable from the given detached instance <emphasis>only</emphasis> if it wants their state to be updated. This can be automated using <emphasis>transitive persistence</emphasis>. See <xref linkend=\"objectstate-transitive\"/> for more information."
 msgstr ""
 
 #. Tag: para
-#: session_api.xml:584
+#: session_api.xml:585
 #, no-c-format
-msgid "The <literal>lock()</literal> method also allows an application to reassociate an object with a new session. However, the detached instance has to be unmodified!"
+msgid "The <literal>lock()</literal> method also allows an application to reassociate an object with a new session. However, the detached instance has to be unmodified."
 msgstr ""
 
 #. Tag: programlisting
-#: session_api.xml:589
+#: session_api.xml:590
 #, no-c-format
 msgid ""
       "<![CDATA[//just reassociate:\n"
@@ -816,31 +816,31 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: session_api.xml:591
+#: session_api.xml:592
 #, no-c-format
-msgid "Note that <literal>lock()</literal> can be used with various <literal>LockMode</literal>s, see the API documentation and the chapter on transaction handling for more information. Reattachment is not the only usecase for <literal>lock()</literal>."
+msgid "Note that <literal>lock()</literal> can be used with various <literal>LockMode</literal>s. See the API documentation and the chapter on transaction handling for more information. Reattachment is not the only usecase for <literal>lock()</literal>."
 msgstr ""
 
 #. Tag: para
-#: session_api.xml:598
+#: session_api.xml:599
 #, no-c-format
 msgid "Other models for long units of work are discussed in <xref linkend=\"transactions-optimistic\"/>."
 msgstr ""
 
 #. Tag: title
-#: session_api.xml:605
+#: session_api.xml:606
 #, no-c-format
 msgid "Automatic state detection"
 msgstr ""
 
 #. Tag: para
-#: session_api.xml:607
+#: session_api.xml:608
 #, no-c-format
 msgid "Hibernate users have requested a general purpose method that either saves a transient instance by generating a new identifier or updates/reattaches the detached instances associated with its current identifier. The <literal>saveOrUpdate()</literal> method implements this functionality."
 msgstr ""
 
 #. Tag: programlisting
-#: session_api.xml:614
+#: session_api.xml:615
 #, no-c-format
 msgid ""
       "<![CDATA[// in the first session\n"
@@ -856,157 +856,157 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: session_api.xml:616
+#: session_api.xml:617
 #, no-c-format
 msgid "The usage and semantics of <literal>saveOrUpdate()</literal> seems to be confusing for new users. Firstly, so long as you are not trying to use instances from one session in another new session, you should not need to use <literal>update()</literal>, <literal>saveOrUpdate()</literal>, or <literal>merge()</literal>. Some whole applications will never use either of these methods."
 msgstr ""
 
 #. Tag: para
-#: session_api.xml:624
+#: session_api.xml:625
 #, no-c-format
 msgid "Usually <literal>update()</literal> or <literal>saveOrUpdate()</literal> are used in the following scenario:"
 msgstr ""
 
 #. Tag: para
-#: session_api.xml:631
+#: session_api.xml:632
 #, no-c-format
 msgid "the application loads an object in the first session"
 msgstr ""
 
 #. Tag: para
-#: session_api.xml:636
+#: session_api.xml:637
 #, no-c-format
 msgid "the object is passed up to the UI tier"
 msgstr ""
 
 #. Tag: para
-#: session_api.xml:641
+#: session_api.xml:642
 #, no-c-format
 msgid "some modifications are made to the object"
 msgstr ""
 
 #. Tag: para
-#: session_api.xml:646
+#: session_api.xml:647
 #, no-c-format
 msgid "the object is passed back down to the business logic tier"
 msgstr ""
 
 #. Tag: para
-#: session_api.xml:651
+#: session_api.xml:652
 #, no-c-format
 msgid "the application persists these modifications by calling <literal>update()</literal> in a second session"
 msgstr ""
 
 #. Tag: para
-#: session_api.xml:658
+#: session_api.xml:659
 #, no-c-format
 msgid "<literal>saveOrUpdate()</literal> does the following:"
 msgstr ""
 
 #. Tag: para
-#: session_api.xml:664
+#: session_api.xml:665
 #, no-c-format
 msgid "if the object is already persistent in this session, do nothing"
 msgstr ""
 
 #. Tag: para
-#: session_api.xml:669
+#: session_api.xml:670
 #, no-c-format
 msgid "if another object associated with the session has the same identifier, throw an exception"
 msgstr ""
 
 #. Tag: para
-#: session_api.xml:675
+#: session_api.xml:676
 #, no-c-format
 msgid "if the object has no identifier property, <literal>save()</literal> it"
 msgstr ""
 
 #. Tag: para
-#: session_api.xml:680
+#: session_api.xml:681
 #, no-c-format
 msgid "if the object's identifier has the value assigned to a newly instantiated object, <literal>save()</literal> it"
 msgstr ""
 
 #. Tag: para
-#: session_api.xml:686
+#: session_api.xml:687
 #, no-c-format
-msgid "if the object is versioned (by a <literal>&lt;version&gt;</literal> or <literal>&lt;timestamp&gt;</literal>), and the version property value is the same value assigned to a newly instantiated object, <literal>save()</literal> it"
+msgid "if the object is versioned by a <literal>&lt;version&gt;</literal> or <literal>&lt;timestamp&gt;</literal>, and the version property value is the same value assigned to a newly instantiated object, <literal>save()</literal> it"
 msgstr ""
 
 #. Tag: para
-#: session_api.xml:694
+#: session_api.xml:695
 #, no-c-format
 msgid "otherwise <literal>update()</literal> the object"
 msgstr ""
 
 #. Tag: para
-#: session_api.xml:700
+#: session_api.xml:701
 #, no-c-format
 msgid "and <literal>merge()</literal> is very different:"
 msgstr ""
 
 #. Tag: para
-#: session_api.xml:706
+#: session_api.xml:707
 #, no-c-format
 msgid "if there is a persistent instance with the same identifier currently associated with the session, copy the state of the given object onto the persistent instance"
 msgstr ""
 
 #. Tag: para
-#: session_api.xml:713
+#: session_api.xml:714
 #, no-c-format
 msgid "if there is no persistent instance currently associated with the session, try to load it from the database, or create a new persistent instance"
 msgstr ""
 
 #. Tag: para
-#: session_api.xml:719
+#: session_api.xml:720
 #, no-c-format
 msgid "the persistent instance is returned"
 msgstr ""
 
 #. Tag: para
-#: session_api.xml:724
+#: session_api.xml:725
 #, no-c-format
 msgid "the given instance does not become associated with the session, it remains detached"
 msgstr ""
 
 #. Tag: title
-#: session_api.xml:734
+#: session_api.xml:735
 #, no-c-format
 msgid "Deleting persistent objects"
 msgstr ""
 
 #. Tag: para
-#: session_api.xml:736
+#: session_api.xml:737
 #, no-c-format
-msgid "<literal>Session.delete()</literal> will remove an object's state from the database. Of course, your application might still hold a reference to a deleted object. It's best to think of <literal>delete()</literal> as making a persistent instance transient."
+msgid "<literal>Session.delete()</literal> will remove an object's state from the database. Your application, however, can still hold a reference to a deleted object. It is best to think of <literal>delete()</literal> as making a persistent instance, transient."
 msgstr ""
 
 #. Tag: programlisting
-#: session_api.xml:743
+#: session_api.xml:744
 #, no-c-format
 msgid "<![CDATA[sess.delete(cat);]]>"
 msgstr ""
 
 #. Tag: para
-#: session_api.xml:745
+#: session_api.xml:746
 #, no-c-format
-msgid "You may delete objects in any order you like, without risk of foreign key constraint violations. It is still possible to violate a <literal>NOT NULL</literal> constraint on a foreign key column by deleting objects in the wrong order, e.g. if you delete the parent, but forget to delete the children."
+msgid "You can delete objects in any order, without risk of foreign key constraint violations. It is still possible to violate a <literal>NOT NULL</literal> constraint on a foreign key column by deleting objects in the wrong order, e.g. if you delete the parent, but forget to delete the children."
 msgstr ""
 
 #. Tag: title
-#: session_api.xml:756
+#: session_api.xml:757
 #, no-c-format
 msgid "Replicating object between two different datastores"
 msgstr ""
 
 #. Tag: para
-#: session_api.xml:758
+#: session_api.xml:759
 #, no-c-format
-msgid "It is occasionally useful to be able to take a graph of persistent instances and make them persistent in a different datastore, without regenerating identifier values."
+msgid "It is sometimes useful to be able to take a graph of persistent instances and make them persistent in a different datastore, without regenerating identifier values."
 msgstr ""
 
 #. Tag: programlisting
-#: session_api.xml:764
+#: session_api.xml:765
 #, no-c-format
 msgid ""
       "<![CDATA[//retrieve a cat from one database\n"
@@ -1025,133 +1025,133 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: session_api.xml:766
+#: session_api.xml:767
 #, no-c-format
-msgid "The <literal>ReplicationMode</literal> determines how <literal>replicate()</literal> will deal with conflicts with existing rows in the database."
+msgid "The <literal>ReplicationMode</literal> determines how <literal>replicate()</literal> will deal with conflicts with existing rows in the database:"
 msgstr ""
 
 #. Tag: para
-#: session_api.xml:773
+#: session_api.xml:774
 #, no-c-format
-msgid "<literal>ReplicationMode.IGNORE</literal> - ignore the object when there is an existing database row with the same identifier"
+msgid "<literal>ReplicationMode.IGNORE</literal>: ignores the object when there is an existing database row with the same identifier"
 msgstr ""
 
 #. Tag: para
-#: session_api.xml:779
+#: session_api.xml:780
 #, no-c-format
-msgid "<literal>ReplicationMode.OVERWRITE</literal> - overwrite any existing database row with the same identifier"
+msgid "<literal>ReplicationMode.OVERWRITE</literal>: overwrites any existing database row with the same identifier"
 msgstr ""
 
 #. Tag: para
-#: session_api.xml:785
+#: session_api.xml:786
 #, no-c-format
-msgid "<literal>ReplicationMode.EXCEPTION</literal> - throw an exception if there is an existing database row with the same identifier"
+msgid "<literal>ReplicationMode.EXCEPTION</literal>: throws an exception if there is an existing database row with the same identifier"
 msgstr ""
 
 #. Tag: para
-#: session_api.xml:791
+#: session_api.xml:792
 #, no-c-format
-msgid "<literal>ReplicationMode.LATEST_VERSION</literal> - overwrite the row if its version number is earlier than the version number of the object, or ignore the object otherwise"
+msgid "<literal>ReplicationMode.LATEST_VERSION</literal>: overwrites the row if its version number is earlier than the version number of the object, or ignore the object otherwise"
 msgstr ""
 
 #. Tag: para
-#: session_api.xml:799
+#: session_api.xml:800
 #, no-c-format
 msgid "Usecases for this feature include reconciling data entered into different database instances, upgrading system configuration information during product upgrades, rolling back changes made during non-ACID transactions and more."
 msgstr ""
 
 #. Tag: title
-#: session_api.xml:808
+#: session_api.xml:809
 #, no-c-format
 msgid "Flushing the Session"
 msgstr ""
 
 #. Tag: para
-#: session_api.xml:810
+#: session_api.xml:811
 #, no-c-format
-msgid "From time to time the <literal>Session</literal> will execute the SQL statements needed to synchronize the JDBC connection's state with the state of objects held in memory. This process, <emphasis>flush</emphasis>, occurs by default at the following points"
+msgid "Sometimes the <literal>Session</literal> will execute the SQL statements needed to synchronize the JDBC connection's state with the state of objects held in memory. This process, called <emphasis>flush</emphasis>, occurs by default at the following points:"
 msgstr ""
 
 #. Tag: para
-#: session_api.xml:819
+#: session_api.xml:820
 #, no-c-format
 msgid "before some query executions"
 msgstr ""
 
 #. Tag: para
-#: session_api.xml:824
+#: session_api.xml:825
 #, no-c-format
 msgid "from <literal>org.hibernate.Transaction.commit()</literal>"
 msgstr ""
 
 #. Tag: para
-#: session_api.xml:829
+#: session_api.xml:830
 #, no-c-format
 msgid "from <literal>Session.flush()</literal>"
 msgstr ""
 
 #. Tag: para
-#: session_api.xml:835
+#: session_api.xml:836
 #, no-c-format
-msgid "The SQL statements are issued in the following order"
+msgid "The SQL statements are issued in the following order:"
 msgstr ""
 
 #. Tag: para
-#: session_api.xml:841
+#: session_api.xml:842
 #, no-c-format
-msgid "all entity insertions, in the same order the corresponding objects were saved using <literal>Session.save()</literal>"
+msgid "all entity insertions in the same order the corresponding objects were saved using <literal>Session.save()</literal>"
 msgstr ""
 
 #. Tag: para
-#: session_api.xml:847
+#: session_api.xml:848
 #, no-c-format
 msgid "all entity updates"
 msgstr ""
 
 #. Tag: para
-#: session_api.xml:852
+#: session_api.xml:853
 #, no-c-format
 msgid "all collection deletions"
 msgstr ""
 
 #. Tag: para
-#: session_api.xml:857
+#: session_api.xml:858
 #, no-c-format
 msgid "all collection element deletions, updates and insertions"
 msgstr ""
 
 #. Tag: para
-#: session_api.xml:862
+#: session_api.xml:863
 #, no-c-format
 msgid "all collection insertions"
 msgstr ""
 
 #. Tag: para
-#: session_api.xml:867
+#: session_api.xml:868
 #, no-c-format
-msgid "all entity deletions, in the same order the corresponding objects were deleted using <literal>Session.delete()</literal>"
+msgid "all entity deletions in the same order the corresponding objects were deleted using <literal>Session.delete()</literal>"
 msgstr ""
 
 #. Tag: para
-#: session_api.xml:874
+#: session_api.xml:875
 #, no-c-format
-msgid "(An exception is that objects using <literal>native</literal> ID generation are inserted when they are saved.)"
+msgid "An exception is that objects using <literal>native</literal> ID generation are inserted when they are saved."
 msgstr ""
 
 #. Tag: para
-#: session_api.xml:879
+#: session_api.xml:880
 #, no-c-format
-msgid "Except when you explicity <literal>flush()</literal>, there are absolutely no guarantees about <emphasis>when</emphasis> the <literal>Session</literal> executes the JDBC calls, only the <emphasis>order</emphasis> in which they are executed. However, Hibernate does guarantee that the <literal>Query.list(..)</literal> will never return stale data; nor will they return the wrong data."
+msgid "Except when you explicitly <literal>flush()</literal>, there are absolutely no guarantees about <emphasis>when</emphasis> the <literal>Session</literal> executes the JDBC calls, only the <emphasis>order</emphasis> in which they are executed. However, Hibernate does guarantee that the <literal>Query.list(..)</literal> will never return stale or incorrect data."
 msgstr ""
 
 #. Tag: para
-#: session_api.xml:887
+#: session_api.xml:888
 #, no-c-format
-msgid "It is possible to change the default behavior so that flush occurs less frequently. The <literal>FlushMode</literal> class defines three different modes: only flush at commit time (and only when the Hibernate <literal>Transaction</literal> API is used), flush automatically using the explained routine, or never flush unless <literal>flush()</literal> is called explicitly. The last mode is useful for long running units of work, where a <literal>Session</literal> is kept open and disconnected for a long time (see <xref linkend=\"transactions-optimistic-longsession\"/>)."
+msgid "It is possible to change the default behavior so that flush occurs less frequently. The <literal>FlushMode</literal> class defines three different modes: only flush at commit time when the Hibernate <literal>Transaction</literal> API is used, flush automatically using the explained routine, or never flush unless <literal>flush()</literal> is called explicitly. The last mode is useful for long running units of work, where a <literal>Session</literal> is kept open and disconnected for a long time (see <xref linkend=\"transactions-optimistic-longsession\"/>)."
 msgstr ""
 
 #. Tag: programlisting
-#: session_api.xml:897
+#: session_api.xml:898
 #, no-c-format
 msgid ""
       "<![CDATA[sess = sf.openSession();\n"
@@ -1171,169 +1171,169 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: session_api.xml:899
+#: session_api.xml:900
 #, no-c-format
 msgid "During flush, an exception might occur (e.g. if a DML operation violates a constraint). Since handling exceptions involves some understanding of Hibernate's transactional behavior, we discuss it in <xref linkend=\"transactions\"/>."
 msgstr ""
 
 #. Tag: title
-#: session_api.xml:908
+#: session_api.xml:909
 #, no-c-format
 msgid "Transitive persistence"
 msgstr ""
 
 #. Tag: para
-#: session_api.xml:910
+#: session_api.xml:911
 #, no-c-format
 msgid "It is quite cumbersome to save, delete, or reattach individual objects, especially if you deal with a graph of associated objects. A common case is a parent/child relationship. Consider the following example:"
 msgstr ""
 
 #. Tag: para
-#: session_api.xml:916
+#: session_api.xml:917
 #, no-c-format
-msgid "If the children in a parent/child relationship would be value typed (e.g. a collection of addresses or strings), their life cycle would depend on the parent and no further action would be required for convenient \"cascading\" of state changes. When the parent is saved, the value-typed child objects are saved as well, when the parent is deleted, the children will be deleted, etc. This even works for operations such as the removal of a child from the collection; Hibernate will detect this and, since value-typed objects can't have shared references, delete the child from the database."
+msgid "If the children in a parent/child relationship would be value typed (e.g. a collection of addresses or strings), their life cycle would depend on the parent and no further action would be required for convenient \"cascading\" of state changes. When the parent is saved, the value-typed child objects are saved and when the parent is deleted, the children will be deleted, etc. This works for operations such as the removal of a child from the collection. Since value-typed objects cannot have shared references, Hibernate will detect this and delete the child from the database."
 msgstr ""
 
 #. Tag: para
-#: session_api.xml:927
+#: session_api.xml:928
 #, no-c-format
-msgid "Now consider the same scenario with parent and child objects being entities, not value-types (e.g. categories and items, or parent and child cats). Entities have their own life cycle, support shared references (so removing an entity from the collection does not mean it can be deleted), and there is by default no cascading of state from one entity to any other associated entities. Hibernate does not implement <emphasis>persistence by reachability</emphasis> by default."
+msgid "Now consider the same scenario with parent and child objects being entities, not value-types (e.g. categories and items, or parent and child cats). Entities have their own life cycle and support shared references. Removing an entity from the collection does not mean it can be deleted), and there is by default no cascading of state from one entity to any other associated entities. Hibernate does not implement <emphasis>persistence by reachability</emphasis> by default."
 msgstr ""
 
 #. Tag: para
-#: session_api.xml:936
+#: session_api.xml:937
 #, no-c-format
 msgid "For each basic operation of the Hibernate session - including <literal>persist(), merge(), saveOrUpdate(), delete(), lock(), refresh(), evict(), replicate()</literal> - there is a corresponding cascade style. Respectively, the cascade styles are named <literal>create, merge, save-update, delete, lock, refresh, evict, replicate</literal>. If you want an operation to be cascaded along an association, you must indicate that in the mapping document. For example:"
 msgstr ""
 
 #. Tag: programlisting
-#: session_api.xml:945
+#: session_api.xml:946
 #, no-c-format
 msgid "<![CDATA[<one-to-one name=\"person\" cascade=\"persist\"/>]]>"
 msgstr ""
 
 #. Tag: para
-#: session_api.xml:947
+#: session_api.xml:948
 #, no-c-format
 msgid "Cascade styles my be combined:"
 msgstr ""
 
 #. Tag: programlisting
-#: session_api.xml:951
+#: session_api.xml:952
 #, no-c-format
 msgid "<![CDATA[<one-to-one name=\"person\" cascade=\"persist,delete,lock\"/>]]>"
 msgstr ""
 
 #. Tag: para
-#: session_api.xml:953
+#: session_api.xml:954
 #, no-c-format
-msgid "You may even use <literal>cascade=\"all\"</literal> to specify that <emphasis>all</emphasis> operations should be cascaded along the association. The default <literal>cascade=\"none\"</literal> specifies that no operations are to be cascaded."
+msgid "You can even use <literal>cascade=\"all\"</literal> to specify that <emphasis>all</emphasis> operations should be cascaded along the association. The default <literal>cascade=\"none\"</literal> specifies that no operations are to be cascaded."
 msgstr ""
 
 #. Tag: para
-#: session_api.xml:959
+#: session_api.xml:960
 #, no-c-format
 msgid "A special cascade style, <literal>delete-orphan</literal>, applies only to one-to-many associations, and indicates that the <literal>delete()</literal> operation should be applied to any child object that is removed from the association."
 msgstr ""
 
 #. Tag: para
-#: session_api.xml:966
+#: session_api.xml:967
 #, no-c-format
 msgid "Recommendations:"
 msgstr ""
 
 #. Tag: para
-#: session_api.xml:972
+#: session_api.xml:973
 #, no-c-format
-msgid "It doesn't usually make sense to enable cascade on a <literal>&lt;many-to-one&gt;</literal> or <literal>&lt;many-to-many&gt;</literal> association. Cascade is often useful for <literal>&lt;one-to-one&gt;</literal> and <literal>&lt;one-to-many&gt;</literal> associations."
+msgid "It does not usually make sense to enable cascade on a <literal>&lt;many-to-one&gt;</literal> or <literal>&lt;many-to-many&gt;</literal> association. Cascade is often useful for <literal>&lt;one-to-one&gt;</literal> and <literal>&lt;one-to-many&gt;</literal> associations."
 msgstr ""
 
 #. Tag: para
-#: session_api.xml:980
+#: session_api.xml:981
 #, no-c-format
 msgid "If the child object's lifespan is bounded by the lifespan of the parent object, make it a <emphasis>life cycle object</emphasis> by specifying <literal>cascade=\"all,delete-orphan\"</literal>."
 msgstr ""
 
 #. Tag: para
-#: session_api.xml:987
+#: session_api.xml:988
 #, no-c-format
 msgid "Otherwise, you might not need cascade at all. But if you think that you will often be working with the parent and children together in the same transaction, and you want to save yourself some typing, consider using <literal>cascade=\"persist,merge,save-update\"</literal>."
 msgstr ""
 
 #. Tag: para
-#: session_api.xml:995
+#: session_api.xml:996
 #, no-c-format
 msgid "Mapping an association (either a single valued association, or a collection) with <literal>cascade=\"all\"</literal> marks the association as a <emphasis>parent/child</emphasis> style relationship where save/update/delete of the parent results in save/update/delete of the child or children."
 msgstr ""
 
 #. Tag: para
-#: session_api.xml:1001
+#: session_api.xml:1002
 #, no-c-format
-msgid "Futhermore, a mere reference to a child from a persistent parent will result in save/update of the child. This metaphor is incomplete, however. A child which becomes unreferenced by its parent is <emphasis>not</emphasis> automatically deleted, except in the case of a <literal>&lt;one-to-many&gt;</literal> association mapped with <literal>cascade=\"delete-orphan\"</literal>. The precise semantics of cascading operations for a parent/child relationship are as follows:"
+msgid "Furthermore, a mere reference to a child from a persistent parent will result in save/update of the child. This metaphor is incomplete, however. A child which becomes unreferenced by its parent is <emphasis>not</emphasis> automatically deleted, except in the case of a <literal>&lt;one-to-many&gt;</literal> association mapped with <literal>cascade=\"delete-orphan\"</literal>. The precise semantics of cascading operations for a parent/child relationship are as follows:"
 msgstr ""
 
 #. Tag: para
-#: session_api.xml:1012
+#: session_api.xml:1013
 #, no-c-format
 msgid "If a parent is passed to <literal>persist()</literal>, all children are passed to <literal>persist()</literal>"
 msgstr ""
 
 #. Tag: para
-#: session_api.xml:1018
+#: session_api.xml:1019
 #, no-c-format
 msgid "If a parent is passed to <literal>merge()</literal>, all children are passed to <literal>merge()</literal>"
 msgstr ""
 
 #. Tag: para
-#: session_api.xml:1024
+#: session_api.xml:1025
 #, no-c-format
 msgid "If a parent is passed to <literal>save()</literal>, <literal>update()</literal> or <literal>saveOrUpdate()</literal>, all children are passed to <literal>saveOrUpdate()</literal>"
 msgstr ""
 
 #. Tag: para
-#: session_api.xml:1030
+#: session_api.xml:1031
 #, no-c-format
 msgid "If a transient or detached child becomes referenced by a persistent parent, it is passed to <literal>saveOrUpdate()</literal>"
 msgstr ""
 
 #. Tag: para
-#: session_api.xml:1036
+#: session_api.xml:1037
 #, no-c-format
 msgid "If a parent is deleted, all children are passed to <literal>delete()</literal>"
 msgstr ""
 
 #. Tag: para
-#: session_api.xml:1041
+#: session_api.xml:1042
 #, no-c-format
 msgid "If a child is dereferenced by a persistent parent, <emphasis>nothing special happens</emphasis> - the application should explicitly delete the child if necessary - unless <literal>cascade=\"delete-orphan\"</literal>, in which case the \"orphaned\" child is deleted."
 msgstr ""
 
 #. Tag: para
-#: session_api.xml:1050
+#: session_api.xml:1051
 #, no-c-format
-msgid "Finally, note that cascading of operations can be applied to an object graph at <emphasis>call time</emphasis> or at <emphasis>flush time</emphasis>. All operations, if enabled, are cascaded to associated entities reachable when the operation is executed. However, <literal>save-upate</literal> and <literal>delete-orphan</literal> are transitive for all associated entities reachable during flush of the <literal>Session</literal>."
+msgid "Finally, note that cascading of operations can be applied to an object graph at <emphasis>call time</emphasis> or at <emphasis>flush time</emphasis>. All operations, if enabled, are cascaded to associated entities reachable when the operation is executed. However, <literal>save-update</literal> and <literal>delete-orphan</literal> are transitive for all associated entities reachable during flush of the <literal>Session</literal>."
 msgstr ""
 
 #. Tag: title
-#: session_api.xml:1062
+#: session_api.xml:1063
 #, no-c-format
 msgid "Using metadata"
 msgstr ""
 
 #. Tag: para
-#: session_api.xml:1064
+#: session_api.xml:1065
 #, no-c-format
-msgid "Hibernate requires a very rich meta-level model of all entity and value types. From time to time, this model is very useful to the application itself. For example, the application might use Hibernate's metadata to implement a \"smart\" deep-copy algorithm that understands which objects should be copied (eg. mutable value types) and which should not (eg. immutable value types and, possibly, associated entities)."
+msgid "Hibernate requires a rich meta-level model of all entity and value types. This model can be useful to the application itself. For example, the application might use Hibernate's metadata to implement a \"smart\" deep-copy algorithm that understands which objects should be copied (eg. mutable value types) and which objects that should not (e.g. immutable value types and, possibly, associated entities)."
 msgstr ""
 
 #. Tag: para
-#: session_api.xml:1071
+#: session_api.xml:1072
 #, no-c-format
-msgid "Hibernate exposes metadata via the <literal>ClassMetadata</literal> and <literal>CollectionMetadata</literal> interfaces and the <literal>Type</literal> hierarchy. Instances of the metadata interfaces may be obtained from the <literal>SessionFactory</literal>."
+msgid "Hibernate exposes metadata via the <literal>ClassMetadata</literal> and <literal>CollectionMetadata</literal> interfaces and the <literal>Type</literal> hierarchy. Instances of the metadata interfaces can be obtained from the <literal>SessionFactory</literal>."
 msgstr ""
 
 #. Tag: programlisting
-#: session_api.xml:1078
+#: session_api.xml:1079
 #, no-c-format
 msgid ""
       "<![CDATA[Cat fritz = ......;\n"

@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2007-10-25 07:47+0000\n"
+"POT-Creation-Date: 2009-07-14 19:56+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -11,25 +11,25 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 
 #. Tag: title
-#: query_criteria.xml:5
+#: query_criteria.xml:29
 #, no-c-format
 msgid "Criteria Queries"
 msgstr "Consultas por critérios"
 
 #. Tag: para
-#: query_criteria.xml:7
+#: query_criteria.xml:31
 #, no-c-format
 msgid "Hibernate features an intuitive, extensible criteria query API."
 msgstr "O Hibernate provê uma intuitiva e extensível API de critério de query."
 
 #. Tag: title
-#: query_criteria.xml:12
+#: query_criteria.xml:36
 #, no-c-format
 msgid "Creating a <literal>Criteria</literal> instance"
 msgstr "Criando uma instancia <literal>Criteria</literal>"
 
 #. Tag: para
-#: query_criteria.xml:14
+#: query_criteria.xml:38
 #, no-c-format
 msgid ""
 "The interface <literal>org.hibernate.Criteria</literal> represents a query "
@@ -41,7 +41,7 @@ msgstr ""
 "intancias de <literal>Criteria</literal> ."
 
 #. Tag: programlisting
-#: query_criteria.xml:20
+#: query_criteria.xml:44
 #, no-c-format
 msgid ""
 "<![CDATA[Criteria crit = sess.createCriteria(Cat.class);\n"
@@ -50,13 +50,13 @@ msgid ""
 msgstr ""
 
 #. Tag: title
-#: query_criteria.xml:25
+#: query_criteria.xml:49
 #, no-c-format
 msgid "Narrowing the result set"
 msgstr "Limitando o result set"
 
 #. Tag: para
-#: query_criteria.xml:27
+#: query_criteria.xml:51
 #, no-c-format
 msgid ""
 "An individual query criterion is an instance of the interface <literal>org."
@@ -70,7 +70,7 @@ msgstr ""
 "certos tipos pré fabricados de <literal>Criterion</literal>."
 
 #. Tag: programlisting
-#: query_criteria.xml:35
+#: query_criteria.xml:59
 #, no-c-format
 msgid ""
 "<![CDATA[List cats = sess.createCriteria(Cat.class)\n"
@@ -80,13 +80,13 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: query_criteria.xml:37
-#, no-c-format
-msgid "Restrictions may be grouped logically."
+#: query_criteria.xml:61
+#, fuzzy, no-c-format
+msgid "Restrictions can be grouped logically."
 msgstr "Restrições podem ser logicamente agrupadas."
 
 #. Tag: programlisting
-#: query_criteria.xml:41
+#: query_criteria.xml:65
 #, no-c-format
 msgid ""
 "<![CDATA[List cats = sess.createCriteria(Cat.class)\n"
@@ -99,7 +99,7 @@ msgid ""
 msgstr ""
 
 #. Tag: programlisting
-#: query_criteria.xml:43
+#: query_criteria.xml:67
 #, no-c-format
 msgid ""
 "<![CDATA[List cats = sess.createCriteria(Cat.class)\n"
@@ -115,11 +115,11 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: query_criteria.xml:45
-#, no-c-format
+#: query_criteria.xml:69
+#, fuzzy, no-c-format
 msgid ""
-"There are quite a range of built-in criterion types (<literal>Restrictions</"
-"literal> subclasses), but one that is especially useful lets you specify SQL "
+"There are a range of built-in criterion types (<literal>Restrictions</"
+"literal> subclasses). One of the most useful allows you to specify SQL "
 "directly."
 msgstr ""
 "Existe um grande número de critérios pré fabricados (subclasses de "
@@ -127,7 +127,7 @@ msgstr ""
 "especificar o SQL diretamente."
 
 #. Tag: programlisting
-#: query_criteria.xml:50
+#: query_criteria.xml:74
 #, no-c-format
 msgid ""
 "<![CDATA[List cats = sess.createCriteria(Cat.class)\n"
@@ -137,7 +137,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: query_criteria.xml:52
+#: query_criteria.xml:76
 #, no-c-format
 msgid ""
 "The <literal>{alias}</literal> placeholder with be replaced by the row alias "
@@ -147,19 +147,19 @@ msgstr ""
 "entidade procurada."
 
 #. Tag: para
-#: query_criteria.xml:57
-#, no-c-format
+#: query_criteria.xml:81
+#, fuzzy, no-c-format
 msgid ""
-"An alternative approach to obtaining a criterion is to get it from a "
-"<literal>Property</literal> instance. You can create a <literal>Property</"
-"literal> by calling <literal>Property.forName()</literal>."
+"You can also obtain a criterion from a <literal>Property</literal> instance. "
+"You can create a <literal>Property</literal> by calling <literal>Property."
+"forName()</literal>:"
 msgstr ""
 "Uma maneira alternativa de obter um critério é pegá-lo de uma instancia de "
 "<literal>Property</literal>. Você pode criar uma <literal>Property</literal> "
 "chamando <literal>Property.forName()</literal>."
 
 #. Tag: programlisting
-#: query_criteria.xml:63
+#: query_criteria.xml:87
 #, no-c-format
 msgid ""
 "<![CDATA[\n"
@@ -177,23 +177,23 @@ msgid ""
 msgstr ""
 
 #. Tag: title
-#: query_criteria.xml:68
+#: query_criteria.xml:92
 #, no-c-format
 msgid "Ordering the results"
 msgstr "Ordering the results"
 
 #. Tag: para
-#: query_criteria.xml:70
-#, no-c-format
+#: query_criteria.xml:94
+#, fuzzy, no-c-format
 msgid ""
-"You may order the results using <literal>org.hibernate.criterion.Order</"
+"You can order the results using <literal>org.hibernate.criterion.Order</"
 "literal>."
 msgstr ""
 "You may order the results using <literal>org.hibernate.criterion.Order</"
 "literal>."
 
 #. Tag: programlisting
-#: query_criteria.xml:74
+#: query_criteria.xml:98
 #, no-c-format
 msgid ""
 "<![CDATA[List cats = sess.createCriteria(Cat.class)\n"
@@ -205,7 +205,7 @@ msgid ""
 msgstr ""
 
 #. Tag: programlisting
-#: query_criteria.xml:76
+#: query_criteria.xml:100
 #, no-c-format
 msgid ""
 "<![CDATA[List cats = sess.createCriteria(Cat.class)\n"
@@ -217,23 +217,21 @@ msgid ""
 msgstr ""
 
 #. Tag: title
-#: query_criteria.xml:81
+#: query_criteria.xml:105
 #, no-c-format
 msgid "Associations"
 msgstr "Associations"
 
 #. Tag: para
-#: query_criteria.xml:83
+#: query_criteria.xml:107
 #, no-c-format
 msgid ""
-"You may easily specify constraints upon related entities by navigating "
-"associations using <literal>createCriteria()</literal>."
+"By navigating associations using <literal>createCriteria()</literal> you can "
+"specify constraints upon related entities:"
 msgstr ""
-"You may easily specify constraints upon related entities by navigating "
-"associations using <literal>createCriteria()</literal>."
 
 #. Tag: programlisting
-#: query_criteria.xml:88
+#: query_criteria.xml:112
 #, no-c-format
 msgid ""
 "<![CDATA[List cats = sess.createCriteria(Cat.class)\n"
@@ -244,11 +242,11 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: query_criteria.xml:90
-#, no-c-format
+#: query_criteria.xml:114
+#, fuzzy, no-c-format
 msgid ""
-"note that the second <literal>createCriteria()</literal> returns a new "
-"instance of <literal>Criteria</literal>, which refers to the elements of the "
+"The second <literal>createCriteria()</literal> returns a new instance of "
+"<literal>Criteria</literal> that refers to the elements of the "
 "<literal>kittens</literal> collection."
 msgstr ""
 "note that the second <literal>createCriteria()</literal> returns a new "
@@ -256,13 +254,14 @@ msgstr ""
 "<literal>kittens</literal> collection."
 
 #. Tag: para
-#: query_criteria.xml:96
-#, no-c-format
-msgid "The following, alternate form is useful in certain circumstances."
+#: query_criteria.xml:120
+#, fuzzy, no-c-format
+msgid ""
+"There is also an alternate form that is useful in certain circumstances:"
 msgstr "The following, alternate form is useful in certain circumstances."
 
 #. Tag: programlisting
-#: query_criteria.xml:100
+#: query_criteria.xml:124
 #, no-c-format
 msgid ""
 "<![CDATA[List cats = sess.createCriteria(Cat.class)\n"
@@ -273,7 +272,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: query_criteria.xml:102
+#: query_criteria.xml:126
 #, no-c-format
 msgid ""
 "(<literal>createAlias()</literal> does not create a new instance of "
@@ -283,12 +282,12 @@ msgstr ""
 "<literal>Criteria</literal>.)"
 
 #. Tag: para
-#: query_criteria.xml:107
-#, no-c-format
+#: query_criteria.xml:131
+#, fuzzy, no-c-format
 msgid ""
-"Note that the kittens collections held by the <literal>Cat</literal> "
-"instances returned by the previous two queries are <emphasis>not</emphasis> "
-"pre-filtered by the criteria! If you wish to retrieve just the kittens that "
+"The kittens collections held by the <literal>Cat</literal> instances "
+"returned by the previous two queries are <emphasis>not</emphasis> pre-"
+"filtered by the criteria. If you want to retrieve just the kittens that "
 "match the criteria, you must use a <literal>ResultTransformer</literal>."
 msgstr ""
 "Note that the kittens collections held by the <literal>Cat</literal> "
@@ -297,7 +296,7 @@ msgstr ""
 "match the criteria, you must use a <literal>ResultTransformer</literal>."
 
 #. Tag: programlisting
-#: query_criteria.xml:114
+#: query_criteria.xml:138
 #, no-c-format
 msgid ""
 "<![CDATA[List cats = sess.createCriteria(Cat.class)\n"
@@ -314,23 +313,23 @@ msgid ""
 msgstr ""
 
 #. Tag: title
-#: query_criteria.xml:119
+#: query_criteria.xml:143
 #, no-c-format
 msgid "Dynamic association fetching"
 msgstr "Dynamic association fetching"
 
 #. Tag: para
-#: query_criteria.xml:121
-#, no-c-format
+#: query_criteria.xml:145
+#, fuzzy, no-c-format
 msgid ""
-"You may specify association fetching semantics at runtime using "
+"You can specify association fetching semantics at runtime using "
 "<literal>setFetchMode()</literal>."
 msgstr ""
 "You may specify association fetching semantics at runtime using "
 "<literal>setFetchMode()</literal>."
 
 #. Tag: programlisting
-#: query_criteria.xml:126
+#: query_criteria.xml:150
 #, no-c-format
 msgid ""
 "<![CDATA[List cats = sess.createCriteria(Cat.class)\n"
@@ -341,7 +340,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: query_criteria.xml:128
+#: query_criteria.xml:152
 #, no-c-format
 msgid ""
 "This query will fetch both <literal>mate</literal> and <literal>kittens</"
@@ -353,13 +352,13 @@ msgstr ""
 "more information."
 
 #. Tag: title
-#: query_criteria.xml:136
+#: query_criteria.xml:160
 #, no-c-format
 msgid "Example queries"
 msgstr "Example queries"
 
 #. Tag: para
-#: query_criteria.xml:138
+#: query_criteria.xml:162
 #, no-c-format
 msgid ""
 "The class <literal>org.hibernate.criterion.Example</literal> allows you to "
@@ -369,7 +368,7 @@ msgstr ""
 "construct a query criterion from a given instance."
 
 #. Tag: programlisting
-#: query_criteria.xml:143
+#: query_criteria.xml:167
 #, no-c-format
 msgid ""
 "<![CDATA[Cat cat = new Cat();\n"
@@ -381,7 +380,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: query_criteria.xml:145
+#: query_criteria.xml:169
 #, no-c-format
 msgid ""
 "Version properties, identifiers and associations are ignored. By default, "
@@ -391,13 +390,13 @@ msgstr ""
 "null valued properties are excluded."
 
 #. Tag: para
-#: query_criteria.xml:150
+#: query_criteria.xml:174
 #, no-c-format
 msgid "You can adjust how the <literal>Example</literal> is applied."
 msgstr "You can adjust how the <literal>Example</literal> is applied."
 
 #. Tag: programlisting
-#: query_criteria.xml:154
+#: query_criteria.xml:178
 #, no-c-format
 msgid ""
 "<![CDATA[Example example = Example.create(cat)\n"
@@ -412,13 +411,13 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: query_criteria.xml:156
+#: query_criteria.xml:180
 #, no-c-format
 msgid "You can even use examples to place criteria upon associated objects."
 msgstr "You can even use examples to place criteria upon associated objects."
 
 #. Tag: programlisting
-#: query_criteria.xml:160
+#: query_criteria.xml:184
 #, no-c-format
 msgid ""
 "<![CDATA[List results = session.createCriteria(Cat.class)\n"
@@ -429,25 +428,25 @@ msgid ""
 msgstr ""
 
 #. Tag: title
-#: query_criteria.xml:165
+#: query_criteria.xml:189
 #, no-c-format
 msgid "Projections, aggregation and grouping"
 msgstr "Projections, aggregation and grouping"
 
 #. Tag: para
-#: query_criteria.xml:166
-#, no-c-format
+#: query_criteria.xml:190
+#, fuzzy, no-c-format
 msgid ""
 "The class <literal>org.hibernate.criterion.Projections</literal> is a "
-"factory for <literal>Projection</literal> instances. We apply a projection "
-"to a query by calling <literal>setProjection()</literal>."
+"factory for <literal>Projection</literal> instances. You can apply a "
+"projection to a query by calling <literal>setProjection()</literal>."
 msgstr ""
 "The class <literal>org.hibernate.criterion.Projections</literal> is a "
 "factory for <literal>Projection</literal> instances. We apply a projection "
 "to a query by calling <literal>setProjection()</literal>."
 
 #. Tag: programlisting
-#: query_criteria.xml:172
+#: query_criteria.xml:196
 #, no-c-format
 msgid ""
 "<![CDATA[List results = session.createCriteria(Cat.class)\n"
@@ -457,7 +456,7 @@ msgid ""
 msgstr ""
 
 #. Tag: programlisting
-#: query_criteria.xml:174
+#: query_criteria.xml:198
 #, no-c-format
 msgid ""
 "<![CDATA[List results = session.createCriteria(Cat.class)\n"
@@ -471,7 +470,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: query_criteria.xml:176
+#: query_criteria.xml:200
 #, no-c-format
 msgid ""
 "There is no explicit \"group by\" necessary in a criteria query. Certain "
@@ -483,19 +482,19 @@ msgstr ""
 "emphasis>, which also appear in the SQL <literal>group by</literal> clause."
 
 #. Tag: para
-#: query_criteria.xml:182
-#, no-c-format
+#: query_criteria.xml:206
+#, fuzzy, no-c-format
 msgid ""
-"An alias may optionally be assigned to a projection, so that the projected "
-"value may be referred to in restrictions or orderings. Here are two "
-"different ways to do this:"
+"An alias can be assigned to a projection so that the projected value can be "
+"referred to in restrictions or orderings. Here are two different ways to do "
+"this:"
 msgstr ""
 "An alias may optionally be assigned to a projection, so that the projected "
 "value may be referred to in restrictions or orderings. Here are two "
 "different ways to do this:"
 
 #. Tag: programlisting
-#: query_criteria.xml:188
+#: query_criteria.xml:212
 #, no-c-format
 msgid ""
 "<![CDATA[List results = session.createCriteria(Cat.class)\n"
@@ -506,7 +505,7 @@ msgid ""
 msgstr ""
 
 #. Tag: programlisting
-#: query_criteria.xml:190
+#: query_criteria.xml:214
 #, no-c-format
 msgid ""
 "<![CDATA[List results = session.createCriteria(Cat.class)\n"
@@ -516,7 +515,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: query_criteria.xml:192
+#: query_criteria.xml:216
 #, no-c-format
 msgid ""
 "The <literal>alias()</literal> and <literal>as()</literal> methods simply "
@@ -530,7 +529,7 @@ msgstr ""
 "you add the projection to a projection list:"
 
 #. Tag: programlisting
-#: query_criteria.xml:199
+#: query_criteria.xml:223
 #, no-c-format
 msgid ""
 "<![CDATA[List results = session.createCriteria(Cat.class)\n"
@@ -546,7 +545,7 @@ msgid ""
 msgstr ""
 
 #. Tag: programlisting
-#: query_criteria.xml:201
+#: query_criteria.xml:225
 #, no-c-format
 msgid ""
 "<![CDATA[List results = session.createCriteria(Domestic.class, \"cat\")\n"
@@ -561,7 +560,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: query_criteria.xml:203
+#: query_criteria.xml:227
 #, no-c-format
 msgid ""
 "You can also use <literal>Property.forName()</literal> to express "
@@ -571,7 +570,7 @@ msgstr ""
 "projections:"
 
 #. Tag: programlisting
-#: query_criteria.xml:207
+#: query_criteria.xml:231
 #, no-c-format
 msgid ""
 "<![CDATA[List results = session.createCriteria(Cat.class)\n"
@@ -581,7 +580,7 @@ msgid ""
 msgstr ""
 
 #. Tag: programlisting
-#: query_criteria.xml:209
+#: query_criteria.xml:233
 #, no-c-format
 msgid ""
 "<![CDATA[List results = session.createCriteria(Cat.class)\n"
@@ -597,25 +596,25 @@ msgid ""
 msgstr ""
 
 #. Tag: title
-#: query_criteria.xml:214
+#: query_criteria.xml:238
 #, no-c-format
 msgid "Detached queries and subqueries"
 msgstr "Detached queries and subqueries"
 
 #. Tag: para
-#: query_criteria.xml:215
-#, no-c-format
+#: query_criteria.xml:239
+#, fuzzy, no-c-format
 msgid ""
-"The <literal>DetachedCriteria</literal> class lets you create a query "
-"outside the scope of a session, and then later execute it using some "
-"arbitrary <literal>Session</literal>."
+"The <literal>DetachedCriteria</literal> class allows you to create a query "
+"outside the scope of a session and then execute it using an arbitrary "
+"<literal>Session</literal>."
 msgstr ""
 "The <literal>DetachedCriteria</literal> class lets you create a query "
 "outside the scope of a session, and then later execute it using some "
 "arbitrary <literal>Session</literal>."
 
 #. Tag: programlisting
-#: query_criteria.xml:220
+#: query_criteria.xml:244
 #, no-c-format
 msgid ""
 "<![CDATA[DetachedCriteria query = DetachedCriteria.forClass(Cat.class)\n"
@@ -630,11 +629,11 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: query_criteria.xml:222
-#, no-c-format
+#: query_criteria.xml:246
+#, fuzzy, no-c-format
 msgid ""
-"A <literal>DetachedCriteria</literal> may also be used to express a "
-"subquery. Criterion instances involving subqueries may be obtained via "
+"A <literal>DetachedCriteria</literal> can also be used to express a "
+"subquery. Criterion instances involving subqueries can be obtained via "
 "<literal>Subqueries</literal> or <literal>Property</literal>."
 msgstr ""
 "A <literal>DetachedCriteria</literal> may also be used to express a "
@@ -642,7 +641,7 @@ msgstr ""
 "<literal>Subqueries</literal> or <literal>Property</literal>."
 
 #. Tag: programlisting
-#: query_criteria.xml:228
+#: query_criteria.xml:252
 #, no-c-format
 msgid ""
 "<![CDATA[DetachedCriteria avgWeight = DetachedCriteria.forClass(Cat.class)\n"
@@ -653,7 +652,7 @@ msgid ""
 msgstr ""
 
 #. Tag: programlisting
-#: query_criteria.xml:230
+#: query_criteria.xml:254
 #, no-c-format
 msgid ""
 "<![CDATA[DetachedCriteria weights = DetachedCriteria.forClass(Cat.class)\n"
@@ -664,13 +663,13 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: query_criteria.xml:232
-#, no-c-format
-msgid "Even correlated subqueries are possible:"
+#: query_criteria.xml:256
+#, fuzzy, no-c-format
+msgid "Correlated subqueries are also possible:"
 msgstr "Even correlated subqueries are possible:"
 
 #. Tag: programlisting
-#: query_criteria.xml:236
+#: query_criteria.xml:260
 #, no-c-format
 msgid ""
 "<![CDATA[DetachedCriteria avgWeightForSex = DetachedCriteria.forClass(Cat."
@@ -683,18 +682,18 @@ msgid ""
 msgstr ""
 
 #. Tag: title
-#: query_criteria.xml:245
+#: query_criteria.xml:269
 #, no-c-format
 msgid "Queries by natural identifier"
 msgstr "Queries by natural identifier"
 
 #. Tag: para
-#: query_criteria.xml:247
-#, no-c-format
+#: query_criteria.xml:271
+#, fuzzy, no-c-format
 msgid ""
-"For most queries, including criteria queries, the query cache is not very "
-"efficient, because query cache invalidation occurs too frequently. However, "
-"there is one special kind of query where we can optimize the cache "
+"For most queries, including criteria queries, the query cache is not "
+"efficient because query cache invalidation occurs too frequently. However, "
+"there is a special kind of query where you can optimize the cache "
 "invalidation algorithm: lookups by a constant natural key. In some "
 "applications, this kind of query occurs frequently. The criteria API "
 "provides special provision for this use case."
@@ -707,17 +706,17 @@ msgstr ""
 "provides special provision for this use case."
 
 #. Tag: para
-#: query_criteria.xml:255
-#, no-c-format
+#: query_criteria.xml:279
+#, fuzzy, no-c-format
 msgid ""
-"First, you should map the natural key of your entity using <literal>&lt;"
-"natural-id&gt;</literal>, and enable use of the second-level cache."
+"First, map the natural key of your entity using <literal>&lt;natural-id&gt;</"
+"literal> and enable use of the second-level cache."
 msgstr ""
 "First, you should map the natural key of your entity using <literal>&lt;"
 "natural-id&gt;</literal>, and enable use of the second-level cache."
 
 #. Tag: programlisting
-#: query_criteria.xml:260
+#: query_criteria.xml:284
 #, no-c-format
 msgid ""
 "<![CDATA[<class name=\"User\">\n"
@@ -734,33 +733,28 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: query_criteria.xml:262
-#, no-c-format
+#: query_criteria.xml:286
+#, fuzzy, no-c-format
 msgid ""
-"Note that this functionality is not intended for use with entities with "
+"This functionality is not intended for use with entities with "
 "<emphasis>mutable</emphasis> natural keys."
 msgstr ""
 "Note that this functionality is not intended for use with entities with "
 "<emphasis>mutable</emphasis> natural keys."
 
 #. Tag: para
-#: query_criteria.xml:267
-#, no-c-format
-msgid "Next, enable the Hibernate query cache."
-msgstr "Next, enable the Hibernate query cache."
-
-#. Tag: para
-#: query_criteria.xml:271
-#, no-c-format
+#: query_criteria.xml:291
+#, fuzzy, no-c-format
 msgid ""
-"Now, <literal>Restrictions.naturalId()</literal> allows us to make use of "
-"the more efficient cache algorithm."
+"Once you have enabled the Hibernate query cache, the <literal>Restrictions."
+"naturalId()</literal> allows you to make use of the more efficient cache "
+"algorithm."
 msgstr ""
 "Now, <literal>Restrictions.naturalId()</literal> allows us to make use of "
 "the more efficient cache algorithm."
 
 #. Tag: programlisting
-#: query_criteria.xml:276
+#: query_criteria.xml:297
 #, no-c-format
 msgid ""
 "<![CDATA[session.createCriteria(User.class)\n"
@@ -770,3 +764,13 @@ msgid ""
 "    ).setCacheable(true)\n"
 "    .uniqueResult();]]>"
 msgstr ""
+
+#~ msgid ""
+#~ "You may easily specify constraints upon related entities by navigating "
+#~ "associations using <literal>createCriteria()</literal>."
+#~ msgstr ""
+#~ "You may easily specify constraints upon related entities by navigating "
+#~ "associations using <literal>createCriteria()</literal>."
+
+#~ msgid "Next, enable the Hibernate query cache."
+#~ msgstr "Next, enable the Hibernate query cache."

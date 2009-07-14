@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2007-10-25 07:48+0000\n"
+"POT-Creation-Date: 2009-07-14 19:56+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -11,35 +11,35 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 
 #. Tag: title
-#: xml.xml:5
+#: xml.xml:29
 #, no-c-format
 msgid "XML Mapping"
 msgstr "XML 매핑"
 
 #. Tag: emphasis
-#: xml.xml:7
-#, no-c-format
+#: xml.xml:31
+#, fuzzy, no-c-format
 msgid ""
-"Note that this is an experimental feature in Hibernate 3.0 and is under "
-"extremely active development."
+"XML Mapping is an experimental feature in Hibernate 3.0 and is currently "
+"under active development."
 msgstr ""
 "이것은 Hibernate3.0에서 실험적인 특징이고 매우 활동적으로 개발 중에 있음을 노"
 "트하라."
 
 #. Tag: title
-#: xml.xml:13
+#: xml.xml:37
 #, no-c-format
 msgid "Working with XML data"
 msgstr "XML 데이터로 작업하기"
 
 #. Tag: para
-#: xml.xml:15
-#, no-c-format
+#: xml.xml:39
+#, fuzzy, no-c-format
 msgid ""
-"Hibernate lets you work with persistent XML data in much the same way you "
-"work with persistent POJOs. A parsed XML tree can be thought of as just "
-"another way to represent the relational data at the object level, instead of "
-"POJOs."
+"Hibernate allows you to work with persistent XML data in much the same way "
+"you work with persistent POJOs. A parsed XML tree can be thought of as "
+"another way of representing the relational data at the object level, instead "
+"of POJOs."
 msgstr ""
 "Hibernate는 당신이 영속 POJO들로 작업하는 것과 아주 동일한 방법으로 영속 XML "
 "데이터에 작업하도록 해준다. 파싱된 XML 트리는 단지 객체 레벨에서 관계형 데이"
@@ -48,7 +48,7 @@ msgstr ""
 "수 있다."
 
 #. Tag: para
-#: xml.xml:22
+#: xml.xml:46
 #, no-c-format
 msgid ""
 "Hibernate supports dom4j as API for manipulating XML trees. You can write "
@@ -68,7 +68,7 @@ msgstr ""
 "literal>(merging(병합)은 아직 지원되지 않는다)."
 
 #. Tag: para
-#: xml.xml:32
+#: xml.xml:56
 #, no-c-format
 msgid ""
 "This feature has many applications including data import/export, "
@@ -78,31 +78,31 @@ msgstr ""
 "통한 엔티티 데이터의 구체화를 포함하는 많은 어플리케이션들을 갖는다."
 
 #. Tag: para
-#: xml.xml:37
-#, no-c-format
+#: xml.xml:61
+#, fuzzy, no-c-format
 msgid ""
-"A single mapping may be used to simultaneously map properties of a class and "
+"A single mapping can be used to simultaneously map properties of a class and "
 "nodes of an XML document to the database, or, if there is no class to map, "
-"it may be used to map just the XML."
+"it can be used to map just the XML."
 msgstr ""
 "하나의 매핑은 클래스들의 프로퍼티들과 XML 문서의 노드들을 데이터베이스로 동시"
 "에 매핑시키는데 사용될 수 있거나, 만일 매핑할 클래스가 존재하지 않을 경우, 그"
 "것은 단지 XML을 매핑시키는데 사용될 수도 있다."
 
 #. Tag: title
-#: xml.xml:44
+#: xml.xml:68
 #, no-c-format
 msgid "Specifying XML and class mapping together"
 msgstr "XML과 클래스 매핑을 함께 지정하기"
 
 #. Tag: para
-#: xml.xml:46
+#: xml.xml:70
 #, no-c-format
 msgid "Here is an example of mapping a POJO and XML simultaneously:"
 msgstr "다음은 POJO와 XML을 동시에 매핑시키는 예제이다 :"
 
 #. Tag: programlisting
-#: xml.xml:50
+#: xml.xml:74
 #, no-c-format
 msgid ""
 "<![CDATA[<class name=\"Account\" \n"
@@ -128,19 +128,19 @@ msgid ""
 msgstr ""
 
 #. Tag: title
-#: xml.xml:54
+#: xml.xml:78
 #, no-c-format
 msgid "Specifying only an XML mapping"
 msgstr "XML 매핑만을 지정하기"
 
 #. Tag: para
-#: xml.xml:56
+#: xml.xml:80
 #, no-c-format
 msgid "Here is an example where there is no POJO class:"
 msgstr "다음은 POJO 클래스가 존재하지 않는 예제이다:"
 
 #. Tag: programlisting
-#: xml.xml:60
+#: xml.xml:84
 #, no-c-format
 msgid ""
 "<![CDATA[<class entity-name=\"Account\" \n"
@@ -169,12 +169,12 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: xml.xml:62
-#, no-c-format
+#: xml.xml:86
+#, fuzzy, no-c-format
 msgid ""
 "This mapping allows you to access the data as a dom4j tree, or as a graph of "
-"property name/value pairs (java <literal>Map</literal>s). The property names "
-"are purely logical constructs that may be referred to in HQL queries."
+"property name/value pairs or java <literal>Map</literal>s. The property "
+"names are purely logical constructs that can be referred to in HQL queries."
 msgstr ""
 "이 매핑은 dom4j 트리로서 또는 프로퍼티 name/value 쌍들(java <literal>Map</"
 "literal>들)의 그래프로서 데이터에 접근하는 것을 당신에게 허용해준다. 프로퍼"
@@ -182,17 +182,17 @@ msgstr ""
 "다."
 
 #. Tag: title
-#: xml.xml:73
+#: xml.xml:97
 #, no-c-format
 msgid "XML mapping metadata"
 msgstr "XML 매핑 메타데이터"
 
 #. Tag: para
-#: xml.xml:75
-#, no-c-format
+#: xml.xml:99
+#, fuzzy, no-c-format
 msgid ""
-"Many Hibernate mapping elements accept the <literal>node</literal> "
-"attribute. This let's you specify the name of an XML attribute or element "
+"A range of Hibernate mapping elements accept the <literal>node</literal> "
+"attribute. This lets you specify the name of an XML attribute or element "
 "that holds the property or entity data. The format of the <literal>node</"
 "literal> attribute must be one of the following:"
 msgstr ""
@@ -201,37 +201,37 @@ msgstr ""
 "하도록 한다. <literal>node</literal> 속성의 포맷은 다음 중 하나이어야 한다:"
 
 #. Tag: para
-#: xml.xml:84
-#, no-c-format
-msgid "<literal>\"element-name\"</literal> - map to the named XML element"
+#: xml.xml:108
+#, fuzzy, no-c-format
+msgid "<literal>\"element-name\"</literal>: map to the named XML element"
 msgstr "<literal>\"element-name\"</literal> - 명명된 XML 요소로 매핑시킨다"
 
 #. Tag: para
-#: xml.xml:87
-#, no-c-format
-msgid "<literal>\"@attribute-name\"</literal> - map to the named XML attribute"
+#: xml.xml:111
+#, fuzzy, no-c-format
+msgid "<literal>\"@attribute-name\"</literal>: map to the named XML attribute"
 msgstr ""
 "<literal>\"@attribute-name\"</literal> - 명명된 XML 속성으로 매핑시킨다"
 
 #. Tag: para
-#: xml.xml:90
-#, no-c-format
-msgid "<literal>\".\"</literal> - map to the parent element"
+#: xml.xml:114
+#, fuzzy, no-c-format
+msgid "<literal>\".\"</literal>: map to the parent element"
 msgstr "<literal>\".\"</literal> - 부모 요소로 매핑 시킨다"
 
 #. Tag: para
-#: xml.xml:93
-#, no-c-format
+#: xml.xml:117
+#, fuzzy, no-c-format
 msgid ""
-"<literal>\"element-name/@attribute-name\"</literal> - map to the named "
+"<literal>\"element-name/@attribute-name\"</literal>: map to the named "
 "attribute of the named element"
 msgstr ""
 "<literal>\"element-name/@attribute-name\"</literal> - 명명된 요소의 명명된 속"
 "성으로 매핑시킨다"
 
 #. Tag: para
-#: xml.xml:100
-#, no-c-format
+#: xml.xml:124
+#, fuzzy, no-c-format
 msgid ""
 "For collections and single valued associations, there is an additional "
 "<literal>embed-xml</literal> attribute. If <literal>embed-xml=\"true\"</"
@@ -239,7 +239,7 @@ msgid ""
 "of value type) will be embedded directly in the XML tree for the entity that "
 "owns the association. Otherwise, if <literal>embed-xml=\"false\"</literal>, "
 "then only the referenced identifier value will appear in the XML for single "
-"point associations and collections will simply not appear at all."
+"point associations and collections will not appear at all."
 msgstr ""
 "콜렉션들과 단일 값 콜렉션들의 경우, 추가적인 <literal>embed-xml</literal> 속"
 "성이 존재한다. 만일 <literal>embed-xml=\"true\"</literal> 일 경우, 연관된 엔"
@@ -249,18 +249,18 @@ msgstr ""
 "인트 연관들에 대해 나타날 것이고 콜렉션들은 단순히 전혀 나타나지 않을 것이다."
 
 #. Tag: para
-#: xml.xml:110
-#, no-c-format
+#: xml.xml:134
+#, fuzzy, no-c-format
 msgid ""
-"You should be careful not to leave <literal>embed-xml=\"true\"</literal> for "
-"too many associations, since XML does not deal well with circularity!"
+"Do not leave <literal>embed-xml=\"true\"</literal> for too many "
+"associations, since XML does not deal well with circularity."
 msgstr ""
 "당신은 너무 많은 연관들에 대해 <literal>embed-xml=\"true\"</literal>로 남겨두"
 "지 말도록 주의해야 한다. 왜냐하면 XML이 순환적으로 잘 처리하지 못하기 때문이"
 "다!"
 
 #. Tag: programlisting
-#: xml.xml:115
+#: xml.xml:139
 #, no-c-format
 msgid ""
 "<![CDATA[<class name=\"Customer\" \n"
@@ -300,17 +300,17 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: xml.xml:117
-#, no-c-format
+#: xml.xml:141
+#, fuzzy, no-c-format
 msgid ""
-"in this case, we have decided to embed the collection of account ids, but "
-"not the actual account data. The following HQL query:"
+"In this case, the collection of account ids is embedded, but not the actual "
+"account data. The following HQL query:"
 msgstr ""
 "이 경우에, 우리는 실제 account 데이터가 아닌, account id들을 가진 콜렉션을 삽"
 "입시키기로 결정했다. 다음 HQL 질의:"
 
 #. Tag: programlisting
-#: xml.xml:122
+#: xml.xml:146
 #, no-c-format
 msgid ""
 "<![CDATA[from Customer c left join fetch c.accounts where c.lastName like :"
@@ -318,13 +318,13 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: xml.xml:124
-#, no-c-format
-msgid "Would return datasets such as this:"
+#: xml.xml:148
+#, fuzzy, no-c-format
+msgid "would return datasets such as this:"
 msgstr "는 다음과 같은 데이터셋들을 반환할 것이다:"
 
 #. Tag: programlisting
-#: xml.xml:128
+#: xml.xml:152
 #, no-c-format
 msgid ""
 "<![CDATA[<customer id=\"123456789\">\n"
@@ -340,7 +340,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: xml.xml:130
+#: xml.xml:154
 #, no-c-format
 msgid ""
 "If you set <literal>embed-xml=\"true\"</literal> on the <literal>&lt;one-to-"
@@ -351,7 +351,7 @@ msgstr ""
 "일 수도 있다:"
 
 #. Tag: programlisting
-#: xml.xml:135
+#: xml.xml:159
 #, no-c-format
 msgid ""
 "<![CDATA[<customer id=\"123456789\">\n"
@@ -373,23 +373,23 @@ msgid ""
 msgstr ""
 
 #. Tag: title
-#: xml.xml:141
+#: xml.xml:165
 #, no-c-format
 msgid "Manipulating XML data"
 msgstr "XML 데이터 처리하기"
 
 #. Tag: para
-#: xml.xml:143
-#, no-c-format
+#: xml.xml:167
+#, fuzzy, no-c-format
 msgid ""
-"Let's rearead and update XML documents in the application. We do this by "
-"obtaining a dom4j session:"
+"You can also re-read and update XML documents in the application. You can do "
+"this by obtaining a dom4j session:"
 msgstr ""
 "우리의 어플리케이션 내에서 XML 문서들을 다시 읽어들이고 업데이트 시키자. 우리"
 "는 dom4j 세션을 얻어서 이것을 행한다:"
 
 #. Tag: programlisting
-#: xml.xml:148
+#: xml.xml:172
 #, no-c-format
 msgid ""
 "<![CDATA[Document doc = ....;\n"
@@ -413,7 +413,7 @@ msgid ""
 msgstr ""
 
 #. Tag: programlisting
-#: xml.xml:150
+#: xml.xml:174
 #, no-c-format
 msgid ""
 "<![CDATA[Session session = factory.openSession();\n"
@@ -435,12 +435,11 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: xml.xml:152
-#, no-c-format
+#: xml.xml:176
+#, fuzzy, no-c-format
 msgid ""
-"It is extremely useful to combine this feature with Hibernate's "
-"<literal>replicate()</literal> operation to implement XML-based data import/"
-"export."
+"When implementing XML-based data import/export, it is useful to combine this "
+"feature with Hibernate's <literal>replicate()</literal> operation."
 msgstr ""
 "XML 기반의 데이터 가져오기/내보내기를 구현하는데 이 특징과 Hibernate의 "
 "<literal>replicate()</literal> 오퍼레이션을 결합시키는 것이 매우 유용하다."

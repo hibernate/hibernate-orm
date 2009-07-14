@@ -1,30 +1,35 @@
 #, fuzzy
 msgid ""
 msgstr ""
+"Report-Msgid-Bugs-To: http://bugs.kde.org\n"
+"POT-Creation-Date: 2009-07-14 19:55+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
-"Content-Type: text/plain; charset=utf-8\n"
+"Content-Type: text/plain; charset=UTF-8\n"
 
-#: index.docbook:5
+#. Tag: title
+#: example_parentchild.xml:29
+#, no-c-format
 msgid "Example: Parent/Child"
 msgstr "Ejemplo: Padre/Hijo"
 
-#: index.docbook:7
+#. Tag: para
+#: example_parentchild.xml:31
+#, fuzzy, no-c-format
 msgid ""
-"One of the very first things that new users try to do with Hibernate is to "
-"model a parent / child type relationship. There are two different approaches "
-"to this. For various reasons the most convenient approach, especially for "
-"new users, is to model both <literal>Parent</literal> and <literal>Child</"
-"literal> as entity classes with a <literal>&lt;one-to-many&gt;</literal> "
-"association from <literal>Parent</literal> to <literal>Child</literal>. (The "
-"alternative approach is to declare the <literal>Child</literal> as a "
-"<literal>&lt;composite-element&gt;</literal>.) Now, it turns out that "
-"default semantics of a one to many association (in Hibernate) are much less "
-"close to the usual semantics of a parent / child relationship than those of "
-"a composite element mapping. We will explain how to use a "
-"<emphasis>bidirectional one to many association with cascades</emphasis> to "
-"model a parent / child relationship efficiently and elegantly. It's not at "
-"all difficult!"
+"One of the first things that new users want to do with Hibernate is to model "
+"a parent/child type relationship. There are two different approaches to "
+"this. The most convenient approach, especially for new users, is to model "
+"both <literal>Parent</literal> and <literal>Child</literal> as entity "
+"classes with a <literal>&lt;one-to-many&gt;</literal> association from "
+"<literal>Parent</literal> to <literal>Child</literal>. The alternative "
+"approach is to declare the <literal>Child</literal> as a <literal>&lt;"
+"composite-element&gt;</literal>. The default semantics of a one-to-many "
+"association in Hibernate are much less close to the usual semantics of a "
+"parent/child relationship than those of a composite element mapping. We will "
+"explain how to use a <emphasis>bidirectional one-to-many association with "
+"cascades</emphasis> to model a parent/child relationship efficiently and "
+"elegantly."
 msgstr ""
 "Una de las primer&#x00ed;simas cosas que los usuarios nuevos intentan hacer "
 "con Hibernate es modelar una relaci&#x00f3;n de tipo padre / hijo. Para esto "
@@ -42,33 +47,41 @@ msgstr ""
 "en cascada</emphasis> para modelar una relaci&#x00f3;n padre / hijo "
 "eficiente y elegantemente. &#x00a1;No es para nada dif&#x00ed;cil!"
 
-#: index.docbook:21
+#. Tag: title
+#: example_parentchild.xml:45
+#, no-c-format
 msgid "A note about collections"
 msgstr "Una nota sobre las colecciones"
 
-#: index.docbook:23
+#. Tag: para
+#: example_parentchild.xml:47
+#, fuzzy, no-c-format
 msgid ""
 "Hibernate collections are considered to be a logical part of their owning "
-"entity; never of the contained entities. This is a crucial distinction! It "
-"has the following consequences:"
+"entity and not of the contained entities. Be aware that this is a critical "
+"distinction that has the following consequences:"
 msgstr ""
 "Se considera que las colecciones de Hibernate son una parte l&#x00f3;gica de "
 "la entidad que las posee; nunca de las entidades contenidas. &#x00a1;Esta es "
 "una distinci&#x00f3;n crucial! Esto tiene las siguientes consecuencias:"
 
-#: index.docbook:30
+#. Tag: para
+#: example_parentchild.xml:54
+#, fuzzy, no-c-format
 msgid ""
-"When we remove / add an object from / to a collection, the version number of "
+"When you remove/add an object from/to a collection, the version number of "
 "the collection owner is incremented."
 msgstr ""
 "Cuando se quita / a&#x00f1;ade un objeto desde / a una colecci&#x00f3;n, se "
 "incrementa el n&#x00fa;mero de versi&#x00f3;n del due&#x00f1;o de la "
 "colecci&#x00f3;n."
 
-#: index.docbook:36
+#. Tag: para
+#: example_parentchild.xml:60
+#, fuzzy, no-c-format
 msgid ""
 "If an object that was removed from a collection is an instance of a value "
-"type (eg, a composite element), that object will cease to be persistent and "
+"type (e.g. a composite element), that object will cease to be persistent and "
 "its state will be completely removed from the database. Likewise, adding a "
 "value type instance to the collection will cause its state to be immediately "
 "persistent."
@@ -79,14 +92,15 @@ msgstr ""
 "de datos. Asimismo, a&#x00f1;adir una instancia de tipo de valor a la "
 "colecci&#x00f3;n causar&#x00e1; que su estado sea inmediatamente persistente."
 
-#: index.docbook:44
+#. Tag: para
+#: example_parentchild.xml:68
+#, fuzzy, no-c-format
 msgid ""
-"On the other hand, if an entity is removed from a collection (a one-to-many "
-"or many-to-many association), it will not be deleted, by default. This "
-"behaviour is completely consistent - a change to the internal state of "
-"another entity should not cause the associated entity to vanish! Likewise, "
-"adding an entity to a collection does not cause that entity to become "
-"persistent, by default."
+"Conversely, if an entity is removed from a collection (a one-to-many or many-"
+"to-many association), it will not be deleted by default. This behavior is "
+"completely consistent; a change to the internal state of another entity "
+"should not cause the associated entity to vanish. Likewise, adding an entity "
+"to a collection does not cause that entity to become persistent, by default."
 msgstr ""
 "Por otro lado, si se quita una entidad de una colecci&#x00f3;n (una "
 "asociaci&#x00f3;n uno-a-muchos o muchos-a-muchos), no ser&#x00e1; borrado, "
@@ -95,13 +109,15 @@ msgstr ""
 "asociada! Asimismo, a&#x00f1;adir una entidad a una colecci&#x00f3;n no "
 "causa que la entidad se vuelva persistente, por defecto."
 
-#: index.docbook:54
+#. Tag: para
+#: example_parentchild.xml:78
+#, fuzzy, no-c-format
 msgid ""
-"Instead, the default behaviour is that adding an entity to a collection "
-"merely creates a link between the two entities, while removing it removes "
-"the link. This is very appropriate for all sorts of cases. Where it is not "
-"appropriate at all is the case of a parent / child relationship, where the "
-"life of the child is bound to the life cycle of the parent."
+"Adding an entity to a collection, by default, merely creates a link between "
+"the two entities. Removing the entity will remove the link. This is "
+"appropriate for all sorts of cases. However, it is not appropriate in the "
+"case of a parent/child relationship. In this case, the life of the child is "
+"bound to the life cycle of the parent."
 msgstr ""
 "En cambio, el comportamiento por defecto es que al a&#x00f1;adir una entidad "
 "a una colecci&#x00f3;n se crea meramente un enlace entre las dos entidades, "
@@ -110,11 +126,15 @@ msgstr ""
 "una relaci&#x00f3;n padre / hijo. donde la vida del hijo est&#x00e1; ligada "
 "al ciclo de vida del padre."
 
-#: index.docbook:64
+#. Tag: title
+#: example_parentchild.xml:88
+#, no-c-format
 msgid "Bidirectional one-to-many"
 msgstr "Uno-a-muchos bidirectional"
 
-#: index.docbook:66
+#. Tag: para
+#: example_parentchild.xml:90
+#, no-c-format
 msgid ""
 "Suppose we start with a simple <literal>&lt;one-to-many&gt;</literal> "
 "association from <literal>Parent</literal> to <literal>Child</literal>."
@@ -123,7 +143,9 @@ msgstr ""
 "to-many&gt;</literal> desde <literal>Parent</literal> a <literal>Child</"
 "literal>."
 
-#: index.docbook:71
+#. Tag: programlisting
+#: example_parentchild.xml:95
+#, no-c-format
 msgid ""
 "<![CDATA[<set name=\"children\">\n"
 "    <key column=\"parent_id\"/>\n"
@@ -135,11 +157,15 @@ msgstr ""
 "    <one-to-many class=\"Child\"/>\n"
 "</set>]]>"
 
-#: index.docbook:73
-msgid "If we were to execute the following code"
+#. Tag: para
+#: example_parentchild.xml:97
+#, fuzzy, no-c-format
+msgid "If we were to execute the following code:"
 msgstr "Si ejecut&#x00e1;semos el siguiente c&#x00f3;digo"
 
-#: index.docbook:77
+#. Tag: programlisting
+#: example_parentchild.xml:101
+#, no-c-format
 msgid ""
 "<![CDATA[Parent p = .....;\n"
 "Child c = new Child();\n"
@@ -153,17 +179,23 @@ msgstr ""
 "session.save(c);\n"
 "session.flush();]]>"
 
-#: index.docbook:79
+#. Tag: para
+#: example_parentchild.xml:103
+#, no-c-format
 msgid "Hibernate would issue two SQL statements:"
 msgstr "Hibernate publicar&#x00ed;a dos sentencias SQL:"
 
-#: index.docbook:85
+#. Tag: para
+#: example_parentchild.xml:109
+#, no-c-format
 msgid ""
 "an <literal>INSERT</literal> to create the record for <literal>c</literal>"
 msgstr ""
 "un <literal>INSERT</literal> para crear el registro de <literal>c</literal>"
 
-#: index.docbook:88
+#. Tag: para
+#: example_parentchild.xml:112
+#, no-c-format
 msgid ""
 "an <literal>UPDATE</literal> to create the link from <literal>p</literal> to "
 "<literal>c</literal>"
@@ -171,10 +203,12 @@ msgstr ""
 "un <literal>UPDATE</literal> para crear el enlace desde <literal>p</literal> "
 "a <literal>c</literal>"
 
-#: index.docbook:95
+#. Tag: para
+#: example_parentchild.xml:119
+#, fuzzy, no-c-format
 msgid ""
 "This is not only inefficient, but also violates any <literal>NOT NULL</"
-"literal> constraint on the <literal>parent_id</literal> column. We can fix "
+"literal> constraint on the <literal>parent_id</literal> column. You can fix "
 "the nullability constraint violation by specifying <literal>not-null=\"true"
 "\"</literal> in the collection mapping:"
 msgstr ""
@@ -184,7 +218,9 @@ msgstr ""
 "restricci&#x00f3;n de nulabilidad especificando <literal>not-null=\"true\"</"
 "literal> en el mapeo de la colecci&#x00f3;n:"
 
-#: index.docbook:101
+#. Tag: programlisting
+#: example_parentchild.xml:125
+#, no-c-format
 msgid ""
 "<![CDATA[<set name=\"children\">\n"
 "    <key column=\"parent_id\" not-null=\"true\"/>\n"
@@ -196,16 +232,20 @@ msgstr ""
 "    <one-to-many class=\"Child\"/>\n"
 "</set>]]>"
 
-#: index.docbook:103
+#. Tag: para
+#: example_parentchild.xml:127
+#, no-c-format
 msgid "However, this is not the recommended solution."
 msgstr "Sin embargo, esta no es la soluci&#x00f3;n recomendada."
 
-#: index.docbook:106
+#. Tag: para
+#: example_parentchild.xml:130
+#, fuzzy, no-c-format
 msgid ""
-"The underlying cause of this behaviour is that the link (the foreign key "
+"The underlying cause of this behavior is that the link (the foreign key "
 "<literal>parent_id</literal>) from <literal>p</literal> to <literal>c</"
 "literal> is not considered part of the state of the <literal>Child</literal> "
-"object and is therefore not created in the <literal>INSERT</literal>. So the "
+"object and is therefore not created in the <literal>INSERT</literal>. The "
 "solution is to make the link part of the <literal>Child</literal> mapping."
 msgstr ""
 "El caso subyacente de este comportamiento es que el enlace (la clave "
@@ -215,7 +255,9 @@ msgstr ""
 "literal>. De modo que la soluci&#x00f3;n es hacer el enlace parte del mapeo "
 "del <literal>Child</literal>."
 
-#: index.docbook:113
+#. Tag: programlisting
+#: example_parentchild.xml:137
+#, no-c-format
 msgid ""
 "<![CDATA[<many-to-one name=\"parent\" column=\"parent_id\" not-null=\"true\"/"
 ">]]>"
@@ -223,25 +265,31 @@ msgstr ""
 "<![CDATA[<many-to-one name=\"parent\" column=\"parent_id\" not-null=\"true\"/"
 ">]]>"
 
-#: index.docbook:115
+#. Tag: para
+#: example_parentchild.xml:139
+#, fuzzy, no-c-format
 msgid ""
-"(We also need to add the <literal>parent</literal> property to the "
-"<literal>Child</literal> class.)"
+"You also need to add the <literal>parent</literal> property to the "
+"<literal>Child</literal> class."
 msgstr ""
 "(Necesitamos adem&#x00e1;s a&#x00f1;adir la propiedad <literal>parent</"
 "literal> a la clase <literal>Child</literal>.)"
 
-#: index.docbook:119
+#. Tag: para
+#: example_parentchild.xml:143
+#, fuzzy, no-c-format
 msgid ""
 "Now that the <literal>Child</literal> entity is managing the state of the "
 "link, we tell the collection not to update the link. We use the "
-"<literal>inverse</literal> attribute."
+"<literal>inverse</literal> attribute to do this:"
 msgstr ""
 "Ahora que la entidad <literal>Child</literal> est&#x00e1; gestionando el "
 "estado del enlace, le decimos a la colecci&#x00f3;n que no actualice el "
 "enlace. Usamos el atributo <literal>inverse</literal>."
 
-#: index.docbook:124
+#. Tag: programlisting
+#: example_parentchild.xml:148
+#, no-c-format
 msgid ""
 "<![CDATA[<set name=\"children\" inverse=\"true\">\n"
 "    <key column=\"parent_id\"/>\n"
@@ -253,13 +301,17 @@ msgstr ""
 "    <one-to-many class=\"Child\"/>\n"
 "</set>]]>"
 
-#: index.docbook:126
-msgid "The following code would be used to add a new <literal>Child</literal>"
+#. Tag: para
+#: example_parentchild.xml:150
+#, fuzzy, no-c-format
+msgid "The following code would be used to add a new <literal>Child</literal>:"
 msgstr ""
 "El siguiente c&#x00f3;digo podr&#x00ed;a ser usado para a&#x00f1;adir un "
 "nuevo <literal>Child</literal>"
 
-#: index.docbook:130
+#. Tag: programlisting
+#: example_parentchild.xml:154
+#, no-c-format
 msgid ""
 "<![CDATA[Parent p = (Parent) session.load(Parent.class, pid);\n"
 "Child c = new Child();\n"
@@ -275,21 +327,27 @@ msgstr ""
 "session.save(c);\n"
 "session.flush();]]>"
 
-#: index.docbook:132
-msgid "And now, only one SQL <literal>INSERT</literal> would be issued!"
+#. Tag: para
+#: example_parentchild.xml:156
+#, fuzzy, no-c-format
+msgid "Only one SQL <literal>INSERT</literal> would now be issued."
 msgstr ""
 "Y ahora, &#x00a1;S&#x00f3;lo se publicar&#x00ed;a un <literal>INSERT</"
 "literal> de SQL!"
 
-#: index.docbook:136
+#. Tag: para
+#: example_parentchild.xml:160
+#, fuzzy, no-c-format
 msgid ""
-"To tighten things up a bit, we could create an <literal>addChild()</literal> "
-"method of <literal>Parent</literal>."
+"You could also create an <literal>addChild()</literal> method of "
+"<literal>Parent</literal>."
 msgstr ""
 "Para ajustar un poco m&#x00e1;s las cosas, podr&#x00ed;amos crear un "
 "m&#x00e9;todo <literal>addChild()</literal> en <literal>Parent</literal>."
 
-#: index.docbook:141
+#. Tag: programlisting
+#: example_parentchild.xml:165
+#, no-c-format
 msgid ""
 "<![CDATA[public void addChild(Child c) {\n"
 "    c.setParent(this);\n"
@@ -301,13 +359,17 @@ msgstr ""
 "    children.add(c);\n"
 "}]]>"
 
-#: index.docbook:143
-msgid "Now, the code to add a <literal>Child</literal> looks like"
+#. Tag: para
+#: example_parentchild.xml:167
+#, fuzzy, no-c-format
+msgid "The code to add a <literal>Child</literal> looks like this:"
 msgstr ""
 "Ahora, el c&#x00f3;digo para a&#x00f1;adir un <literal>Child</literal> se ve "
 "as&#x00ed;"
 
-#: index.docbook:147
+#. Tag: programlisting
+#: example_parentchild.xml:171
+#, no-c-format
 msgid ""
 "<![CDATA[Parent p = (Parent) session.load(Parent.class, pid);\n"
 "Child c = new Child();\n"
@@ -321,19 +383,25 @@ msgstr ""
 "session.save(c);\n"
 "session.flush();]]>"
 
-#: index.docbook:152
+#. Tag: title
+#: example_parentchild.xml:176
+#, no-c-format
 msgid "Cascading life cycle"
 msgstr "Ciclo de vida en cascada"
 
-#: index.docbook:154
+#. Tag: para
+#: example_parentchild.xml:178
+#, fuzzy, no-c-format
 msgid ""
-"The explicit call to <literal>save()</literal> is still annoying. We will "
-"address this by using cascades."
+"You can address the frustrations of the explicit call to <literal>save()</"
+"literal> by using cascades."
 msgstr ""
 "La llamada expl&#x00ed;cita a <literal>save()</literal> es a&#x00fa;n "
 "molesta. Apuntaremos a esto usando tratamientos en cascada."
 
-#: index.docbook:159
+#. Tag: programlisting
+#: example_parentchild.xml:183
+#, no-c-format
 msgid ""
 "<![CDATA[<set name=\"children\" inverse=\"true\" cascade=\"all\">\n"
 "    <key column=\"parent_id\"/>\n"
@@ -345,11 +413,15 @@ msgstr ""
 "    <one-to-many class=\"Child\"/>\n"
 "</set>]]>"
 
-#: index.docbook:161
-msgid "This simplifies the code above to"
+#. Tag: para
+#: example_parentchild.xml:185
+#, fuzzy, no-c-format
+msgid "This simplifies the code above to:"
 msgstr "Esto simplifica el c&#x00f3;digo anterior a"
 
-#: index.docbook:165
+#. Tag: programlisting
+#: example_parentchild.xml:189
+#, no-c-format
 msgid ""
 "<![CDATA[Parent p = (Parent) session.load(Parent.class, pid);\n"
 "Child c = new Child();\n"
@@ -361,9 +433,11 @@ msgstr ""
 "p.addChild(c);\n"
 "session.flush();]]>"
 
-#: index.docbook:167
+#. Tag: para
+#: example_parentchild.xml:191
+#, fuzzy, no-c-format
 msgid ""
-"Similarly, we don't need to iterate over the children when saving or "
+"Similarly, we do not need to iterate over the children when saving or "
 "deleting a <literal>Parent</literal>. The following removes <literal>p</"
 "literal> and all its children from the database."
 msgstr ""
@@ -371,7 +445,9 @@ msgstr ""
 "<literal>Parent</literal>. Lo siguiente quita <literal>p</literal> y todos "
 "sus hijos de la base de datos."
 
-#: index.docbook:172
+#. Tag: programlisting
+#: example_parentchild.xml:196
+#, no-c-format
 msgid ""
 "<![CDATA[Parent p = (Parent) session.load(Parent.class, pid);\n"
 "session.delete(p);\n"
@@ -381,11 +457,15 @@ msgstr ""
 "session.delete(p);\n"
 "session.flush();]]>"
 
-#: index.docbook:174
-msgid "However, this code"
+#. Tag: para
+#: example_parentchild.xml:198
+#, fuzzy, no-c-format
+msgid "However, the following code:"
 msgstr "Sin embargo, este c&#x00f3;digo"
 
-#: index.docbook:178
+#. Tag: programlisting
+#: example_parentchild.xml:202
+#, no-c-format
 msgid ""
 "<![CDATA[Parent p = (Parent) session.load(Parent.class, pid);\n"
 "Child c = (Child) p.getChildren().iterator().next();\n"
@@ -399,11 +479,13 @@ msgstr ""
 "c.setParent(null);\n"
 "session.flush();]]>"
 
-#: index.docbook:180
+#. Tag: para
+#: example_parentchild.xml:204
+#, fuzzy, no-c-format
 msgid ""
-"will not remove <literal>c</literal> from the database; it will ony remove "
-"the link to <literal>p</literal> (and cause a <literal>NOT NULL</literal> "
-"constraint violation, in this case). You need to explicitly <literal>delete()"
+"will not remove <literal>c</literal> from the database. In this case, it "
+"will only remove the link to <literal>p</literal> and cause a <literal>NOT "
+"NULL</literal> constraint violation. You need to explicitly <literal>delete()"
 "</literal> the <literal>Child</literal>."
 msgstr ""
 "no quitar&#x00e1; <literal>c</literal> de la base de datos; s&#x00f3;lo "
@@ -412,7 +494,9 @@ msgstr ""
 "Necesitas borrar el hijo expl&#x00ed;citamente llamando a <literal>delete()</"
 "literal>."
 
-#: index.docbook:186
+#. Tag: programlisting
+#: example_parentchild.xml:210
+#, no-c-format
 msgid ""
 "<![CDATA[Parent p = (Parent) session.load(Parent.class, pid);\n"
 "Child c = (Child) p.getChildren().iterator().next();\n"
@@ -426,19 +510,23 @@ msgstr ""
 "session.delete(c);\n"
 "session.flush();]]>"
 
-#: index.docbook:188
+#. Tag: para
+#: example_parentchild.xml:212
+#, fuzzy, no-c-format
 msgid ""
-"Now, in our case, a <literal>Child</literal> can't really exist without its "
-"parent. So if we remove a <literal>Child</literal> from the collection, we "
-"really do want it to be deleted. For this, we must use <literal>cascade="
-"\"all-delete-orphan\"</literal>."
+"In our case, a <literal>Child</literal> cannot exist without its parent. So "
+"if we remove a <literal>Child</literal> from the collection, we do want it "
+"to be deleted. To do this, we must use <literal>cascade=\"all-delete-orphan"
+"\"</literal>."
 msgstr ""
 "Ahora, en nuestro caso, un <literal>Child</literal> no puede existir "
 "realmente sin su padre. De modo que si quitamos un <literal>Child</literal> "
 "de la colecci&#x00f3;n, realmente queremos que sea borrado. Para esto, "
 "debemos usar <literal>cascade=\"all-delete-orphan\"</literal>."
 
-#: index.docbook:194
+#. Tag: programlisting
+#: example_parentchild.xml:218
+#, no-c-format
 msgid ""
 "<![CDATA[<set name=\"children\" inverse=\"true\" cascade=\"all-delete-orphan"
 "\">\n"
@@ -452,13 +540,15 @@ msgstr ""
 "    <one-to-many class=\"Child\"/>\n"
 "</set>]]>"
 
-#: index.docbook:196
+#. Tag: para
+#: example_parentchild.xml:220
+#, fuzzy, no-c-format
 msgid ""
-"Note: even though the collection mapping specifies <literal>inverse=\"true"
-"\"</literal>, cascades are still processed by iterating the collection "
-"elements. So if you require that an object be saved, deleted or updated by "
-"cascade, you must add it to the collection. It is not enough to simply call "
-"<literal>setParent()</literal>."
+"Even though the collection mapping specifies <literal>inverse=\"true\"</"
+"literal>, cascades are still processed by iterating the collection elements. "
+"If you need an object be saved, deleted or updated by cascade, you must add "
+"it to the collection. It is not enough to simply call <literal>setParent()</"
+"literal>."
 msgstr ""
 "Nota: aunque el mapeo de la colecci&#x00f3;n especifique <literal>inverse="
 "\"true\"</literal>, el tratamiento en cascada se procesa a&#x00fa;n al "
@@ -467,24 +557,29 @@ msgstr ""
 "a la colecci&#x00f3;n. No es suficiente con simplemente llamar a "
 "<literal>setParent()</literal>."
 
-#: index.docbook:206
+#. Tag: title
+#: example_parentchild.xml:230
+#, no-c-format
 msgid "Cascades and <literal>unsaved-value</literal>"
 msgstr "Tratamiento en cascada y <literal>unsaved-value</literal>"
 
-#: index.docbook:208
+#. Tag: para
+#: example_parentchild.xml:232
+#, fuzzy, no-c-format
 msgid ""
 "Suppose we loaded up a <literal>Parent</literal> in one <literal>Session</"
-"literal>, made some changes in a UI action and wish to persist these changes "
-"in a new session by calling <literal>update()</literal>. The "
-"<literal>Parent</literal> will contain a collection of childen and, since "
-"cascading update is enabled, Hibernate needs to know which children are "
-"newly instantiated and which represent existing rows in the database. Lets "
-"assume that both <literal>Parent</literal> and <literal>Child</literal> have "
-"genenerated identifier properties of type <literal>Long</literal>. Hibernate "
-"will use the identifier and version/timestamp property value to determine "
-"which of the children are new. (See <xref linkend=\"objectstate-saveorupdate"
-"\"/>.) <emphasis>In Hibernate3, it is no longer necessary to specify an "
-"<literal>unsaved-value</literal> explicitly.</emphasis>"
+"literal>, made some changes in a UI action and wanted to persist these "
+"changes in a new session by calling <literal>update()</literal>. The "
+"<literal>Parent</literal> will contain a collection of children and, since "
+"the cascading update is enabled, Hibernate needs to know which children are "
+"newly instantiated and which represent existing rows in the database. We "
+"will also assume that both <literal>Parent</literal> and <literal>Child</"
+"literal> have generated identifier properties of type <literal>Long</"
+"literal>. Hibernate will use the identifier and version/timestamp property "
+"value to determine which of the children are new. (See <xref linkend="
+"\"objectstate-saveorupdate\"/>.) <emphasis>In Hibernate3, it is no longer "
+"necessary to specify an <literal>unsaved-value</literal> explicitly.</"
+"emphasis>"
 msgstr ""
 "Sup&#x00f3;n que hemos cargado un <literal>Parent</literal> en una "
 "<literal>Session</literal>, hemos hecho algunos cambios en una acci&#x00f3;n "
@@ -502,15 +597,19 @@ msgstr ""
 "necesario especificar un <literal>unsaved-value</literal> expl&#x00ed;"
 "citamente.</emphasis>"
 
-#: index.docbook:220
+#. Tag: para
+#: example_parentchild.xml:244
+#, fuzzy, no-c-format
 msgid ""
 "The following code will update <literal>parent</literal> and <literal>child</"
-"literal> and insert <literal>newChild</literal>."
+"literal> and insert <literal>newChild</literal>:"
 msgstr ""
 "The following code will update <literal>parent</literal> and <literal>child</"
 "literal> and insert <literal>newChild</literal>."
 
-#: index.docbook:225
+#. Tag: programlisting
+#: example_parentchild.xml:249
+#, no-c-format
 msgid ""
 "<![CDATA[//parent and child were both loaded in a previous session\n"
 "parent.addChild(child);\n"
@@ -526,16 +625,17 @@ msgstr ""
 "session.update(parent);\n"
 "session.flush();]]>"
 
-#: index.docbook:227
+#. Tag: para
+#: example_parentchild.xml:251
+#, fuzzy, no-c-format
 msgid ""
-"Well, that's all very well for the case of a generated identifier, but what "
-"about assigned identifiers and composite identifiers? This is more "
-"difficult, since Hibernate can't use the identifier property to distinguish "
-"between a newly instantiated object (with an identifier assigned by the "
-"user) and an object loaded in a previous session. In this case, Hibernate "
-"will either use the timestamp or version property, or will actually query "
-"the second-level cache or, worst case, the database, to see if the row "
-"exists."
+"This may be suitable for the case of a generated identifier, but what about "
+"assigned identifiers and composite identifiers? This is more difficult, "
+"since Hibernate cannot use the identifier property to distinguish between a "
+"newly instantiated object, with an identifier assigned by the user, and an "
+"object loaded in a previous session. In this case, Hibernate will either use "
+"the timestamp or version property, or will actually query the second-level "
+"cache or, worst case, the database, to see if the row exists."
 msgstr ""
 "Bueno, todo eso est&#x00e1; muy bien para el caso de un identificador "
 "generado, pero &#x00bf;qu&#x00e9; de los identificadores asignados y de los "
@@ -547,28 +647,34 @@ msgstr ""
 "bien consultar&#x00e1; realmente el cach&#x00e9; de segundo nivel, o bien, "
 "en el peor de los casos, la base de datos, para ver si existe la fila."
 
-#: index.docbook:260
+#. Tag: title
+#: example_parentchild.xml:284
+#, no-c-format
 msgid "Conclusion"
 msgstr "Conclusi&#x00f3;n"
 
-#: index.docbook:262
+#. Tag: para
+#: example_parentchild.xml:286
+#, fuzzy, no-c-format
 msgid ""
-"There is quite a bit to digest here and it might look confusing first time "
-"around. However, in practice, it all works out very nicely. Most Hibernate "
-"applications use the parent / child pattern in many places."
+"The sections we have just covered can be a bit confusing. However, in "
+"practice, it all works out nicely. Most Hibernate applications use the "
+"parent/child pattern in many places."
 msgstr ""
 "Hay que resumir un poco aqu&#x00ed; y podr&#x00ed;a parecer confuso a la "
 "primera vez. Sin embargo, en la pr&#x00e1;ctica, todo funciona muy "
 "agradablemente. La mayor&#x00ed;a de las aplicaciones de Hibernate usan el "
 "patr&#x00f3;n padre / hijo en muchos sitios."
 
-#: index.docbook:267
+#. Tag: para
+#: example_parentchild.xml:291
+#, fuzzy, no-c-format
 msgid ""
 "We mentioned an alternative in the first paragraph. None of the above issues "
 "exist in the case of <literal>&lt;composite-element&gt;</literal> mappings, "
-"which have exactly the semantics of a parent / child relationship. "
-"Unfortunately, there are two big limitations to composite element classes: "
-"composite elements may not own collections, and they should not be the child "
+"which have exactly the semantics of a parent/child relationship. "
+"Unfortunately, there are two big limitations with composite element classes: "
+"composite elements cannot own collections and they should not be the child "
 "of any entity other than the unique parent."
 msgstr ""
 "Hemos mencionado una alternativa en el primer p&#x00e1;rrafo. Ninguno de los "
@@ -579,8 +685,8 @@ msgstr ""
 "compuestos no pueden poseer sus propias colecciones, y no deben ser el hijo "
 "de cualquier otra entidad que no sea su padre &#x00fa;nico."
 
-msgid "ROLES_OF_TRANSLATORS"
-msgstr "<!--TRANS:ROLES_OF_TRANSLATORS-->"
+#~ msgid "ROLES_OF_TRANSLATORS"
+#~ msgstr "<!--TRANS:ROLES_OF_TRANSLATORS-->"
 
-msgid "CREDIT_FOR_TRANSLATORS"
-msgstr "<!--TRANS:CREDIT_FOR_TRANSLATORS-->"
+#~ msgid "CREDIT_FOR_TRANSLATORS"
+#~ msgstr "<!--TRANS:CREDIT_FOR_TRANSLATORS-->"

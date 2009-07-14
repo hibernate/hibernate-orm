@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2007-10-25 07:47+0000\n"
+"POT-Creation-Date: 2009-07-14 19:56+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -11,18 +11,18 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 
 #. Tag: title
-#: filters.xml:5
+#: filters.xml:29
 #, no-c-format
 msgid "Filtering data"
 msgstr "Filtrando dados"
 
 #. Tag: para
-#: filters.xml:7
-#, no-c-format
+#: filters.xml:31
+#, fuzzy, no-c-format
 msgid ""
 "Hibernate3 provides an innovative new approach to handling data with "
 "\"visibility\" rules. A <emphasis>Hibernate filter</emphasis> is a global, "
-"named, parameterized filter that may be enabled or disabled for a particular "
+"named, parameterized filter that can be enabled or disabled for a particular "
 "Hibernate session."
 msgstr ""
 "O Hibernate3 provê um novo método inovador para manusear dados com regras de "
@@ -31,23 +31,23 @@ msgstr ""
 "Session do Hibernate."
 
 #. Tag: title
-#: filters.xml:14
+#: filters.xml:38
 #, no-c-format
 msgid "Hibernate filters"
 msgstr "Filtros do Hibernate"
 
 #. Tag: para
-#: filters.xml:16
-#, no-c-format
+#: filters.xml:40
+#, fuzzy, no-c-format
 msgid ""
-"Hibernate3 adds the ability to pre-define filter criteria and attach those "
-"filters at both a class and a collection level. A filter criteria is the "
-"ability to define a restriction clause very similiar to the existing \"where"
-"\" attribute available on the class and various collection elements. Except "
-"these filter conditions can be parameterized. The application can then make "
-"the decision at runtime whether given filters should be enabled and what "
-"their parameter values should be. Filters can be used like database views, "
-"but parameterized inside the application."
+"Hibernate3 has the ability to pre-define filter criteria and attach those "
+"filters at both a class level and a collection level. A filter criteria "
+"allows you to define a restriction clause similar to the existing \"where\" "
+"attribute available on the class and various collection elements. These "
+"filter conditions, however, can be parameterized. The application can then "
+"decide at runtime whether certain filters should be enabled and what their "
+"parameter values should be. Filters can be used like database views, but "
+"they are parameterized inside the application."
 msgstr ""
 "O Hibernate tem a habilidade de pré definir os critérios do filtro e anexar "
 "esses filtros no nível da classe e no nível da coleção. Um critério do "
@@ -60,7 +60,7 @@ msgstr ""
 "à aplicação."
 
 #. Tag: para
-#: filters.xml:26
+#: filters.xml:50
 #, no-c-format
 msgid ""
 "In order to use filters, they must first be defined and then attached to the "
@@ -74,7 +74,7 @@ msgstr ""
 "<literal>&lt;hibernate-mapping/&gt;</literal>:"
 
 #. Tag: programlisting
-#: filters.xml:32
+#: filters.xml:56
 #, no-c-format
 msgid ""
 "<![CDATA[<filter-def name=\"myFilter\">\n"
@@ -83,13 +83,13 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: filters.xml:34
-#, no-c-format
-msgid "Then, this filter can be attached to a class:"
+#: filters.xml:58
+#, fuzzy, no-c-format
+msgid "This filter can then be attached to a class:"
 msgstr "Então esse filtro pode ser anexo à uma classe:"
 
 #. Tag: programlisting
-#: filters.xml:38
+#: filters.xml:62
 #, no-c-format
 msgid ""
 "<![CDATA[<class name=\"myClass\" ...>\n"
@@ -100,13 +100,13 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: filters.xml:40
-#, no-c-format
-msgid "or, to a collection:"
+#: filters.xml:64
+#, fuzzy, no-c-format
+msgid "Or, to a collection:"
 msgstr "ou em uma coleção:"
 
 #. Tag: programlisting
-#: filters.xml:44
+#: filters.xml:68
 #, no-c-format
 msgid ""
 "<![CDATA[<set ...>\n"
@@ -116,23 +116,23 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: filters.xml:46
-#, no-c-format
-msgid "or, even to both (or multiples of each) at the same time."
+#: filters.xml:70
+#, fuzzy, no-c-format
+msgid "Or, to both or multiples of each at the same time."
 msgstr "ou mesmo para ambos (ou muitos de cada) ao mesmo tempo."
 
 #. Tag: para
-#: filters.xml:50
-#, no-c-format
+#: filters.xml:74
+#, fuzzy, no-c-format
 msgid ""
 "The methods on <literal>Session</literal> are: <literal>enableFilter(String "
 "filterName)</literal>, <literal>getEnabledFilter(String filterName)</"
 "literal>, and <literal>disableFilter(String filterName)</literal>. By "
-"default, filters are <emphasis>not</emphasis> enabled for a given session; "
-"they must be explcitly enabled through use of the <literal>Session."
-"enabledFilter()</literal> method, which returns an instance of the "
-"<literal>Filter</literal> interface. Using the simple filter defined above, "
-"this would look like:"
+"default, filters are <emphasis>not</emphasis> enabled for a given session. "
+"Filters must be enabled through use of the <literal>Session.enableFilter()</"
+"literal> method, which returns an instance of the <literal>Filter</literal> "
+"interface. If you used the simple filter defined above, it would look like "
+"this:"
 msgstr ""
 "Os métodos na <literal>Session</literal> são: <literal>enableFilter(String "
 "filterName)</literal>, <literal>getEnabledFilter(String filterName)</"
@@ -143,7 +143,7 @@ msgstr ""
 "Usando o filtro simples definido acima, o código se pareceria com o seguinte:"
 
 #. Tag: programlisting
-#: filters.xml:59
+#: filters.xml:83
 #, no-c-format
 msgid ""
 "<![CDATA[session.enableFilter(\"myFilter\").setParameter(\"myFilterParam\", "
@@ -151,26 +151,27 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: filters.xml:61
-#, no-c-format
+#: filters.xml:85
+#, fuzzy, no-c-format
 msgid ""
-"Note that methods on the org.hibernate.Filter interface do allow the method-"
-"chaining common to much of Hibernate."
+"Methods on the org.hibernate.Filter interface do allow the method-chaining "
+"common to much of Hibernate."
 msgstr ""
 "Veja que os métodos da interface org.hibernate.Filter permite o encadeamento "
 "de funções, comum à maioria das funções do Hibernate."
 
 #. Tag: para
-#: filters.xml:65
-#, no-c-format
+#: filters.xml:89
+#, fuzzy, no-c-format
 msgid ""
-"A full example, using temporal data with an effective record date pattern:"
+"The following is a full example, using temporal data with an effective "
+"record date pattern:"
 msgstr ""
 "Um exemplo completo, usando dados temporais com um padrão efetivo de "
 "registro de datas:"
 
 #. Tag: programlisting
-#: filters.xml:69
+#: filters.xml:93
 #, no-c-format
 msgid ""
 "<![CDATA[<filter-def name=\"effectiveDate\">\n"
@@ -208,18 +209,17 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: filters.xml:71
-#, no-c-format
+#: filters.xml:95
+#, fuzzy, no-c-format
 msgid ""
-"Then, in order to ensure that you always get back currently effective "
-"records, simply enable the filter on the session prior to retrieving "
-"employee data:"
+"In order to ensure that you are provided with currently effective records, "
+"enable the filter on the session prior to retrieving employee data:"
 msgstr ""
 "Para garantir que você sempre tenha registro efetivos, simplesmente habilite "
 "o filtro na session antes de recuperar os dados dos empregados:"
 
 #. Tag: programlisting
-#: filters.xml:76
+#: filters.xml:100
 #, no-c-format
 msgid ""
 "<![CDATA[Session session = ...;\n"
@@ -233,26 +233,26 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: filters.xml:78
-#, no-c-format
+#: filters.xml:102
+#, fuzzy, no-c-format
 msgid ""
-"In the HQL above, even though we only explicitly mentioned a salary "
-"constraint on the results, because of the enabled filter the query will "
-"return only currently active employees who have a salary greater than a "
-"million dollars."
+"Even though a salary constraint was mentioned explicitly on the results in "
+"the above HQL, because of the enabled filter, the query will return only "
+"currently active employees who have a salary greater than one million "
+"dollars."
 msgstr ""
 "No HQL acima, mesmo que mencionamos apenas uma restrição de salário nos "
 "resultados, por causa do filtro habilitado, a consulta retornará apenas os "
 "funcionários ativos cujo salário é maior que um milhão de dólares."
 
 #. Tag: para
-#: filters.xml:84
-#, no-c-format
+#: filters.xml:108
+#, fuzzy, no-c-format
 msgid ""
-"Note: if you plan on using filters with outer joining (either through HQL or "
-"load fetching) be careful of the direction of the condition expression. Its "
-"safest to set this up for left outer joining; in general, place the "
-"parameter first followed by the column name(s) after the operator."
+"If you want to use filters with outer joining, either through HQL or load "
+"fetching, be careful of the direction of the condition expression. It is "
+"safest to set this up for left outer joining. Place the parameter first "
+"followed by the column name(s) after the operator."
 msgstr ""
 "Nota: se você planeja usar filtros com outer join (por HQL ou por load "
 "fetching) seja cuidadoso na direção da expressão de condição. É mais seguro "
@@ -260,18 +260,18 @@ msgstr ""
 "primeiro seguido pelo nome da coluna após o operador."
 
 #. Tag: para
-#: filters.xml:91
-#, no-c-format
+#: filters.xml:115
+#, fuzzy, no-c-format
 msgid ""
-"After being defined a filter might be attached to multiple entities and/or "
-"collections each with its own condition. That can be tedious when the "
-"conditions are the same each time. Thus <literal>&lt;filter-def/&gt;</"
-"literal> allows defining a default condition, either as an attribute or "
-"CDATA:"
+"After being defined, a filter might be attached to multiple entities and/or "
+"collections each with its own condition. This can be problematic when the "
+"conditions are the same each time. Using <literal>&lt;filter-def/&gt;</"
+"literal> allows you to definine a default condition, either as an attribute "
+"or CDATA:"
 msgstr "translator-credits"
 
 #. Tag: programlisting
-#: filters.xml:98
+#: filters.xml:122
 #, no-c-format
 msgid ""
 "<![CDATA[<filter-def name=\"myFilter\" condition=\"abc > xyz\">...</filter-"
@@ -280,11 +280,11 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: filters.xml:100
+#: filters.xml:124
 #, no-c-format
 msgid ""
-"This default condition will then be used whenever the filter is attached to "
-"something without specifying a condition. Note that this means you can give "
-"a specific condition as part of the attachment of the filter which overrides "
-"the default condition in that particular case."
+"This default condition will be used whenever the filter is attached to "
+"something without specifying a condition. This means you can give a specific "
+"condition as part of the attachment of the filter that overrides the default "
+"condition in that particular case."
 msgstr ""

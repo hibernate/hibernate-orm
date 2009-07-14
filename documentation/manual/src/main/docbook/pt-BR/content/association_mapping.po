@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2007-10-25 07:47+0000\n"
+"POT-Creation-Date: 2009-07-14 19:55+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -11,24 +11,24 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 
 #. Tag: title
-#: association_mapping.xml:6
+#: association_mapping.xml:30
 #, no-c-format
 msgid "Association Mappings"
 msgstr "Mapeamento de Associações"
 
 #. Tag: title
-#: association_mapping.xml:9
+#: association_mapping.xml:33
 #, no-c-format
 msgid "Introduction"
 msgstr "Introdução"
 
 #. Tag: para
-#: association_mapping.xml:11
-#, no-c-format
+#: association_mapping.xml:35
+#, fuzzy, no-c-format
 msgid ""
-"Association mappings are the often most difficult thing to get right. In "
-"this section we'll go through the canonical cases one by one, starting with "
-"unidirectional mappings, and then considering the bidirectional cases. We'll "
+"Association mappings are often the most difficult thing to implement "
+"correctly. In this section we examine some canonical cases one by one, "
+"starting with unidirectional mappings and then bidirectional cases. We will "
 "use <literal>Person</literal> and <literal>Address</literal> in all the "
 "examples."
 msgstr ""
@@ -39,22 +39,22 @@ msgstr ""
 "literal> em todos os exemplos."
 
 #. Tag: para
-#: association_mapping.xml:19
-#, no-c-format
+#: association_mapping.xml:43
+#, fuzzy, no-c-format
 msgid ""
-"We'll classify associations by whether or not they map to an intervening "
-"join table, and by multiplicity."
+"Associations will be classified by multiplicity and whether or not they map "
+"to an intervening join table."
 msgstr ""
 "Nós classificaremos as associações pelo seu mapeamento ou a falta do mesmo, "
 "sua intervenção na tabela associativa, e pela sua multiplicidade."
 
 #. Tag: para
-#: association_mapping.xml:24
-#, no-c-format
+#: association_mapping.xml:48
+#, fuzzy, no-c-format
 msgid ""
-"Nullable foreign keys are not considered good practice in traditional data "
-"modelling, so all our examples use not null foreign keys. This is not a "
-"requirement of Hibernate, and the mappings will all work if you drop the "
+"Nullable foreign keys are not considered to be good practice in traditional "
+"data modelling, so our examples do not use nullable foreign keys. This is "
+"not a requirement of Hibernate, and the mappings will work if you drop the "
 "nullability constraints."
 msgstr ""
 "O uso de chaves estrangeiras não obrigatórias não é considerada uma boa "
@@ -64,19 +64,19 @@ msgstr ""
 "obrigatoriedade."
 
 #. Tag: title
-#: association_mapping.xml:34
+#: association_mapping.xml:58
 #, no-c-format
 msgid "Unidirectional associations"
 msgstr "Associações Unidirecionais"
 
 #. Tag: title
-#: association_mapping.xml:37 association_mapping.xml:108
-#, no-c-format
-msgid "many to one"
+#: association_mapping.xml:61 association_mapping.xml:132
+#, fuzzy, no-c-format
+msgid "Many-to-one"
 msgstr "muitos para um"
 
 #. Tag: para
-#: association_mapping.xml:39
+#: association_mapping.xml:63
 #, no-c-format
 msgid ""
 "A <emphasis>unidirectional many-to-one association</emphasis> is the most "
@@ -86,7 +86,7 @@ msgstr ""
 "mais comum de associação unidirecional."
 
 #. Tag: programlisting
-#: association_mapping.xml:44
+#: association_mapping.xml:68
 #, no-c-format
 msgid ""
 "<![CDATA[<class name=\"Person\">\n"
@@ -106,7 +106,7 @@ msgid ""
 msgstr ""
 
 #. Tag: programlisting
-#: association_mapping.xml:45 association_mapping.xml:161
+#: association_mapping.xml:69 association_mapping.xml:185
 #, no-c-format
 msgid ""
 "<![CDATA[\n"
@@ -117,10 +117,10 @@ msgid ""
 msgstr ""
 
 #. Tag: title
-#: association_mapping.xml:50 association_mapping.xml:121
-#: association_mapping.xml:185 association_mapping.xml:225
+#: association_mapping.xml:74 association_mapping.xml:145
+#: association_mapping.xml:210
 #, fuzzy, no-c-format
-msgid "one to one"
+msgid "One-to-one"
 msgstr ""
 "#-#-#-#-#  - (PACKAGE VERSION)  #-#-#-#-#\n"
 "um para um\n"
@@ -132,7 +132,7 @@ msgstr ""
 "one to one"
 
 #. Tag: para
-#: association_mapping.xml:52
+#: association_mapping.xml:76
 #, no-c-format
 msgid ""
 "A <emphasis>unidirectional one-to-one association on a foreign key</"
@@ -144,7 +144,7 @@ msgstr ""
 "coluna."
 
 #. Tag: programlisting
-#: association_mapping.xml:57
+#: association_mapping.xml:81
 #, no-c-format
 msgid ""
 "<![CDATA[<class name=\"Person\">\n"
@@ -165,7 +165,7 @@ msgid ""
 msgstr ""
 
 #. Tag: programlisting
-#: association_mapping.xml:58 association_mapping.xml:193
+#: association_mapping.xml:82 association_mapping.xml:218
 #, no-c-format
 msgid ""
 "<![CDATA[\n"
@@ -176,19 +176,19 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: association_mapping.xml:60
-#, no-c-format
+#: association_mapping.xml:84
+#, fuzzy, no-c-format
 msgid ""
 "A <emphasis>unidirectional one-to-one association on a primary key</"
-"emphasis> usually uses a special id generator. (Notice that we've reversed "
-"the direction of the association in this example.)"
+"emphasis> usually uses a special id generator In this example, however, we "
+"have reversed the direction of the association:"
 msgstr ""
 "Uma <emphasis>associação unidirecional um-para-um na chave primaria</"
 "emphasis> geralmente usa um gerador de id special. ( Note que nós invertemos "
 "a direção da associação nesse exemplo)."
 
 #. Tag: programlisting
-#: association_mapping.xml:66
+#: association_mapping.xml:90
 #, no-c-format
 msgid ""
 "<![CDATA[<class name=\"Person\">\n"
@@ -208,7 +208,7 @@ msgid ""
 msgstr ""
 
 #. Tag: programlisting
-#: association_mapping.xml:67 association_mapping.xml:201
+#: association_mapping.xml:91 association_mapping.xml:226
 #, no-c-format
 msgid ""
 "<![CDATA[\n"
@@ -218,24 +218,24 @@ msgid ""
 msgstr ""
 
 #. Tag: title
-#: association_mapping.xml:72 association_mapping.xml:94
-#, no-c-format
-msgid "one to many"
+#: association_mapping.xml:96 association_mapping.xml:118
+#, fuzzy, no-c-format
+msgid "One-to-many"
 msgstr "um para muitos"
 
 #. Tag: para
-#: association_mapping.xml:74
-#, no-c-format
+#: association_mapping.xml:98
+#, fuzzy, no-c-format
 msgid ""
 "A <emphasis>unidirectional one-to-many association on a foreign key</"
-"emphasis> is a very unusual case, and is not really recommended."
+"emphasis> is an unusual case, and is not recommended."
 msgstr ""
 "Uma <emphasis>associação unidirecional um-para-muitos em uma chave "
 "estrangeira</emphasis> é um caso muito incomum, e realmente não é "
 "recomendada."
 
 #. Tag: programlisting
-#: association_mapping.xml:79
+#: association_mapping.xml:103
 #, no-c-format
 msgid ""
 "<![CDATA[<class name=\"Person\">\n"
@@ -257,7 +257,7 @@ msgid ""
 msgstr ""
 
 #. Tag: programlisting
-#: association_mapping.xml:80
+#: association_mapping.xml:104
 #, no-c-format
 msgid ""
 "<![CDATA[\n"
@@ -268,27 +268,26 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: association_mapping.xml:82
-#, no-c-format
-msgid "We think it's better to use a join table for this kind of association."
+#: association_mapping.xml:106
+#, fuzzy, no-c-format
+msgid "You should instead use a join table for this kind of association."
 msgstr ""
 "Nós achamos que é melhor usar uma tabela associativa para este tipo de "
 "associação."
 
 #. Tag: title
-#: association_mapping.xml:91
+#: association_mapping.xml:115
 #, no-c-format
 msgid "Unidirectional associations with join tables"
 msgstr "Associações Unidirecionais com tabelas associativas"
 
 #. Tag: para
-#: association_mapping.xml:96
-#, no-c-format
+#: association_mapping.xml:120
+#, fuzzy, no-c-format
 msgid ""
 "A <emphasis>unidirectional one-to-many association on a join table</"
-"emphasis> is much preferred. Notice that by specifying <literal>unique=\"true"
-"\"</literal>, we have changed the multiplicity from many-to-many to one-to-"
-"many."
+"emphasis> is the preferred option. Specifying <literal>unique=\"true\"</"
+"literal>, changes the multiplicity from many-to-many to one-to-many."
 msgstr ""
 "Uma <emphasis>associação um-para-muitos unidirecional usando uma tabela "
 "associativa</emphasis> e o mais comum. Note que se especificarmos "
@@ -296,7 +295,7 @@ msgstr ""
 "muitos-para-muitos para um-para-muitos."
 
 #. Tag: programlisting
-#: association_mapping.xml:102
+#: association_mapping.xml:126
 #, no-c-format
 msgid ""
 "<![CDATA[<class name=\"Person\">\n"
@@ -319,7 +318,7 @@ msgid ""
 msgstr ""
 
 #. Tag: programlisting
-#: association_mapping.xml:103
+#: association_mapping.xml:127
 #, no-c-format
 msgid ""
 "<![CDATA[\n"
@@ -331,17 +330,17 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: association_mapping.xml:110
-#, no-c-format
+#: association_mapping.xml:134
+#, fuzzy, no-c-format
 msgid ""
 "A <emphasis>unidirectional many-to-one association on a join table</"
-"emphasis> is quite common when the association is optional."
+"emphasis> is common when the association is optional. For example:"
 msgstr ""
 "Uma <emphasis>associação unidirecional muitos-para-um em uma tabela "
 "associativa</emphasis> é bastante comum quando a associação for opcional."
 
 #. Tag: programlisting
-#: association_mapping.xml:115
+#: association_mapping.xml:139
 #, no-c-format
 msgid ""
 "<![CDATA[<class name=\"Person\">\n"
@@ -365,7 +364,7 @@ msgid ""
 msgstr ""
 
 #. Tag: programlisting
-#: association_mapping.xml:116
+#: association_mapping.xml:140
 #, no-c-format
 msgid ""
 "<![CDATA[\n"
@@ -377,17 +376,17 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: association_mapping.xml:123
-#, no-c-format
+#: association_mapping.xml:147
+#, fuzzy, no-c-format
 msgid ""
 "A <emphasis>unidirectional one-to-one association on a join table</emphasis> "
-"is extremely unusual, but possible."
+"is possible, but extremely unusual."
 msgstr ""
 "Uma <emphasis>associação unidirecional um-para-um em uma tabela associativa</"
 "emphasis> é extremamente incomum, mas possível."
 
 #. Tag: programlisting
-#: association_mapping.xml:128
+#: association_mapping.xml:152
 #, no-c-format
 msgid ""
 "<![CDATA[<class name=\"Person\">\n"
@@ -413,7 +412,7 @@ msgid ""
 msgstr ""
 
 #. Tag: programlisting
-#: association_mapping.xml:129 association_mapping.xml:233
+#: association_mapping.xml:153 association_mapping.xml:258
 #, no-c-format
 msgid ""
 "<![CDATA[\n"
@@ -425,23 +424,23 @@ msgid ""
 msgstr ""
 
 #. Tag: title
-#: association_mapping.xml:134 association_mapping.xml:238
-#, no-c-format
-msgid "many to many"
+#: association_mapping.xml:158 association_mapping.xml:263
+#, fuzzy, no-c-format
+msgid "Many-to-many"
 msgstr "muitos para muitos"
 
 #. Tag: para
-#: association_mapping.xml:136
-#, no-c-format
+#: association_mapping.xml:160
+#, fuzzy, no-c-format
 msgid ""
-"Finally, we have a <emphasis>unidirectional many-to-many association</"
-"emphasis>."
+"Finally, here is an example of a <emphasis>unidirectional many-to-many "
+"association</emphasis>."
 msgstr ""
 "Finalmente, nós temos a <emphasis>associação unidirecional muitos-para- "
 "muitos</emphasis>."
 
 #. Tag: programlisting
-#: association_mapping.xml:140
+#: association_mapping.xml:164
 #, no-c-format
 msgid ""
 "<![CDATA[<class name=\"Person\">\n"
@@ -463,7 +462,7 @@ msgid ""
 msgstr ""
 
 #. Tag: programlisting
-#: association_mapping.xml:141 association_mapping.xml:246
+#: association_mapping.xml:165 association_mapping.xml:271
 #, no-c-format
 msgid ""
 "<![CDATA[\n"
@@ -475,29 +474,30 @@ msgid ""
 msgstr ""
 
 #. Tag: title
-#: association_mapping.xml:148
+#: association_mapping.xml:172
 #, no-c-format
 msgid "Bidirectional associations"
 msgstr "Associações Bidirecionais"
 
 #. Tag: title
-#: association_mapping.xml:151 association_mapping.xml:211
-#, no-c-format
-msgid "one to many / many to one"
+#: association_mapping.xml:175 association_mapping.xml:236
+#, fuzzy, no-c-format
+msgid "one-to-many / many-to-one"
 msgstr "um para muitos / muitos para um"
 
 #. Tag: para
-#: association_mapping.xml:153
-#, no-c-format
+#: association_mapping.xml:177
+#, fuzzy, no-c-format
 msgid ""
 "A <emphasis>bidirectional many-to-one association</emphasis> is the most "
-"common kind of association. (This is the standard parent/child relationship.)"
+"common kind of association. The following example illustrates the standard "
+"parent/child relationship."
 msgstr ""
 "Uma <emphasis>associação bidirecional muitos-para-um</emphasis> é o tipo "
 "mais comum de associação. (Esse é o relacionamento padrão pai / filho. )"
 
 #. Tag: programlisting
-#: association_mapping.xml:159
+#: association_mapping.xml:183
 #, no-c-format
 msgid ""
 "<![CDATA[<class name=\"Person\">\n"
@@ -521,15 +521,15 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: association_mapping.xml:163
-#, no-c-format
+#: association_mapping.xml:187
+#, fuzzy, no-c-format
 msgid ""
-"If you use a <literal>List</literal> (or other indexed collection) you need "
-"to set the <literal>key</literal> column of the foreign key to <literal>not "
-"null</literal>, and let Hibernate manage the association from the "
-"collections side to maintain the index of each element (making the other "
-"side virtually inverse by setting <literal>update=\"false\"</literal> and "
-"<literal>insert=\"false\"</literal>):"
+"If you use a <literal>List</literal>, or other indexed collection, set the "
+"<literal>key</literal> column of the foreign key to <literal>not null</"
+"literal>. Hibernate will manage the association from the collections side to "
+"maintain the index of each element, making the other side virtually inverse "
+"by setting <literal>update=\"false\"</literal> and <literal>insert=\"false"
+"\"</literal>:"
 msgstr ""
 "Se você usar uma <literal>List</literal> ( ou outra coleção indexada ), você "
 "precisa especificar a coluna <literal>chave</literal> estrangeira como not "
@@ -539,7 +539,7 @@ msgstr ""
 "literal> e <literal>insert=\"false\"</literal>):"
 
 #. Tag: programlisting
-#: association_mapping.xml:171
+#: association_mapping.xml:195
 #, no-c-format
 msgid ""
 "<![CDATA[<class name=\"Person\">\n"
@@ -564,13 +564,13 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: association_mapping.xml:173
-#, no-c-format
+#: association_mapping.xml:197
+#, fuzzy, no-c-format
 msgid ""
-"It is important that you define <literal>not-null=\"true\"</literal> on the "
-"<literal>&lt;key&gt;</literal> element of the collection mapping if the "
-"underlying foreign key column is <literal>NOT NULL</literal>. Don't only "
-"declare <literal>not-null=\"true\"</literal> on a possible nested "
+"If the underlying foreign key column is <literal>NOT NULL</literal>, it is "
+"important that you define <literal>not-null=\"true\"</literal> on the "
+"<literal>&lt;key&gt;</literal> element of the collection mapping. Do not "
+"only declare <literal>not-null=\"true\"</literal> on a possible nested "
 "<literal>&lt;column&gt;</literal> element, but on the <literal>&lt;key&gt;</"
 "literal> element."
 msgstr ""
@@ -582,17 +582,17 @@ msgstr ""
 "literal>."
 
 #. Tag: para
-#: association_mapping.xml:187
-#, no-c-format
+#: association_mapping.xml:212
+#, fuzzy, no-c-format
 msgid ""
 "A <emphasis>bidirectional one-to-one association on a foreign key</emphasis> "
-"is quite common."
+"is common:"
 msgstr ""
 "Uma <emphasis>associação bidirecional um para um em uma chave estrangeira</"
 "emphasis> é bastante comum."
 
 #. Tag: programlisting
-#: association_mapping.xml:192
+#: association_mapping.xml:217
 #, no-c-format
 msgid ""
 "<![CDATA[<class name=\"Person\">\n"
@@ -615,17 +615,17 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: association_mapping.xml:195
-#, no-c-format
+#: association_mapping.xml:220
+#, fuzzy, no-c-format
 msgid ""
 "A <emphasis>bidirectional one-to-one association on a primary key</emphasis> "
-"uses the special id generator."
+"uses the special id generator:"
 msgstr ""
 "Uma <emphasis>associação bidirecional um para um em uma chave primária</"
 "emphasis> usa um gerador de id especial."
 
 #. Tag: programlisting
-#: association_mapping.xml:200
+#: association_mapping.xml:225
 #, no-c-format
 msgid ""
 "<![CDATA[<class name=\"Person\">\n"
@@ -647,25 +647,26 @@ msgid ""
 msgstr ""
 
 #. Tag: title
-#: association_mapping.xml:208
+#: association_mapping.xml:233
 #, no-c-format
 msgid "Bidirectional associations with join tables"
 msgstr "Associações Bidirecionais com tabelas associativas"
 
 #. Tag: para
-#: association_mapping.xml:213
-#, no-c-format
+#: association_mapping.xml:238
+#, fuzzy, no-c-format
 msgid ""
-"A <emphasis>bidirectional one-to-many association on a join table</"
-"emphasis>. Note that the <literal>inverse=\"true\"</literal> can go on "
-"either end of the association, on the collection, or on the join."
+"The following is an example of a <emphasis>bidirectional one-to-many "
+"association on a join table</emphasis>. The <literal>inverse=\"true\"</"
+"literal> can go on either end of the association, on the collection, or on "
+"the join."
 msgstr ""
 "Uma <emphasis>associação bidirecional um para muitos em uma tabela "
 "associativa</emphasis>. Veja que <literal>inverse=\"true\"</literal> pode "
 "ser colocado em qualquer ponta associação, na coleção, ou no join."
 
 #. Tag: programlisting
-#: association_mapping.xml:219
+#: association_mapping.xml:244
 #, no-c-format
 msgid ""
 "<![CDATA[<class name=\"Person\">\n"
@@ -697,7 +698,7 @@ msgid ""
 msgstr ""
 
 #. Tag: programlisting
-#: association_mapping.xml:220
+#: association_mapping.xml:245
 #, no-c-format
 msgid ""
 "<![CDATA[\n"
@@ -708,18 +709,32 @@ msgid ""
 "        ]]>"
 msgstr ""
 
+#. Tag: title
+#: association_mapping.xml:250
+#, fuzzy, no-c-format
+msgid "one to one"
+msgstr ""
+"#-#-#-#-#  - (PACKAGE VERSION)  #-#-#-#-#\n"
+"um para um\n"
+"#-#-#-#-#  - (PACKAGE VERSION)  #-#-#-#-#\n"
+"um para um\n"
+"#-#-#-#-#  - (PACKAGE VERSION)  #-#-#-#-#\n"
+"um para um\n"
+"#-#-#-#-#  - (PACKAGE VERSION)  #-#-#-#-#\n"
+"one to one"
+
 #. Tag: para
-#: association_mapping.xml:227
-#, no-c-format
+#: association_mapping.xml:252
+#, fuzzy, no-c-format
 msgid ""
 "A <emphasis>bidirectional one-to-one association on a join table</emphasis> "
-"is extremely unusual, but possible."
+"is possible, but extremely unusual."
 msgstr ""
 "Uma <emphasis>associação bidirecional um-para-um em uma tabela de "
 "associação</emphasis> é algo bastante incomum, mas possivel."
 
 #. Tag: programlisting
-#: association_mapping.xml:232
+#: association_mapping.xml:257
 #, no-c-format
 msgid ""
 "<![CDATA[<class name=\"Person\">\n"
@@ -755,10 +770,10 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: association_mapping.xml:240
-#, no-c-format
+#: association_mapping.xml:265
+#, fuzzy, no-c-format
 msgid ""
-"Finally, we have a <emphasis>bidirectional many-to-many association</"
+"Here is an example of a <emphasis>bidirectional many-to-many association</"
 "emphasis>."
 msgstr ""
 "Finally, we have a <emphasis>bidirectional many-to-many association</"
@@ -766,7 +781,7 @@ msgstr ""
 "muitos."
 
 #. Tag: programlisting
-#: association_mapping.xml:244
+#: association_mapping.xml:269
 #, no-c-format
 msgid ""
 "<![CDATA[<class name=\"Person\">\n"
@@ -793,21 +808,21 @@ msgid ""
 msgstr ""
 
 #. Tag: title
-#: association_mapping.xml:253
+#: association_mapping.xml:278
 #, no-c-format
 msgid "More complex association mappings"
 msgstr "Mapeamento de associações mais complexas"
 
 #. Tag: para
-#: association_mapping.xml:255
-#, no-c-format
+#: association_mapping.xml:280
+#, fuzzy, no-c-format
 msgid ""
 "More complex association joins are <emphasis>extremely</emphasis> rare. "
-"Hibernate makes it possible to handle more complex situations using SQL "
-"fragments embedded in the mapping document. For example, if a table with "
-"historical account information data defines <literal>accountNumber</"
-"literal>, <literal>effectiveEndDate</literal> and "
-"<literal>effectiveStartDate</literal>columns, mapped as follows:"
+"Hibernate handles more complex situations by using SQL fragments embedded in "
+"the mapping document. For example, if a table with historical account "
+"information data defines <literal>accountNumber</literal>, "
+"<literal>effectiveEndDate</literal> and <literal>effectiveStartDate</"
+"literal>columns, it would be mapped as follows:"
 msgstr ""
 "More complex association joins are <emphasis>extremely</emphasis> rare. "
 "Hibernate makes it possible to handle more complex situations using SQL "
@@ -822,7 +837,7 @@ msgstr ""
 "effectiveEndDate e effectiveStartDate, mapeadas assim como segue:"
 
 #. Tag: programlisting
-#: association_mapping.xml:264
+#: association_mapping.xml:289
 #, no-c-format
 msgid ""
 "<![CDATA[<properties name=\"currentAccountKey\">\n"
@@ -837,11 +852,11 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: association_mapping.xml:266
-#, no-c-format
+#: association_mapping.xml:291
+#, fuzzy, no-c-format
 msgid ""
-"Then we can map an association to the <emphasis>current</emphasis> instance "
-"(the one with null <literal>effectiveEndDate</literal>) using:"
+"You can then map an association to the <emphasis>current</emphasis> "
+"instance, the one with null <literal>effectiveEndDate</literal>, by using:"
 msgstr ""
 "Then we can map an association to the <emphasis>current</emphasis> instance "
 "(the one with null <literal>effectiveEndDate</literal>) using: Então nós "
@@ -849,7 +864,7 @@ msgstr ""
 "effectiveEndDate igual a null) usando:"
 
 #. Tag: programlisting
-#: association_mapping.xml:271
+#: association_mapping.xml:296
 #, no-c-format
 msgid ""
 "<![CDATA[<many-to-one name=\"currentAccountInfo\" \n"
@@ -861,15 +876,15 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: association_mapping.xml:273
-#, no-c-format
+#: association_mapping.xml:298
+#, fuzzy, no-c-format
 msgid ""
 "In a more complex example, imagine that the association between "
 "<literal>Employee</literal> and <literal>Organization</literal> is "
 "maintained in an <literal>Employment</literal> table full of historical "
-"employment data. Then an association to the employee's <emphasis>most "
-"recent</emphasis> employer (the one with the most recent <literal>startDate</"
-"literal>) might be mapped this way:"
+"employment data. An association to the employee's <emphasis>most recent</"
+"emphasis> employer, the one with the most recent <literal>startDate</"
+"literal>, could be mapped in the following way:"
 msgstr ""
 "In a more complex example, imagine that the association between "
 "<literal>Employee</literal> and <literal>Organization</literal> is "
@@ -883,7 +898,7 @@ msgstr ""
 "startDate) deve ser mapeado desta maneira:"
 
 #. Tag: programlisting
-#: association_mapping.xml:281
+#: association_mapping.xml:306
 #, no-c-format
 msgid ""
 "<![CDATA[<join>\n"
@@ -901,11 +916,11 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: association_mapping.xml:283
-#, no-c-format
+#: association_mapping.xml:308
+#, fuzzy, no-c-format
 msgid ""
-"You can get quite creative with this functionality, but it is usually more "
-"practical to handle these kinds of cases using HQL or a criteria query."
+"This functionality allows a degree of creativity and flexibility, but it is "
+"more practical to handle these kinds of cases using HQL or a criteria query."
 msgstr ""
 "You can get quite creative with this functionality, but it is usually more "
 "practical to handle these kinds of cases using HQL or a criteria query. Você "

@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2008-08-14 15:28+0000\n"
+"POT-Creation-Date: 2009-07-14 19:55+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <kde-i18n-doc@kde.org>\n"
@@ -17,7 +17,7 @@ msgstr ""
 #. Tag: title
 #: collection_mapping.xml:29
 #, no-c-format
-msgid "Collection Mapping"
+msgid "Collection mapping"
 msgstr ""
 
 #. Tag: title
@@ -29,7 +29,7 @@ msgstr ""
 #. Tag: para
 #: collection_mapping.xml:34
 #, no-c-format
-msgid "Hibernate requires that persistent collection-valued fields be declared as an interface type, for example:"
+msgid "Hibernate requires that persistent collection-valued fields be declared as an interface type. For example:"
 msgstr ""
 
 #. Tag: programlisting
@@ -50,13 +50,13 @@ msgstr ""
 #. Tag: para
 #: collection_mapping.xml:41
 #, no-c-format
-msgid "The actual interface might be <literal>java.util.Set</literal>, <literal>java.util.Collection</literal>, <literal>java.util.List</literal>, <literal>java.util.Map</literal>, <literal>java.util.SortedSet</literal>, <literal>java.util.SortedMap</literal> or ... anything you like! (Where \"anything you like\" means you will have to write an implementation of <literal>org.hibernate.usertype.UserCollectionType</literal>.)"
+msgid "The actual interface might be <literal>java.util.Set</literal>, <literal>java.util.Collection</literal>, <literal>java.util.List</literal>, <literal>java.util.Map</literal>, <literal>java.util.SortedSet</literal>, <literal>java.util.SortedMap</literal> or anything you like (\"anything you like\" means you will have to write an implementation of <literal>org.hibernate.usertype.UserCollectionType</literal>.)"
 msgstr ""
 
 #. Tag: para
 #: collection_mapping.xml:50
 #, no-c-format
-msgid "Notice how we initialized the instance variable with an instance of <literal>HashSet</literal>. This is the best way to initialize collection valued properties of newly instantiated (non-persistent) instances. When you make the instance persistent - by calling <literal>persist()</literal>, for example - Hibernate will actually replace the <literal>HashSet</literal> with an instance of Hibernate's own implementation of <literal>Set</literal>. Watch out for errors like this:"
+msgid "Notice how the instance variable was initialized with an instance of <literal>HashSet</literal>. This is the best way to initialize collection valued properties of newly instantiated (non-persistent) instances. When you make the instance persistent, by calling <literal>persist()</literal> for example, Hibernate will actually replace the <literal>HashSet</literal> with an instance of Hibernate's own implementation of <literal>Set</literal>. Be aware of the following errors:"
 msgstr ""
 
 #. Tag: programlisting
@@ -77,19 +77,19 @@ msgstr ""
 #. Tag: para
 #: collection_mapping.xml:62
 #, no-c-format
-msgid "The persistent collections injected by Hibernate behave like <literal>HashMap</literal>, <literal>HashSet</literal>, <literal>TreeMap</literal>, <literal>TreeSet</literal> or <literal>ArrayList</literal>, depending upon the interface type."
+msgid "The persistent collections injected by Hibernate behave like <literal>HashMap</literal>, <literal>HashSet</literal>, <literal>TreeMap</literal>, <literal>TreeSet</literal> or <literal>ArrayList</literal>, depending on the interface type."
 msgstr ""
 
 #. Tag: para
 #: collection_mapping.xml:69
 #, no-c-format
-msgid "Collections instances have the usual behavior of value types. They are automatically persisted when referenced by a persistent object and automatically deleted when unreferenced. If a collection is passed from one persistent object to another, its elements might be moved from one table to another. Two entities may not share a reference to the same collection instance. Due to the underlying relational model, collection-valued properties do not support null value semantics; Hibernate does not distinguish between a null collection reference and an empty collection."
+msgid "Collections instances have the usual behavior of value types. They are automatically persisted when referenced by a persistent object and are automatically deleted when unreferenced. If a collection is passed from one persistent object to another, its elements might be moved from one table to another. Two entities cannot share a reference to the same collection instance. Due to the underlying relational model, collection-valued properties do not support null value semantics. Hibernate does not distinguish between a null collection reference and an empty collection."
 msgstr ""
 
 #. Tag: para
 #: collection_mapping.xml:80
 #, no-c-format
-msgid "You shouldn't have to worry much about any of this. Use persistent collections the same way you use ordinary Java collections. Just make sure you understand the semantics of bidirectional associations (discussed later)."
+msgid "Use persistent collections the same way you use ordinary Java collections. However, please ensure you understand the semantics of bidirectional associations (these are discussed later)."
 msgstr ""
 
 #. Tag: title
@@ -101,13 +101,13 @@ msgstr ""
 #. Tag: para
 #: collection_mapping.xml:92
 #, no-c-format
-msgid "There are quite a range of mappings that can be generated for collections, covering many common relational models. We suggest you experiment with the schema generation tool to get a feeling for how various mapping declarations translate to database tables."
+msgid "There are quite a range of mappings that can be generated for collections that cover many common relational models. We suggest you experiment with the schema generation tool so that you understand how various mapping declarations translate to database tables."
 msgstr ""
 
 #. Tag: para
 #: collection_mapping.xml:99
 #, no-c-format
-msgid "The Hibernate mapping element used for mapping a collection depends upon the type of the interface. For example, a <literal>&lt;set&gt;</literal> element is used for mapping properties of type <literal>Set</literal>."
+msgid "The Hibernate mapping element used for mapping a collection depends upon the type of interface. For example, a <literal>&lt;set&gt;</literal> element is used for mapping properties of type <literal>Set</literal>."
 msgstr ""
 
 #. Tag: programlisting
@@ -161,85 +161,85 @@ msgstr ""
 #. Tag: para
 #: collection_mapping.xml:135
 #, no-c-format
-msgid "<literal>name</literal> the collection property name"
+msgid "<literal>name</literal>: the collection property name"
 msgstr ""
 
 #. Tag: para
 #: collection_mapping.xml:140
 #, no-c-format
-msgid "<literal>table</literal> (optional - defaults to property name) the name of the collection table (not used for one-to-many associations)"
+msgid "<literal>table</literal> (optional - defaults to property name): the name of the collection table. It is not used for one-to-many associations."
 msgstr ""
 
 #. Tag: para
 #: collection_mapping.xml:146
 #, no-c-format
-msgid "<literal>schema</literal> (optional) the name of a table schema to override the schema declared on the root element"
+msgid "<literal>schema</literal> (optional): the name of a table schema to override the schema declared on the root element"
 msgstr ""
 
 #. Tag: para
 #: collection_mapping.xml:152
 #, no-c-format
-msgid "<literal>lazy</literal> (optional - defaults to <literal>true</literal>) may be used to disable lazy fetching and specify that the association is always eagerly fetched, or to enable \"extra-lazy\" fetching where most operations do not initialize the collection (suitable for very large collections)"
+msgid "<literal>lazy</literal> (optional - defaults to <literal>true</literal>): disables lazy fetching and specifies that the association is always eagerly fetched. It can also be used to enable \"extra-lazy\" fetching where most operations do not initialize the collection. This is suitable for large collections."
 msgstr ""
 
 #. Tag: para
 #: collection_mapping.xml:161
 #, no-c-format
-msgid "<literal>inverse</literal> (optional - defaults to <literal>false</literal>) mark this collection as the \"inverse\" end of a bidirectional association"
+msgid "<literal>inverse</literal> (optional - defaults to <literal>false</literal>): marks this collection as the \"inverse\" end of a bidirectional association."
 msgstr ""
 
 #. Tag: para
 #: collection_mapping.xml:167
 #, no-c-format
-msgid "<literal>cascade</literal> (optional - defaults to <literal>none</literal>) enable operations to cascade to child entities"
+msgid "<literal>cascade</literal> (optional - defaults to <literal>none</literal>): enables operations to cascade to child entities."
 msgstr ""
 
 #. Tag: para
 #: collection_mapping.xml:173
 #, no-c-format
-msgid "<literal>sort</literal> (optional) specify a sorted collection with <literal>natural</literal> sort order, or a given comparator class"
+msgid "<literal>sort</literal> (optional): specifies a sorted collection with <literal>natural</literal> sort order or a given comparator class."
 msgstr ""
 
 #. Tag: para
 #: collection_mapping.xml:179
 #, no-c-format
-msgid "<literal>order-by</literal> (optional, JDK1.4 only) specify a table column (or columns) that define the iteration order of the <literal>Map</literal>, <literal>Set</literal> or bag, together with an optional <literal>asc</literal> or <literal>desc</literal>"
+msgid "<literal>order-by</literal> (optional, JDK1.4 only): specifies a table column or columns that define the iteration order of the <literal>Map</literal>, <literal>Set</literal> or bag, together with an optional <literal>asc</literal> or <literal>desc</literal>."
 msgstr ""
 
 #. Tag: para
 #: collection_mapping.xml:186
 #, no-c-format
-msgid "<literal>where</literal> (optional) specify an arbitrary SQL <literal>WHERE</literal> condition to be used when retrieving or removing the collection (useful if the collection should contain only a subset of the available data)"
+msgid "<literal>where</literal> (optional): specifies an arbitrary SQL <literal>WHERE</literal> condition that is used when retrieving or removing the collection. This is useful if the collection needs to contain only a subset of the available data."
 msgstr ""
 
 #. Tag: para
 #: collection_mapping.xml:193
 #, no-c-format
-msgid "<literal>fetch</literal> (optional, defaults to <literal>select</literal>) Choose between outer-join fetching, fetching by sequential select, and fetching by sequential subselect."
+msgid "<literal>fetch</literal> (optional, defaults to <literal>select</literal>): chooses between outer-join fetching, fetching by sequential select, and fetching by sequential subselect."
 msgstr ""
 
 #. Tag: para
 #: collection_mapping.xml:200
 #, no-c-format
-msgid "<literal>batch-size</literal> (optional, defaults to <literal>1</literal>) specify a \"batch size\" for lazily fetching instances of this collection."
+msgid "<literal>batch-size</literal> (optional, defaults to <literal>1</literal>): specifies a \"batch size\" for lazily fetching instances of this collection."
 msgstr ""
 
 #. Tag: para
 #: collection_mapping.xml:206
 #, no-c-format
-msgid "<literal>access</literal> (optional - defaults to <literal>property</literal>): The strategy Hibernate should use for accessing the collection property value."
+msgid "<literal>access</literal> (optional - defaults to <literal>property</literal>): the strategy Hibernate uses for accessing the collection property value."
 msgstr ""
 
 #. Tag: para
 #: collection_mapping.xml:212
 #, no-c-format
-msgid "<literal>optimistic-lock</literal> (optional - defaults to <literal>true</literal>): Species that changes to the state of the collection results in increment of the owning entity's version. (For one to many associations, it is often reasonable to disable this setting.)"
+msgid "<literal>optimistic-lock</literal> (optional - defaults to <literal>true</literal>): specifies that changes to the state of the collection results in increments of the owning entity's version. For one-to-many associations you may want to disable this setting."
 msgstr ""
 
 #. Tag: para
 #: collection_mapping.xml:220
 #, no-c-format
-msgid "<literal>mutable</literal> (optional - defaults to <literal>true</literal>): A value of <literal>false</literal> specifies that the elements of the collection never change (a minor performance optimization in some cases)."
+msgid "<literal>mutable</literal> (optional - defaults to <literal>true</literal>): a value of <literal>false</literal> specifies that the elements of the collection never change. This allows for minor performance optimization in some cases."
 msgstr ""
 
 #. Tag: title
@@ -251,13 +251,13 @@ msgstr ""
 #. Tag: para
 #: collection_mapping.xml:232
 #, no-c-format
-msgid "Collection instances are distinguished in the database by the foreign key of the entity that owns the collection. This foreign key is referred to as the <emphasis>collection key column</emphasis> (or columns) of the collection table. The collection key column is mapped by the <literal>&lt;key&gt;</literal> element."
+msgid "Collection instances are distinguished in the database by the foreign key of the entity that owns the collection. This foreign key is referred to as the <emphasis>collection key column</emphasis>, or columns, of the collection table. The collection key column is mapped by the <literal>&lt;key&gt;</literal> element."
 msgstr ""
 
 #. Tag: para
 #: collection_mapping.xml:240
 #, no-c-format
-msgid "There may be a nullability constraint on the foreign key column. For most collections, this is implied. For unidirectional one to many associations, the foreign key column is nullable by default, so you might need to specify <literal>not-null=\"true\"</literal>."
+msgid "There can be a nullability constraint on the foreign key column. For most collections, this is implied. For unidirectional one-to-many associations, the foreign key column is nullable by default, so you may need to specify <literal>not-null=\"true\"</literal>."
 msgstr ""
 
 #. Tag: programlisting
@@ -269,7 +269,7 @@ msgstr ""
 #. Tag: para
 #: collection_mapping.xml:249
 #, no-c-format
-msgid "The foreign key constraint may use <literal>ON DELETE CASCADE</literal>."
+msgid "The foreign key constraint can use <literal>ON DELETE CASCADE</literal>."
 msgstr ""
 
 #. Tag: programlisting
@@ -293,7 +293,7 @@ msgstr ""
 #. Tag: para
 #: collection_mapping.xml:265
 #, no-c-format
-msgid "Collections may contain almost any other Hibernate type, including all basic types, custom types, components, and of course, references to other entities. This is an important distinction: an object in a collection might be handled with \"value\" semantics (its life cycle fully depends on the collection owner) or it might be a reference to another entity, with its own life cycle. In the latter case, only the \"link\" between the two objects is considered to be state held by the collection."
+msgid "Collections can contain almost any other Hibernate type, including: basic types, custom types, components and references to other entities. This is an important distinction. An object in a collection might be handled with \"value\" semantics (its life cycle fully depends on the collection owner), or it might be a reference to another entity with its own life cycle. In the latter case, only the \"link\" between the two objects is considered to be a state held by the collection."
 msgstr ""
 
 #. Tag: para
@@ -311,7 +311,7 @@ msgstr ""
 #. Tag: para
 #: collection_mapping.xml:288
 #, no-c-format
-msgid "All collection mappings, except those with set and bag semantics, need an <emphasis>index column</emphasis> in the collection table - a column that maps to an array index, or <literal>List</literal> index, or <literal>Map</literal> key. The index of a <literal>Map</literal> may be of any basic type, mapped with <literal>&lt;map-key&gt;</literal>, it may be an entity reference mapped with <literal>&lt;map-key-many-to-many&gt;</literal>, or it may be a composite type, mapped with <literal>&lt;composite-map-key&gt;</literal>. The index of an array or list is always of type <literal>integer</literal> and is mapped using the <literal>&lt;list-index&gt;</literal> element. The mapped column contains sequential integers (numbered from zero, by default)."
+msgid "All collection mappings, except those with set and bag semantics, need an <emphasis>index column</emphasis> in the collection table. An index column is a column that maps to an array index, or <literal>List</literal> index, or <literal>Map</literal> key. The index of a <literal>Map</literal> may be of any basic type, mapped with <literal>&lt;map-key&gt;</literal>. It can be an entity reference mapped with <literal>&lt;map-key-many-to-many&gt;</literal>, or it can be a composite type mapped with <literal>&lt;composite-map-key&gt;</literal>. The index of an array or list is always of type <literal>integer</literal> and is mapped using the <literal>&lt;list-index&gt;</literal> element. The mapped column contains sequential integers that are numbered from zero by default."
 msgstr ""
 
 #. Tag: sect2
@@ -320,22 +320,22 @@ msgstr ""
 msgid ""
       "<programlistingco> <areaspec> <area id=\"index1\" coords=\"2 45\"/> <area id=\"index2\" coords=\"3 45\"/> </areaspec> <programlisting><![CDATA[<list-index \n"
       "        column=\"column_name\"\n"
-      "        base=\"0|1|...\"/>]]></programlisting> <calloutlist> <callout arearefs=\"index1\"> <para> <literal>column_name</literal> (required): The name of the column holding the collection index values. </para> </callout> <callout arearefs=\"index1\"> <para> <literal>base</literal> (optional, defaults to <literal>0</literal>): The value of the index column that corresponds to the first element of the list or array. </para> </callout> </calloutlist> </programlistingco> <programlistingco> <areaspec> <area id=\"mapkey1\" coords=\"2 45\"/> <area id=\"mapkey2\" coords=\"3 45\"/> <area id=\"mapkey3\" coords=\"4 45\"/> </areaspec> <programlisting><![CDATA[<map-key \n"
+      "        base=\"0|1|...\"/>]]></programlisting> <calloutlist> <callout arearefs=\"index1\"> <para> <literal>column_name</literal> (required): the name of the column holding the collection index values. </para> </callout> <callout arearefs=\"index1\"> <para> <literal>base</literal> (optional - defaults to <literal>0</literal>): the value of the index column that corresponds to the first element of the list or array. </para> </callout> </calloutlist> </programlistingco> <programlistingco> <areaspec> <area id=\"mapkey1\" coords=\"2 45\"/> <area id=\"mapkey2\" coords=\"3 45\"/> <area id=\"mapkey3\" coords=\"4 45\"/> </areaspec> <programlisting><![CDATA[<map-key \n"
       "        column=\"column_name\"\n"
       "        formula=\"any SQL expression\"\n"
       "        type=\"type_name\"\n"
       "        node=\"@attribute-name\"\n"
-      "        length=\"N\"/>]]></programlisting> <calloutlist> <callout arearefs=\"mapkey1\"> <para> <literal>column</literal> (optional): The name of the column holding the collection index values. </para> </callout> <callout arearefs=\"mapkey2\"> <para> <literal>formula</literal> (optional): A SQL formula used to evaluate the key of the map. </para> </callout> <callout arearefs=\"mapkey3\"> <para> <literal>type</literal> (reguired): The type of the map keys. </para> </callout> </calloutlist> </programlistingco> <programlistingco> <areaspec> <area id=\"indexmanytomany1\" coords=\"2 45\"/> <area id=\"indexmanytomany2\" coords=\"3 45\"/> <area id=\"indexmanytomany3\" coords=\"3 45\"/> </areaspec> <programlisting><![CDATA[<map-key-many-to-many\n"
+      "        length=\"N\"/>]]></programlisting> <calloutlist> <callout arearefs=\"mapkey1\"> <para> <literal>column</literal> (optional): the name of the column holding the collection index values. </para> </callout> <callout arearefs=\"mapkey2\"> <para> <literal>formula</literal> (optional): a SQL formula used to evaluate the key of the map. </para> </callout> <callout arearefs=\"mapkey3\"> <para> <literal>type</literal> (required): the type of the map keys. </para> </callout> </calloutlist> </programlistingco> <programlistingco> <areaspec> <area id=\"indexmanytomany1\" coords=\"2 45\"/> <area id=\"indexmanytomany2\" coords=\"3 45\"/> <area id=\"indexmanytomany3\" coords=\"3 45\"/> </areaspec> <programlisting><![CDATA[<map-key-many-to-many\n"
       "        column=\"column_name\"\n"
       "        formula=\"any SQL expression\"\n"
       "        class=\"ClassName\"\n"
-      "/>]]></programlisting> <calloutlist> <callout arearefs=\"indexmanytomany1\"> <para> <literal>column</literal> (optional): The name of the foreign key column for the collection index values. </para> </callout> <callout arearefs=\"indexmanytomany2\"> <para> <literal>formula</literal> (optional): A SQL formula used to evaluate the foreign key of the map key. </para> </callout> <callout arearefs=\"indexmanytomany3\"> <para> <literal>class</literal> (required): The entity class used as the map key. </para> </callout> </calloutlist> </programlistingco>"
+      "/>]]></programlisting> <calloutlist> <callout arearefs=\"indexmanytomany1\"> <para> <literal>column</literal> (optional): the name of the foreign key column for the collection index values. </para> </callout> <callout arearefs=\"indexmanytomany2\"> <para> <literal>formula</literal> (optional): a SQ formula used to evaluate the foreign key of the map key. </para> </callout> <callout arearefs=\"indexmanytomany3\"> <para> <literal>class</literal> (required): the entity class used as the map key. </para> </callout> </calloutlist> </programlistingco>"
 msgstr ""
 
 #. Tag: para
 #: collection_mapping.xml:380
 #, no-c-format
-msgid "If your table doesn't have an index column, and you still wish to use <literal>List</literal> as the property type, you should map the property as a Hibernate <emphasis>&lt;bag&gt;</emphasis>. A bag does not retain its order when it is retrieved from the database, but it may be optionally sorted or ordered."
+msgid "If your table does not have an index column, and you still wish to use <literal>List</literal> as the property type, you can map the property as a Hibernate <emphasis>&lt;bag&gt;</emphasis>. A bag does not retain its order when it is retrieved from the database, but it can be optionally sorted or ordered."
 msgstr ""
 
 #. Tag: title
@@ -347,13 +347,13 @@ msgstr ""
 #. Tag: para
 #: collection_mapping.xml:392
 #, no-c-format
-msgid "Any collection of values or many-to-many association requires a dedicated <emphasis>collection table</emphasis> with a foreign key column or columns, <emphasis>collection element column</emphasis> or columns and possibly an index column or columns."
+msgid "Any collection of values or many-to-many associations requires a dedicated <emphasis>collection table</emphasis> with a foreign key column or columns, <emphasis>collection element column</emphasis> or columns, and possibly an index column or columns."
 msgstr ""
 
 #. Tag: para
 #: collection_mapping.xml:399
 #, no-c-format
-msgid "For a collection of values, we use the <literal>&lt;element&gt;</literal> tag."
+msgid "For a collection of values use the <literal>&lt;element&gt;</literal> tag. For example:"
 msgstr ""
 
 #. Tag: sect2
@@ -370,7 +370,7 @@ msgid ""
       "        not-null=\"true|false\"\n"
       "        unique=\"true|false\"\n"
       "        node=\"element-name\"\n"
-      "/>]]></programlisting> <calloutlist> <callout arearefs=\"element1b\"> <para> <literal>column</literal> (optional): The name of the column holding the collection element values. </para> </callout> <callout arearefs=\"element2b\"> <para> <literal>formula</literal> (optional): An SQL formula used to evaluate the element. </para> </callout> <callout arearefs=\"element3b\"> <para> <literal>type</literal> (required): The type of the collection element. </para> </callout> </calloutlist> </programlistingco> <para> A <emphasis>many-to-many association</emphasis> is specified using the <literal>&lt;many-to-many&gt;</literal> element. </para> <programlistingco> <areaspec> <area id=\"manytomany1\" coords=\"2 60\"/> <area id=\"manytomany2\" coords=\"3 60\"/> <area id=\"manytomany3\" coords=\"4 60\"/> <area id=\"manytomany4\" coords=\"5 60\"/> <area id=\"manytomany5\" coords=\"6 60\"/> <area id=\"manytomany6\" coords=\"7 60\"/> <area id=\"manytomany7\" coords=\"8 60\"/> <area id=\"manytomany8\" coords=\"9 60\"/> </areaspec> <programlisting><![CDATA[<many-to-many\n"
+      "/>]]></programlisting> <calloutlist> <callout arearefs=\"element1b\"> <para> <literal>column</literal> (optional): the name of the column holding the collection element values. </para> </callout> <callout arearefs=\"element2b\"> <para> <literal>formula</literal> (optional): an SQL formula used to evaluate the element. </para> </callout> <callout arearefs=\"element3b\"> <para> <literal>type</literal> (required): the type of the collection element. </para> </callout> </calloutlist> </programlistingco> <para> A <emphasis>many-to-many association</emphasis> is specified using the <literal>&lt;many-to-many&gt;</literal> element. </para> <programlistingco> <areaspec> <area id=\"manytomany1\" coords=\"2 60\"/> <area id=\"manytomany2\" coords=\"3 60\"/> <area id=\"manytomany3\" coords=\"4 60\"/> <area id=\"manytomany4\" coords=\"5 60\"/> <area id=\"manytomany5\" coords=\"6 60\"/> <area id=\"manytomany6\" coords=\"7 60\"/> <area id=\"manytomany7\" coords=\"8 60\"/> <area id=\"manytomany8\" coords=\"9 60\"/> </areaspec> <programlisting><![CDATA[<many-to-many\n"
       "        column=\"column_name\"\n"
       "        formula=\"any SQL expression\"\n"
       "        class=\"ClassName\"\n"
@@ -381,17 +381,23 @@ msgid ""
       "        property-ref=\"propertyNameFromAssociatedClass\"\n"
       "        node=\"element-name\"\n"
       "        embed-xml=\"true|false\"\n"
-      "    />]]></programlisting> <calloutlist> <callout arearefs=\"manytomany1\"> <para> <literal>column</literal> (optional): The name of the element foreign key column. </para> </callout> <callout arearefs=\"manytomany2\"> <para> <literal>formula</literal> (optional): An SQL formula used to evaluate the element foreign key value. </para> </callout> <callout arearefs=\"manytomany3\"> <para> <literal>class</literal> (required): The name of the associated class. </para> </callout> <callout arearefs=\"manytomany4\"> <para> <literal>fetch</literal> (optional - defaults to <literal>join</literal>): enables outer-join or sequential select fetching for this association. This is a special case; for full eager fetching (in a single <literal>SELECT</literal>) of an entity and its many-to-many relationships to other entities, you would enable <literal>join</literal> fetching not only of the collection itself, but also with this attribute on the <literal>&lt;many-to-many&gt;</literal> nested element. </para> </callout> <callout arearefs=\"manytomany5\"> <para> <literal>unique</literal> (optional): Enable the DDL generation of a unique constraint for the foreign-key column. This makes the association multiplicity effectively one to many. </para> </callout> <callout arearefs=\"manytomany6\"> <para> <literal>not-found</literal> (optional - defaults to <literal>exception</literal>): Specifies how foreign keys that reference missing rows will be handled: <literal>ignore</literal> will treat a missing row as a null association. </para> </callout> <callout arearefs=\"manytomany7\"> <para> <literal>entity-name</literal> (optional): The entity name of the associated class, as an alternative to <literal>class</literal>. </para> </callout> <callout arearefs=\"manytomany8\"> <para> <literal>property-ref</literal>: (optional) The name of a property of the associated class that is joined to this foreign key. If not specified, the primary key of the associated class is used. </para> </callout> </calloutlist> </programlistingco>"
+      "    />]]></programlisting> <calloutlist> <callout arearefs=\"manytomany1\"> <para> <literal>column</literal> (optional): the name of the element foreign key column. </para> </callout> <callout arearefs=\"manytomany2\"> <para> <literal>formula</literal> (optional): an SQL formula used to evaluate the element foreign key value. </para> </callout> <callout arearefs=\"manytomany3\"> <para> <literal>class</literal> (required): the name of the associated class. </para> </callout> <callout arearefs=\"manytomany4\"> <para> <literal>fetch</literal> (optional - defaults to <literal>join</literal>): enables outer-join or sequential select fetching for this association. This is a special case; for full eager fetching in a single <literal>SELECT</literal> of an entity and its many-to-many relationships to other entities, you would enable <literal>join</literal> fetching,not only of the collection itself, but also with this attribute on the <literal>&lt;many-to-many&gt;</literal> nested element. </para> </callout> <callout arearefs=\"manytomany5\"> <para> <literal>unique</literal> (optional): enables the DDL generation of a unique constraint for the foreign-key column. This makes the association multiplicity effectively one-to-many. </para> </callout> <callout arearefs=\"manytomany6\"> <para> <literal>not-found</literal> (optional - defaults to <literal>exception</literal>): specifies how foreign keys that reference missing rows will be handled: <literal>ignore</literal> will treat a missing row as a null association. </para> </callout> <callout arearefs=\"manytomany7\"> <para> <literal>entity-name</literal> (optional): the entity name of the associated class, as an alternative to <literal>class</literal>. </para> </callout> <callout arearefs=\"manytomany8\"> <para> <literal>property-ref</literal> (optional): the name of a property of the associated class that is joined to this foreign key. If not specified, the primary key of the associated class is used. </para> </callout> </calloutlist> </programlistingco>"
 msgstr ""
 
 #. Tag: para
 #: collection_mapping.xml:506
 #, no-c-format
-msgid "Some examples, first, a set of strings:"
+msgid "Here are some examples."
+msgstr ""
+
+#. Tag: para
+#: collection_mapping.xml:509
+#, no-c-format
+msgid "A set of strings:"
 msgstr ""
 
 #. Tag: programlisting
-#: collection_mapping.xml:510
+#: collection_mapping.xml:513
 #, no-c-format
 msgid ""
       "<![CDATA[<set name=\"names\" table=\"person_names\">\n"
@@ -401,13 +407,13 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: collection_mapping.xml:512
+#: collection_mapping.xml:515
 #, no-c-format
-msgid "A bag containing integers (with an iteration order determined by the <literal>order-by</literal> attribute):"
+msgid "A bag containing integers with an iteration order determined by the <literal>order-by</literal> attribute:"
 msgstr ""
 
 #. Tag: programlisting
-#: collection_mapping.xml:517
+#: collection_mapping.xml:520
 #, no-c-format
 msgid ""
       "<![CDATA[<bag name=\"sizes\" \n"
@@ -419,13 +425,13 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: collection_mapping.xml:519
+#: collection_mapping.xml:522
 #, no-c-format
-msgid "An array of entities - in this case, a many to many association:"
+msgid "An array of entities, in this case, a many-to-many association:"
 msgstr ""
 
 #. Tag: programlisting
-#: collection_mapping.xml:523
+#: collection_mapping.xml:526
 #, no-c-format
 msgid ""
       "<![CDATA[<array name=\"addresses\" \n"
@@ -438,13 +444,13 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: collection_mapping.xml:525
+#: collection_mapping.xml:528
 #, no-c-format
 msgid "A map from string indices to dates:"
 msgstr ""
 
 #. Tag: programlisting
-#: collection_mapping.xml:529
+#: collection_mapping.xml:532
 #, no-c-format
 msgid ""
       "<![CDATA[<map name=\"holidays\" \n"
@@ -458,13 +464,13 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: collection_mapping.xml:531
+#: collection_mapping.xml:534
 #, no-c-format
-msgid "A list of components (discussed in the next chapter):"
+msgid "A list of components (this is discussed in the next chapter):"
 msgstr ""
 
 #. Tag: programlisting
-#: collection_mapping.xml:535
+#: collection_mapping.xml:538
 #, no-c-format
 msgid ""
       "<![CDATA[<list name=\"carComponents\" \n"
@@ -480,37 +486,37 @@ msgid ""
 msgstr ""
 
 #. Tag: title
-#: collection_mapping.xml:540
+#: collection_mapping.xml:543
 #, no-c-format
 msgid "One-to-many associations"
 msgstr ""
 
 #. Tag: para
-#: collection_mapping.xml:542
+#: collection_mapping.xml:545
 #, no-c-format
-msgid "A <emphasis>one to many association</emphasis> links the tables of two classes via a foreign key, with no intervening collection table. This mapping loses certain semantics of normal Java collections:"
+msgid "A <emphasis>one-to-many association</emphasis> links the tables of two classes via a foreign key with no intervening collection table. This mapping loses certain semantics of normal Java collections:"
 msgstr ""
 
 #. Tag: para
-#: collection_mapping.xml:550
+#: collection_mapping.xml:553
 #, no-c-format
-msgid "An instance of the contained entity class may not belong to more than one instance of the collection"
+msgid "An instance of the contained entity class cannot belong to more than one instance of the collection."
 msgstr ""
 
 #. Tag: para
-#: collection_mapping.xml:556
+#: collection_mapping.xml:559
 #, no-c-format
-msgid "An instance of the contained entity class may not appear at more than one value of the collection index"
+msgid "An instance of the contained entity class cannot appear at more than one value of the collection index."
 msgstr ""
 
 #. Tag: para
-#: collection_mapping.xml:563
+#: collection_mapping.xml:566
 #, no-c-format
-msgid "An association from <literal>Product</literal> to <literal>Part</literal> requires existence of a foreign key column and possibly an index column to the <literal>Part</literal> table. A <literal>&lt;one-to-many&gt;</literal> tag indicates that this is a one to many association."
+msgid "An association from <literal>Product</literal> to <literal>Part</literal> requires the existence of a foreign key column and possibly an index column to the <literal>Part</literal> table. A <literal>&lt;one-to-many&gt;</literal> tag indicates that this is a one-to-many association."
 msgstr ""
 
 #. Tag: programlisting
-#: collection_mapping.xml:576
+#: collection_mapping.xml:579
 #, no-c-format
 msgid ""
       "<![CDATA[<one-to-many \n"
@@ -523,43 +529,43 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: collection_mapping.xml:579
+#: collection_mapping.xml:582
 #, no-c-format
-msgid "<literal>class</literal> (required): The name of the associated class."
+msgid "<literal>class</literal> (required): the name of the associated class."
 msgstr ""
 
 #. Tag: para
-#: collection_mapping.xml:584
+#: collection_mapping.xml:587
 #, no-c-format
-msgid "<literal>not-found</literal> (optional - defaults to <literal>exception</literal>): Specifies how cached identifiers that reference missing rows will be handled: <literal>ignore</literal> will treat a missing row as a null association."
+msgid "<literal>not-found</literal> (optional - defaults to <literal>exception</literal>): specifies how cached identifiers that reference missing rows will be handled. <literal>ignore</literal> will treat a missing row as a null association."
 msgstr ""
 
 #. Tag: para
-#: collection_mapping.xml:591
+#: collection_mapping.xml:594
 #, no-c-format
-msgid "<literal>entity-name</literal> (optional): The entity name of the associated class, as an alternative to <literal>class</literal>."
+msgid "<literal>entity-name</literal> (optional): the entity name of the associated class, as an alternative to <literal>class</literal>."
 msgstr ""
 
 #. Tag: para
-#: collection_mapping.xml:599
+#: collection_mapping.xml:602
 #, no-c-format
-msgid "Notice that the <literal>&lt;one-to-many&gt;</literal> element does not need to declare any columns. Nor is it necessary to specify the <literal>table</literal> name anywhere."
+msgid "The <literal>&lt;one-to-many&gt;</literal> element does not need to declare any columns. Nor is it necessary to specify the <literal>table</literal> name anywhere."
 msgstr ""
 
 #. Tag: para
-#: collection_mapping.xml:605
+#: collection_mapping.xml:609
 #, no-c-format
-msgid "<emphasis>Very important note:</emphasis> If the foreign key column of a <literal>&lt;one-to-many&gt;</literal> association is declared <literal>NOT NULL</literal>, you must declare the <literal>&lt;key&gt;</literal> mapping <literal>not-null=\"true\"</literal> or <emphasis>use a bidirectional association</emphasis> with the collection mapping marked <literal>inverse=\"true\"</literal>. See the discussion of bidirectional associations later in this chapter."
+msgid "If the foreign key column of a <literal>&lt;one-to-many&gt;</literal> association is declared <literal>NOT NULL</literal>, you must declare the <literal>&lt;key&gt;</literal> mapping <literal>not-null=\"true\"</literal> or <emphasis>use a bidirectional association</emphasis> with the collection mapping marked <literal>inverse=\"true\"</literal>. See the discussion of bidirectional associations later in this chapter for more information."
 msgstr ""
 
 #. Tag: para
-#: collection_mapping.xml:614
+#: collection_mapping.xml:619
 #, no-c-format
-msgid "This example shows a map of <literal>Part</literal> entities by name (where <literal>partName</literal> is a persistent property of <literal>Part</literal>). Notice the use of a formula-based index."
+msgid "The following example shows a map of <literal>Part</literal> entities by name, where <literal>partName</literal> is a persistent property of <literal>Part</literal>. Notice the use of a formula-based index:"
 msgstr ""
 
 #. Tag: programlisting
-#: collection_mapping.xml:620
+#: collection_mapping.xml:625
 #, no-c-format
 msgid ""
       "<![CDATA[<map name=\"parts\"\n"
@@ -571,25 +577,25 @@ msgid ""
 msgstr ""
 
 #. Tag: title
-#: collection_mapping.xml:626
+#: collection_mapping.xml:631
 #, no-c-format
 msgid "Advanced collection mappings"
 msgstr ""
 
 #. Tag: title
-#: collection_mapping.xml:629
+#: collection_mapping.xml:634
 #, no-c-format
 msgid "Sorted collections"
 msgstr ""
 
 #. Tag: para
-#: collection_mapping.xml:631
+#: collection_mapping.xml:636
 #, no-c-format
 msgid "Hibernate supports collections implementing <literal>java.util.SortedMap</literal> and <literal>java.util.SortedSet</literal>. You must specify a comparator in the mapping file:"
 msgstr ""
 
 #. Tag: programlisting
-#: collection_mapping.xml:636
+#: collection_mapping.xml:641
 #, no-c-format
 msgid ""
       "<![CDATA[<set name=\"aliases\" \n"
@@ -607,25 +613,25 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: collection_mapping.xml:638
+#: collection_mapping.xml:643
 #, no-c-format
 msgid "Allowed values of the <literal>sort</literal> attribute are <literal>unsorted</literal>, <literal>natural</literal> and the name of a class implementing <literal>java.util.Comparator</literal>."
 msgstr ""
 
 #. Tag: para
-#: collection_mapping.xml:644
+#: collection_mapping.xml:649
 #, no-c-format
 msgid "Sorted collections actually behave like <literal>java.util.TreeSet</literal> or <literal>java.util.TreeMap</literal>."
 msgstr ""
 
 #. Tag: para
-#: collection_mapping.xml:649
+#: collection_mapping.xml:654
 #, no-c-format
-msgid "If you want the database itself to order the collection elements use the <literal>order-by</literal> attribute of <literal>set</literal>, <literal>bag</literal> or <literal>map</literal> mappings. This solution is only available under JDK 1.4 or higher (it is implemented using <literal>LinkedHashSet</literal> or <literal>LinkedHashMap</literal>). This performs the ordering in the SQL query, not in memory."
+msgid "If you want the database itself to order the collection elements, use the <literal>order-by</literal> attribute of <literal>set</literal>, <literal>bag</literal> or <literal>map</literal> mappings. This solution is only available under JDK 1.4 or higher and is implemented using <literal>LinkedHashSet</literal> or <literal>LinkedHashMap</literal>. This performs the ordering in the SQL query and not in the memory."
 msgstr ""
 
 #. Tag: programlisting
-#: collection_mapping.xml:658
+#: collection_mapping.xml:663
 #, no-c-format
 msgid ""
       "<![CDATA[<set name=\"aliases\" table=\"person_aliases\" order-by=\"lower(name) asc\">\n"
@@ -640,74 +646,80 @@ msgid ""
       "</map>]]>"
 msgstr ""
 
-#. Tag: para
-#: collection_mapping.xml:660
+#. Tag: title
+#: collection_mapping.xml:666
 #, no-c-format
-msgid "Note that the value of the <literal>order-by</literal> attribute is an SQL ordering, not a HQL ordering!"
+msgid "Note"
 msgstr ""
 
 #. Tag: para
-#: collection_mapping.xml:665
+#: collection_mapping.xml:667
 #, no-c-format
-msgid "Associations may even be sorted by some arbitrary criteria at runtime using a collection <literal>filter()</literal>."
+msgid "The value of the <literal>order-by</literal> attribute is an SQL ordering, not an HQL ordering."
+msgstr ""
+
+#. Tag: para
+#: collection_mapping.xml:673
+#, no-c-format
+msgid "Associations can even be sorted by arbitrary criteria at runtime using a collection <literal>filter()</literal>:"
 msgstr ""
 
 #. Tag: programlisting
-#: collection_mapping.xml:670
+#: collection_mapping.xml:678
 #, no-c-format
 msgid "<![CDATA[sortedUsers = s.createFilter( group.getUsers(), \"order by this.name\" ).list();]]>"
 msgstr ""
 
 #. Tag: title
-#: collection_mapping.xml:675
+#: collection_mapping.xml:683
 #, no-c-format
 msgid "Bidirectional associations"
 msgstr ""
 
 #. Tag: para
-#: collection_mapping.xml:677
+#: collection_mapping.xml:685
 #, no-c-format
 msgid "A <emphasis>bidirectional association</emphasis> allows navigation from both \"ends\" of the association. Two kinds of bidirectional association are supported:"
 msgstr ""
 
 #. Tag: term
-#: collection_mapping.xml:684
+#: collection_mapping.xml:692
 #, no-c-format
 msgid "one-to-many"
 msgstr ""
 
 #. Tag: para
-#: collection_mapping.xml:686
+#: collection_mapping.xml:694
 #, no-c-format
-msgid "set or bag valued at one end, single-valued at the other"
+msgid "set or bag valued at one end and single-valued at the other"
 msgstr ""
 
 #. Tag: term
-#: collection_mapping.xml:692
+#: collection_mapping.xml:700
 #, no-c-format
 msgid "many-to-many"
 msgstr ""
 
 #. Tag: para
-#: collection_mapping.xml:694
+#: collection_mapping.xml:702
 #, no-c-format
 msgid "set or bag valued at both ends"
 msgstr ""
 
 #. Tag: para
-#: collection_mapping.xml:703
+#: collection_mapping.xml:711
 #, no-c-format
-msgid "You may specify a bidirectional many-to-many association simply by mapping two many-to-many associations to the same database table and declaring one end as <emphasis>inverse</emphasis> (which one is your choice, but it can not be an indexed collection)."
+msgid "You can specify a bidirectional many-to-many association by mapping two many-to-many associations to the same database table and declaring one end as <emphasis>inverse</emphasis>. You cannot select an indexed collection."
 msgstr ""
 
 #. Tag: para
-#: collection_mapping.xml:710
+#: collection_mapping.xml:718
 #, no-c-format
-msgid "Here's an example of a bidirectional many-to-many association; each category can have many items and each item can be in many categories:"
+msgid "Here is an example of a bidirectional many-to-many association that illustrates how each category can have many items and each item can be in many categories:"
 msgstr ""
 
 #. Tag: programlisting
-#: collection_mapping.xml:715
+#: collection_mapping.xml:723
 #, no-c-format
 msgid ""
       "<![CDATA[<class name=\"Category\">\n"
@@ -732,13 +744,13 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: collection_mapping.xml:717
+#: collection_mapping.xml:725
 #, no-c-format
-msgid "Changes made only to the inverse end of the association are <emphasis>not</emphasis> persisted. This means that Hibernate has two representations in memory for every bidirectional association, one link from A to B and another link from B to A. This is easier to understand if you think about the Java object model and how we create a many-to-many relationship in Java:"
+msgid "Changes made only to the inverse end of the association are <emphasis>not</emphasis> persisted. This means that Hibernate has two representations in memory for every bidirectional association: one link from A to B and another link from B to A. This is easier to understand if you think about the Java object model and how a many-to-many relationship in Javais created:"
 msgstr ""
 
 #. Tag: programlisting
-#: collection_mapping.xml:725
+#: collection_mapping.xml:733
 #, no-c-format
 msgid ""
       "<![CDATA[\n"
@@ -750,19 +762,19 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: collection_mapping.xml:727
+#: collection_mapping.xml:735
 #, no-c-format
 msgid "The non-inverse side is used to save the in-memory representation to the database."
 msgstr ""
 
 #. Tag: para
-#: collection_mapping.xml:731
+#: collection_mapping.xml:739
 #, no-c-format
-msgid "You may define a bidirectional one-to-many association by mapping a one-to-many association to the same table column(s) as a many-to-one association and declaring the many-valued end <literal>inverse=\"true\"</literal>."
+msgid "You can define a bidirectional one-to-many association by mapping a one-to-many association to the same table column(s) as a many-to-one association and declaring the many-valued end <literal>inverse=\"true\"</literal>."
 msgstr ""
 
 #. Tag: programlisting
-#: collection_mapping.xml:737
+#: collection_mapping.xml:745
 #, no-c-format
 msgid ""
       "<![CDATA[<class name=\"Parent\">\n"
@@ -785,25 +797,25 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: collection_mapping.xml:739
+#: collection_mapping.xml:747
 #, no-c-format
-msgid "Mapping one end of an association with <literal>inverse=\"true\"</literal> doesn't affect the operation of cascades, these are orthogonal concepts!"
+msgid "Mapping one end of an association with <literal>inverse=\"true\"</literal> does not affect the operation of cascades as these are orthogonal concepts."
 msgstr ""
 
 #. Tag: title
-#: collection_mapping.xml:747
+#: collection_mapping.xml:755
 #, no-c-format
 msgid "Bidirectional associations with indexed collections"
 msgstr ""
 
 #. Tag: para
-#: collection_mapping.xml:748
+#: collection_mapping.xml:756
 #, no-c-format
-msgid "A bidirectional association where one end is represented as a <literal>&lt;list&gt;</literal> or <literal>&lt;map&gt;</literal> requires special consideration. If there is a property of the child class which maps to the index column, no problem, we can continue using <literal>inverse=\"true\"</literal> on the collection mapping:"
+msgid "A bidirectional association where one end is represented as a <literal>&lt;list&gt;</literal> or <literal>&lt;map&gt;</literal>, requires special consideration. If there is a property of the child class that maps to the index column you can use <literal>inverse=\"true\"</literal> on the collection mapping:"
 msgstr ""
 
 #. Tag: programlisting
-#: collection_mapping.xml:755
+#: collection_mapping.xml:763
 #, no-c-format
 msgid ""
       "<![CDATA[<class name=\"Parent\">\n"
@@ -830,13 +842,13 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: collection_mapping.xml:757
+#: collection_mapping.xml:765
 #, no-c-format
-msgid "But, if there is no such property on the child class, we can't think of the association as truly bidirectional (there is information available at one end of the association that is not available at the other end). In this case, we can't map the collection <literal>inverse=\"true\"</literal>. Instead, we could use the following mapping:"
+msgid "If there is no such property on the child class, the association cannot be considered truly bidirectional. That is, there is information available at one end of the association that is not available at the other end. In this case, you cannot map the collection <literal>inverse=\"true\"</literal>. Instead, you could use the following mapping:"
 msgstr ""
 
 #. Tag: programlisting
-#: collection_mapping.xml:764
+#: collection_mapping.xml:772
 #, no-c-format
 msgid ""
       "<![CDATA[<class name=\"Parent\">\n"
@@ -864,25 +876,25 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: collection_mapping.xml:766
+#: collection_mapping.xml:774
 #, no-c-format
-msgid "Note that in this mapping, the collection-valued end of the association is responsible for updates to the foreign key. TODO: Does this really result in some unnecessary update statements?"
+msgid "Note that in this mapping, the collection-valued end of the association is responsible for updates to the foreign key."
 msgstr ""
 
 #. Tag: title
-#: collection_mapping.xml:774
+#: collection_mapping.xml:782
 #, no-c-format
 msgid "Ternary associations"
 msgstr ""
 
 #. Tag: para
-#: collection_mapping.xml:776
+#: collection_mapping.xml:784
 #, no-c-format
-msgid "There are three possible approaches to mapping a ternary association. One is to use a <literal>Map</literal> with an association as its index:"
+msgid "There are three possible approaches to mapping a ternary association. One approach is to use a <literal>Map</literal> with an association as its index:"
 msgstr ""
 
 #. Tag: programlisting
-#: collection_mapping.xml:781
+#: collection_mapping.xml:789
 #, no-c-format
 msgid ""
       "<![CDATA[<map name=\"contracts\">\n"
@@ -893,7 +905,7 @@ msgid ""
 msgstr ""
 
 #. Tag: programlisting
-#: collection_mapping.xml:783
+#: collection_mapping.xml:791
 #, no-c-format
 msgid ""
       "<![CDATA[<map name=\"connections\">\n"
@@ -904,37 +916,37 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: collection_mapping.xml:785
+#: collection_mapping.xml:793
 #, no-c-format
-msgid "A second approach is to simply remodel the association as an entity class. This is the approach we use most commonly."
+msgid "A second approach is to remodel the association as an entity class. This is the most common approach."
 msgstr ""
 
 #. Tag: para
-#: collection_mapping.xml:790
+#: collection_mapping.xml:798
 #, no-c-format
-msgid "A final alternative is to use composite elements, which we will discuss later."
+msgid "A final alternative is to use composite elements, which will be discussed later."
 msgstr ""
 
 #. Tag: literal
-#: collection_mapping.xml:797
+#: collection_mapping.xml:805
 #, no-c-format
 msgid "Using an &lt;idbag&gt;"
 msgstr ""
 
 #. Tag: para
-#: collection_mapping.xml:799
+#: collection_mapping.xml:807
 #, no-c-format
-msgid "If you've fully embraced our view that composite keys are a bad thing and that entities should have synthetic identifiers (surrogate keys), then you might find it a bit odd that the many to many associations and collections of values that we've shown so far all map to tables with composite keys! Now, this point is quite arguable; a pure association table doesn't seem to benefit much from a surrogate key (though a collection of composite values <emphasis>might</emphasis>). Nevertheless, Hibernate provides a feature that allows you to map many to many associations and collections of values to a table with a surrogate key."
+msgid "The majority of the many-to-many associations and collections of values shown previously all map to tables with composite keys, even though it has been have suggested that entities should have synthetic identifiers (surrogate keys). A pure association table does not seem to benefit much from a surrogate key, although a collection of composite values <emphasis>might</emphasis>. It is for this reason that Hibernate provides a feature that allows you to map many-to-many associations and collections of values to a table with a surrogate key."
 msgstr ""
 
 #. Tag: para
-#: collection_mapping.xml:810
+#: collection_mapping.xml:817
 #, no-c-format
-msgid "The <literal>&lt;idbag&gt;</literal> element lets you map a <literal>List</literal> (or <literal>Collection</literal>) with bag semantics."
+msgid "The <literal>&lt;idbag&gt;</literal> element lets you map a <literal>List</literal> (or <literal>Collection</literal>) with bag semantics. For example:"
 msgstr ""
 
 #. Tag: programlisting
-#: collection_mapping.xml:815
+#: collection_mapping.xml:822
 #, no-c-format
 msgid ""
       "<![CDATA[<idbag name=\"lovers\" table=\"LOVERS\">\n"
@@ -947,37 +959,43 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: collection_mapping.xml:817
-#, no-c-format
-msgid "As you can see, an <literal>&lt;idbag&gt;</literal> has a synthetic id generator, just like an entity class! A different surrogate key is assigned to each collection row. Hibernate does not provide any mechanism to discover the surrogate key value of a particular row, however."
-msgstr ""
-
-#. Tag: para
 #: collection_mapping.xml:824
 #, no-c-format
-msgid "Note that the update performance of an <literal>&lt;idbag&gt;</literal> is <emphasis>much</emphasis> better than a regular <literal>&lt;bag&gt;</literal>! Hibernate can locate individual rows efficiently and update or delete them individually, just like a list, map or set."
+msgid "An <literal>&lt;idbag&gt;</literal> has a synthetic id generator, just like an entity class. A different surrogate key is assigned to each collection row. Hibernate does not, however, provide any mechanism for discovering the surrogate key value of a particular row."
 msgstr ""
 
 #. Tag: para
 #: collection_mapping.xml:831
 #, no-c-format
+msgid "The update performance of an <literal>&lt;idbag&gt;</literal> supersedes a regular <literal>&lt;bag&gt;</literal>. Hibernate can locate individual rows efficiently and update or delete them individually, similar to a list, map or set."
+msgstr ""
+
+#. Tag: para
+#: collection_mapping.xml:837
+#, no-c-format
 msgid "In the current implementation, the <literal>native</literal> identifier generation strategy is not supported for <literal>&lt;idbag&gt;</literal> collection identifiers."
 msgstr ""
 
 #. Tag: title
-#: collection_mapping.xml:855
+#: collection_mapping.xml:861
 #, no-c-format
 msgid "Collection examples"
 msgstr ""
 
 #. Tag: para
-#: collection_mapping.xml:857
+#: collection_mapping.xml:863
 #, no-c-format
-msgid "The previous sections are pretty confusing. So lets look at an example. This class:"
+msgid "This section covers collection examples."
+msgstr ""
+
+#. Tag: para
+#: collection_mapping.xml:867
+#, no-c-format
+msgid "The following class has a collection of <literal>Child</literal> instances:"
 msgstr ""
 
 #. Tag: programlisting
-#: collection_mapping.xml:862
+#: collection_mapping.xml:871
 #, no-c-format
 msgid ""
       "<![CDATA[package eg;\n"
@@ -999,13 +1017,13 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: collection_mapping.xml:864
+#: collection_mapping.xml:873
 #, no-c-format
-msgid "has a collection of <literal>Child</literal> instances. If each child has at most one parent, the most natural mapping is a one-to-many association:"
+msgid "If each child has, at most, one parent, the most natural mapping is a one-to-many association:"
 msgstr ""
 
 #. Tag: programlisting
-#: collection_mapping.xml:870
+#: collection_mapping.xml:879
 #, no-c-format
 msgid ""
       "<![CDATA[<hibernate-mapping>\n"
@@ -1031,13 +1049,13 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: collection_mapping.xml:872
+#: collection_mapping.xml:881
 #, no-c-format
 msgid "This maps to the following table definitions:"
 msgstr ""
 
 #. Tag: programlisting
-#: collection_mapping.xml:876
+#: collection_mapping.xml:885
 #, no-c-format
 msgid ""
       "<![CDATA[create table parent ( id bigint not null primary key )\n"
@@ -1046,13 +1064,13 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: collection_mapping.xml:878
+#: collection_mapping.xml:887
 #, no-c-format
 msgid "If the parent is <emphasis>required</emphasis>, use a bidirectional one-to-many association:"
 msgstr ""
 
 #. Tag: programlisting
-#: collection_mapping.xml:883
+#: collection_mapping.xml:892
 #, no-c-format
 msgid ""
       "<![CDATA[<hibernate-mapping>\n"
@@ -1079,13 +1097,13 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: collection_mapping.xml:885
+#: collection_mapping.xml:894
 #, no-c-format
 msgid "Notice the <literal>NOT NULL</literal> constraint:"
 msgstr ""
 
 #. Tag: programlisting
-#: collection_mapping.xml:889
+#: collection_mapping.xml:898
 #, no-c-format
 msgid ""
       "<![CDATA[create table parent ( id bigint not null primary key )\n"
@@ -1097,13 +1115,13 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: collection_mapping.xml:891
+#: collection_mapping.xml:900
 #, no-c-format
-msgid "Alternatively, if you absolutely insist that this association should be unidirectional, you can declare the <literal>NOT NULL</literal> constraint on the <literal>&lt;key&gt;</literal> mapping:"
+msgid "Alternatively, if this association must be unidirectional you can declare the <literal>NOT NULL</literal> constraint on the <literal>&lt;key&gt;</literal> mapping:"
 msgstr ""
 
 #. Tag: programlisting
-#: collection_mapping.xml:897
+#: collection_mapping.xml:906
 #, no-c-format
 msgid ""
       "<![CDATA[<hibernate-mapping>\n"
@@ -1129,13 +1147,13 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: collection_mapping.xml:899
+#: collection_mapping.xml:908
 #, no-c-format
-msgid "On the other hand, if a child might have multiple parents, a many-to-many association is appropriate:"
+msgid "On the other hand, if a child has multiple parents, a many-to-many association is appropriate:"
 msgstr ""
 
 #. Tag: programlisting
-#: collection_mapping.xml:904
+#: collection_mapping.xml:913
 #, no-c-format
 msgid ""
       "<![CDATA[<hibernate-mapping>\n"
@@ -1161,13 +1179,13 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: collection_mapping.xml:906
+#: collection_mapping.xml:915
 #, no-c-format
 msgid "Table definitions:"
 msgstr ""
 
 #. Tag: programlisting
-#: collection_mapping.xml:910
+#: collection_mapping.xml:919
 #, no-c-format
 msgid ""
       "<![CDATA[create table parent ( id bigint not null primary key )\n"
@@ -1180,14 +1198,14 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: collection_mapping.xml:912
+#: collection_mapping.xml:921
 #, no-c-format
-msgid "For more examples and a complete walk-through a parent/child relationship mapping, see <xref linkend=\"example-parentchild\"/>."
+msgid "For more examples and a complete explanation of a parent/child relationship mapping, see <xref linkend=\"example-parentchild\"/> for more information."
 msgstr ""
 
 #. Tag: para
-#: collection_mapping.xml:917
+#: collection_mapping.xml:926
 #, no-c-format
-msgid "Even more exotic association mappings are possible, we will catalog all possibilities in the next chapter."
+msgid "Even more complex association mappings are covered in the next chapter."
 msgstr ""
 

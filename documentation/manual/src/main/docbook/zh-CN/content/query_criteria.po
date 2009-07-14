@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2008-08-14 15:28+0000\n"
+"POT-Creation-Date: 2009-07-14 19:56+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -79,8 +79,8 @@ msgstr ""
 
 #. Tag: para
 #: query_criteria.xml:61
-#, no-c-format
-msgid "Restrictions may be grouped logically."
+#, fuzzy, no-c-format
+msgid "Restrictions can be grouped logically."
 msgstr "约束可以按逻辑分组。"
 
 #. Tag: programlisting
@@ -114,10 +114,10 @@ msgstr ""
 
 #. Tag: para
 #: query_criteria.xml:69
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
-"There are quite a range of built-in criterion types (<literal>Restrictions</"
-"literal> subclasses), but one that is especially useful lets you specify SQL "
+"There are a range of built-in criterion types (<literal>Restrictions</"
+"literal> subclasses). One of the most useful allows you to specify SQL "
 "directly."
 msgstr ""
 "Hibernate提供了相当多的内置criterion类型(<literal>Restrictions</literal> 子"
@@ -143,11 +143,11 @@ msgstr "<literal>{alias}</literal>占位符应当被替换为被查询实体的�
 
 #. Tag: para
 #: query_criteria.xml:81
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
-"An alternative approach to obtaining a criterion is to get it from a "
-"<literal>Property</literal> instance. You can create a <literal>Property</"
-"literal> by calling <literal>Property.forName()</literal>."
+"You can also obtain a criterion from a <literal>Property</literal> instance. "
+"You can create a <literal>Property</literal> by calling <literal>Property."
+"forName()</literal>:"
 msgstr ""
 "<literal>Property</literal>实例是获得一个条件的另外一种途径。你可以通过调用"
 "<literal>Property.forName()</literal> 创建一个<literal>Property</literal>。"
@@ -178,9 +178,9 @@ msgstr "结果集排序"
 
 #. Tag: para
 #: query_criteria.xml:94
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
-"You may order the results using <literal>org.hibernate.criterion.Order</"
+"You can order the results using <literal>org.hibernate.criterion.Order</"
 "literal>."
 msgstr ""
 "你可以使用<literal>org.hibernate.criterion.Order</literal>来为查询结果排序。"
@@ -219,11 +219,9 @@ msgstr "关联"
 #: query_criteria.xml:107
 #, no-c-format
 msgid ""
-"You may easily specify constraints upon related entities by navigating "
-"associations using <literal>createCriteria()</literal>."
+"By navigating associations using <literal>createCriteria()</literal> you can "
+"specify constraints upon related entities:"
 msgstr ""
-"你可以使用<literal>createCriteria()</literal>非常容易的在互相关联的实体间建"
-"立 约束。"
 
 #. Tag: programlisting
 #: query_criteria.xml:112
@@ -238,10 +236,10 @@ msgstr ""
 
 #. Tag: para
 #: query_criteria.xml:114
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
-"note that the second <literal>createCriteria()</literal> returns a new "
-"instance of <literal>Criteria</literal>, which refers to the elements of the "
+"The second <literal>createCriteria()</literal> returns a new instance of "
+"<literal>Criteria</literal> that refers to the elements of the "
 "<literal>kittens</literal> collection."
 msgstr ""
 "注意第二个 <literal>createCriteria()</literal>返回一个新的 "
@@ -250,8 +248,9 @@ msgstr ""
 
 #. Tag: para
 #: query_criteria.xml:120
-#, no-c-format
-msgid "The following, alternate form is useful in certain circumstances."
+#, fuzzy, no-c-format
+msgid ""
+"There is also an alternate form that is useful in certain circumstances:"
 msgstr "接下来，替换形态在某些情况下也是很有用的。"
 
 #. Tag: programlisting
@@ -277,11 +276,11 @@ msgstr ""
 
 #. Tag: para
 #: query_criteria.xml:131
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
-"Note that the kittens collections held by the <literal>Cat</literal> "
-"instances returned by the previous two queries are <emphasis>not</emphasis> "
-"pre-filtered by the criteria! If you wish to retrieve just the kittens that "
+"The kittens collections held by the <literal>Cat</literal> instances "
+"returned by the previous two queries are <emphasis>not</emphasis> pre-"
+"filtered by the criteria. If you want to retrieve just the kittens that "
 "match the criteria, you must use a <literal>ResultTransformer</literal>."
 msgstr ""
 "<literal>Cat</literal>实例所保存的之前两次查询所返回的kittens集合是 "
@@ -313,9 +312,9 @@ msgstr "动态关联抓取"
 
 #. Tag: para
 #: query_criteria.xml:145
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
-"You may specify association fetching semantics at runtime using "
+"You can specify association fetching semantics at runtime using "
 "<literal>setFetchMode()</literal>."
 msgstr ""
 "你可以使用<literal>setFetchMode()</literal>在运行时定义动态关联抓取的语义。"
@@ -424,11 +423,11 @@ msgstr "投影(Projections)、聚合（aggregation）和分组（grouping）"
 
 #. Tag: para
 #: query_criteria.xml:190
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
 "The class <literal>org.hibernate.criterion.Projections</literal> is a "
-"factory for <literal>Projection</literal> instances. We apply a projection "
-"to a query by calling <literal>setProjection()</literal>."
+"factory for <literal>Projection</literal> instances. You can apply a "
+"projection to a query by calling <literal>setProjection()</literal>."
 msgstr ""
 "<literal>org.hibernate.criterion.Projections</literal>是 "
 "<literal>Projection</literal> 的实例工厂。我们通过调用 <literal>setProjection"
@@ -472,11 +471,11 @@ msgstr ""
 
 #. Tag: para
 #: query_criteria.xml:206
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
-"An alias may optionally be assigned to a projection, so that the projected "
-"value may be referred to in restrictions or orderings. Here are two "
-"different ways to do this:"
+"An alias can be assigned to a projection so that the projected value can be "
+"referred to in restrictions or orderings. Here are two different ways to do "
+"this:"
 msgstr ""
 "你可以选择把一个别名指派给一个投影，这样可以使投影值被约束或排序所引用。下面"
 "是两种不同的实现方式："
@@ -588,11 +587,11 @@ msgstr "离线(detached)查询和子查询"
 
 #. Tag: para
 #: query_criteria.xml:239
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
-"The <literal>DetachedCriteria</literal> class lets you create a query "
-"outside the scope of a session, and then later execute it using some "
-"arbitrary <literal>Session</literal>."
+"The <literal>DetachedCriteria</literal> class allows you to create a query "
+"outside the scope of a session and then execute it using an arbitrary "
+"<literal>Session</literal>."
 msgstr ""
 "<literal>DetachedCriteria</literal>类使你在一个session范围之外创建一个查询，"
 "并且可以使用任意的 <literal>Session</literal>来执行它。"
@@ -614,10 +613,10 @@ msgstr ""
 
 #. Tag: para
 #: query_criteria.xml:246
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
-"A <literal>DetachedCriteria</literal> may also be used to express a "
-"subquery. Criterion instances involving subqueries may be obtained via "
+"A <literal>DetachedCriteria</literal> can also be used to express a "
+"subquery. Criterion instances involving subqueries can be obtained via "
 "<literal>Subqueries</literal> or <literal>Property</literal>."
 msgstr ""
 "<literal>DetachedCriteria</literal>也可以用以表示子查询。条件实例包含子查询可"
@@ -647,8 +646,8 @@ msgstr ""
 
 #. Tag: para
 #: query_criteria.xml:256
-#, no-c-format
-msgid "Even correlated subqueries are possible:"
+#, fuzzy, no-c-format
+msgid "Correlated subqueries are also possible:"
 msgstr "甚至相互关联的子查询也是有可能的："
 
 #. Tag: programlisting
@@ -672,11 +671,11 @@ msgstr "根据自然标识查询(Queries by natural identifier)"
 
 #. Tag: para
 #: query_criteria.xml:271
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
-"For most queries, including criteria queries, the query cache is not very "
-"efficient, because query cache invalidation occurs too frequently. However, "
-"there is one special kind of query where we can optimize the cache "
+"For most queries, including criteria queries, the query cache is not "
+"efficient because query cache invalidation occurs too frequently. However, "
+"there is a special kind of query where you can optimize the cache "
 "invalidation algorithm: lookups by a constant natural key. In some "
 "applications, this kind of query occurs frequently. The criteria API "
 "provides special provision for this use case."
@@ -688,10 +687,10 @@ msgstr ""
 
 #. Tag: para
 #: query_criteria.xml:279
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
-"First, you should map the natural key of your entity using <literal>&lt;"
-"natural-id&gt;</literal>, and enable use of the second-level cache."
+"First, map the natural key of your entity using <literal>&lt;natural-id&gt;</"
+"literal> and enable use of the second-level cache."
 msgstr ""
 "首先，你应该对你的entity使用<literal>&lt;natural-id&gt;</literal>来映射自然"
 "键，然后打开第二级缓存。"
@@ -715,30 +714,25 @@ msgstr ""
 
 #. Tag: para
 #: query_criteria.xml:286
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
-"Note that this functionality is not intended for use with entities with "
+"This functionality is not intended for use with entities with "
 "<emphasis>mutable</emphasis> natural keys."
 msgstr "注意,此功能对具有<emphasis>mutable</emphasis>自然键的entity并不适用。"
 
 #. Tag: para
 #: query_criteria.xml:291
-#, no-c-format
-msgid "Next, enable the Hibernate query cache."
-msgstr "然后，打开Hibernate 查询缓存。"
-
-#. Tag: para
-#: query_criteria.xml:295
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
-"Now, <literal>Restrictions.naturalId()</literal> allows us to make use of "
-"the more efficient cache algorithm."
+"Once you have enabled the Hibernate query cache, the <literal>Restrictions."
+"naturalId()</literal> allows you to make use of the more efficient cache "
+"algorithm."
 msgstr ""
 "现在，我们可以用<literal>Restrictions.naturalId()</literal>来使用更加高效的缓"
 "存算法。"
 
 #. Tag: programlisting
-#: query_criteria.xml:300
+#: query_criteria.xml:297
 #, no-c-format
 msgid ""
 "<![CDATA[session.createCriteria(User.class)\n"
@@ -748,3 +742,13 @@ msgid ""
 "    ).setCacheable(true)\n"
 "    .uniqueResult();]]>"
 msgstr ""
+
+#~ msgid ""
+#~ "You may easily specify constraints upon related entities by navigating "
+#~ "associations using <literal>createCriteria()</literal>."
+#~ msgstr ""
+#~ "你可以使用<literal>createCriteria()</literal>非常容易的在互相关联的实体间"
+#~ "建立 约束。"
+
+#~ msgid "Next, enable the Hibernate query cache."
+#~ msgstr "然后，打开Hibernate 查询缓存。"

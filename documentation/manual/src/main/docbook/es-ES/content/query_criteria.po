@@ -1,25 +1,35 @@
 #, fuzzy
 msgid ""
 msgstr ""
+"Report-Msgid-Bugs-To: http://bugs.kde.org\n"
+"POT-Creation-Date: 2009-07-14 19:56+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
-"Content-Type: text/plain; charset=utf-8\n"
+"Content-Type: text/plain; charset=UTF-8\n"
 
-#: index.docbook:5
+#. Tag: title
+#: query_criteria.xml:29
+#, no-c-format
 msgid "Criteria Queries"
 msgstr "Consultas por Criterios"
 
-#: index.docbook:7
+#. Tag: para
+#: query_criteria.xml:31
+#, no-c-format
 msgid "Hibernate features an intuitive, extensible criteria query API."
 msgstr ""
 "Acompa&#x00f1;a a Hibernate una API de consultas por criterios intuitiva y "
 "extensible."
 
-#: index.docbook:12
+#. Tag: title
+#: query_criteria.xml:36
+#, no-c-format
 msgid "Creating a <literal>Criteria</literal> instance"
 msgstr "Creando una instancia de <literal>Criteria</literal>"
 
-#: index.docbook:14
+#. Tag: para
+#: query_criteria.xml:38
+#, no-c-format
 msgid ""
 "The interface <literal>org.hibernate.Criteria</literal> represents a query "
 "against a particular persistent class. The <literal>Session</literal> is a "
@@ -29,7 +39,9 @@ msgstr ""
 "consulta contra una clase persistente en particular. La <literal>Session</"
 "literal> es una f&#x00e1;brica de instancias de <literal>Criteria</literal>."
 
-#: index.docbook:20
+#. Tag: programlisting
+#: query_criteria.xml:44
+#, no-c-format
 msgid ""
 "<![CDATA[Criteria crit = sess.createCriteria(Cat.class);\n"
 "crit.setMaxResults(50);\n"
@@ -39,11 +51,15 @@ msgstr ""
 "crit.setMaxResults(50);\n"
 "List cats = crit.list();]]>"
 
-#: index.docbook:25
+#. Tag: title
+#: query_criteria.xml:49
+#, no-c-format
 msgid "Narrowing the result set"
 msgstr "Estrechando el conjunto resultado"
 
-#: index.docbook:27
+#. Tag: para
+#: query_criteria.xml:51
+#, no-c-format
 msgid ""
 "An individual query criterion is an instance of the interface <literal>org."
 "hibernate.criterion.Criterion</literal>. The class <literal>org.hibernate."
@@ -56,7 +72,9 @@ msgstr ""
 "brica para obtener ciertos tipos prefabricados de <literal>Criterion</"
 "literal>."
 
-#: index.docbook:35
+#. Tag: programlisting
+#: query_criteria.xml:59
+#, no-c-format
 msgid ""
 "<![CDATA[List cats = sess.createCriteria(Cat.class)\n"
 "    .add( Restrictions.like(\"name\", \"Fritz%\") )\n"
@@ -68,11 +86,15 @@ msgstr ""
 "    .add( Restrictions.between(\"weight\", minWeight, maxWeight) )\n"
 "    .list();]]>"
 
-#: index.docbook:37
-msgid "Restrictions may be grouped logically."
+#. Tag: para
+#: query_criteria.xml:61
+#, fuzzy, no-c-format
+msgid "Restrictions can be grouped logically."
 msgstr "Las restricciones pueden ser agrupadas l&#x00f3;gicamente."
 
-#: index.docbook:41
+#. Tag: programlisting
+#: query_criteria.xml:65
+#, no-c-format
 msgid ""
 "<![CDATA[List cats = sess.createCriteria(Cat.class)\n"
 "    .add( Restrictions.like(\"name\", \"Fritz%\") )\n"
@@ -90,7 +112,9 @@ msgstr ""
 "    ) )\n"
 "    .list();]]>"
 
-#: index.docbook:43
+#. Tag: programlisting
+#: query_criteria.xml:67
+#, no-c-format
 msgid ""
 "<![CDATA[List cats = sess.createCriteria(Cat.class)\n"
 "    .add( Restrictions.in( \"name\", new String[] { \"Fritz\", \"Izi\", \"Pk"
@@ -114,17 +138,21 @@ msgstr ""
 "    ) )\n"
 "    .list();]]>"
 
-#: index.docbook:45
+#. Tag: para
+#: query_criteria.xml:69
+#, fuzzy, no-c-format
 msgid ""
-"There are quite a range of built-in criterion types (<literal>Restrictions</"
-"literal> subclasses), but one that is especially useful lets you specify SQL "
+"There are a range of built-in criterion types (<literal>Restrictions</"
+"literal> subclasses). One of the most useful allows you to specify SQL "
 "directly."
 msgstr ""
 "Hay un gran rango de tipos de criterio prefabricados (subclases de "
 "<literal>Restrictions</literal>), pero uno que es especialmente útil te deja "
 "especificar SQL directamente."
 
-#: index.docbook:50
+#. Tag: programlisting
+#: query_criteria.xml:74
+#, no-c-format
 msgid ""
 "<![CDATA[List cats = sess.createCriteria(Cat.class)\n"
 "    .add( Restrictions.sqlRestriction(\"lower({alias}.name) like lower(?)\", "
@@ -136,7 +164,9 @@ msgstr ""
 "\", Hibernate.STRING) )\n"
 "    .list();]]>"
 
-#: index.docbook:52
+#. Tag: para
+#: query_criteria.xml:76
+#, no-c-format
 msgid ""
 "The <literal>{alias}</literal> placeholder with be replaced by the row alias "
 "of the queried entity."
@@ -144,17 +174,21 @@ msgstr ""
 "El sitio <literal>{alias}</literal> ser&#x00e1; remplazado por el alias de "
 "fila de la entidad consultada."
 
-#: index.docbook:57
+#. Tag: para
+#: query_criteria.xml:81
+#, fuzzy, no-c-format
 msgid ""
-"An alternative approach to obtaining a criterion is to get it from a "
-"<literal>Property</literal> instance. You can create a <literal>Property</"
-"literal> by calling <literal>Property.forName()</literal>."
+"You can also obtain a criterion from a <literal>Property</literal> instance. "
+"You can create a <literal>Property</literal> by calling <literal>Property."
+"forName()</literal>:"
 msgstr ""
 "Un enfoque alternativo para obtener un criterio es tomarlo de una instancia "
 "de <literal>Property</literal>. Puedes crear una <literal>Property</literal> "
 "llamando a <literal>Property.forName()</literal>."
 
-#: index.docbook:63
+#. Tag: programlisting
+#: query_criteria.xml:87
+#, no-c-format
 msgid ""
 "<![CDATA[\n"
 "Property age = Property.forName(\"age\");\n"
@@ -182,19 +216,25 @@ msgstr ""
 "\"Pk\" } ) )\n"
 "    .list();]]>"
 
-#: index.docbook:68
+#. Tag: title
+#: query_criteria.xml:92
+#, no-c-format
 msgid "Ordering the results"
 msgstr "Ordenando los resultados"
 
-#: index.docbook:70
+#. Tag: para
+#: query_criteria.xml:94
+#, fuzzy, no-c-format
 msgid ""
-"You may order the results using <literal>org.hibernate.criterion.Order</"
+"You can order the results using <literal>org.hibernate.criterion.Order</"
 "literal>."
 msgstr ""
 "Puedes ordenar los resultados usando <literal>org.hibernate.criterion.Order</"
 "literal>."
 
-#: index.docbook:74
+#. Tag: programlisting
+#: query_criteria.xml:98
+#, no-c-format
 msgid ""
 "<![CDATA[List cats = sess.createCriteria(Cat.class)\n"
 "    .add( Restrictions.like(\"name\", \"F%\")\n"
@@ -210,7 +250,9 @@ msgstr ""
 "    .setMaxResults(50)\n"
 "    .list();]]>"
 
-#: index.docbook:76
+#. Tag: programlisting
+#: query_criteria.xml:100
+#, no-c-format
 msgid ""
 "<![CDATA[List cats = sess.createCriteria(Cat.class)\n"
 "    .add( Property.forName(\"name\").like(\"F%\") )\n"
@@ -226,20 +268,23 @@ msgstr ""
 "    .setMaxResults(50)\n"
 "    .list();]]>"
 
-#: index.docbook:81
+#. Tag: title
+#: query_criteria.xml:105
+#, no-c-format
 msgid "Associations"
 msgstr "Asociaciones"
 
-#: index.docbook:83
+#. Tag: para
+#: query_criteria.xml:107
+#, no-c-format
 msgid ""
-"You may easily specify constraints upon related entities by navigating "
-"associations using <literal>createCriteria()</literal>."
+"By navigating associations using <literal>createCriteria()</literal> you can "
+"specify constraints upon related entities:"
 msgstr ""
-"Puedes especificar f&#x00e1;cilmente restricciones sobre las entidades "
-"relacionadas al navegar asociaciones usando <literal>createCriteria()</"
-"literal>."
 
-#: index.docbook:88
+#. Tag: programlisting
+#: query_criteria.xml:112
+#, no-c-format
 msgid ""
 "<![CDATA[List cats = sess.createCriteria(Cat.class)\n"
 "    .add( Restrictions.like(\"name\", \"F%\") )\n"
@@ -253,21 +298,28 @@ msgstr ""
 "        .add( Restrictions.like(\"name\", \"F%\")\n"
 "    .list();]]>"
 
-#: index.docbook:90
+#. Tag: para
+#: query_criteria.xml:114
+#, fuzzy, no-c-format
 msgid ""
-"note that the second <literal>createCriteria()</literal> returns a new "
-"instance of <literal>Criteria</literal>, which refers to the elements of the "
+"The second <literal>createCriteria()</literal> returns a new instance of "
+"<literal>Criteria</literal> that refers to the elements of the "
 "<literal>kittens</literal> collection."
 msgstr ""
 "nota que el segundo <literal>createCriteria()</literal> devuelve una nueva "
 "instancia de <literal>Criteria</literal>, que hace referencia a los "
 "elementos de la colecci&#x00f3;n <literal>kittens</literal>."
 
-#: index.docbook:96
-msgid "The following, alternate form is useful in certain circumstances."
+#. Tag: para
+#: query_criteria.xml:120
+#, fuzzy, no-c-format
+msgid ""
+"There is also an alternate form that is useful in certain circumstances:"
 msgstr "La siguiente forma alternativa es útil en ciertas circunstancias."
 
-#: index.docbook:100
+#. Tag: programlisting
+#: query_criteria.xml:124
+#, no-c-format
 msgid ""
 "<![CDATA[List cats = sess.createCriteria(Cat.class)\n"
 "    .createAlias(\"kittens\", \"kt\")\n"
@@ -281,7 +333,9 @@ msgstr ""
 "    .add( Restrictions.eqProperty(\"kt.name\", \"mt.name\") )\n"
 "    .list();]]>"
 
-#: index.docbook:102
+#. Tag: para
+#: query_criteria.xml:126
+#, no-c-format
 msgid ""
 "(<literal>createAlias()</literal> does not create a new instance of "
 "<literal>Criteria</literal>.)"
@@ -289,11 +343,13 @@ msgstr ""
 "(<literal>createAlias()</literal> no crea una nueva instancia de "
 "<literal>Criteria</literal>.)"
 
-#: index.docbook:107
+#. Tag: para
+#: query_criteria.xml:131
+#, fuzzy, no-c-format
 msgid ""
-"Note that the kittens collections held by the <literal>Cat</literal> "
-"instances returned by the previous two queries are <emphasis>not</emphasis> "
-"pre-filtered by the criteria! If you wish to retrieve just the kittens that "
+"The kittens collections held by the <literal>Cat</literal> instances "
+"returned by the previous two queries are <emphasis>not</emphasis> pre-"
+"filtered by the criteria. If you want to retrieve just the kittens that "
 "match the criteria, you must use a <literal>ResultTransformer</literal>."
 msgstr ""
 "&#x00a1;Observa que las colecciones de gatitos tenidas por las instancias de "
@@ -302,7 +358,9 @@ msgstr ""
 "s&#x00f3;lo los gatitos que emparejen los criterios, debes usar "
 "<literal>returnMaps()</literal>."
 
-#: index.docbook:114
+#. Tag: programlisting
+#: query_criteria.xml:138
+#, no-c-format
 msgid ""
 "<![CDATA[List cats = sess.createCriteria(Cat.class)\n"
 "    .createCriteria(\"kittens\", \"kt\")\n"
@@ -328,20 +386,26 @@ msgstr ""
 "    Cat kitten = (Cat) map.get(\"kt\");\n"
 "}]]>"
 
-#: index.docbook:119
+#. Tag: title
+#: query_criteria.xml:143
+#, no-c-format
 msgid "Dynamic association fetching"
 msgstr "Recuperaci&#x00f3;n din&#x00e1;mica de asociaciones"
 
-#: index.docbook:121
+#. Tag: para
+#: query_criteria.xml:145
+#, fuzzy, no-c-format
 msgid ""
-"You may specify association fetching semantics at runtime using "
+"You can specify association fetching semantics at runtime using "
 "<literal>setFetchMode()</literal>."
 msgstr ""
 "Puedes especificar la sem&#x00e1;ntica de recuperaci&#x00f3;n de "
 "asociaciones en tiempo de ejecuci&#x00f3;n usando <literal>setFetchMode()</"
 "literal>."
 
-#: index.docbook:126
+#. Tag: programlisting
+#: query_criteria.xml:150
+#, no-c-format
 msgid ""
 "<![CDATA[List cats = sess.createCriteria(Cat.class)\n"
 "    .add( Restrictions.like(\"name\", \"Fritz%\") )\n"
@@ -355,7 +419,9 @@ msgstr ""
 "    .setFetchMode(\"kittens\", FetchMode.EAGER)\n"
 "    .list();]]>"
 
-#: index.docbook:128
+#. Tag: para
+#: query_criteria.xml:152
+#, no-c-format
 msgid ""
 "This query will fetch both <literal>mate</literal> and <literal>kittens</"
 "literal> by outer join. See <xref linkend=\"performance-fetching\"/> for "
@@ -365,11 +431,15 @@ msgstr ""
 "<literal>kittens</literal> por uni&#x00f3;n exterior (outer join). Ver <xref "
 "linkend=\"performance-fetching\"/> para m&#x00e1;s informaci&#x00f3;n."
 
-#: index.docbook:136
+#. Tag: title
+#: query_criteria.xml:160
+#, no-c-format
 msgid "Example queries"
 msgstr "Consultas por ejemplos"
 
-#: index.docbook:138
+#. Tag: para
+#: query_criteria.xml:162
+#, no-c-format
 msgid ""
 "The class <literal>org.hibernate.criterion.Example</literal> allows you to "
 "construct a query criterion from a given instance."
@@ -377,7 +447,9 @@ msgstr ""
 "La clase <literal>org.hibernate.criterion.Example</literal> te permite "
 "construir un criterio de consulta a partir de una instancia dada."
 
-#: index.docbook:143
+#. Tag: programlisting
+#: query_criteria.xml:167
+#, no-c-format
 msgid ""
 "<![CDATA[Cat cat = new Cat();\n"
 "cat.setSex('F');\n"
@@ -393,7 +465,9 @@ msgstr ""
 "    .add( Example.create(cat) )\n"
 "    .list();]]>"
 
-#: index.docbook:145
+#. Tag: para
+#: query_criteria.xml:169
+#, no-c-format
 msgid ""
 "Version properties, identifiers and associations are ignored. By default, "
 "null valued properties are excluded."
@@ -402,11 +476,15 @@ msgstr ""
 "son ignorados. Por defecto, las propiedades valuadas a nulo son exclu&#x00ed;"
 "das."
 
-#: index.docbook:150
+#. Tag: para
+#: query_criteria.xml:174
+#, no-c-format
 msgid "You can adjust how the <literal>Example</literal> is applied."
 msgstr "Puedes ajustar c&#x00f3;mo se aplica el <literal>Example</literal>."
 
-#: index.docbook:154
+#. Tag: programlisting
+#: query_criteria.xml:178
+#, no-c-format
 msgid ""
 "<![CDATA[Example example = Example.create(cat)\n"
 "    .excludeZeroes()           //exclude zero valued properties\n"
@@ -428,12 +506,16 @@ msgstr ""
 "    .add(example)\n"
 "    .list();]]>"
 
-#: index.docbook:156
+#. Tag: para
+#: query_criteria.xml:180
+#, no-c-format
 msgid "You can even use examples to place criteria upon associated objects."
 msgstr ""
 "Puedes incluso usar ejemplos para colocar criterios sobre objetos asociados."
 
-#: index.docbook:160
+#. Tag: programlisting
+#: query_criteria.xml:184
+#, no-c-format
 msgid ""
 "<![CDATA[List results = session.createCriteria(Cat.class)\n"
 "    .add( Example.create(cat) )\n"
@@ -447,22 +529,28 @@ msgstr ""
 "        .add( Example.create( cat.getMate() ) )\n"
 "    .list();]]>"
 
-#: index.docbook:165
+#. Tag: title
+#: query_criteria.xml:189
+#, no-c-format
 msgid "Projections, aggregation and grouping"
 msgstr "Proyecciones, agregaci&#x00f3;n y agrupamiento"
 
-#: index.docbook:166
+#. Tag: para
+#: query_criteria.xml:190
+#, fuzzy, no-c-format
 msgid ""
 "The class <literal>org.hibernate.criterion.Projections</literal> is a "
-"factory for <literal>Projection</literal> instances. We apply a projection "
-"to a query by calling <literal>setProjection()</literal>."
+"factory for <literal>Projection</literal> instances. You can apply a "
+"projection to a query by calling <literal>setProjection()</literal>."
 msgstr ""
 "La clase <literal>org.hibernate.criterion.Projections</literal> es una "
 "f&#x00e1;brica de instancias de <literal>Projection</literal>. Aplicamos una "
 "proyecci&#x00f3;n a una consulta llamando a <literal>setProjection()</"
 "literal>."
 
-#: index.docbook:172
+#. Tag: programlisting
+#: query_criteria.xml:196
+#, no-c-format
 msgid ""
 "<![CDATA[List results = session.createCriteria(Cat.class)\n"
 "    .setProjection( Projections.rowCount() )\n"
@@ -474,7 +562,9 @@ msgstr ""
 "    .add( Restrictions.eq(\"color\", Color.BLACK) )\n"
 "    .list();]]>"
 
-#: index.docbook:174
+#. Tag: programlisting
+#: query_criteria.xml:198
+#, no-c-format
 msgid ""
 "<![CDATA[List results = session.createCriteria(Cat.class)\n"
 "    .setProjection( Projections.projectionList()\n"
@@ -494,7 +584,9 @@ msgstr ""
 "    )\n"
 "    .list();]]>"
 
-#: index.docbook:176
+#. Tag: para
+#: query_criteria.xml:200
+#, no-c-format
 msgid ""
 "There is no explicit \"group by\" necessary in a criteria query. Certain "
 "projection types are defined to be <emphasis>grouping projections</"
@@ -505,17 +597,21 @@ msgstr ""
 "<emphasis>proyecciones agrupadas</emphasis>, que adem&#x00e1;s aparecen en "
 "la cl&#x00e1;usula SQL <literal>group by</literal>."
 
-#: index.docbook:182
+#. Tag: para
+#: query_criteria.xml:206
+#, fuzzy, no-c-format
 msgid ""
-"An alias may optionally be assigned to a projection, so that the projected "
-"value may be referred to in restrictions or orderings. Here are two "
-"different ways to do this:"
+"An alias can be assigned to a projection so that the projected value can be "
+"referred to in restrictions or orderings. Here are two different ways to do "
+"this:"
 msgstr ""
 "Puede opcionalmente asignarse un alias a una proyecci&#x00f3;n, de modo que "
 "el valor proyectado pueda ser referido en restricciones u ordenamientos. "
 "Aqu&#x00ed; hay dos formas diferentes de hacer esto:"
 
-#: index.docbook:188
+#. Tag: programlisting
+#: query_criteria.xml:212
+#, no-c-format
 msgid ""
 "<![CDATA[List results = session.createCriteria(Cat.class)\n"
 "    .setProjection( Projections.alias( Projections.groupProperty(\"color\"), "
@@ -529,7 +625,9 @@ msgstr ""
 "    .addOrder( Order.asc(\"colr\") )\n"
 "    .list();]]>"
 
-#: index.docbook:190
+#. Tag: programlisting
+#: query_criteria.xml:214
+#, no-c-format
 msgid ""
 "<![CDATA[List results = session.createCriteria(Cat.class)\n"
 "    .setProjection( Projections.groupProperty(\"color\").as(\"colr\") )\n"
@@ -541,7 +639,9 @@ msgstr ""
 "    .addOrder( Order.asc(\"colr\") )\n"
 "    .list();]]>"
 
-#: index.docbook:192
+#. Tag: para
+#: query_criteria.xml:216
+#, no-c-format
 msgid ""
 "The <literal>alias()</literal> and <literal>as()</literal> methods simply "
 "wrap a projection instance in another, aliased, instance of "
@@ -553,7 +653,9 @@ msgstr ""
 "de <literal>Projection</literal> con alias. Como un atajo, puedes asignar un "
 "alias cuando agregas la proyecci&#x00f3;n a una lista de proyecciones:"
 
-#: index.docbook:199
+#. Tag: programlisting
+#: query_criteria.xml:223
+#, no-c-format
 msgid ""
 "<![CDATA[List results = session.createCriteria(Cat.class)\n"
 "    .setProjection( Projections.projectionList()\n"
@@ -577,7 +679,9 @@ msgstr ""
 "    .addOrder( Order.desc(\"avgWeight\") )\n"
 "    .list();]]>"
 
-#: index.docbook:201
+#. Tag: programlisting
+#: query_criteria.xml:225
+#, no-c-format
 msgid ""
 "<![CDATA[List results = session.createCriteria(Domestic.class, \"cat\")\n"
 "    .createAlias(\"kittens\", \"kit\")\n"
@@ -599,7 +703,9 @@ msgstr ""
 "    .addOrder( Order.asc(\"kitName\") )\n"
 "    .list();]]>"
 
-#: index.docbook:203
+#. Tag: para
+#: query_criteria.xml:227
+#, no-c-format
 msgid ""
 "You can also use <literal>Property.forName()</literal> to express "
 "projections:"
@@ -607,7 +713,9 @@ msgstr ""
 "Puedes tambi&#x00e9;n usar <literal>Property.forName()</literal> para "
 "expresar proyecciones:"
 
-#: index.docbook:207
+#. Tag: programlisting
+#: query_criteria.xml:231
+#, no-c-format
 msgid ""
 "<![CDATA[List results = session.createCriteria(Cat.class)\n"
 "    .setProjection( Property.forName(\"name\") )\n"
@@ -619,7 +727,9 @@ msgstr ""
 "    .add( Property.forName(\"color\").eq(Color.BLACK) )\n"
 "    .list();]]>"
 
-#: index.docbook:209
+#. Tag: programlisting
+#: query_criteria.xml:233
+#, no-c-format
 msgid ""
 "<![CDATA[List results = session.createCriteria(Cat.class)\n"
 "    .setProjection( Projections.projectionList()\n"
@@ -643,21 +753,27 @@ msgstr ""
 "    .addOrder( Order.desc(\"avgWeight\") )\n"
 "    .list();]]>"
 
-#: index.docbook:214
+#. Tag: title
+#: query_criteria.xml:238
+#, no-c-format
 msgid "Detached queries and subqueries"
 msgstr "Consultas y subconsultas separadas"
 
-#: index.docbook:215
+#. Tag: para
+#: query_criteria.xml:239
+#, fuzzy, no-c-format
 msgid ""
-"The <literal>DetachedCriteria</literal> class lets you create a query "
-"outside the scope of a session, and then later execute it using some "
-"arbitrary <literal>Session</literal>."
+"The <literal>DetachedCriteria</literal> class allows you to create a query "
+"outside the scope of a session and then execute it using an arbitrary "
+"<literal>Session</literal>."
 msgstr ""
 "La clase <literal>DetachedCriteria</literal> te deja crear una consulta "
 "fuera del &#x00e1;mbito de una sesi&#x00f3;n, y entonces ejecutarla luego "
 "usando alguna <literal>Session</literal> arbitraria."
 
-#: index.docbook:220
+#. Tag: programlisting
+#: query_criteria.xml:244
+#, no-c-format
 msgid ""
 "<![CDATA[DetachedCriteria query = DetachedCriteria.forClass(Cat.class)\n"
 "    .add( Property.forName(\"sex\").eq('F') );\n"
@@ -679,10 +795,12 @@ msgstr ""
 "txn.commit();\n"
 "session.close();]]>"
 
-#: index.docbook:222
+#. Tag: para
+#: query_criteria.xml:246
+#, fuzzy, no-c-format
 msgid ""
-"A <literal>DetachedCriteria</literal> may also be used to express a "
-"subquery. Criterion instances involving subqueries may be obtained via "
+"A <literal>DetachedCriteria</literal> can also be used to express a "
+"subquery. Criterion instances involving subqueries can be obtained via "
 "<literal>Subqueries</literal> or <literal>Property</literal>."
 msgstr ""
 "Tambi&#x00e9;n una <literal>DetachedCriteria</literal> puede usarse para "
@@ -690,7 +808,9 @@ msgstr ""
 "subconsultas pueden obtenerse v&#x00ed;a <literal>Subqueries</literal> o "
 "<literal>Property</literal>."
 
-#: index.docbook:228
+#. Tag: programlisting
+#: query_criteria.xml:252
+#, no-c-format
 msgid ""
 "<![CDATA[DetachedCriteria avgWeight = DetachedCriteria.forClass(Cat.class)\n"
 "    .setProjection( Property.forName(\"weight\").avg() );\n"
@@ -704,7 +824,9 @@ msgstr ""
 "    .add( Property.forName(\"weight\").gt(avgWeight) )\n"
 "    .list();]]>"
 
-#: index.docbook:230
+#. Tag: programlisting
+#: query_criteria.xml:254
+#, no-c-format
 msgid ""
 "<![CDATA[DetachedCriteria weights = DetachedCriteria.forClass(Cat.class)\n"
 "    .setProjection( Property.forName(\"weight\") );\n"
@@ -718,11 +840,15 @@ msgstr ""
 "    .add( Subqueries.geAll(\"weight\", weights) )\n"
 "    .list();]]>"
 
-#: index.docbook:232
-msgid "Even correlated subqueries are possible:"
+#. Tag: para
+#: query_criteria.xml:256
+#, fuzzy, no-c-format
+msgid "Correlated subqueries are also possible:"
 msgstr "Incluso son posibles las subconsultas correlacionadas:"
 
-#: index.docbook:236
+#. Tag: programlisting
+#: query_criteria.xml:260
+#, no-c-format
 msgid ""
 "<![CDATA[DetachedCriteria avgWeightForSex = DetachedCriteria.forClass(Cat."
 "class, \"cat2\")\n"
@@ -740,15 +866,19 @@ msgstr ""
 "    .add( Property.forName(\"weight\").gt(avgWeightForSex) )\n"
 "    .list();]]>"
 
-#: index.docbook:245
+#. Tag: title
+#: query_criteria.xml:269
+#, no-c-format
 msgid "Queries by natural identifier"
 msgstr "Consultas por identificador natural"
 
-#: index.docbook:247
+#. Tag: para
+#: query_criteria.xml:271
+#, fuzzy, no-c-format
 msgid ""
-"For most queries, including criteria queries, the query cache is not very "
-"efficient, because query cache invalidation occurs too frequently. However, "
-"there is one special kind of query where we can optimize the cache "
+"For most queries, including criteria queries, the query cache is not "
+"efficient because query cache invalidation occurs too frequently. However, "
+"there is a special kind of query where you can optimize the cache "
 "invalidation algorithm: lookups by a constant natural key. In some "
 "applications, this kind of query occurs frequently. The criteria API "
 "provides special provision for this use case."
@@ -762,16 +892,20 @@ msgstr ""
 "ocurre frecuentemente. La API de criterios brinda especial provisi&#x00f3;n "
 "para este caso de uso."
 
-#: index.docbook:255
+#. Tag: para
+#: query_criteria.xml:279
+#, fuzzy, no-c-format
 msgid ""
-"First, you should map the natural key of your entity using <literal>&lt;"
-"natural-id&gt;</literal>, and enable use of the second-level cache."
+"First, map the natural key of your entity using <literal>&lt;natural-id&gt;</"
+"literal> and enable use of the second-level cache."
 msgstr ""
 "Primero, debes mapear la clave natural de tu entidad usando <literal>&lt;"
 "natural-id&gt;</literal>, y habilitar el uso del cach&#x00e9; de segundo "
 "nivel."
 
-#: index.docbook:260
+#. Tag: programlisting
+#: query_criteria.xml:284
+#, no-c-format
 msgid ""
 "<![CDATA[<class name=\"User\">\n"
 "    <cache usage=\"read-write\"/>\n"
@@ -797,27 +931,30 @@ msgstr ""
 "    <property name=\"password\"/>\n"
 "</class>]]>"
 
-#: index.docbook:262
+#. Tag: para
+#: query_criteria.xml:286
+#, fuzzy, no-c-format
 msgid ""
-"Note that this functionality is not intended for use with entities with "
+"This functionality is not intended for use with entities with "
 "<emphasis>mutable</emphasis> natural keys."
 msgstr ""
 "Nota que esta funcionalidad no est&#x00e1; pensada para uso con entidades "
 "con claves naturales <emphasis>mutable</emphasis>."
 
-#: index.docbook:267
-msgid "Next, enable the Hibernate query cache."
-msgstr "Seguido, habilita el cach&#x00e9; de consulta de Hibernate."
-
-#: index.docbook:271
+#. Tag: para
+#: query_criteria.xml:291
+#, fuzzy, no-c-format
 msgid ""
-"Now, <literal>Restrictions.naturalId()</literal> allows us to make use of "
-"the more efficient cache algorithm."
+"Once you have enabled the Hibernate query cache, the <literal>Restrictions."
+"naturalId()</literal> allows you to make use of the more efficient cache "
+"algorithm."
 msgstr ""
 "Ahora, <literal>Restrictions.naturalId()</literal> nos permite hacer uso de "
 "el algoritmo de cach&#x00e9; m&#x00e1;s eficiente."
 
-#: index.docbook:276
+#. Tag: programlisting
+#: query_criteria.xml:297
+#, no-c-format
 msgid ""
 "<![CDATA[session.createCriteria(User.class)\n"
 "    .add( Restrictions.naturalId()\n"
@@ -833,8 +970,19 @@ msgstr ""
 "    ).setCacheable(true)\n"
 "    .uniqueResult();]]>"
 
-msgid "ROLES_OF_TRANSLATORS"
-msgstr "<!--TRANS:ROLES_OF_TRANSLATORS-->"
+#~ msgid ""
+#~ "You may easily specify constraints upon related entities by navigating "
+#~ "associations using <literal>createCriteria()</literal>."
+#~ msgstr ""
+#~ "Puedes especificar f&#x00e1;cilmente restricciones sobre las entidades "
+#~ "relacionadas al navegar asociaciones usando <literal>createCriteria()</"
+#~ "literal>."
 
-msgid "CREDIT_FOR_TRANSLATORS"
-msgstr "<!--TRANS:CREDIT_FOR_TRANSLATORS-->"
+#~ msgid "Next, enable the Hibernate query cache."
+#~ msgstr "Seguido, habilita el cach&#x00e9; de consulta de Hibernate."
+
+#~ msgid "ROLES_OF_TRANSLATORS"
+#~ msgstr "<!--TRANS:ROLES_OF_TRANSLATORS-->"
+
+#~ msgid "CREDIT_FOR_TRANSLATORS"
+#~ msgstr "<!--TRANS:CREDIT_FOR_TRANSLATORS-->"

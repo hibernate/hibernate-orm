@@ -17,6 +17,7 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.ElementCollection;
+import javax.persistence.CollectionTable;
 
 import org.hibernate.annotations.CollectionOfElements;
 import org.hibernate.annotations.IndexColumn;
@@ -77,7 +78,7 @@ public class Boy {
 	}
 
 	@ElementCollection
-	@JoinTable(name = "ScorePerNickName", joinColumns = @JoinColumn(name = "BoyId"))
+	@CollectionTable(name = "ScorePerNickName", joinColumns = @JoinColumn(name = "BoyId"))
 	@Column(name = "score", nullable = false)
 	public Map<String, Integer> getScorePerNickName() {
 		return scorePerNickName;
@@ -88,7 +89,7 @@ public class Boy {
 	}
 
 	@ElementCollection
-	@JoinTable(
+	@CollectionTable(
 			name = "BoyFavoriteNumbers",
 			joinColumns = @JoinColumn(name = "BoyId")
 	)

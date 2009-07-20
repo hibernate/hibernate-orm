@@ -71,6 +71,8 @@ import javax.persistence.TableGenerator;
 import javax.persistence.Transient;
 import javax.persistence.Version;
 import javax.persistence.ElementCollection;
+import javax.persistence.CollectionTable;
+import javax.persistence.UniqueConstraint;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
@@ -1170,9 +1172,10 @@ public final class AnnotationBinder {
 			return;
 		}
 
-		//process @JoinColumn(s) before @Column(s) to handle collection of elements properly
+		//process @JoinColumn(s) before @Column(s) to handle collection of entities properly
 		{
 			JoinColumn[] anns = null;
+
 			if ( property.isAnnotationPresent( JoinColumn.class ) ) {
 				anns = new JoinColumn[] { property.getAnnotation( JoinColumn.class ) };
 			}
@@ -1467,7 +1470,6 @@ public final class AnnotationBinder {
 			org.hibernate.annotations.IndexColumn indexAnn = property.getAnnotation(
 					org.hibernate.annotations.IndexColumn.class
 			);
-			JoinTable assocTable = property.getAnnotation( JoinTable.class );
 
 			IndexColumn indexColumn = IndexColumn.buildColumnFromAnnotation(
 					indexAnn, propertyHolder, inferredData, mappings
@@ -1626,8 +1628,9 @@ public final class AnnotationBinder {
 				collectionBinder.setOneToMany( false );
 			}
 			collectionBinder.setMappedBy( mappedBy );
+
 			bindJoinedTableAssociation(
-					assocTable, mappings, entityBinder, collectionBinder, propertyHolder, inferredData, mappedBy
+					property, mappings, entityBinder, collectionBinder, propertyHolder, inferredData, mappedBy
 			);
 
 			OnDelete onDeleteAnn = property.getAnnotation( OnDelete.class );
@@ -1735,41 +1738,53 @@ public final class AnnotationBinder {
 
 	//TODO move that to collection binder?
 	private static void bindJoinedTableAssociation(
-			JoinTable joinTableAnn, ExtendedMappings mappings, EntityBinder entityBinder,
+			XProperty property, ExtendedMappings mappings, EntityBinder entityBinder,
 			CollectionBinder collectionBinder, PropertyHolder propertyHolder, PropertyData inferredData,
 			String mappedBy
 	) {
 		TableBinder associationTableBinder = new TableBinder();
 		JoinColumn[] annJoins;
 		JoinColumn[] annInverseJoins;
-		if ( joinTableAnn != null ) {
+		JoinTable assocTable = property.getAnnotation( JoinTable.class );
+		CollectionTable collectionTable = property.getAnnotation( CollectionTable.class );
+
+		if ( assocTable != null || collectionTable != null ) {
+
+			final String catalog;
+			final String schema;
+			final String tableName;
+			final UniqueConstraint[] uniqueConstraints;
+			final JoinColumn[] joins;
+			final JoinColumn[] inverseJoins;
+
+			//JPA 2 has priority
+			if (collectionTable != null) {
+				catalog = collectionTable.catalog();
+				schema = collectionTable.schema();
+				tableName = collectionTable.name();
+				uniqueConstraints = collectionTable.uniqueConstraints();
+				joins = collectionTable.joinColumns();
+				inverseJoins = null;
+			}
+			else {
+				catalog = assocTable.catalog();
+				schema = assocTable.schema();
+				tableName = assocTable.name();
+				uniqueConstraints = assocTable.uniqueConstraints();
+				joins = assocTable.joinColumns();
+				inverseJoins = assocTable.inverseJoinColumns();
+			}
+
 			collectionBinder.setExplicitAssociationTable( true );
-			if ( !BinderHelper.isDefault( joinTableAnn.schema() ) )
-				associationTableBinder.setSchema( joinTableAnn.schema() );
-			if ( !BinderHelper.isDefault( joinTableAnn.catalog() ) )
-				associationTableBinder.setCatalog( joinTableAnn.catalog() );
-			if ( !BinderHelper.isDefault( joinTableAnn.name() ) ) associationTableBinder.setName( joinTableAnn.name() );
-			associationTableBinder.setUniqueConstraints( joinTableAnn.uniqueConstraints() );
+
+			if ( !BinderHelper.isDefault( schema ) ) associationTableBinder.setSchema( schema );
+			if ( !BinderHelper.isDefault( catalog ) ) associationTableBinder.setCatalog( catalog );
+			if ( !BinderHelper.isDefault( tableName ) ) associationTableBinder.setName( tableName );
+			associationTableBinder.setUniqueConstraints( uniqueConstraints );
 
 			//set check constaint in the second pass
-
-			JoinColumn[] joins = joinTableAnn.joinColumns();
-
-			if ( joins.length == 0 ) {
-				annJoins = null;
-			}
-			else {
-				annJoins = joins;
-			}
-
-			JoinColumn[] inverseJoins = joinTableAnn.inverseJoinColumns();
-
-			if ( inverseJoins.length == 0 ) {
-				annInverseJoins = null;
-			}
-			else {
-				annInverseJoins = inverseJoins;
-			}
+			annJoins = joins.length == 0 ? null : joins;
+			annInverseJoins = inverseJoins == null || inverseJoins.length == 0 ? null : inverseJoins;
 		}
 		else {
 			annJoins = null;

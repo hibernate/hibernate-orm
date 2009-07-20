@@ -12,9 +12,6 @@ import javax.persistence.ElementCollection;
 import javax.validation.constraints.NotNull;
 import javax.validation.Valid;
 
-import org.hibernate.annotations.CollectionOfElements;
-import org.hibernate.annotations.Cascade;
-
 /**
  * @author Emmanuel Bernard
  */

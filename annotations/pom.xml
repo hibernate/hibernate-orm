@@ -62,7 +62,7 @@
         <dependency>
             <groupId>org.hibernate.java-persistence</groupId>
             <artifactId>jpa-api</artifactId>
-            <version>2.0.pfd-SNAPSHOT</version>
+            <version>2.0.Beta-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>javassist</groupId>
@@ -83,7 +83,7 @@
         <dependency>
             <groupId>org.hibernate</groupId>
             <artifactId>hibernate-validator</artifactId>
-            <version>4.0.0.Beta2-SNAPSHOT</version>
+            <version>4.0.0.Beta3-SNAPSHOT</version>
             <scope>test</scope>
         </dependency>
     </dependencies>

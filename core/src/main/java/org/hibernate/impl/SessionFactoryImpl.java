@@ -958,7 +958,7 @@ public final class SessionFactoryImpl implements SessionFactory, SessionFactoryI
 
 	private final Cache cacheAccess = new CacheImpl();
 
-	private class CacheImpl implements Cache {
+	private class CacheImpl implements Cache, Serializable {
 		public boolean containsEntity(Class entityClass, Serializable identifier) {
 			return containsEntity( entityClass.getName(), identifier );
 		}

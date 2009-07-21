@@ -36,11 +36,13 @@
     <name>Hibernate Core Parent POM</name>
     <description>The base POM for all Hibernate Core modules.</description>
     <url>http://hibernate.org</url>
+    <inceptionYear>2002</inceptionYear>
 
     <organization>
         <name>Hibernate.org</name>
         <url>http://hibernate.org</url>
     </organization>
+
     <developers>
     </developers>
 
@@ -175,7 +177,40 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-javadoc-plugin</artifactId>
-                    <version>2.4</version>
+                    <version>2.5</version>
+                    <configuration>
+                        <links>
+                            <link>http://java.sun.com/j2se/1.4.2/docs/api/</link>
+                            <link>http://java.sun.com/j2ee/1.4/docs/api/</link>
+                        </links>
+                        <packagesheader>Hibernate Packages</packagesheader>
+                        <doctitle>Hibernate Core ${project.version}</doctitle>
+                        <windowtitle>Hibernate Core ${project.version}</windowtitle>
+                        <bottom><![CDATA[Copyright &copy; ${inceptionYear}-{currentYear} <a href="http://redhat.com">Red Hat Middleware, LLC.</a>  All Rights Reserved]]></bottom>
+                        <excludePackageNames>orh.hibernate.tutorial*</excludePackageNames>
+                        <groups>
+                            <group>
+                                <title>Core API</title>
+                                <packages>
+                                    org.hibernate:org.hibernate.classic:org.hibernate.criterion:org.hibernate.mapping:org.hibernate.metadata:org.hibernate.cfg:org.hibernate.stat
+                                </packages>
+                            </group>
+                            <group>
+                                <title>Extension SPI/API</title>
+                                <packages>
+                                    org.hibernate.id*:org.hibernate.connection:org.hibernate.transaction:org.hibernate.type:org.hibernate.dialect*:org.hibernate.cache*:org.hibernate.event*:org.hibernate.property:org.hibernate.loader*:org.hibernate.persister*:org.hibernate.proxy:org.hibernate.tuple:org.hibernate.transform:org.hibernate.collection:org.hibernate.jdbc:org.hibernate.usertype
+                                </packages>
+                            </group>
+                            <group>
+                                <title>JBoss Cache Integration</title>
+                                <packages>org.hibernate.cache.jbc2*</packages>
+                            </group>
+                            <group>
+                                <title>Miscellaneous API</title>
+                                <packages>org.hibernate.tool.hbm2ddl:org.hibernate.jmx:org.hibernate.tool.instrument*</packages>
+                            </group>
+                        </groups>
+                    </configuration>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
@@ -215,16 +250,7 @@
                 <artifactId>maven-surefire-report-plugin</artifactId>
                 <version>2.4.3</version>
             </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-javadoc-plugin</artifactId>
-                <configuration>
-                    <links>
-                        <link>http://java.sun.com/j2se/1.4.2/docs/api/</link>
-                        <link>http://java.sun.com/j2ee/1.4/docs/api/</link>
-                    </links>
-                </configuration>
-            </plugin>
+<!--
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jxr-plugin</artifactId>
@@ -235,7 +261,7 @@
                 <artifactId>maven-pmd-plugin</artifactId>
                 <version>2.2</version>
                 <configuration>
-                    <linkXref>true</linkXref>
+                    <linkXRef>true</linkXRef>
                     <minimumTokens>100</minimumTokens>
                     <targetJdk>1.4</targetJdk>
                 </configuration>
@@ -258,11 +284,11 @@
                 </configuration>
             </plugin>
             <plugin>
-                <!-- Note: aggregate-able, may cause problems if we aggregate jxr and not this because of the xref links -->
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>javancss-maven-plugin</artifactId>
                 <version>2.0-beta-2</version>
             </plugin>
+-->
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>findbugs-maven-plugin</artifactId>

@@ -29,6 +29,7 @@ import java.util.Map;
 import java.util.Random;
 import javax.persistence.AttributeOverride;
 import javax.persistence.AttributeOverrides;
+import javax.persistence.MapKeyClass;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
@@ -140,6 +141,9 @@ public class MapBinder extends CollectionBinder {
 			 */
 			if ( property.isAnnotationPresent( org.hibernate.annotations.MapKey.class ) ) {
 				target = property.getAnnotation( org.hibernate.annotations.MapKey.class ).targetElement();
+			}
+			else if ( property.isAnnotationPresent( MapKeyClass.class ) ) {
+				target = property.getAnnotation( MapKeyClass.class ).value();
 			}
 			else if ( property.isAnnotationPresent( MapKeyManyToMany.class ) ) {
 				target = property.getAnnotation( MapKeyManyToMany.class ).targetEntity();

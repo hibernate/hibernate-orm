@@ -27,6 +27,7 @@ public class Brand {
 
 	@ElementCollection(targetClass = SizeImpl.class)
 	@MapKeyManyToMany(targetEntity = LuggageImpl.class)
+	//TODO @MapKeyClass(LuggageImpl.class)
 	private Map<Luggage, Size> sizePerLuggage = new HashMap<Luggage, Size>();
 
 

@@ -8,6 +8,7 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.ManyToMany;
+import javax.persistence.MapKeyClass;
 
 import org.hibernate.annotations.MapKey;
 import org.hibernate.annotations.MapKeyManyToMany;
@@ -22,7 +23,7 @@ public class Brand {
 	private Long id;
 
 	@ManyToMany(targetEntity = LuggageImpl.class)
-	@MapKey(targetElement = SizeImpl.class)
+	@MapKeyClass(SizeImpl.class)
 	private Map<Size, Luggage> luggagesBySize = new HashMap<Size, Luggage>();
 
 	@ElementCollection(targetClass = SizeImpl.class)

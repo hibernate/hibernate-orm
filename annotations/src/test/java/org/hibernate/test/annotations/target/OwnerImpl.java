@@ -1,11 +1,7 @@
 //$Id$
 package org.hibernate.test.annotations.target;
 
-import java.util.Map;
-import java.util.HashMap;
 import javax.persistence.Embeddable;
-import org.hibernate.annotations.MapKey;
-import javax.persistence.ManyToMany;
 
 /**
  * @author Emmanuel Bernard

@@ -39,6 +39,7 @@ import javax.persistence.ManyToMany;
 import javax.persistence.MapKey;
 import javax.persistence.OneToMany;
 import javax.persistence.ElementCollection;
+import javax.persistence.MapKeyColumn;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
@@ -337,9 +338,11 @@ public abstract class CollectionBinder {
 		collection.setRole( StringHelper.qualify( propertyHolder.getPath(), propertyName ) );
 		collection.setNodeName( propertyName );
 
-		if ( property.isAnnotationPresent( org.hibernate.annotations.MapKey.class ) && mapKeyPropertyName != null ) {
+		if ( (property.isAnnotationPresent( org.hibernate.annotations.MapKey.class )
+				|| property.isAnnotationPresent( MapKeyColumn.class ) )
+			&& mapKeyPropertyName != null ) {
 			throw new AnnotationException(
-					"Cannot mix @javax.persistence.MapKey and @org.hibernate.annotations.MapKey "
+					"Cannot mix @javax.persistence.MapKey and @MapKeyColumn or @org.hibernate.annotations.MapKey "
 							+ "on the same collection: " + StringHelper.qualify(
 							propertyHolder.getPath(), propertyName
 					)

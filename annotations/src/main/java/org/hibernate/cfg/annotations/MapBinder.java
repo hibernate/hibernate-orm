@@ -138,12 +138,13 @@ public class MapBinder extends CollectionBinder {
 			Class target = void.class;
 			/*
 			 * target has priority over reflection for the map key type
+			 * JPA 2 has priority
 			 */
-			if ( property.isAnnotationPresent( org.hibernate.annotations.MapKey.class ) ) {
-				target = property.getAnnotation( org.hibernate.annotations.MapKey.class ).targetElement();
-			}
-			else if ( property.isAnnotationPresent( MapKeyClass.class ) ) {
+			if ( property.isAnnotationPresent( MapKeyClass.class ) ) {
 				target = property.getAnnotation( MapKeyClass.class ).value();
+			}
+			else if ( property.isAnnotationPresent( org.hibernate.annotations.MapKey.class ) ) {
+				target = property.getAnnotation( org.hibernate.annotations.MapKey.class ).targetElement();
 			}
 			else if ( property.isAnnotationPresent( MapKeyManyToMany.class ) ) {
 				target = property.getAnnotation( MapKeyManyToMany.class ).targetEntity();

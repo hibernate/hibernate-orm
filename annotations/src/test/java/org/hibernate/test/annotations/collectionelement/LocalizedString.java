@@ -8,6 +8,7 @@ import java.util.Map;
 import javax.persistence.Column;
 import javax.persistence.ElementCollection;
 import javax.persistence.Embeddable;
+import javax.persistence.MapKeyColumn;
 
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
@@ -33,7 +34,7 @@ public class LocalizedString implements Serializable {
 			new HashMap<String, String>( 1 );
 
 	@ElementCollection
-	@MapKey( columns = @Column( name = "language_code" ) )
+	@MapKeyColumn(name = "language_code" )
 	@Fetch( FetchMode.JOIN )
 	@Filter( name = "selectedLocale",
 			condition = " language_code = :param " )

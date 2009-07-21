@@ -73,6 +73,7 @@ import javax.persistence.Version;
 import javax.persistence.ElementCollection;
 import javax.persistence.CollectionTable;
 import javax.persistence.UniqueConstraint;
+import javax.persistence.MapKeyColumn;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
@@ -132,6 +133,8 @@ import org.hibernate.cfg.annotations.PropertyBinder;
 import org.hibernate.cfg.annotations.QueryBinder;
 import org.hibernate.cfg.annotations.SimpleValueBinder;
 import org.hibernate.cfg.annotations.TableBinder;
+import org.hibernate.cfg.annotations.MapKeyColumnDelegator;
+import org.hibernate.cfg.annotations.CustomizableColumns;
 import org.hibernate.engine.FilterDefinition;
 import org.hibernate.engine.Versioning;
 import org.hibernate.id.MultipleHiLoPerTableGenerator;
@@ -1538,14 +1541,20 @@ public final class AnnotationBinder {
 				);
 			}
 
-			org.hibernate.annotations.MapKey hibMapKeyAnn = property.getAnnotation(
-					org.hibernate.annotations.MapKey.class
-			);
+			Column[] keyColumns = null;
+			//JPA 2 has priority
+			if ( property.isAnnotationPresent( MapKeyColumn.class ) ) {
+				keyColumns = new Column[] { new MapKeyColumnDelegator( property.getAnnotation( MapKeyColumn.class ) ) };
+			}
+			else if ( property.isAnnotationPresent( org.hibernate.annotations.MapKey.class ) ) {
+				keyColumns = property.getAnnotation( org.hibernate.annotations.MapKey.class ).columns();
+			}
+			//nullify empty array
+			keyColumns = keyColumns != null && keyColumns.length > 0 ? keyColumns : null;
+
 			PropertyData mapKeyVirtualProperty = new WrappedInferredData( inferredData, "mapkey" );
 			Ejb3Column[] mapColumns = Ejb3Column.buildColumnFromAnnotation(
-					hibMapKeyAnn != null && hibMapKeyAnn.columns().length > 0 ?
-							hibMapKeyAnn.columns() :
-							null,
+					keyColumns,
 					null,
 					Nullability.FORCED_NOT_NULL,
 					propertyHolder,

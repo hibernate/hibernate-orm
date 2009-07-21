@@ -11,6 +11,7 @@ import javax.persistence.ManyToMany;
 import javax.persistence.Column;
 import javax.persistence.JoinTable;
 import javax.persistence.JoinColumn;
+import javax.persistence.MapKeyColumn;
 
 import org.hibernate.annotations.MapKey;
 import org.hibernate.annotations.CollectionOfElements;
@@ -26,7 +27,7 @@ public class Atmosphere {
 	public Integer id;
 
 	@ManyToMany(cascade = CascadeType.ALL)
-	@MapKey(columns = {@Column(name="gas_name")})
+	@MapKeyColumn(name="gas_name")
 	public Map<String, Gas> gases = new HashMap<String, Gas>();
 
 	@ManyToMany(cascade = CascadeType.ALL)

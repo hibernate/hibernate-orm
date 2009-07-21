@@ -61,7 +61,7 @@ public class PropertyMap {
 			name = "map_properties",
 			joinColumns = @JoinColumn( name = "map_id" ),
 			inverseJoinColumns = @JoinColumn( name = "property_id" ) )
-	@MapKey( columns = { @Column( name = "map_key" ) } )
+	@MapKey( columns = { @Column( name = "map_key" ) } )   //keep for legacy test
 	public Map<String, Property> getProperties() {
 		return properties;
 	}

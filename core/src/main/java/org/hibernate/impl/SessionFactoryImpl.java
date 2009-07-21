@@ -184,9 +184,8 @@ public final class SessionFactoryImpl implements SessionFactory, SessionFactoryI
 	private final transient SQLFunctionRegistry sqlFunctionRegistry;
 	private final transient SessionFactoryObserver observer;
 	private final transient HashMap entityNameResolvers = new HashMap();
-
-	private final QueryPlanCache queryPlanCache = new QueryPlanCache( this );
-
+	private final transient QueryPlanCache queryPlanCache = new QueryPlanCache( this );
+	private final transient Cache cacheAccess = new CacheImpl();
 	private transient boolean isClosed = false;
 
 	public SessionFactoryImpl(
@@ -195,9 +194,7 @@ public final class SessionFactoryImpl implements SessionFactory, SessionFactoryI
 	        Settings settings,
 	        EventListeners listeners,
 			SessionFactoryObserver observer) throws HibernateException {
-
 		log.info("building session factory");
-
 		this.properties = new Properties();
 		this.properties.putAll( cfg.getProperties() );
 		this.interceptor = cfg.getInterceptor();
@@ -956,16 +953,15 @@ public final class SessionFactoryImpl implements SessionFactory, SessionFactoryI
 		eventListeners.destroyListeners();
 	}
 
-	private final Cache cacheAccess = new CacheImpl();
-
-	private class CacheImpl implements Cache, Serializable {
+	private class CacheImpl implements Cache {
 		public boolean containsEntity(Class entityClass, Serializable identifier) {
 			return containsEntity( entityClass.getName(), identifier );
 		}
 
 		public boolean containsEntity(String entityName, Serializable identifier) {
-			// todo : need a contains() method on the underlying regions
-			throw new UnsupportedOperationException( "not yet implemented - HHH-4021" );
+			EntityPersister p = getEntityPersister( entityName );
+			return p.hasCache() &&
+					p.getCacheAccessStrategy().getRegion().contains( buildCacheKey( identifier, p ) );
 		}
 
 		public void evictEntity(Class entityClass, Serializable identifier) {
@@ -981,15 +977,18 @@ public final class SessionFactoryImpl implements SessionFactory, SessionFactoryI
 									MessageHelper.infoString( p, identifier, SessionFactoryImpl.this )
 					);
 				}
-				CacheKey cacheKey = new CacheKey(
-						identifier,
-						p.getIdentifierType(),
-						p.getRootEntityName(),
-						EntityMode.POJO,
-						SessionFactoryImpl.this
-				);
-				p.getCacheAccessStrategy().evict( cacheKey );
+				p.getCacheAccessStrategy().evict( buildCacheKey( identifier, p ) );
 			}
+		}
+
+		private CacheKey buildCacheKey(Serializable identifier, EntityPersister p) {
+			return new CacheKey(
+					identifier,
+					p.getIdentifierType(),
+					p.getRootEntityName(),
+					EntityMode.POJO,
+					SessionFactoryImpl.this
+			);
 		}
 
 		public void evictEntityRegion(Class entityClass) {
@@ -1014,8 +1013,9 @@ public final class SessionFactoryImpl implements SessionFactory, SessionFactoryI
 		}
 
 		public boolean containsCollection(String role, Serializable ownerIdentifier) {
-			// todo : need a contains() method on the underlying regions
-			return false;
+			CollectionPersister p = getCollectionPersister( role );
+			return p.hasCache() &&
+					p.getCacheAccessStrategy().getRegion().contains( buildCacheKey( ownerIdentifier, p ) );
 		}
 
 		public void evictCollection(String role, Serializable ownerIdentifier) {
@@ -1027,15 +1027,19 @@ public final class SessionFactoryImpl implements SessionFactory, SessionFactoryI
 									MessageHelper.collectionInfoString(p, ownerIdentifier, SessionFactoryImpl.this)
 					);
 				}
-				CacheKey cacheKey = new CacheKey(
-						ownerIdentifier,
-						p.getKeyType(),
-						p.getRole(),
-						EntityMode.POJO,
-						SessionFactoryImpl.this
-				);
+				CacheKey cacheKey = buildCacheKey( ownerIdentifier, p );
 				p.getCacheAccessStrategy().evict( cacheKey );
 			}
+		}
+
+		private CacheKey buildCacheKey(Serializable ownerIdentifier, CollectionPersister p) {
+			return new CacheKey(
+					ownerIdentifier,
+					p.getKeyType(),
+					p.getRole(),
+					EntityMode.POJO,
+					SessionFactoryImpl.this
+			);
 		}
 
 		public void evictCollectionRegion(String role) {
@@ -1056,8 +1060,7 @@ public final class SessionFactoryImpl implements SessionFactory, SessionFactoryI
 		}
 
 		public boolean containsQuery(String regionName) {
-			// todo : need a contains() method on the underlying regions
-			return false;
+			return queryCaches.get( regionName ) != null;
 		}
 
 		public void evictDefaultQueryRegion() {

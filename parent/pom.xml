@@ -373,6 +373,12 @@
                 <artifactId>cglib</artifactId>
                 <version>2.2</version>
             </dependency>
+            <!-- Set the version of the JPA api to be used throughout the the project -->
+            <dependency>
+                <groupId>org.hibernate.java-persistence</groupId>
+                <artifactId>jpa-api</artifactId>
+                <version>2.0.Beta-SNAPSHOT</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 

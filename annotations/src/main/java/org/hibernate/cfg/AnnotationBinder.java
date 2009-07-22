@@ -74,6 +74,8 @@ import javax.persistence.ElementCollection;
 import javax.persistence.CollectionTable;
 import javax.persistence.UniqueConstraint;
 import javax.persistence.MapKeyColumn;
+import javax.persistence.MapKeyJoinColumns;
+import javax.persistence.MapKeyJoinColumn;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
@@ -135,6 +137,7 @@ import org.hibernate.cfg.annotations.SimpleValueBinder;
 import org.hibernate.cfg.annotations.TableBinder;
 import org.hibernate.cfg.annotations.MapKeyColumnDelegator;
 import org.hibernate.cfg.annotations.CustomizableColumns;
+import org.hibernate.cfg.annotations.MapKeyJoinColumnDelegator;
 import org.hibernate.engine.FilterDefinition;
 import org.hibernate.engine.Versioning;
 import org.hibernate.id.MultipleHiLoPerTableGenerator;
@@ -1540,39 +1543,88 @@ public final class AnnotationBinder {
 						mappings
 				);
 			}
+			{
+				Column[] keyColumns = null;
+				//JPA 2 has priority and has different default column values, differenciate legacy from JPA 2
+				Boolean isJPA2 = null;
+				if ( property.isAnnotationPresent( MapKeyColumn.class ) ) {
+					isJPA2 = Boolean.TRUE;
+					keyColumns = new Column[] { new MapKeyColumnDelegator( property.getAnnotation( MapKeyColumn.class ) ) };
+				}
+				else if ( property.isAnnotationPresent( org.hibernate.annotations.MapKey.class ) ) {
+					if ( isJPA2 == null) {
+						isJPA2 = Boolean.FALSE;
+					}
+					keyColumns = property.getAnnotation( org.hibernate.annotations.MapKey.class ).columns();
+				}
 
-			Column[] keyColumns = null;
-			//JPA 2 has priority
-			if ( property.isAnnotationPresent( MapKeyColumn.class ) ) {
-				keyColumns = new Column[] { new MapKeyColumnDelegator( property.getAnnotation( MapKeyColumn.class ) ) };
+				//not explicitly legacy
+				if ( isJPA2 == null) {
+					isJPA2 = Boolean.TRUE;
+				}
+
+				//nullify empty array
+				keyColumns = keyColumns != null && keyColumns.length > 0 ? keyColumns : null;
+	            
+				PropertyData mapKeyVirtualProperty = new WrappedInferredData( inferredData, "mapkey" );
+				Ejb3Column[] mapColumns = Ejb3Column.buildColumnFromAnnotation(
+						keyColumns,
+						null,
+						Nullability.FORCED_NOT_NULL,
+						propertyHolder,
+						isJPA2 ? inferredData : mapKeyVirtualProperty,
+						isJPA2 ? "_KEY" : null,
+						entityBinder.getSecondaryTables(),
+						mappings
+				);
+				collectionBinder.setMapKeyColumns( mapColumns );
 			}
-			else if ( property.isAnnotationPresent( org.hibernate.annotations.MapKey.class ) ) {
-				keyColumns = property.getAnnotation( org.hibernate.annotations.MapKey.class ).columns();
+			{
+				JoinColumn[] joinKeyColumns = null;
+				//JPA 2 has priority and has different default column values, differenciate legacy from JPA 2
+				Boolean isJPA2 = null;
+				if ( property.isAnnotationPresent( MapKeyJoinColumns.class ) ) {
+					isJPA2 = Boolean.TRUE;
+					final MapKeyJoinColumn[] mapKeyJoinColumns = property.getAnnotation( MapKeyJoinColumns.class ).value();
+					joinKeyColumns = new JoinColumn[mapKeyJoinColumns.length];
+					int index = 0;
+					for ( MapKeyJoinColumn joinColumn : mapKeyJoinColumns ) {
+						joinKeyColumns[index] = new MapKeyJoinColumnDelegator( joinColumn );
+						index++;
+					}
+					if ( joinKeyColumns != null ) {
+						throw new AnnotationException( "@MapKeyJoinColumn and @MapKeyJoinColumns used on the same property: "
+								+ StringHelper.qualify( propertyHolder.getClassName(), property.getName() ) );
+					}
+				}
+				else if ( property.isAnnotationPresent( MapKeyJoinColumn.class ) ) {
+					isJPA2 = Boolean.TRUE;
+					joinKeyColumns = new JoinColumn[] { new MapKeyJoinColumnDelegator( property.getAnnotation( MapKeyJoinColumn.class ) ) };
+				}
+				else if ( property.isAnnotationPresent( org.hibernate.annotations.MapKeyManyToMany.class ) ) {
+					if ( isJPA2 == null) {
+						isJPA2 = Boolean.FALSE;
+					}
+					joinKeyColumns = property.getAnnotation( org.hibernate.annotations.MapKeyManyToMany.class ).joinColumns();
+				}
+
+				//not explicitly legacy
+				if ( isJPA2 == null) {
+					isJPA2 = Boolean.TRUE;
+				}
+
+	            PropertyData mapKeyVirtualProperty = new WrappedInferredData( inferredData, "mapkey" );
+				Ejb3JoinColumn[] mapJoinColumns = Ejb3JoinColumn.buildJoinColumnsWithDefaultColumnSuffix(
+						joinKeyColumns,
+						null,
+						entityBinder.getSecondaryTables(),
+						propertyHolder,
+						isJPA2 ? inferredData.getPropertyName() : mapKeyVirtualProperty.getPropertyName(),
+						isJPA2 ? "_KEY" : null,
+						mappings
+				);
+				collectionBinder.setMapKeyManyToManyColumns( mapJoinColumns );
 			}
-			//nullify empty array
-			keyColumns = keyColumns != null && keyColumns.length > 0 ? keyColumns : null;
-
-			PropertyData mapKeyVirtualProperty = new WrappedInferredData( inferredData, "mapkey" );
-			Ejb3Column[] mapColumns = Ejb3Column.buildColumnFromAnnotation(
-					keyColumns,
-					null,
-					Nullability.FORCED_NOT_NULL,
-					propertyHolder,
-					mapKeyVirtualProperty,
-					entityBinder.getSecondaryTables(),
-					mappings
-			);
-			collectionBinder.setMapKeyColumns( mapColumns );
-
-			MapKeyManyToMany mapKeyManyToMany = property.getAnnotation( MapKeyManyToMany.class );
-			Ejb3JoinColumn[] mapJoinColumns = Ejb3JoinColumn.buildJoinColumns(
-					mapKeyManyToMany != null ?
-							mapKeyManyToMany.joinColumns() :
-							null,
-					null, entityBinder.getSecondaryTables(),
-					propertyHolder, mapKeyVirtualProperty.getPropertyName(), mappings
-			);
-			collectionBinder.setMapKeyManyToManyColumns( mapJoinColumns );
 
 			//potential element
 			collectionBinder.setEmbedded( property.isAnnotationPresent( Embedded.class ) );

@@ -134,13 +134,31 @@ public class Ejb3JoinColumn extends Ejb3Column {
 			String propertyName,
 			ExtendedMappings mappings
 	) {
+		return buildJoinColumnsWithDefaultColumnSuffix(anns, mappedBy, joins, propertyHolder, propertyName, "", mappings);
+	}
+
+	public static Ejb3JoinColumn[] buildJoinColumnsWithDefaultColumnSuffix(
+			JoinColumn[] anns,
+			String mappedBy, Map<String, Join> joins,
+			PropertyHolder propertyHolder,
+			String propertyName,
+			String suffixForDefaultColumnName,
+			ExtendedMappings mappings
+	) {
 		JoinColumn[] actualColumns = propertyHolder.getOverriddenJoinColumn(
 				StringHelper.qualify( propertyHolder.getPath(), propertyName )
 		);
 		if ( actualColumns == null ) actualColumns = anns;
 		if ( actualColumns == null || actualColumns.length == 0 ) {
 			return new Ejb3JoinColumn[] {
-					buildJoinColumn( (JoinColumn) null, mappedBy, joins, propertyHolder, propertyName, mappings )
+					buildJoinColumn(
+							(JoinColumn) null,
+							mappedBy,
+							joins,
+							propertyHolder,
+							propertyName,
+							suffixForDefaultColumnName,
+							mappings )
 			};
 		}
 		else {
@@ -153,6 +171,7 @@ public class Ejb3JoinColumn extends Ejb3Column {
 						joins,
 						propertyHolder,
 						propertyName,
+						suffixForDefaultColumnName,
 						mappings
 				);
 			}
@@ -168,6 +187,7 @@ public class Ejb3JoinColumn extends Ejb3Column {
 			String mappedBy, Map<String, Join> joins,
 			PropertyHolder propertyHolder,
 			String propertyName,
+			String suffixForDefaultColumnName,
 			ExtendedMappings mappings
 	) {
 		if ( ann != null ) {
@@ -179,6 +199,10 @@ public class Ejb3JoinColumn extends Ejb3Column {
 			}
 			Ejb3JoinColumn joinColumn = new Ejb3JoinColumn();
 			joinColumn.setJoinAnnotation( ann, null );
+			if ( StringHelper.isEmpty( joinColumn.getLogicalColumnName() ) 
+				&& ! StringHelper.isEmpty( suffixForDefaultColumnName ) ) {
+				joinColumn.setLogicalColumnName( propertyName + suffixForDefaultColumnName );
+			}
 			joinColumn.setJoins( joins );
 			joinColumn.setPropertyHolder( propertyHolder );
 			joinColumn.setPropertyName( BinderHelper.getRelativePath( propertyHolder, propertyName ) );
@@ -192,8 +216,17 @@ public class Ejb3JoinColumn extends Ejb3Column {
 			joinColumn.setMappedBy( mappedBy );
 			joinColumn.setJoins( joins );
 			joinColumn.setPropertyHolder( propertyHolder );
-			joinColumn.setPropertyName( BinderHelper.getRelativePath( propertyHolder, propertyName ) );
-			joinColumn.setImplicit( true );
+			joinColumn.setPropertyName(
+					BinderHelper.getRelativePath( propertyHolder, propertyName )
+			);
+			// property name + suffix is an "explicit" column name
+			if ( !StringHelper.isEmpty( suffixForDefaultColumnName ) ) {
+				joinColumn.setLogicalColumnName( propertyName + suffixForDefaultColumnName );
+				joinColumn.setImplicit( false );
+			}
+			else {
+				joinColumn.setImplicit( true );
+			}
 			joinColumn.setMappings( mappings );
 			joinColumn.bind();
 			return joinColumn;

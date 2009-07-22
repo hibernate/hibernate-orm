@@ -336,6 +336,18 @@ public class Ejb3Column {
 			PropertyData inferredData,
 			Map<String, Join> secondaryTables,
 			ExtendedMappings mappings
+			){
+		return buildColumnFromAnnotation(
+				anns,
+				formulaAnn, nullability, propertyHolder, inferredData, null, secondaryTables, mappings);
+	}
+	public static Ejb3Column[] buildColumnFromAnnotation(
+			javax.persistence.Column[] anns,
+			org.hibernate.annotations.Formula formulaAnn, Nullability nullability, PropertyHolder propertyHolder,
+			PropertyData inferredData,
+			String suffixForDefaultColumnName,
+			Map<String, Join> secondaryTables,
+			ExtendedMappings mappings
 	) {
 		Ejb3Column[] columns;
 		if ( formulaAnn != null ) {
@@ -361,7 +373,12 @@ public class Ejb3Column {
 				log.debug( "Column(s) overridden for property {}", inferredData.getPropertyName() );
 			}
 			if ( actualCols == null ) {
-				columns = buildImplicitColumn( inferredData, secondaryTables, propertyHolder, nullability, mappings );
+				columns = buildImplicitColumn( inferredData,
+						suffixForDefaultColumnName,
+						secondaryTables,
+						propertyHolder,
+						nullability,
+						mappings );
 			}
 			else {
 				final int length = actualCols.length;
@@ -376,6 +393,12 @@ public class Ejb3Column {
 					column.setPrecision( col.precision() );
 					column.setScale( col.scale() );
 					column.setLogicalColumnName( col.name() );
+					//support for explicit property name + suffix
+					if ( StringHelper.isEmpty( column.getLogicalColumnName() )
+						&& ! StringHelper.isEmpty( suffixForDefaultColumnName ) ) {
+						column.setLogicalColumnName( inferredData.getPropertyName() + suffixForDefaultColumnName );
+					}
+
 					column.setPropertyName(
 							BinderHelper.getRelativePath( propertyHolder, inferredData.getPropertyName() )
 					);
@@ -398,8 +421,12 @@ public class Ejb3Column {
 	}
 
 	private static Ejb3Column[] buildImplicitColumn(
-			PropertyData inferredData, Map<String, Join> secondaryTables, PropertyHolder propertyHolder,
-			Nullability nullability, ExtendedMappings mappings
+			PropertyData inferredData,
+			String suffixForDefaultColumnName,
+			Map<String, Join> secondaryTables,
+			PropertyHolder propertyHolder,
+			Nullability nullability,
+			ExtendedMappings mappings
 	) {
 		Ejb3Column[] columns;
 		columns = new Ejb3Column[1];
@@ -412,12 +439,22 @@ public class Ejb3Column {
 			column.setNullable( false );
 		}
 		column.setLength( DEFAULT_COLUMN_LENGTH );
+		final String propertyName = inferredData.getPropertyName();
 		column.setPropertyName(
-				BinderHelper.getRelativePath( propertyHolder, inferredData.getPropertyName() )
+				BinderHelper.getRelativePath( propertyHolder, propertyName )
 		);
 		column.setPropertyHolder( propertyHolder );
 		column.setJoins( secondaryTables );
 		column.setMappings( mappings );
+
+		// property name + suffix is an "explicit" column name
+		if ( !StringHelper.isEmpty( suffixForDefaultColumnName ) ) {
+			column.setLogicalColumnName( propertyName + suffixForDefaultColumnName );
+			column.setImplicit( false );
+		}
+		else {
+			column.setImplicit( true );
+		}
 		column.bind();
 		columns[0] = column;
 		return columns;

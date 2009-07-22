@@ -5,10 +5,14 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Iterator;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.Hibernate;
+import org.hibernate.mapping.PersistentClass;
+import org.hibernate.mapping.Collection;
+import org.hibernate.mapping.Column;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.test.annotations.RequiresDialect;
 import org.hibernate.test.annotations.TestCase;
@@ -19,6 +23,35 @@ import org.hibernate.test.annotations.TestCase;
  * @author Emmanuel Bernard
  */
 public class IndexedCollectionTest extends TestCase {
+
+	public void testJPA2DefaultMapColumns() throws Exception {
+		isDefaultKeyColumnPresent( "gasesDef" );
+		isDefaultKeyColumnPresent( "gasesPerKeyDef" );
+		isNotDefaultKeyColumnPresent( "gasesDefLeg" );
+	}
+
+	private void isDefaultKeyColumnPresent(String propertyName) {
+		final Collection collection = getCfg().getCollectionMapping( Atmosphere.class.getName() + "." + propertyName );
+		final Iterator columnIterator = collection.getCollectionTable().getColumnIterator();
+		boolean hasDefault = false;
+		while ( columnIterator.hasNext() ) {
+			Column column = (Column) columnIterator.next();
+			if ( (propertyName + "_KEY").equals( column.getName() ) ) hasDefault = true;
+		}
+		assertTrue( "Could not find " + propertyName + "_KEY", hasDefault);
+	}
+
+	private void isNotDefaultKeyColumnPresent(String propertyName) {
+		final Collection collection = getCfg().getCollectionMapping( Atmosphere.class.getName() + "." + propertyName );
+		final Iterator columnIterator = collection.getCollectionTable().getColumnIterator();
+		boolean hasDefault = false;
+		while ( columnIterator.hasNext() ) {
+			Column column = (Column) columnIterator.next();
+			if ( (propertyName + "_KEY").equals( column.getName() ) ) hasDefault = true;
+		}
+		assertFalse( "Could not find " + propertyName + "_KEY", hasDefault);
+	}
+
 	public void testFkList() throws Exception {
 		Wardrobe w = new Wardrobe();
 		Drawer d1 = new Drawer();

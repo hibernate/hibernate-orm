@@ -9,6 +9,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.ManyToMany;
 import javax.persistence.MapKeyClass;
+import javax.persistence.JoinColumn;
 
 import org.hibernate.annotations.MapKey;
 import org.hibernate.annotations.MapKeyManyToMany;
@@ -27,8 +28,8 @@ public class Brand {
 	private Map<Size, Luggage> luggagesBySize = new HashMap<Size, Luggage>();
 
 	@ElementCollection(targetClass = SizeImpl.class)
-	@MapKeyManyToMany(targetEntity = LuggageImpl.class)
-	//TODO @MapKeyClass(LuggageImpl.class)
+	@MapKeyClass(LuggageImpl.class)
+	@MapKeyManyToMany //legacy column name: was never officially supported BTW
 	private Map<Luggage, Size> sizePerLuggage = new HashMap<Luggage, Size>();
 
 

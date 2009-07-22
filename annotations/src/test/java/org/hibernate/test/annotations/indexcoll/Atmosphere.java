@@ -12,10 +12,10 @@ import javax.persistence.Column;
 import javax.persistence.JoinTable;
 import javax.persistence.JoinColumn;
 import javax.persistence.MapKeyColumn;
+import javax.persistence.MapKeyJoinColumn;
 
 import org.hibernate.annotations.MapKey;
 import org.hibernate.annotations.CollectionOfElements;
-import org.hibernate.annotations.MapKeyManyToMany;
 
 /**
  * @author Emmanuel Bernard
@@ -31,13 +31,31 @@ public class Atmosphere {
 	public Map<String, Gas> gases = new HashMap<String, Gas>();
 
 	@ManyToMany(cascade = CascadeType.ALL)
-	@MapKeyManyToMany(joinColumns = @JoinColumn(name="gas_id") )
+	@MapKeyJoinColumn(name="gas_id" )
 	@JoinTable(name = "Gas_per_key")
 	public Map<GasKey, Gas> gasesPerKey = new HashMap<GasKey, Gas>();
 
 	@CollectionOfElements //TODO migrate to @ElementCollection ;  @MapKeyManyToMany ??
 	@Column(name="composition_rate")
-	@MapKeyManyToMany(joinColumns = @JoinColumn(name="gas_id"))
+	@MapKeyJoinColumn(name="gas_id" )
 	@JoinTable(name = "Composition", joinColumns = @JoinColumn(name = "atmosphere_id"))
 	public Map<Gas, Double> composition = new HashMap<Gas, Double>();
+
+	//use default JPA 2 column name for map key
+	@ManyToMany(cascade = CascadeType.ALL)
+	@MapKeyColumn
+	@JoinTable(name="Atm_Gas_Def")
+	public Map<String, Gas> gasesDef = new HashMap<String, Gas>();
+
+	//use default HAN legacy column name for map key
+	@ManyToMany(cascade = CascadeType.ALL)
+	@MapKey
+	@JoinTable(name="Atm_Gas_DefLeg")
+	public Map<String, Gas> gasesDefLeg = new HashMap<String, Gas>();
+
+	@ManyToMany(cascade = CascadeType.ALL)
+	@MapKeyJoinColumn
+	@JoinTable(name = "Gas_p_key_def")
+	public Map<GasKey, Gas> gasesPerKeyDef = new HashMap<GasKey, Gas>();
+
 }

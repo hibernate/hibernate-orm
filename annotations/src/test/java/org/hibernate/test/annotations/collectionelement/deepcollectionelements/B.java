@@ -4,8 +4,7 @@ package org.hibernate.test.annotations.collectionelement.deepcollectionelements;
 import java.util.List;
 import javax.persistence.Embeddable;
 import javax.persistence.OneToMany;
-
-import org.hibernate.annotations.IndexColumn;
+import javax.persistence.OrderColumn;
 
 @Embeddable
 public class B {
@@ -13,7 +12,7 @@ public class B {
 
 	//@CollectionOfElements
 	@OneToMany
-	@IndexColumn( name = "ndx" )
+	@OrderColumn( name = "ndx" )
 	private List<C> listOfC;
 
 	public List<C> getListOfC() {

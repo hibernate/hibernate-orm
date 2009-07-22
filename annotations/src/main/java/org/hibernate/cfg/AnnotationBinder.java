@@ -76,6 +76,7 @@ import javax.persistence.UniqueConstraint;
 import javax.persistence.MapKeyColumn;
 import javax.persistence.MapKeyJoinColumns;
 import javax.persistence.MapKeyJoinColumn;
+import javax.persistence.OrderColumn;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
@@ -1473,13 +1474,28 @@ public final class AnnotationBinder {
 			ManyToMany manyToManyAnn = property.getAnnotation( ManyToMany.class );
 			ElementCollection elementCollectionAnn = property.getAnnotation( ElementCollection.class );
 			CollectionOfElements collectionOfElementsAnn = property.getAnnotation( CollectionOfElements.class ); //legacy hibernate
-			org.hibernate.annotations.IndexColumn indexAnn = property.getAnnotation(
-					org.hibernate.annotations.IndexColumn.class
-			);
 
-			IndexColumn indexColumn = IndexColumn.buildColumnFromAnnotation(
-					indexAnn, propertyHolder, inferredData, mappings
-			);
+			final IndexColumn indexColumn;
+
+			if ( property.isAnnotationPresent( OrderColumn.class ) ) {
+				indexColumn = IndexColumn.buildColumnFromAnnotation(
+						property.getAnnotation(OrderColumn.class), 
+						propertyHolder,
+						inferredData,
+						entityBinder.getSecondaryTables(),
+						mappings
+				);
+			}
+			else {
+				//if @IndexColumn is not there, the generated IndexColumn is an implicit column and not used.
+				//so we can leave the legacy processing as the default
+				indexColumn = IndexColumn.buildColumnFromAnnotation(
+						property.getAnnotation(org.hibernate.annotations.IndexColumn.class),
+						propertyHolder,
+						inferredData,
+						mappings
+				);
+			}
 			CollectionBinder collectionBinder = CollectionBinder.getCollectionBinder(
 					propertyHolder.getEntityName(),
 					property,

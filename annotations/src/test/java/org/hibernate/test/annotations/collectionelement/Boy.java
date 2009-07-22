@@ -7,7 +7,9 @@ import java.util.Map;
 import java.util.Set;
 import javax.persistence.AttributeOverride;
 import javax.persistence.AttributeOverrides;
+import javax.persistence.CollectionTable;
 import javax.persistence.Column;
+import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
@@ -15,12 +17,9 @@ import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
-import javax.persistence.JoinTable;
-import javax.persistence.ElementCollection;
-import javax.persistence.CollectionTable;
+import javax.persistence.OrderColumn;
 
 import org.hibernate.annotations.CollectionOfElements;
-import org.hibernate.annotations.IndexColumn;
 
 /**
  * @author Emmanuel Bernard
@@ -94,7 +93,7 @@ public class Boy {
 			joinColumns = @JoinColumn(name = "BoyId")
 	)
 	@Column(name = "favoriteNumber", nullable = false)
-	@IndexColumn(name = "nbr_index")
+	@OrderColumn(name = "nbr_index")
 	public int[] getFavoriteNumbers() {
 		return favoriteNumbers;
 	}

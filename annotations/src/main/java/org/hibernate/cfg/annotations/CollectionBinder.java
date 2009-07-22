@@ -268,7 +268,8 @@ public abstract class CollectionBinder {
 			else if ( java.util.List.class.equals( returnedClass ) ) {
 				if ( isIndexed ) {
 					if ( property.isAnnotationPresent( CollectionId.class ) ) {
-						throw new AnnotationException( "List do not support @CollectionId and @IndexColumn at the same time: "
+						throw new AnnotationException(
+								"List do not support @CollectionId and @OrderColumn (or @IndexColumn) at the same time: "
 								+ StringHelper.qualify( entityName, property.getName() ) );
 					}
 					return new ListBinder();

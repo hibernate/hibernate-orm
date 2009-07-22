@@ -6,8 +6,7 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.OneToMany;
-
-import org.hibernate.annotations.IndexColumn;
+import javax.persistence.OrderColumn;
 
 /**
  * @author Emmanuel Bernard
@@ -33,7 +32,7 @@ public class Drawer {
 	 * @return
 	 */
 	@OneToMany
-	@IndexColumn(name = "from_bottom_position")
+	@OrderColumn //default name test
 	public List<Dress> getDresses() {
 		return dresses;
 	}

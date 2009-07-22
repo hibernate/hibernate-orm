@@ -25,6 +25,8 @@ package org.hibernate.cfg;
 
 import java.util.Map;
 
+import javax.persistence.OrderColumn;
+
 import org.hibernate.mapping.Join;
 
 /**
@@ -82,6 +84,35 @@ public class IndexColumn
 		this.base = base;
 	}
 
+	//JPA 2 @OrderColumn processing
+	public static IndexColumn buildColumnFromAnnotation(
+			OrderColumn ann,
+			PropertyHolder propertyHolder,
+			PropertyData inferredData,
+			Map<String, Join> secondaryTables,
+			ExtendedMappings mappings
+	) {
+		IndexColumn column;
+		if ( ann != null ) {
+			String sqlType = BinderHelper.isDefault( ann.columnDefinition() ) ? null : ann.columnDefinition();
+			String name = BinderHelper.isDefault( ann.name() ) ? inferredData.getPropertyName() + "_ORDER" : ann.name();
+			//TODO move it to a getter based system and remove the constructor
+			column = new IndexColumn(
+					false, sqlType, 0, 0, 0, name, ann.nullable(),
+					false, ann.insertable(), ann.updatable(), ann.table(),
+					secondaryTables, propertyHolder, mappings
+			);
+		}
+		else {
+			column = new IndexColumn(
+					true, null, 0, 0, 0, null, true,
+					false, true, true, null, null, propertyHolder, mappings
+			);
+		}
+		return column;
+	}
+
+	//legacy @IndexColumn processing
 	public static IndexColumn buildColumnFromAnnotation(
 			org.hibernate.annotations.IndexColumn ann,
 			PropertyHolder propertyHolder,

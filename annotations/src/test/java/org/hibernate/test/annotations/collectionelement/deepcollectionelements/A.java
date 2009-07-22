@@ -11,10 +11,9 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.OrderColumn;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
-
-import org.hibernate.annotations.IndexColumn;
 
 @Entity
 @Table( name = "A" )
@@ -24,7 +23,7 @@ public class A {
 	@SequenceGenerator( name = "aSequence", sequenceName = "seq_A" )
 	private int id;
 	@ElementCollection
-	@IndexColumn( name = "ndx" )
+	@OrderColumn( name = "ndx" )
 	private List<B> listOfB;
 
 	public int getId() {

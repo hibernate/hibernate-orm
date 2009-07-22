@@ -3,17 +3,16 @@ package org.hibernate.test.annotations.indexcoll;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Iterator;
 
+import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.Hibernate;
-import org.hibernate.mapping.PersistentClass;
+import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Column;
-import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.test.annotations.RequiresDialect;
 import org.hibernate.test.annotations.TestCase;
 
@@ -25,31 +24,34 @@ import org.hibernate.test.annotations.TestCase;
 public class IndexedCollectionTest extends TestCase {
 
 	public void testJPA2DefaultMapColumns() throws Exception {
-		isDefaultKeyColumnPresent( "gasesDef" );
-		isDefaultKeyColumnPresent( "gasesPerKeyDef" );
-		isNotDefaultKeyColumnPresent( "gasesDefLeg" );
+		isDefaultKeyColumnPresent( Atmosphere.class.getName(), "gasesDef", "_KEY" );
+		isDefaultKeyColumnPresent( Atmosphere.class.getName(), "gasesPerKeyDef", "_KEY" );
+		isNotDefaultKeyColumnPresent( Atmosphere.class.getName(), "gasesDefLeg", "_KEY" );
 	}
 
-	private void isDefaultKeyColumnPresent(String propertyName) {
-		final Collection collection = getCfg().getCollectionMapping( Atmosphere.class.getName() + "." + propertyName );
+	public void testJPA2DefaultIndexColumns() throws Exception {
+		isDefaultKeyColumnPresent( Drawer.class.getName(), "dresses", "_ORDER" );
+	}
+
+	private void isDefaultKeyColumnPresent(String collectionRole, String propertyName, String suffix) {
+		assertTrue( "Could not find " + propertyName + suffix,
+				isDefaultColumnPresent(collectionRole, propertyName, suffix) );
+	}
+
+	private boolean isDefaultColumnPresent(String collectionRole, String propertyName, String suffix) {
+		final Collection collection = getCfg().getCollectionMapping( collectionRole + "." + propertyName );
 		final Iterator columnIterator = collection.getCollectionTable().getColumnIterator();
 		boolean hasDefault = false;
 		while ( columnIterator.hasNext() ) {
 			Column column = (Column) columnIterator.next();
-			if ( (propertyName + "_KEY").equals( column.getName() ) ) hasDefault = true;
+			if ( (propertyName + suffix).equals( column.getName() ) ) hasDefault = true;
 		}
-		assertTrue( "Could not find " + propertyName + "_KEY", hasDefault);
+		return hasDefault;
 	}
 
-	private void isNotDefaultKeyColumnPresent(String propertyName) {
-		final Collection collection = getCfg().getCollectionMapping( Atmosphere.class.getName() + "." + propertyName );
-		final Iterator columnIterator = collection.getCollectionTable().getColumnIterator();
-		boolean hasDefault = false;
-		while ( columnIterator.hasNext() ) {
-			Column column = (Column) columnIterator.next();
-			if ( (propertyName + "_KEY").equals( column.getName() ) ) hasDefault = true;
-		}
-		assertFalse( "Could not find " + propertyName + "_KEY", hasDefault);
+	private void isNotDefaultKeyColumnPresent(String collectionRole, String propertyName, String suffix) {
+		assertFalse( "Could not find " + propertyName + suffix,
+				isDefaultColumnPresent(collectionRole, propertyName, suffix) );
 	}
 
 	public void testFkList() throws Exception {

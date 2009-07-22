@@ -96,7 +96,7 @@ public class ListBinder extends CollectionBinder {
 	}
 
 	private void bindIndex(final ExtendedMappings mappings) {
-		if ( indexColumn.isImplicit() == false ) {
+		if ( !indexColumn.isImplicit() ) {
 			PropertyHolder valueHolder = PropertyHolderBuilder.buildPropertyHolder(
 					this.collection,
 					StringHelper.qualify( this.collection.getRole(), "key" ),
@@ -130,7 +130,7 @@ public class ListBinder extends CollectionBinder {
 		else {
 			Collection coll = this.collection;
 			throw new AnnotationException(
-					"List/array has to be annotated with an @IndexColumn: "
+					"List/array has to be annotated with an @OrderColumn (or @IndexColumn): "
 							+ coll.getRole()
 			);
 		}

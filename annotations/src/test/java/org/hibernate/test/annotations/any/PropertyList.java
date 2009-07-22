@@ -2,19 +2,19 @@ package org.hibernate.test.annotations.any;
 
 import java.util.ArrayList;
 import java.util.List;
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
-import javax.persistence.Table;
-import javax.persistence.JoinTable;
-import javax.persistence.Column;
 import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
+import javax.persistence.OrderColumn;
+import javax.persistence.Table;
 
-import org.hibernate.annotations.ManyToAny;
-import org.hibernate.annotations.Cascade;
-import org.hibernate.annotations.IndexColumn;
 import org.hibernate.annotations.Any;
+import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.CascadeType;
+import org.hibernate.annotations.ManyToAny;
 
 @Entity
 @Table( name = "property_list" )
@@ -41,7 +41,7 @@ public class PropertyList<T extends Property> {
 			joinColumns = @JoinColumn(name = "obj_id"),
 			inverseJoinColumns = @JoinColumn(name = "property_id")
 	)
-    @IndexColumn(name = "prop_index")
+    @OrderColumn(name = "prop_index")
     public List<T> getGeneralProperties() {
         return generalProperties;
     }

@@ -12,13 +12,13 @@ import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.OneToMany;
+import javax.persistence.OrderColumn;
 import javax.persistence.Table;
 
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.LazyCollection;
 import org.hibernate.annotations.LazyCollectionOption;
-import org.hibernate.annotations.IndexColumn;
 
 
 /**
@@ -118,7 +118,7 @@ public class Person implements Serializable {
 	@OneToMany(cascade=CascadeType.ALL)
 	@LazyCollection(LazyCollectionOption.EXTRA)
 	@Fetch(FetchMode.SUBSELECT)
-	@IndexColumn(name="orderedStayIndex")
+	@OrderColumn(name="orderedStayIndex")
 	public List<Stay> getOrderedStay() {
 		return orderedStay;
 	}

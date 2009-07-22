@@ -8,6 +8,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.OneToMany;
 import javax.persistence.ElementCollection;
+import javax.persistence.OrderColumn;
 
 import org.hibernate.annotations.IndexColumn;
 
@@ -31,7 +32,7 @@ public class Contest {
 	}
 
 	@OneToMany(cascade = CascadeType.ALL)
-	@IndexColumn(name = "pos")
+	@OrderColumn(name = "pos")
 	public Competitor[] getResults() {
 		return results;
 	}
@@ -41,7 +42,7 @@ public class Contest {
 	}
 	
 	@ElementCollection
-	@IndexColumn(name = "pos", base=1)
+	@IndexColumn(name = "pos", base=1) //legacy + base
 	public Month[] getHeldIn() {
 		return heldIn;
 	}

@@ -78,7 +78,7 @@
 entityManager.getTransaction().begin();
 
 String ejbqlUpdate = "update Customer set name = :newName where name = :oldName"
-int updatedEntities = entityManager.createQuery( hqlUpdate )
+int updatedEntities = entityManager.createQuery( ejbqlUpdate )
                             .setParameter( "newName", newName )
                             .setParameter( "oldName", oldName )
                             .executeUpdate();

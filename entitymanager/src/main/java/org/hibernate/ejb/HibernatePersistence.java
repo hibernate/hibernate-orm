@@ -170,13 +170,21 @@ public class HibernatePersistence implements javax.persistence.spi.PersistencePr
 			final boolean isInitialized = interceptor == null || interceptor.isInitialized( property );
 			LoadState state;
 			if (isInitialized && interceptor != null) {
-				state = LoadState.LOADED;
+				//property is loaded according to bytecode enhancement, but is it loaded as far as association?
+				//it's ours, we can read
+				state = isLoaded( get( entity, property ) );
+				//it's ours so we know it's loaded
+				if (state == LoadState.UNKNOWN) state = LoadState.LOADED;
 			}
 			else if ( interceptor != null && (! isInitialized)) {
 				state = LoadState.NOT_LOADED;
 			}
 			else if ( sureFromUs ) { //interceptor == null
-				state = LoadState.LOADED;
+				//property is loaded according to bytecode enhancement, but is it loaded as far as association?
+				//it's ours, we can read
+				state = isLoaded( get( entity, property ) );
+				//it's ours so we know it's loaded
+				if (state == LoadState.UNKNOWN) state = LoadState.LOADED;
 			}
 			else {
 				state = LoadState.UNKNOWN;

@@ -9,7 +9,6 @@ import javax.transaction.Synchronization;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
-import org.hibernate.SessionFactory;
 import org.hibernate.Interceptor;
 import org.hibernate.annotations.common.util.ReflectHelper;
 import org.hibernate.cfg.Environment;
@@ -21,21 +20,22 @@ import org.slf4j.LoggerFactory;
  * @author Gavin King
  */
 public class EntityManagerImpl extends AbstractEntityManagerImpl {
-
 	private static final Logger log = LoggerFactory.getLogger( EntityManagerImpl.class );
+
 	protected Session session;
-	protected SessionFactory sessionFactory;
 	protected boolean open;
 	protected boolean discardOnClose;
 	private Class sessionInterceptorClass;
 
 	public EntityManagerImpl(
-			SessionFactory sessionFactory, PersistenceContextType pcType,
+			EntityManagerFactoryImpl entityManagerFactory,
+			PersistenceContextType pcType,
 			PersistenceUnitTransactionType transactionType,
-			boolean discardOnClose, Class sessionInterceptorClass, Map properties
+			boolean discardOnClose, 
+			Class sessionInterceptorClass,
+			Map properties
 	) {
-		super( pcType, transactionType, properties );
-		this.sessionFactory = sessionFactory;
+		super( entityManagerFactory, pcType, transactionType, properties );
 		this.open = true;
 		this.discardOnClose = discardOnClose;
 		Object localSessionInterceptor = null;
@@ -62,7 +62,6 @@ public class EntityManagerImpl extends AbstractEntityManagerImpl {
 	}
 
 	public Session getSession() {
-
 		if ( !open ) throw new IllegalStateException( "EntityManager is closed" );
 		return getRawSession();
 	}
@@ -84,7 +83,7 @@ public class EntityManagerImpl extends AbstractEntityManagerImpl {
 					throw new PersistenceException("Session interceptor does not implement Interceptor: " + sessionInterceptorClass, e);
 				}
 			}
-			session = sessionFactory.openSession( interceptor );
+			session = getEntityManagerFactory().getSessionFactory().openSession( interceptor );
 			if ( persistenceContextType == PersistenceContextType.TRANSACTION ) {
 				( (SessionImplementor) session ).setAutoClear( true );
 			}

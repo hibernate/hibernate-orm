@@ -18,11 +18,11 @@ import org.hibernate.util.JTAHelper;
  */
 public class CurrentEntityManagerImpl extends AbstractEntityManagerImpl {
 
-	private SessionFactory sessionFactory;
-
-	public CurrentEntityManagerImpl(SessionFactory sessionFactory, PersistenceUnitTransactionType transactionType, Map properties) {
-		super( PersistenceContextType.TRANSACTION, transactionType, properties );
-		this.sessionFactory = sessionFactory;
+	public CurrentEntityManagerImpl(
+			EntityManagerFactoryImpl entityManagerFactory,
+			PersistenceUnitTransactionType transactionType,
+			Map properties) {
+		super( entityManagerFactory, PersistenceContextType.TRANSACTION, transactionType, properties );
 		postInit();
 	}
 
@@ -33,14 +33,14 @@ public class CurrentEntityManagerImpl extends AbstractEntityManagerImpl {
 		 * sure the conenctions are released. Be aware that the session will not be closed explicitly.
 		 */
 
+		SessionFactoryImplementor sfi = (SessionFactoryImplementor) getEntityManagerFactory().getSessionFactory();
 		Session s;
-		SessionFactoryImplementor sfi = (SessionFactoryImplementor) sessionFactory;
 		if ( !JTAHelper.isTransactionInProgress( sfi ) ) {
 			s = sfi.openTemporarySession();
 			( (SessionImplementor) s ).setAutoClear( true );
 		}
 		else {
-			s = sessionFactory.getCurrentSession();
+			s = sfi.getCurrentSession();
 		}
 		return s;
 	}

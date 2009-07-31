@@ -69,6 +69,7 @@ import org.hibernate.util.JTAHelper;
 public abstract class AbstractEntityManagerImpl implements HibernateEntityManagerImplementor, Serializable {
 	private static final Logger log = LoggerFactory.getLogger( AbstractEntityManagerImpl.class );
 
+	private EntityManagerFactoryImpl entityManagerFactory;
 	protected transient TransactionImpl tx = new TransactionImpl( this );
 	protected PersistenceContextType persistenceContextType;
 	private FlushModeType flushModeType = FlushModeType.AUTO;
@@ -76,7 +77,11 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 	private Map properties;
 
 	protected AbstractEntityManagerImpl(
-			PersistenceContextType type, PersistenceUnitTransactionType transactionType, Map properties) {
+			EntityManagerFactoryImpl entityManagerFactory,
+			PersistenceContextType type,
+			PersistenceUnitTransactionType transactionType,
+			Map properties) {
+		this.entityManagerFactory = entityManagerFactory;
 		this.persistenceContextType = type;
 		this.transactionType = transactionType;
 		this.properties = properties != null ? properties : CollectionHelper.EMPTY_MAP;
@@ -106,7 +111,20 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 	}
 
 	public Query createQuery(CriteriaQuery criteriaQuery) {
-		return null;  //To change body of implemented methods use File | Settings | File Templates.
+		// TODO-STEVE : here is the interpretation/compilation portion.
+		// 		One option is to build on top of the existing
+		//		org.hibernate.loader.custom.CustomQuery infastructure
+		// 		(which is how native sql queries are implemented e.g.).
+		//		If so, then here we could interpret the criteria into
+		//		a CustomQuery instance which is passed into the
+		//		Query instance returned here.  We would then call into
+		//		the various SessionImplementor methods for execution
+		//		such as #listCustomQuery and #scrollCustomQuery.
+		//
+		// 		The drawback to this (^^) approach is that CustomQuery +
+		//		SessionImplementor combo does not support #executeUpdate
+		//		processing...
+		throw new UnsupportedOperationException( "Not yet implemented!" );
 	}
 
 	public Query createNamedQuery(String name) {
@@ -388,14 +406,18 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 		return tx;
 	}
 
-	public EntityManagerFactory getEntityManagerFactory() {
-		//FIXME
-		return null;  //To change body of implemented methods use File | Settings | File Templates.
+	/**
+	 * {@inheritDoc}
+	 */
+	public EntityManagerFactoryImpl getEntityManagerFactory() {
+		return entityManagerFactory;
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	public QueryBuilder getQueryBuilder() {
-		//FIXME
-		return null;  //To change body of implemented methods use File | Settings | File Templates.
+		return getEntityManagerFactory().getQueryBuilder();
 	}
 
 	public Metamodel getMetamodel() {

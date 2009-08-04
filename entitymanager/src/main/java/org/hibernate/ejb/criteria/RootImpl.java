@@ -22,6 +22,7 @@
 package org.hibernate.ejb.criteria;
 
 import javax.persistence.criteria.Root;
+import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.EntityType;
 
 /**
@@ -40,5 +41,10 @@ public class RootImpl<X> extends FromImpl<X,X> implements Root<X> {
     public EntityType<X> getModel(){
         return ( EntityType<X> ) super.getModel();
     }
+
+	@Override
+	protected Attribute<X, ?> getAttribute(String name) {
+		return (Attribute<X, ?>) getModel().getAttribute( name );
+	}
 
 }

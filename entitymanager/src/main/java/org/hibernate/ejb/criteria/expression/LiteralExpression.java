@@ -28,7 +28,7 @@ import org.hibernate.ejb.criteria.QueryBuilderImpl;
  *
  * @author Steve Ebersole
  */
-public class LiteralExpression<T> extends AbstractExpression<T> {
+public class LiteralExpression<T> extends ExpressionImpl<T> {
 	private final T literal;
 
 	public LiteralExpression(

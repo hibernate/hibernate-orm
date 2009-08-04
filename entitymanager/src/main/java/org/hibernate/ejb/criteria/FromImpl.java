@@ -36,18 +36,19 @@ import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Fetch;
 import javax.persistence.metamodel.Attribute;
+import javax.persistence.metamodel.Attribute.PersistentAttributeType;
 import javax.persistence.metamodel.SingularAttribute;
 import javax.persistence.metamodel.CollectionAttribute;
 import javax.persistence.metamodel.SetAttribute;
 import javax.persistence.metamodel.ListAttribute;
 import javax.persistence.metamodel.MapAttribute;
-import javax.persistence.metamodel.Bindable;
 import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.ManagedType;
 import javax.persistence.metamodel.PluralAttribute;
 
+import javax.persistence.metamodel.PluralAttribute.CollectionType;
 import javax.persistence.metamodel.Type.PersistenceType;
-import org.hibernate.ejb.criteria.expression.AbstractExpression;
+import org.hibernate.ejb.criteria.expression.CollectionExpression;
 import org.hibernate.ejb.criteria.expression.EntityTypeExpression;
 
 /**
@@ -69,7 +70,7 @@ public abstract class FromImpl<Z,X> extends PathImpl<X> implements From<Z,X> {
 	 * @param entityType
 	 */
     protected FromImpl(QueryBuilderImpl queryBuilder, EntityType<X> entityType) {
-		super( queryBuilder, entityType.getBindableJavaType(), null, entityType );
+		super( queryBuilder, entityType.getBindableJavaType(), null, null, entityType );
 		this.type = new EntityTypeExpression( queryBuilder, entityType.getBindableJavaType() );
 	}
 
@@ -77,16 +78,28 @@ public abstract class FromImpl<Z,X> extends PathImpl<X> implements From<Z,X> {
 			QueryBuilderImpl queryBuilder,
 			Class<X> javaType,
 			PathImpl<Z> origin,
-			Bindable<X> model,
-			Expression<Class<? extends X>> type) {
-		super( queryBuilder, javaType, origin, model );
-		this.type = type;
+			Attribute<? super Z, ?> attribute,
+			ManagedType<X> model) {
+		super( queryBuilder, javaType, origin, attribute, model );
+		this.type = new EntityTypeExpression( queryBuilder, model.getJavaType() );
 	}
 
 	@Override
 	public Expression<Class<? extends X>> type() {
 		return type;
 	}
+
+	/**
+	 * Get the attribute by name from the underlying model.  This alows subclasses to
+	 * define exactly how the attribute is derived.
+	 * 
+	 * @param name The attribute name
+	 * 
+	 * @return The attribute.
+	 * 
+	 * @throws IllegalArgumentException If no such attribute is found (follows exception type from {@link ManagedType}).
+	 */
+	protected abstract Attribute<X,?> getAttribute(String name);
 
 
 	// JOINS ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -111,6 +124,10 @@ public abstract class FromImpl<Z,X> extends PathImpl<X> implements From<Z,X> {
 		return joins;
 	}
 
+	protected void addJoin(Join<X,?> join) {
+		getJoinsInternal().add( join );
+	}
+
 	/**
 	 * {@inheritDoc}
 	 */
@@ -123,9 +140,25 @@ public abstract class FromImpl<Z,X> extends PathImpl<X> implements From<Z,X> {
 	 */
 	public <Y> Join<X, Y> join(SingularAttribute<? super X, Y> attribute, JoinType jt) {
 		if ( PersistenceType.BASIC.equals( attribute.getType().getPersistenceType() ) ) {
-            throw new IllegalStateException( "Cannot join to basic type" );
+			throw new BasicPathUsageException( "Cannot join to attribute of basic type", attribute );
         }
-		throw new UnsupportedOperationException( "Not yet implemented!" );
+
+		// TODO : runtime check that the attribute in fact belongs to this From's model/bindable
+
+		if ( jt.equals( JoinType.RIGHT ) ) {
+			throw new UnsupportedOperationException( "RIGHT JOIN not supported" );
+		}
+
+		final Class<Y> attributeType = attribute.getBindableJavaType();
+        final JoinImpl<X, Y> join = new JoinImpl<X, Y>(
+				queryBuilder(),
+				attributeType,
+				this,
+				attribute,
+				jt
+		);
+		joins.add( join );
+		return join;
 	}
 
 	/**
@@ -139,8 +172,36 @@ public abstract class FromImpl<Z,X> extends PathImpl<X> implements From<Z,X> {
 	 * {@inheritDoc}
 	 */
 	public <Y> CollectionJoin<X, Y> join(CollectionAttribute<? super X, Y> collection, JoinType jt) {
-		// TODO : implement
-		throw new UnsupportedOperationException( "Not yet implemented!" );
+		if ( jt.equals( JoinType.RIGHT ) ) {
+			throw new UnsupportedOperationException( "RIGHT JOIN not supported" );
+		}
+
+		final Class<Y> attributeType = collection.getBindableJavaType();
+		final CollectionJoin<X, Y> join;
+		if ( isBasicCollection( collection ) ) {
+			join = new BasicCollectionJoinImpl<X, Y>(
+					queryBuilder(),
+					attributeType,
+					this,
+					collection,
+					jt
+			);
+		}
+		else {
+			join = new CollectionJoinImpl<X, Y>(
+					queryBuilder(),
+					attributeType,
+					this,
+					collection,
+					jt
+			);
+		}
+		joins.add( join );
+		return join;
+	}
+
+	private boolean isBasicCollection(PluralAttribute collection) {
+		return PersistenceType.BASIC.equals( collection.getElementType().getPersistenceType() );
 	}
 
 	/**
@@ -154,8 +215,20 @@ public abstract class FromImpl<Z,X> extends PathImpl<X> implements From<Z,X> {
 	 * {@inheritDoc}
 	 */
 	public <Y> SetJoin<X, Y> join(SetAttribute<? super X, Y> set, JoinType jt) {
-		// TODO : implement
-		throw new UnsupportedOperationException( "Not yet implemented!" );
+		if ( jt.equals( JoinType.RIGHT ) ) {
+			throw new UnsupportedOperationException( "RIGHT JOIN not supported" );
+		}
+
+		final Class<Y> attributeType = set.getBindableJavaType();
+		final SetJoin<X, Y> join;
+		if ( isBasicCollection( set ) ) {
+			join = new BasicSetJoinImpl<X, Y>( queryBuilder(), attributeType, this, set, jt );
+		}
+		else {
+			join = new SetJoinImpl<X, Y>( queryBuilder(), attributeType, this, set, jt );
+		}
+		joins.add( join );
+		return join;
 	}
 
 	/**
@@ -169,8 +242,20 @@ public abstract class FromImpl<Z,X> extends PathImpl<X> implements From<Z,X> {
 	 * {@inheritDoc}
 	 */
 	public <Y> ListJoin<X, Y> join(ListAttribute<? super X, Y> list, JoinType jt) {
-		// TODO : implement
-		throw new UnsupportedOperationException( "Not yet implemented!" );
+		if ( jt.equals( JoinType.RIGHT ) ) {
+			throw new UnsupportedOperationException( "RIGHT JOIN not supported" );
+		}
+
+		final Class<Y> attributeType = list.getBindableJavaType();
+		final ListJoin<X, Y> join;
+		if ( isBasicCollection( list ) ) {
+			join = new BasicListJoinImpl<X, Y>( queryBuilder(), attributeType, this, list, jt );
+		}
+		else {
+			join = new ListJoinImpl<X, Y>( queryBuilder(), attributeType, this, list, jt );
+		}
+		joins.add( join );
+		return join;
 	}
 
 	/**
@@ -184,83 +269,152 @@ public abstract class FromImpl<Z,X> extends PathImpl<X> implements From<Z,X> {
 	 * {@inheritDoc}
 	 */
 	public <K, V> MapJoin<X, K, V> join(MapAttribute<? super X, K, V> map, JoinType jt) {
-		// TODO : implement
-		throw new UnsupportedOperationException( "Not yet implemented!" );
+		if ( jt.equals( JoinType.RIGHT ) ) {
+			throw new UnsupportedOperationException( "RIGHT JOIN not supported" );
+		}
+
+		final Class<V> attributeType = map.getBindableJavaType();
+		final MapJoin<X, K, V> join;
+		if ( isBasicCollection( map ) ) {
+			join = new BasicMapJoinImpl<X,K,V>( queryBuilder(), attributeType, this, map, jt );
+		}
+		else {
+			join = new MapJoinImpl<X,K,V>( queryBuilder(), attributeType, this, map, jt );
+		}
+		joins.add( join );
+		return join;
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public <X, Y> Join<X, Y> join(String attributeName) {
+	public <Y> Join<X, Y> join(String attributeName) {
 		return join( attributeName, DEFAULT_JOIN_TYPE );
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public <X, Y> Join<X, Y> join(String attributeName, JoinType jt) {
-		// TODO : implement
-		throw new UnsupportedOperationException( "Not yet implemented!" );
+	public <Y> Join<X, Y> join(String attributeName, JoinType jt) {
+		if ( jt.equals( JoinType.RIGHT ) ) {
+			throw new UnsupportedOperationException( "RIGHT JOIN not supported" );
+		}
+
+		final Attribute<X,?> attribute = (Attribute<X, ?>) getAttribute( attributeName );
+		if ( attribute.isCollection() ) {
+			final PluralAttribute pluralAttribute = ( PluralAttribute ) attribute;
+			if ( CollectionType.COLLECTION.equals( pluralAttribute.getCollectionType() ) ) {
+				return join( (CollectionAttribute<X,Y>) attribute, jt );
+			}
+			else if ( CollectionType.LIST.equals( pluralAttribute.getCollectionType() ) ) {
+				return join( (ListAttribute<X,Y>) attribute, jt );
+			}
+			else if ( CollectionType.SET.equals( pluralAttribute.getCollectionType() ) ) {
+				return join( (SetAttribute<X,Y>) attribute, jt );
+			}
+			else {
+				return join( (MapAttribute<X,?,Y>) attribute, jt );
+			}
+		}
+		else {
+			return join( (SingularAttribute)attribute, jt );
+		}
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public <X, Y> CollectionJoin<X, Y> joinCollection(String attributeName) {
+	public <Y> CollectionJoin<X, Y> joinCollection(String attributeName) {
 		return joinCollection( attributeName, DEFAULT_JOIN_TYPE );
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public <X, Y> CollectionJoin<X, Y> joinCollection(String attributeName, JoinType jt) {
-		// TODO : implement
-		throw new UnsupportedOperationException( "Not yet implemented!" );
+	public <Y> CollectionJoin<X, Y> joinCollection(String attributeName, JoinType jt) {
+		final Attribute<X,?> attribute = (Attribute<X, ?>) getAttribute( attributeName );
+		if ( ! attribute.isCollection() ) {
+            throw new IllegalArgumentException( "Requested attribute was not a collection" );
+		}
+
+		final PluralAttribute pluralAttribute = ( PluralAttribute ) attribute;
+		if ( ! CollectionType.COLLECTION.equals( pluralAttribute.getCollectionType() ) ) {
+            throw new IllegalArgumentException( "Requested attribute was not a collection" );
+		}
+
+		return join( (CollectionAttribute<X,Y>) attribute, jt );
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public <X, Y> SetJoin<X, Y> joinSet(String attributeName) {
+	public <Y> SetJoin<X, Y> joinSet(String attributeName) {
 		return joinSet( attributeName, DEFAULT_JOIN_TYPE );
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public <X, Y> SetJoin<X, Y> joinSet(String attributeName, JoinType jt) {
-		// TODO : implement
-		throw new UnsupportedOperationException( "Not yet implemented!" );
+	public <Y> SetJoin<X, Y> joinSet(String attributeName, JoinType jt) {
+		final Attribute<X,?> attribute = (Attribute<X, ?>) getAttribute( attributeName );
+		if ( ! attribute.isCollection() ) {
+            throw new IllegalArgumentException( "Requested attribute was not a set" );
+		}
+
+		final PluralAttribute pluralAttribute = ( PluralAttribute ) attribute;
+		if ( ! CollectionType.SET.equals( pluralAttribute.getCollectionType() ) ) {
+            throw new IllegalArgumentException( "Requested attribute was not a set" );
+		}
+
+		return join( (SetAttribute<X,Y>) attribute, jt );
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public <X, Y> ListJoin<X, Y> joinList(String attributeName) {
+	public <Y> ListJoin<X, Y> joinList(String attributeName) {
 		return joinList( attributeName, DEFAULT_JOIN_TYPE );
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public <X, Y> ListJoin<X, Y> joinList(String attributeName, JoinType jt) {
-		// TODO : implement
-		throw new UnsupportedOperationException( "Not yet implemented!" );
+	public <Y> ListJoin<X, Y> joinList(String attributeName, JoinType jt) {	
+		final Attribute<X,?> attribute = (Attribute<X, ?>) getAttribute( attributeName );
+		if ( ! attribute.isCollection() ) {
+            throw new IllegalArgumentException( "Requested attribute was not a list" );
+		}
+
+		final PluralAttribute pluralAttribute = ( PluralAttribute ) attribute;
+		if ( ! CollectionType.LIST.equals( pluralAttribute.getCollectionType() ) ) {
+            throw new IllegalArgumentException( "Requested attribute was not a list" );
+		}
+
+		return join( (ListAttribute<X,Y>) attribute, jt );
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public <X, K, V> MapJoin<X, K, V> joinMap(String attributeName) {
+	public <K, V> MapJoin<X, K, V> joinMap(String attributeName) {
 		return joinMap( attributeName, DEFAULT_JOIN_TYPE );
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public <X, K, V> MapJoin<X, K, V> joinMap(String attributeName, JoinType jt) {
-		// TODO : implement
-		throw new UnsupportedOperationException( "Not yet implemented!" );
+	public <K, V> MapJoin<X, K, V> joinMap(String attributeName, JoinType jt) {
+		final Attribute<X,?> attribute = (Attribute<X, ?>) getAttribute( attributeName );
+		if ( ! attribute.isCollection() ) {
+            throw new IllegalArgumentException( "Requested attribute was not a map" );
+		}
+
+		final PluralAttribute pluralAttribute = ( PluralAttribute ) attribute;
+		if ( ! CollectionType.MAP.equals( pluralAttribute.getCollectionType() ) ) {
+            throw new IllegalArgumentException( "Requested attribute was not a map" );
+		}
+
+		return join( (MapAttribute<X,K,V>) attribute, jt );
 	}
 
 
@@ -316,23 +470,46 @@ public abstract class FromImpl<Z,X> extends PathImpl<X> implements From<Z,X> {
 
 	// PATH HANDLING ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-	public <Y> Path<Y> get(SingularAttribute<? super X, Y> ySingularAttribute) {
-		// TODO : implement
-		throw new UnsupportedOperationException( "Not yet implemented!" );
+	@Override
+	public <Y> Path<Y> get(SingularAttribute<? super X, Y> attribute) {
+		if ( PersistentAttributeType.BASIC.equals( attribute.getPersistentAttributeType() ) ) {
+            return new PathImpl<Y>( queryBuilder(), attribute.getJavaType(), this, attribute, attribute.getBindableType() );
+        }
+		else {
+			return join( attribute );
+        }
 	}
 
+	@Override
 	public <E, C extends Collection<E>> Expression<C> get(PluralAttribute<X, C, E> collection) {
-		// TODO : implement
-		throw new UnsupportedOperationException( "Not yet implemented!" );
+		return new CollectionExpression<C>( queryBuilder(), collection.getJavaType(), collection );
 	}
 
+	@Override
 	public <K, V, M extends Map<K, V>> Expression<M> get(MapAttribute<X, K, V> map) {
-		// TODO : implement
-		throw new UnsupportedOperationException( "Not yet implemented!" );
+		return ( Expression<M> ) new CollectionExpression<Map<K, V>>( queryBuilder(), map.getJavaType(), map );
 	}
 
+	@Override
 	public <Y> Path<Y> get(String attributeName) {
-		// TODO : implement
-		throw new UnsupportedOperationException( "Not yet implemented!" );
+		Attribute attribute = getAttribute( attributeName );
+		if ( attribute.isCollection() ) {
+			final PluralAttribute<X,?,Y> pluralAttribute = (PluralAttribute<X, ?, Y>) attribute;
+			if ( CollectionType.COLLECTION.equals( pluralAttribute.getCollectionType() ) ) {
+				return join( (CollectionAttribute<X,Y>) attribute );
+			}
+			else if ( CollectionType.LIST.equals( pluralAttribute.getCollectionType() ) ) {
+				return join( (ListAttribute<X,Y>) attribute );
+			}
+			else if ( CollectionType.SET.equals( pluralAttribute.getCollectionType() ) ) {
+				return join( (SetAttribute<X,Y>) attribute );
+			}
+			else {
+				return join( (MapAttribute<X,?,Y>) attribute );
+			}
+		}
+		else {
+			return get( (SingularAttribute<X,Y>) attribute );
+		}
 	}
 }

@@ -19,45 +19,41 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.ejb.criteria.expression;
+package org.hibernate.ejb.criteria;
 
-import javax.persistence.criteria.ParameterExpression;
-
-import org.hibernate.ejb.criteria.QueryBuilderImpl;
+import javax.persistence.criteria.Expression;
+import javax.persistence.criteria.JoinType;
+import javax.persistence.criteria.ListJoin;
+import javax.persistence.metamodel.ListAttribute;
+import org.hibernate.ejb.criteria.expression.ListIndexExpression;
 
 /**
- * Defines a parameter specification, or the information about a parameter (where it occurs, what is
- * its type, etc).
+ * Represents a join to a persistent collection, defined as type {@link java.util.List}, whose elements
+ * are associations.
  *
  * @author Steve Ebersole
  */
-public class ParameterExpressionImpl<T> extends ExpressionImpl<T> implements ParameterExpression<T> {
-	private final String name;
-	private final Integer position;
-
-	public ParameterExpressionImpl(
+public class ListJoinImpl<O,E> extends JoinImpl<O,E> implements ListJoin<O,E> {
+	public ListJoinImpl(
 			QueryBuilderImpl queryBuilder,
-			Class<T> javaType,
-			String name) {
-		super( queryBuilder, javaType );
-		this.name = name;
-		this.position = null;
+			Class<E> javaType,
+			PathImpl<O> lhs,
+			ListAttribute<? super O, ?> joinProperty,
+			JoinType joinType) {
+		super( queryBuilder, javaType, lhs, joinProperty, joinType );
 	}
 
-	public ParameterExpressionImpl(
-			QueryBuilderImpl queryBuilder,
-			Class<T> javaType,
-			Integer position) {
-		super( queryBuilder, javaType );
-		this.name = null;
-		this.position = position;
+	@Override
+	public ListAttribute<? super O, E> getAttribute() {
+		return (ListAttribute<? super O, E>) super.getAttribute();
 	}
 
-	public String getName() {
-		return name;
+	@Override
+	public ListAttribute<? super O, E> getModel() {
+        return (ListAttribute<? super O, E>) getAttribute();
 	}
 
-	public Integer getPosition() {
-		return position;
+	public Expression<Integer> index() {
+		return new ListIndexExpression( queryBuilder(), getAttribute() );
 	}
 }

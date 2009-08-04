@@ -25,7 +25,7 @@ import java.util.List;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Selection;
 
-import org.hibernate.ejb.criteria.expression.AbstractExpression;
+import org.hibernate.ejb.criteria.expression.ExpressionImpl;
 import org.hibernate.ejb.criteria.QueryBuilderImpl;
 
 /**
@@ -34,7 +34,7 @@ import org.hibernate.ejb.criteria.QueryBuilderImpl;
  *
  * @author Steve Ebersole
  */
-public abstract class AbstractPredicateImpl extends AbstractExpression<Boolean> implements Predicate {
+public abstract class AbstractPredicateImpl extends ExpressionImpl<Boolean> implements Predicate {
 	private boolean negated;
 
 	protected AbstractPredicateImpl(QueryBuilderImpl queryBuilder) {

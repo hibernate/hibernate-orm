@@ -73,7 +73,7 @@ public class QueryBuilderImpl implements QueryBuilder, Serializable {
 	 *
 	 * @return The underlying {@link EntityManagerFactoryImpl}
 	 */
-	protected EntityManagerFactoryImpl getEntityManagerFactory() {
+	public  EntityManagerFactoryImpl getEntityManagerFactory() {
 		return entityManagerFactory;
 	}
 

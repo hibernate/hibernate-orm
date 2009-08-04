@@ -32,7 +32,7 @@ import org.hibernate.ejb.criteria.QueryBuilderImpl;
  *
  * @author Steve Ebersole
  */
-public class FunctionExpressionImpl<X> extends AbstractExpression<X> implements Expression<X> {
+public class FunctionExpressionImpl<X> extends ExpressionImpl<X> implements Expression<X> {
 	private final String functionName;
 	private final List<Expression<?>> argumentExpressions;
 

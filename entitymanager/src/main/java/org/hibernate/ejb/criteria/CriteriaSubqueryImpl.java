@@ -34,14 +34,14 @@ import javax.persistence.criteria.Root;
 import javax.persistence.criteria.SetJoin;
 import javax.persistence.criteria.Subquery;
 import javax.persistence.metamodel.EntityType;
-import org.hibernate.ejb.criteria.expression.AbstractExpression;
+import org.hibernate.ejb.criteria.expression.ExpressionImpl;
 
 /**
  * TODO : javadoc
  *
  * @author Steve Ebersole
  */
-public class CriteriaSubqueryImpl<T> extends AbstractExpression<T> implements Subquery<T> {
+public class CriteriaSubqueryImpl<T> extends ExpressionImpl<T> implements Subquery<T> {
 	private final AbstractQuery<?> parent;
 	private final QueryStructure<T> queryStructure;
 

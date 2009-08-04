@@ -19,17 +19,25 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.ejb.criteria.expression;
+package org.hibernate.ejb.criteria.expression.function;
 
+import javax.persistence.criteria.Expression;
+
+import org.hibernate.ejb.criteria.expression.FunctionExpressionImpl;
 import org.hibernate.ejb.criteria.QueryBuilderImpl;
 
 /**
- * TODO : javadoc
+ * Implementation of a <tt>AVG</tt> function providing convenience in construction.
+ * <p/>
+ * Parameterized as {@link Double} because thats what JPA states that the return
+ * from <tt>AVG</tt> should be.
  *
  * @author Steve Ebersole
  */
-public class EntityTypeExpression<T> extends ExpressionImpl<T> {
-	public EntityTypeExpression(QueryBuilderImpl queryBuilder, Class<T> javaType) {
-		super( queryBuilder, javaType );
+public class AverageAggregrateFunction extends FunctionExpressionImpl<Double> {
+	public AverageAggregrateFunction(
+			QueryBuilderImpl queryBuilder,
+			Expression<? extends Number> expression) {
+		super( queryBuilder, Double.class, "avg", expression );
 	}
 }

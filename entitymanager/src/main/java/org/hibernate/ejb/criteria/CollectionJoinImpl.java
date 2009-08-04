@@ -19,17 +19,32 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.ejb.criteria.expression;
+package org.hibernate.ejb.criteria;
 
-import org.hibernate.ejb.criteria.QueryBuilderImpl;
+import javax.persistence.criteria.CollectionJoin;
+import javax.persistence.criteria.JoinType;
+import javax.persistence.metamodel.CollectionAttribute;
 
 /**
- * TODO : javadoc
+ * Represents a join to a persistent collection, defined as type {@link java.util.Collection}, whose elements
+ * are associations.
  *
  * @author Steve Ebersole
  */
-public class EntityTypeExpression<T> extends ExpressionImpl<T> {
-	public EntityTypeExpression(QueryBuilderImpl queryBuilder, Class<T> javaType) {
-		super( queryBuilder, javaType );
+public class CollectionJoinImpl<O,E> extends JoinImpl<O,E> implements CollectionJoin<O,E> {
+
+	public CollectionJoinImpl(
+			QueryBuilderImpl queryBuilder,
+			Class<E> javaType,
+			PathImpl<O> lhs,
+			CollectionAttribute<? super O, ?> joinProperty,
+			JoinType joinType) {
+		super(queryBuilder, javaType, lhs, joinProperty, joinType);
 	}
+
+	@Override
+	public CollectionAttribute<? super O, E> getModel() {
+        return (CollectionAttribute<? super O, E>) super.getAttribute();
+    }
+
 }

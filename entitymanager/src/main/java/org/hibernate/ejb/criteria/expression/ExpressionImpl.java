@@ -32,8 +32,8 @@ import org.hibernate.ejb.criteria.QueryBuilderImpl;
  *
  * @author Steve Ebersole
  */
-public class AbstractExpression<T> extends SelectionImpl<T> implements Expression<T> {
-	protected AbstractExpression(QueryBuilderImpl queryBuilder, Class<T> javaType) {
+public class ExpressionImpl<T> extends SelectionImpl<T> implements Expression<T> {
+	public ExpressionImpl(QueryBuilderImpl queryBuilder, Class<T> javaType) {
 		super( queryBuilder, javaType );
 	}
 

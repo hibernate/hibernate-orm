@@ -26,29 +26,41 @@ import java.util.Map;
 import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Path;
 
+import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.Bindable;
-import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.MapAttribute;
 import javax.persistence.metamodel.PluralAttribute;
 import javax.persistence.metamodel.SingularAttribute;
-import org.hibernate.ejb.criteria.expression.AbstractExpression;
+import org.hibernate.ejb.criteria.expression.ExpressionImpl;
 
 /**
- * A {@link Path} models an individual portion of a join expression.
+ * A {@link Path} models an individual portion of a path expression.
  *
  * @author Steve Ebersole
  */
-public class PathImpl<X> extends AbstractExpression<X> implements Path<X> {
+public class PathImpl<X> extends ExpressionImpl<X> implements Path<X> {
 	private final PathImpl<?> origin;
-	private Bindable<X> model;
+	private final Attribute<?,?> attribute;
+	private Object model;
 
+	/**
+	 * Constructs a path.
+	 *
+	 * @param queryBuilder The delegate for building query components.
+	 * @param javaType The java type of this path,
+	 * @param origin The source ("lhs") of this path.
+	 * @param attribute The attribute defining this path element.
+	 * @param model The corresponding model of this path.
+	 */
 	protected PathImpl(
 			QueryBuilderImpl queryBuilder,
 			Class<X> javaType,
 			PathImpl<?> origin,
-			Bindable<X> model) {
+			Attribute<?,?> attribute,
+			Object model) {
         super( queryBuilder, javaType );
 		this.origin = origin;
+		this.attribute = attribute;
 		this.model = model;
 	}
 
@@ -59,6 +71,10 @@ public class PathImpl<X> extends AbstractExpression<X> implements Path<X> {
         return origin;
     }
 
+	public Attribute<?, ?> getAttribute() {
+		return attribute;
+	}
+
 	/**
 	 * {@inheritDoc}
 	 */
@@ -66,7 +82,7 @@ public class PathImpl<X> extends AbstractExpression<X> implements Path<X> {
         if ( model == null ) {
             throw new IllegalStateException( this + " represents a basic path and not a bindable" );
         }
-		return model;
+		return (Bindable<X>)model;
     }
 
 	/**
@@ -76,7 +92,8 @@ public class PathImpl<X> extends AbstractExpression<X> implements Path<X> {
 	 * an {@link IllegalStateException}
 	 */
 	public Expression<Class<? extends X>> type() {
-		throw new IllegalStateException( "type() is not applicable to a primitive path node." );	}
+		throw new BasicPathUsageException( "type() is not applicable to primitive paths.", getAttribute() );
+	}
 
 	/**
 	 * {@inheritDoc}
@@ -85,7 +102,11 @@ public class PathImpl<X> extends AbstractExpression<X> implements Path<X> {
 	 * an {@link IllegalStateException}
 	 */
 	public <Y> Path<Y> get(SingularAttribute<? super X, Y> attribute) {
-		throw new IllegalStateException( this + " is a primitive path node." );
+		throw illegalDereference();
+	}
+
+	private BasicPathUsageException illegalDereference() {
+		return new BasicPathUsageException( "Primitive path cannot be de-referenced", getAttribute() );
 	}
 
 	/**
@@ -95,7 +116,7 @@ public class PathImpl<X> extends AbstractExpression<X> implements Path<X> {
 	 * an {@link IllegalStateException}
 	 */
 	public <E, C extends Collection<E>> Expression<C> get(PluralAttribute<X, C, E> collection) {
-		throw new IllegalStateException( this + " is a primitive path node." );
+		throw illegalDereference();
 	}
 
 	/**
@@ -105,7 +126,7 @@ public class PathImpl<X> extends AbstractExpression<X> implements Path<X> {
 	 * an {@link IllegalStateException}
 	 */
 	public <K, V, M extends Map<K, V>> Expression<M> get(MapAttribute<X, K, V> map) {
-		throw new IllegalStateException( this + " is a primitive path node." );
+		throw illegalDereference();
 	}
 
 	/**
@@ -115,7 +136,7 @@ public class PathImpl<X> extends AbstractExpression<X> implements Path<X> {
 	 * an {@link IllegalStateException}
 	 */
 	public <Y> Path<Y> get(String attributeName) {
-		throw new IllegalStateException( this + " is a primitive path node." );
+		throw illegalDereference();
 	}
 
 }

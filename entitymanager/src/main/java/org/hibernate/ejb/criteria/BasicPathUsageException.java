@@ -19,17 +19,43 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.ejb.criteria.expression;
+package org.hibernate.ejb.criteria;
 
-import org.hibernate.ejb.criteria.QueryBuilderImpl;
+import javax.persistence.metamodel.Attribute;
 
 /**
- * TODO : javadoc
+ * Represents an incorrect usage of a basic path.  Generally this means an attempt to
+ * de-reference a basic attribute path.
  *
  * @author Steve Ebersole
  */
-public class EntityTypeExpression<T> extends ExpressionImpl<T> {
-	public EntityTypeExpression(QueryBuilderImpl queryBuilder, Class<T> javaType) {
-		super( queryBuilder, javaType );
+public class BasicPathUsageException extends RuntimeException {
+	private final Attribute<?,?> attribute;
+
+	/**
+	 * Construct the usage exception.
+	 *
+	 * @param message An error message describing the incorrect usage.
+	 * @param attribute The basic attribute involved.
+	 */
+	public BasicPathUsageException(String message, Attribute<?,?> attribute) {
+		super( message );
+		this.attribute = attribute;
+	}
+
+	/**
+	 * Construct the usage exception.
+	 *
+	 * @param message An error message describing the incorrect usage.
+	 * @param cause An underlying cause.
+	 * @param attribute The basic attribute involved.
+	 */
+	public BasicPathUsageException(String message, Throwable cause, Attribute<?,?> attribute) {
+		super( message, cause );
+		this.attribute = attribute;
+	}
+
+	public Attribute<?,?> getAttribute() {
+		return attribute;
 	}
 }

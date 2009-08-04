@@ -21,7 +21,6 @@
  */
 package org.hibernate.ejb.criteria;
 
-import javax.persistence.criteria.CollectionJoin;
 import javax.persistence.criteria.JoinType;
 import javax.persistence.metamodel.CollectionAttribute;
 
@@ -31,7 +30,9 @@ import javax.persistence.metamodel.CollectionAttribute;
  *
  * @author Steve Ebersole
  */
-public class CollectionJoinImpl<O,E> extends JoinImpl<O,E> implements CollectionJoin<O,E> {
+public class CollectionJoinImpl<O,E>
+		extends JoinImpl<O,E>
+		implements JoinImplementors.CollectionJoinImplementor<O,E> {
 
 	public CollectionJoinImpl(
 			QueryBuilderImpl queryBuilder,

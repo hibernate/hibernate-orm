@@ -124,10 +124,6 @@ public abstract class FromImpl<Z,X> extends PathImpl<X> implements From<Z,X> {
 		return joins;
 	}
 
-	protected void addJoin(Join<X,?> join) {
-		getJoinsInternal().add( join );
-	}
-
 	/**
 	 * {@inheritDoc}
 	 */
@@ -139,6 +135,12 @@ public abstract class FromImpl<Z,X> extends PathImpl<X> implements From<Z,X> {
 	 * {@inheritDoc}
 	 */
 	public <Y> Join<X, Y> join(SingularAttribute<? super X, Y> attribute, JoinType jt) {
+		Join<X, Y> join = constructJoin( attribute, jt );
+		getJoinsInternal().add( join );
+		return join;
+	}
+
+	private <Y> JoinImplementors.JoinImplementor<X, Y> constructJoin(SingularAttribute<? super X, Y> attribute, JoinType jt) {
 		if ( PersistenceType.BASIC.equals( attribute.getType().getPersistenceType() ) ) {
 			throw new BasicPathUsageException( "Cannot join to attribute of basic type", attribute );
         }
@@ -150,17 +152,14 @@ public abstract class FromImpl<Z,X> extends PathImpl<X> implements From<Z,X> {
 		}
 
 		final Class<Y> attributeType = attribute.getBindableJavaType();
-        final JoinImpl<X, Y> join = new JoinImpl<X, Y>(
+        return new JoinImpl<X, Y>(
 				queryBuilder(),
 				attributeType,
 				this,
 				attribute,
 				jt
 		);
-		joins.add( join );
-		return join;
 	}
-
 	/**
 	 * {@inheritDoc}
 	 */
@@ -172,12 +171,18 @@ public abstract class FromImpl<Z,X> extends PathImpl<X> implements From<Z,X> {
 	 * {@inheritDoc}
 	 */
 	public <Y> CollectionJoin<X, Y> join(CollectionAttribute<? super X, Y> collection, JoinType jt) {
+		final CollectionJoin<X, Y> join = constructJoin( collection, jt );
+		getJoinsInternal().add( join );
+		return join;
+	}
+
+	private <Y> JoinImplementors.CollectionJoinImplementor<X, Y> constructJoin(CollectionAttribute<? super X, Y> collection, JoinType jt) {
 		if ( jt.equals( JoinType.RIGHT ) ) {
 			throw new UnsupportedOperationException( "RIGHT JOIN not supported" );
 		}
 
 		final Class<Y> attributeType = collection.getBindableJavaType();
-		final CollectionJoin<X, Y> join;
+		final JoinImplementors.CollectionJoinImplementor<X, Y> join;
 		if ( isBasicCollection( collection ) ) {
 			join = new BasicCollectionJoinImpl<X, Y>(
 					queryBuilder(),
@@ -196,7 +201,6 @@ public abstract class FromImpl<Z,X> extends PathImpl<X> implements From<Z,X> {
 					jt
 			);
 		}
-		joins.add( join );
 		return join;
 	}
 
@@ -215,19 +219,24 @@ public abstract class FromImpl<Z,X> extends PathImpl<X> implements From<Z,X> {
 	 * {@inheritDoc}
 	 */
 	public <Y> SetJoin<X, Y> join(SetAttribute<? super X, Y> set, JoinType jt) {
+		final SetJoin<X, Y> join = constructJoin( set, jt );
+		getJoinsInternal().add( join );
+		return join;
+	}
+
+	private <Y> JoinImplementors.SetJoinImplementor<X, Y> constructJoin(SetAttribute<? super X, Y> set, JoinType jt) {
 		if ( jt.equals( JoinType.RIGHT ) ) {
 			throw new UnsupportedOperationException( "RIGHT JOIN not supported" );
 		}
 
 		final Class<Y> attributeType = set.getBindableJavaType();
-		final SetJoin<X, Y> join;
+		final JoinImplementors.SetJoinImplementor<X, Y> join;
 		if ( isBasicCollection( set ) ) {
 			join = new BasicSetJoinImpl<X, Y>( queryBuilder(), attributeType, this, set, jt );
 		}
 		else {
 			join = new SetJoinImpl<X, Y>( queryBuilder(), attributeType, this, set, jt );
 		}
-		joins.add( join );
 		return join;
 	}
 
@@ -242,19 +251,24 @@ public abstract class FromImpl<Z,X> extends PathImpl<X> implements From<Z,X> {
 	 * {@inheritDoc}
 	 */
 	public <Y> ListJoin<X, Y> join(ListAttribute<? super X, Y> list, JoinType jt) {
+		final ListJoin<X, Y> join = constructJoin( list, jt );
+		getJoinsInternal().add( join );
+		return join;
+	}
+
+	private  <Y> JoinImplementors.ListJoinImplementor<X, Y> constructJoin(ListAttribute<? super X, Y> list, JoinType jt) {
 		if ( jt.equals( JoinType.RIGHT ) ) {
 			throw new UnsupportedOperationException( "RIGHT JOIN not supported" );
 		}
 
 		final Class<Y> attributeType = list.getBindableJavaType();
-		final ListJoin<X, Y> join;
+		final JoinImplementors.ListJoinImplementor<X, Y> join;
 		if ( isBasicCollection( list ) ) {
 			join = new BasicListJoinImpl<X, Y>( queryBuilder(), attributeType, this, list, jt );
 		}
 		else {
 			join = new ListJoinImpl<X, Y>( queryBuilder(), attributeType, this, list, jt );
 		}
-		joins.add( join );
 		return join;
 	}
 
@@ -269,19 +283,24 @@ public abstract class FromImpl<Z,X> extends PathImpl<X> implements From<Z,X> {
 	 * {@inheritDoc}
 	 */
 	public <K, V> MapJoin<X, K, V> join(MapAttribute<? super X, K, V> map, JoinType jt) {
+		final MapJoin<X, K, V> join = constructJoin( map, jt );
+		getJoinsInternal().add( join );
+		return join;
+	}
+
+	private <K, V> JoinImplementors.MapJoinImplementor<X, K, V> constructJoin(MapAttribute<? super X, K, V> map, JoinType jt) {
 		if ( jt.equals( JoinType.RIGHT ) ) {
 			throw new UnsupportedOperationException( "RIGHT JOIN not supported" );
 		}
 
 		final Class<V> attributeType = map.getBindableJavaType();
-		final MapJoin<X, K, V> join;
+		final JoinImplementors.MapJoinImplementor<X, K, V> join;
 		if ( isBasicCollection( map ) ) {
 			join = new BasicMapJoinImpl<X,K,V>( queryBuilder(), attributeType, this, map, jt );
 		}
 		else {
 			join = new MapJoinImpl<X,K,V>( queryBuilder(), attributeType, this, map, jt );
 		}
-		joins.add( join );
 		return join;
 	}
 
@@ -444,9 +463,10 @@ public abstract class FromImpl<Z,X> extends PathImpl<X> implements From<Z,X> {
 		return fetch( singularAttribute, DEFAULT_JOIN_TYPE );
 	}
 
-	public <Y> Fetch<X, Y> fetch(SingularAttribute<? super X, Y> singularAttribute, JoinType jt) {
-		// TODO : implement
-		throw new UnsupportedOperationException( "Not yet implemented!" );
+	public <Y> Fetch<X, Y> fetch(SingularAttribute<? super X, Y> attribute, JoinType jt) {
+		Fetch<X, Y> fetch = constructJoin( attribute, jt );
+		getFetchesInternal().add( fetch );
+		return fetch;
 	}
 
 	public <Y> Fetch<X, Y> fetch(PluralAttribute<? super X, ?, Y> pluralAttribute) {
@@ -454,8 +474,22 @@ public abstract class FromImpl<Z,X> extends PathImpl<X> implements From<Z,X> {
 	}
 
 	public <Y> Fetch<X, Y> fetch(PluralAttribute<? super X, ?, Y> pluralAttribute, JoinType jt) {
-		// TODO : implement
-		throw new UnsupportedOperationException( "Not yet implemented!" );
+		final Fetch<X, Y> fetch;
+		// TODO : combine Fetch and Join hierarchies (JoinImplementor extends Join,Fetch???)
+		if ( CollectionType.COLLECTION.equals( pluralAttribute.getCollectionType() ) ) {
+			fetch = constructJoin( (CollectionAttribute<X,Y>) pluralAttribute, jt );
+		}
+		else if ( CollectionType.LIST.equals( pluralAttribute.getCollectionType() ) ) {
+			fetch = constructJoin( (ListAttribute<X,Y>) pluralAttribute, jt );
+		}
+		else if ( CollectionType.SET.equals( pluralAttribute.getCollectionType() ) ) {
+			fetch = constructJoin( (SetAttribute<X,Y>) pluralAttribute, jt );
+		}
+		else {
+			fetch = constructJoin( (MapAttribute<X,?,Y>) pluralAttribute, jt );
+		}
+		getFetchesInternal().add( fetch );
+		return fetch;
 	}
 
 	public <Y> Fetch<X, Y> fetch(String attributeName) {
@@ -463,8 +497,13 @@ public abstract class FromImpl<Z,X> extends PathImpl<X> implements From<Z,X> {
 	}
 
 	public <Y> Fetch<X, Y> fetch(String attributeName, JoinType jt) {
-		// TODO : implement
-		throw new UnsupportedOperationException( "Not yet implemented!" );
+		Attribute<X,?> attribute = getAttribute( attributeName );
+		if ( attribute.isCollection() ) {
+			return fetch( (PluralAttribute<X,?,Y>)attribute, jt );
+		}
+		else {
+			return fetch( (SingularAttribute<X,Y>) attribute, jt );
+		}
 	}
 
 

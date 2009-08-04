@@ -22,7 +22,6 @@
 package org.hibernate.ejb.criteria;
 
 import javax.persistence.criteria.JoinType;
-import javax.persistence.criteria.SetJoin;
 import javax.persistence.metamodel.SetAttribute;
 
 /**
@@ -33,7 +32,7 @@ import javax.persistence.metamodel.SetAttribute;
  */
 public class BasicSetJoinImpl<O,E>
 		extends AbstractBasicPluralJoin<O,java.util.Set<E>,E> 
-		implements SetJoin<O,E> {
+		implements JoinImplementors.SetJoinImplementor<O,E> {
 
 	public BasicSetJoinImpl(
 			QueryBuilderImpl queryBuilder,

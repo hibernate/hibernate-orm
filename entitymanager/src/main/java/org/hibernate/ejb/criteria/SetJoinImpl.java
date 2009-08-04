@@ -22,7 +22,6 @@
 package org.hibernate.ejb.criteria;
 
 import javax.persistence.criteria.JoinType;
-import javax.persistence.criteria.SetJoin;
 import javax.persistence.metamodel.SetAttribute;
 
 /**
@@ -31,7 +30,10 @@ import javax.persistence.metamodel.SetAttribute;
  *
  * @author Steve Ebersole
  */
-public class SetJoinImpl<O,E> extends JoinImpl<O,E> implements SetJoin<O,E> {
+public class SetJoinImpl<O,E>
+		extends JoinImpl<O,E>
+		implements JoinImplementors.SetJoinImplementor<O,E> {
+
 	public SetJoinImpl(
 			QueryBuilderImpl queryBuilder,
 			Class<E> javaType, 

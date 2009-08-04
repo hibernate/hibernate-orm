@@ -26,7 +26,6 @@ import java.util.Map.Entry;
 import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Join;
 import javax.persistence.criteria.JoinType;
-import javax.persistence.criteria.MapJoin;
 import javax.persistence.criteria.Path;
 import javax.persistence.metamodel.MapAttribute;
 import javax.persistence.metamodel.Type.PersistenceType;
@@ -43,7 +42,7 @@ import javax.persistence.metamodel.Type.PersistenceType;
  */
 public class BasicMapJoinImpl<O,K,V>
 		extends AbstractBasicPluralJoin<O,java.util.Map<K,V>,V> 
-		implements MapJoin<O,K,V> {
+		implements JoinImplementors.MapJoinImplementor<O,K,V> {
 
 	public BasicMapJoinImpl(
 			QueryBuilderImpl queryBuilder,

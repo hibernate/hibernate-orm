@@ -23,6 +23,7 @@ package org.hibernate.ejb.criteria;
 
 import javax.persistence.criteria.CollectionJoin;
 import javax.persistence.criteria.Expression;
+import javax.persistence.criteria.Fetch;
 import javax.persistence.criteria.Join;
 import javax.persistence.criteria.JoinType;
 import javax.persistence.criteria.ListJoin;
@@ -42,7 +43,9 @@ import javax.persistence.metamodel.SingularAttribute;
  *
  * @author Steve Ebersole
  */
-public abstract class AbstractBasicPluralJoin<O,C,E> extends JoinImpl<O,E> implements PluralJoin<O,C,E> {
+public abstract class AbstractBasicPluralJoin<O,C,E>
+		extends JoinImpl<O,E>
+		implements PluralJoin<O,C,E>, Fetch<O,E> {
 
 	public AbstractBasicPluralJoin(
 			QueryBuilderImpl queryBuilder,

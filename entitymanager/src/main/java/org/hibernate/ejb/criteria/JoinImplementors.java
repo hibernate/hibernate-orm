@@ -21,41 +21,32 @@
  */
 package org.hibernate.ejb.criteria;
 
-import javax.persistence.criteria.Expression;
-import javax.persistence.criteria.JoinType;
-import javax.persistence.metamodel.ListAttribute;
-import org.hibernate.ejb.criteria.expression.ListIndexExpression;
+import javax.persistence.criteria.CollectionJoin;
+import javax.persistence.criteria.Fetch;
+import javax.persistence.criteria.Join;
+import javax.persistence.criteria.ListJoin;
+import javax.persistence.criteria.MapJoin;
+import javax.persistence.criteria.SetJoin;
 
 /**
- * Represents a join to a persistent collection, defined as type {@link java.util.List}, whose elements
- * are basic type.
+ * Consolidates the {@link Join} and {@link Fetch} hierarchies since that is how we implement them.
+ * This allows us to treat them polymorphically.
  *
  * @author Steve Ebersole
  */
-public class BasicListJoinImpl<O,E>
-		extends AbstractBasicPluralJoin<O,java.util.List<E>,E> 
-		implements JoinImplementors.ListJoinImplementor<O,E> {
-
-	public BasicListJoinImpl(
-			QueryBuilderImpl queryBuilder,
-			Class<E> javaType,
-			PathImpl<O> lhs,
-			ListAttribute<? super O, ?> joinProperty,
-			JoinType joinType) {
-		super(queryBuilder, javaType, lhs, joinProperty, joinType);
+public interface JoinImplementors {
+	public static interface JoinImplementor<Z,X> extends Join<Z,X>, Fetch<Z,X> {
 	}
 
-	@Override
-	public ListAttribute<? super O, E> getAttribute() {
-		return (ListAttribute<? super O, E>) super.getAttribute();
+	public static interface CollectionJoinImplementor<Z,X> extends CollectionJoin<Z,X>, Fetch<Z,X> {
 	}
 
-	@Override
-	public ListAttribute<? super O, E> getModel() {
-        return getAttribute();
-    }
+	public static interface SetJoinImplementor<Z,X> extends SetJoin<Z,X>, Fetch<Z,X> {
+	}
 
-	public Expression<Integer> index() {
-		return new ListIndexExpression( queryBuilder(), getAttribute() );
+	public static interface ListJoinImplementor<Z,X> extends ListJoin<Z,X>, Fetch<Z,X> {
+	}
+
+	public static interface MapJoinImplementor<Z,K,V> extends MapJoin<Z,K,V>, Fetch<Z,V> {
 	}
 }

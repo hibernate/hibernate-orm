@@ -307,14 +307,14 @@ public abstract class FromImpl<Z,X> extends PathImpl<X> implements From<Z,X> {
 	/**
 	 * {@inheritDoc}
 	 */
-	public <Y> Join<X, Y> join(String attributeName) {
+	public <X,Y> Join<X, Y> join(String attributeName) {
 		return join( attributeName, DEFAULT_JOIN_TYPE );
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public <Y> Join<X, Y> join(String attributeName, JoinType jt) {
+	public <X,Y> Join<X, Y> join(String attributeName, JoinType jt) {
 		if ( jt.equals( JoinType.RIGHT ) ) {
 			throw new UnsupportedOperationException( "RIGHT JOIN not supported" );
 		}
@@ -323,34 +323,34 @@ public abstract class FromImpl<Z,X> extends PathImpl<X> implements From<Z,X> {
 		if ( attribute.isCollection() ) {
 			final PluralAttribute pluralAttribute = ( PluralAttribute ) attribute;
 			if ( CollectionType.COLLECTION.equals( pluralAttribute.getCollectionType() ) ) {
-				return join( (CollectionAttribute<X,Y>) attribute, jt );
+				return (Join<X,Y>) join( (CollectionAttribute) attribute, jt );
 			}
 			else if ( CollectionType.LIST.equals( pluralAttribute.getCollectionType() ) ) {
-				return join( (ListAttribute<X,Y>) attribute, jt );
+				return (Join<X,Y>) join( (ListAttribute) attribute, jt );
 			}
 			else if ( CollectionType.SET.equals( pluralAttribute.getCollectionType() ) ) {
-				return join( (SetAttribute<X,Y>) attribute, jt );
+				return (Join<X,Y>) join( (SetAttribute) attribute, jt );
 			}
 			else {
-				return join( (MapAttribute<X,?,Y>) attribute, jt );
+				return (Join<X,Y>) join( (MapAttribute) attribute, jt );
 			}
 		}
 		else {
-			return join( (SingularAttribute)attribute, jt );
+			return (Join<X,Y>) join( (SingularAttribute)attribute, jt );
 		}
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public <Y> CollectionJoin<X, Y> joinCollection(String attributeName) {
+	public <X,Y> CollectionJoin<X, Y> joinCollection(String attributeName) {
 		return joinCollection( attributeName, DEFAULT_JOIN_TYPE );
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public <Y> CollectionJoin<X, Y> joinCollection(String attributeName, JoinType jt) {
+	public <X,Y> CollectionJoin<X, Y> joinCollection(String attributeName, JoinType jt) {
 		final Attribute<X,?> attribute = (Attribute<X, ?>) getAttribute( attributeName );
 		if ( ! attribute.isCollection() ) {
             throw new IllegalArgumentException( "Requested attribute was not a collection" );
@@ -361,20 +361,20 @@ public abstract class FromImpl<Z,X> extends PathImpl<X> implements From<Z,X> {
             throw new IllegalArgumentException( "Requested attribute was not a collection" );
 		}
 
-		return join( (CollectionAttribute<X,Y>) attribute, jt );
+		return (CollectionJoin<X,Y>) join( (CollectionAttribute) attribute, jt );
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public <Y> SetJoin<X, Y> joinSet(String attributeName) {
+	public <X,Y> SetJoin<X, Y> joinSet(String attributeName) {
 		return joinSet( attributeName, DEFAULT_JOIN_TYPE );
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public <Y> SetJoin<X, Y> joinSet(String attributeName, JoinType jt) {
+	public <X,Y> SetJoin<X, Y> joinSet(String attributeName, JoinType jt) {
 		final Attribute<X,?> attribute = (Attribute<X, ?>) getAttribute( attributeName );
 		if ( ! attribute.isCollection() ) {
             throw new IllegalArgumentException( "Requested attribute was not a set" );
@@ -385,20 +385,20 @@ public abstract class FromImpl<Z,X> extends PathImpl<X> implements From<Z,X> {
             throw new IllegalArgumentException( "Requested attribute was not a set" );
 		}
 
-		return join( (SetAttribute<X,Y>) attribute, jt );
+		return (SetJoin<X,Y>) join( (SetAttribute) attribute, jt );
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public <Y> ListJoin<X, Y> joinList(String attributeName) {
+	public <X,Y> ListJoin<X, Y> joinList(String attributeName) {
 		return joinList( attributeName, DEFAULT_JOIN_TYPE );
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public <Y> ListJoin<X, Y> joinList(String attributeName, JoinType jt) {	
+	public <X,Y> ListJoin<X, Y> joinList(String attributeName, JoinType jt) {
 		final Attribute<X,?> attribute = (Attribute<X, ?>) getAttribute( attributeName );
 		if ( ! attribute.isCollection() ) {
             throw new IllegalArgumentException( "Requested attribute was not a list" );
@@ -409,20 +409,20 @@ public abstract class FromImpl<Z,X> extends PathImpl<X> implements From<Z,X> {
             throw new IllegalArgumentException( "Requested attribute was not a list" );
 		}
 
-		return join( (ListAttribute<X,Y>) attribute, jt );
+		return (ListJoin<X,Y>) join( (ListAttribute) attribute, jt );
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public <K, V> MapJoin<X, K, V> joinMap(String attributeName) {
+	public <X, K, V> MapJoin<X, K, V> joinMap(String attributeName) {
 		return joinMap( attributeName, DEFAULT_JOIN_TYPE );
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public <K, V> MapJoin<X, K, V> joinMap(String attributeName, JoinType jt) {
+	public <X, K, V> MapJoin<X, K, V> joinMap(String attributeName, JoinType jt) {
 		final Attribute<X,?> attribute = (Attribute<X, ?>) getAttribute( attributeName );
 		if ( ! attribute.isCollection() ) {
             throw new IllegalArgumentException( "Requested attribute was not a map" );
@@ -433,7 +433,7 @@ public abstract class FromImpl<Z,X> extends PathImpl<X> implements From<Z,X> {
             throw new IllegalArgumentException( "Requested attribute was not a map" );
 		}
 
-		return join( (MapAttribute<X,K,V>) attribute, jt );
+		return (MapJoin<X,K,V>) join( (MapAttribute) attribute, jt );
 	}
 
 
@@ -492,17 +492,17 @@ public abstract class FromImpl<Z,X> extends PathImpl<X> implements From<Z,X> {
 		return fetch;
 	}
 
-	public <Y> Fetch<X, Y> fetch(String attributeName) {
+	public <X,Y> Fetch<X, Y> fetch(String attributeName) {
 		return fetch( attributeName, DEFAULT_JOIN_TYPE );
 	}
 
-	public <Y> Fetch<X, Y> fetch(String attributeName, JoinType jt) {
-		Attribute<X,?> attribute = getAttribute( attributeName );
+	public <X,Y> Fetch<X, Y> fetch(String attributeName, JoinType jt) {
+		Attribute<X,?> attribute = (Attribute<X, ?>) getAttribute( attributeName );
 		if ( attribute.isCollection() ) {
-			return fetch( (PluralAttribute<X,?,Y>)attribute, jt );
+			return (Fetch<X, Y>) fetch( (PluralAttribute) attribute, jt );
 		}
 		else {
-			return fetch( (SingularAttribute<X,Y>) attribute, jt );
+			return (Fetch<X, Y>) fetch( (SingularAttribute) attribute, jt );
 		}
 	}
 

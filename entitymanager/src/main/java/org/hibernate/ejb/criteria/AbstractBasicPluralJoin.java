@@ -120,28 +120,62 @@ public abstract class AbstractBasicPluralJoin<O,C,E>
     }
 
     @Override
-    public <Y> Join<E, Y> join(String attributeName, JoinType jt) {
+    public <E,Y> Join<E, Y> join(String attributeName, JoinType jt) {
         throw illegalJoin();
     }
 
     @Override
-    public <Y> CollectionJoin<E, Y> joinCollection(String attributeName, JoinType jt) {
+    public <E,Y> CollectionJoin<E, Y> joinCollection(String attributeName, JoinType jt) {
         throw illegalJoin();
     }
 
     @Override
-    public <Y> ListJoin<E, Y> joinList(String attributeName, JoinType jt) {
+    public <E,Y> ListJoin<E, Y> joinList(String attributeName, JoinType jt) {
         throw illegalJoin();
     }
 
     @Override
-    public <L, W> MapJoin<E, L, W> joinMap(String attributeName, JoinType jt) {
+    public <E, L, W> MapJoin<E, L, W> joinMap(String attributeName, JoinType jt) {
         throw illegalJoin();
     }
 
     @Override
-    public <Y> SetJoin<E, Y> joinSet(String attributeName, JoinType jt) {
+    public <E,Y> SetJoin<E, Y> joinSet(String attributeName, JoinType jt) {
         throw illegalJoin();
     }
+
+	@Override
+	public <Y> Fetch<E, Y> fetch(SingularAttribute<? super E, Y> singularAttribute) {
+		throw illegalFetch();
+	}
+
+	private BasicPathUsageException illegalFetch() {
+		return new BasicPathUsageException( "Basic collection cannot be source of a fetch", getAttribute() );
+	}
+
+	@Override
+	public <Y> Fetch<E, Y> fetch(SingularAttribute<? super E, Y> attribute, JoinType jt) {
+		throw illegalFetch();
+	}
+
+	@Override
+	public <Y> Fetch<E, Y> fetch(PluralAttribute<? super E, ?, Y> pluralAttribute) {
+		throw illegalFetch();
+	}
+
+	@Override
+	public <Y> Fetch<E, Y> fetch(PluralAttribute<? super E, ?, Y> pluralAttribute, JoinType jt) {
+		throw illegalFetch();
+	}
+
+	@Override
+	public <X, Y> Fetch<X, Y> fetch(String attributeName) {
+		throw illegalFetch();
+	}
+
+	@Override
+	public <X, Y> Fetch<X, Y> fetch(String attributeName, JoinType jt) {
+		throw illegalFetch();
+	}
 
 }

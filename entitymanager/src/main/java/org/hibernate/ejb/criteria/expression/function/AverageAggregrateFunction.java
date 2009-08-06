@@ -23,7 +23,6 @@ package org.hibernate.ejb.criteria.expression.function;
 
 import javax.persistence.criteria.Expression;
 
-import org.hibernate.ejb.criteria.expression.FunctionExpressionImpl;
 import org.hibernate.ejb.criteria.QueryBuilderImpl;
 
 /**
@@ -34,7 +33,7 @@ import org.hibernate.ejb.criteria.QueryBuilderImpl;
  *
  * @author Steve Ebersole
  */
-public class AverageAggregrateFunction extends FunctionExpressionImpl<Double> {
+public class AverageAggregrateFunction extends BasicFunctionExpression<Double> {
 	public AverageAggregrateFunction(
 			QueryBuilderImpl queryBuilder,
 			Expression<? extends Number> expression) {

@@ -21,22 +21,36 @@
  */
 package org.hibernate.ejb.criteria.expression.function;
 
-import javax.persistence.criteria.Expression;
-
 import org.hibernate.ejb.criteria.QueryBuilderImpl;
+import org.hibernate.ejb.criteria.expression.ExpressionImpl;
 
 /**
- * Implementation of a <tt>SUM</tt> function providing convenience in construction.
- * <p/>
- * Parameterized as {@link Number N extends Number} because thats what JPA states
- * that the return from <tt>SUM</tt> should be.
+ * Models a <tt>CAST</tt> function.
+ *
+ * @param <T> The cast result type.
+ * @param <Y> The type of the expression to be cast.
  *
  * @author Steve Ebersole
  */
-public class SumAggregateFunction<N extends Number> extends BasicFunctionExpression<N> {
-	public SumAggregateFunction(
+public class CastFunction<T,Y> extends ExpressionImpl<T> implements FunctionExpression<T> {
+	public static final String CAST_NAME = "cast";
+
+	private final ExpressionImpl<Y> castSource;
+
+	public CastFunction(
 			QueryBuilderImpl queryBuilder,
-			Expression<N> expression) {
-		super( queryBuilder, expression.getJavaType(), "sum", expression );
+			Class<T> javaType,
+			ExpressionImpl<Y> castSource) {
+		super( queryBuilder, javaType );
+		this.castSource = castSource;
 	}
+
+	public String getFunctionName() {
+		return CAST_NAME;
+	}
+
+	public ExpressionImpl<Y> getCastSource() {
+		return castSource;
+	}
+
 }

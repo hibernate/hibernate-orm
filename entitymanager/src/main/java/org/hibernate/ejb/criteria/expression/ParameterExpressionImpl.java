@@ -53,6 +53,14 @@ public class ParameterExpressionImpl<T> extends ExpressionImpl<T> implements Par
 		this.position = position;
 	}
 
+	public ParameterExpressionImpl(
+			QueryBuilderImpl queryBuilder,
+			Class<T> javaType) {
+		super( queryBuilder, javaType );
+		this.name = null;
+		this.position = null;
+	}
+
 	public String getName() {
 		return name;
 	}

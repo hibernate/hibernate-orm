@@ -26,9 +26,10 @@ import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Predicate;
 
 import org.hibernate.ejb.criteria.QueryBuilderImpl;
+import org.hibernate.ejb.criteria.expression.function.CastFunction;
 
 /**
- * TODO : javadoc
+ * Models an expression in the criteria query language.
  *
  * @author Steve Ebersole
  */
@@ -41,8 +42,9 @@ public class ExpressionImpl<T> extends SelectionImpl<T> implements Expression<T>
 	 * {@inheritDoc}
 	 */
 	public <X> Expression<X> as(Class<X> type) {
-		// TODO-STEVE : implement - needs a cast expression
-		throw new UnsupportedOperationException( "Not yet implemented!" );
+		return type.equals( getJavaType() )
+				? (Expression<X>) this
+				: new CastFunction<X, T>( queryBuilder(), type, this );
 	}
 
 	/**

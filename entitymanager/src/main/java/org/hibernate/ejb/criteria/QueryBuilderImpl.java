@@ -527,10 +527,7 @@ public class QueryBuilderImpl implements QueryBuilder, Serializable {
 	 * {@inheritDoc}
 	 */
 	public <T> ParameterExpression<T> parameter(Class<T> paramClass) {
-		// TODO : AFAICT there is really no way to implement this one correctly.
-		// 		the problem is the need to report getPosition...
-		throw new UnsupportedOperationException( "Note yet implemented!" );
-//		return new ParameterExpressionImpl( this, paramClass, ??? );
+		return new ParameterExpressionImpl<T>( this, paramClass );
 	}
 
 	/**

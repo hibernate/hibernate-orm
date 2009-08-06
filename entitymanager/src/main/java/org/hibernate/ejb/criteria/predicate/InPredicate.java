@@ -28,6 +28,7 @@ import java.util.Collection;
 import javax.persistence.criteria.Expression;
 
 import org.hibernate.ejb.criteria.QueryBuilderImpl;
+import org.hibernate.ejb.criteria.expression.LiteralExpression;
 
 /**
  * TODO : javadoc
@@ -91,9 +92,7 @@ public class InPredicate<T> extends AbstractSimplePredicate implements QueryBuil
 			QueryBuilderImpl queryBuilder,
 			Expression<? extends T> expression,
 			T... values) {
-		super( queryBuilder );
-		// TODO : implements - needs parameter expressions
-		throw new UnsupportedOperationException( "Not yet implemented!" );
+		this( queryBuilder, expression, Arrays.asList( values ) );
 	}
 
 	/**
@@ -108,12 +107,16 @@ public class InPredicate<T> extends AbstractSimplePredicate implements QueryBuil
 			Expression<? extends T> expression,
 			Collection<T> values) {
 		super( queryBuilder );
-		// TODO : implements - needs parameter expressions
-		throw new UnsupportedOperationException( "Not yet implemented!" );
+		this.expression = expression;
+		// TODO : size this?
+		this.values = new ArrayList<Expression<? extends T>>();
+		for ( T value : values ) {
+			this.values.add( new LiteralExpression<T>( queryBuilder, value ) );
+		}
 	}
 
+	@SuppressWarnings("unchecked")
 	public Expression<T> getExpression() {
-		//noinspection unchecked
 		return ( Expression<T> ) expression;
 	}
 
@@ -126,8 +129,7 @@ public class InPredicate<T> extends AbstractSimplePredicate implements QueryBuil
 	}
 
 	public InPredicate<T> value(T value) {
-		// TODO : implements - needs parameter expressions
-		throw new UnsupportedOperationException( "Not yet implemented!" );
+		return value( new LiteralExpression<T>( queryBuilder(), value ) );
 	}
 
 	public InPredicate<T> value(Expression<? extends T> value) {

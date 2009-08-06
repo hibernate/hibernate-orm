@@ -19,48 +19,17 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.ejb.criteria.expression;
+package org.hibernate.ejb.criteria.expression.function;
 
-import java.util.List;
-import java.util.Arrays;
 import javax.persistence.criteria.Expression;
 
-import org.hibernate.ejb.criteria.QueryBuilderImpl;
-
 /**
- * TODO : javadoc
+ * Models an expression resolved as a SQL function call.
+ *
+ * @param <T> The type of the function result.
  *
  * @author Steve Ebersole
  */
-public class FunctionExpressionImpl<X> extends ExpressionImpl<X> implements Expression<X> {
-	private final String functionName;
-	private final List<Expression<?>> argumentExpressions;
-
-	public FunctionExpressionImpl(
-			QueryBuilderImpl queryBuilder,
-			Class<X> javaType,
-			String functionName,
-			List<Expression<?>> argumentExpressions) {
-		super( queryBuilder, javaType );
-		this.functionName = functionName;
-		this.argumentExpressions = argumentExpressions;
-	}
-
-	public FunctionExpressionImpl(
-			QueryBuilderImpl queryBuilder,
-			Class<X> javaType,
-			String functionName,
-			Expression<?>... argumentExpressions) {
-		super( queryBuilder, javaType );
-		this.functionName = functionName;
-		this.argumentExpressions = Arrays.asList( argumentExpressions );
-	}
-
-	public String getFunctionName() {
-		return functionName;
-	}
-
-	public List<Expression<?>> getArgumentExpressions() {
-		return argumentExpressions;
-	}
+public interface FunctionExpression<T> extends Expression<T> {
+	public String getFunctionName();
 }

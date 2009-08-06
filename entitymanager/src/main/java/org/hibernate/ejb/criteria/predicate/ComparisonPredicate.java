@@ -24,9 +24,10 @@ package org.hibernate.ejb.criteria.predicate;
 import javax.persistence.criteria.Expression;
 
 import org.hibernate.ejb.criteria.QueryBuilderImpl;
+import org.hibernate.ejb.criteria.expression.LiteralExpression;
 
 /**
- * TODO : javadoc
+ * Models a basic relational comparison predicate.
  *
  * @author Steve Ebersole
  */
@@ -54,9 +55,7 @@ public class ComparisonPredicate extends AbstractSimplePredicate {
 		super( queryBuilder );
 		this.comparisonOperator = comparisonOperator;
 		this.leftHandSide = leftHandSide;
-		// TODO : generate a parameter expression once those are ready...
-		this.rightHandSide = null;
-		throw new UnsupportedOperationException( "Not yet implemented!" );
+		this.rightHandSide = new LiteralExpression( queryBuilder, rightHandSide );
 	}
 
 	public ComparisonOperator getComparisonOperator() {

@@ -49,6 +49,10 @@ public class CastFunction<T,Y> extends ExpressionImpl<T> implements FunctionExpr
 		return CAST_NAME;
 	}
 
+	public boolean isAggregation() {
+		return false;
+	}
+
 	public ExpressionImpl<Y> getCastSource() {
 		return castSource;
 	}

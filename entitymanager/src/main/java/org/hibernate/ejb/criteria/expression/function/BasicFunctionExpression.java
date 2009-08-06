@@ -21,6 +21,7 @@
  */
 package org.hibernate.ejb.criteria.expression.function;
 
+import java.util.ArrayList;
 import org.hibernate.ejb.criteria.expression.*;
 import java.util.List;
 import java.util.Arrays;
@@ -33,7 +34,7 @@ import org.hibernate.ejb.criteria.QueryBuilderImpl;
  *
  * @author Steve Ebersole
  */
-public class BasicFunctionExpression<X> extends ExpressionImpl<X> implements Expression<X> {
+public class BasicFunctionExpression<X> extends ExpressionImpl<X> implements FunctionExpression<X> {
 	private final String functionName;
 	private final List<Expression<?>> argumentExpressions;
 
@@ -57,9 +58,26 @@ public class BasicFunctionExpression<X> extends ExpressionImpl<X> implements Exp
 		this.argumentExpressions = Arrays.asList( argumentExpressions );
 	}
 
+	protected  static List<Expression<?>> wrapAsLiterals(QueryBuilderImpl queryBuilder, Object... literalArguments) {
+		List<Expression<?>> arguments = new ArrayList<Expression<?>>( properSize( literalArguments.length) );
+		for ( Object o : literalArguments ) {
+			arguments.add( new LiteralExpression( queryBuilder, o ) );
+		}
+		return arguments;
+	}
+
+	protected  static int properSize(int number) {
+		return number + (int)( number*.75 ) + 1;
+	}
+
 	public String getFunctionName() {
 		return functionName;
 	}
+
+	public boolean isAggregation() {
+		return false;
+	}
+
 
 	public List<Expression<?>> getArgumentExpressions() {
 		return argumentExpressions;

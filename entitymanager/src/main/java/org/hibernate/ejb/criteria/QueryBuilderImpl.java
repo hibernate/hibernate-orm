@@ -44,8 +44,7 @@ import org.hibernate.ejb.EntityManagerFactoryImpl;
 import org.hibernate.ejb.criteria.expression.CompoundSelectionImpl;
 import org.hibernate.ejb.criteria.expression.ParameterExpressionImpl;
 import org.hibernate.ejb.criteria.expression.LiteralExpression;
-import org.hibernate.ejb.criteria.expression.function.AverageAggregrateFunction;
-import org.hibernate.ejb.criteria.expression.function.SumAggregateFunction;
+import org.hibernate.ejb.criteria.expression.function.AggregationFunction;
 import org.hibernate.ejb.criteria.predicate.BooleanExpressionPredicate;
 import org.hibernate.ejb.criteria.predicate.ExplicitTruthValueCheck;
 import org.hibernate.ejb.criteria.predicate.TruthValue;
@@ -550,63 +549,57 @@ public class QueryBuilderImpl implements QueryBuilder, Serializable {
 	/**
 	 * {@inheritDoc}
 	 */
-	public <N extends Number> Expression<Double> avg(Expression<N> x) {
-		return new AverageAggregrateFunction( this, x );
+	public <N extends Number> AggregationFunction.AVG avg(Expression<N> x) {
+		return new AggregationFunction.AVG( this, x );
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public <N extends Number> Expression<N> sum(Expression<N> x) {
-		return new SumAggregateFunction<N>( this, x );
+	public <N extends Number> AggregationFunction.SUM<N> sum(Expression<N> x) {
+		return new AggregationFunction.SUM<N>( this, x );
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public <N extends Number> Expression<N> max(Expression<N> x) {
-		// TODO : requires a MaxAggregrateFunction
-		throw new UnsupportedOperationException( "Note yet implemented!" );
+	public <N extends Number> AggregationFunction.MAX<N> max(Expression<N> x) {
+		return new AggregationFunction.MAX<N>( this, x );
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public <N extends Number> Expression<N> min(Expression<N> x) {
-		// TODO : requires a MaxAggregrateFunction
-		throw new UnsupportedOperationException( "Note yet implemented!" );
+	public <N extends Number> AggregationFunction.MIN<N> min(Expression<N> x) {
+		return new AggregationFunction.MIN<N>( this, x );
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
 	public <X extends Comparable<X>> Expression<X> greatest(Expression<X> x) {
-		// TODO : not exactly sure what this should be returning, same as #max ?
-		throw new UnsupportedOperationException( "Note yet implemented!" );
+		return new AggregationFunction.GREATEST<X>( this, x );
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
 	public <X extends Comparable<X>> Expression<X> least(Expression<X> x) {
-		// TODO : not exactly sure what this should be returning, same as #min ?
-		throw new UnsupportedOperationException( "Note yet implemented!" );
+		return new AggregationFunction.LEAST<X>( this, x );
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
 	public Expression<Long> count(Expression<?> x) {
-		// TODO : CountAggregateFunction
-		throw new UnsupportedOperationException( "Note yet implemented!" );
+		return new AggregationFunction.COUNT( this, x, false );
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
 	public Expression<Long> countDistinct(Expression<?> x) {
-		// TODO : CountDistinctAggregateFunction or CountAggregateFunction w/ distinct parameterization
-		throw new UnsupportedOperationException( "Note yet implemented!" );
+		return new AggregationFunction.COUNT( this, x, true );
 	}
 
 

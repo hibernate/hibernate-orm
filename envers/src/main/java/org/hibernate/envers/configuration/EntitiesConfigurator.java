@@ -84,9 +84,13 @@ public class EntitiesConfigurator {
                 }
 
                 EntityXmlMappingData xmlMappingData = new EntityXmlMappingData();
-                auditMetaGen.generateFirstPass(pc, auditData, xmlMappingData);
+                auditMetaGen.generateFirstPass(pc, auditData, xmlMappingData, true);
                 xmlMappings.put(pc, xmlMappingData);
-            }
+			} else {
+				EntityXmlMappingData xmlMappingData = new EntityXmlMappingData();
+				auditMetaGen.generateFirstPass(pc, auditData, xmlMappingData, false);
+				xmlMappings.put(pc, xmlMappingData);
+			}
         }
 
         // Second pass
@@ -123,7 +127,8 @@ public class EntitiesConfigurator {
             }
         }
 
-        return new EntitiesConfigurations(auditMetaGen.getEntitiesConfigurations());
+		return new EntitiesConfigurations(auditMetaGen.getEntitiesConfigurations(),
+				auditMetaGen.getNotAuditedEntitiesConfigurations());
     }
 
     // todo

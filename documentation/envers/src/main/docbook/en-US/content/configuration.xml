@@ -218,4 +218,11 @@
         please see <xref linkend="exceptions"/> for a description of the additional
         <literal>@AuditJoinTable</literal>  annotation that you'll probably want to use.
     </para>
+
+    <para>
+        If you want to audit a relation, where the target entity is not audited (that is the case for example with
+        dictionary-like entities, which don't change and don't have to be audited), just annotate it with
+        <literal>@Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)</literal>. Then, when reading historic
+        versions of your entity, the relation will always point to the "current" related entity.
+    </para>
 </chapter>

@@ -23,26 +23,10 @@
  */
 package org.hibernate.envers;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
-
 /**
- * When applied to a class, indicates that all of its properties should be audited.
- * When applied to a field, indicates that this field should be audited.
- * @author Adam Warski (adam at warski dot org)
  * @author Tomasz Bech
  */
-@Retention(RetentionPolicy.RUNTIME)
-@Target({ElementType.TYPE, ElementType.METHOD, ElementType.FIELD})
-public @interface Audited {
-    ModificationStore modStore()    default ModificationStore.FULL;
-
-	/**
-	 * @return Specifies if the entity that is the target of the relation should be audited or not. If not, then when
-	 * reading a historic version an audited entity, the realtion will always point to the "current" entity.
-	 * This is useful for dictionary-like entities, which don't change and don't need to be audited.
-	 */
-    RelationTargetAuditMode targetAuditMode() default RelationTargetAuditMode.AUDITED;
+public enum RelationTargetAuditMode {
+	AUDITED,
+	NOT_AUDITED
 }

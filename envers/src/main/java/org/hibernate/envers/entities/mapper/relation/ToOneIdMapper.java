@@ -82,7 +82,7 @@ public class ToOneIdMapper implements PropertyMapper {
                 Class<?> entityClass = ReflectionTools.loadClass(referencedEntityName);
 
                 value = versionsReader.getSessionImplementor().getFactory().getEntityPersister(referencedEntityName).
-                        createProxy(null, new ToOneDelegateSessionImplementor(versionsReader, entityClass, entityId, revision));
+                        createProxy(null, new ToOneDelegateSessionImplementor(versionsReader, entityClass, entityId, revision, verCfg));
             }
         }
 

@@ -28,6 +28,7 @@ import java.util.Iterator;
 import org.dom4j.Element;
 import org.dom4j.tree.DefaultElement;
 import org.hibernate.envers.ModificationStore;
+import org.hibernate.envers.RelationTargetAuditMode;
 import org.hibernate.envers.configuration.metadata.reader.PropertyAuditingData;
 import org.hibernate.envers.entities.IdMappingData;
 import org.hibernate.envers.entities.PropertyData;
@@ -133,6 +134,6 @@ public final class IdMetadataGenerator {
 
     private PropertyAuditingData getIdPersistentPropertyAuditingData(Property property) {
         return new PropertyAuditingData(property.getName(), property.getPropertyAccessorName(),
-                ModificationStore.FULL);
+                ModificationStore.FULL, RelationTargetAuditMode.AUDITED);
     }
 }

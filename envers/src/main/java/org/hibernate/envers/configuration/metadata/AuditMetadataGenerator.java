@@ -53,6 +53,7 @@ import org.hibernate.type.*;
 /**
  * @author Adam Warski (adam at warski dot org)
  * @author Sebastian Komander
+ * @author Tomasz Bech
  */
 public final class AuditMetadataGenerator {
     private final Configuration cfg;
@@ -66,6 +67,7 @@ public final class AuditMetadataGenerator {
     private final ToOneRelationMetadataGenerator toOneRelationMetadataGenerator;
 
     private final Map<String, EntityConfiguration> entitiesConfigurations;
+    private final Map<String, EntityConfiguration> notAuditedEntitiesConfigurations;
 
     // Map entity name -> (join descriptor -> element describing the "versioned" join)
     private final Map<String, Map<Join, Element>> entitiesJoins;
@@ -84,6 +86,7 @@ public final class AuditMetadataGenerator {
         this.toOneRelationMetadataGenerator = new ToOneRelationMetadataGenerator(this);
 
         entitiesConfigurations = new HashMap<String, EntityConfiguration>();
+        notAuditedEntitiesConfigurations = new HashMap<String, EntityConfiguration>();
         entitiesJoins = new HashMap<String, Map<Join, Element>>();
     }
 
@@ -278,7 +281,7 @@ public final class AuditMetadataGenerator {
 
     @SuppressWarnings({"unchecked"})
     public void generateFirstPass(PersistentClass pc, ClassAuditingData auditingData,
-                                  EntityXmlMappingData xmlMappingData) {
+                                  EntityXmlMappingData xmlMappingData, boolean isAudited) {
         String schema = auditingData.getAuditTable().schema();
         if (StringTools.isEmpty(schema)) {
             schema = pc.getTable().getSchema();
@@ -288,6 +291,17 @@ public final class AuditMetadataGenerator {
         if (StringTools.isEmpty(catalog)) {
             catalog = pc.getTable().getCatalog();
         }
+
+		if (!isAudited) {
+			String entityName = pc.getEntityName();
+			IdMappingData idMapper = idMetadataGenerator.addId(pc);
+			ExtendedPropertyMapper propertyMapper = null;
+			String parentEntityName = null;
+			EntityConfiguration entityCfg = new EntityConfiguration(entityName, idMapper, propertyMapper,
+					parentEntityName);
+			notAuditedEntitiesConfigurations.put(pc.getEntityName(), entityCfg);
+			return;
+		}
 
         String entityName = pc.getEntityName();
         String auditEntityName = verEntCfg.getAuditEntityName(entityName);
@@ -400,4 +414,13 @@ public final class AuditMetadataGenerator {
 
         throw new MappingException(message);
     }
+
+	/**
+	 * Get the notAuditedEntitiesConfigurations property.
+	 *
+	 * @return the notAuditedEntitiesConfigurations property value
+	 */
+	public Map<String, EntityConfiguration> getNotAuditedEntitiesConfigurations() {
+		return notAuditedEntitiesConfigurations;
+	}
 }

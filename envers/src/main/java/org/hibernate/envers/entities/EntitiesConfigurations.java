@@ -32,12 +32,15 @@ import java.util.Map;
  */
 public class EntitiesConfigurations {
     private Map<String, EntityConfiguration> entitiesConfigurations;
+    private Map<String, EntityConfiguration> notAuditedEntitiesConfigurations;
 
     // Map versions entity name -> entity name
     private Map<String, String> entityNamesForVersionsEntityNames = new HashMap<String, String>();
 
-    public EntitiesConfigurations(Map<String, EntityConfiguration> entitiesConfigurations) {
+	public EntitiesConfigurations(Map<String, EntityConfiguration> entitiesConfigurations,
+								  Map<String, EntityConfiguration> notAuditedEntitiesConfigurations) {
         this.entitiesConfigurations = entitiesConfigurations;
+        this.notAuditedEntitiesConfigurations = notAuditedEntitiesConfigurations;
 
         generateBidirectionRelationInfo();
         generateVersionsEntityToEntityNames();
@@ -61,14 +64,17 @@ public class EntitiesConfigurations {
                 // If this is an "owned" relation, checking the related entity, if it has a relation that has
                 // a mapped-by attribute to the currently checked. If so, this is a bidirectional relation.
                 if (relDesc.getRelationType() == RelationType.TO_ONE ||
-                        relDesc.getRelationType() == RelationType.TO_MANY_MIDDLE) {
-                    for (RelationDescription other : entitiesConfigurations.get(relDesc.getToEntityName()).getRelationsIterator()) {
-                        if (relDesc.getFromPropertyName().equals(other.getMappedByPropertyName()) &&
-                                (entityName.equals(other.getToEntityName()))) {
-                            relDesc.setBidirectional(true);
-                            other.setBidirectional(true);
-                        }
-                    }
+						relDesc.getRelationType() == RelationType.TO_MANY_MIDDLE) {
+					EntityConfiguration entityConfiguration = entitiesConfigurations.get(relDesc.getToEntityName());
+					if (entityConfiguration != null) {
+						for (RelationDescription other : entityConfiguration.getRelationsIterator()) {
+							if (relDesc.getFromPropertyName().equals(other.getMappedByPropertyName()) &&
+									(entityName.equals(other.getToEntityName()))) {
+								relDesc.setBidirectional(true);
+								other.setBidirectional(true);
+							}
+						}
+					}
                 }
             }
         }
@@ -77,6 +83,10 @@ public class EntitiesConfigurations {
     public EntityConfiguration get(String entityName) {
         return entitiesConfigurations.get(entityName);
     }
+
+    public EntityConfiguration getNotVersionEntityConfiguration(String entityName) {
+      return notAuditedEntitiesConfigurations.get(entityName);
+  }
 
     public String getEntityNameForVersionsEntityName(String versionsEntityName) {
         return entityNamesForVersionsEntityNames.get(versionsEntityName);
@@ -98,4 +108,5 @@ public class EntitiesConfigurations {
             return null;
         }
     }
+
 }

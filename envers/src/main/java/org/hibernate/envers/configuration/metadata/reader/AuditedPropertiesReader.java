@@ -160,6 +160,7 @@ public class AuditedPropertiesReader {
 		Versioned ver = property.getAnnotation(Versioned.class);
 		if (aud != null) {
 			propertyData.setStore(aud.modStore());
+			propertyData.setRelationTargetAuditMode(aud.targetAuditMode());
 		} else if (ver != null) {
 			propertyData.setStore(ModificationStore.FULL);
 		} else {
@@ -203,7 +204,7 @@ public class AuditedPropertiesReader {
 
 	/***
 	 * Add the {@link org.hibernate.envers.AuditOverride} annotations.
-	 * 
+	 *
 	 * @param property the property being processed
 	 * @param propertyData the Envers auditing data for this property
 	 */
@@ -220,13 +221,13 @@ public class AuditedPropertiesReader {
 
 	/**
 	 * Process the {@link org.hibernate.envers.AuditOverride} annotations for this property.
-	 * 
+	 *
 	 * @param property
 	 *            the property for which the {@link org.hibernate.envers.AuditOverride}
 	 *            annotations are being processed
 	 * @param propertyData
 	 *            the Envers auditing data for this property
-	 * @return {@code false} if isAudited() of the override annotation was set to 
+	 * @return {@code false} if isAudited() of the override annotation was set to
 	 */
 	private boolean processPropertyAuditingOverrides(XProperty property, PropertyAuditingData propertyData) {
 		// if this property is part of a component, process all override annotations
@@ -236,7 +237,7 @@ public class AuditedPropertiesReader {
 				if (property.getName().equals(override.name())) {
 					// the override applies to this property
 					if (!override.isAudited()) {
-						return false; 
+						return false;
 					} else {
 						if (override.auditJoinTable() != null) {
 							propertyData.setJoinTable(override.auditJoinTable());
@@ -267,7 +268,7 @@ public class AuditedPropertiesReader {
 			} catch (ClassNotFoundException e) {
 				throw new MappingException(e);
 			}
-			
+
 			this.component = component;
 		}
 

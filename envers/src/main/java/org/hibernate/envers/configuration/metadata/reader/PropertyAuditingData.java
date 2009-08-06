@@ -31,6 +31,7 @@ import org.hibernate.envers.AuditOverride;
 import org.hibernate.envers.AuditOverrides;
 import org.hibernate.envers.ModificationStore;
 import org.hibernate.envers.AuditJoinTable;
+import org.hibernate.envers.RelationTargetAuditMode;
 import org.hibernate.envers.entities.PropertyData;
 
 /**
@@ -44,15 +45,18 @@ public class PropertyAuditingData {
     private AuditJoinTable joinTable;
     private String accessType;
     private final List<AuditOverride> auditJoinTableOverrides = new ArrayList<AuditOverride>(0);
+	private RelationTargetAuditMode relationTargetAuditMode;
 
-    public PropertyAuditingData() {
+	public PropertyAuditingData() {
     }
 
-    public PropertyAuditingData(String name, String accessType, ModificationStore store) {
+    public PropertyAuditingData(String name, String accessType, ModificationStore store,
+								RelationTargetAuditMode relationTargetAuditMode) {
         this.name = name;
 		this.beanName = name;
         this.accessType = accessType;
         this.store = store;
+		this.relationTargetAuditMode = relationTargetAuditMode;
     }
 
 	public String getName() {
@@ -108,7 +112,7 @@ public class PropertyAuditingData {
     }
 
 	public List<AuditOverride> getAuditingOverrides() {
-		return auditJoinTableOverrides; 
+		return auditJoinTableOverrides;
 	}
 
 	public void addAuditingOverride(AuditOverride annotation) {
@@ -133,6 +137,24 @@ public class PropertyAuditingData {
 				addAuditingOverride(annotation);
 			}
 		}
+	}
+
+	/**
+	 * Get the relationTargetAuditMode property.
+	 *
+	 * @return the relationTargetAuditMode property value
+	 */
+	public RelationTargetAuditMode getRelationTargetAuditMode() {
+		return relationTargetAuditMode;
+	}
+
+	/**
+	 * Set the relationTargetAuditMode property value.
+	 *
+	 * @param relationTargetAuditMode the relationTargetAuditMode to set
+	 */
+	public void setRelationTargetAuditMode(RelationTargetAuditMode relationTargetAuditMode) {
+		this.relationTargetAuditMode = relationTargetAuditMode;
 	}
 
 }

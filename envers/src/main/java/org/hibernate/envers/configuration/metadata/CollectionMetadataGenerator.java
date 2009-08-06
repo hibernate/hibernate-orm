@@ -36,6 +36,7 @@ import javax.persistence.JoinColumn;
 
 import org.dom4j.Element;
 import org.hibernate.envers.ModificationStore;
+import org.hibernate.envers.RelationTargetAuditMode;
 import org.hibernate.envers.configuration.metadata.reader.PropertyAuditingData;
 import org.hibernate.envers.entities.EntityConfiguration;
 import org.hibernate.envers.entities.IdMappingData;
@@ -231,7 +232,7 @@ public final class CollectionMetadataGenerator {
             // middle table for mapping this relation.
             return StringTools.getLastComponent(entityName) + "_" + StringTools.getLastComponent(getReferencedEntityName(value.getElement()));
         } else {
-            // Hibernate uses a middle table for mapping this relation, so we get it's name directly. 
+            // Hibernate uses a middle table for mapping this relation, so we get it's name directly.
             return value.getCollectionTable().getName();
         }
     }
@@ -413,7 +414,7 @@ public final class CollectionMetadataGenerator {
         } else {
             // Last but one parameter: collection components are always insertable
             boolean mapped = mainGenerator.getBasicMetadataGenerator().addBasic(xmlMapping,
-                    new PropertyAuditingData(prefix, "field", ModificationStore.FULL), value, null,
+                    new PropertyAuditingData(prefix, "field", ModificationStore.FULL, RelationTargetAuditMode.AUDITED), value, null,
                     true, true);
 
             if (mapped) {

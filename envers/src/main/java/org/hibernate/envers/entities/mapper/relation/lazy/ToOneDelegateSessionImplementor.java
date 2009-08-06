@@ -23,29 +23,47 @@
  */
 package org.hibernate.envers.entities.mapper.relation.lazy;
 
+import java.io.Serializable;
+
+import org.hibernate.envers.configuration.AuditConfiguration;
+import org.hibernate.envers.entities.EntitiesConfigurations;
+import org.hibernate.envers.entities.EntityConfiguration;
 import org.hibernate.envers.reader.AuditReaderImplementor;
 
 import org.hibernate.HibernateException;
+import org.hibernate.Session;
 
 /**
  * @author Adam Warski (adam at warski dot org)
+ * @author Tomasz Bech
  */
 public class ToOneDelegateSessionImplementor extends AbstractDelegateSessionImplementor {
+	private static final long serialVersionUID = 4770438372940785488L;
+	
     private final AuditReaderImplementor versionsReader;
     private final Class<?> entityClass;
     private final Object entityId;
     private final Number revision;
+	private EntityConfiguration notVersionedEntityConfiguration;
 
-    public ToOneDelegateSessionImplementor(AuditReaderImplementor versionsReader,
-                                           Class<?> entityClass, Object entityId, Number revision) {
+	public ToOneDelegateSessionImplementor(AuditReaderImplementor versionsReader,
+                                           Class<?> entityClass, Object entityId, Number revision,
+                                           AuditConfiguration verCfg) {
         super(versionsReader.getSessionImplementor());
         this.versionsReader = versionsReader;
         this.entityClass = entityClass;
         this.entityId = entityId;
         this.revision = revision;
+        EntitiesConfigurations entCfg = verCfg.getEntCfg();
+        notVersionedEntityConfiguration = entCfg.getNotVersionEntityConfiguration(entityClass.getName());
     }
 
     public Object doImmediateLoad(String entityName) throws HibernateException {
-        return versionsReader.find(entityClass, entityId, revision);
+		if (notVersionedEntityConfiguration == null) {
+			return versionsReader.find(entityClass, entityId, revision);
+		} else {
+			Session session = versionsReader.getSession();
+			return session.get(entityClass, (Serializable) entityId);
+		}
     }
 }

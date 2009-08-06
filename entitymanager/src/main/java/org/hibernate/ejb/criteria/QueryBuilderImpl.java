@@ -549,28 +549,28 @@ public class QueryBuilderImpl implements QueryBuilder, Serializable {
 	/**
 	 * {@inheritDoc}
 	 */
-	public <N extends Number> AggregationFunction.AVG avg(Expression<N> x) {
+	public <N extends Number> Expression<Double> avg(Expression<N> x) {
 		return new AggregationFunction.AVG( this, x );
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public <N extends Number> AggregationFunction.SUM<N> sum(Expression<N> x) {
+	public <N extends Number> Expression<N> sum(Expression<N> x) {
 		return new AggregationFunction.SUM<N>( this, x );
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public <N extends Number> AggregationFunction.MAX<N> max(Expression<N> x) {
+	public <N extends Number> Expression<N> max(Expression<N> x) {
 		return new AggregationFunction.MAX<N>( this, x );
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public <N extends Number> AggregationFunction.MIN<N> min(Expression<N> x) {
+	public <N extends Number> Expression<N> min(Expression<N> x) {
 		return new AggregationFunction.MIN<N>( this, x );
 	}
 

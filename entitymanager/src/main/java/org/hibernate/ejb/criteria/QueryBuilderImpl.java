@@ -41,10 +41,25 @@ import javax.persistence.criteria.Subquery;
 import javax.persistence.Tuple;
 
 import org.hibernate.ejb.EntityManagerFactoryImpl;
+import org.hibernate.ejb.criteria.expression.BinaryArithmeticOperation;
 import org.hibernate.ejb.criteria.expression.CompoundSelectionImpl;
 import org.hibernate.ejb.criteria.expression.ParameterExpressionImpl;
 import org.hibernate.ejb.criteria.expression.LiteralExpression;
+import org.hibernate.ejb.criteria.expression.SubqueryComparisonModifierExpression;
+import org.hibernate.ejb.criteria.expression.UnaryArithmeticOperation;
+import org.hibernate.ejb.criteria.expression.function.AbsFunction;
 import org.hibernate.ejb.criteria.expression.function.AggregationFunction;
+import org.hibernate.ejb.criteria.expression.function.BasicFunctionExpression;
+import org.hibernate.ejb.criteria.expression.function.CurrentDateFunction;
+import org.hibernate.ejb.criteria.expression.function.CurrentTimeFunction;
+import org.hibernate.ejb.criteria.expression.function.CurrentTimestampFunction;
+import org.hibernate.ejb.criteria.expression.function.LengthFunction;
+import org.hibernate.ejb.criteria.expression.function.LocateFunction;
+import org.hibernate.ejb.criteria.expression.function.LowerFunction;
+import org.hibernate.ejb.criteria.expression.function.SqrtFunction;
+import org.hibernate.ejb.criteria.expression.function.SubstringFunction;
+import org.hibernate.ejb.criteria.expression.function.TrimFunction;
+import org.hibernate.ejb.criteria.expression.function.UpperFunction;
 import org.hibernate.ejb.criteria.predicate.BooleanExpressionPredicate;
 import org.hibernate.ejb.criteria.predicate.ExplicitTruthValueCheck;
 import org.hibernate.ejb.criteria.predicate.TruthValue;
@@ -53,6 +68,7 @@ import org.hibernate.ejb.criteria.predicate.CompoundPredicate;
 import org.hibernate.ejb.criteria.predicate.ComparisonPredicate;
 import org.hibernate.ejb.criteria.predicate.InPredicate;
 import org.hibernate.ejb.criteria.predicate.BetweenPredicate;
+import org.hibernate.ejb.criteria.predicate.LikePredicate;
 import static org.hibernate.ejb.criteria.predicate.ComparisonPredicate.ComparisonOperator;
 
 /**
@@ -519,6 +535,54 @@ public class QueryBuilderImpl implements QueryBuilder, Serializable {
 		return new InPredicate<T>( this, expression, values );
 	}
 
+	public Predicate like(Expression<String> matchExpression, Expression<String> pattern) {
+		return new LikePredicate( this, matchExpression, pattern );
+	}
+
+	public Predicate like(Expression<String> matchExpression, Expression<String> pattern, Expression<Character> escapeCharacter) {
+		return new LikePredicate( this, matchExpression, pattern, escapeCharacter );
+	}
+
+	public Predicate like(Expression<String> matchExpression, Expression<String> pattern, char escapeCharacter) {
+		return new LikePredicate( this, matchExpression, pattern, escapeCharacter );
+	}
+
+	public Predicate like(Expression<String> matchExpression, String pattern) {
+		return new LikePredicate( this, matchExpression, pattern );
+	}
+
+	public Predicate like(Expression<String> matchExpression, String pattern, Expression<Character> escapeCharacter) {
+		return new LikePredicate( this, matchExpression, pattern, escapeCharacter );
+	}
+
+	public Predicate like(Expression<String> matchExpression, String pattern, char escapeCharacter) {
+		return new LikePredicate( this, matchExpression, pattern, escapeCharacter );
+	}
+
+	public Predicate notLike(Expression<String> matchExpression, Expression<String> pattern) {
+		return like( matchExpression, pattern ).negate();
+	}
+
+	public Predicate notLike(Expression<String> matchExpression, Expression<String> pattern, Expression<Character> escapeCharacter) {
+		return like( matchExpression, pattern, escapeCharacter ).negate();
+	}
+
+	public Predicate notLike(Expression<String> matchExpression, Expression<String> pattern, char escapeCharacter) {
+		return like( matchExpression, pattern, escapeCharacter ).negate();
+	}
+
+	public Predicate notLike(Expression<String> matchExpression, String pattern) {
+		return like( matchExpression, pattern ).negate();
+	}
+
+	public Predicate notLike(Expression<String> matchExpression, String pattern, Expression<Character> escapeCharacter) {
+		return like( matchExpression, pattern, escapeCharacter ).negate();
+	}
+
+	public Predicate notLike(Expression<String> matchExpression, String pattern, char escapeCharacter) {
+		return like( matchExpression, pattern, escapeCharacter ).negate();
+	}
+
 
 	// parameters ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -603,126 +667,406 @@ public class QueryBuilderImpl implements QueryBuilder, Serializable {
 	}
 
 
+	// other functions ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	/**
+	 * {@inheritDoc}
+	 */
+	public <T> Expression<T> function(String name, Class<T> returnType, Expression<?>... arguments) {
+		return new BasicFunctionExpression<T>( this, returnType, name, arguments );
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public <N extends Number> Expression<N> abs(Expression<N> expression) {
+		return new AbsFunction<N>( this, expression );
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public Expression<Double> sqrt(Expression<? extends Number> expression) {
+		return new SqrtFunction( this, expression );
+	}
+
+	public Expression<java.sql.Date> currentDate() {
+		return new CurrentDateFunction( this );
+	}
+
+	public Expression<java.sql.Timestamp> currentTimestamp() {
+		return new CurrentTimestampFunction( this );
+	}
+
+	public Expression<java.sql.Time> currentTime() {
+		return new CurrentTimeFunction( this );
+	}
+
+	public Expression<String> substring(Expression<String> value, Expression<Integer> start) {
+		return new SubstringFunction( this, value, start );
+	}
+
+	public Expression<String> substring(Expression<String> value, int start) {
+		return new SubstringFunction( this, value, start );
+	}
+
+	public Expression<String> substring(Expression<String> value, Expression<Integer> start, Expression<Integer> length) {
+		return new SubstringFunction( this, value, start, length );
+	}
+
+	public Expression<String> substring(Expression<String> value, int start, int length) {
+		return new SubstringFunction( this, value, start, length );
+	}
+
+	public Expression<String> trim(Expression<String> trimSource ) {
+		return new TrimFunction( this, trimSource );
+	}
+
+	public Expression<String> trim(Trimspec trimspec, Expression<String> trimSource) {
+		return new TrimFunction( this, trimspec, trimSource );
+	}
+
+	public Expression<String> trim(Expression<Character> trimCharacter, Expression<String> trimSource) {
+		return new TrimFunction( this, trimCharacter, trimSource );
+	}
+
+	public Expression<String> trim(Trimspec trimspec, Expression<Character> trimCharacter, Expression<String> trimSource) {
+		return new TrimFunction( this, trimspec, trimCharacter, trimSource );
+	}
+
+	public Expression<String> trim(char trimCharacter, Expression<String> trimSource) {
+		return new TrimFunction( this, trimCharacter, trimSource );
+	}
+
+	public Expression<String> trim(Trimspec trimspec, char trimCharacter, Expression<String> trimSource) {
+		return new TrimFunction( this, trimspec, trimCharacter, trimSource );
+	}
+
+	public Expression<String> lower(Expression<String> value) {
+		return new LowerFunction( this, value );
+	}
+
+	public Expression<String> upper(Expression<String> value) {
+		return new UpperFunction( this, value );
+	}
+
+	public Expression<Integer> length(Expression<String> value) {
+		return new LengthFunction( this, value );
+	}
+
+	public Expression<Integer> locate(Expression<String> string, Expression<String> pattern) {
+		return new LocateFunction( this, pattern, string );
+	}
+
+	public Expression<Integer> locate(Expression<String> string, Expression<String> pattern, Expression<Integer> start) {
+		return new LocateFunction( this, pattern, string, start );
+	}
+
+	public Expression<Integer> locate(Expression<String> string, String pattern) {
+		return new LocateFunction( this, pattern, string );
+	}
+
+	public Expression<Integer> locate(Expression<String> string, String pattern, int start) {
+		return new LocateFunction( this, pattern, string, start );
+	}
+
+
+	// arithmetic operations ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public <N extends Number> Expression<N> neg(Expression<N> expression) {
+		return new UnaryArithmeticOperation<N>(
+				this,
+				UnaryArithmeticOperation.Operation.UNARY_MINUS,
+				expression
+		);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public <N extends Number> Expression<N> sum(Expression<? extends N> expression1, Expression<? extends N> expression2) {
+		return new BinaryArithmeticOperation<N>(
+				this,
+				(Class<N>) expression1.getJavaType(),
+				BinaryArithmeticOperation.Operation.ADD,
+				expression1,
+				expression2
+		);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public <N extends Number> Expression<N> prod(Expression<? extends N> expression1, Expression<? extends N> expression2) {
+		return new BinaryArithmeticOperation<N>(
+				this,
+				(Class<N>) expression1.getJavaType(),
+				BinaryArithmeticOperation.Operation.MULTIPLY,
+				expression1,
+				expression2
+		);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public <N extends Number> Expression<N> diff(Expression<? extends N> expression1, Expression<? extends N> expression2) {
+		return new BinaryArithmeticOperation<N>(
+				this,
+				(Class<N>) expression1.getJavaType(),
+				BinaryArithmeticOperation.Operation.SUBTRACT,
+				expression1,
+				expression2
+		);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public <N extends Number> Expression<N> sum(Expression<? extends N> expression, N n) {
+		return new BinaryArithmeticOperation<N>(
+				this,
+				(Class<N>) expression.getJavaType(),
+				BinaryArithmeticOperation.Operation.ADD,
+				expression,
+				n
+		);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public <N extends Number> Expression<N> prod(Expression<? extends N> expression, N n) {
+		return new BinaryArithmeticOperation<N>(
+				this,
+				(Class<N>) expression.getJavaType(),
+				BinaryArithmeticOperation.Operation.MULTIPLY,
+				expression,
+				n
+		);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public <N extends Number> Expression<N> diff(Expression<? extends N> expression, N n) {
+		return new BinaryArithmeticOperation<N>(
+				this,
+				(Class<N>) expression.getJavaType(),
+				BinaryArithmeticOperation.Operation.SUBTRACT,
+				expression,
+				n
+		);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public <N extends Number> Expression<N> sum(N n, Expression<? extends N> expression) {
+		return new BinaryArithmeticOperation<N>(
+				this,
+				(Class<N>) expression.getJavaType(),
+				BinaryArithmeticOperation.Operation.ADD,
+				n,
+				expression
+		);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public <N extends Number> Expression<N> prod(N n, Expression<? extends N> expression) {
+		return new BinaryArithmeticOperation<N>(
+				this,
+				(Class<N>) expression.getJavaType(),
+				BinaryArithmeticOperation.Operation.MULTIPLY,
+				n,
+				expression
+		);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public <N extends Number> Expression<N> diff(N n, Expression<? extends N> expression) {
+		return new BinaryArithmeticOperation<N>(
+				this,
+				(Class<N>) expression.getJavaType(),
+				BinaryArithmeticOperation.Operation.SUBTRACT,
+				n,
+				expression
+		);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public Expression<Number> quot(Expression<? extends Number> expression1, Expression<? extends Number> expression2) {
+		// TODO : still open question whether this should be a quotient (integer division) or division
+		throw new UnsupportedOperationException( "Not yet implemented!" );
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public Expression<Number> quot(Expression<? extends Number> expression, Number number) {
+		// TODO : still open question whether this should be a quotient (integer division) or division
+		throw new UnsupportedOperationException( "Not yet implemented!" );
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public Expression<Number> quot(Number number, Expression<? extends Number> expression) {
+		// TODO : still open question whether this should be a quotient (integer division) or division
+		throw new UnsupportedOperationException( "Not yet implemented!" );
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public Expression<Integer> mod(Expression<Integer> expression1, Expression<Integer> expression2) {
+		return new BinaryArithmeticOperation<Integer>(
+				this,
+				Integer.class,
+				BinaryArithmeticOperation.Operation.MOD,
+				expression1,
+				expression2
+		);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public Expression<Integer> mod(Expression<Integer> expression, Integer integer) {
+		return new BinaryArithmeticOperation<Integer>(
+				this,
+				Integer.class,
+				BinaryArithmeticOperation.Operation.MOD,
+				expression,
+				integer
+		);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public Expression<Integer> mod(Integer integer, Expression<Integer> expression) {
+		return new BinaryArithmeticOperation<Integer>(
+				this,
+				Integer.class,
+				BinaryArithmeticOperation.Operation.MOD,
+				integer,
+				expression
+		);
+	}
+
+
+	// casting ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public Expression<Long> toLong(Expression<? extends Number> expression) {
+		return expression.as( Long.class );
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public Expression<Integer> toInteger(Expression<? extends Number> expression) {
+		return expression.as( Integer.class );
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public Expression<Float> toFloat(Expression<? extends Number> expression) {
+		return expression.as( Float.class );
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public Expression<Double> toDouble(Expression<? extends Number> expression) {
+		return expression.as( Double.class );
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public Expression<BigDecimal> toBigDecimal(Expression<? extends Number> expression) {
+		return expression.as( BigDecimal.class );
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public Expression<BigInteger> toBigInteger(Expression<? extends Number> expression) {
+		return expression.as( BigInteger.class );
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public Expression<String> toString(Expression<Character> characterExpression) {
+		return characterExpression.as( String.class );
+	}
+
+
+	// subqueries ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	/**
+	 * {@inheritDoc}
+	 */
 	public Predicate exists(Subquery<?> subquery) {
 		return null;
 	}
 
-	public <Y> Expression<Y> all(Subquery<Y> ySubquery) {
-		return null;
+	/**
+	 * {@inheritDoc}
+	 */
+	public <Y> Expression<Y> all(Subquery<Y> subquery) {
+		return new SubqueryComparisonModifierExpression<Y>(
+				this,
+				subquery.getJavaType(),
+				subquery,
+				SubqueryComparisonModifierExpression.Modifier.ALL
+		);
 	}
 
-	public <Y> Expression<Y> some(Subquery<Y> ySubquery) {
-		return null;
+	/**
+	 * {@inheritDoc}
+	 */
+	public <Y> Expression<Y> some(Subquery<Y> subquery) {
+		return new SubqueryComparisonModifierExpression<Y>(
+				this,
+				subquery.getJavaType(),
+				subquery,
+				SubqueryComparisonModifierExpression.Modifier.SOME
+		);
 	}
 
-	public <Y> Expression<Y> any(Subquery<Y> ySubquery) {
-		return null;
+	/**
+	 * {@inheritDoc}
+	 */
+	public <Y> Expression<Y> any(Subquery<Y> subquery) {
+		return new SubqueryComparisonModifierExpression<Y>(
+				this,
+				subquery.getJavaType(),
+				subquery,
+				SubqueryComparisonModifierExpression.Modifier.ANY
+		);
 	}
 
-	public <N extends Number> Expression<N> neg(Expression<N> nExpression) {
-		return null;
-	}
 
-	public <N extends Number> Expression<N> abs(Expression<N> nExpression) {
-		return null;
-	}
-
-	public <N extends Number> Expression<N> sum(Expression<? extends N> expression, Expression<? extends N> expression1) {
-		return null;
-	}
-
-	public <N extends Number> Expression<N> prod(Expression<? extends N> expression, Expression<? extends N> expression1) {
-		return null;
-	}
-
-	public <N extends Number> Expression<N> diff(Expression<? extends N> expression, Expression<? extends N> expression1) {
-		return null;
-	}
-
-	public <N extends Number> Expression<N> sum(Expression<? extends N> expression, N n) {
-		return null;
-	}
-
-	public <N extends Number> Expression<N> prod(Expression<? extends N> expression, N n) {
-		return null;
-	}
-
-	public <N extends Number> Expression<N> diff(Expression<? extends N> expression, N n) {
-		return null;
-	}
-
-	public <N extends Number> Expression<N> sum(N n, Expression<? extends N> expression) {
-		return null;
-	}
-
-	public <N extends Number> Expression<N> prod(N n, Expression<? extends N> expression) {
-		return null;
-	}
-
-	public <N extends Number> Expression<N> diff(N n, Expression<? extends N> expression) {
-		return null;
-	}
-
-	public Expression<Number> quot(Expression<? extends Number> expression, Expression<? extends Number> expression1) {
-		return null;
-	}
-
-	public Expression<Number> quot(Expression<? extends Number> expression, Number number) {
-		return null;
-	}
-
-	public Expression<Number> quot(Number number, Expression<? extends Number> expression) {
-		return null;
-	}
-
-	public Expression<Integer> mod(Expression<Integer> integerExpression, Expression<Integer> integerExpression1) {
-		return null;
-	}
-
-	public Expression<Integer> mod(Expression<Integer> integerExpression, Integer integer) {
-		return null;
-	}
-
-	public Expression<Integer> mod(Integer integer, Expression<Integer> integerExpression) {
-		return null;
-	}
-
-	public Expression<Double> sqrt(Expression<? extends Number> expression) {
-		return null;
-	}
-
-	public Expression<Long> toLong(Expression<? extends Number> expression) {
-		return null;
-	}
-
-	public Expression<Integer> toInteger(Expression<? extends Number> expression) {
-		return null;
-	}
-
-	public Expression<Float> toFloat(Expression<? extends Number> expression) {
-		return null;
-	}
-
-	public Expression<Double> toDouble(Expression<? extends Number> expression) {
-		return null;
-	}
-
-	public Expression<BigDecimal> toBigDecimal(Expression<? extends Number> expression) {
-		return null;
-	}
-
-	public Expression<BigInteger> toBigInteger(Expression<? extends Number> expression) {
-		return null;
-	}
-
-	public Expression<String> toString(Expression<Character> characterExpression) {
-		return null;
-	}
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	public <C extends Collection<?>> Predicate isEmpty(Expression<C> cExpression) {
 		return null;
@@ -764,54 +1108,6 @@ public class QueryBuilderImpl implements QueryBuilder, Serializable {
 		return null;
 	}
 
-	public Predicate like(Expression<String> stringExpression, Expression<String> stringExpression1) {
-		return null;
-	}
-
-	public Predicate like(Expression<String> stringExpression, Expression<String> stringExpression1, Expression<Character> characterExpression) {
-		return null;
-	}
-
-	public Predicate like(Expression<String> stringExpression, Expression<String> stringExpression1, char c) {
-		return null;
-	}
-
-	public Predicate like(Expression<String> stringExpression, String s) {
-		return null;
-	}
-
-	public Predicate like(Expression<String> stringExpression, String s, Expression<Character> characterExpression) {
-		return null;
-	}
-
-	public Predicate like(Expression<String> stringExpression, String s, char c) {
-		return null;
-	}
-
-	public Predicate notLike(Expression<String> stringExpression, Expression<String> stringExpression1) {
-		return null;
-	}
-
-	public Predicate notLike(Expression<String> stringExpression, Expression<String> stringExpression1, Expression<Character> characterExpression) {
-		return null;
-	}
-
-	public Predicate notLike(Expression<String> stringExpression, Expression<String> stringExpression1, char c) {
-		return null;
-	}
-
-	public Predicate notLike(Expression<String> stringExpression, String s) {
-		return null;
-	}
-
-	public Predicate notLike(Expression<String> stringExpression, String s, Expression<Character> characterExpression) {
-		return null;
-	}
-
-	public Predicate notLike(Expression<String> stringExpression, String s, char c) {
-		return null;
-	}
-
 	public Expression<String> concat(Expression<String> stringExpression, Expression<String> stringExpression1) {
 		return null;
 	}
@@ -821,86 +1117,6 @@ public class QueryBuilderImpl implements QueryBuilder, Serializable {
 	}
 
 	public Expression<String> concat(String s, Expression<String> stringExpression) {
-		return null;
-	}
-
-	public Expression<String> substring(Expression<String> stringExpression, Expression<Integer> integerExpression) {
-		return null;
-	}
-
-	public Expression<String> substring(Expression<String> stringExpression, int i) {
-		return null;
-	}
-
-	public Expression<String> substring(Expression<String> stringExpression, Expression<Integer> integerExpression, Expression<Integer> integerExpression1) {
-		return null;
-	}
-
-	public Expression<String> substring(Expression<String> stringExpression, int i, int i1) {
-		return null;
-	}
-
-	public Expression<String> trim(Expression<String> stringExpression) {
-		return null;
-	}
-
-	public Expression<String> trim(Trimspec trimspec, Expression<String> stringExpression) {
-		return null;
-	}
-
-	public Expression<String> trim(Expression<Character> characterExpression, Expression<String> stringExpression) {
-		return null;
-	}
-
-	public Expression<String> trim(Trimspec trimspec, Expression<Character> characterExpression, Expression<String> stringExpression) {
-		return null;
-	}
-
-	public Expression<String> trim(char c, Expression<String> stringExpression) {
-		return null;
-	}
-
-	public Expression<String> trim(Trimspec trimspec, char c, Expression<String> stringExpression) {
-		return null;
-	}
-
-	public Expression<String> lower(Expression<String> stringExpression) {
-		return null;
-	}
-
-	public Expression<String> upper(Expression<String> stringExpression) {
-		return null;
-	}
-
-	public Expression<Integer> length(Expression<String> stringExpression) {
-		return null;
-	}
-
-	public Expression<Integer> locate(Expression<String> stringExpression, Expression<String> stringExpression1) {
-		return null;
-	}
-
-	public Expression<Integer> locate(Expression<String> stringExpression, Expression<String> stringExpression1, Expression<Integer> integerExpression) {
-		return null;
-	}
-
-	public Expression<Integer> locate(Expression<String> stringExpression, String s) {
-		return null;
-	}
-
-	public Expression<Integer> locate(Expression<String> stringExpression, String s, int i) {
-		return null;
-	}
-
-	public Expression<java.sql.Date> currentDate() {
-		return null;
-	}
-
-	public Expression<java.sql.Timestamp> currentTimestamp() {
-		return null;
-	}
-
-	public Expression<java.sql.Time> currentTime() {
 		return null;
 	}
 
@@ -929,10 +1145,6 @@ public class QueryBuilderImpl implements QueryBuilder, Serializable {
 	}
 
 	public <R> Case<R> selectCase() {
-		return null;
-	}
-
-	public <T> Expression<T> function(String s, Class<T> tClass, Expression<?>... expressions) {
 		return null;
 	}
 }

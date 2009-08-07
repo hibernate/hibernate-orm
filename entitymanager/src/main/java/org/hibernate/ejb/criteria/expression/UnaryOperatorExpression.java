@@ -19,29 +19,20 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.ejb.criteria.expression.function;
+package org.hibernate.ejb.criteria.expression;
 
 import javax.persistence.criteria.Expression;
 
 /**
- * Contract for expressions which model a SQL function call.
- *
- * @param <T> The type of the function result.
+ * Contract for operators with a single operand.
  *
  * @author Steve Ebersole
  */
-public interface FunctionExpression<T> extends Expression<T> {
+public interface UnaryOperatorExpression<T> extends Expression<T> {
 	/**
-	 * Retrieve the name of the function.
+	 * Get the operand.
 	 *
-	 * @return The function name.
+	 * @return The operand.
 	 */
-	public String getFunctionName();
-
-	/**
-	 * Is this function a value aggregator (like a <tt>COUNT</tt> or <tt>MAX</tt> function e.g.)?
-	 *
-	 * @return True if this functions does aggregation.
-	 */
-	public boolean isAggregation();
+	public Expression<?> getOperand();
 }

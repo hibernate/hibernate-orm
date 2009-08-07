@@ -22,26 +22,17 @@
 package org.hibernate.ejb.criteria.expression.function;
 
 import javax.persistence.criteria.Expression;
+import org.hibernate.ejb.criteria.QueryBuilderImpl;
 
 /**
- * Contract for expressions which model a SQL function call.
- *
- * @param <T> The type of the function result.
+ * Models the ANSI SQL <tt>SQRT</tt> function.
  *
  * @author Steve Ebersole
  */
-public interface FunctionExpression<T> extends Expression<T> {
-	/**
-	 * Retrieve the name of the function.
-	 *
-	 * @return The function name.
-	 */
-	public String getFunctionName();
+public class SqrtFunction extends BasicFunctionExpression<Double> {
+	public static final String NAME = "sqrt";
 
-	/**
-	 * Is this function a value aggregator (like a <tt>COUNT</tt> or <tt>MAX</tt> function e.g.)?
-	 *
-	 * @return True if this functions does aggregation.
-	 */
-	public boolean isAggregation();
+	public SqrtFunction(QueryBuilderImpl queryBuilder, Expression<? extends Number> expression) {
+		super( queryBuilder, Double.class, NAME, expression );
+	}
 }

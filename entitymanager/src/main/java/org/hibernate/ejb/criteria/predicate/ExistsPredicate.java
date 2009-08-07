@@ -21,30 +21,24 @@
  */
 package org.hibernate.ejb.criteria.predicate;
 
-import java.util.List;
-import java.util.Collections;
-import javax.persistence.criteria.Expression;
-
+import javax.persistence.criteria.Subquery;
 import org.hibernate.ejb.criteria.QueryBuilderImpl;
 
 /**
- * TODO : javadoc
+ * Models an <tt>EXISTS(<subquery>)</tt> predicate
  *
  * @author Steve Ebersole
  */
-public class AbstractSimplePredicate extends AbstractPredicateImpl {
-	private static final List<Expression<Boolean>> NO_EXPRESSIONS = Collections.emptyList();
+public class ExistsPredicate extends AbstractSimplePredicate {
+	private final Subquery<?> subquery;
 
-	public AbstractSimplePredicate(QueryBuilderImpl queryBuilder) {
-		super( queryBuilder );
+	public ExistsPredicate(QueryBuilderImpl queryBuilder, Subquery<?> subquery) {
+		super(queryBuilder);
+		this.subquery = subquery;
 	}
 
-	public BooleanOperator getOperator() {
-		return BooleanOperator.AND;
-	}
-
-	public final List<Expression<Boolean>> getExpressions() {
-		return NO_EXPRESSIONS;
+	public Subquery<?> getSubquery() {
+		return subquery;
 	}
 
 }

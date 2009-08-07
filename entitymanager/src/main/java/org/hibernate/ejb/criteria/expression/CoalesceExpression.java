@@ -19,32 +19,50 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.ejb.criteria.predicate;
+package org.hibernate.ejb.criteria.expression;
 
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Collections;
 import javax.persistence.criteria.Expression;
-
+import javax.persistence.criteria.QueryBuilder.Coalesce;
 import org.hibernate.ejb.criteria.QueryBuilderImpl;
 
 /**
- * TODO : javadoc
+ * Models an ANSI SQL <tt>COALESCE</tt> expression.  <tt>COALESCE</tt> is a specialized <tt>CASE</tt> statement.
  *
  * @author Steve Ebersole
  */
-public class AbstractSimplePredicate extends AbstractPredicateImpl {
-	private static final List<Expression<Boolean>> NO_EXPRESSIONS = Collections.emptyList();
+public class CoalesceExpression<T> extends ExpressionImpl<T> implements Coalesce<T> {
+	private final List<Expression<? extends T>> expressions;
+	private Class<T> javaType;
 
-	public AbstractSimplePredicate(QueryBuilderImpl queryBuilder) {
-		super( queryBuilder );
+	public CoalesceExpression(QueryBuilderImpl queryBuilder) {
+		this( queryBuilder, null );
 	}
 
-	public BooleanOperator getOperator() {
-		return BooleanOperator.AND;
+	public CoalesceExpression(
+			QueryBuilderImpl queryBuilder,
+			Class<T> javaType) {
+		super( queryBuilder, javaType );
+		this.javaType = javaType;
+		this.expressions = new ArrayList<Expression<? extends T>>();
 	}
 
-	public final List<Expression<Boolean>> getExpressions() {
-		return NO_EXPRESSIONS;
+	@Override
+	public Class<T> getJavaType() {
+		return javaType;
+	}
+
+	public Coalesce<T> value(T value) {
+		return value( new LiteralExpression<T>( queryBuilder(), value ) );
+	}
+
+	public Coalesce<T> value(Expression<? extends T> value) {
+		expressions.add( value );
+		if ( javaType == null ) {
+			javaType = (Class<T>) value.getJavaType();
+		}
+		return this;
 	}
 
 }

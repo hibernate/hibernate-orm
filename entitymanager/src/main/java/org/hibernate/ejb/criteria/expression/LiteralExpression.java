@@ -31,11 +31,16 @@ import org.hibernate.ejb.criteria.QueryBuilderImpl;
 public class LiteralExpression<T> extends ExpressionImpl<T> {
 	private final T literal;
 
-	public LiteralExpression(
-			QueryBuilderImpl queryBuilder,
-			T literal) {
-		//noinspection unchecked
-		super( queryBuilder, ( Class<T> ) literal.getClass() );
+	public LiteralExpression(QueryBuilderImpl queryBuilder, T literal) {
+		this( queryBuilder, (Class<T>) determineClass( literal ), literal );
+	}
+
+	private static Class determineClass(Object literal) {
+		return literal == null ? null : literal.getClass();
+	}
+
+	public LiteralExpression(QueryBuilderImpl queryBuilder, Class<T> type, T literal) {
+		super( queryBuilder, type );
 		this.literal = literal;
 	}
 

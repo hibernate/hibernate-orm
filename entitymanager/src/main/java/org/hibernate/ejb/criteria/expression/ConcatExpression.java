@@ -19,12 +19,9 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.ejb.criteria.predicate;
+package org.hibernate.ejb.criteria.expression;
 
-import java.util.List;
-import java.util.Collections;
 import javax.persistence.criteria.Expression;
-
 import org.hibernate.ejb.criteria.QueryBuilderImpl;
 
 /**
@@ -32,19 +29,43 @@ import org.hibernate.ejb.criteria.QueryBuilderImpl;
  *
  * @author Steve Ebersole
  */
-public class AbstractSimplePredicate extends AbstractPredicateImpl {
-	private static final List<Expression<Boolean>> NO_EXPRESSIONS = Collections.emptyList();
+public class ConcatExpression extends ExpressionImpl<String> {
+	private Expression<String> string1;
+	private Expression<String> string2;
 
-	public AbstractSimplePredicate(QueryBuilderImpl queryBuilder) {
-		super( queryBuilder );
+	public ConcatExpression(
+			QueryBuilderImpl queryBuilder,
+			Expression<String> expression1,
+			Expression<String> expression2) {
+		super( queryBuilder, String.class );
+		this.string1 = expression1;
+		this.string2 = expression2;
 	}
 
-	public BooleanOperator getOperator() {
-		return BooleanOperator.AND;
+	public ConcatExpression(
+			QueryBuilderImpl queryBuilder, 
+			Expression<String> string1, 
+			String string2) {
+		this( queryBuilder, string1, wrap(queryBuilder, string2) );
 	}
 
-	public final List<Expression<Boolean>> getExpressions() {
-		return NO_EXPRESSIONS;
+	private static Expression<String> wrap(QueryBuilderImpl queryBuilder, String string) {
+		return new LiteralExpression<String>( queryBuilder, string );
+	}
+
+	public ConcatExpression(
+			QueryBuilderImpl queryBuilder,
+			String string1,
+			Expression<String> string2) {
+		this( queryBuilder, wrap(queryBuilder, string1), string2 );
+	}
+
+	public Expression<String> getString1() {
+		return string1;
+	}
+
+	public Expression<String> getString2() {
+		return string2;
 	}
 
 }

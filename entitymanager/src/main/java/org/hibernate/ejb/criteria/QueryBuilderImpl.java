@@ -42,9 +42,15 @@ import javax.persistence.Tuple;
 
 import org.hibernate.ejb.EntityManagerFactoryImpl;
 import org.hibernate.ejb.criteria.expression.BinaryArithmeticOperation;
+import org.hibernate.ejb.criteria.expression.CoalesceExpression;
 import org.hibernate.ejb.criteria.expression.CompoundSelectionImpl;
+import org.hibernate.ejb.criteria.expression.ConcatExpression;
+import org.hibernate.ejb.criteria.expression.ExpressionImpl;
 import org.hibernate.ejb.criteria.expression.ParameterExpressionImpl;
 import org.hibernate.ejb.criteria.expression.LiteralExpression;
+import org.hibernate.ejb.criteria.expression.NullifExpression;
+import org.hibernate.ejb.criteria.expression.SearchedCaseExpression;
+import org.hibernate.ejb.criteria.expression.SimpleCaseExpression;
 import org.hibernate.ejb.criteria.expression.SubqueryComparisonModifierExpression;
 import org.hibernate.ejb.criteria.expression.UnaryArithmeticOperation;
 import org.hibernate.ejb.criteria.expression.function.AbsFunction;
@@ -68,6 +74,7 @@ import org.hibernate.ejb.criteria.predicate.CompoundPredicate;
 import org.hibernate.ejb.criteria.predicate.ComparisonPredicate;
 import org.hibernate.ejb.criteria.predicate.InPredicate;
 import org.hibernate.ejb.criteria.predicate.BetweenPredicate;
+import org.hibernate.ejb.criteria.predicate.ExistsPredicate;
 import org.hibernate.ejb.criteria.predicate.LikePredicate;
 import static org.hibernate.ejb.criteria.predicate.ComparisonPredicate.ComparisonOperator;
 
@@ -1023,7 +1030,7 @@ public class QueryBuilderImpl implements QueryBuilder, Serializable {
 	 * {@inheritDoc}
 	 */
 	public Predicate exists(Subquery<?> subquery) {
-		return null;
+		return new ExistsPredicate( this, subquery );
 	}
 
 	/**
@@ -1063,88 +1070,140 @@ public class QueryBuilderImpl implements QueryBuilder, Serializable {
 	}
 
 
+	// miscellaneous expressions ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public <Y> Expression<Y> coalesce(Expression<? extends Y> exp1, Expression<? extends Y> exp2) {
+		return coalesce( (Class<Y>)null, exp1, exp2 );
+	}
+
+	public <Y> Expression<Y> coalesce(Class<Y> type, Expression<? extends Y> exp1, Expression<? extends Y> exp2) {
+		return new CoalesceExpression<Y>( this, type ).value( exp1 ).value( exp2 );
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public <Y> Expression<Y> coalesce(Expression<? extends Y> exp1, Y exp2) {
+		return coalesce( (Class<Y>)null, exp1, exp2 );
+	}
+
+	public <Y> Expression<Y> coalesce(Class<Y> type, Expression<? extends Y> exp1, Y exp2) {
+		return new CoalesceExpression<Y>( this, type ).value( exp1 ).value( exp2 );
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public <T> Coalesce<T> coalesce() {
+		return coalesce( (Class<T>)null );
+	}
+
+	public <T> Coalesce<T> coalesce(Class<T> type) {
+		return new CoalesceExpression<T>( this, type );
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public Expression<String> concat(Expression<String> string1, Expression<String> string2) {
+		return new ConcatExpression( this, string1, string2 );
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public Expression<String> concat(Expression<String> string1, String string2) {
+		return new ConcatExpression( this, string1, string2 );
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public Expression<String> concat(String string1, Expression<String> string2) {
+		return new ConcatExpression( this, string1, string2 );
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public <Y> Expression<Y> nullif(Expression<Y> exp1, Expression<?> exp2) {
+		return nullif( (Class<Y>)null, exp1, exp2 );
+	}
+
+	public <Y> Expression<Y> nullif(Class<Y> type, Expression<Y> exp1, Expression<?> exp2) {
+		return new NullifExpression<Y>( this, type, exp1, exp2 );
+	}
+
+	public <Y> Expression<Y> nullif(Expression<Y> exp1, Y exp2) {
+		return nullif( (Class<Y>)null, exp1, exp2 );
+	}
+
+	public <Y> Expression<Y> nullif(Class<Y> type, Expression<Y> exp1, Y exp2) {
+		return new NullifExpression<Y>( this, type, exp1, exp2 );
+	}
+
+	public <C, R> SimpleCase<C, R> selectCase(Expression<? extends C> expression) {
+		return selectCase( (Class<R>)null, expression );
+	}
+
+	public <C, R> SimpleCase<C, R> selectCase(Class<R> type, Expression<? extends C> expression) {
+		return new SimpleCaseExpression<C, R>( this, type, expression );
+	}
+
+	public <R> Case<R> selectCase() {
+		return selectCase( (Class<R>)null );
+	}
+
+	public <R> Case<R> selectCase(Class<R> type) {
+		return new SearchedCaseExpression<R>( this, type );
+	}
+
+
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	public <C extends Collection<?>> Predicate isEmpty(Expression<C> cExpression) {
-		return null;
+		throw new UnsupportedOperationException( "Not yet implemented!" );
 	}
 
-	public <C extends Collection<?>> Predicate isNotEmpty(Expression<C> cExpression) {
-		return null;
+	public <C extends Collection<?>> Predicate isNotEmpty(Expression<C> colelctionExpression) {
+		return isEmpty( colelctionExpression ).negate();
 	}
 
 	public <C extends Collection<?>> Expression<Integer> size(C c) {
-		return null;
+		throw new UnsupportedOperationException( "Not yet implemented!" );
 	}
 
 	public <C extends Collection<?>> Expression<Integer> size(Expression<C> cExpression) {
-		return null;
+		throw new UnsupportedOperationException( "Not yet implemented!" );
 	}
 
 	public <E, C extends Collection<E>> Predicate isMember(E e, Expression<C> cExpression) {
-		return null;
+		throw new UnsupportedOperationException( "Not yet implemented!" );
 	}
 
 	public <E, C extends Collection<E>> Predicate isNotMember(E e, Expression<C> cExpression) {
-		return null;
+		throw new UnsupportedOperationException( "Not yet implemented!" );
 	}
 
 	public <E, C extends Collection<E>> Predicate isMember(Expression<E> eExpression, Expression<C> cExpression) {
-		return null;
+		throw new UnsupportedOperationException( "Not yet implemented!" );
 	}
 
 	public <E, C extends Collection<E>> Predicate isNotMember(Expression<E> eExpression, Expression<C> cExpression) {
-		return null;
+		throw new UnsupportedOperationException( "Not yet implemented!" );
 	}
 
 	public <V, M extends Map<?, V>> Expression<Collection<V>> values(M map) {
-		return null;
+		throw new UnsupportedOperationException( "Not yet implemented!" );
 	}
 
 	public <K, M extends Map<K, ?>> Expression<Set<K>> keys(M m) {
-		return null;
-	}
-
-	public Expression<String> concat(Expression<String> stringExpression, Expression<String> stringExpression1) {
-		return null;
-	}
-
-	public Expression<String> concat(Expression<String> stringExpression, String s) {
-		return null;
-	}
-
-	public Expression<String> concat(String s, Expression<String> stringExpression) {
-		return null;
-	}
-
-	public <Y> Expression<Y> coalesce(Expression<? extends Y> expression, Expression<? extends Y> expression1) {
-		return null;
-	}
-
-	public <Y> Expression<Y> coalesce(Expression<? extends Y> expression, Y y) {
-		return null;
-	}
-
-	public <Y> Expression<Y> nullif(Expression<Y> yExpression, Expression<?> expression) {
-		return null;
-	}
-
-	public <Y> Expression<Y> nullif(Expression<Y> yExpression, Y y) {
-		return null;
-	}
-
-	public <T> Coalesce<T> coalesce() {
-		return null;
-	}
-
-	public <C, R> SimpleCase<C, R> selectCase(Expression<? extends C> expression) {
-		return null;
-	}
-
-	public <R> Case<R> selectCase() {
-		return null;
+		throw new UnsupportedOperationException( "Not yet implemented!" );
 	}
 }

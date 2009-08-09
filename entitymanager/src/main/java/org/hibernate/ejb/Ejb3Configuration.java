@@ -712,7 +712,8 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 					cfg.buildSessionFactory(),
 					transactionType,
 					discardOnClose,
-					getSessionInterceptorClass( cfg.getProperties() )
+					getSessionInterceptorClass( cfg.getProperties() ),
+					cfg
 			);
 		}
 		catch (HibernateException e) {

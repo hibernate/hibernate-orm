@@ -25,10 +25,12 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.QueryBuilder.Case;
+import org.hibernate.ejb.criteria.ParameterContainer;
+import org.hibernate.ejb.criteria.ParameterRegistry;
 import org.hibernate.ejb.criteria.QueryBuilderImpl;
 
 /**
- * TODO : javadoc
+ * Models what ANSI SQL terms a <tt>searched case expression</tt
  *
  * @author Steve Ebersole
  */
@@ -104,5 +106,12 @@ public class SearchedCaseExpression<R> extends ExpressionImpl<R> implements Case
 		return whenClauses;
 	}
 
+	public void registerParameters(ParameterRegistry registry) {
+		Helper.possibleParameter( getOtherwiseResult(), registry );
+		for ( WhenClause whenClause : getWhenClauses() ) {
+			Helper.possibleParameter( whenClause.getCondition(), registry );
+			Helper.possibleParameter( whenClause.getResult(), registry );
+		}
+	}
 
 }

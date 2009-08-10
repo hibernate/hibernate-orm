@@ -19,20 +19,38 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.ejb.criteria.expression.function;
+package org.hibernate.ejb.criteria.predicate;
 
-import javax.persistence.criteria.Expression;
+import java.util.Collection;
+import org.hibernate.ejb.criteria.ParameterRegistry;
 import org.hibernate.ejb.criteria.QueryBuilderImpl;
+import org.hibernate.ejb.criteria.expression.CollectionExpression;
+import org.hibernate.ejb.criteria.expression.UnaryOperatorExpression;
 
 /**
- * Models the ANSI SQL <tt>UPPER</tt> function.
+ * TODO : javadoc
  *
  * @author Steve Ebersole
  */
-public class UpperFunction extends ParameterizedFunctionExpression<String> {
-	public static final String NAME = "upper";
+public class IsEmptyPredicate<C extends Collection>
+		extends AbstractSimplePredicate
+		implements UnaryOperatorExpression<Boolean> {
 
-	public UpperFunction(QueryBuilderImpl queryBuilder, Expression<String> string) {
-		super( queryBuilder, String.class, NAME, string );
+	private final CollectionExpression<C> collectionExpression;
+
+	public IsEmptyPredicate(
+			QueryBuilderImpl queryBuilder,
+			CollectionExpression<C> collectionExpression) {
+		super(queryBuilder);
+		this.collectionExpression = collectionExpression;
 	}
+
+	public CollectionExpression<C> getOperand() {
+		return collectionExpression;
+	}
+
+	public void registerParameters(ParameterRegistry registry) {
+		// nothing to do
+	}
+
 }

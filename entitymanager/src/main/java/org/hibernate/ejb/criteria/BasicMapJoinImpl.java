@@ -129,8 +129,7 @@ public class BasicMapJoinImpl<O,K,V>
 	 * {@inheritDoc}
 	 */
 	public Expression<Entry<K, V>> entry() {
-		// TODO : ???
-		throw new UnsupportedOperationException("Not supported yet.");
+		return new MapKeyHelpers.MapEntryExpression( queryBuilder(), Map.Entry.class, getAttribute() );
 	}
 
 }

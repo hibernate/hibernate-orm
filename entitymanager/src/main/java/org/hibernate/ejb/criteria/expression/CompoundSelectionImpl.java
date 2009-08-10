@@ -25,6 +25,8 @@ import java.util.List;
 import javax.persistence.criteria.CompoundSelection;
 import javax.persistence.criteria.Selection;
 
+import org.hibernate.ejb.criteria.ParameterContainer;
+import org.hibernate.ejb.criteria.ParameterRegistry;
 import org.hibernate.ejb.criteria.QueryBuilderImpl;
 
 /**
@@ -53,4 +55,11 @@ public class CompoundSelectionImpl<X> extends SelectionImpl<X> implements Compou
 	public List<Selection<?>> getCompoundSelectionItems() {
 		return selectionItems;
 	}
+
+	public void registerParameters(ParameterRegistry registry) {
+		for ( Selection selectionItem : getCompoundSelectionItems() ) {
+			Helper.possibleParameter(selectionItem, registry);
+		}
+	}
+
 }

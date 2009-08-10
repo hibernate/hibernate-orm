@@ -33,7 +33,7 @@ import org.hibernate.ejb.criteria.expression.function.CastFunction;
  *
  * @author Steve Ebersole
  */
-public class ExpressionImpl<T> extends SelectionImpl<T> implements Expression<T> {
+public abstract class ExpressionImpl<T> extends SelectionImpl<T> implements Expression<T> {
 	public ExpressionImpl(QueryBuilderImpl queryBuilder, Class<T> javaType) {
 		super( queryBuilder, javaType );
 	}

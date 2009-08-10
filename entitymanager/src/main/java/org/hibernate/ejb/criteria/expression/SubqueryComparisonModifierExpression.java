@@ -1,6 +1,7 @@
 package org.hibernate.ejb.criteria.expression;
 
 import javax.persistence.criteria.Subquery;
+import org.hibernate.ejb.criteria.ParameterRegistry;
 import org.hibernate.ejb.criteria.QueryBuilderImpl;
 
 /**
@@ -31,6 +32,10 @@ public class SubqueryComparisonModifierExpression<Y> extends ExpressionImpl<Y> {
 
 	public Subquery<Y> getSubquery() {
 		return subquery;
+	}
+
+	public void registerParameters(ParameterRegistry registry) {
+		// nothign to do (the subquery should be handled directly, and the modified itself is not parameterized)
 	}
 
 }

@@ -1,6 +1,8 @@
 package org.hibernate.ejb.criteria.expression;
 
 import javax.persistence.criteria.Expression;
+import org.hibernate.ejb.criteria.ParameterContainer;
+import org.hibernate.ejb.criteria.ParameterRegistry;
 import org.hibernate.ejb.criteria.QueryBuilderImpl;
 
 /**
@@ -34,6 +36,10 @@ public class UnaryArithmeticOperation<T>
 
 	public Operation getOperation() {
 		return operation;
+	}
+
+	public void registerParameters(ParameterRegistry registry) {
+		Helper.possibleParameter( getOperand(), registry );
 	}
 
 }

@@ -1,6 +1,7 @@
 package org.hibernate.ejb.criteria.expression;
 
 import javax.persistence.metamodel.ListAttribute;
+import org.hibernate.ejb.criteria.ParameterRegistry;
 import org.hibernate.ejb.criteria.QueryBuilderImpl;
 
 /**
@@ -20,4 +21,7 @@ public class ListIndexExpression extends ExpressionImpl<Integer> {
 		return listAttribute;
 	}
 
+	public void registerParameters(ParameterRegistry registry) {
+		// nothign to do
+	}
 }

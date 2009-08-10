@@ -32,7 +32,7 @@ import org.hibernate.ejb.criteria.QueryBuilderImpl;
  *
  * @author Steve Ebersole
  */
-public class AbstractSimplePredicate extends AbstractPredicateImpl {
+public abstract class AbstractSimplePredicate extends AbstractPredicateImpl {
 	private static final List<Expression<Boolean>> NO_EXPRESSIONS = Collections.emptyList();
 
 	public AbstractSimplePredicate(QueryBuilderImpl queryBuilder) {

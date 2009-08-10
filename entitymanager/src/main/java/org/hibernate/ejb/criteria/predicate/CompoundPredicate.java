@@ -27,6 +27,8 @@ import java.util.Arrays;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Expression;
 
+import org.hibernate.ejb.criteria.ParameterContainer;
+import org.hibernate.ejb.criteria.ParameterRegistry;
 import org.hibernate.ejb.criteria.QueryBuilderImpl;
 
 /**
@@ -99,4 +101,11 @@ public class CompoundPredicate extends AbstractPredicateImpl {
 	public List<Expression<Boolean>> getExpressions() {
 		return expressions;
 	}
+
+	public void registerParameters(ParameterRegistry registry) {
+		for ( Expression expression : getExpressions() ) {
+			Helper.possibleParameter(expression, registry);
+		}
+	}
+
 }

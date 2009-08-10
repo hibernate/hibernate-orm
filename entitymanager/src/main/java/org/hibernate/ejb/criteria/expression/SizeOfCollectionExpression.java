@@ -19,20 +19,35 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.ejb.criteria.expression.function;
+package org.hibernate.ejb.criteria.expression;
 
-import javax.persistence.criteria.Expression;
+import java.util.Collection;
+import org.hibernate.ejb.criteria.ParameterRegistry;
 import org.hibernate.ejb.criteria.QueryBuilderImpl;
 
 /**
- * Models the ANSI SQL <tt>UPPER</tt> function.
+ * Represents a "size of" expression in regards to a persistent collection; the implication is
+ * that of a subquery.
  *
  * @author Steve Ebersole
  */
-public class UpperFunction extends ParameterizedFunctionExpression<String> {
-	public static final String NAME = "upper";
+public class SizeOfCollectionExpression<C extends Collection>
+		extends ExpressionImpl<Integer> {
+	private final CollectionExpression<C> collectionExpression;
 
-	public UpperFunction(QueryBuilderImpl queryBuilder, Expression<String> string) {
-		super( queryBuilder, String.class, NAME, string );
+	public SizeOfCollectionExpression(
+			QueryBuilderImpl queryBuilder,
+			CollectionExpression<C> collectionExpression) {
+		super(queryBuilder, Integer.class);
+		this.collectionExpression = collectionExpression;
 	}
+
+	public CollectionExpression<C> getCollectionExpression() {
+		return collectionExpression;
+	}
+
+	public void registerParameters(ParameterRegistry registry) {
+		// nothign to do
+	}
+
 }

@@ -23,7 +23,9 @@ package org.hibernate.ejb.criteria.predicate;
 
 import javax.persistence.criteria.Expression;
 
+import org.hibernate.ejb.criteria.ParameterRegistry;
 import org.hibernate.ejb.criteria.QueryBuilderImpl;
+import org.hibernate.ejb.criteria.expression.BinaryOperatorExpression;
 import org.hibernate.ejb.criteria.expression.LiteralExpression;
 
 /**
@@ -31,7 +33,7 @@ import org.hibernate.ejb.criteria.expression.LiteralExpression;
  *
  * @author Steve Ebersole
  */
-public class ComparisonPredicate extends AbstractSimplePredicate {
+public class ComparisonPredicate extends AbstractSimplePredicate implements BinaryOperatorExpression<Boolean> {
 	private final ComparisonOperator comparisonOperator;
 	private final Expression<?> leftHandSide;
 	private final Expression<?> rightHandSide;
@@ -62,12 +64,17 @@ public class ComparisonPredicate extends AbstractSimplePredicate {
 		return comparisonOperator;
 	}
 
-	public Expression<?> getLeftHandSide() {
+	public Expression getLeftHandOperand() {
 		return leftHandSide;
 	}
 
-	public Expression<?> getRightHandSide() {
+	public Expression getRightHandOperand() {
 		return rightHandSide;
+	}
+
+	public void registerParameters(ParameterRegistry registry) {
+		Helper.possibleParameter( getLeftHandOperand(), registry );
+		Helper.possibleParameter( getRightHandOperand(), registry );
 	}
 
 	/**

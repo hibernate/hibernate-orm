@@ -37,8 +37,8 @@ import javax.persistence.criteria.Subquery;
 import javax.persistence.metamodel.EntityType;
 
 /**
- * The Hibernate implementation of the JPA {@link CriteriaQuery}
- * contract.
+ * The Hibernate implementation of the JPA {@link CriteriaQuery} contract.  Mostlty a set of delegation to its
+ * internal {@link QueryStructure}.
  *
  * @author Steve Ebersole
  */
@@ -229,8 +229,7 @@ public class CriteriaQueryImpl<T> extends AbstractNode implements CriteriaQuery<
 	}
 
 	public Set<ParameterExpression<?>> getParameters() {
-		// TODO-STEVE : implement
-		throw new UnsupportedOperationException( "Not yet implemented!" );
+		return queryStructure.getParameters();
 	}
 
 	public <U> Subquery<U> subquery(Class<U> subqueryType) {

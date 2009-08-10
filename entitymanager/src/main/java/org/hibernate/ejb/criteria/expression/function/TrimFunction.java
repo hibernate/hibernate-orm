@@ -2,6 +2,8 @@ package org.hibernate.ejb.criteria.expression.function;
 
 import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.QueryBuilder.Trimspec;
+import org.hibernate.ejb.criteria.ParameterContainer;
+import org.hibernate.ejb.criteria.ParameterRegistry;
 import org.hibernate.ejb.criteria.QueryBuilderImpl;
 import org.hibernate.ejb.criteria.expression.LiteralExpression;
 
@@ -78,6 +80,12 @@ public class TrimFunction extends BasicFunctionExpression<String> {
 
 	public Trimspec getTrimspec() {
 		return trimspec;
+	}
+
+	@Override
+	public void registerParameters(ParameterRegistry registry) {
+		Helper.possibleParameter( getTrimCharacter(), registry );
+		Helper.possibleParameter( getTrimSource(), registry );
 	}
 
 }

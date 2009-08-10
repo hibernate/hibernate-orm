@@ -29,6 +29,7 @@ import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Join;
 import javax.persistence.criteria.ListJoin;
 import javax.persistence.criteria.MapJoin;
+import javax.persistence.criteria.ParameterExpression;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 import javax.persistence.criteria.SetJoin;
@@ -59,6 +60,12 @@ public class CriteriaSubqueryImpl<T> extends ExpressionImpl<T> implements Subque
 
 	public AbstractQuery<?> getParent() {
 		return parent;
+	}
+
+	public void registerParameters(ParameterRegistry registry) {
+		for ( ParameterExpression param : queryStructure.getParameters() ) {
+			registry.registerParameter( param );
+		}
 	}
 
 

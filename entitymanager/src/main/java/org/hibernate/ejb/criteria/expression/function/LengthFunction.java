@@ -29,7 +29,7 @@ import org.hibernate.ejb.criteria.QueryBuilderImpl;
  *
  * @author Steve Ebersole
  */
-public class LengthFunction extends BasicFunctionExpression<Integer> {
+public class LengthFunction extends ParameterizedFunctionExpression<Integer> {
 	public static final String NAME = "length";
 
 	public LengthFunction(QueryBuilderImpl queryBuilder, Expression<String> value) {

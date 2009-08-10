@@ -22,6 +22,7 @@
 package org.hibernate.ejb.criteria.predicate;
 
 import javax.persistence.criteria.Subquery;
+import org.hibernate.ejb.criteria.ParameterRegistry;
 import org.hibernate.ejb.criteria.QueryBuilderImpl;
 
 /**
@@ -39,6 +40,10 @@ public class ExistsPredicate extends AbstractSimplePredicate {
 
 	public Subquery<?> getSubquery() {
 		return subquery;
+	}
+
+	public void registerParameters(ParameterRegistry registry) {
+		// nothing to do here
 	}
 
 }

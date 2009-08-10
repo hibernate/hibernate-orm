@@ -21,6 +21,9 @@
  */
 package org.hibernate.ejb.criteria.expression.function;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import javax.persistence.criteria.Expression;
 import org.hibernate.ejb.criteria.ParameterContainer;
 import org.hibernate.ejb.criteria.ParameterRegistry;
@@ -28,69 +31,57 @@ import org.hibernate.ejb.criteria.QueryBuilderImpl;
 import org.hibernate.ejb.criteria.expression.LiteralExpression;
 
 /**
- * Models the ANSI SQL <tt>LOCATE</tt> function.
+ * Support for functions with parameters.
  *
  * @author Steve Ebersole
  */
-public class LocateFunction extends BasicFunctionExpression<Integer> {
-	public static final String NAME = "locate";
+public class ParameterizedFunctionExpression<X>
+		extends BasicFunctionExpression<X>
+		implements FunctionExpression<X> {
 
-	private final Expression<String> pattern;
-	private final Expression<String> string;
-	private final Expression<Integer> start;
+	private final List<Expression<?>> argumentExpressions;
 
-	public LocateFunction(
+	public ParameterizedFunctionExpression(
 			QueryBuilderImpl queryBuilder,
-			Expression<String> pattern,
-			Expression<String> string,
-			Expression<Integer> start) {
-		super( queryBuilder, Integer.class, NAME );
-		this.pattern = pattern;
-		this.string = string;
-		this.start = start;
+			Class<X> javaType,
+			String functionName,
+			List<Expression<?>> argumentExpressions) {
+		super( queryBuilder, javaType, functionName );
+		this.argumentExpressions = argumentExpressions;
 	}
 
-	public LocateFunction(
+	public ParameterizedFunctionExpression(
 			QueryBuilderImpl queryBuilder,
-			Expression<String> pattern,
-			Expression<String> string) {
-		this( queryBuilder, pattern, string, null );
+			Class<X> javaType,
+			String functionName,
+			Expression<?>... argumentExpressions) {
+		super( queryBuilder, javaType, functionName );
+		this.argumentExpressions = Arrays.asList( argumentExpressions );
 	}
 
-	public LocateFunction(QueryBuilderImpl queryBuilder, String pattern, Expression<String> string) {
-		this(
-				queryBuilder,
-				new LiteralExpression<String>( queryBuilder, pattern ),
-				string,
-				null
-		);
+	protected  static List<Expression<?>> wrapAsLiterals(QueryBuilderImpl queryBuilder, Object... literalArguments) {
+		List<Expression<?>> arguments = new ArrayList<Expression<?>>( properSize( literalArguments.length) );
+		for ( Object o : literalArguments ) {
+			arguments.add( new LiteralExpression( queryBuilder, o ) );
+		}
+		return arguments;
 	}
 
-	public LocateFunction(QueryBuilderImpl queryBuilder, String pattern, Expression<String> string, int start) {
-		this(
-				queryBuilder,
-				new LiteralExpression<String>( queryBuilder, pattern ),
-				string,
-				new LiteralExpression<Integer>( queryBuilder, start )
-		);
+	protected  static int properSize(int number) {
+		return number + (int)( number*.75 ) + 1;
 	}
 
-	public Expression<String> getPattern() {
-		return pattern;
-	}
-
-	public Expression<Integer> getStart() {
-		return start;
-	}
-
-	public Expression<String> getString() {
-		return string;
+	public List<Expression<?>> getArgumentExpressions() {
+		return argumentExpressions;
 	}
 
 	@Override
 	public void registerParameters(ParameterRegistry registry) {
-		Helper.possibleParameter( getPattern(), registry );
-		Helper.possibleParameter( getStart(), registry );
-		Helper.possibleParameter( getString(), registry );
+		for ( Expression argument : getArgumentExpressions() ) {
+			if ( ParameterContainer.class.isInstance( argument ) ) {
+				( (ParameterContainer) argument ).registerParameters(registry);
+			}
+		}
 	}
+
 }

@@ -24,6 +24,7 @@ package org.hibernate.ejb.criteria.predicate;
 import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Predicate;
 
+import org.hibernate.ejb.criteria.ParameterRegistry;
 import org.hibernate.ejb.criteria.QueryBuilderImpl;
 
 /**
@@ -46,5 +47,9 @@ public class BooleanExpressionPredicate extends AbstractSimplePredicate {
 	 */
 	public Expression<Boolean> getExpression() {
 		return expression;
+	}
+
+	public void registerParameters(ParameterRegistry registry) {
+		Helper.possibleParameter(expression, registry);
 	}
 }

@@ -25,10 +25,12 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.QueryBuilder.SimpleCase;
+import org.hibernate.ejb.criteria.ParameterContainer;
+import org.hibernate.ejb.criteria.ParameterRegistry;
 import org.hibernate.ejb.criteria.QueryBuilderImpl;
 
 /**
- * TODO : javadoc
+ * Models what ANSI SQL terms a simple case statement.
  *
  * @author Steve Ebersole
  */
@@ -111,4 +113,13 @@ public class SimpleCaseExpression<C,R> extends ExpressionImpl<R> implements Simp
 	public List<WhenClause> getWhenClauses() {
 		return whenClauses;
 	}
+
+	public void registerParameters(ParameterRegistry registry) {
+		Helper.possibleParameter( getExpression(), registry );
+		for ( WhenClause whenClause : getWhenClauses() ) {
+			Helper.possibleParameter( whenClause.getResult(), registry );
+		}
+		Helper.possibleParameter( getOtherwiseResult(), registry );
+	}
+
 }

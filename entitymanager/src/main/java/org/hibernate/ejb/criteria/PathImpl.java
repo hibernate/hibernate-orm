@@ -139,4 +139,8 @@ public class PathImpl<X> extends ExpressionImpl<X> implements Path<X> {
 		throw illegalDereference();
 	}
 
+	public void registerParameters(ParameterRegistry registry) {
+		// none to register
+	}
+
 }

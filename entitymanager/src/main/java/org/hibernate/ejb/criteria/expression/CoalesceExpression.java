@@ -25,6 +25,8 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.QueryBuilder.Coalesce;
+import org.hibernate.ejb.criteria.ParameterContainer;
+import org.hibernate.ejb.criteria.ParameterRegistry;
 import org.hibernate.ejb.criteria.QueryBuilderImpl;
 
 /**
@@ -64,5 +66,16 @@ public class CoalesceExpression<T> extends ExpressionImpl<T> implements Coalesce
 		}
 		return this;
 	}
+
+	public List<Expression<? extends T>> getExpressions() {
+		return expressions;
+	}
+
+	public void registerParameters(ParameterRegistry registry) {
+		for ( Expression expression : getExpressions() ) {
+			Helper.possibleParameter(expression, registry);
+		}
+	}
+
 
 }

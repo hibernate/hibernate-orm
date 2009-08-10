@@ -19,20 +19,22 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.ejb.criteria.expression.function;
+package org.hibernate.ejb.criteria;
 
-import javax.persistence.criteria.Expression;
-import org.hibernate.ejb.criteria.QueryBuilderImpl;
+import javax.persistence.criteria.ParameterExpression;
 
 /**
- * Models the ANSI SQL <tt>UPPER</tt> function.
+ * A registry for parameters.  In criteria queries, parameters must be actively seeked out as expressions and predicates
+ * are added to the {@link org.hibernate.criterion.CriteriaQuery}; this contract allows the various subcomponents to
+ * register any parameters they contain.
  *
  * @author Steve Ebersole
  */
-public class UpperFunction extends ParameterizedFunctionExpression<String> {
-	public static final String NAME = "upper";
-
-	public UpperFunction(QueryBuilderImpl queryBuilder, Expression<String> string) {
-		super( queryBuilder, String.class, NAME, string );
-	}
+public interface ParameterRegistry {
+	/**
+	 * Registers the given parameter with this regitry.
+	 *
+	 * @param parameter The parameter to register.
+	 */
+	public void registerParameter(ParameterExpression<?> parameter);
 }

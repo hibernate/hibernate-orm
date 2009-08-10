@@ -27,6 +27,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import javax.persistence.criteria.Expression;
 
+import org.hibernate.ejb.criteria.ParameterRegistry;
 import org.hibernate.ejb.criteria.QueryBuilderImpl;
 import org.hibernate.ejb.criteria.expression.LiteralExpression;
 
@@ -135,5 +136,12 @@ public class InPredicate<T> extends AbstractSimplePredicate implements QueryBuil
 	public InPredicate<T> value(Expression<? extends T> value) {
 		values.add( value );
 		return this;
+	}
+
+	public void registerParameters(ParameterRegistry registry) {
+		Helper.possibleParameter( getExpressionInternal(), registry );
+		for ( Expression value : getValues() ) {
+			Helper.possibleParameter(value, registry);
+		}
 	}
 }

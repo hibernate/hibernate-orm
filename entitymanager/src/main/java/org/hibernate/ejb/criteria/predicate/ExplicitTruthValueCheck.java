@@ -23,6 +23,7 @@ package org.hibernate.ejb.criteria.predicate;
 
 import javax.persistence.criteria.Expression;
 
+import org.hibernate.ejb.criteria.ParameterRegistry;
 import org.hibernate.ejb.criteria.QueryBuilderImpl;
 
 /**
@@ -52,6 +53,10 @@ public class ExplicitTruthValueCheck extends AbstractSimplePredicate {
 
 	public TruthValue getTruthValue() {
 		return truthValue;
+	}
+
+	public void registerParameters(ParameterRegistry registry) {
+		Helper.possibleParameter( getBooleanExpression(), registry );
 	}
 }
 

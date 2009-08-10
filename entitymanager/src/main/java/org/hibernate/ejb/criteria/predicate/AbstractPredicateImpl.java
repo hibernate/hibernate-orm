@@ -53,11 +53,13 @@ public abstract class AbstractPredicateImpl extends ExpressionImpl<Boolean> impl
 
 	// Selection ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+	@Override
 	public final boolean isCompoundSelection() {
 		// Should always be false for predicates
 		return super.isCompoundSelection();
 	}
 
+	@Override
 	public final List<Selection<?>> getCompoundSelectionItems() {
 		// Should never have sub selection items for predicates
 		return super.getCompoundSelectionItems();

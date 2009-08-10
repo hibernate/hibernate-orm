@@ -1,6 +1,8 @@
 package org.hibernate.ejb.criteria.expression.function;
 
 import javax.persistence.criteria.Expression;
+import org.hibernate.ejb.criteria.ParameterContainer;
+import org.hibernate.ejb.criteria.ParameterRegistry;
 import org.hibernate.ejb.criteria.QueryBuilderImpl;
 import org.hibernate.ejb.criteria.expression.LiteralExpression;
 
@@ -70,5 +72,11 @@ public class SubstringFunction extends BasicFunctionExpression<String> {
 		return value;
 	}
 
+	@Override
+	public void registerParameters(ParameterRegistry registry) {
+		Helper.possibleParameter( getLength(), registry );
+		Helper.possibleParameter( getStart(), registry );
+		Helper.possibleParameter( getValue(), registry );
+	}
 
 }

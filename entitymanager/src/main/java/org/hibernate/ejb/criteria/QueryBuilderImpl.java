@@ -43,14 +43,15 @@ import javax.persistence.Tuple;
 import org.hibernate.ejb.EntityManagerFactoryImpl;
 import org.hibernate.ejb.criteria.expression.BinaryArithmeticOperation;
 import org.hibernate.ejb.criteria.expression.CoalesceExpression;
+import org.hibernate.ejb.criteria.expression.CollectionExpression;
 import org.hibernate.ejb.criteria.expression.CompoundSelectionImpl;
 import org.hibernate.ejb.criteria.expression.ConcatExpression;
-import org.hibernate.ejb.criteria.expression.ExpressionImpl;
 import org.hibernate.ejb.criteria.expression.ParameterExpressionImpl;
 import org.hibernate.ejb.criteria.expression.LiteralExpression;
 import org.hibernate.ejb.criteria.expression.NullifExpression;
 import org.hibernate.ejb.criteria.expression.SearchedCaseExpression;
 import org.hibernate.ejb.criteria.expression.SimpleCaseExpression;
+import org.hibernate.ejb.criteria.expression.SizeOfCollectionExpression;
 import org.hibernate.ejb.criteria.expression.SubqueryComparisonModifierExpression;
 import org.hibernate.ejb.criteria.expression.UnaryArithmeticOperation;
 import org.hibernate.ejb.criteria.expression.function.AbsFunction;
@@ -62,6 +63,7 @@ import org.hibernate.ejb.criteria.expression.function.CurrentTimestampFunction;
 import org.hibernate.ejb.criteria.expression.function.LengthFunction;
 import org.hibernate.ejb.criteria.expression.function.LocateFunction;
 import org.hibernate.ejb.criteria.expression.function.LowerFunction;
+import org.hibernate.ejb.criteria.expression.function.ParameterizedFunctionExpression;
 import org.hibernate.ejb.criteria.expression.function.SqrtFunction;
 import org.hibernate.ejb.criteria.expression.function.SubstringFunction;
 import org.hibernate.ejb.criteria.expression.function.TrimFunction;
@@ -75,7 +77,9 @@ import org.hibernate.ejb.criteria.predicate.ComparisonPredicate;
 import org.hibernate.ejb.criteria.predicate.InPredicate;
 import org.hibernate.ejb.criteria.predicate.BetweenPredicate;
 import org.hibernate.ejb.criteria.predicate.ExistsPredicate;
+import org.hibernate.ejb.criteria.predicate.IsEmptyPredicate;
 import org.hibernate.ejb.criteria.predicate.LikePredicate;
+import org.hibernate.ejb.criteria.predicate.MemberOfPredicate;
 import static org.hibernate.ejb.criteria.predicate.ComparisonPredicate.ComparisonOperator;
 
 /**
@@ -680,7 +684,21 @@ public class QueryBuilderImpl implements QueryBuilder, Serializable {
 	 * {@inheritDoc}
 	 */
 	public <T> Expression<T> function(String name, Class<T> returnType, Expression<?>... arguments) {
-		return new BasicFunctionExpression<T>( this, returnType, name, arguments );
+		return new ParameterizedFunctionExpression<T>( this, returnType, name, arguments );
+	}
+
+	/**
+	 * Create a reference to a function taking no params.
+	 *
+	 * @param name The function name.
+	 * @param returnType The return type.
+	 *
+	 * @param <T> The type of the function return.
+	 *
+	 * @return The function expression
+	 */
+	public <T> Expression<T> function(String name, Class<T> returnType) {
+		return new BasicFunctionExpression<T>( this, returnType, name );
 	}
 
 	/**
@@ -1137,6 +1155,9 @@ public class QueryBuilderImpl implements QueryBuilder, Serializable {
 		return new NullifExpression<Y>( this, type, exp1, exp2 );
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	public <Y> Expression<Y> nullif(Expression<Y> exp1, Y exp2) {
 		return nullif( (Class<Y>)null, exp1, exp2 );
 	}
@@ -1145,6 +1166,9 @@ public class QueryBuilderImpl implements QueryBuilder, Serializable {
 		return new NullifExpression<Y>( this, type, exp1, exp2 );
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	public <C, R> SimpleCase<C, R> selectCase(Expression<? extends C> expression) {
 		return selectCase( (Class<R>)null, expression );
 	}
@@ -1153,6 +1177,9 @@ public class QueryBuilderImpl implements QueryBuilder, Serializable {
 		return new SimpleCaseExpression<C, R>( this, type, expression );
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	public <R> Case<R> selectCase() {
 		return selectCase( (Class<R>)null );
 	}
@@ -1161,49 +1188,109 @@ public class QueryBuilderImpl implements QueryBuilder, Serializable {
 		return new SearchedCaseExpression<R>( this, type );
 	}
 
-
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-	public <C extends Collection<?>> Predicate isEmpty(Expression<C> cExpression) {
-		throw new UnsupportedOperationException( "Not yet implemented!" );
-	}
-
-	public <C extends Collection<?>> Predicate isNotEmpty(Expression<C> colelctionExpression) {
-		return isEmpty( colelctionExpression ).negate();
-	}
-
+	/**
+	 * {@inheritDoc}
+	 */
 	public <C extends Collection<?>> Expression<Integer> size(C c) {
-		throw new UnsupportedOperationException( "Not yet implemented!" );
+		int size = c == null ? 0 : c.size();
+		return new LiteralExpression<Integer>(this, Integer.class, size);
 	}
 
-	public <C extends Collection<?>> Expression<Integer> size(Expression<C> cExpression) {
-		throw new UnsupportedOperationException( "Not yet implemented!" );
+	/**
+	 * {@inheritDoc}
+	 */
+	public <C extends Collection<?>> Expression<Integer> size(Expression<C> exp) {
+		if ( LiteralExpression.class.isInstance(exp) ) {
+			return size( ( (LiteralExpression<C>) exp ).getLiteral() );
+		}
+		else if ( CollectionExpression.class.isInstance(exp) ) {
+			return new SizeOfCollectionExpression<C>(this, (CollectionExpression<C>)null);
+		}
+		// TODO : what other specific types?  any?
+		throw new IllegalArgumentException("unknown collection expression type [" + exp.getClass().getName() + "]" );
 	}
 
-	public <E, C extends Collection<E>> Predicate isMember(E e, Expression<C> cExpression) {
-		throw new UnsupportedOperationException( "Not yet implemented!" );
-	}
-
-	public <E, C extends Collection<E>> Predicate isNotMember(E e, Expression<C> cExpression) {
-		throw new UnsupportedOperationException( "Not yet implemented!" );
-	}
-
-	public <E, C extends Collection<E>> Predicate isMember(Expression<E> eExpression, Expression<C> cExpression) {
-		throw new UnsupportedOperationException( "Not yet implemented!" );
-	}
-
-	public <E, C extends Collection<E>> Predicate isNotMember(Expression<E> eExpression, Expression<C> cExpression) {
-		throw new UnsupportedOperationException( "Not yet implemented!" );
-	}
-
+	/**
+	 * {@inheritDoc}
+	 */
 	public <V, M extends Map<?, V>> Expression<Collection<V>> values(M map) {
-		throw new UnsupportedOperationException( "Not yet implemented!" );
+		return new LiteralExpression<Collection<V>>( this, map.values() );
 	}
 
-	public <K, M extends Map<K, ?>> Expression<Set<K>> keys(M m) {
-		throw new UnsupportedOperationException( "Not yet implemented!" );
+	/**
+	 * {@inheritDoc}
+	 */
+	public <K, M extends Map<K, ?>> Expression<Set<K>> keys(M map) {
+		return new LiteralExpression<Set<K>>( this, map.keySet() );
+	}
+
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public <C extends Collection<?>> Predicate isEmpty(Expression<C> collectionExpression) {
+		if ( CollectionExpression.class.isInstance(collectionExpression) ) {
+			return new IsEmptyPredicate(
+					this,
+					(CollectionExpression<C>) collectionExpression
+			);
+		}
+		// TODO : what other specific types?  any?
+		throw new IllegalArgumentException(
+				"unknown collection expression type [" + collectionExpression.getClass().getName() + "]"
+		);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public <C extends Collection<?>> Predicate isNotEmpty(Expression<C> collectionExpression) {
+		return isEmpty( collectionExpression ).negate();
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public <E, C extends Collection<E>> Predicate isMember(E e, Expression<C> collectionExpression) {
+		if ( ! CollectionExpression.class.isInstance(collectionExpression) ) {
+			throw new IllegalArgumentException(
+					"unknown collection expression type [" + collectionExpression.getClass().getName() + "]"
+			);
+		}
+		return new MemberOfPredicate<E, C>(
+				this,
+				e, 
+				(CollectionExpression<C>)collectionExpression
+		);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public <E, C extends Collection<E>> Predicate isNotMember(E e, Expression<C> cExpression) {
+		return isMember(e, cExpression).negate();
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public <E, C extends Collection<E>> Predicate isMember(Expression<E> elementExpression, Expression<C> collectionExpression) {
+		if ( ! CollectionExpression.class.isInstance(collectionExpression) ) {
+			throw new IllegalArgumentException(
+					"unknown collection expression type [" + collectionExpression.getClass().getName() + "]"
+			);
+		}
+		return new MemberOfPredicate<E, C>(
+				this,
+				elementExpression,
+				(CollectionExpression<C>)collectionExpression
+		);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public <E, C extends Collection<E>> Predicate isNotMember(Expression<E> eExpression, Expression<C> cExpression) {
+		return isMember(eExpression, cExpression).negate();
 	}
 }

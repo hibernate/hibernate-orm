@@ -30,7 +30,7 @@ import org.hibernate.ejb.criteria.QueryBuilderImpl;
  * @author Steve Ebersole
  */
 public class AbsFunction<N extends Number>
-		extends BasicFunctionExpression<N> {
+		extends ParameterizedFunctionExpression<N> {
 
 	public static final String NAME = "abs";
 

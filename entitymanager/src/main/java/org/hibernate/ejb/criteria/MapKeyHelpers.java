@@ -23,6 +23,8 @@ package org.hibernate.ejb.criteria;
 
 import java.lang.reflect.Member;
 import java.util.Map;
+import java.util.Map.Entry;
+import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Join;
 import javax.persistence.criteria.JoinType;
 import javax.persistence.criteria.MapJoin;
@@ -33,6 +35,7 @@ import javax.persistence.metamodel.ManagedType;
 import javax.persistence.metamodel.MapAttribute;
 import javax.persistence.metamodel.SingularAttribute;
 import javax.persistence.metamodel.Type.PersistenceType;
+import org.hibernate.ejb.criteria.expression.ExpressionImpl;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.type.Type;
@@ -235,6 +238,29 @@ public class MapKeyHelpers {
 		public Class<K> getBindableJavaType() {
 			return jpaBinableJavaType;
 		}
+	}
+
+	public static class MapEntryExpression<K,V>
+			extends ExpressionImpl<Map.Entry<K,V>>
+			implements Expression<Map.Entry<K,V>> {
+		private final MapAttribute<?, K, V> attribute;
+
+		public MapEntryExpression(
+				QueryBuilderImpl queryBuilder,
+				Class<Entry<K, V>> javaType,
+				MapAttribute<?, K, V> attribute) {
+			super(queryBuilder, javaType);
+			this.attribute = attribute;
+		}
+
+		public MapAttribute<?, K, V> getAttribute() {
+			return attribute;
+		}
+
+		public void registerParameters(ParameterRegistry registry) {
+			// none to register
+		}
+
 	}
 
 	/**

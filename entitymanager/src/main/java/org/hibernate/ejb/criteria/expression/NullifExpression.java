@@ -22,6 +22,8 @@
 package org.hibernate.ejb.criteria.expression;
 
 import javax.persistence.criteria.Expression;
+import org.hibernate.ejb.criteria.ParameterContainer;
+import org.hibernate.ejb.criteria.ParameterRegistry;
 import org.hibernate.ejb.criteria.QueryBuilderImpl;
 
 /**
@@ -63,6 +65,11 @@ public class NullifExpression<T> extends ExpressionImpl<T> {
 
 	public Expression<?> getSecondaryExpression() {
 		return secondaryExpression;
+	}
+
+	public void registerParameters(ParameterRegistry registry) {
+		Helper.possibleParameter( getPrimaryExpression(), registry );
+		Helper.possibleParameter( getSecondaryExpression(), registry );
 	}
 
 }

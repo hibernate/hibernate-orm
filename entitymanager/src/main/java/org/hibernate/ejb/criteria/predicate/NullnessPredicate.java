@@ -23,7 +23,9 @@ package org.hibernate.ejb.criteria.predicate;
 
 import javax.persistence.criteria.Expression;
 
+import org.hibernate.ejb.criteria.ParameterRegistry;
 import org.hibernate.ejb.criteria.QueryBuilderImpl;
+import org.hibernate.ejb.criteria.expression.UnaryOperatorExpression;
 
 /**
  * Defines a {@link javax.persistence.criteria.Predicate} for checking the
@@ -34,8 +36,8 @@ import org.hibernate.ejb.criteria.QueryBuilderImpl;
  *
  * @author Steve Ebersole
  */
-public class NullnessPredicate extends AbstractSimplePredicate{
-	private final Expression<?> nullnessCheckExpression;
+public class NullnessPredicate extends AbstractSimplePredicate implements UnaryOperatorExpression<Boolean> {
+	private final Expression<?> operand;
 
 	/**
 	 * Constructs the affirmitive form of nullness checking (<i>IS NULL</i>).  To
@@ -45,12 +47,16 @@ public class NullnessPredicate extends AbstractSimplePredicate{
 	 * @param queryBuilder The query builder from whcih this originates.
 	 * @param expression The expression to check.
 	 */
-	public NullnessPredicate(QueryBuilderImpl queryBuilder, Expression<?> expression) {
+	public NullnessPredicate(QueryBuilderImpl queryBuilder, Expression<?> operand) {
 		super( queryBuilder );
-		this.nullnessCheckExpression = expression;
+		this.operand = operand;
 	}
 
-	public Expression<?> getNullnessCheckExpression() {
-		return nullnessCheckExpression;
+	public Expression<?> getOperand() {
+		return operand;
+	}
+
+	public void registerParameters(ParameterRegistry registry) {
+		Helper.possibleParameter( getOperand(), registry );
 	}
 }

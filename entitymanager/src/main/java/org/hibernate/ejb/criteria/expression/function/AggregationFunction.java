@@ -30,21 +30,7 @@ import org.hibernate.ejb.criteria.expression.LiteralExpression;
  *
  * @author Steve Ebersole
  */
-public class AggregationFunction<T> extends BasicFunctionExpression<T> {
-	/**
-	 * Constructs an aggregation function with no arguments (<tt>COUNT(*)</tt> e.g.).
-	 * 
-	 * @param queryBuilder The query builder instance.
-	 * @param returnType The function return type.
-	 * @param functionName The name of the function.
-	 */
-	public AggregationFunction(
-			QueryBuilderImpl queryBuilder,
-			Class<T> returnType,
-			String functionName) {
-		super( queryBuilder, returnType, functionName, NO_ARGS );
-	}
-
+public class AggregationFunction<T> extends ParameterizedFunctionExpression<T> {
 	/**
 	 * Constructs an aggregation function with a single literal argument.
 	 *

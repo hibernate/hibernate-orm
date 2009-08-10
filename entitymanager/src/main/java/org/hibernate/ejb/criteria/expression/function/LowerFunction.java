@@ -29,7 +29,7 @@ import org.hibernate.ejb.criteria.QueryBuilderImpl;
  *
  * @author Steve Ebersole
  */
-public class LowerFunction extends BasicFunctionExpression<String> {
+public class LowerFunction extends ParameterizedFunctionExpression<String> {
 	public static final String NAME = "lower";
 
 	public LowerFunction(QueryBuilderImpl queryBuilder, Expression<String> string) {

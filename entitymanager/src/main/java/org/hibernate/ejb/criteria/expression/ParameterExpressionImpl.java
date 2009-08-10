@@ -23,6 +23,7 @@ package org.hibernate.ejb.criteria.expression;
 
 import javax.persistence.criteria.ParameterExpression;
 
+import org.hibernate.ejb.criteria.ParameterRegistry;
 import org.hibernate.ejb.criteria.QueryBuilderImpl;
 
 /**
@@ -68,4 +69,9 @@ public class ParameterExpressionImpl<T> extends ExpressionImpl<T> implements Par
 	public Integer getPosition() {
 		return position;
 	}
+
+	public void registerParameters(ParameterRegistry registry) {
+		registry.registerParameter( this );
+	}
+
 }

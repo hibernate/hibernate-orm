@@ -23,6 +23,8 @@ package org.hibernate.ejb.criteria.expression;
 
 import javax.persistence.criteria.Expression;
 
+import org.hibernate.ejb.criteria.ParameterContainer;
+import org.hibernate.ejb.criteria.ParameterRegistry;
 import org.hibernate.ejb.criteria.QueryBuilderImpl;
 
 /**
@@ -89,4 +91,10 @@ public class BinaryArithmeticOperation<N extends Number>
 	public Expression<? extends N> getLeftHandOperand() {
 		return lhs;
 	}
+
+	public void registerParameters(ParameterRegistry registry) {
+		Helper.possibleParameter( getRightHandOperand(), registry );
+		Helper.possibleParameter( getLeftHandOperand(), registry );
+	}
+
 }

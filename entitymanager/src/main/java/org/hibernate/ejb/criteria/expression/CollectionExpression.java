@@ -22,6 +22,7 @@
 package org.hibernate.ejb.criteria.expression;
 
 import javax.persistence.metamodel.PluralAttribute;
+import org.hibernate.ejb.criteria.ParameterRegistry;
 import org.hibernate.ejb.criteria.QueryBuilderImpl;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
@@ -71,4 +72,7 @@ public class CollectionExpression<C> extends ExpressionImpl<C> {
 		return persister;
 	}
 
+	public void registerParameters(ParameterRegistry registry) {
+		// none to register
+	}
 }

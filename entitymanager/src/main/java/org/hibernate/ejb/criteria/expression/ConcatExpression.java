@@ -22,6 +22,8 @@
 package org.hibernate.ejb.criteria.expression;
 
 import javax.persistence.criteria.Expression;
+import org.hibernate.ejb.criteria.ParameterContainer;
+import org.hibernate.ejb.criteria.ParameterRegistry;
 import org.hibernate.ejb.criteria.QueryBuilderImpl;
 
 /**
@@ -66,6 +68,11 @@ public class ConcatExpression extends ExpressionImpl<String> {
 
 	public Expression<String> getString2() {
 		return string2;
+	}
+
+	public void registerParameters(ParameterRegistry registry) {
+		Helper.possibleParameter( getString1(), registry );
+		Helper.possibleParameter( getString2(), registry );
 	}
 
 }

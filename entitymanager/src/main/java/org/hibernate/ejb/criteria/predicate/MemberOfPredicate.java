@@ -21,62 +21,55 @@
  */
 package org.hibernate.ejb.criteria.predicate;
 
+import java.util.Collection;
 import javax.persistence.criteria.Expression;
-
-import org.hibernate.ejb.criteria.ParameterContainer;
 import org.hibernate.ejb.criteria.ParameterRegistry;
 import org.hibernate.ejb.criteria.QueryBuilderImpl;
+import org.hibernate.ejb.criteria.expression.CollectionExpression;
+import org.hibernate.ejb.criteria.expression.LiteralExpression;
 
 /**
- * Models a <tt>BETWEEN</tt> {@link javax.persistence.criteria.Predicate}.
+ * TODO : javadoc
  *
  * @author Steve Ebersole
  */
-public class BetweenPredicate<Y> extends AbstractSimplePredicate {
-	private final Expression<? extends Y> expression;
-	private final Expression<? extends Y> lowerBound;
-	private final Expression<? extends Y> upperBound;
+public class MemberOfPredicate<E, C extends Collection<E>>
+		extends AbstractSimplePredicate {
 
-	public BetweenPredicate(
+	private final Expression<E> elementExpression;
+	private final CollectionExpression<C> collectionExpression;
+
+	public MemberOfPredicate(
 			QueryBuilderImpl queryBuilder,
-			Expression<? extends Y> expression,
-			Y lowerBound,
-			Y upperBound) {
+			Expression<E> elementExpression,
+			CollectionExpression<C> collectionExpression) {
+		super(queryBuilder);
+		this.elementExpression = elementExpression;
+		this.collectionExpression = collectionExpression;
+	}
+
+	public MemberOfPredicate(
+			QueryBuilderImpl queryBuilder,
+			E element,
+			CollectionExpression<C> collectionExpression) {
 		this(
 				queryBuilder,
-				expression,
-				queryBuilder.literal( lowerBound ),
-				queryBuilder.literal( upperBound )
+				new LiteralExpression<E>( queryBuilder, element ),
+				collectionExpression
 		);
 	}
 
-	public BetweenPredicate(
-			QueryBuilderImpl queryBuilder,
-			Expression<? extends Y> expression,
-			Expression<? extends Y> lowerBound,
-			Expression<? extends Y> upperBound) {
-		super( queryBuilder );
-		this.expression = expression;
-		this.lowerBound = lowerBound;
-		this.upperBound = upperBound;
+	public CollectionExpression<C> getCollectionExpression() {
+		return collectionExpression;
 	}
 
-	public Expression<? extends Y> getExpression() {
-		return expression;
-	}
-
-	public Expression<? extends Y> getLowerBound() {
-		return lowerBound;
-	}
-
-	public Expression<? extends Y> getUpperBound() {
-		return upperBound;
+	public Expression<E> getElementExpression() {
+		return elementExpression;
 	}
 
 	public void registerParameters(ParameterRegistry registry) {
-		Helper.possibleParameter( getExpression(), registry );
-		Helper.possibleParameter( getLowerBound(), registry );
-		Helper.possibleParameter( getUpperBound(), registry );
+		Helper.possibleParameter( getCollectionExpression(), registry );
+		Helper.possibleParameter( getElementExpression(), registry );
 	}
 
 }

@@ -21,15 +21,18 @@
  */
 package org.hibernate.ejb.criteria;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Set;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Collections;
+import java.util.LinkedHashSet;
 import javax.persistence.criteria.AbstractQuery;
 import javax.persistence.criteria.Root;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Expression;
+import javax.persistence.criteria.ParameterExpression;
 import javax.persistence.criteria.Selection;
 import javax.persistence.criteria.Subquery;
 import javax.persistence.metamodel.EntityType;
@@ -61,6 +64,27 @@ public class QueryStructure<T> {
 	private List<Expression<?>> groupings = Collections.emptyList();
 	private Predicate having;
 	private List<Subquery<?>> subqueries;
+
+
+	// PARAMETERS ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	public Set<ParameterExpression<?>> getParameters() {
+		final Set<ParameterExpression<?>> parameters = new LinkedHashSet<ParameterExpression<?>>();
+		final ParameterRegistry registry = new ParameterRegistry() {
+			public void registerParameter(ParameterExpression<?> parameter) {
+				parameters.add( parameter );
+			}
+		};
+
+		ParameterContainer.Helper.possibleParameter(selection, registry);
+		ParameterContainer.Helper.possibleParameter(restriction, registry);
+		ParameterContainer.Helper.possibleParameter(having, registry);
+		for ( Subquery subquery : getSubqueries() ) {
+			ParameterContainer.Helper.possibleParameter(subquery, registry);
+		}
+
+		return parameters;
+	}
 
 
 	// SELECTION ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

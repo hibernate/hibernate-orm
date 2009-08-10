@@ -21,14 +21,10 @@
  */
 package org.hibernate.ejb.criteria.expression.function;
 
-import java.util.ArrayList;
-import org.hibernate.ejb.criteria.expression.*;
-import java.util.List;
-import java.util.Arrays;
-import java.util.Collections;
-import javax.persistence.criteria.Expression;
+import org.hibernate.ejb.criteria.ParameterRegistry;
 
 import org.hibernate.ejb.criteria.QueryBuilderImpl;
+import org.hibernate.ejb.criteria.expression.ExpressionImpl;
 
 /**
  * Models the basic conept of a SQL function.
@@ -39,44 +35,14 @@ public class BasicFunctionExpression<X>
 		extends ExpressionImpl<X>
 		implements FunctionExpression<X> {
 
-	public static final List<Expression<?>> NO_ARGS = Collections.emptyList();
-
 	private final String functionName;
-	private final List<Expression<?>> argumentExpressions;
 
 	public BasicFunctionExpression(
 			QueryBuilderImpl queryBuilder,
 			Class<X> javaType,
 			String functionName) {
-		this( queryBuilder, javaType, functionName, NO_ARGS );
-	}
-
-	public BasicFunctionExpression(
-			QueryBuilderImpl queryBuilder,
-			Class<X> javaType,
-			String functionName,
-			List<Expression<?>> argumentExpressions) {
 		super( queryBuilder, javaType );
 		this.functionName = functionName;
-		this.argumentExpressions = argumentExpressions;
-	}
-
-	public BasicFunctionExpression(
-			QueryBuilderImpl queryBuilder,
-			Class<X> javaType,
-			String functionName,
-			Expression<?>... argumentExpressions) {
-		super( queryBuilder, javaType );
-		this.functionName = functionName;
-		this.argumentExpressions = Arrays.asList( argumentExpressions );
-	}
-
-	protected  static List<Expression<?>> wrapAsLiterals(QueryBuilderImpl queryBuilder, Object... literalArguments) {
-		List<Expression<?>> arguments = new ArrayList<Expression<?>>( properSize( literalArguments.length) );
-		for ( Object o : literalArguments ) {
-			arguments.add( new LiteralExpression( queryBuilder, o ) );
-		}
-		return arguments;
 	}
 
 	protected  static int properSize(int number) {
@@ -91,8 +57,7 @@ public class BasicFunctionExpression<X>
 		return false;
 	}
 
-
-	public List<Expression<?>> getArgumentExpressions() {
-		return argumentExpressions;
+	public void registerParameters(ParameterRegistry registry) {
+		// nothing to do here...
 	}
 }

@@ -29,7 +29,7 @@ import org.hibernate.ejb.criteria.QueryBuilderImpl;
  *
  * @author Steve Ebersole
  */
-public class SqrtFunction extends BasicFunctionExpression<Double> {
+public class SqrtFunction extends ParameterizedFunctionExpression<Double> {
 	public static final String NAME = "sqrt";
 
 	public SqrtFunction(QueryBuilderImpl queryBuilder, Expression<? extends Number> expression) {

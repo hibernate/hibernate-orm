@@ -21,10 +21,11 @@
  */
 package org.hibernate.ejb.criteria.expression;
 
+import org.hibernate.ejb.criteria.ParameterRegistry;
 import org.hibernate.ejb.criteria.QueryBuilderImpl;
 
 /**
- * TODO : javadoc
+ * Represents a literal expression.
  *
  * @author Steve Ebersole
  */
@@ -46,5 +47,9 @@ public class LiteralExpression<T> extends ExpressionImpl<T> {
 
 	public T getLiteral() {
 		return literal;
+	}
+
+	public void registerParameters(ParameterRegistry registry) {
+		// nothign to do
 	}
 }

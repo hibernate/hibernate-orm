@@ -21,6 +21,7 @@
  */
 package org.hibernate.ejb.criteria.expression.function;
 
+import org.hibernate.ejb.criteria.ParameterRegistry;
 import org.hibernate.ejb.criteria.QueryBuilderImpl;
 import org.hibernate.ejb.criteria.expression.ExpressionImpl;
 
@@ -32,7 +33,7 @@ import org.hibernate.ejb.criteria.expression.ExpressionImpl;
  *
  * @author Steve Ebersole
  */
-public class CastFunction<T,Y> extends ExpressionImpl<T> implements FunctionExpression<T> {
+public class CastFunction<T,Y> extends BasicFunctionExpression<T> implements FunctionExpression<T> {
 	public static final String CAST_NAME = "cast";
 
 	private final ExpressionImpl<Y> castSource;
@@ -41,20 +42,17 @@ public class CastFunction<T,Y> extends ExpressionImpl<T> implements FunctionExpr
 			QueryBuilderImpl queryBuilder,
 			Class<T> javaType,
 			ExpressionImpl<Y> castSource) {
-		super( queryBuilder, javaType );
+		super( queryBuilder, javaType, CAST_NAME );
 		this.castSource = castSource;
-	}
-
-	public String getFunctionName() {
-		return CAST_NAME;
-	}
-
-	public boolean isAggregation() {
-		return false;
 	}
 
 	public ExpressionImpl<Y> getCastSource() {
 		return castSource;
+	}
+
+	@Override
+	public void registerParameters(ParameterRegistry registry) {
+		Helper.possibleParameter( getCastSource(), registry );
 	}
 
 }

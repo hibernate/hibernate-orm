@@ -24,6 +24,7 @@ package org.hibernate.ejb.criteria.expression;
 import java.util.List;
 import javax.persistence.criteria.Selection;
 
+import org.hibernate.ejb.criteria.ParameterContainer;
 import org.hibernate.ejb.criteria.QueryBuilderImpl;
 
 /**
@@ -32,7 +33,9 @@ import org.hibernate.ejb.criteria.QueryBuilderImpl;
  *
  * @author Steve Ebersole
  */
-public class SelectionImpl<X> extends AbstractTupleElement<X> implements Selection<X> {
+public abstract class SelectionImpl<X>
+		extends AbstractTupleElement<X>
+		implements Selection<X>, ParameterContainer {
 	public SelectionImpl(QueryBuilderImpl queryBuilder, Class<X> javaType) {
 		super( queryBuilder, javaType );
 	}

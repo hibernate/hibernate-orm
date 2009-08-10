@@ -21,6 +21,7 @@
  */
 package org.hibernate.ejb.criteria.expression;
 
+import org.hibernate.ejb.criteria.ParameterRegistry;
 import org.hibernate.ejb.criteria.QueryBuilderImpl;
 
 /**
@@ -32,4 +33,9 @@ public class EntityTypeExpression<T> extends ExpressionImpl<T> {
 	public EntityTypeExpression(QueryBuilderImpl queryBuilder, Class<T> javaType) {
 		super( queryBuilder, javaType );
 	}
+
+	public void registerParameters(ParameterRegistry registry) {
+		// nothign to do
+	}
+
 }

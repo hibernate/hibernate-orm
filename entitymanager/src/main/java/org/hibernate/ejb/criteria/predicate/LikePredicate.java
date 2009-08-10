@@ -22,6 +22,7 @@
 package org.hibernate.ejb.criteria.predicate;
 
 import javax.persistence.criteria.Expression;
+import org.hibernate.ejb.criteria.ParameterRegistry;
 import org.hibernate.ejb.criteria.QueryBuilderImpl;
 import org.hibernate.ejb.criteria.expression.LiteralExpression;
 
@@ -109,6 +110,12 @@ public class LikePredicate extends AbstractSimplePredicate {
 
 	public Expression<String> getPattern() {
 		return pattern;
+	}
+
+	public void registerParameters(ParameterRegistry registry) {
+		Helper.possibleParameter( getEscapeCharacter(), registry );
+		Helper.possibleParameter( getMatchExpression(), registry );
+		Helper.possibleParameter( getPattern(), registry );
 	}
 
 

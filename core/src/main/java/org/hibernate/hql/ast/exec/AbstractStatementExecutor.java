@@ -28,7 +28,6 @@ import java.sql.PreparedStatement;
 import java.sql.Connection;
 import java.sql.Statement;
 import java.util.List;
-import java.util.Iterator;
 import java.util.Collections;
 
 import org.hibernate.HibernateException;
@@ -240,10 +239,11 @@ public abstract class AbstractStatementExecutor implements StatementExecutor {
 	protected void coordinateSharedCacheCleanup(SessionImplementor session) {
 		BulkOperationCleanupAction action = new BulkOperationCleanupAction( session, getAffectedQueryables() );
 
-		action.init();
-
 		if ( session.isEventSource() ) {
 			( ( EventSource ) session ).getActionQueue().addAction( action );
+		}
+		else {
+			action.afterTransactionCompletion( true );
 		}
 	}
 

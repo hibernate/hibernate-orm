@@ -1074,11 +1074,12 @@ public final class HbmBinder {
 					column.setValue( simpleValue );
 					column.setTypeIndex( count++ );
 					bindColumn( columnElement, column, isNullable );
+					final String columnName = columnElement.attributeValue( "name" );
 					String logicalColumnName = mappings.getNamingStrategy().logicalColumnName(
-							columnElement.attributeValue( "name" ), propertyPath
+							columnName, propertyPath
 					);
 					column.setName( mappings.getNamingStrategy().columnName(
-						logicalColumnName ) );
+						columnName ) );
 					if ( table != null ) {
 						table.addColumn( column ); // table=null -> an association
 						                           // - fill it in later
@@ -1115,10 +1116,11 @@ public final class HbmBinder {
 			Column column = new Column();
 			column.setValue( simpleValue );
 			bindColumn( node, column, isNullable );
+			final String columnName = columnAttribute.getValue();
 			String logicalColumnName = mappings.getNamingStrategy().logicalColumnName(
-					columnAttribute.getValue(), propertyPath
+					columnName, propertyPath
 			);
-			column.setName( mappings.getNamingStrategy().columnName( logicalColumnName ) );
+			column.setName( mappings.getNamingStrategy().columnName( columnName ) );
 			if ( table != null ) {
 				table.addColumn( column ); // table=null -> an association - fill
 				                           // it in later

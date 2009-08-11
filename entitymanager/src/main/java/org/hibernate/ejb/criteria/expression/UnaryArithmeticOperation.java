@@ -1,12 +1,11 @@
 package org.hibernate.ejb.criteria.expression;
 
 import javax.persistence.criteria.Expression;
-import org.hibernate.ejb.criteria.ParameterContainer;
 import org.hibernate.ejb.criteria.ParameterRegistry;
 import org.hibernate.ejb.criteria.QueryBuilderImpl;
 
 /**
- * Models arithmetc operations with two operands.
+ * Models unary arithmetic operation (unary plus and unary minus).
  *
  * @author Steve Ebersole
  */
@@ -30,14 +29,20 @@ public class UnaryArithmeticOperation<T>
 		this.operand = operand;
 	}
 
-	public Expression<T> getOperand() {
-		return operand;
-	}
-
 	public Operation getOperation() {
 		return operation;
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
+	public Expression<T> getOperand() {
+		return operand;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
 	public void registerParameters(ParameterRegistry registry) {
 		Helper.possibleParameter( getOperand(), registry );
 	}

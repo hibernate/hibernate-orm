@@ -23,7 +23,6 @@ package org.hibernate.ejb.criteria.expression;
 
 import javax.persistence.criteria.Expression;
 
-import org.hibernate.ejb.criteria.ParameterContainer;
 import org.hibernate.ejb.criteria.ParameterRegistry;
 import org.hibernate.ejb.criteria.QueryBuilderImpl;
 
@@ -44,18 +43,66 @@ public class BinaryArithmeticOperation<N extends Number>
 	private final Expression<? extends N> rhs;
 	private final Expression<? extends N> lhs;
 
+	/**
+	 * Helper for determining the appropriate operation return type based on one of the operands as an expression.
+	 *
+	 * @param defaultType The default return type to use if we cannot determine the java type of 'expression' operand.
+	 * @param expression The operand.
+	 *
+	 * @return The appropriate return type.
+	 */
+	public static Class<? extends Number> determineReturnType(
+			Class<? extends Number> defaultType,
+			Expression<? extends Number> expression) {
+		return expression == null || expression.getJavaType() == null 
+				? defaultType
+				: expression.getJavaType();
+	}
+
+	/**
+	 * Helper for determining the appropriate operation return type based on one of the operands as a literal.
+	 *
+	 * @param defaultType The default return type to use if we cannot determine the java type of 'numberLiteral' operand.
+	 * @param numberLiteral The operand.
+	 *
+	 * @return The appropriate return type.
+	 */
+	public static Class<? extends Number> determineReturnType(
+			Class<? extends Number> defaultType,
+			Number numberLiteral) {
+		return numberLiteral == null ? defaultType : numberLiteral.getClass();
+	}
+
+	/**
+	 * Creates an arithmethic operation based on 2 expressions.
+	 *
+	 * @param queryBuilder The builder for query components.
+	 * @param resultType The operation result type
+	 * @param operator The operator (type of operation).
+	 * @param rhs The right-hand operand
+	 * @param lhs The left-hand operand.
+	 */
 	public BinaryArithmeticOperation(
 			QueryBuilderImpl queryBuilder,
-			Class<N> javaType,
+			Class<N> resultType,
 			Operation operator,
 			Expression<? extends N> rhs,
 			Expression<? extends N> lhs) {
-		super( queryBuilder, javaType );
+		super( queryBuilder, resultType );
 		this.operator = operator;
 		this.rhs = rhs;
 		this.lhs = lhs;
 	}
 
+	/**
+	 * Creates an arithmethic operation based on an expression and a literal.
+	 *
+	 * @param queryBuilder The builder for query components.
+	 * @param resultType The operation result type
+	 * @param operator The operator (type of operation).
+	 * @param rhs The right-hand operand
+	 * @param lhs The left-hand operand (the literal).
+	 */
 	public BinaryArithmeticOperation(
 			QueryBuilderImpl queryBuilder,
 			Class<N> javaType,
@@ -68,6 +115,15 @@ public class BinaryArithmeticOperation<N extends Number>
 		this.lhs = new LiteralExpression<N>( queryBuilder, lhs );
 	}
 
+	/**
+	 * Creates an arithmethic operation based on an expression and a literal.
+	 *
+	 * @param queryBuilder The builder for query components.
+	 * @param resultType The operation result type
+	 * @param operator The operator (type of operation).
+	 * @param rhs The right-hand operand (the literal).
+	 * @param lhs The left-hand operand
+	 */
 	public BinaryArithmeticOperation(
 			QueryBuilderImpl queryBuilder,
 			Class<N> javaType,
@@ -79,19 +135,27 @@ public class BinaryArithmeticOperation<N extends Number>
 		this.rhs = new LiteralExpression<N>( queryBuilder, rhs );
 		this.lhs = lhs;
 	}
-
 	public Operation getOperator() {
 		return operator;
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	public Expression<? extends N> getRightHandOperand() {
 		return rhs;
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	public Expression<? extends N> getLeftHandOperand() {
 		return lhs;
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	public void registerParameters(ParameterRegistry registry) {
 		Helper.possibleParameter( getRightHandOperand(), registry );
 		Helper.possibleParameter( getLeftHandOperand(), registry );

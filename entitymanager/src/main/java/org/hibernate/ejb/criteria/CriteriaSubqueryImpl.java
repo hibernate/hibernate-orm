@@ -38,7 +38,8 @@ import javax.persistence.metamodel.EntityType;
 import org.hibernate.ejb.criteria.expression.ExpressionImpl;
 
 /**
- * TODO : javadoc
+ * The Hibernate implementation of the JPA {@link Subquery} contract.  Mostlty a set of delegation to its internal
+ * {@link QueryStructure}.
  *
  * @author Steve Ebersole
  */

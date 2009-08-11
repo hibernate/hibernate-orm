@@ -813,9 +813,11 @@ public class QueryBuilderImpl implements QueryBuilder, Serializable {
 	 * {@inheritDoc}
 	 */
 	public <N extends Number> Expression<N> sum(Expression<? extends N> expression1, Expression<? extends N> expression2) {
+		Class<N> type = (Class<N>)BinaryArithmeticOperation.determineReturnType( (Class)Number.class, (Expression)expression1 );
+		type = (Class<N>)BinaryArithmeticOperation.determineReturnType( type, (Expression)expression2 );
 		return new BinaryArithmeticOperation<N>(
 				this,
-				(Class<N>) expression1.getJavaType(),
+				type,
 				BinaryArithmeticOperation.Operation.ADD,
 				expression1,
 				expression2
@@ -826,9 +828,11 @@ public class QueryBuilderImpl implements QueryBuilder, Serializable {
 	 * {@inheritDoc}
 	 */
 	public <N extends Number> Expression<N> prod(Expression<? extends N> expression1, Expression<? extends N> expression2) {
+		Class<N> type = (Class<N>)BinaryArithmeticOperation.determineReturnType( (Class)Number.class, (Expression)expression1 );
+		type = (Class<N>)BinaryArithmeticOperation.determineReturnType( type, (Expression)expression2 );
 		return new BinaryArithmeticOperation<N>(
 				this,
-				(Class<N>) expression1.getJavaType(),
+				type,
 				BinaryArithmeticOperation.Operation.MULTIPLY,
 				expression1,
 				expression2
@@ -839,6 +843,8 @@ public class QueryBuilderImpl implements QueryBuilder, Serializable {
 	 * {@inheritDoc}
 	 */
 	public <N extends Number> Expression<N> diff(Expression<? extends N> expression1, Expression<? extends N> expression2) {
+		Class<N> type = (Class<N>)BinaryArithmeticOperation.determineReturnType( (Class)Number.class, (Expression)expression1 );
+		type = (Class<N>)BinaryArithmeticOperation.determineReturnType( type, (Expression)expression2 );
 		return new BinaryArithmeticOperation<N>(
 				this,
 				(Class<N>) expression1.getJavaType(),
@@ -852,9 +858,11 @@ public class QueryBuilderImpl implements QueryBuilder, Serializable {
 	 * {@inheritDoc}
 	 */
 	public <N extends Number> Expression<N> sum(Expression<? extends N> expression, N n) {
+		Class<N> type = (Class<N>)BinaryArithmeticOperation.determineReturnType( (Class)Number.class, (Expression)expression );
+		type = (Class<N>)BinaryArithmeticOperation.determineReturnType( type, n );
 		return new BinaryArithmeticOperation<N>(
 				this,
-				(Class<N>) expression.getJavaType(),
+				type,
 				BinaryArithmeticOperation.Operation.ADD,
 				expression,
 				n
@@ -865,9 +873,11 @@ public class QueryBuilderImpl implements QueryBuilder, Serializable {
 	 * {@inheritDoc}
 	 */
 	public <N extends Number> Expression<N> prod(Expression<? extends N> expression, N n) {
+		Class<N> type = (Class<N>)BinaryArithmeticOperation.determineReturnType( (Class)Number.class, (Expression)expression );
+		type = (Class<N>)BinaryArithmeticOperation.determineReturnType( type, n );
 		return new BinaryArithmeticOperation<N>(
 				this,
-				(Class<N>) expression.getJavaType(),
+				type,
 				BinaryArithmeticOperation.Operation.MULTIPLY,
 				expression,
 				n
@@ -878,9 +888,11 @@ public class QueryBuilderImpl implements QueryBuilder, Serializable {
 	 * {@inheritDoc}
 	 */
 	public <N extends Number> Expression<N> diff(Expression<? extends N> expression, N n) {
+		Class<N> type = (Class<N>)BinaryArithmeticOperation.determineReturnType( (Class)Number.class, (Expression)expression );
+		type = (Class<N>)BinaryArithmeticOperation.determineReturnType( type, n );
 		return new BinaryArithmeticOperation<N>(
 				this,
-				(Class<N>) expression.getJavaType(),
+				type,
 				BinaryArithmeticOperation.Operation.SUBTRACT,
 				expression,
 				n
@@ -891,9 +903,11 @@ public class QueryBuilderImpl implements QueryBuilder, Serializable {
 	 * {@inheritDoc}
 	 */
 	public <N extends Number> Expression<N> sum(N n, Expression<? extends N> expression) {
+		Class<N> type = (Class<N>)BinaryArithmeticOperation.determineReturnType( (Class)Number.class, (Expression)expression );
+		type = (Class<N>)BinaryArithmeticOperation.determineReturnType( type, n );
 		return new BinaryArithmeticOperation<N>(
 				this,
-				(Class<N>) expression.getJavaType(),
+				type,
 				BinaryArithmeticOperation.Operation.ADD,
 				n,
 				expression
@@ -904,9 +918,11 @@ public class QueryBuilderImpl implements QueryBuilder, Serializable {
 	 * {@inheritDoc}
 	 */
 	public <N extends Number> Expression<N> prod(N n, Expression<? extends N> expression) {
+		Class<N> type = (Class<N>)BinaryArithmeticOperation.determineReturnType( (Class)Number.class, (Expression)expression );
+		type = (Class<N>)BinaryArithmeticOperation.determineReturnType( type, n );
 		return new BinaryArithmeticOperation<N>(
 				this,
-				(Class<N>) expression.getJavaType(),
+				type,
 				BinaryArithmeticOperation.Operation.MULTIPLY,
 				n,
 				expression
@@ -917,9 +933,11 @@ public class QueryBuilderImpl implements QueryBuilder, Serializable {
 	 * {@inheritDoc}
 	 */
 	public <N extends Number> Expression<N> diff(N n, Expression<? extends N> expression) {
+		Class<N> type = (Class<N>)BinaryArithmeticOperation.determineReturnType( (Class)Number.class, (Expression)expression );
+		type = (Class<N>)BinaryArithmeticOperation.determineReturnType( type, n );
 		return new BinaryArithmeticOperation<N>(
 				this,
-				(Class<N>) expression.getJavaType(),
+				type,
 				BinaryArithmeticOperation.Operation.SUBTRACT,
 				n,
 				expression
@@ -930,24 +948,39 @@ public class QueryBuilderImpl implements QueryBuilder, Serializable {
 	 * {@inheritDoc}
 	 */
 	public Expression<Number> quot(Expression<? extends Number> expression1, Expression<? extends Number> expression2) {
-		// TODO : still open question whether this should be a quotient (integer division) or division
-		throw new UnsupportedOperationException( "Not yet implemented!" );
+		return new BinaryArithmeticOperation<Number>(
+				this,
+				Number.class,
+				BinaryArithmeticOperation.Operation.DIVIDE,
+				expression1,
+				expression2
+		);
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
 	public Expression<Number> quot(Expression<? extends Number> expression, Number number) {
-		// TODO : still open question whether this should be a quotient (integer division) or division
-		throw new UnsupportedOperationException( "Not yet implemented!" );
+		return new BinaryArithmeticOperation<Number>(
+				this,
+				Number.class,
+				BinaryArithmeticOperation.Operation.DIVIDE,
+				expression,
+				number
+		);
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
 	public Expression<Number> quot(Number number, Expression<? extends Number> expression) {
-		// TODO : still open question whether this should be a quotient (integer division) or division
-		throw new UnsupportedOperationException( "Not yet implemented!" );
+		return new BinaryArithmeticOperation<Number>(
+				this,
+				Number.class,
+				BinaryArithmeticOperation.Operation.DIVIDE,
+				number,
+				expression
+		);
 	}
 
 	/**

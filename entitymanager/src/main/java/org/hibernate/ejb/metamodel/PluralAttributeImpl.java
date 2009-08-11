@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.List;
 import java.util.Set;
 import java.util.Collection;
+import java.io.Serializable;
 import javax.persistence.metamodel.PluralAttribute;
 import javax.persistence.metamodel.ManagedType;
 import javax.persistence.metamodel.Type;
@@ -18,7 +19,7 @@ import org.hibernate.mapping.Property;
 /**
  * @author Emmanuel Bernard
  */
-public abstract class PluralAttributeImpl<X, C, E> implements PluralAttribute<X, C, E> {
+public abstract class PluralAttributeImpl<X, C, E> implements PluralAttribute<X, C, E>, Serializable {
 
 	private final ManagedType<X> ownerType;
 	private final Type<E> elementType;

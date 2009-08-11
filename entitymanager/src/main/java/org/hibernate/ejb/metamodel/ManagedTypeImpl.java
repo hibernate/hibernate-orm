@@ -6,6 +6,7 @@ import java.util.HashSet;
 import java.util.Collections;
 import java.util.Map;
 import java.util.HashMap;
+import java.io.Serializable;
 
 import javax.persistence.metamodel.ManagedType;
 import javax.persistence.metamodel.Attribute;
@@ -23,12 +24,13 @@ import org.hibernate.annotations.common.AssertionFailure;
 /**
  * @author Emmanuel Bernard
  */
-public abstract class ManagedTypeImpl<X> implements ManagedType<X> {
+public abstract class ManagedTypeImpl<X> implements ManagedType<X>, Serializable {
 	private final Class<X> javaClass;
 	private final Map<String,Attribute<X, ?>> declaredAttributes;
 	private final Map<String,SingularAttribute<X, ?>> declaredSingularAttributes;
 	private final Map<String,PluralAttribute<X, ?, ?>> declaredCollections;
 
+	
 
 	ManagedTypeImpl(Class<X> clazz, Iterator<Property> properties, MetadataContext context) {
 		this.javaClass = clazz;

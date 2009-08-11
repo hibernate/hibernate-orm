@@ -66,6 +66,7 @@ public class CriteriaSubqueryImpl<T> extends ExpressionImpl<T> implements Subque
 		for ( ParameterExpression param : queryStructure.getParameters() ) {
 			registry.registerParameter( param );
 		}
+		// TODO : correlations.  Can they contain parameters?
 	}
 
 

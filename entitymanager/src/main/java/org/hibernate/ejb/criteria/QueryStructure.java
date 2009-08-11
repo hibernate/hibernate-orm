@@ -21,7 +21,6 @@
  */
 package org.hibernate.ejb.criteria;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Set;
 import java.util.HashSet;
@@ -81,6 +80,12 @@ public class QueryStructure<T> {
 		ParameterContainer.Helper.possibleParameter(having, registry);
 		for ( Subquery subquery : getSubqueries() ) {
 			ParameterContainer.Helper.possibleParameter(subquery, registry);
+		}
+
+		// both group-by and having expressions can (though unlikely) contain parameters...
+		ParameterContainer.Helper.possibleParameter(having, registry);
+		for ( Expression<?> grouping : groupings ) {
+			ParameterContainer.Helper.possibleParameter(grouping, registry);
 		}
 
 		return parameters;

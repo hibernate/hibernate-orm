@@ -49,18 +49,23 @@ public class EntityTypeImpl<X> extends ManagedTypeImpl<X> implements EntityType<
 	}
 
 	private <A> SingularAttribute<X, A> buildIdAttribute(PersistentClass persistentClass) {
-		final Property identifierProperty = persistentClass.getIdentifierProperty();
-		@SuppressWarnings( "unchecked" )
-		Class<A> idClass = identifierProperty.getType().getReturnedClass();
-		final Type<A> attrType = new BasicTypeImpl<A>( idClass,
-														identifierProperty.isComposite() ?
-																PersistenceType.EMBEDDABLE :
-																PersistenceType.BASIC);
-		return SingularAttributeImpl.create(this, attrType )
-										.property(identifierProperty)
-										//.member( null ) //TODO member
-										.id()
-										.build();
+		if ( hasIdentifierProperty ) {
+			final Property identifierProperty = persistentClass.getIdentifierProperty();
+			@SuppressWarnings( "unchecked" )
+			Class<A> idClass = identifierProperty.getType().getReturnedClass();
+			final Type<A> attrType = new BasicTypeImpl<A>( idClass,
+															identifierProperty.isComposite() ?
+																	PersistenceType.EMBEDDABLE :
+																	PersistenceType.BASIC);
+			return SingularAttributeImpl.create(this, attrType )
+											.property(identifierProperty)
+											//.member( null ) //TODO member
+											.id()
+											.build();
+		}
+		else {
+			return null;
+		}
 	}
 
 	private <A> SingularAttribute<X, A> buildVersionAttribute(PersistentClass persistentClass) {
@@ -101,9 +106,14 @@ public class EntityTypeImpl<X> extends ManagedTypeImpl<X> implements EntityType<
 
 	public <Y> SingularAttribute<? super X, Y> getId(Class<Y> type) {
 		//TODO check that type and id.getJavaType() are related
+		checkId();
 		@SuppressWarnings( "unchecked")
 		final SingularAttribute<? super X, Y> result = ( SingularAttribute<? super X, Y> ) id;
 		return result;
+	}
+
+	private void checkId() {
+		if ( ! hasSingleIdAttribute() ) throw new IllegalArgumentException("This is an @IdClass");
 	}
 
 	public <Y> SingularAttribute<? super X, Y> getVersion(Class<Y> type) {
@@ -114,6 +124,7 @@ public class EntityTypeImpl<X> extends ManagedTypeImpl<X> implements EntityType<
 	}
 
 	public <Y> SingularAttribute<X, Y> getDeclaredId(Class<Y> type) {
+		checkId();
 		//TODO check that type and id.getJavaType() are related
 		@SuppressWarnings("unchecked")
 		final SingularAttribute<X, Y> result = ( SingularAttribute<X, Y> ) id;
@@ -147,6 +158,7 @@ public class EntityTypeImpl<X> extends ManagedTypeImpl<X> implements EntityType<
 	}
 
 	public Type<?> getIdType() {
+		checkId();
 		return id.getType();
 	}
 

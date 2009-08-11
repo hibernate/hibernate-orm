@@ -1,7 +1,23 @@
-// $Id$
 /*
- * JBoss, the OpenSource EJB server Distributable under LGPL license. See terms of license at
- * gnu.org.
+ * Copyright (c) 2009, Red Hat Middleware LLC or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Middleware LLC.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
  */
 package org.hibernate.ejb;
 
@@ -11,7 +27,6 @@ import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.Map;
 import java.util.Set;
-import javax.persistence.EntityManagerFactory;
 import javax.persistence.EntityNotFoundException;
 import javax.persistence.EntityTransaction;
 import javax.persistence.FlushModeType;
@@ -395,7 +410,9 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 	public abstract Session getSession();
 
 	/**
-	 * Return a Session (even if the entity manager is closed
+	 * Return a Session (even if the entity manager is closed).
+	 *
+	 * @return A session.
 	 */
 	protected abstract Session getRawSession();
 
@@ -465,15 +482,6 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 		else if ( mode == FlushMode.COMMIT ) {
 			this.flushModeType = FlushModeType.COMMIT;
 		}
-//		else if ( mode == FlushMode.NEVER ) {
-//			if ( PersistenceContextType.EXTENDED == persistenceContextType && !isTransactionInProgress() ) {
-//				//we are in flushMode none for EXTENDED
-//				return flushMode;
-//			}
-//			else {
-//				return null; //TODO exception?
-//			}
-//		}
 		else {
 			return null; //TODO exception?
 		}
@@ -688,8 +696,6 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 	public Object getDelegate() {
 		return getSession();
 	}
-
-	;
 
 	private void writeObject(ObjectOutputStream oos) throws IOException {
 		oos.defaultWriteObject();

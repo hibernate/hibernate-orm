@@ -1,3 +1,25 @@
+/*
+ * Copyright (c) 2009, Red Hat Middleware LLC or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Middleware LLC.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ */
+
 //$Id$
 package org.hibernate.ejb;
 
@@ -17,6 +39,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
+ * Hibernate implementation of {@link javax.persistence.EntityManager}.
+ *
  * @author Gavin King
  */
 public class EntityManagerImpl extends AbstractEntityManagerImpl {
@@ -33,13 +57,14 @@ public class EntityManagerImpl extends AbstractEntityManagerImpl {
 			PersistenceUnitTransactionType transactionType,
 			boolean discardOnClose, 
 			Class sessionInterceptorClass,
-			Map properties
-	) {
+			Map properties) {
 		super( entityManagerFactory, pcType, transactionType, properties );
 		this.open = true;
 		this.discardOnClose = discardOnClose;
 		Object localSessionInterceptor = null;
-		if (properties != null) localSessionInterceptor = properties.get( HibernatePersistence.SESSION_INTERCEPTOR );
+		if (properties != null) {
+			localSessionInterceptor = properties.get( HibernatePersistence.SESSION_INTERCEPTOR );
+		}
 		if ( localSessionInterceptor != null ) {
 			if (localSessionInterceptor instanceof Class) {
 				sessionInterceptorClass = (Class) localSessionInterceptor;
@@ -62,7 +87,9 @@ public class EntityManagerImpl extends AbstractEntityManagerImpl {
 	}
 
 	public Session getSession() {
-		if ( !open ) throw new IllegalStateException( "EntityManager is closed" );
+		if ( !open ) {
+			throw new IllegalStateException( "EntityManager is closed" );
+		}
 		return getRawSession();
 	}
 
@@ -92,8 +119,9 @@ public class EntityManagerImpl extends AbstractEntityManagerImpl {
 	}
 
 	public void close() {
-
-		if ( !open ) throw new IllegalStateException( "EntityManager is closed" );
+		if ( !open ) {
+			throw new IllegalStateException( "EntityManager is closed" );
+		}
 		if ( !discardOnClose && isTransactionInProgress() ) {
 			//delay the closing till the end of the enlisted transaction
 			getSession().getTransaction().registerSynchronization(
@@ -120,7 +148,9 @@ public class EntityManagerImpl extends AbstractEntityManagerImpl {
 		}
 		else {
 			//close right now
-			if ( session != null ) session.close();
+			if ( session != null ) {
+				session.close();
+			}
 		}
 		open = false;
 	}
@@ -128,7 +158,9 @@ public class EntityManagerImpl extends AbstractEntityManagerImpl {
 	public boolean isOpen() {
 		//adjustFlushMode(); //don't adjust, can't be done on closed EM
 		try {
-			if ( open ) getSession().isOpen(); //to force enlistment in tx
+			if ( open ) {
+				getSession().isOpen(); //to force enlistment in tx
+			}
 			return open;
 		}
 		catch (HibernateException he) {

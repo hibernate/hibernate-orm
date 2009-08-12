@@ -42,6 +42,7 @@ public class Components extends AbstractEntityTest {
     private Integer id1;
     private Integer id2;
     private Integer id3;
+    private Integer id4;
 
     public void configure(Ejb3Configuration cfg) {
         cfg.addAnnotatedClass(ComponentTestEntity.class);
@@ -56,10 +57,12 @@ public class Components extends AbstractEntityTest {
         ComponentTestEntity cte1 = new ComponentTestEntity(new Component1("a", "b"), new Component2("x", "y"));
         ComponentTestEntity cte2 = new ComponentTestEntity(new Component1("a2", "b2"), new Component2("x2", "y2"));
         ComponentTestEntity cte3 = new ComponentTestEntity(new Component1("a3", "b3"), new Component2("x3", "y3"));
+        ComponentTestEntity cte4 = new ComponentTestEntity(null, null);
 
         em.persist(cte1);
         em.persist(cte2);
         em.persist(cte3);
+        em.persist(cte4);
 
         em.getTransaction().commit();
 
@@ -70,10 +73,15 @@ public class Components extends AbstractEntityTest {
         cte1 = em.find(ComponentTestEntity.class, cte1.getId());
         cte2 = em.find(ComponentTestEntity.class, cte2.getId());
         cte3 = em.find(ComponentTestEntity.class, cte3.getId());
+		cte4 = em.find(ComponentTestEntity.class, cte4.getId());
 
         cte1.setComp1(new Component1("a'", "b'"));
         cte2.getComp1().setStr1("a2'");
         cte3.getComp2().setStr6("y3'");
+		cte4.setComp1(new Component1());
+		cte4.getComp1().setStr1("n");
+		cte4.setComp2(new Component2());
+		cte4.getComp2().setStr5("m");
 
         em.getTransaction().commit();
 
@@ -84,9 +92,12 @@ public class Components extends AbstractEntityTest {
         cte1 = em.find(ComponentTestEntity.class, cte1.getId());
         cte2 = em.find(ComponentTestEntity.class, cte2.getId());
         cte3 = em.find(ComponentTestEntity.class, cte3.getId());
+		cte4 = em.find(ComponentTestEntity.class, cte4.getId());
 
         cte1.setComp2(new Component2("x'", "y'"));
         cte3.getComp1().setStr2("b3'");
+		cte4.setComp1(null);
+		cte4.setComp2(null);
 
         em.getTransaction().commit();
 
@@ -103,6 +114,7 @@ public class Components extends AbstractEntityTest {
         id1 = cte1.getId();
         id2 = cte2.getId();
         id3 = cte3.getId();
+        id4 = cte4.getId();
     }
 
     @Test
@@ -112,6 +124,8 @@ public class Components extends AbstractEntityTest {
         assert Arrays.asList(1, 2, 4).equals(getAuditReader().getRevisions(ComponentTestEntity.class, id2));
 
         assert Arrays.asList(1, 3).equals(getAuditReader().getRevisions(ComponentTestEntity.class, id3));
+
+		assert Arrays.asList(1, 2, 3).equals(getAuditReader().getRevisions(ComponentTestEntity.class, id4));
     }
 
     @Test
@@ -145,5 +159,17 @@ public class Components extends AbstractEntityTest {
         assert getAuditReader().find(ComponentTestEntity.class, id3, 2).equals(ver1);
         assert getAuditReader().find(ComponentTestEntity.class, id3, 3).equals(ver2);
         assert getAuditReader().find(ComponentTestEntity.class, id3, 4).equals(ver2);
+    }
+
+    @Test
+    public void testHistoryOfId4() {
+        ComponentTestEntity ver1 = new ComponentTestEntity(id4, null, null);
+        ComponentTestEntity ver2 = new ComponentTestEntity(id4, new Component1("n", null), null);
+        ComponentTestEntity ver3 = new ComponentTestEntity(id4, null, null);
+
+        assert getAuditReader().find(ComponentTestEntity.class, id4, 1).equals(ver1);
+        assert getAuditReader().find(ComponentTestEntity.class, id4, 2).equals(ver2);
+        assert getAuditReader().find(ComponentTestEntity.class, id4, 3).equals(ver3);
+        assert getAuditReader().find(ComponentTestEntity.class, id4, 4).equals(ver3);
     }
 }

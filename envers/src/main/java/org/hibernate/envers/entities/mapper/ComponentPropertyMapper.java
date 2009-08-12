@@ -43,7 +43,7 @@ import org.hibernate.engine.SessionImplementor;
  */
 public class ComponentPropertyMapper implements PropertyMapper, CompositeMapperBuilder {
     private final PropertyData propertyData;
-    private final ExtendedPropertyMapper delegate;
+    private final MultiPropertyMapper delegate;
 	private final String componentClassName;
 
     public ComponentPropertyMapper(PropertyData propertyData, String componentClassName) {
@@ -75,14 +75,26 @@ public class ComponentPropertyMapper implements PropertyMapper, CompositeMapperB
 
         Setter setter = ReflectionTools.getSetter(obj.getClass(), propertyData);
 
-        try {
-            Object subObj = ReflectHelper.getDefaultConstructor(
-					Thread.currentThread().getContextClassLoader().loadClass(componentClassName)).newInstance();
-            setter.set(obj, subObj, null);
-            delegate.mapToEntityFromMap(verCfg, subObj, data, primaryKey, versionsReader, revision);
-        } catch (Exception e) {
-            throw new AuditException(e);
-        }
+		// If all properties are null and single, then the component has to be null also.
+		boolean allNullAndSingle = true;
+		for (Map.Entry<PropertyData, PropertyMapper> property : delegate.getProperties().entrySet()) {
+			if (data.get(property.getKey().getName()) != null || !(property.getValue() instanceof SinglePropertyMapper)) {
+				allNullAndSingle = false;
+				break;
+			}
+		}
+
+		// And we don't have to set anything on the object - the default value is null
+		if (!allNullAndSingle) {
+			try {
+				Object subObj = ReflectHelper.getDefaultConstructor(
+						Thread.currentThread().getContextClassLoader().loadClass(componentClassName)).newInstance();
+				setter.set(obj, subObj, null);
+				delegate.mapToEntityFromMap(verCfg, subObj, data, primaryKey, versionsReader, revision);
+			} catch (Exception e) {
+				throw new AuditException(e);
+			}
+		}
     }
 
     public List<PersistentCollectionChangeData> mapCollectionChanges(String referencingPropertyName,

@@ -26,6 +26,7 @@ package org.hibernate.envers.entities.mapper;
 import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.hibernate.envers.entities.PropertyData;
 import org.hibernate.envers.configuration.AuditConfiguration;
@@ -150,4 +151,8 @@ public class MultiPropertyMapper implements ExtendedPropertyMapper {
             return null;
         }
     }
+
+	public Map<PropertyData, PropertyMapper> getProperties() {
+		return properties;
+	}
 }

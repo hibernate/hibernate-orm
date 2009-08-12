@@ -94,7 +94,7 @@ public class EntityTypeImpl<X> extends ManagedTypeImpl<X> implements EntityType<
 		Set<SingularAttribute<? super X, ?>> attributes = new HashSet<SingularAttribute<? super X, ?>>();
 		while ( properties.hasNext() ) {
 			attributes.add(
-					(SingularAttribute<? super X, ?>) MetamodelFactory.getAttribute( this, properties.next(), context )
+					(SingularAttribute<? super X, ?>) MetamodelFactory.getAttribute( this, properties.next(), context, true )
 			);
 		}
 		return attributes;

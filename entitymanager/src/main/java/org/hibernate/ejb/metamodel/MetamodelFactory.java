@@ -20,6 +20,10 @@ import org.hibernate.mapping.Value;
 class MetamodelFactory {
 
 	static<X, Y, V, K> Attribute<X, Y> getAttribute(ManagedType<X> ownerType, Property property, MetadataContext metadataContext) {
+		return getAttribute( ownerType, property, metadataContext, false );
+	}
+
+	static<X, Y, V, K> Attribute<X, Y> getAttribute(ManagedType<X> ownerType, Property property, MetadataContext metadataContext, boolean isId) {
 		AttributeContext attrContext = getAttributeContext( property );
 		final Attribute<X, Y> attribute;
 		if ( attrContext.isCollection() ) {
@@ -44,11 +48,12 @@ class MetamodelFactory {
 		}
 		else {
 			final Type<Y> attrType = getType( attrContext.getElementTypeStatus(), attrContext.getElementValue(), metadataContext );
-			attribute = SingularAttributeImpl.create( ownerType, attrType )
+			final SingularAttributeImpl.Builder<X, Y> xyBuilder = SingularAttributeImpl.create( ownerType, attrType )
 					// .member(  ); //TODO member
 					.property( property )
-					.persistentAttributeType( attrContext.getElementAttributeType() )
-					.build();
+					.persistentAttributeType( attrContext.getElementAttributeType() );
+			if (isId) xyBuilder.id();
+			attribute = xyBuilder.build();
 		}
 		return attribute;
 	}

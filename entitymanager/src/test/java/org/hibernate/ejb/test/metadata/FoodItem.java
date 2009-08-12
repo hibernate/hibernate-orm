@@ -3,6 +3,7 @@ package org.hibernate.ejb.test.metadata;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.GeneratedValue;
+import javax.persistence.Version;
 
 /**
  * @author Emmanuel Bernard
@@ -11,6 +12,7 @@ import javax.persistence.GeneratedValue;
 public class FoodItem {
 	private Long id;
 	private String name;
+	private Long version;
 
 	@Id @GeneratedValue
 	public Long getId() {
@@ -19,6 +21,15 @@ public class FoodItem {
 
 	public void setId(Long id) {
 		this.id = id;
+	}
+
+	@Version
+	public Long getVersion() {
+		return version;
+	}
+
+	public void setVersion(Long version) {
+		this.version = version;
 	}
 
 	public String getName() {

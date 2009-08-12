@@ -3,6 +3,7 @@ package org.hibernate.ejb.test.metadata;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.GeneratedValue;
+import javax.persistence.Basic;
 
 /**
  * @author Emmanuel Bernard
@@ -24,6 +25,7 @@ public class Fridge {
 		this.id = id;
 	}
 
+	@Basic(optional = false)
 	public String getBrand() {
 		return brand;
 	}

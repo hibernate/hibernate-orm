@@ -1,8 +1,15 @@
 package org.hibernate.ejb.test.metadata;
 
 import java.io.Serializable;
+import java.util.Set;
+import java.util.Map;
+import java.util.List;
 import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
+import javax.persistence.ElementCollection;
+import javax.persistence.CollectionTable;
+import javax.persistence.MapKeyColumn;
+import javax.persistence.OrderColumn;
 
 /**
  * @author Emmanuel Bernard
@@ -10,7 +17,39 @@ import javax.persistence.Entity;
 @Entity
 public class House {
 	private Key key;
-	private String address1;
+	private Address address;
+	private Set<Room> rooms;
+	private Map<String, Room> roomsByName;
+	private List<Room> roomsBySize;
+
+	@ElementCollection
+	@OrderColumn(name = "size_order")
+	public List<Room> getRoomsBySize() {
+		return roomsBySize;
+	}
+
+	public void setRoomsBySize(List<Room> roomsBySize) {
+		this.roomsBySize = roomsBySize;
+	}
+
+	@ElementCollection
+	@MapKeyColumn(name="room_name")
+	public Map<String, Room> getRoomsByName() {
+		return roomsByName;
+	}
+
+	public void setRoomsByName(Map<String, Room> roomsByName) {
+		this.roomsByName = roomsByName;
+	}
+
+	@ElementCollection
+	public Set<Room> getRooms() {
+		return rooms;
+	}
+
+	public void setRooms(Set<Room> rooms) {
+		this.rooms = rooms;
+	}
 
 	@EmbeddedId
 	public Key getKey() {
@@ -21,12 +60,12 @@ public class House {
 		this.key = key;
 	}
 
-	public String getAddress1() {
-		return address1;
+	public Address getAddress() {
+		return address;
 	}
 
-	public void setAddress1(String address1) {
-		this.address1 = address1;
+	public void setAddress(Address address) {
+		this.address = address;
 	}
 
 	public static class Key implements Serializable {

@@ -7,6 +7,11 @@ import javax.persistence.metamodel.Bindable;
 import javax.persistence.metamodel.SingularAttribute;
 import javax.persistence.metamodel.Type;
 import javax.persistence.metamodel.Attribute;
+import javax.persistence.metamodel.EmbeddableType;
+import javax.persistence.metamodel.SetAttribute;
+import javax.persistence.metamodel.PluralAttribute;
+import javax.persistence.metamodel.MapAttribute;
+import javax.persistence.metamodel.ListAttribute;
 
 import org.hibernate.ejb.test.TestCase;
 
@@ -72,7 +77,9 @@ public class MetadataTest extends TestCase {
 		assertEquals( Bindable.BindableType.SINGULAR_ATTRIBUTE, singularAttribute.getBindableType() );
 		assertFalse( singularAttribute.isId() );
 		assertFalse( singularAttribute.isOptional() );
+		assertFalse( entityType.getDeclaredSingularAttribute( "brand", String.class ).isOptional() );
 		assertEquals( Integer.class, singularAttribute.getType().getJavaType() );
+		assertEquals( Type.PersistenceType.BASIC, singularAttribute.getType().getPersistenceType() );
 		final Attribute<? super Fridge, ?> attribute = entityType.getDeclaredAttribute( "temperature" );
 		assertNotNull( attribute );
 		assertEquals( "temperature", attribute.getName() );
@@ -90,10 +97,57 @@ public class MetadataTest extends TestCase {
 			}
 		}
 		assertTrue( found );
-
-
 	}
-		//TODO test embedded
+
+	public void testEmbeddable() throws Exception {
+		final EntityType<House> entityType = factory.getMetamodel().entity( House.class );
+		final SingularAttribute<? super House,Address> address = entityType.getDeclaredSingularAttribute(
+				"address",
+				Address.class
+		);
+		assertNotNull( address );
+		assertEquals( Attribute.PersistentAttributeType.EMBEDDED, address.getPersistentAttributeType() );
+		assertFalse( address.isCollection() );
+		assertFalse( address.isAssociation() );
+		final EmbeddableType<Address> addressType = (EmbeddableType<Address>) address.getType();
+		assertEquals( Type.PersistenceType.EMBEDDABLE, addressType.getPersistenceType() );
+		assertEquals( 3, addressType.getDeclaredAttributes().size() );
+		assertTrue( addressType.getDeclaredSingularAttribute( "address1" ).isOptional() );
+		assertFalse( addressType.getDeclaredSingularAttribute( "address2" ).isOptional() );
+
+		final EmbeddableType<Address> directType = factory.getMetamodel().embeddable( Address.class );
+		assertNotNull( directType );
+		assertEquals( Type.PersistenceType.EMBEDDABLE, directType.getPersistenceType() );
+	}
+
+	public void testElementCollection() throws Exception {
+		final EntityType<House> entityType = factory.getMetamodel().entity( House.class );
+		final SetAttribute<House,Room> rooms = entityType.getDeclaredSet( "rooms", Room.class );
+		assertNotNull( rooms );
+		assertTrue( rooms.isAssociation() );
+		assertTrue( rooms.isCollection() );
+		assertEquals( Attribute.PersistentAttributeType.ELEMENT_COLLECTION, rooms.getPersistentAttributeType() );
+		assertEquals( Room.class, rooms.getBindableJavaType() );
+		assertEquals( Bindable.BindableType.PLURAL_ATTRIBUTE, rooms.getBindableType() );
+		assertEquals( Set.class, rooms.getJavaType() );
+		assertEquals( PluralAttribute.CollectionType.SET, rooms.getCollectionType() );
+		assertEquals( 3, entityType.getDeclaredCollections().size() );
+		assertEquals( Type.PersistenceType.EMBEDDABLE, rooms.getElementType().getPersistenceType() );
+
+		final MapAttribute<House,String,Room> roomsByName = entityType.getDeclaredMap(
+				"roomsByName", String.class, Room.class
+		);
+		assertNotNull( roomsByName );
+		assertEquals( String.class, roomsByName.getKeyJavaType() );
+		assertEquals( Type.PersistenceType.BASIC, roomsByName.getKeyType().getPersistenceType() );
+		assertEquals( PluralAttribute.CollectionType.MAP, roomsByName.getCollectionType() );
+
+		final ListAttribute<House,Room> roomsBySize = entityType.getDeclaredList( "roomsBySize", Room.class );
+		assertNotNull( roomsBySize );
+		assertEquals( Type.PersistenceType.EMBEDDABLE, roomsBySize.getElementType().getPersistenceType() );
+		assertEquals( PluralAttribute.CollectionType.LIST, roomsBySize.getCollectionType() );
+	}
+
 		//todo test plural
 
 	@Override

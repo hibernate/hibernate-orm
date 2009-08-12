@@ -171,7 +171,7 @@ public abstract class ManagedTypeImpl<X> implements ManagedType<X>, Serializable
 	public <K, V> MapAttribute<X, K, V> getDeclaredMap(String name, Class<K> keyType, Class<V> valueType) {
 		final PluralAttribute<X,?,?> attr = declaredCollections.get( name );
 		final String error = "MapAttribute ";
-		checkTypeForPluralAttributes( error, attr, name, valueType, PluralAttribute.CollectionType.LIST );
+		checkTypeForPluralAttributes( error, attr, name, valueType, PluralAttribute.CollectionType.MAP );
 		@SuppressWarnings( "unchecked")
 		final MapAttribute<X, K, V> result = ( MapAttribute<X, K, V> ) attr;
 		if ( result.getKeyJavaType() != keyType ) {

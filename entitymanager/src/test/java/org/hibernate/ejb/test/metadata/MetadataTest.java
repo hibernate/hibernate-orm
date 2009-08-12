@@ -6,6 +6,7 @@ import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.Bindable;
 import javax.persistence.metamodel.SingularAttribute;
 import javax.persistence.metamodel.Type;
+import javax.persistence.metamodel.Attribute;
 
 import org.hibernate.ejb.test.TestCase;
 
@@ -37,7 +38,13 @@ public class MetadataTest extends TestCase {
 		assertFalse( fridgeType.hasVersionAttribute() );
 		assertEquals( Type.PersistenceType.ENTITY, fridgeType.getPersistenceType() );
 
-		//TODO IdClass
+		final EntityType<House> houseType = factory.getMetamodel().entity( House.class );
+		assertTrue( houseType.hasSingleIdAttribute() );
+		final SingularAttribute<House, House.Key> houseId = houseType.getDeclaredId( House.Key.class );
+		assertNotNull( houseId );
+		assertTrue( houseId.isId() );
+		assertEquals( Attribute.PersistentAttributeType.EMBEDDED, houseId.getPersistentAttributeType() );
+		
 		final EntityType<Person> personType = factory.getMetamodel().entity( Person.class );
 		assertFalse( personType.hasSingleIdAttribute() );
 		final Set<SingularAttribute<? super Person,?>> ids = personType.getIdClassAttributes();
@@ -63,17 +70,39 @@ public class MetadataTest extends TestCase {
 		);
 		assertEquals( Integer.class, singularAttribute.getBindableJavaType() );
 		assertEquals( Bindable.BindableType.SINGULAR_ATTRIBUTE, singularAttribute.getBindableType() );
+		assertFalse( singularAttribute.isId() );
+		assertFalse( singularAttribute.isOptional() );
+		assertEquals( Integer.class, singularAttribute.getType().getJavaType() );
+		final Attribute<? super Fridge, ?> attribute = entityType.getDeclaredAttribute( "temperature" );
+		assertNotNull( attribute );
+		assertEquals( "temperature", attribute.getName() );
+		assertEquals( Fridge.class, attribute.getDeclaringType().getJavaType() );
+		assertEquals( Attribute.PersistentAttributeType.BASIC, attribute.getPersistentAttributeType() );
+		assertEquals( Integer.class, attribute.getJavaType() );
+		assertFalse( attribute.isAssociation() );
+		assertFalse( attribute.isCollection() );
 
+		boolean found = false;
+		for (Attribute<Fridge, ?> attr : entityType.getDeclaredAttributes() ) {
+			if ("temperature".equals( attr.getName() ) ) {
+				found = true;
+				break;
+			}
+		}
+		assertTrue( found );
+
+
+	}
 		//TODO test embedded
 		//todo test plural
-	}
 
 	@Override
 	public Class[] getAnnotatedClasses() {
 		return new Class[]{
 				Fridge.class,
 				FoodItem.class,
-				Person.class
+				Person.class,
+				House.class
 		};
 	}
 

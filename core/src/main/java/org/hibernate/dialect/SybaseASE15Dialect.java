@@ -68,7 +68,13 @@ public class SybaseASE15Dialect extends AbstractTransactSQLDialect {
 	public boolean supportsCascadeDelete() {
 		return false;
 	}
-
+    /**
+     * By default, Sybase string comparisons are case-insensitive.<br>
+     * If the DB is configured to be case-sensitive, then the return value will be incorrect.
+     */
+    public boolean areStringComparisonsCaseInsensitive() {
+        return true;
+    }     
 	public boolean supportsExpectedLobUsagePattern() {
 		return false;
 	}

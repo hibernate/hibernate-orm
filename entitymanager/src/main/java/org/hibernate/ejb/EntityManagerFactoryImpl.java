@@ -65,7 +65,13 @@ public class EntityManagerFactoryImpl implements HibernateEntityManagerFactory {
 		this.sessionInterceptorClass = sessionInterceptorClass;
 		@SuppressWarnings( "unchecked" )
 		final Iterator<PersistentClass> classes = cfg.getClassMappings();
-		this.metamodel = new MetamodelImpl( classes );
+		//a safe guard till we are confident that metamodel is wll tested
+		if ( !"disabled".equalsIgnoreCase( cfg.getProperty( "hibernate.ejb.metamodel.generation" ) ) ) {
+			this.metamodel = new MetamodelImpl( classes );
+		}
+		else {
+			this.metamodel = null;
+		}
 		this.criteriaQueryBuilder = new QueryBuilderImpl( this );
 	}
 

@@ -47,6 +47,7 @@ import org.hibernate.hql.ast.QueryTranslatorImpl;
 import org.hibernate.hql.ast.tree.FromElement;
 import org.hibernate.hql.ast.tree.SelectClause;
 import org.hibernate.hql.ast.tree.QueryNode;
+import org.hibernate.hql.ast.tree.AggregatedSelectExpression;
 import org.hibernate.impl.IteratorImpl;
 import org.hibernate.loader.BasicLoader;
 import org.hibernate.param.ParameterSpecification;
@@ -96,7 +97,7 @@ public class QueryLoader extends BasicLoader {
 
 	private int selectLength;
 
-	private ResultTransformer selectNewTransformer;
+	private ResultTransformer implicitResultTransformer;
 	private String[] queryReturnAliases;
 
 	private LockMode[] defaultLockModes;
@@ -128,10 +129,10 @@ public class QueryLoader extends BasicLoader {
 		//sqlResultTypes = selectClause.getSqlResultTypes();
 		queryReturnTypes = selectClause.getQueryReturnTypes();
 
-		selectNewTransformer = HolderInstantiator.createSelectNewTransformer(
-				selectClause.getConstructor(),
-				selectClause.isMap(),
-				selectClause.isList());
+		AggregatedSelectExpression aggregatedSelectExpression = selectClause.getAggregatedSelectExpression();
+		implicitResultTransformer = aggregatedSelectExpression == null
+				? null
+				: aggregatedSelectExpression.getResultTransformer();
 		queryReturnAliases = selectClause.getQueryReturnAliases();
 
 		List collectionFromElements = selectClause.getCollectionFromElements();
@@ -341,7 +342,7 @@ public class QueryLoader extends BasicLoader {
 	}
 
 	private boolean hasSelectNew() {
-		return selectNewTransformer!=null;
+		return implicitResultTransformer != null;
 	}
 
 	protected Object getResultColumnOrRow(Object[] row, ResultTransformer transformer, ResultSet rs, SessionImplementor session)
@@ -374,7 +375,7 @@ public class QueryLoader extends BasicLoader {
 
 	protected List getResultList(List results, ResultTransformer resultTransformer) throws QueryException {
 		// meant to handle dynamic instantiation queries...
-		HolderInstantiator holderInstantiator = HolderInstantiator.getHolderInstantiator(selectNewTransformer, resultTransformer, queryReturnAliases);
+		HolderInstantiator holderInstantiator = buildHolderInstantiator( resultTransformer );
 		if ( holderInstantiator.isRequired() ) {
 			for ( int i = 0; i < results.size(); i++ ) {
 				Object[] row = ( Object[] ) results.get( i );
@@ -382,16 +383,25 @@ public class QueryLoader extends BasicLoader {
 				results.set( i, result );
 			}
 
-			if(!hasSelectNew() && resultTransformer!=null) {
+			if ( !hasSelectNew() && resultTransformer != null ) {
 				return resultTransformer.transformList(results);
-			} else {
+			}
+			else {
 				return results;
 			}
-		} else {
+		}
+		else {
 			return results;
 		}
 	}
 
+	private HolderInstantiator buildHolderInstantiator(ResultTransformer queryLocalResultTransformer) {
+		return HolderInstantiator.getHolderInstantiator(
+				implicitResultTransformer,
+				queryLocalResultTransformer,
+				queryReturnAliases
+		);
+	}
 	// --- Query translator methods ---
 
 	public List list(
@@ -418,10 +428,8 @@ public class QueryLoader extends BasicLoader {
 		}
 
 		try {
-
 			final PreparedStatement st = prepareQueryStatement( queryParameters, false, session );
-
-			if(queryParameters.isCallable()) {
+			if ( queryParameters.isCallable() ) {
 				throw new QueryException("iterate() not supported for callable statements");
 			}
 			final ResultSet rs = getResultSet(st, queryParameters.hasAutoDiscoverScalarTypes(), false, queryParameters.getRowSelection(), session);
@@ -431,8 +439,8 @@ public class QueryLoader extends BasicLoader {
 			        session,
 			        queryReturnTypes,
 			        queryTranslator.getColumnNames(),
-			        HolderInstantiator.getHolderInstantiator(selectNewTransformer, queryParameters.getResultTransformer(), queryReturnAliases)
-				);
+			        buildHolderInstantiator( queryParameters.getResultTransformer() )
+			);
 
 			if ( stats ) {
 				session.getFactory().getStatisticsImplementor().queryExecuted(
@@ -461,7 +469,12 @@ public class QueryLoader extends BasicLoader {
 			final QueryParameters queryParameters,
 	        final SessionImplementor session) throws HibernateException {
 		checkQuery( queryParameters );
-		return scroll( queryParameters, queryReturnTypes, HolderInstantiator.getHolderInstantiator(selectNewTransformer, queryParameters.getResultTransformer(), queryReturnAliases), session );
+		return scroll( 
+				queryParameters,
+				queryReturnTypes,
+				buildHolderInstantiator( queryParameters.getResultTransformer() ),
+				session
+		);
 	}
 
 	// -- Implementation private methods --

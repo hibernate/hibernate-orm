@@ -99,6 +99,9 @@ tokens
 	OBJECT="object";
 	OF="of";
 	TRAILING="trailing";
+	KEY="key";
+	VALUE="value";
+	ENTRY="entry";
 
 	// -- Synthetic token types --
 	AGGREGATE;		// One of the aggregate functions (e.g. min, max, avg)
@@ -633,7 +636,8 @@ vectorExpr
 // NOTE: handleDotIdent() is called immediately after the first IDENT is recognized because
 // the method looks a head to find keywords after DOT and turns them into identifiers.
 identPrimary
-	: identifier { handleDotIdent(); }
+    : mapComponentReference
+    | identifier { handleDotIdent(); }
 			( options { greedy=true; } : DOT^ ( identifier | ELEMENTS | o:OBJECT { #o.setType(IDENT); } ) )*
 			( options { greedy=true; } :
 				( op:OPEN^ { #op.setType(METHOD_CALL);} exprList CLOSE! )
@@ -642,11 +646,9 @@ identPrimary
 	| aggregate
 	;
 
-//## aggregate:
-//##     ( aggregateFunction OPEN path CLOSE ) | ( COUNT OPEN STAR CLOSE ) | ( COUNT OPEN (DISTINCT | ALL) path CLOSE );
-
-//## aggregateFunction:
-//##     COUNT | 'sum' | 'avg' | 'max' | 'min';
+mapComponentReference
+    : ( KEY^ | VALUE^ | ENTRY^ ) OPEN! path CLOSE!
+    ;
 
 aggregate
 	: ( SUM^ | AVG^ | MAX^ | MIN^ ) OPEN! additiveExpression CLOSE! { #aggregate.setType(AGGREGATE); }

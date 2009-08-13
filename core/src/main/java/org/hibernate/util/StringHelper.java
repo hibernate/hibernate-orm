@@ -27,6 +27,7 @@ package org.hibernate.util;
 import java.util.Iterator;
 import java.util.StringTokenizer;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 public final class StringHelper {
 
@@ -83,6 +84,12 @@ public final class StringHelper {
 		StringBuffer buf = new StringBuffer( string.length() * times );
 		for ( int i = 0; i < times; i++ ) buf.append( string );
 		return buf.toString();
+	}
+
+	public static String repeat(char character, int times) {
+		char[] buffer = new char[times];
+		Arrays.fill( buffer, character );
+		return new String( buffer );
 	}
 
 

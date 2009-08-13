@@ -46,7 +46,15 @@ public class SelectFragment {
 	private String[] usedAliases;
 	
 	public SelectFragment() {}
-	
+
+	public List getColumns() {
+		return columns;
+	}
+
+	public String getExtraSelectList() {
+		return extraSelectList;
+	}
+
 	public SelectFragment setUsedAliases(String[] aliases) {
 		usedAliases = aliases;
 		return this;

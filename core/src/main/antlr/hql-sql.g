@@ -230,6 +230,10 @@ tokens
 	protected void prepareLogicOperator(AST operator) throws SemanticException { }
 
 	protected void prepareArithmeticOperator(AST operator) throws SemanticException { }
+
+    protected void processMapComponentReference(AST node) throws SemanticException { }
+
+	protected void validateMapPropertyExpression(AST node) throws SemanticException { }
 }
 
 // The main statement rule.
@@ -640,7 +644,11 @@ propertyName
 	;
 
 propertyRef!
-	: #(d:DOT lhs:propertyRefLhs rhs:propertyName )	{
+	: mcr:mapComponentReference {
+	    resolve( #mcr );
+	    #propertyRef = #mcr;
+	}
+	| #(d:DOT lhs:propertyRefLhs rhs:propertyName )	{
 		// This gives lookupProperty() a chance to transform the tree to process collection properties (.elements, etc).
 		#propertyRef = #(#d, #lhs, #rhs);
 		#propertyRef = lookupProperty(#propertyRef,false,true);
@@ -671,6 +679,18 @@ aliasRef!
 		lookupAlias(#aliasRef);
 		}
 	;
+
+mapComponentReference
+    : #( KEY mapPropertyExpression )
+    | #( VALUE mapPropertyExpression )
+    | #( ENTRY mapPropertyExpression )
+    ;
+
+mapPropertyExpression
+    : e:expr {
+        validateMapPropertyExpression( #e );
+    }
+    ;
 
 parameter!
 	: #(c:COLON a:identifier) {

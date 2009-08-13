@@ -104,6 +104,49 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 		return new FunctionalTestClassTestSuite( ASTParserLoadingTest.class );
 	}
 
+	public void testJPAQLQualifiedIdentificationVariables() {
+		Session s = openSession();
+		s.beginTransaction();
+		Human me = new Human();
+		me.setName( new Name( "Steve", null, "Ebersole" ) );
+		Human joe = new Human();
+		me.setName( new Name( "Joe", null, "Ebersole" ) );
+		me.setFamily( new HashMap() );
+		me.getFamily().put( "son", joe );
+		s.save( me );
+		s.save( joe );
+		s.getTransaction().commit();
+		s.close();
+
+		s = openSession();
+		s.beginTransaction();
+		List results = s.createQuery( "select entry(h.family) from Human h" ).list();
+		assertEquals( 1, results.size() );
+		Object result = results.get(0);
+		assertTrue( Map.Entry.class.isAssignableFrom( result.getClass() ) );
+		Map.Entry entry = (Map.Entry) result;
+		assertTrue( String.class.isAssignableFrom( entry.getKey().getClass() ) );
+		assertTrue( Human.class.isAssignableFrom( entry.getValue().getClass() ) );
+		s.getTransaction().commit();
+		s.close();
+
+		s = openSession();
+		s.beginTransaction();
+		results = s.createQuery( "select distinct key(h.family) from Human h" ).list();
+		assertEquals( 1, results.size() );
+		Object key = results.get(0);
+		assertTrue( String.class.isAssignableFrom( key.getClass() ) );
+		s.getTransaction().commit();
+		s.close();
+
+		s = openSession();
+		s.beginTransaction();
+		s.delete( me );
+		s.delete( joe );
+		s.getTransaction().commit();
+		s.close();
+	}
+
 	public void testPaginationWithPolymorphicQuery() {
 		Session s = openSession();
 		s.beginTransaction();

@@ -42,6 +42,7 @@ import org.hibernate.hql.antlr.HqlTokenTypes;
 import org.hibernate.hql.ast.util.ASTPrinter;
 import org.hibernate.hql.ast.util.ASTUtil;
 import org.hibernate.QueryException;
+import org.hibernate.util.StringHelper;
 
 /**
  * Implements the semantic action methods defined in the HQL base parser to keep the grammar
@@ -71,6 +72,28 @@ public final class HqlParser extends HqlBaseParser {
 	private HqlParser(TokenStream lexer) {
 		super( lexer );
 		initialize();
+	}
+
+
+	// handle trace logging ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    private int traceDepth = 0;
+
+
+	public void traceIn(String ruleName) {
+		if ( inputState.guessing > 0 ) {
+			return;
+		}
+		String prefix = StringHelper.repeat( '-', (traceDepth++ * 2) ) + "-> ";
+		log.trace( prefix + ruleName );
+	}
+
+	public void traceOut(String ruleName) {
+		if ( inputState.guessing > 0 ) {
+			return;
+		}
+		String prefix = "<-" + StringHelper.repeat( '-', (--traceDepth * 2) ) + " ";
+		log.trace( prefix + ruleName );
 	}
 
 	public void reportError(RecognitionException e) {

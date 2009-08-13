@@ -99,6 +99,7 @@ import org.hibernate.sql.SelectFragment;
 import org.hibernate.sql.SimpleSelect;
 import org.hibernate.sql.Template;
 import org.hibernate.sql.Update;
+import org.hibernate.sql.AliasGenerator;
 import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.tuple.entity.EntityTuplizer;
 import org.hibernate.tuple.Tuplizer;
@@ -982,8 +983,14 @@ public abstract class AbstractEntityPersister
 	}
 
 
-	public String propertySelectFragment(String name, String suffix, boolean allProperties) {
+	public String propertySelectFragment(String tableAlias, String suffix, boolean allProperties) {
+		return propertySelectFragmentFragment( tableAlias, suffix, allProperties ).toFragmentString();
+	}
 
+	public SelectFragment propertySelectFragmentFragment(
+			String tableAlias,
+			String suffix,
+			boolean allProperties) {
 		SelectFragment select = new SelectFragment()
 				.setSuffix( suffix )
 				.setUsedAliases( getIdentifierAliases() );
@@ -996,7 +1003,7 @@ public abstract class AbstractEntityPersister
 				!isSubclassTableSequentialSelect( columnTableNumbers[i] ) &&
 				subclassColumnSelectableClosure[i];
 			if ( selectable ) {
-				String subalias = generateTableAlias( name, columnTableNumbers[i] );
+				String subalias = generateTableAlias( tableAlias, columnTableNumbers[i] );
 				select.addColumn( subalias, columns[i], columnAliases[i] );
 			}
 		}
@@ -1008,20 +1015,20 @@ public abstract class AbstractEntityPersister
 			boolean selectable = ( allProperties || !subclassFormulaLazyClosure[i] )
 				&& !isSubclassTableSequentialSelect( formulaTableNumbers[i] );
 			if ( selectable ) {
-				String subalias = generateTableAlias( name, formulaTableNumbers[i] );
+				String subalias = generateTableAlias( tableAlias, formulaTableNumbers[i] );
 				select.addFormula( subalias, formulaTemplates[i], formulaAliases[i] );
 			}
 		}
 
 		if ( entityMetamodel.hasSubclasses() ) {
-			addDiscriminatorToSelect( select, name, suffix );
+			addDiscriminatorToSelect( select, tableAlias, suffix );
 		}
 
 		if ( hasRowId() ) {
-			select.addColumn( name, rowIdName, ROWID_ALIAS );
+			select.addColumn( tableAlias, rowIdName, ROWID_ALIAS );
 		}
 
-		return select.toFragmentString();
+		return select;
 	}
 
 	public Object[] getDatabaseSnapshot(Serializable id, SessionImplementor session)

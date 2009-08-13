@@ -32,6 +32,7 @@ import antlr.collections.AST;
 
 import org.hibernate.sql.Template;
 import org.hibernate.dialect.function.SQLFunction;
+import org.hibernate.util.StringHelper;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,6 +51,28 @@ public class OrderByFragmentParser extends GeneratedOrderByFragmentParser {
 		super( lexer );
 		super.setASTFactory( new Factory() );
 		this.context = context;
+	}
+
+
+	// handle trace logging ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    private int traceDepth = 0;
+
+
+	public void traceIn(String ruleName) {
+		if ( inputState.guessing > 0 ) {
+			return;
+		}
+		String prefix = StringHelper.repeat( '-', (traceDepth++ * 2) ) + "-> ";
+		log.trace( prefix + ruleName );
+	}
+
+	public void traceOut(String ruleName) {
+		if ( inputState.guessing > 0 ) {
+			return;
+		}
+		String prefix = "<-" + StringHelper.repeat( '-', (--traceDepth * 2) ) + " ";
+		log.trace( prefix + ruleName );
 	}
 
 	/**

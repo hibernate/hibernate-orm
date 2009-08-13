@@ -207,6 +207,7 @@ selectColumn
 
 selectExpr
 	: e:selectAtom { out(e); }
+	| mcr:mapComponentReference { out(mcr); }
 	| count
 	| #(CONSTRUCTOR (DOT | IDENT) ( selectColumn )+ )
 	| methodCall
@@ -239,6 +240,12 @@ selectAtom
 	| ALIAS_REF
 	| SELECT_EXPR
 	;
+
+mapComponentReference
+    : KEY
+    | VALUE
+    | ENTRY
+    ;
 
 // The from-clause piece is all goofed up.  Currently, nodes of type FROM_FRAGMENT
 // and JOIN_FRAGMENT can occur at any level in the FromClause sub-tree. We really

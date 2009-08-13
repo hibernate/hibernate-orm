@@ -65,6 +65,9 @@ import org.hibernate.hql.ast.tree.SessionFactoryAwareNode;
 import org.hibernate.hql.ast.tree.BooleanLiteralNode;
 import org.hibernate.hql.ast.tree.IsNullLogicOperatorNode;
 import org.hibernate.hql.ast.tree.IsNotNullLogicOperatorNode;
+import org.hibernate.hql.ast.tree.MapKeyNode;
+import org.hibernate.hql.ast.tree.MapValueNode;
+import org.hibernate.hql.ast.tree.MapEntryNode;
 
 import java.lang.reflect.Constructor;
 
@@ -187,6 +190,15 @@ public class SqlASTFactory extends ASTFactory implements HqlSqlTokenTypes {
 				return IsNotNullLogicOperatorNode.class;
 			case EXISTS:
 				return UnaryLogicOperatorNode.class;
+			case KEY: {
+				return MapKeyNode.class;
+			}
+			case VALUE: {
+				return MapValueNode.class;
+			}
+			case ENTRY: {
+				return MapEntryNode.class;
+			}
 			default:
 				return SqlNode.class;
 		} // switch

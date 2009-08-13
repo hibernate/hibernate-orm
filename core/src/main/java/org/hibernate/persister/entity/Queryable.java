@@ -24,6 +24,8 @@
  */
 package org.hibernate.persister.entity;
 
+import org.hibernate.sql.SelectFragment;
+
 /**
  * Extends the generic <tt>EntityPersister</tt> contract to add
  * operations required by the Hibernate Query Language
@@ -60,6 +62,7 @@ public interface Queryable extends Loadable, PropertyMapping, Joinable {
 	 */
 	public String propertySelectFragment(String alias, String suffix, boolean allProperties);
 
+	public SelectFragment propertySelectFragmentFragment(String alias, String suffix, boolean allProperties);
 	/**
 	 * Get the names of columns used to persist the identifier
 	 */

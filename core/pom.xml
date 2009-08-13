@@ -76,6 +76,8 @@
                 <version>${antlrPluginVersion}</version>
                 <configuration>
                     <grammars>hql.g,hql-sql.g,sql-gen.g,order-by.g,order-by-render.g</grammars>
+                    <traceParser>true</traceParser>
+                    <traceTreeParser>true</traceTreeParser>
                 </configuration>
                 <executions>
                     <execution>

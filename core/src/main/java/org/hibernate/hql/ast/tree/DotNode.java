@@ -28,7 +28,6 @@ import org.hibernate.QueryException;
 import org.hibernate.engine.JoinSequence;
 import org.hibernate.hql.CollectionProperties;
 import org.hibernate.hql.antlr.SqlTokenTypes;
-import org.hibernate.hql.ast.util.ASTPrinter;
 import org.hibernate.hql.ast.util.ASTUtil;
 import org.hibernate.hql.ast.util.ColumnHelper;
 import org.hibernate.persister.collection.QueryableCollection;
@@ -140,7 +139,7 @@ public class DotNode extends FromReferenceNode implements DisplayableNode, Selec
 		StringBuffer buf = new StringBuffer();
 		FromElement fromElement = getFromElement();
 		buf.append( "{propertyName=" ).append( propertyName );
-		buf.append( ",dereferenceType=" ).append( ASTPrinter.getConstantName( getClass(), dereferenceType ) );
+		buf.append( ",dereferenceType=" ).append( getWalker().getASTPrinter().getTokenTypeName( dereferenceType ) );
 		buf.append( ",propertyPath=" ).append( propertyPath );
 		buf.append( ",path=" ).append( getPath() );
 		if ( fromElement != null ) {

@@ -24,7 +24,6 @@
  */
 package org.hibernate.hql.ast.tree;
 
-import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -53,9 +52,11 @@ public class SelectClause extends SelectExpressionList {
 	//private Type[] sqlResultTypes;
 	private Type[] queryReturnTypes;
 	private String[][] columnNames;
-	private ConstructorNode constructorNode;
 	private List collectionFromElements;
 	private String[] aliases;
+
+	// Currently we can only have one...
+	private AggregatedSelectExpression aggregatedSelectExpression;
 
 	/**
 	 * Does this SelectClause represent a scalar query
@@ -99,6 +100,8 @@ public class SelectClause extends SelectExpressionList {
 	
 	/**
 	 * The HQL aliases, or generated aliases
+	 *
+	 * @return the aliases
 	 */
 	public String[] getQueryReturnAliases() {
 		return aliases;
@@ -113,29 +116,15 @@ public class SelectClause extends SelectExpressionList {
 		return columnNames;
 	}
 
-	/**
-	 * The constructor to use for dynamic instantiation queries.
-	 *
-	 * @return The appropriate Constructor reference, or null if not a
-	 *         dynamic instantiation query.
-	 */
-	public Constructor getConstructor() {
-		return constructorNode == null ? null : constructorNode.getConstructor();
+	public AggregatedSelectExpression getAggregatedSelectExpression() {
+		return aggregatedSelectExpression;
 	}
-	
-	public boolean isMap() {
-		return constructorNode == null ? false : constructorNode.isMap();
-	}
-	
-	public boolean isList() {
-		return constructorNode == null ? false : constructorNode.isList();
-	}
-	
+
 	/**
 	 * Prepares an explicitly defined select clause.
 	 *
 	 * @param fromClause The from clause linked to this select clause.
-	 * @throws SemanticException
+	 * @throws SemanticException indicates a semntic issue with the explicit select clause.
 	 */
 	public void initializeExplicitSelectClause(FromClause fromClause) throws SemanticException {
 		if ( prepared ) {
@@ -152,30 +141,28 @@ public class SelectClause extends SelectExpressionList {
 		SelectExpression[] selectExpressions = collectSelectExpressions();
 		
 		for ( int i = 0; i < selectExpressions.length; i++ ) {
-			SelectExpression expr = selectExpressions[i];
+			SelectExpression selectExpression = selectExpressions[i];
 
-			if ( expr.isConstructor() ) {
-				constructorNode = ( ConstructorNode ) expr;
-				List constructorArgumentTypeList = constructorNode.getConstructorArgumentTypeList();
-				//sqlResultTypeList.addAll( constructorArgumentTypeList );
-				queryReturnTypeList.addAll( constructorArgumentTypeList );
+			if ( AggregatedSelectExpression.class.isInstance( selectExpression ) ) {
+				aggregatedSelectExpression = (AggregatedSelectExpression) selectExpression;
+				queryReturnTypeList.addAll( aggregatedSelectExpression.getAggregatedSelectionTypeList() );
 				scalarSelect = true;
 			}
 			else {
-				Type type = expr.getDataType();
+				Type type = selectExpression.getDataType();
 				if ( type == null ) {
-					throw new IllegalStateException( "No data type for node: " + expr.getClass().getName() + " "
-							+ new ASTPrinter( SqlTokenTypes.class ).showAsString( ( AST ) expr, "" ) );
+					throw new IllegalStateException( "No data type for node: " + selectExpression.getClass().getName() + " "
+							+ new ASTPrinter( SqlTokenTypes.class ).showAsString( ( AST ) selectExpression, "" ) );
 				}
 				//sqlResultTypeList.add( type );
 
 				// If the data type is not an association type, it could not have been in the FROM clause.
-				if ( expr.isScalar() ) {
+				if ( selectExpression.isScalar() ) {
 					scalarSelect = true;
 				}
 
-				if ( isReturnableEntity( expr ) ) {
-					fromElementsForLoad.add( expr.getFromElement() );
+				if ( isReturnableEntity( selectExpression ) ) {
+					fromElementsForLoad.add( selectExpression.getFromElement() );
 				}
 
 				// Always add the type to the return type list.
@@ -253,8 +240,7 @@ public class SelectClause extends SelectExpressionList {
 		finishInitialization( /*sqlResultTypeList,*/ queryReturnTypeList );
 	}
 
-	private void finishInitialization(/*ArrayList sqlResultTypeList,*/ ArrayList queryReturnTypeList) {
-		//sqlResultTypes = ( Type[] ) sqlResultTypeList.toArray( new Type[sqlResultTypeList.size()] );
+	private void finishInitialization(ArrayList queryReturnTypeList) {
 		queryReturnTypes = ( Type[] ) queryReturnTypeList.toArray( new Type[queryReturnTypeList.size()] );
 		initializeColumnNames();
 		prepared = true;
@@ -287,7 +273,6 @@ public class SelectClause extends SelectExpressionList {
 
 		ASTAppender appender = new ASTAppender( getASTFactory(), this );	// Get ready to start adding nodes.
 		int size = fromElements.size();
-		ArrayList sqlResultTypeList = new ArrayList( size );
 		ArrayList queryReturnTypeList = new ArrayList( size );
 
 		Iterator iterator = fromElements.iterator();
@@ -305,7 +290,6 @@ public class SelectClause extends SelectExpressionList {
 						queryReturnTypeList.add( type );
 					}
 					fromElementsForLoad.add( fromElement );
-					sqlResultTypeList.add( type );
 					// Generate the select expression.
 					String text = fromElement.renderIdentifierSelect( size, k );
 					SelectExpressionImpl generatedExpr = ( SelectExpressionImpl ) appender.append( SqlTokenTypes.SELECT_EXPR, text, false );
@@ -325,7 +309,7 @@ public class SelectClause extends SelectExpressionList {
 		else {
 			renderNonScalarSelects( selectExpressions, fromClause );
 		}
-		finishInitialization( /*sqlResultTypeList,*/ queryReturnTypeList );
+		finishInitialization( queryReturnTypeList );
 	}
 	
 	public static boolean VERSION2_SQL = false;
@@ -359,7 +343,7 @@ public class SelectClause extends SelectExpressionList {
 	private boolean isReturnableEntity(SelectExpression selectExpression) throws SemanticException {
 		FromElement fromElement = selectExpression.getFromElement();
 		boolean isFetchOrValueCollection = fromElement != null && 
-				( fromElement.isFetch() || fromElement.isCollectionOfValuesOrComponents() ); 
+				( fromElement.isFetch() || fromElement.isCollectionOfValuesOrComponents() );
 		if ( isFetchOrValueCollection ) {
 			return false;
 		}
@@ -378,7 +362,7 @@ public class SelectClause extends SelectExpressionList {
 	}
 	
 	private void initAliases(SelectExpression[] selectExpressions) {
-		if (constructorNode==null) {
+		if ( aggregatedSelectExpression == null ) {
 			aliases = new String[selectExpressions.length];
 			for ( int i=0; i<selectExpressions.length; i++ ) {
 				String alias = selectExpressions[i].getAlias();
@@ -386,7 +370,7 @@ public class SelectClause extends SelectExpressionList {
 			}
 		}
 		else {
-			aliases = constructorNode.getAliases();
+			aliases = aggregatedSelectExpression.getAggregatedAliases();
 		}
 	}
 

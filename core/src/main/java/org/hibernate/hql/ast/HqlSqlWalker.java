@@ -94,6 +94,7 @@ import org.hibernate.type.VersionType;
 import org.hibernate.type.DbTimestampType;
 import org.hibernate.usertype.UserVersionType;
 import org.hibernate.util.ArrayHelper;
+import org.hibernate.util.StringHelper;
 
 import antlr.ASTFactory;
 import antlr.RecognitionException;
@@ -166,6 +167,34 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 		this.collectionFilterRole = collectionRole;
 		this.hqlParser = parser;
 		this.printer = new ASTPrinter( SqlTokenTypes.class );
+	}
+
+
+	// handle trace logging ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    private int traceDepth = 0;
+
+	public void traceIn(String ruleName, AST tree) {
+		if ( inputState.guessing > 0 ) {
+			return;
+		}
+		String prefix = StringHelper.repeat( '-', (traceDepth++ * 2) ) + "-> ";
+		String traceText = ruleName + " (" + buildTraceNodeName(tree) + ")";
+		log.trace( prefix + traceText );
+	}
+
+	private String buildTraceNodeName(AST tree) {
+		return tree == null
+				? "???"
+				: tree.getText() + " [" + printer.getTokenTypeName( tree.getType() ) + "]";
+	}
+
+	public void traceOut(String ruleName, AST tree) {
+		if ( inputState.guessing > 0 ) {
+			return;
+		}
+		String prefix = "<-" + StringHelper.repeat( '-', (--traceDepth * 2) ) + " ";
+		log.trace( prefix + ruleName );
 	}
 
 
@@ -826,11 +855,12 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 		// This is called when it's time to fully resolve a path expression.
 		int type = node.getType();
 		switch ( type ) {
-			case DOT:
+			case DOT: {
 				DotNode dot = ( DotNode ) node;
 				dot.resolveSelectExpression();
 				break;
-			case ALIAS_REF:
+			}
+			case ALIAS_REF: {
 				// Notify the FROM element that it is being referenced by the select.
 				FromReferenceNode aliasRefNode = ( FromReferenceNode ) node;
 				//aliasRefNode.resolve( false, false, aliasRefNode.getText() ); //TODO: is it kosher to do it here?
@@ -839,8 +869,11 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 				if ( fromElement != null ) {
 					fromElement.setIncludeSubclasses( true );
 				}
-			default:
 				break;
+			}
+			default: {
+				break;
+			}
 		}
 	}
 
@@ -1099,6 +1132,22 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 
 	protected void prepareArithmeticOperator(AST operator) throws SemanticException {
 		( ( OperatorNode ) operator ).initialize();
+	}
+
+	protected void validateMapPropertyExpression(AST node) throws SemanticException {
+		try {
+			FromReferenceNode fromReferenceNode = (FromReferenceNode) node;
+			QueryableCollection collectionPersister = fromReferenceNode.getFromElement().getQueryableCollection();
+			if ( ! Map.class.isAssignableFrom( collectionPersister.getCollectionType().getReturnedClass() ) ) {
+				throw new SemanticException( "node did not reference a map" );
+			}
+		}
+		catch ( SemanticException se ) {
+			throw se;
+		}
+		catch ( Throwable t ) {
+			throw new SemanticException( "node did not reference a map" );
+		}
 	}
 
 	public static void panic() {

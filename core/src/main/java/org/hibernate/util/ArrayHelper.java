@@ -84,7 +84,7 @@ public final class ArrayHelper {
 	}
 
 	public static String[] toStringArray(Collection coll) {
-		return (String[]) coll.toArray(EMPTY_STRING_ARRAY);
+		return (String[]) coll.toArray( new String[coll.size()] );
 	}
 	
 	public static String[][] to2DStringArray(Collection coll) {
@@ -96,7 +96,7 @@ public final class ArrayHelper {
 	}
 	
 	public static Type[] toTypeArray(Collection coll) {
-		return (Type[]) coll.toArray(EMPTY_TYPE_ARRAY);
+		return (Type[]) coll.toArray( new Type[coll.size()] );
 	}
 
 	public static int[] toIntArray(Collection coll) {
@@ -136,17 +136,13 @@ public final class ArrayHelper {
 
 	public static String[] slice(String[] strings, int begin, int length) {
 		String[] result = new String[length];
-		for ( int i=0; i<length; i++ ) {
-			result[i] = strings[begin+i];
-		}
+		System.arraycopy( strings, begin, result, 0, length );
 		return result;
 	}
 
 	public static Object[] slice(Object[] objects, int begin, int length) {
 		Object[] result = new Object[length];
-		for ( int i=0; i<length; i++ ) {
-			result[i] = objects[begin+i];
-		}
+		System.arraycopy( objects, begin, result, 0, length );
 		return result;
 	}
 
@@ -160,25 +156,27 @@ public final class ArrayHelper {
 
 	public static String[] join(String[] x, String[] y) {
 		String[] result = new String[ x.length + y.length ];
-		for ( int i=0; i<x.length; i++ ) result[i] = x[i];
-		for ( int i=0; i<y.length; i++ ) result[i+x.length] = y[i];
+		System.arraycopy( x, 0, result, 0, x.length );
+		System.arraycopy( y, 0, result, x.length, y.length );
 		return result;
 	}
 
 	public static String[] join(String[] x, String[] y, boolean[] use) {
 		String[] result = new String[ x.length + countTrue(use) ];
-		for ( int i=0; i<x.length; i++ ) result[i] = x[i];
+		System.arraycopy( x, 0, result, 0, x.length );
 		int k = x.length;
 		for ( int i=0; i<y.length; i++ ) {
-			if ( use[i] ) result[k++] = y[i];
+			if ( use[i] ) {
+				result[k++] = y[i];
+			}
 		}
 		return result;
 	}
 
 	public static int[] join(int[] x, int[] y) {
 		int[] result = new int[ x.length + y.length ];
-		for ( int i=0; i<x.length; i++ ) result[i] = x[i];
-		for ( int i=0; i<y.length; i++ ) result[i+x.length] = y[i];
+		System.arraycopy( x, 0, result, 0, x.length );
+		System.arraycopy( y, 0, result, x.length, y.length );
 		return result;
 	}
 
@@ -236,9 +234,7 @@ public final class ArrayHelper {
 	}
 
 	public static void addAll(Collection collection, Object[] array) {
-		for ( int i=0; i<array.length; i++ ) {
-			collection.add( array[i] );
-		}
+		collection.addAll( Arrays.asList( array ) );
 	}
 
 	public static final String[] EMPTY_STRING_ARRAY = {};

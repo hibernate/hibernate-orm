@@ -29,6 +29,10 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.hibernate.PropertyNotFoundException;
+import org.hibernate.QueryException;
+import org.hibernate.transform.ResultTransformer;
+import org.hibernate.transform.AliasToBeanConstructorResultTransformer;
+import org.hibernate.transform.Transformers;
 import org.hibernate.hql.ast.DetailedSemanticException;
 import org.hibernate.type.Type;
 import org.hibernate.util.ReflectHelper;
@@ -42,13 +46,25 @@ import antlr.collections.AST;
  *
  * @author josh
  */
-public class ConstructorNode extends SelectExpressionList implements SelectExpression {
-
+public class ConstructorNode extends SelectExpressionList implements AggregatedSelectExpression {
 	private Constructor constructor;
 	private Type[] constructorArgumentTypes;
 	private boolean isMap;
 	private boolean isList;
-	
+
+	public ResultTransformer getResultTransformer() {
+		if ( constructor != null ) {
+			return new AliasToBeanConstructorResultTransformer( constructor );
+		}
+		else if ( isMap ) {
+			return Transformers.ALIAS_TO_ENTITY_MAP;
+		}
+		else if ( isList ) {
+			return Transformers.TO_LIST;
+		}
+		throw new QueryException( "Unable to determine proper dynamic-instantiation tranformer to use." );
+	}
+
 	public boolean isMap() {
 		return isMap;
 	}
@@ -56,8 +72,17 @@ public class ConstructorNode extends SelectExpressionList implements SelectExpre
 	public boolean isList() {
 		return isList;
 	}
-	
-	public String[] getAliases() {
+
+	private String[] aggregatedAliases;
+
+	public String[] getAggregatedAliases() {
+		if ( aggregatedAliases == null ) {
+			aggregatedAliases = buildAggregatedAliases();
+		}
+		return aggregatedAliases;
+	}
+
+	private String[] buildAggregatedAliases() {
 		SelectExpression[] selectExpressions = collectSelectExpressions();
 		String[] aliases = new String[selectExpressions.length] ;
 		for ( int i=0; i<selectExpressions.length; i++ ) {
@@ -152,6 +177,10 @@ public class ConstructorNode extends SelectExpressionList implements SelectExpre
 
 	public List getConstructorArgumentTypeList() {
 		return Arrays.asList( constructorArgumentTypes );
+	}
+
+	public List getAggregatedSelectionTypeList() {
+		return getConstructorArgumentTypeList();
 	}
 
 	public FromElement getFromElement() {

@@ -32,15 +32,21 @@ import java.util.Arrays;
 import antlr.RecognitionException;
 import antlr.collections.AST;
 import org.hibernate.QueryException;
+import org.hibernate.util.StringHelper;
 import org.hibernate.param.ParameterSpecification;
 import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.hql.antlr.SqlGeneratorBase;
+import org.hibernate.hql.antlr.SqlTokenTypes;
 import org.hibernate.hql.ast.tree.MethodNode;
 import org.hibernate.hql.ast.tree.FromElement;
 import org.hibernate.hql.ast.tree.Node;
 import org.hibernate.hql.ast.tree.ParameterNode;
 import org.hibernate.hql.ast.tree.ParameterContainer;
+import org.hibernate.hql.ast.util.ASTPrinter;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Generates SQL by overriding callback methods in the base class, which does
@@ -50,10 +56,7 @@ import org.hibernate.hql.ast.tree.ParameterContainer;
  * @author Steve Ebersole
  */
 public class SqlGenerator extends SqlGeneratorBase implements ErrorReporter {
-	/**
-	 * Handles parser errors.
-	 */
-	private ParseErrorHandler parseErrorHandler;
+	private static final Logger log = LoggerFactory.getLogger( SqlGenerator.class );
 
 	/**
 	 * all append invocations on the buf should go through this Output instance variable.
@@ -64,11 +67,39 @@ public class SqlGenerator extends SqlGeneratorBase implements ErrorReporter {
 	 */
 	private SqlWriter writer = new DefaultWriter();
 
+	private ParseErrorHandler parseErrorHandler;
 	private SessionFactoryImplementor sessionFactory;
-
 	private LinkedList outputStack = new LinkedList();
-
+	private final ASTPrinter printer = new ASTPrinter( SqlTokenTypes.class );
 	private List collectedParameters = new ArrayList();
+
+
+	// handle trace logging ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    private int traceDepth = 0;
+
+	public void traceIn(String ruleName, AST tree) {
+		if ( inputState.guessing > 0 ) {
+			return;
+		}
+		String prefix = StringHelper.repeat( '-', (traceDepth++ * 2) ) + "-> ";
+		String traceText = ruleName + " (" + buildTraceNodeName(tree) + ")";
+		log.trace( prefix + traceText );
+	}
+
+	private String buildTraceNodeName(AST tree) {
+		return tree == null
+				? "???"
+				: tree.getText() + " [" + printer.getTokenTypeName( tree.getType() ) + "]";
+	}
+
+	public void traceOut(String ruleName, AST tree) {
+		if ( inputState.guessing > 0 ) {
+			return;
+		}
+		String prefix = "<-" + StringHelper.repeat( '-', (--traceDepth * 2) ) + " ";
+		log.trace( prefix + ruleName );
+	}
 
 	public List getCollectedParameters() {
 		return collectedParameters;

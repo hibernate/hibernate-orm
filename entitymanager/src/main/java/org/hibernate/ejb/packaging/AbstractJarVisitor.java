@@ -1,9 +1,29 @@
+/*
+ * Copyright (c) 2009, Red Hat Middleware LLC or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Middleware LLC.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ */
 package org.hibernate.ejb.packaging;
 
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -19,12 +39,13 @@ import org.slf4j.LoggerFactory;
  * Parse a JAR of any form (zip file, exploded directory, ...)
  * apply a set of filters (File filter, Class filter, Package filter)
  * and return the appropriate matching sets of elements
- * 
  *
  * @author Emmanuel Bernard
  */
-//TODO shortcut when filters are null or empty
 public abstract class AbstractJarVisitor implements JarVisitor {
+
+	//TODO shortcut when filters are null or empty
+
 	private final Logger log = LoggerFactory.getLogger( AbstractJarVisitor.class );
 	protected String unqualifiedJarName;
 	protected URL jarUrl;

@@ -1,3 +1,24 @@
+/*
+ * Copyright (c) 2009, Red Hat Middleware LLC or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Middleware LLC.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ */
 package org.hibernate.ejb.packaging;
 
 import java.util.ArrayList;
@@ -11,7 +32,6 @@ import org.w3c.dom.NodeList;
  * A utility class to cover up the rough bits of xml parsing
  *
  * @author <a href="mailto:chris@kimptoc.net">Chris Kimpton</a>
- * @version $Revision: 11282 $
  */
 public final class XmlHelper {
 	private XmlHelper() {
@@ -27,8 +47,7 @@ public final class XmlHelper {
 	 */
 	public static Iterator getChildrenByTagName(
 			Element element,
-			String tagName
-	) {
+			String tagName) {
 		if ( element == null ) return null;
 		// getElementsByTagName gives the corresponding elements in the whole
 		// descendance. We want only children
@@ -101,9 +120,7 @@ public final class XmlHelper {
 	public static Element getOptionalChild(
 			Element element,
 			String tagName,
-			Element defaultElement
-	)
-			throws Exception {
+			Element defaultElement) throws Exception {
 		Iterator goodChildren = getChildrenByTagName( element, tagName );
 
 		if ( goodChildren != null && goodChildren.hasNext() ) {
@@ -166,9 +183,7 @@ public final class XmlHelper {
 	 */
 	public static String getUniqueChildContent(
 			Element element,
-			String tagName
-	)
-			throws Exception {
+			String tagName) throws Exception {
 		return getElementContent( getUniqueChild( element, tagName ) );
 	}
 
@@ -181,9 +196,7 @@ public final class XmlHelper {
 	 */
 	public static String getOptionalChildContent(
 			Element element,
-			String tagName
-	)
-			throws Exception {
+			String tagName) throws Exception {
 		return getElementContent( getOptionalChild( element, tagName ) );
 	}
 

@@ -76,13 +76,13 @@
         <dependency>
             <groupId>javax.validation</groupId>
             <artifactId>validation-api</artifactId>
-            <version>1.0.CR3-SNAPSHOT</version>
+            <version>1.0.CR4</version>
             <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>org.hibernate</groupId>
             <artifactId>hibernate-validator</artifactId>
-            <version>4.0.0.Beta3-SNAPSHOT</version>
+            <version>4.0.0.Beta3</version>
             <scope>test</scope>
         </dependency>
     </dependencies>

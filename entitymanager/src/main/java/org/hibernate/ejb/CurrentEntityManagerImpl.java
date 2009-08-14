@@ -23,6 +23,7 @@ package org.hibernate.ejb;
 
 import java.util.Map;
 import javax.persistence.PersistenceContextType;
+import javax.persistence.TypedQuery;
 import javax.persistence.spi.PersistenceUnitTransactionType;
 
 import org.hibernate.Session;

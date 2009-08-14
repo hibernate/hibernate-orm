@@ -38,6 +38,7 @@ import javax.persistence.PersistenceContextType;
 import javax.persistence.PersistenceException;
 import javax.persistence.Query;
 import javax.persistence.TransactionRequiredException;
+import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.QueryBuilder;
 import javax.persistence.metamodel.Metamodel;
@@ -125,7 +126,28 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 		}
 	}
 
-	public Query createQuery(CriteriaQuery criteriaQuery) {
+	public <T> TypedQuery<T> createQuery(String qlString, Class<T> resultClass) {
+		throw new UnsupportedOperationException( "Not yet implemented" );
+	}
+
+	public <T> TypedQuery<T> createQuery(CriteriaQuery<T> criteriaQuery) {
+		// TODO-STEVE : here is the interpretation/compilation portion.
+		// 		One option is to build on top of the existing
+		//		org.hibernate.loader.custom.CustomQuery infastructure
+		// 		(which is how native sql queries are implemented e.g.).
+		//		If so, then here we could interpret the criteria into
+		//		a CustomQuery instance which is passed into the
+		//		Query instance returned here.  We would then call into
+		//		the various SessionImplementor methods for execution
+		//		such as #listCustomQuery and #scrollCustomQuery.
+		//
+		// 		The drawback to this (^^) approach is that CustomQuery +
+		//		SessionImplementor combo does not support #executeUpdate
+		//		processing...
+		throw new UnsupportedOperationException( "Not yet implemented!" );
+	}
+
+	public <T> TypedQuery<T> createQuery(CriteriaQuery<T> criteriaQuery, Class<T> resultClass) {
 		// TODO-STEVE : here is the interpretation/compilation portion.
 		// 		One option is to build on top of the existing
 		//		org.hibernate.loader.custom.CustomQuery infastructure
@@ -159,6 +181,11 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 			return null;
 		}
 	}
+
+	public <T> TypedQuery<T> createNamedQuery(String name, Class<T> resultClass) {
+		throw new UnsupportedOperationException( "Not yet implemented" );
+	}
+
 
 	public Query createNativeQuery(String sqlString) {
 		//adjustFlushMode();

@@ -28,15 +28,19 @@ import java.io.Serializable;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContextType;
 import javax.persistence.Cache;
+import javax.persistence.PersistenceUnitUtil;
 import javax.persistence.metamodel.Metamodel;
 import javax.persistence.criteria.QueryBuilder;
 import javax.persistence.spi.PersistenceUnitTransactionType;
+import javax.persistence.spi.LoadState;
 
 import org.hibernate.SessionFactory;
+import org.hibernate.Hibernate;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.ejb.criteria.QueryBuilderImpl;
 import org.hibernate.ejb.metamodel.MetamodelImpl;
+import org.hibernate.ejb.util.PersistenceUtilHelper;
 
 /**
  * Actual Hiberate implementation of {@link javax.persistence.EntityManagerFactory}.
@@ -52,6 +56,7 @@ public class EntityManagerFactoryImpl implements HibernateEntityManagerFactory {
 	private final Class sessionInterceptorClass;
 	private final QueryBuilderImpl criteriaQueryBuilder;
 	private final Metamodel metamodel;
+	private final HibernatePersistenceUnitUtil util;
 
 	public EntityManagerFactoryImpl(
 			SessionFactory sessionFactory,
@@ -73,6 +78,7 @@ public class EntityManagerFactoryImpl implements HibernateEntityManagerFactory {
 			this.metamodel = null;
 		}
 		this.criteriaQueryBuilder = new QueryBuilderImpl( this );
+		this.util = new HibernatePersistenceUnitUtil( this );
 	}
 
 	public EntityManager createEntityManager() {
@@ -114,6 +120,10 @@ public class EntityManagerFactoryImpl implements HibernateEntityManagerFactory {
 		return new JPACache( sessionFactory );
 	}
 
+	public PersistenceUnitUtil getPersistenceUnitUtil() {
+		return null;  //To change body of implemented methods use File | Settings | File Templates.
+	}
+
 	public boolean isOpen() {
 		return ! sessionFactory.isClosed();
 	}
@@ -146,6 +156,37 @@ public class EntityManagerFactoryImpl implements HibernateEntityManagerFactory {
 // TODO : if we want to allow an optional clearing of all cache data, the additional calls would be:
 //			sessionFactory.getCache().evictCollectionRegions();
 //			sessionFactory.getCache().evictQueryRegions();
+		}
+	}
+
+	private static class HibernatePersistenceUnitUtil implements PersistenceUnitUtil, Serializable {
+		private final EntityManagerFactoryImpl emf;
+
+		private HibernatePersistenceUnitUtil(EntityManagerFactoryImpl emf) {
+			this.emf = emf;
+		}
+
+		public boolean isLoaded(Object entity, String attributeName) {
+			LoadState state = PersistenceUtilHelper.isLoadedWithoutReference( entity, attributeName );
+			if (state == LoadState.LOADED) {
+				return true;
+			}
+			else if (state == LoadState.NOT_LOADED ) {
+				return false;
+			}
+			else {
+				return PersistenceUtilHelper.isLoadedWithReference( entity, attributeName ) != LoadState.NOT_LOADED;
+			}
+
+
+		}
+
+		public boolean isLoaded(Object entity) {
+			return PersistenceUtilHelper.isLoaded( entity ) != LoadState.NOT_LOADED;
+		}
+
+		public Object getIdentifier(Object entity) {
+			throw new UnsupportedOperationException( "Not yet implemented" );
 		}
 	}
 }

@@ -38,6 +38,7 @@ import javax.persistence.TemporalType;
 import static javax.persistence.TemporalType.*;
 import javax.persistence.TransactionRequiredException;
 import javax.persistence.LockModeType;
+import javax.persistence.Parameter;
 
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
@@ -395,13 +396,48 @@ public class QueryImpl implements Query, HibernateQuery {
 		}
 	}
 
-	public Map<String, Object> getNamedParameters() {
-		//FIXME
+	//FIXME
+	public Set<Parameter<?>> getParameters() {
 		return null;  //To change body of implemented methods use File | Settings | File Templates.
 	}
 
-	public List getPositionalParameters() {
-		//FIXME
+	//FIXME
+	public Parameter<?> getParameter(String name) {
+		return null;  //To change body of implemented methods use File | Settings | File Templates.
+	}
+
+	//FIXME
+	public Parameter<?> getParameter(int position) {
+		return null;  //To change body of implemented methods use File | Settings | File Templates.
+	}
+
+	//FIXME
+	public <T> Parameter<T> getParameter(String name, Class<T> type) {
+		return null;  //To change body of implemented methods use File | Settings | File Templates.
+	}
+
+	//FIXME
+	public <T> Parameter<T> getParameter(int position, Class<T> type) {
+		return null;  //To change body of implemented methods use File | Settings | File Templates.
+	}
+
+	//FIXME
+	public boolean isBound(Parameter<?> param) {
+		return false;  //To change body of implemented methods use File | Settings | File Templates.
+	}
+
+	//FIXME
+	public <T> T getParameterValue(Parameter<T> param) {
+		return null;  //To change body of implemented methods use File | Settings | File Templates.
+	}
+
+	//FIXME
+	public Object getParameterValue(String name) {
+		return null;  //To change body of implemented methods use File | Settings | File Templates.
+	}
+
+	//FIXME
+	public Object getParameterValue(int position) {
 		return null;  //To change body of implemented methods use File | Settings | File Templates.
 	}
 

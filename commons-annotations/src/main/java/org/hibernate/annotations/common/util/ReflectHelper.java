@@ -27,8 +27,7 @@ import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 
-import org.hibernate.AssertionFailure;
-import org.hibernate.util.StringHelper;
+import org.hibernate.annotations.common.AssertionFailure;
 
 /**
  * Complete duplication of {@link org.hibernate.util.ReflectHelper}.
@@ -186,7 +185,7 @@ public final class ReflectHelper {
 	public static Object getConstantValue(String name) {
 		Class clazz;
 		try {
-			clazz = classForName( org.hibernate.util.StringHelper.qualifier( name ) );
+			clazz = classForName( StringHelper.qualifier( name ) );
 		}
 		catch ( Throwable t ) {
 			return null;

@@ -258,7 +258,7 @@ public final class SessionImpl extends AbstractSessionImpl
 		}
 
 		if ( rootSession != null ) {
-			rootSession.getSession( entityMode );
+			return rootSession.getSession( entityMode );
 		}
 
 		errorIfClosed();

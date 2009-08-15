@@ -53,7 +53,6 @@
         <module>cache-swarmcache</module>
         <module>connection-c3p0</module>
         <module>connection-proxool</module>
-        <module>commons-annotations</module>
         <module>annotations</module>
         <module>entitymanager</module>
         <module>envers</module>
@@ -80,6 +79,20 @@
                 </configuration>
             </plugin>
         </plugins>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-javadoc-plugin</artifactId>
+                    <version>2.5</version>
+<!--
+                    <configuration>
+                        <stylesheetfile>src/main/javadoc/hibernate-javadoc.css</stylesheetfile>
+                    </configuration>
+-->
+                </plugin>
+            </plugins>
+        </pluginManagement>
     </build>
 
     <profiles>

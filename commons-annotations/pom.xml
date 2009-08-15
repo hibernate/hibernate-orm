@@ -28,42 +28,150 @@
 
     <modelVersion>4.0.0</modelVersion>
 
-    <parent>
-        <groupId>org.hibernate</groupId>
-        <artifactId>hibernate-parent</artifactId>
-        <version>3.5.0-SNAPSHOT</version>
-        <relativePath>../parent/pom.xml</relativePath>
-    </parent>
-
     <groupId>org.hibernate</groupId>
     <artifactId>hibernate-commons-annotations</artifactId>
     <packaging>jar</packaging>
+    <version>3.2.0-SNAPSHOT</version>
 
     <name>Hibernate Commons Annotations</name>
     <description>Common reflection code used in support of annotation processing</description>
+    <url>http://hibernate.org</url>
+    <inceptionYear>2005</inceptionYear>
 
-    <!-- Annotations and Commons-Annotations both use the ANN JIRA key -->
+    <organization>
+        <name>Hibernate.org</name>
+        <url>http://hibernate.org</url>
+    </organization>
+
+    <licenses>
+		<license>
+			<name>GNU LESSER GENERAL PUBLIC LICENSE</name>
+			<url>http://www.gnu.org/licenses/lgpl.txt</url>
+		</license>
+	</licenses>
+
+    <developers>
+        <developer>
+            <id>epbernard</id>
+            <name>Emmanuel Bernard</name>
+            <email>emmanuel@hibernate.org</email>
+            <organization>JBoss, a division of Red Hat</organization>
+            <url>http://in.relation.to/Bloggers/Emmanuel</url>
+        </developer>
+    </developers>
+
+    <mailingLists>
+        <mailingList>
+            <name>Hibernate Announcements</name>
+            <post>hibernate-announce@lists.jboss.org</post>
+            <subscribe>https://lists.jboss.org/mailman/listinfo/hibernate-announce</subscribe>
+            <unsubscribe>https://lists.jboss.org/mailman/listinfo/hibernate-announce</unsubscribe>
+            <archive>http://lists.jboss.org/pipermail/hibernate-dev/</archive>
+        </mailingList>
+        <mailingList>
+            <name>Hibernate Commit Notificatons</name>
+            <post>hibernate-commits@lists.jboss.org</post>
+            <subscribe>https://lists.jboss.org/mailman/listinfo/hibernate-commits</subscribe>
+            <unsubscribe>https://lists.jboss.org/mailman/listinfo/hibernate-commits</unsubscribe>
+            <archive>http://lists.jboss.org/pipermail/hibernate-commits/</archive>
+        </mailingList>
+        <mailingList>
+            <name>Hibernate Developers</name>
+            <post>hibernate-dev@lists.jboss.org</post>
+            <subscribe>https://lists.jboss.org/mailman/listinfo/hibernate-dev</subscribe>
+            <unsubscribe>https://lists.jboss.org/mailman/listinfo/hibernate-dev</unsubscribe>
+            <archive>http://lists.jboss.org/pipermail/hibernate-dev/</archive>
+            <otherArchives>
+                <otherArchive>http://www.mail-archive.com/hibernate-dev%40lists.jboss.org/index.html</otherArchive>
+            </otherArchives>
+        </mailingList>
+        <mailingList>
+            <name>Hibernate Issue Notifications</name>
+            <post>hibernate-issues@lists.jboss.org</post>
+            <subscribe>https://lists.jboss.org/mailman/listinfo/hibernate-issues</subscribe>
+            <unsubscribe>https://lists.jboss.org/mailman/listinfo/hibernate-issues</unsubscribe>
+            <archive>http://lists.jboss.org/pipermail/hibernate-issues/</archive>
+        </mailingList>
+    </mailingLists>
+
     <issueManagement>
         <system>jira</system>
-        <url>http://opensource.atlassian.com/projects/hibernate/browse/ANN</url>
+        <url>http://opensource.atlassian.com/projects/hibernate/browse/HCANN</url>
     </issueManagement>
+
+    <scm>
+        <connection>scm:svn:https://svn.jboss.org/repos/hibernate/commons-annotations/trunk</connection>
+        <developerConnection>scm:svn:https://svn.jboss.org/repos/hibernate/commons-annotations/trunk</developerConnection>
+        <url>https://svn.jboss.org/repos/hibernate/commons-annotations/trunk</url>
+    </scm>
 
     <dependencies>
         <dependency>
-            <groupId>org.hibernate</groupId>
-            <artifactId>hibernate-core</artifactId>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
         </dependency>
+        <!-- test-scoped dependencies for common testing dependencies -->
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>3.8.1</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>jcl-over-slf4j</artifactId>
+            <version>${slf4jVersion}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-log4j12</artifactId>
+            <version>${slf4jVersion}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>commons-logging</groupId>
+            <artifactId>commons-logging</artifactId>
+            <version>99.0-does-not-exist</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>commons-logging</groupId>
+            <artifactId>commons-logging-api</artifactId>
+            <version>99.0-does-not-exist</version>
+            <scope>test</scope>
+        </dependency>
+        <!-- / test-scoped dependencies for common testing dependencies -->
     </dependencies>
 
     <dependencyManagement>
         <dependencies>
             <dependency>
-                <groupId>org.hibernate</groupId>
-                <artifactId>hibernate-core</artifactId>
-                <version>${version}</version>
+                <groupId>org.slf4j</groupId>
+                <artifactId>slf4j-api</artifactId>
+                <version>${slf4jVersion}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
+
+    <distributionManagement>
+        <repository>
+            <!-- Copy the dist to the local checkout of the JBoss maven2 repo ${maven.repository.root} -->
+            <!-- It is anticipated that ${maven.repository.root} be set in user's settings.xml -->
+            <!-- todo : replace this with direct svn access once the svnkit providers are available -->
+            <id>repository.jboss.org</id>
+            <url>file://${maven.repository.root}</url>
+        </repository>
+        <snapshotRepository>
+            <id>snapshots.jboss.org</id>
+            <name>JBoss Snapshot Repository</name>
+            <url>dav:https://snapshots.jboss.org/maven2</url>
+        </snapshotRepository>
+    </distributionManagement>
+
+    <properties>
+        <slf4jVersion>1.5.8</slf4jVersion>
+    </properties>
 
     <build>
         <plugins>

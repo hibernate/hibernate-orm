@@ -464,9 +464,11 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 		return getEntityManagerFactory().getQueryBuilder();
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	public Metamodel getMetamodel() {
-		//FIXME
-		return null;  //To change body of implemented methods use File | Settings | File Templates.
+		return getEntityManagerFactory().getMetamodel();
 	}
 
 	public void setFlushMode(FlushModeType flushModeType) {

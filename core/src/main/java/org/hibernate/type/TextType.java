@@ -30,7 +30,7 @@ import java.sql.Types;
 /**
  * <tt>text</tt>: A type that maps an SQL LONGVARCHAR to a Java String.
  *
- * @author Gail Badner
+ * @author Gavin King, Bertrand Renuart
  */
 public class TextType extends AbstractLongStringType {
 

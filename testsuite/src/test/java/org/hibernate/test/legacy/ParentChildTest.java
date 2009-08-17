@@ -130,7 +130,7 @@ public class ParentChildTest extends LegacyTestCase {
 		s.close();
 	}
 
-	public void testProxyReuse() throws Exception {
+	public void testProxyReuseFailureExpected() throws Exception {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
 		FooProxy foo = new Foo();
@@ -179,6 +179,7 @@ public class ParentChildTest extends LegacyTestCase {
 		s.delete(foo);
 		s.delete( s.get(Foo.class, id2) );
 		s.delete( s.get(Foo.class, "xyzid") );
+// here is the issue (HHH-4092).  After the deletes above there are 2 Fees and a Glarch unexpectedly hanging around
 		assertEquals( 2, doDelete( s, "from java.lang.Object" ) );
 		t.commit();
 		s.close();
@@ -205,7 +206,7 @@ public class ParentChildTest extends LegacyTestCase {
 		s.close();
 	}
 
-	public void testComplexCriteria() throws Exception {
+	public void testComplexCriteriaFailureExpected() throws Exception {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
 		Baz baz = new Baz();
@@ -244,6 +245,8 @@ public class ParentChildTest extends LegacyTestCase {
 			.add( Restrictions.eq("string", "a string") )
 			.add( Restrictions.lt("integer", new Integer(-665) ) );
 		crit.createCriteria("fooArray")
+				// this is the bit causing the problems; creating the criteria on fooArray does not add it to FROM,
+				// and so restriction below leads to an invalid reference.
 			.add( Restrictions.eq("string", "a string") )
 			.setLockMode(lockMode);
 

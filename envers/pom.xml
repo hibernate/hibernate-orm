@@ -133,12 +133,6 @@
             </dependency>
             <dependency>
                 <groupId>org.hibernate</groupId>
-                <artifactId>hibernate-commons-annotations</artifactId>
-                <version>${version}</version>
-            </dependency>
-            <!-- todo : change to work like hibernate-core after we import annotations and em back into core -->
-            <dependency>
-                <groupId>org.hibernate</groupId>
                 <artifactId>hibernate-entitymanager</artifactId>
                 <version>${version}</version>
             </dependency>

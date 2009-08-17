@@ -22,7 +22,11 @@
 package org.hibernate.ejb.criteria.basic;
 
 import javax.persistence.EntityManager;
+import javax.persistence.metamodel.SingularAttribute;
 import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.ParameterExpression;
+import javax.persistence.criteria.Root;
+import javax.persistence.criteria.Predicate;
 
 import org.hibernate.ejb.test.TestCase;
 
@@ -37,11 +41,28 @@ public class BasicCriteriaUsageTest extends TestCase {
 		return new Class[] { Wall.class };
 	}
 
-	public void testSimpliestCriterias() {
+	public void testSimplestCriterias() {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
 		CriteriaQuery criteria = em.getQueryBuilder().createQuery();
 		criteria.from( Wall.class );
+		em.getTransaction().commit();
+		em.close();
+	}
+
+	public void testParameterCollection() {
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		CriteriaQuery criteria = em.getQueryBuilder().createQuery();
+		Root<Wall> from = criteria.from( Wall.class );
+		ParameterExpression param = em.getQueryBuilder().parameter( String.class );
+		SingularAttribute<? super Wall,?> colorAttribute = em.getMetamodel()
+				.entity( Wall.class )
+				.getDeclaredSingularAttribute( "color" );
+		assertNotNull( "metamodel returned null singular attribute", colorAttribute );
+		Predicate predicate = em.getQueryBuilder().equal( from.get( colorAttribute ), param );
+		criteria.where( predicate );
+		assertEquals( 1, criteria.getParameters().size() );
 		em.getTransaction().commit();
 		em.close();
 	}

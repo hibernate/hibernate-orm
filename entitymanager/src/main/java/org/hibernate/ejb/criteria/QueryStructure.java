@@ -27,6 +27,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Collections;
 import java.util.LinkedHashSet;
+import java.util.ArrayList;
 import javax.persistence.criteria.AbstractQuery;
 import javax.persistence.criteria.Root;
 import javax.persistence.criteria.Predicate;
@@ -78,14 +79,18 @@ public class QueryStructure<T> {
 		ParameterContainer.Helper.possibleParameter(selection, registry);
 		ParameterContainer.Helper.possibleParameter(restriction, registry);
 		ParameterContainer.Helper.possibleParameter(having, registry);
-		for ( Subquery subquery : getSubqueries() ) {
-			ParameterContainer.Helper.possibleParameter(subquery, registry);
+		if ( subqueries != null ) {
+			for ( Subquery subquery : subqueries ) {
+				ParameterContainer.Helper.possibleParameter(subquery, registry);
+			}
 		}
 
 		// both group-by and having expressions can (though unlikely) contain parameters...
 		ParameterContainer.Helper.possibleParameter(having, registry);
-		for ( Expression<?> grouping : groupings ) {
-			ParameterContainer.Helper.possibleParameter(grouping, registry);
+		if ( groupings != null ) {
+			for ( Expression<?> grouping : groupings ) {
+				ParameterContainer.Helper.possibleParameter(grouping, registry);
+			}
 		}
 
 		return parameters;
@@ -128,7 +133,7 @@ public class QueryStructure<T> {
 	}
 
 	public <X> Root<X> from(EntityType<X> entityType) {
-		RootImpl<X> root = new RootImpl( queryBuilder, entityType );
+		RootImpl<X> root = new RootImpl<X>( queryBuilder, entityType );
 		roots.add( root );
 		return root;
 	}
@@ -179,9 +184,16 @@ public class QueryStructure<T> {
 		return subqueries;
 	}
 
+	public List<Subquery<?>> internalGetSubqueries() {
+		if ( subqueries == null ) {
+			subqueries = new ArrayList<Subquery<?>>();
+		}
+		return subqueries;
+	}
+
 	public <U> Subquery<U> subquery(Class<U> subqueryType) {
 		CriteriaSubqueryImpl<U> subquery = new CriteriaSubqueryImpl<U>( queryBuilder, subqueryType, owner );
-		subqueries.add( subquery );
+		internalGetSubqueries().add( subquery );
 		return subquery;
 	}
 }

@@ -305,67 +305,7 @@ session.flush();]]></programlisting>
              property, or will actually query the second-level cache or, worst case, the database, to see if the 
              row exists.
          </para>
-         
-         <!-- undocumenting
-         <para>
-             There is one further possibility. The <literal>Interceptor</literal> method named 
-             <literal>isUnsaved()</literal> lets the application implement its own strategy for distinguishing
-             newly instantiated objects. For example, you could define a base class for your persistent classes.
-         </para>
 
-         <programlisting><![CDATA[public class Persistent {
-    private boolean _saved = false;
-    public void onSave() {
-        _saved=true;
-    }
-    public void onLoad() {
-        _saved=true;
-    }
-    ......
-    public boolean isSaved() {
-        return _saved;
-    }
-}]]></programlisting>
-     
-         <para>
-             (The <literal>saved</literal> property is non-persistent.)
-             Now implement <literal>isUnsaved()</literal>, along with <literal>onLoad()</literal>
-             and <literal>onSave()</literal> as follows.
-         </para>
-
-         <programlisting><![CDATA[public Boolean isUnsaved(Object entity) {
-    if (entity instanceof Persistent) {
-        return new Boolean( !( (Persistent) entity ).isSaved() );
-    }
-    else {
-        return null;
-    }
-}
-
-public boolean onLoad(Object entity, 
-    Serializable id,
-    Object[] state,
-    String[] propertyNames,
-    Type[] types) {
-
-    if (entity instanceof Persistent) ( (Persistent) entity ).onLoad();
-    return false;
-}
-
-public boolean onSave(Object entity,
-    Serializable id,
-    Object[] state,
-    String[] propertyNames,
-    Type[] types) {
-        
-    if (entity instanceof Persistent) ( (Persistent) entity ).onSave();
-    return false;
-}]]></programlisting>
-
-		<para>
-			Do not worry; in Hibernate3 you do not need to write any of this kind of code if you do not want to.
-		</para>
-     -->
      </sect1>
 
      <sect1 id="example-parentchild-conclusion">

@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2009-07-14 19:56+0000\n"
+"POT-Creation-Date: 2009-06-10 21:02+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -1105,13 +1105,13 @@ msgstr ""
 "                    }]]>"
 
 #. Tag: title
-#: persistent_classes.xml:354
+#: persistent_classes.xml:353
 #, no-c-format
 msgid "EntityNameResolvers"
 msgstr ""
 
 #. Tag: para
-#: persistent_classes.xml:356
+#: persistent_classes.xml:355
 #, no-c-format
 msgid ""
 "The <interfacename>org.hibernate.EntityNameResolver</interfacename> "
@@ -1130,7 +1130,7 @@ msgid ""
 msgstr ""
 
 #. Tag: programlisting
-#: persistent_classes.xml:368
+#: persistent_classes.xml:367
 #, no-c-format
 msgid ""
 "/**\n"
@@ -1262,7 +1262,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: persistent_classes.xml:370
+#: persistent_classes.xml:369
 #, no-c-format
 msgid ""
 "In order to register an <interfacename>org.hibernate.EntityNameResolver</"
@@ -1270,7 +1270,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: persistent_classes.xml:374
+#: persistent_classes.xml:373
 #, no-c-format
 msgid ""
 "Implement a custom <link linkend=\"persistent-classes-tuplizers\">Tuplizer</"
@@ -1279,7 +1279,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: persistent_classes.xml:380
+#: persistent_classes.xml:379
 #, no-c-format
 msgid ""
 "Register it with the <classname>org.hibernate.impl.SessionFactoryImpl</"

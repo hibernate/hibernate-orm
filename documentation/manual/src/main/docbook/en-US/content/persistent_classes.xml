@@ -703,12 +703,5 @@ public class MyEntityTuplizer extends PojoEntityTuplizer {
         </para>
     </sect1>
 
-    <!--<sect1 id="persistent-classes-extensions">
-        <title>Extensions</title>
-        <para>
-            TODO: Document user-extension framework in the property and proxy packages
-        </para>
-    </sect1>-->
-
 </chapter>
 

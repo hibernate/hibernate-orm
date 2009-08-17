@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2009-07-14 19:56+0000\n"
+"POT-Creation-Date: 2009-08-17 20:22+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <kde-i18n-doc@kde.org>\n"
@@ -1467,73 +1467,73 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: performance.xml:1233
+#: performance.xml:1228
 #, no-c-format
 msgid "You can activate and deactivate the monitoring for a <literal>SessionFactory</literal>:"
 msgstr ""
 
 #. Tag: para
-#: performance.xml:1238
+#: performance.xml:1233
 #, no-c-format
 msgid "at configuration time, set <literal>hibernate.generate_statistics</literal> to <literal>false</literal>"
 msgstr ""
 
 #. Tag: para
-#: performance.xml:1245
+#: performance.xml:1240
 #, no-c-format
 msgid "at runtime: <literal>sf.getStatistics().setStatisticsEnabled(true)</literal> or <literal>hibernateStatsBean.setStatisticsEnabled(true)</literal>"
 msgstr ""
 
 #. Tag: para
-#: performance.xml:1252
+#: performance.xml:1247
 #, no-c-format
 msgid "Statistics can be reset programmatically using the <literal>clear()</literal> method. A summary can be sent to a logger (info level) using the <literal>logSummary()</literal> method."
 msgstr ""
 
 #. Tag: title
-#: performance.xml:1261
+#: performance.xml:1256
 #, no-c-format
 msgid "Metrics"
 msgstr ""
 
 #. Tag: para
-#: performance.xml:1263
+#: performance.xml:1258
 #, no-c-format
 msgid "Hibernate provides a number of metrics, from basic information to more specialized information that is only relevant in certain scenarios. All available counters are described in the <literal>Statistics</literal> interface API, in three categories:"
 msgstr ""
 
 #. Tag: para
-#: performance.xml:1270
+#: performance.xml:1265
 #, no-c-format
 msgid "Metrics related to the general <literal>Session</literal> usage, such as number of open sessions, retrieved JDBC connections, etc."
 msgstr ""
 
 #. Tag: para
-#: performance.xml:1276
+#: performance.xml:1271
 #, no-c-format
 msgid "Metrics related to the entities, collections, queries, and caches as a whole (aka global metrics)."
 msgstr ""
 
 #. Tag: para
-#: performance.xml:1282
+#: performance.xml:1277
 #, no-c-format
 msgid "Detailed metrics related to a particular entity, collection, query or cache region."
 msgstr ""
 
 #. Tag: para
-#: performance.xml:1289
+#: performance.xml:1284
 #, no-c-format
 msgid "For example, you can check the cache hit, miss, and put ratio of entities, collections and queries, and the average time a query needs. Be aware that the number of milliseconds is subject to approximation in Java. Hibernate is tied to the JVM precision and on some platforms this might only be accurate to 10 seconds."
 msgstr ""
 
 #. Tag: para
-#: performance.xml:1296
+#: performance.xml:1291
 #, no-c-format
 msgid "Simple getters are used to access the global metrics (i.e. not tied to a particular entity, collection, cache region, etc.). You can access the metrics of a particular entity, collection or cache region through its name, and through its HQL or SQL representation for queries. Please refer to the <literal>Statistics</literal>, <literal>EntityStatistics</literal>, <literal>CollectionStatistics</literal>, <literal>SecondLevelCacheStatistics</literal>, and <literal>QueryStatistics</literal> API Javadoc for more information. The following code is a simple example:"
 msgstr ""
 
 #. Tag: programlisting
-#: performance.xml:1306
+#: performance.xml:1301
 #, no-c-format
 msgid ""
       "<![CDATA[Statistics stats = HibernateUtil.sessionFactory.getStatistics();\n"
@@ -1555,7 +1555,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: performance.xml:1308
+#: performance.xml:1303
 #, no-c-format
 msgid "You can work on all entities, collections, queries and region caches, by retrieving the list of names of entities, collections, queries and region caches using the following methods: <literal>getQueries()</literal>, <literal>getEntityNames()</literal>, <literal>getCollectionRoleNames()</literal>, and <literal>getSecondLevelCacheRegionNames()</literal>."
 msgstr ""

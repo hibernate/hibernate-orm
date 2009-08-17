@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2009-07-14 19:55+0000\n"
+"POT-Creation-Date: 2009-06-10 21:02+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -27,7 +27,7 @@ msgid ""
 msgstr "Una visi&#x00f3;n a (muy) alto nivel de la arquitectura de Hibernate:"
 
 #. Tag: para
-#: architecture.xml:48
+#: architecture.xml:50
 #, fuzzy, no-c-format
 msgid ""
 "We do not have the scope in this document to provide a more detailed view of "
@@ -43,7 +43,7 @@ msgstr ""
 "m&#x00ed;nimo subconjunto de la API de Hibernate:"
 
 #. Tag: para
-#: architecture.xml:54
+#: architecture.xml:56
 #, fuzzy, no-c-format
 msgid ""
 "This next diagram illustrates how Hibernate utilizes database and "
@@ -55,7 +55,7 @@ msgstr ""
 "persistentes) a la aplicaci&#x00f3;n."
 
 #. Tag: para
-#: architecture.xml:59
+#: architecture.xml:61
 #, fuzzy, no-c-format
 msgid ""
 "The \"minimal\" architecture has the application provide its own JDBC "
@@ -70,7 +70,7 @@ msgstr ""
 "m&#x00ed;nimo subconjunto de la API de Hibernate:"
 
 #. Tag: para
-#: architecture.xml:74
+#: architecture.xml:78
 #, fuzzy, no-c-format
 msgid ""
 "The \"comprehensive\" architecture abstracts the application away from the "
@@ -80,19 +80,19 @@ msgstr ""
 "JDBC/JTA y deja que Hibernate se encargue de los detalles."
 
 #. Tag: para
-#: architecture.xml:88
+#: architecture.xml:92
 #, fuzzy, no-c-format
 msgid "Here are some definitions of the objects depicted in the diagrams:"
 msgstr "He aqu&#x00ed; algunas definiciones de los objetos en los diagramas:"
 
 #. Tag: term
-#: architecture.xml:93
+#: architecture.xml:97
 #, no-c-format
 msgid "SessionFactory (<literal>org.hibernate.SessionFactory</literal>)"
 msgstr "SessionFactory (<literal>org.hibernate.SessionFactory</literal>)"
 
 #. Tag: para
-#: architecture.xml:95
+#: architecture.xml:99
 #, fuzzy, no-c-format
 msgid ""
 "A threadsafe, immutable cache of compiled mappings for a single database. A "
@@ -108,13 +108,13 @@ msgstr ""
 "nivel de proceso o de cluster."
 
 #. Tag: term
-#: architecture.xml:105
+#: architecture.xml:109
 #, no-c-format
 msgid "Session (<literal>org.hibernate.Session</literal>)"
 msgstr "Session (<literal>org.hibernate.Session</literal>)"
 
 #. Tag: para
-#: architecture.xml:107
+#: architecture.xml:111
 #, fuzzy, no-c-format
 msgid ""
 "A single-threaded, short-lived object representing a conversation between "
@@ -131,13 +131,13 @@ msgstr ""
 "objetos por identificador."
 
 #. Tag: term
-#: architecture.xml:117
+#: architecture.xml:121
 #, no-c-format
 msgid "Persistent objects and collections"
 msgstr "Objetos y colecciones persistentes"
 
 #. Tag: para
-#: architecture.xml:119
+#: architecture.xml:123
 #, fuzzy, no-c-format
 msgid ""
 "Short-lived, single threaded objects containing persistent state and "
@@ -158,13 +158,13 @@ msgstr ""
 "n)."
 
 #. Tag: term
-#: architecture.xml:129
+#: architecture.xml:133
 #, no-c-format
 msgid "Transient and detached objects and collections"
 msgstr "Objetos y colecciones transitorios y separados"
 
 #. Tag: para
-#: architecture.xml:131
+#: architecture.xml:135
 #, fuzzy, no-c-format
 msgid ""
 "Instances of persistent classes that are not currently associated with a "
@@ -178,13 +178,13 @@ msgstr ""
 "haber sido instanciadas por una <literal>Session</literal> cerrada."
 
 #. Tag: term
-#: architecture.xml:140
+#: architecture.xml:144
 #, no-c-format
 msgid "Transaction (<literal>org.hibernate.Transaction</literal>)"
 msgstr "Transaction (<literal>org.hibernate.Transaction</literal>)"
 
 #. Tag: para
-#: architecture.xml:142
+#: architecture.xml:146
 #, fuzzy, no-c-format
 msgid ""
 "(Optional) A single-threaded, short-lived object used by the application to "
@@ -203,7 +203,7 @@ msgstr ""
 "literal>, nunca es opcional!"
 
 #. Tag: term
-#: architecture.xml:153
+#: architecture.xml:157
 #, no-c-format
 msgid ""
 "ConnectionProvider (<literal>org.hibernate.connection.ConnectionProvider</"
@@ -213,7 +213,7 @@ msgstr ""
 "literal>)"
 
 #. Tag: para
-#: architecture.xml:155
+#: architecture.xml:159
 #, fuzzy, no-c-format
 msgid ""
 "(Optional) A factory for, and pool of, JDBC connections. It abstracts the "
@@ -228,7 +228,7 @@ msgstr ""
 "desarrollador."
 
 #. Tag: term
-#: architecture.xml:163
+#: architecture.xml:167
 #, no-c-format
 msgid ""
 "TransactionFactory (<literal>org.hibernate.TransactionFactory</literal>)"
@@ -236,7 +236,7 @@ msgstr ""
 "TransactionFactory (<literal>org.hibernate.TransactionFactory</literal>)"
 
 #. Tag: para
-#: architecture.xml:165
+#: architecture.xml:169
 #, fuzzy, no-c-format
 msgid ""
 "(Optional) A factory for <literal>Transaction</literal> instances. It is not "
@@ -248,13 +248,13 @@ msgstr ""
 "implementado por el desarrollador."
 
 #. Tag: emphasis
-#: architecture.xml:172
+#: architecture.xml:176
 #, no-c-format
 msgid "Extension Interfaces"
 msgstr "Interfaces de Extensi&#x00f3;n"
 
 #. Tag: para
-#: architecture.xml:174
+#: architecture.xml:178
 #, fuzzy, no-c-format
 msgid ""
 "Hibernate offers a range of optional extension interfaces you can implement "
@@ -267,7 +267,7 @@ msgstr ""
 "API."
 
 #. Tag: para
-#: architecture.xml:183
+#: architecture.xml:187
 #, fuzzy, no-c-format
 msgid ""
 "Given a \"minimal\" architecture, the application bypasses the "
@@ -281,13 +281,13 @@ msgstr ""
 "JDBC."
 
 #. Tag: title
-#: architecture.xml:191
+#: architecture.xml:195
 #, no-c-format
 msgid "Instance states"
 msgstr "Estados de instancia"
 
 #. Tag: para
-#: architecture.xml:192
+#: architecture.xml:196
 #, fuzzy, no-c-format
 msgid ""
 "An instance of a persistent class can be in one of three different states. "
@@ -301,13 +301,13 @@ msgstr ""
 "de persistencia:"
 
 #. Tag: term
-#: architecture.xml:200
+#: architecture.xml:204
 #, no-c-format
 msgid "transient"
 msgstr "transitorio"
 
 #. Tag: para
-#: architecture.xml:202
+#: architecture.xml:206
 #, fuzzy, no-c-format
 msgid ""
 "The instance is not associated with any persistence context. It has no "
@@ -317,13 +317,13 @@ msgstr ""
 "persistencia. No tiene identidad persistente (valor de clave primaria)."
 
 #. Tag: term
-#: architecture.xml:210
+#: architecture.xml:214
 #, no-c-format
 msgid "persistent"
 msgstr "persistente"
 
 #. Tag: para
-#: architecture.xml:212
+#: architecture.xml:216
 #, fuzzy, no-c-format
 msgid ""
 "The instance is currently associated with a persistence context. It has a "
@@ -340,13 +340,13 @@ msgstr ""
 "(localizaci&#x00f3;n en memoria del objeto)."
 
 #. Tag: term
-#: architecture.xml:224
+#: architecture.xml:228
 #, no-c-format
 msgid "detached"
 msgstr "separado"
 
 #. Tag: para
-#: architecture.xml:226
+#: architecture.xml:230
 #, fuzzy, no-c-format
 msgid ""
 "The instance was once associated with a persistence context, but that "
@@ -363,13 +363,13 @@ msgstr ""
 "e identidad Java."
 
 #. Tag: title
-#: architecture.xml:241
+#: architecture.xml:245
 #, no-c-format
 msgid "JMX Integration"
 msgstr "Integraci&#x00f3;n JMX"
 
 #. Tag: para
-#: architecture.xml:243
+#: architecture.xml:247
 #, fuzzy, no-c-format
 msgid ""
 "JMX is the J2EE standard for the management of Java components. Hibernate "
@@ -383,7 +383,7 @@ msgstr ""
 "<literal>org.hibernate.jmx.HibernateService</literal>."
 
 #. Tag: para
-#: architecture.xml:249
+#: architecture.xml:253
 #, fuzzy, no-c-format
 msgid ""
 "For an example of how to deploy Hibernate as a JMX service on the JBoss "
@@ -396,7 +396,7 @@ msgstr ""
 "usando JMX:"
 
 #. Tag: para
-#: architecture.xml:257
+#: architecture.xml:261
 #, fuzzy, no-c-format
 msgid ""
 "<emphasis>Session Management</emphasis>: the Hibernate <literal>Session</"
@@ -421,7 +421,7 @@ msgstr ""
 "<literal>HibernateContext</literal>."
 
 #. Tag: para
-#: architecture.xml:269
+#: architecture.xml:273
 #, fuzzy, no-c-format
 msgid ""
 "<emphasis>HAR deployment</emphasis>: the Hibernate JMX service is deployed "
@@ -442,7 +442,7 @@ msgstr ""
 "de mapeo en tu fichero HAR."
 
 #. Tag: para
-#: architecture.xml:280
+#: architecture.xml:284
 #, no-c-format
 msgid ""
 "Consult the JBoss AS user guide for more information about these options."
@@ -451,7 +451,7 @@ msgstr ""
 "Gu&#x00ed;a de Usuario del JBoss AS."
 
 #. Tag: para
-#: architecture.xml:284
+#: architecture.xml:288
 #, fuzzy, no-c-format
 msgid ""
 "Another feature available as a JMX service is runtime Hibernate statistics. "
@@ -463,13 +463,13 @@ msgstr ""
 "\"configuration-optional-statistics\"/>."
 
 #. Tag: title
-#: architecture.xml:291
+#: architecture.xml:295
 #, no-c-format
 msgid "JCA Support"
 msgstr "Soporte JCA:"
 
 #. Tag: para
-#: architecture.xml:292
+#: architecture.xml:296
 #, fuzzy, no-c-format
 msgid ""
 "Hibernate can also be configured as a JCA connector. Please see the website "
@@ -481,13 +481,13 @@ msgstr ""
 "soporte de JCA de Hibernate est&#x00e1; a&#x00fa;n considerado experimental."
 
 #. Tag: title
-#: architecture.xml:299
+#: architecture.xml:303
 #, fuzzy, no-c-format
 msgid "Contextual sessions"
 msgstr "UNTRANSLATED! Contextual Sessions"
 
 #. Tag: para
-#: architecture.xml:300
+#: architecture.xml:304
 #, fuzzy, no-c-format
 msgid ""
 "Most applications using Hibernate need some form of \"contextual\" session, "
@@ -511,7 +511,7 @@ msgstr ""
 "proxy/interception-based contextual sessions."
 
 #. Tag: para
-#: architecture.xml:309
+#: architecture.xml:313
 #, fuzzy, no-c-format
 msgid ""
 "Starting with version 3.0.1, Hibernate added the <literal>SessionFactory."
@@ -536,7 +536,7 @@ msgstr ""
 "based contextual sessions is all you should ever need to use."
 
 #. Tag: para
-#: architecture.xml:319
+#: architecture.xml:323
 #, fuzzy, no-c-format
 msgid ""
 "However, as of version 3.1, the processing behind <literal>SessionFactory."
@@ -554,7 +554,7 @@ msgstr ""
 "pluggability of the scope and context of defining current sessions."
 
 #. Tag: para
-#: architecture.xml:326
+#: architecture.xml:330
 #, fuzzy, no-c-format
 msgid ""
 "See the Javadocs for the <literal>org.hibernate.context."
@@ -572,7 +572,7 @@ msgstr ""
 "implementations of this interface."
 
 #. Tag: para
-#: architecture.xml:336
+#: architecture.xml:340
 #, fuzzy, no-c-format
 msgid ""
 "<literal>org.hibernate.context.JTASessionContext</literal>: current sessions "
@@ -586,7 +586,7 @@ msgstr ""
 "the Javadocs for details."
 
 #. Tag: para
-#: architecture.xml:344
+#: architecture.xml:348
 #, fuzzy, no-c-format
 msgid ""
 "<literal>org.hibernate.context.ThreadLocalSessionContext</literal>:current "
@@ -597,7 +597,7 @@ msgstr ""
 "details."
 
 #. Tag: para
-#: architecture.xml:350
+#: architecture.xml:354
 #, fuzzy, no-c-format
 msgid ""
 "<literal>org.hibernate.context.ManagedSessionContext</literal>: current "
@@ -611,7 +611,7 @@ msgstr ""
 "this class, it does never open, flush, or close a <literal>Session</literal>."
 
 #. Tag: para
-#: architecture.xml:359
+#: architecture.xml:363
 #, fuzzy, no-c-format
 msgid ""
 "The first two implementations provide a \"one session - one database "
@@ -640,7 +640,7 @@ msgstr ""
 "linkend=\"transactions\"/> for more information and code examples."
 
 #. Tag: para
-#: architecture.xml:371
+#: architecture.xml:375
 #, fuzzy, no-c-format
 msgid ""
 "The <literal>hibernate.current_session_context_class</literal> configuration "

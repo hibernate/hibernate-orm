@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2009-07-14 19:55+0000\n"
+"POT-Creation-Date: 2009-08-17 20:22+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -566,13 +566,13 @@ msgstr ""
 "존재하는지를 알기 위해 데이터베이스를 질의할 것이다."
 
 #. Tag: title
-#: example_parentchild.xml:284
+#: example_parentchild.xml:263
 #, no-c-format
 msgid "Conclusion"
 msgstr "결론"
 
 #. Tag: para
-#: example_parentchild.xml:286
+#: example_parentchild.xml:265
 #, fuzzy, no-c-format
 msgid ""
 "The sections we have just covered can be a bit confusing. However, in "
@@ -584,7 +584,7 @@ msgstr ""
 "들은 많은 장소들에서 부모/자식 패턴을 사용한다."
 
 #. Tag: para
-#: example_parentchild.xml:291
+#: example_parentchild.xml:270
 #, fuzzy, no-c-format
 msgid ""
 "We mentioned an alternative in the first paragraph. None of the above issues "

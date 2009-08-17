@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2009-07-14 19:56+0000\n"
+"POT-Creation-Date: 2009-08-17 20:22+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -2418,7 +2418,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: performance.xml:1233
+#: performance.xml:1228
 #, fuzzy, no-c-format
 msgid ""
 "You can activate and deactivate the monitoring for a "
@@ -2428,7 +2428,7 @@ msgstr ""
 "수 있다"
 
 #. Tag: para
-#: performance.xml:1238
+#: performance.xml:1233
 #, no-c-format
 msgid ""
 "at configuration time, set <literal>hibernate.generate_statistics</literal> "
@@ -2438,7 +2438,7 @@ msgstr ""
 "<literal>false</literal>"
 
 #. Tag: para
-#: performance.xml:1245
+#: performance.xml:1240
 #, no-c-format
 msgid ""
 "at runtime: <literal>sf.getStatistics().setStatisticsEnabled(true)</literal> "
@@ -2448,7 +2448,7 @@ msgstr ""
 "는 <literal>hibernateStatsBean.setStatisticsEnabled(true)</literal>"
 
 #. Tag: para
-#: performance.xml:1252
+#: performance.xml:1247
 #, fuzzy, no-c-format
 msgid ""
 "Statistics can be reset programmatically using the <literal>clear()</"
@@ -2460,13 +2460,13 @@ msgstr ""
 "를 사용하여 logger(info 레벨)에게 전송될 수 있다."
 
 #. Tag: title
-#: performance.xml:1261
+#: performance.xml:1256
 #, no-c-format
 msgid "Metrics"
 msgstr "Metrics"
 
 #. Tag: para
-#: performance.xml:1263
+#: performance.xml:1258
 #, fuzzy, no-c-format
 msgid ""
 "Hibernate provides a number of metrics, from basic information to more "
@@ -2480,7 +2480,7 @@ msgstr ""
 "다:"
 
 #. Tag: para
-#: performance.xml:1270
+#: performance.xml:1265
 #, no-c-format
 msgid ""
 "Metrics related to the general <literal>Session</literal> usage, such as "
@@ -2490,7 +2490,7 @@ msgstr ""
 "<literal>Session</literal> 사용에 관련된 metrics."
 
 #. Tag: para
-#: performance.xml:1276
+#: performance.xml:1271
 #, fuzzy, no-c-format
 msgid ""
 "Metrics related to the entities, collections, queries, and caches as a whole "
@@ -2500,7 +2500,7 @@ msgstr ""
 "metrics로 알려져 있음),"
 
 #. Tag: para
-#: performance.xml:1282
+#: performance.xml:1277
 #, no-c-format
 msgid ""
 "Detailed metrics related to a particular entity, collection, query or cache "
@@ -2508,7 +2508,7 @@ msgid ""
 msgstr "특정한 엔티티, 콜렉션, 질의 또는 캐시 영역에 관련된 상세 metrics."
 
 #. Tag: para
-#: performance.xml:1289
+#: performance.xml:1284
 #, fuzzy, no-c-format
 msgid ""
 "For example, you can check the cache hit, miss, and put ratio of entities, "
@@ -2524,7 +2524,7 @@ msgstr ""
 "있다."
 
 #. Tag: para
-#: performance.xml:1296
+#: performance.xml:1291
 #, fuzzy, no-c-format
 msgid ""
 "Simple getters are used to access the global metrics (i.e. not tied to a "
@@ -2548,7 +2548,7 @@ msgstr ""
 "준다:"
 
 #. Tag: programlisting
-#: performance.xml:1306
+#: performance.xml:1301
 #, no-c-format
 msgid ""
 "<![CDATA[Statistics stats = HibernateUtil.sessionFactory.getStatistics();\n"
@@ -2570,7 +2570,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: performance.xml:1308
+#: performance.xml:1303
 #, fuzzy, no-c-format
 msgid ""
 "You can work on all entities, collections, queries and region caches, by "

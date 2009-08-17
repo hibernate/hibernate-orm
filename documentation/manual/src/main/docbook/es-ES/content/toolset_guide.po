@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2009-07-14 19:56+0000\n"
+"POT-Creation-Date: 2009-06-10 21:02+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -726,14 +726,14 @@ msgstr ""
 "Opciones de L&#x00ed;nea de Comandos de <literal>SchemaExport</literal>"
 
 #. Tag: entry
-#: toolset_guide.xml:307 toolset_guide.xml:457 toolset_guide.xml:527
+#: toolset_guide.xml:307 toolset_guide.xml:457 toolset_guide.xml:526
 #, no-c-format
 msgid "Option"
 msgstr "Opci&#x00f3;n"
 
 #. Tag: entry
 #: toolset_guide.xml:308 toolset_guide.xml:395 toolset_guide.xml:458
-#: toolset_guide.xml:528
+#: toolset_guide.xml:527
 #, no-c-format
 msgid "Description"
 msgstr "Descripci&#x00f3;n"
@@ -799,19 +799,19 @@ msgid "output the ddl script to a file"
 msgstr "enviar la salida del gui&#x00f3;n ddl a un fichero"
 
 #. Tag: literal
-#: toolset_guide.xml:333 toolset_guide.xml:471 toolset_guide.xml:533
+#: toolset_guide.xml:333 toolset_guide.xml:471 toolset_guide.xml:532
 #, no-c-format
 msgid "--naming=eg.MyNamingStrategy"
 msgstr "--naming=eg.MyNamingStrategy"
 
 #. Tag: entry
-#: toolset_guide.xml:334 toolset_guide.xml:472 toolset_guide.xml:534
+#: toolset_guide.xml:334 toolset_guide.xml:472 toolset_guide.xml:533
 #, no-c-format
 msgid "select a <literal>NamingStrategy</literal>"
 msgstr "select a <literal>NamingStrategy</literal>"
 
 #. Tag: literal
-#: toolset_guide.xml:337 toolset_guide.xml:479 toolset_guide.xml:541
+#: toolset_guide.xml:337 toolset_guide.xml:479 toolset_guide.xml:540
 #, no-c-format
 msgid "--config=hibernate.cfg.xml"
 msgstr "--config=hibernate.cfg.xml"
@@ -823,13 +823,13 @@ msgid "read Hibernate configuration from an XML file"
 msgstr "lee la configuraci&#x00f3;n de Hibernate de un fichero XML"
 
 #. Tag: literal
-#: toolset_guide.xml:341 toolset_guide.xml:475 toolset_guide.xml:537
+#: toolset_guide.xml:341 toolset_guide.xml:475 toolset_guide.xml:536
 #, no-c-format
 msgid "--properties=hibernate.properties"
 msgstr "--properties=hibernate.properties"
 
 #. Tag: entry
-#: toolset_guide.xml:342 toolset_guide.xml:476 toolset_guide.xml:538
+#: toolset_guide.xml:342 toolset_guide.xml:476 toolset_guide.xml:537
 #, no-c-format
 msgid "read database properties from a file"
 msgstr "lee las propiedades de base de datos de un fichero"
@@ -1089,7 +1089,7 @@ msgid "do not export the script to the database"
 msgstr "don't export the script to the database"
 
 #. Tag: entry
-#: toolset_guide.xml:480 toolset_guide.xml:542
+#: toolset_guide.xml:480 toolset_guide.xml:541
 #, no-c-format
 msgid "specify a <literal>.cfg.xml</literal> file"
 msgstr "specify a <literal>.cfg.xml</literal> file"
@@ -1190,28 +1190,20 @@ msgstr ""
 "<literal>org.hibernate.tool.hbm2ddl.SchemaValidator</literal> "
 "<emphasis>options mapping_files</emphasis>"
 
-#. Tag: para
-#: toolset_guide.xml:518
-#, fuzzy, no-c-format
-msgid ""
-"The following table displays the <literal>SchemaValidator</literal> command "
-"line options:"
-msgstr "<literal>SchemaValidator</literal> Command Line Options"
-
 #. Tag: title
-#: toolset_guide.xml:521
+#: toolset_guide.xml:520
 #, no-c-format
 msgid "<literal>SchemaValidator</literal> Command Line Options"
 msgstr "<literal>SchemaValidator</literal> Command Line Options"
 
 #. Tag: para
-#: toolset_guide.xml:548
+#: toolset_guide.xml:547
 #, fuzzy, no-c-format
 msgid "You can embed <literal>SchemaValidator</literal> in your application:"
 msgstr "You may embed <literal>SchemaValidator</literal> in your application:"
 
 #. Tag: programlisting
-#: toolset_guide.xml:552
+#: toolset_guide.xml:551
 #, no-c-format
 msgid ""
 "<![CDATA[Configuration cfg = ....;\n"
@@ -1222,19 +1214,19 @@ msgstr ""
 "(cfg).validate();]]>"
 
 #. Tag: title
-#: toolset_guide.xml:557
+#: toolset_guide.xml:556
 #, no-c-format
 msgid "Using Ant for schema validation"
 msgstr "Using Ant for schema validation"
 
 #. Tag: para
-#: toolset_guide.xml:559
+#: toolset_guide.xml:558
 #, no-c-format
 msgid "You can call <literal>SchemaValidator</literal> from the Ant script:"
 msgstr "You can call <literal>SchemaValidator</literal> from the Ant script:"
 
 #. Tag: programlisting
-#: toolset_guide.xml:563
+#: toolset_guide.xml:562
 #, no-c-format
 msgid ""
 "<![CDATA[<target name=\"schemavalidate\">\n"

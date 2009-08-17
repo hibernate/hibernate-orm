@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2009-07-14 19:55+0000\n"
+"POT-Creation-Date: 2009-08-17 20:22+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -537,13 +537,13 @@ msgstr ""
 "查询第二级缓存，或者最坏的情况，查询数据库，来确认是否此行存在。"
 
 #. Tag: title
-#: example_parentchild.xml:284
+#: example_parentchild.xml:263
 #, no-c-format
 msgid "Conclusion"
 msgstr "结论"
 
 #. Tag: para
-#: example_parentchild.xml:286
+#: example_parentchild.xml:265
 #, fuzzy, no-c-format
 msgid ""
 "The sections we have just covered can be a bit confusing. However, in "
@@ -554,7 +554,7 @@ msgstr ""
 "常好。大部分Hibernate应用程序都会经常用到父子对象模式。"
 
 #. Tag: para
-#: example_parentchild.xml:291
+#: example_parentchild.xml:270
 #, fuzzy, no-c-format
 msgid ""
 "We mentioned an alternative in the first paragraph. None of the above issues "

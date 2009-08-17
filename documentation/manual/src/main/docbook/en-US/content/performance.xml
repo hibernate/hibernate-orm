@@ -1334,11 +1334,6 @@ ObjectName on = new ObjectName("hibernate", tb); // MBean object name
 StatisticsService stats = new StatisticsService(); // MBean implementation
 server.registerMBean(stats, on); // Register the MBean on the server]]></programlisting>
 
-            <!--<para>
-                TODO: This does not make sense: In the first case, we retrieve and use the MBean directly. In the second one, we must give
-                the JNDI name in which the session factory is held before using it. Use
-                <literal>hibernateStatsBean.setSessionFactoryJNDIName("my/JNDI/Name")</literal>
-            </para>-->
             <para>
                 You can activate and deactivate the monitoring for a <literal>SessionFactory</literal>:
             </para>

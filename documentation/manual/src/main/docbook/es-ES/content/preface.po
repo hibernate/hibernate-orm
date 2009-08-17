@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2009-07-14 19:56+0000\n"
+"POT-Creation-Date: 2009-06-16 18:47+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -88,7 +88,7 @@ msgid ""
 "instructions. The source code for the tutorial is included in the "
 "distribution in the <literal>doc/reference/tutorial/</literal> directory."
 msgstr ""
-"Lee <xref linkend=\"quickstart\"/> para un tutorial de 30 minutos, usando "
+"Lee <xref linkend=\"tutorial\"/> para un tutorial de 30 minutos, usando "
 "Tomcat."
 
 #. Tag: para
@@ -199,6 +199,21 @@ msgstr ""
 "soporte de producci&#x00f3;n y entrenamiento en Hibernate. Hibernate es un "
 "proyecto de la suite de productos de c&#x00f3;digo abierto JBoss "
 "Professional."
+
+#. Tag: title
+#: preface.xml:133
+#, no-c-format
+msgid "Feedback"
+msgstr ""
+
+#. Tag: para
+#: preface.xml:134
+#, no-c-format
+msgid ""
+"Use <ulink url=\"http://opensource.atlassian.com/projects/hibernate"
+"\">Hibernate JIRA</ulink> to report errors or request enhacements to this "
+"documentation."
+msgstr ""
 
 #~ msgid "ROLES_OF_TRANSLATORS"
 #~ msgstr "<!--TRANS:ROLES_OF_TRANSLATORS-->"

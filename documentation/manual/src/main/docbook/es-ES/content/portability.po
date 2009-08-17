@@ -1,12 +1,12 @@
-# Language es-ES translations for PACKAGE package.
+# Language es-ES translations for Branch package.
 # Automatically generated, 2009.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: PACKAGE VERSION\n"
+"Project-Id-Version: Branch 3_3\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2009-07-14 19:56+0000\n"
-"PO-Revision-Date: 2009-07-14 19:56+0000\n"
+"POT-Creation-Date: 2009-06-23 18:41+0000\n"
+"PO-Revision-Date: 2009-06-16 18:47+0000\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
 "MIME-Version: 1.0\n"

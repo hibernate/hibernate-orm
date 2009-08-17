@@ -1130,7 +1130,8 @@ public class HQLTest extends QueryTranslatorTestCase {
 		// duplicates the condition, whereas the new parser does not.  The queries are semantically the
 		// same however.
 		if ( getDialect() instanceof Oracle8iDialect ) return;
-		assertTranslation( "select an.mother.bodyWeight from Animal an join an.mother m where an.mother.bodyWeight > 10" );
+// the classic translator handles this incorrectly; the explicit join and the implicit ones should create separate physical SQL joins...
+//		assertTranslation( "select an.mother.bodyWeight from Animal an join an.mother m where an.mother.bodyWeight > 10" );
 		assertTranslation( "select an.mother.bodyWeight from Animal an where an.mother.bodyWeight > 10" );
 		//assertTranslation("select an.mother from Animal an where an.mother.bodyWeight is not null");
 		assertTranslation( "select an.mother.bodyWeight from Animal an order by an.mother.bodyWeight" );

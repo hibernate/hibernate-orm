@@ -1,13 +1,11 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
         <groupId>org.hibernate</groupId>
         <artifactId>hibernate-parent</artifactId>
-        <version>3.5.0-SNAPSHOT</version>
+        <version>3.5.0.Beta-1</version>
         <relativePath>../parent/pom.xml</relativePath>
     </parent>
 
@@ -94,12 +92,12 @@
 	            <phase>process-test-classes</phase>
 	            <configuration>
 		        	<tasks>
-	                    <property name="package.dir" value="${basedir}/target/test-packages"/>
-	                    <property name="package.tmp.dir" value="${basedir}/target/tmp"/>
-	                    <property name="classes.dir" value="${project.build.directory}/test-classes"/>	
-                        <property name="testresources.dir" value="${basedir}/src/test/resources"/>					
+	                    <property name="package.dir" value="${basedir}/target/test-packages" />
+	                    <property name="package.tmp.dir" value="${basedir}/target/tmp" />
+	                    <property name="classes.dir" value="${project.build.directory}/test-classes" />	
+                        <property name="testresources.dir" value="${basedir}/src/test/resources" />					
 	                	<ant antfile="${basedir}/build.xml">
-	                  		<target name="package"/>
+	                  		<target name="package" />
 	                	</ant>
 					</tasks>
 	            </configuration>

@@ -1,37 +1,11 @@
-<?xml version="1.0"?>
-<!--
-  ~ Hibernate, Relational Persistence for Idiomatic Java
-  ~
-  ~ Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
-  ~ indicated by the @author tags or express copyright attribution
-  ~ statements applied by the authors.  All third-party contributions are
-  ~ distributed under license by Red Hat Middleware LLC.
-  ~
-  ~ This copyrighted material is made available to anyone wishing to use, modify,
-  ~ copy, or redistribute it subject to the terms and conditions of the GNU
-  ~ Lesser General Public License, as published by the Free Software Foundation.
-  ~
-  ~ This program is distributed in the hope that it will be useful,
-  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
-  ~ or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
-  ~ for more details.
-  ~
-  ~ You should have received a copy of the GNU Lesser General Public License
-  ~ along with this distribution; if not, write to:
-  ~ Free Software Foundation, Inc.
-  ~ 51 Franklin Street, Fifth Floor
-  ~ Boston, MA  02110-1301  USA
-  -->
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>org.hibernate</groupId>
     <artifactId>hibernate-parent</artifactId>
     <packaging>pom</packaging>
-    <version>3.5.0-SNAPSHOT</version>
+    <version>3.5.0.Beta-1</version>
 
     <name>Hibernate Core Parent POM</name>
     <description>The base POM for all Hibernate Core modules.</description>
@@ -56,9 +30,9 @@
     </licenses>
 
     <scm>
-        <connection>scm:svn:https://svn.jboss.org/repos/hibernate/core/trunk</connection>
-        <developerConnection>scm:svn:https://svn.jboss.org/repos/hibernate/core/trunk</developerConnection>
-        <url>https://svn.jboss.org/repos/hibernate/core/trunk</url>
+        <connection>scm:svn:https://svn.jboss.org/repos/hibernate/core/tags/hibernate-3.5.0.Beta-1</connection>
+        <developerConnection>scm:svn:https://svn.jboss.org/repos/hibernate/core/tags/hibernate-3.5.0.Beta-1</developerConnection>
+        <url>https://svn.jboss.org/repos/hibernate/core/tags/hibernate-3.5.0.Beta-1</url>
     </scm>
 
     <ciManagement>

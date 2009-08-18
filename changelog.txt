@@ -5,6 +5,178 @@ match the actual issue resolution (i.e. a bug might not be a bug). Please
 refer to the particular case on JIRA using the issue tracking number to learn
 more about each case.
 
+Changes in version 3.5.0.Beta-1 (2009.08.18)
+-------------------------------------------
+
+** Sub-task
+    * [HHH-3801] - Create a cache-jbosscache-legacy module
+    * [HHH-3802] - Move the up-to-date JBC integration into cache-jbosscache
+    * [HHH-3803] - Repackage JBC integration to org.hibernate.cache.jbc
+    * [HHH-4027] - Remove current cache-jbosscache module content
+    * [HHH-4028] - Move current cache-jbosscache2 module content to cache-jbosscache
+    * [HHH-4029] - Remove cache-jbosscache2 module
+
+** Bug
+    * [HHH-1930] - QuerySyntaxException "with-clause expressions did not reference from-clause element to which the with-clause was associated"
+    * [HHH-2146] - NullpointerException in DefaultDeleteEventListener.deleteTransientEntity
+    * [HHH-2694] - create-drop with c3p0 causes SQLException
+    * [HHH-2745] - NullPointerException when eager fetching joined many-to-many with native SQL query
+    * [HHH-3046] - Merge fails on complicated data structure because of cycle references
+    * [HHH-3216] - Incorrect parse result in ParameterParser
+    * [HHH-3231] - org.hibernate.id.enhanced.TableGenerator throws "IllegalArgumentException: alias not found: tbl" under Oracle
+    * [HHH-3351] - Dynamic entity model and inheritance - exception when trying to persist
+    * [HHH-3392] - Query Cache entries are not distributable
+    * [HHH-3472] - JTASessionContext broken for WebSphere
+    * [HHH-3481] - JTATransactionFactory bug when Transaction cannot be found in JNDI
+    * [HHH-3506] - enabled filters should apply to HQL update/delete statements
+    * [HHH-3508] - Sybase Dialect - Override supportsCascadeDelete to return "false"
+    * [HHH-3519] - account for parameters in select clause of INSERT-SELECT for DB2
+    * [HHH-3528] - FETCH JOIN query doesn't work in a StatelessSession
+    * [HHH-3573] - Incorrect support for columns which aren't insertable
+    * [HHH-3575] - Empty versions-query (both types) will cause a runtime exception
+    * [HHH-3584] - Generate SQL when Dynamic Update is true is including version field even when marked as updateable=false
+    * [HHH-3594] - Hibernate collection listener throw exception when adding entity to the collection
+    * [HHH-3600] - exception while saving bidirectional association
+    * [HHH-3602] - Inheritence issue
+    * [HHH-3621] - Assertion failure in MigrationTest
+    * [HHH-3623] - Make at least ListProxy serializable
+    * [HHH-3633] - Envers ignores empty discriminator classes
+    * [HHH-3636] - Attempt to read invalid column when loading collection of subclasses mapped with table-per-subclass with discriminator
+    * [HHH-3640] - Some standard SQL functions are not implemented in Sybase
+    * [HHH-3647] - instance not of expected entity type: java.util.HashMap is not a: smx3.schema3.Party_AUD
+    * [HHH-3652] - CompositeIdWithGeneratorTest needs a standard way to compare timestamps
+    * [HHH-3662] - Merging read-only entities causes AssertionError("Merged entity does not have status set to MANAGED...")
+    * [HHH-3668] - Sybase does not support implicit conversion from character types to numeric types causes failing unit tests
+    * [HHH-3670] - Invalid test for str() for SQL Server and Sybase
+    * [HHH-3671] - The revision type field is not persisted when setting a custom revision type field name throught the properties
+    * [HHH-3672] - Sybase - second(), minute(), hour(), and extract() cause GenericJDBCException
+    * [HHH-3675] - Limitations on Sybase ResultSet implementation cause unit test failures
+    * [HHH-3679] - Sybase conversion of Java byte to tinyint fails with 8-bit values causing unit test failures
+    * [HHH-3680] - Sybase - composite primary key in unit test exceeds maximum for index causing failure
+    * [HHH-3686] - Sybase - QueryCacheTest.testQueryCacheInvalidation fails
+    * [HHH-3693] - Implicit Polymorphic query + pagination returning zero result
+    * [HHH-3696] - Sybase - unit tests fail when numeric values overflow in precision or scale on insert
+    * [HHH-3698] - Problem with HQL parameter bindings as indexed collection selectors
+    * [HHH-3699] - Problem with HQL parameter bindings for parameters in WITH join clause
+    * [HHH-3701] - SQL function "trim" is not available in Sybase Dialect
+    * [HHH-3703] - RevisionEntity with compound primary key fails
+    * [HHH-3705] - NPE encountered on using AnnotationConfiguration
+    * [HHH-3706] - Audit Table Schema not generated using <annotationconfiguration>
+    * [HHH-3729] - @AuditJoinTable annotation has no effect for embedded concrete subclasses of a MappedSuperClass
+    * [HHH-3736] - Envers EntityInstantiator does not support private constructors for immutable entities
+    * [HHH-3740] - Unable to build EntityManagerFactory when using a non-audited ManyToOne in Audited components
+    * [HHH-3741] - Join tables are not audited if the join is defined in an abstract
+    * [HHH-3773] - NPE when generating schema containing OneToMany relations
+    * [HHH-3779] - "org.hibernate.MappingException: An audited relation to a non-audited entity" during schema-export ant task
+    * [HHH-3782] - Saving a one-to-many relationship results in unsaved transient instance exception
+    * [HHH-3794] - Issue when method return type is Interface
+    * [HHH-3810] - Transient entities can be inserted twice on merge
+    * [HHH-3830] - Problem with inheritance and @ManyToMany relation
+    * [HHH-3847] - java.lang.NullPointerException on onPreRemoveCollection on replicate of persistent class
+    * [HHH-3871] - unnecessary proxy initialization on audit record save
+    * [HHH-3878] - Exception when querying historical data for deleted Entites
+    * [HHH-3880] - org.hibernate.id.enhanced.TableStructure missing "as" keyword in select statment column renames; required for PostgreSQL
+    * [HHH-3888] - Envers schema generation (ant) ignoring columnDefinition ( atribute of @Column, JPA )
+    * [HHH-3912] - Change for HHH-3159 causes InstantiationException
+    * [HHH-3918] - Use standard JDK exception nesting
+    * [HHH-3923] - Enver throws Nullpointer exception with a self reference entities
+    * [HHH-3939] - @NotAudited association requires and joins to the associated table
+    * [HHH-3957] - Audited Null Embeddable objects not returned as null
+    * [HHH-3980] - Fix for HHH-2980 introduced bug that allows the same bag collection role to be fetched multiple times
+    * [HHH-4003] - many-to-many loaders should use inner joins from the collection table to element table
+    * [HHH-4034] - Update org.hibernate.action.BulkOperationCleanupAction to use new Region cache APIs
+    * [HHH-4088] - Session.getSession should always return sessions from parent (or root) session
+    * [HHH-4091] - HQLTest#testDuplicateImplicitJoinInSelect
+
+** Improvement
+    * [HHH-1234] - allow tuplizers the opportunity to influence getSubclassEntityPersister() processing
+    * [HHH-2592] - force hibernate to generate use offset qeury when offset is zero
+    * [HHH-2686] - Include a primary key in the sequence table used by id.enhanced.TableGenerator
+    * [HHH-2802] - Support HQL style order by (JPA @OrderBy)
+    * [HHH-2980] - Error "org.hibernate.HibernateException: cannot simultaneously fetch multiple bags" not specific enough
+    * [HHH-3159] - Oracle 11g - desupport of oracle.jdbc.driver
+    * [HHH-3249] - Make o.h.id.enhanced.TableGenerator more extension-friendly
+    * [HHH-3275] - Allow pluggable tuplizers for composite elements
+    * [HHH-3357] - improve performance of session.clear()
+    * [HHH-3383] - QueryKey is storing references to entities instead of identifiers
+    * [HHH-3424] - concat() with param binding fails function on derby
+    * [HHH-3439] - Change o.h.cfg.Mappings to not require constructor
+    * [HHH-3454] - Allow enhanced.TableGenerator to segment itself per entity as default
+    * [HHH-3456] - Make o.h.id.enhanced.SequenceStyleGenerator more extension-friendly
+    * [HHH-3471] - Provide true-false type that maps to int values
+    * [HHH-3515] - Introduce EntityNameResolver interface
+    * [HHH-3517] - Allow definition of the default tuplizer class to use
+    * [HHH-3518] - Remove Suite classes from testsuite module
+    * [HHH-3525] - Clean up reflection code trying to determine JDK 1.4 capabilities
+    * [HHH-3532] - schema update task should look for foreign key signature
+    * [HHH-3708] - Suboptimal exception on m:n relations with an unaudited entity
+    * [HHH-3712] - Reorganize the Sybase dialect class hierarchy, add SybaseASE15Dialect, and mark SybaseDialect as deprecated
+    * [HHH-3737] - Support Hibernate 3.3 branch in Envers until 3.4.0GA is out
+    * [HHH-3750] - Allow dialects to handle difference in how Query.setFirstResult() should be interpreted
+    * [HHH-3753] - Upgrade to SLF4J version 1.5.8
+    * [HHH-3832] - Upgrade to cglib-2.2.jar
+    * [HHH-3842] - Update maven profiles to use the databases in QA Lab
+    * [HHH-3886] - Update database credentials for QA Lab
+    * [HHH-3892] - Improve support for mapping SQL LONGVARCHAR and CLOB to Java String, SQL LONGVARBINARY and BLOB  to Java byte[]
+    * [HHH-3944] - Document known database portability strategies
+    * [HHH-3978] - Expose Hibernate version via non-compile-time constant expression
+    * [HHH-3982] - Apply build version to org.hibernate.Version
+    * [HHH-3998] - Fix spurious failures in ConfigurationPerformanceTest
+    * [HHH-3999] - Change mysql hostname in pom.xml
+    * [HHH-4016] - SAPDialect should not use oracle style outer joins, ANSI style is prefered by MaxDB
+    * [HHH-4022] - Add an actual API contract for querying/managing cache regions (from app code)
+
+** New Feature
+    * [HHH-3343] - Postgres Plus Dialect
+    * [HHH-3512] - Registration of IdentifierGenerators (short naming)
+    * [HHH-3559] - Possibility to do versioning and non-versioning commits as required
+    * [HHH-3560] - Assume entities relationships as unversioned by default
+    * [HHH-3563] - Support relations in components
+    * [HHH-3564] - Support for the three types of inheritance
+    * [HHH-3565] - Direct property access
+    * [HHH-3568] - In the hibernate mapping of versions entities, mark them as not updateable
+    * [HHH-3570] - Move from "Versioning" to "Auditing"
+    * [HHH-3588] - RevisionType available via public API
+    * [HHH-3598] - Add the possibility to specify restrictions on RevisionType, using RevisionTypeProperty
+    * [HHH-3611] - Extend revision restrictions in the query system
+    * [HHH-3663] - Request to add Joined inheritance strategy supported for versioning
+    * [HHH-3697] - Turn on/turn off versioning in runtime
+    * [HHH-3723] - Publish sources to maven (snapshot) repository
+    * [HHH-3781] - Echo version information to the console in main()
+    * [HHH-3819] - Deleted entries with non null properties
+    * [HHH-3823] - Obtain current revision entity by AuditReader
+    * [HHH-3898] - Add a flag to disable Nullability.checkNullability() and the exception raised in this case
+    * [HHH-3906] - Move to JPA 2 API as a dependency
+    * [HHH-4010] - support auditing of entity having reference (many-to-one relation) to not audited entity
+    * [HHH-4081] - Support for JPA 2.0 "qualified identification variables" (KEY, VALUE and ENTRY)
+
+** Patch
+    * [HHH-530] - Allow application of filters on subqueries
+    * [HHH-2933] - allow custom resolution of Dialect (Tomoto Shimizu Washio)
+    * [HHH-3401] - H2 Database Dialect Fixes
+    * [HHH-3450] - Include SingletonEhCacheProvider as an additional caching provider (Greg Luck)
+    * [HHH-3639] - Sybase keywords - rename columns
+    * [HHH-3649] - DB2Dialect inherits supportsPooledSequences() as false, but it does support
+    * [HHH-3650] - TableGenerator doesn't marks the "primary key" as not null, causing errors in some RDBMS's which expects the PK to be not-null
+    * [HHH-3742] - Documentation corrections
+    * [HHH-3744] - Improved support for persistence of subclasses
+    * [HHH-4037] - Fixing build errors in documentation/manual
+
+** Task
+    * [HHH-3214] - Update unit tests and config files to use non-depracated Oracle dialects
+    * [HHH-3474] - Upgrade to use slf4j 1.5 (1.5.2)
+    * [HHH-3547] - import Envers into Hibernate core as a module
+    * [HHH-3549] - import commons-annotations back into core as a module
+    * [HHH-3550] - import annotations into core as a module
+    * [HHH-3556] - Convert documentation to docbook
+    * [HHH-3585] - Upgrade to JBoss Cache 3
+    * [HHH-3760] - Document EntityNameResolver
+    * [HHH-3761] - Document DialectResolver
+    * [HHH-3879] - Envers documentation: configuration of event listeners is incomplete for JPA: @PostPersist, @PostUpdate  @PostRemove no longer work
+    * [HHH-3953] - Update tutorial chapter
+    * [HHH-3979] - Upgrade to javassist 3.9.0
+    * [HHH-3981] - Upgrade to jDocBook 2.2.0
+
 
 Changes in version 3.3.0.GA (2008.08.13)
 -------------------------------------------

@@ -17,7 +17,6 @@
     <description>Grouping of Hibernate Core Project documentation modules</description>
 
     <modules>
-        <module>releasenotes</module>
         <module>manual</module>
         <module>envers</module>
 <!--

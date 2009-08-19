@@ -87,6 +87,7 @@ Changes in version 3.5.0.Beta-1 (2009.08.18)
     * [HHH-4034] - Update org.hibernate.action.BulkOperationCleanupAction to use new Region cache APIs
     * [HHH-4088] - Session.getSession should always return sessions from parent (or root) session
     * [HHH-4091] - HQLTest#testDuplicateImplicitJoinInSelect
+    * [HHH-4099] - Doc build error (http://jira.codehaus.org/browse/MNG-1323)
 
 ** Improvement
     * [HHH-1234] - allow tuplizers the opportunity to influence getSubclassEntityPersister() processing

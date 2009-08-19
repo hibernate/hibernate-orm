@@ -22,14 +22,16 @@
   ~ 51 Franklin Street, Fifth Floor
   ~ Boston, MA  02110-1301  USA
   -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>org.hibernate</groupId>
     <artifactId>hibernate-parent</artifactId>
     <packaging>pom</packaging>
-    <version>3.5.0.Beta-1</version>
+    <version>3.5.0-SNAPSHOT</version>
 
     <name>Hibernate Core Parent POM</name>
     <description>The base POM for all Hibernate Core modules.</description>
@@ -54,9 +56,9 @@
     </licenses>
 
     <scm>
-        <connection>scm:svn:https://svn.jboss.org/repos/hibernate/core/tags/hibernate-3.5.0.Beta-1</connection>
-        <developerConnection>scm:svn:https://svn.jboss.org/repos/hibernate/core/tags/hibernate-3.5.0.Beta-1</developerConnection>
-        <url>https://svn.jboss.org/repos/hibernate/core/tags/hibernate-3.5.0.Beta-1</url>
+        <connection>scm:svn:https://svn.jboss.org/repos/hibernate/core/trunk</connection>
+        <developerConnection>scm:svn:https://svn.jboss.org/repos/hibernate/core/trunk</developerConnection>
+        <url>https://svn.jboss.org/repos/hibernate/core/trunk</url>
     </scm>
 
     <ciManagement>

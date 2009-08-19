@@ -21,16 +21,6 @@
             <plugin>
                 <groupId>org.jboss.maven.plugins</groupId>
                 <artifactId>maven-jdocbook-plugin</artifactId>
-                <version>2.1.2</version>
-                <extensions>true</extensions>
-                <dependencies>
-                    <dependency>
-                        <groupId>org.hibernate</groupId>
-                        <artifactId>hibernate-jdocbook-style</artifactId>
-                        <version>1.0.2</version>
-                        <type>jdocbook-style</type>
-                    </dependency>
-                </dependencies>
                 <configuration>
                     <sourceDocumentName>Envers_Reference.xml</sourceDocumentName>
                     <masterTranslation>en-US</masterTranslation>
@@ -43,31 +33,6 @@
                             <exclude>**/*.zargo</exclude>
                         </excludes>
                     </imageResource>
-                    <formats>
-                        <format>
-                            <formatName>pdf</formatName>
-                            <stylesheetResource>classpath:/xslt/hibernate/pdf/main-pdf.xsl</stylesheetResource>
-                            <finalName>hibernate_reference.pdf</finalName>
-                            <profilingTypeName>two_pass</profilingTypeName>
-                        </format>
-                        <format>
-                            <formatName>html_single</formatName>
-                            <stylesheetResource>classpath:/xslt/hibernate/html/main-single.xsl</stylesheetResource>
-                            <finalName>index.html</finalName>
-                            <profilingTypeName>two_pass</profilingTypeName>
-                        </format>
-                        <format>
-                            <formatName>html</formatName>
-                            <stylesheetResource>classpath:/xslt/hibernate/html/main-chunk.xsl</stylesheetResource>
-                            <finalName>index.html</finalName>
-                            <profilingTypeName>two_pass</profilingTypeName>
-                        </format>
-                    </formats>
-                    <options>
-                        <xincludeSupported>true</xincludeSupported>
-                        <localeSeparator>-</localeSeparator>
-                        <useRelativeImageUris>false</useRelativeImageUris>
-                    </options>
                 </configuration>
             </plugin>
         </plugins>

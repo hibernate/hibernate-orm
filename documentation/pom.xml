@@ -18,8 +18,8 @@
 
     <modules>
         <module>manual</module>
-<!--
         <module>envers</module>
+<!--
         <module>jbosscache2</module>
 -->
     </modules>

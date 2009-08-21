@@ -46,7 +46,7 @@
 
     <table frame="topbot">
         <title>Envers Configuration Properties</title>
-        <tgroup cols="2">
+        <tgroup cols="3">
             <colspec colname="c1" colwidth="1*"/>
             <colspec colname="c2" colwidth="1*"/>
             <colspec colname="c2" colwidth="1*"/>

@@ -21,6 +21,7 @@
         <module>core</module>
         <module>cache-ehcache</module>
         <module>cache-jbosscache</module>
+        <module>cache-infinispan</module>
         <module>cache-oscache</module>
         <module>cache-swarmcache</module>
         <module>connection-c3p0</module>

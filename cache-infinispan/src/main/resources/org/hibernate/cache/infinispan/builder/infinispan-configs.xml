@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<infinispan xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="urn:infinispan:config:4.0">
+   <global>
+      <transport transportClass = "org.infinispan.remoting.transport.jgroups.JGroupsTransport" 
+            clusterName="infinispan-hibernate-cluster" distributedSyncTimeout="50000">
+         <!-- Note that the JGroups transport uses sensible defaults if no configuration property is defined. -->
+         <properties>
+            <!-- TODO: Change to udp.xml once streaming transfer requirement has been removed.  -->
+            <property name="configurationFile" value="flush-udp.xml"/>
+         </properties>
+         <!-- See the JGroupsTransport javadocs for more flags -->
+      </transport>
+      <serialization marshallerClass="org.infinispan.marshall.VersionAwareMarshaller" version="4.0"/>
+   </global>
+
+   <default>
+      <!-- Used to register JMX statistics in any available MBean server -->
+      <jmxStatistics enabled="false"/>
+   </default>
+
+   <!-- Default configuration is appropriate for entity/collection caching. -->
+   <namedCache name="entity">
+      <clustering mode="invalidation">
+         <stateRetrieval fetchInMemoryState="false" timeout="20000"/>
+         <sync replTimeout="20000"/>
+      </clustering>
+      <!-- Note: REPEATABLE_READ is only useful if the application evicts/clears entities 
+        from the Hibernate Session and then expects to repeatably re-read them in 
+        the same transaction. Otherwise, the Session's internal cache provides a 
+        repeatable-read semantic. Before choosing this config, carefully read the docs
+        and make sure you really need REPEATABLE_READ.
+       -->
+      <locking isolationLevel="READ_COMMITTED" concurrencyLevel="1000" lockAcquisitionTimeout="15000"/>
+      <!-- Eviction configuration.  WakeupInterval defines how often the eviction thread runs, in milliseconds.  
+           0 means the eviction thread will never run.  A separate executor is used for eviction in each cache. -->
+      <eviction wakeUpInterval="5000" maxEntries="10000" strategy="LRU"/>
+      <expiration maxIdle="100000"/>
+      <lazyDeserialization enabled="true"/>
+   </namedCache>
+   
+   <!-- A config appropriate for query caching. Does not replicate queries. -->
+   <namedCache name="local-query">
+      <locking isolationLevel="READ_COMMITTED" concurrencyLevel="1000" lockAcquisitionTimeout="15000"/>
+      <!--Eviction configuration.  WakeupInterval defines how often the eviction thread runs, in milliseconds.  0 means
+         the eviction thread will never run.  A separate executor is used for eviction in each cache. -->
+      <eviction wakeUpInterval="5000" maxEntries="10000" strategy="LRU"/>
+      <expiration maxIdle="100000"/>
+   </namedCache>
+
+   <!-- A query cache that replicates queries. Replication is asynchronous. -->
+   <namedCache name="replicated-query">
+      <clustering mode="replication">
+         <stateRetrieval fetchInMemoryState="false"/>
+         <async/>
+      </clustering>
+      <locking isolationLevel="READ_COMMITTED" concurrencyLevel="1000" lockAcquisitionTimeout="15000"/>
+      <!--Eviction configuration.  WakeupInterval defines how often the eviction thread runs, in milliseconds.  0 means
+         the eviction thread will never run.  A separate executor is used for eviction in each cache. -->
+      <eviction wakeUpInterval="5000" maxEntries="10000" strategy="LRU"/>
+      <expiration maxIdle="100000"/>
+   </namedCache>
+
+   <!-- Optimized for timestamp caching. A clustered timestamp cache
+        is required if query caching is used, even if the query cache
+        itself is configured with CacheMode=LOCAL. -->
+   <namedCache name="timestamps">
+      <clustering mode="replication">
+         <stateRetrieval fetchInMemoryState="true" timeout="20000"/>
+         <async/>
+      </clustering>
+      <locking isolationLevel="READ_COMMITTED" concurrencyLevel="1000" lockAcquisitionTimeout="15000"/>
+      <lazyDeserialization enabled="true"/>
+      <!--  Don't ever evict modification timestamps -->
+      <eviction wakeUpInterval="0" strategy="NONE"/>
+   </namedCache>
+
+</infinispan>

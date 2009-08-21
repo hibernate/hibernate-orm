@@ -1,0 +1,49 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC 
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+   <!--
+      ~ Hibernate, Relational Persistence for Idiomatic Java ~ ~
+      Copyright (c) 2007, Red Hat, Inc. and/or it's affiliates or third-party
+      contributors as ~ indicated by the @author tags or express
+      copyright attribution ~ statements applied by the authors.  All
+      third-party contributions are ~ distributed under license by Red
+      Hat Middleware LLC. ~ ~ This copyrighted material is made
+      available to anyone wishing to use, modify, ~ copy, or
+      redistribute it subject to the terms and conditions of the GNU ~
+      Lesser General Public License, as published by the Free Software
+      Foundation. ~ ~ This program is distributed in the hope that it
+      will be useful, ~ but WITHOUT ANY WARRANTY; without even the
+      implied warranty of MERCHANTABILITY ~ or FITNESS FOR A PARTICULAR
+      PURPOSE. See the GNU Lesser General Public License ~ for more
+      details. ~ ~ You should have received a copy of the GNU Lesser
+      General Public License ~ along with this distribution; if not,
+      write to: ~ Free Software Foundation, Inc. ~ 51 Franklin Street,
+      Fifth Floor ~ Boston, MA 02110-1301 USA
+   -->
+<hibernate-mapping package="org.hibernate.test.cache.infinispan.functional">
+
+   <class name="Item" table="Items">
+      <id name="id">
+         <generator class="increment" />
+      </id>
+      <property name="name" not-null="true" />
+      <property name="description" not-null="true" />
+      <many-to-one name="owner" column="owner_id" class="Item" />
+      <set name="items" inverse="true">
+         <key column="owner_id" />
+         <one-to-many class="Item" />
+      </set>
+   </class>
+
+   <class name="VersionedItem" table="VersionedItems">
+      <id name="id">
+         <generator class="increment" />
+      </id>
+      <version name="version" type="long" />
+      <property name="name" not-null="true" />
+      <property name="description" not-null="true" />
+   </class>
+
+</hibernate-mapping>

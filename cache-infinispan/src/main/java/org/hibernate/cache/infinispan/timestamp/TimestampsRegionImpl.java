@@ -1,0 +1,121 @@
+package org.hibernate.cache.infinispan.timestamp;
+
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+
+import javax.transaction.Transaction;
+import javax.transaction.TransactionManager;
+
+import org.hibernate.cache.CacheException;
+import org.hibernate.cache.TimestampsRegion;
+import org.hibernate.cache.infinispan.impl.BaseGeneralDataRegion;
+import org.hibernate.cache.infinispan.util.CacheHelper;
+import org.infinispan.Cache;
+import org.infinispan.context.Flag;
+import org.infinispan.notifications.Listener;
+import org.infinispan.notifications.cachelistener.annotation.CacheEntryModified;
+import org.infinispan.notifications.cachelistener.annotation.CacheEntryRemoved;
+import org.infinispan.notifications.cachelistener.event.CacheEntryModifiedEvent;
+import org.infinispan.notifications.cachelistener.event.CacheEntryRemovedEvent;
+
+/**
+ * Defines the behavior of the timestamps cache region for Infinispan.
+ * 
+ * @author Chris Bredesen
+ * @author Galder Zamarreño
+ * @since 3.5
+ */
+@Listener
+public class TimestampsRegionImpl extends BaseGeneralDataRegion implements TimestampsRegion {
+
+   private Map localCache = new ConcurrentHashMap();
+
+   public TimestampsRegionImpl(Cache<Object, Object> cache, String name, TransactionManager transactionManager) {
+      super(cache, name, transactionManager);
+      cache.addListener(this);
+      populateLocalCache();
+   }
+
+   @Override
+   public void evict(Object key) throws CacheException {
+      // TODO Is this a valid operation on a timestamps cache?
+      CacheHelper.removeKey(getCache(), key);
+   }
+
+   public void evictAll() throws CacheException {
+      // TODO Is this a valid operation on a timestamps cache?
+      CacheHelper.removeAll(getCache());
+   }
+
+   public Object get(Object key) throws CacheException {
+      Object value = localCache.get(key);
+      if (value == null) {
+         value = suspendAndGet(key, null, false);
+         if (value != null)
+            localCache.put(key, value);
+      }
+      return value;
+   }
+
+   public void put(Object key, Object value) throws CacheException {
+      // Don't hold the JBC node lock throughout the tx, as that
+      // prevents reads and other updates
+      Transaction tx = suspend();
+      try {
+         // We ensure ASYNC semantics (JBCACHE-1175)
+         CacheHelper.put(getCache(), key, value, Flag.FORCE_ASYNCHRONOUS);
+      } catch (Exception e) {
+         throw new CacheException(e);
+      } finally {
+         resume(tx);
+      }
+   }
+
+   @Override
+   public void destroy() throws CacheException {
+      localCache.clear();
+      getCache().removeListener(this);
+      super.destroy();
+   }
+
+   /**
+    * Monitors cache events and updates the local cache
+    * 
+    * @param event
+    */
+   @CacheEntryModified
+   public void nodeModified(CacheEntryModifiedEvent event) {
+      if (event.isPre()) return;
+      localCache.put(event.getKey(), event.getValue());
+   }
+
+   /**
+    * Monitors cache events and updates the local cache
+    * 
+    * @param event
+    */
+   @CacheEntryRemoved
+   public void nodeRemoved(CacheEntryRemovedEvent event) {
+      if (event.isPre()) return;
+      localCache.remove(event.getKey());
+//      Fqn fqn = event.getFqn();
+//      Fqn regFqn = getRegionFqn();
+//      if (fqn.size() == regFqn.size() + 1 && fqn.isChildOf(regFqn)) {
+//         Object key = fqn.get(regFqn.size());
+//         localCache.remove(key);
+//      } else if (fqn.equals(regFqn)) {
+//         localCache.clear();
+//      }
+   }
+
+   /**
+    * Brings all data from the distributed cache into our local cache.
+    */
+   private void populateLocalCache() {
+      Set children = CacheHelper.getKeySet(getCache());
+      for (Object key : children)
+         get(key);
+   }
+
+}

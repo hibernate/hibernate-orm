@@ -1,8 +1,10 @@
 /*
- * Copyright (c) 2009, Red Hat Middleware LLC or third-party contributors as
- * indicated by the @author tags or express copyright attribution
- * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2009 by Red Hat Inc and/or its affiliates or by
+ * third-party contributors as indicated by either @author tags or express
+ * copyright attribution statements applied by the authors.  All
+ * third-party contributions are distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -26,55 +28,187 @@ package org.hibernate.ejb;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
-import java.util.List;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
-import java.util.Map;
-import javax.persistence.FlushModeType;
+import javax.persistence.LockModeType;
 import javax.persistence.NoResultException;
 import javax.persistence.NonUniqueResultException;
+import javax.persistence.Parameter;
 import javax.persistence.Query;
 import javax.persistence.TemporalType;
-import static javax.persistence.TemporalType.*;
-import javax.persistence.TransactionRequiredException;
-import javax.persistence.LockModeType;
-import javax.persistence.Parameter;
+import static javax.persistence.TemporalType.DATE;
+import static javax.persistence.TemporalType.TIME;
+import static javax.persistence.TemporalType.TIMESTAMP;
+import javax.persistence.TypedQuery;
+import javax.persistence.PersistenceException;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.QueryParameterException;
 import org.hibernate.TypeMismatchException;
-import org.hibernate.impl.AbstractQueryImpl;
-import org.hibernate.ejb.util.ConfigurationHelper;
+import org.hibernate.engine.query.NamedParameterDescriptor;
+import org.hibernate.engine.query.OrdinalParameterDescriptor;
 import org.hibernate.hql.QueryExecutionRequestException;
+import org.hibernate.impl.AbstractQueryImpl;
 
 /**
+ * Hibernate implementation of both the {@link Query} and {@link TypedQuery} contracts.
+ *
  * @author <a href="mailto:gavin@hibernate.org">Gavin King</a>
  * @author Emmanuel Bernard
+ * @author Steve Ebersole
  */
-public class QueryImpl implements Query, HibernateQuery {
+public class QueryImpl<X> extends org.hibernate.ejb.AbstractQueryImpl<X> implements TypedQuery<X>, HibernateQuery {
+	private static final Logger log = LoggerFactory.getLogger( QueryImpl.class );
+
 	private org.hibernate.Query query;
-	private HibernateEntityManagerImplementor em;
-	private Boolean isPositional = null;
-	private int maxResults = -1;
-	private int firstResult;
+	private Set<Integer> jpaPositionalIndices;
+	private Set<Parameter<?>> parameters;
 
 	public QueryImpl(org.hibernate.Query query, AbstractEntityManagerImpl em) {
+		super( em );
 		this.query = query;
-		this.em = em;
+		extractParameterInfo();
+	}
+
+	@SuppressWarnings({ "unchecked" })
+	private void extractParameterInfo() {
+		if ( ! AbstractQueryImpl.class.isInstance( query ) ) {
+			throw new IllegalStateException( "Unknown query type for parameter extraction" );
+		}
+
+		HashSet<Parameter<?>> parameters = new HashSet<Parameter<?>>();
+		AbstractQueryImpl queryImpl = AbstractQueryImpl.class.cast( query );
+
+		// extract named params
+		for ( String name : (Set<String>) queryImpl.getParameterMetadata().getNamedParameterNames() ) {
+			final NamedParameterDescriptor descriptor =
+					queryImpl.getParameterMetadata().getNamedParameterDescriptor( name );
+			final ParameterImpl parameter = new ParameterImpl(
+					name,
+					descriptor.getExpectedType() == null
+							? null
+							: descriptor.getExpectedType().getReturnedClass()
+			);
+			parameters.add( parameter );
+			if ( descriptor.isJpaStyle() ) {
+				if ( jpaPositionalIndices == null ) {
+					jpaPositionalIndices = new HashSet<Integer>();
+				}
+				jpaPositionalIndices.add( Integer.valueOf( name ) );
+			}
+		}
+
+		// extract positional parameters
+		for ( int i = 0, max = queryImpl.getParameterMetadata().getOrdinalParameterCount(); i < max; i++ ) {
+			final OrdinalParameterDescriptor descriptor =
+					queryImpl.getParameterMetadata().getOrdinalParameterDescriptor( i+1 );
+			ParameterImpl parameter = new ParameterImpl(
+					descriptor.getOrdinalPosition() + 1,
+					descriptor.getExpectedType() == null
+							? null
+							: descriptor.getExpectedType().getReturnedClass()
+			);
+			parameters.add( parameter );
+			Integer position = descriptor.getOrdinalPosition();
+			if ( jpaPositionalIndices != null && jpaPositionalIndices.contains( position ) ) {
+				log.warn( "Parameter position [" + position + "] occurred as both JPA and Hibernate positional parameter" );
+			}
+		}
+
+		this.parameters = java.util.Collections.unmodifiableSet( parameters );
+	}
+
+	private static class ParameterImpl implements Parameter {
+		private final String name;
+		private final Integer position;
+		private final Class javaType;
+
+		private ParameterImpl(String name, Class javaType) {
+			this.name = name;
+			this.javaType = javaType;
+			this.position = null;
+		}
+
+		private ParameterImpl(Integer position, Class javaType) {
+			this.position = position;
+			this.javaType = javaType;
+			this.name = null;
+		}
+
+		public String getName() {
+			return name;
+		}
+
+		public Integer getPosition() {
+			return position;
+		}
+
+		public Class getJavaType() {
+			return javaType;
+		}
 	}
 
 	public org.hibernate.Query getHibernateQuery() {
 		return query;
 	}
 
-	public int executeUpdate() {
+	protected int internalExecuteUpdate() {
+		return query.executeUpdate();
+	}
+
+	protected void applyMaxResults(int maxResults) {
+		query.setMaxResults( maxResults );
+	}
+
+	protected void applyFirstResult(int firstResult) {
+		query.setFirstResult( firstResult );
+	}
+
+	protected void applyTimeout(int timeout) {
+		query.setTimeout( timeout );
+	}
+
+	protected void applyComment(String comment) {
+		query.setComment( comment );
+	}
+
+	protected void applyFetchSize(int fetchSize) {
+		query.setFetchSize( fetchSize );
+	}
+
+	protected void applyCacheable(boolean isCacheable) {
+		query.setCacheable( isCacheable );
+	}
+
+	protected void applyCacheRegion(String regionName) {
+		query.setCacheRegion( regionName );
+	}
+
+	protected void applyReadOnly(boolean isReadOnly) {
+		query.setReadOnly( isReadOnly );
+	}
+
+	protected void applyCacheMode(CacheMode cacheMode) {
+		query.setCacheMode( cacheMode );
+	}
+
+	protected void applyFlushMode(FlushMode flushMode) {
+		query.setFlushMode( flushMode );
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@SuppressWarnings({ "unchecked" })
+	public List<X> getResultList() {
 		try {
-			if ( ! em.isTransactionInProgress() ) {
-				em.throwPersistenceException( new TransactionRequiredException( "Executing an update/delete query" ) );
-				return 0;
-			}
-			return query.executeUpdate();
+			return (List<X>) query.list();
 		}
 		catch (QueryExecutionRequestException he) {
 			throw new IllegalStateException(he);
@@ -83,56 +217,39 @@ public class QueryImpl implements Query, HibernateQuery {
 			throw new IllegalArgumentException(e);
 		}
 		catch (HibernateException he) {
-			em.throwPersistenceException( he );
-			return 0;
+			throw getEntityManager().convert( he );
 		}
 	}
 
-	public List getResultList() {
+	/**
+	 * {@inheritDoc}
+	 */
+	@SuppressWarnings({ "unchecked" })
+	public X getSingleResult() {
 		try {
-			return query.list();
-		}
-		catch (QueryExecutionRequestException he) {
-			throw new IllegalStateException(he);
-		}
-		catch( TypeMismatchException e ) {
-			throw new IllegalArgumentException(e);
-		}
-		catch (HibernateException he) {
-			em.throwPersistenceException( he );
-			return null;
-		}
-	}
-
-	public Object getSingleResult() {
-		try {
-			List result;
-			/* Avoid OOME if the list() is huge (user faulty query) by limiting the query to 2 elements max */
-			//FIXME: get rid of this impl binding (HHH-3432)
-			if ( query instanceof AbstractQueryImpl ) {
-				if (maxResults != 1) query.setMaxResults( 2 ); //avoid OOME if the list is huge
-				result = query.list();
-				if ( maxResults != -1 ) {
-					query.setMaxResults( maxResults ); //put back the original value
-				}
-				else {
-					AbstractQueryImpl queryImpl = AbstractQueryImpl.class.cast( query );
-					queryImpl.getSelection().setMaxRows( null );
-				}
+			boolean mucked = false;
+			// IMPL NOTE : the mucking with max results here is attempting to help the user from shooting themselves
+			//		in the foot in the case where they have a large query by limiting the query results to 2 max
+			if ( getSpecifiedMaxResults() != 1 ) {
+				mucked = true;
+				query.setMaxResults( 2 ); //avoid OOME if the list is huge
 			}
-			else {
-				//we can't do much because we cannot reset the maxResults => do the full list call
-				//Not tremendously bad as the user is doing a fault here anyway by calling getSingleREsults on a big list
-				result = query.list();
+			List<X> result = (List<X>) query.list();
+			if ( mucked ) {
+				query.setMaxResults( getSpecifiedMaxResults() );
 			}
 
 			if ( result.size() == 0 ) {
-				em.throwPersistenceException( new NoResultException( "No entity found for query" ) );
+				NoResultException nre = new NoResultException( "No entity found for query" );
+				getEntityManager().handlePersistenceException( nre );
+				throw nre;
 			}
 			else if ( result.size() > 1 ) {
-				Set uniqueResult = new HashSet(result);
+				Set<X> uniqueResult = new HashSet<X>(result);
 				if ( uniqueResult.size() > 1 ) {
-					em.throwPersistenceException( new NonUniqueResultException( "result returns more than one elements") );
+					NonUniqueResultException nure = new NonUniqueResultException( "result returns more than one elements" );
+					getEntityManager().handlePersistenceException( nure );
+					throw nure;
 				}
 				else {
 					return uniqueResult.iterator().next();
@@ -140,9 +257,8 @@ public class QueryImpl implements Query, HibernateQuery {
 
 			}
 			else {
-				return result.get(0);
+				return result.get( 0 );
 			}
-			return null; //should never happen
 		}
 		catch (QueryExecutionRequestException he) {
 			throw new IllegalStateException(he);
@@ -151,93 +267,56 @@ public class QueryImpl implements Query, HibernateQuery {
 			throw new IllegalArgumentException(e);
 		}
 		catch (HibernateException he) {
-			em.throwPersistenceException( he );
-			return null;
+			throw getEntityManager().convert( he );
 		}
 	}
 
-	public Query setMaxResults(int maxResult) {
-		if ( maxResult < 0 ) {
-			throw new IllegalArgumentException(
-					"Negative ("
-							+ maxResult
-							+ ") parameter passed in to setMaxResults"
-			);
+	public <T> TypedQuery<X> setParameter(Parameter<T> param, T value) {
+		if ( ! parameters.contains( param ) ) {
+			throw new IllegalArgumentException( "Specified parameter was not found in query" );
 		}
-		this.maxResults = maxResult;
-		query.setMaxResults( maxResult );
-		return this;
-	}
-
-	public int getMaxResults() {
-		return maxResults == -1 ? Integer.MAX_VALUE : maxResults; //stupid spec MAX_VALUE??
-	}
-
-	public Query setFirstResult(int firstResult) {
-		if ( firstResult < 0 ) {
-			throw new IllegalArgumentException(
-					"Negative ("
-							+ firstResult
-							+ ") parameter passed in to setFirstResult"
-			);
+		if ( param.getName() != null ) {
+			// a named param, for not delegate out.  Eventually delegate *into* this method...
+			setParameter( param.getName(), value );
 		}
-		query.setFirstResult( firstResult );
-		this.firstResult = firstResult;
-		return this;
-	}
-
-	public int getFirstResult() {
-		return firstResult;
-	}
-
-	public Query setHint(String hintName, Object value) {
-		try {
-			if ( "org.hibernate.timeout".equals( hintName ) ) {
-				query.setTimeout( ConfigurationHelper.getInteger( value ) );
-			}
-			else if ( "org.hibernate.comment".equals( hintName ) ) {
-				query.setComment( (String) value );
-			}
-			else if ( "org.hibernate.fetchSize".equals( hintName ) ) {
-				query.setFetchSize( ConfigurationHelper.getInteger( value ) );
-			}
-			else if ( "org.hibernate.cacheRegion".equals( hintName ) ) {
-				query.setCacheRegion( (String) value );
-			}
-			else if ( "org.hibernate.cacheable".equals( hintName ) ) {
-				query.setCacheable( ConfigurationHelper.getBoolean( value ) );
-			}
-			else if ( "org.hibernate.readOnly".equals( hintName ) ) {
-				query.setReadOnly( ConfigurationHelper.getBoolean( value ) );
-			}
-			else if ( "org.hibernate.cacheMode".equals( hintName ) ) {
-				query.setCacheMode( ConfigurationHelper.getCacheMode( value ) );
-			}
-			else if ( "org.hibernate.flushMode".equals( hintName ) ) {
-				query.setFlushMode( ConfigurationHelper.getFlushMode( value ) );
-			}
-			//TODO:
-			/*else if ( "org.hibernate.lockMode".equals( hintName ) ) {
-				query.setLockMode( alias, lockMode );
-			}*/
-		}
-		catch (ClassCastException e) {
-			throw new IllegalArgumentException( "Value for hint" );
+		else {
+			setParameter( param.getPosition(), value );
 		}
 		return this;
 	}
 
-	public Map<String, Object> getHints() {
-		//FIXME
-		return null;  //To change body of implemented methods use File | Settings | File Templates.
+	public TypedQuery<X> setParameter(Parameter<Date> param, Date value, TemporalType temporalType) {
+		if ( ! parameters.contains( param ) ) {
+			throw new IllegalArgumentException( "Specified parameter was not found in query" );
+		}
+		if ( param.getName() != null ) {
+			// a named param, for not delegate out.  Eventually delegate *into* this method...
+			setParameter( param.getName(), value, temporalType );
+		}
+		else {
+			setParameter( param.getPosition(), value, temporalType );
+		}
+		return this;
 	}
 
-	public Set<String> getSupportedHints() {
-		//FIXME
-		return null;  //To change body of implemented methods use File | Settings | File Templates.
+	public TypedQuery<X> setParameter(Parameter<Calendar> param, Calendar value, TemporalType temporalType) {
+		if ( ! parameters.contains( param ) ) {
+			throw new IllegalArgumentException( "Specified parameter was not found in query" );
+		}
+		if ( param.getName() != null ) {
+			// a named param, for not delegate out.  Eventually delegate *into* this method...
+			setParameter( param.getName(), value, temporalType );
+		}
+		else {
+			setParameter( param.getPosition(), value, temporalType );
+		}
+		return this;
 	}
 
-	public Query setParameter(String name, Object value) {
+	/**
+	 * {@inheritDoc}
+	 */
+	public TypedQuery<X> setParameter(String name, Object value) {
 		try {
 			if ( value instanceof Collection ) {
 				query.setParameterList( name, (Collection) value );
@@ -245,18 +324,21 @@ public class QueryImpl implements Query, HibernateQuery {
 			else {
 				query.setParameter( name, value );
 			}
+			registerParameterBinding( getParameter( name ), value );
 			return this;
 		}
 		catch (QueryParameterException e) {
 			throw new IllegalArgumentException( e );
 		}
 		catch (HibernateException he) {
-			em.throwPersistenceException( he );
-			return null;
+			throw getEntityManager().convert( he );
 		}
 	}
 
-	public Query setParameter(String name, Date value, TemporalType temporalType) {
+	/**
+	 * {@inheritDoc}
+	 */
+	public TypedQuery<X> setParameter(String name, Date value, TemporalType temporalType) {
 		try {
 			if ( temporalType == DATE ) {
 				query.setDate( name, value );
@@ -267,18 +349,21 @@ public class QueryImpl implements Query, HibernateQuery {
 			else if ( temporalType == TIMESTAMP ) {
 				query.setTimestamp( name, value );
 			}
+			registerParameterBinding( getParameter( name ), value );
 			return this;
 		}
 		catch (QueryParameterException e) {
 			throw new IllegalArgumentException( e );
 		}
 		catch (HibernateException he) {
-			em.throwPersistenceException( he );
-			return null;
+			throw getEntityManager().convert( he );
 		}
 	}
 
-	public Query setParameter(String name, Calendar value, TemporalType temporalType) {
+	/**
+	 * {@inheritDoc}
+	 */
+	public TypedQuery<X> setParameter(String name, Calendar value, TemporalType temporalType) {
 		try {
 			if ( temporalType == DATE ) {
 				query.setCalendarDate( name, value );
@@ -289,24 +374,28 @@ public class QueryImpl implements Query, HibernateQuery {
 			else if ( temporalType == TIMESTAMP ) {
 				query.setCalendar( name, value );
 			}
+			registerParameterBinding( getParameter(name), value );
 			return this;
 		}
 		catch (QueryParameterException e) {
 			throw new IllegalArgumentException( e );
 		}
 		catch (HibernateException he) {
-			em.throwPersistenceException( he );
-			return null;
+			throw getEntityManager().convert( he );
 		}
 	}
 
-	public Query setParameter(int position, Object value) {
+	/**
+	 * {@inheritDoc}
+	 */
+	public TypedQuery<X> setParameter(int position, Object value) {
 		try {
-			if ( isPositionalParameter() ) {
+			if ( isJpaPositionalParameter( position ) ) {
 				this.setParameter( Integer.toString( position ), value );
 			}
 			else {
 				query.setParameter( position - 1, value );
+				registerParameterBinding( getParameter( position ), value );
 			}
 			return this;
 		}
@@ -314,35 +403,20 @@ public class QueryImpl implements Query, HibernateQuery {
 			throw new IllegalArgumentException( e );
 		}
 		catch (HibernateException he) {
-			em.throwPersistenceException( he );
-			return null;
+			throw getEntityManager().convert( he );
 		}
 	}
 
-	private boolean isPositionalParameter() {
-		if (isPositional == null) {
-			//compute it
-			String queryString = query.getQueryString();
-			int index = queryString.indexOf( '?' );
-			//there is a ? and the following char is a digit
-			if (index == -1) {
-				//no ?
-				isPositional = true;
-			}
-			else if ( index == queryString.length() - 1 ) {
-				// "... ?"
-				isPositional = false;
-			}
-			else {
-				isPositional = Character.isDigit( queryString.charAt( index + 1 ) );
-			}
-		}
-		return isPositional;
+	private boolean isJpaPositionalParameter(int position) {
+		return jpaPositionalIndices != null && jpaPositionalIndices.contains( position );
 	}
 
-	public Query setParameter(int position, Date value, TemporalType temporalType) {
+	/**
+	 * {@inheritDoc}
+	 */
+	public TypedQuery<X> setParameter(int position, Date value, TemporalType temporalType) {
 		try {
-			if ( isPositionalParameter() ) {
+			if ( isJpaPositionalParameter( position ) ) {
 				String name = Integer.toString( position );
 				this.setParameter( name, value, temporalType );
 			}
@@ -356,6 +430,7 @@ public class QueryImpl implements Query, HibernateQuery {
 				else if ( temporalType == TIMESTAMP ) {
 					query.setTimestamp( position - 1, value );
 				}
+				registerParameterBinding( getParameter( position ), value );
 			}
 			return this;
 		}
@@ -363,14 +438,16 @@ public class QueryImpl implements Query, HibernateQuery {
 			throw new IllegalArgumentException( e );
 		}
 		catch (HibernateException he) {
-			em.throwPersistenceException( he );
-			return null;
+			throw getEntityManager().convert( he );
 		}
 	}
 
-	public Query setParameter(int position, Calendar value, TemporalType temporalType) {
+	/**
+	 * {@inheritDoc}
+	 */
+	public TypedQuery<X> setParameter(int position, Calendar value, TemporalType temporalType) {
 		try {
-			if ( isPositionalParameter() ) {
+			if ( isJpaPositionalParameter( position ) ) {
 				String name = Integer.toString( position );
 				this.setParameter( name, value, temporalType );
 			}
@@ -384,6 +461,7 @@ public class QueryImpl implements Query, HibernateQuery {
 				else if ( temporalType == TIMESTAMP ) {
 					query.setCalendar( position - 1, value );
 				}
+				registerParameterBinding( getParameter( position ), value );
 			}
 			return this;
 		}
@@ -391,83 +469,117 @@ public class QueryImpl implements Query, HibernateQuery {
 			throw new IllegalArgumentException( e );
 		}
 		catch (HibernateException he) {
-			em.throwPersistenceException( he );
-			return null;
+			throw getEntityManager().convert( he );
 		}
 	}
 
-	//FIXME
+	/**
+	 * {@inheritDoc}
+	 */
 	public Set<Parameter<?>> getParameters() {
-		return null;  //To change body of implemented methods use File | Settings | File Templates.
+		return parameters;
 	}
 
-	//FIXME
+	/**
+	 * {@inheritDoc}
+	 */
 	public Parameter<?> getParameter(String name) {
-		return null;  //To change body of implemented methods use File | Settings | File Templates.
+		if ( name == null ) {
+			throw new IllegalArgumentException( "Name of parameter to locate cannot be null" );
+		}
+		for ( Parameter parameter : parameters ) {
+			if ( name.equals( parameter.getName() ) ) {
+				return parameter;
+			}
+		}
+		throw new IllegalArgumentException( "Unable to locate parameter named [" + name + "]" );
 	}
 
-	//FIXME
+	/**
+	 * {@inheritDoc}
+	 */
 	public Parameter<?> getParameter(int position) {
-		return null;  //To change body of implemented methods use File | Settings | File Templates.
+		if ( isJpaPositionalParameter( position ) ) {
+			return getParameter( Integer.toString( position ) );
+		}
+		else {
+			for ( Parameter parameter : parameters ) {
+				if ( parameter.getPosition() != null && position == parameter.getPosition() ) {
+					return parameter;
+				}
+			}
+			throw new IllegalArgumentException( "Unable to locate parameter with position [" + position + "]" );
+		}
 	}
 
-	//FIXME
+	/**
+	 * {@inheritDoc}
+	 */
+	@SuppressWarnings({ "unchecked" })
 	public <T> Parameter<T> getParameter(String name, Class<T> type) {
-		return null;  //To change body of implemented methods use File | Settings | File Templates.
+		Parameter param = getParameter( name );
+		if ( param.getJavaType() != null ) {
+			// we were able to determine the expected type during analysis, so validate it here
+			throw new IllegalArgumentException(
+					"Parameter type [" + param.getJavaType().getName() +
+							"] is not assignment compatible with requested type [" +
+							type.getName() + "]"
+			);
+		}
+		return param;
 	}
 
-	//FIXME
+	/**
+	 * {@inheritDoc}
+	 */
+	@SuppressWarnings({ "unchecked" })
 	public <T> Parameter<T> getParameter(int position, Class<T> type) {
-		return null;  //To change body of implemented methods use File | Settings | File Templates.
-	}
-
-	//FIXME
-	public boolean isBound(Parameter<?> param) {
-		return false;  //To change body of implemented methods use File | Settings | File Templates.
-	}
-
-	//FIXME
-	public <T> T getParameterValue(Parameter<T> param) {
-		return null;  //To change body of implemented methods use File | Settings | File Templates.
-	}
-
-	//FIXME
-	public Object getParameterValue(String name) {
-		return null;  //To change body of implemented methods use File | Settings | File Templates.
-	}
-
-	//FIXME
-	public Object getParameterValue(int position) {
-		return null;  //To change body of implemented methods use File | Settings | File Templates.
-	}
-
-	public Query setFlushMode(FlushModeType flushMode) {
-		if ( flushMode == FlushModeType.AUTO ) {
-			query.setFlushMode( FlushMode.AUTO );
+		Parameter param = getParameter( position );
+		if ( param.getJavaType() != null ) {
+			// we were able to determine the expected type during analysis, so validate it here
+			throw new IllegalArgumentException(
+					"Parameter type [" + param.getJavaType().getName() +
+							"] is not assignment compatible with requested type [" +
+							type.getName() + "]"
+			);
 		}
-		else if ( flushMode == FlushModeType.COMMIT ) {
-			query.setFlushMode( FlushMode.COMMIT );
-		}
-		return this;
+		return param;
 	}
 
-	public FlushModeType getFlushMode() {
-		//FIXME
-		return null;  //To change body of implemented methods use File | Settings | File Templates.
+	/**
+	 * {@inheritDoc}
+	 */
+	public TypedQuery<X> setLockMode(LockModeType lockModeType) {
+		// TODO : aye aye aye
+		throw new UnsupportedOperationException( "Not yet implemented" );
 	}
 
-	public Query setLockMode(LockModeType lockModeType) {
-		//FIXME
-		return null;  //To change body of implemented methods use File | Settings | File Templates.
-	}
-
+	/**
+	 * {@inheritDoc}
+	 */
 	public LockModeType getLockMode() {
-		//FIXME
-		return null;  //To change body of implemented methods use File | Settings | File Templates.
+		return LockModeType.NONE;
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
+	@SuppressWarnings({ "unchecked" })
 	public <T> T unwrap(Class<T> tClass) {
-		//FIXME
-		return null;  //To change body of implemented methods use File | Settings | File Templates.
+		if ( org.hibernate.Query.class.isAssignableFrom( tClass ) ) {
+			return (T) query;
+		}
+		else {
+			try {
+				return (T) this;
+			}
+			catch ( ClassCastException cce ) {
+				PersistenceException pe = new PersistenceException(
+						"Unsupported unwrap target type [" + tClass.getName() + "]"
+				);
+				getEntityManager().handlePersistenceException( pe );
+				throw pe;
+			}
+		}
 	}
 }

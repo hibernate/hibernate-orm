@@ -116,6 +116,10 @@ public abstract class AbstractQueryImpl implements Query {
 		this.parameterMetadata = parameterMetadata;
 	}
 
+	public ParameterMetadata getParameterMetadata() {
+		return parameterMetadata;
+	}
+
 	public String toString() {
 		return StringHelper.unqualify( getClass().getName() ) + '(' + queryString + ')';
 	}
@@ -161,7 +165,13 @@ public abstract class AbstractQueryImpl implements Query {
 	}
 
 	public Query setMaxResults(int maxResults) {
-		selection.setMaxRows( new Integer(maxResults) );
+		if ( maxResults < 0 ) {
+			// treat negatives specically as meaning no limit...
+			selection.setMaxRows( null );
+		}
+		else {
+			selection.setMaxRows( new Integer(maxResults) );
+		}
 		return this;
 	}
 

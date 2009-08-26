@@ -1,8 +1,10 @@
 /*
- * Copyright (c) 2009, Red Hat Middleware LLC or third-party contributors as
- * indicated by the @author tags or express copyright attribution
- * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2009 by Red Hat Inc and/or its affiliates or by
+ * third-party contributors as indicated by either @author tags or express
+ * copyright attribution statements applied by the authors.  All
+ * third-party contributions are distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -80,6 +82,7 @@ import org.hibernate.util.JTAHelper;
 /**
  * @author <a href="mailto:gavin@hibernate.org">Gavin King</a>
  * @author Emmanuel Bernard
+ * @author Steve Ebersole
  */
 @SuppressWarnings("unchecked")
 public abstract class AbstractEntityManagerImpl implements HibernateEntityManagerImplementor, Serializable {
@@ -115,19 +118,34 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 		this.properties = null;
 	}
 
-	public Query createQuery(String ejbqlString) {
-		//adjustFlushMode();
+	public Query createQuery(String jpaqlString) {
 		try {
-			return new QueryImpl( getSession().createQuery( ejbqlString ), this );
+			return new QueryImpl<Object>( getSession().createQuery( jpaqlString ), this );
 		}
 		catch ( HibernateException he ) {
-			throwPersistenceException( he );
-			return null;
+			throw convert( he );
 		}
 	}
 
-	public <T> TypedQuery<T> createQuery(String qlString, Class<T> resultClass) {
-		throw new UnsupportedOperationException( "Not yet implemented" );
+	public <T> TypedQuery<T> createQuery(String jpaqlString, Class<T> resultClass) {
+		try {
+			org.hibernate.Query hqlQuery = getSession().createQuery( jpaqlString );
+			if ( hqlQuery.getReturnTypes().length != 1 ) {
+				throw new IllegalArgumentException( "Cannot create TypedQuery for query with more than one return" );
+			}
+			if ( ! resultClass.isAssignableFrom( hqlQuery.getReturnTypes()[0].getReturnedClass() ) ) {
+				throw new IllegalArgumentException(
+						"Type specified for TypedQuery [" +
+								resultClass.getName() +
+								"] is incompatible with query return type [" +
+								hqlQuery.getReturnTypes()[0].getReturnedClass() + "]"
+				);
+			}
+			return new QueryImpl<T>( hqlQuery, this );
+		}
+		catch ( HibernateException he ) {
+			throw convert( he );
+		}
 	}
 
 	public <T> TypedQuery<T> createQuery(CriteriaQuery<T> criteriaQuery) {
@@ -165,69 +183,81 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 	}
 
 	public Query createNamedQuery(String name) {
-		//adjustFlushMode();
-		org.hibernate.Query namedQuery;
 		try {
-			namedQuery = getSession().getNamedQuery( name );
+			org.hibernate.Query namedQuery = getSession().getNamedQuery( name );
+			try {
+				return new QueryImpl( namedQuery, this );
+			}
+			catch ( HibernateException he ) {
+				throw convert( he );
+			}
 		}
 		catch ( MappingException e ) {
 			throw new IllegalArgumentException( "Named query not found: " + name );
 		}
-		try {
-			return new QueryImpl( namedQuery, this );
-		}
-		catch ( HibernateException he ) {
-			throwPersistenceException( he );
-			return null;
-		}
 	}
 
 	public <T> TypedQuery<T> createNamedQuery(String name, Class<T> resultClass) {
-		throw new UnsupportedOperationException( "Not yet implemented" );
+		try {
+			org.hibernate.Query namedQuery = getSession().getNamedQuery( name );
+			try {
+				if ( namedQuery.getReturnTypes().length != 1 ) {
+					throw new IllegalArgumentException( "Cannot create TypedQuery for query with more than one return" );
+				}
+				if ( ! resultClass.isAssignableFrom( namedQuery.getReturnTypes()[0].getReturnedClass() ) ) {
+					throw new IllegalArgumentException(
+							"Type specified for TypedQuery [" +
+									resultClass.getName() +
+									"] is incompatible with query return type [" +
+									namedQuery.getReturnTypes()[0].getReturnedClass() + "]"
+					);
+				}
+				return new QueryImpl<T>( namedQuery, this );
+			}
+			catch ( HibernateException he ) {
+				throw convert( he );
+			}
+		}
+		catch ( MappingException e ) {
+			throw new IllegalArgumentException( "Named query not found: " + name );
+		}
 	}
 
 
 	public Query createNativeQuery(String sqlString) {
-		//adjustFlushMode();
 		try {
 			SQLQuery q = getSession().createSQLQuery( sqlString );
 			return new QueryImpl( q, this );
 		}
 		catch ( HibernateException he ) {
-			throwPersistenceException( he );
-			return null;
+			throw convert( he );
 		}
 	}
 
 	public Query createNativeQuery(String sqlString, Class resultClass) {
-		//adjustFlushMode();
 		try {
 			SQLQuery q = getSession().createSQLQuery( sqlString );
 			q.addEntity( "alias1", resultClass.getName(), LockMode.READ );
 			return new QueryImpl( q, this );
 		}
 		catch ( HibernateException he ) {
-			throwPersistenceException( he );
-			return null;
+			throw convert( he );
 		}
 	}
 
 	public Query createNativeQuery(String sqlString, String resultSetMapping) {
-		//adjustFlushMode();
 		try {
 			SQLQuery q = getSession().createSQLQuery( sqlString );
 			q.setResultSetMapping( resultSetMapping );
 			return new QueryImpl( q, this );
 		}
 		catch ( HibernateException he ) {
-			throwPersistenceException( he );
-			return null;
+			throw convert( he );
 		}
 	}
 
 	@SuppressWarnings("unchecked")
 	public <T> T getReference(Class<T> entityClass, Object primaryKey) {
-		//adjustFlushMode();
 		try {
 			return ( T ) getSession().load( entityClass, ( Serializable ) primaryKey );
 		}
@@ -241,14 +271,12 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 			throw new IllegalArgumentException( e.getMessage(), e );
 		}
 		catch ( HibernateException he ) {
-			throwPersistenceException( he );
-			return null;
+			throw convert( he );
 		}
 	}
 
 	@SuppressWarnings("unchecked")
 	public <A> A find(Class<A> entityClass, Object primaryKey) {
-		//adjustFlushMode();
 		try {
 			return ( A ) getSession().get( entityClass, ( Serializable ) primaryKey );
 		}
@@ -270,8 +298,7 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 			throw new IllegalArgumentException( e.getMessage(), e );
 		}
 		catch ( HibernateException he ) {
-			throwPersistenceException( he );
-			return null;
+			throw convert( he );
 		}
 	}
 
@@ -301,7 +328,6 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 
 	public void persist(Object entity) {
 		checkTransactionNeeded();
-		//adjustFlushMode();
 		try {
 			getSession().persist( entity );
 		}
@@ -309,14 +335,13 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 			throw new IllegalArgumentException( e.getMessage() );
 		}
 		catch ( HibernateException he ) {
-			throwPersistenceException( he );
+			throw convert( he );
 		}
 	}
 
 	@SuppressWarnings("unchecked")
 	public <A> A merge(A entity) {
 		checkTransactionNeeded();
-		//adjustFlushMode();
 		try {
 			return ( A ) getSession().merge( entity );
 		}
@@ -327,14 +352,12 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 			throw new IllegalArgumentException( e.getMessage(), e );
 		}
 		catch ( HibernateException he ) {
-			throwPersistenceException( he );
-			return null;
+			throw convert( he );
 		}
 	}
 
 	public void remove(Object entity) {
 		checkTransactionNeeded();
-		//adjustFlushMode();
 		try {
 			getSession().delete( entity );
 		}
@@ -342,13 +365,12 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 			throw new IllegalArgumentException( e.getMessage(), e );
 		}
 		catch ( HibernateException he ) {
-			throwPersistenceException( he );
+			throw convert( he );
 		}
 	}
 
 	public void refresh(Object entity) {
 		checkTransactionNeeded();
-		//adjustFlushMode();
 		try {
 			if ( !getSession().contains( entity ) ) {
 				throw new IllegalArgumentException( "Entity not managed" );
@@ -359,7 +381,7 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 			throw new IllegalArgumentException( e.getMessage(), e );
 		}
 		catch ( HibernateException he ) {
-			throwPersistenceException( he );
+			throw convert( he );
 		}
 	}
 
@@ -391,8 +413,7 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 			throw new IllegalArgumentException( e.getMessage(), e );
 		}
 		catch ( HibernateException he ) {
-			throwPersistenceException( he );
-			return false;
+			throw convert( he );
 		}
 	}
 
@@ -425,7 +446,7 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 			getSession().flush();
 		}
 		catch ( HibernateException he ) {
-			throwPersistenceException( he );
+			throw convert( he );
 		}
 	}
 
@@ -490,7 +511,7 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 			getSession().clear();
 		}
 		catch ( HibernateException he ) {
-			throwPersistenceException( he );
+			throw convert( he );
 		}
 	}
 
@@ -499,7 +520,7 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 			getSession().evict( entity );
 		}
 		catch ( HibernateException he ) {
-			throwPersistenceException( he );
+			throw convert( he );
 		}
 	}
 
@@ -672,14 +693,17 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 											log.trace( "skipping managed flushing" );
 										}
 									}
+									catch ( HibernateException he ) {
+										throw convert( he );
+									}
+									catch( PersistenceException pe ) {
+										handlePersistenceException( pe );
+										throw pe;
+									}
 									catch ( RuntimeException re ) {
-										//throwPersistenceException will mark the transaction as rollbacked
-										if ( re instanceof HibernateException ) {
-											throwPersistenceException( ( HibernateException ) re );
-										}
-										else {
-											throwPersistenceException( new PersistenceException( re ) );
-										}
+										PersistenceException wrapped = new PersistenceException( re );
+										handlePersistenceException( wrapped );
+										throw wrapped;
 									}
 								}
 
@@ -698,7 +722,7 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 										}
 									}
 									catch ( HibernateException e ) {
-										throwPersistenceException( e );
+										throw convert( e );
 									}
 								}
 							}
@@ -709,7 +733,7 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 				}
 			}
 			catch ( HibernateException he ) {
-				throwPersistenceException( he );
+				throw convert( he );
 			}
 		}
 		else {
@@ -735,35 +759,60 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 		tx = new TransactionImpl( this );
 	}
 
-	public void throwPersistenceException(PersistenceException e) {
-		if ( !( e instanceof NoResultException || e instanceof NonUniqueResultException ) ) {
-			try {
-				markAsRollback();
-			}
-			catch ( Exception ne ) {
-				//we do not want the subsequent exception to swallow the original one
-				log.error( "Unable to mark for rollback on PersistenceException: ", ne );
-			}
+	/**
+	 * {@inheritDoc}
+	 */
+	public void handlePersistenceException(PersistenceException e) {
+		if ( e instanceof NoResultException ) {
+			return;
 		}
+		if ( e instanceof NonUniqueResultException ) {
+			return;
+		}
+
+		try {
+			markAsRollback();
+		}
+		catch ( Exception ne ) {
+			//we do not want the subsequent exception to swallow the original one
+			log.error( "Unable to mark for rollback on PersistenceException: ", ne );
+		}
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public void throwPersistenceException(PersistenceException e) {
+		handlePersistenceException( e );
 		throw e;
 	}
 
-	public void throwPersistenceException(HibernateException e) {
+	/**
+	 * {@inheritDoc}
+	 */
+	public RuntimeException convert(HibernateException e) {
 		if ( e instanceof StaleStateException ) {
-			PersistenceException pe = wrapStaleStateException( ( StaleStateException ) e );
-			throwPersistenceException( pe );
+			PersistenceException converted = wrapStaleStateException( ( StaleStateException ) e );
+			handlePersistenceException( converted );
+			return converted;
 		}
 		else if ( e instanceof ObjectNotFoundException ) {
-			throwPersistenceException( new EntityNotFoundException( e.getMessage() ) );
+			EntityNotFoundException converted = new EntityNotFoundException( e.getMessage() );
+			handlePersistenceException( converted );
+			return converted;
 		}
 		else if ( e instanceof org.hibernate.NonUniqueResultException ) {
-			throwPersistenceException( new NonUniqueResultException( e.getMessage() ) );
+			NonUniqueResultException converted = new NonUniqueResultException( e.getMessage() );
+			handlePersistenceException( converted );
+			return converted;
 		}
 		else if ( e instanceof UnresolvableObjectException ) {
-			throwPersistenceException( new EntityNotFoundException( e.getMessage() ) );
+			EntityNotFoundException converted = new EntityNotFoundException( e.getMessage() );
+			handlePersistenceException( converted );
+			return converted;
 		}
 		else if ( e instanceof QueryException ) {
-			throw new IllegalArgumentException( e );
+			return new IllegalArgumentException( e );
 		}
 		else if ( e instanceof TransientObjectException ) {
 			try {
@@ -773,13 +822,25 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 				//we do not want the subsequent exception to swallow the original one
 				log.error( "Unable to mark for rollback on TransientObjectException: ", ne );
 			}
-			throw new IllegalStateException( e ); //Spec 3.2.3 Synchronization rules
+			return new IllegalStateException( e ); //Spec 3.2.3 Synchronization rules
 		}
 		else {
-			throwPersistenceException( new PersistenceException( e ) );
+			PersistenceException converted = new PersistenceException( e );
+			handlePersistenceException( converted );
+			return converted;
 		}
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
+	public void throwPersistenceException(HibernateException e) {
+		throw convert( e );
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
 	public PersistenceException wrapStaleStateException(StaleStateException e) {
 		PersistenceException pe;
 		if ( e instanceof StaleObjectStateException ) {

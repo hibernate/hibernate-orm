@@ -1,8 +1,10 @@
 /*
- * Copyright (c) 2009, Red Hat Middleware LLC or third-party contributors as
- * indicated by the @author tags or express copyright attribution
- * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2009 by Red Hat Inc and/or its affiliates or by
+ * third-party contributors as indicated by either @author tags or express
+ * copyright attribution statements applied by the authors.  All
+ * third-party contributions are distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -17,31 +19,16 @@
  * along with this distribution; if not, write to:
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
- * Boston, MA  02110-1301  USA
+ * Boston, MA  02110-1301  USA\
  */
-
-//$Id$
 package org.hibernate.ejb;
 
 import java.util.Map;
-import java.lang.reflect.Field;
-import java.lang.reflect.Member;
-import java.lang.reflect.Modifier;
-import java.lang.reflect.AccessibleObject;
-import java.lang.reflect.Method;
-import java.lang.reflect.InvocationTargetException;
 import javax.persistence.EntityManagerFactory;
-import javax.persistence.PersistenceException;
-import javax.persistence.spi.PersistenceUnitInfo;
 import javax.persistence.spi.LoadState;
+import javax.persistence.spi.PersistenceUnitInfo;
 
-import org.hibernate.Hibernate;
 import org.hibernate.ejb.util.PersistenceUtilHelper;
-import org.hibernate.intercept.FieldInterceptionHelper;
-import org.hibernate.intercept.FieldInterceptor;
-import org.hibernate.collection.PersistentCollection;
-import org.hibernate.proxy.HibernateProxy;
-import org.hibernate.proxy.LazyInitializer;
 
 /**
  * Hibernate EJB3 persistence provider implementation

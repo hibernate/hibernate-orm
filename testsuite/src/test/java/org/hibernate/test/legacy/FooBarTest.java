@@ -2222,7 +2222,7 @@ public class FooBarTest extends LegacyTestCase {
 			s.createQuery( "select count(*) from Baz as baz where 1 in indices(baz.fooArray)" ).list();
 			s.createQuery( "select count(*) from Bar as bar where 'abc' in elements(bar.baz.fooArray)" ).list();
 			s.createQuery( "select count(*) from Bar as bar where 1 in indices(bar.baz.fooArray)" ).list();
-			if ( !(getDialect() instanceof DB2Dialect) &&  !(getDialect() instanceof Oracle8iDialect ) && !( getDialect() instanceof SybaseDialect ) && !( getDialect() instanceof Sybase11Dialect ) && !( getDialect() instanceof SybaseASE15Dialect )) {
+			if ( !(getDialect() instanceof DB2Dialect) &&  !(getDialect() instanceof Oracle8iDialect ) && !( getDialect() instanceof SybaseDialect ) && !( getDialect() instanceof Sybase11Dialect ) && !( getDialect() instanceof SybaseASE15Dialect ) && !( getDialect() instanceof PostgreSQLDialect )) {
 				// SybaseAnywhereDialect supports implicit conversions from strings to ints
 				s.createQuery(
 						"select count(*) from Bar as bar, bar.component.glarch.proxyArray as g where g.id in indices(bar.baz.fooArray)"

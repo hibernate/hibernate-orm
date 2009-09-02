@@ -1941,11 +1941,23 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 
 		hql = "from Animal a where mod(16, 4) = 4";
 		session.createQuery(hql).list();
-
-		hql = "from Animal a where bit_length(a.bodyWeight) = 24";
+		/**
+		 * PostgreSQL >= 8.3.7 typecasts are no longer automatically allowed 
+		 * <link>http://www.postgresql.org/docs/current/static/release-8-3.html</link>
+		 */
+		if(getDialect() instanceof PostgreSQLDialect){
+			hql = "from Animal a where bit_length(str(a.bodyWeight)) = 24";
+		}else{
+			hql = "from Animal a where bit_length(a.bodyWeight) = 24";
+		}
+		
 		session.createQuery(hql).list();
-
-		hql = "select bit_length(a.bodyWeight) from Animal a";
+		if(getDialect() instanceof PostgreSQLDialect){
+			hql = "select bit_length(str(a.bodyWeight)) from Animal a";
+		}else{
+			hql = "select bit_length(a.bodyWeight) from Animal a";
+		}
+		
 		session.createQuery(hql).list();
 
 		/*hql = "select object(a) from Animal a where CURRENT_DATE = :p1 or CURRENT_TIME = :p2 or CURRENT_TIMESTAMP = :p3";

@@ -8,7 +8,6 @@ import org.hibernate.cache.CacheException;
 import org.hibernate.cache.QueryResultsRegion;
 import org.hibernate.cache.infinispan.impl.BaseTransactionalDataRegion;
 import org.hibernate.cache.infinispan.util.CacheHelper;
-import org.hibernate.util.PropertiesHelper;
 import org.infinispan.Cache;
 import org.infinispan.context.Flag;
 
@@ -18,23 +17,14 @@ import org.infinispan.context.Flag;
  * @since 3.5
  */
 public class QueryResultsRegionImpl extends BaseTransactionalDataRegion implements QueryResultsRegion {
-   public static final String QUERY_CACHE_LOCAL_ONLY_PROP = "hibernate.cache.infinispan.query.localonly";
-
    private boolean localOnly;
 
    public QueryResultsRegionImpl(Cache<Object, Object> cache, String name, Properties properties, TransactionManager transactionManager) {
       super(cache, name, null, transactionManager);
       
-      // If JBC is using INVALIDATION, we don't want to propagate changes.
+      // If Infinispan is using INVALIDATION for query cache, we don't want to propagate changes.
       // We use the Timestamps cache to manage invalidation
       localOnly = CacheHelper.isClusteredInvalidation(cache);
-      if (!localOnly) {
-          // We don't want to waste effort setting an option if JBC is
-          // already in LOCAL mode. If JBC is REPL_(A)SYNC then check
-          // if they passed an config option to disable query replication
-          localOnly = CacheHelper.isClusteredReplication(cache)
-                  && PropertiesHelper.getBoolean(QUERY_CACHE_LOCAL_ONLY_PROP, properties, false);
-      }
    }
 
    public void evict(Object key) throws CacheException {

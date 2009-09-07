@@ -63,13 +63,11 @@ public abstract class BaseRegion implements Region {
    }
 
    public int getTimeout() {
-      // TODO Auto-generated method stub
-      return 0;
+      return 600; // 60 seconds
    }
 
    public long nextTimestamp() {
-      // TODO Auto-generated method stub
-      return 0;
+      return System.currentTimeMillis() / 100;
    }
 
    public Map toMap() {
@@ -77,7 +75,7 @@ public abstract class BaseRegion implements Region {
    }
 
    public void destroy() throws CacheException {
-      // TODO see if we need to do this even in spite of RF.shutdown()
+      cache.clear();
    }
    
    public boolean contains(Object key) {

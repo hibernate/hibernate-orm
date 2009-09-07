@@ -16,8 +16,13 @@
 
 package org.hibernate.test.cache.infinispan.functional.classloader;
 
+import org.hibernate.cache.infinispan.InfinispanRegionFactory;
+import org.hibernate.test.cache.infinispan.functional.cluster.AbstractDualNodeTestCase;
 import org.hibernate.test.cache.infinispan.functional.cluster.ClusterAwareRegionFactory;
 import org.hibernate.test.cache.infinispan.functional.cluster.DualNodeJtaTransactionManagerImpl;
+import org.hibernate.util.PropertiesHelper;
+import org.infinispan.manager.CacheManager;
+import org.infinispan.manager.DefaultCacheManager;
 
 import junit.framework.Test;
 
@@ -35,10 +40,10 @@ public class IsolatedCacheTestSetup extends SelectedClassnameClassLoaderTestSetu
    /**
     * Create a new IsolatedCacheTestSetup.
     */
-   public IsolatedCacheTestSetup(Test test, String[] isolatedClasses, String cacheConfig) {
+   public IsolatedCacheTestSetup(Test test, String[] isolatedClasses) {
       super(test, null, null, isolatedClasses);
       this.isolatedClasses = isolatedClasses;
-      this.cacheConfig = cacheConfig;
+//      this.cacheConfig = cacheConfig;
    }
 
    @Override
@@ -56,8 +61,11 @@ public class IsolatedCacheTestSetup extends SelectedClassnameClassLoaderTestSetu
 //      // Use a CacheManager that will inject the desired defaultClassLoader into our caches
 //      CustomClassLoaderCacheManager cm = new CustomClassLoaderCacheManager(DEF_CACHE_FACTORY_RESOURCE, cf, tccl);
 //      cm.start();
-//      TestCacheInstanceManager.addTestCacheManager(DualNodeTestUtil.LOCAL, cm);
-//
+      
+//      CacheManager manager = new DefaultCacheManager("org/hibernate/test/cache/infinispan/functional/classloader/infinispan-configs.xml");
+//      ClusterAwareRegionFactory.addCacheManager(AbstractDualNodeTestCase.LOCAL, manager);
+//      ClusterAwareRegionFactory.addCacheManager(AbstractDualNodeTestCase.REMOTE, manager);
+
 //      cm.getCache(cacheConfig, true);
 //
 //      // Repeat for the "remote" cache

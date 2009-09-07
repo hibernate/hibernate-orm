@@ -17,7 +17,7 @@
     <description>Integration of Hibernate with Infinispan</description>
 
     <properties>
-      <version.infinispan>4.0.0.BETA1</version.infinispan>
+      <version.infinispan>4.0.0-SNAPSHOT</version.infinispan>
       <version.hsqldb>1.8.0.2</version.hsqldb>
       <version.cglib>2.2</version.cglib>
       <version.javassist>3.4.GA</version.javassist>

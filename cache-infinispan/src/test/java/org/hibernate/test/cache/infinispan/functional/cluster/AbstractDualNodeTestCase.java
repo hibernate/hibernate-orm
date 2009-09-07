@@ -161,7 +161,7 @@ public abstract class AbstractDualNodeTestCase extends FunctionalTestCase {
       }
   }
 
-   private void standardConfigure(Configuration cfg) {
+   protected void standardConfigure(Configuration cfg) {
       super.configure(cfg);
 
       cfg.setProperty(Environment.CONNECTION_PROVIDER, getConnectionProviderClass().getName());

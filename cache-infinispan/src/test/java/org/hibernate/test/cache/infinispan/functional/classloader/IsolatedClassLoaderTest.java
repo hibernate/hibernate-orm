@@ -28,6 +28,8 @@ import junit.framework.TestSuite;
 
 import org.hibernate.SessionFactory;
 import org.hibernate.cache.StandardQueryCache;
+import org.hibernate.cache.infinispan.InfinispanRegionFactory;
+import org.hibernate.cfg.Configuration;
 import org.hibernate.test.cache.infinispan.functional.cluster.AbstractDualNodeTestCase;
 import org.hibernate.test.cache.infinispan.functional.cluster.ClusterAwareRegionFactory;
 import org.hibernate.test.cache.infinispan.functional.cluster.DualNodeJtaTransactionManagerImpl;
@@ -53,7 +55,7 @@ public class IsolatedClassLoaderTest extends AbstractDualNodeTestCase {
 
    public static final String OUR_PACKAGE = IsolatedClassLoaderTest.class.getPackage().getName();
 
-   private static final String CACHE_CONFIG = "replicated-query";
+   private static final String CACHE_CONFIG = "classloader";
 
    protected static final long SLEEP_TIME = 300L;
 
@@ -74,13 +76,20 @@ public class IsolatedClassLoaderTest extends AbstractDualNodeTestCase {
    public static Test suite() throws Exception {
       TestSuite suite = new TestSuite(IsolatedClassLoaderTest.class);
       String[] acctClasses = { OUR_PACKAGE + ".Account", OUR_PACKAGE + ".AccountHolder" };
-      return new IsolatedCacheTestSetup(suite, acctClasses, CACHE_CONFIG);
+      return new IsolatedCacheTestSetup(suite, acctClasses);
    }
 
    @Override
    public String[] getMappings() {
       return new String[] { "cache/infinispan/functional/classloader/Account.hbm.xml" };
    }
+   
+   @Override
+   protected void standardConfigure(Configuration cfg) {
+      super.standardConfigure(cfg);
+      cfg.setProperty(InfinispanRegionFactory.QUERY_CACHE_RESOURCE_PROP, "replicated-query");
+   }
+
 
    @Override
    protected void cleanupTransactionManagement() {
@@ -111,45 +120,36 @@ public class IsolatedClassLoaderTest extends AbstractDualNodeTestCase {
       // Bind a listener to the "local" cache
       // Our region factory makes its CacheManager available to us
       CacheManager localManager = ClusterAwareRegionFactory.getCacheManager(AbstractDualNodeTestCase.LOCAL);
-      Cache localAccountCache = localManager.getCache(Account.class.getName());
-      Cache localAccountHolderCache = localManager.getCache(AccountHolder.class.getName());
+      Cache localReplicatedCache = localManager.getCache("replicated-entity");
 
       // Bind a listener to the "remote" cache
       CacheManager remoteManager = ClusterAwareRegionFactory.getCacheManager(AbstractDualNodeTestCase.REMOTE);
-      Cache remoteAccountCache = remoteManager.getCache(Account.class.getName());
-      Cache remoteAccountHolderCache = remoteManager.getCache(AccountHolder.class.getName());
+      Cache remoteReplicatedCache = remoteManager.getCache("replicated-entity");
 
       ClassLoader cl = Thread.currentThread().getContextClassLoader();
-      log.info("TCCL is " + cl);
       Thread.currentThread().setContextClassLoader(cl.getParent());
+      log.info("TCCL is " + cl.getParent());
 
-      // org.jboss.cache.Fqn fqn = org.jboss.cache.Fqn.fromString("/isolated1");
-      // org.jboss.cache.Region r = localCache.getRegion(fqn, true);
-      // r.registerContextClassLoader(cl.getParent());
-      // r.activate();
-      //      
-      // r = remoteCache.getRegion(fqn, true);
-      // r.registerContextClassLoader(cl.getParent());
-      // r.activate();
-      // Thread.currentThread().setContextClassLoader(cl);
       Account acct = new Account();
       acct.setAccountHolder(new AccountHolder());
 
       try {
-         localAccountCache.put("isolated1", acct);
+         localReplicatedCache.put("isolated1", acct);
+         // With lazy deserialization, retrieval in remote forces class resolution
+         remoteReplicatedCache.get("isolated1");
          fail("Should not have succeeded in putting acct -- classloader not isolated");
       } catch (Exception e) {
-         log.info("Caught exception as desired", e);
+         if (e.getCause() instanceof ClassNotFoundException) {
+            log.info("Caught exception as desired", e);
+         } else {
+            throw new IllegalStateException("Unexpected exception", e);
+         }
       }
 
-      // localCache.getRegion(fqn,
-      // false).registerContextClassLoader(Thread.currentThread().getContextClassLoader());
-      // remoteCache.getRegion(fqn,
-      // false).registerContextClassLoader(Thread.currentThread().getContextClassLoader());
-
       Thread.currentThread().setContextClassLoader(cl);
-      localAccountCache.put("isolated1", acct);
-      assertEquals(acct.getClass().getName(), remoteAccountCache.get("isolated1").getClass().getName());
+      log.info("TCCL is " + cl);
+      localReplicatedCache.put("isolated2", acct);
+      assertEquals(acct.getClass().getName(), remoteReplicatedCache.get("isolated2").getClass().getName());
    }
 
    public void testClassLoaderHandlingNamedQueryRegion() throws Exception {
@@ -164,7 +164,7 @@ public class IsolatedClassLoaderTest extends AbstractDualNodeTestCase {
       // Bind a listener to the "local" cache
       // Our region factory makes its CacheManager available to us
       CacheManager localManager = ClusterAwareRegionFactory.getCacheManager(AbstractDualNodeTestCase.LOCAL);
-      localQueryCache = localManager.getCache("local-query");
+      localQueryCache = localManager.getCache("replicated-query");
       localQueryListener = new CacheAccessListener();
       localQueryCache.addListener(localQueryListener);
 
@@ -172,7 +172,7 @@ public class IsolatedClassLoaderTest extends AbstractDualNodeTestCase {
 
       // Bind a listener to the "remote" cache
       CacheManager remoteManager = ClusterAwareRegionFactory.getCacheManager(AbstractDualNodeTestCase.REMOTE);
-      remoteQueryCache = remoteManager.getCache("local-query");
+      remoteQueryCache = remoteManager.getCache("replicated-query");
       remoteQueryListener = new CacheAccessListener();
       remoteQueryCache.addListener(remoteQueryListener);
 
@@ -184,65 +184,50 @@ public class IsolatedClassLoaderTest extends AbstractDualNodeTestCase {
       ClassLoaderTestDAO dao0 = new ClassLoaderTestDAO(localFactory, localTM);
       ClassLoaderTestDAO dao1 = new ClassLoaderTestDAO(remoteFactory, remoteTM);
 
-//      // Determine whether our query region is already there (in which case it
-//      // will receive remote messages immediately) or is yet to be created on
-//      // first use (in which case it will initially discard remote messages)
-//      String regionName = createRegionName(useNamedRegion ? "AccountRegion" : StandardQueryCache.class.getName());
-//      Region queryRegion = remoteCache.getRegion(Fqn.fromString(regionName), false);
-//      boolean queryRegionExists = queryRegion != null && queryRegion.isActive();
-
       // Initial ops on node 0
       setupEntities(dao0);
 
+      String branch = "63088";
       // Query on post code count
-      assertEquals("63088 has correct # of accounts", 6, dao0.getCountForBranch("63088", useNamedRegion));
-
-      assertTrue("Query cache used ", localQueryListener.getSawRegionModification("???"));
-      // Clear the access state
-      localQueryListener.getSawRegionAccess("???");
-
-      log.info("First query on node0 done");
+      assertEquals(branch + " has correct # of accounts", 6, dao0.getCountForBranch(branch, useNamedRegion));
+      
+      assertEquals("Query cache used", 1, localQueryListener.getSawRegionModificationCount());
+      localQueryListener.clearSawRegionModification();
+      
+//      log.info("First query (get count for branch + " + branch + " ) on node0 done, contents of local query cache are: " + TestingUtil.printCache(localQueryCache));
 
       // Sleep a bit to allow async repl to happen
       sleep(SLEEP_TIME);
-
-//      // If region isn't activated yet, should not have been modified
-//      if (!queryRegionExists) {
-         assertFalse("Query cache remotely modified", remoteQueryListener.getSawRegionModification("???"));
-         // Clear the access state
-         remoteQueryListener.getSawRegionAccess("???");
-//      } else {
-         assertTrue("Query cache remotely modified ", remoteQueryListener.getSawRegionModification("???"));
-         // Clear the access state
-         remoteQueryListener.getSawRegionAccess("???");
-//      }
+      
+      assertEquals("Query cache used", 1, remoteQueryListener.getSawRegionModificationCount());
+      remoteQueryListener.clearSawRegionModification();
 
       // Do query again from node 1
-      assertEquals("63088 has correct # of accounts", 6, dao1.getCountForBranch("63088", useNamedRegion));
-
-//      if (!queryRegionExists) {
-//         // Query should have activated the region and then been inserted
-         assertTrue("Query cache modified ", remoteQueryListener.getSawRegionModification("???"));
-         // Clear the access state
-         remoteQueryListener.getSawRegionAccess("???");
-//      }
-
+      log.info("Repeat first query (get count for branch + " + branch + " ) on remote node");
+      assertEquals("63088 has correct # of accounts", 6, dao1.getCountForBranch(branch, useNamedRegion));
+      assertEquals("Query cache used", 1, remoteQueryListener.getSawRegionModificationCount());
+      remoteQueryListener.clearSawRegionModification();
+      
+      sleep(SLEEP_TIME);
+      
+      assertEquals("Query cache used", 1, localQueryListener.getSawRegionModificationCount());
+      localQueryListener.clearSawRegionModification();
+      
       log.info("First query on node 1 done");
-
-      // We now have the query cache region activated on both nodes.
 
       // Sleep a bit to allow async repl to happen
       sleep(SLEEP_TIME);
 
       // Do some more queries on node 0
-
+      log.info("Do query Smith's branch");
       assertEquals("Correct branch for Smith", "94536", dao0.getBranch(dao0.getSmith(), useNamedRegion));
-
+      log.info("Do query Jone's balance");
       assertEquals("Correct high balances for Jones", 40, dao0.getTotalBalance(dao0.getJones(), useNamedRegion));
 
-      assertTrue("Query cache used ", localQueryListener.getSawRegionModification("???"));
-      // Clear the access state
-      localQueryListener.getSawRegionAccess("???");
+      assertEquals("Query cache used", 2, localQueryListener.getSawRegionModificationCount());
+      localQueryListener.clearSawRegionModification();
+//      // Clear the access state
+//      localQueryListener.getSawRegionAccess("???");
 
       log.info("Second set of queries on node0 done");
 
@@ -250,18 +235,21 @@ public class IsolatedClassLoaderTest extends AbstractDualNodeTestCase {
       sleep(SLEEP_TIME);
 
       // Check if the previous queries replicated
-      assertTrue("Query cache remotely modified ", remoteQueryListener.getSawRegionModification("???"));
-      // Clear the access state
-      remoteQueryListener.getSawRegionAccess("???");
+      assertEquals("Query cache remotely modified", 2, remoteQueryListener.getSawRegionModificationCount());
+      remoteQueryListener.clearSawRegionModification();
+
+      log.info("Repeat second set of queries on node1");
 
       // Do queries again from node 1
+      log.info("Again query Smith's branch");
       assertEquals("Correct branch for Smith", "94536", dao1.getBranch(dao1.getSmith(), useNamedRegion));
-
+      log.info("Again query Jone's balance");
       assertEquals("Correct high balances for Jones", 40, dao1.getTotalBalance(dao1.getJones(), useNamedRegion));
 
       // Should be no change; query was already there
-      assertFalse("Query cache modified ", remoteQueryListener.getSawRegionModification("???"));
-      assertTrue("Query cache accessed ", remoteQueryListener.getSawRegionAccess("???"));
+      assertEquals("Query cache modified", 0, remoteQueryListener.getSawRegionModificationCount());
+      assertEquals("Query cache accessed", 2, remoteQueryListener.getSawRegionAccessCount());
+      remoteQueryListener.clearSawRegionAccess();
 
       log.info("Second set of queries on node1 done");
 
@@ -275,13 +263,9 @@ public class IsolatedClassLoaderTest extends AbstractDualNodeTestCase {
       sleep(SLEEP_TIME);
 
       // Confirm query results are correct on node 0
-
       assertEquals("63088 has correct # of accounts", 7, dao0.getCountForBranch("63088", useNamedRegion));
-
       assertEquals("Correct branch for Smith", "63088", dao0.getBranch(dao0.getSmith(), useNamedRegion));
-
       assertEquals("Correct high balances for Jones", 50, dao0.getTotalBalance(dao0.getJones(), useNamedRegion));
-
       log.info("Third set of queries on node0 done");
    }
 

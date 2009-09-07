@@ -55,9 +55,9 @@ public class InfinispanRegionFactory implements RegionFactory {
    
    private static final String MAX_ENTRIES_SUFFIX = ".eviction.max_entries";
    
-   private static final String LIFESPAN_SUFFIX = ".eviction.lifespan";
+   private static final String LIFESPAN_SUFFIX = ".expiration.lifespan";
    
-   private static final String MAX_IDLE_SUFFIX = ".eviction.max_idle";
+   private static final String MAX_IDLE_SUFFIX = ".expiration.max_idle";
    
    /** 
     * Classpath or filesystem resource containing Infinispan configurations the factory should use.
@@ -188,14 +188,14 @@ public class InfinispanRegionFactory implements RegionFactory {
     * {@inheritDoc}
     */
    public boolean isMinimalPutsEnabledByDefault() {
-      return false;
+      return true;
    }
 
    /**
     * {@inheritDoc}
     */
    public long nextTimestamp() {
-      return 0;
+      return System.currentTimeMillis() / 100;
    }
    
    public void setCacheManager(CacheManager manager) {
@@ -210,13 +210,12 @@ public class InfinispanRegionFactory implements RegionFactory {
     * {@inheritDoc}
     */
    public void start(Settings settings, Properties properties) throws CacheException {
-      log.debug("Starting Infinispan CacheManager");
+      log.debug("Starting Infinispan region factory");
       try {
          transactionManagerlookup = new HibernateTransactionManagerLookup(settings, properties);
          transactionManager = transactionManagerlookup.getTransactionManager();
          
-         String configLoc = PropertiesHelper.getString(INFINISPAN_CONFIG_RESOURCE_PROP, properties, DEF_INFINISPAN_CONFIG_RESOURCE);
-         manager = createCacheManager(configLoc);
+         manager = createCacheManager(properties);
          initGenericDataTypeOverrides();
          Enumeration keys = properties.propertyNames();
          while (keys.hasMoreElements()) {
@@ -256,8 +255,9 @@ public class InfinispanRegionFactory implements RegionFactory {
       return Collections.unmodifiableSet(definedConfigurations);
    }
 
-   protected CacheManager createCacheManager(String configLoc) throws CacheException {
+   protected CacheManager createCacheManager(Properties properties) throws CacheException {
       try {
+         String configLoc = PropertiesHelper.getString(INFINISPAN_CONFIG_RESOURCE_PROP, properties, DEF_INFINISPAN_CONFIG_RESOURCE);
          return new DefaultCacheManager(configLoc);
       } catch (IOException e) {
          throw new CacheException("Unable to create default cache manager", e);
@@ -309,24 +309,6 @@ public class InfinispanRegionFactory implements RegionFactory {
       }
    }
 
-//   private Configuration overrideCacheConfig(TypeOverrides config, Configuration baseCacheCfg) {
-//      // If eviction strategy is different from null, an override has been defined
-//      EvictionStrategy strategy = config.getEvictionStrategy();
-//      if (strategy != null) baseCacheCfg.setEvictionStrategy(strategy);
-//      // If eviction wake up interval is different from min value, an override has been defined
-//      // Checking for -1 might not be enough because user might have defined -1 in the config.
-//      // Same applies to other configuration options.
-//      long wakeUpInterval = config.getEvictionWakeUpInterval(); 
-//      if (wakeUpInterval != Long.MIN_VALUE) baseCacheCfg.setEvictionWakeUpInterval(wakeUpInterval);
-//      int maxEntries = config.getEvictionMaxEntries();
-//      if (maxEntries != Integer.MIN_VALUE) baseCacheCfg.setEvictionMaxEntries(maxEntries);
-//      long lifespan = config.getExpirationLifespan();
-//      if (lifespan != Long.MIN_VALUE) baseCacheCfg.setExpirationLifespan(lifespan); 
-//      long maxIdle = config.getExpirationMaxIdle();
-//      if (maxIdle != Long.MIN_VALUE) baseCacheCfg.setExpirationMaxIdle(maxIdle);
-//      return baseCacheCfg;
-//   }
-   
    private TypeOverrides getOrCreateConfig(int prefixLoc, String key, int suffixLoc) {
       String name = key.substring(prefixLoc + PREFIX.length(), suffixLoc);
       TypeOverrides cfgOverride = typeOverrides.get(name);
@@ -378,39 +360,6 @@ public class InfinispanRegionFactory implements RegionFactory {
          definedConfigurations.add(regionName);
       }
       return manager.getCache(regionName);
-
-//      if (regionOverride != null) {
-//         if (log.isDebugEnabled()) log.debug("Entity cache region specific configuration exists: " + regionOverride);
-//         String cacheName = regionOverride.getCacheName();
-//         if (cacheName != null) {
-//            // Region specific override with a given cache name
-//            if (!definedConfigurations.contains(regionName)) {
-//               templateCacheName = cacheName;
-//               regionCacheCfg = regionOverride.createInfinispanConfiguration();
-//               manager.defineConfiguration(regionName, templateCacheName, regionCacheCfg);
-//               definedConfigurations.add(regionName);
-//            }
-//            return manager.getCache(regionName);
-//         } else {
-//            // Region specific override without cache name, so template cache name is generic for data type.
-//            if (!definedConfigurations.contains(regionName)) {
-//               templateCacheName = typeOverrides.get(typeKey).getCacheName();
-//               regionCacheCfg = regionOverride.createInfinispanConfiguration();
-//               manager.defineConfiguration(regionName, templateCacheName, regionCacheCfg);
-//               definedConfigurations.add(regionName);
-//            }
-//            return manager.getCache(regionName);
-//         }
-//      }
-//      
-//      if (!definedConfigurations.contains(regionName)) {
-//         templateCacheName = typeOverrides.get(typeKey).getCacheName();
-//         regionCacheCfg = typeOverrides.get(typeKey).createInfinispanConfiguration();
-//         manager.defineConfiguration(regionName, templateCacheName, regionCacheCfg);
-//         definedConfigurations.add(regionName);
-//      }
-//      // No region specific overrides, get a cache instance for the generic entity data type region
-//      return manager.getCache(regionName);
    }
    
    private Configuration configureTransactionManager(Configuration regionOverrides, String templateCacheName, Properties properties) {

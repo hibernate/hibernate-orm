@@ -24,6 +24,7 @@ package org.hibernate.test.cache.infinispan.functional.cluster;
 import javax.transaction.TransactionManager;
 
 import org.hibernate.SessionFactory;
+import org.hibernate.cache.infinispan.InfinispanRegionFactory;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.test.cache.infinispan.functional.classloader.Account;
@@ -69,6 +70,12 @@ public class SessionRefreshTestCase extends AbstractDualNodeTestCase {
       cfg.setProperty(Environment.USE_SECOND_LEVEL_CACHE, "false");
    }
    
+   @Override
+   protected void standardConfigure(Configuration cfg) {
+      super.standardConfigure(cfg);
+      cfg.setProperty(InfinispanRegionFactory.ENTITY_CACHE_RESOURCE_PROP, getEntityCacheConfigName()); 
+   }
+
    @Override
    public String[] getMappings() {
       return new String[] { "cache/infinispan/functional/classloader/Account.hbm.xml" };

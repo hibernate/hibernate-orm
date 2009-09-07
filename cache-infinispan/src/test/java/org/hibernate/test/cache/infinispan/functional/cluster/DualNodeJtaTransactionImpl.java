@@ -194,7 +194,7 @@ public class DualNodeJtaTransactionImpl implements Transaction {
             res.prepare(xid);
          } catch (XAException e) {
             log.trace("The resource wants to rollback!", e);
-            return false;
+            throw new SystemException(e.getMessage());
          } catch (Throwable th) {
             log.error("Unexpected error from resource manager!", th);
             throw new SystemException(th.getMessage());

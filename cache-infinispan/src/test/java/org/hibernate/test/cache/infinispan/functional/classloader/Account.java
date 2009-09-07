@@ -88,6 +88,7 @@ public class Account implements Serializable {
       return true;
    }
 
+   @Override
    public int hashCode() {
       int result = 17;
       result = result * 31 + safeHashCode(id);
@@ -97,6 +98,7 @@ public class Account implements Serializable {
       return result;
    }
 
+   @Override
    public String toString() {
       StringBuffer sb = new StringBuffer(getClass().getName());
       sb.append("[id=");

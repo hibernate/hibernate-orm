@@ -32,50 +32,62 @@ import java.io.Serializable;
  * 
  * @author Brian Stansberry
  */
-public class AccountHolder implements Serializable
-{   
+public class AccountHolder implements Serializable {
    private static final long serialVersionUID = 1L;
-   
+
    private String lastName;
    private String ssn;
    private transient boolean deserialized;
-   
-   public AccountHolder( ) {
+
+   public AccountHolder() {
       this("Stansberry", "123-456-7890");
    }
-   
-   public AccountHolder(String lastName, String ssn)
-   {
+
+   public AccountHolder(String lastName, String ssn) {
       this.lastName = lastName;
       this.ssn = ssn;
    }
-   
-   public String getLastName( ) { return this.lastName; }
-   public void setLastName(String lastName) { this.lastName = lastName; }
-   
-   public String getSsn( ) { return ssn; }
-   public void setSsn(String ssn) { this.ssn = ssn; }
-   
-   public boolean equals(Object obj)
-   {
-      if (obj == this) return true;
-      if (!(obj instanceof AccountHolder)) return false;
-      AccountHolder pk = (AccountHolder)obj;
-      if (!lastName.equals(pk.lastName)) return false;
-      if (!ssn.equals(pk.ssn)) return false;
+
+   public String getLastName() {
+      return this.lastName;
+   }
+
+   public void setLastName(String lastName) {
+      this.lastName = lastName;
+   }
+
+   public String getSsn() {
+      return ssn;
+   }
+
+   public void setSsn(String ssn) {
+      this.ssn = ssn;
+   }
+
+   @Override
+   public boolean equals(Object obj) {
+      if (obj == this)
+         return true;
+      if (!(obj instanceof AccountHolder))
+         return false;
+      AccountHolder pk = (AccountHolder) obj;
+      if (!lastName.equals(pk.lastName))
+         return false;
+      if (!ssn.equals(pk.ssn))
+         return false;
       return true;
    }
-   
-   public int hashCode( )
-   {
+
+   @Override
+   public int hashCode() {
       int result = 17;
       result = result * 31 + lastName.hashCode();
       result = result * 31 + ssn.hashCode();
       return result;
    }
-   
-   public String toString()
-   {
+
+   @Override
+   public String toString() {
       StringBuffer sb = new StringBuffer(getClass().getName());
       sb.append("[lastName=");
       sb.append(lastName);
@@ -86,9 +98,8 @@ public class AccountHolder implements Serializable
       sb.append("]");
       return sb.toString();
    }
-   
-   private void readObject(ObjectInputStream ois) throws IOException, ClassNotFoundException
-   {
+
+   private void readObject(ObjectInputStream ois) throws IOException, ClassNotFoundException {
       ois.defaultReadObject();
       deserialized = true;
    }

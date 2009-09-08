@@ -81,12 +81,6 @@ public class XaTransactionImpl implements Transaction {
             s.beforeCompletion();
          }
 
-//         if (!runXaResourcePrepare()) {
-//            status = Status.STATUS_ROLLING_BACK;
-//         } else {
-//            status = Status.STATUS_PREPARED;
-//         }
-
          status = Status.STATUS_COMMITTING;
 
          if (connection != null) {
@@ -98,8 +92,6 @@ public class XaTransactionImpl implements Transaction {
                throw new SystemException();
             }
          }
-
-//         runXaResourceCommitTx();
 
          status = Status.STATUS_COMMITTED;
 
@@ -114,8 +106,6 @@ public class XaTransactionImpl implements Transaction {
    }
 
    public void rollback() throws IllegalStateException, SystemException {
-//      status = Status.STATUS_ROLLING_BACK;
-//      runXaResourceRollback();
       status = Status.STATUS_ROLLEDBACK;
 
       if (connection != null) {

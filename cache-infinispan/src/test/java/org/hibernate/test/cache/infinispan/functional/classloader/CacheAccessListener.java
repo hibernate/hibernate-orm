@@ -40,8 +40,6 @@ import org.slf4j.LoggerFactory;
 public class CacheAccessListener {
    protected final Logger log = LoggerFactory.getLogger(getClass());
    
-//   HashSet<Fqn<String>> modified = new HashSet<Fqn<String>>();
-//   HashSet<Fqn<String>> accessed = new HashSet<Fqn<String>>();
    HashSet modified = new HashSet();
    HashSet accessed = new HashSet();
 
@@ -107,19 +105,6 @@ public class CacheAccessListener {
          return true;
       }
       return false;
-//      boolean saw = false;
-//      for (Object key : sawEvents) {
-//         
-//      }
-//      Fqn<String> fqn = Fqn.fromString(regionName);
-//      for (Iterator<Fqn<String>> it = sawEvent.iterator(); it.hasNext();) {
-//         Fqn<String> modified = (Fqn<String>) it.next();
-//         if (modified.isChildOf(fqn)) {
-//            it.remove();
-//            saw = true;
-//         }
-//      }
-//      return saw;
-   }
+  }
 
 }

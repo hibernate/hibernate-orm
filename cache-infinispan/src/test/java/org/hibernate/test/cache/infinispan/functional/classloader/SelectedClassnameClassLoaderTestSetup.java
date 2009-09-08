@@ -20,30 +20,24 @@ import junit.extensions.TestSetup;
 import junit.framework.Test;
 
 /**
- * A TestSetup that makes SelectedClassnameClassLoader the thread
- * context classloader for the duration of the test.
+ * A TestSetup that makes SelectedClassnameClassLoader the thread context classloader for the
+ * duration of the test.
  * 
  * @author <a href="brian.stansberry@jboss.com">Brian Stansberry</a>
  * @version $Revision: 1 $
  */
-public class SelectedClassnameClassLoaderTestSetup extends TestSetup
-{
+public class SelectedClassnameClassLoaderTestSetup extends TestSetup {
    private ClassLoader originalTCCL;
    private String[] includedClasses;
    private String[] excludedClasses;
    private String[] notFoundClasses;
-   
-   
+
    /**
     * Create a new SelectedClassnameClassLoaderTestSetup.
     * 
     * @param test
     */
-   public SelectedClassnameClassLoaderTestSetup(Test test,
-                                                String[] includedClasses,
-                                                String[] excludedClasses,
-                                                String[] notFoundClasses)
-   {
+   public SelectedClassnameClassLoaderTestSetup(Test test, String[] includedClasses, String[] excludedClasses, String[] notFoundClasses) {
       super(test);
       this.includedClasses = includedClasses;
       this.excludedClasses = excludedClasses;
@@ -51,10 +45,9 @@ public class SelectedClassnameClassLoaderTestSetup extends TestSetup
    }
 
    @Override
-   protected void setUp() throws Exception
-   {      
+   protected void setUp() throws Exception {
       super.setUp();
-      
+
       originalTCCL = Thread.currentThread().getContextClassLoader();
       ClassLoader parent = originalTCCL == null ? getClass().getClassLoader() : originalTCCL;
       ClassLoader selectedTCCL = new SelectedClassnameClassLoader(includedClasses, excludedClasses, notFoundClasses, parent);
@@ -62,12 +55,9 @@ public class SelectedClassnameClassLoaderTestSetup extends TestSetup
    }
 
    @Override
-   protected void tearDown() throws Exception
-   {
+   protected void tearDown() throws Exception {
       Thread.currentThread().setContextClassLoader(originalTCCL);
       super.tearDown();
    }
-   
-   
 
 }

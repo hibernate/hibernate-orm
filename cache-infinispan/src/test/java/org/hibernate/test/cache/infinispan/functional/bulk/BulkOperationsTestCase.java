@@ -69,13 +69,11 @@ public class BulkOperationsTestCase extends FunctionalTestCase {
    }
 
    protected Class getConnectionProviderClass() {
-//      return org.hibernate.test.tm.ConnectionProviderImpl.class;
       return org.hibernate.test.cache.infinispan.tm.XaConnectionProvider.class;
    }
   
    protected Class<? extends TransactionManagerLookup> getTransactionManagerLookupClass() {
       return org.hibernate.test.cache.infinispan.tm.XaTransactionManagerLookup.class;
-//      return org.hibernate.test.tm.TransactionManagerLookupImpl.class;
    }
 
    public void configure(Configuration cfg) {
@@ -245,25 +243,6 @@ public class BulkOperationsTestCase extends FunctionalTestCase {
       }
    }
 
-//   public void cleanup() throws Exception {
-//      String deleteContactHQL = "delete from Contact";
-//      String deleteCustomerHQL = "delete from Customer";
-//      tm.begin();
-//      try {
-//         Session session = getSessions().getCurrentSession();
-//         session.createQuery(deleteContactHQL).setFlushMode(FlushMode.AUTO).executeUpdate();
-//         session.createQuery(deleteCustomerHQL).setFlushMode(FlushMode.AUTO).executeUpdate();
-//         tm.commit();
-//      } catch (Exception e) {
-//         try {
-//            tm.rollback();
-//         } catch (Exception ee) {
-//            // ignored
-//         }
-//         throw e;
-//      }
-//   }
-   
    public void cleanup(boolean ignore) throws Exception {
       String deleteContactHQL = "delete from Contact";
       String deleteCustomerHQL = "delete from Customer";

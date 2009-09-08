@@ -17,7 +17,7 @@ public abstract class BaseTransactionalDataRegion extends BaseRegion implements 
 
    private final CacheDataDescription metadata;
 
-   public BaseTransactionalDataRegion(Cache<Object, Object> cache, String name, CacheDataDescription metadata, TransactionManager transactionManager) {
+   public BaseTransactionalDataRegion(Cache cache, String name, CacheDataDescription metadata, TransactionManager transactionManager) {
       super(cache, name, transactionManager);
       this.metadata = metadata;
    }

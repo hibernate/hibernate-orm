@@ -415,14 +415,7 @@ public abstract class AbstractEntityRegionAccessStrategyTestCase extends Abstrac
       inserter.start();
       reader.start();
 
-//      if (!isBlockingReads())
-         assertTrue("Threads completed", completionLatch.await(1, TimeUnit.SECONDS));
-//      else {
-//         // Reader should be blocking for lock
-//         assertFalse("Threads completed", completionLatch.await(250, TimeUnit.MILLISECONDS));
-//         commitLatch.countDown();
-//         assertTrue("Threads completed", completionLatch.await(1, TimeUnit.SECONDS));
-//      }
+      assertTrue("Threads completed", completionLatch.await(1, TimeUnit.SECONDS));
 
       assertThreadsRanCleanly();
 
@@ -496,10 +489,7 @@ public abstract class AbstractEntityRegionAccessStrategyTestCase extends Abstrac
                readLatch.await();
                log.debug("Read latch acquired, verify local access strategy");
 
-               // This will block w/ pessimistic locking and then
-               // read the new value; w/ optimistic it shouldn't
-               // block and will read the old value
-//               Object expected = !isBlockingReads() ? VALUE1 : VALUE2;
+               // This won't block w/ mvc and will read the old value
                Object expected = VALUE1;
                assertEquals("Correct value", expected, localAccessStrategy.get(KEY, txTimestamp));
 
@@ -524,16 +514,8 @@ public abstract class AbstractEntityRegionAccessStrategyTestCase extends Abstrac
       updater.start();
       reader.start();
 
-//      if (!isBlockingReads())
-         // Should complete promptly
-         assertTrue(completionLatch.await(2, TimeUnit.SECONDS));
-//      else {
-//         // Reader thread should be blocking
-//         assertFalse(completionLatch.await(250, TimeUnit.MILLISECONDS));
-//         // Let the writer commit down
-//         commitLatch.countDown();
-//         assertTrue(completionLatch.await(1, TimeUnit.SECONDS));
-//      }
+      // Should complete promptly
+      assertTrue(completionLatch.await(2, TimeUnit.SECONDS));
 
       assertThreadsRanCleanly();
 
@@ -599,8 +581,6 @@ public abstract class AbstractEntityRegionAccessStrategyTestCase extends Abstrac
 
       assertEquals(null, localAccessStrategy.get(KEY, System.currentTimeMillis()));
 
-      // sleep(1000);
-
       assertEquals(null, remoteAccessStrategy.get(KEY, System.currentTimeMillis()));
    }
 
@@ -608,17 +588,8 @@ public abstract class AbstractEntityRegionAccessStrategyTestCase extends Abstrac
 
       final String KEY = KEY_BASE + testCount++;
 
-//      Fqn regionFqn = getRegionFqn(REGION_NAME, REGION_PREFIX);
-//
-//      Node regionRoot = localCache.getRoot().getChild(regionFqn);
-//      assertFalse(regionRoot == null);
       assertEquals(0, localCache.keySet().size());
-//      assertTrue(regionRoot.isResident());
-
-//      regionRoot = remoteCache.getRoot().getChild(regionFqn);
-//      assertFalse(regionRoot == null);
       assertEquals(0, remoteCache.keySet().size());
-//      assertTrue(regionRoot.isResident());
 
       assertNull("local is clean", localAccessStrategy.get(KEY, System.currentTimeMillis()));
       assertNull("remote is clean", remoteAccessStrategy.get(KEY, System.currentTimeMillis()));
@@ -643,36 +614,18 @@ public abstract class AbstractEntityRegionAccessStrategyTestCase extends Abstrac
       // This should re-establish the region root node in the optimistic case
       assertNull(localAccessStrategy.get(KEY, System.currentTimeMillis()));
 
-//      regionRoot = localCache.getRoot().getChild(regionFqn);
-//      assertFalse(regionRoot == null);
-//      assertEquals(0, getValidChildrenCount(regionRoot));
-//      assertTrue(regionRoot.isValid());
-//      assertTrue(regionRoot.isResident());
       assertEquals(0, localCache.keySet().size());
 
       // Re-establishing the region root on the local node doesn't
       // propagate it to other nodes. Do a get on the remote node to re-establish
       assertEquals(null, remoteAccessStrategy.get(KEY, System.currentTimeMillis()));
 
-//      regionRoot = remoteCache.getRoot().getChild(regionFqn);
-//      assertFalse(regionRoot == null);
-//      assertTrue(regionRoot.isValid());
-//      assertTrue(regionRoot.isResident());
-//      // Not invalidation, so we didn't insert a child above
-//      assertEquals(0, getValidChildrenCount(regionRoot));
       assertEquals(0, remoteCache.keySet().size());
 
       // Test whether the get above messes up the optimistic version
       remoteAccessStrategy.putFromLoad(KEY, VALUE1, System.currentTimeMillis(), new Integer(1));
       assertEquals(VALUE1, remoteAccessStrategy.get(KEY, System.currentTimeMillis()));
 
-      // Revalidate the region root
-//      regionRoot = remoteCache.getRoot().getChild(regionFqn);
-//      assertFalse(regionRoot == null);
-//      assertTrue(regionRoot.isValid());
-//      assertTrue(regionRoot.isResident());
-//      // Region root should have 1 child -- the one we added above
-//      assertEquals(1, getValidChildrenCount(regionRoot));
       assertEquals(1, remoteCache.keySet().size());
 
       // Wait for async propagation
@@ -720,11 +673,9 @@ public abstract class AbstractEntityRegionAccessStrategyTestCase extends Abstrac
 
          localCfg = createConfiguration(configName);
          localRegionFactory = CacheTestUtil.startRegionFactory(localCfg);
-//         localCache = localRegionFactory.getCacheManager().getCache("entity");
 
          remoteCfg = createConfiguration(configName);
          remoteRegionFactory = CacheTestUtil.startRegionFactory(remoteCfg);
-//         remoteCache = remoteRegionFactory.getCacheManager().getCache("entity");
       }
 
       @Override

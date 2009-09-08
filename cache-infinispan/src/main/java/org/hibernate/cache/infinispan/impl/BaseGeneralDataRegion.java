@@ -15,7 +15,7 @@ import org.infinispan.Cache;
  */
 public abstract class BaseGeneralDataRegion extends BaseRegion implements GeneralDataRegion {
 
-   public BaseGeneralDataRegion(Cache<Object, Object> cache, String name, TransactionManager transactionManager) {
+   public BaseGeneralDataRegion(Cache cache, String name, TransactionManager transactionManager) {
       super(cache, name, transactionManager);
    }
 

@@ -28,7 +28,6 @@ public abstract class AbstractFunctionalTestCase extends FunctionalTestCase {
    }
    
    public void testEmptySecondLevelCacheEntry() throws Exception {
-//      getSessions().evictEntity(Item.class.getName());
       getSessions().getCache().evictEntityRegion(Item.class.getName());
       Statistics stats = getSessions().getStatistics();
       stats.clear();

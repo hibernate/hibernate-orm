@@ -19,7 +19,7 @@ import org.infinispan.context.Flag;
 public class QueryResultsRegionImpl extends BaseTransactionalDataRegion implements QueryResultsRegion {
    private boolean localOnly;
 
-   public QueryResultsRegionImpl(Cache<Object, Object> cache, String name, Properties properties, TransactionManager transactionManager) {
+   public QueryResultsRegionImpl(Cache cache, String name, Properties properties, TransactionManager transactionManager) {
       super(cache, name, null, transactionManager);
       
       // If Infinispan is using INVALIDATION for query cache, we don't want to propagate changes.

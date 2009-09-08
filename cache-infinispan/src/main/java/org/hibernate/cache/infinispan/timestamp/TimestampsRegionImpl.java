@@ -31,7 +31,7 @@ public class TimestampsRegionImpl extends BaseGeneralDataRegion implements Times
 
    private Map localCache = new ConcurrentHashMap();
 
-   public TimestampsRegionImpl(Cache<Object, Object> cache, String name, TransactionManager transactionManager) {
+   public TimestampsRegionImpl(Cache cache, String name, TransactionManager transactionManager) {
       super(cache, name, transactionManager);
       cache.addListener(this);
       populateLocalCache();
@@ -99,14 +99,6 @@ public class TimestampsRegionImpl extends BaseGeneralDataRegion implements Times
    public void nodeRemoved(CacheEntryRemovedEvent event) {
       if (event.isPre()) return;
       localCache.remove(event.getKey());
-//      Fqn fqn = event.getFqn();
-//      Fqn regFqn = getRegionFqn();
-//      if (fqn.size() == regFqn.size() + 1 && fqn.isChildOf(regFqn)) {
-//         Object key = fqn.get(regFqn.size());
-//         localCache.remove(key);
-//      } else if (fqn.equals(regFqn)) {
-//         localCache.clear();
-//      }
    }
 
    /**

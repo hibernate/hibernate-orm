@@ -25,7 +25,6 @@ class TransactionalAccess implements CollectionRegionAccessStrategy {
    }
 
    public void evict(Object key) throws CacheException {
-//      delegate.evict(key);
       delegate.remove(key);
    }
 

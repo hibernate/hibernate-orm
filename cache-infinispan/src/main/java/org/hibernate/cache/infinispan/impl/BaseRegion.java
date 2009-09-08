@@ -137,44 +137,5 @@ public abstract class BaseRegion implements Region {
            throw new CacheException("Could not resume transaction", e);
        }
    }
-   
-//   /**
-//    * HACKY WAY TO GET THE TRANSACTION MANAGER, TODO: resolve it!
-//    */
-//   private static TransactionManager getTransactionManager(Properties properties) {
-////      return cache == null ? null : extractComponent(cache, TransactionManager.class);
-//      return TransactionManagerLookupFactory.getTransactionManager(properties);
-//   }
-//   
-//   public static <T> T extractComponent(Cache cache, Class<T> componentType) {
-//      ComponentRegistry cr = extractComponentRegistry(cache);
-//      return cr.getComponent(componentType);
-//   }
-//   
-//   public static ComponentRegistry extractComponentRegistry(Cache cache) {
-//      return (ComponentRegistry) extractField(cache, "componentRegistry");
-//   }
-//   
-//   public static Object extractField(Object target, String fieldName) {
-//      return extractField(target.getClass(), target, fieldName);
-//   }
-//   
-//   public static Object extractField(Class type, Object target, String fieldName) {
-//      Field field;
-//      try {
-//         field = type.getDeclaredField(fieldName);
-//         field.setAccessible(true);
-//         return field.get(target);
-//      }
-//      catch (Exception e) {
-//         if (type.equals(Object.class)) {
-//            e.printStackTrace();
-//            return null;
-//         } else {
-//            // try with superclass!!
-//            return extractField(type.getSuperclass(), target, fieldName);
-//         }
-//      }
-//   }
 
 }

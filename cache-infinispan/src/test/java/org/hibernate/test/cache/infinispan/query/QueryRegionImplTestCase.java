@@ -172,10 +172,6 @@ public class QueryRegionImplTestCase extends AbstractGeneralDataRegionTestCase {
       getDoesNotBlockPutTest();
    }
 
-   // public void testGetDoesNotBlockPutPessimisticRepeatableRead() throws Exception {
-   // getDoesNotBlockPutTest();
-   // }
-
    private void getDoesNotBlockPutTest() throws Exception {
       Configuration cfg = createConfiguration();
       InfinispanRegionFactory regionFactory = CacheTestUtil.startRegionFactory(cfg, getCacheTestSupport());

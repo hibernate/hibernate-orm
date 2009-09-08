@@ -17,7 +17,7 @@ import org.infinispan.Cache;
  */
 public class CollectionRegionImpl extends BaseTransactionalDataRegion implements CollectionRegion {
 
-   public CollectionRegionImpl(Cache<Object, Object> cache, String name, CacheDataDescription metadata, TransactionManager transactionManager) {
+   public CollectionRegionImpl(Cache cache, String name, CacheDataDescription metadata, TransactionManager transactionManager) {
       super(cache, name, metadata, transactionManager);
    }
 

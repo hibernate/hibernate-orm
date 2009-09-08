@@ -102,10 +102,6 @@ public class TransactionalAccessDelegate {
       cache.clear();
    }
 
-//   public void evict(Object key) throws CacheException {
-//      cache.evict(key);
-//   }
-
    public void evictAll() throws CacheException {
       evictOrRemoveAll();
    }

@@ -17,7 +17,7 @@ import org.infinispan.Cache;
  */
 public class EntityRegionImpl extends BaseTransactionalDataRegion implements EntityRegion {
 
-   public EntityRegionImpl(Cache<Object, Object> cache, String name, CacheDataDescription metadata, TransactionManager transactionManager) {
+   public EntityRegionImpl(Cache cache, String name, CacheDataDescription metadata, TransactionManager transactionManager) {
       super(cache, name, metadata, transactionManager);
    }
 

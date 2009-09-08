@@ -16,21 +16,16 @@
 
 package org.hibernate.test.cache.infinispan.functional.classloader;
 
-import org.hibernate.cache.infinispan.InfinispanRegionFactory;
-import org.hibernate.test.cache.infinispan.functional.cluster.AbstractDualNodeTestCase;
 import org.hibernate.test.cache.infinispan.functional.cluster.ClusterAwareRegionFactory;
 import org.hibernate.test.cache.infinispan.functional.cluster.DualNodeJtaTransactionManagerImpl;
-import org.hibernate.util.PropertiesHelper;
-import org.infinispan.manager.CacheManager;
-import org.infinispan.manager.DefaultCacheManager;
 
 import junit.framework.Test;
 
 /**
  * A TestSetup that uses SelectedClassnameClassLoader to ensure that certain classes are not visible
- * to JBoss Cache or JGroups' classloader.
+ * to Infinispan or JGroups' classloader.
  * 
- * @author <a href="brian.stansberry@jboss.com">Brian Stansberry</a>
+ * @author Galder Zamarreño
  */
 public class IsolatedCacheTestSetup extends SelectedClassnameClassLoaderTestSetup {
 
@@ -43,41 +38,15 @@ public class IsolatedCacheTestSetup extends SelectedClassnameClassLoaderTestSetu
    public IsolatedCacheTestSetup(Test test, String[] isolatedClasses) {
       super(test, null, null, isolatedClasses);
       this.isolatedClasses = isolatedClasses;
-//      this.cacheConfig = cacheConfig;
    }
 
    @Override
    protected void setUp() throws Exception {
       super.setUp();
 
-//      // At this point the TCCL cannot see the isolatedClasses
-//      // We want the caches to use this CL as their default classloader
-
+      // At this point the TCCL cannot see the isolatedClasses
+      // We want the caches to use this CL as their default classloader
       ClassLoader tccl = Thread.currentThread().getContextClassLoader();
-
-//      org.jgroups.ChannelFactory cf = new org.jgroups.JChannelFactory();
-//      cf.setMultiplexerConfig(DEF_JGROUPS_RESOURCE);
-//
-//      // Use a CacheManager that will inject the desired defaultClassLoader into our caches
-//      CustomClassLoaderCacheManager cm = new CustomClassLoaderCacheManager(DEF_CACHE_FACTORY_RESOURCE, cf, tccl);
-//      cm.start();
-      
-//      CacheManager manager = new DefaultCacheManager("org/hibernate/test/cache/infinispan/functional/classloader/infinispan-configs.xml");
-//      ClusterAwareRegionFactory.addCacheManager(AbstractDualNodeTestCase.LOCAL, manager);
-//      ClusterAwareRegionFactory.addCacheManager(AbstractDualNodeTestCase.REMOTE, manager);
-
-//      cm.getCache(cacheConfig, true);
-//
-//      // Repeat for the "remote" cache
-//
-//      cf = new org.jgroups.JChannelFactory();
-//      cf.setMultiplexerConfig(DEF_JGROUPS_RESOURCE);
-//
-//      cm = new CustomClassLoaderCacheManager(DEF_CACHE_FACTORY_RESOURCE, cf, tccl);
-//      cm.start();
-//      TestCacheInstanceManager.addTestCacheManager(DualNodeTestUtil.REMOTE, cm);
-//
-//      cm.getCache(cacheConfig, true);
 
       // Now make the isolatedClasses visible to the test driver itself
       SelectedClassnameClassLoader visible = new SelectedClassnameClassLoader(isolatedClasses, null, null, tccl);

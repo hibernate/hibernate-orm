@@ -36,17 +36,10 @@ import org.slf4j.LoggerFactory;
 /**
  * Helper for dealing with Infinisan cache instances.
  * 
- * @author Steve Ebersole
- * @author Brian Stansberry
  * @author Galder Zamarreño
  * @since 3.5
  */
 public class CacheHelper {
-
-   /** Key under which items are cached */
-   public static final String ITEM = "item";
-   /** Key and value used in a hack to create region root nodes */
-   public static final String DUMMY = "dummy";
 
    private static final Logger log = LoggerFactory.getLogger(CacheHelper.class);
 
@@ -368,14 +361,6 @@ public class CacheHelper {
       }
    }
    
-//   public static void evict(Cache cache, Object key) throws CacheException {
-//      try {
-//         cache.evict(key);
-//      } catch (Exception e) {
-//         throw new CacheException(e);
-//      }
-//   }
-   
    public static boolean containsKey(Cache cache, Object key, Flag... flags) {
       try {
          return cache.getAdvancedCache().containsKey(key, flags);
@@ -384,64 +369,4 @@ public class CacheHelper {
       }
    }
 
-//   public static Node addNode(Cache cache, Fqn fqn, boolean localOnly, boolean resident) throws CacheException {
-//      try {
-//         Option option = null;
-//         if (localOnly) {
-//            option = new Option();
-//            option.setCacheModeLocal(localOnly);
-//         }
-//
-//         Node root = cache.getRoot();
-//         setInvocationOption(cache, option);
-//         // FIXME hack to work around fact that calling
-//         // Node added = root.addChild( fqn ); doesn't
-//         // properly set the version on the node
-//         Node added = null;
-//         if (version == null) {
-//            added = root.addChild(fqn);
-//         } else {
-//            cache.put(fqn, DUMMY, DUMMY);
-//            added = root.getChild(fqn);
-//         }
-//         if (resident)
-//            added.setResident(true);
-//         return added;
-//      } catch (Exception e) {
-//         throw new CacheException(e);
-//      }
-//   }
-
-   /**
-//    * Assigns the given Option to the cache's {@link InvocationContext}. Does nothing if
-//    * <code>option</code> is <code>null</code>.
-//    * 
-//    * @param cache
-//    *           the cache. Cannot be <code>null</code>.
-//    * @param option
-//    *           the option. May be <code>null</code>.
-//    * 
-//    * @see {@link Cache#getInvocationContext()}
-//    * @see {@link InvocationContext#setOptionOverrides(Option)}
-//    */
-//   public static void setInvocationOption(Cache cache, Option option) {
-//      if (option != null) {
-//         cache.getInvocationContext().setOptionOverrides(option);
-//      }
-//   }
-
-//   /**
-//    * Creates an {@link Option} using the given {@link DataVersion} and passes it to
-//    * {@link #setInvocationOption(Cache, Option)}.
-//    * 
-//    * @param cache
-//    *           the cache to set the Option on. Cannot be <code>null</code>.
-//    * @param version
-//    *           the DataVersion to set. Cannot be <code>null</code>.
-//    */
-//   public static void setDataVersionOption(Cache cache, DataVersion version) {
-//      Option option = new Option();
-//      option.setDataVersion(version);
-//      setInvocationOption(cache, option);
-//   }
 }

@@ -402,18 +402,8 @@ public abstract class AbstractCollectionRegionAccessStrategyTestCase extends Abs
 
       final String KEY = KEY_BASE + testCount++;
 
-      // Fqn regionFqn = getRegionFqn(REGION_NAME, REGION_PREFIX);
-      //
-      // Node regionRoot = localCache.getRoot().getChild(regionFqn);
-      // assertFalse(regionRoot == null);
-      // assertEquals(0, getValidChildrenCount(regionRoot));
-      // assertTrue(regionRoot.isResident());
       assertEquals(0, localCache.keySet().size());
 
-      // regionRoot = remoteCache.getRoot().getChild(regionFqn);
-      // assertFalse(regionRoot == null);
-      // assertEquals(0, getValidChildrenCount(regionRoot));
-      // assertTrue(regionRoot.isResident());
       assertEquals(0, remoteCache.keySet().size());
 
       assertNull("local is clean", localAccessStrategy.get(KEY, System.currentTimeMillis()));
@@ -435,37 +425,18 @@ public abstract class AbstractCollectionRegionAccessStrategyTestCase extends Abs
       // This should re-establish the region root node
       assertNull(localAccessStrategy.get(KEY, System.currentTimeMillis()));
 
-      // regionRoot = localCache.getRoot().getChild(regionFqn);
-      // assertFalse(regionRoot == null);
-      // assertEquals(0, getValidChildrenCount(regionRoot));
-      // assertTrue(regionRoot.isValid());
-      // assertTrue(regionRoot.isResident());
       assertEquals(0, localCache.keySet().size());
 
       // Re-establishing the region root on the local node doesn't
       // propagate it to other nodes. Do a get on the remote node to re-establish
       assertEquals(null, remoteAccessStrategy.get(KEY, System.currentTimeMillis()));
 
-      // regionRoot = remoteCache.getRoot().getChild(regionFqn);
-      // assertFalse(regionRoot == null);
-      // assertTrue(regionRoot.isValid());
-      // assertTrue(regionRoot.isResident());
-      //        
-      // assertEquals(0, getValidChildrenCount(regionRoot));
-      // Not invalidation, so we didn't insert a child above
       assertEquals(0, remoteCache.keySet().size());
 
       // Test whether the get above messes up the optimistic version
       remoteAccessStrategy.putFromLoad(KEY, VALUE1, System.currentTimeMillis(), new Integer(1));
       assertEquals(VALUE1, remoteAccessStrategy.get(KEY, System.currentTimeMillis()));
 
-      // regionRoot = remoteCache.getRoot().getChild(regionFqn);
-      // assertFalse(regionRoot == null);
-      // assertTrue(regionRoot.isValid());
-      // assertTrue(regionRoot.isResident());
-      // // Region root should have 1 child -- the one we added above
-      // assertEquals(1, getValidChildrenCount(regionRoot));
-      // Revalidate the region root
       assertEquals(1, remoteCache.keySet().size());
 
       // Wait for async propagation of the putFromLoad

@@ -124,7 +124,6 @@ public abstract class AbstractGeneralDataRegionTestCase extends AbstractRegionIm
       Configuration cfg = createConfiguration();
       InfinispanRegionFactory regionFactory = CacheTestUtil.startRegionFactory(cfg, getCacheTestSupport());
       Cache localCache = getInfinispanCache(regionFactory);
-//      boolean invalidation = CacheHelper.isClusteredInvalidation(localCache);
 
       // Sleep a bit to avoid concurrent FLUSH problem
       avoidConcurrentFlush();
@@ -141,7 +140,6 @@ public abstract class AbstractGeneralDataRegionTestCase extends AbstractRegionIm
 
       GeneralDataRegion remoteRegion = (GeneralDataRegion) createRegion(regionFactory,
                getStandardRegionName(REGION_PREFIX), cfg.getProperties(), null);
-//      String regionName = REGION_PREFIX;
 
       Set children = CacheHelper.getKeySet(localCache);
       assertEquals("No children in " + children, 0, children.size());

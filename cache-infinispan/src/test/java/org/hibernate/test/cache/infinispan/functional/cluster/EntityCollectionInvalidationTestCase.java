@@ -244,17 +244,6 @@ public class EntityCollectionInvalidationTestCase extends AbstractDualNodeTestCa
          Customer customer = doGetCustomer(id, session, tm);
          customer.setName("NewJBoss");
          ids.customerId = customer.getId();
-         
-//         Set<Contact> contacts = customer.getContacts();
-//         for (Contact c : contacts) {
-//            if (c.getName().equals("Kabir")) {
-//               contacts.remove(c);
-//            } else {
-//               contactIds.add(c.getId());
-//            }
-//         }
-//         ids.contactIds = contactIds;
-//         customer.setContacts(contacts);
          Set<Contact> contacts = customer.getContacts();
          for (Contact c : contacts) {
             contactIds.add(c.getId());
@@ -356,27 +345,6 @@ public class EntityCollectionInvalidationTestCase extends AbstractDualNodeTestCa
             }
          }
       }
-      
-//      @CacheEntryModified
-//      public void nodeModified(CacheEntryModifiedEvent event) {
-//         log.debug(event.toString());
-//         if (!event.isPre()) {
-//            MarshalledValue mv = (MarshalledValue) event.getKey();
-//            CacheKey cacheKey = (CacheKey) mv.get();
-//            Integer primKey = (Integer) cacheKey.getKey();
-//            String key = (String) cacheKey.getEntityOrRoleName() + '#' + primKey;
-//            log.debug("MyListener[" + name +"] - Modified key " + key);
-//            // String name = fqn.toString();
-//            String token = ".functional.";
-//            int index = key.indexOf(token);
-//            if (index > -1) {
-//               index += token.length();
-//               key = key.substring(index);
-//               log.debug("MyListener[" + name +"] - recording modification of " + key);
-//               visited.add(key);
-//            }
-//         }
-//      }
    }
 
    private class IdContainer {

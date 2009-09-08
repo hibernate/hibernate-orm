@@ -39,7 +39,6 @@ public class Group {
 
 	@ManyToMany(cascade = CascadeType.PERSIST)
 	@JoinTable(name = "GROUPS_PERMISSIONS",
-			uniqueConstraints = @UniqueConstraint(columnNames = {"group_id", "permission"}),
 			joinColumns = @JoinColumn(name = "group_id", referencedColumnName = "id"),
 			inverseJoinColumns = @JoinColumn(name = "permission", referencedColumnName = "permission")
 	)

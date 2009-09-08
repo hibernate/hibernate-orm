@@ -225,7 +225,7 @@ class TypeSafeActivator {
 	}
 
 	/**
-	 * Retrieve the property by path in a recursive way, including IndetifierProperty in the loop
+	 * Retrieve the property by path in a recursive way, including IndentifierProperty in the loop
 	 * If propertyName is null or empty, the IdentifierProperty is returned
 	 */
 	private static Property findPropertyByName(PersistentClass associatedClass, String propertyName) {
@@ -290,7 +290,7 @@ class TypeSafeActivator {
 				}
 				catch ( ClassCastException e ) {
 					throw new HibernateException( "Property " + FACTORY_PROPERTY
-							+ " should containt an object of type " + ValidatorFactory.class.getName() );
+							+ " should contain an object of type " + ValidatorFactory.class.getName() );
 				}
 			}
 		}

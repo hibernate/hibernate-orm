@@ -1,30 +1,23 @@
 package org.hibernate.cfg.beanvalidation;
 
-import java.util.Set;
 import java.util.Properties;
-import java.util.Map;
-import java.util.HashMap;
-import java.util.List;
-import java.util.ArrayList;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import javax.validation.ValidatorFactory;
 import javax.validation.ConstraintViolation;
+import javax.validation.ConstraintViolationException;
 import javax.validation.TraversableResolver;
 import javax.validation.Validator;
-import javax.validation.ConstraintViolationException;
-import javax.validation.groups.Default;
+import javax.validation.ValidatorFactory;
 
-import org.hibernate.event.PreInsertEventListener;
-import org.hibernate.event.PreUpdateEventListener;
+import org.hibernate.EntityMode;
+import org.hibernate.engine.SessionFactoryImplementor;
+import org.hibernate.event.PreDeleteEvent;
 import org.hibernate.event.PreDeleteEventListener;
 import org.hibernate.event.PreInsertEvent;
+import org.hibernate.event.PreInsertEventListener;
 import org.hibernate.event.PreUpdateEvent;
-import org.hibernate.event.PreDeleteEvent;
-import org.hibernate.EntityMode;
-import org.hibernate.HibernateException;
-import org.hibernate.engine.SessionFactoryImplementor;
+import org.hibernate.event.PreUpdateEventListener;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.util.ReflectHelper;
 
 /**
  * @author Emmanuel Bernard

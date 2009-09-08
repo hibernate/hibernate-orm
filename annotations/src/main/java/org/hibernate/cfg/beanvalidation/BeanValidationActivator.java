@@ -1,26 +1,21 @@
 package org.hibernate.cfg.beanvalidation;
 
-import java.util.Map;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.Properties;
 import java.util.Set;
-import java.util.HashSet;
-import java.util.Collection;
-import java.lang.reflect.Method;
-import java.lang.reflect.InvocationTargetException;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import org.hibernate.util.ReflectHelper;
 import org.hibernate.HibernateException;
-import org.hibernate.AssertionFailure;
 import org.hibernate.cfg.Environment;
-import org.hibernate.mapping.PersistentClass;
 import org.hibernate.event.EventListeners;
+import org.hibernate.mapping.PersistentClass;
+import org.hibernate.util.ReflectHelper;
 
 /**
- * This class has no hard depenmdency on Bean Validation APIs
- * It must uses reflectione very time BV is required.
+ * This class has no hard dependency on Bean Validation APIs
+ * It must use reflection every time BV is required.
  * @author Emmanuel Bernard
  */
 public class BeanValidationActivator {
@@ -34,7 +29,7 @@ public class BeanValidationActivator {
 	public static void activateBeanValidation(EventListeners eventListeners, Properties properties) {
 		Set<ValidationMode> modes = ValidationMode.getModes( properties.get( MODE_PROPERTY ) );
 		if ( modes.contains( ValidationMode.NONE ) ) return;
-		//desactivate not-null tracking at the core level when Bean Validation is on unless the user really ask for it
+		//de-activate not-null tracking at the core level when Bean Validation is on unless the user really ask for it
 		if ( properties.getProperty( Environment.CHECK_NULLABILITY ) == null ) {
 			properties.setProperty( Environment.CHECK_NULLABILITY, "false" );
 		}

@@ -26,15 +26,14 @@
 package org.hibernate.dialect;
 
 /**
- * SybaseDialect is being deprecated.
- *
- * AbstractTransactSQLDialect should be used as a base
- * class for Sybase and MS SQL Server dialects.
+ * This dialect is being deprecated; it had been used both as the base class
+ * for TransactSQL-based dialects as well as the physical dialect for handling
+ * Sybase.  Those functions have now been split.
+ * {@link AbstractTransactSQLDialect} should be used as the base class for 
+ * TransactSQL-based dialects.
  * 
  * @author Gail Badner
- * @deprecated SybaseASE15Dialect or SQLServerDialect should be 
- * used instead.
+ * @deprecated use {@link SybaseASE15Dialect} or {@link SQLServerDialect} instead.
  */
-
 public class SybaseDialect extends AbstractTransactSQLDialect {
 }

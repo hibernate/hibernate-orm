@@ -1,8 +1,10 @@
 /*
- * Copyright (c) 2009, Red Hat Middleware LLC or third-party contributors as
- * indicated by the @author tags or express copyright attribution
- * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2009 by Red Hat Inc and/or its affiliates or by
+ * third-party contributors as indicated by either @author tags or express
+ * copyright attribution statements applied by the authors.  All
+ * third-party contributions are distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -23,9 +25,12 @@ package org.hibernate.ejb.criteria;
 
 import java.util.List;
 import java.util.Set;
+import java.util.HashSet;
+import java.util.Collections;
 import javax.persistence.criteria.AbstractQuery;
 import javax.persistence.criteria.CollectionJoin;
 import javax.persistence.criteria.Expression;
+import javax.persistence.criteria.Fetch;
 import javax.persistence.criteria.Join;
 import javax.persistence.criteria.ListJoin;
 import javax.persistence.criteria.MapJoin;
@@ -35,6 +40,7 @@ import javax.persistence.criteria.Root;
 import javax.persistence.criteria.SetJoin;
 import javax.persistence.criteria.Subquery;
 import javax.persistence.metamodel.EntityType;
+import org.hibernate.ejb.criteria.FromImpl.JoinScope;
 import org.hibernate.ejb.criteria.expression.ExpressionImpl;
 
 /**
@@ -48,7 +54,17 @@ public class CriteriaSubqueryImpl<T> extends ExpressionImpl<T> implements Subque
 	private final QueryStructure<T> queryStructure;
 
 	private Expression<T> selection;
-	private Set<Join<?, ?>> joins;
+	private Set<Join<?, ?>> correlatedJoins = new HashSet<Join<?,?>>();
+
+	private final FromImpl.JoinScope joinScope = new FromImpl.JoinScope() {
+		public void addJoin(Join join) {
+			correlatedJoins.add( join );
+		}
+
+		public void addFetch(Fetch fetch) {
+			throw new UnsupportedOperationException( "Cannot define fetch from a subquery correlation" );
+		}
+	};
 
 	public CriteriaSubqueryImpl(
 			QueryBuilderImpl queryBuilder,
@@ -59,28 +75,58 @@ public class CriteriaSubqueryImpl<T> extends ExpressionImpl<T> implements Subque
 		this.queryStructure = new QueryStructure<T>( this, queryBuilder );
 	}
 
+	/**
+	 * Get the scope used to scope joins to this subquery.
+	 *
+	 * @return The subquery's join scope.
+	 */
+	public JoinScope getJoinScope() {
+		return joinScope;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
 	public AbstractQuery<?> getParent() {
 		return parent;
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	public void registerParameters(ParameterRegistry registry) {
 		for ( ParameterExpression param : queryStructure.getParameters() ) {
 			registry.registerParameter( param );
 		}
-		// TODO : correlations.  Can they contain parameters?
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public Class<T> getResultType() {
+		return getJavaType();
 	}
 
 
 	// ROOTS ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+	/**
+	 * {@inheritDoc}
+	 */
 	public Set<Root<?>> getRoots() {
 		return queryStructure.getRoots();
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	public <X> Root<X> from(EntityType<X> entityType) {
 		return queryStructure.from( entityType );
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	public <X> Root<X> from(Class<X> entityClass) {
 		return queryStructure.from( entityClass );
 	}
@@ -156,6 +202,14 @@ public class CriteriaSubqueryImpl<T> extends ExpressionImpl<T> implements Subque
 	/**
 	 * {@inheritDoc}
 	 */
+	public Subquery<T> groupBy(List<Expression<?>> groupings) {
+		queryStructure.setGroupings( groupings );
+		return this;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
 	public Predicate getGroupRestriction() {
 		return queryStructure.getHaving();
 	}
@@ -179,34 +233,58 @@ public class CriteriaSubqueryImpl<T> extends ExpressionImpl<T> implements Subque
 
 	// CORRELATIONS ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    public Set<Join<?, ?>> getJoins() {
-		return joins;
+	/**
+	 * {@inheritDoc}
+	 */
+    public Set<Join<?, ?>> getCorrelatedJoins() {
+		return correlatedJoins;
 	}
 
-	public <Y> Root<Y> correlate(Root<Y> arg0) {
-		throw new UnsupportedOperationException("Not supported yet.");
+	/**
+	 * {@inheritDoc}
+	 */
+	public <Y> Root<Y> correlate(Root<Y> source) {
+		return ( ( RootImpl<Y> ) source ).correlateTo( this );
 	}
 
-	public <X, Y> Join<X, Y> correlate(Join<X, Y> arg0) {
-		throw new UnsupportedOperationException("Not supported yet.");
+	/**
+	 * {@inheritDoc}
+	 */
+	public <X, Y> Join<X, Y> correlate(Join<X, Y> source) {
+		return ( ( JoinImplementors.JoinImplementor<X,Y> ) source ).correlateTo( this );
 	}
 
-	public <X, Y> CollectionJoin<X, Y> correlate(CollectionJoin<X, Y> arg0) {
-		throw new UnsupportedOperationException("Not supported yet.");
+	/**
+	 * {@inheritDoc}
+	 */
+	public <X, Y> CollectionJoin<X, Y> correlate(CollectionJoin<X, Y> source) {
+		return ( ( JoinImplementors.CollectionJoinImplementor<X,Y> ) source ).correlateTo( this );
 	}
 
-	public <X, Y> SetJoin<X, Y> correlate(SetJoin<X, Y> arg0) {
-		throw new UnsupportedOperationException("Not supported yet.");
+	/**
+	 * {@inheritDoc}
+	 */
+	public <X, Y> SetJoin<X, Y> correlate(SetJoin<X, Y> source) {
+		return ( ( JoinImplementors.SetJoinImplementor<X,Y> ) source ).correlateTo( this );
 	}
 
-	public <X, Y> ListJoin<X, Y> correlate(ListJoin<X, Y> arg0) {
-		throw new UnsupportedOperationException("Not supported yet.");
+	/**
+	 * {@inheritDoc}
+	 */
+	public <X, Y> ListJoin<X, Y> correlate(ListJoin<X, Y> source) {
+		return ( ( JoinImplementors.ListJoinImplementor<X,Y> ) source ).correlateTo( this );
 	}
 
-	public <X, K, V> MapJoin<X, K, V> correlate(MapJoin<X, K, V> arg0) {
-		throw new UnsupportedOperationException("Not supported yet.");
+	/**
+	 * {@inheritDoc}
+	 */
+	public <X, K, V> MapJoin<X, K, V> correlate(MapJoin<X, K, V> source) {
+		return ( ( JoinImplementors.MapJoinImplementor<X, K, V> ) source ).correlateTo( this );
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	public <U> Subquery<U> subquery(Class<U> subqueryType) {
 		return queryStructure.subquery( subqueryType );
 	}

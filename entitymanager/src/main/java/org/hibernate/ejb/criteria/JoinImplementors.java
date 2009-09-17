@@ -1,8 +1,10 @@
 /*
- * Copyright (c) 2009, Red Hat Middleware LLC or third-party contributors as
- * indicated by the @author tags or express copyright attribution
- * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2009 by Red Hat Inc and/or its affiliates or by
+ * third-party contributors as indicated by either @author tags or express
+ * copyright attribution statements applied by the authors.  All
+ * third-party contributions are distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -35,18 +37,28 @@ import javax.persistence.criteria.SetJoin;
  * @author Steve Ebersole
  */
 public interface JoinImplementors {
-	public static interface JoinImplementor<Z,X> extends Join<Z,X>, Fetch<Z,X> {
+	public static interface JoinImplementor<Z,X>
+			extends Join<Z,X>, Fetch<Z,X> {
+		public JoinImplementor<Z,X> correlateTo(CriteriaSubqueryImpl subquery);
 	}
 
-	public static interface CollectionJoinImplementor<Z,X> extends CollectionJoin<Z,X>, Fetch<Z,X> {
+	public static interface CollectionJoinImplementor<Z,X> 
+			extends JoinImplementor<Z,X>, CollectionJoin<Z,X>, Fetch<Z,X> {
+		public CollectionJoinImplementor<Z,X> correlateTo(CriteriaSubqueryImpl subquery);
 	}
 
-	public static interface SetJoinImplementor<Z,X> extends SetJoin<Z,X>, Fetch<Z,X> {
+	public static interface SetJoinImplementor<Z,X> 
+			extends JoinImplementor<Z,X>, SetJoin<Z,X>, Fetch<Z,X> {
+		public SetJoinImplementor<Z,X> correlateTo(CriteriaSubqueryImpl subquery);
 	}
 
-	public static interface ListJoinImplementor<Z,X> extends ListJoin<Z,X>, Fetch<Z,X> {
+	public static interface ListJoinImplementor<Z,X> 
+			extends JoinImplementor<Z,X>, ListJoin<Z,X>, Fetch<Z,X> {
+		public ListJoinImplementor<Z,X> correlateTo(CriteriaSubqueryImpl subquery);
 	}
 
-	public static interface MapJoinImplementor<Z,K,V> extends MapJoin<Z,K,V>, Fetch<Z,V> {
+	public static interface MapJoinImplementor<Z,K,V> 
+			extends JoinImplementor<Z,V>, MapJoin<Z,K,V>, Fetch<Z,V> {
+		public MapJoinImplementor<Z,K,V> correlateTo(CriteriaSubqueryImpl subquery);
 	}
 }

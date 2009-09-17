@@ -428,7 +428,7 @@
             <dependency>
                 <groupId>org.hibernate.java-persistence</groupId>
                 <artifactId>jpa-api</artifactId>
-                <version>2.0.Beta-20090815</version>
+                <version>2.0.Beta-SNAPSHOT</version>
             </dependency>
             <!-- Set the version of the hibernate-commons-annotations to be used throughout the the project -->
             <dependency>

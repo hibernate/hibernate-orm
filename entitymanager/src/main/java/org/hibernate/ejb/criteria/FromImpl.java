@@ -1,8 +1,10 @@
 /*
- * Copyright (c) 2009, Red Hat Middleware LLC or third-party contributors as
- * indicated by the @author tags or express copyright attribution
- * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2009 by Red Hat Inc and/or its affiliates or by
+ * third-party contributors as indicated by either @author tags or express
+ * copyright attribution statements applied by the authors.  All
+ * third-party contributions are distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -59,9 +61,33 @@ import org.hibernate.ejb.criteria.expression.EntityTypeExpression;
 public abstract class FromImpl<Z,X> extends PathImpl<X> implements From<Z,X> {
 	public static final JoinType DEFAULT_JOIN_TYPE = JoinType.INNER;
 
+	/**
+	 * Helper contract used to define who/what keeps track of joins and fetches made from this <tt>FROM</tt>.
+	 */
+	public static interface JoinScope<X> {
+		public void addJoin(Join<X, ?> join);
+		public void addFetch(Fetch<X,?> fetch);
+	}
+
 	private final Expression<Class<? extends X>> type;
     private Set<Join<X, ?>> joins;
     private Set<Fetch<X, ?>> fetches;
+
+	private JoinScope<X> joinScope = new JoinScope<X>() {
+		public void addJoin(Join<X, ?> join) {
+			if ( joins == null ) {
+				joins = new LinkedHashSet<Join<X,?>>();
+			}
+			joins.add( join );
+		}
+
+		public void addFetch(Fetch<X, ?> fetch) {
+			if ( fetches == null ) {
+				fetches = new LinkedHashSet<Fetch<X,?>>();
+			}
+			fetches.add( fetch );
+		}
+	};
 
 	/**
 	 * Special constructor for {@link RootImpl}.
@@ -82,6 +108,10 @@ public abstract class FromImpl<Z,X> extends PathImpl<X> implements From<Z,X> {
 			ManagedType<X> model) {
 		super( queryBuilder, javaType, origin, attribute, model );
 		this.type = new EntityTypeExpression( queryBuilder, model.getJavaType() );
+	}
+
+	protected void defineJoinScope(JoinScope<X> joinScope) {
+		this.joinScope = joinScope;
 	}
 
 	@Override
@@ -112,19 +142,6 @@ public abstract class FromImpl<Z,X> extends PathImpl<X> implements From<Z,X> {
 	}
 
 	/**
-	 * Retrieve the collection of joins, imnplementing delayed creations.  Calls on this method
-	 * assume the set is physically needed, and the result is the set being built if not already.
-	 *
-	 * @return The set of joins.
-	 */
-	public Set<Join<X, ?>> getJoinsInternal() {
-		if ( joins == null ) {
-			joins = new LinkedHashSet<Join<X,?>>();
-		}
-		return joins;
-	}
-
-	/**
 	 * {@inheritDoc}
 	 */
 	public <Y> Join<X, Y> join(SingularAttribute<? super X, Y> singularAttribute) {
@@ -136,7 +153,7 @@ public abstract class FromImpl<Z,X> extends PathImpl<X> implements From<Z,X> {
 	 */
 	public <Y> Join<X, Y> join(SingularAttribute<? super X, Y> attribute, JoinType jt) {
 		Join<X, Y> join = constructJoin( attribute, jt );
-		getJoinsInternal().add( join );
+		joinScope.addJoin( join );
 		return join;
 	}
 
@@ -172,7 +189,7 @@ public abstract class FromImpl<Z,X> extends PathImpl<X> implements From<Z,X> {
 	 */
 	public <Y> CollectionJoin<X, Y> join(CollectionAttribute<? super X, Y> collection, JoinType jt) {
 		final CollectionJoin<X, Y> join = constructJoin( collection, jt );
-		getJoinsInternal().add( join );
+		joinScope.addJoin( join );
 		return join;
 	}
 
@@ -220,7 +237,7 @@ public abstract class FromImpl<Z,X> extends PathImpl<X> implements From<Z,X> {
 	 */
 	public <Y> SetJoin<X, Y> join(SetAttribute<? super X, Y> set, JoinType jt) {
 		final SetJoin<X, Y> join = constructJoin( set, jt );
-		getJoinsInternal().add( join );
+		joinScope.addJoin( join );
 		return join;
 	}
 
@@ -252,7 +269,7 @@ public abstract class FromImpl<Z,X> extends PathImpl<X> implements From<Z,X> {
 	 */
 	public <Y> ListJoin<X, Y> join(ListAttribute<? super X, Y> list, JoinType jt) {
 		final ListJoin<X, Y> join = constructJoin( list, jt );
-		getJoinsInternal().add( join );
+		joinScope.addJoin( join );
 		return join;
 	}
 
@@ -284,7 +301,7 @@ public abstract class FromImpl<Z,X> extends PathImpl<X> implements From<Z,X> {
 	 */
 	public <K, V> MapJoin<X, K, V> join(MapAttribute<? super X, K, V> map, JoinType jt) {
 		final MapJoin<X, K, V> join = constructJoin( map, jt );
-		getJoinsInternal().add( join );
+		joinScope.addJoin( join );
 		return join;
 	}
 
@@ -448,14 +465,11 @@ public abstract class FromImpl<Z,X> extends PathImpl<X> implements From<Z,X> {
 
 	/**
 	 * Retrieve the collection of fetches, imnplementing delayed creations.  Calls on this method
-	 * assume the set is physically needed, and the result is the set being built if not already.
+	 * assume the set is physically needed, and as a result the set is built if not already.
 	 *
 	 * @return The set of fetches.
 	 */
-	public Set<Fetch<X, ?>> getFetchesInternal() {
-		if ( fetches == null ) {
-			fetches = new LinkedHashSet<Fetch<X,?>>();
-		}
+	public Set<Fetch<X, ?>> internalGetFetches() {
 		return fetches;
 	}
 
@@ -465,7 +479,7 @@ public abstract class FromImpl<Z,X> extends PathImpl<X> implements From<Z,X> {
 
 	public <Y> Fetch<X, Y> fetch(SingularAttribute<? super X, Y> attribute, JoinType jt) {
 		Fetch<X, Y> fetch = constructJoin( attribute, jt );
-		getFetchesInternal().add( fetch );
+		joinScope.addFetch( fetch );
 		return fetch;
 	}
 
@@ -488,7 +502,7 @@ public abstract class FromImpl<Z,X> extends PathImpl<X> implements From<Z,X> {
 		else {
 			fetch = constructJoin( (MapAttribute<X,?,Y>) pluralAttribute, jt );
 		}
-		getFetchesInternal().add( fetch );
+		joinScope.addFetch( fetch );
 		return fetch;
 	}
 

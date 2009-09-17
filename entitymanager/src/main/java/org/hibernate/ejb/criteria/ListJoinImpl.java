@@ -1,8 +1,10 @@
 /*
- * Copyright (c) 2009, Red Hat Middleware LLC or third-party contributors as
- * indicated by the @author tags or express copyright attribution
- * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2009 by Red Hat Inc and/or its affiliates or by
+ * third-party contributors as indicated by either @author tags or express
+ * copyright attribution statements applied by the authors.  All
+ * third-party contributions are distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -24,6 +26,7 @@ package org.hibernate.ejb.criteria;
 import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.JoinType;
 import javax.persistence.metamodel.ListAttribute;
+import org.hibernate.ejb.criteria.JoinImplementors.ListJoinImplementor;
 import org.hibernate.ejb.criteria.expression.ListIndexExpression;
 
 /**
@@ -40,6 +43,19 @@ public class ListJoinImpl<O,E> extends JoinImpl<O,E> implements JoinImplementors
 			ListAttribute<? super O, ?> joinProperty,
 			JoinType joinType) {
 		super( queryBuilder, javaType, lhs, joinProperty, joinType );
+	}
+
+	@Override
+	public ListJoinImplementor<O, E> correlateTo(CriteriaSubqueryImpl subquery) {
+		ListJoinImpl<O,E> correlation = new ListJoinImpl<O,E>(
+				queryBuilder(),
+				getJavaType(),
+				(PathImpl<O>) getParentPath(),
+				getAttribute(),
+				getJoinType()
+		);
+		correlation.defineJoinScope( subquery.getJoinScope() );
+		return correlation;
 	}
 
 	@Override

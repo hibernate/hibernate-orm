@@ -1,8 +1,10 @@
 /*
- * Copyright (c) 2009, Red Hat Middleware LLC or third-party contributors as
- * indicated by the @author tags or express copyright attribution
- * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2009 by Red Hat Inc and/or its affiliates or by
+ * third-party contributors as indicated by either @author tags or express
+ * copyright attribution statements applied by the authors.  All
+ * third-party contributions are distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -57,6 +59,9 @@ public class CriteriaQueryImpl<T> extends AbstractNode implements CriteriaQuery<
 		this.queryStructure = new QueryStructure<T>( this, queryBuilder );
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	public Class<T> getResultType() {
 		return returnType;
 	}
@@ -64,15 +69,24 @@ public class CriteriaQueryImpl<T> extends AbstractNode implements CriteriaQuery<
 
 	// SELECTION ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+	/**
+	 * {@inheritDoc}
+	 */
 	public CriteriaQuery<T> distinct(boolean applyDistinction) {
 		queryStructure.setDistinction( applyDistinction );
 		return this;
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	public boolean isDistinct() {
 		return queryStructure.isDistinction();
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@SuppressWarnings({ "unchecked" })
 	public Selection<T> getSelection() {
 		return ( Selection<T> ) queryStructure.getSelection();
@@ -82,16 +96,25 @@ public class CriteriaQueryImpl<T> extends AbstractNode implements CriteriaQuery<
 		queryStructure.setSelection( selection );
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	public CriteriaQuery<T> select(Selection<? extends T> selection) {
 		applySelection( selection );
 		return this;
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@SuppressWarnings({ "unchecked" })
 	public CriteriaQuery<T> multiselect(Selection<?>... selections) {
 		return multiselect( Arrays.asList( selections ) );
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@SuppressWarnings({ "unchecked" })
 	public CriteriaQuery<T> multiselect(List<Selection<?>> selections) {
 		final Selection<? extends T> selection;
@@ -131,14 +154,23 @@ public class CriteriaQueryImpl<T> extends AbstractNode implements CriteriaQuery<
 
 	// ROOTS ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+	/**
+	 * {@inheritDoc}
+	 */
 	public Set<Root<?>> getRoots() {
 		return queryStructure.getRoots();
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	public <X> Root<X> from(EntityType<X> entityType) {
 		return queryStructure.from( entityType );
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	public <X> Root<X> from(Class<X> entityClass) {
 		return queryStructure.from( entityClass );
 	}
@@ -188,6 +220,11 @@ public class CriteriaQueryImpl<T> extends AbstractNode implements CriteriaQuery<
 		return this;
 	}
 
+	public CriteriaQuery<T> groupBy(List<Expression<?>> groupings) {
+		queryStructure.setGroupings( groupings );
+		return this;
+	}
+
 	/**
 	 * {@inheritDoc}
 	 */
@@ -214,10 +251,16 @@ public class CriteriaQueryImpl<T> extends AbstractNode implements CriteriaQuery<
 
 	// ORDERING ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+	/**
+	 * {@inheritDoc}
+	 */
 	public List<Order> getOrderList() {
 		return orderSpecs;
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	public CriteriaQuery<T> orderBy(Order... orders) {
 		if ( orders != null && orders.length > 0 ) {
 			orderSpecs = Arrays.asList( orders );
@@ -228,10 +271,24 @@ public class CriteriaQueryImpl<T> extends AbstractNode implements CriteriaQuery<
 		return this;
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
+	public CriteriaQuery<T> orderBy(List<Order> orders) {
+		orderSpecs = orders;
+		return this;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
 	public Set<ParameterExpression<?>> getParameters() {
 		return queryStructure.getParameters();
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	public <U> Subquery<U> subquery(Class<U> subqueryType) {
 		return queryStructure.subquery( subqueryType );
 	}

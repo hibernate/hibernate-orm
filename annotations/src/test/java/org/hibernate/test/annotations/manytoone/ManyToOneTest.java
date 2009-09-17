@@ -208,7 +208,7 @@ public class ManyToOneTest extends TestCase {
 
 		s = openSession();
 		tx = s.beginTransaction();
-		//FIXME: fix this when the small parser bug will be fixed 
+		//FIXME: fix this when the small parser bug will be fixed
 		Query q = s.createQuery( "from " + Child.class.getName() ); //+ " c where c.parent.id.lastName = :lastName");
 		//q.setString("lastName", p.id.lastName);
 		List result = q.list();
@@ -247,10 +247,6 @@ public class ManyToOneTest extends TestCase {
 		assertEquals( 1, n2.getParent().getId().getLevel() );
 		tx.commit();
 		s.close();
-	}
-
-	public void testManyToOneAndIdClass() throws Exception {
-
 	}
 
 	public void testManyToOneNonPk() throws Exception {

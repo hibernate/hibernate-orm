@@ -30,7 +30,7 @@ public class Order implements Serializable {
 		this.id = id;
 	}
 
-	@Column(name="order_nbr", unique = true)
+	@Column(name="order_nbr")
 	public String getOrderNbr() {
 		return orderNbr;
 	}

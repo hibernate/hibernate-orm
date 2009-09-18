@@ -10,7 +10,8 @@ import javax.persistence.Column;
  */
 @MappedSuperclass
 public class Company implements Serializable {
-	@Column(unique = true) private String name;
+	@Column
+	private String name;
 
 	public String getName() {
 		return name;

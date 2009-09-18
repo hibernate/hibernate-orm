@@ -40,11 +40,6 @@ public class GroupWithSet {
 	}
 
 	@ManyToMany(cascade = CascadeType.PERSIST)
-	@JoinTable(name = "GROUPS_PERMISSIONS",
-			uniqueConstraints = @UniqueConstraint(columnNames = {"group_id", "permission"}),
-			joinColumns = @JoinColumn(name = "group_id", referencedColumnName = "id"),
-			inverseJoinColumns = @JoinColumn(name = "permission", referencedColumnName = "permission")
-	)
 	@OrderBy("expirationDate")
 	@Where(clause = "1=1")
 	@WhereJoinTable(clause = "2=2")

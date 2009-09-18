@@ -5,17 +5,14 @@ import java.util.Collection;
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
 import javax.persistence.OrderBy;
 import javax.persistence.Table;
-import javax.persistence.UniqueConstraint;
 
-import org.hibernate.annotations.Where;
-import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.Filter;
+import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.FilterJoinTable;
+import org.hibernate.annotations.Where;
 import org.hibernate.annotations.WhereJoinTable;
 
 /**
@@ -38,10 +35,6 @@ public class Group {
 	}
 
 	@ManyToMany(cascade = CascadeType.PERSIST)
-	@JoinTable(name = "GROUPS_PERMISSIONS",
-			joinColumns = @JoinColumn(name = "group_id", referencedColumnName = "id"),
-			inverseJoinColumns = @JoinColumn(name = "permission", referencedColumnName = "permission")
-	)
 	@OrderBy("expirationDate")
 	@Where(clause = "1=1")
 	@WhereJoinTable(clause = "2=2")

@@ -143,6 +143,33 @@ public class BasicHibernateAnnotationsTest extends TestCase {
 
 	}
 
+	//Test import of TypeDefs from MappedSuperclass and 
+	//Embedded classes  
+	public void testImportTypeDefinitions() throws Exception {
+		Name name = new Name();
+		name.setFirstName("SHARATH");
+		LastName lastName = new LastName();
+		lastName.setName("reddy");
+		name.setLastName(lastName);
+		Session s;
+		Transaction tx;
+		s = openSession();
+		tx = s.beginTransaction();
+		s.persist(name);
+		tx.commit();
+		s.close();
+		
+		s = openSession();
+		tx = s.beginTransaction();
+		name = (Name) s.get( Name.class, name.getId() );
+		assertNotNull( name );
+		assertEquals( "sharath", name.getFirstName() );
+		assertEquals( "REDDY", name.getLastName().getName() );
+		s.delete(name);
+		tx.commit();
+		s.close();
+	}
+
 	public void testNonLazy() throws Exception {
 		Session s;
 		Transaction tx;
@@ -325,7 +352,8 @@ public class BasicHibernateAnnotationsTest extends TestCase {
 				Tree.class,
 				Ransom.class,
 				ZipCode.class,
-				Flight.class
+				Flight.class,
+				Name.class
 		};
 	}
 

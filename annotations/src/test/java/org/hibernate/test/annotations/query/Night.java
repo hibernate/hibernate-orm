@@ -21,7 +21,7 @@ import javax.persistence.NamedQuery;
 		query = "select n from Night n where n.duration = :duration",
 		cacheable = true, cacheRegion = "nightQuery"
 )
-public class Night {
+public class Night extends Darkness {
 	private Integer id;
 	private long duration;
 	private Date date;

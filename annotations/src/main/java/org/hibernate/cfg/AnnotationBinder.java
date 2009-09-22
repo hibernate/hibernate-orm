@@ -429,6 +429,12 @@ public final class AnnotationBinder {
 		//TODO: be more strict with secondarytable allowance (not for ids, not for secondary table join columns etc)
 		InheritanceState inheritanceState = inheritanceStatePerClass.get( clazzToProcess );
 		AnnotatedClassType classType = mappings.getClassType( clazzToProcess );
+		
+		//Queries declared in MappedSuperclass should be usable in Subclasses
+		if ( AnnotatedClassType.EMBEDDABLE_SUPERCLASS.equals( classType )) {
+			bindQueries(clazzToProcess, mappings );
+		}
+		
 		if ( AnnotatedClassType.EMBEDDABLE_SUPERCLASS.equals( classType ) //will be processed by their subentities
 				|| AnnotatedClassType.NONE.equals( classType ) //to be ignored
 				|| AnnotatedClassType.EMBEDDABLE.equals( classType ) //allow embeddable element declaration

@@ -6,6 +6,7 @@ import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.List;
 
+import org.hibernate.MappingException;
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
@@ -110,6 +111,17 @@ public class QueryAndSQLTest extends TestCase {
 		s.close();
 	}
 
+	public void testImportQueryFromMappedSuperclass() {
+		Session s = openSession();
+		try {
+			s.getNamedQuery( "night.olderThan" );
+		}
+		catch(MappingException ex) {
+			assertTrue("Query imported from MappedSuperclass", false);
+		}
+		s.close();
+	}
+	
 	public void testSQLQueryWithManyToOne() {
 		Night n = new Night();
 		Calendar c = new GregorianCalendar();

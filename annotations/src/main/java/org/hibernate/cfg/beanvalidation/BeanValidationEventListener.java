@@ -2,6 +2,7 @@ package org.hibernate.cfg.beanvalidation;
 
 import java.util.Properties;
 import java.util.Set;
+import java.util.HashSet;
 import java.util.concurrent.ConcurrentHashMap;
 import javax.validation.ConstraintViolation;
 import javax.validation.ConstraintViolationException;
@@ -67,15 +68,16 @@ public class BeanValidationEventListener implements
 										.getValidator();
 		final Class<?>[] groups = groupsPerOperation.get( operation );
 		if ( groups.length > 0 ) {
-			final Set<ConstraintViolation<T>> constraintViolations =
-					validator.validate( object, groups );
-			//FIXME CV should no longer be generics
-			Object unsafeViolations = constraintViolations;
+			final Set<ConstraintViolation<T>> constraintViolations = validator.validate( object, groups );
 			if (constraintViolations.size() > 0 ) {
-				//FIXME add Set<ConstraintViolation<?>>
+				Set<ConstraintViolation<?>> propagatedViolations =
+						new HashSet<ConstraintViolation<?>>( constraintViolations.size() );
+				for ( ConstraintViolation<?> violation : constraintViolations) {
+					propagatedViolations.add(violation);
+				}
 				throw new ConstraintViolationException(
 						"Invalid object at " + operation.getName() + " time for groups " + toString( groups ),
-						(Set<ConstraintViolation<?>>) unsafeViolations);
+						propagatedViolations);
 			}
 		}
 	}

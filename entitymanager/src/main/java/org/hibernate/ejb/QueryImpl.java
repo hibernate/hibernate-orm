@@ -51,6 +51,7 @@ import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.QueryParameterException;
 import org.hibernate.TypeMismatchException;
+import org.hibernate.SQLQuery;
 import org.hibernate.engine.query.NamedParameterDescriptor;
 import org.hibernate.engine.query.OrdinalParameterDescriptor;
 import org.hibernate.hql.QueryExecutionRequestException;
@@ -230,7 +231,9 @@ public class QueryImpl<X> extends org.hibernate.ejb.AbstractQueryImpl<X> impleme
 			boolean mucked = false;
 			// IMPL NOTE : the mucking with max results here is attempting to help the user from shooting themselves
 			//		in the foot in the case where they have a large query by limiting the query results to 2 max
-			if ( getSpecifiedMaxResults() != 1 ) {
+			//    SQLQuery cannot be safely paginated, leaving the user's choice here.
+			if ( getSpecifiedMaxResults() != 1 &&
+					! ( SQLQuery.class.isAssignableFrom( query.getClass() ) ) ) {
 				mucked = true;
 				query.setMaxResults( 2 ); //avoid OOME if the list is huge
 			}

@@ -25,6 +25,7 @@ package org.hibernate.envers.tools;
 
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.engine.SessionImplementor;
+import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.Session;
 
 import java.util.*;
@@ -66,20 +67,21 @@ public class Tools {
 		return session.getEntityPersister(null, obj).getIdentifier(obj, session.getEntityMode());
 	}
 
-	public static Object getTargetFromProxy(HibernateProxy proxy) {
-		if (!proxy.getHibernateLazyInitializer().isUninitialized()) {
-			return proxy.getHibernateLazyInitializer().getImplementation();
-		}
+    public static Object getTargetFromProxy(SessionFactoryImplementor sessionFactoryImplementor, HibernateProxy proxy) {
+        if (!proxy.getHibernateLazyInitializer().isUninitialized()) {
+            return proxy.getHibernateLazyInitializer().getImplementation();
+        }
 
-		Session tempSession = proxy.getHibernateLazyInitializer().getSession().getFactory().openTemporarySession();
-		try {
-			proxy.getHibernateLazyInitializer().setSession((SessionImplementor) tempSession);
-			proxy.getHibernateLazyInitializer().initialize();
-			return proxy.getHibernateLazyInitializer().getImplementation();
-		} finally {
-			tempSession.close();
-		}
-	}
+        SessionImplementor sessionImplementor = proxy.getHibernateLazyInitializer().getSession();
+        Session tempSession = sessionImplementor==null ? sessionFactoryImplementor.openTemporarySession() : sessionImplementor.getFactory().openTemporarySession();
+        try {
+            proxy.getHibernateLazyInitializer().setSession((SessionImplementor) tempSession);
+            proxy.getHibernateLazyInitializer().initialize();
+            return proxy.getHibernateLazyInitializer().getImplementation();
+        } finally {
+            tempSession.close();
+        }
+    }
 
     public static boolean objectsEqual(Object obj1, Object obj2) {
         if (obj1 == null) {
@@ -113,7 +115,7 @@ public class Tools {
     }
 
     /**
-     * Transforms a list of arbitrary elements to a list of index-element pairs. 
+     * Transforms a list of arbitrary elements to a list of index-element pairs.
      * @param list List to transform.
      * @return A list of pairs: ((0, element_at_index_0), (1, element_at_index_1), ...)
      */

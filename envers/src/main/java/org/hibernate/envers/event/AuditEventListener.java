@@ -104,7 +104,7 @@ public class AuditEventListener implements PostInsertEventListener, PostUpdateEv
                     	    toEntityName = session.bestGuessEntityName(newValue);
                     	    id = hibernateProxy.getHibernateLazyInitializer().getIdentifier();
 							// We've got to initialize the object from the proxy to later read its state.   
-							newValue = Tools.getTargetFromProxy(hibernateProxy);
+							newValue = Tools.getTargetFromProxy(session.getFactory(), hibernateProxy);
                     	} else {
                     		toEntityName =  session.guessEntityName(newValue);
 
@@ -124,7 +124,7 @@ public class AuditEventListener implements PostInsertEventListener, PostUpdateEv
                     	    toEntityName = session.bestGuessEntityName(oldValue);
                     	    id = hibernateProxy.getHibernateLazyInitializer().getIdentifier();
 							// We've got to initialize the object as we'll read it's state anyway.
-							oldValue = Tools.getTargetFromProxy(hibernateProxy);
+							oldValue = Tools.getTargetFromProxy(session.getFactory(), hibernateProxy);
                     	} else {
                     		toEntityName =  session.guessEntityName(oldValue);
 

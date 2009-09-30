@@ -33,6 +33,7 @@
             <package name="org.hibernate.envers.test.integration.manytomany" />
             <package name="org.hibernate.envers.test.integration.manytomany.ternary" />
             <package name="org.hibernate.envers.test.integration.manytomany.unidirectional" />
+            <package name="org.hibernate.envers.test.integration.manytoone.unidirectional" />
             <package name="org.hibernate.envers.test.integration.naming" />
             <package name="org.hibernate.envers.test.integration.naming.ids" />
             <package name="org.hibernate.envers.test.integration.notinsertable" />

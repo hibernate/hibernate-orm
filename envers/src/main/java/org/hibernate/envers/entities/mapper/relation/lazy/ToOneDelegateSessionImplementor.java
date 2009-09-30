@@ -31,7 +31,6 @@ import org.hibernate.envers.entities.EntityConfiguration;
 import org.hibernate.envers.reader.AuditReaderImplementor;
 
 import org.hibernate.HibernateException;
-import org.hibernate.Session;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -62,8 +61,7 @@ public class ToOneDelegateSessionImplementor extends AbstractDelegateSessionImpl
 		if (notVersionedEntityConfiguration == null) {
 			return versionsReader.find(entityClass, entityId, revision);
 		} else {
-			Session session = versionsReader.getSession();
-			return session.get(entityClass, (Serializable) entityId);
+			return delegate.immediateLoad(entityName, (Serializable) entityId);
 		}
     }
 }

@@ -72,8 +72,8 @@ public class UnversionedStrTestEntity {
 
         UnversionedStrTestEntity that = (UnversionedStrTestEntity) o;
 
-        if (id != null ? !id.equals(that.id) : that.id != null) return false;
-        if (str != null ? !str.equals(that.str) : that.str != null) return false;
+        if (id != null ? !id.equals(that.getId()) : that.getId() != null) return false;
+        if (str != null ? !str.equals(that.getStr()) : that.getStr() != null) return false;
 
         return true;
     }

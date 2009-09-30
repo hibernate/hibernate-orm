@@ -45,7 +45,7 @@ public class TargetNotAuditedEntity {
 	private String data;
 
 	@Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)
-	@ManyToOne(fetch = FetchType.EAGER)
+	@ManyToOne(fetch = FetchType.LAZY)
 	private UnversionedStrTestEntity reference;
 
 	public TargetNotAuditedEntity() { }
@@ -96,8 +96,8 @@ public class TargetNotAuditedEntity {
 
 		TargetNotAuditedEntity that = (TargetNotAuditedEntity) o;
 
-		if (data != null ? !data.equals(that.data) : that.data != null) return false;
-		if (id != null ? !id.equals(that.id) : that.id != null) return false;
+		if (data != null ? !data.equals(that.getData()) : that.getData() != null) return false;
+		if (id != null ? !id.equals(that.getId()) : that.getId() != null) return false;
 
 		return true;
 	}

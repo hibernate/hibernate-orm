@@ -1,8 +1,7 @@
-//$Id $
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2009, Red Hat Middleware LLC or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Middleware LLC.
@@ -21,20 +20,18 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.dialect;
 
 /**
- * SybaseDialect is being deprecated.
+ * This dialect is being deprecated; it had been used both as the base class
+ * for TransactSQL-based dialects as well as the physical dialect for handling
+ * Sybase.  Those functions have now been split.
+ * {@link AbstractTransactSQLDialect} should be used as the base class for
+ * TransactSQL-based dialects.
  *
- * AbstractTransactSQLDialect should be used as a base
- * class for Sybase and MS SQL Server dialects.
- * 
  * @author Gail Badner
- * @deprecated SybaseASE15Dialect or SQLServerDialect should be 
- * used instead.
+ * @deprecated use {@link SybaseASE15Dialect} or {@link SQLServerDialect} instead.
  */
-
 public class SybaseDialect extends AbstractTransactSQLDialect {
 }

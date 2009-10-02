@@ -44,6 +44,7 @@ import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.Oracle10gDialect;
 import org.hibernate.dialect.Oracle9iDialect;
 import org.hibernate.dialect.Oracle8iDialect;
+import org.hibernate.dialect.SybaseAnywhereDialect;
 
 /**
  * The standard Hibernate resolver.
@@ -87,6 +88,10 @@ public class StandardDialectResolver extends AbstractDialectResolver{
 
 		if ( "Sybase SQL Server".equals( databaseName ) || "Adaptive Server Enterprise".equals( databaseName ) ) {
 			return new SybaseDialect();
+		}
+
+		if ( databaseName.startsWith( "Adaptive Server Anywhere" ) ) {
+			return new SybaseAnywhereDialect();
 		}
 
 		if ( "Informix Dynamic Server".equals( databaseName ) ) {

@@ -173,7 +173,7 @@ public final class SessionImpl extends AbstractSessionImpl
 	private transient Session rootSession;
 	private transient Map childSessionsByEntityMode;
 
-	private EntityNameResolver entityNameResolver = new CoordinatingEntityNameResolver();
+	private transient EntityNameResolver entityNameResolver = new CoordinatingEntityNameResolver();
 
 	/**
 	 * Constructor used in building "child sessions".
@@ -1918,6 +1918,8 @@ public final class SessionImpl extends AbstractSessionImpl
 	private void readObject(ObjectInputStream ois) throws IOException, ClassNotFoundException {
 		log.trace( "deserializing session" );
 
+		ois.defaultReadObject();
+
 		entityNameResolver = new CoordinatingEntityNameResolver();
 
 		boolean isRootSession = ois.readBoolean();
@@ -1971,6 +1973,8 @@ public final class SessionImpl extends AbstractSessionImpl
 		}
 
 		log.trace( "serializing session" );
+
+		oos.defaultWriteObject();
 
 		oos.writeBoolean( rootSession == null );
 		oos.writeObject( connectionReleaseMode.toString() );

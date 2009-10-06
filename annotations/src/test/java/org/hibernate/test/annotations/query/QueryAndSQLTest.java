@@ -1,4 +1,27 @@
 //$Id$
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2009, Red Hat, Inc. and/or its affiliates or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat, Inc.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ */
 package org.hibernate.test.annotations.query;
 
 import java.util.Calendar;
@@ -111,13 +134,23 @@ public class QueryAndSQLTest extends TestCase {
 		s.close();
 	}
 
+	
+	/**
+	 * We are testing 2 things here:
+	 * 1. The query 'night.olderThan' is defined in a MappedSuperClass - Darkness.
+	 *    We are verifying that queries defined in a MappedSuperClass are processed.  
+	 * 2. There are 2 Entity classes that extend from Darkness - Night and Twilight. 
+	 *    We are verifying that this does not cause any issues.eg. Double processing of the 
+	 *    MappedSuperClass
+	 */
+	
 	public void testImportQueryFromMappedSuperclass() {
 		Session s = openSession();
 		try {
 			s.getNamedQuery( "night.olderThan" );
 		}
 		catch(MappingException ex) {
-			assertTrue("Query imported from MappedSuperclass", false);
+			fail("Query imported from MappedSuperclass");
 		}
 		s.close();
 	}
@@ -364,10 +397,12 @@ public class QueryAndSQLTest extends TestCase {
 
 	protected Class[] getMappings() {
 		return new Class[] {
+				Darkness.class,
 				Plane.class,
 				A320.class,
 				A320b.class,
 				Night.class,
+				Twilight.class,
 				Area.class,
 				SpaceShip.class,
 				Dictionary.class,

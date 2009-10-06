@@ -24,14 +24,26 @@
  */
 package org.hibernate.test.annotations.query;
 
-import javax.persistence.MappedSuperclass;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
 
-@org.hibernate.annotations.NamedQuery(
-		name = "night.olderThan", 
-		query = "select n from Night n where n.date <= :date"
-)
+/**
+ * @author Sharath Reddy
+ */
+@Entity
+public class Twilight extends Darkness {
 
-@MappedSuperclass
-public class Darkness {
+	private int id;
+	
+	@Id
+	@GeneratedValue
+	public Integer getId() {
+		return id;
+	}
+
+	public void setId(Integer id) {
+		this.id = id;
+	}
 
 }

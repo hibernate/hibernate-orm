@@ -75,6 +75,9 @@
 
         <!-- Max number of milliseconds to wait for a lock acquisition -->
         <attribute name="LockAcquisitionTimeout">15000</attribute>
+        
+        <!--  Lock Striping can lead to deadlocks -->
+        <attribute name="UseLockStriping">false</attribute>
 
         <!--
            Indicate whether to use marshalling or not. Set this to true if you 
@@ -160,6 +163,9 @@
 
         <!-- Max number of milliseconds to wait for a lock acquisition -->
         <attribute name="LockAcquisitionTimeout">15000</attribute>
+        
+        <!--  Lock Striping can lead to deadlocks -->
+        <attribute name="UseLockStriping">false</attribute>
 
        <!--
           Indicate whether to use marshalling or not. Set this to true if you 
@@ -244,6 +250,9 @@
 
         <!-- Max number of milliseconds to wait for a lock acquisition -->
         <attribute name="LockAcquisitionTimeout">15000</attribute>
+        
+        <!--  Lock Striping can lead to deadlocks -->
+        <attribute name="UseLockStriping">false</attribute>
 
        <!--
           Indicate whether to use marshalling or not. Set this to true if you 
@@ -333,6 +342,9 @@
 
         <!-- Max number of milliseconds to wait for a lock acquisition -->
         <attribute name="LockAcquisitionTimeout">15000</attribute>
+        
+        <!--  Lock Striping can lead to deadlocks -->
+        <attribute name="UseLockStriping">false</attribute>
 
         <!--
            Indicate whether to use marshalling or not. Set this to true if you 
@@ -421,6 +433,9 @@
 
         <!-- Max number of milliseconds to wait for a lock acquisition -->
         <attribute name="LockAcquisitionTimeout">15000</attribute>
+        
+        <!--  Lock Striping can lead to deadlocks -->
+        <attribute name="UseLockStriping">false</attribute>
 
         <!--
            Indicate whether to use marshalling or not. Set this to true if you 
@@ -473,6 +488,9 @@
 
         <!-- Max number of milliseconds to wait for a lock acquisition -->
         <attribute name="LockAcquisitionTimeout">15000</attribute>
+        
+        <!--  Lock Striping can lead to deadlocks -->
+        <attribute name="UseLockStriping">false</attribute>
 
         <!--  Eviction policy configurations. -->
         <attribute name="EvictionPolicyConfig">
@@ -542,6 +560,9 @@
 
         <!-- Max number of milliseconds to wait for a lock acquisition -->
         <attribute name="LockAcquisitionTimeout">15000</attribute>
+        
+        <!--  Lock Striping can lead to deadlocks -->
+        <attribute name="UseLockStriping">false</attribute>
 
         <!--
            Indicate whether to use marshalling or not. Set this to true if you 
@@ -622,6 +643,9 @@
 
         <!-- Max number of milliseconds to wait for a lock acquisition -->
         <attribute name="LockAcquisitionTimeout">15000</attribute>
+        
+        <!--  Lock Striping can lead to deadlocks -->
+        <attribute name="UseLockStriping">false</attribute>
 
         <!--
            Indicate whether to use marshalling or not. Set this to true if you 
@@ -709,6 +733,9 @@
 
         <!-- Max number of milliseconds to wait for a lock acquisition -->
         <attribute name="LockAcquisitionTimeout">15000</attribute>
+        
+        <!--  Lock Striping can lead to deadlocks -->
+        <attribute name="UseLockStriping">false</attribute>
 
         <!--
           Indicate whether to use marshalling or not. Set this to true if you are running under a scoped
@@ -799,6 +826,9 @@
 
         <!-- Max number of milliseconds to wait for a lock acquisition -->
         <attribute name="LockAcquisitionTimeout">15000</attribute>
+        
+        <!--  Lock Striping can lead to deadlocks -->
+        <attribute name="UseLockStriping">false</attribute>
 
         <!--
            Indicate whether to use marshalling or not. Set this to true if you 
@@ -889,6 +919,9 @@
 
         <!-- Max number of milliseconds to wait for a lock acquisition -->
         <attribute name="LockAcquisitionTimeout">15000</attribute>
+        
+        <!--  Lock Striping can lead to deadlocks -->
+        <attribute name="UseLockStriping">false</attribute>
 
         <!--
            Indicate whether to use marshalling or not. Set this to true if you 
@@ -977,6 +1010,9 @@
 
         <!-- Max number of milliseconds to wait for a lock acquisition -->
         <attribute name="LockAcquisitionTimeout">15000</attribute>
+        
+        <!--  Lock Striping can lead to deadlocks -->
+        <attribute name="UseLockStriping">false</attribute>
 
         <!--
           Indicate whether to use marshalling or not. Set this to true if you 
@@ -1066,6 +1102,9 @@
 
         <!-- Max number of milliseconds to wait for a lock acquisition -->
         <attribute name="LockAcquisitionTimeout">15000</attribute>
+        
+        <!--  Lock Striping can lead to deadlocks -->
+        <attribute name="UseLockStriping">false</attribute>
 
         <!--
           Indicate whether to use marshalling or not. Set this to true if you 

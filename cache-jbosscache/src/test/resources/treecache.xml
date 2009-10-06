@@ -98,6 +98,9 @@
 
         <!-- Max number of milliseconds to wait for a lock acquisition -->
         <attribute name="LockAcquisitionTimeout">15000</attribute>
+        
+        <!--  Lock Striping can lead to deadlocks -->
+        <attribute name="UseLockStriping">false</attribute>
 
        <!--
           Indicate whether to use marshalling or not. Set this to true if you 

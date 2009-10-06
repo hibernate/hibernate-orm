@@ -1,4 +1,27 @@
 //$Id$
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2009, Red Hat, Inc. and/or its affiliates or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat, Inc.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ */
 package org.hibernate.test.annotations.entity;
 
 import java.math.BigDecimal;
@@ -143,19 +166,33 @@ public class BasicHibernateAnnotationsTest extends TestCase {
 
 	}
 
-	//Test import of TypeDefs from MappedSuperclass and 
-	//Embedded classes  
+	/*
+	 * Test import of TypeDefs from MappedSuperclass and 
+	 * Embedded classes.
+	 * The classes 'Name' and 'FormalLastName' both embed the same 
+	 * component 'LastName'. This is to verify that processing the 
+	 * typedef defined in the component TWICE does not create any 
+	 * issues.  
+	 * 
+	 */
 	public void testImportTypeDefinitions() throws Exception {
-		Name name = new Name();
-		name.setFirstName("SHARATH");
 		LastName lastName = new LastName();
 		lastName.setName("reddy");
+				
+		Name name = new Name();
+		name.setFirstName("SHARATH");
 		name.setLastName(lastName);
+		
+		FormalLastName formalName = new FormalLastName();
+		formalName.setLastName(lastName);
+		formalName.setDesignation("Mr");
+				
 		Session s;
 		Transaction tx;
 		s = openSession();
 		tx = s.beginTransaction();
 		s.persist(name);
+		s.persist(formalName);
 		tx.commit();
 		s.close();
 		 
@@ -165,7 +202,12 @@ public class BasicHibernateAnnotationsTest extends TestCase {
 		assertNotNull( name );
 		assertEquals( "sharath", name.getFirstName() );
 		assertEquals( "REDDY", name.getLastName().getName() );
+		
+		formalName = (FormalLastName) s.get(FormalLastName.class, formalName.getId());
+		assertEquals( "REDDY", formalName.getLastName().getName() );
+		
 		s.delete(name);
+		s.delete(formalName);
 		tx.commit();
 		s.close();
 	}
@@ -424,6 +466,7 @@ public class BasicHibernateAnnotationsTest extends TestCase {
 				ZipCode.class,
 				Flight.class,
 				Name.class,
+				FormalLastName.class,
 				Car.class,
 				Peugot.class,
 				ContactDetails.class

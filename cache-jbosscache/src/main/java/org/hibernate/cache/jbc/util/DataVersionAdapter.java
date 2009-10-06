@@ -116,6 +116,11 @@ public class DataVersionAdapter implements DataVersion {
             // treat as us being newer
             return (other.previousVersion != null);
         }
+        
+        // Can't be newer than itself
+        if ( this == dataVersion ) {
+            return false;
+        }
 
         return versionComparator.compare(currentVersion, other.previousVersion) >= 1;
     }

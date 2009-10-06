@@ -104,12 +104,12 @@ public class MultiplexingCacheInstanceManager implements CacheInstanceManager {
      * Default value for {@link #CACHE_FACTORY_RESOURCE_PROP}. Specifies
      * the "jbc2-configs.xml" file in this package.
      */
-    public static final String DEF_CACHE_FACTORY_RESOURCE = "org/hibernate/cache/jbc2/builder/jbc2-configs.xml";    
+    public static final String DEF_CACHE_FACTORY_RESOURCE = "org/hibernate/cache/jbc/builder/jbc-configs.xml";    
     /**
      * Default value for {@link #CHANNEL_FACTORY_RESOURCE_PROP}. Specifies
      * the "jgroups-stacks.xml" file in this package.
      */
-    public static final String DEF_JGROUPS_RESOURCE = "org/hibernate/cache/jbc2/builder/jgroups-stacks.xml";
+    public static final String DEF_JGROUPS_RESOURCE = "org/hibernate/cache/jbc/builder/jgroups-stacks.xml";
     /**
      * Default value for {@link #ENTITY_CACHE_RESOURCE_PROP}.
      */

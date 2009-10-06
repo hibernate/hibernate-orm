@@ -33,7 +33,7 @@ import org.jboss.cache.CacheManager;
  * @author <a href="brian.stansberry@jboss.com">Brian Stansberry</a>
  * @version $Revision: 1 $
  */
-public class Jbc2ConfigsXmlValidityTestCase extends AbstractJBossCacheTestCase
+public class JbcConfigsXmlValidityTestCase extends AbstractJBossCacheTestCase
 {
    private static final AtomicReference<CacheManager> cacheManagerRef = new AtomicReference<CacheManager>();
    
@@ -57,17 +57,17 @@ public class Jbc2ConfigsXmlValidityTestCase extends AbstractJBossCacheTestCase
    private Cache cache;
    
    /**
-    * Create a new Jbc2ConfigsXmlValidityTestCase.
+    * Create a new JbcConfigsXmlValidityTestCase.
     * 
     * @param name
     */
-   public Jbc2ConfigsXmlValidityTestCase(String name)
+   public JbcConfigsXmlValidityTestCase(String name)
    {
       super(name);
    }
    
    public static Test suite() throws Exception {
-       TestSuite suite = new TestSuite(Jbc2ConfigsXmlValidityTestCase.class);
+       TestSuite suite = new TestSuite(JbcConfigsXmlValidityTestCase.class);
        return new CacheManagerTestSetup(suite, cacheManagerRef);
    }
    

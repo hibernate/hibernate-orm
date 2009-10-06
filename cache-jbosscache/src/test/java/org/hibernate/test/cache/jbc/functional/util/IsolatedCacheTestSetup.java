@@ -18,6 +18,7 @@ package org.hibernate.test.cache.jbc.functional.util;
 
 import junit.framework.Test;
 
+import org.hibernate.cache.jbc.builder.MultiplexingCacheInstanceManager;
 import org.hibernate.test.util.SelectedClassnameClassLoader;
 import org.hibernate.test.util.SelectedClassnameClassLoaderTestSetup;
 
@@ -31,8 +32,8 @@ import org.hibernate.test.util.SelectedClassnameClassLoaderTestSetup;
 public class IsolatedCacheTestSetup extends SelectedClassnameClassLoaderTestSetup
 {
 
-   public static final String DEF_CACHE_FACTORY_RESOURCE = "org/hibernate/cache/jbc/builder/jbc2-configs.xml";
-   public static final String DEF_JGROUPS_RESOURCE = "org/hibernate/cache/jbc/builder/jgroups-stacks.xml";
+   public static final String DEF_CACHE_FACTORY_RESOURCE = MultiplexingCacheInstanceManager.DEF_CACHE_FACTORY_RESOURCE;
+   public static final String DEF_JGROUPS_RESOURCE = MultiplexingCacheInstanceManager.DEF_JGROUPS_RESOURCE;
    
    private String[] isolatedClasses;
    private String cacheConfig;

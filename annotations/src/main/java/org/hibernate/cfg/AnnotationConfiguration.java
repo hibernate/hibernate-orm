@@ -283,7 +283,7 @@ public class AnnotationConfiguration extends Configuration {
 			AnnotationBinder.bindDefaults( createExtendedMappings() );
 			isDefaultProcessed = true;
 		}
-
+ 
 		//process entities
 		if ( precedence == null ) precedence = getProperties().getProperty( ARTEFACT );
 		if ( precedence == null ) precedence = DEFAULT_PRECEDENCE;
@@ -312,8 +312,17 @@ public class AnnotationConfiguration extends Configuration {
 		caches.clear();
 		try {
 			inSecondPass = true;
-			processFkSecondPassInOrder();
 			Iterator iter = secondPasses.iterator();
+			while ( iter.hasNext() ) {
+				SecondPass sp = (SecondPass) iter.next();
+				//do the second pass of simple value types first and remove them
+				if ( sp instanceof SetSimpleValueTypeSecondPass ) {
+					sp.doSecondPass( classes );
+					iter.remove();
+				}
+			}
+			processFkSecondPassInOrder();
+			iter = secondPasses.iterator();
 			while ( iter.hasNext() ) {
 				SecondPass sp = (SecondPass) iter.next();
 				//do the second pass of fk before the others and remove them
@@ -1111,6 +1120,11 @@ public class AnnotationConfiguration extends Configuration {
 			defaultNamedGenerators.add( generator.getName() );
 		}
 
+		public boolean isInSecondPass() {
+			return inSecondPass; 
+		}
+		
+		
 		public IdGenerator getGenerator(String name) {
 			return getGenerator( name, null );
 		}

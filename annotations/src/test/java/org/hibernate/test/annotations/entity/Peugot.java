@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2009, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2009, Red Hat, Inc. and/or its affiliates or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Middleware LLC.
@@ -21,25 +21,28 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.annotations;
+package org.hibernate.test.annotations.entity;
 
-import static java.lang.annotation.ElementType.PACKAGE;
-import static java.lang.annotation.ElementType.TYPE;
-import java.lang.annotation.Retention;
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
-import java.lang.annotation.Target;
+import javax.persistence.Entity;
+
+import org.hibernate.annotations.Parameter;
+import org.hibernate.annotations.TypeDef;
+
+@TypeDef(
+		name = "definedInDerivedClass",
+		typeClass = CasterStringType.class,
+		parameters = {
+			@Parameter(name = "cast", value = "upper")
+		}
+)
 
 /**
- * Type definition
+ * Defines a custom type that is used in the 
+ * base class. 
+ * @author Sharath Reddy
  *
- * @author Emmanuel Bernard
  */
-@Target({TYPE, PACKAGE})
-@Retention(RUNTIME)
-public @interface TypeDef {
-	String name() default "";
-	Class<?> typeClass();
-	Class<?> defaultForType() default void.class;
-	
-	Parameter[] parameters() default {};
+@Entity
+public class Peugot extends Car {
+
 }

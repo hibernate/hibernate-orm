@@ -42,6 +42,7 @@ import org.hibernate.cfg.BinderHelper;
 import org.hibernate.cfg.Ejb3Column;
 import org.hibernate.cfg.ExtendedMappings;
 import org.hibernate.cfg.NotYetImplementedException;
+import org.hibernate.cfg.SetSimpleValueTypeSecondPass;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Table;
 import org.hibernate.type.ByteArrayBlobType;
@@ -68,6 +69,16 @@ public class SimpleValueBinder {
 	private Properties typeParameters = new Properties();
 	private ExtendedMappings mappings;
 	private Table table;
+	private SimpleValue simpleValue;
+	private boolean isVersion;
+
+	public boolean isVersion() {
+		return isVersion;
+	}
+
+	public void setVersion(boolean isVersion) {
+		this.isVersion = isVersion;
+	}
 
 	public void setPropertyName(String propertyName) {
 		this.propertyName = propertyName;
@@ -216,7 +227,7 @@ public class SimpleValueBinder {
 	public void setExplicitType(String explicitType) {
 		this.explicitType = explicitType;
 	}
-
+	
 	//FIXME raise an assertion failure  if setExplicitType(String) and setExplicitType(Type) are use at the same time
 	public void setExplicitType(Type typeAnn) {
 		if ( typeAnn != null ) {
@@ -238,16 +249,35 @@ public class SimpleValueBinder {
 	}
 
 	public SimpleValue make() {
+				
 		validate();
 		log.debug( "building SimpleValue for {}", propertyName );
 		if ( table == null ) {
 			table = columns[0].getTable();
 		}
-		SimpleValue simpleValue = new SimpleValue( table );
-		return fillSimpleValue( simpleValue );
+		simpleValue = new SimpleValue( table );
+		
+		for (Ejb3Column column : columns) {
+			column.linkWithValue( simpleValue );
+		}
+		
+		boolean isInSecondPass = mappings.isInSecondPass();
+		if (!isInSecondPass) {
+			//Defer this to the second pass
+			SetSimpleValueTypeSecondPass secondPass = new SetSimpleValueTypeSecondPass(this);
+			mappings.addSecondPass(secondPass);
+		}
+		else {
+			//We are already in second pass
+			fillSimpleValue();
+		}
+		return simpleValue;
 	}
 
-	public SimpleValue fillSimpleValue(SimpleValue simpleValue) {
+	public void fillSimpleValue() {
+				
+		log.debug( "setting SimpleValue typeName for {}", propertyName );
+				
 		String type = BinderHelper.isDefault( explicitType ) ? returnedClassName : explicitType;
 		org.hibernate.mapping.TypeDef typeDef = mappings.getTypeDef( type );
 		if ( typeDef != null ) {
@@ -262,9 +292,10 @@ public class SimpleValueBinder {
 		if ( persistentClassName != null ) {
 			simpleValue.setTypeUsingReflection( persistentClassName, propertyName );
 		}
-		for (Ejb3Column column : columns) {
-			column.linkWithValue( simpleValue );
+		
+		if ( !simpleValue.isTypeSpecified() && isVersion()) {
+			simpleValue.setTypeName( "integer" );
 		}
-		return simpleValue;
+				
 	}
 }

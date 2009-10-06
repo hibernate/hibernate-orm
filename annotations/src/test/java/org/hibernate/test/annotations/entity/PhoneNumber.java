@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2009, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2009, Red Hat, Inc. and/or its affiliates or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Middleware LLC.
@@ -21,25 +21,22 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.annotations;
+package org.hibernate.test.annotations.entity;
 
-import static java.lang.annotation.ElementType.PACKAGE;
-import static java.lang.annotation.ElementType.TYPE;
-import java.lang.annotation.Retention;
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
-import java.lang.annotation.Target;
-
-/**
- * Type definition
- *
- * @author Emmanuel Bernard
- */
-@Target({TYPE, PACKAGE})
-@Retention(RUNTIME)
-public @interface TypeDef {
-	String name() default "";
-	Class<?> typeClass();
-	Class<?> defaultForType() default void.class;
+public class PhoneNumber {
 	
-	Parameter[] parameters() default {};
+	private String number;
+	
+	public PhoneNumber(String val) {
+		number = val;
+	}
+		
+	public String getNumber() {
+		return number;
+	}
+
+	public void setNumber(String number) {
+		this.number = number;
+	}
+
 }

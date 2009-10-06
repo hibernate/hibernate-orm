@@ -104,7 +104,6 @@ import org.hibernate.annotations.Index;
 import org.hibernate.annotations.LazyToOne;
 import org.hibernate.annotations.LazyToOneOption;
 import org.hibernate.annotations.ManyToAny;
-import org.hibernate.annotations.MapKeyManyToMany;
 import org.hibernate.annotations.NaturalId;
 import org.hibernate.annotations.NotFound;
 import org.hibernate.annotations.NotFoundAction;
@@ -137,7 +136,6 @@ import org.hibernate.cfg.annotations.QueryBinder;
 import org.hibernate.cfg.annotations.SimpleValueBinder;
 import org.hibernate.cfg.annotations.TableBinder;
 import org.hibernate.cfg.annotations.MapKeyColumnDelegator;
-import org.hibernate.cfg.annotations.CustomizableColumns;
 import org.hibernate.cfg.annotations.MapKeyJoinColumnDelegator;
 import org.hibernate.engine.FilterDefinition;
 import org.hibernate.engine.Versioning;
@@ -1005,10 +1003,24 @@ public final class AnnotationBinder {
 		for (Parameter param : defAnn.parameters()) {
 			params.setProperty( param.name(), param.value() );
 		}
-		log.info( "Binding type definition: {}", defAnn.name() );
-		mappings.addTypeDef( defAnn.name(), defAnn.typeClass().getName(), params );
+		
+		if (BinderHelper.isDefault(defAnn.name()) && defAnn.defaultForType().equals(void.class)) {
+			throw new AnnotationException("Both name and defaultForType attributes cannot be set in a TypeDef");
+		}
+		if (!BinderHelper.isDefault(defAnn.name())) {
+			log.info( "Binding type definition: {}", defAnn.name() );
+			mappings.addTypeDef( defAnn.name(), defAnn.typeClass().getName(), params );
+		}
+		else if (!defAnn.defaultForType().equals(void.class)) {
+			log.info( "Binding type definition: {}", defAnn.defaultForType().getName() );
+			mappings.addTypeDef( defAnn.defaultForType().getName(), defAnn.typeClass().getName(), params );
+		}
+		else {
+			throw new AnnotationException("Either name or defaultForType attribute should be set in a TypeDef");
+		}
 	}
-
+		
+		
 	private static void bindDiscriminatorToPersistentClass(
 			RootClass rootClass,
 			Ejb3DiscriminatorColumn discriminatorColumn, Map<String, Join> secondaryTables,
@@ -1365,12 +1377,13 @@ public final class AnnotationBinder {
 			propBinder.setHolder( propertyHolder ); //PropertyHolderBuilder.buildPropertyHolder(rootClass)
 			propBinder.setProperty( property );
 			propBinder.setReturnedClass( inferredData.getPropertyClass() );
-
 			propBinder.setMappings( mappings );
+			
 			Property prop = propBinder.bind();
+			propBinder.getSimpleValueBinder().setVersion(true);
 			rootClass.setVersion( prop );
+			
 			SimpleValue simpleValue = (SimpleValue) prop.getValue();
-			if ( !simpleValue.isTypeSpecified() ) simpleValue.setTypeName( "integer" );
 			simpleValue.setNullValue( "undefined" );
 			rootClass.setOptimisticLockMode( Versioning.OPTIMISTIC_LOCK_VERSION );
 			log.debug(

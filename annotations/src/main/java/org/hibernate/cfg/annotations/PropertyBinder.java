@@ -61,6 +61,8 @@ public class PropertyBinder {
 	private boolean insertable = true;
 	private boolean updatable = true;
 	private String cascade;
+	private SimpleValueBinder simpleValueBinder;
+	
 	/*
 	 * property can be null
 	 * prefer propertyName to property.getName() since some are overloaded
@@ -133,15 +135,15 @@ public class PropertyBinder {
 		String containerClassName = holder == null ?
 				null :
 				holder.getClassName();
-		SimpleValueBinder value = new SimpleValueBinder();
-		value.setMappings( mappings );
-		value.setPropertyName( name );
-		value.setReturnedClassName( returnedClassName );
-		value.setColumns( columns );
-		value.setPersistentClassName( containerClassName );
-		value.setType( property, returnedClass );
-		value.setMappings( mappings );
-		SimpleValue propertyValue = value.make();
+		simpleValueBinder = new SimpleValueBinder();
+		simpleValueBinder.setMappings( mappings );
+		simpleValueBinder.setPropertyName( name );
+		simpleValueBinder.setReturnedClassName( returnedClassName );
+		simpleValueBinder.setColumns( columns );
+		simpleValueBinder.setPersistentClassName( containerClassName );
+		simpleValueBinder.setType( property, returnedClass );
+		simpleValueBinder.setMappings( mappings );
+		SimpleValue propertyValue = simpleValueBinder.make();
 		setValue( propertyValue );
 		Property prop = make();
 		holder.addProperty( prop, columns );
@@ -214,4 +216,9 @@ public class PropertyBinder {
 	public void setReturnedClass(XClass returnedClass) {
 		this.returnedClass = returnedClass;
 	}
+
+	public SimpleValueBinder getSimpleValueBinder() {
+		return simpleValueBinder;
+	}
+	
 }

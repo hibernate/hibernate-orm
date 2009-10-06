@@ -158,7 +158,7 @@ public class BasicHibernateAnnotationsTest extends TestCase {
 		s.persist(name);
 		tx.commit();
 		s.close();
-		
+		 
 		s = openSession();
 		tx = s.beginTransaction();
 		name = (Name) s.get( Name.class, name.getId() );
@@ -341,6 +341,76 @@ public class BasicHibernateAnnotationsTest extends TestCase {
 		tx.commit();
 		s.close();
 	}
+		
+	
+	/**
+	 * We persist and retrieve properties of type 'PhoneNumber'. We set this type to delegate to 
+	 * the Hibernate UserType 'PhoneNumberType' for persistence and retrieval (with the 'defaultForType' attribute). 
+	 * However, we can also use the @TypeDef 'name' attribute and @Type annotation to over-ride this and 
+	 * delegate to OverseasPhoneNumberType. 
+	 * 
+	 */
+	public void testTypeDefsUsingNameAndDefaultForType() {
+		
+		ContactDetails contactDetails = new ContactDetails();
+		contactDetails.setLocalPhoneNumber(new PhoneNumber("999999"));
+		contactDetails.setOverseasPhoneNumber(new PhoneNumber("111111"));
+		
+		Session s = openSession();
+		Transaction tx = s.beginTransaction();
+		s.persist(contactDetails);
+		tx.commit();
+		s.close();
+		
+		s = openSession();
+		tx = s.beginTransaction();
+		contactDetails = 
+			(ContactDetails) s.get( ContactDetails.class, contactDetails.getId() );
+		assertNotNull( contactDetails );
+		assertEquals( "999999", contactDetails.getLocalPhoneNumber().getNumber() );
+		assertEquals( "041111111", contactDetails.getOverseasPhoneNumber().getNumber() );
+		s.delete(contactDetails);
+		tx.commit();
+		s.close();
+		
+		
+		
+	}
+	
+	
+	
+	/**
+	 * A custom type is used in the base class, but defined in the derived class. 
+	 * This would have caused an exception, because the base class is processed 
+	 * BEFORE the derived class, and the custom type is not yet defined. However, 
+	 * it works now because we are setting the typeName for SimpleValue in the second 
+	 * pass. 
+	 * 
+	 * 
+	 * @throws Exception
+	 */
+	public void testSetSimpleValueTypeNameInSecondPass() throws Exception {
+		Peugot derived = new Peugot();
+		derived.setName("sharath");
+		
+		Session s;
+		Transaction tx;
+		s = openSession();
+		tx = s.beginTransaction();
+		s.persist(derived);
+		tx.commit();
+		s.close();
+		
+		s = openSession();
+		tx = s.beginTransaction();
+		derived = (Peugot) s.get( Peugot.class, derived.getId() );
+		assertNotNull( derived );
+		assertEquals( "SHARATH", derived.getName() );
+		s.delete(derived);
+		tx.commit();
+		s.close();
+	}
+	
 
 	public BasicHibernateAnnotationsTest(String x) {
 		super( x );
@@ -353,7 +423,10 @@ public class BasicHibernateAnnotationsTest extends TestCase {
 				Ransom.class,
 				ZipCode.class,
 				Flight.class,
-				Name.class
+				Name.class,
+				Car.class,
+				Peugot.class,
+				ContactDetails.class
 		};
 	}
 

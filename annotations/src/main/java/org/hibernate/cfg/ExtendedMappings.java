@@ -156,4 +156,7 @@ public interface ExtendedMappings extends Mappings {
 	public void addAnyMetaDef(AnyMetaDef defAnn) throws AnnotationException;
 
 	public AnyMetaDef getAnyMetaDef(String name);
+	
+	public boolean isInSecondPass(); 
+	
 }

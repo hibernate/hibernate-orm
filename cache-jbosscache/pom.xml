@@ -46,7 +46,7 @@
         <dependency>
             <groupId>org.jboss.cache</groupId>
             <artifactId>jbosscache-core</artifactId>
-            <version>3.1.0.GA</version> 
+            <version>3.2.1.GA</version> 
         </dependency>
         
         <!-- test dependencies -->

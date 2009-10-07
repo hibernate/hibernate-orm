@@ -46,7 +46,7 @@ public class TransactionalAccess implements EntityRegionAccessStrategy {
     private final TransactionalAccessDelegate delegate;
 
     public TransactionalAccess(EntityRegionImpl region) {
-        this(region, new TransactionalAccessDelegate(region));
+        this(region, new TransactionalAccessDelegate(region, region.getPutFromLoadValidator()));
     }
 
     protected TransactionalAccess(EntityRegionImpl region, TransactionalAccessDelegate delegate) {

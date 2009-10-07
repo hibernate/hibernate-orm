@@ -41,6 +41,6 @@ public class OptimisticTransactionalAccess extends TransactionalAccess {
      * @param region The region\ to which this is providing access
      */
     public OptimisticTransactionalAccess(EntityRegionImpl region) {
-        super(region, new OptimisticTransactionalAccessDelegate(region));
+        super(region, new OptimisticTransactionalAccessDelegate(region, region.getPutFromLoadValidator()));
     }
 }

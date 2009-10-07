@@ -34,7 +34,6 @@ import org.hibernate.cache.jbc.util.CacheHelper;
 import org.hibernate.cache.jbc.util.DataVersionAdapter;
 import org.hibernate.cache.jbc.util.NonLockingDataVersion;
 import org.jboss.cache.config.Option;
-import org.jboss.cache.optimistic.DataVersion;
 
 /**
  * Defines the strategy for transactional access to entity or collection data in
@@ -52,8 +51,8 @@ public class OptimisticTransactionalAccessDelegate extends TransactionalAccessDe
 
     protected final CacheDataDescription dataDescription;
 
-    public OptimisticTransactionalAccessDelegate(TransactionalDataRegionAdapter region) {
-        super(region);
+    public OptimisticTransactionalAccessDelegate(TransactionalDataRegionAdapter region, PutFromLoadValidator validator) {
+        super(region, validator);
         this.dataDescription = region.getCacheDataDescription();
     }
 
@@ -64,7 +63,7 @@ public class OptimisticTransactionalAccessDelegate extends TransactionalAccessDe
      */
     @Override
     public void evict(Object key) throws CacheException {
-        pendingPuts.remove(key);
+        putValidator.keyRemoved(key);
         region.ensureRegionRootExists();
 
         Option opt = NonLockingDataVersion.getInvocationOption();
@@ -76,7 +75,8 @@ public class OptimisticTransactionalAccessDelegate extends TransactionalAccessDe
     @Override
     public void evictAll() throws CacheException
     {
-       pendingPuts.clear();
+       putValidator.regionRemoved();
+       
        Transaction tx = region.suspend();
        try {        
           region.ensureRegionRootExists();
@@ -96,8 +96,6 @@ public class OptimisticTransactionalAccessDelegate extends TransactionalAccessDe
     @Override
     public boolean insert(Object key, Object value, Object version) throws CacheException {
        
-        pendingPuts.remove(key);
-        
         if (!region.checkValid())
             return false;
         
@@ -115,7 +113,7 @@ public class OptimisticTransactionalAccessDelegate extends TransactionalAccessDe
         if (!region.checkValid())
             return false;
         
-        if (!isPutValid(key))
+        if (!putValidator.isPutValid(key))
            return false;
         
         region.ensureRegionRootExists();
@@ -133,7 +131,7 @@ public class OptimisticTransactionalAccessDelegate extends TransactionalAccessDe
         if (!region.checkValid())
             return false;
         
-        if (!isPutValid(key))
+        if (!putValidator.isPutValid(key))
            return false;
         
         region.ensureRegionRootExists();
@@ -145,7 +143,7 @@ public class OptimisticTransactionalAccessDelegate extends TransactionalAccessDe
     @Override
     public void remove(Object key) throws CacheException {
        
-        pendingPuts.remove(key);
+        putValidator.keyRemoved(key);
         
         // We remove whether or not the region is valid. Other nodes
         // may have already restored the region so they need to
@@ -159,7 +157,7 @@ public class OptimisticTransactionalAccessDelegate extends TransactionalAccessDe
 
     @Override
     public void removeAll() throws CacheException {
-       pendingPuts.clear();
+       putValidator.regionRemoved();
        Option opt = NonLockingDataVersion.getInvocationOption();
        CacheHelper.removeAll(cache, regionFqn, opt);
     }
@@ -168,8 +166,6 @@ public class OptimisticTransactionalAccessDelegate extends TransactionalAccessDe
     public boolean update(Object key, Object value, Object currentVersion, Object previousVersion)
             throws CacheException {
        
-        pendingPuts.remove(key);
-        
         // We update whether or not the region is valid. Other nodes
         // may have already restored the region so they need to
         // be informed of the change.
@@ -181,9 +177,10 @@ public class OptimisticTransactionalAccessDelegate extends TransactionalAccessDe
         return true;
     }
 
+    @SuppressWarnings("deprecation")
     private Option getDataVersionOption(Object currentVersion, Object previousVersion) {
         
-        DataVersion dv = (dataDescription != null && dataDescription.isVersioned()) ? new DataVersionAdapter(
+       org.jboss.cache.optimistic.DataVersion dv = (dataDescription != null && dataDescription.isVersioned()) ? new DataVersionAdapter(
                 currentVersion, previousVersion, dataDescription.getVersionComparator(), dataDescription.toString())
                 : NonLockingDataVersion.INSTANCE;
         Option opt = new Option();

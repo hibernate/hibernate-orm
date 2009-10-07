@@ -23,11 +23,6 @@
  */
 package org.hibernate.cache.jbc.access;
 
-import java.util.HashSet;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-
 import javax.transaction.Transaction;
 
 import org.hibernate.cache.CacheException;
@@ -55,13 +50,13 @@ public class TransactionalAccessDelegate {
     protected final Cache cache;
     protected final Fqn regionFqn;
     protected final BasicRegionAdapter region;
-    protected final ConcurrentMap<Object, Set<Object>> pendingPuts = 
-       new ConcurrentHashMap<Object, Set<Object>>();
+    protected final PutFromLoadValidator putValidator;
 
-    public TransactionalAccessDelegate(BasicRegionAdapter adapter) {
+    public TransactionalAccessDelegate(BasicRegionAdapter adapter, PutFromLoadValidator validator) {
         this.region = adapter;
         this.cache = adapter.getCacheInstance();
         this.regionFqn = adapter.getRegionFqn();
+        this.putValidator = validator;
     }
 
     public Object get(Object key, long txTimestamp) throws CacheException {
@@ -74,7 +69,7 @@ public class TransactionalAccessDelegate {
         Object val = CacheHelper.get(cache, regionFqn, key);
         
         if (val == null) {
-           registerPendingPut(key);
+           putValidator.registerPendingPut(key);
         }
         
         return val;
@@ -85,7 +80,7 @@ public class TransactionalAccessDelegate {
         if (!region.checkValid())
             return false;
         
-        if (!isPutValid(key))
+        if (!putValidator.isPutValid(key))
             return false;
        
         region.ensureRegionRootExists();
@@ -99,7 +94,7 @@ public class TransactionalAccessDelegate {
         if (!region.checkValid())
             return false;
         
-        if (!isPutValid(key))
+        if (!putValidator.isPutValid(key))
             return false;
        
         region.ensureRegionRootExists();
@@ -126,8 +121,6 @@ public class TransactionalAccessDelegate {
 
     public boolean insert(Object key, Object value, Object version) throws CacheException {
        
-        pendingPuts.remove(key);
-        
         if (!region.checkValid())
             return false;
        
@@ -143,8 +136,6 @@ public class TransactionalAccessDelegate {
 
     public boolean update(Object key, Object value, Object currentVersion, Object previousVersion)
             throws CacheException {
-       
-        pendingPuts.remove(key);
        
         // We update whether or not the region is valid. Other nodes
         // may have already restored the region so they need to
@@ -163,7 +154,7 @@ public class TransactionalAccessDelegate {
 
     public void remove(Object key) throws CacheException {
        
-        pendingPuts.remove(key);
+       putValidator.keyRemoved(key);
        
         // We remove whether or not the region is valid. Other nodes
         // may have already restored the region so they need to
@@ -175,13 +166,13 @@ public class TransactionalAccessDelegate {
     }
 
     public void removeAll() throws CacheException {
-       pendingPuts.clear();
+       putValidator.regionRemoved();
        CacheHelper.removeAll(cache, regionFqn); 
     }
 
     public void evict(Object key) throws CacheException {
        
-        pendingPuts.remove(key);
+        putValidator.keyRemoved(key);
        
         region.ensureRegionRootExists();
         
@@ -189,7 +180,7 @@ public class TransactionalAccessDelegate {
     }
 
     public void evictAll() throws CacheException {
-       pendingPuts.clear();
+       putValidator.regionRemoved();
        Transaction tx = region.suspend();
        try {        
           region.ensureRegionRootExists();
@@ -199,38 +190,5 @@ public class TransactionalAccessDelegate {
        finally {
           region.resume(tx);
        }        
-    }
-
-    protected void registerPendingPut(Object key)
-    {
-      Set<Object> pending = pendingPuts.get(key);
-      if (pending == null) {
-         pending = new HashSet<Object>();
-      }
-      
-      synchronized (pending) {
-         Object owner = region.getOwnerForPut();
-         pending.add(owner);
-         Set<Object> existing = pendingPuts.putIfAbsent(key, pending);
-         if (existing != pending) {
-            // try again
-            registerPendingPut(key);
-         }
-      }
-    }
-
-    protected boolean isPutValid(Object key)
-    {
-       boolean valid = false;
-       Set<Object> pending = pendingPuts.get(key);
-       if (pending != null) {
-          synchronized (pending) {
-             valid = pending.remove(region.getOwnerForPut());
-             if (valid && pending.size() == 0) {
-                pendingPuts.remove(key);
-             }
-          }
-       }
-      return valid;
     }
 }

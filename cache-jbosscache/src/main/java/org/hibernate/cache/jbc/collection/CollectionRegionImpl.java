@@ -34,6 +34,7 @@ import org.hibernate.cache.CollectionRegion;
 import org.hibernate.cache.access.AccessType;
 import org.hibernate.cache.access.CollectionRegionAccessStrategy;
 import org.hibernate.cache.jbc.TransactionalDataRegionAdapter;
+import org.hibernate.cache.jbc.access.PutFromLoadValidator;
 
 /**
  * Defines the behavior of the collection cache regions for JBossCache 2.x.
@@ -67,5 +68,9 @@ public class CollectionRegionImpl extends TransactionalDataRegionAdapter impleme
     @Override
     protected Fqn<String> createRegionFqn(String regionName, String regionPrefix) {
         return getTypeLastRegionFqn(regionName, regionPrefix, TYPE);
+    }
+    
+    public PutFromLoadValidator getPutFromLoadValidator() {
+       return new PutFromLoadValidator(transactionManager);
     }
 }

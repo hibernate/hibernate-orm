@@ -445,20 +445,6 @@ public abstract class BasicRegionAdapter implements Region {
             resume(tx);
         }
     }
-    
-    public Object getOwnerForPut()
-    {
-       Transaction tx = null;
-       try {
-           if (transactionManager != null) {
-               tx = transactionManager.getTransaction();
-           }
-       } catch (SystemException se) {
-           throw new CacheException("Could not obtain transaction", se);
-       }
-       return tx == null ? Thread.currentThread() : tx;
-       
-    }
 
     /**
      * Tell the TransactionManager to suspend any ongoing transaction.

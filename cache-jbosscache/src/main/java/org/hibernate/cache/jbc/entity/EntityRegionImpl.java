@@ -34,6 +34,7 @@ import org.hibernate.cache.EntityRegion;
 import org.hibernate.cache.access.AccessType;
 import org.hibernate.cache.access.EntityRegionAccessStrategy;
 import org.hibernate.cache.jbc.TransactionalDataRegionAdapter;
+import org.hibernate.cache.jbc.access.PutFromLoadValidator;
 
 /**
  * Defines the behavior of the entity cache regions for JBossCache.
@@ -71,6 +72,10 @@ public class EntityRegionImpl extends TransactionalDataRegionAdapter implements 
     @Override
     protected Fqn<String> createRegionFqn(String regionName, String regionPrefix) {
         return getTypeLastRegionFqn(regionName, regionPrefix, TYPE);
+    }
+    
+    public PutFromLoadValidator getPutFromLoadValidator() {
+       return new PutFromLoadValidator(transactionManager);
     }
 
 }

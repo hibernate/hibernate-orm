@@ -129,6 +129,8 @@
 
         <!-- Max number of milliseconds to wait for a lock acquisition -->
         <attribute name="LockAcquisitionTimeout">5000</attribute>
+        
+        <attribute name="UseLockStriping">false</attribute>
 
        <!--
           Indicate whether to use marshalling or not. Set this to true if you are running under a scoped

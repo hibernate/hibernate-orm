@@ -118,6 +118,8 @@
 
         <!-- Max number of milliseconds to wait for a lock acquisition -->
         <attribute name="LockAcquisitionTimeout">5000</attribute>
+        
+        <attribute name="UseLockStriping">false</attribute>
 
         <!-- For now. disable asynchronous RPC marshalling/sending -->
         <attribute name="SerializationExecutorPoolSize">0</attribute>

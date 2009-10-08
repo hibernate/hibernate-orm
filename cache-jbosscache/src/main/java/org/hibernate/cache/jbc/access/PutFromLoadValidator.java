@@ -115,11 +115,14 @@ public class PutFromLoadValidator
     *                           may be <code>null</code>
     */
    public PutFromLoadValidator(TransactionManager transactionManager) {
-      this(transactionManager, NAKED_PUT_INVALIDATION_PERIOD, PENDING_PUT_OVERAGE_PERIOD, PENDING_PUT_RECENT_PERIOD, MAX_PENDING_PUT_DELAY);
+      this(transactionManager, NAKED_PUT_INVALIDATION_PERIOD, PENDING_PUT_OVERAGE_PERIOD, 
+    		  PENDING_PUT_RECENT_PERIOD, MAX_PENDING_PUT_DELAY);
    }
    
-   /** Constructor variant for use by unit tests; allows control of variouts timeouts by the test. */
-   protected PutFromLoadValidator(TransactionManager transactionManager, long nakedPutInvalidationPeriod, long pendingPutOveragePeriod, long pendingPutRecentPeriod, long maxPendingPutDelay) {
+   /** Constructor variant for use by unit tests; allows control of various timeouts by the test. */
+   protected PutFromLoadValidator(TransactionManager transactionManager, 
+		   long nakedPutInvalidationPeriod, long pendingPutOveragePeriod, 
+		   long pendingPutRecentPeriod, long maxPendingPutDelay) {
       this.transactionManager = transactionManager;
       this.nakedPutInvalidationPeriod = nakedPutInvalidationPeriod;
       this.pendingPutOveragePeriod = pendingPutOveragePeriod;
@@ -127,6 +130,8 @@ public class PutFromLoadValidator
       this.maxPendingPutDelay = maxPendingPutDelay;
    }
 
+   // -----------------------------------------------------------------  Public
+   
    public boolean isPutValid(Object key)
    {
       boolean valid = false;
@@ -264,6 +269,41 @@ public class PutFromLoadValidator
       // Guard against memory leaks
       preventOutdatedPendingPuts(pendingPut);
    }
+   // --------------------------------------------------------------  Protected
+   
+   /** Only for use by unit tests; may be removed at any time */
+   protected int getPendingPutQueueLength() {
+	   pendingLock.lock();
+	   try {
+		   return pendingQueue.size();
+	   }
+	   finally {
+		   pendingLock.unlock();
+	   }
+   }
+   
+   /** Only for use by unit tests; may be removed at any time */
+   protected int getOveragePendingPutQueueLength() {
+	   pendingLock.lock();
+	   try {
+		   return overagePendingQueue.size();
+	   }
+	   finally {
+		   pendingLock.unlock();
+	   }
+   }
+   
+   /** Only for use by unit tests; may be removed at any time */
+   protected int getRemovalQueueLength() {
+	   removalsLock.lock();
+	   try {
+		   return removalsQueue.size();
+	   }
+	   finally {
+		   removalsLock.unlock();
+	   }
+   }
+   // ----------------------------------------------------------------  Private
 
    private Object getOwnerForPut()
    {
@@ -307,7 +347,7 @@ public class PutFromLoadValidator
          
          int pos = 0;
          while (pendingQueue.size() > pos) {
-            WeakReference<PendingPut> ref = pendingQueue.get(0);
+            WeakReference<PendingPut> ref = pendingQueue.get(pos);
             PendingPut item = ref.get();
             if (item == null || item.completed) {
                pendingQueue.remove(pos);
@@ -343,6 +383,7 @@ public class PutFromLoadValidator
             }
             else {
                if (item.timestamp < mustCleanTime) {
+                  overagePendingQueue.remove(0);
                   toClean = item;
                }
                break;
@@ -357,7 +398,7 @@ public class PutFromLoadValidator
       
       // We've found a pendingPut that never happened; clean it up
       if (toClean != null) {
-         PendingPutMap map = pendingPuts.get(toClean.key);
+    	 PendingPutMap map = pendingPuts.get(toClean.key);
          if (map != null) {
             synchronized (map) {
                PendingPut cleaned = map.remove(toClean.owner);

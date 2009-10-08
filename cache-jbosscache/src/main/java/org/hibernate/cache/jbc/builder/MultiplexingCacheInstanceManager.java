@@ -62,7 +62,13 @@ public class MultiplexingCacheInstanceManager implements CacheInstanceManager {
      * 
      * @see #DEF_CACHE_FACTORY_RESOURCE
      */
-    public static final String CACHE_FACTORY_RESOURCE_PROP = "hibernate.cache.region.jbc2.configs";
+    public static final String CACHE_FACTORY_RESOURCE_PROP = "hibernate.cache.jbc.configs";
+    /** 
+     * Legacy name for configuration property {@link #CACHE_FACTORY_RESOURCE_PROP}.
+     * 
+     * @see #DEF_CACHE_FACTORY_RESOURCE
+     */
+    public static final String LEGACY_CACHE_FACTORY_RESOURCE_PROP = "hibernate.cache.region.jbc2.configs";
     /**
      * Classpath or filesystem resource containing JGroups protocol
      * stack configurations the <code>org.jgroups.ChannelFactory</code>
@@ -70,14 +76,26 @@ public class MultiplexingCacheInstanceManager implements CacheInstanceManager {
      * 
      * @see #DEF_JGROUPS_RESOURCE
      */
-    public static final String CHANNEL_FACTORY_RESOURCE_PROP = "hibernate.cache.region.jbc2.jgroups.stacks";
+    public static final String CHANNEL_FACTORY_RESOURCE_PROP = "hibernate.cache.jbc.jgroups.stacks";
+    /**
+     * Legacy name for configuration property {@link #CHANNEL_FACTORY_RESOURCE_PROP}.
+     * 
+     * @see #DEF_JGROUPS_RESOURCE
+     */
+    public static final String LEGACY_CHANNEL_FACTORY_RESOURCE_PROP = "hibernate.cache.region.jbc2.cfg.jgroups.stacks";
     
     /**
      * Name of the configuration that should be used for entity caches.
      * 
      * @see #DEF_ENTITY_RESOURCE
      */
-    public static final String ENTITY_CACHE_RESOURCE_PROP = "hibernate.cache.region.jbc2.cfg.entity";
+    public static final String ENTITY_CACHE_RESOURCE_PROP = "hibernate.cache.jbc.cfg.entity";
+    /**
+     * Legacy name for configuration property {@link #ENTITY_CACHE_RESOURCE_PROP}.
+     * 
+     * @see #DEF_ENTITY_RESOURCE
+     */
+    public static final String LEGACY_ENTITY_CACHE_RESOURCE_PROP = "hibernate.cache.region.jbc2.cfg.entity";
     /**
      * Name of the configuration that should be used for collection caches.
      * No default value, as by default we try to use the same JBoss Cache
@@ -86,19 +104,39 @@ public class MultiplexingCacheInstanceManager implements CacheInstanceManager {
      * @see #ENTITY_CACHE_RESOURCE_PROP
      * @see #DEF_ENTITY_RESOURCE
      */
-    public static final String COLLECTION_CACHE_RESOURCE_PROP = "hibernate.cache.region.jbc2.cfg.collection";
+    public static final String COLLECTION_CACHE_RESOURCE_PROP = "hibernate.cache.jbc.cfg.collection";
+    /**
+     * Legacy name for configuration property {@link #COLLECTION_CACHE_RESOURCE_PROP}.
+     * 
+     * @see #ENTITY_CACHE_RESOURCE_PROP
+     * @see #DEF_ENTITY_RESOURCE
+     */
+    public static final String LEGACY_COLLECTION_CACHE_RESOURCE_PROP = "hibernate.cache.region.jbc2.cfg.collection";
     /**
      * Name of the configuration that should be used for timestamp caches.
      * 
      * @see #DEF_TS_RESOURCE
      */
-    public static final String TIMESTAMP_CACHE_RESOURCE_PROP = "hibernate.cache.region.jbc2.cfg.ts";
+    public static final String TIMESTAMP_CACHE_RESOURCE_PROP = "hibernate.cache.jbc.cfg.timestamps";
+    /**
+     * Legacy name for configuration property {@link #TIMESTAMP_CACHE_RESOURCE_PROP}.
+     * 
+     * @see #DEF_TS_RESOURCE
+     */
+    public static final String LEGACY_TIMESTAMP_CACHE_RESOURCE_PROP = "hibernate.cache.region.jbc2.cfg.ts";
     /**
      * Name of the configuration that should be used for query caches.
      * 
      * @see #DEF_QUERY_RESOURCE
      */
-    public static final String QUERY_CACHE_RESOURCE_PROP = "hibernate.cache.region.jbc2.cfg.query";
+    public static final String QUERY_CACHE_RESOURCE_PROP = "hibernate.cache.jbc.cfg.query";
+
+    /**
+     * Legacy name for configuration property {@link #QUERY_CACHE_RESOURCE_PROP}.
+     * 
+     * @see #DEF_QUERY_RESOURCE
+     */
+    public static final String LEGACY_QUERY_CACHE_RESOURCE_PROP = "hibernate.cache.region.jbc2.cfg.query";
 
     /**
      * Default value for {@link #CACHE_FACTORY_RESOURCE_PROP}. Specifies
@@ -279,14 +317,20 @@ public class MultiplexingCacheInstanceManager implements CacheInstanceManager {
             if (buildCaches && jbcFactory == null) {
                 // See if the user configured a multiplexer stack
                 if (channelFactory == null) {
-                    String muxStacks = PropertiesHelper.getString(CHANNEL_FACTORY_RESOURCE_PROP, properties, DEF_JGROUPS_RESOURCE);
+                    String muxStacks = PropertiesHelper.getString(CHANNEL_FACTORY_RESOURCE_PROP, properties, null);
+                    if (muxStacks == null) {
+                    	muxStacks = PropertiesHelper.getString(LEGACY_CHANNEL_FACTORY_RESOURCE_PROP, properties, DEF_JGROUPS_RESOURCE);
+                    }
                     if (muxStacks != null) {
                         channelFactory = new JChannelFactory();
                         channelFactory.setMultiplexerConfig(muxStacks);
                     }
                 }
                 
-                String factoryRes = PropertiesHelper.getString(CACHE_FACTORY_RESOURCE_PROP, properties, DEF_CACHE_FACTORY_RESOURCE);
+                String factoryRes = PropertiesHelper.getString(CACHE_FACTORY_RESOURCE_PROP, properties, null);
+                if (factoryRes == null) {
+                	factoryRes = PropertiesHelper.getString(LEGACY_CACHE_FACTORY_RESOURCE_PROP, properties, DEF_CACHE_FACTORY_RESOURCE);
+                }
                 jbcFactory = new CacheManagerImpl(factoryRes, channelFactory);
                 ((CacheManagerImpl) jbcFactory).start();
                 selfCreatedFactory = true;
@@ -296,11 +340,18 @@ public class MultiplexingCacheInstanceManager implements CacheInstanceManager {
 
                 if (buildCaches) {
                     entityConfig = PropertiesHelper
-                            .getString(ENTITY_CACHE_RESOURCE_PROP, properties, DEF_ENTITY_RESOURCE);
+                            .getString(ENTITY_CACHE_RESOURCE_PROP, properties, null);
+                    if (entityConfig == null) {
+                    	entityConfig = PropertiesHelper.getString(LEGACY_ENTITY_CACHE_RESOURCE_PROP, 
+                    			properties, DEF_ENTITY_RESOURCE);
+                    }
                     jbcEntityCache = jbcFactory.getCache(entityConfig, true);
                 
                     // Default to collections sharing entity cache if there is one
-                    collectionConfig = PropertiesHelper.getString(COLLECTION_CACHE_RESOURCE_PROP, properties, entityConfig);
+                    collectionConfig = PropertiesHelper.getString(COLLECTION_CACHE_RESOURCE_PROP, properties, null);
+                    if (collectionConfig == null) {
+                    	collectionConfig = PropertiesHelper.getString(LEGACY_COLLECTION_CACHE_RESOURCE_PROP, properties, entityConfig);
+                    }
                     if (entityConfig.equals(collectionConfig)) {
                         jbcCollectionCache = jbcEntityCache;
                     }
@@ -329,7 +380,10 @@ public class MultiplexingCacheInstanceManager implements CacheInstanceManager {
                 if (buildCaches) {
                     // Default to sharing the entity cache if there is one
                     String dfltQueryResource = (entityConfig == null ? DEF_QUERY_RESOURCE : entityConfig);
-                    queryConfig = PropertiesHelper.getString(QUERY_CACHE_RESOURCE_PROP, properties, dfltQueryResource);
+                    queryConfig = PropertiesHelper.getString(QUERY_CACHE_RESOURCE_PROP, properties, null);
+                    if (queryConfig == null) {
+                    	queryConfig = PropertiesHelper.getString(LEGACY_QUERY_CACHE_RESOURCE_PROP, properties, dfltQueryResource);
+                    }
                     if (queryConfig.equals(entityConfig)) {
                         jbcQueryCache = jbcEntityCache;
                     } else if (queryConfig.equals(collectionConfig)) {
@@ -339,7 +393,10 @@ public class MultiplexingCacheInstanceManager implements CacheInstanceManager {
                     }
     
                     // For Timestamps, we default to a separate config
-                    tsConfig = PropertiesHelper.getString(TIMESTAMP_CACHE_RESOURCE_PROP, properties, DEF_TS_RESOURCE);
+                    tsConfig = PropertiesHelper.getString(TIMESTAMP_CACHE_RESOURCE_PROP, properties, null);
+                    if (tsConfig == null) {
+                    	tsConfig = PropertiesHelper.getString(LEGACY_TIMESTAMP_CACHE_RESOURCE_PROP, properties, DEF_TS_RESOURCE);
+                    }
                     if (tsConfig.equals(queryConfig)) {
                         jbcTsCache = jbcQueryCache;
                     }

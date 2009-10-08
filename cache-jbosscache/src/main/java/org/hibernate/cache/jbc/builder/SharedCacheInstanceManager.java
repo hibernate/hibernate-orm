@@ -61,7 +61,14 @@ public class SharedCacheInstanceManager implements CacheInstanceManager {
      * 
      * @see #DEFAULT_CACHE_RESOURCE
      */
-    public static final String CACHE_RESOURCE_PROP = "hibernate.cache.region.jbc2.cfg.shared";
+    public static final String CACHE_RESOURCE_PROP = "hibernate.cache.jbc.cfg.shared";
+    
+    /**
+     * Legacy name for configuration property {@link #CACHE_RESOURCE_PROP}.
+     * 
+     * @see #DEFAULT_CACHE_RESOURCE
+     */
+    public static final String LEGACY_CACHE_RESOURCE_PROP = "hibernate.cache.region.jbc2.cfg.shared";
     
     /**
      * Default name for the JBoss Cache configuration file.
@@ -74,7 +81,13 @@ public class SharedCacheInstanceManager implements CacheInstanceManager {
      * 
      * @see #DEF_JGROUPS_RESOURCE
      */
-    public static final String CHANNEL_FACTORY_RESOURCE_PROP = "hibernate.cache.region.jbc2.cfg.jgroups.stacks";
+    public static final String CHANNEL_FACTORY_RESOURCE_PROP = "hibernate.cache.jbc.cfg.jgroups.stacks";
+    /**
+     * Legacy name for configuration property {@link #CHANNEL_FACTORY_RESOURCE_PROP}.
+     * 
+     * @see #DEF_JGROUPS_RESOURCE
+     */
+    public static final String LEGACY_CHANNEL_FACTORY_RESOURCE_PROP = "hibernate.cache.region.jbc2.cfg.jgroups.stacks";
     /**
      * Default value for {@link #CHANNEL_FACTORY_RESOURCE_PROP}.  Specifies
      * the "jgroups-stacks.xml" file in this package.
@@ -136,7 +149,10 @@ public class SharedCacheInstanceManager implements CacheInstanceManager {
         if (cache == null) {
             
             if (channelFactory == null) {
-                String muxStacks = PropertiesHelper.getString(CHANNEL_FACTORY_RESOURCE_PROP, properties, DEF_JGROUPS_RESOURCE);
+                String muxStacks = PropertiesHelper.getString(CHANNEL_FACTORY_RESOURCE_PROP, properties, null);
+                if (muxStacks == null) {
+                	PropertiesHelper.getString(LEGACY_CHANNEL_FACTORY_RESOURCE_PROP, properties, DEF_JGROUPS_RESOURCE);
+                }
                 if (muxStacks != null) {
                     channelFactory = new JChannelFactory();
                     try {
@@ -189,7 +205,10 @@ public class SharedCacheInstanceManager implements CacheInstanceManager {
      */
     protected Cache createSharedCache(Settings settings, Properties properties)
     {
-        String configResource = PropertiesHelper.getString(CACHE_RESOURCE_PROP, properties, DEFAULT_CACHE_RESOURCE);
+        String configResource = PropertiesHelper.getString(CACHE_RESOURCE_PROP, properties, null);
+        if (configResource == null) {
+        	configResource = PropertiesHelper.getString(LEGACY_CACHE_RESOURCE_PROP, properties, DEFAULT_CACHE_RESOURCE);
+        }
         return new DefaultCacheFactory().createCache(configResource, false);
     }
     

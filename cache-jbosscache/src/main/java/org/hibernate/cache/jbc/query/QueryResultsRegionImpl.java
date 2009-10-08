@@ -46,7 +46,8 @@ import org.jboss.cache.notifications.annotation.CacheListener;
 @CacheListener
 public class QueryResultsRegionImpl extends TransactionalDataRegionAdapter implements QueryResultsRegion {
 
-    public static final String QUERY_CACHE_LOCAL_ONLY_PROP = "hibernate.cache.region.jbc2.query.localonly";
+    public static final String QUERY_CACHE_LOCAL_ONLY_PROP = "hibernate.cache.jbc.query.localonly";
+    public static final String LEGACY_QUERY_CACHE_LOCAL_ONLY_PROP = "hibernate.cache.region.jbc2.query.localonly";
     public static final String TYPE = "QUERY";
     
     /**
@@ -72,9 +73,15 @@ public class QueryResultsRegionImpl extends TransactionalDataRegionAdapter imple
         if (!localOnly) {
             // We don't want to waste effort setting an option if JBC is
             // already in LOCAL mode. If JBC is REPL_(A)SYNC then check
-            // if they passed an config option to disable query replication
-            localOnly = CacheHelper.isClusteredReplication(jbcCache)
-                    && PropertiesHelper.getBoolean(QUERY_CACHE_LOCAL_ONLY_PROP, properties, false);
+        	// if they passed an config option to disable query replication
+        	if (CacheHelper.isClusteredReplication(jbcCache)) {
+        		if (properties.containsKey(QUERY_CACHE_LOCAL_ONLY_PROP)) {
+        			localOnly = PropertiesHelper.getBoolean(QUERY_CACHE_LOCAL_ONLY_PROP, properties, false);
+        		}
+        		else {
+        			localOnly = PropertiesHelper.getBoolean(LEGACY_QUERY_CACHE_LOCAL_ONLY_PROP, properties, false);
+        		}
+        	}
         }
     }
 

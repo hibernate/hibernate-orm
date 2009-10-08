@@ -33,6 +33,7 @@ import org.hibernate.cache.jbc.BasicRegionAdapter;
 import org.hibernate.cache.jbc.util.CacheHelper;
 import org.jboss.cache.Cache;
 import org.jboss.cache.Fqn;
+import org.jboss.cache.config.Option;
 
 /**
  * Defines the strategy for transactional access to entity or collection data in
@@ -49,6 +50,7 @@ public class TransactionalAccessDelegate {
         
     protected final Cache cache;
     protected final Fqn regionFqn;
+    protected final boolean invalidation;
     protected final BasicRegionAdapter region;
     protected final PutFromLoadValidator putValidator;
 
@@ -57,6 +59,7 @@ public class TransactionalAccessDelegate {
         this.cache = adapter.getCacheInstance();
         this.regionFqn = adapter.getRegionFqn();
         this.putValidator = validator;
+        this.invalidation = CacheHelper.isClusteredInvalidation(this.cache);
     }
 
     public Object get(Object key, long txTimestamp) throws CacheException {
@@ -125,8 +128,14 @@ public class TransactionalAccessDelegate {
             return false;
        
         region.ensureRegionRootExists();
-
-        CacheHelper.put(cache, regionFqn, key, value);
+        if (invalidation) {
+        	Option opt = new Option();
+        	opt.setCacheModeLocal(true);
+        	CacheHelper.put(cache, regionFqn, key, value, opt);
+        }
+        else {
+        	CacheHelper.put(cache, regionFqn, key, value);
+        }
         return true;
     }
 

@@ -102,6 +102,9 @@ public class OptimisticTransactionalAccessDelegate extends TransactionalAccessDe
         region.ensureRegionRootExists();
 
         Option opt = getDataVersionOption(version, null);
+        if (this.invalidation) {
+        	opt.setCacheModeLocal(true);
+        }
         CacheHelper.put(cache, regionFqn, key, value, opt);
         return true;
     }

@@ -2,7 +2,7 @@
 <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
 
 <!--
-  ~ Copyright (c) 2008, Red Hat Middleware, LLC. All rights reserved.
+  ~ Copyright (c) 2009, Red Hat, Inc. All rights reserved.
   ~
   ~ This copyrighted material is made available to anyone wishing to use, modify,
   ~ copy, or redistribute it subject to the terms and conditions of the GNU
@@ -42,7 +42,7 @@
            
            <para>
              The JBoss Cache eviction process is fairly straightforward. Whenever
-             a node in a cache read or written to, added or removed, the cache
+             a node in a cache is read or written to, added or removed, the cache
              finds the <emphasis>eviction region</emphasis> (see below) that
              contains the node and passes an <emphasis>eviction event</emphasis>
              object to the <emphasis>eviction policy</emphasis> (see below)

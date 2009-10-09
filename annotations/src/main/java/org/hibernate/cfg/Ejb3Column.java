@@ -95,6 +95,10 @@ public class Ejb3Column {
 		return unique;
 	}
 
+	public boolean isFormula() {
+		return StringHelper.isNotEmpty(formulaString) ? true : false; 
+	}
+		
 	public String getFormulaString() {
 		return formulaString;
 	}
@@ -188,16 +192,22 @@ public class Ejb3Column {
 			String columnName, String propertyName, int length, int precision, int scale, boolean nullable,
 			String sqlType, boolean unique, boolean applyNamingStrategy
 	) {
-		this.mappingColumn = new Column();
-		redefineColumnName( columnName, propertyName, applyNamingStrategy );
-		this.mappingColumn.setLength( length );
-		if ( precision > 0 ) {  //revelent precision
-			this.mappingColumn.setPrecision( precision );
-			this.mappingColumn.setScale( scale );
+		if ( StringHelper.isNotEmpty( formulaString ) ) {
+			this.formula = new Formula();
+			this.formula.setFormula( formulaString );
 		}
-		this.mappingColumn.setNullable( nullable );
-		this.mappingColumn.setSqlType( sqlType );
-		this.mappingColumn.setUnique( unique );
+		else {
+			this.mappingColumn = new Column();
+			redefineColumnName( columnName, propertyName, applyNamingStrategy );
+			this.mappingColumn.setLength( length );
+			if ( precision > 0 ) {  //revelent precision
+				this.mappingColumn.setPrecision( precision );
+				this.mappingColumn.setScale( scale );
+			}
+			this.mappingColumn.setNullable( nullable );
+			this.mappingColumn.setSqlType( sqlType );
+			this.mappingColumn.setUnique( unique );
+		}
 	}
 
 	public boolean isNameDeferred() {
@@ -462,8 +472,14 @@ public class Ejb3Column {
 
 	public static void checkPropertyConsistency(Ejb3Column[] columns, String propertyName) {
 		int nbrOfColumns = columns.length;
+		
 		if ( nbrOfColumns > 1 ) {
 			for (int currentIndex = 1; currentIndex < nbrOfColumns; currentIndex++) {
+				
+				if (columns[currentIndex].isFormula() || columns[currentIndex - 1].isFormula()) {
+					continue;
+				}
+				
 				if ( columns[currentIndex].isInsertable() != columns[currentIndex - 1].isInsertable() ) {
 					throw new AnnotationException(
 							"Mixing insertable and non insertable columns in a property is not allowed: " + propertyName
@@ -486,6 +502,7 @@ public class Ejb3Column {
 				}
 			}
 		}
+		
 	}
 
 	public void addIndex(Index index, boolean inSecondPass) {

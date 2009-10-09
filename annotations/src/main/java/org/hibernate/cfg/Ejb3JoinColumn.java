@@ -33,6 +33,9 @@ import javax.persistence.PrimaryKeyJoinColumn;
 import org.hibernate.AnnotationException;
 import org.hibernate.MappingException;
 import org.hibernate.util.StringHelper;
+import org.hibernate.annotations.JoinColumnOrFormula;
+import org.hibernate.annotations.JoinColumnsOrFormulas;
+import org.hibernate.annotations.JoinFormula;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Join;
 import org.hibernate.mapping.PersistentClass;
@@ -127,6 +130,55 @@ public class Ejb3JoinColumn extends Ejb3Column {
 		return referencedColumn;
 	}
 
+	
+	public static Ejb3JoinColumn[] buildJoinColumnsOrFormulas(
+			JoinColumnsOrFormulas anns,
+			String mappedBy, Map<String, Join> joins,
+			PropertyHolder propertyHolder,
+			String propertyName,
+			ExtendedMappings mappings
+	) {
+		
+		JoinColumnOrFormula [] ann = anns.value();
+		Ejb3JoinColumn [] joinColumns = new Ejb3JoinColumn[ann.length];
+		for (int i = 0; i < ann.length; i++) {
+			JoinColumnOrFormula join = (JoinColumnOrFormula) ann[i];
+			JoinFormula formula = join.formula();
+			if (formula.value() != null && !formula.value().equals("")) {
+				joinColumns[i] = buildJoinFormula(formula, mappedBy, joins, propertyHolder, propertyName, mappings); 
+			}
+			else {
+				joinColumns[i] = buildJoinColumns(new JoinColumn[] { join.column() }, mappedBy, joins, propertyHolder, propertyName, mappings)[0];
+			}
+		}
+				 
+		return joinColumns;
+	}
+	
+	/**
+	 * build join formula
+	 */
+	private static Ejb3JoinColumn buildJoinFormula(
+			JoinFormula ann,
+			String mappedBy, Map<String, Join> joins,
+			PropertyHolder propertyHolder,
+			String propertyName,
+			ExtendedMappings mappings
+	) {
+			
+			Ejb3JoinColumn formulaColumn = new Ejb3JoinColumn();
+			formulaColumn.setFormula( ann.value() );
+			formulaColumn.setReferencedColumn(ann.referencedColumnName());
+			formulaColumn.setMappings( mappings );
+			formulaColumn.setPropertyHolder( propertyHolder );
+			formulaColumn.setJoins( joins );
+			formulaColumn.setPropertyName( BinderHelper.getRelativePath( propertyHolder, propertyName ) );
+			
+			formulaColumn.bind();
+			return formulaColumn;
+		}
+	
+	
 	public static Ejb3JoinColumn[] buildJoinColumns(
 			JoinColumn[] anns,
 			String mappedBy, Map<String, Join> joins,
@@ -382,9 +434,10 @@ public class Ejb3JoinColumn extends Ejb3Column {
 				null, referencedColumn.getLength(),
 				referencedColumn.getPrecision(),
 				referencedColumn.getScale(),
-				getMappingColumn().isNullable(),
+				getMappingColumn() != null ? getMappingColumn().isNullable() : false,
 				referencedColumn.getSqlType(),
-				getMappingColumn().isUnique(), false
+				getMappingColumn() != null ? getMappingColumn().isUnique() : false,
+			    false
 		);
 		linkWithValue( value );
 	}

@@ -101,6 +101,7 @@ import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.Formula;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Index;
+import org.hibernate.annotations.JoinColumnsOrFormulas;
 import org.hibernate.annotations.LazyToOne;
 import org.hibernate.annotations.LazyToOneOption;
 import org.hibernate.annotations.ManyToAny;
@@ -1216,6 +1217,13 @@ public final class AnnotationBinder {
 			if ( anns != null ) {
 				joinColumns = Ejb3JoinColumn.buildJoinColumns(
 						anns, null, entityBinder.getSecondaryTables(),
+						propertyHolder, inferredData.getPropertyName(), mappings
+				);
+			}
+			else if ( property.isAnnotationPresent( JoinColumnsOrFormulas.class ) ) {
+				JoinColumnsOrFormulas ann = property.getAnnotation( JoinColumnsOrFormulas.class );
+				joinColumns = Ejb3JoinColumn.buildJoinColumnsOrFormulas(
+						ann, null, entityBinder.getSecondaryTables(),
 						propertyHolder, inferredData.getPropertyName(), mappings
 				);
 			}

@@ -2,7 +2,7 @@
 <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
 
 <!--
-  ~ Copyright (c) 2008, Red Hat Middleware, LLC. All rights reserved.
+  ~ Copyright (c) 2009, Red Hat, Inc. All rights reserved.
   ~
   ~ This copyrighted material is made available to anyone wishing to use, modify,
   ~ copy, or redistribute it subject to the terms and conditions of the GNU
@@ -41,8 +41,8 @@
          The Second Level Cache can cache four different types of data: entities,
          collections, query results and timestamps. Proper handling of each
          of the types requires slightly different caching semantics.  A major
-         improvement in Hibernate 3.3 is the addition of the 
-         <literal>org.hibernate.cache.RegionFactory</literal> API, which
+         improvement in Hibernate 3.3 was the addition of the 
+         <literal>org.hibernate.cache.RegionFactory</literal> SPI, which
          allows Hibernate to tell the caching integration layer what type
          of data is being cached. Based on that knowledge, the cache integration
          layer can apply the semantics appropriate to that type. 
@@ -128,10 +128,10 @@
                    by another transaction. Whether the presence of that read
                    lock prevents a concurrent write depends on whether the cache
                    is configured for READ_COMMITTED or REPEATABLE_READ semantics
-                   and whether the cache is using optimistic locking. READ_COMMITTED 
+                   and whether the cache is using pessimistic locking. READ_COMMITTED 
                    will allow a concurrent write to proceed; pessimistic locking 
                    with REPEATABLE_READ will cause the write to block until the 
-                   transaction with the read lock commits. Optimistic locking
+                   transaction with the read lock commits. MVCC or optimistic locking
                    allows a REPEATABLE_READ semantic without forcing the writing
                    transaction to block.
                 </para>
@@ -183,6 +183,16 @@
                   cached an entity should not invalidate another node's cache
                   of that same entity -- both caches are storing the same
                   information.
+                </para>
+                
+                <para>
+                  If the cache is configured to use invalidation, a write to
+                  the cache of an entity newly created by the transaction (i.e.
+                  an entity that is stored to the database using an SQL INSERT)
+                  should not result in any cluster-wide message at all.  No other
+                  node in the cluster can possibly be storing an outdated version
+                  of the new entity, so there is no point in sending a cache
+                  invalidation message.
                 </para>
                 
              </listitem>
@@ -285,7 +295,7 @@
             performant unless the query is quite expensive, is very likely to
             be repeated on other nodes, and is unlikely to be invalidated out
             of the cache.<footnote><para>See the discussion of the 
-            <literal>hibernate.cache.region.jbc2.query.localonly</literal> 
+            <literal>hibernate.cache.jbc.query.localonly</literal> 
             property in <xref linkend="sessionfactory"/></para> for more on how
             to only cache query results locally.</footnote>.  
           </para>
@@ -505,7 +515,7 @@
                     configuration:
                  </para>
                  
-                 <programlisting><![CDATA[hibernate.cache.region.jbc2.query.localonly=true]]></programlisting>
+                 <programlisting><![CDATA[hibernate.cache.jbc.query.localonly=true]]></programlisting>
                  
                  <para>
                    If the JBoss Cache instance that the query cache is using
@@ -552,35 +562,37 @@
          <title>Locking Scheme</title>
          
          <para>
-           JBoss Cache supports both optimistic and pessimistic locking schemes.
+           JBoss Cache supports both MVCC and pessimistic locking schemes.
            See the <emphasis>JBoss Cache User Guide</emphasis> for an in depth 
            discussion of these options.  In the Second Level Cache use case, the
-           main benefit of optimistic locking is that updates of cached entities 
+           main benefit of MVCC locking is that updates of cached entities 
            by one transaction do not block reads of the cached entity by other
-           transactions, yet REPEATABLE_READ semantics are preserved.
+           transactions, yet REPEATABLE_READ semantics are preserved. MVCC is
+           also significantly faster than pessimistic locking. For these
+           reasons, using MVCC locking is recommended for Second Level Caches.
          </para>
          
-         <para>
-           If you are using optimistic locking and data versioning in Hibernate
-           for your entities, you should use it in the entity cache as well.
-           If you are not using data versioning, pessimistic locking should be
-           a better choice. Optimistic locking has a higher level of runtime overhead
-           than pessimistic locking, and in most Second Level Cache use cases a 
-           REPEATABLE_READ semantic from the cache is not required (see 
-           <xref linkend="concepts-cache-attr-isolation"/> for details on why not).
-         </para>
+         <note>
+            <title>Optimistic Locking</title>
+            <para>
+               JBoss Cache supports a third locking scheme, known as Optimistic
+               locking. Like MVCC, optimistic locking does not block readers
+               for writes, yet preserves REPEATABLE_READ semantics. However,
+               the runtime overhead of optimistic locking is much, much higher
+               than that of MVCC. So, use of MVCC is recommended.
+            </para>
+         </note>
          
        </sect2><sect2 id="concepts-cache-attr-isolation" revision="1">
          <title>Isolation Level</title>
          
          <para>
-           If the PESSIMISTIC node locking scheme is used, JBoss Cache supports a number of
+           If the MVCC or PESSIMISTIC node locking schemes are used, JBoss Cache supports 
            different isolation level configurations that specify how different
-           transactions coordinate the locking of nodes in the cache. These
-           are somewhat analogous to database isolation levels; see the 
-           <emphasis>JBoss Cache User Guide</emphasis> for an in depth 
-           discussion of these options.  For the Second Level Cache use case, 
-           only two are valid: READ_COMMITTED and REPEATABLE_READ. In both cases,
+           transactions coordinate the locking of nodes in the cache: READ_COMMITTED 
+           and REPEATABLE_READ. These are somewhat analogous to database 
+           isolation levels; see the <emphasis>JBoss Cache User Guide</emphasis> 
+           for an in depth discussion of these options.  In both cases,
            cache reads do not block for other reads. In both cases a transaction 
            that writes to a node in the cache tree will hold an exclusive lock on 
            that node until the transaction commits, causing other transactions
@@ -597,7 +609,7 @@
          </para>
          
          <para>
-           If the OPTIMISTIC node locking scheme is used, any isolation level 
+           If the deprecated OPTIMISTIC node locking scheme is used, any isolation level 
            configuration is ignored by the cache. Optimistic locking provides a 
            repeatable read semantic but does not cause writes to block for reads. 
          </para>
@@ -754,8 +766,8 @@
          
          <para>
           As mentioned previously, Hibernate 3.3 introduced the 
-          <literal>RegionFactory</literal> API as its mechanism for managing
-          the Second Level Cache. This API makes it possible for implementations
+          <literal>RegionFactory</literal> SPI as its mechanism for managing
+          the Second Level Cache. This SPI makes it possible for implementations
           to know at all times whether they are working with entities, 
           collections, queries or timestamps. That knowledge allows the 
           Hibernate/JBoss Cache integration layer to make the best use of the
@@ -764,7 +776,7 @@
          
          <para>
           A Hibernate user doesn't need to understand the <literal>RegionFactory</literal>
-          API in any detail at all; the main point is internally it makes 
+          SPI in any detail at all; the main point is internally it makes 
           possible independent management of the different cache types.  
          </para>
        </sect2>
@@ -794,9 +806,9 @@
                   <para>
                    Provide a set of named JBoss Cache configurations in an XML
                    file (or just use the default set included in the 
-                   <literal>jbc2-configs.xml</literal> file found in the
+                   <literal>jbc-configs.xml</literal> file found in the
                    <literal>org.hibernate.cache.jbc.builder</literal> package
-                   in <literal>hibernate-jbosscache2.jar</literal>).
+                   in <literal>hibernate-jbosscache.jar</literal>).
                   </para>
                </listitem>
                <listitem>
@@ -820,8 +832,8 @@
            <title>Sharable JGroups Resources</title>
            
            <para>
-             JGroups is the group communication library JBoss Cache uses to send
-             messages around a cluster. Each cache has a JGroups 
+             JGroups is the group communication library JBoss Cache uses JGroups
+             to send messages around a cluster. Each cache has a JGroups 
              <literal>Channel</literal>; different channels
              around the cluster that have the same name and compatible 
              configurations detect each other and form a group for message
@@ -872,7 +884,7 @@
                    (or just use the default set included in the 
                    <literal>jgroups-stacks.xml</literal> file found in the
                    <literal>org.hibernate.cache.jbc.builder</literal> package
-                   in the <literal>hibernate-jbosscache2.jar</literal>).
+                   in the <literal>hibernate-jbosscache.jar</literal>).
                   </para>
                </listitem>
                <listitem>
@@ -880,7 +892,7 @@
                    Tell Hibernate where to find that set of configurations
                    on the classpath. See <xref linkend="sessionfactory"/> for
                    details on how to do this. This is not necessary if the 
-                   default set included in <literal>hibernate-jbosscache2.jar</literal>
+                   default set included in <literal>hibernate-jbosscache.jar</literal>
                    is used.
                   </para>
                </listitem>
@@ -890,7 +902,7 @@
                     the name of the channel you want to use. This should be
                     one of the named configurations in the JGroups XML file.
                     The default set of JBoss Cache configurations found in the
-                    <literal>hibernate-jbosscache2.jar</literal> already have
+                    <literal>hibernate-jbosscache.jar</literal> already have
                     appropriate default choices. See <xref linkend="jbc-config-jgroups"/> 
                     for details on how to set this if you don't wish to use the
                     defaults.
@@ -910,7 +922,7 @@
           <para>
            So, we've seen that Hibernate caches up to four different types of 
            data (entities, collections, queries and timestamps) and that
-           Hibernate 3.3 + JBoss Cache 2 gives you the flexibility to use a
+           Hibernate + JBoss Cache gives you the flexibility to use a
            separate underlying JBoss Cache, with different behavior, for each
            type.  You can actually deploy four separate caches, one for each type.
           </para>
@@ -922,7 +934,7 @@
            The queries can usually use the same cache as well. Similarly, 
            queries and timestamps can share a JBoss Cache instance configured 
            for replication, with the
-           <literal>hibernate.cache.region.jbc2.query.localonly=true</literal>
+           <literal>hibernate.cache.jbc.query.localonly=true</literal>
            configuration letting you turn off replication for the queries if
            you want to.
           </para>

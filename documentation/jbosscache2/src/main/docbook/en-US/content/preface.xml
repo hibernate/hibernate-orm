@@ -2,7 +2,7 @@
 <!DOCTYPE preface PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
 
 <!--
-  ~ Copyright (c) 2008, Red Hat Middleware, LLC. All rights reserved.
+  ~ Copyright (c) 2009, Red Hat, Inc. All rights reserved.
   ~
   ~ This copyrighted material is made available to anyone wishing to use, modify,
   ~ copy, or redistribute it subject to the terms and conditions of the GNU
@@ -62,7 +62,7 @@
         caching libraries.  This document is focused on the use of the
         <ulink url="http://labs.jboss.org/jbosscache">JBoss Cache</ulink>
         clustered transactional caching library as an implementation of
-        the Second Level Cache.  It specifically focuses on JBoss Cache 2.
+        the Second Level Cache.  It specifically focuses on JBoss Cache 3.
     </para>
 
     <para>
@@ -142,7 +142,7 @@
         <listitem>
             <para>
                 Use this guide as your primary source of information on the
-                usage of JBoss Cache 2 as a Hibernate Second Level Cache.
+                usage of JBoss Cache 3 as a Hibernate Second Level Cache.
             </para>
         </listitem>
      </orderedlist>

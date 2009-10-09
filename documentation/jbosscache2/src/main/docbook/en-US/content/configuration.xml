@@ -2,7 +2,7 @@
 <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
 
 <!--
-  ~ Copyright (c) 2008, Red Hat Middleware, LLC. All rights reserved.
+  ~ Copyright (c) 2009, Red Hat, Inc. All rights reserved.
   ~
   ~ This copyrighted material is made available to anyone wishing to use, modify,
   ~ copy, or redistribute it subject to the terms and conditions of the GNU
@@ -22,7 +22,7 @@
 
     <para>
       There are three main areas of configuration involved in using JBoss Cache 
-      2 for your Hibernate Second Level Cache: configuring the Hibernate 
+      3 for your Hibernate Second Level Cache: configuring the Hibernate 
       <literal>SessionFactory</literal>, configuring the underlying JBoss Cache
       instance(s), and configuring the JGroups <literal>ChannelFactory</literal>.
       If you use the standard JBoss Cache and JGroups configurations that ship
@@ -77,7 +77,7 @@
                 results replicated:
               </para>
               
-              <programlisting><![CDATA[hibernate.cache.region.jbc2.query.localonly=true]]></programlisting>
+              <programlisting><![CDATA[hibernate.cache.jbc.query.localonly=true]]></programlisting>
                 </listitem>
 
                 <listitem>
@@ -88,8 +88,8 @@
                      configuration option.
                     </para>
                     
-              <programlisting><![CDATA[<![CDATA[hibernate.cache.region.factory_class=
-   org.hibernate.cache.jbc.MultiplexedJBossCacheRegionFactory]]>]]></programlisting>
+              <programlisting><![CDATA[hibernate.cache.region.factory_class=
+   org.hibernate.cache.jbc.MultiplexedJBossCacheRegionFactory]]></programlisting>
                     
                     <para>
                      To determine the correct factory class, you must decide
@@ -121,8 +121,8 @@
             <title>Specifying the <literal>RegionFactory</literal> Implementation</title>
             
             <para>
-              Hibernate 3.3 ships with the following <literal>RegionFactory</literal>
-              implementations that work with JBoss Cache 2. Select the
+              Hibernate 3.5 ships with the following <literal>RegionFactory</literal>
+              implementations that work with JBoss Cache 3. Select the
               one that is appropriate to your needs and use it with
               the <literal>hibernate.cache.region.factory_class</literal>
               configuration option.
@@ -188,7 +188,7 @@
            
            <variablelist>
                <varlistentry>
-                 <term><literal>hibernate.cache.region.jbc2.cfg.shared</literal></term>
+                 <term><literal>hibernate.cache.jbc.cfg.shared</literal></term>
                  <listitem>
                  <para>
                     Classpath or filesystem resource containing JBoss Cache 
@@ -198,14 +198,14 @@
                  </listitem>
                </varlistentry>
                <varlistentry>
-                 <term><literal>hibernate.cache.region.jbc2.cfg.multiplexer.stacks</literal></term>
+                 <term><literal>hibernate.cache.jbc.cfg.multiplexer.stacks</literal></term>
                  <listitem>
                  <para>
                     Classpath or filesystem resource containing JGroups protocol
                     stack configurations the <literal>ChannelFactory</literal>
                     should use. Default is 
-                    <literal>org/hibernate/cache/jbc2/builder/jgroups-stacks.xml</literal>, 
-                    a file found in the <literal>hibernate-jbosscache2.jar</literal>.
+                    <literal>org/hibernate/cache/jbc/builder/jgroups-stacks.xml</literal>, 
+                    a file found in the <literal>hibernate-jbosscache.jar</literal>.
                  </para>
                  </listitem>
                </varlistentry>
@@ -227,7 +227,7 @@
            
            <variablelist>
                <varlistentry>
-                 <term><literal>hibernate.cache.region.jbc2.cfg.shared</literal></term>
+                 <term><literal>hibernate.cache.jbc.cfg.shared</literal></term>
                  <listitem>
                  <para>
                     Specifies the JNDI name under which the JBoss Cache instance 
@@ -261,7 +261,7 @@
            
            <variablelist>
                <varlistentry>
-                 <term><literal>hibernate.cache.region.jbc2.configs</literal></term>
+                 <term><literal>hibernate.cache.jbc.configs</literal></term>
                  <listitem>
                  <para>
                     Classpath or filesystem resource containing JBoss Cache 
@@ -273,28 +273,28 @@
                  </listitem>
                </varlistentry>
                <varlistentry>
-                 <term><literal>hibernate.cache.region.jbc2.cfg.multiplexer.stacks</literal></term>
+                 <term><literal>hibernate.cache.jbc.cfg.multiplexer.stacks</literal></term>
                  <listitem>
                  <para>
                     Classpath or filesystem resource containing JGroups protocol
                     stack configurations the <literal>ChannelFactory</literal>
                     should use. Default is 
-                    <literal>org/hibernate/cache/jbc2/builder/jgroups-stacks.xml</literal>, 
-                    a file found in the <literal>hibernate-jbosscache2.jar</literal>.
+                    <literal>org/hibernate/cache/jbc/builder/jgroups-stacks.xml</literal>, 
+                    a file found in the <literal>hibernate-jbosscache.jar</literal>.
                  </para>
                  </listitem>
                </varlistentry>
                <varlistentry>
-                 <term><literal>hibernate.cache.region.jbc2.cfg.entity</literal></term>
+                 <term><literal>hibernate.cache.jbc.cfg.entity</literal></term>
                  <listitem>
                  <para>
                     Name of the configuration that should be used for entity caches.
-                    Default value is <literal>optimistic-entity</literal>.
+                    Default value is <literal>mvcc-entity</literal>.
                  </para>
                  </listitem>
                </varlistentry>
                <varlistentry>
-                 <term><literal>hibernate.cache.region.jbc2.cfg.collection</literal></term>
+                 <term><literal>hibernate.cache.jbc.cfg.collection</literal></term>
                  <listitem>
                  <para>
                     Name of the configuration that should be used for collection caches.
@@ -304,7 +304,7 @@
                  </listitem>
                </varlistentry>
                <varlistentry>
-                 <term><literal>hibernate.cache.region.jbc2.cfg.ts</literal></term>
+                 <term><literal>hibernate.cache.jbc.cfg.timestamps</literal></term>
                  <listitem>
                  <para>
                     Name of the configuration that should be used for timestamp caches.
@@ -313,7 +313,7 @@
                  </listitem>
                </varlistentry>
                <varlistentry>
-                 <term><literal>hibernate.cache.region.jbc2.cfg.query</literal></term>
+                 <term><literal>hibernate.cache.jbc.cfg.query</literal></term>
                  <listitem>
                  <para>
                     Name of the configuration that should be used for query caches.
@@ -327,11 +327,11 @@
            
            <para>
              Many of the default values name JBoss Cache configurations in the 
-             standard <literal>jbc2-configs.xml</literal> file found in the 
-             <literal>hibernate-jbosscache2.jar</literal>. See 
+             standard <literal>jbc-configs.xml</literal> file found in the 
+             <literal>hibernate-jbosscache.jar</literal>. See 
              <xref linkend="jbc-config-multiple-std"/> for details on those
              configurations. If you want to set 
-             <literal>hibernate.cache.region.jbc2.configs</literal> and use your 
+             <literal>hibernate.cache.jbc.configs</literal> and use your 
              own JBoss Cache configuration file, you can still take advantage of 
              these default names; just name the configurations in your file
              to match.
@@ -342,10 +342,10 @@
              just configure the defaults, with query caching enabled:
            </para>
            
-         <programlisting><![CDATA[<![CDATA[hibernate.cache.use_second_level_cache=true
+         <programlisting><![CDATA[hibernate.cache.use_second_level_cache=true
 hibernate.cache.use_query_cache=true
 hibernate.cache.region.factory_class=
-   org.hibernate.cache.jbc.MultiplexedJBossCacheRegionFactory]]>]]></programlisting>
+   org.hibernate.cache.jbc.MultiplexedJBossCacheRegionFactory]]></programlisting>
       
       <para>
        You would end up using two JBoss Cache instances:
@@ -390,7 +390,7 @@ hibernate.cache.region.factory_class=
            
            <variablelist>
                <varlistentry>
-                 <term><literal>hibernate.cache.region.jbc2.cachefactory</literal></term>
+                 <term><literal>hibernate.cache.jbc.cachefactory</literal></term>
                  <listitem>
                  <para>
                     Specifies the JNDI name under which the 
@@ -400,16 +400,16 @@ hibernate.cache.region.factory_class=
                  </listitem>
                </varlistentry>
                <varlistentry>
-                 <term><literal>hibernate.cache.region.jbc2.cfg.entity</literal></term>
+                 <term><literal>hibernate.cache.jbc.cfg.entity</literal></term>
                  <listitem>
                  <para>
                     Name of the configuration that should be used for entity caches.
-                    Default value is <literal>optimistic-entity</literal>.
+                    Default value is <literal>mvcc-entity</literal>.
                  </para>
                  </listitem>
                </varlistentry>
                <varlistentry>
-                 <term><literal>hibernate.cache.region.jbc2.cfg.collection</literal></term>
+                 <term><literal>hibernate.cache.jbc.cfg.collection</literal></term>
                  <listitem>
                  <para>
                     Name of the configuration that should be used for collection caches.
@@ -419,7 +419,7 @@ hibernate.cache.region.factory_class=
                  </listitem>
                </varlistentry>
                <varlistentry>
-                 <term><literal>hibernate.cache.region.jbc2.cfg.ts</literal></term>
+                 <term><literal>hibernate.cache.jbc.cfg.timestamps</literal></term>
                  <listitem>
                  <para>
                     Name of the configuration that should be used for timestamp caches.
@@ -428,7 +428,7 @@ hibernate.cache.region.factory_class=
                  </listitem>
                </varlistentry>
                <varlistentry>
-                 <term><literal>hibernate.cache.region.jbc2.cfg.query</literal></term>
+                 <term><literal>hibernate.cache.jbc.cfg.query</literal></term>
                  <listitem>
                  <para>
                     Name of the configuration that should be used for query caches.
@@ -442,7 +442,7 @@ hibernate.cache.region.factory_class=
            
            <para>
             See <xref linkend="sessionfactory-multiplexed"/> for a discussion of
-            how the various <literal>hibernate.cache.region.jbc2.cfg</literal>
+            how the various <literal>hibernate.cache.jbc.cfg</literal>
             options combine to determine what JBoss Cache instances are used.
            </para>
            
@@ -455,6 +455,31 @@ hibernate.cache.region.factory_class=
             is created.
            </para>
             
+        </sect2>
+        
+        <sect2 id="sessionfactory-legacy">
+           <title>Legacy Configuration Properties</title>
+           <para>A number of the configuration properties discussed above have
+           changed their name from Hibernate 3.3 to Hibernate 3.5. However,
+           to aid users moving applications from 3.3 to 3.5, the legacy property
+           names are still supported. The legacy property names are:</para>
+           
+           <itemizedlist>
+            <listitem><para><literal>hibernate.cache.region.jbc2.query.localonly</literal></para></listitem>
+            <listitem><para><literal>hibernate.cache.region.jbc2.cfg.shared</literal></para></listitem>
+            <listitem><para><literal>hibernate.cache.region.jbc2.cfg.multiplexer.stacks</literal></para></listitem>
+            <listitem><para><literal>hibernate.cache.region.jbc2.configs</literal></para></listitem>
+            <listitem><para><literal>hibernate.cache.region.jbc2.cfg.entity</literal></para></listitem>
+            <listitem><para><literal>hibernate.cache.region.jbc2.cfg.collection</literal></para></listitem>
+            <listitem><para><literal>hibernate.cache.region.jbc2.cfg.query</literal></para></listitem>
+            <listitem><para><literal>hibernate.cache.region.jbc2.cfg.ts</literal></para></listitem>
+           </itemizedlist>
+           
+           <para>To understand the meaning of these legacy properties, just change
+           <literal>.region.jbc2</literal> to <literal>.jbc</literal> and see
+           the documentation above. The only exception to that is 
+           <literal>hibernate.cache.region.jbc2.cfg.ts</literal> has
+           been changed to <literal>hibernate.cache.jbc.cfg.timestamps</literal>.</para>
         </sect2>
     
     </sect1>
@@ -497,8 +522,8 @@ hibernate.cache.region.factory_class=
               If you are using <literal>MultiplexedJBossCacheRegionFactory</literal>
               you will need to provide a set of JBoss Cache configurations for
               its <literal>CacheManager</literal> to use. (Or, use the set in the
-              <literal>jbc2-configs.xml</literal> file that ships with 
-              <literal>hibernate-jbosscache2.jar</literal>.)  The XML file used
+              <literal>jbc-configs.xml</literal> file that ships with 
+              <literal>hibernate-jbosscache.jar</literal>.)  The XML file used
               by a <literal>CacheManager</literal> is very similar to the
               usual config file used by a standalone cache; the biggest 
               difference is it can include multiple, named, configurations.
@@ -510,10 +535,10 @@ hibernate.cache.region.factory_class=
 <cache-configs>
 
     <!-- A config appropriate for entity/collection caching. -->
-    <cache-config name="optimistic-entity">
+    <cache-config name="mvcc-entity">
 
         <!-- Node locking scheme -->
-        <attribute name="NodeLockingScheme">OPTIMISTIC</attribute> 
+        <attribute name="NodeLockingScheme">MVCC</attribute> 
         
         ..... other configuration attributes
         
@@ -595,10 +620,10 @@ hibernate.cache.region.factory_class=
               </para>
               
               <programlisting><![CDATA[<!-- Node locking scheme:
-        OPTIMISTIC
+        MVCC
         PESSIMISTIC (default)
 -->
-<attribute name="NodeLockingScheme">OPTIMISTIC</attribute>]]></programlisting>  
+<attribute name="NodeLockingScheme">MVCC</attribute>]]></programlisting>  
        
            </sect3>
 
@@ -723,7 +748,7 @@ hibernate.cache.region.factory_class=
               <para>
                 Region based marshalling is enabled in the standard cache
                 configurations that ship with 
-                <literal>hibernate-jbosscache2.jar</literal>
+                <literal>hibernate-jbosscache.jar</literal>
               </para>
            </sect3>
 
@@ -743,8 +768,8 @@ hibernate.cache.region.factory_class=
             
             <para>
               Hibernate ships with a number of standard JBoss Cache configurations
-              in the <literal>hibernate-jbosscache2.jar</literal>'s
-              <literal>jbc2-configs.xml</literal> file. The following table
+              in the <literal>hibernate-jbosscache.jar</literal>'s
+              <literal>jbc-configs.xml</literal> file. The following table
               highlights the key features of each configuration.
             </para>
             
@@ -770,13 +795,33 @@ hibernate.cache.region.factory_class=
             <tbody>
             <row>
                 <entry>
+                    <property>mvcc-entity</property>
+                </entry>
+                <entry>
+                    <property>E/C/Q</property>
+                </entry>
+                <entry>
+                    <property>E/C/Q</property>
+                </entry>
+                <entry>
+                    <property>INVALIDATION_SYNC</property>
+                </entry>
+                <entry>
+                    <property>MVCC</property>
+                </entry>
+                <entry>
+                    <para>no</para>
+                </entry>
+            </row>
+            <row>
+                <entry>
                     <property>optimistic-entity</property>
                 </entry>
                 <entry>
                     <property>E/C/Q</property>
                 </entry>
                 <entry>
-                    <property>E/C/Q</property>
+                    <property>--</property>
                 </entry>
                 <entry>
                     <property>INVALIDATION_SYNC</property>
@@ -796,7 +841,7 @@ hibernate.cache.region.factory_class=
                     <property>E/C/Q</property>
                 </entry>
                 <entry>
-                    <property>E/C/Q</property>
+                    <property>--</property>
                 </entry>
                 <entry>
                     <property>INVALIDATION_SYNC</property>
@@ -822,7 +867,7 @@ hibernate.cache.region.factory_class=
                     <property>LOCAL</property>
                 </entry>
                 <entry>
-                    <property>PESSIMISTIC</property>
+                    <property>MVCC</property>
                 </entry>
                 <entry>
                     <para>no</para>
@@ -842,7 +887,7 @@ hibernate.cache.region.factory_class=
                     <property>LOCAL</property>
                 </entry>
                 <entry>
-                    <property>OPTIMISTIC</property>
+                    <property>MVCC</property>
                 </entry>
                 <entry>
                     <para>no</para>
@@ -862,7 +907,27 @@ hibernate.cache.region.factory_class=
                     <property>REPL_ASYNC</property>
                 </entry>
                 <entry>
-                    <property>PESSIMISTIC</property>
+                    <property>MVCC</property>
+                </entry>
+                <entry>
+                    <para>yes</para>
+                </entry>
+            </row>
+            <row>
+                <entry>
+                    <property>mvcc-shared</property>
+                </entry>
+                <entry>
+                    <property>E/C/Q/T</property>
+                </entry>
+                <entry>
+                    <property>--</property>
+                </entry>
+                <entry>
+                    <property>REPL_SYNC</property>
+                </entry>
+                <entry>
+                    <property>MVCC</property>
                 </entry>
                 <entry>
                     <para>yes</para>
@@ -942,9 +1007,11 @@ hibernate.cache.region.factory_class=
             </listitem>
             <listitem>
               <para>
-               The configurations that use PESSIMISTIC locking use isolation level
-               READ_COMMITTED.  There are also two other standard configurations
+               The configurations that use MVCC or PESSIMISTIC locking use isolation level
+               READ_COMMITTED.  There are also four other standard configurations
                not shown in the table that use REPEATABLE_READ:
+               <literal>mvcc-entity-repeatable</literal>, 
+               <literal>mvcc-shared-repeatable</literal>, 
                <literal>pessimistic-entity-repeatable</literal> and
                <literal>pessimistic-shared-repeatable</literal>. In all other
                respects those configurations are the same as the similarly named
@@ -977,7 +1044,7 @@ hibernate.cache.region.factory_class=
        <para>
          The <literal>jgroups-stacks.xml</literal> file found in the
          <literal>org.hibernate.cache.jbc.builder</literal> package
-         in the <literal>hibernate-jbosscache2.jar</literal> provides a good
+         in the <literal>hibernate-jbosscache.jar</literal> provides a good
          set of standard JGroups configurations; these should be suitable for
          most needs.  If you need to create your own configuration set, we
          recommend that you start with this file as a base.
@@ -1002,7 +1069,7 @@ hibernate.cache.region.factory_class=
                  since maintaining cache consistency means many messages need to
                  be sent to all members.  UDP-based channel configurations are
                  used in the JBoss Cache configurations in the standard
-                 <literal>jbc2-configs.xml</literal> file that ships with
+                 <literal>jbc-configs.xml</literal> file that ships with
                  Hibernate.
                 </para>
              </listitem>
@@ -1050,7 +1117,7 @@ hibernate.cache.region.factory_class=
                 <para>
                   The TCP-based configurations in the 
                   <literal>jgroups-stacks.xml</literal> file found in 
-                  <literal>hibernate-jbosscache2.jar</literal> all use
+                  <literal>hibernate-jbosscache.jar</literal> all use
                   TCP + MPING.  This is because there is no way for the
                   Hibernate authors to provide a meaningful static
                   configuration for TCPPING.  If you want to use TCP + TCPPING

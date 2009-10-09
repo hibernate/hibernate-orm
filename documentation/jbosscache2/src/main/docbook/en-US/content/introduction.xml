@@ -2,7 +2,7 @@
 <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
 
 <!--
-  ~ Copyright (c) 2008, Red Hat Middleware, LLC. All rights reserved.
+  ~ Copyright (c) 2009, Red Hat, Inc. All rights reserved.
   ~
   ~ This copyrighted material is made available to anyone wishing to use, modify,
   ~ copy, or redistribute it subject to the terms and conditions of the GNU
@@ -68,9 +68,9 @@
        <sect2 id="introduction-requirements-dependencies" revision="1">
        <title>Dependencies</title>
        <para>
-        Second level caching with JBoss Cache 2 requires the use of JBoss
-        Cache 2.1.0 or later. The core JBoss Cache project is used; the
-        related PojoCache project/library is not needed.  The following jars, 
+        Second level caching with JBoss Cache 3 requires the use of JBoss
+        Cache 3.1.0 or later. The core JBoss Cache project is used; the
+        related POJO Cache project/library is not needed.  The following jars, 
         included with the JBoss Cache distribution, need to be on the classpath:
        </para>
        
@@ -88,7 +88,7 @@
        </para>
        
        <para>
-         The <literal>hibernate-jbosscache2.jar</literal> that is included with
+         The <literal>hibernate-jbosscache.jar</literal> that is included with
          the Hibernate distribution also needs to be on the classpath.
        </para>
        
@@ -97,9 +97,9 @@
          file<footnote><para><ulink url="http://labs.jboss.org/jgroups">JGroups</ulink>
          is the group communication library used by JBoss Cache for intra-cluster 
          communication.</para></footnote>, need to be on the classpath.  The
-         <literal>hibernate-jbosscache2.jar</literal> includes standard 
+         <literal>hibernate-jbosscache.jar</literal> includes standard 
          configuration files in the <literal>org.hibernate.cache.jbc.builder</literal>
-         package.  The <literal>jbc2-configs.xml</literal> file is for JBoss 
+         package.  The <literal>jbc-configs.xml</literal> file is for JBoss 
          Cache and the <literal>jgroups-stacks.xml</literal> file is for JGroups.
          See <xref linkend="jbc-config"/> and <xref linkend="jgroups-config"/>
          for more details on these files. Users can create their own versions 
@@ -157,12 +157,12 @@
            <listitem>
               <para>
                 Tell Hibernate in your <literal>SessionFactory</literal>
-                configuration that you want to use JBoss Cache 2 as your
+                configuration that you want to use JBoss Cache as your
                 Second Level Cache implementation:
               </para>
               
-              <programlisting><![CDATA[<![CDATA[hibernate.cache.region.factory_class=
-   org.hibernate.cache.jbc.MultiplexedJBossCacheRegionFactory]]>]]></programlisting>
+              <programlisting><![CDATA[hibernate.cache.region.factory_class=
+   org.hibernate.cache.jbc.MultiplexedJBossCacheRegionFactory]]></programlisting>
               
               <para>
                 There are a number of values that can be provided for the 
@@ -179,9 +179,9 @@
               
               <para>
                 Do not set the legacy <literal>hibernate.cache.provider_class</literal> 
-                property when using JBoss Cache 2. That is a legacy property
+                property when using JBoss Cache 3. That is a legacy property
                 from before Hibernate 3.3's redesign of second level caching
-                internals. It will not work with JBoss Cache 2.
+                internals. It will not work with JBoss Cache 3.
               </para>
               
            </listitem>
@@ -209,7 +209,7 @@
                 results replicated:
               </para>
               
-              <programlisting><![CDATA[hibernate.cache.region.jbc2.query.localonly=true]]></programlisting>
+              <programlisting><![CDATA[hibernate.cache.jbc.query.localonly=true]]></programlisting>
            </listitem>
        </itemizedlist>
        

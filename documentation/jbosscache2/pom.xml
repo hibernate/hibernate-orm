@@ -39,12 +39,12 @@
     </parent>
 
     <groupId>org.hibernate</groupId>
-    <artifactId>hibernate-jbc2-manual</artifactId>
-    <version>3.3.0-SNAPSHOT</version>
+    <artifactId>hibernate-jbc-manual</artifactId>
+    <version>3.5.0-SNAPSHOT</version>
     <packaging>jdocbook</packaging>
 
-    <name>Hibernate/JBoss Cache 2 Reference Manual</name>
-    <description>The Hibernate / JBoss Cache 2 integration reference manual</description>
+    <name>Hibernate/JBoss Cache 3 Reference Manual</name>
+    <description>The Hibernate / JBoss Cache 3 integration reference manual</description>
 
     <build>
         <plugins>
@@ -52,8 +52,8 @@
                 <groupId>org.jboss.maven.plugins</groupId>
                 <artifactId>maven-jdocbook-plugin</artifactId>
                 <configuration>
-                    <sourceDocumentName>Hibernate_JBC2_Reference.xml</sourceDocumentName>
-                    <sourceDirectory>${basedir}/src/main/docbook/en-US</sourceDirectory>
+                    <sourceDocumentName>Hibernate_JBC_Reference.xml</sourceDocumentName>
+                    <sourceDirectory>${basedir}/src/main/docbook/</sourceDirectory>
                     <masterTranslation>en-US</masterTranslation>
                     <imageResource>
                         <directory>${basedir}/src/main/docbook/en-US</directory>

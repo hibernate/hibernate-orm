@@ -45,8 +45,11 @@ import org.hibernate.util.ArrayHelper;
  * Map a Byte[] into a Blob
  * Experimental
  *
+ * @deprecated replaced by Hibernate Core's {@link org.hibernate.type.WrappedMaterializedBlobType}
+ *
  * @author Emmanuel Bernard
  */
+@Deprecated
 public class ByteArrayBlobType extends AbstractLobType {
 
 	public int[] sqlTypes(Mapping mapping) throws MappingException {

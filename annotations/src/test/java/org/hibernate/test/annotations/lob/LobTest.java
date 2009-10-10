@@ -3,6 +3,7 @@ package org.hibernate.test.annotations.lob;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.test.annotations.TestCase;
 
 /**
@@ -115,6 +116,11 @@ public class LobTest extends TestCase {
 
 	public LobTest(String x) {
 		super( x );
+	}
+	
+	@Override
+	protected boolean appliesTo(Dialect dialect) {
+		return dialect.supportsExpectedLobUsagePattern();
 	}
 
 	protected Class[] getMappings() {

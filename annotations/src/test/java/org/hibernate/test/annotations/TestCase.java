@@ -125,7 +125,7 @@ public abstract class TestCase extends junit.framework.TestCase {
 			dialectList.addAll(Arrays.asList(requiredDialects));
 		}
 
-		if ( dialectList.isEmpty() || dialectList.contains(Dialect.getDialect().getClass()) ) {
+		if ( (dialectList.isEmpty() || dialectList.contains(Dialect.getDialect().getClass())) && appliesTo(Dialect.getDialect()) ) {
 			skip = false;
 		} else {
 			log.warn("Skipping test {}, because test does not apply for dialect {}", runMethod.getName(), Dialect
@@ -133,7 +133,11 @@ public abstract class TestCase extends junit.framework.TestCase {
 			skip = true;
 		}
 	}
-
+	
+	protected boolean appliesTo( Dialect dialect ) {
+		return true;
+	}
+	
 	private void runTestMethod( Method runMethod ) throws Throwable {
 		try {
 			runMethod.invoke(this, new Class[0]);

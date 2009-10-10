@@ -37,9 +37,11 @@ import org.hibernate.usertype.UserType;
 
 /**
  * Map a String to a Clob
- *
+ * @deprecated replaced by Hibernate Core's {@link org.hibernate.type.MaterializedClobType}
+ * 
  * @author Emmanuel Bernard
  */
+@Deprecated
 public class StringClobType implements UserType, Serializable {
 	public int[] sqlTypes() {
 		return new int[]{Types.CLOB};

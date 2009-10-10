@@ -1198,7 +1198,7 @@ public final class SessionFactoryImpl implements SessionFactory, SessionFactoryI
 		return def;
 	}
 
-	public boolean containsFetchProfileDefition(String name) {
+	public boolean containsFetchProfileDefinition(String name) {
 		return fetchProfiles.containsKey( name );
 	}
 

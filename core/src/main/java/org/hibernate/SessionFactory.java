@@ -385,5 +385,5 @@ public interface SessionFactory extends Referenceable, Serializable {
 	 * @param name The name to check
 	 * @return True if there is such a fetch profile; false otherwise.
 	 */
-	public boolean containsFetchProfileDefition(String name);
+	public boolean containsFetchProfileDefinition(String name);
 }

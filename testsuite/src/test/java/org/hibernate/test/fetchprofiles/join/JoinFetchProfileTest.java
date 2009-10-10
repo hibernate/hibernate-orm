@@ -25,7 +25,6 @@
 package org.hibernate.test.fetchprofiles.join;
 
 import java.util.List;
-import java.util.Iterator;
 
 import org.hibernate.junit.functional.FunctionalTestCase;
 import org.hibernate.Session;
@@ -168,9 +167,9 @@ public class JoinFetchProfileTest extends FunctionalTestCase {
 	}
 
 	public void testBasicFetchProfileOperation() {
-		assertTrue( "fetch profile not parsed properly", sfi().containsFetchProfileDefition( "enrollment.details" ) );
-		assertTrue( "fetch profile not parsed properly", sfi().containsFetchProfileDefition( "offering.details" ) );
-		assertTrue( "fetch profile not parsed properly", sfi().containsFetchProfileDefition( "course.details" ) );
+		assertTrue( "fetch profile not parsed properly", sfi().containsFetchProfileDefinition( "enrollment.details" ) );
+		assertTrue( "fetch profile not parsed properly", sfi().containsFetchProfileDefinition( "offering.details" ) );
+		assertTrue( "fetch profile not parsed properly", sfi().containsFetchProfileDefinition( "course.details" ) );
 		Session s = openSession();
 		SessionImplementor si = ( SessionImplementor ) s;
 		s.enableFetchProfile( "enrollment.details" );

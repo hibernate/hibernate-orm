@@ -204,7 +204,7 @@ public class SessionFactoryStub implements SessionFactory {
 		return getImpl().getFilterDefinition( filterName );
 	}
 
-	public boolean containsFetchProfileDefition(String name) {
-		return getImpl().containsFetchProfileDefition( name );
+	public boolean containsFetchProfileDefinition(String name) {
+		return getImpl().containsFetchProfileDefinition( name );
 	}
 }

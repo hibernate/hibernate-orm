@@ -170,7 +170,7 @@ public class LoadQueryInfluencers implements Serializable {
 	}
 
 	private void checkFetchProfileName(String name) {
-		if ( !sessionFactory.containsFetchProfileDefition( name ) ) {
+		if ( !sessionFactory.containsFetchProfileDefinition( name ) ) {
 			throw new UnknownProfileException( name );
 		}
 	}

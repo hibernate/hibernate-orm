@@ -3,7 +3,6 @@ package org.hibernate.test.annotations.lob;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.dialect.Dialect;
 import org.hibernate.test.annotations.TestCase;
 
 /**
@@ -15,7 +14,7 @@ public class LobTest extends TestCase {
 		Editor editor = new Editor();
 		editor.setName( "O'Reilly" );
 		book.setEditor( editor );
-		book.setCode2( new char[]{'r'} );
+		book.setCode2( new char[] { 'r' } );
 		Session s;
 		Transaction tx;
 		s = openSession();
@@ -25,7 +24,7 @@ public class LobTest extends TestCase {
 		s.close();
 		s = openSession();
 		tx = s.beginTransaction();
-		Book loadedBook = (Book) s.get( Book.class, book.getId() );
+		Book loadedBook = ( Book ) s.get( Book.class, book.getId() );
 		assertNotNull( loadedBook.getEditor() );
 		assertEquals( book.getEditor().getName(), loadedBook.getEditor().getName() );
 		loadedBook.setEditor( null );
@@ -33,7 +32,7 @@ public class LobTest extends TestCase {
 		s.close();
 		s = openSession();
 		tx = s.beginTransaction();
-		loadedBook = (Book) s.get( Book.class, book.getId() );
+		loadedBook = ( Book ) s.get( Book.class, book.getId() );
 		assertNull( loadedBook.getEditor() );
 		tx.commit();
 		s.close();
@@ -48,15 +47,15 @@ public class LobTest extends TestCase {
 		Book b = new Book();
 		b.setShortDescription( "Hibernate Bible" );
 		b.setFullText( "Hibernate in Action aims to..." );
-		b.setCode( new Character[]{'a', 'b', 'c'} );
-		b.setCode2( new char[]{'a', 'b', 'c'} );
+		b.setCode( new Character[] { 'a', 'b', 'c' } );
+		b.setCode2( new char[] { 'a', 'b', 'c' } );
 		s.persist( b );
 		tx.commit();
 		s.close();
 
 		s = openSession();
 		tx = s.beginTransaction();
-		Book b2 = (Book) s.get( Book.class, b.getId() );
+		Book b2 = ( Book ) s.get( Book.class, b.getId() );
 		assertNotNull( b2 );
 		assertEquals( b2.getFullText(), b.getFullText() );
 		assertEquals( b2.getCode()[1].charValue(), b.getCode()[1].charValue() );
@@ -72,13 +71,13 @@ public class LobTest extends TestCase {
 		tx = s.beginTransaction();
 		CompiledCode cc = new CompiledCode();
 		Byte[] header = new Byte[2];
-		header[0] = new Byte( (byte) 3 );
-		header[1] = new Byte( (byte) 0 );
+		header[0] = new Byte( ( byte ) 3 );
+		header[1] = new Byte( ( byte ) 0 );
 		cc.setHeader( header );
 		int codeSize = 5;
 		byte[] full = new byte[codeSize];
-		for ( int i = 0; i < codeSize ; i++ ) {
-			full[i] = (byte) ( 1 + i );
+		for ( int i = 0; i < codeSize; i++ ) {
+			full[i] = ( byte ) ( 1 + i );
 		}
 		cc.setFullCode( full );
 		s.persist( cc );
@@ -86,7 +85,7 @@ public class LobTest extends TestCase {
 		s.close();
 		s = openSession();
 		tx = s.beginTransaction();
-		CompiledCode recompiled = (CompiledCode) s.get( CompiledCode.class, cc.getId() );
+		CompiledCode recompiled = ( CompiledCode ) s.get( CompiledCode.class, cc.getId() );
 		assertEquals( recompiled.getHeader()[1], cc.getHeader()[1] );
 		assertEquals( recompiled.getFullCode()[codeSize - 1], cc.getFullCode()[codeSize - 1] );
 		tx.commit();
@@ -100,15 +99,15 @@ public class LobTest extends TestCase {
 		tx = s.beginTransaction();
 		CompiledCode cc = new CompiledCode();
 		byte[] metadata = new byte[2];
-		metadata[0] = (byte) 3;
-		metadata[1] = (byte) 0;
+		metadata[0] = ( byte ) 3;
+		metadata[1] = ( byte ) 0;
 		cc.setMetadata( metadata );
 		s.persist( cc );
 		tx.commit();
 		s.close();
 		s = openSession();
 		tx = s.beginTransaction();
-		CompiledCode recompiled = (CompiledCode) s.get( CompiledCode.class, cc.getId() );
+		CompiledCode recompiled = ( CompiledCode ) s.get( CompiledCode.class, cc.getId() );
 		assertEquals( recompiled.getMetadata()[1], cc.getMetadata()[1] );
 		tx.commit();
 		s.close();
@@ -117,14 +116,14 @@ public class LobTest extends TestCase {
 	public LobTest(String x) {
 		super( x );
 	}
-	
+
 	@Override
-	protected boolean appliesTo(Dialect dialect) {
-		return dialect.supportsExpectedLobUsagePattern();
+	protected boolean runForCurrentDialect() {
+		return super.runForCurrentDialect() && getDialect().supportsExpectedLobUsagePattern();
 	}
 
 	protected Class[] getMappings() {
-		return new Class[]{
+		return new Class[] {
 				Book.class,
 				CompiledCode.class
 		};

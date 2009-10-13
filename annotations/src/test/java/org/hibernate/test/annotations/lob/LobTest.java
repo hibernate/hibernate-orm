@@ -3,6 +3,7 @@ package org.hibernate.test.annotations.lob;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.test.annotations.TestCase;
 
 /**

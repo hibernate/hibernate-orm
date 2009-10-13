@@ -37,7 +37,6 @@ public abstract class TestCase extends junit.framework.TestCase {
 
 	private static SessionFactory sessions;
 	private static AnnotationConfiguration cfg;
-	private static Dialect dialect;
 	private static Class<?> lastTestClass;
 	private Session session;
 
@@ -86,7 +85,6 @@ public abstract class TestCase extends junit.framework.TestCase {
 				InputStream is = Thread.currentThread().getContextClassLoader().getResourceAsStream( xmlFile );
 				getCfg().addInputStream( is );
 			}
-			setDialect( Dialect.getDialect() );
 			setSessions( getCfg().buildSessionFactory( /* new TestInterceptor() */ ) );
 		}
 		catch ( Exception e ) {
@@ -261,12 +259,8 @@ public abstract class TestCase extends junit.framework.TestCase {
 		return sessions;
 	}
 
-	private void setDialect(Dialect dialect) {
-		TestCase.dialect = dialect;
-	}
-
 	protected Dialect getDialect() {
-		return dialect;
+		return Dialect.getDialect();
 	}
 
 	protected static void setCfg(AnnotationConfiguration cfg) {

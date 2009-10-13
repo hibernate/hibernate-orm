@@ -486,9 +486,7 @@ public abstract class AbstractEntityRegionAccessStrategyTestCase extends Abstrac
         final String KEY = KEY_BASE + testCount++;
 
         // Set up initial state
-        localAccessStrategy.get(KEY, System.currentTimeMillis());
         localAccessStrategy.putFromLoad(KEY, VALUE1, System.currentTimeMillis(), new Integer(1));
-        remoteAccessStrategy.get(KEY, System.currentTimeMillis());
         remoteAccessStrategy.putFromLoad(KEY, VALUE1, System.currentTimeMillis(), new Integer(1));
 
         // Let the async put propagate

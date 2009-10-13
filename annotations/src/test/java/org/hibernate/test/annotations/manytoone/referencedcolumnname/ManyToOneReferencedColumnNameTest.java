@@ -34,6 +34,14 @@ public class ManyToOneReferencedColumnNameTest extends TestCase {
 		s.close();
 		
 	}
+	
+	@Override
+	protected boolean runForCurrentDialect() {
+		return super.runForCurrentDialect() && getDialect().supportsIdentityColumns();
+	}
+
+
+
 	protected Class[] getMappings() {
 		return new Class[] {
 				Item.class,

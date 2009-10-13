@@ -4,7 +4,6 @@ package org.hibernate.test.annotations.xml.hbm;
 import java.util.HashSet;
 
 import org.hibernate.Session;
-import org.hibernate.cfg.Configuration;
 import org.hibernate.test.annotations.TestCase;
 
 /**
@@ -63,32 +62,10 @@ public class HbmTest extends TestCase {
 		s.close();
 	}
 
-	public void testManyToOneAndInterface() throws Exception {
-		Session s = openSession();
-		s.getTransaction().begin();
-		B b = new BImpl();
-		b.setBId( 1 );
-		s.persist( b );
-		Z z = new ZImpl();
-		z.setB( b );
-		s.persist( z );
-		s.flush();
-		s.getTransaction().rollback();
-		s.close();
-	}
-
-	@Override
-	protected void configure(Configuration cfg) {
-		super.configure( cfg );
-		//cfg.addClass( Government.class );
-	}
-
 	protected Class[] getMappings() {
 		return new Class[]{
 				PrimeMinister.class,
 				Sky.class,
-				ZImpl.class
-
 		};
 	}
 
@@ -97,8 +74,6 @@ public class HbmTest extends TestCase {
 		return new String[]{
 				"org/hibernate/test/annotations/xml/hbm/Government.hbm.xml",
 				"org/hibernate/test/annotations/xml/hbm/CloudType.hbm.xml",
-				"org/hibernate/test/annotations/xml/hbm/A.hbm.xml",
-				"org/hibernate/test/annotations/xml/hbm/B.hbm.xml"
 		};
 	}
 }

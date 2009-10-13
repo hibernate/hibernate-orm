@@ -105,8 +105,8 @@ public class CollectionRegionImplTestCase extends AbstractEntityCollectionRegion
     @Override
     protected void putInRegion(Region region, Object key, Object value) {
         CollectionRegionAccessStrategy strategy = ((CollectionRegion) region).buildAccessStrategy(AccessType.TRANSACTIONAL);
-        // putFromLoad is ignored if not preceded by a get, so do a get
-        strategy.get(key, System.currentTimeMillis());
+//        // putFromLoad is ignored if not preceded by a get, so do a get
+//        strategy.get(key, System.currentTimeMillis());
         strategy.putFromLoad(key, value, System.currentTimeMillis(), new Integer(1));
     }
 

@@ -4,8 +4,8 @@ package org.hibernate.test.annotations.id.sequences;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.test.annotations.TestCase;
-import org.hibernate.test.annotations.id.entities.Planet;
-import org.hibernate.test.annotations.id.entities.PlanetCheatSheet;
+import org.hibernate.test.annotations.id.sequences.entities.Planet;
+import org.hibernate.test.annotations.id.sequences.entities.PlanetCheatSheet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

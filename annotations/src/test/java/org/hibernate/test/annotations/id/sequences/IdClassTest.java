@@ -4,8 +4,9 @@ package org.hibernate.test.annotations.id.sequences;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.test.annotations.TestCase;
-import org.hibernate.test.annotations.id.entities.Location;
-import org.hibernate.test.annotations.id.entities.Tower;
+import org.hibernate.test.annotations.id.sequences.entities.Location;
+import org.hibernate.test.annotations.id.sequences.entities.Tower;
+
 
 /**
  * @author Emmanuel Bernard

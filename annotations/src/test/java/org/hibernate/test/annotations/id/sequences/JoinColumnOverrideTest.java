@@ -7,9 +7,9 @@ import java.io.StringWriter;
 import org.hibernate.cfg.AnnotationConfiguration;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.test.annotations.TestCase;
-import org.hibernate.test.annotations.id.entities.Bunny;
-import org.hibernate.test.annotations.id.entities.PointyTooth;
-import org.hibernate.test.annotations.id.entities.TwinkleToes;
+import org.hibernate.test.annotations.id.sequences.entities.Bunny;
+import org.hibernate.test.annotations.id.sequences.entities.PointyTooth;
+import org.hibernate.test.annotations.id.sequences.entities.TwinkleToes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

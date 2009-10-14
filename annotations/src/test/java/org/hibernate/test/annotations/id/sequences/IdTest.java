@@ -1,27 +1,27 @@
-//$Id$
-package org.hibernate.test.annotations.id;
+//$Id: IdTest.java 15025 2008-08-11 09:14:39Z hardy.ferentschik $
+package org.hibernate.test.annotations.id.sequences;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.mapping.Column;
 import org.hibernate.test.annotations.TestCase;
-import org.hibernate.test.annotations.id.entities.Ball;
-import org.hibernate.test.annotations.id.entities.BreakDance;
-import org.hibernate.test.annotations.id.entities.Computer;
-import org.hibernate.test.annotations.id.entities.Department;
-import org.hibernate.test.annotations.id.entities.Dog;
-import org.hibernate.test.annotations.id.entities.FirTree;
-import org.hibernate.test.annotations.id.entities.Footballer;
-import org.hibernate.test.annotations.id.entities.FootballerPk;
-import org.hibernate.test.annotations.id.entities.Furniture;
-import org.hibernate.test.annotations.id.entities.GoalKeeper;
-import org.hibernate.test.annotations.id.entities.Home;
-import org.hibernate.test.annotations.id.entities.Monkey;
-import org.hibernate.test.annotations.id.entities.Phone;
-import org.hibernate.test.annotations.id.entities.Shoe;
-import org.hibernate.test.annotations.id.entities.SoundSystem;
-import org.hibernate.test.annotations.id.entities.Store;
-import org.hibernate.test.annotations.id.entities.Tree;
+import org.hibernate.test.annotations.id.sequences.entities.Ball;
+import org.hibernate.test.annotations.id.sequences.entities.BreakDance;
+import org.hibernate.test.annotations.id.sequences.entities.Computer;
+import org.hibernate.test.annotations.id.sequences.entities.Department;
+import org.hibernate.test.annotations.id.sequences.entities.Dog;
+import org.hibernate.test.annotations.id.sequences.entities.FirTree;
+import org.hibernate.test.annotations.id.sequences.entities.Footballer;
+import org.hibernate.test.annotations.id.sequences.entities.FootballerPk;
+import org.hibernate.test.annotations.id.sequences.entities.Furniture;
+import org.hibernate.test.annotations.id.sequences.entities.GoalKeeper;
+import org.hibernate.test.annotations.id.sequences.entities.Home;
+import org.hibernate.test.annotations.id.sequences.entities.Monkey;
+import org.hibernate.test.annotations.id.sequences.entities.Phone;
+import org.hibernate.test.annotations.id.sequences.entities.Shoe;
+import org.hibernate.test.annotations.id.sequences.entities.SoundSystem;
+import org.hibernate.test.annotations.id.sequences.entities.Store;
+import org.hibernate.test.annotations.id.sequences.entities.Tree;
 
 /**
  * @author Emmanuel Bernard
@@ -273,6 +273,13 @@ public class IdTest extends TestCase {
 		tx.rollback();
 		s.close();
 	}
+	
+	
+	
+	@Override
+	protected boolean runForCurrentDialect() {
+		return super.runForCurrentDialect() && getDialect().supportsSequences();
+	}
 
 	/**
 	 * @see org.hibernate.test.annotations.TestCase#getMappings()
@@ -284,7 +291,7 @@ public class IdTest extends TestCase {
 				SoundSystem.class, Furniture.class, GoalKeeper.class,
 				BreakDance.class, Monkey.class};
 	}
-
+	
 	/**
 	 * @see org.hibernate.test.annotations.TestCase#getAnnotatedPackages()
 	 */

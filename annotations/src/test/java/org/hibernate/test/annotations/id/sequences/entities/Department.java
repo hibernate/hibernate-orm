@@ -1,5 +1,5 @@
-//$Id$
-package org.hibernate.test.annotations.id.entities;
+//$Id: Department.java 14760 2008-06-11 07:33:15Z hardy.ferentschik $
+package org.hibernate.test.annotations.id.sequences.entities;
 
 import java.io.Serializable;
 import javax.persistence.Entity;
@@ -18,7 +18,11 @@ public class Department implements Serializable {
 	private Long id;
 
 	@Id
-	@GeneratedValue
+	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "SEQ_DEPT")
+	@javax.persistence.SequenceGenerator(
+			name = "SEQ_DEPT",
+			sequenceName = "my_sequence"
+	)
 	public Long getId() {
 		return id;
 	}

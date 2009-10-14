@@ -1,5 +1,5 @@
-//$Id$
-package org.hibernate.test.annotations.id.entities;
+//$Id: Shoe.java 14760 2008-06-11 07:33:15Z hardy.ferentschik $
+package org.hibernate.test.annotations.id.sequences.entities;
 
 import java.io.Serializable;
 import javax.persistence.Entity;
@@ -8,17 +8,17 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 
 /**
- * Sample of method generator
+ * sample of Sequance generator
  *
  * @author Emmanuel Bernard
  */
 @Entity
 @SuppressWarnings("serial")
-public class Department implements Serializable {
+public class Shoe implements Serializable {
 	private Long id;
 
 	@Id
-	@GeneratedValue
+	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "SEQ_GEN")
 	public Long getId() {
 		return id;
 	}

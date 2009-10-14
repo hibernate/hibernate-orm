@@ -18,7 +18,7 @@ public class Shoe implements Serializable {
 	private Long id;
 
 	@Id
-	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "SEQ_GEN")
+	@GeneratedValue
 	public Long getId() {
 		return id;
 	}

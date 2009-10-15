@@ -10,6 +10,7 @@ import java.util.Map;
 import javax.persistence.EntityManager;
 
 import org.hibernate.Hibernate;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.ejb.test.TestCase;
 
 /**
@@ -39,6 +40,11 @@ public class BlobTest extends TestCase {
 		assertTrue( image.containsKey( "meta" ) );
 		em.getTransaction().commit();
 		em.close();
+	}
+
+	@Override
+	public boolean appliesTo(Dialect dialect) {
+		return dialect.supportsExpectedLobUsagePattern();
 	}
 
 	public Class[] getAnnotatedClasses() {

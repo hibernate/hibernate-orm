@@ -30,5 +30,5 @@ package org.hibernate.engine.jdbc;
  *
  * @author Steve Ebersole
  */
-public interface NClobImplementer {
+public interface NClobImplementer extends ClobImplementer {
 }

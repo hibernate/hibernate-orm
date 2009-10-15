@@ -118,10 +118,6 @@
                 <extensions>true</extensions>
             </plugin>
             <plugin>
-                <!-- require at least JDK 1.5 to run the build -->
-                <!-- ... -->
-                <!-- we need at least Maven 2.0.8 because of a bug fix affecting our antlr usage -->
-                <!-- 2.0.8 not released at this time, so I instead say anything greater that 2.0.7 -->
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-enforcer-plugin</artifactId>
                 <executions>
@@ -135,9 +131,12 @@
                 <configuration>
                     <rules>
                         <requireJavaVersion>
-                            <version>[1.5,)</version>
+                            <!-- require JDK 1.5 to run the build -->
+                            <version>[1.5,1.6)</version>
                         </requireJavaVersion>
                         <requireMavenVersion>
+                            <!-- we need at least Maven 2.0.8 because of a bug fix affecting our antlr usage -->
+                            <!-- 2.0.8 not released at this time, so I instead say anything greater that 2.0.7 -->
                             <version>(2.0.7,)</version>
                         </requireMavenVersion>
                     </rules>

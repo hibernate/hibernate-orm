@@ -37,10 +37,10 @@ import org.dom4j.Node;
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
+import org.hibernate.Hibernate;
 import org.hibernate.engine.Mapping;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.SessionImplementor;
-import org.hibernate.lob.BlobImpl;
 import org.hibernate.usertype.ParameterizedType;
 import org.hibernate.util.ReflectHelper;
 import org.hibernate.util.SerializationHelper;
@@ -99,7 +99,7 @@ public class SerializableToBlobType extends AbstractLobType implements Parameter
 				st.setBinaryStream( index, new ByteArrayInputStream( toSet ), toSet.length );
 			}
 			else {
-				st.setBlob( index, new BlobImpl( toSet ) );
+				st.setBlob( index, Hibernate.getLobCreator( session ).createBlob( toSet ) );
 			}
 		}
 		else {

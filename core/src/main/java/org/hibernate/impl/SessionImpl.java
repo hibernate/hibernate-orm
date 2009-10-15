@@ -77,6 +77,7 @@ import org.hibernate.engine.QueryParameters;
 import org.hibernate.engine.StatefulPersistenceContext;
 import org.hibernate.engine.Status;
 import org.hibernate.engine.LoadQueryInfluencers;
+import org.hibernate.engine.jdbc.LobCreationContext;
 import org.hibernate.engine.query.FilterQueryPlan;
 import org.hibernate.engine.query.HQLQueryPlan;
 import org.hibernate.engine.query.NativeSQLQueryPlan;
@@ -140,7 +141,7 @@ import org.hibernate.util.StringHelper;
  * @author Gavin King
  */
 public final class SessionImpl extends AbstractSessionImpl 
-		implements EventSource, org.hibernate.classic.Session, JDBCContext.Context {
+		implements EventSource, org.hibernate.classic.Session, JDBCContext.Context, LobCreationContext {
 
 	// todo : need to find a clean way to handle the "event source" role
 	// a seperate classs responsible for generating/dispatching events just duplicates most of the Session methods...
@@ -1999,6 +2000,23 @@ public final class SessionImpl extends AbstractSessionImpl
 		// todo : look at optimizing these...
 		oos.writeObject( loadQueryInfluencers );
 		oos.writeObject( childSessionsByEntityMode );
+	}
+
+	public Object execute(Callback callback) {
+		Connection connection = jdbcContext.getConnectionManager().getConnection();
+		try {
+			return callback.executeOnConnection( connection );
+		}
+		catch ( SQLException e ) {
+			throw JDBCExceptionHelper.convert(
+					getFactory().getSQLExceptionConverter(),
+					e,
+					"Error creating contextual LOB : " + e.getMessage()
+			);
+		}
+		finally {
+			jdbcContext.getConnectionManager().afterStatement();
+		}
 	}
 
 	private class CoordinatingEntityNameResolver implements EntityNameResolver {

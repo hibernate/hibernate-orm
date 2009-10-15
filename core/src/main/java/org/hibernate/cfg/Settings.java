@@ -28,6 +28,7 @@ import java.util.Map;
 
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.EntityMode;
+import org.hibernate.engine.jdbc.JdbcSupport;
 import org.hibernate.tuple.entity.EntityTuplizerFactory;
 import org.hibernate.tuple.component.ComponentTuplizerFactory;
 import org.hibernate.cache.QueryCacheFactory;
@@ -98,6 +99,7 @@ public final class Settings {
 	private boolean checkNullability;
 //	private ComponentTuplizerFactory componentTuplizerFactory; todo : HHH-3517 and HHH-1907
 //	private BytecodeProvider bytecodeProvider;
+	private JdbcSupport jdbcSupport;
 
 	/**
 	 * Package protected constructor
@@ -299,8 +301,12 @@ public final class Settings {
 //		return componentTuplizerFactory;
 //	}
 
+	public JdbcSupport getJdbcSupport() {
+		return jdbcSupport;
+	}
 
-// package protected setters ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	// package protected setters ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 //	void setShowSqlEnabled(boolean b) {
 //		showSql = b;
@@ -502,8 +508,11 @@ public final class Settings {
 //		this.componentTuplizerFactory = componentTuplizerFactory;
 //	}
 
+	void setJdbcSupport(JdbcSupport jdbcSupport) {
+		this.jdbcSupport = jdbcSupport;
+	}
 
-//	public BytecodeProvider getBytecodeProvider() {
+	//	public BytecodeProvider getBytecodeProvider() {
 //		return bytecodeProvider;
 //	}
 //

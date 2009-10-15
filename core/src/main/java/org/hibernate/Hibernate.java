@@ -28,6 +28,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
 import java.io.Serializable;
+import java.io.ByteArrayOutputStream;
 import java.sql.Blob;
 import java.sql.Clob;
 import java.util.Iterator;
@@ -35,12 +36,13 @@ import java.util.Properties;
 
 import org.hibernate.collection.PersistentCollection;
 import org.hibernate.engine.HibernateIterator;
+import org.hibernate.engine.SessionImplementor;
+import org.hibernate.engine.jdbc.NonContextualLobCreator;
+import org.hibernate.engine.jdbc.LobCreationContext;
+import org.hibernate.engine.jdbc.LobCreator;
+import org.hibernate.engine.jdbc.StreamUtils;
 import org.hibernate.intercept.FieldInterceptionHelper;
 import org.hibernate.intercept.FieldInterceptor;
-import org.hibernate.lob.BlobImpl;
-import org.hibernate.lob.ClobImpl;
-import org.hibernate.lob.SerializableBlob;
-import org.hibernate.lob.SerializableClob;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.type.AnyType;
@@ -386,54 +388,163 @@ public final class Hibernate {
 	}
 
 	/**
-	 * Create a new <tt>Blob</tt>. The returned object will be initially immutable.
+	 * Create a new {@link Blob}. The returned object will be initially immutable.
 	 *
 	 * @param bytes a byte array
 	 * @return the Blob
+	 * @deprecated Use {@link #createBlob(byte[], Session)} instead
 	 */
 	public static Blob createBlob(byte[] bytes) {
-		return new SerializableBlob( new BlobImpl( bytes ) );
+		return NonContextualLobCreator.INSTANCE.wrap(
+				NonContextualLobCreator.INSTANCE.createBlob( bytes )
+		);
 	}
 
 	/**
-	 * Create a new <tt>Blob</tt>. The returned object will be initially immutable.
+	 * Create a new {@link Blob}.
+	 *
+	 * @param bytes a byte array
+	 * @param session The session in which the {@link Blob} will be used.
+	 * @return the Blob
+	 */
+	public static Blob createBlob(byte[] bytes, Session session) {
+		// todo : wrap?
+		return getLobCreator( session ).createBlob( bytes );
+	}
+
+	public static LobCreator getLobCreator(Session session) {
+		return getLobCreator( ( SessionImplementor ) session );
+	}
+
+	public static LobCreator getLobCreator(SessionImplementor session) {
+		return session.getFactory()
+				.getSettings()
+				.getJdbcSupport()
+				.getLobCreator( ( LobCreationContext ) session );
+	}
+
+	/**
+	 * Create a new {@link Blob}. The returned object will be initially immutable.
 	 *
 	 * @param stream a binary stream
 	 * @param length the number of bytes in the stream
 	 * @return the Blob
+	 * @deprecated Use {@link #createBlob(InputStream, long, Session)} instead
 	 */
 	public static Blob createBlob(InputStream stream, int length) {
-		return new SerializableBlob( new BlobImpl( stream, length ) );
+		return NonContextualLobCreator.INSTANCE.wrap(
+				NonContextualLobCreator.INSTANCE.createBlob( stream, length )
+		);
 	}
 
 	/**
-	 * Create a new <tt>Blob</tt>. The returned object will be initially immutable.
+	 * Create a new {@link Blob}. The returned object will be initially immutable.
+	 *
+	 * @param stream a binary stream
+	 * @param length the number of bytes in the stream
+	 * @return the Blob
+	 * @deprecated Use {@link #createBlob(InputStream, long, Session)} instead
+	 */
+	public static Blob createBlob(InputStream stream, long length) {
+		return NonContextualLobCreator.INSTANCE.wrap(
+				NonContextualLobCreator.INSTANCE.createBlob( stream, length )
+		);
+	}
+
+	/**
+	 * Create a new {@link Blob}.
+	 *
+	 * @param stream a binary stream
+	 * @param length the number of bytes in the stream
+	 * @param session The session in which the {@link Blob} will be used.
+	 * @return the Blob
+	 */
+	public static Blob createBlob(InputStream stream, long length, Session session) {
+		// todo : wrap?
+		return getLobCreator( session ).createBlob( stream, length );
+	}
+
+	/**
+	 * Create a new {@link Blob}. The returned object will be initially immutable.
+	 * <p/>
+	 * NOTE: this method will read the entire contents of the incoming stream in order to properly
+	 * handle the {@link Blob#length()} method.  If you do not want the stream read, use the
+	 * {@link #createBlob(InputStream,long)} version instead.
 	 *
 	 * @param stream a binary stream
 	 * @return the Blob
-	 * @throws IOException
+	 * @throws IOException Indicates an I/O problem accessing the stream
+	 * @deprecated Use {@link #createBlob(InputStream, long, Session)} instead
 	 */
 	public static Blob createBlob(InputStream stream) throws IOException {
-		return new SerializableBlob( new BlobImpl( stream, stream.available() ) );
+		ByteArrayOutputStream buffer = new ByteArrayOutputStream( stream.available() );
+		StreamUtils.copy( stream, buffer );
+		return createBlob( buffer.toByteArray() );
 	}
 
 	/**
-	 * Create a new <tt>Clob</tt>. The returned object will be initially immutable.
+	 * Create a new {@link Clob}. The returned object will be initially immutable.
 	 *
-	 * @param string a <tt>String</tt>
+	 * @param string The string data
+	 * @return The created {@link Clob}
+	 * @deprecated Use {@link #createClob(String, Session)} instead
 	 */
 	public static Clob createClob(String string) {
-		return new SerializableClob( new ClobImpl( string ) );
+		return NonContextualLobCreator.INSTANCE.wrap(
+				NonContextualLobCreator.INSTANCE.createClob( string )
+		);
 	}
 
 	/**
-	 * Create a new <tt>Clob</tt>. The returned object will be initially immutable.
+	 * Create a new {@link Clob}.
+	 *
+	 * @param string The string data
+	 * @param session The session in which the {@link Clob} will be used.
+	 * @return The created {@link Clob}
+	 */
+	public static Clob createClob(String string, Session session) {
+		// todo : wrap?
+		return getLobCreator( session ).createClob( string );
+	}
+
+	/**
+	 * Create a new {@link Clob}. The returned object will be initially immutable.
 	 *
 	 * @param reader a character stream
 	 * @param length the number of characters in the stream
+	 * @return The created {@link Clob}
+	 * @deprecated Use {@link #createClob(Reader,long,Session)} instead
 	 */
 	public static Clob createClob(Reader reader, int length) {
-		return new SerializableClob( new ClobImpl( reader, length ) );
+		return NonContextualLobCreator.INSTANCE.wrap(
+				NonContextualLobCreator.INSTANCE.createClob( reader, length )
+		);
+	}
+
+	/**
+	 * Create a new {@link Clob}. The returned object will be initially immutable.
+	 *
+	 * @param reader a character stream
+	 * @param length the number of characters in the stream
+	 * @return The created {@link Clob}
+	 * @deprecated Use {@link #createClob(Reader,long,Session)} instead
+	 */
+	public static Clob createClob(Reader reader, long length) {
+		return NonContextualLobCreator.INSTANCE.wrap(
+				NonContextualLobCreator.INSTANCE.createClob( reader, length ) 
+		);
+	}
+
+	/**
+	 * Create a new {@link Clob}.
+	 *
+	 * @param reader a character stream
+	 * @param length the number of characters in the stream
+	 * @param session The session in which the {@link Clob} will be used.
+	 * @return The created {@link Clob}
+	 */
+	public static Clob createClob(Reader reader, long length, Session session) {
+		return getLobCreator( session ).createClob( reader, length );
 	}
 
 	/**
@@ -460,8 +571,7 @@ public final class Hibernate {
 	 *
 	 * @param proxy The potential proxy
 	 * @param propertyName the name of a persistent attribute of the object
-	 * @return true if the named property of the object is not listed as uninitialized
-	 * @return false if the object is an uninitialized proxy, or the named property is uninitialized
+	 * @return true if the named property of the object is not listed as uninitialized; false otherwise
 	 */
 	public static boolean isPropertyInitialized(Object proxy, String propertyName) {
 		

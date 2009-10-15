@@ -34,11 +34,10 @@ import java.util.Map;
 import org.dom4j.Node;
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
-import org.hibernate.MappingException;
+import org.hibernate.Hibernate;
 import org.hibernate.engine.Mapping;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.SessionImplementor;
-import org.hibernate.lob.BlobImpl;
 import org.hibernate.util.ArrayHelper;
 
 /**
@@ -51,9 +50,10 @@ import org.hibernate.util.ArrayHelper;
  */
 @Deprecated
 public class ByteArrayBlobType extends AbstractLobType {
+	private static final int[] TYPES = new int[] { Types.BLOB };
 
-	public int[] sqlTypes(Mapping mapping) throws MappingException {
-		return new int[]{Types.BLOB};
+	public int[] sqlTypes(Mapping mapping) {
+		return TYPES;
 	}
 
 	@Override
@@ -128,7 +128,7 @@ public class ByteArrayBlobType extends AbstractLobType {
 				st.setBinaryStream( index, new ByteArrayInputStream( toSet ), toSet.length );
 			}
 			else {
-				st.setBlob( index, new BlobImpl( toSet ) );
+				st.setBlob( index, Hibernate.getLobCreator( session ).createBlob( toSet ) );
 			}
 		}
 	}

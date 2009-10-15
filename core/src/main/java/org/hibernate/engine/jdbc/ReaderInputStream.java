@@ -22,18 +22,18 @@
  * Boston, MA  02110-1301  USA
  *
  */
-package org.hibernate.lob;
+package org.hibernate.engine.jdbc;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
 
 /**
- * Exposes a <tt>Reader</tt> as an <tt>InputStream</tt>
+ * Exposes a {@link Reader} as an {@link InputStream}.
+ * 
  * @author Gavin King
  */
 public class ReaderInputStream extends InputStream {
-	
 	private Reader reader;
 	
 	public ReaderInputStream(Reader reader) {

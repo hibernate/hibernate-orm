@@ -40,8 +40,10 @@ import org.hibernate.MappingException;
 import org.hibernate.engine.Mapping;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.SessionImplementor;
-import org.hibernate.lob.ClobImpl;
-import org.hibernate.lob.SerializableClob;
+import org.hibernate.engine.jdbc.LobCreator;
+import org.hibernate.engine.jdbc.NonContextualLobCreator;
+import org.hibernate.engine.jdbc.WrappedClob;
+import org.hibernate.engine.jdbc.ClobImplementer;
 import org.hibernate.util.ArrayHelper;
 
 /**
@@ -50,36 +52,87 @@ import org.hibernate.util.ArrayHelper;
  */
 public class ClobType extends AbstractType {
 
-	public void set(PreparedStatement st, Object value, int index, SessionImplementor session) 
-	throws HibernateException, SQLException {
-		
-		if (value==null) {
-			st.setNull(index, Types.CLOB);
+	public void nullSafeSet(
+			PreparedStatement st,
+			Object value,
+			int index,
+			boolean[] settable,
+			SessionImplementor session) throws SQLException {
+		if ( settable[0] ) {
+			set( st, value, index, session );
 		}
-		else {
-		
-			if (value instanceof SerializableClob) {
-				value = ( (SerializableClob) value ).getWrappedClob();
-			}
-		
-			final boolean useReader = session.getFactory().getDialect().useInputStreamToInsertBlob() && 
-				(value instanceof ClobImpl);
-			
-			if ( useReader ) {
-				ClobImpl clob = (ClobImpl) value;
-				st.setCharacterStream( index, clob.getCharacterStream(), (int) clob.length() );
-			}
-			else {
-				st.setClob(index, (Clob) value);
-			}
-			
-		}
-		
 	}
 
-	public Object get(ResultSet rs, String name) throws HibernateException, SQLException {
-		Clob value = rs.getClob(name);
-		return rs.wasNull() ? null : new SerializableClob(value);
+	public void nullSafeSet(
+			PreparedStatement st,
+			Object value,
+			int index,
+			SessionImplementor session) throws SQLException {
+		set( st, value, index, session );
+	}
+
+	public void set(
+			PreparedStatement st,
+			Object value,
+			int index,
+			SessionImplementor session) throws SQLException {
+		if ( value == null ) {
+			st.setNull( index, Types.CLOB );
+			return;
+		}
+
+		Clob clob = ( Clob ) value;
+
+		if ( WrappedClob.class.isInstance( clob ) ) {
+			clob = ( (WrappedClob) value ).getWrappedClob();
+		}
+
+		final boolean useInputStream = session.getFactory().getDialect().useInputStreamToInsertBlob()
+				&& ClobImplementer.class.isInstance( clob );
+
+		if ( useInputStream ) {
+			st.setCharacterStream( index, clob.getCharacterStream(), (int) clob.length() );
+		}
+		else {
+			st.setClob( index, clob );
+		}
+	}
+
+	public Object nullSafeGet(
+			ResultSet rs,
+			String name,
+			SessionImplementor session,
+			Object owner) throws SQLException {
+		return get( rs, name, Hibernate.getLobCreator( session ) );
+	}
+
+	public Object nullSafeGet(
+			ResultSet rs,
+			String[] names,
+			SessionImplementor session,
+			Object owner) throws SQLException {
+		return get( rs, names[0], Hibernate.getLobCreator( session ) );
+	}
+
+	/**
+	 * A method to extract the CLOB value from a result set.
+	 *
+	 * @param rs The result set
+	 * @param name The name of the column containing the CLOB
+	 *
+	 * @return The CLOB
+	 *
+	 * @throws SQLException Indicates a problem accessing the result set
+	 *
+	 * @deprecated Use {@link #get(ResultSet,String,LobCreator)} instead
+	 */
+	public Object get(ResultSet rs, String name) throws SQLException {
+		return get( rs, name, NonContextualLobCreator.INSTANCE );
+	}
+
+	public Clob get(ResultSet rs, String name, LobCreator lobCreator) throws SQLException {
+		Clob value = rs.getClob( name );
+		return rs.wasNull() ? null : lobCreator.wrap( value );
 	}
 
 	public Class getReturnedClass() {
@@ -121,29 +174,6 @@ public class ClobType extends AbstractType {
 	
 	public boolean isMutable() {
 		return false;
-	}
-	
-	public Object nullSafeGet(ResultSet rs, String name,
-			SessionImplementor session, Object owner)
-			throws HibernateException, SQLException {
-		return get(rs, name);
-	}
-	
-	public Object nullSafeGet(ResultSet rs, String[] names,
-			SessionImplementor session, Object owner)
-			throws HibernateException, SQLException {
-		return get( rs, names[0] );
-	}
-	
-	public void nullSafeSet(PreparedStatement st, Object value, int index,
-			boolean[] settable, SessionImplementor session)
-			throws HibernateException, SQLException {
-		if ( settable[0] ) set(st, value, index, session);
-	}
-	
-	public void nullSafeSet(PreparedStatement st, Object value, int index,
-			SessionImplementor session) throws HibernateException, SQLException {
-		set(st, value, index, session);
 	}
 	
 	public Object replace(Object original, Object target,

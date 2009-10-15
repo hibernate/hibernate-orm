@@ -39,6 +39,7 @@ import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 import javax.persistence.criteria.SetJoin;
 import javax.persistence.criteria.Subquery;
+import javax.persistence.criteria.From;
 import javax.persistence.metamodel.EntityType;
 import org.hibernate.ejb.criteria.FromImpl.JoinScope;
 import org.hibernate.ejb.criteria.expression.ExpressionImpl;
@@ -63,6 +64,14 @@ public class CriteriaSubqueryImpl<T> extends ExpressionImpl<T> implements Subque
 
 		public void addFetch(Fetch fetch) {
 			throw new UnsupportedOperationException( "Cannot define fetch from a subquery correlation" );
+		}
+
+		public boolean isCorrelated() {
+			return true;
+		}
+
+		public From getCorrelationParent() {
+			return null;
 		}
 	};
 

@@ -55,7 +55,7 @@ public class JoinImpl<Z, X> extends FromImpl<Z, X> implements JoinImplementors.J
 				javaType,
 				lhs,
 				joinProperty,
-				(ManagedType<X>)queryBuilder.getEntityManagerFactory().getMetamodel().type( javaType )
+				(ManagedType<X>)queryBuilder.getEntityManagerFactory().getMetamodel().managedType( javaType )
 		);
 		this.managedType = (ManagedType<X>) getModel();
 		this.joinType = joinType;
@@ -95,8 +95,24 @@ public class JoinImpl<Z, X> extends FromImpl<Z, X> implements JoinImplementors.J
 				getJoinType()
 		);
 		correlation.defineJoinScope( subquery.getJoinScope() );
+		correlation.correlationParent = this;
 		return correlation;
 	}
 
+	private From<Z,X> correlationParent;
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public boolean isCorrelated() {
+		return false;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public From<Z,X> getCorrelationParent() {
+		return null;
+	}
 
 }

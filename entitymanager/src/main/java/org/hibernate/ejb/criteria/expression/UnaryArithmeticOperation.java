@@ -47,7 +47,7 @@ public class UnaryArithmeticOperation<T>
 			QueryBuilderImpl queryBuilder,
 			Operation operation,
 			Expression<T> operand) {
-		super( queryBuilder, operand.getJavaType() );
+		super( queryBuilder, (Class)operand.getJavaType() );
 		this.operation = operation;
 		this.operand = operand;
 	}

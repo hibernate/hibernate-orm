@@ -47,7 +47,7 @@ public abstract class AbstractPredicateImpl extends ExpressionImpl<Boolean> impl
 		return negated;
 	}
 
-	public Predicate negate() {
+	public Predicate not() {
 		negated = !negated;
 		return this;
 	}

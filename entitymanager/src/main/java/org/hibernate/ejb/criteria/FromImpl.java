@@ -67,6 +67,8 @@ public abstract class FromImpl<Z,X> extends PathImpl<X> implements From<Z,X> {
 	public static interface JoinScope<X> {
 		public void addJoin(Join<X, ?> join);
 		public void addFetch(Fetch<X,?> fetch);
+		public boolean isCorrelated();
+		public From<?, X> getCorrelationParent();
 	}
 
 	private final Expression<Class<? extends X>> type;
@@ -87,13 +89,21 @@ public abstract class FromImpl<Z,X> extends PathImpl<X> implements From<Z,X> {
 			}
 			fetches.add( fetch );
 		}
+
+		public boolean isCorrelated() {
+			return false;
+		}
+
+		public From<?, X> getCorrelationParent() {
+			return null;
+		}
 	};
 
 	/**
 	 * Special constructor for {@link RootImpl}.
 	 *
-	 * @param queryBuilder
-	 * @param entityType
+	 * @param queryBuilder The query build
+	 * @param entityType The entity defining this root
 	 */
     protected FromImpl(QueryBuilderImpl queryBuilder, EntityType<X> entityType) {
 		super( queryBuilder, entityType.getBindableJavaType(), null, null, entityType );

@@ -26,8 +26,7 @@ package org.hibernate.ejb.criteria.expression;
 import java.util.ArrayList;
 import java.util.List;
 import javax.persistence.criteria.Expression;
-import javax.persistence.criteria.QueryBuilder.Coalesce;
-import org.hibernate.ejb.criteria.ParameterContainer;
+import javax.persistence.criteria.CriteriaBuilder.Coalesce;
 import org.hibernate.ejb.criteria.ParameterRegistry;
 import org.hibernate.ejb.criteria.QueryBuilderImpl;
 
@@ -61,6 +60,7 @@ public class CoalesceExpression<T> extends ExpressionImpl<T> implements Coalesce
 		return value( new LiteralExpression<T>( queryBuilder(), value ) );
 	}
 
+	@SuppressWarnings({ "unchecked" })
 	public Coalesce<T> value(Expression<? extends T> value) {
 		expressions.add( value );
 		if ( javaType == null ) {

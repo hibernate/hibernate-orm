@@ -34,7 +34,7 @@ import org.hibernate.ejb.criteria.QueryBuilderImpl;
  * @author Steve Ebersole
  */
 public class SubqueryComparisonModifierExpression<Y> extends ExpressionImpl<Y> {
-	public static enum Modifier { ALL, SOME, ANY };
+	public static enum Modifier { ALL, SOME, ANY }
 
 	private final Subquery<Y> subquery;
 	private final Modifier modifier;

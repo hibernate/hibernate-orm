@@ -24,8 +24,7 @@
 package org.hibernate.ejb.criteria.expression.function;
 
 import javax.persistence.criteria.Expression;
-import javax.persistence.criteria.QueryBuilder.Trimspec;
-import org.hibernate.ejb.criteria.ParameterContainer;
+import javax.persistence.criteria.CriteriaBuilder.Trimspec;
 import org.hibernate.ejb.criteria.ParameterRegistry;
 import org.hibernate.ejb.criteria.QueryBuilderImpl;
 import org.hibernate.ejb.criteria.expression.LiteralExpression;

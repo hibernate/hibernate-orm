@@ -29,6 +29,7 @@ import javax.persistence.criteria.Join;
 import javax.persistence.criteria.ListJoin;
 import javax.persistence.criteria.MapJoin;
 import javax.persistence.criteria.SetJoin;
+import javax.persistence.criteria.From;
 
 /**
  * Consolidates the {@link Join} and {@link Fetch} hierarchies since that is how we implement them.

@@ -25,6 +25,7 @@ package org.hibernate.ejb.criteria;
 
 import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.JoinType;
+import javax.persistence.criteria.From;
 import javax.persistence.metamodel.ListAttribute;
 import org.hibernate.ejb.criteria.JoinImplementors.ListJoinImplementor;
 import org.hibernate.ejb.criteria.expression.ListIndexExpression;
@@ -46,19 +47,6 @@ public class ListJoinImpl<O,E> extends JoinImpl<O,E> implements JoinImplementors
 	}
 
 	@Override
-	public ListJoinImplementor<O, E> correlateTo(CriteriaSubqueryImpl subquery) {
-		ListJoinImpl<O,E> correlation = new ListJoinImpl<O,E>(
-				queryBuilder(),
-				getJavaType(),
-				(PathImpl<O>) getParentPath(),
-				getAttribute(),
-				getJoinType()
-		);
-		correlation.defineJoinScope( subquery.getJoinScope() );
-		return correlation;
-	}
-
-	@Override
 	public ListAttribute<? super O, E> getAttribute() {
 		return (ListAttribute<? super O, E>) super.getAttribute();
 	}
@@ -68,7 +56,40 @@ public class ListJoinImpl<O,E> extends JoinImpl<O,E> implements JoinImplementors
         return (ListAttribute<? super O, E>) getAttribute();
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	public Expression<Integer> index() {
 		return new ListIndexExpression( queryBuilder(), getAttribute() );
+	}
+
+	@Override
+	public ListJoinImplementor<O, E> correlateTo(CriteriaSubqueryImpl subquery) {
+		ListJoinImpl<O,E> correlation = new ListJoinImpl<O,E>(
+				queryBuilder(),
+				getJavaType(),
+				(PathImpl<O>) getParentPath(),
+				getAttribute(),
+				getJoinType()
+		);
+		correlation.defineJoinScope( subquery.getJoinScope() );
+		correlation.correlationParent = this;
+		return correlation;
+	}
+
+	private From<O, E> correlationParent;
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public boolean isCorrelated() {
+		return getCorrelationParent() != null;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public From<O, E> getCorrelationParent() {
+		return correlationParent;
 	}
 }

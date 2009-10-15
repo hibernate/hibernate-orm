@@ -24,6 +24,7 @@
 package org.hibernate.ejb.criteria;
 
 import javax.persistence.criteria.JoinType;
+import javax.persistence.criteria.From;
 import javax.persistence.metamodel.SetAttribute;
 import org.hibernate.ejb.criteria.JoinImplementors.SetJoinImplementor;
 
@@ -47,6 +48,16 @@ public class BasicSetJoinImpl<O,E>
 	}
 
 	@Override
+	public SetAttribute<? super O, E> getAttribute() {
+		return (SetAttribute<? super O, E>) super.getAttribute();
+	}
+
+	@Override
+	public SetAttribute<? super O, E> getModel() {
+        return getAttribute();
+    }
+
+	@Override
 	public SetJoinImplementor<O, E> correlateTo(CriteriaSubqueryImpl subquery) {
 		BasicSetJoinImpl<O,E> correlation = new BasicSetJoinImpl<O,E>(
 				queryBuilder(),
@@ -56,16 +67,23 @@ public class BasicSetJoinImpl<O,E>
 				getJoinType()
 		);
 		correlation.defineJoinScope( subquery.getJoinScope() );
+		correlation.correlationParent = this;
 		return correlation;
 	}
 
-	@Override
-	public SetAttribute<? super O, E> getAttribute() {
-		return (SetAttribute<? super O, E>) super.getAttribute();
+	private From<O, E> correlationParent;
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public boolean isCorrelated() {
+		return getCorrelationParent() != null;
 	}
 
-	@Override
-	public SetAttribute<? super O, E> getModel() {
-        return getAttribute();
-    }
+	/**
+	 * {@inheritDoc}
+	 */
+	public From<O, E> getCorrelationParent() {
+		return correlationParent;
+	}
 }

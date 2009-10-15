@@ -29,6 +29,7 @@ import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Join;
 import javax.persistence.criteria.JoinType;
 import javax.persistence.criteria.Path;
+import javax.persistence.criteria.From;
 import javax.persistence.metamodel.MapAttribute;
 import javax.persistence.metamodel.Type.PersistenceType;
 import org.hibernate.ejb.criteria.JoinImplementors.MapJoinImplementor;
@@ -50,19 +51,6 @@ public class MapJoinImpl<O,K,V>
 			MapAttribute<? super O, K, V> joinProperty,
 			JoinType joinType) {
 		super(queryBuilder, javaType, lhs, joinProperty, joinType);
-	}
-
-	@Override
-	public MapJoinImplementor<O, K, V> correlateTo(CriteriaSubqueryImpl subquery) {
-		MapJoinImpl<O, K, V> correlation = new MapJoinImpl<O, K, V>(
-				queryBuilder(),
-				getJavaType(),
-				(PathImpl<O>) getParentPath(),
-				getAttribute(),
-				getJoinType()
-		);
-		correlation.defineJoinScope( subquery.getJoinScope() );
-		return correlation;
 	}
 
 	@Override
@@ -141,4 +129,34 @@ public class MapJoinImpl<O,K,V>
 		return new MapKeyHelpers.MapEntryExpression( queryBuilder(), Map.Entry.class, getAttribute() );
 	}
 
+
+	private From<O, V> correlationParent;
+
+	@Override
+	public MapJoinImplementor<O, K, V> correlateTo(CriteriaSubqueryImpl subquery) {
+		MapJoinImpl<O, K, V> correlation = new MapJoinImpl<O, K, V>(
+				queryBuilder(),
+				getJavaType(),
+				(PathImpl<O>) getParentPath(),
+				getAttribute(),
+				getJoinType()
+		);
+		correlation.defineJoinScope( subquery.getJoinScope() );
+		correlation.correlationParent = this;
+		return correlation;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public boolean isCorrelated() {
+		return getCorrelationParent() != null;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public From<O, V> getCorrelationParent() {
+		return correlationParent;
+	}
 }

@@ -27,6 +27,7 @@ import java.util.Map;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.spi.LoadState;
 import javax.persistence.spi.PersistenceUnitInfo;
+import javax.persistence.spi.ProviderUtil;
 
 import org.hibernate.ejb.util.PersistenceUtilHelper;
 
@@ -157,24 +158,30 @@ public class HibernatePersistence implements javax.persistence.spi.PersistencePr
 		return configured != null ? configured.buildEntityManagerFactory() : null;
 	}
 
-	public LoadState isLoadedWithoutReference(Object proxy, String property) {
-		return PersistenceUtilHelper.isLoadedWithoutReference( proxy, property );
-	}
+	private final ProviderUtil providerUtil = new ProviderUtil() {
+		public LoadState isLoadedWithoutReference(Object proxy, String property) {
+			return PersistenceUtilHelper.isLoadedWithoutReference( proxy, property );
+		}
 
-	public LoadState isLoadedWithReference(Object proxy, String property) {
-		return PersistenceUtilHelper.isLoadedWithReference( proxy, property );
-	}
+		public LoadState isLoadedWithReference(Object proxy, String property) {
+			return PersistenceUtilHelper.isLoadedWithReference( proxy, property );
+		}
 
-	public LoadState isLoaded(Object o) {
-		return PersistenceUtilHelper.isLoaded(o);
+		public LoadState isLoaded(Object o) {
+			return PersistenceUtilHelper.isLoaded(o);
+		}
+	};
+
+	public ProviderUtil getProviderUtil() {
+		return providerUtil;
 	}
 
 	/**
 	 * create a factory from a canonical version
 	 * @deprecated
 	 */
-	// This is used directly by JBoss so don't remove until further notice.  bill@jboss.org
 	public EntityManagerFactory createEntityManagerFactory(Map properties) {
+		// This is used directly by JBoss so don't remove until further notice.  bill@jboss.org
 		Ejb3Configuration cfg = new Ejb3Configuration();
 		return cfg.createEntityManagerFactory( properties );
 	}

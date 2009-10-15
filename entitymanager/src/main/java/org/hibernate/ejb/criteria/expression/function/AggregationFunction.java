@@ -41,6 +41,7 @@ public class AggregationFunction<T> extends ParameterizedFunctionExpression<T> {
 	 * @param functionName The name of the function.
 	 * @param argument The literal argument
 	 */
+	@SuppressWarnings({ "unchecked" })
 	public AggregationFunction(
 			QueryBuilderImpl queryBuilder,
 			Class<T> returnType,
@@ -114,8 +115,13 @@ public class AggregationFunction<T> extends ParameterizedFunctionExpression<T> {
 	public static class SUM<N extends Number> extends AggregationFunction<N> {
 		public static final String NAME = "sum";
 
+		@SuppressWarnings({ "unchecked" })
 		public SUM(QueryBuilderImpl queryBuilder, Expression<N> expression) {
-			super( queryBuilder, expression.getJavaType(), NAME , expression);
+			super( queryBuilder, (Class<N>)expression.getJavaType(), NAME , expression);
+		}
+
+		public SUM(QueryBuilderImpl queryBuilder, Expression<? extends Number> expression, Class<N> returnType) {
+			super( queryBuilder, returnType, NAME , expression);
 		}
 	}
 
@@ -128,8 +134,9 @@ public class AggregationFunction<T> extends ParameterizedFunctionExpression<T> {
 	public static class MIN<N extends Number> extends AggregationFunction<N> {
 		public static final String NAME = "min";
 
+		@SuppressWarnings({ "unchecked" })
 		public MIN(QueryBuilderImpl queryBuilder, Expression<N> expression) {
-			super( queryBuilder, expression.getJavaType(), NAME , expression);
+			super( queryBuilder, ( Class<N> ) expression.getJavaType(), NAME , expression);
 		}
 	}
 
@@ -142,8 +149,9 @@ public class AggregationFunction<T> extends ParameterizedFunctionExpression<T> {
 	public static class MAX<N extends Number> extends AggregationFunction<N> {
 		public static final String NAME = "max";
 
+		@SuppressWarnings({ "unchecked" })
 		public MAX(QueryBuilderImpl queryBuilder, Expression<N> expression) {
-			super( queryBuilder, expression.getJavaType(), NAME , expression);
+			super( queryBuilder, ( Class<N> ) expression.getJavaType(), NAME , expression);
 		}
 	}
 
@@ -155,8 +163,9 @@ public class AggregationFunction<T> extends ParameterizedFunctionExpression<T> {
 	public static class LEAST<X extends Comparable<X>> extends AggregationFunction<X> {
 		public static final String NAME = "min";
 
+		@SuppressWarnings({ "unchecked" })
 		public LEAST(QueryBuilderImpl queryBuilder, Expression<X> expression) {
-			super( queryBuilder, expression.getJavaType(), NAME , expression);
+			super( queryBuilder, ( Class<X> ) expression.getJavaType(), NAME , expression);
 		}
 	}
 
@@ -168,8 +177,9 @@ public class AggregationFunction<T> extends ParameterizedFunctionExpression<T> {
 	public static class GREATEST<X extends Comparable<X>> extends AggregationFunction<X> {
 		public static final String NAME = "max";
 
+		@SuppressWarnings({ "unchecked" })
 		public GREATEST(QueryBuilderImpl queryBuilder, Expression<X> expression) {
-			super( queryBuilder, expression.getJavaType(), NAME , expression);
+			super( queryBuilder, ( Class<X> ) expression.getJavaType(), NAME , expression);
 		}
 	}
 }

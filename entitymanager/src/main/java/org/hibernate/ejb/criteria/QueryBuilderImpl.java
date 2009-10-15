@@ -31,7 +31,7 @@ import java.util.Map;
 import java.util.Set;
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import javax.persistence.criteria.QueryBuilder;
+import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Selection;
 import javax.persistence.criteria.CompoundSelection;
@@ -87,7 +87,7 @@ import static org.hibernate.ejb.criteria.predicate.ComparisonPredicate.Compariso
  *
  * @author Steve Ebersole
  */
-public class QueryBuilderImpl implements QueryBuilder, Serializable {
+public class QueryBuilderImpl implements CriteriaBuilder, Serializable {
 	private final EntityManagerFactoryImpl entityManagerFactory;
 
 	public QueryBuilderImpl(EntityManagerFactoryImpl entityManagerFactory) {
@@ -260,7 +260,7 @@ public class QueryBuilderImpl implements QueryBuilder, Serializable {
 	 * {@inheritDoc}
 	 */
 	public Predicate not(Expression<Boolean> expression) {
-		return wrap( expression ).negate();
+		return wrap( expression ).not();
 	}
 
 	/**
@@ -318,7 +318,7 @@ public class QueryBuilderImpl implements QueryBuilder, Serializable {
 	 * {@inheritDoc}
 	 */
 	public Predicate isFalse(Expression<Boolean> x) {
-		return wrap( x ).negate();
+		return wrap( x ).not();
 // TODO : the correct thing here depends on response to #5 on my wiki page
 //		return new ExplicitTruthValueCheck( this, x, TruthValue.FALSE );
 	}
@@ -334,7 +334,7 @@ public class QueryBuilderImpl implements QueryBuilder, Serializable {
 	 * {@inheritDoc}
 	 */
 	public Predicate isNotNull(Expression<?> x) {
-		return isNull( x ).negate();
+		return isNull( x ).not();
 	}
 
 	/**
@@ -366,13 +366,13 @@ public class QueryBuilderImpl implements QueryBuilder, Serializable {
 	 */
 	public Predicate notEqual(Expression<?> x, Object y) {
 		//noinspection SuspiciousNameCombination
-		return new ComparisonPredicate( this, ComparisonOperator.NOT_EQUAL, x, y ).negate();
+		return new ComparisonPredicate( this, ComparisonOperator.NOT_EQUAL, x, y ).not();
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public <Y extends Comparable<Y>> Predicate greaterThan(Expression<? extends Y> x, Expression<? extends Y> y) {
+	public <Y extends Comparable<? super Y>> Predicate greaterThan(Expression<? extends Y> x, Expression<? extends Y> y) {
 		//noinspection SuspiciousNameCombination
 		return new ComparisonPredicate( this, ComparisonOperator.GREATER_THAN, x, y );
 	}
@@ -380,7 +380,7 @@ public class QueryBuilderImpl implements QueryBuilder, Serializable {
 	/**
 	 * {@inheritDoc}
 	 */
-	public <Y extends Comparable<Y>> Predicate lessThan(
+	public <Y extends Comparable<? super Y>> Predicate lessThan(
 			Expression<? extends Y> x,
 			Expression<? extends Y> y) {
 		//noinspection SuspiciousNameCombination
@@ -390,7 +390,7 @@ public class QueryBuilderImpl implements QueryBuilder, Serializable {
 	/**
 	 * {@inheritDoc}
 	 */
-	public <Y extends Comparable<Y>> Predicate greaterThanOrEqualTo(
+	public <Y extends Comparable<? super Y>> Predicate greaterThanOrEqualTo(
 			Expression<? extends Y> x,
 			Expression<? extends Y> y) {
 		//noinspection SuspiciousNameCombination
@@ -400,7 +400,7 @@ public class QueryBuilderImpl implements QueryBuilder, Serializable {
 	/**
 	 * {@inheritDoc}
 	 */
-	public <Y extends Comparable<Y>> Predicate lessThanOrEqualTo(
+	public <Y extends Comparable<? super Y>> Predicate lessThanOrEqualTo(
 			Expression<? extends Y> x,
 			Expression<? extends Y> y) {
 		//noinspection SuspiciousNameCombination
@@ -410,7 +410,7 @@ public class QueryBuilderImpl implements QueryBuilder, Serializable {
 	/**
 	 * {@inheritDoc}
 	 */
-	public <Y extends Comparable<Y>> Predicate greaterThan(
+	public <Y extends Comparable<? super Y>> Predicate greaterThan(
 			Expression<? extends Y> x,
 			Y y) {
 		//noinspection SuspiciousNameCombination
@@ -420,7 +420,7 @@ public class QueryBuilderImpl implements QueryBuilder, Serializable {
 	/**
 	 * {@inheritDoc}
 	 */
-	public <Y extends Comparable<Y>> Predicate lessThan(
+	public <Y extends Comparable<? super Y>> Predicate lessThan(
 			Expression<? extends Y> x,
 			Y y) {
 		//noinspection SuspiciousNameCombination
@@ -430,7 +430,7 @@ public class QueryBuilderImpl implements QueryBuilder, Serializable {
 	/**
 	 * {@inheritDoc}
 	 */
-	public <Y extends Comparable<Y>> Predicate greaterThanOrEqualTo(
+	public <Y extends Comparable<? super Y>> Predicate greaterThanOrEqualTo(
 			Expression<? extends Y> x,
 			Y y) {
 		//noinspection SuspiciousNameCombination
@@ -440,7 +440,7 @@ public class QueryBuilderImpl implements QueryBuilder, Serializable {
 	/**
 	 * {@inheritDoc}
 	 */
-	public <Y extends Comparable<Y>> Predicate lessThanOrEqualTo(
+	public<Y extends Comparable<? super Y>> Predicate lessThanOrEqualTo(
 			Expression<? extends Y> x,
 			Y y) {
 		//noinspection SuspiciousNameCombination
@@ -514,7 +514,7 @@ public class QueryBuilderImpl implements QueryBuilder, Serializable {
 	/**
 	 * {@inheritDoc}
 	 */
-	public <Y extends Comparable<Y>> Predicate between(
+	public <Y extends Comparable<? super Y>> Predicate between(
 			Expression<? extends Y> expression,
 			Y lowerBound,
 			Y upperBound) {
@@ -524,7 +524,7 @@ public class QueryBuilderImpl implements QueryBuilder, Serializable {
 	/**
 	 * {@inheritDoc}
 	 */
-	public <Y extends Comparable<Y>> Predicate between(
+	public <Y extends Comparable<? super Y>> Predicate between(
 			Expression<? extends Y> expression,
 			Expression<? extends Y> lowerBound,
 			Expression<? extends Y> upperBound) {
@@ -575,27 +575,27 @@ public class QueryBuilderImpl implements QueryBuilder, Serializable {
 	}
 
 	public Predicate notLike(Expression<String> matchExpression, Expression<String> pattern) {
-		return like( matchExpression, pattern ).negate();
+		return like( matchExpression, pattern ).not();
 	}
 
 	public Predicate notLike(Expression<String> matchExpression, Expression<String> pattern, Expression<Character> escapeCharacter) {
-		return like( matchExpression, pattern, escapeCharacter ).negate();
+		return like( matchExpression, pattern, escapeCharacter ).not();
 	}
 
 	public Predicate notLike(Expression<String> matchExpression, Expression<String> pattern, char escapeCharacter) {
-		return like( matchExpression, pattern, escapeCharacter ).negate();
+		return like( matchExpression, pattern, escapeCharacter ).not();
 	}
 
 	public Predicate notLike(Expression<String> matchExpression, String pattern) {
-		return like( matchExpression, pattern ).negate();
+		return like( matchExpression, pattern ).not();
 	}
 
 	public Predicate notLike(Expression<String> matchExpression, String pattern, Expression<Character> escapeCharacter) {
-		return like( matchExpression, pattern, escapeCharacter ).negate();
+		return like( matchExpression, pattern, escapeCharacter ).not();
 	}
 
 	public Predicate notLike(Expression<String> matchExpression, String pattern, char escapeCharacter) {
-		return like( matchExpression, pattern, escapeCharacter ).negate();
+		return like( matchExpression, pattern, escapeCharacter ).not();
 	}
 
 
@@ -622,6 +622,13 @@ public class QueryBuilderImpl implements QueryBuilder, Serializable {
 		return new LiteralExpression<T>( this, value );
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
+	public <T> Expression<T> nullLiteral(Class<T> resultClass) {
+		return new LiteralExpression<T>( this, resultClass, null );
+	}
+
 
 	// aggregate functions ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -642,6 +649,20 @@ public class QueryBuilderImpl implements QueryBuilder, Serializable {
 	/**
 	 * {@inheritDoc}
 	 */
+	public Expression<Long> sumAsLong(Expression<Integer> x) {
+		return new AggregationFunction.SUM<Long>( this, x, Long.class );
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public Expression<Double> sumAsDouble(Expression<Float> x) {
+		return new AggregationFunction.SUM<Double>( this, x, Double.class );
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
 	public <N extends Number> Expression<N> max(Expression<N> x) {
 		return new AggregationFunction.MAX<N>( this, x );
 	}
@@ -656,15 +677,17 @@ public class QueryBuilderImpl implements QueryBuilder, Serializable {
 	/**
 	 * {@inheritDoc}
 	 */
-	public <X extends Comparable<X>> Expression<X> greatest(Expression<X> x) {
-		return new AggregationFunction.GREATEST<X>( this, x );
+	@SuppressWarnings({ "unchecked" })
+	public <X extends Comparable<? super X>> Expression<X> greatest(Expression<X> x) {
+		return new AggregationFunction.GREATEST( this, x );
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public <X extends Comparable<X>> Expression<X> least(Expression<X> x) {
-		return new AggregationFunction.LEAST<X>( this, x );
+	@SuppressWarnings({ "unchecked" })
+	public <X extends Comparable<? super X>> Expression<X> least(Expression<X> x) {
+		return new AggregationFunction.LEAST( this, x );
 	}
 
 	/**
@@ -696,8 +719,6 @@ public class QueryBuilderImpl implements QueryBuilder, Serializable {
 	 *
 	 * @param name The function name.
 	 * @param returnType The return type.
-	 *
-	 * @param <T> The type of the function return.
 	 *
 	 * @return The function expression
 	 */
@@ -816,6 +837,7 @@ public class QueryBuilderImpl implements QueryBuilder, Serializable {
 	/**
 	 * {@inheritDoc}
 	 */
+	@SuppressWarnings({ "unchecked" })
 	public <N extends Number> Expression<N> sum(Expression<? extends N> expression1, Expression<? extends N> expression2) {
 		Class<N> type = (Class<N>)BinaryArithmeticOperation.determineReturnType( (Class)Number.class, (Expression)expression1 );
 		type = (Class<N>)BinaryArithmeticOperation.determineReturnType( type, (Expression)expression2 );
@@ -831,6 +853,7 @@ public class QueryBuilderImpl implements QueryBuilder, Serializable {
 	/**
 	 * {@inheritDoc}
 	 */
+	@SuppressWarnings({ "unchecked" })
 	public <N extends Number> Expression<N> prod(Expression<? extends N> expression1, Expression<? extends N> expression2) {
 		Class<N> type = (Class<N>)BinaryArithmeticOperation.determineReturnType( (Class)Number.class, (Expression)expression1 );
 		type = (Class<N>)BinaryArithmeticOperation.determineReturnType( type, (Expression)expression2 );
@@ -846,12 +869,13 @@ public class QueryBuilderImpl implements QueryBuilder, Serializable {
 	/**
 	 * {@inheritDoc}
 	 */
+	@SuppressWarnings({ "unchecked" })
 	public <N extends Number> Expression<N> diff(Expression<? extends N> expression1, Expression<? extends N> expression2) {
 		Class<N> type = (Class<N>)BinaryArithmeticOperation.determineReturnType( (Class)Number.class, (Expression)expression1 );
 		type = (Class<N>)BinaryArithmeticOperation.determineReturnType( type, (Expression)expression2 );
 		return new BinaryArithmeticOperation<N>(
 				this,
-				(Class<N>) expression1.getJavaType(),
+				type,
 				BinaryArithmeticOperation.Operation.SUBTRACT,
 				expression1,
 				expression2
@@ -861,6 +885,7 @@ public class QueryBuilderImpl implements QueryBuilder, Serializable {
 	/**
 	 * {@inheritDoc}
 	 */
+	@SuppressWarnings({ "unchecked" })
 	public <N extends Number> Expression<N> sum(Expression<? extends N> expression, N n) {
 		Class<N> type = (Class<N>)BinaryArithmeticOperation.determineReturnType( (Class)Number.class, (Expression)expression );
 		type = (Class<N>)BinaryArithmeticOperation.determineReturnType( type, n );
@@ -876,6 +901,7 @@ public class QueryBuilderImpl implements QueryBuilder, Serializable {
 	/**
 	 * {@inheritDoc}
 	 */
+	@SuppressWarnings({ "unchecked" })
 	public <N extends Number> Expression<N> prod(Expression<? extends N> expression, N n) {
 		Class<N> type = (Class<N>)BinaryArithmeticOperation.determineReturnType( (Class)Number.class, (Expression)expression );
 		type = (Class<N>)BinaryArithmeticOperation.determineReturnType( type, n );
@@ -891,6 +917,7 @@ public class QueryBuilderImpl implements QueryBuilder, Serializable {
 	/**
 	 * {@inheritDoc}
 	 */
+	@SuppressWarnings({ "unchecked" })
 	public <N extends Number> Expression<N> diff(Expression<? extends N> expression, N n) {
 		Class<N> type = (Class<N>)BinaryArithmeticOperation.determineReturnType( (Class)Number.class, (Expression)expression );
 		type = (Class<N>)BinaryArithmeticOperation.determineReturnType( type, n );
@@ -906,6 +933,7 @@ public class QueryBuilderImpl implements QueryBuilder, Serializable {
 	/**
 	 * {@inheritDoc}
 	 */
+	@SuppressWarnings({ "unchecked" })
 	public <N extends Number> Expression<N> sum(N n, Expression<? extends N> expression) {
 		Class<N> type = (Class<N>)BinaryArithmeticOperation.determineReturnType( (Class)Number.class, (Expression)expression );
 		type = (Class<N>)BinaryArithmeticOperation.determineReturnType( type, n );
@@ -921,6 +949,7 @@ public class QueryBuilderImpl implements QueryBuilder, Serializable {
 	/**
 	 * {@inheritDoc}
 	 */
+	@SuppressWarnings({ "unchecked" })
 	public <N extends Number> Expression<N> prod(N n, Expression<? extends N> expression) {
 		Class<N> type = (Class<N>)BinaryArithmeticOperation.determineReturnType( (Class)Number.class, (Expression)expression );
 		type = (Class<N>)BinaryArithmeticOperation.determineReturnType( type, n );
@@ -936,6 +965,7 @@ public class QueryBuilderImpl implements QueryBuilder, Serializable {
 	/**
 	 * {@inheritDoc}
 	 */
+	@SuppressWarnings({ "unchecked" })
 	public <N extends Number> Expression<N> diff(N n, Expression<? extends N> expression) {
 		Class<N> type = (Class<N>)BinaryArithmeticOperation.determineReturnType( (Class)Number.class, (Expression)expression );
 		type = (Class<N>)BinaryArithmeticOperation.determineReturnType( type, n );
@@ -1094,7 +1124,7 @@ public class QueryBuilderImpl implements QueryBuilder, Serializable {
 	public <Y> Expression<Y> all(Subquery<Y> subquery) {
 		return new SubqueryComparisonModifierExpression<Y>(
 				this,
-				subquery.getJavaType(),
+				(Class)subquery.getJavaType(),
 				subquery,
 				SubqueryComparisonModifierExpression.Modifier.ALL
 		);
@@ -1106,7 +1136,7 @@ public class QueryBuilderImpl implements QueryBuilder, Serializable {
 	public <Y> Expression<Y> some(Subquery<Y> subquery) {
 		return new SubqueryComparisonModifierExpression<Y>(
 				this,
-				subquery.getJavaType(),
+				(Class)subquery.getJavaType(),
 				subquery,
 				SubqueryComparisonModifierExpression.Modifier.SOME
 		);
@@ -1118,7 +1148,7 @@ public class QueryBuilderImpl implements QueryBuilder, Serializable {
 	public <Y> Expression<Y> any(Subquery<Y> subquery) {
 		return new SubqueryComparisonModifierExpression<Y>(
 				this,
-				subquery.getJavaType(),
+				(Class)subquery.getJavaType(),
 				subquery,
 				SubqueryComparisonModifierExpression.Modifier.ANY
 		);
@@ -1185,7 +1215,7 @@ public class QueryBuilderImpl implements QueryBuilder, Serializable {
 	 * {@inheritDoc}
 	 */
 	public <Y> Expression<Y> nullif(Expression<Y> exp1, Expression<?> exp2) {
-		return nullif( (Class<Y>)null, exp1, exp2 );
+		return nullif( null, exp1, exp2 );
 	}
 
 	public <Y> Expression<Y> nullif(Class<Y> type, Expression<Y> exp1, Expression<?> exp2) {
@@ -1196,7 +1226,7 @@ public class QueryBuilderImpl implements QueryBuilder, Serializable {
 	 * {@inheritDoc}
 	 */
 	public <Y> Expression<Y> nullif(Expression<Y> exp1, Y exp2) {
-		return nullif( (Class<Y>)null, exp1, exp2 );
+		return nullif( null, exp1, exp2 );
 	}
 
 	public <Y> Expression<Y> nullif(Class<Y> type, Expression<Y> exp1, Y exp2) {
@@ -1241,7 +1271,7 @@ public class QueryBuilderImpl implements QueryBuilder, Serializable {
 			return size( ( (LiteralExpression<C>) exp ).getLiteral() );
 		}
 		else if ( CollectionExpression.class.isInstance(exp) ) {
-			return new SizeOfCollectionExpression<C>(this, (CollectionExpression<C>)null);
+			return new SizeOfCollectionExpression<C>(this, null);
 		}
 		// TODO : what other specific types?  any?
 		throw new IllegalArgumentException("unknown collection expression type [" + exp.getClass().getName() + "]" );
@@ -1265,6 +1295,7 @@ public class QueryBuilderImpl implements QueryBuilder, Serializable {
 	/**
 	 * {@inheritDoc}
 	 */
+	@SuppressWarnings({ "unchecked" })
 	public <C extends Collection<?>> Predicate isEmpty(Expression<C> collectionExpression) {
 		if ( CollectionExpression.class.isInstance(collectionExpression) ) {
 			return new IsEmptyPredicate(
@@ -1282,7 +1313,7 @@ public class QueryBuilderImpl implements QueryBuilder, Serializable {
 	 * {@inheritDoc}
 	 */
 	public <C extends Collection<?>> Predicate isNotEmpty(Expression<C> collectionExpression) {
-		return isEmpty( collectionExpression ).negate();
+		return isEmpty( collectionExpression ).not();
 	}
 
 	/**
@@ -1305,7 +1336,7 @@ public class QueryBuilderImpl implements QueryBuilder, Serializable {
 	 * {@inheritDoc}
 	 */
 	public <E, C extends Collection<E>> Predicate isNotMember(E e, Expression<C> cExpression) {
-		return isMember(e, cExpression).negate();
+		return isMember(e, cExpression).not();
 	}
 
 	/**
@@ -1328,6 +1359,6 @@ public class QueryBuilderImpl implements QueryBuilder, Serializable {
 	 * {@inheritDoc}
 	 */
 	public <E, C extends Collection<E>> Predicate isNotMember(Expression<E> eExpression, Expression<C> cExpression) {
-		return isMember(eExpression, cExpression).negate();
+		return isMember(eExpression, cExpression).not();
 	}
 }

@@ -269,15 +269,15 @@ public abstract class AbstractQueryImpl<X> implements TypedQuery<X> {
 	private Map parameterBindings;
 
 	protected void registerParameterBinding(Parameter parameter, Object value) {
-		if ( value != null && parameter.getJavaType() != null ) {
+		if ( value != null && parameter.getParameterType() != null ) {
 			if ( Collection.class.isInstance( value ) ) {
 				final Collection collection = (Collection) value;
 				// validate the elements...
 				for ( Object element : collection ) {
-					if ( ! parameter.getJavaType().isInstance( element ) ) {
+					if ( ! parameter.getParameterType().isInstance( element ) ) {
 						throw new IllegalArgumentException(
 								"Parameter value [" + element + "] was not matching type [" +
-										parameter.getJavaType().getName() + "]"
+										parameter.getParameterType().getName() + "]"
 						);
 					}
 				}
@@ -285,19 +285,19 @@ public abstract class AbstractQueryImpl<X> implements TypedQuery<X> {
 			else if ( value.getClass().isArray() ) {
 				final Object[] array = (Object[]) value;
 				for ( Object element : array ) {
-					if ( ! parameter.getJavaType().isInstance( element ) ) {
+					if ( ! parameter.getParameterType().isInstance( element ) ) {
 						throw new IllegalArgumentException(
 								"Parameter value [" + element + "] was not matching type [" +
-										parameter.getJavaType().getName() + "]"
+										parameter.getParameterType().getName() + "]"
 						);
 					}
 				}
 			}
 			else {
-				if ( ! parameter.getJavaType().isInstance( value ) ) {
+				if ( ! parameter.getParameterType().isInstance( value ) ) {
 					throw new IllegalArgumentException(
 							"Parameter value [" + value + "] was not matching type [" +
-									parameter.getJavaType().getName() + "]"
+									parameter.getParameterType().getName() + "]"
 					);
 				}
 			}

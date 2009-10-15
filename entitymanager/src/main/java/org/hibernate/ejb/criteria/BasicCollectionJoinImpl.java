@@ -24,6 +24,7 @@
 package org.hibernate.ejb.criteria;
 
 import javax.persistence.criteria.JoinType;
+import javax.persistence.criteria.From;
 import javax.persistence.metamodel.CollectionAttribute;
 import org.hibernate.ejb.criteria.JoinImplementors.CollectionJoinImplementor;
 
@@ -66,7 +67,23 @@ public class BasicCollectionJoinImpl<O,E>
 				getJoinType()
 		);
 		correlation.defineJoinScope( subquery.getJoinScope() );
+		correlation.correlationParent = this;
 		return correlation;
 	}
 
+	private From<O, E> correlationParent;
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public boolean isCorrelated() {
+		return false;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public From<O, E> getCorrelationParent() {
+		return null;
+	}
 }

@@ -26,8 +26,7 @@ package org.hibernate.ejb.criteria.expression;
 import java.util.ArrayList;
 import java.util.List;
 import javax.persistence.criteria.Expression;
-import javax.persistence.criteria.QueryBuilder.Case;
-import org.hibernate.ejb.criteria.ParameterContainer;
+import javax.persistence.criteria.CriteriaBuilder.Case;
 import org.hibernate.ejb.criteria.ParameterRegistry;
 import org.hibernate.ejb.criteria.QueryBuilderImpl;
 
@@ -70,10 +69,11 @@ public class SearchedCaseExpression<R> extends ExpressionImpl<R> implements Case
 		return when( condition, buildLiteral(result) );
 	}
 
+	@SuppressWarnings({ "unchecked" })
 	private LiteralExpression<R> buildLiteral(R result) {
 		final Class<R> type = result != null
 				? (Class<R>) result.getClass()
-				: (Class<R>) getJavaType();
+				: getJavaType();
 		return new LiteralExpression<R>( queryBuilder(), type, result );
 	}
 
@@ -84,6 +84,7 @@ public class SearchedCaseExpression<R> extends ExpressionImpl<R> implements Case
 		return this;
 	}
 
+	@SuppressWarnings({ "unchecked" })
 	private void adjustJavaType(Expression<? extends R> exp) {
 		if ( javaType == null ) {
 			javaType = (Class<R>) exp.getJavaType();

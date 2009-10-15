@@ -72,6 +72,10 @@ public class ParameterExpressionImpl<T> extends ExpressionImpl<T> implements Par
 		return position;
 	}
 
+	public Class<T> getParameterType() {
+		return getJavaType();
+	}
+
 	public void registerParameters(ParameterRegistry registry) {
 		registry.registerParameter( this );
 	}

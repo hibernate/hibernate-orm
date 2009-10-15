@@ -63,6 +63,10 @@ public class MetamodelImpl implements Metamodel, Serializable {
 		}
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
+	@SuppressWarnings({ "unchecked" })
 	public <X> EntityType<X> entity(Class<X> cls) {
 		final EntityType<?> entityType = entities.get( cls );
 		if ( entityType == null ) throw new IllegalArgumentException( "Not an entity: " + cls );
@@ -70,14 +74,21 @@ public class MetamodelImpl implements Metamodel, Serializable {
 		return (EntityType<X>) entityType;
 	}
 
-	public <X> ManagedType<X> type(Class<X> cls) {
-		ManagedType<?> type = null;
-		type = entities.get( cls );
+	/**
+	 * {@inheritDoc}
+	 */
+	@SuppressWarnings({ "unchecked" })
+	public <X> ManagedType<X> managedType(Class<X> cls) {
+		ManagedType<?> type = entities.get( cls );
 		if ( type == null ) throw new IllegalArgumentException( "Not an managed type: " + cls );
 		//unsafe casting is our map inserts guarantee them
 		return (ManagedType<X>) type;
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
+	@SuppressWarnings({ "unchecked" })
 	public <X> EmbeddableType<X> embeddable(Class<X> cls) {
 		final EmbeddableType<?> embeddableType = embeddables.get( cls );
 		if ( embeddableType == null ) throw new IllegalArgumentException( "Not an entity: " + cls );
@@ -85,6 +96,9 @@ public class MetamodelImpl implements Metamodel, Serializable {
 		return (EmbeddableType<X>) embeddableType;
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	public Set<ManagedType<?>> getManagedTypes() {
 		final Set<ManagedType<?>> managedTypes = new HashSet<ManagedType<?>>( entities.size() + embeddables.size() );
 		managedTypes.addAll( entities.values() );
@@ -92,10 +106,16 @@ public class MetamodelImpl implements Metamodel, Serializable {
 		return managedTypes;
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	public Set<EntityType<?>> getEntities() {
 		return new HashSet<EntityType<?>>(entities.values());
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	public Set<EmbeddableType<?>> getEmbeddables() {
 		return new HashSet<EmbeddableType<?>>(embeddables.values());
 	}

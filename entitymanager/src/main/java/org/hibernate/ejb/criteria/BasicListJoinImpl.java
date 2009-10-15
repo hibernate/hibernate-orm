@@ -25,6 +25,7 @@ package org.hibernate.ejb.criteria;
 
 import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.JoinType;
+import javax.persistence.criteria.From;
 import javax.persistence.metamodel.ListAttribute;
 import org.hibernate.ejb.criteria.JoinImplementors.ListJoinImplementor;
 import org.hibernate.ejb.criteria.expression.ListIndexExpression;
@@ -72,7 +73,23 @@ public class BasicListJoinImpl<O,E>
 				getJoinType()
 		);
 		correlation.defineJoinScope( subquery.getJoinScope() );
+		correlation.correlationParent = this;
 		return correlation;
 	}
 
+	private From<O, E> correlationParent;
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public boolean isCorrelated() {
+		return getCorrelationParent() != null;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public From<O, E> getCorrelationParent() {
+		return correlationParent;
+	}
 }

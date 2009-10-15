@@ -30,7 +30,7 @@ import javax.persistence.PersistenceContextType;
 import javax.persistence.Cache;
 import javax.persistence.PersistenceUnitUtil;
 import javax.persistence.metamodel.Metamodel;
-import javax.persistence.criteria.QueryBuilder;
+import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.spi.PersistenceUnitTransactionType;
 import javax.persistence.spi.LoadState;
 
@@ -93,7 +93,7 @@ public class EntityManagerFactoryImpl implements HibernateEntityManagerFactory {
 		);
 	}
 
-	public QueryBuilder getQueryBuilder() {
+	public CriteriaBuilder getCriteriaBuilder() {
 		return criteriaQueryBuilder;
 	}
 

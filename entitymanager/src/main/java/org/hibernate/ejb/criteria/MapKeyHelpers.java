@@ -31,6 +31,7 @@ import javax.persistence.criteria.Join;
 import javax.persistence.criteria.JoinType;
 import javax.persistence.criteria.MapJoin;
 import javax.persistence.criteria.Path;
+import javax.persistence.criteria.From;
 import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.Bindable.BindableType;
 import javax.persistence.metamodel.ManagedType;
@@ -75,6 +76,13 @@ public class MapKeyHelpers {
 			throw new UnsupportedOperationException( "Map key join cannot be used as a correlation" );
 		}
 
+		public boolean isCorrelated() {
+			return false;
+		}
+
+		public From<Map<K, V>, K> getCorrelationParent() {
+			return null;
+		}
 	}
 
 	/**

@@ -24,6 +24,7 @@
 package org.hibernate.ejb.criteria;
 
 import javax.persistence.criteria.Root;
+import javax.persistence.criteria.From;
 import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.EntityType;
 
@@ -33,6 +34,8 @@ import javax.persistence.metamodel.EntityType;
  * @author Steve Ebersole
  */
 public class RootImpl<X> extends FromImpl<X,X> implements Root<X> {
+	private RootImpl<X> correlationParent;
+
 	public RootImpl(
 			QueryBuilderImpl queryBuilder,
 			EntityType<X> model) {
@@ -49,9 +52,18 @@ public class RootImpl<X> extends FromImpl<X,X> implements Root<X> {
 		return (Attribute<X, ?>) getModel().getAttribute( name );
 	}
 
+	public boolean isCorrelated() {
+		return getCorrelationParent() != null;
+	}
+
+	public From<X, X> getCorrelationParent() {
+		return correlationParent;
+	}
+
 	public RootImpl<X> correlateTo(CriteriaSubqueryImpl subquery) {
 		RootImpl<X> correlation = new RootImpl<X>( queryBuilder(), getModel() );
 		correlation.defineJoinScope( subquery.getJoinScope() );
+		correlation.correlationParent = this;
 		return correlation;
 	}
 }

@@ -143,12 +143,12 @@ public class EntityTypeDelegator<X> implements EntityType<X>, Serializable {
 		return delegate.getDeclaredMap( name, keyType, valueType );
 	}
 
-	public Set<PluralAttribute<? super X, ?, ?>> getCollections() {
-		return delegate.getCollections();
+	public Set<PluralAttribute<? super X, ?, ?>> getPluralAttributes() {
+		return delegate.getPluralAttributes();
 	}
 
-	public Set<PluralAttribute<X, ?, ?>> getDeclaredCollections() {
-		return delegate.getDeclaredCollections();
+	public Set<PluralAttribute<X, ?, ?>> getDeclaredPluralAttributes() {
+		return delegate.getDeclaredPluralAttributes();
 	}
 
 	public Attribute<? super X, ?> getAttribute(String name) {

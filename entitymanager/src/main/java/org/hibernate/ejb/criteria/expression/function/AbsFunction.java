@@ -36,7 +36,7 @@ public class AbsFunction<N extends Number>
 
 	public static final String NAME = "abs";
 
-	public AbsFunction(QueryBuilderImpl queryBuilder, Expression<N> expression) {
+	public AbsFunction(QueryBuilderImpl queryBuilder, Expression expression) {
 		super( queryBuilder, expression.getJavaType(), NAME, expression );
 	}
 }

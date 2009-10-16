@@ -31,11 +31,6 @@
         <relativePath>../parent/pom.xml</relativePath>
     </parent>
 
-    <properties>
-        <!-- TODO : move this to local settings.xml -->
-        <jdbc4_jdk>/opt/java/jdk-1.6</jdbc4_jdk>
-    </properties>
-
     <artifactId>hibernate-jdbc4-testing</artifactId>
     <name>JDBC4-JdbcSupport Testing</name>
     <description>Test support of JDBC4 through JdbcSupport</description>
@@ -48,17 +43,17 @@
                 <configuration>
                     <source>1.6</source>
                     <target>1.6</target>
-                    <verbose>true</verbose>
-                    <fork>true</fork>
-                    <executable>${jdbc4_jdk}/javac</executable>
                     <compilerVersion>1.6</compilerVersion>
+                    <executable>${jdk16_home}/bin/javac</executable>
+                    <fork>true</fork>
+                    <verbose>true</verbose>
                 </configuration>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
-                    <jvm>${jdbc4_jdk}/bin/java</jvm>
+                    <jvm>${jdk16_home}/bin/java</jvm>
                 </configuration>
             </plugin>
         </plugins>

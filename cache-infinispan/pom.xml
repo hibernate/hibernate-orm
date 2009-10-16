@@ -86,16 +86,17 @@
                 <configuration>
                     <source>1.6</source>
                     <target>1.6</target>
-                    <verbose>true</verbose>
-                    <fork>true</fork>
-                    <executable>${jdbc4_jdk}/javac</executable>
                     <compilerVersion>1.6</compilerVersion>
+                    <executable>${jdk16_home}/bin/javac</executable>
+                    <fork>true</fork>
+                    <verbose>true</verbose>
                 </configuration>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
+                    <jvm>${jdk16_home}/bin/java</jvm>
                     <excludes>
                         <!-- Skip a long-running test of a prototype class -->
                         <exclude>**/ClusteredConcurrentTimestampRegionTestCase.java</exclude>

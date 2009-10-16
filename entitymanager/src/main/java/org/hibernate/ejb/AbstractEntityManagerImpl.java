@@ -42,7 +42,7 @@ import javax.persistence.Query;
 import javax.persistence.TransactionRequiredException;
 import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.QueryBuilder;
+import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.metamodel.Metamodel;
 import javax.persistence.spi.PersistenceUnitTransactionType;
 import javax.transaction.Status;
@@ -72,6 +72,7 @@ import org.hibernate.UnresolvableObjectException;
 import org.hibernate.cfg.Environment;
 import org.hibernate.ejb.transaction.JoinableCMTTransaction;
 import org.hibernate.ejb.util.ConfigurationHelper;
+import org.hibernate.ejb.criteria.CriteriaQueryCompiler;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.proxy.HibernateProxy;
@@ -148,38 +149,13 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 		}
 	}
 
-	public <T> TypedQuery<T> createQuery(CriteriaQuery<T> criteriaQuery) {
-		// TODO-STEVE : here is the interpretation/compilation portion.
-		// 		One option is to build on top of the existing
-		//		org.hibernate.loader.custom.CustomQuery infastructure
-		// 		(which is how native sql queries are implemented e.g.).
-		//		If so, then here we could interpret the criteria into
-		//		a CustomQuery instance which is passed into the
-		//		Query instance returned here.  We would then call into
-		//		the various SessionImplementor methods for execution
-		//		such as #listCustomQuery and #scrollCustomQuery.
-		//
-		// 		The drawback to this (^^) approach is that CustomQuery +
-		//		SessionImplementor combo does not support #executeUpdate
-		//		processing...
-		throw new UnsupportedOperationException( "Not yet implemented!" );
-	}
+	private CriteriaQueryCompiler criteriaQueryCompiler;
 
-	public <T> TypedQuery<T> createQuery(CriteriaQuery<T> criteriaQuery, Class<T> resultClass) {
-		// TODO-STEVE : here is the interpretation/compilation portion.
-		// 		One option is to build on top of the existing
-		//		org.hibernate.loader.custom.CustomQuery infastructure
-		// 		(which is how native sql queries are implemented e.g.).
-		//		If so, then here we could interpret the criteria into
-		//		a CustomQuery instance which is passed into the
-		//		Query instance returned here.  We would then call into
-		//		the various SessionImplementor methods for execution
-		//		such as #listCustomQuery and #scrollCustomQuery.
-		//
-		// 		The drawback to this (^^) approach is that CustomQuery +
-		//		SessionImplementor combo does not support #executeUpdate
-		//		processing...
-		throw new UnsupportedOperationException( "Not yet implemented!" );
+	public <T> TypedQuery<T> createQuery(CriteriaQuery<T> criteriaQuery) {
+		if ( criteriaQueryCompiler == null ) {
+			criteriaQueryCompiler = new CriteriaQueryCompiler( this );
+		}
+		return criteriaQueryCompiler.compile( criteriaQuery );
 	}
 
 	public Query createNamedQuery(String name) {
@@ -481,8 +457,8 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 	/**
 	 * {@inheritDoc}
 	 */
-	public QueryBuilder getQueryBuilder() {
-		return getEntityManagerFactory().getQueryBuilder();
+	public CriteriaBuilder getCriteriaBuilder() {
+		return getEntityManagerFactory().getCriteriaBuilder();
 	}
 
 	/**
@@ -672,13 +648,13 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 									}
 									catch ( SystemException se ) {
 										log.error( "could not determine transaction status", se );
-										//throwPersistenceException will mark the transaction as rollbacked
-										throwPersistenceException(
-												new PersistenceException(
-														"could not determine transaction status in beforeCompletion()",
-														se
-												)
+										PersistenceException pe = new PersistenceException(
+												"could not determine transaction status in beforeCompletion()",
+												se
 										);
+										// handlePersistenceException will mark the transaction as rollbacked
+										handlePersistenceException( pe );
+										throw pe;
 									}
 									catch ( HibernateException he ) {
 										throwPersistenceException( he );

@@ -293,4 +293,44 @@ public class CriteriaQueryImpl<T> extends AbstractNode implements CriteriaQuery<
 		return queryStructure.subquery( subqueryType );
 	}
 
+	public void validate() {
+		// getRoots() is explicitly supposed to return empty if none defined, no need to check for null
+		if ( getRoots().isEmpty() ) {
+			throw new IllegalStateException( "No criteria query roots were specified" );
+		}
+
+		// if there is not an explicit selection, there is an *implicit* selection of the root entity provided only
+		// a single query root was defined.
+		if ( getSelection() == null && !hasImplicitSelection() ) {
+			throw new IllegalStateException( "No explicit selection and an implicit one cold not be determined" );
+		}
+	}
+
+	/**
+	 * If no explicit selection was defined, we have a condition called an implicit selection if the query specified
+	 * a single {@link Root} and the java type of that {@link Root root's} model is the same as this criteria's
+	 * {@link #getResultType() result type}.
+	 *
+	 * @return True if there is an explicit selection; false otherwise.
+	 */
+	private boolean hasImplicitSelection() {
+		if ( getRoots().size() != 1 ) {
+			return false;
+		}
+
+		Root root = getRoots().iterator().next();
+		if ( root.getModel().getJavaType() != returnType ) {
+			return false;
+		}
+
+		// if we get here, the query defined no selection but defined a single root of the same type as the
+		// criteria query return, so we use that as the implicit selection
+		//
+		// todo : should we put an implicit marker in the selection to this fact to make later processing easier?
+		return true;
+	}
+
+	public String render() {
+		return null;
+	}
 }

@@ -21,8 +21,6 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-
-//$Id$
 package org.hibernate.ejb;
 
 import java.util.Calendar;
@@ -150,7 +148,7 @@ public class QueryImpl<X> extends org.hibernate.ejb.AbstractQueryImpl<X> impleme
 			return position;
 		}
 
-		public Class getJavaType() {
+		public Class getParameterType() {
 			return javaType;
 		}
 	}
@@ -521,10 +519,10 @@ public class QueryImpl<X> extends org.hibernate.ejb.AbstractQueryImpl<X> impleme
 	@SuppressWarnings({ "unchecked" })
 	public <T> Parameter<T> getParameter(String name, Class<T> type) {
 		Parameter param = getParameter( name );
-		if ( param.getJavaType() != null ) {
+		if ( param.getParameterType() != null ) {
 			// we were able to determine the expected type during analysis, so validate it here
 			throw new IllegalArgumentException(
-					"Parameter type [" + param.getJavaType().getName() +
+					"Parameter type [" + param.getParameterType().getName() +
 							"] is not assignment compatible with requested type [" +
 							type.getName() + "]"
 			);
@@ -538,10 +536,10 @@ public class QueryImpl<X> extends org.hibernate.ejb.AbstractQueryImpl<X> impleme
 	@SuppressWarnings({ "unchecked" })
 	public <T> Parameter<T> getParameter(int position, Class<T> type) {
 		Parameter param = getParameter( position );
-		if ( param.getJavaType() != null ) {
+		if ( param.getParameterType() != null ) {
 			// we were able to determine the expected type during analysis, so validate it here
 			throw new IllegalArgumentException(
-					"Parameter type [" + param.getJavaType().getName() +
+					"Parameter type [" + param.getParameterType().getName() +
 							"] is not assignment compatible with requested type [" +
 							type.getName() + "]"
 			);

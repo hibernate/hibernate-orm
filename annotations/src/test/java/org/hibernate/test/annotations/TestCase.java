@@ -56,6 +56,11 @@ public abstract class TestCase extends junit.framework.TestCase {
 	 */
 	private final Set<Class<? extends Dialect>> requiredDialectList = new HashSet<Class<? extends Dialect>>();
 
+	/**
+	 * List of dialects for which the current {@code runMethod} should be skipped.
+	 */
+	private final Set<Class<? extends Dialect>> skipForDialectList = new HashSet<Class<? extends Dialect>>();
+
 	public TestCase() {
 		super();
 	}
@@ -121,6 +126,7 @@ public abstract class TestCase extends junit.framework.TestCase {
 
 	private void setRunTestFlag(Method runMethod) {
 		updateRequiredDialectList( runMethod );
+		updateSkipForDialectList( runMethod );
 
 		if ( runForCurrentDialect() ) {
 			runTest = true;
@@ -150,19 +156,44 @@ public abstract class TestCase extends junit.framework.TestCase {
 		}
 	}
 
+	private void updateSkipForDialectList(Method runMethod) {
+		skipForDialectList.clear();
+
+		SkipForDialect skipForDialectMethodAnn = runMethod.getAnnotation( SkipForDialect.class );
+		if ( skipForDialectMethodAnn != null ) {
+			Class<? extends Dialect>[] skipDialects = skipForDialectMethodAnn.value();
+			skipForDialectList.addAll( Arrays.asList( skipDialects ) );
+		}
+
+		SkipForDialect skipForDialectClassAnn = getClass().getAnnotation( SkipForDialect.class );
+		if ( skipForDialectClassAnn != null ) {
+			Class<? extends Dialect>[] skipDialects = skipForDialectClassAnn.value();
+			skipForDialectList.addAll( Arrays.asList( skipDialects ) );
+		}
+	}
+
 	protected boolean runForCurrentDialect() {
-		if ( requiredDialectList.isEmpty() ) {
-			return true;
-		}
-		else {
-			// check whether the current dialect is assignableFrom from any of the specified required dialects.
-			for ( Class<? extends Dialect> dialect : requiredDialectList ) {
-				if ( dialect.isAssignableFrom( Dialect.getDialect().getClass() ) ) {
-					return true;
-				}
+		boolean runTestForCurrentDialect = true;
+
+		// check whether the current dialect is assignableFrom from any of the specified required dialects.
+		for ( Class<? extends Dialect> dialect : requiredDialectList ) {
+			if ( dialect.isAssignableFrom( Dialect.getDialect().getClass() ) ) {
+				runTestForCurrentDialect = true;
+				break;
 			}
-			return false;
+			runTestForCurrentDialect = false;
 		}
+
+		// check whether the current dialect is assignableFrom from any of the specified skip for dialects.
+		for ( Class<? extends Dialect> dialect : skipForDialectList ) {
+			if ( dialect.isAssignableFrom( Dialect.getDialect().getClass() ) ) {
+				runTestForCurrentDialect = false;
+				break;
+			}
+			runTestForCurrentDialect = true;
+		}
+
+		return runTestForCurrentDialect;
 	}
 
 	private void runTestMethod(Method runMethod) throws Throwable {

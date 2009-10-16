@@ -24,11 +24,12 @@
   * 51 Franklin Street, Fifth Floor
   * Boston, MA  02110-1301  USA
   */
-
 package org.hibernate.test.annotations.manytoonewithformula;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.dialect.HSQLDialect;
+import org.hibernate.test.annotations.SkipForDialect;
 import org.hibernate.test.annotations.TestCase;
 
 /**
@@ -39,13 +40,13 @@ public class ManyToOneWithFormulaTest extends TestCase {
 	public ManyToOneWithFormulaTest(String x) {
 		super( x );
 	}
-	
+
 	public void testManyToOneFromNonPk() throws Exception {
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
 		Menu menu = new Menu();
 		menu.setOrderNbr( "123" );
-		menu.setDefault("F");
+		menu.setDefault( "F" );
 		s.persist( menu );
 		FoodItem foodItem = new FoodItem();
 		foodItem.setItem( "Mouse" );
@@ -53,65 +54,66 @@ public class ManyToOneWithFormulaTest extends TestCase {
 		s.persist( foodItem );
 		s.flush();
 		s.clear();
-		foodItem = (FoodItem) s.get( FoodItem.class, foodItem.getId() );
+		foodItem = ( FoodItem ) s.get( FoodItem.class, foodItem.getId() );
 		assertNotNull( foodItem.getOrder() );
 		assertEquals( "123", foodItem.getOrder().getOrderNbr() );
 		tx.rollback();
 		s.close();
 	}
 
-	
+
 	public void testManyToOneFromPk() throws Exception {
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
-		
+
 		Company company = new Company();
 		s.persist( company );
-		
+
 		Person person = new Person();
-		person.setDefaultFlag("T");
-		person.setCompanyId(company.getId());
-		s.persist(person);
-						
+		person.setDefaultFlag( "T" );
+		person.setCompanyId( company.getId() );
+		s.persist( person );
+
 		s.flush();
 		s.clear();
-		
-		company = (Company) s.get( Company.class, company.getId() );
+
+		company = ( Company ) s.get( Company.class, company.getId() );
 		assertNotNull( company.getDefaultContactPerson() );
 		assertEquals( person.getId(), company.getDefaultContactPerson().getId() );
 		tx.rollback();
 		s.close();
 	}
 
+	@SkipForDialect(value = { HSQLDialect.class }, comment = "The used join conditions does not work in HSQLDB. See HHH-4497")
 	public void testManyToOneToPkWithOnlyFormula() throws Exception {
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
-		
+
 		Language language = new Language();
-		language.setCode("EN");
-		language.setName("English");
+		language.setCode( "EN" );
+		language.setName( "English" );
 		s.persist( language );
-		
+
 		Message msg = new Message();
-		msg.setLanguageCode("en");
-		msg.setLanguageName("English");
-		s.persist(msg);
-						
+		msg.setLanguageCode( "en" );
+		msg.setLanguageName( "English" );
+		s.persist( msg );
+
 		s.flush();
 		s.clear();
-		
-		msg = (Message) s.get( Message.class, msg.getId() );
-		assertNotNull( msg.getLanguage());
+
+		msg = ( Message ) s.get( Message.class, msg.getId() );
+		assertNotNull( msg.getLanguage() );
 		assertEquals( "EN", msg.getLanguage().getCode() );
 		tx.rollback();
 		s.close();
 	}
-		
+
 	/**
 	 * @see org.hibernate.test.annotations.TestCase#getMappings()
 	 */
 	protected java.lang.Class<?>[] getMappings() {
-		return new java.lang.Class[]{
+		return new java.lang.Class[] {
 				Menu.class,
 				FoodItem.class,
 				Company.class,

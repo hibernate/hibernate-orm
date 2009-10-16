@@ -8,7 +8,7 @@ import java.util.Properties;
 import javax.persistence.spi.ClassTransformer;
 import javax.persistence.spi.PersistenceUnitInfo;
 import javax.persistence.spi.PersistenceUnitTransactionType;
-import javax.persistence.Caching;
+import javax.persistence.SharedCacheMode;
 import javax.persistence.ValidationMode;
 import javax.sql.DataSource;
 
@@ -73,7 +73,7 @@ public class PersistenceUnitInfoImpl implements PersistenceUnitInfo {
 		return properties;
 	}
 
-	public String PersistenceXMLSchemaVersion() {
+	public String getPersistenceXMLSchemaVersion() {
 		return null;  //To change body of implemented methods use File | Settings | File Templates.
 	}
 
@@ -93,7 +93,7 @@ public class PersistenceUnitInfoImpl implements PersistenceUnitInfo {
 		return true;
 	}
 
-	public Caching getCaching() {
+	public SharedCacheMode getSharedCacheMode() {
 		//FIXME
 		return null;  //To change body of implemented methods use File | Settings | File Templates.
 	}

@@ -175,7 +175,7 @@ public class JarVisitorTest extends TestCase {
 	}
 
 	/**
-	 * @see EJB-230
+	 * EJB-230
 	 */
 	public void testDuplicateFilterExplodedJarExpected() throws Exception {
 		

@@ -131,7 +131,7 @@ public class MetadataTest extends TestCase {
 		assertEquals( Bindable.BindableType.PLURAL_ATTRIBUTE, rooms.getBindableType() );
 		assertEquals( Set.class, rooms.getJavaType() );
 		assertEquals( PluralAttribute.CollectionType.SET, rooms.getCollectionType() );
-		assertEquals( 3, entityType.getDeclaredCollections().size() );
+		assertEquals( 3, entityType.getDeclaredPluralAttributes().size() );
 		assertEquals( Type.PersistenceType.EMBEDDABLE, rooms.getElementType().getPersistenceType() );
 
 		final MapAttribute<House,String,Room> roomsByName = entityType.getDeclaredMap(

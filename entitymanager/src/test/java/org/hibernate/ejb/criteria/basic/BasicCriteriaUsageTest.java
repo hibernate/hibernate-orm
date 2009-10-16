@@ -44,7 +44,7 @@ public class BasicCriteriaUsageTest extends TestCase {
 	public void testSimplestCriterias() {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
-		CriteriaQuery criteria = em.getQueryBuilder().createQuery();
+		CriteriaQuery criteria = em.getCriteriaBuilder().createQuery();
 		criteria.from( Wall.class );
 		em.getTransaction().commit();
 		em.close();
@@ -53,14 +53,14 @@ public class BasicCriteriaUsageTest extends TestCase {
 	public void testParameterCollection() {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
-		CriteriaQuery criteria = em.getQueryBuilder().createQuery();
+		CriteriaQuery criteria = em.getCriteriaBuilder().createQuery();
 		Root<Wall> from = criteria.from( Wall.class );
-		ParameterExpression param = em.getQueryBuilder().parameter( String.class );
+		ParameterExpression param = em.getCriteriaBuilder().parameter( String.class );
 		SingularAttribute<? super Wall,?> colorAttribute = em.getMetamodel()
 				.entity( Wall.class )
 				.getDeclaredSingularAttribute( "color" );
 		assertNotNull( "metamodel returned null singular attribute", colorAttribute );
-		Predicate predicate = em.getQueryBuilder().equal( from.get( colorAttribute ), param );
+		Predicate predicate = em.getCriteriaBuilder().equal( from.get( colorAttribute ), param );
 		criteria.where( predicate );
 		assertEquals( 1, criteria.getParameters().size() );
 		em.getTransaction().commit();

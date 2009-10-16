@@ -281,6 +281,16 @@ public class MySQLDialect extends Dialect {
 		return "create temporary table if not exists";
 	}
 
+	public String getDropTemporaryTableString() {
+		return "drop temporary table";
+	}
+
+	public Boolean performTemporaryTableDDLInIsolation() {
+		// because we [drop *temporary* table...] we do not
+		// have to perform these in isolation.
+		return Boolean.FALSE;
+	}
+
 	public String getCastTypeName(int code) {
 		if ( code==Types.INTEGER ) {
 			return "signed";
@@ -322,10 +332,6 @@ public class MySQLDialect extends Dialect {
 
 	public boolean supportsRowValueConstructorSyntax() {
 		return true;
-	}
-
-	public Boolean performTemporaryTableDDLInIsolation() {
-		return Boolean.FALSE;
 	}
 
 

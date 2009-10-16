@@ -1092,6 +1092,15 @@ public abstract class Dialect {
 	}
 
 	/**
+	 * Command used to drop a temporary table.
+	 *
+	 * @return The command used to drop a temporary table.
+	 */
+	public String getDropTemporaryTableString() {
+		return "drop table";
+	}
+
+	/**
 	 * Does the dialect require that temporary table DDL statements occur in
 	 * isolation from other statements?  This would be the case if the creation
 	 * would cause any current transaction to get committed implicitly.

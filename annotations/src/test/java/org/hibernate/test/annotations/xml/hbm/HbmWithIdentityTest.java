@@ -8,6 +8,7 @@ import org.hibernate.test.annotations.TestCase;
  * @author Emmanuel Bernard
  */
 public class HbmWithIdentityTest extends TestCase {
+
 	public void testManyToOneAndInterface() throws Exception {
 		Session s = openSession();
 		s.getTransaction().begin();
@@ -21,16 +22,14 @@ public class HbmWithIdentityTest extends TestCase {
 		s.getTransaction().rollback();
 		s.close();
 	}
-	
+
 	@Override
 	protected boolean runForCurrentDialect() {
 		return super.runForCurrentDialect() && getDialect().supportsIdentityColumns();
 	}
 
-
-
 	protected Class[] getMappings() {
-		return new Class[]{
+		return new Class[] {
 				Sky.class,
 				ZImpl.class
 
@@ -39,9 +38,10 @@ public class HbmWithIdentityTest extends TestCase {
 
 	@Override
 	protected String[] getXmlFiles() {
-		return new String[]{
+		return new String[] {
 				"org/hibernate/test/annotations/xml/hbm/A.hbm.xml",
-				"org/hibernate/test/annotations/xml/hbm/B.hbm.xml"
+				"org/hibernate/test/annotations/xml/hbm/B.hbm.xml",
+				"org/hibernate/test/annotations/xml/hbm/CloudType.hbm.xml"
 		};
 	}
 }

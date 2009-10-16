@@ -16,8 +16,8 @@ public class DuplicateTest extends TestCase {
 		try {
 			cfg.addAnnotatedClass( Flight.class );
 			cfg.addAnnotatedClass( org.hibernate.test.annotations.Flight.class );
-			cfg.addResource( "org/hibernate/test/annotations/orm.xml");
-			cfg.addResource( "org/hibernate/test/annotations/duplicatedgenerator/orm.xml");
+			cfg.addResource( "org/hibernate/test/annotations/orm.xml" );
+			cfg.addResource( "org/hibernate/test/annotations/duplicatedgenerator/orm.xml" );
 			cfg.buildSessionFactory();
 			fail( "Should not be able to map the same entity name twice" );
 		}

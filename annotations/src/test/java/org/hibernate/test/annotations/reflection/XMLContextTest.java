@@ -23,7 +23,8 @@ public class XMLContextTest extends TestCase {
 		XMLHelper xmlHelper = new XMLHelper();
 		ClassLoader cl = Thread.currentThread().getContextClassLoader();
 		InputStream is = cl.getResourceAsStream(
-				"org/hibernate/test/annotations/reflection/orm.xml" );
+				"org/hibernate/test/annotations/reflection/orm.xml"
+		);
 		assertNotNull( "ORM.xml not found", is );
 		XMLContext context = new XMLContext();
 		List errors = new ArrayList();

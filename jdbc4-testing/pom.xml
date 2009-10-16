@@ -50,7 +50,7 @@
                     <target>1.6</target>
                     <verbose>true</verbose>
                     <fork>true</fork>
-                    <executable>${jdbc4_jdk}/bin/javac</executable>
+                    <executable>${jdbc4_jdk}/javac</executable>
                     <compilerVersion>1.6</compilerVersion>
                 </configuration>
             </plugin>

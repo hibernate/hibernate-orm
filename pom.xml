@@ -21,7 +21,6 @@
         <module>core</module>
         <module>cache-ehcache</module>
         <module>cache-jbosscache</module>
-        <module>cache-infinispan</module>
         <module>cache-oscache</module>
         <module>cache-swarmcache</module>
         <module>connection-c3p0</module>
@@ -33,7 +32,6 @@
         <module>testing</module>
         <module>testsuite</module>
         <module>jdbc3-testing</module>
-        <module>jdbc4-testing</module>
         <module>tutorials</module>
 <!--
     Need to scope bytecode providers first...
@@ -43,6 +41,7 @@
     </modules>
 
     <build>
+        <defaultGoal>install</defaultGoal>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -72,7 +71,20 @@
         </pluginManagement>
     </build>
 
-    <profiles>
+    <profiles>       
+        <profile>
+            <id>jdk6-modules</id>
+            <activation>
+                <property>
+                    <name>disableJDK6Modules</name>
+                    <value>!true</value>
+                </property>
+            </activation>
+            <modules>
+                <module>cache-infinispan</module>
+                <module>jdbc4-testing</module>
+            </modules>
+        </profile>            
         <profile>
             <id>docs</id>
             <activation>
@@ -87,5 +99,4 @@
             </modules>
         </profile>
     </profiles>
-
 </project>

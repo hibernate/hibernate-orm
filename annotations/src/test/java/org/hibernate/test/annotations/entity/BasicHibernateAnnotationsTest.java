@@ -41,6 +41,9 @@ import org.hibernate.test.annotations.TestCase;
 public class BasicHibernateAnnotationsTest extends TestCase {
 
 	public void testEntity() throws Exception {
+		if( !getDialect().supportsExpectedLobUsagePattern() ){
+			return;
+		}
 		Forest forest = new Forest();
 		forest.setName( "Fontainebleau" );
 		Session s;
@@ -77,6 +80,9 @@ public class BasicHibernateAnnotationsTest extends TestCase {
 	}
 
 	public void testVersioning() throws Exception {
+		if( !getDialect().supportsExpectedLobUsagePattern() ){
+			return;
+		}
 		Forest forest = new Forest();
 		forest.setName( "Fontainebleau" );
 		forest.setLength( 33 );
@@ -121,6 +127,9 @@ public class BasicHibernateAnnotationsTest extends TestCase {
 	}
 
 	public void testPolymorphism() throws Exception {
+		if( !getDialect().supportsExpectedLobUsagePattern() ){
+			return;
+		}
 		Forest forest = new Forest();
 		forest.setName( "Fontainebleau" );
 		forest.setLength( 33 );
@@ -143,6 +152,9 @@ public class BasicHibernateAnnotationsTest extends TestCase {
 	}
 
 	public void testType() throws Exception {
+		if( !getDialect().supportsExpectedLobUsagePattern() ){
+			return;
+		}
 		Forest f = new Forest();
 		f.setName( "Broceliande" );
 		String description = "C'est une enorme foret enchantee ou vivais Merlin et toute la clique";
@@ -295,6 +307,9 @@ public class BasicHibernateAnnotationsTest extends TestCase {
 	}
 
 	public void testParameterizedType() throws Exception {
+		if( !getDialect().supportsExpectedLobUsagePattern() ){
+			return;
+		}
 		Session s;
 		Transaction tx;
 		s = openSession();
@@ -315,6 +330,9 @@ public class BasicHibernateAnnotationsTest extends TestCase {
 	}
 
 	public void testSerialized() throws Exception {
+		if( !getDialect().supportsExpectedLobUsagePattern() ){
+			return;
+		}
 		Forest forest = new Forest();
 		forest.setName( "Shire" );
 		Country country = new Country();

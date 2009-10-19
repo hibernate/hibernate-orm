@@ -11,6 +11,7 @@ import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.Filters;
 import org.hibernate.annotations.Index;
+import org.hibernate.annotations.OptimisticLock;
 import org.hibernate.annotations.OptimisticLockType;
 import org.hibernate.annotations.ParamDef;
 import org.hibernate.annotations.Parameter;
@@ -46,7 +47,8 @@ public class Forest {
 	private String smallText;
 	private String bigText;
 	private Country country;
-
+	
+	@OptimisticLock(excluded=true) 
 	@Type(type = "text")
 	public String getLongDescription() {
 		return longDescription;

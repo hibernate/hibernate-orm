@@ -10,7 +10,6 @@
          </properties>
          <!-- See the JGroupsTransport javadocs for more flags -->
       </transport>
-      <serialization marshallerClass="org.infinispan.marshall.VersionAwareMarshaller" version="4.0"/>
    </global>
 
    <default>

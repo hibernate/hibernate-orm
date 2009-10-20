@@ -26,7 +26,6 @@
         <module>connection-c3p0</module>
         <module>connection-proxool</module>
         <module>annotations</module>
-        <module>entitymanager</module>
         <module>envers</module>
         <module>jmx</module>
         <module>testing</module>
@@ -81,6 +80,7 @@
                 </property>
             </activation>
             <modules>
+                <module>entitymanager</module>
                 <module>cache-infinispan</module>
                 <module>jdbc4-testing</module>
             </modules>

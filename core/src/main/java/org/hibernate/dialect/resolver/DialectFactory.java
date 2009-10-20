@@ -104,7 +104,7 @@ public class DialectFactory {
 	public static  Dialect buildDialect(Properties properties) {
 		String dialectName = properties.getProperty( Environment.DIALECT );
 		if ( dialectName == null ) {
-			throw new HibernateException( "'hibernate.dialect' must be set when no Connection avalable" );
+			throw new HibernateException( "'hibernate.dialect' must be set when no Connection available" );
 		}
 		return constructDialect( dialectName );
 	}

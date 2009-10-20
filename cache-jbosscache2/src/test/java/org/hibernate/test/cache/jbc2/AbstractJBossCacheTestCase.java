@@ -25,10 +25,14 @@ package org.hibernate.test.cache.jbc2;
 
 
 
+import java.util.Set;
+
 import org.hibernate.cache.RegionFactory;
+import org.hibernate.cache.jbc2.util.CacheHelper;
 import org.hibernate.junit.UnitTestCase;
 import org.hibernate.test.util.CacheTestSupport;
 import org.jboss.cache.Cache;
+import org.jboss.cache.Node;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -95,5 +99,16 @@ public abstract class AbstractJBossCacheTestCase extends UnitTestCase {
     
     protected void avoidConcurrentFlush() {
         testSupport.avoidConcurrentFlush();
+    }
+
+    protected int getValidChildrenCount(Node node) {
+        int result = 0;
+        Set<Node> children = node.getChildren();
+        for (Node child : children) {
+           if (node.isValid() && CacheHelper.Internal.NODE.equals(child.getFqn().getLastElement()) == false) {
+              result++;
+           }
+        }
+        return result;
     }
 }

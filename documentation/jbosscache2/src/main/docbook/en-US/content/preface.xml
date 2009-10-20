@@ -158,9 +158,9 @@
 
      <para>
          Commercial development support, production support, and training for Hibernate is
-         available through Red Hat Inc. (see http://www.hibernate.org/SupportTraining/).
+         available through Red Hat, Inc. (see http://www.hibernate.org/SupportTraining/).
          Hibernate is a Professional Open Source project and a critical component of the
-         JBoss Enterprise Middleware System (JEMS) suite of products.
+         JBoss Enterprise Application Platform.
      </para>
 
 </preface>

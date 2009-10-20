@@ -181,8 +181,10 @@ public abstract class AbstractStatementExecutor implements StatementExecutor {
 				public void doWork(Connection connection) throws HibernateException {
 					Statement stmnt = null;
 					try {
+						final String command = session.getFactory().getSettings().getDialect().getDropTemporaryTableString()
+								+ " " + persister.getTemporaryIdTableName();
 						stmnt = connection.createStatement();
-						stmnt.executeUpdate( "drop table " + persister.getTemporaryIdTableName() );
+						stmnt.executeUpdate( command );
 					}
 					catch( Throwable t ) {
 						log.warn( "unable to drop temporary id table after use [" + t.getMessage() + "]" );

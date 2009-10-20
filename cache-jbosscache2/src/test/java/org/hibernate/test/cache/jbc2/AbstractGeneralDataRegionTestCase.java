@@ -24,9 +24,7 @@
 package org.hibernate.test.cache.jbc2;
 
 import java.util.Iterator;
-import java.util.Set;
 
-import org.hibernate.cache.CacheException;
 import org.hibernate.cache.GeneralDataRegion;
 import org.hibernate.cache.QueryResultsRegion;
 import org.hibernate.cache.Region;
@@ -171,8 +169,7 @@ public abstract class AbstractGeneralDataRegionTestCase extends AbstractRegionIm
         
         Node regionRoot = localCache.getRoot().getChild(regionFqn);
         assertFalse(regionRoot == null);
-        Set children = regionRoot.getChildrenNames();
-        assertEquals("No children in " + children, 0, children.size());
+        assertEquals("No children in " + regionRoot, 0, getValidChildrenCount(regionRoot));
         assertTrue(regionRoot.isResident());
         
         if (optimistic) {
@@ -181,7 +178,7 @@ public abstract class AbstractGeneralDataRegionTestCase extends AbstractRegionIm
     
         regionRoot = remoteCache.getRoot().getChild(regionFqn);
         assertFalse(regionRoot == null);
-        assertEquals(0, regionRoot.getChildrenNames().size());
+        assertEquals(0, getValidChildrenCount(regionRoot));
         assertTrue(regionRoot.isResident());
         
         if (optimistic) {
@@ -212,35 +209,24 @@ public abstract class AbstractGeneralDataRegionTestCase extends AbstractRegionIm
         
         localRegion.evictAll();
         
-        // This should re-establish the region root node in the optimistic case
+        // This should re-establish the region root node
         assertNull(localRegion.get(KEY));
         
         regionRoot = localCache.getRoot().getChild(regionFqn);
-        if (optimistic) {
-           assertFalse(regionRoot == null);
-           assertEquals(0, regionRoot.getChildrenNames().size());
-           assertTrue(regionRoot.isValid());
-           assertTrue(regionRoot.isResident());
-        }
-        else {
-            assertTrue("region root is removed", regionRoot == null || !regionRoot.isValid());
-        }
+        assertFalse(regionRoot == null);
+        assertEquals(0, getValidChildrenCount(regionRoot));
+        assertTrue(regionRoot.isValid());
+        assertTrue(regionRoot.isResident());
 
         // Re-establishing the region root on the local node doesn't 
         // propagate it to other nodes. Do a get on the remote node to re-establish
-        // This only adds a node in the case of optimistic locking
         assertEquals(null, remoteRegion.get(KEY));
         
         regionRoot = remoteCache.getRoot().getChild(regionFqn);
-        if (optimistic) {
-            assertFalse(regionRoot == null);
-            assertEquals(0, regionRoot.getChildrenNames().size());
-            assertTrue(regionRoot.isValid());
-            assertTrue(regionRoot.isResident());
-        }
-        else {
-            assertTrue("region root is removed", regionRoot == null || !regionRoot.isValid());
-        }
+        assertFalse(regionRoot == null);
+        assertEquals(0, getValidChildrenCount(regionRoot));
+        assertTrue(regionRoot.isValid());
+        assertTrue(regionRoot.isResident());
         
         assertEquals("local is clean", null, localRegion.get(KEY));
         assertEquals("remote is clean", null, remoteRegion.get(KEY));

@@ -23,6 +23,8 @@
  */
 package org.hibernate.cache.jbc2.access;
 
+import javax.transaction.Transaction;
+
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.access.CollectionRegionAccessStrategy;
 import org.hibernate.cache.access.EntityRegionAccessStrategy;
@@ -56,13 +58,19 @@ public class TransactionalAccessDelegate {
     }
 
     public Object get(Object key, long txTimestamp) throws CacheException {
-       
+        
+        if (!region.checkValid())
+           return null;
+        
         region.ensureRegionRootExists();
         
         return CacheHelper.get(cache, regionFqn, key);
     }
 
-    public boolean putFromLoad(Object key, Object value, long txTimestamp, Object version) throws CacheException {
+   public boolean putFromLoad(Object key, Object value, long txTimestamp, Object version) throws CacheException {
+       
+        if (!region.checkValid())
+            return false;
        
         region.ensureRegionRootExists();
 
@@ -71,6 +79,9 @@ public class TransactionalAccessDelegate {
 
     public boolean putFromLoad(Object key, Object value, long txTimestamp, Object version, boolean minimalPutOverride)
             throws CacheException {
+       
+        if (!region.checkValid())
+            return false;
        
         region.ensureRegionRootExists();
 
@@ -96,6 +107,9 @@ public class TransactionalAccessDelegate {
 
     public boolean insert(Object key, Object value, Object version) throws CacheException {
        
+        if (!region.checkValid())
+            return false;
+       
         region.ensureRegionRootExists();
 
         CacheHelper.put(cache, regionFqn, key, value);
@@ -108,6 +122,10 @@ public class TransactionalAccessDelegate {
 
     public boolean update(Object key, Object value, Object currentVersion, Object previousVersion)
             throws CacheException {
+       
+        // We update whether or not the region is valid. Other nodes
+        // may have already restored the region so they need to
+        // be informed of the change.
        
         region.ensureRegionRootExists();
 
@@ -122,13 +140,17 @@ public class TransactionalAccessDelegate {
 
     public void remove(Object key) throws CacheException {
        
+        // We remove whether or not the region is valid. Other nodes
+        // may have already restored the region so they need to
+        // be informed of the change.
+       
         region.ensureRegionRootExists();
 
         CacheHelper.remove(cache, regionFqn, key);
     }
 
     public void removeAll() throws CacheException {
-        evictOrRemoveAll();
+       CacheHelper.removeAll(cache, regionFqn); 
     }
 
     public void evict(Object key) throws CacheException {
@@ -139,10 +161,15 @@ public class TransactionalAccessDelegate {
     }
 
     public void evictAll() throws CacheException {
-        evictOrRemoveAll();
+       Transaction tx = region.suspend();
+       try {        
+          region.ensureRegionRootExists();
+          
+          CacheHelper.sendEvictAllNotification(cache, regionFqn, region.getMemberId(), null);
+       }
+       finally {
+          region.resume(tx);
+       }        
     }
     
-    private void evictOrRemoveAll() throws CacheException {
-        CacheHelper.removeAll(cache, regionFqn);        
-    }
 }

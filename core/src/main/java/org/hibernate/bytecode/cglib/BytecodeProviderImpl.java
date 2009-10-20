@@ -46,10 +46,6 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 
 	private static final Logger log = LoggerFactory.getLogger( BytecodeProviderImpl.class );
 
-	public BytecodeProviderImpl() {
-		log.warn( "The CGLIB BytecodeProvider impl is considered deprecated and not recommended for use" );
-	}
-
 	public ProxyFactoryFactory getProxyFactoryFactory() {
 		return new ProxyFactoryFactoryImpl();
 	}

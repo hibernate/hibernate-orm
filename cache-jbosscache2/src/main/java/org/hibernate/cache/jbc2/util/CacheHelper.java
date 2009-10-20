@@ -46,6 +46,8 @@ import org.slf4j.LoggerFactory;
  */
 public class CacheHelper {
 
+    public static enum Internal { NODE, LOCAL };
+    
     /** Key under which items are cached */
     public static final String ITEM = "item";
     /** Key and value used in a hack to create region root nodes */
@@ -466,5 +468,24 @@ public class CacheHelper {
         Option option = new Option();
         option.setDataVersion(version);
         setInvocationOption(cache, option);
+    }
+    
+    public static Fqn getInternalFqn(Fqn region)
+    {
+       return Fqn.fromRelativeElements(region, Internal.NODE);
+    }
+    
+    public static void sendEvictNotification(Cache cache, Fqn region, Object member, Object key, Option option)
+    {
+       setInvocationOption(cache, option);
+       Fqn f = Fqn.fromRelativeElements(region, Internal.NODE, member  == null ? Internal.LOCAL : member, key);
+       cache.put(f, ITEM, DUMMY);
+    }
+    
+    public static void sendEvictAllNotification(Cache cache, Fqn region, Object member, Option option)
+    {
+       setInvocationOption(cache, option);
+       Fqn f = Fqn.fromRelativeElements(region, Internal.NODE, member  == null ? Internal.LOCAL : member);
+       cache.put(f, ITEM, DUMMY);
     }
 }

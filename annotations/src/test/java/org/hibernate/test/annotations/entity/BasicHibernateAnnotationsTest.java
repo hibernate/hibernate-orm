@@ -28,11 +28,13 @@ import java.math.BigDecimal;
 import java.util.Currency;
 import java.util.Date;
 
+import org.hibernate.AnnotationException;
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.cfg.AnnotationConfiguration;
 import org.hibernate.test.annotations.TestCase;
 
 /**
@@ -403,18 +405,12 @@ public class BasicHibernateAnnotationsTest extends TestCase {
 	}
 		
 	
-	/**
-	 * We persist and retrieve properties of type 'PhoneNumber'. We set this type to delegate to 
-	 * the Hibernate UserType 'PhoneNumberType' for persistence and retrieval (with the 'defaultForType' attribute). 
-	 * However, we can also use the @TypeDef 'name' attribute and @Type annotation to over-ride this and 
-	 * delegate to OverseasPhoneNumberType. 
-	 * 
-	 */
-	public void testTypeDefsUsingNameAndDefaultForType() {
+	public void testTypeDefNameAndDefaultForTypeAttributes() {
 		
 		ContactDetails contactDetails = new ContactDetails();
 		contactDetails.setLocalPhoneNumber(new PhoneNumber("999999"));
-		contactDetails.setOverseasPhoneNumber(new PhoneNumber("111111"));
+		contactDetails.setOverseasPhoneNumber(
+				new OverseasPhoneNumber("041", "111111"));
 		
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
@@ -432,12 +428,25 @@ public class BasicHibernateAnnotationsTest extends TestCase {
 		s.delete(contactDetails);
 		tx.commit();
 		s.close();
-		
-		
-		
+	
 	}
 	
-	
+	public void testTypeDefWithoutNameAndDefaultForTypeAttributes() {
+		
+		try {
+			AnnotationConfiguration config = new AnnotationConfiguration();
+			config.addAnnotatedClass(LocalContactDetails.class);
+			config.buildSessionFactory();
+			fail("Did not throw expected exception");
+		}
+		catch( AnnotationException ex ) {
+			assertEquals(
+					"Either name or defaultForType (or both) attribute should be set in TypeDef having typeClass org.hibernate.test.annotations.entity.PhoneNumberType", 
+					ex.getMessage());
+		}	
+		
+	}
+
 	
 	/**
 	 * A custom type is used in the base class, but defined in the derived class. 

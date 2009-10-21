@@ -38,8 +38,7 @@ import java.lang.annotation.Target;
 @Retention(RUNTIME)
 public @interface TypeDef {
 	String name() default "";
-	Class<?> typeClass();
 	Class<?> defaultForType() default void.class;
-	
+	Class<?> typeClass();
 	Parameter[] parameters() default {};
 }

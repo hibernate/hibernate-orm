@@ -30,9 +30,7 @@ import org.hibernate.annotations.Type;
 import org.hibernate.annotations.TypeDef;
 
 @TypeDef(
-		name = "phoneNumber",
-		defaultForType = PhoneNumber.class,
-		typeClass = PhoneNumberType.class
+	typeClass = PhoneNumberType.class
 )
 
 /**
@@ -40,7 +38,7 @@ import org.hibernate.annotations.TypeDef;
  *
  */
 @Entity
-public class ContactDetails {
+public class LocalContactDetails {
 
 	@Id
 	@GeneratedValue

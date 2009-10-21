@@ -42,7 +42,7 @@ public class PhoneNumberType implements UserType {
 		return new int[]{Types.VARCHAR};
 	}
 
-	public Class returnedClass() {
+	public Class<?> returnedClass() {
 		return PhoneNumber.class;
 	}
 
@@ -57,17 +57,24 @@ public class PhoneNumberType implements UserType {
 	public Object nullSafeGet(ResultSet rs, String[] names, Object owner) throws HibernateException, SQLException {
 		String result = rs.getString( names[0] );
 		if ( rs.wasNull() ) return null;
-		return new PhoneNumber(result);
+		
+		if (result.length() <= 6) {
+			return new PhoneNumber(result);
+		}
+		else {
+			return new OverseasPhoneNumber(result);
+		}
 	}
 
 	public void nullSafeSet(PreparedStatement st, Object value, int index) throws HibernateException, SQLException {
 		if ( value == null ) {
 			st.setNull( index, sqlTypes()[0] );
+			return;
 		}
-		else {
-			PhoneNumber phoneNumber = (PhoneNumber) value;
-			st.setString( index, phoneNumber.getNumber() );
-		}
+		
+		PhoneNumber phoneNumber = (PhoneNumber) value;
+		String number = phoneNumber.getNumber();
+		st.setString( index, number);
 	}
 
 	public Object deepCopy(Object value) throws HibernateException {

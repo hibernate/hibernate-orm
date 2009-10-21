@@ -1006,19 +1006,20 @@ public final class AnnotationBinder {
 		}
 		
 		if (BinderHelper.isDefault(defAnn.name()) && defAnn.defaultForType().equals(void.class)) {
-			throw new AnnotationException("Both name and defaultForType attributes cannot be set in a TypeDef");
+			throw new AnnotationException(
+					"Either name or defaultForType (or both) attribute should be set in TypeDef having typeClass " + 
+					defAnn.typeClass().getName());
 		}
+		
 		if (!BinderHelper.isDefault(defAnn.name())) {
 			log.info( "Binding type definition: {}", defAnn.name() );
 			mappings.addTypeDef( defAnn.name(), defAnn.typeClass().getName(), params );
 		}
-		else if (!defAnn.defaultForType().equals(void.class)) {
+		if (!defAnn.defaultForType().equals(void.class)) {
 			log.info( "Binding type definition: {}", defAnn.defaultForType().getName() );
 			mappings.addTypeDef( defAnn.defaultForType().getName(), defAnn.typeClass().getName(), params );
 		}
-		else {
-			throw new AnnotationException("Either name or defaultForType attribute should be set in a TypeDef");
-		}
+		
 	}
 		
 		

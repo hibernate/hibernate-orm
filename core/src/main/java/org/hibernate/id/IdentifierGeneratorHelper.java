@@ -33,11 +33,13 @@ import org.slf4j.LoggerFactory;
 
 import org.hibernate.HibernateException;
 import org.hibernate.type.Type;
+import org.hibernate.type.CustomType;
 
 /**
- * Factory and helper methods for <tt>IdentifierGenerator</tt> framework.
+ * Factory and helper methods for {@link IdentifierGenerator} framework.
  *
  * @author Gavin King
+ * @author Steve Ebersole
  */
 public final class IdentifierGeneratorHelper {
 	private static final Logger log = LoggerFactory.getLogger( IdentifierGeneratorHelper.class );
@@ -94,6 +96,16 @@ public final class IdentifierGeneratorHelper {
 	 * @throws IdentifierGenerationException Indicates an unknown type.
 	 */
 	public static Serializable get(ResultSet rs, Type type) throws SQLException, IdentifierGenerationException {
+		if ( ResultSetIdentifierConsumer.class.isInstance( type ) ) {
+			return ( ( ResultSetIdentifierConsumer ) type ).consumeIdentifier( rs );
+		}
+		if ( CustomType.class.isInstance( type ) ) {
+			final CustomType customType = (CustomType) type;
+			if ( ResultSetIdentifierConsumer.class.isInstance( customType.getUserType() ) ) {
+				return ( (ResultSetIdentifierConsumer) customType.getUserType() ).consumeIdentifier( rs );
+			}
+		}
+
 		Class clazz = type.getReturnedClass();
 		if ( clazz == Long.class ) {
 			return new Long( rs.getLong( 1 ) );

@@ -93,6 +93,10 @@ public class CustomType extends AbstractType implements IdentifierType, Discrimi
 		customLogging = LoggableUserType.class.isAssignableFrom( userTypeClass );
 	}
 
+	public UserType getUserType() {
+		return userType;
+	}
+
 	public int[] sqlTypes(Mapping pi) {
 		return types;
 	}

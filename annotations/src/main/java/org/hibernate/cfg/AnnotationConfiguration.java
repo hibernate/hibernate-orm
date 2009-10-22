@@ -95,15 +95,15 @@ import org.hibernate.util.StringHelper;
  */
 public class AnnotationConfiguration extends Configuration {
 	private Logger log = LoggerFactory.getLogger( AnnotationConfiguration.class );
-	
+
 	/**
 	 * Class name of the class needed to enable Search.
 	 */
 	private static final String SEARCH_STARTUP_CLASS = "org.hibernate.search.event.EventListenerRegister";
-	
+
 	/**
 	 * Method to call to enable Search.
-	 */	
+	 */
 	private static final String SEARCH_STARTUP_METHOD = "enableHibernateSearch";
 
 	static {
@@ -113,7 +113,7 @@ public class AnnotationConfiguration extends Configuration {
 	public static final String ARTEFACT = "hibernate.mapping.precedence";
 	public static final String DEFAULT_PRECEDENCE = "hbm, class";
 
-	private Map<String,IdGenerator> namedGenerators;
+	private Map<String, IdGenerator> namedGenerators;
 	private Map<String, Map<String, Join>> joins;
 	private Map<String, AnnotatedClassType> classTypes;
 	private Set<String> defaultNamedQueryNames;
@@ -148,9 +148,11 @@ public class AnnotationConfiguration extends Configuration {
 		//TODO remove embeddable
 		List<XClass> copy = new ArrayList<XClass>( original );
 		//for each class, copy all the relevant hierarchy
-		for (XClass clazz : original) {
+		for ( XClass clazz : original ) {
 			XClass superClass = clazz.getSuperclass();
-			while ( superClass != null && !reflectionManager.equals( superClass, Object.class ) && !copy.contains( superClass ) ) {
+			while ( superClass != null && !reflectionManager.equals( superClass, Object.class ) && !copy.contains(
+					superClass
+			) ) {
 				if ( superClass.isAnnotationPresent( Entity.class )
 						|| superClass.isAnnotationPresent( MappedSuperclass.class ) ) {
 					copy.add( superClass );
@@ -168,7 +170,9 @@ public class AnnotationConfiguration extends Configuration {
 	}
 
 	private void orderHierarchy(List<XClass> copy, List<XClass> newList, List<XClass> original, XClass clazz) {
-		if ( clazz == null || reflectionManager.equals( clazz, Object.class ) ) return;
+		if ( clazz == null || reflectionManager.equals( clazz, Object.class ) ) {
+			return;
+		}
 		//process superclass first
 		orderHierarchy( copy, newList, original, clazz.getSuperclass() );
 		if ( original.contains( clazz ) ) {
@@ -183,6 +187,7 @@ public class AnnotationConfiguration extends Configuration {
 	 * Read a mapping from the class annotation metadata (JSR 175).
 	 *
 	 * @param persistentClass the mapped class
+	 *
 	 * @return the configuration object
 	 */
 	public AnnotationConfiguration addAnnotatedClass(Class persistentClass) throws MappingException {
@@ -191,7 +196,7 @@ public class AnnotationConfiguration extends Configuration {
 			annotatedClasses.add( persistentXClass );
 			return this;
 		}
-		catch (MappingException me) {
+		catch ( MappingException me ) {
 			log.error( "Could not compile the mapping annotations", me );
 			throw me;
 		}
@@ -201,6 +206,7 @@ public class AnnotationConfiguration extends Configuration {
 	 * Read package level metadata
 	 *
 	 * @param packageName java package name
+	 *
 	 * @return the configuration object
 	 */
 	public AnnotationConfiguration addPackage(String packageName) throws MappingException {
@@ -209,7 +215,7 @@ public class AnnotationConfiguration extends Configuration {
 			AnnotationBinder.bindPackage( packageName, createExtendedMappings() );
 			return this;
 		}
-		catch (MappingException me) {
+		catch ( MappingException me ) {
 			log.error( "Could not compile the mapping annotations", me );
 			throw me;
 		}
@@ -255,7 +261,7 @@ public class AnnotationConfiguration extends Configuration {
 		setEntityResolver( new EJB3DTDEntityResolver() );
 		anyMetaDefs = new HashMap<String, AnyMetaDef>();
 		reflectionManager = new JavaReflectionManager();
-		((MetadataProviderInjector) reflectionManager).setMetadataProvider( new JPAMetadataProvider() );
+		( ( MetadataProviderInjector ) reflectionManager ).setMetadataProvider( new JPAMetadataProvider() );
 
 	}
 
@@ -265,7 +271,7 @@ public class AnnotationConfiguration extends Configuration {
 		//build annotatedClassEntities
 		{
 			List<XClass> tempAnnotatedClasses = new ArrayList<XClass>( annotatedClasses.size() );
-			for (XClass clazz : annotatedClasses) {
+			for ( XClass clazz : annotatedClasses ) {
 				if ( clazz.isAnnotationPresent( Entity.class ) ) {
 					annotatedClassEntities.put( clazz.getName(), clazz );
 					tempAnnotatedClasses.add( clazz );
@@ -283,22 +289,26 @@ public class AnnotationConfiguration extends Configuration {
 			AnnotationBinder.bindDefaults( createExtendedMappings() );
 			isDefaultProcessed = true;
 		}
- 
+
 		//process entities
-		if ( precedence == null ) precedence = getProperties().getProperty( ARTEFACT );
-		if ( precedence == null ) precedence = DEFAULT_PRECEDENCE;
+		if ( precedence == null ) {
+			precedence = getProperties().getProperty( ARTEFACT );
+		}
+		if ( precedence == null ) {
+			precedence = DEFAULT_PRECEDENCE;
+		}
 		StringTokenizer precedences = new StringTokenizer( precedence, ",; ", false );
 		if ( !precedences.hasMoreElements() ) {
 			throw new MappingException( ARTEFACT + " cannot be empty: " + precedence );
 		}
 		while ( precedences.hasMoreElements() ) {
-			String artifact = (String) precedences.nextElement();
+			String artifact = ( String ) precedences.nextElement();
 			removeConflictedArtifact( artifact );
 			processArtifactsOfType( artifact );
 		}
 
 		int cacheNbr = caches.size();
-		for (int index = 0; index < cacheNbr; index++) {
+		for ( int index = 0; index < cacheNbr; index++ ) {
 			CacheHolder cacheHolder = caches.get( index );
 			if ( cacheHolder.isClass ) {
 				super.setCacheConcurrencyStrategy(
@@ -314,7 +324,7 @@ public class AnnotationConfiguration extends Configuration {
 			inSecondPass = true;
 			Iterator iter = secondPasses.iterator();
 			while ( iter.hasNext() ) {
-				SecondPass sp = (SecondPass) iter.next();
+				SecondPass sp = ( SecondPass ) iter.next();
 				//do the second pass of simple value types first and remove them
 				if ( sp instanceof SetSimpleValueTypeSecondPass ) {
 					sp.doSecondPass( classes );
@@ -324,7 +334,7 @@ public class AnnotationConfiguration extends Configuration {
 			processFkSecondPassInOrder();
 			iter = secondPasses.iterator();
 			while ( iter.hasNext() ) {
-				SecondPass sp = (SecondPass) iter.next();
+				SecondPass sp = ( SecondPass ) iter.next();
 				//do the second pass of fk before the others and remove them
 				if ( sp instanceof CreateKeySecondPass ) {
 					sp.doSecondPass( classes );
@@ -334,7 +344,7 @@ public class AnnotationConfiguration extends Configuration {
 
 			iter = secondPasses.iterator();
 			while ( iter.hasNext() ) {
-				SecondPass sp = (SecondPass) iter.next();
+				SecondPass sp = ( SecondPass ) iter.next();
 				//do the SecondaryTable second pass before any association becasue associations can be built on joins
 				if ( sp instanceof SecondaryTableSecondPass ) {
 					sp.doSecondPass( classes );
@@ -344,9 +354,9 @@ public class AnnotationConfiguration extends Configuration {
 			super.secondPassCompile();
 			inSecondPass = false;
 		}
-		catch (RecoverableException e) {
+		catch ( RecoverableException e ) {
 			//the exception was not recoverable after all
-			throw (RuntimeException) e.getCause();
+			throw ( RuntimeException ) e.getCause();
 		}
 		Iterator tables = tableUniqueConstraints.entrySet().iterator();
 		Table table;
@@ -354,42 +364,59 @@ public class AnnotationConfiguration extends Configuration {
 		String keyName;
 		int uniqueIndexPerTable;
 		while ( tables.hasNext() ) {
-			entry = (Map.Entry) tables.next();
-			table = (Table) entry.getKey();
-			List<String[]> uniqueConstraints = (List<String[]>) entry.getValue();
+			entry = ( Map.Entry ) tables.next();
+			table = ( Table ) entry.getKey();
+			List<String[]> uniqueConstraints = ( List<String[]> ) entry.getValue();
 			uniqueIndexPerTable = 0;
-			for (String[] columnNames : uniqueConstraints) {
+			for ( String[] columnNames : uniqueConstraints ) {
 				keyName = "key" + uniqueIndexPerTable++;
 				buildUniqueKeyFromColumnNames( columnNames, table, keyName );
 			}
 		}
+		applyConstraintsToDDL();
+	}
+
+	private void applyConstraintsToDDL() {
 		boolean applyOnDdl = getProperties().getProperty(
-				"hibernate.validator.apply_to_ddl", //org.hibernate.validator.Environment.APPLY_TO_DDL
-				"true" )
+				"hibernate.validator.apply_to_ddl",
+				"true"
+		)
 				.equalsIgnoreCase( "true" );
 
+		if ( !applyOnDdl ) {
+			return; // nothing to do in this case
+		}
+		applyHibernateValidatorLegacyConstraintsOnDDL();
+		applyBeanValidationConstraintsOnDDL();
+	}
+
+	private void applyHibernateValidatorLegacyConstraintsOnDDL() {
 		//TODO search for the method only once and cache it?
 		Constructor validatorCtr = null;
 		Method applyMethod = null;
 		try {
-			Class classValidator = ReflectHelper.classForName( "org.hibernate.validator.ClassValidator", this.getClass() );
-			Class messageInterpolator = ReflectHelper.classForName( "org.hibernate.validator.MessageInterpolator", this.getClass() );
+			Class classValidator = ReflectHelper.classForName(
+					"org.hibernate.validator.ClassValidator", this.getClass()
+			);
+			Class messageInterpolator = ReflectHelper.classForName(
+					"org.hibernate.validator.MessageInterpolator", this.getClass()
+			);
 			validatorCtr = classValidator.getDeclaredConstructor(
 					Class.class, ResourceBundle.class, messageInterpolator, Map.class, ReflectionManager.class
 			);
 			applyMethod = classValidator.getMethod( "apply", PersistentClass.class );
 		}
-		catch (ClassNotFoundException e) {
+		catch ( ClassNotFoundException e ) {
 			if ( !isValidatorNotPresentLogged ) {
 				log.info( "Hibernate Validator not found: ignoring" );
 			}
 			isValidatorNotPresentLogged = true;
 		}
-		catch (NoSuchMethodException e) {
+		catch ( NoSuchMethodException e ) {
 			throw new AnnotationException( e );
 		}
-		if ( applyMethod != null && applyOnDdl ) {
-			for (PersistentClass persistentClazz : (Collection<PersistentClass>) classes.values()) {
+		if ( applyMethod != null ) {
+			for ( PersistentClass persistentClazz : ( Collection<PersistentClass> ) classes.values() ) {
 				//integrate the validate framework
 				String className = persistentClazz.getClassName();
 				if ( StringHelper.isNotEmpty( className ) ) {
@@ -399,17 +426,16 @@ public class AnnotationConfiguration extends Configuration {
 						);
 						applyMethod.invoke( validator, persistentClazz );
 					}
-					catch (Exception e) {
+					catch ( Exception e ) {
 						log.warn( "Unable to apply constraints on DDL for " + className, e );
 					}
 				}
 			}
 		}
-		applyDDLOnBeanValidation( (Collection<PersistentClass>) classes.values(), getProperties() );
 	}
 
-	private void applyDDLOnBeanValidation(Collection<PersistentClass> persistentClasses, Properties properties) {
-		BeanValidationActivator.applyDDL( persistentClasses, properties );
+	private void applyBeanValidationConstraintsOnDDL() {
+		BeanValidationActivator.applyDDL( ( Collection<PersistentClass> ) classes.values(), getProperties() );
 	}
 
 	/**
@@ -420,16 +446,16 @@ public class AnnotationConfiguration extends Configuration {
 	private void processFkSecondPassInOrder() {
 		log.debug( "processing fk mappings (*ToOne and JoinedSubclass)" );
 		List<FkSecondPass> fkSecondPasses = getFKSecondPassesOnly();
-		
-		if (fkSecondPasses.size() == 0) {
+
+		if ( fkSecondPasses.size() == 0 ) {
 			return; // nothing to do here
 		}
-		
+
 		// split FkSecondPass instances into primary key and non primary key FKs.
 		// While doing so build a map of class names to FkSecondPass instances depending on this class.
 		Map<String, Set<FkSecondPass>> isADependencyOf = new HashMap<String, Set<FkSecondPass>>();
 		List endOfQueueFkSecondPasses = new ArrayList( fkSecondPasses.size() );
-		for (FkSecondPass sp : fkSecondPasses) {
+		for ( FkSecondPass sp : fkSecondPasses ) {
 			if ( sp.isInPrimaryKey() ) {
 				String referenceEntityName = sp.getReferencedEntityName();
 				PersistentClass classMapping = getClassMapping( referenceEntityName );
@@ -443,19 +469,19 @@ public class AnnotationConfiguration extends Configuration {
 				endOfQueueFkSecondPasses.add( sp );
 			}
 		}
-		
+
 		// using the isADependencyOf map we order the FkSecondPass recursively instances into the right order for processing
 		List<FkSecondPass> orderedFkSecondPasses = new ArrayList( fkSecondPasses.size() );
-		for (String tableName : isADependencyOf.keySet()) {
-			buildRecursiveOrderedFkSecondPasses(orderedFkSecondPasses, isADependencyOf, tableName, tableName);
+		for ( String tableName : isADependencyOf.keySet() ) {
+			buildRecursiveOrderedFkSecondPasses( orderedFkSecondPasses, isADependencyOf, tableName, tableName );
 		}
-		
+
 		// process the ordered FkSecondPasses
 		for ( FkSecondPass sp : orderedFkSecondPasses ) {
 			sp.doSecondPass( classes );
 		}
 
-		processEndOfQueue(endOfQueueFkSecondPasses);
+		processEndOfQueue( endOfQueueFkSecondPasses );
 	}
 
 	private void processEndOfQueue(List endOfQueueFkSecondPasses) {
@@ -467,39 +493,41 @@ public class AnnotationConfiguration extends Configuration {
 		 */
 		boolean stopProcess = false;
 		RuntimeException originalException = null;
-		while ( ! stopProcess ) {
+		while ( !stopProcess ) {
 			List failingSecondPasses = new ArrayList();
 			Iterator it = endOfQueueFkSecondPasses.listIterator();
 			while ( it.hasNext() ) {
-				final SecondPass pass = (SecondPass) it.next();
+				final SecondPass pass = ( SecondPass ) it.next();
 				try {
 					pass.doSecondPass( classes );
 				}
-				catch (RecoverableException e) {
+				catch ( RecoverableException e ) {
 					failingSecondPasses.add( pass );
-					if (originalException == null) originalException = (RuntimeException) e.getCause();
+					if ( originalException == null ) {
+						originalException = ( RuntimeException ) e.getCause();
+					}
 				}
 			}
 			stopProcess = failingSecondPasses.size() == 0 || failingSecondPasses.size() == endOfQueueFkSecondPasses.size();
 			endOfQueueFkSecondPasses = failingSecondPasses;
 		}
-		if (endOfQueueFkSecondPasses.size() > 0) {
+		if ( endOfQueueFkSecondPasses.size() > 0 ) {
 			throw originalException;
 		}
 	}
 
 	/**
 	 * @return Returns a list of all <code>secondPasses</code> instances which are a instance of
-	 * <code>FkSecondPass</code>.
+	 *         <code>FkSecondPass</code>.
 	 */
 	private List<FkSecondPass> getFKSecondPassesOnly() {
 		Iterator iter = secondPasses.iterator();
-		List<FkSecondPass> fkSecondPasses = new ArrayList<FkSecondPass>(secondPasses.size());
+		List<FkSecondPass> fkSecondPasses = new ArrayList<FkSecondPass>( secondPasses.size() );
 		while ( iter.hasNext() ) {
-			SecondPass sp = (SecondPass) iter.next();
+			SecondPass sp = ( SecondPass ) iter.next();
 			//do the second pass of fk before the others and remove them
 			if ( sp instanceof FkSecondPass ) {
-				fkSecondPasses.add( (FkSecondPass) sp );
+				fkSecondPasses.add( ( FkSecondPass ) sp );
 				iter.remove();
 			}
 		}
@@ -508,12 +536,12 @@ public class AnnotationConfiguration extends Configuration {
 
 	/**
 	 * Recursively builds a list of FkSecondPass instances ready to be processed in this order.
-	 * Checking all dependencies recursively seems quite expensive, but the original code just relied 
+	 * Checking all dependencies recursively seems quite expensive, but the original code just relied
 	 * on some sort of table name sorting which failed in certain circumstances.
 	 * <p/>
 	 * See <tt>ANN-722</tt> and <tt>ANN-730</tt>
-	 * 
-	 * @param orderedFkSecondPasses The list containing the <code>FkSecondPass<code> instances ready 
+	 *
+	 * @param orderedFkSecondPasses The list containing the <code>FkSecondPass<code> instances ready
 	 * for processing.
 	 * @param isADependencyOf Our lookup data structure to determine dependencies between tables
 	 * @param startTable Table name to start recursive algorithm.
@@ -523,31 +551,32 @@ public class AnnotationConfiguration extends Configuration {
 			List orderedFkSecondPasses,
 			Map<String, Set<FkSecondPass>> isADependencyOf, String startTable, String currentTable) {
 
-		Set<FkSecondPass> dependencies = isADependencyOf.get(currentTable);
-		
+		Set<FkSecondPass> dependencies = isADependencyOf.get( currentTable );
+
 		// bottom out
-		if (dependencies == null || dependencies.size() == 0) {
+		if ( dependencies == null || dependencies.size() == 0 ) {
 			return;
 		}
-		
-		for (FkSecondPass sp : dependencies) {
+
+		for ( FkSecondPass sp : dependencies ) {
 			String dependentTable = sp.getValue().getTable().getQuotedName();
-			if (dependentTable.compareTo(startTable) == 0) {
+			if ( dependentTable.compareTo( startTable ) == 0 ) {
 				StringBuilder sb = new StringBuilder(
-						"Foreign key circularity dependency involving the following tables: ");
-				throw new AnnotationException(sb.toString());
+						"Foreign key circularity dependency involving the following tables: "
+				);
+				throw new AnnotationException( sb.toString() );
 			}
-			buildRecursiveOrderedFkSecondPasses(orderedFkSecondPasses, isADependencyOf, startTable, dependentTable);
-			if (!orderedFkSecondPasses.contains(sp)) {
-				orderedFkSecondPasses.add(0, sp);
+			buildRecursiveOrderedFkSecondPasses( orderedFkSecondPasses, isADependencyOf, startTable, dependentTable );
+			if ( !orderedFkSecondPasses.contains( sp ) ) {
+				orderedFkSecondPasses.add( 0, sp );
 			}
-		}		
+		}
 	}
 
 	private void processArtifactsOfType(String artifact) {
 		if ( "hbm".equalsIgnoreCase( artifact ) ) {
 			log.debug( "Process hbm files" );
-			for (Document document : hbmDocuments) {
+			for ( Document document : hbmDocuments ) {
 				super.add( document );
 			}
 			hbmDocuments.clear();
@@ -561,7 +590,7 @@ public class AnnotationConfiguration extends Configuration {
 					orderedClasses, reflectionManager
 			);
 			ExtendedMappings mappings = createExtendedMappings();
-			for (XClass clazz : orderedClasses) {
+			for ( XClass clazz : orderedClasses ) {
 				//todo use the same extended mapping
 				AnnotationBinder.bindClass( clazz, inheritanceStatePerClass, mappings );
 			}
@@ -569,13 +598,13 @@ public class AnnotationConfiguration extends Configuration {
 			annotatedClassEntities.clear();
 		}
 		else {
-			log.warn( "Unknown artifact: {}",  artifact );
+			log.warn( "Unknown artifact: {}", artifact );
 		}
 	}
 
 	private void removeConflictedArtifact(String artifact) {
 		if ( "hbm".equalsIgnoreCase( artifact ) ) {
-			for (String entity : hbmEntities.keySet()) {
+			for ( String entity : hbmEntities.keySet() ) {
 				if ( annotatedClassEntities.containsKey( entity ) ) {
 					annotatedClasses.remove( annotatedClassEntities.get( entity ) );
 					annotatedClassEntities.remove( entity );
@@ -583,7 +612,7 @@ public class AnnotationConfiguration extends Configuration {
 			}
 		}
 		else if ( "class".equalsIgnoreCase( artifact ) ) {
-			for (String entity : annotatedClassEntities.keySet()) {
+			for ( String entity : annotatedClassEntities.keySet() ) {
 				if ( hbmEntities.containsKey( entity ) ) {
 					hbmDocuments.remove( hbmEntities.get( entity ) );
 					hbmEntities.remove( entity );
@@ -599,7 +628,7 @@ public class AnnotationConfiguration extends Configuration {
 		Set<Column> unbound = new HashSet<Column>();
 		Set<Column> unboundNoLogical = new HashSet<Column>();
 		ExtendedMappings mappings = createExtendedMappings();
-		for (int index = 0; index < size; index++) {
+		for ( int index = 0; index < size; index++ ) {
 			String columnName;
 			try {
 				columnName = mappings.getPhysicalColumnName( columnNames[index], table );
@@ -607,11 +636,11 @@ public class AnnotationConfiguration extends Configuration {
 				unbound.add( columns[index] );
 				//column equals and hashcode is based on column name
 			}
-			catch (MappingException e) {
+			catch ( MappingException e ) {
 				unboundNoLogical.add( new Column( columnNames[index] ) );
 			}
 		}
-		for (Column column : columns) {
+		for ( Column column : columns ) {
 			if ( table.containsColumn( column ) ) {
 				uc = table.getOrCreateUniqueKey( keyName );
 				uc.addColumn( table.getColumn( column ) );
@@ -620,15 +649,15 @@ public class AnnotationConfiguration extends Configuration {
 		}
 		if ( unbound.size() > 0 || unboundNoLogical.size() > 0 ) {
 			StringBuilder sb = new StringBuilder( "Unable to create unique key constraint (" );
-			for (String columnName : columnNames) {
+			for ( String columnName : columnNames ) {
 				sb.append( columnName ).append( ", " );
 			}
 			sb.setLength( sb.length() - 2 );
 			sb.append( ") on table " ).append( table.getName() ).append( ": " );
-			for (Column column : unbound) {
+			for ( Column column : unbound ) {
 				sb.append( column.getName() ).append( ", " );
 			}
-			for (Column column : unboundNoLogical) {
+			for ( Column column : unboundNoLogical ) {
 				sb.append( column.getName() ).append( ", " );
 			}
 			sb.setLength( sb.length() - 2 );
@@ -653,26 +682,26 @@ public class AnnotationConfiguration extends Configuration {
 			addJar( new File( jar.getValue() ) );
 		}
 		else if ( file != null ) {
-			log.debug(  "{} <- {}", name, file );
+			log.debug( "{} <- {}", name, file );
 			addFile( file.getValue() );
 		}
 		else if ( pckg != null ) {
-			log.debug(  "{} <- {}", name, pckg );
+			log.debug( "{} <- {}", name, pckg );
 			addPackage( pckg.getValue() );
 		}
 		else if ( clazz != null ) {
-			log.debug(  "{} <- {}", name, clazz );
+			log.debug( "{} <- {}", name, clazz );
 			Class loadedClass;
 			try {
 				loadedClass = ReflectHelper.classForName( clazz.getValue() );
 			}
-			catch (ClassNotFoundException cnf) {
+			catch ( ClassNotFoundException cnf ) {
 				throw new MappingException(
 						"Unable to load class declared as <mapping class=\"" + clazz.getValue() + "\"/> in the configuration:",
 						cnf
 				);
 			}
-			catch (NoClassDefFoundError ncdf) {
+			catch ( NoClassDefFoundError ncdf ) {
 				throw new MappingException(
 						"Unable to load class declared as <mapping class=\"" + clazz.getValue() + "\"/> in the configuration:",
 						ncdf
@@ -691,7 +720,9 @@ public class AnnotationConfiguration extends Configuration {
 		boolean ejb3Xml = "entity-mappings".equals( doc.getRootElement().getName() );
 		if ( inSecondPass ) {
 			//if in second pass bypass the queueing, getExtendedQueue reuse this method
-			if ( !ejb3Xml ) super.add( doc );
+			if ( !ejb3Xml ) {
+				super.add( doc );
+			}
 		}
 		else {
 			if ( !ejb3Xml ) {
@@ -702,20 +733,20 @@ public class AnnotationConfiguration extends Configuration {
 						: "";
 				Set<String> entityNames = new HashSet<String>();
 				findClassNames( defaultPackage, hmNode, entityNames );
-				for (String entity : entityNames) {
+				for ( String entity : entityNames ) {
 					hbmEntities.put( entity, doc );
 				}
 				hbmDocuments.add( doc );
 			}
 			else {
 				final MetadataProvider metadataProvider = ( ( MetadataProviderInjector ) reflectionManager ).getMetadataProvider();
-				JPAMetadataProvider jpaMetadataProvider = (JPAMetadataProvider) metadataProvider;
+				JPAMetadataProvider jpaMetadataProvider = ( JPAMetadataProvider ) metadataProvider;
 				List<String> classnames = jpaMetadataProvider.getXMLContext().addDocument( doc );
-				for (String classname : classnames) {
+				for ( String classname : classnames ) {
 					try {
 						annotatedClasses.add( reflectionManager.classForName( classname, this.getClass() ) );
 					}
-					catch (ClassNotFoundException e) {
+					catch ( ClassNotFoundException e ) {
 						throw new AnnotationException( "Unable to load class defined in XML: " + classname, e );
 					}
 				}
@@ -737,18 +768,24 @@ public class AnnotationConfiguration extends Configuration {
 
 		Iterator classIterator = new JoinedIterator( classes );
 		while ( classIterator.hasNext() ) {
-			Element element = (Element) classIterator.next();
+			Element element = ( Element ) classIterator.next();
 			String entityName = element.attributeValue( "entity-name" );
-			if ( entityName == null ) entityName = getClassName( element.attribute( "name" ), defaultPackage );
+			if ( entityName == null ) {
+				entityName = getClassName( element.attribute( "name" ), defaultPackage );
+			}
 			names.add( entityName );
 			findClassNames( defaultPackage, element, names );
 		}
 	}
 
 	private static String getClassName(Attribute name, String defaultPackage) {
-		if ( name == null ) return null;
+		if ( name == null ) {
+			return null;
+		}
 		String unqualifiedName = name.getValue();
-		if ( unqualifiedName == null ) return null;
+		if ( unqualifiedName == null ) {
+			return null;
+		}
 		if ( unqualifiedName.indexOf( '.' ) < 0 && defaultPackage != null ) {
 			return defaultPackage + '.' + unqualifiedName;
 		}
@@ -789,26 +826,26 @@ public class AnnotationConfiguration extends Configuration {
 						"http://java.sun.com/xml/ns/persistence/orm orm_1_0.xsd"
 				);
 			}
-			catch (SAXException e) {
+			catch ( SAXException e ) {
 				saxReader.setValidation( false );
 			}
 			org.dom4j.Document doc = saxReader
 					.read( new InputSource( xmlInputStream ) );
 
 			if ( errors.size() != 0 ) {
-				throw new MappingException( "invalid mapping", (Throwable) errors.get( 0 ) );
+				throw new MappingException( "invalid mapping", ( Throwable ) errors.get( 0 ) );
 			}
 			add( doc );
 			return this;
 		}
-		catch (DocumentException e) {
+		catch ( DocumentException e ) {
 			throw new MappingException( "Could not parse mapping document in input stream", e );
 		}
 		finally {
 			try {
 				xmlInputStream.close();
 			}
-			catch (IOException ioe) {
+			catch ( IOException ioe ) {
 				log.warn( "Could not close input stream", ioe );
 			}
 		}
@@ -817,20 +854,25 @@ public class AnnotationConfiguration extends Configuration {
 	public SessionFactory buildSessionFactory() throws HibernateException {
 		enableLegacyHibernateValidator();
 		enableBeanValidation();
-		enableHibernateSearch(); 
+		enableHibernateSearch();
 		return super.buildSessionFactory();
 	}
 
 	private void enableLegacyHibernateValidator() {
 		//add validator events if the jar is available
-		boolean enableValidatorListeners = !"false".equalsIgnoreCase( getProperty( "hibernate.validator.autoregister_listeners" ) );
+		boolean enableValidatorListeners = !"false".equalsIgnoreCase(
+				getProperty(
+						"hibernate.validator.autoregister_listeners"
+				)
+		);
 		Class validateEventListenerClass = null;
 		try {
 			validateEventListenerClass = ReflectHelper.classForName(
 					"org.hibernate.validator.event.ValidateEventListener",
-					AnnotationConfiguration.class );
+					AnnotationConfiguration.class
+			);
 		}
-		catch (ClassNotFoundException e) {
+		catch ( ClassNotFoundException e ) {
 			//validator is not present
 			log.debug( "Validator not present in classpath, ignoring event listener registration" );
 		}
@@ -840,14 +882,14 @@ public class AnnotationConfiguration extends Configuration {
 			try {
 				validateEventListener = validateEventListenerClass.newInstance();
 			}
-			catch (Exception e) {
+			catch ( Exception e ) {
 				throw new AnnotationException( "Unable to load Validator event listener", e );
 			}
 			{
 				boolean present = false;
 				PreInsertEventListener[] listeners = getEventListeners().getPreInsertEventListeners();
 				if ( listeners != null ) {
-					for (Object eventListener : listeners) {
+					for ( Object eventListener : listeners ) {
 						//not isAssignableFrom since the user could subclass
 						present = present || validateEventListenerClass == eventListener.getClass();
 					}
@@ -855,13 +897,13 @@ public class AnnotationConfiguration extends Configuration {
 						int length = listeners.length + 1;
 						PreInsertEventListener[] newListeners = new PreInsertEventListener[length];
 						System.arraycopy( listeners, 0, newListeners, 0, length - 1 );
-						newListeners[length - 1] = (PreInsertEventListener) validateEventListener;
+						newListeners[length - 1] = ( PreInsertEventListener ) validateEventListener;
 						getEventListeners().setPreInsertEventListeners( newListeners );
 					}
 				}
 				else {
 					getEventListeners().setPreInsertEventListeners(
-							new PreInsertEventListener[] { (PreInsertEventListener) validateEventListener }
+							new PreInsertEventListener[] { ( PreInsertEventListener ) validateEventListener }
 					);
 				}
 			}
@@ -871,7 +913,7 @@ public class AnnotationConfiguration extends Configuration {
 				boolean present = false;
 				PreUpdateEventListener[] listeners = getEventListeners().getPreUpdateEventListeners();
 				if ( listeners != null ) {
-					for (Object eventListener : listeners) {
+					for ( Object eventListener : listeners ) {
 						//not isAssignableFrom since the user could subclass
 						present = present || validateEventListenerClass == eventListener.getClass();
 					}
@@ -879,13 +921,13 @@ public class AnnotationConfiguration extends Configuration {
 						int length = listeners.length + 1;
 						PreUpdateEventListener[] newListeners = new PreUpdateEventListener[length];
 						System.arraycopy( listeners, 0, newListeners, 0, length - 1 );
-						newListeners[length - 1] = (PreUpdateEventListener) validateEventListener;
+						newListeners[length - 1] = ( PreUpdateEventListener ) validateEventListener;
 						getEventListeners().setPreUpdateEventListeners( newListeners );
 					}
 				}
 				else {
 					getEventListeners().setPreUpdateEventListeners(
-							new PreUpdateEventListener[] { (PreUpdateEventListener) validateEventListener }
+							new PreUpdateEventListener[] { ( PreUpdateEventListener ) validateEventListener }
 					);
 				}
 			}
@@ -897,39 +939,49 @@ public class AnnotationConfiguration extends Configuration {
 	}
 
 	/**
-	 * Tries to automatically register Hibernate Search event listeners by locating the 
+	 * Tries to automatically register Hibernate Search event listeners by locating the
 	 * appropriate bootstrap class and calling the <code>enableHibernateSearch</code> method.
 	 */
 	private void enableHibernateSearch() {
 		// load the bootstrap class
 		Class searchStartupClass;
 		try {
-			searchStartupClass = ReflectHelper.classForName(SEARCH_STARTUP_CLASS, AnnotationConfiguration.class);	
-		} catch ( ClassNotFoundException e ) {
+			searchStartupClass = ReflectHelper.classForName( SEARCH_STARTUP_CLASS, AnnotationConfiguration.class );
+		}
+		catch ( ClassNotFoundException e ) {
 			// TODO remove this together with SearchConfiguration after 3.1.0 release of Search
 			// try loading deprecated HibernateSearchEventListenerRegister
 			try {
-				searchStartupClass = ReflectHelper.classForName("org.hibernate.cfg.search.HibernateSearchEventListenerRegister", AnnotationConfiguration.class);
-			} catch ( ClassNotFoundException cnfe ) {
-				log.debug("Search not present in classpath, ignoring event listener registration.");
+				searchStartupClass = ReflectHelper.classForName(
+						"org.hibernate.cfg.search.HibernateSearchEventListenerRegister", AnnotationConfiguration.class
+				);
+			}
+			catch ( ClassNotFoundException cnfe ) {
+				log.debug( "Search not present in classpath, ignoring event listener registration." );
 				return;
 			}
 		}
-		
+
 		// call the method for registering the listeners
 		try {
 			Object searchStartupInstance = searchStartupClass.newInstance();
-			Method enableSearchMethod = searchStartupClass.getDeclaredMethod(SEARCH_STARTUP_METHOD,
-					EventListeners.class, Properties.class);
-			enableSearchMethod.invoke(searchStartupInstance, getEventListeners(), getProperties());
-		} catch ( InstantiationException e ) {
-			log.debug("Unable to instantiate {}, ignoring event listener registration.", SEARCH_STARTUP_CLASS);
-		} catch ( IllegalAccessException e ) {
-			log.debug("Unable to instantiate {}, ignoring event listener registration.", SEARCH_STARTUP_CLASS);
-		} catch ( NoSuchMethodException e ) {
-			log.debug("Method enableHibernateSearch() not found in {}.", SEARCH_STARTUP_CLASS);
-		} catch ( InvocationTargetException e ) {
-			log.debug("Unable to execute {}, ignoring event listener registration.", SEARCH_STARTUP_METHOD);
+			Method enableSearchMethod = searchStartupClass.getDeclaredMethod(
+					SEARCH_STARTUP_METHOD,
+					EventListeners.class, Properties.class
+			);
+			enableSearchMethod.invoke( searchStartupInstance, getEventListeners(), getProperties() );
+		}
+		catch ( InstantiationException e ) {
+			log.debug( "Unable to instantiate {}, ignoring event listener registration.", SEARCH_STARTUP_CLASS );
+		}
+		catch ( IllegalAccessException e ) {
+			log.debug( "Unable to instantiate {}, ignoring event listener registration.", SEARCH_STARTUP_CLASS );
+		}
+		catch ( NoSuchMethodException e ) {
+			log.debug( "Method enableHibernateSearch() not found in {}.", SEARCH_STARTUP_CLASS );
+		}
+		catch ( InvocationTargetException e ) {
+			log.debug( "Unable to execute {}, ignoring event listener registration.", SEARCH_STARTUP_METHOD );
 		}
 	}
 
@@ -1078,13 +1130,15 @@ public class AnnotationConfiguration extends Configuration {
 	}
 
 	@Override
-	public AnnotationConfiguration setCacheConcurrencyStrategy(String clazz, String concurrencyStrategy) throws MappingException {
+	public AnnotationConfiguration setCacheConcurrencyStrategy(String clazz, String concurrencyStrategy)
+			throws MappingException {
 		super.setCacheConcurrencyStrategy( clazz, concurrencyStrategy );
 		return this;
 	}
 
 	@Override
-	public AnnotationConfiguration setCollectionCacheConcurrencyStrategy(String collectionRole, String concurrencyStrategy) throws MappingException {
+	public AnnotationConfiguration setCollectionCacheConcurrencyStrategy(String collectionRole, String concurrencyStrategy)
+			throws MappingException {
 		super.setCollectionCacheConcurrencyStrategy( collectionRole, concurrencyStrategy );
 		return this;
 	}
@@ -1121,10 +1175,10 @@ public class AnnotationConfiguration extends Configuration {
 		}
 
 		public boolean isInSecondPass() {
-			return inSecondPass; 
+			return inSecondPass;
 		}
-		
-		
+
+
 		public IdGenerator getGenerator(String name) {
 			return getGenerator( name, null );
 		}
@@ -1276,8 +1330,9 @@ public class AnnotationConfiguration extends Configuration {
 
 		@Override
 		public void addResultSetMapping(ResultSetMappingDefinition definition) throws DuplicateMappingException {
-			if ( !defaultSqlResulSetMappingNames.contains( definition.getName() ) )
+			if ( !defaultSqlResulSetMappingNames.contains( definition.getName() ) ) {
 				super.addResultSetMapping( definition );
+			}
 		}
 
 		@Override

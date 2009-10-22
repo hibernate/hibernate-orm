@@ -570,8 +570,7 @@
                 <dependency>
                     <groupId>postgresql</groupId>
                     <artifactId>postgresql</artifactId>
-                    <version>8.2-504</version>
-                    <classifier>jdbc3</classifier>
+                    <version>8.2-504.jdbc3</version>
                 </dependency>
             </dependencies>
             <properties>
@@ -591,8 +590,7 @@
                 <dependency>
                     <groupId>postgresql</groupId>
                     <artifactId>postgresql</artifactId>
-                    <version>8.2-504</version>
-                    <classifier>jdbc3</classifier>
+                    <version>8.2-504.jdbc3</version>
                 </dependency>
             </dependencies>
             <properties>

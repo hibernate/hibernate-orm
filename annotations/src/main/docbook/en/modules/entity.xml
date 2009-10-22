@@ -2656,14 +2656,35 @@ public long getObjectVolume()</programlisting>
         <para><literal>@org.hibernate.annotations.TypeDef</literal> and
         <literal>@org.hibernate.annotations.TypeDefs</literal> allows you to
         declare type definitions. These annotations can be placed at the class or
-        package level. Note that these definitions are be global for the
-        session factory (even when defined at the class level). Type definitions have
-        to be defined before any usage. If the type is used on a single entity, you
-        can plance the definition on the entity itself. Otherwise, it is recommended
-        to place the definition a the package level since the entity processing order
-        is not guaranteed.</para>
+        package level. Note that these definitions are global for the
+        session factory (even when defined at the class level). If the type is used on a single entity, you can place the definition on the entity itself. Otherwise, it is recommended to place the definition at the package level. In the example below, when Hibernate encounters a property of class <literal>PhoneNumer</literal>, it delegates the persistence strategy to the custom mapping type <literal>PhoneNumberType</literal>. However, properties belonging to other classes, too, can delegate their persistence strategy to <literal>PhoneNumberType</literal>, by explicitly using the <literal>@Type</literal> annotation. </para>
+
           <note>Package level annotations are placed in a file named <filename>package-info.java</filename>
           in the appropriate package. Place your annotations before the package declaration.</note>
+
+<programlisting>
+@TypeDef(
+	name = "phoneNumber",
+	defaultForType = PhoneNumber.class,
+	typeClass = PhoneNumberType.class
+)
+
+@Entity
+public class ContactDetails {
+      ...
+	private PhoneNumber localPhoneNumber;
+	@Type(type="phoneNumber")
+	private OverseasPhoneNumber overseasPhoneNumber;
+      ...
+}
+
+
+</programlisting>
+
+<para>
+The following example shows the usage of the <literal>parameters</literal> attribute to customize the TypeDef. 
+</para>
+
 
         <programlisting>//in org/hibernate/test/annotations/entity/package-info.java
 @TypeDefs(

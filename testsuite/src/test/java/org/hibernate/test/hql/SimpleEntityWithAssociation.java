@@ -1,7 +1,7 @@
 package org.hibernate.test.hql;
 
-import java.util.Set;
 import java.util.HashSet;
+import java.util.Set;
 
 /**
  * @author Steve Ebersole
@@ -9,6 +9,7 @@ import java.util.HashSet;
 public class SimpleEntityWithAssociation {
 	private Long id;
 	private String name;
+	private Integer negatedNumber;
 	private Set associatedEntities = new HashSet();
 	private Set manyToManyAssociatedEntities = new HashSet();
 
@@ -34,6 +35,14 @@ public class SimpleEntityWithAssociation {
 	public void setName(String name) {
 		this.name = name;
 	}
+	
+	public Integer getNegatedNumber() {
+		return negatedNumber;
+	}
+
+	public void setNegatedNumber(Integer negatedNumber) {
+		this.negatedNumber = negatedNumber;
+	}	
 
 	public Set getAssociatedEntities() {
 		return associatedEntities;

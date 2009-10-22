@@ -8,6 +8,7 @@ import junit.framework.Test;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.cfg.Mappings;
+import org.hibernate.criterion.Restrictions;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.junit.functional.FunctionalTestCase;
@@ -81,6 +82,52 @@ public class CompositeElementTest extends FunctionalTestCase {
 
 		s = openSession();
 		t = s.beginTransaction();
+		s.delete( p );
+		t.commit();
+		s.close();
+	}
+	
+	public void testCustomColumnReadAndWrite() {
+		final double HEIGHT_INCHES = 49;
+		final double HEIGHT_CENTIMETERS = HEIGHT_INCHES * 2.54d;
+		Session s = openSession();
+		Transaction t = s.beginTransaction();
+		Child c = new Child( "Child One" );
+		c.setHeightInches(HEIGHT_INCHES);
+		Parent p = new Parent( "Parent" );
+		p.getChildren().add( c );
+		c.setParent( p );
+		s.save( p );
+		s.flush();
+		
+		// Test value conversion during insert		
+		Double heightViaSql = (Double)s.createSQLQuery("select height_centimeters from parentchild c where c.name='Child One'")
+			.uniqueResult();
+		assertEquals(HEIGHT_CENTIMETERS, heightViaSql, 0.01d);
+		
+		// Test projection		
+		Double heightViaHql = (Double)s.createQuery("select c.heightInches from Parent p join p.children c where p.name='Parent'")
+			.uniqueResult();
+		assertEquals(HEIGHT_INCHES, heightViaHql, 0.01d);
+		
+		// Test entity load via criteria
+		p = (Parent)s.createCriteria(Parent.class).add(Restrictions.eq("name", "Parent")).uniqueResult();
+		c = (Child)p.getChildren().iterator().next();
+		assertEquals(HEIGHT_INCHES, c.getHeightInches(), 0.01d);
+		
+		// Test predicate and entity load via HQL
+		p = (Parent)s.createQuery("from Parent p join p.children c where c.heightInches between ? and ?")
+			.setDouble(0, HEIGHT_INCHES - 0.01d)
+			.setDouble(1, HEIGHT_INCHES + 0.01d)
+			.uniqueResult();
+		c = (Child)p.getChildren().iterator().next();
+		assertEquals(HEIGHT_INCHES, c.getHeightInches(), 0.01d);
+		
+		// Test update
+		c.setHeightInches(1);
+		s.flush();
+		heightViaSql = (Double)s.createSQLQuery("select height_centimeters from parentchild c where c.name='Child One'").uniqueResult();
+		assertEquals(2.54d, heightViaSql, 0.01d);
 		s.delete( p );
 		t.commit();
 		s.close();

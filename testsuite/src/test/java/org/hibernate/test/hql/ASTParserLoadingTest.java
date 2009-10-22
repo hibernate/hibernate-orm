@@ -13,8 +13,6 @@ import java.util.List;
 import java.util.Map;
 
 import junit.framework.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
@@ -30,7 +28,6 @@ import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.Oracle8iDialect;
-
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.Sybase11Dialect;
@@ -55,6 +52,8 @@ import org.hibernate.type.ComponentType;
 import org.hibernate.type.ManyToOneType;
 import org.hibernate.type.Type;
 import org.hibernate.util.StringHelper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Tests the integration of the new AST parser into the loading of query results using
@@ -82,6 +81,7 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 				"hql/FooBarCopy.hbm.xml",
 				"hql/SimpleEntityWithAssociation.hbm.xml",
 				"hql/CrazyIdFieldNames.hbm.xml",
+				"hql/Image.hbm.xml",
 				"batchfetch/ProductLine.hbm.xml",
 				"cid/Customer.hbm.xml",
 				"cid/Order.hbm.xml",
@@ -1085,6 +1085,101 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 		t.commit();
 		s.close();
 	}
+	
+	public void testOrderedWithCustomColumnReadAndWrite() {
+		Session s = openSession();
+		Transaction t = s.beginTransaction();
+		SimpleEntityWithAssociation first = new SimpleEntityWithAssociation();
+		first.setNegatedNumber(1);
+		s.save(first);
+		SimpleEntityWithAssociation second = new SimpleEntityWithAssociation();
+		second.setNegatedNumber(2);
+		s.save(second);
+		s.flush();
+
+		// Check order via SQL. Numbers are negated in the DB, so second comes first.
+		List listViaSql = s.createSQLQuery("select id from simple_1 order by negated_num").list();
+		assertEquals(2, listViaSql.size());
+		assertEquals(second.getId().longValue(), ((Number)listViaSql.get(0)).longValue());
+		assertEquals(first.getId().longValue(), ((Number)listViaSql.get(1)).longValue());
+		
+		// Check order via HQL. Now first comes first b/c the read negates the DB negation.
+		List listViaHql = s.createQuery("from SimpleEntityWithAssociation order by negatedNumber").list();
+		assertEquals(2, listViaHql.size());
+		assertEquals(first.getId(), ((SimpleEntityWithAssociation)listViaHql.get(0)).getId());
+		assertEquals(second.getId(), ((SimpleEntityWithAssociation)listViaHql.get(1)).getId());
+		
+		s.delete(first);
+		s.delete(second);
+		t.commit();
+		s.close();
+		
+	}
+	
+	public void testHavingWithCustomColumnReadAndWrite() {
+		Session s = openSession();
+		Transaction t = s.beginTransaction();
+		SimpleEntityWithAssociation first = new SimpleEntityWithAssociation();
+		first.setNegatedNumber(5);
+		first.setName("simple");
+		s.save(first);
+		SimpleEntityWithAssociation second = new SimpleEntityWithAssociation();
+		second.setNegatedNumber(10);
+		second.setName("simple");
+		s.save(second);
+		SimpleEntityWithAssociation third = new SimpleEntityWithAssociation();
+		third.setNegatedNumber(20);
+		third.setName("complex");
+		s.save(third);
+		s.flush();
+
+		// Check order via HQL. Now first comes first b/c the read negates the DB negation.
+		Number r = (Number)s.createQuery("select sum(negatedNumber) from SimpleEntityWithAssociation " +
+				"group by name having sum(negatedNumber) < 20").uniqueResult();
+		assertEquals(r.intValue(), 15);
+		
+		s.delete(first);
+		s.delete(second);
+		s.delete(third);
+		t.commit();
+		s.close();
+		
+	}
+	
+	public void testLoadSnapshotWithCustomColumnReadAndWrite() {
+		// Exercises entity snapshot load when select-before-update is true.
+		Session s = openSession();
+		Transaction t = s.beginTransaction();
+		final double SIZE_IN_KB = 1536d;
+		final double SIZE_IN_MB = SIZE_IN_KB / 1024d;
+		Image image = new Image();
+		image.setName("picture.gif");
+		image.setSizeKb(SIZE_IN_KB);
+		s.persist(image);
+		s.flush();
+		
+		Double sizeViaSql = (Double)s.createSQLQuery("select size_mb from image").uniqueResult();
+		assertEquals(SIZE_IN_MB, sizeViaSql, 0.01d);
+		t.commit();
+		s.close();
+		
+		s = openSession();
+		t = s.beginTransaction();
+		final double NEW_SIZE_IN_KB = 2048d;
+		final double NEW_SIZE_IN_MB = NEW_SIZE_IN_KB / 1024d;
+		image.setSizeKb(NEW_SIZE_IN_KB);
+		s.update(image);
+		s.flush();
+
+		sizeViaSql = (Double)s.createSQLQuery("select size_mb from image").uniqueResult();
+		assertEquals(NEW_SIZE_IN_MB, sizeViaSql, 0.01d);		
+		
+		s.delete(image);
+		t.commit();
+		s.close();
+		
+	}
+		
 
 	private Human genSimpleHuman(String fName, String lName) {
 		Human h = new Human();
@@ -1188,13 +1283,13 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 		Transaction t = s.beginTransaction();
 		Human h = new Human();
 		h.setBodyWeight( (float) 74.0 );
-		h.setHeight(120.5);
+		h.setHeightInches(120.5);
 		h.setDescription("Me");
 		h.setName( new Name("Gavin", 'A', "King") );
 		h.setNickName("Oney");
 		s.persist(h);
 		Double sum = (Double) s.createQuery("select sum(h.bodyWeight) from Human h").uniqueResult();
-		Double avg = (Double) s.createQuery("select avg(h.height) from Human h").uniqueResult();
+		Double avg = (Double) s.createQuery("select avg(h.heightInches) from Human h").uniqueResult();	// uses custom read and write for column
 		assertEquals(sum.floatValue(), 74.0, 0.01);
 		assertEquals(avg.doubleValue(), 120.5, 0.01);
 		Long id = (Long) s.createQuery("select max(a.id) from Animal a").uniqueResult();
@@ -1208,7 +1303,7 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 		Transaction t = s.beginTransaction();
 		Human h = new Human();
 		h.setBodyWeight( (float) 74.0 );
-		h.setHeight(120.5);
+		h.setHeightInches(120.5);
 		h.setDescription("Me");
 		h.setName( new Name("Gavin", 'A', "King") );
 		h.setNickName("Oney");
@@ -1394,6 +1489,40 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 
 		txn.commit();
 		session.close();
+	}
+	
+	public void testFilterWithCustomColumnReadAndWrite() {
+		Session session = openSession();
+		Transaction txn = session.beginTransaction();
+
+		Human human = new Human();
+		human.setName( new Name( "Steve", 'L', "Ebersole" ) );
+		human.setHeightInches(73d);
+		session.save( human );
+
+		Human friend = new Human();
+		friend.setName( new Name( "John", 'Q', "Doe" ) );
+		friend.setHeightInches(50d);
+		session.save( friend );
+
+		human.setFriends( new ArrayList() );
+		friend.setFriends( new ArrayList() );
+		human.getFriends().add( friend );
+		friend.getFriends().add( human );
+
+		session.flush();
+
+		assertEquals( session.createFilter( human.getFriends(), "" ).list().size(), 1 );
+		assertEquals( session.createFilter( human.getFriends(), "where this.heightInches < ?" ).setDouble( 0, 51d ).list().size(), 1 );
+		assertEquals( session.createFilter( human.getFriends(), "where this.heightInches > ?" ).setDouble( 0, 51d ).list().size(), 0 );
+		assertEquals( session.createFilter( human.getFriends(), "where this.heightInches between 49 and 51" ).list().size(), 1 );
+		assertEquals( session.createFilter( human.getFriends(), "where this.heightInches not between 49 and 51" ).list().size(), 0 );
+
+		session.delete(human);
+		session.delete(friend);
+
+		txn.commit();
+		session.close();		
 	}
 
 	public void testSelectExpressions() {

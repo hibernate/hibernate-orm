@@ -47,12 +47,12 @@ public class CriteriaHQLAlignmentTest extends QueryTranslatorTestCase {
 		assertEquals( "incorrect return type count", 1, translator.getReturnTypes().length );
 		assertEquals( "incorrect return type", Hibernate.LONG, translator.getReturnTypes()[0] );
 		
-		translator = createNewQueryTranslator( "select count(h.height) from Human h" );
+		translator = createNewQueryTranslator( "select count(h.heightInches) from Human h" );
 		assertEquals( "incorrect return type count", 1, translator.getReturnTypes().length );
 		assertEquals( "incorrect return type", Hibernate.LONG, translator.getReturnTypes()[0] );
 				
 		// MAX, MIN return the type of the state-field to which they are applied. 
-		translator = createNewQueryTranslator( "select max(h.height) from Human h" );
+		translator = createNewQueryTranslator( "select max(h.heightInches) from Human h" );
 		assertEquals( "incorrect return type count", 1, translator.getReturnTypes().length );
 		assertEquals( "incorrect return type", Hibernate.DOUBLE, translator.getReturnTypes()[0] );
 		
@@ -61,7 +61,7 @@ public class CriteriaHQLAlignmentTest extends QueryTranslatorTestCase {
 		assertEquals( "incorrect return type", Hibernate.LONG, translator.getReturnTypes()[0] );
 		
 		// AVG returns Double.
-		translator = createNewQueryTranslator( "select avg(h.height) from Human h" );
+		translator = createNewQueryTranslator( "select avg(h.heightInches) from Human h" );
 		assertEquals( "incorrect return type count", 1, translator.getReturnTypes().length );
 		assertEquals( "incorrect return type", Hibernate.DOUBLE, translator.getReturnTypes()[0] );
 		
@@ -83,7 +83,7 @@ public class CriteriaHQLAlignmentTest extends QueryTranslatorTestCase {
 		assertEquals( "incorrect return type", Hibernate.LONG, translator.getReturnTypes()[0] );
 		
 		// SUM returns Double when applied to state-fields of floating point types; 
-		translator = createNewQueryTranslator( "select sum(h.height) from Human h" );
+		translator = createNewQueryTranslator( "select sum(h.heightInches) from Human h" );
 		assertEquals( "incorrect return type count", 1, translator.getReturnTypes().length );
 		assertEquals( "incorrect return type", Hibernate.DOUBLE, translator.getReturnTypes()[0] );
 
@@ -123,18 +123,18 @@ public class CriteriaHQLAlignmentTest extends QueryTranslatorTestCase {
 		// EJB3: COUNT returns Long
 		Long longValue = (Long) s.createCriteria( Human.class ).setProjection( Projections.rowCount()).uniqueResult();
 		assertEquals(longValue, new Long(1));
-		longValue = (Long) s.createCriteria( Human.class ).setProjection( Projections.count("height")).uniqueResult();
+		longValue = (Long) s.createCriteria( Human.class ).setProjection( Projections.count("heightInches")).uniqueResult();
 		assertEquals(longValue, new Long(1));
 		
 		 // MAX, MIN return the type of the state-field to which they are applied. 		
-		Double dblValue = (Double) s.createCriteria( Human.class ).setProjection( Projections.max( "height" )).uniqueResult();
+		Double dblValue = (Double) s.createCriteria( Human.class ).setProjection( Projections.max( "heightInches" )).uniqueResult();
 		assertNotNull(dblValue);
 		
 		longValue = (Long) s.createCriteria( Human.class ).setProjection( Projections.max( "id" )).uniqueResult();
 		assertNotNull(longValue);
 		
 		// AVG returns Double.
-		dblValue = (Double) s.createCriteria( Human.class ).setProjection( Projections.avg( "height" )).uniqueResult();
+		dblValue = (Double) s.createCriteria( Human.class ).setProjection( Projections.avg( "heightInches" )).uniqueResult();
 		assertNotNull(dblValue);
 		
 		dblValue = (Double) s.createCriteria( Human.class ).setProjection( Projections.avg( "id" )).uniqueResult();
@@ -151,7 +151,7 @@ public class CriteriaHQLAlignmentTest extends QueryTranslatorTestCase {
 		assertNotNull(longValue);
 		
 		// SUM returns Double when applied to state-fields of floating point types; 
-		dblValue = (Double) s.createCriteria( Human.class ).setProjection( Projections.sum( "height" )).uniqueResult();
+		dblValue = (Double) s.createCriteria( Human.class ).setProjection( Projections.sum( "heightInches" )).uniqueResult();
 		assertNotNull(dblValue);
 		
 		dblValue = (Double) s.createCriteria( Human.class ).setProjection( Projections.sum( "floatValue" )).uniqueResult();

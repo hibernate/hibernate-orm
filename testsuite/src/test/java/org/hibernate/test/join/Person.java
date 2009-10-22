@@ -11,6 +11,7 @@ public class Person {
 	private String address;
 	private String zip;
 	private String country;
+	private double heightInches;
 	private char sex;
 	
 	/**
@@ -76,6 +77,18 @@ public class Person {
 	 */
 	public void setZip(String zip) {
 		this.zip = zip;
+	}
+	/**
+	 * @return the The height in inches.
+	 */
+	public double getHeightInches() {
+		return heightInches;
+	}
+	/**
+	 * @param heightInches The height in inches.
+	 */
+	public void setHeightInches(double heightInches) {
+		this.heightInches = heightInches;
 	}
 	/**
 	 * @param address The address to set.

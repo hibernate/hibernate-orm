@@ -5,18 +5,19 @@ import junit.framework.Test;
 import junit.framework.TestSuite;
 
 import org.hibernate.intercept.FieldInterceptionHelper;
-import org.hibernate.test.instrument.domain.Document;
+import org.hibernate.junit.UnitTestCase;
+import org.hibernate.test.instrument.cases.Executable;
+import org.hibernate.test.instrument.cases.TestCustomColumnReadAndWrite;
 import org.hibernate.test.instrument.cases.TestDirtyCheckExecutable;
 import org.hibernate.test.instrument.cases.TestFetchAllExecutable;
-import org.hibernate.test.instrument.cases.TestLazyExecutable;
-import org.hibernate.test.instrument.cases.TestLazyManyToOneExecutable;
 import org.hibernate.test.instrument.cases.TestInjectFieldInterceptorExecutable;
 import org.hibernate.test.instrument.cases.TestIsPropertyInitializedExecutable;
+import org.hibernate.test.instrument.cases.TestLazyExecutable;
+import org.hibernate.test.instrument.cases.TestLazyManyToOneExecutable;
 import org.hibernate.test.instrument.cases.TestLazyPropertyCustomTypeExecutable;
 import org.hibernate.test.instrument.cases.TestManyToOneProxyExecutable;
 import org.hibernate.test.instrument.cases.TestSharedPKOneToOneExecutable;
-import org.hibernate.test.instrument.cases.Executable;
-import org.hibernate.junit.UnitTestCase;
+import org.hibernate.test.instrument.domain.Document;
 
 /**
  * @author Gavin King
@@ -67,6 +68,10 @@ public class InstrumentTest extends UnitTestCase {
 		execute( new TestSharedPKOneToOneExecutable() );
 	}
 
+	public void testCustomColumnReadAndWrite() throws Exception {
+		execute( new TestCustomColumnReadAndWrite() );
+	}	
+	
 	private void execute(Executable executable) throws Exception {
 		executable.prepare();
 		try {

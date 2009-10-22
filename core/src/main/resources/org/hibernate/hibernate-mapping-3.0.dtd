@@ -916,6 +916,8 @@ mapping associations to classes with composite ids. -->
 	<!ATTLIST column index CDATA #IMPLIED>
 	<!ATTLIST column check CDATA #IMPLIED>						<!-- default: no check constraint -->
     <!ATTLIST column default CDATA #IMPLIED>                    <!-- default: no default value -->
+    <!ATTLIST column read CDATA #IMPLIED>                       <!-- default: column name -->
+    <!ATTLIST column write CDATA #IMPLIED>                      <!-- default: parameter placeholder ('?') -->
 
 <!-- The formula and subselect elements allow us to map derived properties and 
 entities. -->

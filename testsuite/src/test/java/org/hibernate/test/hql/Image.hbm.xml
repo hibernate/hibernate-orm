@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+        "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+        "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd" >
+
+<hibernate-mapping package="org.hibernate.test.hql">
+
+    <class name="Image" table="image" select-before-update="true" >
+        <id name="id" type="java.lang.Long" column="id">
+            <generator class="native"/>
+        </id>
+        <property name="name" type="java.lang.String" column="name"/>
+    	<property name="sizeKb" lazy="true">
+    		<column name="size_mb"
+    			read="size_mb * 1024.0"
+    			write="? / 1024.0"/>
+    	</property>
+    </class>
+
+</hibernate-mapping>

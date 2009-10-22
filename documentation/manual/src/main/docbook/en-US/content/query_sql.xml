@@ -662,10 +662,15 @@ BEGIN
   <sect1 id="querysql-cud">
     <title>Custom SQL for create, update and delete</title>
 
-    <para>Hibernate3 can use custom SQL statements for create, update, and
-    delete operations. The class and collection persisters in Hibernate
-    already contain a set of configuration time generated strings (insertsql,
-    deletesql, updatesql etc.). The mapping tags
+    <para>Hibernate3 can use custom SQL for create, update, and delete operations.
+    The SQL can be overridden at the statement level or inidividual column level. This
+    section describes statement overrides. For columns, see
+    <xref linkend="mapping-column-read-and-write"/>.
+    </para>
+    <para>
+    The class and collection persisters in Hibernate already contain a set of 
+    configuration time generated strings (insertsql, deletesql, updatesql etc.). 
+    The mapping tags
     <literal>&lt;sql-insert&gt;</literal>,
     <literal>&lt;sql-delete&gt;</literal>, and
     <literal>&lt;sql-update&gt;</literal> override these strings:</para>
@@ -732,7 +737,11 @@ END updatePerson;]]></programlisting>
     <title>Custom SQL for loading</title>
 
     <para>You can also declare your own SQL (or HQL) queries for entity
-    loading:</para>
+    loading. As with inserts, updates, and deletes, this can be done at the
+    individual column level as described in
+    <xref linkend="mapping-column-read-and-write"/>
+    or at the statement level. Here is an example of a statement level override:
+    </para>
 
     <programlisting><![CDATA[<sql-query name="person">
     <return alias="pers" class="Person" lock-mode="upgrade"/>

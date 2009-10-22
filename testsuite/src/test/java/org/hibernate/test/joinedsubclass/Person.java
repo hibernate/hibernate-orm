@@ -10,6 +10,7 @@ public class Person {
 	private String name;
 	private char sex;
 	private int version;
+	private double heightInches;
 	private Address address = new Address();
 	/**
 	 * @return Returns the address.
@@ -66,6 +67,20 @@ public class Person {
 	 */
 	public void setName(String identity) {
 		this.name = identity;
+	}
+
+	/**
+	 * @return Returns the height in inches.
+	 */
+	public double getHeightInches() {
+		return heightInches;
+	}
+
+	/**
+	 * @param heightInches The height in inches to set.
+	 */
+	public void setHeightInches(double heightInches) {
+		this.heightInches = heightInches;
 	}
 
 	public int getVersion() {

@@ -11,21 +11,19 @@ import java.util.Set;
 
 import junit.framework.Test;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.hibernate.Criteria;
 import org.hibernate.EntityMode;
 import org.hibernate.FetchMode;
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.Criteria;
 import org.hibernate.cache.CacheKey;
 import org.hibernate.cache.entry.CollectionCacheEntry;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
-import org.hibernate.criterion.Restrictions;
 import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Property;
+import org.hibernate.criterion.Restrictions;
 import org.hibernate.criterion.Subqueries;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.impl.SessionFactoryImpl;
@@ -33,6 +31,8 @@ import org.hibernate.junit.functional.FunctionalTestCase;
 import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.transform.DistinctRootEntityResultTransformer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Implementation of DynamicFilterTest.
@@ -175,6 +175,24 @@ public class DynamicFilterTest extends FunctionalTestCase {
 		log.info( "HQL against Product..." );
 		results = session.createQuery( "from Product as p where p.stockNumber = ?" ).setInteger( 0, 124 ).list();
 		assertTrue( results.size() == 1 );
+
+		session.close();
+		testData.release();
+	}
+	
+	public void testFiltersWithCustomerReadAndWrite() {
+		//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+		// Custom SQL read/write with filter
+		//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+		log.info( "Starting HQL filter with custom SQL get/set tests" );
+		TestData testData = new TestData();
+		testData.prepare();
+
+		Session session = openSession();
+		session.enableFilter( "heavyProducts" ).setParameter("weightKilograms", 4d);
+		log.info( "HQL against Product..." );
+		List results = session.createQuery( "from Product").list();
+		assertEquals( 1, results.size() );
 
 		session.close();
 		testData.release();
@@ -824,6 +842,7 @@ public class DynamicFilterTest extends FunctionalTestCase {
 			Product product1 = new Product();
 			product1.setName( "Acme Hair Gel" );
 			product1.setStockNumber( 123 );
+			product1.setWeightPounds( 0.25 );
 			product1.setEffectiveStartDate( lastMonth.getTime() );
 			product1.setEffectiveEndDate( nextMonth.getTime() );
 
@@ -848,6 +867,7 @@ public class DynamicFilterTest extends FunctionalTestCase {
 			Product product2 = new Product();
 			product2.setName( "Acme Super-Duper DTO Factory" );
 			product2.setStockNumber( 124 );
+			product1.setWeightPounds( 10.0 );
 			product2.setEffectiveStartDate( sixMonthsAgo.getTime() );
 			product2.setEffectiveEndDate( new Date() );
 

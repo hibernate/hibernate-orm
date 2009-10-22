@@ -19,6 +19,12 @@
 			<property name="address"/>
 			<property name="previousAddress" insert="false"/>
 			<property name="yob" formula="year(dob)"/>
+			<property name="heightInches">
+				<column name="height_centimeters"
+					not-null="true" 
+					read="height_centimeters / 2.54" 
+					write="? * 2.54"/>
+			</property>
 			<property name="currentAddress"
 				column="address"
 				insert="false"

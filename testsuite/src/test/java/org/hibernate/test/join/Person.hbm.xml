@@ -36,6 +36,12 @@
 
         <property name="name" not-null="true" length="80"/>
         <property name="sex" not-null="true" update="false"/>
+		<property name="heightInches">
+			<column name="height_centimeters" 
+				not-null="true" 
+				read="height_centimeters / 2.54" 
+				write="? * 2.54"/>
+		</property>        
 
         <join table="address">
             <key column="address_id"/>
@@ -65,6 +71,11 @@
             <join table="t_user" fetch="select" optional="true">
                 <key column="person_id"/>
                 <property name="login" column="u_login"/>
+				<property name="passwordExpiryDays">
+					<column name="pwd_expiry_weeks" 
+						read="pwd_expiry_weeks * 7.0" 
+						write="? / 7.0"/>
+				</property>                
             </join>
             <join table="t_silly" fetch="select" optional="true">
                 <key column="person_id"/>

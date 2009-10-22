@@ -31,8 +31,6 @@ import java.util.Iterator;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
-import org.hibernate.jdbc.Expectation;
-import org.hibernate.jdbc.Expectations;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.access.CollectionRegionAccessStrategy;
 import org.hibernate.cfg.Configuration;
@@ -42,6 +40,8 @@ import org.hibernate.engine.SessionImplementor;
 import org.hibernate.engine.SubselectFetch;
 import org.hibernate.engine.LoadQueryInfluencers;
 import org.hibernate.exception.JDBCExceptionHelper;
+import org.hibernate.jdbc.Expectation;
+import org.hibernate.jdbc.Expectations;
 import org.hibernate.loader.collection.BatchingCollectionInitializer;
 import org.hibernate.loader.collection.CollectionInitializer;
 import org.hibernate.loader.collection.SubselectOneToManyLoader;
@@ -96,7 +96,7 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 		Update update = new Update( getDialect() )
 				.setTableName( qualifiedTableName )
 				.addColumns( keyColumnNames, "null" )
-				.setPrimaryKeyColumnNames( keyColumnNames );
+				.addPrimaryKeyColumns( keyColumnNames );
 		
 		if ( hasIndex && !indexContainsFormula ) update.addColumns( indexColumnNames, "null" );
 		
@@ -125,7 +125,7 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 			update.setComment( "create one-to-many row " + getRole() );
 		}
 		
-		return update.setPrimaryKeyColumnNames( elementColumnNames )
+		return update.addPrimaryKeyColumns( elementColumnNames, elementColumnWriters )
 				.toStatementString();
 	}
 
@@ -156,7 +156,7 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 		//the ordering of removal and addition is not guaranteed when
 		//a child moves from one parent to another
 		String[] rowSelectColumnNames = ArrayHelper.join(keyColumnNames, elementColumnNames);
-		return update.setPrimaryKeyColumnNames( rowSelectColumnNames )
+		return update.addPrimaryKeyColumns( rowSelectColumnNames )
 				.toStatementString();
 	}
 

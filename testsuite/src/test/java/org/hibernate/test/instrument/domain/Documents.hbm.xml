@@ -53,6 +53,11 @@
     	<many-to-one name="owner" not-null="true" lazy="no-proxy" fetch="select"/>
     	<property name="text" not-null="true" length="2000" lazy="true"/>
     	<property name="lastTextModification" not-null="true" lazy="true" access="field"/>
+    	<property name="sizeKb" lazy="true">
+    		<column name="size_mb"
+    			read="size_mb * 1024.0"
+    			write="? / 1024.0"/>
+    	</property>
     </class>
 
     <class name="Entity" table="entity">

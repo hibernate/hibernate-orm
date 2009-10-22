@@ -36,6 +36,12 @@
 			not-null="true" 
 			update="false"/>
 		<property name="address"/>
+		<property name="heightInches">
+			<column name="height_centimeters" 
+				not-null="true" 
+				read="height_centimeters / 2.54" 
+				write="? * 2.54"/>
+		</property>		
 		
 	</class>
 	
@@ -53,16 +59,22 @@
 		<property name="species" 
 			not-null="true" 
 			update="false"/>
+		<property name="heightInches">
+			<column name="height_centimeters" 
+				not-null="true" 
+				read="height_centimeters / 2.54" 
+				write="? * 2.54"/>
+		</property>			
 			
 	</class>
 	
 	<class name="Being" mutable="false">
 	
 		<subselect>
-			select bid, name as ident, address as loc, 'human' as species 
+			select bid, name as ident, address as loc, 'human' as species, height_centimeters
 			from humans 
 			union 
-			select bid, ident, planet as loc, species 
+			select bid, ident, planet as loc, species, height_centimeters
 			from aliens
 		</subselect>
 		
@@ -77,6 +89,11 @@
 		<property name="identity" column="ident"/>
 		<property name="location" column="loc"/>
 		<property name="species"/>
+		<property name="heightInches">
+			<column name="height_centimeters" 
+				not-null="true" 
+				read="height_centimeters / 2.54"/>
+		</property>		
 		
 	</class>
 

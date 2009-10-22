@@ -36,10 +36,10 @@ import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.QueryException;
 import org.hibernate.cache.access.EntityRegionAccessStrategy;
+import org.hibernate.engine.ExecuteUpdateResultCheckStyle;
 import org.hibernate.engine.Mapping;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.Versioning;
-import org.hibernate.engine.ExecuteUpdateResultCheckStyle;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.PersistentClass;
@@ -65,7 +65,11 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 	private final String[] tableNames;
 	private final String[] naturalOrderTableNames;
 	private final String[][] tableKeyColumns;
+	private final String[][] tableKeyColumnReaders;
+	private final String[][] tableKeyColumnReaderTemplates;
 	private final String[][] naturalOrderTableKeyColumns;
+	private final String[][] naturalOrderTableKeyColumnReaders;
+	private final String[][] naturalOrderTableKeyColumnReaderTemplates;
 	private final boolean[] naturalOrderCascadeDeleteEnabled;
 
 	private final String[] spaces;
@@ -139,6 +143,8 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 
 		ArrayList tables = new ArrayList();
 		ArrayList keyColumns = new ArrayList();
+		ArrayList keyColumnReaders = new ArrayList();
+		ArrayList keyColumnReaderTemplates = new ArrayList();
 		ArrayList cascadeDeletes = new ArrayList();
 		Iterator titer = persistentClass.getTableClosureIterator();
 		Iterator kiter = persistentClass.getKeyClosureIterator();
@@ -152,15 +158,24 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 			);
 			tables.add(tabname);
 			String[] keyCols = new String[idColumnSpan];
+			String[] keyColReaders = new String[idColumnSpan];
+			String[] keyColReaderTemplates = new String[idColumnSpan];
 			Iterator citer = key.getColumnIterator();
 			for ( int k=0; k<idColumnSpan; k++ ) {
-				keyCols[k] = ( (Column) citer.next() ).getQuotedName( factory.getDialect() );
+				Column column = (Column) citer.next();
+				keyCols[k] = column.getQuotedName( factory.getDialect() );
+				keyColReaders[k] = column.getReadExpr( factory.getDialect() );
+				keyColReaderTemplates[k] = column.getTemplate( factory.getDialect(), factory.getSqlFunctionRegistry() );
 			}
 			keyColumns.add(keyCols);
+			keyColumnReaders.add(keyColReaders);
+			keyColumnReaderTemplates.add(keyColReaderTemplates);
 			cascadeDeletes.add( new Boolean( key.isCascadeDeleteEnabled() && factory.getDialect().supportsCascadeDelete() ) );
 		}
 		naturalOrderTableNames = ArrayHelper.toStringArray(tables);
 		naturalOrderTableKeyColumns = ArrayHelper.to2DStringArray(keyColumns);
+		naturalOrderTableKeyColumnReaders = ArrayHelper.to2DStringArray(keyColumnReaders);
+		naturalOrderTableKeyColumnReaderTemplates = ArrayHelper.to2DStringArray(keyColumnReaderTemplates);
 		naturalOrderCascadeDeleteEnabled = ArrayHelper.toBooleanArray(cascadeDeletes);
 
 		ArrayList subtables = new ArrayList();
@@ -198,6 +213,8 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		tableSpan = naturalOrderTableNames.length;
 		tableNames = reverse(naturalOrderTableNames);
 		tableKeyColumns = reverse(naturalOrderTableKeyColumns);
+		tableKeyColumnReaders = reverse(naturalOrderTableKeyColumnReaders);
+		tableKeyColumnReaderTemplates = reverse(naturalOrderTableKeyColumnReaderTemplates);
 		reverse(subclassTableNameClosure, tableSpan);
 		reverse(subclassTableKeyColumnClosure, tableSpan);
 
@@ -514,6 +531,14 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		return tableKeyColumns[0];
 	}
 
+	public String[] getIdentifierColumnReaderTemplates() {
+		return tableKeyColumnReaderTemplates[0];
+	}
+
+	public String[] getIdentifierColumnReaders() {
+		return tableKeyColumnReaders[0];
+	}		
+	
 	public String[] toColumns(String alias, String propertyName) throws QueryException {
 
 		if ( ENTITY_CLASS.equals(propertyName) ) {

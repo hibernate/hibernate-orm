@@ -9,6 +9,7 @@ public class Being {
 	private String identity;
 	private String location;
 	private String species;
+	private double heightInches;	
 	
 	public void setLocation(String location) {
 		this.location = location;
@@ -27,5 +28,11 @@ public class Being {
 	}
 	public String getIdentity() {
 		return identity;
+	}
+	public double getHeightInches() {
+		return heightInches;
+	}
+	public void setHeightInches(double heightInches) {
+		this.heightInches = heightInches;
 	}
 }

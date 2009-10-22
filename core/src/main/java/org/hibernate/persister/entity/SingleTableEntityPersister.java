@@ -35,9 +35,9 @@ import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.cache.access.EntityRegionAccessStrategy;
+import org.hibernate.engine.ExecuteUpdateResultCheckStyle;
 import org.hibernate.engine.Mapping;
 import org.hibernate.engine.SessionFactoryImplementor;
-import org.hibernate.engine.ExecuteUpdateResultCheckStyle;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Formula;
 import org.hibernate.mapping.Join;
@@ -102,6 +102,8 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 	private final Map subclassesByDiscriminatorValue = new HashMap();
 	private final boolean forceDiscriminator;
 	private final String discriminatorColumnName;
+	private final String discriminatorColumnReaders;
+	private final String discriminatorColumnReaderTemplate;
 	private final String discriminatorFormula;
 	private final String discriminatorFormulaTemplate;
 	private final String discriminatorAlias;
@@ -295,11 +297,15 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 				discriminatorFormula = formula.getFormula();
 				discriminatorFormulaTemplate = formula.getTemplate( factory.getDialect(), factory.getSqlFunctionRegistry() );
 				discriminatorColumnName = null;
+				discriminatorColumnReaders = null;
+				discriminatorColumnReaderTemplate = null;
 				discriminatorAlias = "clazz_";
 			}
 			else {
 				Column column = (Column) selectable;
 				discriminatorColumnName = column.getQuotedName( factory.getDialect() );
+				discriminatorColumnReaders = column.getReadExpr( factory.getDialect() );
+				discriminatorColumnReaderTemplate = column.getTemplate( factory.getDialect(), factory.getSqlFunctionRegistry() );
 				discriminatorAlias = column.getAlias( factory.getDialect(), persistentClass.getRootTable() );
 				discriminatorFormula = null;
 				discriminatorFormulaTemplate = null;
@@ -334,6 +340,8 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 			forceDiscriminator = false;
 			discriminatorInsertable = false;
 			discriminatorColumnName = null;
+			discriminatorColumnReaders = null;
+			discriminatorColumnReaderTemplate = null;
 			discriminatorAlias = null;
 			discriminatorType = null;
 			discriminatorValue = null;
@@ -444,6 +452,14 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 		return discriminatorColumnName;
 	}
 
+	public String getDiscriminatorColumnReaders() {
+		return discriminatorColumnReaders;
+	}			
+	
+	public String getDiscriminatorColumnReaderTemplate() {
+		return discriminatorColumnReaderTemplate;
+	}	
+	
 	protected String getDiscriminatorAlias() {
 		return discriminatorAlias;
 	}

@@ -25,12 +25,11 @@
 package org.hibernate.sql;
 
 import java.util.Iterator;
-import java.util.Map;
 import java.util.LinkedHashMap;
+import java.util.Map;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.type.LiteralType;
-import org.hibernate.util.StringHelper;
 
 /**
  * An SQL <tt>UPDATE</tt> statement
@@ -40,12 +39,12 @@ import org.hibernate.util.StringHelper;
 public class Update {
 
 	private String tableName;
-	private String[] primaryKeyColumnNames;
 	private String versionColumnName;
 	private String where;
 	private String assignments;
 	private String comment;
 
+	private Map primaryKeyColumns = new LinkedHashMap();
 	private Map columns = new LinkedHashMap();
 	private Map whereColumns = new LinkedHashMap();
 	
@@ -74,11 +73,38 @@ public class Update {
 		return this;
 	}
 
-	public Update setPrimaryKeyColumnNames(String[] primaryKeyColumnNames) {
-		this.primaryKeyColumnNames = primaryKeyColumnNames;
+	public Update setPrimaryKeyColumnNames(String[] columnNames) {
+		this.primaryKeyColumns.clear();
+		addPrimaryKeyColumns(columnNames);
+		return this;
+	}	
+	
+	public Update addPrimaryKeyColumns(String[] columnNames) {
+		for ( int i=0; i<columnNames.length; i++ ) {
+			addPrimaryKeyColumn( columnNames[i], "?" );
+		}
 		return this;
 	}
+	
+	public Update addPrimaryKeyColumns(String[] columnNames, boolean[] includeColumns, String[] valueExpressions) {
+		for ( int i=0; i<columnNames.length; i++ ) {
+			if( includeColumns[i] ) addPrimaryKeyColumn( columnNames[i], valueExpressions[i] );
+		}
+		return this;
+	}
+	
+	public Update addPrimaryKeyColumns(String[] columnNames, String[] valueExpressions) {
+		for ( int i=0; i<columnNames.length; i++ ) {
+			addPrimaryKeyColumn( columnNames[i], valueExpressions[i] );
+		}
+		return this;
+	}	
 
+	public Update addPrimaryKeyColumn(String columnName, String valueExpression) {
+		this.primaryKeyColumns.put(columnName, valueExpression);
+		return this;
+	}
+	
 	public Update setVersionColumnName(String versionColumnName) {
 		this.versionColumnName = versionColumnName;
 		return this;
@@ -89,7 +115,7 @@ public class Update {
 		this.comment = comment;
 		return this;
 	}
-
+	
 	public Update addColumns(String[] columnNames) {
 		for ( int i=0; i<columnNames.length; i++ ) {
 			addColumn( columnNames[i] );
@@ -97,16 +123,16 @@ public class Update {
 		return this;
 	}
 
-	public Update addColumns(String[] columnNames, boolean[] updateable) {
+	public Update addColumns(String[] columnNames, boolean[] updateable, String[] valueExpressions) {
 		for ( int i=0; i<columnNames.length; i++ ) {
-			if ( updateable[i] ) addColumn( columnNames[i] );
+			if ( updateable[i] ) addColumn( columnNames[i], valueExpressions[i] );
 		}
 		return this;
 	}
 
-	public Update addColumns(String[] columnNames, String value) {
+	public Update addColumns(String[] columnNames, String valueExpression) {
 		for ( int i=0; i<columnNames.length; i++ ) {
-			addColumn( columnNames[i], value );
+			addColumn( columnNames[i], valueExpression );
 		}
 		return this;
 	}
@@ -115,8 +141,8 @@ public class Update {
 		return addColumn(columnName, "?");
 	}
 
-	public Update addColumn(String columnName, String value) {
-		columns.put(columnName, value);
+	public Update addColumn(String columnName, String valueExpression) {
+		columns.put(columnName, valueExpression);
 		return this;
 	}
 
@@ -131,9 +157,9 @@ public class Update {
 		return this;
 	}
 
-	public Update addWhereColumns(String[] columnNames, String value) {
+	public Update addWhereColumns(String[] columnNames, String valueExpression) {
 		for ( int i=0; i<columnNames.length; i++ ) {
-			addWhereColumn( columnNames[i], value );
+			addWhereColumn( columnNames[i], valueExpression );
 		}
 		return this;
 	}
@@ -142,8 +168,8 @@ public class Update {
 		return addWhereColumn(columnName, "=?");
 	}
 
-	public Update addWhereColumn(String columnName, String value) {
-		whereColumns.put(columnName, value);
+	public Update addWhereColumn(String columnName, String valueExpression) {
+		whereColumns.put(columnName, valueExpression);
 		return this;
 	}
 
@@ -176,11 +202,16 @@ public class Update {
 		}
 
 		boolean conditionsAppended = false;
-		if ( primaryKeyColumnNames != null || where != null || !whereColumns.isEmpty() || versionColumnName != null ) {
+		if ( !primaryKeyColumns.isEmpty() || where != null || !whereColumns.isEmpty() || versionColumnName != null ) {
 			buf.append( " where " );
 		}
-		if ( primaryKeyColumnNames != null ) {
-			buf.append( StringHelper.join( "=? and ", primaryKeyColumnNames ) ).append( "=?" );
+		iter = primaryKeyColumns.entrySet().iterator();
+		while ( iter.hasNext() ) {
+			Map.Entry e = (Map.Entry) iter.next();
+			buf.append( e.getKey() ).append( '=' ).append( e.getValue() );
+			if ( iter.hasNext() ) {
+				buf.append( " and " );
+			}
 			conditionsAppended = true;
 		}
 		if ( where != null ) {

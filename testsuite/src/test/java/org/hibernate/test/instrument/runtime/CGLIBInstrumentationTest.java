@@ -1,9 +1,10 @@
 package org.hibernate.test.instrument.runtime;
 
-import org.hibernate.bytecode.BytecodeProvider;
-import org.hibernate.bytecode.cglib.BytecodeProviderImpl;
 import junit.framework.Test;
 import junit.framework.TestSuite;
+
+import org.hibernate.bytecode.BytecodeProvider;
+import org.hibernate.bytecode.cglib.BytecodeProviderImpl;
 
 /**
  * @author Steve Ebersole
@@ -52,4 +53,9 @@ public class CGLIBInstrumentationTest extends AbstractTransformingClassLoaderIns
 	public void testSharedPKOneToOne() {
 		super.testSharedPKOneToOne();
 	}
+	
+	public void testCustomColumnReadAndWrite() {
+		super.testCustomColumnReadAndWrite();
+	}	
+
 }

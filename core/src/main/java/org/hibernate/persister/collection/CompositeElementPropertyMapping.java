@@ -38,7 +38,9 @@ public class CompositeElementPropertyMapping extends AbstractPropertyMapping {
 	private final AbstractComponentType compositeType;
 	
 	public CompositeElementPropertyMapping(
-			String[] elementColumns, 
+			String[] elementColumns,
+			String[] elementColumnReaders,
+			String[] elementColumnReaderTemplates, 
 			String[] elementFormulaTemplates, 
 			AbstractComponentType compositeType, 
 			Mapping factory)
@@ -46,7 +48,8 @@ public class CompositeElementPropertyMapping extends AbstractPropertyMapping {
 
 		this.compositeType = compositeType;
 
-		initComponentPropertyPaths(null, compositeType, elementColumns, elementFormulaTemplates, factory);
+		initComponentPropertyPaths(null, compositeType, elementColumns, elementColumnReaders,
+				elementColumnReaderTemplates, elementFormulaTemplates, factory);
 
 	}
 

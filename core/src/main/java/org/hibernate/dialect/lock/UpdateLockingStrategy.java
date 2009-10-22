@@ -24,22 +24,22 @@
  */
 package org.hibernate.dialect.lock;
 
-import org.hibernate.persister.entity.Lockable;
-import org.hibernate.LockMode;
-import org.hibernate.HibernateException;
-import org.hibernate.StaleObjectStateException;
-import org.hibernate.JDBCException;
-import org.hibernate.pretty.MessageHelper;
-import org.hibernate.exception.JDBCExceptionHelper;
-import org.hibernate.sql.Update;
-import org.hibernate.engine.SessionImplementor;
-import org.hibernate.engine.SessionFactoryImplementor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+
+import org.hibernate.HibernateException;
+import org.hibernate.JDBCException;
+import org.hibernate.LockMode;
+import org.hibernate.StaleObjectStateException;
+import org.hibernate.engine.SessionFactoryImplementor;
+import org.hibernate.engine.SessionImplementor;
+import org.hibernate.exception.JDBCExceptionHelper;
+import org.hibernate.persister.entity.Lockable;
+import org.hibernate.pretty.MessageHelper;
+import org.hibernate.sql.Update;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A locking strategy where the locks are obtained through update statements.
@@ -131,7 +131,7 @@ public class UpdateLockingStrategy implements LockingStrategy {
 		SessionFactoryImplementor factory = lockable.getFactory();
 		Update update = new Update( factory.getDialect() );
 		update.setTableName( lockable.getRootTableName() );
-		update.setPrimaryKeyColumnNames( lockable.getRootTableIdentifierColumnNames() );
+		update.addPrimaryKeyColumns( lockable.getRootTableIdentifierColumnNames() );
 		update.setVersionColumnName( lockable.getVersionColumnName() );
 		update.addColumn( lockable.getVersionColumnName() );
 		if ( factory.getSettings().isCommentsEnabled() ) {

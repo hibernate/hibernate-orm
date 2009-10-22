@@ -47,8 +47,12 @@
 					<property name="last" column="name_last"/>
 				</component>
 				<property name="nickName"/>
-				<property name="height"/>
-
+				<property name="heightInches">
+					<column name="height_centimeters" 
+						not-null="true" 
+						read="height_centimeters / 2.54" 
+						write="? * 2.54"/>
+				</property>   
 				<property name="intValue"/>
 				<property name="floatValue"/>
 				<property name="bigDecimalValue"/>

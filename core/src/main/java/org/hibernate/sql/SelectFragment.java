@@ -121,7 +121,17 @@ public class SelectFragment {
 		columnAliases.add(formulaAlias);
 		return this;
 	}
+	
+	public SelectFragment addColumnTemplate(String tableAlias, String columnTemplate, String columnAlias) {
+		// In this context, there's no difference between a column template and a formula.
+		return addFormula( tableAlias, columnTemplate, columnAlias );
+	}
 
+	public SelectFragment addColumnTemplates(String tableAlias, String[] columnTemplates, String columnAliases[]) {
+		// In this context, there's no difference between a column template and a formula.
+		return addFormulas( tableAlias, columnTemplates, columnAliases );
+	}	
+	
 	public String toFragmentString() {
 		StringBuffer buf = new StringBuffer( columns.size() * 10 );
 		Iterator iter = columns.iterator();

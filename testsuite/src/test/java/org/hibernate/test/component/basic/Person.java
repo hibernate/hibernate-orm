@@ -13,6 +13,7 @@ public class Person {
 	private String currentAddress;
 	private String previousAddress;
 	private int yob;
+	private double heightInches;
 	Person() {}
 	public Person(String name, Date dob, String address) {
 		this.name = name;
@@ -60,4 +61,10 @@ public class Person {
 	public void setCurrentAddress(String currentAddress) {
 		this.currentAddress = currentAddress;
 	}
+	public double getHeightInches() {
+		return heightInches;
+	}
+	public void setHeightInches(double heightInches) {
+		this.heightInches = heightInches;
+	}	
 }

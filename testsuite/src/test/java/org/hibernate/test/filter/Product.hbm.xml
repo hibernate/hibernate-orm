@@ -12,6 +12,12 @@
 
     	<property name="name" type="string"/>
 	    <property name="stockNumber" column="STOCK_NUM" type="int"/>
+	    <property name="weightPounds">
+	    	<column name="weight_kg" 
+	    		not-null="true" 
+	    		write="0.453 * ?" 
+	    		read="weight_kg / 0.453"/>
+	    </property>
 
 	    <property name="effectiveStartDate" column="eff_start_dt" type="java.util.Date"/>
 	    <property name="effectiveEndDate" column="eff_end_dt" type="java.util.Date"/>
@@ -30,6 +36,7 @@
 	    </set>
 
 	    <filter name="effectiveDate" condition=":asOfDate BETWEEN eff_start_dt and eff_end_dt"/>
+	    <filter name="heavyProducts" condition=":weightKilograms &lt; weight_kg"/>
 
 	</class>
 

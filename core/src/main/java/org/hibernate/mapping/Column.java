@@ -31,6 +31,7 @@ import org.hibernate.MappingException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.function.SQLFunctionRegistry;
 import org.hibernate.engine.Mapping;
+import org.hibernate.sql.Template;
 import org.hibernate.util.StringHelper;
 
 /**
@@ -58,6 +59,8 @@ public class Column implements Selectable, Serializable, Cloneable {
 	private String checkConstraint;
 	private String comment;
 	private String defaultValue;
+	private String customWrite;
+	private String customRead;
 
 	public Column() { };
 
@@ -260,9 +263,18 @@ public class Column implements Selectable, Serializable, Cloneable {
 	}
 
 	public String getTemplate(Dialect dialect, SQLFunctionRegistry functionRegistry) {
-		return getQuotedName(dialect);
+		String expr = getReadExpr(dialect);
+		return Template.renderWhereStringTemplate(expr, dialect, functionRegistry);
 	}
 
+	public String getReadExpr(Dialect dialect) {
+		return ( customRead != null && customRead.length() > 0 ) ? customRead : getQuotedName(dialect);
+	}
+	
+	public String getWriteExpr() {
+		return ( customWrite != null && customWrite.length() > 0 ) ? customWrite : "?";
+	}
+	
 	public boolean isFormula() {
 		return false;
 	}
@@ -304,6 +316,22 @@ public class Column implements Selectable, Serializable, Cloneable {
 		this.defaultValue = defaultValue;
 	}
 
+	public String getCustomWrite() {
+		return customWrite;
+	}
+
+	public void setCustomWrite(String customWrite) {
+		this.customWrite = customWrite;
+	}
+
+	public String getCustomRead() {
+		return customRead;
+	}
+
+	public void setCustomRead(String customRead) {
+		this.customRead = customRead;
+	}
+
 	public String getCanonicalName() {
 		return quoted ? name : name.toLowerCase();
 	}
@@ -327,6 +355,8 @@ public class Column implements Selectable, Serializable, Cloneable {
 		copy.setCheckConstraint( checkConstraint );
 		copy.setComment( comment );
 		copy.setDefaultValue( defaultValue );
+		copy.setCustomRead( customRead );
+		copy.setCustomWrite( customWrite );
 		return copy;
 	}
 

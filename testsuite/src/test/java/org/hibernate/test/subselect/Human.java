@@ -9,6 +9,7 @@ public class Human {
 	private String name;
 	private char sex;
 	private String address;
+	private double heightInches;
 	
 	public void setAddress(String address) {
 		this.address = address;
@@ -33,5 +34,11 @@ public class Human {
 	}
 	public Long getId() {
 		return id;
+	}
+	public double getHeightInches() {
+		return heightInches;
+	}
+	public void setHeightInches(double heightInches) {
+		this.heightInches = heightInches;
 	}
 }

@@ -41,6 +41,14 @@ public class BasicEntityPropertyMapping extends AbstractPropertyMapping {
 	public String[] getIdentifierColumnNames() {
 		return persister.getIdentifierColumnNames();
 	}
+	
+	public String[] getIdentifierColumnReaders() {
+		return persister.getIdentifierColumnReaders();
+	}
+	
+	public String[] getIdentifierColumnReaderTemplates() {
+		return persister.getIdentifierColumnReaderTemplates();
+	}
 
 	protected String getEntityName() {
 		return persister.getEntityName();

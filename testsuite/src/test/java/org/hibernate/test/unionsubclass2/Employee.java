@@ -9,6 +9,7 @@ import java.math.BigDecimal;
 public class Employee extends Person {
 	private String title;
 	private BigDecimal salary;
+	private double passwordExpiryDays;	
 	private Employee manager;
 	/**
 	 * @return Returns the title.
@@ -46,4 +47,16 @@ public class Employee extends Person {
 	public void setSalary(BigDecimal salary) {
 		this.salary = salary;
 	}
+	/**
+	 * @return The password expiry policy in days.
+	 */
+	public double getPasswordExpiryDays() {
+		return passwordExpiryDays;
+	}
+	/**
+	 * @param passwordExpiryDays The password expiry policy in days. 
+	 */
+	public void setPasswordExpiryDays(double passwordExpiryDays) {
+		this.passwordExpiryDays = passwordExpiryDays;
+	}	
 }

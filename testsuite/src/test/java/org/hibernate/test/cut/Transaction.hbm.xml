@@ -21,5 +21,18 @@
 			<column name="currency" not-null="true"/>
 		</property>
 	</class>
+	
+    <class name="MutualFund" table="MutualFund">
+		<id name="id">
+			<generator class="native"/>
+		</id>
+		<property name="holdings" type="money">
+			<column name="amount_millions"
+				not-null="true"
+				read="amount_millions * 1000000.0"
+				write="? / 1000000.0"/>
+			<column name="currency" not-null="true"/>
+		</property>
+	</class>	
 
 </hibernate-mapping>

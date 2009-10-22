@@ -16,7 +16,7 @@ public class Human extends Mammal {
 	private Collection friends;
 	private Collection pets;
 	private Map family;
-	private double height;
+	private double heightInches;
 	
 	private BigInteger bigIntegerValue;
 	private BigDecimal bigDecimalValue;
@@ -58,11 +58,12 @@ public class Human extends Mammal {
 		this.nickName = nickName;
 	}
 	
-	public double getHeight() {
-		return height;
+	public double getHeightInches() {
+		return heightInches;
 	}
-	public void setHeight(double height) {
-		this.height = height;
+	
+	public void setHeightInches(double height) {
+		this.heightInches = height;
 	}
 
 	public Map getFamily() {

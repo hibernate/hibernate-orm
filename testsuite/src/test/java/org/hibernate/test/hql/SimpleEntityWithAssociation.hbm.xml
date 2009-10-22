@@ -11,6 +11,11 @@
             <generator class="native"/>
         </id>
         <property name="name" column="NAME" type="string"/>
+        <property name="negatedNumber">
+			<column name="negated_num"
+				read="-negated_num"
+				write="0 - ?"/>        
+        </property>
         <set name="associatedEntities" cascade="all" inverse="true" lazy="true">
             <key column="SIMPLE_1_ID"/>
             <one-to-many class="SimpleAssociatedEntity"/>

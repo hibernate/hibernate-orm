@@ -9,6 +9,7 @@ public class Alien {
 	private String identity;
 	private String planet;
 	private String species;
+	private double heightInches;
 	
 	public void setIdentity(String identity) {
 		this.identity = identity;
@@ -27,6 +28,12 @@ public class Alien {
 	}
 	public String getPlanet() {
 		return planet;
+	}
+	public double getHeightInches() {
+		return heightInches;
+	}
+	public void setHeightInches(double heightInches) {
+		this.heightInches = heightInches;
 	}
 	public void setId(Long id) {
 		this.id = id;

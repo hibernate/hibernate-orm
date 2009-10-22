@@ -1,9 +1,9 @@
 // $Id: Product.java 6507 2005-04-25 16:57:32Z steveebersole $
 package org.hibernate.test.filter;
 
-import java.util.Set;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.Set;
 
 /**
  * @author Steve Ebersole
@@ -14,6 +14,7 @@ public class Product {
 	private int stockNumber;  // int for ease of hashCode() impl
 	private Date effectiveStartDate;
 	private Date effectiveEndDate;
+	private double weightPounds;
 	private Set orderLineItems;
 	private Set categories;
 
@@ -73,6 +74,14 @@ public class Product {
 		this.effectiveEndDate = effectiveEndDate;
 	}
 
+	public double getWeightPounds() {
+		return weightPounds;
+	}
+
+	public void setWeightPounds(double weightPounds) {
+		this.weightPounds = weightPounds;
+	}
+	
 	public Set getCategories() {
 		return categories;
 	}

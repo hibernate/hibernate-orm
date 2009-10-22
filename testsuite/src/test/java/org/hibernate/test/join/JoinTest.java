@@ -9,6 +9,7 @@ import junit.framework.Test;
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.criterion.Restrictions;
 import org.hibernate.junit.functional.FunctionalTestCase;
 import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
 
@@ -130,6 +131,82 @@ public class JoinTest extends FunctionalTestCase {
 		t.commit();
 		s.close();
 	}
+	
+	public void testCustomColumnReadAndWrite() {
+		Session s = openSession();
+		Transaction t = s.beginTransaction();
+		final double HEIGHT_INCHES = 73;
+		final double HEIGHT_CENTIMETERS = HEIGHT_INCHES * 2.54d;
+		Person p = new Person();
+		p.setName("Emmanuel");
+		p.setSex('M');
+		p.setHeightInches(HEIGHT_INCHES);
+		s.persist(p);
+		final double PASSWORD_EXPIRY_WEEKS = 4;
+		final double PASSWORD_EXPIRY_DAYS = PASSWORD_EXPIRY_WEEKS * 7d;
+		User u = new User();
+		u.setName("Steve");
+		u.setSex('M');
+		u.setPasswordExpiryDays(PASSWORD_EXPIRY_DAYS);
+		s.persist(u);
+		s.flush();
+		
+		// Test value conversion during insert
+		Double heightViaSql = (Double)s.createSQLQuery("select height_centimeters from person where name='Emmanuel'").uniqueResult();
+		assertEquals(HEIGHT_CENTIMETERS, heightViaSql, 0.01d);
+		Double expiryViaSql = (Double)s.createSQLQuery("select pwd_expiry_weeks from t_user where person_id=?")
+			.setLong(0, u.getId())
+			.uniqueResult();
+		assertEquals(PASSWORD_EXPIRY_WEEKS, expiryViaSql, 0.01d);
+		
+		// Test projection
+		Double heightViaHql = (Double)s.createQuery("select p.heightInches from Person p where p.name = 'Emmanuel'").uniqueResult();
+		assertEquals(HEIGHT_INCHES, heightViaHql, 0.01d);
+		Double expiryViaHql = (Double)s.createQuery("select u.passwordExpiryDays from User u where u.name = 'Steve'").uniqueResult();
+		assertEquals(PASSWORD_EXPIRY_DAYS, expiryViaHql, 0.01d);
+		
+		// Test restriction and entity load via criteria
+		p = (Person)s.createCriteria(Person.class)
+			.add(Restrictions.between("heightInches", HEIGHT_INCHES - 0.01d, HEIGHT_INCHES + 0.01d))
+			.uniqueResult();
+		assertEquals(HEIGHT_INCHES, p.getHeightInches(), 0.01d);
+		u = (User)s.createCriteria(User.class)
+			.add(Restrictions.between("passwordExpiryDays", PASSWORD_EXPIRY_DAYS - 0.01d, PASSWORD_EXPIRY_DAYS + 0.01d))
+			.uniqueResult();
+		assertEquals(PASSWORD_EXPIRY_DAYS, u.getPasswordExpiryDays(), 0.01d);
+		
+		// Test predicate and entity load via HQL
+		p = (Person)s.createQuery("from Person p where p.heightInches between ? and ?")
+			.setDouble(0, HEIGHT_INCHES - 0.01d)
+			.setDouble(1, HEIGHT_INCHES + 0.01d)
+			.uniqueResult();
+		assertEquals(HEIGHT_INCHES, p.getHeightInches(), 0.01d);
+		u = (User)s.createQuery("from User u where u.passwordExpiryDays between ? and ?")
+			.setDouble(0, PASSWORD_EXPIRY_DAYS - 0.01d)
+			.setDouble(1, PASSWORD_EXPIRY_DAYS + 0.01d)
+			.uniqueResult();
+		assertEquals(PASSWORD_EXPIRY_DAYS, u.getPasswordExpiryDays(), 0.01d);
+		
+		// Test update
+		p.setHeightInches(1);
+		u.setPasswordExpiryDays(7d);
+		s.flush();
+		heightViaSql = (Double)s.createSQLQuery("select height_centimeters from person where name='Emmanuel'").uniqueResult();
+		assertEquals(2.54d, heightViaSql, 0.01d);
+		expiryViaSql = (Double)s.createSQLQuery("select pwd_expiry_weeks from t_user where person_id=?")
+			.setLong(0, u.getId())
+			.uniqueResult();
+		assertEquals(1d, expiryViaSql, 0.01d);
+		
+		s.delete(p);
+		s.delete(u);
+		assertTrue( s.createQuery("from Person").list().isEmpty() );		
+		
+		t.commit();
+		s.close();
+		
+	}
+	
 
 }
 

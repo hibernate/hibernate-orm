@@ -1,10 +1,11 @@
 //$Id: $
 package org.hibernate.test.instrument.runtime;
 
-import org.hibernate.bytecode.BytecodeProvider;
-import org.hibernate.bytecode.javassist.BytecodeProviderImpl;
 import junit.framework.Test;
 import junit.framework.TestSuite;
+
+import org.hibernate.bytecode.BytecodeProvider;
+import org.hibernate.bytecode.javassist.BytecodeProviderImpl;
 
 /**
  * @author Steve Ebersole
@@ -53,4 +54,9 @@ public class JavassistInstrumentationTest extends AbstractTransformingClassLoade
 	public void testSharedPKOneToOne() {
 		super.testSharedPKOneToOne();
 	}
+
+	public void testCustomColumnReadAndWrite() {
+		super.testCustomColumnReadAndWrite();
+	}	
+	
 }

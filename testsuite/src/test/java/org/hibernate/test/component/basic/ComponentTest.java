@@ -7,16 +7,17 @@ import java.util.List;
 
 import junit.framework.Test;
 
+import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.Hibernate;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.Mappings;
 import org.hibernate.criterion.Property;
+import org.hibernate.criterion.Restrictions;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.dialect.SybaseASE15Dialect;
+import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.junit.functional.FunctionalTestCase;
 import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
 import org.hibernate.mapping.Component;
@@ -207,6 +208,48 @@ public class ComponentTest extends FunctionalTestCase {
 		t.commit();
 		s.close();
 	}
+	
+	public void testCustomColumnReadAndWrite() {
+		Session s = openSession();
+		Transaction t = s.beginTransaction();
+		User u = new User( "steve", "hibernater", new Person( "Steve Ebersole", new Date(), "Main St") );
+		final double HEIGHT_INCHES = 73;
+		final double HEIGHT_CENTIMETERS = HEIGHT_INCHES * 2.54d;
+		u.getPerson().setHeightInches(HEIGHT_INCHES);
+		s.persist( u );
+		s.flush();
+		
+		// Test value conversion during insert
+		Double heightViaSql = (Double)s.createSQLQuery("select height_centimeters from t_user where t_user.username='steve'").uniqueResult();
+		assertEquals(HEIGHT_CENTIMETERS, heightViaSql, 0.01d);
+
+		// Test projection
+		Double heightViaHql = (Double)s.createQuery("select u.person.heightInches from User u where u.id = 'steve'").uniqueResult();
+		assertEquals(HEIGHT_INCHES, heightViaHql, 0.01d);
+		
+		// Test restriction and entity load via criteria
+		u = (User)s.createCriteria(User.class)
+			.add(Restrictions.between("person.heightInches", HEIGHT_INCHES - 0.01d, HEIGHT_INCHES + 0.01d))
+			.uniqueResult();
+		assertEquals(HEIGHT_INCHES, u.getPerson().getHeightInches(), 0.01d);
+		
+		// Test predicate and entity load via HQL
+		u = (User)s.createQuery("from User u where u.person.heightInches between ? and ?")
+			.setDouble(0, HEIGHT_INCHES - 0.01d)
+			.setDouble(1, HEIGHT_INCHES + 0.01d)
+			.uniqueResult();
+		assertEquals(HEIGHT_INCHES, u.getPerson().getHeightInches(), 0.01d);
+		
+		// Test update
+		u.getPerson().setHeightInches(1);
+		s.flush();
+		heightViaSql = (Double)s.createSQLQuery("select height_centimeters from t_user where t_user.username='steve'").uniqueResult();
+		assertEquals(2.54d, heightViaSql, 0.01d);
+		s.delete(u);
+		t.commit();
+		s.close();
+	}
+	
 
 	public void testNamedQuery() {
 		Session s = openSession();

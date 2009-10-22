@@ -31,10 +31,6 @@ import java.util.Iterator;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
-import org.hibernate.jdbc.Expectations;
-import org.hibernate.jdbc.Expectation;
-import org.hibernate.type.AssociationType;
-import org.hibernate.persister.entity.Joinable;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.access.CollectionRegionAccessStrategy;
 import org.hibernate.cfg.Configuration;
@@ -44,15 +40,19 @@ import org.hibernate.engine.SessionImplementor;
 import org.hibernate.engine.SubselectFetch;
 import org.hibernate.engine.LoadQueryInfluencers;
 import org.hibernate.exception.JDBCExceptionHelper;
+import org.hibernate.jdbc.Expectation;
+import org.hibernate.jdbc.Expectations;
 import org.hibernate.loader.collection.BatchingCollectionInitializer;
 import org.hibernate.loader.collection.CollectionInitializer;
 import org.hibernate.loader.collection.SubselectCollectionLoader;
 import org.hibernate.mapping.Collection;
+import org.hibernate.persister.entity.Joinable;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.sql.Delete;
 import org.hibernate.sql.Insert;
-import org.hibernate.sql.Update;
 import org.hibernate.sql.SelectFragment;
+import org.hibernate.sql.Update;
+import org.hibernate.type.AssociationType;
 import org.hibernate.util.ArrayHelper;
 
 /**
@@ -81,7 +81,7 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 		
 		Delete delete = new Delete()
 				.setTableName( qualifiedTableName )
-				.setPrimaryKeyColumnNames( keyColumnNames );
+				.addPrimaryKeyColumns( keyColumnNames );
 		
 		if ( hasWhere ) delete.setWhere( sqlWhereString );
 		
@@ -112,7 +112,7 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 		}
 		
 		//if ( !elementIsFormula ) {
-			insert.addColumns( elementColumnNames, elementColumnIsSettable );
+			insert.addColumns( elementColumnNames, elementColumnIsSettable, elementColumnWriters );
 		//}
 		
 		return insert.toStatementString();
@@ -127,17 +127,18 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 			.setTableName( qualifiedTableName );
 		
 		//if ( !elementIsFormula ) {
-			update.addColumns( elementColumnNames, elementColumnIsSettable );
+			update.addColumns( elementColumnNames, elementColumnIsSettable, elementColumnWriters );
 		//}
 		
 		if ( hasIdentifier ) {
-			update.setPrimaryKeyColumnNames( new String[]{ identifierColumnName } );
+			update.addPrimaryKeyColumns( new String[]{ identifierColumnName } );
 		}
 		else if ( hasIndex && !indexContainsFormula ) {
-			update.setPrimaryKeyColumnNames( ArrayHelper.join( keyColumnNames, indexColumnNames ) );
+			update.addPrimaryKeyColumns( ArrayHelper.join( keyColumnNames, indexColumnNames ) );
 		}
 		else {
-			update.setPrimaryKeyColumnNames( ArrayHelper.join( keyColumnNames, elementColumnNames, elementColumnIsInPrimaryKey ) );
+			update.addPrimaryKeyColumns( keyColumnNames );
+			update.addPrimaryKeyColumns( elementColumnNames, elementColumnIsInPrimaryKey, elementColumnWriters );
 		}
 		
 		if ( getFactory().getSettings().isCommentsEnabled() ) {
@@ -156,13 +157,14 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 			.setTableName( qualifiedTableName );
 		
 		if ( hasIdentifier ) {
-			delete.setPrimaryKeyColumnNames( new String[]{ identifierColumnName } );
+			delete.addPrimaryKeyColumns( new String[]{ identifierColumnName } );
 		}
 		else if ( hasIndex && !indexContainsFormula ) {
-			delete.setPrimaryKeyColumnNames( ArrayHelper.join( keyColumnNames, indexColumnNames ) );
+			delete.addPrimaryKeyColumns( ArrayHelper.join( keyColumnNames, indexColumnNames ) );
 		}
 		else {
-			delete.setPrimaryKeyColumnNames( ArrayHelper.join( keyColumnNames, elementColumnNames, elementColumnIsInPrimaryKey ) );
+			delete.addPrimaryKeyColumns( keyColumnNames );
+			delete.addPrimaryKeyColumns( elementColumnNames, elementColumnIsInPrimaryKey, elementColumnWriters );
 		}
 		
 		if ( getFactory().getSettings().isCommentsEnabled() ) {

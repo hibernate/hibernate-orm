@@ -24,7 +24,11 @@
  */
 package org.hibernate.sql;
 
-import org.hibernate.util.StringHelper;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.Map;
+
+import net.sf.cglib.transform.impl.AddPropertyTransformer;
 
 /**
  * An SQL <tt>DELETE</tt> statement
@@ -34,10 +38,11 @@ import org.hibernate.util.StringHelper;
 public class Delete {
 
 	private String tableName;
-	private String[] primaryKeyColumnNames;
 	private String versionColumnName;
 	private String where;
 
+	private Map primaryKeyColumns = new LinkedHashMap();	
+	
 	private String comment;
 	public Delete setComment(String comment) {
 		this.comment = comment;
@@ -55,12 +60,17 @@ public class Delete {
 			buf.append( "/* " ).append(comment).append( " */ " );
 		}
 		buf.append( "delete from " ).append(tableName);
-		if ( where != null || primaryKeyColumnNames != null || versionColumnName != null ) {
+		if ( where != null || !primaryKeyColumns.isEmpty() || versionColumnName != null ) {
 			buf.append( " where " );
 		}
 		boolean conditionsAppended = false;
-		if ( primaryKeyColumnNames != null ) {
-			buf.append( StringHelper.join( "=? and ", primaryKeyColumnNames ) ).append( "=?" );
+		Iterator iter = primaryKeyColumns.entrySet().iterator();
+		while ( iter.hasNext() ) {
+			Map.Entry e = (Map.Entry) iter.next();
+			buf.append( e.getKey() ).append( '=' ).append( e.getValue() );
+			if ( iter.hasNext() ) {
+				buf.append( " and " );
+			}
 			conditionsAppended = true;
 		}
 		if ( where!=null ) {
@@ -94,8 +104,35 @@ public class Delete {
 		return this;
 	}
 
-	public Delete setPrimaryKeyColumnNames(String[] primaryKeyColumnNames) {
-		this.primaryKeyColumnNames = primaryKeyColumnNames;
+	public Delete setPrimaryKeyColumnNames(String[] columnNames) {
+		this.primaryKeyColumns.clear();
+		addPrimaryKeyColumns(columnNames);
+		return this;
+	}	
+
+	public Delete addPrimaryKeyColumns(String[] columnNames) {
+		for ( int i=0; i<columnNames.length; i++ ) {
+			addPrimaryKeyColumn( columnNames[i], "?" );
+		}
+		return this;
+	}
+	
+	public Delete addPrimaryKeyColumns(String[] columnNames, boolean[] includeColumns, String[] valueExpressions) {
+		for ( int i=0; i<columnNames.length; i++ ) {
+			if( includeColumns[i] ) addPrimaryKeyColumn( columnNames[i], valueExpressions[i] );
+		}
+		return this;
+	}
+	
+	public Delete addPrimaryKeyColumns(String[] columnNames, String[] valueExpressions) {
+		for ( int i=0; i<columnNames.length; i++ ) {
+			addPrimaryKeyColumn( columnNames[i], valueExpressions[i] );
+		}
+		return this;
+	}	
+
+	public Delete addPrimaryKeyColumn(String columnName, String valueExpression) {
+		this.primaryKeyColumns.put(columnName, valueExpression);
 		return this;
 	}
 

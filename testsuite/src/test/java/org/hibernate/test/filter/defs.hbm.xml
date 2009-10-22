@@ -20,6 +20,10 @@
 		<filter-param name="asOfDate" type="timestamp"/>
 	</filter-def>
 
+	<filter-def name="heavyProducts">
+		<filter-param name="weightKilograms" type="double"/>
+	</filter-def>
+
 	<filter-def name="seniorSalespersons">
 		<filter-param name="asOfDate" type="timestamp"/>
 	</filter-def>

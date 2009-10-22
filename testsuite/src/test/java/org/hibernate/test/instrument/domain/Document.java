@@ -14,6 +14,7 @@ public class Document {
 	private String text;
 	private Owner owner;
 	private Folder folder;
+	private double sizeKb;
 	private Date lastTextModification = new Date();
 	/**
 	 * @return Returns the folder.
@@ -99,6 +100,18 @@ public class Document {
 	public void setUpperCaseName(String upperCaseName) {
 		this.upperCaseName = upperCaseName;
 	}
+	/**
+	 * @param sizeKb The size in KBs.
+	 */
+	public void setSizeKb(double sizeKb) {
+		this.sizeKb = sizeKb;
+	}
+	/**
+	 * @return The size in KBs.
+	 */
+	public double getSizeKb() {
+		return sizeKb;
+	}	
 	
 	public void updateText(String newText) {
 		if ( !newText.equals(text) ) {

@@ -28,6 +28,12 @@
 				<property name="name" not-null="true"/>
 				<property name="bio"/>
 				<property name="bioLength" formula="length(bio)"/>
+				<property name="heightInches">
+					<column name="height_centimeters" 
+						not-null="true" 
+						read="height_centimeters / 2.54" 
+						write="? * 2.54"/>
+				</property>				
 			</composite-element>
 		</set>
 	</class>

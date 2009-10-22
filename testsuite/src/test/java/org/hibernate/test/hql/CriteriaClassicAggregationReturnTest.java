@@ -43,12 +43,12 @@ public class CriteriaClassicAggregationReturnTest extends QueryTranslatorTestCas
 		assertEquals( "incorrect return type count", 1, translator.getReturnTypes().length );
 		assertEquals( "incorrect return type", Hibernate.INTEGER, translator.getReturnTypes()[0] );
 
-		translator = createNewQueryTranslator( "select count(h.height) from Human h", sfi() );
+		translator = createNewQueryTranslator( "select count(h.heightInches) from Human h", sfi() );
 		assertEquals( "incorrect return type count", 1, translator.getReturnTypes().length );
 		assertEquals( "incorrect return type", Hibernate.INTEGER, translator.getReturnTypes()[0] );
 
 		// MAX, MIN return the type of the state-field to which they are applied.
-		translator = createNewQueryTranslator( "select max(h.height) from Human h", sfi() );
+		translator = createNewQueryTranslator( "select max(h.heightInches) from Human h", sfi() );
 		assertEquals( "incorrect return type count", 1, translator.getReturnTypes().length );
 		assertEquals( "incorrect return type", Hibernate.DOUBLE, translator.getReturnTypes()[0] );
 
@@ -57,7 +57,7 @@ public class CriteriaClassicAggregationReturnTest extends QueryTranslatorTestCas
 		assertEquals( "incorrect return type", Hibernate.LONG, translator.getReturnTypes()[0] );
 
 		// AVG returns Float integrals, and otherwise the field type.
-		translator = createNewQueryTranslator( "select avg(h.height) from Human h", sfi() );
+		translator = createNewQueryTranslator( "select avg(h.heightInches) from Human h", sfi() );
 		assertEquals( "incorrect return type count", 1, translator.getReturnTypes().length );
 		assertEquals( "incorrect return type", Hibernate.DOUBLE, translator.getReturnTypes()[0] );
 
@@ -78,7 +78,7 @@ public class CriteriaClassicAggregationReturnTest extends QueryTranslatorTestCas
 		assertEquals( "incorrect return type count", 1, translator.getReturnTypes().length );
 		assertEquals( "incorrect return type", Hibernate.INTEGER, translator.getReturnTypes()[0] );
 
-		translator = createNewQueryTranslator( "select sum(h.height) from Human h", sfi() );
+		translator = createNewQueryTranslator( "select sum(h.heightInches) from Human h", sfi() );
 		assertEquals( "incorrect return type count", 1, translator.getReturnTypes().length );
 		assertEquals( "incorrect return type", Hibernate.DOUBLE, translator.getReturnTypes()[0] );
 

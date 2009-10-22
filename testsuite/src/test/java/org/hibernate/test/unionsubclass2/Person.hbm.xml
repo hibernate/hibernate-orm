@@ -34,6 +34,12 @@
 		<property name="sex" 
 			not-null="true"
 			update="false"/>
+		<property name="heightInches">
+			<column name="height_centimeters" 
+				not-null="true" 
+				read="height_centimeters / 2.54" 
+				write="? * 2.54"/>
+		</property>			
 		
 		<component name="address">
 			<property name="address" index="AddressIndex"/>
@@ -47,6 +53,12 @@
 					length="20"/>
 				<property name="salary" 
 					length="0"/>
+				<property name="passwordExpiryDays">
+					<column name="pwd_expiry_weeks" 
+						not-null="true" 
+						read="pwd_expiry_weeks * 7.0" 
+						write="? / 7.0"/>
+				</property>					
 				<many-to-one name="manager"/>
 		</union-subclass>
 		

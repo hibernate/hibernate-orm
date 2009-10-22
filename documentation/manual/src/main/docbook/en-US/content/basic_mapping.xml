@@ -2788,7 +2788,7 @@
 
         </sect2>
 
-        <sect2 id="mapping-column" revision="4">
+        <sect2 id="mapping-column" revision="5">
            <title>Column and formula elements</title>
            <para>
                Mapping elements which accept a <literal>column</literal> attribute will alternatively
@@ -2807,12 +2807,22 @@
         index="index_name"
         sql-type="sql_type_name"
         check="SQL expression"
-        default="SQL expression"/>]]></programlisting>
+        default="SQL expression"
+        read="SQL expression"
+        write="SQL expression"/>]]></programlisting>
 
             <programlisting><![CDATA[<formula>SQL expression</formula>]]></programlisting>
 
             <para>
-                <literal>column</literal> and <literal>formula</literal> attributes can even be combined
+                Most of the attributes on <literal>column</literal> provide a means of tailoring the
+                DDL during automatic schema generation. The <literal>read</literal> and <literal>write</literal>
+                attributes allow you to specify custom SQL that Hibernate will use to access the column's value.
+                For more on this, see the discussion of 
+                <link linkend="mapping-column-read-and-write">column read and write expressions</link>.
+            </para>
+
+            <para>
+                The <literal>column</literal> and <literal>formula</literal> elements can even be combined
                 within the same property or association mapping to express, for example, exotic join
                 conditions.
             </para>
@@ -3542,6 +3552,44 @@ public class Customer implements Serializable {
 		    <literal>always</literal>: the property value is generated both
 		    on insert and on update.
 	    </para>
+    </sect1>
+
+    <sect1 id="mapping-column-read-and-write" revision="1">
+        <title>Column read and write expressions</title>
+        <para>
+            Hibernate allows you to customize the SQL it uses to read and write the values
+            of columns mapped to <link linkend="mapping-declaration-property">simple properties</link>.
+            For example, if your database provides a set of data encryption functions, you can
+            invoke them for individual columns like this:
+            <programlisting><![CDATA[<property name="creditCardNumber">
+        <column 
+          name="credit_card_num"
+          read="decrypt(credit_card_num)"
+          write="encrypt(?)"/>
+</property>]]></programlisting>
+        </para>
+        <para>
+            Hibernate applies the custom expressions automatically whenever the property is
+            referenced in a query. This functionality is similar to a derived-property
+            <literal>formula</literal> with two differences:
+            <itemizedlist spacing="compact">
+                <listitem>
+                    <para>
+                        The property is backed by one or more columns that are exported as part of automatic
+                        schema generation.
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                        The property is read-write, not read-only.
+                    </para>
+                </listitem>
+            </itemizedlist>
+        </para>
+        <para>
+            The <literal>write</literal> expression, if specified, must contain exactly one '?' placeholder
+            for the value.
+        </para>
     </sect1>
 
     <sect1 id="mapping-database-object">

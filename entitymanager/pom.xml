@@ -71,22 +71,15 @@
     <build>
         <testResources>
             <testResource>
-                <filtering>false</filtering>
-                <directory>src/test/java</directory>
-                <includes>
-                    <include>**/*.xml</include>
-                </includes>
+                <filtering>true</filtering>
+                <directory>src/test/resources</directory>
             </testResource>
             <testResource>
                 <filtering>true</filtering>
-                <directory>src/test/resources</directory>
-               <includes>
-	                <include>META-INF/**</include>
-                    <include>*.properties</include>
-                </includes>
-            </testResource>
+                <directory>src/test/bundles</directory>
+				<targetPath>../bundles</targetPath>
+            </testResource>          
         </testResources>
-
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -153,7 +146,7 @@
 	                    <property name="package.dir" value="${basedir}/target/test-packages" />
 	                    <property name="package.tmp.dir" value="${basedir}/target/tmp" />
 	                    <property name="classes.dir" value="${project.build.directory}/test-classes" />	
-                        <property name="testresources.dir" value="${basedir}/src/test/resources" />					
+                        <property name="testresources.dir" value="${basedir}/src/test/bundles" />					
 	                	<ant antfile="${basedir}/build.xml">
 	                  		<target name="package" />
 	                	</ant>

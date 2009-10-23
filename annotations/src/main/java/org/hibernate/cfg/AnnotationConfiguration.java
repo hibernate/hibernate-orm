@@ -874,7 +874,7 @@ public class AnnotationConfiguration extends Configuration {
 		}
 		catch ( ClassNotFoundException e ) {
 			//validator is not present
-			log.debug( "Validator not present in classpath, ignoring event listener registration" );
+			log.debug( "Legacy Validator not present in classpath, ignoring event listener registration" );
 		}
 		if ( enableValidatorListeners && validateEventListenerClass != null ) {
 			//TODO so much duplication

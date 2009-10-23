@@ -7,11 +7,11 @@
     <persistence-unit name="explodedpar" transaction-type="RESOURCE_LOCAL">
 
         <properties>
-            <property name="hibernate.dialect" value="org.hibernate.dialect.HSQLDialect"/>
-            <property name="hibernate.connection.driver_class" value="org.hsqldb.jdbcDriver"/>
-            <property name="hibernate.connection.username" value="sa"/>
-            <property name="hibernate.connection.password" value=""/>
-            <property name="hibernate.connection.url" value="jdbc:hsqldb:."/>
+            <property name="hibernate.dialect" value="${db.dialect}"/>
+            <property name="hibernate.connection.driver_class" value="${jdbc.driver}"/>
+            <property name="hibernate.connection.username" value="${jdbc.user}"/>
+            <property name="hibernate.connection.password" value="${jdbc.pass}"/>
+            <property name="hibernate.connection.url" value="${jdbc.url}"/>
             <property name="hibernate.hbm2ddl.auto" value="create-drop"/>
             <property name="hibernate.cache.provider_class" value="org.hibernate.cache.HashtableCacheProvider"/>
         </properties>

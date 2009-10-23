@@ -1,3 +1,4 @@
+//$Id$
 package org.hibernate.ejb.test;
 
 import java.util.HashMap;
@@ -27,8 +28,6 @@ import org.hibernate.ejb.test.pack.various.Seat;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.event.EventListeners;
 import org.hibernate.stat.Statistics;
-
-//$Id$
 
 /**
  * @author Gavin King

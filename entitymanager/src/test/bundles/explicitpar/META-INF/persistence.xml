@@ -12,11 +12,11 @@
         <class>org.hibernate.ejb.test</class>
         <exclude-unlisted-classes>true</exclude-unlisted-classes>
         <properties>
-            <property name="hibernate.dialect" value="org.hibernate.dialect.HSQLDialect"/>
-            <property name="hibernate.connection.driver_class" value="org.hsqldb.jdbcDriver"/>
-            <property name="hibernate.connection.username" value="sa"/>
-            <property name="hibernate.connection.password" value=""/>
-            <property name="hibernate.connection.url" value="jdbc:hsqldb:."/>
+            <property name="hibernate.dialect" value="${db.dialect}"/>
+            <property name="hibernate.connection.driver_class" value="${jdbc.driver}"/>
+            <property name="hibernate.connection.username" value="${jdbc.user}"/>
+            <property name="hibernate.connection.password" value="${jdbc.pass}"/>
+            <property name="hibernate.connection.url" value="${jdbc.url}"/>
             <property name="hibernate.cache.use_query_cache" value="true"/>
             <property name="hibernate.cache.region_prefix" value="hibernate.test"/>
             <property name="hibernate.jdbc.use_streams_for_binary" value="true"/>

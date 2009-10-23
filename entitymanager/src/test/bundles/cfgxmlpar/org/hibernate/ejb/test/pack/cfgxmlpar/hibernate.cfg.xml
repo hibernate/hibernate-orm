@@ -4,11 +4,11 @@
 
 <hibernate-configuration>
     <session-factory>
-        <property name="hibernate.dialect">org.hibernate.dialect.HSQLDialect</property>
-        <property name="hibernate.connection.driver_class">org.hsqldb.jdbcDriver</property>
-        <property name="hibernate.connection.username">sa</property>
-        <property name="hibernate.connection.password"></property>
-        <property name="hibernate.connection.url">jdbc:hsqldb:.</property>
+        <property name="hibernate.dialect">${db.dialect}</property>
+        <property name="hibernate.connection.driver_class">${jdbc.driver}</property>
+        <property name="hibernate.connection.username">${jdbc.user}</property>
+        <property name="hibernate.connection.password">${jdbc.pass}</property>
+        <property name="hibernate.connection.url">${jdbc.url}</property>
         <property name="hibernate.cache.use_query_cache">true</property>
         <property name="hibernate.cache.region_prefix">hibernate.test</property>
         <property name="hibernate.jdbc.use_streams_for_binary">true</property>

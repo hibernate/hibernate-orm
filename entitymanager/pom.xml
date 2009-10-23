@@ -146,7 +146,7 @@
 	                    <property name="package.dir" value="${basedir}/target/test-packages" />
 	                    <property name="package.tmp.dir" value="${basedir}/target/tmp" />
 	                    <property name="classes.dir" value="${project.build.directory}/test-classes" />	
-                        <property name="testresources.dir" value="${basedir}/src/test/bundles" />					
+                        <property name="testresources.dir" value="${basedir}/target/bundles" />					
 	                	<ant antfile="${basedir}/build.xml">
 	                  		<target name="package" />
 	                	</ant>

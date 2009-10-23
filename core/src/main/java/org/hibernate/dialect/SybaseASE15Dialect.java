@@ -1,11 +1,10 @@
-//$Id $
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2009, Red Hat Middleware LLC or third-party contributors as
- * indicated by the @author tags or express copyright attribution
- * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * Copyright (c) 2009 by Red Hat Inc and/or its affiliates or by
+ * third-party contributors as indicated by either @author tags or express
+ * copyright attribution statements applied by the authors.  All
+ * third-party contributions are distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -21,32 +20,22 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.dialect;
 
-import java.sql.CallableStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.sql.Types;
-import java.util.Map;
-import java.util.Iterator;
 
 import org.hibernate.Hibernate;
-import org.hibernate.LockMode;
-import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.AnsiTrimEmulationFunction;
-import org.hibernate.dialect.function.CharIndexFunction;
-import org.hibernate.dialect.function.NoArgSQLFunction;
 import org.hibernate.dialect.function.SQLFunctionTemplate;
-import org.hibernate.dialect.function.StandardSQLFunction;
-import org.hibernate.dialect.function.VarArgsSQLFunction;
 
 /**
- * An SQL dialect compatible with Sybase and MS SQL Server.
+ * An SQL dialect targetting Sybase Adaptive Server Enterprise (ASE) 15 and higher.
+ * <p/>
+ * TODO : verify if this also works with 12/12.5
+ * 
  * @author Gavin King
  */
-
 public class SybaseASE15Dialect extends AbstractTransactSQLDialect {
 	public SybaseASE15Dialect() {
 		super();
@@ -68,13 +57,22 @@ public class SybaseASE15Dialect extends AbstractTransactSQLDialect {
 	public boolean supportsCascadeDelete() {
 		return false;
 	}
+
     /**
-     * By default, Sybase string comparisons are case-insensitive.<br>
-     * If the DB is configured to be case-sensitive, then the return value will be incorrect.
+     * By default, Sybase string comparisons are case-insensitive.
+	 * <p/>
+     * If the DB is configured to be case-sensitive, then this return
+	 * value will be incorrect.
      */
     public boolean areStringComparisonsCaseInsensitive() {
         return true;
-    }     
+    }
+
+	/**
+	 * Actually Sybase does not support LOB locators at al.
+	 *
+	 * @return false.
+	 */
 	public boolean supportsExpectedLobUsagePattern() {
 		return false;
 	}

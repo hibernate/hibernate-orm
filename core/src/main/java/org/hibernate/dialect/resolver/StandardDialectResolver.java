@@ -37,13 +37,13 @@ import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.DerbyDialect;
 import org.hibernate.dialect.IngresDialect;
 import org.hibernate.dialect.SQLServerDialect;
-import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.dialect.InformixDialect;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.Oracle10gDialect;
 import org.hibernate.dialect.Oracle9iDialect;
 import org.hibernate.dialect.Oracle8iDialect;
 import org.hibernate.dialect.SybaseAnywhereDialect;
+import org.hibernate.dialect.SybaseASE15Dialect;
 
 /**
  * The standard Hibernate resolver.
@@ -86,7 +86,7 @@ public class StandardDialectResolver extends AbstractDialectResolver{
 		}
 
 		if ( "Sybase SQL Server".equals( databaseName ) || "Adaptive Server Enterprise".equals( databaseName ) ) {
-			return new SybaseDialect();
+			return new SybaseASE15Dialect();
 		}
 
 		if ( databaseName.startsWith( "Adaptive Server Anywhere" ) ) {

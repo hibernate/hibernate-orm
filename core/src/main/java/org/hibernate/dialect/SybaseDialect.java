@@ -31,9 +31,11 @@ package org.hibernate.dialect;
  * Sybase.  Those functions have now been split.
  * {@link AbstractTransactSQLDialect} should be used as the base class for 
  * TransactSQL-based dialects.
- * 
+ *
  * @author Gail Badner
- * @deprecated use {@link SybaseASE15Dialect} or {@link SQLServerDialect} instead.
+ * @deprecated use {@link AbstractTransactSQLDialect},
+ * {@link SybaseASE15Dialect} or {@link SQLServerDialect} instead depending on
+ * need.
  */
 public class SybaseDialect extends AbstractTransactSQLDialect {
 }

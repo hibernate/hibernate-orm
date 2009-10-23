@@ -25,6 +25,7 @@ public class CallbackAndDirtyTest extends TestCase {
 
 		Customer joe = new Customer();
 		joe.setName( "Joe" );
+		joe.setSex( 'M' );
 		joe.setAddress( "San Francisco" );
 		joe.setZip( "XXXXX" );
 		joe.setCountry( "USA" );

@@ -24,7 +24,7 @@
 package org.hibernate.ejb.criteria.expression.function;
 
 import javax.persistence.criteria.Expression;
-import org.hibernate.ejb.criteria.QueryBuilderImpl;
+import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
 import org.hibernate.ejb.criteria.expression.LiteralExpression;
 
 /**
@@ -36,34 +36,34 @@ public class AggregationFunction<T> extends ParameterizedFunctionExpression<T> {
 	/**
 	 * Constructs an aggregation function with a single literal argument.
 	 *
-	 * @param queryBuilder The query builder instance.
+	 * @param criteriaBuilder The query builder instance.
 	 * @param returnType The function return type.
 	 * @param functionName The name of the function.
 	 * @param argument The literal argument
 	 */
 	@SuppressWarnings({ "unchecked" })
 	public AggregationFunction(
-			QueryBuilderImpl queryBuilder,
+			CriteriaBuilderImpl criteriaBuilder,
 			Class<T> returnType,
 			String functionName,
 			Object argument) {
-		this( queryBuilder, returnType, functionName, new LiteralExpression( queryBuilder, argument ) );
+		this( criteriaBuilder, returnType, functionName, new LiteralExpression( criteriaBuilder, argument ) );
 	}
 
 	/**
 	 * Constructs an aggregation function with a single literal argument.
 	 *
-	 * @param queryBuilder The query builder instance.
+	 * @param criteriaBuilder The query builder instance.
 	 * @param returnType The function return type.
 	 * @param functionName The name of the function.
 	 * @param argument The argument
 	 */
 	public AggregationFunction(
-			QueryBuilderImpl queryBuilder,
+			CriteriaBuilderImpl criteriaBuilder,
 			Class<T> returnType,
 			String functionName,
 			Expression<?> argument) {
-		super( queryBuilder, returnType, functionName, argument );
+		super( criteriaBuilder, returnType, functionName, argument );
 	}
 
 	@Override
@@ -82,8 +82,8 @@ public class AggregationFunction<T> extends ParameterizedFunctionExpression<T> {
 
 		private final boolean distinct;
 
-		public COUNT(QueryBuilderImpl queryBuilder, Expression<?> expression, boolean distinct) {
-			super( queryBuilder, Long.class, NAME , expression );
+		public COUNT(CriteriaBuilderImpl criteriaBuilder, Expression<?> expression, boolean distinct) {
+			super( criteriaBuilder, Long.class, NAME , expression );
 			this.distinct = distinct;
 		}
 
@@ -101,8 +101,8 @@ public class AggregationFunction<T> extends ParameterizedFunctionExpression<T> {
 	public static class AVG extends AggregationFunction<Double> {
 		public static final String NAME = "avg";
 
-		public AVG(QueryBuilderImpl queryBuilder, Expression<? extends Number> expression) {
-			super( queryBuilder, Double.class, NAME, expression );
+		public AVG(CriteriaBuilderImpl criteriaBuilder, Expression<? extends Number> expression) {
+			super( criteriaBuilder, Double.class, NAME, expression );
 		}
 	}
 
@@ -116,12 +116,12 @@ public class AggregationFunction<T> extends ParameterizedFunctionExpression<T> {
 		public static final String NAME = "sum";
 
 		@SuppressWarnings({ "unchecked" })
-		public SUM(QueryBuilderImpl queryBuilder, Expression<N> expression) {
-			super( queryBuilder, (Class<N>)expression.getJavaType(), NAME , expression);
+		public SUM(CriteriaBuilderImpl criteriaBuilder, Expression<N> expression) {
+			super( criteriaBuilder, (Class<N>)expression.getJavaType(), NAME , expression);
 		}
 
-		public SUM(QueryBuilderImpl queryBuilder, Expression<? extends Number> expression, Class<N> returnType) {
-			super( queryBuilder, returnType, NAME , expression);
+		public SUM(CriteriaBuilderImpl criteriaBuilder, Expression<? extends Number> expression, Class<N> returnType) {
+			super( criteriaBuilder, returnType, NAME , expression);
 		}
 	}
 
@@ -135,8 +135,8 @@ public class AggregationFunction<T> extends ParameterizedFunctionExpression<T> {
 		public static final String NAME = "min";
 
 		@SuppressWarnings({ "unchecked" })
-		public MIN(QueryBuilderImpl queryBuilder, Expression<N> expression) {
-			super( queryBuilder, ( Class<N> ) expression.getJavaType(), NAME , expression);
+		public MIN(CriteriaBuilderImpl criteriaBuilder, Expression<N> expression) {
+			super( criteriaBuilder, ( Class<N> ) expression.getJavaType(), NAME , expression);
 		}
 	}
 
@@ -150,8 +150,8 @@ public class AggregationFunction<T> extends ParameterizedFunctionExpression<T> {
 		public static final String NAME = "max";
 
 		@SuppressWarnings({ "unchecked" })
-		public MAX(QueryBuilderImpl queryBuilder, Expression<N> expression) {
-			super( queryBuilder, ( Class<N> ) expression.getJavaType(), NAME , expression);
+		public MAX(CriteriaBuilderImpl criteriaBuilder, Expression<N> expression) {
+			super( criteriaBuilder, ( Class<N> ) expression.getJavaType(), NAME , expression);
 		}
 	}
 
@@ -164,8 +164,8 @@ public class AggregationFunction<T> extends ParameterizedFunctionExpression<T> {
 		public static final String NAME = "min";
 
 		@SuppressWarnings({ "unchecked" })
-		public LEAST(QueryBuilderImpl queryBuilder, Expression<X> expression) {
-			super( queryBuilder, ( Class<X> ) expression.getJavaType(), NAME , expression);
+		public LEAST(CriteriaBuilderImpl criteriaBuilder, Expression<X> expression) {
+			super( criteriaBuilder, ( Class<X> ) expression.getJavaType(), NAME , expression);
 		}
 	}
 
@@ -178,8 +178,8 @@ public class AggregationFunction<T> extends ParameterizedFunctionExpression<T> {
 		public static final String NAME = "max";
 
 		@SuppressWarnings({ "unchecked" })
-		public GREATEST(QueryBuilderImpl queryBuilder, Expression<X> expression) {
-			super( queryBuilder, ( Class<X> ) expression.getJavaType(), NAME , expression);
+		public GREATEST(CriteriaBuilderImpl criteriaBuilder, Expression<X> expression) {
+			super( criteriaBuilder, ( Class<X> ) expression.getJavaType(), NAME , expression);
 		}
 	}
 }

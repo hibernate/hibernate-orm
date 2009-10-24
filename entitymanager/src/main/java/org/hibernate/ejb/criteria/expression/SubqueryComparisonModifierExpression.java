@@ -25,7 +25,8 @@ package org.hibernate.ejb.criteria.expression;
 
 import javax.persistence.criteria.Subquery;
 import org.hibernate.ejb.criteria.ParameterRegistry;
-import org.hibernate.ejb.criteria.QueryBuilderImpl;
+import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
+import org.hibernate.ejb.criteria.CriteriaQueryCompiler;
 
 /**
  * Represents a {@link Modifier#ALL}, {@link Modifier#ANY}, {@link Modifier#SOME} modifier appplied to a subquery as
@@ -34,17 +35,34 @@ import org.hibernate.ejb.criteria.QueryBuilderImpl;
  * @author Steve Ebersole
  */
 public class SubqueryComparisonModifierExpression<Y> extends ExpressionImpl<Y> {
-	public static enum Modifier { ALL, SOME, ANY }
+	public static enum Modifier {
+		ALL {
+			String rendered() {
+				return "all ";
+			}
+		},
+		SOME {
+			String rendered() {
+				return "some ";
+			}
+		},
+		ANY {
+			String rendered() {
+				return "any ";
+			}
+		};
+		abstract String rendered();
+	}
 
 	private final Subquery<Y> subquery;
 	private final Modifier modifier;
 
 	public SubqueryComparisonModifierExpression(
-			QueryBuilderImpl queryBuilder,
+			CriteriaBuilderImpl criteriaBuilder,
 			Class<Y> javaType,
 			Subquery<Y> subquery,
 			Modifier modifier) {
-		super(queryBuilder, javaType);
+		super( criteriaBuilder, javaType);
 		this.subquery = subquery;
 		this.modifier = modifier;
 	}
@@ -61,4 +79,11 @@ public class SubqueryComparisonModifierExpression<Y> extends ExpressionImpl<Y> {
 		// nothign to do (the subquery should be handled directly, and the modified itself is not parameterized)
 	}
 
+	public String render(CriteriaQueryCompiler.RenderingContext renderingContext) {
+		return getModifier().rendered() + ( ( ExpressionImplementor ) getSubquery() ).render( renderingContext );
+	}
+
+	public String renderProjection(CriteriaQueryCompiler.RenderingContext renderingContext) {
+		return render( renderingContext );
+	}
 }

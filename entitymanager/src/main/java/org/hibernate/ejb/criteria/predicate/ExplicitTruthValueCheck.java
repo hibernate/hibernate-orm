@@ -26,7 +26,9 @@ package org.hibernate.ejb.criteria.predicate;
 import javax.persistence.criteria.Expression;
 
 import org.hibernate.ejb.criteria.ParameterRegistry;
-import org.hibernate.ejb.criteria.QueryBuilderImpl;
+import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
+import org.hibernate.ejb.criteria.CriteriaQueryCompiler;
+import org.hibernate.ejb.criteria.expression.ExpressionImplementor;
 
 /**
  * ANSI-SQL defines <tt>TRUE</tt>, <tt>FALSE</tt> and <tt>UNKNOWN</tt> as <i>truth values</i>.  These
@@ -43,8 +45,8 @@ public class ExplicitTruthValueCheck extends AbstractSimplePredicate {
 	private final Expression<Boolean> booleanExpression;
 	private final TruthValue truthValue;
 
-	public ExplicitTruthValueCheck(QueryBuilderImpl queryBuilder, Expression<Boolean> booleanExpression, TruthValue truthValue) {
-		super( queryBuilder );
+	public ExplicitTruthValueCheck(CriteriaBuilderImpl criteriaBuilder, Expression<Boolean> booleanExpression, TruthValue truthValue) {
+		super( criteriaBuilder );
 		this.booleanExpression = booleanExpression;
 		this.truthValue = truthValue;
 	}
@@ -59,6 +61,16 @@ public class ExplicitTruthValueCheck extends AbstractSimplePredicate {
 
 	public void registerParameters(ParameterRegistry registry) {
 		Helper.possibleParameter( getBooleanExpression(), registry );
+	}
+
+	public String render(CriteriaQueryCompiler.RenderingContext renderingContext) {
+		return ( (ExpressionImplementor) getBooleanExpression() ).render( renderingContext )
+				+ " = "
+				+ ( getTruthValue() == TruthValue.TRUE ? "true" : "false" );
+	}
+
+	public String renderProjection(CriteriaQueryCompiler.RenderingContext renderingContext) {
+		return render( renderingContext );
 	}
 }
 

@@ -35,10 +35,9 @@ import javax.persistence.spi.PersistenceUnitTransactionType;
 import javax.persistence.spi.LoadState;
 
 import org.hibernate.SessionFactory;
-import org.hibernate.Hibernate;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.cfg.Configuration;
-import org.hibernate.ejb.criteria.QueryBuilderImpl;
+import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
 import org.hibernate.ejb.metamodel.MetamodelImpl;
 import org.hibernate.ejb.util.PersistenceUtilHelper;
 
@@ -54,7 +53,7 @@ public class EntityManagerFactoryImpl implements HibernateEntityManagerFactory {
 	private final PersistenceUnitTransactionType transactionType;
 	private final boolean discardOnClose;
 	private final Class sessionInterceptorClass;
-	private final QueryBuilderImpl criteriaQueryBuilder;
+	private final CriteriaBuilderImpl criteriaBuilder;
 	private final Metamodel metamodel;
 	private final HibernatePersistenceUnitUtil util;
 
@@ -77,7 +76,7 @@ public class EntityManagerFactoryImpl implements HibernateEntityManagerFactory {
 		else {
 			this.metamodel = null;
 		}
-		this.criteriaQueryBuilder = new QueryBuilderImpl( this );
+		this.criteriaBuilder = new CriteriaBuilderImpl( this );
 		this.util = new HibernatePersistenceUnitUtil( this );
 	}
 
@@ -94,7 +93,7 @@ public class EntityManagerFactoryImpl implements HibernateEntityManagerFactory {
 	}
 
 	public CriteriaBuilder getCriteriaBuilder() {
-		return criteriaQueryBuilder;
+		return criteriaBuilder;
 	}
 
 	public Metamodel getMetamodel() {

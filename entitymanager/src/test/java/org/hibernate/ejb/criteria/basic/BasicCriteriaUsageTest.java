@@ -41,19 +41,10 @@ public class BasicCriteriaUsageTest extends TestCase {
 		return new Class[] { Wall.class };
 	}
 
-	public void testSimplestCriterias() {
-		EntityManager em = getOrCreateEntityManager();
-		em.getTransaction().begin();
-		CriteriaQuery criteria = em.getCriteriaBuilder().createQuery();
-		criteria.from( Wall.class );
-		em.getTransaction().commit();
-		em.close();
-	}
-
 	public void testParameterCollection() {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
-		CriteriaQuery criteria = em.getCriteriaBuilder().createQuery();
+		CriteriaQuery<Wall> criteria = em.getCriteriaBuilder().createQuery( Wall.class );
 		Root<Wall> from = criteria.from( Wall.class );
 		ParameterExpression param = em.getCriteriaBuilder().parameter( String.class );
 		SingularAttribute<? super Wall,?> colorAttribute = em.getMetamodel()
@@ -63,6 +54,16 @@ public class BasicCriteriaUsageTest extends TestCase {
 		Predicate predicate = em.getCriteriaBuilder().equal( from.get( colorAttribute ), param );
 		criteria.where( predicate );
 		assertEquals( 1, criteria.getParameters().size() );
+		em.getTransaction().commit();
+		em.close();
+	}
+
+	public void testTrivialCompilation() {
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		CriteriaQuery<Wall> criteria = em.getCriteriaBuilder().createQuery( Wall.class );
+		criteria.from( Wall.class );
+		em.createQuery( criteria ).getResultList();
 		em.getTransaction().commit();
 		em.close();
 	}

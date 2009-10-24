@@ -28,10 +28,18 @@ import java.util.List;
 import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.CriteriaBuilder.Case;
 import org.hibernate.ejb.criteria.ParameterRegistry;
-import org.hibernate.ejb.criteria.QueryBuilderImpl;
+import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
+import org.hibernate.ejb.criteria.CriteriaQueryCompiler;
 
 /**
- * Models what ANSI SQL terms a <tt>searched case expression</tt
+ * Models what ANSI SQL terms a <tt>searched case expression</tt>.  This is a <tt>CASE</tt> expression
+ * in the form<pre>
+ * CASE
+ *     WHEN [firstCondition] THEN [firstResult]
+ *     WHEN [secondCondition] THEN [secondResult]
+ *     ELSE [defaultResult]
+ * END
+ * </pre>
  *
  * @author Steve Ebersole
  */
@@ -59,9 +67,9 @@ public class SearchedCaseExpression<R> extends ExpressionImpl<R> implements Case
 	}
 
 	public SearchedCaseExpression(
-			QueryBuilderImpl queryBuilder,
+			CriteriaBuilderImpl criteriaBuilder,
 			Class<R> javaType) {
-		super(queryBuilder, javaType);
+		super( criteriaBuilder, javaType);
 		this.javaType = javaType;
 	}
 
@@ -117,4 +125,21 @@ public class SearchedCaseExpression<R> extends ExpressionImpl<R> implements Case
 		}
 	}
 
+	public String render(CriteriaQueryCompiler.RenderingContext renderingContext) {
+		StringBuilder caseStatement = new StringBuilder( "case" );
+		for ( WhenClause whenClause : getWhenClauses() ) {
+			caseStatement.append( " when " )
+					.append( ( (ExpressionImplementor) whenClause.getCondition() ).render( renderingContext ) )
+					.append( " then " )
+					.append( ( (ExpressionImplementor) whenClause.getResult() ).render( renderingContext ) );
+		}
+		caseStatement.append( " else " )
+				.append( ( (ExpressionImplementor) getOtherwiseResult() ).render( renderingContext ) )
+				.append( " end" );
+		return caseStatement.toString();
+	}
+
+	public String renderProjection(CriteriaQueryCompiler.RenderingContext renderingContext) {
+		return render( renderingContext );
+	}
 }

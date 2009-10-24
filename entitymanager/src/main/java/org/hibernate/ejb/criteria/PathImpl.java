@@ -48,19 +48,19 @@ public class PathImpl<X> extends ExpressionImpl<X> implements Path<X> {
 	/**
 	 * Constructs a path.
 	 *
-	 * @param queryBuilder The delegate for building query components.
+	 * @param criteriaBuilder The delegate for building query components.
 	 * @param javaType The java type of this path,
 	 * @param origin The source ("lhs") of this path.
 	 * @param attribute The attribute defining this path element.
 	 * @param model The corresponding model of this path.
 	 */
 	protected PathImpl(
-			QueryBuilderImpl queryBuilder,
+			CriteriaBuilderImpl criteriaBuilder,
 			Class<X> javaType,
 			PathImpl<?> origin,
 			Attribute<?,?> attribute,
 			Object model) {
-        super( queryBuilder, javaType );
+        super( criteriaBuilder, javaType );
 		this.origin = origin;
 		this.attribute = attribute;
 		this.model = model;
@@ -80,7 +80,8 @@ public class PathImpl<X> extends ExpressionImpl<X> implements Path<X> {
 	/**
 	 * {@inheritDoc}
 	 */
-    public Bindable<X> getModel() {
+    @SuppressWarnings({ "unchecked" })
+	public Bindable<X> getModel() {
         if ( model == null ) {
             throw new IllegalStateException( this + " represents a basic path and not a bindable" );
         }
@@ -145,4 +146,24 @@ public class PathImpl<X> extends ExpressionImpl<X> implements Path<X> {
 		// none to register
 	}
 
+	/**
+	 * Get the string representation of this path as a navigation from one of the
+	 * queries <tt>identification variables</tt>
+	 *
+	 * @return The path's identifier.
+	 */
+	public String getPathIdentifier() {
+		return getParentPath().getPathIdentifier() + "." + getAttribute().getName();
+	}
+
+	public String render(CriteriaQueryCompiler.RenderingContext renderingContext) {
+		( (TableExpressionMapper) getParentPath() ).prepareAlias( renderingContext );
+		return getParentPath().getAlias()
+				+ '.'
+				+ getAttribute().getName();
+	}
+
+	public String renderProjection(CriteriaQueryCompiler.RenderingContext renderingContext) {
+		return render( renderingContext );
+	}
 }

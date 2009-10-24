@@ -24,7 +24,7 @@
 package org.hibernate.ejb.criteria.expression.function;
 
 import javax.persistence.criteria.Expression;
-import org.hibernate.ejb.criteria.QueryBuilderImpl;
+import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
 
 /**
  * Models the ANSI SQL <tt>LENGTH</tt> function.
@@ -34,7 +34,7 @@ import org.hibernate.ejb.criteria.QueryBuilderImpl;
 public class LengthFunction extends ParameterizedFunctionExpression<Integer> {
 	public static final String NAME = "length";
 
-	public LengthFunction(QueryBuilderImpl queryBuilder, Expression<String> value) {
-		super( queryBuilder, Integer.class, NAME, value );
+	public LengthFunction(CriteriaBuilderImpl criteriaBuilder, Expression<String> value) {
+		super( criteriaBuilder, Integer.class, NAME, value );
 	}
 }

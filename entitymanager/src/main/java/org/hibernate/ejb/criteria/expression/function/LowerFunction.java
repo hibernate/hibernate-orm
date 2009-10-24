@@ -24,7 +24,7 @@
 package org.hibernate.ejb.criteria.expression.function;
 
 import javax.persistence.criteria.Expression;
-import org.hibernate.ejb.criteria.QueryBuilderImpl;
+import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
 
 /**
  * Models the ANSI SQL <tt>LOWER</tt> function.
@@ -34,7 +34,7 @@ import org.hibernate.ejb.criteria.QueryBuilderImpl;
 public class LowerFunction extends ParameterizedFunctionExpression<String> {
 	public static final String NAME = "lower";
 
-	public LowerFunction(QueryBuilderImpl queryBuilder, Expression<String> string) {
-		super( queryBuilder, String.class, NAME, string );
+	public LowerFunction(CriteriaBuilderImpl criteriaBuilder, Expression<String> string) {
+		super( criteriaBuilder, String.class, NAME, string );
 	}
 }

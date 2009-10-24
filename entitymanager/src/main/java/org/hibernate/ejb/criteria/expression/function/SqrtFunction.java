@@ -24,7 +24,7 @@
 package org.hibernate.ejb.criteria.expression.function;
 
 import javax.persistence.criteria.Expression;
-import org.hibernate.ejb.criteria.QueryBuilderImpl;
+import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
 
 /**
  * Models the ANSI SQL <tt>SQRT</tt> function.
@@ -34,7 +34,7 @@ import org.hibernate.ejb.criteria.QueryBuilderImpl;
 public class SqrtFunction extends ParameterizedFunctionExpression<Double> {
 	public static final String NAME = "sqrt";
 
-	public SqrtFunction(QueryBuilderImpl queryBuilder, Expression<? extends Number> expression) {
-		super( queryBuilder, Double.class, NAME, expression );
+	public SqrtFunction(CriteriaBuilderImpl criteriaBuilder, Expression<? extends Number> expression) {
+		super( criteriaBuilder, Double.class, NAME, expression );
 	}
 }

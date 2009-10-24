@@ -25,11 +25,13 @@ package org.hibernate.ejb.criteria.predicate;
 
 import javax.persistence.criteria.Expression;
 import org.hibernate.ejb.criteria.ParameterRegistry;
-import org.hibernate.ejb.criteria.QueryBuilderImpl;
+import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
+import org.hibernate.ejb.criteria.CriteriaQueryCompiler;
 import org.hibernate.ejb.criteria.expression.LiteralExpression;
+import org.hibernate.ejb.criteria.expression.ExpressionImplementor;
 
 /**
- * TODO : javadoc
+ * Models a SQL <tt>LIKE</tt> expression.
  *
  * @author Steve Ebersole
  */
@@ -39,65 +41,65 @@ public class LikePredicate extends AbstractSimplePredicate {
 	private final Expression<Character> escapeCharacter;
 
 	public LikePredicate(
-			QueryBuilderImpl queryBuilder,
+			CriteriaBuilderImpl criteriaBuilder,
 			Expression<String> matchExpression,
 			Expression<String> pattern) {
-		this( queryBuilder, matchExpression, pattern, null );
+		this( criteriaBuilder, matchExpression, pattern, null );
 	}
 
 	public LikePredicate(
-			QueryBuilderImpl queryBuilder,
+			CriteriaBuilderImpl criteriaBuilder,
 			Expression<String> matchExpression,
 			String pattern) {
-		this( queryBuilder, matchExpression, new LiteralExpression<String>( queryBuilder, pattern) );
+		this( criteriaBuilder, matchExpression, new LiteralExpression<String>( criteriaBuilder, pattern) );
 	}
 
 	public LikePredicate(
-			QueryBuilderImpl queryBuilder,
+			CriteriaBuilderImpl criteriaBuilder,
 			Expression<String> matchExpression,
 			Expression<String> pattern,
 			Expression<Character> escapeCharacter) {
-		super( queryBuilder );
+		super( criteriaBuilder );
 		this.matchExpression = matchExpression;
 		this.pattern = pattern;
 		this.escapeCharacter = escapeCharacter;
 	}
 
 	public LikePredicate(
-			QueryBuilderImpl queryBuilder,
+			CriteriaBuilderImpl criteriaBuilder,
 			Expression<String> matchExpression,
 			Expression<String> pattern,
 			char escapeCharacter) {
 		this(
-				queryBuilder,
+				criteriaBuilder,
 				matchExpression,
 				pattern,
-				new LiteralExpression<Character>( queryBuilder, escapeCharacter )
+				new LiteralExpression<Character>( criteriaBuilder, escapeCharacter )
 		);
 	}
 
 	public LikePredicate(
-			QueryBuilderImpl queryBuilder,
+			CriteriaBuilderImpl criteriaBuilder,
 			Expression<String> matchExpression,
 			String pattern,
 			char escapeCharacter) {
 		this(
-				queryBuilder,
+				criteriaBuilder,
 				matchExpression,
-				new LiteralExpression<String>( queryBuilder, pattern ),
-				new LiteralExpression<Character>( queryBuilder, escapeCharacter )
+				new LiteralExpression<String>( criteriaBuilder, pattern ),
+				new LiteralExpression<Character>( criteriaBuilder, escapeCharacter )
 		);
 	}
 
 	public LikePredicate(
-			QueryBuilderImpl queryBuilder,
+			CriteriaBuilderImpl criteriaBuilder,
 			Expression<String> matchExpression,
 			String pattern,
 			Expression<Character> escapeCharacter) {
 		this(
-				queryBuilder,
+				criteriaBuilder,
 				matchExpression,
-				new LiteralExpression<String>( queryBuilder, pattern ),
+				new LiteralExpression<String>( criteriaBuilder, pattern ),
 				escapeCharacter
 		);
 	}
@@ -120,5 +122,19 @@ public class LikePredicate extends AbstractSimplePredicate {
 		Helper.possibleParameter( getPattern(), registry );
 	}
 
+	public String render(CriteriaQueryCompiler.RenderingContext renderingContext) {
+		StringBuilder likeExpr = new StringBuilder();
+		likeExpr.append( ( (ExpressionImplementor) getMatchExpression() ).render( renderingContext ) )
+				.append( " like " )
+				.append( ( (ExpressionImplementor) getPattern() ).render( renderingContext ) );
+		if ( escapeCharacter != null ) {
+			likeExpr.append( " escape " )
+					.append( ( (ExpressionImplementor) getEscapeCharacter() ).render( renderingContext ) );
+		}
+		return likeExpr.toString();
+	}
 
+	public String renderProjection(CriteriaQueryCompiler.RenderingContext renderingContext) {
+		return render( renderingContext );
+	}
 }

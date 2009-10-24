@@ -50,12 +50,12 @@ public abstract class AbstractBasicPluralJoin<O,C,E>
 		implements PluralJoin<O,C,E>, Fetch<O,E> {
 
 	public AbstractBasicPluralJoin(
-			QueryBuilderImpl queryBuilder,
+			CriteriaBuilderImpl criteriaBuilder,
 			Class<E> javaType,
 			PathImpl<O> lhs,
 			PluralAttribute<? super O, ?, ?> joinProperty,
 			JoinType joinType) {
-		super(queryBuilder, javaType, lhs, joinProperty, joinType);
+		super( criteriaBuilder, javaType, lhs, joinProperty, joinType);
 	}
 
 	@Override

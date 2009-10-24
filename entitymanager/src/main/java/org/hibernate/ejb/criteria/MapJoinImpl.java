@@ -45,12 +45,12 @@ public class MapJoinImpl<O,K,V>
 		implements JoinImplementors.MapJoinImplementor<O,K,V> {
 
 	public MapJoinImpl(
-			QueryBuilderImpl queryBuilder,
+			CriteriaBuilderImpl criteriaBuilder,
 			Class<V> javaType,
 			PathImpl<O> lhs,
 			MapAttribute<? super O, K, V> joinProperty,
 			JoinType joinType) {
-		super(queryBuilder, javaType, lhs, joinProperty, joinType);
+		super( criteriaBuilder, javaType, lhs, joinProperty, joinType);
 	}
 
 	@Override
@@ -73,6 +73,7 @@ public class MapJoinImpl<O,K,V>
 	/**
 	 * {@inheritDoc}
 	 */
+	@SuppressWarnings({ "unchecked" })
 	public Join<Map<K, V>, K> joinKey(JoinType jt) {
 		if ( PersistenceType.BASIC.equals( getAttribute().getKeyType().getPersistenceType() ) ) {
 			throw new BasicPathUsageException( "Cannot join to map key of basic type", getAttribute() );
@@ -90,19 +91,18 @@ public class MapJoinImpl<O,K,V>
 				getParentPath().getModel()
 		);
 		final MapKeyHelpers.MapKeyAttribute mapKeyAttribute = new MapKeyHelpers.MapKeyAttribute( queryBuilder(), getAttribute() );
-		final Join<Map<K, V>, K> join = new MapKeyHelpers.MapKeyJoin<K,V>(
+		return new MapKeyHelpers.MapKeyJoin<K,V>(
 				queryBuilder(),
 				mapKeySource,
 				mapKeyAttribute,
 				jt
 		);
-
-		return join;
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
+	@SuppressWarnings({ "unchecked" })
 	public Path<K> key() {
 		final MapKeyHelpers.MapPath<K,V> mapKeySource = new MapKeyHelpers.MapPath<K,V>(
 				queryBuilder(),
@@ -125,14 +125,16 @@ public class MapJoinImpl<O,K,V>
 	/**
 	 * {@inheritDoc}
 	 */
+	@SuppressWarnings({ "unchecked" })
 	public Expression<Entry<K, V>> entry() {
-		return new MapKeyHelpers.MapEntryExpression( queryBuilder(), Map.Entry.class, getAttribute() );
+		return new MapKeyHelpers.MapEntryExpression( queryBuilder(), Map.Entry.class, this, getAttribute() );
 	}
 
 
 	private From<O, V> correlationParent;
 
 	@Override
+	@SuppressWarnings({ "unchecked" })
 	public MapJoinImplementor<O, K, V> correlateTo(CriteriaSubqueryImpl subquery) {
 		MapJoinImpl<O, K, V> correlation = new MapJoinImpl<O, K, V>(
 				queryBuilder(),

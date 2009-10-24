@@ -44,18 +44,19 @@ public class JoinImpl<Z, X> extends FromImpl<Z, X> implements JoinImplementors.J
 	private final ManagedType<X> managedType;
 	private final JoinType joinType;
 
+	@SuppressWarnings({ "unchecked" })
 	public JoinImpl(
-			QueryBuilderImpl queryBuilder,
+			CriteriaBuilderImpl criteriaBuilder,
 			Class<X> javaType,
 			PathImpl<Z> lhs,
 			Attribute<? super Z, ?> joinProperty,
 			JoinType joinType) {
 		super(
-				queryBuilder,
+				criteriaBuilder,
 				javaType,
 				lhs,
 				joinProperty,
-				(ManagedType<X>)queryBuilder.getEntityManagerFactory().getMetamodel().managedType( javaType )
+				(ManagedType<X>) criteriaBuilder.getEntityManagerFactory().getMetamodel().managedType( javaType )
 		);
 		this.managedType = (ManagedType<X>) getModel();
 		this.joinType = joinType;
@@ -64,12 +65,14 @@ public class JoinImpl<Z, X> extends FromImpl<Z, X> implements JoinImplementors.J
 	/**
 	 * {@inheritDoc}
 	 */
+	@SuppressWarnings({ "unchecked" })
 	public From<?, Z> getParent() {
 		// AFAICT, only "froms" (specifically roots and joins) can be the parent of a join.
 		return ( From<?, Z> ) getParentPath();
 	}
 
 	@Override
+	@SuppressWarnings({ "unchecked" })
 	public Attribute<? super Z, ?> getAttribute() {
 		return (Attribute<? super Z, ?>) super.getAttribute();
 	}
@@ -82,10 +85,12 @@ public class JoinImpl<Z, X> extends FromImpl<Z, X> implements JoinImplementors.J
 	}
 
 	@Override
+	@SuppressWarnings({ "unchecked" })
 	protected Attribute<X, ?> getAttribute(String name) {
 		return (Attribute<X, ?>) managedType.getAttribute( name );
 	}
 
+	@SuppressWarnings({ "unchecked" })
 	public JoinImplementors.JoinImplementor<Z,X> correlateTo(CriteriaSubqueryImpl subquery) {
 		JoinImpl<Z,X> correlation = new JoinImpl<Z,X>(
 				queryBuilder(),
@@ -112,7 +117,12 @@ public class JoinImpl<Z, X> extends FromImpl<Z, X> implements JoinImplementors.J
 	 * {@inheritDoc}
 	 */
 	public From<Z,X> getCorrelationParent() {
-		return null;
+		return correlationParent;
 	}
 
+	public String renderTableExpression(CriteriaQueryCompiler.RenderingContext renderingContext) {
+		prepareAlias( renderingContext );
+		( (FromImpl) getParent() ).prepareAlias( renderingContext );
+		return getParent().getAlias() + '.' + getAttribute().getName() + " as " + getAlias();
+	}
 }

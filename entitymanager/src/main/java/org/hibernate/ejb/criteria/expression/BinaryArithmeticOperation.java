@@ -26,7 +26,8 @@ package org.hibernate.ejb.criteria.expression;
 import javax.persistence.criteria.Expression;
 
 import org.hibernate.ejb.criteria.ParameterRegistry;
-import org.hibernate.ejb.criteria.QueryBuilderImpl;
+import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
+import org.hibernate.ejb.criteria.CriteriaQueryCompiler;
 
 /**
  * Models standard arithmetc operations with two operands.
@@ -38,7 +39,37 @@ public class BinaryArithmeticOperation<N extends Number>
 		implements BinaryOperatorExpression<N> {
 
 	public static enum Operation {
-		ADD, SUBTRACT, MULTIPLY, DIVIDE, QUOT, MOD
+		ADD {
+			String apply(String lhs, String rhs) {
+				return lhs + " + " + rhs;
+			}
+		},
+		SUBTRACT {
+			String apply(String lhs, String rhs) {
+				return lhs + " - " + rhs;
+			}
+		},
+		MULTIPLY {
+			String apply(String lhs, String rhs) {
+				return lhs + " * " + rhs;
+			}
+		},
+		DIVIDE {
+			String apply(String lhs, String rhs) {
+				return lhs + " / " + rhs;
+			}
+		},
+		QUOT {
+			String apply(String lhs, String rhs) {
+				return lhs + " / " + rhs;
+			}
+		},
+		MOD {
+			String apply(String lhs, String rhs) {
+				return lhs + " % " + rhs;
+			}
+		};
+		abstract String apply(String lhs, String rhs);
 	}
 
 	private final Operation operator;
@@ -78,19 +109,19 @@ public class BinaryArithmeticOperation<N extends Number>
 	/**
 	 * Creates an arithmethic operation based on 2 expressions.
 	 *
-	 * @param queryBuilder The builder for query components.
+	 * @param criteriaBuilder The builder for query components.
 	 * @param resultType The operation result type
 	 * @param operator The operator (type of operation).
 	 * @param rhs The right-hand operand
 	 * @param lhs The left-hand operand.
 	 */
 	public BinaryArithmeticOperation(
-			QueryBuilderImpl queryBuilder,
+			CriteriaBuilderImpl criteriaBuilder,
 			Class<N> resultType,
 			Operation operator,
 			Expression<? extends N> rhs,
 			Expression<? extends N> lhs) {
-		super( queryBuilder, resultType );
+		super( criteriaBuilder, resultType );
 		this.operator = operator;
 		this.rhs = rhs;
 		this.lhs = lhs;
@@ -99,42 +130,42 @@ public class BinaryArithmeticOperation<N extends Number>
 	/**
 	 * Creates an arithmethic operation based on an expression and a literal.
 	 *
-	 * @param queryBuilder The builder for query components.
-	 * @param resultType The operation result type
+	 * @param criteriaBuilder The builder for query components.
+	 * @param javaType The operation result type
 	 * @param operator The operator (type of operation).
 	 * @param rhs The right-hand operand
 	 * @param lhs The left-hand operand (the literal).
 	 */
 	public BinaryArithmeticOperation(
-			QueryBuilderImpl queryBuilder,
+			CriteriaBuilderImpl criteriaBuilder,
 			Class<N> javaType,
 			Operation operator,
 			Expression<? extends N> rhs,
 			N lhs) {
-		super( queryBuilder, javaType );
+		super( criteriaBuilder, javaType );
 		this.operator = operator;
 		this.rhs = rhs;
-		this.lhs = new LiteralExpression<N>( queryBuilder, lhs );
+		this.lhs = new LiteralExpression<N>( criteriaBuilder, lhs );
 	}
 
 	/**
 	 * Creates an arithmethic operation based on an expression and a literal.
 	 *
-	 * @param queryBuilder The builder for query components.
-	 * @param resultType The operation result type
+	 * @param criteriaBuilder The builder for query components.
+	 * @param javaType The operation result type
 	 * @param operator The operator (type of operation).
 	 * @param rhs The right-hand operand (the literal).
 	 * @param lhs The left-hand operand
 	 */
 	public BinaryArithmeticOperation(
-			QueryBuilderImpl queryBuilder,
+			CriteriaBuilderImpl criteriaBuilder,
 			Class<N> javaType,
 			Operation operator,
 			N rhs,
 			Expression<? extends N> lhs) {
-		super( queryBuilder, javaType );
+		super( criteriaBuilder, javaType );
 		this.operator = operator;
-		this.rhs = new LiteralExpression<N>( queryBuilder, rhs );
+		this.rhs = new LiteralExpression<N>( criteriaBuilder, rhs );
 		this.lhs = lhs;
 	}
 	public Operation getOperator() {
@@ -163,4 +194,14 @@ public class BinaryArithmeticOperation<N extends Number>
 		Helper.possibleParameter( getLeftHandOperand(), registry );
 	}
 
+	public String render(CriteriaQueryCompiler.RenderingContext renderingContext) {
+		return getOperator().apply(
+				( (ExpressionImplementor) getLeftHandOperand() ).render( renderingContext ),
+				( (ExpressionImplementor) getRightHandOperand() ).render( renderingContext )
+		);
+	}
+
+	public String renderProjection(CriteriaQueryCompiler.RenderingContext renderingContext) {
+		return render( renderingContext );
+	}
 }

@@ -29,7 +29,7 @@ import java.util.List;
 import javax.persistence.criteria.Expression;
 import org.hibernate.ejb.criteria.ParameterContainer;
 import org.hibernate.ejb.criteria.ParameterRegistry;
-import org.hibernate.ejb.criteria.QueryBuilderImpl;
+import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
 import org.hibernate.ejb.criteria.expression.LiteralExpression;
 
 /**
@@ -44,27 +44,27 @@ public class ParameterizedFunctionExpression<X>
 	private final List<Expression<?>> argumentExpressions;
 
 	public ParameterizedFunctionExpression(
-			QueryBuilderImpl queryBuilder,
+			CriteriaBuilderImpl criteriaBuilder,
 			Class<X> javaType,
 			String functionName,
 			List<Expression<?>> argumentExpressions) {
-		super( queryBuilder, javaType, functionName );
+		super( criteriaBuilder, javaType, functionName );
 		this.argumentExpressions = argumentExpressions;
 	}
 
 	public ParameterizedFunctionExpression(
-			QueryBuilderImpl queryBuilder,
+			CriteriaBuilderImpl criteriaBuilder,
 			Class<X> javaType,
 			String functionName,
 			Expression<?>... argumentExpressions) {
-		super( queryBuilder, javaType, functionName );
+		super( criteriaBuilder, javaType, functionName );
 		this.argumentExpressions = Arrays.asList( argumentExpressions );
 	}
 
-	protected  static List<Expression<?>> wrapAsLiterals(QueryBuilderImpl queryBuilder, Object... literalArguments) {
+	protected  static List<Expression<?>> wrapAsLiterals(CriteriaBuilderImpl criteriaBuilder, Object... literalArguments) {
 		List<Expression<?>> arguments = new ArrayList<Expression<?>>( properSize( literalArguments.length) );
 		for ( Object o : literalArguments ) {
-			arguments.add( new LiteralExpression( queryBuilder, o ) );
+			arguments.add( new LiteralExpression( criteriaBuilder, o ) );
 		}
 		return arguments;
 	}

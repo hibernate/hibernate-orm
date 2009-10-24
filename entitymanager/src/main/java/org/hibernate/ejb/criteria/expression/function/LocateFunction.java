@@ -24,9 +24,9 @@
 package org.hibernate.ejb.criteria.expression.function;
 
 import javax.persistence.criteria.Expression;
-import org.hibernate.ejb.criteria.ParameterContainer;
+
 import org.hibernate.ejb.criteria.ParameterRegistry;
-import org.hibernate.ejb.criteria.QueryBuilderImpl;
+import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
 import org.hibernate.ejb.criteria.expression.LiteralExpression;
 
 /**
@@ -42,38 +42,38 @@ public class LocateFunction extends BasicFunctionExpression<Integer> {
 	private final Expression<Integer> start;
 
 	public LocateFunction(
-			QueryBuilderImpl queryBuilder,
+			CriteriaBuilderImpl criteriaBuilder,
 			Expression<String> pattern,
 			Expression<String> string,
 			Expression<Integer> start) {
-		super( queryBuilder, Integer.class, NAME );
+		super( criteriaBuilder, Integer.class, NAME );
 		this.pattern = pattern;
 		this.string = string;
 		this.start = start;
 	}
 
 	public LocateFunction(
-			QueryBuilderImpl queryBuilder,
+			CriteriaBuilderImpl criteriaBuilder,
 			Expression<String> pattern,
 			Expression<String> string) {
-		this( queryBuilder, pattern, string, null );
+		this( criteriaBuilder, pattern, string, null );
 	}
 
-	public LocateFunction(QueryBuilderImpl queryBuilder, String pattern, Expression<String> string) {
+	public LocateFunction(CriteriaBuilderImpl criteriaBuilder, String pattern, Expression<String> string) {
 		this(
-				queryBuilder,
-				new LiteralExpression<String>( queryBuilder, pattern ),
+				criteriaBuilder,
+				new LiteralExpression<String>( criteriaBuilder, pattern ),
 				string,
 				null
 		);
 	}
 
-	public LocateFunction(QueryBuilderImpl queryBuilder, String pattern, Expression<String> string, int start) {
+	public LocateFunction(CriteriaBuilderImpl criteriaBuilder, String pattern, Expression<String> string, int start) {
 		this(
-				queryBuilder,
-				new LiteralExpression<String>( queryBuilder, pattern ),
+				criteriaBuilder,
+				new LiteralExpression<String>( criteriaBuilder, pattern ),
 				string,
-				new LiteralExpression<Integer>( queryBuilder, start )
+				new LiteralExpression<Integer>( criteriaBuilder, start )
 		);
 	}
 

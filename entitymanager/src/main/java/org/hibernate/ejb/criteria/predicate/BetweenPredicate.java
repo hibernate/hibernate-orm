@@ -25,9 +25,10 @@ package org.hibernate.ejb.criteria.predicate;
 
 import javax.persistence.criteria.Expression;
 
-import org.hibernate.ejb.criteria.ParameterContainer;
 import org.hibernate.ejb.criteria.ParameterRegistry;
-import org.hibernate.ejb.criteria.QueryBuilderImpl;
+import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
+import org.hibernate.ejb.criteria.CriteriaQueryCompiler;
+import org.hibernate.ejb.criteria.expression.ExpressionImplementor;
 
 /**
  * Models a <tt>BETWEEN</tt> {@link javax.persistence.criteria.Predicate}.
@@ -40,24 +41,24 @@ public class BetweenPredicate<Y> extends AbstractSimplePredicate {
 	private final Expression<? extends Y> upperBound;
 
 	public BetweenPredicate(
-			QueryBuilderImpl queryBuilder,
+			CriteriaBuilderImpl criteriaBuilder,
 			Expression<? extends Y> expression,
 			Y lowerBound,
 			Y upperBound) {
 		this(
-				queryBuilder,
+				criteriaBuilder,
 				expression,
-				queryBuilder.literal( lowerBound ),
-				queryBuilder.literal( upperBound )
+				criteriaBuilder.literal( lowerBound ),
+				criteriaBuilder.literal( upperBound )
 		);
 	}
 
 	public BetweenPredicate(
-			QueryBuilderImpl queryBuilder,
+			CriteriaBuilderImpl criteriaBuilder,
 			Expression<? extends Y> expression,
 			Expression<? extends Y> lowerBound,
 			Expression<? extends Y> upperBound) {
-		super( queryBuilder );
+		super( criteriaBuilder );
 		this.expression = expression;
 		this.lowerBound = lowerBound;
 		this.upperBound = upperBound;
@@ -81,4 +82,15 @@ public class BetweenPredicate<Y> extends AbstractSimplePredicate {
 		Helper.possibleParameter( getUpperBound(), registry );
 	}
 
+	public String render(CriteriaQueryCompiler.RenderingContext renderingContext) {
+		return ( (ExpressionImplementor) getExpression() ).render( renderingContext )
+				+ " between "
+				+ ( (ExpressionImplementor) getLowerBound() ).render( renderingContext )
+				+ " and "
+				+ ( (ExpressionImplementor) getUpperBound() ).render( renderingContext );
+	}
+
+	public String renderProjection(CriteriaQueryCompiler.RenderingContext renderingContext) {
+		return render( renderingContext );
+	}
 }

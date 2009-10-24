@@ -25,7 +25,8 @@ package org.hibernate.ejb.criteria.expression;
 
 import java.util.Collection;
 import org.hibernate.ejb.criteria.ParameterRegistry;
-import org.hibernate.ejb.criteria.QueryBuilderImpl;
+import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
+import org.hibernate.ejb.criteria.CriteriaQueryCompiler;
 
 /**
  * Represents a "size of" expression in regards to a persistent collection; the implication is
@@ -38,9 +39,9 @@ public class SizeOfCollectionExpression<C extends Collection>
 	private final CollectionExpression<C> collectionExpression;
 
 	public SizeOfCollectionExpression(
-			QueryBuilderImpl queryBuilder,
+			CriteriaBuilderImpl criteriaBuilder,
 			CollectionExpression<C> collectionExpression) {
-		super(queryBuilder, Integer.class);
+		super( criteriaBuilder, Integer.class);
 		this.collectionExpression = collectionExpression;
 	}
 
@@ -52,4 +53,11 @@ public class SizeOfCollectionExpression<C extends Collection>
 		// nothign to do
 	}
 
+	public String render(CriteriaQueryCompiler.RenderingContext renderingContext) {
+		return "size of " + getCollectionExpression().render( renderingContext );
+	}
+
+	public String renderProjection(CriteriaQueryCompiler.RenderingContext renderingContext) {
+		return render( renderingContext );
+	}
 }

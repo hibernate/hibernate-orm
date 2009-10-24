@@ -37,9 +37,9 @@ public class RootImpl<X> extends FromImpl<X,X> implements Root<X> {
 	private RootImpl<X> correlationParent;
 
 	public RootImpl(
-			QueryBuilderImpl queryBuilder,
+			CriteriaBuilderImpl criteriaBuilder,
 			EntityType<X> model) {
-		super( queryBuilder, model );
+		super( criteriaBuilder, model );
 	}
 
 	@Override

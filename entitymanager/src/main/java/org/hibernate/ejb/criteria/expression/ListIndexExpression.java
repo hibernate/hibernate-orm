@@ -25,7 +25,9 @@ package org.hibernate.ejb.criteria.expression;
 
 import javax.persistence.metamodel.ListAttribute;
 import org.hibernate.ejb.criteria.ParameterRegistry;
-import org.hibernate.ejb.criteria.QueryBuilderImpl;
+import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
+import org.hibernate.ejb.criteria.CriteriaQueryCompiler;
+import org.hibernate.ejb.criteria.PathImpl;
 
 /**
  * An expression for referring to the index of a list.
@@ -33,10 +35,12 @@ import org.hibernate.ejb.criteria.QueryBuilderImpl;
  * @author Steve Ebersole
  */
 public class ListIndexExpression extends ExpressionImpl<Integer> {
+	private final PathImpl origin;
 	private final ListAttribute<?,?> listAttribute;
 
-	public ListIndexExpression(QueryBuilderImpl queryBuilder, ListAttribute<?,?> listAttribute) {
-		super( queryBuilder, Integer.class );
+	public ListIndexExpression(CriteriaBuilderImpl criteriaBuilder, PathImpl origin, ListAttribute<?,?> listAttribute) {
+		super( criteriaBuilder, Integer.class );
+		this.origin = origin;
 		this.listAttribute = listAttribute;
 	}
 
@@ -46,5 +50,15 @@ public class ListIndexExpression extends ExpressionImpl<Integer> {
 
 	public void registerParameters(ParameterRegistry registry) {
 		// nothign to do
+	}
+
+	public String render(CriteriaQueryCompiler.RenderingContext renderingContext) {
+		return "index("
+				+ origin.getPathIdentifier() + '.' + getListAttribute().getName()
+				+ ")";
+	}
+
+	public String renderProjection(CriteriaQueryCompiler.RenderingContext renderingContext) {
+		return render( renderingContext );
 	}
 }

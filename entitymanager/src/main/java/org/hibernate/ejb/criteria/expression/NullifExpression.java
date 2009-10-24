@@ -24,9 +24,9 @@
 package org.hibernate.ejb.criteria.expression;
 
 import javax.persistence.criteria.Expression;
-import org.hibernate.ejb.criteria.ParameterContainer;
 import org.hibernate.ejb.criteria.ParameterRegistry;
-import org.hibernate.ejb.criteria.QueryBuilderImpl;
+import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
+import org.hibernate.ejb.criteria.CriteriaQueryCompiler;
 
 /**
  * Models an ANSI SQL <tt>NULLIF</tt> expression.  <tt>NULLIF</tt> is a specialized <tt>CASE</tt> statement.
@@ -38,23 +38,23 @@ public class NullifExpression<T> extends ExpressionImpl<T> {
 	private final Expression<?> secondaryExpression;
 
 	public NullifExpression(
-			QueryBuilderImpl queryBuilder,
+			CriteriaBuilderImpl criteriaBuilder,
 			Class<T> javaType,
 			Expression<? extends T> primaryExpression,
 			Expression<?> secondaryExpression) {
-		super( queryBuilder, (Class<T>)determineType(javaType, primaryExpression) );
+		super( criteriaBuilder, (Class<T>)determineType(javaType, primaryExpression) );
 		this.primaryExpression = primaryExpression;
 		this.secondaryExpression = secondaryExpression;
 	}
 
 	public NullifExpression(
-			QueryBuilderImpl queryBuilder,
+			CriteriaBuilderImpl criteriaBuilder,
 			Class<T> javaType,
 			Expression<? extends T> primaryExpression,
 			Object secondaryExpression) {
-		super( queryBuilder, (Class<T>)determineType(javaType, primaryExpression) );
+		super( criteriaBuilder, (Class<T>)determineType(javaType, primaryExpression) );
 		this.primaryExpression = primaryExpression;
-		this.secondaryExpression = new LiteralExpression( queryBuilder, secondaryExpression );
+		this.secondaryExpression = new LiteralExpression( criteriaBuilder, secondaryExpression );
 	}
 
 	private static Class determineType(Class javaType, Expression primaryExpression) {
@@ -74,4 +74,15 @@ public class NullifExpression<T> extends ExpressionImpl<T> {
 		Helper.possibleParameter( getSecondaryExpression(), registry );
 	}
 
+	public String render(CriteriaQueryCompiler.RenderingContext renderingContext) {
+		return "nullif("
+				+ ( (ExpressionImplementor) getPrimaryExpression() ).render( renderingContext )
+				+ ','
+				+ ( (ExpressionImplementor) getSecondaryExpression() ).render( renderingContext )
+				+ ")";
+	}
+
+	public String renderProjection(CriteriaQueryCompiler.RenderingContext renderingContext) {
+		return render( renderingContext );
+	}
 }

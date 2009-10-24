@@ -50,12 +50,12 @@ public class BasicMapJoinImpl<O,K,V>
 
 
 	public BasicMapJoinImpl(
-			QueryBuilderImpl queryBuilder,
+			CriteriaBuilderImpl criteriaBuilder,
 			Class<V> javaType,
 			PathImpl<O> lhs,
 			MapAttribute<? super O, K, V> joinProperty,
 			JoinType joinType) {
-		super( queryBuilder, javaType, lhs, joinProperty, joinType );
+		super( criteriaBuilder, javaType, lhs, joinProperty, joinType );
 	}
 
 	@Override
@@ -78,6 +78,7 @@ public class BasicMapJoinImpl<O,K,V>
 	/**
 	 * {@inheritDoc}
 	 */
+	@SuppressWarnings({ "unchecked" })
 	public Join<Map<K, V>, K> joinKey(JoinType jt) {
 		if ( PersistenceType.BASIC.equals( getAttribute().getKeyType().getPersistenceType() ) ) {
 			throw new BasicPathUsageException( "Cannot join to map key of basic type", getAttribute() );
@@ -95,14 +96,12 @@ public class BasicMapJoinImpl<O,K,V>
 				getParentPath().getModel()
 		);
 		final MapKeyHelpers.MapKeyAttribute attribute = new MapKeyHelpers.MapKeyAttribute( queryBuilder(), getAttribute() );
-		final Join<Map<K, V>, K> join = new MapKeyHelpers.MapKeyJoin<K,V>(
+		return new MapKeyHelpers.MapKeyJoin<K,V>(
 				queryBuilder(),
 				source,
 				attribute,
 				jt
 		);
-
-		return join;
 	}
 
 
@@ -133,13 +132,15 @@ public class BasicMapJoinImpl<O,K,V>
 	/**
 	 * {@inheritDoc}
 	 */
+	@SuppressWarnings({ "unchecked" })
 	public Expression<Entry<K, V>> entry() {
-		return new MapKeyHelpers.MapEntryExpression( queryBuilder(), Map.Entry.class, getAttribute() );
+		return new MapKeyHelpers.MapEntryExpression( queryBuilder(), Map.Entry.class, this, getAttribute() );
 	}
 
 	private From<O, V> correlationParent;
 
 	@Override
+	@SuppressWarnings({ "unchecked" })
 	public MapJoinImplementor<O, K, V> correlateTo(CriteriaSubqueryImpl subquery) {
 		BasicMapJoinImpl<O,K,V> correlation = new BasicMapJoinImpl<O,K,V>(
 				queryBuilder(),

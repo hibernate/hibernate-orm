@@ -24,24 +24,24 @@
 package org.hibernate.ejb.criteria;
 
 /**
- * All nodes in a criteria query tree will generally need access to the {@link QueryBuilderImpl} from which they
+ * All nodes in a criteria query tree will generally need access to the {@link CriteriaBuilderImpl} from which they
  * come.  This base class provides convenient, consistent support for that.
  *
  * @author Steve Ebersole
  */
 public class AbstractNode {
-	private final QueryBuilderImpl queryBuilder;
+	private final CriteriaBuilderImpl criteriaBuilder;
 
-	public AbstractNode(QueryBuilderImpl queryBuilder) {
-		this.queryBuilder = queryBuilder;
+	public AbstractNode(CriteriaBuilderImpl criteriaBuilder) {
+		this.criteriaBuilder = criteriaBuilder;
 	}
 
 	/**
-	 * Provides protected access to the underlying {@link QueryBuilderImpl}.
+	 * Provides protected access to the underlying {@link CriteriaBuilderImpl}.
 	 *
-	 * @return The underlying {@link QueryBuilderImpl} instance.
+	 * @return The underlying {@link CriteriaBuilderImpl} instance.
 	 */
-	protected QueryBuilderImpl queryBuilder() {
-		return queryBuilder;
+	protected CriteriaBuilderImpl queryBuilder() {
+		return criteriaBuilder;
 	}
 }

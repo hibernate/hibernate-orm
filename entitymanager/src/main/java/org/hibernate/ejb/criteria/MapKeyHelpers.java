@@ -33,13 +33,13 @@ import javax.persistence.criteria.MapJoin;
 import javax.persistence.criteria.Path;
 import javax.persistence.criteria.From;
 import javax.persistence.metamodel.Attribute;
-import javax.persistence.metamodel.Bindable.BindableType;
 import javax.persistence.metamodel.ManagedType;
 import javax.persistence.metamodel.MapAttribute;
 import javax.persistence.metamodel.SingularAttribute;
 import javax.persistence.metamodel.Type.PersistenceType;
 import org.hibernate.ejb.criteria.JoinImplementors.JoinImplementor;
 import org.hibernate.ejb.criteria.expression.ExpressionImpl;
+import org.hibernate.ejb.criteria.expression.ExpressionImplementor;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.type.Type;
@@ -61,9 +61,9 @@ public class MapKeyHelpers {
 	 * @param <V> The type of the map value
 	 */
 	public static class MapKeyJoin<K,V> extends JoinImpl<Map<K, V>, K> implements Join<Map<K, V>, K> {
-		public MapKeyJoin(QueryBuilderImpl queryBuilder, MapPath<K,V> source, MapKeyAttribute<K> attribute, JoinType jt) {
+		public MapKeyJoin(CriteriaBuilderImpl criteriaBuilder, MapPath<K,V> source, MapKeyAttribute<K> attribute, JoinType jt) {
 			super(
-					queryBuilder,
+					criteriaBuilder,
 					attribute.getJavaType(),
 					source,
 					attribute,
@@ -92,10 +92,10 @@ public class MapKeyHelpers {
 	 */
 	public static class MapKeyPath<K> extends PathImpl<K> implements Path<K> {
 		public MapKeyPath(
-				QueryBuilderImpl queryBuilder,
+				CriteriaBuilderImpl criteriaBuilder,
 				MapPath<K,?> source,
 				MapKeyAttribute<K> attribute) {
-			super( queryBuilder, attribute.getJavaType(), source, attribute, attribute.getType() );
+			super( criteriaBuilder, attribute.getJavaType(), source, attribute, attribute.getType() );
 		}
 	}
 
@@ -110,12 +110,12 @@ public class MapKeyHelpers {
 		private final MapJoin<?,K,V> mapJoin;
 
 		public MapPath(
-				QueryBuilderImpl queryBuilder,
+				CriteriaBuilderImpl criteriaBuilder,
 				Class<Map<K, V>> javaType,
 				MapJoin<?,K,V> mapJoin,
 				MapAttribute<?,K,V> attribute,
 				Object model) {
-			super(queryBuilder, javaType, null, attribute, model);
+			super( criteriaBuilder, javaType, null, attribute, model);
 			this.mapJoin = mapJoin;
 		}
 
@@ -146,7 +146,7 @@ public class MapKeyHelpers {
 		private final BindableType jpaBindableType;
 		private final Class<K> jpaBinableJavaType;
 
-		public MapKeyAttribute(QueryBuilderImpl queryBuilder, MapAttribute<?, K, ?> attribute) {
+		public MapKeyAttribute(CriteriaBuilderImpl criteriaBuilder, MapAttribute<?, K, ?> attribute) {
 			this.attribute = attribute;
 			this.jpaType = attribute.getKeyType();
 			this.jpaBinableJavaType = attribute.getKeyJavaType();
@@ -156,7 +156,7 @@ public class MapKeyHelpers {
 
 			String guessedRoleName = determineRole( attribute );
 			SessionFactoryImplementor sfi = (SessionFactoryImplementor)
-					queryBuilder.getEntityManagerFactory().getSessionFactory();
+					criteriaBuilder.getEntityManagerFactory().getSessionFactory();
 			mapPersister = sfi.getCollectionPersister( guessedRoleName );
 			if ( mapPersister == null ) {
 				throw new IllegalStateException( "Could not locate collection persister [" + guessedRoleName + "]" );
@@ -260,13 +260,16 @@ public class MapKeyHelpers {
 	public static class MapEntryExpression<K,V>
 			extends ExpressionImpl<Map.Entry<K,V>>
 			implements Expression<Map.Entry<K,V>> {
+		private final PathImpl origin;
 		private final MapAttribute<?, K, V> attribute;
 
 		public MapEntryExpression(
-				QueryBuilderImpl queryBuilder,
+				CriteriaBuilderImpl criteriaBuilder,
 				Class<Entry<K, V>> javaType,
+				PathImpl origin,
 				MapAttribute<?, K, V> attribute) {
-			super(queryBuilder, javaType);
+			super( criteriaBuilder, javaType);
+			this.origin = origin;
 			this.attribute = attribute;
 		}
 
@@ -278,6 +281,20 @@ public class MapKeyHelpers {
 			// none to register
 		}
 
+		public String render(CriteriaQueryCompiler.RenderingContext renderingContext) {
+			// i dont think this is vqalid outside of select clause...
+			throw new IllegalStateException( "illegal reference to map entry outside of select clause." );
+		}
+
+		public String renderProjection(CriteriaQueryCompiler.RenderingContext renderingContext) {
+			return "entry(" + path( renderingContext ) + ")";
+		}
+
+		private String path(CriteriaQueryCompiler.RenderingContext renderingContext) {
+			return origin.getPathIdentifier() 
+					+ '.'
+					+ ( (ExpressionImplementor) getAttribute() ).renderProjection( renderingContext );
+		}
 	}
 
 	/**

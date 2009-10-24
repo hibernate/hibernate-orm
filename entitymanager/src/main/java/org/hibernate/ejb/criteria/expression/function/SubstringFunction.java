@@ -24,9 +24,9 @@
 package org.hibernate.ejb.criteria.expression.function;
 
 import javax.persistence.criteria.Expression;
-import org.hibernate.ejb.criteria.ParameterContainer;
+
 import org.hibernate.ejb.criteria.ParameterRegistry;
-import org.hibernate.ejb.criteria.QueryBuilderImpl;
+import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
 import org.hibernate.ejb.criteria.expression.LiteralExpression;
 
 /**
@@ -42,44 +42,44 @@ public class SubstringFunction extends BasicFunctionExpression<String> {
 	private final Expression<Integer> length;
 
 	public SubstringFunction(
-			QueryBuilderImpl queryBuilder,
+			CriteriaBuilderImpl criteriaBuilder,
 			Expression<String> value,
 			Expression<Integer> start,
 			Expression<Integer> length) {
-		super( queryBuilder, String.class, NAME );
+		super( criteriaBuilder, String.class, NAME );
 		this.value = value;
 		this.start = start;
 		this.length = length;
 	}
 
 	public SubstringFunction(
-			QueryBuilderImpl queryBuilder,
+			CriteriaBuilderImpl criteriaBuilder,
 			Expression<String> value, 
 			Expression<Integer> start) {
-		this( queryBuilder, value, start, (Expression<Integer>)null );
+		this( criteriaBuilder, value, start, (Expression<Integer>)null );
 	}
 
 	public SubstringFunction(
-			QueryBuilderImpl queryBuilder,
+			CriteriaBuilderImpl criteriaBuilder,
 			Expression<String> value,
 			int start) {
-		this( 
-				queryBuilder,
+		this(
+				criteriaBuilder,
 				value,
-				new LiteralExpression<Integer>( queryBuilder, start )
+				new LiteralExpression<Integer>( criteriaBuilder, start )
 		);
 	}
 
 	public SubstringFunction(
-			QueryBuilderImpl queryBuilder,
+			CriteriaBuilderImpl criteriaBuilder,
 			Expression<String> value,
 			int start,
 			int length) {
 		this(
-				queryBuilder,
+				criteriaBuilder,
 				value,
-				new LiteralExpression<Integer>( queryBuilder, start ),
-				new LiteralExpression<Integer>( queryBuilder, length )
+				new LiteralExpression<Integer>( criteriaBuilder, start ),
+				new LiteralExpression<Integer>( criteriaBuilder, length )
 		);
 	}
 

@@ -27,7 +27,7 @@ import java.util.List;
 import java.util.Collections;
 import javax.persistence.criteria.Expression;
 
-import org.hibernate.ejb.criteria.QueryBuilderImpl;
+import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
 
 /**
  * TODO : javadoc
@@ -37,8 +37,8 @@ import org.hibernate.ejb.criteria.QueryBuilderImpl;
 public abstract class AbstractSimplePredicate extends AbstractPredicateImpl {
 	private static final List<Expression<Boolean>> NO_EXPRESSIONS = Collections.emptyList();
 
-	public AbstractSimplePredicate(QueryBuilderImpl queryBuilder) {
-		super( queryBuilder );
+	public AbstractSimplePredicate(CriteriaBuilderImpl criteriaBuilder) {
+		super( criteriaBuilder );
 	}
 
 	public BooleanOperator getOperator() {

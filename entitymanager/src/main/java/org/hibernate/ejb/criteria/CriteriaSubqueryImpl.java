@@ -26,7 +26,6 @@ package org.hibernate.ejb.criteria;
 import java.util.List;
 import java.util.Set;
 import java.util.HashSet;
-import java.util.Collections;
 import javax.persistence.criteria.AbstractQuery;
 import javax.persistence.criteria.CollectionJoin;
 import javax.persistence.criteria.Expression;
@@ -76,12 +75,12 @@ public class CriteriaSubqueryImpl<T> extends ExpressionImpl<T> implements Subque
 	};
 
 	public CriteriaSubqueryImpl(
-			QueryBuilderImpl queryBuilder,
+			CriteriaBuilderImpl criteriaBuilder,
 			Class<T> javaType,
 			AbstractQuery<?> parent) {
-		super(queryBuilder, javaType);
+		super( criteriaBuilder, javaType);
 		this.parent = parent;
-		this.queryStructure = new QueryStructure<T>( this, queryBuilder );
+		this.queryStructure = new QueryStructure<T>( this, criteriaBuilder );
 	}
 
 	/**
@@ -144,12 +143,12 @@ public class CriteriaSubqueryImpl<T> extends ExpressionImpl<T> implements Subque
 	// SELECTION ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	public Subquery<T> distinct(boolean applyDistinction) {
-		queryStructure.setDistinction( applyDistinction );
+		queryStructure.setDistinct( applyDistinction );
 		return this;
 	}
 
 	public boolean isDistinct() {
-		return queryStructure.isDistinction();
+		return queryStructure.isDistinct();
 	}
 
 	public Expression<T> getSelection() {
@@ -298,4 +297,14 @@ public class CriteriaSubqueryImpl<T> extends ExpressionImpl<T> implements Subque
 		return queryStructure.subquery( subqueryType );
 	}
 
+	public String render(CriteriaQueryCompiler.RenderingContext renderingContext) {
+		StringBuilder subqueryBuffer = new StringBuilder( "(" );
+		queryStructure.render( subqueryBuffer, renderingContext );
+		subqueryBuffer.append( ')' );
+		return subqueryBuffer.toString();
+	}
+
+	public String renderProjection(CriteriaQueryCompiler.RenderingContext renderingContext) {
+		throw new IllegalStateException( "Subquery cannot occur in select clause" );
+	}
 }

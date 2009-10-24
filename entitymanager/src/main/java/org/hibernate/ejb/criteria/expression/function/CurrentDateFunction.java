@@ -23,7 +23,7 @@
  */
 package org.hibernate.ejb.criteria.expression.function;
 
-import org.hibernate.ejb.criteria.QueryBuilderImpl;
+import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
 
 /**
  * Models the ANSI SQL <tt>CURRENT_DATE</tt> function.
@@ -33,7 +33,7 @@ import org.hibernate.ejb.criteria.QueryBuilderImpl;
 public class CurrentDateFunction extends BasicFunctionExpression<java.sql.Date> {
 	public static final String NAME = "current_date";
 
-	public CurrentDateFunction(QueryBuilderImpl queryBuilder) {
-		super( queryBuilder, java.sql.Date.class, NAME );
+	public CurrentDateFunction(CriteriaBuilderImpl criteriaBuilder) {
+		super( criteriaBuilder, java.sql.Date.class, NAME );
 	}
 }

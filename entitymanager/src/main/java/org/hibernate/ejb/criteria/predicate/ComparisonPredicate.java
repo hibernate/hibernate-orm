@@ -26,9 +26,11 @@ package org.hibernate.ejb.criteria.predicate;
 import javax.persistence.criteria.Expression;
 
 import org.hibernate.ejb.criteria.ParameterRegistry;
-import org.hibernate.ejb.criteria.QueryBuilderImpl;
+import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
+import org.hibernate.ejb.criteria.CriteriaQueryCompiler;
 import org.hibernate.ejb.criteria.expression.BinaryOperatorExpression;
 import org.hibernate.ejb.criteria.expression.LiteralExpression;
+import org.hibernate.ejb.criteria.expression.ExpressionImplementor;
 
 /**
  * Models a basic relational comparison predicate.
@@ -41,25 +43,26 @@ public class ComparisonPredicate extends AbstractSimplePredicate implements Bina
 	private final Expression<?> rightHandSide;
 
 	public ComparisonPredicate(
-			QueryBuilderImpl queryBuilder,
+			CriteriaBuilderImpl criteriaBuilder,
 			ComparisonOperator comparisonOperator,
 			Expression<?> leftHandSide,
 			Expression<?> rightHandSide) {
-		super( queryBuilder );
+		super( criteriaBuilder );
 		this.comparisonOperator = comparisonOperator;
 		this.leftHandSide = leftHandSide;
 		this.rightHandSide = rightHandSide;
 	}
 
+	@SuppressWarnings({ "unchecked" })
 	public ComparisonPredicate(
-			QueryBuilderImpl queryBuilder,
+			CriteriaBuilderImpl criteriaBuilder,
 			ComparisonOperator comparisonOperator,
 			Expression<?> leftHandSide,
 			Object rightHandSide) {
-		super( queryBuilder );
+		super( criteriaBuilder );
 		this.comparisonOperator = comparisonOperator;
 		this.leftHandSide = leftHandSide;
-		this.rightHandSide = new LiteralExpression( queryBuilder, rightHandSide );
+		this.rightHandSide = new LiteralExpression( criteriaBuilder, rightHandSide );
 	}
 
 	public ComparisonOperator getComparisonOperator() {
@@ -88,33 +91,63 @@ public class ComparisonPredicate extends AbstractSimplePredicate implements Bina
 			public ComparisonOperator negated() {
 				return NOT_EQUAL;
 			}
+			public String rendered() {
+				return "=";
+			}
 		},
 		NOT_EQUAL {
 			public ComparisonOperator negated() {
 				return EQUAL;
+			}
+			public String rendered() {
+				return "<>";
 			}
 		},
 		LESS_THAN {
 			public ComparisonOperator negated() {
 				return GREATER_THAN_OR_EQUAL;
 			}
+			public String rendered() {
+				return "<";
+			}
 		},
 		LESS_THAN_OR_EQUAL {
 			public ComparisonOperator negated() {
 				return GREATER_THAN;
+			}
+			public String rendered() {
+				return "<=";
 			}
 		},
 		GREATER_THAN {
 			public ComparisonOperator negated() {
 				return LESS_THAN_OR_EQUAL;
 			}
+			public String rendered() {
+				return ">";
+			}
 		},
 		GREATER_THAN_OR_EQUAL {
 			public ComparisonOperator negated() {
 				return LESS_THAN;
 			}
+			public String rendered() {
+				return ">=";
+			}
 		};
 
 		public abstract ComparisonOperator negated();
+
+		public abstract String rendered();
+	}
+
+	public String render(CriteriaQueryCompiler.RenderingContext renderingContext) {
+		return ( ( ExpressionImplementor) getLeftHandOperand() ).render( renderingContext )
+				+ getComparisonOperator().rendered()
+				+ ( ( ExpressionImplementor) getRightHandOperand() ).render( renderingContext );
+	}
+
+	public String renderProjection(CriteriaQueryCompiler.RenderingContext renderingContext) {
+		return render( renderingContext );
 	}
 }

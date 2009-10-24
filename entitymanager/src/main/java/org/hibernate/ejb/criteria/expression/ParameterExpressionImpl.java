@@ -26,7 +26,8 @@ package org.hibernate.ejb.criteria.expression;
 import javax.persistence.criteria.ParameterExpression;
 
 import org.hibernate.ejb.criteria.ParameterRegistry;
-import org.hibernate.ejb.criteria.QueryBuilderImpl;
+import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
+import org.hibernate.ejb.criteria.CriteriaQueryCompiler;
 
 /**
  * Defines a parameter specification, or the information about a parameter (where it occurs, what is
@@ -39,27 +40,27 @@ public class ParameterExpressionImpl<T> extends ExpressionImpl<T> implements Par
 	private final Integer position;
 
 	public ParameterExpressionImpl(
-			QueryBuilderImpl queryBuilder,
+			CriteriaBuilderImpl criteriaBuilder,
 			Class<T> javaType,
 			String name) {
-		super( queryBuilder, javaType );
+		super( criteriaBuilder, javaType );
 		this.name = name;
 		this.position = null;
 	}
 
 	public ParameterExpressionImpl(
-			QueryBuilderImpl queryBuilder,
+			CriteriaBuilderImpl criteriaBuilder,
 			Class<T> javaType,
 			Integer position) {
-		super( queryBuilder, javaType );
+		super( criteriaBuilder, javaType );
 		this.name = null;
 		this.position = position;
 	}
 
 	public ParameterExpressionImpl(
-			QueryBuilderImpl queryBuilder,
+			CriteriaBuilderImpl criteriaBuilder,
 			Class<T> javaType) {
-		super( queryBuilder, javaType );
+		super( criteriaBuilder, javaType );
 		this.name = null;
 		this.position = null;
 	}
@@ -80,4 +81,13 @@ public class ParameterExpressionImpl<T> extends ExpressionImpl<T> implements Par
 		registry.registerParameter( this );
 	}
 
+	public String render(CriteriaQueryCompiler.RenderingContext renderingContext) {
+		final String jpaqlParamName = renderingContext.generateParameterName();
+		renderingContext.registerExplicitParameter( this, jpaqlParamName );
+		return ':' + jpaqlParamName;
+	}
+
+	public String renderProjection(CriteriaQueryCompiler.RenderingContext renderingContext) {
+		return render( renderingContext );
+	}
 }

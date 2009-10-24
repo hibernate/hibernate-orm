@@ -25,7 +25,9 @@ package org.hibernate.ejb.criteria.predicate;
 
 import javax.persistence.criteria.Subquery;
 import org.hibernate.ejb.criteria.ParameterRegistry;
-import org.hibernate.ejb.criteria.QueryBuilderImpl;
+import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
+import org.hibernate.ejb.criteria.CriteriaQueryCompiler;
+import org.hibernate.ejb.criteria.expression.ExpressionImplementor;
 
 /**
  * Models an <tt>EXISTS(<subquery>)</tt> predicate
@@ -35,8 +37,8 @@ import org.hibernate.ejb.criteria.QueryBuilderImpl;
 public class ExistsPredicate extends AbstractSimplePredicate {
 	private final Subquery<?> subquery;
 
-	public ExistsPredicate(QueryBuilderImpl queryBuilder, Subquery<?> subquery) {
-		super(queryBuilder);
+	public ExistsPredicate(CriteriaBuilderImpl criteriaBuilder, Subquery<?> subquery) {
+		super( criteriaBuilder );
 		this.subquery = subquery;
 	}
 
@@ -48,4 +50,12 @@ public class ExistsPredicate extends AbstractSimplePredicate {
 		// nothing to do here
 	}
 
+	public String render(CriteriaQueryCompiler.RenderingContext renderingContext) {
+		return ( isNegated() ? "not " : "" ) + "exists "
+				+ ( ( ExpressionImplementor ) getSubquery() ).render( renderingContext );
+	}
+
+	public String renderProjection(CriteriaQueryCompiler.RenderingContext renderingContext) {
+		return render( renderingContext );
+	}
 }

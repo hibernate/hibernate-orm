@@ -25,7 +25,8 @@ package org.hibernate.ejb.criteria.expression;
 
 import javax.persistence.criteria.Expression;
 import org.hibernate.ejb.criteria.ParameterRegistry;
-import org.hibernate.ejb.criteria.QueryBuilderImpl;
+import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
+import org.hibernate.ejb.criteria.CriteriaQueryCompiler;
 
 /**
  * Models unary arithmetic operation (unary plus and unary minus).
@@ -43,11 +44,12 @@ public class UnaryArithmeticOperation<T>
 	private final Operation operation;
 	private final Expression<T> operand;
 
+	@SuppressWarnings({ "unchecked" })
 	public UnaryArithmeticOperation(
-			QueryBuilderImpl queryBuilder,
+			CriteriaBuilderImpl criteriaBuilder,
 			Operation operation,
 			Expression<T> operand) {
-		super( queryBuilder, (Class)operand.getJavaType() );
+		super( criteriaBuilder, (Class)operand.getJavaType() );
 		this.operation = operation;
 		this.operand = operand;
 	}
@@ -70,4 +72,12 @@ public class UnaryArithmeticOperation<T>
 		Helper.possibleParameter( getOperand(), registry );
 	}
 
+	public String render(CriteriaQueryCompiler.RenderingContext renderingContext) {
+		return ( getOperation() == Operation.UNARY_MINUS ? '-' : '+' )
+				+ ( (ExpressionImplementor) getOperand() ).render( renderingContext );
+	}
+
+	public String renderProjection(CriteriaQueryCompiler.RenderingContext renderingContext) {
+		return render( renderingContext );
+	}
 }

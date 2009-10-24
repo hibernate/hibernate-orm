@@ -28,10 +28,17 @@ import java.util.List;
 import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.CriteriaBuilder.SimpleCase;
 import org.hibernate.ejb.criteria.ParameterRegistry;
-import org.hibernate.ejb.criteria.QueryBuilderImpl;
+import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
+import org.hibernate.ejb.criteria.CriteriaQueryCompiler;
 
 /**
- * Models what ANSI SQL terms a simple case statement.
+ * Models what ANSI SQL terms a simple case statement.  This is a <tt>CASE</tt> expression in the form<pre>
+ * CASE [expression]
+ *     WHEN [firstCondition] THEN [firstResult]
+ *     WHEN [secondCondition] THEN [secondResult]
+ *     ELSE [defaultResult]
+ * END
+ * </pre>
  *
  * @author Steve Ebersole
  */
@@ -61,10 +68,10 @@ public class SimpleCaseExpression<C,R> extends ExpressionImpl<R> implements Simp
 	}
 
 	public SimpleCaseExpression(
-			QueryBuilderImpl queryBuilder,
+			CriteriaBuilderImpl criteriaBuilder,
 			Class<R> javaType,
 			Expression<? extends C> expression) {
-		super(queryBuilder, javaType);
+		super( criteriaBuilder, javaType);
 		this.javaType = javaType;
 		this.expression = expression;
 	}
@@ -126,4 +133,23 @@ public class SimpleCaseExpression<C,R> extends ExpressionImpl<R> implements Simp
 		Helper.possibleParameter( getOtherwiseResult(), registry );
 	}
 
+	public String render(CriteriaQueryCompiler.RenderingContext renderingContext) {
+		StringBuilder caseExpr = new StringBuilder();
+		caseExpr.append( "case " )
+				.append(  ( (ExpressionImplementor) getExpression() ).render( renderingContext ) )
+				.append( ' ' );
+		for ( WhenClause whenClause : getWhenClauses() ) {
+			caseExpr.append( ( (ExpressionImplementor) whenClause.getCondition() ).render( renderingContext ) )
+					.append( " then "  )
+					.append( ( (ExpressionImplementor) whenClause.getResult() ).render( renderingContext ) );
+		}
+		caseExpr.append( " else " )
+				.append( ( (ExpressionImplementor) getOtherwiseResult() ).render( renderingContext ) )
+				.append( " end" );
+		return caseExpr.toString();
+	}
+
+	public String renderProjection(CriteriaQueryCompiler.RenderingContext renderingContext) {
+		return render( renderingContext );
+	}
 }

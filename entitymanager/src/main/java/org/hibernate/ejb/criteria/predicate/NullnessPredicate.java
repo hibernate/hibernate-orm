@@ -26,15 +26,17 @@ package org.hibernate.ejb.criteria.predicate;
 import javax.persistence.criteria.Expression;
 
 import org.hibernate.ejb.criteria.ParameterRegistry;
-import org.hibernate.ejb.criteria.QueryBuilderImpl;
+import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
+import org.hibernate.ejb.criteria.CriteriaQueryCompiler;
 import org.hibernate.ejb.criteria.expression.UnaryOperatorExpression;
+import org.hibernate.ejb.criteria.expression.ExpressionImplementor;
 
 /**
  * Defines a {@link javax.persistence.criteria.Predicate} for checking the
  * nullness state of an expression, aka an <tt>IS (NOT?) NULL</tt> predicate.
  * <p/>
  * The <tt>NOT NULL</tt> form can be built by calling the constructor and then
- * calling {@link #negate}.
+ * calling {@link #not}.
  *
  * @author Steve Ebersole
  */
@@ -43,14 +45,14 @@ public class NullnessPredicate extends AbstractSimplePredicate implements UnaryO
 
 	/**
 	 * Constructs the affirmitive form of nullness checking (<i>IS NULL</i>).  To
-	 * construct the negative form (<i>IS NOT NULL</i>) call {@link #negate} on the
+	 * construct the negative form (<i>IS NOT NULL</i>) call {@link #not} on the
 	 * constructed instance.
 	 *
-	 * @param queryBuilder The query builder from whcih this originates.
-	 * @param expression The expression to check.
+	 * @param criteriaBuilder The query builder from whcih this originates.
+	 * @param operand The expression to check.
 	 */
-	public NullnessPredicate(QueryBuilderImpl queryBuilder, Expression<?> operand) {
-		super( queryBuilder );
+	public NullnessPredicate(CriteriaBuilderImpl criteriaBuilder, Expression<?> operand) {
+		super( criteriaBuilder );
 		this.operand = operand;
 	}
 
@@ -60,5 +62,19 @@ public class NullnessPredicate extends AbstractSimplePredicate implements UnaryO
 
 	public void registerParameters(ParameterRegistry registry) {
 		Helper.possibleParameter( getOperand(), registry );
+	}
+
+	public String render(CriteriaQueryCompiler.RenderingContext renderingContext) {
+		return ( (ExpressionImplementor) operand ).render( renderingContext ) + check();
+	}
+
+	private String check() {
+		return isNegated()
+				? " is not null"
+				: " is null";
+	}
+
+	public String renderProjection(CriteriaQueryCompiler.RenderingContext renderingContext) {
+		return render( renderingContext );
 	}
 }

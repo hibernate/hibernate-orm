@@ -87,10 +87,10 @@ import static org.hibernate.ejb.criteria.predicate.ComparisonPredicate.Compariso
  *
  * @author Steve Ebersole
  */
-public class QueryBuilderImpl implements CriteriaBuilder, Serializable {
+public class CriteriaBuilderImpl implements CriteriaBuilder, Serializable {
 	private final EntityManagerFactoryImpl entityManagerFactory;
 
-	public QueryBuilderImpl(EntityManagerFactoryImpl entityManagerFactory) {
+	public CriteriaBuilderImpl(EntityManagerFactoryImpl entityManagerFactory) {
 		this.entityManagerFactory = entityManagerFactory;
 	}
 

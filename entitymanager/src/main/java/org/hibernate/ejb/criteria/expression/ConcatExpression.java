@@ -24,12 +24,12 @@
 package org.hibernate.ejb.criteria.expression;
 
 import javax.persistence.criteria.Expression;
-import org.hibernate.ejb.criteria.ParameterContainer;
 import org.hibernate.ejb.criteria.ParameterRegistry;
-import org.hibernate.ejb.criteria.QueryBuilderImpl;
+import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
+import org.hibernate.ejb.criteria.CriteriaQueryCompiler;
 
 /**
- * TODO : javadoc
+ * A string concatenation.
  *
  * @author Steve Ebersole
  */
@@ -38,30 +38,30 @@ public class ConcatExpression extends ExpressionImpl<String> {
 	private Expression<String> string2;
 
 	public ConcatExpression(
-			QueryBuilderImpl queryBuilder,
+			CriteriaBuilderImpl criteriaBuilder,
 			Expression<String> expression1,
 			Expression<String> expression2) {
-		super( queryBuilder, String.class );
+		super( criteriaBuilder, String.class );
 		this.string1 = expression1;
 		this.string2 = expression2;
 	}
 
 	public ConcatExpression(
-			QueryBuilderImpl queryBuilder, 
+			CriteriaBuilderImpl criteriaBuilder,
 			Expression<String> string1, 
 			String string2) {
-		this( queryBuilder, string1, wrap(queryBuilder, string2) );
+		this( criteriaBuilder, string1, wrap( criteriaBuilder, string2) );
 	}
 
-	private static Expression<String> wrap(QueryBuilderImpl queryBuilder, String string) {
-		return new LiteralExpression<String>( queryBuilder, string );
+	private static Expression<String> wrap(CriteriaBuilderImpl criteriaBuilder, String string) {
+		return new LiteralExpression<String>( criteriaBuilder, string );
 	}
 
 	public ConcatExpression(
-			QueryBuilderImpl queryBuilder,
+			CriteriaBuilderImpl criteriaBuilder,
 			String string1,
 			Expression<String> string2) {
-		this( queryBuilder, wrap(queryBuilder, string1), string2 );
+		this( criteriaBuilder, wrap( criteriaBuilder, string1), string2 );
 	}
 
 	public Expression<String> getString1() {
@@ -77,4 +77,13 @@ public class ConcatExpression extends ExpressionImpl<String> {
 		Helper.possibleParameter( getString2(), registry );
 	}
 
+	public String render(CriteriaQueryCompiler.RenderingContext renderingContext) {
+		return ( (ExpressionImplementor) getString1() ).render( renderingContext )
+				+ " || "
+				+ ( (ExpressionImplementor) getString2() ).render( renderingContext );
+	}
+
+	public String renderProjection(CriteriaQueryCompiler.RenderingContext renderingContext) {
+		return render( renderingContext );
+	}
 }

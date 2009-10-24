@@ -28,58 +28,61 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import javax.persistence.criteria.Expression;
+import javax.persistence.criteria.Subquery;
 
 import org.hibernate.ejb.criteria.ParameterRegistry;
-import org.hibernate.ejb.criteria.QueryBuilderImpl;
+import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
+import org.hibernate.ejb.criteria.CriteriaQueryCompiler;
 import org.hibernate.ejb.criteria.expression.LiteralExpression;
+import org.hibernate.ejb.criteria.expression.ExpressionImplementor;
 
 /**
  * TODO : javadoc
  *
  * @author Steve Ebersole
  */
-public class InPredicate<T> extends AbstractSimplePredicate implements QueryBuilderImpl.In<T> {
+public class InPredicate<T> extends AbstractSimplePredicate implements CriteriaBuilderImpl.In<T> {
 	private final Expression<? extends T> expression;
 	private final List<Expression<? extends T>> values;
 
 	/**
 	 * Constructs an <tt>IN</tt> predicate against a given expression with an empty list of values.
 	 *
-	 * @param queryBuilder The query builder from which this originates.
+	 * @param criteriaBuilder The query builder from which this originates.
 	 * @param expression The expression.
 	 */
 	public InPredicate(
-			QueryBuilderImpl queryBuilder,
+			CriteriaBuilderImpl criteriaBuilder,
 			Expression<? extends T> expression) {
-		this( queryBuilder, expression, new ArrayList<Expression<? extends T>>() );
+		this( criteriaBuilder, expression, new ArrayList<Expression<? extends T>>() );
 	}
 
 	/**
 	 * Constructs an <tt>IN</tt> predicate against a given expression with the given list of expression values.
 	 *
-	 * @param queryBuilder The query builder from which this originates.
+	 * @param criteriaBuilder The query builder from which this originates.
 	 * @param expression The expression.
 	 * @param values The value list.
 	 */
 	public InPredicate(
-			QueryBuilderImpl queryBuilder,
+			CriteriaBuilderImpl criteriaBuilder,
 			Expression<? extends T> expression,
 			Expression<? extends T>... values) {
-		this( queryBuilder, expression, Arrays.asList( values ) );
+		this( criteriaBuilder, expression, Arrays.asList( values ) );
 	}
 
 	/**
 	 * Constructs an <tt>IN</tt> predicate against a given expression with the given list of expression values.
 	 *
-	 * @param queryBuilder The query builder from which this originates.
+	 * @param criteriaBuilder The query builder from which this originates.
 	 * @param expression The expression.
 	 * @param values The value list.
 	 */
 	public InPredicate(
-			QueryBuilderImpl queryBuilder,
+			CriteriaBuilderImpl criteriaBuilder,
 			Expression<? extends T> expression,
 			List<Expression<? extends T>> values) {
-		super( queryBuilder );
+		super( criteriaBuilder );
 		this.expression = expression;
 		this.values = values;
 	}
@@ -87,34 +90,34 @@ public class InPredicate<T> extends AbstractSimplePredicate implements QueryBuil
 	/**
 	 * Constructs an <tt>IN</tt> predicate against a given expression with the given given literal value list.
 	 *
-	 * @param queryBuilder The query builder from which this originates.
+	 * @param criteriaBuilder The query builder from which this originates.
 	 * @param expression The expression.
 	 * @param values The value list.
 	 */
 	public InPredicate(
-			QueryBuilderImpl queryBuilder,
+			CriteriaBuilderImpl criteriaBuilder,
 			Expression<? extends T> expression,
 			T... values) {
-		this( queryBuilder, expression, Arrays.asList( values ) );
+		this( criteriaBuilder, expression, Arrays.asList( values ) );
 	}
 
 	/**
 	 * Constructs an <tt>IN</tt> predicate against a given expression with the given literal value list.
 	 *
-	 * @param queryBuilder The query builder from which this originates.
+	 * @param criteriaBuilder The query builder from which this originates.
 	 * @param expression The expression.
 	 * @param values The value list.
 	 */
 	public InPredicate(
-			QueryBuilderImpl queryBuilder,
+			CriteriaBuilderImpl criteriaBuilder,
 			Expression<? extends T> expression,
 			Collection<T> values) {
-		super( queryBuilder );
+		super( criteriaBuilder );
 		this.expression = expression;
 		// TODO : size this?
 		this.values = new ArrayList<Expression<? extends T>>();
 		for ( T value : values ) {
-			this.values.add( new LiteralExpression<T>( queryBuilder, value ) );
+			this.values.add( new LiteralExpression<T>( criteriaBuilder, value ) );
 		}
 	}
 
@@ -145,5 +148,32 @@ public class InPredicate<T> extends AbstractSimplePredicate implements QueryBuil
 		for ( Expression value : getValues() ) {
 			Helper.possibleParameter(value, registry);
 		}
+	}
+
+	public String render(CriteriaQueryCompiler.RenderingContext renderingContext) {
+		StringBuilder buffer = new StringBuilder( "in" );
+
+		// subquery expressions are already wrapped in parenthesis, so we only
+		// need to render the parens here if the values represent an explicit value list
+		boolean isInSubqueryPredicate = getValues().size() == 1
+				&& Subquery.class.isInstance( getValues().get( 0 ) );
+		if ( isInSubqueryPredicate ) {
+			buffer.append( ( (ExpressionImplementor) getValues().get(0) ).render( renderingContext ) );
+		}
+		else {
+			buffer.append( '(' );
+			String sep = "";
+			for ( Expression value : getValues() ) {
+				buffer.append( sep )
+						.append( ( (ExpressionImplementor) value ).render( renderingContext ) );
+				sep = ", ";
+			}
+			buffer.append( ')' );
+		}
+		return buffer.toString();
+	}
+
+	public String renderProjection(CriteriaQueryCompiler.RenderingContext renderingContext) {
+		return render( renderingContext );
 	}
 }

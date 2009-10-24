@@ -27,7 +27,7 @@ import java.util.Collection;
 import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Predicate;
 
-import org.hibernate.ejb.criteria.QueryBuilderImpl;
+import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
 import org.hibernate.ejb.criteria.expression.function.CastFunction;
 
 /**
@@ -35,9 +35,9 @@ import org.hibernate.ejb.criteria.expression.function.CastFunction;
  *
  * @author Steve Ebersole
  */
-public abstract class ExpressionImpl<T> extends SelectionImpl<T> implements Expression<T> {
-	public ExpressionImpl(QueryBuilderImpl queryBuilder, Class<T> javaType) {
-		super( queryBuilder, javaType );
+public abstract class ExpressionImpl<T> extends SelectionImpl<T> implements ExpressionImplementor<T> {
+	public ExpressionImpl(CriteriaBuilderImpl criteriaBuilder, Class<T> javaType) {
+		super( criteriaBuilder, javaType );
 	}
 
 	/**

@@ -29,9 +29,10 @@ import java.util.Arrays;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Expression;
 
-import org.hibernate.ejb.criteria.ParameterContainer;
 import org.hibernate.ejb.criteria.ParameterRegistry;
-import org.hibernate.ejb.criteria.QueryBuilderImpl;
+import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
+import org.hibernate.ejb.criteria.CriteriaQueryCompiler;
+import org.hibernate.ejb.criteria.expression.ExpressionImplementor;
 
 /**
  * A compound {@link Predicate predicate} is a grouping of other {@link Predicate predicates} in order to apply
@@ -46,44 +47,44 @@ public class CompoundPredicate extends AbstractPredicateImpl {
 	/**
 	 * Constructs an empty conjunction or disjunction.
 	 *
-	 * @param queryBuilder The query builder from whcih this originates.
+	 * @param criteriaBuilder The query builder from whcih this originates.
 	 * @param operator Indicates whether this predicate will funtion
 	 * as a conjunction or disjuntion.
 	 */
-	public CompoundPredicate(QueryBuilderImpl queryBuilder, BooleanOperator operator) {
-		super( queryBuilder );
+	public CompoundPredicate(CriteriaBuilderImpl criteriaBuilder, BooleanOperator operator) {
+		super( criteriaBuilder );
 		this.operator = operator;
 	}
 
 	/**
 	 * Constructs a conjunction or disjunction over the given expressions.
 	 *
-	 * @param queryBuilder The query builder from which this originates.
+	 * @param criteriaBuilder The query builder from which this originates.
 	 * @param operator Indicates whether this predicate will funtion
 	 * as a conjunction or disjuntion.
 	 * @param expressions The expressions to be grouped.
 	 */
 	public CompoundPredicate(
-			QueryBuilderImpl queryBuilder,
+			CriteriaBuilderImpl criteriaBuilder,
 			BooleanOperator operator,
 			Expression<Boolean>... expressions) {
-		this( queryBuilder,  operator );
+		this( criteriaBuilder,  operator );
 		applyExpressions( expressions );
 	}
 
 	/**
 	 * Constructs a conjunction or disjunction over the given expressions.
 	 *
-	 * @param queryBuilder The query builder from whcih this originates.
+	 * @param criteriaBuilder The query builder from whcih this originates.
 	 * @param operator Indicates whether this predicate will funtion
 	 * as a conjunction or disjuntion.
 	 * @param expressions The expressions to be grouped.
 	 */
 	public CompoundPredicate(
-			QueryBuilderImpl queryBuilder,
+			CriteriaBuilderImpl criteriaBuilder,
 			BooleanOperator operator,
 			List<Expression<Boolean>> expressions) {
-		this( queryBuilder,  operator );
+		this( criteriaBuilder,  operator );
 		applyExpressions( expressions );
 	}
 
@@ -110,4 +111,29 @@ public class CompoundPredicate extends AbstractPredicateImpl {
 		}
 	}
 
+	public String render(CriteriaQueryCompiler.RenderingContext renderingContext) {
+		if ( getExpressions().size() == 1 ) {
+			return ( (ExpressionImplementor) getExpressions().get(0) ).render( renderingContext );
+		}
+		final StringBuilder buffer = new StringBuilder();
+		String sep = "";
+		for ( Expression expression : getExpressions() ) {
+			buffer.append( sep )
+					.append( "( " )
+					.append( ( (ExpressionImplementor) expression ).render( renderingContext ) )
+					.append( " )" );
+			sep = operatorTextWithSeparator();
+		}
+		return buffer.toString();
+	}
+
+	private String operatorTextWithSeparator() {
+		return getOperator() == BooleanOperator.AND
+				? " and "
+				: " or ";
+	}
+
+	public String renderProjection(CriteriaQueryCompiler.RenderingContext renderingContext) {
+		return render( renderingContext );
+	}
 }

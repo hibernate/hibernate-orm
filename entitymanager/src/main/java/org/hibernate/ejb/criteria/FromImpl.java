@@ -58,7 +58,7 @@ import org.hibernate.ejb.criteria.expression.EntityTypeExpression;
  *
  * @author Steve Ebersole
  */
-public abstract class FromImpl<Z,X> extends PathImpl<X> implements From<Z,X> {
+public abstract class FromImpl<Z,X> extends PathImpl<X> implements From<Z,X>, TableExpressionMapper {
 	public static final JoinType DEFAULT_JOIN_TYPE = JoinType.INNER;
 
 	/**
@@ -102,22 +102,33 @@ public abstract class FromImpl<Z,X> extends PathImpl<X> implements From<Z,X> {
 	/**
 	 * Special constructor for {@link RootImpl}.
 	 *
-	 * @param queryBuilder The query build
+	 * @param criteriaBuilder The query build
 	 * @param entityType The entity defining this root
 	 */
-    protected FromImpl(QueryBuilderImpl queryBuilder, EntityType<X> entityType) {
-		super( queryBuilder, entityType.getBindableJavaType(), null, null, entityType );
-		this.type = new EntityTypeExpression( queryBuilder, entityType.getBindableJavaType() );
+	@SuppressWarnings({ "unchecked" })
+    protected FromImpl(CriteriaBuilderImpl criteriaBuilder, EntityType<X> entityType) {
+		super( criteriaBuilder, entityType.getBindableJavaType(), null, null, entityType );
+		this.type = new EntityTypeExpression( criteriaBuilder, entityType.getBindableJavaType() );
 	}
 
+	/**
+	 * The general constructor for a {@link From} implementor.
+	 *
+	 * @param criteriaBuilder
+	 * @param javaType
+	 * @param origin
+	 * @param attribute
+	 * @param model
+	 */
+	@SuppressWarnings({ "unchecked" })
 	public FromImpl(
-			QueryBuilderImpl queryBuilder,
+			CriteriaBuilderImpl criteriaBuilder,
 			Class<X> javaType,
 			PathImpl<Z> origin,
 			Attribute<? super Z, ?> attribute,
 			ManagedType<X> model) {
-		super( queryBuilder, javaType, origin, attribute, model );
-		this.type = new EntityTypeExpression( queryBuilder, model.getJavaType() );
+		super( criteriaBuilder, javaType, origin, attribute, model );
+		this.type = new EntityTypeExpression( criteriaBuilder, model.getJavaType() );
 	}
 
 	protected void defineJoinScope(JoinScope<X> joinScope) {
@@ -341,6 +352,7 @@ public abstract class FromImpl<Z,X> extends PathImpl<X> implements From<Z,X> {
 	/**
 	 * {@inheritDoc}
 	 */
+	@SuppressWarnings({ "unchecked" })
 	public <X,Y> Join<X, Y> join(String attributeName, JoinType jt) {
 		if ( jt.equals( JoinType.RIGHT ) ) {
 			throw new UnsupportedOperationException( "RIGHT JOIN not supported" );
@@ -377,6 +389,7 @@ public abstract class FromImpl<Z,X> extends PathImpl<X> implements From<Z,X> {
 	/**
 	 * {@inheritDoc}
 	 */
+	@SuppressWarnings({ "unchecked" })
 	public <X,Y> CollectionJoin<X, Y> joinCollection(String attributeName, JoinType jt) {
 		final Attribute<X,?> attribute = (Attribute<X, ?>) getAttribute( attributeName );
 		if ( ! attribute.isCollection() ) {
@@ -401,6 +414,7 @@ public abstract class FromImpl<Z,X> extends PathImpl<X> implements From<Z,X> {
 	/**
 	 * {@inheritDoc}
 	 */
+	@SuppressWarnings({ "unchecked" })
 	public <X,Y> SetJoin<X, Y> joinSet(String attributeName, JoinType jt) {
 		final Attribute<X,?> attribute = (Attribute<X, ?>) getAttribute( attributeName );
 		if ( ! attribute.isCollection() ) {
@@ -425,6 +439,7 @@ public abstract class FromImpl<Z,X> extends PathImpl<X> implements From<Z,X> {
 	/**
 	 * {@inheritDoc}
 	 */
+	@SuppressWarnings({ "unchecked" })
 	public <X,Y> ListJoin<X, Y> joinList(String attributeName, JoinType jt) {
 		final Attribute<X,?> attribute = (Attribute<X, ?>) getAttribute( attributeName );
 		if ( ! attribute.isCollection() ) {
@@ -449,6 +464,7 @@ public abstract class FromImpl<Z,X> extends PathImpl<X> implements From<Z,X> {
 	/**
 	 * {@inheritDoc}
 	 */
+	@SuppressWarnings({ "unchecked" })
 	public <X, K, V> MapJoin<X, K, V> joinMap(String attributeName, JoinType jt) {
 		final Attribute<X,?> attribute = (Attribute<X, ?>) getAttribute( attributeName );
 		if ( ! attribute.isCollection() ) {
@@ -520,6 +536,7 @@ public abstract class FromImpl<Z,X> extends PathImpl<X> implements From<Z,X> {
 		return fetch( attributeName, DEFAULT_JOIN_TYPE );
 	}
 
+	@SuppressWarnings({ "unchecked" })
 	public <X,Y> Fetch<X, Y> fetch(String attributeName, JoinType jt) {
 		Attribute<X,?> attribute = (Attribute<X, ?>) getAttribute( attributeName );
 		if ( attribute.isCollection() ) {
@@ -545,15 +562,17 @@ public abstract class FromImpl<Z,X> extends PathImpl<X> implements From<Z,X> {
 
 	@Override
 	public <E, C extends Collection<E>> Expression<C> get(PluralAttribute<X, C, E> collection) {
-		return new CollectionExpression<C>( queryBuilder(), collection.getJavaType(), collection );
+		return new CollectionExpression<C>( queryBuilder(), collection.getJavaType(), this, collection );
 	}
 
 	@Override
+	@SuppressWarnings({ "unchecked" })
 	public <K, V, M extends Map<K, V>> Expression<M> get(MapAttribute<X, K, V> map) {
-		return ( Expression<M> ) new CollectionExpression<Map<K, V>>( queryBuilder(), map.getJavaType(), map );
+		return ( Expression<M> ) new CollectionExpression<Map<K, V>>( queryBuilder(), map.getJavaType(), this, map );
 	}
 
 	@Override
+	@SuppressWarnings({ "unchecked" })
 	public <Y> Path<Y> get(String attributeName) {
 		Attribute attribute = getAttribute( attributeName );
 		if ( attribute.isCollection() ) {
@@ -573,6 +592,34 @@ public abstract class FromImpl<Z,X> extends PathImpl<X> implements From<Z,X> {
 		}
 		else {
 			return get( (SingularAttribute<X,Y>) attribute );
+		}
+	}
+
+	@Override
+	public String getPathIdentifier() {
+		return getAlias();
+	}
+
+	@Override
+	public String render(CriteriaQueryCompiler.RenderingContext renderingContext) {
+		prepareAlias( renderingContext );
+		return getAlias();
+	}
+
+	@Override
+	public String renderProjection(CriteriaQueryCompiler.RenderingContext renderingContext) {
+		prepareAlias( renderingContext );
+		return getAlias();
+	}
+
+	public String renderTableExpression(CriteriaQueryCompiler.RenderingContext renderingContext) {
+		prepareAlias( renderingContext );
+		return ( (EntityType) getModel() ).getName() + " as " + getAlias();
+	}
+	
+	public void prepareAlias(CriteriaQueryCompiler.RenderingContext renderingContext) {
+		if ( getAlias() == null ) {
+			setAlias( renderingContext.generateAlias() );
 		}
 	}
 }

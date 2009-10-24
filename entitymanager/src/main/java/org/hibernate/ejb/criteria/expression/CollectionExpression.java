@@ -25,7 +25,9 @@ package org.hibernate.ejb.criteria.expression;
 
 import javax.persistence.metamodel.PluralAttribute;
 import org.hibernate.ejb.criteria.ParameterRegistry;
-import org.hibernate.ejb.criteria.QueryBuilderImpl;
+import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
+import org.hibernate.ejb.criteria.PathImpl;
+import org.hibernate.ejb.criteria.CriteriaQueryCompiler;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
 
@@ -35,19 +37,21 @@ import org.hibernate.persister.collection.CollectionPersister;
  * @author Steve Ebersole
  */
 public class CollectionExpression<C> extends ExpressionImpl<C> {
+	private final PathImpl origin;
 	private final CollectionPersister persister;
 	private final PluralAttribute<?, C, ?> attribute;
 
 	public CollectionExpression(
-			QueryBuilderImpl queryBuilder,
+			CriteriaBuilderImpl criteriaBuilder,
 			Class<C> javaType,
+			PathImpl origin,
 			PluralAttribute<?, C, ?> attribute) {
-		this( queryBuilder, javaType, resolvePersister( queryBuilder, attribute ), attribute );
+		this( criteriaBuilder, javaType, resolvePersister( criteriaBuilder, attribute ), origin, attribute );
 	}
 
-	private static CollectionPersister resolvePersister(QueryBuilderImpl queryBuilder, PluralAttribute attribute) {
+	private static CollectionPersister resolvePersister(CriteriaBuilderImpl criteriaBuilder, PluralAttribute attribute) {
 		SessionFactoryImplementor sfi = (SessionFactoryImplementor)
-				queryBuilder.getEntityManagerFactory().getSessionFactory();
+				criteriaBuilder.getEntityManagerFactory().getSessionFactory();
 		return sfi.getCollectionPersister( resolveRole( attribute ) );
 	}
 
@@ -57,11 +61,13 @@ public class CollectionExpression<C> extends ExpressionImpl<C> {
 	}
 
 	public CollectionExpression(
-			QueryBuilderImpl queryBuilder,
+			CriteriaBuilderImpl criteriaBuilder,
 			Class<C> javaType,
 			CollectionPersister persister,
+			PathImpl origin,
 			PluralAttribute<?, C, ?> attribute) {
-		super(queryBuilder, javaType);
+		super( criteriaBuilder, javaType );
+		this.origin = origin;
 		this.persister = persister;
 		this.attribute = attribute;
 	}
@@ -76,5 +82,13 @@ public class CollectionExpression<C> extends ExpressionImpl<C> {
 
 	public void registerParameters(ParameterRegistry registry) {
 		// none to register
+	}
+
+	public String render(CriteriaQueryCompiler.RenderingContext renderingContext) {
+		return origin.getPathIdentifier() + '.' + getAttribute().getName();
+	}
+
+	public String renderProjection(CriteriaQueryCompiler.RenderingContext renderingContext) {
+		return render( renderingContext );
 	}
 }

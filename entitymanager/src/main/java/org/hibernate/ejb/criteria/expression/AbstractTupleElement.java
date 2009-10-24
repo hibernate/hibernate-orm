@@ -26,7 +26,7 @@ package org.hibernate.ejb.criteria.expression;
 import javax.persistence.TupleElement;
 
 import org.hibernate.ejb.criteria.AbstractNode;
-import org.hibernate.ejb.criteria.QueryBuilderImpl;
+import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
 
 /**
  * TODO : javadoc
@@ -37,8 +37,8 @@ public abstract class AbstractTupleElement<X> extends AbstractNode implements Tu
 	private final Class<X> javaType;
 	private String alias;
 
-	protected AbstractTupleElement(QueryBuilderImpl queryBuilder, Class<X> javaType) {
-		super( queryBuilder );
+	protected AbstractTupleElement(CriteriaBuilderImpl criteriaBuilder, Class<X> javaType) {
+		super( criteriaBuilder );
 		this.javaType = javaType;
 	}
 

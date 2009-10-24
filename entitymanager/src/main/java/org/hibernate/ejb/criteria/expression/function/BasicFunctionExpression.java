@@ -25,7 +25,8 @@ package org.hibernate.ejb.criteria.expression.function;
 
 import org.hibernate.ejb.criteria.ParameterRegistry;
 
-import org.hibernate.ejb.criteria.QueryBuilderImpl;
+import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
+import org.hibernate.ejb.criteria.CriteriaQueryCompiler;
 import org.hibernate.ejb.criteria.expression.ExpressionImpl;
 
 /**
@@ -40,10 +41,10 @@ public class BasicFunctionExpression<X>
 	private final String functionName;
 
 	public BasicFunctionExpression(
-			QueryBuilderImpl queryBuilder,
+			CriteriaBuilderImpl criteriaBuilder,
 			Class<X> javaType,
 			String functionName) {
-		super( queryBuilder, javaType );
+		super( criteriaBuilder, javaType );
 		this.functionName = functionName;
 	}
 
@@ -61,5 +62,13 @@ public class BasicFunctionExpression<X>
 
 	public void registerParameters(ParameterRegistry registry) {
 		// nothing to do here...
+	}
+
+	public String render(CriteriaQueryCompiler.RenderingContext renderingContext) {
+		return getFunctionName() + "()";
+	}
+
+	public String renderProjection(CriteriaQueryCompiler.RenderingContext renderingContext) {
+		return render( renderingContext );
 	}
 }

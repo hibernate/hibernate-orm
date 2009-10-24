@@ -21,22 +21,18 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.ejb.criteria.expression.function;
+package org.hibernate.ejb.criteria.expression;
 
 import javax.persistence.criteria.Expression;
-import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
+
+import org.hibernate.ejb.criteria.CriteriaQueryCompiler;
 
 /**
- * Models the ANSI SQL <tt>ABS</tt> function.
+ * TODO : javadoc
  *
  * @author Steve Ebersole
  */
-public class AbsFunction<N extends Number>
-		extends ParameterizedFunctionExpression<N> {
-
-	public static final String NAME = "abs";
-
-	public AbsFunction(CriteriaBuilderImpl criteriaBuilder, Expression expression) {
-		super( criteriaBuilder, expression.getJavaType(), NAME, expression );
-	}
+public interface ExpressionImplementor<T> extends Expression<T> {
+	public String render(CriteriaQueryCompiler.RenderingContext renderingContext);
+	public String renderProjection(CriteriaQueryCompiler.RenderingContext renderingContext);
 }

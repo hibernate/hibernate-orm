@@ -28,7 +28,7 @@ import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Selection;
 
 import org.hibernate.ejb.criteria.expression.ExpressionImpl;
-import org.hibernate.ejb.criteria.QueryBuilderImpl;
+import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
 
 /**
  * Basic template support for {@link Predicate} implementors providing
@@ -39,8 +39,8 @@ import org.hibernate.ejb.criteria.QueryBuilderImpl;
 public abstract class AbstractPredicateImpl extends ExpressionImpl<Boolean> implements Predicate {
 	private boolean negated;
 
-	protected AbstractPredicateImpl(QueryBuilderImpl queryBuilder) {
-		super( queryBuilder, Boolean.class );
+	protected AbstractPredicateImpl(CriteriaBuilderImpl criteriaBuilder) {
+		super( criteriaBuilder, Boolean.class );
 	}
 
 	public boolean isNegated() {

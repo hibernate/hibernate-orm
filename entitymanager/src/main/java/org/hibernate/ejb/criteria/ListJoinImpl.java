@@ -38,12 +38,12 @@ import org.hibernate.ejb.criteria.expression.ListIndexExpression;
  */
 public class ListJoinImpl<O,E> extends JoinImpl<O,E> implements JoinImplementors.ListJoinImplementor<O,E> {
 	public ListJoinImpl(
-			QueryBuilderImpl queryBuilder,
+			CriteriaBuilderImpl criteriaBuilder,
 			Class<E> javaType,
 			PathImpl<O> lhs,
 			ListAttribute<? super O, ?> joinProperty,
 			JoinType joinType) {
-		super( queryBuilder, javaType, lhs, joinProperty, joinType );
+		super( criteriaBuilder, javaType, lhs, joinProperty, joinType );
 	}
 
 	@Override
@@ -60,7 +60,7 @@ public class ListJoinImpl<O,E> extends JoinImpl<O,E> implements JoinImplementors
 	 * {@inheritDoc}
 	 */
 	public Expression<Integer> index() {
-		return new ListIndexExpression( queryBuilder(), getAttribute() );
+		return new ListIndexExpression( queryBuilder(), this, getAttribute() );
 	}
 
 	@Override

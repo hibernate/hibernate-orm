@@ -24,7 +24,7 @@
 package org.hibernate.ejb.criteria.expression.function;
 
 import org.hibernate.ejb.criteria.ParameterRegistry;
-import org.hibernate.ejb.criteria.QueryBuilderImpl;
+import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
 import org.hibernate.ejb.criteria.expression.ExpressionImpl;
 
 /**
@@ -41,10 +41,10 @@ public class CastFunction<T,Y> extends BasicFunctionExpression<T> implements Fun
 	private final ExpressionImpl<Y> castSource;
 
 	public CastFunction(
-			QueryBuilderImpl queryBuilder,
+			CriteriaBuilderImpl criteriaBuilder,
 			Class<T> javaType,
 			ExpressionImpl<Y> castSource) {
-		super( queryBuilder, javaType, CAST_NAME );
+		super( criteriaBuilder, javaType, CAST_NAME );
 		this.castSource = castSource;
 	}
 

@@ -39,12 +39,12 @@ public class SetJoinImpl<O,E>
 		implements JoinImplementors.SetJoinImplementor<O,E> {
 
 	public SetJoinImpl(
-			QueryBuilderImpl queryBuilder,
+			CriteriaBuilderImpl criteriaBuilder,
 			Class<E> javaType, 
 			PathImpl<O> lhs,
 			SetAttribute<? super O, ?> joinProperty,
 			JoinType joinType) {
-		super(queryBuilder, javaType, lhs, joinProperty, joinType);
+		super( criteriaBuilder, javaType, lhs, joinProperty, joinType);
 	}
 
 	@Override

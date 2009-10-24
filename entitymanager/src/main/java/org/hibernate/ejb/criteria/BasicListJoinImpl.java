@@ -41,12 +41,12 @@ public class BasicListJoinImpl<O,E>
 		implements JoinImplementors.ListJoinImplementor<O,E> {
 
 	public BasicListJoinImpl(
-			QueryBuilderImpl queryBuilder,
+			CriteriaBuilderImpl criteriaBuilder,
 			Class<E> javaType,
 			PathImpl<O> lhs,
 			ListAttribute<? super O, ?> joinProperty,
 			JoinType joinType) {
-		super(queryBuilder, javaType, lhs, joinProperty, joinType);
+		super( criteriaBuilder, javaType, lhs, joinProperty, joinType);
 	}
 
 	@Override
@@ -60,7 +60,7 @@ public class BasicListJoinImpl<O,E>
     }
 
 	public Expression<Integer> index() {
-		return new ListIndexExpression( queryBuilder(), getAttribute() );
+		return new ListIndexExpression( queryBuilder(), this, getAttribute() );
 	}
 
 	@Override

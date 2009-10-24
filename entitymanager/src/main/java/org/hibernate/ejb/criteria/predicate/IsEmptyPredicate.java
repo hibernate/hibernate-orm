@@ -25,7 +25,8 @@ package org.hibernate.ejb.criteria.predicate;
 
 import java.util.Collection;
 import org.hibernate.ejb.criteria.ParameterRegistry;
-import org.hibernate.ejb.criteria.QueryBuilderImpl;
+import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
+import org.hibernate.ejb.criteria.CriteriaQueryCompiler;
 import org.hibernate.ejb.criteria.expression.CollectionExpression;
 import org.hibernate.ejb.criteria.expression.UnaryOperatorExpression;
 
@@ -41,9 +42,9 @@ public class IsEmptyPredicate<C extends Collection>
 	private final CollectionExpression<C> collectionExpression;
 
 	public IsEmptyPredicate(
-			QueryBuilderImpl queryBuilder,
+			CriteriaBuilderImpl criteriaBuilder,
 			CollectionExpression<C> collectionExpression) {
-		super(queryBuilder);
+		super( criteriaBuilder );
 		this.collectionExpression = collectionExpression;
 	}
 
@@ -55,4 +56,11 @@ public class IsEmptyPredicate<C extends Collection>
 		// nothing to do
 	}
 
+	public String render(CriteriaQueryCompiler.RenderingContext renderingContext) {
+		return getOperand().render( renderingContext ) + " is empty";
+	}
+
+	public String renderProjection(CriteriaQueryCompiler.RenderingContext renderingContext) {
+		return render( renderingContext );
+	}
 }

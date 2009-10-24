@@ -39,12 +39,12 @@ public class BasicCollectionJoinImpl<O,E>
 		implements JoinImplementors.CollectionJoinImplementor<O,E> {
 
 	public BasicCollectionJoinImpl(
-			QueryBuilderImpl queryBuilder,
+			CriteriaBuilderImpl criteriaBuilder,
 			Class<E> javaType,
 			PathImpl<O> lhs,
 			CollectionAttribute<? super O, E> joinProperty,
 			JoinType joinType) {
-		super(queryBuilder, javaType, lhs, joinProperty, joinType);
+		super( criteriaBuilder, javaType, lhs, joinProperty, joinType);
 	}
 
 	@Override

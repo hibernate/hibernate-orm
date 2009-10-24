@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.ArrayList;
+import java.util.Collection;
 import javax.persistence.criteria.AbstractQuery;
 import javax.persistence.criteria.Root;
 import javax.persistence.criteria.Predicate;
@@ -37,7 +38,12 @@ import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.ParameterExpression;
 import javax.persistence.criteria.Selection;
 import javax.persistence.criteria.Subquery;
+import javax.persistence.criteria.Join;
+import javax.persistence.criteria.Fetch;
+import javax.persistence.criteria.JoinType;
 import javax.persistence.metamodel.EntityType;
+
+import org.hibernate.ejb.criteria.expression.ExpressionImplementor;
 
 /**
  * Models basic query structure.  Used as a delegate in implementing both
@@ -52,14 +58,14 @@ import javax.persistence.metamodel.EntityType;
  */
 public class QueryStructure<T> {
 	private final AbstractQuery<T> owner;
-	private final QueryBuilderImpl queryBuilder;
+	private final CriteriaBuilderImpl criteriaBuilder;
 
-	public QueryStructure(AbstractQuery<T> owner, QueryBuilderImpl queryBuilder) {
+	public QueryStructure(AbstractQuery<T> owner, CriteriaBuilderImpl criteriaBuilder) {
 		this.owner = owner;
-		this.queryBuilder = queryBuilder;
+		this.criteriaBuilder = criteriaBuilder;
 	}
 
-	private boolean distinction;
+	private boolean distinct;
 	private Selection<? extends T> selection;
 	private Set<Root<?>> roots = new HashSet<Root<?>>();
 	private Predicate restriction;
@@ -101,12 +107,12 @@ public class QueryStructure<T> {
 
 	// SELECTION ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-	public boolean isDistinction() {
-		return distinction;
+	public boolean isDistinct() {
+		return distinct;
 	}
 
-	public void setDistinction(boolean distinction) {
-		this.distinction = distinction;
+	public void setDistinct(boolean distinct) {
+		this.distinct = distinct;
 	}
 
 	public Selection<? extends T> getSelection() {
@@ -125,7 +131,7 @@ public class QueryStructure<T> {
 	}
 
 	public <X> Root<X> from(Class<X> entityClass) {
-		EntityType<X> entityType = queryBuilder.getEntityManagerFactory()
+		EntityType<X> entityType = criteriaBuilder.getEntityManagerFactory()
 				.getMetamodel()
 				.entity( entityClass );
 		if ( entityType == null ) {
@@ -135,7 +141,7 @@ public class QueryStructure<T> {
 	}
 
 	public <X> Root<X> from(EntityType<X> entityType) {
-		RootImpl<X> root = new RootImpl<X>( queryBuilder, entityType );
+		RootImpl<X> root = new RootImpl<X>( criteriaBuilder, entityType );
 		roots.add( root );
 		return root;
 	}
@@ -194,8 +200,111 @@ public class QueryStructure<T> {
 	}
 
 	public <U> Subquery<U> subquery(Class<U> subqueryType) {
-		CriteriaSubqueryImpl<U> subquery = new CriteriaSubqueryImpl<U>( queryBuilder, subqueryType, owner );
+		CriteriaSubqueryImpl<U> subquery = new CriteriaSubqueryImpl<U>( criteriaBuilder, subqueryType, owner );
 		internalGetSubqueries().add( subquery );
 		return subquery;
+	}
+
+	@SuppressWarnings({ "unchecked" })
+	public void render(StringBuilder jpaqlQuery, CriteriaQueryCompiler.RenderingContext renderingContext) {
+		jpaqlQuery.append( "select " );
+		if ( isDistinct() ) {
+			jpaqlQuery.append( " distinct " );
+		}
+		if ( getSelection() == null ) {
+			// we should have only a single root (query validation should have checked this...)
+			final Root root = getRoots().iterator().next();
+			( (TableExpressionMapper) root ).prepareAlias( renderingContext );
+			jpaqlQuery.append( root.getAlias() );
+		}
+		else {
+			( ( ExpressionImplementor ) getSelection() ).renderProjection( renderingContext );
+		}
+
+		jpaqlQuery.append( " from " );
+		String sep = "";
+		for ( Root root : getRoots() ) {
+			( (TableExpressionMapper) root ).prepareAlias( renderingContext );
+			jpaqlQuery.append( sep );
+			jpaqlQuery.append( ( ( TableExpressionMapper ) root ).renderTableExpression( renderingContext ) );
+			sep = ", ";
+		}
+
+		for ( Root root : getRoots() ) {
+			renderJoins( jpaqlQuery, renderingContext, root.getJoins() );
+			renderFetches( jpaqlQuery, renderingContext, root.getFetches() );
+		}
+
+		if ( getRestriction() != null) {
+			jpaqlQuery.append( " where " )
+					.append( ( (ExpressionImplementor) getRestriction() ).render( renderingContext ) );
+		}
+
+		if ( ! getGroupings().isEmpty() ) {
+			jpaqlQuery.append( " group by " );
+			sep = "";
+			for ( Expression grouping : getGroupings() ) {
+				jpaqlQuery.append( sep )
+						.append( ( (ExpressionImplementor) grouping ).render( renderingContext ) );
+				sep = ", ";
+			}
+
+			if ( getHaving() != null ) {
+				jpaqlQuery.append( " having " )
+						.append( ( (ExpressionImplementor) getHaving() ).render( renderingContext ) );
+			}
+		}
+	}
+
+	@SuppressWarnings({ "unchecked" })
+	private void renderJoins(
+			StringBuilder jpaqlQuery,
+			CriteriaQueryCompiler.RenderingContext renderingContext,
+			Collection<Join<?,?>> joins) {
+		if ( joins == null ) {
+			return;
+		}
+
+		for ( Join join : joins ) {
+			( (TableExpressionMapper) join ).prepareAlias( renderingContext );
+			jpaqlQuery.append( renderJoinType( join.getJoinType() ) )
+					.append( ( ( TableExpressionMapper ) join ).renderTableExpression( renderingContext ) );
+			renderJoins( jpaqlQuery, renderingContext, join.getJoins() );
+			renderFetches( jpaqlQuery, renderingContext, join.getFetches() );
+		}
+	}
+
+	private String renderJoinType(JoinType joinType) {
+		switch ( joinType ) {
+			case INNER: {
+				return " inner join ";
+			}
+			case LEFT: {
+				return " left join ";
+			}
+			case RIGHT: {
+				return " right join ";
+			}
+		}
+		throw new IllegalStateException( "Unknown join type " + joinType );
+	}
+
+	@SuppressWarnings({ "unchecked" })
+	private void renderFetches(
+			StringBuilder jpaqlQuery,
+			CriteriaQueryCompiler.RenderingContext renderingContext,
+			Collection<Fetch> fetches) {
+		if ( fetches == null ) {
+			return;
+		}
+
+		for ( Fetch fetch : fetches ) {
+			( (TableExpressionMapper) fetch ).prepareAlias( renderingContext );
+			jpaqlQuery.append( renderJoinType( fetch.getJoinType() ) )
+					.append( "fetch " )
+					.append( ( ( TableExpressionMapper ) fetch ).renderTableExpression( renderingContext ) );
+
+			renderFetches( jpaqlQuery, renderingContext, fetch.getFetches() );
+		}
 	}
 }

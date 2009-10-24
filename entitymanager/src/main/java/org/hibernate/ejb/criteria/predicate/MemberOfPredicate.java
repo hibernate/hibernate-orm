@@ -26,7 +26,8 @@ package org.hibernate.ejb.criteria.predicate;
 import java.util.Collection;
 import javax.persistence.criteria.Expression;
 import org.hibernate.ejb.criteria.ParameterRegistry;
-import org.hibernate.ejb.criteria.QueryBuilderImpl;
+import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
+import org.hibernate.ejb.criteria.CriteriaQueryCompiler;
 import org.hibernate.ejb.criteria.expression.CollectionExpression;
 import org.hibernate.ejb.criteria.expression.LiteralExpression;
 
@@ -42,21 +43,21 @@ public class MemberOfPredicate<E, C extends Collection<E>>
 	private final CollectionExpression<C> collectionExpression;
 
 	public MemberOfPredicate(
-			QueryBuilderImpl queryBuilder,
+			CriteriaBuilderImpl criteriaBuilder,
 			Expression<E> elementExpression,
 			CollectionExpression<C> collectionExpression) {
-		super(queryBuilder);
+		super( criteriaBuilder );
 		this.elementExpression = elementExpression;
 		this.collectionExpression = collectionExpression;
 	}
 
 	public MemberOfPredicate(
-			QueryBuilderImpl queryBuilder,
+			CriteriaBuilderImpl criteriaBuilder,
 			E element,
 			CollectionExpression<C> collectionExpression) {
 		this(
-				queryBuilder,
-				new LiteralExpression<E>( queryBuilder, element ),
+				criteriaBuilder,
+				new LiteralExpression<E>( criteriaBuilder, element ),
 				collectionExpression
 		);
 	}
@@ -74,4 +75,12 @@ public class MemberOfPredicate<E, C extends Collection<E>>
 		Helper.possibleParameter( getElementExpression(), registry );
 	}
 
+	public String render(CriteriaQueryCompiler.RenderingContext renderingContext) {
+		return ( isNegated() ? "not " : "" ) + "member of "
+				+ collectionExpression.render( renderingContext );
+	}
+
+	public String renderProjection(CriteriaQueryCompiler.RenderingContext renderingContext) {
+		return render( renderingContext );
+	}
 }

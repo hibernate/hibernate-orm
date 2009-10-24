@@ -23,8 +23,11 @@
  */
 package org.hibernate.ejb.criteria.expression;
 
+import javax.persistence.TypedQuery;
+
 import org.hibernate.ejb.criteria.ParameterRegistry;
-import org.hibernate.ejb.criteria.QueryBuilderImpl;
+import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
+import org.hibernate.ejb.criteria.CriteriaQueryCompiler;
 
 /**
  * Represents a literal expression.
@@ -34,16 +37,17 @@ import org.hibernate.ejb.criteria.QueryBuilderImpl;
 public class LiteralExpression<T> extends ExpressionImpl<T> {
 	private final T literal;
 
-	public LiteralExpression(QueryBuilderImpl queryBuilder, T literal) {
-		this( queryBuilder, (Class<T>) determineClass( literal ), literal );
+	@SuppressWarnings({ "unchecked" })
+	public LiteralExpression(CriteriaBuilderImpl criteriaBuilder, T literal) {
+		this( criteriaBuilder, (Class<T>) determineClass( literal ), literal );
 	}
 
 	private static Class determineClass(Object literal) {
 		return literal == null ? null : literal.getClass();
 	}
 
-	public LiteralExpression(QueryBuilderImpl queryBuilder, Class<T> type, T literal) {
-		super( queryBuilder, type );
+	public LiteralExpression(CriteriaBuilderImpl criteriaBuilder, Class<T> type, T literal) {
+		super( criteriaBuilder, type );
 		this.literal = literal;
 	}
 
@@ -53,5 +57,21 @@ public class LiteralExpression<T> extends ExpressionImpl<T> {
 
 	public void registerParameters(ParameterRegistry registry) {
 		// nothign to do
+	}
+
+	public String render(CriteriaQueryCompiler.RenderingContext renderingContext) {
+		final String parameterName = renderingContext.generateParameterName();
+		renderingContext.registerImplicitParameterBinding(
+				new CriteriaQueryCompiler.ImplicitParameterBinding() {
+					public void bind(TypedQuery typedQuery) {
+						typedQuery.setParameter( parameterName, getLiteral() );
+					}
+				}
+		);
+		return ':' + parameterName;
+	}
+
+	public String renderProjection(CriteriaQueryCompiler.RenderingContext renderingContext) {
+		return render( renderingContext );
 	}
 }

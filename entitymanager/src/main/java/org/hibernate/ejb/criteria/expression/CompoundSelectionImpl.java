@@ -27,9 +27,8 @@ import java.util.List;
 import javax.persistence.criteria.CompoundSelection;
 import javax.persistence.criteria.Selection;
 
-import org.hibernate.ejb.criteria.ParameterContainer;
 import org.hibernate.ejb.criteria.ParameterRegistry;
-import org.hibernate.ejb.criteria.QueryBuilderImpl;
+import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
 
 /**
  * The Hibernate implementation of the JPA {@link CompoundSelection}
@@ -41,10 +40,10 @@ public class CompoundSelectionImpl<X> extends SelectionImpl<X> implements Compou
 	private List<Selection<?>> selectionItems;
 
 	public CompoundSelectionImpl(
-			QueryBuilderImpl queryBuilder,
+			CriteriaBuilderImpl criteriaBuilder,
 			Class<X> javaType,
 			List<Selection<?>> selectionItems) {
-		super( queryBuilder, javaType );
+		super( criteriaBuilder, javaType );
 		this.selectionItems = selectionItems;
 	}
 

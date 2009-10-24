@@ -27,7 +27,7 @@ import java.util.List;
 import javax.persistence.criteria.Selection;
 
 import org.hibernate.ejb.criteria.ParameterContainer;
-import org.hibernate.ejb.criteria.QueryBuilderImpl;
+import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
 
 /**
  * The Hibernate implementation of the JPA {@link Selection}
@@ -38,8 +38,8 @@ import org.hibernate.ejb.criteria.QueryBuilderImpl;
 public abstract class SelectionImpl<X>
 		extends AbstractTupleElement<X>
 		implements Selection<X>, ParameterContainer {
-	public SelectionImpl(QueryBuilderImpl queryBuilder, Class<X> javaType) {
-		super( queryBuilder, javaType );
+	public SelectionImpl(CriteriaBuilderImpl criteriaBuilder, Class<X> javaType) {
+		super( criteriaBuilder, javaType );
 	}
 
 	public Selection<X> alias(String alias) {

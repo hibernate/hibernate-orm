@@ -38,6 +38,8 @@ import javax.persistence.Tuple;
 import javax.persistence.criteria.Subquery;
 import javax.persistence.metamodel.EntityType;
 
+import org.hibernate.ejb.criteria.expression.ExpressionImplementor;
+
 /**
  * The Hibernate implementation of the JPA {@link CriteriaQuery} contract.  Mostly a set of delegation to its
  * internal {@link QueryStructure}.
@@ -52,11 +54,11 @@ public class CriteriaQueryImpl<T> extends AbstractNode implements CriteriaQuery<
 
 
 	public CriteriaQueryImpl(
-			QueryBuilderImpl queryBuilder,
+			CriteriaBuilderImpl criteriaBuilder,
 			Class<T> returnType) {
-		super( queryBuilder );
+		super( criteriaBuilder );
 		this.returnType = returnType;
-		this.queryStructure = new QueryStructure<T>( this, queryBuilder );
+		this.queryStructure = new QueryStructure<T>( this, criteriaBuilder );
 	}
 
 	/**
@@ -73,7 +75,7 @@ public class CriteriaQueryImpl<T> extends AbstractNode implements CriteriaQuery<
 	 * {@inheritDoc}
 	 */
 	public CriteriaQuery<T> distinct(boolean applyDistinction) {
-		queryStructure.setDistinction( applyDistinction );
+		queryStructure.setDistinct( applyDistinction );
 		return this;
 	}
 
@@ -81,7 +83,7 @@ public class CriteriaQueryImpl<T> extends AbstractNode implements CriteriaQuery<
 	 * {@inheritDoc}
 	 */
 	public boolean isDistinct() {
-		return queryStructure.isDistinction();
+		return queryStructure.isDistinct();
 	}
 
 	/**
@@ -330,7 +332,26 @@ public class CriteriaQueryImpl<T> extends AbstractNode implements CriteriaQuery<
 		return true;
 	}
 
-	public String render() {
-		return null;
+	public CriteriaQueryCompiler.RenderedCriteriaQuery render(CriteriaQueryCompiler.RenderingContext renderingContext) {
+		final StringBuilder jpaqlQuery = new StringBuilder();
+
+		queryStructure.render( jpaqlQuery, renderingContext );
+
+		if ( ! getOrderList().isEmpty() ) {
+			jpaqlQuery.append( " order by " );
+			String sep = "";
+			for ( Order orderSpec : getOrderList() ) {
+				jpaqlQuery.append( sep )
+						.append( ( ( ExpressionImplementor ) orderSpec.getExpression() ).render( renderingContext ) )
+						.append( orderSpec.isAscending() ? " asc" : " desc" );
+				sep = ", ";
+			}
+		}
+
+		return new CriteriaQueryCompiler.RenderedCriteriaQuery() {
+			public String getQueryString() {
+				return jpaqlQuery.toString();
+			}
+		};
 	}
 }

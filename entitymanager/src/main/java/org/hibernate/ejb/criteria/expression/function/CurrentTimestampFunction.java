@@ -24,7 +24,7 @@
 package org.hibernate.ejb.criteria.expression.function;
 
 import java.sql.Timestamp;
-import org.hibernate.ejb.criteria.QueryBuilderImpl;
+import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
 
 /**
  * Models the ANSI SQL <tt>CURRENT_TIMESTAMP</tt> function.
@@ -34,7 +34,7 @@ import org.hibernate.ejb.criteria.QueryBuilderImpl;
 public class CurrentTimestampFunction extends BasicFunctionExpression<Timestamp> {
 	public static final String NAME = "current_timestamp";
 
-	public CurrentTimestampFunction(QueryBuilderImpl queryBuilder) {
-		super( queryBuilder, Timestamp.class, NAME );
+	public CurrentTimestampFunction(CriteriaBuilderImpl criteriaBuilder) {
+		super( criteriaBuilder, Timestamp.class, NAME );
 	}
 }

@@ -26,7 +26,7 @@ package org.hibernate.ejb.criteria.expression.function;
 import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.CriteriaBuilder.Trimspec;
 import org.hibernate.ejb.criteria.ParameterRegistry;
-import org.hibernate.ejb.criteria.QueryBuilderImpl;
+import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
 import org.hibernate.ejb.criteria.expression.LiteralExpression;
 
 /**
@@ -44,52 +44,52 @@ public class TrimFunction extends BasicFunctionExpression<String> {
 	private final Expression<String> trimSource;
 
 	public TrimFunction(
-			QueryBuilderImpl queryBuilder,
+			CriteriaBuilderImpl criteriaBuilder,
 			Trimspec trimspec,
 			Expression<Character> trimCharacter,
 			Expression<String> trimSource) {
-		super( queryBuilder, String.class, NAME );
+		super( criteriaBuilder, String.class, NAME );
 		this.trimspec = trimspec;
 		this.trimCharacter = trimCharacter;
 		this.trimSource = trimSource;
 	}
 
 	public TrimFunction(
-			QueryBuilderImpl queryBuilder,
+			CriteriaBuilderImpl criteriaBuilder,
 			Trimspec trimspec,
 			char trimCharacter,
 			Expression<String> trimSource) {
-		super( queryBuilder, String.class, NAME );
+		super( criteriaBuilder, String.class, NAME );
 		this.trimspec = trimspec;
-		this.trimCharacter = new LiteralExpression<Character>( queryBuilder, trimCharacter );
+		this.trimCharacter = new LiteralExpression<Character>( criteriaBuilder, trimCharacter );
 		this.trimSource = trimSource;
 	}
 
 	public TrimFunction(
-			QueryBuilderImpl queryBuilder,
+			CriteriaBuilderImpl criteriaBuilder,
 			Expression<String> trimSource) {
-		this( queryBuilder, DEFAULT_TRIMSPEC, DEFAULT_TRIM_CHAR, trimSource );
+		this( criteriaBuilder, DEFAULT_TRIMSPEC, DEFAULT_TRIM_CHAR, trimSource );
 	}
 
 	public TrimFunction(
-			QueryBuilderImpl queryBuilder,
+			CriteriaBuilderImpl criteriaBuilder,
 			Expression<Character> trimCharacter,
 			Expression<String> trimSource) {
-		this( queryBuilder, DEFAULT_TRIMSPEC, trimCharacter, trimSource );
+		this( criteriaBuilder, DEFAULT_TRIMSPEC, trimCharacter, trimSource );
 	}
 
 	public TrimFunction(
-			QueryBuilderImpl queryBuilder,
+			CriteriaBuilderImpl criteriaBuilder,
 			char trimCharacter,
 			Expression<String> trimSource) {
-		this( queryBuilder, DEFAULT_TRIMSPEC, trimCharacter, trimSource );
+		this( criteriaBuilder, DEFAULT_TRIMSPEC, trimCharacter, trimSource );
 	}
 
 	public TrimFunction(
-			QueryBuilderImpl queryBuilder,
+			CriteriaBuilderImpl criteriaBuilder,
 			Trimspec trimspec,
 			Expression<String> trimSource) {
-		this( queryBuilder, trimspec, DEFAULT_TRIM_CHAR, trimSource );
+		this( criteriaBuilder, trimspec, DEFAULT_TRIM_CHAR, trimSource );
 	}
 
 	public Expression<Character> getTrimCharacter() {

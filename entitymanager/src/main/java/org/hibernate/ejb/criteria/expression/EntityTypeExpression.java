@@ -24,7 +24,8 @@
 package org.hibernate.ejb.criteria.expression;
 
 import org.hibernate.ejb.criteria.ParameterRegistry;
-import org.hibernate.ejb.criteria.QueryBuilderImpl;
+import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
+import org.hibernate.ejb.criteria.CriteriaQueryCompiler;
 
 /**
  * TODO : javadoc
@@ -32,12 +33,20 @@ import org.hibernate.ejb.criteria.QueryBuilderImpl;
  * @author Steve Ebersole
  */
 public class EntityTypeExpression<T> extends ExpressionImpl<T> {
-	public EntityTypeExpression(QueryBuilderImpl queryBuilder, Class<T> javaType) {
-		super( queryBuilder, javaType );
+	public EntityTypeExpression(CriteriaBuilderImpl criteriaBuilder, Class<T> javaType) {
+		super( criteriaBuilder, javaType );
 	}
 
 	public void registerParameters(ParameterRegistry registry) {
 		// nothign to do
 	}
 
+	public String render(CriteriaQueryCompiler.RenderingContext renderingContext) {
+		// todo : is it valid for this to get rendered into the query itself?
+		throw new IllegalArgumentException( "Unexpected call on EntityTypeExpression#render" );
+	}
+
+	public String renderProjection(CriteriaQueryCompiler.RenderingContext renderingContext) {
+		return render( renderingContext );
+	}
 }

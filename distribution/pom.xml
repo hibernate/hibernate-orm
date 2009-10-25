@@ -55,6 +55,15 @@
                             <descriptor>src/assembly/hibernate-all.xml</descriptor>
                             <descriptor>src/assembly/dist.xml</descriptor>
                         </descriptors>
+                        <archive>
+                            <manifest>
+                                <addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
+                                <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+                            </manifest>
+                            <manifestEntries>
+                                <Implementation-URL>http://hibernate.org</Implementation-URL>
+                            </manifestEntries>
+                        </archive>
                     </configuration>
                 </plugin>
             </plugins>

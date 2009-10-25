@@ -32,7 +32,6 @@ import junit.framework.TestCase;
 import junit.framework.Test;
 
 import org.hibernate.HibernateException;
-import org.hibernate.dialect.resolver.DialectFactory;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.MySQLDialect;
@@ -40,7 +39,6 @@ import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.DerbyDialect;
 import org.hibernate.dialect.IngresDialect;
 import org.hibernate.dialect.SQLServerDialect;
-import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.dialect.InformixDialect;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.Oracle8iDialect;
@@ -48,6 +46,8 @@ import org.hibernate.dialect.Oracle9iDialect;
 import org.hibernate.dialect.Oracle10gDialect;
 import org.hibernate.dialect.TestingDialects;
 import org.hibernate.dialect.Mocks;
+import org.hibernate.dialect.SybaseASE15Dialect;
+import org.hibernate.dialect.SybaseAnywhereDialect;
 import org.hibernate.cfg.Environment;
 
 /**
@@ -113,8 +113,9 @@ public class DialectFactoryTest extends TestCase {
 		testDetermination( "INGRES", IngresDialect.class );
 		testDetermination( "Microsoft SQL Server Database", SQLServerDialect.class );
 		testDetermination( "Microsoft SQL Server", SQLServerDialect.class );
-		testDetermination( "Sybase SQL Server", SybaseDialect.class );
-		testDetermination( "Adaptive Server Enterprise", SybaseDialect.class );
+		testDetermination( "Sybase SQL Server", SybaseASE15Dialect.class );
+		testDetermination( "Adaptive Server Enterprise", SybaseASE15Dialect.class );
+		testDetermination( "Adaptive Server Anywhere", SybaseAnywhereDialect.class );
 		testDetermination( "Informix Dynamic Server", InformixDialect.class );
 		testDetermination( "DB2/NT", DB2Dialect.class );
 		testDetermination( "DB2/LINUX", DB2Dialect.class );

@@ -25,9 +25,9 @@
   ~
   -->
 
-<assembly xmlns="http://maven.apache.org/POM/4.0.0"
+<assembly xmlns="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.0"
           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/assembly-1.1.0-SNAPSHOT.xsd">
+          xsi:schemaLocation="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.0 http://maven.apache.org/xsd/assembly-1.1.0.xsd">
 
     <!--
         Take the 'core' resoures and build a jar, ala the legacy hibernate3.jar
@@ -46,6 +46,10 @@
             <includes>
                 <include>org.hibernate:*</include>
             </includes>
+            <excludes>
+                <exclude>org.hibernate:hibernate-tools:*</exclude>
+                <exclude>org.hibernate:jtidy:*</exclude>
+            </excludes>
         </dependencySet>
     </dependencySets>
 

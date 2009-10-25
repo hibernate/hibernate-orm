@@ -107,6 +107,21 @@
             <artifactId>hibernate-proxool</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>hibernate-annotations</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>hibernate-entitymanager</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>hibernate-envers</artifactId>
+            <version>${project.version}</version>
+        </dependency>
 
         <!-- optional deps for bytecode providers since they are optional on core -->
         <dependency>

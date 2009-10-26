@@ -51,7 +51,6 @@ import org.hibernate.util.ReflectHelper;
  * @author Steve Ebersole
  */
 public class PojoComponentTuplizer extends AbstractComponentTuplizer {
-
 	private final Class componentClass;
 	private ReflectionOptimizer optimizer;
 	private final Getter parentGetter;

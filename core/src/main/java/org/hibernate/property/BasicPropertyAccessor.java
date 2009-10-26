@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
- * indicated by the @author tags or express copyright attribution
- * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * Copyright (c) 2009 by Red Hat Inc and/or its affiliates or by
+ * third-party contributors as indicated by either @author tags or express
+ * copyright attribution statements applied by the authors.  All
+ * third-party contributions are distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,13 +20,13 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.property;
 
 import java.beans.Introspector;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Member;
 import java.util.Map;
 
 import org.slf4j.Logger;
@@ -164,6 +164,9 @@ public class BasicPropertyAccessor implements PropertyAccessor {
 			this.propertyName=propertyName;
 		}
 
+		/**
+		 * {@inheritDoc}
+		 */
 		public Object get(Object target) throws HibernateException {
 			try {
 				return method.invoke(target, null);
@@ -202,18 +205,37 @@ public class BasicPropertyAccessor implements PropertyAccessor {
 			}
 		}
 
+		/**
+		 * {@inheritDoc}
+		 */
 		public Object getForInsert(Object target, Map mergeMap, SessionImplementor session) {
 			return get( target );
 		}
 
+		/**
+		 * {@inheritDoc}
+		 */
 		public Class getReturnType() {
 			return method.getReturnType();
 		}
 
+		/**
+		 * {@inheritDoc}
+		 */
+		public Member getMember() {
+			return method;
+		}
+
+		/**
+		 * {@inheritDoc}
+		 */
 		public Method getMethod() {
 			return method;
 		}
 
+		/**
+		 * {@inheritDoc}
+		 */
 		public String getMethodName() {
 			return method.getName();
 		}

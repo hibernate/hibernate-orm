@@ -140,7 +140,9 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 			Property property = (Property) iter.next();
 			getters[i] = buildPropertyGetter(property, mappingInfo);
 			setters[i] = buildPropertySetter(property, mappingInfo);
-			if ( !property.isBasicPropertyAccessor() ) foundCustomAccessor = true;
+			if ( !property.isBasicPropertyAccessor() ) {
+				foundCustomAccessor = true;
+			}
 			i++;
 		}
 		hasCustomAccessors = foundCustomAccessor;
@@ -423,4 +425,18 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 		return getClass().getName() + '(' + getEntityMetamodel().getName() + ')';
 	}
 
+	public Getter getIdentifierGetter() {
+		return idGetter;
+	}
+
+	public Getter getVersionGetter() {
+		if ( getEntityMetamodel().isVersioned() ) {
+			return getGetter( getEntityMetamodel().getVersionPropertyIndex() );
+		}
+		return null;
+	}
+
+	public Getter getGetter(int i) {
+		return getters[i];
+	}
 }

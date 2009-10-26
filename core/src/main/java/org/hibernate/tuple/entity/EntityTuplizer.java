@@ -30,6 +30,7 @@ import java.util.Map;
 import org.hibernate.HibernateException;
 import org.hibernate.EntityNameResolver;
 import org.hibernate.EntityMode;
+import org.hibernate.property.Getter;
 import org.hibernate.tuple.Tuplizer;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.engine.SessionFactoryImplementor;
@@ -238,4 +239,18 @@ public interface EntityTuplizer extends Tuplizer {
 	 * @throws HibernateException If we are unable to determine an entity-name within the inheritence hierarchy.
 	 */
 	public String determineConcreteSubclassEntityName(Object entityInstance, SessionFactoryImplementor factory);
+
+	/**
+	 * Retrieve the getter for the identifier property.  May return null.
+	 *
+	 * @return The getter for the identifier property.
+	 */
+	public Getter getIdentifierGetter();
+
+	/**
+	 * Retrieve the getter for the version property.  May return null.
+	 *
+	 * @return The getter for the version property.
+	 */
+	public Getter getVersionGetter();
 }

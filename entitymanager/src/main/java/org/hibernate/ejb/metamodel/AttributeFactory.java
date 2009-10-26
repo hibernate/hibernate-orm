@@ -23,18 +23,22 @@
  */
 package org.hibernate.ejb.metamodel;
 
-import java.util.Iterator;
 import java.lang.reflect.Member;
+import java.util.Iterator;
 import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.Type;
 
+import org.hibernate.EntityMode;
+import org.hibernate.type.EmbeddedComponentType;
+import org.hibernate.type.ComponentType;
+import org.hibernate.annotations.common.AssertionFailure;
+import org.hibernate.mapping.Collection;
+import org.hibernate.mapping.Component;
+import org.hibernate.mapping.Map;
+import org.hibernate.mapping.OneToMany;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Value;
-import org.hibernate.mapping.Collection;
-import org.hibernate.mapping.Map;
-import org.hibernate.mapping.Component;
-import org.hibernate.mapping.OneToMany;
-import org.hibernate.annotations.common.AssertionFailure;
+import org.hibernate.tuple.entity.EntityMetamodel;
 
 /**
  * TODO : javadoc
@@ -57,12 +61,12 @@ public class AttributeFactory {
 			attribute = buildPluralAttribute( ownerType, property, attrContext );
 		}
 		else {
-			final Type<Y> attrType = getType( attrContext.getElementTypeStatus(), attrContext.getElementValue() );
+			final Type<Y> attrType = getType( ownerType, attrContext.getElementTypeStatus(), attrContext.getElementValue() );
 			attribute = new SingularAttributeImpl<X,Y>(
 					property.getName(),
 					property.getType().getReturnedClass(),
 					ownerType,
-					determineJavaMember( property ),
+					determineStandardJavaMember( ownerType, property ),
 					false,
 					false,
 					property.isOptional(),
@@ -76,19 +80,19 @@ public class AttributeFactory {
 	@SuppressWarnings( "unchecked" )
 	private <X, Y, V, K> AttributeImplementor<X, Y> buildPluralAttribute(AbstractManagedType<X> ownerType, Property property, AttributeContext attrContext) {
 		AttributeImplementor<X, Y> attribute;
-		final Type<V> attrType = getType( attrContext.getElementTypeStatus(), attrContext.getElementValue() );
+		final Type<V> attrType = getType( ownerType, attrContext.getElementTypeStatus(), attrContext.getElementValue() );
 		final Class<Y> collectionClass = (Class<Y>) attrContext.getCollectionClass();
 		if ( java.util.Map.class.isAssignableFrom( collectionClass ) ) {
-			final Type<K> keyType = getType( attrContext.getKeyTypeStatus(), attrContext.getKeyValue() );
+			final Type<K> keyType = getType( ownerType, attrContext.getKeyTypeStatus(), attrContext.getKeyValue() );
 			attribute = PluralAttributeImpl.create( ownerType, attrType, collectionClass, keyType )
-					.member( determineJavaMember( property ) )
+					.member( determineStandardJavaMember( ownerType, property ) )
 					.property( property )
 					.persistentAttributeType( attrContext.getElementAttributeType() )
 					.build();
 		}
 		else {
 			attribute =  PluralAttributeImpl.create( ownerType, attrType, collectionClass, null )
-					.member( determineJavaMember( property ) )
+					.member( determineStandardJavaMember( ownerType, property ) )
 					.property( property )
 					.persistentAttributeType( attrContext.getElementAttributeType() )
 					.build();
@@ -96,13 +100,13 @@ public class AttributeFactory {
 		return attribute;
 	}
 
-	private <X> Type<X> getType(AttributeContext.TypeStatus elementTypeStatus, Value value) {
+	private <X> Type<X> getType(AbstractManagedType owner, AttributeContext.TypeStatus elementTypeStatus, Value value) {
 		final org.hibernate.type.Type type = value.getType();
 		switch ( elementTypeStatus ) {
 			case BASIC:
 				return buildBasicType( type );
 			case EMBEDDABLE:
-				return buildEmbeddableType( value, type );
+				return buildEmbeddableType( owner, value, type );
 			case ENTITY:
 				return buildEntityType( type );
 			default:
@@ -124,10 +128,10 @@ public class AttributeFactory {
 	}
 
 	@SuppressWarnings( "unchecked" )
-	private <X> Type<X> buildEmbeddableType(Value value, org.hibernate.type.Type type) {
+	private <X> Type<X> buildEmbeddableType(AbstractManagedType owner, Value value, org.hibernate.type.Type type) {
 		//build embedable type
 		final Class<X> clazz = type.getReturnedClass();
-		final EmbeddableTypeImpl<X> embeddableType = new EmbeddableTypeImpl<X>( clazz );
+		final EmbeddableTypeImpl<X> embeddableType = new EmbeddableTypeImpl<X>( clazz, owner, (ComponentType) type );
 		context.registerEmbeddedableType( embeddableType );
 		final Component component = (Component) value;
 		final Iterator<Property> subProperties = component.getPropertyIterator();
@@ -142,36 +146,113 @@ public class AttributeFactory {
 	@SuppressWarnings({ "unchecked" })
 	public <X, Y> SingularAttributeImpl<X, Y> buildIdAttribute(AbstractManagedType<X> ownerType, Property property) {
 		final AttributeContext attrContext = getAttributeContext( property );
-		final Type<Y> attrType = getType( attrContext.getElementTypeStatus(), attrContext.getElementValue() );
+		final Type<Y> attrType = getType( ownerType, attrContext.getElementTypeStatus(), attrContext.getElementValue() );
 		final Class<Y> idJavaType = property.getType().getReturnedClass();
 		return new SingularAttributeImpl.Identifier(
 				property.getName(),
 				idJavaType,
 				ownerType,
-				determineJavaMember( property ),
+				determineIdentifierJavaMember( ownerType, property ),
 				attrType,
 				attrContext.getElementAttributeType()
 		);
 	}
 
-	@SuppressWarnings({ "UnusedDeclaration" })
-	private Member determineJavaMember(Property property) {
-		return null;
+	private Member determineIdentifierJavaMember(AbstractManagedType ownerType, Property property) {
+// see below
+//		final EntityMetamodel entityMetamodel = getDeclarerEntityMetamodel( property );
+		final EntityMetamodel entityMetamodel = getDeclarerEntityMetamodel( ownerType );
+		if ( ! property.getName().equals( entityMetamodel.getIdentifierProperty().getName() ) ) {
+			// this *should* indicate processing part of an IdClass...
+			return determineVirtualIdentifierJavaMember( entityMetamodel, property );
+		}
+		return entityMetamodel.getTuplizer( EntityMode.POJO ).getIdentifierGetter().getMember();
+	}
+
+	private Member determineVirtualIdentifierJavaMember(EntityMetamodel entityMetamodel, Property property) {
+		if ( ! entityMetamodel.getIdentifierProperty().isVirtual() ) {
+			throw new IllegalArgumentException( "expecting IdClass mapping" );
+		}
+		org.hibernate.type.Type type = entityMetamodel.getIdentifierProperty().getType();
+		if ( ! EmbeddedComponentType.class.isInstance( type ) ) {
+			throw new IllegalArgumentException( "expecting IdClass mapping" );
+		}
+		final EmbeddedComponentType componentType = (EmbeddedComponentType) type;
+		return componentType.getTuplizerMapping()
+				.getTuplizer( EntityMode.POJO )
+				.getGetter( componentType.getPropertyIndex( property.getName() ) )
+				.getMember();
+	}
+
+// getting the owning PersistentClass from the Property is broken in certain cases with annotations...
+//	private EntityMetamodel getDeclarerEntityMetamodel(Property property) {
+//		return context.getSessionFactory()
+//				.getEntityPersister( property.getPersistentClass().getEntityName() )
+//				.getEntityMetamodel();
+//	}
+// so we use the owner's java class to lookup the persister/entitymetamodel
+	private EntityMetamodel getDeclarerEntityMetamodel(AbstractManagedType ownerType) {
+		return context.getSessionFactory()
+				.getEntityPersister( ownerType.getJavaType().getName() )
+				.getEntityMetamodel();
+	}
+
+// getting the owning PersistentClass from the Property is broken in certain cases with annotations...
+//	private Member determineStandardJavaMember(Property property) {
+//		final EntityMetamodel entityMetamodel = getDeclarerEntityMetamodel( property );
+//
+//		final String propertyName = property.getName();
+//		final int index = entityMetamodel.getPropertyIndex( propertyName );
+//		return entityMetamodel.getTuplizer( EntityMode.POJO ).getGetter( index ).getMember();
+//	}
+// so we use the owner's java class to lookup the persister/entitymetamodel
+	private Member determineStandardJavaMember(AbstractManagedType ownerType, Property property) {
+		if ( Type.PersistenceType.EMBEDDABLE == ownerType.getPersistenceType() ) {
+			EmbeddableTypeImpl embeddableType = ( EmbeddableTypeImpl ) ownerType;
+			return embeddableType.getHibernateType().getTuplizerMapping()
+					.getTuplizer( EntityMode.POJO )
+					.getGetter( embeddableType.getHibernateType().getPropertyIndex( property.getName() ) )
+					.getMember();
+		}
+		else if ( Type.PersistenceType.ENTITY == ownerType.getPersistenceType() ) {
+			final EntityMetamodel entityMetamodel = getDeclarerEntityMetamodel( ownerType );
+			final String propertyName = property.getName();
+			final Integer index = entityMetamodel.getPropertyIndexOrNull( propertyName );
+			if ( index == null ) {
+				// just like in #determineIdentifierJavaMember , this *should* indicate we have an IdClass mapping
+				return determineVirtualIdentifierJavaMember( entityMetamodel, property );
+			}
+			else {
+				return entityMetamodel.getTuplizer( EntityMode.POJO ).getGetter( index ).getMember();
+			}
+		}
+		else {
+			throw new IllegalArgumentException( "Unexpected owner type : " + ownerType.getPersistenceType() );
+		}
 	}
 
 	@SuppressWarnings({ "unchecked" })
 	public <X, Y> SingularAttributeImpl<X, Y> buildVerisonAttribute(AbstractManagedType<X> ownerType, Property property) {
 		final AttributeContext attrContext = getAttributeContext( property );
 		final Class<Y> javaType = property.getType().getReturnedClass();
-		final Type<Y> attrType = getType( attrContext.getElementTypeStatus(), attrContext.getElementValue() );
+		final Type<Y> attrType = getType( ownerType, attrContext.getElementTypeStatus(), attrContext.getElementValue() );
 		return new SingularAttributeImpl.Version(
 				property.getName(),
 				javaType,
 				ownerType,
-				determineJavaMember( property ),
+				determineVersionJavaMember( ownerType, property ),
 				attrType,
 				attrContext.getElementAttributeType()
 		);
+	}
+
+	private Member determineVersionJavaMember(AbstractManagedType ownerType, Property property) {
+		final EntityMetamodel entityMetamodel = getDeclarerEntityMetamodel( ownerType );
+		if ( ! property.getName().equals( entityMetamodel.getVersionProperty().getName() ) ) {
+			// this should never happen, but to be safe...
+			throw new IllegalArgumentException( "Given property did not match declared version property" );
+		}
+		return entityMetamodel.getTuplizer( EntityMode.POJO ).getIdentifierGetter().getMember();
 	}
 
 	private static class AttributeContext {

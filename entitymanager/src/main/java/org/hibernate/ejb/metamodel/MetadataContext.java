@@ -33,6 +33,7 @@ import javax.persistence.metamodel.SingularAttribute;
 
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
+import org.hibernate.engine.SessionFactoryImplementor;
 
 /**
  * Defines a context for storing information during the building of the {@link MetamodelImpl}.
@@ -44,6 +45,7 @@ import org.hibernate.mapping.Property;
  * @author Emmanuel Bernard
  */
 class MetadataContext {
+	private final SessionFactoryImplementor sessionFactory;
 	private final AttributeFactory attributeFactory = new AttributeFactory( this );
 
 	private HashMap<Class<?>,EntityTypeImpl<?>> entityTypes
@@ -54,6 +56,14 @@ class MetadataContext {
 			= new LinkedHashMap<PersistentClass,EntityTypeImpl<?>>();
 	private HashMap<Class<?>, EmbeddableTypeImpl<?>> embeddables
 			= new HashMap<Class<?>, EmbeddableTypeImpl<?>>();
+
+	public MetadataContext(SessionFactoryImplementor sessionFactory) {
+		this.sessionFactory = sessionFactory;
+	}
+
+	/*package*/ SessionFactoryImplementor getSessionFactory() {
+		return sessionFactory;
+	}
 
 	/**
 	 * Given a Hibernate {@link PersistentClass}, locate the corresponding JPA {@link org.hibernate.type.EntityType}

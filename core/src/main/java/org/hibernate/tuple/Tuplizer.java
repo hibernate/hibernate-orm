@@ -25,6 +25,7 @@
 package org.hibernate.tuple;
 
 import org.hibernate.HibernateException;
+import org.hibernate.property.Getter;
 
 /**
  * A tuplizer defines the contract for things which know how to manage
@@ -56,24 +57,21 @@ import org.hibernate.HibernateException;
  * @author Steve Ebersole
  */
 public interface Tuplizer {
-
 	/**
 	 * Extract the current values contained on the given entity.
 	 *
 	 * @param entity The entity from which to extract values.
 	 * @return The current property values.
-	 * @throws HibernateException
 	 */
-	public Object[] getPropertyValues(Object entity) throws HibernateException;
+	public Object[] getPropertyValues(Object entity);
 
 	/**
 	 * Inject the given values into the given entity.
 	 *
 	 * @param entity The entity.
 	 * @param values The values to be injected.
-	 * @throws HibernateException
 	 */
-	public void setPropertyValues(Object entity, Object[] values) throws HibernateException;
+	public void setPropertyValues(Object entity, Object[] values);
 
 	/**
 	 * Extract the value of a particular property from the given entity.
@@ -81,17 +79,15 @@ public interface Tuplizer {
 	 * @param entity The entity from which to extract the property value.
 	 * @param i The index of the property for which to extract the value.
 	 * @return The current value of the given property on the given entity.
-	 * @throws HibernateException
 	 */
-	public Object getPropertyValue(Object entity, int i) throws HibernateException;
+	public Object getPropertyValue(Object entity, int i);
 
 	/**
 	 * Generate a new, empty entity.
 	 *
 	 * @return The new, empty entity instance.
-	 * @throws HibernateException
 	 */
-	public Object instantiate() throws HibernateException;
+	public Object instantiate();
 	
 	/**
 	 * Is the given object considered an instance of the the entity (acconting
@@ -115,4 +111,11 @@ public interface Tuplizer {
 	 */
 	public Class getMappedClass();
 
+	/**
+	 * Retrieve the getter for the specified property.
+	 *
+	 * @param i The property index.
+	 * @return The property getter.
+	 */
+	public Getter getGetter(int i);
 }

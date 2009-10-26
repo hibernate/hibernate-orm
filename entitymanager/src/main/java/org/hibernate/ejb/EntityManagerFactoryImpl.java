@@ -35,6 +35,7 @@ import javax.persistence.spi.PersistenceUnitTransactionType;
 import javax.persistence.spi.LoadState;
 
 import org.hibernate.SessionFactory;
+import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
@@ -71,7 +72,7 @@ public class EntityManagerFactoryImpl implements HibernateEntityManagerFactory {
 		final Iterator<PersistentClass> classes = cfg.getClassMappings();
 		//a safe guard till we are confident that metamodel is wll tested
 		if ( !"disabled".equalsIgnoreCase( cfg.getProperty( "hibernate.ejb.metamodel.generation" ) ) ) {
-			this.metamodel = new MetamodelImpl( classes );
+			this.metamodel = MetamodelImpl.buildMetamodel( classes, ( SessionFactoryImplementor ) sessionFactory );
 		}
 		else {
 			this.metamodel = null;

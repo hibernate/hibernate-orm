@@ -32,6 +32,7 @@ import javax.persistence.metamodel.ManagedType;
 import javax.persistence.metamodel.EmbeddableType;
 
 import org.hibernate.mapping.PersistentClass;
+import org.hibernate.engine.SessionFactoryImplementor;
 
 /**
  * Hibernate implementation of the JPA {@link Metamodel} contract.
@@ -44,21 +45,25 @@ public class MetamodelImpl implements Metamodel, Serializable {
 	private final Map<Class<?>, EmbeddableTypeImpl<?>> embeddables;
 
 	/**
-	 * Instantiate the metamodel from the collection of Hibernate {@link PersistentClass} models.
+	 * Build the metamodel using the information from the collection of Hibernate
+	 * {@link PersistentClass} models as well as the Hibernate {@link SessionFactory}.
 	 *
-	 * @param persistentClasses An iterator over the Hibernate {@link PersistentClass} models.
+	 * @param persistentClasses Iterator over the Hibernate (config-time) metamodel
+	 * @param sessionFactory The Hibernate session factry.
+	 * @return The built metamodel
 	 */
-	public MetamodelImpl(Iterator<PersistentClass> persistentClasses) {
-		MetadataContext context = new MetadataContext();
+	public static MetamodelImpl buildMetamodel(
+			Iterator<PersistentClass> persistentClasses,
+			SessionFactoryImplementor sessionFactory) {
+		MetadataContext context = new MetadataContext( sessionFactory );
 		while ( persistentClasses.hasNext() ) {
 			locateOrBuildEntityType( persistentClasses.next(), context );
 		}
-		this.entities = context.getEntityTypeMap();
 		context.wrapUp();
-		this.embeddables = context.getEmbeddableTypeMap();
+		return new MetamodelImpl( context.getEntityTypeMap(), context.getEmbeddableTypeMap() );
 	}
 
-	private EntityTypeImpl<?> locateOrBuildEntityType(PersistentClass persistentClass, MetadataContext context) {
+	private static EntityTypeImpl<?> locateOrBuildEntityType(PersistentClass persistentClass, MetadataContext context) {
 		EntityTypeImpl<?> entityType = context.locateEntityType( persistentClass );
 		if ( entityType == null ) {
 			entityType = buildEntityType( persistentClass, context );
@@ -67,7 +72,7 @@ public class MetamodelImpl implements Metamodel, Serializable {
 	}
 
 	@SuppressWarnings({ "unchecked" })
-	private EntityTypeImpl<?> buildEntityType(PersistentClass persistentClass, MetadataContext context) {
+	private static EntityTypeImpl<?> buildEntityType(PersistentClass persistentClass, MetadataContext context) {
 		final PersistentClass superPersistentClass = persistentClass.getSuperclass();
 		final EntityTypeImpl superEntityType = superPersistentClass == null
 				? null
@@ -82,6 +87,19 @@ public class MetamodelImpl implements Metamodel, Serializable {
 		);
 		context.registerEntityType( persistentClass, entityType );
 		return entityType;
+	}
+
+	/**
+	 * Instantiate the metamodel.
+	 *
+	 * @param entities The entity mappings.
+	 * @param embeddables The embeddable (component) mappings.
+	 */
+	private MetamodelImpl(
+			Map<Class<?>, EntityTypeImpl<?>> entities,
+			Map<Class<?>, EmbeddableTypeImpl<?>> embeddables) {
+		this.entities = entities;
+		this.embeddables = embeddables;
 	}
 
 	/**

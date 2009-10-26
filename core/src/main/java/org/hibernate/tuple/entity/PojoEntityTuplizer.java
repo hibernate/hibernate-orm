@@ -64,7 +64,6 @@ import org.hibernate.util.ReflectHelper;
  * @author Gavin King
  */
 public class PojoEntityTuplizer extends AbstractEntityTuplizer {
-
 	static final Logger log = LoggerFactory.getLogger( PojoEntityTuplizer.class );
 
 	private final Class mappedClass;

@@ -38,6 +38,7 @@ import org.hibernate.EntityMode;
 import org.hibernate.FetchMode;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
+import org.hibernate.PropertyNotFoundException;
 import org.hibernate.engine.CascadeStyle;
 import org.hibernate.engine.Mapping;
 import org.hibernate.engine.SessionFactoryImplementor;
@@ -86,6 +87,10 @@ public class ComponentType extends AbstractType implements AbstractComponentType
 		}
 
 		this.tuplizerMapping = metamodel.getTuplizerMapping();
+	}
+
+	public EntityModeToTuplizerMapping getTuplizerMapping() {
+		return tuplizerMapping;
 	}
 
 	public int[] sqlTypes(Mapping mapping) throws MappingException {
@@ -656,4 +661,15 @@ public class ComponentType extends AbstractType implements AbstractComponentType
 		return false;
 	}
 
+	public int getPropertyIndex(String name) {
+		String[] names = getPropertyNames();
+		for ( int i = 0, max = names.length; i < max; i++ ) {
+			if ( names[i].equals( name ) ) {
+				return i;
+			}
+		}
+		throw new PropertyNotFoundException(
+				"Unable to locate property named " + name + " on " + getReturnedClass().getName()
+		);
+	}
 }

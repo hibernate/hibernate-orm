@@ -87,16 +87,18 @@ public abstract class AbstractIdentifiableType<X>
 	 * {@inheritDoc}
 	 */
 	@SuppressWarnings({ "unchecked" })
-	public <Y> SingularAttribute<? super X, Y> getId(Class<Y> type) {
+	public <Y> SingularAttribute<? super X, Y> getId(Class<Y> javaType) {
 		final SingularAttribute<? super X, Y> id_;
 		if ( id != null ) {
 			checkSimpleId();
 			id_ = ( SingularAttribute<? super X, Y> ) id;
+			if ( javaType != id.getJavaType() ) {
+				throw new IllegalArgumentException( "Id attribute was not of specified type : " + javaType.getName() );
+			}
 		}
 		else {
-			id_ = requireSupertype().getId( type );
+			id_ = requireSupertype().getId( javaType );
 		}
-		// TODO : check that type and id_.getJavaType() are related
 		return id_;
 	}
 
@@ -117,10 +119,12 @@ public abstract class AbstractIdentifiableType<X>
 	 * {@inheritDoc}
 	 */
 	@SuppressWarnings({ "unchecked" })
-	public <Y> SingularAttribute<X, Y> getDeclaredId(Class<Y> yClass) {
+	public <Y> SingularAttribute<X, Y> getDeclaredId(Class<Y> javaType) {
 		checkDeclaredId();
 		checkSimpleId();
-		// TODO : check that type and id.getJavaType() are related
+		if ( javaType != id.getJavaType() ) {
+			throw new IllegalArgumentException( "Id attribute was not of specified type : " + javaType.getName() );
+		}
 		return (SingularAttribute<X, Y>) id;
 	}
 
@@ -177,18 +181,20 @@ public abstract class AbstractIdentifiableType<X>
 	 * {@inheritDoc}
 	 */
 	@SuppressWarnings({ "unchecked" })
-	public <Y> SingularAttribute<? super X, Y> getVersion(Class<Y> type) {
+	public <Y> SingularAttribute<? super X, Y> getVersion(Class<Y> javaType) {
 		if ( ! hasVersionAttribute() ) {
 			return null;
 		}
 		final SingularAttribute<? super X, Y> version_;
 		if ( version != null ) {
 			version_ = ( SingularAttribute<? super X, Y> ) version;
+			if ( javaType != version.getJavaType() ) {
+				throw new IllegalArgumentException( "Version attribute was not of specified type : " + javaType.getName() );
+			}
 		}
 		else {
-			version_ = requireSupertype().getVersion( type );
+			version_ = requireSupertype().getVersion( javaType );
 		}
-		// TODO : check that type and version_.getJavaType() are related
 		return version_;
 	}
 
@@ -196,9 +202,11 @@ public abstract class AbstractIdentifiableType<X>
 	 * {@inheritDoc}
 	 */
 	@SuppressWarnings({ "unchecked" })
-	public <Y> SingularAttribute<X, Y> getDeclaredVersion(Class<Y> yClass) {
+	public <Y> SingularAttribute<X, Y> getDeclaredVersion(Class<Y> javaType) {
 		checkDeclaredVersion();
-		// TODO : check that type and version_.getJavaType() are related
+		if ( javaType != version.getJavaType() ) {
+			throw new IllegalArgumentException( "Version attribute was not of specified type : " + javaType.getName() );
+		}
 		return ( SingularAttribute<X, Y> ) version;
 	}
 

@@ -37,6 +37,16 @@ public class MetadataTest extends TestCase {
 		final SingularAttribute<Fridge, Long> id = fridgeType.getDeclaredId( Long.class );
 		assertNotNull( id );
 		assertTrue( id.isId() );
+		try {
+			fridgeType.getDeclaredId( java.util.Date.class );
+			fail( "expecting failure" );
+		}
+		catch ( IllegalArgumentException ignore ) {
+			// expected result
+		}
+		final SingularAttribute<? super Fridge, Long> id2 = fridgeType.getId( Long.class );
+		assertNotNull( id2 );
+
 		assertEquals( Fridge.class.getName(), fridgeType.getName() );
 		assertEquals( Long.class, fridgeType.getIdType().getJavaType() );
 		assertTrue( fridgeType.hasSingleIdAttribute() );

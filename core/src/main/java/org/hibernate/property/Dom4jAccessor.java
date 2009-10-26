@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
- * indicated by the @author tags or express copyright attribution
- * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * Copyright (c) 2009 by Red Hat Inc and/or its affiliates or by
+ * third-party contributors as indicated by either @author tags or express
+ * copyright attribution statements applied by the authors.  All
+ * third-party contributions are distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,11 +20,11 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.property;
 
 import java.lang.reflect.Method;
+import java.lang.reflect.Member;
 import java.util.Map;
 
 import org.dom4j.Attribute;
@@ -53,7 +53,6 @@ public class Dom4jAccessor implements PropertyAccessor {
 		this.factory = factory;
 		this.nodeName = nodeName;
 		this.propertyType = propertyType;
-		
 	}
 
 	/**
@@ -118,21 +117,28 @@ public class Dom4jAccessor implements PropertyAccessor {
 		}
 
 		/**
-		 * Get the declared Java type
+		 * {@inheritDoc}
 		 */
 		public Class getReturnType() {
 			return Object.class;
 		}
 
 		/**
-		 * Optional operation (return null)
+		 * {@inheritDoc}
+		 */
+		public Member getMember() {
+			return null;
+		}
+
+		/**
+		 * {@inheritDoc}
 		 */
 		public String getMethodName() {
 			return null;
 		}
 
 		/**
-		 * Optional operation (return null)
+		 * {@inheritDoc}
 		 */
 		public Method getMethod() {
 			return null;
@@ -147,14 +153,14 @@ public class Dom4jAccessor implements PropertyAccessor {
 		}
 		
 		/**
-		 * Optional operation (return null)
+		 * {@inheritDoc}
 		 */
 		public String getMethodName() {
 			return null;
 		}
 
 		/**
-		 * Optional operation (return null)
+		 * {@inheritDoc}
 		 */
 		public Method getMethod() {
 			return null;
@@ -166,16 +172,17 @@ public class Dom4jAccessor implements PropertyAccessor {
 	 * @author Gavin King
 	 */
 	public static class TextGetter extends Dom4jGetter {
-		
 		TextGetter(Type propertyType, SessionFactoryImplementor factory) {
 			super(propertyType, factory);
 		}
 
+		/**
+		 * {@inheritDoc}
+		 */
 		public Object get(Object owner) throws HibernateException {
 			Element ownerElement = (Element) owner;
 			return super.propertyType.fromXMLNode(ownerElement, super.factory);
 		}	
-		
 	}
 	
 	/**
@@ -184,19 +191,21 @@ public class Dom4jAccessor implements PropertyAccessor {
 	 */
 	public static class AttributeGetter extends Dom4jGetter {
 		private final String attributeName;
-		
+
 		AttributeGetter(String name, Type propertyType, SessionFactoryImplementor factory) {
 			super(propertyType, factory);
 			attributeName = name.substring(1);
 		}
 
+		/**
+		 * {@inheritDoc}
+		 */
 		public Object get(Object owner) throws HibernateException {
 			Element ownerElement = (Element) owner;
 			Node attribute = ownerElement.attribute(attributeName);
 			return attribute==null ? null : 
 				super.propertyType.fromXMLNode(attribute, super.factory);
 		}	
-		
 	}
 
 	/**
@@ -211,13 +220,15 @@ public class Dom4jAccessor implements PropertyAccessor {
 			elementName = name;
 		}
 
+		/**
+		 * {@inheritDoc}
+		 */
 		public Object get(Object owner) throws HibernateException {
 			Element ownerElement = (Element) owner;
 			Node element = ownerElement.element(elementName);
 			return element==null ? 
 					null : super.propertyType.fromXMLNode(element, super.factory);
 		}	
-		
 	}
 	
 	/**
@@ -227,13 +238,16 @@ public class Dom4jAccessor implements PropertyAccessor {
 	public static class ElementAttributeGetter extends Dom4jGetter {
 		private final String elementName;
 		private final String attributeName;
-		
+
 		ElementAttributeGetter(String name, Type propertyType, SessionFactoryImplementor factory) {
 			super(propertyType, factory);
 			elementName = name.substring( 0, name.indexOf('/') );
 			attributeName = name.substring( name.indexOf('/')+2 );
 		}
 
+		/**
+		 * {@inheritDoc}
+		 */
 		public Object get(Object owner) throws HibernateException {
 			Element ownerElement = (Element) owner;
 			
@@ -260,12 +274,14 @@ public class Dom4jAccessor implements PropertyAccessor {
 	 * @author Gavin King
 	 */
 	public static class TextSetter extends Dom4jSetter {
-		
 		TextSetter(Type propertyType) {
 			super(propertyType);
 		}
 
-		public void set(Object target, Object value, SessionFactoryImplementor factory) 
+		/**
+		 * {@inheritDoc}
+		 */
+		public void set(Object target, Object value, SessionFactoryImplementor factory)
 		throws HibernateException {
 			Element owner = ( Element ) target;
 			if ( !super.propertyType.isXMLElement() ) { //kinda ugly, but needed for collections with a "." node mapping
@@ -277,7 +293,6 @@ public class Dom4jAccessor implements PropertyAccessor {
 				}
 			}
 		}
-
 	}
 	
 	/**
@@ -286,13 +301,16 @@ public class Dom4jAccessor implements PropertyAccessor {
 	 */
 	public static class AttributeSetter extends Dom4jSetter {
 		private final String attributeName;
-		
+
 		AttributeSetter(String name, Type propertyType) {
 			super(propertyType);
 			attributeName = name.substring(1);
 		}
 
-		public void set(Object target, Object value, SessionFactoryImplementor factory) 
+		/**
+		 * {@inheritDoc}
+		 */
+		public void set(Object target, Object value, SessionFactoryImplementor factory)
 		throws HibernateException {
 			Element owner = ( Element ) target;
 			Attribute attribute = owner.attribute(attributeName);
@@ -307,7 +325,6 @@ public class Dom4jAccessor implements PropertyAccessor {
 				super.propertyType.setToXMLNode(attribute, value, factory);
 			}
 		}
-
 	}
 	
 	/**
@@ -322,7 +339,10 @@ public class Dom4jAccessor implements PropertyAccessor {
 			elementName = name;
 		}
 
-		public void set(Object target, Object value, SessionFactoryImplementor factory) 
+		/**
+		 * {@inheritDoc}
+		 */
+		public void set(Object target, Object value, SessionFactoryImplementor factory)
 		throws HibernateException {
 			if (value!=CollectionType.UNFETCHED_COLLECTION) {
 				Element owner = ( Element ) target;
@@ -334,7 +354,6 @@ public class Dom4jAccessor implements PropertyAccessor {
 				}
 			}
 		}
-
 	}
 	
 	/**
@@ -351,7 +370,10 @@ public class Dom4jAccessor implements PropertyAccessor {
 			attributeName = name.substring( name.indexOf('/')+2 );
 		}
 
-		public void set(Object target, Object value, SessionFactoryImplementor factory) 
+		/**
+		 * {@inheritDoc}
+		 */
+		public void set(Object target, Object value, SessionFactoryImplementor factory)
 		throws HibernateException {
 			Element owner = ( Element ) target;
 			Element element = owner.element(elementName);
@@ -375,7 +397,6 @@ public class Dom4jAccessor implements PropertyAccessor {
 				super.propertyType.setToXMLNode(attribute, value, factory);
 			}
 		}
-
 	}
 	
 

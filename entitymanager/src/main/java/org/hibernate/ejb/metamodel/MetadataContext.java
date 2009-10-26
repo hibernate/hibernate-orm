@@ -156,9 +156,7 @@ class MetadataContext {
 		Set<SingularAttribute<? super X, ?>> attributes = new HashSet<SingularAttribute<? super X, ?>>();
 		Iterator<Property> properties = persistentClass.getIdentifierMapper().getPropertyIterator();
 		while ( properties.hasNext() ) {
-			attributes.add(
-					(SingularAttribute<? super X, ?>) attributeFactory.buildAttribute( jpaEntityType, properties.next() )
-			);
+			attributes.add( attributeFactory.buildIdAttribute( jpaEntityType, properties.next() ) );
 		}
 		return attributes;
 	}

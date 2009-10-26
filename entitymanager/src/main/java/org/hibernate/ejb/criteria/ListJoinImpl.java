@@ -27,6 +27,8 @@ import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.JoinType;
 import javax.persistence.criteria.From;
 import javax.persistence.metamodel.ListAttribute;
+import javax.persistence.metamodel.ManagedType;
+
 import org.hibernate.ejb.criteria.JoinImplementors.ListJoinImplementor;
 import org.hibernate.ejb.criteria.expression.ListIndexExpression;
 
@@ -53,7 +55,12 @@ public class ListJoinImpl<O,E> extends JoinImpl<O,E> implements JoinImplementors
 
 	@Override
 	public ListAttribute<? super O, E> getModel() {
-        return (ListAttribute<? super O, E>) getAttribute();
+        return getAttribute();
+	}
+
+	@Override
+	protected ManagedType<E> getManagedType() {
+		return ( ManagedType<E> ) getAttribute().getElementType();
 	}
 
 	/**
@@ -64,6 +71,7 @@ public class ListJoinImpl<O,E> extends JoinImpl<O,E> implements JoinImplementors
 	}
 
 	@Override
+	@SuppressWarnings({ "unchecked" })
 	public ListJoinImplementor<O, E> correlateTo(CriteriaSubqueryImpl subquery) {
 		ListJoinImpl<O,E> correlation = new ListJoinImpl<O,E>(
 				queryBuilder(),

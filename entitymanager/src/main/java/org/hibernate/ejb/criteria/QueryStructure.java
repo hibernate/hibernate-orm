@@ -214,11 +214,10 @@ public class QueryStructure<T> {
 		if ( getSelection() == null ) {
 			// we should have only a single root (query validation should have checked this...)
 			final Root root = getRoots().iterator().next();
-			( (TableExpressionMapper) root ).prepareAlias( renderingContext );
-			jpaqlQuery.append( root.getAlias() );
+			jpaqlQuery.append( ( (ExpressionImplementor) root ).renderProjection( renderingContext) );
 		}
 		else {
-			( ( ExpressionImplementor ) getSelection() ).renderProjection( renderingContext );
+			jpaqlQuery.append( ( (ExpressionImplementor) getSelection() ).renderProjection( renderingContext ) );
 		}
 
 		jpaqlQuery.append( " from " );

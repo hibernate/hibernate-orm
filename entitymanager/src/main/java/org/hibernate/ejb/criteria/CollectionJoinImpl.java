@@ -26,6 +26,8 @@ package org.hibernate.ejb.criteria;
 import javax.persistence.criteria.JoinType;
 import javax.persistence.criteria.From;
 import javax.persistence.metamodel.CollectionAttribute;
+import javax.persistence.metamodel.ManagedType;
+
 import org.hibernate.ejb.criteria.JoinImplementors.CollectionJoinImplementor;
 
 /**
@@ -58,6 +60,12 @@ public class CollectionJoinImpl<O,E>
     }
 
 	@Override
+	protected ManagedType<E> getManagedType() {
+		return ( ManagedType<E> ) getAttribute().getElementType();
+	}
+
+	@Override
+	@SuppressWarnings({ "unchecked" })
 	public CollectionJoinImplementor<O, E> correlateTo(CriteriaSubqueryImpl subquery) {
 		CollectionJoinImpl<O,E> correlation = new CollectionJoinImpl<O,E>(
 				queryBuilder(),

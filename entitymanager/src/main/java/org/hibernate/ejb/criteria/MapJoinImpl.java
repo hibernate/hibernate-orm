@@ -31,6 +31,7 @@ import javax.persistence.criteria.JoinType;
 import javax.persistence.criteria.Path;
 import javax.persistence.criteria.From;
 import javax.persistence.metamodel.MapAttribute;
+import javax.persistence.metamodel.ManagedType;
 import javax.persistence.metamodel.Type.PersistenceType;
 import org.hibernate.ejb.criteria.JoinImplementors.MapJoinImplementor;
 
@@ -61,6 +62,11 @@ public class MapJoinImpl<O,K,V>
 	@Override
 	public MapAttribute<? super O, K, V> getModel() {
 		return getAttribute();
+	}
+
+	@Override
+	protected ManagedType<V> getManagedType() {
+		return ( ManagedType<V> ) getAttribute().getElementType();
 	}
 
 	/**

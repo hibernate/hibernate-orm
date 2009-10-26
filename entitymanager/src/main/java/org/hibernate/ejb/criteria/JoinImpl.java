@@ -56,10 +56,15 @@ public class JoinImpl<Z, X> extends FromImpl<Z, X> implements JoinImplementors.J
 				javaType,
 				lhs,
 				joinProperty,
-				(ManagedType<X>) criteriaBuilder.getEntityManagerFactory().getMetamodel().managedType( javaType )
+				criteriaBuilder.getEntityManagerFactory().getMetamodel().managedType( javaType )
 		);
-		this.managedType = (ManagedType<X>) getModel();
+		this.managedType = getManagedType();
 		this.joinType = joinType;
+	}
+
+	@SuppressWarnings({ "unchecked" })
+	protected ManagedType<X> getManagedType() {
+		return (ManagedType<X>) getModel();
 	}
 
 	/**

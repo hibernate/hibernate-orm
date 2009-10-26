@@ -1,8 +1,10 @@
 /*
- * Copyright (c) 2009, Red Hat Middleware LLC or third-party contributors as
- * indicated by the @author tags or express copyright attribution
- * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2009 by Red Hat Inc and/or its affiliates or by
+ * third-party contributors as indicated by either @author tags or express
+ * copyright attribution statements applied by the authors.  All
+ * third-party contributions are distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -21,24 +23,12 @@
  */
 package org.hibernate.ejb.metamodel;
 
-import java.util.Iterator;
-import java.io.Serializable;
-import javax.persistence.metamodel.EmbeddableType;
-
-import org.hibernate.mapping.Property;
+import javax.persistence.metamodel.Attribute;
 
 /**
- * @author Emmanuel Bernard
+ * TODO : javadoc
+ *
+ * @author Steve Ebersole
  */
-public class EmbeddableTypeImpl<X>
-		extends AbstractManagedType<X>
-		implements EmbeddableType<X>, Serializable {
-
-	public EmbeddableTypeImpl(Class<X> javaType) {
-		super( javaType, null );
-	}
-
-	public PersistenceType getPersistenceType() {
-		return PersistenceType.EMBEDDABLE;
-	}
+public interface AttributeImplementor<X, Y> extends Attribute<X, Y> {
 }

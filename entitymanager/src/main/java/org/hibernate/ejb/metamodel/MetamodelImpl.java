@@ -24,8 +24,6 @@ package org.hibernate.ejb.metamodel;
 import java.util.Set;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.HashMap;
-import java.util.Collections;
 import java.util.HashSet;
 import java.io.Serializable;
 import javax.persistence.metamodel.Metamodel;
@@ -36,31 +34,54 @@ import javax.persistence.metamodel.EmbeddableType;
 import org.hibernate.mapping.PersistentClass;
 
 /**
+ * Hibernate implementation of the JPA {@link Metamodel} contract.
+ *
+ * @author Steve Ebersole
  * @author Emmanuel Bernard
  */
 public class MetamodelImpl implements Metamodel, Serializable {
+	private final Map<Class<?>,EntityTypeImpl<?>> entities;
+	private final Map<Class<?>, EmbeddableTypeImpl<?>> embeddables;
 
-	private final Map<Class<?>,EntityType<?>> entities;
-	private Map<Class<?>, EmbeddableType<?>> embeddables;
-
-	public MetamodelImpl(Iterator<PersistentClass> classes) {
-		Map<Class<?>,EntityType<?>> localEntities = new HashMap<Class<?>,EntityType<?>>();
+	/**
+	 * Instantiate the metamodel from the collection of Hibernate {@link PersistentClass} models.
+	 *
+	 * @param persistentClasses An iterator over the Hibernate {@link PersistentClass} models.
+	 */
+	public MetamodelImpl(Iterator<PersistentClass> persistentClasses) {
 		MetadataContext context = new MetadataContext();
-		while ( classes.hasNext() ) {
-			buildEntityType( classes, localEntities, context );
+		while ( persistentClasses.hasNext() ) {
+			locateOrBuildEntityType( persistentClasses.next(), context );
 		}
-		this.entities = Collections.unmodifiableMap( localEntities );
-		this.embeddables = Collections.unmodifiableMap( context.getEmbeddableTypes() );
-		context.postProcess( this );
+		this.entities = context.getEntityTypeMap();
+		context.wrapUp();
+		this.embeddables = context.getEmbeddableTypeMap();
 	}
 
-	private <X> void buildEntityType(Iterator<PersistentClass> classes, Map<Class<?>, EntityType<?>> localEntities, MetadataContext context) {
-		PersistentClass persistentClass = classes.next();
-		@SuppressWarnings( "unchecked" )
-		final Class<X> clazz = persistentClass.getMappedClass();
-		if ( clazz != null ) {
-			localEntities.put( clazz, new EntityTypeImpl<X>(clazz, persistentClass, context) );
+	private EntityTypeImpl<?> locateOrBuildEntityType(PersistentClass persistentClass, MetadataContext context) {
+		EntityTypeImpl<?> entityType = context.locateEntityType( persistentClass );
+		if ( entityType == null ) {
+			entityType = buildEntityType( persistentClass, context );
 		}
+		return entityType;
+	}
+
+	@SuppressWarnings({ "unchecked" })
+	private EntityTypeImpl<?> buildEntityType(PersistentClass persistentClass, MetadataContext context) {
+		final PersistentClass superPersistentClass = persistentClass.getSuperclass();
+		final EntityTypeImpl superEntityType = superPersistentClass == null
+				? null
+				: locateOrBuildEntityType( superPersistentClass, context );
+		final Class javaType = persistentClass.getMappedClass();
+		EntityTypeImpl entityType = new EntityTypeImpl(
+				javaType,
+				superEntityType,
+				persistentClass.getClassName(),
+				persistentClass.hasIdentifierProperty(),
+				persistentClass.isVersioned()
+		);
+		context.registerEntityType( persistentClass, entityType );
+		return entityType;
 	}
 
 	/**

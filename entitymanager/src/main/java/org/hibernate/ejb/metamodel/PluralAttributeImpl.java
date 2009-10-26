@@ -21,47 +21,45 @@
  */
 package org.hibernate.ejb.metamodel;
 
-import java.lang.reflect.Member;
-import java.util.Map;
-import java.util.List;
-import java.util.Set;
-import java.util.Collection;
 import java.io.Serializable;
-import javax.persistence.metamodel.PluralAttribute;
-import javax.persistence.metamodel.ManagedType;
-import javax.persistence.metamodel.Type;
-import javax.persistence.metamodel.SetAttribute;
+import java.lang.reflect.Member;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import javax.persistence.metamodel.CollectionAttribute;
 import javax.persistence.metamodel.ListAttribute;
 import javax.persistence.metamodel.MapAttribute;
+import javax.persistence.metamodel.PluralAttribute;
+import javax.persistence.metamodel.SetAttribute;
+import javax.persistence.metamodel.Type;
 
 import org.hibernate.mapping.Property;
 
 /**
  * @author Emmanuel Bernard
+ * @author Steve Ebersole
  */
-public abstract class PluralAttributeImpl<X, C, E> implements PluralAttribute<X, C, E>, Serializable {
+public abstract class PluralAttributeImpl<X, C, E>
+		extends AbstractAttribute<X,C>
+		implements PluralAttribute<X, C, E>, Serializable {
 
-	private final ManagedType<X> ownerType;
 	private final Type<E> elementType;
-	//FIXME member is not serializable
-	private final Member member;
-	private final String name;
-	private final PersistentAttributeType persistentAttributeType;
-	private final Class<C> collectionClass;
 
 	private PluralAttributeImpl(Builder<X,C,E,?> builder) {
-		this.ownerType = builder.type;
+		super(
+				builder.property.getName(),
+				builder.collectionClass,
+				builder.type,
+				builder.member,
+				builder.persistentAttributeType
+		);
 		this.elementType = builder.attributeType;
-		this.collectionClass = builder.collectionClass;
-		this.member = builder.member;
-		this.name = builder.property.getName();
-		this.persistentAttributeType = builder.persistentAttributeType;
 	}
 
 	public static class Builder<X, C, E, K> {
 		private final Type<E> attributeType;
-		private final ManagedType<X> type;
+		private final AbstractManagedType<X> type;
 		private Member member;
 		private PersistentAttributeType persistentAttributeType;
 		private Property property;
@@ -69,7 +67,7 @@ public abstract class PluralAttributeImpl<X, C, E> implements PluralAttribute<X,
 		private Type<K> keyType;
 
 
-		private Builder(ManagedType<X> ownerType, Type<E> attrType, Class<C> collectionClass, Type<K> keyType) {
+		private Builder(AbstractManagedType<X> ownerType, Type<E> attrType, Class<C> collectionClass, Type<K> keyType) {
 			this.type = ownerType;
 			this.attributeType = attrType;
 			this.collectionClass = collectionClass;
@@ -91,94 +89,75 @@ public abstract class PluralAttributeImpl<X, C, E> implements PluralAttribute<X,
 			return this;
 		}
 
+		@SuppressWarnings( "unchecked" )
 		public <K> PluralAttributeImpl<X,C,E> build() {
 			if ( Map.class.isAssignableFrom( collectionClass ) ) {
-				@SuppressWarnings( "unchecked" )
 				final Builder<X,Map<K,E>,E,K> builder = (Builder<X,Map<K,E>,E,K>) this;
-				@SuppressWarnings( "unchecked" )
-				final PluralAttributeImpl<X, C, E> result = ( PluralAttributeImpl<X, C, E> ) new MapAttributeImpl<X,K,E>(
+				return ( PluralAttributeImpl<X, C, E> ) new MapAttributeImpl<X,K,E>(
 						builder
 				);
-				return result;
 			}
 			else if ( Set.class.isAssignableFrom( collectionClass ) ) {
-				@SuppressWarnings( "unchecked" )
 				final Builder<X,Set<E>, E,?> builder = (Builder<X, Set<E>, E,?>) this;
-				@SuppressWarnings( "unchecked" )
-				final PluralAttributeImpl<X, C, E> result = ( PluralAttributeImpl<X, C, E> ) new SetAttributeImpl<X,E>(
+				return ( PluralAttributeImpl<X, C, E> ) new SetAttributeImpl<X,E>(
 						builder
 				);
-				return result;
 			}
 			else if ( List.class.isAssignableFrom( collectionClass ) ) {
-				@SuppressWarnings( "unchecked" )
 				final Builder<X, List<E>, E,?> builder = (Builder<X, List<E>, E,?>) this;
-				@SuppressWarnings( "unchecked" )
-				final PluralAttributeImpl<X, C, E> result = ( PluralAttributeImpl<X, C, E> ) new ListAttributeImpl<X,E>(
+				return ( PluralAttributeImpl<X, C, E> ) new ListAttributeImpl<X,E>(
 						builder
 				);
-				return result;
 			}
 			else if ( Collection.class.isAssignableFrom( collectionClass ) ) {
-				@SuppressWarnings( "unchecked" )
 				final Builder<X, Collection<E>,E,?> builder = (Builder<X, Collection<E>, E,?>) this;
-				@SuppressWarnings( "unchecked" )
-				final PluralAttributeImpl<X, C, E> result = ( PluralAttributeImpl<X, C, E> ) new CollectionAttributeImpl<X, E>(
+				return ( PluralAttributeImpl<X, C, E> ) new CollectionAttributeImpl<X, E>(
 						builder
 				);
-				return result;
 			}
 			throw new UnsupportedOperationException( "Unkown collection: " + collectionClass );
 		}
 	}
 
 	public static <X,C,E,K> Builder<X,C,E,K> create(
-			ManagedType<X> ownerType,
+			AbstractManagedType<X> ownerType,
 			Type<E> attrType,
 			Class<C> collectionClass,
 			Type<K> keyType) {
 		return new Builder<X,C,E,K>(ownerType, attrType, collectionClass, keyType);
 	}
 
-	public String getName() {
-		return name;
-	}
-
-	public PersistentAttributeType getPersistentAttributeType() {
-		return persistentAttributeType;
-	}
-
-	public ManagedType<X> getDeclaringType() {
-		return ownerType;
-	}
-
-	public Class<C> getJavaType() {
-		return collectionClass;
-	}
-
-	public abstract CollectionType getCollectionType();
-
+	/**
+	 * {@inheritDoc}
+	 */
 	public Type<E> getElementType() {
 		return elementType;
 	}
 
-
-	public Member getJavaMember() {
-		return member;
-	}
-
+	/**
+	 * {@inheritDoc}
+	 */
 	public boolean isAssociation() {
 		return true;
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	public boolean isCollection() {
 		return true;
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	public BindableType getBindableType() {
 		return BindableType.PLURAL_ATTRIBUTE;
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	public Class<E> getBindableJavaType() {
 		return elementType.getJavaType();
 	}
@@ -188,6 +167,9 @@ public abstract class PluralAttributeImpl<X, C, E> implements PluralAttribute<X,
 			super( xceBuilder );
 		}
 
+		/**
+		 * {@inheritDoc}
+		 */
 		public CollectionType getCollectionType() {
 			return CollectionType.SET;
 		}
@@ -198,6 +180,9 @@ public abstract class PluralAttributeImpl<X, C, E> implements PluralAttribute<X,
 			super( xceBuilder );
 		}
 
+		/**
+		 * {@inheritDoc}
+		 */
 		public CollectionType getCollectionType() {
 			return CollectionType.COLLECTION;
 		}
@@ -208,6 +193,9 @@ public abstract class PluralAttributeImpl<X, C, E> implements PluralAttribute<X,
 			super( xceBuilder );
 		}
 
+		/**
+		 * {@inheritDoc}
+		 */
 		public CollectionType getCollectionType() {
 			return CollectionType.LIST;
 		}
@@ -221,14 +209,23 @@ public abstract class PluralAttributeImpl<X, C, E> implements PluralAttribute<X,
 			this.keyType = xceBuilder.keyType;
 		}
 
+		/**
+		 * {@inheritDoc}
+		 */
 		public CollectionType getCollectionType() {
 			return CollectionType.MAP;
 		}
 
+		/**
+		 * {@inheritDoc}
+		 */
 		public Class<K> getKeyJavaType() {
 			return keyType.getJavaType();
 		}
 
+		/**
+		 * {@inheritDoc}
+		 */
 		public Type<K> getKeyType() {
 			return keyType;
 		}

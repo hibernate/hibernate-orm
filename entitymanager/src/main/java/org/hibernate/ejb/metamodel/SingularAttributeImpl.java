@@ -23,145 +23,123 @@ package org.hibernate.ejb.metamodel;
 
 import java.lang.reflect.Member;
 import java.io.Serializable;
-import javax.persistence.metamodel.ManagedType;
 import javax.persistence.metamodel.SingularAttribute;
 import javax.persistence.metamodel.Type;
 
-import org.hibernate.mapping.Property;
-
 /**
  * @author Emmanuel Bernard
+ * @author Steve Ebersole
  */
-public class SingularAttributeImpl<X, Y> implements SingularAttribute<X, Y>, Serializable {
-	private final boolean isId;
+public class SingularAttributeImpl<X, Y>
+		extends AbstractAttribute<X,Y>
+		implements SingularAttribute<X, Y>, Serializable {
+	private final boolean isIdentifier;
 	private final boolean isVersion;
 	private final boolean isOptional;
-	private final ManagedType<X> ownerType;
-	private final Type<Y> attrType;
-	//FIXME member is not serializable
-	private final Member member;
-	private final String name;
-	private final PersistentAttributeType persistentAttributeType;
+	private final Type<Y> attributeType;
 
-	private SingularAttributeImpl(Builder<X,Y> builder) {
-		this.ownerType = builder.type;
-		this.attrType = builder.attributeType;
-		this.isId = builder.isId;
-		this.isVersion = builder.isVersion;
-		final Property property = builder.property;
-		this.isOptional = property.isOptional();
-		this.member = builder.member;
-		this.name = property.getName();
-		if ( builder.persistentAttributeType != null) {
-			this.persistentAttributeType = builder.persistentAttributeType;
-		}
-		else {
-			this.persistentAttributeType = property.isComposite() ?
-														PersistentAttributeType.EMBEDDED :
-														PersistentAttributeType.BASIC;
+	public SingularAttributeImpl(
+			String name,
+			Class<Y> javaType,
+			AbstractManagedType<X> declaringType,
+			Member member,
+			boolean isIdentifier,
+			boolean isVersion,
+			boolean isOptional,
+			Type<Y> attributeType,
+			PersistentAttributeType persistentAttributeType) {
+		super( name, javaType, declaringType, member, persistentAttributeType );
+		this.isIdentifier = isIdentifier;
+		this.isVersion = isVersion;
+		this.isOptional = isOptional;
+		this.attributeType = attributeType;
+	}
+
+	/**
+	 * Subclass used to simply instantiation of singular attributes representing an entity's
+	 * identifier.
+	 */
+	public static class Identifier<X,Y> extends SingularAttributeImpl<X,Y> {
+		public Identifier(
+				String name,
+				Class<Y> javaType,
+				AbstractManagedType<X> declaringType,
+				Member member,
+				Type<Y> attributeType,
+				PersistentAttributeType persistentAttributeType) {
+			super( name, javaType, declaringType, member, true, false, false, attributeType, persistentAttributeType );
 		}
 	}
 
-	public static class Builder<X,Y> {
-		private boolean isId;
-		private boolean isVersion;
-		//private boolean isOptional = true;
-		private final Type<Y> attributeType;
-		private final ManagedType<X> type;
-		private Member member;
-		//private String name;
-		private PersistentAttributeType persistentAttributeType;
-		private Property property;
-
-
-		private Builder(ManagedType<X> ownerType, Type<Y> attrType) {
-			this.type = ownerType;
-			this.attributeType = attrType;
-		}
-
-		public Builder<X,Y> member(Member member) {
-			this.member = member;
-			return this;
-		}
-
-		public Builder<X, Y> property(Property property) {
-			this.property = property;
-			return this;
-		}
-
-		public Builder<X,Y> id() {
-			isId = true;
-			return this;
-		}
-
-		public Builder<X,Y> version() {
-			isVersion = true;
-			return this;
-		}
-
-		public SingularAttribute<X, Y> build() {
-			return new SingularAttributeImpl<X,Y>(this);
-		}
-
-		public Builder<X, Y> persistentAttributeType(PersistentAttributeType attrType) {
-			this.persistentAttributeType = attrType;
-			return this;
+	/**
+	 * Subclass used to simply instantiation of singular attributes representing an entity's
+	 * version.
+	 */
+	public static class Version<X,Y> extends SingularAttributeImpl<X,Y> {
+		public Version(
+				String name,
+				Class<Y> javaType,
+				AbstractManagedType<X> declaringType,
+				Member member,
+				Type<Y> attributeType,
+				PersistentAttributeType persistentAttributeType) {
+			super( name, javaType, declaringType, member, false, true, false, attributeType, persistentAttributeType );
 		}
 	}
 
-	public static <X,Y> Builder<X,Y> create(ManagedType<X> ownerType, Type<Y> attrType) {
-		return new Builder<X,Y>(ownerType, attrType);
-	}
-
+	/**
+	 * {@inheritDoc}
+	 */
 	public boolean isId() {
-		return isId;
+		return isIdentifier;
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	public boolean isVersion() {
 		return isVersion;
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	public boolean isOptional() {
 		return isOptional;
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	public Type<Y> getType() {
-		return attrType;
+		return attributeType;
 	}
 
-	public String getName() {
-		return name;
-	}
-
-	public PersistentAttributeType getPersistentAttributeType() {
-		return persistentAttributeType;
-	}
-
-	public ManagedType<X> getDeclaringType() {
-		return ownerType;
-	}
-
-	public Class<Y> getJavaType() {
-		return attrType.getJavaType();
-	}
-
-	public Member getJavaMember() {
-		return member;
-	}
-
+	/**
+	 * {@inheritDoc}
+	 */
 	public boolean isAssociation() {
 		return false;
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	public boolean isCollection() {
 		return false;
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	public BindableType getBindableType() {
 		return BindableType.SINGULAR_ATTRIBUTE;
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	public Class<Y> getBindableJavaType() {
-		return attrType.getJavaType();
+		return attributeType.getJavaType();
 	}
 }

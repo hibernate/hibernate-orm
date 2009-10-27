@@ -23,6 +23,7 @@
  */
 package org.hibernate.envers.entities.mapper.relation.lazy.proxy;
 
+import java.io.Serializable;
 import java.util.Collection;
 import java.util.Iterator;
 
@@ -31,8 +32,10 @@ import org.hibernate.envers.entities.mapper.relation.lazy.initializor.Initializo
 /**
  * @author Adam Warski (adam at warski dot org)
  */
-public abstract class CollectionProxy<U, T extends Collection<U>> implements Collection<U> {
-    private org.hibernate.envers.entities.mapper.relation.lazy.initializor.Initializor<T> initializor;
+public abstract class CollectionProxy<U, T extends Collection<U>> implements Collection<U>, Serializable {
+	private static final long serialVersionUID = 8698249863871832402L;
+
+	private transient org.hibernate.envers.entities.mapper.relation.lazy.initializor.Initializor<T> initializor;
     protected T delegate;
 
     protected CollectionProxy() {

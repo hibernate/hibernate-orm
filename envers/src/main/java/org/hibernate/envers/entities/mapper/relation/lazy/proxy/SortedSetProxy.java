@@ -25,12 +25,11 @@ package org.hibernate.envers.entities.mapper.relation.lazy.proxy;
 
 import java.util.Comparator;
 import java.util.SortedSet;
-import java.io.Serializable;
 
 /**
  * @author Adam Warski (adam at warski dot org)
  */
-public class SortedSetProxy<U> extends CollectionProxy<U, SortedSet<U>> implements SortedSet<U>, Serializable {
+public class SortedSetProxy<U> extends CollectionProxy<U, SortedSet<U>> implements SortedSet<U> {
     private static final long serialVersionUID = 2092884107178125905L;
 
     public SortedSetProxy() {

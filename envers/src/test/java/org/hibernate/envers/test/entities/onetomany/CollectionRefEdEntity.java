@@ -24,6 +24,7 @@
 package org.hibernate.envers.test.entities.onetomany;
 
 import java.util.Collection;
+import java.io.Serializable;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.OneToMany;
@@ -35,7 +36,9 @@ import org.hibernate.envers.Audited;
  * @author Adam Warski (adam at warski dot org)
  */
 @Entity
-public class CollectionRefEdEntity {
+public class CollectionRefEdEntity implements Serializable {
+	private static final long serialVersionUID = -1694020123633796683L;
+
     @Id
     private Integer id;
 
@@ -46,7 +49,7 @@ public class CollectionRefEdEntity {
     @OneToMany(mappedBy="reference")
     private Collection<CollectionRefIngEntity> reffering;
 
-    public CollectionRefEdEntity() {
+	public CollectionRefEdEntity() {
     }
 
     public CollectionRefEdEntity(Integer id, String data) {

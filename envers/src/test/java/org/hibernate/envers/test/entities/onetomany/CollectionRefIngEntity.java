@@ -29,12 +29,16 @@ import javax.persistence.ManyToOne;
 
 import org.hibernate.envers.Audited;
 
+import java.io.Serializable;
+
 /**
  * ReferencIng entity
  * @author Adam Warski (adam at warski dot org)
  */
 @Entity
-public class CollectionRefIngEntity {
+public class CollectionRefIngEntity implements Serializable {
+	private static final long serialVersionUID = -9019967223928425707L;
+	
     @Id
     private Integer id;
 
@@ -45,7 +49,7 @@ public class CollectionRefIngEntity {
     @ManyToOne
     private CollectionRefEdEntity reference;
 
-    public CollectionRefIngEntity() { }
+	public CollectionRefIngEntity() { }
 
     public CollectionRefIngEntity(Integer id, String data, CollectionRefEdEntity reference) {
         this.id = id;

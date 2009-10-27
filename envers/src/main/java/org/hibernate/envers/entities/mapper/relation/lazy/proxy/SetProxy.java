@@ -29,7 +29,7 @@ import java.io.Serializable;
 /**
  * @author Adam Warski (adam at warski dot org)
  */
-public class SetProxy<U> extends CollectionProxy<U, Set<U>> implements Set<U>, Serializable {
+public class SetProxy<U> extends CollectionProxy<U, Set<U>> implements Set<U> {
     private static final long serialVersionUID = 131464133074137701L;
 
     public SetProxy() {

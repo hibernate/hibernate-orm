@@ -33,7 +33,7 @@ import java.io.Serializable;
 /**
  * @author Adam Warski (adam at warski dot org)
  */
-public class ListProxy<U> extends CollectionProxy<U, List<U>> implements List<U>, Serializable {
+public class ListProxy<U> extends CollectionProxy<U, List<U>> implements List<U> {
     private static final long serialVersionUID = -5479232938279790987L;
 
     public ListProxy() {

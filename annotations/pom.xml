@@ -163,47 +163,52 @@
             <id>doc</id>
             <build>
                 <plugins>
-                    <plugin>
+                  <plugin>
                         <groupId>org.jboss.maven.plugins</groupId>
                         <artifactId>maven-jdocbook-plugin</artifactId>
-                        <version>2.1.0</version>
+                        <version>2.2.0</version>
                         <extensions>true</extensions>
                         <dependencies>
                             <dependency>
                                 <groupId>org.hibernate</groupId>
                                 <artifactId>hibernate-jdocbook-style</artifactId>
-                                <version>1.0.2</version>
+                                <version>2.0.0</version>
                                 <type>jdocbook-style</type>
                             </dependency>
                         </dependencies>
                         <configuration>
                             <sourceDocumentName>master.xml</sourceDocumentName>
-                            <sourceDirectory>${basedir}/src/main/docbook/en</sourceDirectory>
-                            <masterTranslation>en-US</masterTranslation>
+                            <sourceDirectory>${basedir}/src/main/docbook</sourceDirectory>
+                            <masterTranslation>en</masterTranslation>
                             <imageResource>
                                 <directory>${basedir}/src/main/docbook/en/images</directory>
                             </imageResource>
                             <formats>
                                 <format>
                                     <formatName>pdf</formatName>
-                                    <stylesheetResource>classpath:/xslt/hibernate/pdf/main-pdf.xsl</stylesheetResource>
-                                    <finalName>hibernate-validator-legacy-guide.pdf</finalName>
+                                    <stylesheetResource>classpath:/xslt/org/hibernate/jdocbook/xslt/pdf.xsl</stylesheetResource>
+                                    <finalName>hibernate_reference.pdf</finalName>
                                 </format>
                                 <format>
                                     <formatName>html_single</formatName>
-                                    <stylesheetResource>classpath:/xslt/hibernate/html/main-single.xsl </stylesheetResource>
+                                    <stylesheetResource>classpath:/xslt/org/hibernate/jdocbook/xslt/xhtml-single.xsl
+                            </stylesheetResource>
                                     <finalName>index.html</finalName>
                                 </format>
                                 <format>
                                     <formatName>html</formatName>
-                                    <stylesheetResource>classpath:/xslt/hibernate/html/main-chunk.xsl </stylesheetResource>
+                                    <stylesheetResource>classpath:/xslt/org/hibernate/jdocbook/xslt/xhtml.xsl
+                            </stylesheetResource>
                                     <finalName>index.html</finalName>
                                 </format>
                             </formats>
                             <options>
                                 <xincludeSupported>true</xincludeSupported>
+                                <xmlTransformerType>saxon</xmlTransformerType>
+                                <!-- needed for uri-resolvers; can be ommitted if using 'current' uri scheme -->
+                                <!--     could also locate the docbook dependency and inspect its version... -->
+                                <docbookVersion>1.72.0</docbookVersion>
                                 <localeSeparator>-</localeSeparator>
-                                <useRelativeImageUris>true</useRelativeImageUris>
                             </options>
                         </configuration>
                         <executions>

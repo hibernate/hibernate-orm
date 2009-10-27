@@ -127,6 +127,7 @@ import org.hibernate.annotations.GenericGenerators;
 import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.annotations.common.reflection.XAnnotatedElement;
 import org.hibernate.annotations.common.reflection.XClass;
+import org.hibernate.annotations.common.reflection.XMethod;
 import org.hibernate.annotations.common.reflection.XPackage;
 import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.cfg.annotations.CollectionBinder;
@@ -714,9 +715,10 @@ public final class AnnotationBinder {
 		//process idclass if any
 		Set<String> idProperties = new HashSet<String>();
 		IdClass idClass = null;
+		XClass current = null;
 		if ( !inheritanceState.hasParents ) {
 			//look for idClass
-			XClass current = inheritanceState.clazz;
+			current = inheritanceState.clazz;
 			InheritanceState state = inheritanceState;
 			do {
 				current = state.clazz;
@@ -740,6 +742,9 @@ public final class AnnotationBinder {
 			PropertyData inferredData = new PropertyPreloadedData(
 					entityBinder.getPropertyAccessor(), "id", compositeClass
 			);
+			PropertyData baseInferredData = new PropertyPreloadedData(
+                  entityBinder.getPropertyAccessor(), "id", current
+            );
 			HashMap<String, IdGenerator> localGenerators = new HashMap<String, IdGenerator>();
 			boolean ignoreIdAnnotations = entityBinder.isIgnoreIdAnnotations();
 			entityBinder.setIgnoreIdAnnotations( true );
@@ -747,6 +752,7 @@ public final class AnnotationBinder {
 					generatorType,
 					generator,
 					inferredData,
+					baseInferredData,
 					null,
 					propertyHolder,
 					localGenerators,
@@ -762,6 +768,7 @@ public final class AnnotationBinder {
 			Component mapper = fillComponent(
 					propertyHolder,
 					inferredData,
+					baseInferredData,
 					propertyAnnotated,
 					propertyAccessor, false,
 					entityBinder,
@@ -1941,6 +1948,17 @@ public final class AnnotationBinder {
 			EntityBinder entityBinder,
 			boolean isComponentEmbedded, boolean isIdentifierMapper, boolean inSecondPass, ExtendedMappings mappings
 	) {
+	   
+	   return fillComponent(propertyHolder, inferredData, null, propertyAnnotated, propertyAccessor, isNullable, entityBinder, isComponentEmbedded, isIdentifierMapper, inSecondPass, mappings);
+	}
+	
+	public static Component fillComponent(
+          PropertyHolder propertyHolder, PropertyData inferredData, PropertyData baseInferredData,
+          boolean propertyAnnotated, String propertyAccessor, boolean isNullable,
+          EntityBinder entityBinder,
+          boolean isComponentEmbedded, boolean isIdentifierMapper, boolean inSecondPass, ExtendedMappings mappings
+  ) {
+	
 		/**
 		 * inSecondPass can only be used to apply right away the second pass of a composite-element
 		 * Because it's a value type, there is no bidirectional association, hence second pass
@@ -1963,8 +1981,29 @@ public final class AnnotationBinder {
 				comp, subpath,
 				inferredData, propertyHolder, mappings
 		);
+		
 		List<PropertyData> classElements = new ArrayList<PropertyData>();
 		XClass returnedClassOrElement = inferredData.getClassOrElement();
+		
+		List<PropertyData> baseClassElements = null;
+		XClass baseReturnedClassOrElement;
+		PropertyHolder baseSubHolder;
+		if(baseInferredData != null)
+		{
+		   baseSubHolder = PropertyHolderBuilder.buildPropertyHolder(
+		         comp, subpath,
+		         inferredData, propertyHolder, mappings
+		   );
+		   baseClassElements = new ArrayList<PropertyData>();
+		   baseReturnedClassOrElement = baseInferredData.getClassOrElement();
+		   bindTypeDefs(baseReturnedClassOrElement, mappings);
+		   addElementsOfAClass(
+		         baseClassElements,
+		         baseSubHolder,
+		         propertyAnnotated,
+		         propertyAccessor, baseReturnedClassOrElement, mappings
+		   );
+		}
 
 		//embeddable elements can have type defs
 		bindTypeDefs(returnedClassOrElement, mappings);
@@ -1985,6 +2024,16 @@ public final class AnnotationBinder {
 					propertyAccessor, superClass, mappings
 			);
 			superClass = superClass.getSuperclass();
+		}
+		if(baseClassElements != null)
+		{
+		   if(!hasIdClassAnnotations(inferredData.getPropertyClass()))
+		   {
+		      for(int i=0; i < classElements.size(); i++)
+		      {
+		         classElements.set(i, baseClassElements.get(i));  //this works since they are in the same order
+		      }
+		   }
 		}
 		for (PropertyData propertyAnnotatedElement : classElements) {
 			processElementAnnotations(
@@ -2008,6 +2057,20 @@ public final class AnnotationBinder {
 			String propertyAccessor, EntityBinder entityBinder, boolean isEmbedded,
 			boolean isIdentifierMapper, ExtendedMappings mappings
 	) {
+	   
+	   bindId(generatorType, generatorName, inferredData, null, columns, propertyHolder, localGenerators, isComposite, isPropertyAnnotated, propertyAccessor, entityBinder, isEmbedded, isIdentifierMapper, mappings);
+	}
+	
+    private static void bindId(
+          String generatorType, String generatorName, PropertyData inferredData,
+          PropertyData baseInferredData, Ejb3Column[] columns, PropertyHolder propertyHolder,
+          Map<String, IdGenerator> localGenerators,
+          boolean isComposite,
+          boolean isPropertyAnnotated,
+          String propertyAccessor, EntityBinder entityBinder, boolean isEmbedded,
+          boolean isIdentifierMapper, ExtendedMappings mappings
+  ) {
+     
 		/*
 		 * Fill simple value and property since and Id is a property
 		 */
@@ -2025,7 +2088,7 @@ public final class AnnotationBinder {
 		SimpleValue id;
 		if ( isComposite ) {
 			id = fillComponent(
-					propertyHolder, inferredData, isPropertyAnnotated, propertyAccessor,
+					propertyHolder, inferredData, baseInferredData, isPropertyAnnotated, propertyAccessor,
 					false, entityBinder, isEmbedded, isIdentifierMapper, false, mappings
 			);
 			Component componentId = (Component) id;
@@ -2473,5 +2536,33 @@ public final class AnnotationBinder {
 			inheritanceStatePerClass.put( clazz, state );
 		}
 		return inheritanceStatePerClass;
+	}
+
+	private static boolean hasIdClassAnnotations(XClass idClass)
+	{
+		if(idClass.getAnnotation(Embeddable.class) != null)
+			return true;
+
+		List<XProperty> properties = idClass.getDeclaredProperties( XClass.ACCESS_FIELD );
+		for ( XProperty property : properties ) {
+			if ( property.isAnnotationPresent( Column.class ) || property.isAnnotationPresent( OneToMany.class ) ||
+					property.isAnnotationPresent( ManyToOne.class ) || property.isAnnotationPresent( Id.class ) ||
+					property.isAnnotationPresent( GeneratedValue.class ) || property.isAnnotationPresent( OneToOne.class ) ||
+					property.isAnnotationPresent( ManyToMany.class )
+					) {
+				return true;
+			}
+		}
+		List<XMethod> methods = idClass.getDeclaredMethods();
+		for ( XMethod method : methods ) {
+			if ( method.isAnnotationPresent( Column.class ) || method.isAnnotationPresent( OneToMany.class ) ||
+					method.isAnnotationPresent( ManyToOne.class ) || method.isAnnotationPresent( Id.class ) ||
+					method.isAnnotationPresent( GeneratedValue.class ) || method.isAnnotationPresent( OneToOne.class ) ||
+					method.isAnnotationPresent( ManyToMany.class )
+					) {
+				return true;
+			}
+		}
+		return false;
 	}
 }

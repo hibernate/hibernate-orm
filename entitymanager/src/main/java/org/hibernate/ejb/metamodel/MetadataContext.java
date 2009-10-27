@@ -30,6 +30,7 @@ import java.util.Map;
 import java.util.Set;
 import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.SingularAttribute;
+import javax.persistence.MappedSuperclass;
 
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
@@ -40,6 +41,10 @@ import org.hibernate.engine.SessionFactoryImplementor;
  * <p/>
  * This contextual information includes data needing to be processed in a second pass as well as
  * cross-references into the built metamodel classes.
+ * <p/>
+ * At the end of the day, clients are interested in the {@link #getEntityTypeMap} and {@link #getEmbeddableTypeMap}
+ * results, which represent all the registered {@link #registerEntityType entities} and
+ *  {@link #registerEmbeddedableType embeddabled} respectively.
  *
  * @author Steve Ebersole
  * @author Emmanuel Bernard
@@ -63,6 +68,29 @@ class MetadataContext {
 
 	/*package*/ SessionFactoryImplementor getSessionFactory() {
 		return sessionFactory;
+	}
+
+	/**
+	 * Retrieves the {@link Class java type} to {@link EntityType} map.
+	 *
+	 * @return The {@link Class java type} to {@link EntityType} map.
+	 */
+	public Map<Class<?>, EntityTypeImpl<?>> getEntityTypeMap() {
+		return Collections.unmodifiableMap( entityTypes );
+	}
+
+	public Map<Class<?>, EmbeddableTypeImpl<?>> getEmbeddableTypeMap() {
+		return Collections.unmodifiableMap( embeddables );
+	}
+
+	/*package*/ void registerEntityType(PersistentClass persistentClass, EntityTypeImpl<?> entityType) {
+		entityTypes.put( entityType.getBindableJavaType(), entityType );
+		entityTypesByEntityName.put( persistentClass.getEntityName(), entityType );
+		entityTypesByPersistentClass.put( persistentClass, entityType );
+	}
+
+	/*package*/ void registerEmbeddedableType(EmbeddableTypeImpl<?> embeddableType) {
+		embeddables.put( embeddableType.getJavaType(), embeddableType );
 	}
 
 	/**
@@ -98,29 +126,6 @@ class MetadataContext {
 		return entityTypesByEntityName.get( entityName );
 	}
 
-	/**
-	 * Retrieves the {@link Class java type} to {@link EntityType} map.
-	 *
-	 * @return The {@link Class java type} to {@link EntityType} map.
-	 */
-	public Map<Class<?>, EntityTypeImpl<?>> getEntityTypeMap() {
-		return Collections.unmodifiableMap( entityTypes );
-	}
-
-	/*package*/ void registerEntityType(PersistentClass persistentClass, EntityTypeImpl<?> entityType) {
-		entityTypes.put( entityType.getBindableJavaType(), entityType );
-		entityTypesByEntityName.put( persistentClass.getEntityName(), entityType );
-		entityTypesByPersistentClass.put( persistentClass, entityType );
-	}
-
-	/*package*/ void registerEmbeddedableType(EmbeddableTypeImpl<?> embeddableType) {
-		embeddables.put( embeddableType.getJavaType(), embeddableType );
-	}
-
-	public Map<Class<?>, EmbeddableTypeImpl<?>> getEmbeddableTypeMap() {
-		return Collections.unmodifiableMap( embeddables );
-	}
-
 	@SuppressWarnings({ "unchecked" })
 	public void wrapUp() {
 		// IMPL NOTE : entityTypesByPersistentClass is a insertion-ordered map, where the insertion order
@@ -135,7 +140,7 @@ class MetadataContext {
 				entry.getValue().getBuilder().addAttribute( attribute );
 			}
 			entry.getValue().lock();
-			// todo : find the X_ style metamodel classes, if present, and inject
+			populateStaticMetamodel( entry.getValue() );
 		}
 	}
 
@@ -169,6 +174,36 @@ class MetadataContext {
 			attributes.add( attributeFactory.buildIdAttribute( jpaEntityType, properties.next() ) );
 		}
 		return attributes;
+	}
+
+	private <X> void populateStaticMetamodel(AbstractManagedType<X> managedType) {
+		final Class<X> managedTypeClass = managedType.getJavaType();
+		final String metamodelClassName = managedTypeClass.getName() + "_";
+		try {
+			final Class metamodelClass = Class.forName( metamodelClassName, true, managedTypeClass.getClassLoader() );
+			// we found the class; so populate it...
+			registerAttributes( metamodelClass, managedType );
+		}
+		catch ( ClassNotFoundException ignore ) {
+			// nothing to do...
+		}
+
+		// todo : this does not account for @MappeSuperclass, mainly because this is not being tracked in our
+		// internal metamodel as populated from the annotatios properly
+		AbstractManagedType<? super X> superType = managedType.getSupertype();
+		if ( superType != null ) {
+			populateStaticMetamodel( superType );
+		}
+	}
+
+	private final Set<Class> processedMetamodelClasses = new HashSet<Class>();
+
+	private <X> void registerAttributes(Class metamodelClass, AbstractManagedType<X> managedType) {
+		if ( processedMetamodelClasses.add( metamodelClass ) ) {
+			return;
+		}
+
+		// push the attributes on to the metamodel class...
 	}
 
 }

@@ -29,6 +29,11 @@ import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Join;
 
 import org.hibernate.ejb.test.TestCase;
+import org.hibernate.ejb.test.callbacks.VideoSystem;
+import org.hibernate.ejb.test.callbacks.Television;
+import org.hibernate.ejb.test.callbacks.RemoteControl;
+import org.hibernate.ejb.test.inheritance.Fruit;
+import org.hibernate.ejb.test.inheritance.Strawberry;
 
 /**
  * TODO : javadoc
@@ -41,7 +46,14 @@ public class CriteriaCompilingTest extends TestCase {
 				Customer.class,
 				Item.class,
 				Order.class,
-				Product.class
+				Product.class,
+				// @Inheritance
+				Fruit.class,
+				Strawberry.class,
+				// @MappedSuperclass
+				VideoSystem.class,
+				Television.class,
+				RemoteControl.class
 		};
 	}
 

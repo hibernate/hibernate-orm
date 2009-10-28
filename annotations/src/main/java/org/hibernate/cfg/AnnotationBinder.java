@@ -434,6 +434,7 @@ public final class AnnotationBinder {
 		if ( AnnotatedClassType.EMBEDDABLE_SUPERCLASS.equals( classType ) ) {
 			bindQueries( clazzToProcess, mappings );
 			bindTypeDefs(clazzToProcess, mappings);
+			bindFilterDefs(clazzToProcess, mappings);
 		}
 
 		if ( AnnotatedClassType.EMBEDDABLE_SUPERCLASS.equals( classType ) //will be processed by their subentities
@@ -593,16 +594,12 @@ public final class AnnotationBinder {
 		entityBinder.setWhere( whereAnn );
 		entityBinder.setCache( cacheAnn );
 		entityBinder.setInheritanceState( inheritanceState );
-		Filter filterAnn = annotatedClass.getAnnotation( Filter.class );
-		if ( filterAnn != null ) {
-			entityBinder.addFilter( filterAnn.name(), filterAnn.condition() );
+		
+		//Filters are not allowed on subclasses
+		if ( !inheritanceState.hasParents ) {
+			bindFilters(clazzToProcess, entityBinder, mappings);
 		}
-		Filters filtersAnn = annotatedClass.getAnnotation( Filters.class );
-		if ( filtersAnn != null ) {
-			for (Filter filter : filtersAnn.value()) {
-				entityBinder.addFilter( filter.name(), filter.condition() );
-			}
-		}
+		
 		entityBinder.bindEntity();
 
 		if ( inheritanceState.hasTable() ) {
@@ -969,7 +966,42 @@ public final class AnnotationBinder {
 
 		return classesToProcess;
 	}
-
+	
+	/**
+	 * Process the filters defined on the given class, as well as all filters defined 
+	 * on the MappedSuperclass(s) in the inheritance hierarchy  
+	 */
+	private static void bindFilters(XClass annotatedClass, EntityBinder entityBinder, 
+			ExtendedMappings mappings) {
+		
+		bindFilters(annotatedClass, entityBinder);
+		
+		XClass classToProcess = annotatedClass.getSuperclass(); 
+		while (classToProcess != null) {
+			AnnotatedClassType classType = mappings.getClassType( classToProcess );
+			if ( AnnotatedClassType.EMBEDDABLE_SUPERCLASS.equals( classType ) ) {
+				bindFilters(classToProcess, entityBinder);
+			}
+			classToProcess = classToProcess.getSuperclass();
+		}
+		
+	}
+	
+	private static void bindFilters(XAnnotatedElement annotatedElement, EntityBinder entityBinder) {
+			
+		Filters filtersAnn = annotatedElement.getAnnotation( Filters.class );
+		if ( filtersAnn != null ) {
+			for (Filter filter : filtersAnn.value()) {
+				entityBinder.addFilter( filter.name(), filter.condition() );
+			}
+		}
+		
+		Filter filterAnn = annotatedElement.getAnnotation( Filter.class );
+		if ( filterAnn != null ) {
+			entityBinder.addFilter( filterAnn.name(), filterAnn.condition() );
+		}
+	}
+		
 	private static void bindFilterDefs(XAnnotatedElement annotatedElement, ExtendedMappings mappings) {
 		FilterDef defAnn = annotatedElement.getAnnotation( FilterDef.class );
 		FilterDefs defsAnn = annotatedElement.getAnnotation( FilterDefs.class );

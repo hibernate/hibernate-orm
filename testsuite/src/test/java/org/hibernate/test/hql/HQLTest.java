@@ -34,6 +34,7 @@ import org.hibernate.hql.ast.ASTQueryTranslatorFactory;
 import org.hibernate.hql.ast.DetailedSemanticException;
 import org.hibernate.hql.ast.QuerySyntaxException;
 import org.hibernate.hql.ast.QueryTranslatorImpl;
+import org.hibernate.hql.ast.SqlGenerator;
 import org.hibernate.hql.ast.tree.ConstructorNode;
 import org.hibernate.hql.ast.tree.DotNode;
 import org.hibernate.hql.ast.tree.FromReferenceNode;
@@ -73,12 +74,14 @@ public class HQLTest extends QueryTranslatorTestCase {
 				throw new QueryException( "illegal syntax near collection: " + propertyName );
 			}
 		};
+		SqlGenerator.REGRESSION_STYLE_CROSS_JOINS = true;
 	}
 
 	protected void cleanupTest() throws Exception {
 		SelectClause.VERSION2_SQL = false;
 		DotNode.REGRESSION_STYLE_JOIN_SUPPRESSION = false;
 		DotNode.ILLEGAL_COLL_DEREF_EXCP_BUILDER = DotNode.DEF_ILLEGAL_COLL_DEREF_EXCP_BUILDER;
+		SqlGenerator.REGRESSION_STYLE_CROSS_JOINS = false;
 		super.cleanupTest();
 	}
 

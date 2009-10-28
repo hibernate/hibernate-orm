@@ -58,6 +58,8 @@ import org.slf4j.LoggerFactory;
 public class SqlGenerator extends SqlGeneratorBase implements ErrorReporter {
 	private static final Logger log = LoggerFactory.getLogger( SqlGenerator.class );
 
+	public static boolean REGRESSION_STYLE_CROSS_JOINS = false;
+
 	/**
 	 * all append invocations on the buf should go through this Output instance variable.
 	 * The value of this variable may be temporarily substitued by sql function processing code
@@ -301,7 +303,7 @@ public class SqlGenerator extends SqlGeneratorBase implements ErrorReporter {
 			// right represents a joins originating from left; or
 			// both right and left reprersent joins originating from the same FromElement
 			if ( right.getJoinSequence() != null && right.getJoinSequence().isThetaStyle() ) {
-				out( ", " );
+				writeCrossJoinSeparator();
 			}
 			else {
 				out( " " );
@@ -309,7 +311,16 @@ public class SqlGenerator extends SqlGeneratorBase implements ErrorReporter {
 		}
 		else {
 			// these are just two unrelated table references
+			writeCrossJoinSeparator();
+		}
+	}
+
+	private void writeCrossJoinSeparator() {
+		if ( REGRESSION_STYLE_CROSS_JOINS ) {
 			out( ", " );
+		}
+		else {
+			out( sessionFactory.getDialect().getCrossJoinSeparator() );
 		}
 	}
 

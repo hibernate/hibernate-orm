@@ -211,6 +211,13 @@ public class Oracle8iDialect extends Dialect {
 	}
 
 	/**
+	 * {@inheritDoc}
+	 */
+	public String getCrossJoinSeparator() {
+		return ", ";
+	}
+
+	/**
 	 * Map case support to the Oracle DECODE function.  Oracle did not
 	 * add support for CASE until 9i.
 	 *

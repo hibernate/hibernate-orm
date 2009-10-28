@@ -40,4 +40,7 @@ public class Sybase11Dialect extends AbstractTransactSQLDialect  {
 		return new Sybase11JoinFragment();
 	}
 
+	public String getCrossJoinSeparator() {
+		return ", ";
+	}
 }

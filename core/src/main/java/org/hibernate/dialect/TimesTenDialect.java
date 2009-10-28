@@ -139,6 +139,10 @@ public class TimesTenDialect extends Dialect {
 		return new OracleJoinFragment();
 	}
 
+	public String getCrossJoinSeparator() {
+		return ", ";
+	}
+
 	// new methods in dialect3
 	/*public boolean supportsForUpdateNowait() {
 		return false;

@@ -1578,6 +1578,19 @@ public abstract class Dialect {
 		return "";
 	}
 
+	/**
+	 * Get the separator to use for definining cross joins when translating HQL queries.
+	 * <p/>
+	 * Typically this will be either [<tt> cross join </tt>] or [<tt>, </tt>]
+	 * <p/>
+	 * Note that the spaces are important!
+	 *
+	 * @return
+	 */
+	public String getCrossJoinSeparator() {
+		return " cross join ";
+	}
+
 
 	// Informational metadata ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

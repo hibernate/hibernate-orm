@@ -130,6 +130,7 @@ import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.secure.JACCConfiguration;
 import org.hibernate.tool.hbm2ddl.DatabaseMetadata;
 import org.hibernate.tool.hbm2ddl.TableMetadata;
+import org.hibernate.tool.hbm2ddl.IndexMetadata;
 import org.hibernate.type.SerializationException;
 import org.hibernate.type.Type;
 import org.hibernate.util.ArrayHelper;
@@ -1068,26 +1069,35 @@ public class Configuration implements Serializable {
 					}
 				}
 
-			}
-
-			/*//broken, 'cos we don't generate these with names in SchemaExport
-			subIter = table.getIndexIterator();
-			while ( subIter.hasNext() ) {
-				Index index = (Index) subIter.next();
-				if ( !index.isForeignKey() || !dialect.hasImplicitIndexForForeignKey() ) {
-					if ( tableInfo==null || tableInfo.getIndexMetadata( index.getFilterName() ) == null ) {
-						script.add( index.sqlCreateString(dialect, mapping) );
+				Iterator subIter = table.getIndexIterator();
+				while ( subIter.hasNext() ) {
+					final Index index = (Index) subIter.next();
+					// Skip if index already exists
+					if ( tableInfo != null && StringHelper.isNotEmpty( index.getName() ) ) {
+						final IndexMetadata meta = tableInfo.getIndexMetadata( index.getName() );
+						if ( meta != null ) {
+							continue;
+						}
 					}
+					script.add(
+							index.sqlCreateString(
+									dialect,
+									mapping,
+									defaultCatalog,
+									defaultSchema
+							)
+					);
 				}
+
+//broken, 'cos we don't generate these with names in SchemaExport
+//				subIter = table.getUniqueKeyIterator();
+//				while ( subIter.hasNext() ) {
+//					UniqueKey uk = (UniqueKey) subIter.next();
+//					if ( tableInfo==null || tableInfo.getIndexMetadata( uk.getFilterName() ) == null ) {
+//						script.add( uk.sqlCreateString(dialect, mapping) );
+//					}
+//				}
 			}
-			//broken, 'cos we don't generate these with names in SchemaExport
-			subIter = table.getUniqueKeyIterator();
-			while ( subIter.hasNext() ) {
-				UniqueKey uk = (UniqueKey) subIter.next();
-				if ( tableInfo==null || tableInfo.getIndexMetadata( uk.getFilterName() ) == null ) {
-					script.add( uk.sqlCreateString(dialect, mapping) );
-				}
-			}*/
 		}
 
 		iter = iterateGenerators( dialect );

@@ -27,6 +27,7 @@ package org.hibernate.dialect;
 import org.hibernate.Hibernate;
 import org.hibernate.QueryException;
 import org.hibernate.HibernateException;
+import org.hibernate.util.ReflectHelper;
 import org.hibernate.engine.Mapping;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.type.Type;
@@ -39,6 +40,10 @@ import org.hibernate.sql.DerbyCaseFragment;
 
 import java.util.List;
 import java.util.ArrayList;
+import java.lang.reflect.Method;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Hibernate Dialect for Cloudscape 10 - aka Derby. This implements both an 
@@ -49,12 +54,38 @@ import java.util.ArrayList;
  * @author Simon Johnston
  */
 public class DerbyDialect extends DB2Dialect {
+	private static final Logger log = LoggerFactory.getLogger( DerbyDialect.class );
+
+	private int driverVersionMajor;
+	private int driverVersionMinor;
 
 	public DerbyDialect() {
 		super();
 		registerFunction( "concat", new DerbyConcatFunction() );
 		registerFunction( "trim", new DerbyTrimFunctionEmulation() );
+		determineDriverVersion();
 	}
+
+	/*package*/ void determineDriverVersion() {
+		try {
+			// locate the derby sysinfo class and query its version info
+			final Class sysinfoClass = ReflectHelper.classForName( "org.apache.derby.tools.sysinfo", this.getClass() );
+			final Method majorVersionGetter = sysinfoClass.getMethod( "getMajorVersion", ReflectHelper.NO_PARAM_SIGNATURE );
+			final Method minorVersionGetter = sysinfoClass.getMethod( "getMinorVersion", ReflectHelper.NO_PARAM_SIGNATURE );
+			driverVersionMajor = ( (Integer) majorVersionGetter.invoke( null, ReflectHelper.NO_PARAMS ) ).intValue();
+			driverVersionMinor = ( (Integer) minorVersionGetter.invoke( null, ReflectHelper.NO_PARAMS ) ).intValue();
+		}
+		catch ( Exception e ) {
+			log.warn( "Unable to load/access derby driver class sysinfo to check versions : " + e );
+			driverVersionMajor = -1;
+			driverVersionMinor = -1;
+		}
+	}
+
+	/*package*/ boolean isTenPointFiveReleaseOrNewer() {
+		return driverVersionMajor > 10 || ( driverVersionMajor == 10 && driverVersionMinor >= 5 );
+	}
+
 
 	/**
 	 * This is different in Cloudscape to DB2.
@@ -83,11 +114,75 @@ public class DerbyDialect extends DB2Dialect {
 	}
 
 	public boolean supportsLimit() {
-		return false;
+		return isTenPointFiveReleaseOrNewer();
 	}
 
 	public boolean supportsLimitOffset() {
-		return false;
+		return isTenPointFiveReleaseOrNewer();
+	}
+
+	/**
+	 * {@inheritDoc}
+	 * <p/>
+	 * From Derby 10.5 Docs:
+	 * <pre>
+	 * Query
+	 * [ORDER BY clause]
+	 * [result offset clause]
+	 * [fetch first clause]
+	 * [FOR UPDATE clause]
+	 * [WITH {RR|RS|CS|UR}]
+	 * </pre>
+	 */
+	public String getLimitString(String query, final int offset, final int limit) {
+		StringBuffer sb = new StringBuffer(query.length() + 50);
+
+		final String normalizedSelect = query.toLowerCase().trim();
+		final int forUpdateIndex = normalizedSelect.lastIndexOf( "for update") ;
+
+		if ( hasForUpdateClause( forUpdateIndex ) ) {
+			sb.append( query.substring( 0, forUpdateIndex-1 ) );
+		}
+		else if ( hasWithClause( normalizedSelect ) ) {
+			sb.append( query.substring( 0, getWithIndex( query ) - 1 ) );
+		}
+		else {
+			sb.append( query );
+		}
+
+		if ( offset == 0 ) {
+			sb.append( " fetch first " );
+		}
+		else {
+			sb.append( " offset " ).append( offset ).append( " rows fetch next " );
+		}
+
+		sb.append( limit ).append( " rows only" );
+
+		if ( hasForUpdateClause( forUpdateIndex ) ) {
+			sb.append(' ');
+			sb.append( query.substring( forUpdateIndex ) );
+		}
+		else if ( hasWithClause( normalizedSelect ) ) {
+			sb.append( ' ' ).append( query.substring( getWithIndex( query ) ) );
+		}
+		return sb.toString();
+	}
+
+	private boolean hasForUpdateClause(int forUpdateIndex) {
+		return forUpdateIndex >= 0;
+	}
+
+	private boolean hasWithClause(String normalizedSelect){
+		return normalizedSelect.startsWith( "with ", normalizedSelect.length()-7 );
+	}
+
+	private int getWithIndex(String querySelect) {
+		int i = querySelect.lastIndexOf( "with " );
+		if ( i < 0 ) {
+			i = querySelect.lastIndexOf( "WITH " );
+		}
+		return i;
 	}
 
 	public String getQuerySequencesString() {

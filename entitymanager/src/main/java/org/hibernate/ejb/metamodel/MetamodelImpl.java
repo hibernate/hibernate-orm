@@ -57,7 +57,10 @@ public class MetamodelImpl implements Metamodel, Serializable {
 			SessionFactoryImplementor sessionFactory) {
 		MetadataContext context = new MetadataContext( sessionFactory );
 		while ( persistentClasses.hasNext() ) {
-			locateOrBuildEntityType( persistentClasses.next(), context );
+			PersistentClass pc = persistentClasses.next();
+			if ( pc.getMappedClass() != null ) {
+				locateOrBuildEntityType( pc, context );
+			}
 		}
 		context.wrapUp();
 		return new MetamodelImpl( context.getEntityTypeMap(), context.getEmbeddableTypeMap() );

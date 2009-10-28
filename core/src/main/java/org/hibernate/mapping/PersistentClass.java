@@ -62,6 +62,7 @@ public abstract class PersistentClass implements Serializable, Filterable, MetaA
 	private String discriminatorValue;
 	private boolean lazy;
 	private ArrayList properties = new ArrayList();
+	private ArrayList declaredProperties = new ArrayList();
 	private final ArrayList subclasses = new ArrayList();
 	private final ArrayList subclassProperties = new ArrayList();
 	private final ArrayList subclassTables = new ArrayList();
@@ -96,6 +97,7 @@ public abstract class PersistentClass implements Serializable, Filterable, MetaA
 	private java.util.Map tuplizerImpls;
 
 	protected int optimisticLockMode;
+	private MappedSuperclass superMappedSuperclass;
 
 	public String getClassName() {
 		return className;
@@ -221,6 +223,7 @@ public abstract class PersistentClass implements Serializable, Filterable, MetaA
 
 	public void addProperty(Property p) {
 		properties.add(p);
+		declaredProperties.add(p);
 		p.setPersistentClass(this);
 	}
 
@@ -811,4 +814,31 @@ public abstract class PersistentClass implements Serializable, Filterable, MetaA
 	}
 
 	public abstract boolean isLazyPropertiesCacheable();
+
+	// The following methods are added to support @MappedSuperclass in the metamodel
+	public Iterator getDeclaredPropertyIterator() {
+		ArrayList iterators = new ArrayList();
+		iterators.add( declaredProperties.iterator() );
+		for ( int i = 0; i < joins.size(); i++ ) {
+			Join join = ( Join ) joins.get( i );
+			iterators.add( join.getDeclaredPropertyIterator() );
+		}
+		return new JoinedIterator( iterators );
+	}
+
+	public void addMappedsuperclassProperty(Property p) {
+		properties.add(p);
+		p.setPersistentClass(this);
+	}
+
+	public MappedSuperclass getSuperMappedSuperclass() {
+		return superMappedSuperclass;
+	}
+
+	public void setSuperMappedSuperclass(MappedSuperclass superMappedSuperclass) {
+		this.superMappedSuperclass = superMappedSuperclass;
+	}
+
+	// End of @Mappedsuperclass support
+
 }

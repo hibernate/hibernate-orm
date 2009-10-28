@@ -131,7 +131,7 @@ public class OneToOneSecondPass implements SecondPass {
 						path, mappings
 				) ).doSecondPass( persistentClasses );
 				//no column associated since its a one to one
-				propertyHolder.addProperty( prop );
+				propertyHolder.addProperty( prop, inferredData.getDeclaringClass() );
 			}
 			else {
 				//this is a many to one with Formula
@@ -162,7 +162,7 @@ public class OneToOneSecondPass implements SecondPass {
 				);
 			}
 			if ( otherSideProperty.getValue() instanceof OneToOne ) {
-				propertyHolder.addProperty( prop );
+				propertyHolder.addProperty( prop, inferredData.getDeclaringClass() );
 			}
 			else if ( otherSideProperty.getValue() instanceof ManyToOne ) {
 				Iterator it = otherSide.getJoinIterator();
@@ -208,7 +208,7 @@ public class OneToOneSecondPass implements SecondPass {
 					mappedByJoin.addProperty( prop );
 				}
 				else {
-					propertyHolder.addProperty( prop );
+					propertyHolder.addProperty( prop, inferredData.getDeclaringClass() );
 				}
 
 				value.setReferencedPropertyName( mappedBy );

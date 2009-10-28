@@ -32,17 +32,19 @@ import java.util.Map;
 import java.util.StringTokenizer;
 import javax.persistence.AttributeOverride;
 import javax.persistence.AttributeOverrides;
+import javax.persistence.ElementCollection;
 import javax.persistence.Embeddable;
 import javax.persistence.FetchType;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
 import javax.persistence.MapKey;
-import javax.persistence.OneToMany;
-import javax.persistence.ElementCollection;
 import javax.persistence.MapKeyColumn;
+import javax.persistence.OneToMany;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.hibernate.AnnotationException;
-import org.hibernate.AssertionFailure;
 import org.hibernate.FetchMode;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.BatchSize;
@@ -71,6 +73,7 @@ import org.hibernate.annotations.Sort;
 import org.hibernate.annotations.SortType;
 import org.hibernate.annotations.Where;
 import org.hibernate.annotations.WhereJoinTable;
+import org.hibernate.annotations.common.AssertionFailure;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.cfg.AnnotatedClassType;
@@ -81,6 +84,7 @@ import org.hibernate.cfg.Ejb3Column;
 import org.hibernate.cfg.Ejb3JoinColumn;
 import org.hibernate.cfg.ExtendedMappings;
 import org.hibernate.cfg.IndexColumn;
+import org.hibernate.cfg.InheritanceState;
 import org.hibernate.cfg.PropertyData;
 import org.hibernate.cfg.PropertyHolder;
 import org.hibernate.cfg.PropertyHolderBuilder;
@@ -105,8 +109,6 @@ import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.SingleTableSubclass;
 import org.hibernate.mapping.Table;
 import org.hibernate.util.StringHelper;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Base class for binding different types of collections to Hibernate configuration objects.
@@ -152,9 +154,16 @@ public abstract class CollectionBinder {
 	private Ejb3Column[] mapKeyColumns;
 	private Ejb3JoinColumn[] mapKeyManyToManyColumns;
 	protected HashMap<String, IdGenerator> localGenerators;
+	protected Map<XClass, InheritanceState> inheritanceStatePerClass;
+	private XClass declaringClass;
+	private boolean declaringClassSet;
 
 	public void setUpdatable(boolean updatable) {
 		this.updatable = updatable;
+	}
+
+	public void setInheritanceStatePerClass(Map<XClass, InheritanceState> inheritanceStatePerClass) {
+		this.inheritanceStatePerClass = inheritanceStatePerClass;
 	}
 
 	public void setInsertable(boolean insertable) {
@@ -333,6 +342,11 @@ public abstract class CollectionBinder {
 		this.propertyName = propertyName;
 	}
 
+	public void setDeclaringClass(XClass declaringClass) {
+		this.declaringClass = declaringClass;
+		this.declaringClassSet = true;
+	}
+
 	public void bind() {
 		this.collection = createCollection( propertyHolder.getPersistentClass() );
 		log.debug( "Collection role: {}", StringHelper.qualify( propertyHolder.getPath(), propertyName ) );
@@ -443,6 +457,7 @@ public abstract class CollectionBinder {
 		}
 		//TODO reducce tableBinder != null and oneToMany
 		XClass collectionType = getCollectionType();
+		if ( inheritanceStatePerClass == null) throw new AssertionFailure( "inheritanceStatePerClass not set" );
 		SecondPass sp = getSecondPass(
 				fkJoinColumns,
 				joinColumns,
@@ -482,7 +497,8 @@ public abstract class CollectionBinder {
 		binder.setUpdatable( updatable );
 		Property prop = binder.make();
 		//we don't care about the join stuffs because the column is on the association table.
-		propertyHolder.addProperty( prop );
+		if (! declaringClassSet) throw new AssertionFailure( "DeclaringClass is not set in CollectionBinder while binding" );
+		propertyHolder.addProperty( prop, declaringClass );
 	}
 
 	private void defineFetchingStrategy() {
@@ -569,7 +585,6 @@ public abstract class CollectionBinder {
 			final boolean ignoreNotFound, final boolean unique,
 			final TableBinder assocTableBinder, final ExtendedMappings mappings
 	) {
-
 		return new CollectionSecondPass( mappings, collection ) {
 
 			public void secondPass(java.util.Map persistentClasses, java.util.Map inheritedMetas)
@@ -591,7 +606,8 @@ public abstract class CollectionBinder {
 			Ejb3JoinColumn[] keyColumns, Ejb3JoinColumn[] inverseColumns, Ejb3Column[] elementColumns,
 			boolean isEmbedded,
 			XProperty property, boolean unique,
-			TableBinder associationTableBinder, boolean ignoreNotFound, ExtendedMappings mappings
+			TableBinder associationTableBinder,
+			boolean ignoreNotFound, ExtendedMappings mappings
 	) {
 		PersistentClass persistentClass = (PersistentClass) persistentClasses.get( collType.getName() );
 		boolean reversePropertyInJoin = false;
@@ -627,7 +643,8 @@ public abstract class CollectionBinder {
 					collType,
 					cascadeDeleteEnabled,
 					ignoreNotFound, hqlOrderBy,
-					mappings
+					mappings,
+					inheritanceStatePerClass
 			);
 			return true;
 		}
@@ -651,7 +668,8 @@ public abstract class CollectionBinder {
 	protected void bindOneToManySecondPass(
 			Collection collection, Map persistentClasses, Ejb3JoinColumn[] fkJoinColumns,
 			XClass collectionType,
-			boolean cascadeDeleteEnabled, boolean ignoreNotFound, String hqlOrderBy, ExtendedMappings extendedMappings
+			boolean cascadeDeleteEnabled, boolean ignoreNotFound, String hqlOrderBy, ExtendedMappings extendedMappings,
+			Map<XClass, InheritanceState> inheritanceStatePerClass
 	) {
 
 		log.debug("Binding a OneToMany: {}.{} through a foreign key", propertyHolder.getEntityName(), propertyName);
@@ -677,7 +695,7 @@ public abstract class CollectionBinder {
 		}
 		oneToMany.setAssociatedClass( associatedClass );
 		for (Ejb3JoinColumn column : fkJoinColumns) {
-			column.setPersistentClass( associatedClass, joins );
+			column.setPersistentClass( associatedClass, joins, inheritanceStatePerClass );
 			column.setJoins( joins );
 			collection.setCollectionTable( column.getTable() );
 		}
@@ -1221,7 +1239,7 @@ public abstract class CollectionBinder {
 		else if ( anyAnn != null ) {
 			//@ManyToAny
 			//Make sure that collTyp is never used during the @ManyToAny branch: it will be set to void.class
-			PropertyData inferredData = new PropertyInferredData( property, "unsupported", mappings.getReflectionManager() );
+			PropertyData inferredData = new PropertyInferredData(null, property, "unsupported", mappings.getReflectionManager() );
 			//override the table
 			for (Ejb3Column column : inverseJoinColumns) {
 				column.setTable( collValue.getCollectionTable() );
@@ -1284,7 +1302,7 @@ public abstract class CollectionBinder {
 				Component component = AnnotationBinder.fillComponent(
 						holder, inferredData, isPropertyAnnotated, isPropertyAnnotated ? "property" : "field", true,
 						entityBinder, false, false,
-						true, mappings
+						true, mappings, inheritanceStatePerClass
 				);
 
 				collValue.setElement( component );

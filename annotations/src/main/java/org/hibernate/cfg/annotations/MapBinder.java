@@ -35,8 +35,8 @@ import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.FetchMode;
 import org.hibernate.MappingException;
-import org.hibernate.annotations.MapKeyManyToMany;
 import org.hibernate.annotations.MapKey;
+import org.hibernate.annotations.MapKeyManyToMany;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.cfg.AnnotatedClassType;
@@ -232,7 +232,7 @@ public class MapBinder extends CollectionBinder {
 					Component component = AnnotationBinder.fillComponent(
 							holder, inferredData, isPropertyAnnotated, isPropertyAnnotated ? "property" : "field", true,
 							entityBinder, false, false,
-							true, mappings
+							true, mappings, inheritanceStatePerClass
 					);
 					mapValue.setIndex( component );
 				}

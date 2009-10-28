@@ -41,11 +41,14 @@ public class PropertyInferredData implements PropertyData {
 
 	private final XProperty property;
 	private final ReflectionManager reflectionManager;
+	private final XClass declaringClass;
+
 
 	/**
 	 * Take the annoted element for lazy process
 	 */
-	public PropertyInferredData(XProperty property, String propertyAccessor, ReflectionManager reflectionManager) {
+	public PropertyInferredData(XClass declaringClass, XProperty property, String propertyAccessor, ReflectionManager reflectionManager) {
+		this.declaringClass = declaringClass;
 		this.property = property;
 		this.defaultAccess = propertyAccessor;
 		this.reflectionManager = reflectionManager;
@@ -90,5 +93,9 @@ public class PropertyInferredData implements PropertyData {
 
 	public XProperty getProperty() {
 		return property;
+	}
+
+	public XClass getDeclaringClass() {
+		return declaringClass;
 	}
 }

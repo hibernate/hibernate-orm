@@ -32,6 +32,7 @@ import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Table;
+import org.hibernate.annotations.common.reflection.XClass;
 
 /**
  * Property holder abstract property containers from their direct implementation
@@ -45,7 +46,9 @@ public interface PropertyHolder {
 
 	Table getTable();
 
-	void addProperty(Property prop);
+	void addProperty(Property prop, XClass declaringClass);
+
+	void addProperty(Property prop, Ejb3Column[] columns, XClass declaringClass);
 
 	KeyValue getIdentifier();
 
@@ -70,8 +73,6 @@ public interface PropertyHolder {
 	JoinColumn[] getOverriddenJoinColumn(String propertyName);
 
 	String getEntityName();
-
-	void addProperty(Property prop, Ejb3Column[] columns);
 
 	Join addJoin(JoinTable joinTableAnn, boolean noDelayInPkColumnCreation);
 }

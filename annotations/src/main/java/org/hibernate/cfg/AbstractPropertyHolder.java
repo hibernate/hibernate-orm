@@ -66,6 +66,10 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 		return path;
 	}
 
+	protected ExtendedMappings getMappings() {
+		return mappings;
+	}
+
 	/**
 	 * property can be null
 	 */

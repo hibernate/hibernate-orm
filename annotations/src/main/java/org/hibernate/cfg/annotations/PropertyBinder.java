@@ -34,6 +34,7 @@ import org.hibernate.annotations.NaturalId;
 import org.hibernate.annotations.OptimisticLock;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
+import org.hibernate.annotations.common.AssertionFailure;
 import org.hibernate.cfg.Ejb3Column;
 import org.hibernate.cfg.ExtendedMappings;
 import org.hibernate.cfg.PropertyHolder;
@@ -62,6 +63,8 @@ public class PropertyBinder {
 	private boolean updatable = true;
 	private String cascade;
 	private SimpleValueBinder simpleValueBinder;
+	private XClass declaringClass;
+	private boolean declaringClassSet;
 	
 	/*
 	 * property can be null
@@ -118,11 +121,19 @@ public class PropertyBinder {
 		this.mappings = mappings;
 	}
 
+	public void setDeclaringClass(XClass declaringClass) {
+		this.declaringClass = declaringClass;
+		this.declaringClassSet = true;
+	}
+
 	private void validateBind() {
 		if (property.isAnnotationPresent(Immutable.class)) {
 			throw new AnnotationException("@Immutable on property not allowed. " +
 					"Only allowed on entity level or on a collection.");
-		}	
+		}
+		if ( !declaringClassSet ) {
+			throw new AssertionFailure( "declaringClass has not been set before a bind");
+		}
 	}
 
 	private void validateMake() {
@@ -146,7 +157,7 @@ public class PropertyBinder {
 		SimpleValue propertyValue = simpleValueBinder.make();
 		setValue( propertyValue );
 		Property prop = make();
-		holder.addProperty( prop, columns );
+		holder.addProperty( prop, columns, declaringClass );
 		return prop;
 	}
 

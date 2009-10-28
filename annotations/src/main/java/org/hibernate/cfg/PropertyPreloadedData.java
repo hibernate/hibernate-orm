@@ -67,4 +67,10 @@ public class PropertyPreloadedData implements PropertyData {
 	public XProperty getProperty() {
 		return null; //instead of UnsupportedOperationException
 	}
+
+	public XClass getDeclaringClass() {
+		//Preloaded properties are artificial wrapper for colleciton element accesses
+		//and idClass creation, ignore.
+		return null;
+	}
 }

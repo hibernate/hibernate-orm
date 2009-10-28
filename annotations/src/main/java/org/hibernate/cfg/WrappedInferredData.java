@@ -51,6 +51,10 @@ public class WrappedInferredData implements PropertyData {
 		return wrappedInferredData.getProperty();
 	}
 
+	public XClass getDeclaringClass() {
+		return wrappedInferredData.getDeclaringClass();
+	}
+
 	public XClass getPropertyClass() throws MappingException {
 		return wrappedInferredData.getPropertyClass();
 	}

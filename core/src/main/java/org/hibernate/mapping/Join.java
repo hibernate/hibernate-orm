@@ -39,6 +39,7 @@ public class Join implements Serializable {
 	private static final Alias PK_ALIAS = new Alias(15, "PK");
 
 	private ArrayList properties = new ArrayList();
+	private ArrayList declaredProperties = new ArrayList();
 	private Table table;
 	private KeyValue key;
 	private PersistentClass persistentClass;
@@ -59,8 +60,18 @@ public class Join implements Serializable {
 
 	public void addProperty(Property prop) {
 		properties.add(prop);
+		declaredProperties.add(prop);
 		prop.setPersistentClass( getPersistentClass() );
 	}
+	public void addMappedsuperclassProperty(Property prop) {
+		properties.add(prop);
+		prop.setPersistentClass( getPersistentClass() );
+	}
+
+	public Iterator getDeclaredPropertyIterator() {
+		return declaredProperties.iterator();
+	}
+
 	public boolean containsProperty(Property prop) {
 		return properties.contains(prop);
 	}

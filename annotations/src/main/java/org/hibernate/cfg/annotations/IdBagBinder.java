@@ -68,7 +68,7 @@ public class IdBagBinder extends BagBinder {
 			SimpleValueBinder simpleValue = new SimpleValueBinder();
 
 			PropertyData propertyData = new WrappedInferredData(
-					new PropertyInferredData( property, null, //default access should not be useful
+					new PropertyInferredData( null, property, null, //default access should not be useful
 							mappings.getReflectionManager() ),
 					"id" );
 			Ejb3Column[] idColumns = Ejb3Column.buildColumnFromAnnotation(

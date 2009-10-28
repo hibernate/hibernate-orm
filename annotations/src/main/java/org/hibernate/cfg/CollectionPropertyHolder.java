@@ -62,7 +62,7 @@ public class CollectionPropertyHolder extends AbstractPropertyHolder {
 		return collection.getCollectionTable();
 	}
 
-	public void addProperty(Property prop) {
+	public void addProperty(Property prop, XClass declaringClass) {
 		throw new AssertionFailure( "Cannot add property to a collection" );
 	}
 
@@ -86,7 +86,7 @@ public class CollectionPropertyHolder extends AbstractPropertyHolder {
 		return collection.getOwner().getEntityName();
 	}
 
-	public void addProperty(Property prop, Ejb3Column[] columns) {
+	public void addProperty(Property prop, Ejb3Column[] columns, XClass declaringClass) {
 		//Ejb3Column.checkPropertyConsistency( ); //already called earlier
 		throw new AssertionFailure( "addProperty to a join table of a collection: does it make sense?" );
 	}

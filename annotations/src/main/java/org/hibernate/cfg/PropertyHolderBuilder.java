@@ -47,9 +47,10 @@ public final class PropertyHolderBuilder {
 			PersistentClass persistentClass,
 			EntityBinder entityBinder,
 			//Map<String, Join> joins,
-			ExtendedMappings mappings
+			ExtendedMappings mappings,
+			Map<XClass, InheritanceState> inheritanceStatePerClass
 	) {
-		return new ClassPropertyHolder( persistentClass, clazzToProcess, entityBinder, mappings );
+		return new ClassPropertyHolder( persistentClass, clazzToProcess, entityBinder, mappings, inheritanceStatePerClass );
 	}
 
 	/**
@@ -82,8 +83,9 @@ public final class PropertyHolderBuilder {
 	 */
 	public static PropertyHolder buildPropertyHolder(
 			PersistentClass persistentClass, Map<String, Join> joins,
-			ExtendedMappings mappings
+			ExtendedMappings mappings,
+			Map<XClass, InheritanceState> inheritanceStatePerClass
 	) {
-		return new ClassPropertyHolder( persistentClass, null, joins, mappings );
+		return new ClassPropertyHolder( persistentClass, null, joins, mappings, inheritanceStatePerClass );
 	}
 }

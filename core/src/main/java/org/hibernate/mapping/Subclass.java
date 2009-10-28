@@ -93,6 +93,12 @@ public class Subclass extends PersistentClass {
 		super.addProperty(p);
 		getSuperclass().addSubclassProperty(p);
 	}
+
+	public void addMappedsuperClassProperty(Property p) {
+		super.addMappedsuperclassProperty( p );
+		getSuperclass().addSubclassProperty(p);
+	}
+
 	public void addJoin(Join j) {
 		super.addJoin(j);
 		getSuperclass().addSubclassJoin(j);

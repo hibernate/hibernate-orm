@@ -27,6 +27,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import javax.persistence.MappedSuperclass;
+
 import org.hibernate.AnnotationException;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.AnyMetaDef;
@@ -124,6 +126,7 @@ public interface ExtendedMappings extends Mappings {
 	public AnnotatedClassType getClassType(XClass clazz);
 
 	/**
+	 * FIXME should be private but will this break things?
 	 * Add a class type.
 	 *
 	 * @param clazz The XClass mapping.
@@ -157,6 +160,15 @@ public interface ExtendedMappings extends Mappings {
 
 	public AnyMetaDef getAnyMetaDef(String name);
 	
-	public boolean isInSecondPass(); 
-	
+	public boolean isInSecondPass();
+
+	/**
+	 * add a new MappedSuperclass
+	 */
+	public void addMappedSuperclass(Class<?> type, org.hibernate.mapping.MappedSuperclass mappedSuperclass);
+
+	/**
+	 * Get a MappedSuperclass or null if not mapped
+	 */
+	org.hibernate.mapping.MappedSuperclass getMappedSuperclass(Class<?> type);
 }

@@ -36,6 +36,7 @@ import org.hibernate.util.StringHelper;
 import org.hibernate.annotations.JoinColumnOrFormula;
 import org.hibernate.annotations.JoinColumnsOrFormulas;
 import org.hibernate.annotations.JoinFormula;
+import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Join;
 import org.hibernate.mapping.PersistentClass;
@@ -355,9 +356,11 @@ public class Ejb3JoinColumn extends Ejb3Column {
 	 * Override persistent class on oneToMany Cases for late settings
 	 * Must only be used on second level pass binding
 	 */
-	public void setPersistentClass(PersistentClass persistentClass, Map<String, Join> joins) {
+	public void setPersistentClass(PersistentClass persistentClass,
+								   Map<String, Join> joins,
+								   Map<XClass, InheritanceState> inheritanceStatePerClass) {
 		//FIXME shouldn't we deduce the classname from the persistentclasS?
-		this.propertyHolder = PropertyHolderBuilder.buildPropertyHolder( persistentClass, joins, getMappings() );
+		this.propertyHolder = PropertyHolderBuilder.buildPropertyHolder( persistentClass, joins, getMappings(), inheritanceStatePerClass );
 	}
 
 	public static void checkIfJoinColumn(Object columns, PropertyHolder holder, PropertyData property) {

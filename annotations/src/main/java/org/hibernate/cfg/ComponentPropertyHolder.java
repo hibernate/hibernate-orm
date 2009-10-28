@@ -28,6 +28,7 @@ import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 
 import org.hibernate.AnnotationException;
+import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Join;
 import org.hibernate.mapping.KeyValue;
@@ -49,7 +50,7 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 		return component.getComponentClassName();
 	}
 
-	public void addProperty(Property prop, Ejb3Column[] columns) {
+	public void addProperty(Property prop, Ejb3Column[] columns, XClass declaringClass) {
 		//Ejb3Column.checkPropertyConsistency( ); //already called earlier
 		/*
 		 * Check table matches between the component and the columns
@@ -68,7 +69,7 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 				);
 			}
 		}
-		addProperty( prop );
+		addProperty( prop, declaringClass );
 	}
 
 	public Join addJoin(JoinTable joinTableAnn, boolean noDelayInPkColumnCreation) {
@@ -97,7 +98,7 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 		return component.getTable();
 	}
 
-	public void addProperty(Property prop) {
+	public void addProperty(Property prop, XClass declaringClass) {
 		component.addProperty( prop );
 	}
 

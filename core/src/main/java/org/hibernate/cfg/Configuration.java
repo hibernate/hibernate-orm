@@ -296,6 +296,16 @@ public class Configuration implements Serializable {
 	}
 
 	/**
+	 * Iterate the mapped superclasses mappings
+	 * EXPERIMENTAL Consider this API as PRIVATE
+	 *
+	 * @return Iterator<MappedSuperclass> over the MappedSuperclass mapping currently contained in the configuration.
+	 */
+	public Iterator getMappedSuperclassMappings() {
+		return mappedSuperclasses.values().iterator();
+	}
+
+	/**
 	 * Get the mapping for a particular entity
 	 *
 	 * @param entityName An entity name.
@@ -2760,10 +2770,6 @@ public class Configuration implements Serializable {
 
 		public MappedSuperclass getMappedSuperclass(Class type) {
 			return (MappedSuperclass) mappedSuperclasses.get( type );
-		}
-
-		public Iterator iterateMappedSuperclasses() {
-			return mappedSuperclasses.values().iterator();
 		}
 	}
 }

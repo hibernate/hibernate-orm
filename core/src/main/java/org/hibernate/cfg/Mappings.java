@@ -543,12 +543,4 @@ public interface Mappings {
 	 * @return the MappedSuperclass
 	 */
 	org.hibernate.mapping.MappedSuperclass getMappedSuperclass(Class type);
-
-	/**
-	 * Iterator over the MappedSuperclass mappings
-	 * Use an iterator as a symetry to the other methods on Mappings
-	 * 
-	 * @return mappedSuperclasses
-	 */
-	public Iterator iterateMappedSuperclasses();
 }

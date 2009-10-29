@@ -986,6 +986,7 @@ public final class AnnotationBinder {
 			mappedSuperclass = mappings.getMappedSuperclass( type );
 			if (mappedSuperclass == null) {
 				mappedSuperclass = new org.hibernate.mapping.MappedSuperclass(parentSuperclass, superEntity );
+				mappedSuperclass.setMappedClass( type );
 				mappings.addMappedSuperclass( type, mappedSuperclass );
 			}
 		}

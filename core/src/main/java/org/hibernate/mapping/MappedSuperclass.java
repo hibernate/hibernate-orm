@@ -20,6 +20,7 @@ public class MappedSuperclass {
 	private final MappedSuperclass superMappedSuperclass;
 	private final PersistentClass superPersistentClass;
 	private final List properties;
+	private Class mappedClass;
 
 	public MappedSuperclass(MappedSuperclass superMappedSuperclass, PersistentClass superPersistentClass) {
 		this.superMappedSuperclass = superMappedSuperclass;
@@ -63,5 +64,13 @@ public class MappedSuperclass {
 			}
 		}
 		properties.add(p);
+	}
+
+	public Class getMappedClass() {
+		return mappedClass;
+	}
+
+	public void setMappedClass(Class mappedClass) {
+		this.mappedClass = mappedClass;
 	}
 }

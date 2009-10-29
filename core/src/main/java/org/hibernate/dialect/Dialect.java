@@ -33,6 +33,8 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+import java.util.List;
+import java.util.Iterator;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,6 +51,7 @@ import org.hibernate.dialect.function.StandardSQLFunction;
 import org.hibernate.dialect.lock.LockingStrategy;
 import org.hibernate.dialect.lock.SelectLockingStrategy;
 import org.hibernate.engine.Mapping;
+import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.exception.SQLExceptionConverter;
 import org.hibernate.exception.SQLStateConverter;
 import org.hibernate.exception.ViolatedConstraintNameExtracter;
@@ -94,71 +97,116 @@ public abstract class Dialect {
 	// build the map of standard ANSI SQL aggregation functions ~~~~~~~~~~~~~~~
 
 	private static final Map STANDARD_AGGREGATE_FUNCTIONS = new HashMap();
-	static {
-		STANDARD_AGGREGATE_FUNCTIONS.put( "count", new StandardSQLFunction("count") {
-			public Type getReturnType(Type columnType, Mapping mapping) {
-				return Hibernate.LONG;
-			}
-		} );
 
-		STANDARD_AGGREGATE_FUNCTIONS.put( "avg", new StandardSQLFunction("avg") {
-			public Type getReturnType(Type columnType, Mapping mapping) throws QueryException {
-				int[] sqlTypes;
-				try {
-					sqlTypes = columnType.sqlTypes( mapping );
+	static {
+		STANDARD_AGGREGATE_FUNCTIONS.put(
+				"count",
+				new StandardSQLFunction("count") {
+					public Type getReturnType(Type columnType, Mapping mapping) {
+						return Hibernate.LONG;
+					}
+					public String render(List args, SessionFactoryImplementor factory) {
+						if ( args.size() > 1 ) {
+							if ( "distinct".equalsIgnoreCase( args.get( 0 ).toString() ) ) {
+								return renderCountDistinct( args );
+							}
+						}
+						return super.render( args, factory );
+					}
+					private String renderCountDistinct(List args) {
+						StringBuffer buffer = new StringBuffer();
+						buffer.append( "count(distinct " );
+						String sep = "";
+						Iterator itr = args.iterator();
+						itr.next(); // intentionally skip first
+						while ( itr.hasNext() ) {
+							buffer.append( sep )
+									.append( itr.next() );
+							sep = ", ";
+						}
+						return buffer.append( ")" ).toString();
+					}
 				}
-				catch ( MappingException me ) {
-					throw new QueryException( me );
+		);
+
+		STANDARD_AGGREGATE_FUNCTIONS.put(
+				"avg",
+				new StandardSQLFunction("avg") {
+					public Type getReturnType(Type columnType, Mapping mapping) throws QueryException {
+						int[] sqlTypes;
+						try {
+							sqlTypes = columnType.sqlTypes( mapping );
+						}
+						catch ( MappingException me ) {
+							throw new QueryException( me );
+						}
+						if ( sqlTypes.length != 1 ) {
+							throw new QueryException( "multi-column type in avg()" );
+						}
+						return Hibernate.DOUBLE;
+					}
 				}
-				if ( sqlTypes.length != 1 ) throw new QueryException( "multi-column type in avg()" );
-				return Hibernate.DOUBLE;
-			}
-		} );
+		);
 
 		STANDARD_AGGREGATE_FUNCTIONS.put( "max", new StandardSQLFunction("max") );
 		STANDARD_AGGREGATE_FUNCTIONS.put( "min", new StandardSQLFunction("min") );
-		STANDARD_AGGREGATE_FUNCTIONS.put( "sum", new StandardSQLFunction("sum") {
-			public Type getReturnType(Type columnType, Mapping mapping) {
-				//pre H3.2 behavior: super.getReturnType(ct, m);
-				int[] sqlTypes;
-				try {
-					sqlTypes = columnType.sqlTypes( mapping );
-				}
-				catch ( MappingException me ) {
-					throw new QueryException( me );
-				}
-				if ( sqlTypes.length != 1 ) throw new QueryException( "multi-column type in sum()" );
-				int sqlType = sqlTypes[0];
 
-				// First allow the actual type to control the return value. (the actual underlying sqltype could actually be different)
-				if ( columnType == Hibernate.BIG_INTEGER ) {
-					return Hibernate.BIG_INTEGER;
-				}
-				else if ( columnType == Hibernate.BIG_DECIMAL ) {
-					return Hibernate.BIG_DECIMAL;
-				}
-				else if ( columnType == Hibernate.LONG || columnType == Hibernate.SHORT || columnType == Hibernate.INTEGER) {
-					return Hibernate.LONG;
-				}
-				else if ( columnType == Hibernate.FLOAT || columnType == Hibernate.DOUBLE) {
-					return Hibernate.DOUBLE;
-				}
+		STANDARD_AGGREGATE_FUNCTIONS.put(
+				"sum",
+				new StandardSQLFunction("sum") {
+					public Type getReturnType(Type columnType, Mapping mapping) {
+						//pre H3.2 behavior: super.getReturnType(ct, m);
+						int[] sqlTypes;
+						try {
+							sqlTypes = columnType.sqlTypes( mapping );
+						}
+						catch ( MappingException me ) {
+							throw new QueryException( me );
+						}
+						if ( sqlTypes.length != 1 ) {
+							throw new QueryException( "multi-column type in sum()" );
+						}
+						int sqlType = sqlTypes[0];
 
-				// finally use the sqltype if == on Hibernate types did not find a match.
-				if ( sqlType == Types.NUMERIC ) {
-					return columnType; //because numeric can be anything
+						// First allow the actual type to control the return value; the underlying sqltype could
+						// actually be different
+						if ( columnType == Hibernate.BIG_INTEGER ) {
+							return Hibernate.BIG_INTEGER;
+						}
+						else if ( columnType == Hibernate.BIG_DECIMAL ) {
+							return Hibernate.BIG_DECIMAL;
+						}
+						else if ( columnType == Hibernate.LONG
+								|| columnType == Hibernate.SHORT
+								|| columnType == Hibernate.INTEGER ) {
+							return Hibernate.LONG;
+						}
+						else if ( columnType == Hibernate.FLOAT || columnType == Hibernate.DOUBLE)  {
+							return Hibernate.DOUBLE;
+						}
+
+						// finally use the sqltype if == on Hibernate types did not find a match.
+						if ( sqlType == Types.NUMERIC ) {
+							return columnType; //because numeric can be anything
+						}
+						else if ( sqlType == Types.FLOAT
+								|| sqlType == Types.DOUBLE
+								|| sqlType == Types.DECIMAL
+								|| sqlType == Types.REAL) {
+							return Hibernate.DOUBLE;
+						}
+						else if ( sqlType == Types.BIGINT
+								|| sqlType == Types.INTEGER
+								|| sqlType == Types.SMALLINT
+								|| sqlType == Types.TINYINT ) {
+							return Hibernate.LONG;
+						}
+						else {
+							return columnType;
+						}
+					}
 				}
-				else if ( sqlType == Types.FLOAT || sqlType == Types.DOUBLE || sqlType == Types.DECIMAL || sqlType == Types.REAL) {
-					return Hibernate.DOUBLE;
-				}
-				else if ( sqlType == Types.BIGINT || sqlType == Types.INTEGER || sqlType == Types.SMALLINT || sqlType == Types.TINYINT ) {
-					return Hibernate.LONG;
-				}
-				else {
-					return columnType;
-				}
-			}
-		});
+		);
 	}
 
 	private final TypeNames typeNames = new TypeNames();

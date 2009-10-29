@@ -113,7 +113,7 @@ public class CriteriaHQLAlignmentTest extends QueryTranslatorTestCase {
 	}
 	
 	// HHH-1724 Align Criteria with HQL aggregation return types.
-	public void testCriteriaAggregationReturnTypeFailureExpected() {
+	public void testCriteriaAggregationReturnType() {
 		Session s = openSession();
 		Human human = new Human();
 		human.setBigIntegerValue( new BigInteger("42") );

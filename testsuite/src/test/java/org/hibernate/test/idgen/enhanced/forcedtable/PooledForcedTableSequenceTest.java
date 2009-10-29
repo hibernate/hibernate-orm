@@ -7,6 +7,7 @@ import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.id.enhanced.OptimizerFactory;
 import org.hibernate.id.enhanced.SequenceStyleGenerator;
+import org.hibernate.id.enhanced.TableStructure;
 import org.hibernate.Session;
 
 /**
@@ -29,9 +30,19 @@ public class PooledForcedTableSequenceTest extends DatabaseSpecificFunctionalTes
 
 	public void testNormalBoundary() {
 		EntityPersister persister = sfi().getEntityPersister( Entity.class.getName() );
-		assertClassAssignability( SequenceStyleGenerator.class, persister.getIdentifierGenerator().getClass() );
+		assertTrue(
+				"sequence style generator was not used",
+				SequenceStyleGenerator.class.isInstance( persister.getIdentifierGenerator() )
+		);
 		SequenceStyleGenerator generator = ( SequenceStyleGenerator ) persister.getIdentifierGenerator();
-		assertClassAssignability( OptimizerFactory.PooledOptimizer.class, generator.getOptimizer().getClass() );
+		assertTrue(
+				"table structure was not used",
+				TableStructure.class.isInstance( generator.getDatabaseStructure() )
+		);
+		assertTrue(
+				"pooled optimizer was not used",
+				OptimizerFactory.PooledOptimizer.class.isInstance( generator.getOptimizer() )
+		);
 		OptimizerFactory.PooledOptimizer optimizer = ( OptimizerFactory.PooledOptimizer ) generator.getOptimizer();
 
 		int increment = optimizer.getIncrementSize();

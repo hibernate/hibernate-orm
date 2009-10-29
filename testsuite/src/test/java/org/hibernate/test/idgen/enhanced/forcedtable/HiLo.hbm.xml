@@ -18,7 +18,7 @@
                 <param name="initial_value">1</param>
                 <param name="increment_size">10</param>
                 <param name="optimizer">hilo</param>
-                <param name="force_tbl_use">true</param>
+                <param name="force_table_use">true</param>
             </generator>
         </id>
         <property name="name" type="string"/>

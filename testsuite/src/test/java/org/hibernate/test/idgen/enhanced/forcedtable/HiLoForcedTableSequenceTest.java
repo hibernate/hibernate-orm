@@ -7,6 +7,7 @@ import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.id.enhanced.OptimizerFactory;
 import org.hibernate.id.enhanced.SequenceStyleGenerator;
+import org.hibernate.id.enhanced.TableStructure;
 import org.hibernate.Session;
 
 /**
@@ -29,9 +30,19 @@ public class HiLoForcedTableSequenceTest extends DatabaseSpecificFunctionalTestC
 
 	public void testNormalBoundary() {
 		EntityPersister persister = sfi().getEntityPersister( Entity.class.getName() );
-		assertClassAssignability( SequenceStyleGenerator.class, persister.getIdentifierGenerator().getClass() );
+		assertTrue(
+				"sequence style generator was not used",
+				SequenceStyleGenerator.class.isInstance( persister.getIdentifierGenerator() )
+		);
 		SequenceStyleGenerator generator = ( SequenceStyleGenerator ) persister.getIdentifierGenerator();
-		assertClassAssignability( OptimizerFactory.HiLoOptimizer.class, generator.getOptimizer().getClass() );
+		assertTrue(
+				"table structure was not used",
+				TableStructure.class.isInstance( generator.getDatabaseStructure() )
+		);
+		assertTrue(
+				"hilo optimizer was not used",
+				OptimizerFactory.HiLoOptimizer.class.isInstance( generator.getOptimizer() )
+		);
 		OptimizerFactory.HiLoOptimizer optimizer = ( OptimizerFactory.HiLoOptimizer ) generator.getOptimizer();
 
 		int increment = optimizer.getIncrementSize();

@@ -19,7 +19,7 @@
                 <param name="initial_value">1</param>
                 <param name="increment_size">1</param>
                 <param name="optimizer">none</param>
-                <param name="force_tbl_use">true</param>
+                <param name="force_table_use">true</param>
             </generator>
         </id>
         <property name="name" type="string"/>

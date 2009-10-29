@@ -40,11 +40,6 @@
     <name>Hibernate Annotations</name>
     <description>Annotations metadata for Hibernate</description>
 
-    <issueManagement>
-        <system>jira</system>
-        <url>http://opensource.atlassian.com/projects/hibernate/browse/ANN</url>
-    </issueManagement>
-
     <dependencies>
         <dependency>
             <groupId>org.hibernate</groupId>
@@ -86,12 +81,12 @@
             <dependency>
                 <groupId>javax.validation</groupId>
                 <artifactId>validation-api</artifactId>
-                <version>1.0.CR4</version>
+                <version>1.0.0.GA</version>
             </dependency>
             <dependency>
                 <groupId>org.hibernate</groupId>
                 <artifactId>hibernate-validator</artifactId>
-                <version>4.0.0.CR1</version>
+                <version>4.0.0.GA</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

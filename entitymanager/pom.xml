@@ -16,12 +16,6 @@
     <name>Hibernate Entitity Manager</name>
     <description>Hibernate Entitity Manager</description>
 
-    <!-- Annotations and Commons-Annotations both use the ANN JIRA key -->
-    <issueManagement>
-        <system>jira</system>
-        <url>http://opensource.atlassian.com/projects/hibernate/browse/ANN</url>
-    </issueManagement>
-
     <dependencies>
         <dependency>
             <groupId>${project.groupId}</groupId>

@@ -161,14 +161,4 @@ public interface ExtendedMappings extends Mappings {
 	public AnyMetaDef getAnyMetaDef(String name);
 	
 	public boolean isInSecondPass();
-
-	/**
-	 * add a new MappedSuperclass
-	 */
-	public void addMappedSuperclass(Class<?> type, org.hibernate.mapping.MappedSuperclass mappedSuperclass);
-
-	/**
-	 * Get a MappedSuperclass or null if not mapped
-	 */
-	org.hibernate.mapping.MappedSuperclass getMappedSuperclass(Class<?> type);
 }

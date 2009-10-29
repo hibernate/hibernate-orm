@@ -126,6 +126,7 @@ import org.hibernate.mapping.FetchProfile;
 import org.hibernate.mapping.DenormalizedTable;
 import org.hibernate.mapping.TypeDef;
 import org.hibernate.mapping.Column;
+import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.secure.JACCConfiguration;
 import org.hibernate.tool.hbm2ddl.DatabaseMetadata;
@@ -207,6 +208,9 @@ public class Configuration implements Serializable {
 
 	private DefaultIdentifierGeneratorFactory identifierGeneratorFactory;
 
+	//Map<Class<?>, org.hibernate.mapping.MappedSuperclass>
+	private Map mappedSuperclasses;
+
 	protected Configuration(SettingsFactory settingsFactory) {
 		this.settingsFactory = settingsFactory;
 		reset();
@@ -252,6 +256,8 @@ public class Configuration implements Serializable {
 //		componentTuplizerFactory = new ComponentTuplizerFactory();
 
 		identifierGeneratorFactory = new DefaultIdentifierGeneratorFactory();
+
+		mappedSuperclasses = new HashMap();
 	}
 
 	public EntityTuplizerFactory getEntityTuplizerFactory() {
@@ -2746,6 +2752,18 @@ public class Configuration implements Serializable {
 
 		public DefaultIdentifierGeneratorFactory getIdentifierGeneratorFactory() {
 			return identifierGeneratorFactory;
+		}
+
+		public void addMappedSuperclass(Class type, MappedSuperclass mappedSuperclass) {
+			mappedSuperclasses.put( type, mappedSuperclass );
+		}
+
+		public MappedSuperclass getMappedSuperclass(Class type) {
+			return (MappedSuperclass) mappedSuperclasses.get( type );
+		}
+
+		public Iterator iterateMappedSuperclasses() {
+			return mappedSuperclasses.values().iterator();
 		}
 	}
 }

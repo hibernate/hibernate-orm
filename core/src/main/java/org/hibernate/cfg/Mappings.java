@@ -526,4 +526,29 @@ public interface Mappings {
 	 * @return The IdentifierGeneratorFactory
 	 */
 	public DefaultIdentifierGeneratorFactory getIdentifierGeneratorFactory();
+
+	/**
+	 * add a new MappedSuperclass
+	 * This should not be called if the MappedSuperclass already exists
+	 * (it would be erased)
+	 * @param type type corresponding to the Mappedsuperclass
+	 * @param mappedSuperclass MappedSuperclass
+	 */
+	public void addMappedSuperclass(Class type, org.hibernate.mapping.MappedSuperclass mappedSuperclass);
+
+	/**
+	 * Get a MappedSuperclass or null if not mapped
+	 *
+	 * @param type class corresponding to the MappedSuperclass
+	 * @return the MappedSuperclass
+	 */
+	org.hibernate.mapping.MappedSuperclass getMappedSuperclass(Class type);
+
+	/**
+	 * Iterator over the MappedSuperclass mappings
+	 * Use an iterator as a symetry to the other methods on Mappings
+	 * 
+	 * @return mappedSuperclasses
+	 */
+	public Iterator iterateMappedSuperclasses();
 }

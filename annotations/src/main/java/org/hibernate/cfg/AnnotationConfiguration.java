@@ -135,7 +135,6 @@ public class AnnotationConfiguration extends Configuration {
 	private transient ReflectionManager reflectionManager;
 	private boolean isDefaultProcessed = false;
 	private boolean isValidatorNotPresentLogged;
-	private Map<Class<?>, org.hibernate.mapping.MappedSuperclass> mappedSuperclasses;
 
 	public AnnotationConfiguration() {
 		super();
@@ -261,7 +260,6 @@ public class AnnotationConfiguration extends Configuration {
 		namingStrategy = EJB3NamingStrategy.INSTANCE;
 		setEntityResolver( new EJB3DTDEntityResolver() );
 		anyMetaDefs = new HashMap<String, AnyMetaDef>();
-		mappedSuperclasses = new HashMap<Class<?>, org.hibernate.mapping.MappedSuperclass>();
 		reflectionManager = new JavaReflectionManager();
 		( ( MetadataProviderInjector ) reflectionManager ).setMetadataProvider( new JPAMetadataProvider() );
 
@@ -1178,14 +1176,6 @@ public class AnnotationConfiguration extends Configuration {
 
 		public boolean isInSecondPass() {
 			return inSecondPass;
-		}
-
-		public void addMappedSuperclass(Class<?> type, org.hibernate.mapping.MappedSuperclass mappedSuperclass) {
-			mappedSuperclasses.put( type, mappedSuperclass );
-		}
-
-		public org.hibernate.mapping.MappedSuperclass getMappedSuperclass(Class<?> type) {
-			return mappedSuperclasses.get( type );
 		}
 
 		public IdGenerator getGenerator(String name) {

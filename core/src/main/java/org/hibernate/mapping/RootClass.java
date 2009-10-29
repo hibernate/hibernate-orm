@@ -61,7 +61,9 @@ public class RootClass extends PersistentClass implements TableOwner {
 	private Table table;
 	private boolean discriminatorInsertable = true;
 	private int nextSubclassId = 0;
-		
+	private Property declaredIdentifierProperty;
+	private Property declaredVersion;
+
 	int nextSubclassId() {
 		return ++nextSubclassId;
 	}
@@ -80,6 +82,15 @@ public class RootClass extends PersistentClass implements TableOwner {
 	public Property getIdentifierProperty() {
 		return identifierProperty;
 	}
+
+	public Property getDeclaredIdentifierProperty() {
+		return declaredIdentifierProperty;
+	}
+
+	public void setDeclaredIdentifierProperty(Property declaredIdentifierProperty) {
+		this.declaredIdentifierProperty = declaredIdentifierProperty;
+	}
+
 	public KeyValue getIdentifier() {
 		return identifier;
 	}
@@ -128,6 +139,15 @@ public class RootClass extends PersistentClass implements TableOwner {
 	public Property getVersion() {
 		return version;
 	}
+
+	public Property getDeclaredVersion() {
+		return declaredVersion;
+	}
+
+	public void setDeclaredVersion(Property declaredVersion) {
+		this.declaredVersion = declaredVersion;
+	}
+
 	public void setVersion(Property version) {
 		this.version = version;
 	}
@@ -181,6 +201,7 @@ public class RootClass extends PersistentClass implements TableOwner {
 	public void setIdentifierProperty(Property identifierProperty) {
 		this.identifierProperty = identifierProperty;
 		identifierProperty.setPersistentClass(this);
+
 	}
 
 	public void setMutable(boolean mutable) {

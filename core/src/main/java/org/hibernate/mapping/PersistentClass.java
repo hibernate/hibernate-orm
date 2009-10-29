@@ -98,6 +98,7 @@ public abstract class PersistentClass implements Serializable, Filterable, MetaA
 
 	protected int optimisticLockMode;
 	private MappedSuperclass superMappedSuperclass;
+	private Component declaredIdentifierMapper;
 
 	public String getClassName() {
 		return className;
@@ -236,8 +237,10 @@ public abstract class PersistentClass implements Serializable, Filterable, MetaA
 	public abstract boolean isMutable();
 	public abstract boolean hasIdentifierProperty();
 	public abstract Property getIdentifierProperty();
+	public abstract Property getDeclaredIdentifierProperty();
 	public abstract KeyValue getIdentifier();
 	public abstract Property getVersion();
+	public abstract Property getDeclaredVersion();
 	public abstract Value getDiscriminator();
 	public abstract boolean isInherited();
 	public abstract boolean isPolymorphic();
@@ -774,6 +777,14 @@ public abstract class PersistentClass implements Serializable, Filterable, MetaA
 
 	public Component getIdentifierMapper() {
 		return identifierMapper;
+	}
+
+	public Component getDeclaredIdentifierMapper() {
+		return declaredIdentifierMapper;
+	}
+
+	public void setDeclaredIdentifierMapper(Component declaredIdentifierMapper) {
+		this.declaredIdentifierMapper = declaredIdentifierMapper;
 	}
 
 	public boolean hasIdentifierMapper() {

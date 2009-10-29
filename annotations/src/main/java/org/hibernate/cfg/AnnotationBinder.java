@@ -775,6 +775,21 @@ public final class AnnotationBinder {
 			);
 			entityBinder.setIgnoreIdAnnotations( ignoreIdAnnotations );
 			persistentClass.setIdentifierMapper( mapper );
+
+			//If id definition is on a mapped superclass, update the mapping
+			final org.hibernate.mapping.MappedSuperclass superclass = BinderHelper.getMappedSuperclassOrNull(
+					inferredData.getDeclaringClass(),
+					inheritanceStatePerClass,
+					mappings
+			);
+			if (superclass != null) {
+				superclass.setDeclaredIdentifierMapper(mapper);
+			}
+			else {
+				//we are for sure on the entity
+				persistentClass.setDeclaredIdentifierMapper( mapper );
+			}
+
 			Property property = new Property();
 			property.setName( "_identifierMapper" );
 			property.setNodeName( "id" );
@@ -1462,6 +1477,20 @@ public final class AnnotationBinder {
 			Property prop = propBinder.bind();
 			propBinder.getSimpleValueBinder().setVersion(true);
 			rootClass.setVersion( prop );
+
+			//If version is on a mapped superclass, update the mapping
+			final org.hibernate.mapping.MappedSuperclass superclass = BinderHelper.getMappedSuperclassOrNull(
+					inferredData.getDeclaringClass(),
+					inheritanceStatePerClass,
+					mappings
+			);
+			if (superclass != null) {
+				superclass.setDeclaredVersion(prop);
+			}
+			else {
+				//we know the property is on the actual entity
+				rootClass.setDeclaredVersion( prop );
+			}
 			
 			SimpleValue simpleValue = (SimpleValue) prop.getValue();
 			simpleValue.setNullValue( "undefined" );
@@ -2202,6 +2231,19 @@ public final class AnnotationBinder {
 			binder.setProperty( inferredData.getProperty() );
 			Property prop = binder.make();
 			rootClass.setIdentifierProperty( prop );
+			//if the id property is on a superclass, update the metamodel
+			final org.hibernate.mapping.MappedSuperclass superclass = BinderHelper.getMappedSuperclassOrNull(
+					inferredData.getDeclaringClass(),
+					inheritanceStatePerClass,
+					mappings
+			);
+			if (superclass != null) {
+				superclass.setDeclaredIdentifierProperty(prop);
+			}
+			else {
+				//we know the property is on the actual entity
+				rootClass.setDeclaredIdentifierProperty( prop );
+			}
 		}
 	}
 

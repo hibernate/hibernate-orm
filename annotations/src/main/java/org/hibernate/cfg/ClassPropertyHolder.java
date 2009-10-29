@@ -130,7 +130,7 @@ public class ClassPropertyHolder extends AbstractPropertyHolder {
 		final ExtendedMappings mappings = getMappings();
 		final Class type = mappings.getReflectionManager().toClass( declaringClass );
 		MappedSuperclass superclass = mappings.getMappedSuperclass( type );
-		superclass.addProperty( prop );
+		superclass.addDeclaredProperty( prop );
 	}
 
 	private void addPropertyToJoin(Property prop, XClass declaringClass, Join join) {

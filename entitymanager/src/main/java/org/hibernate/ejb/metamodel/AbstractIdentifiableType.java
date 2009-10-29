@@ -97,7 +97,19 @@ public abstract class AbstractIdentifiableType<X>
 			}
 		}
 		else {
-			id_ = requireSupertype().getId( javaType );
+			//yuk yuk bad me
+			if (this instanceof MappedSuperclassTypeImpl) {
+				final AbstractIdentifiableType<? super X> supertype = getSupertype();
+				if (supertype != null) {
+					id_ = supertype.getId( javaType );
+				}
+				else {
+					id_ = null;
+				}
+			}
+			else {
+				id_ = requireSupertype().getId( javaType );
+			}
 		}
 		return id_;
 	}
@@ -227,6 +239,7 @@ public abstract class AbstractIdentifiableType<X>
 		return new Builder<X>() {
 			public void applyIdAttribute(SingularAttributeImpl<X, ?> idAttribute) {
 				AbstractIdentifiableType.this.id = idAttribute;
+				managedBuilder.addAttribute( idAttribute );
 			}
 
 			public void applyIdClassAttributes(Set<SingularAttribute<? super X,?>> idClassAttributes) {

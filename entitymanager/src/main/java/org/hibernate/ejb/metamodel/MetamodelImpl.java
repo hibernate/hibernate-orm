@@ -32,6 +32,7 @@ import javax.persistence.metamodel.ManagedType;
 import javax.persistence.metamodel.EmbeddableType;
 
 import org.hibernate.mapping.PersistentClass;
+import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.engine.SessionFactoryImplementor;
 
 /**
@@ -46,7 +47,7 @@ public class MetamodelImpl implements Metamodel, Serializable {
 
 	/**
 	 * Build the metamodel using the information from the collection of Hibernate
-	 * {@link PersistentClass} models as well as the Hibernate {@link SessionFactory}.
+	 * {@link PersistentClass} models as well as the Hibernate {@link org.hibernate.SessionFactory}.
 	 *
 	 * @param persistentClasses Iterator over the Hibernate (config-time) metamodel
 	 * @param sessionFactory The Hibernate session factry.
@@ -74,22 +75,65 @@ public class MetamodelImpl implements Metamodel, Serializable {
 		return entityType;
 	}
 
-	@SuppressWarnings({ "unchecked" })
+	//TODO remove / reduce @SW scope
+	@SuppressWarnings( "unchecked" )
 	private static EntityTypeImpl<?> buildEntityType(PersistentClass persistentClass, MetadataContext context) {
-		final PersistentClass superPersistentClass = persistentClass.getSuperclass();
-		final EntityTypeImpl superEntityType = superPersistentClass == null
+		final MappedSuperclass superMappedSuperclass = persistentClass.getSuperMappedSuperclass();
+		AbstractIdentifiableType<?> superType = superMappedSuperclass == null
 				? null
-				: locateOrBuildEntityType( superPersistentClass, context );
+				: locateOrBuildMappedsuperclassType( superMappedSuperclass, context );
+		//no mappedSuperclass, check for a super entity
+		if (superType == null) {
+			final PersistentClass superPersistentClass = persistentClass.getSuperclass();
+			superType = superPersistentClass == null
+					? null
+					: locateOrBuildEntityType( superPersistentClass, context );
+		}
 		final Class javaType = persistentClass.getMappedClass();
 		EntityTypeImpl entityType = new EntityTypeImpl(
 				javaType,
-				superEntityType,
+				superType,
 				persistentClass.getClassName(),
 				persistentClass.hasIdentifierProperty(),
 				persistentClass.isVersioned()
 		);
 		context.registerEntityType( persistentClass, entityType );
 		return entityType;
+	}
+
+	private static MappedSuperclassTypeImpl<?> locateOrBuildMappedsuperclassType(
+			MappedSuperclass mappedSuperclass, MetadataContext context) {
+		MappedSuperclassTypeImpl<?> mappedSuperclassType = context.locateMappedSuperclassType( mappedSuperclass );
+		if ( mappedSuperclassType == null ) {
+			mappedSuperclassType = buildMappedSuperclassType(mappedSuperclass, context);
+		}
+		return mappedSuperclassType;
+	}
+
+	//TODO remove / reduce @SW scope
+	@SuppressWarnings( "unchecked" )
+	private static MappedSuperclassTypeImpl<?> buildMappedSuperclassType(MappedSuperclass mappedSuperclass,
+																		 MetadataContext context) {
+		final MappedSuperclass superMappedSuperclass = mappedSuperclass.getSuperMappedSuperclass();
+		AbstractIdentifiableType<?> superType = superMappedSuperclass == null
+				? null
+				: locateOrBuildMappedsuperclassType( superMappedSuperclass, context );
+		//no mappedSuperclass, check for a super entity
+		if (superType == null) {
+			final PersistentClass superPersistentClass = mappedSuperclass.getSuperPersistentClass();
+			superType = superPersistentClass == null
+					? null
+					: locateOrBuildEntityType( superPersistentClass, context );
+		}
+		final Class javaType = mappedSuperclass.getMappedClass();
+		MappedSuperclassTypeImpl mappedSuperclassType = new MappedSuperclassTypeImpl(
+				javaType,
+				superType,
+				mappedSuperclass.hasIdentifierProperty(),
+				mappedSuperclass.isVersioned()
+		);
+		context.registerMappedSuperclassType( mappedSuperclass, mappedSuperclassType );
+		return mappedSuperclassType;
 	}
 
 	/**

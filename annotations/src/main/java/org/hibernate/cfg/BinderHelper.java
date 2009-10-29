@@ -60,6 +60,7 @@ import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.Value;
+import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.type.TypeFactory;
 import org.hibernate.util.StringHelper;
 import org.slf4j.Logger;
@@ -574,5 +575,25 @@ public class BinderHelper {
 		if ( isDefault( defAnn.name() ) ) return; //don't map not named definitions
 		log.info( "Binding Any Meta definition: {}", defAnn.name() );
 		mappings.addAnyMetaDef( defAnn );
+	}
+
+	public static MappedSuperclass getMappedSuperclassOrNull(XClass declaringClass, 
+															 Map<XClass, InheritanceState> inheritanceStatePerClass,
+															 ExtendedMappings mappings) {
+		boolean retrieve = false;
+		if ( declaringClass != null ) {
+			final InheritanceState inheritanceState = inheritanceStatePerClass.get( declaringClass );
+			if ( inheritanceState == null ) {
+				throw new org.hibernate.annotations.common.AssertionFailure(
+						"Declaring class is not found in the inheritance state hierarchy: " + declaringClass
+				);
+			}
+			if ( inheritanceState.isEmbeddableSuperclass ) {
+				retrieve = true;
+			}
+		}
+		return retrieve ?
+				mappings.getMappedSuperclass( mappings.getReflectionManager().toClass( declaringClass ) ) :
+		        null;
 	}
 }

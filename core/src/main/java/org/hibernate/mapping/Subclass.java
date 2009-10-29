@@ -70,6 +70,11 @@ public class Subclass extends PersistentClass {
 	public Property getIdentifierProperty() {
 		return getSuperclass().getIdentifierProperty();
 	}
+
+	public Property getDeclaredIdentifierProperty() {
+		return null;
+	}
+
 	public KeyValue getIdentifier() {
 		return getSuperclass().getIdentifier();
 	}
@@ -141,6 +146,10 @@ public class Subclass extends PersistentClass {
 	}
 	public Property getVersion() {
 		return getSuperclass().getVersion();
+	}
+
+	public Property getDeclaredVersion() {
+		return null;
 	}
 
 	public boolean hasEmbeddedIdentifier() {

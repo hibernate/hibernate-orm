@@ -12,6 +12,9 @@ import javax.persistence.metamodel.SetAttribute;
 import javax.persistence.metamodel.PluralAttribute;
 import javax.persistence.metamodel.MapAttribute;
 import javax.persistence.metamodel.ListAttribute;
+import javax.persistence.metamodel.MappedSuperclassType;
+import javax.persistence.metamodel.CollectionAttribute;
+import javax.persistence.metamodel.IdentifiableType;
 
 import org.hibernate.ejb.test.TestCase;
 
@@ -53,6 +56,8 @@ public class MetadataTest extends TestCase {
 		assertFalse( fridgeType.hasVersionAttribute() );
 		assertEquals( Type.PersistenceType.ENTITY, fridgeType.getPersistenceType() );
 
+		assertEquals( 3, fridgeType.getDeclaredAttributes().size() );
+
 		final EntityType<House> houseType = factory.getMetamodel().entity( House.class );
 		assertTrue( houseType.hasSingleIdAttribute() );
 		final SingularAttribute<House, House.Key> houseId = houseType.getDeclaredId( House.Key.class );
@@ -74,6 +79,7 @@ public class MetadataTest extends TestCase {
 		final SingularAttribute<? super FoodItem, Long> version = foodType.getVersion( Long.class );
 		assertNotNull( version );
 		assertTrue( version.isVersion() );
+		assertEquals( 3, foodType.getDeclaredAttributes().size() );
 
 	}
 
@@ -158,7 +164,84 @@ public class MetadataTest extends TestCase {
 		assertEquals( PluralAttribute.CollectionType.LIST, roomsBySize.getCollectionType() );
 	}
 
-		//todo test plural
+	public void testHierarchy() {
+		final EntityType<Cat> cat = factory.getMetamodel().entity( Cat.class );
+		assertNotNull( cat );
+		assertEquals( 7, cat.getAttributes().size() );
+		assertEquals( 1, cat.getDeclaredAttributes().size() );
+
+		assertTrue( cat.hasVersionAttribute() );
+		assertEquals( "version", cat.getVersion(Long.class).getName() );
+		verifyDeclaredVersiobnNotPresent( cat );
+		verifyDeclaredIdNotPresentAndIdPresent(cat);
+
+		assertEquals( Type.PersistenceType.MAPPED_SUPERCLASS, cat.getSupertype().getPersistenceType() );
+		MappedSuperclassType<Cattish> cattish = (MappedSuperclassType<Cattish>) cat.getSupertype();
+		assertEquals( 6, cattish.getAttributes().size() );
+		assertEquals( 1, cattish.getDeclaredAttributes().size() );
+
+		assertTrue( cattish.hasVersionAttribute() );
+		assertEquals( "version", cattish.getVersion(Long.class).getName() );
+		verifyDeclaredVersiobnNotPresent( cattish );
+		verifyDeclaredIdNotPresentAndIdPresent(cattish);
+
+		assertEquals( Type.PersistenceType.ENTITY, cattish.getSupertype().getPersistenceType() );
+		EntityType<Feline> feline = (EntityType<Feline>) cattish.getSupertype();
+		assertEquals( 5, feline.getAttributes().size() );
+		assertEquals( 1, feline.getDeclaredAttributes().size() );
+
+		assertTrue( feline.hasVersionAttribute() );
+		assertEquals( "version", feline.getVersion(Long.class).getName() );
+		verifyDeclaredVersiobnNotPresent( feline );
+		verifyDeclaredIdNotPresentAndIdPresent(feline);
+
+		assertEquals( Type.PersistenceType.MAPPED_SUPERCLASS, feline.getSupertype().getPersistenceType() );
+		MappedSuperclassType<Animal> animal = (MappedSuperclassType<Animal>) feline.getSupertype();
+		assertEquals( 4, animal.getAttributes().size() );
+		assertEquals( 2, animal.getDeclaredAttributes().size() );
+
+		assertTrue( animal.hasVersionAttribute() );
+		assertEquals( "version", animal.getVersion(Long.class).getName() );
+		verifyDeclaredVersiobnNotPresent( animal );
+		assertEquals( "id", animal.getId(Long.class).getName() );
+		assertEquals( "id", animal.getDeclaredId(Long.class).getName() );
+
+		assertEquals( Type.PersistenceType.MAPPED_SUPERCLASS, animal.getSupertype().getPersistenceType() );
+		MappedSuperclassType<Thing> thing = (MappedSuperclassType<Thing>) animal.getSupertype();
+		assertEquals( 2, thing.getAttributes().size() );
+		assertEquals( 2, thing.getDeclaredAttributes().size() );
+		final SingularAttribute<Thing, Double> weight = thing.getDeclaredSingularAttribute( "weight", Double.class );
+		assertEquals( Double.class, weight.getJavaType() );
+
+		assertEquals( "version", thing.getVersion(Long.class).getName() );
+		assertEquals( "version", thing.getDeclaredVersion(Long.class).getName() );
+		assertNull( thing.getId( Long.class ) );
+
+		assertNull( thing.getSupertype() );
+	}
+
+	private void verifyDeclaredIdNotPresentAndIdPresent(IdentifiableType<?> type) {
+		assertEquals( "id", type.getId(Long.class).getName() );
+		try {
+			type.getDeclaredId(Long.class);
+			fail("Should not have a declared id");
+		}
+		catch (IllegalArgumentException e) {
+			//success
+		}
+	}
+
+	private void verifyDeclaredVersiobnNotPresent(IdentifiableType<?> type) {
+		try {
+			type.getDeclaredVersion(Long.class);
+			fail("Should not have a declared version");
+		}
+		catch (IllegalArgumentException e) {
+			//success
+		}
+	}
+
+	//todo test plural
 
 	@Override
 	public Class[] getAnnotatedClasses() {
@@ -166,7 +249,11 @@ public class MetadataTest extends TestCase {
 				Fridge.class,
 				FoodItem.class,
 				Person.class,
-				House.class
+				House.class,
+				Dog.class,
+				Cat.class,
+				Cattish.class,
+				Feline.class
 		};
 	}
 

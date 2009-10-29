@@ -242,7 +242,7 @@ public class SaveOrUpdateTest extends FunctionalTestCase {
 				s.createCriteria( NumberedNode.class )
 						.setProjection( Projections.rowCount() )
 						.uniqueResult(),
-		        new Integer( 2 )
+		        new Long( 2 )
 		);
 		s.delete( root );
 		s.delete( child );
@@ -299,7 +299,7 @@ public class SaveOrUpdateTest extends FunctionalTestCase {
 				s.createCriteria( NumberedNode.class )
 						.setProjection( Projections.rowCount() )
 						.uniqueResult(),
-		        new Integer( 2 )
+		        new Long( 2 )
 		);
 		s.delete( root );
 		s.delete( child );
@@ -353,7 +353,7 @@ public class SaveOrUpdateTest extends FunctionalTestCase {
 				s.createCriteria( Node.class )
 						.setProjection( Projections.rowCount() )
 						.uniqueResult(),
-		        new Integer( 2 )
+		        new Long( 2 )
 		);
 		s.delete( root );
 		s.delete( child );

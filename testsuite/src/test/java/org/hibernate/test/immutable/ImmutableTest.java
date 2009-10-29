@@ -86,8 +86,8 @@ public class ImmutableTest extends FunctionalTestCase {
 		cv2 = (ContractVariation) it.next();
 		assertEquals( cv2.getText(), "more expensive" );
 		s.delete(c);
-		assertEquals( s.createCriteria(Contract.class).setProjection( Projections.rowCount() ).uniqueResult(), new Integer(0) );
-		assertEquals( s.createCriteria(ContractVariation.class).setProjection( Projections.rowCount() ).uniqueResult(), new Integer(0) );
+		assertEquals( s.createCriteria(Contract.class).setProjection( Projections.rowCount() ).uniqueResult(), new Long(0) );
+		assertEquals( s.createCriteria(ContractVariation.class).setProjection( Projections.rowCount() ).uniqueResult(), new Long(0) );
 		t.commit();
 		s.close();
 	}
@@ -122,8 +122,8 @@ public class ImmutableTest extends FunctionalTestCase {
 		cv2 = (ContractVariation) it.next();
 		assertEquals( cv2.getText(), "more expensive" );
 		s.delete(c);
-		assertEquals( s.createCriteria(Contract.class).setProjection( Projections.rowCount() ).uniqueResult(), new Integer(0) );
-		assertEquals( s.createCriteria(ContractVariation.class).setProjection( Projections.rowCount() ).uniqueResult(), new Integer(0) );
+		assertEquals( s.createCriteria(Contract.class).setProjection( Projections.rowCount() ).uniqueResult(), new Long(0) );
+		assertEquals( s.createCriteria(ContractVariation.class).setProjection( Projections.rowCount() ).uniqueResult(), new Long(0) );
 		t.commit();
 		s.close();
 	}
@@ -159,8 +159,8 @@ public class ImmutableTest extends FunctionalTestCase {
 		cv2 = (ContractVariation) it.next();
 		assertEquals( cv2.getText(), "more expensive" );
 		s.delete(c);
-		assertEquals( s.createCriteria(Contract.class).setProjection( Projections.rowCount() ).uniqueResult(), new Integer(0) );
-		assertEquals( s.createCriteria(ContractVariation.class).setProjection( Projections.rowCount() ).uniqueResult(), new Integer(0) );
+		assertEquals( s.createCriteria(Contract.class).setProjection( Projections.rowCount() ).uniqueResult(), new Long(0) );
+		assertEquals( s.createCriteria(ContractVariation.class).setProjection( Projections.rowCount() ).uniqueResult(), new Long(0) );
 		t.commit();
 		s.close();
 	}
@@ -203,8 +203,8 @@ public class ImmutableTest extends FunctionalTestCase {
 		cv2 = (ContractVariation) it.next();
 		assertEquals( cv2.getText(), "more expensive" );
 		s.delete(c);
-		assertEquals( s.createCriteria(Contract.class).setProjection( Projections.rowCount() ).uniqueResult(), new Integer(0) );
-		assertEquals( s.createCriteria(ContractVariation.class).setProjection( Projections.rowCount() ).uniqueResult(), new Integer(0) );
+		assertEquals( s.createCriteria(Contract.class).setProjection( Projections.rowCount() ).uniqueResult(), new Long(0) );
+		assertEquals( s.createCriteria(ContractVariation.class).setProjection( Projections.rowCount() ).uniqueResult(), new Long(0) );
 		t.commit();
 		s.close();
 	}
@@ -239,8 +239,8 @@ public class ImmutableTest extends FunctionalTestCase {
 		cv2 = (ContractVariation) it.next();
 		assertEquals( cv2.getText(), "more expensive" );
 		s.delete(c);
-		assertEquals( s.createCriteria(Contract.class).setProjection( Projections.rowCount() ).uniqueResult(), new Integer(0) );
-		assertEquals( s.createCriteria(ContractVariation.class).setProjection( Projections.rowCount() ).uniqueResult(), new Integer(0) );
+		assertEquals( s.createCriteria(Contract.class).setProjection( Projections.rowCount() ).uniqueResult(), new Long(0) );
+		assertEquals( s.createCriteria(ContractVariation.class).setProjection( Projections.rowCount() ).uniqueResult(), new Long(0) );
 		t.commit();
 		s.close();
 	}
@@ -276,8 +276,8 @@ public class ImmutableTest extends FunctionalTestCase {
 		cv2 = (ContractVariation) it.next();
 		assertEquals( cv2.getText(), "more expensive" );
 		s.delete(c);
-		assertEquals( s.createCriteria(Contract.class).setProjection( Projections.rowCount() ).uniqueResult(), new Integer(0) );
-		assertEquals( s.createCriteria(ContractVariation.class).setProjection( Projections.rowCount() ).uniqueResult(), new Integer(0) );
+		assertEquals( s.createCriteria(Contract.class).setProjection( Projections.rowCount() ).uniqueResult(), new Long(0) );
+		assertEquals( s.createCriteria(ContractVariation.class).setProjection( Projections.rowCount() ).uniqueResult(), new Long(0) );
 		t.commit();
 		s.close();
 	}
@@ -321,8 +321,8 @@ public class ImmutableTest extends FunctionalTestCase {
 		cv2 = (ContractVariation) it.next();
 		assertEquals( cv2.getText(), "more expensive" );
 		s.delete(c);
-		assertEquals( s.createCriteria(Contract.class).setProjection( Projections.rowCount() ).uniqueResult(), new Integer(0) );
-		assertEquals( s.createCriteria(ContractVariation.class).setProjection( Projections.rowCount() ).uniqueResult(), new Integer(0) );
+		assertEquals( s.createCriteria(Contract.class).setProjection( Projections.rowCount() ).uniqueResult(), new Long(0) );
+		assertEquals( s.createCriteria(ContractVariation.class).setProjection( Projections.rowCount() ).uniqueResult(), new Long(0) );
 		t.commit();
 		s.close();
 	}

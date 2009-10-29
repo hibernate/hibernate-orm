@@ -370,10 +370,10 @@ public class CriteriaQueryTest extends FunctionalTestCase {
 		
 		//s.flush();
 		
-		Integer count = (Integer) s.createCriteria(Enrolment.class)
+		Long count = (Long) s.createCriteria(Enrolment.class)
 			.setProjection( Projections.count("studentNumber").setDistinct() )
 			.uniqueResult();
-		assertEquals(count, new Integer(2));
+		assertEquals(count, new Long(2));
 		
 		Object object = s.createCriteria(Enrolment.class)
 			.setProjection( Projections.projectionList()
@@ -385,7 +385,7 @@ public class CriteriaQueryTest extends FunctionalTestCase {
 			.uniqueResult();
 		Object[] result = (Object[])object; 
 		
-		assertEquals(new Integer(2),result[0]);
+		assertEquals(new Long(2),result[0]);
 		assertEquals(new Long(667),result[1]);
 		assertEquals(new Long(101),result[2]);
 		assertEquals( 384.0, ( (Double) result[3] ).doubleValue(), 0.01 );
@@ -544,10 +544,10 @@ public class CriteriaQueryTest extends FunctionalTestCase {
 		
 		s.flush();
 		
-		Integer count = (Integer) s.createCriteria(Enrolment.class)
+		Long count = (Long) s.createCriteria(Enrolment.class)
 			.setProjection( Property.forName("studentNumber").count().setDistinct() )
 			.uniqueResult();
-		assertEquals(count, new Integer(2));
+		assertEquals(count, new Long(2));
 		
 		Object object = s.createCriteria(Enrolment.class)
 			.setProjection( Projections.projectionList()
@@ -559,7 +559,7 @@ public class CriteriaQueryTest extends FunctionalTestCase {
 			.uniqueResult();
 		Object[] result = (Object[])object; 
 		
-		assertEquals(new Integer(2),result[0]);
+		assertEquals(new Long(2),result[0]);
 		assertEquals(new Long(667),result[1]);
 		assertEquals(new Long(101),result[2]);
 		assertEquals(384.0, ( (Double) result[3] ).doubleValue(), 0.01);

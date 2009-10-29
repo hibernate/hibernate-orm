@@ -603,7 +603,7 @@ public class MergeTest extends AbstractOperationTestCase {
 			s.createCriteria(NumberedNode.class)
 				.setProjection( Projections.rowCount() )
 				.uniqueResult(),
-			new Integer(2)
+			new Long(2)
 		);
 
 		s.close();
@@ -646,7 +646,7 @@ public class MergeTest extends AbstractOperationTestCase {
 			s.createCriteria(NumberedNode.class)
 				.setProjection( Projections.rowCount() )
 				.uniqueResult(),
-			new Integer(2)
+			new Long(2)
 		);
 		tx.commit();
 
@@ -691,7 +691,7 @@ public class MergeTest extends AbstractOperationTestCase {
 			s.createCriteria(NumberedNode.class)
 				.setProjection( Projections.rowCount() )
 				.uniqueResult(),
-			new Integer(2)
+			new Long(2)
 		);
 		tx.commit();
 

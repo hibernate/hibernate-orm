@@ -182,6 +182,6 @@ public class IdentifierPropertyReferencesTest extends FunctionalTestCase {
 	}
 
 	private long extractCount(Criteria crit) {
-		return ( ( Integer ) crit.list().get( 0 ) ).intValue();
+		return ( ( Long ) crit.list().get( 0 ) ).longValue();
 	}
 }

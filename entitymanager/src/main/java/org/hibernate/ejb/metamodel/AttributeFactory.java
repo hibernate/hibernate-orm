@@ -27,6 +27,7 @@ import java.lang.reflect.Member;
 import java.util.Iterator;
 import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.Type;
+import javax.persistence.metamodel.IdentifiableType;
 
 import org.hibernate.EntityMode;
 import org.hibernate.type.EmbeddedComponentType;
@@ -38,6 +39,7 @@ import org.hibernate.mapping.Map;
 import org.hibernate.mapping.OneToMany;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Value;
+import org.hibernate.mapping.PersistentClass;
 import org.hibernate.tuple.entity.EntityMetamodel;
 
 /**
@@ -144,7 +146,7 @@ public class AttributeFactory {
 	}
 
 	@SuppressWarnings({ "unchecked" })
-	public <X, Y> SingularAttributeImpl<X, Y> buildIdAttribute(AbstractManagedType<X> ownerType, Property property, boolean getMember) {
+	public <X, Y> SingularAttributeImpl<X, Y> buildIdAttribute(AbstractIdentifiableType<X> ownerType, Property property, boolean getMember) {
 		final AttributeContext attrContext = getAttributeContext( property );
 		final Type<Y> attrType = getType( ownerType, attrContext.getElementTypeStatus(), attrContext.getElementValue(), getMember );
 		final Class<Y> idJavaType = property.getType().getReturnedClass();
@@ -158,7 +160,7 @@ public class AttributeFactory {
 		);
 	}
 
-	private Member determineIdentifierJavaMember(AbstractManagedType ownerType, Property property) {
+	private Member determineIdentifierJavaMember(IdentifiableType ownerType, Property property) {
 // see below
 //		final EntityMetamodel entityMetamodel = getDeclarerEntityMetamodel( property );
 		final EntityMetamodel entityMetamodel = getDeclarerEntityMetamodel( ownerType );
@@ -191,11 +193,25 @@ public class AttributeFactory {
 //				.getEntityMetamodel();
 //	}
 // so we use the owner's java class to lookup the persister/entitymetamodel
-	private EntityMetamodel getDeclarerEntityMetamodel(AbstractManagedType ownerType) {
-		return context.getSessionFactory()
-				.getEntityPersister( ownerType.getJavaType().getName() )
+	private EntityMetamodel getDeclarerEntityMetamodel(IdentifiableType<?> ownerType) {
+	final Type.PersistenceType persistenceType = ownerType.getPersistenceType();
+	if ( persistenceType == Type.PersistenceType.ENTITY) {
+			return context.getSessionFactory()
+					.getEntityPersister( ownerType.getJavaType().getName() )
+					.getEntityMetamodel();
+		}
+		else if ( persistenceType == Type.PersistenceType.MAPPED_SUPERCLASS) {
+			PersistentClass persistentClass =
+					context.getPersistentClassHostingProperties( (MappedSuperclassTypeImpl<?>) ownerType );	
+			return context.getSessionFactory()
+				.getEntityPersister( persistentClass.getClassName() )
 				.getEntityMetamodel();
+		}
+		else {
+			throw new AssertionFailure( "Cannot get the metamodel for PersistenceType: " + persistenceType );
+		}
 	}
+
 
 // getting the owning PersistentClass from the Property is broken in certain cases with annotations...
 //	private Member determineStandardJavaMember(Property property) {
@@ -206,33 +222,39 @@ public class AttributeFactory {
 //		return entityMetamodel.getTuplizer( EntityMode.POJO ).getGetter( index ).getMember();
 //	}
 // so we use the owner's java class to lookup the persister/entitymetamodel
-	private Member determineStandardJavaMember(AbstractManagedType ownerType, Property property) {
-		if ( Type.PersistenceType.EMBEDDABLE == ownerType.getPersistenceType() ) {
-			EmbeddableTypeImpl embeddableType = ( EmbeddableTypeImpl ) ownerType;
+	private Member determineStandardJavaMember(AbstractManagedType<?> ownerType, Property property) {
+	final Type.PersistenceType persistenceType = ownerType.getPersistenceType();
+	if ( Type.PersistenceType.EMBEDDABLE == persistenceType ) {
+			EmbeddableTypeImpl embeddableType = ( EmbeddableTypeImpl<?> ) ownerType;
 			return embeddableType.getHibernateType().getTuplizerMapping()
 					.getTuplizer( EntityMode.POJO )
 					.getGetter( embeddableType.getHibernateType().getPropertyIndex( property.getName() ) )
 					.getMember();
 		}
-		else if ( Type.PersistenceType.ENTITY == ownerType.getPersistenceType() ) {
-			final EntityMetamodel entityMetamodel = getDeclarerEntityMetamodel( ownerType );
-			final String propertyName = property.getName();
-			final Integer index = entityMetamodel.getPropertyIndexOrNull( propertyName );
-			if ( index == null ) {
-				// just like in #determineIdentifierJavaMember , this *should* indicate we have an IdClass mapping
-				return determineVirtualIdentifierJavaMember( entityMetamodel, property );
-			}
-			else {
-				return entityMetamodel.getTuplizer( EntityMode.POJO ).getGetter( index ).getMember();
-			}
+		else if ( Type.PersistenceType.ENTITY == persistenceType
+			|| Type.PersistenceType.MAPPED_SUPERCLASS == persistenceType ) {
+			return determineStandardJavaMemberOutOfIdentifiableType( (IdentifiableType<?>) ownerType, property );
 		}
 		else {
-			throw new IllegalArgumentException( "Unexpected owner type : " + ownerType.getPersistenceType() );
+			throw new IllegalArgumentException( "Unexpected owner type : " + persistenceType );
+		}
+	}
+
+	private Member determineStandardJavaMemberOutOfIdentifiableType(IdentifiableType<?> ownerType, Property property) {
+		final EntityMetamodel entityMetamodel = getDeclarerEntityMetamodel( ownerType );
+		final String propertyName = property.getName();
+		final Integer index = entityMetamodel.getPropertyIndexOrNull( propertyName );
+		if ( index == null ) {
+			// just like in #determineIdentifierJavaMember , this *should* indicate we have an IdClass mapping
+			return determineVirtualIdentifierJavaMember( entityMetamodel, property );
+		}
+		else {
+			return entityMetamodel.getTuplizer( EntityMode.POJO ).getGetter( index ).getMember();
 		}
 	}
 
 	@SuppressWarnings({ "unchecked" })
-	public <X, Y> SingularAttributeImpl<X, Y> buildVersionAttribute(AbstractManagedType<X> ownerType, Property property, boolean getMember) {
+	public <X, Y> SingularAttributeImpl<X, Y> buildVersionAttribute(AbstractIdentifiableType<X> ownerType, Property property, boolean getMember) {
 		final AttributeContext attrContext = getAttributeContext( property );
 		final Class<Y> javaType = property.getType().getReturnedClass();
 		final Type<Y> attrType = getType( ownerType, attrContext.getElementTypeStatus(), attrContext.getElementValue(), getMember );
@@ -246,7 +268,7 @@ public class AttributeFactory {
 		);
 	}
 
-	private Member determineVersionJavaMember(AbstractManagedType ownerType, Property property) {
+	private Member determineVersionJavaMember(IdentifiableType ownerType, Property property) {
 		final EntityMetamodel entityMetamodel = getDeclarerEntityMetamodel( ownerType );
 		if ( ! property.getName().equals( entityMetamodel.getVersionProperty().getName() ) ) {
 			// this should never happen, but to be safe...

@@ -169,6 +169,7 @@ public class MetadataTest extends TestCase {
 		assertNotNull( cat );
 		assertEquals( 7, cat.getAttributes().size() );
 		assertEquals( 1, cat.getDeclaredAttributes().size() );
+		ensureProperMember(cat.getDeclaredAttributes());
 
 		assertTrue( cat.hasVersionAttribute() );
 		assertEquals( "version", cat.getVersion(Long.class).getName() );
@@ -179,6 +180,7 @@ public class MetadataTest extends TestCase {
 		MappedSuperclassType<Cattish> cattish = (MappedSuperclassType<Cattish>) cat.getSupertype();
 		assertEquals( 6, cattish.getAttributes().size() );
 		assertEquals( 1, cattish.getDeclaredAttributes().size() );
+		ensureProperMember(cattish.getDeclaredAttributes());
 
 		assertTrue( cattish.hasVersionAttribute() );
 		assertEquals( "version", cattish.getVersion(Long.class).getName() );
@@ -189,6 +191,7 @@ public class MetadataTest extends TestCase {
 		EntityType<Feline> feline = (EntityType<Feline>) cattish.getSupertype();
 		assertEquals( 5, feline.getAttributes().size() );
 		assertEquals( 1, feline.getDeclaredAttributes().size() );
+		ensureProperMember(feline.getDeclaredAttributes());
 
 		assertTrue( feline.hasVersionAttribute() );
 		assertEquals( "version", feline.getVersion(Long.class).getName() );
@@ -199,25 +202,42 @@ public class MetadataTest extends TestCase {
 		MappedSuperclassType<Animal> animal = (MappedSuperclassType<Animal>) feline.getSupertype();
 		assertEquals( 4, animal.getAttributes().size() );
 		assertEquals( 2, animal.getDeclaredAttributes().size() );
+		ensureProperMember(animal.getDeclaredAttributes());
 
 		assertTrue( animal.hasVersionAttribute() );
 		assertEquals( "version", animal.getVersion(Long.class).getName() );
 		verifyDeclaredVersiobnNotPresent( animal );
 		assertEquals( "id", animal.getId(Long.class).getName() );
-		assertEquals( "id", animal.getDeclaredId(Long.class).getName() );
+		final SingularAttribute<Animal, Long> id = animal.getDeclaredId( Long.class );
+		assertEquals( "id", id.getName() );
+		assertNotNull( id.getJavaMember() );
 
 		assertEquals( Type.PersistenceType.MAPPED_SUPERCLASS, animal.getSupertype().getPersistenceType() );
 		MappedSuperclassType<Thing> thing = (MappedSuperclassType<Thing>) animal.getSupertype();
 		assertEquals( 2, thing.getAttributes().size() );
 		assertEquals( 2, thing.getDeclaredAttributes().size() );
+		ensureProperMember(thing.getDeclaredAttributes());
 		final SingularAttribute<Thing, Double> weight = thing.getDeclaredSingularAttribute( "weight", Double.class );
 		assertEquals( Double.class, weight.getJavaType() );
 
 		assertEquals( "version", thing.getVersion(Long.class).getName() );
-		assertEquals( "version", thing.getDeclaredVersion(Long.class).getName() );
+		final SingularAttribute<Thing, Long> version = thing.getDeclaredVersion( Long.class );
+		assertEquals( "version", version.getName() );
+		assertNotNull( version.getJavaMember() );
 		assertNull( thing.getId( Long.class ) );
 
 		assertNull( thing.getSupertype() );
+	}
+
+	private void ensureProperMember(Set<?> attributes) {
+		//we do not update the set so we are safe
+		@SuppressWarnings( "unchecked" )
+		final Set<Attribute<?, ?>> safeAttributes = ( Set<Attribute<?, ?>> ) attributes;
+		for (Attribute<?,?> attribute : safeAttributes ) {
+			final String name = attribute.getJavaMember().getName();
+			assertNotNull( attribute.getJavaMember() );
+			assertTrue( name.toLowerCase().endsWith( attribute.getName().toLowerCase() ) );
+		}
 	}
 
 	private void verifyDeclaredIdNotPresentAndIdPresent(IdentifiableType<?> type) {

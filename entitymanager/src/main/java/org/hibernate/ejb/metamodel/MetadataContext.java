@@ -31,12 +31,14 @@ import java.util.List;
 import java.util.ArrayList;
 import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.SingularAttribute;
+import javax.swing.*;
 
 import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.annotations.common.AssertionFailure;
+import org.hibernate.AnnotationException;
 
 /**
  * Defines a context for storing information during the building of the {@link MetamodelImpl}.
@@ -67,6 +69,14 @@ class MetadataContext {
 			= new HashMap<MappedSuperclass,MappedSuperclassTypeImpl<?>>();
 	//this list contains MappedSuperclass and EntityTypes ordered by superclass first
 	private List<Object> orderedMappings = new ArrayList<Object>();
+	/**
+	 * Stack of PersistentClass being process. Last in the list is the highest in the stack.
+	 * 
+	 */
+	private List<PersistentClass> stackOfPersistentClassesBeingProcessed
+			= new ArrayList<PersistentClass>();
+	private Map<MappedSuperclassTypeImpl<?>, PersistentClass> mappedSuperClassTypeToPersistentClass
+			= new HashMap<MappedSuperclassTypeImpl<?>, PersistentClass>();
 
 	public MetadataContext(SessionFactoryImplementor sessionFactory) {
 		this.sessionFactory = sessionFactory;
@@ -104,6 +114,7 @@ class MetadataContext {
 												  MappedSuperclassTypeImpl<?> mappedSuperclassType) {
 		mappedSuperclassByMappedSuperclassMapping.put( mappedSuperclass, mappedSuperclassType );
 		orderedMappings.add( mappedSuperclass );
+		mappedSuperClassTypeToPersistentClass.put( mappedSuperclassType, getEntityWorkedOn() );
 	}
 
 	/**
@@ -169,7 +180,7 @@ class MetadataContext {
 				Iterator<Property> properties = ( Iterator<Property> ) safeMapping.getDeclaredPropertyIterator();
 				while ( properties.hasNext() ) {
 					final Property property = properties.next();
-					final Attribute attribute = attributeFactory.buildAttribute( jpa2Mapping, property, false );
+					final Attribute attribute = attributeFactory.buildAttribute( jpa2Mapping, property, true );
 					jpa2Mapping.getBuilder().addAttribute( attribute );
 				}
 				jpa2Mapping.lock();
@@ -200,7 +211,7 @@ class MetadataContext {
 			final Property declaredIdentifierProperty = mappingType.getDeclaredIdentifierProperty();
 			if (declaredIdentifierProperty != null) {
 				jpaMappingType.getBuilder().applyIdAttribute(
-						attributeFactory.buildIdAttribute( jpaMappingType, declaredIdentifierProperty, false )
+						attributeFactory.buildIdAttribute( jpaMappingType, declaredIdentifierProperty, true )
 				);
 			}
 		}
@@ -226,7 +237,7 @@ class MetadataContext {
 		final Property declaredVersion = mappingType.getDeclaredVersion();
 		if ( declaredVersion != null ) {
 			jpaMappingType.getBuilder().applyVersionAttribute(
-					attributeFactory.buildVersionAttribute( jpaMappingType, declaredVersion, false )
+					attributeFactory.buildVersionAttribute( jpaMappingType, declaredVersion, true )
 			);
 		}
 	}
@@ -250,7 +261,7 @@ class MetadataContext {
 		@SuppressWarnings( "unchecked" )
 		Iterator<Property> properties = mappingType.getIdentifierMapper().getPropertyIterator();
 		while ( properties.hasNext() ) {
-			attributes.add( attributeFactory.buildIdAttribute( jpaMappingType, properties.next(), false ) );
+			attributes.add( attributeFactory.buildIdAttribute( jpaMappingType, properties.next(), true ) );
 		}
 		return attributes;
 	}
@@ -287,5 +298,34 @@ class MetadataContext {
 
 	public MappedSuperclassTypeImpl<?> locateMappedSuperclassType(MappedSuperclass mappedSuperclass) {
 		return mappedSuperclassByMappedSuperclassMapping.get(mappedSuperclass);
+	}
+
+	public void pushEntityWorkedOn(PersistentClass persistentClass) {
+		stackOfPersistentClassesBeingProcessed.add(persistentClass);
+	}
+
+	public void popEntityWorkedOn(PersistentClass persistentClass) {
+		final PersistentClass stackTop = stackOfPersistentClassesBeingProcessed.remove(
+				stackOfPersistentClassesBeingProcessed.size() - 1
+		);
+		if (stackTop != persistentClass) {
+			throw new AssertionFailure( "Inconsistent popping: "
+				+ persistentClass.getEntityName() + " instead of " + stackTop.getEntityName() );
+		}
+	}
+
+	private PersistentClass getEntityWorkedOn() {
+		return stackOfPersistentClassesBeingProcessed.get(
+					stackOfPersistentClassesBeingProcessed.size() - 1
+			);
+	}
+
+	public PersistentClass getPersistentClassHostingProperties(MappedSuperclassTypeImpl<?> mappedSuperclassType) {
+		final PersistentClass persistentClass = mappedSuperClassTypeToPersistentClass.get( mappedSuperclassType );
+		if (persistentClass == null) {
+			throw new AssertionFailure( "Could not find PersistentClass for MappedSuperclassType: "
+					+ mappedSuperclassType.getJavaType() );
+		}
+		return persistentClass;
 	}
 }

@@ -78,6 +78,8 @@ public class MetamodelImpl implements Metamodel, Serializable {
 	//TODO remove / reduce @SW scope
 	@SuppressWarnings( "unchecked" )
 	private static EntityTypeImpl<?> buildEntityType(PersistentClass persistentClass, MetadataContext context) {
+		final Class javaType = persistentClass.getMappedClass();
+		context.pushEntityWorkedOn(persistentClass);
 		final MappedSuperclass superMappedSuperclass = persistentClass.getSuperMappedSuperclass();
 		AbstractIdentifiableType<?> superType = superMappedSuperclass == null
 				? null
@@ -89,7 +91,6 @@ public class MetamodelImpl implements Metamodel, Serializable {
 					? null
 					: locateOrBuildEntityType( superPersistentClass, context );
 		}
-		final Class javaType = persistentClass.getMappedClass();
 		EntityTypeImpl entityType = new EntityTypeImpl(
 				javaType,
 				superType,
@@ -98,6 +99,7 @@ public class MetamodelImpl implements Metamodel, Serializable {
 				persistentClass.isVersioned()
 		);
 		context.registerEntityType( persistentClass, entityType );
+		context.popEntityWorkedOn(persistentClass);
 		return entityType;
 	}
 

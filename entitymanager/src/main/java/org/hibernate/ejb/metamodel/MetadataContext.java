@@ -34,10 +34,12 @@ import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.SingularAttribute;
 import javax.persistence.metamodel.IdentifiableType;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
-import org.hibernate.mapping.Component;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.annotations.common.AssertionFailure;
 
@@ -55,6 +57,8 @@ import org.hibernate.annotations.common.AssertionFailure;
  * @author Emmanuel Bernard
  */
 class MetadataContext {
+	private static final Logger log = LoggerFactory.getLogger( MetadataContext.class );
+
 	private final SessionFactoryImplementor sessionFactory;
 	private final AttributeFactory attributeFactory = new AttributeFactory( this );
 
@@ -334,21 +338,45 @@ class MetadataContext {
 		final String name = attribute.getName();
 		try {
 			Field field = metamodelClass.getDeclaredField( name );
-			field.setAccessible( true ); // should be public anyway, but to be sure...
-			field.set( null, attribute );
+			try {
+				if ( ! field.isAccessible() ) {
+					// should be public anyway, but to be sure...
+					field.setAccessible( true );
+				}
+				field.set( null, attribute );
+			}
+			catch ( IllegalAccessException e ) {
+				// todo : exception type?
+				throw new AssertionFailure(
+						"Unable to inject static metamodel attribute : " + metamodelClass.getName() + '#' + name,
+						e
+				);
+			}
+			catch ( IllegalArgumentException e ) {
+				// most likely a mismatch in the type we are injecting and the defined field; this represents a
+				// mismatch in how the annotation processor interpretted the attribute and how our metamodel
+				// and/or annotation binder did.
+//
+// This does seem to be an issue currently for ListAttribute and CollectionAttribute for @OneToMany List
+// w/o the @Index definition (which is a bag in Hibernate-terms.  So for the time being we simply
+// log an error
+//				throw new AssertionFailure(
+//						"Illegal argument on static metamodel field injection : " + metamodelClass.getName() + '#' + name
+//								+ "; expected type :  " + attribute.getClass().getName()
+//								+ "; encountered type : " + field.getType().getName()
+//				);
+				log.error(
+						"Illegal argument on static metamodel field injection : " + metamodelClass.getName() + '#' + name
+								+ "; expected type :  " + attribute.getClass().getName()
+								+ "; encountered type : " + field.getType().getName()
+				);
+			}
 		}
 		catch ( NoSuchFieldException e ) {
-			// todo : exception type?
-			throw new AssertionFailure(
-					"Unable to locate static metamodel field : " + metamodelClass.getName() + '#' + name
-			);
-		}
-		catch ( IllegalAccessException e ) {
-			// todo : exception type?
-			throw new AssertionFailure(
-					"Unable to inject static metamodel attribute : " + metamodelClass.getName() + '#' + name,
-					e
-			);
+			log.error( "Unable to locate static metamodel field : " + metamodelClass.getName() + '#' + name );
+//			throw new AssertionFailure(
+//					"Unable to locate static metamodel field : " + metamodelClass.getName() + '#' + name
+//			);
 		}
 	}
 

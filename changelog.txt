@@ -5,6 +5,89 @@ match the actual issue resolution (i.e. a bug might not be a bug). Please
 refer to the particular case on JIRA using the issue tracking number to learn
 more about each case.
 
+
+Changes in version 3.5.0-Beta-2 (2009.11.02)
+-------------------------------------------
+
+** Sub-task
+    * [HHH-4047] - Phase 1 - API & implement join-strategy
+    * [HHH-4196] - Implement JPA 2.0 criteria apis (building)
+    * [HHH-4202] - Implement JPA 2.0 metamodel APIs
+    * [HHH-4528] - Read mapping annotations from entity properties rather than the composite pk
+    * [HHH-4533] - Support for @MappedSuperclass such that we can build javax.persistence.metamodel.MappedSuperclassType
+    * [HHH-4537] - Expose Members for MappedSuperclass properties
+
+** Bug
+    * [HHH-1724] - Critieria needs to be aligned with new aggreation type rules
+    * [HHH-3817] - JBC second level cache integration can cache stale collection data
+    * [HHH-3818] - Hibernate/JBC integration doesn't property handle Entity/CollectionRegionAccessStrategy evictAll
+    * [HHH-4095] - bug in org.hibernate.Hibernate.createBlob( InputStream in )
+    * [HHH-4100] - Problems with Envers docbook sources
+    * [HHH-4105] - SessionFactory mispells method to obtain fetch profile definition
+    * [HHH-4114] - ASTParserLoadingTest fails due to missing "bit_length" function
+    * [HHH-4115] - FooBarTest - "operator does not exist: character varying = integer"
+    * [HHH-4435] - DataVersionAdapter.newerThan incorrect when comparing to self
+    * [HHH-4437] - ToOneDelegateSessionImplementor breaks Hibernate.getClass(auditedEntity.proxyOfnotAuditedEntity)
+    * [HHH-4441] - SessionImpl serialization violates java serialization spec
+    * [HHH-4447] - Envers proxy.getId() returns null if proxy was not initialized yet
+    * [HHH-4449] - NPE during inserting new audited entity with reference to another proxy entity if proxy.lazyInitializer.session is null
+    * [HHH-4463] - Native queries should not be automatically paginated in getSingleResult() as it fails for some DB and or queries
+    * [HHH-4475] - Constants point to non-existing default JBC/JGroups config file locations
+    * [HHH-4486] - Account for MySQL's <DROP TEMPORARY TABLE> statement
+    * [HHH-4494] - cglib log warning says BytecodeProvider impl is considered deprecated
+    * [HHH-4500] - MSSQL, Oracle - Mapping inconsistency
+    * [HHH-4503] - Sybase - Annotations - unit tests using LOBs fail
+    * [HHH-4507] - Persistence units in entitymanager's testsuite are using fixed hsqldb configuration
+    * [HHH-4513] - AnotationConfiguration does not honor hibernate.validator.apply_to_ddl property in case Hibernate Validator 4 is activated
+    * [HHH-4522] - CallbackAndDirtyTest throws exception when run against PostgreSQL
+    * [HHH-4525] - Trunk is not including the newly added modules to the distribution bundle
+    * [HHH-4532] - Unit Tests in test/idgen/enhanced/forcedtable need update
+
+** Improvement
+    * [HHH-3461] - Enhance DialectFactory to support Sybase Adaptive Server Anywhere
+    * [HHH-4364] - Support @NamedQuery on a @MappedSuperclass (Sharath Reddy)
+    * [HHH-4382] - @ManyToOne not working wth @Formula
+    * [HHH-4397] - Split test involving database specific features (like sequence / identity)
+    * [HHH-4405] - Integrate new long string and binary property types in core with  annotations
+    * [HHH-4415] - TestCase could check for superclass of Dialect before skipping it
+    * [HHH-4442] - Change StandardDialectResolver to use SybaseASE15Dialect over deprecated SybaseDialect
+    * [HHH-4443] - Allow generic handling of any Hibernate type for post-insert generated identifiers
+    * [HHH-4476] - Move cache-jbosscache to JBoss Cache 3.2.1
+    * [HHH-4484] - When JBoss Cache is configured for INVALIDATION don't send cluster message on entity insert
+    * [HHH-4502] - Update database profiles in pom.xml
+    * [HHH-4508] - Typo in DialectFactory - avalable should be available
+    * [HHH-4523] - Some of the tests in the entitymanager have hard coded connection settings - these tests should use filtered connection settings
+    * [HHH-4526] - Add better metainf information tot he hibernate all jar gennerated for dist
+
+** New Feature
+    * [HHH-1012] - Index not created by SchemaUpdate
+    * [HHH-1480] - JOIN precendence rules per SQL-99
+    * [HHH-3000] - Allow a TypeDef to be associated with a class (Sharath Reddy)
+    * [HHH-4103] - Implement an Infinispan 2nd level cache provider
+    * [HHH-4232] - TypeDef support on @Embeddable or @MappedSuperClass classes (Sharath Reddy)
+    * [HHH-4332] - Filters for MappedSuperClass
+    * [HHH-4473] - Create documentation to explain the usage of the new 'defaultForType' attribute of the TypeDef annotation
+    * [HHH-4479] - We should be able to implement Joins using formulas with Annotations
+    * [HHH-4512] - TypeDef annotation should support both 'name' and 'defaultForType' attributes
+
+** Patch
+    * [HHH-3972] - Adding FETCH FIRST and OFFSET support to DerbyDialect
+    * [HHH-4440] - Support for column-level read/write fragments (Rob Hasselbaum)
+    * [HHH-4488] - ListProxy, MapProxy etc. - problems during marshalling/demarchalling
+
+** Task
+    * [HHH-2412] - Support for JDBC4
+    * [HHH-3580] - import entitymanager into core as a module
+    * [HHH-3849] - Disable lock striping in JBoss Cache configs
+    * [HHH-4355] - Allow running tests against different databases by using a simple switch
+    * [HHH-4485] - Replace the JBoss Cache integration configuration properties with "jbc2"-less versions
+    * [HHH-4487] - Restore versions of the old public API jbc2 package classes
+    * [HHH-4499] - Account for modules needing JDK 1.6
+    * [HHH-4501] - Use Maven wagon-scm provider for release deployments
+    * [HHH-4530] - Change the docbook style for Annotations and EntityManager to the latest styles used in the other Core modules
+    * [HHH-4538] - Update to Bean Validation 1.0.0 and Hibernate Validator 4.0.0
+
+
 Changes in version 3.5.0.Beta-1 (2009.08.18)
 -------------------------------------------
 

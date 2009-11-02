@@ -189,6 +189,10 @@ public abstract class AbstractIdentifiableType<X>
 		return isVersioned;
 	}
 
+	public boolean hasDeclaredVersionAttribute() {
+		return isVersioned && version != null;
+	}
+
 	/**
 	 * {@inheritDoc}
 	 */
@@ -220,6 +224,16 @@ public abstract class AbstractIdentifiableType<X>
 			throw new IllegalArgumentException( "Version attribute was not of specified type : " + javaType.getName() );
 		}
 		return ( SingularAttribute<X, Y> ) version;
+	}
+
+	/**
+	 * For used to retrieve the declared version when populating the static metamodel.
+	 *
+	 * @return The declared
+	 */
+	public SingularAttribute<X, ?> getDeclaredVersion() {
+		checkDeclaredVersion();
+		return version;
 	}
 
 	/**

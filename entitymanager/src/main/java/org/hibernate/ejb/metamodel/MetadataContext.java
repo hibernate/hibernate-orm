@@ -29,16 +29,17 @@ import java.util.Map;
 import java.util.Set;
 import java.util.List;
 import java.util.ArrayList;
+import java.lang.reflect.Field;
 import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.SingularAttribute;
-import javax.swing.*;
+import javax.persistence.metamodel.IdentifiableType;
 
 import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
+import org.hibernate.mapping.Component;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.annotations.common.AssertionFailure;
-import org.hibernate.AnnotationException;
 
 /**
  * Defines a context for storing information during the building of the {@link MetamodelImpl}.
@@ -163,6 +164,12 @@ class MetadataContext {
 				Iterator<Property> properties = ( Iterator<Property> ) safeMapping.getDeclaredPropertyIterator();
 				while ( properties.hasNext() ) {
 					final Property property = properties.next();
+					if ( property.getValue() == safeMapping.getIdentifierMapper() ) {
+						// property represents special handling for id-class mappings but we have already
+						// accounted for the embedded property mappings in #applyIdMetadata &&
+						// #buildIdClassAttributes
+						continue;
+					}
 					final Attribute attribute = attributeFactory.buildAttribute( jpa2Mapping, property, true );
 					jpa2Mapping.getBuilder().addAttribute( attribute );
 				}
@@ -190,7 +197,12 @@ class MetadataContext {
 				throw new AssertionFailure( "Unexpected mapping type: " + mapping.getClass() );
 			}
 		}
+
+		for ( EmbeddableTypeImpl embeddable : embeddables.values() ) {
+			populateStaticMetamodel( embeddable );
+		}
 	}
+
 
 	private <X> void applyIdMetadata(PersistentClass persistentClass, EntityTypeImpl<X> jpaEntityType) {
 		if ( persistentClass.hasIdentifierProperty() ) {
@@ -289,11 +301,55 @@ class MetadataContext {
 	private final Set<Class> processedMetamodelClasses = new HashSet<Class>();
 
 	private <X> void registerAttributes(Class metamodelClass, AbstractManagedType<X> managedType) {
-		if ( processedMetamodelClasses.add( metamodelClass ) ) {
+		if ( ! processedMetamodelClasses.add( metamodelClass ) ) {
 			return;
 		}
 
 		// push the attributes on to the metamodel class...
+		for ( Attribute<X, ?> attribute : managedType.getDeclaredAttributes() ) {
+			registerAttribute( metamodelClass, attribute );
+		}
+
+		if ( IdentifiableType.class.isInstance( managedType ) ) {
+			final AbstractIdentifiableType<X> entityType = ( AbstractIdentifiableType<X> ) managedType;
+
+			// handle version
+			if ( entityType.hasDeclaredVersionAttribute() ) {
+				registerAttribute( metamodelClass, entityType.getDeclaredVersion() );
+			}
+
+			// handle id-class mappings specially
+			if ( ! entityType.hasSingleIdAttribute() ) {
+				final Set<SingularAttribute<? super X, ?>> attributes = entityType.getIdClassAttributes();
+				if ( attributes != null ) {
+					for ( SingularAttribute<? super X, ?> attribute : attributes ) {
+						registerAttribute( metamodelClass, attribute );
+					}
+				}
+			}
+		}
+	}
+
+	private <X> void registerAttribute(Class metamodelClass, Attribute<X, ?> attribute) {
+		final String name = attribute.getName();
+		try {
+			Field field = metamodelClass.getDeclaredField( name );
+			field.setAccessible( true ); // should be public anyway, but to be sure...
+			field.set( null, attribute );
+		}
+		catch ( NoSuchFieldException e ) {
+			// todo : exception type?
+			throw new AssertionFailure(
+					"Unable to locate static metamodel field : " + metamodelClass.getName() + '#' + name
+			);
+		}
+		catch ( IllegalAccessException e ) {
+			// todo : exception type?
+			throw new AssertionFailure(
+					"Unable to inject static metamodel attribute : " + metamodelClass.getName() + '#' + name,
+					e
+			);
+		}
 	}
 
 	public MappedSuperclassTypeImpl<?> locateMappedSuperclassType(MappedSuperclass mappedSuperclass) {

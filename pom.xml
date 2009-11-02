@@ -20,7 +20,7 @@
         <module>parent</module>
         <module>core</module>
         <module>cache-ehcache</module>
-        <module>cache-jbosscache</module>n
+        <module>cache-jbosscache</module>
         <module>cache-oscache</module>
         <module>cache-swarmcache</module>
         <module>connection-c3p0</module>

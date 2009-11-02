@@ -34,13 +34,13 @@
     <parent>
         <groupId>org.hibernate</groupId>
         <artifactId>hibernate-parent</artifactId>
-        <version>3.5.0-SNAPSHOT</version>
+        <version>3.5.0-Beta-2</version>
         <relativePath>../../parent/pom.xml</relativePath>
     </parent>
 
     <groupId>org.hibernate</groupId>
     <artifactId>hibernate-jbc-manual</artifactId>
-    <version>3.5.0-SNAPSHOT</version>
+    <version>3.5.0-Beta-2</version>
     <packaging>jdocbook</packaging>
 
     <name>Hibernate/JBoss Cache 3 Reference Manual</name>

@@ -24,7 +24,6 @@ import java.io.StringWriter;
 import java.util.List;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.FilerException;
-import javax.annotation.Generated;
 import javax.tools.FileObject;
 import javax.tools.Diagnostic;
 import javax.lang.model.type.TypeMirror;
@@ -38,7 +37,7 @@ import javax.lang.model.element.TypeElement;
  */
 public class ClassWriter {
 	
-	public static void writeFile(IMetaEntity entity, ProcessingEnvironment processingEnv, Context context) {
+	public static void writeFile(MetaEntity entity, ProcessingEnvironment processingEnv, Context context) {
 		try {
 			String metaModelPackage = entity.getPackageName();
 
@@ -85,7 +84,7 @@ public class ClassWriter {
 	 *
 	 * @return body content
 	 */
-	private static StringBuffer generateBody(IMetaEntity entity, Context context) {
+	private static StringBuffer generateBody(MetaEntity entity, Context context) {
 
 		StringWriter sw = new StringWriter();
 		PrintWriter pw = null;
@@ -103,9 +102,9 @@ public class ClassWriter {
 
 			pw.println();
 
-			List<IMetaAttribute> members = entity.getMembers();
+			List<MetaAttribute> members = entity.getMembers();
 
-			for ( IMetaAttribute metaMember : members ) {
+			for ( MetaAttribute metaMember : members ) {
 				pw.println( "	" + metaMember.getDeclarationString() );
 			}
 			pw.println();
@@ -119,7 +118,7 @@ public class ClassWriter {
 		}
 	}
 
-	private static void printClassDeclaration(IMetaEntity entity, PrintWriter pw, Context context) {
+	private static void printClassDeclaration(MetaEntity entity, PrintWriter pw, Context context) {
 		pw.print( "public abstract class " + entity.getSimpleName() + "_" );
 
 		final TypeMirror superClass = entity.getTypeElement().getSuperclass();

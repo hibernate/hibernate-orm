@@ -26,9 +26,9 @@ import javax.lang.model.element.Name;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
 
-import org.hibernate.jpamodelgen.IMetaAttribute;
+import org.hibernate.jpamodelgen.MetaAttribute;
 import org.hibernate.jpamodelgen.ImportContextImpl;
-import org.hibernate.jpamodelgen.IMetaEntity;
+import org.hibernate.jpamodelgen.MetaEntity;
 import org.hibernate.jpamodelgen.ImportContext;
 import org.hibernate.jpamodelgen.xml.jaxb.Attributes;
 import org.hibernate.jpamodelgen.xml.jaxb.Basic;
@@ -45,7 +45,7 @@ import org.hibernate.jpamodelgen.xml.jaxb.OneToOne;
 /**
  * @author Hardy Ferentschik
  */
-public class XmlMetaEntity implements IMetaEntity {
+public class XmlMetaEntity implements MetaEntity {
 
 	static Map<String, String> COLLECTIONS = new HashMap<String, String>();
 
@@ -62,7 +62,7 @@ public class XmlMetaEntity implements IMetaEntity {
 
 	final private ImportContext importContext;
 
-	final private List<IMetaAttribute> members = new ArrayList<IMetaAttribute>();
+	final private List<MetaAttribute> members = new ArrayList<MetaAttribute>();
 
 	private TypeElement element;
 
@@ -135,7 +135,7 @@ public class XmlMetaEntity implements IMetaEntity {
 		return packageName;
 	}
 
-	public List<IMetaAttribute> getMembers() {
+	public List<MetaAttribute> getMembers() {
 		return members;
 	}
 

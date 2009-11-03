@@ -26,7 +26,7 @@ import javax.persistence.AccessType;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.tools.Diagnostic;
 
-import org.hibernate.jpamodelgen.annotation.MetaEntity;
+import org.hibernate.jpamodelgen.annotation.AnnotationMetaEntity;
 
 /**
  * @author Max Andersen
@@ -38,8 +38,8 @@ public class Context {
 	private Map<TypeElement, AccessTypeHolder> accessTypes = new HashMap<TypeElement, AccessTypeHolder>();
 	private Set<String> elementsAlreadyProcessed = new HashSet<String>();
 	private ProcessingEnvironment pe;
-	private final Map<String, IMetaEntity> metaEntitiesToProcess = new HashMap<String, IMetaEntity>();
-	private final Map<String, IMetaEntity> metaSuperclassAndEmbeddableToProcess = new HashMap<String, IMetaEntity>();
+	private final Map<String, MetaEntity> metaEntitiesToProcess = new HashMap<String, MetaEntity>();
+	private final Map<String, MetaEntity> metaSuperclassAndEmbeddableToProcess = new HashMap<String, MetaEntity>();
 
 	private static class AccessTypeHolder {
 		public AccessType elementAccessType;
@@ -50,11 +50,11 @@ public class Context {
 		this.pe = pe;
 	}
 
-	public Map<String, IMetaEntity> getMetaEntitiesToProcess() {
+	public Map<String, MetaEntity> getMetaEntitiesToProcess() {
 		return metaEntitiesToProcess;
 	}
 
-	public Map<String, IMetaEntity> getMetaSuperclassAndEmbeddableToProcess() {
+	public Map<String, MetaEntity> getMetaSuperclassAndEmbeddableToProcess() {
 		return metaSuperclassAndEmbeddableToProcess;
 	}
 
@@ -98,7 +98,7 @@ public class Context {
 			return;
 		}
 
-		ClassWriter.writeFile( new MetaEntity( pe, element, this, defaultAccessTypeForHierarchy ), pe, this );
+		ClassWriter.writeFile( new AnnotationMetaEntity( pe, element, this, defaultAccessTypeForHierarchy ), pe, this );
 		elementsAlreadyProcessed.add( element.getQualifiedName().toString() );
 	}
 }

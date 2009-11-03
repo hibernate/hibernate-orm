@@ -48,7 +48,7 @@ import javax.xml.validation.SchemaFactory;
 
 import org.xml.sax.SAXException;
 
-import org.hibernate.jpamodelgen.annotation.MetaEntity;
+import org.hibernate.jpamodelgen.annotation.AnnotationMetaEntity;
 import org.hibernate.jpamodelgen.xml.XmlMetaEntity;
 import org.hibernate.jpamodelgen.xml.jaxb.Entity;
 import org.hibernate.jpamodelgen.xml.jaxb.EntityMappings;
@@ -125,7 +125,7 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 	}
 
 	private void createMetaModelClasses() {
-		for ( IMetaEntity entity : context.getMetaEntitiesToProcess().values() ) {
+		for ( MetaEntity entity : context.getMetaEntitiesToProcess().values() ) {
 			processingEnv.getMessager()
 					.printMessage( Diagnostic.Kind.NOTE, "Writing meta model for " + entity );
 			ClassWriter.writeFile( entity, processingEnv, context );
@@ -136,7 +136,7 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 			context.getMetaSuperclassAndEmbeddableToProcess().remove( className );
 		}
 
-		for ( IMetaEntity entity : context.getMetaSuperclassAndEmbeddableToProcess().values() ) {
+		for ( MetaEntity entity : context.getMetaSuperclassAndEmbeddableToProcess().values() ) {
 			processingEnv.getMessager()
 					.printMessage( Diagnostic.Kind.NOTE, "Writing meta model for " + entity );
 			ClassWriter.writeFile( entity, processingEnv, context );
@@ -325,13 +325,13 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 
 			if ( element.getKind() == ElementKind.CLASS ) {
 				if ( annotationType.equals( ENTITY_ANN ) ) {
-					MetaEntity metaEntity = new MetaEntity( processingEnv, ( TypeElement ) element, context );
+					AnnotationMetaEntity metaEntity = new AnnotationMetaEntity( processingEnv, ( TypeElement ) element, context );
 					// TODO instead of just adding the entity we have to do some merging.
 					context.getMetaEntitiesToProcess().put( metaEntity.getQualifiedName(), metaEntity );
 				}
 				else if ( annotationType.equals( MAPPED_SUPERCLASS_ANN )
 						|| annotationType.equals( EMBEDDABLE_ANN ) ) {
-					MetaEntity metaEntity = new MetaEntity( processingEnv, ( TypeElement ) element, context );
+					AnnotationMetaEntity metaEntity = new AnnotationMetaEntity( processingEnv, ( TypeElement ) element, context );
 
 					// TODO instead of just adding the entity we have to do some merging.
 					context.getMetaSuperclassAndEmbeddableToProcess().put( metaEntity.getQualifiedName(), metaEntity );
@@ -351,11 +351,11 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 			ormStream = fileObject.openInputStream();
 		}
 		catch ( IOException e1 ) {
-			processingEnv.getMessager()
-					.printMessage(
-							Diagnostic.Kind.WARNING,
-							"Could not load " + resource + " using processingEnv.getFiler().getResource(). Using classpath..."
-					);
+//			processingEnv.getMessager()
+//					.printMessage(
+//							Diagnostic.Kind.WARNING,
+//							"Could not load " + resource + " using processingEnv.getFiler().getResource(). Using classpath..."
+//					);
 
 			// TODO
 			// unfortunately, the Filer.getResource API seems not to be able to load from /META-INF. One gets a

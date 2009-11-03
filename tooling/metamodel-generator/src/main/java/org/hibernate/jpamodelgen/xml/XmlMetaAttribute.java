@@ -18,12 +18,12 @@
 
 package org.hibernate.jpamodelgen.xml;
 
-import org.hibernate.jpamodelgen.IMetaAttribute;
+import org.hibernate.jpamodelgen.MetaAttribute;
 
 /**
  * @author Hardy Ferentschik
  */
-public abstract class XmlMetaAttribute implements IMetaAttribute {
+public abstract class XmlMetaAttribute implements MetaAttribute {
 
     private XmlMetaEntity parentEntity;
 

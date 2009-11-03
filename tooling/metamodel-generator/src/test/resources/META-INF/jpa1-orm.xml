@@ -5,7 +5,7 @@
                  xsi:schemaLocation="http://java.sun.com/xml/ns/persistence/orm orm_1_0.xsd"
                  version="1.0"
         >
-    <package>model</package>
+    <package>org.hibernate.jpamodelgen.test.model</package>
     <entity class="Airplane" metadata-complete="true" access="PROPERTY">
         <attributes>
             <id name="serialNumber"/>

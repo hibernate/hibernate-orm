@@ -15,21 +15,42 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-package org.hibernate.jpamodelgen.xml;
+package org.hibernate.jpamodelgen.test.accesstype;
 
-import org.hibernate.jpamodelgen.MetaSingleAttribute;
+import java.math.BigDecimal;
+import java.util.Set;
+
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
+
+import org.hibernate.jpamodelgen.test.accesstype.Item;
+import org.hibernate.jpamodelgen.test.accesstype.Shop;
 
 /**
+ *
+ * @author Max Andersen
  * @author Hardy Ferentschik
+ * @author Emmanuel Bernard
  */
-public class XmlMetaSingleAttribute extends XmlMetaAttribute implements MetaSingleAttribute {
+@Entity  
+public class Product {
 
-    public XmlMetaSingleAttribute(XmlMetaEntity parent, String propertyName, String type) {
-        super(parent, propertyName, type);
-    }
+	transient String nonPersistent;
+	static String nonPersistent2;
+	
+	@Id
+	long id;
 
-	@Override
-    public String getMetaType() {
-        return "javax.persistence.metamodel.SingularAttribute";
-    }
+    int test;
+	
+	String description;
+	BigDecimal price;
+	
+	@ManyToOne
+	Shop shop;
+	
+	@OneToMany
+	Set<Item> items;
 }

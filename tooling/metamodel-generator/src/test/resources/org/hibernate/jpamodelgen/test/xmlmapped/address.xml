@@ -5,9 +5,13 @@
                  xsi:schemaLocation="http://java.sun.com/xml/ns/persistence/orm orm_2_0.xsd"
                  version="2.0"
         >
-    <package>org.hibernate.jpamodelgen.test.model</package>
-    <entity class="Dummy" access="FIELD" metadata-complete="true"> <!-- Class does not exist -->
+    <package>org.hibernate.jpamodelgen.test.xmlmapped</package>  <!-- default package -->
+    <embeddable class="Address" access="FIELD" metadata-complete="true"> <!--means ignore annotations-->
         <attributes>
-            <id name="id"/>
-    </entity>
+            <basic name="street1"/>
+            <basic name="city"/>
+            <basic name="country"/>
+        </attributes>
+    </embeddable>
 </entity-mappings>
+

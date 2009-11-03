@@ -15,21 +15,24 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-package org.hibernate.jpamodelgen.xml;
+package org.hibernate.jpamodelgen.test.inheritance;
 
-import org.hibernate.jpamodelgen.MetaSingleAttribute;
+import java.sql.Date;
+import javax.persistence.MappedSuperclass;
+
 
 /**
- * @author Hardy Ferentschik
+ * @author Emmanuel Bernard
  */
-public class XmlMetaSingleAttribute extends XmlMetaAttribute implements MetaSingleAttribute {
+@MappedSuperclass
+public class Building extends Area {
+	public Date getBuiltIn() {
+		return builtIn;
+	}
 
-    public XmlMetaSingleAttribute(XmlMetaEntity parent, String propertyName, String type) {
-        super(parent, propertyName, type);
-    }
+	public void setBuiltIn(Date builtIn) {
+		this.builtIn = builtIn;
+	}
 
-	@Override
-    public String getMetaType() {
-        return "javax.persistence.metamodel.SingularAttribute";
-    }
+	private Date builtIn;
 }

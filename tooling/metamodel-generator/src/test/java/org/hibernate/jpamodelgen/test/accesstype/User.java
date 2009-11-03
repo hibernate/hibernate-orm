@@ -15,21 +15,44 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-package org.hibernate.jpamodelgen.xml;
+package org.hibernate.jpamodelgen.test.accesstype;
 
-import org.hibernate.jpamodelgen.MetaSingleAttribute;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.Transient;
 
 /**
- * @author Hardy Ferentschik
+ * @author Emmanuel Bernard
  */
-public class XmlMetaSingleAttribute extends XmlMetaAttribute implements MetaSingleAttribute {
+@Entity
+public class User {
+	private Long id;
+	private String nonPersistent;
+	private String name;
 
-    public XmlMetaSingleAttribute(XmlMetaEntity parent, String propertyName, String type) {
-        super(parent, propertyName, type);
-    }
+	@Id
+	public Long getId() {
+		return id;
+	}
 
-	@Override
-    public String getMetaType() {
-        return "javax.persistence.metamodel.SingularAttribute";
-    }
+	public void setId(Long id) {
+		this.id = id;
+	}
+
+	@Transient
+	public String getNonPersistent() {
+		return nonPersistent;
+	}
+
+	public void setNonPersistent(String nonPersistent) {
+		this.nonPersistent = nonPersistent;
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
 }

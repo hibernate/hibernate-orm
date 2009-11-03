@@ -15,21 +15,31 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-package org.hibernate.jpamodelgen.xml;
+package org.hibernate.jpamodelgen;
 
-import org.hibernate.jpamodelgen.MetaSingleAttribute;
+import javax.lang.model.element.Name;
+import javax.lang.model.element.TypeElement;
+import java.util.List;
 
 /**
  * @author Hardy Ferentschik
  */
-public class XmlMetaSingleAttribute extends XmlMetaAttribute implements MetaSingleAttribute {
+public interface MetaEntity extends ImportContext {
+    String getSimpleName();
 
-    public XmlMetaSingleAttribute(XmlMetaEntity parent, String propertyName, String type) {
-        super(parent, propertyName, type);
-    }
+    String getQualifiedName();
 
-	@Override
-    public String getMetaType() {
-        return "javax.persistence.metamodel.SingularAttribute";
-    }
+    String getPackageName();
+
+    List<MetaAttribute> getMembers();
+
+    String generateImports();
+
+    String importType(String fqcn);
+
+    String staticImport(String fqcn, String member);
+
+    String importType(Name qualifiedName);
+
+	TypeElement getTypeElement();
 }

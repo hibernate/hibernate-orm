@@ -15,21 +15,28 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-package org.hibernate.jpamodelgen.xml;
-
-import org.hibernate.jpamodelgen.MetaSingleAttribute;
+package org.hibernate.jpamodelgen.test.xmlmapped;
 
 /**
  * @author Hardy Ferentschik
  */
-public class XmlMetaSingleAttribute extends XmlMetaAttribute implements MetaSingleAttribute {
+public class Mammal extends LivingBeing {
+	private String id;
+	private String subclass;
 
-    public XmlMetaSingleAttribute(XmlMetaEntity parent, String propertyName, String type) {
-        super(parent, propertyName, type);
-    }
+	public String getId() {
+		return id;
+	}
 
-	@Override
-    public String getMetaType() {
-        return "javax.persistence.metamodel.SingularAttribute";
-    }
+	public void setId(String id) {
+		this.id = id;
+	}
+
+	public String getSubclass() {
+		return subclass;
+	}
+
+	public void setSubclass(String subclass) {
+		this.subclass = subclass;
+	}
 }

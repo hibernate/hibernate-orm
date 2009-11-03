@@ -15,21 +15,33 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-package org.hibernate.jpamodelgen.xml;
+package org.hibernate.jpamodelgen.test.inheritance;
 
-import org.hibernate.jpamodelgen.MetaSingleAttribute;
+import org.testng.annotations.Test;
+
+import org.hibernate.jpamodelgen.test.util.CompilationTest;
+import static org.hibernate.jpamodelgen.test.util.TestUtil.assertSuperClass;
 
 /**
+ * @author Emmanuel Bernard
  * @author Hardy Ferentschik
  */
-public class XmlMetaSingleAttribute extends XmlMetaAttribute implements MetaSingleAttribute {
+public class InheritanceTest extends CompilationTest {
+	@Test
+	public void testSuperEntity() throws Exception {
+		assertSuperClass(
+				Customer.class.getName() + "_", User.class.getName() + "_"
+		);
+	}
 
-    public XmlMetaSingleAttribute(XmlMetaEntity parent, String propertyName, String type) {
-        super(parent, propertyName, type);
-    }
+	@Test
+	public void testMappedSuperclass() throws Exception {
+		assertSuperClass( House.class.getName() + "_", Building.class.getName() + "_" );
+		assertSuperClass( Building.class.getName() + "_", Area.class.getName() + "_" );
+	}
 
 	@Override
-    public String getMetaType() {
-        return "javax.persistence.metamodel.SingularAttribute";
-    }
+	protected String getTestPackage() {
+		return Customer.class.getPackage().getName();
+	}
 }

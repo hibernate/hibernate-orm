@@ -15,21 +15,33 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-package org.hibernate.jpamodelgen.xml;
+package org.hibernate.jpamodelgen.test.accesstype;
 
-import org.hibernate.jpamodelgen.MetaSingleAttribute;
+import java.util.Date;
+import java.util.List;
+import java.util.Set;
 
 /**
+ *
+ * @author Max Andersen
  * @author Hardy Ferentschik
+ * @author Emmanuel Bernard
  */
-public class XmlMetaSingleAttribute extends XmlMetaAttribute implements MetaSingleAttribute {
-
-    public XmlMetaSingleAttribute(XmlMetaEntity parent, String propertyName, String type) {
-        super(parent, propertyName, type);
-    }
-
-	@Override
-    public String getMetaType() {
-        return "javax.persistence.metamodel.SingularAttribute";
-    }
+//@Entity
+public class Order {
+	
+	//@Id
+	long id;
+	
+	//@OneToMany
+	Set<Item> items;
+	
+	boolean filled;
+	Date date;
+	
+	//@OneToMany
+	List<String> notes;
+	
+	//@ManyToOne
+	Shop shop;
 }

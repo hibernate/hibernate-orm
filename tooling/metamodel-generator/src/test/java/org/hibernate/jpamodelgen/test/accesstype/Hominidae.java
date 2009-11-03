@@ -15,21 +15,28 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-package org.hibernate.jpamodelgen.xml;
+package org.hibernate.jpamodelgen.test.accesstype;
 
-import org.hibernate.jpamodelgen.MetaSingleAttribute;
+import javax.persistence.Entity;
+import javax.persistence.Access;
 
 /**
- * @author Hardy Ferentschik
+ * @author Emmanuel Bernard
  */
-public class XmlMetaSingleAttribute extends XmlMetaAttribute implements MetaSingleAttribute {
+@Entity
+@Access(javax.persistence.AccessType.FIELD)
+public class Hominidae extends Mammals {
+	private int intelligence;
 
-    public XmlMetaSingleAttribute(XmlMetaEntity parent, String propertyName, String type) {
-        super(parent, propertyName, type);
-    }
+	public int getIntelligence() {
+		return intelligence;
+	}
 
-	@Override
-    public String getMetaType() {
-        return "javax.persistence.metamodel.SingularAttribute";
-    }
+	public void setIntelligence(int intelligence) {
+		this.intelligence = intelligence;
+	}
+
+	public int getNonPersistent() {
+		return 0;
+	}
 }

@@ -7,8 +7,8 @@
         <mapping-file>/META-INF/dummy.xml</mapping-file>
         <mapping-file>/META-INF/malformed-mapping-xml.xml</mapping-file>
         <mapping-file>/META-INF/jpa1-orm.xml</mapping-file>
-        <mapping-file>/model/xmlmapped/address.xml</mapping-file>
-        <mapping-file>/model/xmlmapped/building.xml</mapping-file>
-        <mapping-file>/model/xmlmapped/mammal.xml</mapping-file>
+        <mapping-file>/org/hibernate/jpamodelgen/test/xmlmapped/address.xml</mapping-file>
+        <mapping-file>/org/hibernate/jpamodelgen/test/xmlmapped/building.xml</mapping-file>
+        <mapping-file>/org/hibernate/jpamodelgen/test/xmlmapped/mammal.xml</mapping-file>
     </persistence-unit>
 </persistence>

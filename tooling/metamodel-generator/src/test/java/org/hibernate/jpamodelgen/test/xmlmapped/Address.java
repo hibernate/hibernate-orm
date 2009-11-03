@@ -15,21 +15,37 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-package org.hibernate.jpamodelgen.xml;
-
-import org.hibernate.jpamodelgen.MetaSingleAttribute;
+package org.hibernate.jpamodelgen.test.xmlmapped;
 
 /**
  * @author Hardy Ferentschik
  */
-public class XmlMetaSingleAttribute extends XmlMetaAttribute implements MetaSingleAttribute {
+public class Address {
+	private String street1;
+	private String city;
+	private String country;
 
-    public XmlMetaSingleAttribute(XmlMetaEntity parent, String propertyName, String type) {
-        super(parent, propertyName, type);
-    }
+	public String getStreet1() {
+		return street1;
+	}
 
-	@Override
-    public String getMetaType() {
-        return "javax.persistence.metamodel.SingularAttribute";
-    }
+	public void setStreet1(String street1) {
+		this.street1 = street1;
+	}
+
+	public String getCity() {
+		return city;
+	}
+
+	public void setCity(String city) {
+		this.city = city;
+	}
+
+	public String getCountry() {
+		return country;
+	}
+
+	public void setCountry(String country) {
+		this.country = country;
+	}
 }

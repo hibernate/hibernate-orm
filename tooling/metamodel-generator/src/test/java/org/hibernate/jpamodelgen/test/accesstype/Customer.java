@@ -15,21 +15,31 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-package org.hibernate.jpamodelgen.xml;
+package org.hibernate.jpamodelgen.test.accesstype;
 
-import org.hibernate.jpamodelgen.MetaSingleAttribute;
+import java.util.Set;
+import javax.persistence.Entity;
+import javax.persistence.OneToMany;
+import javax.persistence.Access;
+import javax.persistence.AccessType;
 
 /**
- * @author Hardy Ferentschik
+ * @author Emmanuel Bernard
  */
-public class XmlMetaSingleAttribute extends XmlMetaAttribute implements MetaSingleAttribute {
+@Entity
+public class Customer extends User {
+	private Set<Order> orders;
+	private String nonPersistent;
 
-    public XmlMetaSingleAttribute(XmlMetaEntity parent, String propertyName, String type) {
-        super(parent, propertyName, type);
-    }
+	@Access(AccessType.FIELD)
+	boolean goodPayer;
 
-	@Override
-    public String getMetaType() {
-        return "javax.persistence.metamodel.SingularAttribute";
-    }
+	public Set<Order> getOrders() {
+		return orders;
+	}
+
+	@OneToMany
+	public void setOrders(Set<Order> orders) {
+		this.orders = orders;
+	}
 }

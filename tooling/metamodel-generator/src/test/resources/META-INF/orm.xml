@@ -5,7 +5,7 @@
                  xsi:schemaLocation="http://java.sun.com/xml/ns/persistence/orm orm_2_0.xsd"
                  version="2.0"
         >
-    <package>model</package>
+    <package>org.hibernate.jpamodelgen.test.accesstype</package>
     <!-- default package -->
     <entity class="Order" access="FIELD" metadata-complete="true"> <!--means ignore annotations-->
         <attributes>
@@ -16,7 +16,7 @@
             <basic name="date"/>
             <many-to-one name="shop"/>
             <one-to-many name="items"
-                         target-entity="Item"
+                         target-entity="org.hibernate.jpamodelgen.test.accesstype.Item"
                          fetch="EAGER"> <!-- target-entity optional guess the type from the geenric-->
                 <cascade>
                     <cascade-persist/>

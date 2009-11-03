@@ -17,12 +17,12 @@
 */
 package org.hibernate.jpamodelgen.xml;
 
-import org.hibernate.jpamodelgen.IMetaCollection;
+import org.hibernate.jpamodelgen.MetaCollection;
 
 /**
  * @author Hardy Ferentschik
  */
-public class XmlMetaCollection extends XmlMetaAttribute implements IMetaCollection {
+public class XmlMetaCollection extends XmlMetaAttribute implements MetaCollection {
 
     String collectionType;
 

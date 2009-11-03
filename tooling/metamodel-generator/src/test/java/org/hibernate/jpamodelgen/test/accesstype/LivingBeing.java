@@ -15,21 +15,28 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-package org.hibernate.jpamodelgen.xml;
+package org.hibernate.jpamodelgen.test.accesstype;
 
-import org.hibernate.jpamodelgen.MetaSingleAttribute;
+import javax.persistence.MappedSuperclass;
+import javax.persistence.Access;
 
 /**
- * @author Hardy Ferentschik
+ * @author Emmanuel Bernard
  */
-public class XmlMetaSingleAttribute extends XmlMetaAttribute implements MetaSingleAttribute {
+@MappedSuperclass
+@Access(javax.persistence.AccessType.FIELD)
+public class LivingBeing {
+	boolean isReallyAlive;
 
-    public XmlMetaSingleAttribute(XmlMetaEntity parent, String propertyName, String type) {
-        super(parent, propertyName, type);
-    }
+	public boolean isReallyAlive() {
+		return isReallyAlive;
+	}
 
-	@Override
-    public String getMetaType() {
-        return "javax.persistence.metamodel.SingularAttribute";
-    }
+	public void setReallyAlive(boolean reallyAlive) {
+		isReallyAlive = reallyAlive;
+	}
+
+	public int nonPersistent() {
+		return 0;
+	}
 }

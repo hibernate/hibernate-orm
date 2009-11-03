@@ -5,9 +5,11 @@
                  xsi:schemaLocation="http://java.sun.com/xml/ns/persistence/orm orm_2_0.xsd"
                  version="2.0"
         >
-    <package>org.hibernate.jpamodelgen.test.model</package>
-    <entity class="Dummy" access="FIELD" metadata-complete="true"> <!-- Class does not exist -->
+    <package>org.hibernate.jpamodelgen.test.xmlmapped</package>
+    <mapped-superclass class="Building" access="FIELD" metadata-complete="true"> <!--means ignore annotations-->
         <attributes>
-            <id name="id"/>
-    </entity>
+            <one-to-one name="address" fetch="LAZY"/>
+        </attributes>
+    </mapped-superclass>
 </entity-mappings>
+

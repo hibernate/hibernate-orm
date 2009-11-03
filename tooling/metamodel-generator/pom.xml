@@ -46,7 +46,7 @@
             <name>Emmanuel Bernard</name>
             <email>emmanuel@hibernate.org</email>
             <url>http://in.relation.to/Bloggers/Emmanuel</url>
-        </developer>        
+        </developer>
         <developer>
             <id>hardy.ferentschik</id>
             <name>Hardy Ferentschik</name>
@@ -86,36 +86,6 @@
                 </configuration>
             </plugin>
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-antrun-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>process_annotations</id>
-                        <phase>process-test-resources</phase>
-                        <configuration>
-                            <tasks>
-                                <property name="build.compiler" value="extJavac"/>
-                                <property name="target.dir" value="${project.build.directory}/generated-src/jpamodelgen"/>
-                                <mkdir dir="${target.dir}"/>
-                                <javac srcdir="${project.build.testSourceDirectory}"
-                                       destdir="${target.dir}"
-                                       failonerror="false"
-                                       excludes="test/**">
-                                    <compilerarg value="-proc:only"/>
-                                    <classpath>
-                                        <path refid="maven.test.classpath"/>
-                                    </classpath>
-                                </javac>
-                            </tasks>
-                            <testSourceRoot>${project.build.directory}/generated-src/jpamodelgen</testSourceRoot>
-                        </configuration>
-                        <goals>
-                            <goal>run</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>jaxb2-maven-plugin</artifactId>
                 <version>1.2</version>
@@ -149,6 +119,16 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
+                    <systemProperties>
+                        <property>
+                            <name>sourceBaseDir</name>
+                            <value>${basedir}/src/test/java</value>
+                        </property>
+                        <property>
+                            <name>outBaseDir</name>
+                            <value>${basedir}/target/test-classes</value>
+                        </property>
+                    </systemProperties>
                     <suiteXmlFiles>
                         <suiteXmlFile>${basedir}/src/test/suite/unit-tests.xml</suiteXmlFile>
                     </suiteXmlFiles>
@@ -215,7 +195,7 @@
                         </goals>
                     </execution>
                 </executions>
-            </plugin>            
+            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-release-plugin</artifactId>

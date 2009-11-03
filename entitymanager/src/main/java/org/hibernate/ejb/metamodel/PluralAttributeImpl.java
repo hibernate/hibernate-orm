@@ -91,6 +91,33 @@ public abstract class PluralAttributeImpl<X, C, E>
 
 		@SuppressWarnings( "unchecked" )
 		public <K> PluralAttributeImpl<X,C,E> build() {
+			//apply strict spec rules first
+			if ( Map.class.equals( collectionClass ) ) {
+				final Builder<X,Map<K,E>,E,K> builder = (Builder<X,Map<K,E>,E,K>) this;
+				return ( PluralAttributeImpl<X, C, E> ) new MapAttributeImpl<X,K,E>(
+						builder
+				);
+			}
+			else if ( Set.class.equals( collectionClass ) ) {
+				final Builder<X,Set<E>, E,?> builder = (Builder<X, Set<E>, E,?>) this;
+				return ( PluralAttributeImpl<X, C, E> ) new SetAttributeImpl<X,E>(
+						builder
+				);
+			}
+			else if ( List.class.equals( collectionClass ) ) {
+				final Builder<X, List<E>, E,?> builder = (Builder<X, List<E>, E,?>) this;
+				return ( PluralAttributeImpl<X, C, E> ) new ListAttributeImpl<X,E>(
+						builder
+				);
+			}
+			else if ( Collection.class.equals( collectionClass ) ) {
+				final Builder<X, Collection<E>,E,?> builder = (Builder<X, Collection<E>, E,?>) this;
+				return ( PluralAttributeImpl<X, C, E> ) new CollectionAttributeImpl<X, E>(
+						builder
+				);
+			}
+
+			//apply loose rules
 			if ( Map.class.isAssignableFrom( collectionClass ) ) {
 				final Builder<X,Map<K,E>,E,K> builder = (Builder<X,Map<K,E>,E,K>) this;
 				return ( PluralAttributeImpl<X, C, E> ) new MapAttributeImpl<X,K,E>(

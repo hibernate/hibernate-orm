@@ -356,10 +356,9 @@ class MetadataContext {
 				// most likely a mismatch in the type we are injecting and the defined field; this represents a
 				// mismatch in how the annotation processor interpretted the attribute and how our metamodel
 				// and/or annotation binder did.
-//
-// This does seem to be an issue currently for ListAttribute and CollectionAttribute for @OneToMany List
-// w/o the @Index definition (which is a bag in Hibernate-terms.  So for the time being we simply
-// log an error
+
+//              This is particularly the case as arrays are nto handled propery by the StaticMetamodel generator
+
 //				throw new AssertionFailure(
 //						"Illegal argument on static metamodel field injection : " + metamodelClass.getName() + '#' + name
 //								+ "; expected type :  " + attribute.getClass().getName()

@@ -136,6 +136,14 @@ public class MetadataTest extends TestCase {
 		assertEquals( Type.PersistenceType.EMBEDDABLE, directType.getPersistenceType() );
 	}
 
+	public void testCollection() throws Exception {
+		final EntityType<Garden> entiytype = factory.getMetamodel().entity( Garden.class );
+		final Set<PluralAttribute<? super Garden, ?, ?>> attributes = entiytype.getPluralAttributes();
+		assertEquals( 1, attributes.size() );
+		PluralAttribute<? super Garden, ?, ?> flowers = attributes.iterator().next();
+		assertTrue( flowers instanceof ListAttribute );
+	}
+
 	public void testElementCollection() throws Exception {
 		final EntityType<House> entityType = factory.getMetamodel().entity( House.class );
 		final SetAttribute<House,Room> rooms = entityType.getDeclaredSet( "rooms", Room.class );
@@ -273,7 +281,9 @@ public class MetadataTest extends TestCase {
 				Dog.class,
 				Cat.class,
 				Cattish.class,
-				Feline.class
+				Feline.class,
+				Garden.class,
+				Flower.class
 		};
 	}
 

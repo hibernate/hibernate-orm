@@ -24,6 +24,8 @@
 package org.hibernate.ejb.metamodel;
 
 import java.lang.reflect.Member;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.util.Iterator;
 import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.Type;
@@ -83,18 +85,21 @@ public class AttributeFactory {
 	private <X, Y, V, K> AttributeImplementor<X, Y> buildPluralAttribute(AbstractManagedType<X> ownerType, Property property, AttributeContext attrContext, boolean getMember) {
 		AttributeImplementor<X, Y> attribute;
 		final Type<V> attrType = getType( ownerType, attrContext.getElementTypeStatus(), attrContext.getElementValue(), getMember );
-		final Class<Y> collectionClass = (Class<Y>) attrContext.getCollectionClass();
+		final Member member = getMember ? determineStandardJavaMember( ownerType, property ) : null;
+		final Class<Y> collectionClass = (Class<Y>) ( member instanceof Field
+				? ( ( Field ) member ).getType()
+				: ( ( Method ) member ).getReturnType() );
 		if ( java.util.Map.class.isAssignableFrom( collectionClass ) ) {
 			final Type<K> keyType = getType( ownerType, attrContext.getKeyTypeStatus(), attrContext.getKeyValue(), getMember );
 			attribute = PluralAttributeImpl.create( ownerType, attrType, collectionClass, keyType )
-					.member( getMember ? determineStandardJavaMember( ownerType, property ) : null )
+					.member( member )
 					.property( property )
 					.persistentAttributeType( attrContext.getElementAttributeType() )
 					.build();
 		}
 		else {
 			attribute =  PluralAttributeImpl.create( ownerType, attrType, collectionClass, null )
-					.member( getMember ? determineStandardJavaMember( ownerType, property ) : null )
+					.member( member )
 					.property( property )
 					.persistentAttributeType( attrContext.getElementAttributeType() )
 					.build();
@@ -318,10 +323,6 @@ public class AttributeFactory {
 			return collectionClass != null;
 		}
 
-		public Class<?> getCollectionClass() {
-			return collectionClass;
-		}
-
 		public Attribute.PersistentAttributeType getElementAttributeType() {
 			return attrType;
 		}
@@ -356,7 +357,6 @@ public class AttributeFactory {
 					final AttributeContext.TypeStatus elementTypeStatus;
 					final Attribute.PersistentAttributeType elementPAT;
 					final Class<?> collectionClass = collValue.getCollectionType().getReturnedClass();
-
 
 					final Value keyValue;
 					final org.hibernate.type.Type keyType;

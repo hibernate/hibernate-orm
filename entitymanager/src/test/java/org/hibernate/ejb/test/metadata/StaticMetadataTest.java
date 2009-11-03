@@ -115,6 +115,9 @@ public class StaticMetadataTest extends TestCase {
 		assertTrue( Person_.firstName.isId() );
 		assertTrue( Person_.lastName.isId() );
 		assertTrue( Person_.lastName.isId() );
+
+		//Garden List as bag
+		assertNotNull( Garden_.flowers );
 	}
 
 	@Override
@@ -127,7 +130,9 @@ public class StaticMetadataTest extends TestCase {
 				Dog.class,
 				Cat.class,
 				Cattish.class,
-				Feline.class
+				Feline.class,
+				Garden.class,
+				Flower.class
 		};
 	}
 

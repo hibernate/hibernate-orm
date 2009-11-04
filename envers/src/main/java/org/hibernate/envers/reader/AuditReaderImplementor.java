@@ -27,13 +27,12 @@ import org.hibernate.envers.AuditReader;
 
 import org.hibernate.Session;
 import org.hibernate.engine.SessionImplementor;
-import org.jboss.envers.VersionsReader;
 
 /**
  * An interface exposed by a VersionsReader to library-facing classes.
  * @author Adam Warski (adam at warski dot org)
  */
-public interface AuditReaderImplementor extends AuditReader, VersionsReader {
+public interface AuditReaderImplementor extends AuditReader {
     SessionImplementor getSessionImplementor();
     Session getSession();
     FirstLevelCache getFirstLevelCache();

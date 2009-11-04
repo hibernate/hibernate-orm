@@ -36,7 +36,6 @@ import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
-import org.jboss.envers.*;
 
 /**
  * A helper class to read versioning meta-data from annotations on a persistent class.
@@ -69,12 +68,7 @@ public final class AnnotationsMetadataReader {
 		if (defaultAudited != null) {
 			return defaultAudited.modStore();
 		} else {
-			Versioned defaultVersioned = clazz.getAnnotation(Versioned.class);
-			if (defaultVersioned != null) {
-				return ModificationStore.FULL;
-			} else {
-				return null;
-			}
+			return null;
 		}
 	}
 

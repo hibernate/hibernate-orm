@@ -32,6 +32,7 @@ import org.hibernate.envers.exception.NotAuditedException;
 import org.hibernate.envers.exception.RevisionDoesNotExistException;
 import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.query.AuditEntity;
+import org.hibernate.envers.query.AuditQueryCreator;
 import static org.hibernate.envers.tools.ArgumentsTools.checkNotNull;
 import static org.hibernate.envers.tools.ArgumentsTools.checkPositive;
 import org.hibernate.envers.synchronization.AuditSync;
@@ -41,7 +42,6 @@ import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.event.EventSource;
 import org.hibernate.engine.SessionImplementor;
-import org.jboss.envers.query.VersionsQueryCreator;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -205,7 +205,7 @@ public class AuditReaderImpl implements AuditReaderImplementor {
 		return (T) auditSync.getCurrentRevisionData(session, persist);
 	}
 
-	public VersionsQueryCreator createQuery() {
-        return new VersionsQueryCreator(verCfg, this);
+	public AuditQueryCreator createQuery() {
+        return new AuditQueryCreator(verCfg, this);
     }
 }

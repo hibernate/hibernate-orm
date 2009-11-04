@@ -28,12 +28,27 @@ import java.util.Date;
 /**
  * @author Adam Warski (adam at warski dot org)
  */
-public class RevisionDoesNotExistException extends org.jboss.envers.exception.RevisionDoesNotExistException {
-    public RevisionDoesNotExistException(Number revision) {
-        super(revision);
+public class RevisionDoesNotExistException extends AuditException {
+	private static final long serialVersionUID = -6417768274074962282L;
+	
+    private Number revision;
+    private Date date;
+
+	public RevisionDoesNotExistException(Number revision) {
+        super("Revision " + revision + " does not exist.");
+        this.revision = revision;
     }
 
     public RevisionDoesNotExistException(Date date) {
-        super(date);
+        super("There is no revision before or at " + date + ".");
+        this.date = date;
+    }
+
+    public Number getRevision() {
+        return revision;
+    }
+
+    public Date getDate() {
+        return date;
     }
 }

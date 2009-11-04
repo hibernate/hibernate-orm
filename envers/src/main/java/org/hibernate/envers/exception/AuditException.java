@@ -23,13 +23,15 @@
  */
 package org.hibernate.envers.exception;
 
-import org.jboss.envers.exception.VersionsException;
+import org.hibernate.HibernateException;
 
 /**
  * @author Adam Warski (adam at warski dot org)
  */
-public class AuditException extends VersionsException {
-    public AuditException(String message) {
+public class AuditException extends HibernateException {
+	private static final long serialVersionUID = 4306480965630972168L;
+
+	public AuditException(String message) {
         super(message);
     }
 

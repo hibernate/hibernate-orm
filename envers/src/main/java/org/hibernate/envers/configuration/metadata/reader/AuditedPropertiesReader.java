@@ -26,7 +26,6 @@ import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Value;
 import org.hibernate.MappingException;
-import org.jboss.envers.Versioned;
 
 /**
  * Reads persistent properties form a
@@ -157,12 +156,9 @@ public class AuditedPropertiesReader {
 
 		// Checking if this property is explicitly audited or if all properties are.
 		Audited aud = property.getAnnotation(Audited.class);
-		Versioned ver = property.getAnnotation(Versioned.class);
 		if (aud != null) {
 			propertyData.setStore(aud.modStore());
 			propertyData.setRelationTargetAuditMode(aud.targetAuditMode());
-		} else if (ver != null) {
-			propertyData.setStore(ModificationStore.FULL);
 		} else {
 			if (defaultStore != null) {
 				propertyData.setStore(defaultStore);

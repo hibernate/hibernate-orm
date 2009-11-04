@@ -589,7 +589,76 @@ Cat fritz = (Cat) iter.next();]]></programlisting>
             <!-- TODO: Write more about this -->
 
         </sect2>
-        
+
+        <sect2 id="performance-fetching-profiles">
+            <title>Fetch profiles</title>
+
+            <para>
+                Another way to affect the fetching strategy for loading associated objects is through something
+                called a fetch profile, which is a named configuration associated with the
+                <interfacename>org.hibernate.SessionFactory</interfacename> but enabled, by name, on the
+                <interfacename>org.hibernate.Session</interfacename>.  Once enabled on a
+                <interfacename>org.hibernate.Session</interfacename>, the fetch profile wull be in affect for
+                that <interfacename>org.hibernate.Session</interfacename> until it is explicitly disabled.
+            </para>
+            <para>
+                So what does that mean?  Well lets explain that by way of an example.  Say we have
+                the following mappings:
+            </para>
+            <programlisting><![CDATA[<hibernate-mapping>
+    <class name="Customer">
+        ...
+        <set name="orders" inverse="true">
+            <key column="cust_id"/>
+            <one-to-many class="Order"/>
+        </set>
+    </class>
+    <class name="Order">
+        ...
+    </class>
+</hibernate-mapping>]]></programlisting>
+            <para>
+                Now normally when you get a reference to a particular customer, that customer's set of
+                orders will be lazy meaning we will not yet have loaded those orders from the database.
+                Normally this is a good thing.  Now lets say that you have a certain use case where
+                it is more efficient to load the customer and their orders together.  One way certainly is
+                to use "dynamic fetching" strategies via an HQL or criteria queries.  But another option is
+                to use a fetch profile to achieve that.  Just add the following to your mapping:
+            </para>
+            <programlisting><![CDATA[<hibernate-mapping>
+    ...
+    <fetch-profile name="customer-with-orders">
+        <fetch entity="Customer" association="orders" style="join"/>
+    </fetch-profile>
+</hibernate-mapping>]]></programlisting>
+            <para>
+                or even:
+            </para>
+            <programlisting><![CDATA[<hibernate-mapping>
+    <class name="Customer">
+        ...
+        <fetch-profile name="customer-with-orders">
+            <fetch association="orders" style="join"/>
+        </fetch-profile>
+    </class>
+    ...
+</hibernate-mapping>]]></programlisting>
+            <para>
+                Now the following code will actually load both the customer <emphasis>and their orders</emphasis>:
+            </para>
+            <programlisting><![CDATA[
+    Session session = ...;
+    session.enableFetchProfile( "customer-with-orders" );  // name matches from mapping
+    Customer customer = (Customer) session.get( Customer.class, customerId );
+
+]]></programlisting>
+            <para>
+                Currently only join style fetch profiles are supported, but they plan is to support additional
+                styles.  See <ulink url="http://opensource.atlassian.com/projects/hibernate/browse/HHH-3414">HHH-3414</ulink>
+                for details.
+            </para>
+        </sect2>
+
         <sect2 id="performance-fetching-lazyproperties">
             <title>Using lazy property fetching</title>
 
@@ -653,7 +722,6 @@ Cat fritz = (Cat) iter.next();]]></programlisting>
             </para>
 
         </sect2>
-
     </sect1>
 
     <sect1 id="performance-cache" revision="1">

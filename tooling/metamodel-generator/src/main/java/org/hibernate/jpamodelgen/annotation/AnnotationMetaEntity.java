@@ -25,38 +25,37 @@ import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
+import javax.lang.model.element.Modifier;
 import javax.lang.model.element.Name;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
-import javax.lang.model.element.Modifier;
+import javax.lang.model.type.ArrayType;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.ExecutableType;
 import javax.lang.model.type.PrimitiveType;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.ElementFilter;
 import javax.lang.model.util.SimpleTypeVisitor6;
-import javax.persistence.EmbeddedId;
-import javax.persistence.Id;
+import javax.persistence.Access;
 import javax.persistence.AccessType;
+import javax.persistence.ElementCollection;
+import javax.persistence.Embeddable;
+import javax.persistence.Embedded;
+import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
+import javax.persistence.Id;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.Transient;
-import javax.persistence.Embedded;
-import javax.persistence.Embeddable;
-import javax.persistence.Access;
-import javax.persistence.ElementCollection;
-import javax.tools.Diagnostic.Kind;
 import javax.tools.Diagnostic;
 
-import org.hibernate.jpamodelgen.MetaEntity;
-import org.hibernate.jpamodelgen.MetaAttribute;
+import org.hibernate.jpamodelgen.Context;
 import org.hibernate.jpamodelgen.ImportContext;
 import org.hibernate.jpamodelgen.ImportContextImpl;
+import org.hibernate.jpamodelgen.MetaAttribute;
+import org.hibernate.jpamodelgen.MetaEntity;
 import org.hibernate.jpamodelgen.TypeUtils;
-import org.hibernate.jpamodelgen.Context;
 
 /**
- *
  * @author Max Andersen
  * @author Hardy Ferentschik
  * @author Emmanuel Bernard
@@ -80,16 +79,12 @@ public class AnnotationMetaEntity implements MetaEntity {
 	}
 
 	public AnnotationMetaEntity(ProcessingEnvironment pe, TypeElement element, Context context, AccessType accessType) {
-		this(pe, element, context);
+		this( pe, element, context );
 		this.defaultAccessTypeForHierarchy = accessType;
 	}
 
 	public String getSimpleName() {
 		return element.getSimpleName().toString();
-	}
-
-	public Element getOriginalElement() {
-		return element;
 	}
 
 	public String getQualifiedName() {
@@ -112,9 +107,9 @@ public class AnnotationMetaEntity implements MetaEntity {
 		addPersistentMembers( membersFound, elementAccessType, methodsOfClass, AccessType.PROPERTY );
 
 		//process superclasses
-		for(TypeElement superclass = TypeUtils.getSuperclass(element) ;
-			superclass != null ;
-			superclass = TypeUtils.getSuperclass( superclass ) ) {
+		for ( TypeElement superclass = TypeUtils.getSuperclass( element );
+			  superclass != null;
+			  superclass = TypeUtils.getSuperclass( superclass ) ) {
 			if ( superclass.getAnnotation( Entity.class ) != null ) {
 				break; //will be handled or has been handled already
 			}
@@ -123,11 +118,6 @@ public class AnnotationMetaEntity implements MetaEntity {
 				context.processElement( superclass, defaultAccessTypeForHierarchy );
 			}
 		}
-
-		//this is valid to not have properties (ie subentities)
-//		if ( membersFound.size() == 0 ) {
-//			pe.getMessager().printMessage( Kind.WARNING, "No properties found on " + element, element );
-//		}
 		return membersFound;
 	}
 
@@ -136,10 +126,8 @@ public class AnnotationMetaEntity implements MetaEntity {
 			AccessType elementAccessType,
 			List<? extends Element> membersOfClass,
 			AccessType membersKind) {
-		pe.getMessager()
-					.printMessage( Kind.NOTE, "Scanning " + membersOfClass.size() + " " + membersKind + " for " + element.toString() );
 		AccessType explicitAccessType;
-		if (elementAccessType == membersKind) {
+		if ( elementAccessType == membersKind ) {
 			//all membersKind considered
 			explicitAccessType = null;
 		}
@@ -149,27 +137,22 @@ public class AnnotationMetaEntity implements MetaEntity {
 		}
 		for ( Element memberOfClass : membersOfClass ) {
 
-			AnnotationMetaAttribute result = memberOfClass.asType().accept( new TypeVisitor( this, explicitAccessType ),
-					memberOfClass
-			);
+			TypeVisitor visitor = new TypeVisitor( this, explicitAccessType );
+			AnnotationMetaAttribute result = memberOfClass.asType().accept( visitor, memberOfClass );
 			if ( result != null ) {
 				membersFound.add( result );
 			}
-//EBE not sure why?
-//			else {
-//				pe.getMessager().printMessage( Kind.WARNING, "Could not find valid info for JPA property", mymember );
-//			}
 		}
 	}
 
 	private AccessType getAccessTypeForElement() {
 
 		//get local strategy
-		AccessType accessType = getAccessTypeForClass(element);
-		if (accessType == null) {
+		AccessType accessType = getAccessTypeForClass( element );
+		if ( accessType == null ) {
 			accessType = this.defaultAccessTypeForHierarchy;
 		}
-		if (accessType == null) {
+		if ( accessType == null ) {
 			//we dont' know
 			//if an enity go up
 			//
@@ -179,13 +162,13 @@ public class AnnotationMetaEntity implements MetaEntity {
 			TypeElement superClass = element;
 			do {
 				superClass = TypeUtils.getSuperclass( superClass );
-				if (superClass != null) {
+				if ( superClass != null ) {
 					if ( superClass.getAnnotation( Entity.class ) != null
 							|| superClass.getAnnotation( MappedSuperclass.class ) != null ) {
 						//FIXME make it work for XML
-						AccessType superClassAccessType = getAccessTypeForClass(superClass);
+						AccessType superClassAccessType = getAccessTypeForClass( superClass );
 						//we've reach the root entity and resolved Ids
-						if ( superClassAccessType != null && defaultAccessTypeForHierarchy != null) {
+						if ( superClassAccessType != null && defaultAccessTypeForHierarchy != null ) {
 							break; //we've found it
 						}
 					}
@@ -212,11 +195,12 @@ public class AnnotationMetaEntity implements MetaEntity {
 		pe.getMessager().printMessage( Diagnostic.Kind.NOTE, "check class" + searchedElement );
 		AccessType accessType = context.getAccessType( searchedElement );
 
-		if (defaultAccessTypeForHierarchy == null) {
+		if ( defaultAccessTypeForHierarchy == null ) {
 			this.defaultAccessTypeForHierarchy = context.getDefaultAccessTypeForHerarchy( searchedElement );
 		}
 		if ( accessType != null ) {
-			pe.getMessager().printMessage( Diagnostic.Kind.NOTE, "Found in cache" + searchedElement + ":" + accessType );
+			pe.getMessager()
+					.printMessage( Diagnostic.Kind.NOTE, "Found in cache" + searchedElement + ":" + accessType );
 			return accessType;
 		}
 
@@ -226,14 +210,15 @@ public class AnnotationMetaEntity implements MetaEntity {
 		 */
 		final Access accessAnn = searchedElement.getAnnotation( Access.class );
 		AccessType forcedAccessType = accessAnn != null ? accessAnn.value() : null;
-		if ( forcedAccessType != null) {
-			pe.getMessager().printMessage( Diagnostic.Kind.NOTE, "access type " + searchedElement + ":" + forcedAccessType );
+		if ( forcedAccessType != null ) {
+			pe.getMessager()
+					.printMessage( Diagnostic.Kind.NOTE, "access type " + searchedElement + ":" + forcedAccessType );
 			context.addAccessType( searchedElement, forcedAccessType );
 		}
 
 		//continue nevertheless to check if we are root and if defaultAccessTypeForHierarchy
 		//should be overridden
-		if ( forcedAccessType == null || defaultAccessTypeForHierarchy == null) {
+		if ( forcedAccessType == null || defaultAccessTypeForHierarchy == null ) {
 			List<? extends Element> myMembers = searchedElement.getEnclosedElements();
 			for ( Element subElement : myMembers ) {
 				List<? extends AnnotationMirror> entityAnnotations =
@@ -252,8 +237,10 @@ public class AnnotationMetaEntity implements MetaEntity {
 						if ( kind == ElementKind.FIELD || kind == ElementKind.METHOD ) {
 							accessType = kind == ElementKind.FIELD ? AccessType.FIELD : AccessType.PROPERTY;
 							//FIXME enlever in niveau
-							if (defaultAccessTypeForHierarchy == null) {
-								this.defaultAccessTypeForHierarchy = context.getDefaultAccessTypeForHerarchy( searchedElement );
+							if ( defaultAccessTypeForHierarchy == null ) {
+								this.defaultAccessTypeForHierarchy = context.getDefaultAccessTypeForHerarchy(
+										searchedElement
+								);
 								//we've discovered the class hierarchy, let's cache it
 								if ( defaultAccessTypeForHierarchy == null ) {
 									this.defaultAccessTypeForHierarchy = accessType;
@@ -262,9 +249,11 @@ public class AnnotationMetaEntity implements MetaEntity {
 									//context.addAccessTypeForHierarchy( element, defaultAccessTypeForHierarchy );
 								}
 							}
-							if ( forcedAccessType == null) {
+							if ( forcedAccessType == null ) {
 								context.addAccessType( searchedElement, accessType );
-								pe.getMessager().printMessage( Diagnostic.Kind.NOTE, "access type " + searchedElement + ":" + accessType );
+								pe.getMessager().printMessage(
+										Diagnostic.Kind.NOTE, "access type " + searchedElement + ":" + accessType
+								);
 								return accessType;
 							}
 							else {
@@ -323,10 +312,20 @@ public class AnnotationMetaEntity implements MetaEntity {
 			}
 		}
 
+		@Override
+		public AnnotationMetaAttribute visitArray(ArrayType t, Element element) {
+			if ( isPersistent( element ) ) {
+				return new AnnotationMetaSingleAttribute( parent, element, TypeUtils.toTypeString( t ) );
+			}
+			else {
+				return null;
+			}
+		}
+
 		private boolean isPersistent(Element element) {
 			//FIXME consider XML
 			boolean correctAccessType = false;
-			if (this.explicitAccessType == null) {
+			if ( this.explicitAccessType == null ) {
 				correctAccessType = true;
 			}
 			else {
@@ -342,7 +341,6 @@ public class AnnotationMetaEntity implements MetaEntity {
 
 		}
 
-
 		@Override
 		public AnnotationMetaAttribute visitDeclared(DeclaredType t, Element element) {
 			//FIXME consider XML
@@ -354,12 +352,17 @@ public class AnnotationMetaEntity implements MetaEntity {
 					//collection of element
 					if ( element.getAnnotation( ElementCollection.class ) != null ) {
 						final TypeMirror collectionType = t.getTypeArguments().get( 0 );
-						final TypeElement collectionElement = ( TypeElement ) pe.getTypeUtils().asElement( collectionType );
-						this.parent.context.processElement( collectionElement,
-								this.parent.defaultAccessTypeForElement );
+						final TypeElement collectionElement = ( TypeElement ) pe.getTypeUtils()
+								.asElement( collectionType );
+						this.parent.context.processElement(
+								collectionElement,
+								this.parent.defaultAccessTypeForElement
+						);
 					}
 					if ( collection.equals( "javax.persistence.metamodel.MapAttribute" ) ) {
-						return new AnnotationMetaMap( parent, element, collection, getKeyType( t ), getElementType( t ) );
+						return new AnnotationMetaMap(
+								parent, element, collection, getKeyType( t ), getElementType( t )
+						);
 					}
 					else {
 						return new AnnotationMetaCollection( parent, element, collection, getElementType( t ) );
@@ -369,17 +372,20 @@ public class AnnotationMetaEntity implements MetaEntity {
 					//FIXME Consider XML
 					if ( element.getAnnotation( Embedded.class ) != null
 							|| returnedElement.getAnnotation( Embeddable.class ) != null ) {
-						this.parent.context.processElement( returnedElement, 
-								this.parent.defaultAccessTypeForElement );
+						this.parent.context.processElement(
+								returnedElement,
+								this.parent.defaultAccessTypeForElement
+						);
 					}
-					return new AnnotationMetaSingleAttribute( parent, element, returnedElement.getQualifiedName().toString() );
+					return new AnnotationMetaSingleAttribute(
+							parent, element, returnedElement.getQualifiedName().toString()
+					);
 				}
 			}
 			else {
 				return null;
 			}
 		}
-
 
 		@Override
 		public AnnotationMetaAttribute visitExecutable(ExecutableType t, Element p) {
@@ -420,7 +426,6 @@ public class AnnotationMetaEntity implements MetaEntity {
 	private String getKeyType(DeclaredType t) {
 		return t.getTypeArguments().get( 0 ).toString();
 	}
-
 
 	private String getElementType(DeclaredType declaredType) {
 		if ( declaredType.getTypeArguments().size() == 1 ) {

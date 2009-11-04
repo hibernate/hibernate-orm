@@ -1,4 +1,4 @@
-// $Id$
+// $Id: Image.java 17903 2009-11-04 13:22:37Z hardy.ferentschik $
 /*
 * JBoss, Home of Professional Open Source
 * Copyright 2008, Red Hat Middleware LLC, and individual contributors
@@ -15,32 +15,22 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-package org.hibernate.jpamodelgen.test.accesstype;
+package org.hibernate.jpamodelgen.test.arraytype;
 
 import javax.persistence.Entity;
 
 /**
- * @author Emmanuel Bernard
+ * @author Hardy Feretnschik
  */
 @Entity
-public class Image {
-	private String name;
+public class TemperatureSamples {
+	private Integer[] samples;
 
-	private byte[] data;
-
-	public String getName() {
-		return name;
+	public Integer[] getSamples() {
+		return samples;
 	}
 
-	public void setName(String name) {
-		this.name = name;
-	}
-
-	public byte[] getData() {
-		return data;
-	}
-
-	public void setData(byte[] data) {
-		this.data = data;
+	public void setSamples(Integer[] samples) {
+		this.samples = samples;
 	}
 }

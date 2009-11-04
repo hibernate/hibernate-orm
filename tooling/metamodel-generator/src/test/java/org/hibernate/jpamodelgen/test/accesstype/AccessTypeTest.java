@@ -21,6 +21,7 @@ import org.testng.annotations.Test;
 
 import org.hibernate.jpamodelgen.test.util.CompilationTest;
 import static org.hibernate.jpamodelgen.test.util.TestUtil.assertAbsenceOfField;
+import static org.hibernate.jpamodelgen.test.util.TestUtil.assertFieldType;
 import static org.hibernate.jpamodelgen.test.util.TestUtil.assertPresenceOfField;
 
 /**
@@ -81,6 +82,7 @@ public class AccessTypeTest extends CompilationTest {
 	@Test
 	public void testMemberAccessType() throws Exception {
 		assertPresenceOfField( Customer.class.getName() + "_", "goodPayer", "access type overriding" );
+		assertFieldType( Customer.class.getName() + "_", "goodPayer", Boolean.class, "access type overriding" );
 	}
 
 	@Override

@@ -17,7 +17,13 @@
 */
 package org.hibernate.jpamodelgen.test.util;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.GenericArrayType;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+
 import org.testng.Assert;
+import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.FileAssert.fail;
 
@@ -52,6 +58,19 @@ public class TestUtil {
 		Assert.assertTrue( isFieldHere( className, fieldName ), errorString );
 	}
 
+	public static void assertFieldType(String className, String fieldName, Class expectedType, String errorString)
+			throws ClassNotFoundException {
+		Field field = getField( className, fieldName );
+		assertNotNull( field );
+		ParameterizedType type = ( ParameterizedType ) field.getGenericType();
+		Type actualType = type.getActualTypeArguments()[1];
+		if ( expectedType.isArray() ) {
+			expectedType = expectedType.getComponentType();
+			actualType = ( ( GenericArrayType ) actualType ).getGenericComponentType();
+		}
+		assertEquals( actualType, expectedType, errorString );
+	}
+
 	public static void assertSuperClass(String className, String superClassName) {
 		Class<?> clazz;
 		Class<?> superClazz;
@@ -69,13 +88,16 @@ public class TestUtil {
 	}
 
 	private static boolean isFieldHere(String className, String fieldName) throws ClassNotFoundException {
+		return getField( className, fieldName ) != null;
+	}
+
+	private static Field getField(String className, String fieldName) throws ClassNotFoundException {
 		Class<?> clazz = Class.forName( className );
 		try {
-			clazz.getField( fieldName );
-			return true;
+			return clazz.getField( fieldName );
 		}
 		catch ( NoSuchFieldException e ) {
-			return false;
+			return null;
 		}
 	}
 }

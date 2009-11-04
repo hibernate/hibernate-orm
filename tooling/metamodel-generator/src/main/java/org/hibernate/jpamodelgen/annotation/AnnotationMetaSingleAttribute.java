@@ -17,12 +17,11 @@
 */
 package org.hibernate.jpamodelgen.annotation;
 
-import org.hibernate.jpamodelgen.MetaSingleAttribute;
-
 import javax.lang.model.element.Element;
 
+import org.hibernate.jpamodelgen.MetaSingleAttribute;
+
 /**
- *
  * @author Max Andersen
  * @author Hardy Ferentschik
  * @author Emmanuel Bernard
@@ -30,12 +29,11 @@ import javax.lang.model.element.Element;
 public class AnnotationMetaSingleAttribute extends AnnotationMetaAttribute implements MetaSingleAttribute {
 
 	public AnnotationMetaSingleAttribute(AnnotationMetaEntity parent, Element element, String type) {
-		super(parent, element, type);
+		super( parent, element, type );
 	}
 
 	@Override
 	public String getMetaType() {
 		return "javax.persistence.metamodel.SingularAttribute";
 	}
-
 }

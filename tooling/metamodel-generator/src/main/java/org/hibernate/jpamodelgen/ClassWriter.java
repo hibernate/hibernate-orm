@@ -17,26 +17,26 @@
 */
 package org.hibernate.jpamodelgen;
 
+import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintWriter;
-import java.io.IOException;
 import java.io.StringWriter;
 import java.util.List;
-import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.FilerException;
-import javax.tools.FileObject;
-import javax.tools.Diagnostic;
-import javax.lang.model.type.TypeMirror;
-import javax.lang.model.type.TypeKind;
-import javax.lang.model.type.DeclaredType;
+import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.type.DeclaredType;
+import javax.lang.model.type.TypeKind;
+import javax.lang.model.type.TypeMirror;
+import javax.tools.Diagnostic;
+import javax.tools.FileObject;
 
 /**
  * @author Emmanuel Bernard
  */
 public class ClassWriter {
-	
+
 	public static void writeFile(MetaEntity entity, ProcessingEnvironment processingEnv, Context context) {
 		try {
 			String metaModelPackage = entity.getPackageName();
@@ -89,21 +89,13 @@ public class ClassWriter {
 		StringWriter sw = new StringWriter();
 		PrintWriter pw = null;
 		try {
-
 			pw = new PrintWriter( sw );
-
+			// we cannot use add @Generated into the metamodel class since this would not work in a JDK 5 environment
 			//pw.println( "@" + entity.importType( Generated.class.getName() ) + "(\"JPA MetaModel for " + entity.getQualifiedName() + "\")" );
-
 			pw.println( "@" + entity.importType( "javax.persistence.metamodel.StaticMetamodel" ) + "(" + entity.getSimpleName() + ".class)" );
-
-
-
 			printClassDeclaration( entity, pw, context );
-
 			pw.println();
-
 			List<MetaAttribute> members = entity.getMembers();
-
 			for ( MetaAttribute metaMember : members ) {
 				pw.println( "	" + metaMember.getDeclarationString() );
 			}
@@ -124,16 +116,15 @@ public class ClassWriter {
 		final TypeMirror superClass = entity.getTypeElement().getSuperclass();
 		//superclass of Object is of NoType which returns some other kind
 		String superclassDeclaration = "";
-		if (superClass.getKind() == TypeKind.DECLARED ) {
+		if ( superClass.getKind() == TypeKind.DECLARED ) {
 			//F..king Ch...t Have those people used their horrible APIs even once?
 			final Element superClassElement = ( ( DeclaredType ) superClass ).asElement();
 			String superClassName = ( ( TypeElement ) superClassElement ).getQualifiedName().toString();
 			if ( context.getMetaEntitiesToProcess().containsKey( superClassName )
 					|| context.getMetaSuperclassAndEmbeddableToProcess().containsKey( superClassName ) ) {
-				pw.print( " extends " + superClassName + "_"  );
+				pw.print( " extends " + superClassName + "_" );
 			}
 		}
-
 		pw.println( " {" );
 	}
 }

@@ -287,7 +287,7 @@ public class MySQLDialect extends Dialect {
 
 	public Boolean performTemporaryTableDDLInIsolation() {
 		// because we [drop *temporary* table...] we do not
-		// have to perform these in isolation.
+		// have to doAfterTransactionCompletion these in isolation.
 		return Boolean.FALSE;
 	}
 

@@ -39,15 +39,13 @@ import java.io.Serializable;
 
 /**
  * Any action relating to insert/update/delete of a collection
+ *
  * @author Gavin King
  */
 public abstract class CollectionAction implements Executable, Serializable, Comparable {
-
 	private transient CollectionPersister persister;
 	private final Serializable key;
-	private Serializable finalKey;
 	private final SessionImplementor session;
-	private SoftLock lock;
 	private final String collectionRole;
 	private final PersistentCollection collection;
 
@@ -62,31 +60,45 @@ public abstract class CollectionAction implements Executable, Serializable, Comp
 		this.collectionRole = persister.getRole();
 		this.collection = collection;
 	}
-	
+
 	protected PersistentCollection getCollection() {
 		return collection;
 	}
 
-	private void readObject(ObjectInputStream ois) throws IOException, ClassNotFoundException {
+	protected void readObject(ObjectInputStream ois) throws IOException, ClassNotFoundException {
 		ois.defaultReadObject();
 		persister = session.getFactory().getCollectionPersister( collectionRole );
 	}
 
-	public void afterTransactionCompletion(boolean success) throws CacheException {
+	public final void beforeExecutions() throws CacheException {
+		// we need to obtain the lock before any actions are
+		// executed, since this may be an inverse="true"
+		// bidirectional association and it is one of the
+		// earlier entity actions which actually updates
+		// the database (this action is resposible for
+		// second-level cache invalidation only)
 		if ( persister.hasCache() ) {
-			final CacheKey ck = new CacheKey( 
-					key, 
-					persister.getKeyType(), 
-					persister.getRole(), 
-					session.getEntityMode(), 
-					session.getFactory() 
-				);
-			persister.getCacheAccessStrategy().unlockItem( ck, lock );
+			final CacheKey ck = new CacheKey(
+					key,
+					persister.getKeyType(),
+					persister.getRole(),
+					session.getEntityMode(),
+					session.getFactory()
+			);
+			final SoftLock lock = persister.getCacheAccessStrategy().lockItem( ck, null );
+			// the old behavior used key as opposed to getKey()
+			afterTransactionProcess = new CacheCleanupProcess( key, persister, lock );
 		}
 	}
 
-	public boolean hasAfterTransactionCompletion() {
-		return persister.hasCache();
+	public BeforeTransactionCompletionProcess getBeforeTransactionCompletionProcess() {
+		return null;
+	}
+
+	private AfterTransactionCompletionProcess afterTransactionProcess;
+
+	public AfterTransactionCompletionProcess getAfterTransactionCompletionProcess() {
+		return afterTransactionProcess;
 	}
 
 	public Serializable[] getPropertySpaces() {
@@ -98,7 +110,7 @@ public abstract class CollectionAction implements Executable, Serializable, Comp
 	}
 
 	protected final Serializable getKey() {
-		finalKey = key;
+		Serializable finalKey = key;
 		if ( key instanceof DelayedPostInsertIdentifier ) {
 			// need to look it up from the persistence-context
 			finalKey = session.getPersistenceContext().getEntry( collection.getOwner() ).getId();
@@ -112,25 +124,6 @@ public abstract class CollectionAction implements Executable, Serializable, Comp
 
 	protected final SessionImplementor getSession() {
 		return session;
-	}
-
-	public final void beforeExecutions() throws CacheException {
-		// we need to obtain the lock before any actions are
-		// executed, since this may be an inverse="true"
-		// bidirectional association and it is one of the
-		// earlier entity actions which actually updates
-		// the database (this action is resposible for
-		// second-level cache invalidation only)
-		if ( persister.hasCache() ) {
-			final CacheKey ck = new CacheKey( 
-					key, 
-					persister.getKeyType(), 
-					persister.getRole(), 
-					session.getEntityMode(), 
-					session.getFactory() 
-			);
-			lock = persister.getCacheAccessStrategy().lockItem( ck, null );
-		}
 	}
 
 	protected final void evict() throws CacheException {
@@ -162,6 +155,29 @@ public abstract class CollectionAction implements Executable, Serializable, Comp
 			//then by fk
 			return persister.getKeyType()
 					.compare( key, action.key, session.getEntityMode() );
+		}
+	}
+
+	private static class CacheCleanupProcess implements AfterTransactionCompletionProcess {
+		private final Serializable key;
+		private final CollectionPersister persister;
+		private final SoftLock lock;
+
+		private CacheCleanupProcess(Serializable key, CollectionPersister persister, SoftLock lock) {
+			this.key = key;
+			this.persister = persister;
+			this.lock = lock;
+		}
+
+		public void doAfterTransactionCompletion(boolean success, SessionImplementor session) {
+			final CacheKey ck = new CacheKey(
+					key,
+					persister.getKeyType(),
+					persister.getRole(),
+					session.getEntityMode(),
+					session.getFactory()
+			);
+			persister.getCacheAccessStrategy().unlockItem( ck, lock );
 		}
 	}
 }

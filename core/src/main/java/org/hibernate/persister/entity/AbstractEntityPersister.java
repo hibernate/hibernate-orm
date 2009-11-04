@@ -2794,7 +2794,7 @@ public abstract class AbstractEntityPersister
 			// need to treat this as if it where optimistic-lock="all" (dirty does *not* make sense);
 			// first we need to locate the "loaded" state
 			//
-			// Note, it potentially could be a proxy, so perform the location the safe way...
+			// Note, it potentially could be a proxy, so doAfterTransactionCompletion the location the safe way...
 			EntityKey key = new EntityKey( id, this, session.getEntityMode() );
 			Object entity = session.getPersistenceContext().getEntity( key );
 			if ( entity != null ) {

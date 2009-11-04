@@ -46,14 +46,13 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.TypeFactory;
 
 public final class EntityUpdateAction extends EntityAction {
-
 	private final Object[] state;
 	private final Object[] previousState;
 	private final Object previousVersion;
-	private Object nextVersion;
 	private final int[] dirtyFields;
 	private final boolean hasDirtyCollection;
 	private final Object rowId;
+	private Object nextVersion;
 	private Object cacheEntry;
 	private SoftLock lock;
 
@@ -149,7 +148,7 @@ public final class EntityUpdateAction extends EntityAction {
 					nextVersion = Versioning.getVersion( state, persister );
 				}
 			}
-			// have the entity entry perform post-update processing, passing it the
+			// have the entity entry doAfterTransactionCompletion post-update processing, passing it the
 			// update state and the new version (if one).
 			entry.postUpdate( instance, state, nextVersion );
 		}
@@ -240,7 +239,11 @@ public final class EntityUpdateAction extends EntityAction {
 		return veto;
 	}
 
-	public void afterTransactionCompletion(boolean success) throws CacheException {
+	protected boolean hasPostCommitEventListeners() {
+		return getSession().getListeners().getPostCommitUpdateEventListeners().length>0;
+	}
+
+	public void doAfterTransactionCompletion(boolean success, SessionImplementor session) throws CacheException {
 		EntityPersister persister = getPersister();
 		if ( persister.hasCache() ) {
 			
@@ -266,10 +269,6 @@ public final class EntityUpdateAction extends EntityAction {
 		postCommitUpdate();
 	}
 
-	protected boolean hasPostCommitEventListeners() {
-		return getSession().getListeners().getPostCommitUpdateEventListeners().length>0;
-	}
-	
 }
 
 

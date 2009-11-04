@@ -40,7 +40,8 @@ import java.io.Serializable;
  *
  * @author Gavin King
  */
-public abstract class EntityAction implements Executable, Serializable, Comparable {
+public abstract class EntityAction
+		implements Executable, Serializable, Comparable, AfterTransactionCompletionProcess {
 
 	private final String entityName;
 	private final Serializable id;
@@ -65,7 +66,21 @@ public abstract class EntityAction implements Executable, Serializable, Comparab
 		this.persister = persister;
 	}
 
+	public BeforeTransactionCompletionProcess getBeforeTransactionCompletionProcess() {
+		return null;
+	}
+
+	public AfterTransactionCompletionProcess getAfterTransactionCompletionProcess() {
+		return needsAfterTransactionCompletion()
+				? this
+				: null;
+	}
+
 	protected abstract boolean hasPostCommitEventListeners();
+
+	public boolean needsAfterTransactionCompletion() {
+		return persister.hasCache() || hasPostCommitEventListeners();
+	}
 
 	/**
 	 * entity name accessor
@@ -121,10 +136,6 @@ public abstract class EntityAction implements Executable, Serializable, Comparab
 
 	public void beforeExecutions() {
 		throw new AssertionFailure( "beforeExecutions() called for non-collection action" );
-	}
-
-	public boolean hasAfterTransactionCompletion() {
-		return persister.hasCache() || hasPostCommitEventListeners();
 	}
 
 	public String toString() {

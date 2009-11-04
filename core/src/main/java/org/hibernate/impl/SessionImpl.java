@@ -423,6 +423,7 @@ public final class SessionImpl extends AbstractSessionImpl
 
 	public void beforeTransactionCompletion(Transaction tx) {
 		log.trace( "before transaction completion" );
+		actionQueue.beforeTransactionCompletion();
 		if ( rootSession == null ) {
 			try {
 				interceptor.beforeTransactionCompletion(tx);
@@ -1185,7 +1186,7 @@ public final class SessionImpl extends AbstractSessionImpl
 		errorIfClosed();
 		checkTransactionSynchStatus();
 		if ( query == null ) {
-			throw new IllegalArgumentException("attempt to perform delete-by-query with null query");
+			throw new IllegalArgumentException("attempt to doAfterTransactionCompletion delete-by-query with null query");
 		}
 
 		if ( log.isTraceEnabled() ) {

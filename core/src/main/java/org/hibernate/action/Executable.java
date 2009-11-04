@@ -34,29 +34,43 @@ import java.io.Serializable;
  * together with required second-level cache management.
  * 
  * @author Gavin King
+ * @author Steve Ebersole
  */
 public interface Executable {
 	/**
-	 * Called before executing any actions
-	 */
-	public void beforeExecutions() throws HibernateException;
-	/**
-	 * Execute this action
-	 */
-	public void execute() throws HibernateException;
-	/**
-	 * Do we need to retain this instance until after the
-	 * transaction completes?
-	 * @return false if this class defines a no-op
-	 * <tt>hasAfterTransactionCompletion()</tt>
-	 */
-	public boolean hasAfterTransactionCompletion();
-	/**
-	 * Called after the transaction completes
-	 */
-	public void afterTransactionCompletion(boolean success) throws HibernateException;
-	/**
 	 * What spaces (tables) are affected by this action?
+	 *
+	 * @return The spaces affected by this action.
 	 */
 	public Serializable[] getPropertySpaces();
+
+	/**
+	 * Called before executing any actions.  Gives actions a chance to perform any preparation.
+	 *
+	 * @throws HibernateException Indicates a problem during preparation.
+	 */
+	public void beforeExecutions() throws HibernateException;
+
+	/**
+	 * Execute this action
+	 *
+	 * @throws HibernateException Indicates a problem during execution.
+	 */
+	public void execute() throws HibernateException;
+
+	/**
+	 * Get the after-transaction-completion process, if any, for this action.
+	 *
+	 * @return The after-transaction-completion process, or null if we have no
+	 * after-transaction-completion process
+	 */
+	public AfterTransactionCompletionProcess getAfterTransactionCompletionProcess();
+
+	/**
+	 * Get the before-transaction-completion process, if any, for this action.
+	 *
+	 * @return The before-transaction-completion process, or null if we have no
+	 * before-transaction-completion process
+	 */
+	public BeforeTransactionCompletionProcess getBeforeTransactionCompletionProcess();
 }

@@ -494,7 +494,7 @@ public class CompositeIdWithGeneratorTest extends FunctionalTestCase {
 		s = openSession();
 		t = s.beginTransaction();
 
-		// perform a find to show that it will wire together fine
+		// doAfterTransactionCompletion a find to show that it will wire together fine
 		PurchaseRecord foundRecord = (PurchaseRecord) s.get(PurchaseRecord.class,
 				new PurchaseRecord.Id(foundPurchaseNumber, foundPurchaseSequence)
 				);

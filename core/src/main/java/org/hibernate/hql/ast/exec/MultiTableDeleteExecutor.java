@@ -59,7 +59,7 @@ public class MultiTableDeleteExecutor extends AbstractStatementExecutor {
 		super( walker, log );
 
 		if ( !walker.getSessionFactoryHelper().getFactory().getDialect().supportsTemporaryTables() ) {
-			throw new HibernateException( "cannot perform multi-table deletes using dialect not supporting temp tables" );
+			throw new HibernateException( "cannot doAfterTransactionCompletion multi-table deletes using dialect not supporting temp tables" );
 		}
 
 		DeleteStatement deleteStatement = ( DeleteStatement ) walker.getAST();

@@ -116,7 +116,6 @@ public final class EntityInsertAction extends EntityAction {
 					session.getEntityMode(), 
 					session.getFactory() 
 				);
-//			boolean put = persister.getCache().insert(ck, cacheEntry);
 			boolean put = persister.getCacheAccessStrategy().insert( ck, cacheEntry, version );
 			
 			if ( put && factory.getStatistics().isStatisticsEnabled() ) {
@@ -181,8 +180,10 @@ public final class EntityInsertAction extends EntityAction {
 		return veto;
 	}
 
-	//Make 100% certain that this is called before any subsequent ScheduledUpdate.afterTransactionCompletion()!!
-	public void afterTransactionCompletion(boolean success) throws HibernateException {
+	/**
+	 * {@inheritDoc}
+	 */
+	public void doAfterTransactionCompletion(boolean success, SessionImplementor session) throws HibernateException {
 		EntityPersister persister = getPersister();
 		if ( success && isCachePutEnabled( persister, getSession() ) ) {
 			final CacheKey ck = new CacheKey( 
@@ -191,7 +192,7 @@ public final class EntityInsertAction extends EntityAction {
 					persister.getRootEntityName(), 
 					getSession().getEntityMode(), 
 					getSession().getFactory() 
-				);
+			);
 			boolean put = persister.getCacheAccessStrategy().afterInsert( ck, cacheEntry, version );
 			
 			if ( put && getSession().getFactory().getStatistics().isStatisticsEnabled() ) {
@@ -207,16 +208,9 @@ public final class EntityInsertAction extends EntityAction {
 	}
 	
 	private boolean isCachePutEnabled(EntityPersister persister, SessionImplementor session) {
-		return persister.hasCache() && 
-				!persister.isCacheInvalidationRequired() && 
-				session.getCacheMode().isPutEnabled();
+		return persister.hasCache()
+				&& !persister.isCacheInvalidationRequired()
+				&& session.getCacheMode().isPutEnabled();
 	}
 
 }
-
-
-
-
-
-
-

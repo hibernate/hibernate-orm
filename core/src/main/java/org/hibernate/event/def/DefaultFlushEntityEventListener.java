@@ -287,7 +287,7 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 			dirtyProperties = ArrayHelper.EMPTY_INT_ARRAY;
 		}
 
-		// check nullability but do not perform command execute
+		// check nullability but do not doAfterTransactionCompletion command execute
 		// we'll use scheduled updates for that.
 		new Nullability(session).checkNullability( values, persister, true );
 

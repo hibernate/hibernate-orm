@@ -161,7 +161,7 @@ public class Expectations {
 
 	public static final Expectation NONE = new Expectation() {
 		public void verifyOutcome(int rowCount, PreparedStatement statement, int batchPosition) {
-			// explicitly perform no checking...
+			// explicitly doAfterTransactionCompletion no checking...
 		}
 
 		public int prepare(PreparedStatement statement) {

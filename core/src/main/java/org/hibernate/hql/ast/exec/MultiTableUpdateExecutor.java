@@ -63,7 +63,7 @@ public class MultiTableUpdateExecutor extends AbstractStatementExecutor {
 		super( walker, log );
 
 		if ( !walker.getSessionFactoryHelper().getFactory().getDialect().supportsTemporaryTables() ) {
-			throw new HibernateException( "cannot perform multi-table updates using dialect not supporting temp tables" );
+			throw new HibernateException( "cannot doAfterTransactionCompletion multi-table updates using dialect not supporting temp tables" );
 		}
 
 		UpdateStatement updateStatement = ( UpdateStatement ) walker.getAST();

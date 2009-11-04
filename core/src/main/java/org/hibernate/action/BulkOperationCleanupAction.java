@@ -70,19 +70,13 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 	 * @param session The session to which this request is tied.
 	 * @param affectedQueryables The affected entity persisters.
 	 */
-	public BulkOperationCleanupAction(
-			SessionImplementor session,
-			Queryable[] affectedQueryables) {
+	public BulkOperationCleanupAction(SessionImplementor session, Queryable[] affectedQueryables) {
 		SessionFactoryImplementor factory = session.getFactory();
 		ArrayList tmpSpaces = new ArrayList();
 		for ( int i = 0; i < affectedQueryables.length; i++ ) {
 			tmpSpaces.addAll( Arrays.asList( affectedQueryables[i].getQuerySpaces() ) );
 			if ( affectedQueryables[i].hasCache() ) {
-				entityCleanups.add(
-						new EntityCleanup(
-								affectedQueryables[i].getCacheAccessStrategy()
-						)
-				);
+				entityCleanups.add( new EntityCleanup( affectedQueryables[i].getCacheAccessStrategy() ) );
 			}
 			Set roles = factory.getCollectionRolesByEntityParticipant( affectedQueryables[i].getEntityName() );
 			if ( roles != null ) {
@@ -91,11 +85,7 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 					String role = ( String ) itr.next();
 					CollectionPersister collectionPersister = factory.getCollectionPersister( role );
 					if ( collectionPersister.hasCache() ) {
-						collectionCleanups.add(
-								new CollectionCleanup(
-										collectionPersister.getCacheAccessStrategy()
-								)
-						);
+						collectionCleanups.add( new CollectionCleanup( collectionPersister.getCacheAccessStrategy() ) );
 					}
 				}
 			}
@@ -129,11 +119,7 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 			if ( affectedEntity( tableSpaces, entitySpaces ) ) {
 				tmpSpaces.addAll( Arrays.asList( entitySpaces ) );
 				if ( persister.hasCache() ) {
-					entityCleanups.add(
-							new EntityCleanup(
-									persister.getCacheAccessStrategy()
-							)
-					);
+					entityCleanups.add( new EntityCleanup( persister.getCacheAccessStrategy() ) );
 				}
 				Set roles = session.getFactory().getCollectionRolesByEntityParticipant( persister.getEntityName() );
 				if ( roles != null ) {
@@ -143,9 +129,7 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 						CollectionPersister collectionPersister = factory.getCollectionPersister( role );
 						if ( collectionPersister.hasCache() ) {
 							collectionCleanups.add(
-									new CollectionCleanup(
-											collectionPersister.getCacheAccessStrategy()
-									)
+									new CollectionCleanup( collectionPersister.getCacheAccessStrategy() )
 							);
 						}
 					}
@@ -169,9 +153,7 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 	 * @return True if there are affected table spaces and any of the incoming
 	 * check table spaces occur in that set.
 	 */
-	private boolean affectedEntity(
-			Set affectedTableSpaces,
-			Serializable[] checkTableSpaces) {
+	private boolean affectedEntity(Set affectedTableSpaces, Serializable[] checkTableSpaces) {
 		if ( affectedTableSpaces == null || affectedTableSpaces.isEmpty() ) {
 			return true;
 		}
@@ -188,22 +170,26 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 		return affectedTableSpaces;
 	}
 
-	public boolean hasAfterTransactionCompletion() {
-		return true;
+	public BeforeTransactionCompletionProcess getBeforeTransactionCompletionProcess() {
+		return null;
 	}
 
-	public void afterTransactionCompletion(boolean success) throws HibernateException {
-		Iterator itr = entityCleanups.iterator();
-		while ( itr.hasNext() ) {
-			final EntityCleanup cleanup = ( EntityCleanup ) itr.next();
-			cleanup.release();
-		}
+	public AfterTransactionCompletionProcess getAfterTransactionCompletionProcess() {
+		return new AfterTransactionCompletionProcess() {
+			public void doAfterTransactionCompletion(boolean success, SessionImplementor session) {
+				Iterator itr = entityCleanups.iterator();
+				while ( itr.hasNext() ) {
+					final EntityCleanup cleanup = ( EntityCleanup ) itr.next();
+					cleanup.release();
+				}
 
-		itr = collectionCleanups.iterator();
-		while ( itr.hasNext() ) {
-			final CollectionCleanup cleanup = ( CollectionCleanup ) itr.next();
-			cleanup.release();
-		}
+				itr = collectionCleanups.iterator();
+				while ( itr.hasNext() ) {
+					final CollectionCleanup cleanup = ( CollectionCleanup ) itr.next();
+					cleanup.release();
+				}
+			}
+		};
 	}
 
 	public void beforeExecutions() throws HibernateException {

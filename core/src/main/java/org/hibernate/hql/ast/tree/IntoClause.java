@@ -220,7 +220,7 @@ public class IntoClause extends HqlSqlWalkerNode implements DisplayableNode {
 			return true;
 		}
 
-		// otherwise, perform a "deep equivalence" check...
+		// otherwise, doAfterTransactionCompletion a "deep equivalence" check...
 
 		if ( !target.getReturnedClass().isAssignableFrom( source.getReturnedClass() ) ) {
 			return false;

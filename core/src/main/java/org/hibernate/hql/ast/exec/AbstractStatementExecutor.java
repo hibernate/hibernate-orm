@@ -245,7 +245,7 @@ public abstract class AbstractStatementExecutor implements StatementExecutor {
 			( ( EventSource ) session ).getActionQueue().addAction( action );
 		}
 		else {
-			action.afterTransactionCompletion( true );
+			action.getAfterTransactionCompletionProcess().doAfterTransactionCompletion( true, session );
 		}
 	}
 

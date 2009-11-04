@@ -333,7 +333,7 @@ public class FromClause extends HqlSqlWalkerNode implements HqlSqlTokenTypes, Di
 		//  the subquery has already been performed (meaning that for
 		//  theta-join dialects, the join conditions have already been moved
 		//  over to the where clause).  A "simple" solution here might to
-		//  perform "join post processing" once for the entire query (including
+		//  doAfterTransactionCompletion "join post processing" once for the entire query (including
 		//  any subqueries) at one fell swoop
 	}
 

@@ -37,7 +37,8 @@ import org.hibernate.event.PreInsertEventListener;
 import org.hibernate.event.EventSource;
 import org.hibernate.persister.entity.EntityPersister;
 
-public final class EntityIdentityInsertAction extends EntityAction {
+public final class EntityIdentityInsertAction extends EntityAction  {
+
 	private final Object[] state;
 	private final boolean isDelayed;
 	private final EntityKey delayedEntityKey;
@@ -53,11 +54,10 @@ public final class EntityIdentityInsertAction extends EntityAction {
 		super( session, null, instance, persister );
 		this.state = state;
 		this.isDelayed = isDelayed;
-		delayedEntityKey = isDelayed ? generateDelayedEntityKey() : null;
+		this.delayedEntityKey = isDelayed ? generateDelayedEntityKey() : null;
 	}
 
 	public void execute() throws HibernateException {
-		
 		final EntityPersister persister = getPersister();
 		final SessionImplementor session = getSession();
 		final Object instance = getInstance();
@@ -89,10 +89,27 @@ public final class EntityIdentityInsertAction extends EntityAction {
 		postInsert();
 
 		if ( session.getFactory().getStatistics().isStatisticsEnabled() && !veto ) {
-			session.getFactory().getStatisticsImplementor()
-					.insertEntity( getPersister().getEntityName() );
+			session.getFactory().getStatisticsImplementor().insertEntity( getPersister().getEntityName() );
 		}
 
+	}
+
+	public boolean needsAfterTransactionCompletion() {
+		//TODO: simply remove this override if we fix the above todos
+		return hasPostCommitEventListeners();
+	}
+
+	protected boolean hasPostCommitEventListeners() {
+		return getSession().getListeners().getPostCommitInsertEventListeners().length>0;
+	}
+
+	public void doAfterTransactionCompletion(boolean success, SessionImplementor session) {
+		//TODO: reenable if we also fix the above todo
+		/*EntityPersister persister = getEntityPersister();
+		if ( success && persister.hasCache() && !persister.isCacheInvalidationRequired() ) {
+			persister.getCache().afterInsert( getGeneratedId(), cacheEntry );
+		}*/
+		postCommitInsert();
 	}
 
 	private void postInsert() {
@@ -145,26 +162,6 @@ public final class EntityIdentityInsertAction extends EntityAction {
 		return veto;
 	}
 
-	//Make 100% certain that this is called before any subsequent ScheduledUpdate.afterTransactionCompletion()!!
-	public void afterTransactionCompletion(boolean success) throws HibernateException {
-		//TODO: reenable if we also fix the above todo
-		/*EntityPersister persister = getEntityPersister();
-		if ( success && persister.hasCache() && !persister.isCacheInvalidationRequired() ) {
-			persister.getCache().afterInsert( getGeneratedId(), cacheEntry );
-		}*/
-		postCommitInsert();
-	}
-
-	public boolean hasAfterTransactionCompletion() {
-		//TODO: simply remove this override
-		//      if we fix the above todos
-		return hasPostCommitEventListeners();
-	}
-
-	protected boolean hasPostCommitEventListeners() {
-		return getSession().getListeners().getPostCommitInsertEventListeners().length>0;
-	}
-	
 	public final Serializable getGeneratedId() {
 		return generatedId;
 	}

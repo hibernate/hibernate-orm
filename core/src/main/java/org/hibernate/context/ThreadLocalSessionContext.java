@@ -319,7 +319,7 @@ public class ThreadLocalSessionContext implements CurrentSessionContext {
 					// method call to pass through since the real session
 					// will complain by throwing an appropriate exception;
 					// NOTE that allowing close() above has the same basic effect,
-					//   but we capture that there simply to perform the unbind...
+					//   but we capture that there simply to doAfterTransactionCompletion the unbind...
 				}
 				else if ( !realSession.getTransaction().isActive() ) {
 					// limit the methods available if no transaction is active

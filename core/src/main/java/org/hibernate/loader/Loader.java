@@ -352,7 +352,7 @@ public abstract class Loader {
 			throw JDBCExceptionHelper.convert(
 			        factory.getSQLExceptionConverter(),
 			        sqle,
-			        "could not perform sequential read of results (forward)",
+			        "could not doAfterTransactionCompletion sequential read of results (forward)",
 			        getSQLString()
 				);
 		}
@@ -400,7 +400,7 @@ public abstract class Loader {
 			}
 
 			// We call getKeyFromResultSet() here so that we can know the
-			// key value upon which to perform the breaking logic.  However,
+			// key value upon which to doAfterTransactionCompletion the breaking logic.  However,
 			// it is also then called from getRowFromResultSet() which is certainly
 			// not the most efficient.  But the call here is needed, and there
 			// currently is no other way without refactoring of the doQuery()/getRowFromResultSet()
@@ -419,7 +419,7 @@ public abstract class Loader {
 			throw JDBCExceptionHelper.convert(
 			        factory.getSQLExceptionConverter(),
 			        sqle,
-			        "could not perform sequential read of results (forward)",
+			        "could not doAfterTransactionCompletion sequential read of results (forward)",
 			        getSQLString()
 				);
 		}
@@ -538,14 +538,14 @@ public abstract class Loader {
 			// at the first physical row we are interested in loading
 			resultSet.next();
 
-			// and perform the load
+			// and doAfterTransactionCompletion the load
 			return sequentialLoad( resultSet, session, queryParameters, returnProxies, keyToRead );
 		}
 		catch ( SQLException sqle ) {
 			throw JDBCExceptionHelper.convert(
 			        factory.getSQLExceptionConverter(),
 			        sqle,
-			        "could not perform sequential read of results (forward)",
+			        "could not doAfterTransactionCompletion sequential read of results (forward)",
 			        getSQLString()
 				);
 		}

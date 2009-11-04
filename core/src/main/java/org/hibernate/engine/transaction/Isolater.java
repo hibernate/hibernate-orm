@@ -126,7 +126,7 @@ public class Isolater {
 
 				connection = session.getBatcher().openConnection();
 
-				// perform the actual work
+				// doAfterTransactionCompletion the actual work
 				work.doWork( connection );
 
 				// if everything went ok, commit the transaction and close the obtained

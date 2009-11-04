@@ -179,7 +179,7 @@ public class NativeSQLQueryPlan implements Serializable {
 			( ( EventSource ) session ).getActionQueue().addAction( action );
 		}
 		else {
-			action.afterTransactionCompletion( true );
+			action.getAfterTransactionCompletionProcess().doAfterTransactionCompletion( true, session );
 		}
 	}
 

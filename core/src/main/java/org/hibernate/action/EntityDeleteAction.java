@@ -42,11 +42,11 @@ import org.hibernate.event.EventSource;
 import org.hibernate.persister.entity.EntityPersister;
 
 public final class EntityDeleteAction extends EntityAction {
-
 	private final Object version;
-	private SoftLock lock;
 	private final boolean isCascadeDeleteEnabled;
 	private final Object[] state;
+
+	private SoftLock lock;
 
 	public EntityDeleteAction(
 			final Serializable id,
@@ -86,7 +86,7 @@ public final class EntityDeleteAction extends EntityAction {
 					persister.getRootEntityName(), 
 					session.getEntityMode(), 
 					session.getFactory() 
-				);
+			);
 			lock = persister.getCacheAccessStrategy().lockItem( ck, version );
 		}
 		else {
@@ -112,19 +112,19 @@ public final class EntityDeleteAction extends EntityAction {
 		persistenceContext.removeEntity(key);
 		persistenceContext.removeProxy(key);
 		
-		if ( persister.hasCache() ) persister.getCacheAccessStrategy().remove( ck );
+		if ( persister.hasCache() ) {
+			persister.getCacheAccessStrategy().remove( ck );
+		}
 
 		postDelete();
 
 		if ( getSession().getFactory().getStatistics().isStatisticsEnabled() && !veto ) {
-			getSession().getFactory().getStatisticsImplementor()
-					.deleteEntity( getPersister().getEntityName() );
+			getSession().getFactory().getStatisticsImplementor().deleteEntity( getPersister().getEntityName() );
 		}
 	}
 
 	private boolean preDelete() {
-		PreDeleteEventListener[] preListeners = getSession().getListeners()
-				.getPreDeleteEventListeners();
+		PreDeleteEventListener[] preListeners = getSession().getListeners().getPreDeleteEventListeners();
 		boolean veto = false;
 		if (preListeners.length>0) {
 			PreDeleteEvent preEvent = new PreDeleteEvent( getInstance(), getId(), state, getPersister() ,(EventSource) getSession() );
@@ -169,29 +169,21 @@ public final class EntityDeleteAction extends EntityAction {
 		}
 	}
 
-	public void afterTransactionCompletion(boolean success) throws HibernateException {
+	public void doAfterTransactionCompletion(boolean success, SessionImplementor session) throws HibernateException {
 		if ( getPersister().hasCache() ) {
-			final CacheKey ck = new CacheKey( 
-					getId(), 
-					getPersister().getIdentifierType(), 
+			final CacheKey ck = new CacheKey(
+					getId(),
+					getPersister().getIdentifierType(),
 					getPersister().getRootEntityName(),
-					getSession().getEntityMode(), 
+					getSession().getEntityMode(),
 					getSession().getFactory()
-				);
+			);
 			getPersister().getCacheAccessStrategy().unlockItem( ck, lock );
 		}
 		postCommitDelete();
 	}
 
 	protected boolean hasPostCommitEventListeners() {
-		return getSession().getListeners().getPostCommitDeleteEventListeners().length>0;
+		return getSession().getListeners().getPostCommitDeleteEventListeners().length > 0;
 	}
-
 }
-
-
-
-
-
-
-

@@ -34,6 +34,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
+import java.util.HashSet;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,6 +50,8 @@ import org.hibernate.action.EntityIdentityInsertAction;
 import org.hibernate.action.EntityInsertAction;
 import org.hibernate.action.EntityUpdateAction;
 import org.hibernate.action.Executable;
+import org.hibernate.action.AfterTransactionCompletionProcess;
+import org.hibernate.action.BeforeTransactionCompletionProcess;
 import org.hibernate.cache.CacheException;
 import org.hibernate.type.Type;
 
@@ -82,7 +85,8 @@ public class ActionQueue {
 	private ArrayList collectionUpdates;
 	private ArrayList collectionRemovals;
 
-	private ArrayList executions;
+	private AfterTransactionCompletionProcessQueue afterTransactionProcesses;
+	private BeforeTransactionCompletionProcessQueue beforeTransactionProcesses;
 
 	/**
 	 * Constructs an action queue bound to the given session.
@@ -103,7 +107,8 @@ public class ActionQueue {
 		collectionRemovals = new ArrayList( INIT_QUEUE_LIST_SIZE );
 		collectionUpdates = new ArrayList( INIT_QUEUE_LIST_SIZE );
 
-		executions = new ArrayList( INIT_QUEUE_LIST_SIZE * 3 );
+		afterTransactionProcesses = new AfterTransactionCompletionProcessQueue( session );
+		beforeTransactionProcesses = new BeforeTransactionCompletionProcessQueue( session );
 	}
 
 	public void clear() {
@@ -145,8 +150,15 @@ public class ActionQueue {
 	}
 
 	public void addAction(BulkOperationCleanupAction cleanupAction) {
-		// Add these directly to the executions queue
-		executions.add( cleanupAction );
+		registerProcess( cleanupAction.getAfterTransactionCompletionProcess() );
+	}
+
+	public void registerProcess(AfterTransactionCompletionProcess process) {
+		afterTransactionProcesses.register( process );
+	}
+
+	public void registerProcess(BeforeTransactionCompletionProcess process) {
+		beforeTransactionProcesses.register( process );
 	}
 
 	/**
@@ -189,29 +201,14 @@ public class ActionQueue {
 	 * @param success Was the transaction successful.
 	 */
 	public void afterTransactionCompletion(boolean success) {
-		int size = executions.size();
-		final boolean invalidateQueryCache = session.getFactory().getSettings().isQueryCacheEnabled();
-		for ( int i = 0; i < size; i++ ) {
-			try {
-				Executable exec = ( Executable ) executions.get( i );
-				try {
-					exec.afterTransactionCompletion( success );
-				}
-				finally {
-					if ( invalidateQueryCache ) {
-						session.getFactory().getUpdateTimestampsCache().invalidate( exec.getPropertySpaces() );
-					}
-				}
-			}
-			catch ( CacheException ce ) {
-				log.error( "could not release a cache lock", ce );
-				// continue loop
-			}
-			catch ( Exception e ) {
-				throw new AssertionFailure( "Exception releasing cache locks", e );
-			}
-		}
-		executions.clear();
+		afterTransactionProcesses.afterTransactionCompletion( success );
+	}
+
+	/**
+	 * Execute any registered {@link BeforeTransactionCompletionProcess}
+	 */
+	public void beforeTransactionCompletion() {
+		beforeTransactionProcesses.beforeTransactionCompletion();
 	}
 
 	/**
@@ -267,16 +264,18 @@ public class ActionQueue {
 	}
 
 	public void execute(Executable executable) {
-		final boolean lockQueryCache = session.getFactory().getSettings().isQueryCacheEnabled();
-		if ( executable.hasAfterTransactionCompletion() || lockQueryCache ) {
-			executions.add( executable );
+		try {
+			executable.execute();
 		}
-		if ( lockQueryCache ) {
-			session.getFactory()
-					.getUpdateTimestampsCache()
-					.preinvalidate( executable.getPropertySpaces() );
+		finally {
+			beforeTransactionProcesses.register( executable.getBeforeTransactionCompletionProcess() );
+			if ( session.getFactory().getSettings().isQueryCacheEnabled() ) {
+				final String[] spaces = (String[]) executable.getPropertySpaces();
+				afterTransactionProcesses.addSpacesToInvalidate( spaces );
+				session.getFactory().getUpdateTimestampsCache().preinvalidate( executable.getPropertySpaces() );
+			}
+			afterTransactionProcesses.register( executable.getAfterTransactionCompletionProcess() );
 		}
-		executable.execute();
 	}
 
 	private void prepareActions(List queue) throws HibernateException {
@@ -376,7 +375,8 @@ public class ActionQueue {
 	}
 
 	public boolean hasAfterTransactionActions() {
-		return executions.size() > 0;
+		// todo : method is not used anywhere; why is it here?
+		return afterTransactionProcesses.processes.size() > 0;
 	}
 
 	public boolean hasAnyQueuedActions() {
@@ -394,7 +394,7 @@ public class ActionQueue {
 	 *
 	 * @param oos The stream to which the action queue should get written
 	 *
-	 * @throws IOException
+	 * @throws IOException Indicates an error writing to the stream
 	 */
 	public void serialize(ObjectOutputStream oos) throws IOException {
 		log.trace( "serializing action-queue" );
@@ -447,8 +447,12 @@ public class ActionQueue {
 	 * action queue
 	 *
 	 * @param ois The stream from which to read the action queue
+	 * @param session The session to which the action queue belongs
 	 *
-	 * @throws IOException
+	 * @return The deserialized action queue
+	 *
+	 * @throws IOException indicates a problem reading from the stream
+	 * @throws ClassNotFoundException Generally means we were unable to locate user classes.
 	 */
 	public static ActionQueue deserialize(
 			ObjectInputStream ois,
@@ -500,6 +504,93 @@ public class ActionQueue {
 		return rtn;
 	}
 
+	private static class BeforeTransactionCompletionProcessQueue {
+		private SessionImplementor session;
+		private List processes = new ArrayList();
+
+		private BeforeTransactionCompletionProcessQueue(SessionImplementor session) {
+			this.session = session;
+		}
+
+		public void register(BeforeTransactionCompletionProcess process) {
+			if ( process == null ) {
+				return;
+			}
+			processes.add( process );
+		}
+
+		public void beforeTransactionCompletion() {
+			final int size = processes.size();
+			for ( int i = 0; i < size; i++ ) {
+				try {
+					BeforeTransactionCompletionProcess process = ( BeforeTransactionCompletionProcess ) processes.get( i );
+					process.doBeforeTransactionCompletion( session );
+				}
+				catch ( HibernateException he ) {
+					throw he;
+				}
+				catch ( Exception e ) {
+					throw new AssertionFailure( "Unable to perform beforeTransactionCompletion callback", e );
+				}
+			}
+			processes.clear();
+		}
+	}
+
+	private static class AfterTransactionCompletionProcessQueue {
+		private SessionImplementor session;
+		private Set querySpacesToInvalidate = new HashSet();
+		private List processes = new ArrayList( INIT_QUEUE_LIST_SIZE * 3 );
+
+		private AfterTransactionCompletionProcessQueue(SessionImplementor session) {
+			this.session = session;
+		}
+
+		public void addSpacesToInvalidate(String[] spaces) {
+			if ( spaces == null ) {
+				return;
+			}
+			for ( int i = 0, max = spaces.length; i < max; i++ ) {
+				addSpaceToInvalidate( spaces[i] );
+			}
+		}
+
+		public void addSpaceToInvalidate(String space) {
+			querySpacesToInvalidate.add( space );
+		}
+
+		public void register(AfterTransactionCompletionProcess process) {
+			if ( process == null ) {
+				return;
+			}
+			processes.add( process );
+		}
+
+		public void afterTransactionCompletion(boolean success) {
+			final int size = processes.size();
+			for ( int i = 0; i < size; i++ ) {
+				try {
+					AfterTransactionCompletionProcess process = ( AfterTransactionCompletionProcess ) processes.get( i );
+					process.doAfterTransactionCompletion( success, session );
+				}
+				catch ( CacheException ce ) {
+					log.error( "could not release a cache lock", ce );
+					// continue loop
+				}
+				catch ( Exception e ) {
+					throw new AssertionFailure( "Exception releasing cache locks", e );
+				}
+			}
+			processes.clear();
+
+			if ( session.getFactory().getSettings().isQueryCacheEnabled() ) {
+				session.getFactory().getUpdateTimestampsCache().invalidate(
+						( String[] ) querySpacesToInvalidate.toArray( new String[ querySpacesToInvalidate.size()] )
+				);
+			}
+			querySpacesToInvalidate.clear();
+		}
+	}
 
 	/**
 	 * Sorts the insert actions using more hashes.
@@ -507,7 +598,6 @@ public class ActionQueue {
 	 * @author Jay Erb
 	 */
 	private class InsertActionSorter {
-
 		// the mapping of entity names to their latest batch numbers.
 		private HashMap latestBatches = new HashMap();
 		private HashMap entityBatchNumber;
@@ -567,10 +657,16 @@ public class ActionQueue {
 		}
 
 		/**
-		 * Finds an acceptable batch for this entity to be a member.
+		 * Finds an acceptable batch for this entity to be a member as part of the {@link InsertActionSorter}
+		 *
+		 * @param action The action being sorted
+		 * @param entityName The name of the entity affected by the action
+		 *
+		 * @return An appropriate batch number; todo document this process better
 		 */
-		private Integer findBatchNumber(EntityInsertAction action,
-										String entityName) {
+		private Integer findBatchNumber(
+				EntityInsertAction action,
+				String entityName) {
 			// loop through all the associated entities and make sure they have been
 			// processed before the latest
 			// batch associated with this entity type.

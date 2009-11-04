@@ -120,7 +120,7 @@ public abstract class CollectionType extends AbstractType implements Association
 	}
 
 	public int getHashCode(Object x, EntityMode entityMode) {
-		throw new UnsupportedOperationException( "cannot perform lookups on collections" );
+		throw new UnsupportedOperationException( "cannot doAfterTransactionCompletion lookups on collections" );
 	}
 
 	/**

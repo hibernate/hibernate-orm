@@ -91,7 +91,7 @@
                 many IDEs to automatically set up a project for us based on the maven descriptor.
             </para>
 
-        <programlisting><![CDATA[<project xmlns="http://maven.apache.org/POM/4.0.0"
+        <programlisting role="XML"><![CDATA[<project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
@@ -166,7 +166,7 @@
                 database; it is a simple JavaBean class with some properties:
             </para>
 
-            <programlisting><![CDATA[package org.hibernate.tutorial.domain;
+            <programlisting role="JAVA"><![CDATA[package org.hibernate.tutorial.domain;
 
 import java.util.Date;
 
@@ -255,7 +255,7 @@ public class Event {
                 The basic structure of a mapping file looks like this:
             </para>
 
-            <programlisting><![CDATA[<?xml version="1.0"?>
+            <programlisting role="XML"><![CDATA[<?xml version="1.0"?>
 <!DOCTYPE hibernate-mapping PUBLIC
         "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
         "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
@@ -290,7 +290,7 @@ public class Event {
                 a mapping to a table in the SQL database:
             </para>
 
-            <programlisting><![CDATA[<hibernate-mapping package="org.hibernate.tutorial.domain">
+            <programlisting role="XML"><![CDATA[<hibernate-mapping package="org.hibernate.tutorial.domain">
 
     <class name="Event" table="EVENTS">
 
@@ -308,7 +308,7 @@ public class Event {
                 identifier generation strategy for a surrogate primary key column:
             </para>
 
-            <programlisting><![CDATA[<hibernate-mapping package="org.hibernate.tutorial.domain">
+            <programlisting role="XML"><![CDATA[<hibernate-mapping package="org.hibernate.tutorial.domain">
 
     <class name="Event" table="EVENTS">
         <id name="id" column="EVENT_ID">
@@ -352,7 +352,7 @@ public class Event {
                 persistent:
             </para>
             
-            <programlisting><![CDATA[
+            <programlisting role="XML"><![CDATA[
 <hibernate-mapping package="org.hibernate.tutorial.domain">
 
     <class name="Event" table="EVENTS">
@@ -465,7 +465,7 @@ public class Event {
                 programmatic setup. Most users prefer the XML configuration file:
             </para>
 
-            <programlisting><![CDATA[<?xml version='1.0' encoding='utf-8'?>
+            <programlisting role="XML"><![CDATA[<?xml version='1.0' encoding='utf-8'?>
 <!DOCTYPE hibernate-configuration PUBLIC
         "-//Hibernate/Hibernate Configuration DTD 3.0//EN"
         "http://hibernate.sourceforge.net/hibernate-configuration-3.0.dtd">
@@ -600,7 +600,7 @@ public class Event {
                 <interfacename>org.hibernate.SessionFactory</interfacename> more convenient.
             </para>
 
-            <programlisting><![CDATA[package org.hibernate.tutorial.util;
+            <programlisting role="JAVA"><![CDATA[package org.hibernate.tutorial.util;
 
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
@@ -676,7 +676,7 @@ public class HibernateUtil {
                 with a <literal>main()</literal> method:
             </para>
 
-            <programlisting><![CDATA[package org.hibernate.tutorial;
+            <programlisting role="JAVA"><![CDATA[package org.hibernate.tutorial;
 
 import org.hibernate.Session;
 
@@ -817,7 +817,7 @@ public class EventManager {
                 To list stored events an option is added to the main method:
             </para>
 
-            <programlisting><![CDATA[        if (args[0].equals("store")) {
+            <programlisting role="JAVA"><![CDATA[        if (args[0].equals("store")) {
             mgr.createAndStoreEvent("My Event", new Date());
         }
         else if (args[0].equals("list")) {
@@ -834,7 +834,7 @@ public class EventManager {
                 A new <literal>listEvents() method is also added</literal>:
             </para>
 
-            <programlisting><![CDATA[    private List listEvents() {
+            <programlisting role="JAVA"><![CDATA[    private List listEvents() {
         Session session = HibernateUtil.getSessionFactory().getCurrentSession();
         session.beginTransaction();
         List result = session.createQuery("from Event").list();
@@ -876,7 +876,7 @@ public class EventManager {
                 The first cut of the <literal>Person</literal> class looks like this:
             </para>
 
-            <programlisting><![CDATA[package org.hibernate.tutorial.domain;
+            <programlisting role="JAVA"><![CDATA[package org.hibernate.tutorial.domain;
 
 public class Person {
 
@@ -901,7 +901,7 @@ public class Person {
                 <filename>src/main/resources/org/hibernate/tutorial/domain/Person.hbm.xml</filename>
             </para>
 
-            <programlisting><![CDATA[<hibernate-mapping package="org.hibernate.tutorial.domain">
+            <programlisting role="XML"><![CDATA[<hibernate-mapping package="org.hibernate.tutorial.domain">
 
     <class name="Person" table="PERSON">
         <id name="id" column="PERSON_ID">
@@ -918,7 +918,7 @@ public class Person {
                 Finally, add the new mapping to Hibernate's configuration:
             </para>
 
-            <programlisting><![CDATA[<mapping resource="events/Event.hbm.xml"/>
+            <programlisting role="XML"><![CDATA[<mapping resource="events/Event.hbm.xml"/>
 <mapping resource="events/Person.hbm.xml"/>]]></programlisting>
 
             <para>
@@ -944,7 +944,7 @@ public class Person {
                 is not relevant to our examples:
             </para>
 
-            <programlisting><![CDATA[public class Person {
+            <programlisting role="JAVA"><![CDATA[public class Person {
 
     private Set events = new HashSet();
 
@@ -970,7 +970,7 @@ public class Person {
                 association. Hence, we use Hibernate's many-to-many mapping:
             </para>
 
-            <programlisting><![CDATA[<class name="Person" table="PERSON">
+            <programlisting role="XML"><![CDATA[<class name="Person" table="PERSON">
     <id name="id" column="PERSON_ID">
         <generator class="native"/>
     </id>
@@ -1028,7 +1028,7 @@ public class Person {
                 Now we will bring some people and events together in a new method in <literal>EventManager</literal>:
             </para>
 
-            <programlisting><![CDATA[    private void addPersonToEvent(Long personId, Long eventId) {
+            <programlisting role="JAVA"><![CDATA[    private void addPersonToEvent(Long personId, Long eventId) {
         Session session = HibernateUtil.getSessionFactory().getCurrentSession();
         session.beginTransaction();
 
@@ -1067,7 +1067,7 @@ public class Person {
                 modify a collection when it is detached:
             </para>
 
-            <programlisting><![CDATA[    private void addPersonToEvent(Long personId, Long eventId) {
+            <programlisting role="JAVA"><![CDATA[    private void addPersonToEvent(Long personId, Long eventId) {
         Session session = HibernateUtil.getSessionFactory().getCurrentSession();
         session.beginTransaction();
 
@@ -1109,7 +1109,7 @@ public class Person {
                 returns it (you might have to modify some of the previous methods to return that identifier):
             </para>
 
-            <programlisting><![CDATA[        else if (args[0].equals("addpersontoevent")) {
+            <programlisting role="JAVA"><![CDATA[        else if (args[0].equals("addpersontoevent")) {
             Long eventId = mgr.createAndStoreEvent("My Event", new Date());
             Long personId = mgr.createAndStorePerson("Foo", "Bar");
             mgr.addPersonToEvent(personId, eventId);
@@ -1151,7 +1151,7 @@ public class Person {
                 <interfacename>java.util.Set</interfacename> of
                 <classname>java.lang.String</classname> instances:
             </para>
-            <programlisting><![CDATA[    private Set emailAddresses = new HashSet();
+            <programlisting role="JAVA"><![CDATA[    private Set emailAddresses = new HashSet();
 
     public Set getEmailAddresses() {
         return emailAddresses;
@@ -1165,7 +1165,7 @@ public class Person {
                 The mapping of this <literal>Set</literal> is as follows:
             </para>
 
-            <programlisting><![CDATA[        <set name="emailAddresses" table="PERSON_EMAIL_ADDR">
+            <programlisting role="XML"><![CDATA[        <set name="emailAddresses" table="PERSON_EMAIL_ADDR">
             <key column="PERSON_ID"/>
             <element type="string" column="EMAIL_ADDR"/>
         </set>]]></programlisting>
@@ -1215,7 +1215,7 @@ public class Person {
                 linking persons and events. It is the same code in Java:
             </para>
 
-            <programlisting><![CDATA[    private void addEmailToPerson(Long personId, String emailAddress) {
+            <programlisting role="JAVA"><![CDATA[    private void addEmailToPerson(Long personId, String emailAddress) {
         Session session = HibernateUtil.getSessionFactory().getCurrentSession();
         session.beginTransaction();
 
@@ -1258,7 +1258,7 @@ public class Person {
                 <literal>Event</literal> class:
             </para>
 
-            <programlisting><![CDATA[    private Set participants = new HashSet();
+            <programlisting role="JAVA"><![CDATA[    private Set participants = new HashSet();
 
     public Set getParticipants() {
         return participants;
@@ -1272,7 +1272,7 @@ public class Person {
                 Now map this side of the association in <literal>Event.hbm.xml</literal>.
             </para>
 
-            <programlisting><![CDATA[        <set name="participants" table="PERSON_EVENT" inverse="true">
+            <programlisting role="XML"><![CDATA[        <set name="participants" table="PERSON_EVENT" inverse="true">
             <key column="EVENT_ID"/>
             <many-to-many column="PERSON_ID" class="events.Person"/>
         </set>]]></programlisting>
@@ -1311,7 +1311,7 @@ public class Person {
                 correctly set both sides (for example, in <literal>Person</literal>):
             </para>
 
-            <programlisting><![CDATA[    protected Set getEvents() {
+            <programlisting role="JAVA"><![CDATA[    protected Set getEvents() {
         return events;
     }
 
@@ -1370,7 +1370,7 @@ public class Person {
                 will only implement the <literal>doGet()</literal> method:
             </para>
 
-            <programlisting><![CDATA[package org.hibernate.tutorial.web;
+            <programlisting role="JAVA"><![CDATA[package org.hibernate.tutorial.web;
 
 // Imports
 
@@ -1450,7 +1450,7 @@ public class EventManagerServlet extends HttpServlet {
                 Now you can implement the processing of the request and the rendering of the page.
             </para>
 
-<programlisting><![CDATA[        // Write HTML header
+<programlisting role="JAVA"><![CDATA[        // Write HTML header
         PrintWriter out = response.getWriter();
         out.println("<html><head><title>Event Manager</title></head><body>");
 
@@ -1487,7 +1487,7 @@ public class EventManagerServlet extends HttpServlet {
                 trivial and only outputs HTML:
             </para>
 
-            <programlisting><![CDATA[    private void printEventForm(PrintWriter out) {
+            <programlisting role="JAVA"><![CDATA[    private void printEventForm(PrintWriter out) {
         out.println("<h2>Add new event:</h2>");
         out.println("<form>");
         out.println("Title: <input name='eventTitle' length='50'/><br/>");
@@ -1502,7 +1502,7 @@ public class EventManagerServlet extends HttpServlet {
                 a query:
             </para>
 
-            <programlisting><![CDATA[    private void listEvents(PrintWriter out, SimpleDateFormat dateFormatter) {
+            <programlisting role="JAVA"><![CDATA[    private void listEvents(PrintWriter out, SimpleDateFormat dateFormatter) {
 
         List result = HibernateUtil.getSessionFactory()
                 .getCurrentSession().createCriteria(Event.class).list();
@@ -1531,7 +1531,7 @@ public class EventManagerServlet extends HttpServlet {
                 the <literal>Session</literal> of the current thread:
             </para>
 
-            <programlisting><![CDATA[    protected void createAndStoreEvent(String title, Date theDate) {
+            <programlisting role="JAVA"><![CDATA[    protected void createAndStoreEvent(String title, Date theDate) {
         Event theEvent = new Event();
         theEvent.setTitle(title);
         theEvent.setDate(theDate);
@@ -1562,7 +1562,7 @@ public class EventManagerServlet extends HttpServlet {
                 as <filename>src/main/webapp/WEB-INF/web.xml</filename>
             </para>
 
-            <programlisting><![CDATA[<?xml version="1.0" encoding="UTF-8"?>
+            <programlisting role="XML"><![CDATA[<?xml version="1.0" encoding="UTF-8"?>
 <web-app version="2.4"
     xmlns="http://java.sun.com/xml/ns/j2ee"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"

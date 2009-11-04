@@ -71,7 +71,7 @@
                 Here is an example of mapping a POJO and XML simultaneously:
             </para>
             
-            <programlisting><![CDATA[<class name="Account" 
+            <programlisting role="XML"><![CDATA[<class name="Account"
         table="ACCOUNTS" 
         node="account">
         
@@ -100,7 +100,7 @@
                 Here is an example where there is no POJO class:
             </para>
             
-            <programlisting><![CDATA[<class entity-name="Account" 
+            <programlisting role="XML"><![CDATA[<class entity-name="Account"
         table="ACCOUNTS" 
         node="account">
         
@@ -177,7 +177,7 @@
             too many associations, since XML does not deal well with circularity.
         </para>
         
-        <programlisting><![CDATA[<class name="Customer" 
+        <programlisting role="XML"><![CDATA[<class name="Customer"
         table="CUSTOMER" 
         node="customer">
         
@@ -223,7 +223,7 @@
             would return datasets such as this:
         </para>
         
-        <programlisting><![CDATA[<customer id="123456789">
+        <programlisting role="XML"><![CDATA[<customer id="123456789">
     <account short-desc="Savings">987632567</account>
     <account short-desc="Credit Card">985612323</account>
     <name>
@@ -239,7 +239,7 @@
             mapping, the data might look more like this:
         </para>
         
-        <programlisting><![CDATA[<customer id="123456789">
+        <programlisting role="XML"><![CDATA[<customer id="123456789">
     <account id="987632567" short-desc="Savings">
         <customer id="123456789"/>
         <balance>100.29</balance>
@@ -267,7 +267,7 @@
             obtaining a dom4j session:
         </para>
         
-       <programlisting><![CDATA[Document doc = ....;
+       <programlisting role="JAVA"><![CDATA[Document doc = ....;
        
 Session session = factory.openSession();
 Session dom4jSession = session.getSession(EntityMode.DOM4J);
@@ -285,7 +285,7 @@ for ( int i=0; i<results.size(); i++ ) {
 tx.commit();
 session.close();]]></programlisting>
        
-       <programlisting><![CDATA[Session session = factory.openSession();
+       <programlisting role="JAVA"><![CDATA[Session session = factory.openSession();
 Session dom4jSession = session.getSession(EntityMode.DOM4J);
 Transaction tx = session.beginTransaction();
 

@@ -53,7 +53,7 @@
             within a <literal>&lt;hibernate-mapping/&gt;</literal> element:
         </para>
 
-        <programlisting><![CDATA[<filter-def name="myFilter">
+        <programlisting role="XML"><![CDATA[<filter-def name="myFilter">
     <filter-param name="myFilterParam" type="string"/>
 </filter-def>]]></programlisting>
 
@@ -61,7 +61,7 @@
             This filter can then be attached to a class:
         </para>
 
-        <programlisting><![CDATA[<class name="myClass" ...>
+        <programlisting role="XML"><![CDATA[<class name="myClass" ...>
     ...
     <filter name="myFilter" condition=":myFilterParam = MY_FILTERED_COLUMN"/>
 </class>]]></programlisting>
@@ -70,7 +70,7 @@
             Or, to a collection:
         </para>
 
-        <programlisting><![CDATA[<set ...>
+        <programlisting role="XML"><![CDATA[<set ...>
     <filter name="myFilter" condition=":myFilterParam = MY_FILTERED_COLUMN"/>
 </set>]]></programlisting>
 
@@ -87,7 +87,7 @@
             look like this:
         </para>
 
-        <programlisting><![CDATA[session.enableFilter("myFilter").setParameter("myFilterParam", "some-value");]]></programlisting>
+        <programlisting role="JAVA"><![CDATA[session.enableFilter("myFilter").setParameter("myFilterParam", "some-value");]]></programlisting>
 
         <para>
             Methods on the org.hibernate.Filter interface do allow the method-chaining common to much of Hibernate.
@@ -97,7 +97,7 @@
             The following is a full example, using temporal data with an effective record date pattern:
         </para>
 
-        <programlisting><![CDATA[<filter-def name="effectiveDate">
+        <programlisting role="XML"><![CDATA[<filter-def name="effectiveDate">
     <filter-param name="asOfDate" type="date"/>
 </filter-def>
 
@@ -130,7 +130,7 @@
             enable the filter on the session prior to retrieving employee data:
         </para>
 
-<programlisting><![CDATA[Session session = ...;
+<programlisting role="JAVA"><![CDATA[Session session = ...;
 session.enableFilter("effectiveDate").setParameter("asOfDate", new Date());
 List results = session.createQuery("from Employee as e where e.salary > :targetSalary")
          .setLong("targetSalary", new Long(1000000))
@@ -157,7 +157,7 @@ List results = session.createQuery("from Employee as e where e.salary > :targetS
             allows you to definine a default condition, either as an attribute or CDATA:
         </para>
 
-        <programlisting><![CDATA[<filter-def name="myFilter" condition="abc > xyz">...</filter-def>
+        <programlisting role="XML"><![CDATA[<filter-def name="myFilter" condition="abc > xyz">...</filter-def>
 <filter-def name="myOtherFilter">abc=xyz</filter-def>]]></programlisting>
 
         <para>

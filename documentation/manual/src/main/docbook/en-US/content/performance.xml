@@ -161,7 +161,7 @@
                 in an exception. For example:
             </para>
         
-            <programlisting><![CDATA[s = sessions.openSession();
+            <programlisting role="JAVA"><![CDATA[s = sessions.openSession();
 Transaction tx = s.beginTransaction();
             
 User u = (User) s.createQuery("from User u where u.name=:userName")
@@ -208,13 +208,13 @@ Integer accessLevel = (Integer) permissions.get("accounts");  // Error!]]></prog
                 so we might want to enable join fetching in the mapping document:
             </para>
             
-            <programlisting><![CDATA[<set name="permissions" 
+            <programlisting role="XML"><![CDATA[<set name="permissions"
             fetch="join">
     <key column="userId"/>
     <one-to-many class="Permission"/>
 </set]]></programlisting>
 
-           <programlisting><![CDATA[<many-to-one name="mother" class="Cat" fetch="join"/>]]></programlisting>
+           <programlisting role="XML"><![CDATA[<many-to-one name="mother" class="Cat" fetch="join"/>]]></programlisting>
 
             <para>
                 The <literal>fetch</literal> strategy defined in the mapping document affects:
@@ -264,7 +264,7 @@ Integer accessLevel = (Integer) permissions.get("accounts");  // Error!]]></prog
                 <literal>Criteria</literal> query. For example:
             </para>
             
-            <programlisting><![CDATA[User user = (User) session.createCriteria(User.class)
+            <programlisting role="JAVA"><![CDATA[User user = (User) session.createCriteria(User.class)
                 .setFetchMode("permissions", FetchMode.JOIN)
                 .add( Restrictions.idEq(userId) )
                 .uniqueResult();]]></programlisting>
@@ -308,7 +308,7 @@ Integer accessLevel = (Integer) permissions.get("accounts");  // Error!]]></prog
                 There are potential problems to note when extending this approach to polymorphic classes.For example:
             </para>
 
-            <programlisting><![CDATA[<class name="Cat" proxy="Cat">
+            <programlisting role="XML"><![CDATA[<class name="Cat" proxy="Cat">
     ......
     <subclass name="DomesticCat">
         .....
@@ -321,7 +321,7 @@ Integer accessLevel = (Integer) permissions.get("accounts");  // Error!]]></prog
                 instance of <literal>DomesticCat</literal>:
             </para>
 
-            <programlisting><![CDATA[Cat cat = (Cat) session.load(Cat.class, id);  // instantiate a proxy (does not hit the db)
+            <programlisting role="JAVA"><![CDATA[Cat cat = (Cat) session.load(Cat.class, id);  // instantiate a proxy (does not hit the db)
 if ( cat.isDomesticCat() ) {                  // hit the db to initialize the proxy
     DomesticCat dc = (DomesticCat) cat;       // Error!
     ....
@@ -331,7 +331,7 @@ if ( cat.isDomesticCat() ) {                  // hit the db to initialize the pr
                 Secondly, it is possible to break proxy <literal>==</literal>:
             </para>
 
-            <programlisting><![CDATA[Cat cat = (Cat) session.load(Cat.class, id);            // instantiate a Cat proxy
+            <programlisting role="JAVA"><![CDATA[Cat cat = (Cat) session.load(Cat.class, id);            // instantiate a Cat proxy
 DomesticCat dc = 
         (DomesticCat) session.load(DomesticCat.class, id);  // acquire new DomesticCat proxy!
 System.out.println(cat==dc);                            // false]]></programlisting>
@@ -341,7 +341,7 @@ System.out.println(cat==dc);                            // false]]></programlist
                 to different proxy objects, the underlying instance will still be the same object:
             </para>
 
-            <programlisting><![CDATA[cat.setWeight(11.0);  // hit the db to initialize the proxy
+            <programlisting role="JAVA"><![CDATA[cat.setWeight(11.0);  // hit the db to initialize the proxy
 System.out.println( dc.getWeight() );  // 11.0]]></programlisting>
 
             <para>
@@ -363,7 +363,7 @@ System.out.println( dc.getWeight() );  // 11.0]]></programlisting>
 	        implements the interface <literal>DomesticCat</literal>. For example: 
             </para>
 
-            <programlisting><![CDATA[<class name="CatImpl" proxy="Cat">
+            <programlisting role="XML"><![CDATA[<class name="CatImpl" proxy="Cat">
     ......
     <subclass name="DomesticCatImpl" proxy="DomesticCat">
         .....
@@ -375,7 +375,7 @@ System.out.println( dc.getWeight() );  // 11.0]]></programlisting>
                 by <literal>load()</literal> or <literal>iterate()</literal>. 
             </para>
 
-            <programlisting><![CDATA[Cat cat = (Cat) session.load(CatImpl.class, catid);
+            <programlisting role="JAVA"><![CDATA[Cat cat = (Cat) session.load(CatImpl.class, catid);
 Iterator iter = session.createQuery("from CatImpl as cat where cat.name='fritz'").iterate();
 Cat fritz = (Cat) iter.next();]]></programlisting>
 
@@ -512,14 +512,14 @@ Cat fritz = (Cat) iter.next();]]></programlisting>
                 You can use a collection filter to get the size of a collection without initializing it:
             </para>
 
-            <programlisting><![CDATA[( (Integer) s.createFilter( collection, "select count(*)" ).list().get(0) ).intValue()]]></programlisting>
+            <programlisting role="JAVA"><![CDATA[( (Integer) s.createFilter( collection, "select count(*)" ).list().get(0) ).intValue()]]></programlisting>
 
             <para>
                 The <literal>createFilter()</literal> method is also used to efficiently retrieve subsets
                 of a collection without needing to initialize the whole collection:
             </para>
 
-            <programlisting><![CDATA[s.createFilter( lazyCollection, "").setFirstResult(0).setMaxResults(10).list();]]></programlisting>
+            <programlisting role="JAVA"><![CDATA[s.createFilter( lazyCollection, "").setFirstResult(0).setMaxResults(10).list();]]></programlisting>
 
         </sect2>
 
@@ -542,7 +542,7 @@ Cat fritz = (Cat) iter.next();]]></programlisting>
                 behavior by specifying a <literal>batch-size</literal> in the mapping of <literal>Person</literal>:
             </para>
 
-            <programlisting><![CDATA[<class name="Person" batch-size="10">...</class>]]></programlisting>
+            <programlisting role="XML"><![CDATA[<class name="Person" batch-size="10">...</class>]]></programlisting>
 
             <para>
                 Hibernate will now execute only three queries: the pattern is 10, 10, 5.
@@ -557,7 +557,7 @@ Cat fritz = (Cat) iter.next();]]></programlisting>
                 collections:
             </para>
 
-            <programlisting><![CDATA[<class name="Person">
+            <programlisting role="XML"><![CDATA[<class name="Person">
     <set name="cats" batch-size="3">
         ...
     </set>
@@ -605,7 +605,7 @@ Cat fritz = (Cat) iter.next();]]></programlisting>
                 So what does that mean?  Well lets explain that by way of an example.  Say we have
                 the following mappings:
             </para>
-            <programlisting><![CDATA[<hibernate-mapping>
+            <programlisting role="XML"><![CDATA[<hibernate-mapping>
     <class name="Customer">
         ...
         <set name="orders" inverse="true">
@@ -625,7 +625,7 @@ Cat fritz = (Cat) iter.next();]]></programlisting>
                 to use "dynamic fetching" strategies via an HQL or criteria queries.  But another option is
                 to use a fetch profile to achieve that.  Just add the following to your mapping:
             </para>
-            <programlisting><![CDATA[<hibernate-mapping>
+            <programlisting role="XML"><![CDATA[<hibernate-mapping>
     ...
     <fetch-profile name="customer-with-orders">
         <fetch entity="Customer" association="orders" style="join"/>
@@ -634,7 +634,7 @@ Cat fritz = (Cat) iter.next();]]></programlisting>
             <para>
                 or even:
             </para>
-            <programlisting><![CDATA[<hibernate-mapping>
+            <programlisting role="XML"><![CDATA[<hibernate-mapping>
     <class name="Customer">
         ...
         <fetch-profile name="customer-with-orders">
@@ -646,7 +646,7 @@ Cat fritz = (Cat) iter.next();]]></programlisting>
             <para>
                 Now the following code will actually load both the customer <emphasis>and their orders</emphasis>:
             </para>
-            <programlisting><![CDATA[
+            <programlisting role="JAVA"><![CDATA[
     Session session = ...;
     session.enableFetchProfile( "customer-with-orders" );  // name matches from mapping
     Customer customer = (Customer) session.get( Customer.class, customerId );
@@ -676,7 +676,7 @@ Cat fritz = (Cat) iter.next();]]></programlisting>
                 particular property mappings:
             </para>
 
-            <programlisting><![CDATA[<class name="Document">
+            <programlisting role="XML"><![CDATA[<class name="Document">
        <id name="id">
         <generator class="native"/>
     </id>
@@ -695,7 +695,7 @@ Cat fritz = (Cat) iter.next();]]></programlisting>
                 For bytecode instrumentation, use the following Ant task:
             </para>
 
-            <programlisting><![CDATA[<target name="instrument" depends="compile">
+            <programlisting role="XML"><![CDATA[<target name="instrument" depends="compile">
     <taskdef name="instrument" classname="org.hibernate.tool.instrument.InstrumentTask">
         <classpath path="${jar.path}"/>
         <classpath path="${classes.dir}"/>
@@ -823,7 +823,7 @@ Cat fritz = (Cat) iter.next();]]></programlisting>
                     <area id="cache2" coords="3 70"/>
                     <area id="cache3" coords="4 70"/>
                 </areaspec>
-                <programlisting><![CDATA[<cache 
+                <programlisting role="XML"><![CDATA[<cache
     usage="transactional|read-write|nonstrict-read-write|read-only"
     region="RegionName"
     include="all|non-lazy"
@@ -876,7 +876,7 @@ Cat fritz = (Cat) iter.next();]]></programlisting>
                 strategy. It is even safe for use in a cluster.
             </para>
 
-            <programlisting><![CDATA[<class name="eg.Immutable" mutable="false">
+            <programlisting role="XML"><![CDATA[<class name="eg.Immutable" mutable="false">
     <cache usage="read-only"/>
     ....
 </class>]]></programlisting>
@@ -898,7 +898,7 @@ Cat fritz = (Cat) iter.next();]]></programlisting>
                 supports locking. The built-in cache providers <emphasis>do not</emphasis> support locking.
             </para>
 
-            <programlisting><![CDATA[<class name="eg.Cat" .... >
+            <programlisting role="XML"><![CDATA[<class name="eg.Cat" .... >
     <cache usage="read-write"/>
     ....
     <set name="kittens" ... >
@@ -1033,7 +1033,7 @@ Cat fritz = (Cat) iter.next();]]></programlisting>
             from the first-level cache.
         </para>
         
-        <programlisting><![CDATA[ScrollableResult cats = sess.createQuery("from Cat as cat").scroll(); //a huge result set
+        <programlisting role="JAVA"><![CDATA[ScrollableResult cats = sess.createQuery("from Cat as cat").scroll(); //a huge result set
 while ( cats.next() ) {
     Cat cat = (Cat) cats.get(0);
     doSomethingWithACat(cat);
@@ -1055,7 +1055,7 @@ while ( cats.next() ) {
             role.
         </para>
         
-        <programlisting><![CDATA[sessionFactory.evict(Cat.class, catId); //evict a particular Cat
+        <programlisting role="JAVA"><![CDATA[sessionFactory.evict(Cat.class, catId); //evict a particular Cat
 sessionFactory.evict(Cat.class);  //evict all Cats
 sessionFactory.evictCollection("Cat.kittens", catId); //evict a particular collection of kittens
 sessionFactory.evictCollection("Cat.kittens"); //evict all kitten collections]]></programlisting>
@@ -1097,7 +1097,7 @@ sessionFactory.evictCollection("Cat.kittens"); //evict all kitten collections]]>
             API:
         </para>
         
-        <programlisting><![CDATA[Map cacheEntries = sessionFactory.getStatistics()
+        <programlisting role="JAVA"><![CDATA[Map cacheEntries = sessionFactory.getStatistics()
         .getSecondLevelCacheStatistics(regionName)
         .getEntries();]]></programlisting>
         
@@ -1144,7 +1144,7 @@ hibernate.cache.use_structured_entries true]]></programlisting>
             <literal>Query.setCacheRegion()</literal>.
         </para>
         
-        <programlisting><![CDATA[List blogs = sess.createQuery("from Blog blog where blog.blogger = :blogger")
+        <programlisting role="JAVA"><![CDATA[List blogs = sess.createQuery("from Blog blog where blog.blogger = :blogger")
     .setEntity("blogger", blogger)
     .setMaxResults(15)
     .setCacheable(true)
@@ -1298,7 +1298,7 @@ hibernate.cache.use_structured_entries true]]></programlisting>
                 make the following common code much faster:
             </para>
 
-            <programlisting><![CDATA[Parent p = (Parent) sess.load(Parent.class, id);
+            <programlisting role="JAVA"><![CDATA[Parent p = (Parent) sess.load(Parent.class, id);
 Child c = new Child();
 c.setParent(p);
 p.getChildren().add(c);  //no need to fetch the collection!
@@ -1382,7 +1382,7 @@ sess.flush();]]></programlisting>
                 minimalistic configuration examples:
             </para>
 
-            <programlisting><![CDATA[// MBean service registration for a specific SessionFactory
+            <programlisting role="JAVA"><![CDATA[// MBean service registration for a specific SessionFactory
 Hashtable tb = new Hashtable();
 tb.put("type", "statistics");
 tb.put("sessionFactory", "myFinancialApp");
@@ -1393,7 +1393,7 @@ stats.setSessionFactory(sessionFactory); // Bind the stats to a SessionFactory
 server.registerMBean(stats, on); // Register the Mbean on the server]]></programlisting>
 
 
-<programlisting><![CDATA[// MBean service registration for all SessionFactory's
+<programlisting role="JAVA"><![CDATA[// MBean service registration for all SessionFactory's
 Hashtable tb = new Hashtable();
 tb.put("type", "statistics");
 tb.put("sessionFactory", "all");
@@ -1475,7 +1475,7 @@ server.registerMBean(stats, on); // Register the MBean on the server]]></program
                 code is a simple example:
             </para>
 
-            <programlisting><![CDATA[Statistics stats = HibernateUtil.sessionFactory.getStatistics();
+            <programlisting role="JAVA"><![CDATA[Statistics stats = HibernateUtil.sessionFactory.getStatistics();
 
 double queryCacheHitCount  = stats.getQueryCacheHitCount();
 double queryCacheMissCount = stats.getQueryCacheMissCount();

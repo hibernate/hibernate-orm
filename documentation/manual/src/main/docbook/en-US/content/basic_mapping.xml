@@ -48,7 +48,7 @@
             Here is an example mapping:
         </para>
 
-        <programlisting id="mapping-declaration-ex1" revision="1"><![CDATA[<?xml version="1.0"?>
+        <programlisting id="mapping-declaration-ex1" role="XML"><![CDATA[<?xml version="1.0"?>
 <!DOCTYPE hibernate-mapping PUBLIC
       "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
           "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
@@ -166,7 +166,7 @@
                 <para>
                     The following is an example of utilizing user namespacing:
                 </para>
-                <programlisting><![CDATA[<?xml version="1.0"?>
+                <programlisting role="XML"><![CDATA[<?xml version="1.0"?>
 <!DOCTYPE hibernate-mapping PUBLIC
         "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
         "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd" [
@@ -202,7 +202,7 @@
                 to use unqualified class names in the query language.
             </para>
 
-             <programlistingco>
+             <programlistingco role="XML">
                  <areaspec>
                      <area id="hm1" coords="2 55"/>
                      <area id="hm2" coords="3 55"/>
@@ -212,7 +212,7 @@
                      <area id="hm6" coords="7 55"/>
                      <area id="hm7" coords="8 55"/>
                  </areaspec>
-                 <programlisting><![CDATA[<hibernate-mapping
+                 <programlisting role="XML"><![CDATA[<hibernate-mapping
          schema="schemaName"
          catalog="catalogName"
          default-cascade="cascade_style"
@@ -293,7 +293,7 @@
                 You can declare a persistent class using the <literal>class</literal> element. For example:
             </para>
 
-            <programlistingco>
+            <programlistingco role="XML">
                 <areaspec>
                     <area id="class1" coords="2 55"/>
                     <area id="class2" coords="3 55" />
@@ -317,7 +317,7 @@
                     <area id="class20" coords="21 55"/>
                     <area id="class21" coords="22 55"/>
                 </areaspec>
-                <programlisting><![CDATA[<class
+                <programlisting role="XML"><![CDATA[<class
         name="ClassName"
         table="tableName"
         discriminator-value="discriminator_value"
@@ -581,7 +581,7 @@
                 immutable and read-only entity to a given SQL subselect expression:
             </para>
 
-            <programlisting><![CDATA[<class name="Summary">
+            <programlisting role="XML"><![CDATA[<class name="Summary">
     <subselect>
         select item.name, max(bid.amount), count(*)
         from item
@@ -613,7 +613,7 @@
                 property to the primary key column.
             </para>
 
-            <programlistingco>
+            <programlistingco role="XML">
                 <areaspec>
                     <area id="id1" coords="2 70"/>
                     <area id="id2" coords="3 70" />
@@ -621,7 +621,7 @@
                     <area id="id4" coords="5 70" />
                     <area id="id5" coords="6 70" />
                 </areaspec>
-                <programlisting><![CDATA[<id
+                <programlisting role="XML"><![CDATA[<id
         name="propertyName"
         type="typename"
         column="column_name"
@@ -689,7 +689,7 @@
                     <literal>&lt;param&gt;</literal> element.
                 </para>
 
-                <programlisting><![CDATA[<id name="id" type="long" column="cat_id">
+                <programlisting role="XML"><![CDATA[<id name="id" type="long" column="cat_id">
         <generator class="org.hibernate.id.TableHiLoGenerator">
                 <param name="table">uid_table</param>
                 <param name="column">next_hi_value_column</param>
@@ -840,7 +840,7 @@
                     Where supported, the second uses an Oracle-style sequence.
                 </para>
 
-                <programlisting><![CDATA[<id name="id" type="long" column="cat_id">
+                <programlisting role="XML"><![CDATA[<id name="id" type="long" column="cat_id">
         <generator class="hilo">
                 <param name="table">hi_value</param>
                 <param name="column">next_value</param>
@@ -848,7 +848,7 @@
         </generator>
 </id>]]></programlisting>
 
-                <programlisting><![CDATA[<id name="id" type="long" column="cat_id">
+                <programlisting role="XML"><![CDATA[<id name="id" type="long" column="cat_id">
         <generator class="seqhilo">
                 <param name="sequence">hi_value</param>
                 <param name="max_lo">100</param>
@@ -883,13 +883,13 @@
                     two SQL queries to insert a new object. For example:
                 </para>
 
-                <programlisting><![CDATA[<id name="id" type="long" column="person_id">
+                <programlisting role="XML"><![CDATA[<id name="id" type="long" column="person_id">
         <generator class="sequence">
                 <param name="sequence">person_id_sequence</param>
         </generator>
 </id>]]></programlisting>
 
-                <programlisting><![CDATA[<id name="id" type="long" column="person_id" unsaved-value="0">
+                <programlisting role="XML"><![CDATA[<id name="id" type="long" column="person_id" unsaved-value="0">
         <generator class="identity"/>
 </id>]]></programlisting>
 
@@ -926,7 +926,7 @@
                     Hibernate does not generate DDL with triggers. It is for legacy schemas only.
                 </para>
 
-                <programlisting><![CDATA[<id name="id" type="long" column="person_id">
+                <programlisting role="XML"><![CDATA[<id name="id" type="long" column="person_id">
         <generator class="select">
                 <param name="key">socialSecurityNumber</param>
         </generator>
@@ -1112,7 +1112,7 @@
         <sect2 id="mapping-declaration-compositeid" revision="3">
             <title>composite-id</title>
 
-            <programlisting><![CDATA[<composite-id
+            <programlisting role="XML"><![CDATA[<composite-id
         name="propertyName"
         class="ClassName"
         mapped="true|false"
@@ -1131,7 +1131,7 @@
                 <literal>&lt;key-many-to-one&gt;</literal> mappings as child elements.
             </para>
 
-            <programlisting><![CDATA[<composite-id>
+            <programlisting role="XML"><![CDATA[<composite-id>
         <key-property name="medicareNumber"/>
         <key-property name="dependent"/>
 </composite-id>]]></programlisting>
@@ -1157,7 +1157,7 @@
                 element are duplicated on both the persistent class and a separate identifier class.
             </para>
 
-            <programlisting><![CDATA[<composite-id class="MedicareId" mapped="true">
+            <programlisting role="XML"><![CDATA[<composite-id class="MedicareId" mapped="true">
         <key-property name="medicareNumber"/>
         <key-property name="dependent"/>
 </composite-id>]]></programlisting>
@@ -1239,7 +1239,7 @@
                 <literal>yes_no</literal>, <literal>true_false</literal>.
             </para>
 
-            <programlistingco>
+            <programlistingco role="XML">
                 <areaspec>
                     <area id="discriminator1" coords="2 60"/>
                     <area id="discriminator2" coords="3 60" />
@@ -1247,7 +1247,7 @@
                     <area id="discriminator4" coords="5 60" />
                     <area id="discriminator5" coords="6 60" />
                 </areaspec>
-                <programlisting><![CDATA[<discriminator
+                <programlisting role="XML"><![CDATA[<discriminator
         column="discriminator_column"
         type="discriminator_type"
         force="true|false"
@@ -1308,7 +1308,7 @@
                 that will be used to evaluate the type of a row. For example:
             </para>
 
-            <programlisting><![CDATA[<discriminator
+            <programlisting role="XML"><![CDATA[<discriminator
     formula="case when CLASS_TYPE in ('a', 'b', 'c') then 0 else 1 end"
     type="integer"/>]]></programlisting>
 
@@ -1323,7 +1323,7 @@
                 use <emphasis>long transactions</emphasis>. See below for more information:
             </para>
 
-            <programlistingco>
+            <programlistingco role="XML">
                 <areaspec>
                     <area id="version1" coords="2 70"/>
                     <area id="version2" coords="3 70"/>
@@ -1333,7 +1333,7 @@
                     <area id="version6" coords="7 70"/>
                     <area id="version7" coords="8 70"/>
                 </areaspec>
-                <programlisting><![CDATA[<version
+                <programlisting role="XML"><![CDATA[<version
         column="version_column"
         name="propertyName"
         type="typename"
@@ -1419,7 +1419,7 @@
                 use the timestamps in other ways.
             </para>
 
-            <programlistingco>
+            <programlistingco role="XML">
                 <areaspec>
                     <area id="timestamp1" coords="2 70"/>
                     <area id="timestamp2" coords="3 70" />
@@ -1428,7 +1428,7 @@
                     <area id="timestamp5" coords="6 70" />
                     <area id="timestamp6" coords="7 70" />
                 </areaspec>
-                <programlisting><![CDATA[<timestamp
+                <programlisting role="XML"><![CDATA[<timestamp
         column="timestamp_column"
         name="propertyName"
         access="field|property|ClassName"
@@ -1510,7 +1510,7 @@
                 property of the class.
             </para>
 
-            <programlistingco>
+            <programlistingco role="XML">
                 <areaspec>
                     <area id="property1" coords="2 70"/>
                     <area id="property2" coords="3 70"/>
@@ -1527,7 +1527,7 @@
                     <area id="property11" coords="12 70"/>
                     <area id="property12" coords="13 70"/>
                 </areaspec>
-                <programlisting><![CDATA[<property
+                <programlisting role="XML"><![CDATA[<property
         name="propertyName"
         column="column_name"
         type="typename"
@@ -1681,7 +1681,7 @@
                 clause subquery in the SQL query that loads an instance:
             </para>
 
-        <programlisting><![CDATA[
+        <programlisting role="XML"><![CDATA[
 <property name="totalPrice"
     formula="( SELECT SUM (li.quantity*p.price) FROM LineItem li, Product p
                 WHERE li.productId = p.productId
@@ -1707,7 +1707,7 @@
                 the primary key column(s) of the target table.
             </para>
 
-            <programlistingco>
+            <programlistingco role="XML">
                 <areaspec>
                     <area id="manytoone1" coords="2 70"/>
                     <area id="manytoone2" coords="3 70"/>
@@ -1728,7 +1728,7 @@
                     <area id="manytoone15" coords="16 70"/>
                     <area id="manytoone16" coords="17 70"/>
                 </areaspec>
-                <programlisting><![CDATA[<many-to-one
+                <programlisting role="XML"><![CDATA[<many-to-one
         name="propertyName"
         column="column_name"
         class="ClassName"
@@ -1874,7 +1874,7 @@
                 Here is an example of a typical <literal>many-to-one</literal> declaration:
             </para>
 
-            <programlisting><![CDATA[<many-to-one name="product" class="Product" column="PRODUCT_ID"/>]]></programlisting>
+            <programlisting role="XML"><![CDATA[<many-to-one name="product" class="Product" column="PRODUCT_ID"/>]]></programlisting>
 
             <para>
                 The <literal>property-ref</literal> attribute should only be used for mapping legacy
@@ -1885,13 +1885,13 @@
                 the SchemaExport tool.
             </para>
 
-            <programlisting><![CDATA[<property name="serialNumber" unique="true" type="string" column="SERIAL_NUMBER"/>]]></programlisting>
+            <programlisting role="XML"><![CDATA[<property name="serialNumber" unique="true" type="string" column="SERIAL_NUMBER"/>]]></programlisting>
 
             <para>
                 Then the mapping for <literal>OrderItem</literal> might use:
             </para>
 
-            <programlisting><![CDATA[<many-to-one name="product" property-ref="serialNumber" column="PRODUCT_SERIAL_NUMBER"/>]]></programlisting>
+            <programlisting role="XML"><![CDATA[<many-to-one name="product" property-ref="serialNumber" column="PRODUCT_SERIAL_NUMBER"/>]]></programlisting>
 
             <para>
                 This is not encouraged, however.
@@ -1906,7 +1906,7 @@
             	If the referenced unique key is the property of a component, you can specify a property path:
             </para>
 
-           <programlisting><![CDATA[<many-to-one name="owner" property-ref="identity.ssn" column="OWNER_SSN"/>]]></programlisting>
+           <programlisting role="XML"><![CDATA[<many-to-one name="owner" property-ref="identity.ssn" column="OWNER_SSN"/>]]></programlisting>
 
         </sect2>
 
@@ -1918,7 +1918,7 @@
                 <literal>one-to-one</literal> element.
             </para>
 
-            <programlistingco>
+            <programlistingco role="XML">
                 <areaspec>
                     <area id="onetoone1" coords="2 70"/>
                     <area id="onetoone2" coords="3 70"/>
@@ -1931,7 +1931,7 @@
                     <area id="onetoone9" coords="10 70"/>
                     <area id="onetoone10" coords="11 70"/>
                 </areaspec>
-                <programlisting><![CDATA[<one-to-one
+                <programlisting role="XML"><![CDATA[<one-to-one
         name="propertyName"
         class="ClassName"
         cascade="cascade_style"
@@ -2043,8 +2043,8 @@
                 <literal>Person</literal> respectively:
             </para>
 
-            <programlisting><![CDATA[<one-to-one name="person" class="Person"/>]]></programlisting>
-            <programlisting><![CDATA[<one-to-one name="employee" class="Employee" constrained="true"/>]]></programlisting>
+            <programlisting role="XML"><![CDATA[<one-to-one name="person" class="Person"/>]]></programlisting>
+            <programlisting role="XML"><![CDATA[<one-to-one name="employee" class="Employee" constrained="true"/>]]></programlisting>
 
             <para>
                 Ensure that the primary keys of the related rows in the PERSON and
@@ -2052,7 +2052,7 @@
                 called <literal>foreign</literal>:
             </para>
 
-            <programlisting><![CDATA[<class name="person" table="PERSON">
+            <programlisting role="XML"><![CDATA[<class name="person" table="PERSON">
     <id name="id" column="PERSON_ID">
         <generator class="foreign">
             <param name="property">employee</param>
@@ -2075,21 +2075,21 @@
                 <literal>Person</literal>, can be expressed as:
             </para>
 
-            <programlisting><![CDATA[<many-to-one name="person" class="Person" column="PERSON_ID" unique="true"/>]]></programlisting>
+            <programlisting role="XML"><![CDATA[<many-to-one name="person" class="Person" column="PERSON_ID" unique="true"/>]]></programlisting>
 
             <para>
                 This association can be made bidirectional by adding the following to the
                 <literal>Person</literal> mapping:
             </para>
 
-           <programlisting><![CDATA[<one-to-one name="employee" class="Employee" property-ref="person"/>]]></programlisting>
+           <programlisting role="XML"><![CDATA[<one-to-one name="employee" class="Employee" property-ref="person"/>]]></programlisting>
 
         </sect2>
 
         <sect2 id="mapping-declaration-naturalid">
             <title>Natural-id</title>
 
-            <programlisting><![CDATA[<natural-id mutable="true|false"/>
+            <programlisting role="XML"><![CDATA[<natural-id mutable="true|false"/>
         <property ... />
         <many-to-one ... />
         ......
@@ -2134,7 +2134,7 @@
                 the "Component" examples below:
             </para>
 
-            <programlistingco>
+            <programlistingco role="XML">
                 <areaspec>
                     <area id="component1" coords="2 45"/>
                     <area id="component2" coords="3 45"/>
@@ -2145,7 +2145,7 @@
                     <area id="component7" coords="8 45"/>
                     <area id="component8" coords="9 45"/>
                 </areaspec>
-                <programlisting><![CDATA[<component
+                <programlisting role="XML"><![CDATA[<component
         name="propertyName"
         class="className"
         insert="true|false"
@@ -2246,7 +2246,7 @@
                 unique constraint. For example:
             </para>
 
-            <programlistingco>
+            <programlistingco role="XML">
                 <areaspec>
                     <area id="properties1" coords="2 45"/>
                     <area id="properties2" coords="3 45"/>
@@ -2254,7 +2254,7 @@
                     <area id="properties4" coords="5 45"/>
                     <area id="properties5" coords="6 45"/>
                 </areaspec>
-                <programlisting><![CDATA[<properties
+                <programlisting role="XML"><![CDATA[<properties
         name="logicalName"
         insert="true|false"
         update="true|false"
@@ -2307,7 +2307,7 @@
                 For example, if we have the following <literal>&lt;properties&gt;</literal> mapping:
             </para>
 
-            <programlisting><![CDATA[<class name="Person">
+            <programlisting role="XML"><![CDATA[<class name="Person">
     <id name="personNumber"/>
 
     ...
@@ -2324,7 +2324,7 @@
                 the <literal>Person</literal> table, instead of to the primary key:
             </para>
 
-            <programlisting><![CDATA[<many-to-one name="person"
+            <programlisting role="XML"><![CDATA[<many-to-one name="person"
          class="Person" property-ref="name">
     <column name="firstName"/>
     <column name="initial"/>
@@ -2347,14 +2347,14 @@
                 mapping strategy, the <literal>&lt;subclass&gt;</literal> declaration is used. For example:
             </para>
 
-            <programlistingco>
+            <programlistingco role="XML">
                 <areaspec>
                     <area id="subclass1" coords="2 55"/>
                     <area id="subclass2" coords="3 55"/>
                     <area id="subclass3" coords="4 55"/>
                     <area id="subclass4" coords="5 55"/>
                 </areaspec>
-                <programlisting><![CDATA[<subclass
+                <programlisting role="XML"><![CDATA[<subclass
         name="ClassName"
         discriminator-value="discriminator_value"
         proxy="ProxyInterface"
@@ -2418,14 +2418,14 @@
                 superclass. To do this you use the <literal>&lt;joined-subclass&gt;</literal> element. For example:
             </para>
 
-            <programlistingco>
+            <programlistingco role="XML">
                 <areaspec>
                     <area id="joinedsubclass1" coords="2 45"/>
                     <area id="joinedsubclass2" coords="3 45"/>
                     <area id="joinedsubclass3" coords="4 45"/>
                     <area id="joinedsubclass4" coords="5 45"/>
                 </areaspec>
-                <programlisting><![CDATA[<joined-subclass
+                <programlisting role="XML"><![CDATA[<joined-subclass
         name="ClassName"
         table="tablename"
         proxy="ProxyInterface"
@@ -2478,7 +2478,7 @@
                 would then be re-written as:
             </para>
 
-        <programlisting><![CDATA[<?xml version="1.0"?>
+        <programlisting role="XML"><![CDATA[<?xml version="1.0"?>
 <!DOCTYPE hibernate-mapping PUBLIC
         "-//Hibernate/Hibernate Mapping DTD//EN"
         "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
@@ -2530,14 +2530,14 @@
                use the <literal>&lt;union-subclass&gt;</literal> mapping. For example:
            </para>
 
-            <programlistingco>
+            <programlistingco role="XML">
                 <areaspec>
                     <area id="unionsubclass1" coords="2 45"/>
                     <area id="unionsubclass2" coords="3 45"/>
                     <area id="unionsubclass3" coords="4 45"/>
                     <area id="unionsubclass4" coords="5 45"/>
                 </areaspec>
-                <programlisting><![CDATA[<union-subclass
+                <programlisting role="XML"><![CDATA[<union-subclass
         name="ClassName"
         table="tablename"
         proxy="ProxyInterface"
@@ -2600,7 +2600,7 @@
                 properties of one class to several tables that have a one-to-one relationship. For example:
             </para>
 
-            <programlistingco>
+            <programlistingco role="XML">
                 <areaspec>
                     <area id="join1" coords="2 50"/>
                     <area id="join2" coords="3 50"/>
@@ -2609,7 +2609,7 @@
                     <area id="join5" coords="6 50"/>
                     <area id="join6" coords="7 50"/>
                 </areaspec>
-                <programlisting><![CDATA[<join
+                <programlisting role="XML"><![CDATA[<join
         table="tablename"
         schema="owner"
         catalog="catalog"
@@ -2676,7 +2676,7 @@
                 table while preserving value type semantics for all properties:
             </para>
 
-            <programlisting><![CDATA[<class name="Person"
+            <programlisting role="XML"><![CDATA[<class name="Person"
     table="PERSON">
 
     <id name="id" column="PERSON_ID">...</id>
@@ -2708,7 +2708,7 @@
                 the primary key of the original table. It also defines the foreign key in the joined table: 
             </para>
 
-            <programlistingco>
+            <programlistingco role="XML">
                 <areaspec>
                     <area id="key1" coords="2 50"/>
                     <area id="key2" coords="3 50"/>
@@ -2717,7 +2717,7 @@
                     <area id="key5" coords="6 50"/>
                     <area id="key6" coords="7 50"/>
                 </areaspec>
-                <programlisting><![CDATA[<key
+                <programlisting role="XML"><![CDATA[<key
         column="columnname"
         on-delete="noaction|cascade"
         property-ref="propertyName"
@@ -2796,7 +2796,7 @@
                is an alternative to the <literal>formula</literal> attribute. For example:
            </para>
 
-           <programlisting><![CDATA[<column
+           <programlisting role="XML"><![CDATA[<column
         name="column_name"
         length="N"
         precision="N"
@@ -2811,7 +2811,7 @@
         read="SQL expression"
         write="SQL expression"/>]]></programlisting>
 
-            <programlisting><![CDATA[<formula>SQL expression</formula>]]></programlisting>
+            <programlisting role="XML"><![CDATA[<formula>SQL expression</formula>]]></programlisting>
 
             <para>
                 Most of the attributes on <literal>column</literal> provide a means of tailoring the
@@ -2827,7 +2827,7 @@
                 conditions.
             </para>
 
-            <programlisting><![CDATA[<many-to-one name="homeAddress" class="Address"
+            <programlisting role="XML"><![CDATA[<many-to-one name="homeAddress" class="Address"
         insert="false" update="false">
     <column name="person_id" not-null="true" length="10"/>
     <formula>'MAILING'</formula>
@@ -2845,14 +2845,14 @@
                 classes and interfaces that are not explicitly mapped:
             </para>
 
-            <programlisting><![CDATA[<import class="java.lang.Object" rename="Universe"/>]]></programlisting>
+            <programlisting role="XML"><![CDATA[<import class="java.lang.Object" rename="Universe"/>]]></programlisting>
 
-            <programlistingco>
+            <programlistingco role="XML">
                 <areaspec>
                     <area id="import1" coords="2 40"/>
                     <area id="import2" coords="3 40"/>
                 </areaspec>
-                <programlisting><![CDATA[<import
+                <programlisting role="XML"><![CDATA[<import
         class="ClassName"
         rename="ShortName"
 />]]></programlisting>
@@ -2893,7 +2893,7 @@
                  the meta-type to class names.
             </para>
 
-            <programlisting><![CDATA[<any name="being" id-type="long" meta-type="string">
+            <programlisting role="XML"><![CDATA[<any name="being" id-type="long" meta-type="string">
     <meta-value value="TBL_ANIMAL" class="Animal"/>
     <meta-value value="TBL_HUMAN" class="Human"/>
     <meta-value value="TBL_ALIEN" class="Alien"/>
@@ -2901,7 +2901,7 @@
     <column name="id"/>
 </any>]]></programlisting>
 
-            <programlistingco>
+            <programlistingco role="XML">
                 <areaspec>
                     <area id="any1" coords="2 50"/>
                     <area id="any2" coords="3 50"/>
@@ -2910,7 +2910,7 @@
                     <area id="any5" coords="6 50"/>
                     <area id="any6" coords="7 50"/>
                 </areaspec>
-                <programlisting><![CDATA[<any
+                <programlisting role="XML"><![CDATA[<any
         name="propertyName"
         id-type="idtypename"
         meta-type="metatypename"
@@ -3217,7 +3217,7 @@
                 are possible.
             </para>
 
-            <programlisting><![CDATA[<property name="twoStrings" type="org.hibernate.test.DoubleStringType">
+            <programlisting role="XML"><![CDATA[<property name="twoStrings" type="org.hibernate.test.DoubleStringType">
     <column name="first_string"/>
     <column name="second_string"/>
 </property>]]></programlisting>
@@ -3241,7 +3241,7 @@
                 files.
             </para>
 
-            <programlisting><![CDATA[<property name="priority">
+            <programlisting role="XML"><![CDATA[<property name="priority">
     <type name="com.mycompany.usertypes.DefaultValueIntegerType">
         <param name="default">0</param>
     </type>
@@ -3259,11 +3259,11 @@
                 parameter values if the type is parameterized.
             </para>
 
-            <programlisting><![CDATA[<typedef class="com.mycompany.usertypes.DefaultValueIntegerType" name="default_zero">
+            <programlisting role="XML"><![CDATA[<typedef class="com.mycompany.usertypes.DefaultValueIntegerType" name="default_zero">
     <param name="default">0</param>
 </typedef>]]></programlisting>
 
-            <programlisting><![CDATA[<property name="priority" type="default_zero"/>]]></programlisting>
+            <programlisting role="XML"><![CDATA[<property name="priority" type="default_zero"/>]]></programlisting>
 
             <para>
                 It is also possible to override the parameters supplied in a typedef on a case-by-case basis
@@ -3329,7 +3329,7 @@
                 Server uses brackets and MySQL uses backticks.
             </para>
 
-            <programlisting><![CDATA[<class name="LineItem" table="`Line Item`">
+            <programlisting role="XML"><![CDATA[<class name="LineItem" table="`Line Item`">
     <id name="id" column="`Item Id`"/><generator class="assigned"/></id>
     <property name="itemNumber" column="`Item #`"/>
     ...
@@ -3355,7 +3355,7 @@
             following example of the <literal>Cat</literal> class with XDoclet mappings:
         </para>
 
-        <programlisting><![CDATA[package eg;
+        <programlisting role="JAVA"><![CDATA[package eg;
 import java.util.Set;
 import java.util.Date;
 
@@ -3484,7 +3484,7 @@ public class Cat {
             This is an example of a POJO class annotated as an EJB entity bean:
         </para>
 
-        <programlisting><![CDATA[@Entity(access = AccessType.FIELD)
+        <programlisting role="JAVA"><![CDATA[@Entity(access = AccessType.FIELD)
 public class Customer implements Serializable {
 
     @Id;
@@ -3561,7 +3561,7 @@ public class Customer implements Serializable {
             of columns mapped to <link linkend="mapping-declaration-property">simple properties</link>.
             For example, if your database provides a set of data encryption functions, you can
             invoke them for individual columns like this:
-            <programlisting><![CDATA[<property name="creditCardNumber">
+            <programlisting role="XML"><![CDATA[<property name="creditCardNumber">
         <column 
           name="credit_card_num"
           read="decrypt(credit_card_num)"
@@ -3607,7 +3607,7 @@ public class Customer implements Serializable {
             The first mode is to explicitly list the CREATE and DROP commands in the mapping
             file:
         </para>
-        <programlisting><![CDATA[<hibernate-mapping>
+        <programlisting role="XML"><![CDATA[<hibernate-mapping>
     ...
     <database-object>
         <create>CREATE TRIGGER my_trigger ...</create>
@@ -3619,7 +3619,7 @@ public class Customer implements Serializable {
             CREATE and DROP commands.  This custom class must implement the
             <literal>org.hibernate.mapping.AuxiliaryDatabaseObject</literal> interface.
         </para>
-        <programlisting><![CDATA[<hibernate-mapping>
+        <programlisting role="XML"><![CDATA[<hibernate-mapping>
     ...
     <database-object>
         <definition class="MyTriggerDefinition"/>
@@ -3629,7 +3629,7 @@ public class Customer implements Serializable {
             Additionally, these database objects can be optionally scoped so that they only
             apply when certain dialects are used.
         </para>
-        <programlisting><![CDATA[<hibernate-mapping>
+        <programlisting role="XML"><![CDATA[<hibernate-mapping>
     ...
     <database-object>
         <definition class="MyTriggerDefinition"/>

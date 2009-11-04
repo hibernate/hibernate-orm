@@ -457,7 +457,7 @@
 	            like this:
             </para>
 
-            <programlisting><![CDATA[// Non-managed environment idiom
+            <programlisting role="JAVA"><![CDATA[// Non-managed environment idiom
 Session sess = factory.openSession();
 Transaction tx = null;
 try {
@@ -490,7 +490,7 @@ finally {
                 management:
             </para>
 
-            <programlisting><![CDATA[// Non-managed environment idiom with getCurrentSession()
+            <programlisting role="JAVA"><![CDATA[// Non-managed environment idiom with getCurrentSession()
 try {
     factory.getCurrentSession().beginTransaction();
 
@@ -538,7 +538,7 @@ catch (RuntimeException e) {
                 transaction management code is identical to the non-managed environment.
             </para>
             
-           <programlisting><![CDATA[// BMT idiom
+           <programlisting role="JAVA"><![CDATA[// BMT idiom
 Session sess = factory.openSession();
 Transaction tx = null;
 try {
@@ -563,7 +563,7 @@ finally {
                use the JTA <literal>UserTransaction</literal> API directly:
             </para>
 
-            <programlisting><![CDATA[// BMT idiom with getCurrentSession()
+            <programlisting role="JAVA"><![CDATA[// BMT idiom with getCurrentSession()
 try {
     UserTransaction tx = (UserTransaction)new InitialContext()
                             .lookup("java:comp/UserTransaction");
@@ -586,7 +586,7 @@ catch (RuntimeException e) {
                 The code is reduced to:
             </para>
 
-            <programlisting><![CDATA[// CMT idiom
+            <programlisting role="JAVA"><![CDATA[// CMT idiom
  Session sess = factory.getCurrentSession();
 
  // do some work
@@ -716,7 +716,7 @@ catch (RuntimeException e) {
                 <literal>Transaction</literal> object.
             </para>
             
-            <programlisting><![CDATA[
+            <programlisting role="JAVA"><![CDATA[
 Session sess = factory.openSession();
 try {
     //set transaction timeout to 3 seconds
@@ -770,7 +770,7 @@ finally {
                 database access. It is the approach most similar to entity EJBs.
             </para>
 
-            <programlisting><![CDATA[// foo is an instance loaded by a previous Session
+            <programlisting role="JAVA"><![CDATA[// foo is an instance loaded by a previous Session
 session = factory.openSession();
 Transaction t = session.beginTransaction();
 
@@ -827,7 +827,7 @@ session.close();]]></programlisting>
                 database transaction.
             </para>
 
-            <programlisting><![CDATA[// foo is an instance loaded earlier by the old session
+            <programlisting role="JAVA"><![CDATA[// foo is an instance loaded earlier by the old session
 Transaction t = session.beginTransaction(); // Obtain a new JDBC connection, start transaction
 
 foo.setProperty("bar");
@@ -896,7 +896,7 @@ session.close();    // Only for last transaction in conversation]]></programlist
                 <literal>Session.saveOrUpdate()</literal>, or <literal>Session.merge()</literal>.
             </para>
 
-            <programlisting><![CDATA[// foo is an instance loaded by a previous Session
+            <programlisting role="JAVA"><![CDATA[// foo is an instance loaded by a previous Session
 foo.setProperty("bar");
 session = factory.openSession();
 Transaction t = session.beginTransaction();

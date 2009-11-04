@@ -1119,7 +1119,7 @@ order by account.type.sortOrder, account.accountNumber, payment.dueDate]]></prog
             You can count the number of query results without returning them:
         </para>
 
-        <programlisting><![CDATA[( (Integer) session.createQuery("select count(*) from ....").iterate().next() ).intValue()]]></programlisting>
+        <programlisting role="JAVA"><![CDATA[( (Integer) session.createQuery("select count(*) from ....").iterate().next() ).intValue()]]></programlisting>
 
         <para>
             To order a result by the size of a collection, use the following query:
@@ -1164,7 +1164,7 @@ having count(msg) = 0]]></programlisting>
             Properties of a JavaBean can be bound to named query parameters:
         </para>
 
-        <programlisting><![CDATA[Query q = s.createQuery("from foo Foo as foo where foo.name=:name and foo.size=:size");
+        <programlisting role="JAVA"><![CDATA[Query q = s.createQuery("from foo Foo as foo where foo.name=:name and foo.size=:size");
 q.setProperties(fooBean); // fooBean has getName() and getSize()
 List foos = q.list();]]></programlisting>
 
@@ -1172,7 +1172,7 @@ List foos = q.list();]]></programlisting>
             Collections are pageable by using the <literal>Query</literal> interface with a filter:
         </para>
 
-        <programlisting><![CDATA[Query q = s.createFilter( collection, "" ); // the trivial filter
+        <programlisting role="JAVA"><![CDATA[Query q = s.createFilter( collection, "" ); // the trivial filter
 q.setMaxResults(PAGE_SIZE);
 q.setFirstResult(PAGE_SIZE * pageNumber);
 List page = q.list();]]></programlisting>
@@ -1181,14 +1181,14 @@ List page = q.list();]]></programlisting>
             Collection elements can be ordered or grouped using a query filter:
         </para>
 
-        <programlisting><![CDATA[Collection orderedCollection = s.filter( collection, "order by this.amount" );
+        <programlisting role="JAVA"><![CDATA[Collection orderedCollection = s.filter( collection, "order by this.amount" );
 Collection counts = s.filter( collection, "select this.type, count(this) group by this.type" );]]></programlisting>
 
         <para>
             You can find the size of a collection without initializing it:
         </para>
 
-        <programlisting><![CDATA[( (Integer) session.createQuery("select count(*) from ....").iterate().next() ).intValue();]]></programlisting>
+        <programlisting role="JAVA"><![CDATA[( (Integer) session.createQuery("select count(*) from ....").iterate().next() ).intValue();]]></programlisting>
 
     </sect1>
 

@@ -92,7 +92,7 @@
             <literal>Parent</literal> to <literal>Child</literal>.
         </para>
 
-        <programlisting><![CDATA[<set name="children">
+        <programlisting role="XML"><![CDATA[<set name="children">
     <key column="parent_id"/>
     <one-to-many class="Child"/>
 </set>]]></programlisting>
@@ -101,7 +101,7 @@
             If we were to execute the following code:
         </para>
 
-        <programlisting><![CDATA[Parent p = .....;
+        <programlisting role="JAVA"><![CDATA[Parent p = .....;
 Child c = new Child();
 p.getChildren().add(c);
 session.save(c);
@@ -129,7 +129,7 @@ session.flush();]]></programlisting>
             <literal>not-null="true"</literal> in the collection mapping:
         </para>
 
-        <programlisting><![CDATA[<set name="children">
+        <programlisting role="XML"><![CDATA[<set name="children">
     <key column="parent_id" not-null="true"/>
     <one-to-many class="Child"/>
 </set>]]></programlisting>
@@ -144,7 +144,7 @@ session.flush();]]></programlisting>
             solution is to make the link part of the <literal>Child</literal> mapping.
         </para>
 
-        <programlisting><![CDATA[<many-to-one name="parent" column="parent_id" not-null="true"/>]]></programlisting>
+        <programlisting role="XML"><![CDATA[<many-to-one name="parent" column="parent_id" not-null="true"/>]]></programlisting>
 
         <para>
             You also need to add the <literal>parent</literal> property to the <literal>Child</literal> class.
@@ -155,7 +155,7 @@ session.flush();]]></programlisting>
             not to update the link. We use the <literal>inverse</literal> attribute to do this:
         </para>
 
-        <programlisting><![CDATA[<set name="children" inverse="true">
+        <programlisting role="XML"><![CDATA[<set name="children" inverse="true">
     <key column="parent_id"/>
     <one-to-many class="Child"/>
 </set>]]></programlisting>
@@ -164,7 +164,7 @@ session.flush();]]></programlisting>
             The following code would be used to add a new <literal>Child</literal>:
         </para>
 
-        <programlisting><![CDATA[Parent p = (Parent) session.load(Parent.class, pid);
+        <programlisting role="JAVA"><![CDATA[Parent p = (Parent) session.load(Parent.class, pid);
 Child c = new Child();
 c.setParent(p);
 p.getChildren().add(c);
@@ -180,7 +180,7 @@ session.flush();]]></programlisting>
             <literal>Parent</literal>.
         </para>
 
-        <programlisting><![CDATA[public void addChild(Child c) {
+        <programlisting role="JAVA"><![CDATA[public void addChild(Child c) {
     c.setParent(this);
     children.add(c);
 }]]></programlisting>
@@ -189,7 +189,7 @@ session.flush();]]></programlisting>
             The code to add a <literal>Child</literal> looks like this:
         </para>
 
-        <programlisting><![CDATA[Parent p = (Parent) session.load(Parent.class, pid);
+        <programlisting role="JAVA"><![CDATA[Parent p = (Parent) session.load(Parent.class, pid);
 Child c = new Child();
 p.addChild(c);
 session.save(c);
@@ -205,7 +205,7 @@ session.flush();]]></programlisting>
              using cascades.
          </para>
 
-        <programlisting><![CDATA[<set name="children" inverse="true" cascade="all">
+        <programlisting role="XML"><![CDATA[<set name="children" inverse="true" cascade="all">
     <key column="parent_id"/>
     <one-to-many class="Child"/>
 </set>]]></programlisting>
@@ -214,7 +214,7 @@ session.flush();]]></programlisting>
              This simplifies the code above to:
          </para>
 
-        <programlisting><![CDATA[Parent p = (Parent) session.load(Parent.class, pid);
+        <programlisting role="JAVA"><![CDATA[Parent p = (Parent) session.load(Parent.class, pid);
 Child c = new Child();
 p.addChild(c);
 session.flush();]]></programlisting>
@@ -224,7 +224,7 @@ session.flush();]]></programlisting>
              The following removes <literal>p</literal> and all its children from the database.
          </para>
 
-         <programlisting><![CDATA[Parent p = (Parent) session.load(Parent.class, pid);
+         <programlisting role="JAVA"><![CDATA[Parent p = (Parent) session.load(Parent.class, pid);
 session.delete(p);
 session.flush();]]></programlisting>
      
@@ -232,7 +232,7 @@ session.flush();]]></programlisting>
              However, the following code:
          </para>
 
-         <programlisting><![CDATA[Parent p = (Parent) session.load(Parent.class, pid);
+         <programlisting role="JAVA"><![CDATA[Parent p = (Parent) session.load(Parent.class, pid);
 Child c = (Child) p.getChildren().iterator().next();
 p.getChildren().remove(c);
 c.setParent(null);
@@ -244,7 +244,7 @@ session.flush();]]></programlisting>
              <literal>delete()</literal> the <literal>Child</literal>.
          </para>
 
-         <programlisting><![CDATA[Parent p = (Parent) session.load(Parent.class, pid);
+         <programlisting role="JAVA"><![CDATA[Parent p = (Parent) session.load(Parent.class, pid);
 Child c = (Child) p.getChildren().iterator().next();
 p.getChildren().remove(c);
 session.delete(c);
@@ -256,7 +256,7 @@ session.flush();]]></programlisting>
              use <literal>cascade="all-delete-orphan"</literal>.
          </para>
 
-        <programlisting><![CDATA[<set name="children" inverse="true" cascade="all-delete-orphan">
+        <programlisting role="XML"><![CDATA[<set name="children" inverse="true" cascade="all-delete-orphan">
     <key column="parent_id"/>
     <one-to-many class="Child"/>
 </set>]]></programlisting>
@@ -290,7 +290,7 @@ session.flush();]]></programlisting>
              <literal>newChild</literal>:
          </para>
 
-         <programlisting><![CDATA[//parent and child were both loaded in a previous session
+         <programlisting role="JAVA"><![CDATA[//parent and child were both loaded in a previous session
 parent.addChild(child);
 Child newChild = new Child();
 parent.addChild(newChild);

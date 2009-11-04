@@ -57,7 +57,7 @@
             Here is a possible mapping document:
         </para>
         
-        <programlisting><![CDATA[<hibernate-mapping>
+        <programlisting role="XML"><![CDATA[<hibernate-mapping>
         
     <class name="Employer" table="employers">
         <id name="id">
@@ -171,7 +171,7 @@ create sequence employer_id_seq]]></programlisting>
             The following mapping document correctly represents these relationships:
         </para>
         
-        <programlisting><![CDATA[<hibernate-mapping>
+        <programlisting role="XML"><![CDATA[<hibernate-mapping>
 
     <class name="Work" table="works" discriminator-value="W">
 
@@ -295,7 +295,7 @@ alter table author_work
             The mapping document will look like this:
         </para>
         
-        <programlisting><![CDATA[<hibernate-mapping>
+        <programlisting role="XML"><![CDATA[<hibernate-mapping>
 
     <class name="Customer" table="customers">
         <id name="id">
@@ -389,7 +389,7 @@ alter table line_items
         
         <sect2 id="example-mappings-typed-onetone">
             <title>"Typed" one-to-one association</title>
-<programlisting><![CDATA[<class name="Person">
+<programlisting role="XML"><![CDATA[<class name="Person">
     <id name="name"/>
     <one-to-one name="address" 
             cascade="all">
@@ -419,7 +419,7 @@ alter table line_items
         
         <sect2 id="example-mappings-composite-key">
             <title>Composite key example</title>
-<programlisting><![CDATA[<class name="Customer">
+<programlisting role="XML"><![CDATA[<class name="Customer">
 
     <id name="customerId"
         length="10">
@@ -536,7 +536,7 @@ alter table line_items
         
         <sect2 id="example-mappings-composite-key-manytomany">
             <title>Many-to-many with shared composite key attribute</title>
-<programlisting><![CDATA[<class name="User" table="`User`">
+<programlisting role="XML"><![CDATA[<class name="User" table="`User`">
     <composite-id>
         <key-property name="name"/>
         <key-property name="org"/>
@@ -575,7 +575,7 @@ alter table line_items
 
         <sect2 id="example-mappings-content-discrimination">
             <title>Content based discrimination</title>
-<programlisting><![CDATA[<class name="Person"
+<programlisting role="XML"><![CDATA[<class name="Person"
     discriminator-value="P">
     
     <id name="id" 
@@ -629,7 +629,7 @@ alter table line_items
 
         <sect2 id="example-mappings-association-alternatekeys" revision="2">
             <title>Associations on alternate keys</title>
-<programlisting><![CDATA[<class name="Person">
+<programlisting role="XML"><![CDATA[<class name="Person">
     
     <id name="id">
         <generator class="hilo"/>

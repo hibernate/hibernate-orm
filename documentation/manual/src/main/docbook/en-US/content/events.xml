@@ -53,7 +53,7 @@
             <literal>EmptyInterceptor</literal>.
         </para>
 
-        <programlisting><![CDATA[package org.hibernate.test;
+        <programlisting role="JAVA"><![CDATA[package org.hibernate.test;
 
 import java.io.Serializable;
 import java.util.Date;
@@ -147,7 +147,7 @@ public class AuditInterceptor extends EmptyInterceptor {
             methods accepting an <literal>Interceptor</literal>.
         </para>
 
-        <programlisting><![CDATA[Session session = sf.openSession( new AuditInterceptor() );]]></programlisting>
+        <programlisting role="JAVA"><![CDATA[Session session = sf.openSession( new AuditInterceptor() );]]></programlisting>
 
         <para>
             A <literal>SessionFactory</literal>-scoped interceptor is registered with the <literal>Configuration</literal>
@@ -158,7 +158,7 @@ public class AuditInterceptor extends EmptyInterceptor {
             sessions will use this interceptor potentially concurrently.
         </para>
     
-        <programlisting><![CDATA[new Configuration().setInterceptor( new AuditInterceptor() );]]></programlisting>
+        <programlisting role="JAVA"><![CDATA[new Configuration().setInterceptor( new AuditInterceptor() );]]></programlisting>
 
     </sect1>
 
@@ -201,7 +201,7 @@ public class AuditInterceptor extends EmptyInterceptor {
             example of a custom load event listener:
         </para>
 
-        <programlisting><![CDATA[public class MyLoadListener implements LoadEventListener {
+        <programlisting role="JAVA"><![CDATA[public class MyLoadListener implements LoadEventListener {
     // this is the single method defined by the LoadEventListener interface
     public void onLoad(LoadEvent event, LoadEventListener.LoadType loadType)
             throws HibernateException {
@@ -216,7 +216,7 @@ public class AuditInterceptor extends EmptyInterceptor {
             to the default listener:
         </para>
 
-<programlisting><![CDATA[<hibernate-configuration>
+<programlisting role="XML"><![CDATA[<hibernate-configuration>
     <session-factory>
         ...
         <event type="load">
@@ -230,7 +230,7 @@ public class AuditInterceptor extends EmptyInterceptor {
             Instead, you can register it programmatically:
         </para>
 
-        <programlisting><![CDATA[Configuration cfg = new Configuration();
+        <programlisting role="JAVA"><![CDATA[Configuration cfg = new Configuration();
 LoadEventListener[] stack = { new MyLoadListener(), new DefaultLoadEventListener() };
 cfg.EventListeners().setLoadEventListeners(stack);]]></programlisting>
 
@@ -264,7 +264,7 @@ cfg.EventListeners().setLoadEventListeners(stack);]]></programlisting>
             authorization.
         </para>
         
-        <programlisting><![CDATA[<listener type="pre-delete" class="org.hibernate.secure.JACCPreDeleteEventListener"/>
+        <programlisting role="XML"><![CDATA[<listener type="pre-delete" class="org.hibernate.secure.JACCPreDeleteEventListener"/>
 <listener type="pre-update" class="org.hibernate.secure.JACCPreUpdateEventListener"/>
 <listener type="pre-insert" class="org.hibernate.secure.JACCPreInsertEventListener"/>
 <listener type="pre-load" class="org.hibernate.secure.JACCPreLoadEventListener"/>]]></programlisting>
@@ -279,7 +279,7 @@ cfg.EventListeners().setLoadEventListeners(stack);]]></programlisting>
             Next, while still in <literal>hibernate.cfg.xml</literal>, bind the permissions to roles:
         </para>
         
-        <programlisting><![CDATA[<grant role="admin" entity-name="User" actions="insert,update,read"/>
+        <programlisting role="XML"><![CDATA[<grant role="admin" entity-name="User" actions="insert,update,read"/>
 <grant role="su" entity-name="User" actions="*"/>]]></programlisting>
         
         <para>

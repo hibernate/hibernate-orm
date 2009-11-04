@@ -36,7 +36,7 @@
             as an interface type. For example:
         </para>
         
-        <programlisting><![CDATA[public class Product {
+        <programlisting role="JAVA"><![CDATA[public class Product {
     private String serialNumber;
     private Set parts = new HashSet();
     
@@ -65,7 +65,7 @@
             Be aware of the following errors:
         </para>
         
-        <programlisting><![CDATA[Cat cat = new DomesticCat();
+        <programlisting role="JAVA"><![CDATA[Cat cat = new DomesticCat();
 Cat kitten = new DomesticCat();
 ....
 Set kittens = new HashSet();
@@ -118,7 +118,7 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
             element is used for mapping properties of type <literal>Set</literal>.
         </para>
         
-        <programlisting><![CDATA[<class name="Product">
+        <programlisting role="JAVA"><![CDATA[<class name="Product">
     <id name="serialNumber" column="productSerialNumber"/>
     <set name="parts">
         <key column="productSerialNumber" not-null="true"/>
@@ -134,7 +134,7 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
             <literal>&lt;map&gt;</literal> element is representative:
         </para>
 
-        <programlistingco>
+        <programlistingco role="XML">
             <areaspec>
                 <area id="mappingcollection1" coords="2 65"/>
                 <area id="mappingcollection2" coords="3 65"/>
@@ -151,7 +151,7 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
                 <area id="mappingcollection13" coords="14 65"/>
                 <area id="mappingcollection14" coords="15 65"/>
             </areaspec>
-            <programlisting><![CDATA[<map
+            <programlisting role="XML"><![CDATA[<map
     name="propertyName"
     table="table_name"
     schema="schema_name"
@@ -288,13 +288,13 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
                 <literal>not-null="true"</literal>.
             </para>
     
-            <programlisting><![CDATA[<key column="productSerialNumber" not-null="true"/>]]></programlisting>
+            <programlisting role="XML"><![CDATA[<key column="productSerialNumber" not-null="true"/>]]></programlisting>
     
             <para>
                 The foreign key constraint can use <literal>ON DELETE CASCADE</literal>.
             </para>
     
-            <programlisting><![CDATA[<key column="productSerialNumber" on-delete="cascade"/>]]></programlisting>
+            <programlisting role="XML"><![CDATA[<key column="productSerialNumber" on-delete="cascade"/>]]></programlisting>
             
             <para>
                 See the previous chapter for a full definition of the <literal>&lt;key&gt;</literal> 
@@ -342,12 +342,12 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
                 sequential integers that are numbered from zero by default.
             </para>
 
-        <programlistingco>
+        <programlistingco role="XML">
             <areaspec>
                 <area id="index1" coords="2 45"/>
                 <area id="index2" coords="3 45"/>
              </areaspec>
-            <programlisting><![CDATA[<list-index 
+            <programlisting role="XML"><![CDATA[<list-index
         column="column_name"
         base="0|1|..."/>]]></programlisting>
             <calloutlist>
@@ -366,13 +366,13 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
             </calloutlist>
         </programlistingco>
 
-        <programlistingco>
+        <programlistingco role="XML">
             <areaspec>
                 <area id="mapkey1" coords="2 45"/>
                 <area id="mapkey2" coords="3 45"/>
                 <area id="mapkey3" coords="4 45"/>
              </areaspec>
-            <programlisting><![CDATA[<map-key 
+            <programlisting role="XML"><![CDATA[<map-key
         column="column_name"
         formula="any SQL expression"
         type="type_name"
@@ -399,13 +399,13 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
             </calloutlist>
         </programlistingco>
 
-        <programlistingco>
+        <programlistingco role="XML">
             <areaspec>
                 <area id="indexmanytomany1" coords="2 45"/>
                 <area id="indexmanytomany2" coords="3 45"/>
                 <area id="indexmanytomany3" coords="3 45"/>
              </areaspec>
-            <programlisting><![CDATA[<map-key-many-to-many
+            <programlisting role="XML"><![CDATA[<map-key-many-to-many
         column="column_name"
         formula="any SQL expression"
         class="ClassName"
@@ -455,13 +455,13 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
             For a collection of values use the <literal>&lt;element&gt;</literal> tag. For example:
         </para>
 
-        <programlistingco>
+        <programlistingco role="XML">
             <areaspec>
                 <area id="element1b" coords="2 50"/>
                 <area id="element2b" coords="3 50"/>
                 <area id="element3b" coords="4 50"/>
              </areaspec>
-            <programlisting><![CDATA[<element
+            <programlisting role="XML"><![CDATA[<element
         column="column_name"
         formula="any SQL expression"
         type="typename"
@@ -498,7 +498,7 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
             <literal>&lt;many-to-many&gt;</literal> element.
         </para>
 
-        <programlistingco>
+        <programlistingco role="XML">
             <areaspec>
                 <area id="manytomany1" coords="2 60"/>
                 <area id="manytomany2" coords="3 60"/>
@@ -509,7 +509,7 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
                 <area id="manytomany7" coords="8 60"/>
                 <area id="manytomany8" coords="9 60"/>
             </areaspec>
-            <programlisting><![CDATA[<many-to-many
+            <programlisting role="XML"><![CDATA[<many-to-many
         column="column_name"
         formula="any SQL expression"
         class="ClassName"
@@ -586,7 +586,7 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
             A set of strings:
         </para>
 
-        <programlisting><![CDATA[<set name="names" table="person_names">
+        <programlisting role="XML"><![CDATA[<set name="names" table="person_names">
     <key column="person_id"/>
     <element column="person_name" type="string"/>
 </set>]]></programlisting>
@@ -596,7 +596,7 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
             <literal>order-by</literal> attribute:
         </para>
 
-        <programlisting><![CDATA[<bag name="sizes" 
+        <programlisting role="XML"><![CDATA[<bag name="sizes"
         table="item_sizes" 
         order-by="size asc">
     <key column="item_id"/>
@@ -607,7 +607,7 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
             An array of entities, in this case, a many-to-many association:
         </para>
 
-        <programlisting><![CDATA[<array name="addresses" 
+        <programlisting role="XML"><![CDATA[<array name="addresses"
         table="PersonAddress" 
         cascade="persist">
     <key column="personId"/>
@@ -619,7 +619,7 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
             A map from string indices to dates:
         </para>
 
-        <programlisting><![CDATA[<map name="holidays" 
+        <programlisting role="XML"><![CDATA[<map name="holidays"
         table="holidays" 
         schema="dbo" 
         order-by="hol_name asc">
@@ -632,7 +632,7 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
             A list of components (this is discussed in the next chapter):
         </para>
 
-        <programlisting><![CDATA[<list name="carComponents" 
+        <programlisting role="XML"><![CDATA[<list name="carComponents"
         table="CarComponents">
     <key column="carId"/>
     <list-index column="sortOrder"/>
@@ -676,13 +676,13 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
             association.
         </para>
 
-        <programlistingco>
+        <programlistingco role="XML">
             <areaspec>
                 <area id="onetomany1" coords="2 60"/>
                 <area id="onetomany2" coords="3 60"/>
                 <area id="onetomany3" coords="4 60"/>
             </areaspec>
-            <programlisting><![CDATA[<one-to-many 
+            <programlisting role="XML"><![CDATA[<one-to-many
         class="ClassName"
         not-found="ignore|exception"
         entity-name="EntityName"
@@ -734,7 +734,7 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
             Notice the use of a formula-based index:
         </para>
 
-        <programlisting><![CDATA[<map name="parts"
+        <programlisting role="XML"><![CDATA[<map name="parts"
         cascade="all">
     <key column="productId" not-null="true"/>
     <map-key formula="partName"/>
@@ -755,7 +755,7 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
             <literal>java.util.SortedSet</literal>. You must specify a comparator in the mapping file:
         </para>
 
-        <programlisting><![CDATA[<set name="aliases" 
+        <programlisting role="XML"><![CDATA[<set name="aliases"
             table="person_aliases" 
             sort="natural">
     <key column="person"/>
@@ -788,7 +788,7 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
             not in the memory.
         </para>
 
-        <programlisting><![CDATA[<set name="aliases" table="person_aliases" order-by="lower(name) asc">
+        <programlisting role="XML"><![CDATA[<set name="aliases" table="person_aliases" order-by="lower(name) asc">
     <key column="person"/>
     <element column="name" type="string"/>
 </set>
@@ -812,7 +812,7 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
             <literal>filter()</literal>:
         </para>
 
-        <programlisting><![CDATA[sortedUsers = s.createFilter( group.getUsers(), "order by this.name" ).list();]]></programlisting>
+        <programlisting role="JAVA"><![CDATA[sortedUsers = s.createFilter( group.getUsers(), "order by this.name" ).list();]]></programlisting>
 
     </sect2>
 
@@ -857,7 +857,7 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
             have many items and each item can be in many categories:
         </para>
 
-        <programlisting><![CDATA[<class name="Category">
+        <programlisting role="XML"><![CDATA[<class name="Category">
     <id name="id" column="CATEGORY_ID"/>
     ...
     <bag name="items" table="CATEGORY_ITEM">
@@ -885,7 +885,7 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
             a many-to-many relationship in Javais created:
         </para>
 
-        <programlisting><![CDATA[
+        <programlisting role="JAVA"><![CDATA[
 category.getItems().add(item);          // The category now "knows" about the relationship
 item.getCategories().add(category);     // The item now "knows" about the relationship
 
@@ -902,7 +902,7 @@ session.persist(category);               // The relationship will be saved]]></p
             end <literal>inverse="true"</literal>.
         </para>
 
-        <programlisting><![CDATA[<class name="Parent">
+        <programlisting role="XML"><![CDATA[<class name="Parent">
     <id name="id" column="parent_id"/>
     ....
     <set name="children" inverse="true">
@@ -936,7 +936,7 @@ session.persist(category);               // The relationship will be saved]]></p
             <literal>inverse="true"</literal> on the collection mapping:
         </para>
         
-        <programlisting><![CDATA[<class name="Parent">
+        <programlisting role="XML"><![CDATA[<class name="Parent">
     <id name="id" column="parent_id"/>
     ....
     <map name="children" inverse="true">
@@ -965,7 +965,7 @@ session.persist(category);               // The relationship will be saved]]></p
             <literal>inverse="true"</literal>. Instead, you could use the following mapping:
         </para>
 
-        <programlisting><![CDATA[<class name="Parent">
+        <programlisting role="XML"><![CDATA[<class name="Parent">
     <id name="id" column="parent_id"/>
     ....
     <map name="children">
@@ -1003,13 +1003,13 @@ session.persist(category);               // The relationship will be saved]]></p
             <literal>Map</literal> with an association as its index:
         </para>
 
-        <programlisting><![CDATA[<map name="contracts">
+        <programlisting role="XML"><![CDATA[<map name="contracts">
     <key column="employer_id" not-null="true"/>
     <map-key-many-to-many column="employee_id" class="Employee"/>
     <one-to-many class="Contract"/>
 </map>]]></programlisting>
             
-            <programlisting><![CDATA[<map name="connections">
+            <programlisting role="XML"><![CDATA[<map name="connections">
     <key column="incoming_node_id"/>
     <map-key-many-to-many column="outgoing_node_id" class="Node"/>
     <many-to-many column="connection_id" class="Connection"/>
@@ -1044,7 +1044,7 @@ session.persist(category);               // The relationship will be saved]]></p
             (or <literal>Collection</literal>) with bag semantics. For example:
         </para>
 
-<programlisting><![CDATA[<idbag name="lovers" table="LOVERS">
+<programlisting role="XML"><![CDATA[<idbag name="lovers" table="LOVERS">
     <collection-id column="ID" type="long">
         <generator class="sequence"/>
     </collection-id>
@@ -1099,7 +1099,7 @@ session.persist(category);               // The relationship will be saved]]></p
 	    The following class has a collection of <literal>Child</literal> instances:
         </para>
 
-        <programlisting><![CDATA[package eg;
+        <programlisting role="JAVA"><![CDATA[package eg;
 import java.util.Set;
 
 public class Parent {
@@ -1122,7 +1122,7 @@ public class Parent {
             
         </para>
 
-        <programlisting><![CDATA[<hibernate-mapping>
+        <programlisting role="XML"><![CDATA[<hibernate-mapping>
 
     <class name="Parent">
         <id name="id">
@@ -1147,7 +1147,7 @@ public class Parent {
             This maps to the following table definitions:
         </para>
 
-        <programlisting><![CDATA[create table parent ( id bigint not null primary key )
+        <programlisting role="XML"><![CDATA[create table parent ( id bigint not null primary key )
 create table child ( id bigint not null primary key, name varchar(255), parent_id bigint )
 alter table child add constraint childfk0 (parent_id) references parent]]></programlisting>
 
@@ -1156,7 +1156,7 @@ alter table child add constraint childfk0 (parent_id) references parent]]></prog
             association:
         </para>
 
-        <programlisting><![CDATA[<hibernate-mapping>
+        <programlisting role="XML"><![CDATA[<hibernate-mapping>
 
     <class name="Parent">
         <id name="id">
@@ -1182,7 +1182,7 @@ alter table child add constraint childfk0 (parent_id) references parent]]></prog
             Notice the <literal>NOT NULL</literal> constraint:
         </para>
 
-        <programlisting><![CDATA[create table parent ( id bigint not null primary key )
+        <programlisting role="XML"><![CDATA[create table parent ( id bigint not null primary key )
 create table child ( id bigint not null
                      primary key,
                      name varchar(255),
@@ -1195,7 +1195,7 @@ alter table child add constraint childfk0 (parent_id) references parent]]></prog
             mapping:
         </para>
 
-        <programlisting><![CDATA[<hibernate-mapping>
+        <programlisting role="XML"><![CDATA[<hibernate-mapping>
 
     <class name="Parent">
         <id name="id">
@@ -1221,7 +1221,7 @@ alter table child add constraint childfk0 (parent_id) references parent]]></prog
             association is appropriate:
         </para>
 
-        <programlisting><![CDATA[<hibernate-mapping>
+        <programlisting role="XML"><![CDATA[<hibernate-mapping>
 
     <class name="Parent">
         <id name="id">

@@ -52,7 +52,7 @@
             use <literal>addResource()</literal>. For example:
         </para>
 
-        <programlisting><![CDATA[Configuration cfg = new Configuration()
+        <programlisting role="JAVA"><![CDATA[Configuration cfg = new Configuration()
     .addResource("Item.hbm.xml")
     .addResource("Bid.hbm.xml");]]></programlisting>
 
@@ -61,7 +61,7 @@
             allow Hibernate to find the mapping document for you:
         </para>
 
-        <programlisting><![CDATA[Configuration cfg = new Configuration()
+        <programlisting role="JAVA"><![CDATA[Configuration cfg = new Configuration()
     .addClass(org.hibernate.auction.Item.class)
     .addClass(org.hibernate.auction.Bid.class);]]></programlisting>
 
@@ -76,7 +76,7 @@
             properties. For example:
         </para>
 
-        <programlisting><![CDATA[Configuration cfg = new Configuration()
+        <programlisting role="JAVA"><![CDATA[Configuration cfg = new Configuration()
     .addClass(org.hibernate.auction.Item.class)
     .addClass(org.hibernate.auction.Bid.class)
     .setProperty("hibernate.dialect", "org.hibernate.dialect.MySQLInnoDBDialect")
@@ -133,7 +133,7 @@
             This factory is intended to be shared by all application threads:
         </para>
 
-        <programlisting><![CDATA[SessionFactory sessions = cfg.buildSessionFactory();]]></programlisting>
+        <programlisting role="JAVA"><![CDATA[SessionFactory sessions = cfg.buildSessionFactory();]]></programlisting>
 
         <para>
             Hibernate does allow your application to instantiate more than one
@@ -152,7 +152,7 @@
             is as simple as:
         </para>
 
-        <programlisting><![CDATA[Session session = sessions.openSession(); // open a new Session]]></programlisting>
+        <programlisting role="JAVA"><![CDATA[Session session = sessions.openSession(); // open a new Session]]></programlisting>
         
         <para>
             Once you start a task that requires access to the database, a JDBC connection will be obtained from
@@ -1344,7 +1344,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
             <literal>Configuration.setNamingStrategy()</literal> before adding mappings:
         </para>
 
-        <programlisting><![CDATA[SessionFactory sf = new Configuration()
+        <programlisting role="JAVA"><![CDATA[SessionFactory sf = new Configuration()
     .setNamingStrategy(ImprovedNamingStrategy.INSTANCE)
     .addFile("Item.hbm.xml")
     .addFile("Bid.hbm.xml")
@@ -1372,7 +1372,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
             your <literal>CLASSPATH</literal>. Here is an example:
         </para>
 
-        <programlisting><![CDATA[<?xml version='1.0' encoding='utf-8'?>
+        <programlisting role="XML"><![CDATA[<?xml version='1.0' encoding='utf-8'?>
 <!DOCTYPE hibernate-configuration PUBLIC
     "-//Hibernate/Hibernate Configuration DTD//EN"
     "http://hibernate.sourceforge.net/hibernate-configuration-3.0.dtd">
@@ -1418,13 +1418,13 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
            With the XML configuration, starting Hibernate is then as simple as:
        </para>
 
-       <programlisting><![CDATA[SessionFactory sf = new Configuration().configure().buildSessionFactory();]]></programlisting>
+       <programlisting role="JAVA"><![CDATA[SessionFactory sf = new Configuration().configure().buildSessionFactory();]]></programlisting>
 
        <para>
            You can select a different XML configuration file using:
        </para>
 
-       <programlisting><![CDATA[SessionFactory sf = new Configuration()
+       <programlisting role="JAVA"><![CDATA[SessionFactory sf = new Configuration()
     .configure("catdb.cfg.xml")
     .buildSessionFactory();]]></programlisting>
 
@@ -1701,7 +1701,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                 <literal>jboss-service.xml</literal> for JBoss 4.0.x:
             </para>
 
-            <programlisting><![CDATA[<?xml version="1.0"?>
+            <programlisting role="XML"><![CDATA[<?xml version="1.0"?>
 <server>
 
 <mbean code="org.hibernate.jmx.HibernateService"

@@ -42,7 +42,7 @@
              and not to architecture-level components. For example, you can model a person like this:
         </para>
 
-        <programlisting><![CDATA[public class Person {
+        <programlisting role="JAVA"><![CDATA[public class Person {
     private java.util.Date birthday;
     private Name name;
     private String key;
@@ -68,7 +68,7 @@
     ......
 }]]></programlisting>
 
-<programlisting><![CDATA[public class Name {
+<programlisting role="JAVA"><![CDATA[public class Name {
     char initial;
     String first;
     String last;
@@ -103,7 +103,7 @@
             Our Hibernate mapping would look like this:
         </para>
 
-        <programlisting><![CDATA[<class name="eg.Person" table="person">
+        <programlisting role="XML"><![CDATA[<class name="eg.Person" table="person">
     <id name="Key" column="pid" type="string">
         <generator class="uuid"/>
     </id>
@@ -144,7 +144,7 @@
             containing entity.
         </para>
 
-        <programlisting><![CDATA[<class name="eg.Person" table="person">
+        <programlisting role="XML"><![CDATA[<class name="eg.Person" table="person">
     <id name="Key" column="pid" type="string">
         <generator class="uuid"/>
     </id>
@@ -169,7 +169,7 @@
             <literal>&lt;composite-element&gt;</literal> tag:
         </para>
 
-        <programlisting><![CDATA[<set name="someNames" table="some_names" lazy="true">
+        <programlisting role="XML"><![CDATA[<set name="someNames" table="some_names" lazy="true">
     <key column="id"/>
     <composite-element class="eg.Name"> <!-- class attribute required -->
         <property name="initial"/>
@@ -219,7 +219,7 @@
             <literal>quantity</literal> are properties of the association:
         </para>
 
-        <programlisting><![CDATA[<class name="eg.Order" .... >
+        <programlisting role="XML"><![CDATA[<class name="eg.Order" .... >
     ....
     <set name="purchasedItems" table="purchase_items" lazy="true">
         <key column="order_id">
@@ -242,7 +242,7 @@
 
         <para>Even ternary (or quaternary, etc) associations are possible:</para>
 
-        <programlisting><![CDATA[<class name="eg.Order" .... >
+        <programlisting role="XML"><![CDATA[<class name="eg.Order" .... >
     ....
     <set name="purchasedItems" table="purchase_items" lazy="true">
         <key column="order_id">
@@ -315,7 +315,7 @@
             the (composite) primary key of <literal>Order</literal>.
         </para>
 
-        <programlisting><![CDATA[<class name="OrderLine">
+        <programlisting role="XML"><![CDATA[<class name="OrderLine">
 
     <composite-id name="id" class="OrderLineId">
         <key-property name="lineId"/>
@@ -340,7 +340,7 @@
             to <literal>OrderLine</literal> is mapped like this:
         </para>
 
-        <programlisting><![CDATA[<many-to-one name="orderLine" class="OrderLine">
+        <programlisting role="XML"><![CDATA[<many-to-one name="orderLine" class="OrderLine">
 <!-- the "class" attribute is optional, as usual -->
     <column name="lineId"/>
     <column name="orderId"/>
@@ -362,7 +362,7 @@
             uses the composite foreign key:
         </para>
 
-    <programlisting><![CDATA[<set name="undeliveredOrderLines">
+    <programlisting role="XML"><![CDATA[<set name="undeliveredOrderLines">
     <key column name="warehouseId"/>
     <many-to-many class="OrderLine">
         <column name="lineId"/>
@@ -376,7 +376,7 @@
             use:
         </para>
 
-    <programlisting><![CDATA[<set name="orderLines" inverse="true">
+    <programlisting role="XML"><![CDATA[<set name="orderLines" inverse="true">
     <key>
         <column name="orderId"/>
         <column name="customerId"/>
@@ -393,7 +393,7 @@
             foreign key.
         </para>
 
-        <programlisting><![CDATA[<class name="OrderLine">
+        <programlisting role="XML"><![CDATA[<class name="OrderLine">
     ....
     ....
     <list name="deliveryAttempts">
@@ -418,7 +418,7 @@
             You can also map a property of type <literal>Map</literal>:
         </para>
 
-    <programlisting><![CDATA[<dynamic-component name="userAttributes">
+    <programlisting role="XML"><![CDATA[<dynamic-component name="userAttributes">
     <property name="foo" column="FOO" type="string"/>
     <property name="bar" column="BAR" type="integer"/>
     <many-to-one name="baz" class="Baz" column="BAZ_ID"/>

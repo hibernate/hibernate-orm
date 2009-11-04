@@ -65,7 +65,7 @@
             common kind of unidirectional association.
         </para>
         
-        <programlisting><![CDATA[<class name="Person">
+        <programlisting role="XML"><![CDATA[<class name="Person">
     <id name="id" column="personId">
         <generator class="native"/>
     </id>
@@ -94,7 +94,7 @@ create table Address ( addressId bigint not null primary key )
             is almost identical. The only difference is the column unique constraint.
         </para>
         
-       <programlisting><![CDATA[<class name="Person">
+       <programlisting role="XML"><![CDATA[<class name="Person">
     <id name="id" column="personId">
         <generator class="native"/>
     </id>
@@ -120,7 +120,7 @@ create table Address ( addressId bigint not null primary key )
             of the association:
         </para>
         
-       <programlisting><![CDATA[<class name="Person">
+       <programlisting role="XML"><![CDATA[<class name="Person">
     <id name="id" column="personId">
         <generator class="native"/>
     </id>
@@ -149,7 +149,7 @@ create table Address ( personId bigint not null primary key )
             is an unusual case, and is not recommended.
         </para>
         
-        <programlisting><![CDATA[<class name="Person">
+        <programlisting role="XML"><![CDATA[<class name="Person">
     <id name="id" column="personId">
         <generator class="native"/>
     </id>
@@ -190,7 +190,7 @@ create table Address ( addressId bigint not null primary key, personId bigint no
             changes the multiplicity from many-to-many to one-to-many.
         </para>
         
-        <programlisting><![CDATA[<class name="Person">
+        <programlisting role="XML"><![CDATA[<class name="Person">
     <id name="id" column="personId">
         <generator class="native"/>
     </id>
@@ -223,7 +223,7 @@ create table Address ( addressId bigint not null primary key )
             is common when the association is optional. For example:
         </para>
         
-        <programlisting><![CDATA[<class name="Person">
+        <programlisting role="XML"><![CDATA[<class name="Person">
     <id name="id" column="personId">
         <generator class="native"/>
     </id>
@@ -257,7 +257,7 @@ create table Address ( addressId bigint not null primary key )
    	but extremely unusual.
         </para>
         
-        <programlisting><![CDATA[<class name="Person">
+        <programlisting role="XML"><![CDATA[<class name="Person">
     <id name="id" column="personId">
         <generator class="native"/>
     </id>
@@ -292,7 +292,7 @@ create table Address ( addressId bigint not null primary key )
             Finally, here is an example of a <emphasis>unidirectional many-to-many association</emphasis>.
         </para>
         
-        <programlisting><![CDATA[<class name="Person">
+        <programlisting role="XML"><![CDATA[<class name="Person">
     <id name="id" column="personId">
         <generator class="native"/>
     </id>
@@ -330,7 +330,7 @@ create table Address ( addressId bigint not null primary key )
             relationship.
         </para>
         
-        <programlisting><![CDATA[<class name="Person">
+        <programlisting role="XML"><![CDATA[<class name="Person">
     <id name="id" column="personId">
         <generator class="native"/>
     </id>
@@ -362,7 +362,7 @@ create table Address ( addressId bigint not null primary key )
             <literal>update="false"</literal> and <literal>insert="false"</literal>:
         </para>
 
-        <programlisting><![CDATA[<class name="Person">
+        <programlisting role="XML"><![CDATA[<class name="Person">
    <id name="id"/>
    ...
    <many-to-one name="address"
@@ -402,7 +402,7 @@ create table Address ( addressId bigint not null primary key )
             is common:
         </para>
         
-       <programlisting><![CDATA[<class name="Person">
+       <programlisting role="XML"><![CDATA[<class name="Person">
     <id name="id" column="personId">
         <generator class="native"/>
     </id>
@@ -429,7 +429,7 @@ create table Address ( addressId bigint not null primary key )
             uses the special id generator:
         </para>
         
-       <programlisting><![CDATA[<class name="Person">
+       <programlisting role="XML"><![CDATA[<class name="Person">
     <id name="id" column="personId">
         <generator class="native"/>
     </id>
@@ -466,7 +466,7 @@ create table Address ( personId bigint not null primary key )
             association, on the collection, or on the join.
         </para>
         
-        <programlisting><![CDATA[<class name="Person">
+        <programlisting role="XML"><![CDATA[<class name="Person">
     <id name="id" column="personId">
         <generator class="native"/>
     </id>
@@ -508,7 +508,7 @@ create table Address ( addressId bigint not null primary key )
             but extremely unusual.
         </para>
         
-        <programlisting><![CDATA[<class name="Person">
+        <programlisting role="XML"><![CDATA[<class name="Person">
     <id name="id" column="personId">
         <generator class="native"/>
     </id>
@@ -553,7 +553,7 @@ create table Address ( addressId bigint not null primary key )
             Here is an example of a <emphasis>bidirectional many-to-many association</emphasis>.
         </para>
         
-        <programlisting><![CDATA[<class name="Person">
+        <programlisting role="XML"><![CDATA[<class name="Person">
     <id name="id" column="personId">
         <generator class="native"/>
     </id>
@@ -597,7 +597,7 @@ create table Address ( addressId bigint not null primary key )
             and <literal>effectiveStartDate</literal>columns, it would be mapped as follows:
         </para>
         
-        <programlisting><![CDATA[<properties name="currentAccountKey">
+        <programlisting role="XML"><![CDATA[<properties name="currentAccountKey">
     <property name="accountNumber" type="string" not-null="true"/>
     <property name="currentAccount" type="boolean">
         <formula>case when effectiveEndDate is null then 1 else 0 end</formula>
@@ -611,7 +611,7 @@ create table Address ( addressId bigint not null primary key )
             the one with null <literal>effectiveEndDate</literal>, by using:
         </para>
         
-        <programlisting><![CDATA[<many-to-one name="currentAccountInfo" 
+        <programlisting role="XML"><![CDATA[<many-to-one name="currentAccountInfo"
         property-ref="currentAccountKey"
         class="AccountInfo">
     <column name="accountNumber"/>
@@ -626,7 +626,7 @@ create table Address ( addressId bigint not null primary key )
             the one with the most recent <literal>startDate</literal>, could be mapped in the following way:
         </para>
         
-        <programlisting><![CDATA[<join>
+        <programlisting role="XML"><![CDATA[<join>
     <key column="employeeId"/>
     <subselect>
         select employeeId, orgId 
@@ -645,7 +645,6 @@ create table Address ( addressId bigint not null primary key )
         </para>
 
     </sect1>
-
 
 </chapter>
 

@@ -107,7 +107,7 @@
             session:
         </para>
 
-        <programlisting><![CDATA[DomesticCat fritz = new DomesticCat();
+        <programlisting role="JAVA"><![CDATA[DomesticCat fritz = new DomesticCat();
 fritz.setColor(Color.GINGER);
 fritz.setSex('M');
 fritz.setName("Fritz");
@@ -151,7 +151,7 @@ Long generatedId = (Long) sess.save(fritz);]]></programlisting>
             of <literal>save()</literal>.
         </para>
 
-<programlisting><![CDATA[DomesticCat pk = new DomesticCat();
+<programlisting role="JAVA"><![CDATA[DomesticCat pk = new DomesticCat();
 pk.setColor(Color.TABBY);
 pk.setSex('F');
 pk.setName("PK");
@@ -189,9 +189,9 @@ sess.save( pk, new Long(1234) );]]></programlisting>
             a newly instantiated instance of that class in a persistent state.
         </para>
 
-        <programlisting><![CDATA[Cat fritz = (Cat) sess.load(Cat.class, generatedId);]]></programlisting>
+        <programlisting role="JAVA"><![CDATA[Cat fritz = (Cat) sess.load(Cat.class, generatedId);]]></programlisting>
 
-<programlisting><![CDATA[// you need to wrap primitive identifiers
+<programlisting role="JAVA"><![CDATA[// you need to wrap primitive identifiers
 long id = 1234;
 DomesticCat pk = (DomesticCat) sess.load( DomesticCat.class, new Long(id) );]]></programlisting>
 
@@ -199,7 +199,7 @@ DomesticCat pk = (DomesticCat) sess.load( DomesticCat.class, new Long(id) );]]><
             Alternatively, you can load state into a given instance:
         </para>
 
-<programlisting><![CDATA[Cat cat = new DomesticCat();
+<programlisting role="JAVA"><![CDATA[Cat cat = new DomesticCat();
 // load pk's state into cat
 sess.load( cat, new Long(pkId) );
 Set kittens = cat.getKittens();]]></programlisting>
@@ -221,7 +221,7 @@ Set kittens = cat.getKittens();]]></programlisting>
             returns null if there is no matching row.
         </para>
         
-        <programlisting><![CDATA[Cat cat = (Cat) sess.get(Cat.class, id);
+        <programlisting role="JAVA"><![CDATA[Cat cat = (Cat) sess.get(Cat.class, id);
 if (cat==null) {
     cat = new Cat();
     sess.save(cat, id);
@@ -233,7 +233,7 @@ return cat;]]></programlisting>
             using a <literal>LockMode</literal>. See the API documentation for more information.
         </para>
 
-        <programlisting><![CDATA[Cat cat = (Cat) sess.get(Cat.class, id, LockMode.UPGRADE);]]></programlisting>
+        <programlisting role="JAVA"><![CDATA[Cat cat = (Cat) sess.get(Cat.class, id, LockMode.UPGRADE);]]></programlisting>
         
         <para>
             Any associated instances or contained collections will 
@@ -248,7 +248,7 @@ return cat;]]></programlisting>
             initialize some of the properties of the object.
         </para>
         
-        <programlisting><![CDATA[sess.save(cat);
+        <programlisting role="JAVA"><![CDATA[sess.save(cat);
 sess.flush(); //force the SQL INSERT
 sess.refresh(cat); //re-read the state (after the trigger executes)]]></programlisting>
 
@@ -283,7 +283,7 @@ sess.refresh(cat); //re-read the state (after the trigger executes)]]></programl
                 <literal>Session</literal>:
             </para>
 
-        <programlisting><![CDATA[List cats = session.createQuery(
+        <programlisting role="JAVA"><![CDATA[List cats = session.createQuery(
     "from Cat as cat where cat.birthdate < ?")
     .setDate(0, date)
     .list();
@@ -333,7 +333,7 @@ Set uniqueMothers = new HashSet(mothersWithKittens.list());]]></programlisting>
                     and <emphasis>n</emphasis> additional selects to initialize the actual instances.
                 </para>
 
-                <programlisting><![CDATA[// fetch ids
+                <programlisting role="JAVA"><![CDATA[// fetch ids
 Iterator iter = sess.createQuery("from eg.Qux q order by q.likeliness").iterate();
 while ( iter.hasNext() ) {
     Qux qux = (Qux) iter.next();  // fetch the object
@@ -355,7 +355,7 @@ while ( iter.hasNext() ) {
                     is returned as an array:
                 </para>
 
-                <programlisting><![CDATA[Iterator kittensAndMothers = sess.createQuery(
+                <programlisting role="JAVA"><![CDATA[Iterator kittensAndMothers = sess.createQuery(
             "select kitten, mother from Cat kitten join kitten.mother mother")
             .list()
             .iterator();
@@ -378,7 +378,7 @@ while ( kittensAndMothers.hasNext() ) {
                     "scalar" results and not entities in persistent state.
                 </para>
 
-                <programlisting><![CDATA[Iterator results = sess.createQuery(
+                <programlisting role="JAVA"><![CDATA[Iterator results = sess.createQuery(
         "select cat.color, min(cat.birthdate), count(cat) from Cat cat " +
         "group by cat.color")
         .list()
@@ -424,17 +424,17 @@ while ( results.hasNext() ) {
                     </listitem>
                 </itemizedlist>
 
-                <programlisting><![CDATA[//named parameter (preferred)
+                <programlisting role="JAVA"><![CDATA[//named parameter (preferred)
 Query q = sess.createQuery("from DomesticCat cat where cat.name = :name");
 q.setString("name", "Fritz");
 Iterator cats = q.iterate();]]></programlisting>
 
-                <programlisting><![CDATA[//positional parameter
+                <programlisting role="JAVA"><![CDATA[//positional parameter
 Query q = sess.createQuery("from DomesticCat cat where cat.name = ?");
 q.setString(0, "Izi");
 Iterator cats = q.iterate();]]></programlisting>
 
-                <programlisting><![CDATA[//named parameter list
+                <programlisting role="JAVA"><![CDATA[//named parameter list
 List names = new ArrayList();
 names.add("Izi");
 names.add("Fritz");
@@ -453,7 +453,7 @@ List cats = q.list();]]></programlisting>
                     use methods of the <literal>Query</literal> interface:
                 </para>
 
-                <programlisting><![CDATA[Query q = sess.createQuery("from DomesticCat cat");
+                <programlisting role="JAVA"><![CDATA[Query q = sess.createQuery("from DomesticCat cat");
 q.setFirstResult(20);
 q.setMaxResults(10);
 List cats = q.list();]]></programlisting>
@@ -475,7 +475,7 @@ List cats = q.list();]]></programlisting>
                     navigation of the query results.
                 </para>
 
-                <programlisting><![CDATA[Query q = sess.createQuery("select cat.name, cat from DomesticCat cat " +
+                <programlisting role="JAVA"><![CDATA[Query q = sess.createQuery("select cat.name, cat from DomesticCat cat " +
                             "order by cat.name");
 ScrollableResults cats = q.scroll();
 if ( cats.first() ) {
@@ -514,7 +514,7 @@ cats.close()]]></programlisting>
                     be interpreted as markup.
                 </para>
 
-                <programlisting><![CDATA[<query name="ByNameAndMaximumWeight"><![CDATA[
+                <programlisting role="XML"><![CDATA[<query name="ByNameAndMaximumWeight"><![CDATA[
     from eg.DomesticCat as cat
         where cat.name = ?
         and cat.weight > ?
@@ -524,7 +524,7 @@ cats.close()]]></programlisting>
                     Parameter binding and executing is done programatically:
                 </para>
 
-                <programlisting><![CDATA[Query q = sess.getNamedQuery("ByNameAndMaximumWeight");
+                <programlisting role="JAVA"><![CDATA[Query q = sess.getNamedQuery("ByNameAndMaximumWeight");
 q.setString(0, name);
 q.setInt(1, minWeight);
 List cats = q.list();]]></programlisting>
@@ -555,7 +555,7 @@ List cats = q.list();]]></programlisting>
                 meaning the current collection element.
             </para>
 
-            <programlisting><![CDATA[Collection blackKittens = session.createFilter(
+            <programlisting role="JAVA"><![CDATA[Collection blackKittens = session.createFilter(
     pk.getKittens(), 
     "where this.color = ?")
     .setParameter( Color.BLACK, Hibernate.custom(ColorUserType.class) )
@@ -573,7 +573,7 @@ List cats = q.list();]]></programlisting>
                 one if required. Filters are not limited to returning the collection elements themselves.
             </para>
 
-            <programlisting><![CDATA[Collection blackKittenMates = session.createFilter(
+            <programlisting role="JAVA"><![CDATA[Collection blackKittenMates = session.createFilter(
     pk.getKittens(), 
     "select this.mate where this.color = eg.Color.BLACK.intValue")
     .list();]]></programlisting>
@@ -583,7 +583,7 @@ List cats = q.list();]]></programlisting>
                 large collection:
             </para>
 
-            <programlisting><![CDATA[Collection tenKittens = session.createFilter(
+            <programlisting role="JAVA"><![CDATA[Collection tenKittens = session.createFilter(
     mother.getKittens(), "")
     .setFirstResult(0).setMaxResults(10)
     .list();]]></programlisting>
@@ -599,7 +599,7 @@ List cats = q.list();]]></programlisting>
                 an intuitive <literal>Criteria</literal> query API for these cases:
             </para>
 
-            <programlisting><![CDATA[Criteria crit = session.createCriteria(Cat.class);
+            <programlisting role="JAVA"><![CDATA[Criteria crit = session.createCriteria(Cat.class);
 crit.add( Restrictions.eq( "color", eg.Color.BLACK ) );
 crit.setMaxResults(10);
 List cats = crit.list();]]></programlisting>
@@ -622,11 +622,11 @@ List cats = crit.list();]]></programlisting>
                 Hibernate API, you must enclose SQL aliases in braces:
             </para>
 
-            <programlisting><![CDATA[List cats = session.createSQLQuery("SELECT {cat.*} FROM CAT {cat} WHERE ROWNUM<10")
+            <programlisting role="JAVA"><![CDATA[List cats = session.createSQLQuery("SELECT {cat.*} FROM CAT {cat} WHERE ROWNUM<10")
     .addEntity("cat", Cat.class)
 .list();]]></programlisting>
                 
-            <programlisting><![CDATA[List cats = session.createSQLQuery(
+            <programlisting role="JAVA"><![CDATA[List cats = session.createSQLQuery(
     "SELECT {cat}.ID AS {cat.id}, {cat}.SEX AS {cat.sex}, " +
            "{cat}.MATE AS {cat.mate}, {cat}.SUBCLASS AS {cat.class}, ... " +
     "FROM CAT {cat} WHERE ROWNUM<10")
@@ -657,7 +657,7 @@ List cats = crit.list();]]></programlisting>
             and then manipulate it directly while the <literal>Session</literal> is open:
         </para>
 
-        <programlisting><![CDATA[DomesticCat cat = (DomesticCat) sess.load( Cat.class, new Long(69) );
+        <programlisting role="JAVA"><![CDATA[DomesticCat cat = (DomesticCat) sess.load( Cat.class, new Long(69) );
 cat.setName("PK");
 sess.flush();  // changes to cat are automatically detected and persisted]]></programlisting>
 
@@ -700,7 +700,7 @@ sess.flush();  // changes to cat are automatically detected and persisted]]></pr
             methods:
         </para>
 
-        <programlisting><![CDATA[// in the first session
+        <programlisting role="JAVA"><![CDATA[// in the first session
 Cat cat = (Cat) firstSession.load(Cat.class, catId);
 Cat potentialMate = new Cat();
 firstSession.save(potentialMate);
@@ -739,7 +739,7 @@ secondSession.update(mate); // update mate]]></programlisting>
             an object with a new session. However, the detached instance has to be unmodified.
         </para>
 
-        <programlisting><![CDATA[//just reassociate:
+        <programlisting role="JAVA"><![CDATA[//just reassociate:
 sess.lock(fritz, LockMode.NONE);
 //do a version check, then reassociate:
 sess.lock(izi, LockMode.READ);
@@ -769,7 +769,7 @@ sess.lock(pk, LockMode.UPGRADE);]]></programlisting>
             The <literal>saveOrUpdate()</literal> method implements this functionality.
         </para>
 
-        <programlisting><![CDATA[// in the first session
+        <programlisting role="JAVA"><![CDATA[// in the first session
 Cat cat = (Cat) firstSession.load(Cat.class, catID);
 
 // in a higher tier of the application
@@ -907,7 +907,7 @@ secondSession.saveOrUpdate(mate);  // save the new instance (mate has a null id)
             transient.
         </para>
 
-        <programlisting><![CDATA[sess.delete(cat);]]></programlisting>
+        <programlisting role="JAVA"><![CDATA[sess.delete(cat);]]></programlisting>
 
         <para>
             You can delete objects in any order, without risk of foreign key
@@ -928,7 +928,7 @@ secondSession.saveOrUpdate(mate);  // save the new instance (mate has a null id)
     	    values.
     	</para>
     	
-        <programlisting><![CDATA[//retrieve a cat from one database
+        <programlisting role="JAVA"><![CDATA[//retrieve a cat from one database
 Session session1 = factory1.openSession();
 Transaction tx1 = session1.beginTransaction();
 Cat cat = session1.get(Cat.class, catId);
@@ -1073,7 +1073,7 @@ session2.close();]]></programlisting>
             a long time (see <xref linkend="transactions-optimistic-longsession"/>).
         </para>
 
-        <programlisting><![CDATA[sess = sf.openSession();
+        <programlisting role="JAVA"><![CDATA[sess = sf.openSession();
 Transaction tx = sess.beginTransaction();
 sess.setFlushMode(FlushMode.COMMIT); // allow queries to return stale state
 
@@ -1134,13 +1134,13 @@ sess.close();]]></programlisting>
             document. For example:
         </para>
         
-        <programlisting><![CDATA[<one-to-one name="person" cascade="persist"/>]]></programlisting>
+        <programlisting role="XML"><![CDATA[<one-to-one name="person" cascade="persist"/>]]></programlisting>
         
         <para>
             Cascade styles my be combined:
         </para>
         
-        <programlisting><![CDATA[<one-to-one name="person" cascade="persist,delete,lock"/>]]></programlisting>
+        <programlisting role="XML"><![CDATA[<one-to-one name="person" cascade="persist,delete,lock"/>]]></programlisting>
         
         <para>
             You can even use <literal>cascade="all"</literal> to specify that <emphasis>all</emphasis>
@@ -1267,7 +1267,7 @@ sess.close();]]></programlisting>
             <literal>SessionFactory</literal>.
         </para>
 
-        <programlisting><![CDATA[Cat fritz = ......;
+        <programlisting role="JAVA"><![CDATA[Cat fritz = ......;
 ClassMetadata catMeta = sessionfactory.getClassMetadata(Cat.class);
 
 Object[] propertyValues = catMeta.getPropertyValues(fritz);

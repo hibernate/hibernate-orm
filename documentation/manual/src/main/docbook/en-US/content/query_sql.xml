@@ -51,7 +51,7 @@
       <para>The most basic SQL query is to get a list of scalars
       (values).</para>
 
-      <programlisting><![CDATA[sess.createSQLQuery("SELECT * FROM CATS").list();
+      <programlisting role="JAVA"><![CDATA[sess.createSQLQuery("SELECT * FROM CATS").list();
 sess.createSQLQuery("SELECT ID, NAME, BIRTHDATE FROM CATS").list();
 ]]></programlisting>
 
@@ -64,7 +64,7 @@ sess.createSQLQuery("SELECT ID, NAME, BIRTHDATE FROM CATS").list();
       <literal>ResultSetMetadata</literal>, or simply to be more explicit in
       what is returned, one can use <literal>addScalar()</literal>:</para>
 
-      <programlisting><![CDATA[sess.createSQLQuery("SELECT * FROM CATS")
+      <programlisting role="JAVA"><![CDATA[sess.createSQLQuery("SELECT * FROM CATS")
  .addScalar("ID", Hibernate.LONG)
  .addScalar("NAME", Hibernate.STRING)
  .addScalar("BIRTHDATE", Hibernate.DATE)
@@ -93,7 +93,7 @@ sess.createSQLQuery("SELECT ID, NAME, BIRTHDATE FROM CATS").list();
       <para>It is possible to leave out the type information for all or some
       of the scalars.</para>
 
-      <programlisting><![CDATA[sess.createSQLQuery("SELECT * FROM CATS")
+      <programlisting role="JAVA"><![CDATA[sess.createSQLQuery("SELECT * FROM CATS")
  .addScalar("ID", Hibernate.LONG)
  .addScalar("NAME")
  .addScalar("BIRTHDATE")
@@ -118,7 +118,7 @@ sess.createSQLQuery("SELECT ID, NAME, BIRTHDATE FROM CATS").list();
       shows how to get entity objects from a native sql query via
       <literal>addEntity()</literal>.</para>
 
-      <programlisting><![CDATA[sess.createSQLQuery("SELECT * FROM CATS").addEntity(Cat.class);
+      <programlisting role="JAVA"><![CDATA[sess.createSQLQuery("SELECT * FROM CATS").addEntity(Cat.class);
 sess.createSQLQuery("SELECT ID, NAME, BIRTHDATE FROM CATS").addEntity(Cat.class);
 ]]></programlisting>
 
@@ -146,7 +146,7 @@ sess.createSQLQuery("SELECT ID, NAME, BIRTHDATE FROM CATS").addEntity(Cat.class)
       example for a <literal>many-to-one</literal> to a
       <literal>Dog</literal>:</para>
 
-      <programlisting><![CDATA[sess.createSQLQuery("SELECT ID, NAME, BIRTHDATE, DOG_ID FROM CATS").addEntity(Cat.class);
+      <programlisting role="JAVA"><![CDATA[sess.createSQLQuery("SELECT ID, NAME, BIRTHDATE, DOG_ID FROM CATS").addEntity(Cat.class);
 ]]></programlisting>
 
       <para>This will allow cat.getDog() to function properly.</para>
@@ -160,7 +160,7 @@ sess.createSQLQuery("SELECT ID, NAME, BIRTHDATE FROM CATS").addEntity(Cat.class)
       done via the <literal>addJoin()</literal> method, which allows you to
       join in an association or collection.</para>
 
-      <programlisting><![CDATA[sess.createSQLQuery("SELECT c.ID, NAME, BIRTHDATE, DOG_ID, D_ID, D_NAME FROM CATS c, DOGS d WHERE c.DOG_ID = d.D_ID")
+      <programlisting role="JAVA"><![CDATA[sess.createSQLQuery("SELECT c.ID, NAME, BIRTHDATE, DOG_ID, D_ID, D_NAME FROM CATS c, DOGS d WHERE c.DOG_ID = d.D_ID")
  .addEntity("cat", Cat.class)
  .addJoin("cat.dog");
 ]]></programlisting>
@@ -173,7 +173,7 @@ sess.createSQLQuery("SELECT ID, NAME, BIRTHDATE FROM CATS").addEntity(Cat.class)
       <literal>Cat</literal> had a one-to-many to <literal>Dog</literal>
       instead.</para>
 
-      <programlisting><![CDATA[sess.createSQLQuery("SELECT ID, NAME, BIRTHDATE, D_ID, D_NAME, CAT_ID FROM CATS c, DOGS d WHERE c.ID = d.CAT_ID")
+      <programlisting role="JAVA"><![CDATA[sess.createSQLQuery("SELECT ID, NAME, BIRTHDATE, D_ID, D_NAME, CAT_ID FROM CATS c, DOGS d WHERE c.ID = d.CAT_ID")
  .addEntity("cat", Cat.class)
  .addJoin("cat.dogs");
 ]]></programlisting>
@@ -196,7 +196,7 @@ sess.createSQLQuery("SELECT ID, NAME, BIRTHDATE FROM CATS").addEntity(Cat.class)
       <para>Column alias injection is needed in the following query (which
       most likely will fail):</para>
 
-      <programlisting><![CDATA[sess.createSQLQuery("SELECT c.*, m.*  FROM CATS c, CATS m WHERE c.MOTHER_ID = c.ID")
+      <programlisting role="JAVA"><![CDATA[sess.createSQLQuery("SELECT c.*, m.*  FROM CATS c, CATS m WHERE c.MOTHER_ID = c.ID")
  .addEntity("cat", Cat.class)
  .addEntity("mother", Cat.class)
 ]]></programlisting>
@@ -215,7 +215,7 @@ sess.createSQLQuery("SELECT ID, NAME, BIRTHDATE FROM CATS").addEntity(Cat.class)
       <para>The following form is not vulnerable to column name
       duplication:</para>
 
-      <programlisting><![CDATA[sess.createSQLQuery("SELECT {cat.*}, {mother.*}  FROM CATS c, CATS m WHERE c.MOTHER_ID = c.ID")
+      <programlisting role="JAVA"><![CDATA[sess.createSQLQuery("SELECT {cat.*}, {mother.*}  FROM CATS c, CATS m WHERE c.MOTHER_ID = c.ID")
  .addEntity("cat", Cat.class)
  .addEntity("mother", Cat.class)
 ]]></programlisting>
@@ -242,7 +242,7 @@ sess.createSQLQuery("SELECT ID, NAME, BIRTHDATE FROM CATS").addEntity(Cat.class)
       declared in the mapping metadata. You can even use the
       property aliases in the where clause.</para>
 
-      <programlisting><![CDATA[String sql = "SELECT ID as {c.id}, NAME as {c.name}, " + 
+      <programlisting role="JAVA"><![CDATA[String sql = "SELECT ID as {c.id}, NAME as {c.name}, " +
          "BIRTHDATE as {c.birthDate}, MOTHER_ID as {c.mother}, {mother.*} " +
          "FROM CAT_LOG c, CAT_LOG m WHERE {c.mother} = c.ID";
 
@@ -376,7 +376,7 @@ List loggedCats = sess.createSQLQuery(sql)
 
       <para>It is possible to apply a ResultTransformer to native SQL queries, allowing it to return non-managed entities.</para>
 
-      <programlisting><![CDATA[sess.createSQLQuery("SELECT NAME, BIRTHDATE FROM CATS")
+      <programlisting role="JAVA"><![CDATA[sess.createSQLQuery("SELECT NAME, BIRTHDATE FROM CATS")
         .setResultTransformer(Transformers.aliasToBean(CatDTO.class))]]></programlisting>
         
               <para>This query specified:</para>
@@ -411,7 +411,7 @@ List loggedCats = sess.createSQLQuery(sql)
       <para>Native SQL queries support positional as well as named
       parameters:</para>
 
-      <programlisting><![CDATA[Query query = sess.createSQLQuery("SELECT * FROM CATS WHERE NAME like ?").addEntity(Cat.class);
+      <programlisting role="JAVA"><![CDATA[Query query = sess.createSQLQuery("SELECT * FROM CATS WHERE NAME like ?").addEntity(Cat.class);
 List pusList = query.setString(0, "Pus%").list();
      
 query = sess.createSQLQuery("SELECT * FROM CATS WHERE NAME like :name").addEntity(Cat.class);
@@ -430,7 +430,7 @@ List pusList = query.setString("name", "Pus%").list();          ]]></programlist
     <emphasis>not</emphasis> need to call
     <literal>addEntity()</literal>.</para>
 
-    <programlisting><![CDATA[<sql-query name="persons">
+    <programlisting role="XML"><![CDATA[<sql-query name="persons">
     <return alias="person" class="eg.Person"/>
     SELECT person.NAME AS {person.name},
            person.AGE AS {person.age},
@@ -439,7 +439,7 @@ List pusList = query.setString("name", "Pus%").list();          ]]></programlist
     WHERE person.NAME LIKE :namePattern
 </sql-query>]]></programlisting>
 
-    <programlisting><![CDATA[List people = sess.getNamedQuery("persons")
+    <programlisting role="JAVA"><![CDATA[List people = sess.getNamedQuery("persons")
     .setString("namePattern", namePattern)
     .setMaxResults(50)
     .list();]]></programlisting>
@@ -448,7 +448,7 @@ List pusList = query.setString("name", "Pus%").list();          ]]></programlist
     the <literal>&lt;load-collection&gt;</literal> element is used to define queries which initialize collections,
     </para>
 
-    <programlisting><![CDATA[<sql-query name="personsWith">
+    <programlisting role="XML"><![CDATA[<sql-query name="personsWith">
     <return alias="person" class="eg.Person"/>
     <return-join alias="address" property="person.mailingAddress"/>
     SELECT person.NAME AS {person.name},
@@ -468,7 +468,7 @@ List pusList = query.setString("name", "Pus%").list();          ]]></programlist
     column alias and Hibernate type using the
     <literal>&lt;return-scalar&gt;</literal> element:</para>
 
-    <programlisting><![CDATA[<sql-query name="mySqlQuery">
+    <programlisting role="XML"><![CDATA[<sql-query name="mySqlQuery">
     <return-scalar column="name" type="string"/>
     <return-scalar column="age" type="long"/>
     SELECT p.NAME AS name,
@@ -481,7 +481,7 @@ List pusList = query.setString("name", "Pus%").list();          ]]></programlist
     several named queries or through the
     <literal>setResultSetMapping()</literal> API.</para>
 
-    <programlisting><![CDATA[<resultset name="personAddress">
+    <programlisting role="XML"><![CDATA[<resultset name="personAddress">
     <return alias="person" class="eg.Person"/>
     <return-join alias="address" property="person.mailingAddress"/>
 </resultset>
@@ -503,7 +503,7 @@ List pusList = query.setString("name", "Pus%").list();          ]]></programlist
     <para>You can, alternatively, use the resultset mapping information in your
     hbm files directly in java code.</para>
 
-    <programlisting><![CDATA[List cats = sess.createSQLQuery(
+    <programlisting role="JAVA"><![CDATA[List cats = sess.createSQLQuery(
         "select {cat.*}, {kitten.*} from cats cat, cats kitten where kitten.mother = cat.id"
     )
     .setResultSetMapping("catAndKitten")
@@ -518,7 +518,7 @@ List pusList = query.setString("name", "Pus%").list();          ]]></programlist
       <literal>{}</literal>-syntax to let Hibernate inject its own
       aliases.For example:</para>
 
-      <programlisting><![CDATA[<sql-query name="mySqlQuery">
+      <programlisting role="XML"><![CDATA[<sql-query name="mySqlQuery">
     <return alias="person" class="eg.Person">
         <return-property name="name" column="myName"/>
         <return-property name="age" column="myAge"/>
@@ -536,7 +536,7 @@ List pusList = query.setString("name", "Pus%").list();          ]]></programlist
       <literal>{}</literal>-syntax which cannot allow fine grained control of
       multi-column properties.</para>
 
-      <programlisting><![CDATA[<sql-query name="organizationCurrentEmployments">
+      <programlisting role="XML"><![CDATA[<sql-query name="organizationCurrentEmployments">
     <return alias="emp" class="Employment">
         <return-property name="salary">
             <return-column name="VALUE"/>
@@ -571,7 +571,7 @@ List pusList = query.setString("name", "Pus%").list();          ]]></programlist
       out-parameter to be able to work with Hibernate. An example of such a
       stored function in Oracle 9 and higher is as follows:</para>
 
-      <programlisting><![CDATA[CREATE OR REPLACE FUNCTION selectAllEmployments
+      <programlisting role="XML"><![CDATA[CREATE OR REPLACE FUNCTION selectAllEmployments
     RETURN SYS_REFCURSOR
 AS
     st_cursor SYS_REFCURSOR;
@@ -587,7 +587,7 @@ BEGIN
       <para>To use this query in Hibernate you need to map it via a named
       query.</para>
 
-      <programlisting><![CDATA[<sql-query name="selectAllEmployees_SP" callable="true">
+      <programlisting role="XML"><![CDATA[<sql-query name="selectAllEmployees_SP" callable="true">
     <return alias="emp" class="Employment">
         <return-property name="employee" column="EMPLOYEE"/>
         <return-property name="employer" column="EMPLOYER"/>
@@ -675,7 +675,7 @@ BEGIN
     <literal>&lt;sql-delete&gt;</literal>, and
     <literal>&lt;sql-update&gt;</literal> override these strings:</para>
 
-    <programlisting><![CDATA[<class name="Person">
+    <programlisting role="XML"><![CDATA[<class name="Person">
     <id name="id">
         <generator class="increment"/>
     </id>
@@ -692,7 +692,7 @@ BEGIN
     <para>Stored procedures are supported if the <literal>callable</literal>
     attribute is set:</para>
 
-    <programlisting><![CDATA[<class name="Person">
+    <programlisting role="XML"><![CDATA[<class name="Person">
     <id name="id">
         <generator class="increment"/>
     </id>
@@ -743,7 +743,7 @@ END updatePerson;]]></programlisting>
     or at the statement level. Here is an example of a statement level override:
     </para>
 
-    <programlisting><![CDATA[<sql-query name="person">
+    <programlisting role="XML"><![CDATA[<sql-query name="person">
     <return alias="pers" class="Person" lock-mode="upgrade"/>
     SELECT NAME AS {pers.name}, ID AS {pers.id}
     FROM PERSON
@@ -754,7 +754,7 @@ END updatePerson;]]></programlisting>
     <para>This is just a named query declaration, as discussed earlier. You
     can reference this named query in a class mapping:</para>
 
-    <programlisting><![CDATA[<class name="Person">
+    <programlisting role="XML"><![CDATA[<class name="Person">
     <id name="id">
         <generator class="increment"/>
     </id>
@@ -766,13 +766,13 @@ END updatePerson;]]></programlisting>
 
     <para>You can even define a query for collection loading:</para>
 
-    <programlisting><![CDATA[<set name="employments" inverse="true">
+    <programlisting role="XML"><![CDATA[<set name="employments" inverse="true">
     <key/>
     <one-to-many class="Employment"/>
     <loader query-ref="employments"/>
 </set>]]></programlisting>
 
-    <programlisting><![CDATA[<sql-query name="employments">
+    <programlisting role="XML"><![CDATA[<sql-query name="employments">
     <load-collection alias="emp" role="Person.employments"/>
     SELECT {emp.*}
     FROM EMPLOYMENT emp
@@ -783,7 +783,7 @@ END updatePerson;]]></programlisting>
     <para>You can also define an entity loader that loads a collection by
     join fetching:</para>
 
-    <programlisting><![CDATA[<sql-query name="person">
+    <programlisting role="XML"><![CDATA[<sql-query name="person">
     <return alias="pers" class="Person"/>
     <return-join alias="emp" property="pers.employments"/>
     SELECT NAME AS {pers.*}, {emp.*}

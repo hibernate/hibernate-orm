@@ -73,7 +73,7 @@
             Starting with version 3.3, Hibernate has a fare more powerful way to automatically determine
             which dialect to should be used by relying on a series of delegates which implement the
             <interfacename>org.hibernate.dialect.resolver.DialectResolver</interfacename> which defines only a
-            single method:<programlisting><![CDATA[public Dialect resolveDialect(DatabaseMetaData metaData) throws JDBCConnectionException]]></programlisting>.
+            single method:<programlisting role="JAVA"><![CDATA[public Dialect resolveDialect(DatabaseMetaData metaData) throws JDBCConnectionException]]></programlisting>.
             The basic contract here is that if the resolver 'understands' the given database metadata then
             it returns the corresponding Dialect; if not it returns null and the process continues to the next
             resolver.  The signature also identifies <exceptionname>org.hibernate.exception.JDBCConnectionException</exceptionname>

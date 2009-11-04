@@ -91,7 +91,7 @@
              before subclasses.
          </para>
 
-         <programlisting><![CDATA[
+         <programlisting role="XML"><![CDATA[
  <hibernate-mapping>
      <subclass name="DomesticCat" extends="Cat" discriminator-value="D">
           <property name="name" type="string"/>
@@ -109,7 +109,7 @@
             display in the following way:
         </para>
 
-        <programlisting><![CDATA[<class name="Payment" table="PAYMENT">
+        <programlisting role="XML"><![CDATA[<class name="Payment" table="PAYMENT">
     <id name="id" type="long" column="PAYMENT_ID">
         <generator class="native"/>
     </id>
@@ -143,7 +143,7 @@
             A table per subclass mapping looks like this:
         </para>
 
-        <programlisting><![CDATA[<class name="Payment" table="PAYMENT">
+        <programlisting role="XML"><![CDATA[<class name="Payment" table="PAYMENT">
     <id name="id" type="long" column="PAYMENT_ID">
         <generator class="native"/>
     </id>
@@ -187,7 +187,7 @@
             <literal>&lt;join&gt;</literal>, as follows:
         </para>
 
-        <programlisting><![CDATA[<class name="Payment" table="PAYMENT">
+        <programlisting role="XML"><![CDATA[<class name="Payment" table="PAYMENT">
     <id name="id" type="long" column="PAYMENT_ID">
         <generator class="native"/>
     </id>
@@ -231,7 +231,7 @@
             using the following approach:
         </para>
 
-        <programlisting><![CDATA[<class name="Payment" table="PAYMENT">
+        <programlisting role="XML"><![CDATA[<class name="Payment" table="PAYMENT">
     <id name="id" type="long" column="PAYMENT_ID">
         <generator class="native"/>
     </id>
@@ -258,7 +258,7 @@
             <literal>&lt;many-to-one&gt;</literal>.
         </para>
 
-        <programlisting><![CDATA[<many-to-one name="payment" column="PAYMENT_ID" class="Payment"/>]]></programlisting>
+        <programlisting role="XML"><![CDATA[<many-to-one name="payment" column="PAYMENT_ID" class="Payment"/>]]></programlisting>
     
         </sect2>
 
@@ -270,7 +270,7 @@
             strategy. First, you can use <literal>&lt;union-subclass&gt;</literal>.
         </para>
 
-        <programlisting><![CDATA[<class name="Payment">
+        <programlisting role="XML"><![CDATA[<class name="Payment">
     <id name="id" type="long" column="PAYMENT_ID">
         <generator class="sequence"/>
     </id>
@@ -318,7 +318,7 @@
             An alternative approach is to make use of implicit polymorphism:
         </para>
 
-        <programlisting><![CDATA[<class name="CreditCardPayment" table="CREDIT_PAYMENT">
+        <programlisting role="XML"><![CDATA[<class name="CreditCardPayment" table="CREDIT_PAYMENT">
     <id name="id" type="long" column="CREDIT_PAYMENT_ID">
         <generator class="native"/>
     </id>
@@ -362,7 +362,7 @@
             is usually mapped using <literal>&lt;any&gt;</literal>.
         </para>
 
-        <programlisting><![CDATA[<any name="payment" meta-type="string" id-type="long">
+        <programlisting role="XML"><![CDATA[<any name="payment" meta-type="string" id-type="long">
     <meta-value value="CREDIT" class="CreditCardPayment"/>
     <meta-value value="CASH" class="CashPayment"/>
     <meta-value value="CHEQUE" class="ChequePayment"/>
@@ -383,7 +383,7 @@
             queries against the <literal>Payment</literal> interface.
        </para>
 
-        <programlisting><![CDATA[<class name="CreditCardPayment" table="CREDIT_PAYMENT">
+        <programlisting role="XML"><![CDATA[<class name="CreditCardPayment" table="CREDIT_PAYMENT">
     <id name="id" type="long" column="CREDIT_PAYMENT_ID">
         <generator class="native"/>
     </id>

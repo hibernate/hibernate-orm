@@ -33,7 +33,7 @@
         look like this:
     </para>
 
-<programlisting><![CDATA[Session session = sessionFactory.openSession();
+<programlisting role="JAVA"><![CDATA[Session session = sessionFactory.openSession();
 Transaction tx = session.beginTransaction();
 for ( int i=0; i<100000; i++ ) {
     Customer customer = new Customer(.....);
@@ -84,7 +84,7 @@ session.close();]]></programlisting>
             the first-level cache.
         </para>
 
-<programlisting><![CDATA[Session session = sessionFactory.openSession();
+<programlisting role="JAVA"><![CDATA[Session session = sessionFactory.openSession();
 Transaction tx = session.beginTransaction();
    
 for ( int i=0; i<100000; i++ ) {
@@ -111,7 +111,7 @@ session.close();]]></programlisting>
             queries that return many rows of data.
         </para>
 
-<programlisting><![CDATA[Session session = sessionFactory.openSession();
+<programlisting role="JAVA"><![CDATA[Session session = sessionFactory.openSession();
 Transaction tx = session.beginTransaction();
    
 ScrollableResults customers = session.getNamedQuery("GetCustomers")
@@ -150,7 +150,7 @@ session.close();]]></programlisting>
             session is a lower-level abstraction that is much closer to the underlying JDBC.
         </para>
         
-<programlisting><![CDATA[StatelessSession session = sessionFactory.openStatelessSession();
+<programlisting role="JAVA"><![CDATA[StatelessSession session = sessionFactory.openStatelessSession();
 Transaction tx = session.beginTransaction();
    
 ScrollableResults customers = session.getNamedQuery("GetCustomers")
@@ -237,7 +237,7 @@ session.close();]]></programlisting>
             those familiar with JDBC's <literal>PreparedStatement.executeUpdate()</literal>:
         </para>
 
-<programlisting><![CDATA[Session session = sessionFactory.openSession();
+<programlisting role="JAVA"><![CDATA[Session session = sessionFactory.openSession();
 Transaction tx = session.beginTransaction();
 
 String hqlUpdate = "update Customer c set c.name = :newName where c.name = :oldName";
@@ -259,7 +259,7 @@ session.close();]]></programlisting>
             This is achieved by adding the <literal>VERSIONED</literal> keyword after the <literal>UPDATE</literal>
             keyword.
         </para>
-<programlisting><![CDATA[Session session = sessionFactory.openSession();
+<programlisting role="JAVA"><![CDATA[Session session = sessionFactory.openSession();
 Transaction tx = session.beginTransaction();
 String hqlVersionedUpdate = "update versioned Customer set name = :newName where name = :oldName";
 int updatedEntities = s.createQuery( hqlUpdate )
@@ -279,7 +279,7 @@ session.close();]]></programlisting>
             method:
         </para>
 
-<programlisting><![CDATA[Session session = sessionFactory.openSession();
+<programlisting role="JAVA"><![CDATA[Session session = sessionFactory.openSession();
 Transaction tx = session.beginTransaction();
 
 String hqlDelete = "delete Customer c where c.name = :oldName";
@@ -363,7 +363,7 @@ session.close();]]></programlisting>
             The following is an example of an HQL <literal>INSERT</literal> statement execution:
         </para>
 
-<programlisting><![CDATA[Session session = sessionFactory.openSession();
+<programlisting role="JAVA"><![CDATA[Session session = sessionFactory.openSession();
 Transaction tx = session.beginTransaction();
 
 String hqlInsert = "insert into DelinquentAccount (id, name) select c.id, c.name from Customer c where ...";

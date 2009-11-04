@@ -41,7 +41,7 @@
             <literal>Criteria</literal> instances.
         </para>
 
-        <programlisting><![CDATA[Criteria crit = sess.createCriteria(Cat.class);
+        <programlisting role="JAVA"><![CDATA[Criteria crit = sess.createCriteria(Cat.class);
 crit.setMaxResults(50);
 List cats = crit.list();]]></programlisting>
 
@@ -58,7 +58,7 @@ List cats = crit.list();]]></programlisting>
             <literal>Criterion</literal> types.
         </para>
 
-        <programlisting><![CDATA[List cats = sess.createCriteria(Cat.class)
+        <programlisting role="JAVA"><![CDATA[List cats = sess.createCriteria(Cat.class)
     .add( Restrictions.like("name", "Fritz%") )
     .add( Restrictions.between("weight", minWeight, maxWeight) )
     .list();]]></programlisting>
@@ -67,7 +67,7 @@ List cats = crit.list();]]></programlisting>
             Restrictions can be grouped logically.
         </para>
 
-        <programlisting><![CDATA[List cats = sess.createCriteria(Cat.class)
+        <programlisting role="JAVA"><![CDATA[List cats = sess.createCriteria(Cat.class)
     .add( Restrictions.like("name", "Fritz%") )
     .add( Restrictions.or(
         Restrictions.eq( "age", new Integer(0) ),
@@ -75,7 +75,7 @@ List cats = crit.list();]]></programlisting>
     ) )
     .list();]]></programlisting>
     
-       <programlisting><![CDATA[List cats = sess.createCriteria(Cat.class)
+       <programlisting role="JAVA"><![CDATA[List cats = sess.createCriteria(Cat.class)
     .add( Restrictions.in( "name", new String[] { "Fritz", "Izi", "Pk" } ) )
     .add( Restrictions.disjunction()
         .add( Restrictions.isNull("age") )
@@ -90,7 +90,7 @@ List cats = crit.list();]]></programlisting>
             subclasses). One of the most useful allows you to specify SQL directly.
         </para>
 
-        <programlisting><![CDATA[List cats = sess.createCriteria(Cat.class)
+        <programlisting role="JAVA"><![CDATA[List cats = sess.createCriteria(Cat.class)
     .add( Restrictions.sqlRestriction("lower({alias}.name) like lower(?)", "Fritz%", Hibernate.STRING) )
     .list();]]></programlisting>
     
@@ -105,7 +105,7 @@ List cats = crit.list();]]></programlisting>
             by calling <literal>Property.forName()</literal>:
         </para>
     
-        <programlisting><![CDATA[
+        <programlisting role="JAVA"><![CDATA[
 Property age = Property.forName("age");
 List cats = sess.createCriteria(Cat.class)
     .add( Restrictions.disjunction()
@@ -126,14 +126,14 @@ List cats = sess.createCriteria(Cat.class)
             You can order the results using <literal>org.hibernate.criterion.Order</literal>.
         </para>
 
-        <programlisting><![CDATA[List cats = sess.createCriteria(Cat.class)
+        <programlisting role="JAVA"><![CDATA[List cats = sess.createCriteria(Cat.class)
     .add( Restrictions.like("name", "F%")
     .addOrder( Order.asc("name") )
     .addOrder( Order.desc("age") )
     .setMaxResults(50)
     .list();]]></programlisting>
     
-        <programlisting><![CDATA[List cats = sess.createCriteria(Cat.class)
+        <programlisting role="JAVA"><![CDATA[List cats = sess.createCriteria(Cat.class)
     .add( Property.forName("name").like("F%") )
     .addOrder( Property.forName("name").asc() )
     .addOrder( Property.forName("age").desc() )
@@ -150,7 +150,7 @@ List cats = sess.createCriteria(Cat.class)
             associations using <literal>createCriteria()</literal> you can specify constraints upon related entities:
         </para>
 
-        <programlisting><![CDATA[List cats = sess.createCriteria(Cat.class)
+        <programlisting role="JAVA"><![CDATA[List cats = sess.createCriteria(Cat.class)
     .add( Restrictions.like("name", "F%") )
     .createCriteria("kittens")
         .add( Restrictions.like("name", "F%") )
@@ -166,7 +166,7 @@ List cats = sess.createCriteria(Cat.class)
             There is also an alternate form that is useful in certain circumstances:
         </para>
 
-        <programlisting><![CDATA[List cats = sess.createCriteria(Cat.class)
+        <programlisting role="JAVA"><![CDATA[List cats = sess.createCriteria(Cat.class)
     .createAlias("kittens", "kt")
     .createAlias("mate", "mt")
     .add( Restrictions.eqProperty("kt.name", "mt.name") )
@@ -184,7 +184,7 @@ List cats = sess.createCriteria(Cat.class)
             criteria, you must use a <literal>ResultTransformer</literal>.
         </para>
 
-        <programlisting><![CDATA[List cats = sess.createCriteria(Cat.class)
+        <programlisting role="JAVA"><![CDATA[List cats = sess.createCriteria(Cat.class)
     .createCriteria("kittens", "kt")
         .add( Restrictions.eq("name", "F%") )
     .setResultTransformer(Criteria.ALIAS_TO_ENTITY_MAP)
@@ -206,7 +206,7 @@ while ( iter.hasNext() ) {
             <literal>setFetchMode()</literal>.
         </para>
 
-        <programlisting><![CDATA[List cats = sess.createCriteria(Cat.class)
+        <programlisting role="JAVA"><![CDATA[List cats = sess.createCriteria(Cat.class)
     .add( Restrictions.like("name", "Fritz%") )
     .setFetchMode("mate", FetchMode.EAGER)
     .setFetchMode("kittens", FetchMode.EAGER)
@@ -227,7 +227,7 @@ while ( iter.hasNext() ) {
             you to construct a query criterion from a given instance.
         </para>
 
-        <programlisting><![CDATA[Cat cat = new Cat();
+        <programlisting role="JAVA"><![CDATA[Cat cat = new Cat();
 cat.setSex('F');
 cat.setColor(Color.BLACK);
 List results = session.createCriteria(Cat.class)
@@ -243,7 +243,7 @@ List results = session.createCriteria(Cat.class)
            You can adjust how the <literal>Example</literal> is applied.
         </para>
 
-        <programlisting><![CDATA[Example example = Example.create(cat)
+        <programlisting role="JAVA"><![CDATA[Example example = Example.create(cat)
     .excludeZeroes()           //exclude zero valued properties
     .excludeProperty("color")  //exclude the property named "color"
     .ignoreCase()              //perform case insensitive string comparisons
@@ -256,7 +256,7 @@ List results = session.createCriteria(Cat.class)
             You can even use examples to place criteria upon associated objects.
         </para>
 
-        <programlisting><![CDATA[List results = session.createCriteria(Cat.class)
+        <programlisting role="JAVA"><![CDATA[List results = session.createCriteria(Cat.class)
     .add( Example.create(cat) )
     .createCriteria("mate")
         .add( Example.create( cat.getMate() ) )
@@ -272,12 +272,12 @@ List results = session.createCriteria(Cat.class)
             projection to a query by calling <literal>setProjection()</literal>.
         </para>
         
-        <programlisting><![CDATA[List results = session.createCriteria(Cat.class)
+        <programlisting role="JAVA"><![CDATA[List results = session.createCriteria(Cat.class)
     .setProjection( Projections.rowCount() )
     .add( Restrictions.eq("color", Color.BLACK) )
     .list();]]></programlisting>
     
-        <programlisting><![CDATA[List results = session.createCriteria(Cat.class)
+        <programlisting role="JAVA"><![CDATA[List results = session.createCriteria(Cat.class)
     .setProjection( Projections.projectionList()
         .add( Projections.rowCount() )
         .add( Projections.avg("weight") )
@@ -298,12 +298,12 @@ List results = session.createCriteria(Cat.class)
             do this:
         </para>
 
-        <programlisting><![CDATA[List results = session.createCriteria(Cat.class)
+        <programlisting role="JAVA"><![CDATA[List results = session.createCriteria(Cat.class)
     .setProjection( Projections.alias( Projections.groupProperty("color"), "colr" ) )
     .addOrder( Order.asc("colr") )
     .list();]]></programlisting>
     
-        <programlisting><![CDATA[List results = session.createCriteria(Cat.class)
+        <programlisting role="JAVA"><![CDATA[List results = session.createCriteria(Cat.class)
     .setProjection( Projections.groupProperty("color").as("colr") )
     .addOrder( Order.asc("colr") )
     .list();]]></programlisting>
@@ -315,7 +315,7 @@ List results = session.createCriteria(Cat.class)
             projection list:
         </para>
 
-       <programlisting><![CDATA[List results = session.createCriteria(Cat.class)
+       <programlisting role="JAVA"><![CDATA[List results = session.createCriteria(Cat.class)
     .setProjection( Projections.projectionList()
         .add( Projections.rowCount(), "catCountByColor" )
         .add( Projections.avg("weight"), "avgWeight" )
@@ -326,7 +326,7 @@ List results = session.createCriteria(Cat.class)
     .addOrder( Order.desc("avgWeight") )
     .list();]]></programlisting>
     
-        <programlisting><![CDATA[List results = session.createCriteria(Domestic.class, "cat")
+        <programlisting role="JAVA"><![CDATA[List results = session.createCriteria(Domestic.class, "cat")
     .createAlias("kittens", "kit")
     .setProjection( Projections.projectionList()
         .add( Projections.property("cat.name"), "catName" )
@@ -340,12 +340,12 @@ List results = session.createCriteria(Cat.class)
             You can also use <literal>Property.forName()</literal> to express projections:
         </para>
     
-        <programlisting><![CDATA[List results = session.createCriteria(Cat.class)
+        <programlisting role="JAVA"><![CDATA[List results = session.createCriteria(Cat.class)
     .setProjection( Property.forName("name") )
     .add( Property.forName("color").eq(Color.BLACK) )
     .list();]]></programlisting>
     
-        <programlisting><![CDATA[List results = session.createCriteria(Cat.class)
+        <programlisting role="JAVA"><![CDATA[List results = session.createCriteria(Cat.class)
     .setProjection( Projections.projectionList()
         .add( Projections.rowCount().as("catCountByColor") )
         .add( Property.forName("weight").avg().as("avgWeight") )
@@ -365,7 +365,7 @@ List results = session.createCriteria(Cat.class)
             of a session and then execute it using an arbitrary <literal>Session</literal>.
         </para>
         
-        <programlisting><![CDATA[DetachedCriteria query = DetachedCriteria.forClass(Cat.class)
+        <programlisting role="JAVA"><![CDATA[DetachedCriteria query = DetachedCriteria.forClass(Cat.class)
     .add( Property.forName("sex").eq('F') );
     
 Session session = ....;
@@ -380,13 +380,13 @@ session.close();]]></programlisting>
             <literal>Property</literal>.            
         </para>
         
-        <programlisting><![CDATA[DetachedCriteria avgWeight = DetachedCriteria.forClass(Cat.class)
+        <programlisting role="JAVA"><![CDATA[DetachedCriteria avgWeight = DetachedCriteria.forClass(Cat.class)
     .setProjection( Property.forName("weight").avg() );
 session.createCriteria(Cat.class)
     .add( Property.forName("weight").gt(avgWeight) )
     .list();]]></programlisting>
     
-        <programlisting><![CDATA[DetachedCriteria weights = DetachedCriteria.forClass(Cat.class)
+        <programlisting role="JAVA"><![CDATA[DetachedCriteria weights = DetachedCriteria.forClass(Cat.class)
     .setProjection( Property.forName("weight") );
 session.createCriteria(Cat.class)
     .add( Subqueries.geAll("weight", weights) )
@@ -396,7 +396,7 @@ session.createCriteria(Cat.class)
             Correlated subqueries are also possible:
         </para>
         
-        <programlisting><![CDATA[DetachedCriteria avgWeightForSex = DetachedCriteria.forClass(Cat.class, "cat2")
+        <programlisting role="JAVA"><![CDATA[DetachedCriteria avgWeightForSex = DetachedCriteria.forClass(Cat.class, "cat2")
     .setProjection( Property.forName("weight").avg() )
     .add( Property.forName("cat2.sex").eqProperty("cat.sex") );
 session.createCriteria(Cat.class, "cat")
@@ -425,7 +425,7 @@ session.createCriteria(Cat.class, "cat")
             <literal>&lt;natural-id&gt;</literal> and enable use of the second-level cache.
         </para>
 
-        <programlisting><![CDATA[<class name="User">
+        <programlisting role="XML"><![CDATA[<class name="User">
     <cache usage="read-write"/>
     <id name="id">
         <generator class="increment"/>
@@ -448,7 +448,7 @@ session.createCriteria(Cat.class, "cat")
             the more efficient cache algorithm.
         </para>
        
-        <programlisting><![CDATA[session.createCriteria(User.class)
+        <programlisting role="JAVA"><![CDATA[session.createCriteria(User.class)
     .add( Restrictions.naturalId()
         .set("name", "gavin")
         .set("org", "hb") 

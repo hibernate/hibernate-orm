@@ -50,7 +50,7 @@
             Most Java applications require a persistent class representing felines. For example:
         </para>
 
-        <programlisting><![CDATA[package eg;
+        <programlisting role="JAVA"><![CDATA[package eg;
 import java.util.Set;
 import java.util.Date;
 
@@ -243,7 +243,7 @@ public class Cat {
             identifier property from the superclass, <literal>Cat</literal>. For example:
         </para>
 
-        <programlisting><![CDATA[package eg;
+        <programlisting role="JAVA"><![CDATA[package eg;
 
 public class DomesticCat extends Cat {
         private String name;
@@ -309,7 +309,7 @@ public class DomesticCat extends Cat {
             <emphasis>natural</emphasis> candidate key):
         </para>
 
-        <programlisting><![CDATA[public class Cat {
+        <programlisting role="JAVA"><![CDATA[public class Cat {
 
     ...
     public boolean equals(Object other) {
@@ -374,7 +374,7 @@ public class DomesticCat extends Cat {
             instead of, or in addition to, a class name:
         </para>
 
-        <programlisting><![CDATA[<hibernate-mapping>
+        <programlisting role="XML"><![CDATA[<hibernate-mapping>
 
     <class entity-name="Customer">
 
@@ -421,7 +421,7 @@ public class DomesticCat extends Cat {
             <literal>Map</literal>s of <literal>Map</literal>s:
         </para>
 
-        <programlisting><![CDATA[Session s = openSession();
+        <programlisting role="JAVA"><![CDATA[Session s = openSession();
 Transaction tx = s.beginTransaction();
 Session s = openSession();
 
@@ -456,7 +456,7 @@ s.close();]]></programlisting>
             basis:
         </para>
 
-        <programlisting><![CDATA[Session dynamicSession = pojoSession.getSession(EntityMode.MAP);
+        <programlisting role="JAVA"><![CDATA[Session dynamicSession = pojoSession.getSession(EntityMode.MAP);
 
 // Create a customer
 Map david = new HashMap();
@@ -517,7 +517,7 @@ dynamicSession.close()
             are meant to manage.  Going back to the example of our customer entity:
         </para>
 
-        <programlisting><![CDATA[<hibernate-mapping>
+        <programlisting role="XML"><![CDATA[<hibernate-mapping>
     <class entity-name="Customer">
         <!--
             Override the dynamic-map entity-mode
@@ -572,7 +572,7 @@ public class CustomMapTuplizerImpl
             for illustration.
         </para>
 
-        <programlisting>
+        <programlisting role="JAVA">
 /**
  * A very trivial JDK Proxy InvocationHandler implementation where we proxy an interface as
  * the domain model and simply store persistent state in an internal Map.  This is an extremely

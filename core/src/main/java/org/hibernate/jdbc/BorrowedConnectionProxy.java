@@ -132,10 +132,6 @@ public class BorrowedConnectionProxy implements InvocationHandler {
 	 * @return The class loader appropriate for proxy construction.
 	 */
 	public static ClassLoader getProxyClassLoader() {
-		ClassLoader cl = Thread.currentThread().getContextClassLoader();
-		if ( cl == null ) {
-			cl = BorrowedConnectionProxy.class.getClassLoader();
-		}
-		return cl;
+		return ConnectionWrapper.class.getClassLoader();
 	}
 }

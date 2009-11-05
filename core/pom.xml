@@ -44,20 +44,14 @@
 
         <dependency>
             <!-- YUCK, YUCK, YUCK!!!! -->
-            <groupId>javax.transaction</groupId>
-            <artifactId>jta</artifactId>
-            <version>1.1</version>
+            <groupId>org.jboss.javaee</groupId>
+            <artifactId>jboss-transaction-api</artifactId>
+            <version>1.0.1.GA</version>
         </dependency>
         <dependency>
-            <groupId>javax.security</groupId>
-            <artifactId>jaas</artifactId>
-            <version>1.0.01</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>javax.security</groupId>
-            <artifactId>jacc</artifactId>
-            <version>1.0</version>
+            <groupId>org.jboss.javaee</groupId>
+            <artifactId>jboss-jacc-api</artifactId>
+            <version>1.1.0.GA</version>
             <scope>provided</scope>
         </dependency>
         <dependency>

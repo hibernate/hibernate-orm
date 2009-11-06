@@ -23,7 +23,6 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.List;
 import javax.annotation.processing.FilerException;
-import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
@@ -37,13 +36,13 @@ import javax.tools.FileObject;
  */
 public class ClassWriter {
 
-	public static void writeFile(MetaEntity entity, ProcessingEnvironment processingEnv, Context context) {
+	public static void writeFile(MetaEntity entity, Context context) {
 		try {
 			String metaModelPackage = entity.getPackageName();
 
 			StringBuffer body = generateBody( entity, context );
 
-			FileObject fo = processingEnv.getFiler().createSourceFile(
+			FileObject fo = context.getProcessingEnvironment().getFiler().createSourceFile(
 					metaModelPackage + "." + entity.getSimpleName() + "_"
 			);
 			OutputStream os = fo.openOutputStream();
@@ -62,17 +61,14 @@ public class ClassWriter {
 
 		}
 		catch ( FilerException filerEx ) {
-			processingEnv.getMessager().printMessage(
-					Diagnostic.Kind.ERROR,
-					"Problem with Processing Environment Filer: "
-							+ filerEx.getMessage()
+			context.logMessage(
+					Diagnostic.Kind.ERROR, "Problem with Processing Environment Filer: " + filerEx.getMessage()
 			);
 		}
 		catch ( IOException ioEx ) {
-			processingEnv.getMessager().printMessage(
+			context.logMessage(
 					Diagnostic.Kind.ERROR,
-					"Problem opening file to write MetaModel for " + entity.getSimpleName()
-							+ ioEx.getMessage()
+					"Problem opening file to write MetaModel for " + entity.getSimpleName() + ioEx.getMessage()
 			);
 		}
 	}

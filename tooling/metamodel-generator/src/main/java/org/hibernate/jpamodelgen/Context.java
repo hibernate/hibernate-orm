@@ -17,13 +17,13 @@
 */
 package org.hibernate.jpamodelgen;
 
-import java.util.Map;
 import java.util.HashMap;
-import java.util.Set;
 import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.TypeElement;
 import javax.persistence.AccessType;
-import javax.annotation.processing.ProcessingEnvironment;
 import javax.tools.Diagnostic;
 
 import org.hibernate.jpamodelgen.annotation.AnnotationMetaEntity;
@@ -34,12 +34,16 @@ import org.hibernate.jpamodelgen.annotation.AnnotationMetaEntity;
  * @author Emmanuel Bernard
  */
 public class Context {
+	private static final String DEBUG_PARAMETER = "debug";
+	private final Map<String, MetaEntity> metaEntitiesToProcess = new HashMap<String, MetaEntity>();
+	private final Map<String, MetaEntity> metaSuperclassAndEmbeddableToProcess = new HashMap<String, MetaEntity>();
+
+	private ProcessingEnvironment pe;
+	private boolean logDebug = false;
+
 	//used to cache access types
 	private Map<TypeElement, AccessTypeHolder> accessTypes = new HashMap<TypeElement, AccessTypeHolder>();
 	private Set<String> elementsAlreadyProcessed = new HashSet<String>();
-	private ProcessingEnvironment pe;
-	private final Map<String, MetaEntity> metaEntitiesToProcess = new HashMap<String, MetaEntity>();
-	private final Map<String, MetaEntity> metaSuperclassAndEmbeddableToProcess = new HashMap<String, MetaEntity>();
 
 	private static class AccessTypeHolder {
 		public AccessType elementAccessType;
@@ -48,6 +52,14 @@ public class Context {
 
 	public Context(ProcessingEnvironment pe) {
 		this.pe = pe;
+		String debugParam = pe.getOptions().get( DEBUG_PARAMETER );
+		if ( debugParam != null && "true".equals( debugParam ) ) {
+			logDebug = true;
+		}
+	}
+
+	public ProcessingEnvironment getProcessingEnvironment() {
+		return pe;
 	}
 
 	public Map<String, MetaEntity> getMetaEntitiesToProcess() {
@@ -94,11 +106,17 @@ public class Context {
 	//does not work for Entity (risk of circularity)
 	public void processElement(TypeElement element, AccessType defaultAccessTypeForHierarchy) {
 		if ( elementsAlreadyProcessed.contains( element.getQualifiedName().toString() ) ) {
-			pe.getMessager().printMessage( Diagnostic.Kind.WARNING, "Element already processed (ignoring): " + element );
+			logMessage( Diagnostic.Kind.WARNING, "Element already processed (ignoring): " + element );
 			return;
 		}
-
-		ClassWriter.writeFile( new AnnotationMetaEntity( pe, element, this, defaultAccessTypeForHierarchy ), pe, this );
+		ClassWriter.writeFile( new AnnotationMetaEntity( pe, element, this, defaultAccessTypeForHierarchy ), this );
 		elementsAlreadyProcessed.add( element.getQualifiedName().toString() );
+	}
+
+	public void logMessage(Diagnostic.Kind type, String message) {
+		if ( !logDebug && type.equals( Diagnostic.Kind.NOTE ) ) {
+			return;
+		}
+		pe.getMessager().printMessage( type, message );
 	}
 }

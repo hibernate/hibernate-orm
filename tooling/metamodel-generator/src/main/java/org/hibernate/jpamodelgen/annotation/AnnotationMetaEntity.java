@@ -192,15 +192,14 @@ public class AnnotationMetaEntity implements MetaEntity {
 	}
 
 	private AccessType getAccessTypeForClass(TypeElement searchedElement) {
-		pe.getMessager().printMessage( Diagnostic.Kind.NOTE, "check class" + searchedElement );
+		context.logMessage( Diagnostic.Kind.NOTE, "check class " + searchedElement );
 		AccessType accessType = context.getAccessType( searchedElement );
 
 		if ( defaultAccessTypeForHierarchy == null ) {
 			this.defaultAccessTypeForHierarchy = context.getDefaultAccessTypeForHerarchy( searchedElement );
 		}
 		if ( accessType != null ) {
-			pe.getMessager()
-					.printMessage( Diagnostic.Kind.NOTE, "Found in cache" + searchedElement + ":" + accessType );
+			context.logMessage( Diagnostic.Kind.NOTE, "Found in cache" + searchedElement + ":" + accessType );
 			return accessType;
 		}
 
@@ -211,8 +210,7 @@ public class AnnotationMetaEntity implements MetaEntity {
 		final Access accessAnn = searchedElement.getAnnotation( Access.class );
 		AccessType forcedAccessType = accessAnn != null ? accessAnn.value() : null;
 		if ( forcedAccessType != null ) {
-			pe.getMessager()
-					.printMessage( Diagnostic.Kind.NOTE, "access type " + searchedElement + ":" + forcedAccessType );
+			context.logMessage( Diagnostic.Kind.NOTE, "access type " + searchedElement + ":" + forcedAccessType );
 			context.addAccessType( searchedElement, forcedAccessType );
 		}
 
@@ -232,7 +230,7 @@ public class AnnotationMetaEntity implements MetaEntity {
 					//FIXME consider XML
 					if ( annotationType.equals( Id.class.getName() )
 							|| annotationType.equals( EmbeddedId.class.getName() ) ) {
-						pe.getMessager().printMessage( Diagnostic.Kind.NOTE, "Found id on" + searchedElement );
+						context.logMessage( Diagnostic.Kind.NOTE, "Found id on" + searchedElement );
 						final ElementKind kind = subElement.getKind();
 						if ( kind == ElementKind.FIELD || kind == ElementKind.METHOD ) {
 							accessType = kind == ElementKind.FIELD ? AccessType.FIELD : AccessType.PROPERTY;
@@ -251,7 +249,7 @@ public class AnnotationMetaEntity implements MetaEntity {
 							}
 							if ( forcedAccessType == null ) {
 								context.addAccessType( searchedElement, accessType );
-								pe.getMessager().printMessage(
+								context.logMessage(
 										Diagnostic.Kind.NOTE, "access type " + searchedElement + ":" + accessType
 								);
 								return accessType;

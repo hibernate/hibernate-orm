@@ -64,10 +64,8 @@ import org.hibernate.jpamodelgen.xml.jaxb.PersistenceUnitMetadata;
  * @author Hardy Ferentschik
  * @author Emmanuel Bernard
  */
-//@SupportedAnnotationTypes("javax.persistence.Entity")
 @SupportedAnnotationTypes("*")
 @SupportedSourceVersion(RELEASE_6)
-// TODO Extract all the XML parsing into a separate class
 public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 
 	private static final String PATH_SEPARATOR = "/";
@@ -87,7 +85,7 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 	public void init(ProcessingEnvironment env) {
 		super.init( env );
 		context = new Context( env );
-		processingEnv.getMessager().printMessage( Diagnostic.Kind.NOTE, "Init Processor " + this );
+		context.logMessage( Diagnostic.Kind.NOTE, "Init Processor " + this );
 	}
 
 	@Override
@@ -95,13 +93,9 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 						   final RoundEnvironment roundEnvironment) {
 
 		if ( roundEnvironment.processingOver() ) {
-			processingEnv.getMessager()
-					.printMessage( Diagnostic.Kind.NOTE, "Last processing round." );
-
+			context.logMessage( Diagnostic.Kind.NOTE, "Last processing round." );
 			createMetaModelClasses();
-
-			processingEnv.getMessager()
-					.printMessage( Diagnostic.Kind.NOTE, "Finished processing" );
+			context.logMessage( Diagnostic.Kind.NOTE, "Finished processing" );
 			return ALLOW_OTHER_PROCESSORS_TO_CLAIM_ANNOTATIONS;
 		}
 
@@ -110,14 +104,13 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 		}
 
 		if ( !hostJPAAnnotations( annotations ) ) {
-			processingEnv.getMessager()
-					.printMessage( Diagnostic.Kind.NOTE, "Current processing round does not contain entities" );
+			context.logMessage( Diagnostic.Kind.NOTE, "Current processing round does not contain entities" );
 			return ALLOW_OTHER_PROCESSORS_TO_CLAIM_ANNOTATIONS;
 		}
 
 		Set<? extends Element> elements = roundEnvironment.getRootElements();
 		for ( Element element : elements ) {
-			processingEnv.getMessager().printMessage( Diagnostic.Kind.NOTE, "Processing " + element.toString() );
+			context.logMessage( Diagnostic.Kind.NOTE, "Processing " + element.toString() );
 			handleRootElementAnnotationMirrors( element );
 		}
 
@@ -126,9 +119,8 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 
 	private void createMetaModelClasses() {
 		for ( MetaEntity entity : context.getMetaEntitiesToProcess().values() ) {
-			processingEnv.getMessager()
-					.printMessage( Diagnostic.Kind.NOTE, "Writing meta model for " + entity );
-			ClassWriter.writeFile( entity, processingEnv, context );
+			context.logMessage( Diagnostic.Kind.NOTE, "Writing meta model for " + entity );
+			ClassWriter.writeFile( entity, context );
 		}
 
 		//process left over, in most cases is empty
@@ -137,9 +129,8 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 		}
 
 		for ( MetaEntity entity : context.getMetaSuperclassAndEmbeddableToProcess().values() ) {
-			processingEnv.getMessager()
-					.printMessage( Diagnostic.Kind.NOTE, "Writing meta model for " + entity );
-			ClassWriter.writeFile( entity, processingEnv, context );
+			context.logMessage( Diagnostic.Kind.NOTE, "Writing meta model for " + entity );
+			ClassWriter.writeFile( entity, context );
 		}
 	}
 
@@ -161,8 +152,7 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 
 	private void parsePersistenceXml() {
 		Persistence persistence = parseXml( PERSISTENCE_XML, Persistence.class, PERSISTENCE_XML_XSD );
-		if ( persistence != null )
-		{
+		if ( persistence != null ) {
 			List<Persistence.PersistenceUnit> persistenceUnits = persistence.getPersistenceUnit();
 			for ( Persistence.PersistenceUnit unit : persistenceUnits ) {
 				List<String> mappingFiles = unit.getMappingFile();
@@ -228,7 +218,7 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 			String fullyQualifiedClassName = packageName + "." + entity.getClazz();
 
 			if ( !xmlMappedTypeExists( fullyQualifiedClassName ) ) {
-				processingEnv.getMessager().printMessage(
+				context.logMessage(
 						Diagnostic.Kind.WARNING,
 						fullyQualifiedClassName + " is mapped in xml, but class does not exists. Skipping meta model generation."
 				);
@@ -240,7 +230,7 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 			);
 
 			if ( context.getMetaEntitiesToProcess().containsKey( fullyQualifiedClassName ) ) {
-				processingEnv.getMessager().printMessage(
+				context.logMessage(
 						Diagnostic.Kind.WARNING,
 						fullyQualifiedClassName + " was already processed once. Skipping second occurance."
 				);
@@ -266,7 +256,7 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 			String fullyQualifiedClassName = packageName + "." + embeddable.getClazz();
 
 			if ( !xmlMappedTypeExists( fullyQualifiedClassName ) ) {
-				processingEnv.getMessager().printMessage(
+				context.logMessage(
 						Diagnostic.Kind.WARNING,
 						fullyQualifiedClassName + " is mapped in xml, but class does not exists. Skipping meta model generation."
 				);
@@ -278,7 +268,7 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 			);
 
 			if ( context.getMetaSuperclassAndEmbeddableToProcess().containsKey( fullyQualifiedClassName ) ) {
-				processingEnv.getMessager().printMessage(
+				context.logMessage(
 						Diagnostic.Kind.WARNING,
 						fullyQualifiedClassName + " was already processed once. Skipping second occurance."
 				);
@@ -294,7 +284,7 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 			String fullyQualifiedClassName = packageName + "." + mappedSuperClass.getClazz();
 
 			if ( !xmlMappedTypeExists( fullyQualifiedClassName ) ) {
-				processingEnv.getMessager().printMessage(
+				context.logMessage(
 						Diagnostic.Kind.WARNING,
 						fullyQualifiedClassName + " is mapped in xml, but class does not exists. Skipping meta model generation."
 				);
@@ -306,7 +296,7 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 			);
 
 			if ( context.getMetaSuperclassAndEmbeddableToProcess().containsKey( fullyQualifiedClassName ) ) {
-				processingEnv.getMessager().printMessage(
+				context.logMessage(
 						Diagnostic.Kind.WARNING,
 						fullyQualifiedClassName + " was already processed once. Skipping second occurance."
 				);
@@ -325,13 +315,17 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 
 			if ( element.getKind() == ElementKind.CLASS ) {
 				if ( annotationType.equals( ENTITY_ANN ) ) {
-					AnnotationMetaEntity metaEntity = new AnnotationMetaEntity( processingEnv, ( TypeElement ) element, context );
+					AnnotationMetaEntity metaEntity = new AnnotationMetaEntity(
+							processingEnv, ( TypeElement ) element, context
+					);
 					// TODO instead of just adding the entity we have to do some merging.
 					context.getMetaEntitiesToProcess().put( metaEntity.getQualifiedName(), metaEntity );
 				}
 				else if ( annotationType.equals( MAPPED_SUPERCLASS_ANN )
 						|| annotationType.equals( EMBEDDABLE_ANN ) ) {
-					AnnotationMetaEntity metaEntity = new AnnotationMetaEntity( processingEnv, ( TypeElement ) element, context );
+					AnnotationMetaEntity metaEntity = new AnnotationMetaEntity(
+							processingEnv, ( TypeElement ) element, context
+					);
 
 					// TODO instead of just adding the entity we have to do some merging.
 					context.getMetaSuperclassAndEmbeddableToProcess().put( metaEntity.getQualifiedName(), metaEntity );
@@ -343,8 +337,7 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 	private InputStream getInputStreamForResource(String resource) {
 		String pkg = getPackage( resource );
 		String name = getRelativeName( resource );
-		processingEnv.getMessager()
-				.printMessage( Diagnostic.Kind.NOTE, "Reading resource " + resource );
+		context.logMessage( Diagnostic.Kind.NOTE, "Reading resource " + resource );
 		InputStream ormStream;
 		try {
 			FileObject fileObject = processingEnv.getFiler().getResource( StandardLocation.CLASS_OUTPUT, pkg, name );
@@ -381,7 +374,7 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 		InputStream stream = getInputStreamForResource( resource );
 
 		if ( stream == null ) {
-			processingEnv.getMessager().printMessage( Diagnostic.Kind.NOTE, resource + " not found." );
+			context.logMessage( Diagnostic.Kind.NOTE, resource + " not found." );
 			return null;
 		}
 		try {
@@ -394,12 +387,12 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 		}
 		catch ( JAXBException e ) {
 			String message = "Error unmarshalling " + resource + " with exception :\n " + e;
-			processingEnv.getMessager().printMessage( Diagnostic.Kind.WARNING, message );
+			context.logMessage( Diagnostic.Kind.WARNING, message );
 			return null;
 		}
 		catch ( Exception e ) {
 			String message = "Error reading " + resource + " with exception :\n " + e;
-			processingEnv.getMessager().printMessage( Diagnostic.Kind.WARNING, message );
+			context.logMessage( Diagnostic.Kind.WARNING, message );
 			return null;
 		}
 	}
@@ -426,15 +419,15 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 		Schema schema = null;
 		URL schemaUrl = this.getClass().getClassLoader().getResource( schemaName );
 		if ( schemaUrl == null ) {
-		  return schema;
+			return schema;
 		}
-		
+
 		SchemaFactory sf = SchemaFactory.newInstance( javax.xml.XMLConstants.W3C_XML_SCHEMA_NS_URI );
 		try {
 			schema = sf.newSchema( schemaUrl );
 		}
 		catch ( SAXException e ) {
-			processingEnv.getMessager().printMessage(
+			context.logMessage(
 					Diagnostic.Kind.WARNING, "Unable to create schema for " + schemaName + ": " + e.getMessage()
 			);
 		}

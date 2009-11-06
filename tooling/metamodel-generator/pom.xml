@@ -31,9 +31,14 @@
     <licenses>
         <license>
             <name>Apache License, Version 2.0</name>
-            <url>license.txt</url>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
         </license>
     </licenses>
+
+    <issueManagement>
+        <system>JIRA</system>
+        <url>http://opensource.atlassian.com/projects/hibernate/browse/METAGEN</url>
+    </issueManagement>
 
     <scm>
         <connection>scm:svn:https://svn.jboss.org/repos/hibernate/jpamodelgen/trunk</connection>
@@ -231,9 +236,10 @@
 
     <distributionManagement>
         <repository>
+            <!-- Copy the dist to the local checkout of the JBoss maven2 repo ${maven.repository.root} -->
+            <!-- It is anticipated that ${maven.repository.root} be set in user's settings.xml -->
             <id>repository.jboss.org</id>
-            <name>JBoss Release Repository</name>
-            <url>scm:svn:https://svn.jboss.org/repos/repository.jboss.org/maven2</url>
+            <url>file://${maven.repository.root}</url>
         </repository>
         <snapshotRepository>
             <id>snapshots.jboss.org</id>

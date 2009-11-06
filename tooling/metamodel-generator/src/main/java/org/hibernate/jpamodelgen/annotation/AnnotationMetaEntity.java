@@ -21,7 +21,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
@@ -62,25 +61,35 @@ import org.hibernate.jpamodelgen.TypeUtils;
  */
 public class AnnotationMetaEntity implements MetaEntity {
 
-	final TypeElement element;
-	final protected ProcessingEnvironment pe;
+	static Map<String, String> COLLECTIONS = new HashMap<String, String>();
 
-	final ImportContext importContext;
+	static {
+		COLLECTIONS.put( "java.util.Collection", "javax.persistence.metamodel.CollectionAttribute" );
+		COLLECTIONS.put( "java.util.Set", "javax.persistence.metamodel.SetAttribute" );
+		COLLECTIONS.put( "java.util.List", "javax.persistence.metamodel.ListAttribute" );
+		COLLECTIONS.put( "java.util.Map", "javax.persistence.metamodel.MapAttribute" );
+	}
+
+	private final TypeElement element;
+	private final ImportContext importContext;
 	private Context context;
 	//used to propagate the access type of the root entity over to subclasses, superclasses and embeddable
 	private AccessType defaultAccessTypeForHierarchy;
 	private AccessType defaultAccessTypeForElement;
 
-	public AnnotationMetaEntity(ProcessingEnvironment pe, TypeElement element, Context context) {
+	public AnnotationMetaEntity(TypeElement element, Context context) {
 		this.element = element;
-		this.pe = pe;
-		importContext = new ImportContextImpl( getPackageName() );
 		this.context = context;
+		importContext = new ImportContextImpl( getPackageName() );
 	}
 
-	public AnnotationMetaEntity(ProcessingEnvironment pe, TypeElement element, Context context, AccessType accessType) {
-		this( pe, element, context );
+	public AnnotationMetaEntity(TypeElement element, Context context, AccessType accessType) {
+		this( element, context );
 		this.defaultAccessTypeForHierarchy = accessType;
+	}
+
+	public Context getContext() {
+		return context;
 	}
 
 	public String getSimpleName() {
@@ -92,8 +101,8 @@ public class AnnotationMetaEntity implements MetaEntity {
 	}
 
 	public String getPackageName() {
-		PackageElement packageOf = pe.getElementUtils().getPackageOf( element );
-		return pe.getElementUtils().getName( packageOf.getQualifiedName() ).toString();
+		PackageElement packageOf = context.getProcessingEnvironment().getElementUtils().getPackageOf( element );
+		return context.getProcessingEnvironment().getElementUtils().getName( packageOf.getQualifiedName() ).toString();
 	}
 
 	public List<MetaAttribute> getMembers() {
@@ -153,10 +162,9 @@ public class AnnotationMetaEntity implements MetaEntity {
 			accessType = this.defaultAccessTypeForHierarchy;
 		}
 		if ( accessType == null ) {
-			//we dont' know
-			//if an enity go up
+			//we don't know if an entity go up
 			//
-			//superclasses alre always treated after their entities
+			//superclasses are always treated after their entities
 			//and their access type are discovered
 			//FIXME is it really true if only the superclass is changed
 			TypeElement superClass = element;
@@ -220,7 +228,7 @@ public class AnnotationMetaEntity implements MetaEntity {
 			List<? extends Element> myMembers = searchedElement.getEnclosedElements();
 			for ( Element subElement : myMembers ) {
 				List<? extends AnnotationMirror> entityAnnotations =
-						pe.getElementUtils().getAllAnnotationMirrors( subElement );
+						context.getProcessingEnvironment().getElementUtils().getAllAnnotationMirrors( subElement );
 
 				for ( Object entityAnnotation : entityAnnotations ) {
 					AnnotationMirror annotationMirror = ( AnnotationMirror ) entityAnnotation;
@@ -272,15 +280,6 @@ public class AnnotationMetaEntity implements MetaEntity {
 		sb.append( "{element=" ).append( element );
 		sb.append( '}' );
 		return sb.toString();
-	}
-
-	static Map<String, String> COLLECTIONS = new HashMap<String, String>();
-
-	static {
-		COLLECTIONS.put( "java.util.Collection", "javax.persistence.metamodel.CollectionAttribute" );
-		COLLECTIONS.put( "java.util.Set", "javax.persistence.metamodel.SetAttribute" );
-		COLLECTIONS.put( "java.util.List", "javax.persistence.metamodel.ListAttribute" );
-		COLLECTIONS.put( "java.util.Map", "javax.persistence.metamodel.MapAttribute" );
 	}
 
 	class TypeVisitor extends SimpleTypeVisitor6<AnnotationMetaAttribute, Element> {
@@ -343,15 +342,18 @@ public class AnnotationMetaEntity implements MetaEntity {
 		public AnnotationMetaAttribute visitDeclared(DeclaredType t, Element element) {
 			//FIXME consider XML
 			if ( isPersistent( element ) ) {
-				TypeElement returnedElement = ( TypeElement ) pe.getTypeUtils().asElement( t );
-				String collection = COLLECTIONS.get( returnedElement.getQualifiedName().toString() ); // WARNING: .toString() is necessary here since Name equals does not compare to String
-
+				TypeElement returnedElement = ( TypeElement ) context.getProcessingEnvironment()
+						.getTypeUtils()
+						.asElement( t );
+				String fqElementName = returnedElement.getQualifiedName()
+						.toString();  // WARNING: .toString() is necessary here since Name equals does not compare to String
+				String collection = COLLECTIONS.get( fqElementName );
 				if ( collection != null ) {
-					//collection of element
 					if ( element.getAnnotation( ElementCollection.class ) != null ) {
-						final TypeMirror collectionType = t.getTypeArguments().get( 0 );
-						final TypeElement collectionElement = ( TypeElement ) pe.getTypeUtils()
-								.asElement( collectionType );
+						TypeMirror collectionElementType = getCollectionElementType( t, fqElementName );
+						final TypeElement collectionElement = ( TypeElement ) context.getProcessingEnvironment()
+								.getTypeUtils()
+								.asElement( collectionElementType );
 						this.parent.context.processElement(
 								collectionElement,
 								this.parent.defaultAccessTypeForElement
@@ -383,6 +385,17 @@ public class AnnotationMetaEntity implements MetaEntity {
 			else {
 				return null;
 			}
+		}
+
+		private TypeMirror getCollectionElementType(DeclaredType t, String fqElementName) {
+			TypeMirror collectionElementType;
+			if ( Map.class.getCanonicalName().equals( fqElementName ) ) {
+				collectionElementType = t.getTypeArguments().get( 1 );
+			}
+			else {
+				collectionElementType = t.getTypeArguments().get( 0 );
+			}
+			return collectionElementType;
 		}
 
 		@Override

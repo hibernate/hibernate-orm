@@ -1,4 +1,4 @@
-// $Id:$
+// $Id$
 /*
 * JBoss, Home of Professional Open Source
 * Copyright 2009, Red Hat, Inc. and/or its affiliates, and individual contributors
@@ -22,7 +22,6 @@ import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import javax.tools.Diagnostic;
 import javax.tools.DiagnosticCollector;
 import javax.tools.JavaCompiler;
 import javax.tools.JavaFileObject;
@@ -112,7 +111,7 @@ public abstract class CompilationTest {
 		FilenameFilter javaFileFilter = new FilenameFilter() {
 			@Override
 			public boolean accept(File dir, String name) {
-				return name.endsWith( ".java" );
+				return name.endsWith( ".java" ) && !name.endsWith( "Test.java" );
 			}
 		};
 		for ( File file : packageDir.listFiles( javaFileFilter ) ) {

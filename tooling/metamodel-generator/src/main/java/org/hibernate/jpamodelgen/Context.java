@@ -109,7 +109,7 @@ public class Context {
 			logMessage( Diagnostic.Kind.WARNING, "Element already processed (ignoring): " + element );
 			return;
 		}
-		ClassWriter.writeFile( new AnnotationMetaEntity( pe, element, this, defaultAccessTypeForHierarchy ), this );
+		ClassWriter.writeFile( new AnnotationMetaEntity( element, this, defaultAccessTypeForHierarchy ), this );
 		elementsAlreadyProcessed.add( element.getQualifiedName().toString() );
 	}
 

@@ -382,6 +382,21 @@ public abstract class ResultSetMappingBinder {
 		else if ( "force".equals( lockMode ) ) {
 			return LockMode.FORCE;
 		}
+		else if ( "optimistic".equals( lockMode ) ) {
+			return LockMode.OPTIMISTIC;
+		}
+		else if ( "optimistic_force_increment".equals( lockMode ) ) {
+			return LockMode.OPTIMISTIC_FORCE_INCREMENT;
+		}
+		else if ( "pessimistic_read".equals( lockMode ) ) {
+			return LockMode.PESSIMISTIC_READ;
+		}
+		else if ( "pessimistic_write".equals( lockMode ) ) {
+			return LockMode.PESSIMISTIC_WRITE;
+		}
+		else if ( "pessimistic_force_increment".equals( lockMode ) ) {
+			return LockMode.PESSIMISTIC_FORCE_INCREMENT;
+		}
 		else {
 			throw new MappingException( "unknown lockmode" );
 		}

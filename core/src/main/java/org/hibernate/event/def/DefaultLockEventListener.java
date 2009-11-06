@@ -80,11 +80,11 @@ public class DefaultLockEventListener extends AbstractLockUpgradeEventListener i
 			}
 
 			entry = reassociate(event, entity, id, persister);
-			
+			// TODO:  make cascadeOnLock optional based on SCOPE
 			cascadeOnLock(event, persister, entity);
 		}
 
-		upgradeLock( entity, entry, event.getLockMode(), source );
+		upgradeLock( entity, entry, event.getLockMode(), event.getSession() );
 	}
 	
 	private void cascadeOnLock(LockEvent event, EntityPersister persister, Object entity) {

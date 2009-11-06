@@ -242,6 +242,17 @@ public abstract class AbstractQueryImpl<X> implements TypedQuery<X> {
 		return QueryHints.getDefinedHints();
 	}
 
+	private javax.persistence.LockModeType jpaLockMode = javax.persistence.LockModeType.NONE;
+
+	public TypedQuery<X> setLockMode(javax.persistence.LockModeType lockModeType) {
+		this.jpaLockMode = lockModeType;
+		return this;
+	}
+
+	public javax.persistence.LockModeType getLockMode() {
+		return jpaLockMode;
+	}
+
 	private FlushModeType jpaFlushMode;
 
 	public TypedQuery<X> setFlushMode(FlushModeType jpaFlushMode) {

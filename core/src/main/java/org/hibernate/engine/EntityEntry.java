@@ -252,7 +252,7 @@ public final class EntityEntry implements Serializable {
 	public void forceLocked(Object entity, Object nextVersion) {
 		version = nextVersion;
 		loadedState[ persister.getVersionProperty() ] = version;
-		setLockMode( LockMode.FORCE );
+		setLockMode( LockMode.FORCE );  // TODO:  use LockMode.PESSIMISTIC_FORCE_INCREMENT
 		persister.setPropertyValue(
 				entity,
 		        getPersister().getVersionProperty(),

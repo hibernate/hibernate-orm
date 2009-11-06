@@ -1391,6 +1391,11 @@ public abstract class AbstractEntityPersister
 		lockers.put( LockMode.UPGRADE, generateLocker( LockMode.UPGRADE ) );
 		lockers.put( LockMode.UPGRADE_NOWAIT, generateLocker( LockMode.UPGRADE_NOWAIT ) );
 		lockers.put( LockMode.FORCE, generateLocker( LockMode.FORCE ) );
+		lockers.put( LockMode.PESSIMISTIC_READ, generateLocker( LockMode.PESSIMISTIC_READ ) );
+		lockers.put( LockMode.PESSIMISTIC_WRITE, generateLocker( LockMode.PESSIMISTIC_WRITE ) );
+		lockers.put( LockMode.PESSIMISTIC_FORCE_INCREMENT, generateLocker( LockMode.PESSIMISTIC_FORCE_INCREMENT ) );
+		lockers.put( LockMode.OPTIMISTIC, generateLocker( LockMode.OPTIMISTIC ) );
+		lockers.put( LockMode.OPTIMISTIC_FORCE_INCREMENT, generateLocker( LockMode.OPTIMISTIC_FORCE_INCREMENT ) );
 	}
 
 	protected LockingStrategy generateLocker(LockMode lockMode) {
@@ -3129,7 +3134,27 @@ public abstract class AbstractEntityPersister
 						readLoader :
 						createEntityLoader( LockMode.FORCE )
 			);
-
+		loaders.put(
+				LockMode.PESSIMISTIC_READ,
+				disableForUpdate ?
+						readLoader :
+						createEntityLoader( LockMode.PESSIMISTIC_READ )
+			);
+		loaders.put(
+				LockMode.PESSIMISTIC_WRITE,
+				disableForUpdate ?
+						readLoader :
+						createEntityLoader( LockMode.PESSIMISTIC_WRITE )
+			);
+		loaders.put(
+				LockMode.PESSIMISTIC_FORCE_INCREMENT,
+				disableForUpdate ?
+						readLoader :
+						createEntityLoader( LockMode.PESSIMISTIC_FORCE_INCREMENT )
+			);
+		loaders.put( LockMode.OPTIMISTIC, readLoader );
+		loaders.put( LockMode.OPTIMISTIC_FORCE_INCREMENT, readLoader );
+	
 		loaders.put(
 				"merge",
 				new CascadeEntityLoader( this, CascadingAction.MERGE, getFactory() )

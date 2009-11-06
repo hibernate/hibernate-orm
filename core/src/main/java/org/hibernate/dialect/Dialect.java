@@ -962,13 +962,13 @@ public abstract class Dialect {
 	 * @return The appropriate for update fragment.
 	 */
 	public String getForUpdateString(LockMode lockMode) {
-		if ( lockMode==LockMode.UPGRADE ) {
+		if ( lockMode==LockMode.UPGRADE || lockMode==LockMode.PESSIMISTIC_READ || lockMode==LockMode.PESSIMISTIC_WRITE) {
 			return getForUpdateString();
 		}
 		else if ( lockMode==LockMode.UPGRADE_NOWAIT ) {
 			return getForUpdateNowaitString();
 		}
-		else if ( lockMode==LockMode.FORCE ) {
+		else if ( lockMode==LockMode.FORCE || lockMode==LockMode.PESSIMISTIC_FORCE_INCREMENT) {
 			return getForUpdateNowaitString();
 		}
 		else {

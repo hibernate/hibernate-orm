@@ -29,7 +29,7 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import javax.persistence.LockModeType;
+
 import javax.persistence.NoResultException;
 import javax.persistence.NonUniqueResultException;
 import javax.persistence.Parameter;
@@ -545,21 +545,6 @@ public class QueryImpl<X> extends org.hibernate.ejb.AbstractQueryImpl<X> impleme
 			);
 		}
 		return param;
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	public TypedQuery<X> setLockMode(LockModeType lockModeType) {
-		// TODO : aye aye aye
-		throw new UnsupportedOperationException( "Not yet implemented" );
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	public LockModeType getLockMode() {
-		return LockModeType.NONE;
 	}
 
 	/**

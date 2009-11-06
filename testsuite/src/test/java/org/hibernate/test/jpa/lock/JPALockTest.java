@@ -51,7 +51,7 @@ public class JPALockTest extends AbstractJPATest {
 	 * must always prevent the phenomena P1 and P2. Applications that call lock(entity, LockModeType.READ)
 	 * on non-versioned objects will not be portable.
 	 * <p/>
-	 * Odd as it may sound, EJB3 LockModeType.READ actually maps to the Hibernate LockMode.UPGRADE
+	 * EJB3 LockModeType.READ actually maps to the Hibernate LockMode.OPTIMISTIC
 	 */
 	public void testLockModeTypeRead() {
 		if ( !readCommittedIsolationMaintained( "ejb3 lock tests" ) ) {

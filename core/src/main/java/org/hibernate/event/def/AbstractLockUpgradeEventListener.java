@@ -29,11 +29,14 @@ import org.slf4j.LoggerFactory;
 
 import org.hibernate.LockMode;
 import org.hibernate.ObjectDeletedException;
+import org.hibernate.OptimisticLockException;
+import org.hibernate.event.EventSource;
+import org.hibernate.action.EntityIncrementVersionProcess;
+import org.hibernate.action.EntityVerifyVersionProcess;
 import org.hibernate.cache.CacheKey;
 import org.hibernate.cache.access.SoftLock;
 import org.hibernate.engine.EntityEntry;
 import org.hibernate.engine.Status;
-import org.hibernate.engine.SessionImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
 
@@ -55,7 +58,7 @@ public class AbstractLockUpgradeEventListener extends AbstractReassociateEventLi
 	 * @param requestedLockMode The lock mode being requested for locking.
 	 * @param source The session which is the source of the event being processed.
 	 */
-	protected void upgradeLock(Object object, EntityEntry entry, LockMode requestedLockMode, SessionImplementor source) {
+	protected void upgradeLock(Object object, EntityEntry entry, LockMode requestedLockMode, EventSource source) {
 
 		if ( requestedLockMode.greaterThan( entry.getLockMode() ) ) {
 			// The user requested a "greater" (i.e. more restrictive) form of
@@ -97,12 +100,26 @@ public class AbstractLockUpgradeEventListener extends AbstractReassociateEventLi
 			}
 			
 			try {
-				if ( persister.isVersioned() && requestedLockMode == LockMode.FORCE ) {
+				if ( persister.isVersioned() && (requestedLockMode == LockMode.FORCE || requestedLockMode == LockMode.PESSIMISTIC_FORCE_INCREMENT )  ) {
 					// todo : should we check the current isolation mode explicitly?
 					Object nextVersion = persister.forceVersionIncrement(
 							entry.getId(), entry.getVersion(), source
 					);
 					entry.forceLocked( object, nextVersion );
+				}
+				else if ( requestedLockMode == LockMode.OPTIMISTIC_FORCE_INCREMENT  ) {
+					if(!persister.isVersioned()) {
+						throw new OptimisticLockException("force: Version column is not mapped for " + entry.getPersister().getEntityName(), object);
+					}
+					EntityIncrementVersionProcess incrementVersion = new EntityIncrementVersionProcess(object, entry);
+					source.getActionQueue().registerProcess(incrementVersion);
+				}
+				else if ( requestedLockMode == LockMode.OPTIMISTIC  ) {
+					if(!persister.isVersioned()) {
+						throw new OptimisticLockException("Version column is not mapped for " + entry.getPersister().getEntityName(), object);					
+					}
+					EntityVerifyVersionProcess verifyVersion = new EntityVerifyVersionProcess(object, entry);
+					source.getActionQueue().registerProcess(verifyVersion);
 				}
 				else {
 					persister.lock( entry.getId(), entry.getVersion(), object, requestedLockMode, source );

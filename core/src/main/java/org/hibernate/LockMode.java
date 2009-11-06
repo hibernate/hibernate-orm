@@ -87,6 +87,7 @@ public final class LockMode implements Serializable {
 	/**
 	 * An upgrade lock. Objects loaded in this lock mode are
 	 * materialized using an SQL <tt>select ... for update</tt>.
+	 * @deprecated instead use PESSIMISTIC_WRITE
 	 */
 	public static final LockMode UPGRADE = new LockMode(10, "UPGRADE");
 	/**
@@ -107,9 +108,47 @@ public final class LockMode implements Serializable {
 	/**
 	 * Similiar to {@link #UPGRADE} except that, for versioned entities,
 	 * it results in a forced version increment.
+	 * @deprecated instead use PESSIMISTIC_FORCE_INCREMENT
 	 */
 	public static final LockMode FORCE = new LockMode( 15, "FORCE" );
 
+	/**
+	 *  start of javax.persistence.LockModeType equivalent modes
+	 */
+
+	/**
+	 * Optimisticly assume that transaction will not experience contention for
+	 * entities.  The entity version will be verified near the transaction end.  
+	 */
+	public static final LockMode OPTIMISTIC = new LockMode(3,"OPTIMISTIC");
+
+	/**
+	 * Optimisticly assume that transaction will not experience contention for entities.
+	 * The entity version will be verified and incremented near the transaction end. 
+	 */
+	public static final LockMode OPTIMISTIC_FORCE_INCREMENT = new LockMode(7,"OPTIMISTIC_FORCE_INCREMENT");
+
+	/**
+	 * Implemented as PESSIMISTIC_WRITE.
+	 * TODO:  introduce separate support for PESSIMISTIC_READ
+	 */
+	public static final LockMode PESSIMISTIC_READ = new LockMode(12,"PESSIMISTIC_READ");
+
+	/**
+	 * Transaction will obtain a database lock immediately.
+	 * TODO:  add PESSIMISTIC_WRITE_NOWAIT
+	 */
+	public static final LockMode PESSIMISTIC_WRITE = new LockMode(13,"PESSIMISTIC_WRITE");
+
+	/**
+	 * Transaction will immediately increment the entity version.
+	 */
+	public static final LockMode PESSIMISTIC_FORCE_INCREMENT = new LockMode(17,"PESSIMISTIC_FORCE_INCREMENT");
+
+	/**
+	 *  end of javax.persistence.LockModeType modes
+	 */
+	
 	static {
 		INSTANCES.put( NONE.name, NONE );
 		INSTANCES.put( READ.name, READ );
@@ -117,6 +156,11 @@ public final class LockMode implements Serializable {
 		INSTANCES.put( UPGRADE_NOWAIT.name, UPGRADE_NOWAIT );
 		INSTANCES.put( WRITE.name, WRITE );
 		INSTANCES.put( FORCE.name, FORCE );
+		INSTANCES.put( OPTIMISTIC.name, OPTIMISTIC);
+		INSTANCES.put( OPTIMISTIC_FORCE_INCREMENT.name, OPTIMISTIC_FORCE_INCREMENT);
+		INSTANCES.put( PESSIMISTIC_READ. name, PESSIMISTIC_READ);
+		INSTANCES.put( PESSIMISTIC_WRITE.name, PESSIMISTIC_WRITE);
+		INSTANCES.put( PESSIMISTIC_FORCE_INCREMENT.name, PESSIMISTIC_FORCE_INCREMENT);
 	}
 
 	private Object readResolve() {

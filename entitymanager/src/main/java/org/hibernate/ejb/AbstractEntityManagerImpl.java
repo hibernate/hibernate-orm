@@ -38,6 +38,7 @@ import javax.persistence.NonUniqueResultException;
 import javax.persistence.OptimisticLockException;
 import javax.persistence.PersistenceContextType;
 import javax.persistence.PersistenceException;
+import javax.persistence.PessimisticLockException;
 import javax.persistence.Query;
 import javax.persistence.TransactionRequiredException;
 import javax.persistence.TypedQuery;
@@ -53,22 +54,7 @@ import javax.transaction.TransactionManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.hibernate.AssertionFailure;
-import org.hibernate.FlushMode;
-import org.hibernate.HibernateException;
-import org.hibernate.LockMode;
-import org.hibernate.MappingException;
-import org.hibernate.ObjectDeletedException;
-import org.hibernate.ObjectNotFoundException;
-import org.hibernate.QueryException;
-import org.hibernate.SQLQuery;
-import org.hibernate.Session;
-import org.hibernate.StaleObjectStateException;
-import org.hibernate.StaleStateException;
-import org.hibernate.Transaction;
-import org.hibernate.TransientObjectException;
-import org.hibernate.TypeMismatchException;
-import org.hibernate.UnresolvableObjectException;
+import org.hibernate.*;
 import org.hibernate.cfg.Environment;
 import org.hibernate.ejb.transaction.JoinableCMTTransaction;
 import org.hibernate.ejb.util.ConfigurationHelper;
@@ -253,8 +239,21 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 
 	@SuppressWarnings("unchecked")
 	public <A> A find(Class<A> entityClass, Object primaryKey) {
+		LockModeType lmt = null;
+		return find( entityClass, primaryKey, lmt);
+	}
+
+	public <T> T find(Class<T> entityClass, Object primaryKey, Map<String, Object> properties) {
+		return find(entityClass, primaryKey);
+	}
+
+	@SuppressWarnings("unchecked")
+	public <A> A find(Class<A> entityClass, Object  primaryKey, LockModeType lockModeType) {
 		try {
-			return ( A ) getSession().get( entityClass, ( Serializable ) primaryKey );
+			if ( lockModeType != null )
+				return ( A ) getSession().get( entityClass, ( Serializable ) primaryKey, getLockMode(lockModeType) );
+			else
+				return ( A ) getSession().get( entityClass, ( Serializable ) primaryKey );
 		}
 		catch ( ObjectDeletedException e ) {
 			//the spec is silent about people doing remove() find() on the same PC
@@ -278,19 +277,8 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 		}
 	}
 
-	public <T> T find(Class<T> tClass, Object o, Map<String, Object> stringObjectMap) {
-		//FIXME
-		return null;  //To change body of implemented methods use File | Settings | File Templates.
-	}
-
-	public <T> T find(Class<T> tClass, Object o, LockModeType lockModeType) {
-		//FIXME
-		return null;  //To change body of implemented methods use File | Settings | File Templates.
-	}
-
-	public <T> T find(Class<T> tClass, Object o, LockModeType lockModeType, Map<String, Object> stringObjectMap) {
-		//FIXME
-		return null;  //To change body of implemented methods use File | Settings | File Templates.
+	public <A> A find(Class<A> entityClass, Object  primaryKey, LockModeType lockModeType, Map<String, Object> properties) {
+		return find(entityClass, primaryKey, lockModeType);
 	}
 
 	private void checkTransactionNeeded() {
@@ -346,12 +334,25 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 	}
 
 	public void refresh(Object entity) {
+		LockModeType lmt = null;
+		refresh(entity, lmt);
+	}
+
+	public void refresh(Object entity, Map<String, Object> properties) {
+		LockModeType lmt = null;
+		refresh(entity, lmt);
+	}
+
+	public void refresh(Object entity, LockModeType lockModeType) {
 		checkTransactionNeeded();
 		try {
 			if ( !getSession().contains( entity ) ) {
 				throw new IllegalArgumentException( "Entity not managed" );
 			}
-			getSession().refresh( entity );
+			if(lockModeType != null)
+				getSession().refresh( entity, getLockMode(lockModeType) );
+			else
+				getSession().refresh( entity );
 		}
 		catch ( MappingException e ) {
 			throw new IllegalArgumentException( e.getMessage(), e );
@@ -361,19 +362,8 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 		}
 	}
 
-	public void refresh(Object o, Map<String, Object> stringObjectMap) {
-		//FIXME
-		//To change body of implemented methods use File | Settings | File Templates.
-	}
-
-	public void refresh(Object o, LockModeType lockModeType) {
-		//FIXME
-		//To change body of implemented methods use File | Settings | File Templates.
-	}
-
-	public void refresh(Object o, LockModeType lockModeType, Map<String, Object> stringObjectMap) {
-		//FIXME
-		//To change body of implemented methods use File | Settings | File Templates.
+	public void refresh(Object entity, LockModeType lockModeType, Map<String, Object> properties) {
+		refresh(entity, lockModeType);
 	}
 
 	public boolean contains(Object entity) {
@@ -393,9 +383,11 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 		}
 	}
 
-	public LockModeType getLockMode(Object o) {
-		//FIXME
-		return null;  //To change body of implemented methods use File | Settings | File Templates.
+	public LockModeType getLockMode(Object entity) {
+		if ( !contains( entity ) ) {
+			throw new IllegalArgumentException( "entity not in the persistence context" );
+		}
+		return this.getLockModeType(getSession().getCurrentLockMode(entity));
 	}
 
 	public void setProperty(String s, Object o) {
@@ -527,21 +519,57 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 			getSession().lock( entity, getLockMode( lockMode ) );
 		}
 		catch ( HibernateException he ) {
-			throwPersistenceException( he );
+			throw convert( he );
 		}
 	}
 
-	public void lock(Object o, LockModeType lockModeType, Map<String, Object> stringObjectMap) {
-		//FIXME
-		//To change body of implemented methods use File | Settings | File Templates.
+	public void lock(Object o, LockModeType lockModeType, Map<String, Object> properties) {
+		// todo:  support different properties passed in
+		lock(o,lockModeType);
 	}
+
+
+	private LockModeType getLockModeType(LockMode lockMode)
+	{
+		if ( lockMode == LockMode.NONE )
+			return LockModeType.NONE;
+		else if ( lockMode == LockMode.OPTIMISTIC || lockMode == LockMode.READ )
+			return LockModeType.OPTIMISTIC;
+		else if ( lockMode == LockMode.OPTIMISTIC_FORCE_INCREMENT || lockMode == LockMode.WRITE )
+			return LockModeType.OPTIMISTIC_FORCE_INCREMENT;
+		else if ( lockMode == LockMode.PESSIMISTIC_READ )
+			return LockModeType.PESSIMISTIC_READ;
+		else if ( lockMode == LockMode.PESSIMISTIC_WRITE )
+			return LockModeType.PESSIMISTIC_WRITE;
+		else if ( lockMode == LockMode.PESSIMISTIC_FORCE_INCREMENT )
+			return LockModeType.PESSIMISTIC_FORCE_INCREMENT;
+		throw new AssertionFailure("unhandled lock mode " + lockMode );
+	}
+
 
 	private LockMode getLockMode(LockModeType lockMode) {
 		switch ( lockMode ) {
+
 			case READ:
-				return LockMode.UPGRADE; //assuming we are on read-commited and we need to prevent non repeteable read
+			case OPTIMISTIC:
+				return LockMode.OPTIMISTIC;
+
+			case OPTIMISTIC_FORCE_INCREMENT:
 			case WRITE:
-				return LockMode.FORCE;
+				return LockMode.OPTIMISTIC_FORCE_INCREMENT;
+
+			case PESSIMISTIC_READ:
+				return LockMode.PESSIMISTIC_READ;
+
+			case PESSIMISTIC_WRITE:
+				return LockMode.PESSIMISTIC_WRITE;
+
+			case PESSIMISTIC_FORCE_INCREMENT:
+				return LockMode.PESSIMISTIC_FORCE_INCREMENT;
+
+			case NONE:
+				return LockMode.NONE;
+
 			default:
 				throw new AssertionFailure( "Unknown LockModeType: " + lockMode );
 		}
@@ -772,6 +800,16 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 			handlePersistenceException( converted );
 			return converted;
 		}
+		else if ( e instanceof org.hibernate.OptimisticLockException ) {
+			PersistenceException converted = wrapLockException(e);
+			handlePersistenceException( converted );
+			return converted;
+		}
+		else if ( e instanceof org.hibernate.PessimisticLockException ) {
+			PersistenceException converted = wrapLockException(e); 
+			handlePersistenceException( converted );
+			return converted;
+		}
 		else if ( e instanceof ObjectNotFoundException ) {
 			EntityNotFoundException converted = new EntityNotFoundException( e.getMessage() );
 			handlePersistenceException( converted );
@@ -846,4 +884,21 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 		}
 		return pe;
 	}
+
+	public PersistenceException wrapLockException(HibernateException e) {
+		PersistenceException pe;
+		if ( e instanceof org.hibernate.OptimisticLockException ) {
+			 org.hibernate.OptimisticLockException ole = (org.hibernate.OptimisticLockException)e;
+			pe = new OptimisticLockException(ole.getMessage(), ole, ole.getEntity());
+		}
+		else if ( e instanceof org.hibernate.PessimisticLockException ) {
+			  org.hibernate.PessimisticLockException ple = (org.hibernate.PessimisticLockException)e;
+			pe = new PessimisticLockException(ple.getMessage(), ple, ple.getEntity());
+		}
+		else {
+			pe = new OptimisticLockException( e );
+		}
+		return pe;
+	}
+
 }

@@ -1,4 +1,4 @@
-// $Id:$
+// $Id$
 /*
 * JBoss, Home of Professional Open Source
 * Copyright 2009, Red Hat, Inc. and/or its affiliates, and individual contributors
@@ -17,13 +17,18 @@
 */
 package org.hibernate.jpamodelgen.test.util;
 
+import java.io.File;
+import java.io.FilenameFilter;
 import java.lang.reflect.Field;
 import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.util.Collection;
+import java.util.Vector;
 
 import org.testng.Assert;
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.FileAssert.fail;
 
@@ -31,6 +36,17 @@ import static org.testng.FileAssert.fail;
  * @author Hardy Ferentschik
  */
 public class TestUtil {
+
+	private static final String PATH_SEPARATOR = System.getProperty( "file.separator" );
+	private static final String outBaseDir;
+
+	static {
+		String tmp = System.getProperty( "outBaseDir" );
+		if ( tmp == null ) {
+			fail( "The system property outBaseDir has to be set and point to the base directory of the test output directory." );
+		}
+		outBaseDir = tmp;
+	}
 
 	private TestUtil() {
 	}
@@ -42,6 +58,25 @@ public class TestUtil {
 		catch ( ClassNotFoundException e ) {
 			fail( e.getMessage() );
 		}
+	}
+
+	public static void assertClassNotFound(String className) {
+		try {
+			Class.forName( className );
+			fail( "Class " + className + " should not have been found." );
+		}
+		catch ( ClassNotFoundException e ) {
+			// success
+		}
+	}
+
+	public static void assertNoGeneratedSourceFile(String className) {
+		// generate the file name
+		String fileName = className.replace( ".", PATH_SEPARATOR );
+		fileName = fileName.concat( ".java" );
+		File sourceFile = new File(outBaseDir + PATH_SEPARATOR + fileName);
+		assertFalse(sourceFile.exists(), "There should be no source file: " + fileName);
+
 	}
 
 	public static void assertAbsenceOfField(String className, String fieldName) throws ClassNotFoundException {

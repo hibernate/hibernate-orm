@@ -315,17 +315,13 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 
 			if ( element.getKind() == ElementKind.CLASS ) {
 				if ( annotationType.equals( ENTITY_ANN ) ) {
-					AnnotationMetaEntity metaEntity = new AnnotationMetaEntity(
-							processingEnv, ( TypeElement ) element, context
-					);
+					AnnotationMetaEntity metaEntity = new AnnotationMetaEntity( ( TypeElement ) element, context );
 					// TODO instead of just adding the entity we have to do some merging.
 					context.getMetaEntitiesToProcess().put( metaEntity.getQualifiedName(), metaEntity );
 				}
 				else if ( annotationType.equals( MAPPED_SUPERCLASS_ANN )
 						|| annotationType.equals( EMBEDDABLE_ANN ) ) {
-					AnnotationMetaEntity metaEntity = new AnnotationMetaEntity(
-							processingEnv, ( TypeElement ) element, context
-					);
+					AnnotationMetaEntity metaEntity = new AnnotationMetaEntity( ( TypeElement ) element, context );
 
 					// TODO instead of just adding the entity we have to do some merging.
 					context.getMetaSuperclassAndEmbeddableToProcess().put( metaEntity.getQualifiedName(), metaEntity );

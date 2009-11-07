@@ -65,7 +65,7 @@ public abstract class CollectionAction implements Executable, Serializable, Comp
 		return collection;
 	}
 
-	protected void readObject(ObjectInputStream ois) throws IOException, ClassNotFoundException {
+	private void readObject(ObjectInputStream ois) throws IOException, ClassNotFoundException {
 		ois.defaultReadObject();
 		persister = session.getFactory().getCollectionPersister( collectionRole );
 	}

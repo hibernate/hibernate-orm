@@ -36,6 +36,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.InvocationTargetException;
 
 import org.hibernate.HibernateException;
+import org.hibernate.JDBCException;
 
 /**
  * {@link LobCreator} implementation using contextual creation against the JDBC {@link java.sql.Connection} class's LOB creation
@@ -70,7 +71,7 @@ public class ContextualLobCreator extends AbstractLobCreator implements LobCreat
 			return blob;
 		}
 		catch ( SQLException e ) {
-			throw new IllegalStateException( "Unable to set BLOB bytes after creation", e );
+			throw new JDBCException( "Unable to set BLOB bytes after creation", e );
 		}
 	}
 
@@ -88,10 +89,10 @@ public class ContextualLobCreator extends AbstractLobCreator implements LobCreat
 			return blob;
 		}
 		catch ( SQLException e ) {
-			throw new IllegalStateException( "Unable to prepare BLOB binary stream for writing", e );
+			throw new JDBCException( "Unable to prepare BLOB binary stream for writing",e );
 		}
 		catch ( IOException e ) {
-			throw new IllegalStateException( "Unable to write stream contents to BLOB", e );
+			throw new HibernateException( "Unable to write stream contents to BLOB", e );
 		}
 	}
 
@@ -114,7 +115,7 @@ public class ContextualLobCreator extends AbstractLobCreator implements LobCreat
 			return clob;
 		}
 		catch ( SQLException e ) {
-			throw new IllegalStateException( "Unable to set CLOB string after creation", e );
+			throw new JDBCException( "Unable to set CLOB string after creation", e );
 		}
 	}
 
@@ -131,10 +132,10 @@ public class ContextualLobCreator extends AbstractLobCreator implements LobCreat
 			return clob;
 		}
 		catch ( SQLException e ) {
-			throw new IllegalStateException( "Unable to prepare CLOB stream for writing", e );
+			throw new JDBCException( "Unable to prepare CLOB stream for writing", e );
 		}
 		catch ( IOException e ) {
-			throw new IllegalStateException( "Unable to write CLOB stream content", e );
+			throw new HibernateException( "Unable to write CLOB stream content", e );
 		}
 	}
 
@@ -157,7 +158,7 @@ public class ContextualLobCreator extends AbstractLobCreator implements LobCreat
 			return clob;
 		}
 		catch ( SQLException e ) {
-			throw new IllegalStateException( "Unable to set NCLOB string after creation", e );
+			throw new JDBCException( "Unable to set NCLOB string after creation", e );
 		}
 	}
 
@@ -174,10 +175,10 @@ public class ContextualLobCreator extends AbstractLobCreator implements LobCreat
 			return clob;
 		}
 		catch ( SQLException e ) {
-			throw new IllegalStateException( "Unable to prepare NCLOB stream for writing", e );
+			throw new JDBCException( "Unable to prepare NCLOB stream for writing", e );
 		}
 		catch ( IOException e ) {
-			throw new IllegalStateException( "Unable to write NCLOB stream content", e );
+			throw new HibernateException( "Unable to write NCLOB stream content", e );
 		}
 	}
 
@@ -216,11 +217,11 @@ public class ContextualLobCreator extends AbstractLobCreator implements LobCreat
 			}
 			catch ( AbstractMethodError e ) {
 				// this again is a big big error...
-				throw new IllegalStateException( "Useable implementation of " + creationMethod.getName() + " not found.", e );
+				throw new IllegalStateException( "Useable implementation of " + creationMethod.getName() + " not found." );
 			}
 			catch ( IllegalAccessException e ) {
 				// this again is a big big error...
-				throw new IllegalStateException( "Illegal access attempt on JDBC method " + creationMethod.getName(), e );
+				throw new IllegalStateException( "Illegal access attempt on JDBC method " + creationMethod.getName() );
 			}
 		}
 	}
@@ -231,7 +232,7 @@ public class ContextualLobCreator extends AbstractLobCreator implements LobCreat
 		}
 		catch ( NoSuchMethodException e ) {
 			// this is a big big error if we get here and these methods are not part of the Connection interface...
-			throw new IllegalStateException( "JDBC driver did not implement " + methodName, e );
+			throw new IllegalStateException( "JDBC driver did not implement " + methodName);
 		}
 	}
 }

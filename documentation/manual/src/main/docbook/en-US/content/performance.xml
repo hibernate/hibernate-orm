@@ -767,21 +767,21 @@ Cat fritz = (Cat) iter.next();]]></programlisting>
                 <entry>Hashtable (not intended for production use)</entry>
                 <entry><literal>org.hibernate.cache.HashtableCacheProvider</literal></entry>
                 <entry>memory</entry>
-                <entry></entry>
+                <entry> </entry>
                 <entry>yes</entry>
             </row>
             <row>
                 <entry>EHCache</entry>
                 <entry><literal>org.hibernate.cache.EhCacheProvider</literal></entry>
                 <entry>memory, disk</entry>
-                <entry></entry>
+                <entry> </entry>
                 <entry>yes</entry>
             </row>
             <row>
                 <entry>OSCache</entry>
                 <entry><literal>org.hibernate.cache.OSCacheProvider</literal></entry>
                 <entry>memory, disk</entry>
-                <entry></entry>
+                <entry> </entry>
                 <entry>yes</entry>
             </row>
             <row>
@@ -789,7 +789,7 @@ Cat fritz = (Cat) iter.next();]]></programlisting>
                 <entry><literal>org.hibernate.cache.SwarmCacheProvider</literal></entry>
                 <entry>clustered (ip multicast)</entry>
                 <entry>yes (clustered invalidation)</entry>
-                <entry></entry>
+                <entry> </entry>
             </row>
             <row>
                 <entry>JBoss Cache 1.x</entry>
@@ -970,41 +970,41 @@ Cat fritz = (Cat) iter.next();]]></programlisting>
                     <entry>yes</entry>
                     <entry>yes</entry>
                     <entry>yes</entry>
-                    <entry></entry>
+                    <entry> </entry>
                 </row>
                 <row>
                     <entry>EHCache</entry>
                     <entry>yes</entry>
                     <entry>yes</entry>
                     <entry>yes</entry>
-                    <entry></entry>
+                    <entry> </entry>
                 </row>
                 <row>
                     <entry>OSCache</entry>
                     <entry>yes</entry>
                     <entry>yes</entry>
                     <entry>yes</entry>
-                    <entry></entry>
+                    <entry> </entry>
                 </row>
                 <row>
                     <entry>SwarmCache</entry>
                     <entry>yes</entry>
                     <entry>yes</entry>
-                    <entry></entry>
-                    <entry></entry>
+                    <entry> </entry>
+                    <entry> </entry>
                 </row>
                 <row>
                     <entry>JBoss Cache 1.x</entry>
                     <entry>yes</entry>
-                    <entry></entry>
-                    <entry></entry>
+                    <entry> </entry>
+                    <entry> </entry>
                     <entry>yes</entry>
                 </row>
                 <row>
                     <entry>JBoss Cache 2</entry>
                     <entry>yes</entry>
-                    <entry></entry>
-                    <entry></entry>
+                    <entry> </entry>
+                    <entry> </entry>
                     <entry>yes</entry>
                 </row>
                 </tbody>
@@ -1110,56 +1110,98 @@ sessionFactory.evictCollection("Cat.kittens"); //evict all kitten collections]]>
 hibernate.cache.use_structured_entries true]]></programlisting>       
                 
     </sect1>
-    
+
     <sect1 id="performance-querycache" revision="1">
         <title>The Query Cache</title>
 
         <para>
             Query result sets can also be cached. This is only useful for queries that are run
-            frequently with the same parameters. You will first need to enable the query cache:
+            frequently with the same parameters.
         </para>
 
-        <programlisting><![CDATA[hibernate.cache.use_query_cache true]]></programlisting>       
-        
-        <para>
-            This setting creates two new cache regions: one holding cached query 
-            result sets (<literal>org.hibernate.cache.StandardQueryCache</literal>), the other 
-            holding timestamps of the most recent updates to queryable tables 
-            (<literal>org.hibernate.cache.UpdateTimestampsCache</literal>). Note that the query
-            cache does not cache the state of the actual entities in the result set; it caches 
-            only identifier values and results of value type. The query cache should always be
-            used in conjunction with the second-level cache.
-        </para>
-        
-        <para>
-            Most queries do not benefit from caching, so by default, queries are not cached. To
-            enable caching, call <literal>Query.setCacheable(true)</literal>. This call allows
-            the query to look for existing cache results or add its results to the cache when
-            it is executed.
-        </para>
-        
-        <para>
-            If you require fine-grained control over query cache expiration policies, you can
-            specify a named cache region for a particular query by calling 
-            <literal>Query.setCacheRegion()</literal>.
-        </para>
-        
-        <programlisting role="JAVA"><![CDATA[List blogs = sess.createQuery("from Blog blog where blog.blogger = :blogger")
-    .setEntity("blogger", blogger)
-    .setMaxResults(15)
-    .setCacheable(true)
-    .setCacheRegion("frontpages")
-    .list();]]></programlisting>
+        <sect2 id="performance-querycache-enable">
+            <title>Enabling query caching</title>
+            <para>
+                Caching of query results introduces some overhead in terms of your applications normal
+                transactional processing.  For example, if you cache results of a query against Person
+                Hibernate will need to keep track of when those results should be invalidated because
+                changes have been committed against Person.  That, coupled with the fact that most
+                applications simply gain no benefit from caching query results, leads Hibernate to
+                disable caching of query results by default.  To use query caching, you will first
+                need to enable the query cache:
+            </para>
+            <programlisting><![CDATA[hibernate.cache.use_query_cache true]]></programlisting>
+            <para>
+                This setting creates two new cache regions:
+                <itemizedlist>
+                    <listitem>
+                        <para>
+                            <classname>org.hibernate.cache.StandardQueryCache</classname>, holding
+                            the cached query results
+                        </para>
+                    </listitem>
+                    <listitem>
+                        <para>
+                            <classname>org.hibernate.cache.UpdateTimestampsCache</classname>, holding
+                            timestamps of the most recent updates to queryable tables.  These are used
+                            to validate the results as they are served from the query cache.
+                        </para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <important>
+                <para>
+                    If you configure your underlying cache implementation to use expiry or
+                    timeouts is is very important that the cache timeout of the underlying
+                    cache region for the UpdateTimestampsCache be set to a higher value than
+                    the timeouts of any of the query caches.  In fact, we recommend that the
+                    the UpdateTimestampsCache region not be configured for expiry at all.  Note,
+                    in particular, that an LRU cache expiry policy is never appropriate.
+                </para>
+            </important>
+            <para>
+                As mentioned above, most queries do not benefit from caching or their results.  So by
+                default, individual queries are not cached even after enabling query caching. To enable
+                results caching for a particular query, call
+                <literal>org.hibernate.Query.setCacheable(true)</literal>.  This call allows the query
+                to look for existing cache results or add its results to the cache when it is executed.
+            </para>
+            <note>
+                <para>
+                    The query cache does not cache the state of the actual entities in the cache; it
+                    caches only identifier values and results of value type.  For this reaso, the query
+                    cache should always be used in conjunction with the second-level cache for those
+                    entities expected to be cached as part of a query result cache (just as with
+                    collection caching).
+                </para>
+            </note>
+        </sect2>
 
-        <para>
-            If the query should force a refresh of its query cache region, you should call
-            <literal>Query.setCacheMode(CacheMode.REFRESH)</literal>. This is particularly useful 
-            in cases where underlying data may have been updated via a separate process (i.e., 
-            not modified through Hibernate) and allows the application to selectively refresh 
-            particular query result sets. This is a more efficient alternative to eviction of 
-            a query cache region via <literal>SessionFactory.evictQueries()</literal>.
-        </para>
+        <sect2 id="performance-querycache-regions">
+            <title>Query cache regions</title>
+            <para>
+                If you require fine-grained control over query cache expiration policies, you can
+                specify a named cache region for a particular query by calling
+                <literal>Query.setCacheRegion()</literal>.
+            </para>
+            <programlisting role="JAVA"><![CDATA[List blogs = sess.createQuery("from Blog blog where blog.blogger = :blogger")
+        .setEntity("blogger", blogger)
+        .setMaxResults(15)
+        .setCacheable(true)
+        .setCacheRegion("frontpages")
+        .list();]]></programlisting>
 
+            <para>
+                If you want to force the query cache to refresh one of its regions (disregard any
+                cached results it finds there) you can use
+                <literal>org.hibernate.Query.setCacheMode(CacheMode.REFRESH)</literal>.  In conjunction
+                with the region you have defined for the given query, Hibernate will selectively force
+                the results cached in that particular region to be refreshed.  This is particularly useful
+                in cases where underlying data may have been updated via a separate process and is a far more
+                efficient alternative to bulk eviction of the region via
+                <literal>org.hibernate.SessionFactory.evictQueries()</literal>.
+            </para>
+        </sect2>
     </sect1>
 
     <sect1 id="performance-collections">

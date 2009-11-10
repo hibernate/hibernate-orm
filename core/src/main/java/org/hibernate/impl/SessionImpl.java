@@ -28,6 +28,8 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
+import java.io.ByteArrayOutputStream;
+import java.io.ByteArrayInputStream;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Collection;
@@ -72,6 +74,7 @@ import org.hibernate.engine.ActionQueue;
 import org.hibernate.engine.CollectionEntry;
 import org.hibernate.engine.EntityEntry;
 import org.hibernate.engine.EntityKey;
+import org.hibernate.engine.NonFlushedChanges;
 import org.hibernate.engine.PersistenceContext;
 import org.hibernate.engine.QueryParameters;
 import org.hibernate.engine.StatefulPersistenceContext;
@@ -127,9 +130,11 @@ import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.stat.SessionStatistics;
 import org.hibernate.stat.SessionStatisticsImpl;
 import org.hibernate.type.Type;
+import org.hibernate.type.SerializationException;
 import org.hibernate.util.ArrayHelper;
 import org.hibernate.util.CollectionHelper;
 import org.hibernate.util.StringHelper;
+import org.hibernate.util.SerializationHelper;
 
 
 /**
@@ -375,6 +380,138 @@ public final class SessionImpl extends AbstractSessionImpl
 				( (Session) iter.next() ).flush();
 			}
 		}
+	}
+
+	/**
+	 * Return changes to this session and its child sessions that have not been flushed yet.
+	 * <p/>
+	 * @return The non-flushed changes.
+	 */
+	public NonFlushedChanges getNonFlushedChanges() throws HibernateException {
+		errorIfClosed();
+		checkTransactionSynchStatus();
+		NonFlushedChanges nonFlushedChanges = new NonFlushedChangesImpl( this );
+		if ( childSessionsByEntityMode != null ) {
+			Iterator it = childSessionsByEntityMode.values().iterator();
+			while ( it.hasNext() ) {
+				nonFlushedChanges.extractFromSession( ( EventSource ) it.next() );
+			}
+		}
+		return nonFlushedChanges;
+	}
+
+	/**
+	 * Apply non-flushed changes from a different session to this session. It is assumed
+	 * that this SessionImpl is "clean" (e.g., has no non-flushed changes, no cached entities,
+	 * no cached collections, no queued actions). The specified NonFlushedChanges object cannot
+	 * be bound to any session.
+	 * <p/>
+	 * @param nonFlushedChanges the non-flushed changes
+	 */
+	public void applyNonFlushedChanges(NonFlushedChanges nonFlushedChanges) throws HibernateException {
+		errorIfClosed();
+		checkTransactionSynchStatus();
+		replacePersistenceContext( ( ( NonFlushedChangesImpl ) nonFlushedChanges ).getPersistenceContext( entityMode) );
+		replaceActionQueue( ( ( NonFlushedChangesImpl ) nonFlushedChanges ).getActionQueue( entityMode ) );
+		if ( childSessionsByEntityMode != null ) {
+			for ( Iterator it = childSessionsByEntityMode.values().iterator(); it.hasNext(); ) {
+				( ( SessionImpl ) it.next() ).applyNonFlushedChanges( nonFlushedChanges );
+			}
+		}
+	}
+
+	private void replacePersistenceContext(StatefulPersistenceContext persistenceContextNew) {
+		if ( persistenceContextNew.getSession() != null ) {
+			throw new IllegalStateException( "new persistence context is already connected to a session " );
+		}
+		persistenceContext.clear();
+		ObjectInputStream ois = null;
+		try {
+			ois = new ObjectInputStream( new ByteArrayInputStream( serializePersistenceContext( persistenceContextNew ) ) );
+			this.persistenceContext = StatefulPersistenceContext.deserialize( ois, this );
+		}
+		catch (IOException ex) {
+			throw new SerializationException( "could not deserialize the persistence context",  ex );
+		}
+		catch (ClassNotFoundException ex) {
+			throw new SerializationException( "could not deserialize the persistence context", ex );
+		}
+		finally {
+			try {
+				if (ois != null) ois.close();
+			}
+			catch (IOException ex) {}
+		}
+	}
+
+	private static byte[] serializePersistenceContext(StatefulPersistenceContext pc) {
+		ByteArrayOutputStream baos = new ByteArrayOutputStream( 512 );
+		ObjectOutputStream oos = null;
+		try {
+			oos = new ObjectOutputStream( baos );
+			( ( StatefulPersistenceContext ) pc ).serialize( oos );
+		}
+		catch (IOException ex) {
+			throw new SerializationException( "could not serialize persistence context", ex );
+		}
+		finally {
+			if ( oos != null ) {
+				try {
+					oos.close();
+				}
+				catch( IOException ex ) {
+					//ignore
+				}
+			}
+		}
+		return baos.toByteArray();
+	}
+
+	private void replaceActionQueue(ActionQueue actionQueueNew) {
+		if ( actionQueue.hasAnyQueuedActions() ) {
+			throw new IllegalStateException( "cannot replace an ActionQueue with queued actions " );
+		}
+		actionQueue.clear();
+		ObjectInputStream ois = null;
+		try {
+			ois = new ObjectInputStream( new ByteArrayInputStream( serializeActionQueue( actionQueueNew ) ) );
+			actionQueue = ActionQueue.deserialize( ois, this );
+		}
+		catch (IOException ex) {
+			throw new SerializationException( "could not deserialize the action queue",  ex );
+		}
+		catch (ClassNotFoundException ex) {
+			throw new SerializationException( "could not deserialize the action queue", ex );
+		}
+		finally {
+			try {
+				if (ois != null) ois.close();
+			}
+			catch (IOException ex) {}
+		}
+	}
+
+	private static byte[] serializeActionQueue(ActionQueue actionQueue) {
+		ByteArrayOutputStream baos = new ByteArrayOutputStream( 512 );
+		ObjectOutputStream oos = null;
+		try {
+			oos = new ObjectOutputStream( baos );
+			actionQueue.serialize( oos );
+		}
+		catch (IOException ex) {
+			throw new SerializationException( "could not serialize action queue", ex );
+		}
+		finally {
+			if ( oos != null ) {
+				try {
+					oos.close();
+				}
+				catch( IOException ex ) {
+					//ignore
+				}
+			}
+		}
+		return baos.toByteArray();
 	}
 
 	public boolean shouldAutoClose() {

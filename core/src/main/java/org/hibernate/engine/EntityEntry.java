@@ -104,7 +104,7 @@ public final class EntityEntry implements Serializable {
 			final boolean isBeingReplicated,
 			final boolean loadedWithLazyPropertiesUnfetched) {
 		this.entityName = entityName;
-		this.persister = factory.getEntityPersister( entityName );
+		this.persister = ( factory == null ? null : factory.getEntityPersister( entityName ) );
 		this.id = id;
 		this.entityMode = entityMode;
 		this.status = status;
@@ -322,7 +322,7 @@ public final class EntityEntry implements Serializable {
 			ObjectInputStream ois,
 	        SessionImplementor session) throws IOException, ClassNotFoundException {
 		return new EntityEntry(
-				session.getFactory(),
+				( session == null ? null : session.getFactory() ),
 		        ( String ) ois.readObject(),
 				( Serializable ) ois.readObject(),
 	            EntityMode.parse( ( String ) ois.readObject() ),

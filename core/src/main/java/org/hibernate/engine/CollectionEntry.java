@@ -266,7 +266,7 @@ public final class CollectionEntry implements Serializable {
 	}
 	
 	void afterDeserialize(SessionFactoryImplementor factory) {
-		loadedPersister = factory.getCollectionPersister(role);
+		loadedPersister = ( factory == null ? null : factory.getCollectionPersister(role) );
 	}
 
 	public boolean wasDereferenced() {
@@ -414,7 +414,7 @@ public final class CollectionEntry implements Serializable {
 				( String ) ois.readObject(),
 		        ( Serializable ) ois.readObject(),
 		        ( Serializable ) ois.readObject(),
-		        session.getFactory()
+		        ( session == null ? null : session.getFactory() )
 		);
 	}
 }

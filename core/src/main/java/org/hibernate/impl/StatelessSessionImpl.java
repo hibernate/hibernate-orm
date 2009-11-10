@@ -55,6 +55,7 @@ import org.hibernate.engine.QueryParameters;
 import org.hibernate.engine.StatefulPersistenceContext;
 import org.hibernate.engine.Versioning;
 import org.hibernate.engine.LoadQueryInfluencers;
+import org.hibernate.engine.NonFlushedChanges;
 import org.hibernate.engine.query.HQLQueryPlan;
 import org.hibernate.engine.query.NativeSQLQueryPlan;
 import org.hibernate.engine.query.sql.NativeSQLQuerySpecification;
@@ -620,6 +621,14 @@ public class StatelessSessionImpl extends AbstractSessionImpl
 	}
 
 	public void flush() {}
+
+	public NonFlushedChanges getNonFlushedChanges() {
+		throw new UnsupportedOperationException();
+	}
+
+	public void applyNonFlushedChanges(NonFlushedChanges nonFlushedChanges) {
+		throw new UnsupportedOperationException();
+	}
 
 	public String getFetchProfile() {
 		return null;

@@ -171,7 +171,7 @@ public final class EntityKey implements Serializable {
 		        ( String ) ois.readObject(),
 		        ( Type ) ois.readObject(),
 		        ois.readBoolean(),
-		        session.getFactory(),
+		        ( session == null ? null : session.getFactory() ),
 		        EntityMode.parse( ( String ) ois.readObject() )
 		);
 	}

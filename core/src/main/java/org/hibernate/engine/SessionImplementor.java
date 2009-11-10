@@ -287,6 +287,24 @@ public interface SessionImplementor extends Serializable {
 	 */
 	int executeNativeUpdate(NativeSQLQuerySpecification specification, QueryParameters queryParameters) throws HibernateException;
 
+
+	/**
+	 * Return changes to this session that have not been flushed yet.
+	 *
+	 * @return The non-flushed changes.
+	 */
+	public NonFlushedChanges getNonFlushedChanges() throws HibernateException;
+
+	/**
+	 * Apply non-flushed changes from a different session to this session. It is assumed
+	 * that this SessionImpl is "clean" (e.g., has no non-flushed changes, no cached entities,
+	 * no cached collections, no queued actions). The specified NonFlushedChanges object cannot
+	 * be bound to any session.
+	 * <p/>
+	 * @param nonFlushedChanges the non-flushed changes
+	 */
+	public void applyNonFlushedChanges(NonFlushedChanges nonFlushedChanges) throws HibernateException;	
+
 	// copied from Session:
 	
 	public EntityMode getEntityMode();

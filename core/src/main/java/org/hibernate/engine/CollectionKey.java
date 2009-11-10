@@ -128,7 +128,7 @@ public final class CollectionKey implements Serializable {
 		        ( Serializable ) ois.readObject(),
 		        ( Type ) ois.readObject(),
 		        EntityMode.parse( ( String ) ois.readObject() ),
-		        session.getFactory()
+		        ( session == null ? null : session.getFactory() )
 		);
 	}
 }

@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2009, Red Hat Middleware LLC or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Middleware LLC.
@@ -20,22 +20,30 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
-package org.hibernate.util;
-
-import java.io.Serializable;
+package org.hibernate.engine;
 
 /**
- * @author Gavin King
+ * This interface defines the public API for changes to an EventSource that have not
+ * been flushed to the database.
+ *
+ * @author Gail Badner
  */
-public class MarkerObject implements Serializable {
-	private String name;
-	
-	public MarkerObject(String name) {
-		this.name=name;
-	}
-	public String toString() {
-		return name;
-	}
+
+import java.io.Serializable;
+import org.hibernate.event.EventSource;
+
+public interface NonFlushedChanges extends Serializable {
+
+	/**
+	 * Extracts the non-flushed Changes from an EventSource into this NonFlushedChanges object.
+	 * <p>
+	 * @param source
+	 */
+	void extractFromSession(EventSource source);
+
+	/**
+	 * Remove the non-flushed changes from this NonFlushedChanges object.
+	 */
+	void clear();
 }

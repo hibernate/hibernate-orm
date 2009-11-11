@@ -75,7 +75,7 @@ public class QueryImpl<X> extends org.hibernate.ejb.AbstractQueryImpl<X> impleme
 		extractParameterInfo();
 	}
 
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings({ "unchecked", "RedundantCast" })
 	private void extractParameterInfo() {
 		if ( ! AbstractQueryImpl.class.isInstance( query ) ) {
 			throw new IllegalStateException( "Unknown query type for parameter extraction" );
@@ -108,7 +108,7 @@ public class QueryImpl<X> extends org.hibernate.ejb.AbstractQueryImpl<X> impleme
 			final OrdinalParameterDescriptor descriptor =
 					queryImpl.getParameterMetadata().getOrdinalParameterDescriptor( i+1 );
 			ParameterImpl parameter = new ParameterImpl(
-					descriptor.getOrdinalPosition() + 1,
+					i + 1,
 					descriptor.getExpectedType() == null
 							? null
 							: descriptor.getExpectedType().getReturnedClass()
@@ -204,7 +204,7 @@ public class QueryImpl<X> extends org.hibernate.ejb.AbstractQueryImpl<X> impleme
 	/**
 	 * {@inheritDoc}
 	 */
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings({ "unchecked", "RedundantCast" })
 	public List<X> getResultList() {
 		try {
 			return (List<X>) query.list();
@@ -223,7 +223,7 @@ public class QueryImpl<X> extends org.hibernate.ejb.AbstractQueryImpl<X> impleme
 	/**
 	 * {@inheritDoc}
 	 */
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings({ "unchecked", "RedundantCast" })
 	public X getSingleResult() {
 		try {
 			boolean mucked = false;

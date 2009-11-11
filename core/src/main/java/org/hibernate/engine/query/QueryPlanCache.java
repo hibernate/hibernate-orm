@@ -26,10 +26,13 @@ package org.hibernate.engine.query;
 
 import org.hibernate.util.SimpleMRUCache;
 import org.hibernate.util.SoftLimitMRUCache;
+import org.hibernate.util.CollectionHelper;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.query.sql.NativeSQLQuerySpecification;
 import org.hibernate.QueryException;
 import org.hibernate.MappingException;
+import org.hibernate.impl.FilterImpl;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,6 +43,7 @@ import java.util.Iterator;
 import java.util.Set;
 import java.util.HashSet;
 import java.util.Collections;
+import java.util.Collection;
 
 /**
  * Acts as a cache for compiled query plans, as well as query-parameter metadata.
@@ -174,7 +178,7 @@ public class QueryPlanCache implements Serializable {
 	private static class HQLQueryPlanKey implements Serializable {
 		private final String query;
 		private final boolean shallow;
-		private final Set filterNames;
+		private final Set filterKeys;
 		private final int hashCode;
 
 		public HQLQueryPlanKey(String query, boolean shallow, Map enabledFilters) {
@@ -182,17 +186,23 @@ public class QueryPlanCache implements Serializable {
 			this.shallow = shallow;
 
 			if ( enabledFilters == null || enabledFilters.isEmpty() ) {
-				filterNames = Collections.EMPTY_SET;
+				filterKeys = Collections.EMPTY_SET;
 			}
 			else {
-				Set tmp = new HashSet();
-				tmp.addAll( enabledFilters.keySet() );
-				this.filterNames = Collections.unmodifiableSet( tmp );
+				Set tmp = new HashSet(
+						CollectionHelper.determineProperSizing( enabledFilters ),
+						CollectionHelper.LOAD_FACTOR
+				);
+				Iterator itr = enabledFilters.values().iterator();
+				while ( itr.hasNext() ) {
+					tmp.add( new DynamicFilterKey( ( FilterImpl ) itr.next() ) );
+				}
+				this.filterKeys = Collections.unmodifiableSet( tmp );
 			}
 
 			int hash = query.hashCode();
 			hash = 29 * hash + ( shallow ? 1 : 0 );
-			hash = 29 * hash + filterNames.hashCode();
+			hash = 29 * hash + filterKeys.hashCode();
 			this.hashCode = hash;
 		}
 
@@ -206,17 +216,64 @@ public class QueryPlanCache implements Serializable {
 
 			final HQLQueryPlanKey that = ( HQLQueryPlanKey ) o;
 
-			if ( shallow != that.shallow ) {
-				return false;
+			return shallow == that.shallow
+					&& filterKeys.equals( that.filterKeys )
+					&& query.equals( that.query );
+
+		}
+
+		public int hashCode() {
+			return hashCode;
+		}
+	}
+
+	private static class DynamicFilterKey implements Serializable {
+		private final String filterName;
+		private final Map parameterMetadata;
+		private final int hashCode;
+
+		private DynamicFilterKey(FilterImpl filter) {
+			this.filterName = filter.getName();
+			if ( filter.getParameters().isEmpty() ) {
+				parameterMetadata = Collections.EMPTY_MAP;
 			}
-			if ( !filterNames.equals( that.filterNames ) ) {
-				return false;
+			else {
+				parameterMetadata = new HashMap(
+						CollectionHelper.determineProperSizing( filter.getParameters() ),
+						CollectionHelper.LOAD_FACTOR
+				);
+				Iterator itr = filter.getParameters().entrySet().iterator();
+				while ( itr.hasNext() ) {
+					final Integer valueCount;
+					final Map.Entry entry = ( Map.Entry ) itr.next();
+					if ( Collection.class.isInstance( entry.getValue() ) ) {
+						valueCount = new Integer( ( (Collection) entry.getValue() ).size() );
+					}
+					else {
+						valueCount = new Integer(1);
+					}
+					parameterMetadata.put( entry.getKey(), valueCount );
+				}
 			}
-			if ( !query.equals( that.query ) ) {
+
+			int hash = filterName.hashCode();
+			hash = 31 * hash + parameterMetadata.hashCode();
+			this.hashCode = hash;
+		}
+
+		public boolean equals(Object o) {
+			if ( this == o ) {
+				return true;
+			}
+			if ( o == null || getClass() != o.getClass() ) {
 				return false;
 			}
 
-			return true;
+			DynamicFilterKey that = ( DynamicFilterKey ) o;
+
+			return filterName.equals( that.filterName )
+					&& parameterMetadata.equals( that.parameterMetadata );
+
 		}
 
 		public int hashCode() {
@@ -262,20 +319,11 @@ public class QueryPlanCache implements Serializable {
 
 			final FilterQueryPlanKey that = ( FilterQueryPlanKey ) o;
 
-			if ( shallow != that.shallow ) {
-				return false;
-			}
-			if ( !filterNames.equals( that.filterNames ) ) {
-				return false;
-			}
-			if ( !query.equals( that.query ) ) {
-				return false;
-			}
-			if ( !collectionRole.equals( that.collectionRole ) ) {
-				return false;
-			}
+			return shallow == that.shallow
+					&& filterNames.equals( that.filterNames )
+					&& query.equals( that.query )
+					&& collectionRole.equals( that.collectionRole );
 
-			return true;
 		}
 
 		public int hashCode() {

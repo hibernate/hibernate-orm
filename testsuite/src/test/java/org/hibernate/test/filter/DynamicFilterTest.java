@@ -39,6 +39,7 @@ import org.slf4j.LoggerFactory;
  *
  * @author Steve
  */
+@SuppressWarnings({ "WhileLoopReplaceableByForEach", "unchecked" })
 public class DynamicFilterTest extends FunctionalTestCase {
 
 	private Logger log = LoggerFactory.getLogger( DynamicFilterTest.class );
@@ -99,7 +100,7 @@ public class DynamicFilterTest extends FunctionalTestCase {
 		ts = ( ( SessionImplementor ) session ).getTimestamp();
 		session.enableFilter( "fulfilledOrders" ).setParameter( "asOfDate", testData.lastMonth.getTime() );
 		sp = ( Salesperson ) session.createQuery( "from Salesperson as s where s.id = :id" )
-		        .setLong( "id", testData.steveId.longValue() )
+		        .setLong( "id", testData.steveId )
 		        .uniqueResult();
 		assertEquals( "Filtered-collection not bypassing 2L-cache", 1, sp.getOrders().size() );
 
@@ -141,6 +142,17 @@ public class DynamicFilterTest extends FunctionalTestCase {
 		assertEquals( "Incorrect order count", 1, sp.getOrders().size() );
 
 		session.clear();
+
+		session.disableFilter("regionlist");
+		session.enableFilter( "regionlist" ).setParameterList( "regions", new String[]{"LA", "APAC", "APAC"} );
+		// Second test retreival through hql with the collection as non-eager with different region list
+		salespersons = session.createQuery( "select s from Salesperson as s" ).list();
+		assertEquals( "Incorrect salesperson count", 1, salespersons.size() );
+		sp = ( Salesperson ) salespersons.get( 0 );
+		assertEquals( "Incorrect order count", 1, sp.getOrders().size() );
+
+		session.clear();
+
 
 		// test retreival through hql with the collection join fetched
 		salespersons = session.createQuery( "select s from Salesperson as s left join fetch s.orders" ).list();
@@ -224,7 +236,7 @@ public class DynamicFilterTest extends FunctionalTestCase {
 
 		log.info( "Criteria query against Product..." );
 		List products = session.createCriteria( Product.class )
-		        .add( Restrictions.eq( "stockNumber", new Integer( 124 ) ) )
+		        .add( Restrictions.eq( "stockNumber", 124 ) )
 		        .list();
 		assertEquals( "Incorrect product count", 1, products.size() );
 
@@ -288,10 +300,10 @@ public class DynamicFilterTest extends FunctionalTestCase {
 		session.enableFilter("region").setParameter("region", "APAC");
 
 		DetachedCriteria lineItemSubquery = DetachedCriteria.forClass(LineItem.class)
-				.add(Restrictions.ge( "quantity", new Long(1L) ))
-				.createCriteria("product")
-				.add(Restrictions.eq("name", "Acme Hair Gel"))
-				.setProjection(Property.forName("id"));
+				.add( Restrictions.ge( "quantity", 1L ) )
+				.createCriteria( "product" )
+				.add( Restrictions.eq( "name", "Acme Hair Gel" ) )
+				.setProjection( Property.forName( "id" ) );
 
 		List orders = session.createCriteria(Order.class)
 				.add(Subqueries.exists(lineItemSubquery))
@@ -309,7 +321,7 @@ public class DynamicFilterTest extends FunctionalTestCase {
 				.setProjection(Property.forName("id"));
 
 		lineItemSubquery = DetachedCriteria.forClass(LineItem.class)
-				.add(Restrictions.ge("quantity", new Long(1L) ))
+				.add(Restrictions.ge("quantity", 1L ))
 				.createCriteria("product")
 				.add(Subqueries.propertyIn("id", productSubquery))
 				.setProjection(Property.forName("id"));
@@ -662,7 +674,7 @@ public class DynamicFilterTest extends FunctionalTestCase {
 
 		// Force the categories to not get initialized here
 		List result = session.createQuery( "from Product as p where p.id = :id" )
-		        .setLong( "id", testData.prod1Id.longValue() )
+		        .setLong( "id", testData.prod1Id )
 		        .list();
 		assertTrue( "No products returned from HQL", !result.isEmpty() );
 

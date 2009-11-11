@@ -45,6 +45,7 @@ import org.hibernate.engine.PersistenceContext;
 import org.hibernate.engine.QueryParameters;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.SessionImplementor;
+import org.hibernate.engine.NonFlushedChanges;
 import org.hibernate.engine.query.sql.NativeSQLQuerySpecification;
 import org.hibernate.event.EventListeners;
 import org.hibernate.impl.CriteriaImpl;
@@ -215,6 +216,14 @@ public abstract class AbstractDelegateSessionImplementor implements SessionImple
     public int executeNativeUpdate(NativeSQLQuerySpecification specification, QueryParameters queryParameters) throws HibernateException {
         return delegate.executeNativeUpdate(specification, queryParameters);
     }
+
+	public NonFlushedChanges getNonFlushedChanges() throws HibernateException {
+		return delegate.getNonFlushedChanges();
+	}
+
+	public void applyNonFlushedChanges(NonFlushedChanges nonFlushedChanges) throws HibernateException {
+		delegate.applyNonFlushedChanges( nonFlushedChanges );		
+	}
 
     public EntityMode getEntityMode() {
         return delegate.getEntityMode();

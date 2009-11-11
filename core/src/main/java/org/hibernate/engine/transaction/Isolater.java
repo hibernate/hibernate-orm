@@ -28,12 +28,15 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import javax.transaction.Transaction;
 import javax.transaction.TransactionManager;
+import javax.transaction.SystemException;
+import javax.transaction.NotSupportedException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.exception.JDBCExceptionHelper;
+import org.hibernate.exception.SQLExceptionConverter;
 
 /**
  * Class which provides the isolation semantics required by
@@ -108,66 +111,29 @@ public class Isolater {
 
 		public void delegateWork(IsolatedWork work, boolean transacted) throws HibernateException {
 			TransactionManager transactionManager = session.getFactory().getTransactionManager();
-			Transaction surroundingTransaction = null;
-			Connection connection = null;
-			boolean caughtException = false;
 
 			try {
-				// First we need to suspend any current JTA transaction and obtain
-				// a JDBC connection
-				surroundingTransaction = transactionManager.suspend();
+				// First we suspend any current JTA transaction
+				Transaction surroundingTransaction = transactionManager.suspend();
 				if ( log.isDebugEnabled() ) {
 					log.debug( "surrounding JTA transaction suspended [" + surroundingTransaction + "]" );
 				}
 
-				if ( transacted ) {
-					transactionManager.begin();
-				}
-
-				connection = session.getBatcher().openConnection();
-
-				// doAfterTransactionCompletion the actual work
-				work.doWork( connection );
-
-				// if everything went ok, commit the transaction and close the obtained
-				// connection handle...
-				session.getBatcher().closeConnection( connection );
-
-				if ( transacted ) {
-					transactionManager.commit();
-				}
-			}
-			catch( Throwable t ) {
-				// at some point the processing went bad, so we need to:
-				//      1) make sure the connection handle gets released
-				//      2) try to cleanup the JTA context as much as possible
-				caughtException = true;
+				boolean hadProblems = false;
 				try {
-					if ( connection != null && !connection.isClosed() ) {
-						session.getBatcher().closeConnection( connection );
+					// then peform the requested work
+					if ( transacted ) {
+						doTheWorkInNewTransaction( work, transactionManager );
+					}
+					else {
+						doTheWorkInNoTransaction( work );
 					}
 				}
-				catch( Throwable ignore ) {
-					log.trace( "unable to release connection on exception [" + ignore + "]" );
+				catch ( HibernateException e ) {
+					hadProblems = true;
+					throw e;
 				}
-				if ( transacted ) {
-					try {
-						transactionManager.rollback();
-					}
-					catch( Throwable ignore ) {
-						log.trace( "unable to rollback new transaction on exception [" + ignore + "]" );
-					}
-				}
-				// finally handle the exception
-				if ( t instanceof HibernateException ) {
-					throw ( HibernateException ) t;
-				}
-				else {
-					throw new HibernateException( "error performing isolated work", t );
-				}
-			}
-			finally {
-				if ( surroundingTransaction != null ) {
+				finally {
 					try {
 						transactionManager.resume( surroundingTransaction );
 						if ( log.isDebugEnabled() ) {
@@ -175,12 +141,85 @@ public class Isolater {
 						}
 					}
 					catch( Throwable t ) {
-						if ( !caughtException ) {
-							throw new HibernateException( "unable to resume previously suspended transaction", t );
+						// if the actually work had an error use that, otherwise error based on t
+						if ( !hadProblems ) {
+							//noinspection ThrowFromFinallyBlock
+							throw new HibernateException( "Unable to resume previously suspended transaction", t );
 						}
 					}
 				}
 			}
+			catch ( SystemException e ) {
+				throw new HibernateException( "Unable to suspend current JTA transaction", e );
+			}
+		}
+
+		private void doTheWorkInNewTransaction(IsolatedWork work, TransactionManager transactionManager) {
+			try {
+				// start the new isolated transaction
+				transactionManager.begin();
+
+				try {
+					doTheWork( work );
+					// if everythign went ok, commit the isolated transaction
+					transactionManager.commit();
+				}
+				catch ( Exception e ) {
+					try {
+						transactionManager.rollback();
+					}
+					catch ( Exception ignore ) {
+						log.info( "Unable to rollback isolated transaction on error [" + e + "] : [" + ignore + "]" );
+					}
+				}
+			}
+			catch ( SystemException e ) {
+				throw new HibernateException( "Unable to start isolated transaction", e );
+			}
+			catch ( NotSupportedException e ) {
+				throw new HibernateException( "Unable to start isolated transaction", e );
+			}
+		}
+
+		private void doTheWorkInNoTransaction(IsolatedWork work) {
+			doTheWork( work );
+		}
+
+		private void doTheWork(IsolatedWork work) {
+			try {
+				// obtain our isolated connection
+				Connection connection = session.getFactory().getConnectionProvider().getConnection();
+				try {
+					// do the actual work
+					work.doWork( connection );
+				}
+				catch ( HibernateException e ) {
+					throw e;
+				}
+				catch ( Exception e ) {
+					throw new HibernateException( "Unable to perform isolated work", e );
+				}
+				finally {
+					try {
+						// no matter what, release the connection (handle)
+						session.getFactory().getConnectionProvider().closeConnection( connection );
+					}
+					catch ( Throwable ignore ) {
+						log.info( "Unable to release isolated connection [" + ignore + "]" );
+					}
+				}
+			}
+			catch ( SQLException sqle ) {
+				throw JDBCExceptionHelper.convert(
+						sqlExceptionConverter(),
+						sqle,
+						"unable to obtain isolated JDBC connection"
+				);
+			}
+		}
+
+		private SQLExceptionConverter sqlExceptionConverter() {
+			return session.getFactory().getSQLExceptionConverter();
 		}
 	}
 
@@ -196,61 +235,75 @@ public class Isolater {
 		}
 
 		public void delegateWork(IsolatedWork work, boolean transacted) throws HibernateException {
-			Connection connection = null;
 			boolean wasAutoCommit = false;
 			try {
-				connection = session.getBatcher().openConnection();
-
-				if ( transacted ) {
-					if ( connection.getAutoCommit() ) {
-						wasAutoCommit = true;
-						connection.setAutoCommit( false );
-					}
-				}
-
-				work.doWork( connection );
-
-				if ( transacted ) {
-					connection.commit();
-				}
-			}
-			catch( Throwable t ) {
+				Connection connection = session.getFactory().getConnectionProvider().getConnection();
 				try {
-					if ( transacted && connection != null && !connection.isClosed() ) {
-						connection.rollback();
+					if ( transacted ) {
+						if ( connection.getAutoCommit() ) {
+							wasAutoCommit = true;
+							connection.setAutoCommit( false );
+						}
+					}
+
+					work.doWork( connection );
+
+					if ( transacted ) {
+						connection.commit();
 					}
 				}
-				catch( Throwable ignore ) {
-					log.trace( "unable to release connection on exception [" + ignore + "]" );
-				}
+				catch( Exception e ) {
+					try {
+						if ( transacted && !connection.isClosed() ) {
+							connection.rollback();
+						}
+					}
+					catch( Exception ignore ) {
+						log.info( "unable to rollback connection on exception [" + ignore + "]" );
+					}
 
-				if ( t instanceof HibernateException ) {
-					throw ( HibernateException ) t;
+					if ( e instanceof HibernateException ) {
+						throw ( HibernateException ) e;
+					}
+					else if ( e instanceof SQLException ) {
+						throw JDBCExceptionHelper.convert(
+								sqlExceptionConverter(),
+								( SQLException ) e,
+								"error performing isolated work"
+						);
+					}
+					else {
+						throw new HibernateException( "error performing isolated work", e );
+					}
 				}
-				else if ( t instanceof SQLException ) {
-					throw JDBCExceptionHelper.convert(
-							session.getFactory().getSQLExceptionConverter(),
-					        ( SQLException ) t,
-					        "error performing isolated work"
-					);
-				}
-				else {
-					throw new HibernateException( "error performing isolated work", t );
-				}
-			}
-			finally {
-				if ( connection != null ) {
+				finally {
 					if ( transacted && wasAutoCommit ) {
 						try {
 							connection.setAutoCommit( true );
 						}
-						catch( Throwable ignore ) {
+						catch( Exception ignore ) {
 							log.trace( "was unable to reset connection back to auto-commit" );
 						}
 					}
-					session.getBatcher().closeConnection( connection );
+					try {
+						session.getFactory().getConnectionProvider().closeConnection( connection );
+					}
+					catch ( Exception ignore ) {
+						log.info( "Unable to release isolated connection [" + ignore + "]" );
+					}
 				}
 			}
+			catch ( SQLException sqle ) {
+				throw JDBCExceptionHelper.convert(
+						sqlExceptionConverter(),
+						sqle,
+						"unable to obtain isolated JDBC connection"
+				);
+			}
+		}
+
+		private SQLExceptionConverter sqlExceptionConverter() {
+			return session.getFactory().getSQLExceptionConverter();
 		}
 	}
 }

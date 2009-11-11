@@ -503,6 +503,7 @@
                     <groupId>hsqldb</groupId>
                     <artifactId>hsqldb</artifactId>
                     <version>1.8.0.2</version>
+                    <scope>test</scope>
                 </dependency>
             </dependencies>
             <properties>
@@ -530,6 +531,7 @@
                     <groupId>mysql</groupId>
                     <artifactId>mysql-connector-java</artifactId>
                     <version>5.0.5</version>
+                    <scope>test</scope>
                 </dependency>
             </dependencies>
             <properties>
@@ -550,6 +552,7 @@
                     <groupId>mysql</groupId>
                     <artifactId>mysql-connector-java</artifactId>
                     <version>5.0.5</version>
+                    <scope>test</scope>
                 </dependency>
             </dependencies>
             <properties>
@@ -570,6 +573,7 @@
                     <groupId>mysql</groupId>
                     <artifactId>mysql-connector-java</artifactId>
                     <version>5.1.8</version>
+                    <scope>test</scope>
                 </dependency>
             </dependencies>
             <properties>
@@ -590,6 +594,7 @@
                     <groupId>postgresql</groupId>
                     <artifactId>postgresql</artifactId>
                     <version>8.2-504.jdbc3</version>
+                    <scope>test</scope>
                 </dependency>
             </dependencies>
             <properties>
@@ -610,6 +615,7 @@
                     <groupId>postgresql</groupId>
                     <artifactId>postgresql</artifactId>
                     <version>8.2-504.jdbc3</version>
+                    <scope>test</scope>
                 </dependency>
             </dependencies>
             <properties>
@@ -636,6 +642,7 @@
                     <groupId>com.ibm</groupId>
                     <artifactId>db2jcc</artifactId>
                     <version>3.1.57</version>
+                    <scope>test</scope>
                 </dependency>
                 <dependency>
                     <groupId>com.ibm</groupId>
@@ -661,6 +668,7 @@
                     <groupId>com.ibm</groupId>
                     <artifactId>db2jcc</artifactId>
                     <version>3.8.47</version>
+                    <scope>test</scope>
                 </dependency>
                 <dependency>
                     <groupId>com.ibm</groupId>
@@ -686,6 +694,7 @@
                     <groupId>com.ibm</groupId>
                     <artifactId>db2jcc</artifactId>
                     <version>3.57.86</version>
+                    <scope>test</scope>
                 </dependency>
                 <dependency>
                     <groupId>com.ibm</groupId>
@@ -712,6 +721,7 @@
                     <artifactId>ojdbc14</artifactId>
                     <!-- use the 10g drivers which are surprisingly largely bug free -->
                     <version>10.0.2.0</version>
+                    <scope>test</scope>
                 </dependency>
             </dependencies>
             <properties>
@@ -733,6 +743,7 @@
                     <artifactId>ojdbc14</artifactId>
                     <!-- use the 10g drivers which are surprisingly largely bug free -->
                     <version>10.0.2.0</version>
+                    <scope>test</scope>
                 </dependency>
             </dependencies>
             <properties>
@@ -753,6 +764,7 @@
                     <groupId>com.oracle</groupId>
                     <artifactId>ojdbc5</artifactId>
                     <version>11.1.0.7.0</version>
+                    <scope>test</scope>
                 </dependency>
             </dependencies>
             <properties>
@@ -773,6 +785,7 @@
                     <groupId>com.oracle</groupId>
                     <artifactId>ojdbc5</artifactId>
                     <version>11.1.0.7.0</version>
+                    <scope>test</scope>
                 </dependency>
             </dependencies>
             <properties>
@@ -793,6 +806,7 @@
                     <groupId>com.sybase</groupId>
                     <artifactId>jconnect</artifactId>
                     <version>6.0.5</version>
+                    <scope>test</scope>
                 </dependency>
             </dependencies>
             <properties>
@@ -812,7 +826,8 @@
                 <dependency>
                     <groupId>com.microsoft.sqlserver</groupId>
                     <artifactId>msjdbc</artifactId>
-                    <version>1.1</version>
+                    <version>2.0.1008.2</version>
+                    <scope>test</scope>
                 </dependency>
             </dependencies>
             <properties>
@@ -832,7 +847,8 @@
                 <dependency>
                     <groupId>com.microsoft.sqlserver</groupId>
                     <artifactId>msjdbc</artifactId>
-                    <version>1.1</version>
+                    <version>2.0.1008.2</version>
+                    <scope>test</scope>
                 </dependency>
             </dependencies>
             <properties>

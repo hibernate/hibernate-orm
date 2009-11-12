@@ -165,10 +165,14 @@ public interface Batcher {
 
 	/**
 	 * Obtain a JDBC connection
+	 *
+	 * @deprecated Obtain connections from {@link ConnectionProvider} instead
 	 */
 	public Connection openConnection() throws HibernateException;
 	/**
 	 * Dispose of the JDBC connection
+	 *
+	 * @deprecated Obtain connections from {@link ConnectionProvider} instead
 	 */
 	public void closeConnection(Connection conn) throws HibernateException;
 	

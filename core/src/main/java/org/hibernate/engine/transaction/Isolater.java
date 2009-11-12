@@ -124,14 +124,14 @@ public class Isolater {
 					transactionManager.begin();
 				}
 
-				connection = session.getBatcher().openConnection();
+				connection = session.getFactory().getConnectionProvider().getConnection();
 
 				// perform the actual work
 				work.doWork( connection );
 
 				// if everything went ok, commit the transaction and close the obtained
 				// connection handle...
-				session.getBatcher().closeConnection( connection );
+				session.getFactory().getConnectionProvider().closeConnection( connection );
 
 				if ( transacted ) {
 					transactionManager.commit();
@@ -144,7 +144,7 @@ public class Isolater {
 				caughtException = true;
 				try {
 					if ( connection != null && !connection.isClosed() ) {
-						session.getBatcher().closeConnection( connection );
+						session.getFactory().getConnectionProvider().closeConnection( connection );
 					}
 				}
 				catch( Throwable ignore ) {
@@ -176,6 +176,7 @@ public class Isolater {
 					}
 					catch( Throwable t ) {
 						if ( !caughtException ) {
+							//noinspection ThrowFromFinallyBlock
 							throw new HibernateException( "unable to resume previously suspended transaction", t );
 						}
 					}
@@ -199,7 +200,7 @@ public class Isolater {
 			Connection connection = null;
 			boolean wasAutoCommit = false;
 			try {
-				connection = session.getBatcher().openConnection();
+				connection = session.getFactory().getConnectionProvider().getConnection();
 
 				if ( transacted ) {
 					if ( connection.getAutoCommit() ) {
@@ -248,7 +249,12 @@ public class Isolater {
 							log.trace( "was unable to reset connection back to auto-commit" );
 						}
 					}
-					session.getBatcher().closeConnection( connection );
+					try {
+						session.getFactory().getConnectionProvider().closeConnection( connection );
+					}
+					catch ( Exception ignore ) {
+						log.info( "Unable to release isolated connection [" + ignore + "]" );
+					}
 				}
 			}
 		}

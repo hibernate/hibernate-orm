@@ -424,70 +424,85 @@ public class Configuration implements Serializable {
 	 * the non-cached file.
 	 */
 	public Configuration addCacheableFile(File xmlFile) throws MappingException {
+		File cachedFile = determineCachedDomFile( xmlFile );
+
 		try {
-			File cachedFile = new File( xmlFile.getAbsolutePath() + ".bin" );
-			org.dom4j.Document doc = null;
+			return addCacheableFileStrictly( xmlFile );
+		}
+		catch ( SerializationException e ) {
+			log.warn( "Could not deserialize cache file: " + cachedFile.getPath() + " : " + e );
+		}
+		catch ( FileNotFoundException e ) {
+			log.warn( "I/O reported cached file could not be found : " + cachedFile.getPath() + " : " + e );
+		}
 
-			final boolean useCachedFile = xmlFile.exists() &&
-					cachedFile.exists() &&
-					xmlFile.lastModified() < cachedFile.lastModified();
+		if ( !xmlFile.exists() ) {
+			throw new MappingNotFoundException( "file", xmlFile.toString() );
+		}
 
-			if ( useCachedFile ) {
-				try {
-					log.info( "Reading mappings from cache file: " + cachedFile );
-					doc = ( org.dom4j.Document ) SerializationHelper.deserialize( new FileInputStream( cachedFile ) );
-				}
-				catch ( SerializationException e ) {
-					log.warn( "Could not deserialize cache file: " + cachedFile.getPath(), e );
-				}
-				catch ( FileNotFoundException e ) {
-					log.warn( "I/O reported cached file could not be found : " + cachedFile.getPath(), e );
-				}
+		log.info( "Reading mappings from file: " + xmlFile );
+		List errors = new ArrayList();
+		try {
+			org.dom4j.Document doc = xmlHelper.createSAXReader( xmlFile.getAbsolutePath(), errors, entityResolver ).read( xmlFile );
+			if ( errors.size() != 0 ) {
+				throw new MappingException( "invalid mapping", ( Throwable ) errors.get( 0 ) );
 			}
 
-			// if doc is null, then for whatever reason, the cached file cannot be used...
-			if ( doc == null ) {
-				if ( !xmlFile.exists() ) {
-					throw new MappingNotFoundException( "file", xmlFile.toString() );
-				}
-
-				log.info( "Reading mappings from file: " + xmlFile );
-				List errors = new ArrayList();
-				try {
-					doc = xmlHelper.createSAXReader( xmlFile.getAbsolutePath(), errors, entityResolver ).read( xmlFile );
-					if ( errors.size() != 0 ) {
-						throw new MappingException( "invalid mapping", ( Throwable ) errors.get( 0 ) );
-					}
-				}
-				catch( DocumentException e){
-					throw new MappingException( "invalid mapping", e );
-				}
-
-				try {
-					log.debug( "Writing cache file for: " + xmlFile + " to: " + cachedFile );
-					SerializationHelper.serialize( ( Serializable ) doc, new FileOutputStream( cachedFile ) );
-				}
-				catch ( SerializationException e ) {
-					log.warn( "Could not write cached file: " + cachedFile, e );
-				}
-				catch ( FileNotFoundException e ) {
-					log.warn( "I/O reported error writing cached file : " + cachedFile.getPath(), e );
-				}
+			try {
+				log.debug( "Writing cache file for: " + xmlFile + " to: " + cachedFile );
+				SerializationHelper.serialize( ( Serializable ) doc, new FileOutputStream( cachedFile ) );
+			}
+			catch ( SerializationException e ) {
+				log.warn( "Could not write cached file: " + cachedFile, e );
+			}
+			catch ( FileNotFoundException e ) {
+				log.warn( "I/O reported error writing cached file : " + cachedFile.getPath(), e );
 			}
 
 			add( doc );
-			return this;
+		}
+		catch( DocumentException e){
+			throw new MappingException( "invalid mapping", e );
+		}
 
+		return this;
+	}
+
+	private File determineCachedDomFile(File xmlFile) {
+		return new File( xmlFile.getAbsolutePath() + ".bin" );
+	}
+
+	/**
+	 * <b>INTENDED FOR TESTSUITE USE ONLY!</b>
+	 * <p/>
+	 * Much like {@link addCacheableFile(File)} except that here we will fail immediately if
+	 * the cache version cannot be found or used for whatever reason
+	 *
+	 * @param xmlFile The xml file, not the bin!
+	 *
+	 * @return The dom "deserialized" from the cached file.
+	 *
+	 * @throws MappingException Indicates a problem in the underlyiong call to {@link #add(org.dom4j.Document)}
+	 * @throws SerializationException Indicates a problem deserializing the cached dom tree
+	 * @throws FileNotFoundException Indicates that the cached file was not found or was not usable.
+	 */
+	public Configuration addCacheableFileStrictly(File xmlFile)
+			throws MappingException, SerializationException, FileNotFoundException {
+		final File cachedFile = determineCachedDomFile( xmlFile );
+
+		final boolean useCachedFile = xmlFile.exists()
+				&& cachedFile.exists()
+				&& xmlFile.lastModified() < cachedFile.lastModified();
+
+		if ( ! useCachedFile ) {
+			throw new FileNotFoundException( "Cached file could not be found or could not be used" );
 		}
-		catch ( InvalidMappingException e ) {
-			throw e;
-		}
-		catch  ( MappingNotFoundException e ) {
-			throw e;
-		}
-		catch ( Exception e ) {
-			throw new InvalidMappingException( "file", xmlFile.toString(), e );
-		}
+
+		log.info( "Reading mappings from cache file: " + cachedFile );
+		org.dom4j.Document document =
+				( org.dom4j.Document ) SerializationHelper.deserialize( new FileInputStream( cachedFile ) );
+		add( document );
+		return this;
 	}
 
 	/**

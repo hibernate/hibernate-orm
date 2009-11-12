@@ -1,29 +1,33 @@
 /*
- * Copyright (c) 2007, Red Hat Middleware, LLC. All rights reserved.
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2009, Red Hat Middleware LLC or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Middleware LLC.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
- * Lesser General Public License, v. 2.1. This program is distributed in the
- * hope that it will be useful, but WITHOUT A WARRANTY; without even the implied
- * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * Lesser General Public License for more details. You should have received a
- * copy of the GNU Lesser General Public License, v.2.1 along with this
- * distribution; if not, write to the Free Software Foundation, Inc.,
- * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+ * Lesser General Public License, as published by the Free Software Foundation.
  *
- * Red Hat Author(s): Max Andersen, Steve Ebersole
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
  */
-package org.hibernate.test.cfg;
+package org.hibernate.test.perf;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.io.PrintWriter;
 
 import junit.framework.Test;
@@ -46,12 +50,10 @@ public class ConfigurationPerformanceTest extends UnitTestCase {
 
 	private final String workPackageName = "org.hibernate.test.cfg.work";
 	private File compilationBaseDir;
-	private File mappingBaseDir;
 	private File workPackageDir;
 
 	protected void setUp() throws Exception {
 		compilationBaseDir = getTestComplileDirectory();
-		mappingBaseDir = new File( compilationBaseDir, "org/hibernate/test" );
 		workPackageDir = new File( compilationBaseDir, workPackageName.replace( '.', '/' ) );
 		if ( workPackageDir.exists() ) {
 			//noinspection ResultOfMethodCallIgnored
@@ -67,50 +69,6 @@ public class ConfigurationPerformanceTest extends UnitTestCase {
 		super.tearDown();
 	}
 
-	private static final String[] FILES = new String[] {
-			"legacy/ABC.hbm.xml",
-			"legacy/ABCExtends.hbm.xml",
-			"legacy/Baz.hbm.xml",
-			"legacy/Blobber.hbm.xml",
-			"legacy/Broken.hbm.xml",
-			"legacy/Category.hbm.xml",
-			"legacy/Circular.hbm.xml",
-			"legacy/Commento.hbm.xml",
-			"legacy/ComponentNotNullMaster.hbm.xml",
-			"legacy/Componentizable.hbm.xml",
-			"legacy/Container.hbm.xml",
-			"legacy/Custom.hbm.xml",
-			"legacy/CustomSQL.hbm.xml",
-			"legacy/Eye.hbm.xml",
-			"legacy/Fee.hbm.xml",
-			"legacy/Fo.hbm.xml",
-			"legacy/FooBar.hbm.xml",
-			"legacy/Fum.hbm.xml",
-			"legacy/Fumm.hbm.xml",
-			"legacy/Glarch.hbm.xml",
-			"legacy/Holder.hbm.xml",
-			"legacy/IJ2.hbm.xml",
-			"legacy/Immutable.hbm.xml",
-			"legacy/Location.hbm.xml",
-			"legacy/Many.hbm.xml",
-			"legacy/Map.hbm.xml",
-			"legacy/Marelo.hbm.xml",
-			"legacy/MasterDetail.hbm.xml",
-			"legacy/Middle.hbm.xml",
-			"legacy/Multi.hbm.xml",
-			"legacy/MultiExtends.hbm.xml",
-			"legacy/Nameable.hbm.xml",
-			"legacy/One.hbm.xml",
-			"legacy/ParentChild.hbm.xml",
-			"legacy/Qux.hbm.xml",
-			"legacy/Simple.hbm.xml",
-			"legacy/SingleSeveral.hbm.xml",
-			"legacy/Stuff.hbm.xml",
-			"legacy/UpDown.hbm.xml",
-			"legacy/Vetoer.hbm.xml",
-			"legacy/WZ.hbm.xml",
-	};
-
 	public ConfigurationPerformanceTest(String string) {
 		super( string );
 	}
@@ -121,33 +79,6 @@ public class ConfigurationPerformanceTest extends UnitTestCase {
 
 	public static void main(String[] args) throws Exception {
 		TestRunner.run( suite() );
-	}
-
-	public void testLoadingAndSerializationOfConfiguration() throws Throwable {
-		final File cachedCfgFile = new File( workPackageDir, "hibernate.cfg.bin" );
-		try {
-			System.err.println( "#### Preparing serialized configuration ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" );
-			prepareSerializedConfiguration( mappingBaseDir, FILES, cachedCfgFile );
-			System.err.println( "#### Preparing serialized configuration complete ~~~~~~~~~~~~~~~~~~~~~~~~" );
-
-			// now make sure we can reload the serialized configuration...
-			System.err.println( "#### Reading serialized configuration ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" );
-			readSerializedConfiguration( cachedCfgFile );
-			System.err.println( "#### Reading serialized configuration complete ~~~~~~~~~~~~~~~~~~~~~~~~~~" );
-		}
-		finally {
-			System.err.println( "###CLEANING UP###" );
-			if ( ! cachedCfgFile.delete() ) {
-				System.err.println( "Unable to cleanup file " + cachedCfgFile.getAbsolutePath() );
-			}
-			//noinspection ForLoopReplaceableByForEach
-			for ( int i = 0; i < FILES.length; i++ ) {
-				File file = new File( mappingBaseDir, FILES[i] + ".bin" );
-				if ( ! file.delete() ) {
-					System.err.println( "Unable to cleanup file " + file.getAbsolutePath() );
-				}
-			}
-		}
 	}
 
 	public void testSessionFactoryCreationTime() throws Throwable {
@@ -198,20 +129,6 @@ public class ConfigurationPerformanceTest extends UnitTestCase {
 		System.err.println( "Subsequent SessionFactory load time : " + subsequent );
 	}
 
-	private void prepareSerializedConfiguration(
-			File mappingFileBase,
-			String[] files,
-			File cachedCfgFile) throws IOException {
-		Configuration cfg = buildConfigurationFromCacheableFiles( mappingFileBase, files );
-
-		ObjectOutputStream os = new ObjectOutputStream( new FileOutputStream( cachedCfgFile ) );
-		os.writeObject( cfg ); // need to serialize Configuration *before* building sf since it would require non-mappings and cfg types to be serializable
-		os.flush();
-		os.close();
-
-		timeBuildingSessionFactory( cfg );
-	}
-
 	private Configuration buildConfigurationFromCacheableFiles(File mappingFileBase, String[] files) {
 		long start = System.currentTimeMillis();
 		Configuration cfg = new Configuration();
@@ -230,27 +147,6 @@ public class ConfigurationPerformanceTest extends UnitTestCase {
 						( System.currentTimeMillis() - start ) / 1000.0 + " sec."
 		);
 		return cfg;
-	}
-
-	private void timeBuildingSessionFactory(Configuration configuration) {
-		long start = System.currentTimeMillis();
-		System.err.println( "Start build of session factory" );
-		SessionFactory factory = configuration.buildSessionFactory();
-		System.err.println( "Built session factory :" + ( System.currentTimeMillis() - start ) / 1000.0 + " sec." );
-		factory.close();
-	}
-
-	private void readSerializedConfiguration(File cachedCfgFile) throws ClassNotFoundException, IOException {
-		long start = System.currentTimeMillis();
-		ObjectInputStream is = new ObjectInputStream( new FileInputStream( cachedCfgFile ) );
-		Configuration cfg = ( Configuration ) is.readObject();
-		is.close();
-		System.err.println(
-				"Loaded serializable configuration :" +
-						( System.currentTimeMillis() - start ) / 1000.0 + " sec."
-		);
-
-		timeBuildingSessionFactory( cfg );
 	}
 
 	public void generateTestFiles() throws Throwable {

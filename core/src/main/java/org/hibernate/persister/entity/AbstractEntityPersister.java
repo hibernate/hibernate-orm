@@ -1412,7 +1412,7 @@ public abstract class AbstractEntityPersister
 	        Object object,
 	        LockMode lockMode,
 	        SessionImplementor session) throws HibernateException {
-		getLocker( lockMode ).lock( id, version, object, session );
+		getLocker( lockMode ).lock( id, version, object, -1, session );
 	}
 
 	public String getRootTableName() {

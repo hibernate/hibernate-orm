@@ -41,9 +41,7 @@ import org.hibernate.dialect.function.VarArgsSQLFunction;
 import org.hibernate.dialect.function.StandardJDBCEscapeFunction;
 import org.hibernate.dialect.function.ConvertFunction;
 import org.hibernate.dialect.function.ConditionalParenthesisFunction;
-import org.hibernate.dialect.lock.LockingStrategy;
-import org.hibernate.dialect.lock.SelectLockingStrategy;
-import org.hibernate.dialect.lock.UpdateLockingStrategy;
+import org.hibernate.dialect.lock.*;
 import org.hibernate.exception.CacheSQLStateConverter;
 import org.hibernate.exception.SQLExceptionConverter;
 import org.hibernate.exception.TemplatedViolatedConstraintNameExtracter;
@@ -564,7 +562,22 @@ public class Cache71Dialect extends Dialect {
 	public LockingStrategy getLockingStrategy(Lockable lockable, LockMode lockMode) {
 		// InterSystems Cache' does not current support "SELECT ... FOR UPDATE" syntax...
 		// Set your transaction mode to READ_COMMITTED before using
-		if ( lockMode.greaterThan( LockMode.READ ) ) {
+		if ( lockMode==LockMode.PESSIMISTIC_FORCE_INCREMENT) {
+			return new PessimisticForceIncrementLockingStrategy( lockable, lockMode);
+		}
+		else if ( lockMode==LockMode.PESSIMISTIC_WRITE) {
+			return new PessimisticWriteUpdateLockingStrategy( lockable, lockMode);
+		}
+		else if ( lockMode==LockMode.PESSIMISTIC_READ) {
+			return new PessimisticReadUpdateLockingStrategy( lockable, lockMode);
+		}
+		else if ( lockMode==LockMode.OPTIMISTIC) {
+			return new OptimisticLockingStrategy( lockable, lockMode);
+		}
+		else if ( lockMode==LockMode.OPTIMISTIC_FORCE_INCREMENT) {
+			return new OptimisticForceIncrementLockingStrategy( lockable, lockMode);
+		}
+		else if ( lockMode.greaterThan( LockMode.READ ) ) {
 			return new UpdateLockingStrategy( lockable, lockMode );
 		}
 		else {

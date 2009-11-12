@@ -111,9 +111,14 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	}
 
 	public String appendLockHint(LockMode mode, String tableName) {
-		if ( mode.greaterThan( LockMode.READ ) ) {
-			// does this need holdlock also? : return tableName + " with (updlock, rowlock, holdlock)";
+		if ( ( mode == LockMode.UPGRADE ) ||
+			  ( mode == LockMode.UPGRADE_NOWAIT ) ||
+			  ( mode == LockMode.PESSIMISTIC_WRITE ) ||			
+			  ( mode == LockMode.WRITE ) ) {
 			return tableName + " with (updlock, rowlock)";
+		}
+		else if ( mode == LockMode.PESSIMISTIC_READ ) {
+			return tableName + " with (holdlock, rowlock)";
 		}
 		else {
 			return tableName;

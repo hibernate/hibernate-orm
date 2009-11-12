@@ -51,11 +51,12 @@ public interface LockingStrategy {
 	 * @param id The id of the row to be locked
 	 * @param version The current version (or null if not versioned)
 	 * @param object The object logically being locked (currently not used)
+	 * @param timeout timeout in milliseconds, 0 = no wait, -1 = wait indefinitely
 	 * @param session The session from which the lock request originated
 	 * @throws StaleObjectStateException Indicates an optimisitic lock failure
 	 * as part of acquiring the requested database lock.
 	 * @throws JDBCException
 	 */
-	public void lock(Serializable id, Object version, Object object, SessionImplementor session)
+	public void lock(Serializable id, Object version, Object object, int timeout, SessionImplementor session)
 	throws StaleObjectStateException, JDBCException;
 }

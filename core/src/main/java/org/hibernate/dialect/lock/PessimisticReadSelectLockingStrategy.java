@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2009, Red Hat Middleware LLC or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Middleware LLC.
@@ -40,18 +40,23 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 /**
- * A locking strategy where the locks are obtained through select statements.
+ * A pessimistic locking strategy where the locks are obtained through select statements.
  * <p/>
  * For non-read locks, this is achieved through the Dialect's specific
  * SELECT ... FOR UPDATE syntax.
  *
+ * This strategy is valid for LockMode.PESSIMISTIC_READ
+ *
+ * This class is a clone of SelectLockingStrategy.
+ *
  * @see org.hibernate.dialect.Dialect#getForUpdateString(org.hibernate.LockMode)
  * @see org.hibernate.dialect.Dialect#appendLockHint(org.hibernate.LockMode, String)
- * @since 3.2
+ * @since 3.5
  *
  * @author Steve Ebersole
+ * @author Scott Marlow
  */
-public class SelectLockingStrategy implements LockingStrategy {
+public class PessimisticReadSelectLockingStrategy implements LockingStrategy {
 
 	private final Lockable lockable;
 	private final LockMode lockMode;
@@ -63,21 +68,20 @@ public class SelectLockingStrategy implements LockingStrategy {
 	 * @param lockable The metadata for the entity to be locked.
 	 * @param lockMode Indictates the type of lock to be acquired.
 	 */
-	public SelectLockingStrategy(Lockable lockable, LockMode lockMode) {
+	public PessimisticReadSelectLockingStrategy(Lockable lockable, LockMode lockMode) {
 		this.lockable = lockable;
 		this.lockMode = lockMode;
 		this.sql = generateLockString();
 	}
 
-	/**
-	 * @see LockingStrategy#lock
+   /**
+	 * @see org.hibernate.dialect.lock.LockingStrategy#lock
 	 */
 	public void lock(
-	        Serializable id,
-	        Object version,
-	        Object object,
-	        int timeout, 
-	        SessionImplementor session) throws StaleObjectStateException, JDBCException {
+      Serializable id,
+      Object version,
+      Object object,
+      int timeout, SessionImplementor session) throws StaleObjectStateException, JDBCException {
 
 		SessionFactoryImplementor factory = session.getFactory();
 		try {

@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2009, Red Hat Middleware LLC or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Middleware LLC.
@@ -42,16 +42,19 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * A locking strategy where the locks are obtained through update statements.
+ * A pessimistic locking strategy where the locks are obtained through update statements.
  * <p/>
- * This strategy is not valid for read style locks.
+ * This strategy is valid for LockMode.PESSIMISTIC_READ
  *
- * @since 3.2
+ * This class is a clone of UpdateLockingStrategy.
+ *
+ * @since 3.5
  *
  * @author Steve Ebersole
+ * @author Scott Marlow
  */
-public class UpdateLockingStrategy implements LockingStrategy {
-	private static final Logger log = LoggerFactory.getLogger( UpdateLockingStrategy.class );
+public class PessimisticReadUpdateLockingStrategy implements LockingStrategy {
+	private static final Logger log = LoggerFactory.getLogger( PessimisticReadUpdateLockingStrategy.class );
 
 	private final Lockable lockable;
 	private final LockMode lockMode;
@@ -64,10 +67,10 @@ public class UpdateLockingStrategy implements LockingStrategy {
 	 * @param lockMode Indictates the type of lock to be acquired.  Note that
 	 * read-locks are not valid for this strategy.
 	 */
-	public UpdateLockingStrategy(Lockable lockable, LockMode lockMode) {
+	public PessimisticReadUpdateLockingStrategy(Lockable lockable, LockMode lockMode) {
 		this.lockable = lockable;
 		this.lockMode = lockMode;
-		if ( lockMode.lessThan( LockMode.UPGRADE ) ) {
+		if ( lockMode.lessThan( LockMode.PESSIMISTIC_READ ) ) {
 			throw new HibernateException( "[" + lockMode + "] not valid for update statement" );
 		}
 		if ( !lockable.isVersioned() ) {
@@ -79,19 +82,17 @@ public class UpdateLockingStrategy implements LockingStrategy {
 		}
 	}
 
-	/**
-	 * @see LockingStrategy#lock
+   /**
+	 * @see org.hibernate.dialect.lock.LockingStrategy#lock
 	 */
 	public void lock(
-	        Serializable id,
-	        Object version,
-	        Object object,
-	        int timeout,
-	        SessionImplementor session) throws StaleObjectStateException, JDBCException {
+      Serializable id,
+      Object version,
+      Object object,
+      int timeout, SessionImplementor session) throws StaleObjectStateException, JDBCException {
 		if ( !lockable.isVersioned() ) {
 			throw new HibernateException( "write locks via update not supported for non-versioned entities [" + lockable.getEntityName() + "]" );
 		}
-		// todo : should we additionally check the current isolation mode explicitly?
 		SessionFactoryImplementor factory = session.getFactory();
 		try {
 			PreparedStatement st = session.getBatcher().prepareSelectStatement( sql );
@@ -107,7 +108,7 @@ public class UpdateLockingStrategy implements LockingStrategy {
 				}
 
 				int affected = st.executeUpdate();
-				if ( affected < 0 ) {
+				if ( affected < 0 ) {  // todo:  should this instead check for exactly one row modified?
 					factory.getStatisticsImplementor().optimisticFailure( lockable.getEntityName() );
 					throw new StaleObjectStateException( lockable.getEntityName(), id );
 				}

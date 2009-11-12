@@ -31,9 +31,7 @@ import org.hibernate.LockMode;
 import org.hibernate.persister.entity.Lockable;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.StandardSQLFunction;
-import org.hibernate.dialect.lock.LockingStrategy;
-import org.hibernate.dialect.lock.UpdateLockingStrategy;
-import org.hibernate.dialect.lock.SelectLockingStrategy;
+import org.hibernate.dialect.lock.*;
 import org.hibernate.sql.CaseFragment;
 import org.hibernate.sql.MckoiCaseFragment;
 
@@ -111,7 +109,22 @@ public class MckoiDialect extends Dialect {
 
 	public LockingStrategy getLockingStrategy(Lockable lockable, LockMode lockMode) {
 		// Mckoi has no known variation of a "SELECT ... FOR UPDATE" syntax...
-		if ( lockMode.greaterThan( LockMode.READ ) ) {
+		if ( lockMode==LockMode.PESSIMISTIC_FORCE_INCREMENT) {
+			return new PessimisticForceIncrementLockingStrategy( lockable, lockMode);
+		}
+		else if ( lockMode==LockMode.PESSIMISTIC_WRITE) {
+			return new PessimisticWriteUpdateLockingStrategy( lockable, lockMode);
+		}
+		else if ( lockMode==LockMode.PESSIMISTIC_READ) {
+			return new PessimisticReadUpdateLockingStrategy( lockable, lockMode);
+		}
+		else if ( lockMode==LockMode.OPTIMISTIC) {
+			return new OptimisticLockingStrategy( lockable, lockMode);
+		}
+		else if ( lockMode==LockMode.OPTIMISTIC_FORCE_INCREMENT) {
+			return new OptimisticForceIncrementLockingStrategy( lockable, lockMode);
+		}
+		else if ( lockMode.greaterThan( LockMode.READ ) ) {
 			return new UpdateLockingStrategy( lockable, lockMode );
 		}
 		else {

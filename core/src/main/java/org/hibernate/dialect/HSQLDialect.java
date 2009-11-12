@@ -38,8 +38,7 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.NoArgSQLFunction;
 import org.hibernate.dialect.function.StandardSQLFunction;
 import org.hibernate.dialect.function.VarArgsSQLFunction;
-import org.hibernate.dialect.lock.LockingStrategy;
-import org.hibernate.dialect.lock.SelectLockingStrategy;
+import org.hibernate.dialect.lock.*;
 import org.hibernate.exception.JDBCExceptionHelper;
 import org.hibernate.exception.TemplatedViolatedConstraintNameExtracter;
 import org.hibernate.exception.ViolatedConstraintNameExtracter;
@@ -292,7 +291,17 @@ public class HSQLDialect extends Dialect {
 
 	public LockingStrategy getLockingStrategy(Lockable lockable, LockMode lockMode) {
 		// HSQLDB only supports READ_UNCOMMITTED transaction isolation
+		if ( lockMode==LockMode.PESSIMISTIC_FORCE_INCREMENT) {
+			return new PessimisticForceIncrementLockingStrategy( lockable, lockMode);
+		}
+		else if ( lockMode==LockMode.OPTIMISTIC) {
+			return new OptimisticLockingStrategy( lockable, lockMode);
+		}
+		else if ( lockMode==LockMode.OPTIMISTIC_FORCE_INCREMENT) {
+			return new OptimisticForceIncrementLockingStrategy( lockable, lockMode);
+		}
 		return new ReadUncommittedLockingStrategy( lockable, lockMode );
+		
 	}
 
 	public static class ReadUncommittedLockingStrategy extends SelectLockingStrategy {
@@ -300,12 +309,12 @@ public class HSQLDialect extends Dialect {
 			super( lockable, lockMode );
 		}
 
-		public void lock(Serializable id, Object version, Object object, SessionImplementor session)
+		public void lock(Serializable id, Object version, Object object, int timeout, SessionImplementor session)
 				throws StaleObjectStateException, JDBCException {
 			if ( getLockMode().greaterThan( LockMode.READ ) ) {
 				log.warn( "HSQLDB supports only READ_UNCOMMITTED isolation" );
 			}
-			super.lock( id, version, object, session );
+			super.lock( id, version, object, timeout, session );
 		}
 	}
 

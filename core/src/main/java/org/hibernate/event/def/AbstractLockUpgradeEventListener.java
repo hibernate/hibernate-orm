@@ -100,26 +100,12 @@ public class AbstractLockUpgradeEventListener extends AbstractReassociateEventLi
 			}
 			
 			try {
-				if ( persister.isVersioned() && (requestedLockMode == LockMode.FORCE || requestedLockMode == LockMode.PESSIMISTIC_FORCE_INCREMENT )  ) {
+				if ( persister.isVersioned() && requestedLockMode == LockMode.FORCE  ) {
 					// todo : should we check the current isolation mode explicitly?
 					Object nextVersion = persister.forceVersionIncrement(
 							entry.getId(), entry.getVersion(), source
 					);
 					entry.forceLocked( object, nextVersion );
-				}
-				else if ( requestedLockMode == LockMode.OPTIMISTIC_FORCE_INCREMENT  ) {
-					if(!persister.isVersioned()) {
-						throw new OptimisticLockException("force: Version column is not mapped for " + entry.getPersister().getEntityName(), object);
-					}
-					EntityIncrementVersionProcess incrementVersion = new EntityIncrementVersionProcess(object, entry);
-					source.getActionQueue().registerProcess(incrementVersion);
-				}
-				else if ( requestedLockMode == LockMode.OPTIMISTIC  ) {
-					if(!persister.isVersioned()) {
-						throw new OptimisticLockException("Version column is not mapped for " + entry.getPersister().getEntityName(), object);					
-					}
-					EntityVerifyVersionProcess verifyVersion = new EntityVerifyVersionProcess(object, entry);
-					source.getActionQueue().registerProcess(verifyVersion);
 				}
 				else {
 					persister.lock( entry.getId(), entry.getVersion(), object, requestedLockMode, source );

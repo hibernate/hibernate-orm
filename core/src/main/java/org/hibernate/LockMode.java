@@ -120,30 +120,30 @@ public final class LockMode implements Serializable {
 	 * Optimisticly assume that transaction will not experience contention for
 	 * entities.  The entity version will be verified near the transaction end.  
 	 */
-	public static final LockMode OPTIMISTIC = new LockMode(3,"OPTIMISTIC");
+	public static final LockMode OPTIMISTIC = new LockMode( 3, "OPTIMISTIC");
 
 	/**
 	 * Optimisticly assume that transaction will not experience contention for entities.
 	 * The entity version will be verified and incremented near the transaction end. 
 	 */
-	public static final LockMode OPTIMISTIC_FORCE_INCREMENT = new LockMode(7,"OPTIMISTIC_FORCE_INCREMENT");
+	public static final LockMode OPTIMISTIC_FORCE_INCREMENT = new LockMode( 4, "OPTIMISTIC_FORCE_INCREMENT");
 
 	/**
 	 * Implemented as PESSIMISTIC_WRITE.
 	 * TODO:  introduce separate support for PESSIMISTIC_READ
 	 */
-	public static final LockMode PESSIMISTIC_READ = new LockMode(12,"PESSIMISTIC_READ");
+	public static final LockMode PESSIMISTIC_READ = new LockMode( 12, "PESSIMISTIC_READ");
 
 	/**
 	 * Transaction will obtain a database lock immediately.
 	 * TODO:  add PESSIMISTIC_WRITE_NOWAIT
 	 */
-	public static final LockMode PESSIMISTIC_WRITE = new LockMode(13,"PESSIMISTIC_WRITE");
+	public static final LockMode PESSIMISTIC_WRITE = new LockMode( 13, "PESSIMISTIC_WRITE");
 
 	/**
 	 * Transaction will immediately increment the entity version.
 	 */
-	public static final LockMode PESSIMISTIC_FORCE_INCREMENT = new LockMode(17,"PESSIMISTIC_FORCE_INCREMENT");
+	public static final LockMode PESSIMISTIC_FORCE_INCREMENT = new LockMode( 17, "PESSIMISTIC_FORCE_INCREMENT");
 
 	/**
 	 *  end of javax.persistence.LockModeType modes

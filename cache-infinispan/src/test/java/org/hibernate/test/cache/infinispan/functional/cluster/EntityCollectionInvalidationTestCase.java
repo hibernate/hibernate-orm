@@ -30,11 +30,11 @@ import javax.transaction.TransactionManager;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.cache.CacheKey;
+import org.hibernate.cache.infinispan.util.CacheHelper;
 import org.hibernate.test.cache.infinispan.functional.Contact;
 import org.hibernate.test.cache.infinispan.functional.Customer;
 import org.infinispan.Cache;
 import org.infinispan.manager.CacheManager;
-import org.infinispan.marshall.MarshalledValue;
 import org.infinispan.notifications.Listener;
 import org.infinispan.notifications.cachelistener.annotation.CacheEntryVisited;
 import org.infinispan.notifications.cachelistener.event.CacheEntryVisitedEvent;
@@ -143,8 +143,8 @@ public class EntityCollectionInvalidationTestCase extends AbstractDualNodeTestCa
          assertLoadedFromCache(remoteListener, ids.customerId, ids.contactIds);
 
          // After modification, local cache should have been invalidated and hence should be empty
-         assertTrue(localCollectionCache.isEmpty());
-         assertTrue(localCustomerCache.isEmpty());
+         assertEquals(0, getValidKeyCount(localCollectionCache.keySet()));
+         assertEquals(0, getValidKeyCount(localCustomerCache.keySet()));
       } catch (Exception e) {
          log.error("Error", e);
          throw e;
@@ -307,6 +307,16 @@ public class EntityCollectionInvalidationTestCase extends AbstractDualNodeTestCa
                .contains("Customer.contacts#" + custId));
    }
 
+   protected int getValidKeyCount(Set keys) {
+      int result = 0;
+      for (Object key : keys) {
+         if (!(CacheHelper.isEvictAllNotification(key))) {
+            result++;
+         }
+      }
+      return result;
+  }
+
    @Listener
    public static class MyListener {
       private static final Logger log = LoggerFactory.getLogger(MyListener.class);
@@ -329,8 +339,7 @@ public class EntityCollectionInvalidationTestCase extends AbstractDualNodeTestCa
       public void nodeVisited(CacheEntryVisitedEvent event) {
          log.debug(event.toString());
          if (!event.isPre()) {
-            MarshalledValue mv = (MarshalledValue) event.getKey();
-            CacheKey cacheKey = (CacheKey) mv.get();
+            CacheKey cacheKey = (CacheKey) event.getKey();
             Integer primKey = (Integer) cacheKey.getKey();
             String key = (String) cacheKey.getEntityOrRoleName() + '#' + primKey;
             log.debug("MyListener[" + name +"] - Visiting key " + key);

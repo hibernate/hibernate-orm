@@ -23,7 +23,10 @@
  */
 package org.hibernate.test.cache.infinispan;
 
+import java.util.Set;
+
 import org.hibernate.cache.RegionFactory;
+import org.hibernate.cache.infinispan.util.CacheHelper;
 import org.hibernate.junit.UnitTestCase;
 import org.hibernate.test.cache.infinispan.util.CacheTestSupport;
 import org.infinispan.Cache;
@@ -81,7 +84,7 @@ public abstract class AbstractNonFunctionalTestCase extends UnitTestCase {
     protected CacheTestSupport getCacheTestSupport() {
         return testSupport;
     }
-    
+
     protected void sleep(long ms) {
         try {
             Thread.sleep(ms);
@@ -94,4 +97,15 @@ public abstract class AbstractNonFunctionalTestCase extends UnitTestCase {
     protected void avoidConcurrentFlush() {
         testSupport.avoidConcurrentFlush();
     }
+
+    protected int getValidKeyCount(Set keys) {
+       int result = 0;
+       for (Object key : keys) {
+          if (!(CacheHelper.isEvictAllNotification(key))) {
+             result++;
+          }
+       }
+       return result;
+   }
+
 }

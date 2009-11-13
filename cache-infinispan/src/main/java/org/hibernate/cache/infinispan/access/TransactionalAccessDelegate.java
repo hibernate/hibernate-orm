@@ -23,11 +23,15 @@
  */
 package org.hibernate.cache.infinispan.access;
 
+import javax.transaction.Transaction;
+
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.access.CollectionRegionAccessStrategy;
 import org.hibernate.cache.access.EntityRegionAccessStrategy;
 import org.hibernate.cache.access.SoftLock;
-import org.infinispan.Cache;
+import org.hibernate.cache.infinispan.impl.BaseRegion;
+import org.hibernate.cache.infinispan.util.CacheAdapter;
+import org.hibernate.cache.infinispan.util.CacheHelper;
 
 /**
  * Defines the strategy for transactional access to entity or collection data in a Infinispan instance.
@@ -41,18 +45,24 @@ import org.infinispan.Cache;
  */
 public class TransactionalAccessDelegate {
 
-   protected final Cache cache;
+   protected final CacheAdapter cacheAdapter;
+   protected final BaseRegion region;
 
-   public TransactionalAccessDelegate(Cache cache) {
-      this.cache = cache;
+   public TransactionalAccessDelegate(BaseRegion region) {
+      this.region = region;
+      this.cacheAdapter = region.getCacheAdapter();
    }
 
    public Object get(Object key, long txTimestamp) throws CacheException {
-      return cache.get(key);
+      if (!region.checkValid()) 
+         return null;
+      return cacheAdapter.get(key);
    }
 
    public boolean putFromLoad(Object key, Object value, long txTimestamp, Object version) throws CacheException {
-      cache.putForExternalRead(key, value);
+      if (!region.checkValid())
+         return false;
+      cacheAdapter.putForExternalRead(key, value);
       return true;
    }
 
@@ -76,7 +86,9 @@ public class TransactionalAccessDelegate {
    }
 
    public boolean insert(Object key, Object value, Object version) throws CacheException {
-      cache.put(key, value);
+      if (!region.checkValid())
+         return false;
+      cacheAdapter.put(key, value);
       return true;
    }
 
@@ -85,7 +97,10 @@ public class TransactionalAccessDelegate {
    }
 
    public boolean update(Object key, Object value, Object currentVersion, Object previousVersion) throws CacheException {
-      cache.put(key, value);
+      // We update whether or not the region is valid. Other nodes
+      // may have already restored the region so they need to
+      // be informed of the change.
+      cacheAdapter.put(key, value);
       return true;
    }
 
@@ -95,18 +110,26 @@ public class TransactionalAccessDelegate {
    }
 
    public void remove(Object key) throws CacheException {
-      cache.remove(key);
+      // We update whether or not the region is valid. Other nodes
+      // may have already restored the region so they need to
+      // be informed of the change.
+      cacheAdapter.remove(key);
    }
 
    public void removeAll() throws CacheException {
-      cache.clear();
+      cacheAdapter.clear();
+   }
+
+   public void evict(Object key) throws CacheException {
+      cacheAdapter.remove(key);
    }
 
    public void evictAll() throws CacheException {
-      evictOrRemoveAll();
-   }
-
-   private void evictOrRemoveAll() throws CacheException {
-      cache.clear();
+      Transaction tx = region.suspend();
+      try {
+         CacheHelper.sendEvictAllNotification(cacheAdapter, region.getAddress());
+      } finally {
+         region.resume(tx);
+      }
    }
 }

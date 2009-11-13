@@ -21,7 +21,10 @@
  */
 package org.hibernate.test.cache.infinispan.functional.cluster;
 
+import java.util.Set;
+
 import org.hibernate.Session;
+import org.hibernate.cache.infinispan.util.CacheHelper;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.Mappings;

@@ -29,7 +29,7 @@ import org.hibernate.cache.infinispan.collection.CollectionRegionImpl;
 import org.hibernate.cache.infinispan.entity.EntityRegionImpl;
 import org.hibernate.cache.infinispan.query.QueryResultsRegionImpl;
 import org.hibernate.cache.infinispan.timestamp.TimestampsRegionImpl;
-import org.infinispan.Cache;
+import org.hibernate.cache.infinispan.util.CacheAdapter;
 import org.infinispan.config.Configuration;
 import org.infinispan.config.Configuration.CacheMode;
 import org.infinispan.eviction.EvictionStrategy;
@@ -125,13 +125,13 @@ public class InfinispanRegionFactoryTestCase extends TestCase {
          assertFalse(factory.getDefinedConfigurations().contains(person));
          assertNotNull(factory.getTypeOverrides().get(addresses));
          assertFalse(factory.getDefinedConfigurations().contains(addresses));
-         Cache cache = null;
+         CacheAdapter cache = null;
 
          EntityRegionImpl region = (EntityRegionImpl) factory.buildEntityRegion(person, p, null);
          assertNotNull(factory.getTypeOverrides().get(person));
          assertTrue(factory.getDefinedConfigurations().contains(person));
          assertNull(factory.getTypeOverrides().get(address));
-         cache = region.getCache();
+         cache = region.getCacheAdapter();
          Configuration cacheCfg = cache.getConfiguration();
          assertEquals(EvictionStrategy.LRU, cacheCfg.getEvictionStrategy());
          assertEquals(2000, cacheCfg.getEvictionWakeUpInterval());
@@ -143,7 +143,7 @@ public class InfinispanRegionFactoryTestCase extends TestCase {
          assertNotNull(factory.getTypeOverrides().get(person));
          assertTrue(factory.getDefinedConfigurations().contains(person));
          assertNull(factory.getTypeOverrides().get(address));
-         cache = region.getCache();
+         cache = region.getCacheAdapter();
          cacheCfg = cache.getConfiguration();
          assertEquals(EvictionStrategy.FIFO, cacheCfg.getEvictionStrategy());
          assertEquals(3000, cacheCfg.getEvictionWakeUpInterval());
@@ -153,7 +153,7 @@ public class InfinispanRegionFactoryTestCase extends TestCase {
          assertNotNull(factory.getTypeOverrides().get(person));
          assertTrue(factory.getDefinedConfigurations().contains(person));
          assertNull(factory.getTypeOverrides().get(address));
-         cache = region.getCache();
+         cache = region.getCacheAdapter();
          cacheCfg = cache.getConfiguration();
          assertEquals(EvictionStrategy.FIFO, cacheCfg.getEvictionStrategy());
          assertEquals(3000, cacheCfg.getEvictionWakeUpInterval());
@@ -163,7 +163,7 @@ public class InfinispanRegionFactoryTestCase extends TestCase {
          assertNotNull(factory.getTypeOverrides().get(addresses));
          assertTrue(factory.getDefinedConfigurations().contains(person));
          assertNull(factory.getTypeOverrides().get(parts));
-         cache = collectionRegion .getCache();
+         cache = collectionRegion .getCacheAdapter();
          cacheCfg = cache.getConfiguration();
          assertEquals(EvictionStrategy.FIFO, cacheCfg.getEvictionStrategy());
          assertEquals(2500, cacheCfg.getEvictionWakeUpInterval());
@@ -175,7 +175,7 @@ public class InfinispanRegionFactoryTestCase extends TestCase {
          assertNotNull(factory.getTypeOverrides().get(addresses));
          assertTrue(factory.getDefinedConfigurations().contains(addresses));
          assertNull(factory.getTypeOverrides().get(parts));
-         cache = collectionRegion.getCache();
+         cache = collectionRegion.getCacheAdapter();
          cacheCfg = cache.getConfiguration();
          assertEquals(EvictionStrategy.LRU, cacheCfg.getEvictionStrategy());
          assertEquals(3500, cacheCfg.getEvictionWakeUpInterval());
@@ -185,7 +185,7 @@ public class InfinispanRegionFactoryTestCase extends TestCase {
          assertNotNull(factory.getTypeOverrides().get(addresses));
          assertTrue(factory.getDefinedConfigurations().contains(addresses));
          assertNull(factory.getTypeOverrides().get(parts));
-         cache = collectionRegion.getCache();
+         cache = collectionRegion.getCacheAdapter();
          cacheCfg = cache.getConfiguration();
          assertEquals(EvictionStrategy.LRU, cacheCfg.getEvictionStrategy());
          assertEquals(3500, cacheCfg.getEvictionWakeUpInterval());
@@ -196,7 +196,7 @@ public class InfinispanRegionFactoryTestCase extends TestCase {
    }
 
    public void testBuildEntityCollectionRegionOverridesOnly() {
-      Cache cache = null;
+      CacheAdapter cache = null;
       Properties p = new Properties();
       p.setProperty("hibernate.cache.infinispan.entity.eviction.strategy", "FIFO");
       p.setProperty("hibernate.cache.infinispan.entity.eviction.wake_up_interval", "3000");
@@ -211,7 +211,7 @@ public class InfinispanRegionFactoryTestCase extends TestCase {
       try {
          EntityRegionImpl region = (EntityRegionImpl) factory.buildEntityRegion("com.acme.Address", p, null);
          assertNull(factory.getTypeOverrides().get("com.acme.Address"));
-         cache = region.getCache();
+         cache = region.getCacheAdapter();
          Configuration cacheCfg = cache.getConfiguration();
          assertEquals(EvictionStrategy.FIFO, cacheCfg.getEvictionStrategy());
          assertEquals(3000, cacheCfg.getEvictionWakeUpInterval());
@@ -220,7 +220,7 @@ public class InfinispanRegionFactoryTestCase extends TestCase {
 
          CollectionRegionImpl collectionRegion = (CollectionRegionImpl) factory.buildCollectionRegion("com.acme.Person.addresses", p, null);
          assertNull(factory.getTypeOverrides().get("com.acme.Person.addresses"));
-         cache = collectionRegion.getCache();
+         cache = collectionRegion.getCacheAdapter();
          cacheCfg = cache.getConfiguration();
          assertEquals(EvictionStrategy.LRU, cacheCfg.getEvictionStrategy());
          assertEquals(3500, cacheCfg.getEvictionWakeUpInterval());
@@ -252,7 +252,7 @@ public class InfinispanRegionFactoryTestCase extends TestCase {
          EntityRegionImpl region = (EntityRegionImpl) factory.buildEntityRegion(person, p, null);
          assertNotNull(factory.getTypeOverrides().get(person));
          assertTrue(factory.getDefinedConfigurations().contains(person));
-         Cache cache = region.getCache();
+         CacheAdapter cache = region.getCacheAdapter();
          Configuration cacheCfg = cache.getConfiguration();
          assertEquals(EvictionStrategy.LRU, cacheCfg.getEvictionStrategy());
          assertEquals(3000, cacheCfg.getEvictionWakeUpInterval());
@@ -297,7 +297,7 @@ public class InfinispanRegionFactoryTestCase extends TestCase {
          config.setFetchInMemoryState(false);
          manager.defineConfiguration("timestamps", config);
          TimestampsRegionImpl region = (TimestampsRegionImpl) factory.buildTimestampsRegion(timestamps, p);
-         Cache cache = region.getCache();
+         CacheAdapter cache = region.getCacheAdapter();
          Configuration cacheCfg = cache.getConfiguration();
          assertEquals(EvictionStrategy.NONE, cacheCfg.getEvictionStrategy());
          assertEquals(CacheMode.REPL_ASYNC, cacheCfg.getCacheMode());
@@ -324,7 +324,7 @@ public class InfinispanRegionFactoryTestCase extends TestCase {
          config.setCacheMode(CacheMode.REPL_SYNC);
          manager.defineConfiguration("unrecommended-timestamps", config);
          TimestampsRegionImpl region = (TimestampsRegionImpl) factory.buildTimestampsRegion(timestamps, p);
-         Cache cache = region.getCache();
+         CacheAdapter cache = region.getCacheAdapter();
          Configuration cacheCfg = cache.getConfiguration();
          assertEquals(EvictionStrategy.NONE, cacheCfg.getEvictionStrategy());
          assertEquals(CacheMode.REPL_SYNC, cacheCfg.getCacheMode());
@@ -400,7 +400,7 @@ public class InfinispanRegionFactoryTestCase extends TestCase {
       try {
          assertTrue(factory.getDefinedConfigurations().contains("local-query"));
          QueryResultsRegionImpl region = (QueryResultsRegionImpl) factory.buildQueryResultsRegion(query, p);
-         Cache cache = region.getCache();
+         CacheAdapter cache = region.getCacheAdapter();
          Configuration cacheCfg = cache.getConfiguration();
          assertEquals(CacheMode.LOCAL, cacheCfg.getCacheMode());
       } finally {

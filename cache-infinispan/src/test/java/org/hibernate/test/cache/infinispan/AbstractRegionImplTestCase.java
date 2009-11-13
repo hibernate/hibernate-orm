@@ -29,8 +29,8 @@ import org.hibernate.cache.CacheDataDescription;
 import org.hibernate.cache.Region;
 import org.hibernate.cache.impl.CacheDataDescriptionImpl;
 import org.hibernate.cache.infinispan.InfinispanRegionFactory;
+import org.hibernate.cache.infinispan.util.CacheAdapter;
 import org.hibernate.util.ComparableComparator;
-import org.infinispan.Cache;
 
 /**
  * Base class for tests of Region implementations.
@@ -44,7 +44,7 @@ public abstract class AbstractRegionImplTestCase extends AbstractNonFunctionalTe
       super(name);
    }
 
-   protected abstract Cache getInfinispanCache(InfinispanRegionFactory regionFactory);
+   protected abstract CacheAdapter getInfinispanCache(InfinispanRegionFactory regionFactory);
 
    protected abstract Region createRegion(InfinispanRegionFactory regionFactory, String regionName, Properties properties, CacheDataDescription cdd);
 

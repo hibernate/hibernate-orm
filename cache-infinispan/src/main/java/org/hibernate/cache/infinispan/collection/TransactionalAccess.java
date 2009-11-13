@@ -21,11 +21,11 @@ class TransactionalAccess implements CollectionRegionAccessStrategy {
 
    TransactionalAccess(CollectionRegionImpl region) {
       this.region = region;
-      this.delegate = new TransactionalAccessDelegate(region.getCache());
+      this.delegate = new TransactionalAccessDelegate(region);
    }
 
    public void evict(Object key) throws CacheException {
-      delegate.remove(key);
+      delegate.evict(key);
    }
 
    public void evictAll() throws CacheException {

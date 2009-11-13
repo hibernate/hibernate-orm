@@ -24,6 +24,8 @@ import org.hibernate.cache.infinispan.query.QueryResultsRegionImpl;
 import org.hibernate.cache.infinispan.timestamp.TimestampsRegionImpl;
 import org.hibernate.cache.infinispan.timestamp.TimestampTypeOverrides;
 import org.hibernate.cache.infinispan.tm.HibernateTransactionManagerLookup;
+import org.hibernate.cache.infinispan.util.CacheAdapter;
+import org.hibernate.cache.infinispan.util.CacheAdapterImpl;
 import org.hibernate.cfg.Settings;
 import org.hibernate.util.PropertiesHelper;
 import org.infinispan.Cache;
@@ -154,14 +156,20 @@ public class InfinispanRegionFactory implements RegionFactory {
    public CollectionRegion buildCollectionRegion(String regionName, Properties properties, CacheDataDescription metadata) throws CacheException {
       log.debug("Building collection cache region [" + regionName + "]");
       Cache cache = getCache(regionName, COLLECTION_KEY, properties);
-      return new CollectionRegionImpl(cache, regionName, metadata, transactionManager);
+      CacheAdapter cacheAdapter = CacheAdapterImpl.newInstance(cache);
+      CollectionRegionImpl region = new CollectionRegionImpl(cacheAdapter, regionName, metadata, transactionManager);
+      region.start();
+      return region;
    }
 
    /** {@inheritDoc} */
    public EntityRegion buildEntityRegion(String regionName, Properties properties, CacheDataDescription metadata) throws CacheException {
       if (log.isDebugEnabled()) log.debug("Building entity cache region [" + regionName + "]");
       Cache cache = getCache(regionName, ENTITY_KEY, properties);
-      return new EntityRegionImpl(cache, regionName, metadata, transactionManager);
+      CacheAdapter cacheAdapter = CacheAdapterImpl.newInstance(cache);
+      EntityRegionImpl region = new EntityRegionImpl(cacheAdapter, regionName, metadata, transactionManager);
+      region.start();
+      return region;
    }
 
    /**
@@ -171,7 +179,10 @@ public class InfinispanRegionFactory implements RegionFactory {
             throws CacheException {
       log.debug("Building query results cache region [" + regionName + "]");
       String cacheName = typeOverrides.get(QUERY_KEY).getCacheName();
-      return new QueryResultsRegionImpl(manager.getCache(cacheName), regionName, properties, transactionManager);
+      CacheAdapter cacheAdapter = CacheAdapterImpl.newInstance(manager.getCache(cacheName));
+      QueryResultsRegionImpl region = new QueryResultsRegionImpl(cacheAdapter, regionName, properties, transactionManager);
+      region.start();
+      return region;
    }
 
    /**
@@ -181,7 +192,10 @@ public class InfinispanRegionFactory implements RegionFactory {
             throws CacheException {
       log.debug("Building timestamps cache region [" + regionName + "]");
       String cacheName = typeOverrides.get(TIMESTAMPS_KEY).getCacheName();
-      return new TimestampsRegionImpl(manager.getCache(cacheName), regionName, transactionManager);
+      CacheAdapter cacheAdapter = CacheAdapterImpl.newInstance(manager.getCache(cacheName));
+      TimestampsRegionImpl region = new TimestampsRegionImpl(cacheAdapter, regionName, transactionManager);
+      region.start();
+      return region;
    }
 
    /**

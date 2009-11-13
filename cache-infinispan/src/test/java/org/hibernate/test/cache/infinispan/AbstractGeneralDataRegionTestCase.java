@@ -29,10 +29,9 @@ import org.hibernate.cache.GeneralDataRegion;
 import org.hibernate.cache.QueryResultsRegion;
 import org.hibernate.cache.Region;
 import org.hibernate.cache.infinispan.InfinispanRegionFactory;
-import org.hibernate.cache.infinispan.util.CacheHelper;
+import org.hibernate.cache.infinispan.util.CacheAdapter;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.test.cache.infinispan.util.CacheTestUtil;
-import org.infinispan.Cache;
 import org.infinispan.transaction.tm.BatchModeTransactionManager;
 
 /**
@@ -74,8 +73,8 @@ public abstract class AbstractGeneralDataRegionTestCase extends AbstractRegionIm
    private void evictOrRemoveTest() throws Exception {
       Configuration cfg = createConfiguration();
       InfinispanRegionFactory regionFactory = CacheTestUtil.startRegionFactory(cfg, getCacheTestSupport());
-      Cache localCache = getInfinispanCache(regionFactory);
-      boolean invalidation = CacheHelper.isClusteredInvalidation(localCache);
+      CacheAdapter localCache = getInfinispanCache(regionFactory);
+      boolean invalidation = localCache.isClusteredInvalidation();
 
       // Sleep a bit to avoid concurrent FLUSH problem
       avoidConcurrentFlush();
@@ -123,7 +122,7 @@ public abstract class AbstractGeneralDataRegionTestCase extends AbstractRegionIm
    private void evictOrRemoveAllTest(String configName) throws Exception {
       Configuration cfg = createConfiguration();
       InfinispanRegionFactory regionFactory = CacheTestUtil.startRegionFactory(cfg, getCacheTestSupport());
-      Cache localCache = getInfinispanCache(regionFactory);
+      CacheAdapter localCache = getInfinispanCache(regionFactory);
 
       // Sleep a bit to avoid concurrent FLUSH problem
       avoidConcurrentFlush();
@@ -133,7 +132,7 @@ public abstract class AbstractGeneralDataRegionTestCase extends AbstractRegionIm
 
       cfg = createConfiguration();
       regionFactory = CacheTestUtil.startRegionFactory(cfg, getCacheTestSupport());
-      Cache remoteCache = getInfinispanCache(regionFactory);
+      CacheAdapter remoteCache = getInfinispanCache(regionFactory);
 
       // Sleep a bit to avoid concurrent FLUSH problem
       avoidConcurrentFlush();
@@ -141,11 +140,11 @@ public abstract class AbstractGeneralDataRegionTestCase extends AbstractRegionIm
       GeneralDataRegion remoteRegion = (GeneralDataRegion) createRegion(regionFactory,
                getStandardRegionName(REGION_PREFIX), cfg.getProperties(), null);
 
-      Set children = CacheHelper.getKeySet(localCache);
-      assertEquals("No children in " + children, 0, children.size());
+      Set keys = localCache.keySet();
+      assertEquals("No valid children in " + keys, 0, getValidKeyCount(keys));
 
-      children = CacheHelper.getKeySet(remoteCache);
-      assertEquals("No children in " + children, 0, children.size());
+      keys = remoteCache.keySet();
+      assertEquals("No valid children in " + keys, 0, getValidKeyCount(keys));
 
       assertNull("local is clean", localRegion.get(KEY));
       assertNull("remote is clean", remoteRegion.get(KEY));
@@ -168,11 +167,13 @@ public abstract class AbstractGeneralDataRegionTestCase extends AbstractRegionIm
       sleep(250);
       // This should re-establish the region root node in the optimistic case
       assertNull(localRegion.get(KEY));
+      assertEquals("No valid children in " + keys, 0, getValidKeyCount(localCache.keySet()));
 
       // Re-establishing the region root on the local node doesn't
       // propagate it to other nodes. Do a get on the remote node to re-establish
       // This only adds a node in the case of optimistic locking
       assertEquals(null, remoteRegion.get(KEY));
+      assertEquals("No valid children in " + keys, 0, getValidKeyCount(remoteCache.keySet()));
 
       assertEquals("local is clean", null, localRegion.get(KEY));
       assertEquals("remote is clean", null, remoteRegion.get(KEY));

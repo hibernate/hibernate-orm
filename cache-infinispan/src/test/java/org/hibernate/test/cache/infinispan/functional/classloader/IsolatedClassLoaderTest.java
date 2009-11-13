@@ -198,7 +198,7 @@ public class IsolatedClassLoaderTest extends AbstractDualNodeTestCase {
 
       // Sleep a bit to allow async repl to happen
       sleep(SLEEP_TIME);
-      
+
       assertEquals("Query cache used", 1, remoteQueryListener.getSawRegionModificationCount());
       remoteQueryListener.clearSawRegionModification();
 
@@ -207,12 +207,12 @@ public class IsolatedClassLoaderTest extends AbstractDualNodeTestCase {
       assertEquals("63088 has correct # of accounts", 6, dao1.getCountForBranch(branch, useNamedRegion));
       assertEquals("Query cache used", 1, remoteQueryListener.getSawRegionModificationCount());
       remoteQueryListener.clearSawRegionModification();
-      
+
       sleep(SLEEP_TIME);
-      
+
       assertEquals("Query cache used", 1, localQueryListener.getSawRegionModificationCount());
       localQueryListener.clearSawRegionModification();
-      
+
       log.info("First query on node 1 done");
 
       // Sleep a bit to allow async repl to happen

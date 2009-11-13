@@ -29,8 +29,9 @@ import org.hibernate.cache.CacheDataDescription;
 import org.hibernate.cache.Region;
 import org.hibernate.cache.UpdateTimestampsCache;
 import org.hibernate.cache.infinispan.InfinispanRegionFactory;
+import org.hibernate.cache.infinispan.util.CacheAdapter;
+import org.hibernate.cache.infinispan.util.CacheAdapterImpl;
 import org.hibernate.test.cache.infinispan.AbstractGeneralDataRegionTestCase;
-import org.infinispan.Cache;
 
 /**
  * Tests of TimestampsRegionImpl.
@@ -55,8 +56,8 @@ public class TimestampsRegionImplTestCase extends AbstractGeneralDataRegionTestC
    }
 
    @Override
-   protected Cache getInfinispanCache(InfinispanRegionFactory regionFactory) {
-      return regionFactory.getCacheManager().getCache("timestamps");
+   protected CacheAdapter getInfinispanCache(InfinispanRegionFactory regionFactory) {
+      return CacheAdapterImpl.newInstance(regionFactory.getCacheManager().getCache("timestamps"));
    }
 
 }

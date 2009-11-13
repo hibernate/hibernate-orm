@@ -34,10 +34,11 @@ import org.hibernate.cache.QueryResultsRegion;
 import org.hibernate.cache.Region;
 import org.hibernate.cache.StandardQueryCache;
 import org.hibernate.cache.infinispan.InfinispanRegionFactory;
+import org.hibernate.cache.infinispan.util.CacheAdapter;
+import org.hibernate.cache.infinispan.util.CacheAdapterImpl;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.test.cache.infinispan.AbstractGeneralDataRegionTestCase;
 import org.hibernate.test.cache.infinispan.util.CacheTestUtil;
-import org.infinispan.Cache;
 import org.infinispan.notifications.Listener;
 import org.infinispan.notifications.cachelistener.annotation.CacheEntryVisited;
 import org.infinispan.notifications.cachelistener.event.CacheEntryVisitedEvent;
@@ -74,8 +75,8 @@ public class QueryRegionImplTestCase extends AbstractGeneralDataRegionTestCase {
    }
 
    @Override
-   protected Cache getInfinispanCache(InfinispanRegionFactory regionFactory) {
-      return regionFactory.getCacheManager().getCache("local-query");
+   protected CacheAdapter getInfinispanCache(InfinispanRegionFactory regionFactory) {
+      return CacheAdapterImpl.newInstance(regionFactory.getCacheManager().getCache("local-query"));
    }
    
    @Override
@@ -186,7 +187,7 @@ public class QueryRegionImplTestCase extends AbstractGeneralDataRegionTestCase {
       assertEquals(VALUE1, region.get(KEY));
 
       // final Fqn rootFqn = getRegionFqn(getStandardRegionName(REGION_PREFIX), REGION_PREFIX);
-      final Cache jbc = getInfinispanCache(regionFactory);
+      final CacheAdapter jbc = getInfinispanCache(regionFactory);
 
       final CountDownLatch blockerLatch = new CountDownLatch(1);
       final CountDownLatch writerLatch = new CountDownLatch(1);

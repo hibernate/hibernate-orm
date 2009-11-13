@@ -21,11 +21,11 @@ class TransactionalAccess implements EntityRegionAccessStrategy {
 
    TransactionalAccess(EntityRegionImpl region) {
       this.region = region;
-      this.delegate = new TransactionalAccessDelegate(region.getCache());
+      this.delegate = new TransactionalAccessDelegate(region);
    }
 
    public void evict(Object key) throws CacheException {
-      delegate.remove(key);
+      delegate.evict(key);
    }
 
    public void evictAll() throws CacheException {
@@ -41,8 +41,7 @@ class TransactionalAccess implements EntityRegionAccessStrategy {
    }
 
    public boolean insert(Object key, Object value, Object version) throws CacheException {
-      region.getCache().put(key, value);
-      return true; // TODO this is suspect
+      return delegate.insert(key, value, version);
    }
 
    public boolean putFromLoad(Object key, Object value, long txTimestamp, Object version) throws CacheException {

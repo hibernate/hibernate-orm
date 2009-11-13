@@ -32,8 +32,9 @@ import org.hibernate.cache.Region;
 import org.hibernate.cache.RegionFactory;
 import org.hibernate.cache.access.AccessType;
 import org.hibernate.cache.infinispan.InfinispanRegionFactory;
+import org.hibernate.cache.infinispan.util.CacheAdapter;
+import org.hibernate.cache.infinispan.util.CacheAdapterImpl;
 import org.hibernate.test.cache.infinispan.AbstractEntityCollectionRegionTestCase;
-import org.infinispan.Cache;
 
 /**
  * Tests of EntityRegionImpl.
@@ -94,8 +95,8 @@ public class EntityRegionImplTestCase extends AbstractEntityCollectionRegionTest
    }
 
    @Override
-   protected Cache getInfinispanCache(InfinispanRegionFactory regionFactory) {
-      return regionFactory.getCacheManager().getCache("entity");
+   protected CacheAdapter getInfinispanCache(InfinispanRegionFactory regionFactory) {
+      return CacheAdapterImpl.newInstance(regionFactory.getCacheManager().getCache("entity"));
    }
 
 }

@@ -26,6 +26,7 @@ package org.hibernate.test.cache.infinispan.functional.classloader;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.hibernate.cache.infinispan.util.CacheHelper;
 import org.infinispan.notifications.Listener;
 import org.infinispan.notifications.cachelistener.annotation.CacheEntryCreated;
 import org.infinispan.notifications.cachelistener.annotation.CacheEntryModified;
@@ -50,7 +51,7 @@ public class CacheAccessListener {
 
    @CacheEntryModified
    public void nodeModified(CacheEntryModifiedEvent event) {
-      if (!event.isPre()) {
+      if (!event.isPre() && !CacheHelper.isEvictAllNotification(event.getKey())) {
          Object key = event.getKey();
          log.info("Modified node " + key);
          modified.add(key.toString());
@@ -59,7 +60,7 @@ public class CacheAccessListener {
    
    @CacheEntryCreated
    public void nodeCreated(CacheEntryCreatedEvent event) {
-      if (!event.isPre()) {
+      if (!event.isPre() && !CacheHelper.isEvictAllNotification(event.getKey())) {
          Object key = event.getKey();
          log.info("Created node " + key);
          modified.add(key.toString());
@@ -68,7 +69,7 @@ public class CacheAccessListener {
 
    @CacheEntryVisited
    public void nodeVisited(CacheEntryVisitedEvent event) {
-      if (!event.isPre()) {
+      if (!event.isPre() && !CacheHelper.isEvictAllNotification(event.getKey())) {
          Object key = event.getKey();
          log.info("Visited node " + key);
          accessed.add(key.toString());

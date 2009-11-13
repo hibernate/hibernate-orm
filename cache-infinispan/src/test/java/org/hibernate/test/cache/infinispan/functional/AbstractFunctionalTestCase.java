@@ -26,7 +26,7 @@ public abstract class AbstractFunctionalTestCase extends FunctionalTestCase {
    public String getCacheConcurrencyStrategy() {
       return cacheConcurrencyStrategy;
    }
-   
+
    public void testEmptySecondLevelCacheEntry() throws Exception {
       getSessions().getCache().evictEntityRegion(Item.class.getName());
       Statistics stats = getSessions().getStatistics();

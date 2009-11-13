@@ -38,13 +38,12 @@ import org.hibernate.cache.access.EntityRegionAccessStrategy;
 import org.hibernate.cache.impl.CacheDataDescriptionImpl;
 import org.hibernate.cache.infinispan.InfinispanRegionFactory;
 import org.hibernate.cache.infinispan.impl.BaseRegion;
-import org.hibernate.cache.infinispan.util.CacheHelper;
+import org.hibernate.cache.infinispan.util.CacheAdapter;
+import org.hibernate.cache.infinispan.util.FlagAdapter;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.test.cache.infinispan.AbstractNonFunctionalTestCase;
 import org.hibernate.test.cache.infinispan.util.CacheTestUtil;
 import org.hibernate.util.ComparableComparator;
-import org.infinispan.Cache;
-import org.infinispan.context.Flag;
 import org.infinispan.transaction.tm.BatchModeTransactionManager;
 
 /**
@@ -64,10 +63,10 @@ public abstract class AbstractEntityRegionAccessStrategyTestCase extends Abstrac
 
    protected static Configuration localCfg;
    protected static InfinispanRegionFactory localRegionFactory;
-   protected Cache localCache;
+   protected CacheAdapter localCache;
    protected static Configuration remoteCfg;
    protected static InfinispanRegionFactory remoteRegionFactory;
-   protected Cache remoteCache;
+   protected CacheAdapter remoteCache;
 
    protected boolean invalidation;
    protected boolean synchronous;
@@ -114,10 +113,10 @@ public abstract class AbstractEntityRegionAccessStrategyTestCase extends Abstrac
                .getProperties(), getCacheDataDescription());
       localAccessStrategy = localEntityRegion.buildAccessStrategy(getAccessType());
 
-      localCache = ((BaseRegion) localEntityRegion).getCache();
+      localCache = ((BaseRegion) localEntityRegion).getCacheAdapter();
 
-      invalidation = CacheHelper.isClusteredInvalidation(localCache);
-      synchronous = CacheHelper.isSynchronous(localCache);
+      invalidation = localCache.isClusteredInvalidation();
+      synchronous = localCache.isSynchronous();
 
       // Sleep a bit to avoid concurrent FLUSH problem
       avoidConcurrentFlush();
@@ -126,7 +125,7 @@ public abstract class AbstractEntityRegionAccessStrategyTestCase extends Abstrac
                .getProperties(), getCacheDataDescription());
       remoteAccessStrategy = remoteEntityRegion.buildAccessStrategy(getAccessType());
 
-      remoteCache = ((BaseRegion) remoteEntityRegion).getCache();
+      remoteCache = ((BaseRegion) remoteEntityRegion).getCacheAdapter();
 
       node1Exception = null;
       node2Exception = null;
@@ -145,13 +144,13 @@ public abstract class AbstractEntityRegionAccessStrategyTestCase extends Abstrac
          remoteEntityRegion.destroy();
 
       try {
-         localCache.getAdvancedCache().clear(Flag.CACHE_MODE_LOCAL);
+         localCache.withFlags(FlagAdapter.CACHE_MODE_LOCAL).clear();
       } catch (Exception e) {
          log.error("Problem purging local cache", e);
       }
 
       try {
-         remoteCache.getAdvancedCache().clear(Flag.CACHE_MODE_LOCAL);
+         remoteCache.withFlags(FlagAdapter.CACHE_MODE_LOCAL).clear();
       } catch (Exception e) {
          log.error("Problem purging remote cache", e);
       }
@@ -560,8 +559,9 @@ public abstract class AbstractEntityRegionAccessStrategyTestCase extends Abstrac
    }
 
    private void evictOrRemoveTest(boolean evict) {
-
       final String KEY = KEY_BASE + testCount++;
+      assertEquals(0, getValidKeyCount(localCache.keySet()));
+      assertEquals(0, getValidKeyCount(remoteCache.keySet()));
 
       assertNull("local is clean", localAccessStrategy.get(KEY, System.currentTimeMillis()));
       assertNull("remote is clean", remoteAccessStrategy.get(KEY, System.currentTimeMillis()));
@@ -570,9 +570,6 @@ public abstract class AbstractEntityRegionAccessStrategyTestCase extends Abstrac
       assertEquals(VALUE1, localAccessStrategy.get(KEY, System.currentTimeMillis()));
       remoteAccessStrategy.putFromLoad(KEY, VALUE1, System.currentTimeMillis(), new Integer(1));
       assertEquals(VALUE1, remoteAccessStrategy.get(KEY, System.currentTimeMillis()));
-
-      // Wait for async propagation
-      sleep(250);
 
       if (evict)
          localAccessStrategy.evict(KEY);
@@ -580,17 +577,15 @@ public abstract class AbstractEntityRegionAccessStrategyTestCase extends Abstrac
          localAccessStrategy.remove(KEY);
 
       assertEquals(null, localAccessStrategy.get(KEY, System.currentTimeMillis()));
-
+      assertEquals(0, getValidKeyCount(localCache.keySet()));
       assertEquals(null, remoteAccessStrategy.get(KEY, System.currentTimeMillis()));
+      assertEquals(0, getValidKeyCount(remoteCache.keySet()));
    }
 
    private void evictOrRemoveAllTest(boolean evict) {
-
       final String KEY = KEY_BASE + testCount++;
-
-      assertEquals(0, localCache.keySet().size());
-      assertEquals(0, remoteCache.keySet().size());
-
+      assertEquals(0, getValidKeyCount(localCache.keySet()));
+      assertEquals(0, getValidKeyCount(remoteCache.keySet()));
       assertNull("local is clean", localAccessStrategy.get(KEY, System.currentTimeMillis()));
       assertNull("remote is clean", remoteAccessStrategy.get(KEY, System.currentTimeMillis()));
 
@@ -606,27 +601,26 @@ public abstract class AbstractEntityRegionAccessStrategyTestCase extends Abstrac
       // Wait for async propagation
       sleep(250);
 
-      if (evict)
+      if (evict) {
+         log.debug("Call evict all locally");
          localAccessStrategy.evictAll();
-      else
+      } else {
          localAccessStrategy.removeAll();
+      }
 
       // This should re-establish the region root node in the optimistic case
       assertNull(localAccessStrategy.get(KEY, System.currentTimeMillis()));
-
-      assertEquals(0, localCache.keySet().size());
+      assertEquals(0, getValidKeyCount(localCache.keySet()));
 
       // Re-establishing the region root on the local node doesn't
       // propagate it to other nodes. Do a get on the remote node to re-establish
       assertEquals(null, remoteAccessStrategy.get(KEY, System.currentTimeMillis()));
-
-      assertEquals(0, remoteCache.keySet().size());
+      assertEquals(0, getValidKeyCount(remoteCache.keySet()));
 
       // Test whether the get above messes up the optimistic version
       remoteAccessStrategy.putFromLoad(KEY, VALUE1, System.currentTimeMillis(), new Integer(1));
       assertEquals(VALUE1, remoteAccessStrategy.get(KEY, System.currentTimeMillis()));
-
-      assertEquals(1, remoteCache.keySet().size());
+      assertEquals(1, getValidKeyCount(remoteCache.keySet()));
 
       // Wait for async propagation
       sleep(250);

@@ -80,6 +80,8 @@ public class XaTransactionImpl implements Transaction {
             Synchronization s = (Synchronization) synchronizations.get(i);
             s.beforeCompletion();
          }
+         
+         runXaResourcePrepare();
 
          status = Status.STATUS_COMMITTING;
 
@@ -92,6 +94,8 @@ public class XaTransactionImpl implements Transaction {
                throw new SystemException();
             }
          }
+         
+         runXaResourceCommitTx();
 
          status = Status.STATUS_COMMITTED;
 
@@ -117,6 +121,8 @@ public class XaTransactionImpl implements Transaction {
             throw new SystemException();
          }
       }
+      
+      runXaResourceRollback();
 
       for (int i = 0; i < synchronizations.size(); i++) {
          Synchronization s = (Synchronization) synchronizations.get(i);

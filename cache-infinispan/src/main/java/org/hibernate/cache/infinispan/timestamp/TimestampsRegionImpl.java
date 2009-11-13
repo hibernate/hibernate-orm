@@ -10,12 +10,13 @@ import javax.transaction.TransactionManager;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.TimestampsRegion;
 import org.hibernate.cache.infinispan.impl.BaseGeneralDataRegion;
+import org.hibernate.cache.infinispan.util.CacheAdapter;
 import org.hibernate.cache.infinispan.util.CacheHelper;
-import org.infinispan.Cache;
-import org.infinispan.context.Flag;
+import org.hibernate.cache.infinispan.util.FlagAdapter;
 import org.infinispan.notifications.Listener;
 import org.infinispan.notifications.cachelistener.annotation.CacheEntryModified;
 import org.infinispan.notifications.cachelistener.annotation.CacheEntryRemoved;
+import org.infinispan.notifications.cachelistener.event.CacheEntryInvalidatedEvent;
 import org.infinispan.notifications.cachelistener.event.CacheEntryModifiedEvent;
 import org.infinispan.notifications.cachelistener.event.CacheEntryRemovedEvent;
 
@@ -31,26 +32,31 @@ public class TimestampsRegionImpl extends BaseGeneralDataRegion implements Times
 
    private Map localCache = new ConcurrentHashMap();
 
-   public TimestampsRegionImpl(Cache cache, String name, TransactionManager transactionManager) {
-      super(cache, name, transactionManager);
-      cache.addListener(this);
+   public TimestampsRegionImpl(CacheAdapter cacheAdapter, String name, TransactionManager transactionManager) {
+      super(cacheAdapter, name, transactionManager);
+      cacheAdapter.addListener(this);
       populateLocalCache();
    }
 
    @Override
    public void evict(Object key) throws CacheException {
       // TODO Is this a valid operation on a timestamps cache?
-      CacheHelper.removeKey(getCache(), key);
+      cacheAdapter.remove(key);
    }
 
    public void evictAll() throws CacheException {
       // TODO Is this a valid operation on a timestamps cache?
-      CacheHelper.removeAll(getCache());
+      Transaction tx = suspend();
+      try {        
+         CacheHelper.sendEvictAllNotification(cacheAdapter, getAddress());
+      } finally {
+         resume(tx);
+      }
    }
 
    public Object get(Object key) throws CacheException {
       Object value = localCache.get(key);
-      if (value == null) {
+      if (value == null && checkValid()) {
          value = suspendAndGet(key, null, false);
          if (value != null)
             localCache.put(key, value);
@@ -64,7 +70,7 @@ public class TimestampsRegionImpl extends BaseGeneralDataRegion implements Times
       Transaction tx = suspend();
       try {
          // We ensure ASYNC semantics (JBCACHE-1175)
-         CacheHelper.put(getCache(), key, value, Flag.FORCE_ASYNCHRONOUS);
+         cacheAdapter.withFlags(FlagAdapter.FORCE_ASYNCHRONOUS).put(key, value);
       } catch (Exception e) {
          throw new CacheException(e);
       } finally {
@@ -75,7 +81,7 @@ public class TimestampsRegionImpl extends BaseGeneralDataRegion implements Times
    @Override
    public void destroy() throws CacheException {
       localCache.clear();
-      getCache().removeListener(this);
+      cacheAdapter.removeListener(this);
       super.destroy();
    }
 
@@ -86,8 +92,9 @@ public class TimestampsRegionImpl extends BaseGeneralDataRegion implements Times
     */
    @CacheEntryModified
    public void nodeModified(CacheEntryModifiedEvent event) {
-      if (event.isPre()) return;
-      localCache.put(event.getKey(), event.getValue());
+      if (!handleEvictAllModification(event) && !event.isPre()) {
+         localCache.put(event.getKey(), event.getValue());
+      }
    }
 
    /**
@@ -101,11 +108,29 @@ public class TimestampsRegionImpl extends BaseGeneralDataRegion implements Times
       localCache.remove(event.getKey());
    }
 
+   @Override
+   protected boolean handleEvictAllModification(CacheEntryModifiedEvent event) {
+      boolean result = super.handleEvictAllModification(event);
+      if (result) {
+         localCache.clear();
+      }
+      return result;
+   }
+
+   @Override
+   protected boolean handleEvictAllInvalidation(CacheEntryInvalidatedEvent event) {
+      boolean result = super.handleEvictAllInvalidation(event);
+      if (result) {
+         localCache.clear();
+      }
+      return result;
+   }
+
    /**
     * Brings all data from the distributed cache into our local cache.
     */
    private void populateLocalCache() {
-      Set children = CacheHelper.getKeySet(getCache());
+      Set children = cacheAdapter.keySet();
       for (Object key : children)
          get(key);
    }

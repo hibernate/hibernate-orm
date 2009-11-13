@@ -32,6 +32,7 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.classic.Session;
 import org.hibernate.junit.functional.FunctionalTestCase;
+import org.hibernate.stat.SecondLevelCacheStatistics;
 import org.hibernate.test.cache.infinispan.functional.Contact;
 import org.hibernate.test.cache.infinispan.functional.Customer;
 import org.hibernate.transaction.CMTTransactionFactory;
@@ -48,30 +49,31 @@ import org.slf4j.LoggerFactory;
 public class BulkOperationsTestCase extends FunctionalTestCase {
 
    private static final Logger log = LoggerFactory.getLogger(BulkOperationsTestCase.class);
-   
+
    private TransactionManager tm;
-            
+
    public BulkOperationsTestCase(String string) {
       super(string);
    }
 
    public String[] getMappings() {
-      return new String[] { "cache/infinispan/functional/Contact.hbm.xml", "cache/infinispan/functional/Customer.hbm.xml" };
+      return new String[] { "cache/infinispan/functional/Contact.hbm.xml",
+               "cache/infinispan/functional/Customer.hbm.xml" };
    }
-   
+
    @Override
    public String getCacheConcurrencyStrategy() {
       return "transactional";
    }
-   
+
    protected Class getTransactionFactoryClass() {
-       return CMTTransactionFactory.class;
+      return CMTTransactionFactory.class;
    }
 
    protected Class getConnectionProviderClass() {
       return org.hibernate.test.cache.infinispan.tm.XaConnectionProvider.class;
    }
-  
+
    protected Class<? extends TransactionManagerLookup> getTransactionManagerLookupClass() {
       return org.hibernate.test.cache.infinispan.tm.XaTransactionManagerLookup.class;
    }
@@ -81,11 +83,13 @@ public class BulkOperationsTestCase extends FunctionalTestCase {
 
       cfg.setProperty(Environment.USE_SECOND_LEVEL_CACHE, "true");
       cfg.setProperty(Environment.GENERATE_STATISTICS, "true");
+      cfg.setProperty(Environment.USE_QUERY_CACHE, "false");
       cfg.setProperty(Environment.CONNECTION_PROVIDER, getConnectionProviderClass().getName());
-      cfg.setProperty(Environment.TRANSACTION_MANAGER_STRATEGY, getTransactionManagerLookupClass().getName());
-      
+      cfg.setProperty(Environment.TRANSACTION_MANAGER_STRATEGY, getTransactionManagerLookupClass()
+               .getName());
+
       Class transactionFactory = getTransactionFactoryClass();
-      cfg.setProperty( Environment.TRANSACTION_STRATEGY, transactionFactory.getName());
+      cfg.setProperty(Environment.TRANSACTION_STRATEGY, transactionFactory.getName());
    }
 
    public void testBulkOperations() throws Throwable {
@@ -93,14 +97,19 @@ public class BulkOperationsTestCase extends FunctionalTestCase {
       boolean cleanedUp = false;
       try {
          tm = getTransactionManagerLookupClass().newInstance().getTransactionManager(null);
-         
+
          createContacts();
 
          List<Integer> rhContacts = getContactsByCustomer("Red Hat");
          assertNotNull("Red Hat contacts exist", rhContacts);
          assertEquals("Created expected number of Red Hat contacts", 10, rhContacts.size());
 
+         SecondLevelCacheStatistics contactSlcs = getEnvironment().getSessionFactory()
+                  .getStatistics().getSecondLevelCacheStatistics(Contact.class.getName());
+         assertEquals(20, contactSlcs.getElementCountInMemory());
+
          assertEquals("Deleted all Red Hat contacts", 10, deleteContacts());
+         assertEquals(0, contactSlcs.getElementCountInMemory());
 
          List<Integer> jbContacts = getContactsByCustomer("JBoss");
          assertNotNull("JBoss contacts exist", jbContacts);
@@ -115,6 +124,7 @@ public class BulkOperationsTestCase extends FunctionalTestCase {
          }
 
          updateContacts("Kabir", "Updated");
+         assertEquals(0, contactSlcs.getElementCountInMemory());
          for (Integer id : jbContacts) {
             Contact contact = getContact(id);
             assertNotNull("JBoss contact " + id + " exists", contact);
@@ -125,7 +135,20 @@ public class BulkOperationsTestCase extends FunctionalTestCase {
          List<Integer> updated = getContactsByTLF("Updated");
          assertNotNull("Got updated contacts", updated);
          assertEquals("Updated contacts", 5, updated.size());
-      } catch(Throwable t) {
+
+         updateContactsWithOneManual("Kabir", "UpdatedAgain");
+         assertEquals(contactSlcs.getElementCountInMemory(), 0);
+         for (Integer id : jbContacts) {
+            Contact contact = getContact(id);
+            assertNotNull("JBoss contact " + id + " exists", contact);
+            String expected = ("Kabir".equals(contact.getName())) ? "UpdatedAgain" : "2222";
+            assertEquals("JBoss contact " + id + " has correct TLF", expected, contact.getTlf());
+         }
+
+         updated = getContactsByTLF("UpdatedAgain");
+         assertNotNull("Got updated contacts", updated);
+         assertEquals("Updated contacts", 5, updated.size());
+      } catch (Throwable t) {
          cleanedUp = true;
          log.debug("Exceptional cleanup");
          cleanup(true);
@@ -185,8 +208,8 @@ public class BulkOperationsTestCase extends FunctionalTestCase {
       try {
 
          Session session = getSessions().getCurrentSession();
-         List results = session.createQuery(selectHQL).setFlushMode(FlushMode.AUTO).setParameter("cName", customerName)
-                  .list();
+         List results = session.createQuery(selectHQL).setFlushMode(FlushMode.AUTO).setParameter(
+                  "cName", customerName).list();
          tm.commit();
          return results;
       } catch (Exception e) {
@@ -203,7 +226,8 @@ public class BulkOperationsTestCase extends FunctionalTestCase {
       try {
 
          Session session = getSessions().getCurrentSession();
-         List results = session.createQuery(selectHQL).setFlushMode(FlushMode.AUTO).setParameter("cTLF", tlf).list();
+         List results = session.createQuery(selectHQL).setFlushMode(FlushMode.AUTO).setParameter(
+                  "cTLF", tlf).list();
          tm.commit();
          return results;
       } catch (Exception e) {
@@ -214,13 +238,30 @@ public class BulkOperationsTestCase extends FunctionalTestCase {
 
    public int updateContacts(String name, String newTLF) throws Exception {
       String updateHQL = "update Contact set tlf = :cNewTLF where name = :cName";
-
       tm.begin();
       try {
-
          Session session = getSessions().getCurrentSession();
-         int rowsAffected = session.createQuery(updateHQL).setFlushMode(FlushMode.AUTO).setParameter("cNewTLF", newTLF)
-                  .setParameter("cName", name).executeUpdate();
+         int rowsAffected = session.createQuery(updateHQL).setFlushMode(FlushMode.AUTO)
+                  .setParameter("cNewTLF", newTLF).setParameter("cName", name).executeUpdate();
+         tm.commit();
+         return rowsAffected;
+      } catch (Exception e) {
+         tm.rollback();
+         throw e;
+      }
+   }
+
+   public int updateContactsWithOneManual(String name, String newTLF) throws Exception {
+      String queryHQL = "from Contact c where c.name = :cName";
+      String updateHQL = "update Contact set tlf = :cNewTLF where name = :cName";
+      tm.begin();
+      try {
+         Session session = getSessions().getCurrentSession();
+         @SuppressWarnings("unchecked")
+         List<Contact> list = session.createQuery(queryHQL).setParameter("cName", name).list();
+         list.get(0).setTlf(newTLF);
+         int rowsAffected = session.createQuery(updateHQL).setFlushMode(FlushMode.AUTO)
+                  .setParameter("cNewTLF", newTLF).setParameter("cName", name).executeUpdate();
          tm.commit();
          return rowsAffected;
       } catch (Exception e) {
@@ -290,7 +331,7 @@ public class BulkOperationsTestCase extends FunctionalTestCase {
          s.persist(customer);
          s.getTransaction().commit();
          s.close();
-         
+
          return customer;
       } finally {
          System.out.println("CREATE CUSTOMER " + id + " -  END");

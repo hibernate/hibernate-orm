@@ -4,7 +4,7 @@ import javax.transaction.TransactionManager;
 
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.GeneralDataRegion;
-import org.infinispan.Cache;
+import org.hibernate.cache.infinispan.util.CacheAdapter;
 
 /**
  * Support for Infinispan {@link GeneralDataRegion} implementors.
@@ -15,24 +15,24 @@ import org.infinispan.Cache;
  */
 public abstract class BaseGeneralDataRegion extends BaseRegion implements GeneralDataRegion {
 
-   public BaseGeneralDataRegion(Cache cache, String name, TransactionManager transactionManager) {
-      super(cache, name, transactionManager);
+   public BaseGeneralDataRegion(CacheAdapter cacheAdapter, String name, TransactionManager transactionManager) {
+      super(cacheAdapter, name, transactionManager);
    }
 
    public void evict(Object key) throws CacheException {
-      getCache().evict(key);
+      cacheAdapter.evict(key);
    }
 
    public void evictAll() throws CacheException {
-      getCache().clear();
+      cacheAdapter.clear();
    }
 
    public Object get(Object key) throws CacheException {
-      return getCache().get(key);
+      return cacheAdapter.get(key);
    }
 
    public void put(Object key, Object value) throws CacheException {
-      getCache().put(key, value);
+      cacheAdapter.put(key, value);
    }
 
 }

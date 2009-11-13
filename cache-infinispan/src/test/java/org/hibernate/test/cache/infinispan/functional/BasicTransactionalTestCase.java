@@ -1,6 +1,7 @@
 package org.hibernate.test.cache.infinispan.functional;
 
 import java.io.Serializable;
+import java.util.Map;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
@@ -63,6 +64,8 @@ public class BasicTransactionalTestCase extends AbstractFunctionalTestCase {
       assertEquals(item.getName(), loadedWithCachedCollection.getName());
       assertEquals(item.getItems().size(), loadedWithCachedCollection.getItems().size());
       assertEquals(1, cStats.getHitCount());
+      Map cacheEntries = cStats.getEntries();
+      assertEquals(1, cacheEntries.size());
       s.close();
    }
 

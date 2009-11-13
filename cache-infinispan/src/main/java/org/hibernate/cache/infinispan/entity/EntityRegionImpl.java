@@ -8,17 +8,19 @@ import org.hibernate.cache.EntityRegion;
 import org.hibernate.cache.access.AccessType;
 import org.hibernate.cache.access.EntityRegionAccessStrategy;
 import org.hibernate.cache.infinispan.impl.BaseTransactionalDataRegion;
-import org.infinispan.Cache;
+import org.hibernate.cache.infinispan.util.CacheAdapter;
+import org.infinispan.notifications.Listener;
 
 /**
  * @author Chris Bredesen
  * @author Galder Zamarreño
  * @since 3.5
  */
+@Listener
 public class EntityRegionImpl extends BaseTransactionalDataRegion implements EntityRegion {
 
-   public EntityRegionImpl(Cache cache, String name, CacheDataDescription metadata, TransactionManager transactionManager) {
-      super(cache, name, metadata, transactionManager);
+   public EntityRegionImpl(CacheAdapter cacheAdapter, String name, CacheDataDescription metadata, TransactionManager transactionManager) {
+      super(cacheAdapter, name, metadata, transactionManager);
    }
 
    public EntityRegionAccessStrategy buildAccessStrategy(AccessType accessType) throws CacheException {

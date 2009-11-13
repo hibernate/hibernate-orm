@@ -43,7 +43,7 @@ public class SerializableToImageType extends ImageType {
 	protected Object toExternalFormat(byte[] bytes) {
 		if (bytes == null)
 			return null;
-		return SerializationHelper.deserialize(bytes);
+		return SerializationHelper.deserialize( bytes, getReturnedClass().getClassLoader() );
 	}
 
 	protected byte[] toInternalFormat(Object bytes) {

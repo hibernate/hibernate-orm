@@ -101,8 +101,8 @@ public class SerializableType extends MutableType {
 		return SerializationHelper.serialize( (Serializable) object );
 	}
 
-	private static Object fromBytes( byte[] bytes ) throws SerializationException {
-		return SerializationHelper.deserialize(bytes);
+	private Object fromBytes(byte[] bytes) throws SerializationException {
+		return SerializationHelper.deserialize( bytes, getReturnedClass().getClassLoader() );
 	}
 
 	public int sqlType() {

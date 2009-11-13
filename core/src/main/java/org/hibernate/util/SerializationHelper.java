@@ -84,7 +84,10 @@ public final class SerializationHelper {
      */
     public static Object clone(Serializable object) throws SerializationException {
 	    log.trace("Starting clone through serialization");
-        return deserialize( serialize(object) );
+		if ( object == null ) {
+			return null;
+		}
+        return deserialize( serialize( object ), object.getClass().getClassLoader() );
     }
 
     // Serialize
@@ -153,14 +156,11 @@ public final class SerializationHelper {
     // Deserialize
     //-----------------------------------------------------------------------
     /**
-     * <p>Deserializes an <code>Object</code> from the specified stream.</p>
-     *
-     * <p>The stream will be closed once the object is written. This
-     * avoids the need for a finally clause, and maybe also exception
-     * handling, in the application code.</p>
-     *
-     * <p>The stream passed in is not buffered internally within this method.
-     * This is the responsibility of your application if desired.</p>
+     * Deserializes an object from the specified stream using the Thread Context
+	 * ClassLoader (TCCL).  If there is no TCCL set, the classloader of the calling
+	 * class is used.
+     * <p/>
+	 * Delegates to {@link #deserialize(java.io.InputStream, ClassLoader)}
      *
      * @param inputStream  the serialized object input stream, must not be null
      * @return the deserialized object
@@ -168,35 +168,65 @@ public final class SerializationHelper {
      * @throws SerializationException (runtime) if the serialization fails
      */
     public static Object deserialize(InputStream inputStream) throws SerializationException {
-        if (inputStream == null) {
-            throw new IllegalArgumentException("The InputStream must not be null");
-        }
-
-		log.trace("Starting deserialization of object");
-
-        CustomObjectInputStream in = null;
-        try {
-            // stream closed in the finally
-            in = new CustomObjectInputStream(inputStream);
-            return in.readObject();
-
-        }
-        catch (ClassNotFoundException ex) {
-            throw new SerializationException("could not deserialize", ex);
-        }
-        catch (IOException ex) {
-            throw new SerializationException("could not deserialize", ex);
-        }
-        finally {
-            try {
-                if (in != null) in.close();
-            }
-            catch (IOException ex) {}
-        }
+		return deserialize( inputStream, Thread.currentThread().getContextClassLoader() );
     }
 
     /**
-     * <p>Deserializes a single <code>Object</code> from an array of bytes.</p>
+     * Deserializes an object from the specified stream using the Thread Context
+	 * ClassLoader (TCCL).  If there is no TCCL set, the classloader of the calling
+	 * class is used.
+     * <p/>
+     * The stream will be closed once the object is read. This avoids the need 
+	 * for a finally clause, and maybe also exception handling, in the application
+	 * code.
+     * <p/>
+     * The stream passed in is not buffered internally within this method.  This is
+	 * the responsibility of the caller, if desired.
+     *
+     * @param inputStream  the serialized object input stream, must not be null
+	 * @param loader The classloader to use
+	 *
+     * @return the deserialized object
+	 *
+     * @throws IllegalArgumentException if <code>inputStream</code> is <code>null</code>
+     * @throws SerializationException (runtime) if the serialization fails
+     */
+    public static Object deserialize(InputStream inputStream, ClassLoader loader) throws SerializationException {
+        if (inputStream == null) {
+            throw new IllegalArgumentException( "The InputStream must not be null" );
+        }
+
+		log.trace( "Starting deserialization of object" );
+
+		try {
+			CustomObjectInputStream in = new CustomObjectInputStream( inputStream, loader );
+			try {
+				return in.readObject();
+			}
+			catch ( ClassNotFoundException e ) {
+				throw new SerializationException( "could not deserialize", e );
+			}
+			catch ( IOException e ) {
+				throw new SerializationException( "could not deserialize", e );
+			}
+			finally {
+				try {
+					in.close();
+				}
+				catch (IOException ignore) {
+					// ignore
+				}
+			}
+		}
+		catch ( IOException e ) {
+			throw new SerializationException( "could not deserialize", e );
+		}
+	}
+
+    /**
+     * Deserializes an Object from an array of bytes.
+	 * <p/>
+	 * Delegates to {@link #deserialize(byte[], ClassLoader)}
      *
      * @param objectData  the serialized object, must not be null
      * @return the deserialized object
@@ -204,11 +234,29 @@ public final class SerializationHelper {
      * @throws SerializationException (runtime) if the serialization fails
      */
     public static Object deserialize(byte[] objectData) throws SerializationException {
-        if (objectData == null) {
-            throw new IllegalArgumentException("The byte[] must not be null");
+		return deserialize( objectData, Thread.currentThread().getContextClassLoader() );
+    }
+
+    /**
+     * Deserializes an Object from an array of bytes.
+	 * <p/>
+	 * Delegates to {@link #deserialize(java.io.InputStream, ClassLoader)} using a
+	 *  {@link ByteArrayInputStream} to wrap the array.
+     *
+     * @param objectData  the serialized object, must not be null
+	 * @param loader The classloader to use
+	 *
+     * @return the deserialized object
+	 *
+     * @throws IllegalArgumentException if <code>objectData</code> is <code>null</code>
+     * @throws SerializationException (runtime) if the serialization fails
+     */
+    public static Object deserialize(byte[] objectData, ClassLoader loader) throws SerializationException {
+        if ( objectData == null ) {
+            throw new IllegalArgumentException( "The byte[] must not be null" );
         }
-        ByteArrayInputStream bais = new ByteArrayInputStream(objectData);
-        return deserialize(bais);
+        ByteArrayInputStream bais = new ByteArrayInputStream( objectData );
+        return deserialize( bais, loader );
     }
 
 
@@ -218,28 +266,27 @@ public final class SerializationHelper {
 	 * the same purpose).
 	 */
 	private static final class CustomObjectInputStream extends ObjectInputStream {
+		private final ClassLoader loader;
 
-		public CustomObjectInputStream(InputStream in) throws IOException {
-			super(in);
+		private CustomObjectInputStream(InputStream in, ClassLoader loader) throws IOException {
+			super( in );
+			this.loader = loader;
 		}
 
 		protected Class resolveClass(ObjectStreamClass v) throws IOException, ClassNotFoundException {
 			String className = v.getName();
-			Class resolvedClass = null;
-
 			log.trace("Attempting to locate class [" + className + "]");
 
-			ClassLoader loader = Thread.currentThread().getContextClassLoader();
-			try {
-				resolvedClass = loader.loadClass(className);
-				log.trace("Class resolved through context class loader");
-			}
-			catch(ClassNotFoundException e) {
-				log.trace("Asking super to resolve");
-				resolvedClass = super.resolveClass(v);
+			if ( loader != null ) {
+				try {
+					return Class.forName( className, false, loader );
+				}
+				catch (ClassNotFoundException e) {
+					log.trace( "Unable to locate class using given classloader" );
+				}
 			}
 
-			return resolvedClass;
+			return super.resolveClass( v );
 		}
 	}
 }

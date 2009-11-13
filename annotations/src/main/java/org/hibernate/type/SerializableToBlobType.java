@@ -87,8 +87,8 @@ public class SerializableToBlobType extends AbstractLobType implements Parameter
 		return SerializationHelper.serialize( (Serializable) object );
 	}
 
-	private static Object fromBytes(byte[] bytes) throws SerializationException {
-		return SerializationHelper.deserialize( bytes );
+	private Object fromBytes(byte[] bytes) throws SerializationException {
+		return SerializationHelper.deserialize( bytes, getReturnedClass().getClassLoader() );
 	}
 
 	public void set(PreparedStatement st, Object value, int index, SessionImplementor session) throws SQLException {

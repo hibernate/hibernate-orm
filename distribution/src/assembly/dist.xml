@@ -119,6 +119,13 @@
         </dependencySet>
 
         <dependencySet>
+            <outputDirectory>lib/optional/infinispan</outputDirectory>
+            <includes>
+                <include>org.infinispan:infinispan-core</include>
+            </includes>
+        </dependencySet>
+
+        <dependencySet>
             <outputDirectory>lib/optional/oscache</outputDirectory>
             <includes>
                 <include>opensymphony:oscache</include>

@@ -24,6 +24,8 @@
 package org.hibernate.engine.jdbc;
 
 import java.sql.Connection;
+import java.sql.SQLException;
+import java.sql.DatabaseMetaData;
 import java.lang.reflect.Method;
 
 import org.slf4j.Logger;
@@ -67,6 +69,18 @@ public class JdbcSupportLoader {
 		}
 
 		try {
+			try {
+				DatabaseMetaData meta = jdbcConnection.getMetaData(); 
+				// if the jdbc driver version is less than 4, it shouldn't have createClob
+				if ( meta.getJDBCMajorVersion() < 4 ) {
+					log.info("Disabling contextual LOB creation as JDBC driver version (" +
+						meta.getJDBCMajorVersion()+
+						") is less than 4");
+					return false;
+				}
+			}
+			catch(SQLException eat) { /* ignore exception and continue */}
+
 			Class connectionClass = Connection.class;
 			Method createClobMethod = connectionClass.getMethod( "createClob", NO_ARG_SIG );
 			if ( createClobMethod.getDeclaringClass().equals( Connection.class ) ) {

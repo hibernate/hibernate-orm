@@ -405,7 +405,7 @@ public class Configuration implements Serializable {
 		try {
 			org.dom4j.Document doc = xmlHelper.createSAXReader( xmlFile.getAbsolutePath(), errors, entityResolver ).read( xmlFile );
 			if ( errors.size() != 0 ) {
-				throw new MappingException( "invalid mapping", ( Throwable ) errors.get( 0 ) );
+				throw new InvalidMappingException( "file", xmlFile.toString(), (Throwable) errors.get(0) );
 			}
 
 			try {
@@ -422,7 +422,7 @@ public class Configuration implements Serializable {
 			add( doc );
 		}
 		catch( DocumentException e){
-			throw new MappingException( "invalid mapping", e );
+			throw new InvalidMappingException( "file", xmlFile.toString(), e );
 		}
 
 		return this;

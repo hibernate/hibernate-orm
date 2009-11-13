@@ -141,16 +141,13 @@ public class CompositeIdTest extends TestCase {
 		TvMagazin mag = new TvMagazin();
 		mag.time = new Date();
 		mag.id = pk;
-		//pk.name = "Trax";
 		pk.channel = channel;
 		pk.presenter = pres;
 		s.persist( mag );
 		tx.commit();
 		s.clear();
 		tx = s.beginTransaction();
-		mag = (TvMagazin) s.createQuery( "from TvMagazin mag" ) // where mag.id.name = :name")
-				//.setParameter( "name", "Trax" )
-				.uniqueResult();
+		mag = (TvMagazin) s.createQuery( "from TvMagazin mag" ).uniqueResult();
 		assertNotNull( mag.id );
 		assertNotNull( mag.id.channel );
 		assertEquals( channel.id, mag.id.channel.id );
@@ -171,7 +168,6 @@ public class CompositeIdTest extends TestCase {
 		Product product = new Product();
 		product.name = "small car";
 		s.persist( product );
-		OrderLinePk pk = new OrderLinePk();
 		OrderLine orderLine = new OrderLine();
 		orderLine.order = order;
 		orderLine.product = product;
@@ -202,16 +198,13 @@ public class CompositeIdTest extends TestCase {
 		program.time = new Date();
 		program.id = pk;
 		program.text = "Award Winning Programming";
-		//pk.name = "Trax";
 		pk.channel = channel;
 		pk.presenter = pres;
 		s.persist( program );
 		tx.commit();
 		s.clear();
 		tx = s.beginTransaction();
-		program = (TvProgram) s.createQuery( "from TvProgram pr" ) // where mag.id.name = :name")
-				//.setParameter( "name", "Trax" )
-				.uniqueResult();
+		program = (TvProgram) s.createQuery( "from TvProgram pr" ).uniqueResult();
 		assertNotNull( program.id );
 		assertNotNull( program.id.channel );
 		assertEquals( channel.id, program.id.channel.id );
@@ -238,14 +231,11 @@ public class CompositeIdTest extends TestCase {
 		program.channel = channel;
 		program.presenter = pres;
 		program.text = "Jump the shark programming";
-		//pk.name = "Trax";
 		s.persist( program );
 		tx.commit();
 		s.clear();
 		tx = s.beginTransaction();
-		program = (TvProgramIdClass) s.createQuery( "from TvProgramIdClass pr" ) // where mag.id.name = :name")
-				//.setParameter( "name", "Trax" )
-				.uniqueResult();
+		program = (TvProgramIdClass) s.createQuery( "from TvProgramIdClass pr" ).uniqueResult();
 		assertNotNull( program.channel );
 		assertEquals( channel.id, program.channel.id );
 		assertNotNull( program.presenter );

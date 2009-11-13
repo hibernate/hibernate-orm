@@ -99,24 +99,23 @@ public class PojoComponentTuplizer extends AbstractComponentTuplizer {
 
 	public Object[] getPropertyValues(Object component) throws HibernateException {
 		if ( component == BackrefPropertyAccessor.UNKNOWN ) {
-			return new Object[ propertySpan ];
+			return new Object[propertySpan];
 		}
 		if ( optimizer != null && optimizer.getAccessOptimizer() != null ) {
 			return optimizer.getAccessOptimizer().getPropertyValues( component );
 		}
 		else {
-			return super.getPropertyValues(component);
+			return super.getPropertyValues( component );
 		}
 	}
 
 	public void setPropertyValues(Object component, Object[] values) throws HibernateException {
 		if ( optimizer != null && optimizer.getAccessOptimizer() != null ) {
-				optimizer.getAccessOptimizer().setPropertyValues( component, values );
+			optimizer.getAccessOptimizer().setPropertyValues( component, values );
 		}
 		else {
-			super.setPropertyValues(component, values);
+			super.setPropertyValues( component, values );
 		}
-
 	}
 
 	public Object getParent(Object component) {
@@ -124,19 +123,21 @@ public class PojoComponentTuplizer extends AbstractComponentTuplizer {
 	}
 
 	public boolean hasParentProperty() {
-		return parentGetter!=null;
+		return parentGetter != null;
 	}
 
 	public boolean isMethodOf(Method method) {
-		for ( int i=0; i<propertySpan; i++ ) {
+		for ( int i = 0; i < propertySpan; i++ ) {
 			final Method getterMethod = getters[i].getMethod();
-			if ( getterMethod!=null && getterMethod.equals(method) ) return true;
+			if ( getterMethod != null && getterMethod.equals( method ) ) {
+				return true;
+			}
 		}
 		return false;
 	}
 
 	public void setParent(Object component, Object parent, SessionFactoryImplementor factory) {
-		parentSetter.set(component, parent, factory);
+		parentSetter.set( component, parent, factory );
 	}
 
 	protected Instantiator buildInstantiator(Component component) {

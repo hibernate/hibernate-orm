@@ -31,7 +31,7 @@ import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.tuple.Tuplizer;
 
 /**
- * Defines further responsibilities reagarding tuplization based on
+ * Defines further responsibilities regarding tuplization based on
  * a mapped components.
  * </p>
  * ComponentTuplizer implementations should have the following constructor signature:

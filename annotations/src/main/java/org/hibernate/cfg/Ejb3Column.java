@@ -184,7 +184,7 @@ public class Ejb3Column {
 			initMappingColumn(
 					logicalColumnName, propertyName, length, precision, scale, nullable, sqlType, unique, true
 			);
-			log.debug( "Binding column {}. Unique {}. Nullable {}.", new Object[] {mappingColumn.getName(), unique, nullable});
+			log.debug( "Binding column: " + toString());
 		}
 	}
 
@@ -533,5 +533,18 @@ public class Ejb3Column {
 					secondPass
 			);
 		}
+	}
+
+	@Override
+	public String toString() {
+		final StringBuilder sb = new StringBuilder();
+		sb.append( "Ejb3Column" );
+		sb.append( "{table=" ).append( getTable() );
+		sb.append( ", mappingColumn=" ).append( mappingColumn.getName() );
+		sb.append( ", insertable=" ).append( insertable );
+		sb.append( ", updatable=" ).append( updatable );
+		sb.append( ", unique=" ).append( unique );
+		sb.append( '}' );
+		return sb.toString();
 	}
 }

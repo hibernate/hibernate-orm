@@ -101,4 +101,14 @@ public class Ejb3DiscriminatorColumn extends Ejb3Column {
 		discriminatorColumn.bind();
 		return discriminatorColumn;
 	}
+
+	@Override
+	public String toString() {
+		final StringBuilder sb = new StringBuilder();
+		sb.append( "Ejb3DiscriminatorColumn" );
+		sb.append( "{logicalColumnName'" ).append( getLogicalColumnName() ).append( '\'' );
+		sb.append( ", discriminatorTypeName='" ).append( discriminatorTypeName ).append( '\'' );
+		sb.append( '}' );
+		return sb.toString();
+	}
 }

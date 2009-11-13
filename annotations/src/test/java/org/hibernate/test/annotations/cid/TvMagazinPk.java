@@ -12,7 +12,7 @@ import javax.persistence.ManyToOne;
 public class TvMagazinPk implements Serializable {
 	@ManyToOne
 	public Channel channel;
-	//public String name;
+	
 	@ManyToOne
 	public Presenter presenter;
 }

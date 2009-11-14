@@ -45,6 +45,7 @@ public class JdbcSupportLoader {
 	 *
 	 * @param jdbcConnection A JDBC {@link java.sql.Connection} which can be used to gauge the drivers level of support,
 	 * specifically for creating LOB references.
+	 *
 	 * @return An appropriate {@link JdbcSupport} instance.
 	 */
 	public static JdbcSupport loadJdbcSupport(Connection jdbcConnection) {
@@ -61,25 +62,30 @@ public class JdbcSupportLoader {
 	 * throwing an exception).
 	 *
 	 * @param jdbcConnection The connection whcih can be used in level-of-support testing.
+	 *
 	 * @return True if the connection can be used to create LOBs; false otherwise.
 	 */
 	private static boolean useContextualLobCreation(Connection jdbcConnection) {
 		if ( jdbcConnection == null ) {
+			log.info( "Disabling contextual LOB creation as connection was null" );
 			return false;
 		}
 
 		try {
 			try {
-				DatabaseMetaData meta = jdbcConnection.getMetaData(); 
+				DatabaseMetaData meta = jdbcConnection.getMetaData();
 				// if the jdbc driver version is less than 4, it shouldn't have createClob
 				if ( meta.getJDBCMajorVersion() < 4 ) {
-					log.info("Disabling contextual LOB creation as JDBC driver version (" +
-						meta.getJDBCMajorVersion()+
-						") is less than 4");
+					log.info(
+							"Disabling contextual LOB creation as JDBC driver reported JDBC version [" +
+									meta.getJDBCMajorVersion() + "] less than 4"
+					);
 					return false;
 				}
 			}
-			catch(SQLException eat) { /* ignore exception and continue */}
+			catch ( SQLException ignore ) {
+				// ignore exception and continue
+			}
 
 			Class connectionClass = Connection.class;
 			Method createClobMethod = connectionClass.getMethod( "createClob", NO_ARG_SIG );
@@ -99,7 +105,7 @@ public class JdbcSupportLoader {
 					return true;
 				}
 				catch ( Throwable t ) {
-					log.info( "createClob() method threw error : " + t );
+					log.info( "Disabling contextual LOB creation as createClob() method threw error : " + t );
 				}
 			}
 		}

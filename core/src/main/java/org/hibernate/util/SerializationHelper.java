@@ -224,7 +224,9 @@ public final class SerializationHelper {
 	}
 
     /**
-     * Deserializes an Object from an array of bytes.
+     * Deserializes an object from an array of bytes using the Thread Context
+	 * ClassLoader (TCCL).  If there is no TCCL set, the classloader of the calling
+	 * class is used.
 	 * <p/>
 	 * Delegates to {@link #deserialize(byte[], ClassLoader)}
      *
@@ -238,7 +240,7 @@ public final class SerializationHelper {
     }
 
     /**
-     * Deserializes an Object from an array of bytes.
+     * Deserializes an object from an array of bytes.
 	 * <p/>
 	 * Delegates to {@link #deserialize(java.io.InputStream, ClassLoader)} using a
 	 *  {@link ByteArrayInputStream} to wrap the array.
@@ -261,9 +263,12 @@ public final class SerializationHelper {
 
 
 	/**
-	 * Custom ObjectInputStream implementation to more appropriately handle classloading
-	 * within app servers (mainly jboss - hence this class inspired by jboss's class of
-	 * the same purpose).
+	 * By default, to resolve the classes being deserialized JDK serialization uses the
+	 * classes loader which loaded the class which initiated the deserialization call.  Here
+	 * that would be hibernate classes.  However, there are cases where that is not the correct
+	 * class loader to use; mainly here we are worried about deserializing user classes in
+	 * environments (app servers, etc) where Hibernate is on a parent classes loader.  To
+	 * facilitate for that we allow passing in the class loader we should use.
 	 */
 	private static final class CustomObjectInputStream extends ObjectInputStream {
 		private final ClassLoader loader;
@@ -273,10 +278,14 @@ public final class SerializationHelper {
 			this.loader = loader;
 		}
 
+		/**
+		 * {@inheritDoc}
+		 */
 		protected Class resolveClass(ObjectStreamClass v) throws IOException, ClassNotFoundException {
 			String className = v.getName();
 			log.trace("Attempting to locate class [" + className + "]");
 
+			// if we were given a classloader, attempt to use it to resolve the class...
 			if ( loader != null ) {
 				try {
 					return Class.forName( className, false, loader );
@@ -286,6 +295,8 @@ public final class SerializationHelper {
 				}
 			}
 
+			// By default delegate to normal JDK deserialization which will use the class loader
+			// of the class which is calling this deserialization.
 			return super.resolveClass( v );
 		}
 	}

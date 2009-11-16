@@ -186,7 +186,7 @@ public class BulkManipulationTest extends FunctionalTestCase {
 		List l = s.createQuery("from Vehicle").list();
 		assertEquals(l.size(),4);
 
-		s.createSQLQuery( "insert into PICKUP (id, vin, owner) select id, vin, owner from Car" ).executeUpdate();
+		s.createSQLQuery( "insert into Pickup (id, vin, owner) select id, vin, owner from Car" ).executeUpdate();
 
 		l = s.createQuery("from Vehicle").list();
 		assertEquals(l.size(),5);
@@ -194,7 +194,7 @@ public class BulkManipulationTest extends FunctionalTestCase {
 		t.commit();
 		t = s.beginTransaction();
 
-		s.createSQLQuery( "delete from TRUCK" ).executeUpdate();
+		s.createSQLQuery( "delete from Truck" ).executeUpdate();
 
 		l = s.createQuery("from Vehicle").list();
 		assertEquals(l.size(),4);
@@ -207,7 +207,7 @@ public class BulkManipulationTest extends FunctionalTestCase {
 		
 		assertEquals(0,s.createSQLQuery( "delete from SUV where owner = :owner" ).setString( "owner", "NotThere" ).executeUpdate());
 		assertEquals(1,s.createSQLQuery( "delete from SUV where owner = :owner" ).setString( "owner", "Joe" ).executeUpdate());
-		s.createSQLQuery( "delete from PICKUP" ).executeUpdate();
+		s.createSQLQuery( "delete from Pickup" ).executeUpdate();
 
 		l = s.createQuery("from Vehicle").list();
 		assertEquals(l.size(),0);

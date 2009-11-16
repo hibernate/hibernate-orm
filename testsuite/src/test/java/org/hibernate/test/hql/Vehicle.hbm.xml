@@ -26,6 +26,6 @@
 
 	<sql-query name="native-delete-car">
 	    <synchronize table="Car"/>
-		delete from CAR where owner = ?
+		delete from Car where owner = ?
 	</sql-query>
 </hibernate-mapping>

@@ -997,6 +997,10 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		return entitiesByKey;
 	}
 
+	public Map getProxiesByKey() {
+		return proxiesByKey;
+	}
+
 	public Map getEntityEntries() {
 		return entityEntries;
 	}

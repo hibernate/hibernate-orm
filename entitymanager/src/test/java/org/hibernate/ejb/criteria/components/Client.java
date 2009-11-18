@@ -1,6 +1,4 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
  * Copyright (c) 2009 by Red Hat Inc and/or its affiliates or by
  * third-party contributors as indicated by either @author tags or express
  * copyright attribution statements applied by the authors.  All
@@ -19,22 +17,51 @@
  * along with this distribution; if not, write to:
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
- * Boston, MA  02110-1301  USA
+ * Boston, MA  02110-1301  USA\
  */
-package org.hibernate.ejb.test.metadata;
+package org.hibernate.ejb.criteria.components;
+
+import java.io.Serializable;
+import javax.persistence.Embedded;
+import javax.persistence.Entity;
+import javax.persistence.Id;
 
 /**
- * @author Emmanuel Bernard
+ * The client domain entity
+ *
  */
-//not an entity but in between mapped superclass and entity
-public class SubThing extends Thing {
-	private String blah;
+@Entity
+public class Client implements Serializable {
+	private int id;
+	private Name name;
 
-	public String getBlah() {
-		return blah;
+	public Client() {
 	}
 
-	public void setBlah(String blah) {
-		this.blah = blah;
+	public Client(int id, Name name) {
+		this.id = id;
+		this.name = name;
+	}
+
+	public Client(int id, String firstName, String lastName) {
+		this( id, new Name( firstName, lastName ) );
+	}
+
+	@Id
+	public int getId() {
+		return id;
+	}
+
+	public void setId(int id) {
+		this.id = id;
+	}
+
+	@Embedded
+	public Name getName() {
+		return name;
+	}
+
+	public void setName(Name name) {
+		this.name = name;
 	}
 }

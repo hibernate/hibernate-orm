@@ -47,6 +47,7 @@ import javax.persistence.metamodel.MapAttribute;
 import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.ManagedType;
 import javax.persistence.metamodel.PluralAttribute;
+import javax.persistence.metamodel.Bindable;
 
 import javax.persistence.metamodel.PluralAttribute.CollectionType;
 import javax.persistence.metamodel.Type.PersistenceType;
@@ -61,6 +62,10 @@ import org.hibernate.ejb.criteria.expression.EntityTypeExpression;
 public abstract class FromImpl<Z,X> extends PathImpl<X> implements From<Z,X>, TableExpressionMapper {
 	public static final JoinType DEFAULT_JOIN_TYPE = JoinType.INNER;
 
+	private final Expression<Class<? extends X>> typeExpression;
+    private Set<Join<X, ?>> joins;
+    private Set<Fetch<X, ?>> fetches;
+
 	/**
 	 * Helper contract used to define who/what keeps track of joins and fetches made from this <tt>FROM</tt>.
 	 */
@@ -70,10 +75,6 @@ public abstract class FromImpl<Z,X> extends PathImpl<X> implements From<Z,X>, Ta
 		public boolean isCorrelated();
 		public From<?, X> getCorrelationParent();
 	}
-
-	private final Expression<Class<? extends X>> type;
-    private Set<Join<X, ?>> joins;
-    private Set<Fetch<X, ?>> fetches;
 
 	private JoinScope<X> joinScope = new JoinScope<X>() {
 		public void addJoin(Join<X, ?> join) {
@@ -108,7 +109,7 @@ public abstract class FromImpl<Z,X> extends PathImpl<X> implements From<Z,X>, Ta
 	@SuppressWarnings({ "unchecked" })
     protected FromImpl(CriteriaBuilderImpl criteriaBuilder, EntityType<X> entityType) {
 		super( criteriaBuilder, entityType.getBindableJavaType(), null, null, entityType );
-		this.type = new EntityTypeExpression( criteriaBuilder, entityType.getBindableJavaType() );
+		this.typeExpression = new EntityTypeExpression( criteriaBuilder, entityType.getBindableJavaType() );
 	}
 
 	/**
@@ -126,9 +127,9 @@ public abstract class FromImpl<Z,X> extends PathImpl<X> implements From<Z,X>, Ta
 			Class<X> javaType,
 			PathImpl<Z> origin,
 			Attribute<? super Z, ?> attribute,
-			ManagedType<X> model) {
+			Bindable<X> model) {
 		super( criteriaBuilder, javaType, origin, attribute, model );
-		this.type = new EntityTypeExpression( criteriaBuilder, model.getJavaType() );
+		this.typeExpression = new EntityTypeExpression( criteriaBuilder, model.getBindableJavaType() );
 	}
 
 	protected void defineJoinScope(JoinScope<X> joinScope) {
@@ -137,7 +138,7 @@ public abstract class FromImpl<Z,X> extends PathImpl<X> implements From<Z,X>, Ta
 
 	@Override
 	public Expression<Class<? extends X>> type() {
-		return type;
+		return typeExpression;
 	}
 
 	/**

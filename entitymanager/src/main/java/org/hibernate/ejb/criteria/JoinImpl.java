@@ -27,6 +27,9 @@ import javax.persistence.criteria.From;
 import javax.persistence.criteria.JoinType;
 import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.ManagedType;
+import javax.persistence.metamodel.Bindable;
+import javax.persistence.metamodel.SingularAttribute;
+import javax.persistence.metamodel.EmbeddableType;
 
 /**
  * Models a non-collection property join.
@@ -56,7 +59,9 @@ public class JoinImpl<Z, X> extends FromImpl<Z, X> implements JoinImplementors.J
 				javaType,
 				lhs,
 				joinProperty,
-				criteriaBuilder.getEntityManagerFactory().getMetamodel().managedType( javaType )
+				( Bindable<X> ) ( Attribute.PersistentAttributeType.EMBEDDED == joinProperty.getPersistentAttributeType()
+										? joinProperty
+										: criteriaBuilder.getEntityManagerFactory().getMetamodel().managedType( javaType ))
 		);
 		this.managedType = getManagedType();
 		this.joinType = joinType;
@@ -64,7 +69,10 @@ public class JoinImpl<Z, X> extends FromImpl<Z, X> implements JoinImplementors.J
 
 	@SuppressWarnings({ "unchecked" })
 	protected ManagedType<X> getManagedType() {
-		return (ManagedType<X>) getModel();
+		Bindable<X> model = getModel();
+		return Bindable.BindableType.ENTITY_TYPE == model.getBindableType()
+				? (ManagedType<X>) model
+				: (EmbeddableType<X>) ( (SingularAttribute) model ).getType();
 	}
 
 	/**

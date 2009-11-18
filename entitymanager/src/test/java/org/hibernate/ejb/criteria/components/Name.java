@@ -1,6 +1,4 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
  * Copyright (c) 2009 by Red Hat Inc and/or its affiliates or by
  * third-party contributors as indicated by either @author tags or express
  * copyright attribution statements applied by the authors.  All
@@ -19,22 +17,49 @@
  * along with this distribution; if not, write to:
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
- * Boston, MA  02110-1301  USA
+ * Boston, MA  02110-1301  USA\
  */
-package org.hibernate.ejb.test.metadata;
+package org.hibernate.ejb.criteria.components;
+
+import java.io.Serializable;
+import javax.persistence.Embeddable;
+import javax.persistence.Column;
 
 /**
- * @author Emmanuel Bernard
+ * The name component
+ *
+ * @author alan.oleary
  */
-//not an entity but in between mapped superclass and entity
-public class SubThing extends Thing {
-	private String blah;
+@Embeddable
+public class Name implements Serializable {
+    private static final long serialVersionUID = 8381969086665589013L;
 
-	public String getBlah() {
-		return blah;
+    private String firstName;
+    private String lastName;
+
+	public Name() {
 	}
 
-	public void setBlah(String blah) {
-		this.blah = blah;
+	public Name(String firstName, String lastName) {
+		this.firstName = firstName;
+		this.lastName = lastName;
+	}
+
+	@Column(name = "FIRST_NAME", nullable = false)
+	public String getFirstName() {
+		return firstName;
+	}
+
+	public void setFirstName(String firstName) {
+		this.firstName = firstName;
+	}
+
+	@Column(name = "LAST_NAME", nullable = false)
+	public String getLastName() {
+		return lastName;
+	}
+
+	public void setLastName(String lastName) {
+		this.lastName = lastName;
 	}
 }

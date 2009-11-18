@@ -34,8 +34,8 @@ import org.hibernate.cache.TimestampsRegion;
 import org.hibernate.cache.infinispan.InfinispanRegionFactory;
 import org.hibernate.cfg.Settings;
 import org.infinispan.manager.CacheManager;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.infinispan.util.logging.Log;
+import org.infinispan.util.logging.LogFactory;
 
 /**
  * ClusterAwareRegionFactory.
@@ -45,7 +45,7 @@ import org.slf4j.LoggerFactory;
  */
 public class ClusterAwareRegionFactory implements RegionFactory {
    
-   private static final Logger log = LoggerFactory.getLogger(ClusterAwareRegionFactory.class);
+   private static final Log log = LogFactory.getLog(ClusterAwareRegionFactory.class);
    private static final Hashtable<String, CacheManager> cacheManagers = new Hashtable<String, CacheManager>();
 
    private final InfinispanRegionFactory delegate = new InfinispanRegionFactory();
@@ -75,7 +75,7 @@ public class ClusterAwareRegionFactory implements RegionFactory {
    }
 
    public void start(Settings settings, Properties properties) throws CacheException {
-      cacheManagerName = properties.getProperty(AbstractDualNodeTestCase.NODE_ID_PROP);
+      cacheManagerName = properties.getProperty(DualNodeTestCase.NODE_ID_PROP);
       
       CacheManager existing = getCacheManager(cacheManagerName);
       locallyAdded = (existing == null);

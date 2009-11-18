@@ -32,6 +32,8 @@ import org.hibernate.cache.access.SoftLock;
 import org.hibernate.cache.infinispan.impl.BaseRegion;
 import org.hibernate.cache.infinispan.util.CacheAdapter;
 import org.hibernate.cache.infinispan.util.CacheHelper;
+import org.infinispan.util.logging.Log;
+import org.infinispan.util.logging.LogFactory;
 
 /**
  * Defines the strategy for transactional access to entity or collection data in a Infinispan instance.
@@ -44,31 +46,50 @@ import org.hibernate.cache.infinispan.util.CacheHelper;
  * @since 3.5
  */
 public class TransactionalAccessDelegate {
-
+   private static final Log log = LogFactory.getLog(TransactionalAccessDelegate.class);
    protected final CacheAdapter cacheAdapter;
    protected final BaseRegion region;
+   protected final PutFromLoadValidator putValidator;
 
-   public TransactionalAccessDelegate(BaseRegion region) {
+   public TransactionalAccessDelegate(BaseRegion region, PutFromLoadValidator validator) {
       this.region = region;
       this.cacheAdapter = region.getCacheAdapter();
+      this.putValidator = validator;
    }
 
    public Object get(Object key, long txTimestamp) throws CacheException {
       if (!region.checkValid()) 
          return null;
-      return cacheAdapter.get(key);
+      Object val = cacheAdapter.get(key);
+      if (val == null)
+         putValidator.registerPendingPut(key);
+      return val;
    }
 
    public boolean putFromLoad(Object key, Object value, long txTimestamp, Object version) throws CacheException {
-      if (!region.checkValid())
+      if (!region.checkValid()) {
          return false;
+      }
+      if (!putValidator.isPutValid(key)) {
+         return false;
+      }
       cacheAdapter.putForExternalRead(key, value);
       return true;
    }
 
    public boolean putFromLoad(Object key, Object value, long txTimestamp, Object version, boolean minimalPutOverride)
             throws CacheException {
-      return putFromLoad(key, value, txTimestamp, version);
+      boolean trace = log.isTraceEnabled();
+      if (!region.checkValid()) {
+         if (trace) log.trace("Region not valid");
+         return false;
+      }
+      if (!putValidator.isPutValid(key)) {
+         if (trace) log.trace("Put {0} not valid", key);
+         return false;
+      }
+      cacheAdapter.putForExternalRead(key, value);
+      return true;
    }
 
    public SoftLock lockItem(Object key, Object version) throws CacheException {
@@ -113,18 +134,22 @@ public class TransactionalAccessDelegate {
       // We update whether or not the region is valid. Other nodes
       // may have already restored the region so they need to
       // be informed of the change.
+      putValidator.keyRemoved(key);
       cacheAdapter.remove(key);
    }
 
    public void removeAll() throws CacheException {
+      putValidator.cleared();
       cacheAdapter.clear();
    }
 
    public void evict(Object key) throws CacheException {
+      putValidator.keyRemoved(key);
       cacheAdapter.remove(key);
    }
 
    public void evictAll() throws CacheException {
+      putValidator.cleared();
       Transaction tx = region.suspend();
       try {
          CacheHelper.sendEvictAllNotification(cacheAdapter, region.getAddress());

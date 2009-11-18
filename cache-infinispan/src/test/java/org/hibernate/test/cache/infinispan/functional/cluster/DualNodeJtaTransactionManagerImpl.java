@@ -35,8 +35,8 @@ import javax.transaction.SystemException;
 import javax.transaction.Transaction;
 import javax.transaction.TransactionManager;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.infinispan.util.logging.Log;
+import org.infinispan.util.logging.LogFactory;
 
 /**
  * Variant of SimpleJtaTransactionManagerImpl that doesn't use a VM-singleton, but rather a set of
@@ -46,7 +46,7 @@ import org.slf4j.LoggerFactory;
  */
 public class DualNodeJtaTransactionManagerImpl implements TransactionManager {
 
-   private static final Logger log = LoggerFactory.getLogger(DualNodeJtaTransactionManagerImpl.class);
+   private static final Log log = LogFactory.getLog(DualNodeJtaTransactionManagerImpl.class);
 
    private static final Hashtable INSTANCES = new Hashtable();
 

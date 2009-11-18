@@ -40,8 +40,8 @@ import javax.transaction.xa.XAException;
 import javax.transaction.xa.XAResource;
 import javax.transaction.xa.Xid;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.infinispan.util.logging.Log;
+import org.infinispan.util.logging.LogFactory;
 
 /**
  * XaResourceCapableTransactionImpl.
@@ -50,7 +50,7 @@ import org.slf4j.LoggerFactory;
  * @since 3.5
  */
 public class XaTransactionImpl implements Transaction {
-   private static final Logger log = LoggerFactory.getLogger(XaTransactionImpl.class);
+   private static final Log log = LogFactory.getLog(XaTransactionImpl.class);
    private int status;
    private LinkedList synchronizations;
    private Connection connection; // the only resource we care about is jdbc connection

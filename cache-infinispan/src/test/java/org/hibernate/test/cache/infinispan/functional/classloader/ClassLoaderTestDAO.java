@@ -30,8 +30,8 @@ import javax.transaction.TransactionManager;
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.infinispan.util.logging.Log;
+import org.infinispan.util.logging.LogFactory;
 
 /**
  * Comment
@@ -39,7 +39,7 @@ import org.slf4j.LoggerFactory;
  * @author Brian Stansberry
  */
 public class ClassLoaderTestDAO {
-   private static final Logger log = LoggerFactory.getLogger(ClassLoaderTestDAO.class);
+   private static final Log log = LogFactory.getLog(ClassLoaderTestDAO.class);
 
    private SessionFactory sessionFactory;
    private TransactionManager tm;

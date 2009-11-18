@@ -39,8 +39,8 @@ import org.infinispan.notifications.Listener;
 import org.infinispan.notifications.cachelistener.annotation.CacheEntryVisited;
 import org.infinispan.notifications.cachelistener.event.CacheEntryVisitedEvent;
 import org.jboss.util.collection.ConcurrentSet;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.infinispan.util.logging.Log;
+import org.infinispan.util.logging.LogFactory;
 
 /**
  * EntityCollectionInvalidationTestCase.
@@ -48,8 +48,8 @@ import org.slf4j.LoggerFactory;
  * @author Galder Zamarreño
  * @since 3.5
  */
-public class EntityCollectionInvalidationTestCase extends AbstractDualNodeTestCase {
-   private static final Logger log = LoggerFactory.getLogger(EntityCollectionInvalidationTestCase.class);
+public class EntityCollectionInvalidationTestCase extends DualNodeTestCase {
+   private static final Log log = LogFactory.getLog(EntityCollectionInvalidationTestCase.class);
    private static final long SLEEP_TIME = 50l;
    private static final Integer CUSTOMER_ID = new Integer(1);
    static int test = 0;
@@ -67,7 +67,7 @@ public class EntityCollectionInvalidationTestCase extends AbstractDualNodeTestCa
 
       // Bind a listener to the "local" cache
       // Our region factory makes its CacheManager available to us
-      CacheManager localManager = ClusterAwareRegionFactory.getCacheManager(AbstractDualNodeTestCase.LOCAL);
+      CacheManager localManager = ClusterAwareRegionFactory.getCacheManager(DualNodeTestCase.LOCAL);
       // Cache localCache = localManager.getCache("entity");
       Cache localCustomerCache = localManager.getCache(Customer.class.getName());
       Cache localContactCache = localManager.getCache(Contact.class.getName());
@@ -76,10 +76,10 @@ public class EntityCollectionInvalidationTestCase extends AbstractDualNodeTestCa
       localCustomerCache.addListener(localListener);
       localContactCache.addListener(localListener);
       localCollectionCache.addListener(localListener);
-      TransactionManager localTM = DualNodeJtaTransactionManagerImpl.getInstance(AbstractDualNodeTestCase.LOCAL);
+      TransactionManager localTM = DualNodeJtaTransactionManagerImpl.getInstance(DualNodeTestCase.LOCAL);
 
       // Bind a listener to the "remote" cache
-      CacheManager remoteManager = ClusterAwareRegionFactory.getCacheManager(AbstractDualNodeTestCase.REMOTE);
+      CacheManager remoteManager = ClusterAwareRegionFactory.getCacheManager(DualNodeTestCase.REMOTE);
       Cache remoteCustomerCache = remoteManager.getCache(Customer.class.getName());
       Cache remoteContactCache = remoteManager.getCache(Contact.class.getName());
       Cache remoteCollectionCache = remoteManager.getCache(Customer.class.getName() + ".contacts");
@@ -87,7 +87,7 @@ public class EntityCollectionInvalidationTestCase extends AbstractDualNodeTestCa
       remoteCustomerCache.addListener(remoteListener);
       remoteContactCache.addListener(remoteListener);
       remoteCollectionCache.addListener(remoteListener);
-      TransactionManager remoteTM = DualNodeJtaTransactionManagerImpl.getInstance(AbstractDualNodeTestCase.REMOTE);
+      TransactionManager remoteTM = DualNodeJtaTransactionManagerImpl.getInstance(DualNodeTestCase.REMOTE);
 
       SessionFactory localFactory = getEnvironment().getSessionFactory();
       SessionFactory remoteFactory = getSecondNodeEnvironment().getSessionFactory();
@@ -319,7 +319,7 @@ public class EntityCollectionInvalidationTestCase extends AbstractDualNodeTestCa
 
    @Listener
    public static class MyListener {
-      private static final Logger log = LoggerFactory.getLogger(MyListener.class);
+      private static final Log log = LogFactory.getLog(MyListener.class);
       private Set<String> visited = new ConcurrentSet<String>();
       private final String name;
       

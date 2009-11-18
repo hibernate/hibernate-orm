@@ -29,8 +29,8 @@ import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.util.Set;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.infinispan.util.logging.Log;
+import org.infinispan.util.logging.LogFactory;
 
 /**
  * Helper for dealing with Infinisan cache instances.
@@ -40,7 +40,7 @@ import org.slf4j.LoggerFactory;
  */
 public class CacheHelper {
 
-   private static final Logger log = LoggerFactory.getLogger(CacheHelper.class);
+   private static final Log log = LogFactory.getLog(CacheHelper.class);
 
    /**
     * Disallow external instantiation of CacheHelper.

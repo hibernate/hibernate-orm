@@ -47,9 +47,9 @@ public class DualNodeConnectionProviderImpl implements ConnectionProvider {
    }
 
    public void configure(Properties props) throws HibernateException {
-      nodeId = props.getProperty(AbstractDualNodeTestCase.NODE_ID_PROP);
+      nodeId = props.getProperty(DualNodeTestCase.NODE_ID_PROP);
       if (nodeId == null)
-         throw new HibernateException(AbstractDualNodeTestCase.NODE_ID_PROP + " not configured");
+         throw new HibernateException(DualNodeTestCase.NODE_ID_PROP + " not configured");
    }
 
    public Connection getConnection() throws SQLException {

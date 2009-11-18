@@ -52,7 +52,6 @@ public abstract class AbstractTransactionalAccessTestCase extends AbstractEntity
 
       final String KEY = KEY_BASE + testCount++;
 
-      localAccessStrategy.get(KEY, System.currentTimeMillis());
       localAccessStrategy.putFromLoad(KEY, VALUE1, System.currentTimeMillis(), new Integer(1));
 
       final CountDownLatch pferLatch = new CountDownLatch(1);

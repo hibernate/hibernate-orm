@@ -7,6 +7,7 @@ import org.hibernate.cache.CacheException;
 import org.hibernate.cache.EntityRegion;
 import org.hibernate.cache.access.AccessType;
 import org.hibernate.cache.access.EntityRegionAccessStrategy;
+import org.hibernate.cache.infinispan.access.PutFromLoadValidator;
 import org.hibernate.cache.infinispan.impl.BaseTransactionalDataRegion;
 import org.hibernate.cache.infinispan.util.CacheAdapter;
 import org.infinispan.notifications.Listener;
@@ -32,4 +33,7 @@ public class EntityRegionImpl extends BaseTransactionalDataRegion implements Ent
       throw new CacheException("Unsupported access type [" + accessType.getName() + "]");
    }
 
+   public PutFromLoadValidator getPutFromLoadValidator() {
+      return new PutFromLoadValidator(transactionManager);
+   }
 }

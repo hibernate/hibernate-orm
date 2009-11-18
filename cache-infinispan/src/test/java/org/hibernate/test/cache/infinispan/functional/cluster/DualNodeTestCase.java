@@ -21,10 +21,7 @@
  */
 package org.hibernate.test.cache.infinispan.functional.cluster;
 
-import java.util.Set;
-
 import org.hibernate.Session;
-import org.hibernate.cache.infinispan.util.CacheHelper;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.Mappings;
@@ -33,8 +30,8 @@ import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.junit.functional.ExecutionEnvironment;
 import org.hibernate.junit.functional.FunctionalTestCase;
 import org.hibernate.transaction.CMTTransactionFactory;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.infinispan.util.logging.Log;
+import org.infinispan.util.logging.LogFactory;
 
 /**
  * AbstractDualNodeTestCase.
@@ -42,16 +39,16 @@ import org.slf4j.LoggerFactory;
  * @author Galder Zamarreño
  * @since 3.5
  */
-public abstract class AbstractDualNodeTestCase extends FunctionalTestCase {
+public abstract class DualNodeTestCase extends FunctionalTestCase {
    
-   private static final Logger log = LoggerFactory.getLogger(AbstractDualNodeTestCase.class);
+   private static final Log log = LogFactory.getLog(DualNodeTestCase.class);
    public static final String NODE_ID_PROP = "hibernate.test.cluster.node.id";
    public static final String LOCAL = "local";
    public static final String REMOTE = "remote";
    private ExecutionEnvironment secondNodeEnvironment;
    private Session secondNodeSession;
 
-   public AbstractDualNodeTestCase(String string) {
+   public DualNodeTestCase(String string) {
       super(string);
    }
    
@@ -164,6 +161,10 @@ public abstract class AbstractDualNodeTestCase extends FunctionalTestCase {
       }
   }
 
+   protected boolean getUseQueryCache() {
+      return true;
+   }
+
    protected void standardConfigure(Configuration cfg) {
       super.configure(cfg);
 
@@ -171,6 +172,7 @@ public abstract class AbstractDualNodeTestCase extends FunctionalTestCase {
       cfg.setProperty(Environment.TRANSACTION_MANAGER_STRATEGY, getTransactionManagerLookupClass().getName());
       cfg.setProperty(Environment.TRANSACTION_STRATEGY, getTransactionFactoryClass().getName());
       cfg.setProperty(Environment.CACHE_REGION_FACTORY, getCacheRegionFactory().getName());
+      cfg.setProperty(Environment.USE_QUERY_CACHE, String.valueOf(getUseQueryCache()));
    }
 
    /**
@@ -178,10 +180,10 @@ public abstract class AbstractDualNodeTestCase extends FunctionalTestCase {
     * configure method to allow separate cache settings for the second node.
     */
    public class SecondNodeSettings implements ExecutionEnvironment.Settings {
-      private final AbstractDualNodeTestCase delegate;
+      private final DualNodeTestCase delegate;
 
       public SecondNodeSettings() {
-         this.delegate = AbstractDualNodeTestCase.this;
+         this.delegate = DualNodeTestCase.this;
       }
 
       /**

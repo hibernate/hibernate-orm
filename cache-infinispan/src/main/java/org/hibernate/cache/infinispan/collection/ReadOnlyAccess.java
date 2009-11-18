@@ -2,8 +2,8 @@ package org.hibernate.cache.infinispan.collection;
 
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.access.SoftLock;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.infinispan.util.logging.Log;
+import org.infinispan.util.logging.LogFactory;
 
 /**
  * This defines the strategy for transactional access to collection data in a
@@ -17,7 +17,7 @@ import org.slf4j.LoggerFactory;
  * @since 3.5
  */
 class ReadOnlyAccess extends TransactionalAccess {
-   private static final Logger log = LoggerFactory.getLogger(ReadOnlyAccess.class);
+   private static final Log log = LogFactory.getLog(ReadOnlyAccess.class);
 
    ReadOnlyAccess(CollectionRegionImpl region) {
       super(region);

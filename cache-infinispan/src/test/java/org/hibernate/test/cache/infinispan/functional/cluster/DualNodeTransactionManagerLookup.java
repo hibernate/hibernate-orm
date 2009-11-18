@@ -39,9 +39,9 @@ import org.hibernate.HibernateException;
 public class DualNodeTransactionManagerLookup implements TransactionManagerLookup {
 
    public TransactionManager getTransactionManager(Properties props) throws HibernateException {
-      String nodeId = props.getProperty(AbstractDualNodeTestCase.NODE_ID_PROP);
+      String nodeId = props.getProperty(DualNodeTestCase.NODE_ID_PROP);
       if (nodeId == null)
-         throw new HibernateException(AbstractDualNodeTestCase.NODE_ID_PROP + " not configured");
+         throw new HibernateException(DualNodeTestCase.NODE_ID_PROP + " not configured");
       return DualNodeJtaTransactionManagerImpl.getInstance(nodeId);
    }
 

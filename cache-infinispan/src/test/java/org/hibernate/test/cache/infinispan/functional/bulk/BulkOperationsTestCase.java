@@ -25,20 +25,25 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import javax.transaction.Status;
 import javax.transaction.TransactionManager;
 
 import org.hibernate.FlushMode;
+import org.hibernate.cache.RegionFactory;
+import org.hibernate.cache.infinispan.InfinispanRegionFactory;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.classic.Session;
+import org.hibernate.connection.ConnectionProvider;
 import org.hibernate.junit.functional.FunctionalTestCase;
 import org.hibernate.stat.SecondLevelCacheStatistics;
 import org.hibernate.test.cache.infinispan.functional.Contact;
 import org.hibernate.test.cache.infinispan.functional.Customer;
 import org.hibernate.transaction.CMTTransactionFactory;
+import org.hibernate.transaction.TransactionFactory;
 import org.hibernate.transaction.TransactionManagerLookup;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.infinispan.util.logging.Log;
+import org.infinispan.util.logging.LogFactory;
 
 /**
  * BulkOperationsTestCase.
@@ -47,8 +52,7 @@ import org.slf4j.LoggerFactory;
  * @since 3.5
  */
 public class BulkOperationsTestCase extends FunctionalTestCase {
-
-   private static final Logger log = LoggerFactory.getLogger(BulkOperationsTestCase.class);
+   private static final Log log = LogFactory.getLog(BulkOperationsTestCase.class);
 
    private TransactionManager tm;
 
@@ -66,11 +70,15 @@ public class BulkOperationsTestCase extends FunctionalTestCase {
       return "transactional";
    }
 
-   protected Class getTransactionFactoryClass() {
+   protected Class<? extends RegionFactory> getCacheRegionFactory() {
+      return InfinispanRegionFactory.class;
+   }
+
+   protected Class<? extends TransactionFactory> getTransactionFactoryClass() {
       return CMTTransactionFactory.class;
    }
 
-   protected Class getConnectionProviderClass() {
+   protected Class<? extends ConnectionProvider> getConnectionProviderClass() {
       return org.hibernate.test.cache.infinispan.tm.XaConnectionProvider.class;
    }
 
@@ -80,20 +88,17 @@ public class BulkOperationsTestCase extends FunctionalTestCase {
 
    public void configure(Configuration cfg) {
       super.configure(cfg);
-
       cfg.setProperty(Environment.USE_SECOND_LEVEL_CACHE, "true");
       cfg.setProperty(Environment.GENERATE_STATISTICS, "true");
       cfg.setProperty(Environment.USE_QUERY_CACHE, "false");
+      cfg.setProperty(Environment.CACHE_REGION_FACTORY, getCacheRegionFactory().getName());
       cfg.setProperty(Environment.CONNECTION_PROVIDER, getConnectionProviderClass().getName());
-      cfg.setProperty(Environment.TRANSACTION_MANAGER_STRATEGY, getTransactionManagerLookupClass()
-               .getName());
-
-      Class transactionFactory = getTransactionFactoryClass();
-      cfg.setProperty(Environment.TRANSACTION_STRATEGY, transactionFactory.getName());
+      cfg.setProperty(Environment.TRANSACTION_MANAGER_STRATEGY, getTransactionManagerLookupClass().getName());
+      cfg.setProperty(Environment.TRANSACTION_STRATEGY, getTransactionFactoryClass().getName());
    }
 
    public void testBulkOperations() throws Throwable {
-      System.out.println("*** testBulkOperations()");
+      log.info("*** testBulkOperations()");
       boolean cleanedUp = false;
       try {
          tm = getTransactionManagerLookupClass().newInstance().getTransactionManager(null);
@@ -166,13 +171,14 @@ public class BulkOperationsTestCase extends FunctionalTestCase {
       log.debug("Create 10 contacts");
       tm.begin();
       try {
-         for (int i = 0; i < 10; i++)
-            createCustomer(i);
-         tm.commit();
+         for (int i = 0; i < 10; i++) createCustomer(i);
       } catch (Exception e) {
          log.error("Unable to create customer", e);
-         tm.rollback();
+         tm.setRollbackOnly();
          throw e;
+      } finally {
+         if (tm.getStatus() == Status.STATUS_ACTIVE) tm.commit();
+         else tm.rollback();
       }
    }
 
@@ -183,19 +189,25 @@ public class BulkOperationsTestCase extends FunctionalTestCase {
 
       tm.begin();
       try {
-
          Session session = getSessions().getCurrentSession();
          int rowsAffected = session.createQuery(deleteHQL).setFlushMode(FlushMode.AUTO)
                   .setParameter("cName", "Red Hat").executeUpdate();
          tm.commit();
          return rowsAffected;
       } catch (Exception e) {
-         try {
-            tm.rollback();
-         } catch (Exception ee) {
-            // ignored
-         }
+         log.error("Unable to delete contac", e);
+         tm.setRollbackOnly();
          throw e;
+      } finally {
+         if (tm.getStatus() == Status.STATUS_ACTIVE) {
+            tm.commit();
+         } else {
+            try {
+               tm.rollback();
+            } catch (Exception ee) {
+               // ignored
+            }
+         }
       }
    }
 
@@ -210,11 +222,14 @@ public class BulkOperationsTestCase extends FunctionalTestCase {
          Session session = getSessions().getCurrentSession();
          List results = session.createQuery(selectHQL).setFlushMode(FlushMode.AUTO).setParameter(
                   "cName", customerName).list();
-         tm.commit();
          return results;
       } catch (Exception e) {
-         tm.rollback();
+         log.error("Unable to get contacts by customer", e);
+         tm.setRollbackOnly();
          throw e;
+      } finally {
+         if (tm.getStatus() == Status.STATUS_ACTIVE) tm.commit();
+         else tm.rollback();
       }
    }
 
@@ -224,15 +239,17 @@ public class BulkOperationsTestCase extends FunctionalTestCase {
 
       tm.begin();
       try {
-
          Session session = getSessions().getCurrentSession();
          List results = session.createQuery(selectHQL).setFlushMode(FlushMode.AUTO).setParameter(
                   "cTLF", tlf).list();
-         tm.commit();
          return results;
       } catch (Exception e) {
-         tm.rollback();
+         log.error("Unable to get contacts", e);
+         tm.setRollbackOnly();
          throw e;
+      } finally {
+         if (tm.getStatus() == Status.STATUS_ACTIVE) tm.commit();
+         else tm.rollback();
       }
    }
 
@@ -243,11 +260,14 @@ public class BulkOperationsTestCase extends FunctionalTestCase {
          Session session = getSessions().getCurrentSession();
          int rowsAffected = session.createQuery(updateHQL).setFlushMode(FlushMode.AUTO)
                   .setParameter("cNewTLF", newTLF).setParameter("cName", name).executeUpdate();
-         tm.commit();
          return rowsAffected;
       } catch (Exception e) {
-         tm.rollback();
+         log.error("Unable to update contacts", e);
+         tm.setRollbackOnly();
          throw e;
+      } finally {
+         if (tm.getStatus() == Status.STATUS_ACTIVE) tm.commit();
+         else tm.rollback();
       }
    }
 
@@ -262,25 +282,30 @@ public class BulkOperationsTestCase extends FunctionalTestCase {
          list.get(0).setTlf(newTLF);
          int rowsAffected = session.createQuery(updateHQL).setFlushMode(FlushMode.AUTO)
                   .setParameter("cNewTLF", newTLF).setParameter("cName", name).executeUpdate();
-         tm.commit();
          return rowsAffected;
       } catch (Exception e) {
-         tm.rollback();
+         log.error("Unable to update contacts with one manual", e);
+         tm.setRollbackOnly();
          throw e;
+      } finally {
+         if (tm.getStatus() == Status.STATUS_ACTIVE) tm.commit();
+         else tm.rollback();
       }
    }
 
    public Contact getContact(Integer id) throws Exception {
       tm.begin();
       try {
-
          Session session = getSessions().getCurrentSession();
          Contact contact = (Contact) session.get(Contact.class, id);
-         tm.commit();
          return contact;
       } catch (Exception e) {
-         tm.rollback();
+         log.error("Unable to get contact", e);
+         tm.setRollbackOnly();
          throw e;
+      } finally {
+         if (tm.getStatus() == Status.STATUS_ACTIVE) tm.commit();
+         else tm.rollback();
       }
    }
 
@@ -292,15 +317,21 @@ public class BulkOperationsTestCase extends FunctionalTestCase {
          Session session = getSessions().getCurrentSession();
          session.createQuery(deleteContactHQL).setFlushMode(FlushMode.AUTO).executeUpdate();
          session.createQuery(deleteCustomerHQL).setFlushMode(FlushMode.AUTO).executeUpdate();
-         tm.commit();
       } catch (Exception e) {
-         if (!ignore) {
-            try {
-               tm.rollback();
-            } catch (Exception ee) {
-               // ignored
+         log.error("Unable to get contact", e);
+         tm.setRollbackOnly();
+         throw e;
+      } finally {
+         if (tm.getStatus() == Status.STATUS_ACTIVE) {
+            tm.commit();
+         } else {
+            if (!ignore) {
+               try {
+                  tm.rollback();
+               } catch (Exception ee) {
+                  // ignored
+               }
             }
-            throw e;
          }
       }
    }

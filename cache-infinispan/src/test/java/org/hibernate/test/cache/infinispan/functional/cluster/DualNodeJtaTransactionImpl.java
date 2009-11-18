@@ -42,8 +42,8 @@ import javax.transaction.xa.XAException;
 import javax.transaction.xa.XAResource;
 import javax.transaction.xa.Xid;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.infinispan.util.logging.Log;
+import org.infinispan.util.logging.LogFactory;
 
 /**
  * SimpleJtaTransactionImpl variant that works with DualNodeTransactionManagerImpl.
@@ -51,7 +51,7 @@ import org.slf4j.LoggerFactory;
  * @author Brian Stansberry
  */
 public class DualNodeJtaTransactionImpl implements Transaction {
-   private static final Logger log = LoggerFactory.getLogger(DualNodeJtaTransactionImpl.class);
+   private static final Log log = LogFactory.getLog(DualNodeJtaTransactionImpl.class);
 
    private int status;
    private LinkedList synchronizations;

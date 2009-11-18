@@ -32,8 +32,8 @@ import org.infinispan.Cache;
 import org.infinispan.config.Configuration;
 import org.infinispan.manager.CacheManager;
 import org.infinispan.manager.DefaultCacheManager;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.infinispan.util.logging.Log;
+import org.infinispan.util.logging.LogFactory;
 
 /**
  * A {@link RegionFactory} for <a href="http://www.jboss.org/infinispan">Infinispan</a>-backed cache
@@ -44,13 +44,13 @@ import org.slf4j.LoggerFactory;
  * @since 3.5
  */
 public class InfinispanRegionFactory implements RegionFactory {
-   
-   private static final Logger log = LoggerFactory.getLogger(InfinispanRegionFactory.class);
-   
+
+   private static final Log log = LogFactory.getLog(InfinispanRegionFactory.class);
+
    private static final String PREFIX = "hibernate.cache.infinispan.";
-   
+
    private static final String CONFIG_SUFFIX = ".cfg";
-   
+
    private static final String STRATEGY_SUFFIX = ".eviction.strategy";
 
    private static final String WAKE_UP_INTERVAL_SUFFIX = ".eviction.wake_up_interval";

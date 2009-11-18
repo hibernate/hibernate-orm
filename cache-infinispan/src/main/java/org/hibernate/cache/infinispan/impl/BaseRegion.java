@@ -1,6 +1,7 @@
 package org.hibernate.cache.infinispan.impl;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -130,11 +131,13 @@ public abstract class BaseRegion implements Region {
 
    public Map toMap() {
       if (checkValid()) {
-         Map map = cacheAdapter.toMap();
-         Set keys = map.keySet();
-         for (Object key : keys) {
-            if (CacheHelper.isEvictAllNotification(key)) {
-               map.remove(key);
+         // If copying causes issues, provide a lazily loaded Map
+         Map map = new HashMap();
+         Set<Map.Entry> entries = cacheAdapter.toMap().entrySet();
+         for (Map.Entry entry : entries) {
+            Object key = entry.getKey();
+            if (!CacheHelper.isEvictAllNotification(key)) {
+               map.put(key, entry.getValue());
             }
          }
          return map;
@@ -149,7 +152,7 @@ public abstract class BaseRegion implements Region {
          cacheAdapter.removeListener(this);
       }
    }
-   
+
    public boolean contains(Object key) {
       if (!checkValid())
          return false;
@@ -209,7 +212,19 @@ public abstract class BaseRegion implements Region {
            resume(tx);
        }
    }
-   
+
+   public Object getOwnerForPut() {
+      Transaction tx = null;
+      try {
+          if (transactionManager != null) {
+              tx = transactionManager.getTransaction();
+          }
+      } catch (SystemException se) {
+          throw new CacheException("Could not obtain transaction", se);
+      }
+      return tx == null ? Thread.currentThread() : tx;
+   }
+
    /**
     * Tell the TransactionManager to suspend any ongoing transaction.
     * 

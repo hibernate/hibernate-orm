@@ -21,7 +21,7 @@ class TransactionalAccess implements EntityRegionAccessStrategy {
 
    TransactionalAccess(EntityRegionImpl region) {
       this.region = region;
-      this.delegate = new TransactionalAccessDelegate(region);
+      this.delegate = new TransactionalAccessDelegate(region, region.getPutFromLoadValidator());
    }
 
    public void evict(Object key) throws CacheException {

@@ -32,8 +32,8 @@ import org.hibernate.cache.RegionFactory;
 import org.hibernate.util.NamingHelper;
 import org.hibernate.util.PropertiesHelper;
 import org.infinispan.manager.CacheManager;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.infinispan.util.logging.Log;
+import org.infinispan.util.logging.LogFactory;
 
 /**
  * A {@link RegionFactory} for <a href="http://www.jboss.org/infinispan">Infinispan</a>-backed cache
@@ -44,7 +44,7 @@ import org.slf4j.LoggerFactory;
  */
 public class JndiInfinispanRegionFactory extends InfinispanRegionFactory {
 
-   private static final Logger log = LoggerFactory.getLogger(JndiInfinispanRegionFactory.class);
+   private static final Log log = LogFactory.getLog(JndiInfinispanRegionFactory.class);
 
    /**
     * Specifies the JNDI name under which the {@link CacheManager} to use is bound.

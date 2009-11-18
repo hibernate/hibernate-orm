@@ -30,7 +30,7 @@ import org.hibernate.SessionFactory;
 import org.hibernate.cache.StandardQueryCache;
 import org.hibernate.cache.infinispan.InfinispanRegionFactory;
 import org.hibernate.cfg.Configuration;
-import org.hibernate.test.cache.infinispan.functional.cluster.AbstractDualNodeTestCase;
+import org.hibernate.test.cache.infinispan.functional.cluster.DualNodeTestCase;
 import org.hibernate.test.cache.infinispan.functional.cluster.ClusterAwareRegionFactory;
 import org.hibernate.test.cache.infinispan.functional.cluster.DualNodeJtaTransactionManagerImpl;
 import org.infinispan.Cache;
@@ -51,7 +51,7 @@ import org.slf4j.LoggerFactory;
  * @author Galder Zamarreño
  * @since 3.5
  */
-public class IsolatedClassLoaderTest extends AbstractDualNodeTestCase {
+public class IsolatedClassLoaderTest extends DualNodeTestCase {
 
    public static final String OUR_PACKAGE = IsolatedClassLoaderTest.class.getPackage().getName();
 
@@ -119,11 +119,11 @@ public class IsolatedClassLoaderTest extends AbstractDualNodeTestCase {
    public void testIsolatedSetup() throws Exception {
       // Bind a listener to the "local" cache
       // Our region factory makes its CacheManager available to us
-      CacheManager localManager = ClusterAwareRegionFactory.getCacheManager(AbstractDualNodeTestCase.LOCAL);
+      CacheManager localManager = ClusterAwareRegionFactory.getCacheManager(DualNodeTestCase.LOCAL);
       Cache localReplicatedCache = localManager.getCache("replicated-entity");
 
       // Bind a listener to the "remote" cache
-      CacheManager remoteManager = ClusterAwareRegionFactory.getCacheManager(AbstractDualNodeTestCase.REMOTE);
+      CacheManager remoteManager = ClusterAwareRegionFactory.getCacheManager(DualNodeTestCase.REMOTE);
       Cache remoteReplicatedCache = remoteManager.getCache("replicated-entity");
 
       ClassLoader cl = Thread.currentThread().getContextClassLoader();
@@ -163,20 +163,20 @@ public class IsolatedClassLoaderTest extends AbstractDualNodeTestCase {
    protected void queryTest(boolean useNamedRegion) throws Exception {
       // Bind a listener to the "local" cache
       // Our region factory makes its CacheManager available to us
-      CacheManager localManager = ClusterAwareRegionFactory.getCacheManager(AbstractDualNodeTestCase.LOCAL);
+      CacheManager localManager = ClusterAwareRegionFactory.getCacheManager(DualNodeTestCase.LOCAL);
       localQueryCache = localManager.getCache("replicated-query");
       localQueryListener = new CacheAccessListener();
       localQueryCache.addListener(localQueryListener);
 
-      TransactionManager localTM = DualNodeJtaTransactionManagerImpl.getInstance(AbstractDualNodeTestCase.LOCAL);
+      TransactionManager localTM = DualNodeJtaTransactionManagerImpl.getInstance(DualNodeTestCase.LOCAL);
 
       // Bind a listener to the "remote" cache
-      CacheManager remoteManager = ClusterAwareRegionFactory.getCacheManager(AbstractDualNodeTestCase.REMOTE);
+      CacheManager remoteManager = ClusterAwareRegionFactory.getCacheManager(DualNodeTestCase.REMOTE);
       remoteQueryCache = remoteManager.getCache("replicated-query");
       remoteQueryListener = new CacheAccessListener();
       remoteQueryCache.addListener(remoteQueryListener);
 
-      TransactionManager remoteTM = DualNodeJtaTransactionManagerImpl.getInstance(AbstractDualNodeTestCase.REMOTE);
+      TransactionManager remoteTM = DualNodeJtaTransactionManagerImpl.getInstance(DualNodeTestCase.REMOTE);
 
       SessionFactory localFactory = getEnvironment().getSessionFactory();
       SessionFactory remoteFactory = getSecondNodeEnvironment().getSessionFactory();

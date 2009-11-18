@@ -39,6 +39,7 @@ import org.hibernate.type.AssociationType;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
+import org.hibernate.type.ComponentType;
 import org.hibernate.util.StringHelper;
 
 import antlr.ASTFactory;
@@ -53,7 +54,7 @@ import org.slf4j.LoggerFactory;
  *
  * @author josh
  */
-class FromElementFactory implements SqlTokenTypes {
+public class FromElementFactory implements SqlTokenTypes {
 
 	private static final Logger log = LoggerFactory.getLogger( FromElementFactory.class );
 
@@ -293,6 +294,12 @@ class FromElementFactory implements SqlTokenTypes {
 		}
 
 		return elem;
+	}
+
+	public FromElement createComponentJoin(ComponentType type) {
+		// need to create a "place holder" from-element that can store the component/alias for this
+		// 		component join
+		return new ComponentJoin( fromClause, origin, classAlias, path, type );
 	}
 
 	FromElement createElementJoin(QueryableCollection queryableCollection) throws SemanticException {

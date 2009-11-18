@@ -74,6 +74,10 @@ class FromElementType {
 		}
 	}
 
+	protected FromElementType(FromElement fromElement) {
+		this.fromElement = fromElement;
+	}
+
 	private String getTableAlias() {
 		return fromElement.getTableAlias();
 	}

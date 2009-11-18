@@ -69,6 +69,7 @@ import org.hibernate.hql.ast.tree.SelectExpression;
 import org.hibernate.hql.ast.tree.UpdateStatement;
 import org.hibernate.hql.ast.tree.OperatorNode;
 import org.hibernate.hql.ast.tree.ParameterContainer;
+import org.hibernate.hql.ast.tree.FromElementFactory;
 import org.hibernate.hql.ast.util.ASTPrinter;
 import org.hibernate.hql.ast.util.ASTUtil;
 import org.hibernate.hql.ast.util.AliasGenerator;
@@ -92,6 +93,7 @@ import org.hibernate.type.AssociationType;
 import org.hibernate.type.Type;
 import org.hibernate.type.VersionType;
 import org.hibernate.type.DbTimestampType;
+import org.hibernate.type.ComponentType;
 import org.hibernate.usertype.UserVersionType;
 import org.hibernate.util.ArrayHelper;
 import org.hibernate.util.StringHelper;
@@ -362,14 +364,29 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 		// Generate an explicit join for the root dot node.   The implied joins will be collected and passed up
 		// to the root dot node.
 		dot.resolve( true, false, alias == null ? null : alias.getText() );
-		FromElement fromElement = dot.getImpliedJoin();
-		fromElement.setAllPropertyFetch(propertyFetch!=null);
 
-		if ( with != null ) {
-			if ( fetch ) {
-				throw new SemanticException( "with-clause not allowed on fetched associations; use filters" );
+		final FromElement fromElement;
+		if ( dot.getDataType() != null && dot.getDataType().isComponentType() ) {
+			FromElementFactory factory = new FromElementFactory( 
+					getCurrentFromClause(),
+					dot.getLhs().getFromElement(),
+					dot.getPropertyPath(),
+					alias == null ? null : alias.getText(),
+					null,
+					false
+			);
+			fromElement = factory.createComponentJoin( (ComponentType) dot.getDataType() );
+		}
+		else {
+			fromElement = dot.getImpliedJoin();
+			fromElement.setAllPropertyFetch( propertyFetch != null );
+
+			if ( with != null ) {
+				if ( fetch ) {
+					throw new SemanticException( "with-clause not allowed on fetched associations; use filters" );
+				}
+				handleWithFragment( fromElement, with );
 			}
-			handleWithFragment( fromElement, with );
 		}
 
 		if ( log.isDebugEnabled() ) {

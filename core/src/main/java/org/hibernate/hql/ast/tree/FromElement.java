@@ -90,6 +90,30 @@ public class FromElement extends HqlSqlWalkerNode implements DisplayableNode, Pa
 	public FromElement() {
 	}
 
+	/**
+	 * Constructor form used to initialize {@link ComponentJoin}
+	 *
+	 * @param fromClause The FROM clause to which this element belongs
+	 * @param origin The origin (LHS) of this element
+	 * @param alias The alias applied to this element
+	 */
+	protected FromElement(
+			FromClause fromClause,
+			FromElement origin,
+			String alias) {
+		this.fromClause = fromClause;
+		this.origin = origin;
+		this.classAlias = alias;
+		this.tableAlias = origin.getTableAlias();
+		super.initialize( fromClause.getWalker() );
+	}
+
+	protected void initializeComponentJoin(FromElementType elementType) {
+		this.elementType = elementType;
+		fromClause.registerFromElement( this );
+		initialized = true;
+	}
+
 	public String getCollectionSuffix() {
 		return elementType.getCollectionSuffix();
 	}

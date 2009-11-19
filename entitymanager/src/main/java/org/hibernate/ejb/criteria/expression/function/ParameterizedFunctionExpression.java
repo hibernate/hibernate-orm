@@ -30,7 +30,9 @@ import javax.persistence.criteria.Expression;
 import org.hibernate.ejb.criteria.ParameterContainer;
 import org.hibernate.ejb.criteria.ParameterRegistry;
 import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
+import org.hibernate.ejb.criteria.CriteriaQueryCompiler;
 import org.hibernate.ejb.criteria.expression.LiteralExpression;
+import org.hibernate.ejb.criteria.expression.ExpressionImplementor;
 
 /**
  * Support for functions with parameters.
@@ -86,4 +88,15 @@ public class ParameterizedFunctionExpression<X>
 		}
 	}
 
+	@Override
+	public String render(CriteriaQueryCompiler.RenderingContext renderingContext) {
+		StringBuilder buffer = new StringBuilder();
+		buffer.append( getFunctionName() )
+				.append( '(' );
+		for ( Expression argument : argumentExpressions ) {
+			buffer.append( ( (ExpressionImplementor) argument ).render( renderingContext ) );
+		}
+		buffer.append( ')' );
+		return buffer.toString();
+	}
 }

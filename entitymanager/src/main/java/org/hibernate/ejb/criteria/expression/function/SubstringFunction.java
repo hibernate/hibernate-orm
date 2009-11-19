@@ -27,7 +27,9 @@ import javax.persistence.criteria.Expression;
 
 import org.hibernate.ejb.criteria.ParameterRegistry;
 import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
+import org.hibernate.ejb.criteria.CriteriaQueryCompiler;
 import org.hibernate.ejb.criteria.expression.LiteralExpression;
+import org.hibernate.ejb.criteria.expression.ExpressionImplementor;
 
 /**
  * Models the ANSI SQL <tt>SUBSTRING</tt> function.
@@ -102,4 +104,17 @@ public class SubstringFunction extends BasicFunctionExpression<String> {
 		Helper.possibleParameter( getValue(), registry );
 	}
 
+	public String render(CriteriaQueryCompiler.RenderingContext renderingContext) {
+		StringBuilder buffer = new StringBuilder();
+		buffer.append( "substring(" )
+				.append( ( (ExpressionImplementor) getValue() ).render( renderingContext ) )
+				.append( ',' )
+				.append( ( (ExpressionImplementor) getStart() ).render( renderingContext ) );
+		if ( getLength() != null ) {
+			buffer.append( ',' )
+					.append( ( (ExpressionImplementor) getLength() ).render( renderingContext ) );
+		}
+		buffer.append( ')' );
+		return buffer.toString();
+	}
 }

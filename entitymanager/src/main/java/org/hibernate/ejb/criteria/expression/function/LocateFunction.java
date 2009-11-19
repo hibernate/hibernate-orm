@@ -27,7 +27,9 @@ import javax.persistence.criteria.Expression;
 
 import org.hibernate.ejb.criteria.ParameterRegistry;
 import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
+import org.hibernate.ejb.criteria.CriteriaQueryCompiler;
 import org.hibernate.ejb.criteria.expression.LiteralExpression;
+import org.hibernate.ejb.criteria.expression.ExpressionImplementor;
 
 /**
  * Models the ANSI SQL <tt>LOCATE</tt> function.
@@ -94,5 +96,20 @@ public class LocateFunction extends BasicFunctionExpression<Integer> {
 		Helper.possibleParameter( getPattern(), registry );
 		Helper.possibleParameter( getStart(), registry );
 		Helper.possibleParameter( getString(), registry );
+	}
+
+	@Override
+	public String render(CriteriaQueryCompiler.RenderingContext renderingContext) {
+		StringBuilder buffer = new StringBuilder();
+		buffer.append( "locate(" )
+				.append( ( (ExpressionImplementor) getPattern() ).render( renderingContext ) )
+				.append( ',' )
+				.append( ( (ExpressionImplementor) getString() ).render( renderingContext ) );
+		if ( getStart() != null ) {
+			buffer.append( ',' )
+					.append( ( (ExpressionImplementor) getStart() ).render( renderingContext ) );
+		}
+		buffer.append( ')' );
+		return buffer.toString();
 	}
 }

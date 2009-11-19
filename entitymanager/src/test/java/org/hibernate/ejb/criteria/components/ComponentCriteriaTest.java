@@ -28,6 +28,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
+import javax.persistence.criteria.Expression;
 
 import org.hibernate.ejb.test.TestCase;
 
@@ -62,6 +63,25 @@ public class ComponentCriteriaTest extends TestCase {
 		em = getOrCreateEntityManager();
 		em.getTransaction().begin();
 		em.createQuery( "delete Client" ).executeUpdate();
+		em.getTransaction().commit();
+		em.close();
+	}
+
+	public void testParameterizedFunctions() {
+		// HHH-4586
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		CriteriaBuilder cb = em.getCriteriaBuilder();
+		// lower
+		CriteriaQuery<Client> cq = cb.createQuery( Client.class );
+		Root<Client> root = cq.from( Client.class );
+		cq.where( cb.equal( cb.lower( root.get( Client_.name ).get( Name_.lastName ) ),"test" ) );
+		em.createQuery( cq ).getResultList();
+		// upper
+		cq = cb.createQuery( Client.class );
+		root = cq.from( Client.class );
+		cq.where( cb.equal( cb.upper( root.get( Client_.name ).get( Name_.lastName ) ),"test" ) );
+		em.createQuery( cq ).getResultList();
 		em.getTransaction().commit();
 		em.close();
 	}

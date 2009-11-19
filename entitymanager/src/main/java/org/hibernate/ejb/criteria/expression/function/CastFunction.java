@@ -25,6 +25,7 @@ package org.hibernate.ejb.criteria.expression.function;
 
 import org.hibernate.ejb.criteria.ParameterRegistry;
 import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
+import org.hibernate.ejb.criteria.CriteriaQueryCompiler;
 import org.hibernate.ejb.criteria.expression.ExpressionImpl;
 
 /**
@@ -57,4 +58,9 @@ public class CastFunction<T,Y> extends BasicFunctionExpression<T> implements Fun
 		Helper.possibleParameter( getCastSource(), registry );
 	}
 
+	public String render(CriteriaQueryCompiler.RenderingContext renderingContext) {
+		// HHH-4590
+		// todo : how to handle these, espeically if in the select...
+		return super.render( renderingContext );
+	}
 }

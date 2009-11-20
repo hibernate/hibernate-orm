@@ -46,6 +46,7 @@ import org.hibernate.MappingException;
 import org.hibernate.QueryException;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.StaleStateException;
+import org.hibernate.LockRequest;
 import org.hibernate.cache.CacheKey;
 import org.hibernate.cache.access.EntityRegionAccessStrategy;
 import org.hibernate.cache.entry.CacheEntry;
@@ -1412,7 +1413,16 @@ public abstract class AbstractEntityPersister
 	        Object object,
 	        LockMode lockMode,
 	        SessionImplementor session) throws HibernateException {
-		getLocker( lockMode ).lock( id, version, object, -1, session );
+		getLocker( lockMode ).lock( id, version, object, LockRequest.WAIT_FOREVER, session );
+	}
+	
+	public void lock(
+			Serializable id,
+	        Object version,
+	        Object object,
+	        LockRequest lockRequest,
+	        SessionImplementor session) throws HibernateException {
+		getLocker( lockRequest.getLockMode() ).lock( id, version, object, lockRequest.getTimeOut(), session );
 	}
 
 	public String getRootTableName() {
@@ -1866,6 +1876,19 @@ public abstract class AbstractEntityPersister
 				this,
 				batchSize,
 				lockMode,
+				getFactory(),
+				loadQueryInfluencers
+		);
+	}
+
+	protected UniqueEntityLoader createEntityLoader(
+			LockRequest lockRequest,
+			LoadQueryInfluencers loadQueryInfluencers) throws MappingException {
+		//TODO: disable batch loading if lockMode > READ?
+		return BatchingEntityLoader.createBatchingEntityLoader(
+				this,
+				batchSize,
+				lockRequest,
 				getFactory(),
 				loadQueryInfluencers
 		);
@@ -3185,7 +3208,25 @@ public abstract class AbstractEntityPersister
 				);
 		}
 
-		final UniqueEntityLoader loader = getAppropriateLoader( lockMode, session );
+		final UniqueEntityLoader loader = getAppropriateLoader( new LockRequest().setLockMode(lockMode), session );
+		return loader.load( id, optionalObject, session );
+	}
+
+	/**
+	 * Load an instance using either the <tt>forUpdateLoader</tt> or the outer joining <tt>loader</tt>,
+	 * depending upon the value of the <tt>lock</tt> parameter
+	 */
+	public Object load(Serializable id, Object optionalObject, LockRequest lockRequest, SessionImplementor session)
+			throws HibernateException {
+
+		if ( log.isTraceEnabled() ) {
+			log.trace(
+					"Fetching entity: " +
+					MessageHelper.infoString( this, id, getFactory() )
+				);
+		}
+
+		final UniqueEntityLoader loader = getAppropriateLoader( lockRequest, session );
 		return loader.load( id, optionalObject, session );
 	}
 
@@ -3208,7 +3249,7 @@ public abstract class AbstractEntityPersister
 				&& filterHelper.isAffectedBy( session.getLoadQueryInfluencers().getEnabledFilters() );
 	}
 
-	private UniqueEntityLoader getAppropriateLoader(LockMode lockMode, SessionImplementor session) {
+	private UniqueEntityLoader getAppropriateLoader(LockRequest lockRequest, SessionImplementor session) {
 		if ( queryLoader != null ) {
 			// if the user specified a custom query loader we need to that
 			// regardless of any other consideration
@@ -3217,9 +3258,9 @@ public abstract class AbstractEntityPersister
 		else if ( isAffectedByEnabledFilters( session ) ) {
 			// because filters affect the rows returned (because they add
 			// restirctions) these need to be next in precendence
-			return createEntityLoader( lockMode, session.getLoadQueryInfluencers() );
+			return createEntityLoader( lockRequest, session.getLoadQueryInfluencers() );
 		}
-		else if ( session.getLoadQueryInfluencers().getInternalFetchProfile() != null && LockMode.UPGRADE.greaterThan( lockMode ) ) {
+		else if ( session.getLoadQueryInfluencers().getInternalFetchProfile() != null && LockMode.UPGRADE.greaterThan( lockRequest.getLockMode() ) ) {
 			// Next, we consider whether an 'internal' fetch profile has been set.
 			// This indicates a special fetch profile Hibernate needs applied
 			// (for its merge loading process e.g.).
@@ -3228,10 +3269,10 @@ public abstract class AbstractEntityPersister
 		else if ( isAffectedByEnabledFetchProfiles( session ) ) {
 			// If the session has associated influencers we need to adjust the
 			// SQL query used for loading based on those influencers
-			return createEntityLoader( lockMode, session.getLoadQueryInfluencers() );
+			return createEntityLoader( lockRequest, session.getLoadQueryInfluencers() );
 		}
 		else {
-			return ( UniqueEntityLoader ) loaders.get( lockMode );
+			return ( UniqueEntityLoader ) loaders.get( lockRequest.getLockMode() );
 		}
 	}
 

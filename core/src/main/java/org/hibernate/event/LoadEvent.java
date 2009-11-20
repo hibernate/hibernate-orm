@@ -27,6 +27,7 @@ package org.hibernate.event;
 import java.io.Serializable;
 
 import org.hibernate.LockMode;
+import org.hibernate.LockRequest;
 
 /**
  *  Defines an event class for the loading of an entity.
@@ -40,20 +41,24 @@ public class LoadEvent extends AbstractEvent {
 	private Serializable entityId;
 	private String entityClassName;
 	private Object instanceToLoad;
-	private LockMode lockMode;
+	private LockRequest lockRequest;
 	private boolean isAssociationFetch;
 	private Object result;
 
 	public LoadEvent(Serializable entityId, Object instanceToLoad, EventSource source) {
-		this(entityId, null, instanceToLoad, null, false, source);
+		this(entityId, null, instanceToLoad, new LockRequest(), false, source);
 	}
 
 	public LoadEvent(Serializable entityId, String entityClassName, LockMode lockMode, EventSource source) {
 		this(entityId, entityClassName, null, lockMode, false, source);
 	}
-	
+
+	public LoadEvent(Serializable entityId, String entityClassName, LockRequest lockRequest, EventSource source) {
+		this(entityId, entityClassName, null, lockRequest, false, source);
+	}
+
 	public LoadEvent(Serializable entityId, String entityClassName, boolean isAssociationFetch, EventSource source) {
-		this(entityId, entityClassName, null, null, isAssociationFetch, source);
+		this(entityId, entityClassName, null, new LockRequest(), isAssociationFetch, source);
 	}
 	
 	public boolean isAssociationFetch() {
@@ -67,6 +72,16 @@ public class LoadEvent extends AbstractEvent {
 			LockMode lockMode,
 			boolean isAssociationFetch,
 			EventSource source) {
+		this(entityId, entityClassName, instanceToLoad, new LockRequest().setLockMode(lockMode), isAssociationFetch, source );
+	}
+
+	private LoadEvent(
+			Serializable entityId,
+			String entityClassName,
+			Object instanceToLoad,
+			LockRequest lockRequest,
+			boolean isAssociationFetch,
+			EventSource source) {
 
 		super(source);
 
@@ -74,17 +89,17 @@ public class LoadEvent extends AbstractEvent {
 			throw new IllegalArgumentException("id to load is required for loading");
 		}
 
-		if ( lockMode == LockMode.WRITE ) {
+		if ( lockRequest.getLockMode() == LockMode.WRITE ) {
 			throw new IllegalArgumentException("Invalid lock mode for loading");
 		}
-		else if ( lockMode == null ) {
-			lockMode = DEFAULT_LOCK_MODE;
+		else if ( lockRequest.getLockMode() == null ) {
+			lockRequest.setLockMode(DEFAULT_LOCK_MODE);
 		}
 
 		this.entityId = entityId;
 		this.entityClassName = entityClassName;
 		this.instanceToLoad = instanceToLoad;
-		this.lockMode = lockMode;
+		this.lockRequest = lockRequest;
 		this.isAssociationFetch = isAssociationFetch;
 	}
 
@@ -112,12 +127,32 @@ public class LoadEvent extends AbstractEvent {
 		this.instanceToLoad = instanceToLoad;
 	}
 
+	public LockRequest getLockRequest() {
+		return lockRequest;
+	}
+
 	public LockMode getLockMode() {
-		return lockMode;
+		return lockRequest.getLockMode();
 	}
 
 	public void setLockMode(LockMode lockMode) {
-		this.lockMode = lockMode;
+		this.lockRequest.setLockMode(lockMode);
+	}
+
+	public void setLockTimeout(int timeout) {
+		this.lockRequest.setTimeOut(timeout);
+	}
+
+	public int getLockTimeout() {
+		return this.lockRequest.getTimeOut();
+	}
+
+	public void setLockScope(boolean cascade) {
+		this.lockRequest.setScope(cascade);
+	}
+
+	public boolean getLockScope() {
+		return this.lockRequest.getScope();
 	}
 
 	public Object getResult() {

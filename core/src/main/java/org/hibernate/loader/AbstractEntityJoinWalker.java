@@ -31,6 +31,7 @@ import java.util.Iterator;
 import org.hibernate.FetchMode;
 import org.hibernate.LockMode;
 import org.hibernate.MappingException;
+import org.hibernate.LockRequest;
 import org.hibernate.engine.CascadeStyle;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.LoadQueryInfluencers;
@@ -92,6 +93,29 @@ public abstract class AbstractEntityJoinWalker extends JoinWalker {
 		);
 		initPersisters(allAssociations, lockMode);
 		initStatementString( whereString, orderByString, lockMode);
+	}
+
+	protected final void initAll(
+			final String whereString,
+			final String orderByString,
+			final LockRequest lockRequest) throws MappingException {
+		walkEntityTree( persister, getAlias() );
+		List allAssociations = new ArrayList();
+		allAssociations.addAll(associations);
+		allAssociations.add(
+				new OuterJoinableAssociation(
+						persister.getEntityType(),
+						null,
+						null,
+						alias,
+						JoinFragment.LEFT_OUTER_JOIN,
+						null,
+						getFactory(),
+						CollectionHelper.EMPTY_MAP
+				)
+		);
+		initPersisters(allAssociations, lockRequest.getLockMode());
+		initStatementString( whereString, orderByString, lockRequest.getLockMode());
 	}
 
 	protected final void initProjection(

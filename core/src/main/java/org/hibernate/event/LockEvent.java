@@ -25,6 +25,7 @@
 package org.hibernate.event;
 
 import org.hibernate.LockMode;
+import org.hibernate.LockRequest;
 
 /**
  *  Defines an event class for the locking of an entity.
@@ -34,7 +35,7 @@ import org.hibernate.LockMode;
 public class LockEvent extends AbstractEvent {
 
 	private Object object;
-	private LockMode lockMode;
+	private LockRequest lockRequest;
 	private String entityName;
 
 	public LockEvent(String entityName, Object original, LockMode lockMode, EventSource source) {
@@ -42,10 +43,21 @@ public class LockEvent extends AbstractEvent {
 		this.entityName = entityName;
 	}
 
+	public LockEvent(String entityName, Object original, LockRequest lockRequest, EventSource source) {
+		this(original, lockRequest, source);
+		this.entityName = entityName;
+	}
+
 	public LockEvent(Object object, LockMode lockMode, EventSource source) {
 		super(source);
 		this.object = object;
-		this.lockMode = lockMode;
+		this.lockRequest = new LockRequest().setLockMode(lockMode);
+	}
+
+	public LockEvent(Object object, LockRequest lockRequest, EventSource source) {
+		super(source);
+		this.object = object;
+		this.lockRequest = lockRequest;
 	}
 
 	public Object getObject() {
@@ -56,12 +68,32 @@ public class LockEvent extends AbstractEvent {
 		this.object = object;
 	}
 
+	public LockRequest getLockRequest() {
+		return lockRequest;	
+	}
+
 	public LockMode getLockMode() {
-		return lockMode;
+		return lockRequest.getLockMode();
 	}
 
 	public void setLockMode(LockMode lockMode) {
-		this.lockMode = lockMode;
+		this.lockRequest.setLockMode(lockMode);
+	}
+
+	public void setLockTimeout(int timeout) {
+		this.lockRequest.setTimeOut(timeout);
+	}
+
+	public int getLockTimeout() {
+		return this.lockRequest.getTimeOut();
+	}
+
+	public void setLockScope(boolean cascade) {
+		this.lockRequest.setScope(cascade);
+	}
+
+	public boolean getLockScope() {
+		return this.lockRequest.getScope();
 	}
 
 	public String getEntityName() {

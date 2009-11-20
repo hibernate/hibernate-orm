@@ -270,8 +270,21 @@ public interface Session extends Serializable {
 	 * @param lockMode the lock level
 	 * @return the persistent instance or proxy
 	 * @throws HibernateException
+	 * @deprecated LockMode parameter should be replaced with a LockRequest
 	 */
 	public Object load(Class theClass, Serializable id, LockMode lockMode) throws HibernateException;
+
+	/**
+	 * Return the persistent instance of the given entity class with the given identifier,
+	 * obtaining the specified lock mode, assuming the instance exists.
+	 *
+	 * @param theClass a persistent class
+	 * @param id a valid identifier of an existing persistent instance of the class
+	 * @param lockRequest contains the lock level
+	 * @return the persistent instance or proxy
+	 * @throws HibernateException
+	 */
+	public Object load(Class theClass, Serializable id, LockRequest lockRequest) throws HibernateException;
 
 	/**
 	 * Return the persistent instance of the given entity class with the given identifier,
@@ -282,8 +295,21 @@ public interface Session extends Serializable {
 	 * @param lockMode the lock level
 	 * @return the persistent instance or proxy
 	 * @throws HibernateException
+	 * @deprecated LockMode parameter should be replaced with a LockRequest
 	 */
 	public Object load(String entityName, Serializable id, LockMode lockMode) throws HibernateException;
+
+	/**
+	 * Return the persistent instance of the given entity class with the given identifier,
+	 * obtaining the specified lock mode, assuming the instance exists.
+	 *
+	 * @param entityName a persistent class
+	 * @param id a valid identifier of an existing persistent instance of the class
+	 * @param lockRequest contains the lock level
+	 * @return the persistent instance or proxy
+	 * @throws HibernateException
+	 */
+	public Object load(String entityName, Serializable id, LockRequest lockRequest) throws HibernateException;
 
 	/**
 	 * Return the persistent instance of the given entity class with the given identifier,
@@ -500,28 +526,67 @@ public interface Session extends Serializable {
 	/**
 	 * Obtain the specified lock level upon the given object. This may be used to
 	 * perform a version check (<tt>LockMode.READ</tt>), to upgrade to a pessimistic
-	 * lock (<tt>LockMode.UPGRADE</tt>), or to simply reassociate a transient instance
+	 * lock (<tt>LockMode.PESSIMISTIC_WRITE</tt>), or to simply reassociate a transient instance
 	 * with a session (<tt>LockMode.NONE</tt>). This operation cascades to associated
 	 * instances if the association is mapped with <tt>cascade="lock"</tt>.
 	 *
 	 * @param object a persistent or transient instance
 	 * @param lockMode the lock level
 	 * @throws HibernateException
+	 * @deprecated LockMode parameter should be replaced with a LockRequest
 	 */
 	public void lock(Object object, LockMode lockMode) throws HibernateException;
 
 	/**
 	 * Obtain the specified lock level upon the given object. This may be used to
-	 * perform a version check (<tt>LockMode.READ</tt>), to upgrade to a pessimistic
-	 * lock (<tt>LockMode.UPGRADE</tt>), or to simply reassociate a transient instance
+	 * perform a version check (<tt>LockMode.OPTIMISTIC</tt>), to upgrade to a pessimistic
+	 * lock (<tt>LockMode.PESSIMISTIC_WRITE</tt>), or to simply reassociate a transient instance
+	 * with a session (<tt>LockMode.NONE</tt>). This operation cascades to associated
+	 * instances if the association is mapped with <tt>cascade="lock" and lockRequest.getScope() == true</tt>.
+	 *
+	 * @param object a persistent or transient instance
+	 * @param lockRequest contains the lock level
+	 * @throws HibernateException
+	 */
+	public void lock(Object object, LockRequest lockRequest) throws HibernateException;
+
+	/**
+	 * Obtain the specified lock level upon the given object. This may be used to
+	 * perform a version check (<tt>LockMode.OPTIMISTIC</tt>), to upgrade to a pessimistic
+	 * lock (<tt>LockMode.PESSIMISTIC_WRITE</tt>), or to simply reassociate a transient instance
 	 * with a session (<tt>LockMode.NONE</tt>). This operation cascades to associated
 	 * instances if the association is mapped with <tt>cascade="lock"</tt>.
 	 *
 	 * @param object a persistent or transient instance
 	 * @param lockMode the lock level
 	 * @throws HibernateException
+	 * @deprecated LockMode parameter should be replaced with a LockRequest
 	 */
 	public void lock(String entityName, Object object, LockMode lockMode) throws HibernateException;
+
+	/**
+	 * Obtain the specified lock level upon the given object. This may be used to
+	 * perform a version check (<tt>LockMode.OPTIMISTIC</tt>), to upgrade to a pessimistic
+	 * lock (<tt>LockMode.PESSIMISTIC_WRITE</tt>), or to simply reassociate a transient instance
+	 * with a session (<tt>LockMode.NONE</tt>). This operation cascades to associated
+	 * instances if the association is mapped with <tt>cascade="lock" and lockRequest.getScope() == true.</tt>.
+	 *
+	 * @param object a persistent or transient instance
+	 * @param lockRequest contains the lock level
+	 * @throws HibernateException
+	 */
+	public void lock(String entityName, Object object, LockRequest lockRequest) throws HibernateException;
+
+	/**
+	 * Build a lockRequest that specifies the LockMode, pessimistic lock timeout and lock scope.
+	 * timeout and scope is ignored for optimistic locking.
+	 *
+	 * Use: LockRequest lr = session.buildLockRequest().setLockMode(LockMode.PESSIMISTIC_WRITE).setTimeOut(1000 * 60);
+	 *      session.lock(entity, lr);
+	 *
+	 * @throws HibernateException
+	 */
+	LockRequest buildLockRequest();
 
 	/**
 	 * Re-read the state of the given instance from the underlying database. It is
@@ -548,8 +613,21 @@ public interface Session extends Serializable {
 	 * @param object a persistent or detached instance
 	 * @param lockMode the lock mode to use
 	 * @throws HibernateException
+	 * @deprecated LockMode parameter should be replaced with a LockRequest
 	 */
 	public void refresh(Object object, LockMode lockMode) throws HibernateException;
+
+	/**
+	 * Re-read the state of the given instance from the underlying database, with
+	 * the given <tt>LockMode</tt>. It is inadvisable to use this to implement
+	 * long-running sessions that span many business tasks. This method is, however,
+	 * useful in certain special circumstances.
+	 *
+	 * @param object a persistent or detached instance
+	 * @param lockRequest contains the lock mode to use
+	 * @throws HibernateException
+	 */
+	public void refresh(Object object, LockRequest lockRequest) throws HibernateException;
 
 	/**
 	 * Determine the current lock mode of the given object.
@@ -688,8 +766,23 @@ public interface Session extends Serializable {
 	 * @param lockMode the lock mode
 	 * @return a persistent instance or null
 	 * @throws HibernateException
+	 * @deprecated LockMode parameter should be replaced with a LockRequest
 	 */
 	public Object get(Class clazz, Serializable id, LockMode lockMode) throws HibernateException;
+
+	/**
+	 * Return the persistent instance of the given entity class with the given identifier,
+	 * or null if there is no such persistent instance. (If the instance is already associated
+	 * with the session, return that instance. This method never returns an uninitialized instance.)
+	 * Obtain the specified lock mode if the instance exists.
+	 *
+	 * @param clazz a persistent class
+	 * @param id an identifier
+	 * @param lockRequest the lock mode
+	 * @return a persistent instance or null
+	 * @throws HibernateException
+	 */
+	public Object get(Class clazz, Serializable id, LockRequest lockRequest) throws HibernateException;
 
 	/**
 	 * Return the persistent instance of the given named entity with the given identifier,
@@ -714,8 +807,23 @@ public interface Session extends Serializable {
 	 * @param lockMode the lock mode
 	 * @return a persistent instance or null
 	 * @throws HibernateException
+	 * @deprecated LockMode parameter should be replaced with a LockRequest
 	 */
 	public Object get(String entityName, Serializable id, LockMode lockMode) throws HibernateException;
+
+	/**
+	 * Return the persistent instance of the given entity class with the given identifier,
+	 * or null if there is no such persistent instance. (If the instance is already associated
+	 * with the session, return that instance. This method never returns an uninitialized instance.)
+	 * Obtain the specified lock mode if the instance exists.
+	 *
+	 * @param entityName the entity name
+	 * @param id an identifier
+	 * @param lockRequest contains the lock mode
+	 * @return a persistent instance or null
+	 * @throws HibernateException
+	 */
+	public Object get(String entityName, Serializable id, LockRequest lockRequest) throws HibernateException;
 
 	
 	/**

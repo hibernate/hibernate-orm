@@ -30,6 +30,7 @@ import java.util.Iterator;
 import org.hibernate.FetchMode;
 import org.hibernate.LockMode;
 import org.hibernate.MappingException;
+import org.hibernate.LockRequest;
 import org.hibernate.engine.CascadeStyle;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.LoadQueryInfluencers;
@@ -47,7 +48,7 @@ import org.hibernate.type.AssociationType;
  */
 public class EntityJoinWalker extends AbstractEntityJoinWalker {
 	
-	private final LockMode lockMode;
+	private final LockRequest lockRequest = new LockRequest();
 
 	public EntityJoinWalker(
 			OuterJoinLoadable persister, 
@@ -58,13 +59,33 @@ public class EntityJoinWalker extends AbstractEntityJoinWalker {
 			LoadQueryInfluencers loadQueryInfluencers) throws MappingException {
 		super( persister, factory, loadQueryInfluencers );
 
-		this.lockMode = lockMode;
+		this.lockRequest.setLockMode(lockMode);
 		
 		StringBuffer whereCondition = whereString( getAlias(), uniqueKey, batchSize )
 				//include the discriminator and class-level where, but not filters
 				.append( persister.filterFragment( getAlias(), Collections.EMPTY_MAP ) );
 
-		initAll( whereCondition.toString(), "", lockMode );
+		initAll( whereCondition.toString(), "", lockRequest );
+	}
+
+	public EntityJoinWalker(
+			OuterJoinLoadable persister,
+			String[] uniqueKey,
+			int batchSize,
+			LockRequest lockRequest,
+			SessionFactoryImplementor factory,
+			LoadQueryInfluencers loadQueryInfluencers) throws MappingException {
+		super( persister, factory, loadQueryInfluencers );
+
+		this.lockRequest.setLockMode(lockRequest.getLockMode());
+		this.lockRequest.setTimeOut(lockRequest.getTimeOut());
+		this.lockRequest.setScope(lockRequest.getScope());
+
+		StringBuffer whereCondition = whereString( getAlias(), uniqueKey, batchSize )
+				//include the discriminator and class-level where, but not filters
+				.append( persister.filterFragment( getAlias(), Collections.EMPTY_MAP ) );
+
+		initAll( whereCondition.toString(), "", lockRequest);
 	}
 
 	protected int getJoinType(
@@ -81,7 +102,7 @@ public class EntityJoinWalker extends AbstractEntityJoinWalker {
 		// NOTE : we override this form here specifically to account for
 		// fetch profiles.
 		// TODO : how to best handle criteria queries?
-		if ( lockMode.greaterThan( LockMode.READ ) ) {
+		if ( lockRequest.getLockMode().greaterThan( LockMode.READ ) ) {
 			return -1;
 		}
 		if ( isTooDeep( currentDepth )

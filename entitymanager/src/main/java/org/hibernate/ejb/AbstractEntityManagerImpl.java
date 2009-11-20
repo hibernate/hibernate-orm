@@ -29,6 +29,7 @@ import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.Map;
 import java.util.Set;
+import java.util.HashMap;
 import javax.persistence.EntityNotFoundException;
 import javax.persistence.EntityTransaction;
 import javax.persistence.FlushModeType;
@@ -42,6 +43,7 @@ import javax.persistence.PessimisticLockException;
 import javax.persistence.Query;
 import javax.persistence.TransactionRequiredException;
 import javax.persistence.TypedQuery;
+import javax.persistence.PessimisticLockScope;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.metamodel.Metamodel;
@@ -74,6 +76,8 @@ import org.hibernate.util.JTAHelper;
 @SuppressWarnings("unchecked")
 public abstract class AbstractEntityManagerImpl implements HibernateEntityManagerImplementor, Serializable {
 	private static final Logger log = LoggerFactory.getLogger( AbstractEntityManagerImpl.class );
+	private static final String PESSIMISTICLOCKSCOPE  = "javax.persistence.lock.scope";
+	private static final String PESSIMISTICLOCKTIMEOUT= "javax.persistence.lock.timeout";
 
 	private EntityManagerFactoryImpl entityManagerFactory;
 	protected transient TransactionImpl tx = new TransactionImpl( this );
@@ -239,19 +243,22 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 
 	@SuppressWarnings("unchecked")
 	public <A> A find(Class<A> entityClass, Object primaryKey) {
-		LockModeType lmt = null;
-		return find( entityClass, primaryKey, lmt);
+		return find( entityClass, primaryKey, null, null);
 	}
 
 	public <T> T find(Class<T> entityClass, Object primaryKey, Map<String, Object> properties) {
-		return find(entityClass, primaryKey);
+		return find(entityClass, primaryKey, null, null);
 	}
 
 	@SuppressWarnings("unchecked")
 	public <A> A find(Class<A> entityClass, Object  primaryKey, LockModeType lockModeType) {
+		return find(entityClass, primaryKey, lockModeType, null);
+	}
+
+	public <A> A find(Class<A> entityClass, Object  primaryKey, LockModeType lockModeType, Map<String, Object> properties) {
 		try {
 			if ( lockModeType != null )
-				return ( A ) getSession().get( entityClass, ( Serializable ) primaryKey, getLockMode(lockModeType) );
+				return ( A ) getSession().get( entityClass, ( Serializable ) primaryKey, getLockRequest(lockModeType, properties) );
 			else
 				return ( A ) getSession().get( entityClass, ( Serializable ) primaryKey );
 		}
@@ -275,10 +282,6 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 		catch ( HibernateException he ) {
 			throw convert( he );
 		}
-	}
-
-	public <A> A find(Class<A> entityClass, Object  primaryKey, LockModeType lockModeType, Map<String, Object> properties) {
-		return find(entityClass, primaryKey, lockModeType);
 	}
 
 	private void checkTransactionNeeded() {
@@ -334,23 +337,25 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 	}
 
 	public void refresh(Object entity) {
-		LockModeType lmt = null;
-		refresh(entity, lmt);
+		refresh(entity, null, null);
 	}
 
 	public void refresh(Object entity, Map<String, Object> properties) {
-		LockModeType lmt = null;
-		refresh(entity, lmt);
+		refresh(entity, null, null);
 	}
 
 	public void refresh(Object entity, LockModeType lockModeType) {
+		refresh(entity, lockModeType, null);
+	}
+
+	public void refresh(Object entity, LockModeType lockModeType, Map<String, Object> properties) {
 		checkTransactionNeeded();
 		try {
 			if ( !getSession().contains( entity ) ) {
 				throw new IllegalArgumentException( "Entity not managed" );
 			}
 			if(lockModeType != null)
-				getSession().refresh( entity, getLockMode(lockModeType) );
+				getSession().refresh( entity, getLockRequest(lockModeType, properties) );
 			else
 				getSession().refresh( entity );
 		}
@@ -360,10 +365,6 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 		catch ( HibernateException he ) {
 			throw convert( he );
 		}
-	}
-
-	public void refresh(Object entity, LockModeType lockModeType, Map<String, Object> properties) {
-		refresh(entity, lockModeType);
 	}
 
 	public boolean contains(Object entity) {
@@ -508,6 +509,10 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 	}
 
 	public void lock(Object entity, LockModeType lockMode) {
+		lock( entity, lockMode, null);
+	}
+
+	public void lock(Object entity, LockModeType lockModeType, Map<String, Object> properties) {
 		try {
 			if ( !isTransactionInProgress() ) {
 				throw new TransactionRequiredException( "no transaction is in progress" );
@@ -516,21 +521,42 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 			if ( !contains( entity ) ) {
 				throw new IllegalArgumentException( "entity not in the persistence context" );
 			}
-			getSession().lock( entity, getLockMode( lockMode ) );
+			getSession().lock( entity, getLockRequest(lockModeType, properties) );
 		}
 		catch ( HibernateException he ) {
 			throw convert( he );
 		}
+
 	}
 
-	public void lock(Object o, LockModeType lockModeType, Map<String, Object> properties) {
-		// todo:  support different properties passed in
-		lock(o,lockModeType);
+	private LockRequest getLockRequest(LockModeType lockModeType, Map<String, Object> properties) {
+		LockRequest lockRequest = new LockRequest();
+		lockRequest.setLockMode(getLockMode(lockModeType));
+		if ( properties != null ) {
+			// lockRequest scope will default to false (PessimisticLockScope.NORMAL)
+			Object value = properties.get(PESSIMISTICLOCKSCOPE);
+			if ( value instanceof String && PessimisticLockScope.valueOf((String) value) == PessimisticLockScope.EXTENDED) {
+				lockRequest.setScope(true);
+			}
+			// lockRequest timeout will default to LockRequest.FOREVER_WAIT
+			value = properties.get(PESSIMISTICLOCKTIMEOUT);
+			if ( value instanceof String ) {
+				int timeout = Integer.parseInt((String) value);
+				if ( timeout < 0 ) {
+					lockRequest.setTimeOut(LockRequest.WAIT_FOREVER);
+				}
+				else if( timeout == 0 ) {
+					lockRequest.setTimeOut(LockRequest.NO_WAIT);
+				}
+				else {
+					lockRequest.setTimeOut(timeout);
+				}
+			}
+		}
+		return lockRequest;
 	}
 
-
-	private LockModeType getLockModeType(LockMode lockMode)
-	{
+	private LockModeType getLockModeType(LockMode lockMode) {
 		if ( lockMode == LockMode.NONE )
 			return LockModeType.NONE;
 		else if ( lockMode == LockMode.OPTIMISTIC || lockMode == LockMode.READ )

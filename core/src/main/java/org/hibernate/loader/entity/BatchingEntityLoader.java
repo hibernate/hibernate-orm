@@ -33,6 +33,7 @@ import java.util.Set;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.MappingException;
+import org.hibernate.LockRequest;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.engine.LoadQueryInfluencers;
@@ -125,6 +126,26 @@ public class BatchingEntityLoader implements UniqueEntityLoader {
 		}
 		else {
 			return new EntityLoader(persister, lockMode, factory, loadQueryInfluencers);
+		}
+	}
+
+	public static UniqueEntityLoader createBatchingEntityLoader(
+		final OuterJoinLoadable persister,
+		final int maxBatchSize,
+		final LockRequest lockRequest,
+		final SessionFactoryImplementor factory,
+		final LoadQueryInfluencers loadQueryInfluencers) throws MappingException {
+
+		if ( maxBatchSize>1 ) {
+			int[] batchSizesToCreate = ArrayHelper.getBatchSizes(maxBatchSize);
+			Loader[] loadersToCreate = new Loader[ batchSizesToCreate.length ];
+			for ( int i=0; i<batchSizesToCreate.length; i++ ) {
+				loadersToCreate[i] = new EntityLoader(persister, batchSizesToCreate[i], lockRequest, factory, loadQueryInfluencers);
+			}
+			return new BatchingEntityLoader(persister, batchSizesToCreate, loadersToCreate);
+		}
+		else {
+			return new EntityLoader(persister, lockRequest, factory, loadQueryInfluencers);
 		}
 	}
 

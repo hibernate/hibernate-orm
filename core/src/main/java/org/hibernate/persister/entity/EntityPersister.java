@@ -31,6 +31,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.MappingException;
 import org.hibernate.EntityMode;
+import org.hibernate.LockRequest;
 import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.cache.OptimisticCacheSource;
 import org.hibernate.cache.access.EntityRegionAccessStrategy;
@@ -327,9 +328,21 @@ public interface EntityPersister extends OptimisticCacheSource {
 	throws HibernateException;
 
 	/**
+	 * Load an instance of the persistent class.
+	 */
+	public Object load(Serializable id, Object optionalObject, LockRequest lockRequest, SessionImplementor session)
+	throws HibernateException;
+
+	/**
 	 * Do a version check (optional operation)
 	 */
 	public void lock(Serializable id, Object version, Object object, LockMode lockMode, SessionImplementor session)
+	throws HibernateException;
+
+	/**
+	 * Do a version check (optional operation)
+	 */
+	public void lock(Serializable id, Object version, Object object, LockRequest lockRequest, SessionImplementor session)
 	throws HibernateException;
 
 	/**

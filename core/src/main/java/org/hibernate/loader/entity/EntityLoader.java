@@ -24,12 +24,10 @@
  */
 package org.hibernate.loader.entity;
 
-import java.util.Map;
-import java.util.Set;
-
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.MappingException;
+import org.hibernate.LockRequest;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.engine.LoadQueryInfluencers;
@@ -56,7 +54,15 @@ public class EntityLoader extends AbstractEntityLoader {
 			LoadQueryInfluencers loadQueryInfluencers) throws MappingException {
 		this( persister, 1, lockMode, factory, loadQueryInfluencers );
 	}
-	
+
+	public EntityLoader(
+			OuterJoinLoadable persister,
+			LockRequest lockRequest,
+			SessionFactoryImplementor factory,
+			LoadQueryInfluencers loadQueryInfluencers) throws MappingException {
+		this( persister, 1, lockRequest, factory, loadQueryInfluencers );
+	}
+
 	public EntityLoader(
 			OuterJoinLoadable persister, 
 			int batchSize, 
@@ -70,6 +76,23 @@ public class EntityLoader extends AbstractEntityLoader {
 				batchSize,
 				lockMode,
 				factory, 
+				loadQueryInfluencers
+			);
+	}
+
+	public EntityLoader(
+			OuterJoinLoadable persister,
+			int batchSize,
+			LockRequest lockRequest,
+			SessionFactoryImplementor factory,
+			LoadQueryInfluencers loadQueryInfluencers) throws MappingException {
+		this(
+				persister,
+				persister.getIdentifierColumnNames(),
+				persister.getIdentifierType(),
+				batchSize,
+				lockRequest,
+				factory,
 				loadQueryInfluencers
 			);
 	}
@@ -98,6 +121,34 @@ public class EntityLoader extends AbstractEntityLoader {
 
 		batchLoader = batchSize > 1;
 		
+		log.debug( "Static select for entity " + entityName + ": " + getSQLString() );
+
+	}
+
+	public EntityLoader(
+			OuterJoinLoadable persister,
+			String[] uniqueKey,
+			Type uniqueKeyType,
+			int batchSize,
+			LockRequest lockRequest,
+			SessionFactoryImplementor factory,
+			LoadQueryInfluencers loadQueryInfluencers) throws MappingException {
+		super( persister, uniqueKeyType, factory, loadQueryInfluencers );
+
+		JoinWalker walker = new EntityJoinWalker(
+				persister,
+				uniqueKey,
+				batchSize,
+				lockRequest,
+				factory,
+				loadQueryInfluencers
+		);
+		initFromWalker( walker );
+
+		postInstantiate();
+
+		batchLoader = batchSize > 1;
+
 		log.debug( "Static select for entity " + entityName + ": " + getSQLString() );
 
 	}

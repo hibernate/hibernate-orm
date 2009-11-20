@@ -207,6 +207,10 @@ public class JoinWalker {
 		}
 	}
 
+	protected String getWithClause(String path)	{
+		return "";
+	}
+	
 	/**
 	 * Add on association (one-to-one, many-to-one, or a collection) to a list 
 	 * of associations to be fetched by outerjoin 
@@ -235,6 +239,7 @@ public class JoinWalker {
 				aliasedLhsColumns, 
 				subalias, 
 				joinType, 
+				getWithClause(path),
 				getFactory(),
 				loadQueryInfluencers.getEnabledFilters()
 		);

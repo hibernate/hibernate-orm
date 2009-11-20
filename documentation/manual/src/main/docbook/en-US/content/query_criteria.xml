@@ -196,6 +196,34 @@ while ( iter.hasNext() ) {
     Cat kitten = (Cat) map.get("kt");
 }]]></programlisting>
 
+	<para>
+		Additionally you may manipulate the result set using a left outer join:
+	</para>
+	<programlisting><![CDATA[
+		List cats = session.createCriteria( Cat.class )
+                       .createAlias("mate", "mt", Criteria.LEFT_JOIN, Restrictions.like("mt.name", "good%") )
+                       .addOrder(Order.asc("mt.age"))
+                       .list();
+	
+	]]></programlisting>
+
+	<para>
+		This will return all of the <literal>Cat</literal>s with a mate whose name starts with "good"
+		ordered by their mate's age, and all cats who do not have a mate.  
+		 This is useful when there is a need to order or limit in the database
+		 prior to returning complex/large result sets, and removes many instances where
+		 multiple queries would have to be performed and the results unioned 
+		 by java in memory.  
+	</para>
+	<para>
+		Without this feature, first all of the cats without a mate would need to be loaded in one query. 
+	</para>
+	<para>
+		A second query would need to retreive the cats with mates who's name started with "good" sorted by the mates age.
+	</para>
+	<para>
+		Thirdly, in memory; the lists would need to be joined manually.
+	</para>
     </sect1>
     
     <sect1 id="querycriteria-dynamicfetching" revision="1">

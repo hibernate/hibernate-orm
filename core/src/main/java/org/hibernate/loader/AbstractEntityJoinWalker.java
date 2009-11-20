@@ -85,6 +85,7 @@ public abstract class AbstractEntityJoinWalker extends JoinWalker {
 						null,
 						alias,
 						JoinFragment.LEFT_OUTER_JOIN,
+						null,
 						getFactory(),
 						CollectionHelper.EMPTY_MAP
 				)

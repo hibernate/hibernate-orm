@@ -80,7 +80,7 @@ public class CriteriaImpl implements Criteria, Serializable {
 	private CacheMode cacheMode;
 	private FlushMode sessionFlushMode;
 	private CacheMode sessionCacheMode;
-	
+
 	private ResultTransformer resultTransformer = Criteria.ROOT_ENTITY;
 
 
@@ -202,6 +202,11 @@ public class CriteriaImpl implements Criteria, Serializable {
 		return this;
 	}
 
+	public Criteria createAlias(String associationPath, String alias, int joinType, Criterion withClause) {
+		new Subcriteria( this, associationPath, alias, joinType, withClause );
+		return this;
+	}
+
 	public Criteria createCriteria(String associationPath) {
 		return createCriteria( associationPath, INNER_JOIN );
 	}
@@ -216,6 +221,10 @@ public class CriteriaImpl implements Criteria, Serializable {
 
 	public Criteria createCriteria(String associationPath, String alias, int joinType) {
 		return new Subcriteria( this, associationPath, alias, joinType );
+	}
+
+	public Criteria createCriteria(String associationPath, String alias, int joinType, Criterion withClause) {
+		return new Subcriteria( this, associationPath, alias, joinType, withClause );
 	}
 
 	public ResultTransformer getResultTransformer() {
@@ -309,7 +318,7 @@ public class CriteriaImpl implements Criteria, Serializable {
 			after();
 		}
 	}
-	
+
 	public ScrollableResults scroll() {
 		return scroll( ScrollMode.SCROLL_INSENSITIVE );
 	}
@@ -338,7 +347,7 @@ public class CriteriaImpl implements Criteria, Serializable {
 			getSession().setCacheMode( cacheMode );
 		}
 	}
-	
+
 	protected void after() {
 		if ( sessionFlushMode != null ) {
 			getSession().setFlushMode( sessionFlushMode );
@@ -349,7 +358,7 @@ public class CriteriaImpl implements Criteria, Serializable {
 			sessionCacheMode = null;
 		}
 	}
-	
+
 	public boolean isLookupByNaturalKey() {
 		if ( projection != null ) {
 			return false;
@@ -374,16 +383,21 @@ public class CriteriaImpl implements Criteria, Serializable {
 		private Criteria parent;
 		private LockMode lockMode;
 		private int joinType;
-
+		private Criterion withClause;
 
 		// Constructors ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-		private Subcriteria(Criteria parent, String path, String alias, int joinType) {
+		private Subcriteria(Criteria parent, String path, String alias, int joinType, Criterion withClause) {
 			this.alias = alias;
 			this.path = path;
 			this.parent = parent;
 			this.joinType = joinType;
-			CriteriaImpl.this.subcriteriaList.add(this);
+			this.withClause = withClause;
+			CriteriaImpl.this.subcriteriaList.add( this );
+		}
+
+		private Subcriteria(Criteria parent, String path, String alias, int joinType) {
+			this( parent, path, alias, joinType, null );
 		}
 
 		private Subcriteria(Criteria parent, String path, int joinType) {
@@ -391,10 +405,10 @@ public class CriteriaImpl implements Criteria, Serializable {
 		}
 
 		public String toString() {
-			return "Subcriteria(" +
-				path + ":" +
-				(alias==null ? "" : alias) +
-				')';
+			return "Subcriteria("
+					+ path + ":"
+					+ (alias==null ? "" : alias)
+					+ ')';
 		}
 
 
@@ -429,6 +443,10 @@ public class CriteriaImpl implements Criteria, Serializable {
 			return joinType;
 		}
 
+		public Criterion getWithClause() {
+			return this.withClause;
+		}
+
 
 		// Criteria impl ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -451,6 +469,11 @@ public class CriteriaImpl implements Criteria, Serializable {
 			return this;
 		}
 
+		public Criteria createAlias(String associationPath, String alias, int joinType, Criterion withClause) throws HibernateException {
+			new Subcriteria( this, associationPath, alias, joinType, withClause );
+			return this;
+		}
+
 		public Criteria createCriteria(String associationPath) {
 			return createCriteria( associationPath, INNER_JOIN );
 		}
@@ -465,6 +488,10 @@ public class CriteriaImpl implements Criteria, Serializable {
 
 		public Criteria createCriteria(String associationPath, String alias, int joinType) throws HibernateException {
 			return new Subcriteria( Subcriteria.this, associationPath, alias, joinType );
+		}
+
+		public Criteria createCriteria(String associationPath, String alias, int joinType, Criterion withClause) throws HibernateException {
+			return new Subcriteria( this, associationPath, alias, joinType, withClause );
 		}
 
 		public Criteria setCacheable(boolean cacheable) {
@@ -493,8 +520,7 @@ public class CriteriaImpl implements Criteria, Serializable {
 			return CriteriaImpl.this.uniqueResult();
 		}
 
-		public Criteria setFetchMode(String associationPath, FetchMode mode)
-			throws HibernateException {
+		public Criteria setFetchMode(String associationPath, FetchMode mode) {
 			CriteriaImpl.this.setFetchMode( StringHelper.qualify(path, associationPath), mode);
 			return this;
 		}

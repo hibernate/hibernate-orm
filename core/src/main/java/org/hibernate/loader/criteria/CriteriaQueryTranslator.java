@@ -43,6 +43,7 @@ import org.hibernate.MappingException;
 import org.hibernate.QueryException;
 import org.hibernate.hql.ast.util.SessionFactoryHelper;
 import org.hibernate.criterion.CriteriaQuery;
+import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.Projection;
 import org.hibernate.engine.QueryParameters;
 import org.hibernate.engine.RowSelection;
@@ -77,7 +78,8 @@ public class CriteriaQueryTranslator implements CriteriaQuery {
 	private final Map aliasCriteriaMap = new HashMap();
 	private final Map associationPathCriteriaMap = new LinkedHashMap();
 	private final Map associationPathJoinTypesMap = new LinkedHashMap();
-
+	private final Map withClauseMap = new HashMap();
+	
 	private final SessionFactoryImplementor sessionFactory;
 
 	public CriteriaQueryTranslator(
@@ -168,6 +170,10 @@ public class CriteriaQueryTranslator implements CriteriaQuery {
 			if ( old != null ) {
 				// TODO : not so sure this is needed...
 				throw new QueryException( "duplicate association path: " + wholeAssociationPath );
+			}
+			if ( crit.getWithClause() != null )
+			{
+				this.withClauseMap.put(wholeAssociationPath, crit.getWithClause());
 			}
 		}
 	}
@@ -266,9 +272,42 @@ public class CriteriaQueryTranslator implements CriteriaQuery {
 	}
 
 	public QueryParameters getQueryParameters() {
+		RowSelection selection = new RowSelection();
+		selection.setFirstRow( rootCriteria.getFirstResult() );
+		selection.setMaxRows( rootCriteria.getMaxResults() );
+		selection.setTimeout( rootCriteria.getTimeout() );
+		selection.setFetchSize( rootCriteria.getFetchSize() );
+
+		Map lockModes = new HashMap();
+		Iterator iter = rootCriteria.getLockModes().entrySet().iterator();
+		while ( iter.hasNext() ) {
+			Map.Entry me = ( Map.Entry ) iter.next();
+			final Criteria subcriteria = getAliasedCriteria( ( String ) me.getKey() );
+			lockModes.put( getSQLAlias( subcriteria ), me.getValue() );
+		}
 		List values = new ArrayList();
 		List types = new ArrayList();
-		Iterator iter = rootCriteria.iterateExpressionEntries();
+		iter = rootCriteria.iterateSubcriteria();
+		while ( iter.hasNext() ) {
+			CriteriaImpl.Subcriteria subcriteria = ( CriteriaImpl.Subcriteria ) iter.next();
+			LockMode lm = subcriteria.getLockMode();
+			if ( lm != null ) {
+				lockModes.put( getSQLAlias( subcriteria ), lm );
+			}
+			if ( subcriteria.getWithClause() != null )
+			{
+				TypedValue[] tv = subcriteria.getWithClause().getTypedValues( subcriteria, this );
+				for ( int i = 0; i < tv.length; i++ ) {
+					values.add( tv[i].getValue() );
+					types.add( tv[i].getType() );
+				}
+			}
+		}
+
+		// Type and value gathering for the WHERE clause needs to come AFTER lock mode gathering,
+		// because the lock mode gathering loop now contains join clauses which can contain
+		// parameter bindings (as in the HQL WITH clause).
+		iter = rootCriteria.iterateExpressionEntries();
 		while ( iter.hasNext() ) {
 			CriteriaImpl.CriterionEntry ce = ( CriteriaImpl.CriterionEntry ) iter.next();
 			TypedValue[] tv = ce.getCriterion().getTypedValues( ce.getCriteria(), this );
@@ -277,31 +316,9 @@ public class CriteriaQueryTranslator implements CriteriaQuery {
 				types.add( tv[i].getType() );
 			}
 		}
+
 		Object[] valueArray = values.toArray();
 		Type[] typeArray = ArrayHelper.toTypeArray( types );
-
-		RowSelection selection = new RowSelection();
-		selection.setFirstRow( rootCriteria.getFirstResult() );
-		selection.setMaxRows( rootCriteria.getMaxResults() );
-		selection.setTimeout( rootCriteria.getTimeout() );
-		selection.setFetchSize( rootCriteria.getFetchSize() );
-
-		Map lockModes = new HashMap();
-		iter = rootCriteria.getLockModes().entrySet().iterator();
-		while ( iter.hasNext() ) {
-			Map.Entry me = ( Map.Entry ) iter.next();
-			final Criteria subcriteria = getAliasedCriteria( ( String ) me.getKey() );
-			lockModes.put( getSQLAlias( subcriteria ), me.getValue() );
-		}
-		iter = rootCriteria.iterateSubcriteria();
-		while ( iter.hasNext() ) {
-			CriteriaImpl.Subcriteria subcriteria = ( CriteriaImpl.Subcriteria ) iter.next();
-			LockMode lm = subcriteria.getLockMode();
-			if ( lm != null ) {
-				lockModes.put( getSQLAlias( subcriteria ), lm );
-			}
-		}
-
 		return new QueryParameters(
 				typeArray,
 		        valueArray,
@@ -576,4 +593,10 @@ public class CriteriaQueryTranslator implements CriteriaQuery {
 		return propertyName;
 	}
 
+	public String getWithClause(String path)
+	{
+		final Criterion crit = (Criterion)this.withClauseMap.get(path);
+		return crit == null ? null : crit.toSqlString(getCriteria(path), this);
+	}
+	
 }

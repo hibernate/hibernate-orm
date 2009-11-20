@@ -135,7 +135,10 @@ public interface Criteria extends CriteriaSpecification {
 	 *
 	 * @param associationPath a dot seperated property path
 	 * @param mode The fetch mode for the referenced association
+	 *
 	 * @return this (for method chaining)
+	 *
+	 * @throws HibernateException Indicates a problem applying the given fetch mode
 	 */
 	public Criteria setFetchMode(String associationPath, FetchMode mode) throws HibernateException;
 
@@ -143,6 +146,7 @@ public interface Criteria extends CriteriaSpecification {
 	 * Set the lock mode of the current entity
 	 *
 	 * @param lockMode The lock mode to be applied
+	 *
 	 * @return this (for method chaining)
 	 */
 	public Criteria setLockMode(LockMode lockMode);
@@ -151,8 +155,9 @@ public interface Criteria extends CriteriaSpecification {
 	 * Set the lock mode of the aliased entity
 	 *
 	 * @param alias The previously assigned alias representing the entity to
-	 * which the given lock mode should apply.
+	 *			which the given lock mode should apply.
 	 * @param lockMode The lock mode to be applied
+	 *
 	 * @return this (for method chaining)
 	 */
 	public Criteria setLockMode(String alias, LockMode lockMode);
@@ -165,7 +170,10 @@ public interface Criteria extends CriteriaSpecification {
 	 *
 	 * @param associationPath A dot-seperated property path
 	 * @param alias The alias to assign to the joined association (for later reference).
+	 *
 	 * @return this (for method chaining)
+	 *
+	 * @throws HibernateException Indicates a problem creating the sub criteria
 	 */
 	public Criteria createAlias(String associationPath, String alias) throws HibernateException;
 
@@ -179,10 +187,31 @@ public interface Criteria extends CriteriaSpecification {
 	 * @param associationPath A dot-seperated property path
 	 * @param alias The alias to assign to the joined association (for later reference).
 	 * @param joinType The type of join to use.
+	 *
 	 * @return this (for method chaining)
+	 *
+	 * @throws HibernateException Indicates a problem creating the sub criteria
 	 */
 	public Criteria createAlias(String associationPath, String alias, int joinType) throws HibernateException;
 
+	/**
+	 * Join an association using the specified join-type, assigning an alias
+	 * to the joined association.
+	 * <p/>
+	 * The joinType is expected to be one of {@link #INNER_JOIN} (the default),
+	 * {@link #FULL_JOIN}, or {@link #LEFT_JOIN}.
+	 *
+	 * @param associationPath A dot-seperated property path
+	 * @param alias The alias to assign to the joined association (for later reference).
+	 * @param joinType The type of join to use.
+	 * @param withClause The criteria to be added to the join condition (<tt>ON</tt> clause)
+	 *
+	 * @return this (for method chaining)
+	 *
+	 * @throws HibernateException Indicates a problem creating the sub criteria
+	 */
+	public Criteria createAlias(String associationPath, String alias, int joinType, Criterion withClause) throws HibernateException;
+	
 	/**
 	 * Create a new <tt>Criteria</tt>, "rooted" at the associated entity.
 	 * <p/>
@@ -190,7 +219,10 @@ public interface Criteria extends CriteriaSpecification {
 	 * {@link #INNER_JOIN} for the joinType.
 	 *
 	 * @param associationPath A dot-seperated property path
+	 *
 	 * @return the created "sub criteria"
+	 *
+	 * @throws HibernateException Indicates a problem creating the sub criteria
 	 */
 	public Criteria createCriteria(String associationPath) throws HibernateException;
 
@@ -200,7 +232,10 @@ public interface Criteria extends CriteriaSpecification {
 	 *
 	 * @param associationPath A dot-seperated property path
 	 * @param joinType The type of join to use.
+	 *
 	 * @return the created "sub criteria"
+	 *
+	 * @throws HibernateException Indicates a problem creating the sub criteria
 	 */
 	public Criteria createCriteria(String associationPath, int joinType) throws HibernateException;
 
@@ -213,7 +248,10 @@ public interface Criteria extends CriteriaSpecification {
 	 *
 	 * @param associationPath A dot-seperated property path
 	 * @param alias The alias to assign to the joined association (for later reference).
+	 *
 	 * @return the created "sub criteria"
+	 *
+	 * @throws HibernateException Indicates a problem creating the sub criteria
 	 */
 	public Criteria createCriteria(String associationPath, String alias) throws HibernateException;
 
@@ -224,9 +262,27 @@ public interface Criteria extends CriteriaSpecification {
 	 * @param associationPath A dot-seperated property path
 	 * @param alias The alias to assign to the joined association (for later reference).
 	 * @param joinType The type of join to use.
+	 *
 	 * @return the created "sub criteria"
+	 *
+	 * @throws HibernateException Indicates a problem creating the sub criteria
 	 */
 	public Criteria createCriteria(String associationPath, String alias, int joinType) throws HibernateException;
+
+	/**
+	 * Create a new <tt>Criteria</tt>, "rooted" at the associated entity,
+	 * assigning the given alias and using the specified join type.
+	 *
+	 * @param associationPath A dot-seperated property path
+	 * @param alias The alias to assign to the joined association (for later reference).
+	 * @param joinType The type of join to use.
+	 * @param withClause The criteria to be added to the join condition (<tt>ON</tt> clause)
+	 *
+	 * @return the created "sub criteria"
+	 * 
+	 * @throws HibernateException Indicates a problem creating the sub criteria
+	 */
+	public Criteria createCriteria(String associationPath, String alias, int joinType, Criterion withClause) throws HibernateException;
 
 	/**
 	 * Set a strategy for handling the query results. This determines the
@@ -327,6 +383,9 @@ public interface Criteria extends CriteriaSpecification {
 	 * Get the results.
 	 *
 	 * @return The list of matched query results.
+	 *
+	 * @throws HibernateException Indicates a problem either translating the criteria to SQL,
+	 * exeucting the SQL or processing the SQL results.
 	 */
 	public List list() throws HibernateException;
 	
@@ -335,6 +394,9 @@ public interface Criteria extends CriteriaSpecification {
 	 *
 	 * @return The {@link ScrollableResults} representing the matched
 	 * query results.
+	 *
+	 * @throws HibernateException Indicates a problem either translating the criteria to SQL,
+	 * exeucting the SQL or processing the SQL results.
 	 */
 	public ScrollableResults scroll() throws HibernateException;
 
@@ -344,8 +406,12 @@ public interface Criteria extends CriteriaSpecification {
 	 *
 	 * @param scrollMode Indicates the type of underlying database cursor to
 	 * request.
+	 *
 	 * @return The {@link ScrollableResults} representing the matched
 	 * query results.
+	 *
+	 * @throws HibernateException Indicates a problem either translating the criteria to SQL,
+	 * exeucting the SQL or processing the SQL results.
 	 */
 	public ScrollableResults scroll(ScrollMode scrollMode) throws HibernateException;
 

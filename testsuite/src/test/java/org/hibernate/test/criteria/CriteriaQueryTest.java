@@ -794,5 +794,99 @@ public class CriteriaQueryTest extends FunctionalTestCase {
 		t.commit();
 		session.close();
 	}
+	
+	public void testAliasJoinCriterion() {
+		Session session = openSession();
+		Transaction t = session.beginTransaction();
+
+		Course courseA = new Course();
+		courseA.setCourseCode("HIB-A");
+		courseA.setDescription("Hibernate Training A");
+		session.persist(courseA);
+
+		Course courseB = new Course();
+		courseB.setCourseCode("HIB-B");
+		courseB.setDescription("Hibernate Training B");
+		session.persist(courseB);
+
+		Student gavin = new Student();
+		gavin.setName("Gavin King");
+		gavin.setStudentNumber(232);
+		gavin.setPreferredCourse(courseA);
+		session.persist(gavin);
+
+		Student leonardo = new Student();
+		leonardo.setName("Leonardo Quijano");
+		leonardo.setStudentNumber(233);
+		leonardo.setPreferredCourse(courseB);
+		session.persist(leonardo);
+
+		Student johnDoe = new Student();
+		johnDoe.setName("John Doe");
+		johnDoe.setStudentNumber(235);
+		johnDoe.setPreferredCourse(null);
+		session.persist(johnDoe);
+
+		// test == on one value exists
+		List result = session.createCriteria( Student.class )
+			.createAlias( "preferredCourse", "pc", Criteria.LEFT_JOIN, Restrictions.eq("pc.courseCode", "HIB-A") )
+			.setProjection( Property.forName("pc.courseCode") )
+			.addOrder(Order.asc("pc.courseCode"))
+			.list();
+		
+		assertEquals( 3, result.size() );
+		
+		// can't be sure of NULL comparison ordering aside from they should
+		// either come first or last
+		if ( result.get( 0 ) == null ) {
+			assertNull(result.get(1));
+			assertEquals( "HIB-A", result.get(2) );
+		}
+		else {
+			assertNull( result.get(2) );
+			assertNull( result.get(1) );
+			assertEquals( "HIB-A", result.get(0) );
+		}
+		
+		// test == on non existent value
+		result = session.createCriteria( Student.class )
+		.createAlias( "preferredCourse", "pc", Criteria.LEFT_JOIN, Restrictions.eq("pc.courseCode", "HIB-R") )
+		.setProjection( Property.forName("pc.courseCode") )
+		.addOrder(Order.asc("pc.courseCode"))
+		.list();
+	
+		assertEquals( 3, result.size() );
+		assertNull( result.get(2) );
+		assertNull( result.get(1) );
+		assertNull(result.get(0) );
+		
+		// test != on one existing value
+		result = session.createCriteria( Student.class )
+		.createAlias( "preferredCourse", "pc", Criteria.LEFT_JOIN, Restrictions.ne("pc.courseCode", "HIB-A") )
+		.setProjection( Property.forName("pc.courseCode") )
+		.addOrder(Order.asc("pc.courseCode"))
+		.list();
+	
+		assertEquals( 3, result.size() );
+		// can't be sure of NULL comparison ordering aside from they should
+		// either come first or last
+		if ( result.get( 0 ) == null ) {
+			assertNull( result.get(1) );
+			assertEquals( "HIB-B", result.get(2) );
+		}
+		else {
+			assertEquals( "HIB-B", result.get(0) );
+			assertNull( result.get(1) );
+			assertNull( result.get(2) );
+		}
+
+		session.delete(gavin);
+		session.delete(leonardo);
+		session.delete(johnDoe);
+		session.delete(courseA);
+		session.delete(courseB);
+		t.commit();
+		session.close();
+	}
 }
 

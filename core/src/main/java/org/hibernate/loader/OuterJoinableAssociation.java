@@ -59,6 +59,7 @@ public final class OuterJoinableAssociation {
 			String[] lhsColumns,
 			String rhsAlias,
 			int joinType,
+			String withClause,
 			SessionFactoryImplementor factory,
 			Map enabledFilters) throws MappingException {
 		this.joinableType = joinableType;
@@ -68,7 +69,8 @@ public final class OuterJoinableAssociation {
 		this.joinType = joinType;
 		this.joinable = joinableType.getAssociatedJoinable(factory);
 		this.rhsColumns = JoinHelper.getRHSColumnNames(joinableType, factory);
-		this.on = joinableType.getOnCondition(rhsAlias, factory, enabledFilters);
+		this.on = joinableType.getOnCondition(rhsAlias, factory, enabledFilters)
+			+ ( withClause == null || withClause.trim().length() == 0 ? "" : " and ( " + withClause + " )" );
 		this.enabledFilters = enabledFilters; // needed later for many-to-many/filter application
 	}
 

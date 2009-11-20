@@ -210,4 +210,8 @@ public class CriteriaJoinWalker extends AbstractEntityJoinWalker {
 		return "criteria query";
 	}
 
+	protected String getWithClause(String path) {
+		return translator.getWithClause(path); 
+	}
+	
 }

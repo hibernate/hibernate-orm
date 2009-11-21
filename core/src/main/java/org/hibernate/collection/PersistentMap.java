@@ -199,17 +199,17 @@ public class PersistentMap extends AbstractPersistentCollection implements Map {
 	public Object remove(Object key) {
 		if ( isPutQueueEnabled() ) {
 			Object old = readElementByIndex( key );
-			queueOperation( new Remove( key, old ) );
-			return old;
-		}
-		else {
-			// TODO : safe to interpret "map.remove(key) == null" as non-dirty?
-			initialize( true );
-			if ( map.containsKey( key ) ) {
-				dirty();
+			if ( old != UNKNOWN ) {
+				queueOperation( new Remove( key, old ) );
+				return old;
 			}
-			return map.remove( key );
 		}
+		// TODO : safe to interpret "map.remove(key) == null" as non-dirty?
+		initialize( true );
+		if ( map.containsKey( key ) ) {
+			dirty();
+		}
+		return map.remove( key );
 	}
 
 	/**

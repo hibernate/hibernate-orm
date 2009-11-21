@@ -25,6 +25,7 @@
 package org.hibernate.loader.custom.sql;
 
 import org.hibernate.QueryException;
+import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.query.ParameterParser;
 import org.hibernate.persister.collection.SQLLoadableCollection;
 import org.hibernate.persister.entity.SQLLoadable;
@@ -38,9 +39,15 @@ import java.util.Map;
  * @author Gavin King
  * @author Max Andersen
  * @author Steve Ebersole
+ * @author Paul Benedict
  */
 public class SQLQueryParser {
+	private static final String HIBERNATE_PLACEHOLDER_PREFIX = "h-";
+	private static final String DOMAIN_PLACEHOLDER = "h-domain";
+	private static final String CATALOG_PLACEHOLDER = "h-catalog";
+	private static final String SCHEMA_PLACEHOLDER = "h-schema";
 
+	private final SessionFactoryImplementor factory;
 	private final String originalQueryString;
 	private final ParserContext context;
 
@@ -57,9 +64,10 @@ public class SQLQueryParser {
 		Map getPropertyResultsMapByAlias(String alias);
 	}
 
-	public SQLQueryParser(String queryString, ParserContext context) {
+	public SQLQueryParser(String queryString, ParserContext context, SessionFactoryImplementor factory) {
 		this.originalQueryString = queryString;
 		this.context = context;
+		this.factory = factory;
 	}
 
 	public Map getNamedParameters() {
@@ -71,7 +79,9 @@ public class SQLQueryParser {
 	}
 
 	public String process() {
-		return substituteParams( substituteBrackets( originalQueryString ) );
+		String processedSql = substituteBrackets( originalQueryString );
+		processedSql = substituteParams( processedSql );
+		return processedSql;
 	}
 
 	// TODO: should "record" how many properties we have reffered to - and if we 
@@ -97,41 +107,75 @@ public class SQLQueryParser {
 				throw new QueryException( "Unmatched braces for alias path", sqlQuery );
 			}
 
-			String aliasPath = sqlQuery.substring( left + 1, right );
-			int firstDot = aliasPath.indexOf( '.' );
-			if ( firstDot == -1 ) {
-				if ( context.isEntityAlias( aliasPath ) ) {
-					// it is a simple table alias {foo}
-					result.append( aliasPath );
-					aliasesFound++;
+			final String aliasPath = sqlQuery.substring( left + 1, right );
+			boolean isPlaceholder = aliasPath.startsWith( HIBERNATE_PLACEHOLDER_PREFIX );
+
+			if ( isPlaceholder ) {
+				// Domain replacement
+				if ( DOMAIN_PLACEHOLDER.equals( aliasPath ) ) {
+					final String catalogName = factory.getSettings().getDefaultCatalogName();
+					if ( catalogName != null ) {
+						result.append( catalogName );
+						result.append( "." );
+					}
+					final String schemaName = factory.getSettings().getDefaultSchemaName();
+					if ( schemaName != null ) {
+						result.append( schemaName );
+						result.append( "." );
+					}
+				}
+				// Schema replacement
+				else if ( SCHEMA_PLACEHOLDER.equals( aliasPath ) ) {
+					final String schemaName = factory.getSettings().getDefaultSchemaName();
+					if ( schemaName != null ) {
+						result.append(schemaName);
+						result.append(".");
+					}
 				} 
+				// Catalog replacement
+				else if ( CATALOG_PLACEHOLDER.equals( aliasPath ) ) {
+					final String catalogName = factory.getSettings().getDefaultCatalogName();
+					if ( catalogName != null ) {
+						result.append( catalogName );
+						result.append( "." );
+					}
+				}
 				else {
-					// passing through anything we do not know : to support jdbc escape sequences HB-898
-					result.append( '{' ).append(aliasPath).append( '}' );					
+					throw new QueryException( "Unknown placeholder ", aliasPath );
 				}
 			}
 			else {
-				String aliasName = aliasPath.substring(0, firstDot);
-				boolean isCollection = context.isCollectionAlias( aliasName );
-				boolean isEntity = context.isEntityAlias( aliasName );
-				
-				if ( isCollection ) {
-					// The current alias is referencing the collection to be eagerly fetched
-					String propertyName = aliasPath.substring( firstDot + 1 );
-					result.append( resolveCollectionProperties( aliasName, propertyName ) );
-					aliasesFound++;
-				} 
-				else if ( isEntity ) {
-					// it is a property reference {foo.bar}
-					String propertyName = aliasPath.substring( firstDot + 1 );
-					result.append( resolveProperties( aliasName, propertyName ) );
-					aliasesFound++;
+				int firstDot = aliasPath.indexOf( '.' );
+				if ( firstDot == -1 ) {
+					if ( context.isEntityAlias( aliasPath ) ) {
+						// it is a simple table alias {foo}
+						result.append( aliasPath );
+						aliasesFound++;
+					} 
+					else {
+						// passing through anything we do not know : to support jdbc escape sequences HB-898
+						result.append( '{' ).append(aliasPath).append( '}' );					
+					}
 				}
 				else {
-					// passing through anything we do not know : to support jdbc escape sequences HB-898
-					result.append( '{' ).append(aliasPath).append( '}' );
+					final String aliasName = aliasPath.substring( 0, firstDot );
+					if ( context.isCollectionAlias( aliasName ) ) {
+						// The current alias is referencing the collection to be eagerly fetched
+						String propertyName = aliasPath.substring( firstDot + 1 );
+						result.append( resolveCollectionProperties( aliasName, propertyName ) );
+						aliasesFound++;
+					} 
+					else if ( context.isEntityAlias( aliasName ) ) {
+						// it is a property reference {foo.bar}
+						String propertyName = aliasPath.substring( firstDot + 1 );
+						result.append( resolveProperties( aliasName, propertyName ) );
+						aliasesFound++;
+					}
+					else {
+						// passing through anything we do not know : to support jdbc escape sequences HB-898
+						result.append( '{' ).append(aliasPath).append( '}' );
+					}
 				}
-	
 			}
 		}
 

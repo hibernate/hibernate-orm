@@ -10,7 +10,7 @@ import org.hibernate.junit.functional.FunctionalTestCase;
 import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
 
 /**
- * todo: describe PersistentMapTest
+ * Test various situations using a {@link PersistentMap}.
  *
  * @author Steve Ebersole
  */
@@ -27,6 +27,7 @@ public class PersistentMapTest extends FunctionalTestCase {
 		return new FunctionalTestClassTestSuite( PersistentMapTest.class );
 	}
 
+	@SuppressWarnings({ "unchecked" })
 	public void testWriteMethodDirtying() {
 		Parent parent = new Parent( "p1" );
 		Child child = new Child( "c1" );
@@ -38,7 +39,7 @@ public class PersistentMapTest extends FunctionalTestCase {
 		session.beginTransaction();
 		session.save( parent );
 		session.flush();
-		// at this point, the set on parent has now been replaced with a PersistentSet...
+		// at this point, the map on parent has now been replaced with a PersistentMap...
 		PersistentMap children = ( PersistentMap ) parent.getChildren();
 
 		Object old = children.put( child.getName(), child );
@@ -99,4 +100,38 @@ public class PersistentMapTest extends FunctionalTestCase {
 		session.getTransaction().commit();
 		session.close();
 	}
+
+    public void testRemoveAgainstUninitializedMap() {
+        Parent parent = new Parent( "p1" );
+        Child child = new Child( "c1" );
+        parent.addChild( child );
+
+        Session session = openSession();
+        session.beginTransaction();
+        session.save( parent );
+        session.getTransaction().commit();
+        session.close();
+
+        // Now reload the parent and test removing the child
+        session = openSession();
+        session.beginTransaction();
+        parent = ( Parent ) session.get( Parent.class, parent.getName() );
+        Child child2 = ( Child ) parent.getChildren().remove( child.getName() );
+		child2.setParent( null );
+		assertNotNull( child2 );
+		assertTrue( parent.getChildren().isEmpty() );
+        session.getTransaction().commit();
+        session.close();
+
+		// Load the parent once again and make sure child is still gone
+		//		then cleanup
+        session = openSession();
+        session.beginTransaction();
+		parent = ( Parent ) session.get( Parent.class, parent.getName() );
+		assertTrue( parent.getChildren().isEmpty() );
+		session.delete( child2 );
+		session.delete( parent );
+        session.getTransaction().commit();
+        session.close();
+    }
 }

@@ -11,7 +11,7 @@
 
         <map name="children" inverse="true" cascade="all">
             <key column="PARENT" />
-            <map-key type="string" />
+            <map-key type="string" formula="NAME"/>
             <one-to-many class="Child" />
         </map>
 	</class>

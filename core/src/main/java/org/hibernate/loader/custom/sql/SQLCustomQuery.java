@@ -129,7 +129,7 @@ public class SQLCustomQuery implements CustomQuery {
 //
 //		String[] suffixes = BasicLoader.generateSuffixes(entityPersisters.length);
 
-		SQLQueryParser parser = new SQLQueryParser( sqlQuery, new ParserContext( aliasContext ) );
+		SQLQueryParser parser = new SQLQueryParser( sqlQuery, new ParserContext( aliasContext ), factory );
 		this.sql = parser.process();
 		this.namedParameterBindPoints.putAll( parser.getNamedParameters() );
 

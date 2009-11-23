@@ -273,7 +273,14 @@ public final class AuditMetadataGenerator {
 
         // Getting the property mapper of the parent - when mapping properties, they need to be included
         String parentEntityName = pc.getSuperclass().getEntityName();
-        ExtendedPropertyMapper parentPropertyMapper = entitiesConfigurations.get(parentEntityName).getPropertyMapper();
+
+        EntityConfiguration parentConfiguration = entitiesConfigurations.get(parentEntityName);
+        if (parentConfiguration == null) {
+            throw new MappingException("Entity '" + pc.getEntityName() + "' is audited, but its superclass: '" +
+                    parentEntityName + "' is not.");
+        }
+        
+        ExtendedPropertyMapper parentPropertyMapper = parentConfiguration.getPropertyMapper();
         ExtendedPropertyMapper propertyMapper = new SubclassPropertyMapper(new MultiPropertyMapper(), parentPropertyMapper);
 
         return Triple.make(class_mapping, propertyMapper, parentEntityName);

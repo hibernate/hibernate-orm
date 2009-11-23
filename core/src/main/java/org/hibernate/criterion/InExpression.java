@@ -70,8 +70,8 @@ public class InExpression implements Criterion {
 		if ( type.isComponentType() ) {
 			AbstractComponentType actype = (AbstractComponentType) type;
 			Type[] types = actype.getSubtypes();
-			for ( int i=0; i<types.length; i++ ) {
-				for ( int j=0; j<values.length; j++ ) {
+			for ( int j=0; j<values.length; j++ ) {
+				for ( int i=0; i<types.length; i++ ) {
 					Object subval = values[j]==null ? 
 						null : 
 						actype.getPropertyValues( values[j], EntityMode.POJO )[i];

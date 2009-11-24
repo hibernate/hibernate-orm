@@ -34,7 +34,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.ReplicationMode;
 import org.hibernate.TransientObjectException;
-import org.hibernate.LockRequest;
+import org.hibernate.LockOptions;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.collection.PersistentCollection;
@@ -167,16 +167,16 @@ public abstract class CascadingAction {
 				log.trace( "cascading to lock: " + entityName );
 			}
 			LockMode lockMode = LockMode.NONE;
-			LockRequest lr = new LockRequest();
-			if ( anything instanceof LockRequest ) {
-				LockRequest lockRequest = (LockRequest)anything;
-				lr.setTimeOut(lockRequest.getTimeOut());
-				lr.setScope( lockRequest.getScope());
-				if ( lockRequest.getScope() == true )	// cascade specified lockMode
-					lockMode = lockRequest.getLockMode();
+			LockOptions lr = new LockOptions();
+			if ( anything instanceof LockOptions) {
+				LockOptions lockOptions = (LockOptions)anything;
+				lr.setTimeOut(lockOptions.getTimeOut());
+				lr.setScope( lockOptions.getScope());
+				if ( lockOptions.getScope() == true )	// cascade specified lockMode
+					lockMode = lockOptions.getLockMode();
 			}
 			lr.setLockMode(lockMode);
-			session.lock( entityName, child, lr);
+			session.buildLockRequest(lr).lock(entityName, child);
 		}
 		public Iterator getCascadableChildrenIterator(EventSource session, CollectionType collectionType, Object collection) {
 			// lock doesn't cascade to uninitialized collections

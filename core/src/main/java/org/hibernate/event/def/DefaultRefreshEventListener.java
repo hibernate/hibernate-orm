@@ -142,7 +142,7 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 		
 		String previousFetchProfile = source.getFetchProfile();
 		source.setFetchProfile("refresh");
-		Object result = persister.load( id, object, event.getLockRequest(), source );
+		Object result = persister.load( id, object, event.getLockOptions(), source );
 		source.setFetchProfile(previousFetchProfile);
 		
 		UnresolvableObjectException.throwIfNull( result, id, persister.getEntityName() );

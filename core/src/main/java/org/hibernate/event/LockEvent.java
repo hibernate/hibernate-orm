@@ -25,7 +25,7 @@
 package org.hibernate.event;
 
 import org.hibernate.LockMode;
-import org.hibernate.LockRequest;
+import org.hibernate.LockOptions;
 
 /**
  *  Defines an event class for the locking of an entity.
@@ -35,7 +35,7 @@ import org.hibernate.LockRequest;
 public class LockEvent extends AbstractEvent {
 
 	private Object object;
-	private LockRequest lockRequest;
+	private LockOptions lockOptions;
 	private String entityName;
 
 	public LockEvent(String entityName, Object original, LockMode lockMode, EventSource source) {
@@ -43,21 +43,21 @@ public class LockEvent extends AbstractEvent {
 		this.entityName = entityName;
 	}
 
-	public LockEvent(String entityName, Object original, LockRequest lockRequest, EventSource source) {
-		this(original, lockRequest, source);
+	public LockEvent(String entityName, Object original, LockOptions lockOptions, EventSource source) {
+		this(original, lockOptions, source);
 		this.entityName = entityName;
 	}
 
 	public LockEvent(Object object, LockMode lockMode, EventSource source) {
 		super(source);
 		this.object = object;
-		this.lockRequest = new LockRequest().setLockMode(lockMode);
+		this.lockOptions = new LockOptions().setLockMode(lockMode);
 	}
 
-	public LockEvent(Object object, LockRequest lockRequest, EventSource source) {
+	public LockEvent(Object object, LockOptions lockOptions, EventSource source) {
 		super(source);
 		this.object = object;
-		this.lockRequest = lockRequest;
+		this.lockOptions = lockOptions;
 	}
 
 	public Object getObject() {
@@ -68,32 +68,32 @@ public class LockEvent extends AbstractEvent {
 		this.object = object;
 	}
 
-	public LockRequest getLockRequest() {
-		return lockRequest;	
+	public LockOptions getLockOptions() {
+		return lockOptions;
 	}
 
 	public LockMode getLockMode() {
-		return lockRequest.getLockMode();
+		return lockOptions.getLockMode();
 	}
 
 	public void setLockMode(LockMode lockMode) {
-		this.lockRequest.setLockMode(lockMode);
+		this.lockOptions.setLockMode(lockMode);
 	}
 
 	public void setLockTimeout(int timeout) {
-		this.lockRequest.setTimeOut(timeout);
+		this.lockOptions.setTimeOut(timeout);
 	}
 
 	public int getLockTimeout() {
-		return this.lockRequest.getTimeOut();
+		return this.lockOptions.getTimeOut();
 	}
 
 	public void setLockScope(boolean cascade) {
-		this.lockRequest.setScope(cascade);
+		this.lockOptions.setScope(cascade);
 	}
 
 	public boolean getLockScope() {
-		return this.lockRequest.getScope();
+		return this.lockOptions.getScope();
 	}
 
 	public String getEntityName() {

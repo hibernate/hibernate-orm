@@ -25,17 +25,14 @@
 package org.hibernate.loader.entity;
 
 import java.util.Collections;
-import java.util.Iterator;
 
 import org.hibernate.FetchMode;
 import org.hibernate.LockMode;
 import org.hibernate.MappingException;
-import org.hibernate.LockRequest;
+import org.hibernate.LockOptions;
 import org.hibernate.engine.CascadeStyle;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.LoadQueryInfluencers;
-import org.hibernate.engine.profile.FetchProfile;
-import org.hibernate.engine.profile.Fetch;
 import org.hibernate.loader.AbstractEntityJoinWalker;
 import org.hibernate.persister.entity.OuterJoinLoadable;
 import org.hibernate.type.AssociationType;
@@ -48,7 +45,7 @@ import org.hibernate.type.AssociationType;
  */
 public class EntityJoinWalker extends AbstractEntityJoinWalker {
 	
-	private final LockRequest lockRequest = new LockRequest();
+	private final LockOptions lockOptions = new LockOptions();
 
 	public EntityJoinWalker(
 			OuterJoinLoadable persister, 
@@ -59,33 +56,33 @@ public class EntityJoinWalker extends AbstractEntityJoinWalker {
 			LoadQueryInfluencers loadQueryInfluencers) throws MappingException {
 		super( persister, factory, loadQueryInfluencers );
 
-		this.lockRequest.setLockMode(lockMode);
+		this.lockOptions.setLockMode(lockMode);
 		
 		StringBuffer whereCondition = whereString( getAlias(), uniqueKey, batchSize )
 				//include the discriminator and class-level where, but not filters
 				.append( persister.filterFragment( getAlias(), Collections.EMPTY_MAP ) );
 
-		initAll( whereCondition.toString(), "", lockRequest );
+		initAll( whereCondition.toString(), "", lockOptions);
 	}
 
 	public EntityJoinWalker(
 			OuterJoinLoadable persister,
 			String[] uniqueKey,
 			int batchSize,
-			LockRequest lockRequest,
+			LockOptions lockOptions,
 			SessionFactoryImplementor factory,
 			LoadQueryInfluencers loadQueryInfluencers) throws MappingException {
 		super( persister, factory, loadQueryInfluencers );
 
-		this.lockRequest.setLockMode(lockRequest.getLockMode());
-		this.lockRequest.setTimeOut(lockRequest.getTimeOut());
-		this.lockRequest.setScope(lockRequest.getScope());
+		this.lockOptions.setLockMode(lockOptions.getLockMode());
+		this.lockOptions.setTimeOut(lockOptions.getTimeOut());
+		this.lockOptions.setScope(lockOptions.getScope());
 
 		StringBuffer whereCondition = whereString( getAlias(), uniqueKey, batchSize )
 				//include the discriminator and class-level where, but not filters
 				.append( persister.filterFragment( getAlias(), Collections.EMPTY_MAP ) );
 
-		initAll( whereCondition.toString(), "", lockRequest);
+		initAll( whereCondition.toString(), "", lockOptions);
 	}
 
 	protected int getJoinType(
@@ -102,7 +99,7 @@ public class EntityJoinWalker extends AbstractEntityJoinWalker {
 		// NOTE : we override this form here specifically to account for
 		// fetch profiles.
 		// TODO : how to best handle criteria queries?
-		if ( lockRequest.getLockMode().greaterThan( LockMode.READ ) ) {
+		if ( lockOptions.getLockMode().greaterThan( LockMode.READ ) ) {
 			return -1;
 		}
 		if ( isTooDeep( currentDepth )

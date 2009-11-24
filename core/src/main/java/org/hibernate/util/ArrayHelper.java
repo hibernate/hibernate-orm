@@ -32,7 +32,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.hibernate.LockMode;
-import org.hibernate.LockRequest;
+import org.hibernate.LockOptions;
 import org.hibernate.type.Type;
 
 public final class ArrayHelper {
@@ -84,9 +84,9 @@ public final class ArrayHelper {
 		return array;
 	}
 
-	public static LockMode[] fillArray(LockRequest lockRequest, int length) {
+	public static LockMode[] fillArray(LockOptions lockOptions, int length) {
 		LockMode[] array = new LockMode[length];
-		Arrays.fill(array, lockRequest);
+		Arrays.fill(array, lockOptions);
 		return array;
 	}
 

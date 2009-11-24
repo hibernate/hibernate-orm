@@ -69,7 +69,7 @@ import org.hibernate.TransientObjectException;
 import org.hibernate.UnresolvableObjectException;
 import org.hibernate.UnknownProfileException;
 import org.hibernate.EntityNameResolver;
-import org.hibernate.LockRequest;
+import org.hibernate.LockOptions;
 import org.hibernate.collection.PersistentCollection;
 import org.hibernate.engine.ActionQueue;
 import org.hibernate.engine.CollectionEntry;
@@ -742,21 +742,20 @@ public final class SessionImpl extends AbstractSessionImpl
 		fireLock( new LockEvent(entityName, object, lockMode, this) );
 	}
 
-	public void lock(String entityName, Object object, LockRequest lockRequest) throws HibernateException {
-		fireLock( new LockEvent(entityName, object, lockRequest, this) );
-	}
-
-	public LockRequest buildLockRequest() {
-		return new LockRequest(); 
+	public LockRequest buildLockRequest(LockOptions lockOptions) {
+		return new LockRequestImpl(lockOptions);
 	}
 
 	public void lock(Object object, LockMode lockMode) throws HibernateException {
 		fireLock( new LockEvent(object, lockMode, this) );
 	}
 
+	private void fireLock(String entityName, Object object, LockOptions options) {
+		fireLock( new LockEvent( entityName, object, options, this) );
+	}
 
-	public void lock(Object object, LockRequest lockRequest) throws HibernateException {
-		fireLock( new LockEvent(object, lockRequest, this) );
+	private void fireLock( Object object, LockOptions options) {
+		fireLock( new LockEvent( object, options, this) );
 	}
 
 	private void fireLock(LockEvent lockEvent) {
@@ -1037,8 +1036,8 @@ public final class SessionImpl extends AbstractSessionImpl
 		return load( entityClass.getName(), id, lockMode );
 	}
 
-	public Object load(Class entityClass, Serializable id, LockRequest lockRequest) throws HibernateException {
-		return load( entityClass.getName(), id, lockRequest );
+	public Object load(Class entityClass, Serializable id, LockOptions lockOptions) throws HibernateException {
+		return load( entityClass.getName(), id, lockOptions);
 	}
 
 	public Object load(String entityName, Serializable id, LockMode lockMode) throws HibernateException {
@@ -1047,8 +1046,8 @@ public final class SessionImpl extends AbstractSessionImpl
 		return event.getResult();
 	}
 
-	public Object load(String entityName, Serializable id, LockRequest lockRequest) throws HibernateException {
-		LoadEvent event = new LoadEvent(id, entityName, lockRequest, this);
+	public Object load(String entityName, Serializable id, LockOptions lockOptions) throws HibernateException {
+		LoadEvent event = new LoadEvent(id, entityName, lockOptions, this);
 		fireLoad( event, LoadEventListener.LOAD );
 		return event.getResult();
 	}
@@ -1057,8 +1056,8 @@ public final class SessionImpl extends AbstractSessionImpl
 		return get( entityClass.getName(), id, lockMode );
 	}
 
-	public Object get(Class entityClass, Serializable id, LockRequest lockRequest) throws HibernateException {
-		return get( entityClass.getName(), id, lockRequest );
+	public Object get(Class entityClass, Serializable id, LockOptions lockOptions) throws HibernateException {
+		return get( entityClass.getName(), id, lockOptions);
 	}
 
 	public Object get(String entityName, Serializable id, LockMode lockMode) throws HibernateException {
@@ -1067,8 +1066,8 @@ public final class SessionImpl extends AbstractSessionImpl
 		return event.getResult();
 	}
 
-	public Object get(String entityName, Serializable id, LockRequest lockRequest) throws HibernateException {
-		LoadEvent event = new LoadEvent(id, entityName, lockRequest, this);
+	public Object get(String entityName, Serializable id, LockOptions lockOptions) throws HibernateException {
+		LoadEvent event = new LoadEvent(id, entityName, lockOptions, this);
 	   	fireLoad(event, LoadEventListener.GET);
 		return event.getResult();
 	}
@@ -1093,8 +1092,8 @@ public final class SessionImpl extends AbstractSessionImpl
 		fireRefresh( new RefreshEvent(object, lockMode, this) );
 	}
 
-	public void refresh(Object object, LockRequest lockRequest) throws HibernateException {
-		fireRefresh( new RefreshEvent(object, lockRequest, this) );
+	public void refresh(Object object, LockOptions lockOptions) throws HibernateException {
+		fireRefresh( new RefreshEvent(object, lockOptions, this) );
 	}
 
 	public void refresh(Object object, Map refreshedAlready) throws HibernateException {
@@ -2215,6 +2214,50 @@ public final class SessionImpl extends AbstractSessionImpl
 
 			// the old-time stand-by...
 			return entity.getClass().getName();
+		}
+	}
+
+	private class LockRequestImpl implements LockRequest {
+		private final LockOptions lockOptions;
+		private LockRequestImpl(LockOptions lo) {
+			lockOptions = new LockOptions();
+			lockOptions.setLockMode(lo.getLockMode());
+			lockOptions.setScope(lo.getScope());
+			lockOptions.setTimeOut(lo.getTimeOut());
+		}
+
+		public LockMode getLockMode() {
+			return lockOptions.getLockMode();
+		}
+
+		public LockRequest setLockMode(LockMode lockMode) {
+			lockOptions.setLockMode(lockMode);
+			return this;
+		}
+
+		public int getTimeOut() {
+			return lockOptions.getTimeOut();
+		}
+
+		public LockRequest setTimeOut(int timeout) {
+			lockOptions.setTimeOut(timeout);
+			return this;
+		}
+
+		public boolean getScope() {
+			return lockOptions.getScope();
+		}
+
+		public LockRequest setScope(boolean scope) {
+			lockOptions.setScope(scope);
+			return this;
+		}
+
+		public void lock(String entityName, Object object) throws HibernateException {
+			fireLock( entityName, object, lockOptions );
+		}
+		public void lock(Object object) throws HibernateException {
+			fireLock( object, lockOptions );
 		}
 	}
 }

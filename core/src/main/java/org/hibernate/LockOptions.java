@@ -29,7 +29,7 @@ package org.hibernate;
  * 
  * @author Scott Marlow
  */
-public class LockRequest
+public class LockOptions
 {
 
 	public static final int NO_WAIT = 0;
@@ -42,14 +42,13 @@ public class LockRequest
 	private boolean scope=false;// if true, cascade (pessimistic only) lock to collections and relationships
 										 // owned by the entity.
 
-	public LockRequest() {
+	public LockOptions() {
 
 	}
-	
-	public LockRequest( LockMode lockMode, int timeout, boolean scope ) {
+
+
+	public LockOptions( LockMode lockMode) {
 		this.lockMode = lockMode;
-		this.timeout = timeout;
-		this.scope = scope;
 	}
 
 	/**
@@ -66,7 +65,7 @@ public class LockRequest
 	 * @param lockMode
 	 * @return this LockRequest instance for operation chaining.
 	 */
-	public LockRequest setLockMode(LockMode lockMode) {
+	public LockOptions setLockMode(LockMode lockMode) {
 		this.lockMode = lockMode;
 		return this;
 	}
@@ -87,7 +86,7 @@ public class LockRequest
 	 * @param timeout is time in milliseconds to wait for lock.  -1 means wait forever and 0 means no wait.
 	 * @return this LockRequest instance for operation chaining.
 	 */
-	public LockRequest setTimeOut(int timeout) {
+	public LockOptions setTimeOut(int timeout) {
 		this.timeout = timeout;
 		return this;
 	}
@@ -107,7 +106,7 @@ public class LockRequest
 	 * @param scope
 	 * @return
 	 */
-	public LockRequest setScope(boolean scope) {
+	public LockOptions setScope(boolean scope) {
 		this.scope = scope;
 		return this;
 	}

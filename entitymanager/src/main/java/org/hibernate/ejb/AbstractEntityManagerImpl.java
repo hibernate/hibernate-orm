@@ -29,7 +29,6 @@ import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.Map;
 import java.util.Set;
-import java.util.HashMap;
 import javax.persistence.EntityNotFoundException;
 import javax.persistence.EntityTransaction;
 import javax.persistence.FlushModeType;
@@ -521,7 +520,7 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 			if ( !contains( entity ) ) {
 				throw new IllegalArgumentException( "entity not in the persistence context" );
 			}
-			getSession().lock( entity, getLockRequest(lockModeType, properties) );
+			getSession().buildLockRequest(getLockRequest(lockModeType, properties)).lock( entity );
 		}
 		catch ( HibernateException he ) {
 			throw convert( he );
@@ -529,31 +528,31 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 
 	}
 
-	private LockRequest getLockRequest(LockModeType lockModeType, Map<String, Object> properties) {
-		LockRequest lockRequest = new LockRequest();
-		lockRequest.setLockMode(getLockMode(lockModeType));
+	private LockOptions getLockRequest(LockModeType lockModeType, Map<String, Object> properties) {
+		LockOptions lockOptions = new LockOptions();
+		lockOptions.setLockMode(getLockMode(lockModeType));
 		if ( properties != null ) {
-			// lockRequest scope will default to false (PessimisticLockScope.NORMAL)
+			// lockOptions scope will default to false (PessimisticLockScope.NORMAL)
 			Object value = properties.get(PESSIMISTICLOCKSCOPE);
 			if ( value instanceof String && PessimisticLockScope.valueOf((String) value) == PessimisticLockScope.EXTENDED) {
-				lockRequest.setScope(true);
+				lockOptions.setScope(true);
 			}
-			// lockRequest timeout will default to LockRequest.FOREVER_WAIT
+			// lockOptions timeout will default to LockOptions.FOREVER_WAIT
 			value = properties.get(PESSIMISTICLOCKTIMEOUT);
 			if ( value instanceof String ) {
 				int timeout = Integer.parseInt((String) value);
 				if ( timeout < 0 ) {
-					lockRequest.setTimeOut(LockRequest.WAIT_FOREVER);
+					lockOptions.setTimeOut(LockOptions.WAIT_FOREVER);
 				}
 				else if( timeout == 0 ) {
-					lockRequest.setTimeOut(LockRequest.NO_WAIT);
+					lockOptions.setTimeOut(LockOptions.NO_WAIT);
 				}
 				else {
-					lockRequest.setTimeOut(timeout);
+					lockOptions.setTimeOut(timeout);
 				}
 			}
 		}
-		return lockRequest;
+		return lockOptions;
 	}
 
 	private LockModeType getLockModeType(LockMode lockMode) {

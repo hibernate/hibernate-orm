@@ -27,7 +27,7 @@ package org.hibernate.loader.entity;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.MappingException;
-import org.hibernate.LockRequest;
+import org.hibernate.LockOptions;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.engine.LoadQueryInfluencers;
@@ -57,10 +57,10 @@ public class EntityLoader extends AbstractEntityLoader {
 
 	public EntityLoader(
 			OuterJoinLoadable persister,
-			LockRequest lockRequest,
+			LockOptions lockOptions,
 			SessionFactoryImplementor factory,
 			LoadQueryInfluencers loadQueryInfluencers) throws MappingException {
-		this( persister, 1, lockRequest, factory, loadQueryInfluencers );
+		this( persister, 1, lockOptions, factory, loadQueryInfluencers );
 	}
 
 	public EntityLoader(
@@ -83,7 +83,7 @@ public class EntityLoader extends AbstractEntityLoader {
 	public EntityLoader(
 			OuterJoinLoadable persister,
 			int batchSize,
-			LockRequest lockRequest,
+			LockOptions lockOptions,
 			SessionFactoryImplementor factory,
 			LoadQueryInfluencers loadQueryInfluencers) throws MappingException {
 		this(
@@ -91,7 +91,7 @@ public class EntityLoader extends AbstractEntityLoader {
 				persister.getIdentifierColumnNames(),
 				persister.getIdentifierType(),
 				batchSize,
-				lockRequest,
+				lockOptions,
 				factory,
 				loadQueryInfluencers
 			);
@@ -130,7 +130,7 @@ public class EntityLoader extends AbstractEntityLoader {
 			String[] uniqueKey,
 			Type uniqueKeyType,
 			int batchSize,
-			LockRequest lockRequest,
+			LockOptions lockOptions,
 			SessionFactoryImplementor factory,
 			LoadQueryInfluencers loadQueryInfluencers) throws MappingException {
 		super( persister, uniqueKeyType, factory, loadQueryInfluencers );
@@ -139,7 +139,7 @@ public class EntityLoader extends AbstractEntityLoader {
 				persister,
 				uniqueKey,
 				batchSize,
-				lockRequest,
+				lockOptions,
 				factory,
 				loadQueryInfluencers
 		);

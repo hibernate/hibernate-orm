@@ -11,9 +11,8 @@ import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.MappingException;
-import org.hibernate.LockRequest;
+import org.hibernate.LockOptions;
 import org.hibernate.tuple.entity.EntityMetamodel;
-import org.hibernate.cache.CacheConcurrencyStrategy;
 import org.hibernate.cache.access.EntityRegionAccessStrategy;
 import org.hibernate.cache.entry.CacheEntryStructure;
 import org.hibernate.cache.entry.UnstructuredCacheEntry;
@@ -281,15 +280,15 @@ public class CustomPersister implements EntityPersister {
 	}
 
 	/**
-	 * @see EntityPersister#load(Serializable, Object, LockRequest, SessionImplementor)
+	 * @see EntityPersister#load(Serializable, Object, org.hibernate.LockOptions , SessionImplementor)
 	 */
 	public Object load(
 		Serializable id,
 		Object optionalObject,
-		LockRequest lockRequest,
+		LockOptions lockOptions,
 		SessionImplementor session
 	) throws HibernateException {
-		return load(id, optionalObject, lockRequest.getLockMode(), session);
+		return load(id, optionalObject, lockOptions.getLockMode(), session);
 	}
 
 	/**
@@ -343,7 +342,7 @@ public class CustomPersister implements EntityPersister {
 		Serializable id,
 		Object version,
 		Object object,
-		LockRequest lockRequest,
+		LockOptions lockOptions,
 		SessionImplementor session
 	) throws HibernateException {
 

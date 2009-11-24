@@ -27,7 +27,7 @@ package org.hibernate.event;
 import java.io.Serializable;
 
 import org.hibernate.LockMode;
-import org.hibernate.LockRequest;
+import org.hibernate.LockOptions;
 
 /**
  *  Defines an event class for the loading of an entity.
@@ -41,24 +41,24 @@ public class LoadEvent extends AbstractEvent {
 	private Serializable entityId;
 	private String entityClassName;
 	private Object instanceToLoad;
-	private LockRequest lockRequest;
+	private LockOptions lockOptions;
 	private boolean isAssociationFetch;
 	private Object result;
 
 	public LoadEvent(Serializable entityId, Object instanceToLoad, EventSource source) {
-		this(entityId, null, instanceToLoad, new LockRequest(), false, source);
+		this(entityId, null, instanceToLoad, new LockOptions(), false, source);
 	}
 
 	public LoadEvent(Serializable entityId, String entityClassName, LockMode lockMode, EventSource source) {
 		this(entityId, entityClassName, null, lockMode, false, source);
 	}
 
-	public LoadEvent(Serializable entityId, String entityClassName, LockRequest lockRequest, EventSource source) {
-		this(entityId, entityClassName, null, lockRequest, false, source);
+	public LoadEvent(Serializable entityId, String entityClassName, LockOptions lockOptions, EventSource source) {
+		this(entityId, entityClassName, null, lockOptions, false, source);
 	}
 
 	public LoadEvent(Serializable entityId, String entityClassName, boolean isAssociationFetch, EventSource source) {
-		this(entityId, entityClassName, null, new LockRequest(), isAssociationFetch, source);
+		this(entityId, entityClassName, null, new LockOptions(), isAssociationFetch, source);
 	}
 	
 	public boolean isAssociationFetch() {
@@ -72,14 +72,14 @@ public class LoadEvent extends AbstractEvent {
 			LockMode lockMode,
 			boolean isAssociationFetch,
 			EventSource source) {
-		this(entityId, entityClassName, instanceToLoad, new LockRequest().setLockMode(lockMode), isAssociationFetch, source );
+		this(entityId, entityClassName, instanceToLoad, new LockOptions().setLockMode(lockMode), isAssociationFetch, source );
 	}
 
 	private LoadEvent(
 			Serializable entityId,
 			String entityClassName,
 			Object instanceToLoad,
-			LockRequest lockRequest,
+			LockOptions lockOptions,
 			boolean isAssociationFetch,
 			EventSource source) {
 
@@ -89,17 +89,17 @@ public class LoadEvent extends AbstractEvent {
 			throw new IllegalArgumentException("id to load is required for loading");
 		}
 
-		if ( lockRequest.getLockMode() == LockMode.WRITE ) {
+		if ( lockOptions.getLockMode() == LockMode.WRITE ) {
 			throw new IllegalArgumentException("Invalid lock mode for loading");
 		}
-		else if ( lockRequest.getLockMode() == null ) {
-			lockRequest.setLockMode(DEFAULT_LOCK_MODE);
+		else if ( lockOptions.getLockMode() == null ) {
+			lockOptions.setLockMode(DEFAULT_LOCK_MODE);
 		}
 
 		this.entityId = entityId;
 		this.entityClassName = entityClassName;
 		this.instanceToLoad = instanceToLoad;
-		this.lockRequest = lockRequest;
+		this.lockOptions = lockOptions;
 		this.isAssociationFetch = isAssociationFetch;
 	}
 
@@ -127,32 +127,32 @@ public class LoadEvent extends AbstractEvent {
 		this.instanceToLoad = instanceToLoad;
 	}
 
-	public LockRequest getLockRequest() {
-		return lockRequest;
+	public LockOptions getLockOptions() {
+		return lockOptions;
 	}
 
 	public LockMode getLockMode() {
-		return lockRequest.getLockMode();
+		return lockOptions.getLockMode();
 	}
 
 	public void setLockMode(LockMode lockMode) {
-		this.lockRequest.setLockMode(lockMode);
+		this.lockOptions.setLockMode(lockMode);
 	}
 
 	public void setLockTimeout(int timeout) {
-		this.lockRequest.setTimeOut(timeout);
+		this.lockOptions.setTimeOut(timeout);
 	}
 
 	public int getLockTimeout() {
-		return this.lockRequest.getTimeOut();
+		return this.lockOptions.getTimeOut();
 	}
 
 	public void setLockScope(boolean cascade) {
-		this.lockRequest.setScope(cascade);
+		this.lockOptions.setScope(cascade);
 	}
 
 	public boolean getLockScope() {
-		return this.lockRequest.getScope();
+		return this.lockOptions.getScope();
 	}
 
 	public Object getResult() {

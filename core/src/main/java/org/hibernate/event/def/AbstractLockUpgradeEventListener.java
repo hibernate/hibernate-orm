@@ -29,11 +29,8 @@ import org.slf4j.LoggerFactory;
 
 import org.hibernate.LockMode;
 import org.hibernate.ObjectDeletedException;
-import org.hibernate.OptimisticLockException;
-import org.hibernate.LockRequest;
+import org.hibernate.LockOptions;
 import org.hibernate.event.EventSource;
-import org.hibernate.action.EntityIncrementVersionProcess;
-import org.hibernate.action.EntityVerifyVersionProcess;
 import org.hibernate.cache.CacheKey;
 import org.hibernate.cache.access.SoftLock;
 import org.hibernate.engine.EntityEntry;
@@ -56,12 +53,12 @@ public class AbstractLockUpgradeEventListener extends AbstractReassociateEventLi
 	 *
 	 * @param object The entity for which to upgrade the lock.
 	 * @param entry The entity's EntityEntry instance.
-	 * @param lockRequest contains the requested lock mode.
+	 * @param lockOptions contains the requested lock mode.
 	 * @param source The session which is the source of the event being processed.
 	 */
-	protected void upgradeLock(Object object, EntityEntry entry, LockRequest lockRequest, EventSource source) {
+	protected void upgradeLock(Object object, EntityEntry entry, LockOptions lockOptions, EventSource source) {
 
-		LockMode requestedLockMode = lockRequest.getLockMode();
+		LockMode requestedLockMode = lockOptions.getLockMode();
 		if ( requestedLockMode.greaterThan( entry.getLockMode() ) ) {
 			// The user requested a "greater" (i.e. more restrictive) form of
 			// pessimistic lock

@@ -485,7 +485,7 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 					return INCONSISTENT_RTN_CLASS_MARKER;
 				}
 			}
-			upgradeLock( old, oldEntry, event.getLockRequest(), event.getSession() );
+			upgradeLock( old, oldEntry, event.getLockOptions(), event.getSession() );
 		}
 
 		return old;

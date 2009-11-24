@@ -25,7 +25,7 @@
 package org.hibernate.event;
 
 import org.hibernate.LockMode;
-import org.hibernate.LockRequest;
+import org.hibernate.LockOptions;
 
 /**
  *  Defines an event class for the refreshing of an object.
@@ -35,7 +35,7 @@ import org.hibernate.LockRequest;
 public class RefreshEvent extends AbstractEvent {
 
 	private Object object;
-	private LockRequest lockRequest = new LockRequest().setLockMode(LockMode.READ);
+	private LockOptions lockOptions = new LockOptions().setLockMode(LockMode.READ);
 
 	public RefreshEvent(Object object, EventSource source) {
 		super(source);
@@ -50,34 +50,34 @@ public class RefreshEvent extends AbstractEvent {
 		if (lockMode == null) {
 			throw new IllegalArgumentException("Attempt to generate refresh event with null lock mode");
 		}
-		this.lockRequest.setLockMode(lockMode);
+		this.lockOptions.setLockMode(lockMode);
 	}
 
-	public RefreshEvent(Object object, LockRequest lockRequest, EventSource source) {
+	public RefreshEvent(Object object, LockOptions lockOptions, EventSource source) {
 		this(object, source);
-		if (lockRequest == null) {
+		if (lockOptions == null) {
 			throw new IllegalArgumentException("Attempt to generate refresh event with null lock request");
 		}
-		this.lockRequest = lockRequest;
+		this.lockOptions = lockOptions;
 	}
 
 	public Object getObject() {
 		return object;
 	}
 
-	public LockRequest getLockRequest() {
-		return lockRequest;
+	public LockOptions getLockOptions() {
+		return lockOptions;
 	}
 
 	public LockMode getLockMode() {
-		return lockRequest.getLockMode();
+		return lockOptions.getLockMode();
 	}
 
 	public int getLockTimeout() {
-		return this.lockRequest.getTimeOut();
+		return this.lockOptions.getTimeOut();
 	}
 
 	public boolean getLockScope() {
-		return this.lockRequest.getScope();
+		return this.lockOptions.getScope();
 	}
 }

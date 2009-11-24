@@ -1,5 +1,5 @@
 //$Id$
-package org.hibernate.ejb.test;
+package org.hibernate.ejb.test.query;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -9,6 +9,10 @@ import javax.persistence.Query;
 import javax.persistence.TemporalType;
 
 import org.hibernate.Hibernate;
+import org.hibernate.ejb.test.TestCase;
+import org.hibernate.ejb.test.Item;
+import org.hibernate.ejb.test.Wallet;
+import org.hibernate.ejb.test.Distributor;
 
 
 /**
@@ -244,6 +248,33 @@ public class QueryTest extends TestCase {
 		em.remove( w );
 		em.getTransaction().commit();
 		em.close();
+	}
+
+	public void testPositionalParameterWithUserError() throws Exception {
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		Wallet w = new Wallet();
+		w.setBrand( "Lacoste" );
+		w.setModel( "Minimic" );
+		w.setSerial( "0100202002" );
+		em.persist( w );
+		em.flush();
+
+
+		try {
+			Query query = em.createQuery( "select w from Wallet w where w.brand = ?1 and w.model = ?3" );
+			query.setParameter( 1, "Lacoste" );
+			query.setParameter( 2, "Expensive" );
+			query.getResultList();
+			fail("The query should fail due to a user error in parameters");
+		}
+		catch ( IllegalArgumentException e ) {
+			//success
+		}
+		finally {
+			em.getTransaction().rollback();
+			em.close();
+		}
 	}
 
 	public void testNativeQuestionMarkParameter() throws Exception {

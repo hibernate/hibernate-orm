@@ -21,7 +21,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA\
  */
-package org.hibernate.ejb.test.ql;
+package org.hibernate.ejb.test.query;
 
 import javax.persistence.EntityManager;
 

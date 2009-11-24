@@ -76,7 +76,9 @@ public class ParameterMetadata implements Serializable {
 
 	public OrdinalParameterDescriptor getOrdinalParameterDescriptor(int position) {
 		if ( position < 1 || position > ordinalDescriptors.length ) {
-			throw new IndexOutOfBoundsException( "Remember that ordinal parameters are 1-based!" );
+			String error = "Position beyond number of declared ordinal parameters. " +
+					"Remember that ordinal parameters are 1-based! Position: " + position;
+			throw new QueryParameterException( error );
 		}
 		return ordinalDescriptors[position - 1];
 	}

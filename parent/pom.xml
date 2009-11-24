@@ -512,7 +512,29 @@
                 <jdbc.url>jdbc:hsqldb:.</jdbc.url>
                 <jdbc.user>sa</jdbc.user>
                 <jdbc.pass/>
-                <jdbc.isolation/>
+                 <jdbc.isolation/>
+            </properties>
+        </profile>
+
+        <profile>
+            <id>h2</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <dependencies>
+                <dependency>
+                    <groupId>com.h2database</groupId>
+                    <artifactId>h2</artifactId>
+                    <version>1.2.124</version>
+                </dependency>
+            </dependencies>
+            <properties>
+                <db.dialect>org.hibernate.dialect.H2Dialect</db.dialect>
+                <jdbc.driver>org.h2.Driver</jdbc.driver>
+                <jdbc.url>jdbc:h2:mem:db1</jdbc.url>
+                <jdbc.user>sa</jdbc.user>
+                <jdbc.pass/>
+                 <jdbc.isolation/>
             </properties>
         </profile>
         <!--

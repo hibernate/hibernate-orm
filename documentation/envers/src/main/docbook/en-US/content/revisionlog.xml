@@ -49,7 +49,7 @@
         </listitem>
         <listitem>
             <para>
-                a long-valued property, annotated with <literal>@RevisionTimestamp</literal>. Value of
+                a long- or j.u.Date- valued property, annotated with <literal>@RevisionTimestamp</literal>. Value of
                 this property will be automatically set by Envers.
             </para>
         </listitem>
@@ -58,6 +58,14 @@
     <para>
         You can either add these properties to your entity, or extend
         <literal>org.hibernate.envers.DefaultRevisionEntity</literal>, which already has those two properties.
+    </para>
+
+    <para>
+        When using a <literal>Date</literal>, instead of a <literal>long/Long</literal> for the revision timestamp,
+        take care not to use a mapping of the property which will loose precision (for example, using
+        <literal>@Temporal(DATE)</literal> is wrong, as it doesn't store the time information, so many of your
+        revisions will appear to happen at exactly the same time). A good choice is a
+        <literal>@Temporal(TIMESTAMP)</literal>.
     </para>
 
     <para>

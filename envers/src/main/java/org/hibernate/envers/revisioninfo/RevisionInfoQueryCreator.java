@@ -35,9 +35,12 @@ public class RevisionInfoQueryCreator {
     private final String revisionDateQuery;
     private final String revisionNumberForDateQuery;
     private final String revisionQuery;
+    private final boolean timestampAsDate;
 
     public RevisionInfoQueryCreator(String revisionInfoEntityName, String revisionInfoIdName,
-                                    String revisionInfoTimestampName) {
+                                    String revisionInfoTimestampName, boolean timestampAsDate) {
+        this.timestampAsDate = timestampAsDate;
+        
         revisionDateQuery = new StringBuilder()
                 .append("select rev.").append(revisionInfoTimestampName)
                 .append(" from ").append(revisionInfoEntityName)
@@ -62,7 +65,7 @@ public class RevisionInfoQueryCreator {
     }
 
     public Query getRevisionNumberForDateQuery(Session session, Date date) {
-        return session.createQuery(revisionNumberForDateQuery).setParameter("_revision_date", date.getTime());
+        return session.createQuery(revisionNumberForDateQuery).setParameter("_revision_date", timestampAsDate ? date : date.getTime());
     }
 
     public Query getRevisionQuery(Session session, Number revision) {

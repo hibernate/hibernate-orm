@@ -141,12 +141,13 @@ public class AuditReaderImpl implements AuditReaderImplementor {
         Query query = verCfg.getRevisionInfoQueryCreator().getRevisionDateQuery(session, revision);
 
         try {
-            Long timestamp = (Long) query.uniqueResult();
-            if (timestamp == null) {
+            Object timestampObject = query.uniqueResult();
+            if (timestampObject == null) {
                 throw new RevisionDoesNotExistException(revision);
             }
 
-            return new Date(timestamp);
+            // The timestamp object is either a date or a long
+            return timestampObject instanceof Date ? (Date) timestampObject : new Date((Long) timestampObject);
         } catch (NonUniqueResultException e) {
             throw new AuditException(e);
         }

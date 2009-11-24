@@ -23,6 +23,7 @@
  */
 package org.hibernate.envers.configuration;
 
+import java.util.Date;
 import java.util.Iterator;
 
 import org.dom4j.Document;
@@ -45,6 +46,8 @@ import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.mapping.PersistentClass;
+import org.hibernate.type.LongType;
+import org.hibernate.type.Type;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -53,7 +56,7 @@ public class RevisionInfoConfiguration {
     private String revisionInfoEntityName;
     private PropertyData revisionInfoIdData;
     private PropertyData revisionInfoTimestampData;
-    private String revisionInfoTimestampType;
+    private Type revisionInfoTimestampType;
 
     private String revisionPropType;
 
@@ -61,7 +64,7 @@ public class RevisionInfoConfiguration {
         revisionInfoEntityName = "org.hibernate.envers.DefaultRevisionEntity";
         revisionInfoIdData = new PropertyData("id", "id", "field", null);
         revisionInfoTimestampData = new PropertyData("timestamp", "timestamp", "field", null);
-        revisionInfoTimestampType = "long";
+        revisionInfoTimestampType = new LongType();
 
         revisionPropType = "integer";
     }
@@ -79,7 +82,7 @@ public class RevisionInfoConfiguration {
         MetadataTools.addColumn(idProperty, "REV", null, 0, 0, null);
 
         Element timestampProperty = MetadataTools.addProperty(class_mapping, revisionInfoTimestampData.getName(),
-                revisionInfoTimestampType, true, false);
+                revisionInfoTimestampType.getName(), true, false);
         MetadataTools.addColumn(timestampProperty, "REVTSTMP", null, 0, 0, null);
 
         return document;
@@ -131,12 +134,14 @@ public class RevisionInfoConfiguration {
 
                 XClass revisionTimestampClass = property.getType();
                 if (reflectionManager.equals(revisionTimestampClass, Long.class) ||
-                        reflectionManager.equals(revisionTimestampClass, Long.TYPE)) {
+                        reflectionManager.equals(revisionTimestampClass, Long.TYPE) ||
+                        reflectionManager.equals(revisionTimestampClass, Date.class) ||
+                        reflectionManager.equals(revisionTimestampClass, java.sql.Date.class)) {
                     revisionInfoTimestampData = new PropertyData(property.getName(), property.getName(), accessType, null);
                     revisionTimestampFound.set();
                 } else {
                     throw new MappingException("The field annotated with @RevisionTimestamp must be of type " +
-                            "long or Long");
+                            "long, Long, java.util.Date or java.sql.Date");
                 }
             }
         }
@@ -203,8 +208,9 @@ public class RevisionInfoConfiguration {
                 revisionInfoEntityName = pc.getEntityName();
 
                 revisionInfoClass = pc.getMappedClass();
+                revisionInfoTimestampType = pc.getProperty(revisionInfoTimestampData.getName()).getType();
                 revisionInfoGenerator = new DefaultRevisionInfoGenerator(revisionInfoEntityName, revisionInfoClass,
-                        revisionEntity.value(), revisionInfoTimestampData);
+                        revisionEntity.value(), revisionInfoTimestampData, isTimestampAsDate());
             }
         }
 
@@ -214,16 +220,21 @@ public class RevisionInfoConfiguration {
         if (revisionInfoGenerator == null) {
             revisionInfoClass = DefaultRevisionEntity.class;
             revisionInfoGenerator = new DefaultRevisionInfoGenerator(revisionInfoEntityName, revisionInfoClass,
-                    RevisionListener.class, revisionInfoTimestampData);
+                    RevisionListener.class, revisionInfoTimestampData, isTimestampAsDate());
             revisionInfoXmlMapping = generateDefaultRevisionInfoXmlMapping();
         }
 
         return new RevisionInfoConfigurationResult(
                 revisionInfoGenerator, revisionInfoXmlMapping,
                 new RevisionInfoQueryCreator(revisionInfoEntityName, revisionInfoIdData.getName(),
-                        revisionInfoTimestampData.getName()),
+                        revisionInfoTimestampData.getName(), isTimestampAsDate()),
                 generateRevisionInfoRelationMapping(),
                 new RevisionInfoNumberReader(revisionInfoClass, revisionInfoIdData), revisionInfoEntityName);
+    }
+    
+    private boolean isTimestampAsDate() {
+    	String typename = revisionInfoTimestampType.getName();
+    	return "date".equals(typename) || "time".equals(typename) || "timestamp".equals(typename);
     }
 }
 

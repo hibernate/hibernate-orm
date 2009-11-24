@@ -23,12 +23,13 @@
  */
 package org.hibernate.envers.revisioninfo;
 
-import org.hibernate.envers.RevisionListener;
-import org.hibernate.envers.entities.PropertyData;
-import org.hibernate.envers.tools.reflection.ReflectionTools;
+import java.util.Date;
 
 import org.hibernate.MappingException;
 import org.hibernate.Session;
+import org.hibernate.envers.RevisionListener;
+import org.hibernate.envers.entities.PropertyData;
+import org.hibernate.envers.tools.reflection.ReflectionTools;
 import org.hibernate.property.Setter;
 
 /**
@@ -38,13 +39,16 @@ public class DefaultRevisionInfoGenerator implements RevisionInfoGenerator {
     private final String revisionInfoEntityName;
     private final RevisionListener listener;
     private final Setter revisionTimestampSetter;
+    private final boolean timestampAsDate;
     private final Class<?> revisionInfoClass;
 
     public DefaultRevisionInfoGenerator(String revisionInfoEntityName, Class<?> revisionInfoClass,
                                        Class<? extends RevisionListener> listenerClass,
-                                       PropertyData revisionInfoTimestampData) {
+                                       PropertyData revisionInfoTimestampData,
+                                       boolean timestampAsDate) {
         this.revisionInfoEntityName = revisionInfoEntityName;
         this.revisionInfoClass = revisionInfoClass;
+        this.timestampAsDate = timestampAsDate;
 
         revisionTimestampSetter = ReflectionTools.getSetter(revisionInfoClass, revisionInfoTimestampData);
 
@@ -75,7 +79,8 @@ public class DefaultRevisionInfoGenerator implements RevisionInfoGenerator {
             throw new RuntimeException(e);
         }
 
-        revisionTimestampSetter.set(revisionInfo, System.currentTimeMillis(), null);
+        long timestamp = System.currentTimeMillis();
+        revisionTimestampSetter.set(revisionInfo, timestampAsDate ? new Date(timestamp) : timestamp, null);
 
         if (listener != null) {
             listener.newRevision(revisionInfo);

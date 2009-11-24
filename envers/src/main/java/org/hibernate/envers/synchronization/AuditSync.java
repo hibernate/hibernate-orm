@@ -168,8 +168,15 @@ public class AuditSync implements Synchronization {
 			}
 		} catch (RuntimeException e) {
 			// Rolling back the transaction in case of any exceptions
-			session.getTransaction().rollback();
-			throw e;
+			//noinspection finally
+            try {
+                if (session.getTransaction().isActive()) {
+    			    session.getTransaction().rollback();
+                }
+            } finally {
+                //noinspection ThrowFromFinallyBlock
+                throw e;
+            }
 		}
     }
 

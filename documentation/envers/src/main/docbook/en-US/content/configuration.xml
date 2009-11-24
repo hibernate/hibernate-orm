@@ -148,6 +148,32 @@
                         stored twice).
                     </entry>
                 </row>
+                <row>
+                    <entry>
+                        <property>org.hibernate.envers.defaultAuditTableSchemaName</property>
+                    </entry>
+                    <entry>
+                        null (same as normal tables)
+                    </entry>
+                    <entry>
+                        The default schema name that should be used for audit tables. Can be overriden using the
+                        <literal>@AuditTable(schema="...")</literal> annotation. If not present, the schema will
+                        be the same as the schema of the normal tables.
+                    </entry>
+                </row>
+                <row>
+                    <entry>
+                        <property>org.hibernate.envers.defaultAuditTableCatalogName</property>
+                    </entry>
+                    <entry>
+                        null (same as normal tables)
+                    </entry>
+                    <entry>
+                        The default catalog name that should be used for audit tables. Can be overriden using the
+                        <literal>@AuditTable(catalog="...")</literal> annotation. If not present, the catalog will
+                        be the same as the catalog of the normal tables.                        
+                    </entry>
+                </row>
             </tbody>
         </tgroup>
     </table>

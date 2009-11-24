@@ -39,6 +39,12 @@ public class GlobalConfiguration {
 	// Should entity data be stored when it is deleted
 	private final boolean storeDataAtDelete;
 
+    // The default name of the schema of audit tables.
+    private final String defaultSchemaName;
+
+    // The default name of the catalog of the audit tables.
+    private final String defaultCatalogName;
+
     /*
      Which operator to use in correlated subqueries (when we want a property to be equal to the result of
      a correlated subquery, for example: e.p <operator> (select max(e2.p) where e2.p2 = e.p2 ...).
@@ -59,6 +65,9 @@ public class GlobalConfiguration {
 		String storeDataDeletedEntityStr = properties.getProperty("org.hibernate.envers.storeDataAtDelete", "false");
 		storeDataAtDelete = Boolean.parseBoolean(storeDataDeletedEntityStr);
 
+        defaultSchemaName = properties.getProperty("org.hibernate.envers.defaultAuditTableSchemaName", null);
+        defaultCatalogName = properties.getProperty("org.hibernate.envers.defaultAuditTableCatalogName", null);
+
         correlatedSubqueryOperator = "org.hibernate.dialect.HSQLDialect".equals(
                 properties.getProperty("hibernate.dialect")) ? "in" : "=";
     }
@@ -78,4 +87,12 @@ public class GlobalConfiguration {
 	public boolean isStoreDataAtDelete() {
 		return storeDataAtDelete;
 	}
+
+    public String getDefaultSchemaName() {
+        return defaultSchemaName;
+    }
+
+    public String getDefaultCatalogName() {
+        return defaultCatalogName;
+    }
 }

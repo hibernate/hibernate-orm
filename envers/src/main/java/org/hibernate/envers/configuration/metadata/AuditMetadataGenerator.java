@@ -203,14 +203,26 @@ public final class AuditMetadataGenerator {
                 auditTableName = verEntCfg.getAuditEntityName(originalTableName);
             }
 
+            // Get the schema ...
             String schema = auditingData.getAuditTable().schema();
+            // ... if empty, try using the default ...
             if (StringTools.isEmpty(schema)) {
-                schema = join.getTable().getSchema();
+                schema = globalCfg.getDefaultSchemaName();
+
+                // ... if still empty, use the same as the normal table.
+                if (StringTools.isEmpty(schema)) {
+                    schema = join.getTable().getSchema();
+                }
             }
 
+            // Same for catalogs
             String catalog = auditingData.getAuditTable().catalog();
             if (StringTools.isEmpty(catalog)) {
-                catalog = join.getTable().getCatalog();
+                catalog = globalCfg.getDefaultCatalogName();
+
+                if (StringTools.isEmpty(catalog)) {
+                    catalog = join.getTable().getCatalog();
+                }
             }
 
             Element joinElement = MetadataTools.createJoin(parent, auditTableName, schema, catalog);

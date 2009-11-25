@@ -552,8 +552,9 @@ public interface Session extends Serializable {
 	public void lock(String entityName, Object object, LockMode lockMode) throws HibernateException;
 
 	/**
-	 * Build a lockRequest that specifies the LockMode, pessimistic lock timeout and lock scope.
-	 * timeout and scope is ignored for optimistic locking.
+	 * Build a LockRequest that specifies the LockMode, pessimistic lock timeout and lock scope.
+	 * timeout and scope is ignored for optimistic locking.  After building the LockRequest,
+	 * call LockRequest.lock to perform the requested locking. 
 	 *
 	 * Use: session.buildLockRequest().
 	 *      setLockMode(LockMode.PESSIMISTIC_WRITE).setTimeOut(1000 * 60).lock(entity);

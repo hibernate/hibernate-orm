@@ -40,14 +40,11 @@ import org.hibernate.envers.entities.mapper.MultiPropertyMapper;
 import org.hibernate.envers.entities.mapper.SubclassPropertyMapper;
 import org.hibernate.envers.tools.StringTools;
 import org.hibernate.envers.tools.Triple;
+import org.hibernate.envers.AuditTable;
 
 import org.hibernate.MappingException;
 import org.hibernate.cfg.Configuration;
-import org.hibernate.mapping.Collection;
-import org.hibernate.mapping.Join;
-import org.hibernate.mapping.PersistentClass;
-import org.hibernate.mapping.Property;
-import org.hibernate.mapping.Value;
+import org.hibernate.mapping.*;
 import org.hibernate.type.*;
 
 /**
@@ -180,6 +177,38 @@ public final class AuditMetadataGenerator {
 		return true;
 	}
 
+    private String getSchema(AuditTable auditTable, Table table) {
+        // Get the schema from the annotation ...
+        String schema = auditTable.schema();
+        // ... if empty, try using the default ...
+        if (StringTools.isEmpty(schema)) {
+            schema = globalCfg.getDefaultSchemaName();
+
+            // ... if still empty, use the same as the normal table.
+            if (StringTools.isEmpty(schema)) {
+                schema = table.getSchema();
+            }
+        }
+
+        return schema;
+    }
+
+    private String getCatalog(AuditTable auditTable, Table table) {
+        // Get the catalog from the annotation ...
+        String catalog = auditTable.catalog();
+        // ... if empty, try using the default ...
+        if (StringTools.isEmpty(catalog)) {
+            catalog = globalCfg.getDefaultCatalogName();
+
+            // ... if still empty, use the same as the normal table.
+            if (StringTools.isEmpty(catalog)) {
+                catalog = table.getCatalog();
+            }
+        }
+
+        return catalog;
+    }
+
     @SuppressWarnings({"unchecked"})
     private void createJoins(PersistentClass pc, Element parent, ClassAuditingData auditingData) {
         Iterator<Join> joins = pc.getJoinIterator();
@@ -203,27 +232,8 @@ public final class AuditMetadataGenerator {
                 auditTableName = verEntCfg.getAuditEntityName(originalTableName);
             }
 
-            // Get the schema ...
-            String schema = auditingData.getAuditTable().schema();
-            // ... if empty, try using the default ...
-            if (StringTools.isEmpty(schema)) {
-                schema = globalCfg.getDefaultSchemaName();
-
-                // ... if still empty, use the same as the normal table.
-                if (StringTools.isEmpty(schema)) {
-                    schema = join.getTable().getSchema();
-                }
-            }
-
-            // Same for catalogs
-            String catalog = auditingData.getAuditTable().catalog();
-            if (StringTools.isEmpty(catalog)) {
-                catalog = globalCfg.getDefaultCatalogName();
-
-                if (StringTools.isEmpty(catalog)) {
-                    catalog = join.getTable().getCatalog();
-                }
-            }
+            String schema = getSchema(auditingData.getAuditTable(), join.getTable());
+            String catalog = getCatalog(auditingData.getAuditTable(), join.getTable());
 
             Element joinElement = MetadataTools.createJoin(parent, auditTableName, schema, catalog);
             joinElements.put(join, joinElement);
@@ -301,15 +311,8 @@ public final class AuditMetadataGenerator {
     @SuppressWarnings({"unchecked"})
     public void generateFirstPass(PersistentClass pc, ClassAuditingData auditingData,
                                   EntityXmlMappingData xmlMappingData, boolean isAudited) {
-        String schema = auditingData.getAuditTable().schema();
-        if (StringTools.isEmpty(schema)) {
-            schema = pc.getTable().getSchema();
-        }
-
-        String catalog = auditingData.getAuditTable().catalog();
-        if (StringTools.isEmpty(catalog)) {
-            catalog = pc.getTable().getCatalog();
-        }
+        String schema = getSchema(auditingData.getAuditTable(), pc.getTable());
+        String catalog = getCatalog(auditingData.getAuditTable(), pc.getTable());
 
 		if (!isAudited) {
 			String entityName = pc.getEntityName();

@@ -49,6 +49,8 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.type.LongType;
 import org.hibernate.type.Type;
 
+import javax.persistence.Column;
+
 /**
  * @author Adam Warski (adam at warski dot org)
  */
@@ -59,6 +61,7 @@ public class RevisionInfoConfiguration {
     private Type revisionInfoTimestampType;
 
     private String revisionPropType;
+    private Column revisionPropColumn;
 
     public RevisionInfoConfiguration() {
         revisionInfoEntityName = "org.hibernate.envers.DefaultRevisionEntity";
@@ -90,9 +93,14 @@ public class RevisionInfoConfiguration {
 
     private Element generateRevisionInfoRelationMapping() {
         Document document = DocumentHelper.createDocument();
-        Element rev_rel_mapping =document.addElement("key-many-to-one");
+        Element rev_rel_mapping = document.addElement("key-many-to-one");
         rev_rel_mapping.addAttribute("type", revisionPropType);
         rev_rel_mapping.addAttribute("class", revisionInfoEntityName);
+
+        if (revisionPropColumn != null) {
+            // Putting a fake name to make Hibernate happy. It will be replaced later anyway.
+            MetadataTools.addColumn(rev_rel_mapping, "*" , null, 0, 0, revisionPropColumn.columnDefinition());
+        }
 
         return rev_rel_mapping;
     }
@@ -125,6 +133,11 @@ public class RevisionInfoConfiguration {
                     throw new MappingException("The field annotated with @RevisionNumber must be of type " +
                             "int, Integer, long or Long");
                 }
+
+                // Getting the @Column definition of the revision number property, to later use that info to
+                // generate the same mapping for the relation from an audit table's revision number to the
+                // revision entity revision number.
+                revisionPropColumn = property.getAnnotation(Column.class);
             }
 
             if (revisionTimestamp != null) {

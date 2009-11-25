@@ -40,7 +40,6 @@ import org.hibernate.envers.entities.mapper.MultiPropertyMapper;
 import org.hibernate.envers.entities.mapper.SubclassPropertyMapper;
 import org.hibernate.envers.tools.StringTools;
 import org.hibernate.envers.tools.Triple;
-import org.hibernate.envers.AuditTable;
 
 import org.hibernate.MappingException;
 import org.hibernate.cfg.Configuration;
@@ -90,7 +89,8 @@ public final class AuditMetadataGenerator {
     void addRevisionInfoRelation(Element any_mapping) {
         Element rev_mapping = (Element) revisionInfoRelationMapping.clone();
         rev_mapping.addAttribute("name", verEntCfg.getRevisionFieldName());
-        MetadataTools.addColumn(rev_mapping, verEntCfg.getRevisionFieldName(), null, 0, 0, null);
+
+        MetadataTools.addOrModifyColumn(rev_mapping, verEntCfg.getRevisionFieldName());
 
         any_mapping.add(rev_mapping);
     }

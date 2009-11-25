@@ -177,9 +177,9 @@ public final class AuditMetadataGenerator {
 		return true;
 	}
 
-    private String getSchema(AuditTable auditTable, Table table) {
+    protected String getSchema(String schemaFromAnnotation, Table table) {
         // Get the schema from the annotation ...
-        String schema = auditTable.schema();
+        String schema = schemaFromAnnotation;
         // ... if empty, try using the default ...
         if (StringTools.isEmpty(schema)) {
             schema = globalCfg.getDefaultSchemaName();
@@ -193,9 +193,9 @@ public final class AuditMetadataGenerator {
         return schema;
     }
 
-    private String getCatalog(AuditTable auditTable, Table table) {
+    protected String getCatalog(String catalogFromAnnotation, Table table) {
         // Get the catalog from the annotation ...
-        String catalog = auditTable.catalog();
+        String catalog = catalogFromAnnotation;
         // ... if empty, try using the default ...
         if (StringTools.isEmpty(catalog)) {
             catalog = globalCfg.getDefaultCatalogName();
@@ -232,8 +232,8 @@ public final class AuditMetadataGenerator {
                 auditTableName = verEntCfg.getAuditEntityName(originalTableName);
             }
 
-            String schema = getSchema(auditingData.getAuditTable(), join.getTable());
-            String catalog = getCatalog(auditingData.getAuditTable(), join.getTable());
+            String schema = getSchema(auditingData.getAuditTable().schema(), join.getTable());
+            String catalog = getCatalog(auditingData.getAuditTable().catalog(), join.getTable());
 
             Element joinElement = MetadataTools.createJoin(parent, auditTableName, schema, catalog);
             joinElements.put(join, joinElement);
@@ -311,8 +311,8 @@ public final class AuditMetadataGenerator {
     @SuppressWarnings({"unchecked"})
     public void generateFirstPass(PersistentClass pc, ClassAuditingData auditingData,
                                   EntityXmlMappingData xmlMappingData, boolean isAudited) {
-        String schema = getSchema(auditingData.getAuditTable(), pc.getTable());
-        String catalog = getCatalog(auditingData.getAuditTable(), pc.getTable());
+        String schema = getSchema(auditingData.getAuditTable().schema(), pc.getTable());
+        String catalog = getCatalog(auditingData.getAuditTable().catalog(), pc.getTable());
 
 		if (!isAudited) {
 			String entityName = pc.getEntityName();

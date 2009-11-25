@@ -475,10 +475,8 @@ public final class CollectionMetadataGenerator {
     }
 
     private Element createMiddleEntityXml(String auditMiddleTableName, String auditMiddleEntityName) {
-        String schema = StringTools.isEmpty(propertyAuditingData.getJoinTable().schema()) ?
-                propertyValue.getCollectionTable().getSchema() : propertyAuditingData.getJoinTable().schema();
-        String catalog = StringTools.isEmpty(propertyAuditingData.getJoinTable().catalog()) ?
-                propertyValue.getCollectionTable().getCatalog() : propertyAuditingData.getJoinTable().catalog();
+        String schema = mainGenerator.getSchema(propertyAuditingData.getJoinTable().schema(), propertyValue.getCollectionTable());
+        String catalog = mainGenerator.getCatalog(propertyAuditingData.getJoinTable().catalog(), propertyValue.getCollectionTable());
 
         Element middleEntityXml = MetadataTools.createEntity(xmlMappingData.newAdditionalMapping(),
                 new AuditTableData(auditMiddleEntityName, auditMiddleTableName, schema, catalog), null);

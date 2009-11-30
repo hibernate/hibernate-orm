@@ -889,6 +889,7 @@ public final class AnnotationBinder {
 					null;
 		}
 		else {
+			//the are the root entity but we might have mapped superclasses that contain the id class
 			AccessType access = clazzToProcess.getAnnotation( AccessType.class );
 			explicitAccessType = access != null ?
 					access.value() :
@@ -926,7 +927,6 @@ public final class AnnotationBinder {
 			exceptionWhileWalkingElements = e;
 		}
 
-		//TODO remember why it should be !inheritanceState.hasParents
 		if ( !hasIdentifier && !inheritanceState.hasParents ) {
 			if ( isExplicitPropertyAnnotated != null ) {
 				//the original exception is legitimate

@@ -83,7 +83,9 @@
             </activation>
             <modules>
                 <module>entitymanager</module>
+<!--
                 <module>cache-infinispan</module>
+-->
                 <module>jdbc4-testing</module>
             </modules>
         </profile>            

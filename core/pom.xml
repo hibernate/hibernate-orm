@@ -114,7 +114,7 @@
                             <targetMembers>
                             	<methodBodyReturn>
                             	    <className>org.hibernate.Version</className>
-                            	    <methodName>getVersionString</methodName>&gt;
+                            	    <methodName>getVersionString</methodName>
                             	</methodBodyReturn>
                             </targetMembers>
                         </bytecodeInjection>

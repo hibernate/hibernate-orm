@@ -45,6 +45,8 @@ import org.hibernate.MappingException;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.mapping.*;
 import org.hibernate.type.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -52,6 +54,8 @@ import org.hibernate.type.*;
  * @author Tomasz Bech
  */
 public final class AuditMetadataGenerator {
+    private static final Logger log = LoggerFactory.getLogger(AuditMetadataGenerator.class);
+
     private final Configuration cfg;
     private final GlobalConfiguration globalCfg;
     private final AuditEntitiesConfiguration verEntCfg;
@@ -317,6 +321,15 @@ public final class AuditMetadataGenerator {
 		if (!isAudited) {
 			String entityName = pc.getEntityName();
 			IdMappingData idMapper = idMetadataGenerator.addId(pc);
+
+            if (idMapper == null) {
+                // Unsupported id mapping, e.g. key-many-to-one. If the entity is used in auditing, an exception
+                // will be thrown later on.
+                log.debug("Unable to create auditing id mapping for entity " + entityName +
+                        ", because of an unsupported Hibernate id mapping (e.g. key-many-to-one).");
+                return;
+            }
+
 			ExtendedPropertyMapper propertyMapper = null;
 			String parentEntityName = null;
 			EntityConfiguration entityCfg = new EntityConfiguration(entityName, idMapper, propertyMapper,
@@ -326,6 +339,8 @@ public final class AuditMetadataGenerator {
 		}
 
         String entityName = pc.getEntityName();
+        log.debug("Generating first-pass auditing mapping for entity " + entityName + ".");
+
         String auditEntityName = verEntCfg.getAuditEntityName(entityName);
         String auditTableName = verEntCfg.getAuditTableName(entityName, pc.getTable().getName());
 
@@ -395,6 +410,7 @@ public final class AuditMetadataGenerator {
     public void generateSecondPass(PersistentClass pc, ClassAuditingData auditingData,
                                    EntityXmlMappingData xmlMappingData) {
         String entityName = pc.getEntityName();
+        log.debug("Generating second-pass auditing mapping for entity " + entityName + ".");
 
         CompositeMapperBuilder propertyMapper = entitiesConfigurations.get(entityName).getPropertyMapper();
 

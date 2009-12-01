@@ -84,6 +84,11 @@ public final class IdMetadataGenerator {
         Property id_prop = pc.getIdentifierProperty();
         Component id_mapper = pc.getIdentifierMapper();
 
+        // Checking if the id mapping is supported
+        if (id_mapper == null && id_prop == null) {
+            return null;
+        }
+
         SimpleIdMapperBuilder mapper;
         if (id_mapper != null) {
             // Multiple id

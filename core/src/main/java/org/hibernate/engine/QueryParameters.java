@@ -55,7 +55,7 @@ public final class QueryParameters {
 	private Type[] positionalParameterTypes;
 	private Object[] positionalParameterValues;
 	private Map namedParameters;
-	private Map lockModes;
+	private Map lockOptions;
 	private RowSelection rowSelection;
 	private boolean cacheable;
 	private String cacheRegion;
@@ -133,7 +133,7 @@ public final class QueryParameters {
 	public QueryParameters(
 			final Type[] positionalParameterTypes,
 			final Object[] positionalParameterValues,
-			final Map lockModes,
+			final Map lockOptions,
 			final RowSelection rowSelection,
 			final boolean cacheable,
 			final String cacheRegion,
@@ -145,7 +145,7 @@ public final class QueryParameters {
 				positionalParameterTypes,
 				positionalParameterValues,
 				null,
-				lockModes,
+				lockOptions,
 				rowSelection,
 				false,
 				cacheable,
@@ -161,7 +161,7 @@ public final class QueryParameters {
 			final Type[] positionalParameterTypes,
 			final Object[] positionalParameterValues,
 			final Map namedParameters,
-			final Map lockModes,
+			final Map lockOptions,
 			final RowSelection rowSelection,
 			final boolean readOnly,
 			final boolean cacheable,
@@ -173,7 +173,7 @@ public final class QueryParameters {
 		this.positionalParameterTypes = positionalParameterTypes;
 		this.positionalParameterValues = positionalParameterValues;
 		this.namedParameters = namedParameters;
-		this.lockModes = lockModes;
+		this.lockOptions = lockOptions;
 		this.rowSelection = rowSelection;
 		this.cacheable = cacheable;
 		this.cacheRegion = cacheRegion;
@@ -188,7 +188,7 @@ public final class QueryParameters {
 			final Type[] positionalParameterTypes,
 			final Object[] positionalParameterValues,
 			final Map namedParameters,
-			final Map lockModes,
+			final Map lockOptions,
 			final RowSelection rowSelection,
 			final boolean readOnly,
 			final boolean cacheable,
@@ -204,7 +204,7 @@ public final class QueryParameters {
 				positionalParameterTypes,
 				positionalParameterValues,
 				namedParameters,
-				lockModes,
+				lockOptions,
 				rowSelection,
 				readOnly,
 				cacheable,
@@ -258,12 +258,12 @@ public final class QueryParameters {
 		rowSelection = selection;
 	}
 
-	public Map getLockModes() {
-		return lockModes;
+	public Map getLockOptions() {
+		return lockOptions;
 	}
 
-	public void setLockModes(Map map) {
-		lockModes = map;
+	public void setLockOptions(Map map) {
+		lockOptions = map;
 	}
 
 	public void traceParameters(SessionFactoryImplementor factory) throws HibernateException {
@@ -468,7 +468,7 @@ public final class QueryParameters {
 				this.positionalParameterTypes,
 				this.positionalParameterValues,
 				this.namedParameters,
-				this.lockModes,
+				this.lockOptions,
 				selection,
 				this.readOnly,
 				this.cacheable,

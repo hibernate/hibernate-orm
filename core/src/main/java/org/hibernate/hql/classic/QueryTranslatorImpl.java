@@ -46,6 +46,7 @@ import org.hibernate.LockMode;
 import org.hibernate.MappingException;
 import org.hibernate.QueryException;
 import org.hibernate.ScrollableResults;
+import org.hibernate.LockOptions;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.JoinSequence;
 import org.hibernate.engine.QueryParameters;
@@ -1036,40 +1037,40 @@ public class QueryTranslatorImpl extends BasicLoader implements FilterTranslator
 		holderClass = clazz;
 	}
 
-	protected LockMode[] getLockModes(Map lockModes) {
+	protected LockOptions[] getLockOptions(Map lockOptions) {
 		// unfortunately this stuff can't be cached because
 		// it is per-invocation, not constant for the
 		// QueryTranslator instance
-		HashMap nameLockModes = new HashMap();
-		if ( lockModes != null ) {
-			Iterator iter = lockModes.entrySet().iterator();
+		HashMap nameLockOptions = new HashMap();
+		if ( lockOptions != null ) {
+			Iterator iter = lockOptions.entrySet().iterator();
 			while ( iter.hasNext() ) {
 				Map.Entry me = ( Map.Entry ) iter.next();
-				nameLockModes.put( getAliasName( ( String ) me.getKey() ),
+				nameLockOptions.put( getAliasName( ( String ) me.getKey() ),
 						me.getValue() );
 			}
 		}
-		LockMode[] lockModeArray = new LockMode[names.length];
+		LockOptions[] lockOptionsArray = new LockOptions[names.length];
 		for ( int i = 0; i < names.length; i++ ) {
-			LockMode lm = ( LockMode ) nameLockModes.get( names[i] );
-			if ( lm == null ) lm = LockMode.NONE;
-			lockModeArray[i] = lm;
+			LockOptions lm = ( LockOptions ) nameLockOptions.get( names[i] );
+			if ( lm == null ) lm = LockOptions.NONE;
+			lockOptionsArray[i] = lm;
 		}
-		return lockModeArray;
+		return lockOptionsArray;
 	}
 
-	protected String applyLocks(String sql, Map lockModes, Dialect dialect) throws QueryException {
+	protected String applyLocks(String sql, Map lockOptions, Dialect dialect) throws QueryException {
 		// can't cache this stuff either (per-invocation)
 		final String result;
-		if ( lockModes == null || lockModes.size() == 0 ) {
+		if ( lockOptions == null || lockOptions.size() == 0 ) {
 			result = sql;
 		}
 		else {
-			Map aliasedLockModes = new HashMap();
-			Iterator iter = lockModes.entrySet().iterator();
+			Map aliasedLockOptions = new HashMap();
+			Iterator iter = lockOptions.entrySet().iterator();
 			while ( iter.hasNext() ) {
 				Map.Entry me = ( Map.Entry ) iter.next();
-				aliasedLockModes.put( getAliasName( ( String ) me.getKey() ), me.getValue() );
+				aliasedLockOptions.put( getAliasName( ( String ) me.getKey() ), me.getValue() );
 			}
 			Map keyColumnNames = null;
 			if ( dialect.forUpdateOfColumns() ) {
@@ -1078,7 +1079,7 @@ public class QueryTranslatorImpl extends BasicLoader implements FilterTranslator
 					keyColumnNames.put( names[i], persisters[i].getIdentifierColumnNames() );
 				}
 			}
-			result = dialect.applyLocksToSql( sql, aliasedLockModes, keyColumnNames );
+			result = dialect.applyLocksToSql( sql, aliasedLockOptions, keyColumnNames );
 		}
 		logQuery( queryString, result );
 		return result;

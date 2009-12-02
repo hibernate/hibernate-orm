@@ -46,6 +46,7 @@ import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.LockMode;
 import org.hibernate.Query;
+import org.hibernate.LockOptions;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -146,7 +147,7 @@ public abstract class AbstractAuditQuery implements AuditQuery {
     private FlushMode flushMode;
     private CacheMode cacheMode;
     private Integer timeout;
-    private LockMode lockMode;
+    private LockOptions lockOptions = new LockOptions(LockMode.NONE);
 
     public AuditQuery setMaxResults(int maxResults) {
         this.maxResults = maxResults;
@@ -188,11 +189,26 @@ public abstract class AbstractAuditQuery implements AuditQuery {
         return this;
     }
 
+	/**
+	 * Set lock mode
+	 * @param lockMode
+	 * @return this object
+	 * @deprecated Instead use setLockOptions
+	 */
     public AuditQuery setLockMode(LockMode lockMode) {
-        this.lockMode = lockMode;
+        lockOptions.setLockMode(lockMode);
         return this;
     }
 
+	/**
+	 * Set lock options
+	 * @param lockOptions
+	 * @return this object
+	 */
+	public AuditQuery setLockOptions(LockOptions lockOptions) {
+		LockOptions.copy(lockOptions, this.lockOptions);
+		return this;
+	}
     protected void setQueryProperties(Query query) {
         if (maxResults != null) query.setMaxResults(maxResults);
         if (firstResult != null) query.setFirstResult(firstResult);
@@ -202,6 +218,8 @@ public abstract class AbstractAuditQuery implements AuditQuery {
         if (flushMode != null) query.setFlushMode(flushMode);
         if (cacheMode != null) query.setCacheMode(cacheMode);
         if (timeout != null) query.setTimeout(timeout);
-        if (lockMode != null) query.setLockMode("e", lockMode);
+        if (lockOptions != null && lockOptions.getLockMode() != LockMode.NONE) {
+			  query.setLockOptions("e", lockOptions);
+		  }
     }
 }

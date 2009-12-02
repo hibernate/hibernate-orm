@@ -7,6 +7,7 @@ import org.hibernate.junit.UnitTestCase;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.util.StringHelper;
 import org.hibernate.LockMode;
+import org.hibernate.LockOptions;
 
 /**
  * {@inheritDoc}
@@ -55,9 +56,9 @@ public abstract class AbstractLockHintTest extends UnitTestCase {
 		}
 
 		public void verify() {
-			HashMap lockModes = new HashMap();
-			lockModes.put( aliasToLock, LockMode.UPGRADE );
-			String actualProcessedSql = dialect.applyLocksToSql( rawSql, lockModes, Collections.EMPTY_MAP );
+			HashMap lockOptions = new HashMap();
+			lockOptions.put( aliasToLock, new LockOptions(LockMode.UPGRADE) );
+			String actualProcessedSql = dialect.applyLocksToSql( rawSql, lockOptions, Collections.EMPTY_MAP );
 			assertEquals( expectedProcessedSql, actualProcessedSql );
 		}
 	}

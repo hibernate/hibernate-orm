@@ -47,6 +47,7 @@ import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.WrongClassException;
+import org.hibernate.LockOptions;
 import org.hibernate.cache.FilterKey;
 import org.hibernate.cache.QueryCache;
 import org.hibernate.cache.QueryKey;
@@ -173,18 +174,18 @@ public abstract class Loader {
 	}
 
 	/**
-	 * What lock mode does this load entities with?
+	 * What lock options does this load entities with?
 	 *
-	 * @param lockModes a collection of lock modes specified dynamically via the Query interface
+	 * @param lockOptions a collection of lock options specified dynamically via the Query interface
 	 */
-	protected abstract LockMode[] getLockModes(Map lockModes);
+	protected abstract LockOptions[] getLockOptions(Map lockOptions);
 
 	/**
 	 * Append <tt>FOR UPDATE OF</tt> clause, if necessary. This
 	 * empty superclass implementation merely returns its first
 	 * argument.
 	 */
-	protected String applyLocks(String sql, Map lockModes, Dialect dialect) throws HibernateException {
+	protected String applyLocks(String sql, Map lockOptions, Dialect dialect) throws HibernateException {
 		return sql;
 	}
 
@@ -219,7 +220,7 @@ public abstract class Loader {
 	protected String preprocessSQL(String sql, QueryParameters parameters, Dialect dialect)
 			throws HibernateException {
 		
-		sql = applyLocks( sql, parameters.getLockModes(), dialect );
+		sql = applyLocks( sql, parameters.getLockOptions(), dialect );
 		
 		return getFactory().getSettings().isCommentsEnabled() ?
 				prependComment( sql, parameters ) : sql;
@@ -290,7 +291,7 @@ public abstract class Loader {
 			        resultSet,
 					session,
 					queryParameters,
-					getLockModes( queryParameters.getLockModes() ),
+					getLockOptions( queryParameters.getLockOptions() ),
 					null,
 					hydratedObjects,
 					new EntityKey[entitySpan],
@@ -336,7 +337,7 @@ public abstract class Loader {
 						resultSet,
 						session,
 						queryParameters,
-						getLockModes( queryParameters.getLockModes() ),
+						getLockOptions( queryParameters.getLockOptions() ),
 						null,
 						hydratedObjects,
 						loadedKeys,
@@ -573,7 +574,7 @@ public abstract class Loader {
 	        final ResultSet resultSet,
 	        final SessionImplementor session,
 	        final QueryParameters queryParameters,
-	        final LockMode[] lockModeArray,
+	        final LockOptions[] lockOptionsArray,
 	        final EntityKey optionalObjectKey,
 	        final List hydratedObjects,
 	        final EntityKey[] keys,
@@ -604,7 +605,7 @@ public abstract class Loader {
 				keys,
 				queryParameters.getOptionalObject(),
 				optionalObjectKey,
-				lockModeArray,
+				lockOptionsArray,
 				hydratedObjects,
 				session
 		);
@@ -699,7 +700,7 @@ public abstract class Loader {
 //
 // Would need to change the way the max-row stuff is handled (i.e. behind an interface) so
 // that I could do the control breaking at the means to know when to stop
-		final LockMode[] lockModeArray = getLockModes( queryParameters.getLockModes() );
+		final LockOptions[] lockOptionsArray = getLockOptions( queryParameters.getLockOptions() );
 		final EntityKey optionalObjectKey = getOptionalObjectKey( queryParameters, session );
 
 		final boolean createSubselects = isSubselectLoadingEnabled();
@@ -723,7 +724,7 @@ public abstract class Loader {
 						rs,
 						session,
 						queryParameters,
-						lockModeArray,
+						lockOptionsArray,
 						optionalObjectKey,
 						hydratedObjects,
 						keys,
@@ -1183,7 +1184,7 @@ public abstract class Loader {
 	        final EntityKey[] keys,
 	        final Object optionalObject,
 	        final EntityKey optionalObjectKey,
-	        final LockMode[] lockModes,
+	        final LockOptions[] lockOptions,
 	        final List hydratedObjects,
 	        final SessionImplementor session) 
 	throws HibernateException, SQLException {
@@ -1220,7 +1221,7 @@ public abstract class Loader {
 							persisters[i],
 							key,
 							object,
-							lockModes[i],
+							lockOptions[i],
 							session 
 						);
 				}
@@ -1231,7 +1232,7 @@ public abstract class Loader {
 							persisters[i],
 							descriptors[i].getRowIdAlias(),
 							key,
-							lockModes[i],
+							lockOptions[i],
 							optionalObjectKey,
 							optionalObject,
 							hydratedObjects,
@@ -1257,10 +1258,10 @@ public abstract class Loader {
 	        final Loadable persister,
 	        final EntityKey key,
 	        final Object object,
-	        final LockMode lockMode,
+	        final LockOptions lockOptions,
 	        final SessionImplementor session) 
 	throws HibernateException, SQLException {
-
+		LockMode lockMode = (lockOptions == null) ? null : lockOptions.getLockMode();
 		if ( !persister.isInstance( object, session.getEntityMode() ) ) {
 			throw new WrongClassException( 
 					"loaded object was of wrong class " + object.getClass(), 
@@ -1296,13 +1297,13 @@ public abstract class Loader {
 	        final Loadable persister,
 	        final String rowIdAlias,
 	        final EntityKey key,
-	        final LockMode lockMode,
+	        final LockOptions lockOptions,
 	        final EntityKey optionalObjectKey,
 	        final Object optionalObject,
 	        final List hydratedObjects,
 	        final SessionImplementor session) 
 	throws HibernateException, SQLException {
-
+		LockMode lockMode = (lockOptions == null) ? null : lockOptions.getLockMode();
 		final String instanceClass = getInstanceClass( 
 				rs, 
 				i, 

@@ -47,6 +47,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.LockMode;
+import org.hibernate.LockOptions;
 import org.hibernate.jdbc.util.FormatStyle;
 import org.hibernate.mapping.Table;
 import org.hibernate.util.PropertiesHelper;
@@ -411,7 +412,7 @@ public class TableGenerator extends TransactionHelper implements PersistentIdent
 				" from " + tableName + ' ' + alias +
 				" where " + StringHelper.qualify( alias, segmentColumnName ) + "=?";
 		HashMap lockMap = new HashMap();
-		lockMap.put( alias, LockMode.UPGRADE );
+		lockMap.put( alias,  LockOptions.UPGRADE );
 		Map updateTargetColumnsMap = Collections.singletonMap( alias, new String[] { valueColumnName } );
 		return dialect.applyLocksToSql( query, lockMap, updateTargetColumnsMap );
 	}

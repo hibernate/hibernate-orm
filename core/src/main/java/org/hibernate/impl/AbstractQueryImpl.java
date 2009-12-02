@@ -227,7 +227,7 @@ public abstract class AbstractQueryImpl implements Query {
 		return session;
 	}
 
-	protected abstract Map getLockModes();
+	protected abstract Map getLockOptions();
 
 
 	// Parameter handling code ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -874,7 +874,7 @@ public abstract class AbstractQueryImpl implements Query {
 				typeArray(),
 				valueArray(),
 				namedParams,
-				getLockModes(),
+				getLockOptions(),
 				getSelection(),
 				readOnly,
 				cacheable,

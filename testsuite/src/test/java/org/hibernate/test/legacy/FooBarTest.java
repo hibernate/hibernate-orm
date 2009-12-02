@@ -34,6 +34,7 @@ import org.hibernate.Query;
 import org.hibernate.QueryException;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Transaction;
+import org.hibernate.LockOptions;
 import org.hibernate.cfg.Environment;
 import org.hibernate.classic.Session;
 import org.hibernate.connection.ConnectionProvider;
@@ -1354,7 +1355,7 @@ public class FooBarTest extends LegacyTestCase {
 		s.save(baz);
 		Query q = s.createQuery("from Foo foo, Bar bar");
 		if ( !(getDialect() instanceof DB2Dialect) ) {
-			q.setLockMode("bar", LockMode.UPGRADE);
+			q.setLockOptions("bar", LockOptions.UPGRADE);
 		}
 		Object[] result = (Object[]) q.uniqueResult();
 		Object b = result[0];
@@ -1368,7 +1369,7 @@ public class FooBarTest extends LegacyTestCase {
 		s.createQuery( "from Foo foo" ).list();
 		assertTrue( s.getCurrentLockMode(b)==LockMode.NONE );
 		q = s.createQuery("from Foo foo");
-		q.setLockMode("foo", LockMode.READ);
+		q.setLockOptions("foo", LockOptions.READ);
 		q.list();
 		assertTrue( s.getCurrentLockMode(b)==LockMode.READ);
 		s.evict(baz);
@@ -1387,9 +1388,9 @@ public class FooBarTest extends LegacyTestCase {
 		tx = s.beginTransaction();
 		q = s.createQuery("from Foo foo, Bar bar, Bar bar2");
 		if ( !(getDialect() instanceof DB2Dialect) ) {
-			q.setLockMode("bar", LockMode.UPGRADE);
+			q.setLockOptions("bar", LockOptions.UPGRADE);
 		}
-		q.setLockMode("bar2", LockMode.READ);
+		q.setLockOptions("bar2", LockOptions.READ);
 		result = (Object[]) q.list().get(0);
 		if ( !(getDialect() instanceof DB2Dialect) ) {
 			assertTrue( s.getCurrentLockMode( result[0] )==LockMode.UPGRADE && s.getCurrentLockMode( result[1] )==LockMode.UPGRADE );

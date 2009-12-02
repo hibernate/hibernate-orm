@@ -34,6 +34,7 @@ import java.util.Iterator;
 
 import org.hibernate.Hibernate;
 import org.hibernate.LockMode;
+import org.hibernate.LockOptions;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CharIndexFunction;
 import org.hibernate.dialect.function.NoArgSQLFunction;
@@ -168,13 +169,14 @@ abstract class AbstractTransactSQLDialect extends Dialect {
 		}
 	}
 
-	public String applyLocksToSql(String sql, Map aliasedLockModes, Map keyColumnNames) {
-		Iterator itr = aliasedLockModes.entrySet().iterator();
+	public String applyLocksToSql(String sql, Map aliasedLockOptions, Map keyColumnNames) {
+		Iterator itr = aliasedLockOptions.entrySet().iterator();
 		StringBuffer buffer = new StringBuffer( sql );
 		int correction = 0;
 		while ( itr.hasNext() ) {
 			final Map.Entry entry = ( Map.Entry ) itr.next();
-			final LockMode lockMode = ( LockMode ) entry.getValue();
+			final LockOptions lockOption = ( LockOptions ) entry.getValue();
+			final LockMode lockMode = lockOption.getLockMode();
 			if ( lockMode.greaterThan( LockMode.READ ) ) {
 				final String alias = ( String ) entry.getKey();
 				int start = -1, end = -1;

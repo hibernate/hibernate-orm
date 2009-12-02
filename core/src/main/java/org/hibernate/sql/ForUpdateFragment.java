@@ -29,6 +29,7 @@ import java.util.Map;
 
 import org.hibernate.LockMode;
 import org.hibernate.QueryException;
+import org.hibernate.LockOptions;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.util.StringHelper;
 
@@ -44,13 +45,14 @@ public class ForUpdateFragment {
 		this.dialect = dialect;
 	}
 
-	public ForUpdateFragment(Dialect dialect, Map lockModes, Map keyColumnNames) throws QueryException {
+	public ForUpdateFragment(Dialect dialect, Map lockOptions, Map keyColumnNames) throws QueryException {
 		this( dialect );
 		LockMode upgradeType = null;
-		Iterator iter = lockModes.entrySet().iterator();
+		Iterator iter = lockOptions.entrySet().iterator();
 		while ( iter.hasNext() ) {
 			final Map.Entry me = ( Map.Entry ) iter.next();
-			final LockMode lockMode = ( LockMode ) me.getValue();
+			final LockOptions lockOption = ( LockOptions ) me.getValue();
+			final LockMode lockMode = lockOption.getLockMode();
 			if ( LockMode.READ.lessThan( lockMode ) ) {
 				final String tableAlias = ( String ) me.getKey();
 				if ( dialect.forUpdateOfColumns() ) {

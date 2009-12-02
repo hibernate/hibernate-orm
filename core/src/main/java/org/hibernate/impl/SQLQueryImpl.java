@@ -41,6 +41,7 @@ import org.hibernate.SQLQuery;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.MappingException;
+import org.hibernate.LockOptions;
 import org.hibernate.engine.query.sql.NativeSQLQuerySpecification;
 import org.hibernate.engine.ResultSetMappingDefinition;
 import org.hibernate.engine.NamedSQLQueryDefinition;
@@ -253,7 +254,11 @@ public class SQLQueryImpl extends AbstractQueryImpl implements SQLQuery {
 		throw new UnsupportedOperationException("cannot set the lock mode for a native SQL query");
 	}
 
-	protected Map getLockModes() {
+	public Query setLockOptions(String alias, LockOptions lockOptions) {
+		throw new UnsupportedOperationException("cannot set lock options for a native SQL query");
+	}
+
+	protected Map getLockOptions() {
 		//we never need to apply locks to the SQL
 		return CollectionHelper.EMPTY_MAP;
 	}

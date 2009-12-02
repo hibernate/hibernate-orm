@@ -43,6 +43,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.MappingException;
 import org.hibernate.QueryException;
+import org.hibernate.LockOptions;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CastFunction;
 import org.hibernate.dialect.function.SQLFunction;
@@ -970,6 +971,28 @@ public abstract class Dialect {
 	}
 
 	/**
+	 * Given LockOptions (lockMode, timeout), determine the appropriate for update fragment to use.
+qu	 *
+	 * @param lockOptions contains the lock mode to apply.
+	 * @return The appropriate for update fragment.
+	 */
+	public String getForUpdateString(LockOptions lockOptions) {
+		LockMode lockMode = lockOptions.getLockMode();
+		if ( lockMode==LockMode.UPGRADE || lockMode==LockMode.PESSIMISTIC_READ || lockMode==LockMode.PESSIMISTIC_WRITE) {
+			return getForUpdateString();
+		}
+		else if ( lockMode==LockMode.UPGRADE_NOWAIT ) {
+			return getForUpdateNowaitString();
+		}
+		else if ( lockMode==LockMode.FORCE || lockMode==LockMode.PESSIMISTIC_FORCE_INCREMENT) {
+			return getForUpdateNowaitString();
+		}
+		else {
+			return "";
+		}
+	}
+
+	/**
 	 * Given a lock mode, determine the appropriate for update fragment to use.
 	 *
 	 * @param lockMode The lock mode to apply.
@@ -1078,12 +1101,12 @@ public abstract class Dialect {
 	 * <tt>SELECT FOR UPDATE</tt> to achieve this in their own fashion.
 	 *
 	 * @param sql the SQL string to modify
-	 * @param aliasedLockModes a map of lock modes indexed by aliased table names.
+	 * @param aliasedLockOptions a map of lock options indexed by aliased table names.
 	 * @param keyColumnNames a map of key columns indexed by aliased table names.
 	 * @return the modified SQL string.
 	 */
-	public String applyLocksToSql(String sql, Map aliasedLockModes, Map keyColumnNames) {
-		return sql + new ForUpdateFragment( this, aliasedLockModes, keyColumnNames ).toFragmentString();
+	public String applyLocksToSql(String sql, Map aliasedLockOptions, Map keyColumnNames) {
+		return sql + new ForUpdateFragment( this, aliasedLockOptions, keyColumnNames ).toFragmentString();
 	}
 
 

@@ -38,6 +38,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.QueryException;
 import org.hibernate.ScrollableResults;
+import org.hibernate.LockOptions;
 import org.hibernate.engine.QueryParameters;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.SessionImplementor;
@@ -78,7 +79,7 @@ public class CustomLoader extends Loader {
 	private final int[] collectionOwners;
 	private final CollectionAliases[] collectionAliases;
 
-	private final LockMode[] lockModes;
+	private final LockOptions[] lockOptions;
 //	private final String[] sqlAliases;
 //	private final String[] sqlAliasSuffixes;
 	private final ResultRowProcessor rowProcessor;
@@ -106,7 +107,7 @@ public class CustomLoader extends Loader {
 		List collectionOwners = new ArrayList();
 		List collectionAliases = new ArrayList();
 
-		List lockModes = new ArrayList();
+		List lockOptions = new ArrayList();
 		List resultColumnProcessors = new ArrayList();
 		List nonScalarReturnList = new ArrayList();
 		List resultTypes = new ArrayList();
@@ -133,7 +134,8 @@ public class CustomLoader extends Loader {
 				RootReturn rootRtn = ( RootReturn ) rtn;
 				Queryable persister = ( Queryable ) factory.getEntityPersister( rootRtn.getEntityName() );
 				entityPersisters.add( persister );
-				lockModes.add( rootRtn.getLockMode() );
+				// TODO: get lock options from rootRTN
+				lockOptions.add( new LockOptions(rootRtn.getLockMode()) );
 				resultColumnProcessors.add( new NonScalarResultColumnProcessor( returnableCounter++ ) );
 				nonScalarReturnList.add( rtn );
 				entityOwners.add( new Integer( -1 ) );
@@ -147,7 +149,8 @@ public class CustomLoader extends Loader {
 				String role = collRtn.getOwnerEntityName() + "." + collRtn.getOwnerProperty();
 				QueryableCollection persister = ( QueryableCollection ) factory.getCollectionPersister( role );
 				collectionPersisters.add( persister );
-				lockModes.add( collRtn.getLockMode() );
+				// TODO: get lock options from collRtn
+				lockOptions.add( new LockOptions(collRtn.getLockMode()) );
 				resultColumnProcessors.add( new NonScalarResultColumnProcessor( returnableCounter++ ) );
 				nonScalarReturnList.add( rtn );
 				collectionOwners.add( new Integer( -1 ) );
@@ -169,7 +172,8 @@ public class CustomLoader extends Loader {
 				NonScalarReturn ownerDescriptor = fetchRtn.getOwner();
 				int ownerIndex = nonScalarReturnList.indexOf( ownerDescriptor );
 				entityOwners.add( new Integer( ownerIndex ) );
-				lockModes.add( fetchRtn.getLockMode() );
+				// TODO:  get lock options from fetchRtn
+				lockOptions.add( new LockOptions(fetchRtn.getLockMode()) );
 				Queryable ownerPersister = determineAppropriateOwnerPersister( ownerDescriptor );
 				EntityType fetchedType = ( EntityType ) ownerPersister.getPropertyType( fetchRtn.getOwnerProperty() );
 				String entityName = fetchedType.getAssociatedEntityName( getFactory() );
@@ -185,7 +189,8 @@ public class CustomLoader extends Loader {
 				NonScalarReturn ownerDescriptor = fetchRtn.getOwner();
 				int ownerIndex = nonScalarReturnList.indexOf( ownerDescriptor );
 				collectionOwners.add( new Integer( ownerIndex ) );
-				lockModes.add( fetchRtn.getLockMode() );
+				// TODO:  get lock options from fetchRtn
+				lockOptions.add( new LockOptions(fetchRtn.getLockMode()) );
 				Queryable ownerPersister = determineAppropriateOwnerPersister( ownerDescriptor );
 				String role = ownerPersister.getEntityName() + '.' + fetchRtn.getOwnerProperty();
 				QueryableCollection persister = ( QueryableCollection ) factory.getCollectionPersister( role );
@@ -228,9 +233,9 @@ public class CustomLoader extends Loader {
 			this.collectionAliases[i] = ( CollectionAliases ) collectionAliases.get( i );
 		}
 
-		this.lockModes = new LockMode[ lockModes.size() ];
-		for ( int i = 0; i < lockModes.size(); i++ ) {
-			this.lockModes[i] = ( LockMode ) lockModes.get( i );
+		this.lockOptions = new LockOptions[ lockOptions.size() ];
+		for ( int i = 0; i < lockOptions.size(); i++ ) {
+			this.lockOptions[i] = ( LockOptions ) lockOptions.get( i );
 		}
 
 		this.resultTypes = ArrayHelper.toTypeArray( resultTypes );
@@ -288,8 +293,8 @@ public class CustomLoader extends Loader {
 		return querySpaces;
 	}
 
-	protected LockMode[] getLockModes(Map lockModesMap) {
-		return lockModes;
+	protected LockOptions[] getLockOptions(Map lockModesMap) {
+		return lockOptions;
 	}
 
 	protected Loadable[] getEntityPersisters() {

@@ -35,6 +35,7 @@ import org.hibernate.LockMode;
 import org.hibernate.Query;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
+import org.hibernate.LockOptions;
 import org.hibernate.engine.QueryParameters;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.engine.query.ParameterMetadata;
@@ -47,7 +48,7 @@ import org.hibernate.engine.query.ParameterMetadata;
  */
 public class QueryImpl extends AbstractQueryImpl {
 
-	private Map lockModes = new HashMap(2);
+	private Map lockOptions = new HashMap(2);
 
 	public QueryImpl(
 			String queryString,
@@ -125,12 +126,16 @@ public class QueryImpl extends AbstractQueryImpl {
 	}
 
 	public Query setLockMode(String alias, LockMode lockMode) {
-		lockModes.put(alias, lockMode);
+		return setLockOptions( alias, new LockOptions(lockMode) );
+	}
+	
+	public Query setLockOptions(String alias, LockOptions lockOption) {
+		lockOptions.put(alias, lockOption);
 		return this;
 	}
 
-	protected Map getLockModes() {
-		return lockModes;
+	protected Map getLockOptions() {
+		return lockOptions;
 	}
 
 }

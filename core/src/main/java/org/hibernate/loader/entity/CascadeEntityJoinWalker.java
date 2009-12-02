@@ -27,6 +27,7 @@ package org.hibernate.loader.entity;
 import org.hibernate.FetchMode;
 import org.hibernate.LockMode;
 import org.hibernate.MappingException;
+import org.hibernate.LockOptions;
 import org.hibernate.engine.CascadeStyle;
 import org.hibernate.engine.CascadingAction;
 import org.hibernate.engine.SessionFactoryImplementor;
@@ -48,7 +49,7 @@ public class CascadeEntityJoinWalker extends AbstractEntityJoinWalker {
 				//include the discriminator and class-level where, but not filters
 				.append( persister.filterFragment( getAlias(), CollectionHelper.EMPTY_MAP ) );
 	
-		initAll( whereCondition.toString(), "", LockMode.READ );
+		initAll( whereCondition.toString(), "", LockOptions.READ );
 	}
 
 	protected boolean isJoinedFetchEnabled(AssociationType type, FetchMode config, CascadeStyle cascadeStyle) {

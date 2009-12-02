@@ -75,29 +75,6 @@ public abstract class AbstractEntityJoinWalker extends JoinWalker {
 	protected final void initAll(
 			final String whereString,
 			final String orderByString,
-			final LockMode lockMode) throws MappingException {
-		walkEntityTree( persister, getAlias() );
-		List allAssociations = new ArrayList();
-		allAssociations.addAll(associations);
-		allAssociations.add(
-				new OuterJoinableAssociation(
-						persister.getEntityType(),
-						null,
-						null,
-						alias,
-						JoinFragment.LEFT_OUTER_JOIN,
-						null,
-						getFactory(),
-						CollectionHelper.EMPTY_MAP
-				)
-		);
-		initPersisters(allAssociations, lockMode);
-		initStatementString( whereString, orderByString, lockMode);
-	}
-
-	protected final void initAll(
-			final String whereString,
-			final String orderByString,
 			final LockOptions lockOptions) throws MappingException {
 		walkEntityTree( persister, getAlias() );
 		List allAssociations = new ArrayList();
@@ -114,8 +91,8 @@ public abstract class AbstractEntityJoinWalker extends JoinWalker {
 						CollectionHelper.EMPTY_MAP
 				)
 		);
-		initPersisters(allAssociations, lockOptions.getLockMode());
-		initStatementString( whereString, orderByString, lockOptions.getLockMode());
+		initPersisters(allAssociations, lockOptions);
+		initStatementString( whereString, orderByString, lockOptions);
 	}
 
 	protected final void initProjection(
@@ -123,17 +100,17 @@ public abstract class AbstractEntityJoinWalker extends JoinWalker {
 			final String whereString,
 			final String orderByString,
 			final String groupByString,
-			final LockMode lockMode) throws MappingException {
+			final LockOptions lockOptions) throws MappingException {
 		walkEntityTree( persister, getAlias() );
 		persisters = new Loadable[0];
-		initStatementString(projectionString, whereString, orderByString, groupByString, lockMode);
+		initStatementString(projectionString, whereString, orderByString, groupByString, lockOptions);
 	}
 
 	private void initStatementString(
 			final String condition,
 			final String orderBy,
-			final LockMode lockMode) throws MappingException {
-		initStatementString(null, condition, orderBy, "", lockMode);
+			final LockOptions lockOptions) throws MappingException {
+		initStatementString(null, condition, orderBy, "", lockOptions);
 	}
 
 	private void initStatementString(
@@ -141,7 +118,7 @@ public abstract class AbstractEntityJoinWalker extends JoinWalker {
 			final String condition,
 			final String orderBy,
 			final String groupBy,
-			final LockMode lockMode) throws MappingException {
+			final LockOptions lockOptions) throws MappingException {
 
 		final int joins = countEntityPersisters( associations );
 		suffixes = BasicLoader.generateSuffixes( joins + 1 );
@@ -149,14 +126,14 @@ public abstract class AbstractEntityJoinWalker extends JoinWalker {
 		JoinFragment ojf = mergeOuterJoins( associations );
 
 		Select select = new Select( getDialect() )
-				.setLockMode( lockMode )
+				.setLockOptions( lockOptions )
 				.setSelectClause(
 						projection == null ?
 								persister.selectFragment( alias, suffixes[joins] ) + selectString( associations ) :
 								projection
 				)
 				.setFromClause(
-						getDialect().appendLockHint( lockMode, persister.fromTableFragment( alias ) ) +
+						getDialect().appendLockHint( lockOptions.getLockMode(), persister.fromTableFragment( alias ) ) +
 								persister.fromJoinFragment( alias, true, true )
 				)
 				.setWhereClause( condition )

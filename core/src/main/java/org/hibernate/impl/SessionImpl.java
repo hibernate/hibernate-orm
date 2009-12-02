@@ -2221,9 +2221,7 @@ public final class SessionImpl extends AbstractSessionImpl
 		private final LockOptions lockOptions;
 		private LockRequestImpl(LockOptions lo) {
 			lockOptions = new LockOptions();
-			lockOptions.setLockMode(lo.getLockMode());
-			lockOptions.setScope(lo.getScope());
-			lockOptions.setTimeOut(lo.getTimeOut());
+			LockOptions.copy(lo, lockOptions);
 		}
 
 		public LockMode getLockMode() {

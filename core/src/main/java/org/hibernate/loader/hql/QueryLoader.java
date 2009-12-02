@@ -36,6 +36,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.QueryException;
 import org.hibernate.ScrollableResults;
+import org.hibernate.LockOptions;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.QueryParameters;
 import org.hibernate.engine.SessionFactoryImplementor;
@@ -100,7 +101,7 @@ public class QueryLoader extends BasicLoader {
 	private ResultTransformer implicitResultTransformer;
 	private String[] queryReturnAliases;
 
-	private LockMode[] defaultLockModes;
+	private LockOptions[] defaultLockOptions;
 
 
 	/**
@@ -197,8 +198,7 @@ public class QueryLoader extends BasicLoader {
 		}
 
 		//NONE, because its the requested lock mode, not the actual! 
-		defaultLockModes = ArrayHelper.fillArray(LockMode.NONE, size);
-
+		defaultLockOptions = ArrayHelper.fillArray( LockOptions.NONE, size );
 	}
 
 	// -- Loader implementation --
@@ -277,42 +277,42 @@ public class QueryLoader extends BasicLoader {
 	}
 
 	/**
-	 * @param lockModes a collection of lock modes specified dynamically via the Query interface
+	 * @param lockOptions a collection of lock modes specified dynamically via the Query interface
 	 */
-	protected LockMode[] getLockModes(Map lockModes) {
+	protected LockOptions[] getLockOptions(Map lockOptions) {
 
-		if ( lockModes==null || lockModes.size()==0 ) {
-			return defaultLockModes;
+		if ( lockOptions==null || lockOptions.size()==0 ) {
+			return defaultLockOptions;
 		}
 		else {
 			// unfortunately this stuff can't be cached because
 			// it is per-invocation, not constant for the
 			// QueryTranslator instance
 
-			LockMode[] lockModeArray = new LockMode[entityAliases.length];
+			LockOptions[] lockOptionsArray = new LockOptions[entityAliases.length];
 			for ( int i = 0; i < entityAliases.length; i++ ) {
-				LockMode lockMode = (LockMode) lockModes.get( entityAliases[i] );
-				if ( lockMode == null ) {
+				LockOptions options = (LockOptions) lockOptions.get( entityAliases[i] );
+				if ( options == null ) {
 					//NONE, because its the requested lock mode, not the actual! 
-					lockMode = LockMode.NONE;
+					options = LockOptions.NONE;
 				}
-				lockModeArray[i] = lockMode;
+				lockOptionsArray[i] = options;
 			}
-			return lockModeArray;
+			return lockOptionsArray;
 		}
 	}
 
-	protected String applyLocks(String sql, Map lockModes, Dialect dialect) throws QueryException {
-		if ( lockModes == null || lockModes.size() == 0 ) {
+	protected String applyLocks(String sql, Map lockOptions, Dialect dialect) throws QueryException {
+		if ( lockOptions == null || lockOptions.size() == 0 ) {
 			return sql;
 		}
 
 		// can't cache this stuff either (per-invocation)
 		// we are given a map of user-alias -> lock mode
 		// create a new map of sql-alias -> lock mode
-		final Map aliasedLockModes = new HashMap();
+		final Map aliasedLockOptions = new HashMap();
 		final Map keyColumnNames = dialect.forUpdateOfColumns() ? new HashMap() : null;
-		final Iterator iter = lockModes.entrySet().iterator();
+		final Iterator iter = lockOptions.entrySet().iterator();
 		while ( iter.hasNext() ) {
 			Map.Entry me = ( Map.Entry ) iter.next();
 			final String userAlias = ( String ) me.getKey();
@@ -329,12 +329,12 @@ public class QueryLoader extends BasicLoader {
 			final QueryNode select = ( QueryNode ) queryTranslator.getSqlAST();
 			final Lockable drivingPersister = ( Lockable ) select.getFromClause().getFromElement( userAlias ).getQueryable();
 			final String sqlAlias = drivingPersister.getRootTableAlias( drivingSqlAlias );
-			aliasedLockModes.put( sqlAlias, me.getValue() );
+			aliasedLockOptions.put( sqlAlias, me.getValue() );
 			if ( keyColumnNames != null ) {
 				keyColumnNames.put( sqlAlias, drivingPersister.getRootTableIdentifierColumnNames() );
 			}
 		}
-		return dialect.applyLocksToSql( sql, aliasedLockModes, keyColumnNames );
+		return dialect.applyLocksToSql( sql, aliasedLockOptions, keyColumnNames );
 	}
 
 	protected boolean upgradeLocks() {

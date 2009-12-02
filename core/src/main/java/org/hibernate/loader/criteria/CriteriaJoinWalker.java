@@ -32,6 +32,7 @@ import org.hibernate.Criteria;
 import org.hibernate.FetchMode;
 import org.hibernate.LockMode;
 import org.hibernate.MappingException;
+import org.hibernate.LockOptions;
 import org.hibernate.engine.CascadeStyle;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.LoadQueryInfluencers;
@@ -104,13 +105,13 @@ public class CriteriaJoinWalker extends AbstractEntityJoinWalker {
 					translator.getWhereCondition(), 
 					translator.getOrderBy(),
 					translator.getGroupBy(),
-					LockMode.NONE 
+					LockOptions.NONE  
 				);
 		}
 		else {
 			resultTypes = new Type[] { TypeFactory.manyToOne( persister.getEntityName() ) };
 
-			initAll( translator.getWhereCondition(), translator.getOrderBy(), LockMode.NONE );
+			initAll( translator.getWhereCondition(), translator.getOrderBy(), LockOptions.NONE );
 		}
 		
 		userAliasList.add( criteria.getAlias() ); //root entity comes *last*

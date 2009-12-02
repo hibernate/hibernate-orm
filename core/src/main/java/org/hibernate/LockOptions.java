@@ -31,9 +31,27 @@ package org.hibernate;
  */
 public class LockOptions
 {
-
+	/**
+	 * NO_WAIT timeout value will not block for pessimistic locking
+	 */
 	public static final int NO_WAIT = 0;
+	/**
+	 * WAIT_FOREVER timeout value will block until pessimistic lock is obtained
+	 */
 	public static final int WAIT_FOREVER = -1;
+	/**
+	 * NONE represents LockMode.NONE (timeout + scope do not apply)
+	 */
+	public static final LockOptions NONE = new LockOptions(LockMode.NONE);
+	/**
+	 * READ represents LockMode.READ (timeout + scope do not apply)
+	 */
+	public static final LockOptions READ = new LockOptions(LockMode.READ);
+	/**
+	 * UPGRADE represents LockMode.UPGRADE (will wait forever for lock and
+	 * scope of false meaning only entity is locked)
+	 */
+	public static final LockOptions UPGRADE = new LockOptions(LockMode.UPGRADE);
 
 	private LockMode lockMode = LockMode.NONE;
 
@@ -109,6 +127,19 @@ public class LockOptions
 	public LockOptions setScope(boolean scope) {
 		this.scope = scope;
 		return this;
+	}
+
+	/**
+	 * Copy From to Dest
+	 * @param from is copied from
+	 * @param dest is copied to
+	 * @return dest
+	 */
+	public static LockOptions copy(LockOptions from, LockOptions dest) {
+		dest.setLockMode(from.getLockMode());
+		dest.setScope(from.getScope());
+		dest.setTimeOut(from.getTimeOut());
+		return dest;
 	}
 
 }

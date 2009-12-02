@@ -73,10 +73,7 @@ public class EntityJoinWalker extends AbstractEntityJoinWalker {
 			SessionFactoryImplementor factory,
 			LoadQueryInfluencers loadQueryInfluencers) throws MappingException {
 		super( persister, factory, loadQueryInfluencers );
-
-		this.lockOptions.setLockMode(lockOptions.getLockMode());
-		this.lockOptions.setTimeOut(lockOptions.getTimeOut());
-		this.lockOptions.setScope(lockOptions.getScope());
+		LockOptions.copy(lockOptions, this.lockOptions);
 
 		StringBuffer whereCondition = whereString( getAlias(), uniqueKey, batchSize )
 				//include the discriminator and class-level where, but not filters

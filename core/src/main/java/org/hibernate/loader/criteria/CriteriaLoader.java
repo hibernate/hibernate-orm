@@ -36,6 +36,7 @@ import org.hibernate.LockMode;
 import org.hibernate.QueryException;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
+import org.hibernate.LockOptions;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.QueryParameters;
 import org.hibernate.engine.SessionFactoryImplementor;
@@ -143,38 +144,38 @@ public class CriteriaLoader extends OuterJoinLoader {
 		return querySpaces;
 	}
 
-	protected String applyLocks(String sqlSelectString, Map lockModes, Dialect dialect) throws QueryException {
-		if ( lockModes == null || lockModes.isEmpty() ) {
+	protected String applyLocks(String sqlSelectString, Map lockOptions, Dialect dialect) throws QueryException {
+		if ( lockOptions == null || lockOptions.isEmpty() ) {
 			return sqlSelectString;
 		}
 
-		final Map aliasedLockModes = new HashMap();
+		final Map aliasedLockOptions = new HashMap();
 		final Map keyColumnNames = dialect.forUpdateOfColumns() ? new HashMap() : null;
 		final String[] drivingSqlAliases = getAliases();
 		for ( int i = 0; i < drivingSqlAliases.length; i++ ) {
-			final LockMode lockMode = ( LockMode ) lockModes.get( drivingSqlAliases[i] );
-			if ( lockMode != null ) {
+			final LockOptions lockOption = ( LockOptions ) lockOptions.get( drivingSqlAliases[i] );
+			if ( lockOption != null ) {
 				final Lockable drivingPersister = ( Lockable ) getEntityPersisters()[i];
 				final String rootSqlAlias = drivingPersister.getRootTableAlias( drivingSqlAliases[i] );
-				aliasedLockModes.put( rootSqlAlias, lockMode );
+				aliasedLockOptions.put( rootSqlAlias, lockOption );
 				if ( keyColumnNames != null ) {
 					keyColumnNames.put( rootSqlAlias, drivingPersister.getRootTableIdentifierColumnNames() );
 				}
 			}
 		}
-		return dialect.applyLocksToSql( sqlSelectString, aliasedLockModes, keyColumnNames );
+		return dialect.applyLocksToSql( sqlSelectString, aliasedLockOptions, keyColumnNames );
 	}
 
-	protected LockMode[] getLockModes(Map lockModes) {
+	protected LockOptions[] getLockOptions(Map lockOptions) {
 		final String[] entityAliases = getAliases();
 		if ( entityAliases == null ) {
 			return null;
 		}
 		final int size = entityAliases.length;
-		LockMode[] lockModesArray = new LockMode[size];
+		LockOptions[] lockModesArray = new LockOptions[size];
 		for ( int i=0; i<size; i++ ) {
-			LockMode lockMode = (LockMode) lockModes.get( entityAliases[i] );
-			lockModesArray[i] = lockMode==null ? LockMode.NONE : lockMode;
+			LockOptions lockOption = (LockOptions) lockOptions.get( entityAliases[i] );
+			lockModesArray[i] = lockOption==null ? LockOptions.NONE : lockOption;
 		}
 		return lockModesArray;
 	}

@@ -84,8 +84,8 @@ public final class ArrayHelper {
 		return array;
 	}
 
-	public static LockMode[] fillArray(LockOptions lockOptions, int length) {
-		LockMode[] array = new LockMode[length];
+	public static LockOptions[] fillArray(LockOptions lockOptions, int length) {
+		LockOptions[] array = new LockOptions[length];
 		Arrays.fill(array, lockOptions);
 		return array;
 	}

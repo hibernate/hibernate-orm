@@ -34,6 +34,7 @@ import java.util.Set;
 import org.hibernate.FetchMode;
 import org.hibernate.LockMode;
 import org.hibernate.MappingException;
+import org.hibernate.LockOptions;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.CascadeStyle;
 import org.hibernate.engine.JoinHelper;
@@ -81,7 +82,7 @@ public class JoinWalker {
 	protected CollectionPersister[] collectionPersisters;
 	protected int[] collectionOwners;
 	protected String[] aliases;
-	protected LockMode[] lockModeArray;
+	protected LockOptions[] lockOptionsArray;
 	protected String sql;
 
 	protected JoinWalker(
@@ -100,12 +101,12 @@ public class JoinWalker {
 		this.collectionSuffixes = collectionSuffixes;
 	}
 
-	public LockMode[] getLockModeArray() {
-		return lockModeArray;
+	public LockOptions[] getLockModeOptions() {
+		return lockOptionsArray;
 	}
 
-	public void setLockModeArray(LockMode[] lockModeArray) {
-		this.lockModeArray = lockModeArray;
+	public void setLockOptionsArray(LockOptions[] lockOptionsArray) {
+		this.lockOptionsArray = lockOptionsArray;
 	}
 
 	public String[] getSuffixes() {
@@ -978,7 +979,12 @@ public class JoinWalker {
 		}
 	}
 
+
 	protected void initPersisters(final List associations, final LockMode lockMode) throws MappingException {
+		initPersisters( associations, new LockOptions(lockMode));
+	}
+
+	protected void initPersisters(final List associations, final LockOptions lockOptions) throws MappingException {
 		
 		final int joins = countEntityPersisters(associations);
 		final int collections = countCollectionPersisters(associations);
@@ -991,7 +997,7 @@ public class JoinWalker {
 		aliases = new String[joins];
 		owners = new int[joins];
 		ownerAssociationTypes = new EntityType[joins];
-		lockModeArray = ArrayHelper.fillArray(lockMode, joins);
+		lockOptionsArray = ArrayHelper.fillArray(lockOptions, joins);
 		
 		int i=0;
 		int j=0;

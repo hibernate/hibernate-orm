@@ -13,7 +13,8 @@ import java.util.ArrayList;
 @Entity
 @Audited
 public class Child1Entity {
-     @Id
+    @Id
+    @GeneratedValue
     private Integer id;
 
     private String child1Data;
@@ -63,7 +64,6 @@ public class Child1Entity {
         this.parents = parents;
     }
 
-    @SuppressWarnings({"RedundantIfStatement"})
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -72,6 +72,7 @@ public class Child1Entity {
         Child1Entity that = (Child1Entity) o;
 
         if (child1Data != null ? !child1Data.equals(that.child1Data) : that.child1Data != null) return false;
+        //noinspection RedundantIfStatement
         if (id != null ? !id.equals(that.id) : that.id != null) return false;
 
         return true;
@@ -81,7 +82,10 @@ public class Child1Entity {
     public int hashCode() {
         int result = id != null ? id.hashCode() : 0;
         result = 31 * result + (child1Data != null ? child1Data.hashCode() : 0);
-        result = 31 * result + (parents != null ? parents.hashCode() : 0);
         return result;
+    }
+
+    public String toString() {
+        return "C1E(id = " + id + ", child1Data = " + child1Data + ")";
     }
 }

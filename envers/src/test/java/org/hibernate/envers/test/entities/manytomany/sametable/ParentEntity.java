@@ -14,6 +14,7 @@ import java.util.ArrayList;
 @Audited
 public class ParentEntity {
     @Id
+    @GeneratedValue
     private Integer id;
 
     private String parentData;
@@ -87,9 +88,9 @@ public class ParentEntity {
 
         ParentEntity that = (ParentEntity) o;
 
-        if (parentData != null ? !parentData.equals(that.parentData) : that.parentData != null) return false;
-        //noinspection RedundantIfStatement
         if (id != null ? !id.equals(that.id) : that.id != null) return false;
+        //noinspection RedundantIfStatement
+        if (parentData != null ? !parentData.equals(that.parentData) : that.parentData != null) return false;
 
         return true;
     }
@@ -98,8 +99,10 @@ public class ParentEntity {
     public int hashCode() {
         int result = id != null ? id.hashCode() : 0;
         result = 31 * result + (parentData != null ? parentData.hashCode() : 0);
-        result = 31 * result + (children1 != null ? children1.hashCode() : 0);
-        result = 31 * result + (children2 != null ? children2.hashCode() : 0);
         return result;
+    }
+
+    public String toString() {
+        return "PE(id = " + id + ", parentData = " + parentData + ")";
     }
 }

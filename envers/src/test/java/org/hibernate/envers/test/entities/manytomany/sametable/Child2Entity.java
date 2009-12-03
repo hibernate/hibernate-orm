@@ -13,7 +13,8 @@ import java.util.ArrayList;
 @Entity
 @Audited
 public class Child2Entity {
-     @Id
+    @Id
+    @GeneratedValue
     private Integer id;
 
     private String child2Data;
@@ -81,7 +82,10 @@ public class Child2Entity {
     public int hashCode() {
         int result = id != null ? id.hashCode() : 0;
         result = 31 * result + (child2Data != null ? child2Data.hashCode() : 0);
-        result = 31 * result + (parents != null ? parents.hashCode() : 0);
         return result;
+    }
+
+    public String toString() {
+        return "C2E(id = " + id + ", child2Data = " + child2Data + ")";
     }
 }

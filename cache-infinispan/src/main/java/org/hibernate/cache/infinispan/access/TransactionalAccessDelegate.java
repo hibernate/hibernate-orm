@@ -32,6 +32,7 @@ import org.hibernate.cache.access.SoftLock;
 import org.hibernate.cache.infinispan.impl.BaseRegion;
 import org.hibernate.cache.infinispan.util.CacheAdapter;
 import org.hibernate.cache.infinispan.util.CacheHelper;
+import org.hibernate.cache.infinispan.util.FlagAdapter;
 import org.infinispan.util.logging.Log;
 import org.infinispan.util.logging.LogFactory;
 
@@ -109,7 +110,12 @@ public class TransactionalAccessDelegate {
    public boolean insert(Object key, Object value, Object version) throws CacheException {
       if (!region.checkValid())
          return false;
-      cacheAdapter.put(key, value);
+
+      if (cacheAdapter.isClusteredInvalidation())
+         cacheAdapter.withFlags(FlagAdapter.CACHE_MODE_LOCAL).put(key, value);
+      else
+         cacheAdapter.put(key, value);
+
       return true;
    }
 

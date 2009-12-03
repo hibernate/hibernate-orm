@@ -68,6 +68,15 @@ public class MetadataTools {
         return prop_mapping;
     }
 
+    private static void addOrModifyAttribute(Element parent, String name, String value) {
+        Attribute attribute = parent.attribute(name);
+        if (attribute == null) {
+            parent.addAttribute(name, value);
+        } else {
+            attribute.setValue(value);
+        }
+    }
+
     public static Element addOrModifyColumn(Element parent, String name) {
         Element column_mapping = parent.element("column");
 
@@ -76,12 +85,7 @@ public class MetadataTools {
         }
 
         if (!StringTools.isEmpty(name)) {
-            Attribute nameAttribute = column_mapping.attribute("name");
-            if (nameAttribute == null) {
-                column_mapping.addAttribute("name", name);
-            } else {
-                nameAttribute.setValue(name);
-            }
+            addOrModifyAttribute(column_mapping, "name", name);
         }
 
         return column_mapping;

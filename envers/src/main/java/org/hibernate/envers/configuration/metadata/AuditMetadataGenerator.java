@@ -69,12 +69,15 @@ public final class AuditMetadataGenerator {
     private final Map<String, EntityConfiguration> entitiesConfigurations;
     private final Map<String, EntityConfiguration> notAuditedEntitiesConfigurations;
 
+    private final AuditEntityNameRegister auditEntityNameRegister;
+
     // Map entity name -> (join descriptor -> element describing the "versioned" join)
     private final Map<String, Map<Join, Element>> entitiesJoins;
 
     public AuditMetadataGenerator(Configuration cfg, GlobalConfiguration globalCfg,
                                   AuditEntitiesConfiguration verEntCfg,
-                                  Element revisionInfoRelationMapping) {
+                                  Element revisionInfoRelationMapping,
+                                  AuditEntityNameRegister auditEntityNameRegister) {
         this.cfg = cfg;
         this.globalCfg = globalCfg;
         this.verEntCfg = verEntCfg;
@@ -84,6 +87,8 @@ public final class AuditMetadataGenerator {
 		this.componentMetadataGenerator = new ComponentMetadataGenerator(this);
         this.idMetadataGenerator = new IdMetadataGenerator(this);
         this.toOneRelationMetadataGenerator = new ToOneRelationMetadataGenerator(this);
+
+        this.auditEntityNameRegister = auditEntityNameRegister;
 
         entitiesConfigurations = new HashMap<String, EntityConfiguration>();
         notAuditedEntitiesConfigurations = new HashMap<String, EntityConfiguration>();
@@ -344,6 +349,9 @@ public final class AuditMetadataGenerator {
         String auditEntityName = verEntCfg.getAuditEntityName(entityName);
         String auditTableName = verEntCfg.getAuditTableName(entityName, pc.getTable().getName());
 
+        // Registering the audit entity name, now that it is known
+        auditEntityNameRegister.register(auditEntityName);
+
         AuditTableData auditTableData = new AuditTableData(auditEntityName, auditTableName, schema, catalog);
 
         // Generating a mapping for the id
@@ -444,6 +452,10 @@ public final class AuditMetadataGenerator {
 
     AuditEntitiesConfiguration getVerEntCfg() {
         return verEntCfg;
+    }
+
+    AuditEntityNameRegister getAuditEntityNameRegister() {
+        return auditEntityNameRegister;
     }
 
     void throwUnsupportedTypeException(Type type, String entityName, String propertyName) {

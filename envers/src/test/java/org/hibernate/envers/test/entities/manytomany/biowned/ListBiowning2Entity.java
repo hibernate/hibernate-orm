@@ -37,6 +37,7 @@ import org.hibernate.envers.Audited;
 @Audited
 public class ListBiowning2Entity {
     @Id
+    @GeneratedValue
     private Integer id;
 
     private String data;

@@ -254,7 +254,13 @@ public final class CollectionMetadataGenerator {
         // Generating the XML mapping for the middle entity, only if the relation isn't inverse.
         // If the relation is inverse, will be later checked by comparing middleEntityXml with null.
         Element middleEntityXml;
-        if (!propertyValue.isInverse()) {
+        if (!propertyValue.isInverse()) {            
+            // Generating a unique middle entity name
+            auditMiddleEntityName = mainGenerator.getAuditEntityNameRegister().createUnique(auditMiddleEntityName);
+
+            // Registering the generated name
+            mainGenerator.getAuditEntityNameRegister().register(auditMiddleEntityName);
+
             middleEntityXml = createMiddleEntityXml(auditMiddleTableName, auditMiddleEntityName);
         } else {
             middleEntityXml = null;

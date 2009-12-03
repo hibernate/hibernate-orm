@@ -41,6 +41,7 @@ import org.hibernate.envers.configuration.metadata.reader.AnnotationsMetadataRea
 import org.hibernate.envers.configuration.metadata.EntityXmlMappingData;
 import org.hibernate.envers.configuration.metadata.reader.ClassAuditingData;
 import org.hibernate.envers.configuration.metadata.AuditMetadataGenerator;
+import org.hibernate.envers.configuration.metadata.AuditEntityNameRegister;
 import org.hibernate.envers.entities.EntitiesConfigurations;
 import org.hibernate.envers.tools.StringTools;
 import org.hibernate.envers.tools.graph.GraphTopologicalSort;
@@ -57,8 +58,11 @@ public class EntitiesConfigurator {
     public EntitiesConfigurations configure(Configuration cfg, ReflectionManager reflectionManager,
                                             GlobalConfiguration globalCfg, AuditEntitiesConfiguration verEntCfg,
                                             Document revisionInfoXmlMapping, Element revisionInfoRelationMapping) {
+        // Creating a name register to capture all audit entity names created.
+        AuditEntityNameRegister auditEntityNameRegister = new AuditEntityNameRegister();
+
         AuditMetadataGenerator auditMetaGen = new AuditMetadataGenerator(cfg, globalCfg, verEntCfg,
-                revisionInfoRelationMapping);
+                revisionInfoRelationMapping, auditEntityNameRegister);
         DOMWriter writer = new DOMWriter();
 
         // Sorting the persistent class topologically - superclass always before subclass
@@ -76,6 +80,7 @@ public class EntitiesConfigurator {
                     new AnnotationsMetadataReader(globalCfg, reflectionManager, pc);
             ClassAuditingData auditData = annotationsMetadataReader.getAuditData();
 
+            EntityXmlMappingData xmlMappingData = new EntityXmlMappingData();
             if (auditData.isAudited()) {
                 pcDatas.put(pc, auditData);
 
@@ -83,14 +88,12 @@ public class EntitiesConfigurator {
                     verEntCfg.addCustomAuditTableName(pc.getEntityName(), auditData.getAuditTable().value());
                 }
 
-                EntityXmlMappingData xmlMappingData = new EntityXmlMappingData();
                 auditMetaGen.generateFirstPass(pc, auditData, xmlMappingData, true);
-                xmlMappings.put(pc, xmlMappingData);
 			} else {
-				EntityXmlMappingData xmlMappingData = new EntityXmlMappingData();
 				auditMetaGen.generateFirstPass(pc, auditData, xmlMappingData, false);
-				xmlMappings.put(pc, xmlMappingData);
 			}
+
+            xmlMappings.put(pc, xmlMappingData);
         }
 
         // Second pass

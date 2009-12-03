@@ -31,6 +31,7 @@
         <module>testing</module>
         <module>testsuite</module>
         <module>jdbc3-testing</module>
+        <module>cache-infinispan</module>
 <!--
         <module>tutorials</module>
 -->

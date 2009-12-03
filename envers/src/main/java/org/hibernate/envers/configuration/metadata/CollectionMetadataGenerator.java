@@ -260,8 +260,8 @@ public final class CollectionMetadataGenerator {
 
             // Registering the generated name
             mainGenerator.getAuditEntityNameRegister().register(auditMiddleEntityName);
-
-            middleEntityXml = createMiddleEntityXml(auditMiddleTableName, auditMiddleEntityName);
+                        
+            middleEntityXml = createMiddleEntityXml(auditMiddleTableName, auditMiddleEntityName, propertyValue.getWhere());
         } else {
             middleEntityXml = null;
         }
@@ -480,13 +480,18 @@ public final class CollectionMetadataGenerator {
         }
     }
 
-    private Element createMiddleEntityXml(String auditMiddleTableName, String auditMiddleEntityName) {
+    private Element createMiddleEntityXml(String auditMiddleTableName, String auditMiddleEntityName, String where) {
         String schema = mainGenerator.getSchema(propertyAuditingData.getJoinTable().schema(), propertyValue.getCollectionTable());
         String catalog = mainGenerator.getCatalog(propertyAuditingData.getJoinTable().catalog(), propertyValue.getCollectionTable());
 
         Element middleEntityXml = MetadataTools.createEntity(xmlMappingData.newAdditionalMapping(),
                 new AuditTableData(auditMiddleEntityName, auditMiddleTableName, schema, catalog), null);
         Element middleEntityXmlId = middleEntityXml.addElement("composite-id");
+
+        // If there is a where clause on the relation, adding it to the middle entity.
+        if (where != null) {
+            middleEntityXml.addAttribute("where", where);
+        }
 
         middleEntityXmlId.addAttribute("name", mainGenerator.getVerEntCfg().getOriginalIdPropName());
 

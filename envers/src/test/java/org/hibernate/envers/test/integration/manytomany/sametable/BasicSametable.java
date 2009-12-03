@@ -35,6 +35,7 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 import org.hibernate.ejb.Ejb3Configuration;
+import org.hibernate.Session;
 
 /**
  * Test which checks that auditing entities which contain multiple mappings to same tables work.
@@ -49,14 +50,26 @@ public class BasicSametable extends AbstractEntityTest {
     private Integer c2_2_id;
 
     public void configure(Ejb3Configuration cfg) {
-        //cfg.addAnnotatedClass(ParentEntity.class);
-        //cfg.addAnnotatedClass(Child1Entity.class);
-        //cfg.addAnnotatedClass(Child2Entity.class);
+        cfg.addAnnotatedClass(ParentEntity.class);
+        cfg.addAnnotatedClass(Child1Entity.class);
+        cfg.addAnnotatedClass(Child2Entity.class);
     }
 
-    //@BeforeClass(enabled = false, dependsOnMethods = "init")
+    @BeforeClass(enabled = true, dependsOnMethods = "init")
     public void initData() {
         EntityManager em = getEntityManager();
+
+        // We need first to modify the columns in the middle (join table) to allow null values. Hbm2ddl doesn't seem
+        // to allow this.
+        em.getTransaction().begin();
+        Session session = (Session) em.getDelegate();
+        session.createSQLQuery("DROP TABLE children").executeUpdate();
+        session.createSQLQuery("CREATE TABLE children(parent_id integer, child1_id integer NULL, child2_id integer NULL)").executeUpdate();
+        session.createSQLQuery("DROP TABLE children_AUD").executeUpdate();
+        session.createSQLQuery("CREATE TABLE children_AUD(REV integer NOT NULL, REVTYPE tinyint, " +
+                "parent_id integer, child1_id integer NULL, child2_id integer NULL)").executeUpdate();
+        em.getTransaction().commit();
+        em.clear();
 
         ParentEntity p1 = new ParentEntity("parent_1");
         ParentEntity p2 = new ParentEntity("parent_2");
@@ -78,6 +91,7 @@ public class BasicSametable extends AbstractEntityTest {
         em.persist(c2_2);
 
         em.getTransaction().commit();
+        em.clear();
 
         // Revision 2 - (p1: c1_1, p2: c2_1)
 
@@ -92,6 +106,7 @@ public class BasicSametable extends AbstractEntityTest {
         p2.getChildren2().add(c2_1);
 
         em.getTransaction().commit();
+        em.clear();
 
         // Revision 3 - (p1: c1_1, c1_2, c2_2, p2: c1_1, c2_1)
         em.getTransaction().begin();
@@ -108,6 +123,7 @@ public class BasicSametable extends AbstractEntityTest {
         p2.getChildren1().add(c1_1);
 
         em.getTransaction().commit();
+        em.clear();
 
         // Revision 4 - (p1: c1_2, c2_2, p2: c1_1, c2_1, c2_2)
         em.getTransaction().begin();
@@ -121,6 +137,7 @@ public class BasicSametable extends AbstractEntityTest {
         p2.getChildren2().add(c2_2);
 
         em.getTransaction().commit();
+        em.clear();
 
         // Revision 5 - (p1: c2_2, p2: c1_1, c2_1)
         em.getTransaction().begin();
@@ -134,6 +151,7 @@ public class BasicSametable extends AbstractEntityTest {
         c1_2.getParents().remove(p1);
 
         em.getTransaction().commit();
+        em.clear();
 
         //
 
@@ -145,21 +163,22 @@ public class BasicSametable extends AbstractEntityTest {
         c2_2_id = c2_2.getId();
     }
 
-    @Test(enabled = false)
+    @Test(enabled = true)
     public void testRevisionsCounts() {
-        assert Arrays.asList(1, 2, 3, 4, 5).equals(getAuditReader().getRevisions(ParentEntity.class, p1_id));
-        assert Arrays.asList(1, 2, 3, 4, 5).equals(getAuditReader().getRevisions(ParentEntity.class, p2_id));
+        assert Arrays.asList(1, 2, 3, 4).equals(getAuditReader().getRevisions(ParentEntity.class, p1_id));
+        assert Arrays.asList(1, 2, 3, 4).equals(getAuditReader().getRevisions(ParentEntity.class, p2_id));
 
-        assert Arrays.asList(1, 2, 3, 4).equals(getAuditReader().getRevisions(Child1Entity.class, c1_1_id));
-        assert Arrays.asList(1, 3, 5).equals(getAuditReader().getRevisions(Child1Entity.class, c1_2_id));
+        assert Arrays.asList(1).equals(getAuditReader().getRevisions(Child1Entity.class, c1_1_id));
+        assert Arrays.asList(1, 5).equals(getAuditReader().getRevisions(Child1Entity.class, c1_2_id));
 
-        assert Arrays.asList(1, 2).equals(getAuditReader().getRevisions(Child1Entity.class, c2_1_id));
-        assert Arrays.asList(1, 3, 4, 5).equals(getAuditReader().getRevisions(Child1Entity.class, c2_2_id));
+        assert Arrays.asList(1).equals(getAuditReader().getRevisions(Child1Entity.class, c2_1_id));
+        assert Arrays.asList(1, 5).equals(getAuditReader().getRevisions(Child1Entity.class, c2_2_id));
     }
 
-    @Test(enabled = false)
+    @Test(enabled = true)
     public void testHistoryOfParent1() {
         Child1Entity c1_1 = getEntityManager().find(Child1Entity.class, c1_1_id);
+        Child1Entity c1_2 = getEntityManager().find(Child1Entity.class, c1_2_id);
         Child2Entity c2_2 = getEntityManager().find(Child2Entity.class, c2_2_id);
 
         ParentEntity rev1 = getAuditReader().find(ParentEntity.class, p1_id, 1);
@@ -169,10 +188,10 @@ public class BasicSametable extends AbstractEntityTest {
         ParentEntity rev5 = getAuditReader().find(ParentEntity.class, p1_id, 5);
 
         assert TestTools.checkList(rev1.getChildren1());
-        assert TestTools.checkList(rev2.getChildren1());
-        assert TestTools.checkList(rev3.getChildren1(), c1_1);
-        assert TestTools.checkList(rev4.getChildren1(), c1_1);
-        assert TestTools.checkList(rev5.getChildren1(), c1_1);
+        assert TestTools.checkList(rev2.getChildren1(), c1_1);
+        assert TestTools.checkList(rev3.getChildren1(), c1_1, c1_2);
+        assert TestTools.checkList(rev4.getChildren1(), c1_2);
+        assert TestTools.checkList(rev5.getChildren1());
 
         assert TestTools.checkList(rev1.getChildren2());
         assert TestTools.checkList(rev2.getChildren2());
@@ -181,10 +200,9 @@ public class BasicSametable extends AbstractEntityTest {
         assert TestTools.checkList(rev5.getChildren2(), c2_2);
     }
 
-    @Test(enabled = false)
+    @Test(enabled = true)
     public void testHistoryOfParent2() {
         Child1Entity c1_1 = getEntityManager().find(Child1Entity.class, c1_1_id);
-        Child1Entity c1_2 = getEntityManager().find(Child1Entity.class, c1_2_id);
         Child2Entity c2_1 = getEntityManager().find(Child2Entity.class, c2_1_id);
         Child2Entity c2_2 = getEntityManager().find(Child2Entity.class, c2_2_id);
 
@@ -195,10 +213,10 @@ public class BasicSametable extends AbstractEntityTest {
         ParentEntity rev5 = getAuditReader().find(ParentEntity.class, p2_id, 5);
 
         assert TestTools.checkList(rev1.getChildren1());
-        assert TestTools.checkList(rev2.getChildren1(), c1_1);
-        assert TestTools.checkList(rev3.getChildren1(), c1_1, c1_2);
-        assert TestTools.checkList(rev4.getChildren1(), c1_2);
-        assert TestTools.checkList(rev5.getChildren1());
+        assert TestTools.checkList(rev2.getChildren1());
+        assert TestTools.checkList(rev3.getChildren1(), c1_1);
+        assert TestTools.checkList(rev4.getChildren1(), c1_1);
+        assert TestTools.checkList(rev5.getChildren1(), c1_1);
 
         assert TestTools.checkList(rev1.getChildren2());
         assert TestTools.checkList(rev2.getChildren2(), c2_1);
@@ -207,7 +225,7 @@ public class BasicSametable extends AbstractEntityTest {
         assert TestTools.checkList(rev5.getChildren2(), c2_1);
     }
 
-    @Test(enabled = false)
+    @Test(enabled = true)
     public void testHistoryOfChild1_1() {
         ParentEntity p1 = getEntityManager().find(ParentEntity.class, p1_id);
         ParentEntity p2 = getEntityManager().find(ParentEntity.class, p2_id);
@@ -242,7 +260,7 @@ public class BasicSametable extends AbstractEntityTest {
         assert TestTools.checkList(rev5.getParents());
     }
 
-    @Test(enabled = false)
+    @Test(enabled = true)
     public void testHistoryOfChild2_1() {
         ParentEntity p2 = getEntityManager().find(ParentEntity.class, p2_id);
 
@@ -259,7 +277,7 @@ public class BasicSametable extends AbstractEntityTest {
         assert TestTools.checkList(rev5.getParents(), p2);
     }
 
-    @Test(enabled = false)
+    @Test(enabled = true)
     public void testHistoryOfChild2_2() {
         ParentEntity p1 = getEntityManager().find(ParentEntity.class, p1_id);
         ParentEntity p2 = getEntityManager().find(ParentEntity.class, p2_id);

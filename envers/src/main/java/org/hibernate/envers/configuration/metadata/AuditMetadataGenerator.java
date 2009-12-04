@@ -381,7 +381,7 @@ public final class AuditMetadataGenerator {
 
                 // Adding the "key" element with all columns + the revision number column
                 Element keyMapping = mappingData.getFirst().addElement("key");
-                MetadataTools.addColumns(keyMapping, pc.getIdentifierProperty().getColumnIterator());
+                MetadataTools.addColumns(keyMapping, pc.getTable().getPrimaryKey().columnIterator());
                 MetadataTools.addColumn(keyMapping, verEntCfg.getRevisionFieldName(), null, 0, 0, null);
                 break;
 

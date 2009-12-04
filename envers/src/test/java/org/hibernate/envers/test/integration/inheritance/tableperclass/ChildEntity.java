@@ -73,6 +73,6 @@ public class ChildEntity extends ParentEntity {
     }
 
     public String toString() {
-        return "ChildEntity(id = " + getId() + ", data = " + getData() + ", number = " + number + ")";
+        return "ChildPrimaryKeyJoinEntity(id = " + getId() + ", data = " + getData() + ", number = " + number + ")";
     }
 }

@@ -21,33 +21,30 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.envers.test.integration.inheritance.single;
+
+package org.hibernate.envers.test.integration.inheritance.joined.primarykeyjoin;
 
 import javax.persistence.Basic;
-import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
+import javax.persistence.PrimaryKeyJoinColumn;
 
 import org.hibernate.envers.Audited;
+import org.hibernate.envers.test.integration.inheritance.joined.ParentEntity;
 
 /**
  * @author Adam Warski (adam at warski dot org)
  */
 @Entity
-@DiscriminatorValue("2")
 @Audited
-public class ChildEntity extends ParentEntity {
+@PrimaryKeyJoinColumn(name = "other_id")
+public class ChildPrimaryKeyJoinEntity extends ParentEntity {
     @Basic
     private Long number;
 
-    public ChildEntity() {
+    public ChildPrimaryKeyJoinEntity() {
     }
 
-    public ChildEntity(String data, Long number) {
-        super(data);
-        this.number = number;
-    }
-
-    public ChildEntity(Integer id, String data, Long number) {
+    public ChildPrimaryKeyJoinEntity(Integer id, String data, Long number) {
         super(id, data);
         this.number = number;
     }
@@ -62,12 +59,13 @@ public class ChildEntity extends ParentEntity {
 
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof ChildEntity)) return false;
+        if (!(o instanceof ChildPrimaryKeyJoinEntity)) return false;
         if (!super.equals(o)) return false;
 
-        ChildEntity childEntity = (ChildEntity) o;
+        ChildPrimaryKeyJoinEntity childPrimaryKeyJoinEntity = (ChildPrimaryKeyJoinEntity) o;
 
-        if (number != null ? !number.equals(childEntity.number) : childEntity.number != null) return false;
+        //noinspection RedundantIfStatement
+        if (number != null ? !number.equals(childPrimaryKeyJoinEntity.number) : childPrimaryKeyJoinEntity.number != null) return false;
 
         return true;
     }
@@ -79,6 +77,6 @@ public class ChildEntity extends ParentEntity {
     }
 
     public String toString() {
-        return "ChildPrimaryKeyJoinEntity(id = " + getId() + ", data = " + getData() + ", number = " + number + ")";
+        return "CPKJE(id = " + getId() + ", data = " + getData() + ", number = " + number + ")";
     }
 }

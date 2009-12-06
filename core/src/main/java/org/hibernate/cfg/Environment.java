@@ -502,6 +502,11 @@ public final class Environment {
     public static final String JACC_CONTEXTID = "hibernate.jacc_context_id";
 
 	/**
+	 * Should all database identifiers be quoted.
+	 */
+	public static final String GLOBALLY_QUOTED_IDENTIFIERS = "hibernate.globally_quoted_identifiers";
+
+	/**
 	 * Enable nullability checking.
 	 * Raises an exception if a property marked as not-null is null.
 	 * Default to true.

@@ -27,8 +27,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
-import javax.persistence.MappedSuperclass;
-
 import org.hibernate.AnnotationException;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.AnyMetaDef;
@@ -134,9 +132,21 @@ public interface ExtendedMappings extends Mappings {
 	 */
 	public AnnotatedClassType addClassType(XClass clazz);
 
+	/**
+	 * @deprecated Use {@link #getUniqueConstraintHoldersByTable} instead
+	 */
+	@SuppressWarnings({ "JavaDoc" })
 	public Map<Table, List<String[]>> getTableUniqueConstraints();
 
+	public Map<Table, List<UniqueConstraintHolder>> getUniqueConstraintHoldersByTable();
+
+	/**
+	 * @deprecated Use {@link #addUniqueConstraintHolders} instead
+	 */
+	@SuppressWarnings({ "JavaDoc" })
 	public void addUniqueConstraints(Table table, List uniqueConstraints);
+
+	public void addUniqueConstraintHolders(Table table, List<UniqueConstraintHolder> uniqueConstraintHolders);
 
 	public void addMappedBy(String entityName, String propertyName, String inversePropertyName);
 

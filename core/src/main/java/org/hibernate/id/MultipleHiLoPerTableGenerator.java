@@ -37,6 +37,7 @@ import org.slf4j.LoggerFactory;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.MappingException;
+import org.hibernate.cfg.ObjectNameNormalizer;
 import org.hibernate.jdbc.util.FormatStyle;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.SessionImplementor;
@@ -221,22 +222,41 @@ public class MultipleHiLoPerTableGenerator
 	}
 
 	public void configure(Type type, Properties params, Dialect dialect) throws MappingException {
-		tableName = PropertiesHelper.getString(ID_TABLE, params, DEFAULT_TABLE);
-		pkColumnName = PropertiesHelper.getString(PK_COLUMN_NAME, params, DEFAULT_PK_COLUMN);
-		valueColumnName = PropertiesHelper.getString(VALUE_COLUMN_NAME, params, DEFAULT_VALUE_COLUMN);
-		String schemaName = params.getProperty(SCHEMA);
-		String catalogName = params.getProperty(CATALOG);
-		keySize = PropertiesHelper.getInt(PK_LENGTH_NAME, params, DEFAULT_PK_LENGTH);
-		String keyValue = PropertiesHelper.getString(PK_VALUE_NAME, params, params.getProperty(TABLE) );
+		ObjectNameNormalizer normalizer = ( ObjectNameNormalizer ) params.get( IDENTIFIER_NORMALIZER );
 
-		if ( tableName.indexOf( '.' )<0 ) {
+		tableName = normalizer.normalizeIdentifierQuoting( PropertiesHelper.getString( ID_TABLE, params, DEFAULT_TABLE ) );
+		if ( tableName.indexOf( '.' ) < 0 ) {
+			tableName = dialect.quote( tableName );
+			final String schemaName = dialect.quote(
+					normalizer.normalizeIdentifierQuoting( params.getProperty( SCHEMA ) )
+			);
+			final String catalogName = dialect.quote(
+					normalizer.normalizeIdentifierQuoting( params.getProperty( CATALOG ) )
+			);
 			tableName = Table.qualify( catalogName, schemaName, tableName );
 		}
+		else {
+			// if already qualified there is not much we can do in a portable manner so we pass it
+			// through and assume the user has set up the name correctly.
+		}
+
+		pkColumnName = dialect.quote(
+				normalizer.normalizeIdentifierQuoting(
+						PropertiesHelper.getString( PK_COLUMN_NAME, params, DEFAULT_PK_COLUMN )
+				)
+		);
+		valueColumnName = dialect.quote(
+				normalizer.normalizeIdentifierQuoting(
+						PropertiesHelper.getString( VALUE_COLUMN_NAME, params, DEFAULT_VALUE_COLUMN )
+				)
+		);
+		keySize = PropertiesHelper.getInt(PK_LENGTH_NAME, params, DEFAULT_PK_LENGTH);
+		String keyValue = PropertiesHelper.getString(PK_VALUE_NAME, params, params.getProperty(TABLE) );
 
 		query = "select " +
 			valueColumnName +
 			" from " +
-			dialect.appendLockHint(LockMode.UPGRADE, tableName) +
+			dialect.appendLockHint( LockMode.PESSIMISTIC_WRITE, tableName ) +
 			" where " + pkColumnName + " = '" + keyValue + "'" +
 			dialect.getForUpdateString();
 

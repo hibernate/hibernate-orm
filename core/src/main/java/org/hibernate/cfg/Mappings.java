@@ -543,4 +543,11 @@ public interface Mappings {
 	 * @return the MappedSuperclass
 	 */
 	org.hibernate.mapping.MappedSuperclass getMappedSuperclass(Class type);
+
+	/**
+	 * Retrieve the database identifier normalizer for this context.
+	 *
+	 * @return The normalizer.
+	 */
+	public ObjectNameNormalizer getObjectNameNormalizer();
 }

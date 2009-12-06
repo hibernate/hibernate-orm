@@ -34,6 +34,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
+import org.hibernate.cfg.ObjectNameNormalizer;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.exception.JDBCExceptionHelper;
@@ -61,38 +62,55 @@ public class IncrementGenerator implements IdentifierGenerator, Configurable {
 	private String sql;
 	private Class returnClass;
 
-	public synchronized Serializable generate(SessionImplementor session, Object object) 
-	throws HibernateException {
-
-		if (sql!=null) {
+	public synchronized Serializable generate(SessionImplementor session, Object object) throws HibernateException {
+		if ( sql != null ) {
 			getNext( session );
 		}
-		return IdentifierGeneratorHelper.createNumber(next++, returnClass);
+		return IdentifierGeneratorHelper.createNumber( next++, returnClass );
 	}
 
-	public void configure(Type type, Properties params, Dialect dialect)
-	throws MappingException {
-
-		String tableList = params.getProperty("tables");
-		if (tableList==null) tableList = params.getProperty(PersistentIdentifierGenerator.TABLES);
-		String[] tables = StringHelper.split(", ", tableList);
-		String column = params.getProperty("column");
-		if (column==null) column = params.getProperty(PersistentIdentifierGenerator.PK);
-		String schema = params.getProperty(PersistentIdentifierGenerator.SCHEMA);
-		String catalog = params.getProperty(PersistentIdentifierGenerator.CATALOG);
+	public void configure(Type type, Properties params, Dialect dialect) throws MappingException {
 		returnClass = type.getReturnedClass();
-		
+
+		ObjectNameNormalizer normalizer =
+				( ObjectNameNormalizer ) params.get( PersistentIdentifierGenerator.IDENTIFIER_NORMALIZER );
+
+		String column = params.getProperty( "column" );
+		if ( column == null ) {
+			column = params.getProperty( PersistentIdentifierGenerator.PK );
+		}
+		column = dialect.quote( normalizer.normalizeIdentifierQuoting( column ) );
+
+		String tableList = params.getProperty( "tables" );
+		if ( tableList == null ) {
+			tableList = params.getProperty( PersistentIdentifierGenerator.TABLES );
+		}
+		String[] tables = StringHelper.split( ", ", tableList );
+
+		final String schema = dialect.quote(
+				normalizer.normalizeIdentifierQuoting(
+						params.getProperty( PersistentIdentifierGenerator.SCHEMA )
+				)
+		);
+		final String catalog = dialect.quote(
+				normalizer.normalizeIdentifierQuoting(
+						params.getProperty( PersistentIdentifierGenerator.CATALOG )
+				)
+		);
 
 		StringBuffer buf = new StringBuffer();
-		for ( int i=0; i<tables.length; i++ ) {
-			if (tables.length>1) {
-				buf.append("select ").append(column).append(" from ");
+		for ( int i=0; i < tables.length; i++ ) {
+			final String tableName = dialect.quote( normalizer.normalizeIdentifierQuoting( tables[i] ) );
+			if ( tables.length > 1 ) {
+				buf.append( "select " ).append( column ).append( " from " );
 			}
-			buf.append( Table.qualify( catalog, schema, tables[i] ) );
-			if ( i<tables.length-1) buf.append(" union ");
+			buf.append( Table.qualify( catalog, schema, tableName ) );
+			if ( i < tables.length-1 ) {
+				buf.append( " union " );
+			}
 		}
-		if (tables.length>1) {
-			buf.insert(0, "( ").append(" ) ids_");
+		if ( tables.length > 1 ) {
+			buf.insert( 0, "( " ).append( " ) ids_" );
 			column = "ids_." + column;
 		}
 		
@@ -100,9 +118,7 @@ public class IncrementGenerator implements IdentifierGenerator, Configurable {
 	}
 
 	private void getNext( SessionImplementor session ) {
-
-		log.debug("fetching initial value: " + sql);
-		
+		log.debug( "fetching initial value: " + sql );
 		try {
 			PreparedStatement st = session.getBatcher().prepareSelectStatement(sql);
 			try {
@@ -133,7 +149,7 @@ public class IncrementGenerator implements IdentifierGenerator, Configurable {
 					sqle,
 					"could not fetch initial value for increment generator",
 					sql
-				);
+			);
 		}
 	}
 

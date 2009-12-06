@@ -11,8 +11,11 @@ import org.hibernate.id.enhanced.SequenceStyleGenerator;
 import org.hibernate.id.enhanced.SequenceStructure;
 import org.hibernate.id.enhanced.OptimizerFactory;
 import org.hibernate.id.enhanced.TableStructure;
+import org.hibernate.id.PersistentIdentifierGenerator;
 import org.hibernate.Hibernate;
 import org.hibernate.MappingException;
+import org.hibernate.cfg.ObjectNameNormalizer;
+import org.hibernate.cfg.NamingStrategy;
 
 /**
  * Tests that SequenceStyleGenerator configures itself as expected
@@ -34,7 +37,7 @@ public class SequenceStyleConfigUnitTest extends UnitTestCase {
 	 */
 	public void testDefaultedSequenceBackedConfiguration() {
 		Dialect dialect = new SequenceDialect();
-		Properties props = new Properties();
+		Properties props = buildGeneratorPropertiesBase();
 		SequenceStyleGenerator generator = new SequenceStyleGenerator();
 		generator.configure( Hibernate.LONG, props, dialect );
 
@@ -43,12 +46,29 @@ public class SequenceStyleConfigUnitTest extends UnitTestCase {
 		assertEquals( SequenceStyleGenerator.DEF_SEQUENCE_NAME, generator.getDatabaseStructure().getName() );
 	}
 
+	private Properties buildGeneratorPropertiesBase() {
+		Properties props = new Properties();
+		props.put(
+				PersistentIdentifierGenerator.IDENTIFIER_NORMALIZER,
+				new ObjectNameNormalizer() {
+					protected boolean isUseQuotedIdentifiersGlobally() {
+						return false;
+					}
+
+					protected NamingStrategy getNamingStrategy() {
+						return null;
+					}
+				}
+		);
+		return props;
+	}
+
 	/**
 	 * Test all params defaulted with a dialect which does not support sequences
 	 */
 	public void testDefaultedTableBackedConfiguration() {
 		Dialect dialect = new TableDialect();
-		Properties props = new Properties();
+		Properties props = buildGeneratorPropertiesBase();
 		SequenceStyleGenerator generator = new SequenceStyleGenerator();
 		generator.configure( Hibernate.LONG, props, dialect );
 
@@ -63,7 +83,7 @@ public class SequenceStyleConfigUnitTest extends UnitTestCase {
 	 * dialect supporting pooled sequences (pooled) and not (hilo)
 	 */
 	public void testDefaultOptimizerBasedOnIncrementBackedBySequence() {
-		Properties props = new Properties();
+		Properties props = buildGeneratorPropertiesBase();
 		props.setProperty( SequenceStyleGenerator.INCREMENT_PARAM, "10" );
 
 		// for dialects which do not support pooled sequences, we default to pooled+table
@@ -89,7 +109,7 @@ public class SequenceStyleConfigUnitTest extends UnitTestCase {
 	 * pooled.
 	 */
 	public void testDefaultOptimizerBasedOnIncrementBackedByTable() {
-		Properties props = new Properties();
+		Properties props = buildGeneratorPropertiesBase();
 		props.setProperty( SequenceStyleGenerator.INCREMENT_PARAM, "10" );
 		Dialect dialect = new TableDialect();
 		SequenceStyleGenerator generator = new SequenceStyleGenerator();
@@ -104,7 +124,7 @@ public class SequenceStyleConfigUnitTest extends UnitTestCase {
 	 */
 	public void testForceTableUse() {
 		Dialect dialect = new SequenceDialect();
-		Properties props = new Properties();
+		Properties props = buildGeneratorPropertiesBase();
 		props.setProperty( SequenceStyleGenerator.FORCE_TBL_PARAM, "true" );
 		SequenceStyleGenerator generator = new SequenceStyleGenerator();
 		generator.configure( Hibernate.LONG, props, dialect );
@@ -121,7 +141,7 @@ public class SequenceStyleConfigUnitTest extends UnitTestCase {
 		final Dialect dialect = new SequenceDialect();
 
 		// optimizer=none w/ increment > 1 => should honor optimizer
-		Properties props = new Properties();
+		Properties props = buildGeneratorPropertiesBase();
 		props.setProperty( SequenceStyleGenerator.OPT_PARAM, OptimizerFactory.NONE );
 		props.setProperty( SequenceStyleGenerator.INCREMENT_PARAM, "20" );
 		SequenceStyleGenerator generator = new SequenceStyleGenerator();
@@ -132,7 +152,7 @@ public class SequenceStyleConfigUnitTest extends UnitTestCase {
 		assertEquals( 1, generator.getDatabaseStructure().getIncrementSize() );
 
 		// optimizer=hilo w/ increment > 1 => hilo
-		props = new Properties();
+		props = buildGeneratorPropertiesBase();
 		props.setProperty( SequenceStyleGenerator.OPT_PARAM, OptimizerFactory.HILO );
 		props.setProperty( SequenceStyleGenerator.INCREMENT_PARAM, "20" );
 		generator = new SequenceStyleGenerator();
@@ -143,7 +163,7 @@ public class SequenceStyleConfigUnitTest extends UnitTestCase {
 		assertEquals( 20, generator.getDatabaseStructure().getIncrementSize() );
 
 		// optimizer=pooled w/ increment > 1 => hilo
-		props = new Properties();
+		props = buildGeneratorPropertiesBase();
 		props.setProperty( SequenceStyleGenerator.OPT_PARAM, OptimizerFactory.POOL );
 		props.setProperty( SequenceStyleGenerator.INCREMENT_PARAM, "20" );
 		generator = new SequenceStyleGenerator();

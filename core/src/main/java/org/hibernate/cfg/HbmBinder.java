@@ -2045,15 +2045,24 @@ public final class HbmBinder {
 		// GENERATOR
 		Element subnode = node.element( "generator" );
 		if ( subnode != null ) {
-			model.setIdentifierGeneratorStrategy( subnode.attributeValue( "class" ) );
+			final String generatorClass = subnode.attributeValue( "class" );
+			model.setIdentifierGeneratorStrategy( generatorClass );
 
 			Properties params = new Properties();
+			// YUCK!  but cannot think of a clean way to do this given the string-config based scheme
+			params.put( PersistentIdentifierGenerator.IDENTIFIER_NORMALIZER, mappings.getObjectNameNormalizer() );
 
 			if ( mappings.getSchemaName() != null ) {
-				params.setProperty( PersistentIdentifierGenerator.SCHEMA, mappings.getSchemaName() );
+				params.setProperty(
+						PersistentIdentifierGenerator.SCHEMA,
+						mappings.getObjectNameNormalizer().normalizeIdentifierQuoting( mappings.getSchemaName() ) 
+				);
 			}
 			if ( mappings.getCatalogName() != null ) {
-				params.setProperty( PersistentIdentifierGenerator.CATALOG, mappings.getCatalogName() );
+				params.setProperty(
+						PersistentIdentifierGenerator.CATALOG,
+						mappings.getObjectNameNormalizer().normalizeIdentifierQuoting( mappings.getCatalogName() )
+				);
 			}
 
 			Iterator iter = subnode.elementIterator( "param" );

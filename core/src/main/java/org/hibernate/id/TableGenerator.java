@@ -36,6 +36,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
+import org.hibernate.cfg.ObjectNameNormalizer;
 import org.hibernate.jdbc.util.FormatStyle;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.SessionImplementor;
@@ -88,20 +89,33 @@ public class TableGenerator extends TransactionHelper
 	private String update;
 
 	public void configure(Type type, Properties params, Dialect dialect) {
+		ObjectNameNormalizer normalizer = ( ObjectNameNormalizer ) params.get( IDENTIFIER_NORMALIZER );
 
-		tableName = PropertiesHelper.getString(TABLE, params, DEFAULT_TABLE_NAME);
-		columnName = PropertiesHelper.getString(COLUMN, params, DEFAULT_COLUMN_NAME);
-		String schemaName = params.getProperty(SCHEMA);
-		String catalogName = params.getProperty(CATALOG);
-
-		if ( tableName.indexOf( '.' )<0 ) {
-			tableName = Table.qualify( catalogName, schemaName, tableName );
+		tableName = PropertiesHelper.getString( TABLE, params, DEFAULT_TABLE_NAME );
+		if ( tableName.indexOf( '.' ) < 0 ) {
+			final String schemaName = normalizer.normalizeIdentifierQuoting( params.getProperty( SCHEMA ) );
+			final String catalogName = normalizer.normalizeIdentifierQuoting( params.getProperty( CATALOG ) );
+			tableName = Table.qualify(
+					dialect.quote( catalogName ),
+					dialect.quote( schemaName ),
+					dialect.quote( tableName )
+			);
 		}
+		else {
+			// if already qualified there is not much we can do in a portable manner so we pass it
+			// through and assume the user has set up the name correctly.
+		}
+
+		columnName = dialect.quote(
+				normalizer.normalizeIdentifierQuoting(
+						PropertiesHelper.getString( COLUMN, params, DEFAULT_COLUMN_NAME )
+				)
+		);
 
 		query = "select " + 
 			columnName + 
 			" from " + 
-			dialect.appendLockHint(LockMode.UPGRADE, tableName) +
+			dialect.appendLockHint(LockMode.PESSIMISTIC_WRITE, tableName) +
 			dialect.getForUpdateString();
 
 		update = "update " + 

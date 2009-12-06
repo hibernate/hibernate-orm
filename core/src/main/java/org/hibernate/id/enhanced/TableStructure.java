@@ -69,7 +69,7 @@ public class TableStructure extends TransactionHelper implements DatabaseStructu
 		this.valueColumnName = valueColumnName;
 
 		selectQuery = "select " + valueColumnName + " as id_val" +
-				" from " + dialect.appendLockHint( LockMode.UPGRADE, tableName ) +
+				" from " + dialect.appendLockHint( LockMode.PESSIMISTIC_WRITE, tableName ) +
 				dialect.getForUpdateString();
 
 		updateQuery = "update " + tableName +

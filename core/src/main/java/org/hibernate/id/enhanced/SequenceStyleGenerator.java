@@ -34,6 +34,7 @@ import org.hibernate.id.PersistentIdentifierGenerator;
 import org.hibernate.id.Configurable;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
+import org.hibernate.cfg.ObjectNameNormalizer;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.mapping.Table;
 import org.hibernate.util.PropertiesHelper;
@@ -160,7 +161,7 @@ public class SequenceStyleGenerator implements PersistentIdentifierGenerator, Co
 		this.identifierType = type;
 		boolean forceTableUse = PropertiesHelper.getBoolean( FORCE_TBL_PARAM, params, false );
 
-		final String sequenceName = determineSequenceName( params );
+		final String sequenceName = determineSequenceName( params, dialect );
 
 		final int initialValue = determineInitialValue( params );
 		int incrementSize = determineIncrementSize( params );
@@ -190,14 +191,25 @@ public class SequenceStyleGenerator implements PersistentIdentifierGenerator, Co
 	 * Called during {@link #configure configuration}.
 	 *
 	 * @param params The params supplied in the generator config (plus some standard useful extras).
+	 * @param dialect The dialect in effect
 	 * @return The sequence name
 	 */
-	protected String determineSequenceName(Properties params) {
+	protected String determineSequenceName(Properties params, Dialect dialect) {
+		ObjectNameNormalizer normalizer = ( ObjectNameNormalizer ) params.get( IDENTIFIER_NORMALIZER );
 		String sequenceName = PropertiesHelper.getString( SEQUENCE_PARAM, params, DEF_SEQUENCE_NAME );
 		if ( sequenceName.indexOf( '.' ) < 0 ) {
+			sequenceName = normalizer.normalizeIdentifierQuoting( sequenceName );
 			String schemaName = params.getProperty( SCHEMA );
 			String catalogName = params.getProperty( CATALOG );
-			sequenceName = Table.qualify( catalogName, schemaName, sequenceName );
+			sequenceName = Table.qualify(
+					dialect.quote( catalogName ),
+					dialect.quote( schemaName ),
+					dialect.quote( sequenceName )
+			);
+		}
+		else {
+			// if already qualified there is not much we can do in a portable manner so we pass it
+			// through and assume the user has set up the name correctly.
 		}
 		return sequenceName;
 	}
@@ -210,10 +222,13 @@ public class SequenceStyleGenerator implements PersistentIdentifierGenerator, Co
 	 * physical table</b>.
 	 *
 	 * @param params The params supplied in the generator config (plus some standard useful extras).
+	 * @param dialect The dialect in effect.
 	 * @return The value column name
 	 */
-	protected String determineValueColumnName(Properties params) {
-		return PropertiesHelper.getString( VALUE_COLUMN_PARAM, params, DEF_VALUE_COLUMN );
+	protected String determineValueColumnName(Properties params, Dialect dialect) {
+		ObjectNameNormalizer normalizer = ( ObjectNameNormalizer ) params.get( IDENTIFIER_NORMALIZER );
+		String name = PropertiesHelper.getString( VALUE_COLUMN_PARAM, params, DEF_VALUE_COLUMN );
+		return dialect.quote( normalizer.normalizeIdentifierQuoting( name ) );
 	}
 
 	/**
@@ -296,7 +311,7 @@ public class SequenceStyleGenerator implements PersistentIdentifierGenerator, Co
 			return new SequenceStructure( dialect, sequenceName, initialValue, incrementSize );
 		}
 		else {
-			String valueColumnName = determineValueColumnName( params );
+			String valueColumnName = determineValueColumnName( params, dialect );
 			return new TableStructure( dialect, sequenceName, valueColumnName, initialValue, incrementSize );
 		}
 	}

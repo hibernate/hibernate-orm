@@ -34,6 +34,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
+import org.hibernate.cfg.ObjectNameNormalizer;
 import org.hibernate.exception.JDBCExceptionHelper;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.SessionImplementor;
@@ -53,8 +54,8 @@ import org.hibernate.util.PropertiesHelper;
  * @see TableHiLoGenerator
  * @author Gavin King
  */
-
 public class SequenceGenerator implements PersistentIdentifierGenerator, Configurable {
+	private static final Logger log = LoggerFactory.getLogger(SequenceGenerator.class);
 
 	/**
 	 * The sequence parameter
@@ -72,20 +73,29 @@ public class SequenceGenerator implements PersistentIdentifierGenerator, Configu
 	private Type identifierType;
 	private String sql;
 
-	private static final Logger log = LoggerFactory.getLogger(SequenceGenerator.class);
-
 	public void configure(Type type, Properties params, Dialect dialect) throws MappingException {
-		sequenceName = PropertiesHelper.getString(SEQUENCE, params, "hibernate_sequence");
-		parameters = params.getProperty(PARAMETERS);
-		String schemaName = params.getProperty(SCHEMA);
-		String catalogName = params.getProperty(CATALOG);
+		ObjectNameNormalizer normalizer = ( ObjectNameNormalizer ) params.get( IDENTIFIER_NORMALIZER );
+		sequenceName = normalizer.normalizeIdentifierQuoting(
+				PropertiesHelper.getString( SEQUENCE, params, "hibernate_sequence" )
+		);
+		parameters = params.getProperty( PARAMETERS );
 
-		if (sequenceName.indexOf( '.' ) < 0) {
-			sequenceName = Table.qualify( catalogName, schemaName, sequenceName );
+		if ( sequenceName.indexOf( '.' ) < 0 ) {
+			final String schemaName = normalizer.normalizeIdentifierQuoting( params.getProperty( SCHEMA ) );
+			final String catalogName = normalizer.normalizeIdentifierQuoting( params.getProperty( CATALOG ) );
+			sequenceName = Table.qualify(
+					dialect.quote( catalogName ),
+					dialect.quote( schemaName ),
+					dialect.quote( sequenceName )
+			);
+		}
+		else {
+			// if already qualified there is not much we can do in a portable manner so we pass it
+			// through and assume the user has set up the name correctly.
 		}
 
 		this.identifierType = type;
-		sql = dialect.getSequenceNextValString(sequenceName);
+		sql = dialect.getSequenceNextValString( sequenceName );
 	}
 
 	public Serializable generate(SessionImplementor session, Object obj) 

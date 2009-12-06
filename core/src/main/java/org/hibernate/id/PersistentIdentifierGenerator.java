@@ -67,7 +67,12 @@ public interface PersistentIdentifierGenerator extends IdentifierGenerator {
      * The configuration parameter holding the catalog name
      */
     public static final String CATALOG = "catalog";
-    
+
+	/**
+	 * The key under whcih to find the {@link org.hibernate.cfg.ObjectNameNormalizer} in the config param map.
+	 */
+	public static final String IDENTIFIER_NORMALIZER = "identifier_normalizer";
+
 	/**
 	 * The SQL required to create the underlying database objects.
 	 *

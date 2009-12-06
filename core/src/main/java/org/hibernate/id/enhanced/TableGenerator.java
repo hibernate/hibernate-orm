@@ -46,8 +46,8 @@ import org.hibernate.type.Type;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
-import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
+import org.hibernate.cfg.ObjectNameNormalizer;
 import org.hibernate.jdbc.util.FormatStyle;
 import org.hibernate.mapping.Table;
 import org.hibernate.util.PropertiesHelper;
@@ -287,9 +287,9 @@ public class TableGenerator extends TransactionHelper implements PersistentIdent
 	public void configure(Type type, Properties params, Dialect dialect) throws MappingException {
 		identifierType = type;
 
-		tableName = determneGeneratorTableName( params );
-		segmentColumnName = determineSegmentColumnName( params );
-		valueColumnName = determineValueColumnName( params );
+		tableName = determneGeneratorTableName( params, dialect );
+		segmentColumnName = determineSegmentColumnName( params, dialect );
+		valueColumnName = determineValueColumnName( params, dialect );
 
 		segmentValue = determineSegmentValue( params );
 
@@ -313,16 +313,27 @@ public class TableGenerator extends TransactionHelper implements PersistentIdent
 	 *
 	 * @see #getTableName()
 	 * @param params The params supplied in the generator config (plus some standard useful extras).
+	 * @param dialect The dialect in effect
 	 * @return The table name to use.
 	 */
-	protected String determneGeneratorTableName(Properties params) {
+	protected String determneGeneratorTableName(Properties params, Dialect dialect) {
 		String name = PropertiesHelper.getString( TABLE_PARAM, params, DEF_TABLE );
 		boolean isGivenNameUnqualified = name.indexOf( '.' ) < 0;
 		if ( isGivenNameUnqualified ) {
+			ObjectNameNormalizer normalizer = ( ObjectNameNormalizer ) params.get( IDENTIFIER_NORMALIZER );
+			name = normalizer.normalizeIdentifierQuoting( name );
 			// if the given name is un-qualified we may neen to qualify it
-			String schemaName = params.getProperty( SCHEMA );
-			String catalogName = params.getProperty( CATALOG );
-			name = Table.qualify( catalogName, schemaName, name );
+			String schemaName = normalizer.normalizeIdentifierQuoting( params.getProperty( SCHEMA ) );
+			String catalogName = normalizer.normalizeIdentifierQuoting( params.getProperty( CATALOG ) );
+			name = Table.qualify(
+					dialect.quote( catalogName ),
+					dialect.quote( schemaName ),
+					dialect.quote( name)
+			);
+		}
+		else {
+			// if already qualified there is not much we can do in a portable manner so we pass it
+			// through and assume the user has set up the name correctly.
 		}
 		return name;
 	}
@@ -335,10 +346,13 @@ public class TableGenerator extends TransactionHelper implements PersistentIdent
 	 *
 	 * @see #getSegmentColumnName()
 	 * @param params The params supplied in the generator config (plus some standard useful extras).
+	 * @param dialect The dialect in effect
 	 * @return The name of the segment column
 	 */
-	protected String determineSegmentColumnName(Properties params) {
-		return PropertiesHelper.getString( SEGMENT_COLUMN_PARAM, params, DEF_SEGMENT_COLUMN );
+	protected String determineSegmentColumnName(Properties params, Dialect dialect) {
+		ObjectNameNormalizer normalizer = ( ObjectNameNormalizer ) params.get( IDENTIFIER_NORMALIZER );
+		String name = PropertiesHelper.getString( SEGMENT_COLUMN_PARAM, params, DEF_SEGMENT_COLUMN );
+		return dialect.quote( normalizer.normalizeIdentifierQuoting( name ) );
 	}
 
 	/**
@@ -348,10 +362,13 @@ public class TableGenerator extends TransactionHelper implements PersistentIdent
 	 *
 	 * @see #getValueColumnName()
 	 * @param params The params supplied in the generator config (plus some standard useful extras).
+	 * @param dialect The dialect in effect
 	 * @return The name of the value column
 	 */
-	protected String determineValueColumnName(Properties params) {
-		return PropertiesHelper.getString( VALUE_COLUMN_PARAM, params, DEF_VALUE_COLUMN );
+	protected String determineValueColumnName(Properties params, Dialect dialect) {
+		ObjectNameNormalizer normalizer = ( ObjectNameNormalizer ) params.get( IDENTIFIER_NORMALIZER );
+		String name = PropertiesHelper.getString( VALUE_COLUMN_PARAM, params, DEF_VALUE_COLUMN );
+		return dialect.quote( normalizer.normalizeIdentifierQuoting( name ) );
 	}
 
 	/**

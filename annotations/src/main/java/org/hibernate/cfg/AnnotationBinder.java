@@ -395,6 +395,7 @@ public final class AnnotationBinder {
 				idGen.addParam( org.hibernate.id.SequenceGenerator.SEQUENCE, seqGen.sequenceName() );
 			}
 			//FIXME: work on initialValue() through SequenceGenerator.PARAMETERS
+			//		steve : or just use o.h.id.enhanced.SequenceStyleGenerator
 			if ( seqGen.initialValue() != 1 ) {
 				log.warn(
 						"Hibernate does not support SequenceGenerator.initialValue()"
@@ -485,7 +486,7 @@ public final class AnnotationBinder {
 		String table = ""; //might be no @Table annotation on the annotated class
 		String catalog = "";
 		String discrimValue = null;
-		List<String[]> uniqueConstraints = new ArrayList<String[]>();
+		List<UniqueConstraintHolder> uniqueConstraints = new ArrayList<UniqueConstraintHolder>();
 		Ejb3DiscriminatorColumn discriminatorColumn = null;
 		Ejb3JoinColumn[] inheritanceJoinedColumns = null;
 
@@ -494,7 +495,7 @@ public final class AnnotationBinder {
 			table = tabAnn.name();
 			schema = tabAnn.schema();
 			catalog = tabAnn.catalog();
-			uniqueConstraints = TableBinder.buildUniqueConstraints( tabAnn.uniqueConstraints() );
+			uniqueConstraints = TableBinder.buildUniqueConstraintHolders( tabAnn.uniqueConstraints() );
 		}
 		final boolean hasJoinedColumns = inheritanceState.hasParents
 				&& InheritanceType.JOINED.equals( inheritanceState.type );

@@ -23,7 +23,6 @@
  */
 package org.hibernate.cfg.annotations;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -34,7 +33,6 @@ import javax.persistence.JoinTable;
 import javax.persistence.PrimaryKeyJoinColumn;
 import javax.persistence.SecondaryTable;
 import javax.persistence.SecondaryTables;
-import javax.persistence.UniqueConstraint;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
@@ -68,6 +66,10 @@ import org.hibernate.cfg.Ejb3JoinColumn;
 import org.hibernate.cfg.ExtendedMappings;
 import org.hibernate.cfg.InheritanceState;
 import org.hibernate.cfg.PropertyHolder;
+import org.hibernate.cfg.ObjectNameSource;
+import org.hibernate.cfg.NamingStrategy;
+import org.hibernate.cfg.ObjectNameNormalizer;
+import org.hibernate.cfg.UniqueConstraintHolder;
 import org.hibernate.engine.ExecuteUpdateResultCheckStyle;
 import org.hibernate.engine.FilterDefinition;
 import org.hibernate.engine.Versioning;
@@ -81,6 +83,7 @@ import org.hibernate.mapping.TableOwner;
 import org.hibernate.mapping.Value;
 import org.hibernate.util.ReflectHelper;
 import org.hibernate.util.StringHelper;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -292,9 +295,7 @@ public class EntityBinder {
 		}
 
 		if ( !inheritanceState.hasParents ) {
-			Iterator<Map.Entry<String, String>> iter = filters.entrySet().iterator();
-			while ( iter.hasNext() ) {
-				Map.Entry<String, String> filter = iter.next();
+			for ( Map.Entry<String, String> filter : filters.entrySet() ) {
 				String filterName = filter.getKey();
 				String cond = filter.getValue();
 				if ( BinderHelper.isDefault( cond ) ) {
@@ -386,6 +387,7 @@ public class EntityBinder {
 		}
 	}
 
+	@SuppressWarnings({ "unchecked" })
 	public void setProxy(Proxy proxy) {
 		if ( proxy != null ) {
 			lazy = proxy.lazy();
@@ -415,29 +417,58 @@ public class EntityBinder {
 		}
 	}
 
-	private String getClassTableName(String tableName) {
-		if ( StringHelper.isEmpty( tableName ) ) {
-			return mappings.getNamingStrategy().classToTableName( name );
+	private static class EntityTableObjectNameSource implements ObjectNameSource {
+		private final String explicitName;
+		private final String logicalName;
+
+		private EntityTableObjectNameSource(String explicitName, String entityName) {
+			this.explicitName = explicitName;
+			this.logicalName = StringHelper.isNotEmpty( explicitName )
+					? explicitName
+					: StringHelper.unqualify( entityName );
 		}
-		else {
-			return mappings.getNamingStrategy().tableName( tableName );
+
+		public String getExplicitName() {
+			return explicitName;
+		}
+
+		public String getLogicalName() {
+			return logicalName;
+		}
+	}
+
+	private static class EntityTableNamingStrategyHelper implements ObjectNameNormalizer.NamingStrategyHelper {
+		private final String entityName;
+
+		private EntityTableNamingStrategyHelper(String entityName) {
+			this.entityName = entityName;
+		}
+
+		public String determineImplicitName(NamingStrategy strategy) {
+			return strategy.classToTableName( entityName );
+		}
+
+		public String handleExplicitName(NamingStrategy strategy, String name) {
+			return strategy.tableName( name );
 		}
 	}
 
 	public void bindTable(
 			String schema, String catalog,
-			String tableName, List uniqueConstraints,
-			String constraints, Table denormalizedSuperclassTable
-	) {
-		String logicalName = StringHelper.isNotEmpty( tableName ) ?
-				tableName :
-				StringHelper.unqualify( name );
-		Table table = TableBinder.fillTable(
-				schema, catalog,
-				getClassTableName( tableName ),
-				logicalName,
-				persistentClass.isAbstract(), uniqueConstraints, constraints,
-				denormalizedSuperclassTable, mappings
+			String tableName, List<UniqueConstraintHolder> uniqueConstraints,
+			String constraints, Table denormalizedSuperclassTable) {
+		EntityTableObjectNameSource tableNameContext = new EntityTableObjectNameSource( tableName, name );
+		EntityTableNamingStrategyHelper namingStrategyHelper = new EntityTableNamingStrategyHelper( name );
+		final Table table = TableBinder.buildAndFillTable(
+				schema,
+				catalog,
+				tableNameContext,
+				namingStrategyHelper,
+				persistentClass.isAbstract(),
+				uniqueConstraints,
+				constraints,
+				denormalizedSuperclassTable,
+				mappings
 		);
 
 		if ( persistentClass instanceof TableOwner ) {
@@ -592,68 +623,89 @@ public class EntityBinder {
 		return addJoin( null, joinTable, holder, noDelayInPkColumnCreation );
 	}
 
-	/**
-	 * A non null propertyHolder means than we process the Pk creation without delay
-	 */
+	private static class SecondaryTableNameSource implements ObjectNameSource {
+		// always has an explicit name
+		private final String explicitName;
+
+		private SecondaryTableNameSource(String explicitName) {
+			this.explicitName = explicitName;
+		}
+
+		public String getExplicitName() {
+			return explicitName;
+		}
+
+		public String getLogicalName() {
+			return explicitName;
+		}
+	}
+
+	private static class SecondaryTableNamingStrategyHelper implements ObjectNameNormalizer.NamingStrategyHelper {
+		public String determineImplicitName(NamingStrategy strategy) {
+			// todo : throw an error?
+			return null;
+		}
+
+		public String handleExplicitName(NamingStrategy strategy, String name) {
+			return strategy.tableName( name );
+		}
+	}
+
+	private static SecondaryTableNamingStrategyHelper SEC_TBL_NS_HELPER = new SecondaryTableNamingStrategyHelper();
+
 	private Join addJoin(
-			SecondaryTable secondaryTable, JoinTable joinTable, PropertyHolder propertyHolder,
-			boolean noDelayInPkColumnCreation
-	) {
+			SecondaryTable secondaryTable,
+			JoinTable joinTable,
+			PropertyHolder propertyHolder,
+			boolean noDelayInPkColumnCreation) {
+		// A non null propertyHolder means than we process the Pk creation without delay
 		Join join = new Join();
 		join.setPersistentClass( persistentClass );
-		String schema;
-		String catalog;
-		String table;
-		String realTable;
-		UniqueConstraint[] uniqueConstraintsAnn;
+
+		final String schema;
+		final String catalog;
+		final SecondaryTableNameSource secondaryTableNameContext;
+		final Object joinColumns;
+		final List<UniqueConstraintHolder> uniqueConstraintHolders;
+
 		if ( secondaryTable != null ) {
 			schema = secondaryTable.schema();
 			catalog = secondaryTable.catalog();
-			table = secondaryTable.name();
-			realTable = mappings.getNamingStrategy().tableName( table ); //always an explicit table name
-			uniqueConstraintsAnn = secondaryTable.uniqueConstraints();
+			secondaryTableNameContext = new SecondaryTableNameSource( secondaryTable.name() );
+			joinColumns = secondaryTable.pkJoinColumns();
+			uniqueConstraintHolders = TableBinder.buildUniqueConstraintHolders( secondaryTable.uniqueConstraints() );
 		}
 		else if ( joinTable != null ) {
 			schema = joinTable.schema();
 			catalog = joinTable.catalog();
-			table = joinTable.name();
-			realTable = mappings.getNamingStrategy().tableName( table ); //always an explicit table name
-			uniqueConstraintsAnn = joinTable.uniqueConstraints();
+			secondaryTableNameContext = new SecondaryTableNameSource( joinTable.name() );
+			joinColumns = joinTable.joinColumns();
+			uniqueConstraintHolders = TableBinder.buildUniqueConstraintHolders( joinTable.uniqueConstraints() );
 		}
 		else {
 			throw new AssertionFailure( "Both JoinTable and SecondaryTable are null" );
 		}
-		List uniqueConstraints = new ArrayList( uniqueConstraintsAnn == null ?
-				0 :
-				uniqueConstraintsAnn.length );
-		if ( uniqueConstraintsAnn != null && uniqueConstraintsAnn.length != 0 ) {
-			for (UniqueConstraint uc : uniqueConstraintsAnn) {
-				uniqueConstraints.add( uc.columnNames() );
-			}
-		}
-		Table tableMapping = TableBinder.fillTable(
+
+		final Table table = TableBinder.buildAndFillTable(
 				schema,
 				catalog,
-				realTable,
-				table, false, uniqueConstraints, null, null, mappings
+				secondaryTableNameContext,
+				SEC_TBL_NS_HELPER,
+				false,
+				uniqueConstraintHolders,
+				null,
+				null,
+				mappings
 		);
+
 		//no check constraints available on joins
-		join.setTable( tableMapping );
+		join.setTable( table );
 
 		//somehow keep joins() for later.
 		//Has to do the work later because it needs persistentClass id!
-		Object joinColumns = null;
-		//get the appropriate pk columns
-		if ( secondaryTable != null ) {
-			joinColumns = secondaryTable.pkJoinColumns();
-		}
-		else if ( joinTable != null ) {
-			joinColumns = joinTable.joinColumns();
-		}
 		log.info(
 				"Adding secondary table to entity {} -> {}", persistentClass.getEntityName(), join.getTable().getName()
 		);
-
 		org.hibernate.annotations.Table matchingTable = findMatchingComplimentTableAnnotation( join );
 		if ( matchingTable != null ) {
 			join.setSequentialSelect( FetchMode.JOIN != matchingTable.fetch() );
@@ -689,8 +741,8 @@ public class EntityBinder {
 			createPrimaryColumnsToSecondaryTable( joinColumns, propertyHolder, join );
 		}
 		else {
-			secondaryTables.put( realTable, join );
-			secondaryTableJoins.put( realTable, joinColumns );
+			secondaryTables.put( table.getQuotedName(), join );
+			secondaryTableJoins.put( table.getQuotedName(), joinColumns );
 		}
 		return join;
 	}

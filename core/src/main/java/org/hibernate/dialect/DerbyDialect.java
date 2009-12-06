@@ -169,6 +169,11 @@ public class DerbyDialect extends DB2Dialect {
 		return sb.toString();
 	}
 
+	public boolean supportsVariableLimit() {
+		// we bind the limit and offset values directly into the sql...
+		return false;
+	}
+
 	private boolean hasForUpdateClause(int forUpdateIndex) {
 		return forUpdateIndex >= 0;
 	}

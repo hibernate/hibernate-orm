@@ -68,7 +68,6 @@ import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.DuplicateMappingException;
 import org.hibernate.tuple.entity.EntityTuplizerFactory;
-import org.hibernate.tuple.component.ComponentTuplizerFactory;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.function.SQLFunction;
@@ -2456,6 +2455,8 @@ public class Configuration implements Serializable {
 			Table table = ( Table ) tables.get( key );
 
 			if ( table == null ) {
+				schema = getObjectNameNormalizer().normalizeIdentifierQuoting( schema );
+				catalog = getObjectNameNormalizer().normalizeIdentifierQuoting( catalog );
 				table = new Table();
 				table.setAbstract( isAbstract );
 				table.setName( name );
@@ -2484,6 +2485,9 @@ public class Configuration implements Serializable {
 			if ( tables.containsKey( key ) ) {
 				throw new DuplicateMappingException( "table", name );
 			}
+
+			schema = getObjectNameNormalizer().normalizeIdentifierQuoting( schema );
+			catalog = getObjectNameNormalizer().normalizeIdentifierQuoting( catalog );
 
 			Table table = new DenormalizedTable( includedTable );
 			table.setAbstract( isAbstract );
@@ -2785,6 +2789,23 @@ public class Configuration implements Serializable {
 
 		public MappedSuperclass getMappedSuperclass(Class type) {
 			return (MappedSuperclass) mappedSuperclasses.get( type );
+		}
+
+		public ObjectNameNormalizer getObjectNameNormalizer() {
+			return normalizer;
+		}
+	}
+
+	final ObjectNameNormalizer normalizer = new ObjectNameNormalizerImpl();
+
+	final class ObjectNameNormalizerImpl extends ObjectNameNormalizer implements Serializable {
+		public boolean isUseQuotedIdentifiersGlobally() {
+			String setting = (String) properties.get( Environment.GLOBALLY_QUOTED_IDENTIFIERS );
+			return setting != null && Boolean.valueOf( setting ).booleanValue();
+		}
+
+		public NamingStrategy getNamingStrategy() {
+			return namingStrategy;
 		}
 	}
 }

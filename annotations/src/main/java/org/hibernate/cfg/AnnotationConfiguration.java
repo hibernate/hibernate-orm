@@ -85,6 +85,7 @@ import org.hibernate.mapping.UniqueKey;
 import org.hibernate.util.JoinedIterator;
 import org.hibernate.util.ReflectHelper;
 import org.hibernate.util.StringHelper;
+import org.hibernate.util.CollectionHelper;
 
 /**
  * Similar to the {@link Configuration} object but handles EJB3 and Hibernate
@@ -121,7 +122,8 @@ public class AnnotationConfiguration extends Configuration {
 	private Set<String> defaultSqlResulSetMappingNames;
 	private Set<String> defaultNamedGenerators;
 	private Map<String, Properties> generatorTables;
-	private Map<Table, List<String[]>> tableUniqueConstraints;
+	private Map<Table, List<UniqueConstraintHolder>> uniqueConstraintHoldersByTable;
+//	private Map<Table, List<String[]>> tableUniqueConstraints;
 	private Map<String, String> mappedByResolver;
 	private Map<String, String> propertyRefResolver;
 	private Map<String, AnyMetaDef> anyMetaDefs;
@@ -249,7 +251,7 @@ public class AnnotationConfiguration extends Configuration {
 		defaultNamedNativeQueryNames = new HashSet<String>();
 		defaultSqlResulSetMappingNames = new HashSet<String>();
 		defaultNamedGenerators = new HashSet<String>();
-		tableUniqueConstraints = new HashMap<Table, List<String[]>>();
+		uniqueConstraintHoldersByTable = new HashMap<Table, List<UniqueConstraintHolder>>();
 		mappedByResolver = new HashMap<String, String>();
 		propertyRefResolver = new HashMap<String, String>();
 		annotatedClasses = new ArrayList<XClass>();
@@ -358,19 +360,19 @@ public class AnnotationConfiguration extends Configuration {
 			//the exception was not recoverable after all
 			throw ( RuntimeException ) e.getCause();
 		}
-		Iterator tables = tableUniqueConstraints.entrySet().iterator();
-		Table table;
-		Map.Entry entry;
-		String keyName;
-		int uniqueIndexPerTable;
+
+		Iterator<Map.Entry<Table,List<UniqueConstraintHolder>>> tables = uniqueConstraintHoldersByTable.entrySet().iterator();
 		while ( tables.hasNext() ) {
-			entry = ( Map.Entry ) tables.next();
-			table = ( Table ) entry.getKey();
-			List<String[]> uniqueConstraints = ( List<String[]> ) entry.getValue();
-			uniqueIndexPerTable = 0;
-			for ( String[] columnNames : uniqueConstraints ) {
-				keyName = "key" + uniqueIndexPerTable++;
-				buildUniqueKeyFromColumnNames( columnNames, table, keyName );
+			final Map.Entry<Table,List<UniqueConstraintHolder>> entry = tables.next();
+			final Table table = entry.getKey();
+			final List<UniqueConstraintHolder> uniqueConstraints = entry.getValue();
+			int uniqueIndexPerTable = 0;
+			for ( UniqueConstraintHolder holder : uniqueConstraints ) {
+				uniqueIndexPerTable++;
+				final String keyName = StringHelper.isEmpty( holder.getName() )
+						? "key" + uniqueIndexPerTable
+						: holder.getName();
+				buildUniqueKeyFromColumnNames( table, keyName, holder.getColumns() );
 			}
 		}
 		applyConstraintsToDDL();
@@ -621,23 +623,26 @@ public class AnnotationConfiguration extends Configuration {
 		}
 	}
 
-	private void buildUniqueKeyFromColumnNames(String[] columnNames, Table table, String keyName) {
+	private void buildUniqueKeyFromColumnNames(Table table, String keyName, String[] columnNames) {
+		ExtendedMappings mappings = createExtendedMappings();
+		keyName = mappings.getObjectNameNormalizer().normalizeIdentifierQuoting( keyName );
+
 		UniqueKey uc;
 		int size = columnNames.length;
 		Column[] columns = new Column[size];
 		Set<Column> unbound = new HashSet<Column>();
 		Set<Column> unboundNoLogical = new HashSet<Column>();
-		ExtendedMappings mappings = createExtendedMappings();
 		for ( int index = 0; index < size; index++ ) {
-			String columnName;
+			final String logicalColumnName = mappings.getObjectNameNormalizer()
+					.normalizeIdentifierQuoting( columnNames[index] );
 			try {
-				columnName = mappings.getPhysicalColumnName( columnNames[index], table );
+				final String columnName = mappings.getPhysicalColumnName( logicalColumnName, table );
 				columns[index] = new Column( columnName );
 				unbound.add( columns[index] );
 				//column equals and hashcode is based on column name
 			}
 			catch ( MappingException e ) {
-				unboundNoLogical.add( new Column( columnNames[index] ) );
+				unboundNoLogical.add( new Column( logicalColumnName ) );
 			}
 		}
 		for ( Column column : columns ) {
@@ -1258,17 +1263,69 @@ public class AnnotationConfiguration extends Configuration {
 			return type;
 		}
 
+		/**
+		 * {@inheritDoc}
+		 */
 		public Map<Table, List<String[]>> getTableUniqueConstraints() {
-			return tableUniqueConstraints;
+			final Map<Table, List<String[]>> deprecatedStructure = new HashMap<Table, List<String[]>>(
+					CollectionHelper.determineProperSizing( getUniqueConstraintHoldersByTable() ),
+					CollectionHelper.LOAD_FACTOR
+			);
+			for ( Map.Entry<Table, List<UniqueConstraintHolder>> entry : getUniqueConstraintHoldersByTable().entrySet() ) {
+				List<String[]> columnsPerConstraint = new ArrayList<String[]>(
+						CollectionHelper.determineProperSizing( entry.getValue().size() )
+				);
+				deprecatedStructure.put( entry.getKey(), columnsPerConstraint );
+				for ( UniqueConstraintHolder holder : entry.getValue() ) {
+					columnsPerConstraint.add( holder.getColumns() );
+				}
+			}
+			return deprecatedStructure;
 		}
 
+		/**
+		 * {@inheritDoc}
+		 */
+		public Map<Table, List<UniqueConstraintHolder>> getUniqueConstraintHoldersByTable() {
+			return uniqueConstraintHoldersByTable;
+		}
+
+		/**
+		 * {@inheritDoc}
+		 */
+		@SuppressWarnings({ "unchecked" })
 		public void addUniqueConstraints(Table table, List uniqueConstraints) {
-			List oldConstraints = tableUniqueConstraints.get( table );
-			if ( oldConstraints == null ) {
-				oldConstraints = new ArrayList();
-				tableUniqueConstraints.put( table, oldConstraints );
+			List<UniqueConstraintHolder> constraintHolders = new ArrayList<UniqueConstraintHolder>(
+					CollectionHelper.determineProperSizing( uniqueConstraints.size() )
+			);
+
+			int keyNameBase = determineCurrentNumberOfUniqueConstraintHolders( table );
+			for ( String[] columns : (List<String[]>)uniqueConstraints ) {
+				final String keyName = "key" + keyNameBase++;
+				constraintHolders.add(
+						new UniqueConstraintHolder().setName( keyName ).setColumns( columns )
+				);
 			}
-			oldConstraints.addAll( uniqueConstraints );
+			addUniqueConstraintHolders( table, constraintHolders );
+		}
+
+		private int determineCurrentNumberOfUniqueConstraintHolders(Table table) {
+			List currentHolders = getUniqueConstraintHoldersByTable().get( table );
+			return currentHolders == null
+					? 0
+					: currentHolders.size();
+		}
+
+		/**
+		 * {@inheritDoc}
+		 */
+		public void addUniqueConstraintHolders(Table table, List<UniqueConstraintHolder> uniqueConstraintHolders) {
+			List<UniqueConstraintHolder> holderList = getUniqueConstraintHoldersByTable().get( table );
+			if ( holderList == null ) {
+				holderList = new ArrayList<UniqueConstraintHolder>();
+				getUniqueConstraintHoldersByTable().put( table, holderList );
+			}
+			holderList.addAll( uniqueConstraintHolders );
 		}
 
 		public void addMappedBy(String entityName, String propertyName, String inversePropertyName) {

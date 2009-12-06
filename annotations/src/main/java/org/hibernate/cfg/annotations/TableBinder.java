@@ -32,10 +32,15 @@ import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.annotations.Index;
 import org.hibernate.util.StringHelper;
+import org.hibernate.util.CollectionHelper;
 import org.hibernate.cfg.BinderHelper;
 import org.hibernate.cfg.Ejb3JoinColumn;
 import org.hibernate.cfg.ExtendedMappings;
 import org.hibernate.cfg.IndexOrUniqueKeySecondPass;
+import org.hibernate.cfg.ObjectNameNormalizer;
+import org.hibernate.cfg.ObjectNameSource;
+import org.hibernate.cfg.NamingStrategy;
+import org.hibernate.cfg.UniqueConstraintHolder;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.DependantValue;
@@ -62,7 +67,8 @@ public class TableBinder {
 	private String catalog;
 	private String name;
 	private boolean isAbstract;
-	private List<String[]> uniqueConstraints;
+	private List<UniqueConstraintHolder> uniqueConstraints;
+//	private List<String[]> uniqueConstraints;
 	String constraints;
 	Table denormalizedSuperTable;
 	ExtendedMappings mappings;
@@ -93,7 +99,7 @@ public class TableBinder {
 	}
 
 	public void setUniqueConstraints(UniqueConstraint[] uniqueConstraints) {
-		this.uniqueConstraints = TableBinder.buildUniqueConstraints( uniqueConstraints );
+		this.uniqueConstraints = TableBinder.buildUniqueConstraintHolders( uniqueConstraints );
 	}
 
 	public void setConstraints(String constraints) {
@@ -108,45 +114,150 @@ public class TableBinder {
 		this.mappings = mappings;
 	}
 
+	private static class AssociationTableNameSource implements ObjectNameSource {
+		private final String explicitName;
+		private final String logicalName;
+
+		private AssociationTableNameSource(String explicitName, String logicalName) {
+			this.explicitName = explicitName;
+			this.logicalName = logicalName;
+		}
+
+		public String getExplicitName() {
+			return explicitName;
+		}
+
+		public String getLogicalName() {
+			return logicalName;
+		}
+	}
+
 	// only bind association table currently
 	public Table bind() {
 		//logicalName only accurate for assoc table...
-		String unquotedOwnerTable = StringHelper.unquote( ownerEntityTable );
-		String unquotedAssocTable = StringHelper.unquote( associatedEntityTable );
+		final String unquotedOwnerTable = StringHelper.unquote( ownerEntityTable );
+		final String unquotedAssocTable = StringHelper.unquote( associatedEntityTable );
 
-		String logicalName = mappings.getNamingStrategy()
-				.logicalCollectionTableName(
-						name,
+		final ObjectNameSource nameSource = buildNameContext( unquotedOwnerTable, unquotedAssocTable );
+
+		final boolean ownerEntityTableQuoted = StringHelper.isQuoted( ownerEntityTable );
+		final boolean associatedEntityTableQuoted = StringHelper.isQuoted( associatedEntityTable );
+		final ObjectNameNormalizer.NamingStrategyHelper namingStrategyHelper = new ObjectNameNormalizer.NamingStrategyHelper() {
+			public String determineImplicitName(NamingStrategy strategy) {
+				final String strategyResult = strategy.collectionTableName(
+						ownerEntity,
 						unquotedOwnerTable,
+						associatedEntity,
 						unquotedAssocTable,
-						propertyName );
-		if ( StringHelper.isQuoted( ownerEntityTable ) || StringHelper.isQuoted( associatedEntityTable ) ) {
-			logicalName = StringHelper.quote( logicalName );
-		}
-		String extendedName;
-		if ( name != null ) {
-			extendedName = mappings.getNamingStrategy().tableName( name );
-		}
-		else {
-			extendedName = mappings.getNamingStrategy()
-					.collectionTableName(
-							ownerEntity,
-							unquotedOwnerTable,
-							associatedEntity,
-							unquotedAssocTable,
-							propertyName
-					);
-			if ( StringHelper.isQuoted( ownerEntityTable ) || StringHelper.isQuoted( associatedEntityTable ) ) {
-				extendedName = StringHelper.quote( extendedName );
+						propertyName
+
+				);
+				return ownerEntityTableQuoted || associatedEntityTableQuoted
+						? StringHelper.quote( strategyResult )
+						: strategyResult;
 			}
-		}
-		return fillTable(
-				schema, catalog,
-				extendedName, logicalName, isAbstract, uniqueConstraints, constraints,
-				denormalizedSuperTable, mappings
+
+			public String handleExplicitName(NamingStrategy strategy, String name) {
+				return strategy.tableName( name );
+			}
+		};
+
+		return buildAndFillTable(
+				schema,
+				catalog,
+				nameSource,
+				namingStrategyHelper,
+				isAbstract,
+				uniqueConstraints,
+				constraints,
+				denormalizedSuperTable,
+				mappings
 		);
 	}
 
+	private ObjectNameSource buildNameContext(String unquotedOwnerTable, String unquotedAssocTable) {
+		String logicalName = mappings.getNamingStrategy().logicalCollectionTableName(
+				name,
+				unquotedOwnerTable,
+				unquotedAssocTable,
+				propertyName
+		);
+		if ( StringHelper.isQuoted( ownerEntityTable ) || StringHelper.isQuoted( associatedEntityTable ) ) {
+			logicalName = StringHelper.quote( logicalName );
+		}
+
+		return new AssociationTableNameSource( name, logicalName );
+	}
+
+	public static Table buildAndFillTable(
+			String schema,
+			String catalog,
+			ObjectNameSource nameSource,
+			ObjectNameNormalizer.NamingStrategyHelper namingStrategyHelper,
+			boolean isAbstract,
+			List<UniqueConstraintHolder> uniqueConstraints,
+			String constraints,
+			Table denormalizedSuperTable,
+			ExtendedMappings mappings) {
+		schema = BinderHelper.isDefault( schema ) ? mappings.getSchemaName() : schema;
+		catalog = BinderHelper.isDefault( catalog ) ? mappings.getCatalogName() : catalog;
+
+		String realTableName = mappings.getObjectNameNormalizer().normalizeDatabaseIdentifier(
+				nameSource.getExplicitName(),
+				namingStrategyHelper
+		);
+
+		final Table table;
+		if ( denormalizedSuperTable != null ) {
+			table = mappings.addDenormalizedTable(
+					schema,
+					catalog,
+					realTableName,
+					isAbstract,
+					null, // subselect
+					denormalizedSuperTable
+			);
+		}
+		else {
+			table = mappings.addTable(
+					schema,
+					catalog,
+					realTableName,
+					null, // subselect
+					isAbstract
+			);
+		}
+
+		if ( uniqueConstraints != null && uniqueConstraints.size() > 0 ) {
+			mappings.addUniqueConstraintHolders( table, uniqueConstraints );
+		}
+
+		if ( constraints != null ) table.addCheckConstraint( constraints );
+
+		// logicalName is null if we are in the second pass
+		final String logicalName = nameSource.getLogicalName();
+		if ( logicalName != null ) {
+			mappings.addTableBinding( schema, catalog, logicalName, realTableName, denormalizedSuperTable );
+		}
+		return table;
+	}
+
+	/**
+	 *
+	 * @param schema
+	 * @param catalog
+	 * @param realTableName
+	 * @param logicalName
+	 * @param isAbstract
+	 * @param uniqueConstraints
+	 * @param constraints
+	 * @param denormalizedSuperTable
+	 * @param mappings
+	 * @return
+	 *
+	 * @deprecated Use {@link #buildAndFillTable} instead.
+	 */
+	@SuppressWarnings({ "JavaDoc" })
 	public static Table fillTable(
 			String schema, String catalog, String realTableName, String logicalName, boolean isAbstract,
 			List uniqueConstraints, String constraints, Table denormalizedSuperTable, ExtendedMappings mappings
@@ -195,8 +306,9 @@ public class TableBinder {
 			associatedClass = destinationEntity;
 		}
 		else {
-			associatedClass = columns[0].getPropertyHolder() == null ? null : columns[0].getPropertyHolder()
-					.getPersistentClass();
+			associatedClass = columns[0].getPropertyHolder() == null
+					? null
+					: columns[0].getPropertyHolder().getPersistentClass();
 		}
 		final String mappedByProperty = columns[0].getMappedBy();
 		if ( StringHelper.isNotEmpty( mappedByProperty ) ) {
@@ -235,7 +347,7 @@ public class TableBinder {
 			 */
 			Iterator idColumns;
 			if ( referencedEntity instanceof JoinedSubclass ) {
-				idColumns = ( (JoinedSubclass) referencedEntity ).getKey().getColumnIterator();
+				idColumns = referencedEntity.getKey().getColumnIterator();
 			}
 			else {
 				idColumns = referencedEntity.getIdentifier().getColumnIterator();
@@ -345,7 +457,7 @@ public class TableBinder {
 			}
 		}
 		value.createForeignKey();
-		if ( unique == true ) {
+		if ( unique ) {
 			createUniqueConstraint( value );
 		}
 	}
@@ -384,11 +496,41 @@ public class TableBinder {
 		}
 	}
 
+	/**
+	 * @deprecated Use {@link #buildUniqueConstraintHolders} instead
+	 */
+	@SuppressWarnings({ "JavaDoc" })
 	public static List<String[]> buildUniqueConstraints(UniqueConstraint[] constraintsArray) {
 		List<String[]> result = new ArrayList<String[]>();
 		if ( constraintsArray.length != 0 ) {
 			for (UniqueConstraint uc : constraintsArray) {
 				result.add( uc.columnNames() );
+			}
+		}
+		return result;
+	}
+
+	/**
+	 * Build a list of {@link org.hibernate.cfg.UniqueConstraintHolder} instances given a list of
+	 * {@link UniqueConstraint} annotations.
+	 *
+	 * @param annotations The {@link UniqueConstraint} annotations.
+	 *
+	 * @return The built {@link org.hibernate.cfg.UniqueConstraintHolder} instances.
+	 */
+	public static List<UniqueConstraintHolder> buildUniqueConstraintHolders(UniqueConstraint[] annotations) {
+		List<UniqueConstraintHolder> result;
+		if ( annotations == null || annotations.length == 0 ) {
+			result = java.util.Collections.emptyList();
+		}
+		else {
+			result = new ArrayList<UniqueConstraintHolder>( CollectionHelper.determineProperSizing( annotations.length ) );
+			for ( UniqueConstraint uc : annotations ) {
+				result.add(
+						new UniqueConstraintHolder()
+								.setName( uc.name() )
+								.setColumns( uc.columnNames() )
+				);
 			}
 		}
 		return result;

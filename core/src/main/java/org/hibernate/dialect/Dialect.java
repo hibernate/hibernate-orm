@@ -1466,17 +1466,21 @@ qu	 *
 	 * By default, the incoming value is checked to see if its first character
 	 * is the back-tick (`).  If so, the dialect specific quoting is applied.
 	 *
-	 * @param column The value to be quoted.
+	 * @param name The value to be quoted.
 	 * @return The quoted (or unmodified, if not starting with back-tick) value.
 	 * @see #openQuote()
 	 * @see #closeQuote()
 	 */
-	public final String quote(String column) {
-		if ( column.charAt( 0 ) == '`' ) {
-			return openQuote() + column.substring( 1, column.length() - 1 ) + closeQuote();
+	public final String quote(String name) {
+		if ( name == null ) {
+			return null;
+		}
+
+		if ( name.charAt( 0 ) == '`' ) {
+			return openQuote() + name.substring( 1, name.length() - 1 ) + closeQuote();
 		}
 		else {
-			return column;
+			return name;
 		}
 	}
 

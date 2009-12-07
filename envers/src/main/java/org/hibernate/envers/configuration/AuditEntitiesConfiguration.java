@@ -23,6 +23,8 @@
  */
 package org.hibernate.envers.configuration;
 
+import static org.hibernate.envers.tools.Tools.getProperty;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -51,14 +53,26 @@ public class AuditEntitiesConfiguration {
     public AuditEntitiesConfiguration(Properties properties, String revisionInfoEntityName) {
         this.revisionInfoEntityName = revisionInfoEntityName;
 
-        auditTablePrefix = properties.getProperty("org.hibernate.envers.auditTablePrefix", "");
-        auditTableSuffix = properties.getProperty("org.hibernate.envers.auditTableSuffix", "_AUD");
+        auditTablePrefix = getProperty(properties,
+                "org.hibernate.envers.audit_table_prefix",
+                "org.hibernate.envers.auditTablePrefix",
+                "");
+        auditTableSuffix = getProperty(properties,
+                "org.hibernate.envers.audit_table_suffix", 
+                "org.hibernate.envers.auditTableSuffix",
+                "_AUD");
 
         originalIdPropName = "originalId";
 
-        revisionFieldName = properties.getProperty("org.hibernate.envers.revisionFieldName", "REV");
+        revisionFieldName = getProperty(properties,
+                "org.hibernate.envers.revision_field_name",
+                "org.hibernate.envers.revisionFieldName",
+                "REV");
 
-        revisionTypePropName = properties.getProperty("org.hibernate.envers.revisionTypeFieldName", "REVTYPE");
+        revisionTypePropName = getProperty(properties,
+                "org.hibernate.envers.revision_type_field_name", 
+                "org.hibernate.envers.revisionTypeFieldName",
+                "REVTYPE");
         revisionTypePropType = "byte";
 
         customAuditTablesNames = new HashMap<String, String>();

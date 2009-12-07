@@ -60,7 +60,7 @@
             <tbody>
                 <row>
                     <entry>
-                        <property>org.hibernate.envers.auditTablePrefix</property>
+                        <property>org.hibernate.envers.audit_table_prefix</property>
                     </entry>
                     <entry>
 
@@ -72,7 +72,7 @@
                 </row>
                 <row>
                     <entry>
-                        <property>org.hibernate.envers.auditTableSuffix</property>
+                        <property>org.hibernate.envers.audit_table_suffix</property>
                     </entry>
                     <entry>
                         _AUD
@@ -86,7 +86,7 @@
                 </row>
                 <row>
                     <entry>
-                        <property>org.hibernate.envers.revisionFieldName</property>
+                        <property>org.hibernate.envers.revision_field_name</property>
                     </entry>
                     <entry>
                         REV
@@ -97,7 +97,7 @@
                 </row>
                 <row>
                     <entry>
-                        <property>org.hibernate.envers.revisionTypeFieldName</property>
+                        <property>org.hibernate.envers.revision_type_field_name</property>
                     </entry>
                     <entry>
                         REVTYPE
@@ -109,7 +109,7 @@
                 </row>
                 <row>
                     <entry>
-                        <property>org.hibernate.envers.revisionOnCollectionChange</property>
+                        <property>org.hibernate.envers.revision_on_collection_change</property>
                     </entry>
                     <entry>
                         true
@@ -122,7 +122,7 @@
                 </row>
                 <row>
                     <entry>
-                        <property>org.hibernate.envers.doNotAuditOptimisticLockingField</property>
+                        <property>org.hibernate.envers.do_not_audit_optimistic_locking_field</property>
                     </entry>
                     <entry>
                         true
@@ -135,7 +135,7 @@
                 </row>
                 <row>
                     <entry>
-                        <property>org.hibernate.envers.storeDataAtDelete</property>
+                        <property>org.hibernate.envers.store_data_at_delete</property>
                     </entry>
                     <entry>
                         false
@@ -150,7 +150,7 @@
                 </row>
                 <row>
                     <entry>
-                        <property>org.hibernate.envers.defaultAuditTableSchemaName</property>
+                        <property>org.hibernate.envers.default_audit_table_schema_name</property>
                     </entry>
                     <entry>
                         null (same as normal tables)
@@ -163,7 +163,7 @@
                 </row>
                 <row>
                     <entry>
-                        <property>org.hibernate.envers.defaultAuditTableCatalogName</property>
+                        <property>org.hibernate.envers.default_audit_table_catalog_name</property>
                     </entry>
                     <entry>
                         null (same as normal tables)

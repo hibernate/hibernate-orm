@@ -23,6 +23,8 @@
  */
 package org.hibernate.envers.configuration;
 
+import static org.hibernate.envers.tools.Tools.getProperty;
+
 import java.util.Properties;
 
 /**
@@ -54,19 +56,26 @@ public class GlobalConfiguration {
     private final String correlatedSubqueryOperator;
 
     public GlobalConfiguration(Properties properties) {
-        String generateRevisionsForCollectionsStr = properties.getProperty("org.hibernate.envers.revisionOnCollectionChange",
+        String generateRevisionsForCollectionsStr = getProperty(properties,
+                "org.hibernate.envers.revision_on_collection_change",
+                "org.hibernate.envers.revisionOnCollectionChange",
                 "true");
         generateRevisionsForCollections = Boolean.parseBoolean(generateRevisionsForCollectionsStr);
 
-        String ignoreOptimisticLockingPropertyStr = properties.getProperty("org.hibernate.envers.doNotAuditOptimisticLockingField",
+        String ignoreOptimisticLockingPropertyStr = getProperty(properties,
+                "org.hibernate.envers.do_not_audit_optimistic_locking_field",
+                "org.hibernate.envers.doNotAuditOptimisticLockingField",
                 "true");
         doNotAuditOptimisticLockingField = Boolean.parseBoolean(ignoreOptimisticLockingPropertyStr);
 
-		String storeDataDeletedEntityStr = properties.getProperty("org.hibernate.envers.storeDataAtDelete", "false");
+		String storeDataDeletedEntityStr = getProperty(properties,
+                "org.hibernate.envers.store_data_at_delete",
+                "org.hibernate.envers.storeDataAtDelete",
+                "false");
 		storeDataAtDelete = Boolean.parseBoolean(storeDataDeletedEntityStr);
 
-        defaultSchemaName = properties.getProperty("org.hibernate.envers.defaultAuditTableSchemaName", null);
-        defaultCatalogName = properties.getProperty("org.hibernate.envers.defaultAuditTableCatalogName", null);
+        defaultSchemaName = properties.getProperty("org.hibernate.envers.default_audit_table_schema_name", null);
+        defaultCatalogName = properties.getProperty("org.hibernate.envers.default_audit_table_catalog_name", null);
 
         correlatedSubqueryOperator = "org.hibernate.dialect.HSQLDialect".equals(
                 properties.getProperty("hibernate.dialect")) ? "in" : "=";

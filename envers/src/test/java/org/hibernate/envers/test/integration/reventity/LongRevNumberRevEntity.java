@@ -26,6 +26,7 @@ package org.hibernate.envers.test.integration.reventity;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.Column;
 
 import org.hibernate.envers.RevisionEntity;
 import org.hibernate.envers.RevisionNumber;
@@ -40,6 +41,7 @@ public class LongRevNumberRevEntity {
     @Id
     @GeneratedValue
     @RevisionNumber
+    @Column(columnDefinition = "int")
     private long customId;
 
     @RevisionTimestamp

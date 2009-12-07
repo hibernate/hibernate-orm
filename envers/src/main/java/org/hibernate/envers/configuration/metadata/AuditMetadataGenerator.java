@@ -95,13 +95,22 @@ public final class AuditMetadataGenerator {
         entitiesJoins = new HashMap<String, Map<Join, Element>>();
     }
 
-    void addRevisionInfoRelation(Element any_mapping) {
+    /**
+     * Clones the revision info relation mapping, so that it can be added to other mappings. Also, the name of
+     * the property and the column are set properly.
+     * @return A revision info mapping, which can be added to other mappings (has no parent).
+     */
+    private Element cloneAndSetupRevisionInfoRelationMapping() {
         Element rev_mapping = (Element) revisionInfoRelationMapping.clone();
         rev_mapping.addAttribute("name", verEntCfg.getRevisionFieldName());
 
         MetadataTools.addOrModifyColumn(rev_mapping, verEntCfg.getRevisionFieldName());
 
-        any_mapping.add(rev_mapping);
+        return rev_mapping;
+    }
+
+    void addRevisionInfoRelation(Element any_mapping) {
+        any_mapping.add(cloneAndSetupRevisionInfoRelationMapping());
     }
 
     void addRevisionType(Element any_mapping) {
@@ -379,10 +388,12 @@ public final class AuditMetadataGenerator {
             case JOINED:
                 mappingData = generateInheritanceMappingData(pc, xmlMappingData, auditTableData, "joined-subclass");
 
-                // Adding the "key" element with all columns + the revision number column
+                // Adding the "key" element with all id columns...
                 Element keyMapping = mappingData.getFirst().addElement("key");
                 MetadataTools.addColumns(keyMapping, pc.getTable().getPrimaryKey().columnIterator());
-                MetadataTools.addColumn(keyMapping, verEntCfg.getRevisionFieldName(), null, 0, 0, null);
+
+                // ... and the revision number column, read from the revision info relation mapping.
+                keyMapping.add((Element) cloneAndSetupRevisionInfoRelationMapping().element("column").clone());
                 break;
 
             case TABLE_PER_CLASS:

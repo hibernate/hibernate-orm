@@ -61,7 +61,7 @@ public class RevisionInfoConfiguration {
     private Type revisionInfoTimestampType;
 
     private String revisionPropType;
-    private Column revisionPropColumn;
+    private String revisionPropSqlType;
 
     public RevisionInfoConfiguration() {
         revisionInfoEntityName = "org.hibernate.envers.DefaultRevisionEntity";
@@ -97,9 +97,9 @@ public class RevisionInfoConfiguration {
         rev_rel_mapping.addAttribute("type", revisionPropType);
         rev_rel_mapping.addAttribute("class", revisionInfoEntityName);
 
-        if (revisionPropColumn != null) {
+        if (revisionPropSqlType != null) {
             // Putting a fake name to make Hibernate happy. It will be replaced later anyway.
-            MetadataTools.addColumn(rev_rel_mapping, "*" , null, 0, 0, revisionPropColumn.columnDefinition());
+            MetadataTools.addColumn(rev_rel_mapping, "*" , null, 0, 0, revisionPropSqlType);
         }
 
         return rev_rel_mapping;
@@ -137,7 +137,10 @@ public class RevisionInfoConfiguration {
                 // Getting the @Column definition of the revision number property, to later use that info to
                 // generate the same mapping for the relation from an audit table's revision number to the
                 // revision entity revision number.
-                revisionPropColumn = property.getAnnotation(Column.class);
+                Column revisionPropColumn = property.getAnnotation(Column.class);
+                if (revisionPropColumn != null) {
+                    revisionPropSqlType = revisionPropColumn.columnDefinition();
+                }
             }
 
             if (revisionTimestamp != null) {

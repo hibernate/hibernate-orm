@@ -412,7 +412,7 @@ public abstract class Dialect {
 	// hibernate type mapping support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	/**
-	 * Get the name of the Hibernate {@link org.hibernate.type.Type} associated with th given
+	 * Get the name of the Hibernate {@link org.hibernate.type.Type} associated with the given
 	 * {@link java.sql.Types} typecode.
 	 *
 	 * @param code The {@link java.sql.Types} typecode
@@ -483,7 +483,7 @@ public abstract class Dialect {
 	}
 
 	/**
-	 * Retrieves a map of the dialect's registered fucntions
+	 * Retrieves a map of the dialect's registered functions
 	 * (functionName => {@link org.hibernate.dialect.function.SQLFunction}).
 	 *
 	 * @return The map of registered functions.
@@ -504,7 +504,7 @@ public abstract class Dialect {
 	}
 
 
-	// native identifier generatiion ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// native identifier generation ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	/**
 	 * The class (which implements {@link org.hibernate.id.IdentifierGenerator})
@@ -551,7 +551,7 @@ public abstract class Dialect {
 
 	/**
 	 * Whether this dialect have an Identity clause added to the data type or a
-	 * completely seperate identity data type
+	 * completely separate identity data type
 	 *
 	 * @return boolean
 	 */
@@ -560,7 +560,7 @@ public abstract class Dialect {
 	}
 
 	/**
-	 * Provided we {@link #supportsInsertSelectIdentity}, then attch the
+	 * Provided we {@link #supportsInsertSelectIdentity}, then attach the
 	 * "select identity" clause to the  insert statement.
 	 *  <p/>
 	 * Note, if {@link #supportsInsertSelectIdentity} == false then
@@ -576,7 +576,7 @@ public abstract class Dialect {
 
 	/**
 	 * Get the select command to use to retrieve the last generated IDENTITY
-	 * value for a particuar table
+	 * value for a particular table
 	 *
 	 * @param table The table into which the insert was done
 	 * @param column The PK column.
@@ -656,7 +656,7 @@ public abstract class Dialect {
 	}
 
 	/**
-	 * Generate the appropriate select statement to to retreive the next value
+	 * Generate the appropriate select statement to to retrieve the next value
 	 * of a sequence.
 	 * <p/>
 	 * This should be a "stand alone" select statement.
@@ -670,7 +670,7 @@ public abstract class Dialect {
 	}
 
 	/**
-	 * Generate the select expression fragment that will retreive the next
+	 * Generate the select expression fragment that will retrieve the next
 	 * value of a sequence as part of another (typically DML) statement.
 	 * <p/>
 	 * This differs from {@link #getSequenceNextValString(String)} in that this
@@ -828,7 +828,7 @@ public abstract class Dialect {
 	}
 
 	/**
-	 * Does this dialect support bind variables (i.e., prepared statememnt
+	 * Does this dialect support bind variables (i.e., prepared statement
 	 * parameters) for its limit/offset?
 	 *
 	 * @return True if bind variables can be used; false otherwise.
@@ -903,7 +903,7 @@ public abstract class Dialect {
 	 * Apply s limit clause to the query.
 	 * <p/>
 	 * Typically dialects utilize {@link #supportsVariableLimit() variable}
-	 * limit caluses when they support limits.  Thus, when building the
+	 * limit clauses when they support limits.  Thus, when building the
 	 * select command we do not actually need to know the limit or the offest
 	 * since we will just be using placeholders.
 	 * <p/>
@@ -921,7 +921,7 @@ public abstract class Dialect {
 	}
 
 	/**
-	 * Hibernate APIs explcitly state that setFirstResult() should be a zero-based offset. Here we allow the
+	 * Hibernate APIs explicitly state that setFirstResult() should be a zero-based offset. Here we allow the
 	 * Dialect a chance to convert that value based on what the underlying db or driver will expect.
 	 * <p/>
 	 * NOTE: what gets passed into {@link #getLimitString(String,int,int)} is the zero-based offset.  Dialects which
@@ -972,7 +972,7 @@ public abstract class Dialect {
 
 	/**
 	 * Given LockOptions (lockMode, timeout), determine the appropriate for update fragment to use.
-qu	 *
+	 *
 	 * @param lockOptions contains the lock mode to apply.
 	 * @return The appropriate for update fragment.
 	 */
@@ -1225,7 +1225,7 @@ qu	 *
 	// callable statement support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	/**
-	 * Registers an OUT parameter which will be returing a
+	 * Registers an OUT parameter which will be returning a
 	 * {@link java.sql.ResultSet}.  How this is accomplished varies greatly
 	 * from DB to DB, hence its inclusion (along with {@link #getResultSet}) here.
 	 *
@@ -1271,7 +1271,7 @@ qu	 *
 	/**
 	 * Should the value returned by {@link #getCurrentTimestampSelectString}
 	 * be treated as callable.  Typically this indicates that JDBC escape
-	 * sytnax is being used...
+	 * syntax is being used...
 	 *
 	 * @return True if the {@link #getCurrentTimestampSelectString} return
 	 * is callable; false otherwise.
@@ -1281,7 +1281,7 @@ qu	 *
 	}
 
 	/**
-	 * Retrieve the command used to retrieve the current timestammp from the
+	 * Retrieve the command used to retrieve the current timestamp from the
 	 * database.
 	 *
 	 * @return The command.
@@ -1668,7 +1668,7 @@ qu	 *
 	}
 
 	/**
-	 * Get the separator to use for definining cross joins when translating HQL queries.
+	 * Get the separator to use for defining cross joins when translating HQL queries.
 	 * <p/>
 	 * Typically this will be either [<tt> cross join </tt>] or [<tt>, </tt>]
 	 * <p/>

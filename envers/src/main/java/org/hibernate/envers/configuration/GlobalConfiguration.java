@@ -74,8 +74,8 @@ public class GlobalConfiguration {
                 "false");
 		storeDataAtDelete = Boolean.parseBoolean(storeDataDeletedEntityStr);
 
-        defaultSchemaName = properties.getProperty("org.hibernate.envers.default_audit_table_schema_name", null);
-        defaultCatalogName = properties.getProperty("org.hibernate.envers.default_audit_table_catalog_name", null);
+        defaultSchemaName = properties.getProperty("org.hibernate.envers.default_schema", null);
+        defaultCatalogName = properties.getProperty("org.hibernate.envers.default_catalog", null);
 
         correlatedSubqueryOperator = "org.hibernate.dialect.HSQLDialect".equals(
                 properties.getProperty("hibernate.dialect")) ? "in" : "=";

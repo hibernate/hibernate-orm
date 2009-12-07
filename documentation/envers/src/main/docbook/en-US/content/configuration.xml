@@ -150,7 +150,7 @@
                 </row>
                 <row>
                     <entry>
-                        <property>org.hibernate.envers.default_audit_table_schema_name</property>
+                        <property>org.hibernate.envers.default_schema</property>
                     </entry>
                     <entry>
                         null (same as normal tables)
@@ -163,7 +163,7 @@
                 </row>
                 <row>
                     <entry>
-                        <property>org.hibernate.envers.default_audit_table_catalog_name</property>
+                        <property>org.hibernate.envers.default_catalog</property>
                     </entry>
                     <entry>
                         null (same as normal tables)

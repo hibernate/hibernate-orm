@@ -48,6 +48,8 @@ public class JPAMetadataProvider implements MetadataProvider {
 		if ( defaults == null ) {
 			defaults = new HashMap<Object, Object>();
 			XMLContext.Default xmlDefaults = xmlContext.getDefault( null );
+
+			defaults.put( "delimited-identifier", xmlDefaults.getDelimitedIdentifier() );
 			List<Class> entityListeners = new ArrayList<Class>();
 			for ( String className : xmlContext.getDefaultEntityListeners() ) {
 				try {

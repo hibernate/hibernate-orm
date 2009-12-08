@@ -288,6 +288,12 @@ public class AnnotationConfiguration extends Configuration {
 
 		//process default values first
 		if ( !isDefaultProcessed ) {
+			//use global delimiters if orm.xml declare it
+			final Object isDelimited = reflectionManager.getDefaults().get( "delimited-identifier" );
+			if (isDelimited != null && isDelimited == Boolean.TRUE) {
+				getProperties().put( Environment.GLOBALLY_QUOTED_IDENTIFIERS, "true" );
+			}
+
 			AnnotationBinder.bindDefaults( createExtendedMappings() );
 			isDefaultProcessed = true;
 		}

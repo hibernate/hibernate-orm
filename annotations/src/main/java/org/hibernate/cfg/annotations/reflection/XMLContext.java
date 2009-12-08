@@ -73,6 +73,8 @@ public class XMLContext {
 					globalDefaults.setAccess( unitElement != null ? unitElement.getTextTrim() : null );
 					unitElement = defaultElement.element( "cascade-persist" );
 					globalDefaults.setCascadePersist( unitElement != null ? Boolean.TRUE : null );
+					unitElement = defaultElement.element( "delimited-identifiers" );
+					globalDefaults.setDelimitedIdentifiers( unitElement != null ? Boolean.TRUE : null );
 					defaultEntityListeners.addAll( addEntityListenerClasses( defaultElement, null, addedClasses ) );
 				}
 			}
@@ -198,6 +200,7 @@ public class XMLContext {
 		private String catalog;
 		private Boolean metadataComplete;
 		private Boolean cascadePersist;
+		private Boolean delimitedIdentifier;
 
 		public String getAccess() {
 			return access;
@@ -262,12 +265,21 @@ public class XMLContext {
 				if ( globalDefault.getPackageName() != null ) packageName = globalDefault.getPackageName();
 				if ( globalDefault.getSchema() != null ) schema = globalDefault.getSchema();
 				if ( globalDefault.getCatalog() != null ) catalog = globalDefault.getCatalog();
+				if ( globalDefault.getDelimitedIdentifier() != null ) delimitedIdentifier = globalDefault.getDelimitedIdentifier();
 				if ( globalDefault.getMetadataComplete() != null ) {
 					metadataComplete = globalDefault.getMetadataComplete();
 				}
 				//TODO fix that in stone if cascade-persist is set already?
 				if ( globalDefault.getCascadePersist() != null ) cascadePersist = globalDefault.getCascadePersist();
 			}
+		}
+
+		public void setDelimitedIdentifiers(Boolean delimitedIdentifier) {
+			this.delimitedIdentifier = delimitedIdentifier;
+		}
+
+		public Boolean getDelimitedIdentifier() {
+			return delimitedIdentifier;
 		}
 	}
 

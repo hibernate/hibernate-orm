@@ -39,6 +39,7 @@ import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.ParameterExpression;
 
 import org.hibernate.ejb.HibernateEntityManagerImplementor;
+import org.hibernate.util.StringHelper;
 
 /**
  * Compiles a JPA criteria query into an executable {@link TypedQuery}.  Its single contract is the {@link #compile}
@@ -77,7 +78,9 @@ public class CriteriaQueryCompiler {
 		criteriaQueryImpl.validate();
 
 		final Map<ParameterExpression<?>,String> explicitParameterMapping = new HashMap<ParameterExpression<?>,String>();
+		final Map<String,ParameterExpression<?>> explicitParameterNameMapping = new HashMap<String,ParameterExpression<?>>();
 		final List<ImplicitParameterBinding> implicitParameterBindings = new ArrayList<ImplicitParameterBinding>();
+
 		RenderingContext renderingContext = new RenderingContext() {
 			private int aliasCount = 0;
 			private int explicitParameterCount = 0;
@@ -92,6 +95,12 @@ public class CriteriaQueryCompiler {
 
 			public void registerExplicitParameter(ParameterExpression<?> criteriaQueryParameter, String jpaqlParameterName) {
 				explicitParameterMapping.put( criteriaQueryParameter, jpaqlParameterName );
+				if ( StringHelper.isNotEmpty( criteriaQueryParameter.getName() ) ) {
+					explicitParameterNameMapping.put(
+							criteriaQueryParameter.getName(),
+							criteriaQueryParameter
+					);
+				}
 			}
 
 			public void registerImplicitParameterBinding(ImplicitParameterBinding binding) {
@@ -109,12 +118,13 @@ public class CriteriaQueryCompiler {
 			implicitParameterBinding.bind( jpaqlQuery );
 		}
 
-		return wrap( jpaqlQuery, explicitParameterMapping );
+		return wrap( jpaqlQuery, explicitParameterMapping, explicitParameterNameMapping );
 	}
 
 	private <X> TypedQuery<X> wrap(
 			final TypedQuery<X> jpaqlQuery,
-			final Map<ParameterExpression<?>, String> explicitParameterMapping) {
+			final Map<ParameterExpression<?>, String> explicitParameterMapping,
+			final Map<String, ParameterExpression<?>> explicitParameterNameMapping) {
 		return new TypedQuery<X>() {
 
 			public List<X> getResultList() {
@@ -130,7 +140,8 @@ public class CriteriaQueryCompiler {
 			}
 
 			public TypedQuery<X> setMaxResults(int i) {
-				return jpaqlQuery.setMaxResults( i );
+				jpaqlQuery.setMaxResults( i );
+				return this;
 			}
 
 			public int getFirstResult() {
@@ -138,7 +149,8 @@ public class CriteriaQueryCompiler {
 			}
 
 			public TypedQuery<X> setFirstResult(int i) {
-				return jpaqlQuery.setFirstResult( i );
+				jpaqlQuery.setFirstResult( i );
+				return this;
 			}
 
 			public Map<String, Object> getHints() {
@@ -146,7 +158,8 @@ public class CriteriaQueryCompiler {
 			}
 
 			public TypedQuery<X> setHint(String name, Object value) {
-				return jpaqlQuery.setHint( name, value);
+				jpaqlQuery.setHint( name, value);
+				return this;
 			}
 
 			public FlushModeType getFlushMode() {
@@ -154,7 +167,8 @@ public class CriteriaQueryCompiler {
 			}
 
 			public TypedQuery<X> setFlushMode(FlushModeType flushModeType) {
-				return jpaqlQuery.setFlushMode( flushModeType );
+				jpaqlQuery.setFlushMode( flushModeType );
+				return this;
 			}
 
 			public LockModeType getLockMode() {
@@ -162,7 +176,8 @@ public class CriteriaQueryCompiler {
 			}
 
 			public TypedQuery<X> setLockMode(LockModeType lockModeType) {
-				return jpaqlQuery.setLockMode( lockModeType );
+				jpaqlQuery.setLockMode( lockModeType );
+				return this;
 			}
 
 			@SuppressWarnings({ "unchecked" })
@@ -181,7 +196,8 @@ public class CriteriaQueryCompiler {
 
 			@SuppressWarnings({ "unchecked" })
 			public <T> TypedQuery<X> setParameter(Parameter<T> param, T t) {
-				return jpaqlQuery.setParameter( mapToNamedParameter( param ), t );
+				jpaqlQuery.setParameter( mapToNamedParameter( param ), t );
+				return this;
 			}
 
 			@SuppressWarnings({ "RedundantCast" })
@@ -193,16 +209,99 @@ public class CriteriaQueryCompiler {
 
 			@SuppressWarnings({ "unchecked" })
 			public TypedQuery<X> setParameter(Parameter<Calendar> param, Calendar calendar, TemporalType temporalType) {
-				return jpaqlQuery.setParameter( mapToNamedParameter( param ), calendar, temporalType );
+				jpaqlQuery.setParameter( mapToNamedParameter( param ), calendar, temporalType );
+				return this;
 			}
 
 			@SuppressWarnings({ "unchecked" })
 			public TypedQuery<X> setParameter(Parameter<Date> param, Date date, TemporalType temporalType) {
-				return jpaqlQuery.setParameter( mapToNamedParameter( param ), date, temporalType );
+				jpaqlQuery.setParameter( mapToNamedParameter( param ), date, temporalType );
+				return this;
 			}
 
 			public <T> T unwrap(Class<T> cls) {
 				return jpaqlQuery.unwrap( cls );
+			}
+
+			@SuppressWarnings({ "unchecked" })
+			public Object getParameterValue(String name) {
+				return getParameterValue( resolveExplicitCriteriaParameterName( name ) );
+			}
+
+			private Parameter resolveExplicitCriteriaParameterName(String name) {
+				Parameter parameter = explicitParameterNameMapping.get( name );
+				if ( parameter == null ) {
+					throw new IllegalArgumentException( "Named parameter [" + name + "] not encountered" );
+				}
+				return parameter;
+			}
+
+			public Parameter<?> getParameter(String name) {
+				return mapToNamedParameter( resolveExplicitCriteriaParameterName( name ) );
+			}
+
+			@SuppressWarnings({ "unchecked" })
+			public <T> Parameter<T> getParameter(String name, Class<T> type) {
+				Parameter parameter = resolveExplicitCriteriaParameterName( name );
+				if ( type.isAssignableFrom( parameter.getParameterType() ) ) {
+					return (Parameter<T>) parameter;
+				}
+				throw new IllegalArgumentException(
+						"Named parameter [" + name + "] type is not assignanle to request type ["
+								+ type.getName() + "]"
+				);
+			}
+
+			@SuppressWarnings({ "unchecked" })
+			public TypedQuery<X> setParameter(String name, Object value) {
+				setParameter(
+						resolveExplicitCriteriaParameterName( name, value ),
+						value
+				);
+				return this;
+			}
+
+			private Parameter resolveExplicitCriteriaParameterName(String name, Object value) {
+				Parameter parameter = resolveExplicitCriteriaParameterName( name );
+				// todo : is null valid?
+				if ( value != null ) {
+					if ( ! parameter.getParameterType().isInstance( value ) ) {
+						throw new IllegalArgumentException(
+								"Named parameter [" + name + "] type mismatch; expecting ["
+										+ parameter.getParameterType().getName() + "], found ["
+										+ value.getClass().getName() + "]"
+						);
+					}
+				}
+				return parameter;
+			}
+
+			@SuppressWarnings({ "unchecked" })
+			public TypedQuery<X> setParameter(String name, Calendar calendar, TemporalType temporalType) {
+				Parameter parameter = resolveExplicitCriteriaParameterName( name );
+				if ( ! Calendar.class.isAssignableFrom( parameter.getParameterType() ) ) {
+					throw new IllegalArgumentException(
+							"Named parameter [" + name + "] type mismatch; expecting ["
+									+ Calendar.class.getName() + "], found ["
+									+ parameter.getParameterType().getName() + "]"
+					);
+				}
+				setParameter( parameter, calendar, temporalType );
+				return this;
+			}
+
+			@SuppressWarnings({ "unchecked" })
+			public TypedQuery<X> setParameter(String name, Date date, TemporalType temporalType) {
+				Parameter parameter = resolveExplicitCriteriaParameterName( name );
+				if ( ! Date.class.isAssignableFrom( parameter.getParameterType() ) ) {
+					throw new IllegalArgumentException(
+							"Named parameter [" + name + "] type mismatch; expecting ["
+									+ Date.class.getName() + "], found ["
+									+ parameter.getParameterType().getName() + "]"
+					);
+				}
+				setParameter( parameter, date, temporalType );
+				return this;
 			}
 
 
@@ -210,30 +309,6 @@ public class CriteriaQueryCompiler {
 
 			public int executeUpdate() {
 				throw new IllegalArgumentException( "Criteria queries do not support update queries" );
-			}
-
-			public TypedQuery<X> setParameter(String s, Object o) {
-				throw new IllegalArgumentException( "Criteria queries do not support named parameters" );
-			}
-
-			public TypedQuery<X> setParameter(String s, Calendar calendar, TemporalType temporalType) {
-				throw new IllegalArgumentException( "Criteria queries do not support named parameters" );
-			}
-
-			public TypedQuery<X> setParameter(String s, Date date, TemporalType temporalType) {
-				throw new IllegalArgumentException( "Criteria queries do not support named parameters" );
-			}
-
-			public Object getParameterValue(String name) {
-				throw new IllegalArgumentException( "Criteria queries do not support named parameters" );
-			}
-
-			public Parameter<?> getParameter(String name) {
-				throw new IllegalArgumentException( "Criteria queries do not support named parameters" );
-			}
-
-			public <T> Parameter<T> getParameter(String name, Class<T> type) {
-				throw new IllegalArgumentException( "Criteria queries do not support named parameters" );
 			}
 
 			public TypedQuery<X> setParameter(int i, Object o) {

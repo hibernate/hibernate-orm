@@ -482,4 +482,17 @@ public interface PersistenceContext {
 	public void setReadOnly(Object entity, boolean readOnly);
 
 	void replaceDelayedEntityIdentityInsertKeys(EntityKey oldKey, Serializable generatedId);
+
+	/**
+	 * Put child/parent relation to cache for cascading op
+	 * @param parent
+	 * @param child
+	 */
+	public void addChildParent(Object parent, Object child);
+
+	/**
+	 * Remove child/parent relation from cache 
+	 * @param parent
+	 */
+	public void removeChildParent(Object child);
 }

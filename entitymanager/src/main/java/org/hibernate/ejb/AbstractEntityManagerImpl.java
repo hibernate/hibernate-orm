@@ -492,6 +492,12 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 		}
 	}
 
+	/**
+	 * Hibernate can be set in various flush modes that are unknown to
+	 * JPA 2.0. This method can then return null.
+	 * If it returns null, do em.unwrap(Session.class).getFlushMode() to get the
+	 * Hibernate flush mode
+	 */
 	public FlushModeType getFlushMode() {
 		FlushMode mode = getSession().getFlushMode();
 		if ( mode == FlushMode.AUTO ) {
@@ -501,7 +507,7 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 			this.flushModeType = FlushModeType.COMMIT;
 		}
 		else {
-			return null; //TODO exception?
+			return null;
 		}
 		//otherwise this is an unknown mode for EJB3
 		return flushModeType;

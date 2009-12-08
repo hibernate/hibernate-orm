@@ -152,6 +152,7 @@ public final class Cascade {
 
 				if ( style.doCascade( action ) ) {
 					cascadeProperty(
+						    parent,
 					        persister.getPropertyValue( parent, i, entityMode ),
 					        types[i],
 					        style,
@@ -180,6 +181,7 @@ public final class Cascade {
 	 * Cascade an action to the child or children
 	 */
 	private void cascadeProperty(
+			final Object parent,
 			final Object child,
 			final Type type,
 			final CascadeStyle style,
@@ -191,6 +193,7 @@ public final class Cascade {
 				AssociationType associationType = (AssociationType) type;
 				if ( cascadeAssociationNow( associationType ) ) {
 					cascadeAssociation(
+							parent,
 							child,
 							type,
 							style,
@@ -200,7 +203,7 @@ public final class Cascade {
 				}
 			}
 			else if ( type.isComponentType() ) {
-				cascadeComponent( child, (AbstractComponentType) type, anything );
+				cascadeComponent( parent, child, (AbstractComponentType) type, anything );
 			}
 		}
 	}
@@ -211,6 +214,7 @@ public final class Cascade {
 	}
 
 	private void cascadeComponent(
+			final Object parent,
 			final Object child,
 			final AbstractComponentType componentType,
 			final Object anything) {
@@ -220,6 +224,7 @@ public final class Cascade {
 			CascadeStyle componentPropertyStyle = componentType.getCascadeStyle(i);
 			if ( componentPropertyStyle.doCascade(action) ) {
 				cascadeProperty(
+						parent,
 						children[i],
 						types[i],
 						componentPropertyStyle,
@@ -231,16 +236,17 @@ public final class Cascade {
 	}
 
 	private void cascadeAssociation(
+			final Object parent,
 			final Object child,
 			final Type type,
 			final CascadeStyle style,
 			final Object anything,
 			final boolean isCascadeDeleteEnabled) {
 		if ( type.isEntityType() || type.isAnyType() ) {
-			cascadeToOne( child, type, style, anything, isCascadeDeleteEnabled );
+			cascadeToOne( parent, child, type, style, anything, isCascadeDeleteEnabled );
 		}
 		else if ( type.isCollectionType() ) {
-			cascadeCollection( child, style, anything, (CollectionType) type );
+			cascadeCollection( parent, child, style, anything, (CollectionType) type );
 		}
 	}
 
@@ -248,6 +254,7 @@ public final class Cascade {
 	 * Cascade an action to a collection
 	 */
 	private void cascadeCollection(
+			final Object parent,
 			final Object child,
 			final CascadeStyle style,
 			final Object anything,
@@ -264,6 +271,7 @@ public final class Cascade {
 		//cascade to current collection elements
 		if ( elemType.isEntityType() || elemType.isAnyType() || elemType.isComponentType() ) {
 			cascadeCollectionElements(
+				parent,
 				child,
 				type,
 				style,
@@ -280,6 +288,7 @@ public final class Cascade {
 	 * Cascade an action to a to-one association or any type
 	 */
 	private void cascadeToOne(
+			final Object parent,
 			final Object child,
 			final Type type,
 			final CascadeStyle style,
@@ -289,7 +298,13 @@ public final class Cascade {
 				? ( (EntityType) type ).getAssociatedEntityName()
 				: null;
 		if ( style.reallyDoCascade(action) ) { //not really necessary, but good for consistency...
-			action.cascade(eventSource, child, entityName, anything, isCascadeDeleteEnabled);
+			eventSource.getPersistenceContext().addChildParent(child, parent);
+			try {
+				action.cascade(eventSource, child, entityName, anything, isCascadeDeleteEnabled);
+			}
+			finally {
+				eventSource.getPersistenceContext().removeChildParent(child);
+			}
 		}
 	}
 
@@ -297,6 +312,7 @@ public final class Cascade {
 	 * Cascade to the collection elements
 	 */
 	private void cascadeCollectionElements(
+			final Object parent,
 			final Object child,
 			final CollectionType collectionType,
 			final CascadeStyle style,
@@ -318,6 +334,7 @@ public final class Cascade {
 			Iterator iter = action.getCascadableChildrenIterator(eventSource, collectionType, child);
 			while ( iter.hasNext() ) {
 				cascadeProperty(
+						parent,
 						iter.next(), 
 						elemType,
 						style, 

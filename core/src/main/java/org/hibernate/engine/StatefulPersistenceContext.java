@@ -119,6 +119,10 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	// yet loaded ... for now, this is purely transient!
 	private Map unownedCollections;
 	
+	// Parent entities cache by their child for cascading
+	// May be empty or not contains all relation 
+	private Map parentsByChild;
+	
 	private int cascading = 0;
 	private int loadCounter = 0;
 	private boolean flushing = false;
@@ -147,7 +151,8 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		collectionEntries = IdentityMap.instantiateSequenced( INIT_COLL_SIZE );
 		collectionsByKey = new HashMap( INIT_COLL_SIZE );
 		arrayHolders = IdentityMap.instantiate( INIT_COLL_SIZE );
-
+		parentsByChild = IdentityMap.instantiateSequenced( INIT_COLL_SIZE );
+		
 		nullifiableEntityKeys = new HashSet();
 
 		initTransientState();
@@ -214,6 +219,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		entitiesByKey.clear();
 		entitiesByUniqueKey.clear();
 		entityEntries.clear();
+		parentsByChild.clear();
 		entitySnapshotsByKey.clear();
 		collectionsByKey.clear();
 		collectionEntries.clear();
@@ -360,6 +366,8 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		while ( iter.hasNext() ) {
 			if ( iter.next()==entity ) iter.remove();
 		}
+		// Clear all parent cache
+		parentsByChild.clear();
 		entitySnapshotsByKey.remove(key);
 		nullifiableEntityKeys.remove(key);
 		getBatchFetchQueue().removeBatchLoadableEntityKey(key);
@@ -1104,8 +1112,18 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		final EntityPersister persister = session.getFactory().getEntityPersister( entityName );
 		final CollectionPersister collectionPersister = session.getFactory().getCollectionPersister( collectionRole );
 
+	    // try cache lookup first
+	    Object parent = parentsByChild.get(childEntity);
+		if (parent != null) {
+	       if (isFoundInParent(propertyName, childEntity, persister, collectionPersister, parent)) {
+		       return getEntry(parent).getId();
+		   }
+		   else {
+			  parentsByChild.remove(childEntity); // remove wrong entry
+		   }
+		}
 		// iterate all the entities currently associated with the persistence context.
-		Iterator entities = entityEntries.entrySet().iterator();
+		Iterator entities = IdentityMap.entries(entityEntries).iterator();
 		while ( entities.hasNext() ) {
 			final Map.Entry me = ( Map.Entry ) entities.next();
 			final EntityEntry entityEntry = ( EntityEntry ) me.getValue();
@@ -1207,7 +1225,26 @@ public class StatefulPersistenceContext implements PersistenceContext {
 				.getEntityPersister(entity);
 		CollectionPersister cp = session.getFactory()
 				.getCollectionPersister(entity + '.' + property);
-		Iterator entities = entityEntries.entrySet().iterator();
+		
+	    // try cache lookup first
+	    Object parent = parentsByChild.get(childEntity);
+		if (parent != null) {
+			Object index = getIndexInParent(property, childEntity, persister, cp, parent);
+			
+			if (index==null && mergeMap!=null) {
+				Object unmergedInstance = mergeMap.get(parent);
+				Object unmergedChild = mergeMap.get(childEntity);
+				if ( unmergedInstance!=null && unmergedChild!=null ) {
+					index = getIndexInParent(property, unmergedChild, persister, cp, unmergedInstance);
+				}
+			}
+			if (index!=null) {
+				return index;
+			}
+			parentsByChild.remove(childEntity); // remove wrong entry
+		}
+		
+		Iterator entities = IdentityMap.entries(entityEntries).iterator();
 		while ( entities.hasNext() ) {
 			Map.Entry me = (Map.Entry) entities.next();
 			EntityEntry ee = (EntityEntry) me.getValue();
@@ -1277,6 +1314,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	public void replaceDelayedEntityIdentityInsertKeys(EntityKey oldKey, Serializable generatedId) {
 		Object entity = entitiesByKey.remove( oldKey );
 		EntityEntry oldEntry = ( EntityEntry ) entityEntries.remove( entity );
+		parentsByChild.clear();
 
 		EntityKey newKey = new EntityKey( generatedId, oldEntry.getPersister(), getSession().getEntityMode() );
 		addEntity( newKey, entity );
@@ -1486,5 +1524,19 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		}
 
 		return rtn;
+	}
+
+	/**
+	 * @see org.hibernate.engine.PersistenceContext#addChildParent(java.lang.Object, java.lang.Object)
+	 */
+	public void addChildParent(Object child, Object parent) {
+		parentsByChild.put(child, parent);
+	}
+	
+	/**
+	 * @see org.hibernate.engine.PersistenceContext#removeChildParent(java.lang.Object)
+	 */
+	public void removeChildParent(Object child) {
+	   parentsByChild.remove(child);
 	}
 }

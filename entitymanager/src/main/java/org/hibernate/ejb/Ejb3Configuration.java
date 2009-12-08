@@ -188,6 +188,9 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 			this.setProperty( Environment.DATASOURCE, metadata.getNonJtaDatasource() );
 		}
 		defineTransactionType( metadata.getTransactionType(), workingVars );
+		if ( metadata.isUseQuotedIdentifiers() ) {
+			this.setProperty( Environment.GLOBALLY_QUOTED_IDENTIFIERS, "true" );
+		}
 		if ( metadata.getClasses().size() > 0 ) {
 			workingVars.put( HibernatePersistence.CLASS_NAMES, metadata.getClasses() );
 		}

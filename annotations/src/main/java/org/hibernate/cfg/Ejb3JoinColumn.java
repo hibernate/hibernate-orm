@@ -332,8 +332,14 @@ public class Ejb3JoinColumn extends Ejb3Column {
 				columnDefinition = joinAnn.columnDefinition();
 				referencedColumnName = joinAnn.referencedColumnName();
 			}
-			String sqlType = "".equals( columnDefinition ) ? null : columnDefinition;
-			String name = "".equals( colName ) ? defaultName : colName;
+
+			String sqlType = "".equals( columnDefinition )
+					? null
+					: mappings.getObjectNameNormalizer().normalizeIdentifierQuoting( columnDefinition );
+			String name = "".equals( colName )
+					? defaultName
+					: colName;
+			name = mappings.getObjectNameNormalizer().normalizeIdentifierQuoting( name );
 			return new Ejb3JoinColumn(
 					sqlType,
 					name, false, false,
@@ -344,6 +350,7 @@ public class Ejb3JoinColumn extends Ejb3Column {
 			);
 		}
 		else {
+			defaultName = mappings.getObjectNameNormalizer().normalizeIdentifierQuoting( defaultName );
 			return new Ejb3JoinColumn(
 					(String) null, defaultName,
 					false, false, true, true, null, (String) null,

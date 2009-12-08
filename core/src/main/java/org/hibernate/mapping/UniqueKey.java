@@ -39,22 +39,29 @@ public class UniqueKey extends Constraint {
 
 	public String sqlConstraintString(Dialect dialect) {
 		StringBuffer buf = new StringBuffer( "unique (" );
+		boolean hadNullableColumn = false;
 		Iterator iter = getColumnIterator();
-		boolean nullable = false;
 		while ( iter.hasNext() ) {
 			Column column = (Column) iter.next();
-			if ( !nullable && column.isNullable() ) nullable = true;
+			if ( !hadNullableColumn && column.isNullable() ) {
+				hadNullableColumn = true;
+			}
 			buf.append( column.getQuotedName( dialect ) );
-			if ( iter.hasNext() ) buf.append( ", " );
+			if ( iter.hasNext() ) {
+				buf.append( ", " );
+			}
 		}
 		//do not add unique constraint on DB not supporting unique and nullable columns
-		return !nullable || dialect.supportsNotNullUnique() ?
+		return !hadNullableColumn || dialect.supportsNotNullUnique() ?
 				buf.append( ')' ).toString() :
 				null;
 	}
 
-	public String sqlConstraintString(Dialect dialect, String constraintName, String defaultCatalog,
-									  String defaultSchema) {
+	public String sqlConstraintString(
+			Dialect dialect,
+			String constraintName,
+			String defaultCatalog,
+			String defaultSchema) {
 		StringBuffer buf = new StringBuffer(
 				dialect.getAddPrimaryKeyConstraintString( constraintName )
 		).append( '(' );

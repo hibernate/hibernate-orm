@@ -209,6 +209,9 @@ public final class PersistenceXmlLoader {
 				else if ( tag.equals( "exclude-unlisted-classes" ) ) {
 					metadata.setExcludeUnlistedClasses( true );
 				}
+				else if ( tag.equals( "delimited-identifiers" ) ) {
+					metadata.setUseQuotedIdentifiers( true );
+				}
 				else if ( tag.equals( "properties" ) ) {
 					NodeList props = element.getChildNodes();
 					for ( int j = 0; j < props.getLength() ; j++ ) {

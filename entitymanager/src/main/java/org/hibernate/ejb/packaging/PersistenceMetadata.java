@@ -43,6 +43,7 @@ public class PersistenceMetadata {
 	private String jtaDatasource;
 	private String provider;
 	private PersistenceUnitTransactionType transactionType;
+	private boolean useQuotedIdentifiers = false; // the spec (erroneously?) calls this delimited-identifiers
 	private List<String> classes = new ArrayList<String>();
 	private List<String> packages = new ArrayList<String>();
 	private List<String> mappingFiles = new ArrayList<String>();
@@ -92,6 +93,14 @@ public class PersistenceMetadata {
 			this.provider = provider.substring( 0, provider.length() - 6 );
 		}
 		this.provider = provider;
+	}
+
+	public boolean isUseQuotedIdentifiers() {
+		return useQuotedIdentifiers;
+	}
+
+	public void setUseQuotedIdentifiers(boolean useQuotedIdentifiers) {
+		this.useQuotedIdentifiers = useQuotedIdentifiers;
 	}
 
 	public List<String> getClasses() {
@@ -162,6 +171,7 @@ public class PersistenceMetadata {
 				.append("\tnonJtaDataSource: ").append(nonJtaDatasource).append("\n")
 				.append("\ttransactionType: ").append(transactionType).append("\n")
 				.append("\tprovider: ").append(provider).append("\n")
+				.append("\tuseQuotedIdentifiers: ").append(useQuotedIdentifiers).append("\n")
 				.append("\tclasses[\n");
 		if (classes != null) {
 			for (String elt : classes) {

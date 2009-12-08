@@ -100,8 +100,12 @@ public abstract class Constraint implements RelationalModel, Serializable {
 
 	public String sqlDropString(Dialect dialect, String defaultCatalog, String defaultSchema) {
 		if ( isGenerated( dialect ) ) {
-			return "alter table " + getTable()
-					.getQualifiedName( dialect, defaultCatalog, defaultSchema ) + " drop constraint " + getName();
+			return new StringBuffer()
+					.append( "alter table " )
+					.append( getTable().getQualifiedName( dialect, defaultCatalog, defaultSchema ) )
+					.append( " drop constraint " )
+					.append( dialect.quote( getName() ) )
+					.toString();
 		}
 		else {
 			return null;

@@ -444,6 +444,9 @@ public class BinderHelper {
 					( (org.hibernate.mapping.Column) id.getColumnIterator().next() ).getName()
 			);
 		}
+		// YUCK!  but cannot think of a clean way to do this given the string-config based scheme
+		params.put( PersistentIdentifierGenerator.IDENTIFIER_NORMALIZER, mappings.getObjectNameNormalizer() );
+
 		if ( !isDefault( generatorName ) ) {
 			//we have a named generator
 			IdGenerator gen = mappings.getGenerator( generatorName, localGenerators );

@@ -48,7 +48,6 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.Value;
-import org.hibernate.util.CollectionHelper;
 import org.hibernate.util.StringHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -78,9 +77,8 @@ public class ResultsetMappingSecondPass implements QuerySecondPass {
 
 		for (EntityResult entity : ann.entities()) {
 			//TODO parameterize lock mode?
-			List properties = new ArrayList();
-			List propertyNames = new ArrayList();
-			Map propertyresults = new HashMap();
+			List<FieldResult> properties = new ArrayList<FieldResult>();
+			List<String> propertyNames = new ArrayList<String>();
 			for (FieldResult field : entity.fields()) {
 				//use an ArrayList cause we might have several columns per root property
 				String name = field.name();
@@ -120,18 +118,16 @@ public class ResultsetMappingSecondPass implements QuerySecondPass {
 				}
 			}
 
-			Set uniqueReturnProperty = new HashSet();
-			Iterator iterator = properties.iterator();
-			while ( iterator.hasNext() ) {
-				FieldResult propertyresult = (FieldResult) iterator.next();
-				String name = propertyresult.name();
+			Set<String> uniqueReturnProperty = new HashSet<String>();
+			Map<String, ArrayList<String>> propertyResultsTmp = new HashMap<String, ArrayList<String>>();
+			for ( Object property : properties ) {
+				final FieldResult propertyresult = ( FieldResult ) property;
+				final String name = propertyresult.name();
 				if ( "class".equals( name ) ) {
 					throw new MappingException(
 							"class is not a valid property name to use in a @FieldResult, use @Entity(discriminatorColumn) instead"
 					);
 				}
-				ArrayList allResultColumns = new ArrayList();
-				allResultColumns.add( propertyresult.column() );
 
 				if ( uniqueReturnProperty.contains( name ) ) {
 					throw new MappingException(
@@ -140,38 +136,56 @@ public class ResultsetMappingSecondPass implements QuerySecondPass {
 					);
 				}
 				uniqueReturnProperty.add( name );
+
+				final String quotingNormalizedColumnName = mappings.getObjectNameNormalizer()
+						.normalizeIdentifierQuoting( propertyresult.column() );
+
 				String key = StringHelper.root( name );
-				ArrayList intermediateResults = (ArrayList) propertyresults.get( key );
+				ArrayList<String> intermediateResults = propertyResultsTmp.get( key );
 				if ( intermediateResults == null ) {
-					propertyresults.put( key, allResultColumns );
+					intermediateResults = new ArrayList<String>();
+					propertyResultsTmp.put( key, intermediateResults );
 				}
-				else {
-					intermediateResults.addAll( allResultColumns );
-				}
+				intermediateResults.add( quotingNormalizedColumnName );
 			}
-			Iterator entries = propertyresults.entrySet().iterator();
-			while ( entries.hasNext() ) {
-				Map.Entry entry = (Map.Entry) entries.next();
-				if ( entry.getValue() instanceof ArrayList ) {
-					ArrayList list = (ArrayList) entry.getValue();
-					entry.setValue( list.toArray( new String[list.size()] ) );
-				}
+
+			Map<String, String[]> propertyResults = new HashMap<String,String[]>();
+			for ( Map.Entry<String, ArrayList<String>> entry : propertyResultsTmp.entrySet() ) {
+				propertyResults.put(
+						entry.getKey(),
+						entry.getValue().toArray( new String[ entry.getValue().size() ] )
+				);
 			}
 
 			if ( !BinderHelper.isDefault( entity.discriminatorColumn() ) ) {
-				propertyresults.put( "class", new String[] { entity.discriminatorColumn() } );
+				final String quotingNormalizedName = mappings.getObjectNameNormalizer().normalizeIdentifierQuoting(
+						entity.discriminatorColumn()
+				);
+				propertyResults.put( "class", new String[] { quotingNormalizedName } );
 			}
 
-			propertyresults = propertyresults.isEmpty() ? CollectionHelper.EMPTY_MAP : propertyresults;
-			NativeSQLQueryRootReturn result =
-					new NativeSQLQueryRootReturn(
-							"alias" + entityAliasIndex++, entity.entityClass().getName(), propertyresults, LockMode.READ
-					);
+			if ( propertyResults.isEmpty() ) {
+				propertyResults = java.util.Collections.emptyMap();
+			}
+
+			NativeSQLQueryRootReturn result = new NativeSQLQueryRootReturn(
+					"alias" + entityAliasIndex++,
+					entity.entityClass().getName(),
+					propertyResults,
+					LockMode.READ
+			);
 			definition.addQueryReturn( result );
 		}
 
-		for (ColumnResult column : ann.columns()) {
-			definition.addQueryReturn( new NativeSQLQueryScalarReturn( column.name(), null ) );
+		for ( ColumnResult column : ann.columns() ) {
+			definition.addQueryReturn(
+					new NativeSQLQueryScalarReturn(
+							mappings.getObjectNameNormalizer().normalizeIdentifierQuoting(
+									column.name()
+							),
+							null
+					)
+			);
 		}
 
 		if ( isDefault ) {
@@ -182,6 +196,7 @@ public class ResultsetMappingSecondPass implements QuerySecondPass {
 		}
 	}
 
+	@SuppressWarnings({ "unchecked" })
 	private List getFollowers(Iterator parentPropIter, String reducedName, String name) {
 		boolean hasFollowers = false;
 		List followers = new ArrayList();

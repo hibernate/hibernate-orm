@@ -2451,12 +2451,14 @@ public class Configuration implements Serializable {
 				String name,
 				String subselect,
 				boolean isAbstract) {
+			name = getObjectNameNormalizer().normalizeIdentifierQuoting( name );
+			schema = getObjectNameNormalizer().normalizeIdentifierQuoting( schema );
+			catalog = getObjectNameNormalizer().normalizeIdentifierQuoting( catalog );
+
 			String key = subselect == null ? Table.qualify( catalog, schema, name ) : subselect;
 			Table table = ( Table ) tables.get( key );
 
 			if ( table == null ) {
-				schema = getObjectNameNormalizer().normalizeIdentifierQuoting( schema );
-				catalog = getObjectNameNormalizer().normalizeIdentifierQuoting( catalog );
 				table = new Table();
 				table.setAbstract( isAbstract );
 				table.setName( name );
@@ -2481,13 +2483,14 @@ public class Configuration implements Serializable {
 				boolean isAbstract,
 				String subselect,
 				Table includedTable) throws DuplicateMappingException {
+			name = getObjectNameNormalizer().normalizeIdentifierQuoting( name );
+			schema = getObjectNameNormalizer().normalizeIdentifierQuoting( schema );
+			catalog = getObjectNameNormalizer().normalizeIdentifierQuoting( catalog );
+
 			String key = subselect == null ? Table.qualify(catalog, schema, name) : subselect;
 			if ( tables.containsKey( key ) ) {
 				throw new DuplicateMappingException( "table", name );
 			}
-
-			schema = getObjectNameNormalizer().normalizeIdentifierQuoting( schema );
-			catalog = getObjectNameNormalizer().normalizeIdentifierQuoting( catalog );
 
 			Table table = new DenormalizedTable( includedTable );
 			table.setAbstract( isAbstract );

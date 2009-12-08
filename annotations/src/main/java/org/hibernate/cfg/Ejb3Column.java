@@ -189,9 +189,15 @@ public class Ejb3Column {
 	}
 
 	protected void initMappingColumn(
-			String columnName, String propertyName, int length, int precision, int scale, boolean nullable,
-			String sqlType, boolean unique, boolean applyNamingStrategy
-	) {
+			String columnName,
+			String propertyName,
+			int length,
+			int precision,
+			int scale,
+			boolean nullable,
+			String sqlType,
+			boolean unique,
+			boolean applyNamingStrategy) {
 		if ( StringHelper.isNotEmpty( formulaString ) ) {
 			this.formula = new Formula();
 			this.formula.setFormula( formulaString );
@@ -218,16 +224,25 @@ public class Ejb3Column {
 		if ( applyNamingStrategy ) {
 			if ( StringHelper.isEmpty( columnName ) ) {
 				if ( propertyName != null ) {
-					mappingColumn.setName( mappings.getNamingStrategy().propertyToColumnName( propertyName ) );
+					mappingColumn.setName(
+							mappings.getObjectNameNormalizer().normalizeIdentifierQuoting(
+									mappings.getNamingStrategy().propertyToColumnName( propertyName )
+							)
+					);
 				}
 				//Do nothing otherwise
 			}
 			else {
-				mappingColumn.setName( mappings.getNamingStrategy().columnName( columnName ) );
+				columnName = mappings.getObjectNameNormalizer().normalizeIdentifierQuoting( columnName );
+				columnName = mappings.getNamingStrategy().columnName( columnName );
+				columnName = mappings.getObjectNameNormalizer().normalizeIdentifierQuoting( columnName );
+				mappingColumn.setName( columnName );
 			}
 		}
 		else {
-			if ( StringHelper.isNotEmpty( columnName ) ) mappingColumn.setName( columnName );
+			if ( StringHelper.isNotEmpty( columnName ) ) {
+				mappingColumn.setName( mappings.getObjectNameNormalizer().normalizeIdentifierQuoting( columnName ) );
+			}
 		}
 	}
 
@@ -383,30 +398,37 @@ public class Ejb3Column {
 				log.debug( "Column(s) overridden for property {}", inferredData.getPropertyName() );
 			}
 			if ( actualCols == null ) {
-				columns = buildImplicitColumn( inferredData,
+				columns = buildImplicitColumn(
+						inferredData,
 						suffixForDefaultColumnName,
 						secondaryTables,
 						propertyHolder,
 						nullability,
-						mappings );
+						mappings
+				);
 			}
 			else {
 				final int length = actualCols.length;
 				columns = new Ejb3Column[length];
 				for (int index = 0; index < length; index++) {
+					final ObjectNameNormalizer nameNormalizer = mappings.getObjectNameNormalizer();
 					javax.persistence.Column col = actualCols[index];
-					String sqlType = col.columnDefinition().equals( "" ) ? null : col.columnDefinition();
+					final String sqlType = col.columnDefinition().equals( "" )
+							? null
+							: nameNormalizer.normalizeIdentifierQuoting( col.columnDefinition() );
+					final String tableName = nameNormalizer.normalizeIdentifierQuoting( col.table() );
+					final String columnName = nameNormalizer.normalizeIdentifierQuoting( col.name() );
 					Ejb3Column column = new Ejb3Column();
 					column.setImplicit( false );
 					column.setSqlType( sqlType );
 					column.setLength( col.length() );
 					column.setPrecision( col.precision() );
 					column.setScale( col.scale() );
-					column.setLogicalColumnName( col.name() );
-					//support for explicit property name + suffix
-					if ( StringHelper.isEmpty( column.getLogicalColumnName() )
-						&& ! StringHelper.isEmpty( suffixForDefaultColumnName ) ) {
+					if ( StringHelper.isEmpty( columnName ) && ! StringHelper.isEmpty( suffixForDefaultColumnName ) ) {
 						column.setLogicalColumnName( inferredData.getPropertyName() + suffixForDefaultColumnName );
+					}
+					else {
+						column.setLogicalColumnName( columnName );
 					}
 
 					column.setPropertyName(
@@ -418,7 +440,7 @@ public class Ejb3Column {
 					column.setUnique( col.unique() );
 					column.setInsertable( col.insertable() );
 					column.setUpdatable( col.updatable() );
-					column.setSecondaryTableName( col.table() );
+					column.setSecondaryTableName( tableName );
 					column.setPropertyHolder( propertyHolder );
 					column.setJoins( secondaryTables );
 					column.setMappings( mappings );
@@ -436,12 +458,11 @@ public class Ejb3Column {
 			Map<String, Join> secondaryTables,
 			PropertyHolder propertyHolder,
 			Nullability nullability,
-			ExtendedMappings mappings
-	) {
-		Ejb3Column[] columns;
-		columns = new Ejb3Column[1];
+			ExtendedMappings mappings) {
 		Ejb3Column column = new Ejb3Column();
-		column.setImplicit( false );
+		Ejb3Column[] columns = new Ejb3Column[1];
+		columns[0] = column;
+
 		//not following the spec but more clean
 		if ( nullability != Nullability.FORCED_NULL
 				&& inferredData.getClassOrElement().isPrimitive()
@@ -466,7 +487,6 @@ public class Ejb3Column {
 			column.setImplicit( true );
 		}
 		column.bind();
-		columns[0] = column;
 		return columns;
 	}
 

@@ -400,11 +400,6 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 		return null;  //To change body of implemented methods use File | Settings | File Templates.
 	}
 
-	public Set<String> getSupportedProperties() {
-		//FIXME
-		return null;  //To change body of implemented methods use File | Settings | File Templates.
-	}
-
 	public void flush() {
 		try {
 			if ( !isTransactionInProgress() ) {

@@ -160,7 +160,6 @@ public class NativeScanner implements Scanner {
 		for (String pattern : filePatterns) {
 			sb.append( "  " ).append( pattern ).append( "\n" );
 		}
-		System.err.println(sb.toString());
 		JarVisitor jarVisitor = getVisitor( jarToScan );
 
 		//state visitor available

@@ -645,8 +645,10 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 		if ( clazz.equals( SessionImplementor.class ) ) {
 			return ( T ) getSession();
 		}
-		//FIXME
-		return null;  //To change body of implemented methods use File | Settings | File Templates.
+		else {
+			//unknown class type
+			throw new PersistenceException( "Hibernate cannot unwrap " + clazz);
+		}
 	}
 
 	private void joinTransaction(boolean ignoreNotJoining) {

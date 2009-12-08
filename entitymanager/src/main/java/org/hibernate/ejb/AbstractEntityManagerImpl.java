@@ -570,9 +570,13 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 			return LockModeType.OPTIMISTIC_FORCE_INCREMENT;
 		else if ( lockMode == LockMode.PESSIMISTIC_READ )
 			return LockModeType.PESSIMISTIC_READ;
-		else if ( lockMode == LockMode.PESSIMISTIC_WRITE )
+		else if ( lockMode == LockMode.PESSIMISTIC_WRITE
+				|| lockMode == LockMode.UPGRADE
+				|| lockMode == LockMode.UPGRADE_NOWAIT) //timeout of 0
+			//TODO check that if we have UPGRADE_NOWAIT we have a timeout of zero?
 			return LockModeType.PESSIMISTIC_WRITE;
-		else if ( lockMode == LockMode.PESSIMISTIC_FORCE_INCREMENT )
+		else if ( lockMode == LockMode.PESSIMISTIC_FORCE_INCREMENT
+				|| lockMode == LockMode.FORCE)
 			return LockModeType.PESSIMISTIC_FORCE_INCREMENT;
 		throw new AssertionFailure("unhandled lock mode " + lockMode );
 	}

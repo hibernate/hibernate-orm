@@ -61,7 +61,7 @@ import org.infinispan.util.logging.LogFactory;
  */
 public class ConcurrentWriteTest extends SingleNodeTestCase {
    private static final Log log = LogFactory.getLog(ConcurrentWriteTest.class);
-
+   private static final boolean trace = log.isTraceEnabled();
    /**
     * when USER_COUNT==1, tests pass, when >4 tests fail
     */
@@ -423,15 +423,21 @@ public class ConcurrentWriteTest extends SingleNodeTestCase {
             for (int i = 0; i < ITERATION_COUNT && !TERMINATE_ALL_USERS; i++) {
                if (contactExists())
                   throw new IllegalStateException("contact already exists before add, customerId=" + customerId);
+               if (trace) log.trace("Add contact for customer " + customerId);
                addContact(customerId);
+               if (trace) log.trace("Added contact");
                thinkRandomTime();
                if (!contactExists())
                   throw new IllegalStateException("contact missing after successful add, customerId=" + customerId);
                thinkRandomTime();
+               if (trace) log.trace("Read all customers' first contact");
                // read everyone's contacts
                readEveryonesFirstContact();
+               if (trace) log.trace("Read completed");
                thinkRandomTime();
+               if (trace) log.trace("Remove contact of customer" + customerId);
                removeContact(customerId);
+               if (trace) log.trace("Removed contact");
                if (contactExists())
                   throw new IllegalStateException("contact still exists after successful remove call, customerId=" + customerId);
                thinkRandomTime();

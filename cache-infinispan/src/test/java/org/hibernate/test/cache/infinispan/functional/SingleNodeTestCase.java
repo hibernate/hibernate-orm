@@ -34,7 +34,10 @@ public abstract class SingleNodeTestCase extends FunctionalTestCase {
 
    protected TransactionManager getTransactionManager() {
       try {
-         return getTransactionManagerLookupClass().newInstance().getTransactionManager(null);
+         if (getTransactionManagerLookupClass() == null)
+            return null;
+         else
+            return getTransactionManagerLookupClass().newInstance().getTransactionManager(null);
       } catch (Exception e) {
          log.error("Error", e);
          throw new RuntimeException(e);
@@ -81,7 +84,9 @@ public abstract class SingleNodeTestCase extends FunctionalTestCase {
       cfg.setProperty(Environment.USE_QUERY_CACHE, String.valueOf(getUseQueryCache()));
       cfg.setProperty(Environment.CACHE_REGION_FACTORY, getCacheRegionFactory().getName());
       cfg.setProperty(Environment.CONNECTION_PROVIDER, getConnectionProviderClass().getName());
-      cfg.setProperty(Environment.TRANSACTION_MANAGER_STRATEGY, getTransactionManagerLookupClass().getName());
+      if (getTransactionManagerLookupClass() != null) {
+         cfg.setProperty(Environment.TRANSACTION_MANAGER_STRATEGY, getTransactionManagerLookupClass().getName());
+      }
       cfg.setProperty(Environment.TRANSACTION_STRATEGY, getTransactionFactoryClass().getName());
    }
 

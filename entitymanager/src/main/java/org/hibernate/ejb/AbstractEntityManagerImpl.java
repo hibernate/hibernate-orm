@@ -44,6 +44,7 @@ import javax.persistence.TransactionRequiredException;
 import javax.persistence.TypedQuery;
 import javax.persistence.PessimisticLockScope;
 import javax.persistence.LockTimeoutException;
+import javax.persistence.QueryTimeoutException;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.metamodel.Metamodel;
@@ -807,6 +808,9 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 			return;
 		}
 		if ( e instanceof LockTimeoutException ) {
+			return;
+		}
+		if ( e instanceof QueryTimeoutException ) {
 			return;
 		}
 

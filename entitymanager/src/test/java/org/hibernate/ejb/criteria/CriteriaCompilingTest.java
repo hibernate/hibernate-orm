@@ -23,7 +23,13 @@
  */
 package org.hibernate.ejb.criteria;
 
+import java.io.ByteArrayOutputStream;
+import java.io.ObjectOutput;
+import java.io.ObjectOutputStream;
+import java.io.ByteArrayInputStream;
+import java.io.ObjectInputStream;
 import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
 import javax.persistence.criteria.Root;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Join;
@@ -104,6 +110,46 @@ public class CriteriaCompilingTest extends TestCase {
 
 		em.getTransaction().commit();
 		em.close();
+	}
+
+	//FIXME uncomment the serialization line and enjoy the test failing
+	public void testSerialization() {
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+
+		CriteriaQuery<Order> criteria = em.getCriteriaBuilder().createQuery( Order.class );
+		Root<Order> root = criteria.from( Order.class );
+		root.fetch( "lineItems" );
+		criteria.select( root );
+
+		//FIXME uncomment the serialization line and enjoy the test failing
+		//criteria = serializeDdeserialize( criteria );
+
+		em.createQuery( criteria ).getResultList();
+
+		em.getTransaction().commit();
+		em.close();
+	}
+
+	private <T> T serializeDdeserialize(T object) {
+		T serializedObject = null;
+		try {
+			ByteArrayOutputStream stream = new ByteArrayOutputStream();
+			ObjectOutput out = new ObjectOutputStream( stream );
+			out.writeObject( object );
+			out.close();
+			byte[] serialized = stream.toByteArray();
+			stream.close();
+			ByteArrayInputStream byteIn = new ByteArrayInputStream( serialized );
+			ObjectInputStream in = new ObjectInputStream( byteIn );
+			serializedObject = (T) in.readObject();
+			in.close();
+			byteIn.close();
+		}
+		catch (Exception e) {
+			fail("Unable to serialize / deserialize the object: " + e.getMessage() );
+		}
+		return serializedObject;
 	}
 
 }

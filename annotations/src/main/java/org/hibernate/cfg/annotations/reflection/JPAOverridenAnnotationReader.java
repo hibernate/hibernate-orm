@@ -810,6 +810,7 @@ public class JPAOverridenAnnotationReader implements AnnotationReader {
 			if ( subelement.element( "cascade-merge" ) != null ) cascades.add( CascadeType.MERGE );
 			if ( subelement.element( "cascade-remove" ) != null ) cascades.add( CascadeType.REMOVE );
 			if ( subelement.element( "cascade-refresh" ) != null ) cascades.add( CascadeType.REFRESH );
+			if ( subelement.element( "cascade-detach" ) != null ) cascades.add( CascadeType.DETACH );
 		}
 		if ( Boolean.TRUE.equals( defaults.getCascadePersist() )
 				&& !cascades.contains( CascadeType.ALL ) && !cascades.contains( CascadeType.PERSIST ) ) {

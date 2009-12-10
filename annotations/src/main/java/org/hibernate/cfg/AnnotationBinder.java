@@ -2518,6 +2518,9 @@ public final class AnnotationBinder {
 					case REFRESH:
 						hibernateCascadeSet.add( CascadeType.REFRESH );
 						break;
+					case DETACH:
+						hibernateCascadeSet.add( CascadeType.DETACH );
+						break;
 				}
 			}
 		}
@@ -2565,6 +2568,7 @@ public final class AnnotationBinder {
 					cascade.append( "," ).append( "replicate" );
 					break;
 				case EVICT:
+				case DETACH:
 					cascade.append( "," ).append( "evict" );
 					break;
 				case DELETE:

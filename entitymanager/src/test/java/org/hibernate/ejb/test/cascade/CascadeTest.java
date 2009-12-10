@@ -31,8 +31,7 @@ public class CascadeTest extends TestCase {
 
 		em.persist( teacher );
 		em.getTransaction().commit();
-	
-		System.out.println("***************************");
+
 		em = getOrCreateEntityManager();
 		em.getTransaction().begin();
 		

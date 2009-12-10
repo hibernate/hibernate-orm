@@ -37,5 +37,8 @@ public enum CascadeType {
 	REPLICATE,
 	DELETE_ORPHAN,
 	LOCK,
-	EVICT
+	/** @deprecated use DETACH */
+	@Deprecated
+	EVICT,
+	DETACH
 }

@@ -121,6 +121,19 @@ public class DerbyDialect extends DB2Dialect {
 		return isTenPointFiveReleaseOrNewer();
 	}
 
+   public String getForUpdateString() {
+		return " for update with rs";
+   }
+
+	public String getWriteLockString(int timeout) {
+		return " for update with rs";
+	}
+
+	public String getReadLockString(int timeout) {
+		return " for read only with rs";
+	}
+	
+
 	/**
 	 * {@inheritDoc}
 	 * <p/>

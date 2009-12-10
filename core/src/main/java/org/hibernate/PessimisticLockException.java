@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2009, Red Hat Middleware LLC or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Middleware LLC.
@@ -37,6 +37,11 @@ public class PessimisticLockException extends HibernateException {
 	public PessimisticLockException(String s) {
 		super(s);
 	}
+
+   public PessimisticLockException(String s, Throwable throwable, Object entity) {
+         super(s, throwable);
+         this.entity = entity;
+      }
 
 	public PessimisticLockException(String s, Object entity) {
 		super(s);

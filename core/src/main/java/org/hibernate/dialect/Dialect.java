@@ -978,8 +978,14 @@ public abstract class Dialect {
 	 */
 	public String getForUpdateString(LockOptions lockOptions) {
 		LockMode lockMode = lockOptions.getLockMode();
-		if ( lockMode==LockMode.UPGRADE || lockMode==LockMode.PESSIMISTIC_READ || lockMode==LockMode.PESSIMISTIC_WRITE) {
+		if ( lockMode==LockMode.UPGRADE) {
 			return getForUpdateString();
+		}
+		else if( lockMode==LockMode.PESSIMISTIC_READ ) {
+			return getReadLockString(lockOptions.getTimeOut());
+		}
+		else if( lockMode==LockMode.PESSIMISTIC_WRITE ) {
+			return getWriteLockString(lockOptions.getTimeOut());
 		}
 		else if ( lockMode==LockMode.UPGRADE_NOWAIT ) {
 			return getForUpdateNowaitString();
@@ -999,8 +1005,14 @@ public abstract class Dialect {
 	 * @return The appropriate for update fragment.
 	 */
 	public String getForUpdateString(LockMode lockMode) {
-		if ( lockMode==LockMode.UPGRADE || lockMode==LockMode.PESSIMISTIC_READ || lockMode==LockMode.PESSIMISTIC_WRITE) {
+		if ( lockMode==LockMode.UPGRADE ) {
 			return getForUpdateString();
+		}
+		else if( lockMode==LockMode.PESSIMISTIC_READ ) {
+			return getReadLockString(LockOptions.WAIT_FOREVER);
+		}
+		else if( lockMode==LockMode.PESSIMISTIC_WRITE ) {
+			return getWriteLockString(LockOptions.WAIT_FOREVER);
 		}
 		else if ( lockMode==LockMode.UPGRADE_NOWAIT ) {
 			return getForUpdateNowaitString();
@@ -1022,6 +1034,31 @@ public abstract class Dialect {
 	public String getForUpdateString() {
 		return " for update";
 	}
+
+	/**
+	 * Get the string to append to SELECT statements to acquire WRITE locks
+	 * for this dialect.  Location of the of the returned string is treated
+	 * the same as getForUpdateString.
+	 *
+	 * @param timeout in milliseconds, -1 for indefinite wait and 0 for no wait.
+	 * @return The appropriate <tt>LOCK</tt> clause string.
+	 */
+	public String getWriteLockString(int timeout) {
+		return getForUpdateString();
+	}
+
+	/**
+	 * Get the string to append to SELECT statements to acquire WRITE locks
+	 * for this dialect.  Location of the of the returned string is treated
+	 * the same as getForUpdateString.
+	 *
+	 * @param timeout in milliseconds, -1 for indefinite wait and 0 for no wait.
+	 * @return The appropriate <tt>LOCK</tt> clause string.
+	 */
+	public String getReadLockString(int timeout) {
+		return getForUpdateString();
+	}
+
 
 	/**
 	 * Is <tt>FOR UPDATE OF</tt> syntax supported?

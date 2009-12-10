@@ -27,12 +27,13 @@ package org.hibernate.dialect.lock;
 import org.hibernate.persister.entity.Lockable;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.engine.SessionFactoryImplementor;
-import org.hibernate.StaleObjectStateException;
-import org.hibernate.JDBCException;
-import org.hibernate.LockMode;
 import org.hibernate.sql.SimpleSelect;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.exception.JDBCExceptionHelper;
+import org.hibernate.LockMode;
+import org.hibernate.StaleObjectStateException;
+import org.hibernate.JDBCException;
+import org.hibernate.PessimisticLockException;
 
 import java.io.Serializable;
 import java.sql.PreparedStatement;
@@ -117,12 +118,13 @@ public class PessimisticReadSelectLockingStrategy implements LockingStrategy {
 
 		}
 		catch ( SQLException sqle ) {
-			throw JDBCExceptionHelper.convert(
+			JDBCException e = JDBCExceptionHelper.convert(
 					session.getFactory().getSQLExceptionConverter(),
 					sqle,
 					"could not lock: " + MessageHelper.infoString( lockable, id, session.getFactory() ),
 					sql
 				);
+			throw new PessimisticLockException("could not obtain pessimistic lock", e, object);
 		}
 	}
 

@@ -30,6 +30,7 @@ import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.JDBCException;
 import org.hibernate.LockMode;
+import org.hibernate.PessimisticLockException;
 import org.hibernate.sql.SimpleSelect;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.exception.JDBCExceptionHelper;
@@ -117,12 +118,13 @@ public class PessimisticWriteSelectLockingStrategy implements LockingStrategy {
 
 		}
 		catch ( SQLException sqle ) {
-			throw JDBCExceptionHelper.convert(
+			JDBCException e = JDBCExceptionHelper.convert(
 					session.getFactory().getSQLExceptionConverter(),
 					sqle,
 					"could not lock: " + MessageHelper.infoString( lockable, id, session.getFactory() ),
 					sql
 				);
+			throw new PessimisticLockException("could not obtain pessimistic lock", e, object);
 		}
 	}
 

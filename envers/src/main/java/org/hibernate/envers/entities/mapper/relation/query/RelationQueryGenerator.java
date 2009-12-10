@@ -28,6 +28,8 @@ import org.hibernate.envers.reader.AuditReaderImplementor;
 import org.hibernate.Query;
 
 /**
+ * TODO: cleanup implementations and extract common code
+ *
  * Implementations of this interface provide a method to generate queries on a relation table (a table used
  * for mapping relations). The query can select, apart from selecting the content of the relation table, also data of
  * other "related" entities.

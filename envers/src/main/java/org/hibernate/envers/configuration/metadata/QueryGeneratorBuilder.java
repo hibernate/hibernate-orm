@@ -30,10 +30,8 @@ import org.hibernate.envers.configuration.GlobalConfiguration;
 import org.hibernate.envers.configuration.AuditEntitiesConfiguration;
 import org.hibernate.envers.entities.mapper.relation.MiddleComponentData;
 import org.hibernate.envers.entities.mapper.relation.MiddleIdData;
-import org.hibernate.envers.entities.mapper.relation.query.OneEntityQueryGenerator;
-import org.hibernate.envers.entities.mapper.relation.query.RelationQueryGenerator;
-import org.hibernate.envers.entities.mapper.relation.query.ThreeEntityQueryGenerator;
-import org.hibernate.envers.entities.mapper.relation.query.TwoEntityQueryGenerator;
+import org.hibernate.envers.entities.mapper.relation.query.*;
+import org.hibernate.MappingException;
 
 /**
  * Builds query generators, for reading collection middle tables, along with any related entities.
@@ -66,9 +64,19 @@ public final class QueryGeneratorBuilder {
             return new OneEntityQueryGenerator(verEntCfg, auditMiddleEntityName, referencingIdData,
                     componentDatas);
         } else if (idDatas.size() == 1) {
-            return new TwoEntityQueryGenerator(globalCfg, verEntCfg, auditMiddleEntityName, referencingIdData,
-                    idDatas.get(0), componentDatas);
+            if (idDatas.get(0).isAudited()) {
+                return new TwoEntityQueryGenerator(globalCfg, verEntCfg, auditMiddleEntityName, referencingIdData,
+                        idDatas.get(0), componentDatas);
+            } else {
+                return new TwoEntityOneAuditedQueryGenerator(verEntCfg, auditMiddleEntityName, referencingIdData,
+                        idDatas.get(0), componentDatas);
+            }
         } else if (idDatas.size() == 2) {
+            // All entities must be audited.
+            if (!idDatas.get(0).isAudited() || !idDatas.get(1).isAudited()) {
+                throw new MappingException("Ternary relations using @Audited(targetAuditMode = NOT_AUDITED) are not supported.");
+            }
+
             return new ThreeEntityQueryGenerator(globalCfg, verEntCfg, auditMiddleEntityName, referencingIdData,
                     idDatas.get(0), idDatas.get(1), componentDatas);
         } else {

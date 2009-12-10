@@ -40,6 +40,7 @@ import org.hibernate.envers.entities.mapper.MultiPropertyMapper;
 import org.hibernate.envers.entities.mapper.SubclassPropertyMapper;
 import org.hibernate.envers.tools.StringTools;
 import org.hibernate.envers.tools.Triple;
+import org.hibernate.envers.RelationTargetAuditMode;
 
 import org.hibernate.MappingException;
 import org.hibernate.cfg.Configuration;
@@ -348,7 +349,7 @@ public final class AuditMetadataGenerator {
 			String parentEntityName = null;
 			EntityConfiguration entityCfg = new EntityConfiguration(entityName, idMapper, propertyMapper,
 					parentEntityName);
-			notAuditedEntitiesConfigurations.put(pc.getEntityName(), entityCfg);
+			notAuditedEntitiesConfigurations.put(entityName, entityCfg);
 			return;
 		}
 
@@ -474,6 +475,36 @@ public final class AuditMetadataGenerator {
                 ", on entity " + entityName + ", property '" + propertyName + "'.";
 
         throw new MappingException(message);
+    }
+
+    /**
+     * Reads the id mapping data of a referenced entity.
+     * @param entityName Name of the entity which is the source of the relation.
+     * @param referencedEntityName Name of the entity which is the target of the relation.
+     * @param propertyAuditingData Auditing data of the property that is the source of the relation.
+     * @param allowNotAuditedTarget Are not-audited target entities allowed.
+     * @throws MappingException If a relation from an audited to a non-audited entity is detected, which is not
+     * mapped using {@link RelationTargetAuditMode#NOT_AUDITED}.
+     * @return The id mapping data of the related entity. 
+     */
+    IdMappingData getReferencedIdMappingData(String entityName, String referencedEntityName,
+                                             PropertyAuditingData propertyAuditingData,
+                                             boolean allowNotAuditedTarget) {
+        EntityConfiguration configuration = getEntitiesConfigurations().get(referencedEntityName);
+		if (configuration == null) {
+            RelationTargetAuditMode relationTargetAuditMode = propertyAuditingData.getRelationTargetAuditMode();
+			configuration = getNotAuditedEntitiesConfigurations().get(referencedEntityName);
+
+			if (configuration == null || !allowNotAuditedTarget || !RelationTargetAuditMode.NOT_AUDITED.equals(relationTargetAuditMode)) {
+				throw new MappingException("An audited relation from " + entityName + "."
+						+ propertyAuditingData.getName() + " to a not audited entity " + referencedEntityName + "!"
+						+ (allowNotAuditedTarget ?
+                            " Such mapping is possible, but has to be explicitly defined using @Audited(targetAuditMode = NOT_AUDITED)." :
+                            ""));
+			}
+		}
+
+        return configuration.getIdMappingData();
     }
 
 	/**

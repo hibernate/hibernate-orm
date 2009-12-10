@@ -155,28 +155,26 @@ public final class CollectionMetadataGenerator {
         }
     }
 
+    private MiddleIdData createMiddleIdData(IdMappingData idMappingData, String prefix, String entityName) {
+        return new MiddleIdData(mainGenerator.getVerEntCfg(), idMappingData, prefix, entityName,
+                mainGenerator.getEntitiesConfigurations().containsKey(entityName));
+    }
+
     @SuppressWarnings({"unchecked"})
     private void addOneToManyAttached() {
         String mappedBy = getMappedBy(propertyValue);
 
-        EntityConfiguration referencedEntityConfiguration = mainGenerator.getEntitiesConfigurations()
-                .get(referencedEntityName);
-
-		if (referencedEntityConfiguration == null) {
-			throwRelationNotAudited(referencedEntityName);
-			// Impossible to get here.
-            throw new AssertionError();
-		}
-        IdMappingData referencedIdMapping = referencedEntityConfiguration.getIdMappingData();
+        IdMappingData referencedIdMapping = mainGenerator.getReferencedIdMappingData(referencingEntityName,
+                    referencedEntityName, propertyAuditingData, false);
         IdMappingData referencingIdMapping = referencingEntityConfiguration.getIdMappingData();
 
         // Generating the id mappers data for the referencing side of the relation.
-        MiddleIdData referencingIdData = new MiddleIdData(mainGenerator.getVerEntCfg(), referencingIdMapping,
+        MiddleIdData referencingIdData = createMiddleIdData(referencingIdMapping,
                 mappedBy + "_", referencingEntityName);
 
         // And for the referenced side. The prefixed mapper won't be used (as this collection isn't persisted
         // in a join table, so the prefix value is arbitrary).
-        MiddleIdData referencedIdData = new MiddleIdData(mainGenerator.getVerEntCfg(), referencedIdMapping,
+        MiddleIdData referencedIdData = createMiddleIdData(referencedIdMapping,
                 null, referencedEntityName);
 
         // Generating the element mapping.
@@ -293,7 +291,7 @@ public final class CollectionMetadataGenerator {
         }
 
         // Storing the id data of the referencing entity: original mapper, prefixed mapper and entity name.
-        MiddleIdData referencingIdData = new MiddleIdData(mainGenerator.getVerEntCfg(), referencingIdMapping,
+        MiddleIdData referencingIdData = createMiddleIdData(referencingIdMapping,
                 referencingPrefixRelated, referencingEntityName);
 
         // Creating a query generator builder, to which additional id data will be added, in case this collection
@@ -390,14 +388,9 @@ public final class CollectionMetadataGenerator {
             String prefixRelated = prefix + "_";
 
             String referencedEntityName = getReferencedEntityName(value);
-			EntityConfiguration referencedEntityConfiguration = mainGenerator.getEntitiesConfigurations()
-                    .get(referencedEntityName);
-			if (referencedEntityConfiguration == null) {
-				throwRelationNotAudited(referencedEntityName);
-				// Impossible to get here.
-                throw new AssertionError();
-			}
-            IdMappingData referencedIdMapping = referencedEntityConfiguration.getIdMappingData();
+
+            IdMappingData referencedIdMapping = mainGenerator.getReferencedIdMappingData(referencingEntityName,
+                    referencedEntityName, propertyAuditingData, true);
 
             // Adding related-entity (in this case: the referenced entities id) id mapping to the xml only if the
             // relation isn't inverse (so when <code>xmlMapping</code> is not null).
@@ -410,7 +403,7 @@ public final class CollectionMetadataGenerator {
             }
 
             // Storing the id data of the referenced entity: original mapper, prefixed mapper and entity name.
-            MiddleIdData referencedIdData = new MiddleIdData(mainGenerator.getVerEntCfg(), referencedIdMapping,
+            MiddleIdData referencedIdData = createMiddleIdData(referencedIdMapping,
                     prefixRelated, referencedEntityName);
             // And adding it to the generator builder.
             queryGeneratorBuilder.addRelation(referencedIdData);
@@ -541,9 +534,4 @@ public final class CollectionMetadataGenerator {
         throw new MappingException("Unable to read the mapped by attribute for " + propertyName + " in "
                 + referencingEntityName + "!");
     }
-
-	private void throwRelationNotAudited(String referencedEntityName) {
-		throw new MappingException("An audited relation from " + referencingEntityName +
-				" to a non-audited entity: " + referencedEntityName);
-	}
 }

@@ -85,8 +85,8 @@ public final class ThreeEntityQueryGenerator implements RelationQueryGenerator {
 
         // SELECT new list(ee) FROM middleEntity ee
         QueryBuilder qb = new QueryBuilder(versionsMiddleEntityName, "ee");
-        qb.addFrom(referencedIdData.getVersionsEntityName(), "e");
-        qb.addFrom(indexIdData.getVersionsEntityName(), "f");
+        qb.addFrom(referencedIdData.getAuditEntityName(), "e");
+        qb.addFrom(indexIdData.getAuditEntityName(), "f");
         qb.addProjection("new list", "ee, e, f", false, false);
         // WHERE
         Parameters rootParameters = qb.getRootParameters();

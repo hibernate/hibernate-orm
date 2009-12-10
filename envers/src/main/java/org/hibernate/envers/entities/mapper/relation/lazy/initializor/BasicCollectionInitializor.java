@@ -66,8 +66,16 @@ public class BasicCollectionInitializor<T extends Collection> extends AbstractCo
     @SuppressWarnings({"unchecked"})
     protected void addToCollection(T collection, Object collectionRow) {
         Object elementData = ((List) collectionRow).get(elementComponentData.getComponentIndex());
-        Object element = elementComponentData.getComponentMapper().mapToObjectFromFullMap(entityInstantiator,
-                (Map<String, Object>) elementData, null, revision);
+
+        // If the target entity is not audited, the elements may be the entities already, so we have to check
+        // if they are maps or not.
+        Object element;
+        if (elementData instanceof Map) {
+            element = elementComponentData.getComponentMapper().mapToObjectFromFullMap(entityInstantiator,
+                    (Map<String, Object>) elementData, null, revision);
+        } else {
+            element = elementData;
+        }
         collection.add(element);
     }
 }

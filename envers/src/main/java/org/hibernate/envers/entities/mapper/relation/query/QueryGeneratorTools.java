@@ -37,7 +37,7 @@ public class QueryGeneratorTools {
                                            MiddleIdData idData, String revisionPropertyPath, String originalIdPropertyName,
                                            String alias1, String alias2) {
         // SELECT max(e.revision) FROM versionsReferencedEntity e2
-        QueryBuilder maxERevQb = qb.newSubQueryBuilder(idData.getVersionsEntityName(), alias2);
+        QueryBuilder maxERevQb = qb.newSubQueryBuilder(idData.getAuditEntityName(), alias2);
         maxERevQb.addProjection("max", revisionPropertyPath, false);
         // WHERE
         Parameters maxERevQbParameters = maxERevQb.getRootParameters();

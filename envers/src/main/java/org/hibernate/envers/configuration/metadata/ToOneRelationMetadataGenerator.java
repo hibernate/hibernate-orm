@@ -24,7 +24,6 @@
 package org.hibernate.envers.configuration.metadata;
 
 import org.dom4j.Element;
-import org.hibernate.envers.RelationTargetAuditMode;
 import org.hibernate.envers.entities.EntityConfiguration;
 import org.hibernate.envers.entities.IdMappingData;
 import org.hibernate.envers.entities.PropertyData;
@@ -55,24 +54,8 @@ public final class ToOneRelationMetadataGenerator {
                   CompositeMapperBuilder mapper, String entityName, boolean insertable) {
         String referencedEntityName = ((ToOne) value).getReferencedEntityName();
 
-		EntityConfiguration configuration = mainGenerator.getEntitiesConfigurations().get(referencedEntityName);
-		if (configuration == null) {
-			configuration = mainGenerator.getNotAuditedEntitiesConfigurations().get(referencedEntityName);
-			if (configuration != null) {
-				RelationTargetAuditMode relationTargetAuditMode = propertyAuditingData.getRelationTargetAuditMode();
-				if (!RelationTargetAuditMode.NOT_AUDITED.equals(relationTargetAuditMode)) {
-					throw new MappingException("An audited relation from " + entityName + "."
-							+ propertyAuditingData.getName() + " to a not audited entity " + referencedEntityName + "!"
-							+ ". Such mapping is possible, but has to be strictly defined using RelationTargetAuditMode.NOT_AUDITED in @Audited.");
-				}
-			}
-		}
-		if (configuration == null) {
-			throw new MappingException("An audited relation from " + entityName + "."
-					+ propertyAuditingData.getName() + " to a not audited entity " + referencedEntityName + "!");
-		}
-
-        IdMappingData idMapping = configuration.getIdMappingData();
+        IdMappingData idMapping = mainGenerator.getReferencedIdMappingData(entityName, referencedEntityName,
+                propertyAuditingData, true);
 
         String lastPropertyPrefix = propertyAuditingData.getName() + "_";
 

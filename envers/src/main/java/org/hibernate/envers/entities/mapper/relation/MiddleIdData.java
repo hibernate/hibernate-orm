@@ -33,44 +33,51 @@ import org.hibernate.envers.entities.mapper.id.IdMapper;
  * @author Adam Warski (adam at warski dot org)
  */
 public final class MiddleIdData {
-    /**
-     * Original id mapper of the related entity.
-     */
     private final IdMapper originalMapper;
-    /**
-     * Prefixed id mapper (with the names for the id fields that are used in the middle table) of the related entity.
-     */
     private final IdMapper prefixedMapper;
-    /**
-     * Name of the related entity.
-     */
     private final String entityName;
-    /**
-     * Versions name of the related entity.
-     */
-    private final String versionsEntityName;
+    private final String auditEntityName;
 
     public MiddleIdData(AuditEntitiesConfiguration verEntCfg, IdMappingData mappingData, String prefix,
-                        String entityName) {
+                        String entityName, boolean audited) {
         this.originalMapper = mappingData.getIdMapper();
         this.prefixedMapper = mappingData.getIdMapper().prefixMappedProperties(prefix);
         this.entityName = entityName;
-        this.versionsEntityName = verEntCfg.getAuditEntityName(entityName);
+        this.auditEntityName = audited ? verEntCfg.getAuditEntityName(entityName) : null;
     }
 
+    /**
+     * @return Original id mapper of the related entity.
+     */
     public IdMapper getOriginalMapper() {
         return originalMapper;
     }
 
+    /**
+     * @return prefixed id mapper (with the names for the id fields that are used in the middle table) of the related entity.
+     */
     public IdMapper getPrefixedMapper() {
         return prefixedMapper;
     }
 
+    /**
+     * @return Name of the related entity (regular, not audited).
+     */
     public String getEntityName() {
         return entityName;
     }
 
-    public String getVersionsEntityName() {
-        return versionsEntityName;
+    /**
+     * @return Audit name of the related entity.
+     */
+    public String getAuditEntityName() {
+        return auditEntityName;
+    }
+
+    /**
+     * @return Is the entity, to which this middle id data correspond, audited.
+     */
+    public boolean isAudited() {
+        return auditEntityName != null;
     }
 }

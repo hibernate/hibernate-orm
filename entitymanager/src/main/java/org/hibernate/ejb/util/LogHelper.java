@@ -63,6 +63,12 @@ public final class LogHelper {
 				.append( "\n\t" )
 				.append( "PU root URL: " )
 				.append( unitInfo.getPersistenceUnitRootUrl() )
+				.append( "\n\t" )
+				.append( "Shared Cache Mode: " )
+				.append( unitInfo.getSharedCacheMode() )
+				.append( "\n\t" )
+				.append( "Validation Mode: " )
+				.append( unitInfo.getValidationMode() )
 				.append( "\n\t" );
 		sb.append( "Jar files URLs [" );
 		List<URL> jarFileUrls = unitInfo.getJarFileUrls();

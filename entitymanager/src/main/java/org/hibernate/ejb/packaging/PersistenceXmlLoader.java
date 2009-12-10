@@ -212,6 +212,12 @@ public final class PersistenceXmlLoader {
 				else if ( tag.equals( "delimited-identifiers" ) ) {
 					metadata.setUseQuotedIdentifiers( true );
 				}
+				else if ( tag.equals( "validation-mode" ) ) {
+					metadata.setValidationMode( XmlHelper.getElementContent( element ) );
+				}
+				else if ( tag.equals( "shared-cache-mode" ) ) {
+					metadata.setSharedCacheMode( XmlHelper.getElementContent( element ) );
+				}
 				else if ( tag.equals( "properties" ) ) {
 					NodeList props = element.getChildNodes();
 					for ( int j = 0; j < props.getLength() ; j++ ) {

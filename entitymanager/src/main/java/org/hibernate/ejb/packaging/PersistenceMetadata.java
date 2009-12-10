@@ -51,6 +51,17 @@ public class PersistenceMetadata {
 	private List<NamedInputStream> hbmfiles = new ArrayList<NamedInputStream>();
 	private Properties props = new Properties();
 	private boolean excludeUnlistedClasses = false;
+	private String validationMode;
+
+	public String getSharedCacheMode() {
+		return sharedCacheMode;
+	}
+
+	public boolean isExcludeUnlistedClasses() {
+		return excludeUnlistedClasses;
+	}
+
+	private String sharedCacheMode;
 
 	public String getName() {
 		return name;
@@ -204,6 +215,13 @@ public class PersistenceMetadata {
 				.append( hbmfiles != null ? hbmfiles.size() : 0 ).append("\n")
 				.append("\tproperties[\n");
 
+		if (validationMode != null) {
+			sb.append("\tvalidation-mode: ").append(validationMode).append("\n");
+		}
+		if (sharedCacheMode != null) {
+			sb.append("\tshared-cache-mode: ").append(sharedCacheMode).append("\n");
+		}
+
 		if (props != null) {
 			for ( Map.Entry elt : props.entrySet()) {
 				sb.append("\t\t").append( elt.getKey() ).append(": ").append( elt.getValue() ).append("\n");
@@ -212,5 +230,17 @@ public class PersistenceMetadata {
 		sb.append( "\t]").append( "]");
 
 		return sb.toString();
+	}
+
+	public void setValidationMode(String validationMode) {
+		this.validationMode = validationMode;
+	}
+
+	public String getValidationMode() {
+		return validationMode;
+	}
+
+	public void setSharedCacheMode(String sharedCacheMode) {
+		this.sharedCacheMode = sharedCacheMode;
 	}
 }

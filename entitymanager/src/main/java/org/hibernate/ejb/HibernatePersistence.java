@@ -56,6 +56,14 @@ public class HibernatePersistence implements javax.persistence.spi.PersistencePr
 	 */
 	public static final String NON_JTA_DATASOURCE = "javax.persistence.nonJtaDataSource";
 	/**
+	 * Validation mode
+	 */
+	public static final String VALIDATION_MODE = "javax.persistence.validation.mode";
+	/**
+	 * Shared cache mode
+	 */
+	public static final String SHARED_CACHE_MODE = "javax.persistence.sharedCache.mode";
+	/**
 	 * JAR autodetection artifacts class, hbm
 	 */
 	public static final String AUTODETECTION = "hibernate.archive.autodetection";

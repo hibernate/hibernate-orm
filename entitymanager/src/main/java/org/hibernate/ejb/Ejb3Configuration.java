@@ -55,6 +55,7 @@ import javax.persistence.EntityManagerFactory;
 import javax.persistence.EntityNotFoundException;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.PersistenceException;
+import javax.persistence.ValidationMode;
 import javax.persistence.spi.PersistenceUnitInfo;
 import javax.persistence.spi.PersistenceUnitTransactionType;
 import javax.sql.DataSource;
@@ -199,6 +200,12 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 		}
 		if ( metadata.getHbmfiles().size() > 0 ) {
 			workingVars.put( HibernatePersistence.HBXML_FILES, metadata.getHbmfiles() );
+		}
+		if ( metadata.getValidationMode() != null) {
+			workingVars.put( HibernatePersistence.VALIDATION_MODE, metadata.getValidationMode() );
+		}
+		if ( metadata.getSharedCacheMode() != null) {
+			workingVars.put( HibernatePersistence.SHARED_CACHE_MODE, metadata.getSharedCacheMode() );
 		}
 		Properties props = new Properties();
 		props.putAll( metadata.getProps() );
@@ -475,6 +482,18 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 			workingVars.put( HibernatePersistence.PACKAGE_NAMES, packages );
 			workingVars.put( HibernatePersistence.XML_FILE_NAMES, xmlFiles );
 			if ( hbmFiles.size() > 0 ) workingVars.put( HibernatePersistence.HBXML_FILES, hbmFiles );
+
+			//validation-mode
+			final Object validationMode = info.getValidationMode();
+			if ( validationMode != null) {
+				workingVars.put( HibernatePersistence.VALIDATION_MODE, validationMode );
+			}
+
+			//shared-cache-mode
+			final Object sharedCacheMode = info.getSharedCacheMode();
+			if ( sharedCacheMode != null) {
+				workingVars.put( HibernatePersistence.SHARED_CACHE_MODE, sharedCacheMode );
+			}
 
 			//datasources
 			Boolean isJTA = null;

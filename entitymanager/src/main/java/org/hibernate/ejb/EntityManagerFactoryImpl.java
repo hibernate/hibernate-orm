@@ -35,6 +35,10 @@ import javax.persistence.spi.PersistenceUnitTransactionType;
 import javax.persistence.spi.LoadState;
 
 import org.hibernate.SessionFactory;
+import org.hibernate.Hibernate;
+import org.hibernate.HibernateException;
+import org.hibernate.EntityMode;
+import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.cfg.Configuration;
@@ -110,18 +114,19 @@ public class EntityManagerFactoryImpl implements HibernateEntityManagerFactory {
 		return null;  //To change body of implemented methods use File | Settings | File Templates.
 	}
 
-	public Set<String> getSupportedProperties() {
-		//FIXME
-		return null;  //To change body of implemented methods use File | Settings | File Templates.
-	}
-
 	public Cache getCache() {
 		// TODO : cache the cache reference?
+		if ( ! isOpen() ) {
+			throw new IllegalStateException("EntityManagerFactory is closed");
+		}
 		return new JPACache( sessionFactory );
 	}
 
 	public PersistenceUnitUtil getPersistenceUnitUtil() {
-		return null;  //To change body of implemented methods use File | Settings | File Templates.
+		if ( ! isOpen() ) {
+			throw new IllegalStateException("EntityManagerFactory is closed");
+		}
+		return util;
 	}
 
 	public boolean isOpen() {
@@ -160,7 +165,7 @@ public class EntityManagerFactoryImpl implements HibernateEntityManagerFactory {
 	}
 
 	private static class HibernatePersistenceUnitUtil implements PersistenceUnitUtil, Serializable {
-		private final EntityManagerFactoryImpl emf;
+		private final HibernateEntityManagerFactory emf;
 
 		private HibernatePersistenceUnitUtil(EntityManagerFactoryImpl emf) {
 			this.emf = emf;
@@ -177,8 +182,6 @@ public class EntityManagerFactoryImpl implements HibernateEntityManagerFactory {
 			else {
 				return PersistenceUtilHelper.isLoadedWithReference( entity, attributeName ) != LoadState.NOT_LOADED;
 			}
-
-
 		}
 
 		public boolean isLoaded(Object entity) {
@@ -186,7 +189,13 @@ public class EntityManagerFactoryImpl implements HibernateEntityManagerFactory {
 		}
 
 		public Object getIdentifier(Object entity) {
-			throw new UnsupportedOperationException( "Not yet implemented" );
+			final Class entityClass = Hibernate.getClass( entity );
+			final ClassMetadata classMetadata = emf.getSessionFactory().getClassMetadata( entityClass );
+			if (classMetadata == null) {
+				throw new IllegalArgumentException( entityClass + " is not an entity" );
+			}
+			//TODO does that work for @IdClass?
+			return classMetadata.getIdentifier( entity, EntityMode.POJO );
 		}
 	}
 }

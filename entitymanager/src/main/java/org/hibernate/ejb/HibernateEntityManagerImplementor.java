@@ -27,6 +27,7 @@ import javax.persistence.PersistenceException;
 
 import org.hibernate.HibernateException;
 import org.hibernate.StaleStateException;
+import org.hibernate.LockOptions;
 
 /**
  * Additional internal contracts for the Hibernate {@link javax.persistence.EntityManager} implementation.
@@ -56,6 +57,18 @@ public interface HibernateEntityManagerImplementor extends HibernateEntityManage
 	 * @param e The exception being handled and finally thrown.
 	 */
 	public void throwPersistenceException(PersistenceException e);
+
+	/**
+	 * Converts a Hibernate-specific exception into a JPA-specified exception; note that the JPA sepcification makes use
+	 * of exceptions outside its exception hierarchy, though they are all runtime exceptions.
+	 * <p/>
+	 * Any appropriate/needed calls to {@link #handlePersistenceException} are also made.
+	 *
+	 * @param e The Hibernate excepton.
+	 * @param lockOptions The lock options in effect at the time of exception (can be null)
+	 * @return The JPA-specified exception
+	 */
+	public RuntimeException convert(HibernateException e, LockOptions lockOptions);
 
 	/**
 	 * Converts a Hibernate-specific exception into a JPA-specified exception; note that the JPA sepcification makes use

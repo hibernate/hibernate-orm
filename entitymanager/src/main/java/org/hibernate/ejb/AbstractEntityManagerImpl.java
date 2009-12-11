@@ -257,9 +257,11 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 	}
 
 	public <A> A find(Class<A> entityClass, Object  primaryKey, LockModeType lockModeType, Map<String, Object> properties) {
+		LockOptions lockOptions = null;
 		try {
 			if ( lockModeType != null )
-				return ( A ) getSession().get( entityClass, ( Serializable ) primaryKey, getLockRequest(lockModeType, properties) );
+				return ( A ) getSession().get( entityClass, ( Serializable ) primaryKey,
+					( lockOptions = getLockRequest(lockModeType, properties) ) );
 			else
 				return ( A ) getSession().get( entityClass, ( Serializable ) primaryKey );
 		}
@@ -281,7 +283,7 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 			throw new IllegalArgumentException( e.getMessage(), e );
 		}
 		catch ( HibernateException he ) {
-			throw convert( he );
+			throw convert( he , lockOptions );
 		}
 	}
 
@@ -351,12 +353,13 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 
 	public void refresh(Object entity, LockModeType lockModeType, Map<String, Object> properties) {
 		checkTransactionNeeded();
+		LockOptions lockOptions = null;
 		try {
 			if ( !getSession().contains( entity ) ) {
 				throw new IllegalArgumentException( "Entity not managed" );
 			}
 			if(lockModeType != null)
-				getSession().refresh( entity, getLockRequest(lockModeType, properties) );
+				getSession().refresh( entity, (lockOptions = getLockRequest(lockModeType, properties) ) );
 			else
 				getSession().refresh( entity );
 		}
@@ -364,7 +367,7 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 			throw new IllegalArgumentException( e.getMessage(), e );
 		}
 		catch ( HibernateException he ) {
-			throw convert( he );
+			throw convert( he, lockOptions);
 		}
 	}
 
@@ -515,6 +518,7 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 	}
 
 	public void lock(Object entity, LockModeType lockModeType, Map<String, Object> properties) {
+		LockOptions lockOptions = null;
 		try {
 			if ( !isTransactionInProgress() ) {
 				throw new TransactionRequiredException( "no transaction is in progress" );
@@ -523,10 +527,10 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 			if ( !contains( entity ) ) {
 				throw new IllegalArgumentException( "entity not in the persistence context" );
 			}
-			getSession().buildLockRequest(getLockRequest(lockModeType, properties)).lock( entity );
+			getSession().buildLockRequest( (lockOptions = getLockRequest(lockModeType, properties))).lock( entity );
 		}
 		catch ( HibernateException he ) {
-			throw convert( he );
+			throw convert( he , lockOptions);
 		}
 
 	}
@@ -835,18 +839,25 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 	 * {@inheritDoc}
 	 */
 	public RuntimeException convert(HibernateException e) {
+		return convert(e, null);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public RuntimeException convert(HibernateException e, LockOptions lockOptions) {
 		if ( e instanceof StaleStateException ) {
 			PersistenceException converted = wrapStaleStateException( ( StaleStateException ) e );
 			handlePersistenceException( converted );
 			return converted;
 		}
 		else if ( e instanceof org.hibernate.OptimisticLockException ) {
-			PersistenceException converted = wrapLockException(e);
+			PersistenceException converted = wrapLockException(e, lockOptions);
 			handlePersistenceException( converted );
 			return converted;
 		}
 		else if ( e instanceof org.hibernate.PessimisticLockException ) {
-			PersistenceException converted = wrapLockException(e); 
+			PersistenceException converted = wrapLockException(e, lockOptions); 
 			handlePersistenceException( converted );
 			return converted;
 		}
@@ -925,7 +936,7 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 		return pe;
 	}
 
-	public PersistenceException wrapLockException(HibernateException e) {
+	public PersistenceException wrapLockException(HibernateException e, LockOptions lockOptions) {
 		PersistenceException pe;
 		if ( e instanceof org.hibernate.OptimisticLockException ) {
 			 org.hibernate.OptimisticLockException ole = (org.hibernate.OptimisticLockException)e;
@@ -933,7 +944,13 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 		}
 		else if ( e instanceof org.hibernate.PessimisticLockException ) {
 			  org.hibernate.PessimisticLockException ple = (org.hibernate.PessimisticLockException)e;
-			pe = new PessimisticLockException(ple.getMessage(), ple, ple.getEntity());
+			if (lockOptions !=null && lockOptions.getTimeOut() > -1) {
+				// assume lock timeout occurred if a timeout or NO WAIT was specified 
+				pe = new LockTimeoutException(ple.getMessage(), ple, ple.getEntity());
+			}
+			else {
+				pe = new PessimisticLockException(ple.getMessage(), ple, ple.getEntity());
+			}
 		}
 		else {
 			pe = new OptimisticLockException( e );

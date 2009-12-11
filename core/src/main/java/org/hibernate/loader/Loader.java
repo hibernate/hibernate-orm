@@ -214,13 +214,34 @@ public abstract class Loader {
 		return null;
 	}
 
+	private Map buildLockMap(Map locks) {
+		Map result = locks;
+		if ( result == null ) {
+			LockOptions[] lockArray = getLockOptions(result);
+			String[] aliases = getAliases();
+			if (aliases != null &&
+				lockArray != null &&
+				lockArray.length > 0 &&
+				lockArray.length == aliases.length &&
+				lockArray[0].getLockMode() != LockMode.NONE ) {
+				result = new HashMap();
+				for ( int looper = 0; looper < lockArray.length; looper++ ) {
+					result.put(aliases[looper], lockArray[looper]);
+				}
+			}
+		}
+
+		return result;
+	}
 	/**
 	 * Modify the SQL, adding lock hints and comments, if necessary
 	 */
 	protected String preprocessSQL(String sql, QueryParameters parameters, Dialect dialect)
 			throws HibernateException {
-		
-		sql = applyLocks( sql, parameters.getLockOptions(), dialect );
+
+		Map locks = buildLockMap(parameters.getLockOptions());
+
+		sql = applyLocks( sql, locks, dialect );
 		
 		return getFactory().getSettings().isCommentsEnabled() ?
 				prependComment( sql, parameters ) : sql;
@@ -700,9 +721,9 @@ public abstract class Loader {
 //
 // Would need to change the way the max-row stuff is handled (i.e. behind an interface) so
 // that I could do the control breaking at the means to know when to stop
-		final LockOptions[] lockOptionsArray = getLockOptions( queryParameters.getLockOptions() );
-		final EntityKey optionalObjectKey = getOptionalObjectKey( queryParameters, session );
 
+		final EntityKey optionalObjectKey = getOptionalObjectKey( queryParameters, session );
+		final LockOptions[] lockOptionsArray = getLockOptions( queryParameters.getLockOptions() );
 		final boolean createSubselects = isSubselectLoadingEnabled();
 		final List subselectResultKeys = createSubselects ? new ArrayList() : null;
 		final List results = new ArrayList();

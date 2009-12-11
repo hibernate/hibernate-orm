@@ -25,9 +25,7 @@
 package org.hibernate.loader;
 
 import java.util.Map;
-import java.util.Set;
 
-import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.SessionFactoryImplementor;

@@ -24,29 +24,33 @@
  */
 package org.hibernate;
 
+import java.sql.SQLException;
+
 /**
  *
- * Throw when an pessimistic locking conflict occurs.
+ * Thrown when a pessimistic locking conflict occurs.
  *
  * @author Scott Marlow
  */
-public class PessimisticLockException extends HibernateException {
+public class PessimisticLockException extends JDBCException {
 
 	Object entity;
 
-	public PessimisticLockException(String s) {
-		super(s);
-	}
 
-   public PessimisticLockException(String s, Throwable throwable, Object entity) {
-         super(s, throwable);
+	public PessimisticLockException(String s, JDBCException je, Object entity) {
+			super(s, je.getSQLException());
+			this.entity = entity;
+		}
+
+   public PessimisticLockException(String s, SQLException se, Object entity) {
+         super(s, se);
          this.entity = entity;
       }
 
-	public PessimisticLockException(String s, Object entity) {
-		super(s);
-		this.entity = entity;
-	}
+	public PessimisticLockException(String s, SQLException se, String sql) {
+			super(s, se, sql);
+			this.entity = null;
+		}
 
 	public Object getEntity() {
 		return entity;

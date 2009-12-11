@@ -25,6 +25,7 @@
 package org.hibernate.exception;
 
 import org.hibernate.JDBCException;
+import org.hibernate.PessimisticLockException;
 
 import java.sql.SQLException;
 import java.util.HashSet;
@@ -108,6 +109,11 @@ public class SQLStateConverter implements SQLExceptionConverter {
 			if ( "61000".equals( sqlState ) ) {
 				// oracle sql-state code for deadlock
 				return new LockAcquisitionException( message, sqlException, sql );
+			}
+
+			if ( "40XL1".equals( sqlState ) || "40XL2".equals( sqlState )) {
+				// Derby "A lock could not be obtained within the time requested."
+				return new PessimisticLockException( message, sqlException, sql );
 			}
 		}
 

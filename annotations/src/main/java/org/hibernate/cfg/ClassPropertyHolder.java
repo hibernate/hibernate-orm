@@ -113,7 +113,7 @@ public class ClassPropertyHolder extends AbstractPropertyHolder {
 						"Declaring class is not found in the inheritance state hierarchy: " + declaringClass
 				);
 			}
-			if ( inheritanceState.isEmbeddableSuperclass ) {
+			if ( inheritanceState.isEmbeddableSuperclass() ) {
 				persistentClass.addMappedsuperclassProperty(prop);
 				addPropertyToMappedSuperclass( prop, declaringClass );
 			}
@@ -141,7 +141,7 @@ public class ClassPropertyHolder extends AbstractPropertyHolder {
 						"Declaring class is not found in the inheritance state hierarchy: " + declaringClass
 				);
 			}
-			if ( inheritanceState.isEmbeddableSuperclass ) {
+			if ( inheritanceState.isEmbeddableSuperclass() ) {
 				join.addMappedsuperclassProperty(prop);
 				addPropertyToMappedSuperclass( prop, declaringClass );
 			}

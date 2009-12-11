@@ -294,7 +294,7 @@ public class EntityBinder {
 			persistentClass.addTuplizer( mode, tuplizer.impl().getName() );
 		}
 
-		if ( !inheritanceState.hasParents ) {
+		if ( !inheritanceState.hasParents() ) {
 			for ( Map.Entry<String, String> filter : filters.entrySet() ) {
 				String filterName = filter.getKey();
 				String cond = filter.getValue();

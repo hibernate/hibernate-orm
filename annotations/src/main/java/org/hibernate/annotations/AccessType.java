@@ -23,17 +23,20 @@
  */
 package org.hibernate.annotations;
 
-import static java.lang.annotation.ElementType.*;
 import java.lang.annotation.Retention;
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import java.lang.annotation.Target;
+
+import static java.lang.annotation.ElementType.FIELD;
+import static java.lang.annotation.ElementType.METHOD;
+import static java.lang.annotation.ElementType.TYPE;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
  * Property Access type
  *
  * @author Emmanuel Bernard
  */
-@Target({TYPE, METHOD, FIELD})
+@Target({ TYPE, METHOD, FIELD })
 @Retention(RUNTIME)
 public @interface AccessType {
 	String value();

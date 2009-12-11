@@ -176,6 +176,7 @@ import org.slf4j.LoggerFactory;
  * package)
  *
  * @author Emmanuel Bernard
+ * @author Hardy Ferentschik
  */
 @SuppressWarnings("unchecked")
 public final class AnnotationBinder {
@@ -247,7 +248,7 @@ public final class AnnotationBinder {
 	}
 
 	public static void bindPackage(String packageName, ExtendedMappings mappings) {
-		XPackage pckg = null;
+		XPackage pckg;
 		try {
 			pckg = mappings.getReflectionManager().packageForName( packageName );
 		}
@@ -438,153 +439,72 @@ public final class AnnotationBinder {
 			bindFilterDefs(clazzToProcess, mappings);
 		}
 
-		if ( AnnotatedClassType.EMBEDDABLE_SUPERCLASS.equals( classType ) //will be processed by their subentities
-				|| AnnotatedClassType.NONE.equals( classType ) //to be ignored
-				|| AnnotatedClassType.EMBEDDABLE.equals( classType ) //allow embeddable element declaration
-				) {
-			if ( AnnotatedClassType.NONE.equals( classType )
-					&& clazzToProcess.isAnnotationPresent( org.hibernate.annotations.Entity.class ) ) {
-				log.warn( "Class annotated @org.hibernate.annotations.Entity but not javax.persistence.Entity "
-						+ "(most likely a user error): {}", clazzToProcess.getName() );
-			}
+		if( !isEntityClassType( clazzToProcess, classType ) ) {
 			return;
 		}
-		if ( !classType.equals( AnnotatedClassType.ENTITY ) ) {
-			//TODO make this test accurate by removing the none elements artifically added
-			throw new AnnotationException(
-					"Annotated class should have a @javax.persistence.Entity, @javax.persistence.Embeddable or @javax.persistence.EmbeddedSuperclass annotation: " + clazzToProcess
-							.getName()
-			);
-		}
-		XAnnotatedElement annotatedClass = clazzToProcess;
+
 		log.info( "Binding entity from annotated class: {}", clazzToProcess.getName() );
-		final ReflectionManager reflectionManager = mappings.getReflectionManager();
-		InheritanceState superEntityState =
-				InheritanceState.getSuperEntityInheritanceState(
-						clazzToProcess, inheritanceStatePerClass, reflectionManager
-				);
-		PersistentClass superEntity = superEntityState != null ?
-				mappings.getClass(
-						superEntityState.clazz.getName()
-				) :
-				null;
-		if ( superEntity == null ) {
-			//check if superclass is not a potential persistent class
-			if ( inheritanceState.hasParents ) {
-				throw new AssertionFailure(
-						"Subclass has to be binded after it's mother class: "
-								+ superEntityState.clazz.getName()
-				);
-			}
-		}
-		bindQueries( annotatedClass, mappings );
-		bindFilterDefs( annotatedClass, mappings );
-		bindTypeDefs( annotatedClass, mappings );
-		BinderHelper.bindAnyMetaDefs( annotatedClass, mappings );
+
+		PersistentClass superEntity = getSuperEntity(clazzToProcess, inheritanceStatePerClass, mappings, inheritanceState);
+
+		bindQueries( clazzToProcess, mappings );
+		bindFilterDefs( clazzToProcess, mappings );
+		bindTypeDefs( clazzToProcess, mappings );
+		BinderHelper.bindAnyMetaDefs( clazzToProcess, mappings );
 
 		String schema = "";
 		String table = ""; //might be no @Table annotation on the annotated class
 		String catalog = "";
-		String discrimValue = null;
 		List<UniqueConstraintHolder> uniqueConstraints = new ArrayList<UniqueConstraintHolder>();
-		Ejb3DiscriminatorColumn discriminatorColumn = null;
-		Ejb3JoinColumn[] inheritanceJoinedColumns = null;
-
-		if ( annotatedClass.isAnnotationPresent( javax.persistence.Table.class ) ) {
-			javax.persistence.Table tabAnn = annotatedClass.getAnnotation( javax.persistence.Table.class );
+		if ( clazzToProcess.isAnnotationPresent( javax.persistence.Table.class ) ) {
+			javax.persistence.Table tabAnn = clazzToProcess.getAnnotation( javax.persistence.Table.class );
 			table = tabAnn.name();
 			schema = tabAnn.schema();
 			catalog = tabAnn.catalog();
 			uniqueConstraints = TableBinder.buildUniqueConstraintHolders( tabAnn.uniqueConstraints() );
 		}
-		final boolean hasJoinedColumns = inheritanceState.hasParents
-				&& InheritanceType.JOINED.equals( inheritanceState.type );
-		if ( hasJoinedColumns ) {
-			//@Inheritance(JOINED) subclass need to link back to the super entity
-			PrimaryKeyJoinColumns jcsAnn = annotatedClass.getAnnotation( PrimaryKeyJoinColumns.class );
-			boolean explicitInheritanceJoinedColumns = jcsAnn != null && jcsAnn.value().length != 0;
-			if ( explicitInheritanceJoinedColumns ) {
-				int nbrOfInhJoinedColumns = jcsAnn.value().length;
-				PrimaryKeyJoinColumn jcAnn;
-				inheritanceJoinedColumns = new Ejb3JoinColumn[nbrOfInhJoinedColumns];
-				for (int colIndex = 0; colIndex < nbrOfInhJoinedColumns; colIndex++) {
-					jcAnn = jcsAnn.value()[colIndex];
-					inheritanceJoinedColumns[colIndex] = Ejb3JoinColumn.buildJoinColumn(
-							jcAnn, null, superEntity.getIdentifier(),
-							(Map<String, Join>) null, (PropertyHolder) null, mappings
-					);
-				}
-			}
-			else {
-				PrimaryKeyJoinColumn jcAnn = annotatedClass.getAnnotation( PrimaryKeyJoinColumn.class );
-				inheritanceJoinedColumns = new Ejb3JoinColumn[1];
-				inheritanceJoinedColumns[0] = Ejb3JoinColumn.buildJoinColumn(
-						jcAnn, null, superEntity.getIdentifier(),
-						(Map<String, Join>) null, (PropertyHolder) null, mappings
-				);
-			}
-			log.debug( "Subclass joined column(s) created" );
-		}
-		else {
-			if ( annotatedClass.isAnnotationPresent( javax.persistence.PrimaryKeyJoinColumns.class )
-					|| annotatedClass.isAnnotationPresent( javax.persistence.PrimaryKeyJoinColumn.class ) ) {
-				log.warn( "Root entity should not hold an PrimaryKeyJoinColum(s), will be ignored" );
-			}
-		}
 
-		if ( InheritanceType.SINGLE_TABLE.equals( inheritanceState.type ) ) {
-			javax.persistence.DiscriminatorColumn discAnn = annotatedClass.getAnnotation(
+		Ejb3JoinColumn[] inheritanceJoinedColumns = makeInheritanceJoinColumns( clazzToProcess, mappings, inheritanceState, superEntity );
+		Ejb3DiscriminatorColumn discriminatorColumn = null;
+		String discrimValue = null;
+		if ( InheritanceType.SINGLE_TABLE.equals( inheritanceState.getType() ) ) {
+			javax.persistence.DiscriminatorColumn discAnn = clazzToProcess.getAnnotation(
 					javax.persistence.DiscriminatorColumn.class
 			);
 			DiscriminatorType discriminatorType = discAnn != null ?
 					discAnn.discriminatorType() :
 					DiscriminatorType.STRING;
 
-			org.hibernate.annotations.DiscriminatorFormula discFormulaAnn = annotatedClass.getAnnotation(
+			org.hibernate.annotations.DiscriminatorFormula discFormulaAnn = clazzToProcess.getAnnotation(
 					org.hibernate.annotations.DiscriminatorFormula.class
 			);
-			if ( !inheritanceState.hasParents ) {
+			if ( !inheritanceState.hasParents() ) {
 				discriminatorColumn = Ejb3DiscriminatorColumn.buildDiscriminatorColumn(
 						discriminatorType, discAnn, discFormulaAnn, mappings
 				);
 			}
-			if ( discAnn != null && inheritanceState.hasParents ) {
+			if ( discAnn != null && inheritanceState.hasParents() ) {
 				log.warn(
 						"Discriminator column has to be defined in the root entity, it will be ignored in subclass: {}",
 						clazzToProcess.getName()
 				);
 			}
-			discrimValue = annotatedClass.isAnnotationPresent( DiscriminatorValue.class ) ?
-					annotatedClass.getAnnotation( DiscriminatorValue.class ).value() :
+
+			discrimValue = clazzToProcess.isAnnotationPresent( DiscriminatorValue.class ) ?
+					clazzToProcess.getAnnotation( DiscriminatorValue.class ).value() :
 					null;
 		}
 
-		//we now know what kind of persistent entity it is
-		PersistentClass persistentClass;
-		//create persistent class
-		if ( !inheritanceState.hasParents ) {
-			persistentClass = new RootClass();
-		}
-		else if ( InheritanceType.SINGLE_TABLE.equals( inheritanceState.type ) ) {
-			persistentClass = new SingleTableSubclass( superEntity );
-		}
-		else if ( InheritanceType.JOINED.equals( inheritanceState.type ) ) {
-			persistentClass = new JoinedSubclass( superEntity );
-		}
-		else if ( InheritanceType.TABLE_PER_CLASS.equals( inheritanceState.type ) ) {
-			persistentClass = new UnionSubclass( superEntity );
-		}
-		else {
-			throw new AssertionFailure( "Unknown inheritance type: " + inheritanceState.type );
-		}
-		Proxy proxyAnn = annotatedClass.getAnnotation( Proxy.class );
-		BatchSize sizeAnn = annotatedClass.getAnnotation( BatchSize.class );
-		Where whereAnn = annotatedClass.getAnnotation( Where.class );
-		Entity entityAnn = annotatedClass.getAnnotation( Entity.class );
-		org.hibernate.annotations.Entity hibEntityAnn = annotatedClass.getAnnotation(
+		PersistentClass persistentClass = makePersistentClass( inheritanceState, superEntity );
+
+		Proxy proxyAnn = clazzToProcess.getAnnotation( Proxy.class );
+		BatchSize sizeAnn = clazzToProcess.getAnnotation( BatchSize.class );
+		Where whereAnn = clazzToProcess.getAnnotation( Where.class );
+		Entity entityAnn = clazzToProcess.getAnnotation( Entity.class );
+		org.hibernate.annotations.Entity hibEntityAnn = clazzToProcess.getAnnotation(
 				org.hibernate.annotations.Entity.class
 		);
-		org.hibernate.annotations.Cache cacheAnn = annotatedClass.getAnnotation(
+		org.hibernate.annotations.Cache cacheAnn = clazzToProcess.getAnnotation(
 				org.hibernate.annotations.Cache.class
 		);
 		EntityBinder entityBinder = new EntityBinder(
@@ -598,14 +518,14 @@ public final class AnnotationBinder {
 		entityBinder.setInheritanceState( inheritanceState );
 		
 		//Filters are not allowed on subclasses
-		if ( !inheritanceState.hasParents ) {
+		if ( !inheritanceState.hasParents() ) {
 			bindFilters(clazzToProcess, entityBinder, mappings);
 		}
 		
 		entityBinder.bindEntity();
 
 		if ( inheritanceState.hasTable() ) {
-			Check checkAnn = annotatedClass.getAnnotation( Check.class );
+			Check checkAnn = clazzToProcess.getAnnotation( Check.class );
 			String constraints = checkAnn == null ?
 					null :
 					checkAnn.constraints();
@@ -617,32 +537,29 @@ public final class AnnotationBinder {
 			);
 		}
 		else {
-			if ( annotatedClass.isAnnotationPresent( Table.class ) ) {
+			if ( clazzToProcess.isAnnotationPresent( Table.class ) ) {
 				log.warn( "Illegal use of @Table in a subclass of a SINGLE_TABLE hierarchy: " + clazzToProcess
 						.getName() );
 			}
 		}
-//		Map<String, Column[]> columnOverride = PropertyHolderBuilder.buildHierarchyColumnOverride(
-//				clazzToProcess,
-//				persistentClass.getClassName()
-//		);
+
 		PropertyHolder propertyHolder = PropertyHolderBuilder.buildPropertyHolder(
 				clazzToProcess,
 				persistentClass,
 				entityBinder, mappings, inheritanceStatePerClass
 		);
 
-		javax.persistence.SecondaryTable secTabAnn = annotatedClass.getAnnotation(
+		javax.persistence.SecondaryTable secTabAnn = clazzToProcess.getAnnotation(
 				javax.persistence.SecondaryTable.class
 		);
-		javax.persistence.SecondaryTables secTabsAnn = annotatedClass.getAnnotation(
+		javax.persistence.SecondaryTables secTabsAnn = clazzToProcess.getAnnotation(
 				javax.persistence.SecondaryTables.class
 		);
 		entityBinder.firstLevelSecondaryTablesBinding( secTabAnn, secTabsAnn );
 
-		OnDelete onDeleteAnn = annotatedClass.getAnnotation( OnDelete.class );
+		OnDelete onDeleteAnn = clazzToProcess.getAnnotation( OnDelete.class );
 		boolean onDeleteAppropriate = false;
-		if ( InheritanceType.JOINED.equals( inheritanceState.type ) && inheritanceState.hasParents ) {
+		if ( InheritanceType.JOINED.equals( inheritanceState.getType() ) && inheritanceState.hasParents() ) {
 			onDeleteAppropriate = true;
 			final JoinedSubclass jsc = (JoinedSubclass) persistentClass;
 			if ( persistentClass.getEntityPersisterClass() == null ) {
@@ -650,7 +567,7 @@ public final class AnnotationBinder {
 			}
 			SimpleValue key = new DependantValue( jsc.getTable(), jsc.getIdentifier() );
 			jsc.setKey( key );
-			ForeignKey fk = annotatedClass.getAnnotation( ForeignKey.class );
+			ForeignKey fk = clazzToProcess.getAnnotation( ForeignKey.class );
 			if ( fk != null && !BinderHelper.isDefault( fk.name() ) ) {
 				key.setForeignKeyName( fk.name() );
 			}
@@ -666,14 +583,14 @@ public final class AnnotationBinder {
 			mappings.addSecondPass( new CreateKeySecondPass( jsc ) );
 
 		}
-		else if ( InheritanceType.SINGLE_TABLE.equals( inheritanceState.type ) ) {
-			if ( inheritanceState.hasParents ) {
+		else if ( InheritanceType.SINGLE_TABLE.equals( inheritanceState.getType() ) ) {
+			if ( inheritanceState.hasParents() ) {
 				if ( persistentClass.getEntityPersisterClass() == null ) {
 					persistentClass.getRootClass().setEntityPersisterClass( SingleTableEntityPersister.class );
 				}
 			}
 			else {
-				if ( inheritanceState.hasSons || !discriminatorColumn.isImplicit() ) {
+				if ( inheritanceState.hasSiblings() || !discriminatorColumn.isImplicit() ) {
 					//need a discriminator column
 					bindDiscriminatorToPersistentClass(
 							(RootClass) persistentClass,
@@ -685,8 +602,8 @@ public final class AnnotationBinder {
 				}
 			}
 		}
-		else if ( InheritanceType.TABLE_PER_CLASS.equals( inheritanceState.type ) ) {
-			if ( inheritanceState.hasParents ) {
+		else if ( InheritanceType.TABLE_PER_CLASS.equals( inheritanceState.getType() ) ) {
+			if ( inheritanceState.hasParents() ) {
 				if ( persistentClass.getEntityPersisterClass() == null ) {
 					persistentClass.getRootClass().setEntityPersisterClass( UnionSubclassEntityPersister.class );
 				}
@@ -699,7 +616,7 @@ public final class AnnotationBinder {
 		}
 
 		//try to find class level generators
-		HashMap<String, IdGenerator> classGenerators = buildLocalGenerators( annotatedClass, mappings );
+		HashMap<String, IdGenerator> classGenerators = buildLocalGenerators( clazzToProcess, mappings );
 
 		// check properties
 		List<PropertyData> elements =
@@ -709,30 +626,29 @@ public final class AnnotationBinder {
 		if ( elements == null ) {
 			throw new AnnotationException( "No identifier specified for entity: " + propertyHolder.getEntityName() );
 		}
-		final boolean subclassAndSingleTableStrategy = inheritanceState.type == InheritanceType.SINGLE_TABLE
-				&& inheritanceState.hasParents;
+		final boolean subclassAndSingleTableStrategy = inheritanceState.getType() == InheritanceType.SINGLE_TABLE
+				&& inheritanceState.hasParents();
 		//process idclass if any
 		Set<String> idProperties = new HashSet<String>();
 		IdClass idClass = null;
 		XClass current = null;
-		if ( !inheritanceState.hasParents ) {
+		if ( !inheritanceState.hasParents() ) {
 			//look for idClass
-			current = inheritanceState.clazz;
 			InheritanceState state = inheritanceState;
 			do {
-				current = state.clazz;
+				current = state.getClazz();
 				if ( current.isAnnotationPresent( IdClass.class ) ) {
 					idClass = current.getAnnotation( IdClass.class );
 					break;
 				}
 				state = InheritanceState.getSuperclassInheritanceState(
-						current, inheritanceStatePerClass, reflectionManager
+						current, inheritanceStatePerClass, mappings.getReflectionManager()
 				);
 			}
 			while ( state != null );
 		}
 		if ( idClass != null ) {
-			XClass compositeClass = reflectionManager.toXClass( idClass.value() );
+			XClass compositeClass = mappings.getReflectionManager().toXClass( idClass.value() );
 			boolean isComponent = true;
 			boolean propertyAnnotated = entityBinder.isPropertyAnnotated( compositeClass );
 			String propertyAccessor = entityBinder.getPropertyAccessor( compositeClass );
@@ -837,7 +753,7 @@ public final class AnnotationBinder {
 			);
 		}
 
-		if ( !inheritanceState.hasParents ) {
+		if ( !inheritanceState.hasParents() ) {
 			final RootClass rootClass = (RootClass) persistentClass;
 			mappings.addSecondPass( new CreateKeySecondPass( rootClass ) );
 		}
@@ -848,12 +764,119 @@ public final class AnnotationBinder {
 		mappings.addClass( persistentClass );
 
 		//Process secondary tables and complementary definitions (ie o.h.a.Table)
-		mappings.addSecondPass( new SecondaryTableSecondPass( entityBinder, propertyHolder, annotatedClass ) );
+		mappings.addSecondPass( new SecondaryTableSecondPass( entityBinder, propertyHolder, clazzToProcess ) );
 
 		//add process complementary Table definition (index & all)
-		entityBinder.processComplementaryTableDefinitions( annotatedClass.getAnnotation( org.hibernate.annotations.Table.class ) );
-		entityBinder.processComplementaryTableDefinitions( annotatedClass.getAnnotation( org.hibernate.annotations.Tables.class ) );
+		entityBinder.processComplementaryTableDefinitions( clazzToProcess.getAnnotation( org.hibernate.annotations.Table.class ) );
+		entityBinder.processComplementaryTableDefinitions( clazzToProcess.getAnnotation( org.hibernate.annotations.Tables.class ) );
 
+	}
+
+	private static PersistentClass makePersistentClass(InheritanceState inheritanceState, PersistentClass superEntity) {
+		//we now know what kind of persistent entity it is
+		PersistentClass persistentClass;
+		//create persistent class
+		if ( !inheritanceState.hasParents() ) {
+			persistentClass = new RootClass();
+		}
+		else if ( InheritanceType.SINGLE_TABLE.equals( inheritanceState.getType() ) ) {
+			persistentClass = new SingleTableSubclass( superEntity );
+		}
+		else if ( InheritanceType.JOINED.equals( inheritanceState.getType() ) ) {
+			persistentClass = new JoinedSubclass( superEntity );
+		}
+		else if ( InheritanceType.TABLE_PER_CLASS.equals( inheritanceState.getType() ) ) {
+			persistentClass = new UnionSubclass( superEntity );
+		}
+		else {
+			throw new AssertionFailure( "Unknown inheritance type: " + inheritanceState.getType() );
+		}
+		return persistentClass;
+	}
+
+	private static Ejb3JoinColumn[] makeInheritanceJoinColumns(XClass clazzToProcess, ExtendedMappings mappings, InheritanceState inheritanceState, PersistentClass superEntity) {
+		Ejb3JoinColumn[] inheritanceJoinedColumns = null;
+		final boolean hasJoinedColumns = inheritanceState.hasParents()
+				&& InheritanceType.JOINED.equals( inheritanceState.getType() );
+		if ( hasJoinedColumns ) {
+			//@Inheritance(JOINED) subclass need to link back to the super entity
+			PrimaryKeyJoinColumns jcsAnn = clazzToProcess.getAnnotation( PrimaryKeyJoinColumns.class );
+			boolean explicitInheritanceJoinedColumns = jcsAnn != null && jcsAnn.value().length != 0;
+			if ( explicitInheritanceJoinedColumns ) {
+				int nbrOfInhJoinedColumns = jcsAnn.value().length;
+				PrimaryKeyJoinColumn jcAnn;
+				inheritanceJoinedColumns = new Ejb3JoinColumn[nbrOfInhJoinedColumns];
+				for (int colIndex = 0; colIndex < nbrOfInhJoinedColumns; colIndex++) {
+					jcAnn = jcsAnn.value()[colIndex];
+					inheritanceJoinedColumns[colIndex] = Ejb3JoinColumn.buildJoinColumn(
+							jcAnn, null, superEntity.getIdentifier(),
+							( Map<String, Join> ) null, ( PropertyHolder ) null, mappings
+					);
+				}
+			}
+			else {
+				PrimaryKeyJoinColumn jcAnn = clazzToProcess.getAnnotation( PrimaryKeyJoinColumn.class );
+				inheritanceJoinedColumns = new Ejb3JoinColumn[1];
+				inheritanceJoinedColumns[0] = Ejb3JoinColumn.buildJoinColumn(
+						jcAnn, null, superEntity.getIdentifier(),
+						(Map<String, Join>) null, (PropertyHolder) null, mappings
+				);
+			}
+			log.debug( "Subclass joined column(s) created" );
+		}
+		else {
+			if ( clazzToProcess.isAnnotationPresent( PrimaryKeyJoinColumns.class )
+					|| clazzToProcess.isAnnotationPresent( PrimaryKeyJoinColumn.class ) ) {
+				log.warn( "Root entity should not hold an PrimaryKeyJoinColum(s), will be ignored" );
+			}
+		}
+		return inheritanceJoinedColumns;
+	}
+
+	private static PersistentClass getSuperEntity(XClass clazzToProcess, Map<XClass, InheritanceState> inheritanceStatePerClass, ExtendedMappings mappings, InheritanceState inheritanceState) {
+		final ReflectionManager reflectionManager = mappings.getReflectionManager();
+		InheritanceState superEntityState =
+				InheritanceState.getInheritanceStateOfSuperEntity(
+						clazzToProcess, inheritanceStatePerClass, reflectionManager
+				);
+		PersistentClass superEntity = superEntityState != null ?
+				mappings.getClass(
+						superEntityState.getClazz().getName()
+				) :
+				null;
+		if ( superEntity == null ) {
+			//check if superclass is not a potential persistent class
+			if ( inheritanceState.hasParents() ) {
+				throw new AssertionFailure(
+						"Subclass has to be binded after it's mother class: "
+								+ superEntityState.getClazz().getName()
+				);
+			}
+		}
+		return superEntity;
+	}
+
+	private static boolean isEntityClassType(XClass clazzToProcess, AnnotatedClassType classType) {
+		if ( AnnotatedClassType.EMBEDDABLE_SUPERCLASS.equals( classType ) //will be processed by their subentities
+				|| AnnotatedClassType.NONE.equals( classType ) //to be ignored
+				|| AnnotatedClassType.EMBEDDABLE.equals( classType ) //allow embeddable element declaration
+				) {
+			if ( AnnotatedClassType.NONE.equals( classType )
+					&& clazzToProcess.isAnnotationPresent( org.hibernate.annotations.Entity.class ) ) {
+				log.warn( "Class annotated @org.hibernate.annotations.Entity but not javax.persistence.Entity "
+						+ "(most likely a user error): {}", clazzToProcess.getName() );
+			}
+			return false;
+		}
+
+		if ( !classType.equals( AnnotatedClassType.ENTITY ) ) {
+			throw new AnnotationException(
+					"Annotated class should have a @javax.persistence.Entity, @javax.persistence.Embeddable or @javax.persistence.EmbeddedSuperclass annotation: " + clazzToProcess
+							.getName()
+			);
+		}
+		
+		return true;
 	}
 
 	/**
@@ -874,19 +897,19 @@ public final class AnnotationBinder {
 		int deep = classesToProcess.size();
 		boolean hasIdentifier = false;
 
-		assert !inheritanceState.isEmbeddableSuperclass;
+		assert !inheritanceState.isEmbeddableSuperclass();
 		Boolean isExplicitPropertyAnnotated = null;
 		String explicitAccessType;
-		if ( inheritanceState.hasParents ) {
+		if ( inheritanceState.hasParents() ) {
 			InheritanceState superEntityState =
-					InheritanceState.getSuperEntityInheritanceState(
+					InheritanceState.getInheritanceStateOfSuperEntity(
 							clazzToProcess, inheritanceStatePerClass, mappings.getReflectionManager()
 					);
 			isExplicitPropertyAnnotated = superEntityState != null ?
-					superEntityState.isPropertyAnnotated :
+					superEntityState.isPropertyAnnotated() :
 					null;
 			explicitAccessType = superEntityState != null ?
-					superEntityState.accessType :
+					superEntityState.getAccessType() :
 					null;
 		}
 		else {
@@ -928,7 +951,7 @@ public final class AnnotationBinder {
 			exceptionWhileWalkingElements = e;
 		}
 
-		if ( !hasIdentifier && !inheritanceState.hasParents ) {
+		if ( !hasIdentifier && !inheritanceState.hasParents() ) {
 			if ( isExplicitPropertyAnnotated != null ) {
 				//the original exception is legitimate
 				if ( exceptionWhileWalkingElements != null) throw exceptionWhileWalkingElements;
@@ -953,9 +976,9 @@ public final class AnnotationBinder {
 		//TODO set the access type here?
 		entityBinder.setPropertyAnnotated( isPropertyAnnotated );
 		entityBinder.setPropertyAccessor( accessType );
-		inheritanceState.isPropertyAnnotated = isPropertyAnnotated;
-		inheritanceState.accessType = accessType;
-		return hasIdentifier || inheritanceState.hasParents ?
+		inheritanceState.setPropertyAnnotated( isPropertyAnnotated );
+		inheritanceState.setAccessType( accessType );
+		return hasIdentifier || inheritanceState.hasParents() ?
 				elements :
 				null;
 	}
@@ -983,16 +1006,16 @@ public final class AnnotationBinder {
 
 			currentClassInHierarchy = superClass;
 		}
-		while ( superclassState != null && superclassState.isEmbeddableSuperclass );
+		while ( superclassState != null && superclassState.isEmbeddableSuperclass() );
 
 		//add @MappedSuperclass in the metadata
 		// classes from 0 to n-1 are @MappedSuperclass and should be linked
 		org.hibernate.mapping.MappedSuperclass mappedSuperclass = null;
 		final InheritanceState superEntityState =
-				InheritanceState.getSuperEntityInheritanceState(annotatedClass, inheritanceStatePerClass, reflectionManager);
+				InheritanceState.getInheritanceStateOfSuperEntity(annotatedClass, inheritanceStatePerClass, reflectionManager);
 		PersistentClass superEntity =
 				superEntityState != null ?
-						mappings.getClass( superEntityState.clazz.getName() ) :
+						mappings.getClass( superEntityState.getClazz().getName() ) :
 						null;
 		final int lastMappedSuperclass = classesToProcess.size() - 1;
 		for ( int index = 0 ; index < lastMappedSuperclass ; index++ ) {
@@ -1139,7 +1162,7 @@ public final class AnnotationBinder {
 		String localPropertyAccessor = access != null ?
 				access.value() :
 				null;
-		String accessType = null;
+		String accessType;
 		if ( "property".equals( localPropertyAccessor ) || "field".equals( localPropertyAccessor ) ) {
 			accessType = localPropertyAccessor;
 		}
@@ -1579,8 +1602,6 @@ public final class AnnotationBinder {
 			}
 
 			Cascade hibernateCascade = property.getAnnotation( Cascade.class );
-			NotFound notFound = property.getAnnotation( NotFound.class );
-			boolean ignoreNotFound = notFound != null && notFound.action().equals( NotFoundAction.IGNORE );
 			OnDelete onDeleteAnn = property.getAnnotation( OnDelete.class );
 			boolean onDeleteCascade = onDeleteAnn != null && OnDeleteAction.CASCADE.equals( onDeleteAnn.action() );
 			JoinTable assocTable = property.getAnnotation( JoinTable.class );
@@ -1654,7 +1675,7 @@ public final class AnnotationBinder {
 			collectionBinder.setMappings( mappings );
 			collectionBinder.setPropertyAccessorName( inferredData.getDefaultAccess() );
 
-			Ejb3Column[] elementColumns = null;
+			Ejb3Column[] elementColumns;
 			PropertyData virtualProperty = new WrappedInferredData( inferredData, "element" );
 			if ( property.isAnnotationPresent( Column.class ) || property.isAnnotationPresent(
 					Formula.class
@@ -1860,7 +1881,7 @@ public final class AnnotationBinder {
 		}
 		else {
 			//define whether the type is a component or not
-			boolean isComponent = false;
+			boolean isComponent;
 			Embeddable embeddableAnn = returnedClass.getAnnotation( Embeddable.class );
 			Embedded embeddedAnn = property.getAnnotation( Embedded.class );
 			isComponent = embeddedAnn != null || embeddableAnn != null;
@@ -2185,9 +2206,7 @@ public final class AnnotationBinder {
 			);
 		}
 		RootClass rootClass = (RootClass) persistentClass;
-		String persistentClassName = rootClass == null ?
-				null :
-				rootClass.getClassName();
+		String persistentClassName = rootClass.getClassName();
 		SimpleValue id;
 		if ( isComposite ) {
 			id = fillComponent(
@@ -2620,6 +2639,14 @@ public final class AnnotationBinder {
 		return mappings.getReflectionManager().equals( clazz, void.class );
 	}
 
+	/**
+	 * For the mapped entities build some temporary data-structure containing information about the
+	 * inheritance status of a class.
+	 *
+	 * @param orderedClasses Order list of all annotated entities and their mapped superclasses
+	 * @param reflectionManager  Reference to the reflection manager (commons-annotations)
+	 * @return A map of {@code InheritanceState}s keyed against their {@code XClass}.
+	 */
 	public static Map<XClass, InheritanceState> buildInheritanceStates(
 			List<XClass> orderedClasses, ReflectionManager reflectionManager
 	) {
@@ -2635,22 +2662,22 @@ public final class AnnotationBinder {
 			if ( superclassState != null ) {
 				//the classes are ordered thus preventing an NPE
 				//FIXME if an entity has subclasses annotated @MappedSperclass wo sub @Entity this is wrong
-				superclassState.hasSons = true;
-				InheritanceState superEntityState = InheritanceState.getSuperEntityInheritanceState(
+				superclassState.setHasSiblings( true );
+				InheritanceState superEntityState = InheritanceState.getInheritanceStateOfSuperEntity(
 						clazz, inheritanceStatePerClass,
 						reflectionManager
 				);
-				state.hasParents = superEntityState != null;
-				final boolean nonDefault = state.type != null && !InheritanceType.SINGLE_TABLE.equals( state.type );
-				if ( superclassState.type != null ) {
-					final boolean mixingStrategy = state.type != null && !state.type.equals( superclassState.type );
+				state.setHasParents( superEntityState != null );
+				final boolean nonDefault = state.getType() != null && !InheritanceType.SINGLE_TABLE.equals( state.getType() );
+				if ( superclassState.getType() != null ) {
+					final boolean mixingStrategy = state.getType() != null && !state.getType().equals( superclassState.getType() );
 					if ( nonDefault && mixingStrategy ) {
 						log.warn(
 								"Mixing inheritance strategy in a entity hierarchy is not allowed, ignoring sub strategy in: {}",
 								clazz.getName()
 						);
 					}
-					state.type = superclassState.type;
+					state.setType( superclassState.getType() );
 				}
 			}
 			inheritanceStatePerClass.put( clazz, state );

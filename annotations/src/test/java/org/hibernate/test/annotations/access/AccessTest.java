@@ -9,7 +9,7 @@ import org.hibernate.test.annotations.TestCase;
  * @author Emmanuel Bernard
  */
 public class AccessTest extends TestCase {
-	
+
 	public void testSuperclassOverriding() throws Exception {
 		Furniture fur = new Furniture();
 		fur.setColor( "Black" );
@@ -21,7 +21,7 @@ public class AccessTest extends TestCase {
 		tx.commit();
 		s.clear();
 		tx = s.beginTransaction();
-		fur = (Furniture) s.get( Furniture.class, fur.getId() );
+		fur = ( Furniture ) s.get( Furniture.class, fur.getId() );
 		assertFalse( fur.isAlive );
 		assertNotNull( fur.getColor() );
 		s.delete( fur );
@@ -38,7 +38,7 @@ public class AccessTest extends TestCase {
 		tx.commit();
 		s.clear();
 		tx = s.beginTransaction();
-		fur = (Furniture) s.get( Furniture.class, fur.getId() );
+		fur = ( Furniture ) s.get( Furniture.class, fur.getId() );
 		assertNotNull( fur.getGod() );
 		s.delete( fur );
 		tx.commit();
@@ -54,12 +54,11 @@ public class AccessTest extends TestCase {
 		tx.commit();
 		s.clear();
 		tx = s.beginTransaction();
-		fur = (Furniture) s.get( Furniture.class, fur.getId() );
+		fur = ( Furniture ) s.get( Furniture.class, fur.getId() );
 		assertEquals( 5, fur.weight );
 		s.delete( fur );
 		tx.commit();
 		s.close();
-
 	}
 
 	public void testNonOverridenSubclass() throws Exception {
@@ -71,12 +70,11 @@ public class AccessTest extends TestCase {
 		tx.commit();
 		s.clear();
 		tx = s.beginTransaction();
-		chair = (Chair) s.get( Chair.class, chair.getId() );
+		chair = ( Chair ) s.get( Chair.class, chair.getId() );
 		assertNull( chair.getPillow() );
 		s.delete( chair );
 		tx.commit();
 		s.close();
-
 	}
 
 	public void testOverridenSubclass() throws Exception {
@@ -89,13 +87,12 @@ public class AccessTest extends TestCase {
 		tx.commit();
 		s.clear();
 		tx = s.beginTransaction();
-		bed = (BigBed) s.get( BigBed.class, bed.getId() );
+		bed = ( BigBed ) s.get( BigBed.class, bed.getId() );
 		assertEquals( 5, bed.size );
 		assertNull( bed.getQuality() );
 		s.delete( bed );
 		tx.commit();
 		s.close();
-
 	}
 
 	public void testFieldsOverriding() throws Exception {
@@ -107,22 +104,21 @@ public class AccessTest extends TestCase {
 		tx.commit();
 		s.clear();
 		tx = s.beginTransaction();
-		gs = (Gardenshed) s.get( Gardenshed.class, gs.getId() );
+		gs = ( Gardenshed ) s.get( Gardenshed.class, gs.getId() );
 		assertEquals( 4, gs.floors );
 		assertEquals( 6, gs.getFloors() );
 		s.delete( gs );
 		tx.commit();
 		s.close();
-
 	}
 
 	protected Class[] getMappings() {
-		return new Class[]{
+		return new Class[] {
 				Bed.class,
 				Chair.class,
 				Furniture.class,
 				BigBed.class,
-				Gardenshed.class
+				Gardenshed.class,
 		};
 	}
 }

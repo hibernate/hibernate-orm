@@ -591,7 +591,7 @@ public class BinderHelper {
 						"Declaring class is not found in the inheritance state hierarchy: " + declaringClass
 				);
 			}
-			if ( inheritanceState.isEmbeddableSuperclass ) {
+			if ( inheritanceState.isEmbeddableSuperclass() ) {
 				retrieve = true;
 			}
 		}

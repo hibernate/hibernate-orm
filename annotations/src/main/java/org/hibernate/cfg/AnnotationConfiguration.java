@@ -123,7 +123,6 @@ public class AnnotationConfiguration extends Configuration {
 	private Set<String> defaultNamedGenerators;
 	private Map<String, Properties> generatorTables;
 	private Map<Table, List<UniqueConstraintHolder>> uniqueConstraintHoldersByTable;
-//	private Map<Table, List<String[]>> tableUniqueConstraints;
 	private Map<String, String> mappedByResolver;
 	private Map<String, String> propertyRefResolver;
 	private Map<String, AnyMetaDef> anyMetaDefs;
@@ -146,10 +145,30 @@ public class AnnotationConfiguration extends Configuration {
 		super( sf );
 	}
 
+	/**
+	 * Takes the list of entities annotated with {@code @Entity} or {@code @MappedSuperclass} and returns them in an
+	 * ordered list.
+	 *
+	 * @param original The list of all entities annotated with {@code @Entity} or {@code @MappedSuperclass}
+	 * @return Ordered list of entities including superclasses for entities which have any. Class hierachies are
+	 * listed bottom up (starting from the top level base class). There is no indication in the list when a new class
+	 * (hierarchy) starts.
+	 */
 	protected List<XClass> orderAndFillHierarchy(List<XClass> original) {
-		//TODO remove embeddable
 		List<XClass> copy = new ArrayList<XClass>( original );
-		//for each class, copy all the relevant hierarchy
+		insertMappedSuperclasses( original, copy );
+
+		// order the hierarchy
+		List<XClass> workingCopy = new ArrayList<XClass>( copy );
+		List<XClass> newList = new ArrayList<XClass>( copy.size() );
+		while ( workingCopy.size() > 0 ) {
+			XClass clazz = workingCopy.get( 0 );
+			orderHierarchy( workingCopy, newList, copy, clazz );
+		}
+		return newList;
+	}
+
+	private void insertMappedSuperclasses(List<XClass> original, List<XClass> copy) {
 		for ( XClass clazz : original ) {
 			XClass superClass = clazz.getSuperclass();
 			while ( superClass != null && !reflectionManager.equals( superClass, Object.class ) && !copy.contains(
@@ -162,13 +181,6 @@ public class AnnotationConfiguration extends Configuration {
 				superClass = superClass.getSuperclass();
 			}
 		}
-		List<XClass> workingCopy = new ArrayList<XClass>( copy );
-		List<XClass> newList = new ArrayList<XClass>( copy.size() );
-		while ( workingCopy.size() > 0 ) {
-			XClass clazz = workingCopy.get( 0 );
-			orderHierarchy( workingCopy, newList, copy, clazz );
-		}
-		return newList;
 	}
 
 	private void orderHierarchy(List<XClass> copy, List<XClass> newList, List<XClass> original, XClass clazz) {
@@ -598,6 +610,7 @@ public class AnnotationConfiguration extends Configuration {
 					orderedClasses, reflectionManager
 			);
 			ExtendedMappings mappings = createExtendedMappings();
+
 			for ( XClass clazz : orderedClasses ) {
 				//todo use the same extended mapping
 				AnnotationBinder.bindClass( clazz, inheritanceStatePerClass, mappings );
@@ -1166,20 +1179,6 @@ public class AnnotationConfiguration extends Configuration {
 	}
 
 	protected class ExtendedMappingsImpl extends MappingsImpl implements ExtendedMappings {
-//		private final Map<String, IdGenerator> namedGenerators;
-//		private final Map<String, Map<String, Join>> joins;
-//		private final Map<String, AnnotatedClassType> classTypes;
-//		private final Map<String, Properties> generatorTables;
-//		private final Map<Table, List<String[]>> tableUniqueConstraints;
-//		private final Map<String, String> mappedByResolver;
-//		private final Map<String, String> propertyRefResolver;
-//		private final ReflectionManager reflectionManager;
-//		private final Set<String> defaultNamedQueryNames;
-//		private final Set<String> defaultNamedNativeQueryNames;
-//		private final Set<String> defaultSqlResulSetMappingNames;
-//		private final Set<String> defaultNamedGenerators;
-//		private final Map<String, AnyMetaDef> anyMetaDefs;
-
 		public void addDefaultGenerator(IdGenerator generator) {
 			this.addGenerator( generator );
 			defaultNamedGenerators.add( generator.getName() );

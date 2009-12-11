@@ -13,7 +13,6 @@ import org.hibernate.annotations.AccessType;
  * @author Emmanuel Bernard
  */
 @Embeddable
-//access = AccessType.PROPERTY)
 @AccessType("property")
 public class Country implements Serializable {
 	private String iso2;
@@ -35,5 +34,4 @@ public class Country implements Serializable {
 	public void setName(String name) {
 		this.name = name;
 	}
-
 }

@@ -33,56 +33,58 @@ import org.hibernate.annotations.common.reflection.XAnnotatedElement;
 import org.hibernate.annotations.common.reflection.XClass;
 
 /**
- * Some extra data to the inheritance position of a class
+ * Some extra data to the inheritance position of a class.
  *
  * @author Emmanuel Bernard
  */
 public class InheritanceState {
 	public InheritanceState(XClass clazz) {
-		this.clazz = clazz;
+		this.setClazz( clazz );
 		extractInheritanceType();
 	}
 
-	public XClass clazz;
+	private XClass clazz;
+
 	/**
-	 * has son either mappedsuperclass son or entity son
+	 * Has sibling (either mappedsuperclass entity)
 	 */
-	public boolean hasSons = false;
+	private boolean hasSiblings = false;
+
 	/**
 	 * a mother entity is available
 	 */
-	public boolean hasParents = false;
-	public InheritanceType type;
-	public boolean isEmbeddableSuperclass = false;
+	private boolean hasParents = false;
+	private InheritanceType type;
+	private boolean isEmbeddableSuperclass = false;
 
 	/**
 	 * only defined on embedded superclasses
 	 */
-	public String accessType = null;
-	public Boolean isPropertyAnnotated;
+	private String accessType = null;
+	private Boolean isPropertyAnnotated;
 
 	private void extractInheritanceType() {
-		XAnnotatedElement element = clazz;
+		XAnnotatedElement element = getClazz();
 		Inheritance inhAnn = element.getAnnotation( Inheritance.class );
 		MappedSuperclass mappedSuperClass = element.getAnnotation( MappedSuperclass.class );
 		if ( mappedSuperClass != null ) {
-			isEmbeddableSuperclass = true;
-			type = inhAnn == null ? null : inhAnn.strategy();
+			setEmbeddableSuperclass( true );
+			setType( inhAnn == null ? null : inhAnn.strategy() );
 		}
 		else {
-			type = inhAnn == null ? InheritanceType.SINGLE_TABLE : inhAnn.strategy();
+			setType( inhAnn == null ? InheritanceType.SINGLE_TABLE : inhAnn.strategy() );
 		}
 	}
 
 	boolean hasTable() {
-		return !hasParents || !InheritanceType.SINGLE_TABLE.equals( type );
+		return !hasParents() || !InheritanceType.SINGLE_TABLE.equals( getType() );
 	}
 
 	boolean hasDenormalizedTable() {
-		return hasParents && InheritanceType.TABLE_PER_CLASS.equals( type );
+		return hasParents() && InheritanceType.TABLE_PER_CLASS.equals( getType() );
 	}
 
-	public static InheritanceState getSuperEntityInheritanceState(
+	public static InheritanceState getInheritanceStateOfSuperEntity(
 			XClass clazz, Map<XClass, InheritanceState> states,
 			ReflectionManager reflectionManager
 	) {
@@ -90,7 +92,9 @@ public class InheritanceState {
 		do {
 			superclass = superclass.getSuperclass();
 			InheritanceState currentState = states.get( superclass );
-			if ( currentState != null && !currentState.isEmbeddableSuperclass ) return currentState;
+			if ( currentState != null && !currentState.isEmbeddableSuperclass() ) {
+				return currentState;
+			}
 		}
 		while ( superclass != null && !reflectionManager.equals( superclass, Object.class ) );
 		return null;
@@ -108,5 +112,61 @@ public class InheritanceState {
 		}
 		while ( superclass != null && !reflectionManager.equals( superclass, Object.class ) );
 		return null;
+	}
+
+	public XClass getClazz() {
+		return clazz;
+	}
+
+	public void setClazz(XClass clazz) {
+		this.clazz = clazz;
+	}
+
+	public boolean hasSiblings() {
+		return hasSiblings;
+	}
+
+	public void setHasSiblings(boolean hasSiblings) {
+		this.hasSiblings = hasSiblings;
+	}
+
+	public boolean hasParents() {
+		return hasParents;
+	}
+
+	public void setHasParents(boolean hasParents) {
+		this.hasParents = hasParents;
+	}
+
+	public InheritanceType getType() {
+		return type;
+	}
+
+	public void setType(InheritanceType type) {
+		this.type = type;
+	}
+
+	public boolean isEmbeddableSuperclass() {
+		return isEmbeddableSuperclass;
+	}
+
+	public void setEmbeddableSuperclass(boolean embeddableSuperclass) {
+		isEmbeddableSuperclass = embeddableSuperclass;
+	}
+
+	public String getAccessType() {
+		return accessType;
+	}
+
+	public void setAccessType(String accessType) {
+		this.accessType = accessType;
+	}
+
+	public Boolean isPropertyAnnotated() {
+		return isPropertyAnnotated;
+	}
+
+	public void setPropertyAnnotated(Boolean propertyAnnotated) {
+		isPropertyAnnotated = propertyAnnotated;
 	}
 }

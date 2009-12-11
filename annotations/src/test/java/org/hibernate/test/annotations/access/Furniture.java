@@ -37,7 +37,6 @@ public class Furniture extends Woody {
 		this.id = id;
 	}
 
-
 	@AccessType("property")
 	public long weight;
 

@@ -40,6 +40,16 @@
             <artifactId>jpa-api</artifactId>
         </dependency>
         <dependency>
+            <groupId>javax.validation</groupId>
+            <artifactId>validation-api</artifactId>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>org.hibernate</groupId>
+            <artifactId>hibernate-validator</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <!--
                 Only really needed for the antrun plugin defined below (which in turn is only really needed
                 to work around a missing feature on the compile plugin; lovely no?).  However I have not

@@ -472,6 +472,17 @@
                 <artifactId>hibernate-commons-annotations</artifactId>
                 <version>3.2.0.Beta1</version>
             </dependency>
+            <!--  set the optional Bean Validation and Hibernate Validator to be used throughout the project  -->
+            <dependency>
+                <groupId>javax.validation</groupId>
+                <artifactId>validation-api</artifactId>
+                <version>1.0.0.GA</version>
+            </dependency>
+            <dependency>
+                <groupId>org.hibernate</groupId>
+                <artifactId>hibernate-validator</artifactId>
+                <version>4.0.2.GA</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 

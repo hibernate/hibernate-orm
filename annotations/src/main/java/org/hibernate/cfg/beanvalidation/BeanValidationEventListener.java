@@ -125,7 +125,7 @@ public class BeanValidationEventListener implements
 				StringBuilder builder = new StringBuilder();
 				builder.append( "validation failed for classes " );
 				builder.append( classNames );
-				builder.append( " during" );
+				builder.append( " during " );
 				builder.append( operation.getName() );
 				builder.append( " time for groups " );
 				builder.append( toString( groups ) );

@@ -24,11 +24,15 @@
 package org.hibernate.envers.test.integration.flush;
 
 import java.util.Arrays;
+import java.util.List;
 import javax.persistence.EntityManager;
 
 import org.hibernate.envers.test.entities.StrTestEntity;
+import org.hibernate.envers.query.AuditEntity;
+import org.hibernate.envers.RevisionType;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
+import static org.testng.Assert.assertEquals;
 
 import org.hibernate.FlushMode;
 
@@ -82,5 +86,17 @@ public class DoubleFlushModDel extends AbstractFlushTest {
 
         assert getAuditReader().find(StrTestEntity.class, id, 1).equals(ver1);
         assert getAuditReader().find(StrTestEntity.class, id, 2) == null;
+    }
+
+    @Test
+    public void testRevisionTypes() {
+        @SuppressWarnings({"unchecked"}) List<Object[]> results =
+                getAuditReader().createQuery()
+                        .forRevisionsOfEntity(StrTestEntity.class, false, true)
+                        .add(AuditEntity.id().eq(id))
+                        .getResultList();
+
+        assertEquals(results.get(0)[2], RevisionType.ADD);
+        assertEquals(results.get(1)[2], RevisionType.DEL);
     }
 }

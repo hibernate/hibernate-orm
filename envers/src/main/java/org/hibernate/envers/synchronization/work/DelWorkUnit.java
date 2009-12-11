@@ -67,23 +67,23 @@ public class DelWorkUnit extends AbstractAuditWorkUnit implements AuditWorkUnit 
         setPerformed(data);
     }
 
-    public KeepCheckResult check(AddWorkUnit second) {
-        return KeepCheckResult.NONE;
+    public AuditWorkUnit merge(AddWorkUnit second) {
+        return null;
     }
 
-    public KeepCheckResult check(ModWorkUnit second) {
-        return KeepCheckResult.NONE;
+    public AuditWorkUnit merge(ModWorkUnit second) {
+        return null;
     }
 
-    public KeepCheckResult check(DelWorkUnit second) {
-        return KeepCheckResult.FIRST;
+    public AuditWorkUnit merge(DelWorkUnit second) {
+        return this;
     }
 
-    public KeepCheckResult check(CollectionChangeWorkUnit second) {
-        return KeepCheckResult.FIRST;
+    public AuditWorkUnit merge(CollectionChangeWorkUnit second) {
+        return this;
     }
 
-    public KeepCheckResult dispatch(KeepCheckVisitor first) {
-        return first.check(this);
+    public AuditWorkUnit dispatch(WorkUnitMergeVisitor first) {
+        return first.merge(this);
     }
 }

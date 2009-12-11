@@ -24,12 +24,14 @@
 package org.hibernate.envers.synchronization.work;
 
 /**
- * Visitor pattern visitor. All methods should be invoked on the first work unit.
+ * Visitor patter dispatcher.
  * @author Adam Warski (adam at warski dot org)
  */
-public interface KeepCheckVisitor {
-    KeepCheckResult check(AddWorkUnit second);
-    KeepCheckResult check(ModWorkUnit second);
-    KeepCheckResult check(DelWorkUnit second);
-    KeepCheckResult check(CollectionChangeWorkUnit second);
+public interface WorkUnitMergeDispatcher {
+    /**
+     * Shuold be invoked on the second work unit.
+     * @param first First work unit (that is, the one added earlier).
+     * @return The work unit that is the result of the merge.
+     */
+    AuditWorkUnit dispatch(WorkUnitMergeVisitor first);
 }

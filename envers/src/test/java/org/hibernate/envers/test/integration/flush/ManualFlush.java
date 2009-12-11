@@ -24,11 +24,15 @@
 package org.hibernate.envers.test.integration.flush;
 
 import java.util.Arrays;
+import java.util.List;
 import javax.persistence.EntityManager;
 
 import org.hibernate.envers.test.entities.StrTestEntity;
+import org.hibernate.envers.query.AuditEntity;
+import org.hibernate.envers.RevisionType;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
+import static org.testng.Assert.assertEquals;
 
 import org.hibernate.FlushMode;
 
@@ -95,5 +99,17 @@ public class ManualFlush extends AbstractFlushTest {
     @Test
     public void testCurrent() {
         assert getEntityManager().find(StrTestEntity.class, id).equals(new StrTestEntity("z", id));
+    }
+
+    @Test
+    public void testRevisionTypes() {
+        @SuppressWarnings({"unchecked"}) List<Object[]> results =
+                getAuditReader().createQuery()
+                        .forRevisionsOfEntity(StrTestEntity.class, false, true)
+                        .add(AuditEntity.id().eq(id))
+                        .getResultList();
+
+        assertEquals(results.get(0)[2], RevisionType.ADD);
+        assertEquals(results.get(1)[2], RevisionType.MOD);
     }
 }

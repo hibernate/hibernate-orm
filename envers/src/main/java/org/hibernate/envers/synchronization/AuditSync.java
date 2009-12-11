@@ -86,22 +86,16 @@ public class AuditSync implements Synchronization {
                 if (usedIds.containsKey(usedIdsKey)) {
                     AuditWorkUnit other = usedIds.get(usedIdsKey);
 
-                    // The entity with entityId has two work units; checking which one should be kept.
-                    switch (vwu.dispatch(other)) {
-                        case FIRST:
-                            // Simply not adding the second
-                            break;
+                    AuditWorkUnit result = vwu.dispatch(other);
 
-                        case SECOND:
-                            removeWorkUnit(other);
-                            usedIds.put(usedIdsKey, vwu);
-                            workUnits.offer(vwu);
-                            break;
+                    if (result != other) {
+                        removeWorkUnit(other);
 
-                        case NONE:
-                            removeWorkUnit(other);
-                            break;
-                    }
+                        if (result != null) {
+                            usedIds.put(usedIdsKey, result);
+                            workUnits.offer(result);
+                        } // else: a null result means that no work unit should be kept
+                    } // else: the result is the same as the work unit already added. No need to do anything.
                 } else {
                     usedIds.put(usedIdsKey, vwu);
                     workUnits.offer(vwu);

@@ -62,23 +62,27 @@ public class ModWorkUnit extends AbstractAuditWorkUnit implements AuditWorkUnit 
         setPerformed(data);
     }
 
-    public KeepCheckResult check(AddWorkUnit second) {
-        return KeepCheckResult.FIRST;
+    public Map<String, Object> getData() {
+        return data;
     }
 
-    public KeepCheckResult check(ModWorkUnit second) {
-        return KeepCheckResult.SECOND;
+    public AuditWorkUnit merge(AddWorkUnit second) {
+        return this;
     }
 
-    public KeepCheckResult check(DelWorkUnit second) {
-        return KeepCheckResult.SECOND;
+    public AuditWorkUnit merge(ModWorkUnit second) {
+        return second;
     }
 
-    public KeepCheckResult check(CollectionChangeWorkUnit second) {
-        return KeepCheckResult.FIRST;
+    public AuditWorkUnit merge(DelWorkUnit second) {
+        return second;
     }
 
-    public KeepCheckResult dispatch(KeepCheckVisitor first) {
-        return first.check(this);
+    public AuditWorkUnit merge(CollectionChangeWorkUnit second) {
+        return this;
+    }
+
+    public AuditWorkUnit dispatch(WorkUnitMergeVisitor first) {
+        return first.merge(this);
     }
 }

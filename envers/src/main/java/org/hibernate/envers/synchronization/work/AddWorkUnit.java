@@ -38,15 +38,22 @@ import org.hibernate.persister.entity.EntityPersister;
  * @author Adam Warski (adam at warski dot org)
  */
 public class AddWorkUnit extends AbstractAuditWorkUnit implements AuditWorkUnit {
-    private final Object[] state;
-    private final String[] propertyNames;
+    private final Map<String, Object> data;
 
     public AddWorkUnit(SessionImplementor sessionImplementor, String entityName, AuditConfiguration verCfg,
 					   Serializable id, EntityPersister entityPersister, Object[] state) {
         super(sessionImplementor, entityName, verCfg, id);
 
-        this.state = state;
-        this.propertyNames = entityPersister.getPropertyNames();
+        data = new HashMap<String, Object>();
+        verCfg.getEntCfg().get(getEntityName()).getPropertyMapper().map(sessionImplementor, data,
+				entityPersister.getPropertyNames(), state, null);
+    }
+
+    public AddWorkUnit(SessionImplementor sessionImplementor, String entityName, AuditConfiguration verCfg,
+                       Serializable id, Map<String, Object> data) {
+        super(sessionImplementor, entityName, verCfg, id);
+
+        this.data = data;
     }
 
     public boolean containsWork() {
@@ -54,34 +61,30 @@ public class AddWorkUnit extends AbstractAuditWorkUnit implements AuditWorkUnit 
     }
 
     public void perform(Session session, Object revisionData) {
-        Map<String, Object> data = new HashMap<String, Object>();
         fillDataWithId(data, revisionData, RevisionType.ADD);
-
-        verCfg.getEntCfg().get(getEntityName()).getPropertyMapper().map(sessionImplementor, data,
-				propertyNames, state, null);
 
         session.save(verCfg.getAuditEntCfg().getAuditEntityName(getEntityName()), data);
 
         setPerformed(data);
     }
 
-    public KeepCheckResult check(AddWorkUnit second) {
-        return KeepCheckResult.FIRST;
+    public AuditWorkUnit merge(AddWorkUnit second) {
+        return second;
     }
 
-    public KeepCheckResult check(ModWorkUnit second) {
-        return KeepCheckResult.SECOND;
+    public AuditWorkUnit merge(ModWorkUnit second) {
+        return new AddWorkUnit(sessionImplementor, entityName, verCfg, id, second.getData());
     }
 
-    public KeepCheckResult check(DelWorkUnit second) {
-        return KeepCheckResult.NONE;
+    public AuditWorkUnit merge(DelWorkUnit second) {
+        return null;
     }
 
-    public KeepCheckResult check(CollectionChangeWorkUnit second) {
-        return KeepCheckResult.FIRST;
+    public AuditWorkUnit merge(CollectionChangeWorkUnit second) {
+        return this;
     }
 
-    public KeepCheckResult dispatch(KeepCheckVisitor first) {
-        return first.check(this);
+    public AuditWorkUnit dispatch(WorkUnitMergeVisitor first) {
+        return first.merge(this);
     }
 }

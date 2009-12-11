@@ -24,12 +24,12 @@
 package org.hibernate.envers.synchronization.work;
 
 /**
- * Possible outcomes of selecting which work unit to keep, in case there are two work units for the same entity
- * with the same id.
+ * Visitor pattern visitor. All methods should be invoked on the first work unit.
  * @author Adam Warski (adam at warski dot org)
  */
-public enum KeepCheckResult {
-    FIRST,
-    SECOND,
-    NONE
+public interface WorkUnitMergeVisitor {
+    AuditWorkUnit merge(AddWorkUnit second);
+    AuditWorkUnit merge(ModWorkUnit second);
+    AuditWorkUnit merge(DelWorkUnit second);
+    AuditWorkUnit merge(CollectionChangeWorkUnit second);
 }

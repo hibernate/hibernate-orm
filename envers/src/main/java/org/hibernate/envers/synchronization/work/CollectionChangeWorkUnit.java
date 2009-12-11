@@ -62,23 +62,23 @@ public class CollectionChangeWorkUnit extends AbstractAuditWorkUnit implements A
         setPerformed(data);
     }
 
-    public KeepCheckResult check(AddWorkUnit second) {
-        return KeepCheckResult.SECOND;
+    public AuditWorkUnit merge(AddWorkUnit second) {
+        return second;
     }
 
-    public KeepCheckResult check(ModWorkUnit second) {
-        return KeepCheckResult.SECOND;
+    public AuditWorkUnit merge(ModWorkUnit second) {
+        return second;
     }
 
-    public KeepCheckResult check(DelWorkUnit second) {
-        return KeepCheckResult.SECOND;
+    public AuditWorkUnit merge(DelWorkUnit second) {
+        return second;
     }
 
-    public KeepCheckResult check(CollectionChangeWorkUnit second) {
-        return KeepCheckResult.FIRST;
+    public AuditWorkUnit merge(CollectionChangeWorkUnit second) {
+        return this;
     }
 
-    public KeepCheckResult dispatch(KeepCheckVisitor first) {
-        return first.check(this);
+    public AuditWorkUnit dispatch(WorkUnitMergeVisitor first) {
+        return first.merge(this);
     }
 }

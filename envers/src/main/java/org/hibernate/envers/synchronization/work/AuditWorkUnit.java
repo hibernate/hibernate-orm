@@ -28,7 +28,7 @@ import org.hibernate.Session;
 /**
  * @author Adam Warski (adam at warski dot org)
  */
-public interface AuditWorkUnit extends KeepCheckVisitor, KeepCheckDispatcher {
+public interface AuditWorkUnit extends WorkUnitMergeVisitor, WorkUnitMergeDispatcher {
     Object getEntityId();
     String getEntityName();
     

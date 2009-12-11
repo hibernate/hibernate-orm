@@ -58,6 +58,16 @@ public class PersistentCollectionChangeWorkUnit extends AbstractAuditWorkUnit im
                 .mapCollectionChanges(referencingPropertyName, collection, snapshot, id);
     }
 
+    public PersistentCollectionChangeWorkUnit(SessionImplementor sessionImplementor, String entityName,
+                                              AuditConfiguration verCfg, Serializable id,
+                                              List<PersistentCollectionChangeData> collectionChanges,
+                                              String referencingPropertyName) {
+        super(sessionImplementor, entityName, verCfg, id);
+
+        this.collectionChanges = collectionChanges;
+        this.referencingPropertyName = referencingPropertyName;
+    }
+
     public boolean containsWork() {
         return collectionChanges != null && collectionChanges.size() != 0;
     }
@@ -83,23 +93,23 @@ public class PersistentCollectionChangeWorkUnit extends AbstractAuditWorkUnit im
         return collectionChanges;
     }
 
-    public KeepCheckResult check(AddWorkUnit second) {
+    public AuditWorkUnit merge(AddWorkUnit second) {
         return null;
     }
 
-    public KeepCheckResult check(ModWorkUnit second) {
+    public AuditWorkUnit merge(ModWorkUnit second) {
         return null;
     }
 
-    public KeepCheckResult check(DelWorkUnit second) {
+    public AuditWorkUnit merge(DelWorkUnit second) {
         return null;
     }
 
-    public KeepCheckResult check(CollectionChangeWorkUnit second) {
+    public AuditWorkUnit merge(CollectionChangeWorkUnit second) {
         return null;
     }
 
-    public KeepCheckResult dispatch(KeepCheckVisitor first) {
+    public AuditWorkUnit dispatch(WorkUnitMergeVisitor first) {
         if (first instanceof PersistentCollectionChangeWorkUnit) {
             PersistentCollectionChangeWorkUnit original = (PersistentCollectionChangeWorkUnit) first;
 
@@ -115,26 +125,25 @@ public class PersistentCollectionChangeWorkUnit extends AbstractAuditWorkUnit im
                         persistentCollectionChangeData);
             }
 
-            // Storing the current changes
-            List<PersistentCollectionChangeData> newChanges = new ArrayList<PersistentCollectionChangeData>();
-            newChanges.addAll(collectionChanges);
+            // This will be the list with the resulting (merged) changes.
+            List<PersistentCollectionChangeData> mergedChanges = new ArrayList<PersistentCollectionChangeData>();
 
-            // And building the change list again
-            collectionChanges.clear();
+            // Including only those original changes, which are not overshadowed by new ones.
             for (PersistentCollectionChangeData originalCollectionChangeData : original.getCollectionChanges()) {
                 if (!newChangesIdMap.containsKey(getOriginalId(originalCollectionChangeData))) {
-                    collectionChanges.add(originalCollectionChangeData);
+                    mergedChanges.add(originalCollectionChangeData);
                 }
             }
 
             // Finally adding all of the new changes to the end of the list
-            collectionChanges.addAll(newChanges);
+            mergedChanges.addAll(getCollectionChanges());
+
+            return new PersistentCollectionChangeWorkUnit(sessionImplementor, entityName, verCfg, id, mergedChanges, 
+                    referencingPropertyName);
         } else {
             throw new RuntimeException("Trying to merge a " + first + " with a PersitentCollectionChangeWorkUnit. " +
                     "This is not really possible.");
         }
-
-        return KeepCheckResult.SECOND;
     }
 
     private Object getOriginalId(PersistentCollectionChangeData persistentCollectionChangeData) {

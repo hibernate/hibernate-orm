@@ -41,8 +41,7 @@ public abstract class AbstractAuditWorkUnit implements AuditWorkUnit {
 	protected final SessionImplementor sessionImplementor;
     protected final AuditConfiguration verCfg;
     protected final Serializable id;
-
-    private final String entityName;
+    protected final String entityName;
 
     private Object performedData;
 

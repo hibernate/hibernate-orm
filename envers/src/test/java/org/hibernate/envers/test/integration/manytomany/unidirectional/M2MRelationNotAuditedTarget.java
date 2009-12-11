@@ -37,6 +37,7 @@ import org.hibernate.envers.test.entities.manytomany.unidirectional.M2MTargetNot
 
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
+import static org.testng.Assert.*;
 
 /**
  * A test for auditing a many-to-many relation where the target entity is not audited.
@@ -143,10 +144,10 @@ public class M2MRelationNotAuditedTarget extends AbstractEntityTest {
 		M2MTargetNotAuditedEntity rev3 = getAuditReader().find(M2MTargetNotAuditedEntity.class, tnae1_id, 3);
 		M2MTargetNotAuditedEntity rev4 = getAuditReader().find(M2MTargetNotAuditedEntity.class, tnae1_id, 4);
 
-		checkList(rev1.getReferences());
-		checkList(rev2.getReferences(), uste1);
-		checkList(rev3.getReferences(), uste1);
-		checkList(rev4.getReferences(), uste1, uste2);
+		assertTrue(checkList(rev1.getReferences()));
+		assertTrue(checkList(rev2.getReferences(), uste1));
+		assertTrue(checkList(rev3.getReferences(), uste1));
+		assertTrue(checkList(rev4.getReferences(), uste1, uste2));
 	}
 
 	@Test
@@ -159,9 +160,9 @@ public class M2MRelationNotAuditedTarget extends AbstractEntityTest {
 		M2MTargetNotAuditedEntity rev3 = getAuditReader().find(M2MTargetNotAuditedEntity.class, tnae2_id, 3);
 		M2MTargetNotAuditedEntity rev4 = getAuditReader().find(M2MTargetNotAuditedEntity.class, tnae2_id, 4);
 
-		checkList(rev1.getReferences(), uste1, uste2);
-		checkList(rev2.getReferences(), uste2);
-		checkList(rev3.getReferences());
-		checkList(rev4.getReferences(), uste1);
+		assertTrue(checkList(rev1.getReferences(), uste1, uste2));
+		assertTrue(checkList(rev2.getReferences(), uste2));
+		assertTrue(checkList(rev3.getReferences()));
+		assertTrue(checkList(rev4.getReferences(), uste1));
 	}
 }

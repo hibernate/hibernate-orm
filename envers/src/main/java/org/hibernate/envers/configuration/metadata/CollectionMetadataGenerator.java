@@ -145,7 +145,7 @@ public final class CollectionMetadataGenerator {
     void addCollection() {
         Type type = propertyValue.getType();
 
-        if ((type instanceof BagType || type instanceof SetType || type instanceof MapType) &&
+        if ((type instanceof BagType || type instanceof SetType || type instanceof MapType || type instanceof ListType) &&
                 (propertyValue.getElement() instanceof OneToMany) && (propertyValue.isInverse())) {
             // A one-to-many relation mapped using @ManyToOne and @OneToMany(mappedBy="...")
             addOneToManyAttached();

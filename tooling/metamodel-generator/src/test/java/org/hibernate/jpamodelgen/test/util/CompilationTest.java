@@ -58,6 +58,7 @@ public abstract class CompilationTest {
 			compile();
 		}
 		catch ( Exception e ) {
+			e.printStackTrace(  );
 			fail( "Unable to compile test sources. " + e.getMessage() );
 		}
 	}
@@ -114,7 +115,11 @@ public abstract class CompilationTest {
 				return name.endsWith( ".java" ) && !name.endsWith( "Test.java" );
 			}
 		};
-		for ( File file : packageDir.listFiles( javaFileFilter ) ) {
+		final File[] files = packageDir.listFiles( javaFileFilter );
+		if (files == null) {
+			throw new RuntimeException( "Cannot find package directory (is your base dir correct?): " + packageDirName );
+		}
+		for ( File file : files ) {
 			javaFiles.add( file );
 		}
 		return javaFiles;

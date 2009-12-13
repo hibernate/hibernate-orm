@@ -58,13 +58,13 @@
             -->
             <groupId>${project.groupId}</groupId>
             <artifactId>hibernate-jpamodelgen</artifactId>
-            <version>1.0.0.Beta1</version>
+            <version>1.0.0-Beta-2</version>
             <scope>test</scope>
             <exclusions>
                 <exclusion>
                     <!-- Use the jpa-api defined here, crossing fingers they match up signature-wise -->
-                    <groupId>org.hibernate.java-persistence</groupId>
-                    <artifactId>jpa-api</artifactId>
+                    <groupId>org.hibernate.javax.persistence</groupId>
+                    <artifactId>hibernate-jpa-2.0-api</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>

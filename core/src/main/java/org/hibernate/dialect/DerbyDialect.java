@@ -86,6 +86,9 @@ public class DerbyDialect extends DB2Dialect {
 		return driverVersionMajor > 10 || ( driverVersionMajor == 10 && driverVersionMinor >= 5 );
 	}
 
+	public String getCrossJoinSeparator() {
+		return ", ";
+	}
 
 	/**
 	 * This is different in Cloudscape to DB2.

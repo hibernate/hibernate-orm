@@ -139,6 +139,6 @@ public final class IdMetadataGenerator {
 
     private PropertyAuditingData getIdPersistentPropertyAuditingData(Property property) {
         return new PropertyAuditingData(property.getName(), property.getPropertyAccessorName(),
-                ModificationStore.FULL, RelationTargetAuditMode.AUDITED);
+                ModificationStore.FULL, RelationTargetAuditMode.AUDITED, null, null);
     }
 }

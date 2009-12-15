@@ -30,7 +30,6 @@ import java.util.Map;
 import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.configuration.AuditConfiguration;
 
-import org.hibernate.Session;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.engine.SessionImplementor;
 
@@ -53,7 +52,7 @@ public class DelWorkUnit extends AbstractAuditWorkUnit implements AuditWorkUnit 
         return true;
     }
 
-    public void perform(Session session, Object revisionData) {
+    public Map<String, Object> generateData(Object revisionData) {
         Map<String, Object> data = new HashMap<String, Object>();
         fillDataWithId(data, revisionData, RevisionType.DEL);
 
@@ -62,9 +61,7 @@ public class DelWorkUnit extends AbstractAuditWorkUnit implements AuditWorkUnit 
 					propertyNames, state, state);
 		}
 
-        session.save(verCfg.getAuditEntCfg().getAuditEntityName(getEntityName()), data);
-
-        setPerformed(data);
+        return data;
     }
 
     public AuditWorkUnit merge(AddWorkUnit second) {
@@ -80,6 +77,10 @@ public class DelWorkUnit extends AbstractAuditWorkUnit implements AuditWorkUnit 
     }
 
     public AuditWorkUnit merge(CollectionChangeWorkUnit second) {
+        return this;
+    }
+
+    public AuditWorkUnit merge(FakeBidirectionalRelationWorkUnit second) {
         return this;
     }
 

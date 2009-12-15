@@ -12,4 +12,12 @@ public class MappingTools {
 	public static String createComponentPrefix(String componentName) {
 		return componentName + "_";
 	}
+
+    /**
+     * @param referencePropertyName The name of the property that holds the relation to the entity.
+     * @return A prefix which should be used to prefix an id mapper for the related entity.
+     */
+    public static String createToOneRelationPrefix(String referencePropertyName) {
+        return referencePropertyName + "_";
+    }
 }

@@ -30,6 +30,7 @@ import java.util.Map;
 import org.dom4j.Element;
 import org.hibernate.envers.configuration.GlobalConfiguration;
 import org.hibernate.envers.configuration.AuditEntitiesConfiguration;
+import org.hibernate.envers.configuration.ClassesAuditingData;
 import org.hibernate.envers.configuration.metadata.reader.ClassAuditingData;
 import org.hibernate.envers.configuration.metadata.reader.PropertyAuditingData;
 import org.hibernate.envers.entities.EntityConfiguration;
@@ -62,15 +63,22 @@ public final class AuditMetadataGenerator {
     private final AuditEntitiesConfiguration verEntCfg;
     private final Element revisionInfoRelationMapping;
 
+    /*
+     * Generators for different kinds of property values/types.
+     */
     private final BasicMetadataGenerator basicMetadataGenerator;
 	private final ComponentMetadataGenerator componentMetadataGenerator;
     private final IdMetadataGenerator idMetadataGenerator;
     private final ToOneRelationMetadataGenerator toOneRelationMetadataGenerator;
 
+    /*
+     * Here information about already generated mappings will be accumulated.
+     */
     private final Map<String, EntityConfiguration> entitiesConfigurations;
     private final Map<String, EntityConfiguration> notAuditedEntitiesConfigurations;
 
     private final AuditEntityNameRegister auditEntityNameRegister;
+    private final ClassesAuditingData classesAuditingData;
 
     // Map entity name -> (join descriptor -> element describing the "versioned" join)
     private final Map<String, Map<Join, Element>> entitiesJoins;
@@ -78,7 +86,8 @@ public final class AuditMetadataGenerator {
     public AuditMetadataGenerator(Configuration cfg, GlobalConfiguration globalCfg,
                                   AuditEntitiesConfiguration verEntCfg,
                                   Element revisionInfoRelationMapping,
-                                  AuditEntityNameRegister auditEntityNameRegister) {
+                                  AuditEntityNameRegister auditEntityNameRegister,
+                                  ClassesAuditingData classesAuditingData) {
         this.cfg = cfg;
         this.globalCfg = globalCfg;
         this.verEntCfg = verEntCfg;
@@ -89,7 +98,8 @@ public final class AuditMetadataGenerator {
         this.idMetadataGenerator = new IdMetadataGenerator(this);
         this.toOneRelationMetadataGenerator = new ToOneRelationMetadataGenerator(this);
 
-        this.auditEntityNameRegister = auditEntityNameRegister;
+        this.auditEntityNameRegister = auditEntityNameRegister;        
+        this.classesAuditingData = classesAuditingData;
 
         entitiesConfigurations = new HashMap<String, EntityConfiguration>();
         notAuditedEntitiesConfigurations = new HashMap<String, EntityConfiguration>();
@@ -446,6 +456,10 @@ public final class AuditMetadataGenerator {
 
     public Map<String, EntityConfiguration> getEntitiesConfigurations() {
         return entitiesConfigurations;
+    }
+
+    public ClassesAuditingData getClassesAuditingData() {
+        return classesAuditingData;
     }
 
     // Getters for generators and configuration

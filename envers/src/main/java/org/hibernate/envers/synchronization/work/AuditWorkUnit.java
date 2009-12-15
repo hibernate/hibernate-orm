@@ -25,7 +25,10 @@ package org.hibernate.envers.synchronization.work;
 
 import org.hibernate.Session;
 
+import java.util.Map;
+
 /**
+ * TODO: refactor constructors into factory methods
  * @author Adam Warski (adam at warski dot org)
  */
 public interface AuditWorkUnit extends WorkUnitMergeVisitor, WorkUnitMergeDispatcher {
@@ -35,7 +38,20 @@ public interface AuditWorkUnit extends WorkUnitMergeVisitor, WorkUnitMergeDispat
     boolean containsWork();
 
     boolean isPerformed();
-    
+
+    /**
+     * Perform this work unit in the given session.
+     * @param session Session, in which the work unit should be performed.
+     * @param revisionData The current revision data, which will be used to populate the work unit with the correct
+     * revision relation.
+     */
     void perform(Session session, Object revisionData);
     void undo(Session session);
+
+    /**
+     * @param revisionData The current revision data, which will be used to populate the work unit with the correct
+     * revision relation.
+     * @return Generates data that should be saved when performing this work unit.
+     */
+    Map<String, Object> generateData(Object revisionData);
 }

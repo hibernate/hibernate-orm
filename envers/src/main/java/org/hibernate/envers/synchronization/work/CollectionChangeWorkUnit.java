@@ -30,7 +30,6 @@ import java.util.Map;
 import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.configuration.AuditConfiguration;
 
-import org.hibernate.Session;
 import org.hibernate.engine.SessionImplementor;
 
 /**
@@ -50,16 +49,14 @@ public class CollectionChangeWorkUnit extends AbstractAuditWorkUnit implements A
         return true;
     }
 
-    public void perform(Session session, Object revisionData) {
+    public Map<String, Object> generateData(Object revisionData) {
         Map<String, Object> data = new HashMap<String, Object>();
         fillDataWithId(data, revisionData, RevisionType.MOD);
 
         verCfg.getEntCfg().get(getEntityName()).getPropertyMapper().mapToMapFromEntity(sessionImplementor,
 				data, entity, null);
 
-        session.save(verCfg.getAuditEntCfg().getAuditEntityName(getEntityName()), data);
-
-        setPerformed(data);
+        return data;
     }
 
     public AuditWorkUnit merge(AddWorkUnit second) {
@@ -76,6 +73,10 @@ public class CollectionChangeWorkUnit extends AbstractAuditWorkUnit implements A
 
     public AuditWorkUnit merge(CollectionChangeWorkUnit second) {
         return this;
+    }
+
+    public AuditWorkUnit merge(FakeBidirectionalRelationWorkUnit second) {
+        return second;
     }
 
     public AuditWorkUnit dispatch(WorkUnitMergeVisitor first) {

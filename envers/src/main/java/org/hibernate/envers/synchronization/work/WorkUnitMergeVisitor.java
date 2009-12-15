@@ -32,4 +32,5 @@ public interface WorkUnitMergeVisitor {
     AuditWorkUnit merge(ModWorkUnit second);
     AuditWorkUnit merge(DelWorkUnit second);
     AuditWorkUnit merge(CollectionChangeWorkUnit second);
+    AuditWorkUnit merge(FakeBidirectionalRelationWorkUnit second);
 }

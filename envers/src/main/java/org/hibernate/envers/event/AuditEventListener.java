@@ -24,6 +24,7 @@
 package org.hibernate.envers.event;
 
 import java.io.Serializable;
+import java.util.List;
 
 import org.hibernate.envers.configuration.AuditConfiguration;
 import org.hibernate.envers.entities.RelationDescription;
@@ -31,12 +32,9 @@ import org.hibernate.envers.entities.RelationType;
 import org.hibernate.envers.entities.mapper.PersistentCollectionChangeData;
 import org.hibernate.envers.entities.mapper.id.IdMapper;
 import org.hibernate.envers.synchronization.AuditSync;
-import org.hibernate.envers.synchronization.work.AddWorkUnit;
-import org.hibernate.envers.synchronization.work.CollectionChangeWorkUnit;
-import org.hibernate.envers.synchronization.work.DelWorkUnit;
-import org.hibernate.envers.synchronization.work.ModWorkUnit;
-import org.hibernate.envers.synchronization.work.PersistentCollectionChangeWorkUnit;
+import org.hibernate.envers.synchronization.work.*;
 import org.hibernate.envers.tools.Tools;
+import org.hibernate.envers.RevisionType;
 
 import org.hibernate.cfg.Configuration;
 import org.hibernate.collection.PersistentCollection;
@@ -57,6 +55,7 @@ import org.hibernate.event.PreCollectionRemoveEventListener;
 import org.hibernate.event.PreCollectionUpdateEvent;
 import org.hibernate.event.PreCollectionUpdateEventListener;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.persister.collection.AbstractCollectionPersister;
 import org.hibernate.proxy.HibernateProxy;
 
 /**
@@ -182,7 +181,8 @@ public class AuditEventListener implements PostInsertEventListener, PostUpdateEv
     }
 
     private void generateBidirectionalCollectionChangeWorkUnits(AuditSync verSync, AbstractCollectionEvent event,
-                                                                PersistentCollectionChangeWorkUnit workUnit) {
+                                                                PersistentCollectionChangeWorkUnit workUnit,
+                                                                RelationDescription rd) {
         // Checking if this is enabled in configuration ...
         if (!verCfg.getGlobalCfg().isGenerateRevisionsForCollections()) {
             return;
@@ -190,12 +190,9 @@ public class AuditEventListener implements PostInsertEventListener, PostUpdateEv
 
         // Checking if this is not a bidirectional relation - then, a revision needs also be generated for
         // the other side of the relation.
-        RelationDescription relDesc = verCfg.getEntCfg().getRelationDescription(event.getAffectedOwnerEntityName(),
-                workUnit.getReferencingPropertyName());
-
         // relDesc can be null if this is a collection of simple values (not a relation).
-        if (relDesc != null && relDesc.isBidirectional()) {
-            String relatedEntityName = relDesc.getToEntityName();
+        if (rd != null && rd.isBidirectional()) {
+            String relatedEntityName = rd.getToEntityName();
             IdMapper relatedIdMapper = verCfg.getEntCfg().get(relatedEntityName).getIdMapper();
             
             for (PersistentCollectionChangeData changeData : workUnit.getCollectionChanges()) {
@@ -208,6 +205,38 @@ public class AuditEventListener implements PostInsertEventListener, PostUpdateEv
         }
     }
 
+    private void generateFakeBidirecationalRelationWorkUnits(AuditSync verSync, PersistentCollection newColl, Serializable oldColl,
+                                                             String collectionEntityName, String referencingPropertyName,
+                                                             AbstractCollectionEvent event,
+                                                             RelationDescription rd) {
+        // First computing the relation changes
+        List<PersistentCollectionChangeData> collectionChanges = verCfg.getEntCfg().get(collectionEntityName).getPropertyMapper()
+                .mapCollectionChanges(referencingPropertyName, newColl, oldColl, event.getAffectedOwnerIdOrNull());
+
+        // Getting the id mapper for the related entity, as the work units generated will corrspond to the related
+        // entities.
+        String relatedEntityName = rd.getToEntityName();
+        IdMapper relatedIdMapper = verCfg.getEntCfg().get(relatedEntityName).getIdMapper();
+
+        // For each collection change, generating the bidirectional work unit.
+        for (PersistentCollectionChangeData changeData : collectionChanges) {
+            Object relatedObj = changeData.getChangedElement();
+            Serializable relatedId = (Serializable) relatedIdMapper.mapToIdFromEntity(relatedObj);
+            RevisionType revType = (RevisionType) changeData.getData().get(verCfg.getAuditEntCfg().getRevisionTypePropName());
+
+            // By default, the nested work unit is a collection change work unit.
+            AuditWorkUnit nestedWorkUnit = new CollectionChangeWorkUnit(event.getSession(), relatedEntityName, verCfg,
+                    relatedId, relatedObj);
+
+            verSync.addWorkUnit(new FakeBidirectionalRelationWorkUnit(event.getSession(), relatedEntityName, verCfg,
+                    relatedId, event.getAffectedOwnerOrNull(), rd, revType, nestedWorkUnit));
+        }
+
+        // We also have to generate a collection change work unit for the owning entity.
+        verSync.addWorkUnit(new CollectionChangeWorkUnit(event.getSession(), collectionEntityName, verCfg,
+                event.getAffectedOwnerIdOrNull(), event.getAffectedOwnerOrNull()));
+    }
+
     private void onCollectionAction(AbstractCollectionEvent event, PersistentCollection newColl, Serializable oldColl,
                                     CollectionEntry collectionEntry) {
         String entityName = event.getAffectedOwnerEntityName();
@@ -215,16 +244,28 @@ public class AuditEventListener implements PostInsertEventListener, PostUpdateEv
         if (verCfg.getEntCfg().isVersioned(entityName)) {
             AuditSync verSync = verCfg.getSyncManager().get(event.getSession());
 
-            PersistentCollectionChangeWorkUnit workUnit = new PersistentCollectionChangeWorkUnit(event.getSession(),
-					entityName, verCfg, newColl, collectionEntry, oldColl, event.getAffectedOwnerIdOrNull());
-            verSync.addWorkUnit(workUnit);
+            String ownerEntityName = ((AbstractCollectionPersister) collectionEntry.getLoadedPersister()).getOwnerEntityName();
+            String referencingPropertyName = collectionEntry.getRole().substring(ownerEntityName.length() + 1);
 
-            if (workUnit.containsWork()) {
-                // There are some changes: a revision needs also be generated for the collection owner
-                verSync.addWorkUnit(new CollectionChangeWorkUnit(event.getSession(), event.getAffectedOwnerEntityName(),
-						verCfg, event.getAffectedOwnerIdOrNull(), event.getAffectedOwnerOrNull()));
+            // Checking if this is not a "fake" many-to-one bidirectional relation. The relation description may be
+            // null in case of collections of non-entities.
+            RelationDescription rd = verCfg.getEntCfg().get(entityName).getRelationDescription(referencingPropertyName);
+            if (rd != null && rd.getMappedByPropertyName() != null) {
+                generateFakeBidirecationalRelationWorkUnits(verSync, newColl, oldColl, entityName,
+                        referencingPropertyName, event, rd);
+            } else {
+                PersistentCollectionChangeWorkUnit workUnit = new PersistentCollectionChangeWorkUnit(event.getSession(),
+                        entityName, verCfg, newColl, collectionEntry, oldColl, event.getAffectedOwnerIdOrNull(),
+                        referencingPropertyName);
+                verSync.addWorkUnit(workUnit);
 
-                generateBidirectionalCollectionChangeWorkUnits(verSync, event, workUnit);
+                if (workUnit.containsWork()) {
+                    // There are some changes: a revision needs also be generated for the collection owner
+                    verSync.addWorkUnit(new CollectionChangeWorkUnit(event.getSession(), event.getAffectedOwnerEntityName(),
+                            verCfg, event.getAffectedOwnerIdOrNull(), event.getAffectedOwnerOrNull()));
+
+                    generateBidirectionalCollectionChangeWorkUnits(verSync, event, workUnit, rd);
+                }
             }
         }
     }

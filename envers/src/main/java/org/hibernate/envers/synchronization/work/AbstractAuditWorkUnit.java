@@ -64,6 +64,14 @@ public abstract class AbstractAuditWorkUnit implements AuditWorkUnit {
         data.put(entitiesCfg.getOriginalIdPropName(), originalId);
     }
 
+    public void perform(Session session, Object revisionData) {
+        Map<String, Object> data = generateData(revisionData);
+
+        session.save(verCfg.getAuditEntCfg().getAuditEntityName(getEntityName()), data);
+
+        setPerformed(data);
+    }
+
     public Object getEntityId() {
         return id;
     }

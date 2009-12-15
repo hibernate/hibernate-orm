@@ -27,6 +27,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.hibernate.envers.entities.mapper.ExtendedPropertyMapper;
+import org.hibernate.envers.entities.mapper.PropertyMapper;
 import org.hibernate.envers.entities.mapper.id.IdMapper;
 
 /**
@@ -52,29 +53,29 @@ public class EntityConfiguration {
 
     public void addToOneRelation(String fromPropertyName, String toEntityName, IdMapper idMapper) {
         relations.put(fromPropertyName, new RelationDescription(fromPropertyName, RelationType.TO_ONE,
-                toEntityName, null, idMapper));
+                toEntityName, null, idMapper, null));
     }
 
     public void addToOneNotOwningRelation(String fromPropertyName, String mappedByPropertyName, String toEntityName,
                                     IdMapper idMapper) {
         relations.put(fromPropertyName, new RelationDescription(fromPropertyName, RelationType.TO_ONE_NOT_OWNING,
-                toEntityName, mappedByPropertyName, idMapper));
+                toEntityName, mappedByPropertyName, idMapper, null));
     }
 
     public void addToManyNotOwningRelation(String fromPropertyName, String mappedByPropertyName, String toEntityName,
-                                     IdMapper idMapper) {
+                                     IdMapper idMapper, PropertyMapper fakeBidirectionalRelationMapper) {
         relations.put(fromPropertyName, new RelationDescription(fromPropertyName, RelationType.TO_MANY_NOT_OWNING,
-                toEntityName, mappedByPropertyName, idMapper));
+                toEntityName, mappedByPropertyName, idMapper, fakeBidirectionalRelationMapper));
     }
 
     public void addToManyMiddleRelation(String fromPropertyName, String toEntityName) {
         relations.put(fromPropertyName, new RelationDescription(fromPropertyName, RelationType.TO_MANY_MIDDLE,
-                toEntityName, null, null));
+                toEntityName, null, null, null));
     }
 
     public void addToManyMiddleNotOwningRelation(String fromPropertyName, String mappedByPropertyName, String toEntityName) {
         relations.put(fromPropertyName, new RelationDescription(fromPropertyName, RelationType.TO_MANY_MIDDLE_NOT_OWNING,
-                toEntityName, mappedByPropertyName, null));
+                toEntityName, mappedByPropertyName, null, null));
     }
 
     public boolean isRelation(String propertyName) {

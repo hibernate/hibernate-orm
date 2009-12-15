@@ -40,13 +40,11 @@ import org.hibernate.envers.RelationTargetAuditMode;
 import org.hibernate.envers.configuration.metadata.reader.PropertyAuditingData;
 import org.hibernate.envers.entities.EntityConfiguration;
 import org.hibernate.envers.entities.IdMappingData;
+import org.hibernate.envers.entities.PropertyData;
 import org.hibernate.envers.entities.mapper.CompositeMapperBuilder;
-import org.hibernate.envers.entities.mapper.relation.BasicCollectionMapper;
-import org.hibernate.envers.entities.mapper.relation.CommonCollectionMapperData;
-import org.hibernate.envers.entities.mapper.relation.ListCollectionMapper;
-import org.hibernate.envers.entities.mapper.relation.MapCollectionMapper;
-import org.hibernate.envers.entities.mapper.relation.MiddleComponentData;
-import org.hibernate.envers.entities.mapper.relation.MiddleIdData;
+import org.hibernate.envers.entities.mapper.PropertyMapper;
+import org.hibernate.envers.entities.mapper.id.IdMapper;
+import org.hibernate.envers.entities.mapper.relation.*;
 import org.hibernate.envers.entities.mapper.relation.component.MiddleDummyComponentMapper;
 import org.hibernate.envers.entities.mapper.relation.component.MiddleMapKeyIdComponentMapper;
 import org.hibernate.envers.entities.mapper.relation.component.MiddleMapKeyPropertyComponentMapper;
@@ -61,6 +59,7 @@ import org.hibernate.envers.entities.mapper.relation.query.OneAuditEntityQueryGe
 import org.hibernate.envers.entities.mapper.relation.query.RelationQueryGenerator;
 import org.hibernate.envers.tools.StringTools;
 import org.hibernate.envers.tools.Tools;
+import org.hibernate.envers.tools.MappingTools;
 
 import org.hibernate.MappingException;
 import org.hibernate.mapping.Collection;
@@ -79,12 +78,16 @@ import org.hibernate.type.SetType;
 import org.hibernate.type.SortedMapType;
 import org.hibernate.type.SortedSetType;
 import org.hibernate.type.Type;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Generates metadata for a collection-valued property.
  * @author Adam Warski (adam at warski dot org)
  */
 public final class CollectionMetadataGenerator {
+    private static final Logger log = LoggerFactory.getLogger(CollectionMetadataGenerator.class);
+
     private final AuditMetadataGenerator mainGenerator;
     private final String propertyName;
     private final Collection propertyValue;
@@ -145,10 +148,13 @@ public final class CollectionMetadataGenerator {
     void addCollection() {
         Type type = propertyValue.getType();
 
-        if ((type instanceof BagType || type instanceof SetType || type instanceof MapType || type instanceof ListType) &&
-                (propertyValue.getElement() instanceof OneToMany) && (propertyValue.isInverse())) {
+        boolean oneToManyAttachedType = type instanceof BagType || type instanceof SetType || type instanceof MapType || type instanceof ListType;
+        boolean inverseOneToMany = (propertyValue.getElement() instanceof OneToMany) && (propertyValue.isInverse());
+        boolean fakeOneToManyBidirectional = (propertyValue.getElement() instanceof OneToMany) && (propertyAuditingData.getAuditMappedBy() != null);
+
+        if (oneToManyAttachedType && (inverseOneToMany || fakeOneToManyBidirectional)) {
             // A one-to-many relation mapped using @ManyToOne and @OneToMany(mappedBy="...")
-            addOneToManyAttached();
+            addOneToManyAttached(fakeOneToManyBidirectional);
         } else {
             // All other kinds of relations require a middle (join) table.
             addWithMiddleTable();
@@ -161,7 +167,10 @@ public final class CollectionMetadataGenerator {
     }
 
     @SuppressWarnings({"unchecked"})
-    private void addOneToManyAttached() {
+    private void addOneToManyAttached(boolean fakeOneToManyBidirectional) {
+        log.debug("Adding audit mapping for property " + referencingEntityName + "." + propertyName +
+                ": one-to-many collection, using a join column on the referenced entity.");
+
         String mappedBy = getMappedBy(propertyValue);
 
         IdMappingData referencedIdMapping = mainGenerator.getReferencedIdMappingData(referencingEntityName,
@@ -200,9 +209,29 @@ public final class CollectionMetadataGenerator {
         // Checking the type of the collection and adding an appropriate mapper.
         addMapper(commonCollectionMapperData, elementComponentData, indexComponentData);
 
+        PropertyMapper fakeBidirectionalRelationMapper;
+        if (fakeOneToManyBidirectional) {
+            // In case of a fake many-to-one bidirectional relation, we have to generate a mapper which maps
+            // the mapped-by property name to the id of the related entity (which is the owner of the collection).
+            String auditMappedBy = propertyAuditingData.getAuditMappedBy();
+
+            // Creating a prefixed relation mapper.
+            IdMapper relMapper = referencingIdMapping.getIdMapper().prefixMappedProperties(
+                    MappingTools.createToOneRelationPrefix(auditMappedBy));
+
+            fakeBidirectionalRelationMapper = new ToOneIdMapper(
+                    relMapper,
+                    // The mapper will only be used to map from entity to map, so no need to provide other details
+                    // when constructing the PropertyData.
+                    new PropertyData(auditMappedBy, null, null, null),
+                    referencedEntityName);
+        } else {
+            fakeBidirectionalRelationMapper = null;
+        }
+
         // Storing information about this relation.
         referencingEntityConfiguration.addToManyNotOwningRelation(propertyName, mappedBy,
-                referencedEntityName, referencingIdData.getPrefixedMapper());
+                referencedEntityName, referencingIdData.getPrefixedMapper(), fakeBidirectionalRelationMapper);
     }
 
     /**
@@ -237,6 +266,9 @@ public final class CollectionMetadataGenerator {
 
     @SuppressWarnings({"unchecked"})
     private void addWithMiddleTable() {
+        log.debug("Adding audit mapping for property " + referencingEntityName + "." + propertyName +
+                ": collection with a join table.");
+
         // Generating the name of the middle table
         String auditMiddleTableName;
         String auditMiddleEntityName;
@@ -248,6 +280,8 @@ public final class CollectionMetadataGenerator {
             auditMiddleTableName = mainGenerator.getVerEntCfg().getAuditTableName(null, middleTableName);
             auditMiddleEntityName = mainGenerator.getVerEntCfg().getAuditEntityName(middleTableName);
         }
+
+        log.debug("Using join table name: " + auditMiddleTableName);
 
         // Generating the XML mapping for the middle entity, only if the relation isn't inverse.
         // If the relation is inverse, will be later checked by comparing middleEntityXml with null.
@@ -413,8 +447,8 @@ public final class CollectionMetadataGenerator {
         } else {
             // Last but one parameter: collection components are always insertable
             boolean mapped = mainGenerator.getBasicMetadataGenerator().addBasic(xmlMapping,
-                    new PropertyAuditingData(prefix, "field", ModificationStore.FULL, RelationTargetAuditMode.AUDITED), value, null,
-                    true, true);
+                    new PropertyAuditingData(prefix, "field", ModificationStore.FULL, RelationTargetAuditMode.AUDITED, null, null),
+                    value, null, true, true);
 
             if (mapped) {
                 // Simple values are always stored in the first item of the array returned by the query generator.
@@ -499,10 +533,34 @@ public final class CollectionMetadataGenerator {
         return middleEntityXmlId;
     }
 
+    private String getMappedByCommon(PersistentClass referencedClass) {
+        // If there's an @AuditMappedBy specified, returning it directly.
+        String auditMappedBy = propertyAuditingData.getAuditMappedBy();
+        if (auditMappedBy != null) {
+            // Checking that the property exists.
+            try {
+                referencedClass.getProperty(auditMappedBy);
+            } catch (MappingException me) {
+                throw new MappingException("@AuditMappedBy points to a property that can be read: " +
+                    referencedClass.getEntityName() + "." + auditMappedBy, me);
+            }
+
+            return auditMappedBy;
+        }
+
+        return null;
+    }
+
     @SuppressWarnings({"unchecked"})
     private String getMappedBy(Collection collectionValue) {
-        Iterator<Property> assocClassProps =
-                ((OneToMany) collectionValue.getElement()).getAssociatedClass().getPropertyIterator();
+        PersistentClass referencedClass = ((OneToMany) collectionValue.getElement()).getAssociatedClass();
+
+        String mappedByCommon = getMappedByCommon(referencedClass);
+        if (mappedByCommon != null) {
+            return mappedByCommon;
+        }
+
+        Iterator<Property> assocClassProps = referencedClass.getPropertyIterator();
 
         while (assocClassProps.hasNext()) {
             Property property = assocClassProps.next();
@@ -519,6 +577,11 @@ public final class CollectionMetadataGenerator {
 
     @SuppressWarnings({"unchecked"})
     private String getMappedBy(Table collectionTable, PersistentClass referencedClass) {
+        String mappedByCommon = getMappedByCommon(referencedClass);
+        if (mappedByCommon != null) {
+            return mappedByCommon;
+        }
+
         Iterator<Property> properties = referencedClass.getPropertyIterator();
         while (properties.hasNext()) {
             Property property = properties.next();

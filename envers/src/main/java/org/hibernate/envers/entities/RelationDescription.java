@@ -24,6 +24,7 @@
 package org.hibernate.envers.entities;
 
 import org.hibernate.envers.entities.mapper.id.IdMapper;
+import org.hibernate.envers.entities.mapper.PropertyMapper;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -34,15 +35,18 @@ public class RelationDescription {
     private final String toEntityName;
     private final String mappedByPropertyName;
     private final IdMapper idMapper;
+    private final PropertyMapper fakeBidirectionalRelationMapper;
     private boolean bidirectional;
 
     public RelationDescription(String fromPropertyName, RelationType relationType, String toEntityName,
-                               String mappedByPropertyName, IdMapper idMapper) {
+                               String mappedByPropertyName, IdMapper idMapper,
+                               PropertyMapper fakeBidirectionalRelationMapper) {
         this.fromPropertyName = fromPropertyName;
         this.relationType = relationType;
         this.toEntityName = toEntityName;
         this.mappedByPropertyName = mappedByPropertyName;
         this.idMapper = idMapper;
+        this.fakeBidirectionalRelationMapper = fakeBidirectionalRelationMapper;
 
         this.bidirectional = false;
     }
@@ -65,6 +69,10 @@ public class RelationDescription {
 
     public IdMapper getIdMapper() {
         return idMapper;
+    }
+
+    public PropertyMapper getFakeBidirectionalRelationMapper() {
+        return fakeBidirectionalRelationMapper;
     }
 
     public boolean isBidirectional() {

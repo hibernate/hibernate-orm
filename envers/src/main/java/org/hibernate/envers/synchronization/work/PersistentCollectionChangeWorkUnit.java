@@ -34,7 +34,6 @@ import org.hibernate.envers.configuration.AuditEntitiesConfiguration;
 import org.hibernate.envers.entities.mapper.PersistentCollectionChangeData;
 
 import org.hibernate.Session;
-import org.hibernate.persister.collection.AbstractCollectionPersister;
 import org.hibernate.engine.CollectionEntry;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.collection.PersistentCollection;
@@ -48,11 +47,11 @@ public class PersistentCollectionChangeWorkUnit extends AbstractAuditWorkUnit im
 
     public PersistentCollectionChangeWorkUnit(SessionImplementor sessionImplementor, String entityName,
 											  AuditConfiguration auditCfg, PersistentCollection collection,
-											  CollectionEntry collectionEntry, Serializable snapshot, Serializable id) {
+											  CollectionEntry collectionEntry, Serializable snapshot, Serializable id,
+                                              String referencingPropertyName) {
         super(sessionImplementor, entityName, auditCfg, new PersistentCollectionChangeWorkUnitId(id, collectionEntry.getRole()));
 
-		String ownerEntityName = ((AbstractCollectionPersister) collectionEntry.getLoadedPersister()).getOwnerEntityName();
-		referencingPropertyName = collectionEntry.getRole().substring(ownerEntityName.length() + 1);
+		this.referencingPropertyName = referencingPropertyName;
 
         collectionChanges = auditCfg.getEntCfg().get(getEntityName()).getPropertyMapper()
                 .mapCollectionChanges(referencingPropertyName, collection, snapshot, id);
@@ -70,6 +69,10 @@ public class PersistentCollectionChangeWorkUnit extends AbstractAuditWorkUnit im
 
     public boolean containsWork() {
         return collectionChanges != null && collectionChanges.size() != 0;
+    }
+
+    public Map<String, Object> generateData(Object revisionData) {
+        throw new UnsupportedOperationException("Cannot generate data for a collection change work unit!");
     }
 
     @SuppressWarnings({"unchecked"})
@@ -106,6 +109,10 @@ public class PersistentCollectionChangeWorkUnit extends AbstractAuditWorkUnit im
     }
 
     public AuditWorkUnit merge(CollectionChangeWorkUnit second) {
+        return null;
+    }
+
+    public AuditWorkUnit merge(FakeBidirectionalRelationWorkUnit second) {
         return null;
     }
 

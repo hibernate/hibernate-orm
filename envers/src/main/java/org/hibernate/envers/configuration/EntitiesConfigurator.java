@@ -60,30 +60,36 @@ public class EntitiesConfigurator {
                                             Document revisionInfoXmlMapping, Element revisionInfoRelationMapping) {
         // Creating a name register to capture all audit entity names created.
         AuditEntityNameRegister auditEntityNameRegister = new AuditEntityNameRegister();
-
-        AuditMetadataGenerator auditMetaGen = new AuditMetadataGenerator(cfg, globalCfg, verEntCfg,
-                revisionInfoRelationMapping, auditEntityNameRegister);
         DOMWriter writer = new DOMWriter();
 
         // Sorting the persistent class topologically - superclass always before subclass
         Iterator<PersistentClass> classes = GraphTopologicalSort.sort(new PersistentClassGraphDefiner(cfg)).iterator();
 
-        Map<PersistentClass, ClassAuditingData> pcDatas =
-                new HashMap<PersistentClass, ClassAuditingData>();
+        ClassesAuditingData classesAuditingData = new ClassesAuditingData();
         Map<PersistentClass, EntityXmlMappingData> xmlMappings = new HashMap<PersistentClass, EntityXmlMappingData>();
 
-        // First pass
+        // Reading metadata from annotations
         while (classes.hasNext()) {
             PersistentClass pc = classes.next();
+
             // Collecting information from annotations on the persistent class pc
             AnnotationsMetadataReader annotationsMetadataReader =
                     new AnnotationsMetadataReader(globalCfg, reflectionManager, pc);
             ClassAuditingData auditData = annotationsMetadataReader.getAuditData();
 
+            classesAuditingData.addClassAuditingData(pc, auditData);
+        }
+
+        AuditMetadataGenerator auditMetaGen = new AuditMetadataGenerator(cfg, globalCfg, verEntCfg,
+                revisionInfoRelationMapping, auditEntityNameRegister, classesAuditingData);
+
+        // First pass
+        for (Map.Entry<PersistentClass, ClassAuditingData> pcDatasEntry : classesAuditingData.getAllClassAuditedData()) {
+            PersistentClass pc = pcDatasEntry.getKey();
+            ClassAuditingData auditData = pcDatasEntry.getValue();
+
             EntityXmlMappingData xmlMappingData = new EntityXmlMappingData();
             if (auditData.isAudited()) {
-                pcDatas.put(pc, auditData);
-
                 if (!StringTools.isEmpty(auditData.getAuditTable().value())) {
                     verEntCfg.addCustomAuditTableName(pc.getEntityName(), auditData.getAuditTable().value());
                 }
@@ -97,31 +103,29 @@ public class EntitiesConfigurator {
         }
 
         // Second pass
-        for (Map.Entry<PersistentClass, ClassAuditingData> pcDatasEntry : pcDatas.entrySet()) {
+        for (Map.Entry<PersistentClass, ClassAuditingData> pcDatasEntry : classesAuditingData.getAllClassAuditedData()) {
             EntityXmlMappingData xmlMappingData = xmlMappings.get(pcDatasEntry.getKey());
 
-            auditMetaGen.generateSecondPass(pcDatasEntry.getKey(), pcDatasEntry.getValue(), xmlMappingData);
+            if (pcDatasEntry.getValue().isAudited()) {
+                auditMetaGen.generateSecondPass(pcDatasEntry.getKey(), pcDatasEntry.getValue(), xmlMappingData);
+                try {
+                    cfg.addDocument(writer.write(xmlMappingData.getMainXmlMapping()));
+                    //writeDocument(xmlMappingData.getMainXmlMapping());
 
-            try {
-                cfg.addDocument(writer.write(xmlMappingData.getMainXmlMapping()));
-                // TODO
-                //writeDocument(xmlMappingData.getMainXmlMapping());
-
-                for (Document additionalMapping : xmlMappingData.getAdditionalXmlMappings()) {
-                    cfg.addDocument(writer.write(additionalMapping));
-                    // TODO
-                    //writeDocument(additionalMapping);
+                    for (Document additionalMapping : xmlMappingData.getAdditionalXmlMappings()) {
+                        cfg.addDocument(writer.write(additionalMapping));
+                        //writeDocument(additionalMapping);
+                    }
+                } catch (DocumentException e) {
+                    throw new MappingException(e);
                 }
-            } catch (DocumentException e) {
-                throw new MappingException(e);
             }
         }
 
         // Only if there are any versioned classes
-        if (pcDatas.size() > 0) {
+        if (classesAuditingData.getAllClassAuditedData().size() > 0) {
             try {
                 if (revisionInfoXmlMapping !=  null) {
-                    // TODO
                     //writeDocument(revisionInfoXmlMapping);
                     cfg.addDocument(writer.write(revisionInfoXmlMapping));
                 }
@@ -134,7 +138,7 @@ public class EntitiesConfigurator {
 				auditMetaGen.getNotAuditedEntitiesConfigurations());
     }
 
-    // todo
+    @SuppressWarnings({"UnusedDeclaration"})
     private void writeDocument(Document e) {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         Writer w = new PrintWriter(baos);

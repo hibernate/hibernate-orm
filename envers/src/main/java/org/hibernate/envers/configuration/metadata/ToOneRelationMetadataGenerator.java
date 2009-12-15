@@ -32,17 +32,23 @@ import org.hibernate.envers.entities.mapper.id.IdMapper;
 import org.hibernate.envers.entities.mapper.relation.OneToOneNotOwningMapper;
 import org.hibernate.envers.entities.mapper.relation.ToOneIdMapper;
 import org.hibernate.envers.configuration.metadata.reader.PropertyAuditingData;
+import org.hibernate.envers.configuration.metadata.reader.ClassAuditingData;
+import org.hibernate.envers.tools.MappingTools;
 
 import org.hibernate.MappingException;
 import org.hibernate.mapping.OneToOne;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.Value;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Generates metadata for to-one relations (reference-valued properties).
  * @author Adam Warski (adam at warski dot org)
  */
 public final class ToOneRelationMetadataGenerator {
+    private static final Logger log = LoggerFactory.getLogger(ToOneRelationMetadataGenerator.class);
+
     private final AuditMetadataGenerator mainGenerator;
 
     ToOneRelationMetadataGenerator(AuditMetadataGenerator auditMetadataGenerator) {
@@ -57,7 +63,7 @@ public final class ToOneRelationMetadataGenerator {
         IdMappingData idMapping = mainGenerator.getReferencedIdMappingData(entityName, referencedEntityName,
                 propertyAuditingData, true);
 
-        String lastPropertyPrefix = propertyAuditingData.getName() + "_";
+        String lastPropertyPrefix = MappingTools.createToOneRelationPrefix(propertyAuditingData.getName());
 
         // Generating the id mapper for the relation
         IdMapper relMapper = idMapping.getIdMapper().prefixMappedProperties(lastPropertyPrefix);
@@ -65,6 +71,30 @@ public final class ToOneRelationMetadataGenerator {
         // Storing information about this relation
         mainGenerator.getEntitiesConfigurations().get(entityName).addToOneRelation(
                 propertyAuditingData.getName(), referencedEntityName, relMapper);
+
+        // If the property isn't insertable, checking if this is not a "fake" bidirectional many-to-one relationship,
+        // that is, when the one side owns the relation (and is a collection), and the many side is non insertable.
+        // When that's the case and the user specified to store this relation without a middle table (using
+        // @AuditMappedBy), we have to make the property insertable for the purposes of Envers. In case of changes to
+        // the entity that didn't involve the relation, it's value will then be stored properly. In case of changes
+        // to the entity that did involve the relation, it's the responsibility of the collection side to store the
+        // proper data.
+        if (!insertable) {
+            ClassAuditingData referencedAuditingData = mainGenerator.getClassesAuditingData().getClassAuditingData(referencedEntityName);
+
+            // Looking through the properties of the referenced entity to find the right property.
+            for (String referencedPropertyName : referencedAuditingData.getPropertyNames()) {
+                String auditMappedBy = referencedAuditingData.getPropertyAuditingData(referencedPropertyName).getAuditMappedBy();
+                if (propertyAuditingData.getName().equals(auditMappedBy)) {
+                    log.debug("Non-insertable property " + entityName + "." + propertyAuditingData.getName() +
+                            " will be made insertable because a matching @AuditMappedBy was found in the " +
+                            referencedEntityName + " entity.");
+
+                    insertable = true;
+                    break;
+                }
+            }
+        }
 
         // Adding an element to the mapping corresponding to the references entity id's
         Element properties = (Element) idMapping.getXmlRelationMapping().clone();
@@ -97,7 +127,7 @@ public final class ToOneRelationMetadataGenerator {
             throw new MappingException("An audited relation to a non-audited entity " + entityName + "!");
         }
 
-        String lastPropertyPrefix = owningReferencePropertyName + "_";
+        String lastPropertyPrefix = MappingTools.createToOneRelationPrefix(owningReferencePropertyName);
         String referencedEntityName = propertyValue.getReferencedEntityName();
 
         // Generating the id mapper for the relation

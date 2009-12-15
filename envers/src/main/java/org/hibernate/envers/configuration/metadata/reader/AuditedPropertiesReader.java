@@ -14,12 +14,7 @@ import javax.persistence.Version;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.annotations.common.reflection.ReflectionManager;
-import org.hibernate.envers.AuditJoinTable;
-import org.hibernate.envers.AuditOverride;
-import org.hibernate.envers.AuditOverrides;
-import org.hibernate.envers.Audited;
-import org.hibernate.envers.ModificationStore;
-import org.hibernate.envers.NotAudited;
+import org.hibernate.envers.*;
 import org.hibernate.envers.configuration.GlobalConfiguration;
 import org.hibernate.envers.tools.MappingTools;
 import org.hibernate.mapping.Component;
@@ -177,9 +172,20 @@ public class AuditedPropertiesReader {
 			return false; // not audited due to AuditOverride annotation
 		}
 		addPropertyMapKey(property, propertyData);
+        setPropertyAuditMappedBy(property, propertyData);
 
 		return true;
 	}
+
+    private void setPropertyAuditMappedBy(XProperty property, PropertyAuditingData propertyData) {
+        AuditMappedBy auditMappedBy = property.getAnnotation(AuditMappedBy.class);
+        if (auditMappedBy != null) {
+		    propertyData.setAuditMappedBy(auditMappedBy.mappedBy());
+            if (!"".equals(auditMappedBy.positionMappedBy())) {
+                propertyData.setPositionMappedBy(auditMappedBy.positionMappedBy());
+            }
+        }
+    }
 
 	private void addPropertyMapKey(XProperty property, PropertyAuditingData propertyData) {
 		MapKey mapKey = property.getAnnotation(MapKey.class);
@@ -254,7 +260,7 @@ public class AuditedPropertiesReader {
 		public Class<? extends Annotation> annotationType() { return this.getClass(); }
 	};
 
-	private class ComponentPropertiesSource implements PersistentPropertiesSource {
+    private class ComponentPropertiesSource implements PersistentPropertiesSource {
 		private final XClass xclass;
 		private final Component component;
 

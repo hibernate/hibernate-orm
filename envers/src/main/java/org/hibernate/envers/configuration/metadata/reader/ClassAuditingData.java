@@ -57,6 +57,10 @@ public class ClassAuditingData implements AuditedPropertiesHolder {
         return properties.get(propertyName);
     }
 
+    public Iterable<String> getPropertyNames() {
+        return properties.keySet();
+    }
+
     public Map<String, String> getSecondaryTableDictionary() {
         return secondaryTableDictionary;
     }

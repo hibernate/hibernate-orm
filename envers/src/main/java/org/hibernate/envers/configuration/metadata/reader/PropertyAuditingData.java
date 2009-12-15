@@ -46,17 +46,22 @@ public class PropertyAuditingData {
     private String accessType;
     private final List<AuditOverride> auditJoinTableOverrides = new ArrayList<AuditOverride>(0);
 	private RelationTargetAuditMode relationTargetAuditMode;
+    private String auditMappedBy;
+    private String positionMappedBy;
 
 	public PropertyAuditingData() {
     }
 
     public PropertyAuditingData(String name, String accessType, ModificationStore store,
-								RelationTargetAuditMode relationTargetAuditMode) {
+								RelationTargetAuditMode relationTargetAuditMode,
+                                String auditMappedBy, String positionMappedBy) {
         this.name = name;
 		this.beanName = name;
         this.accessType = accessType;
         this.store = store;
 		this.relationTargetAuditMode = relationTargetAuditMode;
+        this.auditMappedBy = auditMappedBy;
+        this.positionMappedBy = positionMappedBy;
     }
 
 	public String getName() {
@@ -115,7 +120,23 @@ public class PropertyAuditingData {
 		return auditJoinTableOverrides;
 	}
 
-	public void addAuditingOverride(AuditOverride annotation) {
+    public String getAuditMappedBy() {
+        return auditMappedBy;
+    }
+
+    public void setAuditMappedBy(String auditMappedBy) {
+        this.auditMappedBy = auditMappedBy;
+    }
+
+    public String getPositionMappedBy() {
+        return positionMappedBy;
+    }
+
+    public void setPositionMappedBy(String positionMappedBy) {
+        this.positionMappedBy = positionMappedBy;
+    }
+
+    public void addAuditingOverride(AuditOverride annotation) {
 		if (annotation != null) {
 			String overrideName = annotation.name();
 			boolean present = false;

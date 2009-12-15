@@ -449,6 +449,13 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 	/**
 	 * {@inheritDoc}
 	 */
+	public HibernateEntityManagerFactory getFactory() {
+		return entityManagerFactory;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
 	public CriteriaBuilder getCriteriaBuilder() {
 		return getEntityManagerFactory().getCriteriaBuilder();
 	}

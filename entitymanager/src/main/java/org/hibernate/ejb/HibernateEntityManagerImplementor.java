@@ -37,6 +37,13 @@ import org.hibernate.LockOptions;
  */
 public interface HibernateEntityManagerImplementor extends HibernateEntityManager {
 	/**
+	 * Get access to the Hibernate extended EMF contract.
+	 *
+	 * @return The Hibernate EMF contract for this EM.
+	 */
+	public HibernateEntityManagerFactory getFactory();
+
+	/**
 	 * Provides access to whether a transaction is currently in progress.
 	 *
 	 * @return True if a transaction is considered currently in progress; false otherwise.

@@ -49,20 +49,26 @@ public class ToOneIdMapper implements PropertyMapper {
     private final IdMapper delegate;
     private final PropertyData propertyData;
     private final String referencedEntityName;
+    private final boolean nonInsertableFake;
 
-    public ToOneIdMapper(IdMapper delegate, PropertyData propertyData, String referencedEntityName) {
+    public ToOneIdMapper(IdMapper delegate, PropertyData propertyData, String referencedEntityName, boolean nonInsertableFake) {
         this.delegate = delegate;
         this.propertyData = propertyData;
         this.referencedEntityName = referencedEntityName;
+        this.nonInsertableFake = nonInsertableFake;
     }
 
     public boolean mapToMapFromEntity(SessionImplementor session, Map<String, Object> data, Object newObj, Object oldObj) {
         HashMap<String, Object> newData = new HashMap<String, Object>();
         data.put(propertyData.getName(), newData);
 
-        delegate.mapToMapFromEntity(newData, newObj);
+        // If this property is originally non-insertable, but made insertable because it is in a many-to-one "fake"
+        // bi-directional relation, we always store the "old", unchaged data, to prevent storing changes made
+        // to this field. It is the responsibility of the collection to properly update it if it really changed.
+        delegate.mapToMapFromEntity(newData, nonInsertableFake ? oldObj : newObj);
 
-        return !Tools.entitiesEqual(session, newObj, oldObj);
+        //noinspection SimplifiableConditionalExpression
+        return nonInsertableFake ? false : !Tools.entitiesEqual(session, newObj, oldObj);
     }
 
     public void mapToEntityFromMap(AuditConfiguration verCfg, Object obj, Map data, Object primaryKey,

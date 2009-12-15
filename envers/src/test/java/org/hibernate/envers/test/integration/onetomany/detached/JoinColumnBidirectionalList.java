@@ -86,12 +86,27 @@ public class JoinColumnBidirectionalList extends AbstractEntityTest {
         em.getTransaction().commit();
         em.clear();
 
+        // No revision - no changes
+        em.getTransaction().begin();
+
+        ing1 = em.find(ListJoinColumnBidirectionalRefIngEntity.class, ing1.getId());
+        ing2 = em.find(ListJoinColumnBidirectionalRefIngEntity.class, ing2.getId());
+        ed1 = em.find(ListJoinColumnBidirectionalRefEdEntity.class, ed1.getId());
+        ed2 = em.find(ListJoinColumnBidirectionalRefEdEntity.class, ed2.getId());
+
+        ed2.setOwner(ing2);
+
+        em.getTransaction().commit();
+        em.clear();
+
         // Revision 3 (ing1: ed1, ed2)
         em.getTransaction().begin();
 
         ed1 = em.find(ListJoinColumnBidirectionalRefEdEntity.class, ed1.getId());
 
         ed1.setData("ed1 bis");
+        // Shouldn't get written
+        ed1.setOwner(ing2);
 
         em.getTransaction().commit();
         em.clear();

@@ -36,17 +36,19 @@ public class RelationDescription {
     private final String mappedByPropertyName;
     private final IdMapper idMapper;
     private final PropertyMapper fakeBidirectionalRelationMapper;
+    private final boolean insertable;
     private boolean bidirectional;
 
     public RelationDescription(String fromPropertyName, RelationType relationType, String toEntityName,
                                String mappedByPropertyName, IdMapper idMapper,
-                               PropertyMapper fakeBidirectionalRelationMapper) {
+                               PropertyMapper fakeBidirectionalRelationMapper, boolean insertable) {
         this.fromPropertyName = fromPropertyName;
         this.relationType = relationType;
         this.toEntityName = toEntityName;
         this.mappedByPropertyName = mappedByPropertyName;
         this.idMapper = idMapper;
         this.fakeBidirectionalRelationMapper = fakeBidirectionalRelationMapper;
+        this.insertable = insertable;
 
         this.bidirectional = false;
     }
@@ -73,6 +75,10 @@ public class RelationDescription {
 
     public PropertyMapper getFakeBidirectionalRelationMapper() {
         return fakeBidirectionalRelationMapper;
+    }
+
+    public boolean isInsertable() {
+        return insertable;
     }
 
     public boolean isBidirectional() {

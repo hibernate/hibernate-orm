@@ -70,7 +70,7 @@ public final class ToOneRelationMetadataGenerator {
 
         // Storing information about this relation
         mainGenerator.getEntitiesConfigurations().get(entityName).addToOneRelation(
-                propertyAuditingData.getName(), referencedEntityName, relMapper);
+                propertyAuditingData.getName(), referencedEntityName, relMapper, insertable);
 
         // If the property isn't insertable, checking if this is not a "fake" bidirectional many-to-one relationship,
         // that is, when the one side owns the relation (and is a collection), and the many side is non insertable.
@@ -79,6 +79,7 @@ public final class ToOneRelationMetadataGenerator {
         // the entity that didn't involve the relation, it's value will then be stored properly. In case of changes
         // to the entity that did involve the relation, it's the responsibility of the collection side to store the
         // proper data.
+        boolean nonInsertableFake = false;
         if (!insertable) {
             ClassAuditingData referencedAuditingData = mainGenerator.getClassesAuditingData().getClassAuditingData(referencedEntityName);
 
@@ -91,6 +92,7 @@ public final class ToOneRelationMetadataGenerator {
                             referencedEntityName + " entity.");
 
                     insertable = true;
+                    nonInsertableFake = true;
                     break;
                 }
             }
@@ -106,7 +108,7 @@ public final class ToOneRelationMetadataGenerator {
 
         // Adding mapper for the id
         PropertyData propertyData = propertyAuditingData.getPropertyData();
-        mapper.addComposite(propertyData, new ToOneIdMapper(relMapper, propertyData, referencedEntityName));
+        mapper.addComposite(propertyData, new ToOneIdMapper(relMapper, propertyData, referencedEntityName, nonInsertableFake));
     }
 
     @SuppressWarnings({"unchecked"})

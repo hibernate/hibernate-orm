@@ -84,7 +84,8 @@ public class AuditEventListener implements PostInsertEventListener, PostUpdateEv
         for (int i=0; i<propertyNames.length; i++) {
             String propertyName = propertyNames[i];
             RelationDescription relDesc = verCfg.getEntCfg().getRelationDescription(entityName, propertyName);
-            if (relDesc != null && relDesc.isBidirectional() && relDesc.getRelationType() == RelationType.TO_ONE) {
+            if (relDesc != null && relDesc.isBidirectional() && relDesc.getRelationType() == RelationType.TO_ONE &&
+                    relDesc.isInsertable()) {
                 // Checking for changes
                 Object oldValue = oldState == null ? null : oldState[i];
                 Object newValue = newState == null ? null : newState[i];
@@ -144,11 +145,14 @@ public class AuditEventListener implements PostInsertEventListener, PostUpdateEv
         if (verCfg.getEntCfg().isVersioned(entityName)) {
             AuditSync verSync = verCfg.getSyncManager().get(event.getSession());
 
-            verSync.addWorkUnit(new AddWorkUnit(event.getSession(), event.getPersister().getEntityName(), verCfg,
-					event.getId(), event.getPersister(), event.getState()));
+            AuditWorkUnit workUnit = new AddWorkUnit(event.getSession(), event.getPersister().getEntityName(), verCfg,
+                    event.getId(), event.getPersister(), event.getState());
+            verSync.addWorkUnit(workUnit);
 
-            generateBidirectionalCollectionChangeWorkUnits(verSync, event.getPersister(), entityName, event.getState(),
-                    null, event.getSession());
+            if (workUnit.containsWork()) {
+                generateBidirectionalCollectionChangeWorkUnits(verSync, event.getPersister(), entityName, event.getState(),
+                        null, event.getSession());
+            }
         }
     }
 
@@ -158,11 +162,14 @@ public class AuditEventListener implements PostInsertEventListener, PostUpdateEv
         if (verCfg.getEntCfg().isVersioned(entityName)) {
             AuditSync verSync = verCfg.getSyncManager().get(event.getSession());
 
-            verSync.addWorkUnit(new ModWorkUnit(event.getSession(), event.getPersister().getEntityName(), verCfg,
-					event.getId(), event.getPersister(), event.getState(), event.getOldState()));
+            AuditWorkUnit workUnit = new ModWorkUnit(event.getSession(), event.getPersister().getEntityName(), verCfg,
+                    event.getId(), event.getPersister(), event.getState(), event.getOldState());
+            verSync.addWorkUnit(workUnit);
 
-            generateBidirectionalCollectionChangeWorkUnits(verSync, event.getPersister(), entityName, event.getState(),
-                    event.getOldState(), event.getSession());
+            if (workUnit.containsWork()) {
+                generateBidirectionalCollectionChangeWorkUnits(verSync, event.getPersister(), entityName, event.getState(),
+                        event.getOldState(), event.getSession());
+            }
         }
     }
 
@@ -172,11 +179,14 @@ public class AuditEventListener implements PostInsertEventListener, PostUpdateEv
         if (verCfg.getEntCfg().isVersioned(entityName)) {
             AuditSync verSync = verCfg.getSyncManager().get(event.getSession());
 
-            verSync.addWorkUnit(new DelWorkUnit(event.getSession(), event.getPersister().getEntityName(), verCfg,
-					event.getId(), event.getPersister(), event.getDeletedState()));
+            AuditWorkUnit workUnit = new DelWorkUnit(event.getSession(), event.getPersister().getEntityName(), verCfg,
+                    event.getId(), event.getPersister(), event.getDeletedState());
+            verSync.addWorkUnit(workUnit);
 
-            generateBidirectionalCollectionChangeWorkUnits(verSync, event.getPersister(), entityName, null,
-                    event.getDeletedState(), event.getSession());
+            if (workUnit.containsWork()) {
+                generateBidirectionalCollectionChangeWorkUnits(verSync, event.getPersister(), entityName, null,
+                        event.getDeletedState(), event.getSession());
+            }
         }
     }
 

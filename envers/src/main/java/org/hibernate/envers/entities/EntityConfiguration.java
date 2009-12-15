@@ -51,31 +51,31 @@ public class EntityConfiguration {
         this.relations = new HashMap<String, RelationDescription>();
     }
 
-    public void addToOneRelation(String fromPropertyName, String toEntityName, IdMapper idMapper) {
+    public void addToOneRelation(String fromPropertyName, String toEntityName, IdMapper idMapper, boolean insertable) {
         relations.put(fromPropertyName, new RelationDescription(fromPropertyName, RelationType.TO_ONE,
-                toEntityName, null, idMapper, null));
+                toEntityName, null, idMapper, null, insertable));
     }
 
     public void addToOneNotOwningRelation(String fromPropertyName, String mappedByPropertyName, String toEntityName,
                                     IdMapper idMapper) {
         relations.put(fromPropertyName, new RelationDescription(fromPropertyName, RelationType.TO_ONE_NOT_OWNING,
-                toEntityName, mappedByPropertyName, idMapper, null));
+                toEntityName, mappedByPropertyName, idMapper, null, true));
     }
 
     public void addToManyNotOwningRelation(String fromPropertyName, String mappedByPropertyName, String toEntityName,
                                      IdMapper idMapper, PropertyMapper fakeBidirectionalRelationMapper) {
         relations.put(fromPropertyName, new RelationDescription(fromPropertyName, RelationType.TO_MANY_NOT_OWNING,
-                toEntityName, mappedByPropertyName, idMapper, fakeBidirectionalRelationMapper));
+                toEntityName, mappedByPropertyName, idMapper, fakeBidirectionalRelationMapper, true));
     }
 
     public void addToManyMiddleRelation(String fromPropertyName, String toEntityName) {
         relations.put(fromPropertyName, new RelationDescription(fromPropertyName, RelationType.TO_MANY_MIDDLE,
-                toEntityName, null, null, null));
+                toEntityName, null, null, null, true));
     }
 
     public void addToManyMiddleNotOwningRelation(String fromPropertyName, String mappedByPropertyName, String toEntityName) {
         relations.put(fromPropertyName, new RelationDescription(fromPropertyName, RelationType.TO_MANY_MIDDLE_NOT_OWNING,
-                toEntityName, mappedByPropertyName, null, null));
+                toEntityName, mappedByPropertyName, null, null, true));
     }
 
     public boolean isRelation(String propertyName) {

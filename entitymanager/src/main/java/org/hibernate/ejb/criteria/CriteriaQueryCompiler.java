@@ -39,6 +39,9 @@ import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.ParameterExpression;
 
 import org.hibernate.ejb.HibernateEntityManagerImplementor;
+import org.hibernate.engine.SessionFactoryImplementor;
+import org.hibernate.type.Type;
+import org.hibernate.type.TypeFactory;
 import org.hibernate.util.StringHelper;
 
 /**
@@ -61,6 +64,8 @@ public class CriteriaQueryCompiler {
 
 		public void registerExplicitParameter(ParameterExpression<?> criteriaQueryParameter, String jpaqlParameterName);
 		public void registerImplicitParameterBinding(ImplicitParameterBinding binding);
+
+		public String getCastType(Class javaType);
 	}
 
 	public static interface RenderedCriteriaQuery {
@@ -105,6 +110,25 @@ public class CriteriaQueryCompiler {
 
 			public void registerImplicitParameterBinding(ImplicitParameterBinding binding) {
 				implicitParameterBindings.add( binding );
+			}
+
+			public String getCastType(Class javaType) {
+				SessionFactoryImplementor factory =
+						( SessionFactoryImplementor ) entityManager.getFactory().getSessionFactory();
+				Type hibernateType = TypeFactory.heuristicType( javaType.getName() );
+				if ( hibernateType == null ) {
+					throw new IllegalArgumentException(
+							"Could not convert java type [" + javaType.getName() + "] to Hibernate type"
+					);
+				}
+				int[] sqlTypeCodes = hibernateType.sqlTypes( factory );
+				if ( sqlTypeCodes.length != 1 ) {
+					throw new IllegalArgumentException(
+							"Invalid Hibernate Type [" + hibernateType.getName() +
+									"] for cast : more than one column spanned"
+					);
+				}
+				return factory.getDialect().getCastTypeName( sqlTypeCodes[0] );
 			}
 		};
 

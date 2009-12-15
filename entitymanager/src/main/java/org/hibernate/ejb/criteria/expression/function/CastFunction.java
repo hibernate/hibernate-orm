@@ -58,9 +58,12 @@ public class CastFunction<T,Y> extends BasicFunctionExpression<T> implements Fun
 		Helper.possibleParameter( getCastSource(), registry );
 	}
 
+	@Override
 	public String render(CriteriaQueryCompiler.RenderingContext renderingContext) {
-		// HHH-4590
-		// todo : how to handle these, espeically if in the select...
-		return super.render( renderingContext );
+		return CAST_NAME + '(' +
+				castSource.render( renderingContext ) +
+				" as " +
+				renderingContext.getCastType( getJavaType() ) +
+				')';
 	}
 }

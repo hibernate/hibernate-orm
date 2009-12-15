@@ -8,6 +8,8 @@ import org.hibernate.envers.RevisionType;
 import java.io.Serializable;
 import java.util.Map;
 import java.util.HashMap;
+import java.util.Set;
+import java.util.HashSet;
 
 /**
  * A work unit that handles "fake" bidirectional one-to-many relations (mapped with {@code @OneToMany+@JoinColumn} and
@@ -15,44 +17,49 @@ import java.util.HashMap;
  * @author Adam Warski (adam at warski dot org)
  */
 public class FakeBidirectionalRelationWorkUnit extends AbstractAuditWorkUnit implements AuditWorkUnit {
-    private final Object owningEntity;
-    private final RelationDescription rd;
-    private final RevisionType revisionType;
+    private final Map<String, FakeRelationChange> fakeRelationChanges;
 
     /*
      * The work unit responsible for generating the "raw" entity data to be saved.
      */
     private final AuditWorkUnit nestedWorkUnit;
 
-
     public FakeBidirectionalRelationWorkUnit(SessionImplementor sessionImplementor, String entityName,
-                                             AuditConfiguration verCfg, Serializable id, Object owningEntity,
+                                             AuditConfiguration verCfg, Serializable id,
+                                             String referencingPropertyName, Object owningEntity,
                                              RelationDescription rd, RevisionType revisionType,
                                              AuditWorkUnit nestedWorkUnit) {
         super(sessionImplementor, entityName, verCfg, id);
+        this.nestedWorkUnit = nestedWorkUnit;
 
+        // Adding the change for the relation.
+        fakeRelationChanges = new HashMap<String, FakeRelationChange>();
+        fakeRelationChanges.put(referencingPropertyName, new FakeRelationChange(owningEntity, rd, revisionType));
+    }
 
-        this.owningEntity = owningEntity;
-        this.rd = rd;
-        this.revisionType = revisionType;
+    public FakeBidirectionalRelationWorkUnit(FakeBidirectionalRelationWorkUnit original,
+                                             Map<String, FakeRelationChange> fakeRelationChanges,
+                                             AuditWorkUnit nestedWorkUnit) {
+        super(original.sessionImplementor, original.entityName, original.verCfg, original.id);
+
+        this.fakeRelationChanges = fakeRelationChanges;
         this.nestedWorkUnit = nestedWorkUnit;
     }
 
     public FakeBidirectionalRelationWorkUnit(FakeBidirectionalRelationWorkUnit original, AuditWorkUnit nestedWorkUnit) {
         super(original.sessionImplementor, original.entityName, original.verCfg, original.id);
 
-        this.owningEntity = original.owningEntity;
-        this.rd = original.rd;
-        this.revisionType = original.revisionType;
         this.nestedWorkUnit = nestedWorkUnit;
+
+        fakeRelationChanges = new HashMap<String, FakeRelationChange>(original.getFakeRelationChanges());
     }
 
     public AuditWorkUnit getNestedWorkUnit() {
         return nestedWorkUnit;
     }
 
-    public RevisionType getRevisionType() {
-        return revisionType;
+    public Map<String, FakeRelationChange> getFakeRelationChanges() {
+        return fakeRelationChanges;
     }
 
     public boolean containsWork() {
@@ -64,11 +71,10 @@ public class FakeBidirectionalRelationWorkUnit extends AbstractAuditWorkUnit imp
         // Making a defensive copy not to modify the data held by the nested work unit.
         Map<String, Object> nestedData = new HashMap<String, Object>(nestedWorkUnit.generateData(revisionData));
 
-        // Now adding data for the fake relation.
-        // If the revision type is "DEL", it means that the object is removed from the collection. Then the
-        // new owner will in fact be null.
-        rd.getFakeBidirectionalRelationMapper().mapToMapFromEntity(sessionImplementor, nestedData,
-                revisionType == RevisionType.DEL ? null : owningEntity, null);
+        // Now adding data for all fake relations.
+        for (FakeRelationChange fakeRelationChange : fakeRelationChanges.values()) {
+            fakeRelationChange.generateData(sessionImplementor, nestedData);
+        }
 
         return nestedData;
     }
@@ -90,19 +96,23 @@ public class FakeBidirectionalRelationWorkUnit extends AbstractAuditWorkUnit imp
     }
 
     public AuditWorkUnit merge(FakeBidirectionalRelationWorkUnit second) {
-        /*
-         * The merging rules are the following (revision types of the first and second work units):
-         * - DEL, DEL - return any (the work units are the same)
-         * - DEL, ADD - return ADD (points to new owner)
-         * - ADD, DEL - return ADD (points to new owner)
-         * - ADD, ADD - return second (points to newer owner)
-         */
+        // First merging the nested work units.
+        AuditWorkUnit mergedNested = second.getNestedWorkUnit().dispatch(nestedWorkUnit);
 
-        if (revisionType == RevisionType.DEL || second.getRevisionType() == RevisionType.ADD) {
-            return second;
+        // Now merging the fake relation changes from both work units.
+        Map<String, FakeRelationChange> secondFakeRelationChanges = second.getFakeRelationChanges();
+        Map<String, FakeRelationChange> mergedFakeRelationChanges = new HashMap<String, FakeRelationChange>();
+        Set<String> allPropertyNames = new HashSet<String>(fakeRelationChanges.keySet());
+        allPropertyNames.addAll(secondFakeRelationChanges.keySet());
+
+        for (String propertyName : allPropertyNames) {
+            mergedFakeRelationChanges.put(propertyName,
+                    FakeRelationChange.merge(
+                            fakeRelationChanges.get(propertyName),
+                            secondFakeRelationChanges.get(propertyName)));
         }
 
-        return this;
+        return new FakeBidirectionalRelationWorkUnit(this, mergedFakeRelationChanges, mergedNested);
     }
 
     public AuditWorkUnit dispatch(WorkUnitMergeVisitor first) {
@@ -115,5 +125,49 @@ public class FakeBidirectionalRelationWorkUnit extends AbstractAuditWorkUnit imp
 
         // Creating a new fake relation work unit with the nested merged data
         return new FakeBidirectionalRelationWorkUnit(frwu, nestedMerged);
+    }
+
+    /**
+     * Describes a change to a single fake bidirectional relation.
+     */
+    private static class FakeRelationChange {
+        private final Object owningEntity;
+        private final RelationDescription rd;
+        private final RevisionType revisionType;
+
+        public FakeRelationChange(Object owningEntity, RelationDescription rd, RevisionType revisionType) {
+            this.owningEntity = owningEntity;
+            this.rd = rd;
+            this.revisionType = revisionType;
+        }
+
+        public RevisionType getRevisionType() {
+            return revisionType;
+        }
+
+        public void generateData(SessionImplementor sessionImplementor, Map<String, Object> data) {
+            // If the revision type is "DEL", it means that the object is removed from the collection. Then the
+            // new owner will in fact be null.
+            rd.getFakeBidirectionalRelationMapper().mapToMapFromEntity(sessionImplementor, data,
+                    revisionType == RevisionType.DEL ? null : owningEntity, null);
+        }
+
+        public static FakeRelationChange merge(FakeRelationChange first, FakeRelationChange second) {
+            if (first == null) { return second; }
+            if (second == null) { return first; }
+
+            /*
+             * The merging rules are the following (revision types of the first and second changes):
+             * - DEL, DEL - return any (the work units are the same)
+             * - DEL, ADD - return ADD (points to new owner)
+             * - ADD, DEL - return ADD (points to new owner)
+             * - ADD, ADD - return second (points to newer owner)
+             */
+            if (first.getRevisionType() == RevisionType.DEL || second.getRevisionType() == RevisionType.ADD) {
+                return second;
+            } else {
+                return first;
+            }
+        }
     }
 }

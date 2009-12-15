@@ -95,14 +95,14 @@
         <dependency>
             <groupId>org.testng</groupId>
             <artifactId>testng</artifactId>
-            <version>5.10</version>
+            <version>5.8</version>
             <classifier>jdk15</classifier>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
-            <version>1.0.79</version>
+            <version>1.2.125</version>
             <scope>test</scope>
         </dependency>
         <dependency>

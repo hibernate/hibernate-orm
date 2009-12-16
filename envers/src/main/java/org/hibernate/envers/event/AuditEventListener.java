@@ -234,11 +234,15 @@ public class AuditEventListener implements PostInsertEventListener, PostUpdateEv
             Serializable relatedId = (Serializable) relatedIdMapper.mapToIdFromEntity(relatedObj);
             RevisionType revType = (RevisionType) changeData.getData().get(verCfg.getAuditEntCfg().getRevisionTypePropName());
 
+            // This can be different from relatedEntityName, in case of inheritance (the real entity may be a subclass
+            // of relatedEntityName).
+            String realRelatedEntityName = event.getSession().bestGuessEntityName(relatedObj);
+
             // By default, the nested work unit is a collection change work unit.
-            AuditWorkUnit nestedWorkUnit = new CollectionChangeWorkUnit(event.getSession(), relatedEntityName, verCfg,
+            AuditWorkUnit nestedWorkUnit = new CollectionChangeWorkUnit(event.getSession(), realRelatedEntityName, verCfg,
                     relatedId, relatedObj);
 
-            verSync.addWorkUnit(new FakeBidirectionalRelationWorkUnit(event.getSession(), relatedEntityName, verCfg,
+            verSync.addWorkUnit(new FakeBidirectionalRelationWorkUnit(event.getSession(), realRelatedEntityName, verCfg,
                     relatedId, referencingPropertyName, event.getAffectedOwnerOrNull(), rd, revType,
                     changeData.getChangedElementIndex(), nestedWorkUnit));
         }

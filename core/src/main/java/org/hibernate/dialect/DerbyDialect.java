@@ -62,7 +62,7 @@ public class DerbyDialect extends DB2Dialect {
 	public DerbyDialect() {
 		super();
 		registerFunction( "concat", new DerbyConcatFunction() );
-		registerFunction( "trim", new DerbyTrimFunctionEmulation() );
+		registerFunction( "trim", new SQLFunctionTemplate( Hibernate.STRING, "trim(?1 ?2 ?3 ?4)" ) );
 		determineDriverVersion();
 	}
 

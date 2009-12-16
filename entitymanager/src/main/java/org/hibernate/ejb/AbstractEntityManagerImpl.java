@@ -542,7 +542,7 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 
 	}
 
-	private LockOptions getLockRequest(LockModeType lockModeType, Map<String, Object> properties) {
+	public LockOptions getLockRequest(LockModeType lockModeType, Map<String, Object> properties) {
 		LockOptions lockOptions = new LockOptions();
 		lockOptions.setLockMode(getLockMode(lockModeType));
 		if ( properties != null ) {
@@ -569,7 +569,7 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 		return lockOptions;
 	}
 
-	private LockModeType getLockModeType(LockMode lockMode) {
+	private static LockModeType getLockModeType(LockMode lockMode) {
 		if ( lockMode == LockMode.NONE )
 			return LockModeType.NONE;
 		else if ( lockMode == LockMode.OPTIMISTIC || lockMode == LockMode.READ )
@@ -590,7 +590,7 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 	}
 
 
-	private LockMode getLockMode(LockModeType lockMode) {
+	private static LockMode getLockMode(LockModeType lockMode) {
 		switch ( lockMode ) {
 
 			case READ:

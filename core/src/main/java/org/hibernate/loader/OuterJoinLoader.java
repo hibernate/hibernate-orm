@@ -27,6 +27,7 @@ package org.hibernate.loader;
 import java.util.Map;
 
 import org.hibernate.LockOptions;
+import org.hibernate.LockMode;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.LoadQueryInfluencers;
@@ -48,7 +49,8 @@ public abstract class OuterJoinLoader extends BasicLoader {
 	protected CollectionPersister[] collectionPersisters;
 	protected int[] collectionOwners;
 	protected String[] aliases;
-	protected LockOptions[] lockOptionsArray;
+	private LockOptions lockOptions;
+	protected LockMode[] lockModeArray;
 	protected int[] owners;
 	protected EntityType[] ownerAssociationTypes;
 	protected String sql;
@@ -92,8 +94,12 @@ public abstract class OuterJoinLoader extends BasicLoader {
 		return ownerAssociationTypes;
 	}
 
-	protected LockOptions[] getLockOptions(Map lockModes) {
-		return lockOptionsArray;
+	protected LockMode[] getLockModes(LockOptions lockOptions) {
+		return lockModeArray;
+	}
+
+	protected LockOptions getLockOptions() {
+		return lockOptions;
 	}
 
 	public LoadQueryInfluencers getLoadQueryInfluencers() {
@@ -116,7 +122,8 @@ public abstract class OuterJoinLoader extends BasicLoader {
 		persisters = walker.getPersisters();
 		collectionPersisters = walker.getCollectionPersisters();
 		ownerAssociationTypes = walker.getOwnerAssociationTypes();
-		lockOptionsArray = walker.getLockModeOptions();
+		lockOptions = walker.getLockModeOptions();
+		lockModeArray = walker.getLockModeArray();
 		suffixes = walker.getSuffixes();
 		collectionSuffixes = walker.getCollectionSuffixes();
 		owners = walker.getOwners();

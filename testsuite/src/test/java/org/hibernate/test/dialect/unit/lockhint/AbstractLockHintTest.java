@@ -1,6 +1,5 @@
 package org.hibernate.test.dialect.unit.lockhint;
 
-import java.util.HashMap;
 import java.util.Collections;
 
 import org.hibernate.junit.UnitTestCase;
@@ -56,8 +55,8 @@ public abstract class AbstractLockHintTest extends UnitTestCase {
 		}
 
 		public void verify() {
-			HashMap lockOptions = new HashMap();
-			lockOptions.put( aliasToLock, new LockOptions(LockMode.UPGRADE) );
+			LockOptions lockOptions = new LockOptions(LockMode.UPGRADE);
+			lockOptions.setAliasLockMode(LockMode.UPGRADE,  aliasToLock);
 			String actualProcessedSql = dialect.applyLocksToSql( rawSql, lockOptions, Collections.EMPTY_MAP );
 			assertEquals( expectedProcessedSql, actualProcessedSql );
 		}

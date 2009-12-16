@@ -41,6 +41,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.MappingException;
 import org.hibernate.QueryException;
+import org.hibernate.LockOptions;
 import org.hibernate.hql.ast.util.SessionFactoryHelper;
 import org.hibernate.criterion.CriteriaQuery;
 import org.hibernate.criterion.Criterion;
@@ -272,18 +273,18 @@ public class CriteriaQueryTranslator implements CriteriaQuery {
 	}
 
 	public QueryParameters getQueryParameters() {
+		LockOptions lockOptions = new LockOptions();
 		RowSelection selection = new RowSelection();
 		selection.setFirstRow( rootCriteria.getFirstResult() );
 		selection.setMaxRows( rootCriteria.getMaxResults() );
 		selection.setTimeout( rootCriteria.getTimeout() );
 		selection.setFetchSize( rootCriteria.getFetchSize() );
 
-		Map lockModes = new HashMap();
 		Iterator iter = rootCriteria.getLockModes().entrySet().iterator();
 		while ( iter.hasNext() ) {
 			Map.Entry me = ( Map.Entry ) iter.next();
 			final Criteria subcriteria = getAliasedCriteria( ( String ) me.getKey() );
-			lockModes.put( getSQLAlias( subcriteria ), me.getValue() );
+			lockOptions.setAliasLockMode( (LockMode)me.getValue(), getSQLAlias( subcriteria ) );
 		}
 		List values = new ArrayList();
 		List types = new ArrayList();
@@ -292,7 +293,7 @@ public class CriteriaQueryTranslator implements CriteriaQuery {
 			CriteriaImpl.Subcriteria subcriteria = ( CriteriaImpl.Subcriteria ) iter.next();
 			LockMode lm = subcriteria.getLockMode();
 			if ( lm != null ) {
-				lockModes.put( getSQLAlias( subcriteria ), lm );
+				lockOptions.setAliasLockMode( lm, getSQLAlias( subcriteria ) );
 			}
 			if ( subcriteria.getWithClause() != null )
 			{
@@ -322,7 +323,7 @@ public class CriteriaQueryTranslator implements CriteriaQuery {
 		return new QueryParameters(
 				typeArray,
 		        valueArray,
-		        lockModes,
+		        lockOptions,
 		        selection,
 		        rootCriteria.getCacheable(),
 		        rootCriteria.getCacheRegion(),

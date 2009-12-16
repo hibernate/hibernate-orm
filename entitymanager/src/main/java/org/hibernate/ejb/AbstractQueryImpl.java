@@ -217,7 +217,7 @@ public abstract class AbstractQueryImpl<X> implements TypedQuery<X> {
 			}
 			/* TODO:
 			else if ( "org.hibernate.lockMode".equals( hintName ) ) {
-				query.setLockMode( alias, lockMode );
+				query.setAliasLockMode( alias, lockMode );
 			}*/
 			else {
 				skipped = true;
@@ -242,16 +242,9 @@ public abstract class AbstractQueryImpl<X> implements TypedQuery<X> {
 		return QueryHints.getDefinedHints();
 	}
 
-	private javax.persistence.LockModeType jpaLockMode = javax.persistence.LockModeType.NONE;
+	public abstract TypedQuery<X> setLockMode(javax.persistence.LockModeType lockModeType);
 
-	public TypedQuery<X> setLockMode(javax.persistence.LockModeType lockModeType) {
-		this.jpaLockMode = lockModeType;
-		return this;
-	}
-
-	public javax.persistence.LockModeType getLockMode() {
-		return jpaLockMode;
-	}
+	public abstract javax.persistence.LockModeType getLockMode();
 
 	private FlushModeType jpaFlushMode;
 

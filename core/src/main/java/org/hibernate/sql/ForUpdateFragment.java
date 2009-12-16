@@ -26,6 +26,7 @@ package org.hibernate.sql;
 
 import java.util.Iterator;
 import java.util.Map;
+import java.util.HashMap;
 
 import org.hibernate.LockMode;
 import org.hibernate.QueryException;
@@ -40,19 +41,30 @@ public class ForUpdateFragment {
 	private final StringBuffer aliases = new StringBuffer();
 	private boolean isNowaitEnabled;
 	private final Dialect dialect;
+	private LockMode lockMode;
+	private LockOptions lockOptions;
 
 	public ForUpdateFragment(Dialect dialect) {
 		this.dialect = dialect;
 	}
 
-	public ForUpdateFragment(Dialect dialect, Map lockOptions, Map keyColumnNames) throws QueryException {
+	public ForUpdateFragment(Dialect dialect, LockOptions lockOptions, Map keyColumnNames) throws QueryException {
 		this( dialect );
 		LockMode upgradeType = null;
-		Iterator iter = lockOptions.entrySet().iterator();
+		Iterator iter = lockOptions.getAliasLockIterator();
+		this.lockOptions =  lockOptions;
+
+		if ( !iter.hasNext()) {  // no tables referenced
+			final LockMode lockMode = lockOptions.getLockMode();
+			if ( LockMode.READ.lessThan( lockMode ) ) {
+				upgradeType = lockMode;
+				this.lockMode = lockMode;
+			}
+		}
+
 		while ( iter.hasNext() ) {
 			final Map.Entry me = ( Map.Entry ) iter.next();
-			final LockOptions lockOption = ( LockOptions ) me.getValue();
-			final LockMode lockMode = lockOption.getLockMode();
+			final LockMode lockMode = ( LockMode ) me.getValue();
 			if ( LockMode.READ.lessThan( lockMode ) ) {
 				final String tableAlias = ( String ) me.getKey();
 				if ( dialect.forUpdateOfColumns() ) {
@@ -89,9 +101,17 @@ public class ForUpdateFragment {
 	}
 
 	public String toFragmentString() {
-		if ( aliases.length() == 0 ) {
+
+		if ( aliases.length() == 0) {
+			if ( lockOptions != null ) {
+				return dialect.getForUpdateString(lockOptions);
+			}
+			else if ( lockMode != null ) {
+				return dialect.getForUpdateString(lockMode);
+			}
 			return "";
 		}
+		// TODO:  pass lockmode
 		return isNowaitEnabled ?
 				dialect.getForUpdateNowaitString( aliases.toString() ) :
 				dialect.getForUpdateString( aliases.toString() );

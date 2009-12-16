@@ -24,7 +24,6 @@
  */
 package org.hibernate.impl;
 
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -48,7 +47,7 @@ import org.hibernate.engine.query.ParameterMetadata;
  */
 public class QueryImpl extends AbstractQueryImpl {
 
-	private Map lockOptions = new HashMap(2);
+	private LockOptions lockOptions = new LockOptions();
 
 	public QueryImpl(
 			String queryString,
@@ -126,15 +125,18 @@ public class QueryImpl extends AbstractQueryImpl {
 	}
 
 	public Query setLockMode(String alias, LockMode lockMode) {
-		return setLockOptions( alias, new LockOptions(lockMode) );
+		lockOptions.setAliasLockMode(lockMode, alias);
+		return this;
 	}
 	
-	public Query setLockOptions(String alias, LockOptions lockOption) {
-		lockOptions.put(alias, lockOption);
+	public Query setLockOptions(LockOptions lockOption) {
+		this.lockOptions.setLockMode(lockOption.getLockMode());
+		this.lockOptions.setScope(lockOption.getScope());
+		this.lockOptions.setTimeOut(lockOptions.getTimeOut());
 		return this;
 	}
 
-	protected Map getLockOptions() {
+	protected LockOptions getLockOptions() {
 		return lockOptions;
 	}
 

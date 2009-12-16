@@ -209,15 +209,13 @@ public interface Query {
 	/**
 	 * Set the lock options for the objects idententified by the
 	 * given alias that appears in the <tt>FROM</tt> clause.
-	 * @param alias a query alias, or <tt>this</tt> for a collection filter
 	 */
-	public Query setLockOptions(String alias, LockOptions lockOptions);
+	public Query setLockOptions(LockOptions lockOptions);
 
 	/**
 	 * Set the lockmode for the objects idententified by the
 	 * given alias that appears in the <tt>FROM</tt> clause.
 	 * @param alias a query alias, or <tt>this</tt> for a collection filter
-	 * @deprecated Instead use setLockOptions
 	 */
 	public Query setLockMode(String alias, LockMode lockMode);
 

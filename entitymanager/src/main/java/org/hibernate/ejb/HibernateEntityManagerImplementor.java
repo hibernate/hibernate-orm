@@ -24,10 +24,13 @@
 package org.hibernate.ejb;
 
 import javax.persistence.PersistenceException;
+import javax.persistence.LockModeType;
 
 import org.hibernate.HibernateException;
 import org.hibernate.StaleStateException;
 import org.hibernate.LockOptions;
+
+import java.util.Map;
 
 /**
  * Additional internal contracts for the Hibernate {@link javax.persistence.EntityManager} implementation.
@@ -96,4 +99,13 @@ public interface HibernateEntityManagerImplementor extends HibernateEntityManage
 	public void throwPersistenceException(HibernateException e);
 
 	public PersistenceException wrapStaleStateException(StaleStateException e);
+
+	/**
+	 * Convert from JPA-2 LockModeType & properties into LockOptions
+	 *
+	 * @param lockModeType is the requested lock type
+	 * @param properties are the lock properties
+	 * @return the LockOptions
+	 */
+	public LockOptions getLockRequest(LockModeType lockModeType, Map<String, Object> properties);
 }

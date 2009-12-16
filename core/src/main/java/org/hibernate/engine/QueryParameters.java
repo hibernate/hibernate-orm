@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2009, Red Hat Middleware LLC or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Middleware LLC.
@@ -38,6 +38,7 @@ import org.slf4j.LoggerFactory;
 import org.hibernate.HibernateException;
 import org.hibernate.QueryException;
 import org.hibernate.ScrollMode;
+import org.hibernate.LockOptions;
 import org.hibernate.impl.FilterImpl;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.hql.classic.ParserHelper;
@@ -55,7 +56,7 @@ public final class QueryParameters {
 	private Type[] positionalParameterTypes;
 	private Object[] positionalParameterValues;
 	private Map namedParameters;
-	private Map lockOptions;
+	private LockOptions lockOptions;
 	private RowSelection rowSelection;
 	private boolean cacheable;
 	private String cacheRegion;
@@ -133,7 +134,7 @@ public final class QueryParameters {
 	public QueryParameters(
 			final Type[] positionalParameterTypes,
 			final Object[] positionalParameterValues,
-			final Map lockOptions,
+			final LockOptions lockOptions,
 			final RowSelection rowSelection,
 			final boolean cacheable,
 			final String cacheRegion,
@@ -161,7 +162,7 @@ public final class QueryParameters {
 			final Type[] positionalParameterTypes,
 			final Object[] positionalParameterValues,
 			final Map namedParameters,
-			final Map lockOptions,
+			final LockOptions lockOptions,
 			final RowSelection rowSelection,
 			final boolean readOnly,
 			final boolean cacheable,
@@ -188,7 +189,7 @@ public final class QueryParameters {
 			final Type[] positionalParameterTypes,
 			final Object[] positionalParameterValues,
 			final Map namedParameters,
-			final Map lockOptions,
+			final LockOptions lockOptions,
 			final RowSelection rowSelection,
 			final boolean readOnly,
 			final boolean cacheable,
@@ -258,12 +259,8 @@ public final class QueryParameters {
 		rowSelection = selection;
 	}
 
-	public Map getLockOptions() {
+	public LockOptions getLockOptions() {
 		return lockOptions;
-	}
-
-	public void setLockOptions(Map map) {
-		lockOptions = map;
 	}
 
 	public void traceParameters(SessionFactoryImplementor factory) throws HibernateException {

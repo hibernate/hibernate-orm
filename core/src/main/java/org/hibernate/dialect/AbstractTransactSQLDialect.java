@@ -169,14 +169,13 @@ abstract class AbstractTransactSQLDialect extends Dialect {
 		}
 	}
 
-	public String applyLocksToSql(String sql, Map aliasedLockOptions, Map keyColumnNames) {
-		Iterator itr = aliasedLockOptions.entrySet().iterator();
+	public String applyLocksToSql(String sql, LockOptions aliasedLockOptions, Map keyColumnNames) {
+		Iterator itr = aliasedLockOptions.getAliasLockIterator();
 		StringBuffer buffer = new StringBuffer( sql );
 		int correction = 0;
 		while ( itr.hasNext() ) {
 			final Map.Entry entry = ( Map.Entry ) itr.next();
-			final LockOptions lockOption = ( LockOptions ) entry.getValue();
-			final LockMode lockMode = lockOption.getLockMode();
+			final LockMode lockMode = ( LockMode ) entry.getValue();
 			if ( lockMode.greaterThan( LockMode.READ ) ) {
 				final String alias = ( String ) entry.getKey();
 				int start = -1, end = -1;

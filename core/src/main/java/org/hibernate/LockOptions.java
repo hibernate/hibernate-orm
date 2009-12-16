@@ -23,6 +23,11 @@
  */
 package org.hibernate;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Iterator;
+
+
 /**
  * Contains locking details (LockMode, Timeout and Scope).
  * 
@@ -59,6 +64,8 @@ public class LockOptions
 	private boolean scope=false;// if true, cascade (pessimistic only) lock to collections and relationships
 										 // owned by the entity.
 
+	private Map /* <String, LockMode> */ lockModesByName = new HashMap();
+
 	public LockOptions() {
 
 	}
@@ -85,6 +92,49 @@ public class LockOptions
 	public LockOptions setLockMode(LockMode lockMode) {
 		this.lockMode = lockMode;
 		return this;
+	}
+
+	/**
+	 * Specify the LockMode to be used for the specified alias.
+	 *
+	 * The ability to set the lockMode for a table alias is intended
+	 * for internal Hibernate use.
+	 *
+	 * @param lockMode
+	 * @param alias used to reference the LockMode.
+	 * @return this LockRequest instance for operation chaining.
+	 */
+	public LockOptions setAliasLockMode(LockMode lockMode, String alias) {
+		lockModesByName.put(alias, lockMode);
+		return this;
+	}
+
+	/**
+	 * Get the lock mode for the specified alias.
+	 *
+	 * @param alias used to reference the LockMode.
+	 * @return the lock mode.
+	 */
+	public LockMode getAliasLockMode(String alias) {
+		return (LockMode)lockModesByName.get(alias);
+	}
+
+	/**
+	 * Get the number of aliases that have LockModes specified
+	 *
+	 * @return the number of aliases
+	 */
+	public int getAliasLockCount() {
+		return lockModesByName.size();
+	}
+
+	/**
+	 * Iterator for accessing Alias (key) and LockMode (value) as Map.Entry
+	 * 
+	 * @return Iterator for accessing the Map.Entry's
+	 */
+	public Iterator getAliasLockIterator() {
+		return lockModesByName.entrySet().iterator();
 	}
 
 	/**
@@ -128,8 +178,10 @@ public class LockOptions
 		return this;
 	}
 
+
 	/**
-	 * Copy From to Dest
+	 * Shallow copy From to Dest
+	 *
 	 * @param from is copied from
 	 * @param dest is copied to
 	 * @return dest
@@ -138,6 +190,7 @@ public class LockOptions
 		dest.setLockMode(from.getLockMode());
 		dest.setScope(from.getScope());
 		dest.setTimeOut(from.getTimeOut());
+		dest.lockModesByName = new HashMap(from.lockModesByName);
 		return dest;
 	}
 

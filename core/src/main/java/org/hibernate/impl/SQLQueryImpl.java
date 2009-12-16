@@ -254,13 +254,13 @@ public class SQLQueryImpl extends AbstractQueryImpl implements SQLQuery {
 		throw new UnsupportedOperationException("cannot set the lock mode for a native SQL query");
 	}
 
-	public Query setLockOptions(String alias, LockOptions lockOptions) {
+	public Query setLockOptions(LockOptions lockOptions) {
 		throw new UnsupportedOperationException("cannot set lock options for a native SQL query");
 	}
 
-	protected Map getLockOptions() {
+	protected LockOptions getLockOptions() {
 		//we never need to apply locks to the SQL
-		return CollectionHelper.EMPTY_MAP;
+		return null;
 	}
 
 	public SQLQuery addScalar(String columnAlias, Type type) {

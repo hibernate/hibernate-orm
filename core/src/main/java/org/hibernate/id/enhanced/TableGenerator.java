@@ -30,7 +30,6 @@ import java.sql.SQLException;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.Properties;
-import java.util.HashMap;
 import java.util.Collections;
 import java.util.Map;
 import java.io.Serializable;
@@ -47,6 +46,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.LockOptions;
+import org.hibernate.LockMode;
 import org.hibernate.cfg.ObjectNameNormalizer;
 import org.hibernate.jdbc.util.FormatStyle;
 import org.hibernate.mapping.Table;
@@ -428,10 +428,10 @@ public class TableGenerator extends TransactionHelper implements PersistentIdent
 		String query = "select " + StringHelper.qualify( alias, valueColumnName ) +
 				" from " + tableName + ' ' + alias +
 				" where " + StringHelper.qualify( alias, segmentColumnName ) + "=?";
-		HashMap lockMap = new HashMap();
-		lockMap.put( alias,  LockOptions.UPGRADE );
+		LockOptions lockOptions = new LockOptions(LockMode.UPGRADE);
+		lockOptions.setAliasLockMode(LockMode.UPGRADE, alias);
 		Map updateTargetColumnsMap = Collections.singletonMap( alias, new String[] { valueColumnName } );
-		return dialect.applyLocksToSql( query, lockMap, updateTargetColumnsMap );
+		return dialect.applyLocksToSql( query, lockOptions, updateTargetColumnsMap );
 	}
 
 	protected String buildUpdateQuery() {

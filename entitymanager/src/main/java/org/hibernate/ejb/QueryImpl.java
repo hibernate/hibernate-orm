@@ -40,6 +40,7 @@ import static javax.persistence.TemporalType.TIME;
 import static javax.persistence.TemporalType.TIMESTAMP;
 import javax.persistence.TypedQuery;
 import javax.persistence.PersistenceException;
+import javax.persistence.TransactionRequiredException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,6 +51,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.QueryParameterException;
 import org.hibernate.TypeMismatchException;
 import org.hibernate.SQLQuery;
+import org.hibernate.LockOptions;
 import org.hibernate.engine.query.NamedParameterDescriptor;
 import org.hibernate.engine.query.OrdinalParameterDescriptor;
 import org.hibernate.hql.QueryExecutionRequestException;
@@ -568,4 +570,23 @@ public class QueryImpl<X> extends org.hibernate.ejb.AbstractQueryImpl<X> impleme
 			}
 		}
 	}
+
+	private javax.persistence.LockModeType jpaLockMode = javax.persistence.LockModeType.NONE;
+
+	@SuppressWarnings({ "unchecked" })
+	public TypedQuery<X> setLockMode(javax.persistence.LockModeType lockModeType) {
+
+		if (! getEntityManager().isTransactionInProgress()) {
+			throw new TransactionRequiredException( "no transaction is in progress" );
+		}
+
+		this.jpaLockMode = lockModeType;
+		query.setLockOptions(getEntityManager().getLockRequest(lockModeType, null));
+		return this;
+	}
+
+	public javax.persistence.LockModeType getLockMode() {
+		return jpaLockMode;
+	}
+
 }

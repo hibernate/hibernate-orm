@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2009, Red Hat Middleware LLC or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Middleware LLC.
@@ -144,38 +144,42 @@ public class CriteriaLoader extends OuterJoinLoader {
 		return querySpaces;
 	}
 
-	protected String applyLocks(String sqlSelectString, Map lockOptions, Dialect dialect) throws QueryException {
-		if ( lockOptions == null || lockOptions.isEmpty() ) {
+	protected String applyLocks(String sqlSelectString, LockOptions lockOptions, Dialect dialect) throws QueryException {
+		if ( lockOptions == null ||
+			( lockOptions.getLockMode() == LockMode.NONE && lockOptions.getAliasLockCount() == 0 ) ) {
 			return sqlSelectString;
 		}
 
-		final Map aliasedLockOptions = new HashMap();
+		final LockOptions locks = new LockOptions(lockOptions.getLockMode());
+		locks.setScope( lockOptions.getScope());
+		locks.setTimeOut( lockOptions.getTimeOut());
+
 		final Map keyColumnNames = dialect.forUpdateOfColumns() ? new HashMap() : null;
 		final String[] drivingSqlAliases = getAliases();
 		for ( int i = 0; i < drivingSqlAliases.length; i++ ) {
-			final LockOptions lockOption = ( LockOptions ) lockOptions.get( drivingSqlAliases[i] );
-			if ( lockOption != null ) {
+			final LockMode lockMode = lockOptions.getAliasLockMode( drivingSqlAliases[i] );
+			if ( lockMode != null ) {
 				final Lockable drivingPersister = ( Lockable ) getEntityPersisters()[i];
 				final String rootSqlAlias = drivingPersister.getRootTableAlias( drivingSqlAliases[i] );
-				aliasedLockOptions.put( rootSqlAlias, lockOption );
+				locks.setAliasLockMode(lockMode, rootSqlAlias);
 				if ( keyColumnNames != null ) {
 					keyColumnNames.put( rootSqlAlias, drivingPersister.getRootTableIdentifierColumnNames() );
 				}
 			}
 		}
-		return dialect.applyLocksToSql( sqlSelectString, aliasedLockOptions, keyColumnNames );
+		return dialect.applyLocksToSql( sqlSelectString, locks, keyColumnNames );
 	}
 
-	protected LockOptions[] getLockOptions(Map lockOptions) {
+	protected LockMode[] getLockModes(LockOptions lockOptions) {
 		final String[] entityAliases = getAliases();
 		if ( entityAliases == null ) {
 			return null;
 		}
 		final int size = entityAliases.length;
-		LockOptions[] lockModesArray = new LockOptions[size];
+		LockMode[] lockModesArray = new LockMode[size];
 		for ( int i=0; i<size; i++ ) {
-			LockOptions lockOption = (LockOptions) lockOptions.get( entityAliases[i] );
-			lockModesArray[i] = lockOption==null ? LockOptions.NONE : lockOption;
+			LockMode lockMode = lockOptions.getAliasLockMode( entityAliases[i] );
+			lockModesArray[i] = lockMode==null ? lockOptions.getLockMode() : lockMode;
 		}
 		return lockModesArray;
 	}

@@ -82,7 +82,8 @@ public class JoinWalker {
 	protected CollectionPersister[] collectionPersisters;
 	protected int[] collectionOwners;
 	protected String[] aliases;
-	protected LockOptions[] lockOptionsArray;
+	protected LockOptions lockOptions;
+	protected LockMode[] lockModeArray;
 	protected String sql;
 
 	protected JoinWalker(
@@ -101,12 +102,12 @@ public class JoinWalker {
 		this.collectionSuffixes = collectionSuffixes;
 	}
 
-	public LockOptions[] getLockModeOptions() {
-		return lockOptionsArray;
+	public LockOptions getLockModeOptions() {
+		return lockOptions;
 	}
 
-	public void setLockOptionsArray(LockOptions[] lockOptionsArray) {
-		this.lockOptionsArray = lockOptionsArray;
+	public LockMode[] getLockModeArray() {
+		return lockModeArray;
 	}
 
 	public String[] getSuffixes() {
@@ -993,12 +994,14 @@ public class JoinWalker {
 		collectionPersisters = collections==0 ? null : new CollectionPersister[collections];
 		collectionSuffixes = BasicLoader.generateSuffixes( joins + 1, collections );
 
+		this.lockOptions = lockOptions;
+
 		persisters = new Loadable[joins];
 		aliases = new String[joins];
 		owners = new int[joins];
 		ownerAssociationTypes = new EntityType[joins];
-		lockOptionsArray = ArrayHelper.fillArray(lockOptions, joins);
-		
+		lockModeArray = ArrayHelper.fillArray(lockOptions.getLockMode(), joins);
+
 		int i=0;
 		int j=0;
 		Iterator iter = associations.iterator();

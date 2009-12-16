@@ -80,6 +80,9 @@ public class TransactionImpl implements EntityTransaction {
 			if (e instanceof StaleStateException) {
 				wrappedException = entityManager.wrapStaleStateException( (StaleStateException) e );
 			}
+			else if (e instanceof HibernateException) {
+				throw entityManager.convert( (HibernateException)e );
+			}
 			else {
 				wrappedException = e;
 			}

@@ -49,6 +49,7 @@ import org.hibernate.NonUniqueResultException;
 import org.hibernate.PropertyNotFoundException;
 import org.hibernate.Query;
 import org.hibernate.QueryException;
+import org.hibernate.LockOptions;
 import org.hibernate.engine.QueryParameters;
 import org.hibernate.engine.RowSelection;
 import org.hibernate.engine.SessionImplementor;
@@ -227,7 +228,7 @@ public abstract class AbstractQueryImpl implements Query {
 		return session;
 	}
 
-	protected abstract Map getLockOptions();
+	protected abstract LockOptions getLockOptions();
 
 
 	// Parameter handling code ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

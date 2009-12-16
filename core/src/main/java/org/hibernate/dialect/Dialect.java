@@ -1138,11 +1138,11 @@ public abstract class Dialect {
 	 * <tt>SELECT FOR UPDATE</tt> to achieve this in their own fashion.
 	 *
 	 * @param sql the SQL string to modify
-	 * @param aliasedLockOptions a map of lock options indexed by aliased table names.
+	 * @param aliasedLockOptions lock options indexed by aliased table names.
 	 * @param keyColumnNames a map of key columns indexed by aliased table names.
 	 * @return the modified SQL string.
 	 */
-	public String applyLocksToSql(String sql, Map aliasedLockOptions, Map keyColumnNames) {
+	public String applyLocksToSql(String sql, LockOptions aliasedLockOptions, Map keyColumnNames) {
 		return sql + new ForUpdateFragment( this, aliasedLockOptions, keyColumnNames ).toFragmentString();
 	}
 

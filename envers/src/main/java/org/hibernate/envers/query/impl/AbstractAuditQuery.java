@@ -219,7 +219,7 @@ public abstract class AbstractAuditQuery implements AuditQuery {
         if (cacheMode != null) query.setCacheMode(cacheMode);
         if (timeout != null) query.setTimeout(timeout);
         if (lockOptions != null && lockOptions.getLockMode() != LockMode.NONE) {
-			  query.setLockOptions("e", lockOptions);
+			  query.setLockMode("e", lockOptions.getLockMode());
 		  }
     }
 }

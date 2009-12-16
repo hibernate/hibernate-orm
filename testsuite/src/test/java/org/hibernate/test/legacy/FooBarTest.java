@@ -1355,7 +1355,7 @@ public class FooBarTest extends LegacyTestCase {
 		s.save(baz);
 		Query q = s.createQuery("from Foo foo, Bar bar");
 		if ( !(getDialect() instanceof DB2Dialect) ) {
-			q.setLockOptions("bar", LockOptions.UPGRADE);
+			q.setLockMode("bar", LockMode.UPGRADE);
 		}
 		Object[] result = (Object[]) q.uniqueResult();
 		Object b = result[0];
@@ -1369,7 +1369,7 @@ public class FooBarTest extends LegacyTestCase {
 		s.createQuery( "from Foo foo" ).list();
 		assertTrue( s.getCurrentLockMode(b)==LockMode.NONE );
 		q = s.createQuery("from Foo foo");
-		q.setLockOptions("foo", LockOptions.READ);
+		q.setLockMode("foo", LockMode.READ);
 		q.list();
 		assertTrue( s.getCurrentLockMode(b)==LockMode.READ);
 		s.evict(baz);
@@ -1388,9 +1388,9 @@ public class FooBarTest extends LegacyTestCase {
 		tx = s.beginTransaction();
 		q = s.createQuery("from Foo foo, Bar bar, Bar bar2");
 		if ( !(getDialect() instanceof DB2Dialect) ) {
-			q.setLockOptions("bar", LockOptions.UPGRADE);
+			q.setLockMode("bar", LockMode.UPGRADE);
 		}
-		q.setLockOptions("bar2", LockOptions.READ);
+		q.setLockMode("bar2", LockMode.READ);
 		result = (Object[]) q.list().get(0);
 		if ( !(getDialect() instanceof DB2Dialect) ) {
 			assertTrue( s.getCurrentLockMode( result[0] )==LockMode.UPGRADE && s.getCurrentLockMode( result[1] )==LockMode.UPGRADE );

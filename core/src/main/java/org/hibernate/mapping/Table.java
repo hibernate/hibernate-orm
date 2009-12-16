@@ -321,14 +321,13 @@ public class Table implements RelationalModel, Serializable {
 				String defaultValue = column.getDefaultValue();
 				if ( defaultValue != null ) {
 					alter.append( " default " ).append( defaultValue );
+				}
 
-					if ( column.isNullable() ) {
-						alter.append( dialect.getNullColumnString() );
-					}
-					else {
-						alter.append( " not null" );
-					}
-
+				if ( column.isNullable() ) {
+					alter.append( dialect.getNullColumnString() );
+				}
+				else {
+					alter.append( " not null" );
 				}
 
 				boolean useUniqueConstraint = column.isUnique() &&

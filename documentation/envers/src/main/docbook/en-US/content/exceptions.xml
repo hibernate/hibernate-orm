@@ -90,6 +90,22 @@
             <literal>@JoinTable</literal>.
         </para>
 
+        <para>
+            One special case are relations mapped with <literal>@OneToMany</literal>+<literal>@JoinColumn</literal> on
+            the one side, and <literal>@ManyToOne</literal>+<literal>@JoinColumn(insertable=false, updatable=false</literal>)
+            on the many side.
+            Such relations are in fact bidirectional, but the owning side is the collection (see alse
+            <ulink url="http://docs.jboss.org/hibernate/stable/annotations/reference/en/html_single/#entity-hibspec-collection-extratype">here</ulink>).
+        </para>
+        <para>
+            To properly audit such relations with Envers, you can use the <literal>@AuditMappedBy</literal> annotation.
+            It enables you to specify the reverse property (using the <literal>mappedBy</literal> element). In case
+            of indexed collections, the index column must also be mapped in the referenced entity (using
+            <literal>@Column(insertable=false, updatable=false)</literal>, and specified using
+            <literal>positionMappedBy</literal>. This annotation will affect only the way
+            Envers works. Please note that the annotation is experimental and may change in the future.
+        </para>
+
     </sect1>
 
 </chapter>

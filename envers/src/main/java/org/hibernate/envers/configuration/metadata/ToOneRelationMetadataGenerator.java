@@ -24,6 +24,8 @@
 package org.hibernate.envers.configuration.metadata;
 
 import org.dom4j.Element;
+import org.hibernate.MappingException;
+import org.hibernate.envers.configuration.metadata.reader.PropertyAuditingData;
 import org.hibernate.envers.entities.EntityConfiguration;
 import org.hibernate.envers.entities.IdMappingData;
 import org.hibernate.envers.entities.PropertyData;
@@ -31,24 +33,16 @@ import org.hibernate.envers.entities.mapper.CompositeMapperBuilder;
 import org.hibernate.envers.entities.mapper.id.IdMapper;
 import org.hibernate.envers.entities.mapper.relation.OneToOneNotOwningMapper;
 import org.hibernate.envers.entities.mapper.relation.ToOneIdMapper;
-import org.hibernate.envers.configuration.metadata.reader.PropertyAuditingData;
-import org.hibernate.envers.configuration.metadata.reader.ClassAuditingData;
 import org.hibernate.envers.tools.MappingTools;
-
-import org.hibernate.MappingException;
 import org.hibernate.mapping.OneToOne;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.Value;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Generates metadata for to-one relations (reference-valued properties).
  * @author Adam Warski (adam at warski dot org)
  */
 public final class ToOneRelationMetadataGenerator {
-    private static final Logger log = LoggerFactory.getLogger(ToOneRelationMetadataGenerator.class);
-
     private final AuditMetadataGenerator mainGenerator;
 
     ToOneRelationMetadataGenerator(AuditMetadataGenerator auditMetadataGenerator) {
@@ -79,23 +73,12 @@ public final class ToOneRelationMetadataGenerator {
         // the entity that didn't involve the relation, it's value will then be stored properly. In case of changes
         // to the entity that did involve the relation, it's the responsibility of the collection side to store the
         // proper data.
-        boolean nonInsertableFake = false;
-        if (!insertable) {
-            ClassAuditingData referencedAuditingData = mainGenerator.getClassesAuditingData().getClassAuditingData(referencedEntityName);
-
-            // Looking through the properties of the referenced entity to find the right property.
-            for (String referencedPropertyName : referencedAuditingData.getPropertyNames()) {
-                String auditMappedBy = referencedAuditingData.getPropertyAuditingData(referencedPropertyName).getAuditMappedBy();
-                if (propertyAuditingData.getName().equals(auditMappedBy)) {
-                    log.debug("Non-insertable property " + entityName + "." + propertyAuditingData.getName() +
-                            " will be made insertable because a matching @AuditMappedBy was found in the " +
-                            referencedEntityName + " entity.");
-
-                    insertable = true;
-                    nonInsertableFake = true;
-                    break;
-                }
-            }
+        boolean nonInsertableFake;
+        if (!insertable && propertyAuditingData.isForceInsertable()) {
+            nonInsertableFake = true;
+            insertable = true;
+        } else {
+            nonInsertableFake = false;
         }
 
         // Adding an element to the mapping corresponding to the references entity id's

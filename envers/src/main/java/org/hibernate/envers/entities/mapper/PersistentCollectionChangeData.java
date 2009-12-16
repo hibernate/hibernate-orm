@@ -23,10 +23,12 @@
  */
 package org.hibernate.envers.entities.mapper;
 
+import org.hibernate.envers.tools.Pair;
+
 import java.util.Map;
 
 /**
- * Data describing the change of a single object in a persisten collection (when the object was added, removed or
+ * Data describing the change of a single object in a persistent collection (when the object was added, removed or
  * modified in the collection).
  * @author Adam Warski (adam at warski dot org)
  */
@@ -54,10 +56,32 @@ public class PersistentCollectionChangeData {
     }
 
     /**
-     * For use by bi-directional associations.
      * @return The affected element, which was changed (added, removed, modified) in the collection.
      */
     public Object getChangedElement() {
+        if (changedElement instanceof Pair) {
+            return ((Pair) changedElement).getSecond();
+        }
+
+        if (changedElement instanceof Map.Entry) {
+            return ((Map.Entry) changedElement).getValue();
+        }
+
         return changedElement;
+    }
+
+    /**
+     * @return Index of the affected element, or {@code null} if the collection isn't indexed.
+     */
+    public Object getChangedElementIndex() {
+        if (changedElement instanceof Pair) {
+            return ((Pair) changedElement).getFirst();
+        }
+
+        if (changedElement instanceof Map.Entry) {
+            return ((Map.Entry) changedElement).getKey();
+        }
+
+        return null;
     }
 }

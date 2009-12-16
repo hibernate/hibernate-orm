@@ -48,13 +48,15 @@ public class PropertyAuditingData {
 	private RelationTargetAuditMode relationTargetAuditMode;
     private String auditMappedBy;
     private String positionMappedBy;
+    private boolean forceInsertable;
 
 	public PropertyAuditingData() {
     }
 
     public PropertyAuditingData(String name, String accessType, ModificationStore store,
 								RelationTargetAuditMode relationTargetAuditMode,
-                                String auditMappedBy, String positionMappedBy) {
+                                String auditMappedBy, String positionMappedBy,
+                                boolean forceInsertable) {
         this.name = name;
 		this.beanName = name;
         this.accessType = accessType;
@@ -62,6 +64,7 @@ public class PropertyAuditingData {
 		this.relationTargetAuditMode = relationTargetAuditMode;
         this.auditMappedBy = auditMappedBy;
         this.positionMappedBy = positionMappedBy;
+        this.forceInsertable = forceInsertable;
     }
 
 	public String getName() {
@@ -134,6 +137,14 @@ public class PropertyAuditingData {
 
     public void setPositionMappedBy(String positionMappedBy) {
         this.positionMappedBy = positionMappedBy;
+    }
+
+    public boolean isForceInsertable() {
+        return forceInsertable;
+    }
+
+    public void setForceInsertable(boolean forceInsertable) {
+        this.forceInsertable = forceInsertable;
     }
 
     public void addAuditingOverride(AuditOverride annotation) {

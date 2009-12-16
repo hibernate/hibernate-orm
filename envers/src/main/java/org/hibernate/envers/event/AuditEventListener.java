@@ -239,7 +239,8 @@ public class AuditEventListener implements PostInsertEventListener, PostUpdateEv
                     relatedId, relatedObj);
 
             verSync.addWorkUnit(new FakeBidirectionalRelationWorkUnit(event.getSession(), relatedEntityName, verCfg,
-                    relatedId, referencingPropertyName, event.getAffectedOwnerOrNull(), rd, revType, nestedWorkUnit));
+                    relatedId, referencingPropertyName, event.getAffectedOwnerOrNull(), rd, revType,
+                    changeData.getChangedElementIndex(), nestedWorkUnit));
         }
 
         // We also have to generate a collection change work unit for the owning entity.

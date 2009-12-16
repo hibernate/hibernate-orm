@@ -53,29 +53,31 @@ public class EntityConfiguration {
 
     public void addToOneRelation(String fromPropertyName, String toEntityName, IdMapper idMapper, boolean insertable) {
         relations.put(fromPropertyName, new RelationDescription(fromPropertyName, RelationType.TO_ONE,
-                toEntityName, null, idMapper, null, insertable));
+                toEntityName, null, idMapper, null, null, insertable));
     }
 
     public void addToOneNotOwningRelation(String fromPropertyName, String mappedByPropertyName, String toEntityName,
-                                    IdMapper idMapper) {
+                                          IdMapper idMapper) {
         relations.put(fromPropertyName, new RelationDescription(fromPropertyName, RelationType.TO_ONE_NOT_OWNING,
-                toEntityName, mappedByPropertyName, idMapper, null, true));
+                toEntityName, mappedByPropertyName, idMapper, null, null, true));
     }
 
     public void addToManyNotOwningRelation(String fromPropertyName, String mappedByPropertyName, String toEntityName,
-                                     IdMapper idMapper, PropertyMapper fakeBidirectionalRelationMapper) {
+                                           IdMapper idMapper, PropertyMapper fakeBidirectionalRelationMapper,
+                                           PropertyMapper fakeBidirectionalRelationIndexMapper) {
         relations.put(fromPropertyName, new RelationDescription(fromPropertyName, RelationType.TO_MANY_NOT_OWNING,
-                toEntityName, mappedByPropertyName, idMapper, fakeBidirectionalRelationMapper, true));
+                toEntityName, mappedByPropertyName, idMapper, fakeBidirectionalRelationMapper,
+                fakeBidirectionalRelationIndexMapper, true));
     }
 
     public void addToManyMiddleRelation(String fromPropertyName, String toEntityName) {
         relations.put(fromPropertyName, new RelationDescription(fromPropertyName, RelationType.TO_MANY_MIDDLE,
-                toEntityName, null, null, null, true));
+                toEntityName, null, null, null, null, true));
     }
 
     public void addToManyMiddleNotOwningRelation(String fromPropertyName, String mappedByPropertyName, String toEntityName) {
         relations.put(fromPropertyName, new RelationDescription(fromPropertyName, RelationType.TO_MANY_MIDDLE_NOT_OWNING,
-                toEntityName, mappedByPropertyName, null, null, true));
+                toEntityName, mappedByPropertyName, null, null, null, true));
     }
 
     public boolean isRelation(String propertyName) {

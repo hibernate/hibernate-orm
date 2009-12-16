@@ -66,7 +66,7 @@ public final class BasicMetadataGenerator {
 								Value value, SimpleMapperBuilder mapper, boolean insertable, boolean key) {
 		if (parent != null) {
 			Element prop_mapping = MetadataTools.addProperty(parent, propertyAuditingData.getName(),
-					value.getType().getName(), insertable, key);
+					value.getType().getName(), propertyAuditingData.isForceInsertable() || insertable, key);
 			MetadataTools.addColumns(prop_mapping, (Iterator<Column>) value.getColumnIterator());
 		}
 

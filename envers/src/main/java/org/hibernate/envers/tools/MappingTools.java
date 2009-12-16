@@ -1,5 +1,10 @@
 package org.hibernate.envers.tools;
 
+import org.hibernate.mapping.Collection;
+import org.hibernate.mapping.OneToMany;
+import org.hibernate.mapping.ToOne;
+import org.hibernate.mapping.Value;
+
 /**
  * @author Adam Warski (adam at warski dot org)
  */
@@ -19,5 +24,17 @@ public class MappingTools {
      */
     public static String createToOneRelationPrefix(String referencePropertyName) {
         return referencePropertyName + "_";
+    }
+
+    public static String getReferencedEntityName(Value value) {
+        if (value instanceof ToOne) {
+            return ((ToOne) value).getReferencedEntityName();
+        } else if (value instanceof OneToMany) {
+            return ((OneToMany) value).getReferencedEntityName();
+        } else if (value instanceof Collection) {
+            return getReferencedEntityName(((Collection) value).getElement());
+        }
+
+        return null;
     }
 }

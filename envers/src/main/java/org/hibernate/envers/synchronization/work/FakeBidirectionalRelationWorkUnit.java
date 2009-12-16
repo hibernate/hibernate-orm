@@ -28,13 +28,14 @@ public class FakeBidirectionalRelationWorkUnit extends AbstractAuditWorkUnit imp
                                              AuditConfiguration verCfg, Serializable id,
                                              String referencingPropertyName, Object owningEntity,
                                              RelationDescription rd, RevisionType revisionType,
+                                             Object index,
                                              AuditWorkUnit nestedWorkUnit) {
         super(sessionImplementor, entityName, verCfg, id);
         this.nestedWorkUnit = nestedWorkUnit;
 
         // Adding the change for the relation.
         fakeRelationChanges = new HashMap<String, FakeRelationChange>();
-        fakeRelationChanges.put(referencingPropertyName, new FakeRelationChange(owningEntity, rd, revisionType));
+        fakeRelationChanges.put(referencingPropertyName, new FakeRelationChange(owningEntity, rd, revisionType, index));
     }
 
     public FakeBidirectionalRelationWorkUnit(FakeBidirectionalRelationWorkUnit original,
@@ -134,11 +135,14 @@ public class FakeBidirectionalRelationWorkUnit extends AbstractAuditWorkUnit imp
         private final Object owningEntity;
         private final RelationDescription rd;
         private final RevisionType revisionType;
+        private final Object index;
 
-        public FakeRelationChange(Object owningEntity, RelationDescription rd, RevisionType revisionType) {
+        public FakeRelationChange(Object owningEntity, RelationDescription rd, RevisionType revisionType,
+                                  Object index) {
             this.owningEntity = owningEntity;
             this.rd = rd;
             this.revisionType = revisionType;
+            this.index = index;
         }
 
         public RevisionType getRevisionType() {
@@ -150,6 +154,12 @@ public class FakeBidirectionalRelationWorkUnit extends AbstractAuditWorkUnit imp
             // new owner will in fact be null.
             rd.getFakeBidirectionalRelationMapper().mapToMapFromEntity(sessionImplementor, data,
                     revisionType == RevisionType.DEL ? null : owningEntity, null);
+
+            // Also mapping the index, if the collection is indexed.
+            if (rd.getFakeBidirectionalRelationIndexMapper() != null) {
+                rd.getFakeBidirectionalRelationIndexMapper().mapToMapFromEntity(sessionImplementor, data,
+                        revisionType == RevisionType.DEL ? null : index, null);
+            }
         }
 
         public static FakeRelationChange merge(FakeRelationChange first, FakeRelationChange second) {

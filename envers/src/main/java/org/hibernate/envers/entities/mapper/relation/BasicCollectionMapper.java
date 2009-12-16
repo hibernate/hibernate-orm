@@ -71,8 +71,4 @@ public final class BasicCollectionMapper<T extends Collection> extends AbstractC
     protected void mapToMapFromObject(Map<String, Object> data, Object changed) {
         elementComponentData.getComponentMapper().mapToMapFromObject(data, changed);
     }
-
-    protected Object getElement(Object changedObject) {
-        return changedObject;
-    }
 }

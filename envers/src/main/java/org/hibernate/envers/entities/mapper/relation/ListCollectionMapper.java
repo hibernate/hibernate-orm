@@ -83,9 +83,4 @@ public final class ListCollectionMapper extends AbstractCollectionMapper<List> i
         elementComponentData.getComponentMapper().mapToMapFromObject(data, indexValuePair.getSecond());
         indexComponentData.getComponentMapper().mapToMapFromObject(data, indexValuePair.getFirst());
     }
-
-    @SuppressWarnings({"unchecked"})
-    protected Object getElement(Object changedObject) {
-        return ((Pair<Integer, Object>) changedObject).getFirst();
-    }
 }

@@ -80,6 +80,9 @@ public class EntitiesConfigurator {
             classesAuditingData.addClassAuditingData(pc, auditData);
         }
 
+        // Now that all information is read we can update the calculated fields.
+        classesAuditingData.updateCalculatedFields();
+
         AuditMetadataGenerator auditMetaGen = new AuditMetadataGenerator(cfg, globalCfg, verEntCfg,
                 revisionInfoRelationMapping, auditEntityNameRegister, classesAuditingData);
 

@@ -47,6 +47,10 @@ import org.hibernate.HibernateException;
 public class SinglePropertyMapper implements PropertyMapper, SimpleMapperBuilder {
     private PropertyData propertyData;
 
+    public SinglePropertyMapper(PropertyData propertyData) {
+        this.propertyData = propertyData;
+    }
+
     public SinglePropertyMapper() { }
 
     public void add(PropertyData propertyData) {

@@ -76,8 +76,4 @@ public final class MapCollectionMapper<T extends Map> extends AbstractCollection
         elementComponentData.getComponentMapper().mapToMapFromObject(data, ((Map.Entry) changed).getValue());
         indexComponentData.getComponentMapper().mapToMapFromObject(data, ((Map.Entry) changed).getKey());
     }
-
-    protected Object getElement(Object changedObject) {
-        return ((Map.Entry) changedObject).getValue();
-    }
 }

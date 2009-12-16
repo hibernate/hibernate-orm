@@ -70,7 +70,6 @@ public abstract class AbstractCollectionMapper<T> implements PropertyMapper {
 
     protected abstract Collection getNewCollectionContent(PersistentCollection newCollection);
     protected abstract Collection getOldCollectionContent(Serializable oldCollection);
-    protected abstract Object getElement(Object changedObject);
 
     /**
      * Maps the changed collection element to the given map.
@@ -87,7 +86,7 @@ public abstract class AbstractCollectionMapper<T> implements PropertyMapper {
             entityData.put(commonCollectionMapperData.getVerEntCfg().getOriginalIdPropName(), originalId);
 
             collectionChanges.add(new PersistentCollectionChangeData(
-                    commonCollectionMapperData.getVersionsMiddleEntityName(), entityData, getElement(changedObj)));
+                    commonCollectionMapperData.getVersionsMiddleEntityName(), entityData, changedObj));
             // Mapping the collection owner's id.
             commonCollectionMapperData.getReferencingIdData().getPrefixedMapper().mapToMapFromId(originalId, id);
 

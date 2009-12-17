@@ -33,6 +33,12 @@ import javax.persistence.PersistenceException;
 import javax.persistence.spi.PersistenceUnitTransactionType;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.transform.stream.StreamSource;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.validation.SchemaFactory;
+import javax.xml.validation.Schema;
+import javax.xml.validation.Validator;
+import javax.xml.validation.ValidatorHandler;
 
 import org.hibernate.cfg.EJB3DTDEntityResolver;
 import org.hibernate.ejb.HibernatePersistence;
@@ -71,28 +77,34 @@ public final class PersistenceXmlLoader {
 		if ( is == null ) {
 			throw new IOException( "Failed to obtain InputStream from url: " + configURL );
 		}
-		List errors = new ArrayList();
-		DocumentBuilderFactory docBuilderFactory = null;
-		docBuilderFactory = DocumentBuilderFactory.newInstance();
-		docBuilderFactory.setValidating( true );
+		DocumentBuilderFactory docBuilderFactory = DocumentBuilderFactory.newInstance();
 		docBuilderFactory.setNamespaceAware( true );
-		try {
-			//otherwise Xerces fails in validation
-			docBuilderFactory.setAttribute( "http://apache.org/xml/features/validation/schema", true );
-		}
-		catch (IllegalArgumentException e) {
-			docBuilderFactory.setValidating( false );
-			docBuilderFactory.setNamespaceAware( false );
-		}
+		final Schema v2Schema = SchemaFactory.newInstance( javax.xml.XMLConstants.W3C_XML_SCHEMA_NS_URI )
+				.newSchema( new StreamSource( getStreamFromClasspath( "persistence_2_0.xsd" ) ) );
+		final Validator v2Validator = v2Schema.newValidator();
+		final Schema v1Schema = SchemaFactory.newInstance( javax.xml.XMLConstants.W3C_XML_SCHEMA_NS_URI )
+				.newSchema( new StreamSource( getStreamFromClasspath( "persistence_1_0.xsd" ) ) );
+		final Validator v1Validator = v2Schema.newValidator();
+
 		InputSource source = new InputSource( is );
 		DocumentBuilder docBuilder = docBuilderFactory.newDocumentBuilder();
 		docBuilder.setEntityResolver( resolver );
-		docBuilder.setErrorHandler( new ErrorLogger( "XML InputStream", errors, resolver ) );
 		Document doc = docBuilder.parse( source );
+
+		List errors = new ArrayList();
+		v2Validator.setErrorHandler( new ErrorLogger( "XML InputStream", errors, resolver ) );
+		v2Validator.validate( new DOMSource( doc ) );
+		
 		if ( errors.size() != 0 ) {
-			throw new PersistenceException( "invalid persistence.xml", (Throwable) errors.get( 0 ) );
+			throw new PersistenceException( "Invlid persistence.xml. Check the error logs for parsing errors", (Throwable) errors.get( 0 ) );
 		}
 		return doc;
+	}
+
+	private static InputStream getStreamFromClasspath(String fileName) {
+		String path = "org/hibernate/ejb/" + fileName;
+		InputStream dtdStream = PersistenceXmlLoader.class.getClassLoader().getResourceAsStream( path );
+		return dtdStream;
 	}
 
 	/**
@@ -109,6 +121,9 @@ public final class PersistenceXmlLoader {
 												   PersistenceUnitTransactionType defaultTransactionType) throws Exception {
 		Document doc = loadURL( url, resolver );
 		Element top = doc.getDocumentElement();
+		//version is mandatory
+		final String version = top.getAttribute( "version" );
+
 		NodeList children = top.getChildNodes();
 		ArrayList<PersistenceMetadata> units = new ArrayList<PersistenceMetadata>();
 		for ( int i = 0; i < children.getLength() ; i++ ) {
@@ -117,6 +132,7 @@ public final class PersistenceXmlLoader {
 				String tag = element.getTagName();
 				if ( tag.equals( "persistence-unit" ) ) {
 					PersistenceMetadata metadata = parsePersistenceUnit( element );
+					metadata.setVersion(version);
 					//override properties of metadata if needed
 					if ( overrides.containsKey( HibernatePersistence.PROVIDER ) ) {
 						String provider = (String) overrides.get( HibernatePersistence.PROVIDER );
@@ -270,20 +286,33 @@ public final class PersistenceXmlLoader {
 		}
 
 		public void error(SAXParseException error) {
-			if ( resolver instanceof EJB3DTDEntityResolver ) {
-				if ( ( (EJB3DTDEntityResolver) resolver ).isResolved() == false ) return;
-			}
-			log.error( "Error parsing XML: {}({}) {}", new Object[] { file, error.getLineNumber(), error.getMessage() } );
+//			if ( resolver instanceof EJB3DTDEntityResolver ) {
+//				if ( ( (EJB3DTDEntityResolver) resolver ).isResolved() == false ) return;
+//			}
+
+			log.error( "Error parsing XML (line {}: column {}): {}",
+					new Object[] {
+							error.getLineNumber(),
+							error.getColumnNumber(),
+							error.getMessage() } );
 			errors.add( error );
 		}
 
 		public void fatalError(SAXParseException error) {
-			log.error( "Error parsing XML: {}({}) {}", new Object[] { file, error.getLineNumber(), error.getMessage() } );
+			log.error( "Error parsing XML (line {}: column {}): {}",
+					new Object[] {
+							error.getLineNumber(),
+							error.getColumnNumber(),
+							error.getMessage() } );
 			errors.add( error );
 		}
 
 		public void warning(SAXParseException warn) {
-			log.warn( "Warning parsing XML: {}({}) {}", new Object[] { file, warn.getLineNumber(), warn.getMessage() } );
+			log.warn( "Warning parsing XML (line {}: column {}): {}",
+					new Object[] {
+							warn.getLineNumber(),
+							warn.getColumnNumber(),
+							warn.getMessage() } );
 		}
 	}
 

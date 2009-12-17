@@ -52,6 +52,15 @@ public class PersistenceMetadata {
 	private Properties props = new Properties();
 	private boolean excludeUnlistedClasses = false;
 	private String validationMode;
+	private String version;
+
+	public String getVersion() {
+		return version;
+	}
+
+	public void setVersion(String version) {
+		this.version = version;
+	}
 
 	public String getSharedCacheMode() {
 		return sharedCacheMode;
@@ -176,7 +185,9 @@ public class PersistenceMetadata {
 	@Override
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
-		sb.append( "PersistenceMetadata [\n")
+		sb.append( "PersistenceMetadata(version=" )
+				.append( version )
+				.append(") [\n")
 				.append("\tname: ").append(name).append("\n")
 				.append("\tjtaDataSource: ").append(jtaDatasource).append("\n")
 				.append("\tnonJtaDataSource: ").append(nonJtaDatasource).append("\n")
@@ -212,8 +223,7 @@ public class PersistenceMetadata {
 		}
 		sb.append( "\t]\n")
 				.append("\thbmfiles: ")
-				.append( hbmfiles != null ? hbmfiles.size() : 0 ).append("\n")
-				.append("\tproperties[\n");
+				.append( hbmfiles != null ? hbmfiles.size() : 0 ).append("\n");
 
 		if (validationMode != null) {
 			sb.append("\tvalidation-mode: ").append(validationMode).append("\n");
@@ -221,6 +231,8 @@ public class PersistenceMetadata {
 		if (sharedCacheMode != null) {
 			sb.append("\tshared-cache-mode: ").append(sharedCacheMode).append("\n");
 		}
+
+		sb.append("\tproperties[\n");
 
 		if (props != null) {
 			for ( Map.Entry elt : props.entrySet()) {

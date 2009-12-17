@@ -174,7 +174,7 @@ class MetadataContext {
 						// #buildIdClassAttributes
 						continue;
 					}
-					final Attribute attribute = attributeFactory.buildAttribute( jpa2Mapping, property, true );
+					final Attribute attribute = attributeFactory.buildAttribute( jpa2Mapping, property );
 					jpa2Mapping.getBuilder().addAttribute( attribute );
 				}
 				jpa2Mapping.lock();
@@ -191,7 +191,7 @@ class MetadataContext {
 				Iterator<Property> properties = ( Iterator<Property> ) safeMapping.getDeclaredPropertyIterator();
 				while ( properties.hasNext() ) {
 					final Property property = properties.next();
-					final Attribute attribute = attributeFactory.buildAttribute( jpa2Mapping, property, true );
+					final Attribute attribute = attributeFactory.buildAttribute( jpa2Mapping, property );
 					jpa2Mapping.getBuilder().addAttribute( attribute );
 				}
 				jpa2Mapping.lock();
@@ -213,7 +213,7 @@ class MetadataContext {
 			final Property declaredIdentifierProperty = persistentClass.getDeclaredIdentifierProperty();
 			if (declaredIdentifierProperty != null) {
 				jpaEntityType.getBuilder().applyIdAttribute(
-						attributeFactory.buildIdAttribute( jpaEntityType, declaredIdentifierProperty, true )
+						attributeFactory.buildIdAttribute( jpaEntityType, declaredIdentifierProperty )
 				);
 			}
 		}
@@ -227,7 +227,7 @@ class MetadataContext {
 			final Property declaredIdentifierProperty = mappingType.getDeclaredIdentifierProperty();
 			if (declaredIdentifierProperty != null) {
 				jpaMappingType.getBuilder().applyIdAttribute(
-						attributeFactory.buildIdAttribute( jpaMappingType, declaredIdentifierProperty, true )
+						attributeFactory.buildIdAttribute( jpaMappingType, declaredIdentifierProperty )
 				);
 			}
 		}
@@ -244,7 +244,7 @@ class MetadataContext {
 		final Property declaredVersion = persistentClass.getDeclaredVersion();
 		if (declaredVersion != null) {
 			jpaEntityType.getBuilder().applyVersionAttribute(
-					attributeFactory.buildVersionAttribute( jpaEntityType, declaredVersion, true )
+					attributeFactory.buildVersionAttribute( jpaEntityType, declaredVersion )
 			);
 		}
 	}
@@ -253,7 +253,7 @@ class MetadataContext {
 		final Property declaredVersion = mappingType.getDeclaredVersion();
 		if ( declaredVersion != null ) {
 			jpaMappingType.getBuilder().applyVersionAttribute(
-					attributeFactory.buildVersionAttribute( jpaMappingType, declaredVersion, true )
+					attributeFactory.buildVersionAttribute( jpaMappingType, declaredVersion )
 			);
 		}
 	}
@@ -265,7 +265,7 @@ class MetadataContext {
 		@SuppressWarnings( "unchecked")
 		Iterator<Property> properties = persistentClass.getIdentifierMapper().getPropertyIterator();
 		while ( properties.hasNext() ) {
-			attributes.add( attributeFactory.buildIdAttribute( jpaEntityType, properties.next(), true ) );
+			attributes.add( attributeFactory.buildIdAttribute( jpaEntityType, properties.next() ) );
 		}
 		return attributes;
 	}
@@ -277,7 +277,7 @@ class MetadataContext {
 		@SuppressWarnings( "unchecked" )
 		Iterator<Property> properties = mappingType.getIdentifierMapper().getPropertyIterator();
 		while ( properties.hasNext() ) {
-			attributes.add( attributeFactory.buildIdAttribute( jpaMappingType, properties.next(), true ) );
+			attributes.add( attributeFactory.buildIdAttribute( jpaMappingType, properties.next() ) );
 		}
 		return attributes;
 	}

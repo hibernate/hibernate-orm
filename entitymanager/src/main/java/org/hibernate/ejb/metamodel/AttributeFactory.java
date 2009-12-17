@@ -58,19 +58,19 @@ public class AttributeFactory {
 	}
 
 	@SuppressWarnings({ "unchecked" })
-	public <X, Y> AttributeImplementor<X, Y> buildAttribute(AbstractManagedType<X> ownerType, Property property, boolean getMember) {
+	public <X, Y> AttributeImplementor<X, Y> buildAttribute(AbstractManagedType<X> ownerType, Property property) {
 		AttributeContext attrContext = getAttributeContext( property );
 		final AttributeImplementor<X, Y> attribute;
 		if ( attrContext.isCollection() ) {
-			attribute = buildPluralAttribute( ownerType, property, attrContext, getMember );
+			attribute = buildPluralAttribute( ownerType, property, attrContext);
 		}
 		else {
-			final Type<Y> attrType = getType( ownerType, attrContext.getElementTypeStatus(), attrContext.getElementValue(), getMember );
+			final Type<Y> attrType = getType( ownerType, attrContext.getElementTypeStatus(), attrContext.getElementValue() );
 			attribute = new SingularAttributeImpl<X,Y>(
 					property.getName(),
 					property.getType().getReturnedClass(),
 					ownerType,
-					getMember ? determineStandardJavaMember( ownerType, property ) : null,
+					determineStandardJavaMember( ownerType, property ),
 					false,
 					false,
 					property.isOptional(),
@@ -82,15 +82,15 @@ public class AttributeFactory {
 	}
 
 	@SuppressWarnings( "unchecked" )
-	private <X, Y, V, K> AttributeImplementor<X, Y> buildPluralAttribute(AbstractManagedType<X> ownerType, Property property, AttributeContext attrContext, boolean getMember) {
+	private <X, Y, V, K> AttributeImplementor<X, Y> buildPluralAttribute(AbstractManagedType<X> ownerType, Property property, AttributeContext attrContext) {
 		AttributeImplementor<X, Y> attribute;
-		final Type<V> attrType = getType( ownerType, attrContext.getElementTypeStatus(), attrContext.getElementValue(), getMember );
-		final Member member = getMember ? determineStandardJavaMember( ownerType, property ) : null;
+		final Type<V> attrType = getType( ownerType, attrContext.getElementTypeStatus(), attrContext.getElementValue() );
+		final Member member = determineStandardJavaMember( ownerType, property );
 		final Class<Y> collectionClass = (Class<Y>) ( member instanceof Field
 				? ( ( Field ) member ).getType()
 				: ( ( Method ) member ).getReturnType() );
 		if ( java.util.Map.class.isAssignableFrom( collectionClass ) ) {
-			final Type<K> keyType = getType( ownerType, attrContext.getKeyTypeStatus(), attrContext.getKeyValue(), getMember );
+			final Type<K> keyType = getType( ownerType, attrContext.getKeyTypeStatus(), attrContext.getKeyValue() );
 			attribute = PluralAttributeImpl.create( ownerType, attrType, collectionClass, keyType )
 					.member( member )
 					.property( property )
@@ -107,13 +107,13 @@ public class AttributeFactory {
 		return attribute;
 	}
 
-	private <X> Type<X> getType(AbstractManagedType owner, AttributeContext.TypeStatus elementTypeStatus, Value value, boolean getMember) {
+	private <X> Type<X> getType(AbstractManagedType owner, AttributeContext.TypeStatus elementTypeStatus, Value value) {
 		final org.hibernate.type.Type type = value.getType();
 		switch ( elementTypeStatus ) {
 			case BASIC:
 				return buildBasicType( type );
 			case EMBEDDABLE:
-				return buildEmbeddableType( owner, value, type, getMember );
+				return buildEmbeddableType( owner, value, type );
 			case ENTITY:
 				return buildEntityType( type );
 			default:
@@ -135,7 +135,7 @@ public class AttributeFactory {
 	}
 
 	@SuppressWarnings( "unchecked" )
-	private <X> Type<X> buildEmbeddableType(AbstractManagedType owner, Value value, org.hibernate.type.Type type, boolean getMember) {
+	private <X> Type<X> buildEmbeddableType(AbstractManagedType owner, Value value, org.hibernate.type.Type type) {
 		//build embedable type
 		final Class<X> clazz = type.getReturnedClass();
 		final EmbeddableTypeImpl<X> embeddableType = new EmbeddableTypeImpl<X>( clazz, owner, (ComponentType) type );
@@ -144,22 +144,22 @@ public class AttributeFactory {
 		final Iterator<Property> subProperties = component.getPropertyIterator();
 		while ( subProperties.hasNext() ) {
 			final Property property = subProperties.next();
-			embeddableType.getBuilder().addAttribute( buildAttribute( embeddableType, property, getMember ) );
+			embeddableType.getBuilder().addAttribute( buildAttribute( embeddableType, property) );
 		}
 		embeddableType.lock();
 		return embeddableType;
 	}
 
 	@SuppressWarnings({ "unchecked" })
-	public <X, Y> SingularAttributeImpl<X, Y> buildIdAttribute(AbstractIdentifiableType<X> ownerType, Property property, boolean getMember) {
+	public <X, Y> SingularAttributeImpl<X, Y> buildIdAttribute(AbstractIdentifiableType<X> ownerType, Property property) {
 		final AttributeContext attrContext = getAttributeContext( property );
-		final Type<Y> attrType = getType( ownerType, attrContext.getElementTypeStatus(), attrContext.getElementValue(), getMember );
+		final Type<Y> attrType = getType( ownerType, attrContext.getElementTypeStatus(), attrContext.getElementValue() );
 		final Class<Y> idJavaType = property.getType().getReturnedClass();
 		return new SingularAttributeImpl.Identifier(
 				property.getName(),
 				idJavaType,
 				ownerType,
-				getMember ? determineIdentifierJavaMember( ownerType, property ) : null,
+				determineIdentifierJavaMember( ownerType, property ),
 				attrType,
 				attrContext.getElementAttributeType()
 		);
@@ -259,15 +259,15 @@ public class AttributeFactory {
 	}
 
 	@SuppressWarnings({ "unchecked" })
-	public <X, Y> SingularAttributeImpl<X, Y> buildVersionAttribute(AbstractIdentifiableType<X> ownerType, Property property, boolean getMember) {
+	public <X, Y> SingularAttributeImpl<X, Y> buildVersionAttribute(AbstractIdentifiableType<X> ownerType, Property property) {
 		final AttributeContext attrContext = getAttributeContext( property );
 		final Class<Y> javaType = property.getType().getReturnedClass();
-		final Type<Y> attrType = getType( ownerType, attrContext.getElementTypeStatus(), attrContext.getElementValue(), getMember );
+		final Type<Y> attrType = getType( ownerType, attrContext.getElementTypeStatus(), attrContext.getElementValue() );
 		return new SingularAttributeImpl.Version(
 				property.getName(),
 				javaType,
 				ownerType,
-				getMember ? determineVersionJavaMember( ownerType, property ) : null,
+				determineVersionJavaMember( ownerType, property ),
 				attrType,
 				attrContext.getElementAttributeType()
 		);

@@ -40,7 +40,7 @@
         </listitem>
         <listitem>
             <para>
-                <ulink url="http://www.jboss.com/index.html?module=bb&amp;op=viewforum&amp;f=283">Forum</ulink>
+                <ulink url="http://community.jboss.org/en/envers?view=discussions">Forum</ulink>
             </para>
         </listitem>
         <listitem>
@@ -62,6 +62,11 @@
         <listitem>
             <para>
                 <ulink url="http://www.jboss.org/feeds/view/envers">Blog</ulink>
+            </para>
+        </listitem>
+        <listitem>
+            <para>
+                <ulink url="https://community.jboss.org/wiki/EnversFAQ">FAQ</ulink>
             </para>
         </listitem>
     </orderedlist>

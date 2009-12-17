@@ -45,6 +45,10 @@
 			<param name="extension" value="par"/>
 			<param name="jarname" value="defaultpar"/>
 		</antcall>
+        <antcall target="packjar" inheritall="true">
+			<param name="extension" value="par"/>
+			<param name="jarname" value="defaultpar_1_0"/>
+		</antcall>
 		<antcall target="packjar" inheritall="true">
 			<param name="extension" value="par"/>
 			<param name="jarname" value="space par"/>

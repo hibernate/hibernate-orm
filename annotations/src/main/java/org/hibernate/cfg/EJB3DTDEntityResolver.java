@@ -32,6 +32,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
+ * Resolve JPA xsd files locally
+ *
  * @author Emmanuel Bernard
  */
 public class EJB3DTDEntityResolver extends DTDEntityResolver {
@@ -41,49 +43,38 @@ public class EJB3DTDEntityResolver extends DTDEntityResolver {
 
 	boolean resolved = false;
 
+	/**
+	 * Persistence.xml has been resolved locally
+	 * @return true if it has
+	 */
 	public boolean isResolved() {
 		return resolved;
 	}
 
 	public InputSource resolveEntity(String publicId, String systemId) {
+		log.trace("Resolving XML entity {} : {}", publicId, systemId);
 		InputSource is = super.resolveEntity( publicId, systemId );
 		if ( is == null ) {
 			if ( systemId != null ) {
 				if ( systemId.endsWith( "orm_1_0.xsd" ) ) {
-					log.debug(
-							"recognized EJB3 ORM namespace; attempting to resolve on classpath under org/hibernate/ejb"
-					);
-					String path = "org/hibernate/ejb/" + "orm_1_0.xsd";
-					InputStream dtdStream = resolveInHibernateNamespace( path );
-					if ( dtdStream == null ) {
-						log.debug( "unable to locate [{}] on classpath", systemId );
-					}
-					else {
-						log.debug( "located [{}] in classpath", systemId );
-						InputSource source = new InputSource( dtdStream );
-						source.setPublicId( publicId );
-						source.setSystemId( systemId );
-						resolved = false;
-						return source;
-					}
+					InputStream dtdStream = getStreamFromClasspath( "orm_1_0.xsd" );
+					final InputSource source = buildInputSource( publicId, systemId, dtdStream, false );
+					if (source != null) return source;
+				}
+				else if ( systemId.endsWith( "orm_2_0.xsd" ) ) {
+					InputStream dtdStream = getStreamFromClasspath( "orm_2_0.xsd" );
+					final InputSource source = buildInputSource( publicId, systemId, dtdStream, false );
+					if (source != null) return source;
 				}
 				else if ( systemId.endsWith( "persistence_1_0.xsd" ) ) {
-					log.debug(
-							"recognized EJB3 ORM namespace; attempting to resolve on classpath under org/hibernate/ejb"
-					);
-					String path = "org/hibernate/ejb/" + "persistence_1_0.xsd";
-					InputStream dtdStream = resolveInHibernateNamespace( path );
-					if ( dtdStream == null ) {
-						log.debug( "unable to locate [{}] on classpath", systemId );
-					}
-					else {
-						log.debug( "located [{}] in classpath", systemId );
-						InputSource source = new InputSource( dtdStream );
-						source.setPublicId( publicId );
-						source.setSystemId( systemId );
-						resolved = true;
-						return source;
-					}
+					InputStream dtdStream = getStreamFromClasspath( "persistence_1_0.xsd" );
+					final InputSource source = buildInputSource( publicId, systemId, dtdStream, true );
+					if (source != null) return source;
+				}
+				else if ( systemId.endsWith( "persistence_2_0.xsd" ) ) {
+					InputStream dtdStream = getStreamFromClasspath( "persistence_2_0.xsd" );
+					final InputSource source = buildInputSource( publicId, systemId, dtdStream, true );
+					if (source != null) return source;
 				}
 			}
 		}
@@ -93,5 +84,29 @@ public class EJB3DTDEntityResolver extends DTDEntityResolver {
 		}
 		//use the default behavior
 		return null;
+	}
+
+	private InputSource buildInputSource(String publicId, String systemId, InputStream dtdStream, boolean resolved) {
+		if ( dtdStream == null ) {
+			log.trace( "unable to locate [{}] on classpath", systemId );
+			return null;
+		}
+		else {
+			log.trace( "located [{}] in classpath", systemId );
+			InputSource source = new InputSource( dtdStream );
+			source.setPublicId( publicId );
+			source.setSystemId( systemId );
+			this.resolved = resolved;
+			return source;
+		}
+	}
+
+	private InputStream getStreamFromClasspath(String fileName) {
+		log.trace(
+							"recognized JPA ORM namespace; attempting to resolve on classpath under org/hibernate/ejb"
+		);
+		String path = "org/hibernate/ejb/" + fileName;
+		InputStream dtdStream = resolveInHibernateNamespace( path );
+		return dtdStream;
 	}
 }

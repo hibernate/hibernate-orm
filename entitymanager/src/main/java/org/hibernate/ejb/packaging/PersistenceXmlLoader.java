@@ -84,19 +84,54 @@ public final class PersistenceXmlLoader {
 		final Validator v2Validator = v2Schema.newValidator();
 		final Schema v1Schema = SchemaFactory.newInstance( javax.xml.XMLConstants.W3C_XML_SCHEMA_NS_URI )
 				.newSchema( new StreamSource( getStreamFromClasspath( "persistence_1_0.xsd" ) ) );
-		final Validator v1Validator = v2Schema.newValidator();
+		final Validator v1Validator = v1Schema.newValidator();
 
 		InputSource source = new InputSource( is );
 		DocumentBuilder docBuilder = docBuilderFactory.newDocumentBuilder();
 		docBuilder.setEntityResolver( resolver );
-		Document doc = docBuilder.parse( source );
+		List<SAXParseException> errors = new ArrayList<SAXParseException>();
+		Document doc = null;
+		try {
+			doc = docBuilder.parse( source );
+		}
+		catch ( SAXParseException e ) {
+			errors.add( e );
+		}
 
-		List errors = new ArrayList();
-		v2Validator.setErrorHandler( new ErrorLogger( "XML InputStream", errors, resolver ) );
-		v2Validator.validate( new DOMSource( doc ) );
-		
+		if (errors.size() == 0) {
+			v2Validator.setErrorHandler( new ErrorLogger( "XML InputStream", errors, resolver ) );
+			log.trace("Validate with persistence_2_0.xsd schema on file {}", configURL);
+			v2Validator.validate( new DOMSource( doc ) );
+			boolean isV1Schema = false;
+			if ( errors.size() != 0 ) {
+				//v2 fails, it could be because the file is v1.
+				log.trace("Found error with persistence_2_0.xsd schema on file {}", configURL);
+				SAXParseException exception = errors.get( 0 );
+				final String errorMessage = exception.getMessage();
+				isV1Schema = errorMessage.contains("1.0")
+						&& errorMessage.contains("2.0")
+						&& errorMessage.contains("version");
+
+			}
+			if (isV1Schema) {
+				log.trace("Validate with persistence_1_0.xsd schema on file {}", configURL);
+				errors.clear();
+				v1Validator.setErrorHandler( new ErrorLogger( "XML InputStream", errors, resolver ) );
+				v1Validator.validate( new DOMSource( doc ) );
+			}
+		}
 		if ( errors.size() != 0 ) {
-			throw new PersistenceException( "Invlid persistence.xml. Check the error logs for parsing errors", (Throwable) errors.get( 0 ) );
+			StringBuilder errorMessage = new StringBuilder( );
+			for (SAXParseException error : errors) {
+				errorMessage.append("Error parsing XML (line")
+							.append(error.getLineNumber())
+							.append(" : column ")
+							.append(error.getColumnNumber())
+							.append("): ")
+							.append(error.getMessage())
+							.append("\n");
+			}
+			throw new PersistenceException( "Invalid persistence.xml.\n" + errorMessage.toString() );
 		}
 		return doc;
 	}
@@ -289,30 +324,14 @@ public final class PersistenceXmlLoader {
 //			if ( resolver instanceof EJB3DTDEntityResolver ) {
 //				if ( ( (EJB3DTDEntityResolver) resolver ).isResolved() == false ) return;
 //			}
-
-			log.error( "Error parsing XML (line {}: column {}): {}",
-					new Object[] {
-							error.getLineNumber(),
-							error.getColumnNumber(),
-							error.getMessage() } );
 			errors.add( error );
 		}
 
 		public void fatalError(SAXParseException error) {
-			log.error( "Error parsing XML (line {}: column {}): {}",
-					new Object[] {
-							error.getLineNumber(),
-							error.getColumnNumber(),
-							error.getMessage() } );
 			errors.add( error );
 		}
 
 		public void warning(SAXParseException warn) {
-			log.warn( "Warning parsing XML (line {}: column {}): {}",
-					new Object[] {
-							warn.getLineNumber(),
-							warn.getColumnNumber(),
-							warn.getMessage() } );
 		}
 	}
 

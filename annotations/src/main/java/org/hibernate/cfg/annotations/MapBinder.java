@@ -39,6 +39,7 @@ import org.hibernate.annotations.MapKey;
 import org.hibernate.annotations.MapKeyManyToMany;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
+import org.hibernate.cfg.AccessType;
 import org.hibernate.cfg.AnnotatedClassType;
 import org.hibernate.cfg.AnnotationBinder;
 import org.hibernate.cfg.BinderHelper;
@@ -227,10 +228,10 @@ public class MapBinder extends CollectionBinder {
 
 					//boolean propertyAccess = embeddable == null || AccessType.PROPERTY.equals( embeddable.access() );
 					//FIXME "index" is it right?
-					PropertyData inferredData = new PropertyPreloadedData( "property", "index", elementClass );
+					PropertyData inferredData = new PropertyPreloadedData( AccessType.PROPERTY, "index", elementClass );
 					//TODO be smart with isNullable
 					Component component = AnnotationBinder.fillComponent(
-							holder, inferredData, isPropertyAnnotated, isPropertyAnnotated ? "property" : "field", true,
+							holder, inferredData, isPropertyAnnotated ? AccessType.PROPERTY : AccessType.FIELD, true,
 							entityBinder, false, false,
 							true, mappings, inheritanceStatePerClass
 					);

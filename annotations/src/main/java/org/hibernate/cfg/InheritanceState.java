@@ -60,8 +60,7 @@ public class InheritanceState {
 	/**
 	 * only defined on embedded superclasses
 	 */
-	private String accessType = null;
-	private Boolean isPropertyAnnotated;
+	private AccessType accessType = AccessType.DEFAULT;
 
 	private void extractInheritanceType() {
 		XAnnotatedElement element = getClazz();
@@ -108,7 +107,9 @@ public class InheritanceState {
 		do {
 			superclass = superclass.getSuperclass();
 			InheritanceState currentState = states.get( superclass );
-			if ( currentState != null ) return currentState;
+			if ( currentState != null ) {
+				return currentState;
+			}
 		}
 		while ( superclass != null && !reflectionManager.equals( superclass, Object.class ) );
 		return null;
@@ -154,19 +155,11 @@ public class InheritanceState {
 		isEmbeddableSuperclass = embeddableSuperclass;
 	}
 
-	public String getAccessType() {
+	public AccessType getAccessType() {
 		return accessType;
 	}
 
-	public void setAccessType(String accessType) {
-		this.accessType = accessType;
-	}
-
-	public Boolean isPropertyAnnotated() {
-		return isPropertyAnnotated;
-	}
-
-	public void setPropertyAnnotated(Boolean propertyAnnotated) {
-		isPropertyAnnotated = propertyAnnotated;
+	public void setAccessType(AccessType type) {
+		this.accessType = type;
 	}
 }

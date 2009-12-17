@@ -23,8 +23,9 @@
  */
 package org.hibernate.cfg;
 
+import javax.persistence.Access;
+
 import org.hibernate.MappingException;
-import org.hibernate.annotations.AccessType;
 import org.hibernate.annotations.Target;
 import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.annotations.common.reflection.XClass;
@@ -37,7 +38,7 @@ import org.hibernate.annotations.common.reflection.XProperty;
  * @author Paolo Perrotta
  */
 public class PropertyInferredData implements PropertyData {
-	private final String defaultAccess;
+	private final AccessType defaultAccess;
 
 	private final XProperty property;
 	private final ReflectionManager reflectionManager;
@@ -50,15 +51,45 @@ public class PropertyInferredData implements PropertyData {
 	public PropertyInferredData(XClass declaringClass, XProperty property, String propertyAccessor, ReflectionManager reflectionManager) {
 		this.declaringClass = declaringClass;
 		this.property = property;
-		this.defaultAccess = propertyAccessor;
+		this.defaultAccess = AccessType.getAccessStrategy( propertyAccessor );
 		this.reflectionManager = reflectionManager;
 	}
 
-	public String getDefaultAccess() throws MappingException {
-		// if(skip())
-		// return defaultAccess;
-		AccessType access = property.getAnnotation( AccessType.class );
-		return access != null ? access.value() : defaultAccess;
+	public AccessType getDefaultAccess() throws MappingException {
+		AccessType accessType = defaultAccess;
+
+		AccessType hibernateAccessType = AccessType.DEFAULT;
+		AccessType jpaAccessType = AccessType.DEFAULT;
+
+		org.hibernate.annotations.AccessType accessTypeAnnotation = property.getAnnotation( org.hibernate.annotations.AccessType.class );
+		if ( accessTypeAnnotation != null ) {
+			hibernateAccessType = AccessType.getAccessStrategy( accessTypeAnnotation.value() );
+		}
+
+		Access access = property.getAnnotation( Access.class );
+		if ( access != null ) {
+			jpaAccessType = AccessType.getAccessStrategy( access.value() );
+		}
+
+		if ( hibernateAccessType != AccessType.DEFAULT
+				&& jpaAccessType != AccessType.DEFAULT
+				&& hibernateAccessType != jpaAccessType ) {
+
+			StringBuilder builder = new StringBuilder();
+			builder.append( property.toString() );
+			builder.append(
+					" defines @AccessType and @Access with contradicting values. Use of @Access only is recommended."
+			);
+			throw new MappingException( builder.toString() );
+		}
+
+		if ( hibernateAccessType != AccessType.DEFAULT ) {
+			accessType = hibernateAccessType;
+		}
+		else if ( jpaAccessType != AccessType.DEFAULT ) {
+			accessType = jpaAccessType;
+		}
+		return accessType;
 	}
 
 	public String getPropertyName() throws MappingException {

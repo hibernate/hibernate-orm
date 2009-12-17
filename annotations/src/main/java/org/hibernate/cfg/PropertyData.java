@@ -33,7 +33,7 @@ public interface PropertyData {
 	 * @return default member access (whether field or property)
 	 * @throws MappingException No getter or field found or wrong JavaBean spec usage
 	 */
-	String getDefaultAccess();
+	AccessType getDefaultAccess();
 
 	/**
 	 * @return property name

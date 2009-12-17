@@ -28,19 +28,19 @@ import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
 
 public class PropertyPreloadedData implements PropertyData {
-	private final String defaultAccess;
+	private final AccessType defaultAccess;
 
 	private final String propertyName;
 
 	private final XClass returnedClass;
 
-	public PropertyPreloadedData(String defaultAccess, String propertyName, XClass returnedClass) {
+	public PropertyPreloadedData(AccessType defaultAccess, String propertyName, XClass returnedClass) {
 		this.defaultAccess = defaultAccess;
 		this.propertyName = propertyName;
 		this.returnedClass = returnedClass;
 	}
 
-	public String getDefaultAccess() throws MappingException {
+	public AccessType getDefaultAccess() throws MappingException {
 		return defaultAccess;
 	}
 

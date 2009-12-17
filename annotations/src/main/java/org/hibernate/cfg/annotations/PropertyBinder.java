@@ -35,6 +35,7 @@ import org.hibernate.annotations.OptimisticLock;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.annotations.common.AssertionFailure;
+import org.hibernate.cfg.AccessType;
 import org.hibernate.cfg.Ejb3Column;
 import org.hibernate.cfg.ExtendedMappings;
 import org.hibernate.cfg.PropertyHolder;
@@ -54,7 +55,7 @@ public class PropertyBinder {
 	private String name;
 	private String returnedClassName;
 	private boolean lazy;
-	private String propertyAccessorName;
+	private AccessType accessType;
 	private Ejb3Column[] columns;
 	private PropertyHolder holder;
 	private ExtendedMappings mappings;
@@ -94,8 +95,8 @@ public class PropertyBinder {
 		this.lazy = lazy;
 	}
 
-	public void setPropertyAccessorName(String propertyAccessorName) {
-		this.propertyAccessorName = propertyAccessorName;
+	public void setAccessType(AccessType accessType) {
+		this.accessType = accessType;
 	}
 
 	public void setColumns(Ejb3Column[] columns) {
@@ -170,7 +171,7 @@ public class PropertyBinder {
 		prop.setValue( value );
 		prop.setLazy( lazy );
 		prop.setCascade( cascade );
-		prop.setPropertyAccessorName( propertyAccessorName );
+		prop.setPropertyAccessorName( accessType.getType() );
 		Generated ann = property != null ?
 				property.getAnnotation( Generated.class ) :
 				null;
@@ -231,5 +232,5 @@ public class PropertyBinder {
 	public SimpleValueBinder getSimpleValueBinder() {
 		return simpleValueBinder;
 	}
-	
+
 }

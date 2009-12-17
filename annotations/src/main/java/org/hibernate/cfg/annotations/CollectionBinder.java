@@ -76,6 +76,7 @@ import org.hibernate.annotations.WhereJoinTable;
 import org.hibernate.annotations.common.AssertionFailure;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
+import org.hibernate.cfg.AccessType;
 import org.hibernate.cfg.AnnotatedClassType;
 import org.hibernate.cfg.AnnotationBinder;
 import org.hibernate.cfg.BinderHelper;
@@ -157,6 +158,7 @@ public abstract class CollectionBinder {
 	protected Map<XClass, InheritanceState> inheritanceStatePerClass;
 	private XClass declaringClass;
 	private boolean declaringClassSet;
+	private AccessType accessType;
 
 	public void setUpdatable(boolean updatable) {
 		this.updatable = updatable;
@@ -170,16 +172,13 @@ public abstract class CollectionBinder {
 		this.insertable = insertable;
 	}
 
-
 	public void setCascadeStrategy(String cascadeStrategy) {
 		this.cascadeStrategy = cascadeStrategy;
 	}
 
-	public void setPropertyAccessorName(String propertyAccessorName) {
-		this.propertyAccessorName = propertyAccessorName;
+	public void setAccessType(AccessType accessType) {
+		this.accessType = accessType;
 	}
-
-	private String propertyAccessorName;
 
 	public void setInverseJoinColumns(Ejb3JoinColumn[] inverseJoinColumns) {
 		this.inverseJoinColumns = inverseJoinColumns;
@@ -491,7 +490,7 @@ public abstract class CollectionBinder {
 		if ( cascadeStrategy != null && cascadeStrategy.indexOf( "delete-orphan" ) >= 0 ) {
 			collection.setOrphanDelete( true );
 		}
-		binder.setPropertyAccessorName( propertyAccessorName );
+		binder.setAccessType( accessType );
 		binder.setProperty( property );
 		binder.setInsertable( insertable );
 		binder.setUpdatable( updatable );
@@ -1296,11 +1295,10 @@ public abstract class CollectionBinder {
 					throw new AssertionFailure( "Unable to guess collection property accessor name" );
 				}
 
-				//boolean propertyAccess = embeddable == null || AccessType.PROPERTY.equals( embeddable.access() );
-				PropertyData inferredData = new PropertyPreloadedData( "property", "element", elementClass );
+				PropertyData inferredData = new PropertyPreloadedData( AccessType.PROPERTY, "element", elementClass );
 				//TODO be smart with isNullable
 				Component component = AnnotationBinder.fillComponent(
-						holder, inferredData, isPropertyAnnotated, isPropertyAnnotated ? "property" : "field", true,
+						holder, inferredData, isPropertyAnnotated ? AccessType.PROPERTY : AccessType.FIELD, true,
 						entityBinder, false, false,
 						true, mappings, inheritanceStatePerClass
 				);

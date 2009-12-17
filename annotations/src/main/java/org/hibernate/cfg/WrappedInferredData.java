@@ -43,7 +43,7 @@ public class WrappedInferredData implements PropertyData {
 		return wrappedInferredData.getClassOrElementName();
 	}
 
-	public String getDefaultAccess() {
+	public AccessType getDefaultAccess() {
 		return wrappedInferredData.getDefaultAccess();
 	}
 

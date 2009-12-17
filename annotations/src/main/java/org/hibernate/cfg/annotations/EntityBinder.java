@@ -27,6 +27,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import javax.persistence.Access;
 import javax.persistence.Entity;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
@@ -38,7 +39,6 @@ import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.EntityMode;
 import org.hibernate.MappingException;
-import org.hibernate.annotations.AccessType;
 import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
@@ -60,6 +60,7 @@ import org.hibernate.annotations.Tuplizers;
 import org.hibernate.annotations.Where;
 import org.hibernate.annotations.common.reflection.XAnnotatedElement;
 import org.hibernate.annotations.common.reflection.XClass;
+import org.hibernate.cfg.AccessType;
 import org.hibernate.cfg.AnnotationBinder;
 import org.hibernate.cfg.BinderHelper;
 import org.hibernate.cfg.Ejb3JoinColumn;
@@ -99,7 +100,6 @@ public class EntityBinder {
 	private ExtendedMappings mappings;
 	private Logger log = LoggerFactory.getLogger( EntityBinder.class );
 	private String discriminatorValue = "";
-	private boolean isPropertyAnnotated = false;
 	private boolean dynamicInsert;
 	private boolean dynamicUpdate;
 	private boolean explicitHibernateEntityAnnotation;
@@ -118,11 +118,7 @@ public class EntityBinder {
 	private InheritanceState inheritanceState;
 	private boolean ignoreIdAnnotations;
 	private boolean cacheLazyProperty;
-	private String propertyAccessor;
-
-	public boolean isPropertyAnnotated() {
-		return isPropertyAnnotated;
-	}
+	private AccessType propertyAccessor = AccessType.DEFAULT;
 
 	/**
 	 * Use as a fake one for Collection of elements
@@ -847,36 +843,41 @@ public class EntityBinder {
 		}
 	}
 
-	public void setPropertyAnnotated(boolean propertyAnnotated) {
-		this.isPropertyAnnotated = propertyAnnotated;
-	}
-
-	public String getPropertyAccessor() {
+	public AccessType getPropertyAccessor() {
 		return propertyAccessor;
 	}
 
-	public void setPropertyAccessor(String propertyAccessor) {
+	public void setPropertyAccessor(AccessType propertyAccessor) {
 		this.propertyAccessor = propertyAccessor;
 	}
 
-	public boolean isPropertyAnnotated(XAnnotatedElement element) {
-		AccessType access = element.getAnnotation( AccessType.class );
-		if ( access == null ) return isPropertyAnnotated;
-		String propertyAccessor = access.value();
-		if ( "property".equals( propertyAccessor ) ) {
-			return Boolean.TRUE;
-		}
-		else if ( "field".equals( propertyAccessor ) ) {
-			return Boolean.FALSE;
-		}
-		else {
-			return isPropertyAnnotated;
-		}
-	}
+	public AccessType getPropertyAccessor(XAnnotatedElement element) {
+		AccessType accessType = propertyAccessor;
 
-	public String getPropertyAccessor(XAnnotatedElement element) {
-		AccessType access = element.getAnnotation( AccessType.class );
-		if ( access == null ) return propertyAccessor;
-		return access.value();
+		AccessType hibernateAccessType = null;
+		AccessType jpaAccessType = null;
+
+		org.hibernate.annotations.AccessType accessTypeAnnotation = element.getAnnotation( org.hibernate.annotations.AccessType.class );
+		if ( accessTypeAnnotation != null ) {
+			hibernateAccessType = AccessType.getAccessStrategy( accessTypeAnnotation.value() );
+		}
+
+		Access access = element.getAnnotation( Access.class );
+		if ( access != null ) {
+			jpaAccessType = AccessType.getAccessStrategy( access.value() );
+		}
+
+		if ( hibernateAccessType != null && jpaAccessType != null && hibernateAccessType != jpaAccessType ) {
+			throw new MappingException( " " );
+		}
+
+		if ( hibernateAccessType != null ) {
+			accessType = hibernateAccessType;
+		}
+		else if ( jpaAccessType != null ) {
+			accessType = jpaAccessType;
+		}
+
+		return accessType;
 	}
 }

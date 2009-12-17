@@ -43,8 +43,6 @@ import javax.persistence.criteria.Fetch;
 import javax.persistence.criteria.JoinType;
 import javax.persistence.metamodel.EntityType;
 
-import org.hibernate.ejb.criteria.expression.ExpressionImplementor;
-
 /**
  * Models basic query structure.  Used as a delegate in implementing both
  * {@link org.hibernate.criterion.CriteriaQuery} and
@@ -214,10 +212,10 @@ public class QueryStructure<T> {
 		if ( getSelection() == null ) {
 			// we should have only a single root (query validation should have checked this...)
 			final Root root = getRoots().iterator().next();
-			jpaqlQuery.append( ( (ExpressionImplementor) root ).renderProjection( renderingContext) );
+			jpaqlQuery.append( ( (Renderable) root ).renderProjection( renderingContext) );
 		}
 		else {
-			jpaqlQuery.append( ( (ExpressionImplementor) getSelection() ).renderProjection( renderingContext ) );
+			jpaqlQuery.append( ( (Renderable) getSelection() ).renderProjection( renderingContext ) );
 		}
 
 		jpaqlQuery.append( " from " );
@@ -236,7 +234,7 @@ public class QueryStructure<T> {
 
 		if ( getRestriction() != null) {
 			jpaqlQuery.append( " where " )
-					.append( ( (ExpressionImplementor) getRestriction() ).render( renderingContext ) );
+					.append( ( (Renderable) getRestriction() ).render( renderingContext ) );
 		}
 
 		if ( ! getGroupings().isEmpty() ) {
@@ -244,13 +242,13 @@ public class QueryStructure<T> {
 			sep = "";
 			for ( Expression grouping : getGroupings() ) {
 				jpaqlQuery.append( sep )
-						.append( ( (ExpressionImplementor) grouping ).render( renderingContext ) );
+						.append( ( (Renderable) grouping ).render( renderingContext ) );
 				sep = ", ";
 			}
 
 			if ( getHaving() != null ) {
 				jpaqlQuery.append( " having " )
-						.append( ( (ExpressionImplementor) getHaving() ).render( renderingContext ) );
+						.append( ( (Renderable) getHaving() ).render( renderingContext ) );
 			}
 		}
 	}

@@ -30,6 +30,7 @@ import javax.persistence.criteria.CriteriaBuilder.SimpleCase;
 import org.hibernate.ejb.criteria.ParameterRegistry;
 import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
 import org.hibernate.ejb.criteria.CriteriaQueryCompiler;
+import org.hibernate.ejb.criteria.Renderable;
 
 /**
  * Models what ANSI SQL terms a simple case statement.  This is a <tt>CASE</tt> expression in the form<pre>
@@ -136,15 +137,15 @@ public class SimpleCaseExpression<C,R> extends ExpressionImpl<R> implements Simp
 	public String render(CriteriaQueryCompiler.RenderingContext renderingContext) {
 		StringBuilder caseExpr = new StringBuilder();
 		caseExpr.append( "case " )
-				.append(  ( (ExpressionImplementor) getExpression() ).render( renderingContext ) )
+				.append(  ( (Renderable) getExpression() ).render( renderingContext ) )
 				.append( ' ' );
 		for ( WhenClause whenClause : getWhenClauses() ) {
-			caseExpr.append( ( (ExpressionImplementor) whenClause.getCondition() ).render( renderingContext ) )
+			caseExpr.append( ( (Renderable) whenClause.getCondition() ).render( renderingContext ) )
 					.append( " then "  )
-					.append( ( (ExpressionImplementor) whenClause.getResult() ).render( renderingContext ) );
+					.append( ( (Renderable) whenClause.getResult() ).render( renderingContext ) );
 		}
 		caseExpr.append( " else " )
-				.append( ( (ExpressionImplementor) getOtherwiseResult() ).render( renderingContext ) )
+				.append( ( (Renderable) getOtherwiseResult() ).render( renderingContext ) )
 				.append( " end" );
 		return caseExpr.toString();
 	}

@@ -28,8 +28,8 @@ import javax.persistence.criteria.Expression;
 import org.hibernate.ejb.criteria.ParameterRegistry;
 import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
 import org.hibernate.ejb.criteria.CriteriaQueryCompiler;
+import org.hibernate.ejb.criteria.Renderable;
 import org.hibernate.ejb.criteria.expression.UnaryOperatorExpression;
-import org.hibernate.ejb.criteria.expression.ExpressionImplementor;
 
 /**
  * Defines a {@link javax.persistence.criteria.Predicate} for checking the
@@ -65,7 +65,7 @@ public class NullnessPredicate extends AbstractSimplePredicate implements UnaryO
 	}
 
 	public String render(CriteriaQueryCompiler.RenderingContext renderingContext) {
-		return ( (ExpressionImplementor) operand ).render( renderingContext ) + check();
+		return ( (Renderable) operand ).render( renderingContext ) + check();
 	}
 
 	private String check() {

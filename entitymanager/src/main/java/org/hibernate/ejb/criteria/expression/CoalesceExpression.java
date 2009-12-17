@@ -30,6 +30,7 @@ import javax.persistence.criteria.CriteriaBuilder.Coalesce;
 import org.hibernate.ejb.criteria.ParameterRegistry;
 import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
 import org.hibernate.ejb.criteria.CriteriaQueryCompiler;
+import org.hibernate.ejb.criteria.Renderable;
 
 /**
  * Models an ANSI SQL <tt>COALESCE</tt> expression.  <tt>COALESCE</tt> is a specialized <tt>CASE</tt> statement.
@@ -85,7 +86,7 @@ public class CoalesceExpression<T> extends ExpressionImpl<T> implements Coalesce
 		String sep = "";
 		for ( Expression expression : getExpressions() ) {
 			buffer.append( sep )
-					.append( ( (ExpressionImplementor) expression ).render( renderingContext ) );
+					.append( ( (Renderable) expression ).render( renderingContext ) );
 			sep = ", ";
 		}
 		return buffer.append( ")" ).toString();

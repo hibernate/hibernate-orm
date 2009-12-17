@@ -28,7 +28,7 @@ import javax.persistence.criteria.Expression;
 import org.hibernate.ejb.criteria.ParameterRegistry;
 import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
 import org.hibernate.ejb.criteria.CriteriaQueryCompiler;
-import org.hibernate.ejb.criteria.expression.ExpressionImplementor;
+import org.hibernate.ejb.criteria.Renderable;
 
 /**
  * ANSI-SQL defines <tt>TRUE</tt>, <tt>FALSE</tt> and <tt>UNKNOWN</tt> as <i>truth values</i>.  These
@@ -64,7 +64,7 @@ public class ExplicitTruthValueCheck extends AbstractSimplePredicate {
 	}
 
 	public String render(CriteriaQueryCompiler.RenderingContext renderingContext) {
-		return ( (ExpressionImplementor) getBooleanExpression() ).render( renderingContext )
+		return ( (Renderable) getBooleanExpression() ).render( renderingContext )
 				+ " = "
 				+ ( getTruthValue() == TruthValue.TRUE ? "true" : "false" );
 	}

@@ -29,7 +29,7 @@ import javax.persistence.criteria.Predicate;
 import org.hibernate.ejb.criteria.ParameterRegistry;
 import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
 import org.hibernate.ejb.criteria.CriteriaQueryCompiler;
-import org.hibernate.ejb.criteria.expression.ExpressionImplementor;
+import org.hibernate.ejb.criteria.Renderable;
 
 /**
  * Defines a {@link Predicate} used to wrap an {@link Expression Expression&lt;Boolean&gt;}.
@@ -58,7 +58,7 @@ public class BooleanExpressionPredicate extends AbstractSimplePredicate {
 	}
 
 	public String render(CriteriaQueryCompiler.RenderingContext renderingContext) {
-		return ( ( ExpressionImplementor) getExpression() ).render( renderingContext );
+		return ( (Renderable) getExpression() ).render( renderingContext );
 	}
 
 	public String renderProjection(CriteriaQueryCompiler.RenderingContext renderingContext) {

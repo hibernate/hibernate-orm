@@ -28,6 +28,7 @@ import javax.persistence.criteria.Expression;
 import org.hibernate.ejb.criteria.ParameterRegistry;
 import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
 import org.hibernate.ejb.criteria.CriteriaQueryCompiler;
+import org.hibernate.ejb.criteria.Renderable;
 
 /**
  * Models standard arithmetc operations with two operands.
@@ -196,8 +197,8 @@ public class BinaryArithmeticOperation<N extends Number>
 
 	public String render(CriteriaQueryCompiler.RenderingContext renderingContext) {
 		return getOperator().apply(
-				( (ExpressionImplementor) getLeftHandOperand() ).render( renderingContext ),
-				( (ExpressionImplementor) getRightHandOperand() ).render( renderingContext )
+				( (Renderable) getLeftHandOperand() ).render( renderingContext ),
+				( (Renderable) getRightHandOperand() ).render( renderingContext )
 		);
 	}
 

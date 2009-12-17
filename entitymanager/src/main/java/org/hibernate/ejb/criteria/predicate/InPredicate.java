@@ -33,8 +33,8 @@ import javax.persistence.criteria.Subquery;
 import org.hibernate.ejb.criteria.ParameterRegistry;
 import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
 import org.hibernate.ejb.criteria.CriteriaQueryCompiler;
+import org.hibernate.ejb.criteria.Renderable;
 import org.hibernate.ejb.criteria.expression.LiteralExpression;
-import org.hibernate.ejb.criteria.expression.ExpressionImplementor;
 
 /**
  * TODO : javadoc
@@ -158,14 +158,14 @@ public class InPredicate<T> extends AbstractSimplePredicate implements CriteriaB
 		boolean isInSubqueryPredicate = getValues().size() == 1
 				&& Subquery.class.isInstance( getValues().get( 0 ) );
 		if ( isInSubqueryPredicate ) {
-			buffer.append( ( (ExpressionImplementor) getValues().get(0) ).render( renderingContext ) );
+			buffer.append( ( (Renderable) getValues().get(0) ).render( renderingContext ) );
 		}
 		else {
 			buffer.append( '(' );
 			String sep = "";
 			for ( Expression value : getValues() ) {
 				buffer.append( sep )
-						.append( ( (ExpressionImplementor) value ).render( renderingContext ) );
+						.append( ( (Renderable) value ).render( renderingContext ) );
 				sep = ", ";
 			}
 			buffer.append( ')' );

@@ -28,8 +28,8 @@ import javax.persistence.criteria.CriteriaBuilder.Trimspec;
 import org.hibernate.ejb.criteria.ParameterRegistry;
 import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
 import org.hibernate.ejb.criteria.CriteriaQueryCompiler;
+import org.hibernate.ejb.criteria.Renderable;
 import org.hibernate.ejb.criteria.expression.LiteralExpression;
-import org.hibernate.ejb.criteria.expression.ExpressionImplementor;
 
 /**
  * Models the ANSI SQL <tt>TRIM</tt> function.
@@ -118,9 +118,9 @@ public class TrimFunction extends BasicFunctionExpression<String> {
 				.append( "trim(" )
 				.append( trimspec.name() )
 				.append( ' ' )
-				.append( ( (ExpressionImplementor) trimCharacter ).render( renderingContext ) )
+				.append( ( (Renderable) trimCharacter ).render( renderingContext ) )
 				.append( " from " )
-				.append( ( (ExpressionImplementor) trimSource ).render( renderingContext ) )
+				.append( ( (Renderable) trimSource ).render( renderingContext ) )
 				.append( ')' )
 				.toString();
 	}

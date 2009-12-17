@@ -30,6 +30,7 @@ import javax.persistence.criteria.CriteriaBuilder.Case;
 import org.hibernate.ejb.criteria.ParameterRegistry;
 import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
 import org.hibernate.ejb.criteria.CriteriaQueryCompiler;
+import org.hibernate.ejb.criteria.Renderable;
 
 /**
  * Models what ANSI SQL terms a <tt>searched case expression</tt>.  This is a <tt>CASE</tt> expression
@@ -129,12 +130,12 @@ public class SearchedCaseExpression<R> extends ExpressionImpl<R> implements Case
 		StringBuilder caseStatement = new StringBuilder( "case" );
 		for ( WhenClause whenClause : getWhenClauses() ) {
 			caseStatement.append( " when " )
-					.append( ( (ExpressionImplementor) whenClause.getCondition() ).render( renderingContext ) )
+					.append( ( (Renderable) whenClause.getCondition() ).render( renderingContext ) )
 					.append( " then " )
-					.append( ( (ExpressionImplementor) whenClause.getResult() ).render( renderingContext ) );
+					.append( ( (Renderable) whenClause.getResult() ).render( renderingContext ) );
 		}
 		caseStatement.append( " else " )
-				.append( ( (ExpressionImplementor) getOtherwiseResult() ).render( renderingContext ) )
+				.append( ( (Renderable) getOtherwiseResult() ).render( renderingContext ) )
 				.append( " end" );
 		return caseStatement.toString();
 	}

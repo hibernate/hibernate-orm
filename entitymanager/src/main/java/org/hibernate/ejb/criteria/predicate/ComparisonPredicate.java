@@ -28,9 +28,9 @@ import javax.persistence.criteria.Expression;
 import org.hibernate.ejb.criteria.ParameterRegistry;
 import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
 import org.hibernate.ejb.criteria.CriteriaQueryCompiler;
+import org.hibernate.ejb.criteria.Renderable;
 import org.hibernate.ejb.criteria.expression.BinaryOperatorExpression;
 import org.hibernate.ejb.criteria.expression.LiteralExpression;
-import org.hibernate.ejb.criteria.expression.ExpressionImplementor;
 
 /**
  * Models a basic relational comparison predicate.
@@ -66,7 +66,9 @@ public class ComparisonPredicate extends AbstractSimplePredicate implements Bina
 	}
 
 	public ComparisonOperator getComparisonOperator() {
-		return comparisonOperator;
+		return isNegated()
+				? comparisonOperator.negated()
+				: comparisonOperator;
 	}
 
 	public Expression getLeftHandOperand() {
@@ -142,9 +144,9 @@ public class ComparisonPredicate extends AbstractSimplePredicate implements Bina
 	}
 
 	public String render(CriteriaQueryCompiler.RenderingContext renderingContext) {
-		return ( ( ExpressionImplementor) getLeftHandOperand() ).render( renderingContext )
+		return ( (Renderable) getLeftHandOperand() ).render( renderingContext )
 				+ getComparisonOperator().rendered()
-				+ ( ( ExpressionImplementor) getRightHandOperand() ).render( renderingContext );
+				+ ( (Renderable) getRightHandOperand() ).render( renderingContext );
 	}
 
 	public String renderProjection(CriteriaQueryCompiler.RenderingContext renderingContext) {

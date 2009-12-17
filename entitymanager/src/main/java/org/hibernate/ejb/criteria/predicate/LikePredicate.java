@@ -27,8 +27,8 @@ import javax.persistence.criteria.Expression;
 import org.hibernate.ejb.criteria.ParameterRegistry;
 import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
 import org.hibernate.ejb.criteria.CriteriaQueryCompiler;
+import org.hibernate.ejb.criteria.Renderable;
 import org.hibernate.ejb.criteria.expression.LiteralExpression;
-import org.hibernate.ejb.criteria.expression.ExpressionImplementor;
 
 /**
  * Models a SQL <tt>LIKE</tt> expression.
@@ -124,12 +124,12 @@ public class LikePredicate extends AbstractSimplePredicate {
 
 	public String render(CriteriaQueryCompiler.RenderingContext renderingContext) {
 		StringBuilder likeExpr = new StringBuilder();
-		likeExpr.append( ( (ExpressionImplementor) getMatchExpression() ).render( renderingContext ) )
+		likeExpr.append( ( (Renderable) getMatchExpression() ).render( renderingContext ) )
 				.append( " like " )
-				.append( ( (ExpressionImplementor) getPattern() ).render( renderingContext ) );
+				.append( ( (Renderable) getPattern() ).render( renderingContext ) );
 		if ( escapeCharacter != null ) {
 			likeExpr.append( " escape " )
-					.append( ( (ExpressionImplementor) getEscapeCharacter() ).render( renderingContext ) );
+					.append( ( (Renderable) getEscapeCharacter() ).render( renderingContext ) );
 		}
 		return likeExpr.toString();
 	}

@@ -27,19 +27,19 @@ import java.lang.reflect.Member;
 import java.util.Map;
 import java.util.Map.Entry;
 import javax.persistence.criteria.Expression;
+import javax.persistence.criteria.From;
 import javax.persistence.criteria.Join;
 import javax.persistence.criteria.JoinType;
 import javax.persistence.criteria.MapJoin;
 import javax.persistence.criteria.Path;
-import javax.persistence.criteria.From;
 import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.ManagedType;
 import javax.persistence.metamodel.MapAttribute;
 import javax.persistence.metamodel.SingularAttribute;
 import javax.persistence.metamodel.Type.PersistenceType;
+
 import org.hibernate.ejb.criteria.JoinImplementors.JoinImplementor;
 import org.hibernate.ejb.criteria.expression.ExpressionImpl;
-import org.hibernate.ejb.criteria.expression.ExpressionImplementor;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.type.Type;
@@ -293,7 +293,7 @@ public class MapKeyHelpers {
 		private String path(CriteriaQueryCompiler.RenderingContext renderingContext) {
 			return origin.getPathIdentifier() 
 					+ '.'
-					+ ( (ExpressionImplementor) getAttribute() ).renderProjection( renderingContext );
+					+ ( (Renderable) getAttribute() ).renderProjection( renderingContext );
 		}
 	}
 

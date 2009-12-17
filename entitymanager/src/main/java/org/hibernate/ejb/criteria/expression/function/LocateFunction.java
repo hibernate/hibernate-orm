@@ -28,8 +28,8 @@ import javax.persistence.criteria.Expression;
 import org.hibernate.ejb.criteria.ParameterRegistry;
 import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
 import org.hibernate.ejb.criteria.CriteriaQueryCompiler;
+import org.hibernate.ejb.criteria.Renderable;
 import org.hibernate.ejb.criteria.expression.LiteralExpression;
-import org.hibernate.ejb.criteria.expression.ExpressionImplementor;
 
 /**
  * Models the ANSI SQL <tt>LOCATE</tt> function.
@@ -102,12 +102,12 @@ public class LocateFunction extends BasicFunctionExpression<Integer> {
 	public String render(CriteriaQueryCompiler.RenderingContext renderingContext) {
 		StringBuilder buffer = new StringBuilder();
 		buffer.append( "locate(" )
-				.append( ( (ExpressionImplementor) getPattern() ).render( renderingContext ) )
+				.append( ( (Renderable) getPattern() ).render( renderingContext ) )
 				.append( ',' )
-				.append( ( (ExpressionImplementor) getString() ).render( renderingContext ) );
+				.append( ( (Renderable) getString() ).render( renderingContext ) );
 		if ( getStart() != null ) {
 			buffer.append( ',' )
-					.append( ( (ExpressionImplementor) getStart() ).render( renderingContext ) );
+					.append( ( (Renderable) getStart() ).render( renderingContext ) );
 		}
 		buffer.append( ')' );
 		return buffer.toString();

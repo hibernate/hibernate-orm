@@ -27,6 +27,7 @@ import javax.persistence.criteria.Expression;
 import org.hibernate.ejb.criteria.ParameterRegistry;
 import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
 import org.hibernate.ejb.criteria.CriteriaQueryCompiler;
+import org.hibernate.ejb.criteria.Renderable;
 
 /**
  * Models an ANSI SQL <tt>NULLIF</tt> expression.  <tt>NULLIF</tt> is a specialized <tt>CASE</tt> statement.
@@ -76,9 +77,9 @@ public class NullifExpression<T> extends ExpressionImpl<T> {
 
 	public String render(CriteriaQueryCompiler.RenderingContext renderingContext) {
 		return "nullif("
-				+ ( (ExpressionImplementor) getPrimaryExpression() ).render( renderingContext )
+				+ ( (Renderable) getPrimaryExpression() ).render( renderingContext )
 				+ ','
-				+ ( (ExpressionImplementor) getSecondaryExpression() ).render( renderingContext )
+				+ ( (Renderable) getSecondaryExpression() ).render( renderingContext )
 				+ ")";
 	}
 

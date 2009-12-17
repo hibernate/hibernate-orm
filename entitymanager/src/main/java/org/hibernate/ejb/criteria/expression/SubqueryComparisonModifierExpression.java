@@ -27,6 +27,7 @@ import javax.persistence.criteria.Subquery;
 import org.hibernate.ejb.criteria.ParameterRegistry;
 import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
 import org.hibernate.ejb.criteria.CriteriaQueryCompiler;
+import org.hibernate.ejb.criteria.Renderable;
 
 /**
  * Represents a {@link Modifier#ALL}, {@link Modifier#ANY}, {@link Modifier#SOME} modifier appplied to a subquery as
@@ -80,7 +81,7 @@ public class SubqueryComparisonModifierExpression<Y> extends ExpressionImpl<Y> {
 	}
 
 	public String render(CriteriaQueryCompiler.RenderingContext renderingContext) {
-		return getModifier().rendered() + ( ( ExpressionImplementor ) getSubquery() ).render( renderingContext );
+		return getModifier().rendered() + ( (Renderable) getSubquery() ).render( renderingContext );
 	}
 
 	public String renderProjection(CriteriaQueryCompiler.RenderingContext renderingContext) {

@@ -35,7 +35,9 @@ import org.hibernate.ejb.criteria.expression.function.CastFunction;
  *
  * @author Steve Ebersole
  */
-public abstract class ExpressionImpl<T> extends SelectionImpl<T> implements ExpressionImplementor<T> {
+public abstract class ExpressionImpl<T>
+		extends SelectionImpl<T>
+		implements ExpressionImplementor<T> {
 	public ExpressionImpl(CriteriaBuilderImpl criteriaBuilder, Class<T> javaType) {
 		super( criteriaBuilder, javaType );
 	}
@@ -43,6 +45,7 @@ public abstract class ExpressionImpl<T> extends SelectionImpl<T> implements Expr
 	/**
 	 * {@inheritDoc}
 	 */
+	@SuppressWarnings({ "unchecked" })
 	public <X> Expression<X> as(Class<X> type) {
 		return type.equals( getJavaType() )
 				? (Expression<X>) this

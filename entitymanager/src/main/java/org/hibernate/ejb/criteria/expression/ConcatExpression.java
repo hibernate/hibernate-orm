@@ -27,6 +27,7 @@ import javax.persistence.criteria.Expression;
 import org.hibernate.ejb.criteria.ParameterRegistry;
 import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
 import org.hibernate.ejb.criteria.CriteriaQueryCompiler;
+import org.hibernate.ejb.criteria.Renderable;
 
 /**
  * A string concatenation.
@@ -78,9 +79,9 @@ public class ConcatExpression extends ExpressionImpl<String> {
 	}
 
 	public String render(CriteriaQueryCompiler.RenderingContext renderingContext) {
-		return ( (ExpressionImplementor) getString1() ).render( renderingContext )
+		return ( (Renderable) getString1() ).render( renderingContext )
 				+ " || "
-				+ ( (ExpressionImplementor) getString2() ).render( renderingContext );
+				+ ( (Renderable) getString2() ).render( renderingContext );
 	}
 
 	public String renderProjection(CriteriaQueryCompiler.RenderingContext renderingContext) {

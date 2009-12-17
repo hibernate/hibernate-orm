@@ -38,8 +38,6 @@ import javax.persistence.Tuple;
 import javax.persistence.criteria.Subquery;
 import javax.persistence.metamodel.EntityType;
 
-import org.hibernate.ejb.criteria.expression.ExpressionImplementor;
-
 /**
  * The Hibernate implementation of the JPA {@link CriteriaQuery} contract.  Mostly a set of delegation to its
  * internal {@link QueryStructure}.
@@ -342,7 +340,7 @@ public class CriteriaQueryImpl<T> extends AbstractNode implements CriteriaQuery<
 			String sep = "";
 			for ( Order orderSpec : getOrderList() ) {
 				jpaqlQuery.append( sep )
-						.append( ( ( ExpressionImplementor ) orderSpec.getExpression() ).render( renderingContext ) )
+						.append( ( ( Renderable ) orderSpec.getExpression() ).render( renderingContext ) )
 						.append( orderSpec.isAscending() ? " asc" : " desc" );
 				sep = ", ";
 			}

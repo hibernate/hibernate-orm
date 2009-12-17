@@ -28,7 +28,7 @@ import javax.persistence.criteria.Expression;
 import org.hibernate.ejb.criteria.ParameterRegistry;
 import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
 import org.hibernate.ejb.criteria.CriteriaQueryCompiler;
-import org.hibernate.ejb.criteria.expression.ExpressionImplementor;
+import org.hibernate.ejb.criteria.Renderable;
 
 /**
  * Models a <tt>BETWEEN</tt> {@link javax.persistence.criteria.Predicate}.
@@ -83,11 +83,11 @@ public class BetweenPredicate<Y> extends AbstractSimplePredicate {
 	}
 
 	public String render(CriteriaQueryCompiler.RenderingContext renderingContext) {
-		return ( (ExpressionImplementor) getExpression() ).render( renderingContext )
+		return ( (Renderable) getExpression() ).render( renderingContext )
 				+ " between "
-				+ ( (ExpressionImplementor) getLowerBound() ).render( renderingContext )
+				+ ( (Renderable) getLowerBound() ).render( renderingContext )
 				+ " and "
-				+ ( (ExpressionImplementor) getUpperBound() ).render( renderingContext );
+				+ ( (Renderable) getUpperBound() ).render( renderingContext );
 	}
 
 	public String renderProjection(CriteriaQueryCompiler.RenderingContext renderingContext) {

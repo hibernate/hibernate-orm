@@ -32,7 +32,7 @@ import javax.persistence.criteria.Expression;
 import org.hibernate.ejb.criteria.ParameterRegistry;
 import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
 import org.hibernate.ejb.criteria.CriteriaQueryCompiler;
-import org.hibernate.ejb.criteria.expression.ExpressionImplementor;
+import org.hibernate.ejb.criteria.Renderable;
 
 /**
  * A compound {@link Predicate predicate} is a grouping of other {@link Predicate predicates} in order to apply
@@ -113,14 +113,14 @@ public class CompoundPredicate extends AbstractPredicateImpl {
 
 	public String render(CriteriaQueryCompiler.RenderingContext renderingContext) {
 		if ( getExpressions().size() == 1 ) {
-			return ( (ExpressionImplementor) getExpressions().get(0) ).render( renderingContext );
+			return ( (Renderable) getExpressions().get(0) ).render( renderingContext );
 		}
 		final StringBuilder buffer = new StringBuilder();
 		String sep = "";
 		for ( Expression expression : getExpressions() ) {
 			buffer.append( sep )
 					.append( "( " )
-					.append( ( (ExpressionImplementor) expression ).render( renderingContext ) )
+					.append( ( (Renderable) expression ).render( renderingContext ) )
 					.append( " )" );
 			sep = operatorTextWithSeparator();
 		}

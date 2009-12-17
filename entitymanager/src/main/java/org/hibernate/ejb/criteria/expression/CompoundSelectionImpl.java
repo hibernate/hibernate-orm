@@ -24,11 +24,14 @@
 package org.hibernate.ejb.criteria.expression;
 
 import java.util.List;
+import javax.persistence.Tuple;
 import javax.persistence.criteria.CompoundSelection;
 import javax.persistence.criteria.Selection;
 
+import org.hibernate.ejb.criteria.CriteriaQueryCompiler;
 import org.hibernate.ejb.criteria.ParameterRegistry;
 import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
+import org.hibernate.ejb.criteria.Renderable;
 
 /**
  * The Hibernate implementation of the JPA {@link CompoundSelection}
@@ -36,7 +39,8 @@ import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
  *
  * @author Steve Ebersole
  */
-public class CompoundSelectionImpl<X> extends SelectionImpl<X> implements CompoundSelection<X> {
+public class CompoundSelectionImpl<X> extends SelectionImpl<X> implements CompoundSelection<X>, Renderable {
+	private final boolean isConstructor;
 	private List<Selection<?>> selectionItems;
 
 	public CompoundSelectionImpl(
@@ -44,6 +48,7 @@ public class CompoundSelectionImpl<X> extends SelectionImpl<X> implements Compou
 			Class<X> javaType,
 			List<Selection<?>> selectionItems) {
 		super( criteriaBuilder, javaType );
+		this.isConstructor = !javaType.isArray() && !Tuple.class.isAssignableFrom( javaType );
 		this.selectionItems = selectionItems;
 	}
 
@@ -63,4 +68,24 @@ public class CompoundSelectionImpl<X> extends SelectionImpl<X> implements Compou
 		}
 	}
 
+	public String render(CriteriaQueryCompiler.RenderingContext renderingContext) {
+		StringBuilder buff = new StringBuilder();
+		if ( isConstructor ) {
+			buff.append( "new " ).append( getJavaType().getName() ).append( '(' );
+		}
+		String sep = "";
+		for ( Selection selection : selectionItems ) {
+			buff.append( sep )
+					.append( ( (Renderable) selection ).renderProjection( renderingContext ) );
+			sep = ", ";
+		}
+		if ( isConstructor ) {
+			buff.append( ')' );
+		}
+		return buff.toString();
+	}
+
+	public String renderProjection(CriteriaQueryCompiler.RenderingContext renderingContext) {
+		return render( renderingContext );
+	}
 }

@@ -106,7 +106,6 @@ public class PostgreSQLDialect extends Dialect {
 		registerFunction( "quote_literal", new StandardSQLFunction("quote_literal", Hibernate.STRING) );
 		registerFunction( "md5", new StandardSQLFunction("md5") );
 		registerFunction( "ascii", new StandardSQLFunction("ascii", Hibernate.INTEGER) );
-		registerFunction( "length", new StandardSQLFunction("length", Hibernate.LONG) );
 		registerFunction( "char_length", new StandardSQLFunction("char_length", Hibernate.LONG) );
 		registerFunction( "bit_length", new StandardSQLFunction("bit_length", Hibernate.LONG) );
 		registerFunction( "octet_length", new StandardSQLFunction("octet_length", Hibernate.LONG) );

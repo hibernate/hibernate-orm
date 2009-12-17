@@ -305,7 +305,6 @@ public class Cache71Dialect extends Dialect {
 		registerFunction( "lcase", new StandardJDBCEscapeFunction( "lcase", Hibernate.STRING ) );
 		registerFunction( "left", new StandardJDBCEscapeFunction( "left", Hibernate.STRING ) );
 		registerFunction( "len", new StandardSQLFunction( "len", Hibernate.INTEGER ) );
-		registerFunction( "length", new StandardSQLFunction( "length", Hibernate.INTEGER ) );
 		registerFunction( "$length", new VarArgsSQLFunction( "$length(", ",", ")" ) );
 		// aggregate functions shouldn't be registered, right?
 		//registerFunction( "list", new StandardSQLFunction("list",Hibernate.STRING) );

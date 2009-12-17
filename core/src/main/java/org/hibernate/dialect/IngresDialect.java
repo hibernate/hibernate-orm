@@ -100,7 +100,6 @@ public class IngresDialect extends Dialect {
 		registerFunction( "intextract", new StandardSQLFunction( "intextract", Hibernate.INTEGER ) );
 		registerFunction( "left", new StandardSQLFunction( "left", Hibernate.STRING ) );
 		registerFunction( "locate", new SQLFunctionTemplate( Hibernate.LONG, "locate(?1, ?2)" ) );
-		registerFunction( "length", new StandardSQLFunction( "length", Hibernate.LONG ) );
 		registerFunction( "ln", new StandardSQLFunction( "ln", Hibernate.DOUBLE ) );
 		registerFunction( "log", new StandardSQLFunction( "log", Hibernate.DOUBLE ) );
 		registerFunction( "lower", new StandardSQLFunction( "lower" ) );

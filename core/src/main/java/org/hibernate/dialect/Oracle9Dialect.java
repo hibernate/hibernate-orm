@@ -117,7 +117,6 @@ public class Oracle9Dialect extends Dialect {
 		registerFunction( "soundex", new StandardSQLFunction("soundex") );
 		registerFunction( "upper", new StandardSQLFunction("upper") );
 		registerFunction( "ascii", new StandardSQLFunction("ascii", Hibernate.INTEGER) );
-		registerFunction( "length", new StandardSQLFunction("length", Hibernate.LONG) );
 
 		registerFunction( "to_char", new StandardSQLFunction("to_char", Hibernate.STRING) );
 		registerFunction( "to_date", new StandardSQLFunction("to_date", Hibernate.TIMESTAMP) );

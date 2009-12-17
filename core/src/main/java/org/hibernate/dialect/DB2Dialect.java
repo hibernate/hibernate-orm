@@ -134,7 +134,6 @@ public class DB2Dialect extends Dialect {
 		registerFunction("lower", new StandardSQLFunction("lower") );
 		registerFunction("ucase", new StandardSQLFunction("ucase") );
 		registerFunction("lcase", new StandardSQLFunction("lcase") );
-		registerFunction("length", new StandardSQLFunction("length", Hibernate.LONG) );
 		registerFunction("ltrim", new StandardSQLFunction("ltrim") );
 		registerFunction("rtrim", new StandardSQLFunction("rtrim") );
 		registerFunction( "substr", new StandardSQLFunction( "substr", Hibernate.STRING ) );

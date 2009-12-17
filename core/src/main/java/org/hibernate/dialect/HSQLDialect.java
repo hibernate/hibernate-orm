@@ -85,7 +85,6 @@ public class HSQLDialect extends Dialect {
 
 		registerFunction( "ascii", new StandardSQLFunction( "ascii", Hibernate.INTEGER ) );
 		registerFunction( "char", new StandardSQLFunction( "char", Hibernate.CHARACTER ) );
-		registerFunction( "length", new StandardSQLFunction( "length", Hibernate.LONG ) );
 		registerFunction( "lower", new StandardSQLFunction( "lower" ) );
 		registerFunction( "upper", new StandardSQLFunction( "upper" ) );
 		registerFunction( "lcase", new StandardSQLFunction( "lcase" ) );

@@ -76,7 +76,6 @@ public class MySQLDialect extends Dialect {
 		registerFunction("character_length", new StandardSQLFunction("character_length", Hibernate.LONG) );
 		registerFunction("lcase", new StandardSQLFunction("lcase") );
 		registerFunction("lower", new StandardSQLFunction("lower") );
-		registerFunction("length", new StandardSQLFunction("length", Hibernate.LONG) );
 		registerFunction("ltrim", new StandardSQLFunction("ltrim") );
 		registerFunction("ord", new StandardSQLFunction("ord", Hibernate.INTEGER) );
 		registerFunction("quote", new StandardSQLFunction("quote") );

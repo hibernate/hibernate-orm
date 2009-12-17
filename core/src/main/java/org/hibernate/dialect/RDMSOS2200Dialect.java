@@ -73,7 +73,6 @@ public class RDMSOS2200Dialect extends Dialect {
 		registerFunction("ascii", new StandardSQLFunction("ascii", Hibernate.INTEGER) );
 		registerFunction("char_length", new StandardSQLFunction("char_length", Hibernate.INTEGER) );
 		registerFunction("character_length", new StandardSQLFunction("character_length", Hibernate.INTEGER) );
-		registerFunction("length", new StandardSQLFunction("length", Hibernate.INTEGER) );
 
 		// The RDMS concat() function only supports 2 parameters
 		registerFunction( "concat", new SQLFunctionTemplate(Hibernate.STRING, "concat(?1, ?2)") );

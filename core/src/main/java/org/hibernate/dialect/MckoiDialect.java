@@ -64,7 +64,6 @@ public class MckoiDialect extends Dialect {
 		registerFunction( "sqrt", new StandardSQLFunction("sqrt", Hibernate.DOUBLE) );
 		registerFunction( "abs", new StandardSQLFunction("abs") );
 		registerFunction( "sign", new StandardSQLFunction( "sign", Hibernate.INTEGER ) );
-		registerFunction( "length", new StandardSQLFunction( "length", Hibernate.INTEGER ) );
 		registerFunction( "round", new StandardSQLFunction( "round", Hibernate.INTEGER ) );
 		registerFunction( "mod", new StandardSQLFunction( "mod", Hibernate.INTEGER ) );
 		registerFunction( "least", new StandardSQLFunction("least") );

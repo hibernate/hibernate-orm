@@ -25,6 +25,7 @@ package org.hibernate.ejb.criteria.predicate;
 
 import javax.persistence.criteria.Expression;
 
+import org.hibernate.ejb.criteria.ValueConverter;
 import org.hibernate.ejb.criteria.ParameterRegistry;
 import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
 import org.hibernate.ejb.criteria.CriteriaQueryCompiler;
@@ -62,7 +63,29 @@ public class ComparisonPredicate extends AbstractSimplePredicate implements Bina
 		super( criteriaBuilder );
 		this.comparisonOperator = comparisonOperator;
 		this.leftHandSide = leftHandSide;
-		this.rightHandSide = new LiteralExpression( criteriaBuilder, rightHandSide );
+		if ( Number.class.isAssignableFrom( leftHandSide.getJavaType() ) ) {
+			this.rightHandSide = new LiteralExpression(
+					criteriaBuilder,
+					ValueConverter.convert( rightHandSide, (Class<Number>) leftHandSide.getJavaType() )
+			);
+		}
+		else {
+			this.rightHandSide = new LiteralExpression( criteriaBuilder, rightHandSide );
+		}
+	}
+
+	public <N extends Number> ComparisonPredicate(
+			CriteriaBuilderImpl criteriaBuilder,
+			ComparisonOperator comparisonOperator,
+			Expression<N> leftHandSide,
+			Number rightHandSide) {
+		super( criteriaBuilder );
+		this.comparisonOperator = comparisonOperator;
+		this.leftHandSide = leftHandSide;
+		this.rightHandSide = new LiteralExpression<N>( 
+				criteriaBuilder,
+				ValueConverter.convert( rightHandSide, leftHandSide.getJavaType() )
+		);
 	}
 
 	public ComparisonOperator getComparisonOperator() {

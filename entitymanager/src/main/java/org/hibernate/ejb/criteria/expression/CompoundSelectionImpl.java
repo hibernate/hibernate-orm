@@ -23,6 +23,7 @@
  */
 package org.hibernate.ejb.criteria.expression;
 
+import java.util.ArrayList;
 import java.util.List;
 import javax.persistence.Tuple;
 import javax.persistence.criteria.CompoundSelection;
@@ -32,6 +33,8 @@ import org.hibernate.ejb.criteria.CriteriaQueryCompiler;
 import org.hibernate.ejb.criteria.ParameterRegistry;
 import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
 import org.hibernate.ejb.criteria.Renderable;
+import org.hibernate.ejb.criteria.TupleElementImplementor;
+import org.hibernate.ejb.criteria.ValueConverter;
 
 /**
  * The Hibernate implementation of the JPA {@link CompoundSelection}
@@ -60,6 +63,21 @@ public class CompoundSelectionImpl<X> extends SelectionImpl<X> implements Compou
 	@Override
 	public List<Selection<?>> getCompoundSelectionItems() {
 		return selectionItems;
+	}
+
+	@Override
+	public List<ValueConverter.Conversion> getConversions() {
+		if ( isConstructor ) {
+			return null;
+		}
+		boolean foundConversions = false;
+		ArrayList<ValueConverter.Conversion> conversions = new ArrayList<ValueConverter.Conversion>();
+		for ( Selection selection : getCompoundSelectionItems() ) {
+			ValueConverter.Conversion conversion = ( (TupleElementImplementor) selection ).getConversion();
+			conversions.add( conversion );
+			foundConversions = foundConversions || conversion != null;
+		}
+		return foundConversions ? null : conversions;
 	}
 
 	public void registerParameters(ParameterRegistry registry) {

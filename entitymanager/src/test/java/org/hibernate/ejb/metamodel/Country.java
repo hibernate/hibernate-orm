@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2009, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,49 +20,46 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
-package org.hibernate.engine.query;
+package org.hibernate.ejb.metamodel;
 
-import org.hibernate.type.Type;
-
-import java.io.Serializable;
+import javax.persistence.Basic;
+import javax.persistence.Embeddable;
 
 /**
- * Descriptor regarding a named parameter.
+ * TODO : javadoc
  *
  * @author Steve Ebersole
  */
-public class NamedParameterDescriptor implements Serializable {
-	private final String name;
-	private Type expectedType;
-	private final int[] sourceLocations;
-	private final boolean jpaStyle;
+@Embeddable
+public class Country implements java.io.Serializable {
+	private String country;
+	private String code;
 
-	public NamedParameterDescriptor(String name, Type expectedType, int[] sourceLocations, boolean jpaStyle) {
-		this.name = name;
-		this.expectedType = expectedType;
-		this.sourceLocations = sourceLocations;
-		this.jpaStyle = jpaStyle;
+	public Country() {
 	}
 
-	public String getName() {
-		return name;
+	public Country(String v1, String v2) {
+		country = v1;
+		code = v2;
 	}
 
-	public Type getExpectedType() {
-		return expectedType;
+	@Basic
+	public String getCountry() {
+		return country;
 	}
 
-	public int[] getSourceLocations() {
-		return sourceLocations;
+	public void setCountry(String v) {
+		country = v;
 	}
 
-	public boolean isJpaStyle() {
-		return jpaStyle;
+	@Basic
+	public String getCode() {
+		return code;
 	}
 
-	public void resetExpectedType(Type type) {
-		this.expectedType = type;
+	public void setCode(String v) {
+		code = v;
 	}
 }
+

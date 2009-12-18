@@ -27,8 +27,8 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import javax.persistence.EntityNotFoundException;
 import javax.persistence.EntityTransaction;
 import javax.persistence.FlushModeType;
@@ -59,6 +59,7 @@ import org.slf4j.LoggerFactory;
 
 import org.hibernate.*;
 import org.hibernate.cfg.Environment;
+import org.hibernate.ejb.criteria.ValueConverter;
 import org.hibernate.ejb.transaction.JoinableCMTTransaction;
 import org.hibernate.ejb.util.ConfigurationHelper;
 import org.hibernate.ejb.criteria.CriteriaQueryCompiler;
@@ -66,6 +67,7 @@ import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.transaction.TransactionFactory;
+import org.hibernate.transform.BasicTransformerAdapter;
 import org.hibernate.util.CollectionHelper;
 import org.hibernate.util.JTAHelper;
 
@@ -137,6 +139,45 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 		}
 		catch ( HibernateException he ) {
 			throw convert( he );
+		}
+	}
+
+	public <T> TypedQuery<T> createQuery(
+			String jpaqlString,
+			Class<T> resultClass,
+			Options options) {
+		try {
+			org.hibernate.Query hqlQuery = getSession().createQuery( jpaqlString );
+			if ( options.getConversions() != null ) {
+				hqlQuery.setResultTransformer( new ValueConversionResultTransformer(  options.getConversions() ) );
+			}
+			else {
+				options.getResultMetadataValidator().validate( hqlQuery.getReturnTypes() );
+			}
+			return new QueryImpl<T>( hqlQuery, this, options.getNamedParameterExplicitTypes() );
+		}
+		catch ( HibernateException he ) {
+			throw convert( he );
+		}
+	}
+
+	private static class ValueConversionResultTransformer extends BasicTransformerAdapter {
+		private List<ValueConverter.Conversion> conversions;
+
+		private ValueConversionResultTransformer(List<ValueConverter.Conversion> conversions) {
+			this.conversions = conversions;
+		}
+
+		@Override
+		public Object transformTuple(Object[] tuple, String[] aliases) {
+			Object[] result = new Object[ tuple.length ];
+			for ( int i = 0; i < tuple.length; i++ ) {
+				ValueConverter.Conversion conversion = conversions.get( i );
+				result[i] = conversion == null
+						? tuple[i]
+						: conversion.apply( tuple[i] );
+			}
+			return result.length == 1 ? result[0] : result;
 		}
 	}
 

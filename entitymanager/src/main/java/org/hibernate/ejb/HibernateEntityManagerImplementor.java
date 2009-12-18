@@ -25,11 +25,16 @@ package org.hibernate.ejb;
 
 import javax.persistence.PersistenceException;
 import javax.persistence.LockModeType;
+import javax.persistence.TypedQuery;
 
 import org.hibernate.HibernateException;
 import org.hibernate.StaleStateException;
 import org.hibernate.LockOptions;
+import org.hibernate.ejb.criteria.ValueConverter;
+import org.hibernate.transform.ResultTransformer;
+import org.hibernate.type.Type;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -108,4 +113,38 @@ public interface HibernateEntityManagerImplementor extends HibernateEntityManage
 	 * @return the LockOptions
 	 */
 	public LockOptions getLockRequest(LockModeType lockModeType, Map<String, Object> properties);
+
+	public static interface Options {
+		public static interface ResultMetadataValidator {
+			public void validate(Type[] returnTypes);
+		}
+
+		/**
+		 * Get the conversions for the individual tuples in the query results.
+		 *
+		 * @return Value conversions to be applied to the JPA QL results
+		 */
+		public List<ValueConverter.Conversion> getConversions();
+
+		/**
+		 * Get the explicit parameter types.  Generally speaking these would apply to implicit named
+		 * parameters.
+		 *
+		 * @return The
+		 */
+		public Map<String,Class> getNamedParameterExplicitTypes();
+
+		public ResultMetadataValidator getResultMetadataValidator();
+	}
+
+	/**
+	 * Used during "compiling" a JPA criteria query.
+	 *
+	 * @param jpaqlString The criteria query rendered as a JPA QL string
+	 * @param resultClass The result type (the type expected in the result list)
+	 * @param options The options to use to build the query.
+	 * @param <T> The query type
+	 * @return The typed query
+	 */
+	public <T> TypedQuery<T> createQuery(String jpaqlString, Class<T> resultClass, Options options);
 }

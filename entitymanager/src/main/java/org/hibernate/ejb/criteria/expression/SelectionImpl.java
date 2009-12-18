@@ -23,11 +23,14 @@
  */
 package org.hibernate.ejb.criteria.expression;
 
+import java.util.Collections;
 import java.util.List;
 import javax.persistence.criteria.Selection;
 
 import org.hibernate.ejb.criteria.ParameterContainer;
 import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
+import org.hibernate.ejb.criteria.SelectionImplementor;
+import org.hibernate.ejb.criteria.ValueConverter;
 
 /**
  * The Hibernate implementation of the JPA {@link Selection}
@@ -37,7 +40,7 @@ import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
  */
 public abstract class SelectionImpl<X>
 		extends AbstractTupleElement<X>
-		implements Selection<X>, ParameterContainer {
+		implements SelectionImplementor<X>, ParameterContainer {
 	public SelectionImpl(CriteriaBuilderImpl criteriaBuilder, Class<X> javaType) {
 		super( criteriaBuilder, javaType );
 	}
@@ -49,6 +52,12 @@ public abstract class SelectionImpl<X>
 
 	public boolean isCompoundSelection() {
 		return false;
+	}
+
+	public List<ValueConverter.Conversion> getConversions() {
+		return getConversion() == null
+				? null
+				: Collections.singletonList( (ValueConverter.Conversion) getConversion() );
 	}
 
 	public List<Selection<?>> getCompoundSelectionItems() {

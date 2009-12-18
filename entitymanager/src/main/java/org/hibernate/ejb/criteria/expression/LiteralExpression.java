@@ -25,6 +25,7 @@ package org.hibernate.ejb.criteria.expression;
 
 import javax.persistence.TypedQuery;
 
+import org.hibernate.ejb.criteria.ValueConverter;
 import org.hibernate.ejb.criteria.ParameterRegistry;
 import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
 import org.hibernate.ejb.criteria.CriteriaQueryCompiler;
@@ -35,7 +36,7 @@ import org.hibernate.ejb.criteria.CriteriaQueryCompiler;
  * @author Steve Ebersole
  */
 public class LiteralExpression<T> extends ExpressionImpl<T> {
-	private final T literal;
+	private Object literal;
 
 	@SuppressWarnings({ "unchecked" })
 	public LiteralExpression(CriteriaBuilderImpl criteriaBuilder, T literal) {
@@ -51,18 +52,27 @@ public class LiteralExpression<T> extends ExpressionImpl<T> {
 		this.literal = literal;
 	}
 
+	@SuppressWarnings({ "unchecked" })
 	public T getLiteral() {
-		return literal;
+		return (T) literal;
 	}
 
 	public void registerParameters(ParameterRegistry registry) {
-		// nothign to do
+		// nothing to do
 	}
 
 	public String render(CriteriaQueryCompiler.RenderingContext renderingContext) {
 		final String parameterName = renderingContext.generateParameterName();
 		renderingContext.registerImplicitParameterBinding(
 				new CriteriaQueryCompiler.ImplicitParameterBinding() {
+					public String getParameterName() {
+						return parameterName;
+					}
+
+					public Class getJavaType() {
+						return LiteralExpression.this.getJavaType();
+					}
+
 					public void bind(TypedQuery typedQuery) {
 						typedQuery.setParameter( parameterName, getLiteral() );
 					}
@@ -73,5 +83,20 @@ public class LiteralExpression<T> extends ExpressionImpl<T> {
 
 	public String renderProjection(CriteriaQueryCompiler.RenderingContext renderingContext) {
 		return render( renderingContext );
+	}
+
+	@Override
+	@SuppressWarnings({ "unchecked" })
+	protected void resetJavaType(Class targetType) {
+		super.resetJavaType( targetType );
+		ValueConverter.Conversion conversion = getConversion();
+		if ( conversion == null ) {
+			conversion = ValueConverter.determineAppropriateConversion( targetType );
+			forceConversion( conversion );
+		}
+
+		if ( conversion != null ) {
+			literal = conversion.apply( literal );
+		}
 	}
 }

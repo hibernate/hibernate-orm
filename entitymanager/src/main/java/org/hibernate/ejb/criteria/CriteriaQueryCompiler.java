@@ -55,6 +55,8 @@ import org.hibernate.util.StringHelper;
  */
 public class CriteriaQueryCompiler {
 	public static interface ImplicitParameterBinding {
+		public String getParameterName();
+		public Class getJavaType();
 		public void bind(TypedQuery typedQuery);
 	}
 
@@ -70,6 +72,8 @@ public class CriteriaQueryCompiler {
 
 	public static interface RenderedCriteriaQuery {
 		public String getQueryString();
+		public List<ValueConverter.Conversion> getValueConversions();
+		public HibernateEntityManagerImplementor.Options.ResultMetadataValidator getResultMetadataValidator();
 	}
 
 	private final HibernateEntityManagerImplementor entityManager;
@@ -85,6 +89,7 @@ public class CriteriaQueryCompiler {
 		final Map<ParameterExpression<?>,String> explicitParameterMapping = new HashMap<ParameterExpression<?>,String>();
 		final Map<String,ParameterExpression<?>> explicitParameterNameMapping = new HashMap<String,ParameterExpression<?>>();
 		final List<ImplicitParameterBinding> implicitParameterBindings = new ArrayList<ImplicitParameterBinding>();
+		final Map<String,Class> implicitParameterTypes = new HashMap<String, Class>();
 
 		RenderingContext renderingContext = new RenderingContext() {
 			private int aliasCount = 0;
@@ -110,6 +115,10 @@ public class CriteriaQueryCompiler {
 
 			public void registerImplicitParameterBinding(ImplicitParameterBinding binding) {
 				implicitParameterBindings.add( binding );
+				implicitParameterTypes.put(
+						binding.getParameterName(),
+						binding.getJavaType()
+				);
 			}
 
 			public String getCastType(Class javaType) {
@@ -132,12 +141,26 @@ public class CriteriaQueryCompiler {
 			}
 		};
 
-		RenderedCriteriaQuery renderedCriteriaQuery = criteriaQueryImpl.render( renderingContext );
+		final RenderedCriteriaQuery renderedCriteriaQuery = criteriaQueryImpl.render( renderingContext );
 
 		TypedQuery<T> jpaqlQuery = entityManager.createQuery(
 				renderedCriteriaQuery.getQueryString(),
-				criteriaQuery.getResultType()
+				criteriaQuery.getResultType(),
+				new HibernateEntityManagerImplementor.Options() {
+					public List<ValueConverter.Conversion> getConversions() {
+						return renderedCriteriaQuery.getValueConversions();
+					}
+
+					public Map<String, Class> getNamedParameterExplicitTypes() {
+						return implicitParameterTypes;
+					}
+
+					public ResultMetadataValidator getResultMetadataValidator() {
+						return renderedCriteriaQuery.getResultMetadataValidator();
+					}
+				}
 		);
+
 		for ( ImplicitParameterBinding implicitParameterBinding : implicitParameterBindings ) {
 			implicitParameterBinding.bind( jpaqlQuery );
 		}

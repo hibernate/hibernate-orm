@@ -38,6 +38,9 @@ import javax.persistence.Tuple;
 import javax.persistence.criteria.Subquery;
 import javax.persistence.metamodel.EntityType;
 
+import org.hibernate.ejb.HibernateEntityManagerImplementor;
+import org.hibernate.type.Type;
+
 /**
  * The Hibernate implementation of the JPA {@link CriteriaQuery} contract.  Mostly a set of delegation to its
  * internal {@link QueryStructure}.
@@ -349,6 +352,41 @@ public class CriteriaQueryImpl<T> extends AbstractNode implements CriteriaQuery<
 		return new CriteriaQueryCompiler.RenderedCriteriaQuery() {
 			public String getQueryString() {
 				return jpaqlQuery.toString();
+			}
+
+			@SuppressWarnings({ "unchecked" })
+			public List<ValueConverter.Conversion> getValueConversions() {
+				SelectionImplementor selection = (SelectionImplementor) queryStructure.getSelection();
+				return selection == null
+						? null
+						: selection.getConversions();
+			}
+
+			public HibernateEntityManagerImplementor.Options.ResultMetadataValidator getResultMetadataValidator() {
+				return new HibernateEntityManagerImplementor.Options.ResultMetadataValidator() {
+					public void validate(Type[] returnTypes) {
+						SelectionImplementor selection = (SelectionImplementor) queryStructure.getSelection();
+						if ( selection != null ) {
+							if ( selection.isCompoundSelection() ) {
+								if ( returnTypes.length != selection.getCompoundSelectionItems().size() ) {
+									throw new IllegalStateException(
+											"Number of return values [" + returnTypes.length +
+													"] did not match expected [" +
+													selection.getCompoundSelectionItems().size() + "]"
+									);
+								}
+							}
+							else {
+								if ( returnTypes.length > 1 ) {
+									throw new IllegalStateException(
+											"Number of return values [" + returnTypes.length +
+													"] did not match expected [1]"
+									);
+								}
+							}
+						}
+					}
+				};
 			}
 		};
 	}

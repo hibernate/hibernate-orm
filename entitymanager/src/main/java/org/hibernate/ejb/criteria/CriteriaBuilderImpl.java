@@ -48,6 +48,7 @@ import org.hibernate.ejb.criteria.expression.CoalesceExpression;
 import org.hibernate.ejb.criteria.expression.CollectionExpression;
 import org.hibernate.ejb.criteria.expression.CompoundSelectionImpl;
 import org.hibernate.ejb.criteria.expression.ConcatExpression;
+import org.hibernate.ejb.criteria.ExpressionImplementor;
 import org.hibernate.ejb.criteria.expression.ParameterExpressionImpl;
 import org.hibernate.ejb.criteria.expression.LiteralExpression;
 import org.hibernate.ejb.criteria.expression.NullifExpression;
@@ -1062,50 +1063,50 @@ public class CriteriaBuilderImpl implements CriteriaBuilder, Serializable {
 	/**
 	 * {@inheritDoc}
 	 */
-	public Expression<Long> toLong(Expression<? extends Number> expression) {
-		return expression.as( Long.class );
+	public ExpressionImplementor<Long> toLong(Expression<? extends Number> expression) {
+		return ( (ExpressionImplementor<? extends Number>) expression ).asLong();
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public Expression<Integer> toInteger(Expression<? extends Number> expression) {
-		return expression.as( Integer.class );
+	public ExpressionImplementor<Integer> toInteger(Expression<? extends Number> expression) {
+		return ( (ExpressionImplementor<? extends Number>) expression ).asInteger();
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public Expression<Float> toFloat(Expression<? extends Number> expression) {
-		return expression.as( Float.class );
+	public ExpressionImplementor<Float> toFloat(Expression<? extends Number> expression) {
+		return ( (ExpressionImplementor<? extends Number>) expression ).asFloat();
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public Expression<Double> toDouble(Expression<? extends Number> expression) {
-		return expression.as( Double.class );
+	public ExpressionImplementor<Double> toDouble(Expression<? extends Number> expression) {
+		return ( (ExpressionImplementor<? extends Number>) expression ).asDouble();
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public Expression<BigDecimal> toBigDecimal(Expression<? extends Number> expression) {
-		return expression.as( BigDecimal.class );
+	public ExpressionImplementor<BigDecimal> toBigDecimal(Expression<? extends Number> expression) {
+		return ( (ExpressionImplementor<? extends Number>) expression ).asBigDecimal();
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public Expression<BigInteger> toBigInteger(Expression<? extends Number> expression) {
-		return expression.as( BigInteger.class );
+	public ExpressionImplementor<BigInteger> toBigInteger(Expression<? extends Number> expression) {
+		return ( (ExpressionImplementor<? extends Number>) expression ).asBigInteger();
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public Expression<String> toString(Expression<Character> characterExpression) {
-		return characterExpression.as( String.class );
+	public ExpressionImplementor<String> toString(Expression<Character> characterExpression) {
+		return ( (ExpressionImplementor<Character>) characterExpression ).asString();
 	}
 
 

@@ -25,9 +25,11 @@ package org.hibernate.ejb;
 
 import java.util.Calendar;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import javax.persistence.NoResultException;
@@ -56,6 +58,7 @@ import org.hibernate.engine.query.NamedParameterDescriptor;
 import org.hibernate.engine.query.OrdinalParameterDescriptor;
 import org.hibernate.hql.QueryExecutionRequestException;
 import org.hibernate.impl.AbstractQueryImpl;
+import org.hibernate.type.TypeFactory;
 
 /**
  * Hibernate implementation of both the {@link Query} and {@link TypedQuery} contracts.
@@ -72,13 +75,20 @@ public class QueryImpl<X> extends org.hibernate.ejb.AbstractQueryImpl<X> impleme
 	private Set<Parameter<?>> parameters;
 
 	public QueryImpl(org.hibernate.Query query, AbstractEntityManagerImpl em) {
+		this( query, em, Collections.<String, Class>emptyMap() );
+	}
+
+	public QueryImpl(
+			org.hibernate.Query query,
+			AbstractEntityManagerImpl em,
+			Map<String,Class> namedParameterTypeRedefinitions) {
 		super( em );
 		this.query = query;
-		extractParameterInfo();
+		extractParameterInfo( namedParameterTypeRedefinitions );
 	}
 
 	@SuppressWarnings({ "unchecked", "RedundantCast" })
-	private void extractParameterInfo() {
+	private void extractParameterInfo(Map<String,Class> namedParameterTypeRedefinition) {
 		if ( ! AbstractQueryImpl.class.isInstance( query ) ) {
 			throw new IllegalStateException( "Unknown query type for parameter extraction" );
 		}
@@ -90,12 +100,16 @@ public class QueryImpl<X> extends org.hibernate.ejb.AbstractQueryImpl<X> impleme
 		for ( String name : (Set<String>) queryImpl.getParameterMetadata().getNamedParameterNames() ) {
 			final NamedParameterDescriptor descriptor =
 					queryImpl.getParameterMetadata().getNamedParameterDescriptor( name );
-			final ParameterImpl parameter = new ParameterImpl(
-					name,
-					descriptor.getExpectedType() == null
-							? null
-							: descriptor.getExpectedType().getReturnedClass()
-			);
+			Class javaType = namedParameterTypeRedefinition.get( name );
+			if ( javaType != null ) {
+				descriptor.resetExpectedType(
+						TypeFactory.heuristicType( javaType.getName() )
+				);
+			}
+			else if ( descriptor.getExpectedType() != null ) {
+				javaType = descriptor.getExpectedType().getReturnedClass();
+			}
+			final ParameterImpl parameter = new ParameterImpl( name, javaType );
 			parameters.add( parameter );
 			if ( descriptor.isJpaStyle() ) {
 				if ( jpaPositionalIndices == null ) {

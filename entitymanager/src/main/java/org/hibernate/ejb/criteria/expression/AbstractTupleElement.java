@@ -23,22 +23,27 @@
  */
 package org.hibernate.ejb.criteria.expression;
 
-import javax.persistence.TupleElement;
-
 import org.hibernate.ejb.criteria.AbstractNode;
 import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
+import org.hibernate.ejb.criteria.TupleElementImplementor;
+import org.hibernate.ejb.criteria.ValueConverter;
 
 /**
  * TODO : javadoc
  *
  * @author Steve Ebersole
  */
-public abstract class AbstractTupleElement<X> extends AbstractNode implements TupleElement<X> {
-	private final Class<X> javaType;
+public abstract class AbstractTupleElement<X>
+		extends AbstractNode
+		implements TupleElementImplementor<X> {
+	private final Class originalJavaType;
+	private Class<X> javaType;
 	private String alias;
+	private ValueConverter.Conversion<X> conversion;
 
 	protected AbstractTupleElement(CriteriaBuilderImpl criteriaBuilder, Class<X> javaType) {
 		super( criteriaBuilder );
+		this.originalJavaType = javaType;
 		this.javaType = javaType;
 	}
 
@@ -47,6 +52,26 @@ public abstract class AbstractTupleElement<X> extends AbstractNode implements Tu
 	 */
 	public Class<X> getJavaType() {
 		return javaType;
+	}
+
+	@SuppressWarnings({ "unchecked" })
+	protected void resetJavaType(Class targetType) {
+		this.javaType = targetType;
+//		this.conversion = javaType.equals( originalJavaType )
+//				? null
+//				: ValueConverter.determineAppropriateConversion( javaType );
+		this.conversion = ValueConverter.determineAppropriateConversion( javaType );
+	}
+
+	protected void forceConversion(ValueConverter.Conversion<X> conversion) {
+		this.conversion = conversion;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public ValueConverter.Conversion<X> getConversion() {
+		return conversion;
 	}
 
 	/**

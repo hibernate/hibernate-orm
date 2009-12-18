@@ -23,11 +23,14 @@
  */
 package org.hibernate.ejb.criteria.expression;
 
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.Collection;
 import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Predicate;
 
 import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
+import org.hibernate.ejb.criteria.ExpressionImplementor;
 import org.hibernate.ejb.criteria.expression.function.CastFunction;
 
 /**
@@ -92,5 +95,68 @@ public abstract class ExpressionImpl<T>
 	 */
 	public Predicate in(Expression<Collection<?>> values) {
 		return queryBuilder().in( this, values );
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@SuppressWarnings({ "unchecked" })
+	public ExpressionImplementor<Long> asLong() {
+		resetJavaType( Long.class );
+		return (ExpressionImplementor<Long>) this;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@SuppressWarnings({ "unchecked" })
+	public ExpressionImplementor<Integer> asInteger() {
+		resetJavaType( Integer.class );
+		return (ExpressionImplementor<Integer>) this;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@SuppressWarnings({ "unchecked" })
+	public ExpressionImplementor<Float> asFloat() {
+		resetJavaType( Float.class );
+		return (ExpressionImplementor<Float>) this;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@SuppressWarnings({ "unchecked" })
+	public ExpressionImplementor<Double> asDouble() {
+		resetJavaType( Double.class );
+		return (ExpressionImplementor<Double>) this;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@SuppressWarnings({ "unchecked" })
+	public ExpressionImplementor<BigDecimal> asBigDecimal() {
+		resetJavaType( BigDecimal.class );
+		return (ExpressionImplementor<BigDecimal>) this;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@SuppressWarnings({ "unchecked" })
+	public ExpressionImplementor<BigInteger> asBigInteger() {
+		resetJavaType( BigInteger.class );
+		return (ExpressionImplementor<BigInteger>) this;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@SuppressWarnings({ "unchecked" })
+	public ExpressionImplementor<String> asString() {
+		resetJavaType( String.class );
+		return (ExpressionImplementor<String>) this;
 	}
 }

@@ -85,6 +85,10 @@ public class HQLTest extends QueryTranslatorTestCase {
 		super.cleanupTest();
 	}
 
+	public void testModulo() {
+		assertTranslation( "from Animal a where a.bodyWeight % 2 = 0" );
+	}
+
 	public void testInvalidCollectionDereferencesFail() {
 		// should fail with the same exceptions (because of the DotNode.ILLEGAL_COLL_DEREF_EXCP_BUILDER injection)
 		assertTranslation( "from Animal a where a.offspring.description = 'xyz'" );

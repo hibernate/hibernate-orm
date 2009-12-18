@@ -158,6 +158,7 @@ public class SqlASTFactory extends ASTFactory implements HqlSqlTokenTypes {
 			case MINUS:
 			case STAR:
 			case DIV:
+			case MOD:
 				return BinaryArithmeticOperatorNode.class;
 			case UNARY_MINUS:
 			case UNARY_PLUS:

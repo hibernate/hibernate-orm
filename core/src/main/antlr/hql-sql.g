@@ -558,6 +558,7 @@ arithmeticExpr
 	: #(PLUS expr expr)         { prepareArithmeticOperator( #arithmeticExpr ); }
 	| #(MINUS expr expr)        { prepareArithmeticOperator( #arithmeticExpr ); }
 	| #(DIV expr expr)          { prepareArithmeticOperator( #arithmeticExpr ); }
+	| #(MOD expr expr)          { prepareArithmeticOperator( #arithmeticExpr ); }
 	| #(STAR expr expr)         { prepareArithmeticOperator( #arithmeticExpr ); }
 //	| #(CONCAT expr (expr)+ )   { prepareArithmeticOperator( #arithmeticExpr ); }
 	| #(UNARY_MINUS expr)       { prepareArithmeticOperator( #arithmeticExpr ); }

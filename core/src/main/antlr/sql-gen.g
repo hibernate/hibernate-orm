@@ -377,6 +377,7 @@ additiveExpr
 multiplicativeExpr
 	: #(STAR nestedExpr { out("*"); } nestedExpr)
 	| #(DIV nestedExpr { out("/"); } nestedExprAfterMinusDiv)
+	| #(MOD nestedExpr { out(" % "); } nestedExprAfterMinusDiv)
 	;
 
 nestedExpr

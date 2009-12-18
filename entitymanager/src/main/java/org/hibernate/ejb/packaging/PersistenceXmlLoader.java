@@ -68,6 +68,11 @@ public final class PersistenceXmlLoader {
 	}
 
 	private static Document loadURL(URL configURL, EntityResolver resolver) throws Exception {
+		/*
+		 * try and parse the document:
+		 *  - try and validate the document with persistence_2_0.xsd
+		  * - if it fails because of the version attribute mismatch, try and validate the document with persistence_1_0.xsd
+		 */
 		InputStream is = null;
 		if (configURL != null) {
 			URLConnection conn = configURL.openConnection();
@@ -75,8 +80,9 @@ public final class PersistenceXmlLoader {
 			is = conn.getInputStream();
 		}
 		if ( is == null ) {
-			throw new IOException( "Failed to obtain InputStream from url: " + configURL );
+			throw new IOException( "Failed to obtain InputStream while reading persistence.xml file: " + configURL );
 		}
+
 		DocumentBuilderFactory docBuilderFactory = DocumentBuilderFactory.newInstance();
 		docBuilderFactory.setNamespaceAware( true );
 		final Schema v2Schema = SchemaFactory.newInstance( javax.xml.XMLConstants.W3C_XML_SCHEMA_NS_URI )
@@ -91,6 +97,8 @@ public final class PersistenceXmlLoader {
 		docBuilder.setEntityResolver( resolver );
 		List<SAXParseException> errors = new ArrayList<SAXParseException>();
 		Document doc = null;
+
+		//first sparse document and collect syntaxic errors
 		try {
 			doc = docBuilder.parse( source );
 		}
@@ -99,7 +107,7 @@ public final class PersistenceXmlLoader {
 		}
 
 		if (errors.size() == 0) {
-			v2Validator.setErrorHandler( new ErrorLogger( "XML InputStream", errors, resolver ) );
+			v2Validator.setErrorHandler( new ErrorLogger( errors ) );
 			log.trace("Validate with persistence_2_0.xsd schema on file {}", configURL);
 			v2Validator.validate( new DOMSource( doc ) );
 			boolean isV1Schema = false;
@@ -108,6 +116,7 @@ public final class PersistenceXmlLoader {
 				log.trace("Found error with persistence_2_0.xsd schema on file {}", configURL);
 				SAXParseException exception = errors.get( 0 );
 				final String errorMessage = exception.getMessage();
+				//is it a validation error due to a v1 schema validated by a v2
 				isV1Schema = errorMessage.contains("1.0")
 						&& errorMessage.contains("2.0")
 						&& errorMessage.contains("version");
@@ -116,11 +125,12 @@ public final class PersistenceXmlLoader {
 			if (isV1Schema) {
 				log.trace("Validate with persistence_1_0.xsd schema on file {}", configURL);
 				errors.clear();
-				v1Validator.setErrorHandler( new ErrorLogger( "XML InputStream", errors, resolver ) );
+				v1Validator.setErrorHandler( new ErrorLogger( errors ) );
 				v1Validator.validate( new DOMSource( doc ) );
 			}
 		}
 		if ( errors.size() != 0 ) {
+			//report all errors in the exception
 			StringBuilder errorMessage = new StringBuilder( );
 			for (SAXParseException error : errors) {
 				errorMessage.append("Error parsing XML (line")
@@ -310,17 +320,14 @@ public final class PersistenceXmlLoader {
 	}
 
 	public static class ErrorLogger implements ErrorHandler {
-		private String file;
-		private List errors;
-		private EntityResolver resolver;
+		private List<SAXParseException> errors;
 
-		ErrorLogger(String file, List errors, EntityResolver resolver) {
-			this.file = file;
+		ErrorLogger(List<SAXParseException> errors) {
 			this.errors = errors;
-			this.resolver = resolver;
 		}
 
 		public void error(SAXParseException error) {
+			//what was this commented code about?
 //			if ( resolver instanceof EJB3DTDEntityResolver ) {
 //				if ( ( (EJB3DTDEntityResolver) resolver ).isResolved() == false ) return;
 //			}

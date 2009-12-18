@@ -26,6 +26,7 @@ package org.hibernate.cfg;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.StringReader;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -54,6 +55,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
+import org.xml.sax.SAXParseException;
+import org.xml.sax.ErrorHandler;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.DuplicateMappingException;
@@ -67,6 +70,7 @@ import org.hibernate.annotations.common.reflection.MetadataProviderInjector;
 import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.java.JavaReflectionManager;
+import org.hibernate.annotations.common.AssertionFailure;
 import org.hibernate.cfg.annotations.Version;
 import org.hibernate.cfg.annotations.reflection.JPAMetadataProvider;
 import org.hibernate.cfg.beanvalidation.BeanValidationActivator;
@@ -839,31 +843,75 @@ public class AnnotationConfiguration extends Configuration {
 	@Override
 	public AnnotationConfiguration addInputStream(InputStream xmlInputStream) throws MappingException {
 		try {
-			List errors = new ArrayList();
-			SAXReader saxReader = xmlHelper.createSAXReader( "XML InputStream", errors, getEntityResolver() );
-			try {
-				saxReader.setFeature( "http://apache.org/xml/features/validation/schema", true );
-				//saxReader.setFeature( "http://apache.org/xml/features/validation/dynamic", true );
-				//set the default schema locators
-				saxReader.setProperty(
-						"http://apache.org/xml/properties/schema/external-schemaLocation",
-						"http://java.sun.com/xml/ns/persistence/orm orm_1_0.xsd"
-				);
-			}
-			catch ( SAXException e ) {
-				saxReader.setValidation( false );
-			}
-			org.dom4j.Document doc = saxReader
-					.read( new InputSource( xmlInputStream ) );
+			/*
+			 * try and parse the document:
+			 *  - try and validate the document with orm_2_0.xsd
+			  * - if it fails because of the version attribute mismatch, try and validate the document with orm_1_0.xsd
+			 */
+			List<SAXParseException> errors = new ArrayList<SAXParseException>();
+			SAXReader saxReader = new SAXReader( );
+			saxReader.setEntityResolver( getEntityResolver() );
+			saxReader.setErrorHandler( new ErrorLogger(errors) );
+			saxReader.setMergeAdjacentText(true);
+			saxReader.setValidation(true);
 
+			setValidationFor( saxReader, "orm_2_0.xsd" );
+
+			org.dom4j.Document doc = null;
+			try {
+				doc = saxReader.read( new InputSource( xmlInputStream ) );
+			}
+			catch ( DocumentException e ) {
+				//the document is syntactically incorrect
+
+				//DOM4J sometimes wraps the SAXParseException wo much interest
+				final Throwable throwable = e.getCause();
+				if ( e.getCause() == null || !( throwable instanceof SAXParseException ) ) {
+					throw new MappingException( "Could not parse JPA mapping document", e );
+				}
+				errors.add( (SAXParseException) throwable );
+			}
+
+			boolean isV1Schema = false;
 			if ( errors.size() != 0 ) {
-				throw new MappingException( "invalid mapping", ( Throwable ) errors.get( 0 ) );
+				SAXParseException exception = errors.get( 0 );
+				final String errorMessage = exception.getMessage();
+				//does the error look like a schema mismatch?
+				isV1Schema = doc != null
+						&& errorMessage.contains("1.0")
+						&& errorMessage.contains("2.0")
+						&& errorMessage.contains("version");
+			}
+			if (isV1Schema) {
+				//reparse with v1
+				errors.clear();
+				setValidationFor( saxReader, "orm_1_0.xsd" );
+				try {
+					//too bad we have to reparse to validate again :(
+					saxReader.read( new StringReader( doc.asXML() ) );
+				}
+				catch ( DocumentException e ) {
+					//oops asXML fails even if the core doc parses initially
+					new AssertionFailure("Error in DOM4J leads to a bug in Hibernate", e);
+				}
+
+			}
+			if ( errors.size() != 0 ) {
+				//report errors in exception
+				StringBuilder errorMessage = new StringBuilder( );
+				for (SAXParseException error : errors) {
+					errorMessage.append("Error parsing XML (line")
+								.append(error.getLineNumber())
+								.append(" : column ")
+								.append(error.getColumnNumber())
+								.append("): ")
+								.append(error.getMessage())
+								.append("\n");
+				}
+				throw new MappingException( "Invalid ORM mapping file.\n" + errorMessage.toString() );
 			}
 			add( doc );
 			return this;
-		}
-		catch ( DocumentException e ) {
-			throw new MappingException( "Could not parse mapping document in input stream", e );
 		}
 		finally {
 			try {
@@ -872,6 +920,40 @@ public class AnnotationConfiguration extends Configuration {
 			catch ( IOException ioe ) {
 				log.warn( "Could not close input stream", ioe );
 			}
+		}
+	}
+
+	private static class ErrorLogger implements ErrorHandler {
+		private List<SAXParseException> errors;
+
+		public ErrorLogger(List<SAXParseException> errors) {
+			this.errors = errors;
+		}
+
+		public void warning(SAXParseException exception) throws SAXException {
+			errors.add( exception );
+		}
+
+		public void error(SAXParseException exception) throws SAXException {
+			errors.add( exception );
+		}
+
+		public void fatalError(SAXParseException exception) throws SAXException {
+		}
+	}
+
+	private void setValidationFor(SAXReader saxReader, String xsd) {
+		try {
+			saxReader.setFeature( "http://apache.org/xml/features/validation/schema", true );
+			//saxReader.setFeature( "http://apache.org/xml/features/validation/dynamic", true );
+			//set the default schema locators
+			saxReader.setProperty(
+					"http://apache.org/xml/properties/schema/external-schemaLocation",
+					"http://java.sun.com/xml/ns/persistence/orm " + xsd
+			);
+		}
+		catch ( SAXException e ) {
+			saxReader.setValidation( false );
 		}
 	}
 

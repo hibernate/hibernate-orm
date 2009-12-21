@@ -26,6 +26,7 @@ package org.hibernate.ejb.metamodel;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import javax.persistence.JoinTable;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
 
@@ -112,7 +113,7 @@ public class Info implements java.io.Serializable {
 		zip = v;
 	}
 
-	@OneToOne(mappedBy = "info")
+	@OneToOne(mappedBy = "info") @JoinTable
 	public Spouse getSpouse() {
 		return spouse;
 	}

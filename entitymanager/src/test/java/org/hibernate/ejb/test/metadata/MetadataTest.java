@@ -36,7 +36,6 @@ import javax.persistence.metamodel.PluralAttribute;
 import javax.persistence.metamodel.MapAttribute;
 import javax.persistence.metamodel.ListAttribute;
 import javax.persistence.metamodel.MappedSuperclassType;
-import javax.persistence.metamodel.CollectionAttribute;
 import javax.persistence.metamodel.IdentifiableType;
 
 import org.hibernate.ejb.test.TestCase;
@@ -53,11 +52,23 @@ public class MetadataTest extends TestCase {
 		assertNotNull( entityType );
 	}
 
+	public void testLogicalManyToOne() throws Exception {
+		final EntityType<JoinedManyToOneOwner> entityType = factory.getMetamodel().entity( JoinedManyToOneOwner.class );
+		final SingularAttribute attr = entityType.getDeclaredSingularAttribute( "house" );
+		assertEquals( Attribute.PersistentAttributeType.MANY_TO_ONE, attr.getPersistentAttributeType() );
+		assertEquals( House.class, attr.getBindableJavaType() );
+		final EntityType<House> houseType = factory.getMetamodel().entity( House.class );
+		assertEquals( houseType.getBindableJavaType(), attr.getBindableJavaType() );
+	}
+
 	public void testEntity() throws Exception {
 		final EntityType<Fridge> fridgeType = factory.getMetamodel().entity( Fridge.class );
 		assertEquals( Fridge.class, fridgeType.getBindableJavaType() );
 		assertEquals( Bindable.BindableType.ENTITY_TYPE, fridgeType.getBindableType() );
-		assertNotNull( fridgeType.getDeclaredSingularAttribute( "temperature", Integer.class ) );
+		SingularAttribute<Fridge,Integer> wrapped = fridgeType.getDeclaredSingularAttribute( "temperature", Integer.class );
+		assertNotNull( wrapped );
+		SingularAttribute<Fridge,Integer> primitive = fridgeType.getDeclaredSingularAttribute( "temperature", int.class );
+		assertNotNull( primitive );
 		assertNotNull( fridgeType.getDeclaredSingularAttribute( "temperature" ) );
 		assertNotNull( fridgeType.getDeclaredAttribute( "temperature" ) );
 		final SingularAttribute<Fridge, Long> id = fridgeType.getDeclaredId( Long.class );
@@ -112,19 +123,22 @@ public class MetadataTest extends TestCase {
 				"temperature",
 				Integer.class
 		);
-		assertEquals( Integer.class, singularAttribute.getBindableJavaType() );
+//		assertEquals( Integer.class, singularAttribute.getBindableJavaType() );
+//		assertEquals( Integer.class, singularAttribute.getType().getJavaType() );
+		assertEquals( int.class, singularAttribute.getBindableJavaType() );
+		assertEquals( int.class, singularAttribute.getType().getJavaType() );
 		assertEquals( Bindable.BindableType.SINGULAR_ATTRIBUTE, singularAttribute.getBindableType() );
 		assertFalse( singularAttribute.isId() );
 		assertFalse( singularAttribute.isOptional() );
 		assertFalse( entityType.getDeclaredSingularAttribute( "brand", String.class ).isOptional() );
-		assertEquals( Integer.class, singularAttribute.getType().getJavaType() );
 		assertEquals( Type.PersistenceType.BASIC, singularAttribute.getType().getPersistenceType() );
 		final Attribute<? super Fridge, ?> attribute = entityType.getDeclaredAttribute( "temperature" );
 		assertNotNull( attribute );
 		assertEquals( "temperature", attribute.getName() );
 		assertEquals( Fridge.class, attribute.getDeclaringType().getJavaType() );
 		assertEquals( Attribute.PersistentAttributeType.BASIC, attribute.getPersistentAttributeType() );
-		assertEquals( Integer.class, attribute.getJavaType() );
+//		assertEquals( Integer.class, attribute.getJavaType() );
+		assertEquals( int.class, attribute.getJavaType() );
 		assertFalse( attribute.isAssociation() );
 		assertFalse( attribute.isCollection() );
 
@@ -306,7 +320,8 @@ public class MetadataTest extends TestCase {
 				Cattish.class,
 				Feline.class,
 				Garden.class,
-				Flower.class
+				Flower.class,
+				JoinedManyToOneOwner.class
 		};
 	}
 

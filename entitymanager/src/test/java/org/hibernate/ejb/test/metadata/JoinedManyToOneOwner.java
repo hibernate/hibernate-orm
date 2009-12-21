@@ -21,38 +21,40 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.ejb.metamodel;
+package org.hibernate.ejb.test.metadata;
 
-import javax.persistence.EntityManager;
-import javax.persistence.metamodel.SingularAttribute;
-
-import org.hibernate.ejb.test.TestCase;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.JoinTable;
+import javax.persistence.ManyToOne;
 
 /**
- * TODO : javadoc
+ * An entity that defines a @ManyToOne @JoinTable
+ * <p/>
+ * See HHH-4720 for details
  *
  * @author Steve Ebersole
  */
-public class EmbeddedTypeTest extends TestCase {
-	@Override
-	public Class[] getAnnotatedClasses() {
-		return new Class[] {
-				Product.class, ShelfLife.class
-		};
+@Entity
+public class JoinedManyToOneOwner {
+	private Long id;
+	private House house;
+
+	@Id
+	public Long getId() {
+		return id;
 	}
 
-	public void testSingularAttributeAccessByName() {
-		// HHH-4702
-		EntityManager em = getOrCreateEntityManager();
-		em.getTransaction().begin();
+	public void setId(Long id) {
+		this.id = id;
+	}
 
-		SingularAttribute soldDate_ = em.getMetamodel().embeddable( ShelfLife.class )
-				.getSingularAttribute( "soldDate" );
-		assertEquals( java.sql.Date.class, soldDate_.getBindableJavaType());
-		assertEquals( java.sql.Date.class, soldDate_.getType().getJavaType() );
-		assertEquals( java.sql.Date.class, soldDate_.getJavaType() );
+	@ManyToOne @JoinTable( name = "SOME_OTHER_TABLE" )
+	public House getHouse() {
+		return house;
+	}
 
-		em.getTransaction().commit();
-		em.close();
+	public void setHouse(House house) {
+		this.house = house;
 	}
 }

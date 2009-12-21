@@ -172,6 +172,7 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
                     <redirectTestOutputToFile>true</redirectTestOutputToFile>
+                    <argLine>-Xmx1024m</argLine>
                 </configuration>
             </plugin>
             <!-- Attach source jars -->

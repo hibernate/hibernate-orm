@@ -13,8 +13,8 @@
     <artifactId>hibernate-entitymanager</artifactId>
     <packaging>jar</packaging>
 
-    <name>Hibernate Entitity Manager</name>
-    <description>Hibernate Entitity Manager</description>
+    <name>Hibernate Entity Manager</name>
+    <description>Hibernate Entity Manager</description>
 
     <dependencies>
         <dependency>

@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping SYSTEM "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd" >
+<hibernate-mapping
+	package="org.hibernate.test.hql">
+
+	
+
+    <class name="StateProvince">
+        <id name="id">
+            <generator class="native"/>
+        </id>
+        <property name="name"/>
+        <property name="isoCode"/>
+    </class>
+
+
+</hibernate-mapping>

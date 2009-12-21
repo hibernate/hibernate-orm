@@ -262,6 +262,11 @@ public final class EntityEntry implements Serializable {
 	}
 
 	public void setReadOnly(boolean readOnly, Object entity) {
+		if ( ( readOnly && status == Status.READ_ONLY ) ||
+			 ( ( ! readOnly ) && status == Status.MANAGED ) ) {
+			// simply return since the status is not being changed
+			return;
+		}
 		if (status!=Status.MANAGED && status!=Status.READ_ONLY) {
 			throw new HibernateException("instance was not in a valid state");
 		}

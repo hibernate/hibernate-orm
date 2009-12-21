@@ -338,7 +338,7 @@ public class FieldTransformer {
 			}
 			CodeAttribute codeAttr = minfo.getCodeAttribute();
 			if (codeAttr == null) {
-				return;
+				continue;
 			}
 			CodeIterator iter = codeAttr.iterator();
 			while (iter.hasNext()) {

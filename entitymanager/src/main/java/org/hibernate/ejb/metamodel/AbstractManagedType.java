@@ -242,7 +242,7 @@ public abstract class AbstractManagedType<X>
 					|| ( Byte.class.equals( javaType ) && Byte.TYPE.equals( declaredType ) )
 					|| ( Short.class.equals( javaType ) && Short.TYPE.equals( declaredType ) )
 					|| ( Integer.class.equals( javaType ) && Integer.TYPE.equals( declaredType ) )
-					|| ( Long.class.equals( javaType ) && Long.TYPE.equals( javaType ) )
+					|| ( Long.class.equals( javaType ) && Long.TYPE.equals( declaredType ) )
 					|| ( Float.class.equals( javaType ) && Float.TYPE.equals( declaredType ) )
 					|| ( Double.class.equals( javaType ) && Double.TYPE.equals( declaredType ) );
 		}

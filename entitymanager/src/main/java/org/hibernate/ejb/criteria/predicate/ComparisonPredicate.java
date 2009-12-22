@@ -63,7 +63,7 @@ public class ComparisonPredicate extends AbstractSimplePredicate implements Bina
 		super( criteriaBuilder );
 		this.comparisonOperator = comparisonOperator;
 		this.leftHandSide = leftHandSide;
-		if ( Number.class.isAssignableFrom( leftHandSide.getJavaType() ) ) {
+		if ( ValueConverter.isNumeric( leftHandSide.getJavaType() ) ) {
 			this.rightHandSide = new LiteralExpression(
 					criteriaBuilder,
 					ValueConverter.convert( rightHandSide, (Class<Number>) leftHandSide.getJavaType() )

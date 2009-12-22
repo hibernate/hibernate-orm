@@ -113,7 +113,7 @@ public class Info implements java.io.Serializable {
 		zip = v;
 	}
 
-	@OneToOne(mappedBy = "info") @JoinTable
+	@OneToOne(mappedBy = "info") @JoinTable( name = "INFO_SPOUSE_TABLE" )
 	public Spouse getSpouse() {
 		return spouse;
 	}

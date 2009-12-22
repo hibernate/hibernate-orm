@@ -39,6 +39,16 @@ public class ValueConverter {
 		public T apply(Object value);
 	}
 
+	public static boolean isNumeric(Class type) {
+		return Number.class.isAssignableFrom( type )
+				|| Byte.TYPE.equals( type )
+				|| Short.TYPE.equals( type )
+				|| Integer.TYPE.equals( type )
+				|| Long.TYPE.isAssignableFrom( type )
+				|| Float.TYPE.equals( type )
+				|| Double.TYPE.isAssignableFrom( type );
+	}
+
 	public static class ByteConversion implements Conversion<Byte> {
 		public static final ByteConversion INSTANCE = new ByteConversion();
 		@SuppressWarnings({ "UnnecessaryBoxing" })
@@ -185,8 +195,12 @@ public class ValueConverter {
 
 	private static IllegalArgumentException unknownConversion(Object value, Class type) {
 		return new IllegalArgumentException(
-				"Unaware how to convert value [" + value + "] to requested type [" + type.getName() + "]"
+				"Unaware how to convert value [" + value + " : " + typeName( value ) + "] to requested type [" + type.getName() + "]"
 		);
+	}
+
+	private static String typeName(Object value) {
+		return value == null ? "???" : value.getClass().getName();
 	}
 
 	/**
@@ -226,22 +240,22 @@ public class ValueConverter {
 		if ( String.class.equals( targetType ) ) {
 			return (Conversion<T>) StringConversion.INSTANCE;
 		}
-		if ( Byte.class.equals( targetType ) ) {
+		if ( Byte.class.equals( targetType ) || Byte.TYPE.equals( targetType ) ) {
 			return (Conversion<T>) ByteConversion.INSTANCE;
 		}
-		if ( Short.class.equals( targetType ) ) {
+		if ( Short.class.equals( targetType ) || Short.TYPE.equals( targetType ) ) {
 			return (Conversion<T>) ShortConversion.INSTANCE;
 		}
-		if ( Integer.class.equals( targetType ) ) {
+		if ( Integer.class.equals( targetType ) || Integer.TYPE.equals( targetType ) ) {
 			return (Conversion<T>) IntegerConversion.INSTANCE;
 		}
-		if ( Long.class.equals( targetType ) ) {
+		if ( Long.class.equals( targetType ) || Long.TYPE.equals( targetType ) ) {
 			return (Conversion<T>) LongConversion.INSTANCE;
 		}
-		if ( Float.class.equals( targetType ) ) {
+		if ( Float.class.equals( targetType ) || Float.TYPE.equals( targetType ) ) {
 			return (Conversion<T>) FloatConversion.INSTANCE;
 		}
-		if ( Double.class.equals( targetType ) ) {
+		if ( Double.class.equals( targetType ) || Double.TYPE.equals( targetType ) ) {
 			return (Conversion<T>) DoubleConversion.INSTANCE;
 		}
 		if ( BigInteger.class.equals( targetType ) ) {

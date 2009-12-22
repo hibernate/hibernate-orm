@@ -1,4 +1,4 @@
-// $Id:$
+// $Id$
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
@@ -1486,7 +1486,7 @@ public final class AnnotationBinder {
 				}
 			}
 			bindManyToOne(
-					getCascadeStrategy( ann.cascade(), hibernateCascade ),
+					getCascadeStrategy( ann.cascade(), hibernateCascade, false),
 					joinColumns,
 					ann.optional(),
 					ignoreNotFound, onDeleteCascade,
@@ -1521,7 +1521,7 @@ public final class AnnotationBinder {
 				}
 			}
 			bindOneToOne(
-					getCascadeStrategy( ann.cascade(), hibernateCascade ),
+					getCascadeStrategy( ann.cascade(), hibernateCascade, false),
 					joinColumns,
 					ann.optional(),
 					getFetchMode( ann.fetch() ),
@@ -1550,7 +1550,7 @@ public final class AnnotationBinder {
 					joinColumn.setSecondaryTableName( join.getTable().getName() );
 				}
 			}
-			bindAny( getCascadeStrategy( null, hibernateCascade ), //@Any has not cascade attribute
+			bindAny( getCascadeStrategy( null, hibernateCascade, false), //@Any has not cascade attribute
 					joinColumns, onDeleteCascade, nullability,
 					propertyHolder, inferredData, entityBinder,
 					isIdentifierMapper, mappings );
@@ -1756,7 +1756,8 @@ public final class AnnotationBinder {
 				collectionBinder.setTargetEntity(
 						mappings.getReflectionManager().toXClass( oneToManyAnn.targetEntity() )
 				);
-				collectionBinder.setCascadeStrategy( getCascadeStrategy( oneToManyAnn.cascade(), hibernateCascade ) );
+				collectionBinder.setCascadeStrategy(
+						getCascadeStrategy( oneToManyAnn.cascade(), hibernateCascade, oneToManyAnn.orphanRemoval()) );
 				collectionBinder.setOneToMany( true );
 			}
 			else if ( elementCollectionAnn != null
@@ -1783,7 +1784,7 @@ public final class AnnotationBinder {
 				collectionBinder.setTargetEntity(
 						mappings.getReflectionManager().toXClass( manyToManyAnn.targetEntity() )
 				);
-				collectionBinder.setCascadeStrategy( getCascadeStrategy( manyToManyAnn.cascade(), hibernateCascade ) );
+				collectionBinder.setCascadeStrategy( getCascadeStrategy( manyToManyAnn.cascade(), hibernateCascade, false) );
 				collectionBinder.setOneToMany( false );
 			}
 			else if ( property.isAnnotationPresent( ManyToAny.class ) ) {
@@ -1791,7 +1792,7 @@ public final class AnnotationBinder {
 				collectionBinder.setTargetEntity(
 						mappings.getReflectionManager().toXClass( void.class )
 				);
-				collectionBinder.setCascadeStrategy( getCascadeStrategy( null, hibernateCascade ) );
+				collectionBinder.setCascadeStrategy( getCascadeStrategy( null, hibernateCascade, false) );
 				collectionBinder.setOneToMany( false );
 			}
 			collectionBinder.setMappedBy( mappedBy );
@@ -2464,8 +2465,8 @@ public final class AnnotationBinder {
 	}
 
 	private static String getCascadeStrategy(
-			javax.persistence.CascadeType[] ejbCascades, Cascade hibernateCascadeAnnotation
-	) {
+		javax.persistence.CascadeType[] ejbCascades, Cascade hibernateCascadeAnnotation,
+		boolean orphanRemoval) {
 		EnumSet<CascadeType> hibernateCascadeSet = convertToHibernateCascadeType( ejbCascades );
 		CascadeType[] hibernateCascades = hibernateCascadeAnnotation == null ?
 				null :
@@ -2473,6 +2474,11 @@ public final class AnnotationBinder {
 
 		if ( hibernateCascades != null && hibernateCascades.length > 0 ) {
 			hibernateCascadeSet.addAll( Arrays.asList( hibernateCascades ) );
+		}
+
+		if ( orphanRemoval ) {
+			hibernateCascadeSet.add(CascadeType.DELETE_ORPHAN);
+			hibernateCascadeSet.add(CascadeType.REMOVE);
 		}
 
 		StringBuilder cascade = new StringBuilder();

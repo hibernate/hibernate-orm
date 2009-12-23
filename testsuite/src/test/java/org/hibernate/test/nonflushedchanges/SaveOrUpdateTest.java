@@ -5,6 +5,7 @@ import junit.framework.Test;
 
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
+import org.hibernate.HibernateException;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.criterion.Projections;
@@ -441,7 +442,24 @@ public class SaveOrUpdateTest extends AbstractOperationTestCase {
 
 		SimpleJtaTransactionManagerImpl.getInstance().begin();
 		Session s2 = openSession();
-		s2.saveOrUpdate( child );
+		try {
+			s2.getTransaction().begin();
+			s2.saveOrUpdate( child );
+			fail();
+		}
+		catch ( HibernateException ex ) {
+			// expected because parent is connected to s1
+		}
+		finally {
+			SimpleJtaTransactionManagerImpl.getInstance().rollback();
+		}
+
+		s1.evict( child.getParent() );
+		assertFalse( s1.contains( child.getParent() ) );
+
+		SimpleJtaTransactionManagerImpl.getInstance().begin();
+		s2 = openSession();
+ 		s2.saveOrUpdate( child );
 		s2 = applyNonFlushedChangesToNewSessionCloseOldSession( s2 );
 		child = ( Node ) getOldToNewEntityRefMap().get( child );
 		assertTrue( s2.contains( child ) );

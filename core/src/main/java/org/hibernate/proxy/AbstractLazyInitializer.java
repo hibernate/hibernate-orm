@@ -46,6 +46,7 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 	private boolean unwrap;
 
 	private transient SessionImplementor session;
+	private transient EntityKey entityKey; // cached value
 
 	/**
 	 * For serialization from the non-pojo initializers (HHH-3309)
@@ -64,6 +65,7 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 		this.entityName = entityName;
 		this.id = id;
 		this.session = session;
+		this.entityKey = generateEntityKeyOrNull();
 	}
 
 	/**
@@ -85,6 +87,7 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 	 */
 	public final void setIdentifier(Serializable id) {
 		this.id = id;
+		entityKey = generateEntityKeyOrNull();
 	}
 
 	/**
@@ -110,10 +113,23 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 				//TODO: perhaps this should be some other RuntimeException...
 				throw new HibernateException("illegally attempted to associate a proxy with two open Sessions");
 			}
+			else if ( s == null ){
+				unsetSession();
+			}
 			else {
 				session = s;
+				entityKey = generateEntityKeyOrNull();
 			}
 		}
+	}
+
+	private EntityKey generateEntityKeyOrNull() {
+		if ( getIdentifier() == null || session == null || entityName == null ) {
+			return null;
+		}
+		return new EntityKey(
+				getIdentifier(), session.getFactory().getEntityPersister( entityName ), session.getEntityMode()
+		);
 	}
 
 	/**
@@ -121,6 +137,7 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 	 */
 	public void unsetSession() {
 		session = null;
+		entityKey = null;
 	}
 
 	/**
@@ -162,9 +179,14 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 	 * @return Value for property 'connectedToSession'.
 	 */
 	protected final boolean isConnectedToSession() {
-		return session!=null &&
-				session.isOpen() &&
-				session.getPersistenceContext().containsProxy(this);
+		return getProxyOrNull() != null;
+	}
+
+	private Object getProxyOrNull() {
+		if ( session != null && session.isOpen() && entityKey != null ) {
+			return session.getPersistenceContext().getProxy( entityKey );
+		}
+		return null;
 	}
 
 	/**

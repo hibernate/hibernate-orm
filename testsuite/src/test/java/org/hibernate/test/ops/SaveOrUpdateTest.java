@@ -6,6 +6,7 @@ import junit.framework.Test;
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.HibernateException;
 import org.hibernate.junit.functional.FunctionalTestCase;
 import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
 import org.hibernate.intercept.FieldInterceptionHelper;
@@ -388,6 +389,23 @@ public class SaveOrUpdateTest extends FunctionalTestCase {
 		assertTrue( s1.contains( child.getParent() ) );
 
 		Session s2 = openSession();
+		try {
+			s2.getTransaction().begin();
+			s2.saveOrUpdate( child );
+			fail();
+		}
+		catch ( HibernateException ex ) {
+			// expected because parent is connected to s1
+		}
+		finally {
+			s2.getTransaction().rollback();
+		}
+		s2.close();
+
+		s1.evict( child.getParent() );
+		assertFalse( s1.contains( child.getParent() ) );
+
+		s2 = openSession();
 		s2.getTransaction().begin();
 		s2.saveOrUpdate( child );
 		assertTrue( s2.contains( child ) );

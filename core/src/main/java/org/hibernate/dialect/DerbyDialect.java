@@ -81,12 +81,12 @@ public class DerbyDialect extends DB2Dialect {
 		return ", ";
 	}
 
-	/**
-	 * This is different in Cloudscape to DB2.
-	 */
-	public String getIdentityColumnString() {
-		return "not null generated always as identity"; //$NON-NLS-1
-	}
+//	/**
+//	 * This is different in Cloudscape to DB2.
+//	 */
+//	public String getIdentityColumnString() {
+//		return "not null generated always as identity"; //$NON-NLS-1
+//	}
 
 	/**
 	 * Return the case statement modified for Cloudscape.
@@ -99,9 +99,9 @@ public class DerbyDialect extends DB2Dialect {
 	      return true;
 	}
 
-	public Class getNativeIdentifierGeneratorClass() {
-		return TableHiLoGenerator.class;
-	}
+//	public Class getNativeIdentifierGeneratorClass() {
+//		return TableHiLoGenerator.class;
+//	}
 
 	public boolean supportsSequences() {
 		return false;

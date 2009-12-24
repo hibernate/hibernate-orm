@@ -145,7 +145,7 @@ public final class ConnectionProviderFactory {
 	 * Transform JDBC connection properties.
 	 *
 	 * Passed in the form <tt>hibernate.connection.*</tt> to the
-	 * format accepted by <tt>DriverManager</tt> by triming the leading "<tt>hibernate.connection</tt>".
+	 * format accepted by <tt>DriverManager</tt> by trimming the leading "<tt>hibernate.connection</tt>".
 	 */
 	public static Properties getConnectionProperties(Properties properties) {
 
@@ -153,7 +153,7 @@ public final class ConnectionProviderFactory {
 		Properties result = new Properties();
 		while ( iter.hasNext() ) {
 			String prop = (String) iter.next();
-			if ( prop.indexOf(Environment.CONNECTION_PREFIX) > -1 && !SPECIAL_PROPERTIES.contains(prop) ) {
+			if ( prop.startsWith(Environment.CONNECTION_PREFIX) && !SPECIAL_PROPERTIES.contains(prop) ) {
 				result.setProperty(
 					prop.substring( Environment.CONNECTION_PREFIX.length()+1 ),
 					properties.getProperty(prop)

@@ -110,6 +110,11 @@ public class DerbyDialect extends DB2Dialect {
 	public boolean supportsLimit() {
 		return isTenPointFiveReleaseOrNewer();
 	}
+	
+	//HHH-4531
+	public boolean supportsCommentOn() {
+		return false;
+	}
 
 	public boolean supportsLimitOffset() {
 		return isTenPointFiveReleaseOrNewer();

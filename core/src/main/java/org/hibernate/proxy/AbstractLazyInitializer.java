@@ -106,12 +106,13 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 	 */
 	public final void setSession(SessionImplementor s) throws HibernateException {
 		if ( s != session ) {
-			if ( isConnectedToSession() ) {
+			// check for s == null first, since it is least expensive
+			if ( s == null ){
+				unsetSession();
+			}
+			else if ( isConnectedToSession() ) {
 				//TODO: perhaps this should be some other RuntimeException...
 				throw new HibernateException("illegally attempted to associate a proxy with two open Sessions");
-			}
-			else if ( s == null ){
-				unsetSession();
 			}
 			else {
 				session = s;

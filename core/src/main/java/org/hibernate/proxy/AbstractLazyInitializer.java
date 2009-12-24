@@ -46,7 +46,6 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 	private boolean unwrap;
 
 	private transient SessionImplementor session;
-	private transient EntityKey entityKey; // cached value
 
 	/**
 	 * For serialization from the non-pojo initializers (HHH-3309)
@@ -65,7 +64,6 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 		this.entityName = entityName;
 		this.id = id;
 		this.session = session;
-		this.entityKey = generateEntityKeyOrNull();
 	}
 
 	/**
@@ -87,7 +85,6 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 	 */
 	public final void setIdentifier(Serializable id) {
 		this.id = id;
-		entityKey = generateEntityKeyOrNull();
 	}
 
 	/**
@@ -118,18 +115,15 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 			}
 			else {
 				session = s;
-				entityKey = generateEntityKeyOrNull();
 			}
 		}
 	}
 
-	private EntityKey generateEntityKeyOrNull() {
-		if ( getIdentifier() == null || session == null || entityName == null ) {
+	private static EntityKey generateEntityKeyOrNull(Serializable id, SessionImplementor s, String entityName) {
+		if ( id == null || s == null || entityName == null ) {
 			return null;
 		}
-		return new EntityKey(
-				getIdentifier(), session.getFactory().getEntityPersister( entityName ), session.getEntityMode()
-		);
+		return new EntityKey( id, s.getFactory().getEntityPersister( entityName ), s.getEntityMode() );
 	}
 
 	/**
@@ -137,7 +131,6 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 	 */
 	public void unsetSession() {
 		session = null;
-		entityKey = null;
 	}
 
 	/**
@@ -183,7 +176,8 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 	}
 
 	private Object getProxyOrNull() {
-		if ( session != null && session.isOpen() && entityKey != null ) {
+		final EntityKey entityKey = generateEntityKeyOrNull( getIdentifier(), session, getEntityName() );
+		if ( entityKey != null && session != null && session.isOpen() ) {
 			return session.getPersistenceContext().getProxy( entityKey );
 		}
 		return null;
@@ -210,12 +204,8 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 	 * do not initialize the proxy
 	 */
 	public final Object getImplementation(SessionImplementor s) throws HibernateException {
-		final EntityKey entityKey = new EntityKey(
-				getIdentifier(),
-				s.getFactory().getEntityPersister( getEntityName() ),
-				s.getEntityMode()
-		);
-		return s.getPersistenceContext().getEntity( entityKey );
+		final EntityKey entityKey = generateEntityKeyOrNull( getIdentifier(), s, getEntityName() );
+		return ( entityKey == null ? null : s.getPersistenceContext().getEntity( entityKey ) );
 	}
 
 	/**

@@ -90,6 +90,10 @@ public class DerbyDialect extends DB2Dialect {
 		return false;
 	}
 
+	public boolean supportsCommentOn() {
+		return false;
+	}
+
 	public String getQuerySequencesString() {
 	   return null ;
 	}

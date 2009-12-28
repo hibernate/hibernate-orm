@@ -68,7 +68,7 @@ public interface EntityPersister extends OptimisticCacheSource {
 	 * Called only once per {@link org.hibernate.SessionFactory} lifecycle,
 	 * after all entity persisters have been instantiated.
 	 *
-	 * @throws org.hibernate.MappingException Indicates an issue in the metdata.
+	 * @throws org.hibernate.MappingException Indicates an issue in the metadata.
 	 */
 	public void postInstantiate() throws MappingException;
 
@@ -172,7 +172,7 @@ public interface EntityPersister extends OptimisticCacheSource {
 	/**
 	 * Determine whether this entity has any non-none cascading.
 	 *
-	 * @return True if the entity has any properties with a cscade other than NONE;
+	 * @return True if the entity has any properties with a cascade other than NONE;
 	 * false otherwise (aka, no cascading).
 	 */
 	public boolean hasCascades();
@@ -205,7 +205,7 @@ public interface EntityPersister extends OptimisticCacheSource {
 	 * Get the type of a particular property by name.
 	 *
 	 * @param propertyName The name of the property for which to retrieve
-	 * the typpe.
+	 * the type.
 	 * @return The type.
 	 * @throws org.hibernate.MappingException Typically indicates an unknown
 	 * property name.
@@ -245,10 +245,10 @@ public interface EntityPersister extends OptimisticCacheSource {
 	public boolean hasIdentifierProperty();
 
 	/**
-	 * Determine whether detahced instances of this entity carry their own
+	 * Determine whether detached instances of this entity carry their own
 	 * identifier value.
 	 * <p/>
-	 * The other option is the deperecated feature where users could supply
+	 * The other option is the deprecated feature where users could supply
 	 * the id during session calls.
 	 *
 	 * @return True if either (1) {@link #hasIdentifierProperty()} or
@@ -300,7 +300,7 @@ public interface EntityPersister extends OptimisticCacheSource {
 	/**
 	 * Retrieve the current state of the natural-id properties from the database.
 	 *
-	 * @param id The identifier of the entity for which to retrieve the naturak-id values.
+	 * @param id The identifier of the entity for which to retrieve the natural-id values.
 	 * @param session The session from which the request originated.
 	 * @return The natural-id snapshot.
 	 */
@@ -430,7 +430,7 @@ public interface EntityPersister extends OptimisticCacheSource {
 	public boolean[] getPropertyVersionability();
 	public boolean[] getPropertyLaziness();
 	/**
-	 * Get the cascade styles of the propertes (optional operation)
+	 * Get the cascade styles of the properties (optional operation)
 	 */
 	public CascadeStyle[] getPropertyCascadeStyles();
 
@@ -700,7 +700,7 @@ public interface EntityPersister extends OptimisticCacheSource {
 	 * <tt>Animal</tt> persister is being asked to return the persister specific to <tt>Cat</tt>.
 	 * <p/>
 	 * It is also possible that the instance is actually an <tt>Animal</tt> instance in the above example in which
-	 * case we would retrn <tt>this</tt> from this method.
+	 * case we would return <tt>this</tt> from this method.
 	 *
 	 * @param instance The entity instance
 	 * @param factory Reference to the SessionFactory

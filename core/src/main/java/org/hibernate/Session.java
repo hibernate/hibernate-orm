@@ -111,7 +111,7 @@ public interface Session extends Serializable {
 
 	/**
 	 * Force this session to flush. Must be called at the end of a
-	 * unit of work, before commiting the transaction and closing the
+	 * unit of work, before committing the transaction and closing the
 	 * session (depending on {@link #setFlushMode flush-mode},
 	 * {@link Transaction#commit()} calls this method).
 	 * <p/>
@@ -816,7 +816,7 @@ public interface Session extends Serializable {
 	 * Enable the named filter for this current session.
 	 *
 	 * @param filterName The name of the filter to be enabled.
-	 * @return The Filter instance representing the enabled fiter.
+	 * @return The Filter instance representing the enabled filter.
 	 */
 	public Filter enableFilter(String filterName);
 
@@ -824,7 +824,7 @@ public interface Session extends Serializable {
 	 * Retrieve a currently enabled filter by name.
 	 *
 	 * @param filterName The name of the filter to be retrieved.
-	 * @return The Filter instance representing the enabled fiter.
+	 * @return The Filter instance representing the enabled filter.
 	 */
 	public Filter getEnabledFilter(String filterName);
 

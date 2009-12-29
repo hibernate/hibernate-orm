@@ -46,7 +46,7 @@ public class NodeTraverser {
 	public NodeTraverser( VisitationStrategy strategy ) {
 		this.strategy = strategy;
 	}
-	 
+
 	/**
 	 * Traverse the AST tree depth first.
 	 * 
@@ -63,20 +63,26 @@ public class NodeTraverser {
 			throw new IllegalArgumentException(
 					"node to traverse cannot be null!" );
 		}
-		AST node = ast.getFirstChild();
+		visitDepthFirst( ast.getFirstChild() );
+	}
+	
+	private void visitDepthFirst(AST ast){
+		if(ast==null){
+			return;
+		}
 		Stack stack = new Stack();
-		if ( node != null ) {
-			stack.push( node );
+		if ( ast != null ) {
+			stack.push( ast );
 			while (!stack.empty()) {
-				node = (AST) stack.pop();
-				strategy.visit( node );
-				if ( node.getFirstChild() != null ) {
-					stack.push( node.getFirstChild() );
-				}
-				if ( node.getNextSibling() != null ) {
-					stack.push( node.getNextSibling() );
-				}
+				ast = (AST) stack.pop();
+				strategy.visit( ast );
+				if ( ast.getNextSibling() != null ) 
+					stack.push( ast.getNextSibling() );
+				if ( ast.getFirstChild() != null ) 
+					stack.push( ast.getFirstChild() );
 			}
 		}
 	}
+
+	
 }

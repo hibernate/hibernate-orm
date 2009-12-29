@@ -105,7 +105,6 @@ public class LongInElementsTest extends FunctionalTestCase {
 		
 	}
 	
-	@Override
 	public boolean appliesTo( Dialect dialect ) {
 		//HHH-1123
 		return !(dialect instanceof SQLServerDialect) && !(dialect instanceof Oracle8iDialect);

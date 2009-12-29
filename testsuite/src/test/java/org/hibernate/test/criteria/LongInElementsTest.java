@@ -32,6 +32,9 @@ import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.criterion.Restrictions;
+import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.Oracle8iDialect;
+import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.junit.functional.FunctionalTestCase;
 import org.hibernate.test.hql.StateProvince;
 
@@ -53,7 +56,7 @@ public class LongInElementsTest extends FunctionalTestCase {
 		return new String[] { "criteria/Animal.hbm.xml" };
 	}
 	
-	//HHH-1123
+	//HHH-2166
 	public void testLongInElementsByHQL(){
 		Session session = openSession();
 		Transaction t = session.beginTransaction();
@@ -77,8 +80,8 @@ public class LongInElementsTest extends FunctionalTestCase {
 		
 	}
 	
-	//HHH-1123
-	public void te2stLongInElementsByCriteria(){
+	//HHH-2166
+	public void testLongInElementsByCriteria(){
 		Session session = openSession();
 		Transaction t = session.beginTransaction();
 
@@ -101,6 +104,13 @@ public class LongInElementsTest extends FunctionalTestCase {
 		
 	}
 	
+	@Override
+	public boolean appliesTo( Dialect dialect ) {
+		//HHH-1123
+		return !(dialect instanceof SQLServerDialect) && !(dialect instanceof Oracle8iDialect);
+		
+	}
+
 	private List createLotsOfElements(){
 		List list = new ArrayList();
 		for ( int i = 0; i < ELEMENTS_SIZE; i++ ){

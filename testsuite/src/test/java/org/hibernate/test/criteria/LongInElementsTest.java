@@ -41,6 +41,7 @@ import org.hibernate.test.hql.StateProvince;
 /**
  * 
  * HHH-2166 Long "in" lists in queries results in a Java stack overflow exception.
+ * to reproduce this issue, you should add "<argLine>-Xss128k</argLine>" to the surefire plugin (test on Fedora 12)
  * 
  * @author Strong Liu
  */

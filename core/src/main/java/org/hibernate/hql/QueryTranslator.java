@@ -39,7 +39,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Defines the constract of an HQL->SQL translator.
+ * Defines the contract of an HQL->SQL translator.
  *
  * @author josh
  */
@@ -74,7 +74,7 @@ public interface QueryTranslator {
 			throws HibernateException;
 
 	/**
-	 * Perform an iterate operation given the underlying query defintion.
+	 * Perform an iterate operation given the underlying query definition.
 	 *
 	 * @param queryParameters The query bind parameters.
 	 * @param session         The session owning this query.
@@ -85,7 +85,7 @@ public interface QueryTranslator {
 			throws HibernateException;
 
 	/**
-	 * Perform a scroll operation given the underlying query defintion.
+	 * Perform a scroll operation given the underlying query definition.
 	 *
 	 * @param queryParameters The query bind parameters.
 	 * @param session         The session owning this query.
@@ -96,7 +96,7 @@ public interface QueryTranslator {
 			throws HibernateException;
 
 	/**
-	 * Perform a bulk update/delete operation given the underlying query defintion.
+	 * Perform a bulk update/delete operation given the underlying query definition.
 	 *
 	 * @param queryParameters The query bind parameters.
 	 * @param session         The session owning this query.
@@ -107,7 +107,7 @@ public interface QueryTranslator {
 			throws HibernateException;
 
 	/**
-	 * Returns the set of query spaces (table names) that the query referrs to.
+	 * Returns the set of query spaces (table names) that the query refers to.
 	 *
 	 * @return A set of query spaces (table names).
 	 */
@@ -115,7 +115,7 @@ public interface QueryTranslator {
 
 	/**
 	 * Retrieve the query identifier for this translator.  The query identifier is
-	 * used in stats collection.
+	 * used in states collection.
 	 *
 	 * @return the identifier
 	 */
@@ -181,7 +181,7 @@ public interface QueryTranslator {
 	/**
 	 * Does the translated query contain collection fetches?
 	 *
-	 * @return tru if the query does contain collection fetched;
+	 * @return true if the query does contain collection fetched;
 	 * false otherwise.
 	 */
 	boolean containsCollectionFetches();

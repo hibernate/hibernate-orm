@@ -32,7 +32,6 @@ import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.criterion.Restrictions;
-import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.Oracle8iDialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.junit.functional.FunctionalTestCase;
@@ -40,81 +39,85 @@ import org.hibernate.test.hql.StateProvince;
 
 /**
  * 
- * HHH-2166 Long "in" lists in queries results in a Java stack overflow exception.
- * to reproduce this issue, you should add "<argLine>-Xss128k</argLine>" to the surefire plugin (test on Fedora 12)
+ * HHH-2166 Long "in" lists in queries results in a Java stack overflow
+ * exception. to reproduce this issue, you should add
+ * "<argLine>-Xss128k</argLine>" to the surefire plugin (test on Fedora 12)
  * 
  * @author Strong Liu
  */
 public class LongInElementsTest extends FunctionalTestCase {
-	
+
 	private static final int ELEMENTS_SIZE = 4000;
-	
+
 	public LongInElementsTest( String string ) {
-		super(string);
+		super( string );
 	}
 
 	public String[] getMappings() {
 		return new String[] { "criteria/Animal.hbm.xml" };
 	}
-	
-	//HHH-2166
-	public void testLongInElementsByHQL(){
+
+	// HHH-2166
+	public void testLongInElementsByHQL() {
+		if ( (getDialect() instanceof SQLServerDialect)
+				|| (getDialect() instanceof Oracle8iDialect) ){
+			skipExpectedFailure( new Exception("this test fails on oracle and ms sql server, for more info, see HHH-1123") );
+		}
 		Session session = openSession();
 		Transaction t = session.beginTransaction();
 
 		StateProvince beijing = new StateProvince();
-		beijing.setIsoCode("100089");
-		beijing.setName("beijing");
-		session.persist(beijing);
+		beijing.setIsoCode( "100089" );
+		beijing.setName( "beijing" );
+		session.persist( beijing );
 		session.flush();
 		session.clear();
-		
-		Query query = session.createQuery("from org.hibernate.test.hql.StateProvince sp where sp.id in ( :idList )");
+
+		Query query = session
+				.createQuery( "from org.hibernate.test.hql.StateProvince sp where sp.id in ( :idList )" );
 		query.setParameterList( "idList" , createLotsOfElements() );
 		List list = query.list();
 		session.flush();
 		session.clear();
-		assertEquals( 1, list.size() );
-		session.delete(beijing);
+		assertEquals( 1 , list.size() );
+		session.delete( beijing );
 		t.commit();
 		session.close();
-		
+
 	}
-	
-	//HHH-2166
-	public void testLongInElementsByCriteria(){
+
+	// HHH-2166
+	public void testLongInElementsByCriteria() {
+		if ( (getDialect() instanceof SQLServerDialect)
+				|| (getDialect() instanceof Oracle8iDialect) ){
+			skipExpectedFailure( new Exception("this test fails on oracle and ms sql server, for more info, see HHH-1123") );
+		}
 		Session session = openSession();
 		Transaction t = session.beginTransaction();
 
 		StateProvince beijing = new StateProvince();
-		beijing.setIsoCode("100089");
-		beijing.setName("beijing");
-		session.persist(beijing);
+		beijing.setIsoCode( "100089" );
+		beijing.setName( "beijing" );
+		session.persist( beijing );
 		session.flush();
 		session.clear();
-		
-		Criteria criteria = session.createCriteria(StateProvince.class);
-		criteria.add(Restrictions.in("id", createLotsOfElements()));
+
+		Criteria criteria = session.createCriteria( StateProvince.class );
+		criteria.add( Restrictions.in( "id" , createLotsOfElements() ) );
 		List list = criteria.list();
 		session.flush();
 		session.clear();
-		assertEquals( 1, list.size() );
-		session.delete(beijing);
+		assertEquals( 1 , list.size() );
+		session.delete( beijing );
 		t.commit();
 		session.close();
-		
-	}
-	
-	public boolean appliesTo( Dialect dialect ) {
-		//HHH-1123
-		return !(dialect instanceof SQLServerDialect) && !(dialect instanceof Oracle8iDialect);
-		
+
 	}
 
-	private List createLotsOfElements(){
+	private List createLotsOfElements() {
 		List list = new ArrayList();
-		for ( int i = 0; i < ELEMENTS_SIZE; i++ ){
-			list.add(Long.valueOf(i));
+		for ( int i = 0; i < ELEMENTS_SIZE; i++ ) {
+			list.add( Long.valueOf( i ) );
 		}
 		return list;
 	}

@@ -62,6 +62,7 @@ public class LongInElementsTest extends FunctionalTestCase {
 		if ( (getDialect() instanceof SQLServerDialect)
 				|| (getDialect() instanceof Oracle8iDialect) ){
 			skipExpectedFailure( new Exception("this test fails on oracle and ms sql server, for more info, see HHH-1123") );
+			return;
 		}
 		Session session = openSession();
 		Transaction t = session.beginTransaction();
@@ -91,6 +92,7 @@ public class LongInElementsTest extends FunctionalTestCase {
 		if ( (getDialect() instanceof SQLServerDialect)
 				|| (getDialect() instanceof Oracle8iDialect) ){
 			skipExpectedFailure( new Exception("this test fails on oracle and ms sql server, for more info, see HHH-1123") );
+			return;
 		}
 		Session session = openSession();
 		Transaction t = session.beginTransaction();

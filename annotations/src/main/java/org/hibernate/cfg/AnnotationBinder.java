@@ -1672,6 +1672,7 @@ public final class AnnotationBinder {
 				//nullify empty array
 				keyColumns = keyColumns != null && keyColumns.length > 0 ? keyColumns : null;
 
+				//"mapkey" is the legacy column name of the key column pre JPA 2
 				PropertyData mapKeyVirtualProperty = new WrappedInferredData( inferredData, "mapkey" );
 				Ejb3Column[] mapColumns = Ejb3Column.buildColumnFromAnnotation(
 						keyColumns,

@@ -98,8 +98,48 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 
 	/**
 	 * Get column overriding, property first, then parent, then holder
+	 * replace
+	 *  - "index" by "key" if present
+	 *  - "element" by "value" if present
+	 * These rules are here to support both JPA 2 and legacy overriding rules.
+	 *
+	 * WARNING: this can conflict with user's expectations if:
+	 *  - the property uses some restricted values
+	 *  - the user has overridden the column
+	 * But this is unlikely and avoid the need for a "legacy" flag
 	 */
 	public Column[] getOverriddenColumn(String propertyName) {
+		Column[] result = getExactOverriddenColumn( propertyName );
+		if (result == null) {
+			if ( propertyName.contains( ".key." ) ) {
+				//TODO cache the underlying regexp
+				result = getExactOverriddenColumn( propertyName.replace( ".key.", ".index."  ) );
+			}
+			if ( result == null && propertyName.endsWith( ".key" ) ) {
+				//TODO cache the underlying regexp
+				result = getExactOverriddenColumn(
+						propertyName.substring( 0, propertyName.length() - ".key".length() ) + ".index"
+						);
+			}
+			if ( result == null && propertyName.contains( ".value." ) ) {
+				//TODO cache the underlying regexp
+				result = getExactOverriddenColumn( propertyName.replace( ".value.", ".element."  ) );
+			}
+			if ( result == null && propertyName.endsWith( ".value" ) ) {
+				//TODO cache the underlying regexp
+				result = getExactOverriddenColumn(
+						propertyName.substring( 0, propertyName.length() - ".value".length() ) + ".element"
+						);
+			}
+		}
+		return result;
+	}
+
+	/**
+	 * Get column overriding, property first, then parent, then holder
+	 * find the overridden rules from the exact property name.
+	 */
+	private Column[] getExactOverriddenColumn(String propertyName) {
 		Column[] override = null;
 		if ( parent != null ) {
 			override = parent.getOverriddenColumn( propertyName );

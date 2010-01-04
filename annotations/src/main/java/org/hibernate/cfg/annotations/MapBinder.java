@@ -174,10 +174,6 @@ public class MapBinder extends CollectionBinder {
 			else {
 				XClass elementClass;
 				AnnotatedClassType classType;
-				//			Map<String, javax.persistence.Column[]> columnOverrides = PropertyHolderBuilder.buildColumnOverride(
-				//					property, StringHelper.qualify( collValue.getRole(), "element" )
-				//			);
-				//FIXME the "element" is lost
 				PropertyHolder holder = null;
 				if ( BinderHelper.PRIMITIVE_NAMES.contains( mapKeyType ) ) {
 					classType = AnnotatedClassType.NONE;
@@ -227,8 +223,8 @@ public class MapBinder extends CollectionBinder {
 					}
 
 					//boolean propertyAccess = embeddable == null || AccessType.PROPERTY.equals( embeddable.access() );
-					//FIXME "index" is it right?
-					PropertyData inferredData = new PropertyPreloadedData( AccessType.PROPERTY, "index", elementClass );
+					//"key" is the JPA 2 prefix for map keys
+					PropertyData inferredData = new PropertyPreloadedData( AccessType.PROPERTY, "key", elementClass );
 					//TODO be smart with isNullable
 					Component component = AnnotationBinder.fillComponent(
 							holder, inferredData, isPropertyAnnotated ? AccessType.PROPERTY : AccessType.FIELD, true,

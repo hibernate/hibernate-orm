@@ -1295,7 +1295,8 @@ public abstract class CollectionBinder {
 					throw new AssertionFailure( "Unable to guess collection property accessor name" );
 				}
 
-				PropertyData inferredData = new PropertyPreloadedData( AccessType.PROPERTY, "element", elementClass );
+				//"value" is the JPA 2 prefix for map values (used to be "element")
+				PropertyData inferredData = new PropertyPreloadedData( AccessType.PROPERTY, "value", elementClass );
 				//TODO be smart with isNullable
 				Component component = AnnotationBinder.fillComponent(
 						holder, inferredData, isPropertyAnnotated ? AccessType.PROPERTY : AccessType.FIELD, true,

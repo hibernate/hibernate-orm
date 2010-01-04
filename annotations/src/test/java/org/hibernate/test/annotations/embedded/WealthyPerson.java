@@ -27,5 +27,5 @@ public class WealthyPerson extends Person {
 		@AttributeOverride(name="country",
 								 column=@Column(name="HOME_COUNTRY"))
 	})
-	protected Set<Address> vacationHomes = new HashSet();
+	protected Set<Address> vacationHomes = new HashSet<Address>();
 }

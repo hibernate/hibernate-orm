@@ -159,6 +159,19 @@ public abstract class CollectionBinder {
 	private XClass declaringClass;
 	private boolean declaringClassSet;
 	private AccessType accessType;
+	private boolean hibernateExtensionMapping;
+
+	public boolean isMap() {
+		return false;
+	}
+
+	public void setIsHibernateExtensionMapping(boolean hibernateExtensionMapping) {
+		this.hibernateExtensionMapping = hibernateExtensionMapping;
+	}
+
+	protected boolean isHibernateExtensionMapping() {
+		return hibernateExtensionMapping;
+	}
 
 	public void setUpdatable(boolean updatable) {
 		this.updatable = updatable;
@@ -224,14 +237,15 @@ public abstract class CollectionBinder {
 	 */
 	public static CollectionBinder getCollectionBinder(
 			String entityName, XProperty property,
-			boolean isIndexed
+			boolean isIndexed, boolean isHibernateExtensionMapping
 	) {
+		CollectionBinder result;
 		if ( property.isArray() ) {
 			if ( property.getElementClass().isPrimitive() ) {
-				return new PrimitiveArrayBinder();
+				result = new PrimitiveArrayBinder();
 			}
 			else {
-				return new ArrayBinder();
+				result = new ArrayBinder();
 			}
 		}
 		else if ( property.isCollection() ) {
@@ -242,35 +256,35 @@ public abstract class CollectionBinder {
 					throw new AnnotationException( "Set do not support @CollectionId: "
 							+ StringHelper.qualify( entityName, property.getName() ) );
 				}
-				return new SetBinder();
+				result = new SetBinder();
 			}
 			else if ( java.util.SortedSet.class.equals( returnedClass ) ) {
 				if ( property.isAnnotationPresent( CollectionId.class ) ) {
 					throw new AnnotationException( "Set do not support @CollectionId: "
 							+ StringHelper.qualify( entityName, property.getName() ) );
 				}
-				return new SetBinder( true );
+				result = new SetBinder( true );
 			}
 			else if ( java.util.Map.class.equals( returnedClass ) ) {
 				if ( property.isAnnotationPresent( CollectionId.class ) ) {
 					throw new AnnotationException( "Map do not support @CollectionId: "
 							+ StringHelper.qualify( entityName, property.getName() ) );
 				}
-				return new MapBinder();
+				result = new MapBinder();
 			}
 			else if ( java.util.SortedMap.class.equals( returnedClass ) ) {
 				if ( property.isAnnotationPresent( CollectionId.class ) ) {
 					throw new AnnotationException( "Map do not support @CollectionId: "
 							+ StringHelper.qualify( entityName, property.getName() ) );
 				}
-				return new MapBinder( true );
+				result = new MapBinder( true );
 			}
 			else if ( java.util.Collection.class.equals( returnedClass ) ) {
 				if ( property.isAnnotationPresent( CollectionId.class ) ) {
-					return new IdBagBinder();
+					result = new IdBagBinder();
 				}
 				else {
-					return new BagBinder();
+					result = new BagBinder();
 				}
 			}
 			else if ( java.util.List.class.equals( returnedClass ) ) {
@@ -280,13 +294,13 @@ public abstract class CollectionBinder {
 								"List do not support @CollectionId and @OrderColumn (or @IndexColumn) at the same time: "
 								+ StringHelper.qualify( entityName, property.getName() ) );
 					}
-					return new ListBinder();
+					result = new ListBinder();
 				}
 				else if ( property.isAnnotationPresent( CollectionId.class ) ) {
-					return new IdBagBinder();
+					result = new IdBagBinder();
 				}
 				else {
-					return new BagBinder();
+					result = new BagBinder();
 				}
 			}
 			else {
@@ -302,6 +316,8 @@ public abstract class CollectionBinder {
 							+ StringHelper.qualify( entityName, property.getName() )
 			);
 		}
+		result.setIsHibernateExtensionMapping( isHibernateExtensionMapping );
+		return result;
 	}
 
 	protected CollectionBinder() {
@@ -1251,10 +1267,7 @@ public abstract class CollectionBinder {
 		else {
 			XClass elementClass;
 			AnnotatedClassType classType;
-//			Map<String, javax.persistence.Column[]> columnOverrides = PropertyHolderBuilder.buildColumnOverride(
-//					property, StringHelper.qualify( collValue.getRole(), "element" )
-//			);
-			//FIXME the "element" is lost
+
 			PropertyHolder holder = null;
 			if ( BinderHelper.PRIMITIVE_NAMES.contains( collType.getName() ) ) {
 				classType = AnnotatedClassType.NONE;
@@ -1266,7 +1279,7 @@ public abstract class CollectionBinder {
 
 				holder = PropertyHolderBuilder.buildPropertyHolder(
 						collValue,
-						collValue.getRole(), // + ".element",
+						collValue.getRole(),
 						elementClass,
 						property, parentPropertyHolder, mappings
 				);
@@ -1295,8 +1308,25 @@ public abstract class CollectionBinder {
 					throw new AssertionFailure( "Unable to guess collection property accessor name" );
 				}
 
-				//"value" is the JPA 2 prefix for map values (used to be "element")
-				PropertyData inferredData = new PropertyPreloadedData( AccessType.PROPERTY, "value", elementClass );
+				PropertyData inferredData;
+				if ( isMap() ) {
+					//"value" is the JPA 2 prefix for map values (used to be "element")
+					if ( isHibernateExtensionMapping() ) {
+						inferredData = new PropertyPreloadedData( AccessType.PROPERTY, "element", elementClass );
+					}
+					else {
+						inferredData = new PropertyPreloadedData( AccessType.PROPERTY, "value", elementClass );
+					}
+				}
+				else {
+					if ( isHibernateExtensionMapping() ) {
+						inferredData = new PropertyPreloadedData( AccessType.PROPERTY, "element", elementClass );
+					}
+					else {
+						//"collection&&element" is not a valid property name => placeholder
+						inferredData = new PropertyPreloadedData( AccessType.PROPERTY, "collection&&element", elementClass );
+					}
+				}
 				//TODO be smart with isNullable
 				Component component = AnnotationBinder.fillComponent(
 						holder, inferredData, isPropertyAnnotated ? AccessType.PROPERTY : AccessType.FIELD, true,

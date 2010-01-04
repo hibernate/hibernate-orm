@@ -1589,7 +1589,10 @@ public final class AnnotationBinder {
 			CollectionBinder collectionBinder = CollectionBinder.getCollectionBinder(
 					propertyHolder.getEntityName(),
 					property,
-					!indexColumn.isImplicit()
+					!indexColumn.isImplicit(),
+					property.isAnnotationPresent( CollectionOfElements.class )
+					|| property.isAnnotationPresent( org.hibernate.annotations.MapKey.class )
+							// || property.isAnnotationPresent( ManyToAny.class )
 			);
 			collectionBinder.setIndexColumn( indexColumn );
 			MapKey mapKeyAnn = property.getAnnotation( MapKey.class );

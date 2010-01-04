@@ -83,6 +83,10 @@ public class MapBinder extends CollectionBinder {
 		super();
 	}
 
+	public boolean isMap() {
+		return true;
+	}
+
 	protected Collection createCollection(PersistentClass persistentClass) {
 		return new org.hibernate.mapping.Map( persistentClass );
 	}
@@ -222,9 +226,16 @@ public class MapBinder extends CollectionBinder {
 						throw new AssertionFailure( "Unable to guess collection property accessor name" );
 					}
 
-					//boolean propertyAccess = embeddable == null || AccessType.PROPERTY.equals( embeddable.access() );
-					//"key" is the JPA 2 prefix for map keys
-					PropertyData inferredData = new PropertyPreloadedData( AccessType.PROPERTY, "key", elementClass );
+
+					PropertyData inferredData;
+					if ( isHibernateExtensionMapping() ) {
+						inferredData = new PropertyPreloadedData( AccessType.PROPERTY, "index", elementClass );
+					}
+					else {
+						//"key" is the JPA 2 prefix for map keys
+						inferredData = new PropertyPreloadedData( AccessType.PROPERTY, "key", elementClass );
+					}
+
 					//TODO be smart with isNullable
 					Component component = AnnotationBinder.fillComponent(
 							holder, inferredData, isPropertyAnnotated ? AccessType.PROPERTY : AccessType.FIELD, true,

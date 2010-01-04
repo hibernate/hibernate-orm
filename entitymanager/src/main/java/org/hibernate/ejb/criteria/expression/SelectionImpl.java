@@ -23,6 +23,7 @@
  */
 package org.hibernate.ejb.criteria.expression;
 
+import java.io.Serializable;
 import java.util.Collections;
 import java.util.List;
 import javax.persistence.criteria.Selection;
@@ -40,7 +41,7 @@ import org.hibernate.ejb.criteria.ValueHandlerFactory;
  */
 public abstract class SelectionImpl<X>
 		extends AbstractTupleElement<X>
-		implements SelectionImplementor<X>, ParameterContainer {
+		implements SelectionImplementor<X>, ParameterContainer, Serializable {
 	public SelectionImpl(CriteriaBuilderImpl criteriaBuilder, Class<X> javaType) {
 		super( criteriaBuilder, javaType );
 	}

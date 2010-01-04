@@ -23,6 +23,7 @@
  */
 package org.hibernate.ejb.criteria.expression;
 
+import java.io.Serializable;
 import java.util.Collection;
 import org.hibernate.ejb.criteria.ParameterRegistry;
 import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
@@ -35,7 +36,8 @@ import org.hibernate.ejb.criteria.CriteriaQueryCompiler;
  * @author Steve Ebersole
  */
 public class SizeOfCollectionExpression<C extends Collection>
-		extends ExpressionImpl<Integer> {
+		extends ExpressionImpl<Integer>
+		implements Serializable {
 	private final CollectionExpression<C> collectionExpression;
 
 	public SizeOfCollectionExpression(

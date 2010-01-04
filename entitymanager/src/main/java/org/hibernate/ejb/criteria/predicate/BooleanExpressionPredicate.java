@@ -23,6 +23,7 @@
  */
 package org.hibernate.ejb.criteria.predicate;
 
+import java.io.Serializable;
 import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Predicate;
 
@@ -36,7 +37,9 @@ import org.hibernate.ejb.criteria.Renderable;
  * 
  * @author Steve Ebersole
  */
-public class BooleanExpressionPredicate extends AbstractSimplePredicate {
+public class BooleanExpressionPredicate
+		extends AbstractSimplePredicate
+		implements Serializable {
 	private final Expression<Boolean> expression;
 
 	public BooleanExpressionPredicate(CriteriaBuilderImpl criteriaBuilder, Expression<Boolean> expression) {

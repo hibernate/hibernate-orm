@@ -23,6 +23,7 @@
  */
 package org.hibernate.ejb.criteria;
 
+import java.io.Serializable;
 import java.util.Map;
 import java.util.Map.Entry;
 import javax.persistence.criteria.Expression;
@@ -43,7 +44,7 @@ import org.hibernate.ejb.criteria.JoinImplementors.MapJoinImplementor;
  */
 public class MapJoinImpl<O,K,V>
 		extends JoinImpl<O,V>
-		implements JoinImplementors.MapJoinImplementor<O,K,V> {
+		implements JoinImplementors.MapJoinImplementor<O,K,V>, Serializable {
 
 	public MapJoinImpl(
 			CriteriaBuilderImpl criteriaBuilder,

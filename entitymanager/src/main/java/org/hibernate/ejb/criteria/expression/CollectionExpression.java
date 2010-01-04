@@ -23,6 +23,7 @@
  */
 package org.hibernate.ejb.criteria.expression;
 
+import java.io.Serializable;
 import javax.persistence.metamodel.PluralAttribute;
 import org.hibernate.ejb.criteria.ParameterRegistry;
 import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
@@ -36,7 +37,7 @@ import org.hibernate.persister.collection.CollectionPersister;
  *
  * @author Steve Ebersole
  */
-public class CollectionExpression<C> extends ExpressionImpl<C> {
+public class CollectionExpression<C> extends ExpressionImpl<C> implements Serializable {
 	private final PathImpl origin;
 	private final CollectionPersister persister;
 	private final PluralAttribute<?, C, ?> attribute;

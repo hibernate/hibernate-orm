@@ -23,6 +23,7 @@
  */
 package org.hibernate.ejb.criteria.expression;
 
+import java.io.Serializable;
 import javax.persistence.criteria.Subquery;
 import org.hibernate.ejb.criteria.ParameterRegistry;
 import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
@@ -35,7 +36,9 @@ import org.hibernate.ejb.criteria.Renderable;
  *
  * @author Steve Ebersole
  */
-public class SubqueryComparisonModifierExpression<Y> extends ExpressionImpl<Y> {
+public class SubqueryComparisonModifierExpression<Y>
+		extends ExpressionImpl<Y>
+		implements Serializable {
 	public static enum Modifier {
 		ALL {
 			String rendered() {
@@ -77,7 +80,7 @@ public class SubqueryComparisonModifierExpression<Y> extends ExpressionImpl<Y> {
 	}
 
 	public void registerParameters(ParameterRegistry registry) {
-		// nothign to do (the subquery should be handled directly, and the modified itself is not parameterized)
+		// nothing to do (the subquery should be handled directly, and the modified itself is not parameterized)
 	}
 
 	public String render(CriteriaQueryCompiler.RenderingContext renderingContext) {

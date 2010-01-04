@@ -23,6 +23,7 @@
  */
 package org.hibernate.ejb.criteria;
 
+import java.io.Serializable;
 import java.util.List;
 import java.util.Set;
 import java.util.HashSet;
@@ -49,7 +50,7 @@ import org.hibernate.ejb.criteria.expression.ExpressionImpl;
  *
  * @author Steve Ebersole
  */
-public class CriteriaSubqueryImpl<T> extends ExpressionImpl<T> implements Subquery<T> {
+public class CriteriaSubqueryImpl<T> extends ExpressionImpl<T> implements Subquery<T>, Serializable {
 	private final AbstractQuery<?> parent;
 	private final QueryStructure<T> queryStructure;
 

@@ -23,6 +23,7 @@
  */
 package org.hibernate.ejb.criteria.expression;
 
+import java.io.Serializable;
 import javax.persistence.criteria.Expression;
 
 /**
@@ -30,7 +31,7 @@ import javax.persistence.criteria.Expression;
  *
  * @author Steve Ebersole
  */
-public interface UnaryOperatorExpression<T> extends Expression<T> {
+public interface UnaryOperatorExpression<T> extends Expression<T>, Serializable {
 	/**
 	 * Get the operand.
 	 *

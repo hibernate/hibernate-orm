@@ -23,6 +23,7 @@
  */
 package org.hibernate.ejb.criteria.predicate;
 
+import java.io.Serializable;
 import java.util.List;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Selection;
@@ -36,7 +37,9 @@ import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
  *
  * @author Steve Ebersole
  */
-public abstract class AbstractPredicateImpl extends ExpressionImpl<Boolean> implements Predicate {
+public abstract class AbstractPredicateImpl
+		extends ExpressionImpl<Boolean>
+		implements Predicate, Serializable {
 	private boolean negated;
 
 	protected AbstractPredicateImpl(CriteriaBuilderImpl criteriaBuilder) {

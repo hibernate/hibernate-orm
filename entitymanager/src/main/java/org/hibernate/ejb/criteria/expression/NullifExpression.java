@@ -23,6 +23,7 @@
  */
 package org.hibernate.ejb.criteria.expression;
 
+import java.io.Serializable;
 import javax.persistence.criteria.Expression;
 import org.hibernate.ejb.criteria.ParameterRegistry;
 import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
@@ -34,7 +35,7 @@ import org.hibernate.ejb.criteria.Renderable;
  *
  * @author Steve Ebersole
  */
-public class NullifExpression<T> extends ExpressionImpl<T> {
+public class NullifExpression<T> extends ExpressionImpl<T> implements Serializable {
 	private final Expression<? extends T> primaryExpression;
 	private final Expression<?> secondaryExpression;
 

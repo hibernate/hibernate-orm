@@ -23,6 +23,7 @@
  */
 package org.hibernate.ejb.criteria;
 
+import java.io.Serializable;
 import java.lang.reflect.Member;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -60,8 +61,15 @@ public class MapKeyHelpers {
 	 * @param <K> The type of the map key
 	 * @param <V> The type of the map value
 	 */
-	public static class MapKeyJoin<K,V> extends JoinImpl<Map<K, V>, K> implements Join<Map<K, V>, K> {
-		public MapKeyJoin(CriteriaBuilderImpl criteriaBuilder, MapPath<K,V> source, MapKeyAttribute<K> attribute, JoinType jt) {
+	public static class MapKeyJoin<K,V>
+			extends JoinImpl<Map<K, V>, K>
+			implements Join<Map<K, V>, K>, Serializable {
+
+		public MapKeyJoin(
+				CriteriaBuilderImpl criteriaBuilder,
+				MapPath<K,V> source,
+				MapKeyAttribute<K> attribute,
+				JoinType jt) {
 			super(
 					criteriaBuilder,
 					attribute.getJavaType(),
@@ -90,7 +98,7 @@ public class MapKeyHelpers {
 	 *
 	 * @param <K> The type of the map key.
 	 */
-	public static class MapKeyPath<K> extends PathImpl<K> implements Path<K> {
+	public static class MapKeyPath<K> extends PathImpl<K> implements Path<K>, Serializable {
 		public MapKeyPath(
 				CriteriaBuilderImpl criteriaBuilder,
 				MapPath<K,?> source,
@@ -106,7 +114,7 @@ public class MapKeyHelpers {
 	 * @param <K> The map key type
 	 * @param <V> The map value type
 	 */
-	public static class MapPath<K,V> extends PathImpl<Map<K, V>> implements Path<Map<K, V>> {
+	public static class MapPath<K,V> extends PathImpl<Map<K, V>> implements Path<Map<K, V>>, Serializable {
 		private final MapJoin<?,K,V> mapJoin;
 
 		public MapPath(
@@ -138,7 +146,7 @@ public class MapKeyHelpers {
 	 *
 	 * @param <K> The type of the map key
 	 */
-	public static class MapKeyAttribute<K> implements SingularAttribute<Map<K,?>,K> {
+	public static class MapKeyAttribute<K> implements SingularAttribute<Map<K,?>,K>, Serializable {
 		private final MapAttribute<?,K,?> attribute;
 		private final CollectionPersister mapPersister;
 		private final Type mapKeyType;
@@ -259,7 +267,7 @@ public class MapKeyHelpers {
 
 	public static class MapEntryExpression<K,V>
 			extends ExpressionImpl<Map.Entry<K,V>>
-			implements Expression<Map.Entry<K,V>> {
+			implements Expression<Map.Entry<K,V>>, Serializable {
 		private final PathImpl origin;
 		private final MapAttribute<?, K, V> attribute;
 
@@ -282,7 +290,7 @@ public class MapKeyHelpers {
 		}
 
 		public String render(CriteriaQueryCompiler.RenderingContext renderingContext) {
-			// i dont think this is vqalid outside of select clause...
+			// i don't think this is valid outside of select clause...
 			throw new IllegalStateException( "illegal reference to map entry outside of select clause." );
 		}
 

@@ -23,6 +23,7 @@
  */
 package org.hibernate.ejb.criteria.predicate;
 
+import java.io.Serializable;
 import javax.persistence.criteria.Expression;
 
 import org.hibernate.ejb.criteria.ValueHandlerFactory;
@@ -38,7 +39,9 @@ import org.hibernate.ejb.criteria.expression.LiteralExpression;
  *
  * @author Steve Ebersole
  */
-public class ComparisonPredicate extends AbstractSimplePredicate implements BinaryOperatorExpression<Boolean> {
+public class ComparisonPredicate
+		extends AbstractSimplePredicate
+		implements BinaryOperatorExpression<Boolean>, Serializable {
 	private final ComparisonOperator comparisonOperator;
 	private final Expression<?> leftHandSide;
 	private final Expression<?> rightHandSide;

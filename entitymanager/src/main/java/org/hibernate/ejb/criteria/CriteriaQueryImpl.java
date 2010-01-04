@@ -23,6 +23,7 @@
  */
 package org.hibernate.ejb.criteria;
 
+import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -47,7 +48,7 @@ import org.hibernate.type.Type;
  *
  * @author Steve Ebersole
  */
-public class CriteriaQueryImpl<T> extends AbstractNode implements CriteriaQuery<T> {
+public class CriteriaQueryImpl<T> extends AbstractNode implements CriteriaQuery<T>, Serializable {
 	private final Class<T> returnType;
 
 	private final QueryStructure<T> queryStructure;

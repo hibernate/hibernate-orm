@@ -23,6 +23,8 @@
  */
 package org.hibernate.ejb.criteria.expression;
 
+import java.io.Serializable;
+
 import org.hibernate.ejb.criteria.ParameterRegistry;
 import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
 import org.hibernate.ejb.criteria.CriteriaQueryCompiler;
@@ -32,7 +34,7 @@ import org.hibernate.ejb.criteria.CriteriaQueryCompiler;
  *
  * @author Steve Ebersole
  */
-public class EntityTypeExpression<T> extends ExpressionImpl<T> {
+public class EntityTypeExpression<T> extends ExpressionImpl<T> implements Serializable {
 	public EntityTypeExpression(CriteriaBuilderImpl criteriaBuilder, Class<T> javaType) {
 		super( criteriaBuilder, javaType );
 	}

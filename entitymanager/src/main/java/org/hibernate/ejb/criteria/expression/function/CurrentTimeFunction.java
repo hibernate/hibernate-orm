@@ -23,6 +23,9 @@
  */
 package org.hibernate.ejb.criteria.expression.function;
 
+import java.io.Serializable;
+import java.sql.Time;
+
 import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
 
 /**
@@ -30,10 +33,12 @@ import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
  *
  * @author Steve Ebersole
  */
-public class CurrentTimeFunction extends BasicFunctionExpression<java.sql.Time> {
+public class CurrentTimeFunction
+		extends BasicFunctionExpression<Time> 
+		implements Serializable {
 	public static final String NAME = "current_time";
 
 	public CurrentTimeFunction(CriteriaBuilderImpl criteriaBuilder) {
-		super( criteriaBuilder, java.sql.Time.class, NAME );
+		super( criteriaBuilder, Time.class, NAME );
 	}
 }

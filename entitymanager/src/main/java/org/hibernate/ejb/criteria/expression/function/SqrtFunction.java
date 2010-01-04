@@ -23,6 +23,7 @@
  */
 package org.hibernate.ejb.criteria.expression.function;
 
+import java.io.Serializable;
 import javax.persistence.criteria.Expression;
 import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
 
@@ -31,7 +32,9 @@ import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
  *
  * @author Steve Ebersole
  */
-public class SqrtFunction extends ParameterizedFunctionExpression<Double> {
+public class SqrtFunction
+		extends ParameterizedFunctionExpression<Double>
+		implements Serializable {
 	public static final String NAME = "sqrt";
 
 	public SqrtFunction(CriteriaBuilderImpl criteriaBuilder, Expression<? extends Number> expression) {

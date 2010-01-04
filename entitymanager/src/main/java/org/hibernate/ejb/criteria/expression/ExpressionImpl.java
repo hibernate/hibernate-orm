@@ -23,6 +23,7 @@
  */
 package org.hibernate.ejb.criteria.expression;
 
+import java.io.Serializable;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Collection;
@@ -40,7 +41,7 @@ import org.hibernate.ejb.criteria.expression.function.CastFunction;
  */
 public abstract class ExpressionImpl<T>
 		extends SelectionImpl<T>
-		implements ExpressionImplementor<T> {
+		implements ExpressionImplementor<T>, Serializable {
 	public ExpressionImpl(CriteriaBuilderImpl criteriaBuilder, Class<T> javaType) {
 		super( criteriaBuilder, javaType );
 	}

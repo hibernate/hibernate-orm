@@ -23,6 +23,7 @@
  */
 package org.hibernate.ejb.criteria.predicate;
 
+import java.io.Serializable;
 import javax.persistence.criteria.Expression;
 
 import org.hibernate.ejb.criteria.ParameterRegistry;
@@ -33,14 +34,16 @@ import org.hibernate.ejb.criteria.expression.UnaryOperatorExpression;
 
 /**
  * Defines a {@link javax.persistence.criteria.Predicate} for checking the
- * nullness state of an expression, aka an <tt>IS (NOT?) NULL</tt> predicate.
+ * nullness state of an expression, aka an <tt>IS [NOT] NULL</tt> predicate.
  * <p/>
  * The <tt>NOT NULL</tt> form can be built by calling the constructor and then
  * calling {@link #not}.
  *
  * @author Steve Ebersole
  */
-public class NullnessPredicate extends AbstractSimplePredicate implements UnaryOperatorExpression<Boolean> {
+public class NullnessPredicate
+		extends AbstractSimplePredicate
+		implements UnaryOperatorExpression<Boolean>, Serializable {
 	private final Expression<?> operand;
 
 	/**

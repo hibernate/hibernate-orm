@@ -23,6 +23,7 @@
  */
 package org.hibernate.ejb.criteria.predicate;
 
+import java.io.Serializable;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -38,11 +39,13 @@ import org.hibernate.ejb.criteria.ValueHandlerFactory;
 import org.hibernate.ejb.criteria.expression.LiteralExpression;
 
 /**
- * TODO : javadoc
+ * Models an <tt>[NOT] IN</tt> restriction
  *
  * @author Steve Ebersole
  */
-public class InPredicate<T> extends AbstractSimplePredicate implements CriteriaBuilderImpl.In<T> {
+public class InPredicate<T>
+		extends AbstractSimplePredicate
+		implements CriteriaBuilderImpl.In<T>, Serializable {
 	private final Expression<? extends T> expression;
 	private final List<Expression<? extends T>> values;
 

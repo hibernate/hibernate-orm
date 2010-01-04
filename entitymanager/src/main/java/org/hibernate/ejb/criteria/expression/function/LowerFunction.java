@@ -23,6 +23,7 @@
  */
 package org.hibernate.ejb.criteria.expression.function;
 
+import java.io.Serializable;
 import javax.persistence.criteria.Expression;
 import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
 
@@ -31,7 +32,9 @@ import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
  *
  * @author Steve Ebersole
  */
-public class LowerFunction extends ParameterizedFunctionExpression<String> {
+public class LowerFunction
+		extends ParameterizedFunctionExpression<String>
+		implements Serializable {
 	public static final String NAME = "lower";
 
 	public LowerFunction(CriteriaBuilderImpl criteriaBuilder, Expression<String> string) {

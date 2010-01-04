@@ -139,8 +139,7 @@ public class CriteriaCompilingTest extends TestCase {
 		root.fetch( "lineItems" );
 		criteria.select( root );
 
-		// TODO uncomment the serialization line and enjoy the test failing
-		// criteria = serializeDeserialize( criteria );
+		criteria = serializeDeserialize( criteria );
 
 		em.createQuery( criteria ).getResultList();
 

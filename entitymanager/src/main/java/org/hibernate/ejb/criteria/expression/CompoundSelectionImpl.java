@@ -23,6 +23,7 @@
  */
 package org.hibernate.ejb.criteria.expression;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import javax.persistence.Tuple;
@@ -42,7 +43,9 @@ import org.hibernate.ejb.criteria.ValueHandlerFactory;
  *
  * @author Steve Ebersole
  */
-public class CompoundSelectionImpl<X> extends SelectionImpl<X> implements CompoundSelection<X>, Renderable {
+public class CompoundSelectionImpl<X>
+		extends SelectionImpl<X>
+		implements CompoundSelection<X>, Renderable, Serializable {
 	private final boolean isConstructor;
 	private List<Selection<?>> selectionItems;
 

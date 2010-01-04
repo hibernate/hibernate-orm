@@ -23,6 +23,7 @@
  */
 package org.hibernate.ejb.criteria.expression;
 
+import java.io.Serializable;
 import javax.persistence.criteria.ParameterExpression;
 
 import org.hibernate.ejb.criteria.ParameterRegistry;
@@ -35,7 +36,9 @@ import org.hibernate.ejb.criteria.CriteriaQueryCompiler;
  *
  * @author Steve Ebersole
  */
-public class ParameterExpressionImpl<T> extends ExpressionImpl<T> implements ParameterExpression<T> {
+public class ParameterExpressionImpl<T>
+		extends ExpressionImpl<T>
+		implements ParameterExpression<T>, Serializable {
 	private final String name;
 	private final Integer position;
 

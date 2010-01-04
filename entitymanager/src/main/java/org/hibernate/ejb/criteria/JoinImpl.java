@@ -23,6 +23,7 @@
  */
 package org.hibernate.ejb.criteria;
 
+import java.io.Serializable;
 import javax.persistence.criteria.From;
 import javax.persistence.criteria.JoinType;
 import javax.persistence.metamodel.Attribute;
@@ -36,7 +37,9 @@ import javax.persistence.metamodel.EmbeddableType;
  *
  * @author Steve Ebersole
  */
-public class JoinImpl<Z, X> extends FromImpl<Z, X> implements JoinImplementors.JoinImplementor<Z,X> {
+public class JoinImpl<Z, X> 
+		extends FromImpl<Z, X>
+		implements JoinImplementors.JoinImplementor<Z,X>, Serializable {
 	// TODO : keep track or whether any non-identifier properties get dereferenced
 	// for join optimization like in HQL
 

@@ -23,6 +23,7 @@
  */
 package org.hibernate.ejb.criteria.predicate;
 
+import java.io.Serializable;
 import javax.persistence.criteria.Expression;
 
 import org.hibernate.ejb.criteria.ParameterRegistry;
@@ -40,7 +41,9 @@ import org.hibernate.ejb.criteria.Renderable;
  *
  * @author Steve Ebersole
  */
-public class ExplicitTruthValueCheck extends AbstractSimplePredicate {
+public class ExplicitTruthValueCheck
+		extends AbstractSimplePredicate
+		implements Serializable {
 	// TODO : given that JPA supports only TRUE and FALSE, can this be handled just with negation?
 	private final Expression<Boolean> booleanExpression;
 	private final TruthValue truthValue;

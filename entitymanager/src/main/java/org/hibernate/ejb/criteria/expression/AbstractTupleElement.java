@@ -23,6 +23,8 @@
  */
 package org.hibernate.ejb.criteria.expression;
 
+import java.io.Serializable;
+
 import org.hibernate.ejb.criteria.AbstractNode;
 import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
 import org.hibernate.ejb.criteria.TupleElementImplementor;
@@ -35,7 +37,7 @@ import org.hibernate.ejb.criteria.ValueHandlerFactory;
  */
 public abstract class AbstractTupleElement<X>
 		extends AbstractNode
-		implements TupleElementImplementor<X> {
+		implements TupleElementImplementor<X>, Serializable {
 	private final Class originalJavaType;
 	private Class<X> javaType;
 	private String alias;

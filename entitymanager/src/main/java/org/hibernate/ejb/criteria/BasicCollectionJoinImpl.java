@@ -23,6 +23,7 @@
  */
 package org.hibernate.ejb.criteria;
 
+import java.io.Serializable;
 import javax.persistence.criteria.JoinType;
 import javax.persistence.criteria.From;
 import javax.persistence.metamodel.CollectionAttribute;
@@ -36,7 +37,7 @@ import org.hibernate.ejb.criteria.JoinImplementors.CollectionJoinImplementor;
  */
 public class BasicCollectionJoinImpl<O,E>
 		extends AbstractBasicPluralJoin<O,java.util.Collection<E>,E>
-		implements JoinImplementors.CollectionJoinImplementor<O,E> {
+		implements JoinImplementors.CollectionJoinImplementor<O,E>, Serializable {
 
 	public BasicCollectionJoinImpl(
 			CriteriaBuilderImpl criteriaBuilder,

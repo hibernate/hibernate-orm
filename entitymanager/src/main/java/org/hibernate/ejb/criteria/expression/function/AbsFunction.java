@@ -23,6 +23,7 @@
  */
 package org.hibernate.ejb.criteria.expression.function;
 
+import java.io.Serializable;
 import javax.persistence.criteria.Expression;
 import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
 
@@ -32,8 +33,8 @@ import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
  * @author Steve Ebersole
  */
 public class AbsFunction<N extends Number>
-		extends ParameterizedFunctionExpression<N> {
-
+		extends ParameterizedFunctionExpression<N>
+		implements Serializable {
 	public static final String NAME = "abs";
 
 	public AbsFunction(CriteriaBuilderImpl criteriaBuilder, Expression expression) {

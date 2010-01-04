@@ -23,6 +23,7 @@
  */
 package org.hibernate.ejb.criteria.expression;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import javax.persistence.criteria.Expression;
@@ -43,7 +44,9 @@ import org.hibernate.ejb.criteria.Renderable;
  *
  * @author Steve Ebersole
  */
-public class SimpleCaseExpression<C,R> extends ExpressionImpl<R> implements SimpleCase<C,R> {
+public class SimpleCaseExpression<C,R>
+		extends ExpressionImpl<R>
+		implements SimpleCase<C,R>, Serializable {
 	private Class<R> javaType;
 	private final Expression<? extends C> expression;
 	private List<WhenClause> whenClauses = new ArrayList<WhenClause>();

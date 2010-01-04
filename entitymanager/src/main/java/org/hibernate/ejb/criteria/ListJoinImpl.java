@@ -23,6 +23,7 @@
  */
 package org.hibernate.ejb.criteria;
 
+import java.io.Serializable;
 import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.JoinType;
 import javax.persistence.criteria.From;
@@ -38,7 +39,9 @@ import org.hibernate.ejb.criteria.expression.ListIndexExpression;
  *
  * @author Steve Ebersole
  */
-public class ListJoinImpl<O,E> extends JoinImpl<O,E> implements JoinImplementors.ListJoinImplementor<O,E> {
+public class ListJoinImpl<O,E>
+		extends JoinImpl<O,E>
+		implements JoinImplementors.ListJoinImplementor<O,E>, Serializable {
 	public ListJoinImpl(
 			CriteriaBuilderImpl criteriaBuilder,
 			Class<E> javaType,

@@ -23,6 +23,7 @@
  */
 package org.hibernate.ejb.criteria;
 
+import java.io.Serializable;
 import java.util.Collection;
 import java.util.Map;
 import javax.persistence.criteria.Expression;
@@ -40,7 +41,7 @@ import org.hibernate.ejb.criteria.expression.ExpressionImpl;
  *
  * @author Steve Ebersole
  */
-public class PathImpl<X> extends ExpressionImpl<X> implements Path<X> {
+public class PathImpl<X> extends ExpressionImpl<X> implements Path<X>, Serializable {
 	private final PathImpl<?> origin;
 	private final Attribute<?,?> attribute;
 	private Object model;

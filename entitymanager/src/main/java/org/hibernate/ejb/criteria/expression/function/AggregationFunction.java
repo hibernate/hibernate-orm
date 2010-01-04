@@ -23,6 +23,7 @@
  */
 package org.hibernate.ejb.criteria.expression.function;
 
+import java.io.Serializable;
 import javax.persistence.criteria.Expression;
 import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
 import org.hibernate.ejb.criteria.CriteriaQueryCompiler;
@@ -33,7 +34,10 @@ import org.hibernate.ejb.criteria.expression.LiteralExpression;
  *
  * @author Steve Ebersole
  */
-public class AggregationFunction<T> extends ParameterizedFunctionExpression<T> {
+public class AggregationFunction<T>
+		extends ParameterizedFunctionExpression<T>
+		implements Serializable {
+
 	/**
 	 * Constructs an aggregation function with a single literal argument.
 	 *

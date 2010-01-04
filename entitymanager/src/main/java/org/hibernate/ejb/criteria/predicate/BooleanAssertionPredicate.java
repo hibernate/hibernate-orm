@@ -23,6 +23,7 @@
  */
 package org.hibernate.ejb.criteria.predicate;
 
+import java.io.Serializable;
 import javax.persistence.criteria.Expression;
 
 import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
@@ -31,11 +32,18 @@ import org.hibernate.ejb.criteria.ParameterRegistry;
 import org.hibernate.ejb.criteria.Renderable;
 
 /**
- * TODO : javadoc
+ * Predicate to assert the explicit value of a boolean expression:<ul>
+ * <li>x = true</li>
+ * <li>x = false</li>
+ * <li>x <> true</li>
+ * <li>x <> false</li>
+ * </ul>
  *
  * @author Steve Ebersole
  */
-public class BooleanAssertionPredicate extends AbstractSimplePredicate {
+public class BooleanAssertionPredicate
+		extends AbstractSimplePredicate
+		implements Serializable {
 	private final Expression<Boolean> expression;
 	private final Boolean assertedValue;
 

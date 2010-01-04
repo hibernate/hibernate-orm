@@ -23,6 +23,7 @@
  */
 package org.hibernate.ejb.criteria.expression;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import javax.persistence.criteria.Expression;
@@ -44,7 +45,9 @@ import org.hibernate.ejb.criteria.Renderable;
  *
  * @author Steve Ebersole
  */
-public class SearchedCaseExpression<R> extends ExpressionImpl<R> implements Case<R> {
+public class SearchedCaseExpression<R>
+		extends ExpressionImpl<R>
+		implements Case<R>, Serializable {
 	private Class<R> javaType; // overrides the javaType kept on tuple-impl so that we can adjust it
 	private List<WhenClause> whenClauses = new ArrayList<WhenClause>();
 	private Expression<? extends R> otherwiseResult;

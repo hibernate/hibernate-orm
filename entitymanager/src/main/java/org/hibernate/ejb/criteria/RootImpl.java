@@ -23,6 +23,7 @@
  */
 package org.hibernate.ejb.criteria;
 
+import java.io.Serializable;
 import javax.persistence.criteria.Root;
 import javax.persistence.criteria.From;
 import javax.persistence.metamodel.Attribute;
@@ -33,7 +34,7 @@ import javax.persistence.metamodel.EntityType;
  *
  * @author Steve Ebersole
  */
-public class RootImpl<X> extends FromImpl<X,X> implements Root<X> {
+public class RootImpl<X> extends FromImpl<X,X> implements Root<X>, Serializable {
 	private RootImpl<X> correlationParent;
 
 	public RootImpl(

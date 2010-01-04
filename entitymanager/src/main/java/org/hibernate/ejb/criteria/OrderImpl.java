@@ -23,15 +23,16 @@
  */
 package org.hibernate.ejb.criteria;
 
+import java.io.Serializable;
 import javax.persistence.criteria.Order;
 import javax.persistence.criteria.Expression;
 
 /**
- * TODO : javadoc
+ * Represents an <tt>ORDER BY</tt> fragment.
  *
  * @author Steve Ebersole
  */
-public class OrderImpl implements Order {
+public class OrderImpl implements Order, Serializable {
 	private final Expression<?> expression;
 	private boolean ascending;
 

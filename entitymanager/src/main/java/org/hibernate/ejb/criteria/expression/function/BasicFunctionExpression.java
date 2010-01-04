@@ -23,6 +23,8 @@
  */
 package org.hibernate.ejb.criteria.expression.function;
 
+import java.io.Serializable;
+
 import org.hibernate.ejb.criteria.ParameterRegistry;
 
 import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
@@ -30,13 +32,13 @@ import org.hibernate.ejb.criteria.CriteriaQueryCompiler;
 import org.hibernate.ejb.criteria.expression.ExpressionImpl;
 
 /**
- * Models the basic conept of a SQL function.
+ * Models the basic concept of a SQL function.
  *
  * @author Steve Ebersole
  */
 public class BasicFunctionExpression<X>
 		extends ExpressionImpl<X>
-		implements FunctionExpression<X> {
+		implements FunctionExpression<X>, Serializable {
 
 	private final String functionName;
 

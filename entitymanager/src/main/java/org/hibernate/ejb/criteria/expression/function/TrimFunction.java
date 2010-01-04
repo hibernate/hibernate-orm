@@ -23,6 +23,7 @@
  */
 package org.hibernate.ejb.criteria.expression.function;
 
+import java.io.Serializable;
 import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.CriteriaBuilder.Trimspec;
 import org.hibernate.ejb.criteria.ParameterRegistry;
@@ -36,7 +37,9 @@ import org.hibernate.ejb.criteria.expression.LiteralExpression;
  *
  * @author Steve Ebersole
  */
-public class TrimFunction extends BasicFunctionExpression<String> {
+public class TrimFunction
+		extends BasicFunctionExpression<String>
+		implements Serializable {
 	public static final String NAME = "trim";
 	public static final Trimspec DEFAULT_TRIMSPEC = Trimspec.BOTH;
 	public static final char DEFAULT_TRIM_CHAR = ' ';

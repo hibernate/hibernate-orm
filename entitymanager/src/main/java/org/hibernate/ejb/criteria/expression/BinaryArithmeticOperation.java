@@ -23,6 +23,7 @@
  */
 package org.hibernate.ejb.criteria.expression;
 
+import java.io.Serializable;
 import javax.persistence.criteria.Expression;
 
 import org.hibernate.ejb.criteria.ParameterRegistry;
@@ -37,7 +38,7 @@ import org.hibernate.ejb.criteria.Renderable;
  */
 public class BinaryArithmeticOperation<N extends Number>
 		extends ExpressionImpl<N>
-		implements BinaryOperatorExpression<N> {
+		implements BinaryOperatorExpression<N>, Serializable {
 
 	public static enum Operation {
 		ADD {

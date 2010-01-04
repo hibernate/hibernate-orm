@@ -23,6 +23,7 @@
  */
 package org.hibernate.ejb.criteria.expression.function;
 
+import java.io.Serializable;
 import javax.persistence.criteria.Expression;
 
 import org.hibernate.ejb.criteria.ParameterRegistry;
@@ -36,7 +37,9 @@ import org.hibernate.ejb.criteria.expression.LiteralExpression;
  *
  * @author Steve Ebersole
  */
-public class LocateFunction extends BasicFunctionExpression<Integer> {
+public class LocateFunction
+		extends BasicFunctionExpression<Integer>
+		implements Serializable {
 	public static final String NAME = "locate";
 
 	private final Expression<String> pattern;

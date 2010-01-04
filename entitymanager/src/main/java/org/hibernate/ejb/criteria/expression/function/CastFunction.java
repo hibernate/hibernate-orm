@@ -23,6 +23,8 @@
  */
 package org.hibernate.ejb.criteria.expression.function;
 
+import java.io.Serializable;
+
 import org.hibernate.ejb.criteria.ParameterRegistry;
 import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
 import org.hibernate.ejb.criteria.CriteriaQueryCompiler;
@@ -36,7 +38,9 @@ import org.hibernate.ejb.criteria.expression.ExpressionImpl;
  *
  * @author Steve Ebersole
  */
-public class CastFunction<T,Y> extends BasicFunctionExpression<T> implements FunctionExpression<T> {
+public class CastFunction<T,Y>
+		extends BasicFunctionExpression<T>
+		implements FunctionExpression<T>, Serializable {
 	public static final String CAST_NAME = "cast";
 
 	private final ExpressionImpl<Y> castSource;

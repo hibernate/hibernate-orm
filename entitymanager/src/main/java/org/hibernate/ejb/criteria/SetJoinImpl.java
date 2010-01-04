@@ -23,6 +23,7 @@
  */
 package org.hibernate.ejb.criteria;
 
+import java.io.Serializable;
 import javax.persistence.criteria.JoinType;
 import javax.persistence.criteria.From;
 import javax.persistence.metamodel.SetAttribute;
@@ -38,7 +39,7 @@ import org.hibernate.ejb.criteria.JoinImplementors.SetJoinImplementor;
  */
 public class SetJoinImpl<O,E>
 		extends JoinImpl<O,E>
-		implements JoinImplementors.SetJoinImplementor<O,E> {
+		implements JoinImplementors.SetJoinImplementor<O,E>, Serializable {
 
 	public SetJoinImpl(
 			CriteriaBuilderImpl criteriaBuilder,

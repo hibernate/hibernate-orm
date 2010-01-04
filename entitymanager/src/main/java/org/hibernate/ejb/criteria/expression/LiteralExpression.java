@@ -23,6 +23,7 @@
  */
 package org.hibernate.ejb.criteria.expression;
 
+import java.io.Serializable;
 import javax.persistence.TypedQuery;
 
 import org.hibernate.ejb.criteria.ValueHandlerFactory;
@@ -35,7 +36,7 @@ import org.hibernate.ejb.criteria.CriteriaQueryCompiler;
  *
  * @author Steve Ebersole
  */
-public class LiteralExpression<T> extends ExpressionImpl<T> {
+public class LiteralExpression<T> extends ExpressionImpl<T> implements Serializable {
 	private Object literal;
 
 	@SuppressWarnings({ "unchecked" })

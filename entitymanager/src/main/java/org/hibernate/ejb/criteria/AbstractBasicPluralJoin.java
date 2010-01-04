@@ -23,6 +23,7 @@
  */
 package org.hibernate.ejb.criteria;
 
+import java.io.Serializable;
 import javax.persistence.criteria.CollectionJoin;
 import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Fetch;
@@ -47,7 +48,7 @@ import javax.persistence.metamodel.SingularAttribute;
  */
 public abstract class AbstractBasicPluralJoin<O,C,E>
 		extends JoinImpl<O,E>
-		implements PluralJoin<O,C,E>, Fetch<O,E> {
+		implements PluralJoin<O,C,E>, Fetch<O,E>, Serializable {
 
 	public AbstractBasicPluralJoin(
 			CriteriaBuilderImpl criteriaBuilder,

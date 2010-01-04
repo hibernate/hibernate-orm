@@ -23,6 +23,7 @@
  */
 package org.hibernate.ejb.criteria.expression;
 
+import java.io.Serializable;
 import javax.persistence.criteria.Expression;
 import org.hibernate.ejb.criteria.ParameterRegistry;
 import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
@@ -36,7 +37,7 @@ import org.hibernate.ejb.criteria.Renderable;
  */
 public class UnaryArithmeticOperation<T> 
 		extends ExpressionImpl<T>
-		implements UnaryOperatorExpression<T> {
+		implements UnaryOperatorExpression<T>, Serializable {
 
 	public static enum Operation {
 		UNARY_PLUS, UNARY_MINUS

@@ -23,6 +23,7 @@
  */
 package org.hibernate.ejb.criteria;
 
+import java.io.Serializable;
 import java.util.Set;
 import java.util.Map;
 import java.util.HashMap;
@@ -56,7 +57,7 @@ import org.hibernate.util.StringHelper;
  *
  * @author Steve Ebersole
  */
-public class CriteriaQueryCompiler {
+public class CriteriaQueryCompiler implements Serializable {
 	private static final Logger log = LoggerFactory.getLogger( CriteriaQueryCompiler.class );
 
 	public static interface ImplicitParameterBinding {

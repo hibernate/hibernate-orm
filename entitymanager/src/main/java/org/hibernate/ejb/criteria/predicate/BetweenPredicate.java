@@ -23,6 +23,7 @@
  */
 package org.hibernate.ejb.criteria.predicate;
 
+import java.io.Serializable;
 import javax.persistence.criteria.Expression;
 
 import org.hibernate.ejb.criteria.ParameterRegistry;
@@ -35,7 +36,9 @@ import org.hibernate.ejb.criteria.Renderable;
  *
  * @author Steve Ebersole
  */
-public class BetweenPredicate<Y> extends AbstractSimplePredicate {
+public class BetweenPredicate<Y>
+		extends AbstractSimplePredicate
+		implements Serializable {
 	private final Expression<? extends Y> expression;
 	private final Expression<? extends Y> lowerBound;
 	private final Expression<? extends Y> upperBound;

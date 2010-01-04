@@ -23,6 +23,7 @@
  */
 package org.hibernate.ejb.criteria.expression;
 
+import java.io.Serializable;
 import javax.persistence.criteria.Expression;
 import org.hibernate.ejb.criteria.ParameterRegistry;
 import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
@@ -34,7 +35,7 @@ import org.hibernate.ejb.criteria.Renderable;
  *
  * @author Steve Ebersole
  */
-public class ConcatExpression extends ExpressionImpl<String> {
+public class ConcatExpression extends ExpressionImpl<String> implements Serializable {
 	private Expression<String> string1;
 	private Expression<String> string2;
 

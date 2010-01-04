@@ -23,6 +23,7 @@
  */
 package org.hibernate.ejb.criteria.expression;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import javax.persistence.criteria.Expression;
@@ -37,7 +38,7 @@ import org.hibernate.ejb.criteria.Renderable;
  *
  * @author Steve Ebersole
  */
-public class CoalesceExpression<T> extends ExpressionImpl<T> implements Coalesce<T> {
+public class CoalesceExpression<T> extends ExpressionImpl<T> implements Coalesce<T>, Serializable {
 	private final List<Expression<? extends T>> expressions;
 	private Class<T> javaType;
 

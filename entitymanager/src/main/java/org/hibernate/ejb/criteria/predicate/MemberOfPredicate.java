@@ -23,6 +23,7 @@
  */
 package org.hibernate.ejb.criteria.predicate;
 
+import java.io.Serializable;
 import java.util.Collection;
 import javax.persistence.criteria.Expression;
 import org.hibernate.ejb.criteria.ParameterRegistry;
@@ -33,12 +34,13 @@ import org.hibernate.ejb.criteria.expression.CollectionExpression;
 import org.hibernate.ejb.criteria.expression.LiteralExpression;
 
 /**
- * TODO : javadoc
+ * Models an <tt>[NOT] MEMBER OF</tt> restriction
  *
  * @author Steve Ebersole
  */
 public class MemberOfPredicate<E, C extends Collection<E>>
-		extends AbstractSimplePredicate {
+		extends AbstractSimplePredicate
+		implements Serializable {
 
 	private final Expression<E> elementExpression;
 	private final CollectionExpression<C> collectionExpression;

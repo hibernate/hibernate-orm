@@ -23,6 +23,7 @@
  */
 package org.hibernate.ejb.criteria.predicate;
 
+import java.io.Serializable;
 import javax.persistence.criteria.Expression;
 import org.hibernate.ejb.criteria.ParameterRegistry;
 import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
@@ -35,7 +36,7 @@ import org.hibernate.ejb.criteria.expression.LiteralExpression;
  *
  * @author Steve Ebersole
  */
-public class LikePredicate extends AbstractSimplePredicate {
+public class LikePredicate extends AbstractSimplePredicate implements Serializable {
 	private final Expression<String> matchExpression;
 	private final Expression<String> pattern;
 	private final Expression<Character> escapeCharacter;

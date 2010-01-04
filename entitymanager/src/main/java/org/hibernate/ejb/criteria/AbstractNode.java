@@ -23,13 +23,15 @@
  */
 package org.hibernate.ejb.criteria;
 
+import java.io.Serializable;
+
 /**
  * All nodes in a criteria query tree will generally need access to the {@link CriteriaBuilderImpl} from which they
  * come.  This base class provides convenient, consistent support for that.
  *
  * @author Steve Ebersole
  */
-public class AbstractNode {
+public class AbstractNode implements Serializable {
 	private final CriteriaBuilderImpl criteriaBuilder;
 
 	public AbstractNode(CriteriaBuilderImpl criteriaBuilder) {

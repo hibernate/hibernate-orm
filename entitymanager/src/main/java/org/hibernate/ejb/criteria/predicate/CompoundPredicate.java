@@ -23,6 +23,7 @@
  */
 package org.hibernate.ejb.criteria.predicate;
 
+import java.io.Serializable;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -40,7 +41,9 @@ import org.hibernate.ejb.criteria.Renderable;
  *
  * @author Steve Ebersole
  */
-public class CompoundPredicate extends AbstractPredicateImpl {
+public class CompoundPredicate
+		extends AbstractPredicateImpl
+		implements Serializable {
 	private final BooleanOperator operator;
 	private final List<Expression<Boolean>> expressions = new ArrayList<Expression<Boolean>>();
 

@@ -23,6 +23,7 @@
  */
 package org.hibernate.ejb.criteria.predicate;
 
+import java.io.Serializable;
 import java.util.Collection;
 import org.hibernate.ejb.criteria.ParameterRegistry;
 import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
@@ -31,13 +32,13 @@ import org.hibernate.ejb.criteria.expression.CollectionExpression;
 import org.hibernate.ejb.criteria.expression.UnaryOperatorExpression;
 
 /**
- * TODO : javadoc
+ * Models an <tt>IS [NOT] EMPTY</tt> restriction
  *
  * @author Steve Ebersole
  */
 public class IsEmptyPredicate<C extends Collection>
 		extends AbstractSimplePredicate
-		implements UnaryOperatorExpression<Boolean> {
+		implements UnaryOperatorExpression<Boolean>, Serializable {
 
 	private final CollectionExpression<C> collectionExpression;
 

@@ -23,6 +23,7 @@
  */
 package org.hibernate.ejb.criteria.predicate;
 
+import java.io.Serializable;
 import java.util.List;
 import java.util.Collections;
 import javax.persistence.criteria.Expression;
@@ -34,7 +35,9 @@ import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
  *
  * @author Steve Ebersole
  */
-public abstract class AbstractSimplePredicate extends AbstractPredicateImpl {
+public abstract class AbstractSimplePredicate
+		extends AbstractPredicateImpl 
+		implements Serializable {
 	private static final List<Expression<Boolean>> NO_EXPRESSIONS = Collections.emptyList();
 
 	public AbstractSimplePredicate(CriteriaBuilderImpl criteriaBuilder) {

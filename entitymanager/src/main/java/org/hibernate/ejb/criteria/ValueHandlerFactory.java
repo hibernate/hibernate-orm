@@ -23,6 +23,7 @@
  */
 package org.hibernate.ejb.criteria;
 
+import java.io.Serializable;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 
@@ -40,7 +41,7 @@ public class ValueHandlerFactory {
 		public String render(T value);
 	}
 
-	public static abstract class BaseValueHandler<T> implements ValueHandler<T> {
+	public static abstract class BaseValueHandler<T> implements ValueHandler<T>, Serializable {
 		public String render(T value) {
 			return value.toString();
 		}
@@ -73,7 +74,7 @@ public class ValueHandlerFactory {
 				|| Double.TYPE.isInstance( value );
 	}
 
-	public static class ByteValueHandler extends BaseValueHandler<Byte> {
+	public static class ByteValueHandler extends BaseValueHandler<Byte> implements Serializable {
 		public static final ByteValueHandler INSTANCE = new ByteValueHandler();
 		@SuppressWarnings({ "UnnecessaryBoxing" })
 		public Byte convert(Object value) {
@@ -90,7 +91,7 @@ public class ValueHandlerFactory {
 		}
 	}
 
-	public static class ShortValueHandler extends BaseValueHandler<Short> {
+	public static class ShortValueHandler extends BaseValueHandler<Short> implements Serializable {
 		public static final ShortValueHandler INSTANCE = new ShortValueHandler();
 		@SuppressWarnings({ "UnnecessaryBoxing" })
 		public Short convert(Object value) {
@@ -107,7 +108,7 @@ public class ValueHandlerFactory {
 		}
 	}
 
-	public static class IntegerValueHandler extends BaseValueHandler<Integer> {
+	public static class IntegerValueHandler extends BaseValueHandler<Integer> implements Serializable {
 		public static final IntegerValueHandler INSTANCE = new IntegerValueHandler();
 		@SuppressWarnings({ "UnnecessaryBoxing" })
 		public Integer convert(Object value) {
@@ -124,7 +125,7 @@ public class ValueHandlerFactory {
 		}
 	}
 
-	public static class LongValueHandler extends BaseValueHandler<Long> {
+	public static class LongValueHandler extends BaseValueHandler<Long> implements Serializable {
 		public static final LongValueHandler INSTANCE = new LongValueHandler();
 		@SuppressWarnings({ "UnnecessaryBoxing" })
 		public Long convert(Object value) {
@@ -146,7 +147,7 @@ public class ValueHandlerFactory {
 		}
 	}
 
-	public static class FloatValueHandler extends BaseValueHandler<Float> {
+	public static class FloatValueHandler extends BaseValueHandler<Float> implements Serializable {
 		public static final FloatValueHandler INSTANCE = new FloatValueHandler();
 		@SuppressWarnings({ "UnnecessaryBoxing" })
 		public Float convert(Object value) {
@@ -168,7 +169,7 @@ public class ValueHandlerFactory {
 		}
 	}
 
-	public static class DoubleValueHandler extends BaseValueHandler<Double> {
+	public static class DoubleValueHandler extends BaseValueHandler<Double> implements Serializable {
 		public static final DoubleValueHandler INSTANCE = new DoubleValueHandler();
 		@SuppressWarnings({ "UnnecessaryBoxing" })
 		public Double convert(Object value) {
@@ -190,7 +191,7 @@ public class ValueHandlerFactory {
 		}
 	}
 
-	public static class BigIntegerValueHandler extends BaseValueHandler<BigInteger> {
+	public static class BigIntegerValueHandler extends BaseValueHandler<BigInteger> implements Serializable {
 		public static final BigIntegerValueHandler INSTANCE = new BigIntegerValueHandler();
 		public BigInteger convert(Object value) {
 			if ( value == null ) {
@@ -206,7 +207,7 @@ public class ValueHandlerFactory {
 		}
 	}
 
-	public static class BigDecimalValueHandler extends BaseValueHandler<BigDecimal> {
+	public static class BigDecimalValueHandler extends BaseValueHandler<BigDecimal> implements Serializable {
 		public static final BigDecimalValueHandler INSTANCE = new BigDecimalValueHandler();
 		public BigDecimal convert(Object value) {
 			if ( value == null ) {
@@ -225,7 +226,7 @@ public class ValueHandlerFactory {
 		}
 	}
 
-	public static class StringValueHandler extends BaseValueHandler<String> {
+	public static class StringValueHandler extends BaseValueHandler<String> implements Serializable {
 		public static final StringValueHandler INSTANCE = new StringValueHandler();
 		public String convert(Object value) {
 			return value == null ? null : value.toString();

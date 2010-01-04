@@ -23,6 +23,7 @@
  */
 package org.hibernate.ejb.criteria.expression.function;
 
+import java.io.Serializable;
 import javax.persistence.criteria.Expression;
 
 import org.hibernate.ejb.criteria.ParameterRegistry;
@@ -36,7 +37,9 @@ import org.hibernate.ejb.criteria.expression.LiteralExpression;
  *
  * @author Steve Ebersole
  */
-public class SubstringFunction extends BasicFunctionExpression<String> {
+public class SubstringFunction
+		extends BasicFunctionExpression<String>
+		implements Serializable {
 	public static final String NAME = "substring";
 
 	private final Expression<String> value;
@@ -54,6 +57,7 @@ public class SubstringFunction extends BasicFunctionExpression<String> {
 		this.length = length;
 	}
 
+	@SuppressWarnings({ "RedundantCast" })
 	public SubstringFunction(
 			CriteriaBuilderImpl criteriaBuilder,
 			Expression<String> value, 

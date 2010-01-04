@@ -23,6 +23,7 @@
  */
 package org.hibernate.ejb.criteria;
 
+import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Set;
 import java.util.HashSet;
@@ -54,7 +55,7 @@ import javax.persistence.metamodel.EntityType;
  *
  * @author Steve Ebersole
  */
-public class QueryStructure<T> {
+public class QueryStructure<T> implements Serializable {
 	private final AbstractQuery<T> owner;
 	private final CriteriaBuilderImpl criteriaBuilder;
 

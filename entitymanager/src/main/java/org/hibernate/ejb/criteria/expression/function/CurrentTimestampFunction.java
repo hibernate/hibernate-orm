@@ -23,6 +23,7 @@
  */
 package org.hibernate.ejb.criteria.expression.function;
 
+import java.io.Serializable;
 import java.sql.Timestamp;
 import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
 
@@ -31,7 +32,9 @@ import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
  *
  * @author Steve Ebersole
  */
-public class CurrentTimestampFunction extends BasicFunctionExpression<Timestamp> {
+public class CurrentTimestampFunction
+		extends BasicFunctionExpression<Timestamp>
+		implements Serializable {
 	public static final String NAME = "current_timestamp";
 
 	public CurrentTimestampFunction(CriteriaBuilderImpl criteriaBuilder) {

@@ -23,6 +23,7 @@
  */
 package org.hibernate.ejb.criteria;
 
+import java.io.Serializable;
 import java.util.Set;
 import java.util.Collection;
 import java.util.Map;
@@ -59,7 +60,9 @@ import org.hibernate.ejb.criteria.expression.EntityTypeExpression;
  *
  * @author Steve Ebersole
  */
-public abstract class FromImpl<Z,X> extends PathImpl<X> implements From<Z,X>, TableExpressionMapper {
+public abstract class FromImpl<Z,X>
+		extends PathImpl<X>
+		implements From<Z,X>, TableExpressionMapper, Serializable {
 	public static final JoinType DEFAULT_JOIN_TYPE = JoinType.INNER;
 
 	private final Expression<Class<? extends X>> typeExpression;
@@ -69,7 +72,7 @@ public abstract class FromImpl<Z,X> extends PathImpl<X> implements From<Z,X>, Ta
 	/**
 	 * Helper contract used to define who/what keeps track of joins and fetches made from this <tt>FROM</tt>.
 	 */
-	public static interface JoinScope<X> {
+	public static interface JoinScope<X> extends Serializable {
 		public void addJoin(Join<X, ?> join);
 		public void addFetch(Fetch<X,?> fetch);
 		public boolean isCorrelated();

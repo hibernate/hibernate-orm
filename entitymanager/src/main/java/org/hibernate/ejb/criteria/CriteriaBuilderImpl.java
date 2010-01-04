@@ -48,7 +48,6 @@ import org.hibernate.ejb.criteria.expression.CoalesceExpression;
 import org.hibernate.ejb.criteria.expression.CollectionExpression;
 import org.hibernate.ejb.criteria.expression.CompoundSelectionImpl;
 import org.hibernate.ejb.criteria.expression.ConcatExpression;
-import org.hibernate.ejb.criteria.ExpressionImplementor;
 import org.hibernate.ejb.criteria.expression.ParameterExpressionImpl;
 import org.hibernate.ejb.criteria.expression.LiteralExpression;
 import org.hibernate.ejb.criteria.expression.NullifExpression;
@@ -71,6 +70,7 @@ import org.hibernate.ejb.criteria.expression.function.SqrtFunction;
 import org.hibernate.ejb.criteria.expression.function.SubstringFunction;
 import org.hibernate.ejb.criteria.expression.function.TrimFunction;
 import org.hibernate.ejb.criteria.expression.function.UpperFunction;
+import org.hibernate.ejb.criteria.predicate.BooleanAssertionPredicate;
 import org.hibernate.ejb.criteria.predicate.BooleanExpressionPredicate;
 import org.hibernate.ejb.criteria.predicate.NullnessPredicate;
 import org.hibernate.ejb.criteria.predicate.CompoundPredicate;
@@ -252,6 +252,9 @@ public class CriteriaBuilderImpl implements CriteriaBuilder, Serializable {
 		if ( Predicate.class.isInstance( expression ) ) {
 			return ( ( Predicate ) expression );
 		}
+		else if ( PathImplementor.class.isInstance( expression ) ) {
+			return new BooleanAssertionPredicate( this, expression, Boolean.TRUE );
+		}
 		else {
 			return new BooleanExpressionPredicate( this, expression );
 		}
@@ -309,19 +312,15 @@ public class CriteriaBuilderImpl implements CriteriaBuilder, Serializable {
 	/**
 	 * {@inheritDoc}
 	 */
-	public Predicate isTrue(Expression<Boolean> x) {
-		return wrap( x );
-// TODO : the correct thing here depends on response to #5 on my wiki page
-//		return new ExplicitTruthValueCheck( this, x, TruthValue.TRUE );
+	public Predicate isTrue(Expression<Boolean> expression) {
+		return new BooleanAssertionPredicate( this, expression, Boolean.TRUE );
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public Predicate isFalse(Expression<Boolean> x) {
-		return wrap( x ).not();
-// TODO : the correct thing here depends on response to #5 on my wiki page
-//		return new ExplicitTruthValueCheck( this, x, TruthValue.FALSE );
+	public Predicate isFalse(Expression<Boolean> expression) {
+		return new BooleanAssertionPredicate( this, expression, Boolean.FALSE );
 	}
 
 	/**
@@ -1122,10 +1121,11 @@ public class CriteriaBuilderImpl implements CriteriaBuilder, Serializable {
 	/**
 	 * {@inheritDoc}
 	 */
+	@SuppressWarnings({ "unchecked" })
 	public <Y> Expression<Y> all(Subquery<Y> subquery) {
 		return new SubqueryComparisonModifierExpression<Y>(
 				this,
-				(Class)subquery.getJavaType(),
+				(Class<Y>) subquery.getJavaType(),
 				subquery,
 				SubqueryComparisonModifierExpression.Modifier.ALL
 		);
@@ -1134,10 +1134,11 @@ public class CriteriaBuilderImpl implements CriteriaBuilder, Serializable {
 	/**
 	 * {@inheritDoc}
 	 */
+	@SuppressWarnings({ "unchecked" })
 	public <Y> Expression<Y> some(Subquery<Y> subquery) {
 		return new SubqueryComparisonModifierExpression<Y>(
 				this,
-				(Class)subquery.getJavaType(),
+				(Class<Y>) subquery.getJavaType(),
 				subquery,
 				SubqueryComparisonModifierExpression.Modifier.SOME
 		);
@@ -1146,10 +1147,11 @@ public class CriteriaBuilderImpl implements CriteriaBuilder, Serializable {
 	/**
 	 * {@inheritDoc}
 	 */
+	@SuppressWarnings({ "unchecked" })
 	public <Y> Expression<Y> any(Subquery<Y> subquery) {
 		return new SubqueryComparisonModifierExpression<Y>(
 				this,
-				(Class)subquery.getJavaType(),
+				(Class<Y>) subquery.getJavaType(),
 				subquery,
 				SubqueryComparisonModifierExpression.Modifier.ANY
 		);
@@ -1161,8 +1163,9 @@ public class CriteriaBuilderImpl implements CriteriaBuilder, Serializable {
 	/**
 	 * {@inheritDoc}
 	 */
+	@SuppressWarnings({ "RedundantCast" })
 	public <Y> Expression<Y> coalesce(Expression<? extends Y> exp1, Expression<? extends Y> exp2) {
-		return coalesce( (Class<Y>)null, exp1, exp2 );
+		return coalesce( (Class<Y>) null, exp1, exp2 );
 	}
 
 	public <Y> Expression<Y> coalesce(Class<Y> type, Expression<? extends Y> exp1, Expression<? extends Y> exp2) {
@@ -1172,8 +1175,9 @@ public class CriteriaBuilderImpl implements CriteriaBuilder, Serializable {
 	/**
 	 * {@inheritDoc}
 	 */
+	@SuppressWarnings({ "RedundantCast" })
 	public <Y> Expression<Y> coalesce(Expression<? extends Y> exp1, Y exp2) {
-		return coalesce( (Class<Y>)null, exp1, exp2 );
+		return coalesce( (Class<Y>) null, exp1, exp2 );
 	}
 
 	public <Y> Expression<Y> coalesce(Class<Y> type, Expression<? extends Y> exp1, Y exp2) {
@@ -1272,7 +1276,7 @@ public class CriteriaBuilderImpl implements CriteriaBuilder, Serializable {
 			return size( ( (LiteralExpression<C>) exp ).getLiteral() );
 		}
 		else if ( CollectionExpression.class.isInstance(exp) ) {
-			return new SizeOfCollectionExpression<C>(this, null);
+			return new SizeOfCollectionExpression<C>(this, (CollectionExpression<C>) exp );
 		}
 		// TODO : what other specific types?  any?
 		throw new IllegalArgumentException("unknown collection expression type [" + exp.getClass().getName() + "]" );

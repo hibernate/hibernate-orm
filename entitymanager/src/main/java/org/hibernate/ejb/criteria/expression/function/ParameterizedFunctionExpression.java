@@ -91,12 +91,15 @@ public class ParameterizedFunctionExpression<X>
 	@Override
 	public String render(CriteriaQueryCompiler.RenderingContext renderingContext) {
 		StringBuilder buffer = new StringBuilder();
-		buffer.append( getFunctionName() )
-				.append( '(' );
+		buffer.append( getFunctionName() ).append( '(' );
+		renderArguments( buffer, renderingContext );
+		buffer.append( ')' );
+		return buffer.toString();
+	}
+
+	protected void renderArguments(StringBuilder buffer, CriteriaQueryCompiler.RenderingContext renderingContext) {
 		for ( Expression argument : argumentExpressions ) {
 			buffer.append( ( (Renderable) argument ).render( renderingContext ) );
 		}
-		buffer.append( ')' );
-		return buffer.toString();
 	}
 }

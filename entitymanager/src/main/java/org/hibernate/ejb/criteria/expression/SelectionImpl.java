@@ -30,7 +30,7 @@ import javax.persistence.criteria.Selection;
 import org.hibernate.ejb.criteria.ParameterContainer;
 import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
 import org.hibernate.ejb.criteria.SelectionImplementor;
-import org.hibernate.ejb.criteria.ValueConverter;
+import org.hibernate.ejb.criteria.ValueHandlerFactory;
 
 /**
  * The Hibernate implementation of the JPA {@link Selection}
@@ -54,13 +54,13 @@ public abstract class SelectionImpl<X>
 		return false;
 	}
 
-	public List<ValueConverter.Conversion> getConversions() {
-		return getConversion() == null
+	public List<ValueHandlerFactory.ValueHandler> getValueHandlers() {
+		return getValueHandler() == null
 				? null
-				: Collections.singletonList( (ValueConverter.Conversion) getConversion() );
+				: Collections.singletonList( (ValueHandlerFactory.ValueHandler) getValueHandler() );
 	}
 
 	public List<Selection<?>> getCompoundSelectionItems() {
-		throw new IllegalStateException( "Not a compund selection" );
+		throw new IllegalStateException( "Not a compound selection" );
 	}
 }

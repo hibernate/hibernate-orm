@@ -25,7 +25,7 @@ package org.hibernate.ejb.criteria.expression;
 
 import javax.persistence.TypedQuery;
 
-import org.hibernate.ejb.criteria.ValueConverter;
+import org.hibernate.ejb.criteria.ValueHandlerFactory;
 import org.hibernate.ejb.criteria.ParameterRegistry;
 import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
 import org.hibernate.ejb.criteria.CriteriaQueryCompiler;
@@ -61,7 +61,13 @@ public class LiteralExpression<T> extends ExpressionImpl<T> {
 		// nothing to do
 	}
 
+	@SuppressWarnings({ "unchecked" })
 	public String render(CriteriaQueryCompiler.RenderingContext renderingContext) {
+		if ( ValueHandlerFactory.isNumeric( literal ) ) {
+			return ValueHandlerFactory.determineAppropriateHandler( (Class) literal.getClass() ).render( literal );
+		}
+
+		// else...
 		final String parameterName = renderingContext.generateParameterName();
 		renderingContext.registerImplicitParameterBinding(
 				new CriteriaQueryCompiler.ImplicitParameterBinding() {
@@ -89,14 +95,14 @@ public class LiteralExpression<T> extends ExpressionImpl<T> {
 	@SuppressWarnings({ "unchecked" })
 	protected void resetJavaType(Class targetType) {
 		super.resetJavaType( targetType );
-		ValueConverter.Conversion conversion = getConversion();
-		if ( conversion == null ) {
-			conversion = ValueConverter.determineAppropriateConversion( targetType );
-			forceConversion( conversion );
+		ValueHandlerFactory.ValueHandler valueHandler = getValueHandler();
+		if ( valueHandler == null ) {
+			valueHandler = ValueHandlerFactory.determineAppropriateHandler( targetType );
+			forceConversion( valueHandler );
 		}
 
-		if ( conversion != null ) {
-			literal = conversion.apply( literal );
+		if ( valueHandler != null ) {
+			literal = valueHandler.convert( literal );
 		}
 	}
 }

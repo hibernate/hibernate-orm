@@ -67,7 +67,8 @@ public class BinaryArithmeticOperation<N extends Number>
 		},
 		MOD {
 			String apply(String lhs, String rhs) {
-				return lhs + " % " + rhs;
+//				return lhs + " % " + rhs;
+				return "mod(" + lhs + "," + rhs + ")";
 			}
 		};
 		abstract String apply(String lhs, String rhs);

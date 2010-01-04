@@ -28,6 +28,7 @@ import javax.persistence.criteria.Expression;
 import org.hibernate.ejb.criteria.ParameterRegistry;
 import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
 import org.hibernate.ejb.criteria.CriteriaQueryCompiler;
+import org.hibernate.ejb.criteria.Renderable;
 import org.hibernate.ejb.criteria.expression.CollectionExpression;
 import org.hibernate.ejb.criteria.expression.LiteralExpression;
 
@@ -76,7 +77,8 @@ public class MemberOfPredicate<E, C extends Collection<E>>
 	}
 
 	public String render(CriteriaQueryCompiler.RenderingContext renderingContext) {
-		return ( isNegated() ? "not " : "" ) + "member of "
+		return ( (Renderable) elementExpression ).render( renderingContext )
+				+ ( isNegated() ? " not" : "" ) + " member of "
 				+ collectionExpression.render( renderingContext );
 	}
 

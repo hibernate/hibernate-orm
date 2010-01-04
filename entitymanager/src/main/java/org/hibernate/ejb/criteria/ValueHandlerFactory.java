@@ -27,16 +27,30 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 
 /**
- * Helper for generically converting a values into another type.
+ * Helper for generically dealing with literal values.
  *
  * @author Steve Ebersole
  */
-public class ValueConverter {
-	private ValueConverter() {
+public class ValueHandlerFactory {
+	private ValueHandlerFactory() {
 	}
 
-	public static interface Conversion<T> {
-		public T apply(Object value);
+	public static interface ValueHandler<T> {
+		public T convert(Object value);
+		public String render(T value);
+	}
+
+	public static abstract class BaseValueHandler<T> implements ValueHandler<T> {
+		public String render(T value) {
+			return value.toString();
+		}
+	}
+
+	public static class NoOpValueHandler<T> extends BaseValueHandler<T> {
+		@SuppressWarnings({ "unchecked" })
+		public T convert(Object value) {
+			return (T) value;
+		}
 	}
 
 	public static boolean isNumeric(Class type) {
@@ -44,15 +58,25 @@ public class ValueConverter {
 				|| Byte.TYPE.equals( type )
 				|| Short.TYPE.equals( type )
 				|| Integer.TYPE.equals( type )
-				|| Long.TYPE.isAssignableFrom( type )
+				|| Long.TYPE.equals( type )
 				|| Float.TYPE.equals( type )
-				|| Double.TYPE.isAssignableFrom( type );
+				|| Double.TYPE.equals( type );
 	}
 
-	public static class ByteConversion implements Conversion<Byte> {
-		public static final ByteConversion INSTANCE = new ByteConversion();
+	public static boolean isNumeric(Object value) {
+		return Number.class.isInstance( value )
+				|| Byte.TYPE.isInstance( value )
+				|| Short.TYPE.isInstance( value )
+				|| Integer.TYPE.isInstance( value )
+				|| Long.TYPE.isInstance( value )
+				|| Float.TYPE.isInstance( value )
+				|| Double.TYPE.isInstance( value );
+	}
+
+	public static class ByteValueHandler extends BaseValueHandler<Byte> {
+		public static final ByteValueHandler INSTANCE = new ByteValueHandler();
 		@SuppressWarnings({ "UnnecessaryBoxing" })
-		public Byte apply(Object value) {
+		public Byte convert(Object value) {
 			if ( value == null ) {
 				return null;
 			}
@@ -66,10 +90,10 @@ public class ValueConverter {
 		}
 	}
 
-	public static class ShortConversion implements Conversion<Short> {
-		public static final ShortConversion INSTANCE = new ShortConversion();
+	public static class ShortValueHandler extends BaseValueHandler<Short> {
+		public static final ShortValueHandler INSTANCE = new ShortValueHandler();
 		@SuppressWarnings({ "UnnecessaryBoxing" })
-		public Short apply(Object value) {
+		public Short convert(Object value) {
 			if ( value == null ) {
 				return null;
 			}
@@ -83,10 +107,10 @@ public class ValueConverter {
 		}
 	}
 
-	public static class IntegerConversion implements Conversion<Integer> {
-		public static final IntegerConversion INSTANCE = new IntegerConversion();
+	public static class IntegerValueHandler extends BaseValueHandler<Integer> {
+		public static final IntegerValueHandler INSTANCE = new IntegerValueHandler();
 		@SuppressWarnings({ "UnnecessaryBoxing" })
-		public Integer apply(Object value) {
+		public Integer convert(Object value) {
 			if ( value == null ) {
 				return null;
 			}
@@ -100,10 +124,10 @@ public class ValueConverter {
 		}
 	}
 
-	public static class LongConversion implements Conversion<Long> {
-		public static final LongConversion INSTANCE = new LongConversion();
+	public static class LongValueHandler extends BaseValueHandler<Long> {
+		public static final LongValueHandler INSTANCE = new LongValueHandler();
 		@SuppressWarnings({ "UnnecessaryBoxing" })
-		public Long apply(Object value) {
+		public Long convert(Object value) {
 			if ( value == null ) {
 				return null;
 			}
@@ -115,12 +139,17 @@ public class ValueConverter {
 			}
 			throw unknownConversion( value, Long.class );
 		}
+
+		@Override
+		public String render(Long value) {
+			return value.toString() + 'L';
+		}
 	}
 
-	public static class FloatConversion implements Conversion<Float> {
-		public static final FloatConversion INSTANCE = new FloatConversion();
+	public static class FloatValueHandler extends BaseValueHandler<Float> {
+		public static final FloatValueHandler INSTANCE = new FloatValueHandler();
 		@SuppressWarnings({ "UnnecessaryBoxing" })
-		public Float apply(Object value) {
+		public Float convert(Object value) {
 			if ( value == null ) {
 				return null;
 			}
@@ -132,12 +161,17 @@ public class ValueConverter {
 			}
 			throw unknownConversion( value, Float.class );
 		}
+
+		@Override
+		public String render(Float value) {
+			return value.toString() + 'F';
+		}
 	}
 
-	public static class DoubleConversion implements Conversion<Double> {
-		public static final DoubleConversion INSTANCE = new DoubleConversion();
+	public static class DoubleValueHandler extends BaseValueHandler<Double> {
+		public static final DoubleValueHandler INSTANCE = new DoubleValueHandler();
 		@SuppressWarnings({ "UnnecessaryBoxing" })
-		public Double apply(Object value) {
+		public Double convert(Object value) {
 			if ( value == null ) {
 				return null;
 			}
@@ -149,11 +183,16 @@ public class ValueConverter {
 			}
 			throw unknownConversion( value, Double.class );
 		}
+
+		@Override
+		public String render(Double value) {
+			return value.toString() + 'D';
+		}
 	}
 
-	public static class BigIntegerConversion implements Conversion<BigInteger> {
-		public static final BigIntegerConversion INSTANCE = new BigIntegerConversion();
-		public BigInteger apply(Object value) {
+	public static class BigIntegerValueHandler extends BaseValueHandler<BigInteger> {
+		public static final BigIntegerValueHandler INSTANCE = new BigIntegerValueHandler();
+		public BigInteger convert(Object value) {
 			if ( value == null ) {
 				return null;
 			}
@@ -167,9 +206,9 @@ public class ValueConverter {
 		}
 	}
 
-	public static class BigDecimalConversion implements Conversion<BigDecimal> {
-		public static final BigDecimalConversion INSTANCE = new BigDecimalConversion();
-		public BigDecimal apply(Object value) {
+	public static class BigDecimalValueHandler extends BaseValueHandler<BigDecimal> {
+		public static final BigDecimalValueHandler INSTANCE = new BigDecimalValueHandler();
+		public BigDecimal convert(Object value) {
 			if ( value == null ) {
 				return null;
 			}
@@ -186,9 +225,9 @@ public class ValueConverter {
 		}
 	}
 
-	public static class StringConversion implements Conversion<String> {
-		public static final StringConversion INSTANCE = new StringConversion();
-		public String apply(Object value) {
+	public static class StringValueHandler extends BaseValueHandler<String> {
+		public static final StringValueHandler INSTANCE = new StringValueHandler();
+		public String convert(Object value) {
 			return value == null ? null : value.toString();
 		}
 	}
@@ -220,15 +259,15 @@ public class ValueConverter {
 			return (T) value;
 		}
 
-		Conversion<T> conversion = determineAppropriateConversion( targetType );
-		if ( conversion == null ) {
+		ValueHandler<T> valueHandler = determineAppropriateHandler( targetType );
+		if ( valueHandler == null ) {
 			throw unknownConversion( value, targetType );
 		}
-		return conversion.apply( value );
+		return valueHandler.convert( value );
 	}
 
 	/**
-	 * Determine the appropriate {@link Conversion} strategy for converting a value
+	 * Determine the appropriate {@link ValueHandlerFactory.ValueHandler} strategy for converting a value
 	 * to the given target type
 	 *
 	 * @param targetType The target type (to which we want to convert values).
@@ -236,33 +275,33 @@ public class ValueConverter {
 	 * @return The conversion
 	 */
 	@SuppressWarnings({ "unchecked" })
-	public static <T> Conversion<T> determineAppropriateConversion(Class<T> targetType) {
+	public static <T> ValueHandler<T> determineAppropriateHandler(Class<T> targetType) {
 		if ( String.class.equals( targetType ) ) {
-			return (Conversion<T>) StringConversion.INSTANCE;
+			return (ValueHandler<T>) StringValueHandler.INSTANCE;
 		}
 		if ( Byte.class.equals( targetType ) || Byte.TYPE.equals( targetType ) ) {
-			return (Conversion<T>) ByteConversion.INSTANCE;
+			return (ValueHandler<T>) ByteValueHandler.INSTANCE;
 		}
 		if ( Short.class.equals( targetType ) || Short.TYPE.equals( targetType ) ) {
-			return (Conversion<T>) ShortConversion.INSTANCE;
+			return (ValueHandler<T>) ShortValueHandler.INSTANCE;
 		}
 		if ( Integer.class.equals( targetType ) || Integer.TYPE.equals( targetType ) ) {
-			return (Conversion<T>) IntegerConversion.INSTANCE;
+			return (ValueHandler<T>) IntegerValueHandler.INSTANCE;
 		}
 		if ( Long.class.equals( targetType ) || Long.TYPE.equals( targetType ) ) {
-			return (Conversion<T>) LongConversion.INSTANCE;
+			return (ValueHandler<T>) LongValueHandler.INSTANCE;
 		}
 		if ( Float.class.equals( targetType ) || Float.TYPE.equals( targetType ) ) {
-			return (Conversion<T>) FloatConversion.INSTANCE;
+			return (ValueHandler<T>) FloatValueHandler.INSTANCE;
 		}
 		if ( Double.class.equals( targetType ) || Double.TYPE.equals( targetType ) ) {
-			return (Conversion<T>) DoubleConversion.INSTANCE;
+			return (ValueHandler<T>) DoubleValueHandler.INSTANCE;
 		}
 		if ( BigInteger.class.equals( targetType ) ) {
-			return (Conversion<T>) BigIntegerConversion.INSTANCE;
+			return (ValueHandler<T>) BigIntegerValueHandler.INSTANCE;
 		}
 		if ( BigDecimal.class.equals( targetType ) ) {
-			return (Conversion<T>) BigDecimalConversion.INSTANCE;
+			return (ValueHandler<T>) BigDecimalValueHandler.INSTANCE;
 		}
 		return null;
 	}

@@ -34,7 +34,7 @@ import org.hibernate.ejb.criteria.ParameterRegistry;
 import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
 import org.hibernate.ejb.criteria.Renderable;
 import org.hibernate.ejb.criteria.TupleElementImplementor;
-import org.hibernate.ejb.criteria.ValueConverter;
+import org.hibernate.ejb.criteria.ValueHandlerFactory;
 
 /**
  * The Hibernate implementation of the JPA {@link CompoundSelection}
@@ -66,18 +66,18 @@ public class CompoundSelectionImpl<X> extends SelectionImpl<X> implements Compou
 	}
 
 	@Override
-	public List<ValueConverter.Conversion> getConversions() {
+	public List<ValueHandlerFactory.ValueHandler> getValueHandlers() {
 		if ( isConstructor ) {
 			return null;
 		}
-		boolean foundConversions = false;
-		ArrayList<ValueConverter.Conversion> conversions = new ArrayList<ValueConverter.Conversion>();
+		boolean foundHandlers = false;
+		ArrayList<ValueHandlerFactory.ValueHandler> valueHandlers = new ArrayList<ValueHandlerFactory.ValueHandler>();
 		for ( Selection selection : getCompoundSelectionItems() ) {
-			ValueConverter.Conversion conversion = ( (TupleElementImplementor) selection ).getConversion();
-			conversions.add( conversion );
-			foundConversions = foundConversions || conversion != null;
+			ValueHandlerFactory.ValueHandler valueHandler = ( (TupleElementImplementor) selection ).getValueHandler();
+			valueHandlers.add( valueHandler );
+			foundHandlers = foundHandlers || valueHandler != null;
 		}
-		return foundConversions ? null : conversions;
+		return foundHandlers ? null : valueHandlers;
 	}
 
 	public void registerParameters(ParameterRegistry registry) {

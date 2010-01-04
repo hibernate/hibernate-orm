@@ -23,21 +23,31 @@
  */
 package org.hibernate.ejb.criteria;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.ObjectInputStream;
 import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
-import java.io.ByteArrayInputStream;
-import java.io.ObjectInputStream;
 import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.criteria.Root;
 import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Join;
+import javax.persistence.criteria.Root;
 
+import org.hibernate.ejb.metamodel.Address;
+import org.hibernate.ejb.metamodel.Alias;
+import org.hibernate.ejb.metamodel.Country;
+import org.hibernate.ejb.metamodel.CreditCard;
+import org.hibernate.ejb.metamodel.Customer;
+import org.hibernate.ejb.metamodel.Info;
+import org.hibernate.ejb.metamodel.LineItem;
+import org.hibernate.ejb.metamodel.Order;
+import org.hibernate.ejb.metamodel.Phone;
+import org.hibernate.ejb.metamodel.Product;
+import org.hibernate.ejb.metamodel.ShelfLife;
+import org.hibernate.ejb.metamodel.Spouse;
 import org.hibernate.ejb.test.TestCase;
-import org.hibernate.ejb.test.callbacks.VideoSystem;
-import org.hibernate.ejb.test.callbacks.Television;
 import org.hibernate.ejb.test.callbacks.RemoteControl;
+import org.hibernate.ejb.test.callbacks.Television;
+import org.hibernate.ejb.test.callbacks.VideoSystem;
 import org.hibernate.ejb.test.inheritance.Fruit;
 import org.hibernate.ejb.test.inheritance.Strawberry;
 
@@ -50,9 +60,17 @@ public class CriteriaCompilingTest extends TestCase {
 	public Class[] getAnnotatedClasses() {
 		return new Class[] {
 				Customer.class,
-				Item.class,
+				Alias.class,
+				Phone.class,
+				Address.class,
+				Country.class,
+				CreditCard.class,
+				Info.class,
+				Spouse.class,
+				LineItem.class,
 				Order.class,
 				Product.class,
+				ShelfLife.class,
 				// @Inheritance
 				Fruit.class,
 				Strawberry.class,
@@ -112,7 +130,6 @@ public class CriteriaCompilingTest extends TestCase {
 		em.close();
 	}
 
-	//FIXME uncomment the serialization line and enjoy the test failing
 	public void testSerialization() {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
@@ -122,8 +139,8 @@ public class CriteriaCompilingTest extends TestCase {
 		root.fetch( "lineItems" );
 		criteria.select( root );
 
-		//FIXME uncomment the serialization line and enjoy the test failing
-		//criteria = serializeDdeserialize( criteria );
+		// TODO uncomment the serialization line and enjoy the test failing
+		// criteria = serializeDeserialize( criteria );
 
 		em.createQuery( criteria ).getResultList();
 
@@ -131,7 +148,7 @@ public class CriteriaCompilingTest extends TestCase {
 		em.close();
 	}
 
-	private <T> T serializeDdeserialize(T object) {
+	private <T> T serializeDeserialize(T object) {
 		T serializedObject = null;
 		try {
 			ByteArrayOutputStream stream = new ByteArrayOutputStream();

@@ -35,7 +35,7 @@ import org.hibernate.ejb.criteria.CriteriaQueryCompiler;
 import org.hibernate.ejb.criteria.Renderable;
 
 /**
- * A compound {@link Predicate predicate} is a grouping of other {@link Predicate predicates} in order to apply
+ * A compound {@link Predicate predicate} is a grouping of other {@link Predicate predicates} in order to convert
  * either a conjunction (logical AND) or a disjunction (logical OR).
  *
  * @author Steve Ebersole

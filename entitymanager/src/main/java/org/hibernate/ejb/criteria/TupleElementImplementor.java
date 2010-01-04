@@ -31,5 +31,5 @@ import javax.persistence.TupleElement;
  * @author Steve Ebersole
  */
 public interface TupleElementImplementor<X> extends TupleElement<X> {
-	public ValueConverter.Conversion<X> getConversion();
+	public ValueHandlerFactory.ValueHandler<X> getValueHandler();
 }

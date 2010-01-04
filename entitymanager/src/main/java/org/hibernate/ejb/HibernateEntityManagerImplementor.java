@@ -30,8 +30,7 @@ import javax.persistence.TypedQuery;
 import org.hibernate.HibernateException;
 import org.hibernate.StaleStateException;
 import org.hibernate.LockOptions;
-import org.hibernate.ejb.criteria.ValueConverter;
-import org.hibernate.transform.ResultTransformer;
+import org.hibernate.ejb.criteria.ValueHandlerFactory;
 import org.hibernate.type.Type;
 
 import java.util.List;
@@ -124,7 +123,7 @@ public interface HibernateEntityManagerImplementor extends HibernateEntityManage
 		 *
 		 * @return Value conversions to be applied to the JPA QL results
 		 */
-		public List<ValueConverter.Conversion> getConversions();
+		public List<ValueHandlerFactory.ValueHandler> getValueHandlers();
 
 		/**
 		 * Get the explicit parameter types.  Generally speaking these would apply to implicit named

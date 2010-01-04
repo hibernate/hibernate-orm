@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2009, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -23,14 +23,27 @@
  */
 package org.hibernate.ejb.criteria;
 
-import java.util.List;
-import javax.persistence.criteria.Selection;
+import javax.persistence.criteria.Path;
+import javax.persistence.metamodel.Attribute;
 
 /**
- * TODO : javadoc
+ * Implementation contract for the JPA {@link Path} interface.
  *
  * @author Steve Ebersole
  */
-public interface SelectionImplementor<X> extends TupleElementImplementor<X>, Selection<X>  {
-	public List<ValueHandlerFactory.ValueHandler> getValueHandlers();
+public interface PathImplementor<X> extends ExpressionImplementor<X>, Path<X> {
+	/**
+	 * Get the string representation of this path as a navigation from one of the
+	 * queries <tt>identification variables</tt>
+	 *
+	 * @return The path's identifier.
+	 */
+	public String getPathIdentifier();
+
+	/**
+	 * Retrieve reference to the attribute this path represents.
+	 *
+	 * @return The metamodel attribute.
+	 */
+	public Attribute<?, ?> getAttribute();
 }

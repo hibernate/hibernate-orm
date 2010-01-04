@@ -123,15 +123,16 @@ public class LikePredicate extends AbstractSimplePredicate {
 	}
 
 	public String render(CriteriaQueryCompiler.RenderingContext renderingContext) {
-		StringBuilder likeExpr = new StringBuilder();
-		likeExpr.append( ( (Renderable) getMatchExpression() ).render( renderingContext ) )
-				.append( " like " )
+		final String operator = isNegated() ? " not like " : " like ";
+		StringBuilder buffer = new StringBuilder();
+		buffer.append( ( (Renderable) getMatchExpression() ).render( renderingContext ) )
+				.append( operator )
 				.append( ( (Renderable) getPattern() ).render( renderingContext ) );
 		if ( escapeCharacter != null ) {
-			likeExpr.append( " escape " )
+			buffer.append( " escape " )
 					.append( ( (Renderable) getEscapeCharacter() ).render( renderingContext ) );
 		}
-		return likeExpr.toString();
+		return buffer.toString();
 	}
 
 	public String renderProjection(CriteriaQueryCompiler.RenderingContext renderingContext) {

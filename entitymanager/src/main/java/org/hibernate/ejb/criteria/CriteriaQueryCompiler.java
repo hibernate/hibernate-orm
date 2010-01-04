@@ -38,6 +38,9 @@ import javax.persistence.LockModeType;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.ParameterExpression;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import org.hibernate.ejb.HibernateEntityManagerImplementor;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.type.Type;
@@ -54,6 +57,8 @@ import org.hibernate.util.StringHelper;
  * @author Steve Ebersole
  */
 public class CriteriaQueryCompiler {
+	private static final Logger log = LoggerFactory.getLogger( CriteriaQueryCompiler.class );
+
 	public static interface ImplicitParameterBinding {
 		public String getParameterName();
 		public Class getJavaType();
@@ -72,7 +77,7 @@ public class CriteriaQueryCompiler {
 
 	public static interface RenderedCriteriaQuery {
 		public String getQueryString();
-		public List<ValueConverter.Conversion> getValueConversions();
+		public List<ValueHandlerFactory.ValueHandler> getValueHandlers();
 		public HibernateEntityManagerImplementor.Options.ResultMetadataValidator getResultMetadataValidator();
 	}
 
@@ -143,12 +148,14 @@ public class CriteriaQueryCompiler {
 
 		final RenderedCriteriaQuery renderedCriteriaQuery = criteriaQueryImpl.render( renderingContext );
 
+		log.debug( "Rendered criteria query -> {}", renderedCriteriaQuery.getQueryString() );
+
 		TypedQuery<T> jpaqlQuery = entityManager.createQuery(
 				renderedCriteriaQuery.getQueryString(),
 				criteriaQuery.getResultType(),
 				new HibernateEntityManagerImplementor.Options() {
-					public List<ValueConverter.Conversion> getConversions() {
-						return renderedCriteriaQuery.getValueConversions();
+					public List<ValueHandlerFactory.ValueHandler> getValueHandlers() {
+						return renderedCriteriaQuery.getValueHandlers();
 					}
 
 					public Map<String, Class> getNamedParameterExplicitTypes() {

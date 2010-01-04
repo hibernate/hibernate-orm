@@ -25,6 +25,7 @@ package org.hibernate.ejb.criteria.expression.function;
 
 import javax.persistence.criteria.Expression;
 import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
+import org.hibernate.ejb.criteria.CriteriaQueryCompiler;
 import org.hibernate.ejb.criteria.expression.LiteralExpression;
 
 /**
@@ -85,6 +86,14 @@ public class AggregationFunction<T> extends ParameterizedFunctionExpression<T> {
 		public COUNT(CriteriaBuilderImpl criteriaBuilder, Expression<?> expression, boolean distinct) {
 			super( criteriaBuilder, Long.class, NAME , expression );
 			this.distinct = distinct;
+		}
+
+		@Override
+		protected void renderArguments(StringBuilder buffer, CriteriaQueryCompiler.RenderingContext renderingContext) {
+			if ( isDistinct() ) {
+				buffer.append( "distinct " );
+			}
+			super.renderArguments( buffer, renderingContext );
 		}
 
 		public boolean isDistinct() {

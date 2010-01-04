@@ -83,8 +83,9 @@ public class BetweenPredicate<Y> extends AbstractSimplePredicate {
 	}
 
 	public String render(CriteriaQueryCompiler.RenderingContext renderingContext) {
+		final String operator = isNegated() ? " not between " : " between ";
 		return ( (Renderable) getExpression() ).render( renderingContext )
-				+ " between "
+				+ operator
 				+ ( (Renderable) getLowerBound() ).render( renderingContext )
 				+ " and "
 				+ ( (Renderable) getUpperBound() ).render( renderingContext );

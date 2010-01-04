@@ -207,7 +207,7 @@ public class QueryStructure<T> {
 	public void render(StringBuilder jpaqlQuery, CriteriaQueryCompiler.RenderingContext renderingContext) {
 		jpaqlQuery.append( "select " );
 		if ( isDistinct() ) {
-			jpaqlQuery.append( " distinct " );
+			jpaqlQuery.append( "distinct " );
 		}
 		if ( getSelection() == null ) {
 			// we should have only a single root (query validation should have checked this...)

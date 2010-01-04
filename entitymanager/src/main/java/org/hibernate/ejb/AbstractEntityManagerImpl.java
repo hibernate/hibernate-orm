@@ -59,7 +59,7 @@ import org.slf4j.LoggerFactory;
 
 import org.hibernate.*;
 import org.hibernate.cfg.Environment;
-import org.hibernate.ejb.criteria.ValueConverter;
+import org.hibernate.ejb.criteria.ValueHandlerFactory;
 import org.hibernate.ejb.transaction.JoinableCMTTransaction;
 import org.hibernate.ejb.util.ConfigurationHelper;
 import org.hibernate.ejb.criteria.CriteriaQueryCompiler;
@@ -148,8 +148,8 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 			Options options) {
 		try {
 			org.hibernate.Query hqlQuery = getSession().createQuery( jpaqlString );
-			if ( options.getConversions() != null ) {
-				hqlQuery.setResultTransformer( new ValueConversionResultTransformer(  options.getConversions() ) );
+			if ( options.getValueHandlers() != null ) {
+				hqlQuery.setResultTransformer( new ValueConversionResultTransformer(  options.getValueHandlers() ) );
 			}
 			else {
 				options.getResultMetadataValidator().validate( hqlQuery.getReturnTypes() );
@@ -162,20 +162,20 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 	}
 
 	private static class ValueConversionResultTransformer extends BasicTransformerAdapter {
-		private List<ValueConverter.Conversion> conversions;
+		private List<ValueHandlerFactory.ValueHandler> valueHandlers;
 
-		private ValueConversionResultTransformer(List<ValueConverter.Conversion> conversions) {
-			this.conversions = conversions;
+		private ValueConversionResultTransformer(List<ValueHandlerFactory.ValueHandler> valueHandlers) {
+			this.valueHandlers = valueHandlers;
 		}
 
 		@Override
 		public Object transformTuple(Object[] tuple, String[] aliases) {
 			Object[] result = new Object[ tuple.length ];
 			for ( int i = 0; i < tuple.length; i++ ) {
-				ValueConverter.Conversion conversion = conversions.get( i );
-				result[i] = conversion == null
+				ValueHandlerFactory.ValueHandler valueHandler = valueHandlers.get( i );
+				result[i] = valueHandler == null
 						? tuple[i]
-						: conversion.apply( tuple[i] );
+						: valueHandler.convert( tuple[i] );
 			}
 			return result.length == 1 ? result[0] : result;
 		}

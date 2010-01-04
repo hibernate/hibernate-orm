@@ -26,7 +26,7 @@ package org.hibernate.ejb.criteria.expression;
 import org.hibernate.ejb.criteria.AbstractNode;
 import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
 import org.hibernate.ejb.criteria.TupleElementImplementor;
-import org.hibernate.ejb.criteria.ValueConverter;
+import org.hibernate.ejb.criteria.ValueHandlerFactory;
 
 /**
  * TODO : javadoc
@@ -39,7 +39,7 @@ public abstract class AbstractTupleElement<X>
 	private final Class originalJavaType;
 	private Class<X> javaType;
 	private String alias;
-	private ValueConverter.Conversion<X> conversion;
+	private ValueHandlerFactory.ValueHandler<X> valueHandler;
 
 	protected AbstractTupleElement(CriteriaBuilderImpl criteriaBuilder, Class<X> javaType) {
 		super( criteriaBuilder );
@@ -57,21 +57,21 @@ public abstract class AbstractTupleElement<X>
 	@SuppressWarnings({ "unchecked" })
 	protected void resetJavaType(Class targetType) {
 		this.javaType = targetType;
-//		this.conversion = javaType.equals( originalJavaType )
+//		this.valueHandler = javaType.equals( originalJavaType )
 //				? null
-//				: ValueConverter.determineAppropriateConversion( javaType );
-		this.conversion = ValueConverter.determineAppropriateConversion( javaType );
+//				: ValueHandlerFactory.determineAppropriateHandler( javaType );
+		this.valueHandler = ValueHandlerFactory.determineAppropriateHandler( javaType );
 	}
 
-	protected void forceConversion(ValueConverter.Conversion<X> conversion) {
-		this.conversion = conversion;
+	protected void forceConversion(ValueHandlerFactory.ValueHandler<X> valueHandler) {
+		this.valueHandler = valueHandler;
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public ValueConverter.Conversion<X> getConversion() {
-		return conversion;
+	public ValueHandlerFactory.ValueHandler<X> getValueHandler() {
+		return valueHandler;
 	}
 
 	/**

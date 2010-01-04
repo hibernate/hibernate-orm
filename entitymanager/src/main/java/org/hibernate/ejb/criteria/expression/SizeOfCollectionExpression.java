@@ -50,11 +50,11 @@ public class SizeOfCollectionExpression<C extends Collection>
 	}
 
 	public void registerParameters(ParameterRegistry registry) {
-		// nothign to do
+		// nothing to do
 	}
 
 	public String render(CriteriaQueryCompiler.RenderingContext renderingContext) {
-		return "size of " + getCollectionExpression().render( renderingContext );
+		return "size(" + getCollectionExpression().render( renderingContext ) + ")";
 	}
 
 	public String renderProjection(CriteriaQueryCompiler.RenderingContext renderingContext) {

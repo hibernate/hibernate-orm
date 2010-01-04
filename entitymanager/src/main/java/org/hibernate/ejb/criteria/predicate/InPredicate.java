@@ -34,6 +34,7 @@ import org.hibernate.ejb.criteria.ParameterRegistry;
 import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
 import org.hibernate.ejb.criteria.CriteriaQueryCompiler;
 import org.hibernate.ejb.criteria.Renderable;
+import org.hibernate.ejb.criteria.ValueHandlerFactory;
 import org.hibernate.ejb.criteria.expression.LiteralExpression;
 
 /**
@@ -114,10 +115,14 @@ public class InPredicate<T> extends AbstractSimplePredicate implements CriteriaB
 			Collection<T> values) {
 		super( criteriaBuilder );
 		this.expression = expression;
-		// TODO : size this?
-		this.values = new ArrayList<Expression<? extends T>>();
+		this.values = new ArrayList<Expression<? extends T>>( values.size() );
+		ValueHandlerFactory.ValueHandler<? extends T> valueHandler = ValueHandlerFactory.isNumeric( expression.getJavaType() )
+				? ValueHandlerFactory.determineAppropriateHandler( (Class<? extends T>) expression.getJavaType() )
+				: new ValueHandlerFactory.NoOpValueHandler<T>();
 		for ( T value : values ) {
-			this.values.add( new LiteralExpression<T>( criteriaBuilder, value ) );
+			this.values.add(
+					new LiteralExpression<T>( criteriaBuilder, valueHandler.convert( value ) )
+			);
 		}
 	}
 
@@ -151,10 +156,17 @@ public class InPredicate<T> extends AbstractSimplePredicate implements CriteriaB
 	}
 
 	public String render(CriteriaQueryCompiler.RenderingContext renderingContext) {
-		StringBuilder buffer = new StringBuilder( "in" );
+		StringBuilder buffer = new StringBuilder();
 
-		// subquery expressions are already wrapped in parenthesis, so we only
-		// need to render the parens here if the values represent an explicit value list
+		buffer.append( ( (Renderable) getExpression() ).render( renderingContext ) );
+
+		if ( isNegated() ) {
+			buffer.append( " not" );
+		}
+		buffer.append( " in " );
+
+		// subquery expressions are already wrapped in parenthesis, so we only need to
+		// render the parenthesis here if the values represent an explicit value list
 		boolean isInSubqueryPredicate = getValues().size() == 1
 				&& Subquery.class.isInstance( getValues().get( 0 ) );
 		if ( isInSubqueryPredicate ) {

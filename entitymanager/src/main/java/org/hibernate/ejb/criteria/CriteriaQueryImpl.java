@@ -355,11 +355,11 @@ public class CriteriaQueryImpl<T> extends AbstractNode implements CriteriaQuery<
 			}
 
 			@SuppressWarnings({ "unchecked" })
-			public List<ValueConverter.Conversion> getValueConversions() {
+			public List<ValueHandlerFactory.ValueHandler> getValueHandlers() {
 				SelectionImplementor selection = (SelectionImplementor) queryStructure.getSelection();
 				return selection == null
 						? null
-						: selection.getConversions();
+						: selection.getValueHandlers();
 			}
 
 			public HibernateEntityManagerImplementor.Options.ResultMetadataValidator getResultMetadataValidator() {

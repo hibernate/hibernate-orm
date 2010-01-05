@@ -20,6 +20,7 @@ import javax.persistence.JoinColumn;
 import javax.persistence.OrderColumn;
 
 import org.hibernate.annotations.CollectionOfElements;
+import org.hibernate.test.annotations.collectionelement.FavoriteFood;
 
 /**
  * @author Emmanuel Bernard
@@ -39,6 +40,7 @@ public class Boy {
 	private int[] favoriteNumbers;
 	private Set<Toy> favoriteToys = new HashSet<Toy>();
 	private Set<Character> characters = new HashSet<Character>();
+	private Map<String, FavoriteFood> foods = new HashMap<String,FavoriteFood>();
 	private Set<CountryAttitude> countryAttitudes = new HashSet<CountryAttitude>();
 
 	@Id
@@ -120,6 +122,16 @@ public class Boy {
 
 	public void setCharacters(Set<Character> characters) {
 		this.characters = characters;
+	}
+
+	@ElementCollection
+	@Enumerated(EnumType.STRING)
+	public Map<String, FavoriteFood> getFavoriteFood() {
+		return foods;
+	}
+
+	public void setFavoriteFood(Map<String, FavoriteFood>foods) {
+		this.foods = foods;
 	}
 
 	@ElementCollection(fetch = FetchType.EAGER)

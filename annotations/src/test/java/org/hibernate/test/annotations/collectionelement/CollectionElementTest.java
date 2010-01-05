@@ -1,6 +1,7 @@
 //$Id$
 package org.hibernate.test.annotations.collectionelement;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 
@@ -40,6 +41,12 @@ public class CollectionElementTest extends TestCase {
 		boy.setFavoriteNumbers( favNbrs );
 		boy.getCharacters().add( Character.GENTLE );
 		boy.getCharacters().add( Character.CRAFTY );
+
+		HashMap<String,FavoriteFood> foods = new HashMap<String,FavoriteFood>();
+		foods.put( "breakfast", FavoriteFood.PIZZA);
+		foods.put( "lunch", FavoriteFood.KUNGPAOCHICKEN);
+		foods.put( "dinner", FavoriteFood.SUSHI);
+		boy.setFavoriteFood(foods);
 		s.persist( boy );
 		s.getTransaction().commit();
 		s.clear();
@@ -53,6 +60,9 @@ public class CollectionElementTest extends TestCase {
 		assertNotNull( boy.getFavoriteNumbers() );
 		assertEquals( 3, boy.getFavoriteNumbers()[1] );
 		assertTrue( boy.getCharacters().contains( Character.CRAFTY ) );
+		assertTrue( boy.getFavoriteFood().get("dinner").equals(FavoriteFood.SUSHI));
+		assertTrue( boy.getFavoriteFood().get("lunch").equals(FavoriteFood.KUNGPAOCHICKEN));
+		assertTrue( boy.getFavoriteFood().get("breakfast").equals(FavoriteFood.PIZZA));
 		List result = s.createQuery( "select boy from Boy boy join boy.nickNames names where names = :name" )
 				.setParameter( "name", "Thing" ).list();
 		assertEquals( 1, result.size() );

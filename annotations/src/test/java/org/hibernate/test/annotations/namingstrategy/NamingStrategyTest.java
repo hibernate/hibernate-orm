@@ -56,7 +56,7 @@ public class NamingStrategyTest extends TestCase {
 					foundIt = true;
 				}
 				// make sure we use A_ADDRESS instead of AEC_address
-				assertFalse("got table name mapped to: AEC_address which violates JPA-2 spec section 11.1.8 ([OWNING_ENTITY_NAME]_[COLLECTION_ATTRIBUTE_NAME])",table.getName().equalsIgnoreCase("AEC_address"));
+				assertFalse("got table name mapped to: AEC_address (should be A_ADDRESS) which violates JPA-2 spec section 11.1.8 ([OWNING_ENTITY_NAME]_[COLLECTION_ATTRIBUTE_NAME])",table.getName().equalsIgnoreCase("AEC_address"));
 			}
 			assertTrue("table not mapped to A_ADDRESS which violates JPA-2 spec section 11.1.8",foundIt);
 		}

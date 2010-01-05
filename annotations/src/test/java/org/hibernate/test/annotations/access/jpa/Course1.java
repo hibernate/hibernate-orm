@@ -1,4 +1,4 @@
-//$Id$
+//$Id: AccessTest.java 15025 2008-08-11 09:14:39Z hardy.ferentschik $
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
@@ -24,49 +24,51 @@
  */
 package org.hibernate.test.annotations.access.jpa;
 
-import javax.persistence.Access;
+import java.util.List;
+import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
-import javax.persistence.Transient;
+import javax.persistence.OneToMany;
+
 
 /**
- * @author Emmanuel Bernard
+ * @author Hardy Ferentschik
  */
 @Entity
-@Access(javax.persistence.AccessType.FIELD)
-public class Furniture extends Woody {
+public class Course1 {
 	@Id
 	@GeneratedValue
-	private Integer id;
+	private long id;
 
-	private String brand;
+	private String title;
 
-	@Transient
-	public String getBrand() {
-		return brand;
-	}
+	private List<Student> students;
 
-	public void setBrand(String brand) {
-		this.brand = brand;
-	}
-
-	public Integer getId() {
+	public long getId() {
 		return id;
 	}
 
-	public void setId(Integer id) {
+	public void setId(long id) {
 		this.id = id;
 	}
 
-	public long weight;
-
-	@Access(javax.persistence.AccessType.PROPERTY)
-	public long getWeight() {
-		return weight + 1;
+	@OneToMany(cascade = CascadeType.ALL)
+	public List<Student> getStudents() {
+		return students;
 	}
 
-	public void setWeight(long weight) {
-		this.weight = weight + 1;
+	public void setStudents(List<Student> students) {
+		this.students = students;
+	}
+
+	public String getTitle() {
+		return title;
+	}
+
+	public void setTitle(String title) {
+		this.title = title;
 	}
 }
+
+

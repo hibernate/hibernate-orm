@@ -45,13 +45,12 @@ import org.hibernate.annotations.Target;
 import org.hibernate.annotations.Type;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
+import org.hibernate.util.StringHelper;
 
 /**
+ * A helper class to keep the {@code XProperty}s of a class ordered by access type.
+ *
  * @author Hardy Ferentschik
- */
-
-/**
- * A temporary class where we keep the {@code XProperty}s of a class ordered by access type.
  */
 class PropertyContainer {
 
@@ -59,24 +58,26 @@ class PropertyContainer {
 	private final TreeMap<String, XProperty> fieldAccessMap;
 	private final TreeMap<String, XProperty> propertyAccessMap;
 	private final XClass xClass;
-	private final AccessType defaultAccessType;
+	private final AccessType explicitClassDefinedAccessType;
 
 	PropertyContainer(XClass clazz) {
 		this.xClass = clazz;
 		fieldAccessMap = initProperties( AccessType.FIELD );
 		propertyAccessMap = initProperties( AccessType.PROPERTY );
-		defaultAccessType = determineClassDefinedAccessStrategy();
+		explicitClassDefinedAccessType = determineClassDefinedAccessStrategy();
 		checkForJpaAccess();
-
-
 	}
 
 	public XClass getXClass() {
 		return xClass;
 	}
 
-	public AccessType getDefaultAccessStrategy() {
-		return defaultAccessType;
+	public AccessType getExplicitAccessStrategy() {
+		return explicitClassDefinedAccessType;
+	}
+
+	public boolean hasExplicitAccessStrategy() {
+		return !explicitClassDefinedAccessType.equals( AccessType.DEFAULT );
 	}
 
 	public Collection<XProperty> getProperties(AccessType accessType) {
@@ -85,6 +86,24 @@ class PropertyContainer {
 		}
 		else {
 			return fieldAccessMap.values();
+		}
+	}
+
+	public void assertTypesAreResolvable(AccessType access) {
+		TreeMap<String, XProperty> xprops;
+		if ( AccessType.PROPERTY.equals( access ) || AccessType.DEFAULT.equals( access ) ) {
+			xprops = propertyAccessMap;
+		}
+		else {
+			xprops = fieldAccessMap;
+		}
+		for ( XProperty property : xprops.values() ) {
+			if ( !property.isTypeResolved() && !discoverTypeWithoutReflection( property ) ) {
+				String msg = "Property " + StringHelper.qualify( xClass.getName(), property.getName() ) +
+						" has an unbound type and no explicit target entity. Resolve this Generic usage issue" +
+						" or set an explicit target attribute (eg @OneToMany(target=) or use an explicit @Type";
+				throw new AnnotationException( msg );
+			}
 		}
 	}
 
@@ -136,16 +155,10 @@ class PropertyContainer {
 		TreeMap<String, XProperty> propertiesMap = new TreeMap<String, XProperty>();
 		List<XProperty> properties = xClass.getDeclaredProperties( access.getType() );
 		for ( XProperty property : properties ) {
-//				if ( !property.isTypeResolved() && !discoverTypeWithoutReflection( property )
-//						&& !mustBeSkipped( property ) ) {
-//					String msg = "Property " + StringHelper.qualify( xClass.getName(), property.getName() ) +
-//							" has an unbound type and no explicit target entity. Resolve this Generic usage issue" +
-//							" or set an explicit target attribute (eg @OneToMany(target=) or use an explicit @Type";
-//					throw new AnnotationException( msg );
-//				}
-			if ( !mustBeSkipped( property ) ) {
-				propertiesMap.put( property.getName(), property );
+			if ( mustBeSkipped( property ) ) {
+				continue;
 			}
+			propertiesMap.put( property.getName(), property );
 		}
 		return propertiesMap;
 	}

@@ -35,7 +35,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
-import javax.persistence.Access;
 import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.DiscriminatorType;
@@ -191,8 +190,6 @@ public final class AnnotationBinder {
 	 * bindSomething usually create the mapping container and is accessed by one of the 2 first level method
 	 * makeSomething usually create the mapping container and is accessed by bindSomething[else]
 	 * fillSomething take the container into parameter and fill it.
-	 *
-	 *
 	 */
 	private AnnotationBinder() {
 	}
@@ -618,7 +615,7 @@ public final class AnnotationBinder {
 			);
 		}
 
-		//try to find class level generators
+		// try to find class level generators
 		HashMap<String, IdGenerator> classGenerators = buildLocalGenerators( clazzToProcess, mappings );
 
 		// check properties
@@ -626,9 +623,6 @@ public final class AnnotationBinder {
 				getElementsToProcess(
 						persistentClass, clazzToProcess, inheritanceStatePerClass, entityBinder, mappings
 				);
-		if ( elements == null ) {
-			throw new AnnotationException( "No identifier specified for entity: " + propertyHolder.getEntityName() );
-		}
 		final boolean subclassAndSingleTableStrategy = inheritanceState.getType() == InheritanceType.SINGLE_TABLE
 				&& inheritanceState.hasParents();
 		//process idclass if any
@@ -644,9 +638,7 @@ public final class AnnotationBinder {
 					idClass = current.getAnnotation( IdClass.class );
 					break;
 				}
-				state = InheritanceState.getSuperclassInheritanceState(
-						current, inheritanceStatePerClass, mappings.getReflectionManager()
-				);
+				state = InheritanceState.getSuperclassInheritanceState( current, inheritanceStatePerClass );
 			}
 			while ( state != null );
 		}
@@ -657,10 +649,10 @@ public final class AnnotationBinder {
 			String generatorType = "assigned";
 			String generator = BinderHelper.ANNOTATION_STRING_DEFAULT;
 			PropertyData inferredData = new PropertyPreloadedData(
-					entityBinder.getPropertyAccessor(), "id", compositeClass
+					entityBinder.getPropertyAccessType(), "id", compositeClass
 			);
 			PropertyData baseInferredData = new PropertyPreloadedData(
-                  entityBinder.getPropertyAccessor(), "id", current
+                  entityBinder.getPropertyAccessType(), "id", current
             );
 			HashMap<String, IdGenerator> localGenerators = new HashMap<String, IdGenerator>();
 			boolean ignoreIdAnnotations = entityBinder.isIgnoreIdAnnotations();
@@ -834,11 +826,7 @@ public final class AnnotationBinder {
 	}
 
 	private static PersistentClass getSuperEntity(XClass clazzToProcess, Map<XClass, InheritanceState> inheritanceStatePerClass, ExtendedMappings mappings, InheritanceState inheritanceState) {
-		final ReflectionManager reflectionManager = mappings.getReflectionManager();
-		InheritanceState superEntityState =
-				InheritanceState.getInheritanceStateOfSuperEntity(
-						clazzToProcess, inheritanceStatePerClass, reflectionManager
-				);
+		InheritanceState superEntityState = InheritanceState.getInheritanceStateOfSuperEntity( clazzToProcess, inheritanceStatePerClass );
 		PersistentClass superEntity = superEntityState != null ?
 				mappings.getClass(
 						superEntityState.getClazz().getName()
@@ -880,8 +868,7 @@ public final class AnnotationBinder {
 	}
 
 	/*
-	 * Get the annotated elements
-	 * Guess the annotated element from @Id or @EmbeddedId presence
+	 * Get the annotated elements, guessing the access type from @Id or @EmbeddedId presence.
 	 * Change EntityBinder by side effect
 	 */
 	private static List<PropertyData> getElementsToProcess(
@@ -892,104 +879,50 @@ public final class AnnotationBinder {
 		InheritanceState inheritanceState = inheritanceStatePerClass.get( clazzToProcess );
 		assert !inheritanceState.isEmbeddableSuperclass();
 
-		AccessType accessType = determineExplicitAccessType(
-				clazzToProcess, inheritanceStatePerClass, mappings, inheritanceState
-		);
 
 		List<XClass> classesToProcess = getMappedSuperclassesTillNextEntityOrdered(
 				persistentClass, clazzToProcess, inheritanceStatePerClass, mappings
 		);
+
+		AccessType accessType = determineDefaultAccessType( clazzToProcess, inheritanceStatePerClass );
+
 		List<PropertyData> elements = new ArrayList<PropertyData>();
 		int deep = classesToProcess.size();
 		boolean hasIdentifier = false;
 
-		/*
-		 * delay the exception in case field access is used
-		 */
-		AnnotationException exceptionWhileWalkingElements = null;
-		try {
-			for (int index = 0; index < deep; index++) {
-				PropertyContainer properyContainer = new PropertyContainer( classesToProcess.get( index ) );
-				boolean currentHasIdentifier = addElementsOfClass( elements, accessType , properyContainer, mappings );
-				hasIdentifier = hasIdentifier || currentHasIdentifier;
-			}
+		for ( int index = 0; index < deep; index++ ) {
+			PropertyContainer properyContainer = new PropertyContainer( classesToProcess.get( index ) );
+			boolean currentHasIdentifier = addElementsOfClass( elements, accessType, properyContainer, mappings );
+			hasIdentifier = hasIdentifier || currentHasIdentifier;
 		}
-		catch ( AnnotationException e ) {
-			exceptionWhileWalkingElements = e;
-		}
+
+		entityBinder.setPropertyAccessType( accessType );
 
 		if ( !hasIdentifier && !inheritanceState.hasParents() ) {
-			if (  AccessType.PROPERTY.equals( accessType ) ) {
-				//the original exception is legitimate
-				if ( exceptionWhileWalkingElements != null) throw exceptionWhileWalkingElements;
-				return null; //explicit but no @Id: the upper layer will raise an exception
-			}
-			accessType = AccessType.FIELD;
-			elements.clear();
-			for (int index = 0; index < deep; index++) {
-				PropertyContainer properyContainer = new PropertyContainer( classesToProcess.get( index ) );
-				boolean currentHasIdentifier = addElementsOfClass(elements, accessType, properyContainer, mappings );
-				hasIdentifier = hasIdentifier || currentHasIdentifier;
-			}
+			throw new AnnotationException( "No identifier specified for entity: " + clazzToProcess.getName() );
 		}
 
-		//the field show no id, fallback to he original exception
-		if (!hasIdentifier && exceptionWhileWalkingElements != null) throw exceptionWhileWalkingElements;
-
-		entityBinder.setPropertyAccessor( accessType );
-		inheritanceState.setAccessType( accessType );
-		return hasIdentifier || inheritanceState.hasParents() ?
-				elements :
-				null;
+		return elements;
 	}
 
-	/*
-	 * Check whether either the class itself or any of its super classes explicitly defines a value access strategy.
-	 *
-	 * @return {@code AccessType.FIELD} or {@code AccessType.PROPERTY} in case there is an explicit value,
-	 * {@code AccessType.DEFAULT} otherwise.
-	 */
-	private static AccessType determineExplicitAccessType(XClass clazzToProcess, Map<XClass, InheritanceState> inheritanceStatePerClass, ExtendedMappings mappings, InheritanceState inheritanceState) {
-		AccessType explicitAccessType = AccessType.DEFAULT;
-
-		// check whether any of the super classes or the class itself
-		if ( inheritanceState.hasParents() ) {
-			InheritanceState superEntityState =
-					InheritanceState.getInheritanceStateOfSuperEntity(
-							clazzToProcess, inheritanceStatePerClass, mappings.getReflectionManager()
-					);
-			if ( superEntityState != null ) {
-				explicitAccessType = superEntityState.getAccessType();
+	private static AccessType determineDefaultAccessType(XClass annotatedClass, Map<XClass, InheritanceState> inheritanceStatePerClass) {
+		XClass xclass = annotatedClass;
+		while ( xclass != null && !Object.class.getName().equals( xclass.getName() ) ) {
+			if ( xclass.isAnnotationPresent( Entity.class ) || xclass.isAnnotationPresent( MappedSuperclass.class ) ) {
+				for ( XProperty prop : xclass.getDeclaredProperties( AccessType.PROPERTY.getType() ) ) {
+					if ( prop.isAnnotationPresent( Id.class ) || prop.isAnnotationPresent( EmbeddedId.class ) ) {
+						return AccessType.PROPERTY;
+					}
+				}
+				for ( XProperty prop : xclass.getDeclaredProperties( AccessType.FIELD.getType() ) ) {
+					if ( prop.isAnnotationPresent( Id.class ) || prop.isAnnotationPresent( EmbeddedId.class ) ) {
+						return AccessType.FIELD;
+					}
+				}
 			}
+			xclass = xclass.getSuperclass();
 		}
-		else {
-			AccessType hibernateExplicitAccessType = AccessType.DEFAULT;
-		    AccessType jpaExplicitAccessType = AccessType.DEFAULT;
-
-			//the are the root entity but we might have mapped superclasses that contain the id class
-			org.hibernate.annotations.AccessType accessType = clazzToProcess.getAnnotation( org.hibernate.annotations.AccessType.class );
-			if ( accessType != null ) {
-				hibernateExplicitAccessType = AccessType.getAccessStrategy( accessType.value() );
-			}
-
-			Access access = clazzToProcess.getAnnotation( Access.class );
-			if( access != null ) {
-				jpaExplicitAccessType = AccessType.getAccessStrategy( access.value() );
-			}
-
-			if ( hibernateExplicitAccessType != AccessType.DEFAULT
-					&& jpaExplicitAccessType != AccessType.DEFAULT
-					&& hibernateExplicitAccessType != jpaExplicitAccessType ) {
-				throw new MappingException( "@AccessType and @Access specified with contradicting values. Use of @Access only is recommended. " );
-			}
-
-			if(hibernateExplicitAccessType != AccessType.DEFAULT) {
-				explicitAccessType = hibernateExplicitAccessType;
-			}  else {
-				explicitAccessType = jpaExplicitAccessType;
-			}
-		}
-		return explicitAccessType;
+		throw new AnnotationException( "No identifier specified for entity: " + annotatedClass.getName() );
 	}
 
 	private static List<XClass> getMappedSuperclassesTillNextEntityOrdered(
@@ -1021,7 +954,7 @@ public final class AnnotationBinder {
 		// classes from 0 to n-1 are @MappedSuperclass and should be linked
 		org.hibernate.mapping.MappedSuperclass mappedSuperclass = null;
 		final InheritanceState superEntityState =
-				InheritanceState.getInheritanceStateOfSuperEntity(annotatedClass, inheritanceStatePerClass, reflectionManager);
+				InheritanceState.getInheritanceStateOfSuperEntity( annotatedClass, inheritanceStatePerClass );
 		PersistentClass superEntity =
 				superEntityState != null ?
 						mappings.getClass( superEntityState.getClazz().getName() ) :
@@ -1162,7 +1095,7 @@ public final class AnnotationBinder {
 	/**
 	 *
 	 * @param elements List of {@code ProperyData} instances
-	 * @param propertyAccessor The default value access strategy which has to be used in case no explicit local access
+	 * @param defaultAccessType The default value access strategy which has to be used in case no explicit local access
 	 *        strategy is used
 	 * @param propertyContainer Metadata about a class and its properties
 	 * @param mappings Mapping meta data
@@ -1170,19 +1103,20 @@ public final class AnnotationBinder {
 	 * the determined access strategy, {@code false} otherwise.
 	 */
 	private static boolean addElementsOfClass(
-			List<PropertyData> elements, AccessType propertyAccessor, PropertyContainer propertyContainer, ExtendedMappings mappings
+			List<PropertyData> elements, AccessType defaultAccessType, PropertyContainer propertyContainer, ExtendedMappings mappings
 	) {
 		boolean hasIdentifier = false;
-		AccessType classDefinedAccessType = propertyContainer.getDefaultAccessStrategy();
+		AccessType accessType = defaultAccessType;
 
-		if ( classDefinedAccessType.equals( AccessType.DEFAULT ) ) {
-			classDefinedAccessType = propertyAccessor;
+		if ( propertyContainer.hasExplicitAccessStrategy() ) {
+			accessType = propertyContainer.getExplicitAccessStrategy();
 		}
 
-		Collection<XProperty> properties = propertyContainer.getProperties( classDefinedAccessType );
+		propertyContainer.assertTypesAreResolvable( accessType );
+		Collection<XProperty> properties = propertyContainer.getProperties( accessType );
 		for ( XProperty p : properties ) {
 			final boolean currentHasIdentifier = addProperty(
-					propertyContainer.getXClass(), p, elements, classDefinedAccessType.getType(), mappings
+					propertyContainer.getXClass(), p, elements, accessType.getType(), mappings
 			);
 			hasIdentifier = hasIdentifier || currentHasIdentifier;
 		}
@@ -1193,7 +1127,7 @@ public final class AnnotationBinder {
 			XClass declaringClass, XProperty property, List<PropertyData> annElts,
 			String propertyAccessor, ExtendedMappings mappings
 	) {
-		boolean hasIdentifier = false;
+		boolean hasIdentifier;
 		PropertyData propertyAnnotatedElement = new PropertyInferredData(
 				declaringClass, property, propertyAccessor,
 				mappings.getReflectionManager() );
@@ -2048,7 +1982,6 @@ public final class AnnotationBinder {
 
 		List<PropertyData> baseClassElements = null;
 		XClass baseReturnedClassOrElement;
-		PropertyHolder baseSubHolder;
 		if(baseInferredData != null)
 		{
 		   baseClassElements = new ArrayList<PropertyData>();
@@ -2567,29 +2500,22 @@ public final class AnnotationBinder {
 	 * inheritance status of a class.
 	 *
 	 * @param orderedClasses Order list of all annotated entities and their mapped superclasses
-	 * @param reflectionManager  Reference to the reflection manager (commons-annotations)
 	 * @return A map of {@code InheritanceState}s keyed against their {@code XClass}.
 	 */
-	public static Map<XClass, InheritanceState> buildInheritanceStates(
-			List<XClass> orderedClasses, ReflectionManager reflectionManager
-	) {
+	public static Map<XClass, InheritanceState> buildInheritanceStates(List<XClass> orderedClasses) {
 		Map<XClass, InheritanceState> inheritanceStatePerClass = new HashMap<XClass, InheritanceState>(
 				orderedClasses.size()
 		);
 		for (XClass clazz : orderedClasses) {
 			InheritanceState superclassState = InheritanceState.getSuperclassInheritanceState(
-					clazz, inheritanceStatePerClass,
-					reflectionManager
-			);
+					clazz, inheritanceStatePerClass );
 			InheritanceState state = new InheritanceState( clazz );
 			if ( superclassState != null ) {
 				//the classes are ordered thus preventing an NPE
 				//FIXME if an entity has subclasses annotated @MappedSperclass wo sub @Entity this is wrong
 				superclassState.setHasSiblings( true );
 				InheritanceState superEntityState = InheritanceState.getInheritanceStateOfSuperEntity(
-						clazz, inheritanceStatePerClass,
-						reflectionManager
-				);
+						clazz, inheritanceStatePerClass );
 				state.setHasParents( superEntityState != null );
 				final boolean nonDefault = state.getType() != null && !InheritanceType.SINGLE_TABLE.equals( state.getType() );
 				if ( superclassState.getType() != null ) {

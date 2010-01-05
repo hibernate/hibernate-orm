@@ -36,7 +36,7 @@ import javax.persistence.OneToMany;
  * @author Hardy Ferentschik
  */
 @Entity
-public class CoursePropertyAccess {
+public class Course7 {
 	private long id;
 
 	private String title;

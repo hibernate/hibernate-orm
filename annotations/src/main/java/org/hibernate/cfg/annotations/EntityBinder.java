@@ -118,7 +118,7 @@ public class EntityBinder {
 	private InheritanceState inheritanceState;
 	private boolean ignoreIdAnnotations;
 	private boolean cacheLazyProperty;
-	private AccessType propertyAccessor = AccessType.DEFAULT;
+	private AccessType propertyAccessType = AccessType.DEFAULT;
 
 	/**
 	 * Use as a fake one for Collection of elements
@@ -843,16 +843,28 @@ public class EntityBinder {
 		}
 	}
 
-	public AccessType getPropertyAccessor() {
-		return propertyAccessor;
+	public AccessType getPropertyAccessType() {
+		return propertyAccessType;
 	}
 
-	public void setPropertyAccessor(AccessType propertyAccessor) {
-		this.propertyAccessor = propertyAccessor;
+	public void setPropertyAccessType(AccessType propertyAccessor) {
+		this.propertyAccessType = getExplicitAccessType( annotatedClass );
+		// only set the access type if there is no explicit access type for this class
+		if( this.propertyAccessType == null ) {
+			this.propertyAccessType = propertyAccessor;
+		}
 	}
 
 	public AccessType getPropertyAccessor(XAnnotatedElement element) {
-		AccessType accessType = propertyAccessor;
+		AccessType accessType = getExplicitAccessType( element );
+		if ( accessType == null ) {
+		   accessType = propertyAccessType;
+		}
+		return accessType;
+	}
+
+	public AccessType getExplicitAccessType(XAnnotatedElement element) {
+		AccessType accessType = null;
 
 		AccessType hibernateAccessType = null;
 		AccessType jpaAccessType = null;
@@ -868,7 +880,9 @@ public class EntityBinder {
 		}
 
 		if ( hibernateAccessType != null && jpaAccessType != null && hibernateAccessType != jpaAccessType ) {
-			throw new MappingException( " " );
+			throw new MappingException(
+					"Found @Access and @AccessType with conflicting values on a property in class " + annotatedClass.toString()
+			);
 		}
 
 		if ( hibernateAccessType != null ) {

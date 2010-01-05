@@ -1,4 +1,4 @@
-//$Id: AccessTest.java 15025 2008-08-11 09:14:39Z hardy.ferentschik $
+//$Id: Being.java 18260 2009-12-17 21:14:07Z hardy.ferentschik $
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
@@ -24,52 +24,48 @@
  */
 package org.hibernate.test.annotations.access.jpa;
 
-import java.util.List;
-import javax.persistence.Access;
-import javax.persistence.AccessType;
-import javax.persistence.CascadeType;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.OneToMany;
+import javax.persistence.Embeddable;
 
 
 /**
  * @author Hardy Ferentschik
  */
-@Entity
-@Access(AccessType.PROPERTY)
-public class CourseExplicitPropertyAccess3 {
-	@Id
-	@GeneratedValue
-	private long id;
+@Embeddable
+public class Color {
+	public int r;
+	public int g;
+	public int b;
 
-	private String title;
-
-	@OneToMany(cascade = CascadeType.ALL)
-	private List<Student> students;
-
-	public long getId() {
-		return id;
+	public Color() {
 	}
 
-	public void setId(long id) {
-		this.id = id;
+	public Color(int r, int g, int b) {
+		this.r = r;
+		this.g = g;
+		this.b = b;
 	}
 
-	public List<Student> getStudents() {
-		return students;
+	public int getB() {
+		throw new RuntimeException();
 	}
 
-	public void setStudents(List<Student> students) {
-		this.students = students;
+	public void setB(int b) {
+		this.b = b;
 	}
 
-	public String getTitle() {
-		return title;
+	public int getG() {
+		throw new RuntimeException();
 	}
 
-	public void setTitle(String title) {
-		this.title = title;
+	public void setG(int g) {
+		this.g = g;
+	}
+
+	public int getR() {
+		throw new RuntimeException();
+	}
+
+	public void setR(int r) {
+		this.r = r;
 	}
 }

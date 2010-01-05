@@ -28,7 +28,6 @@ import javax.persistence.Inheritance;
 import javax.persistence.InheritanceType;
 import javax.persistence.MappedSuperclass;
 
-import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.annotations.common.reflection.XAnnotatedElement;
 import org.hibernate.annotations.common.reflection.XClass;
 
@@ -57,11 +56,6 @@ public class InheritanceState {
 	private InheritanceType type;
 	private boolean isEmbeddableSuperclass = false;
 
-	/**
-	 * only defined on embedded superclasses
-	 */
-	private AccessType accessType = AccessType.DEFAULT;
-
 	private void extractInheritanceType() {
 		XAnnotatedElement element = getClazz();
 		Inheritance inhAnn = element.getAnnotation( Inheritance.class );
@@ -84,8 +78,7 @@ public class InheritanceState {
 	}
 
 	public static InheritanceState getInheritanceStateOfSuperEntity(
-			XClass clazz, Map<XClass, InheritanceState> states,
-			ReflectionManager reflectionManager
+			XClass clazz, Map<XClass, InheritanceState> states
 	) {
 		XClass superclass = clazz;
 		do {
@@ -95,14 +88,11 @@ public class InheritanceState {
 				return currentState;
 			}
 		}
-		while ( superclass != null && !reflectionManager.equals( superclass, Object.class ) );
+		while ( superclass != null && !Object.class.getName().equals( superclass.getName() ) );
 		return null;
 	}
 
-	public static InheritanceState getSuperclassInheritanceState(
-			XClass clazz, Map<XClass, InheritanceState> states,
-			ReflectionManager reflectionManager
-	) {
+	public static InheritanceState getSuperclassInheritanceState( XClass clazz, Map<XClass, InheritanceState> states) {
 		XClass superclass = clazz;
 		do {
 			superclass = superclass.getSuperclass();
@@ -111,7 +101,7 @@ public class InheritanceState {
 				return currentState;
 			}
 		}
-		while ( superclass != null && !reflectionManager.equals( superclass, Object.class ) );
+		while ( superclass != null && !Object.class.getName().equals( superclass.getName() ) );
 		return null;
 	}
 
@@ -153,13 +143,5 @@ public class InheritanceState {
 
 	public void setEmbeddableSuperclass(boolean embeddableSuperclass) {
 		isEmbeddableSuperclass = embeddableSuperclass;
-	}
-
-	public AccessType getAccessType() {
-		return accessType;
-	}
-
-	public void setAccessType(AccessType type) {
-		this.accessType = type;
 	}
 }

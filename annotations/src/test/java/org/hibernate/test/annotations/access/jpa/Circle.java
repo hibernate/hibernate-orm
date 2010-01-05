@@ -1,4 +1,4 @@
-//$Id: AccessTest.java 15025 2008-08-11 09:14:39Z hardy.ferentschik $
+//$Id: Being.java 18260 2009-12-17 21:14:07Z hardy.ferentschik $
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
@@ -24,49 +24,26 @@
  */
 package org.hibernate.test.annotations.access.jpa;
 
-import java.util.List;
-import javax.persistence.CascadeType;
+import javax.persistence.Access;
+import javax.persistence.AccessType;
+import javax.persistence.Embedded;
 import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.OneToMany;
 
 
 /**
  * @author Hardy Ferentschik
  */
 @Entity
-public class CourseFieldAccess {
-	@Id
-	@GeneratedValue
-	private long id;
+@Access(AccessType.FIELD)
+public class Circle extends Shape {
+	@Embedded
+	private Color color;
 
-	private String title;
-
-	@OneToMany(cascade = CascadeType.ALL)
-	private List<Student> students;
-
-	public long getId() {
-		return id;
+	public Color getColor() {
+		return color;
 	}
 
-	public void setId(long id) {
-		this.id = id;
-	}
-
-	public List<Student> getStudents() {
-		return students;
-	}
-
-	public void setStudents(List<Student> students) {
-		this.students = students;
-	}
-
-	public String getTitle() {
-		return title;
-	}
-
-	public void setTitle(String title) {
-		this.title = title;
+	public void setColor(Color color) {
+		this.color = color;
 	}
 }

@@ -1,4 +1,4 @@
-//$Id: AccessTest.java 15025 2008-08-11 09:14:39Z hardy.ferentschik $
+//$Id: Being.java 18260 2009-12-17 21:14:07Z hardy.ferentschik $
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
@@ -24,27 +24,22 @@
  */
 package org.hibernate.test.annotations.access.jpa;
 
-import java.util.List;
-import javax.persistence.CascadeType;
+import javax.persistence.Access;
+import javax.persistence.AccessType;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
-import javax.persistence.OneToMany;
 
 
 /**
  * @author Hardy Ferentschik
  */
 @Entity
-public class Course {
-	@Id
-	@GeneratedValue
+public class Shape {
 	private long id;
 
-	private String title;
-
-	private List<Student> students;
-
+	@Id
+	@GeneratedValue
 	public long getId() {
 		return id;
 	}
@@ -52,23 +47,4 @@ public class Course {
 	public void setId(long id) {
 		this.id = id;
 	}
-
-	@OneToMany(cascade = CascadeType.ALL)
-	public List<Student> getStudents() {
-		return students;
-	}
-
-	public void setStudents(List<Student> students) {
-		this.students = students;
-	}
-
-	public String getTitle() {
-		return title;
-	}
-
-	public void setTitle(String title) {
-		this.title = title;
-	}
 }
-
-

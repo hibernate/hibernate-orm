@@ -43,7 +43,7 @@ public class AccessMappingTest extends TestCase {
 
 	public void testInconsistentAnnotationPlacement() throws Exception {
 		AnnotationConfiguration cfg = new AnnotationConfiguration();
-		cfg.addAnnotatedClass( Course.class );
+		cfg.addAnnotatedClass( Course1.class );
 		cfg.addAnnotatedClass( Student.class );
 		try {
 			cfg.buildSessionFactory();
@@ -56,7 +56,7 @@ public class AccessMappingTest extends TestCase {
 
 	public void testFieldAnnotationPlacement() throws Exception {
 		AnnotationConfiguration cfg = new AnnotationConfiguration();
-		Class<?> classUnderTest = CourseFieldAccess.class;
+		Class<?> classUnderTest = Course6.class;
 		cfg.addAnnotatedClass( classUnderTest );
 		cfg.addAnnotatedClass( Student.class );
 		SessionFactoryImplementor factory = ( SessionFactoryImplementor ) cfg.buildSessionFactory();
@@ -71,7 +71,7 @@ public class AccessMappingTest extends TestCase {
 
 	public void testPropertyAnnotationPlacement() throws Exception {
 		AnnotationConfiguration cfg = new AnnotationConfiguration();
-		Class<?> classUnderTest = CoursePropertyAccess.class;
+		Class<?> classUnderTest = Course7.class;
 		cfg.addAnnotatedClass( classUnderTest );
 		cfg.addAnnotatedClass( Student.class );
 		SessionFactoryImplementor factory = ( SessionFactoryImplementor ) cfg.buildSessionFactory();
@@ -86,7 +86,7 @@ public class AccessMappingTest extends TestCase {
 
 	public void testExplicitPropertyAccessAnnotationsOnProperty() throws Exception {
 		AnnotationConfiguration cfg = new AnnotationConfiguration();
-		Class<?> classUnderTest = CourseExplicitPropertyAccess.class;
+		Class<?> classUnderTest = Course2.class;
 		cfg.addAnnotatedClass( classUnderTest );
 		cfg.addAnnotatedClass( Student.class );
 		SessionFactoryImplementor factory = ( SessionFactoryImplementor ) cfg.buildSessionFactory();
@@ -101,7 +101,7 @@ public class AccessMappingTest extends TestCase {
 
 	public void testExplicitPropertyAccessAnnotationsOnField() throws Exception {
 		AnnotationConfiguration cfg = new AnnotationConfiguration();
-		cfg.addAnnotatedClass( CourseExplicitPropertyAccess3.class );
+		cfg.addAnnotatedClass( Course4.class );
 		cfg.addAnnotatedClass( Student.class );
 		try {
 			cfg.buildSessionFactory();
@@ -114,7 +114,7 @@ public class AccessMappingTest extends TestCase {
 
 	public void testExplicitPropertyAccessAnnotationsWithHibernateStyleOverride() throws Exception {
 		AnnotationConfiguration cfg = new AnnotationConfiguration();
-		Class<?> classUnderTest = CourseExplicitPropertyAccess2.class;
+		Class<?> classUnderTest = Course3.class;
 		cfg.addAnnotatedClass( classUnderTest );
 		cfg.addAnnotatedClass( Student.class );
 		SessionFactoryImplementor factory = ( SessionFactoryImplementor ) cfg.buildSessionFactory();
@@ -134,7 +134,7 @@ public class AccessMappingTest extends TestCase {
 
 	public void testExplicitPropertyAccessAnnotationsWithJpaStyleOverride() throws Exception {
 		AnnotationConfiguration cfg = new AnnotationConfiguration();
-		Class<?> classUnderTest = CourseExplicitPropertyAccess4.class;
+		Class<?> classUnderTest = Course5.class;
 		cfg.addAnnotatedClass( classUnderTest );
 		cfg.addAnnotatedClass( Student.class );
 		SessionFactoryImplementor factory = ( SessionFactoryImplementor ) cfg.buildSessionFactory();
@@ -148,6 +148,45 @@ public class AccessMappingTest extends TestCase {
 
 		assertTrue(
 				"Property access should be used.",
+				tuplizer.getGetter( 0 ) instanceof BasicPropertyAccessor.BasicGetter
+		);
+	}
+
+	public void testDefaultFieldAccessIsInherited() throws Exception {
+		AnnotationConfiguration cfg = new AnnotationConfiguration();
+		Class<?> classUnderTest = User.class;
+		cfg.addAnnotatedClass( classUnderTest );
+		cfg.addAnnotatedClass( Person.class );
+		cfg.addAnnotatedClass( Being.class );
+		SessionFactoryImplementor factory = ( SessionFactoryImplementor ) cfg.buildSessionFactory();
+		EntityMetamodel metaModel = factory.getEntityPersister( classUnderTest.getName() )
+				.getEntityMetamodel();
+		PojoEntityTuplizer tuplizer = ( PojoEntityTuplizer ) metaModel.getTuplizer( EntityMode.POJO );
+		assertTrue(
+				"Field access should be used since the default access mode gets inherited",
+				tuplizer.getIdentifierGetter() instanceof DirectPropertyAccessor.DirectGetter
+		);
+	}
+
+	public void testDefaultPropertyAccessIsInherited() throws Exception {
+		AnnotationConfiguration cfg = new AnnotationConfiguration();
+		cfg.addAnnotatedClass( Horse.class );
+		cfg.addAnnotatedClass( Animal.class );
+
+		SessionFactoryImplementor factory = ( SessionFactoryImplementor ) cfg.buildSessionFactory();
+		EntityMetamodel metaModel = factory.getEntityPersister( Animal.class.getName() )
+				.getEntityMetamodel();
+		PojoEntityTuplizer tuplizer = ( PojoEntityTuplizer ) metaModel.getTuplizer( EntityMode.POJO );
+		assertTrue(
+				"Property access should be used since explicity configured via @Access",
+				tuplizer.getIdentifierGetter() instanceof BasicPropertyAccessor.BasicGetter
+		);
+
+		metaModel = factory.getEntityPersister( Horse.class.getName() )
+				.getEntityMetamodel();
+		tuplizer = ( PojoEntityTuplizer ) metaModel.getTuplizer( EntityMode.POJO );
+		assertTrue(
+				"Property access should be used since the default access mode gets inherited",
 				tuplizer.getGetter( 0 ) instanceof BasicPropertyAccessor.BasicGetter
 		);
 	}

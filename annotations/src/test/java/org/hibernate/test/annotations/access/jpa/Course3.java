@@ -39,7 +39,7 @@ import javax.persistence.OneToMany;
  */
 @Entity
 @Access(AccessType.PROPERTY)
-public class CourseExplicitPropertyAccess2 {
+public class Course3 {
 	private long id;
 
 	private String title;

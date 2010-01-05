@@ -1,4 +1,4 @@
-//$Id: AccessTest.java 15025 2008-08-11 09:14:39Z hardy.ferentschik $
+//$Id$
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
@@ -24,54 +24,30 @@
  */
 package org.hibernate.test.annotations.access.jpa;
 
-import java.util.List;
 import javax.persistence.Access;
 import javax.persistence.AccessType;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
-import javax.persistence.ManyToMany;
 
 
 /**
  * @author Hardy Ferentschik
  */
 @Entity
-@Access(AccessType.PROPERTY)
-public class CourseExplicitPropertyAccess4 {
+@Access(AccessType.FIELD)
+public class Animal {
 
-	@Access(AccessType.FIELD)
-	@Id
-	@GeneratedValue
 	private long id;
 
-	private String title;
-
-	private List<Student> students;
-
-
+	@Access( AccessType.PROPERTY)
+	@Id
+	@GeneratedValue
 	public long getId() {
 		return id;
 	}
 
 	public void setId(long id) {
 		this.id = id;
-	}
-
-	@ManyToMany
-	public List<Student> getStudents() {
-		return students;
-	}
-
-	public void setStudents(List<Student> students) {
-		this.students = students;
-	}
-
-	public String getTitle() {
-		return title;
-	}
-
-	public void setTitle(String title) {
-		this.title = title;
 	}
 }

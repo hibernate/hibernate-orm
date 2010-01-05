@@ -39,15 +39,16 @@ import javax.persistence.OneToMany;
  */
 @Entity
 @Access(AccessType.PROPERTY)
-public class CourseExplicitPropertyAccess {
+public class Course4 {
+	@Id
+	@GeneratedValue
 	private long id;
 
 	private String title;
 
+	@OneToMany(cascade = CascadeType.ALL)
 	private List<Student> students;
 
-	@Id
-	@GeneratedValue
 	public long getId() {
 		return id;
 	}
@@ -56,7 +57,6 @@ public class CourseExplicitPropertyAccess {
 		this.id = id;
 	}
 
-	@OneToMany(cascade = CascadeType.ALL)
 	public List<Student> getStudents() {
 		return students;
 	}

@@ -54,10 +54,10 @@ public class AccessTest extends TestCase {
 		tx.commit();
 		s.clear();
 		tx = s.beginTransaction();
-		john = (User) s.get( User.class, john.getId() );
-		assertEquals("Wrong number of friends", 1, john.getFriends().size() );
+		john = ( User ) s.get( User.class, john.getId() );
+		assertEquals( "Wrong number of friends", 1, john.getFriends().size() );
 		assertNull( john.firstname );
-		
+
 		s.delete( john );
 		tx.commit();
 		s.close();
@@ -74,7 +74,7 @@ public class AccessTest extends TestCase {
 		tx.commit();
 		s.clear();
 		tx = s.beginTransaction();
-		fur = (Furniture) s.get( Furniture.class, fur.getId() );
+		fur = ( Furniture ) s.get( Furniture.class, fur.getId() );
 		assertFalse( fur.isAlive );
 		assertNotNull( fur.getColor() );
 		s.delete( fur );
@@ -91,7 +91,7 @@ public class AccessTest extends TestCase {
 		tx.commit();
 		s.clear();
 		tx = s.beginTransaction();
-		fur = (Furniture) s.get( Furniture.class, fur.getId() );
+		fur = ( Furniture ) s.get( Furniture.class, fur.getId() );
 		assertNotNull( fur.getGod() );
 		s.delete( fur );
 		tx.commit();
@@ -107,7 +107,7 @@ public class AccessTest extends TestCase {
 		tx.commit();
 		s.clear();
 		tx = s.beginTransaction();
-		fur = (Furniture) s.get( Furniture.class, fur.getId() );
+		fur = ( Furniture ) s.get( Furniture.class, fur.getId() );
 		assertEquals( 5, fur.weight );
 		s.delete( fur );
 		tx.commit();
@@ -124,7 +124,7 @@ public class AccessTest extends TestCase {
 		tx.commit();
 		s.clear();
 		tx = s.beginTransaction();
-		chair = (Chair) s.get( Chair.class, chair.getId() );
+		chair = ( Chair ) s.get( Chair.class, chair.getId() );
 		assertNull( chair.getPillow() );
 		s.delete( chair );
 		tx.commit();
@@ -142,7 +142,7 @@ public class AccessTest extends TestCase {
 		tx.commit();
 		s.clear();
 		tx = s.beginTransaction();
-		bed = (BigBed) s.get( BigBed.class, bed.getId() );
+		bed = ( BigBed ) s.get( BigBed.class, bed.getId() );
 		assertEquals( 5, bed.size );
 		assertNull( bed.getQuality() );
 		s.delete( bed );
@@ -160,13 +160,36 @@ public class AccessTest extends TestCase {
 		tx.commit();
 		s.clear();
 		tx = s.beginTransaction();
-		gs = (Gardenshed) s.get( Gardenshed.class, gs.getId() );
+		gs = ( Gardenshed ) s.get( Gardenshed.class, gs.getId() );
 		assertEquals( 4, gs.floors );
 		assertEquals( 6, gs.getFloors() );
 		s.delete( gs );
 		tx.commit();
 		s.close();
 
+	}
+
+	public void testEmbeddableUsesAccessStrategyOfContainingClass() throws Exception {
+		Circle circle = new Circle();
+		Color color = new Color( 5, 10, 15 );
+		circle.setColor( color );
+		Session s = openSession();
+		s.persist( circle );
+		Transaction tx = s.beginTransaction();
+		tx.commit();
+		s.clear();
+		tx = s.beginTransaction();
+		circle = ( Circle ) s.get( Circle.class, circle.getId() );
+		assertEquals( 5, circle.getColor().r );
+		try {
+			circle.getColor().getR();
+			fail();
+		} catch (RuntimeException e) {
+			// success		
+		}
+		s.delete( circle );
+		tx.commit();
+		s.close();
 	}
 
 	protected Class[] getMappings() {
@@ -178,7 +201,10 @@ public class AccessTest extends TestCase {
 				Gardenshed.class,
 				Closet.class,
 				Person.class,
-				User.class
+				User.class,
+				Shape.class,
+				Circle.class,
+				Color.class
 		};
 	}
 }

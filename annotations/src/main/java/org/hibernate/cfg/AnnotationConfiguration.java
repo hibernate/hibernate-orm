@@ -611,7 +611,7 @@ public class AnnotationConfiguration extends Configuration {
 			//bind classes in the correct order calculating some inheritance state
 			List<XClass> orderedClasses = orderAndFillHierarchy( annotatedClasses );
 			Map<XClass, InheritanceState> inheritanceStatePerClass = AnnotationBinder.buildInheritanceStates(
-					orderedClasses, reflectionManager
+					orderedClasses
 			);
 			ExtendedMappings mappings = createExtendedMappings();
 

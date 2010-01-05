@@ -27,6 +27,9 @@ package org.hibernate.test.annotations.entity;
 import java.math.BigDecimal;
 import java.util.Currency;
 import java.util.Date;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.Hibernate;
@@ -469,6 +472,17 @@ public class BasicHibernateAnnotationsTest extends TestCase {
 		Country country = new Country();
 		country.setName( "Middle Earth" );
 		forest.setCountry( country );
+		Set<Country> near = new HashSet<Country>();
+		country = new Country();
+		country.setName("Mordor");
+		near.add(country);
+		country = new Country();
+		country.setName("Gondor");
+		near.add(country);
+		country = new Country();
+		country.setName("Eriador");
+		near.add(country);
+		forest.setNear(near);
 		Session s;
 		Transaction tx;
 		s = openSession();
@@ -481,8 +495,17 @@ public class BasicHibernateAnnotationsTest extends TestCase {
 		tx = s.beginTransaction();
 		forest = (Forest) s.get( Forest.class, forest.getId() );
 		assertNotNull( forest );
-		assertNotNull( forest.getCountry() );
+		country = forest.getCountry();
+		assertNotNull( country );
 		assertEquals( country.getName(), forest.getCountry().getName() );
+		near = forest.getNear();
+		assertTrue("correct number of nearby countries", near.size() == 3);
+		for (Iterator iter = near.iterator(); iter.hasNext();) {
+			country = (Country)iter.next();
+			String name = country.getName();
+			assertTrue("found expected nearby country " + name,
+				(name.equals("Mordor") || name.equals("Gondor") || name.equals("Eriador")));
+		}
 		tx.commit();
 		s.close();
 	}

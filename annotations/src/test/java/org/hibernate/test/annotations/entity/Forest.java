@@ -1,6 +1,7 @@
 //$Id$
 package org.hibernate.test.annotations.entity;
 
+import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
@@ -18,6 +19,8 @@ import org.hibernate.annotations.Parameter;
 import org.hibernate.annotations.PolymorphismType;
 import org.hibernate.annotations.Type;
 import org.hibernate.annotations.Where;
+
+import java.util.Set;
 
 /**
  * Use hibernate specific annotations
@@ -47,6 +50,7 @@ public class Forest {
 	private String smallText;
 	private String bigText;
 	private Country country;
+	private Set near;
 	
 	@OptimisticLock(excluded=true) 
 	@Type(type = "text")
@@ -110,4 +114,15 @@ public class Forest {
 	public void setCountry(Country country) {
 		this.country = country;
 	}
+
+	@Lob
+	@ElementCollection
+	public Set<Country> getNear() {
+		return near;
+	}
+
+	public void setNear(Set<Country>near) {
+		this.near = near;
+	}
+	
 }

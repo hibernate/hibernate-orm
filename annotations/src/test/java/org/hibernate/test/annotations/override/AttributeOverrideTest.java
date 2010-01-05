@@ -3,6 +3,7 @@ package org.hibernate.test.annotations.override;
 import java.util.Iterator;
 
 import org.hibernate.test.annotations.TestCase;
+import org.hibernate.test.util.SchemaUtil;
 import org.hibernate.metadata.CollectionMetadata;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
@@ -34,20 +35,7 @@ public class AttributeOverrideTest extends TestCase  {
 	}
 
 	public boolean isColumnPresent(String tableName, String columnName) {
-		final Iterator<Table> tables = ( Iterator<Table> ) getCfg().getTableMappings();
-		while (tables.hasNext()) {
-			Table table = tables.next();
-			if (tableName.equals( table.getName() ) ) {
-				Iterator<Column> columns = (Iterator<Column>) table.getColumnIterator();
-				while ( columns.hasNext() ) {
-					Column column = columns.next();
-					if ( columnName.equals( column.getName() ) ) {
-						return true;
-					}
-				}
-			}
-		}
-		return false;
+		return SchemaUtil.isColumnPresent( tableName, columnName, getCfg() );
 	}
 
 	protected Class<?>[] getMappings() {

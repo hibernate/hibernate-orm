@@ -144,7 +144,9 @@ public class TableBinder {
 		final String unquotedAssocTable = StringHelper.unquote( associatedEntityTable );
 
 		//@ElementCollection use ownerEntity_property instead of the cleaner ownerTableName_property
-		final String ownerObjectName = isJPA2ElementCollection ? StringHelper.unqualify( ownerEntity ) : unquotedOwnerTable;
+		// ownerEntity can be null when the table name is explicitly set
+		final String ownerObjectName = isJPA2ElementCollection && ownerEntity != null ?
+				StringHelper.unqualify( ownerEntity ) : unquotedOwnerTable;
 		final ObjectNameSource nameSource = buildNameContext( 
 				ownerObjectName,
 				unquotedAssocTable );

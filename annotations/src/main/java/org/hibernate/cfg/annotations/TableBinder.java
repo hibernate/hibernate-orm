@@ -77,6 +77,7 @@ public class TableBinder {
 	private String propertyName;
 	private String ownerEntity;
 	private String associatedEntity;
+	private boolean isJPA2ElementCollection;
 
 	public void setSchema(String schema) {
 		this.schema = schema;
@@ -114,6 +115,10 @@ public class TableBinder {
 		this.mappings = mappings;
 	}
 
+	public void setJPA2ElementCollection(boolean isJPA2ElementCollection) {
+		this.isJPA2ElementCollection = isJPA2ElementCollection;
+	}
+
 	private static class AssociationTableNameSource implements ObjectNameSource {
 		private final String explicitName;
 		private final String logicalName;
@@ -138,15 +143,20 @@ public class TableBinder {
 		final String unquotedOwnerTable = StringHelper.unquote( ownerEntityTable );
 		final String unquotedAssocTable = StringHelper.unquote( associatedEntityTable );
 
-		final ObjectNameSource nameSource = buildNameContext( unquotedOwnerTable, unquotedAssocTable );
+		//@ElementCollection use ownerEntity_property instead of the cleaner ownerTableName_property
+		final String ownerObjectName = isJPA2ElementCollection ? StringHelper.unqualify( ownerEntity ) : unquotedOwnerTable;
+		final ObjectNameSource nameSource = buildNameContext( 
+				ownerObjectName,
+				unquotedAssocTable );
 
 		final boolean ownerEntityTableQuoted = StringHelper.isQuoted( ownerEntityTable );
 		final boolean associatedEntityTableQuoted = StringHelper.isQuoted( associatedEntityTable );
 		final ObjectNameNormalizer.NamingStrategyHelper namingStrategyHelper = new ObjectNameNormalizer.NamingStrategyHelper() {
 			public String determineImplicitName(NamingStrategy strategy) {
+
 				final String strategyResult = strategy.collectionTableName(
 						ownerEntity,
-						unquotedOwnerTable,
+						ownerObjectName,
 						associatedEntity,
 						unquotedAssocTable,
 						propertyName

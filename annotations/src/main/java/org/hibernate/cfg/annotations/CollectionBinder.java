@@ -1225,6 +1225,7 @@ public abstract class CollectionBinder {
 						joinColumns[0].getPropertyName()
 				);
 			}
+			associationTableBinder.setJPA2ElementCollection( !isCollectionOfEntities && property.isAnnotationPresent( ElementCollection.class ));
 			collValue.setCollectionTable( associationTableBinder.bind() );
 		}
 		bindFilters( isCollectionOfEntities );

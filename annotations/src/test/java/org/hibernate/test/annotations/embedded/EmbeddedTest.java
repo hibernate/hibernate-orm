@@ -11,6 +11,7 @@ import org.hibernate.Transaction;
 import org.hibernate.test.annotations.TestCase;
 import org.hibernate.test.annotations.embedded.FloatLeg.RateIndex;
 import org.hibernate.test.annotations.embedded.Leg.Frequency;
+import org.hibernate.test.util.SchemaUtil;
 
 /**
  * @author Emmanuel Bernard
@@ -365,8 +366,13 @@ public class EmbeddedTest extends TestCase {
 		s.close();
 	}
 
-	// quick test based on testSimple
-	public void testCollectionTable() throws Exception {
+	public void testDefaultCollectionTable() throws Exception {
+		//are the tables correct?
+		assertTrue( SchemaUtil.isTablePresent("WealthyPerson_vacationHomes", getCfg() ) );
+		assertTrue( SchemaUtil.isTablePresent("PersonEmbed_legacyVacationHomes", getCfg() ) );
+		assertTrue( SchemaUtil.isTablePresent("WelPers_VacHomes", getCfg() ) );
+
+		//just to make sure, use the mapping
 		Session s;
 		Transaction tx;
 		WealthyPerson p = new WealthyPerson();

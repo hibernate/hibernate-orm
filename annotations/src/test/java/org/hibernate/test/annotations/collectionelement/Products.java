@@ -1,4 +1,4 @@
-package org.hibernate.ejb.test.ops;
+package org.hibernate.test.annotations.collectionelement;
 
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;

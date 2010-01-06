@@ -42,7 +42,6 @@ public class AddressBook {
 
 	@MapKey
 	@OneToMany(mappedBy = "book", cascade = {CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REMOVE})
-	@JoinTable(name="AddRegEntry")
 	public Map<AddressEntryPk, AddressEntry> getEntries() {
 		return entries;
 	}
@@ -63,7 +62,6 @@ public class AddressBook {
 
 	@MapKey(name = "directory")
 	@OneToMany(mappedBy = "book")
-	@JoinTable(name="Dir_Entry")
 	public Map<AlphabeticalDirectory, AddressEntry> getDirectoryEntries() {
 		return directoryEntries;
 	}

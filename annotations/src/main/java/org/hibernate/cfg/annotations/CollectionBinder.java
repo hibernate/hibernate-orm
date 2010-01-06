@@ -35,6 +35,7 @@ import javax.persistence.AttributeOverrides;
 import javax.persistence.ElementCollection;
 import javax.persistence.Embeddable;
 import javax.persistence.FetchType;
+import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
 import javax.persistence.MapKey;
@@ -464,6 +465,15 @@ public abstract class CollectionBinder {
 
 		//work on association
 		boolean isMappedBy = !BinderHelper.isDefault( mappedBy );
+
+		if (isMappedBy
+				&& (property.isAnnotationPresent( JoinColumn.class )
+					|| property.isAnnotationPresent( JoinTable.class ) ) ) {
+			String message = "Associations marked as mappedBy must not define database mappings like @JoinTable or @JoinColumn: ";
+			message += StringHelper.qualify( propertyHolder.getPath(), propertyName );
+			throw new AnnotationException( message );
+		}
+
 		collection.setInverse( isMappedBy );
 
 		//many to many may need some second pass informations
@@ -487,7 +497,7 @@ public abstract class CollectionBinder {
 				|| property.isAnnotationPresent( CollectionOfElements.class ) //legacy hibernate
 				|| property.isAnnotationPresent( ElementCollection.class ) //JPA 2
 				) {
-			// do it right away, otherwise @ManyToon on composite element call addSecondPass 
+			// do it right away, otherwise @ManyToOne on composite element call addSecondPass
 			// and raise a ConcurrentModificationException
 			//sp.doSecondPass( CollectionHelper.EMPTY_MAP );
 			mappings.addSecondPass( sp, !isMappedBy );

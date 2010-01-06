@@ -1243,7 +1243,8 @@ public abstract class CollectionBinder {
 			element.setFetchMode( FetchMode.JOIN );
 			element.setLazy( false );
 			element.setIgnoreNotFound( ignoreNotFound );
-			if ( StringHelper.isNotEmpty( hqlOrderBy ) ) {
+			// as per 11.1.38 of JPA-2 spec, default to primary key if no column is specified by @OrderBy. 
+			if ( hqlOrderBy != null ) {
 				collValue.setManyToManyOrdering(
 						buildOrderByClauseFromHql( hqlOrderBy, collectionEntity, collValue.getRole() )
 				);

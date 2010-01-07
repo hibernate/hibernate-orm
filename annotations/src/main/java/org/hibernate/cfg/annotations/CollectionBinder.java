@@ -1031,7 +1031,7 @@ public abstract class CollectionBinder {
 				int index = 0;
 
 				for (String property : properties) {
-					Property p = component.getProperty( property );
+					Property p = BinderHelper.findPropertyByName( component, property );
 					if ( p == null ) {
 						throw new AnnotationException(
 								"property from @OrderBy clause not found: "

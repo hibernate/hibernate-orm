@@ -81,7 +81,7 @@ public class AuditedPropertiesReader {
 
 	private void addPropertiesFromClass(XClass clazz)  {
 		XClass superclazz = clazz.getSuperclass();
-		if (!"java.lang.Object".equals(superclazz.getName())) {
+		if (!clazz.isInterface() && !"java.lang.Object".equals(superclazz.getName())) {
 			addPropertiesFromClass(superclazz);
 		}
 

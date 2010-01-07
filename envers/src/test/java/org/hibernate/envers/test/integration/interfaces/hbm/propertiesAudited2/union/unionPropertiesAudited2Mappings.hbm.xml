@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="WINDOWS-1251"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD//EN" "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<hibernate-mapping>
+
+	<class
+		name="org.hibernate.envers.test.integration.interfaces.hbm.propertiesAudited2.SimpleInterface"
+		abstract="true" >
+
+		<id name="id" column="ID" type="long">
+			<generator class="increment" />
+		</id>
+
+		<property name="data" column="DATA" />
+
+	</class>
+
+	<union-subclass
+		name="org.hibernate.envers.test.integration.interfaces.hbm.propertiesAudited2.AuditedImplementor"
+		extends="org.hibernate.envers.test.integration.interfaces.hbm.propertiesAudited2.SimpleInterface"
+		table="AUDITED_IMPLEMENTOR" >
+
+		<property name="auditedImplementorData" column="IMPLEMENTOR_DATA" />
+
+		<property name="numerito" column="NUMERITO" />
+
+	</union-subclass>
+	
+	<union-subclass
+		name="org.hibernate.envers.test.integration.interfaces.hbm.propertiesAudited2.NonAuditedImplementor"
+		extends="org.hibernate.envers.test.integration.interfaces.hbm.propertiesAudited2.SimpleInterface"
+		table="NON_AUDITED_IMPLEMENTOR" >
+
+		<property name="nonAuditedImplementorData" column="NON_IMPLEMENTOR_DATA" />
+
+		<property name="numerito" column="NUMERITO" />
+
+	</union-subclass>	
+
+</hibernate-mapping>

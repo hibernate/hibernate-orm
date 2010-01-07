@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="WINDOWS-1251"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD//EN" "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<hibernate-mapping>
+
+	<class
+		name="org.hibernate.envers.test.integration.interfaces.hbm.propertiesAudited2.SimpleInterface"
+		table="SIMPLES_interface" discriminator-value="SIMPLE_INTERFACE">
+
+		<id name="id" column="ID" type="long">
+			<generator class="native" />
+		</id>
+
+		<discriminator column="DISCRIMINATOR" />
+
+		<property name="data" column="DATA" />
+
+	</class>
+
+	<subclass
+		name="org.hibernate.envers.test.integration.interfaces.hbm.propertiesAudited2.AuditedImplementor"
+		extends="org.hibernate.envers.test.integration.interfaces.hbm.propertiesAudited2.SimpleInterface"
+		discriminator-value="AUDITED_IMPLEMENTOR" >
+
+		<property name="auditedImplementorData" column="IMPLEMENTOR_DATA" />
+
+		<property name="numerito" column="NUMERITO" />
+
+	</subclass>
+	
+	<subclass
+		name="org.hibernate.envers.test.integration.interfaces.hbm.propertiesAudited2.NonAuditedImplementor"
+		extends="org.hibernate.envers.test.integration.interfaces.hbm.propertiesAudited2.SimpleInterface"
+		discriminator-value="NON_AUDITED_IMPLEMENTOR" >
+
+		<property name="nonAuditedImplementorData" column="NON_IMPLEMENTOR_DATA" />
+
+		<property name="numerito" column="NUMERITO" />
+
+	</subclass>	
+
+</hibernate-mapping>

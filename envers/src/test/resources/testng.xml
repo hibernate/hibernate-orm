@@ -31,6 +31,15 @@
             <package name="org.hibernate.envers.test.integration.inheritance.tableperclass.relation" />
             <package name="org.hibernate.envers.test.integration.interfaces.components" />
             <package name="org.hibernate.envers.test.integration.interfaces.relation" />
+            <package name="org.hibernate.envers.test.integration.interfaces.hbm.allAudited.subclass" />
+            <package name="org.hibernate.envers.test.integration.interfaces.hbm.allAudited.joined" />
+            <package name="org.hibernate.envers.test.integration.interfaces.hbm.allAudited.union" />
+            <package name="org.hibernate.envers.test.integration.interfaces.hbm.propertiesAudited.subclass" />
+            <package name="org.hibernate.envers.test.integration.interfaces.hbm.propertiesAudited.joined" />
+            <package name="org.hibernate.envers.test.integration.interfaces.hbm.propertiesAudited.union" />
+            <package name="org.hibernate.envers.test.integration.interfaces.hbm.propertiesAudited2.subclass" />
+            <package name="org.hibernate.envers.test.integration.interfaces.hbm.propertiesAudited2.joined" />
+            <package name="org.hibernate.envers.test.integration.interfaces.hbm.propertiesAudited2.union" />
             <package name="org.hibernate.envers.test.integration.manytomany" />
             <package name="org.hibernate.envers.test.integration.manytomany.biowned" />
             <package name="org.hibernate.envers.test.integration.manytomany.sametable" />

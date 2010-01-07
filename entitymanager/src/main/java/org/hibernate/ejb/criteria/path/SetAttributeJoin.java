@@ -72,7 +72,7 @@ public class SetAttributeJoin<O,E>
 	@Override
 	protected FromImplementor<O, E> createCorrelationDelegate() {
 		return new SetAttributeJoin<O,E>(
-				queryBuilder(),
+				criteriaBuilder(),
 				getJavaType(),
 				(PathImplementor<O>) getParentPath(),
 				getAttribute(),

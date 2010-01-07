@@ -60,7 +60,7 @@ public class ListAttributeJoin<O,E>
 	 * {@inheritDoc}
 	 */
 	public Expression<Integer> index() {
-		return new ListIndexExpression( queryBuilder(), this, getAttribute() );
+		return new ListIndexExpression( criteriaBuilder(), this, getAttribute() );
 	}
 
 	@Override
@@ -81,7 +81,7 @@ public class ListAttributeJoin<O,E>
 	@Override
 	protected FromImplementor<O, E> createCorrelationDelegate() {
 		return new ListAttributeJoin<O,E>(
-				queryBuilder(),
+				criteriaBuilder(),
 				getJavaType(),
 				(PathImplementor<O>) getParentPath(),
 				getAttribute(),

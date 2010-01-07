@@ -167,7 +167,7 @@ public class CriteriaSubqueryImpl<T> extends ExpressionImpl<T> implements Subque
 	 * {@inheritDoc}
 	 */
 	public Subquery<T> where(Expression<Boolean> expression) {
-		queryStructure.setRestriction( queryBuilder().wrap( expression ) );
+		queryStructure.setRestriction( criteriaBuilder().wrap( expression ) );
 		return this;
 	}
 
@@ -176,7 +176,7 @@ public class CriteriaSubqueryImpl<T> extends ExpressionImpl<T> implements Subque
 	 */
 	public Subquery<T> where(Predicate... predicates) {
 		// TODO : assuming this should be a conjuntion, but the spec does not say specifically...
-		queryStructure.setRestriction( queryBuilder().and( predicates ) );
+		queryStructure.setRestriction( criteriaBuilder().and( predicates ) );
 		return this;
 	}
 
@@ -218,7 +218,7 @@ public class CriteriaSubqueryImpl<T> extends ExpressionImpl<T> implements Subque
 	 * {@inheritDoc}
 	 */
 	public Subquery<T> having(Expression<Boolean> expression) {
-		queryStructure.setHaving( queryBuilder().wrap( expression ) );
+		queryStructure.setHaving( criteriaBuilder().wrap( expression ) );
 		return this;
 	}
 
@@ -226,7 +226,7 @@ public class CriteriaSubqueryImpl<T> extends ExpressionImpl<T> implements Subque
 	 * {@inheritDoc}
 	 */
 	public Subquery<T> having(Predicate... predicates) {
-		queryStructure.setHaving( queryBuilder().and( predicates ) );
+		queryStructure.setHaving( criteriaBuilder().and( predicates ) );
 		return this;
 	}
 

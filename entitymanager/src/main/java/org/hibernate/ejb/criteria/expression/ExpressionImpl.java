@@ -53,49 +53,49 @@ public abstract class ExpressionImpl<T>
 	public <X> Expression<X> as(Class<X> type) {
 		return type.equals( getJavaType() )
 				? (Expression<X>) this
-				: new CastFunction<X, T>( queryBuilder(), type, this );
+				: new CastFunction<X, T>( criteriaBuilder(), type, this );
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
 	public Predicate isNull() {
-		return queryBuilder().isNull( this );
+		return criteriaBuilder().isNull( this );
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
 	public Predicate isNotNull() {
-		return queryBuilder().isNotNull( this );
+		return criteriaBuilder().isNotNull( this );
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
     public Predicate in(Object... values) {
-		return queryBuilder().in( this, values );
+		return criteriaBuilder().in( this, values );
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
 	public Predicate in(Expression<?>... values) {
-		return queryBuilder().in( this, values );
+		return criteriaBuilder().in( this, values );
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
 	public Predicate in(Collection<?> values) {
-		return queryBuilder().in( this, values );
+		return criteriaBuilder().in( this, values );
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
 	public Predicate in(Expression<Collection<?>> values) {
-		return queryBuilder().in( this, values );
+		return criteriaBuilder().in( this, values );
 	}
 
 	/**

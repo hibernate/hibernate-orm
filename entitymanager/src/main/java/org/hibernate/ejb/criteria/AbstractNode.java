@@ -43,7 +43,7 @@ public class AbstractNode implements Serializable {
 	 *
 	 * @return The underlying {@link CriteriaBuilderImpl} instance.
 	 */
-	protected CriteriaBuilderImpl queryBuilder() {
+	protected CriteriaBuilderImpl criteriaBuilder() {
 		return criteriaBuilder;
 	}
 }

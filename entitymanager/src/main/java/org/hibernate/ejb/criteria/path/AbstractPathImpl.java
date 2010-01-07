@@ -69,7 +69,7 @@ public abstract class AbstractPathImpl<X>
 			PathSource pathSource) {
 		super( criteriaBuilder, javaType );
 		this.pathSource = pathSource;
-		this.typeExpression =  new PathTypeExpression( queryBuilder(), getJavaType() );
+		this.typeExpression =  new PathTypeExpression( criteriaBuilder(), getJavaType() );
 	}
 
 	public PathSource getPathSource() {
@@ -137,7 +137,7 @@ public abstract class AbstractPathImpl<X>
 
 		SingularAttributePath<Y> path = (SingularAttributePath<Y>) resolveCachedAttributePath( attribute.getName() );
 		if ( path == null ) {
-			path = new SingularAttributePath<Y>( queryBuilder(), attribute.getJavaType(), this, attribute );
+			path = new SingularAttributePath<Y>( criteriaBuilder(), attribute.getJavaType(), this, attribute );
 			registerAttributePath( attribute.getName(), path );
 		}
 		return path;
@@ -154,7 +154,7 @@ public abstract class AbstractPathImpl<X>
 
 		PluralAttributePath<C> path = (PluralAttributePath<C>) resolveCachedAttributePath( attribute.getName() );
 		if ( path == null ) {
-			path = new PluralAttributePath<C>( queryBuilder(), this, attribute );
+			path = new PluralAttributePath<C>( criteriaBuilder(), this, attribute );
 			registerAttributePath( attribute.getName(), path );
 		}
 		return path;
@@ -171,7 +171,7 @@ public abstract class AbstractPathImpl<X>
 
 		PluralAttributePath path = (PluralAttributePath) resolveCachedAttributePath( attribute.getName() );
 		if ( path == null ) {
-			path = new PluralAttributePath( queryBuilder(), this, attribute );
+			path = new PluralAttributePath( criteriaBuilder(), this, attribute );
 			registerAttributePath( attribute.getName(), path );
 		}
 		return path;

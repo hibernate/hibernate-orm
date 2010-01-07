@@ -86,7 +86,7 @@ public class SearchedCaseExpression<R>
 		final Class<R> type = result != null
 				? (Class<R>) result.getClass()
 				: getJavaType();
-		return new LiteralExpression<R>( queryBuilder(), type, result );
+		return new LiteralExpression<R>( criteriaBuilder(), type, result );
 	}
 
 	public Case<R> when(Expression<Boolean> condition, Expression<? extends R> result) {

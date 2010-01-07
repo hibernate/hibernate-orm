@@ -69,7 +69,7 @@ public class SingularAttributeJoin<Z,X> extends AbstractJoinImpl<Z,X> {
 	@Override
 	protected FromImplementor<Z, X> createCorrelationDelegate() {
 		return new SingularAttributeJoin<Z,X>(
-				queryBuilder(),
+				criteriaBuilder(),
 				getJavaType(),
 				getPathSource(),
 				getAttribute(),

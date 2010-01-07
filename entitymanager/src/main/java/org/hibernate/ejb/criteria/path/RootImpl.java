@@ -57,7 +57,7 @@ public class RootImpl<X> extends AbstractFromImpl<X,X> implements Root<X>, Seria
 
 	@Override
 	protected FromImplementor<X, X> createCorrelationDelegate() {
-		return new RootImpl<X>( queryBuilder(), getEntityType() );
+		return new RootImpl<X>( criteriaBuilder(), getEntityType() );
 	}
 
 	@Override

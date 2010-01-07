@@ -236,7 +236,7 @@ public abstract class AbstractFromImpl<Z,X>
 
 		final Class<Y> attributeType = attribute.getBindableJavaType();
 		return new SingularAttributeJoin<X,Y>(
-				queryBuilder(),
+				criteriaBuilder(),
 				attributeType,
 				this,
 				attribute,
@@ -272,7 +272,7 @@ public abstract class AbstractFromImpl<Z,X>
 
 		final Class<Y> attributeType = collection.getBindableJavaType();
 		return new CollectionAttributeJoin<X, Y>(
-				queryBuilder(),
+				criteriaBuilder(),
 				attributeType,
 				this,
 				collection,
@@ -308,7 +308,7 @@ public abstract class AbstractFromImpl<Z,X>
 		// TODO : runtime check that the attribute in fact belongs to this From's model/bindable
 
 		final Class<Y> attributeType = set.getBindableJavaType();
-		return new SetAttributeJoin<X,Y>( queryBuilder(), attributeType, this, set, jt );
+		return new SetAttributeJoin<X,Y>( criteriaBuilder(), attributeType, this, set, jt );
 	}
 
 	/**
@@ -339,7 +339,7 @@ public abstract class AbstractFromImpl<Z,X>
 		// TODO : runtime check that the attribute in fact belongs to this From's model/bindable
 
 		final Class<Y> attributeType = list.getBindableJavaType();
-		return new ListAttributeJoin<X,Y>( queryBuilder(), attributeType, this, list, jt );
+		return new ListAttributeJoin<X,Y>( criteriaBuilder(), attributeType, this, list, jt );
 	}
 
 	/**
@@ -370,7 +370,7 @@ public abstract class AbstractFromImpl<Z,X>
 		// TODO : runtime check that the attribute in fact belongs to this From's model/bindable
 
 		final Class<V> attributeType = map.getBindableJavaType();
-		return new MapAttributeJoin<X, K, V>( queryBuilder(), attributeType, this, map, jt );
+		return new MapAttributeJoin<X, K, V>( criteriaBuilder(), attributeType, this, map, jt );
 	}
 
 	/**

@@ -124,10 +124,10 @@ public class CriteriaQueryImpl<T> extends AbstractNode implements CriteriaQuery<
 		final Selection<? extends T> selection;
 
 		if ( Tuple.class.isAssignableFrom( getResultType() ) ) {
-			selection = ( Selection<? extends T> ) queryBuilder().tuple( selections );
+			selection = ( Selection<? extends T> ) criteriaBuilder().tuple( selections );
 		}
 		else if ( getResultType().isArray() ) {
-			selection = ( Selection<? extends T> )  queryBuilder().array(
+			selection = ( Selection<? extends T> )  criteriaBuilder().array(
 					( Class<? extends Object[]> ) getResultType(),
 					selections
 			);
@@ -144,12 +144,12 @@ public class CriteriaQueryImpl<T> extends AbstractNode implements CriteriaQuery<
 					break;
 				}
 				default: {
-					selection = ( Selection<? extends T> ) queryBuilder().array( selections );
+					selection = ( Selection<? extends T> ) criteriaBuilder().array( selections );
 				}
 			}
 		}
 		else {
-			selection = queryBuilder().construct( getResultType(), selections );
+			selection = criteriaBuilder().construct( getResultType(), selections );
 		}
 		applySelection( selection );
 		return this;
@@ -193,7 +193,7 @@ public class CriteriaQueryImpl<T> extends AbstractNode implements CriteriaQuery<
 	 * {@inheritDoc}
 	 */
 	public CriteriaQuery<T> where(Expression<Boolean> expression) {
-		queryStructure.setRestriction( queryBuilder().wrap( expression ) );
+		queryStructure.setRestriction( criteriaBuilder().wrap( expression ) );
 		return this;
 	}
 
@@ -202,7 +202,7 @@ public class CriteriaQueryImpl<T> extends AbstractNode implements CriteriaQuery<
 	 */
 	public CriteriaQuery<T> where(Predicate... predicates) {
 		// TODO : assuming this should be a conjuntion, but the spec does not say specifically...
-		queryStructure.setRestriction( queryBuilder().and( predicates ) );
+		queryStructure.setRestriction( criteriaBuilder().and( predicates ) );
 		return this;
 	}
 
@@ -240,7 +240,7 @@ public class CriteriaQueryImpl<T> extends AbstractNode implements CriteriaQuery<
 	 * {@inheritDoc}
 	 */
 	public CriteriaQuery<T> having(Expression<Boolean> expression) {
-		queryStructure.setHaving( queryBuilder().wrap( expression ) );
+		queryStructure.setHaving( criteriaBuilder().wrap( expression ) );
 		return this;
 	}
 
@@ -248,7 +248,7 @@ public class CriteriaQueryImpl<T> extends AbstractNode implements CriteriaQuery<
 	 * {@inheritDoc}
 	 */
 	public CriteriaQuery<T> having(Predicate... predicates) {
-		queryStructure.setHaving( queryBuilder().and( predicates ) );
+		queryStructure.setHaving( criteriaBuilder().and( predicates ) );
 		return this;
 	}
 

@@ -143,7 +143,7 @@ public class InPredicate<T>
 	}
 
 	public InPredicate<T> value(T value) {
-		return value( new LiteralExpression<T>( queryBuilder(), value ) );
+		return value( new LiteralExpression<T>( criteriaBuilder(), value ) );
 	}
 
 	public InPredicate<T> value(Expression<? extends T> value) {

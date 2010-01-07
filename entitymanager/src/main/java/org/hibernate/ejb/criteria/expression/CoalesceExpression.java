@@ -60,7 +60,7 @@ public class CoalesceExpression<T> extends ExpressionImpl<T> implements Coalesce
 	}
 
 	public Coalesce<T> value(T value) {
-		return value( new LiteralExpression<T>( queryBuilder(), value ) );
+		return value( new LiteralExpression<T>( criteriaBuilder(), value ) );
 	}
 
 	@SuppressWarnings({ "unchecked" })

@@ -70,7 +70,7 @@ public class CollectionAttributeJoin<O,E>
 	@Override
 	protected FromImplementor<O, E> createCorrelationDelegate() {
 		return new CollectionAttributeJoin<O,E>(
-				queryBuilder(),
+				criteriaBuilder(),
 				getJavaType(),
 				(PathImplementor<O>) getParentPath(),
 				getAttribute(),

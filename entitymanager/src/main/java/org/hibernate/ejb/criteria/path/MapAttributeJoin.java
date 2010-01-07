@@ -75,7 +75,7 @@ public class MapAttributeJoin<O,K,V>
 	@Override
 	protected FromImplementor<O, V> createCorrelationDelegate() {
 		return new MapAttributeJoin<O,K,V>(
-				queryBuilder(),
+				criteriaBuilder(),
 				getJavaType(),
 				(PathImplementor<O>) getParentPath(),
 				getAttribute(),
@@ -96,7 +96,7 @@ public class MapAttributeJoin<O,K,V>
 	 */
 	@SuppressWarnings({ "unchecked" })
 	public Expression<Map.Entry<K, V>> entry() {
-		return new MapEntryExpression( queryBuilder(), Map.Entry.class, this, getAttribute() );
+		return new MapEntryExpression( criteriaBuilder(), Map.Entry.class, this, getAttribute() );
 	}
 
 	/**
@@ -105,13 +105,13 @@ public class MapAttributeJoin<O,K,V>
 	@SuppressWarnings({ "unchecked" })
 	public Path<K> key() {
 		final MapKeyHelpers.MapKeySource<K,V> mapKeySource = new MapKeyHelpers.MapKeySource<K,V>(
-				queryBuilder(),
+				criteriaBuilder(),
 				getAttribute().getJavaType(),
 				this,
 				getAttribute()
 		);
-		final MapKeyHelpers.MapKeyAttribute mapKeyAttribute = new MapKeyHelpers.MapKeyAttribute( queryBuilder(), getAttribute() );
-		return new MapKeyHelpers.MapKeyPath( queryBuilder(), mapKeySource, mapKeyAttribute );
+		final MapKeyHelpers.MapKeyAttribute mapKeyAttribute = new MapKeyHelpers.MapKeyAttribute( criteriaBuilder(), getAttribute() );
+		return new MapKeyHelpers.MapKeyPath( criteriaBuilder(), mapKeySource, mapKeyAttribute );
 	}
 
 }

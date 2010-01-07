@@ -1056,7 +1056,7 @@ public abstract class Loader {
 
 	/**
 	 * If this is a collection initializer, we need to tell the session that a collection
-	 * is being initilized, to account for the possibility of the collection having
+	 * is being initialized, to account for the possibility of the collection having
 	 * no elements (hence no rows in the result set).
 	 */
 	private void handleEmptyCollections(
@@ -1173,7 +1173,7 @@ public abstract class Loader {
 	}
 
 	/**
-	 * Resolve any ids for currently loaded objects, duplications within the
+	 * Resolve any IDs for currently loaded objects, duplications within the
 	 * <tt>ResultSet</tt>, etc. Instantiate empty objects to be initialized from the
 	 * <tt>ResultSet</tt>. Return an array of objects (a row of results) and an
 	 * array of booleans (by side-effect) that determine whether the corresponding
@@ -1620,7 +1620,7 @@ public abstract class Loader {
 	}
 
 	/**
-	 * Some dialect-specific LIMIT clauses require the maximium last row number
+	 * Some dialect-specific LIMIT clauses require the maximum last row number
 	 * (aka, first_row_number + total_row_count), while others require the maximum
 	 * returned row count (the total maximum number of rows to return).
 	 *
@@ -1706,7 +1706,7 @@ public abstract class Loader {
 	/**
 	 * Bind positional parameter values to the JDBC prepared statement.
 	 * <p/>
-	 * Postional parameters are those specified by JDBC-style ? parameters
+	 * Positional parameters are those specified by JDBC-style ? parameters
 	 * in the source query.  It is (currently) expected that these come
 	 * before any named parameters in the source query.
 	 *

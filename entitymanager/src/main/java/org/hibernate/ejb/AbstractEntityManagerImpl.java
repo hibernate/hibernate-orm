@@ -41,12 +41,15 @@ import javax.persistence.PersistenceException;
 import javax.persistence.PessimisticLockException;
 import javax.persistence.Query;
 import javax.persistence.TransactionRequiredException;
+import javax.persistence.Tuple;
+import javax.persistence.TupleElement;
 import javax.persistence.TypedQuery;
 import javax.persistence.PessimisticLockScope;
 import javax.persistence.LockTimeoutException;
 import javax.persistence.QueryTimeoutException;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.Selection;
 import javax.persistence.metamodel.Metamodel;
 import javax.persistence.spi.PersistenceUnitTransactionType;
 import javax.transaction.Status;
@@ -60,6 +63,7 @@ import org.slf4j.LoggerFactory;
 import org.hibernate.*;
 import org.hibernate.cfg.Environment;
 import org.hibernate.ejb.criteria.ValueHandlerFactory;
+import org.hibernate.ejb.criteria.expression.CompoundSelectionImpl;
 import org.hibernate.ejb.transaction.JoinableCMTTransaction;
 import org.hibernate.ejb.util.ConfigurationHelper;
 import org.hibernate.ejb.criteria.CriteriaQueryCompiler;
@@ -68,6 +72,7 @@ import org.hibernate.engine.SessionImplementor;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.transaction.TransactionFactory;
 import org.hibernate.transform.BasicTransformerAdapter;
+import org.hibernate.transform.ResultTransformer;
 import org.hibernate.util.CollectionHelper;
 import org.hibernate.util.JTAHelper;
 
@@ -145,14 +150,23 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 	public <T> TypedQuery<T> createQuery(
 			String jpaqlString,
 			Class<T> resultClass,
+			Selection selection,
 			Options options) {
 		try {
 			org.hibernate.Query hqlQuery = getSession().createQuery( jpaqlString );
-			if ( options.getValueHandlers() != null ) {
-				hqlQuery.setResultTransformer( new ValueConversionResultTransformer(  options.getValueHandlers() ) );
-			}
-			else {
+
+			if ( options.getValueHandlers() == null ) {
 				options.getResultMetadataValidator().validate( hqlQuery.getReturnTypes() );
+			}
+
+			// determine if we need a result transformer
+			List tupleElements = Tuple.class.equals( resultClass )
+					? ( (CompoundSelectionImpl<Tuple>) selection ).getCompoundSelectionItems()
+					: null;
+			if ( options.getValueHandlers() != null || tupleElements != null ) {
+				hqlQuery.setResultTransformer(
+						new CriteriaQueryTransformer( options.getValueHandlers(), tupleElements )
+				);
 			}
 			return new QueryImpl<T>( hqlQuery, this, options.getNamedParameterExplicitTypes() );
 		}
@@ -161,23 +175,108 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 		}
 	}
 
-	private static class ValueConversionResultTransformer extends BasicTransformerAdapter {
-		private List<ValueHandlerFactory.ValueHandler> valueHandlers;
+	private static class CriteriaQueryTransformer extends BasicTransformerAdapter {
+		private final List<ValueHandlerFactory.ValueHandler> valueHandlers;
+		private final List tupleElements;
 
-		private ValueConversionResultTransformer(List<ValueHandlerFactory.ValueHandler> valueHandlers) {
+		private CriteriaQueryTransformer(List<ValueHandlerFactory.ValueHandler> valueHandlers, List tupleElements) {
+			// todo : should these 2 sizes match *always*?
 			this.valueHandlers = valueHandlers;
+			this.tupleElements = tupleElements;
 		}
 
 		@Override
 		public Object transformTuple(Object[] tuple, String[] aliases) {
-			Object[] result = new Object[ tuple.length ];
-			for ( int i = 0; i < tuple.length; i++ ) {
-				ValueHandlerFactory.ValueHandler valueHandler = valueHandlers.get( i );
-				result[i] = valueHandler == null
-						? tuple[i]
-						: valueHandler.convert( tuple[i] );
+			final Object[] valueHandlerResult;
+			if ( valueHandlers == null ) {
+				valueHandlerResult = tuple;
 			}
-			return result.length == 1 ? result[0] : result;
+			else {
+				valueHandlerResult = new Object[ tuple.length ];
+				for ( int i = 0; i < tuple.length; i++ ) {
+					ValueHandlerFactory.ValueHandler valueHandler = valueHandlers.get( i );
+					valueHandlerResult[i] = valueHandler == null
+							? tuple[i]
+							: valueHandler.convert( tuple[i] );
+				}
+			}
+
+			return tupleElements == null
+					? valueHandlerResult.length == 1 ? valueHandlerResult[0] : valueHandlerResult
+					: new TupleImpl( tuple );
+
+		}
+
+		private class TupleImpl implements Tuple {
+			private final Object[] tuples;
+
+			private TupleImpl(Object[] tuples) {
+				if ( tuples.length != tupleElements.size() ) {
+					throw new IllegalArgumentException(
+							"Size mismatch between tuple result [" + tuples.length
+									+ "] and expected tuple elements [" + tupleElements.size() + "]"
+					);
+				}
+				this.tuples = tuples;
+			}
+
+			public <X> X get(TupleElement<X> tupleElement) {
+				int index = tupleElements.indexOf( tupleElement );
+				if ( index < 0 ) {
+					throw new IllegalArgumentException( "Requested tuple element did not correspond to element in the result tuple" );
+				}
+				// index should be "in range" by nature of size check in ctor
+				return (X) tuples[index];
+			}
+
+			public Object get(String alias) {
+				int index = -1;
+				if ( alias != null ) {
+					alias = alias.trim();
+					if ( alias.length() > 0 ) {
+						int i = 0;
+						for ( TupleElement selection : (List<TupleElement>) tupleElements ) {
+							if ( alias.equals( selection.getAlias() ) ) {
+								index = i;
+								break;
+							}
+							i++;
+						}
+					}
+				}
+				if ( index < 0 ) {
+					throw new IllegalArgumentException(
+							"Given alias [" + alias + "] did not correspond to an element in the result tuple"
+					);
+				}
+				// index should be "in range" by nature of size check in ctor
+				return tuples[index];
+			}
+
+			public <X> X get(String alias, Class<X> type) {
+				return (X) get( alias );
+			}
+
+			public Object get(int i) {
+				if ( i >= tuples.length ) {
+					throw new IllegalArgumentException(
+							"Given index [" + i + "] was outside the range of result tuple size [" + tuples.length + "] "
+					);
+				}
+				return tuples[i];
+			}
+
+			public <X> X get(int i, Class<X> type) {
+				return (X) get( i );
+			}
+
+			public Object[] toArray() {
+				return tuples;
+			}
+
+			public List<TupleElement<?>> getElements() {
+				return (List<TupleElement<?>>) tupleElements;
+			}
 		}
 	}
 

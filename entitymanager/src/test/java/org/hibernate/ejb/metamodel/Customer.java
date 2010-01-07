@@ -45,6 +45,7 @@ import javax.persistence.Table;
 public class Customer implements java.io.Serializable {
 	private String id;
 	private String name;
+	private Integer age;
 	private Address home;
 	private Address work;
 	private Country country;
@@ -94,6 +95,15 @@ public class Customer implements java.io.Serializable {
 
 	public void setName(String v) {
 		this.name = v;
+	}
+
+	@Column(name = "AGE")
+	public Integer getAge() {
+		return age;
+	}
+
+	public void setAge(Integer age) {
+		this.age = age;
 	}
 
 	@Embedded

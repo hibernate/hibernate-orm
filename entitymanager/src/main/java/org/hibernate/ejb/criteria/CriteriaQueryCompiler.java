@@ -154,6 +154,7 @@ public class CriteriaQueryCompiler implements Serializable {
 		TypedQuery<T> jpaqlQuery = entityManager.createQuery(
 				renderedCriteriaQuery.getQueryString(),
 				criteriaQuery.getResultType(),
+				criteriaQuery.getSelection(),
 				new HibernateEntityManagerImplementor.Options() {
 					public List<ValueHandlerFactory.ValueHandler> getValueHandlers() {
 						return renderedCriteriaQuery.getValueHandlers();

@@ -16,7 +16,7 @@ public class UnionAllAuditedTest extends AbstractAllAuditedTest {
 
     public void configure(Ejb3Configuration cfg) {
         try {
-            URL url = Thread.currentThread().getContextClassLoader().getResource("org/hibernate/envers/test/integration/interfaces/hbm/allAudited/union/unionAllAuditedMappings.hbm.xml");
+            URL url = Thread.currentThread().getContextClassLoader().getResource("mappings/interfaces/unionAllAuditedMappings.hbm.xml");
 	        cfg.addFile(new File(url.toURI()));
 		} catch (URISyntaxException e) {
 			e.printStackTrace();

@@ -17,7 +17,7 @@ public class UnionPropertiesAuditedTest extends AbstractPropertiesAuditedTest {
 
     public void configure(Ejb3Configuration cfg) {
         try {
-            URL url = Thread.currentThread().getContextClassLoader().getResource("org/hibernate/envers/test/integration/interfaces/hbm/propertiesAudited/union/unionPropertiesAuditedMappings.hbm.xml");
+            URL url = Thread.currentThread().getContextClassLoader().getResource("mappings/interfaces/unionPropertiesAuditedMappings.hbm.xml");
 	        cfg.addFile(new File(url.toURI()));
 		} catch (URISyntaxException e) {
 			e.printStackTrace();

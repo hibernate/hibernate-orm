@@ -17,7 +17,7 @@ public class SubclassPropertiesAudited2Test extends AbstractPropertiesAudited2Te
 
     public void configure(Ejb3Configuration cfg) {
         try {
-            URL url = Thread.currentThread().getContextClassLoader().getResource("org/hibernate/envers/test/integration/interfaces/hbm/propertiesAudited2/subclass/subclassPropertiesAudited2Mappings.hbm.xml");
+            URL url = Thread.currentThread().getContextClassLoader().getResource("mappings/interfaces/subclassPropertiesAudited2Mappings.hbm.xml");
 	        cfg.addFile(new File(url.toURI()));
 		} catch (URISyntaxException e) {
 			e.printStackTrace();

@@ -16,7 +16,7 @@ public class SubclassAllAuditedTest extends AbstractAllAuditedTest {
 
     public void configure(Ejb3Configuration cfg) {
         try {
-            URL url = Thread.currentThread().getContextClassLoader().getResource("org/hibernate/envers/test/integration/interfaces/hbm/allAudited/subclass/subclassAllAuditedMappings.hbm.xml");
+            URL url = Thread.currentThread().getContextClassLoader().getResource("mappings/interfaces/subclassAllAuditedMappings.hbm.xml");
 	        cfg.addFile(new File(url.toURI()));
 		} catch (URISyntaxException e) {
 			e.printStackTrace();

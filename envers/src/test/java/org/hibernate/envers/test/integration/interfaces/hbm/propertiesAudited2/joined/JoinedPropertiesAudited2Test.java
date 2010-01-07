@@ -17,7 +17,7 @@ public class JoinedPropertiesAudited2Test extends AbstractPropertiesAudited2Test
 
     public void configure(Ejb3Configuration cfg) {
         try {
-            URL url = Thread.currentThread().getContextClassLoader().getResource("org/hibernate/envers/test/integration/interfaces/hbm/propertiesAudited2/joined/joinedPropertiesAudited2Mappings.hbm.xml");
+            URL url = Thread.currentThread().getContextClassLoader().getResource("mappings/interfaces/joinedPropertiesAudited2Mappings.hbm.xml");
 	        cfg.addFile(new File(url.toURI()));
 		} catch (URISyntaxException e) {
 			e.printStackTrace();

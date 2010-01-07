@@ -30,6 +30,7 @@ import java.util.Date;
 import java.util.Properties;
 import javax.persistence.Enumerated;
 import javax.persistence.Lob;
+import javax.persistence.MapKeyEnumerated;
 import javax.persistence.MapKeyTemporal;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
@@ -207,9 +208,8 @@ public class SimpleValueBinder {
 				typeParameters.setProperty( EnumType.CATALOG, catalog );
 				typeParameters.setProperty( EnumType.TABLE, columns[0].getTable().getName() );
 				typeParameters.setProperty( EnumType.COLUMN, columns[0].getName() );
-				Enumerated enumAnn = property.getAnnotation( Enumerated.class );
-				if ( enumAnn != null ) {
-					javax.persistence.EnumType enumType = enumAnn.value();
+				javax.persistence.EnumType enumType = getEnumType( property );
+				if ( enumType != null ) {
 					if ( javax.persistence.EnumType.ORDINAL.equals( enumType ) ) {
 						typeParameters.setProperty( EnumType.TYPE, String.valueOf( Types.INTEGER ) );
 					}
@@ -226,6 +226,23 @@ public class SimpleValueBinder {
 		this.typeParameters = typeParameters;
 		Type annType = property.getAnnotation( Type.class );
 		setExplicitType( annType );
+	}
+
+	private javax.persistence.EnumType getEnumType(XProperty property) {
+		javax.persistence.EnumType enumType = null;
+		if (key) {
+			MapKeyEnumerated enumAnn = property.getAnnotation( MapKeyEnumerated.class );
+			if ( enumAnn != null ) {
+				enumType = enumAnn.value();
+			}
+		}
+		else {
+			Enumerated enumAnn = property.getAnnotation( Enumerated.class );
+			if ( enumAnn != null ) {
+				enumType = enumAnn.value();
+			}
+		}
+		return enumType;
 	}
 
 	private TemporalType getTemporalType(XProperty property) {

@@ -7,6 +7,7 @@ import java.util.Map;
 import javax.persistence.CascadeType;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.ManyToMany;
@@ -14,6 +15,7 @@ import javax.persistence.Column;
 import javax.persistence.JoinTable;
 import javax.persistence.JoinColumn;
 import javax.persistence.MapKeyColumn;
+import javax.persistence.MapKeyEnumerated;
 import javax.persistence.MapKeyJoinColumn;
 import javax.persistence.MapKeyTemporal;
 import javax.persistence.TemporalType;
@@ -26,6 +28,12 @@ import org.hibernate.annotations.CollectionOfElements;
  */
 @Entity
 public class Atmosphere {
+
+	public static enum Level {
+		LOW,
+		HIGH
+	}
+
 	@Id
 	@GeneratedValue
 	public Integer id;
@@ -37,6 +45,10 @@ public class Atmosphere {
 	@MapKeyTemporal(TemporalType.DATE)
 	@ElementCollection
 	public Map<Date, String> colorPerDate = new HashMap<Date,String>();
+
+	@ElementCollection
+	@MapKeyEnumerated(EnumType.STRING)
+	public Map<Level, String> colorPerLevel = new HashMap<Level,String>();
 
 	@ManyToMany(cascade = CascadeType.ALL)
 	@MapKeyJoinColumn(name="gas_id" )

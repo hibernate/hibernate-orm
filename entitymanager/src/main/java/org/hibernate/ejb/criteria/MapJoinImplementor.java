@@ -23,19 +23,18 @@
  */
 package org.hibernate.ejb.criteria;
 
-import javax.persistence.criteria.Path;
-import javax.persistence.metamodel.Attribute;
+import javax.persistence.criteria.MapJoin;
 
 /**
- * Implementation contract for the JPA {@link Path} interface.
+ * Specialization of {@link JoinImplementor} for {@link java.util.Map} typed attribute joins
  *
  * @author Steve Ebersole
  */
-public interface PathImplementor<X> extends ExpressionImplementor<X>, Path<X>, PathSource<X>, Renderable {
+public interface MapJoinImplementor<Z,K,V> extends JoinImplementor<Z,V>, MapJoin<Z,K,V> {
 	/**
-	 * Retrieve reference to the attribute this path represents.
-	 *
-	 * @return The metamodel attribute.
+	 * {@inheritDoc}
+	 * <p/>
+	 * Refined return type
 	 */
-	public Attribute<?, ?> getAttribute();
+	public MapJoinImplementor<Z,K,V> correlateTo(CriteriaSubqueryImpl subquery);
 }

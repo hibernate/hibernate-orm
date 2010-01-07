@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2009 by Red Hat Inc and/or its affiliates or by
- * third-party contributors as indicated by either @author tags or express
- * copyright attribution statements applied by the authors.  All
- * third-party contributions are distributed under license by Red Hat Inc.
+ * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -23,12 +23,21 @@
  */
 package org.hibernate.ejb.criteria;
 
+import javax.persistence.criteria.Path;
+
 /**
- * Common contract for things which map to a table expression in a <tt>SQL FROM clause</tt>.
+ * Implementation contract for things which can be the source (parent, left-hand-side, etc) of a path
  *
  * @author Steve Ebersole
  */
-public interface TableExpressionMapper {
+public interface PathSource<X> extends Path<X> {
 	public void prepareAlias(CriteriaQueryCompiler.RenderingContext renderingContext);
-	public String renderTableExpression(CriteriaQueryCompiler.RenderingContext renderingContext);
+
+	/**
+	 * Get the string representation of this path as a navigation from one of the
+	 * queries <tt>identification variables</tt>
+	 *
+	 * @return The path's identifier.
+	 */
+	public String getPathIdentifier();
 }

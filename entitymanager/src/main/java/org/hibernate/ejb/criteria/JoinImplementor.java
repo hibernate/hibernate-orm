@@ -23,19 +23,20 @@
  */
 package org.hibernate.ejb.criteria;
 
-import javax.persistence.criteria.Path;
-import javax.persistence.metamodel.Attribute;
+import javax.persistence.criteria.Fetch;
+import javax.persistence.criteria.Join;
 
 /**
- * Implementation contract for the JPA {@link Path} interface.
- *
- * @author Steve Ebersole
- */
-public interface PathImplementor<X> extends ExpressionImplementor<X>, Path<X>, PathSource<X>, Renderable {
+ * Consolidates the {@link Join} and {@link Fetch} hierarchies since that is how we implement them.
+ * This allows us to treat them polymorphically.
+*
+* @author Steve Ebersole
+*/
+public interface JoinImplementor<Z,X> extends Join<Z,X>, Fetch<Z,X>, FromImplementor<Z,X> {
 	/**
-	 * Retrieve reference to the attribute this path represents.
-	 *
-	 * @return The metamodel attribute.
+	 * {@inheritDoc}
+	 * <p/>
+	 * Refined return type
 	 */
-	public Attribute<?, ?> getAttribute();
+	public JoinImplementor<Z,X> correlateTo(CriteriaSubqueryImpl subquery);
 }

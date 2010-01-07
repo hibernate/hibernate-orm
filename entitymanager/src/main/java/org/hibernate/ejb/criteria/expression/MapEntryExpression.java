@@ -21,73 +21,61 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.ejb.criteria.predicate;
+package org.hibernate.ejb.criteria.expression;
 
 import java.io.Serializable;
+import java.util.Map;
 import javax.persistence.criteria.Expression;
+import javax.persistence.metamodel.MapAttribute;
 
 import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
 import org.hibernate.ejb.criteria.CriteriaQueryCompiler;
 import org.hibernate.ejb.criteria.ParameterRegistry;
+import org.hibernate.ejb.criteria.PathImplementor;
 import org.hibernate.ejb.criteria.Renderable;
 
 /**
- * Predicate to assert the explicit value of a boolean expression:<ul>
- * <li>x = true</li>
- * <li>x = false</li>
- * <li>x <> true</li>
- * <li>x <> false</li>
- * </ul>
+ * TODO : javadoc
  *
  * @author Steve Ebersole
  */
-public class BooleanAssertionPredicate
-		extends AbstractSimplePredicate
-		implements Serializable {
-	private final Expression<Boolean> expression;
-	private final Boolean assertedValue;
+public class MapEntryExpression<K,V>
+		extends ExpressionImpl<Map.Entry<K,V>>
+		implements Expression<Map.Entry<K,V>>, Serializable {
 
-	public BooleanAssertionPredicate(
+	private final PathImplementor origin;
+	private final MapAttribute<?, K, V> attribute;
+
+	public MapEntryExpression(
 			CriteriaBuilderImpl criteriaBuilder,
-			Expression<Boolean> expression,
-			Boolean assertedValue) {
-		super( criteriaBuilder );
-		this.expression = expression;
-		this.assertedValue = assertedValue;
+			Class<Map.Entry<K, V>> javaType,
+			PathImplementor origin,
+			MapAttribute<?, K, V> attribute) {
+		super( criteriaBuilder, javaType);
+		this.origin = origin;
+		this.attribute = attribute;
 	}
 
-	public Expression<Boolean> getExpression() {
-		return expression;
+	public MapAttribute<?, K, V> getAttribute() {
+		return attribute;
 	}
 
-	public Boolean getAssertedValue() {
-		return assertedValue;
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
 	public void registerParameters(ParameterRegistry registry) {
-		Helper.possibleParameter( expression, registry );
+		// none to register
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	public String render(CriteriaQueryCompiler.RenderingContext renderingContext) {
-		final String operator = isNegated() ? " <> " : " = ";
-		final String assertionLiteral = assertedValue ? "true" : "false";
-
-		return ( (Renderable) expression ).render( renderingContext )
-				+ operator
-				+ assertionLiteral;
+		// don't think this is valid outside of select clause...
+		throw new IllegalStateException( "illegal reference to map entry outside of select clause." );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	public String renderProjection(CriteriaQueryCompiler.RenderingContext renderingContext) {
-		return render( renderingContext );
+		return "entry(" + path( renderingContext ) + ")";
 	}
 
+	private String path(CriteriaQueryCompiler.RenderingContext renderingContext) {
+		return origin.getPathIdentifier()
+				+ '.'
+				+ ( (Renderable) getAttribute() ).renderProjection( renderingContext );
+	}
 }

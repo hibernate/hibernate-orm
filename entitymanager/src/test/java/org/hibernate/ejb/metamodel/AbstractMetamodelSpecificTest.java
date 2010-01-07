@@ -21,21 +21,22 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.ejb.criteria;
+package org.hibernate.ejb.metamodel;
 
-import javax.persistence.criteria.Path;
-import javax.persistence.metamodel.Attribute;
+import org.hibernate.ejb.test.TestCase;
 
 /**
- * Implementation contract for the JPA {@link Path} interface.
+ * TODO : javadoc
  *
  * @author Steve Ebersole
  */
-public interface PathImplementor<X> extends ExpressionImplementor<X>, Path<X>, PathSource<X>, Renderable {
-	/**
-	 * Retrieve reference to the attribute this path represents.
-	 *
-	 * @return The metamodel attribute.
-	 */
-	public Attribute<?, ?> getAttribute();
+public abstract class AbstractMetamodelSpecificTest extends TestCase {
+	@Override
+	public Class[] getAnnotatedClasses() {
+		return new Class[] {
+				Address.class, Alias.class, Country.class, CreditCard.class, Customer.class,
+				Info.class, LineItem.class, Order.class, Phone.class, Product.class,
+				ShelfLife.class, Spouse.class
+		};
+	}
 }

@@ -28,7 +28,8 @@ import javax.persistence.metamodel.ListAttribute;
 import org.hibernate.ejb.criteria.ParameterRegistry;
 import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
 import org.hibernate.ejb.criteria.CriteriaQueryCompiler;
-import org.hibernate.ejb.criteria.PathImpl;
+import org.hibernate.ejb.criteria.PathImplementor;
+
 
 /**
  * An expression for referring to the index of a list.
@@ -36,21 +37,24 @@ import org.hibernate.ejb.criteria.PathImpl;
  * @author Steve Ebersole
  */
 public class ListIndexExpression extends ExpressionImpl<Integer> implements Serializable {
-	private final PathImpl origin;
-	private final ListAttribute<?,?> listAttribute;
+	private final PathImplementor origin;
+	private final ListAttribute listAttribute;
 
-	public ListIndexExpression(CriteriaBuilderImpl criteriaBuilder, PathImpl origin, ListAttribute<?,?> listAttribute) {
+	public ListIndexExpression(
+			CriteriaBuilderImpl criteriaBuilder,
+			PathImplementor origin,
+			ListAttribute listAttribute) {
 		super( criteriaBuilder, Integer.class );
 		this.origin = origin;
 		this.listAttribute = listAttribute;
 	}
 
-	public ListAttribute<?,?> getListAttribute() {
+	public ListAttribute getListAttribute() {
 		return listAttribute;
 	}
 
 	public void registerParameters(ParameterRegistry registry) {
-		// nothign to do
+		// nothing to do
 	}
 
 	public String render(CriteriaQueryCompiler.RenderingContext renderingContext) {

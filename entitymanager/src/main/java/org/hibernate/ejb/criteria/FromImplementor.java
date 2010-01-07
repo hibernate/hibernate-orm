@@ -23,19 +23,28 @@
  */
 package org.hibernate.ejb.criteria;
 
-import javax.persistence.criteria.Path;
-import javax.persistence.metamodel.Attribute;
+import java.io.Serializable;
+import javax.persistence.criteria.Fetch;
+import javax.persistence.criteria.From;
+import javax.persistence.criteria.Join;
 
 /**
- * Implementation contract for the JPA {@link Path} interface.
+ * Implementation contract for the JPA {@link From} interface.
  *
  * @author Steve Ebersole
  */
-public interface PathImplementor<X> extends ExpressionImplementor<X>, Path<X>, PathSource<X>, Renderable {
+public interface FromImplementor<Z,X> extends PathImplementor<X>, From<Z,X> {
+	public void prepareAlias(CriteriaQueryCompiler.RenderingContext renderingContext);
+	public String renderTableExpression(CriteriaQueryCompiler.RenderingContext renderingContext);
+
 	/**
-	 * Retrieve reference to the attribute this path represents.
-	 *
-	 * @return The metamodel attribute.
+	 * Helper contract used to define who/what keeps track of joins and fetches made from this <tt>FROM</tt>.
 	 */
-	public Attribute<?, ?> getAttribute();
+	public static interface JoinScope<X> extends Serializable {
+		public void addJoin(Join<X, ?> join);
+		public void addFetch(Fetch<X,?> fetch);
+	}
+
+	public FromImplementor<Z,X> correlateTo(CriteriaSubqueryImpl subquery);
+	public void prepareCorrelationDelegate(JoinScope<X> joinScope, FromImplementor<Z,X> parent);
 }

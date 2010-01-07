@@ -21,73 +21,73 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.ejb.criteria.predicate;
+package org.hibernate.ejb.criteria.path;
 
 import java.io.Serializable;
-import javax.persistence.criteria.Expression;
+import javax.persistence.criteria.Root;
+import javax.persistence.metamodel.EntityType;
 
 import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
 import org.hibernate.ejb.criteria.CriteriaQueryCompiler;
-import org.hibernate.ejb.criteria.ParameterRegistry;
-import org.hibernate.ejb.criteria.Renderable;
+import org.hibernate.ejb.criteria.CriteriaSubqueryImpl;
+import org.hibernate.ejb.criteria.FromImplementor;
 
 /**
- * Predicate to assert the explicit value of a boolean expression:<ul>
- * <li>x = true</li>
- * <li>x = false</li>
- * <li>x <> true</li>
- * <li>x <> false</li>
- * </ul>
+ * TODO : javadoc
  *
  * @author Steve Ebersole
  */
-public class BooleanAssertionPredicate
-		extends AbstractSimplePredicate
-		implements Serializable {
-	private final Expression<Boolean> expression;
-	private final Boolean assertedValue;
+public class RootImpl<X> extends AbstractFromImpl<X,X> implements Root<X>, Serializable {
+	private final EntityType<X> entityType;
 
-	public BooleanAssertionPredicate(
+	public RootImpl(
 			CriteriaBuilderImpl criteriaBuilder,
-			Expression<Boolean> expression,
-			Boolean assertedValue) {
-		super( criteriaBuilder );
-		this.expression = expression;
-		this.assertedValue = assertedValue;
+			EntityType<X> entityType) {
+		super( criteriaBuilder, entityType.getJavaType() );
+		this.entityType = entityType;
 	}
 
-	public Expression<Boolean> getExpression() {
-		return expression;
+	public EntityType<X> getEntityType() {
+		return entityType;
 	}
 
-	public Boolean getAssertedValue() {
-		return assertedValue;
+	public EntityType<X> getModel() {
+		return getEntityType();
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
-	public void registerParameters(ParameterRegistry registry) {
-		Helper.possibleParameter( expression, registry );
+	@Override
+	protected FromImplementor<X, X> createCorrelationDelegate() {
+		return new RootImpl<X>( queryBuilder(), getEntityType() );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
+	public RootImpl<X> correlateTo(CriteriaSubqueryImpl subquery) {
+		return (RootImpl<X>) super.correlateTo( subquery );
+	}
+
+	@Override
+	protected boolean canBeJoinSource() {
+		return true;
+	}
+
+	public String renderTableExpression(CriteriaQueryCompiler.RenderingContext renderingContext) {
+		prepareAlias( renderingContext );
+		return getModel().getName() + " as " + getAlias();
+	}
+
+	@Override
+	public String getPathIdentifier() {
+		return getAlias();
+	}
+
+	@Override
 	public String render(CriteriaQueryCompiler.RenderingContext renderingContext) {
-		final String operator = isNegated() ? " <> " : " = ";
-		final String assertionLiteral = assertedValue ? "true" : "false";
-
-		return ( (Renderable) expression ).render( renderingContext )
-				+ operator
-				+ assertionLiteral;
+		prepareAlias( renderingContext );
+		return getAlias();
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public String renderProjection(CriteriaQueryCompiler.RenderingContext renderingContext) {
 		return render( renderingContext );
 	}
-
 }

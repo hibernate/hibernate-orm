@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2009 by Red Hat Inc and/or its affiliates or by
- * third-party contributors as indicated by either @author tags or express
- * copyright attribution statements applied by the authors.  All
- * third-party contributions are distributed under license by Red Hat Inc.
+ * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -21,64 +21,123 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.ejb.criteria;
+package org.hibernate.ejb.criteria.path;
 
 import java.io.Serializable;
-import java.util.Set;
-import java.util.Collection;
-import java.util.Map;
 import java.util.LinkedHashSet;
+import java.util.Set;
+import javax.persistence.criteria.CollectionJoin;
+import javax.persistence.criteria.Fetch;
 import javax.persistence.criteria.From;
 import javax.persistence.criteria.Join;
 import javax.persistence.criteria.JoinType;
-import javax.persistence.criteria.CollectionJoin;
-import javax.persistence.criteria.SetJoin;
 import javax.persistence.criteria.ListJoin;
 import javax.persistence.criteria.MapJoin;
-import javax.persistence.criteria.Path;
-import javax.persistence.criteria.Expression;
-import javax.persistence.criteria.Fetch;
+import javax.persistence.criteria.SetJoin;
 import javax.persistence.metamodel.Attribute;
-import javax.persistence.metamodel.Attribute.PersistentAttributeType;
-import javax.persistence.metamodel.SingularAttribute;
 import javax.persistence.metamodel.CollectionAttribute;
-import javax.persistence.metamodel.SetAttribute;
 import javax.persistence.metamodel.ListAttribute;
-import javax.persistence.metamodel.MapAttribute;
-import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.ManagedType;
+import javax.persistence.metamodel.MapAttribute;
 import javax.persistence.metamodel.PluralAttribute;
-import javax.persistence.metamodel.Bindable;
+import javax.persistence.metamodel.SetAttribute;
+import javax.persistence.metamodel.SingularAttribute;
+import javax.persistence.metamodel.Type;
 
-import javax.persistence.metamodel.PluralAttribute.CollectionType;
-import javax.persistence.metamodel.Type.PersistenceType;
-import org.hibernate.ejb.criteria.expression.CollectionExpression;
-import org.hibernate.ejb.criteria.expression.EntityTypeExpression;
+import org.hibernate.ejb.criteria.BasicPathUsageException;
+import org.hibernate.ejb.criteria.CollectionJoinImplementor;
+import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
+import org.hibernate.ejb.criteria.CriteriaQueryCompiler;
+import org.hibernate.ejb.criteria.CriteriaSubqueryImpl;
+import org.hibernate.ejb.criteria.FromImplementor;
+import org.hibernate.ejb.criteria.JoinImplementor;
+import org.hibernate.ejb.criteria.ListJoinImplementor;
+import org.hibernate.ejb.criteria.MapJoinImplementor;
+import org.hibernate.ejb.criteria.PathSource;
+import org.hibernate.ejb.criteria.SetJoinImplementor;
 
 /**
- * TODO : javadoc
+ * Convenience base class for various {@link javax.persistence.criteria.From} implementors.
  *
  * @author Steve Ebersole
  */
-public abstract class FromImpl<Z,X>
-		extends PathImpl<X>
-		implements From<Z,X>, TableExpressionMapper, Serializable {
+public abstract class AbstractFromImpl<Z,X>
+		extends AbstractPathImpl<X>
+		implements From<Z,X>, FromImplementor<Z,X>, Serializable {
+
 	public static final JoinType DEFAULT_JOIN_TYPE = JoinType.INNER;
 
-	private final Expression<Class<? extends X>> typeExpression;
     private Set<Join<X, ?>> joins;
     private Set<Fetch<X, ?>> fetches;
 
-	/**
-	 * Helper contract used to define who/what keeps track of joins and fetches made from this <tt>FROM</tt>.
-	 */
-	public static interface JoinScope<X> extends Serializable {
-		public void addJoin(Join<X, ?> join);
-		public void addFetch(Fetch<X,?> fetch);
-		public boolean isCorrelated();
-		public From<?, X> getCorrelationParent();
+	public AbstractFromImpl(CriteriaBuilderImpl criteriaBuilder, Class<X> javaType) {
+		this( criteriaBuilder, javaType, null );
 	}
 
+	public AbstractFromImpl(CriteriaBuilderImpl criteriaBuilder, Class<X> javaType, PathSource pathSource) {
+		super( criteriaBuilder, javaType, pathSource );
+	}
+
+	@Override
+	@SuppressWarnings({ "unchecked" })
+	public PathSource<Z> getPathSource() {
+		return super.getPathSource();
+	}
+
+	@Override
+	public String getPathIdentifier() {
+		return getAlias();
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	protected boolean canBeDereferenced() {
+		return true;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public void prepareAlias(CriteriaQueryCompiler.RenderingContext renderingContext) {
+		if ( getAlias() == null ) {
+			setAlias( renderingContext.generateAlias() );
+		}
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public Attribute<?, ?> getAttribute() {
+		return null;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public From<?, Z> getParent() {
+		return null;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@SuppressWarnings({ "unchecked" })
+	protected Attribute<X, ?> locateAttributeInternal(String name) {
+		return (Attribute<X, ?>) locateManagedType().getAttribute( name );
+	}
+
+	@SuppressWarnings({ "unchecked" })
+	protected ManagedType<? super X> locateManagedType() {
+		// by default, this should be the model
+		return (ManagedType<? super X>) getModel();
+	}
+
+
+	// CORRELATION ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	private From<Z,X> correlationParent;
 	private JoinScope<X> joinScope = new JoinScope<X>() {
 		public void addJoin(Join<X, ?> join) {
 			if ( joins == null ) {
@@ -93,71 +152,49 @@ public abstract class FromImpl<Z,X>
 			}
 			fetches.add( fetch );
 		}
-
-		public boolean isCorrelated() {
-			return false;
-		}
-
-		public From<?, X> getCorrelationParent() {
-			return null;
-		}
 	};
 
 	/**
-	 * Special constructor for {@link RootImpl}.
-	 *
-	 * @param criteriaBuilder The query build
-	 * @param entityType The entity defining this root
+	 * {@inheritDoc}
 	 */
-	@SuppressWarnings({ "unchecked" })
-    protected FromImpl(CriteriaBuilderImpl criteriaBuilder, EntityType<X> entityType) {
-		super( criteriaBuilder, entityType.getBindableJavaType(), null, null, entityType );
-		this.typeExpression = new EntityTypeExpression( criteriaBuilder, entityType.getBindableJavaType() );
+	public boolean isCorrelated() {
+		return getCorrelationParent() != null;
 	}
 
 	/**
-	 * The general constructor for a {@link From} implementor.
-	 *
-	 * @param criteriaBuilder
-	 * @param javaType
-	 * @param origin
-	 * @param attribute
-	 * @param model
+	 * {@inheritDoc}
 	 */
-	@SuppressWarnings({ "unchecked" })
-	public FromImpl(
-			CriteriaBuilderImpl criteriaBuilder,
-			Class<X> javaType,
-			PathImpl<Z> origin,
-			Attribute<? super Z, ?> attribute,
-			Bindable<X> model) {
-		super( criteriaBuilder, javaType, origin, attribute, model );
-		this.typeExpression = new EntityTypeExpression( criteriaBuilder, model.getBindableJavaType() );
+	public From<Z,X> getCorrelationParent() {
+		return correlationParent;
 	}
 
-	protected void defineJoinScope(JoinScope<X> joinScope) {
+	/**
+	 * {@inheritDoc}
+	 */
+	@SuppressWarnings({ "unchecked" })
+	public FromImplementor<Z, X> correlateTo(CriteriaSubqueryImpl subquery) {
+		final FromImplementor<Z, X> correlationDelegate = createCorrelationDelegate();
+		correlationDelegate.prepareCorrelationDelegate( subquery.getJoinScope(), this );
+		return correlationDelegate;
+	}
+
+	protected abstract FromImplementor<Z, X> createCorrelationDelegate();
+
+	public void prepareCorrelationDelegate(JoinScope<X> joinScope, FromImplementor<Z, X> parent) {
 		this.joinScope = joinScope;
+		this.correlationParent = parent;
 	}
-
-	@Override
-	public Expression<Class<? extends X>> type() {
-		return typeExpression;
-	}
-
-	/**
-	 * Get the attribute by name from the underlying model.  This alows subclasses to
-	 * define exactly how the attribute is derived.
-	 * 
-	 * @param name The attribute name
-	 * 
-	 * @return The attribute.
-	 * 
-	 * @throws IllegalArgumentException If no such attribute is found (follows exception type from {@link ManagedType}).
-	 */
-	protected abstract Attribute<X,?> getAttribute(String name);
 
 
 	// JOINS ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	protected abstract boolean canBeJoinSource();
+
+	private RuntimeException illegalJoin() {
+		return new IllegalArgumentException(
+				"Collection of values [" + getPathIdentifier() + "] cannot be source of a join"
+		);
+	}
 
 	/**
 	 * {@inheritDoc}
@@ -177,13 +214,17 @@ public abstract class FromImpl<Z,X>
 	 * {@inheritDoc}
 	 */
 	public <Y> Join<X, Y> join(SingularAttribute<? super X, Y> attribute, JoinType jt) {
+		if ( ! canBeJoinSource() ) {
+			throw illegalJoin();
+		}
+
 		Join<X, Y> join = constructJoin( attribute, jt );
 		joinScope.addJoin( join );
 		return join;
 	}
 
-	private <Y> JoinImplementors.JoinImplementor<X, Y> constructJoin(SingularAttribute<? super X, Y> attribute, JoinType jt) {
-		if ( PersistenceType.BASIC.equals( attribute.getType().getPersistenceType() ) ) {
+	private <Y> JoinImplementor<X, Y> constructJoin(SingularAttribute<? super X, Y> attribute, JoinType jt) {
+		if ( Type.PersistenceType.BASIC.equals( attribute.getType().getPersistenceType() ) ) {
 			throw new BasicPathUsageException( "Cannot join to attribute of basic type", attribute );
         }
 
@@ -194,7 +235,7 @@ public abstract class FromImpl<Z,X>
 		}
 
 		final Class<Y> attributeType = attribute.getBindableJavaType();
-        return new JoinImpl<X, Y>(
+		return new SingularAttributeJoin<X,Y>(
 				queryBuilder(),
 				attributeType,
 				this,
@@ -213,41 +254,30 @@ public abstract class FromImpl<Z,X>
 	 * {@inheritDoc}
 	 */
 	public <Y> CollectionJoin<X, Y> join(CollectionAttribute<? super X, Y> collection, JoinType jt) {
+		if ( ! canBeJoinSource() ) {
+			throw illegalJoin();
+		}
+
 		final CollectionJoin<X, Y> join = constructJoin( collection, jt );
 		joinScope.addJoin( join );
 		return join;
 	}
 
-	private <Y> JoinImplementors.CollectionJoinImplementor<X, Y> constructJoin(CollectionAttribute<? super X, Y> collection, JoinType jt) {
+	private <Y> CollectionJoinImplementor<X, Y> constructJoin(CollectionAttribute<? super X, Y> collection, JoinType jt) {
 		if ( jt.equals( JoinType.RIGHT ) ) {
 			throw new UnsupportedOperationException( "RIGHT JOIN not supported" );
 		}
 
-		final Class<Y> attributeType = collection.getBindableJavaType();
-		final JoinImplementors.CollectionJoinImplementor<X, Y> join;
-		if ( isBasicCollection( collection ) ) {
-			join = new BasicCollectionJoinImpl<X, Y>(
-					queryBuilder(),
-					attributeType,
-					this,
-					collection,
-					jt
-			);
-		}
-		else {
-			join = new CollectionJoinImpl<X, Y>(
-					queryBuilder(),
-					attributeType,
-					this,
-					collection,
-					jt
-			);
-		}
-		return join;
-	}
+		// TODO : runtime check that the attribute in fact belongs to this From's model/bindable
 
-	private boolean isBasicCollection(PluralAttribute collection) {
-		return PersistenceType.BASIC.equals( collection.getElementType().getPersistenceType() );
+		final Class<Y> attributeType = collection.getBindableJavaType();
+		return new CollectionAttributeJoin<X, Y>(
+				queryBuilder(),
+				attributeType,
+				this,
+				collection,
+				jt
+		);
 	}
 
 	/**
@@ -261,25 +291,24 @@ public abstract class FromImpl<Z,X>
 	 * {@inheritDoc}
 	 */
 	public <Y> SetJoin<X, Y> join(SetAttribute<? super X, Y> set, JoinType jt) {
+		if ( ! canBeJoinSource() ) {
+			throw illegalJoin();
+		}
+
 		final SetJoin<X, Y> join = constructJoin( set, jt );
 		joinScope.addJoin( join );
 		return join;
 	}
 
-	private <Y> JoinImplementors.SetJoinImplementor<X, Y> constructJoin(SetAttribute<? super X, Y> set, JoinType jt) {
+	private <Y> SetJoinImplementor<X, Y> constructJoin(SetAttribute<? super X, Y> set, JoinType jt) {
 		if ( jt.equals( JoinType.RIGHT ) ) {
 			throw new UnsupportedOperationException( "RIGHT JOIN not supported" );
 		}
 
+		// TODO : runtime check that the attribute in fact belongs to this From's model/bindable
+
 		final Class<Y> attributeType = set.getBindableJavaType();
-		final JoinImplementors.SetJoinImplementor<X, Y> join;
-		if ( isBasicCollection( set ) ) {
-			join = new BasicSetJoinImpl<X, Y>( queryBuilder(), attributeType, this, set, jt );
-		}
-		else {
-			join = new SetJoinImpl<X, Y>( queryBuilder(), attributeType, this, set, jt );
-		}
-		return join;
+		return new SetAttributeJoin<X,Y>( queryBuilder(), attributeType, this, set, jt );
 	}
 
 	/**
@@ -293,25 +322,24 @@ public abstract class FromImpl<Z,X>
 	 * {@inheritDoc}
 	 */
 	public <Y> ListJoin<X, Y> join(ListAttribute<? super X, Y> list, JoinType jt) {
+		if ( ! canBeJoinSource() ) {
+			throw illegalJoin();
+		}
+
 		final ListJoin<X, Y> join = constructJoin( list, jt );
 		joinScope.addJoin( join );
 		return join;
 	}
 
-	private  <Y> JoinImplementors.ListJoinImplementor<X, Y> constructJoin(ListAttribute<? super X, Y> list, JoinType jt) {
+	private  <Y> ListJoinImplementor<X, Y> constructJoin(ListAttribute<? super X, Y> list, JoinType jt) {
 		if ( jt.equals( JoinType.RIGHT ) ) {
 			throw new UnsupportedOperationException( "RIGHT JOIN not supported" );
 		}
 
+		// TODO : runtime check that the attribute in fact belongs to this From's model/bindable
+
 		final Class<Y> attributeType = list.getBindableJavaType();
-		final JoinImplementors.ListJoinImplementor<X, Y> join;
-		if ( isBasicCollection( list ) ) {
-			join = new BasicListJoinImpl<X, Y>( queryBuilder(), attributeType, this, list, jt );
-		}
-		else {
-			join = new ListJoinImpl<X, Y>( queryBuilder(), attributeType, this, list, jt );
-		}
-		return join;
+		return new ListAttributeJoin<X,Y>( queryBuilder(), attributeType, this, list, jt );
 	}
 
 	/**
@@ -325,25 +353,24 @@ public abstract class FromImpl<Z,X>
 	 * {@inheritDoc}
 	 */
 	public <K, V> MapJoin<X, K, V> join(MapAttribute<? super X, K, V> map, JoinType jt) {
+		if ( ! canBeJoinSource() ) {
+			throw illegalJoin();
+		}
+
 		final MapJoin<X, K, V> join = constructJoin( map, jt );
 		joinScope.addJoin( join );
 		return join;
 	}
 
-	private <K, V> JoinImplementors.MapJoinImplementor<X, K, V> constructJoin(MapAttribute<? super X, K, V> map, JoinType jt) {
+	private <K, V> MapJoinImplementor<X, K, V> constructJoin(MapAttribute<? super X, K, V> map, JoinType jt) {
 		if ( jt.equals( JoinType.RIGHT ) ) {
 			throw new UnsupportedOperationException( "RIGHT JOIN not supported" );
 		}
 
+		// TODO : runtime check that the attribute in fact belongs to this From's model/bindable
+
 		final Class<V> attributeType = map.getBindableJavaType();
-		final JoinImplementors.MapJoinImplementor<X, K, V> join;
-		if ( isBasicCollection( map ) ) {
-			join = new BasicMapJoinImpl<X,K,V>( queryBuilder(), attributeType, this, map, jt );
-		}
-		else {
-			join = new MapJoinImpl<X,K,V>( queryBuilder(), attributeType, this, map, jt );
-		}
-		return join;
+		return new MapAttributeJoin<X, K, V>( queryBuilder(), attributeType, this, map, jt );
 	}
 
 	/**
@@ -358,20 +385,24 @@ public abstract class FromImpl<Z,X>
 	 */
 	@SuppressWarnings({ "unchecked" })
 	public <X,Y> Join<X, Y> join(String attributeName, JoinType jt) {
+		if ( ! canBeJoinSource() ) {
+			throw illegalJoin();
+		}
+
 		if ( jt.equals( JoinType.RIGHT ) ) {
 			throw new UnsupportedOperationException( "RIGHT JOIN not supported" );
 		}
 
-		final Attribute<X,?> attribute = (Attribute<X, ?>) getAttribute( attributeName );
+		final Attribute<X,?> attribute = (Attribute<X, ?>) locateAttribute( attributeName );
 		if ( attribute.isCollection() ) {
 			final PluralAttribute pluralAttribute = ( PluralAttribute ) attribute;
-			if ( CollectionType.COLLECTION.equals( pluralAttribute.getCollectionType() ) ) {
+			if ( PluralAttribute.CollectionType.COLLECTION.equals( pluralAttribute.getCollectionType() ) ) {
 				return (Join<X,Y>) join( (CollectionAttribute) attribute, jt );
 			}
-			else if ( CollectionType.LIST.equals( pluralAttribute.getCollectionType() ) ) {
+			else if ( PluralAttribute.CollectionType.LIST.equals( pluralAttribute.getCollectionType() ) ) {
 				return (Join<X,Y>) join( (ListAttribute) attribute, jt );
 			}
-			else if ( CollectionType.SET.equals( pluralAttribute.getCollectionType() ) ) {
+			else if ( PluralAttribute.CollectionType.SET.equals( pluralAttribute.getCollectionType() ) ) {
 				return (Join<X,Y>) join( (SetAttribute) attribute, jt );
 			}
 			else {
@@ -395,13 +426,13 @@ public abstract class FromImpl<Z,X>
 	 */
 	@SuppressWarnings({ "unchecked" })
 	public <X,Y> CollectionJoin<X, Y> joinCollection(String attributeName, JoinType jt) {
-		final Attribute<X,?> attribute = (Attribute<X, ?>) getAttribute( attributeName );
+		final Attribute<X,?> attribute = (Attribute<X, ?>) locateAttribute( attributeName );
 		if ( ! attribute.isCollection() ) {
             throw new IllegalArgumentException( "Requested attribute was not a collection" );
 		}
 
 		final PluralAttribute pluralAttribute = ( PluralAttribute ) attribute;
-		if ( ! CollectionType.COLLECTION.equals( pluralAttribute.getCollectionType() ) ) {
+		if ( ! PluralAttribute.CollectionType.COLLECTION.equals( pluralAttribute.getCollectionType() ) ) {
             throw new IllegalArgumentException( "Requested attribute was not a collection" );
 		}
 
@@ -420,13 +451,13 @@ public abstract class FromImpl<Z,X>
 	 */
 	@SuppressWarnings({ "unchecked" })
 	public <X,Y> SetJoin<X, Y> joinSet(String attributeName, JoinType jt) {
-		final Attribute<X,?> attribute = (Attribute<X, ?>) getAttribute( attributeName );
+		final Attribute<X,?> attribute = (Attribute<X, ?>) locateAttribute( attributeName );
 		if ( ! attribute.isCollection() ) {
             throw new IllegalArgumentException( "Requested attribute was not a set" );
 		}
 
 		final PluralAttribute pluralAttribute = ( PluralAttribute ) attribute;
-		if ( ! CollectionType.SET.equals( pluralAttribute.getCollectionType() ) ) {
+		if ( ! PluralAttribute.CollectionType.SET.equals( pluralAttribute.getCollectionType() ) ) {
             throw new IllegalArgumentException( "Requested attribute was not a set" );
 		}
 
@@ -445,13 +476,13 @@ public abstract class FromImpl<Z,X>
 	 */
 	@SuppressWarnings({ "unchecked" })
 	public <X,Y> ListJoin<X, Y> joinList(String attributeName, JoinType jt) {
-		final Attribute<X,?> attribute = (Attribute<X, ?>) getAttribute( attributeName );
+		final Attribute<X,?> attribute = (Attribute<X, ?>) locateAttribute( attributeName );
 		if ( ! attribute.isCollection() ) {
             throw new IllegalArgumentException( "Requested attribute was not a list" );
 		}
 
 		final PluralAttribute pluralAttribute = ( PluralAttribute ) attribute;
-		if ( ! CollectionType.LIST.equals( pluralAttribute.getCollectionType() ) ) {
+		if ( ! PluralAttribute.CollectionType.LIST.equals( pluralAttribute.getCollectionType() ) ) {
             throw new IllegalArgumentException( "Requested attribute was not a list" );
 		}
 
@@ -470,13 +501,13 @@ public abstract class FromImpl<Z,X>
 	 */
 	@SuppressWarnings({ "unchecked" })
 	public <X, K, V> MapJoin<X, K, V> joinMap(String attributeName, JoinType jt) {
-		final Attribute<X,?> attribute = (Attribute<X, ?>) getAttribute( attributeName );
+		final Attribute<X,?> attribute = (Attribute<X, ?>) locateAttribute( attributeName );
 		if ( ! attribute.isCollection() ) {
             throw new IllegalArgumentException( "Requested attribute was not a map" );
 		}
 
 		final PluralAttribute pluralAttribute = ( PluralAttribute ) attribute;
-		if ( ! CollectionType.MAP.equals( pluralAttribute.getCollectionType() ) ) {
+		if ( ! PluralAttribute.CollectionType.MAP.equals( pluralAttribute.getCollectionType() ) ) {
             throw new IllegalArgumentException( "Requested attribute was not a map" );
 		}
 
@@ -486,20 +517,21 @@ public abstract class FromImpl<Z,X>
 
 	// FETCHES ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+	protected boolean canBeFetchSource() {
+		// the conditions should be the same...
+		return canBeJoinSource();
+	}
+
+	private RuntimeException illegalFetch() {
+		return new IllegalArgumentException(
+				"Collection of values [" + getPathIdentifier() + "] cannot be source of a fetch"
+		);
+	}
+
 	/**
 	 * {@inheritDoc}
 	 */
 	public Set<Fetch<X, ?>> getFetches() {
-		return fetches;
-	}
-
-	/**
-	 * Retrieve the collection of fetches, imnplementing delayed creations.  Calls on this method
-	 * assume the set is physically needed, and as a result the set is built if not already.
-	 *
-	 * @return The set of fetches.
-	 */
-	public Set<Fetch<X, ?>> internalGetFetches() {
 		return fetches;
 	}
 
@@ -508,6 +540,10 @@ public abstract class FromImpl<Z,X>
 	}
 
 	public <Y> Fetch<X, Y> fetch(SingularAttribute<? super X, Y> attribute, JoinType jt) {
+		if ( ! canBeFetchSource() ) {
+			throw illegalFetch();
+		}
+
 		Fetch<X, Y> fetch = constructJoin( attribute, jt );
 		joinScope.addFetch( fetch );
 		return fetch;
@@ -518,15 +554,19 @@ public abstract class FromImpl<Z,X>
 	}
 
 	public <Y> Fetch<X, Y> fetch(PluralAttribute<? super X, ?, Y> pluralAttribute, JoinType jt) {
+		if ( ! canBeFetchSource() ) {
+			throw illegalFetch();
+		}
+
 		final Fetch<X, Y> fetch;
 		// TODO : combine Fetch and Join hierarchies (JoinImplementor extends Join,Fetch???)
-		if ( CollectionType.COLLECTION.equals( pluralAttribute.getCollectionType() ) ) {
+		if ( PluralAttribute.CollectionType.COLLECTION.equals( pluralAttribute.getCollectionType() ) ) {
 			fetch = constructJoin( (CollectionAttribute<X,Y>) pluralAttribute, jt );
 		}
-		else if ( CollectionType.LIST.equals( pluralAttribute.getCollectionType() ) ) {
+		else if ( PluralAttribute.CollectionType.LIST.equals( pluralAttribute.getCollectionType() ) ) {
 			fetch = constructJoin( (ListAttribute<X,Y>) pluralAttribute, jt );
 		}
-		else if ( CollectionType.SET.equals( pluralAttribute.getCollectionType() ) ) {
+		else if ( PluralAttribute.CollectionType.SET.equals( pluralAttribute.getCollectionType() ) ) {
 			fetch = constructJoin( (SetAttribute<X,Y>) pluralAttribute, jt );
 		}
 		else {
@@ -542,88 +582,16 @@ public abstract class FromImpl<Z,X>
 
 	@SuppressWarnings({ "unchecked" })
 	public <X,Y> Fetch<X, Y> fetch(String attributeName, JoinType jt) {
-		Attribute<X,?> attribute = (Attribute<X, ?>) getAttribute( attributeName );
+		if ( ! canBeFetchSource() ) {
+			throw illegalFetch();
+		}
+
+		Attribute<X,?> attribute = (Attribute<X, ?>) locateAttribute( attributeName );
 		if ( attribute.isCollection() ) {
 			return (Fetch<X, Y>) fetch( (PluralAttribute) attribute, jt );
 		}
 		else {
 			return (Fetch<X, Y>) fetch( (SingularAttribute) attribute, jt );
-		}
-	}
-
-
-	// PATH HANDLING ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-	@Override
-	public <Y> Path<Y> get(SingularAttribute<? super X, Y> attribute) {
-		if ( PersistentAttributeType.BASIC.equals( attribute.getPersistentAttributeType() ) ) {
-            return new PathImpl<Y>( queryBuilder(), attribute.getJavaType(), this, attribute, attribute.getBindableType() );
-        }
-		else {
-			return join( attribute );
-        }
-	}
-
-	@Override
-	public <E, C extends Collection<E>> Expression<C> get(PluralAttribute<X, C, E> collection) {
-		return new CollectionExpression<C>( queryBuilder(), collection.getJavaType(), this, collection );
-	}
-
-	@Override
-	@SuppressWarnings({ "unchecked" })
-	public <K, V, M extends Map<K, V>> Expression<M> get(MapAttribute<X, K, V> map) {
-		return ( Expression<M> ) new CollectionExpression<Map<K, V>>( queryBuilder(), map.getJavaType(), this, map );
-	}
-
-	@Override
-	@SuppressWarnings({ "unchecked" })
-	public <Y> Path<Y> get(String attributeName) {
-		Attribute attribute = getAttribute( attributeName );
-		if ( attribute.isCollection() ) {
-			final PluralAttribute<X,?,Y> pluralAttribute = (PluralAttribute<X, ?, Y>) attribute;
-			if ( CollectionType.COLLECTION.equals( pluralAttribute.getCollectionType() ) ) {
-				return join( (CollectionAttribute<X,Y>) attribute );
-			}
-			else if ( CollectionType.LIST.equals( pluralAttribute.getCollectionType() ) ) {
-				return join( (ListAttribute<X,Y>) attribute );
-			}
-			else if ( CollectionType.SET.equals( pluralAttribute.getCollectionType() ) ) {
-				return join( (SetAttribute<X,Y>) attribute );
-			}
-			else {
-				return join( (MapAttribute<X,?,Y>) attribute );
-			}
-		}
-		else {
-			return get( (SingularAttribute<X,Y>) attribute );
-		}
-	}
-
-	@Override
-	public String getPathIdentifier() {
-		return getAlias();
-	}
-
-	@Override
-	public String render(CriteriaQueryCompiler.RenderingContext renderingContext) {
-		prepareAlias( renderingContext );
-		return getAlias();
-	}
-
-	@Override
-	public String renderProjection(CriteriaQueryCompiler.RenderingContext renderingContext) {
-		prepareAlias( renderingContext );
-		return getAlias();
-	}
-
-	public String renderTableExpression(CriteriaQueryCompiler.RenderingContext renderingContext) {
-		prepareAlias( renderingContext );
-		return ( (EntityType) getModel() ).getName() + " as " + getAlias();
-	}
-	
-	public void prepareAlias(CriteriaQueryCompiler.RenderingContext renderingContext) {
-		if ( getAlias() == null ) {
-			setAlias( renderingContext.generateAlias() );
 		}
 	}
 }

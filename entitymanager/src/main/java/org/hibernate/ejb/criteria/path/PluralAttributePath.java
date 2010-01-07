@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2009 by Red Hat Inc and/or its affiliates or by
- * third-party contributors as indicated by either @author tags or express
- * copyright attribution statements applied by the authors.  All
- * third-party contributions are distributed under license by Red Hat Inc.
+ * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -21,33 +21,35 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.ejb.criteria.expression;
+package org.hibernate.ejb.criteria.path;
 
 import java.io.Serializable;
+import javax.persistence.metamodel.Attribute;
+import javax.persistence.metamodel.Bindable;
 import javax.persistence.metamodel.PluralAttribute;
-import org.hibernate.ejb.criteria.ParameterRegistry;
+
 import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
-import org.hibernate.ejb.criteria.PathImpl;
-import org.hibernate.ejb.criteria.CriteriaQueryCompiler;
+import org.hibernate.ejb.criteria.PathSource;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
 
 /**
- * TODO : javadoc
+ * Models a path for a {@link PluralAttribute} generally obtained from a
+ * {@link javax.persistence.criteria.Path#get} call
  *
  * @author Steve Ebersole
  */
-public class CollectionExpression<C> extends ExpressionImpl<C> implements Serializable {
-	private final PathImpl origin;
+public class PluralAttributePath<X> extends AbstractPathImpl<X> implements Serializable {
+	private final PluralAttribute<?,X,?> attribute;
 	private final CollectionPersister persister;
-	private final PluralAttribute<?, C, ?> attribute;
 
-	public CollectionExpression(
+	public PluralAttributePath(
 			CriteriaBuilderImpl criteriaBuilder,
-			Class<C> javaType,
-			PathImpl origin,
-			PluralAttribute<?, C, ?> attribute) {
-		this( criteriaBuilder, javaType, resolvePersister( criteriaBuilder, attribute ), origin, attribute );
+			PathSource source,
+			PluralAttribute<?,X,?> attribute) {
+		super( criteriaBuilder, attribute.getJavaType(), source );
+		this.attribute = attribute;
+		this.persister = resolvePersister( criteriaBuilder, attribute );
 	}
 
 	private static CollectionPersister resolvePersister(CriteriaBuilderImpl criteriaBuilder, PluralAttribute attribute) {
@@ -61,35 +63,32 @@ public class CollectionExpression<C> extends ExpressionImpl<C> implements Serial
 				'.' + attribute.getName();
 	}
 
-	public CollectionExpression(
-			CriteriaBuilderImpl criteriaBuilder,
-			Class<C> javaType,
-			CollectionPersister persister,
-			PathImpl origin,
-			PluralAttribute<?, C, ?> attribute) {
-		super( criteriaBuilder, javaType );
-		this.origin = origin;
-		this.persister = persister;
-		this.attribute = attribute;
-	}
-
-	public PluralAttribute<?, C, ?> getAttribute() {
+	public PluralAttribute<?,X,?> getAttribute() {
 		return attribute;
 	}
 
+	@SuppressWarnings({ "UnusedDeclaration" })
 	public CollectionPersister getPersister() {
 		return persister;
 	}
 
-	public void registerParameters(ParameterRegistry registry) {
-		// none to register
+	@Override
+	protected boolean canBeDereferenced() {
+		// cannot be dereferenced
+		return false;
 	}
 
-	public String render(CriteriaQueryCompiler.RenderingContext renderingContext) {
-		return origin.getPathIdentifier() + '.' + getAttribute().getName();
+	@Override
+	protected Attribute locateAttributeInternal(String attributeName) {
+		throw new IllegalArgumentException( "Plural attribute paths cannot be further dereferenced" );
 	}
 
-	public String renderProjection(CriteriaQueryCompiler.RenderingContext renderingContext) {
-		return render( renderingContext );
+	public Bindable<X> getModel() {
+		// the issue here is the parameterized type; X is the collection
+		// type (Map, Set, etc) while the "bindable" for a collection is the
+		// elements.
+		//
+		// TODO : throw exception instead?
+		return null;
 	}
 }

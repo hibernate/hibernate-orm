@@ -45,7 +45,6 @@ import javax.persistence.Tuple;
 import org.hibernate.ejb.EntityManagerFactoryImpl;
 import org.hibernate.ejb.criteria.expression.BinaryArithmeticOperation;
 import org.hibernate.ejb.criteria.expression.CoalesceExpression;
-import org.hibernate.ejb.criteria.expression.CollectionExpression;
 import org.hibernate.ejb.criteria.expression.CompoundSelectionImpl;
 import org.hibernate.ejb.criteria.expression.ConcatExpression;
 import org.hibernate.ejb.criteria.expression.ParameterExpressionImpl;
@@ -70,6 +69,7 @@ import org.hibernate.ejb.criteria.expression.function.SqrtFunction;
 import org.hibernate.ejb.criteria.expression.function.SubstringFunction;
 import org.hibernate.ejb.criteria.expression.function.TrimFunction;
 import org.hibernate.ejb.criteria.expression.function.UpperFunction;
+import org.hibernate.ejb.criteria.path.PluralAttributePath;
 import org.hibernate.ejb.criteria.predicate.BooleanAssertionPredicate;
 import org.hibernate.ejb.criteria.predicate.BooleanExpressionPredicate;
 import org.hibernate.ejb.criteria.predicate.NullnessPredicate;
@@ -1275,8 +1275,8 @@ public class CriteriaBuilderImpl implements CriteriaBuilder, Serializable {
 		if ( LiteralExpression.class.isInstance(exp) ) {
 			return size( ( (LiteralExpression<C>) exp ).getLiteral() );
 		}
-		else if ( CollectionExpression.class.isInstance(exp) ) {
-			return new SizeOfCollectionExpression<C>(this, (CollectionExpression<C>) exp );
+		else if ( PluralAttributePath.class.isInstance(exp) ) {
+			return new SizeOfCollectionExpression<C>(this, (PluralAttributePath<C>) exp );
 		}
 		// TODO : what other specific types?  any?
 		throw new IllegalArgumentException("unknown collection expression type [" + exp.getClass().getName() + "]" );
@@ -1302,11 +1302,8 @@ public class CriteriaBuilderImpl implements CriteriaBuilder, Serializable {
 	 */
 	@SuppressWarnings({ "unchecked" })
 	public <C extends Collection<?>> Predicate isEmpty(Expression<C> collectionExpression) {
-		if ( CollectionExpression.class.isInstance(collectionExpression) ) {
-			return new IsEmptyPredicate(
-					this,
-					(CollectionExpression<C>) collectionExpression
-			);
+		if ( PluralAttributePath.class.isInstance(collectionExpression) ) {
+			return new IsEmptyPredicate( this, (PluralAttributePath<C>) collectionExpression );
 		}
 		// TODO : what other specific types?  any?
 		throw new IllegalArgumentException(
@@ -1325,7 +1322,7 @@ public class CriteriaBuilderImpl implements CriteriaBuilder, Serializable {
 	 * {@inheritDoc}
 	 */
 	public <E, C extends Collection<E>> Predicate isMember(E e, Expression<C> collectionExpression) {
-		if ( ! CollectionExpression.class.isInstance(collectionExpression) ) {
+		if ( ! PluralAttributePath.class.isInstance( collectionExpression ) ) {
 			throw new IllegalArgumentException(
 					"unknown collection expression type [" + collectionExpression.getClass().getName() + "]"
 			);
@@ -1333,7 +1330,7 @@ public class CriteriaBuilderImpl implements CriteriaBuilder, Serializable {
 		return new MemberOfPredicate<E, C>(
 				this,
 				e, 
-				(CollectionExpression<C>)collectionExpression
+				(PluralAttributePath<C>)collectionExpression
 		);
 	}
 
@@ -1348,7 +1345,7 @@ public class CriteriaBuilderImpl implements CriteriaBuilder, Serializable {
 	 * {@inheritDoc}
 	 */
 	public <E, C extends Collection<E>> Predicate isMember(Expression<E> elementExpression, Expression<C> collectionExpression) {
-		if ( ! CollectionExpression.class.isInstance(collectionExpression) ) {
+		if ( ! PluralAttributePath.class.isInstance( collectionExpression ) ) {
 			throw new IllegalArgumentException(
 					"unknown collection expression type [" + collectionExpression.getClass().getName() + "]"
 			);
@@ -1356,7 +1353,7 @@ public class CriteriaBuilderImpl implements CriteriaBuilder, Serializable {
 		return new MemberOfPredicate<E, C>(
 				this,
 				elementExpression,
-				(CollectionExpression<C>)collectionExpression
+				(PluralAttributePath<C>)collectionExpression
 		);
 	}
 

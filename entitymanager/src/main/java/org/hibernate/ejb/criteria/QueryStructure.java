@@ -44,6 +44,8 @@ import javax.persistence.criteria.Fetch;
 import javax.persistence.criteria.JoinType;
 import javax.persistence.metamodel.EntityType;
 
+import org.hibernate.ejb.criteria.path.RootImpl;
+
 /**
  * Models basic query structure.  Used as a delegate in implementing both
  * {@link org.hibernate.criterion.CriteriaQuery} and
@@ -222,9 +224,9 @@ public class QueryStructure<T> implements Serializable {
 		jpaqlQuery.append( " from " );
 		String sep = "";
 		for ( Root root : getRoots() ) {
-			( (TableExpressionMapper) root ).prepareAlias( renderingContext );
+			( (FromImplementor) root ).prepareAlias( renderingContext );
 			jpaqlQuery.append( sep );
-			jpaqlQuery.append( ( ( TableExpressionMapper ) root ).renderTableExpression( renderingContext ) );
+			jpaqlQuery.append( ( (FromImplementor) root ).renderTableExpression( renderingContext ) );
 			sep = ", ";
 		}
 
@@ -264,9 +266,9 @@ public class QueryStructure<T> implements Serializable {
 		}
 
 		for ( Join join : joins ) {
-			( (TableExpressionMapper) join ).prepareAlias( renderingContext );
+			( (FromImplementor) join ).prepareAlias( renderingContext );
 			jpaqlQuery.append( renderJoinType( join.getJoinType() ) )
-					.append( ( ( TableExpressionMapper ) join ).renderTableExpression( renderingContext ) );
+					.append( ( (FromImplementor) join ).renderTableExpression( renderingContext ) );
 			renderJoins( jpaqlQuery, renderingContext, join.getJoins() );
 			renderFetches( jpaqlQuery, renderingContext, join.getFetches() );
 		}
@@ -297,10 +299,10 @@ public class QueryStructure<T> implements Serializable {
 		}
 
 		for ( Fetch fetch : fetches ) {
-			( (TableExpressionMapper) fetch ).prepareAlias( renderingContext );
+			( (FromImplementor) fetch ).prepareAlias( renderingContext );
 			jpaqlQuery.append( renderJoinType( fetch.getJoinType() ) )
 					.append( "fetch " )
-					.append( ( ( TableExpressionMapper ) fetch ).renderTableExpression( renderingContext ) );
+					.append( ( (FromImplementor) fetch ).renderTableExpression( renderingContext ) );
 
 			renderFetches( jpaqlQuery, renderingContext, fetch.getFetches() );
 		}

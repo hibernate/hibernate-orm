@@ -28,6 +28,7 @@ import java.util.Collection;
 import org.hibernate.ejb.criteria.ParameterRegistry;
 import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
 import org.hibernate.ejb.criteria.CriteriaQueryCompiler;
+import org.hibernate.ejb.criteria.path.PluralAttributePath;
 
 /**
  * Represents a "size of" expression in regards to a persistent collection; the implication is
@@ -38,17 +39,17 @@ import org.hibernate.ejb.criteria.CriteriaQueryCompiler;
 public class SizeOfCollectionExpression<C extends Collection>
 		extends ExpressionImpl<Integer>
 		implements Serializable {
-	private final CollectionExpression<C> collectionExpression;
+	private final PluralAttributePath<C> collectionPath;
 
 	public SizeOfCollectionExpression(
 			CriteriaBuilderImpl criteriaBuilder,
-			CollectionExpression<C> collectionExpression) {
+			PluralAttributePath<C> collectionPath) {
 		super( criteriaBuilder, Integer.class);
-		this.collectionExpression = collectionExpression;
+		this.collectionPath = collectionPath;
 	}
 
-	public CollectionExpression<C> getCollectionExpression() {
-		return collectionExpression;
+	public PluralAttributePath<C> getCollectionPath() {
+		return collectionPath;
 	}
 
 	public void registerParameters(ParameterRegistry registry) {
@@ -56,7 +57,7 @@ public class SizeOfCollectionExpression<C extends Collection>
 	}
 
 	public String render(CriteriaQueryCompiler.RenderingContext renderingContext) {
-		return "size(" + getCollectionExpression().render( renderingContext ) + ")";
+		return "size(" + getCollectionPath().render( renderingContext ) + ")";
 	}
 
 	public String renderProjection(CriteriaQueryCompiler.RenderingContext renderingContext) {

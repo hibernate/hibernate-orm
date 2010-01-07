@@ -28,8 +28,8 @@ import java.util.Collection;
 import org.hibernate.ejb.criteria.ParameterRegistry;
 import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
 import org.hibernate.ejb.criteria.CriteriaQueryCompiler;
-import org.hibernate.ejb.criteria.expression.CollectionExpression;
 import org.hibernate.ejb.criteria.expression.UnaryOperatorExpression;
+import org.hibernate.ejb.criteria.path.PluralAttributePath;
 
 /**
  * Models an <tt>IS [NOT] EMPTY</tt> restriction
@@ -40,17 +40,17 @@ public class IsEmptyPredicate<C extends Collection>
 		extends AbstractSimplePredicate
 		implements UnaryOperatorExpression<Boolean>, Serializable {
 
-	private final CollectionExpression<C> collectionExpression;
+	private final PluralAttributePath<C> collectionPath;
 
 	public IsEmptyPredicate(
 			CriteriaBuilderImpl criteriaBuilder,
-			CollectionExpression<C> collectionExpression) {
+			PluralAttributePath<C> collectionPath) {
 		super( criteriaBuilder );
-		this.collectionExpression = collectionExpression;
+		this.collectionPath = collectionPath;
 	}
 
-	public CollectionExpression<C> getOperand() {
-		return collectionExpression;
+	public PluralAttributePath<C> getOperand() {
+		return collectionPath;
 	}
 
 	public void registerParameters(ParameterRegistry registry) {

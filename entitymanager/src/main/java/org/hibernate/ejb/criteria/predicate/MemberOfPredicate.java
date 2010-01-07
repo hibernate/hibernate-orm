@@ -30,8 +30,8 @@ import org.hibernate.ejb.criteria.ParameterRegistry;
 import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
 import org.hibernate.ejb.criteria.CriteriaQueryCompiler;
 import org.hibernate.ejb.criteria.Renderable;
-import org.hibernate.ejb.criteria.expression.CollectionExpression;
 import org.hibernate.ejb.criteria.expression.LiteralExpression;
+import org.hibernate.ejb.criteria.path.PluralAttributePath;
 
 /**
  * Models an <tt>[NOT] MEMBER OF</tt> restriction
@@ -43,30 +43,30 @@ public class MemberOfPredicate<E, C extends Collection<E>>
 		implements Serializable {
 
 	private final Expression<E> elementExpression;
-	private final CollectionExpression<C> collectionExpression;
+	private final PluralAttributePath<C> collectionPath;
 
 	public MemberOfPredicate(
 			CriteriaBuilderImpl criteriaBuilder,
 			Expression<E> elementExpression,
-			CollectionExpression<C> collectionExpression) {
+			PluralAttributePath<C> collectionPath) {
 		super( criteriaBuilder );
 		this.elementExpression = elementExpression;
-		this.collectionExpression = collectionExpression;
+		this.collectionPath = collectionPath;
 	}
 
 	public MemberOfPredicate(
 			CriteriaBuilderImpl criteriaBuilder,
 			E element,
-			CollectionExpression<C> collectionExpression) {
+			PluralAttributePath<C> collectionPath) {
 		this(
 				criteriaBuilder,
 				new LiteralExpression<E>( criteriaBuilder, element ),
-				collectionExpression
+				collectionPath
 		);
 	}
 
-	public CollectionExpression<C> getCollectionExpression() {
-		return collectionExpression;
+	public PluralAttributePath<C> getCollectionPath() {
+		return collectionPath;
 	}
 
 	public Expression<E> getElementExpression() {
@@ -74,14 +74,14 @@ public class MemberOfPredicate<E, C extends Collection<E>>
 	}
 
 	public void registerParameters(ParameterRegistry registry) {
-		Helper.possibleParameter( getCollectionExpression(), registry );
+		Helper.possibleParameter( getCollectionPath(), registry );
 		Helper.possibleParameter( getElementExpression(), registry );
 	}
 
 	public String render(CriteriaQueryCompiler.RenderingContext renderingContext) {
 		return ( (Renderable) elementExpression ).render( renderingContext )
 				+ ( isNegated() ? " not" : "" ) + " member of "
-				+ collectionExpression.render( renderingContext );
+				+ getCollectionPath().render( renderingContext );
 	}
 
 	public String renderProjection(CriteriaQueryCompiler.RenderingContext renderingContext) {

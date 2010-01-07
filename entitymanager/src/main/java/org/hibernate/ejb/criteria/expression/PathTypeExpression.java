@@ -21,21 +21,34 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.ejb.criteria;
+package org.hibernate.ejb.criteria.expression;
 
-import javax.persistence.criteria.Path;
-import javax.persistence.metamodel.Attribute;
+import java.io.Serializable;
+
+import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
+import org.hibernate.ejb.criteria.CriteriaQueryCompiler;
+import org.hibernate.ejb.criteria.ParameterRegistry;
 
 /**
- * Implementation contract for the JPA {@link Path} interface.
+ * Used to construct the result of {@link javax.persistence.criteria.Path#type()}
  *
  * @author Steve Ebersole
  */
-public interface PathImplementor<X> extends ExpressionImplementor<X>, Path<X>, PathSource<X>, Renderable {
-	/**
-	 * Retrieve reference to the attribute this path represents.
-	 *
-	 * @return The metamodel attribute.
-	 */
-	public Attribute<?, ?> getAttribute();
+public class PathTypeExpression<T> extends ExpressionImpl<T> implements Serializable {
+	public PathTypeExpression(CriteriaBuilderImpl criteriaBuilder, Class<T> javaType) {
+		super( criteriaBuilder, javaType );
+	}
+
+	public void registerParameters(ParameterRegistry registry) {
+		// nothing to do
+	}
+
+	public String render(CriteriaQueryCompiler.RenderingContext renderingContext) {
+		// todo : is it valid for this to get rendered into the query itself?
+		throw new IllegalArgumentException( "Unexpected call on EntityTypeExpression#render" );
+	}
+
+	public String renderProjection(CriteriaQueryCompiler.RenderingContext renderingContext) {
+		return render( renderingContext );
+	}
 }

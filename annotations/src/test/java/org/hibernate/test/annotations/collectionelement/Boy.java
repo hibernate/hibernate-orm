@@ -36,7 +36,10 @@ public class Boy {
 	private String firstName;
 	private String lastName;
 	private Set<String> nickNames = new HashSet<String>();
+	private Set<String> hatedNames = new HashSet<String>();
+	private Set<String> preferredNames = new HashSet<String>();
 	private Map<String, Integer> scorePerNickName = new HashMap<String, Integer>();
+	private Map<String, Integer> scorePerPreferredName = new HashMap<String, Integer>();
 	private int[] favoriteNumbers;
 	private Set<Toy> favoriteToys = new HashSet<Toy>();
 	private Set<Character> characters = new HashSet<Character>();
@@ -76,6 +79,34 @@ public class Boy {
 
 	public void setNickNames(Set<String> nickName) {
 		this.nickNames = nickName;
+	}
+
+	@ElementCollection //default column names
+	public Set<String> getHatedNames() {
+		return hatedNames;
+	}
+
+	public void setHatedNames(Set<String> hatedNames) {
+		this.hatedNames = hatedNames;
+	}
+
+	@ElementCollection //default column names
+	@Column
+	public Set<String> getPreferredNames() {
+		return preferredNames;
+	}
+
+	public void setPreferredNames(Set<String> preferredNames) {
+		this.preferredNames = preferredNames;
+	}
+
+	@ElementCollection	
+	public Map<String, Integer> getScorePerPreferredName() {
+		return scorePerPreferredName;
+	}
+
+	public void setScorePerPreferredName(Map<String, Integer> scorePerPreferredName) {
+		this.scorePerPreferredName = scorePerPreferredName;
 	}
 
 	@ElementCollection

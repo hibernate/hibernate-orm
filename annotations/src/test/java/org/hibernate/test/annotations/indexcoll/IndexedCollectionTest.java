@@ -33,13 +33,13 @@ public class IndexedCollectionTest extends TestCase {
 		isDefaultKeyColumnPresent( Drawer.class.getName(), "dresses", "_ORDER" );
 	}
 
-	private void isDefaultKeyColumnPresent(String collectionRole, String propertyName, String suffix) {
+	private void isDefaultKeyColumnPresent(String collectionOwner, String propertyName, String suffix) {
 		assertTrue( "Could not find " + propertyName + suffix,
-				isDefaultColumnPresent(collectionRole, propertyName, suffix) );
+				isDefaultColumnPresent(collectionOwner, propertyName, suffix) );
 	}
 
-	private boolean isDefaultColumnPresent(String collectionRole, String propertyName, String suffix) {
-		final Collection collection = getCfg().getCollectionMapping( collectionRole + "." + propertyName );
+	private boolean isDefaultColumnPresent(String collectionOwner, String propertyName, String suffix) {
+		final Collection collection = getCfg().getCollectionMapping( collectionOwner + "." + propertyName );
 		final Iterator columnIterator = collection.getCollectionTable().getColumnIterator();
 		boolean hasDefault = false;
 		while ( columnIterator.hasNext() ) {
@@ -49,9 +49,9 @@ public class IndexedCollectionTest extends TestCase {
 		return hasDefault;
 	}
 
-	private void isNotDefaultKeyColumnPresent(String collectionRole, String propertyName, String suffix) {
+	private void isNotDefaultKeyColumnPresent(String collectionOwner, String propertyName, String suffix) {
 		assertFalse( "Could not find " + propertyName + suffix,
-				isDefaultColumnPresent(collectionRole, propertyName, suffix) );
+				isDefaultColumnPresent(collectionOwner, propertyName, suffix) );
 	}
 
 	public void testFkList() throws Exception {

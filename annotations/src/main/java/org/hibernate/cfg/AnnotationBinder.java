@@ -1552,7 +1552,9 @@ public final class AnnotationBinder {
 			collectionBinder.setAccessType( inferredData.getDefaultAccess() );
 
 			Ejb3Column[] elementColumns;
-			PropertyData virtualProperty = new WrappedInferredData( inferredData, "element" );
+			//do not use "element" if you are a JPA 2 @ElementCollection only for legacy Hibernate mappings
+			boolean isJPA2ForValueMapping = property.isAnnotationPresent( ElementCollection.class );
+			PropertyData virtualProperty = isJPA2ForValueMapping ? inferredData : new WrappedInferredData( inferredData, "element" );
 			if ( property.isAnnotationPresent( Column.class ) || property.isAnnotationPresent(
 					Formula.class
 			) ) {

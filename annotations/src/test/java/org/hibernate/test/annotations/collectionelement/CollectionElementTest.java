@@ -2,6 +2,7 @@
 package org.hibernate.test.annotations.collectionelement;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 
@@ -9,8 +10,11 @@ import org.hibernate.Filter;
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.mapping.Collection;
+import org.hibernate.mapping.Column;
 import org.hibernate.test.annotations.Country;
 import org.hibernate.test.annotations.TestCase;
+import org.hibernate.util.StringHelper;
 
 /**
  * @author Emmanuel Bernard
@@ -210,6 +214,32 @@ public class CollectionElementTest extends TestCase {
 		assertEquals( 1.1f, m.getValues().get( 1 ) );
 		tx.rollback();
 		s.close();
+	}
+
+	public void testDefaultValueColumnForBasic() throws Exception {
+		isDefaultValueCollectionColumnPresent( Boy.class.getName(), "hatedNames" );
+		isDefaultValueCollectionColumnPresent( Boy.class.getName(), "preferredNames" );
+		isValueCollectionColumnPresent( Boy.class.getName(), "nickNames", "element" );
+		isDefaultValueCollectionColumnPresent( Boy.class.getName(), "scorePerPreferredName");
+	}
+
+	private void isLegacyValueCollectionColumnPresent(String collectionHolder, String propertyName) {
+
+	}
+
+	private void isDefaultValueCollectionColumnPresent(String collectionOwner, String propertyName) {
+		isValueCollectionColumnPresent( collectionOwner, propertyName, propertyName );
+	}
+
+	private void isValueCollectionColumnPresent(String collectionOwner, String propertyName, String columnName) {
+		final Collection collection = getCfg().getCollectionMapping( collectionOwner + "." + propertyName );
+		final Iterator columnIterator = collection.getCollectionTable().getColumnIterator();
+		boolean hasDefault = false;
+		while ( columnIterator.hasNext() ) {
+			Column column = (Column) columnIterator.next();
+			if ( columnName.equals( column.getName() ) ) hasDefault = true;
+		}
+		assertTrue( "Could not find " + columnName, hasDefault );
 	}
 
 	protected Class[] getMappings() {

@@ -1,9 +1,11 @@
 //$Id$
 package org.hibernate.test.annotations.indexcoll;
 
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import javax.persistence.CascadeType;
+import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
@@ -13,6 +15,8 @@ import javax.persistence.JoinTable;
 import javax.persistence.JoinColumn;
 import javax.persistence.MapKeyColumn;
 import javax.persistence.MapKeyJoinColumn;
+import javax.persistence.MapKeyTemporal;
+import javax.persistence.TemporalType;
 
 import org.hibernate.annotations.MapKey;
 import org.hibernate.annotations.CollectionOfElements;
@@ -29,6 +33,10 @@ public class Atmosphere {
 	@ManyToMany(cascade = CascadeType.ALL)
 	@MapKeyColumn(name="gas_name")
 	public Map<String, Gas> gases = new HashMap<String, Gas>();
+
+	@MapKeyTemporal(TemporalType.DATE)
+	@ElementCollection
+	public Map<Date, String> colorPerDate = new HashMap<Date,String>();
 
 	@ManyToMany(cascade = CascadeType.ALL)
 	@MapKeyJoinColumn(name="gas_id" )

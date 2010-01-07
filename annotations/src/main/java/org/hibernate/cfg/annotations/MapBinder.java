@@ -271,8 +271,12 @@ public class MapBinder extends CollectionBinder {
 					//do not call setType as it extract the type from @Type
 					//the algorithm generally does not apply for map key anyway
 					MapKey mapKeyAnn = property.getAnnotation( org.hibernate.annotations.MapKey.class );
+					elementBinder.setKey(true);
 					if (mapKeyAnn != null && ! BinderHelper.isDefault( mapKeyAnn.type().type() ) ) {
 						elementBinder.setExplicitType( mapKeyAnn.type() );
+					}
+					else {
+						elementBinder.setType( property, elementClass );
 					}
 					mapValue.setIndex( elementBinder.make() );
 				}

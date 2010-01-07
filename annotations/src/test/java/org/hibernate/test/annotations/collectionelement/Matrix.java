@@ -27,7 +27,7 @@ public class Matrix {
 	@ElementCollection
 	@Sort(type = SortType.NATURAL) 
 	@Type(type = "float")
-	private SortedMap<Integer, Float> values = new TreeMap<Integer, Float>();
+	private SortedMap<Integer, Float> mvalues = new TreeMap<Integer, Float>();
 
 	public Integer getId() {
 		return id;
@@ -37,11 +37,11 @@ public class Matrix {
 		this.id = id;
 	}
 
-	public Map<Integer, Float> getValues() {
-		return values;
+	public Map<Integer, Float> getMvalues() {
+		return mvalues;
 	}
 
-	public void setValues(SortedMap<Integer, Float> values) {
-		this.values = values;
+	public void setMvalues(SortedMap<Integer, Float> mValues) {
+		this.mvalues = mValues;
 	}
 }

@@ -14,7 +14,6 @@ import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Column;
 import org.hibernate.test.annotations.Country;
 import org.hibernate.test.annotations.TestCase;
-import org.hibernate.util.StringHelper;
 
 /**
  * @author Emmanuel Bernard
@@ -204,14 +203,14 @@ public class CollectionElementTest extends TestCase {
 
 	public void testMapKeyType() throws Exception {
 		Matrix m = new Matrix();
-		m.getValues().put( 1, 1.1f );
+		m.getMvalues().put( 1, 1.1f );
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
 		s.persist( m );
 		s.flush();
 		s.clear();
 		m = (Matrix) s.get( Matrix.class, m.getId() );
-		assertEquals( 1.1f, m.getValues().get( 1 ) );
+		assertEquals( 1.1f, m.getMvalues().get( 1 ) );
 		tx.rollback();
 		s.close();
 	}

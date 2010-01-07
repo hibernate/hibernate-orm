@@ -30,7 +30,9 @@ import java.util.Date;
 import java.util.Properties;
 import javax.persistence.Enumerated;
 import javax.persistence.Lob;
+import javax.persistence.MapKeyTemporal;
 import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
@@ -70,6 +72,8 @@ public class SimpleValueBinder {
 	private Table table;
 	private SimpleValue simpleValue;
 	private boolean isVersion;
+	//is a Map key
+	private boolean key;
 
 	public boolean isVersion() {
 		return isVersion;
@@ -112,8 +116,9 @@ public class SimpleValueBinder {
 		Properties typeParameters = this.typeParameters;
 		typeParameters.clear();
 		String type = BinderHelper.ANNOTATION_STRING_DEFAULT;
-		if ( property.isAnnotationPresent( Temporal.class ) ) {
-			Temporal ann = property.getAnnotation( Temporal.class );
+		if ( (!key && property.isAnnotationPresent( Temporal.class ) ) 
+				|| (key && property.isAnnotationPresent( MapKeyTemporal.class ) )) {
+
 			boolean isDate;
 			if ( mappings.getReflectionManager().equals( returnedClassOrElement, Date.class ) ) {
 				isDate = true;
@@ -127,8 +132,8 @@ public class SimpleValueBinder {
 								+ StringHelper.qualify( persistentClassName, propertyName )
 				);
 			}
-
-			switch ( ann.value() ) {
+			final TemporalType temporalType = getTemporalType( property );
+			switch ( temporalType ) {
 				case DATE:
 					type = isDate ? "date" : "calendar_date";
 					break;
@@ -145,7 +150,7 @@ public class SimpleValueBinder {
 					type = isDate ? "timestamp" : "calendar";
 					break;
 				default:
-					throw new AssertionFailure( "Unknown temporal type: " + ann.value() );
+					throw new AssertionFailure( "Unknown temporal type: " + temporalType );
 			}
 		}
 		else if ( property.isAnnotationPresent( Lob.class ) ) {
@@ -219,8 +224,19 @@ public class SimpleValueBinder {
 		}
 		explicitType = type;
 		this.typeParameters = typeParameters;
-		Type annType = (Type) property.getAnnotation( Type.class );
+		Type annType = property.getAnnotation( Type.class );
 		setExplicitType( annType );
+	}
+
+	private TemporalType getTemporalType(XProperty property) {
+		if (key) {
+			MapKeyTemporal ann = property.getAnnotation( MapKeyTemporal.class );
+			return ann.value();
+		}
+		else {
+			Temporal ann = property.getAnnotation( Temporal.class );
+			return ann.value();
+		}
 	}
 
 	public void setExplicitType(String explicitType) {
@@ -296,5 +312,9 @@ public class SimpleValueBinder {
 			simpleValue.setTypeName( "integer" );
 		}
 				
+	}
+
+	public void setKey(boolean key) {
+		this.key = key;
 	}
 }

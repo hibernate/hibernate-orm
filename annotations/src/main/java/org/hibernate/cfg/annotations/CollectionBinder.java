@@ -36,6 +36,7 @@ import javax.persistence.ElementCollection;
 import javax.persistence.Embeddable;
 import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
+import javax.persistence.JoinColumns;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
 import javax.persistence.MapKey;
@@ -468,6 +469,7 @@ public abstract class CollectionBinder {
 
 		if (isMappedBy
 				&& (property.isAnnotationPresent( JoinColumn.class )
+					|| property.isAnnotationPresent( JoinColumns.class )
 					|| property.isAnnotationPresent( JoinTable.class ) ) ) {
 			String message = "Associations marked as mappedBy must not define database mappings like @JoinTable or @JoinColumn: ";
 			message += StringHelper.qualify( propertyHolder.getPath(), propertyName );
@@ -1415,6 +1417,9 @@ public abstract class CollectionBinder {
 				joinColumns, collValue.getOwner(), collectionEntity, collValue, false, mappings
 		);
 		SimpleValue key = buildCollectionKey( collValue, joinColumns, cascadeDeleteEnabled, property, mappings );
+		if ( property.isAnnotationPresent( ElementCollection.class ) && joinColumns.length > 0 ) {
+			joinColumns[0].setJPA2ElementCollection( true );
+		}
 		TableBinder.bindFk( collValue.getOwner(), collectionEntity, joinColumns, key, false, mappings );
 	}
 

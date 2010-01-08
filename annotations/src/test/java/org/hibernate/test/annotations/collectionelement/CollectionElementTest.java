@@ -218,8 +218,12 @@ public class CollectionElementTest extends TestCase {
 	public void testDefaultValueColumnForBasic() throws Exception {
 		isDefaultValueCollectionColumnPresent( Boy.class.getName(), "hatedNames" );
 		isDefaultValueCollectionColumnPresent( Boy.class.getName(), "preferredNames" );
-		isValueCollectionColumnPresent( Boy.class.getName(), "nickNames", "element" );
+		isCollectionColumnPresent( Boy.class.getName(), "nickNames", "element" );
 		isDefaultValueCollectionColumnPresent( Boy.class.getName(), "scorePerPreferredName");
+	}
+
+	public void testDefaultFKNameForElementCollection() throws Exception {
+		isCollectionColumnPresent( Boy.class.getName(), "hatedNames", "Boy_id" );
 	}
 
 	private void isLegacyValueCollectionColumnPresent(String collectionHolder, String propertyName) {
@@ -227,10 +231,10 @@ public class CollectionElementTest extends TestCase {
 	}
 
 	private void isDefaultValueCollectionColumnPresent(String collectionOwner, String propertyName) {
-		isValueCollectionColumnPresent( collectionOwner, propertyName, propertyName );
+		isCollectionColumnPresent( collectionOwner, propertyName, propertyName );
 	}
 
-	private void isValueCollectionColumnPresent(String collectionOwner, String propertyName, String columnName) {
+	private void isCollectionColumnPresent(String collectionOwner, String propertyName, String columnName) {
 		final Collection collection = getCfg().getCollectionMapping( collectionOwner + "." + propertyName );
 		final Iterator columnIterator = collection.getCollectionTable().getColumnIterator();
 		boolean hasDefault = false;

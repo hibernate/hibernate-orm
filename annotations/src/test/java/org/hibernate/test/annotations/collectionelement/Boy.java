@@ -18,6 +18,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.OrderColumn;
+import javax.persistence.Table;
 
 import org.hibernate.annotations.CollectionOfElements;
 import org.hibernate.test.annotations.collectionelement.FavoriteFood;
@@ -31,6 +32,7 @@ import org.hibernate.test.annotations.collectionelement.FavoriteFood;
 		@AttributeOverride( name="scorePerNickName.element", column = @Column(name="fld_score") ),
 		@AttributeOverride( name="favoriteToys.element.brand.surname", column = @Column(name = "fld_surname"))}
 )
+@Table(name="tbl_Boys")
 public class Boy {
 	private Integer id;
 	private String firstName;

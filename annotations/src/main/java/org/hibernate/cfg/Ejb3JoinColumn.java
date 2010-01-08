@@ -62,6 +62,11 @@ public class Ejb3JoinColumn extends Ejb3Column {
 	//table name on the mapped by side if any
 	private String mappedByTableName;
 	private String mappedByEntityName;
+	private boolean JPA2ElementCollection;
+
+	public void setJPA2ElementCollection(boolean JPA2ElementCollection) {
+		this.JPA2ElementCollection = JPA2ElementCollection;
+	}
 
 	//FIXME hacky solution to get the information at property ref resolution
 	public String getManyToManyOwnerSideEntityName() {
@@ -398,10 +403,12 @@ public class Ejb3JoinColumn extends Ejb3Column {
 
 		if ( mappedBySide ) {
 			String unquotedMappedbyTable = StringHelper.unquote( mappedByTableName );
+			final String ownerObjectName = JPA2ElementCollection && mappedByEntityName != null ?
+				StringHelper.unqualify( mappedByEntityName ) : unquotedMappedbyTable;
 			columnName = getMappings().getNamingStrategy().foreignKeyColumnName(
 					mappedByPropertyName,
 					mappedByEntityName,
-					unquotedMappedbyTable,
+					ownerObjectName,
 					unquotedLogicalReferenceColumn
 			);
 			//one element was quoted so we quote

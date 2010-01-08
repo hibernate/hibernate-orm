@@ -48,6 +48,8 @@ public class MySQLRoundFunctionTest extends FunctionalTestCase {
 	}
 	
 	public void testRoundFuntion(){
+		if(!(getDialect() instanceof MySQLDialect))
+			return;
 		Product product = new Product();
 		product.setLength( 100 );
 		product.setPrice( new BigDecimal( 1.298 ) );
@@ -67,9 +69,5 @@ public class MySQLRoundFunctionTest extends FunctionalTestCase {
 		
 	}
 
-	@Override
-	public boolean appliesTo( Dialect dialect ) {
-		return dialect instanceof MySQLDialect;
-	}
 
 }

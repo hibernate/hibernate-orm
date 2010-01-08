@@ -6,8 +6,8 @@
 <project name="HibernateEntityManager" basedir=".">
 
     <target name="generate-metamodel" depends="uptodate.check" unless="metamodel.build.notRequired">
-
         <echo>Processing JPA annotations for metamodel generation</echo>
+        <mkdir dir="${target.dir}"/>
         <javac srcdir="${src.dir}"
                destdir="${target.dir}"
                failonerror="false"
@@ -21,7 +21,6 @@
     </target>
 
     <target name="uptodate.check">
-        <mkdir dir="${target.dir}"/>
         <uptodate property="metamodel.build.notRequired" targetfile="${target.dir}/.staleflag">
             <srcfiles dir="${src.dir}" includes="**/*.java"/>
         </uptodate>

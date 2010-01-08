@@ -113,7 +113,7 @@ public class MySQLDialect extends Dialect {
 		registerFunction("ceiling", new StandardSQLFunction("ceiling", Hibernate.INTEGER) );
 		registerFunction("ceil", new StandardSQLFunction("ceil", Hibernate.INTEGER) );
 		registerFunction("floor", new StandardSQLFunction("floor", Hibernate.INTEGER) );
-		registerFunction("round", new StandardSQLFunction("round", Hibernate.INTEGER) );
+		registerFunction("round", new StandardSQLFunction("round") );
 
 		registerFunction("datediff", new StandardSQLFunction("datediff", Hibernate.INTEGER) );
 		registerFunction("timediff", new StandardSQLFunction("timediff", Hibernate.TIME) );

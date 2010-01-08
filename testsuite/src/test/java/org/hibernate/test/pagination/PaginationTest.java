@@ -126,7 +126,7 @@ public class PaginationTest extends FunctionalTestCase {
 
 		result = generateBaseCriteria( session )
 				.setFirstResult( 99 )
-				.setMaxResults( Integer.MAX_VALUE )
+				.setMaxResults( Integer.MAX_VALUE - 200 )
 				.list();
 		assertEquals( 1, result.size() );
 		assertEquals( 99, ( ( DataPoint ) result.get( 0 ) ).getSequence() );

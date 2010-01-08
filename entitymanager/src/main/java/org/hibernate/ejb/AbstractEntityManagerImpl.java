@@ -56,6 +56,7 @@ import javax.transaction.Status;
 import javax.transaction.Synchronization;
 import javax.transaction.SystemException;
 import javax.transaction.TransactionManager;
+import javax.validation.ConstraintViolationException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -444,8 +445,8 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 		catch ( MappingException e ) {
 			throw new IllegalArgumentException( e.getMessage() );
 		}
-		catch ( HibernateException he ) {
-			throw convert( he );
+		catch ( RuntimeException e ) {
+			throw convert( e );
 		}
 	}
 
@@ -461,8 +462,8 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 		catch ( MappingException e ) {
 			throw new IllegalArgumentException( e.getMessage(), e );
 		}
-		catch ( HibernateException he ) {
-			throw convert( he );
+		catch ( RuntimeException e ) { //including HibernateException
+			throw convert( e );
 		}
 	}
 
@@ -474,8 +475,8 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 		catch ( MappingException e ) {
 			throw new IllegalArgumentException( e.getMessage(), e );
 		}
-		catch ( HibernateException he ) {
-			throw convert( he );
+		catch ( RuntimeException e ) { //including HibernateException
+			throw convert( e );
 		}
 	}
 
@@ -553,8 +554,8 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 			//adjustFlushMode();
 			getSession().flush();
 		}
-		catch ( HibernateException he ) {
-			throw convert( he );
+		catch ( RuntimeException e ) {
+			throw convert( e );
 		}
 	}
 
@@ -768,7 +769,7 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 			tx.setRollbackOnly();
 		}
 		else {
-			//no explicit use of the tx. boudaries methods
+			//no explicit use of the tx. boundaries methods
 			if ( PersistenceUnitTransactionType.JTA == transactionType ) {
 				TransactionManager transactionManager =
 						( ( SessionFactoryImplementor ) getRawSession().getSessionFactory() ).getTransactionManager();
@@ -985,8 +986,24 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 	/**
 	 * {@inheritDoc}
 	 */
+	//FIXME should we remove all calls to this method and use convert(RuntimeException) ?
 	public RuntimeException convert(HibernateException e) {
 		return convert(e, null);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public RuntimeException convert(RuntimeException e) {
+		RuntimeException result = e;
+		if ( e instanceof HibernateException ) {
+			result = convert( (HibernateException) e );
+		}
+		else if (e instanceof ConstraintViolationException) {
+			markAsRollback();
+		}
+		//if any RT exception should mark the tx for rollback, convert the last else if into a else
+		return result;
 	}
 
 	/**

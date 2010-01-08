@@ -25,6 +25,10 @@ public class BeanValidationTest extends TestCase {
 		catch ( ConstraintViolationException e ) {
 			assertEquals( 1, e.getConstraintViolations().size() );
 		}
+		assertTrue(
+				"A constraint violation exception should mark the transaction for rollback",
+				em.getTransaction().getRollbackOnly()
+		);
 		em.getTransaction().rollback();
 		em.close();
 	}

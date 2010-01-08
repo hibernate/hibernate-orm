@@ -579,7 +579,8 @@ public class QueryImpl<X> extends org.hibernate.ejb.AbstractQueryImpl<X> impleme
 				PersistenceException pe = new PersistenceException(
 						"Unsupported unwrap target type [" + tClass.getName() + "]"
 				);
-				getEntityManager().handlePersistenceException( pe );
+				//It's probably against the spec to not mark the tx for rollback but it will be easier for people
+				//getEntityManager().handlePersistenceException( pe );
 				throw pe;
 			}
 		}

@@ -1,4 +1,6 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
     <modelVersion>4.0.0</modelVersion>
 
@@ -94,35 +96,50 @@
             <testResource>
                 <filtering>true</filtering>
                 <directory>src/test/bundles</directory>
-				<targetPath>../bundles</targetPath>
-            </testResource>          
+                <targetPath>../bundles</targetPath>
+            </testResource>
         </testResources>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-antrun-plugin</artifactId>
+                <!-- Define one configuration outside executions and without a phase in order to allow 'mvn antrun:run' -->
+                <configuration>
+                    <tasks>
+                        <property name="target.dir" value="${project.build.directory}/generated-src/jpamodelgen"/>
+                        <property name="src.dir" value="${project.build.testSourceDirectory}"/>
+                        <property name="jdk16_home" value="${jdk16_home}"/>
+                        <property name="classpath" refid="maven.test.classpath"/>
+                        <ant antfile="${basedir}/build.xml">
+                            <target name="generate-metamodel"/>
+                        </ant>
+                    </tasks>
+                </configuration>
                 <executions>
                     <execution>
                         <id>process_annotations</id>
-                        <phase>process-test-resources</phase>
+                        <phase>process-test-sources</phase>
+                        <configuration>
+                            <!-- No additional configuration needed. Unbound configuration gets inherited. (Feels wrong, but that's how it is) -->
+                            <testSourceRoot>${project.build.directory}/generated-src/jpamodelgen</testSourceRoot>
+                        </configuration>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>package-tests</id>
+                        <phase>process-test-classes</phase>
                         <configuration>
                             <tasks>
-                                <echo>processing JPA annotations</echo>
-                                <property name="target.dir" value="${project.build.directory}/generated-src/jpamodelgen"/>
-                                <mkdir dir="${target.dir}"/>
-                                <javac srcdir="${project.build.testSourceDirectory}"
-                                       destdir="${target.dir}"
-                                       failonerror="false"
-                                       fork="true"
-                                       executable="${jdk16_home}/bin/javac"
-                                       target="1.5">
-                                    <compilerarg value="-proc:only"/>
-                                    <classpath>
-                                        <path refid="maven.test.classpath"/>
-                                    </classpath>
-                                </javac>
+                                <property name="package.dir" value="${basedir}/target/test-packages"/>
+                                <property name="package.tmp.dir" value="${basedir}/target/tmp"/>
+                                <property name="classes.dir" value="${project.build.directory}/test-classes"/>
+                                <property name="testresources.dir" value="${basedir}/target/bundles"/>
+                                <ant antfile="${basedir}/build.xml">
+                                    <target name="package"/>
+                                </ant>
                             </tasks>
-                            <testSourceRoot>${project.build.directory}/generated-src/jpamodelgen</testSourceRoot>
                         </configuration>
                         <goals>
                             <goal>run</goal>
@@ -130,29 +147,6 @@
                     </execution>
                 </executions>
             </plugin>
-	      <plugin>
-	        <artifactId>maven-antrun-plugin</artifactId>
-	        <executions>
-	          <execution>
-		        <id>package-tests</id>
-	            <phase>process-test-classes</phase>
-	            <configuration>
-		        	<tasks>
-	                    <property name="package.dir" value="${basedir}/target/test-packages" />
-	                    <property name="package.tmp.dir" value="${basedir}/target/tmp" />
-	                    <property name="classes.dir" value="${project.build.directory}/test-classes" />	
-                        <property name="testresources.dir" value="${basedir}/target/bundles" />					
-	                	<ant antfile="${basedir}/build.xml">
-	                  		<target name="package" />
-	                	</ant>
-					</tasks>
-	            </configuration>
-	            <goals>
-	              <goal>run</goal>
-	            </goals>
-	          </execution>
-	        </executions>
-	      </plugin>	
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
@@ -173,32 +167,43 @@
                     </execution>
                 </executions>
             </plugin>
-	      <plugin>
-	        <groupId>org.apache.maven.plugins</groupId>
-	        <artifactId>maven-surefire-plugin</artifactId>
-	        <configuration>
-		      <forkMode>pertest</forkMode>	
-	          <additionalClasspathElements>
-              	<additionalClasspathElement>${basedir}/target/test-packages/cfgxmlpar.par</additionalClasspathElement>
-				<additionalClasspathElement>${basedir}/target/test-packages/defaultpar.par</additionalClasspathElement>
-                  <additionalClasspathElement>${basedir}/target/test-packages/defaultpar_1_0.par</additionalClasspathElement>
-				<additionalClasspathElement>${basedir}/target/test-packages/excludehbmpar.par</additionalClasspathElement>
-				<additionalClasspathElement>${basedir}/target/test-packages/explicitpar.par</additionalClasspathElement>
-				<additionalClasspathElement>${basedir}/target/test-packages/explodedpar.par</additionalClasspathElement>
-				<additionalClasspathElement>${basedir}/target/test-packages/externaljar.jar</additionalClasspathElement>
-				<additionalClasspathElement>${basedir}/target/test-packages/nesteddir.ear</additionalClasspathElement>
-				<additionalClasspathElement>${basedir}/target/test-packages/nestedjar.ear</additionalClasspathElement>
-				<additionalClasspathElement>${basedir}/target/test-packages/overridenpar.jar</additionalClasspathElement>
-				<additionalClasspathElement>${basedir}/target/test-packages/space par.par</additionalClasspathElement>
-				<additionalClasspathElement>${basedir}/target/test-packages/war.war</additionalClasspathElement>                              
-	          </additionalClasspathElements>
-	        </configuration>
-	      </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <forkMode>pertest</forkMode>
+                    <additionalClasspathElements>
+                        <additionalClasspathElement>${basedir}/target/test-packages/cfgxmlpar.par
+                        </additionalClasspathElement>
+                        <additionalClasspathElement>${basedir}/target/test-packages/defaultpar.par
+                        </additionalClasspathElement>
+                        <additionalClasspathElement>${basedir}/target/test-packages/defaultpar_1_0.par
+                        </additionalClasspathElement>
+                        <additionalClasspathElement>${basedir}/target/test-packages/excludehbmpar.par
+                        </additionalClasspathElement>
+                        <additionalClasspathElement>${basedir}/target/test-packages/explicitpar.par
+                        </additionalClasspathElement>
+                        <additionalClasspathElement>${basedir}/target/test-packages/explodedpar.par
+                        </additionalClasspathElement>
+                        <additionalClasspathElement>${basedir}/target/test-packages/externaljar.jar
+                        </additionalClasspathElement>
+                        <additionalClasspathElement>${basedir}/target/test-packages/nesteddir.ear
+                        </additionalClasspathElement>
+                        <additionalClasspathElement>${basedir}/target/test-packages/nestedjar.ear
+                        </additionalClasspathElement>
+                        <additionalClasspathElement>${basedir}/target/test-packages/overridenpar.jar
+                        </additionalClasspathElement>
+                        <additionalClasspathElement>${basedir}/target/test-packages/space par.par
+                        </additionalClasspathElement>
+                        <additionalClasspathElement>${basedir}/target/test-packages/war.war</additionalClasspathElement>
+                    </additionalClasspathElements>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
 
     <profiles>
-       <profile>
+        <profile>
             <id>doc</id>
             <build>
                 <plugins>
@@ -261,6 +266,6 @@
                 </plugins>
             </build>
         </profile>
-      </profiles>
+    </profiles>
 
 </project>

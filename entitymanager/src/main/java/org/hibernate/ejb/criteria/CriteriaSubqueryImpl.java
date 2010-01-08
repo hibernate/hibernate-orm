@@ -53,7 +53,6 @@ public class CriteriaSubqueryImpl<T> extends ExpressionImpl<T> implements Subque
 	private final AbstractQuery<?> parent;
 	private final QueryStructure<T> queryStructure;
 
-	private Expression<T> selection;
 	private Set<Join<?, ?>> correlatedJoins = new HashSet<Join<?,?>>();
 
 	private final FromImplementor.JoinScope joinScope = new FromImplementor.JoinScope() {
@@ -144,12 +143,11 @@ public class CriteriaSubqueryImpl<T> extends ExpressionImpl<T> implements Subque
 	}
 
 	public Expression<T> getSelection() {
-		return selection;
+		return (Expression<T>) queryStructure.getSelection();
 	}
 
 	public Subquery<T> select(Expression<T> expression) {
-		queryStructure.setSelection( selection );
-		this.selection = expression;
+		queryStructure.setSelection( expression );
 		return this;
 	}
 

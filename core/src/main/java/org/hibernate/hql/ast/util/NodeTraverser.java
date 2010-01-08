@@ -25,14 +25,14 @@
 package org.hibernate.hql.ast.util;
 
 import antlr.collections.AST;
-import java.util.Map;
-import java.util.HashMap;
+import java.util.Stack;
 
 /**
  * A visitor for traversing an AST tree.
  * 
  * @author Steve Ebersole
  * @author Philip R. "Pib" Burns.
+ * @author Strong Liu
  * 
  */
 
@@ -57,100 +57,32 @@ public class NodeTraverser {
 	 *            Note that the AST passed in is not visited itself. Visitation
 	 *            starts with its children.
 	 *            </p>
-	 *            <p>
-	 *            The current code for traverseDepthFirst uses iteration to walk
-	 *            the tree. This corrects stack overflow problems for constructs
-	 *            such as "x in (:x)" where ":x" specifies a large number of
-	 *            items.
-	 *            </p>
 	 */
-
 	public void traverseDepthFirst( AST ast ) {
-		// Root AST node cannot be null or
-		// traversal of its subtree is impossible.
 		if ( ast == null ) {
-			throw new IllegalArgumentException( "node to traverse cannot be null!" );
+			throw new IllegalArgumentException(
+					"node to traverse cannot be null!" );
 		}
-		// Map to hold parents of each
-		// AST node. Unfortunately the AST
-		// interface does not provide a method
-		// for finding the parent of a node, so
-		// we use the Map to save them.
-
-		Map parentNodes = new HashMap();
-
-		// Start tree traversal with first child
-		// of the specified root AST node.
-
-		AST currentNode = ast.getFirstChild();
-
-		// Remember parent of first child.
-
-		parentNodes.put(currentNode, ast);
-
-		// Iterate through nodes, simulating
-		// recursive tree traversal, and add them
-		// to queue in proper order for later
-		// linear traversal. This "flattens" the
-		// into a linear list of nodes which can
-		// be visited non-recursively.
-
-		while ( currentNode != null ) {
-			// Visit the current node.
-
-			strategy.visit( currentNode );
-
-			// Move down to current node's first child
-			// if it exists.
-
-			AST childNode = currentNode.getFirstChild();
-
-			// If the child is not null, make it
-			// the current node.
-
-			if ( childNode != null ) {
-				// Remember parent of the child.
-
-				parentNodes.put( childNode, currentNode );
-
-				// Make child the current node.
-
-				currentNode = childNode;
-
-				continue;
-			}
-
-			while ( currentNode != null ) {
-				// Move to next sibling if any.
-
-				AST siblingNode = currentNode.getNextSibling();
-
-				if (siblingNode != null) {
-					// Get current node's parent.
-					// This is also the parent of the
-					// sibling node.
-
-					AST parentNode = (AST) parentNodes.get(currentNode);
-
-					// Remember parent of sibling.
-
-					parentNodes.put(siblingNode, parentNode);
-
-					// Make sibling the current node.
-
-					currentNode = siblingNode;
-
-					break;
-				}
-				// Move up to parent if no sibling.
-				// If parent is root node, we're done.
-
-				currentNode = (AST) parentNodes.get(currentNode);
-
-				if (currentNode.equals(ast)) {
-					currentNode = null;
-				}
+		visitDepthFirst( ast.getFirstChild() );
+	}
+	
+	private void visitDepthFirst(AST ast){
+		if(ast==null){
+			return;
+		}
+		Stack stack = new Stack();
+		if ( ast != null ) {
+			stack.push( ast );
+			while (!stack.empty()) {
+				ast = (AST) stack.pop();
+				strategy.visit( ast );
+				if ( ast.getNextSibling() != null ) 
+					stack.push( ast.getNextSibling() );
+				if ( ast.getFirstChild() != null ) 
+					stack.push( ast.getFirstChild() );
 			}
 		}
 	}
+
+	
 }

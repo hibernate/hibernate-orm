@@ -311,7 +311,9 @@ public class ThreadLocalSessionContext implements CurrentSessionContext {
 					     || "equals".equals( method.getName() )
 					     || "hashCode".equals( method.getName() )
 				         || "getStatistics".equals( method.getName() )
-					     || "isOpen".equals( method.getName() ) ) {
+					     || "isOpen".equals( method.getName() )
+						 || "getListeners".equals( method.getName() ) //useful for HSearch in particular
+						) {
 					// allow these to go through the the real session no matter what
 				}
 				else if ( !realSession.isOpen() ) {

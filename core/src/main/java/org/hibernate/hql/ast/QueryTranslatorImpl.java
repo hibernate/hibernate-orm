@@ -580,7 +580,7 @@ public class QueryTranslatorImpl implements FilterTranslator {
 			if ( dotRoot != null ) {
 				// we are already processing a dot-structure
 				if ( ASTUtil.isSubtreeChild( dotRoot, node ) ) {
-					// igndore it...
+					// ignore it...
 					return;
 				}
 				else {

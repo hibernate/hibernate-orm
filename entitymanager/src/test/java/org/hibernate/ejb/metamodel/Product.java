@@ -23,6 +23,8 @@
  */
 package org.hibernate.ejb.metamodel;
 
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import javax.persistence.AttributeOverride;
 import javax.persistence.AttributeOverrides;
 import javax.persistence.Column;
@@ -53,8 +55,11 @@ public class Product implements java.io.Serializable {
 	private String id;
 	private String name;
 	private double price;
+	private float rating;
 	private int quantity;
 	private long partNumber;
+	private BigInteger someBigInteger;
+	private BigDecimal someBigDecimal;
 	private String wareHouse;
 	private ShelfLife shelfLife;
 
@@ -113,6 +118,30 @@ public class Product implements java.io.Serializable {
 
 	public void setPartNumber(long v) {
 		this.partNumber = v;
+	}
+
+	public float getRating() {
+		return rating;
+	}
+
+	public void setRating(float rating) {
+		this.rating = rating;
+	}
+
+	public BigInteger getSomeBigInteger() {
+		return someBigInteger;
+	}
+
+	public void setSomeBigInteger(BigInteger someBigInteger) {
+		this.someBigInteger = someBigInteger;
+	}
+
+	public BigDecimal getSomeBigDecimal() {
+		return someBigDecimal;
+	}
+
+	public void setSomeBigDecimal(BigDecimal someBigDecimal) {
+		this.someBigDecimal = someBigDecimal;
 	}
 
 	@Column(name = "WHOUSE", nullable = true, table = "PRODUCT_DETAILS")

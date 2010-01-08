@@ -131,10 +131,14 @@ public class AggregationFunction<T>
 		@SuppressWarnings({ "unchecked" })
 		public SUM(CriteriaBuilderImpl criteriaBuilder, Expression<N> expression) {
 			super( criteriaBuilder, (Class<N>)expression.getJavaType(), NAME , expression);
+			// force the use of a ValueHandler
+			resetJavaType( expression.getJavaType() );
 		}
 
 		public SUM(CriteriaBuilderImpl criteriaBuilder, Expression<? extends Number> expression, Class<N> returnType) {
 			super( criteriaBuilder, returnType, NAME , expression);
+			// force the use of a ValueHandler
+			resetJavaType( returnType );
 		}
 	}
 

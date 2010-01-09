@@ -366,7 +366,7 @@ public class CriteriaBuilderImpl implements CriteriaBuilder, Serializable {
 	 */
 	public Predicate notEqual(Expression<?> x, Object y) {
 		//noinspection SuspiciousNameCombination
-		return new ComparisonPredicate( this, ComparisonOperator.NOT_EQUAL, x, y ).not();
+		return new ComparisonPredicate( this, ComparisonOperator.NOT_EQUAL, x, y );
 	}
 
 	/**

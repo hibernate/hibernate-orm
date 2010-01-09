@@ -60,15 +60,18 @@ import org.hibernate.ejb.criteria.path.RootImpl;
 public class QueryStructure<T> implements Serializable {
 	private final AbstractQuery<T> owner;
 	private final CriteriaBuilderImpl criteriaBuilder;
+	private final boolean isSubQuery;
 
 	public QueryStructure(AbstractQuery<T> owner, CriteriaBuilderImpl criteriaBuilder) {
 		this.owner = owner;
 		this.criteriaBuilder = criteriaBuilder;
+		this.isSubQuery = Subquery.class.isInstance( owner );
 	}
 
 	private boolean distinct;
 	private Selection<? extends T> selection;
 	private Set<Root<?>> roots = new HashSet<Root<?>>();
+	private Set<FromImplementor> correlationRoots;
 	private Predicate restriction;
 	private List<Expression<?>> groupings = Collections.emptyList();
 	private Predicate having;
@@ -148,6 +151,36 @@ public class QueryStructure<T> implements Serializable {
 	}
 
 
+	// CORRELATION ROOTS ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	public void addCorrelationRoot(FromImplementor fromImplementor) {
+		if ( !isSubQuery ) {
+			throw new IllegalStateException( "Query is not identified as sub-query" );
+		}
+		if ( correlationRoots == null ) {
+			correlationRoots = new HashSet<FromImplementor>();
+		}
+		correlationRoots.add( fromImplementor );
+	}
+
+	public Set<Join<?, ?>> collectCorrelatedJoins() {
+		if ( !isSubQuery ) {
+			throw new IllegalStateException( "Query is not identified as sub-query" );
+		}
+		final Set<Join<?, ?>> correlatedJoins;
+		if ( correlationRoots != null ) {
+			correlatedJoins = new HashSet<Join<?,?>>();
+			for ( FromImplementor<?,?> correlationRoot : correlationRoots ) {
+				correlatedJoins.addAll( correlationRoot.getJoins() );
+			}
+		}
+		else {
+			correlatedJoins = Collections.emptySet();
+		}
+		return correlatedJoins;
+	}
+
+
 	// RESTRICTIONS ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	public Predicate getRestriction() {
@@ -213,14 +246,61 @@ public class QueryStructure<T> implements Serializable {
 			jpaqlQuery.append( "distinct " );
 		}
 		if ( getSelection() == null ) {
-			// we should have only a single root (query validation should have checked this...)
-			final Root root = getRoots().iterator().next();
-			jpaqlQuery.append( ( (Renderable) root ).renderProjection( renderingContext) );
+			jpaqlQuery.append( locateImplicitSelection().renderProjection( renderingContext ) );
 		}
 		else {
 			jpaqlQuery.append( ( (Renderable) getSelection() ).renderProjection( renderingContext ) );
 		}
 
+		renderFromClause( jpaqlQuery, renderingContext );
+
+		if ( getRestriction() != null) {
+			jpaqlQuery.append( " where " )
+					.append( ( (Renderable) getRestriction() ).render( renderingContext ) );
+		}
+
+		if ( ! getGroupings().isEmpty() ) {
+			jpaqlQuery.append( " group by " );
+			String sep = "";
+			for ( Expression grouping : getGroupings() ) {
+				jpaqlQuery.append( sep )
+						.append( ( (Renderable) grouping ).render( renderingContext ) );
+				sep = ", ";
+			}
+
+			if ( getHaving() != null ) {
+				jpaqlQuery.append( " having " )
+						.append( ( (Renderable) getHaving() ).render( renderingContext ) );
+			}
+		}
+	}
+
+	private FromImplementor locateImplicitSelection() {
+		FromImplementor implicitSelection = null;
+
+		if ( ! isSubQuery ) {
+			// we should have only a single root (query validation should have checked this...)
+			implicitSelection = (FromImplementor) getRoots().iterator().next();
+		}
+		else {
+			// we should only have a single "root" which can act as the implicit selection
+			final Set<Join<?, ?>> correlatedJoins = collectCorrelatedJoins();
+			if ( correlatedJoins != null ) {
+				if ( correlatedJoins.size() == 1 ) {
+					implicitSelection = (FromImplementor) correlatedJoins.iterator().next();
+				}
+			}
+		}
+
+		if ( implicitSelection == null ) {
+			throw new IllegalStateException( "No explicit selection and an implicit one cold not be determined" );
+		}
+
+		return implicitSelection;
+	}
+
+	@SuppressWarnings({ "unchecked" })
+	private void renderFromClause(StringBuilder jpaqlQuery, CriteriaQueryCompiler.RenderingContext renderingContext) {
 		jpaqlQuery.append( " from " );
 		String sep = "";
 		for ( Root root : getRoots() ) {
@@ -235,23 +315,26 @@ public class QueryStructure<T> implements Serializable {
 			renderFetches( jpaqlQuery, renderingContext, root.getFetches() );
 		}
 
-		if ( getRestriction() != null) {
-			jpaqlQuery.append( " where " )
-					.append( ( (Renderable) getRestriction() ).render( renderingContext ) );
-		}
-
-		if ( ! getGroupings().isEmpty() ) {
-			jpaqlQuery.append( " group by " );
-			sep = "";
-			for ( Expression grouping : getGroupings() ) {
-				jpaqlQuery.append( sep )
-						.append( ( (Renderable) grouping ).render( renderingContext ) );
-				sep = ", ";
-			}
-
-			if ( getHaving() != null ) {
-				jpaqlQuery.append( " having " )
-						.append( ( (Renderable) getHaving() ).render( renderingContext ) );
+		if ( isSubQuery ) {
+			if ( correlationRoots != null ) {
+				for ( FromImplementor<?,?> correlationRoot : correlationRoots ) {
+					final FromImplementor correlationParent = correlationRoot.getCorrelationParent();
+					correlationParent.prepareAlias( renderingContext );
+					final String correlationRootAlias = correlationParent.getAlias();
+					for ( Join<?,?> correlationJoin : correlationRoot.getJoins() ) {
+						final JoinImplementor correlationJoinImpl = (JoinImplementor) correlationJoin;
+						// IMPL NOTE: reuse the sep from above!
+						jpaqlQuery.append( sep );
+						correlationJoinImpl.prepareAlias( renderingContext );
+						jpaqlQuery.append( correlationRootAlias )
+								.append( '.' )
+								.append( correlationJoinImpl.getAttribute().getName() )
+								.append( " as " )
+								.append( correlationJoinImpl.getAlias() );
+						sep = ", ";
+						renderJoins( jpaqlQuery, renderingContext, correlationJoinImpl.getJoins() );
+					}
+				}
 			}
 		}
 	}

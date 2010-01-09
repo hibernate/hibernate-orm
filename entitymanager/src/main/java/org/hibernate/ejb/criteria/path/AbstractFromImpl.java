@@ -102,8 +102,19 @@ public abstract class AbstractFromImpl<Z,X>
 	 */
 	public void prepareAlias(CriteriaQueryCompiler.RenderingContext renderingContext) {
 		if ( getAlias() == null ) {
-			setAlias( renderingContext.generateAlias() );
+			if ( isCorrelated() ) {
+				setAlias( getCorrelationParent().getAlias() );
+			}
+			else {
+				setAlias( renderingContext.generateAlias() );
+			}
 		}
+	}
+
+	@Override
+	public String renderProjection(CriteriaQueryCompiler.RenderingContext renderingContext) {
+		prepareAlias( renderingContext );
+		return getAlias();
 	}
 
 	/**
@@ -137,8 +148,24 @@ public abstract class AbstractFromImpl<Z,X>
 
 	// CORRELATION ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-	private From<Z,X> correlationParent;
-	private JoinScope<X> joinScope = new JoinScope<X>() {
+	// IMPL NOTE : another means from handling correlations is to create a series of
+	//		specialized From implementations that represent the correlation roots.  While
+	//		that may be cleaner code-wise, it is certainly means creating a lot of "extra"
+	//		classes since we'd need one for each Subquery#correlate method
+
+	private FromImplementor<Z,X> correlationParent;
+
+	private JoinScope<X> joinScope = new BasicJoinScope();
+
+	/**
+	 * Helper contract used to define who/what keeps track of joins and fetches made from this <tt>FROM</tt>.
+	 */
+	public static interface JoinScope<X> extends Serializable {
+		public void addJoin(Join<X, ?> join);
+		public void addFetch(Fetch<X,?> fetch);
+	}
+
+	protected class BasicJoinScope implements JoinScope<X> {
 		public void addJoin(Join<X, ?> join) {
 			if ( joins == null ) {
 				joins = new LinkedHashSet<Join<X,?>>();
@@ -152,7 +179,20 @@ public abstract class AbstractFromImpl<Z,X>
 			}
 			fetches.add( fetch );
 		}
-	};
+	}
+
+	protected class CorrelationJoinScope implements JoinScope<X> {
+		public void addJoin(Join<X, ?> join) {
+			if ( joins == null ) {
+				joins = new LinkedHashSet<Join<X,?>>();
+			}
+			joins.add( join );
+		}
+
+		public void addFetch(Fetch<X, ?> fetch) {
+			throw new UnsupportedOperationException( "Cannot define fetch from a subquery correlation" );
+		}
+	}
 
 	/**
 	 * {@inheritDoc}
@@ -164,7 +204,7 @@ public abstract class AbstractFromImpl<Z,X>
 	/**
 	 * {@inheritDoc}
 	 */
-	public From<Z,X> getCorrelationParent() {
+	public FromImplementor<Z,X> getCorrelationParent() {
 		return correlationParent;
 	}
 
@@ -174,17 +214,21 @@ public abstract class AbstractFromImpl<Z,X>
 	@SuppressWarnings({ "unchecked" })
 	public FromImplementor<Z, X> correlateTo(CriteriaSubqueryImpl subquery) {
 		final FromImplementor<Z, X> correlationDelegate = createCorrelationDelegate();
-		correlationDelegate.prepareCorrelationDelegate( subquery.getJoinScope(), this );
+		correlationDelegate.prepareCorrelationDelegate( this );
 		return correlationDelegate;
 	}
 
 	protected abstract FromImplementor<Z, X> createCorrelationDelegate();
 
-	public void prepareCorrelationDelegate(JoinScope<X> joinScope, FromImplementor<Z, X> parent) {
-		this.joinScope = joinScope;
+	public void prepareCorrelationDelegate(FromImplementor<Z, X> parent) {
+		this.joinScope = new CorrelationJoinScope();
 		this.correlationParent = parent;
 	}
 
+	@Override
+	public String getAlias() {
+		return isCorrelated() ? getCorrelationParent().getAlias() : super.getAlias();
+	}
 
 	// JOINS ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

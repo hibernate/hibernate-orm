@@ -26,11 +26,9 @@ package org.hibernate.ejb.criteria;
 import java.io.Serializable;
 import java.util.List;
 import java.util.Set;
-import java.util.HashSet;
 import javax.persistence.criteria.AbstractQuery;
 import javax.persistence.criteria.CollectionJoin;
 import javax.persistence.criteria.Expression;
-import javax.persistence.criteria.Fetch;
 import javax.persistence.criteria.Join;
 import javax.persistence.criteria.ListJoin;
 import javax.persistence.criteria.MapJoin;
@@ -53,18 +51,6 @@ public class CriteriaSubqueryImpl<T> extends ExpressionImpl<T> implements Subque
 	private final AbstractQuery<?> parent;
 	private final QueryStructure<T> queryStructure;
 
-	private Set<Join<?, ?>> correlatedJoins = new HashSet<Join<?,?>>();
-
-	private final FromImplementor.JoinScope joinScope = new FromImplementor.JoinScope() {
-		public void addJoin(Join join) {
-			correlatedJoins.add( join );
-		}
-
-		public void addFetch(Fetch fetch) {
-			throw new UnsupportedOperationException( "Cannot define fetch from a subquery correlation" );
-		}
-	};
-
 	public CriteriaSubqueryImpl(
 			CriteriaBuilderImpl criteriaBuilder,
 			Class<T> javaType,
@@ -72,15 +58,6 @@ public class CriteriaSubqueryImpl<T> extends ExpressionImpl<T> implements Subque
 		super( criteriaBuilder, javaType);
 		this.parent = parent;
 		this.queryStructure = new QueryStructure<T>( this, criteriaBuilder );
-	}
-
-	/**
-	 * Get the scope used to scope joins to this subquery.
-	 *
-	 * @return The subquery's join scope.
-	 */
-	public FromImplementor.JoinScope getJoinScope() {
-		return joinScope;
 	}
 
 	/**
@@ -235,49 +212,61 @@ public class CriteriaSubqueryImpl<T> extends ExpressionImpl<T> implements Subque
 	 * {@inheritDoc}
 	 */
     public Set<Join<?, ?>> getCorrelatedJoins() {
-		return correlatedJoins;
+		return queryStructure.collectCorrelatedJoins();
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
 	public <Y> Root<Y> correlate(Root<Y> source) {
-		return ( ( RootImpl<Y> ) source ).correlateTo( this );
+		final RootImpl<Y> correlation = ( ( RootImpl<Y> ) source ).correlateTo( this );
+		queryStructure.addCorrelationRoot( correlation );
+		return correlation;
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
 	public <X, Y> Join<X, Y> correlate(Join<X, Y> source) {
-		return ( (JoinImplementor<X,Y>) source ).correlateTo( this );
+		final JoinImplementor<X,Y> correlation = ( (JoinImplementor<X,Y>) source ).correlateTo( this );
+		queryStructure.addCorrelationRoot( correlation );
+		return correlation;
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
 	public <X, Y> CollectionJoin<X, Y> correlate(CollectionJoin<X, Y> source) {
-		return ( (CollectionJoinImplementor<X,Y>) source ).correlateTo( this );
+		final CollectionJoinImplementor<X,Y> correlation = ( (CollectionJoinImplementor<X,Y>) source ).correlateTo( this );
+		queryStructure.addCorrelationRoot( correlation );
+		return correlation;
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
 	public <X, Y> SetJoin<X, Y> correlate(SetJoin<X, Y> source) {
-		return ( (SetJoinImplementor<X,Y>) source ).correlateTo( this );
+		final SetJoinImplementor<X,Y> correlation = ( (SetJoinImplementor<X,Y>) source ).correlateTo( this );
+		queryStructure.addCorrelationRoot( correlation );
+		return correlation;
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
 	public <X, Y> ListJoin<X, Y> correlate(ListJoin<X, Y> source) {
-		return ( (ListJoinImplementor<X,Y>) source ).correlateTo( this );
+		final ListJoinImplementor<X,Y> correlation = ( (ListJoinImplementor<X,Y>) source ).correlateTo( this );
+		queryStructure.addCorrelationRoot( correlation );
+		return correlation;
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
 	public <X, K, V> MapJoin<X, K, V> correlate(MapJoin<X, K, V> source) {
-		return ( (MapJoinImplementor<X, K, V>) source ).correlateTo( this );
+		final MapJoinImplementor<X, K, V> correlation = ( (MapJoinImplementor<X, K, V>) source ).correlateTo( this );
+		queryStructure.addCorrelationRoot( correlation );
+		return correlation;
 	}
 
 	/**

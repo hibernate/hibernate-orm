@@ -37,14 +37,8 @@ public interface FromImplementor<Z,X> extends PathImplementor<X>, From<Z,X> {
 	public void prepareAlias(CriteriaQueryCompiler.RenderingContext renderingContext);
 	public String renderTableExpression(CriteriaQueryCompiler.RenderingContext renderingContext);
 
-	/**
-	 * Helper contract used to define who/what keeps track of joins and fetches made from this <tt>FROM</tt>.
-	 */
-	public static interface JoinScope<X> extends Serializable {
-		public void addJoin(Join<X, ?> join);
-		public void addFetch(Fetch<X,?> fetch);
-	}
 
 	public FromImplementor<Z,X> correlateTo(CriteriaSubqueryImpl subquery);
-	public void prepareCorrelationDelegate(JoinScope<X> joinScope, FromImplementor<Z,X> parent);
+	public void prepareCorrelationDelegate(FromImplementor<Z,X> parent);
+	public FromImplementor<Z, X> getCorrelationParent();
 }

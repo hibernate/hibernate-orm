@@ -47,6 +47,7 @@ import org.hibernate.ejb.criteria.expression.BinaryArithmeticOperation;
 import org.hibernate.ejb.criteria.expression.CoalesceExpression;
 import org.hibernate.ejb.criteria.expression.CompoundSelectionImpl;
 import org.hibernate.ejb.criteria.expression.ConcatExpression;
+import org.hibernate.ejb.criteria.expression.NullLiteralExpression;
 import org.hibernate.ejb.criteria.expression.ParameterExpressionImpl;
 import org.hibernate.ejb.criteria.expression.LiteralExpression;
 import org.hibernate.ejb.criteria.expression.NullifExpression;
@@ -84,7 +85,7 @@ import org.hibernate.ejb.criteria.predicate.MemberOfPredicate;
 import static org.hibernate.ejb.criteria.predicate.ComparisonPredicate.ComparisonOperator;
 
 /**
- * TODO : javadoc
+ * Hibernate implementation of the JPA {@link CriteriaBuilder} contract.
  *
  * @author Steve Ebersole
  */
@@ -619,6 +620,9 @@ public class CriteriaBuilderImpl implements CriteriaBuilder, Serializable {
 	 * {@inheritDoc}
 	 */
 	public <T> Expression<T> literal(T value) {
+		if ( value == null ) {
+			throw new IllegalArgumentException( "literal value cannot be null" );
+		}
 		return new LiteralExpression<T>( this, value );
 	}
 
@@ -626,7 +630,7 @@ public class CriteriaBuilderImpl implements CriteriaBuilder, Serializable {
 	 * {@inheritDoc}
 	 */
 	public <T> Expression<T> nullLiteral(Class<T> resultClass) {
-		return new LiteralExpression<T>( this, resultClass, null );
+		return new NullLiteralExpression<T>( this, resultClass );
 	}
 
 

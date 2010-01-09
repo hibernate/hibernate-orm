@@ -88,8 +88,17 @@ public class LiteralExpression<T> extends ExpressionImpl<T> implements Serializa
 		return ':' + parameterName;
 	}
 
+	@SuppressWarnings({ "unchecked" })
 	public String renderProjection(CriteriaQueryCompiler.RenderingContext renderingContext) {
-		return render( renderingContext );
+		// some drivers/servers do not like parameters in the select clause
+		final ValueHandlerFactory.ValueHandler handler =
+				ValueHandlerFactory.determineAppropriateHandler( literal.getClass() );
+		if ( ! ValueHandlerFactory.isCharacter( literal ) ) {
+			return '\'' + handler.render( literal ) + '\'';
+		}
+		else {
+			return handler.render( literal );
+		}
 	}
 
 	@Override

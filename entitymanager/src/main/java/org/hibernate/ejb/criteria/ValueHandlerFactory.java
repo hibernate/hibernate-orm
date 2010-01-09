@@ -54,6 +54,18 @@ public class ValueHandlerFactory {
 		}
 	}
 
+	public static boolean isCharacter(Class type) {
+		return String.class.isAssignableFrom( type )
+				|| Character.class.isAssignableFrom( type )
+				|| Character.TYPE.equals( type );
+	}
+
+	public static boolean isCharacter(Object value) {
+		return String.class.isInstance( value )
+				|| Character.class.isInstance( value )
+				|| Character.TYPE.isInstance( value );
+	}
+
 	public static boolean isNumeric(Class type) {
 		return Number.class.isAssignableFrom( type )
 				|| Byte.TYPE.equals( type )

@@ -8,7 +8,9 @@
     <package>org.hibernate.ejb.test.pack.various</package>
     <entity class="Seat" access="PROPERTY" metadata-complete="true">
         <attributes>
-            <id name="number"/>
+            <id name="number">
+            	<column name="`number`" />
+            </id>
         </attributes>
     </entity>
 </entity-mappings>

@@ -9,6 +9,7 @@
         <property name="hibernate.connection.username">${jdbc.user}</property>
         <property name="hibernate.connection.password">${jdbc.pass}</property>
         <property name="hibernate.connection.url">${jdbc.url}</property>
+        <property name="hibernate.connection.isolation">${jdbc.isolation}</property>
         <property name="hibernate.cache.use_query_cache">true</property>
         <property name="hibernate.cache.region_prefix">hibernate.test</property>
         <property name="hibernate.jdbc.use_streams_for_binary">true</property>

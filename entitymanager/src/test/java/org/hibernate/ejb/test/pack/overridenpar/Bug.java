@@ -1,6 +1,7 @@
 //$Id$
 package org.hibernate.ejb.test.pack.overridenpar;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.GeneratedValue;
@@ -14,6 +15,7 @@ public class Bug {
 	@GeneratedValue
 	private Long id;
 	private String subject;
+	@Column(name="`comment`")
 	private String comment;
 
 	public Long getId() {

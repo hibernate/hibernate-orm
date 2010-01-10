@@ -3,6 +3,8 @@ package org.hibernate.ejb.test;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Properties;
+
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
@@ -32,6 +34,7 @@ import org.hibernate.ejb.test.pack.defaultpar_1_0.Lighter1;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.event.EventListeners;
 import org.hibernate.stat.Statistics;
+import org.hibernate.util.ConfigHelper;
 
 /**
  * @author Gavin King
@@ -230,10 +233,9 @@ public class PackagedEntityManagerTest extends TestCase {
 	public void testOverridenPar() throws Exception {
 		HashMap properties = new HashMap();
 		properties.put( HibernatePersistence.JTA_DATASOURCE, null );
-		properties.put( "hibernate.connection.driver_class", "org.hsqldb.jdbcDriver" );
-		properties.put( "hibernate.connection.username", "sa" );
-		properties.put( "hibernate.connection.password", "" );
-		properties.put( "hibernate.connection.url", "jdbc:hsqldb:." );
+		Properties p=new Properties();
+		p.load( ConfigHelper.getResourceAsStream( "/overridenpar.properties" ) );
+		properties.putAll( p );
 		EntityManagerFactory emf = Persistence.createEntityManagerFactory( "overridenpar", properties );
 		EntityManager em = emf.createEntityManager();
 		org.hibernate.ejb.test.pack.overridenpar.Bug bug = new org.hibernate.ejb.test.pack.overridenpar.Bug();

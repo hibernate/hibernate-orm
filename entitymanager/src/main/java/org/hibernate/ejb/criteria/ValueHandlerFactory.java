@@ -220,7 +220,7 @@ public class ValueHandlerFactory {
 
 		@Override
 		public String render(BigInteger value) {
-			return "cast( " + value.toString() + " as BigInteger )";
+			return value.toString() + "BI";
 		}
 	}
 
@@ -244,7 +244,7 @@ public class ValueHandlerFactory {
 
 		@Override
 		public String render(BigDecimal value) {
-			return "cast( " + value.toString() + " as BigDecimal )";
+			return value.toString() + "BD";
 		}
 	}
 

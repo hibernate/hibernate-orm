@@ -598,6 +598,8 @@ literal
 	| NUM_LONG { processNumericLiteral( #literal ); }
 	| NUM_FLOAT { processNumericLiteral( #literal ); }
 	| NUM_DOUBLE { processNumericLiteral( #literal ); }
+	| NUM_BIG_INTEGER { processNumericLiteral( #literal ); }
+	| NUM_BIG_DECIMAL { processNumericLiteral( #literal ); }
 	| QUOTED_STRING
 	;
 

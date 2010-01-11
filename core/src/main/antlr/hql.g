@@ -133,6 +133,8 @@ tokens
 	NUM_DOUBLE;
 	NUM_FLOAT;
 	NUM_LONG;
+	NUM_BIG_INTEGER;
+	NUM_BIG_DECIMAL;
 	JAVA_CONSTANT;
 }
 
@@ -693,6 +695,8 @@ constant
 	| NUM_FLOAT
 	| NUM_LONG
 	| NUM_DOUBLE
+	| NUM_BIG_INTEGER
+	| NUM_BIG_DECIMAL
 	| QUOTED_STRING
 	| NULL
 	| TRUE
@@ -821,12 +825,13 @@ NUM_INT
 	:   '.' {_ttype = DOT;}
 			(	('0'..'9')+ (EXPONENT)? (f1:FLOAT_SUFFIX {t=f1;})?
 				{
-					if (t != null && t.getText().toUpperCase().indexOf('F')>=0)
-					{
+					if ( t != null && t.getText().toUpperCase().indexOf("BD")>=0) {
+						_ttype = NUM_BIG_DECIMAL;
+					}
+					else if (t != null && t.getText().toUpperCase().indexOf('F')>=0) {
 						_ttype = NUM_FLOAT;
 					}
-					else
-					{
+					else {
 						_ttype = NUM_DOUBLE; // assume double
 					}
 				}
@@ -847,6 +852,7 @@ NUM_INT
 		|	('1'..'9') ('0'..'9')*  {isDecimal=true;}		// non-zero decimal
 		)
 		(	('l') { _ttype = NUM_LONG; }
+		|	('b''i') { _ttype = NUM_BIG_INTEGER; }
 
 		// only check to see if it's a float if looks like decimal so far
 		|	{isDecimal}?
@@ -855,12 +861,13 @@ NUM_INT
 			|   f4:FLOAT_SUFFIX {t=f4;}
 			)
 			{
-				if (t != null && t.getText().toUpperCase() .indexOf('F') >= 0)
-				{
+				if ( t != null && t.getText().toUpperCase().indexOf("BD")>=0) {
+					_ttype = NUM_BIG_DECIMAL;
+				}
+				else if (t != null && t.getText().toUpperCase() .indexOf('F') >= 0) {
 					_ttype = NUM_FLOAT;
 				}
-				else
-				{
+				else {
 					_ttype = NUM_DOUBLE; // assume double
 				}
 			}
@@ -881,6 +888,6 @@ EXPONENT
 
 protected
 FLOAT_SUFFIX
-	:	'f'|'d'
+	:	'f'|'d'|'b''d'
 	;
 

@@ -145,6 +145,8 @@ public class SqlASTFactory extends ASTFactory implements HqlSqlTokenTypes {
 			case NUM_FLOAT:
 			case NUM_LONG:
 			case NUM_DOUBLE:
+			case NUM_BIG_INTEGER:
+			case NUM_BIG_DECIMAL:
 			case QUOTED_STRING:
 				return LiteralNode.class;
 			case TRUE:

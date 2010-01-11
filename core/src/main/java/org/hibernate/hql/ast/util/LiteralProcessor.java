@@ -50,6 +50,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.text.DecimalFormat;
 
 /**
@@ -229,10 +230,14 @@ public class LiteralProcessor implements HqlSqlTokenTypes {
 	}
 
 	public void processNumeric(AST literal) {
-		if ( literal.getType() == NUM_INT || literal.getType() == NUM_LONG ) {
+		if ( literal.getType() == NUM_INT
+				|| literal.getType() == NUM_LONG
+				|| literal.getType() == NUM_BIG_INTEGER ) {
 			literal.setText( determineIntegerRepresentation( literal.getText(), literal.getType() ) );
 		}
-		else if ( literal.getType() == NUM_FLOAT || literal.getType() == NUM_DOUBLE ) {
+		else if ( literal.getType() == NUM_FLOAT
+				|| literal.getType() == NUM_DOUBLE
+				|| literal.getType() == NUM_BIG_DECIMAL ) {
 			literal.setText( determineDecimalRepresentation( literal.getText(), literal.getType() ) );
 		}
 		else {
@@ -250,11 +255,21 @@ public class LiteralProcessor implements HqlSqlTokenTypes {
 					log.trace( "could not format incoming text [" + text + "] as a NUM_INT; assuming numeric overflow and attempting as NUM_LONG" );
 				}
 			}
-			String literalValue = text;
-			if ( literalValue.endsWith( "l" ) || literalValue.endsWith( "L" ) ) {
-				literalValue = literalValue.substring( 0, literalValue.length() - 1 );
+			else if ( type == NUM_LONG ) {
+				String literalValue = text;
+				if ( literalValue.endsWith( "l" ) || literalValue.endsWith( "L" ) ) {
+					literalValue = literalValue.substring( 0, literalValue.length() - 1 );
+				}
+				return Long.valueOf( literalValue ).toString();
 			}
-			return Long.valueOf( literalValue ).toString();
+			else if ( type == NUM_BIG_INTEGER ) {
+				String literalValue = text;
+				if ( literalValue.endsWith( "bi" ) || literalValue.endsWith( "BI" ) ) {
+					literalValue = literalValue.substring( 0, literalValue.length() - 2 );
+				}
+				return new BigInteger( literalValue ).toString();
+			}
+			throw new HibernateException( "Unknown literal type to parse as integer" );
 		}
 		catch( Throwable t ) {
 			throw new HibernateException( "Could not parse literal [" + text + "] as integer", t );
@@ -273,6 +288,11 @@ public class LiteralProcessor implements HqlSqlTokenTypes {
 				literalValue = literalValue.substring( 0, literalValue.length() - 1 );
 			}
 		}
+		else if ( type == NUM_BIG_DECIMAL ) {
+			if ( literalValue.endsWith( "bd" ) || literalValue.endsWith( "BD" ) ) {
+				literalValue = literalValue.substring( 0, literalValue.length() - 2 );
+			}
+		}
 
 		BigDecimal number = null;
 		try {
@@ -284,6 +304,7 @@ public class LiteralProcessor implements HqlSqlTokenTypes {
 
 		return formatters[ DECIMAL_LITERAL_FORMAT ].format( number );
 	}
+
 
 	private static interface DecimalFormatter {
 		String format(BigDecimal number);

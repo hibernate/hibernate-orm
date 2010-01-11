@@ -217,6 +217,11 @@ public class ValueHandlerFactory {
 			}
 			throw unknownConversion( value, BigInteger.class );
 		}
+
+		@Override
+		public String render(BigInteger value) {
+			return "cast( " + value.toString() + " as BigInteger )";
+		}
 	}
 
 	public static class BigDecimalValueHandler extends BaseValueHandler<BigDecimal> implements Serializable {
@@ -235,6 +240,11 @@ public class ValueHandlerFactory {
 				return new BigDecimal( (String) value );
 			}
 			throw unknownConversion( value, BigDecimal.class );
+		}
+
+		@Override
+		public String render(BigDecimal value) {
+			return "cast( " + value.toString() + " as BigDecimal )";
 		}
 	}
 

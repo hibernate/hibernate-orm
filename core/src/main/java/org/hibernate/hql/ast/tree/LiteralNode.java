@@ -22,7 +22,6 @@
  * Boston, MA  02110-1301  USA
  *
  */
-
 package org.hibernate.hql.ast.tree;
 
 import org.hibernate.Hibernate;
@@ -53,6 +52,10 @@ public class LiteralNode extends AbstractSelectExpression implements HqlSqlToken
 				return Hibernate.LONG;
 			case NUM_DOUBLE:
 				return Hibernate.DOUBLE;
+			case NUM_BIG_INTEGER:
+				return Hibernate.BIG_INTEGER;
+			case NUM_BIG_DECIMAL:
+				return Hibernate.BIG_DECIMAL;
 			case QUOTED_STRING:
 				return Hibernate.STRING;
 			case TRUE:

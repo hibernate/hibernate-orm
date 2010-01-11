@@ -2,6 +2,7 @@
 package org.hibernate.test.hql;
 
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
@@ -1195,9 +1196,124 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 		a.setBodyWeight(12.4f);
 		a.setDescription("an animal");
 		s.persist(a);
-		Integer bw = (Integer) s.createQuery("select cast(bodyWeight as integer) from Animal").uniqueResult();
-		bw = (Integer) s.createQuery("select cast(a.bodyWeight as integer) from Animal a").uniqueResult();
-		bw.toString();
+		Object bodyWeight = s.createQuery("select cast(bodyWeight as integer) from Animal").uniqueResult();
+		assertTrue( Integer.class.isInstance( bodyWeight ) );
+		assertEquals( 12, bodyWeight );
+		bodyWeight = s.createQuery("select cast(bodyWeight as big_decimal) from Animal").uniqueResult();
+		assertTrue( BigDecimal.class.isInstance( bodyWeight ) );
+		assertEquals( BigDecimal.valueOf( a.getBodyWeight() ), bodyWeight );
+		Object literal = s.createQuery("select cast(10000000 as big_integer) from Animal").uniqueResult();
+		assertTrue( BigInteger.class.isInstance( literal ) );
+		assertEquals( BigInteger.valueOf( 10000000 ), literal );
+		s.delete(a);
+		t.commit();
+		s.close();
+	}
+
+	/**
+	 * Test the numeric expression rules specified in section 4.8.6 of the JPA 2 specification
+	 */
+	public void testNumericExpressionReturnTypes() {
+		Session s = openSession();
+		Transaction t = s.beginTransaction();
+		Animal a = new Animal();
+		a.setBodyWeight(12.4f);
+		a.setDescription("an animal");
+		s.persist(a);
+
+		Object result;
+
+		// addition ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+		result = s.createQuery( "select 1 + 1 from Animal as a" ).uniqueResult();
+		assertTrue( "int + int", Integer.class.isInstance( result ) );
+		assertEquals( 2, result );
+
+		result = s.createQuery( "select 1 + 1L from Animal a" ).uniqueResult();
+		assertTrue( "int + long", Long.class.isInstance( result ) );
+		assertEquals( Long.valueOf( 2 ), result );
+
+		result = s.createQuery( "select 1 + 1BI from Animal a" ).uniqueResult();
+		assertTrue( "int + BigInteger", BigInteger.class.isInstance( result ) );
+		assertEquals( BigInteger.valueOf( 2 ), result );
+
+		result = s.createQuery( "select 1 + 1F from Animal a" ).uniqueResult();
+		assertTrue( "int + float", Float.class.isInstance( result ) );
+		assertEquals( Float.valueOf( 2 ), result );
+
+		result = s.createQuery( "select 1 + 1D from Animal a" ).uniqueResult();
+		assertTrue( "int + double", Double.class.isInstance( result ) );
+		assertEquals( Double.valueOf( 2 ), result );
+
+		result = s.createQuery( "select 1 + 1BD from Animal a" ).uniqueResult();
+		assertTrue( "int + BigDecimal", BigDecimal.class.isInstance( result ) );
+		assertEquals( BigDecimal.valueOf( 2 ), result );
+
+		result = s.createQuery( "select 1F + 1D from Animal a" ).uniqueResult();
+		assertTrue( "float + double", Double.class.isInstance( result ) );
+		assertEquals( Double.valueOf( 2 ), result );
+
+		result = s.createQuery( "select 1F + 1BD from Animal a" ).uniqueResult();
+		assertTrue( "float + BigDecimal", Float.class.isInstance( result ) );
+		assertEquals( Float.valueOf( 2 ), result );
+
+		// subtraction ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+		result = s.createQuery( "select 1 - 1 from Animal as a" ).uniqueResult();
+		assertTrue( "int - int", Integer.class.isInstance( result ) );
+		assertEquals( 0, result );
+
+		result = s.createQuery( "select 1 - 1L from Animal a" ).uniqueResult();
+		assertTrue( "int - long", Long.class.isInstance( result ) );
+		assertEquals( Long.valueOf( 0 ), result );
+
+		result = s.createQuery( "select 1 - 1BI from Animal a" ).uniqueResult();
+		assertTrue( "int - BigInteger", BigInteger.class.isInstance( result ) );
+		assertEquals( BigInteger.valueOf( 0 ), result );
+
+		result = s.createQuery( "select 1 - 1F from Animal a" ).uniqueResult();
+		assertTrue( "int - float", Float.class.isInstance( result ) );
+		assertEquals( Float.valueOf( 0 ), result );
+
+		result = s.createQuery( "select 1 - 1D from Animal a" ).uniqueResult();
+		assertTrue( "int - double", Double.class.isInstance( result ) );
+		assertEquals( Double.valueOf( 0 ), result );
+
+		result = s.createQuery( "select 1 - 1BD from Animal a" ).uniqueResult();
+		assertTrue( "int - BigDecimal", BigDecimal.class.isInstance( result ) );
+		assertEquals( BigDecimal.valueOf( 0 ), result );
+
+		result = s.createQuery( "select 1F - 1D from Animal a" ).uniqueResult();
+		assertTrue( "float - double", Double.class.isInstance( result ) );
+		assertEquals( Double.valueOf( 0 ), result );
+
+		result = s.createQuery( "select 1F - 1BD from Animal a" ).uniqueResult();
+		assertTrue( "float - BigDecimal", Float.class.isInstance( result ) );
+		assertEquals( Float.valueOf( 0 ), result );
+
+		// multiplication ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+		result = s.createQuery( "select 1 * 1 from Animal as a" ).uniqueResult();
+		assertTrue( "int * int", Integer.class.isInstance( result ) );
+		assertEquals( 1, result );
+
+		result = s.createQuery( "select 1 * 1L from Animal a" ).uniqueResult();
+		assertTrue( "int * long", Long.class.isInstance( result ) );
+		assertEquals( Long.valueOf( 1 ), result );
+
+		result = s.createQuery( "select 1 * 1BI from Animal a" ).uniqueResult();
+		assertTrue( "int * BigInteger", BigInteger.class.isInstance( result ) );
+		assertEquals( BigInteger.valueOf( 1 ), result );
+
+		result = s.createQuery( "select 1 * 1F from Animal a" ).uniqueResult();
+		assertTrue( "int * float", Float.class.isInstance( result ) );
+		assertEquals( Float.valueOf( 1 ), result );
+
+		result = s.createQuery( "select 1 * 1D from Animal a" ).uniqueResult();
+		assertTrue( "int * double", Double.class.isInstance( result ) );
+		assertEquals( Double.valueOf( 1 ), result );
+
+		result = s.createQuery( "select 1 * 1BD from Animal a" ).uniqueResult();
+		assertTrue( "int * BigDecimal", BigDecimal.class.isInstance( result ) );
+		assertEquals( BigDecimal.valueOf( 1 ), result );
+
 		s.delete(a);
 		t.commit();
 		s.close();

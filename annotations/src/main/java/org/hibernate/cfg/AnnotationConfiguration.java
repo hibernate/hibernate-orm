@@ -1,3 +1,4 @@
+// $Id:$
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
@@ -259,7 +260,7 @@ public class AnnotationConfiguration extends Configuration {
 	@Override
 	protected void reset() {
 		super.reset();
-		namedGenerators = new HashMap();
+		namedGenerators = new HashMap<String, IdGenerator>();
 		joins = new HashMap<String, Map<String, Join>>();
 		classTypes = new HashMap<String, AnnotatedClassType>();
 		generatorTables = new HashMap<String, Properties>();
@@ -784,7 +785,7 @@ public class AnnotationConfiguration extends Configuration {
 
 	private static void findClassNames(
 			String defaultPackage, final Element startNode,
-			final java.util.Set names
+			final java.util.Set<String> names
 	) {
 		// if we have some extends we need to check if those classes possibly could be inside the
 		// same hbm.xml file...

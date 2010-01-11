@@ -28,9 +28,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.persistence.AccessType;
+
 import org.dom4j.Document;
 import org.dom4j.Element;
+
+import org.hibernate.AnnotationException;
 import org.hibernate.util.StringHelper;
+
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 
@@ -47,8 +52,10 @@ public class XMLContext {
 	private boolean hasContext = false;
 
 	/**
-	 * Add a document and return the list of added classes names
+	 * @param doc The xml document to add
+	 * @return Add a xml document to this context and return the list of added class names.
 	 */
+	@SuppressWarnings( "unchecked" )
 	public List<String> addDocument(Document doc) {
 		hasContext = true;
 		List<String> addedClasses = new ArrayList<String>();
@@ -70,7 +77,7 @@ public class XMLContext {
 					unitElement = defaultElement.element( "catalog" );
 					globalDefaults.setCatalog( unitElement != null ? unitElement.getTextTrim() : null );
 					unitElement = defaultElement.element( "access" );
-					globalDefaults.setAccess( unitElement != null ? unitElement.getTextTrim() : null );
+					setAccess( unitElement, globalDefaults );
 					unitElement = defaultElement.element( "cascade-persist" );
 					globalDefaults.setCascadePersist( unitElement != null ? Boolean.TRUE : null );
 					unitElement = defaultElement.element( "delimited-identifiers" );
@@ -93,7 +100,7 @@ public class XMLContext {
 		unitElement = root.element( "catalog" );
 		entityMappingDefault.setCatalog( unitElement != null ? unitElement.getTextTrim() : null );
 		unitElement = root.element( "access" );
-		entityMappingDefault.setAccess( unitElement != null ? unitElement.getTextTrim() : null );
+		setAccess( unitElement, entityMappingDefault );
 		defaultElements.add( root );
 
 		List<Element> entities = (List<Element>) root.elements( "entity" );
@@ -105,6 +112,26 @@ public class XMLContext {
 		entities = (List<Element>) root.elements( "embeddable" );
 		addClass( entities, packageName, entityMappingDefault, addedClasses );
 		return addedClasses;
+	}
+
+	private void setAccess(Element unitElement, Default defaultType) {
+		if ( unitElement != null ) {
+			String access = unitElement.getTextTrim();
+			setAccess( access, defaultType );
+		}
+	}
+
+	private void setAccess( String access, Default defaultType) {
+		AccessType type;
+		if ( access != null ) {
+			try {
+				type = AccessType.valueOf( access );
+			}
+			catch ( IllegalArgumentException e ) {
+				throw new AnnotationException( "Invalid access type " + access + " (check your xml configuration)" );
+			}
+			defaultType.setAccess( type );
+		}
 	}
 
 	private void addClass(List<Element> entities, String packageName, Default defaults, List<String> addedClasses) {
@@ -123,7 +150,7 @@ public class XMLContext {
 				localDefault.setMetadataComplete( Boolean.parseBoolean( metadataCompleteString ) );
 			}
 			String access = element.attributeValue( "access" );
-			if ( access != null ) localDefault.setAccess( access );
+			setAccess( access, localDefault );
 			defaultsOverriding.put( className, localDefault );
 
 			log.debug( "Adding XML overriding information for {}", className );
@@ -135,6 +162,7 @@ public class XMLContext {
 		List<String> localAddedClasses = new ArrayList<String>();
 		Element listeners = element.element( "entity-listeners" );
 		if ( listeners != null ) {
+			@SuppressWarnings( "unchecked" )
 			List<Element> elements = (List<Element>) listeners.elements( "entity-listener" );
 			for (Element listener : elements) {
 				String listenerClassName = buildSafeClassName( listener.attributeValue( "class" ), packageName );
@@ -181,7 +209,7 @@ public class XMLContext {
 		return xmlDefault;
 	}
 
-	public Element getXMLTree(String className, String methodName) {
+	public Element getXMLTree(String className ) {
 		return classOverriding.get( className );
 	}
 
@@ -194,7 +222,7 @@ public class XMLContext {
 	}
 
 	public static class Default {
-		private String access;
+		private AccessType access;
 		private String packageName;
 		private String schema;
 		private String catalog;
@@ -202,17 +230,12 @@ public class XMLContext {
 		private Boolean cascadePersist;
 		private Boolean delimitedIdentifier;
 
-		public String getAccess() {
+		public AccessType getAccess() {
 			return access;
 		}
 
-		protected void setAccess(String access) {
-			if ( "FIELD".equals( access ) || "PROPERTY".equals( access ) ) {
-				this.access = access.toLowerCase();
-			}
-			else {
-				this.access = access;
-			}
+		protected void setAccess(AccessType access) {
+			this.access = access;
 		}
 
 		public String getCatalog() {
@@ -244,7 +267,7 @@ public class XMLContext {
 		}
 
 		public boolean canUseJavaAnnotations() {
-			return metadataComplete == null || !metadataComplete.booleanValue();
+			return metadataComplete == null || !metadataComplete;
 		}
 
 		protected void setMetadataComplete(Boolean metadataComplete) {

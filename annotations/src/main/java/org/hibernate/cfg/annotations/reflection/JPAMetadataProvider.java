@@ -61,7 +61,7 @@ public class JPAMetadataProvider implements MetadataProvider {
 			}
 			defaults.put( EntityListeners.class, entityListeners );
 			for ( Element element : xmlContext.getAllDocuments() ) {
-
+				@SuppressWarnings( "unchecked" )
 				List<Element> elements = element.elements( "sequence-generator" );
 				List<SequenceGenerator> sequenceGenerators = ( List<SequenceGenerator> ) defaults.get( SequenceGenerator.class );
 				if ( sequenceGenerators == null ) {

@@ -1,4 +1,4 @@
-//$Id: AccessTest.java 15025 2008-08-11 09:14:39Z hardy.ferentschik $
+//$Id$
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
@@ -37,6 +37,8 @@ import org.hibernate.tuple.entity.PojoEntityTuplizer;
 
 
 /**
+ * Tests verifying the correct behaviour for the usage of {@code @javax.persistence.Access}.
+ *
  * @author Hardy Ferentschik
  */
 public class AccessMappingTest extends TestCase {

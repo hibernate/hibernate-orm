@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<entity-mappings xmlns="http://java.sun.com/xml/ns/persistence/orm"
+                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                 xsi:schemaLocation="http://java.sun.com/xml/ns/persistence/orm file:/Users/hardy/work/hibernate/core/trunk/annotations/src/main/resources/org/hibernate/ejb/orm_2_0.xsd"
+                 version="2.0">
+    <description>Mapping for Crew entity</description>
+    <package>org.hibernate.test.annotations.access.xml</package>
+    <mapped-superclass class="Crew" metadata-complete="false" access="FIELD">
+        <attributes>
+            <id name="id">
+                <generated-value/>
+            </id>
+        </attributes>
+    </mapped-superclass>
+</entity-mappings>

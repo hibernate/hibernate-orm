@@ -58,10 +58,10 @@ public class AssociationOverrideTest extends TestCase {
 		ContactInfo ci = new ContactInfo();
 		Addr address = new Addr();
 		address.setCity("Boston");
-		//address.setCountry("USA");
+		address.setCountry("USA");
 		address.setState("MA");
 		address.setStreet("27 School Street");
-		//address.setZipcode("02108");
+		address.setZipcode("02108");
 		ci.setAddr(address);
 		List<PhoneNumber> phoneNumbers = new ArrayList();
 		PhoneNumber num = new PhoneNumber();

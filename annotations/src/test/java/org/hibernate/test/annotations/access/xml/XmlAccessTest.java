@@ -143,8 +143,18 @@ public class XmlAccessTest extends TestCase {
 		List<Class<?>> classes = new ArrayList<Class<?>>();
 		classes.add( classUnderTest );
 		classes.add( Knive.class );
-		List<String> configFiles =  new ArrayList<String>();
+		List<String> configFiles = new ArrayList<String>();
 		configFiles.add( "org/hibernate/test/annotations/access/xml/Cook.xml" );
+		SessionFactoryImplementor factory = buildSessionFactory( classes, configFiles );
+		assertAccessType( factory, classUnderTest, AccessType.PROPERTY );
+	}
+
+	public void testAccessOnElementCollectionXmlElement() throws Exception {
+		Class<?> classUnderTest = Boy.class;
+		List<Class<?>> classes = new ArrayList<Class<?>>();
+		classes.add( classUnderTest );
+		List<String> configFiles = new ArrayList<String>();
+		configFiles.add( "org/hibernate/test/annotations/access/xml/Boy.xml" );
 		SessionFactoryImplementor factory = buildSessionFactory( classes, configFiles );
 		assertAccessType( factory, classUnderTest, AccessType.PROPERTY );
 	}

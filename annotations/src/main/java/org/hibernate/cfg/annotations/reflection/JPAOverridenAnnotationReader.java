@@ -372,6 +372,7 @@ public class JPAOverridenAnnotationReader implements AnnotationReader {
 					getAssociation( OneToOne.class, annotationList, defaults );
 					getAssociation( OneToMany.class, annotationList, defaults );
 					getAssociation( ManyToMany.class, annotationList, defaults );
+					getElementCollection( annotationList, defaults );
 					addIfNotNull( annotationList, getSequenceGenerator( elementsForProperty, defaults ) );
 					addIfNotNull( annotationList, getTableGenerator( elementsForProperty, defaults ) );
 					addIfNotNull( annotationList, getAttributeOverrides( elementsForProperty, defaults ) );
@@ -647,22 +648,7 @@ public class JPAOverridenAnnotationReader implements AnnotationReader {
 		for (Element element : elementsForProperty) {
 			if ( xmlName.equals( element.getName() ) ) {
 				AnnotationDescriptor ad = new AnnotationDescriptor( annotationType );
-				String className = element.attributeValue( "target-entity" );
-				if ( className != null ) {
-					Class clazz;
-					try {
-						clazz = ReflectHelper.classForName(
-								XMLContext.buildSafeClassName( className, defaults ),
-								this.getClass()
-						);
-					}
-					catch (ClassNotFoundException e) {
-						throw new AnnotationException(
-								"Unable to find " + element.getPath() + "target-entity: " + className, e
-						);
-					}
-					ad.setValue( "targetEntity", clazz );
-				}
+				addTargetClass( element, ad, "target-entity", defaults );
 				getFetchType( ad, element );
 				getCascades( ad, element, defaults );
 				getJoinTable( annotationList, element, defaults );
@@ -781,6 +767,38 @@ public class JPAOverridenAnnotationReader implements AnnotationReader {
 				addIfNotNull( annotationList, annotation );
 				annotation = getJavaAnnotation( Columns.class );
 				addIfNotNull( annotationList, annotation );
+			}
+		}
+	}
+
+	private void addTargetClass(Element element, AnnotationDescriptor ad, String nodeName, XMLContext.Default defaults) {
+		String className = element.attributeValue( nodeName );
+		if ( className != null ) {
+			Class clazz;
+			try {
+				clazz = ReflectHelper.classForName(
+						XMLContext.buildSafeClassName( className, defaults ),
+						this.getClass()
+				);
+			}
+			catch (ClassNotFoundException e) {
+				throw new AnnotationException(
+						"Unable to find " + element.getPath() + " " + nodeName + ": " + className, e
+				);
+			}
+			ad.setValue( getJavaAttributeNameFromXMLOne(nodeName), clazz );
+		}
+	}
+
+	// TODO: Complete parsing of all element-collection related xml
+	private void getElementCollection(List<Annotation> annotationList, XMLContext.Default defaults) {
+		for ( Element element : elementsForProperty ) {
+			if ( "element-collection".equals( element.getName() ) ) {
+				AnnotationDescriptor ad = new AnnotationDescriptor( ElementCollection.class );
+				addTargetClass( element, ad, "target-class", defaults );
+				annotationList.add( AnnotationFactory.create( ad ) );
+
+				getAccessType( annotationList, element );
 			}
 		}
 	}

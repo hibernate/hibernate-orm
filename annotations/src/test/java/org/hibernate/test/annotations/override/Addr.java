@@ -1,11 +1,11 @@
-package org.hibernate.test.annotations.collectionelement;
+package org.hibernate.test.annotations.override;
 
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.OneToMany;
 
 @Entity
-public class Address {
+public class Addr {
 
 	@Id
 	int id;

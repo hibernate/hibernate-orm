@@ -1,4 +1,4 @@
-package org.hibernate.test.annotations.collectionelement;
+package org.hibernate.test.annotations.override;
 
 import javax.persistence.Entity;
 import javax.persistence.Id;

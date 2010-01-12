@@ -1,4 +1,6 @@
-package org.hibernate.test.annotations.collectionelement;
+package org.hibernate.test.annotations.override;
+
+import org.hibernate.test.annotations.override.SocialSite;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Embeddable;

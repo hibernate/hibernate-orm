@@ -1,10 +1,9 @@
-package org.hibernate.test.annotations.collectionelement;
+package org.hibernate.test.annotations.override;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Embeddable;
 import javax.persistence.Embedded;
 import javax.persistence.JoinColumn;
-import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import java.util.List;
@@ -14,7 +13,7 @@ import java.util.List;
 public class ContactInfo {
 	@ManyToOne(cascade = CascadeType.ALL)
 	@JoinColumn(name="address_id_fk")
-	Address address;
+	Addr address;
 
 	@ManyToMany(cascade = CascadeType.ALL)
 	List<PhoneNumber> phoneNumbers;
@@ -22,11 +21,11 @@ public class ContactInfo {
 	@Embedded
 	SocialTouchPoints social;
 
-	public Address getAddress() {
+	public Addr getAddress() {
 		return address;
 	}
 
-	public void setAddress(Address address) {
+	public void setAddr(Addr address) {
 		this.address = address;
 	}
 

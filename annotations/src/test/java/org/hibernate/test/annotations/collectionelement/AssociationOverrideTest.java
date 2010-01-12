@@ -4,6 +4,7 @@ import junit.framework.Assert;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.test.annotations.TestCase;
+import org.hibernate.test.util.SchemaUtil;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -12,6 +13,16 @@ import java.util.List;
 public class AssociationOverrideTest extends TestCase {
 
 	public void testDottedNotation() throws Exception {
+		assertTrue( SchemaUtil.isTablePresent( "Employee", getCfg() ) );
+		assertTrue( "Overridden @JoinColumn fails",
+				SchemaUtil.isColumnPresent( "Employee", "fld_address_fk", getCfg() ) );
+
+		assertTrue( "Overridden @JoinTable name fails", SchemaUtil.isTablePresent( "tbl_empl_sites", getCfg() ) );
+		assertTrue( "Overridden @JoinTable with default @JoinColumn fails",
+				SchemaUtil.isColumnPresent( "tbl_empl_sites", "employee_id", getCfg() ) );
+		assertTrue( "Overridden @JoinTable.inverseJoinColumn fails",
+				SchemaUtil.isColumnPresent( "tbl_empl_sites", "to_website_fk", getCfg() ) );
+
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
 		ContactInfo ci = new ContactInfo();

@@ -3,6 +3,8 @@ package org.hibernate.test.annotations.collectionelement;
 import javax.persistence.CascadeType;
 import javax.persistence.Embeddable;
 import javax.persistence.Embedded;
+import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import java.util.List;
@@ -10,10 +12,11 @@ import java.util.List;
 
 @Embeddable
 public class ContactInfo {
-   @ManyToOne(targetEntity=Address.class, cascade=CascadeType.ALL)
+	@ManyToOne(cascade = CascadeType.ALL)
+	@JoinColumn(name="address_id_fk")
 	Address address;
 
-	@ManyToMany(targetEntity=PhoneNumber.class, cascade=CascadeType.ALL)
+	@ManyToMany(cascade = CascadeType.ALL)
 	List<PhoneNumber> phoneNumbers;
 
 	@Embedded

@@ -33,6 +33,7 @@ import javax.persistence.Column;
 import javax.persistence.Embeddable;
 import javax.persistence.Entity;
 import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
 import javax.persistence.MappedSuperclass;
 
 import org.hibernate.AssertionFailure;
@@ -50,8 +51,11 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 	private Map<String, Column[]> currentPropertyColumnOverride;
 	private Map<String, JoinColumn[]> holderJoinColumnOverride;
 	private Map<String, JoinColumn[]> currentPropertyJoinColumnOverride;
+	private Map<String, JoinTable> holderJoinTableOverride;
+	private Map<String, JoinTable> currentPropertyJoinTableOverride;
 	private String path;
 	private ExtendedMappings mappings;
+
 
 	public AbstractPropertyHolder(
 			String path, PropertyHolder parent, XClass clazzToProcess, ExtendedMappings mappings
@@ -77,6 +81,7 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 		if ( property == null ) {
 			this.currentPropertyColumnOverride = null;
 			this.currentPropertyJoinColumnOverride = null;
+			this.currentPropertyJoinTableOverride = null;
 		}
 		else {
 			this.currentPropertyColumnOverride = buildColumnOverride(
@@ -92,6 +97,13 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 			);
 			if ( this.currentPropertyJoinColumnOverride.size() == 0 ) {
 				this.currentPropertyJoinColumnOverride = null;
+			}
+			this.currentPropertyJoinTableOverride = buildJoinTableOverride(
+					property,
+					getPath()
+			);
+			if ( this.currentPropertyJoinTableOverride.size() == 0 ) {
+				this.currentPropertyJoinTableOverride = null;
 			}
 		}
 	}
@@ -111,6 +123,7 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 			// WARNING: this can conflict with user's expectations if:
 	 		//  - the property uses some restricted values
 	 		//  - the user has overridden the column
+			// also change getOverriddenJoinColumn and getOverriddenJoinTable as well
 	 		
 //			if ( propertyName.contains( ".key." ) ) {
 //				//support for legacy @AttributeOverride declarations
@@ -149,7 +162,7 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 	 * Get column overriding, property first, then parent, then holder
 	 * find the overridden rules from the exact property name.
 	 */
-	public Column[] getExactOverriddenColumn(String propertyName) {
+	private Column[] getExactOverriddenColumn(String propertyName) {
 		Column[] override = null;
 		if ( parent != null ) {
 			override = parent.getExactOverriddenColumn( propertyName );
@@ -165,8 +178,25 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 
 	/**
 	 * Get column overriding, property first, then parent, then holder
+	 * replace the placeholder 'collection&&element' with nothing
+	 *
+	 * These rules are here to support both JPA 2 and legacy overriding rules.
+	 *
 	 */
 	public JoinColumn[] getOverriddenJoinColumn(String propertyName) {
+		JoinColumn[] result = getExactOverriddenJoinColumn( propertyName );
+		if ( result == null && propertyName.contains( ".collection&&element." ) ) {
+			//support for non map collections where no prefix is needed
+			//TODO cache the underlying regexp
+			result = getExactOverriddenJoinColumn( propertyName.replace( ".collection&&element.", "."  ) );
+		}
+		return result;
+	}
+
+	/**
+	 * Get column overriding, property first, then parent, then holder
+	 */
+	private JoinColumn[] getExactOverriddenJoinColumn(String propertyName) {
 		JoinColumn[] override = null;
 		if ( parent != null ) {
 			override = parent.getOverriddenJoinColumn( propertyName );
@@ -180,26 +210,81 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 		return override;
 	}
 
+	/**
+	 * Get column overriding, property first, then parent, then holder
+	 * replace the placeholder 'collection&&element' with nothing
+	 *
+	 * These rules are here to support both JPA 2 and legacy overriding rules.
+	 *
+	 */
+	public JoinTable getJoinTable(XProperty property) {
+		final String propertyName = StringHelper.qualify( getPath(), property.getName() );
+		JoinTable result = getOverriddenJoinTable( propertyName );
+		if (result == null) {
+			result = property.getAnnotation( JoinTable.class );
+		}
+		return result;
+	}
+
+	/**
+	 * Get column overriding, property first, then parent, then holder
+	 * replace the placeholder 'collection&&element' with nothing
+	 *
+	 * These rules are here to support both JPA 2 and legacy overriding rules.
+	 *
+	 */
+	public JoinTable getOverriddenJoinTable(String propertyName) {
+		JoinTable result = getExactOverriddenJoinTable( propertyName );
+		if ( result == null && propertyName.contains( ".collection&&element." ) ) {
+			//support for non map collections where no prefix is needed
+			//TODO cache the underlying regexp
+			result = getExactOverriddenJoinTable( propertyName.replace( ".collection&&element.", "."  ) );
+		}
+		return result;
+	}
+
+	/**
+	 * Get column overriding, property first, then parent, then holder
+	 */
+	private JoinTable getExactOverriddenJoinTable(String propertyName) {
+		JoinTable override = null;
+		if ( parent != null ) {
+			override = parent.getOverriddenJoinTable( propertyName );
+		}
+		if ( override == null && currentPropertyJoinColumnOverride != null ) {
+			override = currentPropertyJoinTableOverride.get( propertyName );
+		}
+		if ( override == null && holderJoinTableOverride != null ) {
+			override = holderJoinTableOverride.get( propertyName );
+		}
+		return override;
+	}
+
 	private void buildHierarchyColumnOverride(XClass element) {
 		XClass current = element;
 		Map<String, Column[]> columnOverride = new HashMap<String, Column[]>();
 		Map<String, JoinColumn[]> joinColumnOverride = new HashMap<String, JoinColumn[]>();
+		Map<String, JoinTable> joinTableOverride = new HashMap<String, JoinTable>();
 		while ( current != null && !mappings.getReflectionManager().toXClass( Object.class ).equals( current ) ) {
 			if ( current.isAnnotationPresent( Entity.class ) || current.isAnnotationPresent( MappedSuperclass.class )
 					|| current.isAnnotationPresent( Embeddable.class ) ) {
 				//FIXME is embeddable override?
 				Map<String, Column[]> currentOverride = buildColumnOverride( current, getPath() );
 				Map<String, JoinColumn[]> currentJoinOverride = buildJoinColumnOverride( current, getPath() );
+				Map<String, JoinTable> currentJoinTableOverride = buildJoinTableOverride( current, getPath() );
 				currentOverride.putAll( columnOverride ); //subclasses have precedence over superclasses
+				currentJoinOverride.putAll( joinColumnOverride ); //subclasses have precedence over superclasses
 				currentJoinOverride.putAll( joinColumnOverride ); //subclasses have precedence over superclasses
 				columnOverride = currentOverride;
 				joinColumnOverride = currentJoinOverride;
+				joinTableOverride = currentJoinTableOverride;
 			}
 			current = current.getSuperclass();
 		}
 
 		holderColumnOverride = columnOverride.size() > 0 ? columnOverride : null;
 		holderJoinColumnOverride = joinColumnOverride.size() > 0 ? joinColumnOverride : null;
+		holderJoinTableOverride = joinTableOverride.size() > 0 ? joinTableOverride : null;
 	}
 
 	private static Map<String, Column[]> buildColumnOverride(XAnnotatedElement element, String path) {
@@ -218,7 +303,7 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 			overrides = null;
 		}
 
-		//fill overriden columns
+		//fill overridden columns
 		if ( overrides != null ) {
 			for (AttributeOverride depAttr : overrides) {
 				columnOverride.put(
@@ -246,7 +331,7 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 			overrides = null;
 		}
 
-		//fill overriden columns
+		//fill overridden columns
 		if ( overrides != null ) {
 			for (AssociationOverride depAttr : overrides) {
 				columnOverride.put(
@@ -256,6 +341,36 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 			}
 		}
 		return columnOverride;
+	}
+
+	private static Map<String, JoinTable> buildJoinTableOverride(XAnnotatedElement element, String path) {
+		Map<String, JoinTable> tableOverride = new HashMap<String, JoinTable>();
+		if ( element == null ) return tableOverride;
+		AssociationOverride singleOverride = element.getAnnotation( AssociationOverride.class );
+		AssociationOverrides multipleOverrides = element.getAnnotation( AssociationOverrides.class );
+		AssociationOverride[] overrides;
+		if ( singleOverride != null ) {
+			overrides = new AssociationOverride[] { singleOverride };
+		}
+		else if ( multipleOverrides != null ) {
+			overrides = multipleOverrides.value();
+		}
+		else {
+			overrides = null;
+		}
+
+		//fill overridden tables
+		if ( overrides != null ) {
+			for (AssociationOverride depAttr : overrides) {
+				if ( depAttr.joinColumns().length == 0 ) {
+					tableOverride.put(
+							StringHelper.qualify( path, depAttr.name() ),
+							depAttr.joinTable()
+					);
+				}
+			}
+		}
+		return tableOverride;
 	}
 
 	public void setParentProperty(String parentProperty) {

@@ -470,7 +470,7 @@ public abstract class CollectionBinder {
 		if (isMappedBy
 				&& (property.isAnnotationPresent( JoinColumn.class )
 					|| property.isAnnotationPresent( JoinColumns.class )
-					|| property.isAnnotationPresent( JoinTable.class ) ) ) {
+					|| propertyHolder.getJoinTable( property ) != null ) ) {
 			String message = "Associations marked as mappedBy must not define database mappings like @JoinTable or @JoinColumn: ";
 			message += StringHelper.qualify( propertyHolder.getPath(), propertyName );
 			throw new AnnotationException( message );
@@ -1152,7 +1152,7 @@ public abstract class CollectionBinder {
 				);
 			}
 			else if ( anyAnn != null ) {
-				if ( !property.isAnnotationPresent( JoinTable.class ) ) {
+				if ( parentPropertyHolder.getJoinTable( property ) == null ) {
 					String path = collValue.getOwnerEntityName() + "." + joinColumns[0].getPropertyName();
 					throw new AnnotationException(
 							"@JoinTable is mandatory when @ManyToAny is used: " + path
@@ -1160,7 +1160,7 @@ public abstract class CollectionBinder {
 				}
 			}
 			else {
-				JoinTable joinTableAnn = property.getAnnotation( JoinTable.class );
+				JoinTable joinTableAnn = parentPropertyHolder.getJoinTable( property );
 				if ( joinTableAnn != null && joinTableAnn.inverseJoinColumns().length > 0 ) {
 					String path = collValue.getOwnerEntityName() + "." + joinColumns[0].getPropertyName();
 					throw new AnnotationException(

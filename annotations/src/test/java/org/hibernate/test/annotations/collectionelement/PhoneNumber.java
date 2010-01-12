@@ -17,8 +17,8 @@ public class PhoneNumber {
 	}
 
 	int number;
-	
-   @ManyToMany(mappedBy="contactInfo.phoneNumbers", cascade= CascadeType.ALL)
+
+	@ManyToMany(mappedBy = "contactInfo.phoneNumbers", cascade = CascadeType.ALL)
 	Collection<Employee> employees;
 
 	public Collection<Employee> getEmployees() {

@@ -647,4 +647,5 @@ public class BinderHelper {
 				mappings.getMappedSuperclass( mappings.getReflectionManager().toClass( declaringClass ) ) :
 		        null;
 	}
+
 }

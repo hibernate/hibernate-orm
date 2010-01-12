@@ -10,34 +10,31 @@ import javax.persistence.JoinTable;
 
 @Entity
 public class Employee {
-   @Id
+	@Id
 	int id;
 
-/*	@AssociationOverride(
-	 name="social.website",
-	 joinTable=@JoinTable(
-		 name="xxxwebsites",
-		 joinColumns=@JoinColumn(name="id"),
-		 inverseJoinColumns=@JoinColumn(name="id" )
-	 )
-	)
-
-	@AssociationOverride(
-	 name="social.website",
-		joinColumns=@JoinColumn(name="id"))
-*/
-
-	@AssociationOverride(
-	 name="social.website",
-	 joinTable=@JoinTable(
-		 name="xxxwebsites",
-		 joinColumns=@JoinColumn(name=""),
-		 inverseJoinColumns=@JoinColumn(name="id" )
-	 )
-	)
-   @Embedded
+	@AssociationOverrides({
+		@AssociationOverride(
+				name = "social.website",
+				joinTable = @JoinTable(
+						name = "tbl_empl_sites",
+						inverseJoinColumns = @JoinColumn(name = "to_website_fk")
+				)
+		),
+		@AssociationOverride(
+				name = "phoneNumbers",
+				joinTable = @JoinTable(
+						name = "tbl_empl_phone"
+				)
+		),
+		@AssociationOverride(
+			name="address",
+			joinColumns = @JoinColumn(name="fld_address_fk")
+		)
+	})
+	@Embedded
 	ContactInfo contactInfo;
-	
+
 	public int getId() {
 		return id;
 	}

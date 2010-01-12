@@ -1234,8 +1234,8 @@ public final class AnnotationBinder {
 				( property.isAnnotationPresent( ManyToOne.class )
 						|| property.isAnnotationPresent( OneToOne.class ) )
 				) {
-			if ( property.isAnnotationPresent( JoinTable.class ) ) {
-				JoinTable joinTableAnn = property.getAnnotation( JoinTable.class );
+			JoinTable joinTableAnn = propertyHolder.getJoinTable( property );
+			if ( joinTableAnn != null ) {
 				joinColumns = Ejb3JoinColumn.buildJoinColumns(
 						joinTableAnn.inverseJoinColumns(), null, entityBinder.getSecondaryTables(),
 						propertyHolder, inferredData.getPropertyName(), mappings
@@ -1412,7 +1412,7 @@ public final class AnnotationBinder {
 			boolean ignoreNotFound = notFound != null && notFound.action().equals( NotFoundAction.IGNORE );
 			OnDelete onDeleteAnn = property.getAnnotation( OnDelete.class );
 			boolean onDeleteCascade = onDeleteAnn != null && OnDeleteAction.CASCADE.equals( onDeleteAnn.action() );
-			JoinTable assocTable = property.getAnnotation( JoinTable.class );
+			JoinTable assocTable = propertyHolder.getJoinTable( property );
 			if ( assocTable != null ) {
 				Join join = propertyHolder.addJoin( assocTable, false );
 				for (Ejb3JoinColumn joinColumn : joinColumns) {
@@ -1447,7 +1447,7 @@ public final class AnnotationBinder {
 			boolean ignoreNotFound = notFound != null && notFound.action().equals( NotFoundAction.IGNORE );
 			OnDelete onDeleteAnn = property.getAnnotation( OnDelete.class );
 			boolean onDeleteCascade = onDeleteAnn != null && OnDeleteAction.CASCADE.equals( onDeleteAnn.action() );
-			JoinTable assocTable = property.getAnnotation( JoinTable.class );
+			JoinTable assocTable = propertyHolder.getJoinTable( property );
 			if ( assocTable != null ) {
 				Join join = propertyHolder.addJoin( assocTable, false );
 				for (Ejb3JoinColumn joinColumn : joinColumns) {
@@ -1477,7 +1477,7 @@ public final class AnnotationBinder {
 			Cascade hibernateCascade = property.getAnnotation( Cascade.class );
 			OnDelete onDeleteAnn = property.getAnnotation( OnDelete.class );
 			boolean onDeleteCascade = onDeleteAnn != null && OnDeleteAction.CASCADE.equals( onDeleteAnn.action() );
-			JoinTable assocTable = property.getAnnotation( JoinTable.class );
+			JoinTable assocTable = propertyHolder.getJoinTable( property );
 			if ( assocTable != null ) {
 				Join join = propertyHolder.addJoin( assocTable, false );
 				for (Ejb3JoinColumn joinColumn : joinColumns) {
@@ -1852,7 +1852,7 @@ public final class AnnotationBinder {
 		TableBinder associationTableBinder = new TableBinder();
 		JoinColumn[] annJoins;
 		JoinColumn[] annInverseJoins;
-		JoinTable assocTable = property.getAnnotation( JoinTable.class );
+		JoinTable assocTable = propertyHolder.getJoinTable( property );
 		CollectionTable collectionTable = property.getAnnotation( CollectionTable.class );
 
 		if ( assocTable != null || collectionTable != null ) {

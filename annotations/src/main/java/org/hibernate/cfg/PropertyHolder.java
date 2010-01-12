@@ -27,6 +27,7 @@ import javax.persistence.Column;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 
+import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.mapping.Join;
 import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.PersistentClass;
@@ -71,6 +72,14 @@ public interface PropertyHolder {
 	 * return null if the column is not overridden, or an array of column if true
 	 */
 	JoinColumn[] getOverriddenJoinColumn(String propertyName);
+
+	/**
+	 * return
+	 *  - null if no join table is present,
+	 *  - the join table if not overridden,
+	 *  - the overridden join table otherwise
+	 */
+	JoinTable getJoinTable(XProperty property);
 
 	String getEntityName();
 

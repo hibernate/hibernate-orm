@@ -9,7 +9,7 @@ import java.util.List;
 public class SocialTouchPoints {
 
 	// owning side of many to many
-	@ManyToMany(targetEntity=SocialSite.class, cascade= CascadeType.ALL)
+	@ManyToMany(cascade= CascadeType.ALL)
 	List<SocialSite> website;
 
 	public List<SocialSite> getWebsite() {

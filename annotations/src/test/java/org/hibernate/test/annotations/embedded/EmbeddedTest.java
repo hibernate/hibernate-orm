@@ -2,6 +2,9 @@
 package org.hibernate.test.annotations.embedded;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
@@ -415,6 +418,68 @@ public class EmbeddedTest extends TestCase {
 		s.close();
 	}
 
+	// make sure we support collection of embeddable objects inside embeddable objects
+	public void testEmbeddableInsideEmbeddable() throws Exception {
+		Session s;
+		Transaction tx;
+
+		Collection<URLFavorite> urls = new ArrayList<URLFavorite>();
+		URLFavorite urlFavorite = new URLFavorite();
+		urlFavorite.setUrl( "http://highscalability.com/" );
+		urls.add(urlFavorite);
+
+		urlFavorite = new URLFavorite();
+		urlFavorite.setUrl( "http://www.jboss.org/" );
+		urls.add(urlFavorite);
+
+		urlFavorite = new URLFavorite();
+		urlFavorite.setUrl( "http://www.hibernate.org/" );
+		urls.add(urlFavorite);
+
+		urlFavorite = new URLFavorite();
+		urlFavorite.setUrl( "http://www.jgroups.org/" );
+		urls.add( urlFavorite );
+
+ 		Collection<String>ideas = new ArrayList<String>();
+		ideas.add( "lionheart" );
+		ideas.add( "xforms" );
+		ideas.add( "dynamic content" );
+		ideas.add( "http" );
+
+		InternetFavorites internetFavorites = new InternetFavorites();
+		internetFavorites.setLinks( urls );
+		internetFavorites.setIdeas( ideas );
+
+		FavoriteThings favoriteThings = new FavoriteThings();
+		favoriteThings.setWeb( internetFavorites );
+
+		s = openSession();
+
+		tx = s.beginTransaction();
+		s.persist(favoriteThings);
+		tx.commit();
+
+		tx = s.beginTransaction();
+		s.flush();
+		favoriteThings = (FavoriteThings) s.get( FavoriteThings.class,  favoriteThings.getId() );
+		assertTrue( "has web", favoriteThings.getWeb() != null );
+		assertTrue( "has ideas", favoriteThings.getWeb().getIdeas() != null );
+		assertTrue( "has favorite idea 'http'",favoriteThings.getWeb().getIdeas().contains("http") );
+		assertTrue( "has favorite idea 'http'",favoriteThings.getWeb().getIdeas().contains("dynamic content") );
+
+		urls = favoriteThings.getWeb().getLinks();
+		assertTrue( "has urls", urls != null);
+		URLFavorite[] favs = new URLFavorite[4];
+		urls.toArray(favs);
+		assertTrue( "has http://www.hibernate.org url favorite link",
+			"http://www.hibernate.org/".equals( favs[0].getUrl() ) ||
+			"http://www.hibernate.org/".equals( favs[1].getUrl() ) ||
+			"http://www.hibernate.org/".equals( favs[2].getUrl() ) ||
+			"http://www.hibernate.org/".equals( favs[3].getUrl() ));
+		tx.commit();
+		s.close();
+	}
+
 	public EmbeddedTest(String x) {
 		super( x );
 	}
@@ -431,7 +496,8 @@ public class EmbeddedTest extends TestCase {
 				InternetProvider.class,
 				CorpType.class,
 				Nationality.class,
-				Manager.class
+				Manager.class,
+				FavoriteThings.class
 		};
 	}
 }

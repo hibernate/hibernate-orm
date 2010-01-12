@@ -1,4 +1,4 @@
-// $Id:$
+// $Id$
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
@@ -839,6 +839,7 @@ public class JPAOverridenAnnotationReader implements AnnotationReader {
 			if ( "embedded".equals( element.getName() ) ) {
 				AnnotationDescriptor ad = new AnnotationDescriptor( Embedded.class );
 				annotationList.add( AnnotationFactory.create( ad ) );
+				getAccessType( annotationList, element );
 			}
 		}
 		if ( elementsForProperty.size() == 0 && defaults.canUseJavaAnnotations() ) {
@@ -985,6 +986,7 @@ public class JPAOverridenAnnotationReader implements AnnotationReader {
 					addIfNotNull( annotationList, annotation );
 					AnnotationDescriptor ad = new AnnotationDescriptor( EmbeddedId.class );
 					annotationList.add( AnnotationFactory.create( ad ) );
+					getAccessType( annotationList, element );
 				}
 			}
 		}

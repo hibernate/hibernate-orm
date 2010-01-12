@@ -60,7 +60,7 @@ public class XmlAccessTest extends TestCase {
 
 		// now with an additional xml configuration file changing the default access type for Tourist using basic
 		configFiles = new ArrayList<String>();
-		configFiles.add("org/hibernate/test/annotations/access/xml/Tourist.xml");
+		configFiles.add( "org/hibernate/test/annotations/access/xml/Tourist.xml" );
 		factory = buildSessionFactory( classes, configFiles );
 		assertAccessType( factory, classUnderTest, AccessType.PROPERTY );
 	}
@@ -120,7 +120,7 @@ public class XmlAccessTest extends TestCase {
 		Class<?> classUnderTest = Waiter.class;
 		List<Class<?>> classes = new ArrayList<Class<?>>();
 		classes.add( classUnderTest );
-		classes.add(Crew.class);
+		classes.add( Crew.class );
 		List<String> configFiles = new ArrayList<String>();
 		configFiles.add( "org/hibernate/test/annotations/access/xml/Crew.xml" );
 		SessionFactoryImplementor factory = buildSessionFactory( classes, configFiles );
@@ -131,9 +131,20 @@ public class XmlAccessTest extends TestCase {
 		Class<?> classUnderTest = RentalCar.class;
 		List<Class<?>> classes = new ArrayList<Class<?>>();
 		classes.add( classUnderTest );
-		classes.add(Driver.class);
+		classes.add( Driver.class );
 		List<String> configFiles = new ArrayList<String>();
 		configFiles.add( "org/hibernate/test/annotations/access/xml/RentalCar.xml" );
+		SessionFactoryImplementor factory = buildSessionFactory( classes, configFiles );
+		assertAccessType( factory, classUnderTest, AccessType.PROPERTY );
+	}
+
+	public void testAccessOnEmbeddedXmlElement() throws Exception {
+		Class<?> classUnderTest = Cook.class;
+		List<Class<?>> classes = new ArrayList<Class<?>>();
+		classes.add( classUnderTest );
+		classes.add( Knive.class );
+		List<String> configFiles =  new ArrayList<String>();
+		configFiles.add( "org/hibernate/test/annotations/access/xml/Cook.xml" );
 		SessionFactoryImplementor factory = buildSessionFactory( classes, configFiles );
 		assertAccessType( factory, classUnderTest, AccessType.PROPERTY );
 	}
@@ -153,6 +164,7 @@ public class XmlAccessTest extends TestCase {
 	}
 
 	// uses the first getter of the tupelizer for the assertions
+
 	private void assertAccessType(SessionFactoryImplementor factory, Class<?> classUnderTest, AccessType accessType) {
 		EntityMetamodel metaModel = factory.getEntityPersister( classUnderTest.getName() )
 				.getEntityMetamodel();

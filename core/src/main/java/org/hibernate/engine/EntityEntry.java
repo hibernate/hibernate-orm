@@ -56,6 +56,7 @@ public final class EntityEntry implements Serializable {
 	private transient EntityPersister persister; // for convenience to save some lookups
 	private final EntityMode entityMode;
 	private final String entityName;
+	private transient EntityKey cachedEntityKey; // cached EntityKey (lazy-initialized)
 	private boolean isBeingReplicated;
 	private boolean loadedWithLazyPropertiesUnfetched; //NOTE: this is not updated when properties are fetched lazily!
 	private final transient Object rowId;
@@ -165,6 +166,21 @@ public final class EntityEntry implements Serializable {
 		return persister;
 	}
 
+	/**
+	 * Get the EntityKey based on this EntityEntry.
+	 * @return the EntityKey
+	 * @throws  IllegalStateException if getId() is null
+	 */
+	public EntityKey getEntityKey() {
+		if ( cachedEntityKey == null ) {
+			if ( getId() == null ) {
+				throw new IllegalStateException( "cannot generate an EntityKey when id is null.");
+			}
+			cachedEntityKey = new EntityKey( getId(), getPersister(), entityMode );
+		}
+		return cachedEntityKey;
+	}
+
 	void afterDeserialize(SessionFactoryImplementor factory) {
 		persister = factory.getEntityPersister( entityName );
 	}
@@ -225,7 +241,7 @@ public final class EntityEntry implements Serializable {
 				earlyInsert ?
 						!isExistsInDatabase() :
 						session.getPersistenceContext().getNullifiableEntityKeys()
-							.contains( new EntityKey( getId(), getPersister(), entityMode ) )
+							.contains( getEntityKey() )
 				);
 	}
 	

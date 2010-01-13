@@ -108,9 +108,8 @@ public final class EntityDeleteAction extends EntityAction {
 		}
 		entry.postDelete();
 
-		EntityKey key = new EntityKey( entry.getId(), entry.getPersister(), session.getEntityMode() );
-		persistenceContext.removeEntity(key);
-		persistenceContext.removeProxy(key);
+		persistenceContext.removeEntity( entry.getEntityKey() );
+		persistenceContext.removeProxy( entry.getEntityKey() );
 		
 		if ( persister.hasCache() ) {
 			persister.getCacheAccessStrategy().remove( ck );

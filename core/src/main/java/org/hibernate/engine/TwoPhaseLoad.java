@@ -191,10 +191,7 @@ public final class TwoPhaseLoad {
 		}
 
 		boolean isReallyReadOnly = readOnly || !persister.isMutable();
-		Object proxy = persistenceContext.getProxy(
-				new EntityKey(entityEntry.getId(), entityEntry.getPersister(), session.getEntityMode()
-			)
-		);
+		Object proxy = persistenceContext.getProxy( entityEntry.getEntityKey() );
 		if ( proxy != null ) {
 			// there is already a proxy for this impl
 			// only set the status to read-only if the proxy is read-only

@@ -88,9 +88,8 @@ public class DefaultEvictEventListener implements EvictEventListener {
 		else {
 			EntityEntry e = persistenceContext.removeEntry( object );
 			if ( e != null ) {
-				EntityKey key = new EntityKey( e.getId(), e.getPersister(), source.getEntityMode()  );
-				persistenceContext.removeEntity( key );
-				doEvict( object, key, e.getPersister(), source );
+				persistenceContext.removeEntity( e.getEntityKey() );
+				doEvict( object, e.getEntityKey(), e.getPersister(), source );
 			}
 		}
 	}

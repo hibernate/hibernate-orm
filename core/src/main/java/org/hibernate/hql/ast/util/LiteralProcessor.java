@@ -247,6 +247,13 @@ public class LiteralProcessor implements HqlSqlTokenTypes {
 
 	private String determineIntegerRepresentation(String text, int type) {
 		try {
+			if ( type == NUM_BIG_INTEGER ) {
+				String literalValue = text;
+				if ( literalValue.endsWith( "bi" ) || literalValue.endsWith( "BI" ) ) {
+					literalValue = literalValue.substring( 0, literalValue.length() - 2 );
+				}
+				return new BigInteger( literalValue ).toString();
+			}
 			if ( type == NUM_INT ) {
 				try {
 					return Integer.valueOf( text ).toString();
@@ -255,21 +262,11 @@ public class LiteralProcessor implements HqlSqlTokenTypes {
 					log.trace( "could not format incoming text [" + text + "] as a NUM_INT; assuming numeric overflow and attempting as NUM_LONG" );
 				}
 			}
-			else if ( type == NUM_LONG ) {
-				String literalValue = text;
-				if ( literalValue.endsWith( "l" ) || literalValue.endsWith( "L" ) ) {
-					literalValue = literalValue.substring( 0, literalValue.length() - 1 );
-				}
-				return Long.valueOf( literalValue ).toString();
+			String literalValue = text;
+			if ( literalValue.endsWith( "l" ) || literalValue.endsWith( "L" ) ) {
+				literalValue = literalValue.substring( 0, literalValue.length() - 1 );
 			}
-			else if ( type == NUM_BIG_INTEGER ) {
-				String literalValue = text;
-				if ( literalValue.endsWith( "bi" ) || literalValue.endsWith( "BI" ) ) {
-					literalValue = literalValue.substring( 0, literalValue.length() - 2 );
-				}
-				return new BigInteger( literalValue ).toString();
-			}
-			throw new HibernateException( "Unknown literal type to parse as integer" );
+			return Long.valueOf( literalValue ).toString();
 		}
 		catch( Throwable t ) {
 			throw new HibernateException( "Could not parse literal [" + text + "] as integer", t );

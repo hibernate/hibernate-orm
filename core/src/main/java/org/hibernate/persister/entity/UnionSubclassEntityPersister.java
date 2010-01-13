@@ -30,6 +30,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.Hibernate;
@@ -390,7 +391,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 				);
 		}
 
-		HashSet columns = new HashSet();
+		HashSet columns = new LinkedHashSet();
 		Iterator titer = model.getSubclassTableClosureIterator();
 		while ( titer.hasNext() ) {
 			Table table = (Table) titer.next();

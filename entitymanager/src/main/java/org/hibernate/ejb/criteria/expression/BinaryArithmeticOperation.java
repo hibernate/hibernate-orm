@@ -115,40 +115,19 @@ public class BinaryArithmeticOperation<N extends Number>
 	 * @param criteriaBuilder The builder for query components.
 	 * @param resultType The operation result type
 	 * @param operator The operator (type of operation).
-	 * @param rhs The right-hand operand
 	 * @param lhs The left-hand operand.
+	 * @param rhs The right-hand operand
 	 */
 	public BinaryArithmeticOperation(
 			CriteriaBuilderImpl criteriaBuilder,
 			Class<N> resultType,
 			Operation operator,
-			Expression<? extends N> rhs,
-			Expression<? extends N> lhs) {
+			Expression<? extends N> lhs,
+			Expression<? extends N> rhs) {
 		super( criteriaBuilder, resultType );
 		this.operator = operator;
-		this.rhs = rhs;
 		this.lhs = lhs;
-	}
-
-	/**
-	 * Creates an arithmethic operation based on an expression and a literal.
-	 *
-	 * @param criteriaBuilder The builder for query components.
-	 * @param javaType The operation result type
-	 * @param operator The operator (type of operation).
-	 * @param rhs The right-hand operand
-	 * @param lhs The left-hand operand (the literal).
-	 */
-	public BinaryArithmeticOperation(
-			CriteriaBuilderImpl criteriaBuilder,
-			Class<N> javaType,
-			Operation operator,
-			Expression<? extends N> rhs,
-			N lhs) {
-		super( criteriaBuilder, javaType );
-		this.operator = operator;
 		this.rhs = rhs;
-		this.lhs = new LiteralExpression<N>( criteriaBuilder, lhs );
 	}
 
 	/**
@@ -157,19 +136,40 @@ public class BinaryArithmeticOperation<N extends Number>
 	 * @param criteriaBuilder The builder for query components.
 	 * @param javaType The operation result type
 	 * @param operator The operator (type of operation).
-	 * @param rhs The right-hand operand (the literal).
 	 * @param lhs The left-hand operand
+	 * @param rhs The right-hand operand (the literal)
 	 */
 	public BinaryArithmeticOperation(
 			CriteriaBuilderImpl criteriaBuilder,
 			Class<N> javaType,
 			Operation operator,
-			N rhs,
-			Expression<? extends N> lhs) {
+			Expression<? extends N> lhs,
+			N rhs) {
 		super( criteriaBuilder, javaType );
 		this.operator = operator;
-		this.rhs = new LiteralExpression<N>( criteriaBuilder, rhs );
 		this.lhs = lhs;
+		this.rhs = new LiteralExpression<N>( criteriaBuilder, rhs );
+	}
+
+	/**
+	 * Creates an arithmetic operation based on an expression and a literal.
+	 *
+	 * @param criteriaBuilder The builder for query components.
+	 * @param javaType The operation result type
+	 * @param operator The operator (type of operation).
+	 * @param lhs The left-hand operand (the literal)
+	 * @param rhs The right-hand operand
+	 */
+	public BinaryArithmeticOperation(
+			CriteriaBuilderImpl criteriaBuilder,
+			Class<N> javaType,
+			Operation operator,
+			N lhs,
+			Expression<? extends N> rhs) {
+		super( criteriaBuilder, javaType );
+		this.operator = operator;
+		this.lhs = new LiteralExpression<N>( criteriaBuilder, lhs );
+		this.rhs = rhs;
 	}
 	public Operation getOperator() {
 		return operator;

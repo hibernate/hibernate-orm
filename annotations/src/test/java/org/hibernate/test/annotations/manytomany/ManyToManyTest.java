@@ -1,4 +1,5 @@
 //$Id$
+//$Id$
 package org.hibernate.test.annotations.manytomany;
 
 
@@ -7,6 +8,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 
 import org.hibernate.Hibernate;
@@ -641,6 +643,81 @@ public class ManyToManyTest extends TestCase {
 		s.close();
 	}
 
+	// Test for HHH-4685
+	// Section 11.1.25
+	// The ManyToMany annotation may be used within an embeddable class contained within an entity class to specify a
+	// relationship to a collection of entities[101]. If the relationship is bidirectional and the entity containing
+	// the embeddable class is the owner of the relationship, the non-owning side must use the mappedBy element of the
+	// ManyToMany annotation to specify the relationship field or property of the embeddable class. The dot (".")
+	// notation syntax must be used in the mappedBy element to indicate the relationship attribute within the embedded
+	// attribute. The value of each identifier used with the dot notation is the name of the respective embedded field
+	// or property.
+	public void testManyToManyEmbeddableBiDirectionalDotNotationInMappedBy() throws Exception {
+		Session s;
+		Transaction tx;
+		s = openSession();
+		tx = s.beginTransaction();
+		Employee e = new Employee();
+		e.setName( "Sharon" );
+		List<PhoneNumber> phoneNumbers = new ArrayList<PhoneNumber>();
+		Collection<Employee> employees = new ArrayList<Employee>();
+		employees.add( e );
+	   ContactInfo contactInfo = new ContactInfo();
+		PhoneNumber number = new PhoneNumber();
+		number.setEmployees( employees );
+		phoneNumbers.add( number );
+		contactInfo.setPhoneNumbers( phoneNumbers );
+		e.setContactInfo( contactInfo );
+		s.persist( e );
+		s.flush();
+		s.clear();
+		tx.commit();
+
+		tx.begin();
+		e = (Employee)s.get( e.getClass(),e.getId() );
+		// follow both directions of many to many association 
+		assertEquals("same employee", e.getName(), e.getContactInfo().getPhoneNumbers().get(0).getEmployees().iterator().next().getName());
+		tx.commit();
+
+		s.close();
+	}
+
+	// Test for HHH-4685
+	// Section 11.1.26
+	// The ManyToOne annotation may be used within an embeddable class to specify a relationship from the embeddable
+	// class to an entity class. If the relationship is bidirectional, the non-owning OneToMany entity side must use the
+	// mappedBy element of the OneToMany annotation to specify the relationship field or property of the embeddable field
+	// or property on the owning side of the relationship. The dot (".") notation syntax must be used in the mappedBy
+	// element to indicate the relationship attribute within the embedded attribute. The value of each identifier used
+	// with the dot notation is the name of the respective embedded field or property.
+	public void testOneToManyEmbeddableBiDirectionalDotNotationInMappedBy() throws Exception {
+		Session s;
+		Transaction tx;
+		s = openSession();
+		tx = s.beginTransaction();
+		Employee e = new Employee();
+		JobInfo job = new JobInfo();
+		job.setJobDescription( "Sushi Chef" );
+		ProgramManager pm = new ProgramManager();
+		Collection<Employee> employees = new ArrayList<Employee>();
+		employees.add(e);
+		pm.setManages( employees );
+		job.setPm(pm);
+		e.setJobInfo( job );
+		s.persist( e );
+		s.flush();
+		s.clear();
+		tx.commit();
+
+		tx.begin();
+		e = (Employee) s.get( e.getClass(), e.getId() );
+		assertEquals( "same job in both directions", 
+			e.getJobInfo().getJobDescription(),
+			e.getJobInfo().getPm().getManages().iterator().next().getJobInfo().getJobDescription()  );
+		tx.commit();
+		s.close();
+	}
+
 	/**
 	 * @see org.hibernate.test.annotations.TestCase#getMappings()
 	 */
@@ -664,7 +741,9 @@ public class ManyToManyTest extends TestCase {
 				Inspector.class,
 				InspectorPrefixes.class,
 				BuildingCompany.class,
-				Building.class
+				Building.class,
+				PhoneNumber.class,
+				ProgramManager.class
 		};
 	}
 

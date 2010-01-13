@@ -28,6 +28,8 @@ import java.io.Serializable;
 
 import org.hibernate.HibernateException;
 import org.hibernate.LazyInitializationException;
+import org.hibernate.TransientObjectException;
+import org.hibernate.SessionException;
 import org.hibernate.engine.EntityKey;
 import org.hibernate.engine.SessionImplementor;
 
@@ -43,8 +45,8 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 	private Serializable id;
 	private Object target;
 	private boolean initialized;
+	private boolean readOnly;
 	private boolean unwrap;
-
 	private transient SessionImplementor session;
 
 	/**
@@ -63,7 +65,15 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 	protected AbstractLazyInitializer(String entityName, Serializable id, SessionImplementor session) {
 		this.entityName = entityName;
 		this.id = id;
-		this.session = session;
+		// initialize other fields depending on session state
+		if ( session == null ) {
+			// would be better to call unsetSession(), but it is not final...
+			session = null;
+			readOnly = false;
+		}
+		else {
+			setSession( session );
+		}
 	}
 
 	/**
@@ -108,7 +118,9 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 		if ( s != session ) {
 			// check for s == null first, since it is least expensive
 			if ( s == null ){
-				unsetSession();
+				// would be better to call unsetSession(), but it is not final...
+				session = null;
+				readOnly = false;
 			}
 			else if ( isConnectedToSession() ) {
 				//TODO: perhaps this should be some other RuntimeException...
@@ -116,6 +128,8 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 			}
 			else {
 				session = s;
+				// NOTE: the proxy may not be connected to the session yet, so set readOnly directly
+				readOnly = ! session.getFactory().getEntityPersister( entityName ).isMutable();
 			}
 		}
 	}
@@ -132,6 +146,7 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 	 */
 	public void unsetSession() {
 		session = null;
+		readOnly = false;
 	}
 
 	/**
@@ -218,6 +233,48 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 	 */
 	protected final Object getTarget() {
 		return target;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public boolean isReadOnly() {
+		errorIfReadOnlySettingNotAvailable();
+		if ( !isConnectedToSession() ) {
+			throw new TransientObjectException(
+					"The read-only/modifiable setting is only accessible when the proxy is associated with a session." );
+		}
+		return readOnly;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public void setReadOnly(boolean readOnly) {
+		errorIfReadOnlySettingNotAvailable();
+		// only update if readOnly is different from current setting
+		if ( this.readOnly != readOnly ) {
+			Object proxy = getProxyOrNull();
+			if ( proxy == null ) {
+				throw new TransientObjectException(
+						"Cannot set the read-only/modifiable mode unless the proxy is associated with a session." );
+			}
+			this.readOnly = readOnly;
+			if ( initialized ) {
+				session.getPersistenceContext().setReadOnly( target, readOnly );
+			}
+		}
+	}
+
+	private void errorIfReadOnlySettingNotAvailable() {
+		if ( session == null ) {
+			throw new TransientObjectException(
+					"Proxy is detached (i.e, session is null). The read-only/modifiable setting is only accessible when the proxy is associated with an open session." );
+		}
+		if ( session.isClosed() ) {
+			throw new SessionException(
+					"Session is closed. The read-only/modifiable setting is only accessible when the proxy is associated with an open session." );
+		}
 	}
 
 	/**

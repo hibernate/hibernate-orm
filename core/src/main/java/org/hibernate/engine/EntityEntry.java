@@ -261,22 +261,25 @@ public final class EntityEntry implements Serializable {
 		);
 	}
 
+	public boolean isReadOnly() {
+		if (status != Status.MANAGED && status != Status.READ_ONLY) {
+			throw new HibernateException("instance was not in a valid state");
+		}
+		return status == Status.READ_ONLY;
+	}
+
 	public void setReadOnly(boolean readOnly, Object entity) {
-		if ( ( readOnly && status == Status.READ_ONLY ) ||
-			 ( ( ! readOnly ) && status == Status.MANAGED ) ) {
+		if ( readOnly == isReadOnly() ) {
 			// simply return since the status is not being changed
 			return;
 		}
-		if (status!=Status.MANAGED && status!=Status.READ_ONLY) {
-			throw new HibernateException("instance was not in a valid state");
-		}
-		if (readOnly) {
-			setStatus(Status.READ_ONLY);
+		if ( readOnly ) {
+			setStatus( Status.READ_ONLY );
 			loadedState = null;
 		}
 		else {
-			setStatus(Status.MANAGED);
-			loadedState = getPersister().getPropertyValues(entity, entityMode);
+			setStatus( Status.MANAGED );
+			loadedState = getPersister().getPropertyValues( entity, entityMode );
 		}
 	}
 	

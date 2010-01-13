@@ -1956,6 +1956,12 @@ public final class SessionImpl extends AbstractSessionImpl
 		return true;
 	}
 
+	public boolean isReadOnly(Object entityOrProxy) {
+		errorIfClosed();
+		checkTransactionSynchStatus();
+		return persistenceContext.isReadOnly( entityOrProxy );	
+	}
+
 	public void setReadOnly(Object entity, boolean readOnly) {
 		errorIfClosed();
 		checkTransactionSynchStatus();

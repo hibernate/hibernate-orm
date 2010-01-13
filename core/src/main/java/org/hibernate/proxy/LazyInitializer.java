@@ -105,6 +105,37 @@ public interface LazyInitializer {
 	public void setImplementation(Object target);
 
 	/**
+	 * Is the proxy read-only?.
+	 *
+	 * @return true, if this proxy is read-only; false, otherwise
+	 * @throws org.hibernate.TransientObjectException if the proxy is not association with a session
+	 * @throws org.hibernate.SessionException if the proxy is associated with a sesssion that is closed
+	 *
+	 * @see org.hibernate.Session#isReadOnly(Object entityOrProxy)
+	 */
+	public boolean isReadOnly();
+
+	/**
+	 * Set an associated modifiable proxy to read-only mode, or a read-only
+	 * proxy to modifiable mode. If the proxy is currently initialized, its
+	 * implementation will be set to the same mode; otherwise, when the
+	 * proxy is initialized, its implementation will have the same read-only/
+	 * modifiable setting as the proxy. In read-only mode, no snapshot is
+	 * maintained and the instance is never dirty checked.
+	 *
+	 * If the associated proxy already has the specified read-only/modifiable
+	 * setting, then this method does nothing.
+	 *
+	 * @param readOnly, if true, the associated proxy is made read-only;
+	 *                  if false, the associated proxy is made modifiable.
+	 * @throws org.hibernate.TransientObjectException if the proxy is not association with a session
+	 * @throws org.hibernate.SessionException if the proxy is associated with a sesssion that is closed
+	 * 
+	 * @see org.hibernate.Session#setReadOnly(Object entityOrProxy, boolean readOnly)
+	 */
+	public void setReadOnly(boolean readOnly);
+
+	/**
 	 * Get the session to which this proxy is associated, or null if it is not attached.
 	 *
 	 * @return The associated session.

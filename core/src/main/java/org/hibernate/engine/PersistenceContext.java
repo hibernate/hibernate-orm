@@ -475,11 +475,26 @@ public interface PersistenceContext {
 	 * Is the association property belonging to the keyed entity null?
 	 */
 	public boolean isPropertyNull(EntityKey ownerKey, String propertyName);
-	
+
 	/**
-	 * Set the object to read only and discard it's snapshot
+	 * Is the entity or proxy read-only?
+	 *
+	 * @param entityOrProxy
+	 * @return true, the object is read-only; false, the object is modifiable.
 	 */
-	public void setReadOnly(Object entity, boolean readOnly);
+	public boolean isReadOnly(Object entityOrProxy);
+
+	/**
+	 * Set the entity or proxy to read only and discard it's snapshot.
+	 *
+	 * If the entity or proxy already has the specified read-only/modifiable
+	 * setting, then this method does nothing.
+	 *
+	 * @param entityOrProxy, an entity or HibernateProxy
+	 * @param readOnly, if true, the entity or proxy is made read-only;
+	 *                  if false, the entity or proxy is made modifiable.
+	 */
+	public void setReadOnly(Object entityOrProxy, boolean readOnly);
 
 	void replaceDelayedEntityIdentityInsertKeys(EntityKey oldKey, Serializable generatedId);
 

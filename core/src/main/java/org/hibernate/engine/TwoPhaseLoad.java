@@ -32,6 +32,7 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.CacheMode;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
+import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.cache.CacheKey;
 import org.hibernate.cache.entry.CacheEntry;
 import org.hibernate.event.PostLoadEvent;
@@ -188,8 +189,18 @@ public final class TwoPhaseLoad {
 				factory.getStatisticsImplementor().secondLevelCachePut( persister.getCacheAccessStrategy().getRegion().getName() );
 			}
 		}
-	
-		if ( readOnly || !persister.isMutable() ) {
+
+		boolean isReallyReadOnly = readOnly || !persister.isMutable();
+		Object proxy = persistenceContext.getProxy(
+				new EntityKey(entityEntry.getId(), entityEntry.getPersister(), session.getEntityMode()
+			)
+		);
+		if ( proxy != null ) {
+			// there is already a proxy for this impl
+			// only set the status to read-only if the proxy is read-only
+			isReallyReadOnly = ( ( HibernateProxy ) proxy ).getHibernateLazyInitializer().isReadOnly();
+		}
+		if ( isReallyReadOnly ) {
 			//no need to take a snapshot - this is a 
 			//performance optimization, but not really
 			//important, except for entities with huge 

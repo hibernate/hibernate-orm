@@ -839,15 +839,29 @@ public interface Session extends Serializable {
 	 * Get the statistics for this session.
 	 */
 	public SessionStatistics getStatistics();
-	
+
 	/**
-	 * Set an unmodified persistent object to read only mode, or a read only
-	 * object to modifiable mode. In read only mode, no snapshot is maintained
+	 * Is the specified entity or proxy read-only?
+	 * @param entityOrProxy, an entity or HibernateProxy
+	 * @return true, the entity or proxy is read-only;
+	 *         false, the entity or proxy is modifiable.
+	 */
+	public boolean isReadOnly(Object entityOrProxy);
+
+	/**
+	 * Set an unmodified persistent object to read-only mode, or a read-only
+	 * object to modifiable mode. In read-only mode, no snapshot is maintained
 	 * and the instance is never dirty checked.
+	 *
+	 * If the entity or proxy already has the specified read-only/modifiable
+	 * setting, then this method does nothing.
 	 * 
+	 * @param entityOrProxy, an entity or HibernateProxy
+	 * @param readOnly, if true, the entity or proxy is made read-only;
+	 *                  if false, the entity or proxy is made modifiable.
 	 * @see Query#setReadOnly(boolean)
 	 */
-	public void setReadOnly(Object entity, boolean readOnly);
+	public void setReadOnly(Object entityOrProxy, boolean readOnly);
 
 	/**
 	 * Controller for allowing users to perform JDBC related work using the Connection

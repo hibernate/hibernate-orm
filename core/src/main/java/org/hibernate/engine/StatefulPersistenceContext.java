@@ -1302,13 +1302,67 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		nullAssociations.clear();
 	}
 
-	public void setReadOnly(Object entity, boolean readOnly) {
-		EntityEntry entry = getEntry(entity);
-		if (entry==null) {
-			throw new TransientObjectException("Instance was not associated with the session");
+	public boolean isReadOnly(Object entityOrProxy) {
+		if ( entityOrProxy == null ) {
+			throw new AssertionFailure( "object must be non-null." );
 		}
-		entry.setReadOnly(readOnly, entity);
-		hasNonReadOnlyEntities = hasNonReadOnlyEntities || !readOnly;
+		boolean isReadOnly;
+		if ( entityOrProxy instanceof HibernateProxy ) {
+			isReadOnly = ( ( HibernateProxy ) entityOrProxy ).getHibernateLazyInitializer().isReadOnly();
+		}
+		else {
+			EntityEntry ee =  getEntry( entityOrProxy );
+			if ( ee == null ) {
+				throw new TransientObjectException("Instance was not associated with this persistence context" );
+			}
+			isReadOnly = ee.isReadOnly();
+		}
+		return isReadOnly;
+	}
+
+	public void setReadOnly(Object object, boolean readOnly) {
+		if ( object == null ) {
+			throw new AssertionFailure( "object must be non-null." );
+		}
+		if ( isReadOnly( object ) == readOnly ) {
+			return;
+		}
+		if ( object instanceof HibernateProxy ) {
+			HibernateProxy proxy = ( HibernateProxy ) object;
+			setProxyReadOnly( proxy, readOnly );
+			if ( Hibernate.isInitialized( proxy ) ) {
+				setEntityReadOnly(
+						proxy.getHibernateLazyInitializer().getImplementation(),
+						readOnly
+				);
+			}
+		}
+		else {
+			setEntityReadOnly( object, readOnly );
+			// PersistenceContext.proxyFor( entity ) returns entity if there is no proxy for that entity
+			// so need to check the return value to be sure it is really a proxy
+			Object maybeProxy = getSession().getPersistenceContext().proxyFor( object );
+			if ( maybeProxy instanceof HibernateProxy ) {
+				setProxyReadOnly( ( HibernateProxy ) maybeProxy, readOnly );
+			}
+		}
+	}
+
+	private void setProxyReadOnly(HibernateProxy proxy, boolean readOnly) {
+		if ( proxy.getHibernateLazyInitializer().getSession() != getSession() ) {
+			throw new AssertionFailure(
+					"Attempt to set a proxy to read-only that is associated with a different session" );
+		}
+		proxy.getHibernateLazyInitializer().setReadOnly( readOnly );
+	}
+
+	private void setEntityReadOnly(Object entity, boolean readOnly) {
+		EntityEntry entry = getEntry(entity);
+		if (entry == null) {
+			throw new TransientObjectException("Instance was not associated with this persistence context" );
+		}
+		entry.setReadOnly(readOnly, entity );
+		hasNonReadOnlyEntities = hasNonReadOnlyEntities || ! readOnly;
 	}
 
 	public void replaceDelayedEntityIdentityInsertKeys(EntityKey oldKey, Serializable generatedId) {

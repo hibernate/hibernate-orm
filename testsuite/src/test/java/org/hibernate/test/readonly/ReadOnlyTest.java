@@ -67,7 +67,7 @@ public class ReadOnlyTest extends FunctionalTestCase {
 		return new FunctionalTestClassTestSuite( ReadOnlyTest.class );
 	}
 
-	public void testReadOnlyOnProxiesFailureExpected() {
+	public void testReadOnlyOnProxies() {
 		Session s = openSession();
 		s.setCacheMode( CacheMode.IGNORE );
 		s.beginTransaction();
@@ -82,6 +82,7 @@ public class ReadOnlyTest extends FunctionalTestCase {
 
 		s = openSession();
 		s.setCacheMode(CacheMode.IGNORE);
+		s.beginTransaction();
 		dp = ( DataPoint ) s.load( DataPoint.class, new Long( dpId ) );
 		assertFalse( "was initialized", Hibernate.isInitialized( dp ) );
 		s.setReadOnly( dp, true );
@@ -176,6 +177,138 @@ public class ReadOnlyTest extends FunctionalTestCase {
 		t.commit();
 		s.close();
 
+	}
+
+	public void testReadOnlyDelete() {
+
+		Session s = openSession();
+		s.setCacheMode(CacheMode.IGNORE);
+		Transaction t = s.beginTransaction();
+		DataPoint dp = new DataPoint();
+		dp.setX( new BigDecimal(0.1d).setScale(19, BigDecimal.ROUND_DOWN) );
+		dp.setY( new BigDecimal( Math.cos( dp.getX().doubleValue() ) ).setScale(19, BigDecimal.ROUND_DOWN) );
+		s.save(dp);
+		t.commit();
+		s.close();
+
+		s = openSession();
+		s.setCacheMode(CacheMode.IGNORE);
+		t = s.beginTransaction();
+		dp = ( DataPoint ) s.get( DataPoint.class, dp.getId() );
+		s.setReadOnly( dp, true );
+		s.delete(  dp );
+		t.commit();
+		s.close();
+
+		s = openSession();
+		t = s.beginTransaction();
+		List list = s.createQuery("from DataPoint where description='done!'").list();
+		assertTrue( list.isEmpty() );
+		t.commit();
+		s.close();
+
+	}
+
+	public void testReadOnlyModeWithExistingModifiableEntity() {
+
+		Session s = openSession();
+		s.setCacheMode(CacheMode.IGNORE);
+		Transaction t = s.beginTransaction();
+		DataPoint dp = null;
+		for ( int i=0; i<100; i++ ) {
+			dp = new DataPoint();
+			dp.setX( new BigDecimal(i * 0.1d).setScale(19, BigDecimal.ROUND_DOWN) );
+			dp.setY( new BigDecimal( Math.cos( dp.getX().doubleValue() ) ).setScale(19, BigDecimal.ROUND_DOWN) );
+			s.save(dp);
+		}
+		t.commit();
+		s.close();
+
+		s = openSession();
+		s.setCacheMode(CacheMode.IGNORE);
+		t = s.beginTransaction();
+		DataPoint dpLast = ( DataPoint ) s.get( DataPoint.class,  dp.getId() );
+		assertFalse( s.isReadOnly( dpLast ) );
+		int i = 0;
+		ScrollableResults sr = s.createQuery("from DataPoint dp order by dp.x asc")
+				.setReadOnly(true)
+				.scroll(ScrollMode.FORWARD_ONLY);
+		int nExpectedChanges = 0;
+		while ( sr.next() ) {
+			dp = (DataPoint) sr.get(0);
+			if ( dp.getId() == dpLast.getId() ) {
+				//dpLast existed in the session before executing the read-only query
+				assertFalse( s.isReadOnly( dp ) );
+			}
+			else {
+				assertTrue( s.isReadOnly( dp ) );
+			}
+			if (++i==50) {
+				s.setReadOnly(dp, false);
+				nExpectedChanges = ( dp == dpLast ? 1 : 2 );
+			}
+			dp.setDescription("done!");
+		}
+		t.commit();
+		s.clear();
+		t = s.beginTransaction();
+		List list = s.createQuery("from DataPoint where description='done!'").list();
+		assertEquals( list.size(), nExpectedChanges );
+		s.createQuery("delete from DataPoint").executeUpdate();
+		t.commit();
+		s.close();
+	}
+
+	public void testModifiableModeWithExistingReadOnlyEntity() {
+
+		Session s = openSession();
+		s.setCacheMode(CacheMode.IGNORE);
+		Transaction t = s.beginTransaction();
+		DataPoint dp = null;
+		for ( int i=0; i<100; i++ ) {
+			dp = new DataPoint();
+			dp.setX( new BigDecimal(i * 0.1d).setScale(19, BigDecimal.ROUND_DOWN) );
+			dp.setY( new BigDecimal( Math.cos( dp.getX().doubleValue() ) ).setScale(19, BigDecimal.ROUND_DOWN) );
+			s.save(dp);
+		}
+		t.commit();
+		s.close();
+
+		s = openSession();
+		s.setCacheMode(CacheMode.IGNORE);
+		t = s.beginTransaction();
+		DataPoint dpLast = ( DataPoint ) s.get( DataPoint.class,  dp.getId() );
+		assertFalse( s.isReadOnly( dpLast ) );
+		s.setReadOnly( dpLast, true );
+		assertTrue( s.isReadOnly( dpLast ) );
+		int i = 0;
+		ScrollableResults sr = s.createQuery("from DataPoint dp order by dp.x asc")
+				.setReadOnly(false)
+				.scroll(ScrollMode.FORWARD_ONLY);
+		int nExpectedChanges = 0;
+		while ( sr.next() ) {
+			dp = (DataPoint) sr.get(0);
+			if ( dp.getId() == dpLast.getId() ) {
+				//dpLast existed in the session before executing the read-only query
+				assertTrue( s.isReadOnly( dp ) );
+			}
+			else {
+				assertFalse( s.isReadOnly( dp ) );
+			}
+			if (++i==50) {
+				s.setReadOnly(dp, true);
+				nExpectedChanges = ( dp == dpLast ? 99 : 98 );
+			}
+			dp.setDescription("done!");
+		}
+		t.commit();
+		s.clear();
+		t = s.beginTransaction();
+		List list = s.createQuery("from DataPoint where description='done!'").list();
+		assertEquals( list.size(), nExpectedChanges );
+		s.createQuery("delete from DataPoint").executeUpdate();
+		t.commit();
+		s.close();
 	}
 
 	public void testReadOnlyOnTextType() {

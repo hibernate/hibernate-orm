@@ -72,21 +72,6 @@
         </dependency>
     </dependencies>
 
-    <dependencyManagement>
-        <dependencies>
-            <dependency>
-                <groupId>${project.groupId}</groupId>
-                <artifactId>hibernate-core</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>${project.groupId}</groupId>
-                <artifactId>hibernate-annotations</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-        </dependencies>
-    </dependencyManagement>
-
     <build>
         <testResources>
             <testResource>
@@ -158,14 +143,6 @@
             <plugin>
                 <groupId>org.jboss.maven.plugins</groupId>
                 <artifactId>maven-test-ext-plugin</artifactId>
-                <version>1.1.0</version>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>extend</goal>
-                        </goals>
-                    </execution>
-                </executions>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -210,47 +187,13 @@
                     <plugin>
                         <groupId>org.jboss.maven.plugins</groupId>
                         <artifactId>maven-jdocbook-plugin</artifactId>
-                        <version>2.1.0</version>
-                        <extensions>true</extensions>
-                        <dependencies>
-                            <dependency>
-                                <groupId>org.hibernate</groupId>
-                                <artifactId>hibernate-jdocbook-style</artifactId>
-                                <version>1.0.2</version>
-                                <type>jdocbook-style</type>
-                            </dependency>
-                        </dependencies>
                         <configuration>
                             <sourceDocumentName>master.xml</sourceDocumentName>
-                            <sourceDirectory>${basedir}/src/main/docbook/en</sourceDirectory>
-                            <masterTranslation>en-US</masterTranslation>
+                            <sourceDirectory>${basedir}/src/main/docbook</sourceDirectory>
+                            <masterTranslation>en</masterTranslation>
                             <imageResource>
                                 <directory>${basedir}/src/main/docbook/en/images</directory>
                             </imageResource>
-                            <formats>
-                                <format>
-                                    <formatName>pdf</formatName>
-                                    <stylesheetResource>classpath:/xslt/hibernate/pdf/main-pdf.xsl</stylesheetResource>
-                                    <finalName>hibernate-validator-legacy-guide.pdf</finalName>
-                                </format>
-                                <format>
-                                    <formatName>html_single</formatName>
-                                    <stylesheetResource>classpath:/xslt/hibernate/html/main-single.xsl
-                                    </stylesheetResource>
-                                    <finalName>index.html</finalName>
-                                </format>
-                                <format>
-                                    <formatName>html</formatName>
-                                    <stylesheetResource>classpath:/xslt/hibernate/html/main-chunk.xsl
-                                    </stylesheetResource>
-                                    <finalName>index.html</finalName>
-                                </format>
-                            </formats>
-                            <options>
-                                <xincludeSupported>true</xincludeSupported>
-                                <localeSeparator>-</localeSeparator>
-                                <useRelativeImageUris>true</useRelativeImageUris>
-                            </options>
                         </configuration>
                         <executions>
                             <execution>
@@ -267,5 +210,4 @@
             </build>
         </profile>
     </profiles>
-
 </project>

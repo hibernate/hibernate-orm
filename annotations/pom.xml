@@ -22,7 +22,9 @@
   ~ 51 Franklin Street, Fifth Floor
   ~ Boston, MA  02110-1301  USA
   -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
     <modelVersion>4.0.0</modelVersion>
 
@@ -103,14 +105,6 @@
             <plugin>
                 <groupId>org.jboss.maven.plugins</groupId>
                 <artifactId>maven-test-ext-plugin</artifactId>
-                <version>1.1.0</version>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>extend</goal>
-                        </goals>
-                    </execution>
-                </executions>
             </plugin>
             <plugin>
                 <groupId>org.twdata.maven</groupId>
@@ -145,19 +139,9 @@
             <id>doc</id>
             <build>
                 <plugins>
-                  <plugin>
+                    <plugin>
                         <groupId>org.jboss.maven.plugins</groupId>
                         <artifactId>maven-jdocbook-plugin</artifactId>
-                        <version>2.2.0</version>
-                        <extensions>true</extensions>
-                        <dependencies>
-                            <dependency>
-                                <groupId>org.hibernate</groupId>
-                                <artifactId>hibernate-jdocbook-style</artifactId>
-                                <version>2.0.0</version>
-                                <type>jdocbook-style</type>
-                            </dependency>
-                        </dependencies>
                         <configuration>
                             <sourceDocumentName>master.xml</sourceDocumentName>
                             <sourceDirectory>${basedir}/src/main/docbook</sourceDirectory>
@@ -165,33 +149,6 @@
                             <imageResource>
                                 <directory>${basedir}/src/main/docbook/en/images</directory>
                             </imageResource>
-                            <formats>
-                                <format>
-                                    <formatName>pdf</formatName>
-                                    <stylesheetResource>classpath:/xslt/org/hibernate/jdocbook/xslt/pdf.xsl</stylesheetResource>
-                                    <finalName>hibernate_reference.pdf</finalName>
-                                </format>
-                                <format>
-                                    <formatName>html_single</formatName>
-                                    <stylesheetResource>classpath:/xslt/org/hibernate/jdocbook/xslt/xhtml-single.xsl
-                            </stylesheetResource>
-                                    <finalName>index.html</finalName>
-                                </format>
-                                <format>
-                                    <formatName>html</formatName>
-                                    <stylesheetResource>classpath:/xslt/org/hibernate/jdocbook/xslt/xhtml.xsl
-                            </stylesheetResource>
-                                    <finalName>index.html</finalName>
-                                </format>
-                            </formats>
-                            <options>
-                                <xincludeSupported>true</xincludeSupported>
-                                <xmlTransformerType>saxon</xmlTransformerType>
-                                <!-- needed for uri-resolvers; can be ommitted if using 'current' uri scheme -->
-                                <!--     could also locate the docbook dependency and inspect its version... -->
-                                <docbookVersion>1.72.0</docbookVersion>
-                                <localeSeparator>-</localeSeparator>
-                            </options>
                         </configuration>
                         <executions>
                             <execution>
@@ -207,7 +164,5 @@
                 </plugins>
             </build>
         </profile>
-
     </profiles>
-
 </project>

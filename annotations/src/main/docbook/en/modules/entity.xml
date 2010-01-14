@@ -1,4 +1,4 @@
-<?xml version='1.0' encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <!--
   ~ Hibernate, Relational Persistence for Idiomatic Java
   ~
@@ -22,8 +22,8 @@
   ~ 51 Franklin Street, Fifth Floor
   ~ Boston, MA  02110-1301  USA
   -->
-
-<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
+"http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
 <chapter id="entity">
   <title>Entity Beans</title>
 
@@ -463,10 +463,10 @@ public class Country implements Serializable {
 }
             </programlisting>
 
-        <para>A embeddable object inherit the access type of its owning entity
-        (note that you can override that using the Hibernate specific
-        <literal>@AccessType</literal> annotations (see <xref
-        linkend="entity-hibspec" />).</para>
+        <para>An embeddable object inherits the access type of its owning
+        entity (note that you can override that using
+        <literal>@Access</literal> or the Hibernate specific
+        <literal>@AccessType</literal> annotation.</para>
 
         <para>The <literal>Person</literal> entity bean has two component
         properties, <literal>homeAddress</literal> and
@@ -939,8 +939,8 @@ public class BaseEntity {
         </note>
 
         <note>
-          <para>The access type (field or methods), is inherited from the root
-          entity, unless you use the Hibernate annotation
+          <para>The default access type (field or methods) is used, unless you
+          use the <literal>@Access</literal> or
           <literal>@AccessType</literal></para>
         </note>
 
@@ -1799,14 +1799,14 @@ public class RegionalArticlePk implements Serializable { ... }
          </programlisting>
 
       <para><literal>@Embeddable</literal> inherit the access type of its
-      owning entity unless the Hibernate specific annotation
-      <literal>@AccessType</literal> is used. Composite foreign keys (if not
-      using the default sensitive values) are defined on associations using
-      the <literal>@JoinColumns</literal> element, which is basically an array
-      of <literal>@JoinColumn</literal>. It is considered a good practice to
-      express <literal>referencedColumnNames</literal> explicitly. Otherwise,
-      Hibernate will suppose that you use the same order of columns as in the
-      primary key declaration.</para>
+      owning entity unless <literal>@Access</literal> or the Hibernate
+      specific annotation <literal>@AccessType</literal> is used. Composite
+      foreign keys (if not using the default sensitive values) are defined on
+      associations using the <literal>@JoinColumns</literal> element, which is
+      basically an array of <literal>@JoinColumn</literal>. It is considered a
+      good practice to express <literal>referencedColumnNames</literal>
+      explicitly. Otherwise, Hibernate will suppose that you use the same
+      order of columns as in the primary key declaration.</para>
 
       <programlisting>
 @Entity
@@ -2528,26 +2528,20 @@ List results = s.createCriteria( Citizen.class )
       <sect3>
         <title>Access type</title>
 
-        <para>The access type is guessed from the position of
-        <literal>@Id</literal> or <literal>@EmbeddedId</literal> in the entity
-        hierarchy. Sub-entities, embedded objects and mapped superclass
-        inherit the access type from the root entity.</para>
+        <para>The default access type is determined from the position of the
+        <literal>@Id</literal> or <literal>@EmbeddedId</literal> annotation in
+        the entity hierarchy. </para>
 
-        <para>In Hibernate, you can override the access type to:</para>
+        <note>
+          <para>The placement of annotations within a class hierarchy has to
+          be consistent (either field or on property) to be able to determine
+          the default access type. It is recommended to stick to one single
+          annotation placement strategy throughout your whole
+          application.</para>
+        </note>
 
-        <itemizedlist>
-          <listitem>
-            <para>use a custom access type strategy</para>
-          </listitem>
-
-          <listitem>
-            <para>fine tune the access type at the class level or at the
-            property level</para>
-          </listitem>
-        </itemizedlist>
-
-        <para>An @AccessType annotation has been introduced to support this
-        behavior. You can define the access type on</para>
+        <para>To finetune the access strategy JPA 2 introduces the @Access
+        annotation. With its help you can define the access type on:</para>
 
         <itemizedlist>
           <listitem>
@@ -2567,28 +2561,96 @@ List results = s.createCriteria( Citizen.class )
           </listitem>
         </itemizedlist>
 
-        <para>The access type is overriden for the annotated element, if
-        overriden on a class, all the properties of the given class inherit
-        the access type. For root entities, the access type is considered to
-        be the default one for the whole hierarchy (overridable at class or
-        property level).</para>
+        <para>Prior to JPA 2 Hibernate used the Hibernate specific annotation
+        <literal>@org.hibernate.annotations.AccessType</literal> to change
+        specific access types. @AccessType still exists to support legacy
+        systems, but the usage of @Access is recommended for new applications.
+        The behaviour of @Access and @AccessType are similar, but there are
+        differences. For both annotations applies:</para>
 
-        <para>If the access type is marked as "property", the getters are
-        scanned for annotations, if the access type is marked as "field", the
-        fields are scanned for annotations. Otherwise the elements marked with
-        @Id or @embeddedId are scanned.</para>
+        <itemizedlist>
+          <listitem>
+            <para>The access type is overriden for the annotated element, if
+            overriden on a class, all the properties of the given class
+            inherit the access type. </para>
+          </listitem>
 
-        <para>You can override an access type for a property, but the element
-        to annotate will not be influenced: for example an entity having
-        access type <literal>field</literal>, can annotate a field with
-        <literal>@AccessType("property")</literal>, the access type will then
-        be property for this attribute, the the annotations still have to be
-        carried on the field.</para>
+          <listitem>
+            <para>If an entity is marked as
+            <literal>@Access(AccessType.PROPERTY)</literal> or
+            <literal>@AccessType("property")</literal> respectively, the
+            getters are scanned for annotations, if the enitiy is marked as
+            <literal>@Access(AccessType.FIELD)</literal> or
+            <literal>@AccessType("field")</literal> respectively, the fields
+            are scanned for annotations. </para>
+          </listitem>
+        </itemizedlist>
+
+        <para>In the case where you want to override the access type for a
+        property of an entity which already defines an explicit access type
+        the annotation placement between @Access and @AccessType
+        differs:</para>
+
+        <programlisting><emphasis role="bold">@AccessType("property")</emphasis> // set access type for all properties in Country
+public class Country implements Serializable {
+    private String iso2;
+    private String name;
+
+    public String getIso2() {
+        return iso2;
+    }
+
+    public void setIso2(String iso2) {
+        this.iso2 = iso2;
+    }
+
+    @Column(name = "countryName")
+    <emphasis role="bold">@AccessType("field")</emphasis> // set the access type for name to field
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+}
+</programlisting>
+
+        <programlisting><emphasis role="bold">@Access(AccessType.PROPERTY)</emphasis> // set access type for all properties in Country
+public class Country implements Serializable {
+    private String iso2;
+
+    <emphasis role="bold">@Access(AccessType.FIELD)</emphasis>  // set the access type for name to field
+    private String name;
+
+    public String getIso2() {
+        return iso2;
+    }
+
+    public void setIso2(String iso2) {
+        this.iso2 = iso2;
+    }
+
+    @Column(name = "countryName")
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+}
+</programlisting>
+
+        <note>
+          <para>Watch out for the different annotation placement strategy. In
+          the case of <literal>@Access</literal> the field has to be annotated
+          with the overriding access strategy whereas with
+          <literal>@AccessType</literal> the property gets annotated.</para>
+        </note>
 
         <para>If a superclass or an embeddable object is not annotated, the
-        root entity access type is used (even if an access type has been
-        define on an intermediate superclass or embeddable object). The
-        russian doll principle does not apply.</para>
+        default entity access type is used.</para>
 
         <programlisting>@Entity
 public class Person implements Serializable {
@@ -2655,14 +2717,28 @@ public long getObjectVolume()</programlisting>
 
         <para><literal>@org.hibernate.annotations.TypeDef</literal> and
         <literal>@org.hibernate.annotations.TypeDefs</literal> allows you to
-        declare type definitions. These annotations can be placed at the class or
-        package level. Note that these definitions are global for the
-        session factory (even when defined at the class level). If the type is used on a single entity, you can place the definition on the entity itself. Otherwise, it is recommended to place the definition at the package level. In the example below, when Hibernate encounters a property of class <literal>PhoneNumer</literal>, it delegates the persistence strategy to the custom mapping type <literal>PhoneNumberType</literal>. However, properties belonging to other classes, too, can delegate their persistence strategy to <literal>PhoneNumberType</literal>, by explicitly using the <literal>@Type</literal> annotation. </para>
+        declare type definitions. These annotations can be placed at the class
+        or package level. Note that these definitions are global for the
+        session factory (even when defined at the class level). If the type is
+        used on a single entity, you can place the definition on the entity
+        itself. Otherwise, it is recommended to place the definition at the
+        package level. In the example below, when Hibernate encounters a
+        property of class <literal>PhoneNumer</literal>, it delegates the
+        persistence strategy to the custom mapping type
+        <literal>PhoneNumberType</literal>. However, properties belonging to
+        other classes, too, can delegate their persistence strategy to
+        <literal>PhoneNumberType</literal>, by explicitly using the
+        <literal>@Type</literal> annotation.</para>
 
-          <note>Package level annotations are placed in a file named <filename>package-info.java</filename>
-          in the appropriate package. Place your annotations before the package declaration.</note>
+        <note>
+          Package level annotations are placed in a file named 
 
-<programlisting>
+          <filename>package-info.java</filename>
+
+           in the appropriate package. Place your annotations before the package declaration.
+        </note>
+
+        <programlisting>
 @TypeDef(
 	name = "phoneNumber",
 	defaultForType = PhoneNumber.class,
@@ -2681,10 +2757,9 @@ public class ContactDetails {
 
 </programlisting>
 
-<para>
-The following example shows the usage of the <literal>parameters</literal> attribute to customize the TypeDef. 
-</para>
-
+        <para>The following example shows the usage of the
+        <literal>parameters</literal> attribute to customize the
+        TypeDef.</para>
 
         <programlisting>//in org/hibernate/test/annotations/entity/package-info.java
 @TypeDefs(

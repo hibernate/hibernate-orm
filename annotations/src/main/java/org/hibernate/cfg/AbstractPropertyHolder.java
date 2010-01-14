@@ -199,7 +199,7 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 	private JoinColumn[] getExactOverriddenJoinColumn(String propertyName) {
 		JoinColumn[] override = null;
 		if ( parent != null ) {
-			override = parent.getOverriddenJoinColumn( propertyName );
+			override = parent.getExactOverriddenJoinColumn( propertyName );
 		}
 		if ( override == null && currentPropertyJoinColumnOverride != null ) {
 			override = currentPropertyJoinColumnOverride.get( propertyName );
@@ -249,9 +249,9 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 	private JoinTable getExactOverriddenJoinTable(String propertyName) {
 		JoinTable override = null;
 		if ( parent != null ) {
-			override = parent.getOverriddenJoinTable( propertyName );
+			override = parent.getExactOverriddenJoinTable( propertyName );
 		}
-		if ( override == null && currentPropertyJoinColumnOverride != null ) {
+		if ( override == null && currentPropertyJoinTableOverride != null ) {
 			override = currentPropertyJoinTableOverride.get( propertyName );
 		}
 		if ( override == null && holderJoinTableOverride != null ) {

@@ -1,4 +1,4 @@
-// $Id:$
+// $Id$
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
@@ -893,7 +893,7 @@ public class AnnotationConfiguration extends Configuration {
 				}
 				catch ( DocumentException e ) {
 					//oops asXML fails even if the core doc parses initially
-					new AssertionFailure("Error in DOM4J leads to a bug in Hibernate", e);
+					throw new AssertionFailure("Error in DOM4J leads to a bug in Hibernate", e);
 				}
 
 			}

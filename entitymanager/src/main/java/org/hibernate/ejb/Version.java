@@ -23,6 +23,8 @@
 //$Id$
 package org.hibernate.ejb;
 
+import java.util.Date;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,7 +33,7 @@ import org.slf4j.LoggerFactory;
  * @author Emmanuel Bernard
  */
 public class Version {
-	public static final String VERSION = "3.5.0.Beta1";
+	public static final String VERSION = "3.5.0." + new Date();
 	private static final Logger log = LoggerFactory.getLogger( Version.class );
 
 	static {

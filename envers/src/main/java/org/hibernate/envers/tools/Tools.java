@@ -73,12 +73,22 @@ public class Tools {
         }
 
         SessionImplementor sessionImplementor = proxy.getHibernateLazyInitializer().getSession();
-        Session tempSession = sessionImplementor==null ? sessionFactoryImplementor.openTemporarySession() : sessionImplementor.getFactory().openTemporarySession();
+        Session tempSession = sessionImplementor==null
+				? sessionFactoryImplementor.openTemporarySession()
+				: sessionImplementor.getFactory().openTemporarySession();
         try {
-            proxy.getHibernateLazyInitializer().setSession((SessionImplementor) tempSession);
-            proxy.getHibernateLazyInitializer().initialize();
-            return proxy.getHibernateLazyInitializer().getImplementation();
-        } finally {
+			Object target = tempSession.get(
+					proxy.getHibernateLazyInitializer().getEntityName(),
+					proxy.getHibernateLazyInitializer().getIdentifier()
+			);
+			proxy.getHibernateLazyInitializer().setImplementation( target );
+			return target;
+// adam, changes in AbstractLazyInitializer render this no longer valid...
+//            proxy.getHibernateLazyInitializer().setSession((SessionImplementor) tempSession);
+//            proxy.getHibernateLazyInitializer().initialize();
+//            return proxy.getHibernateLazyInitializer().getImplementation();
+        }
+		finally {
             tempSession.close();
         }
     }

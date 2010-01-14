@@ -29,6 +29,7 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToOne;
 
 
 @Entity
@@ -37,6 +38,10 @@ public class Player {
 	private int id;
 	private String name;
 	private SoccerTeam team;
+
+	// For the world cup of one versus one matches, we have
+	// teams with one player (1v1 team).
+	private SoccerTeam oneVoneTeam;
 
 	@Id
 	@GeneratedValue
@@ -61,5 +66,14 @@ public class Player {
 	}
 	public void setTeam(SoccerTeam team) {
 		this.team = team;
+	}
+
+	@OneToOne
+	public SoccerTeam getOneVoneTeam() {
+		return oneVoneTeam;
+	}
+
+	public void setOneVoneTeam(SoccerTeam oneVoneTeam) {
+		this.oneVoneTeam = oneVoneTeam;
 	}
 }

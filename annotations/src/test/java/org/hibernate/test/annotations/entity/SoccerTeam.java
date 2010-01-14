@@ -32,16 +32,25 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.OneToMany;
+import javax.persistence.OneToOne;
 
 @Entity
 public class SoccerTeam {
 	@Id
 	@GeneratedValue
 	private int id;
+
+	String name;
+
 	@OneToMany(mappedBy="team",
 		orphanRemoval=true,
 		cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH})
 	private Set<Player> players = new HashSet<Player>();
+
+	@OneToOne(mappedBy="oneVoneTeam",
+		orphanRemoval=true,
+		cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH})
+	private Player oneVonePlayer;
 
 	public int getId() {
 		return id;
@@ -60,4 +69,20 @@ public class SoccerTeam {
 		val.setTeam(this);
 	}
 
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	public Player getOneVonePlayer() {
+		return oneVonePlayer;
+	}
+
+	public void setOneVonePlayer(Player oneVonePlayer) {
+		this.oneVonePlayer = oneVonePlayer;
+	}
+	
 }

@@ -6,6 +6,164 @@ refer to the particular case on JIRA using the issue tracking number to learn
 more about each case.
 
 
+Changes in version 3.5.0-Beta-3 (2010.01.13)
+-------------------------------------------
+- http://opensource.atlassian.com/projects/hibernate/browse/HHH/fixforversion/10981
+
+** Sub-task
+    * [HHH-4203] - Implement JPA 2.0 criteria apis (compiling)
+    * [HHH-4352] - implement @AttributeOverride for Map (key, value)
+    * [HHH-4353] - implement default column naming strategy for Collections and Map of basic types
+    * [HHH-4527] - Implement @j.p.Access support
+    * [HHH-4536] - Fix the mismatch between JPA 2's logical model and mapping.* physical model wrt t*toOne and *ToMany
+    * [HHH-4546] - add JPA 2.0 locking
+    * [HHH-4553] - Hibernate doesn't support official JPA2 escape char for table name
+    * [HHH-4584] - Query Language needs to support joins on embedded values
+    * [HHH-4598] - An embeddable class may contains collection of basic types or embeddable objects
+    * [HHH-4600] - Implements full support for JPA 2 Maps
+    * [HHH-4601] - implement orphanRemoval for *ToMany
+    * [HHH-4649] - support for <delimited-identifier/> in ORM.xml files
+    * [HHH-4654] - Criteria quries must support referencing parameters by name
+    * [HHH-4657] - support CascadeType.DETACH and em.detach()
+    * [HHH-4663] - Make sure CriteriaQuery is serializable
+    * [HHH-4665] - Implement emf.getPersistentUnitUtil().getIdentifier(Object)
+    * [HHH-4667] - Properly parse the new orm.xml xsd and persistence.xml xsd
+    * [HHH-4675] - Bean Validation ConstraintViolationException should trigger a tx rollback as per JPA's spec
+    * [HHH-4679] - Make sure @AssociationOverride support the dot notation (section 11.1.2)
+    * [HHH-4680] - Implement @AssociationOverride .value for Map value overriding (section 11.1.2)
+    * [HHH-4681] - Implement @AttributeOverride "key." or "value." for Maps
+    * [HHH-4682] - Check that @CollectionTable (or its absence) defaults to the right table/column names
+    * [HHH-4684] - Make sure @Lob works with @ElementCollection
+    * [HHH-4685] - Make sure bidirectional @*To* works from an embedded object to another entity
+    * [HHH-4686] - Implement @MapKeyEnumerated
+    * [HHH-4687] - implement @MapKeyTemporal
+    * [HHH-4688] - Make sure @OrderBy works for @ElementCollection
+    * [HHH-4689] - Make sure @OrderBy supports dotted notation to point to embedded properties
+    * [HHH-4692] - add the new orm_2_0.xsd file
+    * [HHH-4696] - Add persistence.xsd version 2
+    * [HHH-4724] - query.multiselect() on a CriteriaQuery<Tuple> returns List<Object[]> instead of List<Tuple>
+    * [HHH-4752] - @AttributeOverride for column name should use no prefix for @ElementCollection (legacy uses "element")
+    * [HHH-4753] - Default table name for @CollectionTable is not inferred correctly according to spec requirement
+    * [HHH-4756] - javax.persistence.criteria.Path#get should result in *delayed* join rendering
+    * [HHH-4758] - Rename org.hibernate.ejb.criteria.AbstractNode#queryBuilder to #criteriaBuilder
+    * [HHH-4766] - Properly support criteria notion of SUM aggregation return types
+    * [HHH-4771] - @ElementCollection fk column should default to entityName_columnNameOfOwningId
+    * [HHH-4782] - Implement @AssociationOverride.joinTable
+
+** Bug
+    * [HHH-1352] - Session.setReadOnly(Object, boolean) fails for proxies
+    * [HHH-1575] - Expression.in on component object gives parameters til SQL in wrong order
+    * [HHH-2166] - Long "in" lists in queries results in a Java stack overflow exception.
+    * [HHH-2990] - Fix SerializationHelper$CustomObjectInputStream to use Class.forName and better classloader
+    * [HHH-3164] - "id in ..." with EmbeddedId and criteria API
+    * [HHH-3240] - In Derby field type 'text' is converted to CLOB(255)
+    * [HHH-3338] - Order of attributes in generated SQL query is dependent on Java version
+    * [HHH-3529] - ConnectionWrapper is not visible from class loader
+    * [HHH-4041] - Null Pointer Exception when using @NotAudited on an entity with discriminator column, inherited from base entity with InheritanceType.SINGLE_TABLE
+    * [HHH-4063] - NPE reading metadata from an mapped interface
+    * [HHH-4065] - Incorrect SQL is used for HQL if the number of values for a filter collection parameter is changed
+    * [HHH-4090] - RelationTargetAuditMode.NOT_AUDITED not working with many-to-many relations
+    * [HHH-4257] - map key type no longer inferred correctly, throws exception at runtime
+    * [HHH-4283] - Bidirectional indexed collection mapped incorrectly for IndexedCollectionTest
+    * [HHH-4457] - SchemaUpdate fails on Sybase ASE 15 when a new column is added without a default value
+    * [HHH-4519] - Hibernate/Infinispan integration doesn't property handle Entity/CollectionRegionAccessStrategy evictAll
+    * [HHH-4520] - Infinispan second level cache integration can cache stale collection data
+    * [HHH-4531] - Derby dialect should not support comments
+    * [HHH-4542] - Annotation processor does not handle "bag" mappings correctly
+    * [HHH-4560] - JDBC4 support inadvertently missed 1.4 compatibility
+    * [HHH-4565] - Maven deps: HSQLDB shouldn't be a dependency in compile scope.
+    * [HHH-4566] - Maven deps: JAXB API and JAXB RI shouldn't be dependencies of Hibernate Annotations.
+    * [HHH-4567] - EntiytManager's QueryImpl mishandles ordinal position of HQL-style positional parameters
+    * [HHH-4571] - Infinispan not properly being built into distribution bundle
+    * [HHH-4572] - check if the connection supports jdbc4 before looking for the createClob method
+    * [HHH-4574] - ConnectionProviderFactory.getConnectionProperties() includes extra properties
+    * [HHH-4581] - Embedded objects in criteria API does not work
+    * [HHH-4586] - Parameterized functions built throught CriteriaBuilder missing parameters when rendered
+    * [HHH-4588] - Seam 2.x depends on ReaderInputStream which it shouldn't.  Deprecate the current Hibernate ReaderInputStream class
+    * [HHH-4590] - CASTs from CriteriaBuilder.toXXX methods still need to be fleshed out
+    * [HHH-4604] - IllegalArgumentException should be raised when an ordinal parameter is not present in the query
+    * [HHH-4611] - When the revision number in the revision entity uses a @Column(columnDefinition=), the sql-type is not properly set on the REV property of audit entities
+    * [HHH-4614] - (javassist) Instrumented model with abstract MappedSuperclass and field access doesn't work
+    * [HHH-4625] - Use of maven-injection-plugin intermittently leads to build failures
+    * [HHH-4631] - Infinispan integration module is causing build problems
+    * [HHH-4633] - Using same table for multiple relations doesn't work
+    * [HHH-4634] - A many-to-many relation owned by both sides causes a mapping exception
+    * [HHH-4641] - @PrimaryKeyJoinColumn on an inherited entity doesn't affect the column name
+    * [HHH-4644] - When using join-inheritance and a custom revision entity, the child mapping uses incorrect revision number column sql type
+    * [HHH-4645] - Rename properties used to configure Envers from camel case to _
+    * [HHH-4650] - Removing an item from a persistent collection, flushing, and adding the same item again fails
+    * [HHH-4653] - Setting the "referencedColumnName" in @JoinColumnOrFormula throws an NPE
+    * [HHH-4670] - Incorrect revision types when in a add-flush-mod-flush sequence
+    * [HHH-4698] - Better handling of JPA criteria expressions
+    * [HHH-4702] - org.hibernate.ejb.metamodel.AttributeFactory should use member for javaType, et al
+    * [HHH-4707] - Currently no support for modulus operator
+    * [HHH-4708] - Make CompoundSelectionImpl implement ExpressionImplementor
+    * [HHH-4709] - registered length functions should return Integer
+    * [HHH-4711] - persistence.xml is not validated during parsing
+    * [HHH-4715] - Unexpected results when an updated entity that is already modifiable is set to modifiable again
+    * [HHH-4720] - Improve javax.persistence.metamodel.Attribute support
+    * [HHH-4735] - Proxy can be associated with a new session when it is already connected to a different one
+    * [HHH-4741] - org.hibernate.test.filter.DynamicFilterTest.testSqlSyntaxOfFiltersWithUnions fails on MySQL
+    * [HHH-4743] - Bug in BooleanLiteralNode with CustomType
+    * [HHH-4764] - org.hibernate.test.pagination.PaginationTest.testLimitOffset() fails on oracle and db2 due to
+    * [HHH-4767] - Bug in how Criteria Subquery selections are handled
+    * [HHH-4768] - Bug in how Criteria Subquery correlations are handled
+    * [HHH-4769] - In HQL, function ROUND always returns an Integer, it truncate the decimal part of Double number.
+    * [HHH-4772] - Empty conjunction/disjunction in criteria does not follow spec rules
+    * [HHH-4774] - Do not handle literals using parameters in JPA criteria select
+    * [HHH-4775] - CriteriaBuilder#notEqual being interpreted oppositely
+    * [HHH-4776] - Add a NullLiteralExpression for CriteriaBuilder#nullLiteral
+    * [HHH-4777] - org.hibernate.ejb.test.PackagedEntityManagerTest.testOverridenPar() hard code hsqldb connection info
+    * [HHH-4778] - Need better handling of criteria expression casting
+    * [HHH-4780] - Allow BigDecimal and BigInteger to be specified as numeric literal types
+    * [HHH-4785] - BinaryArithmeticOperation reverses incoming arguments
+    * [HHH-4786] - SerializableType + custom Serializable class + L2 cache causes problems
+    * [HHH-4788] - antrun plugin version is not explicitly specified in the parent pom
+    * [HHH-4790] - Envers test failing, disabling for beta-3 release
+    * [HHH-4791] - Invalid assumption made in org.hibernate.envers.tools.Tools#getTargetFromProxy
+
+** Deprecation
+    * [HHH-4561] - Deprecate openConnection()/closeConnection() methods on Batcher interface
+
+** Improvement
+    * [HHH-2576] - Allow native-sql to have placeholders for default schema and catalog
+    * [HHH-4000] - Utlize jhighlight hooks for rendered syntax coloration of XML and Java based programlisting docbook elements
+    * [HHH-4540] - Allow the revision timestamp to be a Date
+    * [HHH-4545] - Allow o.h.action.Executable to register for either (or both) before or after transaction completion callbacks
+    * [HHH-4548] - Alter poms to not use javax.* artifacts under Sun proprietary license
+    * [HHH-4550] - Document that update-timestamps cache region should not be configured for expiry.
+    * [HHH-4569] - Split focus of ConfigurationPerformanceTest
+    * [HHH-4573] - Minor typo, formatting and cleanup fixes
+    * [HHH-4575] - When Infinispan is configured for INVALIDATION don't send cluster message on entity insert
+    * [HHH-4671] - Derby is one of those dialects that should not support "cross join"
+    * [HHH-4697] - Add means to get HibernateEntityManagerFactory from HibernateEntityManagerImplementor
+    * [HHH-4705] - Derby does now in fact support the full ANSI SQL TRIM function
+    * [HHH-4719] - Support modulo operator
+    * [HHH-4737] - Cache the EntityKey in EntityEntry when id is non-null
+    * [HHH-4763] - Change antrun plugin configuration in entitymanager module to allow metamodel generation without processing all life cycles
+
+** New Feature
+    * [HHH-2308] - Adding predicates to the join condition using Criteria Query
+    * [HHH-4608] - Add new properties that will allow to specify the default schema and catalog that should be used for audit tables
+    * [HHH-4694] - Support "fake" many-to-one bidirectional relations
+    * [HHH-4749] - Don't block calls to getListeners on SessionImplementor when using thread scoped sessions
+
+** Patch
+    * [HHH-1918] - enable non-hilo identity generation in DerbyDialect
+    * [HHH-2347] - Improvement to DerbyDialect default identy generation mode
+    * [HHH-2584] - PersistentMap.remove() incorrect on uninitialized, non-extra-lazy map
+    * [HHH-3860] - Cascading performance problems when session contains many entities
+
+** Task
+    * [HHH-4006] - Document fetch profiles
+    * [HHH-4498] - Move the xml configuration files in the annotations module into the default resource directory /src/test/resources
+    * [HHH-4655] - Upgrade jpamodelgen dependency in entitymanager to use 1.0.0.Beta1
+    * [HHH-4672] - Upgrade JPA dependency to hibernate-jpa-2.0-api-1.0.0-CR-1
+    * [HHH-4673] - Upgrade JPA Static Metamodel Generator dependency to 1.0.0.Beta1
+    * [HHH-4674] - JBoss has renamed its JACC artifact
+    * [HHH-4783] - Remove obsolete changelog.txt files in annotations and entitymanager modules
+
+
 Changes in version 3.5.0-Beta-2 (2009.11.02)
 -------------------------------------------
 

@@ -109,6 +109,10 @@ public final class Cascade {
 		this.action = action;
 	}
 
+	private SessionFactoryImplementor getFactory() {
+		return eventSource.getFactory();
+	}
+
 	/**
 	 * Cascade an action from the parent entity instance to all its children.
 	 *
@@ -206,6 +210,54 @@ public final class Cascade {
 				cascadeComponent( parent, child, (AbstractComponentType) type, anything );
 			}
 		}
+		else {
+			// potentially we need to handle orphan deletes for one-to-ones here...
+			if ( isLogicalOneToOne( type ) ) {
+				// We have a physical or logical one-to-one and from previous checks we know we
+				// have a null value.  See if the attribute cascade settings and action-type require
+				// orphan checking
+				if ( style.hasOrphanDelete() && action.deleteOrphans() ) {
+					// value is orphaned if loaded state for this property shows not null
+					// because it is currently null.
+					final EntityEntry entry = eventSource.getPersistenceContext().getEntry( parent );
+					if ( entry != null ) {
+						final EntityType entityType = (EntityType) type;
+						final Object loadedValue = entry.getLoadedValue( entityType.getPropertyName() );
+						if ( loadedValue != null ) {
+							final String entityName = entityType.getAssociatedEntityName();
+							if ( log.isTraceEnabled() ) {
+								log.trace( "deleting orphaned entity instance: " + entityName );
+							}
+							eventSource.delete( entityName, loadedValue, false, new HashSet() );
+						}
+					}
+				}
+			}
+		}
+	}
+
+	/**
+	 * Check if the association is a one to one in the logical model (either a shared-pk
+	 * or unique fk).
+	 *
+	 * @param type The type representing the attribute metadata
+	 *
+	 * @return True if the attribute represents a logical one to one association
+	 */
+	private boolean isLogicalOneToOne(Type type) {
+		if ( ! type.isEntityType() ) {
+			return false;
+		}
+		final EntityType entityType = (EntityType) type;
+		if ( entityType.isOneToOne() ) {
+			// physical one-to-one
+			return true;
+		}
+		// todo : still need to handle the many-to-one w/ property-ref
+		//		actually there is a question about whether the constrained side
+		//		can declare the orphan-delete.  If not, then the side declaring
+		//		the orphan-delete can only ever be a <one-to-one/>
+		return false;
 	}
 
 	private boolean cascadeAssociationNow(AssociationType associationType) {

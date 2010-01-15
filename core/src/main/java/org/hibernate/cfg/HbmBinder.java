@@ -1615,13 +1615,9 @@ public final class HbmBinder {
 		Attribute fkNode = node.attribute( "foreign-key" );
 		if ( fkNode != null ) manyToOne.setForeignKeyName( fkNode.getValue() );
 
-		validateCascade( node, path );
-	}
-
-	private static void validateCascade(Element node, String path) {
 		String cascade = node.attributeValue( "cascade" );
 		if ( cascade != null && cascade.indexOf( "delete-orphan" ) >= 0 ) {
-			throw new MappingException( "single-valued associations do not support orphan delete: " + path );
+			throw new MappingException( "many-to-one attributes do not support orphan delete: " + path );
 		}
 	}
 
@@ -1687,8 +1683,6 @@ public final class HbmBinder {
 		oneToOne.setPropertyName( node.attributeValue( "name" ) );
 
 		oneToOne.setReferencedEntityName( getEntityName( node, mappings ) );
-
-		validateCascade( node, path );
 	}
 
 	public static void bindOneToMany(Element node, OneToMany oneToMany, Mappings mappings)

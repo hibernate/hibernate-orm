@@ -274,6 +274,18 @@ public class MetadataTest extends TestCase {
 		assertNull( thing.getSupertype() );
 	}
 
+	public void testOneToManyJoinColumnUnidirectional() throws Exception {
+		final EntityType<Parent> parent = factory.getMetamodel().entity( Parent.class );
+		assertNotNull( parent );
+		final SetAttribute<? super Parent, ?> children = parent.getSet( "children" );
+		assertNotNull( children );
+		assertEquals( 1, parent.getPluralAttributes().size() );
+		assertEquals( 3, parent.getAttributes().size() );
+		final EntityType<Child> child = factory.getMetamodel().entity( Child.class );
+		assertNotNull( child );
+		assertEquals( 2, child.getAttributes().size() );
+	}
+
 	private void ensureProperMember(Set<?> attributes) {
 		//we do not update the set so we are safe
 		@SuppressWarnings( "unchecked" )
@@ -321,7 +333,9 @@ public class MetadataTest extends TestCase {
 				Feline.class,
 				Garden.class,
 				Flower.class,
-				JoinedManyToOneOwner.class
+				JoinedManyToOneOwner.class,
+				Parent.class,
+				Child.class
 		};
 	}
 

@@ -175,7 +175,9 @@ class MetadataContext {
 						continue;
 					}
 					final Attribute attribute = attributeFactory.buildAttribute( jpa2Mapping, property );
-					jpa2Mapping.getBuilder().addAttribute( attribute );
+					if ( attribute != null ) {
+						jpa2Mapping.getBuilder().addAttribute( attribute );
+					}
 				}
 				jpa2Mapping.lock();
 				populateStaticMetamodel( jpa2Mapping );
@@ -192,7 +194,9 @@ class MetadataContext {
 				while ( properties.hasNext() ) {
 					final Property property = properties.next();
 					final Attribute attribute = attributeFactory.buildAttribute( jpa2Mapping, property );
-					jpa2Mapping.getBuilder().addAttribute( attribute );
+					if ( attribute != null ) {
+						jpa2Mapping.getBuilder().addAttribute( attribute );
+					}
 				}
 				jpa2Mapping.lock();
 				populateStaticMetamodel( jpa2Mapping );

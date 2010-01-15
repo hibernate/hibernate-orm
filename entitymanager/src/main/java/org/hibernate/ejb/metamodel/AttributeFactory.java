@@ -73,10 +73,12 @@ public class AttributeFactory {
 	 * @param property The Hibernate property descriptor for the attribute
 	 * @param <X> The type of the owner
 	 * @param <Y> The attribute type
-	 * @return The built attribute descriptor
+	 * @return The built attribute descriptor or null if the attribute is not part of the JPA 2 model (eg backrefs)
 	 */
 	@SuppressWarnings({ "unchecked" })
 	public <X, Y> AttributeImplementor<X, Y> buildAttribute(AbstractManagedType<X> ownerType, Property property) {
+		//a back ref is a virtual property created by Hibernate, let's hide it from the JPA model.
+		if ( property.isBackRef() ) return null;
 		final AttributeContext<X> attributeContext = wrap( ownerType, property );
 		final AttributeMetadata<X,Y> attributeMetadata =
 				determineAttributeMetadata( attributeContext, NORMAL_MEMBER_RESOLVER );
@@ -208,7 +210,10 @@ public class AttributeFactory {
 				final Iterator<Property> subProperties = component.getPropertyIterator();
 				while ( subProperties.hasNext() ) {
 					final Property property = subProperties.next();
-					embeddableType.getBuilder().addAttribute( buildAttribute( embeddableType, property) );
+					final AttributeImplementor<Y, Object> attribute = buildAttribute( embeddableType, property );
+					if ( attribute != null ) {
+						embeddableType.getBuilder().addAttribute( attribute );
+					}
 				}
 				embeddableType.lock();
 				return embeddableType;

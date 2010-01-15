@@ -62,7 +62,7 @@ public class ClassWriter {
 		}
 		catch ( FilerException filerEx ) {
 			context.logMessage(
-					Diagnostic.Kind.ERROR, "Problem with Processing Environment Filer: " + filerEx.getMessage()
+					Diagnostic.Kind.WARNING, "Problem with Processing Environment Filer: " + filerEx.getMessage()
 			);
 		}
 		catch ( IOException ioEx ) {

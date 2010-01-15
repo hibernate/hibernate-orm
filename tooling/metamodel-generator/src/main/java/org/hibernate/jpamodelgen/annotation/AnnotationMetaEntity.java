@@ -435,15 +435,18 @@ public class AnnotationMetaEntity implements MetaEntity {
 	}
 
 	private String getKeyType(DeclaredType t) {
-		return t.getTypeArguments().get( 0 ).toString();
+		return TypeUtils.extractClosestRealTypeAsString( t.getTypeArguments().get( 0 ), context );
 	}
 
 	private String getElementType(DeclaredType declaredType) {
 		if ( declaredType.getTypeArguments().size() == 1 ) {
-			return declaredType.getTypeArguments().get( 0 ).toString();
+			final TypeMirror type = declaredType.getTypeArguments().get( 0 );
+			return TypeUtils.extractClosestRealTypeAsString( type, context );
 		}
 		else {
-			return declaredType.getTypeArguments().get( 1 ).toString();
+			return TypeUtils.extractClosestRealTypeAsString( declaredType.getTypeArguments().get( 1 ), context );
 		}
 	}
+
+
 }

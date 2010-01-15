@@ -226,7 +226,8 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 			}
 
 			XmlMetaEntity metaEntity = new XmlMetaEntity(
-					entity, packageName, getXmlMappedType( fullyQualifiedClassName )
+					entity, packageName, getXmlMappedType( fullyQualifiedClassName ),
+					context
 			);
 
 			if ( context.getMetaEntitiesToProcess().containsKey( fullyQualifiedClassName ) ) {
@@ -264,7 +265,8 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 			}
 
 			XmlMetaEntity metaEntity = new XmlMetaEntity(
-					embeddable, packageName, getXmlMappedType( fullyQualifiedClassName )
+					embeddable, packageName, getXmlMappedType( fullyQualifiedClassName ),
+					context
 			);
 
 			if ( context.getMetaSuperclassAndEmbeddableToProcess().containsKey( fullyQualifiedClassName ) ) {
@@ -292,7 +294,8 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 			}
 
 			XmlMetaEntity metaEntity = new XmlMetaEntity(
-					mappedSuperClass, packageName, getXmlMappedType( fullyQualifiedClassName )
+					mappedSuperClass, packageName, getXmlMappedType( fullyQualifiedClassName ),
+					context
 			);
 
 			if ( context.getMetaSuperclassAndEmbeddableToProcess().containsKey( fullyQualifiedClassName ) ) {

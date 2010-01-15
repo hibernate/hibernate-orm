@@ -509,7 +509,8 @@ public final class Environment {
 	/**
 	 * Enable nullability checking.
 	 * Raises an exception if a property marked as not-null is null.
-	 * Default to true.
+	 * Default to false if Bean Validation is present in the classpath and Hibernate Annotations is used,
+	 * true otherwise.
 	 */
 	public static final String CHECK_NULLABILITY = "hibernate.check_nullability";
 

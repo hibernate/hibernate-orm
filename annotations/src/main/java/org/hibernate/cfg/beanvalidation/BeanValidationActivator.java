@@ -28,18 +28,12 @@ public class BeanValidationActivator {
 
 	public static void activateBeanValidation(EventListeners eventListeners, Properties properties) {
 		Set<ValidationMode> modes = ValidationMode.getModes( properties.get( MODE_PROPERTY ) );
-		if ( modes.contains( ValidationMode.NONE ) ) return;
-		//de-activate not-null tracking at the core level when Bean Validation is on unless the user really ask for it
-		if ( properties.getProperty( Environment.CHECK_NULLABILITY ) == null ) {
-			properties.setProperty( Environment.CHECK_NULLABILITY, "false" );
-		}
 
 		try {
 			//load Validation
 			ReflectHelper.classForName( BV_DISCOVERY_CLASS, BeanValidationActivator.class );
 		}
 		catch ( ClassNotFoundException e ) {
-
 			if ( modes.contains( ValidationMode.CALLBACK ) ) {
 				throw new HibernateException( "Bean Validation not available in the class path but required in " + MODE_PROPERTY );
 			}
@@ -48,6 +42,16 @@ public class BeanValidationActivator {
 				return;
 			}
 		}
+
+		//de-activate not-null tracking at the core level when Bean Validation
+		// is present unless the user really asks for it
+		//Note that if BV is not present, the behavior is backward compatible
+		if ( properties.getProperty( Environment.CHECK_NULLABILITY ) == null ) {
+			properties.setProperty( Environment.CHECK_NULLABILITY, "false" );
+		}
+
+		if ( modes.contains( ValidationMode.NONE ) ) return;
+
 		try {
 			Class<?> activator = ReflectHelper.classForName( TYPE_SAFE_ACTIVATOR_CLASS, BeanValidationActivator.class );
 			Method activateBeanValidation =

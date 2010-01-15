@@ -1,15 +1,37 @@
 //$Id$
+/*
+ * Copyright (c) 2009, Red Hat Middleware LLC or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Middleware LLC.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ */
 package org.hibernate.ejb.test.connection;
 
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
+import javax.persistence.SharedCacheMode;
+import javax.persistence.ValidationMode;
 import javax.persistence.spi.ClassTransformer;
 import javax.persistence.spi.PersistenceUnitInfo;
 import javax.persistence.spi.PersistenceUnitTransactionType;
-import javax.persistence.SharedCacheMode;
-import javax.persistence.ValidationMode;
 import javax.sql.DataSource;
 
 import org.hibernate.cfg.Environment;
@@ -29,9 +51,7 @@ public class PersistenceUnitInfoImpl implements PersistenceUnitInfo {
 
 	public PersistenceUnitInfoImpl(URL puRoot, String[] mappingFiles) {
 		this.mappingFiles = new ArrayList<String>( mappingFiles.length );
-		for ( String mappingFile : mappingFiles ) {
-			this.mappingFiles.add( mappingFile );
-		}
+		this.mappingFiles.addAll( Arrays.asList( mappingFiles ) );
 		this.puRoot = puRoot;
 	}
 
@@ -74,7 +94,7 @@ public class PersistenceUnitInfoImpl implements PersistenceUnitInfo {
 	}
 
 	public String getPersistenceXMLSchemaVersion() {
-		return null;  //To change body of implemented methods use File | Settings | File Templates.
+		return null;
 	}
 
 	public ClassLoader getClassLoader() {
@@ -94,13 +114,11 @@ public class PersistenceUnitInfoImpl implements PersistenceUnitInfo {
 	}
 
 	public SharedCacheMode getSharedCacheMode() {
-		//FIXME
-		return null;  //To change body of implemented methods use File | Settings | File Templates.
+		return null;
 	}
 
 	public ValidationMode getValidationMode() {
-		//FIXME
-		return null;  //To change body of implemented methods use File | Settings | File Templates.
+		return null;
 	}
 
 	public void addTransformer(ClassTransformer transformer) {

@@ -1,3 +1,4 @@
+// $Id:$
 /*
  * Copyright (c) 2009, Red Hat Middleware LLC or third-party contributors as
  * indicated by the @author tags or express copyright attribution
@@ -33,17 +34,14 @@ import javax.persistence.PersistenceException;
 import javax.persistence.spi.PersistenceUnitTransactionType;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.transform.stream.StreamSource;
 import javax.xml.transform.dom.DOMSource;
-import javax.xml.validation.SchemaFactory;
+import javax.xml.transform.stream.StreamSource;
 import javax.xml.validation.Schema;
+import javax.xml.validation.SchemaFactory;
 import javax.xml.validation.Validator;
-import javax.xml.validation.ValidatorHandler;
 
-import org.hibernate.cfg.EJB3DTDEntityResolver;
-import org.hibernate.ejb.HibernatePersistence;
-import org.hibernate.ejb.util.ConfigurationHelper;
-import org.hibernate.util.StringHelper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -52,11 +50,13 @@ import org.xml.sax.EntityResolver;
 import org.xml.sax.ErrorHandler;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXParseException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
+import org.hibernate.ejb.HibernatePersistence;
+import org.hibernate.ejb.util.ConfigurationHelper;
+import org.hibernate.util.StringHelper;
 
 /**
- * Persistence.xml handler
+ * Handler for persistence.xml files.
  *
  * @author <a href="mailto:bill@jboss.org">Bill Burke</a>
  * @author Emmanuel Bernard

@@ -1,3 +1,4 @@
+// $Id:$
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
@@ -43,7 +44,6 @@ public class HibernatePersistence implements javax.persistence.spi.PersistencePr
 	 */
 	public static final String PROVIDER = "javax.persistence.provider";
 	/**
-	 * �
 	 * transaction type
 	 */
 	public static final String TRANSACTION_TYPE = "javax.persistence.transactionType";

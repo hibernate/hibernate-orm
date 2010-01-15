@@ -27,6 +27,7 @@ import java.lang.reflect.Member;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.TypeVariable;
 import java.util.Iterator;
 import javax.persistence.ManyToMany;
 import javax.persistence.OneToOne;
@@ -733,12 +734,12 @@ public class AttributeFactory {
 
 			ParameterizedType signatureType = getSignatureType( member );
 			if ( keyPersistentAttributeType == null ) {
-				elementJavaType = (Class) signatureType.getActualTypeArguments()[0];
+				elementJavaType = getClassFromGenericArgument( signatureType.getActualTypeArguments()[0] );
 				keyJavaType = null;
 			}
 			else {
-				keyJavaType = (Class) signatureType.getActualTypeArguments()[0];
-				elementJavaType = (Class) signatureType.getActualTypeArguments()[1];
+				keyJavaType = getClassFromGenericArgument( signatureType.getActualTypeArguments()[0] );
+				elementJavaType = getClassFromGenericArgument( signatureType.getActualTypeArguments()[1] );
 			}
 
 			this.elementValueContext = new ValueContext() {
@@ -802,6 +803,23 @@ public class AttributeFactory {
 			else {
 				keyValueContext = null;
 			}
+		}
+
+		private Class<?> getClassFromGenericArgument(java.lang.reflect.Type type) {
+			Class<?> javaType;
+			Object unsafeElementType = type;
+			if ( unsafeElementType instanceof Class ) {
+				javaType = (Class) unsafeElementType;
+			}
+			else if ( unsafeElementType instanceof TypeVariable ) {
+				final java.lang.reflect.Type upperBound = ( ( TypeVariable ) unsafeElementType ).getBounds()[0];
+				javaType = getClassFromGenericArgument( upperBound );
+			}
+			else {
+				throw new AssertionFailure("Fail to process type argument in a generic declaration. Type: "
+						+ type.getClass() );
+			}
+			return javaType;
 		}
 
 		public ValueContext getElementValueContext() {

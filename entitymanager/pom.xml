@@ -60,7 +60,7 @@
             -->
             <groupId>${project.groupId}</groupId>
             <artifactId>hibernate-jpamodelgen</artifactId>
-            <version>1.0.0-Beta-2</version>
+            <version>1.0.0-SNAPSHOT</version>
             <scope>test</scope>
             <exclusions>
                 <exclusion>

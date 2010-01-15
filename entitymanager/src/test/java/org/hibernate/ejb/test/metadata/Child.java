@@ -10,7 +10,7 @@ import javax.persistence.Table;
  */
 @Entity
 @Table(name="ejb_child")
-public class Child {
+public class Child extends Being {
 	private Integer id;
 	private String name;
 

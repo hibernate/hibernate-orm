@@ -15,17 +15,29 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-package org.hibernate.jpamodelgen;
+package org.hibernate.jpamodelgen.test.generics;
+
+import org.testng.annotations.Test;
+
+import org.hibernate.jpamodelgen.test.elementcollection.House;
+import org.hibernate.jpamodelgen.test.util.CompilationTest;
+
+import static org.hibernate.jpamodelgen.test.util.TestUtil.assertClassGenerated;
+import static org.hibernate.jpamodelgen.test.util.TestUtil.assertNoGeneratedSourceFile;
 
 /**
- * @author Hardy Ferentschik
+ * @author Emmanuel Bernard
  */
-public interface MetaAttribute {
-	String getDeclarationString();
+public class GenericsTest extends CompilationTest {
 
-	String getMetaType();
+	@Test
+	public void testGenerics() {
+		assertClassGenerated( Parent.class.getName() + "_" );
+		assertClassGenerated( Child.class.getName() + "_" );
+	}
 
-	String getPropertyName();
-
-	String getTypeDeclaration();
+	@Override
+	protected String getTestPackage() {
+		return Parent.class.getPackage().getName();
+	}
 }

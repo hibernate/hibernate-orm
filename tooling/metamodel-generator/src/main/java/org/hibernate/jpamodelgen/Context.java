@@ -110,6 +110,7 @@ public class Context {
 			return;
 		}
 		ClassWriter.writeFile( new AnnotationMetaEntity( element, this, defaultAccessTypeForHierarchy ), this );
+		TypeUtils.extractClosestRealTypeAsString( element.asType(), this );
 		elementsAlreadyProcessed.add( element.getQualifiedName().toString() );
 	}
 

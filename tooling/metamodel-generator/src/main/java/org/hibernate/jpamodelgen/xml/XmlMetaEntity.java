@@ -26,10 +26,12 @@ import javax.lang.model.element.Name;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
 
+import org.hibernate.jpamodelgen.Context;
 import org.hibernate.jpamodelgen.MetaAttribute;
 import org.hibernate.jpamodelgen.ImportContextImpl;
 import org.hibernate.jpamodelgen.MetaEntity;
 import org.hibernate.jpamodelgen.ImportContext;
+import org.hibernate.jpamodelgen.TypeUtils;
 import org.hibernate.jpamodelgen.xml.jaxb.Attributes;
 import org.hibernate.jpamodelgen.xml.jaxb.Basic;
 import org.hibernate.jpamodelgen.xml.jaxb.ElementCollection;
@@ -65,31 +67,35 @@ public class XmlMetaEntity implements MetaEntity {
 	final private List<MetaAttribute> members = new ArrayList<MetaAttribute>();
 
 	private TypeElement element;
+	private Context context;
 
-	public XmlMetaEntity(Entity ormEntity, String packageName, TypeElement element) {
+	public XmlMetaEntity(Entity ormEntity, String packageName, TypeElement element, Context context) {
 		this.clazzName = ormEntity.getClazz();
 		this.packageName = packageName;
-		importContext = new ImportContextImpl( getPackageName() );
+		this.context = context;
+		this.importContext = new ImportContextImpl( getPackageName() );
 		this.element = element;
 		Attributes attributes = ormEntity.getAttributes();
 
 		parseAttributes( attributes );
 	}
 
-	public XmlMetaEntity(MappedSuperclass mappedSuperclass, String packageName, TypeElement element) {
+	public XmlMetaEntity(MappedSuperclass mappedSuperclass, String packageName, TypeElement element, Context context) {
 		this.clazzName = mappedSuperclass.getClazz();
 		this.packageName = packageName;
-		importContext = new ImportContextImpl( getPackageName() );
+		this.context = context;
+		this.importContext = new ImportContextImpl( getPackageName() );
 		this.element = element;
 		Attributes attributes = mappedSuperclass.getAttributes();
 
 		parseAttributes( attributes );
 	}
 
-	public XmlMetaEntity(Embeddable embeddable, String packageName, TypeElement element) {
+	public XmlMetaEntity(Embeddable embeddable, String packageName, TypeElement element, Context context) {
 		this.clazzName = embeddable.getClazz();
 		this.packageName = packageName;
-		importContext = new ImportContextImpl( getPackageName() );
+		this.context = context;
+		this.importContext = new ImportContextImpl( getPackageName() );
 		this.element = element;
 		EmbeddableAttributes attributes = embeddable.getAttributes();
 
@@ -164,7 +170,7 @@ public class XmlMetaEntity implements MetaEntity {
 		for ( Element elem : element.getEnclosedElements() ) {
 			if ( elem.getSimpleName().toString().equals( propertyName ) ) {
 				DeclaredType type = ( ( DeclaredType ) elem.asType() );
-				types[0] = type.getTypeArguments().get( 0 ).toString();
+				types[0] = TypeUtils.extractClosestRealTypeAsString(type.getTypeArguments().get( 0 ), context);
 				types[1] = COLLECTIONS.get( type.asElement().toString() );
 			}
 		}

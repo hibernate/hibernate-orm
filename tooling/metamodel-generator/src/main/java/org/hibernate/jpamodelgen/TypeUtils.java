@@ -18,6 +18,7 @@
 package org.hibernate.jpamodelgen;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.lang.model.type.TypeMirror;
@@ -25,6 +26,8 @@ import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.Element;
+import javax.lang.model.type.TypeVariable;
+import javax.lang.model.util.Types;
 
 /**
  * Utility class.
@@ -70,6 +73,26 @@ public class TypeUtils {
 		}
 		else {
 			return null;
+		}
+	}
+
+	public static String extractClosestRealTypeAsString(TypeMirror type, Context context) {
+		if ( type instanceof TypeVariable ) {
+			final TypeMirror compositeUpperBound = ( ( TypeVariable ) type ).getUpperBound();
+			final Types types = context.getProcessingEnvironment()
+					.getTypeUtils();
+			final List<? extends TypeMirror> upperBounds = types.directSupertypes( compositeUpperBound );
+			if (upperBounds.size() == 0) {
+				return compositeUpperBound.toString();
+			}
+			else {
+				//take the first one
+				return extractClosestRealTypeAsString( upperBounds.get( 0 ), context );
+			}
+
+		}
+		else {
+			return type.toString();
 		}
 	}
 }

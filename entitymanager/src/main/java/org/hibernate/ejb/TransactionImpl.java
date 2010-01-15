@@ -77,11 +77,8 @@ public class TransactionImpl implements EntityTransaction {
 		}
 		catch (Exception e) {
 			Exception wrappedException;
-			if (e instanceof StaleStateException) {
-				wrappedException = entityManager.wrapStaleStateException( (StaleStateException) e );
-			}
-			else if (e instanceof HibernateException) {
-				throw entityManager.convert( (HibernateException)e );
+			if (e instanceof HibernateException) {
+				wrappedException = entityManager.convert( (HibernateException)e );
 			}
 			else {
 				wrappedException = e;
@@ -93,7 +90,7 @@ public class TransactionImpl implements EntityTransaction {
 			catch (Exception re) {
 				//swallow
 			}
-			throw new RollbackException( "Error while commiting the transaction", wrappedException );
+			throw new RollbackException( "Error while committing the transaction", wrappedException );
 		}
 		finally {
 			rollbackOnly = false;

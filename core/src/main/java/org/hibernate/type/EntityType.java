@@ -508,7 +508,21 @@ public abstract class EntityType extends AbstractType implements AssociationType
 		return result.toString();
 	}
 
+	/**
+	 * Is the association modeled here defined as a 1-1 in the database (physical model)?
+	 *
+	 * @return True if a 1-1 in the database; false otherwise.
+	 */
 	public abstract boolean isOneToOne();
+
+	/**
+	 * Is the association modeled here a 1-1 according to the logical moidel?
+	 *
+	 * @return True if a 1-1 in the logical model; false otherwise.
+	 */
+	public boolean isLogicalOneToOne() {
+		return isOneToOne();
+	}
 
 	/**
 	 * Convenience method to locate the identifier type of the associated entity.

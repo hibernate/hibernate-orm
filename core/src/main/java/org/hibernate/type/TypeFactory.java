@@ -201,6 +201,8 @@ public final class TypeFactory {
 
 	/**
 	 * A many-to-one association type for the given class
+	 *
+	 * @deprecated Use {@link #manyToOne(String, String, boolean, boolean, boolean, boolean, boolean)}
 	 */
 	public static EntityType manyToOne(
 			String persistentClass,
@@ -208,8 +210,8 @@ public final class TypeFactory {
 			boolean lazy,
 			boolean unwrapProxy,
 			boolean isEmbeddedInXML,
-			boolean ignoreNotFound
-	) {
+			boolean ignoreNotFound) {
+		//noinspection deprecation
 		return new ManyToOneType(
 				persistentClass,
 				uniqueKeyPropertyName,
@@ -217,7 +219,29 @@ public final class TypeFactory {
 				unwrapProxy,
 				isEmbeddedInXML,
 				ignoreNotFound
-			);
+		);
+	}
+
+	/**
+	 * A many-to-one association type for the given class
+	 */
+	public static EntityType manyToOne(
+			String persistentClass,
+			String uniqueKeyPropertyName,
+			boolean lazy,
+			boolean unwrapProxy,
+			boolean isEmbeddedInXML,
+			boolean ignoreNotFound,
+			boolean isLogicalOneToOne) {
+		return new ManyToOneType(
+				persistentClass,
+				uniqueKeyPropertyName,
+				lazy,
+				unwrapProxy,
+				isEmbeddedInXML,
+				ignoreNotFound,
+				isLogicalOneToOne
+		);
 	}
 
 	/**

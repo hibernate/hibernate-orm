@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,13 +20,14 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.engine;
 
+import java.io.Serializable;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Stack;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,6 +37,7 @@ import org.hibernate.collection.PersistentCollection;
 import org.hibernate.event.EventSource;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.pretty.MessageHelper;
 import org.hibernate.type.AbstractComponentType;
 import org.hibernate.type.AssociationType;
 import org.hibernate.type.CollectionType;
@@ -148,7 +150,8 @@ public final class Cascade {
 			EntityMode entityMode = eventSource.getEntityMode();
 			boolean hasUninitializedLazyProperties = persister.hasUninitializedLazyProperties( parent, entityMode );
 			for ( int i=0; i<types.length; i++) {
-				CascadeStyle style = cascadeStyles[i];
+				final CascadeStyle style = cascadeStyles[i];
+				final String propertyName = persister.getPropertyNames()[i];
 				if ( hasUninitializedLazyProperties && persister.getPropertyLaziness()[i] && ! action.performOnLazyProperty() ) {
 					//do nothing to avoid a lazy property initialization
 					continue;
@@ -160,6 +163,7 @@ public final class Cascade {
 					        persister.getPropertyValue( parent, i, entityMode ),
 					        types[i],
 					        style,
+							propertyName,
 					        anything,
 					        false
 					);
@@ -189,6 +193,7 @@ public final class Cascade {
 			final Object child,
 			final Type type,
 			final CascadeStyle style,
+			final String propertyName,
 			final Object anything,
 			final boolean isCascadeDeleteEnabled) throws HibernateException {
 
@@ -207,7 +212,7 @@ public final class Cascade {
 				}
 			}
 			else if ( type.isComponentType() ) {
-				cascadeComponent( parent, child, (AbstractComponentType) type, anything );
+				cascadeComponent( parent, child, (AbstractComponentType) type, propertyName, anything );
 			}
 		}
 		else {
@@ -222,11 +227,34 @@ public final class Cascade {
 					final EntityEntry entry = eventSource.getPersistenceContext().getEntry( parent );
 					if ( entry != null ) {
 						final EntityType entityType = (EntityType) type;
-						final Object loadedValue = entry.getLoadedValue( entityType.getPropertyName() );
+						final Object loadedValue;
+						if ( componentPathStack.isEmpty() ) {
+							// association defined on entity
+							loadedValue = entry.getLoadedValue( propertyName );
+						}
+						else {
+							// association defined on component
+							// 		todo : this is currently unsupported because of the fact that
+							//		we do not know the loaded state of this value properly
+							//		and doing so would be very difficult given how components and
+							//		entities are loaded (and how 'loaded state' is put into the
+							//		EntityEntry).  Solutions here are to either:
+							//			1) properly account for components as a 2-phase load construct
+							//			2) just assume the association was just now orphaned and
+							// 				issue the orphan delete.  This would require a special
+							//				set of SQL statements though since we do not know the
+							//				orphaned value, something a delete with a subquery to
+							// 				match the owner.
+//							final String propertyPath = composePropertyPath( entityType.getPropertyName() );
+							loadedValue = null;
+						}
 						if ( loadedValue != null ) {
-							final String entityName = entityType.getAssociatedEntityName();
+							final String entityName = entry.getPersister().getEntityName();
 							if ( log.isTraceEnabled() ) {
-								log.trace( "deleting orphaned entity instance: " + entityName );
+								final Serializable id = entry.getPersister()
+										.getIdentifier( loadedValue, eventSource.getEntityMode() );
+								final String description = MessageHelper.infoString( entityName, id );
+								log.trace( "deleting orphaned entity instance: " + description );
 							}
 							eventSource.delete( entityName, loadedValue, false, new HashSet() );
 						}
@@ -245,20 +273,25 @@ public final class Cascade {
 	 * @return True if the attribute represents a logical one to one association
 	 */
 	private boolean isLogicalOneToOne(Type type) {
-		if ( ! type.isEntityType() ) {
-			return false;
-		}
-		final EntityType entityType = (EntityType) type;
-		if ( entityType.isOneToOne() ) {
-			// physical one-to-one
-			return true;
-		}
-		// todo : still need to handle the many-to-one w/ property-ref
-		//		actually there is a question about whether the constrained side
-		//		can declare the orphan-delete.  If not, then the side declaring
-		//		the orphan-delete can only ever be a <one-to-one/>
-		return false;
+		return type.isEntityType() && ( (EntityType) type ).isLogicalOneToOne();
 	}
+
+	private String composePropertyPath(String propertyName) {
+		if ( componentPathStack.isEmpty() ) {
+			return propertyName;
+		}
+		else {
+			StringBuffer buffer = new StringBuffer();
+			Iterator itr = componentPathStack.iterator();
+			while ( itr.hasNext() ) {
+				buffer.append( itr.next() ).append( '.' );
+			}
+			buffer.append( propertyName );
+			return buffer.toString();
+		}
+	}
+
+	private Stack componentPathStack = new Stack();
 
 	private boolean cascadeAssociationNow(AssociationType associationType) {
 		return associationType.getForeignKeyDirection().cascadeNow(cascadeTo) &&
@@ -269,22 +302,27 @@ public final class Cascade {
 			final Object parent,
 			final Object child,
 			final AbstractComponentType componentType,
+			final String componentPropertyName,
 			final Object anything) {
-		Object[] children = componentType.getPropertyValues(child, eventSource);
+		componentPathStack.push( componentPropertyName );
+		Object[] children = componentType.getPropertyValues( child, eventSource );
 		Type[] types = componentType.getSubtypes();
 		for ( int i=0; i<types.length; i++ ) {
-			CascadeStyle componentPropertyStyle = componentType.getCascadeStyle(i);
+			final CascadeStyle componentPropertyStyle = componentType.getCascadeStyle(i);
+			final String subPropertyName = componentType.getPropertyNames()[i];
 			if ( componentPropertyStyle.doCascade(action) ) {
 				cascadeProperty(
 						parent,
 						children[i],
 						types[i],
 						componentPropertyStyle,
+						subPropertyName,
 						anything,
 						false
 					);
 			}
 		}
+		componentPathStack.pop();
 	}
 
 	private void cascadeAssociation(
@@ -389,7 +427,8 @@ public final class Cascade {
 						parent,
 						iter.next(), 
 						elemType,
-						style, 
+						style,
+						null,
 						anything, 
 						isCascadeDeleteEnabled 
 					);

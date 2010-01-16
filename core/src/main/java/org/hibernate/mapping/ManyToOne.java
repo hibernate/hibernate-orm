@@ -38,8 +38,8 @@ import org.hibernate.type.TypeFactory;
  * @author Gavin King
  */
 public class ManyToOne extends ToOne {
-	
 	private boolean ignoreNotFound;
+	private boolean isLogicalOneToOne;
 	
 	public ManyToOne(Table table) {
 		super(table);
@@ -52,8 +52,9 @@ public class ManyToOne extends ToOne {
 				isLazy(),
 				isUnwrapProxy(),
 				isEmbedded(),
-				isIgnoreNotFound()
-			);
+				isIgnoreNotFound(),
+				isLogicalOneToOne
+		);
 	}
 
 	public void createForeignKey() throws MappingException {
@@ -110,5 +111,11 @@ public class ManyToOne extends ToOne {
 		this.ignoreNotFound = ignoreNotFound;
 	}
 
-	
+	public void markAsLogicalOneToOne() {
+		this.isLogicalOneToOne = true;
+	}
+
+	public boolean isLogicalOneToOne() {
+		return isLogicalOneToOne;
+	}
 }

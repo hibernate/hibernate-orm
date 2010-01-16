@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,7 +20,6 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.tuple.entity;
 
@@ -29,7 +28,6 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
-import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.tuple.Instantiator;
@@ -132,12 +130,12 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
         getters = new Getter[propertySpan];
 		setters = new Setter[propertySpan];
 
-		Iterator iter = mappingInfo.getPropertyClosureIterator();
+		Iterator itr = mappingInfo.getPropertyClosureIterator();
 		boolean foundCustomAccessor=false;
 		int i=0;
-		while ( iter.hasNext() ) {
+		while ( itr.hasNext() ) {
 			//TODO: redesign how PropertyAccessors are acquired...
-			Property property = (Property) iter.next();
+			Property property = (Property) itr.next();
 			getters[i] = buildPropertyGetter(property, mappingInfo);
 			setters[i] = buildPropertySetter(property, mappingInfo);
 			if ( !property.isBasicPropertyAccessor() ) {
@@ -172,7 +170,7 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 	}
 
 	/**
-	 * Retreives the defined entity-names for any subclasses defined for this
+	 * Retrieves the defined entity-names for any subclasses defined for this
 	 * entity.
 	 *
 	 * @return Any subclass entity-names.
@@ -208,7 +206,7 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 		catch ( ClassCastException cce ) {
 			StringBuffer msg = new StringBuffer( "Identifier classes must be serializable. " );
 			if ( id != null ) {
-				msg.append( id.getClass().getName() + " is not serializable. " );
+				msg.append( id.getClass().getName() ).append( " is not serializable. " );
 			}
 			if ( cce.getMessage() != null ) {
 				msg.append( cce.getMessage() );
@@ -296,16 +294,21 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 	}
 
 	public Object getPropertyValue(Object entity, String propertyPath) throws HibernateException {
-		
-		int loc = propertyPath.indexOf('.');
-		String basePropertyName = loc>0 ?
-			propertyPath.substring(0, loc) : propertyPath;
-			
-		int index = entityMetamodel.getPropertyIndex( basePropertyName );
-		Object baseValue = getPropertyValue( entity, index );
-		if ( loc>0 ) {
-			ComponentType type = (ComponentType) entityMetamodel.getPropertyTypes()[index];
-			return getComponentValue( type, baseValue, propertyPath.substring(loc+1) );
+		final int loc = propertyPath.indexOf('.');
+		final String basePropertyName = loc > 0
+				? propertyPath.substring( 0, loc )
+				: propertyPath;
+		final int index = entityMetamodel.getPropertyIndex( basePropertyName );
+		final Object baseValue = getPropertyValue( entity, index );
+		if ( loc > 0 ) {
+			if ( baseValue == null ) {
+				return null;
+			}
+			return getComponentValue(
+					(ComponentType) entityMetamodel.getPropertyTypes()[index],
+					baseValue,
+					propertyPath.substring(loc+1)
+			);
 		}
 		else {
 			return baseValue;
@@ -321,30 +324,36 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 	 * @return The property value extracted.
 	 */
 	protected Object getComponentValue(ComponentType type, Object component, String propertyPath) {
-		
-		int loc = propertyPath.indexOf('.');
-		String basePropertyName = loc>0 ?
-			propertyPath.substring(0, loc) : propertyPath;
-		
-		String[] propertyNames = type.getPropertyNames();
-		int index=0;
-		for ( ; index<propertyNames.length; index++ ) {
-			if ( basePropertyName.equals( propertyNames[index] ) ) break;
-		}
-		if (index==propertyNames.length) {
-			throw new MappingException( "component property not found: " + basePropertyName );
-		}
-		
-		Object baseValue = type.getPropertyValue( component, index, getEntityMode() );
-		
-		if ( loc>0 ) {
-			ComponentType subtype = (ComponentType) type.getSubtypes()[index];
-			return getComponentValue( subtype, baseValue, propertyPath.substring(loc+1) );
+		final int loc = propertyPath.indexOf( '.' );
+		final String basePropertyName = loc > 0
+				? propertyPath.substring( 0, loc )
+				: propertyPath;
+		final int index = findSubPropertyIndex( type, basePropertyName );
+		final Object baseValue = type.getPropertyValue( component, index, getEntityMode() );
+		if ( loc > 0 ) {
+			if ( baseValue == null ) {
+				return null;
+			}
+			return getComponentValue(
+					(ComponentType) type.getSubtypes()[index],
+					baseValue,
+					propertyPath.substring(loc+1)
+			);
 		}
 		else {
 			return baseValue;
 		}
 		
+	}
+
+	private int findSubPropertyIndex(ComponentType type, String subPropertyName) {
+		final String[] propertyNames = type.getPropertyNames();
+		for ( int index = 0; index<propertyNames.length; index++ ) {
+			if ( subPropertyName.equals( propertyNames[index] ) ) {
+				return index;
+			}
+		}
+		throw new MappingException( "component property not found: " + subPropertyName );
 	}
 
 	public void setPropertyValues(Object entity, Object[] values) throws HibernateException {

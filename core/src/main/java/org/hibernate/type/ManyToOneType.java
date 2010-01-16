@@ -45,27 +45,54 @@ import org.hibernate.persister.entity.EntityPersister;
  * @author Gavin King
  */
 public class ManyToOneType extends EntityType {
-	
 	private final boolean ignoreNotFound;
+	private boolean isLogicalOneToOne;
 
-	public ManyToOneType(String className) {
-		this( className, false );
+	/**
+	 * Creates a many-to-one association type with the given referenced entity.
+	 *
+	 * @param referencedEntityName The name iof the referenced entity
+	 */
+	public ManyToOneType(String referencedEntityName) {
+		this( referencedEntityName, false );
 	}
 
-	public ManyToOneType(String className, boolean lazy) {
-		super( className, null, !lazy, true, false );
-		this.ignoreNotFound = false;
+	/**
+	 * Creates a many-to-one association type with the given referenced entity and the
+	 * given laziness characteristic
+	 *
+	 * @param referencedEntityName The name iof the referenced entity
+	 * @param lazy Should the association be handled lazily
+	 */
+	public ManyToOneType(String referencedEntityName, boolean lazy) {
+		this( referencedEntityName, null, !lazy, true, false, false );
 	}
 
+	/**
+	 * @deprecated use {@link #ManyToOneType(String, String, boolean, boolean, boolean, boolean, boolean)}
+	 * @noinspection JavaDoc
+	 */
 	public ManyToOneType(
-			String entityName,
+			String referencedEntityName,
 			String uniqueKeyPropertyName,
 			boolean lazy,
 			boolean unwrapProxy,
 			boolean isEmbeddedInXML,
 			boolean ignoreNotFound) {
-		super( entityName, uniqueKeyPropertyName, !lazy, isEmbeddedInXML, unwrapProxy );
+		this( referencedEntityName, uniqueKeyPropertyName, !lazy, isEmbeddedInXML, unwrapProxy, ignoreNotFound, false );
+	}
+
+	public ManyToOneType(
+			String referencedEntityName,
+			String uniqueKeyPropertyName,
+			boolean lazy,
+			boolean unwrapProxy,
+			boolean isEmbeddedInXML,
+			boolean ignoreNotFound,
+			boolean isLogicalOneToOne) {
+		super( referencedEntityName, uniqueKeyPropertyName, !lazy, isEmbeddedInXML, unwrapProxy );
 		this.ignoreNotFound = ignoreNotFound;
+		this.isLogicalOneToOne = isLogicalOneToOne;
 	}
 
 	protected boolean isNullable() {
@@ -82,7 +109,11 @@ public class ManyToOneType extends EntityType {
 	public boolean isOneToOne() {
 		return false;
 	}
-	
+
+	public boolean isLogicalOneToOne() {
+		return isLogicalOneToOne;
+	}
+
 	public int getColumnSpan(Mapping mapping) throws MappingException {
 		// our column span is the number of columns in the PK
 		return getIdentifierOrUniqueKeyType( mapping ).getColumnSpan( mapping );

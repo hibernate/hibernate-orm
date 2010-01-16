@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,7 +20,6 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.engine;
 
@@ -28,7 +27,6 @@ import java.io.Serializable;
 import java.io.ObjectOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
-
 
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
@@ -84,13 +82,9 @@ public final class EntityEntry implements Serializable {
 		this.loadedWithLazyPropertiesUnfetched = lazyPropertiesAreUnfetched;
 		this.persister=persister;
 		this.entityMode = entityMode;
-		this.entityName = persister == null ?
-				null : persister.getEntityName();
+		this.entityName = persister == null ? null : persister.getEntityName();
 	}
 
-	/**
-	 * Used during custom deserialization
-	 */
 	private EntityEntry(
 			final SessionFactoryImplementor factory,
 			final String entityName,
@@ -104,6 +98,7 @@ public final class EntityEntry implements Serializable {
 			final boolean existsInDatabase,
 			final boolean isBeingReplicated,
 			final boolean loadedWithLazyPropertiesUnfetched) {
+		// Used during custom deserialization
 		this.entityName = entityName;
 		this.persister = ( factory == null ? null : factory.getEntityPersister( entityName ) );
 		this.id = id;
@@ -181,10 +176,6 @@ public final class EntityEntry implements Serializable {
 		return cachedEntityKey;
 	}
 
-	void afterDeserialize(SessionFactoryImplementor factory) {
-		persister = factory.getEntityPersister( entityName );
-	}
-
 	public String getEntityName() {
 		return entityName;
 	}
@@ -198,24 +189,29 @@ public final class EntityEntry implements Serializable {
 	}
 	
 	/**
-	 * After actually updating the database, update the snapshot information,
-	 * and escalate the lock mode
+	 * Handle updating the internal state of the entry after actually performing
+	 * the database update.  Specifically we update the snapshot information and
+	 * escalate the lock mode
+	 *
+	 * @param entity The entity instance
+	 * @param updatedState The state calculated after the update (becomes the
+	 * new {@link #getLoadedState() loaded state}.
+	 * @param nextVersion The new version.
 	 */
 	public void postUpdate(Object entity, Object[] updatedState, Object nextVersion) {
 		this.loadedState = updatedState;
-		
 		setLockMode(LockMode.WRITE);
-		
+
 		if ( getPersister().isVersioned() ) {
 			this.version = nextVersion;
-			getPersister().setPropertyValue( 
-					entity, 
+			getPersister().setPropertyValue(
+					entity,
 					getPersister().getVersionProperty(), 
 					nextVersion, 
 					entityMode 
-				);
+			);
 		}
-		
+
 		FieldInterceptionHelper.clearDirty( entity );
 	}
 
@@ -249,8 +245,7 @@ public final class EntityEntry implements Serializable {
 		int propertyIndex = ( (UniqueKeyLoadable) persister ).getPropertyIndex(propertyName);
 		return loadedState[propertyIndex];
 	}
-	
-	
+
 	public boolean requiresDirtyCheck(Object entity) {
 		
 		boolean isMutableInstance = 
@@ -268,6 +263,7 @@ public final class EntityEntry implements Serializable {
 	public void forceLocked(Object entity, Object nextVersion) {
 		version = nextVersion;
 		loadedState[ persister.getVersionProperty() ] = version;
+		//noinspection deprecation
 		setLockMode( LockMode.FORCE );  // TODO:  use LockMode.PESSIMISTIC_FORCE_INCREMENT
 		persister.setPropertyValue(
 				entity,
@@ -309,13 +305,13 @@ public final class EntityEntry implements Serializable {
 		return loadedWithLazyPropertiesUnfetched;
 	}
 
-
 	/**
 	 * Custom serialization routine used during serialization of a
 	 * Session/PersistenceContext for increased performance.
 	 *
 	 * @param oos The stream to which we should write the serial data.
-	 * @throws java.io.IOException
+	 *
+	 * @throws IOException If a stream error occurs
 	 */
 	void serialize(ObjectOutputStream oos) throws IOException {
 		oos.writeObject( entityName );
@@ -338,9 +334,12 @@ public final class EntityEntry implements Serializable {
 	 *
 	 * @param ois The stream from which to read the entry.
 	 * @param session The session being deserialized.
+	 *
 	 * @return The deserialized EntityEntry
-	 * @throws IOException
-	 * @throws ClassNotFoundException
+	 *
+	 * @throws IOException If a stream error occurs
+	 * @throws ClassNotFoundException If any of the classes declared in the stream
+	 * cannot be found
 	 */
 	static EntityEntry deserialize(
 			ObjectInputStream ois,
@@ -353,7 +352,7 @@ public final class EntityEntry implements Serializable {
 				Status.parse( ( String ) ois.readObject() ),
 	            ( Object[] ) ois.readObject(),
 	            ( Object[] ) ois.readObject(),
-	            ( Object ) ois.readObject(),
+	            ois.readObject(),
 	            LockMode.parse( ( String ) ois.readObject() ),
 	            ois.readBoolean(),
 	            ois.readBoolean(),

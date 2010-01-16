@@ -1064,10 +1064,10 @@ public final class HbmBinder {
 		// COLUMN(S)
 		Attribute columnAttribute = node.attribute( "column" );
 		if ( columnAttribute == null ) {
-			Iterator iter = node.elementIterator();
+			Iterator itr = node.elementIterator();
 			int count = 0;
-			while ( iter.hasNext() ) {
-				Element columnElement = (Element) iter.next();
+			while ( itr.hasNext() ) {
+				Element columnElement = (Element) itr.next();
 				if ( columnElement.getName().equals( "column" ) ) {
 					Column column = new Column();
 					column.setValue( simpleValue );
@@ -1115,6 +1115,9 @@ public final class HbmBinder {
 			Column column = new Column();
 			column.setValue( simpleValue );
 			bindColumn( node, column, isNullable );
+			if ( column.isUnique() && ManyToOne.class.isInstance( simpleValue ) ) {
+				( (ManyToOne) simpleValue ).markAsLogicalOneToOne();
+			}
 			final String columnName = columnAttribute.getValue();
 			String logicalColumnName = mappings.getNamingStrategy().logicalColumnName(
 					columnName, propertyPath
@@ -1617,7 +1620,9 @@ public final class HbmBinder {
 
 		String cascade = node.attributeValue( "cascade" );
 		if ( cascade != null && cascade.indexOf( "delete-orphan" ) >= 0 ) {
-			throw new MappingException( "many-to-one attributes do not support orphan delete: " + path );
+			if ( !manyToOne.isLogicalOneToOne() ) {
+				throw new MappingException( "many-to-one attributes do not support orphan delete: " + path );
+			}
 		}
 	}
 

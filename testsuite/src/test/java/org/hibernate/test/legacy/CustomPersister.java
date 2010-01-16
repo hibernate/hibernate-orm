@@ -629,6 +629,10 @@ public class CustomPersister implements EntityPersister {
 		return false;
 	}
 
+	public String[] getOrphanRemovalOneToOnePaths() {
+		return null;
+	}
+
 	public Object[] getNaturalIdentifierSnapshot(Serializable id, SessionImplementor session) throws HibernateException {
 		return null;
 	}

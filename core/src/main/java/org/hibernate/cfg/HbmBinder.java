@@ -1621,7 +1621,9 @@ public final class HbmBinder {
 		String cascade = node.attributeValue( "cascade" );
 		if ( cascade != null && cascade.indexOf( "delete-orphan" ) >= 0 ) {
 			if ( !manyToOne.isLogicalOneToOne() ) {
-				throw new MappingException( "many-to-one attributes do not support orphan delete: " + path );
+				throw new MappingException(
+						"many-to-one attribute [" + path + "] does not support orphan delete as it is not unique"
+				);
 			}
 		}
 	}
@@ -1688,6 +1690,15 @@ public final class HbmBinder {
 		oneToOne.setPropertyName( node.attributeValue( "name" ) );
 
 		oneToOne.setReferencedEntityName( getEntityName( node, mappings ) );
+
+		String cascade = node.attributeValue( "cascade" );
+		if ( cascade != null && cascade.indexOf( "delete-orphan" ) >= 0 ) {
+			if ( oneToOne.isConstrained() ) {
+				throw new MappingException(
+						"one-to-one attribute [" + path + "] does not support orphan delete as it is constrained"
+				);
+			}
+		}
 	}
 
 	public static void bindOneToMany(Element node, OneToMany oneToMany, Mappings mappings)

@@ -225,8 +225,7 @@ public final class Cascade {
 					// value is orphaned if loaded state for this property shows not null
 					// because it is currently null.
 					final EntityEntry entry = eventSource.getPersistenceContext().getEntry( parent );
-					if ( entry != null ) {
-						final EntityType entityType = (EntityType) type;
+					if ( entry != null && entry.getStatus() != Status.SAVING ) {
 						final Object loadedValue;
 						if ( componentPathStack.isEmpty() ) {
 							// association defined on entity
@@ -245,6 +244,7 @@ public final class Cascade {
 							//				set of SQL statements though since we do not know the
 							//				orphaned value, something a delete with a subquery to
 							// 				match the owner.
+//							final EntityType entityType = (EntityType) type;
 //							final String propertyPath = composePropertyPath( entityType.getPropertyName() );
 							loadedValue = null;
 						}

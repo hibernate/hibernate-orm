@@ -107,9 +107,26 @@
                 <artifactId>maven-test-ext-plugin</artifactId>
             </plugin>
             <plugin>
+                <groupId>org.jboss.maven.plugins</groupId>
+                <artifactId>maven-injection-plugin</artifactId>
+                <configuration>
+                    <bytecodeInjections>
+                        <bytecodeInjection>
+                            <expression>${pom.version}</expression>
+                            <targetMembers>
+                            	<methodBodyReturn>
+                            	    <className>org.hibernate.cfg.annotations.Version</className>
+                            	    <methodName>getVersionString</methodName>
+                            	</methodBodyReturn>
+                            </targetMembers>
+                        </bytecodeInjection>
+                    </bytecodeInjections>
+                </configuration>
+            </plugin>            
+            <plugin>
                 <groupId>org.twdata.maven</groupId>
                 <artifactId>maven-cli-plugin</artifactId>
-                <version>0.6.3.CR2</version>
+                <version>0.6.4</version>
             </plugin>
         </plugins>
     </build>

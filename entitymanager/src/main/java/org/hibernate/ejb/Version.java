@@ -1,3 +1,4 @@
+// $Id:$
 /*
  * Copyright (c) 2009, Red Hat Middleware LLC or third-party contributors as
  * indicated by the @author tags or express copyright attribution
@@ -23,8 +24,6 @@
 //$Id$
 package org.hibernate.ejb;
 
-import java.util.Date;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,11 +32,14 @@ import org.slf4j.LoggerFactory;
  * @author Emmanuel Bernard
  */
 public class Version {
-	public static final String VERSION = "3.5.0." + new Date();
-	private static final Logger log = LoggerFactory.getLogger( Version.class );
+	private static Logger log = LoggerFactory.getLogger( Version.class );
+
+	public static String getVersionString() {
+		return "[WORKING]";
+	}
 
 	static {
-		log.info( "Hibernate EntityManager {}", VERSION );
+		log.info( "Hibernate EntityManager {}", getVersionString() );
 	}
 
 	public static void touch() {

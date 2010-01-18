@@ -1101,6 +1101,16 @@ public final class HbmBinder {
 					simpleValue.addFormula( formula );
 				}
 			}
+
+			// todo : another GoodThing would be to go back after all parsing and see if all the columns
+			// (and no formulas) are contained in a defined unique key that only contains these columns.
+			// That too would mark this as a logical one-to-one
+			final Attribute uniqueAttribute = node.attribute( "unique" );
+			if ( uniqueAttribute != null
+					&& "true".equals( uniqueAttribute.getValue() )
+					&& ManyToOne.class.isInstance( simpleValue ) ) {
+				( (ManyToOne) simpleValue ).markAsLogicalOneToOne();
+			}
 		}
 		else {
 			if ( node.elementIterator( "column" ).hasNext() ) {

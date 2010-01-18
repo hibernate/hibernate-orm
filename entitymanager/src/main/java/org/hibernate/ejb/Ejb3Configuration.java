@@ -1,4 +1,4 @@
-// $Id:$
+// $Id$
 /*
  * Copyright (c) 2009, Red Hat Middleware LLC or third-party contributors as
  * indicated by the @author tags or express copyright attribution
@@ -178,7 +178,7 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 		log.debug( "Creating Factory: {}", metadata.getName() );
 
 		Map workingVars = new HashMap();
-		workingVars.put( HibernatePersistence.PERSISTENCE_UNIT_NAME, metadata.getName() );
+		workingVars.put( AvailableSettings.PERSISTENCE_UNIT_NAME, metadata.getName() );
 		this.persistenceUnitName = metadata.getName();
 
 		if ( StringHelper.isNotEmpty( metadata.getJtaDatasource() ) ) {
@@ -189,22 +189,22 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 		}
 		defineTransactionType( metadata.getTransactionType(), workingVars );
 		if ( metadata.getClasses().size() > 0 ) {
-			workingVars.put( HibernatePersistence.CLASS_NAMES, metadata.getClasses() );
+			workingVars.put( AvailableSettings.CLASS_NAMES, metadata.getClasses() );
 		}
 		if ( metadata.getPackages().size() > 0 ) {
-			workingVars.put( HibernatePersistence.PACKAGE_NAMES, metadata.getPackages() );
+			workingVars.put( AvailableSettings.PACKAGE_NAMES, metadata.getPackages() );
 		}
 		if ( metadata.getMappingFiles().size() > 0 ) {
-			workingVars.put( HibernatePersistence.XML_FILE_NAMES, metadata.getMappingFiles() );
+			workingVars.put( AvailableSettings.XML_FILE_NAMES, metadata.getMappingFiles() );
 		}
 		if ( metadata.getHbmfiles().size() > 0 ) {
-			workingVars.put( HibernatePersistence.HBXML_FILES, metadata.getHbmfiles() );
+			workingVars.put( AvailableSettings.HBXML_FILES, metadata.getHbmfiles() );
 		}
 		if ( metadata.getValidationMode() != null) {
-			workingVars.put( HibernatePersistence.VALIDATION_MODE, metadata.getValidationMode() );
+			workingVars.put( AvailableSettings.VALIDATION_MODE, metadata.getValidationMode() );
 		}
 		if ( metadata.getSharedCacheMode() != null) {
-			workingVars.put( HibernatePersistence.SHARED_CACHE_MODE, metadata.getSharedCacheMode() );
+			workingVars.put( AvailableSettings.SHARED_CACHE_MODE, metadata.getSharedCacheMode() );
 		}
 		Properties props = new Properties();
 		props.putAll( metadata.getProps() );
@@ -410,7 +410,7 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 		}
 
 		integration = integration != null ? Collections.unmodifiableMap( integration ) : CollectionHelper.EMPTY_MAP;
-		String provider = (String) integration.get( HibernatePersistence.PROVIDER );
+		String provider = (String) integration.get( AvailableSettings.PROVIDER );
 		if ( provider == null ) provider = info.getPersistenceProviderClassName();
 		if ( provider != null && ! provider.trim().startsWith( IMPLEMENTATION_NAME ) ) {
 			log.info( "Required a different provider: {}", provider );
@@ -435,7 +435,7 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 
 		try {
 			Map workingVars = new HashMap();
-			workingVars.put( HibernatePersistence.PERSISTENCE_UNIT_NAME, info.getPersistenceUnitName() );
+			workingVars.put( AvailableSettings.PERSISTENCE_UNIT_NAME, info.getPersistenceUnitName() );
 			this.persistenceUnitName = info.getPersistenceUnitName();
 			List<String> entities = new ArrayList<String>( 50 );
 			if ( info.getManagedClassNames() != null ) entities.addAll( info.getManagedClassNames() );
@@ -473,38 +473,38 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 			addXMLEntities( xmlFiles, info, entities );
 
 			//FIXME send the appropriate entites.
-			if ( "true".equalsIgnoreCase( properties.getProperty( HibernatePersistence.USE_CLASS_ENHANCER ) ) ) {
+			if ( "true".equalsIgnoreCase( properties.getProperty( AvailableSettings.USE_CLASS_ENHANCER ) ) ) {
 				info.addTransformer( new InterceptFieldClassFileTransformer( entities ) );
 			}
 
-			workingVars.put( HibernatePersistence.CLASS_NAMES, entities );
-			workingVars.put( HibernatePersistence.PACKAGE_NAMES, packages );
-			workingVars.put( HibernatePersistence.XML_FILE_NAMES, xmlFiles );
-			if ( hbmFiles.size() > 0 ) workingVars.put( HibernatePersistence.HBXML_FILES, hbmFiles );
+			workingVars.put( AvailableSettings.CLASS_NAMES, entities );
+			workingVars.put( AvailableSettings.PACKAGE_NAMES, packages );
+			workingVars.put( AvailableSettings.XML_FILE_NAMES, xmlFiles );
+			if ( hbmFiles.size() > 0 ) workingVars.put( AvailableSettings.HBXML_FILES, hbmFiles );
 
 			//validation-mode
 			final Object validationMode = info.getValidationMode();
 			if ( validationMode != null) {
-				workingVars.put( HibernatePersistence.VALIDATION_MODE, validationMode );
+				workingVars.put( AvailableSettings.VALIDATION_MODE, validationMode );
 			}
 
 			//shared-cache-mode
 			final Object sharedCacheMode = info.getSharedCacheMode();
 			if ( sharedCacheMode != null) {
-				workingVars.put( HibernatePersistence.SHARED_CACHE_MODE, sharedCacheMode );
+				workingVars.put( AvailableSettings.SHARED_CACHE_MODE, sharedCacheMode );
 			}
 
 			//datasources
 			Boolean isJTA = null;
 			boolean overridenDatasource = false;
-			if ( integration.containsKey( HibernatePersistence.JTA_DATASOURCE ) ) {
-				String dataSource = (String) integration.get( HibernatePersistence.JTA_DATASOURCE );
+			if ( integration.containsKey( AvailableSettings.JTA_DATASOURCE ) ) {
+				String dataSource = (String) integration.get( AvailableSettings.JTA_DATASOURCE );
 				overridenDatasource = true;
 				properties.setProperty( Environment.DATASOURCE, dataSource );
 				isJTA = Boolean.TRUE;
 			}
-			if ( integration.containsKey( HibernatePersistence.NON_JTA_DATASOURCE ) ) {
-				String dataSource = (String) integration.get( HibernatePersistence.NON_JTA_DATASOURCE );
+			if ( integration.containsKey( AvailableSettings.NON_JTA_DATASOURCE ) ) {
+				String dataSource = (String) integration.get( AvailableSettings.NON_JTA_DATASOURCE );
 				overridenDatasource = true;
 				properties.setProperty( Environment.DATASOURCE, dataSource );
 				if (isJTA == null) isJTA = Boolean.FALSE;
@@ -640,7 +640,7 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 		}
 		else {
 			throw new PersistenceException( getExceptionHeader() +
-					HibernatePersistence.TRANSACTION_TYPE + " of the wrong class type"
+					AvailableSettings.TRANSACTION_TYPE + " of the wrong class type"
 							+ ": " + overridenTxType.getClass()
 			);
 		}
@@ -663,10 +663,10 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 		boolean detectClasses = false;
 		boolean detectHbm = false;
 		String detectSetting = overridenProperties != null ?
-				(String) overridenProperties.get( HibernatePersistence.AUTODETECTION ) :
+				(String) overridenProperties.get( AvailableSettings.AUTODETECTION ) :
 				null;
 		detectSetting = detectSetting == null ?
-				properties.getProperty( HibernatePersistence.AUTODETECTION) :
+				properties.getProperty( AvailableSettings.AUTODETECTION) :
 				detectSetting;
 		if ( detectSetting == null && excludeIfNotOverriden) {
 			//not overriden through HibernatePersistence.AUTODETECTION so we comply with the spec excludeUnlistedClasses
@@ -719,10 +719,10 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 		if ( workingVars != null ) {
 			props.putAll( workingVars );
 			//remove huge non String elements for a clean props
-			props.remove( HibernatePersistence.CLASS_NAMES );
-			props.remove( HibernatePersistence.PACKAGE_NAMES );
-			props.remove( HibernatePersistence.HBXML_FILES );
-			props.remove( HibernatePersistence.LOADED_CLASSES );
+			props.remove( AvailableSettings.CLASS_NAMES );
+			props.remove( AvailableSettings.PACKAGE_NAMES );
+			props.remove( AvailableSettings.HBXML_FILES );
+			props.remove( AvailableSettings.LOADED_CLASSES );
 		}
 		configure( props, workingVars );
 		return buildEntityManagerFactory();
@@ -767,7 +767,7 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 	}
 
 	private Class getSessionInterceptorClass(Properties properties) {
-		String sessionInterceptorClassname = (String) properties.get( HibernatePersistence.SESSION_INTERCEPTOR );
+		String sessionInterceptorClassname = (String) properties.get( AvailableSettings.SESSION_INTERCEPTOR );
 		if ( StringHelper.isNotEmpty( sessionInterceptorClassname ) ) {
 			try {
 				Class interceptorClass = ReflectHelper.classForName( sessionInterceptorClassname, Ejb3Configuration.class );
@@ -776,15 +776,15 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 			}
 			catch (ClassNotFoundException e) {
 				throw new PersistenceException( getExceptionHeader() + "Unable to load "
-						+ HibernatePersistence.SESSION_INTERCEPTOR + ": " + sessionInterceptorClassname, e);
+						+ AvailableSettings.SESSION_INTERCEPTOR + ": " + sessionInterceptorClassname, e);
 			}
 			catch (IllegalAccessException e) {
 				throw new PersistenceException( getExceptionHeader() + "Unable to instanciate "
-						+ HibernatePersistence.SESSION_INTERCEPTOR + ": " + sessionInterceptorClassname, e);
+						+ AvailableSettings.SESSION_INTERCEPTOR + ": " + sessionInterceptorClassname, e);
 			}
 			catch (InstantiationException e) {
 				throw new PersistenceException( getExceptionHeader() + "Unable to instanciate "
-						+ HibernatePersistence.SESSION_INTERCEPTOR + ": " + sessionInterceptorClassname, e);
+						+ AvailableSettings.SESSION_INTERCEPTOR + ": " + sessionInterceptorClassname, e);
 			}
 		}
 		else {
@@ -831,8 +831,8 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 		Properties preparedProperties = prepareProperties( properties, workingVars );
 		if ( workingVars == null ) workingVars = CollectionHelper.EMPTY_MAP;
 
-		if ( preparedProperties.containsKey( HibernatePersistence.CFG_FILE ) ) {
-			String cfgFileName = preparedProperties.getProperty( HibernatePersistence.CFG_FILE );
+		if ( preparedProperties.containsKey( AvailableSettings.CFG_FILE ) ) {
+			String cfgFileName = preparedProperties.getProperty( AvailableSettings.CFG_FILE );
 			cfg.configure( cfgFileName );
 		}
 
@@ -853,24 +853,24 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 			//had to be safe
 			if ( uncastObject != null && uncastObject instanceof String ) {
 				String propertyKey = (String) uncastObject;
-				if ( propertyKey.startsWith( HibernatePersistence.CLASS_CACHE_PREFIX ) ) {
+				if ( propertyKey.startsWith( AvailableSettings.CLASS_CACHE_PREFIX ) ) {
 					setCacheStrategy( propertyKey, preparedProperties, true, workingVars );
 				}
-				else if ( propertyKey.startsWith( HibernatePersistence.COLLECTION_CACHE_PREFIX ) ) {
+				else if ( propertyKey.startsWith( AvailableSettings.COLLECTION_CACHE_PREFIX ) ) {
 					setCacheStrategy( propertyKey, preparedProperties, false, workingVars );
 				}
-				else if ( propertyKey.startsWith( HibernatePersistence.JACC_PREFIX )
-						&& ! ( propertyKey.equals( HibernatePersistence.JACC_CONTEXT_ID )
-						|| propertyKey.equals( HibernatePersistence.JACC_ENABLED ) ) ) {
+				else if ( propertyKey.startsWith( AvailableSettings.JACC_PREFIX )
+						&& ! ( propertyKey.equals( AvailableSettings.JACC_CONTEXT_ID )
+						|| propertyKey.equals( AvailableSettings.JACC_ENABLED ) ) ) {
 					jaccKeys.add( propertyKey );
 				}
 			}
 		}
-		if ( preparedProperties.containsKey( HibernatePersistence.INTERCEPTOR )
+		if ( preparedProperties.containsKey( AvailableSettings.INTERCEPTOR )
 				&& ( cfg.getInterceptor() == null
 				|| cfg.getInterceptor().equals( defaultInterceptor ) ) ) {
 			//cfg.setInterceptor has precedence over configuration file
-			String interceptorName = preparedProperties.getProperty( HibernatePersistence.INTERCEPTOR );
+			String interceptorName = preparedProperties.getProperty( AvailableSettings.INTERCEPTOR );
 			try {
 				Class interceptor = classForName( interceptorName );
 				cfg.setInterceptor( (Interceptor) interceptor.newInstance() );
@@ -896,11 +896,11 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 				);
 			}
 		}
-		if ( preparedProperties.containsKey( HibernatePersistence.NAMING_STRATEGY )
+		if ( preparedProperties.containsKey( AvailableSettings.NAMING_STRATEGY )
 				&& ( cfg.getNamingStrategy() == null
 				|| cfg.getNamingStrategy().equals( defaultNamingStrategy ) ) ) {
 			//cfg.setNamingStrategy has precedence over configuration file
-			String namingStrategyName = preparedProperties.getProperty( HibernatePersistence.NAMING_STRATEGY );
+			String namingStrategyName = preparedProperties.getProperty( AvailableSettings.NAMING_STRATEGY );
 			try {
 				Class namingStragegy = classForName( namingStrategyName );
 				cfg.setNamingStrategy( (NamingStrategy) namingStragegy.newInstance() );
@@ -941,36 +941,36 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 		if ( ! "true".equalsIgnoreCase( cfg.getProperty( Environment.AUTOCOMMIT ) ) ) {
 			log.warn( "{} = false break the EJB3 specification", Environment.AUTOCOMMIT );
 		}
-		discardOnClose = preparedProperties.getProperty( HibernatePersistence.DISCARD_PC_ON_CLOSE )
+		discardOnClose = preparedProperties.getProperty( AvailableSettings.DISCARD_PC_ON_CLOSE )
 				.equals( "true" );
 		return this;
 	}
 
 	private void addClassesToSessionFactory(Map workingVars) {
-		if ( workingVars.containsKey( HibernatePersistence.CLASS_NAMES ) ) {
+		if ( workingVars.containsKey( AvailableSettings.CLASS_NAMES ) ) {
 			Collection<String> classNames = (Collection<String>) workingVars.get(
-					HibernatePersistence.CLASS_NAMES
+					AvailableSettings.CLASS_NAMES
 			);
 			addNamedAnnotatedClasses( this, classNames, workingVars );
 		}
 		//TODO apparently only used for Tests, get rid of it?
-		if ( workingVars.containsKey( HibernatePersistence.LOADED_CLASSES ) ) {
-			Collection<Class> classes = (Collection<Class>) workingVars.get( HibernatePersistence.LOADED_CLASSES );
+		if ( workingVars.containsKey( AvailableSettings.LOADED_CLASSES ) ) {
+			Collection<Class> classes = (Collection<Class>) workingVars.get( AvailableSettings.LOADED_CLASSES );
 			for ( Class clazz : classes ) {
 				cfg.addAnnotatedClass( clazz );
 			}
 		}
-		if ( workingVars.containsKey( HibernatePersistence.PACKAGE_NAMES ) ) {
+		if ( workingVars.containsKey( AvailableSettings.PACKAGE_NAMES ) ) {
 			Collection<String> packages = (Collection<String>) workingVars.get(
-					HibernatePersistence.PACKAGE_NAMES
+					AvailableSettings.PACKAGE_NAMES
 			);
 			for ( String pkg : packages ) {
 				cfg.addPackage( pkg );
 			}
 		}
-		if ( workingVars.containsKey( HibernatePersistence.XML_FILE_NAMES ) ) {
+		if ( workingVars.containsKey( AvailableSettings.XML_FILE_NAMES ) ) {
 			Collection<String> xmlFiles = (Collection<String>) workingVars.get(
-					HibernatePersistence.XML_FILE_NAMES
+					AvailableSettings.XML_FILE_NAMES
 			);
 			for ( String xmlFile : xmlFiles ) {
 				Boolean useMetaInf = null;
@@ -1002,9 +1002,9 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 				}
 			}
 		}
-		if ( workingVars.containsKey( HibernatePersistence.HBXML_FILES ) ) {
+		if ( workingVars.containsKey( AvailableSettings.HBXML_FILES ) ) {
 			Collection<NamedInputStream> hbmXmlFiles = (Collection<NamedInputStream>) workingVars.get(
-					HibernatePersistence.HBXML_FILES
+					AvailableSettings.HBXML_FILES
 			);
 			for ( NamedInputStream is : hbmXmlFiles ) {
 				try {
@@ -1043,9 +1043,9 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 		preparedProperties.setProperty( Environment.AUTOCOMMIT, "true" );
 		preparedProperties.setProperty( Environment.USE_IDENTIFIER_ROLLBACK, "false" );
 		preparedProperties.setProperty( Environment.FLUSH_BEFORE_COMPLETION, "false" );
-		preparedProperties.setProperty( HibernatePersistence.DISCARD_PC_ON_CLOSE, "false" );
+		preparedProperties.setProperty( AvailableSettings.DISCARD_PC_ON_CLOSE, "false" );
 		if (cfgXmlResource != null) {
-			preparedProperties.setProperty( HibernatePersistence.CFG_FILE, cfgXmlResource );
+			preparedProperties.setProperty( AvailableSettings.CFG_FILE, cfgXmlResource );
 			cfgXmlResource = null;
 		}
 
@@ -1061,7 +1061,7 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 			transactionType = PersistenceUnitTransactionType.RESOURCE_LOCAL;
 		}
 		defineTransactionType(
-				preparedProperties.getProperty( HibernatePersistence.TRANSACTION_TYPE ),
+				preparedProperties.getProperty( AvailableSettings.TRANSACTION_TYPE ),
 				workingVars
 		);
 		boolean hasTxStrategy = StringHelper.isNotEmpty(
@@ -1094,8 +1094,8 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 
 	private void setCacheStrategy(String propertyKey, Map properties, boolean isClass, Map workingVars) {
 		String role = propertyKey.substring(
-				( isClass ? HibernatePersistence.CLASS_CACHE_PREFIX
-						.length() : HibernatePersistence.COLLECTION_CACHE_PREFIX.length() )
+				( isClass ? AvailableSettings.CLASS_CACHE_PREFIX
+						.length() : AvailableSettings.COLLECTION_CACHE_PREFIX.length() )
 						+ 1
 		);
 		//dot size added
@@ -1104,7 +1104,7 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 		if ( !params.hasMoreTokens() ) {
 			StringBuilder error = new StringBuilder( "Illegal usage of " );
 			error.append(
-					isClass ? HibernatePersistence.CLASS_CACHE_PREFIX : HibernatePersistence.COLLECTION_CACHE_PREFIX
+					isClass ? AvailableSettings.CLASS_CACHE_PREFIX : AvailableSettings.COLLECTION_CACHE_PREFIX
 			);
 			error.append( ": " ).append( propertyKey ).append( " " ).append( value );
 			throw new PersistenceException( getExceptionHeader() + error.toString() );
@@ -1128,17 +1128,17 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 
 	private void addSecurity(List<String> keys, Map properties, Map workingVars) {
 		log.debug( "Adding security" );
-		if ( !properties.containsKey( HibernatePersistence.JACC_CONTEXT_ID ) ) {
+		if ( !properties.containsKey( AvailableSettings.JACC_CONTEXT_ID ) ) {
 			throw new PersistenceException( getExceptionHeader() +
 					"Entities have been configured for JACC, but "
-							+ HibernatePersistence.JACC_CONTEXT_ID
+							+ AvailableSettings.JACC_CONTEXT_ID
 							+ " has not been set"
 			);
 		}
-		String contextId = (String) properties.get( HibernatePersistence.JACC_CONTEXT_ID );
+		String contextId = (String) properties.get( AvailableSettings.JACC_CONTEXT_ID );
 		setProperty( Environment.JACC_CONTEXTID, contextId );
 
-		int roleStart = HibernatePersistence.JACC_PREFIX.length() + 1;
+		int roleStart = AvailableSettings.JACC_PREFIX.length() + 1;
 
 		for ( String key : keys ) {
 			JACCConfiguration jaccCfg = new JACCConfiguration( contextId );
@@ -1151,7 +1151,7 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 			}
 			catch (IndexOutOfBoundsException e) {
 				throw new PersistenceException( getExceptionHeader() +
-						"Illegal usage of " + HibernatePersistence.JACC_PREFIX + ": " + key );
+						"Illegal usage of " + AvailableSettings.JACC_PREFIX + ": " + key );
 			}
 		}
 	}

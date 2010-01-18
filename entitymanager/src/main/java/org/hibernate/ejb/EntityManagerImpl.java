@@ -19,8 +19,6 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-
-//$Id$
 package org.hibernate.ejb;
 
 import java.util.Map;
@@ -63,7 +61,7 @@ public class EntityManagerImpl extends AbstractEntityManagerImpl {
 		this.discardOnClose = discardOnClose;
 		Object localSessionInterceptor = null;
 		if (properties != null) {
-			localSessionInterceptor = properties.get( HibernatePersistence.SESSION_INTERCEPTOR );
+			localSessionInterceptor = properties.get( AvailableSettings.SESSION_INTERCEPTOR );
 		}
 		if ( localSessionInterceptor != null ) {
 			if (localSessionInterceptor instanceof Class) {

@@ -19,8 +19,6 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-
-//$Id$
 package org.hibernate.ejb;
 
 import java.beans.BeanInfo;
@@ -168,15 +166,15 @@ public class EventListenerConfigurator {
 	}
 
 	public void setProperties(Properties properties) {
-		if ( properties.containsKey( HibernatePersistence.JACC_ENABLED ) ) {
+		if ( properties.containsKey( AvailableSettings.JACC_ENABLED ) ) {
 			isSecurity = true;
 		}
 		//override events if needed
 		Enumeration<?> enumeration = properties.propertyNames();
 		while ( enumeration.hasMoreElements() ) {
 			String name = (String) enumeration.nextElement();
-			if ( name.startsWith( HibernatePersistence.EVENT_LISTENER_PREFIX ) ) {
-				String type = name.substring( HibernatePersistence.EVENT_LISTENER_PREFIX.length() + 1 );
+			if ( name.startsWith( AvailableSettings.EVENT_LISTENER_PREFIX ) ) {
+				String type = name.substring( AvailableSettings.EVENT_LISTENER_PREFIX.length() + 1 );
 				StringTokenizer st = new StringTokenizer( properties.getProperty( name ), " ,", false );
 				List<String> listeners = new ArrayList<String>();
 				while ( st.hasMoreElements() ) {

@@ -73,7 +73,6 @@ import org.hibernate.engine.SessionImplementor;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.transaction.TransactionFactory;
 import org.hibernate.transform.BasicTransformerAdapter;
-import org.hibernate.transform.ResultTransformer;
 import org.hibernate.util.CollectionHelper;
 import org.hibernate.util.JTAHelper;
 
@@ -85,8 +84,6 @@ import org.hibernate.util.JTAHelper;
 @SuppressWarnings("unchecked")
 public abstract class AbstractEntityManagerImpl implements HibernateEntityManagerImplementor, Serializable {
 	private static final Logger log = LoggerFactory.getLogger( AbstractEntityManagerImpl.class );
-	private static final String PESSIMISTICLOCKSCOPE  = "javax.persistence.lock.scope";
-	private static final String PESSIMISTICLOCKTIMEOUT= "javax.persistence.lock.timeout";
 
 	private EntityManagerFactoryImpl entityManagerFactory;
 	protected transient TransactionImpl tx = new TransactionImpl( this );
@@ -688,12 +685,12 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 		lockOptions.setLockMode(getLockMode(lockModeType));
 		if ( properties != null ) {
 			// lockOptions scope will default to false (PessimisticLockScope.NORMAL)
-			Object value = properties.get(PESSIMISTICLOCKSCOPE);
+			Object value = properties.get( AvailableSettings.LOCK_SCOPE );
 			if ( value instanceof String && PessimisticLockScope.valueOf((String) value) == PessimisticLockScope.EXTENDED) {
 				lockOptions.setScope(true);
 			}
 			// lockOptions timeout will default to LockOptions.FOREVER_WAIT
-			value = properties.get(PESSIMISTICLOCKTIMEOUT);
+			value = properties.get( AvailableSettings.LOCK_TIMEOUT );
 			if ( value instanceof String ) {
 				int timeout = Integer.parseInt((String) value);
 				if ( timeout < 0 ) {

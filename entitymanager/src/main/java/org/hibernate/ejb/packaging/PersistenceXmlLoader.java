@@ -1,9 +1,10 @@
-// $Id:$
 /*
- * Copyright (c) 2009, Red Hat Middleware LLC or third-party contributors as
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -40,6 +41,10 @@ import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 import javax.xml.validation.Validator;
 
+import org.hibernate.ejb.AvailableSettings;
+import org.hibernate.ejb.util.ConfigurationHelper;
+import org.hibernate.util.StringHelper;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
@@ -50,10 +55,6 @@ import org.xml.sax.EntityResolver;
 import org.xml.sax.ErrorHandler;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXParseException;
-
-import org.hibernate.ejb.HibernatePersistence;
-import org.hibernate.ejb.util.ConfigurationHelper;
-import org.hibernate.util.StringHelper;
 
 /**
  * Handler for persistence.xml files.
@@ -179,20 +180,20 @@ public final class PersistenceXmlLoader {
 					PersistenceMetadata metadata = parsePersistenceUnit( element );
 					metadata.setVersion(version);
 					//override properties of metadata if needed
-					if ( overrides.containsKey( HibernatePersistence.PROVIDER ) ) {
-						String provider = (String) overrides.get( HibernatePersistence.PROVIDER );
+					if ( overrides.containsKey( AvailableSettings.PROVIDER ) ) {
+						String provider = (String) overrides.get( AvailableSettings.PROVIDER );
 						metadata.setProvider( provider );
 					}
-					if ( overrides.containsKey( HibernatePersistence.TRANSACTION_TYPE ) ) {
-						String transactionType = (String) overrides.get( HibernatePersistence.TRANSACTION_TYPE );
+					if ( overrides.containsKey( AvailableSettings.TRANSACTION_TYPE ) ) {
+						String transactionType = (String) overrides.get( AvailableSettings.TRANSACTION_TYPE );
 						metadata.setTransactionType( PersistenceXmlLoader.getTransactionType( transactionType ) );
 					}
-					if ( overrides.containsKey( HibernatePersistence.JTA_DATASOURCE ) ) {
-						String dataSource = (String) overrides.get( HibernatePersistence.JTA_DATASOURCE );
+					if ( overrides.containsKey( AvailableSettings.JTA_DATASOURCE ) ) {
+						String dataSource = (String) overrides.get( AvailableSettings.JTA_DATASOURCE );
 						metadata.setJtaDatasource( dataSource );
 					}
-					if ( overrides.containsKey( HibernatePersistence.NON_JTA_DATASOURCE ) ) {
-						String dataSource = (String) overrides.get( HibernatePersistence.NON_JTA_DATASOURCE );
+					if ( overrides.containsKey( AvailableSettings.NON_JTA_DATASOURCE ) ) {
+						String dataSource = (String) overrides.get( AvailableSettings.NON_JTA_DATASOURCE );
 						metadata.setNonJtaDatasource( dataSource );
 					}
 					/*

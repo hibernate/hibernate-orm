@@ -1,4 +1,26 @@
-//$Id$
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Inc.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ */
 package org.hibernate.ejb.test;
 
 import java.io.IOException;
@@ -16,6 +38,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.ejb.AvailableSettings;
 import org.hibernate.ejb.HibernatePersistence;
 
 
@@ -125,16 +148,16 @@ public abstract class TestCase extends junit.framework.TestCase {
 		for ( Class clazz : getAnnotatedClasses() ) {
 			classes.add( clazz );
 		}
-		config.put( HibernatePersistence.LOADED_CLASSES, classes );
+		config.put( AvailableSettings.LOADED_CLASSES, classes );
 		for ( Map.Entry<Class, String> entry : getCachedClasses().entrySet() ) {
 			config.put(
-					HibernatePersistence.CLASS_CACHE_PREFIX + "." + entry.getKey().getName(),
+					AvailableSettings.CLASS_CACHE_PREFIX + "." + entry.getKey().getName(),
 					entry.getValue()
 			);
 		}
 		for ( Map.Entry<String, String> entry : getCachedCollections().entrySet() ) {
 			config.put(
-					HibernatePersistence.COLLECTION_CACHE_PREFIX + "." + entry.getKey(),
+					AvailableSettings.COLLECTION_CACHE_PREFIX + "." + entry.getKey(),
 					entry.getValue()
 			);
 		}
@@ -143,7 +166,7 @@ public abstract class TestCase extends junit.framework.TestCase {
 			for ( String dd : getEjb3DD() ) {
 				dds.add( dd );
 			}
-			config.put( HibernatePersistence.XML_FILE_NAMES, dds );
+			config.put( AvailableSettings.XML_FILE_NAMES, dds );
 		}
 		return config;
 	}

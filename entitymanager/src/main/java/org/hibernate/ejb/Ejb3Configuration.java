@@ -187,6 +187,24 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 		else if ( StringHelper.isNotEmpty( metadata.getNonJtaDatasource() ) ) {
 			this.setProperty( Environment.DATASOURCE, metadata.getNonJtaDatasource() );
 		}
+		else {
+			final String driver = (String) metadata.getProps().get( AvailableSettings.JDBC_DRIVER );
+			if ( StringHelper.isNotEmpty( driver ) ) {
+				this.setProperty( Environment.DRIVER, driver );
+			}
+			final String url = (String) metadata.getProps().get( AvailableSettings.JDBC_URL );
+			if ( StringHelper.isNotEmpty( url ) ) {
+				this.setProperty( Environment.URL, url );
+			}
+			final String user = (String) metadata.getProps().get( AvailableSettings.JDBC_USER );
+			if ( StringHelper.isNotEmpty( user ) ) {
+				this.setProperty( Environment.USER, user );
+			}
+			final String pass = (String) metadata.getProps().get( AvailableSettings.JDBC_PASSWORD );
+			if ( StringHelper.isNotEmpty( pass ) ) {
+				this.setProperty( Environment.PASS, pass );
+			}
+		}
 		defineTransactionType( metadata.getTransactionType(), workingVars );
 		if ( metadata.getClasses().size() > 0 ) {
 			workingVars.put( AvailableSettings.CLASS_NAMES, metadata.getClasses() );

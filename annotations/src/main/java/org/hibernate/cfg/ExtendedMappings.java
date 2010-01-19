@@ -171,4 +171,12 @@ public interface ExtendedMappings extends Mappings {
 	public AnyMetaDef getAnyMetaDef(String name);
 	
 	public boolean isInSecondPass();
+
+	/**
+	 * Return the property annotated with @MapsId("propertyName") if any.
+	 * Null otherwise
+	 */
+	public PropertyData getPropertyAnnotatedWithMapsId(XClass entityType, String propertyName);
+
+	public void addPropertyAnnotatedWithMapsId(XClass entityType, PropertyData property);
 }

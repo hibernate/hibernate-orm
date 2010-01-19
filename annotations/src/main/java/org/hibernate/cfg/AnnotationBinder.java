@@ -56,6 +56,7 @@ import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.MapKey;
 import javax.persistence.MappedSuperclass;
+import javax.persistence.MapsId;
 import javax.persistence.NamedNativeQueries;
 import javax.persistence.NamedNativeQuery;
 import javax.persistence.NamedQueries;
@@ -891,7 +892,7 @@ public final class AnnotationBinder {
 		boolean hasIdentifier = false;
 
 		for ( int index = 0; index < deep; index++ ) {
-			PropertyContainer properyContainer = new PropertyContainer( classesToProcess.get( index ) );
+			PropertyContainer properyContainer = new PropertyContainer( classesToProcess.get( index ), clazzToProcess );
 			boolean currentHasIdentifier = addElementsOfClass( elements, accessType, properyContainer, mappings );
 			hasIdentifier = hasIdentifier || currentHasIdentifier;
 		}
@@ -1116,7 +1117,7 @@ public final class AnnotationBinder {
 		Collection<XProperty> properties = propertyContainer.getProperties( accessType );
 		for ( XProperty p : properties ) {
 			final boolean currentHasIdentifier = addProperty(
-					propertyContainer.getXClass(), p, elements, accessType.getType(), mappings
+					propertyContainer, p, elements, accessType.getType(), mappings
 			);
 			hasIdentifier = hasIdentifier || currentHasIdentifier;
 		}
@@ -1124,9 +1125,11 @@ public final class AnnotationBinder {
 	}
 
 	private static boolean addProperty(
-			XClass declaringClass, XProperty property, List<PropertyData> annElts,
+			PropertyContainer propertyContainer, XProperty property, List<PropertyData> annElts,
 			String propertyAccessor, ExtendedMappings mappings
 	) {
+		final XClass declaringClass = propertyContainer.getDeclaringClass();
+		final XClass entity = propertyContainer.getEntityAtStake();
 		boolean hasIdentifier;
 		PropertyData propertyAnnotatedElement = new PropertyInferredData(
 				declaringClass, property, propertyAccessor,
@@ -1144,6 +1147,9 @@ public final class AnnotationBinder {
 		else {
 			annElts.add( propertyAnnotatedElement );
 			hasIdentifier = false;
+		}
+		if ( element.isAnnotationPresent( MapsId.class  ) ) {
+			mappings.addPropertyAnnotatedWithMapsId( entity, propertyAnnotatedElement );
 		}
 
 		return hasIdentifier;
@@ -1166,7 +1172,7 @@ public final class AnnotationBinder {
 		 * ordering does not matter
 		 */
 		Ejb3Column[] columns = null;
-		Ejb3JoinColumn[] joinColumns = null;
+
 		log.debug(
 				"Processing annotations of {}.{}", propertyHolder.getEntityName(), inferredData.getPropertyName()
 		);
@@ -1183,36 +1189,11 @@ public final class AnnotationBinder {
 			}
 			return;
 		}
+		Ejb3JoinColumn[] joinColumns = buildExplicitJoinColumns(
+				propertyHolder, property, inferredData, entityBinder, mappings
+		);
 
-		//process @JoinColumn(s) before @Column(s) to handle collection of entities properly
-		{
-			JoinColumn[] anns = null;
 
-			if ( property.isAnnotationPresent( JoinColumn.class ) ) {
-				anns = new JoinColumn[] { property.getAnnotation( JoinColumn.class ) };
-			}
-			else if ( property.isAnnotationPresent( JoinColumns.class ) ) {
-				JoinColumns ann = property.getAnnotation( JoinColumns.class );
-				anns = ann.value();
-				int length = anns.length;
-				if ( length == 0 ) {
-					throw new AnnotationException( "Cannot bind an empty @JoinColumns" );
-				}
-			}
-			if ( anns != null ) {
-				joinColumns = Ejb3JoinColumn.buildJoinColumns(
-						anns, null, entityBinder.getSecondaryTables(),
-						propertyHolder, inferredData.getPropertyName(), mappings
-				);
-			}
-			else if ( property.isAnnotationPresent( JoinColumnsOrFormulas.class ) ) {
-				JoinColumnsOrFormulas ann = property.getAnnotation( JoinColumnsOrFormulas.class );
-				joinColumns = Ejb3JoinColumn.buildJoinColumnsOrFormulas(
-						ann, null, entityBinder.getSecondaryTables(),
-						propertyHolder, inferredData.getPropertyName(), mappings
-				);
-			}
-		}
 		if ( property.isAnnotationPresent( Column.class ) || property.isAnnotationPresent( Formula.class ) ) {
 			Column ann = property.getAnnotation( Column.class );
 			Formula formulaAnn = property.getAnnotation( Formula.class );
@@ -1234,30 +1215,9 @@ public final class AnnotationBinder {
 				( property.isAnnotationPresent( ManyToOne.class )
 						|| property.isAnnotationPresent( OneToOne.class ) )
 				) {
-			JoinTable joinTableAnn = propertyHolder.getJoinTable( property );
-			if ( joinTableAnn != null ) {
-				joinColumns = Ejb3JoinColumn.buildJoinColumns(
-						joinTableAnn.inverseJoinColumns(), null, entityBinder.getSecondaryTables(),
-						propertyHolder, inferredData.getPropertyName(), mappings
-				);
-				if ( StringHelper.isEmpty( joinTableAnn.name() ) ) {
-					throw new AnnotationException(
-							"JoinTable.name() on a @ToOne association has to be explicit: "
-									+ StringHelper.qualify( propertyHolder.getPath(), inferredData.getPropertyName() )
-					);
-				}
-			}
-			else {
-				OneToOne oneToOneAnn = property.getAnnotation( OneToOne.class );
-				String mappedBy = oneToOneAnn != null ?
-						oneToOneAnn.mappedBy() :
-						null;
-				joinColumns = Ejb3JoinColumn.buildJoinColumns(
-						(JoinColumn[]) null,
-						mappedBy, entityBinder.getSecondaryTables(),
-						propertyHolder, inferredData.getPropertyName(), mappings
-				);
-			}
+			joinColumns = buildDefaultJoinColumnsForXToOne(
+					propertyHolder, property, inferredData, entityBinder, mappings
+			);
 		}
 		else if ( joinColumns == null &&
 				( property.isAnnotationPresent( OneToMany.class )
@@ -1843,6 +1803,69 @@ public final class AnnotationBinder {
 		}
 	}
 
+	private static Ejb3JoinColumn[] buildDefaultJoinColumnsForXToOne(PropertyHolder propertyHolder, XProperty property, PropertyData inferredData, EntityBinder entityBinder, ExtendedMappings mappings) {
+		Ejb3JoinColumn[] joinColumns;
+		JoinTable joinTableAnn = propertyHolder.getJoinTable( property );
+		if ( joinTableAnn != null ) {
+			joinColumns = Ejb3JoinColumn.buildJoinColumns(
+					joinTableAnn.inverseJoinColumns(), null, entityBinder.getSecondaryTables(),
+					propertyHolder, inferredData.getPropertyName(), mappings
+			);
+			if ( StringHelper.isEmpty( joinTableAnn.name() ) ) {
+				throw new AnnotationException(
+						"JoinTable.name() on a @ToOne association has to be explicit: "
+								+ StringHelper.qualify( propertyHolder.getPath(), inferredData.getPropertyName() )
+				);
+			}
+		}
+		else {
+			OneToOne oneToOneAnn = property.getAnnotation( OneToOne.class );
+			String mappedBy = oneToOneAnn != null ?
+					oneToOneAnn.mappedBy() :
+					null;
+			joinColumns = Ejb3JoinColumn.buildJoinColumns(
+					( JoinColumn[]) null,
+					mappedBy, entityBinder.getSecondaryTables(),
+					propertyHolder, inferredData.getPropertyName(), mappings
+			);
+		}
+		return joinColumns;
+	}
+
+	private static Ejb3JoinColumn[] buildExplicitJoinColumns(PropertyHolder propertyHolder, XProperty property, PropertyData inferredData, EntityBinder entityBinder, ExtendedMappings mappings) {
+		//process @JoinColumn(s) before @Column(s) to handle collection of entities properly
+		Ejb3JoinColumn[] joinColumns = null;
+		{
+			JoinColumn[] anns = null;
+
+			if ( property.isAnnotationPresent( JoinColumn.class ) ) {
+				anns = new JoinColumn[] { property.getAnnotation( JoinColumn.class ) };
+			}
+			else if ( property.isAnnotationPresent( JoinColumns.class ) ) {
+				JoinColumns ann = property.getAnnotation( JoinColumns.class );
+				anns = ann.value();
+				int length = anns.length;
+				if ( length == 0 ) {
+					throw new AnnotationException( "Cannot bind an empty @JoinColumns" );
+				}
+			}
+			if ( anns != null ) {
+				joinColumns = Ejb3JoinColumn.buildJoinColumns(
+						anns, null, entityBinder.getSecondaryTables(),
+						propertyHolder, inferredData.getPropertyName(), mappings
+				);
+			}
+			else if ( property.isAnnotationPresent( JoinColumnsOrFormulas.class ) ) {
+				JoinColumnsOrFormulas ann = property.getAnnotation( JoinColumnsOrFormulas.class );
+				joinColumns = Ejb3JoinColumn.buildJoinColumnsOrFormulas(
+						ann, null, entityBinder.getSecondaryTables(),
+						propertyHolder, inferredData.getPropertyName(), mappings
+				);
+			}
+		}
+		return joinColumns;
+	}
+
 	//TODO move that to collection binder?
 	private static void bindJoinedTableAssociation(
 			XProperty property, ExtendedMappings mappings, EntityBinder entityBinder,
@@ -1979,6 +2002,7 @@ public final class AnnotationBinder {
 				inferredData, propertyHolder, mappings
 		);
 
+		final XClass entityXClass = inferredData.getPropertyClass();
 		List<PropertyData> classElements = new ArrayList<PropertyData>();
 		XClass returnedClassOrElement = inferredData.getClassOrElement();
 
@@ -1989,25 +2013,25 @@ public final class AnnotationBinder {
 		   baseClassElements = new ArrayList<PropertyData>();
 		   baseReturnedClassOrElement = baseInferredData.getClassOrElement();
 		   bindTypeDefs(baseReturnedClassOrElement, mappings);
-	       PropertyContainer propContainer = new PropertyContainer( baseReturnedClassOrElement );
+	       PropertyContainer propContainer = new PropertyContainer( baseReturnedClassOrElement, entityXClass );
 		   addElementsOfClass( baseClassElements, propertyAccessor, propContainer, mappings );
 		}
 
 		//embeddable elements can have type defs
 		bindTypeDefs(returnedClassOrElement, mappings);
-		PropertyContainer propContainer = new PropertyContainer( returnedClassOrElement );
+		PropertyContainer propContainer = new PropertyContainer( returnedClassOrElement, entityXClass );
 		addElementsOfClass( classElements, propertyAccessor, propContainer, mappings);
 
 		//add elements of the embeddable superclass
-		XClass superClass = inferredData.getPropertyClass().getSuperclass();
+		XClass superClass = entityXClass.getSuperclass();
 		while ( superClass != null && superClass.isAnnotationPresent( MappedSuperclass.class ) ) {
 			//FIXME: proper support of typevariables incl var resolved at upper levels
-			propContainer = new PropertyContainer( superClass );
+			propContainer = new PropertyContainer( superClass, entityXClass );
 			addElementsOfClass( classElements, propertyAccessor, propContainer, mappings );
 			superClass = superClass.getSuperclass();
 		}
 		if ( baseClassElements != null ) {
-			if ( !hasIdClassAnnotations( inferredData.getPropertyClass() ) ) {
+			if ( !hasIdClassAnnotations( entityXClass ) ) {
 				for ( int i = 0; i < classElements.size(); i++ ) {
 					classElements.set( i, baseClassElements.get( i ) );  //this works since they are in the same order
 				}
@@ -2082,6 +2106,22 @@ public final class AnnotationBinder {
 			setupComponentTuplizer( property, componentId );
 		}
 		else {
+			final XClass persistentXClass;
+			try {
+				 persistentXClass = mappings.getReflectionManager()
+						.classForName( persistentClassName, AnnotationBinder.class );
+			}
+			catch ( ClassNotFoundException e ) {
+				throw new AssertionFailure( "Persistence class name cannot be converted into a Class", e);
+			}
+			final PropertyData annotatedWithMapsId = mappings.getPropertyAnnotatedWithMapsId( persistentXClass, "" );
+			if ( annotatedWithMapsId != null ) {
+				columns = buildExplicitJoinColumns( propertyHolder, annotatedWithMapsId.getProperty(), annotatedWithMapsId, entityBinder, mappings );
+				if (columns == null) {
+					columns = buildDefaultJoinColumnsForXToOne( propertyHolder, annotatedWithMapsId.getProperty(), annotatedWithMapsId, entityBinder, mappings );
+				}
+			}
+
 			for (Ejb3Column column : columns) {
 				column.forceNotNull(); //this is an id
 			}

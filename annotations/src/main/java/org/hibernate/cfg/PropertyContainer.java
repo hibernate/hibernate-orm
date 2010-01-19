@@ -1,4 +1,4 @@
-// $Id:$
+// $Id$
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
@@ -55,20 +55,26 @@ import org.hibernate.util.StringHelper;
 class PropertyContainer {
 
 	private static final Logger log = LoggerFactory.getLogger( AnnotationBinder.class );
+	private final XClass entityAtStake;
 	private final TreeMap<String, XProperty> fieldAccessMap;
 	private final TreeMap<String, XProperty> propertyAccessMap;
 	private final XClass xClass;
 	private final AccessType explicitClassDefinedAccessType;
 
-	PropertyContainer(XClass clazz) {
+	PropertyContainer(XClass clazz, XClass entityAtStake) {
 		this.xClass = clazz;
+		this.entityAtStake = entityAtStake;
 		fieldAccessMap = initProperties( AccessType.FIELD );
 		propertyAccessMap = initProperties( AccessType.PROPERTY );
 		explicitClassDefinedAccessType = determineClassDefinedAccessStrategy();
 		checkForJpaAccess();
 	}
 
-	public XClass getXClass() {
+	public XClass getEntityAtStake() {
+		return entityAtStake;
+	}
+
+	public XClass getDeclaringClass() {
 		return xClass;
 	}
 

@@ -46,6 +46,7 @@ import java.util.StringTokenizer;
 import javax.persistence.Embeddable;
 import javax.persistence.Entity;
 import javax.persistence.MappedSuperclass;
+import javax.persistence.MapsId;
 
 import org.dom4j.Attribute;
 import org.dom4j.Document;
@@ -64,6 +65,7 @@ import org.hibernate.DuplicateMappingException;
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
 import org.hibernate.MappingException;
+import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.annotations.AnyMetaDef;
 import org.hibernate.annotations.common.reflection.MetadataProvider;
@@ -141,6 +143,7 @@ public class AnnotationConfiguration extends Configuration {
 	private transient ReflectionManager reflectionManager;
 	private boolean isDefaultProcessed = false;
 	private boolean isValidatorNotPresentLogged;
+	private Map<XClass,Map<String,PropertyData>> propertiesAnnotatedWithMapsId;
 
 	public AnnotationConfiguration() {
 		super();
@@ -279,6 +282,7 @@ public class AnnotationConfiguration extends Configuration {
 		namingStrategy = EJB3NamingStrategy.INSTANCE;
 		setEntityResolver( new EJB3DTDEntityResolver() );
 		anyMetaDefs = new HashMap<String, AnyMetaDef>();
+		propertiesAnnotatedWithMapsId = new HashMap<XClass, Map<String,PropertyData>>();
 		reflectionManager = new JavaReflectionManager();
 		( ( MetadataProviderInjector ) reflectionManager ).setMetadataProvider( new JPAMetadataProvider() );
 
@@ -1269,6 +1273,20 @@ public class AnnotationConfiguration extends Configuration {
 
 		public boolean isInSecondPass() {
 			return inSecondPass;
+		}
+
+		public PropertyData getPropertyAnnotatedWithMapsId(XClass entityType, String propertyName) {
+			final Map<String, PropertyData> map = propertiesAnnotatedWithMapsId.get( entityType );
+			return map == null ? null : map.get( propertyName );
+		}
+
+		public void addPropertyAnnotatedWithMapsId(XClass entityType, PropertyData property) {
+			Map<String, PropertyData> map = propertiesAnnotatedWithMapsId.get( entityType );
+			if (map == null) {
+				map = new HashMap<String, PropertyData>();
+				propertiesAnnotatedWithMapsId.put( entityType, map );
+			}
+			map.put( property.getProperty().getAnnotation( MapsId.class ).value(), property );
 		}
 
 		public IdGenerator getGenerator(String name) {

@@ -1455,7 +1455,7 @@ public final class AnnotationBinder {
 				}
 			}
 			bindOneToOne(
-					getCascadeStrategy( ann.cascade(), hibernateCascade, false),
+					getCascadeStrategy( ann.cascade(), hibernateCascade, ann.orphanRemoval()),
 					joinColumns,
 					ann.optional(),
 					getFetchMode( ann.fetch() ),
@@ -2147,6 +2147,10 @@ public final class AnnotationBinder {
 	) {
 		//All FK columns should be in the same table
 		org.hibernate.mapping.ManyToOne value = new org.hibernate.mapping.ManyToOne( columns[0].getTable() );
+		// This is a @OneToOne mapped to a physical o.h.mapping.ManyToOne
+		if ( unique ) {
+			value.markAsLogicalOneToOne();
+		}
 		if ( isDefault( targetEntity, mappings ) ) {
 			value.setReferencedEntityName( inferredData.getClassOrElementName() );
 		}

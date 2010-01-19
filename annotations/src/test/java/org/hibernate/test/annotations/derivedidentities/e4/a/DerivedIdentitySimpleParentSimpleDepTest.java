@@ -2,9 +2,6 @@ package org.hibernate.test.annotations.derivedidentities.e4.a;
 
 import org.hibernate.Session;
 import org.hibernate.test.annotations.TestCase;
-import org.hibernate.test.annotations.derivedidentities.e1.b.Dependent;
-import org.hibernate.test.annotations.derivedidentities.e1.b.DependentId;
-import org.hibernate.test.annotations.derivedidentities.e1.b.Employee;
 import org.hibernate.test.util.SchemaUtil;
 
 /**

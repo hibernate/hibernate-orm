@@ -168,65 +168,83 @@ public class AvailableSettings {
 	 * JAR autodetection artifacts class, hbm
 	 */
 	public static final String AUTODETECTION = "hibernate.archive.autodetection";
+
 	/**
 	 * cfg.xml configuration file used
 	 */
 	public static final String CFG_FILE = "hibernate.ejb.cfgfile";
+
 	/**
 	 * Caching configuration should follow the following pattern
 	 * hibernate.ejb.classcache.<fully.qualified.Classname> usage[, region]
 	 * where usage is the cache strategy used and region the cache region name
 	 */
 	public static final String CLASS_CACHE_PREFIX = "hibernate.ejb.classcache";
+
 	/**
 	 * Caching configuration should follow the following pattern
 	 * hibernate.ejb.collectioncache.<fully.qualified.Classname>.<role> usage[, region]
 	 * where usage is the cache strategy used and region the cache region name
 	 */
 	public static final String COLLECTION_CACHE_PREFIX = "hibernate.ejb.collectioncache";
+
 	/**
 	 * Interceptor class name, the class has to have a no-arg constructor
 	 * the interceptor instance is shared amongst all EntityManager of a given EntityManagerFactory
 	 */
 	public static final String INTERCEPTOR = "hibernate.ejb.interceptor";
+
 	/**
 	 * Interceptor class name, the class has to have a no-arg constructor
 	 */
 	public static final String SESSION_INTERCEPTOR = "hibernate.ejb.interceptor.session_scoped";
+
 	/**
 	 * Naming strategy class name, the class has to have a no-arg constructor
 	 */
 	public static final String NAMING_STRATEGY = "hibernate.ejb.naming_strategy";
+
 	/**
 	 * Event configuration should follow the following pattern
 	 * hibernate.ejb.event.[eventType] f.q.c.n.EventListener1, f.q.c.n.EventListener12 ...
 	 */
 	public static final String EVENT_LISTENER_PREFIX = "hibernate.ejb.event";
+
 	/**
 	 * Enable the class file enhancement
 	 */
 	public static final String USE_CLASS_ENHANCER = "hibernate.ejb.use_class_enhancer";
+
 	/**
 	 * Whether or not discard persistent context on entityManager.close()
 	 * The EJB3 compliant and default choice is false
 	 */
 	public static final String DISCARD_PC_ON_CLOSE = "hibernate.ejb.discard_pc_on_close";
+
 	/**
 	 * Consider this as experimental
 	 * It is not recommended to set up this property, the configuration is stored
 	 * in the JNDI in a serialized form
 	 */
 	public static final String CONFIGURATION_JNDI_NAME = "hibernate.ejb.configuration_jndi_name";
+
+	/**
+	 * Used to detrmine flush mode.
+	 */
+	public static final String FLUSH_MODE = "org.hibernate.flushMode";
+
 	/**
 	 * List of classes names
 	 * Internal use only
 	 */
 	public static final String CLASS_NAMES = "hibernate.ejb.classes";
+
 	/**
 	 * List of annotated packages
 	 * Internal use only
 	 */
 	public static final String PACKAGE_NAMES = "hibernate.ejb.packages";
+
 	/**
 	 * List of classes names
 	 * Internal use only

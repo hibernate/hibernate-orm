@@ -1,3 +1,4 @@
+// $Id:$
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
@@ -23,6 +24,7 @@
  */
 package org.hibernate;
 
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Iterator;
@@ -33,7 +35,7 @@ import java.util.Iterator;
  * 
  * @author Scott Marlow
  */
-public class LockOptions
+public class LockOptions implements Serializable
 {
 	/**
 	 * NO_WAIT timeout value will not block for pessimistic locking
@@ -67,9 +69,7 @@ public class LockOptions
 	private Map /* <String, LockMode> */ lockModesByName = new HashMap();
 
 	public LockOptions() {
-
 	}
-
 
 	public LockOptions( LockMode lockMode) {
 		this.lockMode = lockMode;
@@ -193,5 +193,4 @@ public class LockOptions
 		dest.lockModesByName = new HashMap(from.lockModesByName);
 		return dest;
 	}
-
 }

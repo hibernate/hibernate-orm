@@ -1,10 +1,11 @@
+// $Id:$
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2009 by Red Hat Inc and/or its affiliates or by
- * third-party contributors as indicated by either @author tags or express
- * copyright attribution statements applied by the authors.  All
- * third-party contributions are distributed under license by Red Hat Inc.
+ * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -27,28 +28,31 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import javax.persistence.EntityNotFoundException;
 import javax.persistence.EntityTransaction;
 import javax.persistence.FlushModeType;
 import javax.persistence.LockModeType;
+import javax.persistence.LockTimeoutException;
 import javax.persistence.NoResultException;
 import javax.persistence.NonUniqueResultException;
 import javax.persistence.OptimisticLockException;
 import javax.persistence.PersistenceContextType;
 import javax.persistence.PersistenceException;
 import javax.persistence.PessimisticLockException;
+import javax.persistence.PessimisticLockScope;
 import javax.persistence.Query;
+import javax.persistence.QueryTimeoutException;
 import javax.persistence.TransactionRequiredException;
 import javax.persistence.Tuple;
 import javax.persistence.TupleElement;
 import javax.persistence.TypedQuery;
-import javax.persistence.PessimisticLockScope;
-import javax.persistence.LockTimeoutException;
-import javax.persistence.QueryTimeoutException;
-import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Selection;
 import javax.persistence.metamodel.Metamodel;
 import javax.persistence.spi.PersistenceUnitTransactionType;
@@ -61,36 +65,59 @@ import javax.validation.ConstraintViolationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.hibernate.*;
+import org.hibernate.AssertionFailure;
+import org.hibernate.FlushMode;
+import org.hibernate.HibernateException;
+import org.hibernate.LockMode;
+import org.hibernate.LockOptions;
+import org.hibernate.MappingException;
+import org.hibernate.ObjectDeletedException;
+import org.hibernate.ObjectNotFoundException;
+import org.hibernate.QueryException;
+import org.hibernate.SQLQuery;
+import org.hibernate.Session;
+import org.hibernate.StaleObjectStateException;
+import org.hibernate.StaleStateException;
+import org.hibernate.Transaction;
+import org.hibernate.TransientObjectException;
+import org.hibernate.TypeMismatchException;
+import org.hibernate.UnresolvableObjectException;
 import org.hibernate.cfg.Environment;
+import org.hibernate.ejb.criteria.CriteriaQueryCompiler;
 import org.hibernate.ejb.criteria.ValueHandlerFactory;
 import org.hibernate.ejb.criteria.expression.CompoundSelectionImpl;
 import org.hibernate.ejb.transaction.JoinableCMTTransaction;
 import org.hibernate.ejb.util.ConfigurationHelper;
-import org.hibernate.ejb.criteria.CriteriaQueryCompiler;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.transaction.TransactionFactory;
 import org.hibernate.transform.BasicTransformerAdapter;
-import org.hibernate.util.CollectionHelper;
 import org.hibernate.util.JTAHelper;
 
 /**
  * @author <a href="mailto:gavin@hibernate.org">Gavin King</a>
  * @author Emmanuel Bernard
  * @author Steve Ebersole
+ * @author Hardy Ferentschik
  */
 @SuppressWarnings("unchecked")
 public abstract class AbstractEntityManagerImpl implements HibernateEntityManagerImplementor, Serializable {
 	private static final Logger log = LoggerFactory.getLogger( AbstractEntityManagerImpl.class );
 
+	private static final List<String> entityManagerSpecificProperties = new ArrayList<String>();
+	static {
+		entityManagerSpecificProperties.add( AvailableSettings.LOCK_SCOPE );
+		entityManagerSpecificProperties.add( AvailableSettings.LOCK_TIMEOUT );
+		entityManagerSpecificProperties.add( AvailableSettings.FLUSH_MODE );
+	}
+
 	private EntityManagerFactoryImpl entityManagerFactory;
 	protected transient TransactionImpl tx = new TransactionImpl( this );
 	protected PersistenceContextType persistenceContextType;
-	private FlushModeType flushModeType = FlushModeType.AUTO;
 	private PersistenceUnitTransactionType transactionType;
-	private Map properties;
+	private Map<String, Object> properties;
+	private LockOptions lockOptions;
 
 	protected AbstractEntityManagerImpl(
 			EntityManagerFactoryImpl entityManagerFactory,
@@ -100,7 +127,16 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 		this.entityManagerFactory = entityManagerFactory;
 		this.persistenceContextType = type;
 		this.transactionType = transactionType;
-		this.properties = properties != null ? properties : CollectionHelper.EMPTY_MAP;
+
+		this.lockOptions = new LockOptions( );
+		this.properties = new HashMap<String, Object>();
+		if(properties != null) {
+			for ( String key : entityManagerSpecificProperties ) {
+				if ( properties.containsKey( key ) ) {
+					this.properties.put( key, properties.get( key ) );
+				}
+			}
+		}
 	}
 
 	protected void postInit() {
@@ -108,11 +144,65 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 		if ( PersistenceUnitTransactionType.JTA.equals( transactionType ) ) {
 			joinTransaction( true );
 		}
-		Object flushMode = properties.get( "org.hibernate.flushMode" );
-		if ( flushMode != null ) {
-			getSession().setFlushMode( ConfigurationHelper.getFlushMode( flushMode ) );
+
+		setDefaultProperties();
+		applyProperties();
+	}
+
+	private void applyProperties() {
+		getSession().setFlushMode( ConfigurationHelper.getFlushMode( properties.get( AvailableSettings.FLUSH_MODE ) ) );
+		setLockOptions(this.properties, this.lockOptions);
+	}
+
+	private void setLockOptions(Map<String, Object> props, LockOptions options) {
+		Object lockScope = props.get( AvailableSettings.LOCK_SCOPE );
+		if ( lockScope instanceof String && PessimisticLockScope.valueOf( ( String ) lockScope ) == PessimisticLockScope.EXTENDED ) {
+			options.setScope( true );
 		}
-		this.properties = null;
+		else if ( lockScope instanceof PessimisticLockScope ) {
+			boolean extended = PessimisticLockScope.EXTENDED.equals( ( PessimisticLockScope ) lockScope );
+			options.setScope( extended );
+		}
+		else {
+			throw new PersistenceException( "Unable to parse " + AvailableSettings.LOCK_SCOPE + ": " + lockScope );
+		}
+
+		Object lockTimeout = props.get( AvailableSettings.LOCK_TIMEOUT );
+		int timeout;
+		if ( lockTimeout instanceof String ) {
+			timeout = Integer.parseInt( ( String ) lockTimeout );
+		}
+		else if ( lockTimeout instanceof Integer ) {
+			timeout = ( Integer ) lockTimeout;
+		}
+		else {
+			throw new PersistenceException( "Unable to parse " + AvailableSettings.LOCK_TIMEOUT + ": " + lockTimeout );
+		}
+		if ( timeout < 0 ) {
+			options.setTimeOut( LockOptions.WAIT_FOREVER );
+		}
+		else if ( timeout == 0 ) {
+			options.setTimeOut( LockOptions.NO_WAIT );
+		}
+		else {
+			options.setTimeOut( timeout );
+		}
+	}
+
+	/**
+	 * Sets the default property values for the properties the entity manager supports and which are not already explicitly
+	 * set.
+	 */
+	private void setDefaultProperties() {
+		if (properties.get( AvailableSettings.FLUSH_MODE ) == null) {
+			properties.put( AvailableSettings.FLUSH_MODE, getSession().getFlushMode().toString() );
+		}
+		if (properties.get( AvailableSettings.LOCK_SCOPE ) == null) {
+			this.properties.put( AvailableSettings.LOCK_SCOPE, PessimisticLockScope.EXTENDED.name() );
+		}
+		if (properties.get( AvailableSettings.LOCK_TIMEOUT ) == null) {
+			properties.put( AvailableSettings.LOCK_TIMEOUT, LockOptions.WAIT_FOREVER );
+		}
 	}
 
 	public Query createQuery(String jpaqlString) {
@@ -328,7 +418,6 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 		}
 	}
 
-
 	public Query createNativeQuery(String sqlString) {
 		try {
 			SQLQuery q = getSession().createSQLQuery( sqlString );
@@ -397,9 +486,12 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 	public <A> A find(Class<A> entityClass, Object  primaryKey, LockModeType lockModeType, Map<String, Object> properties) {
 		LockOptions lockOptions = null;
 		try {
-			if ( lockModeType != null )
-				return ( A ) getSession().get( entityClass, ( Serializable ) primaryKey,
-					( lockOptions = getLockRequest(lockModeType, properties) ) );
+			if ( lockModeType != null ) {
+				return ( A ) getSession().get(
+						entityClass, ( Serializable ) primaryKey,
+						getLockRequest( lockModeType, properties )
+				);
+			}
 			else
 				return ( A ) getSession().get( entityClass, ( Serializable ) primaryKey );
 		}
@@ -530,17 +622,21 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 		if ( !contains( entity ) ) {
 			throw new IllegalArgumentException( "entity not in the persistence context" );
 		}
-		return this.getLockModeType(getSession().getCurrentLockMode(entity));
+		return getLockModeType(getSession().getCurrentLockMode(entity));
 	}
 
 	public void setProperty(String s, Object o) {
-		//FIXME
-		//To change body of implemented methods use File | Settings | File Templates.
+		if ( entityManagerSpecificProperties.contains( s ) ) {
+			properties.put( s, o );
+			applyProperties();
+		}
+		else {
+			log.debug( "Trying to set a property which is not supported on entity manager level" );
+		}
 	}
 
 	public Map<String, Object> getProperties() {
-		//FIXME
-		return null;  //To change body of implemented methods use File | Settings | File Templates.
+		return Collections.unmodifiableMap( properties );
 	}
 
 	public void flush() {
@@ -548,7 +644,6 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 			if ( !isTransactionInProgress() ) {
 				throw new TransactionRequiredException( "no transaction is in progress" );
 			}
-			//adjustFlushMode();
 			getSession().flush();
 		}
 		catch ( RuntimeException e ) {
@@ -606,7 +701,6 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 	}
 
 	public void setFlushMode(FlushModeType flushModeType) {
-		this.flushModeType = flushModeType;
 		if ( flushModeType == FlushModeType.AUTO ) {
 			getSession().setFlushMode( FlushMode.AUTO );
 		}
@@ -619,7 +713,6 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 	}
 
 	public void clear() {
-		//adjustFlushMode();
 		try {
 			getSession().clear();
 		}
@@ -646,16 +739,15 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 	public FlushModeType getFlushMode() {
 		FlushMode mode = getSession().getFlushMode();
 		if ( mode == FlushMode.AUTO ) {
-			this.flushModeType = FlushModeType.AUTO;
+			return FlushModeType.AUTO;
 		}
 		else if ( mode == FlushMode.COMMIT ) {
-			this.flushModeType = FlushModeType.COMMIT;
+			return FlushModeType.COMMIT;
 		}
 		else {
+			// otherwise this is an unknown mode for EJB3
 			return null;
 		}
-		//otherwise this is an unknown mode for EJB3
-		return flushModeType;
 	}
 
 	public void lock(Object entity, LockModeType lockMode) {
@@ -668,7 +760,6 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 			if ( !isTransactionInProgress() ) {
 				throw new TransactionRequiredException( "no transaction is in progress" );
 			}
-			//adjustFlushMode();
 			if ( !contains( entity ) ) {
 				throw new IllegalArgumentException( "entity not in the persistence context" );
 			}
@@ -677,36 +768,19 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 		catch ( HibernateException he ) {
 			throw convert( he , lockOptions);
 		}
-
 	}
 
 	public LockOptions getLockRequest(LockModeType lockModeType, Map<String, Object> properties) {
 		LockOptions lockOptions = new LockOptions();
-		lockOptions.setLockMode(getLockMode(lockModeType));
+		LockOptions.copy( this.lockOptions, lockOptions );
+		lockOptions.setLockMode( getLockMode( lockModeType ) );
 		if ( properties != null ) {
-			// lockOptions scope will default to false (PessimisticLockScope.NORMAL)
-			Object value = properties.get( AvailableSettings.LOCK_SCOPE );
-			if ( value instanceof String && PessimisticLockScope.valueOf((String) value) == PessimisticLockScope.EXTENDED) {
-				lockOptions.setScope(true);
-			}
-			// lockOptions timeout will default to LockOptions.FOREVER_WAIT
-			value = properties.get( AvailableSettings.LOCK_TIMEOUT );
-			if ( value instanceof String ) {
-				int timeout = Integer.parseInt((String) value);
-				if ( timeout < 0 ) {
-					lockOptions.setTimeOut(LockOptions.WAIT_FOREVER);
-				}
-				else if( timeout == 0 ) {
-					lockOptions.setTimeOut(LockOptions.NO_WAIT);
-				}
-				else {
-					lockOptions.setTimeOut(timeout);
-				}
-			}
+			setLockOptions( properties, lockOptions );
 		}
 		return lockOptions;
 	}
 
+	@SuppressWarnings("deprecation")
 	private static LockModeType getLockModeType(LockMode lockMode) {
 		if ( lockMode == LockMode.NONE )
 			return LockModeType.NONE;

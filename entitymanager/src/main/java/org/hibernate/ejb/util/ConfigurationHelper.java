@@ -78,7 +78,6 @@ public abstract class ConfigurationHelper {
 			default:
 				throw new AssertionFailure("Unknown FlushModeType: " + flushMode);
 		}
-
 	}
 
 	public static Integer getInteger(Object value) {

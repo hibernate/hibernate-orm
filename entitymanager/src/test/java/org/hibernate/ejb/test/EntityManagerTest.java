@@ -1,4 +1,27 @@
 //$Id$
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Inc.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ */
 package org.hibernate.ejb.test;
 
 import java.io.ByteArrayInputStream;
@@ -10,11 +33,13 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import javax.persistence.EntityManager;
+import javax.persistence.EntityNotFoundException;
 import javax.persistence.FlushModeType;
 import javax.persistence.Query;
 
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
+import org.hibernate.ejb.AvailableSettings;
 import org.hibernate.ejb.HibernateEntityManager;
 import org.hibernate.ejb.HibernateEntityManagerFactory;
 import org.hibernate.stat.Statistics;
@@ -25,7 +50,7 @@ import org.hibernate.stat.Statistics;
 public class EntityManagerTest extends TestCase {
 
 	public Class[] getAnnotatedClasses() {
-		return new Class[]{
+		return new Class[] {
 				Item.class,
 				Distributor.class,
 				Wallet.class
@@ -44,54 +69,7 @@ public class EntityManagerTest extends TestCase {
 		return result;
 	}
 
-	// EM TRANSACTION
-//	public void testEntityManager() {
-//
-//		Item item = new Item( "Mouse", "Micro$oft mouse" );
-//
-//		EntityManager em = getEntityManager();
-//		em.getTransaction().begin();
-//		em.persist( item );
-//		assertTrue( em.contains( item ) );
-//		em.getTransaction().commit();
-//
-//		assertFalse( em.contains( item ) );
-//
-//		em.getTransaction().begin();
-//		item = (Item) em.createQuery( "from Item where descr like 'M%'" ).getSingleResult();
-//		assertNotNull( item );
-//		assertEquals( "Micro$oft mouse", item.getDescr() );
-//		item.setDescr( "Micro$oft wireless mouse" );
-//		assertTrue( em.contains( item ) );
-//		em.getTransaction().commit();
-//
-//		assertFalse( em.contains( item ) );
-//
-//		em.getTransaction().begin();
-//		item = (Item) em.find( Item.class, "Mouse" );
-//		assertNotNull( item );
-//		em.getTransaction().commit();
-//
-//		item = em.find( Item.class, "Mouse" );
-//		assertFalse( em.contains( item ) );
-//
-//		item = (Item) em.createQuery( "from Item where descr like 'M%'" ).getSingleResult();
-//		assertNotNull( item );
-//		assertFalse( em.contains( item ) );
-//
-//		em.getTransaction().begin();
-//		item = em.find( Item.class, "Mouse" );
-//		assertNotNull( item );
-//		assertTrue( em.contains( item ) );
-//		assertEquals( "Micro$oft wireless mouse", item.getDescr() );
-//		em.remove( item );
-//		em.remove( item );//second should be a no-op
-//		em.getTransaction().commit();
-//
-//		em.close();
-//	}
-
-	public void testExtendedEntityManager() {
+	public void testEntityManager() {
 
 		Item item = new Item( "Mouse", "Micro$oft mouse" );
 
@@ -104,7 +82,7 @@ public class EntityManagerTest extends TestCase {
 		assertTrue( em.contains( item ) );
 
 		em.getTransaction().begin();
-		Item item1 = (Item) em.createQuery( "select i from Item i where descr like 'M%'" ).getSingleResult();
+		Item item1 = ( Item ) em.createQuery( "select i from Item i where descr like 'M%'" ).getSingleResult();
 		assertNotNull( item1 );
 		assertSame( item, item1 );
 		item.setDescr( "Micro$oft wireless mouse" );
@@ -123,7 +101,7 @@ public class EntityManagerTest extends TestCase {
 		assertSame( item, item1 );
 		assertTrue( em.contains( item ) );
 
-		item1 = (Item) em.createQuery( "select i from Item i where descr like 'M%'" ).getSingleResult();
+		item1 = ( Item ) em.createQuery( "select i from Item i where descr like 'M%'" ).getSingleResult();
 		assertNotNull( item1 );
 		assertSame( item, item1 );
 		assertTrue( em.contains( item ) );
@@ -144,7 +122,7 @@ public class EntityManagerTest extends TestCase {
 		res.setName( "Bruce" );
 		item.setDistributors( new HashSet<Distributor>() );
 		item.getDistributors().add( res );
-		Statistics stats = ( (HibernateEntityManagerFactory) factory ).getSessionFactory().getStatistics();
+		Statistics stats = ( ( HibernateEntityManagerFactory ) factory ).getSessionFactory().getStatistics();
 		stats.clear();
 		stats.setStatisticsEnabled( true );
 
@@ -191,9 +169,11 @@ public class EntityManagerTest extends TestCase {
 			em.contains( nonManagedObject );
 			fail( "Should have raised an exception" );
 		}
-		catch (IllegalArgumentException iae) {
+		catch ( IllegalArgumentException iae ) {
 			//success
-			if ( em.getTransaction() != null ) em.getTransaction().rollback();
+			if ( em.getTransaction() != null ) {
+				em.getTransaction().rollback();
+			}
 		}
 		finally {
 			em.close();
@@ -232,7 +212,7 @@ public class EntityManagerTest extends TestCase {
 		EntityManager em = getOrCreateEntityManager();
 		em.setFlushMode( FlushModeType.COMMIT );
 		assertEquals( FlushModeType.COMMIT, em.getFlushMode() );
-		( (HibernateEntityManager) em ).getSession().setFlushMode( FlushMode.ALWAYS );
+		( ( HibernateEntityManager ) em ).getSession().setFlushMode( FlushMode.ALWAYS );
 		assertNull( em.getFlushMode() );
 		em.close();
 	}
@@ -261,7 +241,7 @@ public class EntityManagerTest extends TestCase {
 			Query query = em.createQuery( "SELECT p FETCH JOIN p.distributors FROM Item p" );
 			query.getSingleResult();
 		}
-		catch (IllegalArgumentException e) {
+		catch ( IllegalArgumentException e ) {
 			ByteArrayOutputStream stream = new ByteArrayOutputStream();
 			ObjectOutput out = new ObjectOutputStream( stream );
 			out.writeObject( e );
@@ -270,7 +250,7 @@ public class EntityManagerTest extends TestCase {
 			stream.close();
 			ByteArrayInputStream byteIn = new ByteArrayInputStream( serialized );
 			ObjectInputStream in = new ObjectInputStream( byteIn );
-			IllegalArgumentException deserializedException = (IllegalArgumentException) in.readObject();
+			IllegalArgumentException deserializedException = ( IllegalArgumentException ) in.readObject();
 			in.close();
 			byteIn.close();
 			assertNull( deserializedException.getCause().getCause() );
@@ -289,7 +269,7 @@ public class EntityManagerTest extends TestCase {
 		stream.close();
 		ByteArrayInputStream byteIn = new ByteArrayInputStream( serialized );
 		ObjectInputStream in = new ObjectInputStream( byteIn );
-		HibernateException deserializedException = (HibernateException) in.readObject();
+		HibernateException deserializedException = ( HibernateException ) in.readObject();
 		in.close();
 		byteIn.close();
 		assertNotNull( "Arbitrary exceptions nullified", deserializedException.getCause() );
@@ -307,30 +287,78 @@ public class EntityManagerTest extends TestCase {
 	}
 
 	//EJB-9
-//	public void testGet() throws Exception {
-//		EntityManager em = getEntityManager();
-//		em.getTransaction().begin();
-//		Item item = (Item) em.get(Item.class, "nonexistentone");
-//		try {
-//			item.getDescr();
-//			em.getTransaction().commit();
-//			fail("Object with wrong id should have failed");
-//		}
-//		catch (EntityNotFoundException e) {
-//			//success
-//			if (em.getTransaction() != null) em.getTransaction().rollback();
-//		}
-//		finally {
-//			em.close();
-//		}
-//	}
-
-	public EntityManagerTest() {
-		super();
+	public void testGet() throws Exception {
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		Item item = ( Item ) em.getReference( Item.class, "nonexistentone" );
+		try {
+			item.getDescr();
+			em.getTransaction().commit();
+			fail( "Object with wrong id should have failed" );
+		}
+		catch ( EntityNotFoundException e ) {
+			//success
+			if ( em.getTransaction() != null ) {
+				em.getTransaction().rollback();
+			}
+		}
+		finally {
+			em.close();
+		}
 	}
 
-	public EntityManagerTest(String arg0) {
-		super( arg0 );
+	public void testGetProperties() throws Exception {
+		EntityManager em = getOrCreateEntityManager();
+		Map<String, Object> properties = em.getProperties();
+		assertNotNull( properties );
+		try {
+			properties.put( "foo", "bar" );
+			fail();
+		}
+		catch ( UnsupportedOperationException e ) {
+			// success
+		}
+
+		assertTrue( properties.containsKey( AvailableSettings.FLUSH_MODE ) );
 	}
 
+	public void testSetProperty() throws Exception {
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		Wallet wallet = new Wallet();
+		wallet.setSerial( "000" );
+		em.persist( wallet );
+		em.getTransaction().commit();
+
+		em.clear();
+		assertEquals( em.getProperties().get( AvailableSettings.FLUSH_MODE ), "AUTO" );
+		assertNotNull(
+				"With default settings the entity should be persisted on commit.",
+				em.find( Wallet.class, wallet.getSerial() )
+		);
+
+		em.getTransaction().begin();
+		wallet = em.merge( wallet );
+		em.remove( wallet );
+		em.getTransaction().commit();
+
+		em.clear();
+		assertNull( "The entity should have been removed.", em.find( Wallet.class, wallet.getSerial() ) );
+
+		em.setProperty( "org.hibernate.flushMode", "MANUAL" +
+				"" );
+		em.getTransaction().begin();
+		wallet = new Wallet();
+		wallet.setSerial( "000" );
+		em.persist( wallet );
+		em.getTransaction().commit();
+
+		em.clear();
+		assertNull(
+				"With a flush mode of manual the entity should not have been persisted.",
+				em.find( Wallet.class, wallet.getSerial() )
+		);
+		assertEquals( "MANUAL", em.getProperties().get( AvailableSettings.FLUSH_MODE ) );
+		em.close();
+	}
 }

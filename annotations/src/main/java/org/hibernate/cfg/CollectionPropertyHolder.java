@@ -70,6 +70,10 @@ public class CollectionPropertyHolder extends AbstractPropertyHolder {
 		throw new AssertionFailure( "Identifier collection not yet managed" );
 	}
 
+	public boolean isOrWithinEmbeddedId() {
+		return false;
+	}
+
 	public PersistentClass getPersistentClass() {
 		return collection.getOwner();
 	}

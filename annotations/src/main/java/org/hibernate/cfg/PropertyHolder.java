@@ -53,6 +53,11 @@ public interface PropertyHolder {
 
 	KeyValue getIdentifier();
 
+	/**
+	 * Return true if this component is or is embedded in a @EmbeddedId
+	 */
+	boolean isOrWithinEmbeddedId();
+
 	PersistentClass getPersistentClass();
 
 	boolean isComponent();

@@ -1256,6 +1256,8 @@ public final class AnnotationBinder {
 		if ( !entityBinder.isIgnoreIdAnnotations() &&
 				( property.isAnnotationPresent( Id.class )
 						|| property.isAnnotationPresent( EmbeddedId.class ) ) ) {
+			//Override from @MapsId if needed
+			columns = overrideColumnFromMapsIdProperty( "", columns, propertyHolder, entityBinder, mappings );
 			if ( isIdentifierMapper ) {
 				throw new AnnotationException(
 						"@IdClass class should not have @Id nor @EmbeddedId properties"
@@ -1754,6 +1756,12 @@ public final class AnnotationBinder {
 					}
 				}
 
+
+				//Override from @MapsId if needed
+				if ( propertyHolder.isOrWithinEmbeddedId() ) {
+					columns = overrideColumnFromMapsIdProperty( property.getName(), columns, propertyHolder, entityBinder, mappings );
+				}
+
 				PropertyBinder propBinder = new PropertyBinder();
 				propBinder.setName( inferredData.getPropertyName() );
 				propBinder.setReturnedClassName( inferredData.getTypeName() );
@@ -2110,25 +2118,6 @@ public final class AnnotationBinder {
 			setupComponentTuplizer( property, componentId );
 		}
 		else {
-			final XClass persistentXClass;
-			try {
-				 persistentXClass = mappings.getReflectionManager()
-						.classForName( persistentClassName, AnnotationBinder.class );
-			}
-			catch ( ClassNotFoundException e ) {
-				throw new AssertionFailure( "Persistence class name cannot be converted into a Class", e);
-			}
-
-			final PropertyData annotatedWithMapsId = mappings.getPropertyAnnotatedWithMapsId( persistentXClass, "" );
-			if ( annotatedWithMapsId != null ) {
-				columns = buildExplicitJoinColumns( propertyHolder, annotatedWithMapsId.getProperty(), annotatedWithMapsId, entityBinder, mappings );
-				if (columns == null) {
-					columns = buildDefaultJoinColumnsForXToOne( propertyHolder, annotatedWithMapsId.getProperty(), annotatedWithMapsId, entityBinder, mappings );
-					throw new UnsupportedOperationException( "Implicit @JoinColumn is not supported on @MapsId properties: "
-							+ annotatedWithMapsId.getDeclaringClass() + " " + annotatedWithMapsId.getPropertyName() );
-				}
-			}
-
 			for (Ejb3Column column : columns) {
 				column.forceNotNull(); //this is an id
 			}
@@ -2168,6 +2157,32 @@ public final class AnnotationBinder {
 				rootClass.setDeclaredIdentifierProperty( prop );
 			}
 		}
+	}
+
+	private static Ejb3Column[] overrideColumnFromMapsIdProperty(String propertyPath,
+																 Ejb3Column[] columns,
+																 PropertyHolder propertyHolder,
+																 EntityBinder entityBinder,
+																 ExtendedMappings mappings) {
+		Ejb3Column[] result = columns;
+		final XClass persistentXClass;
+		try {
+			 persistentXClass = mappings.getReflectionManager()
+					.classForName( propertyHolder.getPersistentClass().getClassName(), AnnotationBinder.class );
+		}
+		catch ( ClassNotFoundException e ) {
+			throw new AssertionFailure( "PersistentClass name cannot be converted into a Class", e);
+		}
+		final PropertyData annotatedWithMapsId = mappings.getPropertyAnnotatedWithMapsId( persistentXClass, propertyPath );
+		if ( annotatedWithMapsId != null ) {
+			result = buildExplicitJoinColumns( propertyHolder, annotatedWithMapsId.getProperty(), annotatedWithMapsId, entityBinder, mappings );
+			if (result == null) {
+				result = buildDefaultJoinColumnsForXToOne( propertyHolder, annotatedWithMapsId.getProperty(), annotatedWithMapsId, entityBinder, mappings );
+				throw new UnsupportedOperationException( "Implicit @JoinColumn is not supported on @MapsId properties: "
+						+ annotatedWithMapsId.getDeclaringClass() + " " + annotatedWithMapsId.getPropertyName() );
+			}
+		}
+		return result;
 	}
 
 	private static void setupComponentTuplizer(XProperty property, Component component) {

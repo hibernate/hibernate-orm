@@ -44,6 +44,15 @@ public class PropertyInferredData implements PropertyData {
 	private final ReflectionManager reflectionManager;
 	private final XClass declaringClass;
 
+	@Override
+	public String toString() {
+		final StringBuilder sb = new StringBuilder();
+		sb.append( "PropertyInferredData" );
+		sb.append( "{property=" ).append( property );
+		sb.append( ", declaringClass=" ).append( declaringClass );
+		sb.append( '}' );
+		return sb.toString();
+	}
 
 	/**
 	 * Take the annoted element for lazy process

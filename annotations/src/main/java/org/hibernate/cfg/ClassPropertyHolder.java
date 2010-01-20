@@ -195,4 +195,8 @@ public class ClassPropertyHolder extends AbstractPropertyHolder {
 	public KeyValue getIdentifier() {
 		return persistentClass.getIdentifier();
 	}
+
+	public boolean isOrWithinEmbeddedId() {
+		return false;
+	}
 }

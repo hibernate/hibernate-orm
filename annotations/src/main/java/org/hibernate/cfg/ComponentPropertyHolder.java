@@ -24,11 +24,14 @@
 package org.hibernate.cfg;
 
 import javax.persistence.Column;
+import javax.persistence.EmbeddedId;
+import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.annotations.common.reflection.XClass;
+import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Join;
 import org.hibernate.mapping.KeyValue;
@@ -45,6 +48,7 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 	//TODO introduce a overrideTable() method for columns held by sec table rather than the hack
 	//     joinsPerRealTableName in ClassPropertyHolder
 	private Component component;
+	private boolean isOrWithinEmbeddedId;
 
 	public String getEntityName() {
 		return component.getComponentClassName();
@@ -82,8 +86,14 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 			ExtendedMappings mappings
 	) {
 		super( path, parent, inferredData.getPropertyClass(), mappings );
-		setCurrentProperty( inferredData.getProperty() );
+		final XProperty property = inferredData.getProperty();
+		setCurrentProperty( property );
 		this.component = component;
+		this.isOrWithinEmbeddedId =
+				parent.isOrWithinEmbeddedId()
+				|| ( property != null &&
+					( property.isAnnotationPresent( Id.class )
+					|| property.isAnnotationPresent( EmbeddedId.class ) ) );
 	}
 
 	public String getClassName() {
@@ -104,6 +114,10 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 
 	public KeyValue getIdentifier() {
 		return component.getOwner().getIdentifier();
+	}
+
+	public boolean isOrWithinEmbeddedId() {
+		return isOrWithinEmbeddedId;
 	}
 
 	public PersistentClass getPersistentClass() {

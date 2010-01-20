@@ -1,11 +1,11 @@
-package org.hibernate.test.annotations.derivedidentities.e4.a;
+package org.hibernate.test.annotations.derivedidentities.e4.b;
 
 import java.util.Date;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
 import javax.persistence.MapsId;
+import javax.persistence.OneToOne;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 
@@ -13,15 +13,14 @@ import javax.persistence.TemporalType;
  * @author Emmanuel Bernard
  */
 @Entity
-public class FinancialHistory {
-	@Id
-	String id; // overriding not allowed ... // default join column name is overridden @MapsId
+public class MedicalHistory {
+
+	@Id String id; // overriding not allowed ... // default join column name is overridden @MapsId
 	@Temporal(TemporalType.DATE)
 	Date lastupdate;
 
 	@JoinColumn(name = "FK")
 	@MapsId
-	@ManyToOne
+	@OneToOne
 	Person patient;
-
 }

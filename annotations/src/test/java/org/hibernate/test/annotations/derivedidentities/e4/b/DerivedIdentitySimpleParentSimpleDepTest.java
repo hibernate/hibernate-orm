@@ -1,4 +1,4 @@
-package org.hibernate.test.annotations.derivedidentities.e4.a;
+package org.hibernate.test.annotations.derivedidentities.e4.b;
 
 import java.util.Date;
 

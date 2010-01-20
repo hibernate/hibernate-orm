@@ -1,8 +1,30 @@
 //$Id$
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Inc.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ */
 package org.hibernate.test.annotations;
 
 import java.io.InputStream;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.sql.Connection;
@@ -24,6 +46,7 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.jdbc.Work;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
+import org.hibernate.util.StringHelper;
 
 /**
  * A base class for all tests.
@@ -113,14 +136,9 @@ public abstract class TestCase extends junit.framework.TestCase {
 	}
 
 	protected void runTest() throws Throwable {
-		try {
-			if ( runTest ) {
-				runTestMethod( runMethod );
-				handleUnclosedSession();
-			}
-		}
-		catch ( Throwable e ) {
-			closeSession( e );
+		if ( runTest ) {
+			runTestMethod( runMethod );
+			handleUnclosedSession();
 		}
 	}
 
@@ -197,16 +215,38 @@ public abstract class TestCase extends junit.framework.TestCase {
 	}
 
 	private void runTestMethod(Method runMethod) throws Throwable {
+		boolean failureExpected = runMethod.getAnnotation( FailureExpected.class ) != null;
 		try {
 			runMethod.invoke( this, new Class[0] );
+			if ( failureExpected ) {
+				throw new FailureExpectedTestPassedException();
+			}
 		}
-		catch ( InvocationTargetException e ) {
-			e.fillInStackTrace();
-			throw e.getTargetException();
+		catch ( FailureExpectedTestPassedException t ) {
+			closeSession();
+			throw t;
 		}
-		catch ( IllegalAccessException e ) {
-			e.fillInStackTrace();
-			throw e;
+		catch ( Throwable t ) {
+			closeSession();
+			if ( failureExpected ) {
+				FailureExpected ann = runMethod.getAnnotation( FailureExpected.class );
+				StringBuilder builder = new StringBuilder();
+				if ( StringHelper.isNotEmpty( ann.message() ) ) {
+					builder.append( ann.message() );
+				}
+				else {
+					builder.append( "ignoring test methods annoated with @FailureExpected" );
+				}
+				if ( StringHelper.isNotEmpty( ann.issueNumber() ) ) {
+					builder.append( " (" );
+					builder.append( ann.issueNumber() );
+					builder.append( ")" );
+				}
+				reportSkip( builder.toString(), "Failed with: " + t.toString() );
+			}
+			else {
+				throw t;
+			}
 		}
 	}
 
@@ -215,7 +255,7 @@ public abstract class TestCase extends junit.framework.TestCase {
 		assertNotNull( fName );
 		Method runMethod = null;
 		try {
-			runMethod = getClass().getMethod( fName, null );
+			runMethod = getClass().getMethod( fName );
 		}
 		catch ( NoSuchMethodException e ) {
 			fail( "Method \"" + fName + "\" not found" );
@@ -240,7 +280,7 @@ public abstract class TestCase extends junit.framework.TestCase {
 		}
 	}
 
-	private void closeSession(Throwable e) throws Throwable {
+	private void closeSession() {
 		try {
 			if ( session != null && session.isOpen() ) {
 				if ( session.isConnected() ) {
@@ -259,7 +299,6 @@ public abstract class TestCase extends junit.framework.TestCase {
 		}
 		catch ( Exception ignore ) {
 		}
-		throw e;
 	}
 
 	public Session openSession() throws HibernateException {
@@ -314,10 +353,30 @@ public abstract class TestCase extends junit.framework.TestCase {
 		export.create( true, true );
 	}
 
+	protected void reportSkip(String reason, String testDescription) {
+		StringBuilder builder = new StringBuilder( );
+		builder.append( "*** skipping test [" );
+		builder.append( runMethod.getDeclaringClass().getName() );
+		builder.append( "." );
+		builder.append(runMethod.getName() );
+		builder.append( "] - " );
+		builder.append( testDescription );
+		builder.append( " : " );
+		builder.append( reason );
+
+		log.warn( builder.toString() );
+	}
+
 	public class RollbackWork implements Work {
 
 		public void execute(Connection connection) throws SQLException {
 			connection.rollback();
+		}
+	}
+
+	private static class FailureExpectedTestPassedException extends Exception {
+		public FailureExpectedTestPassedException() {
+			super( "Test marked as @FailureExpected, but did not fail!" );
 		}
 	}
 }

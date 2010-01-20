@@ -1,3 +1,4 @@
+// $Id:$
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
@@ -23,11 +24,10 @@
  */
 package org.hibernate.test.annotations.idclassgeneratedvalue;
 
-import java.math.BigDecimal;
 import java.util.List;
 
 import org.hibernate.Session;
-import org.hibernate.Transaction;
+import org.hibernate.test.annotations.FailureExpected;
 import org.hibernate.test.annotations.TestCase;
 
 /**
@@ -52,7 +52,7 @@ public class IdClassGeneratedValueTest extends TestCase {
 		s.beginTransaction();
 		List<Simple> simpleList = s.createQuery( "select s from Simple s" ).list();
 		assertEquals( simpleList.size(), 2 );
-		s1 = (Simple) s.load( Simple.class, new SimplePK( 1L, 2L ) );
+		s1 = ( Simple ) s.load( Simple.class, new SimplePK( 1L, 2L ) );
 		assertEquals( s1.getQuantity(), 10 );
 		s.clear();
 		s.createQuery( "delete Simple" ).executeUpdate();
@@ -60,6 +60,7 @@ public class IdClassGeneratedValueTest extends TestCase {
 		s.close();
 	}
 
+	@FailureExpected(message = "Not yet implemented", issueNumber = "HHH-4552")
 	@SuppressWarnings({ "unchecked" })
 	public void testSingleGeneratedValue() {
 		Session s = openSession();
@@ -76,38 +77,39 @@ public class IdClassGeneratedValueTest extends TestCase {
 		s.beginTransaction();
 		List<Simple> simpleList = s.createQuery( "select s from Simple2 s" ).list();
 		assertEquals( simpleList.size(), 2 );
-		s1 = (Simple2) s.load( Simple2.class, new SimplePK( s1Id1, 2L ) );
+		s1 = ( Simple2 ) s.load( Simple2.class, new SimplePK( s1Id1, 2L ) );
 		assertEquals( s1.getQuantity(), 10 );
 		s.clear();
 		s.createQuery( "delete Simple2" ).executeUpdate();
 		s.getTransaction().commit();
 		s.close();
 	}
-	
-	   @SuppressWarnings({ "unchecked" })
-	    public void testMultipleGeneratedValue() {
-	        Session s = openSession();
-	        s.beginTransaction();
-	        Multiple m1 = new Multiple( 1000L, 10 );
-	        s.persist( m1 );
-	        Long m1Id1 = m1.getId1();
-	        Long m1Id2 = m1.getId2();
-	        Multiple m2 = new Multiple( 2000L, 20 );
-	        s.persist( m2 );
-	        s.getTransaction().commit();
-	        s.close();
 
-	        s = openSession();
-	        s.beginTransaction();
-	        List<Simple> simpleList = s.createQuery( "select m from Multiple m" ).list();
-	        assertEquals( simpleList.size(), 2 );
-	        m1 = (Multiple) s.load( Multiple.class, new MultiplePK( m1Id1, m1Id2, 2L ) );
-	        assertEquals( m1.getQuantity(), 10 );
-	        s.clear();
-	        s.createQuery( "delete Multiple" ).executeUpdate();
-	        s.getTransaction().commit();
-	        s.close();
-	    }
+	@FailureExpected(message = "Not yet implemented", issueNumber = "HHH-4552")
+	@SuppressWarnings({ "unchecked" })
+	public void testMultipleGeneratedValue() {
+		Session s = openSession();
+		s.beginTransaction();
+		Multiple m1 = new Multiple( 1000L, 10 );
+		s.persist( m1 );
+		Long m1Id1 = m1.getId1();
+		Long m1Id2 = m1.getId2();
+		Multiple m2 = new Multiple( 2000L, 20 );
+		s.persist( m2 );
+		s.getTransaction().commit();
+		s.close();
+
+		s = openSession();
+		s.beginTransaction();
+		List<Simple> simpleList = s.createQuery( "select m from Multiple m" ).list();
+		assertEquals( simpleList.size(), 2 );
+		m1 = ( Multiple ) s.load( Multiple.class, new MultiplePK( m1Id1, m1Id2, 2L ) );
+		assertEquals( m1.getQuantity(), 10 );
+		s.clear();
+		s.createQuery( "delete Multiple" ).executeUpdate();
+		s.getTransaction().commit();
+		s.close();
+	}
 
 //	public void testComplexIdClass() {
 //		Session s = openSession();
@@ -155,7 +157,7 @@ public class IdClassGeneratedValueTest extends TestCase {
 				Simple.class,
 				Simple2.class,
 				Multiple.class
-				
+
 		};
 	}
 }

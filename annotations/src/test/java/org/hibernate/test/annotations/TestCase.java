@@ -227,15 +227,10 @@ public abstract class TestCase extends junit.framework.TestCase {
 			closeSession();
 			throw t;
 		}
-		catch ( InvocationTargetException e ) {
-			e.fillInStackTrace();
-			throw e.getTargetException();
-		}
-		catch ( IllegalAccessException e ) {
-			e.fillInStackTrace();
-			throw e;
-		}
 		catch ( Throwable t ) {
+			if ( t instanceof InvocationTargetException || t instanceof IllegalAccessException ) {
+				t.fillInStackTrace();
+			}
 			closeSession();
 			if ( failureExpected ) {
 				FailureExpected ann = runMethod.getAnnotation( FailureExpected.class );

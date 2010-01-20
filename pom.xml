@@ -19,6 +19,8 @@
     <modules>
         <module>parent</module>
         <module>core</module>
+        <module>testing</module>
+        <module>testsuite</module>
         <module>cache-ehcache</module>
         <module>cache-jbosscache</module>
         <module>cache-oscache</module>
@@ -28,8 +30,6 @@
         <module>annotations</module>
         <module>envers</module>
         <module>jmx</module>
-        <module>testing</module>
-        <module>testsuite</module>
         <module>jdbc3-testing</module>
         <module>cache-infinispan</module>
 <!--
@@ -48,9 +48,6 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-release-plugin</artifactId>
-<!--
-                <version>2.0-beta-7</version>
--->
                 <version>2.0-beta-9</version>
                 <configuration>
                     <autoVersionSubmodules>true</autoVersionSubmodules>
@@ -84,9 +81,6 @@
             </activation>
             <modules>
                 <module>entitymanager</module>
-<!--
-                <module>cache-infinispan</module>
--->
                 <module>jdbc4-testing</module>
             </modules>
         </profile>            

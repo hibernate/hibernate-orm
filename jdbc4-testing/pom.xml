@@ -32,7 +32,7 @@
     </parent>
 
     <artifactId>hibernate-jdbc4-testing</artifactId>
-    <name>JDBC4-JdbcSupport Testing</name>
+    <name>Hibernate JDBC4-JdbcSupport Testing</name>
     <description>Test support of JDBC4 through JdbcSupport</description>
 
     <build>

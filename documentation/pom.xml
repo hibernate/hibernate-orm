@@ -13,7 +13,7 @@
     <artifactId>hibernate-documentation</artifactId>
     <packaging>pom</packaging>
 
-    <name>Hibernate Core - Documentation</name>
+    <name>Hibernate Core Documentation</name>
     <description>Grouping of Hibernate Core Project documentation modules</description>
 
     <modules>

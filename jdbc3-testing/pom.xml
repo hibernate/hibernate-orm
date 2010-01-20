@@ -34,7 +34,7 @@
     <artifactId>hibernate-jdbc3-testing</artifactId>
     <packaging>jar</packaging>
 
-    <name>JDBC3-JdbcSupport Testing</name>
+    <name>Hibernate JDBC3-JdbcSupport Testing</name>
     <description>Test support of JDBC3 through JdbcSupport</description>
 
     <dependencies>

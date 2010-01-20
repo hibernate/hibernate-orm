@@ -65,7 +65,7 @@ public class ManyToOneType extends EntityType {
 	 * @param lazy Should the association be handled lazily
 	 */
 	public ManyToOneType(String referencedEntityName, boolean lazy) {
-		this( referencedEntityName, null, !lazy, true, false, false );
+		this( referencedEntityName, null, lazy, true, false, false );
 	}
 
 	/**
@@ -79,7 +79,7 @@ public class ManyToOneType extends EntityType {
 			boolean unwrapProxy,
 			boolean isEmbeddedInXML,
 			boolean ignoreNotFound) {
-		this( referencedEntityName, uniqueKeyPropertyName, !lazy, isEmbeddedInXML, unwrapProxy, ignoreNotFound, false );
+		this( referencedEntityName, uniqueKeyPropertyName, lazy, unwrapProxy, isEmbeddedInXML, ignoreNotFound, false );
 	}
 
 	public ManyToOneType(

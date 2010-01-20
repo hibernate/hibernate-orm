@@ -10,7 +10,7 @@ public class Value {
 	private Definition definition;
 	private LocalizedStrings localizedStrings = new LocalizedStrings();
 
-	private Value() {
+	protected Value() {
 	}
 
 	public Value(Definition definition) {

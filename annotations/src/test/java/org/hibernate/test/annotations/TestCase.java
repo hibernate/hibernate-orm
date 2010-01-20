@@ -25,6 +25,7 @@
 package org.hibernate.test.annotations;
 
 import java.io.InputStream;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.sql.Connection;
@@ -225,6 +226,14 @@ public abstract class TestCase extends junit.framework.TestCase {
 		catch ( FailureExpectedTestPassedException t ) {
 			closeSession();
 			throw t;
+		}
+		catch ( InvocationTargetException e ) {
+			e.fillInStackTrace();
+			throw e.getTargetException();
+		}
+		catch ( IllegalAccessException e ) {
+			e.fillInStackTrace();
+			throw e;
 		}
 		catch ( Throwable t ) {
 			closeSession();

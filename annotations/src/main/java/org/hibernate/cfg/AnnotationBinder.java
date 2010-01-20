@@ -1379,12 +1379,13 @@ public final class AnnotationBinder {
 					joinColumn.setSecondaryTableName( join.getTable().getName() );
 				}
 			}
+			final boolean mandatory = !ann.optional() || property.isAnnotationPresent( MapsId.class );
 			bindManyToOne(
 					getCascadeStrategy( ann.cascade(), hibernateCascade, false),
 					joinColumns,
-					ann.optional(),
+					!mandatory,
 					ignoreNotFound, onDeleteCascade,
-					mappings.getReflectionManager().toXClass( ann.targetEntity() ),
+					ToOneBinder.getTargetEntity( inferredData, mappings ),
 					propertyHolder,
 					inferredData, false, isIdentifierMapper, inSecondPass, mappings
 			);
@@ -1422,7 +1423,7 @@ public final class AnnotationBinder {
 					!mandatory,
 					getFetchMode( ann.fetch() ),
 					ignoreNotFound, onDeleteCascade,
-					mappings.getReflectionManager().toXClass( ann.targetEntity() ),
+					ToOneBinder.getTargetEntity( inferredData, mappings ),
 					propertyHolder,
 					inferredData, ann.mappedBy(), trueOneToOne, isIdentifierMapper, inSecondPass, mappings
 			);
@@ -2117,11 +2118,14 @@ public final class AnnotationBinder {
 			catch ( ClassNotFoundException e ) {
 				throw new AssertionFailure( "Persistence class name cannot be converted into a Class", e);
 			}
+
 			final PropertyData annotatedWithMapsId = mappings.getPropertyAnnotatedWithMapsId( persistentXClass, "" );
 			if ( annotatedWithMapsId != null ) {
 				columns = buildExplicitJoinColumns( propertyHolder, annotatedWithMapsId.getProperty(), annotatedWithMapsId, entityBinder, mappings );
 				if (columns == null) {
 					columns = buildDefaultJoinColumnsForXToOne( propertyHolder, annotatedWithMapsId.getProperty(), annotatedWithMapsId, entityBinder, mappings );
+					throw new UnsupportedOperationException( "Implicit @JoinColumn is not supported on @MapsId properties: "
+							+ annotatedWithMapsId.getDeclaringClass() + " " + annotatedWithMapsId.getPropertyName() );
 				}
 			}
 
@@ -2194,13 +2198,9 @@ public final class AnnotationBinder {
 		if ( unique ) {
 			value.markAsLogicalOneToOne();
 		}
-		if ( isDefault( targetEntity, mappings ) ) {
-			value.setReferencedEntityName( inferredData.getClassOrElementName() );
-		}
-		else {
-			value.setReferencedEntityName( targetEntity.getName() );
-		}
-		defineFetchingStrategy( value, inferredData.getProperty() );
+		value.setReferencedEntityName( ToOneBinder.getReferenceEntityName(inferredData, targetEntity, mappings) );
+		final XProperty property = inferredData.getProperty();
+		defineFetchingStrategy( value, property );
 		//value.setFetchMode( fetchMode );
 		value.setIgnoreNotFound( ignoreNotFound );
 		value.setCascadeDeleteEnabled( cascadeOnDelete );
@@ -2210,11 +2210,18 @@ public final class AnnotationBinder {
 				column.setNullable( false );
 			}
 		}
+		if ( property.isAnnotationPresent( MapsId.class ) ) {
+			//read only
+			for (Ejb3JoinColumn column : columns) {
+				column.setInsertable( false );
+				column.setUpdatable( false );
+			}
+		}
 		value.setTypeName( inferredData.getClassOrElementName() );
 		final String propertyName = inferredData.getPropertyName();
 		value.setTypeUsingReflection( propertyHolder.getClassName(), propertyName );
 
-		ForeignKey fk = inferredData.getProperty().getAnnotation( ForeignKey.class );
+		ForeignKey fk = property.getAnnotation( ForeignKey.class );
 		String fkName = fk != null ?
 				fk.name() :
 				"";
@@ -2250,7 +2257,7 @@ public final class AnnotationBinder {
 		}
 		binder.setAccessType( inferredData.getDefaultAccess() );
 		binder.setCascade( cascadeStrategy );
-		binder.setProperty(inferredData.getProperty());
+		binder.setProperty( property );
 		Property prop = binder.make();
 		//composite FK columns are in the same table so its OK
 		propertyHolder.addProperty( prop, columns, inferredData.getDeclaringClass() );

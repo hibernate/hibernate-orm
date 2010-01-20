@@ -27,6 +27,7 @@ import java.io.Serializable;
 import java.sql.Types;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.Map;
 import java.util.Properties;
 import javax.persistence.Enumerated;
 import javax.persistence.Lob;
@@ -46,6 +47,7 @@ import org.hibernate.cfg.BinderHelper;
 import org.hibernate.cfg.Ejb3Column;
 import org.hibernate.cfg.ExtendedMappings;
 import org.hibernate.cfg.NotYetImplementedException;
+import org.hibernate.cfg.SecondPass;
 import org.hibernate.cfg.SetSimpleValueTypeSecondPass;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Table;
@@ -288,15 +290,13 @@ public class SimpleValueBinder {
 			table = columns[0].getTable();
 		}
 		simpleValue = new SimpleValue( table );
-		
-		for (Ejb3Column column : columns) {
-			column.linkWithValue( simpleValue );
-		}
-		
+
+		linkWithValue();
+
 		boolean isInSecondPass = mappings.isInSecondPass();
+		SetSimpleValueTypeSecondPass secondPass = new SetSimpleValueTypeSecondPass(this);
 		if (!isInSecondPass) {
 			//Defer this to the second pass
-			SetSimpleValueTypeSecondPass secondPass = new SetSimpleValueTypeSecondPass(this);
 			mappings.addSecondPass(secondPass);
 		}
 		else {
@@ -304,6 +304,12 @@ public class SimpleValueBinder {
 			fillSimpleValue();
 		}
 		return simpleValue;
+	}
+
+	public void linkWithValue() {
+		for ( Ejb3Column column : columns) {
+			column.linkWithValue( simpleValue );
+		}
 	}
 
 	public void fillSimpleValue() {

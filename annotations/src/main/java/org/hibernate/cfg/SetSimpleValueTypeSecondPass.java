@@ -34,7 +34,7 @@ import org.hibernate.cfg.annotations.SimpleValueBinder;
 public class SetSimpleValueTypeSecondPass implements SecondPass {
 
 	SimpleValueBinder binder;
-	
+
 	public SetSimpleValueTypeSecondPass(SimpleValueBinder val) {
 		binder = val;
 	}

@@ -88,13 +88,7 @@ public class OneToOneSecondPass implements SecondPass {
 		);
 		final String propertyName = inferredData.getPropertyName();
 		value.setPropertyName( propertyName );
-		String referencedEntityName;
-		if ( AnnotationBinder.isDefault( targetEntity, mappings ) ) {
-			referencedEntityName = inferredData.getClassOrElementName();
-		}
-		else {
-			referencedEntityName = targetEntity.getName();
-		}
+		String referencedEntityName = ToOneBinder.getReferenceEntityName(inferredData, targetEntity, mappings);
 		value.setReferencedEntityName( referencedEntityName );  
 		AnnotationBinder.defineFetchingStrategy( value, inferredData.getProperty() );
 		//value.setFetchMode( fetchMode );

@@ -393,6 +393,31 @@ public class Ejb3JoinColumn extends Ejb3Column {
 		String logicalReferencedColumn = getMappings().getLogicalColumnName(
 				referencedColumn.getQuotedName(), referencedEntity.getTable()
 		);
+		columnName = buildDefaultColumnName( referencedEntity, logicalReferencedColumn );
+		//yuk side effect on an implicit column
+		setLogicalColumnName( columnName );
+		setReferencedColumn( logicalReferencedColumn );
+		initMappingColumn(
+				columnName,
+				null, referencedColumn.getLength(),
+				referencedColumn.getPrecision(),
+				referencedColumn.getScale(),
+				getMappingColumn() != null ? getMappingColumn().isNullable() : false,
+				referencedColumn.getSqlType(),
+				getMappingColumn() != null ? getMappingColumn().isUnique() : false,
+			    false
+		);
+		linkWithValue( value );
+	}
+
+	public void addDefaultJoinColumnName(PersistentClass referencedEntity, String logicalReferencedColumn) {
+		final String columnName = buildDefaultColumnName( referencedEntity, logicalReferencedColumn );
+		getMappingColumn().setName( columnName );
+		setLogicalColumnName( columnName );
+	}
+	
+	private String buildDefaultColumnName(PersistentClass referencedEntity, String logicalReferencedColumn) {
+		String columnName;
 		boolean mappedBySide = mappedByTableName != null || mappedByPropertyName != null;
 		boolean ownerSide = getPropertyName() != null;
 
@@ -443,20 +468,7 @@ public class Ejb3JoinColumn extends Ejb3Column {
 				columnName = StringHelper.quote( columnName );
 			}
 		}
-		//yuk side effect on an implicit column
-		setLogicalColumnName( columnName );
-		setReferencedColumn( logicalReferencedColumn );
-		initMappingColumn(
-				columnName,
-				null, referencedColumn.getLength(),
-				referencedColumn.getPrecision(),
-				referencedColumn.getScale(),
-				getMappingColumn() != null ? getMappingColumn().isNullable() : false,
-				referencedColumn.getSqlType(),
-				getMappingColumn() != null ? getMappingColumn().isUnique() : false,
-			    false
-		);
-		linkWithValue( value );
+		return columnName;
 	}
 
 	/**

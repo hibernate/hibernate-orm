@@ -314,7 +314,7 @@ public class TableBinder {
 	) {
 		PersistentClass associatedClass;
 		if ( destinationEntity != null ) {
-			//overidden destination
+			//overridden destination
 			associatedClass = destinationEntity;
 		}
 		else {

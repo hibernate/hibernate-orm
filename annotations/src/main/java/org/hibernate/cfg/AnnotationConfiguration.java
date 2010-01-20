@@ -374,7 +374,7 @@ public class AnnotationConfiguration extends Configuration {
 			iter = secondPasses.iterator();
 			while ( iter.hasNext() ) {
 				SecondPass sp = ( SecondPass ) iter.next();
-				//do the SecondaryTable second pass before any association becasue associations can be built on joins
+				//do the SecondaryTable second pass before any association because associations can be built on joins
 				if ( sp instanceof SecondaryTableSecondPass ) {
 					sp.doSecondPass( classes );
 					iter.remove();

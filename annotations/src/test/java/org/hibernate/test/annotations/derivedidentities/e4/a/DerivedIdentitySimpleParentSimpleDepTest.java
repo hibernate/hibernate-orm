@@ -1,5 +1,7 @@
 package org.hibernate.test.annotations.derivedidentities.e4.a;
 
+import java.util.Date;
+
 import org.hibernate.Session;
 import org.hibernate.test.annotations.TestCase;
 import org.hibernate.test.util.SchemaUtil;
@@ -25,6 +27,11 @@ public class DerivedIdentitySimpleParentSimpleDepTest extends TestCase {
 		s.clear();
 		d = (MedicalHistory) s.get( MedicalHistory.class, d.id );
 		assertEquals( d.id, d.patient.ssn );
+		d.lastupdate = new Date();
+		s.flush();
+		s.clear();
+		d = (MedicalHistory) s.get( MedicalHistory.class, d.id );
+		assertNotNull( d.lastupdate );
 		s.getTransaction().rollback();
 		s.close();
 	}

@@ -1414,10 +1414,12 @@ public final class AnnotationBinder {
 					joinColumn.setSecondaryTableName( join.getTable().getName() );
 				}
 			}
+			//MapsId means the columns belong to the pk => not null
+			final boolean mandatory = !ann.optional() || property.isAnnotationPresent( MapsId.class );
 			bindOneToOne(
 					getCascadeStrategy( ann.cascade(), hibernateCascade, ann.orphanRemoval()),
 					joinColumns,
-					ann.optional(),
+					!mandatory,
 					getFetchMode( ann.fetch() ),
 					ignoreNotFound, onDeleteCascade,
 					mappings.getReflectionManager().toXClass( ann.targetEntity() ),
@@ -2088,6 +2090,7 @@ public final class AnnotationBinder {
 		RootClass rootClass = (RootClass) persistentClass;
 		String persistentClassName = rootClass.getClassName();
 		SimpleValue id;
+		final String propertyName = inferredData.getPropertyName();
 		if ( isComposite ) {
 			id = fillComponent(
 					propertyHolder, inferredData, baseInferredData, propertyAccessor,
@@ -2126,7 +2129,7 @@ public final class AnnotationBinder {
 				column.forceNotNull(); //this is an id
 			}
 			SimpleValueBinder value = new SimpleValueBinder();
-			value.setPropertyName( inferredData.getPropertyName() );
+			value.setPropertyName( propertyName );
 			value.setReturnedClassName( inferredData.getTypeName() );
 			value.setColumns( columns );
 			value.setPersistentClassName( persistentClassName );
@@ -2141,7 +2144,7 @@ public final class AnnotationBinder {
 		}
 		else {
 			PropertyBinder binder = new PropertyBinder();
-			binder.setName( inferredData.getPropertyName() );
+			binder.setName( propertyName );
 			binder.setValue( id );
 			binder.setAccessType( inferredData.getDefaultAccess() );
 			binder.setProperty( inferredData.getProperty() );
@@ -2220,7 +2223,7 @@ public final class AnnotationBinder {
 		String path = propertyHolder.getPath() + "." + propertyName;
 		FkSecondPass secondPass = new ToOneFkSecondPass(
 				value, columns,
-				!optional && unique, //cannot have nullabe and unique on certain DBs like Derby
+				!optional && unique, //cannot have nullable and unique on certain DBs like Derby
 				propertyHolder.getEntityOwnerClassName(),
 				path, mappings
 		);
@@ -2328,14 +2331,19 @@ public final class AnnotationBinder {
 				Iterator idColumns = identifier.getColumnIterator();
 				List<String> idColumnNames = new ArrayList<String>();
 				org.hibernate.mapping.Column currentColumn;
-				while ( idColumns.hasNext() ) {
-					currentColumn = (org.hibernate.mapping.Column) idColumns.next();
-					idColumnNames.add( currentColumn.getName() );
+				if ( identifier.getColumnSpan() !=  joinColumns.length ) {
+					mapToPK = false;
 				}
-				for (Ejb3JoinColumn col : joinColumns) {
-					if ( !idColumnNames.contains( col.getMappingColumn().getName() ) ) {
-						mapToPK = false;
-						break;
+				else {
+					while ( idColumns.hasNext() ) {
+						currentColumn = (org.hibernate.mapping.Column) idColumns.next();
+						idColumnNames.add( currentColumn.getName() );
+					}
+					for (Ejb3JoinColumn col : joinColumns) {
+						if ( !idColumnNames.contains( col.getMappingColumn().getName() ) ) {
+							mapToPK = false;
+							break;
+						}
 					}
 				}
 			}

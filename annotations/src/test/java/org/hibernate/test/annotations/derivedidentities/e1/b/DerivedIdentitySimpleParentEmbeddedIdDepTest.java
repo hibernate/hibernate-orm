@@ -56,7 +56,7 @@ public class DerivedIdentitySimpleParentEmbeddedIdDepTest extends TestCase {
 	}
 
 	@Override
-	protected Class<?>[] getMappings() {
+	protected Class<?>[] getAnnotatedClasses() {
 		return new Class<?>[] {
 				Dependent.class,
 				Employee.class,

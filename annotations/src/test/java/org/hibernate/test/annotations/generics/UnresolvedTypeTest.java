@@ -34,7 +34,7 @@ public class UnresolvedTypeTest extends TestCase {
 	}
 
 	@Override
-	protected Class[] getMappings() {
+	protected Class[] getAnnotatedClasses() {
 		return new Class[]{
 				Gene.class,
 				DNA.class

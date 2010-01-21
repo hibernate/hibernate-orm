@@ -26,7 +26,7 @@ public class TuplizerTest extends TestCase {
 		s.getTransaction().rollback();
 		s.close();
 	}
-	protected Class[] getMappings() {
+	protected Class[] getAnnotatedClasses() {
 		return new Class[] {
 				Cuisine.class
 		};

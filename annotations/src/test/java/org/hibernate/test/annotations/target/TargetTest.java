@@ -73,7 +73,7 @@ public class TargetTest extends TestCase {
 		s.close();
 	}
 
-	protected Class[] getMappings() {
+	protected Class[] getAnnotatedClasses() {
 		return new Class[] {
 				LuggageImpl.class,
 				Brand.class

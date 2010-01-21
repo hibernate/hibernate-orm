@@ -1,6 +1,7 @@
 //$Id$
 package org.hibernate.ejb.test.callbacks;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -9,6 +10,7 @@ import javax.persistence.EntityManager;
 import org.hibernate.ejb.test.Cat;
 import org.hibernate.ejb.test.Kitten;
 import org.hibernate.ejb.test.TestCase;
+import org.hibernate.test.annotations.FailureExpected;
 
 /**
  * @author Emmanuel Bernard
@@ -166,66 +168,60 @@ public class CallbacksTest extends TestCase {
 		em.close();
 	}
 	
-//	/**
-//	 * Tests callbacks for collection changes.
-//	 * 
-//	 * @throws Exception in case the test fails.
-//	 * @see EJB-288
-//	 */
-//	public void testPostUpdateCollection() throws Exception {
-//		
-//		// create a cat
-//		EntityManager em = getEntityManager();
-//		Cat cat = new Cat();
-//		em.getTransaction().begin();
-//		cat.setLength( 23 );
-//		cat.setAge( 2 );
-//		cat.setName( "Beetle" );
-//		cat.setDateOfBirth( new Date() );
-//		em.persist( cat );
-//		em.getTransaction().commit();
-//		
-//		// assert it is persisted
-//		List ids = Cat.getIdList();
-//		Object id = Cat.getIdList().get( ids.size() - 1 );
-//		assertNotNull( id );
-//		
-//		// add a kitten to the cat - triggers PostCollectionRecreateEvent
-//		int postVersion = Cat.postVersion;
-//		em.getTransaction().begin();
-//		Kitten kitty = new Kitten();
-//		kitty.setName("kitty");
-//		List kittens = new ArrayList<Kitten>();
-//		kittens.add(kitty);
-//		cat.setKittens(kittens);
-//		em.getTransaction().commit();
-//		assertEquals("Post version should have been incremented.", postVersion + 1, Cat.postVersion);
-//		
-//		// add another kitten - triggers PostCollectionUpdateEvent. 
-//		postVersion = Cat.postVersion;
-//		em.getTransaction().begin();
-//		Kitten tom = new Kitten();
-//		tom.setName("Tom");
-//		cat.getKittens().add(tom);
-//		em.getTransaction().commit();
-//		assertEquals("Post version should have been incremented.", postVersion + 1, Cat.postVersion);
-//		
-//		// delete a kitty - triggers PostCollectionUpdateEvent 
-//		postVersion = Cat.postVersion;
-//		em.getTransaction().begin();
-//		cat.getKittens().remove(tom);
-//		em.getTransaction().commit();
-//		assertEquals("Post version should have been incremented.", postVersion + 1, Cat.postVersion);
-//		
-//		// delete and recreate kittens - triggers PostCollectionRemoveEvent and PostCollectionRecreateEvent)
-//		postVersion = Cat.postVersion;
-//		em.getTransaction().begin();
-//		cat.setKittens(new ArrayList<Kitten>());
-//		em.getTransaction().commit();
-//		assertEquals("Post version should have been incremented.", postVersion + 2, Cat.postVersion);		
-//		
-//		em.close();
-//	}	
+	@FailureExpected(message = "collection change does not trigger an event", issueNumber = "EJB-288")
+	public void testPostUpdateCollection() throws Exception {
+		// create a cat
+		EntityManager em = getOrCreateEntityManager();
+		Cat cat = new Cat();
+		em.getTransaction().begin();
+		cat.setLength( 23 );
+		cat.setAge( 2 );
+		cat.setName( "Beetle" );
+		cat.setDateOfBirth( new Date() );
+		em.persist( cat );
+		em.getTransaction().commit();
+
+		// assert it is persisted
+		List ids = Cat.getIdList();
+		Object id = Cat.getIdList().get( ids.size() - 1 );
+		assertNotNull( id );
+
+		// add a kitten to the cat - triggers PostCollectionRecreateEvent
+		int postVersion = Cat.postVersion;
+		em.getTransaction().begin();
+		Kitten kitty = new Kitten();
+		kitty.setName("kitty");
+		List kittens = new ArrayList<Kitten>();
+		kittens.add(kitty);
+		cat.setKittens(kittens);
+		em.getTransaction().commit();
+		assertEquals("Post version should have been incremented.", postVersion + 1, Cat.postVersion);
+
+		// add another kitten - triggers PostCollectionUpdateEvent.
+		postVersion = Cat.postVersion;
+		em.getTransaction().begin();
+		Kitten tom = new Kitten();
+		tom.setName("Tom");
+		cat.getKittens().add(tom);
+		em.getTransaction().commit();
+		assertEquals("Post version should have been incremented.", postVersion + 1, Cat.postVersion);
+
+		// delete a kitty - triggers PostCollectionUpdateEvent
+		postVersion = Cat.postVersion;
+		em.getTransaction().begin();
+		cat.getKittens().remove(tom);
+		em.getTransaction().commit();
+		assertEquals("Post version should have been incremented.", postVersion + 1, Cat.postVersion);
+
+		// delete and recreate kittens - triggers PostCollectionRemoveEvent and PostCollectionRecreateEvent)
+		postVersion = Cat.postVersion;
+		em.getTransaction().begin();
+		cat.setKittens(new ArrayList<Kitten>());
+		em.getTransaction().commit();
+		assertEquals("Post version should have been incremented.", postVersion + 2, Cat.postVersion);
+
+		em.close();
+	}
 
 	public Class[] getAnnotatedClasses() {
 		return new Class[]{

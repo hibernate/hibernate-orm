@@ -60,7 +60,7 @@ public class IdManyToOneTest extends TestCase {
 		s.close();
 	}
 
-	protected Class[] getMappings() {
+	protected Class[] getAnnotatedClasses() {
 		return new Class[] {
 				Store.class,
 				Customer.class,

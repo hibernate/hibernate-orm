@@ -178,7 +178,7 @@ public class ReferencedColumnNameTest extends TestCase {
 		super( x );
 	}
 
-	protected Class[] getMappings() {
+	protected Class[] getAnnotatedClasses() {
 		return new Class[]{
 				House.class,
 				Postman.class,

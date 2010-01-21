@@ -45,7 +45,7 @@ public class ArrayTest extends TestCase {
 	}
 
 	@SuppressWarnings("unchecked")
-	protected Class[] getMappings() {
+	protected Class[] getAnnotatedClasses() {
 		return new Class[]{
 				Competitor.class,
 				Contest.class

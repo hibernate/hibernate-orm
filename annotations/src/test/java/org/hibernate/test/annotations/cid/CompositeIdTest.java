@@ -310,7 +310,7 @@ public class CompositeIdTest extends TestCase {
 		s.close();
 	}
 
-	protected Class[] getMappings() {
+	protected Class[] getAnnotatedClasses() {
 		return new Class[] {
 				Parent.class,
 				Child.class,

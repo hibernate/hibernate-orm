@@ -35,9 +35,9 @@ public class PersisterTest extends TestCase {
 	}
 
 	/**
-	 * @see org.hibernate.test.annotations.TestCase#getMappings()
+	 * @see org.hibernate.test.annotations.TestCase#getAnnotatedClasses()
 	 */
-	protected Class[] getMappings() {
+	protected Class[] getAnnotatedClasses() {
 		return new Class[]{
 				Card.class,
 				Deck.class

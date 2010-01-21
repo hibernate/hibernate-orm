@@ -34,7 +34,7 @@ public class BeanValidationProvidedFactoryTest extends TestCase {
 		s.close();
 	}
 
-	protected Class<?>[] getMappings() {
+	protected Class<?>[] getAnnotatedClasses() {
 		return new Class<?>[] {
 				CupHolder.class
 		};

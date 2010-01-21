@@ -52,6 +52,12 @@
             <scope>test</scope>
         </dependency>
         <dependency>
+            <groupId>${groupId}</groupId>
+            <artifactId>hibernate-testing</artifactId>
+            <version>${version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <!--
                 Only really needed for the antrun plugin defined below (which in turn is only really needed
                 to work around a missing feature on the compile plugin; lovely no?).  However I have not

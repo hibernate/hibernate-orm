@@ -52,7 +52,7 @@ public class IndexTest extends TestCase {
 		s.close();
 	}
 
-	protected Class[] getMappings() {
+	protected Class[] getAnnotatedClasses() {
 		return new Class[]{
 				Conductor.class,
 				Vehicule.class,

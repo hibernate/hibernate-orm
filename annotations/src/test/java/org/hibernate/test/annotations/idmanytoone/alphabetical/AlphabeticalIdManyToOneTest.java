@@ -12,7 +12,7 @@ public class AlphabeticalIdManyToOneTest extends TestCase {
 	}
 
 
-	protected Class[] getMappings() {
+	protected Class[] getAnnotatedClasses() {
 		return new Class[] {
 				B.class,
 				C.class,

@@ -13,7 +13,7 @@ public class GenericsInheritanceTest extends TestCase {
 		s.close();
 		//mapping is tested
 	}
-	protected Class[] getMappings() {
+	protected Class[] getAnnotatedClasses() {
 		return new Class[] {
 				ChildHierarchy1.class,
 				ParentHierarchy1.class,

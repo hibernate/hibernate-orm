@@ -78,7 +78,7 @@ public class TablePerClassTest extends TestCase {
 		super( x );	//To change body of overridden methods use File | Settings | File Templates.
 	}
 
-	protected Class[] getMappings() {
+	protected Class[] getAnnotatedClasses() {
 		return new Class[]{
 				Robot.class,
 				T800.class,

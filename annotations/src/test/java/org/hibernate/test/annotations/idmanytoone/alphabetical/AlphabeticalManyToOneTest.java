@@ -11,7 +11,7 @@ public class AlphabeticalManyToOneTest extends TestCase {
 		//test through deployment
 	}
 
-	protected Class[] getMappings() {
+	protected Class[] getAnnotatedClasses() {
 		return new Class[] {
 				Acces.class,
 				Droitacces.class,

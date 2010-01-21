@@ -38,7 +38,7 @@ public class AttributeOverrideTest extends TestCase  {
 		return SchemaUtil.isColumnPresent( tableName, columnName, getCfg() );
 	}
 
-	protected Class<?>[] getMappings() {
+	protected Class<?>[] getAnnotatedClasses() {
 		return new Class<?>[] {
 				PropertyInfo.class,
 				PropertyRecord.class,

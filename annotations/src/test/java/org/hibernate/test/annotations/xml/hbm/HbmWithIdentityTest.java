@@ -28,7 +28,7 @@ public class HbmWithIdentityTest extends TestCase {
 		return super.runForCurrentDialect() && getDialect().supportsIdentityColumns();
 	}
 
-	protected Class[] getMappings() {
+	protected Class[] getAnnotatedClasses() {
 		return new Class[] {
 				Sky.class,
 				ZImpl.class

@@ -65,7 +65,7 @@ public class Ejb3XmlTest extends TestCase {
 		s.close();
 	}
 
-	protected Class[] getMappings() {
+	protected Class[] getAnnotatedClasses() {
 		return new Class[]{
 				CarModel.class,
 				Manufacturer.class,

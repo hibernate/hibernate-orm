@@ -179,7 +179,7 @@ public class HibernateTraversableResolverTest extends TestCase {
 		cfg.setProperty( "hibernate.validator.autoregister_listeners", "false" );
 	}
 
-	protected Class<?>[] getMappings() {
+	protected Class<?>[] getAnnotatedClasses() {
 		return new Class<?>[] {
 				Button.class,
 				Color.class,

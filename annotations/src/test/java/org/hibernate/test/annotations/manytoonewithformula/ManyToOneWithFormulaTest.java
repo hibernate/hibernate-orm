@@ -150,9 +150,9 @@ public class ManyToOneWithFormulaTest extends TestCase {
 	
 	
 	/**
-	 * @see org.hibernate.test.annotations.TestCase#getMappings()
+	 * @see org.hibernate.test.annotations.TestCase#getAnnotatedClasses()
 	 */
-	protected java.lang.Class<?>[] getMappings() {
+	protected java.lang.Class<?>[] getAnnotatedClasses() {
 		return new java.lang.Class[] {
 				Menu.class,
 				FoodItem.class,

@@ -11,7 +11,7 @@ public class InterfacesTest extends TestCase {
 
 	}
 
-	protected Class[] getMappings() {
+	protected Class[] getAnnotatedClasses() {
 		return new Class[]{
 				ContactImpl.class,
 				UserImpl.class

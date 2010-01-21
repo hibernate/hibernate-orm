@@ -74,7 +74,7 @@ public class BeanValidationGroupsTest extends TestCase {
 		cfg.setProperty( "hibernate.validator.apply_to_ddl", "false" );
 	}
 
-	protected Class<?>[] getMappings() {
+	protected Class<?>[] getAnnotatedClasses() {
 		return new Class<?>[] {
 				CupHolder.class
 		};

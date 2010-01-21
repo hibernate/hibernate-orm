@@ -50,7 +50,7 @@ public class IdClassCompositePKTest extends TestCase {
 		s.close();
 	}
 
-	protected Class[] getMappings() {
+	protected Class[] getAnnotatedClasses() {
 		return new Class[] {
 				DomainAdmin.class
 		};

@@ -28,7 +28,7 @@ public class PolymorphismTest extends TestCase {
 
 	}
 
-	protected Class[] getMappings() {
+	protected Class[] getAnnotatedClasses() {
 		return new Class[] {
 				Car.class,
 				SportCar.class

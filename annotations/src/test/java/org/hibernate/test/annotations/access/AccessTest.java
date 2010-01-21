@@ -112,7 +112,7 @@ public class AccessTest extends TestCase {
 		s.close();
 	}
 
-	protected Class[] getMappings() {
+	protected Class[] getAnnotatedClasses() {
 		return new Class[] {
 				Bed.class,
 				Chair.class,

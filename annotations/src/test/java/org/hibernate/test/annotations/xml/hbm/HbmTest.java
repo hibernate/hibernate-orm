@@ -62,7 +62,7 @@ public class HbmTest extends TestCase {
 		s.close();
 	}
 
-	protected Class[] getMappings() {
+	protected Class[] getAnnotatedClasses() {
 		return new Class[]{
 				PrimeMinister.class,
 				Sky.class,

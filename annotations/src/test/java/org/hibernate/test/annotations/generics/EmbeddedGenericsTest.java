@@ -47,7 +47,7 @@ public class EmbeddedGenericsTest extends TestCase {
 		session.close();
 	}
 
-	protected Class[] getMappings() {
+	protected Class[] getAnnotatedClasses() {
 		return new Class[]{
 				Classes.Book.class,
 				Classes.PopularBook.class

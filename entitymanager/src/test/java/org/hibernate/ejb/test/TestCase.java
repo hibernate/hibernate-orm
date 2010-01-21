@@ -26,29 +26,36 @@ package org.hibernate.ejb.test;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
-
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.ejb.AvailableSettings;
-import org.hibernate.ejb.HibernatePersistence;
-
+import org.hibernate.ejb.Ejb3Configuration;
+import org.hibernate.test.annotations.HibernateTestCase;
 
 /**
+ * A base class for all ejb tests.
+ *
  * @author Emmanuel Bernard
+ * @author Hardy Ferentschik
  */
-public abstract class TestCase extends junit.framework.TestCase {
-	protected EntityManagerFactory factory;
-	protected EntityManager em;
-	private static Log log = LogFactory.getLog( TestCase.class );
+public abstract class TestCase extends HibernateTestCase {
+
+	private static final Log log = LogFactory.getLog( TestCase.class );
+
+	protected static EntityManagerFactory factory;
+	private EntityManager em;
+
 
 	public TestCase() {
 		super();
@@ -58,57 +65,64 @@ public abstract class TestCase extends junit.framework.TestCase {
 		super( name );
 	}
 
-	public void setUp() {
-		factory = new HibernatePersistence().createEntityManagerFactory( getConfig() );
+
+	public void tearDown() throws Exception {
+		super.tearDown();
 	}
 
-	public void tearDown() {
-		factory.close();
-	}
-	
 	@Override
-	public void runTest() throws Throwable {
-		try {
-			em = getOrCreateEntityManager();
-			super.runTest();
-			if (em.getTransaction().isActive()) {
-				em.getTransaction().rollback();
-				fail("You left an open transaction! Fix your test case. For now, we are closing it for you.");
-			}
+	protected void buildConfiguration() throws Exception {
+		Ejb3Configuration ejbconfig = new Ejb3Configuration();
+		TestCase.cfg = ejbconfig.getHibernateConfiguration();
+		if ( recreateSchema() ) {
+			cfg.setProperty( Environment.HBM2DDL_AUTO, "create-drop" );
+		}
+		factory = ejbconfig.createEntityManagerFactory( getConfig() );
+	}
 
-		} catch (Throwable t) {
-			if (em.getTransaction().isActive())  
-				em.getTransaction().rollback();
-			throw t;
-		} finally {
-			if (em.isOpen()) {
-				// as we open an EM before the test runs, it will still be open if the test uses a custom EM.
-				// or, the person may have forgotten to close. So, do not raise a "fail", but log the fact.
-				em.close(); 
-				log.warn("The EntityManager is not closed. Closing it.");
-			}
+	protected void handleUnclosedResources(){
+		if(em == null) {
+			return;
+		}
+		if ( em.getTransaction().isActive() ) {
+			em.getTransaction().rollback();
+			log.warn( "You left an open transaction! Fix your test case. For now, we are closing it for you." );
+		}
+		if ( em.isOpen() ) {
+			// as we open an EM before the test runs, it will still be open if the test uses a custom EM.
+			// or, the person may have forgotten to close. So, do not raise a "fail", but log the fact.
+			em.close();
+			log.warn( "The EntityManager is not closed. Closing it." );
+		}
+		cfg = null;
+	}
+
+	protected void closeResources() {
+		if ( factory != null ) {
+			factory.close();
 		}
 	}
-	
+
 	protected EntityManager getOrCreateEntityManager() {
-		if (em == null || !em.isOpen()) 
+		if ( em == null || !em.isOpen() ) {
 			em = factory.createEntityManager();
+		}
 		return em;
 	}
 
-	/** always reopen a new EM and clse the existing one */
+	/**
+	 * always reopen a new EM and clse the existing one
+	 */
 	protected EntityManager createEntityManager(Map properties) {
-		if (em != null && em.isOpen() ) {
+		if ( em != null && em.isOpen() ) {
 			em.close();
 		}
-		em = factory.createEntityManager(properties);
+		em = factory.createEntityManager( properties );
 		return em;
 	}
 
-	public abstract Class[] getAnnotatedClasses();
-
 	public String[] getEjb3DD() {
-		return new String[] {};
+		return new String[] { };
 	}
 
 	public Map<Class, String> getCachedClasses() {
@@ -126,14 +140,14 @@ public abstract class TestCase extends junit.framework.TestCase {
 			try {
 				props.load( stream );
 			}
-			catch (Exception e) {
+			catch ( Exception e ) {
 				throw new RuntimeException( "could not load hibernate.properties" );
 			}
 			finally {
 				try {
 					stream.close();
 				}
-				catch (IOException ioe) {
+				catch ( IOException ioe ) {
 				}
 			}
 		}
@@ -142,12 +156,10 @@ public abstract class TestCase extends junit.framework.TestCase {
 	}
 
 	public Map getConfig() {
-		Map config = loadProperties();
+		Map<Object, Object> config = loadProperties();
 		ArrayList<Class> classes = new ArrayList<Class>();
 
-		for ( Class clazz : getAnnotatedClasses() ) {
-			classes.add( clazz );
-		}
+		classes.addAll( Arrays.asList( getAnnotatedClasses() ) );
 		config.put( AvailableSettings.LOADED_CLASSES, classes );
 		for ( Map.Entry<Class, String> entry : getCachedClasses().entrySet() ) {
 			config.put(
@@ -163,9 +175,7 @@ public abstract class TestCase extends junit.framework.TestCase {
 		}
 		if ( getEjb3DD().length > 0 ) {
 			ArrayList<String> dds = new ArrayList<String>();
-			for ( String dd : getEjb3DD() ) {
-				dds.add( dd );
-			}
+			dds.addAll( Arrays.asList( getEjb3DD() ) );
 			config.put( AvailableSettings.XML_FILE_NAMES, dds );
 		}
 		return config;
@@ -173,30 +183,13 @@ public abstract class TestCase extends junit.framework.TestCase {
 
 	@Override
 	public void runBare() throws Throwable {
-		
-		if (!appliesTo(Dialect.getDialect())) 
+		if ( !appliesTo( Dialect.getDialect() ) ) {
 			return;
-		
-		Throwable exception = null;
-		setUp();
-		try {
-			runTest();
-		} catch (Throwable running) {
-			exception = running;
-		} finally {
-			try {
-				tearDown();
-			} catch (Throwable tearingDown) {
-				if (exception == null)
-					exception = tearingDown;
-			}
 		}
-		if (exception != null)
-			throw exception;
+		super.runBare();
 	}
 
 	public boolean appliesTo(Dialect dialect) {
 		return true;
 	}
-
 }

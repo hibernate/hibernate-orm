@@ -1,4 +1,4 @@
-//$Id: IdClassTest.java 14784 2008-06-19 10:42:20Z hardy.ferentschik $
+//$Id$
 package org.hibernate.test.annotations.id.sequences;
 
 import org.hibernate.Session;
@@ -31,7 +31,7 @@ public class IdClassTest extends TestCase {
 		s.close();
 	}
 
-	protected Class[] getMappings() {
+	protected Class[] getAnnotatedClasses() {
 		return new Class[]{
 				Tower.class
 		};

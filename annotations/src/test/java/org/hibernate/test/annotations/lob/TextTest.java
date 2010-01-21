@@ -1,4 +1,4 @@
-//$Id: $
+//$Id$
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
@@ -45,7 +45,7 @@ import org.hibernate.util.ArrayHelper;
 public class TextTest extends TestCase {
 
 	@Override
-	protected Class<?>[] getMappings() {
+	protected Class<?>[] getAnnotatedClasses() {
 		return new Class[] { LongStringHolder.class };
 	}
 

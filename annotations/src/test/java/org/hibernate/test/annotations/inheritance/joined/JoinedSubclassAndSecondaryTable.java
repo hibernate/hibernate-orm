@@ -21,9 +21,9 @@ public class JoinedSubclassAndSecondaryTable extends TestCase {
 	}
 
 	/**
-	 * @see org.hibernate.test.annotations.TestCase#getMappings()
+	 * @see org.hibernate.test.annotations.TestCase#getAnnotatedClasses()
 	 */
-	protected Class[] getMappings() {
+	protected Class[] getAnnotatedClasses() {
 		return new Class[]{
 				Pool.class,
 				SwimmingPool.class

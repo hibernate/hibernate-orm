@@ -56,6 +56,12 @@
             <groupId>org.hibernate.javax.persistence</groupId>
             <artifactId>hibernate-jpa-2.0-api</artifactId>
         </dependency>
+       <dependency>
+            <groupId>${groupId}</groupId>
+            <artifactId>hibernate-testing</artifactId>
+            <version>${version}</version>
+           <scope>test</scope>
+        </dependency>        
         <dependency>
             <groupId>javassist</groupId>
             <artifactId>javassist</artifactId>

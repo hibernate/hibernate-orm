@@ -36,7 +36,7 @@ public class NotFoundTest extends TestCase {
 
 	}
 
-	protected Class[] getMappings() {
+	protected Class[] getAnnotatedClasses() {
 		return new Class[]{
 				Coin.class,
 				Currency.class

@@ -123,7 +123,7 @@ public class LobTest extends TestCase {
 		return super.runForCurrentDialect() && getDialect().supportsExpectedLobUsagePattern();
 	}
 
-	protected Class[] getMappings() {
+	protected Class[] getAnnotatedClasses() {
 		return new Class[] {
 				Book.class,
 				CompiledCode.class

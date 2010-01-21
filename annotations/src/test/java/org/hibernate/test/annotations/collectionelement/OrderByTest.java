@@ -103,7 +103,7 @@ public class OrderByTest extends TestCase {
 
 	}
 
-	protected Class[] getMappings() {
+	protected Class[] getAnnotatedClasses() {
 		return new Class[] {
 			Products.class,
 			Widgets.class,

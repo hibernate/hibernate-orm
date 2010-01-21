@@ -91,7 +91,7 @@ public class AssociationOverrideTest extends TestCase {
 		s.close();
 	}
 
-	protected Class[] getMappings() {
+	protected Class[] getAnnotatedClasses() {
 		return new Class[]{
 				Employee.class,
 				Location.class,

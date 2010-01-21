@@ -48,7 +48,7 @@ public class GenericsTest extends TestCase {
 		super.configure( cfg );
 	}
 
-	protected Class[] getMappings() {
+	protected Class[] getAnnotatedClasses() {
 		return new Class[]{
 				Paper.class,
 				PaperType.class,

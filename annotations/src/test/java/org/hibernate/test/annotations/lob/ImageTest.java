@@ -1,4 +1,4 @@
-//$Id: $
+//$Id$
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
@@ -161,7 +161,7 @@ public class ImageTest extends TestCase {
 		return new String[] { "org.hibernate.test.annotations.lob" };
 	}
 
-	public Class<?>[] getMappings() {
+	public Class<?>[] getAnnotatedClasses() {
 		return new Class[] { ImageHolder.class };
 	}
 

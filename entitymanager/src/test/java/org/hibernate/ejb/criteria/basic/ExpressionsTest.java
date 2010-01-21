@@ -41,7 +41,7 @@ public class ExpressionsTest extends AbstractMetamodelSpecificTest {
 	private CriteriaBuilder builder;
 
 	@Override
-	public void setUp() {
+	public void setUp() throws Exception {
 		super.setUp();
 		builder = factory.getCriteriaBuilder();
 		EntityManager em = getOrCreateEntityManager();
@@ -60,7 +60,7 @@ public class ExpressionsTest extends AbstractMetamodelSpecificTest {
 	}
 
 	@Override
-	public void tearDown() {
+	public void tearDown() throws Exception {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
 		em.createQuery( "delete Product" ).executeUpdate();

@@ -1,4 +1,4 @@
-//$Id: EnumIdTest.java 14785 2008-06-19 10:44:33Z hardy.ferentschik $
+//$Id$
 package org.hibernate.test.annotations.id.sequences;
 
 import org.hibernate.Session;
@@ -54,9 +54,9 @@ public class EnumIdTest extends TestCase {
 	}
 
 	/**
-	 * @see org.hibernate.test.annotations.TestCase#getMappings()
+	 * @see org.hibernate.test.annotations.TestCase#getAnnotatedClasses()
 	 */
-	protected Class[] getMappings() {
+	protected Class[] getAnnotatedClasses() {
 		return new Class[] { PlanetCheatSheet.class };
 	}
 }

@@ -1,4 +1,4 @@
-//$Id: JoinColumnOverrideTest.java 14761 2008-06-11 13:51:06Z hardy.ferentschik $
+//$Id$
 package org.hibernate.test.annotations.id.sequences;
 
 import java.io.PrintWriter;
@@ -56,9 +56,9 @@ public class JoinColumnOverrideTest extends TestCase {
 	}
 
 	/**
-	 * @see org.hibernate.test.annotations.TestCase#getMappings()
+	 * @see org.hibernate.test.annotations.TestCase#getAnnotatedClasses()
 	 */
-	protected Class[] getMappings() {
+	protected Class[] getAnnotatedClasses() {
 		return new Class[] {};
 	}
 }

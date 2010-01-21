@@ -62,7 +62,7 @@ public class DerivedIdentitySimpleParentSimpleDepMapsIdTest extends TestCase {
 	}
 
 	@Override
-	protected Class<?>[] getMappings() {
+	protected Class<?>[] getAnnotatedClasses() {
 		return new Class<?>[] {
 				MedicalHistory.class,
 				Person.class,

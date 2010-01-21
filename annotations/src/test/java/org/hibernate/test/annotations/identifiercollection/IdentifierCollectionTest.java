@@ -36,7 +36,7 @@ public class IdentifierCollectionTest extends TestCase {
 		tx.rollback();
 		s.close();
 	}
-	protected Class[] getMappings() {
+	protected Class[] getAnnotatedClasses() {
 		return new Class[] {
 				Passport.class,
 				Stamp.class

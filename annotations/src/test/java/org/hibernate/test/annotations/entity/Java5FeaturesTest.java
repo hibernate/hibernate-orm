@@ -115,7 +115,7 @@ public class Java5FeaturesTest extends TestCase {
 		super( x );
 	}
 
-	protected Class[] getMappings() {
+	protected Class[] getAnnotatedClasses() {
 		return new Class[]{
 				Race.class,
 				Bid.class,

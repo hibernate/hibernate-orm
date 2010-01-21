@@ -92,10 +92,7 @@ public class JoinedSubclassTest extends TestCase {
 		s.close();
 	}
 
-	/**
-	 * @see org.hibernate.test.annotations.TestCase#getMappings()
-	 */
-	protected Class[] getMappings() {
+	protected Class[] getAnnotatedClasses() {
 		return new Class[]{
 				Boat.class,
 				Ferry.class,
@@ -106,5 +103,4 @@ public class JoinedSubclassTest extends TestCase {
 				Tomato.class
 		};
 	}
-
 }

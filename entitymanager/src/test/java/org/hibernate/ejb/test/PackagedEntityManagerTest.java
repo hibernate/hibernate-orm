@@ -26,7 +26,6 @@ package org.hibernate.ejb.test;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Properties;
-
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
@@ -42,6 +41,10 @@ import org.hibernate.ejb.test.pack.defaultpar.Money;
 import org.hibernate.ejb.test.pack.defaultpar.Mouse;
 import org.hibernate.ejb.test.pack.defaultpar.OtherIncrementListener;
 import org.hibernate.ejb.test.pack.defaultpar.Version;
+import org.hibernate.ejb.test.pack.defaultpar_1_0.ApplicationServer1;
+import org.hibernate.ejb.test.pack.defaultpar_1_0.Lighter1;
+import org.hibernate.ejb.test.pack.defaultpar_1_0.Mouse1;
+import org.hibernate.ejb.test.pack.defaultpar_1_0.Version1;
 import org.hibernate.ejb.test.pack.excludehbmpar.Caipirinha;
 import org.hibernate.ejb.test.pack.explodedpar.Carpet;
 import org.hibernate.ejb.test.pack.explodedpar.Elephant;
@@ -49,10 +52,6 @@ import org.hibernate.ejb.test.pack.externaljar.Scooter;
 import org.hibernate.ejb.test.pack.spacepar.Bug;
 import org.hibernate.ejb.test.pack.various.Airplane;
 import org.hibernate.ejb.test.pack.various.Seat;
-import org.hibernate.ejb.test.pack.defaultpar_1_0.ApplicationServer1;
-import org.hibernate.ejb.test.pack.defaultpar_1_0.Version1;
-import org.hibernate.ejb.test.pack.defaultpar_1_0.Mouse1;
-import org.hibernate.ejb.test.pack.defaultpar_1_0.Lighter1;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.event.EventListeners;
 import org.hibernate.stat.Statistics;
@@ -65,11 +64,12 @@ import org.hibernate.util.ConfigHelper;
 public class PackagedEntityManagerTest extends TestCase {
 
 	public Class[] getAnnotatedClasses() {
-		return new Class[] {
-		};
+		return new Class[] { Item.class, Distributor.class };
 	}
 
-	public void setUp() {
+	@Override
+	protected void buildConfiguration() throws Exception {
+		super.buildConfiguration();
 		factory = Persistence.createEntityManagerFactory( "manager1" );
 	}
 
@@ -193,12 +193,18 @@ public class PackagedEntityManagerTest extends TestCase {
 		try {
 			emf = Persistence.createEntityManagerFactory( "excludehbmpar", new HashMap() );
 		}
-		catch (PersistenceException e) {
+		catch ( PersistenceException e ) {
 			Throwable nested = e.getCause();
-			if ( nested == null ) throw e;
+			if ( nested == null ) {
+				throw e;
+			}
 			nested = nested.getCause();
-			if ( nested == null ) throw e;
-			if ( !( nested instanceof ClassNotFoundException ) ) throw e;
+			if ( nested == null ) {
+				throw e;
+			}
+			if ( !( nested instanceof ClassNotFoundException ) ) {
+				throw e;
+			}
 			fail( "Try to process hbm file: " + e.getMessage() );
 		}
 		EntityManager em = emf.createEntityManager();
@@ -255,7 +261,7 @@ public class PackagedEntityManagerTest extends TestCase {
 	public void testOverridenPar() throws Exception {
 		HashMap properties = new HashMap();
 		properties.put( AvailableSettings.JTA_DATASOURCE, null );
-		Properties p=new Properties();
+		Properties p = new Properties();
 		p.load( ConfigHelper.getResourceAsStream( "/overridenpar.properties" ) );
 		properties.putAll( p );
 		EntityManagerFactory emf = Persistence.createEntityManagerFactory( "overridenpar", properties );
@@ -276,11 +282,12 @@ public class PackagedEntityManagerTest extends TestCase {
 	public void testListeners() throws Exception {
 		EntityManagerFactory emf = Persistence.createEntityManagerFactory( "manager1", new HashMap() );
 		EntityManager em = emf.createEntityManager();
-		EventListeners eventListeners = em.unwrap(SessionImplementor.class).getListeners();
+		EventListeners eventListeners = em.unwrap( SessionImplementor.class ).getListeners();
 		assertEquals(
 				"Explicit pre-insert event through hibernate.ejb.event.pre-insert does not work",
 				eventListeners.getPreInsertEventListeners().length,
-				eventListeners.getPreUpdateEventListeners().length + 1 );
+				eventListeners.getPreUpdateEventListeners().length + 1
+		);
 
 		em.close();
 		emf.close();
@@ -299,7 +306,7 @@ public class PackagedEntityManagerTest extends TestCase {
 		assertTrue( em.contains( item ) );
 
 		em.getTransaction().begin();
-		Item item1 = (Item) em.createQuery( "select i from Item i where descr like 'M%'" ).getSingleResult();
+		Item item1 = ( Item ) em.createQuery( "select i from Item i where descr like 'M%'" ).getSingleResult();
 		assertNotNull( item1 );
 		assertSame( item, item1 );
 		item.setDescr( "Micro$oft wireless mouse" );
@@ -318,7 +325,7 @@ public class PackagedEntityManagerTest extends TestCase {
 		assertSame( item, item1 );
 		assertTrue( em.contains( item ) );
 
-		item1 = (Item) em.createQuery( "select i from Item i where descr like 'M%'" ).getSingleResult();
+		item1 = ( Item ) em.createQuery( "select i from Item i where descr like 'M%'" ).getSingleResult();
 		assertNotNull( item1 );
 		assertSame( item, item1 );
 		assertTrue( em.contains( item ) );
@@ -339,7 +346,7 @@ public class PackagedEntityManagerTest extends TestCase {
 		res.setName( "Bruce" );
 		item.setDistributors( new HashSet<Distributor>() );
 		item.getDistributors().add( res );
-		Statistics stats = ( (HibernateEntityManagerFactory) factory ).getSessionFactory().getStatistics();
+		Statistics stats = ( ( HibernateEntityManagerFactory ) factory ).getSessionFactory().getStatistics();
 		stats.clear();
 		stats.setStatisticsEnabled( true );
 
@@ -369,7 +376,7 @@ public class PackagedEntityManagerTest extends TestCase {
 		second = em.find( Item.class, item.getName() );
 		assertEquals( 1, second.getDistributors().size() );
 		assertEquals( 3, stats.getSecondLevelCacheHitCount() );
-		for (Distributor distro : second.getDistributors()) {
+		for ( Distributor distro : second.getDistributors() ) {
 			em.remove( distro );
 		}
 		em.remove( second );

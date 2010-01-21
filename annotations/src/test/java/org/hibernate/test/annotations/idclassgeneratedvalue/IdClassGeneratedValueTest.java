@@ -1,4 +1,4 @@
-// $Id:$
+// $Id$
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
@@ -149,7 +149,7 @@ public class IdClassGeneratedValueTest extends TestCase {
 //		assertTrue( true );
 //	}
 
-	protected Class[] getMappings() {
+	protected Class[] getAnnotatedClasses() {
 		return new Class[] {
 //				Customer.class,
 //				CustomerInventory.class,

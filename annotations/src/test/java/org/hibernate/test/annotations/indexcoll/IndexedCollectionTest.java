@@ -595,7 +595,7 @@ public class IndexedCollectionTest extends TestCase {
 		super( x );
 	}
 
-	protected Class[] getMappings() {
+	protected Class[] getAnnotatedClasses() {
 		return new Class[]{
 				Wardrobe.class,
 				Drawer.class,

@@ -42,7 +42,7 @@ public class ManyToOneReferencedColumnNameTest extends TestCase {
 
 
 
-	protected Class[] getMappings() {
+	protected Class[] getAnnotatedClasses() {
 		return new Class[] {
 				Item.class,
 				Vendor.class,

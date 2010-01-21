@@ -26,7 +26,7 @@ public class QuoteTest extends TestCase {
 		assertEquals( "User_Role", getCfg().getCollectionMapping( role ).getCollectionTable().getName() );
 		s.close();
 	}
-	protected Class[] getMappings() {
+	protected Class[] getAnnotatedClasses() {
 		return new Class[] {
 				User.class,
 				Role.class

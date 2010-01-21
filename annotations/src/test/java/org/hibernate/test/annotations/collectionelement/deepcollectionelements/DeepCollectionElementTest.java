@@ -15,7 +15,7 @@ public class DeepCollectionElementTest extends TestCase {
 
 	}
 
-	protected Class[] getMappings() {
+	protected Class[] getAnnotatedClasses() {
 		return new Class[] {
 				//A.class,
 				//B.class,

@@ -138,7 +138,7 @@ public class AnyTest extends TestCase {
 	}
 
 	@Override
-	protected Class[] getMappings() {
+	protected Class[] getAnnotatedClasses() {
 		return new Class[] {
 				StringProperty.class,
 				IntegerProperty.class,

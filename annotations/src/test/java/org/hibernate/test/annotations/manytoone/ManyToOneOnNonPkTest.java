@@ -45,7 +45,7 @@ public class ManyToOneOnNonPkTest extends TestCase {
 //
 	}
 
-	protected Class[] getMappings() {
+	protected Class[] getAnnotatedClasses() {
 		return new Class[] {
 			//Carz.class,
 			//Lotz.class

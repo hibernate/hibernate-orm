@@ -31,7 +31,7 @@ public class MapKeyTest extends TestCase {
 		s.close();
 	}
 
-	protected Class[] getMappings() {
+	protected Class[] getAnnotatedClasses() {
 		return new Class[] {
 				GenerationUser.class,
 				GenerationGroup.class

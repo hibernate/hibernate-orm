@@ -90,6 +90,6 @@ public class CascadeTest extends TestCase {
 				Author.class
 		};
 	}
-	
-	
+
+
 }

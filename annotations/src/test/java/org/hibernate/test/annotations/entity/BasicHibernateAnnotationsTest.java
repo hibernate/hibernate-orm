@@ -686,7 +686,7 @@ public class BasicHibernateAnnotationsTest extends TestCase {
 		super( x );
 	}
 
-	protected Class<?>[] getMappings() {
+	protected Class<?>[] getAnnotatedClasses() {
 		return new Class[]{
 				Forest.class,
 				Tree.class,

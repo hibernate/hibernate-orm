@@ -395,7 +395,7 @@ public class QueryAndSQLTest extends TestCase {
 		s.close();
 	}
 
-	protected Class[] getMappings() {
+	protected Class[] getAnnotatedClasses() {
 		return new Class[] {
 				Darkness.class,
 				Plane.class,

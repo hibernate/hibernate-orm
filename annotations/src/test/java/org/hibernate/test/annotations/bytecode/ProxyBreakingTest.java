@@ -35,7 +35,7 @@ public class ProxyBreakingTest extends TestCase {
 		super( name );
 	}
 
-	protected Class[] getMappings() {
+	protected Class[] getAnnotatedClasses() {
 		return new Class[0];
 	}
 

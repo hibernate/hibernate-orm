@@ -34,7 +34,7 @@ public class BeanValidationDisabledTest extends TestCase {
 		cfg.setProperty( "javax.persistence.validation.mode", "none" );
 	}
 
-	protected Class<?>[] getMappings() {
+	protected Class<?>[] getAnnotatedClasses() {
 		return new Class<?>[] {
 				CupHolder.class
 		};

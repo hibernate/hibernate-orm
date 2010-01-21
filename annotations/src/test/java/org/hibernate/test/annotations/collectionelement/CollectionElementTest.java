@@ -245,7 +245,7 @@ public class CollectionElementTest extends TestCase {
 		assertTrue( "Could not find " + columnName, hasDefault );
 	}
 
-	protected Class[] getMappings() {
+	protected Class[] getAnnotatedClasses() {
 		return new Class[] {
 				Boy.class,
 				Country.class,

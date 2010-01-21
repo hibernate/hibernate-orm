@@ -484,7 +484,7 @@ public class EmbeddedTest extends TestCase {
 		super( x );
 	}
 
-	protected Class[] getMappings() {
+	protected Class[] getAnnotatedClasses() {
 		return new Class[]{
 				Person.class,
 				WealthyPerson.class,

@@ -23,8 +23,12 @@
  */
 package org.hibernate.cfg.annotations;
 
+import java.util.Map;
 import javax.persistence.EmbeddedId;
 import javax.persistence.Id;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.annotations.Generated;
@@ -32,20 +36,22 @@ import org.hibernate.annotations.GenerationTime;
 import org.hibernate.annotations.Immutable;
 import org.hibernate.annotations.NaturalId;
 import org.hibernate.annotations.OptimisticLock;
+import org.hibernate.annotations.common.AssertionFailure;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
-import org.hibernate.annotations.common.AssertionFailure;
 import org.hibernate.cfg.AccessType;
+import org.hibernate.cfg.BinderHelper;
 import org.hibernate.cfg.Ejb3Column;
 import org.hibernate.cfg.ExtendedMappings;
+import org.hibernate.cfg.InheritanceState;
 import org.hibernate.cfg.PropertyHolder;
+import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.PropertyGeneration;
+import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Value;
 import org.hibernate.util.StringHelper;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * @author Emmanuel Bernard
@@ -66,13 +72,21 @@ public class PropertyBinder {
 	private SimpleValueBinder simpleValueBinder;
 	private XClass declaringClass;
 	private boolean declaringClassSet;
-	
+	private boolean embedded;
+
+	public void setEmbedded(boolean embedded) {
+		this.embedded = embedded;
+	}
+
 	/*
-	 * property can be null
-	 * prefer propertyName to property.getName() since some are overloaded
-	 */
+		 * property can be null
+		 * prefer propertyName to property.getName() since some are overloaded
+		 */
 	private XProperty property;
 	private XClass returnedClass;
+	private boolean isId;
+	private Map<XClass, InheritanceState> inheritanceStatePerClass;
+	private Property mappingProperty;
 
 	public void setInsertable(boolean insertable) {
 		this.insertable = insertable;
@@ -81,7 +95,6 @@ public class PropertyBinder {
 	public void setUpdatable(boolean updatable) {
 		this.updatable = updatable;
 	}
-
 
 	public void setName(String name) {
 		this.name = name;
@@ -128,12 +141,14 @@ public class PropertyBinder {
 	}
 
 	private void validateBind() {
-		if (property.isAnnotationPresent(Immutable.class)) {
-			throw new AnnotationException("@Immutable on property not allowed. " +
-					"Only allowed on entity level or on a collection.");
+		if ( property.isAnnotationPresent( Immutable.class ) ) {
+			throw new AnnotationException(
+					"@Immutable on property not allowed. " +
+							"Only allowed on entity level or on a collection."
+			);
 		}
 		if ( !declaringClassSet ) {
-			throw new AssertionFailure( "declaringClass has not been set before a bind");
+			throw new AssertionFailure( "declaringClass has not been set before a bind" );
 		}
 	}
 
@@ -141,7 +156,7 @@ public class PropertyBinder {
 		//TODO check necessary params for a make
 	}
 
-	public Property bind() {
+	private Property makePropertyAndValue() {
 		validateBind();
 		log.debug( "binding property {} with lazy={}", name, lazy );
 		String containerClassName = holder == null ?
@@ -157,12 +172,51 @@ public class PropertyBinder {
 		simpleValueBinder.setMappings( mappings );
 		SimpleValue propertyValue = simpleValueBinder.make();
 		setValue( propertyValue );
-		Property prop = make();
-		holder.addProperty( prop, columns, declaringClass );
+		return makeProperty();
+	}
+
+	//used when value is provided
+	public Property makePropertyAndBind() {
+		return bind( makeProperty() );
+	}
+
+	//used to build everything from scratch
+	public Property makePropertyValueAndBind() {
+		return bind( makePropertyAndValue() );
+	}
+
+	private Property bind(Property prop) {
+		if (isId) {
+			final RootClass rootClass = ( RootClass ) holder.getPersistentClass();
+			rootClass.setIdentifier( ( KeyValue ) getValue() );
+
+			if (embedded) {
+				rootClass.setEmbeddedIdentifier( true );
+			}
+			else {
+				rootClass.setIdentifierProperty( prop );
+				final org.hibernate.mapping.MappedSuperclass superclass = BinderHelper.getMappedSuperclassOrNull(
+						declaringClass,
+						inheritanceStatePerClass,
+						mappings
+				);
+				if (superclass != null) {
+					superclass.setDeclaredIdentifierProperty(prop);
+				}
+				else {
+					//we know the property is on the actual entity
+					rootClass.setDeclaredIdentifierProperty( prop );
+				}
+			}
+		}
+		else {
+			holder.addProperty( prop, columns, declaringClass );
+		}
 		return prop;
 	}
 
-	public Property make() {
+	//used when the value is provided and the binding is done elsewhere
+	public Property makeProperty() {
 		validateMake();
 		log.debug( "Building property " + name );
 		Property prop = new Property();
@@ -182,8 +236,10 @@ public class PropertyBinder {
 			if ( !GenerationTime.NEVER.equals( generated ) ) {
 				if ( property.isAnnotationPresent( javax.persistence.Version.class )
 						&& GenerationTime.INSERT.equals( generated ) ) {
-					throw new AnnotationException( "@Generated(INSERT) on a @Version property not allowed, use ALWAYS: "
-							+ StringHelper.qualify( holder.getPath(), name ) );
+					throw new AnnotationException(
+							"@Generated(INSERT) on a @Version property not allowed, use ALWAYS: "
+									+ StringHelper.qualify( holder.getPath(), name )
+					);
 				}
 				insertable = false;
 				if ( GenerationTime.ALWAYS.equals( generated ) ) {
@@ -213,11 +269,14 @@ public class PropertyBinder {
 					property.isAnnotationPresent( javax.persistence.Version.class )
 							|| property.isAnnotationPresent( Id.class )
 							|| property.isAnnotationPresent( EmbeddedId.class ) ) ) {
-				throw new AnnotationException( "@OptimisticLock.exclude=true incompatible with @Id, @EmbeddedId and @Version: "
-						+ StringHelper.qualify( holder.getPath(), name ) );
+				throw new AnnotationException(
+						"@OptimisticLock.exclude=true incompatible with @Id, @EmbeddedId and @Version: "
+								+ StringHelper.qualify( holder.getPath(), name )
+				);
 			}
 		}
 		log.trace( "Cascading " + name + " with " + cascade );
+		this.mappingProperty = prop;
 		return prop;
 	}
 
@@ -233,4 +292,15 @@ public class PropertyBinder {
 		return simpleValueBinder;
 	}
 
+	public Value getValue() {
+		return value;
+	}
+
+	public void setId(boolean id) {
+		this.isId = id;
+	}
+
+	public void setInheritanceStatePerClass(Map<XClass, InheritanceState> inheritanceStatePerClass) {
+		this.inheritanceStatePerClass = inheritanceStatePerClass;
+	}
 }

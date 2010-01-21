@@ -61,16 +61,18 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 		 * if not, change the component table if no properties are set
 		 * if a property is set already the core cannot support that
 		 */
-		Table table = columns[0].getTable();
-		if ( !table.equals( component.getTable() ) ) {
-			if ( component.getPropertySpan() == 0 ) {
-				component.setTable( table );
-			}
-			else {
-				throw new AnnotationException(
-						"A component cannot hold properties split into 2 different tables: "
-								+ this.getPath()
-				);
+		if (columns != null) {
+			Table table = columns[0].getTable();
+			if ( !table.equals( component.getTable() ) ) {
+				if ( component.getPropertySpan() == 0 ) {
+					component.setTable( table );
+				}
+				else {
+					throw new AnnotationException(
+							"A component cannot hold properties split into 2 different tables: "
+									+ this.getPath()
+					);
+				}
 			}
 		}
 		addProperty( prop, declaringClass );

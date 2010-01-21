@@ -9,7 +9,7 @@ import org.hibernate.test.util.SchemaUtil;
 /**
  * @author Emmanuel Bernard
  */
-public class DerivedIdentitySimpleParentSimpleDepTest extends TestCase {
+public class DerivedIdentitySimpleParentSimpleDepMapsIdTest extends TestCase {
 
 	public void testOneToOneExplicitJoinColumn() throws Exception {
 		assertTrue( SchemaUtil.isColumnPresent( "MedicalHistory", "FK", getCfg() ) );

@@ -106,7 +106,7 @@ public class OneToOneSecondPass implements SecondPass {
 		binder.setValue( value );
 		binder.setCascade( cascadeStrategy );
 		binder.setAccessType( inferredData.getDefaultAccess() );
-		Property prop = binder.make();
+		Property prop = binder.makeProperty();
 		if ( BinderHelper.isDefault( mappedBy ) ) {
 			/*
 			 * we need to check if the columns are in the right order

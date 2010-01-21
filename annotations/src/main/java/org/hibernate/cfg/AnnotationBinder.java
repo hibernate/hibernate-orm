@@ -256,7 +256,7 @@ public final class AnnotationBinder {
 			SequenceGenerator ann = pckg.getAnnotation( SequenceGenerator.class );
 			IdGenerator idGen = buildIdGenerator( ann, mappings );
 			mappings.addGenerator( idGen );
-			log.debug( "Add sequence generator with name: {}", idGen.getName() );
+			log.trace( "Add sequence generator with name: {}", idGen.getName() );
 		}
 		if ( pckg.isAnnotationPresent( TableGenerator.class ) ) {
 			TableGenerator ann = pckg.getAnnotation( TableGenerator.class );
@@ -381,7 +381,7 @@ public final class AnnotationBinder {
 				idGen.addParam( MultipleHiLoPerTableGenerator.PK_VALUE_NAME, tabGen.pkColumnValue() );
 			}
 			idGen.addParam( TableHiLoGenerator.MAX_LO, String.valueOf( tabGen.allocationSize() - 1 ) );
-			log.debug( "Add table generator with name: {}", idGen.getName() );
+			log.trace( "Add table generator with name: {}", idGen.getName() );
 		}
 		else if ( ann instanceof SequenceGenerator ) {
 			SequenceGenerator seqGen = (SequenceGenerator) ann;
@@ -399,7 +399,7 @@ public final class AnnotationBinder {
 				);
 			}
 			idGen.addParam( SequenceHiLoGenerator.MAX_LO, String.valueOf( seqGen.allocationSize() - 1 ) );
-			log.debug( "Add sequence generator with name: {}", idGen.getName() );
+			log.trace( "Add sequence generator with name: {}", idGen.getName() );
 		}
 		else if ( ann instanceof GenericGenerator ) {
 			GenericGenerator genGen = (GenericGenerator) ann;
@@ -409,7 +409,7 @@ public final class AnnotationBinder {
 			for (Parameter parameter : params) {
 				idGen.addParam( parameter.name(), parameter.value() );
 			}
-			log.debug( "Add generic generator with name: {}", idGen.getName() );
+			log.trace( "Add generic generator with name: {}", idGen.getName() );
 		}
 		else {
 			throw new AssertionFailure( "Unknown Generator annotation: " + ann );
@@ -815,7 +815,7 @@ public final class AnnotationBinder {
 						(Map<String, Join>) null, (PropertyHolder) null, mappings
 				);
 			}
-			log.debug( "Subclass joined column(s) created" );
+			log.trace( "Subclass joined column(s) created" );
 		}
 		else {
 			if ( clazzToProcess.isAnnotationPresent( PrimaryKeyJoinColumns.class )
@@ -1089,7 +1089,7 @@ public final class AnnotationBinder {
 			discriminatorColumn.linkWithValue( discrim );
 			discrim.setTypeName( discriminatorColumn.getDiscriminatorTypeName() );
 			rootClass.setPolymorphic( true );
-			log.debug( "Setting discriminator for entity {}", rootClass.getEntityName() );
+			log.trace( "Setting discriminator for entity {}", rootClass.getEntityName() );
 		}
 	}
 
@@ -1173,7 +1173,7 @@ public final class AnnotationBinder {
 		 */
 		Ejb3Column[] columns = null;
 
-		log.debug(
+		log.trace(
 				"Processing annotations of {}.{}", propertyHolder.getEntityName(), inferredData.getPropertyName()
 		);
 
@@ -1253,9 +1253,11 @@ public final class AnnotationBinder {
 		}
 
 		final XClass returnedClass = inferredData.getClassOrElement();
+		boolean isId;
 		if ( !entityBinder.isIgnoreIdAnnotations() &&
 				( property.isAnnotationPresent( Id.class )
 						|| property.isAnnotationPresent( EmbeddedId.class ) ) ) {
+			isId = true;
 			//Override from @MapsId if needed
 			columns = overrideColumnFromMapsIdProperty( "", columns, propertyHolder, entityBinder, mappings );
 			if ( isIdentifierMapper ) {
@@ -1263,7 +1265,7 @@ public final class AnnotationBinder {
 						"@IdClass class should not have @Id nor @EmbeddedId properties"
 				);
 			}
-			log.debug( "{} is an id", inferredData.getPropertyName() );
+			log.trace( "{} is an id", inferredData.getPropertyName() );
 			//clone classGenerator and override with local values
 			HashMap<String, IdGenerator> localGenerators = (HashMap<String, IdGenerator>) classGenerators.clone();
 			localGenerators.putAll( buildLocalGenerators( property, mappings ) );
@@ -1298,7 +1300,7 @@ public final class AnnotationBinder {
 					inheritanceStatePerClass
 			);
 
-			log.debug(
+			log.trace(
 					"Bind {} on {}", ( isComponent ? "@EmbeddedId" : "@Id" ), inferredData.getPropertyName()
 			);
 		}
@@ -1320,7 +1322,7 @@ public final class AnnotationBinder {
 								+ propertyHolder.getEntityName()
 				);
 			}
-			log.debug( "{} is a version property", inferredData.getPropertyName() );
+			log.trace( "{} is a version property", inferredData.getPropertyName() );
 			RootClass rootClass = (RootClass) propertyHolder.getPersistentClass();
 			PropertyBinder propBinder = new PropertyBinder();
 			propBinder.setName( inferredData.getPropertyName() );
@@ -1354,7 +1356,7 @@ public final class AnnotationBinder {
 			SimpleValue simpleValue = (SimpleValue) prop.getValue();
 			simpleValue.setNullValue( "undefined" );
 			rootClass.setOptimisticLockMode( Versioning.OPTIMISTIC_LOCK_VERSION );
-			log.debug(
+			log.trace(
 					"Version name: {}, unsavedValue: {}", rootClass.getVersion().getName(),
 					( (SimpleValue) rootClass.getVersion().getValue() ).getNullValue()
 			);
@@ -2007,7 +2009,7 @@ public final class AnnotationBinder {
 		}
 		comp.setNodeName( inferredData.getPropertyName() );
 		String subpath = StringHelper.qualify( propertyHolder.getPath(), inferredData.getPropertyName() );
-		log.debug( "Binding component with path: {}", subpath );
+		log.trace( "Binding component with path: {}", subpath );
 		PropertyHolder subHolder = PropertyHolderBuilder.buildPropertyHolder(
 				comp, subpath,
 				inferredData, propertyHolder, mappings
@@ -2339,7 +2341,7 @@ public final class AnnotationBinder {
 	) {
 		//column.getTable() => persistentClass.getTable()
 		final String propertyName = inferredData.getPropertyName();
-		log.debug( "Fetching {} with {}", propertyName, fetchMode );
+		log.trace( "Fetching {} with {}", propertyName, fetchMode );
 		boolean mapToPK = true;
 		if ( !trueOneToOne ) {
 			//try to find a hidden true one to one (FK == PK columns)

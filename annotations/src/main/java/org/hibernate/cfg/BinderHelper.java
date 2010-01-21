@@ -648,4 +648,8 @@ public class BinderHelper {
 		        null;
 	}
 
+	public static String getPath(PropertyHolder holder, PropertyData property) {
+		return StringHelper.qualify( holder.getPath(), property.getPropertyName() );
+	}
+
 }

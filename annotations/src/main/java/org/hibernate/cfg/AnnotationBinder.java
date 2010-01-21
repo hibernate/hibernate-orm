@@ -1184,7 +1184,7 @@ public final class AnnotationBinder {
 			else {
 				throw new AnnotationException(
 						"@Parent cannot be applied outside an embeddable object: "
-								+ StringHelper.qualify( propertyHolder.getPath(), property.getName() )
+								+ BinderHelper.getPath( propertyHolder, inferredData )
 				);
 			}
 			return;
@@ -1236,7 +1236,7 @@ public final class AnnotationBinder {
 		}
 		else if ( joinColumns == null && property.isAnnotationPresent( org.hibernate.annotations.Any.class ) ) {
 			throw new AnnotationException( "@Any requires an explicit @JoinColumn(s): "
-					+ StringHelper.qualify( propertyHolder.getPath(), property.getName() ) );
+					+ BinderHelper.getPath( propertyHolder, inferredData ) );
 		}
 		if ( columns == null && !property.isAnnotationPresent( ManyToMany.class ) ) {
 			//useful for collection of embedded elements
@@ -1260,48 +1260,17 @@ public final class AnnotationBinder {
 			isId = true;
 			//Override from @MapsId if needed
 			columns = overrideColumnFromMapsIdProperty( "", columns, propertyHolder, entityBinder, mappings );
-			if ( isIdentifierMapper ) {
-				throw new AnnotationException(
-						"@IdClass class should not have @Id nor @EmbeddedId properties"
-				);
-			}
-			log.trace( "{} is an id", inferredData.getPropertyName() );
-			//clone classGenerator and override with local values
-			HashMap<String, IdGenerator> localGenerators = (HashMap<String, IdGenerator>) classGenerators.clone();
-			localGenerators.putAll( buildLocalGenerators( property, mappings ) );
-
-			//manage composite related metadata
-			//guess if its a component and find id data access (property, field etc)
-			final boolean isComponent = returnedClass.isAnnotationPresent( Embeddable.class )
-					|| property.isAnnotationPresent( EmbeddedId.class );
-			AccessType propertyAccessor = entityBinder.getPropertyAccessor( returnedClass );
-
-			GeneratedValue generatedValue = property.getAnnotation( GeneratedValue.class );
-			String generatorType = generatedValue != null ?
-					generatorType( generatedValue.strategy() ) :
-					"assigned";
-			String generator = generatedValue != null ?
-					generatedValue.generator() :
-					BinderHelper.ANNOTATION_STRING_DEFAULT;
-			if ( isComponent ) generatorType = "assigned"; //a component must not have any generator
-
-			bindId(
-					generatorType,
-					generator,
-					inferredData,
-					columns,
+			processId(
 					propertyHolder,
-					localGenerators,
-					isComponent,
-					propertyAccessor, entityBinder,
-					false,
+					property,
+					inferredData,
+					classGenerators,
+					entityBinder,
 					isIdentifierMapper,
 					mappings,
-					inheritanceStatePerClass
-			);
-
-			log.trace(
-					"Bind {} on {}", ( isComponent ? "@EmbeddedId" : "@Id" ), inferredData.getPropertyName()
+					inheritanceStatePerClass,
+					columns,
+					returnedClass
 			);
 		}
 		else if ( property.isAnnotationPresent( Version.class ) ) {
@@ -1368,7 +1337,7 @@ public final class AnnotationBinder {
 			if ( property.isAnnotationPresent( Column.class )
 					|| property.isAnnotationPresent( Columns.class ) ) {
 				throw new AnnotationException( "@Column(s) not allowed on a @ManyToOne property: "
-						+ StringHelper.qualify( propertyHolder.getPath(), inferredData.getPropertyName() ) );
+						+ BinderHelper.getPath( propertyHolder, inferredData ) );
 			}
 
 			Cascade hibernateCascade = property.getAnnotation( Cascade.class );
@@ -1401,7 +1370,7 @@ public final class AnnotationBinder {
 			if ( property.isAnnotationPresent( Column.class )
 					|| property.isAnnotationPresent( Columns.class ) ) {
 				throw new AnnotationException( "@Column(s) not allowed on a @OneToOne property: "
-						+ StringHelper.qualify( propertyHolder.getPath(), inferredData.getPropertyName() ) );
+						+ BinderHelper.getPath( propertyHolder, inferredData ) );
 			}
 
 			//FIXME support a proper PKJCs
@@ -1438,7 +1407,7 @@ public final class AnnotationBinder {
 			if ( property.isAnnotationPresent( Column.class )
 					|| property.isAnnotationPresent( Columns.class ) ) {
 				throw new AnnotationException( "@Column(s) not allowed on a @Any property: "
-						+ StringHelper.qualify( propertyHolder.getPath(), inferredData.getPropertyName() ) );
+						+ BinderHelper.getPath( propertyHolder, inferredData ) );
 			}
 
 			Cascade hibernateCascade = property.getAnnotation( Cascade.class );
@@ -1607,7 +1576,7 @@ public final class AnnotationBinder {
 					}
 					if ( joinKeyColumns != null ) {
 						throw new AnnotationException( "@MapKeyJoinColumn and @MapKeyJoinColumns used on the same property: "
-								+ StringHelper.qualify( propertyHolder.getClassName(), property.getName() ) );
+								+ BinderHelper.getPath( propertyHolder, inferredData ) );
 					}
 				}
 				else if ( property.isAnnotationPresent( MapKeyJoinColumn.class ) ) {
@@ -1816,6 +1785,53 @@ public final class AnnotationBinder {
 		}
 	}
 
+	private static void processId(PropertyHolder propertyHolder, XProperty property, PropertyData inferredData, HashMap<String, IdGenerator> classGenerators, EntityBinder entityBinder, boolean isIdentifierMapper, ExtendedMappings mappings, Map<XClass, InheritanceState> inheritanceStatePerClass, Ejb3Column[] columns, XClass returnedClass) {
+		if ( isIdentifierMapper ) {
+			throw new AnnotationException(
+					"@IdClass class should not have @Id nor @EmbeddedId properties: "
+							+ BinderHelper.getPath( propertyHolder, inferredData )
+			);
+		}
+		log.trace( "{} is an id", inferredData.getPropertyName() );
+		//clone classGenerator and override with local values
+		HashMap<String, IdGenerator> localGenerators = (HashMap<String, IdGenerator>) classGenerators.clone();
+		localGenerators.putAll( buildLocalGenerators( property, mappings ) );
+
+		//manage composite related metadata
+		//guess if its a component and find id data access (property, field etc)
+		final boolean isComponent = returnedClass.isAnnotationPresent( Embeddable.class )
+				|| property.isAnnotationPresent( EmbeddedId.class );
+		AccessType propertyAccessor = entityBinder.getPropertyAccessor( returnedClass );
+
+		GeneratedValue generatedValue = property.getAnnotation( GeneratedValue.class );
+		String generatorType = generatedValue != null ?
+				generatorType( generatedValue.strategy() ) :
+				"assigned";
+		String generator = generatedValue != null ?
+				generatedValue.generator() :
+				BinderHelper.ANNOTATION_STRING_DEFAULT;
+		if ( isComponent ) generatorType = "assigned"; //a component must not have any generator
+
+		bindId(
+				generatorType,
+				generator,
+				inferredData,
+				columns,
+				propertyHolder,
+				localGenerators,
+				isComponent,
+				propertyAccessor, entityBinder,
+				false,
+				isIdentifierMapper,
+				mappings,
+				inheritanceStatePerClass
+		);
+
+		log.trace(
+				"Bind {} on {}", ( isComponent ? "@EmbeddedId" : "@Id" ), inferredData.getPropertyName()
+		);
+	}
+
 	private static Ejb3JoinColumn[] buildDefaultJoinColumnsForXToOne(PropertyHolder propertyHolder, XProperty property, PropertyData inferredData, EntityBinder entityBinder, ExtendedMappings mappings) {
 		Ejb3JoinColumn[] joinColumns;
 		JoinTable joinTableAnn = propertyHolder.getJoinTable( property );
@@ -1827,7 +1843,7 @@ public final class AnnotationBinder {
 			if ( StringHelper.isEmpty( joinTableAnn.name() ) ) {
 				throw new AnnotationException(
 						"JoinTable.name() on a @ToOne association has to be explicit: "
-								+ StringHelper.qualify( propertyHolder.getPath(), inferredData.getPropertyName() )
+								+ BinderHelper.getPath( propertyHolder, inferredData )
 				);
 			}
 		}
@@ -2008,7 +2024,7 @@ public final class AnnotationBinder {
 			comp.setComponentClassName( comp.getOwner().getClassName() );
 		}
 		comp.setNodeName( inferredData.getPropertyName() );
-		String subpath = StringHelper.qualify( propertyHolder.getPath(), inferredData.getPropertyName() );
+		String subpath = BinderHelper.getPath( propertyHolder, inferredData );
 		log.trace( "Binding component with path: {}", subpath );
 		PropertyHolder subHolder = PropertyHolderBuilder.buildPropertyHolder(
 				comp, subpath,
@@ -2409,7 +2425,7 @@ public final class AnnotationBinder {
 		org.hibernate.annotations.Any anyAnn = inferredData.getProperty().getAnnotation( org.hibernate.annotations.Any.class );
 		if ( anyAnn == null ) {
 			throw new AssertionFailure( "Missing @Any annotation: "
-					+ StringHelper.qualify( propertyHolder.getPath(), inferredData.getPropertyName() ) );
+					+ BinderHelper.getPath( propertyHolder, inferredData ) );
 		}
 		Any value = BinderHelper.buildAnyValue( anyAnn.metaDef(), columns, anyAnn.metaColumn(), inferredData,
 				cascadeOnDelete, nullability, propertyHolder, entityBinder, anyAnn.optional(), mappings );

@@ -38,6 +38,7 @@ import org.hibernate.classic.Validatable;
 import org.hibernate.engine.EntityEntry;
 import org.hibernate.engine.EntityKey;
 import org.hibernate.engine.Nullability;
+import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.engine.Status;
 import org.hibernate.engine.Versioning;
@@ -62,8 +63,12 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 	/**
 	 * make sure user didn't mangle the id
 	 */
-	public void checkId(Object object, EntityPersister persister, Serializable id, EntityMode entityMode)
-	throws HibernateException {
+	public void checkId(
+			Object object,
+			EntityPersister persister,
+			Serializable id,
+			EntityMode entityMode,
+			SessionFactoryImplementor factory) throws HibernateException {
 
 		if ( id != null && id instanceof DelayedPostInsertIdentifier ) {
 			// this is a situation where the entity id is assigned by a post-insert generator
@@ -77,7 +82,7 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 			if (id==null) {
 				throw new AssertionFailure("null id in " + persister.getEntityName() + " entry (don't flush the Session after an exception occurs)");
 			}
-			if ( !persister.getIdentifierType().isEqual(id, oid, entityMode) ) {
+			if ( !persister.getIdentifierType().isEqual( id, oid, entityMode, factory ) ) {
 				throw new HibernateException(
 						"identifier of an instance of " +
 						persister.getEntityName() +
@@ -184,7 +189,7 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 			values = loadedState;
 		}
 		else {
-			checkId( entity, persister, entry.getId(), entityMode );
+			checkId( entity, persister, entry.getId(), entityMode, session.getFactory() );
 
 			// grab its current state
 			values = persister.getPropertyValues( entity, entityMode );

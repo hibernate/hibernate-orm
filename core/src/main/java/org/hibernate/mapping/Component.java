@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,17 +20,30 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.mapping;
 
+import java.io.Serializable;
+import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import org.hibernate.EntityMode;
+import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
+import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.SessionImplementor;
+import org.hibernate.id.CompositeNestedGeneratedValueGenerator;
+import org.hibernate.id.IdentifierGenerator;
+import org.hibernate.id.factory.IdentifierGeneratorFactory;
+import org.hibernate.property.Getter;
+import org.hibernate.property.PropertyAccessor;
+import org.hibernate.property.Setter;
 import org.hibernate.tuple.component.ComponentMetamodel;
 import org.hibernate.type.ComponentType;
 import org.hibernate.type.EmbeddedComponentType;
@@ -41,10 +54,11 @@ import org.hibernate.util.ReflectHelper;
 /**
  * The mapping for a component, composite element,
  * composite identifier, etc.
+ *
  * @author Gavin King
+ * @author Steve Ebersole
  */
 public class Component extends SimpleValue implements MetaAttributable {
-
 	private ArrayList properties = new ArrayList();
 	private String componentClassName;
 	private boolean embedded;
@@ -293,6 +307,137 @@ public class Component extends SimpleValue implements MetaAttributable {
 
 	public String toString() {
 		return getClass().getName() + '(' + properties.toString() + ')';
+	}
+
+	private IdentifierGenerator builtIdentifierGenerator;
+
+	public IdentifierGenerator createIdentifierGenerator(
+			IdentifierGeneratorFactory identifierGeneratorFactory,
+			Dialect dialect,
+			String defaultCatalog,
+			String defaultSchema,
+			RootClass rootClass) throws MappingException {
+		if ( builtIdentifierGenerator == null ) {
+			builtIdentifierGenerator = buildIdentifierGenerator(
+					identifierGeneratorFactory,
+					dialect,
+					defaultCatalog,
+					defaultSchema,
+					rootClass
+			);
+		}
+		return builtIdentifierGenerator;
+	}
+
+	private IdentifierGenerator buildIdentifierGenerator(
+			IdentifierGeneratorFactory identifierGeneratorFactory,
+			Dialect dialect,
+			String defaultCatalog,
+			String defaultSchema,
+			RootClass rootClass) throws MappingException {
+		final boolean hasCustomGenerator = ! DEFAULT_ID_GEN_STRATEGY.equals( getIdentifierGeneratorStrategy() );
+		if ( hasCustomGenerator ) {
+			return super.createIdentifierGenerator(
+					identifierGeneratorFactory, dialect, defaultCatalog, defaultSchema, rootClass
+			);
+		}
+
+		final Class entityClass = rootClass.getMappedClass();
+		final Class attributeDeclarer; // what class is the declarer of the composite pk attributes
+		CompositeNestedGeneratedValueGenerator.GenerationContextLocator locator;
+
+		// IMPL NOTE : See the javadoc discussion on CompositeNestedGeneratedValueGenerator wrt the
+		//		various scenarios for which we need to account here
+		if ( isEmbedded() ) {
+			// we have the "straight up" embedded (again the hibernate term) component identifier
+			attributeDeclarer = entityClass;
+		}
+		else if ( rootClass.getIdentifierProperty() != null ) {
+			// we have the "@EmbeddedId" / <composite-id name="idName"/> case
+			attributeDeclarer = resolveComponentClass();
+		}
+		else {
+			// we have the @IdClass / <composite-id mapped="true"/> case
+			attributeDeclarer = resolveComponentClass();
+		}
+
+		locator = new StandardGenerationContextLocator( rootClass.getEntityName() );
+		final CompositeNestedGeneratedValueGenerator generator = new CompositeNestedGeneratedValueGenerator( locator );
+
+		Iterator itr = getPropertyIterator();
+		while ( itr.hasNext() ) {
+			final Property property = (Property) itr.next();
+			if ( property.getValue().isSimpleValue() ) {
+				final SimpleValue value = (SimpleValue) property.getValue();
+
+				if ( DEFAULT_ID_GEN_STRATEGY.equals( value.getIdentifierGeneratorStrategy() ) ) {
+					// skip any 'assigned' generators, they would have been handled by
+					// the StandardGenerationContextLocator
+					continue;
+				}
+
+				final IdentifierGenerator valueGenerator = value.createIdentifierGenerator(
+						identifierGeneratorFactory,
+						dialect,
+						defaultCatalog,
+						defaultSchema,
+						rootClass
+				);
+				final Setter injector = property.getPropertyAccessor( attributeDeclarer )
+						.getSetter( attributeDeclarer, property.getName() );
+				generator.addGeneratedValuePlan(
+						new ValueGenerationPlan(
+								property.getName(),
+								valueGenerator,
+								injector
+						)
+				);
+			}
+		}
+		return generator;
+	}
+
+	private Class resolveComponentClass() {
+		try {
+			return getComponentClass();
+		}
+		catch ( Exception e ) {
+			return null;
+		}
+	}
+
+	public static class StandardGenerationContextLocator
+			implements CompositeNestedGeneratedValueGenerator.GenerationContextLocator {
+		private final String entityName;
+
+		public StandardGenerationContextLocator(String entityName) {
+			this.entityName = entityName;
+		}
+
+		public Serializable locateGenerationContext(SessionImplementor session, Object incomingObject) {
+			return session.getEntityPersister( entityName, incomingObject )
+					.getIdentifier( incomingObject, session.getEntityMode() );
+		}
+	}
+
+	public static class ValueGenerationPlan implements CompositeNestedGeneratedValueGenerator.GenerationPlan {
+		private final String propertyName;
+		private final IdentifierGenerator subGenerator;
+		private final Setter injector;
+
+		public ValueGenerationPlan(
+				String propertyName,
+				IdentifierGenerator subGenerator,
+				Setter injector) {
+			this.propertyName = propertyName;
+			this.subGenerator = subGenerator;
+			this.injector = injector;
+		}
+
+		public void execute(SessionImplementor session, Object incomingObject) {
+			final Object generatedValue = subGenerator.generate( session, incomingObject );
+			injector.set( incomingObject, generatedValue, session.getFactory() );
+		}
 	}
 
 }

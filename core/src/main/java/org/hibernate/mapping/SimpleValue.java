@@ -46,11 +46,12 @@ import org.hibernate.util.ReflectHelper;
  * @author Gavin King
  */
 public class SimpleValue implements KeyValue {
+	public static final String DEFAULT_ID_GEN_STRATEGY = "assigned";
 
 	private final List columns = new ArrayList();
 	private String typeName;
 	private Properties identifierGeneratorProperties;
-	private String identifierGeneratorStrategy = "assigned";
+	private String identifierGeneratorStrategy = DEFAULT_ID_GEN_STRATEGY;
 	private String nullValue;
 	private Table table;
 	private String foreignKeyName;
@@ -124,8 +125,7 @@ public class SimpleValue implements KeyValue {
 			Dialect dialect, 
 			String defaultCatalog, 
 			String defaultSchema, 
-			RootClass rootClass) 
-	throws MappingException {
+			RootClass rootClass) throws MappingException {
 		
 		Properties params = new Properties();
 		

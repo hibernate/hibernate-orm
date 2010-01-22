@@ -22,8 +22,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import javax.lang.model.element.AnnotationMirror;
+import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
+import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.Name;
 import javax.lang.model.element.PackageElement;
@@ -43,7 +45,11 @@ import javax.persistence.Embedded;
 import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import javax.persistence.ManyToMany;
+import javax.persistence.ManyToOne;
 import javax.persistence.MappedSuperclass;
+import javax.persistence.OneToMany;
+import javax.persistence.OneToOne;
 import javax.persistence.Transient;
 import javax.tools.Diagnostic;
 
@@ -348,8 +354,11 @@ public class AnnotationMetaEntity implements MetaEntity {
 				String fqElementName = returnedElement.getQualifiedName()
 						.toString();  // WARNING: .toString() is necessary here since Name equals does not compare to String
 				String collection = COLLECTIONS.get( fqElementName );
+				final List<? extends AnnotationMirror> annotations = element.getAnnotationMirrors();
+				String targetEntity = getTargetEntity( annotations );
 				if ( collection != null ) {
-					if ( element.getAnnotation( ElementCollection.class ) != null ) {
+					if ( containsAnnotation( annotations, ElementCollection.class ) ) {
+						//FIXME I don't understand why this code is different between Elementcollection and a regular collection but it needs to take targetClass into account
 						TypeMirror collectionElementType = getCollectionElementType( t, fqElementName );
 						final TypeElement collectionElement = ( TypeElement ) context.getProcessingEnvironment()
 								.getTypeUtils()
@@ -361,11 +370,12 @@ public class AnnotationMetaEntity implements MetaEntity {
 					}
 					if ( collection.equals( "javax.persistence.metamodel.MapAttribute" ) ) {
 						return new AnnotationMetaMap(
-								parent, element, collection, getKeyType( t ), getElementType( t )
+								//FIXME support targetEntity for map's key @MapKeyClass
+								parent, element, collection, getKeyType( t ), getElementType( t, targetEntity )
 						);
 					}
 					else {
-						return new AnnotationMetaCollection( parent, element, collection, getElementType( t ) );
+						return new AnnotationMetaCollection( parent, element, collection, getElementType( t, targetEntity ) );
 					}
 				}
 				else {
@@ -414,6 +424,63 @@ public class AnnotationMetaEntity implements MetaEntity {
 		}
 	}
 
+	private boolean containsAnnotation(List<? extends AnnotationMirror> annotations, Class<?> annotation) {
+		String annString = annotation.getName();
+		for ( AnnotationMirror mirror : annotations ) {
+			if ( annString.equals( mirror.getAnnotationType().toString() ) ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * Returns targetEntity or null if no targetEntity is here or if equals to void
+	 */
+	private String getTargetEntity(List<? extends AnnotationMirror> annotations) {
+		final String elementCollection = ElementCollection.class.getName();
+
+		for ( AnnotationMirror mirror : annotations ) {
+			final String annotation = mirror.getAnnotationType().toString();
+			if ( elementCollection.equals( annotation ) ) {
+				final String targetEntity = getTargetEntity( mirror );
+				if (targetEntity != null) return targetEntity;
+			}
+			else if ( OneToMany.class.getName().equals( annotation ) ) {
+				final String targetEntity = getTargetEntity( mirror );
+				if (targetEntity != null) return targetEntity;
+			}
+			else if ( ManyToMany.class.getName().equals( annotation ) ) {
+				final String targetEntity = getTargetEntity( mirror );
+				if (targetEntity != null) return targetEntity;
+			}
+			else if ( ManyToOne.class.getName().equals( annotation ) ) {
+				final String targetEntity = getTargetEntity( mirror );
+				if (targetEntity != null) return targetEntity;
+			}
+			else if ( OneToOne.class.getName().equals( annotation ) ) {
+				final String targetEntity = getTargetEntity( mirror );
+				if (targetEntity != null) return targetEntity;
+			}
+		}
+		return null;
+	}
+
+	private String getTargetEntity(AnnotationMirror mirror) {
+		String targetEntity = null;
+		final Map<? extends ExecutableElement, ? extends AnnotationValue> attributes = mirror.getElementValues();
+		for ( Map.Entry<? extends ExecutableElement, ? extends AnnotationValue> entry : attributes.entrySet() ) {
+			final String simpleName = entry.getKey().getSimpleName().toString();
+			if ( "targetEntity".equals( simpleName ) ) {
+				targetEntity = entry.getValue().toString();
+				break;
+			}
+		}
+		targetEntity = ( "void.class".equals( targetEntity ) ) ? null : targetEntity;
+		return targetEntity != null && targetEntity.endsWith( ".class" ) ?
+				targetEntity.substring( 0, targetEntity.length() - 6 ) : null;
+	}
+
 	public String generateImports() {
 		return importContext.generateImports();
 	}
@@ -438,13 +505,23 @@ public class AnnotationMetaEntity implements MetaEntity {
 		return TypeUtils.extractClosestRealTypeAsString( t.getTypeArguments().get( 0 ), context );
 	}
 
-	private String getElementType(DeclaredType declaredType) {
-		if ( declaredType.getTypeArguments().size() == 1 ) {
-			final TypeMirror type = declaredType.getTypeArguments().get( 0 );
+	private String getElementType(DeclaredType declaredType, String targetEntity) {
+		if (targetEntity != null) return targetEntity;
+		final List<? extends TypeMirror> mirrors = declaredType.getTypeArguments();
+		if ( mirrors.size() == 1 ) {
+			final TypeMirror type = mirrors.get( 0 );
 			return TypeUtils.extractClosestRealTypeAsString( type, context );
 		}
+		else if ( mirrors.size() == 2 ) {
+			return TypeUtils.extractClosestRealTypeAsString( mirrors.get( 1 ), context );
+		}
 		else {
-			return TypeUtils.extractClosestRealTypeAsString( declaredType.getTypeArguments().get( 1 ), context );
+			//for 0 or many
+			//0 is expected, many is not
+			if ( mirrors.size() > 2) {
+				context.logMessage( Diagnostic.Kind.WARNING, "Unable to find the closest solid type" + declaredType );
+			}
+			return "?";
 		}
 	}
 

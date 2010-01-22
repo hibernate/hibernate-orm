@@ -734,12 +734,18 @@ public class AttributeFactory {
 
 			ParameterizedType signatureType = getSignatureType( member );
 			if ( keyPersistentAttributeType == null ) {
-				elementJavaType = getClassFromGenericArgument( signatureType.getActualTypeArguments()[0] );
+				elementJavaType = signatureType != null ?
+						getClassFromGenericArgument( signatureType.getActualTypeArguments()[0] ) :
+						Object.class; //FIXME and honor targetEntity?
 				keyJavaType = null;
 			}
 			else {
-				keyJavaType = getClassFromGenericArgument( signatureType.getActualTypeArguments()[0] );
-				elementJavaType = getClassFromGenericArgument( signatureType.getActualTypeArguments()[1] );
+				keyJavaType = signatureType != null ?
+						getClassFromGenericArgument( signatureType.getActualTypeArguments()[0] ) :
+						Object.class; //FIXME and honor targetEntity?
+				elementJavaType = signatureType != null ?
+						getClassFromGenericArgument( signatureType.getActualTypeArguments()[1] ) :
+						Object.class; //FIXME and honor targetEntity?
 			}
 
 			this.elementValueContext = new ValueContext() {
@@ -836,9 +842,12 @@ public class AttributeFactory {
 	}
 
 	public static ParameterizedType getSignatureType(Member member) {
-		return (ParameterizedType) ( Field.class.isInstance( member )
-						? ( (Field) member ).getGenericType()
-						: ( (Method) member ).getGenericReturnType());
+		final java.lang.reflect.Type type = Field.class.isInstance( member )
+				? ( ( Field ) member ).getGenericType()
+				: ( ( Method ) member ).getGenericReturnType();
+		//this is a raw type
+		if ( type instanceof Class ) return null;
+		return (ParameterizedType) type;
 	}
 
 	public static PluralAttribute.CollectionType determineCollectionType(Class javaType) {

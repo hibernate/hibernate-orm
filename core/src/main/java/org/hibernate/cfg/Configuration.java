@@ -474,7 +474,7 @@ public class Configuration implements Serializable {
 	/**
 	 * <b>INTENDED FOR TESTSUITE USE ONLY!</b>
 	 * <p/>
-	 * Much like {@link addCacheableFile(File)} except that here we will fail immediately if
+	 * Much like {@link #addCacheableFile(File)} except that here we will fail immediately if
 	 * the cache version cannot be found or used for whatever reason
 	 *
 	 * @param xmlFile The xml file, not the bin!
@@ -2796,6 +2796,10 @@ public class Configuration implements Serializable {
 
 		public ObjectNameNormalizer getObjectNameNormalizer() {
 			return normalizer;
+		}
+
+		public Properties getConfigurationProperties() {
+			return properties;
 		}
 	}
 

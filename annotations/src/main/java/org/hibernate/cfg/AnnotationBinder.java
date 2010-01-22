@@ -24,6 +24,7 @@
  */
 package org.hibernate.cfg;
 
+import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -36,6 +37,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import javax.persistence.Basic;
+import javax.persistence.Cacheable;
 import javax.persistence.Column;
 import javax.persistence.DiscriminatorType;
 import javax.persistence.DiscriminatorValue;
@@ -66,6 +68,7 @@ import javax.persistence.OneToOne;
 import javax.persistence.PrimaryKeyJoinColumn;
 import javax.persistence.PrimaryKeyJoinColumns;
 import javax.persistence.SequenceGenerator;
+import javax.persistence.SharedCacheMode;
 import javax.persistence.SqlResultSetMapping;
 import javax.persistence.SqlResultSetMappings;
 import javax.persistence.Table;
@@ -86,6 +89,7 @@ import org.hibernate.FetchMode;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.CascadeType;
 import org.hibernate.annotations.Check;
@@ -128,6 +132,7 @@ import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XMethod;
 import org.hibernate.annotations.common.reflection.XPackage;
 import org.hibernate.annotations.common.reflection.XProperty;
+import org.hibernate.cache.RegionFactory;
 import org.hibernate.cfg.annotations.CollectionBinder;
 import org.hibernate.cfg.annotations.EntityBinder;
 import org.hibernate.cfg.annotations.Nullability;
@@ -505,9 +510,9 @@ public final class AnnotationBinder {
 		org.hibernate.annotations.Entity hibEntityAnn = clazzToProcess.getAnnotation(
 				org.hibernate.annotations.Entity.class
 		);
-		org.hibernate.annotations.Cache cacheAnn = clazzToProcess.getAnnotation(
-				org.hibernate.annotations.Cache.class
-		);
+
+		Cache cacheAnn = determineCacheSettings( clazzToProcess, mappings );
+
 		EntityBinder entityBinder = new EntityBinder(
 				entityAnn, hibEntityAnn, clazzToProcess, persistentClass, mappings
 		);
@@ -763,6 +768,84 @@ public final class AnnotationBinder {
 		entityBinder.processComplementaryTableDefinitions( clazzToProcess.getAnnotation( org.hibernate.annotations.Table.class ) );
 		entityBinder.processComplementaryTableDefinitions( clazzToProcess.getAnnotation( org.hibernate.annotations.Tables.class ) );
 
+	}
+
+	private static Cache determineCacheSettings(XClass clazzToProcess, ExtendedMappings mappings) {
+		Cache cacheAnn = clazzToProcess.getAnnotation( Cache.class );
+		if ( cacheAnn != null ) {
+			return cacheAnn;
+		}
+
+		Cacheable cacheableAnn = clazzToProcess.getAnnotation( Cacheable.class );
+		SharedCacheMode mode = (SharedCacheMode) mappings.getConfigurationProperties().get(
+				"javax.persistence.sharedCache.mode"
+		);
+		switch ( mode ) {
+			case ALL: {
+				cacheAnn = buildCacheMock( clazzToProcess.getName(), mappings );
+				break;
+			}
+			case ENABLE_SELECTIVE: {
+				if ( cacheableAnn != null && cacheableAnn.value() ) {
+					cacheAnn = buildCacheMock( clazzToProcess.getName(), mappings );
+				}
+				break;
+			}
+			case DISABLE_SELECTIVE: {
+				if ( cacheableAnn == null || cacheableAnn.value() ) {
+					cacheAnn = buildCacheMock( clazzToProcess.getName(), mappings );
+				}
+				break;
+			}
+			default: {
+				// treat both NONE and UNSPECIFIED the same
+				break;
+			}
+		}
+		return cacheAnn;
+	}
+
+	private static Cache buildCacheMock(String region, ExtendedMappings mappings) {
+		return new LocalCacheAnnotationImpl( region, determineCacheConcurrencyStrategy( mappings ) );
+	}
+
+	private static CacheConcurrencyStrategy DEFAULT_CACHE_CONCURRENCY_STRATEGY;
+
+	private static CacheConcurrencyStrategy determineCacheConcurrencyStrategy(ExtendedMappings mappings) {
+		if ( DEFAULT_CACHE_CONCURRENCY_STRATEGY == null ) {
+// todo need to figure out how we will determine the default cache access-type/concurrency-strategy
+//			RegionFactory cacheRegionFactory = SettingsFactory.createRegionFactory( mappings.getConfigurationProperties(), true );
+//			DEFAULT_CACHE_CONCURRENCY_STRATEGY = cacheRegionFactory.[getDefault...]
+			DEFAULT_CACHE_CONCURRENCY_STRATEGY = CacheConcurrencyStrategy.TRANSACTIONAL;
+		}
+		return DEFAULT_CACHE_CONCURRENCY_STRATEGY;
+	}
+
+	@SuppressWarnings({ "ClassExplicitlyAnnotation" })
+	private static class LocalCacheAnnotationImpl implements Cache {
+		private final String region;
+		private final CacheConcurrencyStrategy usage;
+
+		private LocalCacheAnnotationImpl(String region, CacheConcurrencyStrategy usage) {
+			this.region = region;
+			this.usage = usage;
+		}
+
+		public CacheConcurrencyStrategy usage() {
+			return usage;
+		}
+
+		public String region() {
+			return region;
+		}
+
+		public String include() {
+			return "all";
+		}
+
+		public Class<? extends Annotation> annotationType() {
+			return Cache.class;
+		}
 	}
 
 	private static PersistentClass makePersistentClass(InheritanceState inheritanceState, PersistentClass superEntity) {

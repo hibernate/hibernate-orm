@@ -380,7 +380,7 @@ public class SettingsFactory implements Serializable {
 		}
 	}
 
-	protected RegionFactory createRegionFactory(Properties properties, boolean cachingEnabled) {
+	public static RegionFactory createRegionFactory(Properties properties, boolean cachingEnabled) {
 		String regionFactoryClassName = PropertiesHelper.getString( Environment.CACHE_REGION_FACTORY, properties, null );
 		if ( regionFactoryClassName == null && cachingEnabled ) {
 			String providerClassName = PropertiesHelper.getString( Environment.CACHE_PROVIDER, properties, null );

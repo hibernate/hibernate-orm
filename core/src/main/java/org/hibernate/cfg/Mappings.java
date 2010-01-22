@@ -550,4 +550,11 @@ public interface Mappings {
 	 * @return The normalizer.
 	 */
 	public ObjectNameNormalizer getObjectNameNormalizer();
+
+	/**
+	 * Retrieve the configuration properties currently in effect.
+	 *
+	 * @return The configuration properties
+	 */
+	public Properties getConfigurationProperties();
 }

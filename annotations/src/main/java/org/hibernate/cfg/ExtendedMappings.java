@@ -30,6 +30,7 @@ import java.util.Properties;
 import org.hibernate.AnnotationException;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.AnyMetaDef;
+import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.engine.NamedQueryDefinition;

@@ -30,12 +30,12 @@ public class RawTypesTest extends CompilationTest {
 
 	@Test
 	public void testGenerics() {
-		assertClassGenerated( A.class.getName() + "_" );
-		assertClassGenerated( B.class.getName() + "_" );
+		assertClassGenerated( DeskWithRawType.class.getName() + "_" );
+		assertClassGenerated( EmployeeWithRawType.class.getName() + "_" );
 	}
 
 	@Override
 	protected String getTestPackage() {
-		return A.class.getPackage().getName();
+		return DeskWithRawType.class.getPackage().getName();
 	}
 }

@@ -144,6 +144,10 @@ public abstract class AbstractQueryImpl implements Query {
 		return this;
 	}
 
+	public CacheMode getCacheMode() {
+		return cacheMode;
+	}
+
 	public Query setCacheable(boolean cacheable) {
 		this.cacheable = cacheable;
 		return this;

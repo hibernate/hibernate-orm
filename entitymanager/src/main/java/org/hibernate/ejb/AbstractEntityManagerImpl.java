@@ -1,4 +1,4 @@
-// $Id:$
+// $Id$
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
@@ -33,6 +33,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import javax.persistence.CacheRetrieveMode;
+import javax.persistence.CacheStoreMode;
 import javax.persistence.EntityNotFoundException;
 import javax.persistence.EntityTransaction;
 import javax.persistence.FlushModeType;
@@ -66,6 +68,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.hibernate.AssertionFailure;
+import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
@@ -87,6 +90,7 @@ import org.hibernate.ejb.criteria.CriteriaQueryCompiler;
 import org.hibernate.ejb.criteria.ValueHandlerFactory;
 import org.hibernate.ejb.criteria.expression.CompoundSelectionImpl;
 import org.hibernate.ejb.transaction.JoinableCMTTransaction;
+import org.hibernate.ejb.util.CacheModeHelper;
 import org.hibernate.ejb.util.ConfigurationHelper;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.SessionImplementor;
@@ -110,6 +114,8 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 		entityManagerSpecificProperties.add( AvailableSettings.LOCK_SCOPE );
 		entityManagerSpecificProperties.add( AvailableSettings.LOCK_TIMEOUT );
 		entityManagerSpecificProperties.add( AvailableSettings.FLUSH_MODE );
+		entityManagerSpecificProperties.add( AvailableSettings.SHARED_CACHE_RETRIEVE_MODE );
+		entityManagerSpecificProperties.add( AvailableSettings.SHARED_CACHE_STORE_MODE );
 	}
 
 	private EntityManagerFactoryImpl entityManagerFactory;
@@ -152,6 +158,28 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 	private void applyProperties() {
 		getSession().setFlushMode( ConfigurationHelper.getFlushMode( properties.get( AvailableSettings.FLUSH_MODE ) ) );
 		setLockOptions(this.properties, this.lockOptions);
+		getSession().setCacheMode(
+				CacheModeHelper.interpretCacheMode(
+						currentCacheStoreMode(),
+						currentCacheRetrieveMode()
+				)
+		);
+	}
+
+	private CacheRetrieveMode currentCacheRetrieveMode() {
+		return determineCacheRetrieveMode( properties );
+	}
+
+	private CacheRetrieveMode determineCacheRetrieveMode(Map<String,Object> settings) {
+		return (CacheRetrieveMode) settings.get( AvailableSettings.SHARED_CACHE_RETRIEVE_MODE );
+	}
+
+	private CacheStoreMode currentCacheStoreMode() {
+		return determineCacheStoreMode( properties );
+	}
+
+	private CacheStoreMode determineCacheStoreMode(Map<String,Object> settings) {
+		return (CacheStoreMode) properties.get( AvailableSettings.SHARED_CACHE_STORE_MODE );
 	}
 
 	private void setLockOptions(Map<String, Object> props, LockOptions options) {
@@ -194,14 +222,20 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 	 * set.
 	 */
 	private void setDefaultProperties() {
-		if (properties.get( AvailableSettings.FLUSH_MODE ) == null) {
+		if ( properties.get( AvailableSettings.FLUSH_MODE ) == null) {
 			properties.put( AvailableSettings.FLUSH_MODE, getSession().getFlushMode().toString() );
 		}
-		if (properties.get( AvailableSettings.LOCK_SCOPE ) == null) {
+		if ( properties.get( AvailableSettings.LOCK_SCOPE ) == null) {
 			this.properties.put( AvailableSettings.LOCK_SCOPE, PessimisticLockScope.EXTENDED.name() );
 		}
-		if (properties.get( AvailableSettings.LOCK_TIMEOUT ) == null) {
+		if ( properties.get( AvailableSettings.LOCK_TIMEOUT ) == null) {
 			properties.put( AvailableSettings.LOCK_TIMEOUT, LockOptions.WAIT_FOREVER );
+		}
+		if ( properties.get( AvailableSettings.SHARED_CACHE_RETRIEVE_MODE ) == null) {
+			properties.put( AvailableSettings.SHARED_CACHE_RETRIEVE_MODE, CacheModeHelper.DEFAULT_RETRIEVE_MODE );
+		}
+		if ( properties.get( AvailableSettings.SHARED_CACHE_STORE_MODE ) == null) {
+			properties.put( AvailableSettings.SHARED_CACHE_STORE_MODE, CacheModeHelper.DEFAULT_STORE_MODE );
 		}
 	}
 
@@ -484,8 +518,11 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 	}
 
 	public <A> A find(Class<A> entityClass, Object  primaryKey, LockModeType lockModeType, Map<String, Object> properties) {
+		CacheMode previousCacheMode = getSession().getCacheMode();
+		CacheMode cacheMode = determineAppropriateLocalCacheMode( properties );
 		LockOptions lockOptions = null;
 		try {
+			getSession().setCacheMode( cacheMode );
 			if ( lockModeType != null ) {
 				return ( A ) getSession().get(
 						entityClass, ( Serializable ) primaryKey,
@@ -515,6 +552,27 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 		catch ( HibernateException he ) {
 			throw convert( he , lockOptions );
 		}
+		finally {
+			getSession().setCacheMode( previousCacheMode );
+		}
+	}
+
+	public CacheMode determineAppropriateLocalCacheMode(Map<String, Object> localProperties) {
+		CacheRetrieveMode retrieveMode = null;
+		CacheStoreMode storeMode = null;
+		if ( localProperties != null ) {
+			retrieveMode = determineCacheRetrieveMode( localProperties );
+			storeMode = determineCacheStoreMode( localProperties );
+		}
+		if ( retrieveMode == null ) {
+			// use the EM setting
+			retrieveMode = determineCacheRetrieveMode( this.properties );
+		}
+		if ( storeMode == null ) {
+			// use the EM setting
+			storeMode = determineCacheStoreMode( this.properties );
+		}
+		return CacheModeHelper.interpretCacheMode( storeMode, retrieveMode );
 	}
 
 	private void checkTransactionNeeded() {
@@ -583,8 +641,11 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 
 	public void refresh(Object entity, LockModeType lockModeType, Map<String, Object> properties) {
 		checkTransactionNeeded();
+		CacheMode previousCacheMode = getSession().getCacheMode();
+		CacheMode localCacheMode = determineAppropriateLocalCacheMode( properties );
 		LockOptions lockOptions = null;
 		try {
+			getSession().setCacheMode( localCacheMode );
 			if ( !getSession().contains( entity ) ) {
 				throw new IllegalArgumentException( "Entity not managed" );
 			}
@@ -598,6 +659,9 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 		}
 		catch ( HibernateException he ) {
 			throw convert( he, lockOptions);
+		}
+		finally {
+			getSession().setCacheMode( previousCacheMode );
 		}
 	}
 

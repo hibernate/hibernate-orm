@@ -113,14 +113,36 @@ public class AvailableSettings {
 	 * enabled as per the rules defined in JPA 2 section 3.1.7.
 	 * <p/>
 	 * See JPA 2 sections 9.4.3 and 8.2.1.7
+	 * @see javax.persistence.SharedCacheMode
 	 */
 	public static final String SHARED_CACHE_MODE = "javax.persistence.sharedCache.mode";
+
+	/**
+	 * NOTE : Not a valid EMF property...
+	 * <p/>
+	 * Used to indicate if the provider should attempt to retrieve requested data
+	 * in the shared cache.
+	 *
+	 * @see javax.persistence.CacheRetrieveMode
+	 */
+	public static final String SHARED_CACHE_RETRIEVE_MODE ="javax.persistence.cache.retrieveMode";
+
+	/**
+	 * NOTE : Not a valid EMF property...
+	 * <p/>
+	 * Used to indicate if the provider should attempt to store data loaded from the database
+	 * in the shared cache.
+	 *
+	 * @see javax.persistence.CacheStoreMode
+	 */
+	public static final String SHARED_CACHE_STORE_MODE ="javax.persistence.cache.storeMode";
 
 	/**
 	 * Used to indicate what form of automatic validation is in effect as per rules defined
 	 * in JPA 2 section 3.6.1.1
 	 * <p/>
 	 * See JPA 2 sections 9.4.3 and 8.2.1.8
+	 * @see javax.persistence.ValidationMode
 	 */
 	public static final String VALIDATION_MODE = "javax.persistence.validation.mode";
 

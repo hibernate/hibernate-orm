@@ -27,6 +27,8 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import javax.persistence.CacheRetrieveMode;
+import javax.persistence.CacheStoreMode;
 import javax.persistence.FlushModeType;
 import javax.persistence.Parameter;
 import javax.persistence.TransactionRequiredException;
@@ -47,6 +49,8 @@ import static org.hibernate.ejb.QueryHints.HINT_FETCH_SIZE;
 import static org.hibernate.ejb.QueryHints.HINT_FLUSH_MODE;
 import static org.hibernate.ejb.QueryHints.HINT_READONLY;
 import static org.hibernate.ejb.QueryHints.HINT_TIMEOUT;
+
+import org.hibernate.ejb.util.CacheModeHelper;
 import org.hibernate.ejb.util.ConfigurationHelper;
 import org.hibernate.hql.QueryExecutionRequestException;
 
@@ -214,6 +218,34 @@ public abstract class AbstractQueryImpl<X> implements TypedQuery<X> {
 			}
 			else if ( HINT_FLUSH_MODE.equals( hintName ) ) {
 				applyFlushMode( ConfigurationHelper.getFlushMode( value ) );
+			}
+			else if ( AvailableSettings.SHARED_CACHE_RETRIEVE_MODE.equals( hintName ) ) {
+				final CacheRetrieveMode retrieveMode = (CacheRetrieveMode) value;
+
+				CacheStoreMode storeMode = hints != null
+						? (CacheStoreMode) hints.get( AvailableSettings.SHARED_CACHE_STORE_MODE )
+						: null;
+				if ( storeMode == null ) {
+					storeMode = (CacheStoreMode) entityManager.getProperties()
+							.get( AvailableSettings.SHARED_CACHE_STORE_MODE );
+				}
+				applyCacheMode(
+						CacheModeHelper.interpretCacheMode( storeMode, retrieveMode )
+				);
+			}
+			else if ( AvailableSettings.SHARED_CACHE_STORE_MODE.equals( hintName ) ) {
+				final CacheStoreMode storeMode = (CacheStoreMode) value;
+
+				CacheRetrieveMode retrieveMode = hints != null
+						? (CacheRetrieveMode) hints.get( AvailableSettings.SHARED_CACHE_RETRIEVE_MODE )
+						: null;
+				if ( retrieveMode == null ) {
+					retrieveMode = (CacheRetrieveMode) entityManager.getProperties()
+							.get( AvailableSettings.SHARED_CACHE_RETRIEVE_MODE );
+				}
+				applyCacheMode(
+						CacheModeHelper.interpretCacheMode( storeMode, retrieveMode )
+				);
 			}
 			/* TODO:
 			else if ( "org.hibernate.lockMode".equals( hintName ) ) {

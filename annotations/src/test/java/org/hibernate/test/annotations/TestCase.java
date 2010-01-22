@@ -53,14 +53,27 @@ public abstract class TestCase extends HibernateTestCase {
 	}
 
 	public Session openSession() throws HibernateException {
+		rebuildSessionFactory();
 		session = getSessions().openSession();
 		return session;
 	}
 
 	public Session openSession(Interceptor interceptor) throws HibernateException {
+		rebuildSessionFactory();
 		session = getSessions().openSession( interceptor );
 		return session;
 	}
+
+	private void rebuildSessionFactory() {
+		if ( sessions == null ) {
+			try {
+				buildConfiguration();
+			}
+			catch ( Exception e ) {
+				throw new HibernateException( e );
+			}
+		}
+	}	
 
 	protected void setSessions(SessionFactory sessions) {
 		TestCase.sessions = sessions;
@@ -72,7 +85,6 @@ public abstract class TestCase extends HibernateTestCase {
 
 	@Override	
 	protected void buildConfiguration() throws Exception {
-
 		if ( getSessions() != null ) {
 			getSessions().close();
 		}

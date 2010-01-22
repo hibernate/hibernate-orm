@@ -780,6 +780,9 @@ public final class AnnotationBinder {
 		SharedCacheMode mode = (SharedCacheMode) mappings.getConfigurationProperties().get(
 				"javax.persistence.sharedCache.mode"
 		);
+		if ( mode == null ) {
+			mode = SharedCacheMode.UNSPECIFIED;
+		}
 		switch ( mode ) {
 			case ALL: {
 				cacheAnn = buildCacheMock( clazzToProcess.getName(), mappings );

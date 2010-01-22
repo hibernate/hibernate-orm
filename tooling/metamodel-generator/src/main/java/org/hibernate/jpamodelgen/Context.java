@@ -106,7 +106,7 @@ public class Context {
 	//does not work for Entity (risk of circularity)
 	public void processElement(TypeElement element, AccessType defaultAccessTypeForHierarchy) {
 		if ( elementsAlreadyProcessed.contains( element.getQualifiedName().toString() ) ) {
-			logMessage( Diagnostic.Kind.WARNING, "Element already processed (ignoring): " + element );
+			logMessage( Diagnostic.Kind.OTHER, "Element already processed (ignoring): " + element );
 			return;
 		}
 		ClassWriter.writeFile( new AnnotationMetaEntity( element, this, defaultAccessTypeForHierarchy ), this );
@@ -115,7 +115,7 @@ public class Context {
 	}
 
 	public void logMessage(Diagnostic.Kind type, String message) {
-		if ( !logDebug && type.equals( Diagnostic.Kind.NOTE ) ) {
+		if ( !logDebug && type.equals( Diagnostic.Kind.OTHER ) ) {
 			return;
 		}
 		pe.getMessager().printMessage( type, message );

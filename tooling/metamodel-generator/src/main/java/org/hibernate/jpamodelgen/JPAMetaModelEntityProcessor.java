@@ -85,7 +85,7 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 	public void init(ProcessingEnvironment env) {
 		super.init( env );
 		context = new Context( env );
-		context.logMessage( Diagnostic.Kind.NOTE, "Init Processor " + this );
+		context.logMessage( Diagnostic.Kind.NOTE, "Hibernate JPA 2 Static-Metamodel Generator " + Version.getVersionString() );
 	}
 
 	@Override
@@ -93,9 +93,9 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 						   final RoundEnvironment roundEnvironment) {
 
 		if ( roundEnvironment.processingOver() ) {
-			context.logMessage( Diagnostic.Kind.NOTE, "Last processing round." );
+			context.logMessage( Diagnostic.Kind.OTHER, "Last processing round." );
 			createMetaModelClasses();
-			context.logMessage( Diagnostic.Kind.NOTE, "Finished processing" );
+			context.logMessage( Diagnostic.Kind.OTHER, "Finished processing" );
 			return ALLOW_OTHER_PROCESSORS_TO_CLAIM_ANNOTATIONS;
 		}
 
@@ -104,13 +104,13 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 		}
 
 		if ( !hostJPAAnnotations( annotations ) ) {
-			context.logMessage( Diagnostic.Kind.NOTE, "Current processing round does not contain entities" );
+			context.logMessage( Diagnostic.Kind.OTHER, "Current processing round does not contain entities" );
 			return ALLOW_OTHER_PROCESSORS_TO_CLAIM_ANNOTATIONS;
 		}
 
 		Set<? extends Element> elements = roundEnvironment.getRootElements();
 		for ( Element element : elements ) {
-			context.logMessage( Diagnostic.Kind.NOTE, "Processing " + element.toString() );
+			context.logMessage( Diagnostic.Kind.OTHER, "Processing " + element.toString() );
 			handleRootElementAnnotationMirrors( element );
 		}
 
@@ -119,7 +119,7 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 
 	private void createMetaModelClasses() {
 		for ( MetaEntity entity : context.getMetaEntitiesToProcess().values() ) {
-			context.logMessage( Diagnostic.Kind.NOTE, "Writing meta model for " + entity );
+			context.logMessage( Diagnostic.Kind.OTHER, "Writing meta model for " + entity );
 			ClassWriter.writeFile( entity, context );
 		}
 
@@ -129,7 +129,7 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 		}
 
 		for ( MetaEntity entity : context.getMetaSuperclassAndEmbeddableToProcess().values() ) {
-			context.logMessage( Diagnostic.Kind.NOTE, "Writing meta model for " + entity );
+			context.logMessage( Diagnostic.Kind.OTHER, "Writing meta model for " + entity );
 			ClassWriter.writeFile( entity, context );
 		}
 	}
@@ -336,7 +336,7 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 	private InputStream getInputStreamForResource(String resource) {
 		String pkg = getPackage( resource );
 		String name = getRelativeName( resource );
-		context.logMessage( Diagnostic.Kind.NOTE, "Reading resource " + resource );
+		context.logMessage( Diagnostic.Kind.OTHER, "Reading resource " + resource );
 		InputStream ormStream;
 		try {
 			FileObject fileObject = processingEnv.getFiler().getResource( StandardLocation.CLASS_OUTPUT, pkg, name );
@@ -373,7 +373,7 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 		InputStream stream = getInputStreamForResource( resource );
 
 		if ( stream == null ) {
-			context.logMessage( Diagnostic.Kind.NOTE, resource + " not found." );
+			context.logMessage( Diagnostic.Kind.OTHER, resource + " not found." );
 			return null;
 		}
 		try {

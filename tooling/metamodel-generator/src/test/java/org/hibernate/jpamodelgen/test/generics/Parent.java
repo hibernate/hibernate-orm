@@ -56,7 +56,7 @@ public class Parent {
 		this.name = name;
 	}
 
-	@OneToMany
+	@OneToMany(targetEntity = void.class)
 	@JoinColumn(name="parent_fk", nullable = false)
 	public Set<Child> getChildren() {
 		return children;

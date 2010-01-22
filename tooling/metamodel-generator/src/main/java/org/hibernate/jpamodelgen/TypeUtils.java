@@ -79,8 +79,7 @@ public class TypeUtils {
 	public static String extractClosestRealTypeAsString(TypeMirror type, Context context) {
 		if ( type instanceof TypeVariable ) {
 			final TypeMirror compositeUpperBound = ( ( TypeVariable ) type ).getUpperBound();
-			final Types types = context.getProcessingEnvironment()
-					.getTypeUtils();
+			final Types types = context.getProcessingEnvironment().getTypeUtils();
 			final List<? extends TypeMirror> upperBounds = types.directSupertypes( compositeUpperBound );
 			if (upperBounds.size() == 0) {
 				return compositeUpperBound.toString();
@@ -89,7 +88,6 @@ public class TypeUtils {
 				//take the first one
 				return extractClosestRealTypeAsString( upperBounds.get( 0 ), context );
 			}
-
 		}
 		else {
 			return type.toString();

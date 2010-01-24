@@ -771,20 +771,8 @@ public class EntityBinder {
 	}
 
 	public static String getCacheConcurrencyStrategy(CacheConcurrencyStrategy strategy) {
-		switch ( strategy ) {
-			case NONE:
-				return null;
-			case READ_ONLY:
-				return org.hibernate.cache.access.AccessType.READ_ONLY.getName();
-			case READ_WRITE:
-				return org.hibernate.cache.access.AccessType.READ_WRITE.getName();
-			case NONSTRICT_READ_WRITE:
-				return org.hibernate.cache.access.AccessType.NONSTRICT_READ_WRITE.getName();
-			case TRANSACTIONAL:
-				return org.hibernate.cache.access.AccessType.TRANSACTIONAL.getName();
-			default:
-				throw new AssertionFailure( "CacheConcurrencyStrategy unknown: " + strategy );
-		}
+		org.hibernate.cache.access.AccessType accessType = strategy.toAccessType();
+		return accessType == null ? null : accessType.getName();
 	}
 
 	public void addFilter(String name, String condition) {

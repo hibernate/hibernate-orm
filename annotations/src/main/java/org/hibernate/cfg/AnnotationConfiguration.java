@@ -106,6 +106,13 @@ public class AnnotationConfiguration extends Configuration {
 	private Logger log = LoggerFactory.getLogger( AnnotationConfiguration.class );
 
 	/**
+	 * Setting used to give the name of the default {@link org.hibernate.annotations.CacheConcurrencyStrategy}
+	 * to use when either {@link javax.persistence.Cacheable @Cacheable} or
+	 * {@link Cache @Cache} is used.  {@link Cache @Cache(strategy=".."} is used to override.
+	 */
+	public static final String DEFAULT_CACHE_CONCURRENCY_STRATEGY = "org.hibernate.cache.default_cache_concurrency_strategy";
+
+	/**
 	 * Class name of the class needed to enable Search.
 	 */
 	private static final String SEARCH_STARTUP_CLASS = "org.hibernate.search.event.EventListenerRegister";

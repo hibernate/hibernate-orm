@@ -26,6 +26,7 @@ package org.hibernate.cache;
 
 import java.util.Properties;
 
+import org.hibernate.cache.access.AccessType;
 import org.hibernate.cfg.Settings;
 
 /**
@@ -75,6 +76,14 @@ public interface RegionFactory {
 	 * otherwise.
 	 */
 	public boolean isMinimalPutsEnabledByDefault();
+
+	/**
+	 * Get the default access type for {@link EntityRegion entity} and
+	 * {@link CollectionRegion collection} regions.
+	 *
+	 * @return This factory's default access type.
+	 */
+	public AccessType getDefaultAccessType();
 
 	/**
 	 * Generate a timestamp.

@@ -31,6 +31,7 @@ import org.hibernate.cache.EntityRegion;
 import org.hibernate.cache.QueryResultsRegion;
 import org.hibernate.cache.RegionFactory;
 import org.hibernate.cache.TimestampsRegion;
+import org.hibernate.cache.access.AccessType;
 import org.hibernate.cache.infinispan.InfinispanRegionFactory;
 import org.hibernate.cfg.Settings;
 import org.infinispan.manager.CacheManager;
@@ -117,7 +118,12 @@ public class ClusterAwareRegionFactory implements RegionFactory {
       return delegate.isMinimalPutsEnabledByDefault();
    }
 
-   public long nextTimestamp() {
+	@Override
+	public AccessType getDefaultAccessType() {
+		return AccessType.TRANSACTIONAL;
+	}
+
+	public long nextTimestamp() {
       return delegate.nextTimestamp();
    }
 }

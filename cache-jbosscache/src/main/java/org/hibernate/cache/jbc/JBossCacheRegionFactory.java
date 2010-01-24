@@ -32,6 +32,7 @@ import org.hibernate.cache.EntityRegion;
 import org.hibernate.cache.QueryResultsRegion;
 import org.hibernate.cache.RegionFactory;
 import org.hibernate.cache.TimestampsRegion;
+import org.hibernate.cache.access.AccessType;
 import org.hibernate.cache.jbc.builder.JndiSharedCacheInstanceManager;
 import org.hibernate.cache.jbc.builder.SharedCacheInstanceManager;
 import org.hibernate.cache.jbc.collection.CollectionRegionImpl;
@@ -116,7 +117,11 @@ public class JBossCacheRegionFactory implements RegionFactory {
         return true;
     }
 
-    public long nextTimestamp() {
+	public AccessType getDefaultAccessType() {
+		return AccessType.TRANSACTIONAL;
+	}
+
+	public long nextTimestamp() {
         return System.currentTimeMillis() / 100;
     }
 

@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,7 +20,6 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.cache.impl.bridge;
 
@@ -38,6 +37,7 @@ import org.hibernate.cache.QueryResultsRegion;
 import org.hibernate.cache.NoCacheProvider;
 import org.hibernate.cache.TimestampsRegion;
 import org.hibernate.cache.CacheDataDescription;
+import org.hibernate.cache.access.AccessType;
 import org.hibernate.util.PropertiesHelper;
 import org.hibernate.util.ReflectHelper;
 import org.hibernate.cfg.Environment;
@@ -79,6 +79,14 @@ public class RegionFactoryCacheProviderBridge implements RegionFactory {
 
 	public boolean isMinimalPutsEnabledByDefault() {
 		return cacheProvider.isMinimalPutsEnabledByDefault();
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public AccessType getDefaultAccessType() {
+		// we really have no idea
+		return null;
 	}
 
 	public long nextTimestamp() {

@@ -119,6 +119,11 @@ public class EntityBinder {
 	private boolean ignoreIdAnnotations;
 	private boolean cacheLazyProperty;
 	private AccessType propertyAccessType = AccessType.DEFAULT;
+	private boolean wrapIdsInEmbeddedComponents;
+
+	public boolean wrapIdsInEmbeddedComponents() {
+		return wrapIdsInEmbeddedComponents;
+	}
 
 	/**
 	 * Use as a fake one for Collection of elements
@@ -412,6 +417,11 @@ public class EntityBinder {
 			where = whereAnn.clause();
 		}
 	}
+
+	public void setWrapIdsInEmbeddedComponents(boolean wrapIdsInEmbeddedComponents) {
+		this.wrapIdsInEmbeddedComponents = wrapIdsInEmbeddedComponents;
+	}
+
 
 	private static class EntityTableObjectNameSource implements ObjectNameSource {
 		private final String explicitName;

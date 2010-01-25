@@ -625,10 +625,10 @@ public final class AnnotationBinder {
 		HashMap<String, IdGenerator> classGenerators = buildLocalGenerators( clazzToProcess, mappings );
 
 		// check properties
-		List<PropertyData> elements =
-				getElementsToProcess(
-						persistentClass, clazzToProcess, inheritanceStatePerClass, entityBinder, mappings
-				);
+		final ElementsToProcess elementsToProcess = getElementsToProcess(
+				persistentClass, clazzToProcess, inheritanceStatePerClass, entityBinder, mappings
+		);
+		
 		final boolean subclassAndSingleTableStrategy = inheritanceState.getType() == InheritanceType.SINGLE_TABLE
 				&& inheritanceState.hasParents();
 		//process idclass if any
@@ -674,7 +674,9 @@ public final class AnnotationBinder {
 					isComponent,
 					propertyAccessor, entityBinder,
 					true,
-					false, mappings, inheritanceStatePerClass
+					false,
+					mappings,
+					inheritanceStatePerClass
 			);
 			inferredData = new PropertyPreloadedData(
 					propertyAccessor, "_identifierMapper", compositeClass
@@ -683,9 +685,11 @@ public final class AnnotationBinder {
 					propertyHolder,
 					inferredData,
 					baseInferredData,
-					propertyAccessor, false,
+					propertyAccessor,
+					false,
 					entityBinder,
-					true, true,
+					true,
+					true,
 					false, mappings, inheritanceStatePerClass
 			);
 			entityBinder.setIgnoreIdAnnotations( ignoreIdAnnotations );
@@ -720,8 +724,11 @@ public final class AnnotationBinder {
 				idProperties.add( ( (Property) properties.next() ).getName() );
 			}
 		}
+		else {
+			entityBinder.setWrapIdsInEmbeddedComponents( elementsToProcess.getIdPropertyCount() > 1 );
+		}
 		Set<String> missingIdProperties = new HashSet<String>( idProperties );
-		for (PropertyData propertyAnnotatedElement : elements) {
+		for (PropertyData propertyAnnotatedElement : elementsToProcess.getElements() ) {
 			String propertyName = propertyAnnotatedElement.getPropertyName();
 			if ( !idProperties.contains( propertyName ) ) {
 				processElementAnnotations(
@@ -979,7 +986,7 @@ public final class AnnotationBinder {
 	 * Get the annotated elements, guessing the access type from @Id or @EmbeddedId presence.
 	 * Change EntityBinder by side effect
 	 */
-	private static List<PropertyData> getElementsToProcess(
+	private static ElementsToProcess getElementsToProcess(
 			PersistentClass persistentClass, XClass clazzToProcess,
 			Map<XClass, InheritanceState> inheritanceStatePerClass,
 			EntityBinder entityBinder, ExtendedMappings mappings
@@ -996,21 +1003,39 @@ public final class AnnotationBinder {
 
 		List<PropertyData> elements = new ArrayList<PropertyData>();
 		int deep = classesToProcess.size();
-		boolean hasIdentifier = false;
+		int idPropertyCount = 0;
 
 		for ( int index = 0; index < deep; index++ ) {
-			PropertyContainer properyContainer = new PropertyContainer( classesToProcess.get( index ), clazzToProcess );
-			boolean currentHasIdentifier = addElementsOfClass( elements, accessType, properyContainer, mappings );
-			hasIdentifier = hasIdentifier || currentHasIdentifier;
+			PropertyContainer propertyContainer = new PropertyContainer( classesToProcess.get( index ), clazzToProcess );
+			int currentIdPropertyCount = addElementsOfClass( elements, accessType, propertyContainer, mappings );
+			idPropertyCount +=  currentIdPropertyCount;
 		}
 
 		entityBinder.setPropertyAccessType( accessType );
 
-		if ( !hasIdentifier && !inheritanceState.hasParents() ) {
+		if ( idPropertyCount == 0 && !inheritanceState.hasParents() ) {
 			throw new AnnotationException( "No identifier specified for entity: " + clazzToProcess.getName() );
 		}
 
-		return elements;
+		return new ElementsToProcess( elements, idPropertyCount);
+	}
+
+	private static final class ElementsToProcess {
+		private final List<PropertyData> properties;
+		private final int idPropertyCount;
+
+		public List<PropertyData> getElements() {
+			return properties;
+		}
+
+		public int getIdPropertyCount() {
+			return idPropertyCount;
+		}
+
+		private ElementsToProcess(List<PropertyData> properties, int idPropertyCount) {
+			this.properties = properties;
+			this.idPropertyCount = idPropertyCount;
+		}
 	}
 
 	private static AccessType determineDefaultAccessType(XClass annotatedClass, Map<XClass, InheritanceState> inheritanceStatePerClass) {
@@ -1207,13 +1232,13 @@ public final class AnnotationBinder {
 	 *        strategy is used
 	 * @param propertyContainer Metadata about a class and its properties
 	 * @param mappings Mapping meta data
-	 * @return {@code true} in case an id property was found while iterating the elements of {@code annoatedClass} using
+	 * @return the number of id properties found while iterating the elements of {@code annoatedClass} using
 	 * the determined access strategy, {@code false} otherwise.
 	 */
-	private static boolean addElementsOfClass(
+	private static int addElementsOfClass(
 			List<PropertyData> elements, AccessType defaultAccessType, PropertyContainer propertyContainer, ExtendedMappings mappings
 	) {
-		boolean hasIdentifier = false;
+		int idPropertyCounter = 0;
 		AccessType accessType = defaultAccessType;
 
 		if ( propertyContainer.hasExplicitAccessStrategy() ) {
@@ -1223,21 +1248,21 @@ public final class AnnotationBinder {
 		propertyContainer.assertTypesAreResolvable( accessType );
 		Collection<XProperty> properties = propertyContainer.getProperties( accessType );
 		for ( XProperty p : properties ) {
-			final boolean currentHasIdentifier = addProperty(
+			final int currentIdPropertyCounter = addProperty(
 					propertyContainer, p, elements, accessType.getType(), mappings
 			);
-			hasIdentifier = hasIdentifier || currentHasIdentifier;
+			idPropertyCounter += currentIdPropertyCounter;
 		}
-		return hasIdentifier;
+		return idPropertyCounter;
 	}
 
-	private static boolean addProperty(
+	private static int addProperty(
 			PropertyContainer propertyContainer, XProperty property, List<PropertyData> annElts,
 			String propertyAccessor, ExtendedMappings mappings
 	) {
 		final XClass declaringClass = propertyContainer.getDeclaringClass();
 		final XClass entity = propertyContainer.getEntityAtStake();
-		boolean hasIdentifier;
+		int idPropertyCounter = 0;
 		PropertyData propertyAnnotatedElement = new PropertyInferredData(
 				declaringClass, property, propertyAccessor,
 				mappings.getReflectionManager() );
@@ -1249,17 +1274,16 @@ public final class AnnotationBinder {
 		final XAnnotatedElement element = propertyAnnotatedElement.getProperty();
 		if ( element.isAnnotationPresent( Id.class ) || element.isAnnotationPresent( EmbeddedId.class ) ) {
 			annElts.add( 0, propertyAnnotatedElement );
-			hasIdentifier = true;
+			idPropertyCounter++;
 		}
 		else {
 			annElts.add( propertyAnnotatedElement );
-			hasIdentifier = false;
 		}
 		if ( element.isAnnotationPresent( MapsId.class  ) ) {
 			mappings.addPropertyAnnotatedWithMapsId( entity, propertyAnnotatedElement );
 		}
 
-		return hasIdentifier;
+		return idPropertyCounter;
 	}
 
 	/*
@@ -1361,9 +1385,28 @@ public final class AnnotationBinder {
 
 		final XClass returnedClass = inferredData.getClassOrElement();
 
+		//prepare PropertyBinder
+		PropertyBinder propertyBinder = new PropertyBinder();
+		propertyBinder.setName( inferredData.getPropertyName() );
+		propertyBinder.setReturnedClassName( inferredData.getTypeName() );
+		propertyBinder.setAccessType( inferredData.getDefaultAccess() );
+		propertyBinder.setHolder( propertyHolder );
+		propertyBinder.setProperty( property );
+		propertyBinder.setReturnedClass( inferredData.getPropertyClass() );
+		propertyBinder.setMappings( mappings );
+		if ( isIdentifierMapper ) {
+			propertyBinder.setInsertable( false );
+			propertyBinder.setUpdatable( false );
+		}
+		propertyBinder.setDeclaringClass( inferredData.getDeclaringClass() );
+		propertyBinder.setEntityBinder( entityBinder );
+		propertyBinder.setInheritanceStatePerClass(inheritanceStatePerClass);
+
 		boolean isId = !entityBinder.isIgnoreIdAnnotations() &&
 				( property.isAnnotationPresent( Id.class )
 						|| property.isAnnotationPresent( EmbeddedId.class ) );
+		propertyBinder.setId( isId );
+
 		if ( property.isAnnotationPresent( Version.class ) ) {
 			if ( isIdentifierMapper ) {
 				throw new AnnotationException(
@@ -1384,19 +1427,14 @@ public final class AnnotationBinder {
 			}
 			log.trace( "{} is a version property", inferredData.getPropertyName() );
 			RootClass rootClass = (RootClass) propertyHolder.getPersistentClass();
-			PropertyBinder propBinder = new PropertyBinder();
-			propBinder.setName( inferredData.getPropertyName() );
-			propBinder.setReturnedClassName( inferredData.getTypeName() );
-			propBinder.setLazy( false );
-			propBinder.setAccessType( inferredData.getDefaultAccess() );
-			propBinder.setColumns( columns );
-			propBinder.setHolder( propertyHolder ); //PropertyHolderBuilder.buildPropertyHolder(rootClass)
-			propBinder.setProperty( property );
-			propBinder.setReturnedClass( inferredData.getPropertyClass() );
-			propBinder.setMappings( mappings );
-			propBinder.setDeclaringClass( inferredData.getDeclaringClass() );
-			Property prop = propBinder.makePropertyValueAndBind();
-			propBinder.getSimpleValueBinder().setVersion(true);
+//			PropertyBinder propBinder = new PropertyBinder();
+//			propBinder.setName( inferredData.getPropertyName() );
+//			propBinder.setReturnedClassName( inferredData.getTypeName() );
+//			propBinder.setLazy( false );
+//			propBinder.setAccessType( inferredData.getDefaultAccess() );
+			propertyBinder.setColumns( columns );
+			Property prop = propertyBinder.makePropertyValueAndBind();
+			propertyBinder.getSimpleValueBinder().setVersion(true);
 			rootClass.setVersion( prop );
 
 			//If version is on a mapped superclass, update the mapping
@@ -1451,7 +1489,8 @@ public final class AnnotationBinder {
 					ignoreNotFound, onDeleteCascade,
 					ToOneBinder.getTargetEntity( inferredData, mappings ),
 					propertyHolder,
-					inferredData, false, isIdentifierMapper, inSecondPass, mappings
+					inferredData, false, isIdentifierMapper,
+					inSecondPass, propertyBinder, mappings
 			);
 		}
 		else if ( property.isAnnotationPresent( OneToOne.class ) ) {
@@ -1489,7 +1528,13 @@ public final class AnnotationBinder {
 					ignoreNotFound, onDeleteCascade,
 					ToOneBinder.getTargetEntity( inferredData, mappings ),
 					propertyHolder,
-					inferredData, ann.mappedBy(), trueOneToOne, isIdentifierMapper, inSecondPass, mappings
+					inferredData,
+					ann.mappedBy(),
+					trueOneToOne,
+					isIdentifierMapper,
+					inSecondPass,
+					propertyBinder,
+					mappings
 			);
 		}
 		else if ( property.isAnnotationPresent( org.hibernate.annotations.Any.class ) ) {
@@ -1793,7 +1838,7 @@ public final class AnnotationBinder {
 			isComponent = property.isAnnotationPresent( Embedded.class )
 					|| property.isAnnotationPresent( EmbeddedId.class )
 					|| returnedClass.isAnnotationPresent( Embeddable.class );
-			PropertyBinder propertyBinder;
+
 			if ( isComponent ) {
 				AccessType propertyAccessor = entityBinder.getPropertyAccessor( property );
 				propertyBinder = bindComponent(
@@ -1835,23 +1880,12 @@ public final class AnnotationBinder {
 							mappings );
 				}
 
-				propertyBinder = new PropertyBinder();
-				propertyBinder.setName( inferredData.getPropertyName() );
-				propertyBinder.setReturnedClassName( inferredData.getTypeName() );
 				propertyBinder.setLazy( lazy );
-				propertyBinder.setAccessType( inferredData.getDefaultAccess() );
 				propertyBinder.setColumns( columns );
-				propertyBinder.setHolder( propertyHolder );
-				propertyBinder.setProperty( property );
-				propertyBinder.setReturnedClass( inferredData.getPropertyClass() );
-				propertyBinder.setMappings( mappings );
-				if ( isIdentifierMapper ) {
-					propertyBinder.setInsertable( false );
-					propertyBinder.setUpdatable( false );
-				}
-				propertyBinder.setDeclaringClass( inferredData.getDeclaringClass() );
-				propertyBinder.setId(isId);
-				propertyBinder.setInheritanceStatePerClass(inheritanceStatePerClass);
+//				if ( isIdentifierMapper ) {
+//					propertyBinder.setInsertable( false );
+//					propertyBinder.setUpdatable( false );
+//				}
 				propertyBinder.makePropertyValueAndBind();
 			}
 			if (isId) {
@@ -2105,6 +2139,7 @@ public final class AnnotationBinder {
 		binder.setEmbedded( isComponentEmbedded );
 		binder.setHolder( propertyHolder );
 		binder.setId( isId );
+		binder.setEntityBinder( entityBinder );
 		binder.setInheritanceStatePerClass( inheritanceStatePerClass );
 		binder.setMappings( mappings );
 		binder.makePropertyAndBind();
@@ -2136,17 +2171,7 @@ public final class AnnotationBinder {
 		 * Because it's a value type, there is no bidirectional association, hence second pass
 		 * ordering does not matter
 		 */
-		Component comp = new Component( propertyHolder.getPersistentClass() );
-		comp.setEmbedded( isComponentEmbedded );
-		//yuk
-		comp.setTable( propertyHolder.getTable() );
-		if ( !isIdentifierMapper ) {
-			comp.setComponentClassName( inferredData.getClassOrElementName() );
-		}
-		else {
-			comp.setComponentClassName( comp.getOwner().getClassName() );
-		}
-		comp.setNodeName( inferredData.getPropertyName() );
+		Component comp = createComponent( propertyHolder, inferredData, isComponentEmbedded, isIdentifierMapper );
 		String subpath = BinderHelper.getPath( propertyHolder, inferredData );
 		log.trace( "Binding component with path: {}", subpath );
 		PropertyHolder subHolder = PropertyHolderBuilder.buildPropertyHolder(
@@ -2199,6 +2224,22 @@ public final class AnnotationBinder {
 					inSecondPass, mappings, inheritanceStatePerClass
 			);
 		}
+		return comp;
+	}
+
+	public static Component createComponent(PropertyHolder propertyHolder, PropertyData inferredData, boolean isComponentEmbedded, boolean isIdentifierMapper) {
+		Component comp = new Component( propertyHolder.getPersistentClass() );
+		comp.setEmbedded( isComponentEmbedded );
+		//yuk
+		comp.setTable( propertyHolder.getTable() );
+		//FIXME shouldn't identifier mapper use getClassOrElementName? Need to be checked.
+		if ( isIdentifierMapper || ( isComponentEmbedded && inferredData.getPropertyName() == null ) ) {
+			comp.setComponentClassName( comp.getOwner().getClassName() );
+		}
+		else {
+			comp.setComponentClassName( inferredData.getClassOrElementName() );
+		}
+		comp.setNodeName( inferredData.getPropertyName() );
 		return comp;
 	}
 
@@ -2345,7 +2386,9 @@ public final class AnnotationBinder {
 			String cascadeStrategy, Ejb3JoinColumn[] columns, boolean optional,
 			boolean ignoreNotFound, boolean cascadeOnDelete,
 			XClass targetEntity, PropertyHolder propertyHolder,
-			PropertyData inferredData, boolean unique, boolean isIdentifierMapper, boolean inSecondPass,
+			PropertyData inferredData, boolean unique,
+			boolean isIdentifierMapper, boolean inSecondPass,
+			PropertyBinder propertyBinder,
 			ExtendedMappings mappings
 	) {
 		//All FK columns should be in the same table
@@ -2399,24 +2442,26 @@ public final class AnnotationBinder {
 			);
 		}
 		Ejb3Column.checkPropertyConsistency( columns, propertyHolder.getEntityName() + propertyName );
-		PropertyBinder binder = new PropertyBinder();
-		binder.setName( propertyName );
-		binder.setValue( value );
+		//PropertyBinder binder = new PropertyBinder();
+		propertyBinder.setName( propertyName );
+		propertyBinder.setValue( value );
 		//binder.setCascade(cascadeStrategy);
 		if ( isIdentifierMapper ) {
-			binder.setInsertable( false );
-			binder.setUpdatable( false );
+			propertyBinder.setInsertable( false );
+			propertyBinder.setUpdatable( false );
 		}
 		else {
-			binder.setInsertable( columns[0].isInsertable() );
-			binder.setUpdatable( columns[0].isUpdatable() );
+			propertyBinder.setInsertable( columns[0].isInsertable() );
+			propertyBinder.setUpdatable( columns[0].isUpdatable() );
 		}
-		binder.setAccessType( inferredData.getDefaultAccess() );
-		binder.setCascade( cascadeStrategy );
-		binder.setProperty( property );
-		Property prop = binder.makeProperty();
+		propertyBinder.setColumns( columns );
+		propertyBinder.setAccessType( inferredData.getDefaultAccess() );
+		propertyBinder.setCascade( cascadeStrategy );
+		propertyBinder.setProperty( property );
+		propertyBinder.setXToMany( true );
+		Property prop = propertyBinder.makePropertyAndBind();
 		//composite FK columns are in the same table so its OK
-		propertyHolder.addProperty( prop, columns, inferredData.getDeclaringClass() );
+		//propertyHolder.addProperty( prop, columns, inferredData.getDeclaringClass() );
 	}
 
 	protected static void defineFetchingStrategy(ToOne toOne, XProperty property) {
@@ -2476,7 +2521,10 @@ public final class AnnotationBinder {
 			PropertyHolder propertyHolder,
 			PropertyData inferredData, String mappedBy,
 			boolean trueOneToOne,
-			boolean isIdentifierMapper, boolean inSecondPass, ExtendedMappings mappings
+			boolean isIdentifierMapper,
+			boolean inSecondPass,
+			PropertyBinder propertyBinder,
+			ExtendedMappings mappings
 	) {
 		//column.getTable() => persistentClass.getTable()
 		final String propertyName = inferredData.getPropertyName();
@@ -2535,7 +2583,8 @@ public final class AnnotationBinder {
 			bindManyToOne(
 					cascadeStrategy, joinColumns, optional, ignoreNotFound, cascadeOnDelete,
 					targetEntity,
-					propertyHolder, inferredData, true, isIdentifierMapper, inSecondPass, mappings
+					propertyHolder, inferredData, true, isIdentifierMapper, inSecondPass,
+					propertyBinder, mappings
 			);
 		}
 	}

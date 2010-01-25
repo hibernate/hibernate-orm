@@ -40,11 +40,14 @@ import org.hibernate.annotations.common.AssertionFailure;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.cfg.AccessType;
+import org.hibernate.cfg.AnnotationBinder;
 import org.hibernate.cfg.BinderHelper;
 import org.hibernate.cfg.Ejb3Column;
 import org.hibernate.cfg.ExtendedMappings;
 import org.hibernate.cfg.InheritanceState;
 import org.hibernate.cfg.PropertyHolder;
+import org.hibernate.cfg.PropertyPreloadedData;
+import org.hibernate.mapping.Component;
 import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.PropertyGeneration;
@@ -73,15 +76,21 @@ public class PropertyBinder {
 	private XClass declaringClass;
 	private boolean declaringClassSet;
 	private boolean embedded;
+	private EntityBinder entityBinder;
+	private boolean isXToMany;
 
 	public void setEmbedded(boolean embedded) {
 		this.embedded = embedded;
 	}
 
+	public void setEntityBinder(EntityBinder entityBinder) {
+		this.entityBinder = entityBinder;
+	}
+
 	/*
-		 * property can be null
-		 * prefer propertyName to property.getName() since some are overloaded
-		 */
+			 * property can be null
+			 * prefer propertyName to property.getName() since some are overloaded
+			 */
 	private XProperty property;
 	private XClass returnedClass;
 	private boolean isId;
@@ -185,27 +194,45 @@ public class PropertyBinder {
 		return bind( makePropertyAndValue() );
 	}
 
+	public void setXToMany(boolean xToMany) {
+		this.isXToMany = xToMany;
+	}
+
 	private Property bind(Property prop) {
 		if (isId) {
 			final RootClass rootClass = ( RootClass ) holder.getPersistentClass();
-			rootClass.setIdentifier( ( KeyValue ) getValue() );
-
-			if (embedded) {
-				rootClass.setEmbeddedIdentifier( true );
+			//if an xToMany, it as to be wrapped today.
+			//FIXME this pose a problem as the PK is the class instead of the associated class which is not really compliant with the spec
+			if ( isXToMany || entityBinder.wrapIdsInEmbeddedComponents() ) {
+				Component identifier = (Component) rootClass.getIdentifier();
+				if (identifier == null) {
+					identifier = AnnotationBinder.createComponent( holder, new PropertyPreloadedData(null, null, null), true, false );
+					rootClass.setIdentifier( identifier );
+					identifier.setNullValue( "undefined" );
+					rootClass.setEmbeddedIdentifier( true );
+				}
+				//FIXME is it good enough?
+				identifier.addProperty( prop );
 			}
 			else {
-				rootClass.setIdentifierProperty( prop );
-				final org.hibernate.mapping.MappedSuperclass superclass = BinderHelper.getMappedSuperclassOrNull(
-						declaringClass,
-						inheritanceStatePerClass,
-						mappings
-				);
-				if (superclass != null) {
-					superclass.setDeclaredIdentifierProperty(prop);
+				rootClass.setIdentifier( ( KeyValue ) getValue() );
+				if (embedded) {
+					rootClass.setEmbeddedIdentifier( true );
 				}
 				else {
-					//we know the property is on the actual entity
-					rootClass.setDeclaredIdentifierProperty( prop );
+					rootClass.setIdentifierProperty( prop );
+					final org.hibernate.mapping.MappedSuperclass superclass = BinderHelper.getMappedSuperclassOrNull(
+							declaringClass,
+							inheritanceStatePerClass,
+							mappings
+					);
+					if (superclass != null) {
+						superclass.setDeclaredIdentifierProperty(prop);
+					}
+					else {
+						//we know the property is on the actual entity
+						rootClass.setDeclaredIdentifierProperty( prop );
+					}
 				}
 			}
 		}

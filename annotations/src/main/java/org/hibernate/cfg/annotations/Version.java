@@ -1,4 +1,4 @@
-// $Id:$
+// $Id$
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
@@ -24,6 +24,8 @@
  */
 package org.hibernate.cfg.annotations;
 
+import java.util.Date;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,7 +36,7 @@ public class Version {
 	private static Logger log = LoggerFactory.getLogger( Version.class );
 
 	public static String getVersionString() {
-		return "[WORKING]";
+		return "[WORKING]-1";
 	}
 
 	static {

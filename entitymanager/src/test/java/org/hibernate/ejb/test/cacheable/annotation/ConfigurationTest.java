@@ -26,6 +26,9 @@ package org.hibernate.ejb.test.cacheable.annotation;
 import java.util.Properties;
 import javax.persistence.SharedCacheMode;
 
+import org.hibernate.cache.access.AccessType;
+import org.hibernate.cache.impl.NoCachingRegionFactory;
+import org.hibernate.cfg.Environment;
 import org.hibernate.ejb.AvailableSettings;
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.junit.UnitTestCase;
@@ -109,6 +112,7 @@ public class ConfigurationTest extends UnitTestCase {
 	private Ejb3Configuration buildConfiguration(SharedCacheMode mode) {
 		Properties properties = new Properties();
 		properties.put( AvailableSettings.SHARED_CACHE_MODE, mode );
+		properties.put( Environment.CACHE_REGION_FACTORY, CustomRegionFactory.class.getName() );
 		Ejb3Configuration config = new Ejb3Configuration();
 		config.setProperties( properties );
 		config.addAnnotatedClass( ExplicitlyCacheableEntity.class );
@@ -116,5 +120,16 @@ public class ConfigurationTest extends UnitTestCase {
 		config.addAnnotatedClass( NoCacheableAnnotationEntity.class );
 		config.buildMappings();
 		return config;
+	}
+
+	public static class CustomRegionFactory extends NoCachingRegionFactory {
+		public CustomRegionFactory(Properties properties) {
+			super( properties );
+		}
+
+		@Override
+		public AccessType getDefaultAccessType() {
+			return AccessType.READ_WRITE;
+		}
 	}
 }

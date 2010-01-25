@@ -38,7 +38,7 @@ import org.hibernate.envers.entities.mapper.relation.lazy.initializor.Initializo
 public class SortedMapProxy<K, V> implements SortedMap<K, V>, Serializable {
     private static final long serialVersionUID = 2645817952901452375L;
 
-    private Initializor<SortedMap<K, V>> initializor;
+    private transient Initializor<SortedMap<K, V>> initializor;
     protected SortedMap<K, V> delegate;
 
     public SortedMapProxy() {

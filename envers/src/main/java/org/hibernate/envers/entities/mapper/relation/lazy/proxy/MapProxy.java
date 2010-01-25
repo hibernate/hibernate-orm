@@ -36,7 +36,7 @@ import org.hibernate.envers.entities.mapper.relation.lazy.initializor.Initializo
 public class MapProxy<K, V> implements Map<K, V>, Serializable {
     private static final long serialVersionUID = 8418037541773074646L;
 
-    private Initializor<Map<K, V>> initializor;
+    private transient Initializor<Map<K, V>> initializor;
     protected Map<K, V> delegate;
 
     public MapProxy() {

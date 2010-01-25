@@ -162,7 +162,7 @@ public class InfinispanRegionFactory implements RegionFactory {
       log.debug("Building collection cache region [" + regionName + "]");
       Cache cache = getCache(regionName, COLLECTION_KEY, properties);
       CacheAdapter cacheAdapter = CacheAdapterImpl.newInstance(cache);
-      CollectionRegionImpl region = new CollectionRegionImpl(cacheAdapter, regionName, metadata, transactionManager);
+      CollectionRegionImpl region = new CollectionRegionImpl(cacheAdapter, regionName, metadata, transactionManager, this);
       region.start();
       return region;
    }
@@ -172,7 +172,7 @@ public class InfinispanRegionFactory implements RegionFactory {
       if (log.isDebugEnabled()) log.debug("Building entity cache region [" + regionName + "]");
       Cache cache = getCache(regionName, ENTITY_KEY, properties);
       CacheAdapter cacheAdapter = CacheAdapterImpl.newInstance(cache);
-      EntityRegionImpl region = new EntityRegionImpl(cacheAdapter, regionName, metadata, transactionManager);
+      EntityRegionImpl region = new EntityRegionImpl(cacheAdapter, regionName, metadata, transactionManager, this);
       region.start();
       return region;
    }
@@ -185,7 +185,7 @@ public class InfinispanRegionFactory implements RegionFactory {
       log.debug("Building query results cache region [" + regionName + "]");
       String cacheName = typeOverrides.get(QUERY_KEY).getCacheName();
       CacheAdapter cacheAdapter = CacheAdapterImpl.newInstance(manager.getCache(cacheName));
-      QueryResultsRegionImpl region = new QueryResultsRegionImpl(cacheAdapter, regionName, properties, transactionManager);
+      QueryResultsRegionImpl region = new QueryResultsRegionImpl(cacheAdapter, regionName, properties, transactionManager, this);
       region.start();
       return region;
    }
@@ -198,7 +198,7 @@ public class InfinispanRegionFactory implements RegionFactory {
       log.debug("Building timestamps cache region [" + regionName + "]");
       String cacheName = typeOverrides.get(TIMESTAMPS_KEY).getCacheName();
       CacheAdapter cacheAdapter = CacheAdapterImpl.newInstance(manager.getCache(cacheName));
-      TimestampsRegionImpl region = new TimestampsRegionImpl(cacheAdapter, regionName, transactionManager);
+      TimestampsRegionImpl region = new TimestampsRegionImpl(cacheAdapter, regionName, transactionManager, this);
       region.start();
       return region;
    }

@@ -5,6 +5,7 @@ import javax.transaction.TransactionManager;
 import org.hibernate.cache.CacheDataDescription;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.CollectionRegion;
+import org.hibernate.cache.RegionFactory;
 import org.hibernate.cache.access.AccessType;
 import org.hibernate.cache.access.CollectionRegionAccessStrategy;
 import org.hibernate.cache.infinispan.access.PutFromLoadValidator;
@@ -20,8 +21,9 @@ import org.infinispan.notifications.Listener;
 @Listener
 public class CollectionRegionImpl extends BaseTransactionalDataRegion implements CollectionRegion {
 
-   public CollectionRegionImpl(CacheAdapter cacheAdapter, String name, CacheDataDescription metadata, TransactionManager transactionManager) {
-      super(cacheAdapter, name, metadata, transactionManager);
+   public CollectionRegionImpl(CacheAdapter cacheAdapter, String name, CacheDataDescription metadata, 
+            TransactionManager transactionManager, RegionFactory factory) {
+      super(cacheAdapter, name, metadata, transactionManager, factory);
    }
 
    public CollectionRegionAccessStrategy buildAccessStrategy(AccessType accessType) throws CacheException {

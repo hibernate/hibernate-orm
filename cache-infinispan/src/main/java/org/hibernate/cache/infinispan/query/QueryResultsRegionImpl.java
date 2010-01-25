@@ -7,6 +7,7 @@ import javax.transaction.TransactionManager;
 
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.QueryResultsRegion;
+import org.hibernate.cache.RegionFactory;
 import org.hibernate.cache.infinispan.impl.BaseTransactionalDataRegion;
 import org.hibernate.cache.infinispan.util.CacheAdapter;
 import org.hibernate.cache.infinispan.util.CacheHelper;
@@ -22,9 +23,8 @@ import org.infinispan.notifications.Listener;
 public class QueryResultsRegionImpl extends BaseTransactionalDataRegion implements QueryResultsRegion {
    private boolean localOnly;
 
-   public QueryResultsRegionImpl(CacheAdapter cacheAdapter, String name, Properties properties, TransactionManager transactionManager) {
-      super(cacheAdapter, name, null, transactionManager);
-      
+   public QueryResultsRegionImpl(CacheAdapter cacheAdapter, String name, Properties properties, TransactionManager transactionManager, RegionFactory factory) {
+      super(cacheAdapter, name, null, transactionManager, factory);
       // If Infinispan is using INVALIDATION for query cache, we don't want to propagate changes.
       // We use the Timestamps cache to manage invalidation
       localOnly = cacheAdapter.isClusteredInvalidation();

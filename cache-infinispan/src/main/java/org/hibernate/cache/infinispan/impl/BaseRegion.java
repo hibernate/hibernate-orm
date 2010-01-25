@@ -14,6 +14,7 @@ import javax.transaction.TransactionManager;
 
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.Region;
+import org.hibernate.cache.RegionFactory;
 import org.hibernate.cache.infinispan.util.AddressAdapter;
 import org.hibernate.cache.infinispan.util.AddressAdapterImpl;
 import org.hibernate.cache.infinispan.util.CacheAdapter;
@@ -48,14 +49,16 @@ public abstract class BaseRegion implements Region {
    protected final boolean replication;
    protected final Object invalidationMutex = new Object();
    protected final AtomicReference<InvalidateState> invalidateState = new AtomicReference<InvalidateState>(InvalidateState.VALID);
+   private final RegionFactory factory;
 
-   public BaseRegion(CacheAdapter cacheAdapter, String name, TransactionManager transactionManager) {
+   public BaseRegion(CacheAdapter cacheAdapter, String name, TransactionManager transactionManager, RegionFactory factory) {
       this.cacheAdapter = cacheAdapter;
       this.name = name;
       this.transactionManager = transactionManager;
       this.replication = cacheAdapter.isClusteredReplication();
       this.address = this.cacheAdapter.getAddress();
       this.cacheAdapter.addListener(this);
+      this.factory = factory;
    }
 
    public void start() {
@@ -126,7 +129,7 @@ public abstract class BaseRegion implements Region {
    }
 
    public long nextTimestamp() {
-      return System.currentTimeMillis() / 100;
+      return factory.nextTimestamp();
    }
 
    public Map toMap() {

@@ -4,6 +4,7 @@ import javax.transaction.TransactionManager;
 
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.GeneralDataRegion;
+import org.hibernate.cache.RegionFactory;
 import org.hibernate.cache.infinispan.util.CacheAdapter;
 
 /**
@@ -15,8 +16,8 @@ import org.hibernate.cache.infinispan.util.CacheAdapter;
  */
 public abstract class BaseGeneralDataRegion extends BaseRegion implements GeneralDataRegion {
 
-   public BaseGeneralDataRegion(CacheAdapter cacheAdapter, String name, TransactionManager transactionManager) {
-      super(cacheAdapter, name, transactionManager);
+   public BaseGeneralDataRegion(CacheAdapter cacheAdapter, String name, TransactionManager transactionManager, RegionFactory factory) {
+      super(cacheAdapter, name, transactionManager, factory);
    }
 
    public void evict(Object key) throws CacheException {

@@ -8,6 +8,7 @@ import javax.transaction.Transaction;
 import javax.transaction.TransactionManager;
 
 import org.hibernate.cache.CacheException;
+import org.hibernate.cache.RegionFactory;
 import org.hibernate.cache.TimestampsRegion;
 import org.hibernate.cache.infinispan.impl.BaseGeneralDataRegion;
 import org.hibernate.cache.infinispan.util.CacheAdapter;
@@ -32,8 +33,8 @@ public class TimestampsRegionImpl extends BaseGeneralDataRegion implements Times
 
    private Map localCache = new ConcurrentHashMap();
 
-   public TimestampsRegionImpl(CacheAdapter cacheAdapter, String name, TransactionManager transactionManager) {
-      super(cacheAdapter, name, transactionManager);
+   public TimestampsRegionImpl(CacheAdapter cacheAdapter, String name, TransactionManager transactionManager, RegionFactory factory) {
+      super(cacheAdapter, name, transactionManager, factory);
       cacheAdapter.addListener(this);
       populateLocalCache();
    }

@@ -3,6 +3,7 @@ package org.hibernate.cache.infinispan.impl;
 import javax.transaction.TransactionManager;
 
 import org.hibernate.cache.CacheDataDescription;
+import org.hibernate.cache.RegionFactory;
 import org.hibernate.cache.TransactionalDataRegion;
 import org.hibernate.cache.infinispan.util.CacheAdapter;
 
@@ -17,8 +18,8 @@ public abstract class BaseTransactionalDataRegion extends BaseRegion implements 
 
    private final CacheDataDescription metadata;
 
-   public BaseTransactionalDataRegion(CacheAdapter cacheAdapter, String name, CacheDataDescription metadata, TransactionManager transactionManager) {
-      super(cacheAdapter, name, transactionManager);
+   public BaseTransactionalDataRegion(CacheAdapter cacheAdapter, String name, CacheDataDescription metadata, TransactionManager transactionManager, RegionFactory factory) {
+      super(cacheAdapter, name, transactionManager, factory);
       this.metadata = metadata;
    }
 

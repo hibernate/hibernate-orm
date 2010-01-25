@@ -21,7 +21,9 @@
  */
 package org.hibernate.cache.infinispan;
 
+import java.util.HashSet;
 import java.util.Locale;
+import java.util.Set;
 
 import org.hibernate.cache.CacheException;
 import org.infinispan.config.Configuration;
@@ -36,18 +38,22 @@ import org.infinispan.eviction.EvictionStrategy;
  * @since 3.5
  */
 public class TypeOverrides {
-   
+
+   private final Set<String> overridden = new HashSet<String>();
+
    private String cacheName;
-   
+
    private EvictionStrategy evictionStrategy;
-   
-   private long evictionWakeUpInterval = Long.MIN_VALUE;
-   
-   private int evictionMaxEntries = Integer.MIN_VALUE;
-   
-   private long expirationLifespan = Long.MIN_VALUE;
-   
-   private long expirationMaxIdle = Long.MIN_VALUE;
+
+   private long evictionWakeUpInterval;
+
+   private int evictionMaxEntries;
+
+   private long expirationLifespan;
+
+   private long expirationMaxIdle;
+
+   private boolean isExposeStatistics;
 
    public String getCacheName() {
       return cacheName;
@@ -62,6 +68,7 @@ public class TypeOverrides {
    }
 
    public void setEvictionStrategy(String evictionStrategy) {
+      markAsOverriden("evictionStrategy");
       this.evictionStrategy = EvictionStrategy.valueOf(uc(evictionStrategy));
    }
 
@@ -70,6 +77,7 @@ public class TypeOverrides {
    }
 
    public void setEvictionWakeUpInterval(long evictionWakeUpInterval) {
+      markAsOverriden("evictionWakeUpInterval");
       this.evictionWakeUpInterval = evictionWakeUpInterval;
    }
 
@@ -78,6 +86,7 @@ public class TypeOverrides {
    }
 
    public void setEvictionMaxEntries(int evictionMaxEntries) {
+      markAsOverriden("evictionMaxEntries");
       this.evictionMaxEntries = evictionMaxEntries;
    }
 
@@ -86,6 +95,7 @@ public class TypeOverrides {
    }
 
    public void setExpirationLifespan(long expirationLifespan) {
+      markAsOverriden("expirationLifespan");
       this.expirationLifespan = expirationLifespan;
    }
 
@@ -94,32 +104,34 @@ public class TypeOverrides {
    }
 
    public void setExpirationMaxIdle(long expirationMaxIdle) {
+      markAsOverriden("expirationMaxIdle");
       this.expirationMaxIdle = expirationMaxIdle;
    }
-   
-//   public boolean isConvertedToInfinispanConfiguration() {
-//      return convertedToInfinispanConfiguration;
-//   }
-   
+
+   public boolean isExposeStatistics() {
+      return isExposeStatistics;
+   }
+
+   public void setExposeStatistics(boolean isExposeStatistics) {
+      markAsOverriden("isExposeStatistics");
+      this.isExposeStatistics = isExposeStatistics;
+   }
+
    public Configuration createInfinispanConfiguration() {
       Configuration cacheCfg = new Configuration();
-      // If eviction strategy is different from null, an override has been defined
-      if (evictionStrategy != null) cacheCfg.setEvictionStrategy(evictionStrategy);
-      // If eviction wake up interval is different from min value, an override has been defined
-      // Checking for -1 might not be enough because user might have defined -1 in the config.
-      // Same applies to other configuration options.
-      if (evictionWakeUpInterval != Long.MIN_VALUE) cacheCfg.setEvictionWakeUpInterval(evictionWakeUpInterval);
-      if (evictionMaxEntries != Integer.MIN_VALUE) cacheCfg.setEvictionMaxEntries(evictionMaxEntries);
-      if (expirationLifespan != Long.MIN_VALUE) cacheCfg.setExpirationLifespan(expirationLifespan); 
-      if (expirationMaxIdle != Long.MIN_VALUE) cacheCfg.setExpirationMaxIdle(expirationMaxIdle);
-//      convertedToInfinispanConfiguration = true;
+      if (overridden.contains("evictionStrategy")) cacheCfg.setEvictionStrategy(evictionStrategy);
+      if (overridden.contains("evictionWakeUpInterval")) cacheCfg.setEvictionWakeUpInterval(evictionWakeUpInterval);
+      if (overridden.contains("evictionMaxEntries")) cacheCfg.setEvictionMaxEntries(evictionMaxEntries);
+      if (overridden.contains("expirationLifespan")) cacheCfg.setExpirationLifespan(expirationLifespan);
+      if (overridden.contains("expirationMaxIdle")) cacheCfg.setExpirationMaxIdle(expirationMaxIdle);
+      if (overridden.contains("isExposeStatistics")) cacheCfg.setExposeJmxStatistics(isExposeStatistics);
       return cacheCfg;
    }
-   
+
    public void validateInfinispanConfiguration(Configuration configuration) throws CacheException {
       // no-op
    }
-   
+
    @Override
    public String toString() {
       return new StringBuilder().append(getClass().getSimpleName()).append('{')
@@ -131,8 +143,12 @@ public class TypeOverrides {
          .append(", maxIdle=").append(expirationMaxIdle)
          .append('}').toString();
    }
-   
+
    private String uc(String s) {
       return s == null ? null : s.toUpperCase(Locale.ENGLISH);
+   }
+
+   private void markAsOverriden(String fieldName) {
+      overridden.add(fieldName);
    }
 }

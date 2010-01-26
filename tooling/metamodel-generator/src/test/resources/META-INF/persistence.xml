@@ -10,5 +10,6 @@
         <mapping-file>/org/hibernate/jpamodelgen/test/xmlmapped/address.xml</mapping-file>
         <mapping-file>/org/hibernate/jpamodelgen/test/xmlmapped/building.xml</mapping-file>
         <mapping-file>/org/hibernate/jpamodelgen/test/xmlmapped/mammal.xml</mapping-file>
+        <mapping-file>/org/hibernate/jpamodelgen/test/xmlmapped/boy.xml</mapping-file>
     </persistence-unit>
 </persistence>

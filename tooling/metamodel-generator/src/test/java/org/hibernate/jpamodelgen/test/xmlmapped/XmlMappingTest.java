@@ -17,12 +17,18 @@
 */
 package org.hibernate.jpamodelgen.test.xmlmapped;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.ParameterizedType;
+
 import org.testng.annotations.Test;
 
 import org.hibernate.jpamodelgen.test.util.CompilationTest;
+
+import static junit.framework.Assert.assertTrue;
 import static org.hibernate.jpamodelgen.test.util.TestUtil.assertClassGenerated;
 import static org.hibernate.jpamodelgen.test.util.TestUtil.assertPresenceOfField;
 import static org.hibernate.jpamodelgen.test.util.TestUtil.assertSuperClass;
+import static org.hibernate.jpamodelgen.test.util.TestUtil.getField;
 
 /**
  * @author Hardy Ferentschik
@@ -39,6 +45,17 @@ public class XmlMappingTest extends CompilationTest {
 		assertPresenceOfField(
 				Building.class.getName() + "_", "address", "address field should exist"
 		);
+	}
+
+	@Test
+	public void testXmlConfiguredElementCollection() throws Exception {
+		assertClassGenerated( Boy.class.getName() + "_" );
+		assertPresenceOfField(
+				Boy.class.getName() + "_", "nickNames", "nickNames field should exist"
+		);
+		Field field = getField( Boy.class.getName() + "_", "nickNames" );
+		ParameterizedType type = ( ParameterizedType ) field.getGenericType();
+		assertTrue( "Wrong target type", type.getActualTypeArguments()[1].equals( Integer.class ) );
 	}
 
 	@Test

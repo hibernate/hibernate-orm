@@ -17,8 +17,6 @@
 */
 package org.hibernate.jpamodelgen;
 
-import org.hibernate.jpamodelgen.MetaAttribute;
-
 /**
  * @author Hardy Ferentschik
  */

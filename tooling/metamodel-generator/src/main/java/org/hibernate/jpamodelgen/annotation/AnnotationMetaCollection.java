@@ -17,30 +17,25 @@
 */
 package org.hibernate.jpamodelgen.annotation;
 
-import org.hibernate.jpamodelgen.MetaCollection;
-
 import javax.lang.model.element.Element;
 
+import org.hibernate.jpamodelgen.MetaCollection;
+
 /**
- *
  * @author Max Andersen
  * @author Hardy Ferentschik
  * @author Emmanuel Bernard
  */
 public class AnnotationMetaCollection extends AnnotationMetaAttribute implements MetaCollection {
-
-	private String collectionType; 
-	
+	private String collectionType;
 
 	public AnnotationMetaCollection(AnnotationMetaEntity parent, Element element, String collectionType, String elementType) {
-		super(parent, element, elementType);
-		this.collectionType = collectionType;		
+		super( parent, element, elementType );
+		this.collectionType = collectionType;
 	}
 
 	@Override
-	public String getMetaType() {		
+	public String getMetaType() {
 		return collectionType;
 	}
-
-	
 }

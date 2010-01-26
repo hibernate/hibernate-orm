@@ -22,10 +22,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import javax.lang.model.element.AnnotationMirror;
-import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
-import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.Name;
 import javax.lang.model.element.PackageElement;
@@ -34,6 +32,7 @@ import javax.lang.model.type.ArrayType;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.ExecutableType;
 import javax.lang.model.type.PrimitiveType;
+import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.ElementFilter;
 import javax.lang.model.util.SimpleTypeVisitor6;
@@ -312,8 +311,11 @@ public class AnnotationMetaEntity implements MetaEntity {
 	class TypeVisitor extends SimpleTypeVisitor6<AnnotationMetaAttribute, Element> {
 
 		AnnotationMetaEntity parent;
-		//if null, process all members as implicit
-		//if not null, only process members marked as @Access(explicitAccessType)
+
+		/*
+		 * If {@code explicitAccessType == null}, process all members as implicit. If  {@code explicitAccessType != null}
+		 * only process members marked as {@code @Access(explicitAccessType)}.
+		 */
 		private AccessType explicitAccessType;
 
 		TypeVisitor(AnnotationMetaEntity parent, AccessType explicitAccessType) {
@@ -366,20 +368,19 @@ public class AnnotationMetaEntity implements MetaEntity {
 		}
 
 		@Override
-		public AnnotationMetaAttribute visitDeclared(DeclaredType t, Element element) {
+		public AnnotationMetaAttribute visitDeclared(DeclaredType declaredType, Element element) {
 			//FIXME consider XML
 			if ( isPersistent( element ) ) {
 				TypeElement returnedElement = ( TypeElement ) context.getProcessingEnvironment()
 						.getTypeUtils()
-						.asElement( t );
-				String fqElementName = returnedElement.getQualifiedName()
-						.toString();  // WARNING: .toString() is necessary here since Name equals does not compare to String
+						.asElement( declaredType );
+				// WARNING: .toString() is necessary here since Name equals does not compare to String
+				String fqElementName = returnedElement.getQualifiedName().toString();
 				String collection = COLLECTIONS.get( fqElementName );
 				String targetEntity = getTargetEntity( element.getAnnotationMirrors() );
 				if ( collection != null ) {
 					if ( TypeUtils.containsAnnotation( element, ElementCollection.class ) ) {
-						//FIXME I don't understand why this code is different between Elementcollection and a regular collection but it needs to take targetClass into account
-						TypeMirror collectionElementType = getCollectionElementType( t, fqElementName );
+						TypeMirror collectionElementType = getCollectionElementType( declaredType, fqElementName );
 						final TypeElement collectionElement = ( TypeElement ) context.getProcessingEnvironment()
 								.getTypeUtils()
 								.asElement( collectionElementType );
@@ -391,12 +392,16 @@ public class AnnotationMetaEntity implements MetaEntity {
 					if ( collection.equals( "javax.persistence.metamodel.MapAttribute" ) ) {
 						return new AnnotationMetaMap(
 								//FIXME support targetEntity for map's key @MapKeyClass
-								parent, element, collection, getKeyType( t ), getElementType( t, targetEntity )
+								parent,
+								element,
+								collection,
+								getKeyType( declaredType ),
+								getElementType( declaredType, targetEntity )
 						);
 					}
 					else {
 						return new AnnotationMetaCollection(
-								parent, element, collection, getElementType( t, targetEntity )
+								parent, element, collection, getElementType( declaredType, targetEntity )
 						);
 					}
 				}
@@ -446,39 +451,40 @@ public class AnnotationMetaEntity implements MetaEntity {
 	}
 
 	/**
+	 * @param annotations list of annotation mirrors.
+	 *
 	 * @return target entity class name as string or {@code null} if no targetEntity is here or if equals to void
 	 */
-
 	private String getTargetEntity(List<? extends AnnotationMirror> annotations) {
 
+		String fullyQualifiedTargetEntityName = null;
 		for ( AnnotationMirror mirror : annotations ) {
-			if ( TypeUtils.isAnnotationMirrorOfType( mirror, ElementCollection.class )
-					|| TypeUtils.isAnnotationMirrorOfType( mirror, OneToMany.class )
+			if ( TypeUtils.isAnnotationMirrorOfType( mirror, ElementCollection.class ) ) {
+				fullyQualifiedTargetEntityName = getFullyQualifiedClassNameOfTargetEntity( mirror, "targetClass" );
+			}
+			else if ( TypeUtils.isAnnotationMirrorOfType( mirror, OneToMany.class )
 					|| TypeUtils.isAnnotationMirrorOfType( mirror, ManyToMany.class )
 					|| TypeUtils.isAnnotationMirrorOfType( mirror, ManyToOne.class )
 					|| TypeUtils.isAnnotationMirrorOfType( mirror, OneToOne.class ) ) {
-				final String targetEntity = getTargetEntity( mirror );
-				if ( targetEntity != null ) {
-					return targetEntity;
-				}
+				fullyQualifiedTargetEntityName = getFullyQualifiedClassNameOfTargetEntity( mirror, "targetEntity" );
 			}
 		}
-		return null;
+		return fullyQualifiedTargetEntityName;
 	}
 
-	private String getTargetEntity(AnnotationMirror mirror) {
-		String targetEntity = null;
-		final Map<? extends ExecutableElement, ? extends AnnotationValue> attributes = mirror.getElementValues();
-		for ( Map.Entry<? extends ExecutableElement, ? extends AnnotationValue> entry : attributes.entrySet() ) {
-			final String simpleName = entry.getKey().getSimpleName().toString();
-			if ( "targetEntity".equals( simpleName ) ) {
-				targetEntity = entry.getValue().toString();
-				break;
+	private String getFullyQualifiedClassNameOfTargetEntity(AnnotationMirror mirror, String parameterName) {
+		assert mirror != null;
+		assert parameterName != null;
+
+		String targetEntityName = null;
+		Object parameterValue = TypeUtils.getAnnotationValue( mirror, parameterName );
+		if ( parameterValue != null ) {
+			TypeMirror parameterType = ( TypeMirror ) parameterValue;
+			if ( !parameterType.getKind().equals( TypeKind.VOID ) ) {
+				targetEntityName = parameterType.toString();
 			}
 		}
-		targetEntity = ( "void.class".equals( targetEntity ) ) ? null : targetEntity;
-		return targetEntity != null && targetEntity.endsWith( ".class" ) ?
-				targetEntity.substring( 0, targetEntity.length() - 6 ) : null;
+		return targetEntityName;
 	}
 
 	public String generateImports() {

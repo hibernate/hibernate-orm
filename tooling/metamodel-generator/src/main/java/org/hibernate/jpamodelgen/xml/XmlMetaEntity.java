@@ -27,10 +27,10 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
 
 import org.hibernate.jpamodelgen.Context;
-import org.hibernate.jpamodelgen.MetaAttribute;
-import org.hibernate.jpamodelgen.ImportContextImpl;
-import org.hibernate.jpamodelgen.MetaEntity;
 import org.hibernate.jpamodelgen.ImportContext;
+import org.hibernate.jpamodelgen.ImportContextImpl;
+import org.hibernate.jpamodelgen.MetaAttribute;
+import org.hibernate.jpamodelgen.MetaEntity;
 import org.hibernate.jpamodelgen.util.TypeUtils;
 import org.hibernate.jpamodelgen.xml.jaxb.Attributes;
 import org.hibernate.jpamodelgen.xml.jaxb.Basic;
@@ -101,29 +101,33 @@ public class XmlMetaEntity implements MetaEntity {
 
 		XmlMetaSingleAttribute attribute;
 		for ( Basic basic : attributes.getBasic() ) {
-			attribute = new XmlMetaSingleAttribute( this, basic.getName(), getType( basic.getName() ) );
+			attribute = new XmlMetaSingleAttribute( this, basic.getName(), getType( basic.getName(), null ) );
 			members.add( attribute );
 		}
 
 		for ( ManyToOne manyToOne : attributes.getManyToOne() ) {
-			attribute = new XmlMetaSingleAttribute( this, manyToOne.getName(), getType( manyToOne.getName() ) );
+			attribute = new XmlMetaSingleAttribute(
+					this, manyToOne.getName(), getType( manyToOne.getName(), manyToOne.getTargetEntity() )
+			);
 			members.add( attribute );
 		}
 
 		for ( OneToOne oneToOne : attributes.getOneToOne() ) {
-			attribute = new XmlMetaSingleAttribute( this, oneToOne.getName(), getType( oneToOne.getName() ) );
+			attribute = new XmlMetaSingleAttribute(
+					this, oneToOne.getName(), getType( oneToOne.getName(), oneToOne.getTargetEntity() )
+			);
 			members.add( attribute );
 		}
 
 		XmlMetaCollection metaCollection;
 		for ( OneToMany oneToMany : attributes.getOneToMany() ) {
-			String[] types = getCollectionType( oneToMany.getName() );
+			String[] types = getCollectionType( oneToMany.getName(), oneToMany.getTargetEntity() );
 			metaCollection = new XmlMetaCollection( this, oneToMany.getName(), types[0], types[1] );
 			members.add( metaCollection );
 		}
 
 		for ( ElementCollection collection : attributes.getElementCollection() ) {
-			String[] types = getCollectionType( collection.getName() );
+			String[] types = getCollectionType( collection.getName(), collection.getTargetClass() );
 			metaCollection = new XmlMetaCollection( this, collection.getName(), types[0], types[1] );
 			members.add( metaCollection );
 		}
@@ -165,19 +169,37 @@ public class XmlMetaEntity implements MetaEntity {
 		return element;
 	}
 
-	private String[] getCollectionType(String propertyName) {
+	private String[] getCollectionType(String propertyName, String explicitTargetEntity) {
 		String types[] = new String[2];
 		for ( Element elem : element.getEnclosedElements() ) {
 			if ( elem.getSimpleName().toString().equals( propertyName ) ) {
 				DeclaredType type = ( ( DeclaredType ) elem.asType() );
-				types[0] = TypeUtils.extractClosestRealTypeAsString(type.getTypeArguments().get( 0 ), context);
+				if ( explicitTargetEntity == null ) {
+					types[0] = TypeUtils.extractClosestRealTypeAsString( type.getTypeArguments().get( 0 ), context );
+				}
+				else {
+					types[0] = explicitTargetEntity;
+				}
 				types[1] = COLLECTIONS.get( type.asElement().toString() );
 			}
 		}
 		return types;
 	}
 
-	private String getType(String propertyName) {
+	/**
+	 * Returns the entity type for relation.
+	 *
+	 * @param propertyName The property name of the association
+	 * @param explicitTargetEntity The explicitly specified target entity type
+	 *
+	 * @return The entity type for relation/association.
+	 */
+	private String getType(String propertyName, String explicitTargetEntity) {
+		if ( explicitTargetEntity != null ) {
+			// TODO should there be a check of the target entity class and if it is loadable?
+			return explicitTargetEntity;
+		}
+
 		String typeName = null;
 		for ( Element elem : element.getEnclosedElements() ) {
 			if ( elem.getSimpleName().toString().equals( propertyName ) ) {
@@ -225,35 +247,39 @@ public class XmlMetaEntity implements MetaEntity {
 			// TODO what do we do if there are more than one id nodes?
 			Id id = attributes.getId().get( 0 );
 			attribute = new XmlMetaSingleAttribute(
-					this, id.getName(), getType( id.getName() )
+					this, id.getName(), getType( id.getName(), null )
 			);
 			members.add( attribute );
 		}
 
 		for ( Basic basic : attributes.getBasic() ) {
-			attribute = new XmlMetaSingleAttribute( this, basic.getName(), getType( basic.getName() ) );
+			attribute = new XmlMetaSingleAttribute( this, basic.getName(), getType( basic.getName(), null ) );
 			members.add( attribute );
 		}
 
 		for ( ManyToOne manyToOne : attributes.getManyToOne() ) {
-			attribute = new XmlMetaSingleAttribute( this, manyToOne.getName(), getType( manyToOne.getName() ) );
+			attribute = new XmlMetaSingleAttribute(
+					this, manyToOne.getName(), getType( manyToOne.getName(), manyToOne.getTargetEntity() )
+			);
 			members.add( attribute );
 		}
 
 		for ( OneToOne oneToOne : attributes.getOneToOne() ) {
-			attribute = new XmlMetaSingleAttribute( this, oneToOne.getName(), getType( oneToOne.getName() ) );
+			attribute = new XmlMetaSingleAttribute(
+					this, oneToOne.getName(), getType( oneToOne.getName(), oneToOne.getTargetEntity() )
+			);
 			members.add( attribute );
 		}
 
 		XmlMetaCollection metaCollection;
 		for ( OneToMany oneToMany : attributes.getOneToMany() ) {
-			String[] types = getCollectionType( oneToMany.getName() );
+			String[] types = getCollectionType( oneToMany.getName(), oneToMany.getTargetEntity() );
 			metaCollection = new XmlMetaCollection( this, oneToMany.getName(), types[0], types[1] );
 			members.add( metaCollection );
 		}
 
 		for ( ElementCollection collection : attributes.getElementCollection() ) {
-			String[] types = getCollectionType( collection.getName() );
+			String[] types = getCollectionType( collection.getName(), collection.getTargetClass() );
 			metaCollection = new XmlMetaCollection( this, collection.getName(), types[0], types[1] );
 			members.add( metaCollection );
 		}

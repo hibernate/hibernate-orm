@@ -434,9 +434,9 @@ public class Component extends SimpleValue implements MetaAttributable {
 			this.injector = injector;
 		}
 
-		public void execute(SessionImplementor session, Object incomingObject) {
+		public void execute(SessionImplementor session, Object incomingObject, Object idObject) {
 			final Object generatedValue = subGenerator.generate( session, incomingObject );
-			injector.set( incomingObject, generatedValue, session.getFactory() );
+			injector.set( idObject, generatedValue, session.getFactory() );
 		}
 	}
 

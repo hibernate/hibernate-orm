@@ -67,7 +67,7 @@ public class CompositeNestedGeneratedValueGenerator implements IdentifierGenerat
 	}
 
 	public static interface GenerationPlan {
-		public void execute(SessionImplementor session, Object incomingObject);
+		public void execute(SessionImplementor session, Object incomingObject, Object objectId);
 	}
 
 	private final GenerationContextLocator generationContextLocator;
@@ -87,7 +87,7 @@ public class CompositeNestedGeneratedValueGenerator implements IdentifierGenerat
 		Iterator itr = generationPlans.iterator();
 		while ( itr.hasNext() ) {
 			final GenerationPlan plan = (GenerationPlan) itr.next();
-			plan.execute( session, context );
+			plan.execute( session, object, context );
 		}
 
 		return context;

@@ -23,6 +23,7 @@ import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.RoundEnvironment;
 import javax.annotation.processing.SupportedAnnotationTypes;
+import javax.annotation.processing.SupportedOptions;
 import javax.annotation.processing.SupportedSourceVersion;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Element;
@@ -48,8 +49,9 @@ import static javax.lang.model.SourceVersion.RELEASE_6;
  */
 @SupportedAnnotationTypes("*")
 @SupportedSourceVersion(RELEASE_6)
+@SupportedOptions({ JPAMetaModelEntityProcessor.DEBUG_OPTION })
 public class JPAMetaModelEntityProcessor extends AbstractProcessor {
-
+	public static final String DEBUG_OPTION = "debug";
 	private static final Boolean ALLOW_OTHER_PROCESSORS_TO_CLAIM_ANNOTATIONS = Boolean.FALSE;
 
 	private boolean xmlProcessed = false;

@@ -35,7 +35,7 @@ import org.hibernate.jpamodelgen.util.TypeUtils;
  * @author Emmanuel Bernard
  */
 public class Context {
-	private static final String DEBUG_PARAMETER = "debug";
+
 	private final Map<String, MetaEntity> metaEntitiesToProcess = new HashMap<String, MetaEntity>();
 	private final Map<String, MetaEntity> metaSuperclassAndEmbeddableToProcess = new HashMap<String, MetaEntity>();
 
@@ -53,7 +53,7 @@ public class Context {
 
 	public Context(ProcessingEnvironment pe) {
 		this.pe = pe;
-		String debugParam = pe.getOptions().get( DEBUG_PARAMETER );
+		String debugParam = pe.getOptions().get( JPAMetaModelEntityProcessor.DEBUG_OPTION );
 		if ( debugParam != null && "true".equals( debugParam ) ) {
 			logDebug = true;
 		}

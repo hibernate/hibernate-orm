@@ -75,7 +75,7 @@ public class IdClassGeneratedValueTest extends TestCase {
 
 		s = openSession();
 		s.beginTransaction();
-		List<Simple> simpleList = s.createQuery( "select s from Simple2 s" ).list();
+		List<Simple2> simpleList = s.createQuery( "select s from Simple2 s" ).list();
 		assertEquals( simpleList.size(), 2 );
 		s1 = ( Simple2 ) s.load( Simple2.class, new SimplePK( s1Id1, 2L ) );
 		assertEquals( s1.getQuantity(), 10 );
@@ -101,7 +101,7 @@ public class IdClassGeneratedValueTest extends TestCase {
 
 		s = openSession();
 		s.beginTransaction();
-		List<Simple> simpleList = s.createQuery( "select m from Multiple m" ).list();
+		List<Multiple> simpleList = s.createQuery( "select m from Multiple m" ).list();
 		assertEquals( simpleList.size(), 2 );
 		m1 = ( Multiple ) s.load( Multiple.class, new MultiplePK( m1Id1, m1Id2, 2L ) );
 		assertEquals( m1.getQuantity(), 10 );

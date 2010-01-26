@@ -2100,6 +2100,22 @@ public final class
 					new HashMap<String, IdGenerator>(), entityBinder, isIdentifierMapper, isComponentEmbedded,
 					inSecondPass, mappings, inheritanceStatePerClass
 			);
+			
+			XProperty property = propertyAnnotatedElement.getProperty();
+			if(property.isAnnotationPresent(GeneratedValue.class) &&
+			      property.isAnnotationPresent(Id.class))
+			{
+			   //clone classGenerator and override with local values
+			   HashMap<String, IdGenerator> localGenerators = (HashMap<String, IdGenerator>) new HashMap<String, IdGenerator>();
+			   localGenerators.putAll( buildLocalGenerators( property, mappings ) );
+
+			   GeneratedValue generatedValue = property.getAnnotation( GeneratedValue.class );
+			   String generatorType = generatedValue != null ? generatorType( generatedValue.strategy() ) : "assigned";
+			   String generator = generatedValue != null ? generatedValue.generator() : BinderHelper.ANNOTATION_STRING_DEFAULT;
+                   
+			   BinderHelper.makeIdGenerator( (SimpleValue) comp.getProperty(property.getName()).getValue(), generatorType, generator, mappings, localGenerators);
+			}
+
 		}
 		return comp;
 	}
@@ -2118,21 +2134,6 @@ public final class
 		}
 		comp.setNodeName( inferredData.getPropertyName() );
 		return comp;
-	}
-
-	private static void bindId(
-			String generatorType, String generatorName,
-			PropertyData inferredData, Ejb3Column[] columns, PropertyHolder propertyHolder,
-			Map<String, IdGenerator> localGenerators,
-			boolean isComposite,
-			AccessType propertyAccessor, EntityBinder entityBinder, boolean isEmbedded,
-			boolean isIdentifierMapper, ExtendedMappings mappings,
-			Map<XClass, InheritanceState> inheritanceStatePerClass
-	) {
-
-	   bindId(generatorType, generatorName, inferredData, null, columns, propertyHolder,
-			   localGenerators, isComposite, propertyAccessor, entityBinder,
-			   isEmbedded, isIdentifierMapper, mappings, inheritanceStatePerClass);
 	}
 
     private static void bindId(

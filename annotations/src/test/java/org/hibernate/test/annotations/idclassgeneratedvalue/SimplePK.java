@@ -33,26 +33,15 @@ import java.io.Serializable;
 public class SimplePK implements Serializable {
 	private final Long id1;
 	private final Long id2;
-	// AnnotationBinder (incorrectly) requires this to be transient; see HHH-4819 and HHH-4820
-	private final transient int cachedHashCode;
 
 	private SimplePK() {
-		// required by Hibernate, though never used; see HHH-4818
 		id1 = null;
 		id2 = null;
-		cachedHashCode = super.hashCode();
 	}
 
 	public SimplePK(Long id1, Long id2) {
 		this.id1 = id1;
 		this.id2 = id2;
-		this.cachedHashCode = calculateHashCode();
-	}
-
-	private int calculateHashCode() {
-		int result = id1.hashCode();
-		result = 31 * result + id2.hashCode();
-		return result;
 	}
 
 	public Long getId1() {
@@ -80,6 +69,8 @@ public class SimplePK implements Serializable {
 
 	@Override
 	public int hashCode() {
-		return cachedHashCode;
+		int result = id1.hashCode();
+		result = 31 * result + id2.hashCode();
+		return result;
 	}
 }

@@ -62,12 +62,35 @@ import org.hibernate.engine.SessionImplementor;
  * @author Steve Ebersole
  */
 public class CompositeNestedGeneratedValueGenerator implements IdentifierGenerator, Serializable {
+	/**
+	 * Contract for declaring how to locate the context for sub-value injection.
+	 */
 	public static interface GenerationContextLocator {
+		/**
+		 * Given the incoming object, determine the context for injecting back its generated
+		 * id sub-values.
+		 *
+		 * @param session The current session
+		 * @param incomingObject The entity for which we are generating id
+		 *
+		 * @return The injection context
+		 */
 		public Serializable locateGenerationContext(SessionImplementor session, Object incomingObject);
 	}
 
+	/**
+	 * Contract for performing the actual sub-value generation, usually injecting it into the
+	 * determined {@link GenerationContextLocator#locateGenerationContext context}
+	 */
 	public static interface GenerationPlan {
-		public void execute(SessionImplementor session, Object incomingObject, Object objectId);
+		/**
+		 * Execute the value generation.
+		 *
+		 * @param session The current session
+		 * @param incomingObject The entity for which we are generating id
+		 * @param injectionContext The context into which the generated value can be injected
+		 */
+		public void execute(SessionImplementor session, Object incomingObject, Object injectionContext);
 	}
 
 	private final GenerationContextLocator generationContextLocator;

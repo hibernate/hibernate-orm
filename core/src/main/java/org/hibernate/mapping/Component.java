@@ -37,6 +37,7 @@ import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.EntityEntry;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.id.CompositeNestedGeneratedValueGenerator;
 import org.hibernate.id.IdentifierGenerator;
@@ -348,17 +349,17 @@ public class Component extends SimpleValue implements MetaAttributable {
 
 		// IMPL NOTE : See the javadoc discussion on CompositeNestedGeneratedValueGenerator wrt the
 		//		various scenarios for which we need to account here
-		if ( isEmbedded() ) {
-			// we have the "straight up" embedded (again the hibernate term) component identifier
-			attributeDeclarer = entityClass;
+		if ( rootClass.getIdentifierMapper() != null ) {
+			// we have the @IdClass / <composite-id mapped="true"/> case
+			attributeDeclarer = resolveComponentClass();
 		}
 		else if ( rootClass.getIdentifierProperty() != null ) {
 			// we have the "@EmbeddedId" / <composite-id name="idName"/> case
 			attributeDeclarer = resolveComponentClass();
 		}
 		else {
-			// we have the @IdClass / <composite-id mapped="true"/> case
-			attributeDeclarer = resolveComponentClass();
+			// we have the "straight up" embedded (again the hibernate term) component identifier
+			attributeDeclarer = entityClass;
 		}
 
 		locator = new StandardGenerationContextLocator( rootClass.getEntityName() );
@@ -383,18 +384,21 @@ public class Component extends SimpleValue implements MetaAttributable {
 						defaultSchema,
 						rootClass
 				);
-				final Setter injector = property.getPropertyAccessor( attributeDeclarer )
-						.getSetter( attributeDeclarer, property.getName() );
 				generator.addGeneratedValuePlan(
 						new ValueGenerationPlan(
 								property.getName(),
 								valueGenerator,
-								injector
+								injector( property, attributeDeclarer )
 						)
 				);
 			}
 		}
 		return generator;
+	}
+
+	private Setter injector(Property property, Class attributeDeclarer) {
+		return property.getPropertyAccessor( attributeDeclarer )
+				.getSetter( attributeDeclarer, property.getName() );
 	}
 
 	private Class resolveComponentClass() {
@@ -434,9 +438,12 @@ public class Component extends SimpleValue implements MetaAttributable {
 			this.injector = injector;
 		}
 
-		public void execute(SessionImplementor session, Object incomingObject, Object idObject) {
+		/**
+		 * {@inheritDoc}
+		 */
+		public void execute(SessionImplementor session, Object incomingObject, Object injectionContext) {
 			final Object generatedValue = subGenerator.generate( session, incomingObject );
-			injector.set( idObject, generatedValue, session.getFactory() );
+			injector.set( injectionContext, generatedValue, session.getFactory() );
 		}
 	}
 

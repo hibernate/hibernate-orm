@@ -60,7 +60,6 @@ public class IdClassGeneratedValueTest extends TestCase {
 		s.close();
 	}
 
-	@FailureExpected(message = "Not yet implemented", jiraKey = "HHH-4552")
 	@SuppressWarnings({ "unchecked" })
 	public void testSingleGeneratedValue() {
 		Session s = openSession();
@@ -77,7 +76,7 @@ public class IdClassGeneratedValueTest extends TestCase {
 		s.beginTransaction();
 		List<Simple2> simpleList = s.createQuery( "select s from Simple2 s" ).list();
 		assertEquals( simpleList.size(), 2 );
-		s1 = ( Simple2 ) s.load( Simple2.class, new SimplePK( s1Id1, 2L ) );
+		s1 = ( Simple2 ) s.load( Simple2.class, new SimplePK( s1Id1, 200L ) );
 		assertEquals( s1.getQuantity(), 10 );
 		s.clear();
 		s.createQuery( "delete Simple2" ).executeUpdate();
@@ -85,7 +84,6 @@ public class IdClassGeneratedValueTest extends TestCase {
 		s.close();
 	}
 
-	@FailureExpected(message = "Not yet implemented", jiraKey = "HHH-4552")
 	@SuppressWarnings({ "unchecked" })
 	public void testMultipleGeneratedValue() {
 		Session s = openSession();
@@ -103,7 +101,7 @@ public class IdClassGeneratedValueTest extends TestCase {
 		s.beginTransaction();
 		List<Multiple> simpleList = s.createQuery( "select m from Multiple m" ).list();
 		assertEquals( simpleList.size(), 2 );
-		m1 = ( Multiple ) s.load( Multiple.class, new MultiplePK( m1Id1, m1Id2, 2L ) );
+		m1 = ( Multiple ) s.load( Multiple.class, new MultiplePK( m1Id1, m1Id2, 1000L ) );
 		assertEquals( m1.getQuantity(), 10 );
 		s.clear();
 		s.createQuery( "delete Multiple" ).executeUpdate();

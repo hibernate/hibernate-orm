@@ -226,6 +226,11 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 		else if ( idSetter != null ) {
 			idSetter.set( entity, id, getFactory() );
 		}
+		else if ( identifierMapperType != null ) {
+			ComponentType extractor = (ComponentType) entityMetamodel.getIdentifierProperty().getType();
+			ComponentType copier = (ComponentType) identifierMapperType;
+			copier.setPropertyValues( entity, extractor.getPropertyValues( id, getEntityMode() ), getEntityMode() );
+		}
 	}
 
 	public void resetIdentifier(Object entity, Serializable currentId, Object currentVersion) {

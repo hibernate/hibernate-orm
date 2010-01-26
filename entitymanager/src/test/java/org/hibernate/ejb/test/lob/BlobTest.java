@@ -12,7 +12,6 @@ import javax.persistence.EntityManager;
 import org.hibernate.Hibernate;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.ejb.test.TestCase;
-import org.hibernate.test.annotations.FailureExpected;
 
 /**
  * @author Emmanuel Bernard

@@ -1,4 +1,3 @@
-// $Id$
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
@@ -22,7 +21,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.test.annotations;
+package org.hibernate.junit;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -32,14 +31,38 @@ import java.lang.annotation.Target;
 import org.hibernate.dialect.Dialect;
 
 /**
- * Annotations used to mark a test to be specific to a given dialect.
+ * Annotation used to indicate that a test should be skipped when run against the
+ * indicated dialects.
  *
  * @author Hardy Ferentschik
+ * @author Steve Ebersole
  */
-@Target({ ElementType.METHOD, ElementType.TYPE })
 @Retention(RetentionPolicy.RUNTIME)
+@Target({ ElementType.METHOD, ElementType.TYPE })
 public @interface SkipForDialect {
+	/**
+	 * The dialects against which to skip the test
+	 * @return The dialects
+	 */
 	Class<? extends Dialect>[] value();
 
-	String comment();
+	/**
+	 * Used to indicate if the dialects should be matched strictly (classes equal) or
+	 * non-strictly (instanceof).
+	 * @return Should strict matching be used?
+	 */
+	boolean strictMatching() default false;
+
+	/**
+	 * Comment describing the reason for the skip.
+	 * @return The comment
+	 */
+	String comment() default "";
+
+	/**
+	 * The key of a JIRA issue which covers the reason for this skip.  Eventually we should make this
+	 * a requirement.
+	 * @return The jira issue key
+	 */
+	String jiraKey() default "";
 }

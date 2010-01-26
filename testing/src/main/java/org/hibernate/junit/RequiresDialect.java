@@ -1,4 +1,3 @@
-// $Id$
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
@@ -22,7 +21,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.test.annotations;
+package org.hibernate.junit;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -32,12 +31,24 @@ import java.lang.annotation.Target;
 import org.hibernate.dialect.Dialect;
 
 /**
- * Annotations used to mark a test to be specific to a given dialect.
+ * Annotation used to indicate that a test should be run only when run against the
+ * indicated dialects.
  * 
  * @author Hardy Ferentschik
  */
 @Target({ElementType.METHOD, ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface RequiresDialect {
+	/**
+	 * The dialects against which to run the test
+	 * @return The dialects
+	 */
 	Class<? extends Dialect>[] value();
+
+	/**
+	 * Used to indicate if the dialects should be matched strictly (classes equal) or
+	 * non-strictly (instanceof).
+	 * @return Should strict matching be used?
+	 */
+	boolean strictMatching() default false;
 }

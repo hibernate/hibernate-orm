@@ -1,4 +1,3 @@
-// $Id:$
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
@@ -24,6 +23,7 @@
  */
 package org.hibernate.test.annotations;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
@@ -40,6 +40,9 @@ import org.slf4j.LoggerFactory;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.jdbc.Work;
+import org.hibernate.junit.FailureExpected;
+import org.hibernate.junit.RequiresDialect;
+import org.hibernate.junit.SkipForDialect;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.util.StringHelper;
 
@@ -56,11 +59,6 @@ public abstract class HibernateTestCase extends TestCase {
 	protected static Configuration cfg;
 	private static Class<?> lastTestClass;
 
-
-	/**
-	 * The test method.
-	 */
-	private Method runMethod = null;
 
 	/**
 	 * Flag indicating whether the test should be run or skipped.
@@ -87,17 +85,73 @@ public abstract class HibernateTestCase extends TestCase {
 	}
 
 	@Override
-	protected void setUp() throws Exception {
-		runMethod = findTestMethod();
-		setRunTestFlag( runMethod );
-		if ( runTest ) {
-			if ( cfg == null || lastTestClass != getClass() ) {
-				buildConfiguration();
-				lastTestClass = getClass();
+	public void runBare() throws Throwable {
+		Method runMethod = findTestMethod();
+
+		final Skip skip = determineSkipByDialect( Dialect.getDialect(), runMethod );
+		if ( skip != null ) {
+			reportSkip( skip );
+			return;
+		}
+
+		setUp();
+		try {
+			runTest();
+		}
+		finally {
+			tearDown();
+		}
+	}
+
+	@Override
+	protected void runTest() throws Throwable {
+		Method runMethod = findTestMethod();
+		FailureExpected failureExpected = locateAnnotation( FailureExpected.class, runMethod );
+		try {
+			super.runTest();
+			if ( failureExpected != null ) {
+				throw new FailureExpectedTestPassedException();
+			}
+		}
+		catch ( FailureExpectedTestPassedException t ) {
+			closeResources();
+			throw t;
+		}
+		catch ( Throwable t ) {
+			if ( t instanceof InvocationTargetException ) {
+				t = ( ( InvocationTargetException ) t ).getTargetException();
+			}
+			if ( t instanceof IllegalAccessException ) {
+				t.fillInStackTrace();
+			}
+			closeResources();
+			if ( failureExpected != null) {
+				StringBuilder builder = new StringBuilder();
+				if ( StringHelper.isNotEmpty( failureExpected.message() ) ) {
+					builder.append( failureExpected.message() );
+				}
+				else {
+					builder.append( "ignoring @FailureExpected test" );
+				}
+				builder.append( " (" )
+						.append( failureExpected.jiraKey() )
+						.append( ")" );
+				reportSkip( "Failed with: " + t.toString(), builder.toString()  );
 			}
 			else {
-				runSchemaGeneration();
+				throw t;
 			}
+		}
+	}
+
+	@Override
+	protected void setUp() throws Exception {
+		if ( cfg == null || lastTestClass != getClass() ) {
+			buildConfiguration();
+			lastTestClass = getClass();
+		}
+		else {
+			runSchemaGeneration();
 		}
 	}
 
@@ -107,58 +161,86 @@ public abstract class HibernateTestCase extends TestCase {
 		handleUnclosedResources();
 	}
 
-	protected void runTest() throws Throwable {
-		if ( runTest ) {
-			runTestMethod( runMethod );
+	protected static class Skip {
+		private final String reason;
+		private final String testDescription;
+
+		public Skip(String reason, String testDescription) {
+			this.reason = reason;
+			this.testDescription = testDescription;
 		}
 	}
 
-	private void setRunTestFlag(Method runMethod) {
-		updateRequiredDialectList( runMethod );
-		updateSkipForDialectList( runMethod );
+	protected final Skip determineSkipByDialect(Dialect dialect, Method runMethod) {
+		// skips have precedence, so check them first
+		SkipForDialect skipForDialectAnn = locateAnnotation( SkipForDialect.class, runMethod );
+		if ( skipForDialectAnn != null ) {
+			for ( Class<? extends Dialect> dialectClass : skipForDialectAnn.value() ) {
+				if ( skipForDialectAnn.strictMatching() ) {
+					if ( dialectClass.equals( dialect.getClass() ) ) {
+						return buildSkip( dialect, skipForDialectAnn.comment(), skipForDialectAnn.jiraKey() );
+					}
+				}
+				else {
+					if ( dialectClass.isInstance( dialect ) ) {
+						return buildSkip( dialect, skipForDialectAnn.comment(), skipForDialectAnn.jiraKey() );
+					}
+				}
+			}
+		}
 
-		if ( runForCurrentDialect() ) {
-			runTest = true;
+		// then check against the requires
+		RequiresDialect requiresDialectAnn = locateAnnotation( RequiresDialect.class, runMethod );
+		if ( requiresDialectAnn != null ) {
+			for ( Class<? extends Dialect> dialectClass : requiresDialectAnn.value() ) {
+				if ( requiresDialectAnn.strictMatching() ) {
+					if ( dialectClass.equals( dialect.getClass() ) ) {
+						return buildSkip( dialect, null, null );
+					}
+				}
+				else {
+					if ( dialectClass.isInstance( dialect ) ) {
+						return buildSkip( dialect, null, null );
+					}
+				}
+			}
 		}
-		else {
-			log.warn(
-					"Skipping test {}, because test does not apply for dialect {}", runMethod.getName(), Dialect
-							.getDialect().getClass()
-			);
-			runTest = false;
-		}
+
+		return null;
 	}
 
-	private void updateRequiredDialectList(Method runMethod) {
-		requiredDialectList.clear();
-
-		RequiresDialect requiresDialectMethodAnn = runMethod.getAnnotation( RequiresDialect.class );
-		if ( requiresDialectMethodAnn != null ) {
-			Class<? extends Dialect>[] requiredDialects = requiresDialectMethodAnn.value();
-			requiredDialectList.addAll( Arrays.asList( requiredDialects ) );
+	protected <T extends Annotation> T locateAnnotation(Class<T> annotationClass, Method runMethod) {
+		T annotation = runMethod.getAnnotation( annotationClass );
+		if ( annotation == null ) {
+			annotation = getClass().getAnnotation( annotationClass );
 		}
-
-		RequiresDialect requiresDialectClassAnn = getClass().getAnnotation( RequiresDialect.class );
-		if ( requiresDialectClassAnn != null ) {
-			Class<? extends Dialect>[] requiredDialects = requiresDialectClassAnn.value();
-			requiredDialectList.addAll( Arrays.asList( requiredDialects ) );
+		if ( annotation == null ) {
+			annotation = runMethod.getDeclaringClass().getAnnotation( annotationClass );
 		}
+		return annotation;
 	}
 
-	private void updateSkipForDialectList(Method runMethod) {
-		skipForDialectList.clear();
+	protected Skip buildSkip(Dialect dialect, String comment, String jiraKey) {
+		StringBuilder buffer = new StringBuilder();
+		buffer.append( "skipping database-specific test [" );
+		buffer.append( fullTestName() );
+		buffer.append( "] for dialect [" );
+		buffer.append( dialect.getClass().getName() );
+		buffer.append( ']' );
 
-		SkipForDialect skipForDialectMethodAnn = runMethod.getAnnotation( SkipForDialect.class );
-		if ( skipForDialectMethodAnn != null ) {
-			Class<? extends Dialect>[] skipDialects = skipForDialectMethodAnn.value();
-			skipForDialectList.addAll( Arrays.asList( skipDialects ) );
+		if ( StringHelper.isNotEmpty( comment ) ) {
+			buffer.append( "; " ).append( comment );
 		}
 
-		SkipForDialect skipForDialectClassAnn = getClass().getAnnotation( SkipForDialect.class );
-		if ( skipForDialectClassAnn != null ) {
-			Class<? extends Dialect>[] skipDialects = skipForDialectClassAnn.value();
-			skipForDialectList.addAll( Arrays.asList( skipDialects ) );
+		if ( StringHelper.isNotEmpty( jiraKey ) ) {
+			buffer.append( " (" ).append( jiraKey ).append( ')' );
 		}
+
+		return new Skip( buffer.toString(), null );
+	}
+
+	public String fullTestName() {
+		return this.getClass().getName() + "#" + this.getName();
 	}
 
 	protected boolean runForCurrentDialect() {
@@ -183,48 +265,6 @@ public abstract class HibernateTestCase extends TestCase {
 		}
 
 		return runTestForCurrentDialect;
-	}
-
-	private void runTestMethod(Method runMethod) throws Throwable {
-		boolean failureExpected = runMethod.getAnnotation( FailureExpected.class ) != null;
-		try {
-			runMethod.invoke( this, new Class[0] );
-			if ( failureExpected ) {
-				throw new FailureExpectedTestPassedException();
-			}
-		}
-		catch ( FailureExpectedTestPassedException t ) {
-			closeResources();
-			throw t;
-		}
-		catch ( Throwable t ) {
-			if ( t instanceof InvocationTargetException ) {
-				t = ( ( InvocationTargetException ) t ).getTargetException();
-			}
-			if ( t instanceof IllegalAccessException ) {
-				t.fillInStackTrace();
-			}
-			closeResources();
-			if ( failureExpected ) {
-				FailureExpected ann = runMethod.getAnnotation( FailureExpected.class );
-				StringBuilder builder = new StringBuilder();
-				if ( StringHelper.isNotEmpty( ann.message() ) ) {
-					builder.append( ann.message() );
-				}
-				else {
-					builder.append( "ignoring test methods annoated with @FailureExpected" );
-				}
-				if ( StringHelper.isNotEmpty( ann.issueNumber() ) ) {
-					builder.append( " (" );
-					builder.append( ann.issueNumber() );
-					builder.append( ")" );
-				}
-				reportSkip( builder.toString(), "Failed with: " + t.toString() );
-			}
-			else {
-				throw t;
-			}
-		}
 	}
 
 	private Method findTestMethod() {
@@ -288,12 +328,14 @@ public abstract class HibernateTestCase extends TestCase {
 		export.drop( true, true );
 	}
 
+	private void reportSkip(Skip skip) {
+		reportSkip( skip.reason, skip.testDescription );
+	}
+
 	protected void reportSkip(String reason, String testDescription) {
 		StringBuilder builder = new StringBuilder();
 		builder.append( "*** skipping test [" );
-		builder.append( runMethod.getDeclaringClass().getName() );
-		builder.append( "." );
-		builder.append( runMethod.getName() );
+		builder.append( fullTestName() );
 		builder.append( "] - " );
 		builder.append( testDescription );
 		builder.append( " : " );

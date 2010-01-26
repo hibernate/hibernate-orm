@@ -32,7 +32,7 @@ import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.Sybase11Dialect;
 import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.dialect.SybaseDialect;
-import org.hibernate.test.annotations.RequiresDialect;
+import org.hibernate.junit.RequiresDialect;
 import org.hibernate.test.annotations.TestCase;
 import org.hibernate.util.ArrayHelper;
 

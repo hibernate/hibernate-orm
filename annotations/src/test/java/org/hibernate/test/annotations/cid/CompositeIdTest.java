@@ -9,11 +9,10 @@ import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.Criteria;
-import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.criterion.Disjunction;
 import org.hibernate.criterion.Restrictions;
+import org.hibernate.junit.SkipForDialect;
 import org.hibernate.test.annotations.TestCase;
-import org.hibernate.test.annotations.SkipForDialect;
 
 /**
  * test some composite id functionalities

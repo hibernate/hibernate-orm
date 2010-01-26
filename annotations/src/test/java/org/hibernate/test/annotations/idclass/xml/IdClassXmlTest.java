@@ -22,20 +22,17 @@
  */
 package org.hibernate.test.annotations.idclass.xml;
 
-import org.hibernate.Query;
-import org.hibernate.Session;
-import org.hibernate.Transaction;
-import org.hibernate.test.annotations.FailureExpected;
+import org.hibernate.junit.FailureExpected;
 import org.hibernate.test.annotations.TestCase;
 
 /**
- * HHH-4282
+ * A test for HHH-4282
  *
  * @author Hardy Ferentschik
  */
+@FailureExpected( jiraKey = "HHH-4282" )
 public class IdClassXmlTest extends TestCase {
 
-	@FailureExpected
 	public void testEntityMappningPropertiesAreNotIgnored() {
 		throw new RuntimeException();
 //		Session s = openSession();

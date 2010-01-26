@@ -10,7 +10,7 @@ import javax.persistence.EntityManager;
 import org.hibernate.ejb.test.Cat;
 import org.hibernate.ejb.test.Kitten;
 import org.hibernate.ejb.test.TestCase;
-import org.hibernate.test.annotations.FailureExpected;
+import org.hibernate.junit.FailureExpected;
 
 /**
  * @author Emmanuel Bernard
@@ -168,7 +168,7 @@ public class CallbacksTest extends TestCase {
 		em.close();
 	}
 	
-	@FailureExpected(message = "collection change does not trigger an event", issueNumber = "EJB-288")
+	@FailureExpected(message = "collection change does not trigger an event", jiraKey = "EJB-288")
 	public void testPostUpdateCollection() throws Exception {
 		// create a cat
 		EntityManager em = getOrCreateEntityManager();

@@ -27,7 +27,7 @@ package org.hibernate.test.annotations.idclassgeneratedvalue;
 import java.util.List;
 
 import org.hibernate.Session;
-import org.hibernate.test.annotations.FailureExpected;
+import org.hibernate.junit.FailureExpected;
 import org.hibernate.test.annotations.TestCase;
 
 /**
@@ -60,7 +60,7 @@ public class IdClassGeneratedValueTest extends TestCase {
 		s.close();
 	}
 
-	@FailureExpected(message = "Not yet implemented", issueNumber = "HHH-4552")
+	@FailureExpected(message = "Not yet implemented", jiraKey = "HHH-4552")
 	@SuppressWarnings({ "unchecked" })
 	public void testSingleGeneratedValue() {
 		Session s = openSession();
@@ -85,7 +85,7 @@ public class IdClassGeneratedValueTest extends TestCase {
 		s.close();
 	}
 
-	@FailureExpected(message = "Not yet implemented", issueNumber = "HHH-4552")
+	@FailureExpected(message = "Not yet implemented", jiraKey = "HHH-4552")
 	@SuppressWarnings({ "unchecked" })
 	public void testMultipleGeneratedValue() {
 		Session s = openSession();

@@ -2000,9 +2000,9 @@ public final class
 						+ " must not have @Id properties when used as an @EmbeddedId: "
 						+ BinderHelper.getPath( propertyHolder, inferredData ) );
 			}
-			if ( comp.getPropertySpan() == 0 ) {
+			if ( referencedEntityName == null && comp.getPropertySpan() == 0 ) {
 				throw new AnnotationException( comp.getComponentClassName()
-						+ " has no persistent id property"
+						+ " has no persistent id property: "
 						+ BinderHelper.getPath( propertyHolder, inferredData ) );
 			}
 		}

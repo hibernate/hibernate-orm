@@ -7,7 +7,8 @@ import org.hibernate.test.util.SchemaUtil;
 /**
  * @author Emmanuel Bernard
  */
-public class DerivedIdentitySimpleParentEmbeddedIdDepTest extends TestCase {
+public class
+		DerivedIdentitySimpleParentEmbeddedIdDepTest extends TestCase {
 
 	public void testManyToOne() throws Exception {
 		assertTrue( SchemaUtil.isColumnPresent( "Dependent", "FK", getCfg() ) );

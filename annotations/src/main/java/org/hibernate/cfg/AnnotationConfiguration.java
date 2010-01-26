@@ -359,35 +359,11 @@ public class AnnotationConfiguration extends Configuration {
 		caches.clear();
 		try {
 			inSecondPass = true;
-			Iterator iter = secondPasses.iterator();
-			while ( iter.hasNext() ) {
-				SecondPass sp = ( SecondPass ) iter.next();
-				//do the second pass of simple value types first and remove them
-				if ( sp instanceof SetSimpleValueTypeSecondPass ) {
-					sp.doSecondPass( classes );
-					iter.remove();
-				}
-			}
+			processSecondPassesOfType( SetSimpleValueTypeSecondPass.class );
+			processSecondPassesOfType( CopyIdentifierComponentSecondPass.class );
 			processFkSecondPassInOrder();
-			iter = secondPasses.iterator();
-			while ( iter.hasNext() ) {
-				SecondPass sp = ( SecondPass ) iter.next();
-				//do the second pass of fk before the others and remove them
-				if ( sp instanceof CreateKeySecondPass ) {
-					sp.doSecondPass( classes );
-					iter.remove();
-				}
-			}
-
-			iter = secondPasses.iterator();
-			while ( iter.hasNext() ) {
-				SecondPass sp = ( SecondPass ) iter.next();
-				//do the SecondaryTable second pass before any association because associations can be built on joins
-				if ( sp instanceof SecondaryTableSecondPass ) {
-					sp.doSecondPass( classes );
-					iter.remove();
-				}
-			}
+			processSecondPassesOfType( CreateKeySecondPass.class );
+			processSecondPassesOfType( SecondaryTableSecondPass.class );
 			super.secondPassCompile();
 			inSecondPass = false;
 		}
@@ -411,6 +387,18 @@ public class AnnotationConfiguration extends Configuration {
 			}
 		}
 		applyConstraintsToDDL();
+	}
+
+	private void processSecondPassesOfType(Class<? extends SecondPass> type) {
+		Iterator iter = secondPasses.iterator();
+		while ( iter.hasNext() ) {
+			SecondPass sp = ( SecondPass ) iter.next();
+			//do the second pass of simple value types first and remove them
+			if ( type.isInstance( sp ) ) {
+				sp.doSecondPass( classes );
+				iter.remove();
+			}
+		}
 	}
 
 	private void applyConstraintsToDDL() {
@@ -623,10 +611,11 @@ public class AnnotationConfiguration extends Configuration {
 			log.debug( "Process annotated classes" );
 			//bind classes in the correct order calculating some inheritance state
 			List<XClass> orderedClasses = orderAndFillHierarchy( annotatedClasses );
-			Map<XClass, InheritanceState> inheritanceStatePerClass = AnnotationBinder.buildInheritanceStates(
-					orderedClasses
-			);
 			ExtendedMappings mappings = createExtendedMappings();
+			Map<XClass, InheritanceState> inheritanceStatePerClass = AnnotationBinder.buildInheritanceStates(
+					orderedClasses, mappings
+			);
+
 
 			for ( XClass clazz : orderedClasses ) {
 				//todo use the same extended mapping

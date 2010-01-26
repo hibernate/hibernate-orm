@@ -17,7 +17,6 @@ public class Dependent implements Serializable {
 
 
 	@Id
-	//@JoinColumn(name = "FK")
 	// id attribute mapped by join column default
 	@ManyToOne
 	Employee emp;

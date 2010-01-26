@@ -90,10 +90,12 @@ public final class LogHelper {
 		sb.append( "]\n\t" );
 		sb.append( "Properties [" );
 		Properties properties = unitInfo.getProperties();
-		Enumeration names = properties.propertyNames();
-		while ( names.hasMoreElements() ) {
-			String name = (String) names.nextElement();
-			sb.append( "\n\t\t" ).append( name ).append( ": " ).append( properties.getProperty( name ) );
+		if (properties != null) {
+			Enumeration names = properties.propertyNames();
+			while ( names.hasMoreElements() ) {
+				String name = (String) names.nextElement();
+				sb.append( "\n\t\t" ).append( name ).append( ": " ).append( properties.getProperty( name ) );
+			}
 		}
 		sb.append( "]" );
 		return sb.toString();

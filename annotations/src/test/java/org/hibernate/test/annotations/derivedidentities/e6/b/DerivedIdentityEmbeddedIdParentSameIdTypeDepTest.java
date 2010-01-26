@@ -1,6 +1,4 @@
-package org.hibernate.test.annotations.derivedidentities.e5.b;
-
-import java.util.Date;
+package org.hibernate.test.annotations.derivedidentities.e6.b;
 
 import org.hibernate.Session;
 import org.hibernate.test.annotations.TestCase;
@@ -9,15 +7,16 @@ import org.hibernate.test.util.SchemaUtil;
 /**
  * @author Emmanuel Bernard
  */
-public class DerivedIdentityIdClassParentSameIdTypeDepTest extends TestCase {
+public class DerivedIdentityEmbeddedIdParentSameIdTypeDepTest extends TestCase {
 
 	public void testOneToOneExplicitJoinColumn() throws Exception {
 		assertTrue( SchemaUtil.isColumnPresent( "MedicalHistory", "FK1", getCfg() ) );
 		assertTrue( SchemaUtil.isColumnPresent( "MedicalHistory", "FK2", getCfg() ) );
 		assertTrue( ! SchemaUtil.isColumnPresent( "MedicalHistory", "firstname", getCfg() ) );
 		Person e = new Person();
-		e.firstName = "Emmanuel";
-		e.lastName = "Bernard";
+		e.id = new PersonId();
+		e.id.firstName = "Emmanuel";
+		e.id.lastName = "Bernard";
 		Session s = openSession(  );
 		s.getTransaction().begin();
 		s.persist( e );
@@ -30,7 +29,7 @@ public class DerivedIdentityIdClassParentSameIdTypeDepTest extends TestCase {
 		s.flush();
 		s.clear();
 		d = (MedicalHistory) s.get( MedicalHistory.class, d.id );
-		assertEquals( d.id.firstName, d.patient.firstName );
+		assertEquals( d.id.firstName, d.patient.id.firstName );
 		s.getTransaction().rollback();
 		s.close();
 	}

@@ -241,10 +241,8 @@ public abstract class AbstractIdentifiableType<X>
 	 * super class.
 	 */
 	protected void checkDeclaredVersion() {
-		if ( version == null ) {
-			if ( getSupertype() != null && getSupertype().hasVersionAttribute() ) {
-				throw new IllegalArgumentException( "The version attribute is not declared on this type" );
-			}
+		if ( version == null || ( getSupertype() != null && getSupertype().hasVersionAttribute() )) {
+			throw new IllegalArgumentException( "The version attribute is not declared on this type" );
 		}
 	}
 

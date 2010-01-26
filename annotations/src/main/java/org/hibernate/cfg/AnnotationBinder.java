@@ -769,12 +769,7 @@ public final class
 		}
 
 		Cacheable cacheableAnn = clazzToProcess.getAnnotation( Cacheable.class );
-		SharedCacheMode mode = (SharedCacheMode) mappings.getConfigurationProperties().get(
-				"javax.persistence.sharedCache.mode"
-		);
-		if ( mode == null ) {
-			mode = SharedCacheMode.UNSPECIFIED;
-		}
+		SharedCacheMode mode = determineSharedCacheMode( mappings );
 		switch ( mode ) {
 			case ALL: {
 				cacheAnn = buildCacheMock( clazzToProcess.getName(), mappings );
@@ -798,6 +793,33 @@ public final class
 			}
 		}
 		return cacheAnn;
+	}
+
+	private static SharedCacheMode determineSharedCacheMode(ExtendedMappings mappings) {
+		SharedCacheMode mode;
+		final Object value = mappings.getConfigurationProperties().get( "javax.persistence.sharedCache.mode" );
+		if ( value == null ) {
+			log.debug( "no value specified for 'javax.persistence.sharedCache.mode'; using UNSPECIFIED" );
+			mode = SharedCacheMode.UNSPECIFIED;
+		}
+		else {
+			if ( SharedCacheMode.class.isInstance( value ) ) {
+				mode = ( SharedCacheMode ) value;
+			}
+			else {
+				try {
+					mode = SharedCacheMode.valueOf( value.toString() );
+				}
+				catch ( Exception e ) {
+					log.debug( 
+							"Unable to resolve given mode name [" + value.toString()
+									+ "]; using UNSPECIFIED : " + e.toString()
+					);
+					mode = SharedCacheMode.UNSPECIFIED;
+				}
+			}
+		}
+		return mode;
 	}
 
 	private static Cache buildCacheMock(String region, ExtendedMappings mappings) {

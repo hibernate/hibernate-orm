@@ -147,6 +147,11 @@ public class AvailableSettings {
 	public static final String VALIDATION_MODE = "javax.persistence.validation.mode";
 
 	/**
+	 * Used to pass along any discovered validator factory.
+	 */
+	public static final String VALIDATION_FACTORY = "javax.persistence.validation.factory";
+
+	/**
 	 * Used to request (hint) a pessimistic lock scope.
 	 * <p/>
 	 * See JPA 2 sections 8.2.1.9 and 3.4.4.3

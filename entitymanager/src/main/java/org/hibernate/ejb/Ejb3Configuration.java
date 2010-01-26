@@ -54,6 +54,7 @@ import javax.persistence.EntityManagerFactory;
 import javax.persistence.EntityNotFoundException;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.PersistenceException;
+import javax.persistence.SharedCacheMode;
 import javax.persistence.spi.PersistenceUnitInfo;
 import javax.persistence.spi.PersistenceUnitTransactionType;
 import javax.sql.DataSource;
@@ -161,6 +162,7 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 	 * If used, be sure to <b>not override</b> the hibernate.connection.provider_class
 	 * property
 	 */
+	@SuppressWarnings({ "JavaDoc", "unchecked" })
 	public void setDataSource(DataSource ds) {
 		if ( ds != null ) {
 			Map cpInjection = new HashMap();
@@ -173,9 +175,22 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 	/**
 	 * create a factory from a parsed persistence.xml
 	 * Especially the scanning of classes and additional jars is done already at this point.
+	 * <p/>
+	 * NOTE: public only for unit testing purposes; not a public API!
+	 *
+	 * @param metadata The information parsed from the persistence.xml
+	 * @param overridesIn Any explicitly passed config settings
+	 *
+	 * @return this
 	 */
-	private Ejb3Configuration configure(PersistenceMetadata metadata, Map overrides) {
+	@SuppressWarnings({ "unchecked" })
+	public Ejb3Configuration configure(PersistenceMetadata metadata, Map overridesIn) {
 		log.debug( "Creating Factory: {}", metadata.getName() );
+
+		Map overrides = new HashMap();
+		if ( overridesIn != null ) {
+			overrides.putAll( overridesIn );
+		}
 
 		Map workingVars = new HashMap();
 		workingVars.put( AvailableSettings.PERSISTENCE_UNIT_NAME, metadata.getName() );
@@ -218,20 +233,46 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 		if ( metadata.getHbmfiles().size() > 0 ) {
 			workingVars.put( AvailableSettings.HBXML_FILES, metadata.getHbmfiles() );
 		}
-		if ( metadata.getValidationMode() != null) {
-			workingVars.put( AvailableSettings.VALIDATION_MODE, metadata.getValidationMode() );
-		}
-		if ( metadata.getSharedCacheMode() != null) {
-			workingVars.put( AvailableSettings.SHARED_CACHE_MODE, metadata.getSharedCacheMode() );
-		}
+
 		Properties props = new Properties();
 		props.putAll( metadata.getProps() );
-		if ( overrides != null ) {
-			for ( Map.Entry entry : (Set<Map.Entry>) overrides.entrySet() ) {
-				Object value = entry.getValue();
-				props.put( entry.getKey(), value == null ? "" :  value ); //alter null, not allowed in properties
-			}
+
+		// validation factory
+		final Object validationFactory = overrides.get( AvailableSettings.VALIDATION_FACTORY );
+		if ( validationFactory != null ) {
+			props.put( AvailableSettings.VALIDATION_FACTORY, validationFactory );
 		}
+		overrides.remove( AvailableSettings.VALIDATION_FACTORY );
+
+		// validation-mode (overrides has precedence)
+		{
+			final Object integrationValue = overrides.get( AvailableSettings.VALIDATION_MODE );
+			if ( integrationValue != null ) {
+				props.put( AvailableSettings.VALIDATION_MODE, integrationValue.toString() );
+			}
+			else if ( metadata.getValidationMode() != null ) {
+				props.put( AvailableSettings.VALIDATION_MODE, metadata.getValidationMode() );
+			}
+			overrides.remove( AvailableSettings.VALIDATION_MODE );
+		}
+
+		// shared-cache-mode (overrides has precedence)
+		{
+			final Object integrationValue = overrides.get( AvailableSettings.SHARED_CACHE_MODE );
+			if ( integrationValue != null ) {
+				props.put( AvailableSettings.SHARED_CACHE_MODE, integrationValue.toString() );
+			}
+			else if ( metadata.getSharedCacheMode() != null ) {
+				props.put( AvailableSettings.SHARED_CACHE_MODE, metadata.getSharedCacheMode() );
+			}
+			overrides.remove( AvailableSettings.SHARED_CACHE_MODE );
+		}
+
+		for ( Map.Entry entry : (Set<Map.Entry>) overrides.entrySet() ) {
+			Object value = entry.getValue();
+			props.put( entry.getKey(), value == null ? "" :  value ); //alter null, not allowed in properties
+		}
+
 		configure( props, workingVars );
 		return this;
 	}
@@ -246,8 +287,12 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 	 *
 	 * @param persistenceUnitName persistence unit name
 	 * @param integration properties passed to the persistence provider
+	 *
 	 * @return configured Ejb3Configuration or null if no persistence unit match
+	 *
+	 * @see HibernatePersistence#createEntityManagerFactory(String, java.util.Map)
 	 */
+	@SuppressWarnings({ "unchecked" })
 	public Ejb3Configuration configure(String persistenceUnitName, Map integration) {
 		try {
 			log.debug( "Look up for persistence unit: {}", persistenceUnitName );
@@ -416,9 +461,18 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 	}
 
 	/**
-	 * Process configuration from a PersistenceUnitInfo object
-	 * Typically called by the container
+	 * Process configuration from a PersistenceUnitInfo object; typically called by the container
+	 * via {@link javax.persistence.spi.PersistenceProvider#createContainerEntityManagerFactory}.
+	 * In Hibernate EM, this correlates to {@link HibernatePersistence#createContainerEntityManagerFactory}
+	 *
+	 * @param info The persistence unit info passed in by the container (usually from processing a persistence.xml).
+	 * @param integration The map of integration properties from the container to configure the provider.
+	 *
+	 * @return The configured EJB3Configurartion object
+	 *
+	 * @see HibernatePersistence#createContainerEntityManagerFactory
 	 */
+	@SuppressWarnings({ "unchecked" })
 	public Ejb3Configuration configure(PersistenceUnitInfo info, Map integration) {
 		if ( log.isDebugEnabled() ) {
 			log.debug( "Processing {}", LogHelper.logPersistenceUnitInfo( info ) );
@@ -427,19 +481,26 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 			log.info( "Processing PersistenceUnitInfo [\n\tname: {}\n\t...]", info.getPersistenceUnitName() );
 		}
 
+		// Spec says the passed map may be null, so handle that to make further processing easier...
 		integration = integration != null ? Collections.unmodifiableMap( integration ) : CollectionHelper.EMPTY_MAP;
+
+		// See if we (Hibernate) are the persistence provider
 		String provider = (String) integration.get( AvailableSettings.PROVIDER );
-		if ( provider == null ) provider = info.getPersistenceProviderClassName();
+		if ( provider == null ) {
+			provider = info.getPersistenceProviderClassName();
+		}
 		if ( provider != null && ! provider.trim().startsWith( IMPLEMENTATION_NAME ) ) {
 			log.info( "Required a different provider: {}", provider );
 			return null;
 		}
+
+		// set the classloader, passed in by the container in info, to set as the TCCL so that
+		// Hibernate uses it to properly resolve class references.
 		if ( info.getClassLoader() == null ) {
 			throw new IllegalStateException(
 					"[PersistenceUnit: " + info.getPersistenceUnitName() == null ? "" : info.getPersistenceUnitName()
 							+ "] " + "PersistenceUnitInfo.getClassLoader() id null" );
 		}
-		//set the classloader
 		Thread thread = Thread.currentThread();
 		ClassLoader contextClassLoader = thread.getContextClassLoader();
 		boolean sameClassLoader = info.getClassLoader().equals( contextClassLoader );
@@ -451,6 +512,10 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 			overridenClassLoader = null;
 		}
 
+		// Best I can tell, 'workingVars' is some form of additional configuration contract.
+		// But it does not correlate 1-1 to EMF/SF settings.  It really is like a set of de-typed
+		// additional configuration info.  I think it makes better sense to define this as an actual
+		// contract if that was in fact the intent; the code here is pretty confusing.
 		try {
 			Map workingVars = new HashMap();
 			workingVars.put( AvailableSettings.PERSISTENCE_UNIT_NAME, info.getPersistenceUnitName() );
@@ -460,7 +525,9 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 			List<NamedInputStream> hbmFiles = new ArrayList<NamedInputStream>();
 			List<String> packages = new ArrayList<String>();
 			List<String> xmlFiles = new ArrayList<String>( 50 );
-			if ( info.getMappingFileNames() != null ) xmlFiles.addAll( info.getMappingFileNames() );
+			if ( info.getMappingFileNames() != null ) {
+				xmlFiles.addAll( info.getMappingFileNames() );
+			}
 			//Should always be true if the container is not dump
 			boolean searchForORMFiles = ! xmlFiles.contains( META_INF_ORM_XML );
 
@@ -481,9 +548,7 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 			setDetectedArtifactsOnScanningContext( context, info.getProperties(), null, info.excludeUnlistedClasses() );
 			scanForClasses( context, packages, entities, hbmFiles );
 
-			Properties properties = info.getProperties() != null ?
-					info.getProperties() :
-					new Properties();
+			Properties properties = info.getProperties() != null ? info.getProperties() : new Properties();
 			ConfigurationHelper.overrideProperties( properties, integration );
 
 			//FIXME entities is used to enhance classes and to collect annotated entities this should not be mixed
@@ -500,16 +565,32 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 			workingVars.put( AvailableSettings.XML_FILE_NAMES, xmlFiles );
 			if ( hbmFiles.size() > 0 ) workingVars.put( AvailableSettings.HBXML_FILES, hbmFiles );
 
-			//validation-mode
-			final Object validationMode = info.getValidationMode();
-			if ( validationMode != null) {
-				workingVars.put( AvailableSettings.VALIDATION_MODE, validationMode );
+			// validation factory
+			final Object validationFactory = integration.get( AvailableSettings.VALIDATION_FACTORY );
+			if ( validationFactory != null ) {
+				properties.put( AvailableSettings.VALIDATION_FACTORY, validationFactory );
 			}
 
-			//shared-cache-mode
-			final Object sharedCacheMode = info.getSharedCacheMode();
-			if ( sharedCacheMode != null) {
-				workingVars.put( AvailableSettings.SHARED_CACHE_MODE, sharedCacheMode );
+			// validation-mode (integration has precedence)
+			{
+				final Object integrationValue = integration.get( AvailableSettings.VALIDATION_MODE );
+				if ( integrationValue != null ) {
+					properties.put( AvailableSettings.VALIDATION_MODE, integrationValue.toString() );
+				}
+				else if ( info.getValidationMode() != null ) {
+					properties.put( AvailableSettings.VALIDATION_MODE, info.getValidationMode().name() );
+				}
+			}
+
+			// shared-cache-mode (integration has precedence)
+			{
+				final Object integrationValue = integration.get( AvailableSettings.SHARED_CACHE_MODE );
+				if ( integrationValue != null ) {
+					properties.put( AvailableSettings.SHARED_CACHE_MODE, integrationValue.toString() );
+				}
+				else if ( info.getSharedCacheMode() != null ) {
+					properties.put( AvailableSettings.SHARED_CACHE_MODE, info.getSharedCacheMode().name() );
+				}
 			}
 
 			//datasources
@@ -837,12 +918,20 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 	}
 
 	/**
-	 * create a factory from a canonical workingVars map and the overriden properties
+	 * Configures this configuration object from 2 distinctly different sources.
 	 *
+	 * @param properties These are the properties that came from the user, either via
+	 * a persistence.xml or explicitly passed in to one of our
+	 * {@link javax.persistence.spi.PersistenceProvider}/{@link HibernatePersistence} contracts.
+	 * @param workingVars Is collection of settings which need to be handled similarly
+	 * between the 2 main bootstrap methods, but where the values are determine very differently
+	 * by each bootstrap method.  todo eventually make this a contract (class/interface)
+	 *
+	 * @return The configured configuration
+	 *
+	 * @see HibernatePersistence
 	 */
-	private Ejb3Configuration configure(
-			Properties properties, Map workingVars
-	) {
+	private Ejb3Configuration configure(Properties properties, Map workingVars) {
 		//TODO check for people calling more than once this method (except buildEMF)
 		if (isConfigurationProcessed) return this;
 		isConfigurationProcessed = true;

@@ -25,9 +25,9 @@ public class DerivedIdentityIdClassParentEmbeddedIdDepTest extends TestCase {
 		d.emp = e;
 		d.id = new DependentId();
 		d.id.name = "Doggy";
-		d.id.empPK = new EmployeeId();
-		d.id.empPK.firstName = e.firstName; //FIXME not needed when foreign is enabled
-		d.id.empPK.lastName = e.lastName; //FIXME not needed when foreign is enabled
+//		d.id.empPK = new EmployeeId(); //FIXME not needed when foreign is enabled
+//		d.id.empPK.firstName = e.firstName; //FIXME not needed when foreign is enabled
+//		d.id.empPK.lastName = e.lastName; //FIXME not needed when foreign is enabled
 		s.persist( d );
 		s.flush();
 		s.clear();

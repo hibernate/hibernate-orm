@@ -967,127 +967,6 @@ public final class
 		return true;
 	}
 
-//	/*
-//	 * Get the annotated elements, guessing the access type from @Id or @EmbeddedId presence.
-//	 * Change EntityBinder by side effect
-//	 */
-//	private static InheritanceState.ElementsToProcess getElementsToProcess(
-//			PersistentClass persistentClass, XClass clazzToProcess,
-//			Map<XClass, InheritanceState> inheritanceStatePerClass,
-//			EntityBinder entityBinder, ExtendedMappings mappings
-//	) {
-//		InheritanceState inheritanceState = inheritanceStatePerClass.get( clazzToProcess );
-//		assert !inheritanceState.isEmbeddableSuperclass();
-//
-//
-//		List<XClass> classesToProcess = getMappedSuperclassesTillNextEntityOrdered(
-//				persistentClass, clazzToProcess, inheritanceStatePerClass, mappings
-//		);
-//
-//		AccessType accessType = determineDefaultAccessType( clazzToProcess, inheritanceStatePerClass );
-//
-//		List<PropertyData> elements = new ArrayList<PropertyData>();
-//		int deep = classesToProcess.size();
-//		int idPropertyCount = 0;
-//
-//		for ( int index = 0; index < deep; index++ ) {
-//			PropertyContainer propertyContainer = new PropertyContainer( classesToProcess.get( index ), clazzToProcess );
-//			int currentIdPropertyCount = addElementsOfClass( elements, accessType, propertyContainer, mappings );
-//			idPropertyCount +=  currentIdPropertyCount;
-//		}
-//
-//		entityBinder.setPropertyAccessType( accessType );
-//
-//		if ( idPropertyCount == 0 && !inheritanceState.hasParents() ) {
-//			throw new AnnotationException( "No identifier specified for entity: " + clazzToProcess.getName() );
-//		}
-//
-//		return new InheritanceState.ElementsToProcess( elements, idPropertyCount);
-//	}
-
-//	private static AccessType determineDefaultAccessType(XClass annotatedClass, Map<XClass, InheritanceState> inheritanceStatePerClass) {
-//		XClass xclass = annotatedClass;
-//		while ( xclass != null && !Object.class.getName().equals( xclass.getName() ) ) {
-//			if ( xclass.isAnnotationPresent( Entity.class ) || xclass.isAnnotationPresent( MappedSuperclass.class ) ) {
-//				for ( XProperty prop : xclass.getDeclaredProperties( AccessType.PROPERTY.getType() ) ) {
-//					if ( prop.isAnnotationPresent( Id.class ) || prop.isAnnotationPresent( EmbeddedId.class ) ) {
-//						return AccessType.PROPERTY;
-//					}
-//				}
-//				for ( XProperty prop : xclass.getDeclaredProperties( AccessType.FIELD.getType() ) ) {
-//					if ( prop.isAnnotationPresent( Id.class ) || prop.isAnnotationPresent( EmbeddedId.class ) ) {
-//						return AccessType.FIELD;
-//					}
-//				}
-//			}
-//			xclass = xclass.getSuperclass();
-//		}
-//		throw new AnnotationException( "No identifier specified for entity: " + annotatedClass.getName() );
-//	}
-//
-//	private static List<XClass> getMappedSuperclassesTillNextEntityOrdered(
-//			PersistentClass persistentClass, XClass annotatedClass,
-//			Map<XClass, InheritanceState> inheritanceStatePerClass,
-//			ExtendedMappings mappings
-//	) {
-//
-//		//ordered to allow proper messages on properties subclassing
-//		List<XClass> classesToProcess = new ArrayList<XClass>();
-//		XClass currentClassInHierarchy = annotatedClass;
-//		InheritanceState superclassState;
-//		final ReflectionManager reflectionManager = mappings.getReflectionManager();
-//		do {
-//			classesToProcess.add( 0, currentClassInHierarchy );
-//			XClass superClass = currentClassInHierarchy;
-//			do {
-//				superClass = superClass.getSuperclass();
-//				superclassState = inheritanceStatePerClass.get( superClass );
-//			}
-//			while ( superClass != null && !reflectionManager
-//					.equals( superClass, Object.class ) && superclassState == null );
-//
-//			currentClassInHierarchy = superClass;
-//		}
-//		while ( superclassState != null && superclassState.isEmbeddableSuperclass() );
-//		addMappedSuperClassInMetadata(
-//				persistentClass, annotatedClass, inheritanceStatePerClass, mappings, classesToProcess
-//		);
-//
-//
-//		return classesToProcess;
-//	}
-//
-//	private static void addMappedSuperClassInMetadata(PersistentClass persistentClass,
-//													  XClass annotatedClass,
-//													  Map<XClass, InheritanceState> inheritanceStatePerClass,
-//													  ExtendedMappings mappings,
-//													  List<XClass> classesToProcess) {
-//		//add @MappedSuperclass in the metadata
-//		// classes from 0 to n-1 are @MappedSuperclass and should be linked
-//		org.hibernate.mapping.MappedSuperclass mappedSuperclass = null;
-//		final InheritanceState superEntityState =
-//				InheritanceState.getInheritanceStateOfSuperEntity( annotatedClass, inheritanceStatePerClass );
-//		PersistentClass superEntity =
-//				superEntityState != null ?
-//						mappings.getClass( superEntityState.getClazz().getName() ) :
-//						null;
-//		final int lastMappedSuperclass = classesToProcess.size() - 1;
-//		for ( int index = 0 ; index < lastMappedSuperclass ; index++ ) {
-//			org.hibernate.mapping.MappedSuperclass parentSuperclass = mappedSuperclass;
-//			final Class<?> type = mappings.getReflectionManager().toClass( classesToProcess.get( index ) );
-//			//add MAppedSuperclass if not already there
-//			mappedSuperclass = mappings.getMappedSuperclass( type );
-//			if (mappedSuperclass == null) {
-//				mappedSuperclass = new org.hibernate.mapping.MappedSuperclass(parentSuperclass, superEntity );
-//				mappedSuperclass.setMappedClass( type );
-//				mappings.addMappedSuperclass( type, mappedSuperclass );
-//			}
-//		}
-//		if (mappedSuperclass != null) {
-//			persistentClass.setSuperMappedSuperclass(mappedSuperclass);
-//		}
-//	}
-
 	/*
 	 * Process the filters defined on the given class, as well as all filters defined
 	 * on the MappedSuperclass(s) in the inheritance hierarchy
@@ -1347,11 +1226,6 @@ public final class
 			}
 			log.trace( "{} is a version property", inferredData.getPropertyName() );
 			RootClass rootClass = (RootClass) propertyHolder.getPersistentClass();
-//			PropertyBinder propBinder = new PropertyBinder();
-//			propBinder.setName( inferredData.getPropertyName() );
-//			propBinder.setReturnedClassName( inferredData.getTypeName() );
-//			propBinder.setLazy( false );
-//			propBinder.setAccessType( inferredData.getDefaultAccess() );
 			propertyBinder.setColumns( columns );
 			Property prop = propertyBinder.makePropertyValueAndBind();
 			propertyBinder.getSimpleValueBinder().setVersion(true);
@@ -1809,23 +1683,43 @@ public final class
 
 				propertyBinder.setLazy( lazy );
 				propertyBinder.setColumns( columns );
-//				if ( isIdentifierMapper ) {
-//					propertyBinder.setInsertable( false );
-//					propertyBinder.setUpdatable( false );
-//				}
+
 				propertyBinder.makePropertyValueAndBind();
+
 			}
+			if (isOverridden) {
+					final PropertyData mapsIdProperty = BinderHelper.getPropertyAnnotatedWithMapsId(
+							isId, propertyHolder, property.getName(), mappings
+					);
+					HashMap<String, IdGenerator> localGenerators = (HashMap<String, IdGenerator>) classGenerators.clone();
+					final IdGenerator foreignGenerator = new IdGenerator();
+					foreignGenerator.setIdentifierGeneratorStrategy( "assigned" );
+					foreignGenerator.setName( "Hibernate-local--foreign generator" );
+					foreignGenerator.setIdentifierGeneratorStrategy( "foreign" );
+					foreignGenerator.addParam( "property", mapsIdProperty.getPropertyName() );
+					localGenerators.put( foreignGenerator.getName(), foreignGenerator );
+
+					BinderHelper.makeIdGenerator(
+							(SimpleValue) propertyBinder.getValue(),
+							foreignGenerator.getIdentifierGeneratorStrategy(),
+							foreignGenerator.getName(),
+							mappings,
+							localGenerators
+					);
+				}
 			if (isId) {
 				//components and regular basic types create SimpleValue objects
 				final SimpleValue value = ( SimpleValue ) propertyBinder.getValue();
-				processId(
-						propertyHolder,
-						inferredData,
-						value,
-						classGenerators,
-						isIdentifierMapper,
-						mappings
-				);
+				if ( !isOverridden ) {
+					processId(
+							propertyHolder,
+							inferredData,
+							value,
+							classGenerators,
+							isIdentifierMapper,
+							mappings
+					);
+				}
 			}
 		}
 		//init index
@@ -1862,7 +1756,13 @@ public final class
 		}
 	}
 
-	private static void processId(PropertyHolder propertyHolder, PropertyData inferredData, SimpleValue idValue, HashMap<String, IdGenerator> classGenerators, boolean isIdentifierMapper, ExtendedMappings mappings) {
+	private static void processId(
+			PropertyHolder propertyHolder,
+			PropertyData inferredData,
+			SimpleValue idValue,
+			HashMap<String, IdGenerator> classGenerators,
+			boolean isIdentifierMapper,
+			ExtendedMappings mappings) {
 		if ( isIdentifierMapper ) {
 			throw new AnnotationException(
 					"@IdClass class should not have @Id nor @EmbeddedId properties: "

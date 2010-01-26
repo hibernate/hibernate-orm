@@ -23,7 +23,7 @@ public class
 		d.emp = e;
 		d.id = new DependentId();
 		d.id.name = "Doggy";
-		d.id.empPK = e.empId; //FIXME not needed when foreign is enabled
+		//d.id.empPK = e.empId; //FIXME not needed when foreign is enabled
 		s.persist( d );
 		s.flush();
 		s.clear();
@@ -46,7 +46,7 @@ public class
 		d.emp = e;
 		d.id = new DependentId();
 		d.id.name = "Doggy";
-		d.id.empPK = e.empId; //FIXME not needed when foreign is enabled
+		//d.id.empPK = e.empId; //FIXME not needed when foreign is enabled
 		s.persist( d );
 		s.flush();
 		s.clear();

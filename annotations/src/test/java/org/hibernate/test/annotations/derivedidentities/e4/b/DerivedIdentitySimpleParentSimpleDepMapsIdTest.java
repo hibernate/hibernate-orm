@@ -21,7 +21,7 @@ public class DerivedIdentitySimpleParentSimpleDepMapsIdTest extends TestCase {
 		s.persist( e );
 		MedicalHistory d = new MedicalHistory();
 		d.patient = e;
-		d.id = "aaa"; //FIXME not needed when foreign is enabled
+		//d.id = "aaa"; //FIXME not needed when foreign is enabled
 		s.persist( d );
 		s.flush();
 		s.clear();
@@ -46,7 +46,7 @@ public class DerivedIdentitySimpleParentSimpleDepMapsIdTest extends TestCase {
 		s.persist( e );
 		FinancialHistory d = new FinancialHistory();
 		d.patient = e;
-		d.id = "aaa"; //FIXME not needed when foreign is enabled
+		//d.id = "aaa"; //FIXME not needed when foreign is enabled
 		s.persist( d );
 		s.flush();
 		s.clear();

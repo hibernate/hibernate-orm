@@ -22,9 +22,9 @@ public class DerivedIdentityIdClassParentSameIdTypeDepTest extends TestCase {
 		s.getTransaction().begin();
 		s.persist( e );
 		MedicalHistory d = new MedicalHistory();
-		d.id = new PersonId();
-		d.id.firstName = "Emmanuel"; //FIXME not needed when foreign is enabled
-		d.id.lastName = "Bernard"; //FIXME not needed when foreign is enabled
+//		d.id = new PersonId(); //FIXME not needed when foreign is enabled
+//		d.id.firstName = "Emmanuel"; //FIXME not needed when foreign is enabled
+//		d.id.lastName = "Bernard"; //FIXME not needed when foreign is enabled
 		d.patient = e;
 		s.persist( d );
 		s.flush();

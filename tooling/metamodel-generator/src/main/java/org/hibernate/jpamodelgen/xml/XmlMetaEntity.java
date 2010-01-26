@@ -31,7 +31,7 @@ import org.hibernate.jpamodelgen.MetaAttribute;
 import org.hibernate.jpamodelgen.ImportContextImpl;
 import org.hibernate.jpamodelgen.MetaEntity;
 import org.hibernate.jpamodelgen.ImportContext;
-import org.hibernate.jpamodelgen.TypeUtils;
+import org.hibernate.jpamodelgen.util.TypeUtils;
 import org.hibernate.jpamodelgen.xml.jaxb.Attributes;
 import org.hibernate.jpamodelgen.xml.jaxb.Basic;
 import org.hibernate.jpamodelgen.xml.jaxb.ElementCollection;

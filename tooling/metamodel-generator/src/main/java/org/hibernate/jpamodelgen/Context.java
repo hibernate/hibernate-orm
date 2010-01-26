@@ -27,6 +27,7 @@ import javax.persistence.AccessType;
 import javax.tools.Diagnostic;
 
 import org.hibernate.jpamodelgen.annotation.AnnotationMetaEntity;
+import org.hibernate.jpamodelgen.util.TypeUtils;
 
 /**
  * @author Max Andersen

@@ -58,7 +58,7 @@ import org.hibernate.jpamodelgen.ImportContext;
 import org.hibernate.jpamodelgen.ImportContextImpl;
 import org.hibernate.jpamodelgen.MetaAttribute;
 import org.hibernate.jpamodelgen.MetaEntity;
-import org.hibernate.jpamodelgen.TypeUtils;
+import org.hibernate.jpamodelgen.util.TypeUtils;
 
 /**
  * @author Max Andersen
@@ -67,6 +67,7 @@ import org.hibernate.jpamodelgen.TypeUtils;
  */
 public class AnnotationMetaEntity implements MetaEntity {
 
+	private static final String DEFAULT_ANNOTATION_PARAMETER_NAME = "value";
 	static Map<String, String> COLLECTIONS = new HashMap<String, String>();
 
 	static {
@@ -122,14 +123,14 @@ public class AnnotationMetaEntity implements MetaEntity {
 		addPersistentMembers( membersFound, elementAccessType, methodsOfClass, AccessType.PROPERTY );
 
 		//process superclasses
-		for ( TypeElement superclass = TypeUtils.getSuperclass( element );
+		for ( TypeElement superclass = TypeUtils.getSuperclassTypeElement( element );
 			  superclass != null;
-			  superclass = TypeUtils.getSuperclass( superclass ) ) {
-			if ( superclass.getAnnotation( Entity.class ) != null ) {
+			  superclass = TypeUtils.getSuperclassTypeElement( superclass ) ) {
+			if ( TypeUtils.containsAnnotation( superclass, Entity.class ) ) {
 				break; //will be handled or has been handled already
 			}
-			else if ( superclass.getAnnotation( MappedSuperclass.class ) != null ) {
-				//FIXME use the class defalut access type
+			else if ( TypeUtils.containsAnnotation( superclass, MappedSuperclass.class ) ) {
+				//FIXME use the class default access type
 				context.processElement( superclass, defaultAccessTypeForHierarchy );
 			}
 		}
@@ -175,10 +176,9 @@ public class AnnotationMetaEntity implements MetaEntity {
 			//FIXME is it really true if only the superclass is changed
 			TypeElement superClass = element;
 			do {
-				superClass = TypeUtils.getSuperclass( superClass );
+				superClass = TypeUtils.getSuperclassTypeElement( superClass );
 				if ( superClass != null ) {
-					if ( superClass.getAnnotation( Entity.class ) != null
-							|| superClass.getAnnotation( MappedSuperclass.class ) != null ) {
+					if ( TypeUtils.containsAnnotation( superClass, Entity.class, MappedSuperclass.class ) ) {
 						//FIXME make it work for XML
 						AccessType superClassAccessType = getAccessTypeForClass( superClass );
 						//we've reach the root entity and resolved Ids
@@ -221,8 +221,7 @@ public class AnnotationMetaEntity implements MetaEntity {
 		 * when forcing access type, we can only override the defaultAccessTypeForHierarchy
 		 * if we are the entity root (identified by having @Id or @EmbeddedId
 		 */
-		final Access accessAnn = searchedElement.getAnnotation( Access.class );
-		AccessType forcedAccessType = accessAnn != null ? accessAnn.value() : null;
+		AccessType forcedAccessType = determineAnnotationSpecifiedAccessType( searchedElement );
 		if ( forcedAccessType != null ) {
 			context.logMessage( Diagnostic.Kind.OTHER, "access type " + searchedElement + ":" + forcedAccessType );
 			context.addAccessType( searchedElement, forcedAccessType );
@@ -239,11 +238,9 @@ public class AnnotationMetaEntity implements MetaEntity {
 				for ( Object entityAnnotation : entityAnnotations ) {
 					AnnotationMirror annotationMirror = ( AnnotationMirror ) entityAnnotation;
 
-					final String annotationType = annotationMirror.getAnnotationType().toString();
-
 					//FIXME consider XML
-					if ( annotationType.equals( Id.class.getName() )
-							|| annotationType.equals( EmbeddedId.class.getName() ) ) {
+					if ( TypeUtils.isAnnotationMirrorOfType( annotationMirror, Id.class )
+							|| TypeUtils.isAnnotationMirrorOfType( annotationMirror, EmbeddedId.class ) ) {
 						context.logMessage( Diagnostic.Kind.OTHER, "Found id on" + searchedElement );
 						final ElementKind kind = subElement.getKind();
 						if ( kind == ElementKind.FIELD || kind == ElementKind.METHOD ) {
@@ -273,6 +270,30 @@ public class AnnotationMetaEntity implements MetaEntity {
 							}
 						}
 					}
+				}
+			}
+		}
+		return forcedAccessType;
+	}
+
+	private AccessType determineAnnotationSpecifiedAccessType(Element element) {
+		final AnnotationMirror accessAnnotationMirror = TypeUtils.getAnnotationMirror( element, Access.class );
+		AccessType forcedAccessType = null;
+		if ( accessAnnotationMirror != null ) {
+			Element accessElement = ( Element ) TypeUtils.getAnnotationValue(
+					accessAnnotationMirror,
+					DEFAULT_ANNOTATION_PARAMETER_NAME
+			);
+			if ( accessElement.getKind().equals( ElementKind.ENUM_CONSTANT ) ) {
+				if ( accessElement.getSimpleName().toString().equals( AccessType.PROPERTY.toString() ) ) {
+					forcedAccessType = AccessType.PROPERTY;
+				}
+				else if ( accessElement.getSimpleName().toString().equals( AccessType.FIELD.toString() ) ) {
+					forcedAccessType = AccessType.FIELD;
+
+				}
+				else {
+					context.logMessage( Diagnostic.Kind.ERROR, "Unexpected type for access type" );
 				}
 			}
 		}
@@ -332,13 +353,13 @@ public class AnnotationMetaEntity implements MetaEntity {
 				correctAccessType = true;
 			}
 			else {
-				final Access accessAnn = element.getAnnotation( Access.class );
-				if ( accessAnn != null && explicitAccessType.equals( accessAnn.value() ) ) {
+				AccessType annotationAccessType = determineAnnotationSpecifiedAccessType( element );
+				if ( explicitAccessType.equals( annotationAccessType ) ) {
 					correctAccessType = true;
 				}
 			}
 			return correctAccessType
-					&& element.getAnnotation( Transient.class ) == null
+					&& !TypeUtils.containsAnnotation( element, Transient.class )
 					&& !element.getModifiers().contains( Modifier.TRANSIENT )
 					&& !element.getModifiers().contains( Modifier.STATIC );
 
@@ -354,10 +375,9 @@ public class AnnotationMetaEntity implements MetaEntity {
 				String fqElementName = returnedElement.getQualifiedName()
 						.toString();  // WARNING: .toString() is necessary here since Name equals does not compare to String
 				String collection = COLLECTIONS.get( fqElementName );
-				final List<? extends AnnotationMirror> annotations = element.getAnnotationMirrors();
-				String targetEntity = getTargetEntity( annotations );
+				String targetEntity = getTargetEntity( element.getAnnotationMirrors() );
 				if ( collection != null ) {
-					if ( containsAnnotation( annotations, ElementCollection.class ) ) {
+					if ( TypeUtils.containsAnnotation( element, ElementCollection.class ) ) {
 						//FIXME I don't understand why this code is different between Elementcollection and a regular collection but it needs to take targetClass into account
 						TypeMirror collectionElementType = getCollectionElementType( t, fqElementName );
 						final TypeElement collectionElement = ( TypeElement ) context.getProcessingEnvironment()
@@ -375,13 +395,14 @@ public class AnnotationMetaEntity implements MetaEntity {
 						);
 					}
 					else {
-						return new AnnotationMetaCollection( parent, element, collection, getElementType( t, targetEntity ) );
+						return new AnnotationMetaCollection(
+								parent, element, collection, getElementType( t, targetEntity )
+						);
 					}
 				}
 				else {
 					//FIXME Consider XML
-					if ( element.getAnnotation( Embedded.class ) != null
-							|| returnedElement.getAnnotation( Embeddable.class ) != null ) {
+					if ( TypeUtils.containsAnnotation( returnedElement, Embedded.class, Embeddable.class ) ) {
 						this.parent.context.processElement(
 								returnedElement,
 								this.parent.defaultAccessTypeForElement
@@ -424,43 +445,22 @@ public class AnnotationMetaEntity implements MetaEntity {
 		}
 	}
 
-	private boolean containsAnnotation(List<? extends AnnotationMirror> annotations, Class<?> annotation) {
-		String annString = annotation.getName();
-		for ( AnnotationMirror mirror : annotations ) {
-			if ( annString.equals( mirror.getAnnotationType().toString() ) ) {
-				return true;
-			}
-		}
-		return false;
-	}
-
 	/**
-	 * Returns targetEntity or null if no targetEntity is here or if equals to void
+	 * @return target entity class name as string or {@code null} if no targetEntity is here or if equals to void
 	 */
+
 	private String getTargetEntity(List<? extends AnnotationMirror> annotations) {
-		final String elementCollection = ElementCollection.class.getName();
 
 		for ( AnnotationMirror mirror : annotations ) {
-			final String annotation = mirror.getAnnotationType().toString();
-			if ( elementCollection.equals( annotation ) ) {
+			if ( TypeUtils.isAnnotationMirrorOfType( mirror, ElementCollection.class )
+					|| TypeUtils.isAnnotationMirrorOfType( mirror, OneToMany.class )
+					|| TypeUtils.isAnnotationMirrorOfType( mirror, ManyToMany.class )
+					|| TypeUtils.isAnnotationMirrorOfType( mirror, ManyToOne.class )
+					|| TypeUtils.isAnnotationMirrorOfType( mirror, OneToOne.class ) ) {
 				final String targetEntity = getTargetEntity( mirror );
-				if (targetEntity != null) return targetEntity;
-			}
-			else if ( OneToMany.class.getName().equals( annotation ) ) {
-				final String targetEntity = getTargetEntity( mirror );
-				if (targetEntity != null) return targetEntity;
-			}
-			else if ( ManyToMany.class.getName().equals( annotation ) ) {
-				final String targetEntity = getTargetEntity( mirror );
-				if (targetEntity != null) return targetEntity;
-			}
-			else if ( ManyToOne.class.getName().equals( annotation ) ) {
-				final String targetEntity = getTargetEntity( mirror );
-				if (targetEntity != null) return targetEntity;
-			}
-			else if ( OneToOne.class.getName().equals( annotation ) ) {
-				final String targetEntity = getTargetEntity( mirror );
-				if (targetEntity != null) return targetEntity;
+				if ( targetEntity != null ) {
+					return targetEntity;
+				}
 			}
 		}
 		return null;
@@ -506,7 +506,9 @@ public class AnnotationMetaEntity implements MetaEntity {
 	}
 
 	private String getElementType(DeclaredType declaredType, String targetEntity) {
-		if (targetEntity != null) return targetEntity;
+		if ( targetEntity != null ) {
+			return targetEntity;
+		}
 		final List<? extends TypeMirror> mirrors = declaredType.getTypeArguments();
 		if ( mirrors.size() == 1 ) {
 			final TypeMirror type = mirrors.get( 0 );
@@ -518,12 +520,10 @@ public class AnnotationMetaEntity implements MetaEntity {
 		else {
 			//for 0 or many
 			//0 is expected, many is not
-			if ( mirrors.size() > 2) {
+			if ( mirrors.size() > 2 ) {
 				context.logMessage( Diagnostic.Kind.WARNING, "Unable to find the closest solid type" + declaredType );
 			}
 			return "?";
 		}
 	}
-
-
 }

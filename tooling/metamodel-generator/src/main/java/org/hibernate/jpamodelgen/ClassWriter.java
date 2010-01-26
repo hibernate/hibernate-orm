@@ -39,7 +39,6 @@ public class ClassWriter {
 	public static void writeFile(MetaEntity entity, Context context) {
 		try {
 			String metaModelPackage = entity.getPackageName();
-
 			StringBuffer body = generateBody( entity, context );
 
 			FileObject fo = context.getProcessingEnvironment().getFiler().createSourceFile(
@@ -49,11 +48,8 @@ public class ClassWriter {
 			PrintWriter pw = new PrintWriter( os );
 
 			pw.println( "package " + metaModelPackage + ";" );
-
 			pw.println();
-
 			pw.println( entity.generateImports() );
-
 			pw.println( body );
 
 			pw.flush();
@@ -62,7 +58,7 @@ public class ClassWriter {
 		}
 		catch ( FilerException filerEx ) {
 			context.logMessage(
-					Diagnostic.Kind.WARNING, "Problem with Processing Environment Filer: " + filerEx.getMessage()
+					Diagnostic.Kind.ERROR, "Problem with Filer: " + filerEx.getMessage()
 			);
 		}
 		catch ( IOException ioEx ) {
@@ -77,6 +73,7 @@ public class ClassWriter {
 	 * Generate everything after import statements.
 	 *
 	 * @param entity The meta entity for which to write the body
+	 * @param context The processing context
 	 *
 	 * @return body content
 	 */
@@ -111,7 +108,6 @@ public class ClassWriter {
 
 		final TypeMirror superClass = entity.getTypeElement().getSuperclass();
 		//superclass of Object is of NoType which returns some other kind
-		String superclassDeclaration = "";
 		if ( superClass.getKind() == TypeKind.DECLARED ) {
 			//F..king Ch...t Have those people used their horrible APIs even once?
 			final Element superClassElement = ( ( DeclaredType ) superClass ).asElement();

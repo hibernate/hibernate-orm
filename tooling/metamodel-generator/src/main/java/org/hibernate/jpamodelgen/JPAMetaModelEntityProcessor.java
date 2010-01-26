@@ -29,10 +29,12 @@ import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.TypeElement;
 import javax.persistence.Embeddable;
+import javax.persistence.Entity;
 import javax.persistence.MappedSuperclass;
 import javax.tools.Diagnostic;
 
 import org.hibernate.jpamodelgen.annotation.AnnotationMetaEntity;
+import org.hibernate.jpamodelgen.util.TypeUtils;
 import org.hibernate.jpamodelgen.xml.XmlParser;
 
 import static javax.lang.model.SourceVersion.RELEASE_6;
@@ -48,11 +50,7 @@ import static javax.lang.model.SourceVersion.RELEASE_6;
 @SupportedSourceVersion(RELEASE_6)
 public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 
-
 	private static final Boolean ALLOW_OTHER_PROCESSORS_TO_CLAIM_ANNOTATIONS = Boolean.FALSE;
-	private static final String ENTITY_ANN = javax.persistence.Entity.class.getName();
-	private static final String MAPPED_SUPERCLASS_ANN = MappedSuperclass.class.getName();
-	private static final String EMBEDDABLE_ANN = Embeddable.class.getName();
 
 	private boolean xmlProcessed = false;
 	private Context context;
@@ -115,14 +113,13 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 
 	private boolean hostJPAAnnotations(Set<? extends TypeElement> annotations) {
 		for ( TypeElement type : annotations ) {
-			final String typeName = type.getQualifiedName().toString();
-			if ( typeName.equals( ENTITY_ANN ) ) {
+			if ( TypeUtils.isTypeElementOfType( type, Entity.class ) ) {
 				return true;
 			}
-			else if ( typeName.equals( EMBEDDABLE_ANN ) ) {
+			else if ( TypeUtils.isTypeElementOfType( type, Embeddable.class ) ) {
 				return true;
 			}
-			else if ( typeName.equals( MAPPED_SUPERCLASS_ANN ) ) {
+			else if ( TypeUtils.isTypeElementOfType( type, MappedSuperclass.class ) ) {
 				return true;
 			}
 		}
@@ -131,20 +128,17 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 
 	private void handleRootElementAnnotationMirrors(final Element element) {
 
-		List<? extends AnnotationMirror> annotationMirrors = element
-				.getAnnotationMirrors();
+		List<? extends AnnotationMirror> annotationMirrors = element.getAnnotationMirrors();
 
 		for ( AnnotationMirror mirror : annotationMirrors ) {
-			final String annotationType = mirror.getAnnotationType().toString();
-
 			if ( element.getKind() == ElementKind.CLASS ) {
-				if ( annotationType.equals( ENTITY_ANN ) ) {
+				if ( TypeUtils.isAnnotationMirrorOfType( mirror, Entity.class ) ) {
 					AnnotationMetaEntity metaEntity = new AnnotationMetaEntity( ( TypeElement ) element, context );
 					// TODO instead of just adding the entity we have to do some merging.
 					context.getMetaEntitiesToProcess().put( metaEntity.getQualifiedName(), metaEntity );
 				}
-				else if ( annotationType.equals( MAPPED_SUPERCLASS_ANN )
-						|| annotationType.equals( EMBEDDABLE_ANN ) ) {
+				else if ( TypeUtils.isAnnotationMirrorOfType( mirror, MappedSuperclass.class )
+						|| TypeUtils.isAnnotationMirrorOfType( mirror, Embeddable.class ) ) {
 					AnnotationMetaEntity metaEntity = new AnnotationMetaEntity( ( TypeElement ) element, context );
 
 					// TODO instead of just adding the entity we have to do some merging.

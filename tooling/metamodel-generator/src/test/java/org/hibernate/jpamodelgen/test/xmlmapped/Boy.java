@@ -1,4 +1,4 @@
-// $Id$
+// $Id:$
 /*
 * JBoss, Home of Professional Open Source
 * Copyright 2009, Red Hat, Inc. and/or its affiliates, and individual contributors
@@ -15,28 +15,46 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-package org.hibernate.jpamodelgen.test.elementcollection;
+package org.hibernate.jpamodelgen.test.xmlmapped;
 
-import java.util.Map;
-import javax.persistence.ElementCollection;
-import javax.persistence.Entity;
-import javax.persistence.MapKeyColumn;
+import java.util.List;
 
 /**
  * @author Hardy Ferentschik
  */
-@Entity
-public class House {
-	private Map<String, Room> roomsByName;
+public class Boy {
+	private long id;
 
-	@ElementCollection(targetClass = Room.class)
-	@MapKeyColumn(name = "room_name")
-	public Map<String, Room> getRoomsByName() {
-		return roomsByName;
+	private String name;
+
+	/*
+	 * The mapping in boy.xml specifies as target-class for the element collection java.lang.Integer. This makes no
+	 * sense from a mapping point, but makes it easy to test.
+	 */
+	private List<String> nickNames;
+
+	public long getId() {
+		return id;
 	}
 
-	public void setRoomsByName(Map<String, Room> roomsByName) {
-		this.roomsByName = roomsByName;
+	public void setId(long id) {
+		this.id = id;
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	public List<String> getNickNames() {
+		return nickNames;
+	}
+
+	public void setNickNames(List<String> nickNames) {
+		this.nickNames = nickNames;
 	}
 }
 

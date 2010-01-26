@@ -56,7 +56,7 @@ public class TestUtil {
 			assertNotNull( Class.forName( className ) );
 		}
 		catch ( ClassNotFoundException e ) {
-			fail( e.getMessage() );
+			fail( className + " was not generated." );
 		}
 	}
 
@@ -126,7 +126,7 @@ public class TestUtil {
 		return getField( className, fieldName ) != null;
 	}
 
-	private static Field getField(String className, String fieldName) throws ClassNotFoundException {
+	public static Field getField(String className, String fieldName) throws ClassNotFoundException {
 		Class<?> clazz = Class.forName( className );
 		try {
 			return clazz.getField( fieldName );

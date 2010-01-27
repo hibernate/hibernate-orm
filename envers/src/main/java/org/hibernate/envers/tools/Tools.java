@@ -83,10 +83,6 @@ public class Tools {
 			);
 			proxy.getHibernateLazyInitializer().setImplementation( target );
 			return target;
-// adam, changes in AbstractLazyInitializer render this no longer valid...
-//            proxy.getHibernateLazyInitializer().setSession((SessionImplementor) tempSession);
-//            proxy.getHibernateLazyInitializer().initialize();
-//            return proxy.getHibernateLazyInitializer().getImplementation();
         }
 		finally {
             tempSession.close();

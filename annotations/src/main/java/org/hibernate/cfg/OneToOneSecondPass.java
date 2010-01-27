@@ -162,8 +162,9 @@ public class OneToOneSecondPass implements SecondPass {
 				Iterator it = otherSide.getJoinIterator();
 				Join otherSideJoin = null;
 				while ( it.hasNext() ) {
-					otherSideJoin = (Join) it.next();
-					if ( otherSideJoin.containsProperty( otherSideProperty ) ) {
+					Join otherSideJoinValue = (Join) it.next();
+					if ( otherSideJoinValue.containsProperty( otherSideProperty ) ) {
+						otherSideJoin = otherSideJoinValue;
 						break;
 					}
 				}

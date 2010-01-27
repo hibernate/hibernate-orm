@@ -951,7 +951,7 @@ public class QueryTranslatorImpl extends BasicLoader implements FilterTranslator
 			PreparedStatement st = prepareQueryStatement( queryParameters, false, session );
 			ResultSet rs = getResultSet( st, queryParameters.hasAutoDiscoverScalarTypes(), false, queryParameters.getRowSelection(), session );
 			HolderInstantiator hi = HolderInstantiator.createClassicHolderInstantiator(holderConstructor, queryParameters.getResultTransformer());
-			Iterator result = new IteratorImpl( rs, st, session, returnTypes, getColumnNames(), hi );
+			Iterator result = new IteratorImpl( rs, st, session, queryParameters.isReadOnly( session ), returnTypes, getColumnNames(), hi );
 
 			if ( stats ) {
 				session.getFactory().getStatisticsImplementor().queryExecuted(

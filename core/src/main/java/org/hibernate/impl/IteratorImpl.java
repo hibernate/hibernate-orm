@@ -51,6 +51,7 @@ public final class IteratorImpl implements HibernateIterator {
 
 	private ResultSet rs;
 	private final EventSource session;
+	private boolean readOnly;
 	private final Type[] types;
 	private final boolean single;
 	private Object currentResult;
@@ -63,6 +64,7 @@ public final class IteratorImpl implements HibernateIterator {
 	        ResultSet rs,
 	        PreparedStatement ps,
 	        EventSource sess,
+	        boolean readOnly,
 	        Type[] types,
 	        String[][] columnNames,
 	        HolderInstantiator holderInstantiator)
@@ -71,6 +73,7 @@ public final class IteratorImpl implements HibernateIterator {
 		this.rs=rs;
 		this.ps=ps;
 		this.session = sess;
+		this.readOnly = readOnly;
 		this.types = types;
 		this.names = columnNames;
 		this.holderInstantiator = holderInstantiator;
@@ -127,6 +130,8 @@ public final class IteratorImpl implements HibernateIterator {
 
 	public Object next() throws HibernateException {
 		if ( !hasNext ) throw new NoSuchElementException("No more results");
+		boolean sessionDefaultReadOnlyOrig = session.isDefaultReadOnly();
+		session.setDefaultReadOnly( readOnly );
 		try {
 			boolean isHolder = holderInstantiator.isRequired();
 
@@ -158,6 +163,9 @@ public final class IteratorImpl implements HibernateIterator {
 					sqle,
 					"could not get next iterator result"
 				);
+		}
+		finally {
+			session.setDefaultReadOnly( sessionDefaultReadOnlyOrig );
 		}
 	}
 

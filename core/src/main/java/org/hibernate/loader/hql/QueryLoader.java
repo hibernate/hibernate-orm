@@ -442,6 +442,7 @@ public class QueryLoader extends BasicLoader {
 					rs,
 			        st,
 			        session,
+			        queryParameters.isReadOnly( session ),
 			        queryReturnTypes,
 			        queryTranslator.getColumnNames(),
 			        buildHolderInstantiator( queryParameters.getResultTransformer() )

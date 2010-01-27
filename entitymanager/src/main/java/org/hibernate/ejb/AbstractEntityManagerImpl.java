@@ -191,29 +191,34 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 			boolean extended = PessimisticLockScope.EXTENDED.equals( ( PessimisticLockScope ) lockScope );
 			options.setScope( extended );
 		}
-		else {
+		else if ( lockScope != null ) {
 			throw new PersistenceException( "Unable to parse " + AvailableSettings.LOCK_SCOPE + ": " + lockScope );
 		}
 
 		Object lockTimeout = props.get( AvailableSettings.LOCK_TIMEOUT );
-		int timeout;
+		int timeout = 0;
+		boolean timeoutSet = false;
 		if ( lockTimeout instanceof String ) {
 			timeout = Integer.parseInt( ( String ) lockTimeout );
+			timeoutSet = true;
 		}
 		else if ( lockTimeout instanceof Integer ) {
 			timeout = ( Integer ) lockTimeout;
+			timeoutSet = true;
 		}
-		else {
+		else if ( lockTimeout != null ) {
 			throw new PersistenceException( "Unable to parse " + AvailableSettings.LOCK_TIMEOUT + ": " + lockTimeout );
 		}
-		if ( timeout < 0 ) {
-			options.setTimeOut( LockOptions.WAIT_FOREVER );
-		}
-		else if ( timeout == 0 ) {
-			options.setTimeOut( LockOptions.NO_WAIT );
-		}
-		else {
-			options.setTimeOut( timeout );
+		if ( timeoutSet != false ) {
+			if ( timeout < 0 ) {
+				options.setTimeOut( LockOptions.WAIT_FOREVER );
+			}
+			else if ( timeout == 0 ) {
+				options.setTimeOut( LockOptions.NO_WAIT );
+			}
+			else {
+				options.setTimeOut( timeout );
+			}
 		}
 	}
 

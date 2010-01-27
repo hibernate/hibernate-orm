@@ -12,7 +12,6 @@ import org.hibernate.mapping.Component;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.SimpleValue;
-import org.hibernate.mapping.Value;
 
 /**
  * @author Emmanuel Bernard
@@ -46,12 +45,13 @@ public class CopyIdentifierComponentSecondPass implements SecondPass {
 		Component referencedComponent = (Component) referencedPersistentClass.getIdentifier();
 		Iterator<Property> properties = referencedComponent.getPropertyIterator();
 
+
 		//prepare column name structure
 		boolean isExplicitReference = true;
 		Map<String, Ejb3JoinColumn> columnByReferencedName = new HashMap<String, Ejb3JoinColumn>(joinColumns.length);
 		for (Ejb3JoinColumn joinColumn : joinColumns) {
 			final String referencedColumnName = joinColumn.getReferencedColumn();
-			if ( BinderHelper.isDefault( referencedColumnName ) ) {
+			if ( referencedColumnName == null || BinderHelper.isDefault( referencedColumnName ) ) {
 				break;
 			}
 			columnByReferencedName.put( referencedColumnName, joinColumn );
@@ -87,29 +87,40 @@ public class CopyIdentifierComponentSecondPass implements SecondPass {
 				value.setTypeName( referencedValue.getTypeName() );
 				value.setTypeParameters( referencedValue.getTypeParameters() );
 				final Iterator<Column> columns = referencedValue.getColumnIterator();
-				//FIXME take care of Formula
-				while ( columns.hasNext() ) {
-					Column column = columns.next();
-					final Ejb3JoinColumn joinColumn;
-					String logicalColumnName = null;
-					if ( isExplicitReference ) {
-						final String columnName = column.getName();
-						logicalColumnName = mappings.getLogicalColumnName( columnName, referencedPersistentClass.getTable() );
-						joinColumn = columnByReferencedName.get( logicalColumnName );
+
+				if ( joinColumns[0].isNameDeferred() ) {
+					joinColumns[0].copyReferencedStructureAndCreateDefaultJoinColumns(
+						referencedPersistentClass,
+						columns,
+						value);
+				}
+				else {
+					//FIXME take care of Formula
+					while ( columns.hasNext() ) {
+						Column column = columns.next();
+						final Ejb3JoinColumn joinColumn;
+						String logicalColumnName = null;
+						if ( isExplicitReference ) {
+							final String columnName = column.getName();
+							logicalColumnName = mappings.getLogicalColumnName( columnName, referencedPersistentClass.getTable() );
+							joinColumn = columnByReferencedName.get( logicalColumnName );
+						}
+						else {
+							joinColumn = columnByReferencedName.get( "" + index );
+							index++;
+						}
+						if ( joinColumn == null && ! joinColumns[0].isNameDeferred() ) {
+							throw new AnnotationException(
+									isExplicitReference ?
+											"Unable to find column reference in the @MapsId mapping: " + logicalColumnName :
+											"Implicit column reference in the @MapsId mapping fails, try to use explicit referenceColumnNames: " + referencedEntityName
+							);
+						}
+						final String columnName = joinColumn == null || joinColumn.isNameDeferred() ? "tata_" + column.getName() : joinColumn
+								.getName();
+						value.addColumn( new Column( columnName ) );
+						column.setValue( value );
 					}
-					else {
-						joinColumn = columnByReferencedName.get( "" + index );
-						index++;
-					}
-					if (joinColumn == null) {
-						throw new AnnotationException(
-								isExplicitReference ?
-										"Unable to find column reference in the @MapsId mapping: " + logicalColumnName :
-										"Implicit column reference in the @MapsId mapping fails, try to use explicit referenceColumnNames: " + referencedEntityName
-						);
-					}
-					value.addColumn( new Column( joinColumn.getName() ) );
-					column.setValue( value );
 				}
 				component.addProperty( property );
 			}

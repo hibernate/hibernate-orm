@@ -27,7 +27,6 @@ import java.io.Serializable;
 import java.sql.Types;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.Map;
 import java.util.Properties;
 import javax.persistence.Enumerated;
 import javax.persistence.Lob;
@@ -35,6 +34,9 @@ import javax.persistence.MapKeyEnumerated;
 import javax.persistence.MapKeyTemporal;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
@@ -49,7 +51,6 @@ import org.hibernate.cfg.Ejb3JoinColumn;
 import org.hibernate.cfg.ExtendedMappings;
 import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.cfg.PkDrivenByDefaultMapsIdSecondPass;
-import org.hibernate.cfg.SecondPass;
 import org.hibernate.cfg.SetSimpleValueTypeSecondPass;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Table;
@@ -59,8 +60,6 @@ import org.hibernate.type.PrimitiveCharacterArrayClobType;
 import org.hibernate.type.SerializableToBlobType;
 import org.hibernate.type.WrappedMaterializedBlobType;
 import org.hibernate.util.StringHelper;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * @author Emmanuel Bernard

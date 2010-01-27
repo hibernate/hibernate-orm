@@ -16,10 +16,10 @@ public class Dependent {
 	DependentId id;
 
 	@MapsId("empPK")
-	@JoinColumns({
-			@JoinColumn(name = "FK1", referencedColumnName = "firstName"),
-			@JoinColumn(name = "FK2", referencedColumnName = "lastName")
-	})
+//	@JoinColumns({
+//			@JoinColumn(name = "FK1", referencedColumnName = "firstName"),
+//			@JoinColumn(name = "FK2", referencedColumnName = "lastName")
+//	})
 	@ManyToOne
 	Employee emp;
 }

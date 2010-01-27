@@ -10,8 +10,8 @@ import org.hibernate.test.util.SchemaUtil;
 public class DerivedIdentityIdClassParentEmbeddedIdDepTest extends TestCase {
 
 	public void testManyToOne() throws Exception {
-		assertTrue( SchemaUtil.isColumnPresent( "Dependent", "FK1", getCfg() ) );
-		assertTrue( SchemaUtil.isColumnPresent( "Dependent", "FK2", getCfg() ) );
+		assertTrue( SchemaUtil.isColumnPresent( "Dependent", "emp_firstName", getCfg() ) );
+		assertTrue( SchemaUtil.isColumnPresent( "Dependent", "emp_lastName", getCfg() ) );
 		assertTrue( SchemaUtil.isColumnPresent( "Dependent", "name", getCfg() ) );
 		assertTrue( ! SchemaUtil.isColumnPresent( "Dependent", "firstName", getCfg() ) );
 		assertTrue( ! SchemaUtil.isColumnPresent( "Dependent", "lastName", getCfg() ) );
@@ -42,8 +42,9 @@ public class DerivedIdentityIdClassParentEmbeddedIdDepTest extends TestCase {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class<?>[] {
-				Dependent.class,
-				Employee.class
+				Employee.class,
+				Dependent.class
+
 		};
 	}
 }

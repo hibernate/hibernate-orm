@@ -82,6 +82,13 @@ public class SequenceStructure implements DatabaseStructure {
 	/**
 	 * {@inheritDoc}
 	 */
+	public int getInitialValue() {
+		return initialValue;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
 	public AccessCallback buildCallback(final SessionImplementor session) {
 		return new AccessCallback() {
 			public long getNextValue() {

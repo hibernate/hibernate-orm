@@ -47,6 +47,12 @@ public interface DatabaseStructure {
 	public int getTimesAccessed();
 
 	/**
+	 * The configured initial value
+	 * @return The configured initial value
+	 */
+	public int getInitialValue();
+
+	/**
 	 * The configured increment size
 	 * @return The configured increment size
 	 */

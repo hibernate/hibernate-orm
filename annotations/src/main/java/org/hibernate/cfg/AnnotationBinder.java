@@ -146,6 +146,7 @@ import org.hibernate.id.MultipleHiLoPerTableGenerator;
 import org.hibernate.id.PersistentIdentifierGenerator;
 import org.hibernate.id.SequenceHiLoGenerator;
 import org.hibernate.id.TableHiLoGenerator;
+import org.hibernate.id.enhanced.SequenceStyleGenerator;
 import org.hibernate.mapping.Any;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.DependantValue;
@@ -348,7 +349,7 @@ public final class
 		}
 	}
 
-	private static IdGenerator buildIdGenerator(java.lang.annotation.Annotation ann, Mappings mappings) {
+	private static IdGenerator buildIdGenerator(java.lang.annotation.Annotation ann, ExtendedMappings mappings) {
 		IdGenerator idGen = new IdGenerator();
 		if ( mappings.getSchemaName() != null ) {
 			idGen.addParam( PersistentIdentifierGenerator.SCHEMA, mappings.getSchemaName() );
@@ -356,54 +357,106 @@ public final class
 		if ( mappings.getCatalogName() != null ) {
 			idGen.addParam( PersistentIdentifierGenerator.CATALOG, mappings.getCatalogName() );
 		}
+		final boolean useNewGeneratorMappings = mappings.useNewGeneratorMappings();
 		if ( ann == null ) {
 			idGen = null;
 		}
 		else if ( ann instanceof TableGenerator ) {
 			TableGenerator tabGen = (TableGenerator) ann;
 			idGen.setName( tabGen.name() );
-			idGen.setIdentifierGeneratorStrategy( MultipleHiLoPerTableGenerator.class.getName() );
+			if ( useNewGeneratorMappings ) {
+				idGen.setIdentifierGeneratorStrategy( org.hibernate.id.enhanced.TableGenerator.class.getName() );
+				idGen.addParam( org.hibernate.id.enhanced.TableGenerator.CONFIG_PREFER_SEGMENT_PER_ENTITY, "true" );
 
-			if ( !BinderHelper.isDefault( tabGen.table() ) ) {
-				idGen.addParam( MultipleHiLoPerTableGenerator.ID_TABLE, tabGen.table() );
+				if ( !BinderHelper.isDefault( tabGen.catalog() ) ) {
+					idGen.addParam( org.hibernate.id.enhanced.TableGenerator.CATALOG, tabGen.catalog() );
+				}
+				if ( !BinderHelper.isDefault( tabGen.schema() ) ) {
+					idGen.addParam( org.hibernate.id.enhanced.TableGenerator.SCHEMA, tabGen.schema() );
+				}
+				if ( !BinderHelper.isDefault( tabGen.table() ) ) {
+					idGen.addParam( org.hibernate.id.enhanced.TableGenerator.TABLE_PARAM, tabGen.table() );
+				}
+				if ( !BinderHelper.isDefault( tabGen.pkColumnName() ) ) {
+					idGen.addParam( org.hibernate.id.enhanced.TableGenerator.SEGMENT_COLUMN_PARAM, tabGen.pkColumnName() );
+				}
+				if ( !BinderHelper.isDefault( tabGen.pkColumnValue() ) ) {
+					idGen.addParam( org.hibernate.id.enhanced.TableGenerator.SEGMENT_VALUE_PARAM, tabGen.pkColumnValue() );
+				}
+				if ( !BinderHelper.isDefault( tabGen.valueColumnName() ) ) {
+					idGen.addParam( org.hibernate.id.enhanced.TableGenerator.VALUE_COLUMN_PARAM, tabGen.valueColumnName() );
+				}
+				idGen.addParam( org.hibernate.id.enhanced.TableGenerator.INCREMENT_PARAM, String.valueOf( tabGen.allocationSize() ) );
+				idGen.addParam( org.hibernate.id.enhanced.TableGenerator.INITIAL_PARAM, String.valueOf( tabGen.initialValue() ) );
+				if ( tabGen.uniqueConstraints() != null && tabGen.uniqueConstraints().length > 0 ) {
+					log.warn( "Ignoring unique constraints specified on table generator [{}]", tabGen.name() );
+				}
 			}
-			if ( !BinderHelper.isDefault( tabGen.catalog() ) ) {
-				idGen.addParam( MultipleHiLoPerTableGenerator.CATALOG, tabGen.catalog() );
-			}
-			if ( !BinderHelper.isDefault( tabGen.schema() ) ) {
-				idGen.addParam( MultipleHiLoPerTableGenerator.SCHEMA, tabGen.schema() );
-			}
-			//FIXME implements uniqueconstrains
+			else {
+				idGen.setIdentifierGeneratorStrategy( MultipleHiLoPerTableGenerator.class.getName() );
 
-			if ( !BinderHelper.isDefault( tabGen.pkColumnName() ) ) {
-				idGen.addParam( MultipleHiLoPerTableGenerator.PK_COLUMN_NAME, tabGen.pkColumnName() );
+				if ( !BinderHelper.isDefault( tabGen.table() ) ) {
+					idGen.addParam( MultipleHiLoPerTableGenerator.ID_TABLE, tabGen.table() );
+				}
+				if ( !BinderHelper.isDefault( tabGen.catalog() ) ) {
+					idGen.addParam( MultipleHiLoPerTableGenerator.CATALOG, tabGen.catalog() );
+				}
+				if ( !BinderHelper.isDefault( tabGen.schema() ) ) {
+					idGen.addParam( MultipleHiLoPerTableGenerator.SCHEMA, tabGen.schema() );
+				}
+				//FIXME implement uniqueconstrains
+				if ( tabGen.uniqueConstraints() != null && tabGen.uniqueConstraints().length > 0 ) {
+					log.warn( "Ignoring unique constraints specified on table generator [{}]", tabGen.name() );
+				}
+
+				if ( !BinderHelper.isDefault( tabGen.pkColumnName() ) ) {
+					idGen.addParam( MultipleHiLoPerTableGenerator.PK_COLUMN_NAME, tabGen.pkColumnName() );
+				}
+				if ( !BinderHelper.isDefault( tabGen.valueColumnName() ) ) {
+					idGen.addParam( MultipleHiLoPerTableGenerator.VALUE_COLUMN_NAME, tabGen.valueColumnName() );
+				}
+				if ( !BinderHelper.isDefault( tabGen.pkColumnValue() ) ) {
+					idGen.addParam( MultipleHiLoPerTableGenerator.PK_VALUE_NAME, tabGen.pkColumnValue() );
+				}
+				idGen.addParam( TableHiLoGenerator.MAX_LO, String.valueOf( tabGen.allocationSize() - 1 ) );
 			}
-			if ( !BinderHelper.isDefault( tabGen.valueColumnName() ) ) {
-				idGen.addParam( MultipleHiLoPerTableGenerator.VALUE_COLUMN_NAME, tabGen.valueColumnName() );
-			}
-			if ( !BinderHelper.isDefault( tabGen.pkColumnValue() ) ) {
-				idGen.addParam( MultipleHiLoPerTableGenerator.PK_VALUE_NAME, tabGen.pkColumnValue() );
-			}
-			idGen.addParam( TableHiLoGenerator.MAX_LO, String.valueOf( tabGen.allocationSize() - 1 ) );
 			log.trace( "Add table generator with name: {}", idGen.getName() );
 		}
 		else if ( ann instanceof SequenceGenerator ) {
 			SequenceGenerator seqGen = (SequenceGenerator) ann;
 			idGen.setName( seqGen.name() );
-			idGen.setIdentifierGeneratorStrategy( "seqhilo" );
+			if ( useNewGeneratorMappings ) {
+				idGen.setIdentifierGeneratorStrategy( SequenceStyleGenerator.class.getName() );
 
-			if ( !BinderHelper.isDefault( seqGen.sequenceName() ) ) {
-				idGen.addParam( org.hibernate.id.SequenceGenerator.SEQUENCE, seqGen.sequenceName() );
+				if ( !BinderHelper.isDefault( seqGen.catalog() ) ) {
+					idGen.addParam( SequenceStyleGenerator.CATALOG, seqGen.catalog() );
+				}
+				if ( !BinderHelper.isDefault( seqGen.schema() ) ) {
+					idGen.addParam( SequenceStyleGenerator.SCHEMA, seqGen.schema() );
+				}
+				if ( !BinderHelper.isDefault( seqGen.sequenceName() ) ) {
+					idGen.addParam( SequenceStyleGenerator.SEQUENCE_PARAM, seqGen.sequenceName() );
+				}
+				idGen.addParam( SequenceStyleGenerator.INCREMENT_PARAM, String.valueOf( seqGen.allocationSize() ) );
+				idGen.addParam( SequenceStyleGenerator.INITIAL_PARAM, String.valueOf( seqGen.initialValue() ) );
 			}
-			//FIXME: work on initialValue() through SequenceGenerator.PARAMETERS
-			//		steve : or just use o.h.id.enhanced.SequenceStyleGenerator
-			if ( seqGen.initialValue() != 1 ) {
-				log.warn(
-						"Hibernate does not support SequenceGenerator.initialValue()"
-				);
+			else {
+				idGen.setIdentifierGeneratorStrategy( "seqhilo" );
+
+				if ( !BinderHelper.isDefault( seqGen.sequenceName() ) ) {
+					idGen.addParam( org.hibernate.id.SequenceGenerator.SEQUENCE, seqGen.sequenceName() );
+				}
+				//FIXME: work on initialValue() through SequenceGenerator.PARAMETERS
+				//		steve : or just use o.h.id.enhanced.SequenceStyleGenerator
+				if ( seqGen.initialValue() != 1 ) {
+					log.warn(
+							"Hibernate does not support SequenceGenerator.initialValue() unless '{}' set",
+							AnnotationConfiguration.USE_NEW_ID_GENERATOR_MAPPINGS
+					);
+				}
+				idGen.addParam( SequenceHiLoGenerator.MAX_LO, String.valueOf( seqGen.allocationSize() - 1 ) );
+				log.trace( "Add sequence generator with name: {}", idGen.getName() );
 			}
-			idGen.addParam( SequenceHiLoGenerator.MAX_LO, String.valueOf( seqGen.allocationSize() - 1 ) );
-			log.trace( "Add sequence generator with name: {}", idGen.getName() );
 		}
 		else if ( ann instanceof GenericGenerator ) {
 			GenericGenerator genGen = (GenericGenerator) ann;
@@ -1804,7 +1857,7 @@ public final class
 
 		GeneratedValue generatedValue = property.getAnnotation( GeneratedValue.class );
 		String generatorType = generatedValue != null ?
-				generatorType( generatedValue.strategy() ) :
+				generatorType( generatedValue.strategy(), mappings ) :
 				"assigned";
 		String generatorName = generatedValue != null ?
 				generatedValue.generator() :
@@ -2032,7 +2085,7 @@ public final class
 			   localGenerators.putAll( buildLocalGenerators( property, mappings ) );
 
 			   GeneratedValue generatedValue = property.getAnnotation( GeneratedValue.class );
-			   String generatorType = generatedValue != null ? generatorType( generatedValue.strategy() ) : "assigned";
+			   String generatorType = generatedValue != null ? generatorType( generatedValue.strategy(), mappings ) : "assigned";
 			   String generator = generatedValue != null ? generatedValue.generator() : BinderHelper.ANNOTATION_STRING_DEFAULT;
                    
 			   BinderHelper.makeIdGenerator( (SimpleValue) comp.getProperty(property.getName()).getValue(), generatorType, generator, mappings, localGenerators);
@@ -2395,16 +2448,23 @@ public final class
 		propertyHolder.addProperty( prop, columns, inferredData.getDeclaringClass() );
 	}
 
-	private static String generatorType(GenerationType generatorEnum) {
+	private static String generatorType(GenerationType generatorEnum, ExtendedMappings mappings) {
+		boolean useNewGeneratorMappings = mappings.useNewGeneratorMappings();
 		switch ( generatorEnum ) {
 			case IDENTITY:
 				return "identity";
 			case AUTO:
-				return "native";
+				return useNewGeneratorMappings
+						? org.hibernate.id.enhanced.SequenceStyleGenerator.class.getName()
+						: "native";
 			case TABLE:
-				return MultipleHiLoPerTableGenerator.class.getName();
+				return useNewGeneratorMappings
+						? org.hibernate.id.enhanced.TableGenerator.class.getName()
+						: MultipleHiLoPerTableGenerator.class.getName();
 			case SEQUENCE:
-				return "seqhilo";
+				return useNewGeneratorMappings
+						? org.hibernate.id.enhanced.SequenceStyleGenerator.class.getName()
+						: "seqhilo";
 		}
 		throw new AssertionFailure( "Unknown GeneratorType: " + generatorEnum );
 	}
@@ -2509,7 +2569,7 @@ public final class
 		}
 	}
 
-	private static HashMap<String, IdGenerator> buildLocalGenerators(XAnnotatedElement annElt, Mappings mappings) {
+	private static HashMap<String, IdGenerator> buildLocalGenerators(XAnnotatedElement annElt, ExtendedMappings mappings) {
 		HashMap<String, IdGenerator> generators = new HashMap<String, IdGenerator>();
 		TableGenerator tabGen = annElt.getAnnotation( TableGenerator.class );
 		SequenceGenerator seqGen = annElt.getAnnotation( SequenceGenerator.class );

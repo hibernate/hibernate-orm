@@ -87,6 +87,13 @@ public class TableStructure extends TransactionHelper implements DatabaseStructu
 	/**
 	 * {@inheritDoc}
 	 */
+	public int getInitialValue() {
+		return initialValue;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
 	public int getIncrementSize() {
 		return incrementSize;
 	}

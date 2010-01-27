@@ -108,9 +108,15 @@ public class AnnotationConfiguration extends Configuration {
 	/**
 	 * Setting used to give the name of the default {@link org.hibernate.annotations.CacheConcurrencyStrategy}
 	 * to use when either {@link javax.persistence.Cacheable @Cacheable} or
-	 * {@link Cache @Cache} is used.  {@link Cache @Cache(strategy=".."} is used to override.
+	 * {@link Cache @Cache} is used.  {@link Cache @Cache(strategy="..")} is used to override.
 	 */
 	public static final String DEFAULT_CACHE_CONCURRENCY_STRATEGY = "org.hibernate.cache.default_cache_concurrency_strategy";
+
+	/**
+	 * Setting which indicates the Hibernate {@link org.hibernate.id.IdentifierGenerator} name to use as the mapping
+	 * for {@link javax.persistence.GenerationType#AUTO @GeneratedValue(strategy=AUTO...)}
+	 */
+	public static final String USE_NEW_ID_GENERATOR_MAPPINGS = "org.hibernate.id.new_generator_mappings";
 
 	/**
 	 * Class name of the class needed to enable Search.
@@ -1284,6 +1290,17 @@ public class AnnotationConfiguration extends Configuration {
 				propertiesAnnotatedWithMapsId.put( entityType, map );
 			}
 			map.put( property.getProperty().getAnnotation( MapsId.class ).value(), property );
+		}
+
+		private Boolean useNewGeneratorMappings;
+
+		@SuppressWarnings({ "UnnecessaryUnboxing" })
+		public boolean useNewGeneratorMappings() {
+			if ( useNewGeneratorMappings == null ) {
+				final String booleanName = getConfigurationProperties().getProperty( USE_NEW_ID_GENERATOR_MAPPINGS );
+				useNewGeneratorMappings = Boolean.valueOf( booleanName );
+			}
+			return useNewGeneratorMappings.booleanValue();
 		}
 
 		public IdGenerator getGenerator(String name) {

@@ -180,4 +180,12 @@ public interface ExtendedMappings extends Mappings {
 	public PropertyData getPropertyAnnotatedWithMapsId(XClass entityType, String propertyName);
 
 	public void addPropertyAnnotatedWithMapsId(XClass entityType, PropertyData property);
+
+	/**
+	 * Should we use the new generator strategy mappings.  This is controlled by the
+	 * {@link AnnotationConfiguration#USE_NEW_ID_GENERATOR_MAPPINGS} setting.
+	 *
+	 * @return True if the new generators should be used, false otherwise.
+	 */
+	public boolean useNewGeneratorMappings();
 }

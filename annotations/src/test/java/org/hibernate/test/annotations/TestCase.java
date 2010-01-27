@@ -32,6 +32,7 @@ import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.AnnotationConfiguration;
 import org.hibernate.cfg.Environment;
+import org.hibernate.engine.SessionFactoryImplementor;
 
 /**
  * A base class for all annotation tests.
@@ -81,6 +82,10 @@ public abstract class TestCase extends HibernateTestCase {
 
 	protected SessionFactory getSessions() {
 		return sessions;
+	}
+
+	protected SessionFactoryImplementor sfi() {
+		return (SessionFactoryImplementor) getSessions();
 	}
 
 	@Override	

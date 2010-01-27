@@ -124,7 +124,7 @@ public class ReadOnlySessionLazyNonLazyTest extends FunctionalTestCase {
 		c = ( Container ) s.get( Container.class, cOrig.getId() );
 		assertSame( cOrig, c );
 		checkContainer( cOrig, expectedInitializedObjects, expectedReadOnlyObjects, s );
-		//s.refresh( cOrig );
+		s.refresh( cOrig );
 		assertSame( cOrig, c );
 		checkContainer( cOrig, expectedInitializedObjects, expectedReadOnlyObjects, s );
 		s.evict( cOrig );

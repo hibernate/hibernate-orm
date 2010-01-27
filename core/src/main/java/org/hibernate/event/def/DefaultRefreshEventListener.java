@@ -71,7 +71,13 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 
 		final EventSource source = event.getSession();
 		
-		if ( source.getPersistenceContext().reassociateIfUninitializedProxy( event.getObject() ) ) return;
+		boolean isTransient = ! source.contains( event.getObject() );
+		if ( source.getPersistenceContext().reassociateIfUninitializedProxy( event.getObject() ) ) {
+			if ( isTransient ) {
+				source.setReadOnly( event.getObject(), source.isDefaultReadOnly() );
+			}
+			return;
+		}
 
 		final Object object = source.getPersistenceContext().unproxyAndReassociate( event.getObject() );
 
@@ -143,6 +149,9 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 		String previousFetchProfile = source.getFetchProfile();
 		source.setFetchProfile("refresh");
 		Object result = persister.load( id, object, event.getLockOptions(), source );
+		// Keep the same read-only/modifiable setting for the entity that it had before refreshing;
+		// If it was transient, then set it to the default for the source.
+		source.setReadOnly( result, ( e == null ? source.isDefaultReadOnly() : e.isReadOnly() ) );
 		source.setFetchProfile(previousFetchProfile);
 		
 		UnresolvableObjectException.throwIfNull( result, id, persister.getEntityName() );

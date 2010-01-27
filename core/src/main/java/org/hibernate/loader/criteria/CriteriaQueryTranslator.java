@@ -531,6 +531,14 @@ public class CriteriaQueryTranslator implements CriteriaQuery {
 			if ( q != null ) {
 				Type type = q.getDiscriminatorType();
 				String stringValue = q.getDiscriminatorSQLValue();
+				if (stringValue != null && stringValue.length() > 2
+						&& stringValue.startsWith("'")
+						&& stringValue.endsWith("'")) { // remove the single
+														// quotes
+					stringValue = stringValue.substring(1,
+							stringValue.length() - 1);
+				}
+				
 				// Convert the string value into the proper type.
 				if ( type instanceof NullableType ) {
 					NullableType nullableType = ( NullableType ) type;

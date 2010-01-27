@@ -352,7 +352,12 @@ public class Ejb3Column {
 	}
 
 	public void setSecondaryTableName(String secondaryTableName) {
-		this.secondaryTableName = secondaryTableName;
+		if ( "``".equals( secondaryTableName ) ) {
+			this.secondaryTableName = "";
+		}
+		else {
+			this.secondaryTableName = secondaryTableName;
+		}
 	}
 
 	public static Ejb3Column[] buildColumnFromAnnotation(

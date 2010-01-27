@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<entity-mappings xmlns="http://java.sun.com/xml/ns/persistence/orm" version="2.0">
+    <persistence-unit-metadata>
+        <persistence-unit-defaults>
+            <delimited-identifiers/>
+        </persistence-unit-defaults>
+    </persistence-unit-metadata>
+</entity-mappings>

@@ -29,7 +29,8 @@ public class QuoteTest extends TestCase {
 	protected Class[] getAnnotatedClasses() {
 		return new Class[] {
 				User.class,
-				Role.class
+				Role.class,
+				Phone.class
 		};
 	}
 }

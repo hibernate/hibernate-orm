@@ -474,7 +474,7 @@ public class TableBinder {
 		}
 	}
 
-	private static void linkJoinColumnWithValueOverridingNameIfImplicit(
+	public static void linkJoinColumnWithValueOverridingNameIfImplicit(
 			PersistentClass referencedEntity, Iterator columnIterator, Ejb3JoinColumn[] columns, SimpleValue value
 	) {	
 		for (Ejb3JoinColumn joinCol : columns) {

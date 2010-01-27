@@ -45,8 +45,10 @@ import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.cfg.BinderHelper;
 import org.hibernate.cfg.Ejb3Column;
+import org.hibernate.cfg.Ejb3JoinColumn;
 import org.hibernate.cfg.ExtendedMappings;
 import org.hibernate.cfg.NotYetImplementedException;
+import org.hibernate.cfg.PkDrivenByDefaultMapsIdSecondPass;
 import org.hibernate.cfg.SecondPass;
 import org.hibernate.cfg.SetSimpleValueTypeSecondPass;
 import org.hibernate.mapping.SimpleValue;
@@ -77,6 +79,11 @@ public class SimpleValueBinder {
 	private boolean isVersion;
 	//is a Map key
 	private boolean key;
+	private String referencedEntityName;
+
+	public void setReferencedEntityName(String referencedEntityName) {
+		this.referencedEntityName = referencedEntityName;
+	}
 
 	public boolean isVersion() {
 		return isVersion;
@@ -307,8 +314,15 @@ public class SimpleValueBinder {
 	}
 
 	public void linkWithValue() {
-		for ( Ejb3Column column : columns) {
-			column.linkWithValue( simpleValue );
+		if ( columns[0].isNameDeferred() && ! mappings.isInSecondPass() && referencedEntityName != null) {
+			mappings.addSecondPass(
+					new PkDrivenByDefaultMapsIdSecondPass( referencedEntityName, ( Ejb3JoinColumn[]) columns, simpleValue)
+			);
+		}
+		else {
+			for ( Ejb3Column column : columns) {
+				column.linkWithValue( simpleValue );
+			}
 		}
 	}
 

@@ -1758,6 +1758,12 @@ public final class
 
 				propertyBinder.setLazy( lazy );
 				propertyBinder.setColumns( columns );
+				if (isOverridden) {
+					final PropertyData mapsIdProperty = BinderHelper.getPropertyAnnotatedWithMapsId(
+							isId, propertyHolder, property.getName(), mappings
+					);
+					propertyBinder.setReferencedEntityName( mapsIdProperty.getClassOrElementName() );
+				}
 
 				propertyBinder.makePropertyValueAndBind();
 

@@ -365,6 +365,7 @@ public class AnnotationConfiguration extends Configuration {
 		caches.clear();
 		try {
 			inSecondPass = true;
+			processSecondPassesOfType( PkDrivenByDefaultMapsIdSecondPass.class );
 			processSecondPassesOfType( SetSimpleValueTypeSecondPass.class );
 			processSecondPassesOfType( CopyIdentifierComponentSecondPass.class );
 			processFkSecondPassInOrder();

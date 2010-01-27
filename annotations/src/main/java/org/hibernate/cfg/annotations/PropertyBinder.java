@@ -78,6 +78,11 @@ public class PropertyBinder {
 	private boolean embedded;
 	private EntityBinder entityBinder;
 	private boolean isXToMany;
+	private String referencedEntityName;
+
+	public void setReferencedEntityName(String referencedEntityName) {
+		this.referencedEntityName = referencedEntityName;
+	}
 
 	public void setEmbedded(boolean embedded) {
 		this.embedded = embedded;
@@ -179,6 +184,7 @@ public class PropertyBinder {
 		simpleValueBinder.setPersistentClassName( containerClassName );
 		simpleValueBinder.setType( property, returnedClass );
 		simpleValueBinder.setMappings( mappings );
+		simpleValueBinder.setReferencedEntityName( referencedEntityName );
 		SimpleValue propertyValue = simpleValueBinder.make();
 		setValue( propertyValue );
 		return makeProperty();

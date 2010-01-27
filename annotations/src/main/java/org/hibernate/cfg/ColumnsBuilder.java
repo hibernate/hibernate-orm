@@ -189,9 +189,9 @@ class ColumnsBuilder {
 		if ( annotatedWithMapsId != null ) {
 			result = buildExplicitJoinColumns( annotatedWithMapsId.getProperty(), annotatedWithMapsId );
 			if (result == null) {
-				//result = buildDefaultJoinColumnsForXToOne( annotatedWithMapsId.getProperty(), annotatedWithMapsId);
-				throw new UnsupportedOperationException( "Implicit @JoinColumn is not supported on @MapsId properties: "
-						+ annotatedWithMapsId.getDeclaringClass() + " " + annotatedWithMapsId.getPropertyName() );
+				result = buildDefaultJoinColumnsForXToOne( annotatedWithMapsId.getProperty(), annotatedWithMapsId);
+//				throw new UnsupportedOperationException( "Implicit @JoinColumn is not supported on @MapsId properties: "
+//						+ annotatedWithMapsId.getDeclaringClass() + " " + annotatedWithMapsId.getPropertyName() );
 			}
 		}
 		return result;

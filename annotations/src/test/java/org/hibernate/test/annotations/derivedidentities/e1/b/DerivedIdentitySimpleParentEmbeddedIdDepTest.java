@@ -11,19 +11,19 @@ public class
 		DerivedIdentitySimpleParentEmbeddedIdDepTest extends TestCase {
 
 	public void testManyToOne() throws Exception {
-		assertTrue( SchemaUtil.isColumnPresent( "Dependent", "FK", getCfg() ) );
+		assertTrue( SchemaUtil.isColumnPresent( "Dependent", "emp_empId", getCfg() ) );
 		assertTrue( ! SchemaUtil.isColumnPresent( "Dependent", "empPK", getCfg() ) );
 		Employee e = new Employee();
 		e.empId = 1;
 		e.empName = "Emmanuel";
 		Session s = openSession(  );
 		s.getTransaction().begin();
-		s.persist( e );
+
 		Dependent d = new Dependent();
 		d.emp = e;
 		d.id = new DependentId();
 		d.id.name = "Doggy";
-		//d.id.empPK = e.empId; //FIXME not needed when foreign is enabled
+		s.persist( e );
 		s.persist( d );
 		s.flush();
 		s.clear();

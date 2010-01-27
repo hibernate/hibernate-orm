@@ -14,7 +14,7 @@ public class Dependent {
 	@EmbeddedId
 	DependentId id;
 
-	@JoinColumn(name="FK") // id attribute mapped by join column default
+	//@JoinColumn(name="FK") // id attribute mapped by join column default
 	@MapsId("empPK") // maps empPK attribute of embedded id
 	@ManyToOne
 	Employee emp;

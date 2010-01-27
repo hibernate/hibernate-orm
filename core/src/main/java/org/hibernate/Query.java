@@ -175,11 +175,46 @@ public interface Query {
 	public Query setFirstResult(int firstResult);
 	
 	/**
-	 * Entities retrieved by this query will be loaded in 
-	 * a read-only mode where Hibernate will never dirty-check
-	 * them or make changes persistent.
+	 * Should entities and proxies loaded by this Query be put in read-only mode? If the
+	 * read-only/modifiable setting was not initialized, then the default
+	 * read-only/modifiable setting for the persistence context is returned instead.
+	 * @see Query#setReadOnly(boolean)
+	 * @see org.hibernate.engine.PersistenceContext#isDefaultReadOnly()
 	 *
+	 * The read-only/modifiable setting has no impact on entities/proxies returned by the
+	 * query that existed in the session before the query was executed.
+	 *
+	 * @return true, entities and proxies loaded by the query will be put in read-only mode
+	 *         false, entities and proxies loaded by the query will be put in modifiable mode
 	 */
+	public boolean isReadOnly();
+
+	/**
+	 * Set the read-only/modifiable mode for entities and proxies
+	 * loaded by this Query. This setting overrides the default setting
+	 * for the persistence context.
+	 * @see org.hibernate.engine.PersistenceContext#isDefaultReadOnly()
+	 *
+	 * To set the default read-only/modifiable setting used for
+	 * entities and proxies that are loaded into the session:
+	 * @see org.hibernate.engine.PersistenceContext#setDefaultReadOnly(boolean)
+	 * @see org.hibernate.Session#setDefaultReadOnly(boolean)
+	 *
+	 * Read-only entities are not dirty-checked and snapshots of persistent
+	 * state are not maintained. Read-only entities can be modified, but
+	 * changes are not persisted.
+	 *
+	 * When a proxy is initialized, the loaded entity will have the same
+	 * read-only/modifiable setting as the uninitialized
+	 * proxy has, regardless of the session's current setting.
+	 *
+	 * The read-only/modifiable setting has no impact on entities/proxies
+	 * returned by the query that existed in the session before the query was executed.
+	 *
+	 * @return true, entities and proxies loaded by the query will be put in read-only mode
+	 *         false, entities and proxies loaded by the query will be put in modifiable mode
+	 */
+
 	public Query setReadOnly(boolean readOnly);
 
 	/**

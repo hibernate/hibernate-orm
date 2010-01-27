@@ -229,6 +229,7 @@ public class JavassistLazyInitializer extends BasicLazyInitializer implements Me
 		        persistentClass,
 		        interfaces,
 		        getIdentifier(),
+		        ( getSession() != null && getSession().isOpen() ? isReadOnly() : false ),
 		        getIdentifierMethod,
 		        setIdentifierMethod,
 		        componentIdType

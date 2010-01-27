@@ -65,11 +65,11 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 	protected AbstractLazyInitializer(String entityName, Serializable id, SessionImplementor session) {
 		this.entityName = entityName;
 		this.id = id;
+		this.readOnly = false;
 		// initialize other fields depending on session state
 		if ( session == null ) {
 			// would be better to call unsetSession(), but it is not final...
 			session = null;
-			readOnly = false;
 		}
 		else {
 			setSession( session );
@@ -116,11 +116,11 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 	 */
 	public final void setSession(SessionImplementor s) throws HibernateException {
 		if ( s != session ) {
+			readOnly = false;
 			// check for s == null first, since it is least expensive
 			if ( s == null ){
 				// would be better to call unsetSession(), but it is not final...
 				session = null;
-				readOnly = false;
 			}
 			else if ( isConnectedToSession() ) {
 				//TODO: perhaps this should be some other RuntimeException...
@@ -128,8 +128,6 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 			}
 			else {
 				session = s;
-				// NOTE: the proxy may not be connected to the session yet, so set readOnly directly
-				readOnly = ! session.getFactory().getEntityPersister( entityName ).isMutable();
 			}
 		}
 	}

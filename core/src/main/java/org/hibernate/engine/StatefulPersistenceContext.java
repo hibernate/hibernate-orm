@@ -127,6 +127,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	private int loadCounter = 0;
 	private boolean flushing = false;
 	
+	private boolean defaultReadOnly = false;
 	private boolean hasNonReadOnlyEntities = false;
 
 	private LoadContexts loadContexts;
@@ -231,12 +232,27 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		if ( batchFetchQueue != null ) {
 			batchFetchQueue.clear();
 		}
+		// defaultReadOnly is unaffected by clear()
 		hasNonReadOnlyEntities = false;
 		if ( loadContexts != null ) {
 			loadContexts.cleanup();
 		}
 	}
-	
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public boolean isDefaultReadOnly() {
+		return defaultReadOnly;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public void setDefaultReadOnly(boolean defaultReadOnly) {
+		this.defaultReadOnly = defaultReadOnly;
+	}
+
 	public boolean hasNonReadOnlyEntities() {
 		return hasNonReadOnlyEntities;
 	}
@@ -1396,6 +1412,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	public void serialize(ObjectOutputStream oos) throws IOException {
 		log.trace( "serializing persistent-context" );
 
+		oos.writeBoolean( defaultReadOnly );
 		oos.writeBoolean( hasNonReadOnlyEntities );
 
 		oos.writeInt( entitiesByKey.size() );
@@ -1491,6 +1508,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		// because serialization is used for different things.
 
 		try {
+			rtn.defaultReadOnly = ois.readBoolean();
 			// todo : we can actually just determine this from the incoming EntityEntry-s
 			rtn.hasNonReadOnlyEntities = ois.readBoolean();
 

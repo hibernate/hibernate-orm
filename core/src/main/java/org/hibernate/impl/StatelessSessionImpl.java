@@ -483,6 +483,22 @@ public class StatelessSessionImpl extends AbstractSessionImpl
 		return false;
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
+	public boolean isDefaultReadOnly() {
+		return false;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public void setDefaultReadOnly(boolean readOnly) throws HibernateException {
+		if ( readOnly == true ) {
+			throw new UnsupportedOperationException();
+		}
+	}
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	//TODO: COPY/PASTE FROM SessionImpl, pull up!

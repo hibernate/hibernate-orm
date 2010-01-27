@@ -26,7 +26,6 @@
 package org.hibernate.test.readonly;
 
 import java.math.BigDecimal;
-import java.util.Iterator;
 import java.util.List;
 
 import junit.framework.Test;
@@ -43,13 +42,12 @@ import org.hibernate.junit.functional.FunctionalTestCase;
 import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
 
 /**
- * 
- * @author Gavin King
+ *
  * @author Gail Badner
  */
-public class ReadOnlyTest extends FunctionalTestCase {
-	
-	public ReadOnlyTest(String str) {
+public class ReadOnlySessionTest extends FunctionalTestCase {
+
+	public ReadOnlySessionTest(String str) {
 		super(str);
 	}
 
@@ -66,7 +64,7 @@ public class ReadOnlyTest extends FunctionalTestCase {
 	}
 
 	public static Test suite() {
-		return new FunctionalTestClassTestSuite( ReadOnlyTest.class );
+		return new FunctionalTestClassTestSuite( ReadOnlySessionTest.class );
 	}
 
 	public void testReadOnlyOnProxies() {
@@ -85,10 +83,13 @@ public class ReadOnlyTest extends FunctionalTestCase {
 		s = openSession();
 		s.setCacheMode(CacheMode.IGNORE);
 		s.beginTransaction();
+		s.setDefaultReadOnly( true );
+		assertTrue( s.isDefaultReadOnly() );
 		dp = ( DataPoint ) s.load( DataPoint.class, new Long( dpId ) );
+		s.setDefaultReadOnly( false );
 		assertFalse( "was initialized", Hibernate.isInitialized( dp ) );
-		s.setReadOnly( dp, true );
-		assertFalse( "was initialized during setReadOnly", Hibernate.isInitialized( dp ) );
+		assertTrue( s.isReadOnly( dp ) );
+		assertFalse( "was initialized during isReadOnly", Hibernate.isInitialized( dp ) );
 		dp.setDescription( "changed" );
 		assertTrue( "was not initialized during mod", Hibernate.isInitialized( dp ) );
 		assertEquals( "desc not changed in memory", "changed", dp.getDescription() );
@@ -106,10 +107,10 @@ public class ReadOnlyTest extends FunctionalTestCase {
 	}
 
 	public void testReadOnlyMode() {
-		
+
 		Session s = openSession();
 		s.setCacheMode(CacheMode.IGNORE);
-		Transaction t = s.beginTransaction();		
+		Transaction t = s.beginTransaction();
 		for ( int i=0; i<100; i++ ) {
 			DataPoint dp = new DataPoint();
 			dp.setX( new BigDecimal(i * 0.1d).setScale(19, BigDecimal.ROUND_DOWN) );
@@ -118,13 +119,13 @@ public class ReadOnlyTest extends FunctionalTestCase {
 		}
 		t.commit();
 		s.close();
-		
+
 		s = openSession();
 		s.setCacheMode(CacheMode.IGNORE);
 		t = s.beginTransaction();
+		s.setDefaultReadOnly( true );
 		int i = 0;
 		ScrollableResults sr = s.createQuery("from DataPoint dp order by dp.x asc")
-				.setReadOnly(true)
 				.scroll(ScrollMode.FORWARD_ONLY);
 		while ( sr.next() ) {
 			DataPoint dp = (DataPoint) sr.get(0);
@@ -141,32 +142,45 @@ public class ReadOnlyTest extends FunctionalTestCase {
 		s.createQuery("delete from DataPoint").executeUpdate();
 		t.commit();
 		s.close();
-		
 	}
 
-	public void testReadOnlyModeAutoFlushOnQuery() {
+	public void testReadOnlyQueryScrollChangeToModifiableBeforeIterate() {
 
 		Session s = openSession();
 		s.setCacheMode(CacheMode.IGNORE);
 		Transaction t = s.beginTransaction();
-		DataPoint dpFirst = null;
 		for ( int i=0; i<100; i++ ) {
 			DataPoint dp = new DataPoint();
 			dp.setX( new BigDecimal(i * 0.1d).setScale(19, BigDecimal.ROUND_DOWN) );
 			dp.setY( new BigDecimal( Math.cos( dp.getX().doubleValue() ) ).setScale(19, BigDecimal.ROUND_DOWN) );
 			s.save(dp);
 		}
-		ScrollableResults sr = s.createQuery("from DataPoint dp order by dp.x asc")
-				.setReadOnly(true)
-				.scroll(ScrollMode.FORWARD_ONLY);
-		while ( sr.next() ) {
-			DataPoint dp = (DataPoint) sr.get(0);
-			assertFalse( s.isReadOnly( dp ) );
-			s.delete( dp );
-		}
 		t.commit();
 		s.close();
 
+		s = openSession();
+		s.setCacheMode(CacheMode.IGNORE);
+		t = s.beginTransaction();
+		s.setDefaultReadOnly( true );
+		int i = 0;
+		ScrollableResults sr = s.createQuery("from DataPoint dp order by dp.x asc")
+				.scroll(ScrollMode.FORWARD_ONLY);
+		s.setDefaultReadOnly( false );
+		while ( sr.next() ) {
+			DataPoint dp = (DataPoint) sr.get(0);
+			if (++i==50) {
+				s.setReadOnly(dp, false);
+			}
+			dp.setDescription("done!");
+		}
+		t.commit();
+		s.clear();
+		t = s.beginTransaction();
+		List single = s.createQuery("from DataPoint where description='done!'").list();
+		assertEquals( 1, single.size() );
+		s.createQuery("delete from DataPoint").executeUpdate();
+		t.commit();
+		s.close();
 	}
 
 	public void testReadOnlyRefreshFailureExpected() {
@@ -184,12 +198,13 @@ public class ReadOnlyTest extends FunctionalTestCase {
 
 		s = openSession();
 		s.setCacheMode(CacheMode.IGNORE);
+		s.setDefaultReadOnly( true );
 		t = s.beginTransaction();
 		dp = ( DataPoint ) s.get( DataPoint.class, dp.getId() );
-		s.setReadOnly( dp, true );
 		assertEquals( "original", dp.getDescription() );
 		dp.setDescription( "changed" );
 		assertEquals( "changed", dp.getDescription() );
+		s.setDefaultReadOnly( false );
 		s.refresh( dp );
 		assertEquals( "original", dp.getDescription() );
 		dp.setDescription( "changed" );
@@ -219,17 +234,19 @@ public class ReadOnlyTest extends FunctionalTestCase {
 		s.close();
 
 		s = openSession();
+		s.setDefaultReadOnly( true );
 		s.setCacheMode(CacheMode.IGNORE);
 		t = s.beginTransaction();
 		dp = ( DataPoint ) s.get( DataPoint.class, dp.getId() );
-		s.setReadOnly( dp, true );
+		s.setDefaultReadOnly( false );
+		assertTrue( s.isReadOnly( dp ) );
 		s.delete(  dp );
 		t.commit();
 		s.close();
 
 		s = openSession();
 		t = s.beginTransaction();
-		List list = s.createQuery("from DataPoint where description='done!'").list();
+		List list = s.createQuery("from DataPoint where id=" + dp.getId() ).list();
 		assertTrue( list.isEmpty() );
 		t.commit();
 		s.close();
@@ -249,10 +266,11 @@ public class ReadOnlyTest extends FunctionalTestCase {
 		s.close();
 
 		s = openSession();
+		s.setDefaultReadOnly( true );
 		s.setCacheMode(CacheMode.IGNORE);
 		t = s.beginTransaction();
 		dp = ( DataPoint ) s.get( DataPoint.class, dp.getId() );
-		s.setReadOnly( dp, true );
+		s.setDefaultReadOnly( true );
 		dp.setDescription( "a DataPoint" );
 		s.delete(  dp );
 		t.commit();
@@ -260,7 +278,7 @@ public class ReadOnlyTest extends FunctionalTestCase {
 
 		s = openSession();
 		t = s.beginTransaction();
-		List list = s.createQuery("from DataPoint where description='done!'").list();
+		List list = s.createQuery("from DataPoint where id=" + dp.getId() ).list();
 		assertTrue( list.isEmpty() );
 		t.commit();
 		s.close();
@@ -287,10 +305,11 @@ public class ReadOnlyTest extends FunctionalTestCase {
 		t = s.beginTransaction();
 		DataPoint dpLast = ( DataPoint ) s.get( DataPoint.class,  dp.getId() );
 		assertFalse( s.isReadOnly( dpLast ) );
+		s.setDefaultReadOnly( true );
 		int i = 0;
 		ScrollableResults sr = s.createQuery("from DataPoint dp order by dp.x asc")
-				.setReadOnly(true)
 				.scroll(ScrollMode.FORWARD_ONLY);
+		s.setDefaultReadOnly( false );
 		int nExpectedChanges = 0;
 		while ( sr.next() ) {
 			dp = (DataPoint) sr.get(0);
@@ -311,7 +330,7 @@ public class ReadOnlyTest extends FunctionalTestCase {
 		s.clear();
 		t = s.beginTransaction();
 		List list = s.createQuery("from DataPoint where description='done!'").list();
-		assertEquals( list.size(), nExpectedChanges );
+		assertEquals( nExpectedChanges, list.size() );
 		s.createQuery("delete from DataPoint").executeUpdate();
 		t.commit();
 		s.close();
@@ -335,9 +354,8 @@ public class ReadOnlyTest extends FunctionalTestCase {
 		s = openSession();
 		s.setCacheMode(CacheMode.IGNORE);
 		t = s.beginTransaction();
+		s.setDefaultReadOnly( true );
 		DataPoint dpLast = ( DataPoint ) s.get( DataPoint.class,  dp.getId() );
-		assertFalse( s.isReadOnly( dpLast ) );
-		s.setReadOnly( dpLast, true );
 		assertTrue( s.isReadOnly( dpLast ) );
 		int i = 0;
 		ScrollableResults sr = s.createQuery("from DataPoint dp order by dp.x asc")
@@ -363,7 +381,7 @@ public class ReadOnlyTest extends FunctionalTestCase {
 		s.clear();
 		t = s.beginTransaction();
 		List list = s.createQuery("from DataPoint where description='done!'").list();
-		assertEquals( list.size(), nExpectedChanges );
+		assertEquals( nExpectedChanges, list.size() );
 		s.createQuery("delete from DataPoint").executeUpdate();
 		t.commit();
 		s.close();
@@ -384,9 +402,10 @@ public class ReadOnlyTest extends FunctionalTestCase {
 
 		s = openSession();
 		s.beginTransaction();
+		s.setDefaultReadOnly( true );
 		s.setCacheMode( CacheMode.IGNORE );
 		holder = ( TextHolder ) s.get( TextHolder.class, id );
-		s.setReadOnly( holder, true );
+		s.setDefaultReadOnly( false );
 		holder.setTheText( newText );
 		s.flush();
 		s.getTransaction().commit();
@@ -418,8 +437,8 @@ public class ReadOnlyTest extends FunctionalTestCase {
 		s = openSession();
 		s.setCacheMode(CacheMode.IGNORE);
 		t = s.beginTransaction();
+		s.setDefaultReadOnly( true );
 		DataPoint dpManaged = ( DataPoint ) s.get( DataPoint.class, new Long( dp.getId() ) );
-		s.setReadOnly( dpManaged, true );
 		DataPoint dpMerged = ( DataPoint ) s.merge( dp );
 		assertSame( dpManaged, dpMerged );
 		t.commit();
@@ -435,4 +454,3 @@ public class ReadOnlyTest extends FunctionalTestCase {
 
 	}
 }
-

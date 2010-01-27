@@ -2,15 +2,25 @@
 package org.hibernate.test.readonly;
 
 import java.math.BigDecimal;
+import java.io.Serializable;
 
 /**
  * @author Gavin King
  */
-public class DataPoint {
+public class DataPoint implements Serializable {
 	private long id;
 	private BigDecimal x;
 	private BigDecimal y;
 	private String description;
+
+	public DataPoint() {}
+
+	public DataPoint(BigDecimal x, BigDecimal y, String description) {
+		this.x = x;
+		this.y = y;
+		this.description = description;
+	}
+
 	/**
 	 * @return Returns the description.
 	 */
@@ -58,5 +68,8 @@ public class DataPoint {
 	 */
 	public void setY(BigDecimal y) {
 		this.y = y;
+	}
+	void exception() throws Exception {
+		throw new Exception("foo");
 	}
 }

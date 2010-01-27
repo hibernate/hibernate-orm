@@ -66,6 +66,7 @@ public final class QueryParameters {
 	private Object optionalObject;
 	private String optionalEntityName;
 	private Serializable optionalId;
+	private boolean isReadOnlyInitialized;
 	private boolean readOnly;
 	private boolean callable = false;
 	private boolean autodiscovertypes = false;
@@ -124,6 +125,7 @@ public final class QueryParameters {
 				null,
 				false,
 				false,
+				false,
 				null,
 				null,
 				collectionKeys,
@@ -149,6 +151,7 @@ public final class QueryParameters {
 				lockOptions,
 				rowSelection,
 				false,
+				false,
 				cacheable,
 				cacheRegion,
 				comment,
@@ -164,6 +167,7 @@ public final class QueryParameters {
 			final Map namedParameters,
 			final LockOptions lockOptions,
 			final RowSelection rowSelection,
+			final boolean isReadOnlyInitialized,
 			final boolean readOnly,
 			final boolean cacheable,
 			final String cacheRegion,
@@ -181,6 +185,7 @@ public final class QueryParameters {
 		//this.forceCacheRefresh = forceCacheRefresh;
 		this.comment = comment;
 		this.collectionKeys = collectionKeys;
+		this.isReadOnlyInitialized = isReadOnlyInitialized;
 		this.readOnly = readOnly;
 		this.resultTransformer = transformer;
 	}
@@ -191,6 +196,7 @@ public final class QueryParameters {
 			final Map namedParameters,
 			final LockOptions lockOptions,
 			final RowSelection rowSelection,
+			final boolean isReadOnlyInitialized,
 			final boolean readOnly,
 			final boolean cacheable,
 			final String cacheRegion,
@@ -207,6 +213,7 @@ public final class QueryParameters {
 				namedParameters,
 				lockOptions,
 				rowSelection,
+				isReadOnlyInitialized,
 				readOnly,
 				cacheable,
 				cacheRegion,
@@ -351,12 +358,82 @@ public final class QueryParameters {
 		this.optionalObject = optionalObject;
 	}
 
+	/**
+	 * Has the read-only/modifiable mode been explicitly set?
+	 * @see QueryParameters#setReadOnly(boolean)
+	 * @see QueryParameters#isReadOnly(SessionImplementor)
+	 *
+	 * @return true, the read-only/modifiable mode was explicitly set
+	 *         false, the read-only/modifiable mode was not explicitly set
+	 */
+	public boolean isReadOnlyInitialized() {
+		return isReadOnlyInitialized;
+	}
+
+	/**
+	 * Should entities and proxies loaded by the Query be put in read-only mode? The
+	 * read-only/modifiable setting must be initialized via QueryParameters#setReadOnly(boolean)
+	 * before calling this method.
+	 *
+	 * @see QueryParameters#isReadOnlyInitialized()
+	 * @see QueryParameters#isReadOnly(SessionImplementor)
+	 * @see QueryParameters#setReadOnly(boolean)
+	 *
+	 * The read-only/modifiable setting has no impact on entities/proxies returned by the
+	 * query that existed in the session before the query was executed.
+	 *
+	 * @return true, entities and proxies loaded by the Query will be put in read-only mode
+	 *         false, entities and proxies loaded by the Query will be put in modifiable mode
+	 * @throws IllegalStateException if the read-only/modifiable setting has not been
+	 * initialized (i.e., isReadOnlyInitialized() == false).
+	 */
 	public boolean isReadOnly() {
+		if ( ! isReadOnlyInitialized() ) {
+			throw new IllegalStateException( "cannot call isReadOnly() when isReadOnlyInitialized() returns false" );
+		}
 		return readOnly;
 	}
 
+	/**
+	 * Should entities and proxies loaded by the Query be put in read-only mode? If the
+	 * read-only/modifiable setting was not initialized
+	 * (i.e., QueryParameters#isReadOnlyInitialized() == false), then the default
+	 * read-only/modifiable setting for the persistence context is returned instead.
+	 *
+	 * @see QueryParameters#isReadOnlyInitialized()
+	 * @see QueryParameters#setReadOnly(boolean)
+	 * @see org.hibernate.engine.PersistenceContext#isDefaultReadOnly()
+	 *
+	 * The read-only/modifiable setting has no impact on entities/proxies returned by the
+	 * query that existed in the session before the query was executed.
+	 *
+	 * @return true, entities and proxies loaded by the query will be put in read-only mode
+	 *         false, entities and proxies loaded by the query will be put in modifiable mode
+	 */
+	public boolean isReadOnly(SessionImplementor session) {
+		return ( isReadOnlyInitialized ?
+				isReadOnly() :
+				session.getPersistenceContext().isDefaultReadOnly() 
+		);
+	}
+
+	/**
+	 * Set the read-only/modifiable mode for entities and proxies loaded by the query.
+	 * 	 *
+	 * @see QueryParameters#isReadOnlyInitialized()
+	 * @see QueryParameters#isReadOnly(SessionImplementor)
+	 * @see QueryParameters#setReadOnly(boolean)
+	 * @see org.hibernate.engine.PersistenceContext#isDefaultReadOnly()
+	 *
+	 * The read-only/modifiable setting has no impact on entities/proxies returned by the
+	 * query that existed in the session before the query was executed.
+	 *
+	 * @return true, entities and proxies loaded by the query will be put in read-only mode
+	 *         false, entities and proxies loaded by the query will be put in modifiable mode
+	 */
 	public void setReadOnly(boolean readOnly) {
 		this.readOnly = readOnly;
+		this.isReadOnlyInitialized = true;
 	}
 
 	public void setCallable(boolean callable) {
@@ -467,6 +544,7 @@ public final class QueryParameters {
 				this.namedParameters,
 				this.lockOptions,
 				selection,
+				this.isReadOnlyInitialized,
 				this.readOnly,
 				this.cacheable,
 				this.cacheRegion,

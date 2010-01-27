@@ -253,15 +253,32 @@ public abstract class Loader {
 		throws HibernateException, SQLException {
 
 		final PersistenceContext persistenceContext = session.getPersistenceContext();
+		boolean defaultReadOnlyOrig = persistenceContext.isDefaultReadOnly();
+		if ( queryParameters.isReadOnlyInitialized() ) {
+			// The read-only/modifiable mode for the query was explicitly set.
+			// Temporarily set the default read-only/modifiable setting to the query's setting.
+			persistenceContext.setDefaultReadOnly( queryParameters.isReadOnly() );
+		}
+		else {
+			// The read-only/modifiable setting for the query was not initialized.
+			// Use the default read-only/modifiable from the persistence context instead.
+			queryParameters.setReadOnly( persistenceContext.isDefaultReadOnly() );
+		}
 		persistenceContext.beforeLoad();
 		List result;
 		try {
-			result = doQuery( session, queryParameters, returnProxies );
+			try {
+				result = doQuery( session, queryParameters, returnProxies );
+			}
+			finally {
+				persistenceContext.afterLoad();
+			}
+			persistenceContext.initializeNonLazyCollections();
 		}
 		finally {
-			persistenceContext.afterLoad();
+			// Restore the original default
+			persistenceContext.setDefaultReadOnly( defaultReadOnlyOrig );
 		}
-		persistenceContext.initializeNonLazyCollections();
 		return result;
 	}
 
@@ -312,7 +329,7 @@ public abstract class Loader {
 				hydratedObjects, 
 				resultSet, 
 				session, 
-				queryParameters.isReadOnly() 
+				queryParameters.isReadOnly( session )
 			);
 		session.getPersistenceContext().initializeNonLazyCollections();
 		return result;
@@ -363,7 +380,7 @@ public abstract class Loader {
 				hydratedObjects, 
 				resultSet, 
 				session, 
-				queryParameters.isReadOnly() 
+				queryParameters.isReadOnly( session )
 			);
 		session.getPersistenceContext().initializeNonLazyCollections();
 		return result;
@@ -749,7 +766,7 @@ public abstract class Loader {
 			session.getBatcher().closeQueryStatement( st, rs );
 		}
 
-		initializeEntitiesAndCollections( hydratedObjects, rs, session, queryParameters.isReadOnly() );
+		initializeEntitiesAndCollections( hydratedObjects, rs, session, queryParameters.isReadOnly( session ) );
 
 		if ( createSubselects ) createSubselects( subselectResultKeys, queryParameters, session );
 
@@ -1884,7 +1901,7 @@ public abstract class Loader {
 		try {
 			result = doQueryAndInitializeNonLazyCollections( 
 					session,
-					new QueryParameters( 
+					new QueryParameters(
 							new Type[] { identifierType },
 							new Object[] { id },
 							optionalObject,

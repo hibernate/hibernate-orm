@@ -28,6 +28,7 @@ import java.io.Serializable;
 import java.lang.reflect.Method;
 
 import org.hibernate.HibernateException;
+import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.type.AbstractComponentType;
 
 /**
@@ -39,6 +40,7 @@ public final class SerializableProxy implements Serializable {
 	private Class persistentClass;
 	private Class[] interfaces;
 	private Serializable id;
+	private boolean readOnly;
 	private Class getIdentifierMethodClass;
 	private Class setIdentifierMethodClass;
 	private String getIdentifierMethodName;
@@ -53,6 +55,7 @@ public final class SerializableProxy implements Serializable {
 	    final Class persistentClass,
 	    final Class[] interfaces,
 	    final Serializable id,
+	    final boolean readOnly,
 	    final Method getIdentifierMethod,
 	    final Method setIdentifierMethod,
 	    AbstractComponentType componentIdType
@@ -61,6 +64,7 @@ public final class SerializableProxy implements Serializable {
 		this.persistentClass = persistentClass;
 		this.interfaces = interfaces;
 		this.id = id;
+		this.readOnly = readOnly;
 		if (getIdentifierMethod!=null) {
 			getIdentifierMethodClass = getIdentifierMethod.getDeclaringClass();
 			getIdentifierMethodName = getIdentifierMethod.getName();

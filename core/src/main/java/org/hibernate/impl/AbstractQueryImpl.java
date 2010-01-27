@@ -101,7 +101,7 @@ public abstract class AbstractQueryImpl implements Query {
 	private FlushMode sessionFlushMode;
 	private CacheMode sessionCacheMode;
 	private Serializable collectionKey;
-	private boolean readOnly;
+	private Boolean readOnly;
 	private ResultTransformer resultTransformer;
 
 	public AbstractQueryImpl(
@@ -202,12 +202,21 @@ public abstract class AbstractQueryImpl implements Query {
 		return this;
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	public boolean isReadOnly() {
-		return readOnly;
+		return ( readOnly == null ?
+				getSession().getPersistenceContext().isDefaultReadOnly() :
+				readOnly.booleanValue() 
+		);
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	public Query setReadOnly(boolean readOnly) {
-		this.readOnly = readOnly;
+		this.readOnly = Boolean.valueOf( readOnly );
 		return this;
 	}
 
@@ -881,7 +890,8 @@ public abstract class AbstractQueryImpl implements Query {
 				namedParams,
 				getLockOptions(),
 				getSelection(),
-				readOnly,
+				true,
+				isReadOnly(),
 				cacheable,
 				cacheRegion,
 				comment,

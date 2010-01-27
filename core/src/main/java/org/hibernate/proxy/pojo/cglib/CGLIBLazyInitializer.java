@@ -212,6 +212,7 @@ public final class CGLIBLazyInitializer extends BasicLazyInitializer implements 
 				persistentClass,
 				interfaces,
 				getIdentifier(),
+				( getSession() != null && getSession().isOpen() ? isReadOnly() : false ),
 				getIdentifierMethod,
 				setIdentifierMethod,
 				componentIdType 

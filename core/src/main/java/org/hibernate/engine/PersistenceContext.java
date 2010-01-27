@@ -477,7 +477,56 @@ public interface PersistenceContext {
 	public boolean isPropertyNull(EntityKey ownerKey, String propertyName);
 
 	/**
+	 * Will entities and proxies that are loaded into this persistence
+	 * context be made read-only by default?
+	 *
+	 * To determine the read-only/modifiable setting for a particular entity
+	 * or proxy:
+	 * @see PersistenceContext#isReadOnly(Object)
+	 * @see org.hibernate.Session#isReadOnly(Object) 
+	 *
+	 * @return true, loaded entities/proxies will be made read-only by default;
+	 *         false, loaded entities/proxies will be made modifiable by default.
+	 *
+	 * @see org.hibernate.Session#isDefaultReadOnly() 
+	 */
+	public boolean isDefaultReadOnly();
+
+	/**
+	 * Change the default for entities and proxies loaded into this persistence
+	 * context from modifiable to read-only mode, or from modifiable to read-only
+	 * mode.
+	 *
+	 * Read-only entities are not dirty-checked and snapshots of persistent
+	 * state are not maintained. Read-only entities can be modified, but
+	 * changes are not persisted.
+	 *
+	 * When a proxy is initialized, the loaded entity will have the same
+	 * read-only/modifiable setting as the uninitialized
+	 * proxy has, regardless of the persistence context's current setting.
+	 *
+	 * To change the read-only/modifiable setting for a particular entity
+	 * or proxy that is already in this session:
++	 * @see PersistenceContext#setReadOnly(Object,boolean)
+	 * @see org.hibernate.Session#setReadOnly(Object, boolean)
+	 *
+	 * To override this session's read-only/modifiable setting for entities
+	 * and proxies loaded by a Query:
+	 * @see org.hibernate.Query#setReadOnly(boolean)
+	 *
+	 * @param readOnly true, the default for loaded entities/proxies is read-only;
+	 *                 false, the default for loaded entities/proxies is modifiable
+	 *
+	 * @see org.hibernate.Session#setDefaultReadOnly(boolean)
+	 */
+	public void setDefaultReadOnly(boolean readOnly);
+
+	/**
 	 * Is the entity or proxy read-only?
+	 *
+	 * To get the default read-only/modifiable setting used for
+	 * entities and proxies that are loaded into the session:
+	 * @see org.hibernate.Session#isDefaultReadOnly()
 	 *
 	 * @param entityOrProxy
 	 * @return true, the object is read-only; false, the object is modifiable.
@@ -485,14 +534,34 @@ public interface PersistenceContext {
 	public boolean isReadOnly(Object entityOrProxy);
 
 	/**
-	 * Set the entity or proxy to read only and discard it's snapshot.
+	 * Set an unmodified persistent object to read-only mode, or a read-only
+	 * object to modifiable mode.
+	 *
+	 * Read-only entities are not dirty-checked and snapshots of persistent
+	 * state are not maintained. Read-only entities can be modified, but
+	 * changes are not persisted.
+	 *
+	 * When a proxy is initialized, the loaded entity will have the same
+	 * read-only/modifiable setting as the uninitialized
+	 * proxy has, regardless of the session's current setting.
 	 *
 	 * If the entity or proxy already has the specified read-only/modifiable
 	 * setting, then this method does nothing.
 	 *
+	 * To set the default read-only/modifiable setting used for
+	 * entities and proxies that are loaded into this persistence context:
+	 * @see PersistenceContext#setDefaultReadOnly(boolean)
+	 * @see org.hibernate.Session#setDefaultReadOnly(boolean)
+	 *
+	 * To override this persistence context's read-only/modifiable setting
+	 * for entities and proxies loaded by a Query:
+	 * @see org.hibernate.Query#setReadOnly(boolean)
+	 *
 	 * @param entityOrProxy, an entity or HibernateProxy
 	 * @param readOnly, if true, the entity or proxy is made read-only;
 	 *                  if false, the entity or proxy is made modifiable.
+	 *
+	 * @see org.hibernate.Session#setReadOnly(Object, boolean)
 	 */
 	public void setReadOnly(Object entityOrProxy, boolean readOnly);
 

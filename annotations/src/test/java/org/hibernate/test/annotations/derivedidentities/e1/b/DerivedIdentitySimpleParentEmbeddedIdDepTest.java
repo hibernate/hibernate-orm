@@ -23,8 +23,8 @@ public class
 		d.emp = e;
 		d.id = new DependentId();
 		d.id.name = "Doggy";
-		s.persist( e );
 		s.persist( d );
+		s.persist( e );
 		s.flush();
 		s.clear();
 		d = (Dependent) s.get( Dependent.class, d.id );

@@ -20,7 +20,8 @@ package org.hibernate.jpamodelgen.test.inheritance;
 import org.testng.annotations.Test;
 
 import org.hibernate.jpamodelgen.test.util.CompilationTest;
-import static org.hibernate.jpamodelgen.test.util.TestUtil.assertSuperClass;
+
+import static org.hibernate.jpamodelgen.test.util.TestUtil.assertSuperClassRelationShipInMetamodel;
 
 /**
  * @author Emmanuel Bernard
@@ -29,15 +30,13 @@ import static org.hibernate.jpamodelgen.test.util.TestUtil.assertSuperClass;
 public class InheritanceTest extends CompilationTest {
 	@Test
 	public void testSuperEntity() throws Exception {
-		assertSuperClass(
-				Customer.class.getName() + "_", User.class.getName() + "_"
-		);
+		assertSuperClassRelationShipInMetamodel( Customer.class, User.class );
 	}
 
 	@Test
 	public void testMappedSuperclass() throws Exception {
-		assertSuperClass( House.class.getName() + "_", Building.class.getName() + "_" );
-		assertSuperClass( Building.class.getName() + "_", Area.class.getName() + "_" );
+		assertSuperClassRelationShipInMetamodel( House.class, Building.class );
+		assertSuperClassRelationShipInMetamodel( Building.class, Area.class );
 	}
 
 	@Override

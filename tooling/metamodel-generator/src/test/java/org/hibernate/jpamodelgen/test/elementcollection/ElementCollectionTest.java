@@ -20,9 +20,9 @@ package org.hibernate.jpamodelgen.test.elementcollection;
 import org.testng.annotations.Test;
 
 import org.hibernate.jpamodelgen.test.util.CompilationTest;
-import static org.hibernate.jpamodelgen.test.util.TestUtil.assertClassGenerated;
-import static org.hibernate.jpamodelgen.test.util.TestUtil.assertClassNotFound;
-import static org.hibernate.jpamodelgen.test.util.TestUtil.assertNoGeneratedSourceFile;
+
+import static org.hibernate.jpamodelgen.test.util.TestUtil.assertMetamodelClassGeneratedFor;
+import static org.hibernate.jpamodelgen.test.util.TestUtil.assertNoSourceFileGeneratedFor;
 
 /**
  * @author Hardy Ferentschik
@@ -33,10 +33,10 @@ public class ElementCollectionTest extends CompilationTest {
 	 */
 	@Test
 	public void testElementCollectionOnMap() {
-		assertClassGenerated( House.class.getName() + "_" );
-		assertClassGenerated( House.class.getName() + "_" );
+		assertMetamodelClassGeneratedFor( House.class );
+		assertMetamodelClassGeneratedFor( House.class );
 		// side effect of METAGEN-8 was that a meta class for String was created!
-		assertNoGeneratedSourceFile( String.class.getName() + "_" );
+		assertNoSourceFileGeneratedFor( String.class );
 	}
 
 	@Override

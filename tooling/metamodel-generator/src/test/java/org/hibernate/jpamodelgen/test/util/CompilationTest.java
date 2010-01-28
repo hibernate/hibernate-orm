@@ -55,6 +55,7 @@ public abstract class CompilationTest {
 
 	public CompilationTest() {
 		try {
+			TestUtil.clearOutputFolder();
 			compile();
 		}
 		catch ( Exception e ) {

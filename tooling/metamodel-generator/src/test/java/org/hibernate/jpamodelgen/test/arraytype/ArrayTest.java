@@ -20,27 +20,29 @@ package org.hibernate.jpamodelgen.test.arraytype;
 import org.testng.annotations.Test;
 
 import org.hibernate.jpamodelgen.test.util.CompilationTest;
-import static org.hibernate.jpamodelgen.test.util.TestUtil.assertFieldType;
+
+import static org.hibernate.jpamodelgen.test.util.TestUtil.assertFieldTypeInMetaModelFor;
 
 /**
  * @author Hardy Ferentschik
  */
 public class ArrayTest extends CompilationTest {
+
 	/**
 	 * METAGEN-2
 	 */
 	@Test
-	public void testPrimitiveArray() throws Exception {
-		assertFieldType( Image.class.getName() + "_", "data", byte[].class, "Wrong type for field." );
+	public void testPrimitiveArray() {
+		assertFieldTypeInMetaModelFor( Image.class, "data", byte[].class, "Wrong type for field." );
 	}
 
 	/**
 	 * METAGEN-2
 	 */
 	@Test
-	public void testIntegerArray() throws Exception {
-		assertFieldType(
-				TemperatureSamples.class.getName() + "_", "samples", Integer[].class, "Wrong type for field."
+	public void testIntegerArray() {
+		assertFieldTypeInMetaModelFor(
+				TemperatureSamples.class, "samples", Integer[].class, "Wrong type for field."
 		);
 	}
 

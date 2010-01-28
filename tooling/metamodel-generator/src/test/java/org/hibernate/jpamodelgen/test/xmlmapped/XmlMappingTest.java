@@ -17,52 +17,79 @@
 */
 package org.hibernate.jpamodelgen.test.xmlmapped;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.ParameterizedType;
-
 import org.testng.annotations.Test;
 
 import org.hibernate.jpamodelgen.test.util.CompilationTest;
 
-import static junit.framework.Assert.assertTrue;
-import static org.hibernate.jpamodelgen.test.util.TestUtil.assertClassGenerated;
-import static org.hibernate.jpamodelgen.test.util.TestUtil.assertPresenceOfField;
-import static org.hibernate.jpamodelgen.test.util.TestUtil.assertSuperClass;
-import static org.hibernate.jpamodelgen.test.util.TestUtil.getField;
+import static org.hibernate.jpamodelgen.test.util.TestUtil.assertFieldTypeInMetaModelFor;
+import static org.hibernate.jpamodelgen.test.util.TestUtil.assertMetamodelClassGeneratedFor;
+import static org.hibernate.jpamodelgen.test.util.TestUtil.assertPresenceOfFieldInMetamodelFor;
+import static org.hibernate.jpamodelgen.test.util.TestUtil.assertSuperClassRelationShipInMetamodel;
 
 /**
  * @author Hardy Ferentschik
  */
 public class XmlMappingTest extends CompilationTest {
 	@Test
-	public void testXmlConfiguredEmbeddedClassGenerated() throws Exception {
-		assertClassGenerated( Address.class.getName() + "_" );
+	public void testXmlConfiguredEmbeddedClassGenerated() {
+		assertMetamodelClassGeneratedFor( Address.class );
 	}
 
 	@Test
-	public void testXmlConfiguredMappedSuperclassGenerated() throws Exception {
-		assertClassGenerated( Building.class.getName() + "_" );
-		assertPresenceOfField(
-				Building.class.getName() + "_", "address", "address field should exist"
+	public void testXmlConfiguredMappedSuperclassGenerated() {
+		assertMetamodelClassGeneratedFor( Building.class );
+		assertPresenceOfFieldInMetamodelFor( Building.class, "address", "address field should exist" );
+	}
+
+	/**
+	 * METAGEN-17
+	 */
+	@Test
+	public void testTargetEntityOnOneToOne() {
+		assertMetamodelClassGeneratedFor( Boy.class );
+		assertPresenceOfFieldInMetamodelFor( Boy.class, "favoriteSuperhero", "favoriteSuperhero field should exist" );
+		assertFieldTypeInMetaModelFor(
+				Boy.class, "favoriteSuperhero", FakeHero.class, "target entity overridden in xml"
+		);
+	}
+
+	/**
+	 * METAGEN-17
+	 */
+	@Test
+	public void testTargetEntityOnOneToMany() {
+		assertMetamodelClassGeneratedFor( Boy.class );
+		assertPresenceOfFieldInMetamodelFor( Boy.class, "knowsHeros", "knowsHeros field should exist" );
+		assertFieldTypeInMetaModelFor(
+				Boy.class, "knowsHeros", FakeHero.class, "target entity overridden in xml"
+		);
+	}
+
+	/**
+	 * METAGEN-17
+	 */
+	@Test
+	public void testTargetEntityOnManyToMany() {
+		assertMetamodelClassGeneratedFor( Boy.class );
+		assertPresenceOfFieldInMetamodelFor( Boy.class, "savedBy", "savedBy field should exist" );
+		assertFieldTypeInMetaModelFor(
+				Boy.class, "savedBy", FakeHero.class, "target entity overridden in xml"
 		);
 	}
 
 	@Test
-	public void testXmlConfiguredElementCollection() throws Exception {
-		assertClassGenerated( Boy.class.getName() + "_" );
-		assertPresenceOfField(
-				Boy.class.getName() + "_", "nickNames", "nickNames field should exist"
-		);
-		Field field = getField( Boy.class.getName() + "_", "nickNames" );
-		ParameterizedType type = ( ParameterizedType ) field.getGenericType();
-		assertTrue( "Wrong target type", type.getActualTypeArguments()[1].equals( Integer.class ) );
+	public void testXmlConfiguredElementCollection() {
+		assertMetamodelClassGeneratedFor( Boy.class );
+		assertPresenceOfFieldInMetamodelFor( Boy.class, "nickNames", "nickNames field should exist" );
+		assertFieldTypeInMetaModelFor( Boy.class, "nickNames", Integer.class, "target class overridden in xml" );
 	}
 
+
 	@Test
-	public void testClassHierarchy() throws Exception {
-		assertClassGenerated( Mammal.class.getName() + "_" );
-		assertClassGenerated( LivingBeing.class.getName() + "_" );
-		assertSuperClass( Mammal.class.getName() + "_", LivingBeing.class.getName() + "_" );
+	public void testClassHierarchy() {
+		assertMetamodelClassGeneratedFor( Mammal.class );
+		assertMetamodelClassGeneratedFor( LivingBeing.class );
+		assertSuperClassRelationShipInMetamodel( Mammal.class, LivingBeing.class );
 	}
 
 	@Test(expectedExceptions = ClassNotFoundException.class)

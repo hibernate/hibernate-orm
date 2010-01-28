@@ -19,11 +19,9 @@ package org.hibernate.jpamodelgen.test.generics;
 
 import org.testng.annotations.Test;
 
-import org.hibernate.jpamodelgen.test.elementcollection.House;
 import org.hibernate.jpamodelgen.test.util.CompilationTest;
 
-import static org.hibernate.jpamodelgen.test.util.TestUtil.assertClassGenerated;
-import static org.hibernate.jpamodelgen.test.util.TestUtil.assertNoGeneratedSourceFile;
+import static org.hibernate.jpamodelgen.test.util.TestUtil.assertMetamodelClassGeneratedFor;
 
 /**
  * @author Emmanuel Bernard
@@ -32,8 +30,8 @@ public class GenericsTest extends CompilationTest {
 
 	@Test
 	public void testGenerics() {
-		assertClassGenerated( Parent.class.getName() + "_" );
-		assertClassGenerated( Child.class.getName() + "_" );
+		assertMetamodelClassGeneratedFor( Parent.class );
+		assertMetamodelClassGeneratedFor( Child.class );
 	}
 
 	@Override

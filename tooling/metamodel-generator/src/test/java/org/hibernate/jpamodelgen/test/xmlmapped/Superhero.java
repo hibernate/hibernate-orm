@@ -17,51 +17,22 @@
 */
 package org.hibernate.jpamodelgen.test.xmlmapped;
 
-import java.util.List;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
 
 /**
  * @author Hardy Ferentschik
  */
-public class Boy {
+@Entity
+public class Superhero {
+	@Id
+	@GeneratedValue
 	private long id;
 
 	private String name;
 
-	/*
-	 * The mapping in boy.xml specifies as target-class for the element collection java.lang.Integer. This makes no
-	 * sense from a mapping point, but makes it easy to test.
-	 */
-	private List<String> nickNames;
-
-	private Superhero favoriteSuperhero;
-
-	private List<Superhero> knowsHeros;
-
-	private List<Superhero> savedBy;
-
-	public List<Superhero> getSavedBy() {
-		return savedBy;
-	}
-
-	public void setSavedBy(List<Superhero> savedBy) {
-		this.savedBy = savedBy;
-	}
-
-	public Superhero getFavoriteSuperhero() {
-		return favoriteSuperhero;
-	}
-
-	public void setFavoriteSuperhero(Superhero favoriteSuperhero) {
-		this.favoriteSuperhero = favoriteSuperhero;
-	}
-
-	public List<Superhero> getKnowsHeros() {
-		return knowsHeros;
-	}
-
-	public void setKnowsHeros(List<Superhero> knowsHeros) {
-		this.knowsHeros = knowsHeros;
-	}
+	private String superPower;
 
 	public long getId() {
 		return id;
@@ -79,12 +50,12 @@ public class Boy {
 		this.name = name;
 	}
 
-	public List<String> getNickNames() {
-		return nickNames;
+	public String getSuperPower() {
+		return superPower;
 	}
 
-	public void setNickNames(List<String> nickNames) {
-		this.nickNames = nickNames;
+	public void setSuperPower(String superPower) {
+		this.superPower = superPower;
 	}
 }
 

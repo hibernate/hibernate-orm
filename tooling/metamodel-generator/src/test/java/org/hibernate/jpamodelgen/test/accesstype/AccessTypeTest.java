@@ -20,9 +20,11 @@ package org.hibernate.jpamodelgen.test.accesstype;
 import org.testng.annotations.Test;
 
 import org.hibernate.jpamodelgen.test.util.CompilationTest;
-import static org.hibernate.jpamodelgen.test.util.TestUtil.assertAbsenceOfField;
-import static org.hibernate.jpamodelgen.test.util.TestUtil.assertFieldType;
-import static org.hibernate.jpamodelgen.test.util.TestUtil.assertPresenceOfField;
+import org.hibernate.jpamodelgen.test.util.TestUtil;
+
+import static org.hibernate.jpamodelgen.test.util.TestUtil.assertAbsenceOfFieldInMetamodelFor;
+import static org.hibernate.jpamodelgen.test.util.TestUtil.assertFieldTypeInMetaModelFor;
+import static org.hibernate.jpamodelgen.test.util.TestUtil.assertPresenceOfFieldInMetamodelFor;
 
 /**
  * @author Emmanuel Bernard
@@ -31,58 +33,58 @@ import static org.hibernate.jpamodelgen.test.util.TestUtil.assertPresenceOfField
 public class AccessTypeTest extends CompilationTest {
 
 	@Test
-	public void testExcludeTransientFieldAndStatic() throws Exception {
-		assertAbsenceOfField( Product.class.getName() + "_", "nonPersistent" );
-		assertAbsenceOfField( Product.class.getName() + "_", "nonPersistent2" );
+	public void testExcludeTransientFieldAndStatic() {
+		TestUtil.assertAbsenceOfFieldInMetamodelFor( Product.class, "nonPersistent" );
+		TestUtil.assertAbsenceOfFieldInMetamodelFor( Product.class, "nonPersistent2" );
 	}
 
 	@Test
-	public void testDefaultAccessTypeOnEntity() throws Exception {
-		assertAbsenceOfField( User.class.getName() + "_", "nonPersistent" );
+	public void testDefaultAccessTypeOnEntity() {
+		TestUtil.assertAbsenceOfFieldInMetamodelFor( User.class, "nonPersistent" );
 	}
 
 	@Test
-	public void testDefaultAccessTypeForSubclassOfEntity() throws Exception {
-		assertAbsenceOfField( Customer.class.getName() + "_", "nonPersistent" );
+	public void testDefaultAccessTypeForSubclassOfEntity() {
+		TestUtil.assertAbsenceOfFieldInMetamodelFor( Customer.class, "nonPersistent" );
 	}
 
 	@Test
-	public void testDefaultAccessTypeForEmbeddable() throws Exception {
-		assertAbsenceOfField( Detail.class.getName() + "_", "nonPersistent" );
+	public void testDefaultAccessTypeForEmbeddable() {
+		TestUtil.assertAbsenceOfFieldInMetamodelFor( Detail.class, "nonPersistent" );
 	}
 
 	@Test
-	public void testInheritedAccessTypeForEmbeddable() throws Exception {
-		assertAbsenceOfField( Country.class.getName() + "_", "nonPersistent" );
-		assertAbsenceOfField(
-				Pet.class.getName() + "_", "nonPersistent", "Collection of embeddable not taken care of"
+	public void testInheritedAccessTypeForEmbeddable() {
+		TestUtil.assertAbsenceOfFieldInMetamodelFor( Country.class, "nonPersistent" );
+		assertAbsenceOfFieldInMetamodelFor(
+				Pet.class, "nonPersistent", "Collection of embeddable not taken care of"
 		);
 	}
 
 	@Test
-	public void testDefaultAccessTypeForMappedSuperclass() throws Exception {
-		assertAbsenceOfField( Detail.class.getName() + "_", "volume" );
+	public void testDefaultAccessTypeForMappedSuperclass() {
+		TestUtil.assertAbsenceOfFieldInMetamodelFor( Detail.class, "volume" );
 	}
 
 	@Test
-	public void testExplicitAccessTypeAndDefaultFromRootEntity() throws Exception {
-		assertAbsenceOfField(
-				LivingBeing.class.getName() + "_",
+	public void testExplicitAccessTypeAndDefaultFromRootEntity() {
+		assertAbsenceOfFieldInMetamodelFor(
+				LivingBeing.class,
 				"nonPersistent",
 				"explicit access type on mapped superclass"
 		);
-		assertAbsenceOfField( Hominidae.class.getName() + "_", "nonPersistent", "explicit access type on entity" );
-		assertAbsenceOfField(
-				Human.class.getName() + "_",
+		assertAbsenceOfFieldInMetamodelFor( Hominidae.class, "nonPersistent", "explicit access type on entity" );
+		assertAbsenceOfFieldInMetamodelFor(
+				Human.class,
 				"nonPersistent",
 				"proper inheritance from root entity access type"
 		);
 	}
 
 	@Test
-	public void testMemberAccessType() throws Exception {
-		assertPresenceOfField( Customer.class.getName() + "_", "goodPayer", "access type overriding" );
-		assertFieldType( Customer.class.getName() + "_", "goodPayer", Boolean.class, "access type overriding" );
+	public void testMemberAccessType() {
+		assertPresenceOfFieldInMetamodelFor( Customer.class, "goodPayer", "access type overriding" );
+		assertFieldTypeInMetaModelFor( Customer.class, "goodPayer", Boolean.class, "access type overriding" );
 	}
 
 	@Override

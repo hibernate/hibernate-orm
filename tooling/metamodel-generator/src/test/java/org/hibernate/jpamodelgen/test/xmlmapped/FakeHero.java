@@ -1,7 +1,7 @@
-// $Id$
+// $Id:$
 /*
 * JBoss, Home of Professional Open Source
-* Copyright 2008, Red Hat Middleware LLC, and individual contributors
+* Copyright 2009, Red Hat, Inc. and/or its affiliates, and individual contributors
 * by the @authors tag. See the copyright.txt in the distribution for a
 * full listing of individual contributors.
 *
@@ -15,27 +15,10 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-package org.hibernate.jpamodelgen.test.rawTypes;
-
-import org.testng.annotations.Test;
-
-import org.hibernate.jpamodelgen.test.util.CompilationTest;
-
-import static org.hibernate.jpamodelgen.test.util.TestUtil.assertMetamodelClassGeneratedFor;
+package org.hibernate.jpamodelgen.test.xmlmapped;
 
 /**
- * @author Emmanuel Bernard
+ * @author Hardy Ferentschik
  */
-public class RawTypesTest extends CompilationTest {
-
-	@Test
-	public void testGenerics() {
-		assertMetamodelClassGeneratedFor( DeskWithRawType.class );
-		assertMetamodelClassGeneratedFor( EmployeeWithRawType.class );
-	}
-
-	@Override
-	protected String getTestPackage() {
-		return DeskWithRawType.class.getPackage().getName();
-	}
+public class FakeHero {
 }

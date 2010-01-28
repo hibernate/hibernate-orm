@@ -6,7 +6,9 @@
             <package name="org.hibernate.jpamodelgen.test.accesstype"/>
             <package name="org.hibernate.jpamodelgen.test.arraytype"/>
             <package name="org.hibernate.jpamodelgen.test.elementcollection"/>
+            <package name="org.hibernate.jpamodelgen.test.generics"/>
             <package name="org.hibernate.jpamodelgen.test.inheritance"/>
+            <package name="org.hibernate.jpamodelgen.test.rawTypes"/>
             <package name="org.hibernate.jpamodelgen.test.xmlmapped"/>
         </packages>
     </test>

@@ -14,13 +14,17 @@ public class SecondMetadataTest extends TestCase {
 		assertNotNull( emf.getMetamodel() );
 		assertNotNull( emf.getMetamodel().entity( DeskWithRawType.class ) );
 		assertNotNull( emf.getMetamodel().entity( EmployeeWithRawType.class ) );
+		assertNotNull( emf.getMetamodel().entity( SimpleMedicalHistory.class ) );
+		assertNotNull( emf.getMetamodel().entity( SimplePerson.class ) );
 	}
 
 	@Override
 	public Class[] getAnnotatedClasses() {
 		return new Class[] {
 				DeskWithRawType.class,
-				EmployeeWithRawType.class
+				EmployeeWithRawType.class,
+				SimpleMedicalHistory.class,
+				SimplePerson.class
 		};
 	}
 }

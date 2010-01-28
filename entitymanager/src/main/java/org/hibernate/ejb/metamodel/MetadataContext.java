@@ -37,6 +37,8 @@ import javax.persistence.metamodel.IdentifiableType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.hibernate.mapping.Component;
+import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
@@ -221,8 +223,25 @@ class MetadataContext {
 				);
 			}
 		}
-		else {
+		else if ( persistentClass.hasIdentifierMapper() ) {
 			jpaEntityType.getBuilder().applyIdClassAttributes( buildIdClassAttributes( jpaEntityType, persistentClass ) );
+		}
+		else {
+			final KeyValue value = persistentClass.getIdentifier();
+			if (value instanceof Component ) {
+				final Component component = ( Component ) value;
+				if ( component.getPropertySpan() > 1 ) {
+					//FIXME we are an Hibernate embedded id (ie not type)
+				}
+				else {
+					//FIXME take care of declared vs non declared property
+					jpaEntityType.getBuilder().applyIdAttribute(
+						attributeFactory.buildIdAttribute(
+								jpaEntityType,
+								(Property) component.getPropertyIterator().next() )
+					);
+				}
+			}
 		}
 	}
 

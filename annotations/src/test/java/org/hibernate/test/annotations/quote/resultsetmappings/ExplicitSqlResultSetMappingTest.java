@@ -24,6 +24,8 @@
 package org.hibernate.test.annotations.quote.resultsetmappings;
 
 import org.hibernate.Session;
+import org.hibernate.cfg.Configuration;
+import org.hibernate.cfg.Environment;
 import org.hibernate.test.annotations.TestCase;
 
 /**
@@ -32,29 +34,58 @@ import org.hibernate.test.annotations.TestCase;
  * @author Steve Ebersole
  */
 public class ExplicitSqlResultSetMappingTest extends TestCase {
-	private String queryString = "select t.\"NAME\" as \"QuotEd_nAMe\" from \"MY_ENTITY_TABLE_NAME\" t";
+	private String queryString = "select t.\"NAME\" as \"QuotEd_nAMe\" from \"MY_ENTITY_TABLE\" t";
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class<?>[] { MyEntity.class };
 	}
 
-	public void testCompleteAutoDiscovery() {
-		Session s = openSession();
+	@Override
+	protected void configure(Configuration cfg) {
+		cfg.setProperty( Environment.GLOBALLY_QUOTED_IDENTIFIERS, "true" );
+	}
+
+	private void prepareTestData() {
+		Session s = sfi().openSession();
 		s.beginTransaction();
-		s.createSQLQuery( queryString )
-				.list();
+		s.save( new MyEntity( "mine" ) );
 		s.getTransaction().commit();
 		s.close();
 	}
 
-	public void testPartialAutoDiscovery() {
+	private void cleanupTestData() {
+		Session s = sfi().openSession();
+		s.beginTransaction();
+		s.createQuery( "delete MyEntity" ).executeUpdate();
+		s.getTransaction().commit();
+		s.close();
+	}
+
+	public void testCompleteScalarAutoDiscovery() {
+		prepareTestData();
+
 		Session s = openSession();
 		s.beginTransaction();
 		s.createSQLQuery( queryString )
-				.setResultSetMapping( "explicitResultSetMapping" )
 				.list();
 		s.getTransaction().commit();
 		s.close();
+
+		cleanupTestData();
+	}
+
+	public void testPartialScalarAutoDiscovery() {
+		prepareTestData();
+
+		Session s = openSession();
+		s.beginTransaction();
+		s.createSQLQuery( queryString )
+				.setResultSetMapping( "explicitScalarResultSetMapping" )
+				.list();
+		s.getTransaction().commit();
+		s.close();
+
+		cleanupTestData();
 	}
 }

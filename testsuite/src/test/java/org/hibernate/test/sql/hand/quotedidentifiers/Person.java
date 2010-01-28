@@ -21,39 +21,37 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.loader;
-
-import java.util.Map;
-
-import org.hibernate.engine.SessionFactoryImplementor;
-import org.hibernate.persister.entity.Loadable;
+package org.hibernate.test.sql.hand.quotedidentifiers;
 
 /**
- * EntityAliases that chooses the column names over the alias names.  This strategy is used
- * when the result-set mapping did not give specific aliases to use in extracting from the
- * result set.  We use the column names from the underlying persister.
- * 
- * @author max
+ * TODO : javadoc
+ *
  * @author Steve Ebersole
  */
-public class ColumnEntityAliases extends DefaultEntityAliases {
+public class Person {
+	private Long id;
+	private String name;
 
-	public ColumnEntityAliases(
-			Map returnProperties,
-			Loadable persister, 
-			String suffix) {
-		super( returnProperties, persister, suffix );
+	public Person() {
 	}
-	
-	protected String[] getIdentifierAliases(Loadable persister, String suffix) {
-		return persister.getIdentifierColumnNames();
+
+	public Person(String name) {
+		this.name = name;
 	}
-	
-	protected String getDiscriminatorAlias(Loadable persister, String suffix) {
-		return persister.getDiscriminatorColumnName();
+
+	public Long getId() {
+		return id;
 	}
-	
-	protected String[] getPropertyAliases(Loadable persister, int j) {
-		return persister.getPropertyColumnNames(j);
+
+	public void setId(Long id) {
+		this.id = id;
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
 	}
 }

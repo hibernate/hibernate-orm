@@ -29,6 +29,8 @@ import java.util.StringTokenizer;
 import java.util.ArrayList;
 import java.util.Arrays;
 
+import org.hibernate.dialect.Dialect;
+
 public final class StringHelper {
 
 	private static final int ALIAS_TRUNCATE_LENGTH = 10;
@@ -540,5 +542,60 @@ public final class StringHelper {
 		else {
 			return name;
 		}
+	}
+
+	/**
+	 * Determine if the given name is quoted.  It is considered quoted if either:
+	 * <ol>
+	 * <li>starts AND ends with backticks (`)</li>
+	 * <li>starts with dialect-specified {@link org.hibernate.dialect.Dialect#openQuote() open-quote}
+	 * 		AND ends with dialect-specified {@link org.hibernate.dialect.Dialect#closeQuote() close-quote}</li>
+	 * </ol>
+	 *
+	 * @param name The name to check
+	 * @param dialect The dialect (to determine the "real" quoting chars).
+	 *
+	 * @return True if quoted, false otherwise
+	 */
+	public static boolean isQuoted(String name, Dialect dialect) {
+		return name != null && name.length() != 0
+				&& ( name.charAt( 0 ) == '`' && name.charAt( name.length() - 1 ) == '`'
+				|| name.charAt( 0 ) == dialect.openQuote() && name.charAt( name.length() - 1 ) == dialect.closeQuote() );
+	}
+
+	/**
+	 * Return the unquoted version of name stripping the start and end quote characters.
+	 *
+	 * @param name The name to be unquoted.
+	 * @param dialect The dialect (to determine the "real" quoting chars).
+	 *
+	 * @return The unquoted version.
+	 */
+	public static String unquote(String name, Dialect dialect) {
+		if ( isQuoted( name, dialect ) ) {
+			return name.substring( 1, name.length() - 1 );
+		}
+		else {
+			return name;
+		}
+	}
+
+	/**
+	 * Return the unquoted version of name stripping the start and end quote characters.
+	 *
+	 * @param names The names to be unquoted.
+	 * @param dialect The dialect (to determine the "real" quoting chars).
+	 *
+	 * @return The unquoted versions.
+	 */
+	public static String[] unquote(String[] names, Dialect dialect) {
+		if ( names == null ) {
+			return null;
+		}
+		String[] unquoted = new String[ names.length ];
+		for ( int i = 0; i < names.length; i++ ) {
+			unquoted[i] = unquote( names[i], dialect );
+		}
+		return unquoted;
 	}
 }

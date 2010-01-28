@@ -56,6 +56,7 @@ import org.hibernate.type.TypeFactory;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.CollectionType;
 import org.hibernate.util.ArrayHelper;
+import org.hibernate.util.StringHelper;
 
 /**
  * Extension point for loaders which use a SQL result set with "unexpected" column aliases.
@@ -125,7 +126,7 @@ public class CustomLoader extends Loader {
 				specifiedAliases.add( scalarRtn.getColumnAlias() );
 				resultColumnProcessors.add(
 						new ScalarResultColumnProcessor(
-								scalarRtn.getColumnAlias(),
+								StringHelper.unquote( scalarRtn.getColumnAlias() ),
 								scalarRtn.getType()
 						)
 				);

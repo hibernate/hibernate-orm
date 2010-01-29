@@ -5,6 +5,66 @@ match the actual issue resolution (i.e. a bug might not be a bug). Please
 refer to the particular case on JIRA using the issue tracking number to learn
 more about each case.
 
+Changes in version 3.5.0-Beta-4 (2010.01.28)
+-------------------------------------------
+- http://opensource.atlassian.com/projects/hibernate/browse/HHH/fixforversion/11012
+
+** Sub-task
+    * [HHH-4529] - Partial support for derived identity (including @MapsId)
+    * [HHH-4651] - Add support for EntityManager properties
+    * [HHH-4659] - Add support for standard declarative cache (@Cacheable)
+    * [HHH-4660] - Support Cache Retrieve Mode and Cache Store Mode Properties
+    * [HHH-4669] - Implement JDBC driver properties support
+    * [HHH-4677] - implement PersistenceUnitInfo#getPersistenceXMLSchemaVersion(); and the same in PersistenceMetadata
+    * [HHH-4678] - Apply PersistenceUnitInfo#getSharedCacheMode and #getValidationMode
+    * [HHH-4690] - Consider adding a flag for legacy/new generators
+    * [HHH-4725] - implement orphanRemoval for OneToOne
+    * [HHH-4849] - Derived Identity: default @JoinColumn is not honored for properties linked to @MapsId
+
+** Bug
+    * [HHH-3828] - Criteria: Restriction whith class does not work
+    * [HHH-4736] - Cannot pass ValidatorFactory into PersistenceProvider.createContainerEntityManagerFactory(PersistenceUnitInfo, Map)
+    * [HHH-4781] - When a read-only entity is refreshed it is changed to modifiable
+    * [HHH-4789] - Check  annotations and entitymanager poms for consistent plugin configuration
+    * [HHH-4796] - NullPointerException when an @AssociationOverride joinColumn is set but no @AssociationOverride joinTable is on a given property
+    * [HHH-4797] - Backref properties should be ignored when building the JPA 2 metamodel (leading atm to java.lang.IllegalArgumentException: Cannot determine java-type from given member [null])
+    * [HHH-4804] - Entities in non-lazy associations loaded by a read-only HQL Query are not read-only
+    * [HHH-4805] - JPA 2 metamodel impl ignores nested generics
+    * [HHH-4806] - em.getTransaction.commit() does not always wrap in a RollbackException
+    * [HHH-4807] - not-null checking no longer applied even if Bean Validation is not present
+    * [HHH-4828] - Entities returned by Query...setReadOnly(true)...iterate() should be read-only 
+    * [HHH-4834] - Exception in the metamodel population when raw types are used in collections
+    * [HHH-4843] - org.hibernate.ejb.util.LogHelper assumes javax.persistence.spi.PersistenceUnitInfo#getProperties is never null
+    * [HHH-4846] - NPE in AbstractIdentifiableType.checkDeclaredVersion
+    * [HHH-4847] - In nested id generators, use the context aka idObject for set operation and the raw entity as input for generation
+    * [HHH-4850] - Transaction commit throws RollbackException instead of PessimisticLockException
+    * [HHH-4851] - OneToOneSecondPass Metadata is mistakenly interpreted
+    * [HHH-4853] - 3.4.4.3 Lock Mode Properties and Uses, "Vendor-specific hints must be ignored if they are not understood. "
+    * [HHH-4855] - Incorrectly tries to search a secondary table when globally quoted identifiers are used
+    * [HHH-4858] - Implicitly add a cascade PERSIST when @MapsId is used
+    * [HHH-4859] - NPE when the entity uses a core-style "embedded" id (ie not an @IdClass nor an explicit @EmbeddedId)
+    * [HHH-4862] - quoted column/alias names not properly handled in org.hibernate.loader.EntityAliases
+
+** Improvement
+    * [HHH-4552] - Support generated value within composite keys
+    * [HHH-4813] - annotation and entitymanager module should use the maven-injection-plugin to generate version string
+    * [HHH-4816] - Cleanup JPA setting name constants
+
+** New Feature
+    * [HHH-2501] - Add capability to set a default read-only/modifiable setting for a session
+    * [HHH-2762] - SessionImplementor.getNonFlushedChanges()/applyNonFlushedChanges() API and initial implementation
+    * [HHH-4616] - Configure global/cache level JMX statistics from Hibernate configuration file
+    * [HHH-4726] - Add support for delete-orphan cascading to <one-to-one/>
+    * [HHH-4840] - Support embedded id properties like core
+
+** Task
+    * [HHH-4792] - Validate fix for HHH-4791
+    * [HHH-4793] - Revert disabling of VersionsJoinTableRangeComponentNamingTest and fix underlying issue
+    * [HHH-4799] - Create a *unit* test that asserts SerializationHelper's ability to deser a class using an "isolated classloader" (aka a TCCL)
+    * [HHH-4822] - Add @FailureExpected annotation to annotations and entitymananger modules to allow the skipping of tests 
+    * [HHH-4823] - Reorder modules in top level pom so that testsuite runs directly after core
+    * [HHH-4856] - Upgrade dependency to jpa metamodel generator
+
 
 Changes in version 3.5.0-Beta-3 (2010.01.13)
 -------------------------------------------

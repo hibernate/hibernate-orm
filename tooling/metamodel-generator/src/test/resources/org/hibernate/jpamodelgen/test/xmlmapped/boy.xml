@@ -13,7 +13,7 @@
             <one-to-many name="knowsHeros" target-entity="org.hibernate.jpamodelgen.test.xmlmapped.FakeHero"/>
             <one-to-one name="favoriteSuperhero" target-entity="org.hibernate.jpamodelgen.test.xmlmapped.FakeHero"/>
             <many-to-many name="savedBy" target-entity="org.hibernate.jpamodelgen.test.xmlmapped.FakeHero"/>
-            <element-collection name="nickNames" target-class="java.lang.Integer"/>
+            <element-collection name="nickNames" target-class="java.lang.String"/>
         </attributes>
     </entity>
 </entity-mappings>

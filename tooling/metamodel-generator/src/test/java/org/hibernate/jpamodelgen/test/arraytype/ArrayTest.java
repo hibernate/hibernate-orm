@@ -21,7 +21,7 @@ import org.testng.annotations.Test;
 
 import org.hibernate.jpamodelgen.test.util.CompilationTest;
 
-import static org.hibernate.jpamodelgen.test.util.TestUtil.assertFieldTypeInMetaModelFor;
+import static org.hibernate.jpamodelgen.test.util.TestUtil.assertAttributeTypeInMetaModelFor;
 
 /**
  * @author Hardy Ferentschik
@@ -33,7 +33,7 @@ public class ArrayTest extends CompilationTest {
 	 */
 	@Test
 	public void testPrimitiveArray() {
-		assertFieldTypeInMetaModelFor( Image.class, "data", byte[].class, "Wrong type for field." );
+		assertAttributeTypeInMetaModelFor( Image.class, "data", byte[].class, "Wrong type for field." );
 	}
 
 	/**
@@ -41,7 +41,7 @@ public class ArrayTest extends CompilationTest {
 	 */
 	@Test
 	public void testIntegerArray() {
-		assertFieldTypeInMetaModelFor(
+		assertAttributeTypeInMetaModelFor(
 				TemperatureSamples.class, "samples", Integer[].class, "Wrong type for field."
 		);
 	}

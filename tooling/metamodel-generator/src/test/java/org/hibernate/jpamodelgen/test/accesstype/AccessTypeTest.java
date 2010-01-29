@@ -23,7 +23,7 @@ import org.hibernate.jpamodelgen.test.util.CompilationTest;
 import org.hibernate.jpamodelgen.test.util.TestUtil;
 
 import static org.hibernate.jpamodelgen.test.util.TestUtil.assertAbsenceOfFieldInMetamodelFor;
-import static org.hibernate.jpamodelgen.test.util.TestUtil.assertFieldTypeInMetaModelFor;
+import static org.hibernate.jpamodelgen.test.util.TestUtil.assertAttributeTypeInMetaModelFor;
 import static org.hibernate.jpamodelgen.test.util.TestUtil.assertPresenceOfFieldInMetamodelFor;
 
 /**
@@ -84,7 +84,7 @@ public class AccessTypeTest extends CompilationTest {
 	@Test
 	public void testMemberAccessType() {
 		assertPresenceOfFieldInMetamodelFor( Customer.class, "goodPayer", "access type overriding" );
-		assertFieldTypeInMetaModelFor( Customer.class, "goodPayer", Boolean.class, "access type overriding" );
+		assertAttributeTypeInMetaModelFor( Customer.class, "goodPayer", Boolean.class, "access type overriding" );
 	}
 
 	@Override

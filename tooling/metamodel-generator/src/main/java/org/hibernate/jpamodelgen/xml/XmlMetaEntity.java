@@ -25,12 +25,15 @@ import javax.lang.model.element.Element;
 import javax.lang.model.element.Name;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
+import javax.lang.model.type.TypeMirror;
+import javax.tools.Diagnostic;
 
 import org.hibernate.jpamodelgen.Context;
 import org.hibernate.jpamodelgen.ImportContext;
 import org.hibernate.jpamodelgen.ImportContextImpl;
 import org.hibernate.jpamodelgen.MetaAttribute;
 import org.hibernate.jpamodelgen.MetaEntity;
+import org.hibernate.jpamodelgen.MetaModelGenerationException;
 import org.hibernate.jpamodelgen.util.TypeUtils;
 import org.hibernate.jpamodelgen.xml.jaxb.Attributes;
 import org.hibernate.jpamodelgen.xml.jaxb.Basic;
@@ -142,8 +145,14 @@ public class XmlMetaEntity implements MetaEntity {
 		for ( Element elem : element.getEnclosedElements() ) {
 			if ( elem.getSimpleName().toString().equals( propertyName ) ) {
 				DeclaredType type = ( ( DeclaredType ) elem.asType() );
+				List<? extends TypeMirror> typeArguments = type.getTypeArguments();
+
+				if ( typeArguments.size() == 0 && explicitTargetEntity == null ) {
+					throw new MetaModelGenerationException( "Unable to determine target entity type for " + clazzName + "." + propertyName + "." );
+				}
+
 				if ( explicitTargetEntity == null ) {
-					types[0] = TypeUtils.extractClosestRealTypeAsString( type.getTypeArguments().get( 0 ), context );
+					types[0] = TypeUtils.extractClosestRealTypeAsString( typeArguments.get( 0 ), context );
 				}
 				else {
 					types[0] = explicitTargetEntity;
@@ -240,23 +249,56 @@ public class XmlMetaEntity implements MetaEntity {
 		}
 
 		XmlMetaCollection metaCollection;
+		String[] types;
 		for ( ManyToMany manyToMany : attributes.getManyToMany() ) {
-			String[] types = getCollectionType( manyToMany.getName(), manyToMany.getTargetEntity() );
+			try {
+				types = getCollectionType( manyToMany.getName(), manyToMany.getTargetEntity() );
+			}
+			catch ( MetaModelGenerationException e ) {
+				logMetaModelException( manyToMany.getName(), e );
+				break;
+			}
 			metaCollection = new XmlMetaCollection( this, manyToMany.getName(), types[0], types[1] );
 			members.add( metaCollection );
 		}
 
 		for ( OneToMany oneToMany : attributes.getOneToMany() ) {
-			String[] types = getCollectionType( oneToMany.getName(), oneToMany.getTargetEntity() );
+			try {
+				types = getCollectionType( oneToMany.getName(), oneToMany.getTargetEntity() );
+			}
+			catch ( MetaModelGenerationException e ) {
+				logMetaModelException( oneToMany.getName(), e );
+				break;
+			}
 			metaCollection = new XmlMetaCollection( this, oneToMany.getName(), types[0], types[1] );
 			members.add( metaCollection );
 		}
 
 		for ( ElementCollection collection : attributes.getElementCollection() ) {
-			String[] types = getCollectionType( collection.getName(), collection.getTargetClass() );
+			try {
+				types = getCollectionType( collection.getName(), collection.getTargetClass() );
+			}
+			catch ( MetaModelGenerationException e ) {
+				logMetaModelException( collection.getName(), e );
+				break;
+			}
 			metaCollection = new XmlMetaCollection( this, collection.getName(), types[0], types[1] );
 			members.add( metaCollection );
 		}
+	}
+
+	private void logMetaModelException(String name, MetaModelGenerationException e) {
+		StringBuilder builder = new StringBuilder();
+		builder.append( "Error processing xml for " );
+		builder.append( clazzName );
+		builder.append( "." );
+		builder.append( name );
+		builder.append( ". Error message: " );
+		builder.append( e.getMessage() );
+		context.logMessage(
+				Diagnostic.Kind.WARNING,
+				builder.toString()
+		);
 	}
 
 	private void parseEmbeddableAttributes(EmbeddableAttributes attributes) {

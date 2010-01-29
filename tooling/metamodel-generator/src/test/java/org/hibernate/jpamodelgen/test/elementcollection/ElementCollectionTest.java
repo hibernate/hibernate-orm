@@ -21,6 +21,7 @@ import org.testng.annotations.Test;
 
 import org.hibernate.jpamodelgen.test.util.CompilationTest;
 
+import static org.hibernate.jpamodelgen.test.util.TestUtil.assertMapAttributesInMetaModelFor;
 import static org.hibernate.jpamodelgen.test.util.TestUtil.assertMetamodelClassGeneratedFor;
 import static org.hibernate.jpamodelgen.test.util.TestUtil.assertNoSourceFileGeneratedFor;
 
@@ -34,9 +35,24 @@ public class ElementCollectionTest extends CompilationTest {
 	@Test
 	public void testElementCollectionOnMap() {
 		assertMetamodelClassGeneratedFor( House.class );
-		assertMetamodelClassGeneratedFor( House.class );
+		assertMetamodelClassGeneratedFor( Room.class );
 		// side effect of METAGEN-8 was that a meta class for String was created!
 		assertNoSourceFileGeneratedFor( String.class );
+	}
+
+	/**
+	 * METAGEN-19
+	 */
+	@Test
+	public void testMapKeyClass() {
+		assertMetamodelClassGeneratedFor( Hotel.class );
+		assertMapAttributesInMetaModelFor(
+				Hotel.class, "roomsByName", String.class, Room.class, "Wrong type in map attribute."
+		);
+
+		assertMapAttributesInMetaModelFor(
+				Hotel.class, "cleaners", Room.class, Cleaner.class, "Wrong type in map attribute."
+		);
 	}
 
 	@Override

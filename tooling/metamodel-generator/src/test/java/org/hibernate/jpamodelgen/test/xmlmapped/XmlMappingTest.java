@@ -21,7 +21,7 @@ import org.testng.annotations.Test;
 
 import org.hibernate.jpamodelgen.test.util.CompilationTest;
 
-import static org.hibernate.jpamodelgen.test.util.TestUtil.assertFieldTypeInMetaModelFor;
+import static org.hibernate.jpamodelgen.test.util.TestUtil.assertAttributeTypeInMetaModelFor;
 import static org.hibernate.jpamodelgen.test.util.TestUtil.assertMetamodelClassGeneratedFor;
 import static org.hibernate.jpamodelgen.test.util.TestUtil.assertPresenceOfFieldInMetamodelFor;
 import static org.hibernate.jpamodelgen.test.util.TestUtil.assertSuperClassRelationShipInMetamodel;
@@ -48,7 +48,7 @@ public class XmlMappingTest extends CompilationTest {
 	public void testTargetEntityOnOneToOne() {
 		assertMetamodelClassGeneratedFor( Boy.class );
 		assertPresenceOfFieldInMetamodelFor( Boy.class, "favoriteSuperhero", "favoriteSuperhero field should exist" );
-		assertFieldTypeInMetaModelFor(
+		assertAttributeTypeInMetaModelFor(
 				Boy.class, "favoriteSuperhero", FakeHero.class, "target entity overridden in xml"
 		);
 	}
@@ -60,7 +60,7 @@ public class XmlMappingTest extends CompilationTest {
 	public void testTargetEntityOnOneToMany() {
 		assertMetamodelClassGeneratedFor( Boy.class );
 		assertPresenceOfFieldInMetamodelFor( Boy.class, "knowsHeros", "knowsHeros field should exist" );
-		assertFieldTypeInMetaModelFor(
+		assertAttributeTypeInMetaModelFor(
 				Boy.class, "knowsHeros", FakeHero.class, "target entity overridden in xml"
 		);
 	}
@@ -72,7 +72,7 @@ public class XmlMappingTest extends CompilationTest {
 	public void testTargetEntityOnManyToMany() {
 		assertMetamodelClassGeneratedFor( Boy.class );
 		assertPresenceOfFieldInMetamodelFor( Boy.class, "savedBy", "savedBy field should exist" );
-		assertFieldTypeInMetaModelFor(
+		assertAttributeTypeInMetaModelFor(
 				Boy.class, "savedBy", FakeHero.class, "target entity overridden in xml"
 		);
 	}
@@ -81,7 +81,7 @@ public class XmlMappingTest extends CompilationTest {
 	public void testXmlConfiguredElementCollection() {
 		assertMetamodelClassGeneratedFor( Boy.class );
 		assertPresenceOfFieldInMetamodelFor( Boy.class, "nickNames", "nickNames field should exist" );
-		assertFieldTypeInMetaModelFor( Boy.class, "nickNames", Integer.class, "target class overridden in xml" );
+		assertAttributeTypeInMetaModelFor( Boy.class, "nickNames", String.class, "target class overridden in xml" );
 	}
 
 

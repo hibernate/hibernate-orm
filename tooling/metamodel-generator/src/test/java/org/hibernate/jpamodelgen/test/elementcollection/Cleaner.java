@@ -1,4 +1,4 @@
-// $Id:$
+// $Id$
 /*
 * JBoss, Home of Professional Open Source
 * Copyright 2009, Red Hat, Inc. and/or its affiliates, and individual contributors
@@ -15,55 +15,24 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-package org.hibernate.jpamodelgen.test.xmlmapped;
+package org.hibernate.jpamodelgen.test.elementcollection;
 
-import java.util.List;
+import javax.persistence.Entity;
 
 /**
  * @author Hardy Ferentschik
  */
-public class Boy {
-	private long id;
+@Entity
+public class Cleaner {
+	private int id;
 
 	private String name;
 
-	private List nickNames;
-
-	private Superhero favoriteSuperhero;
-
-	private List<Superhero> knowsHeros;
-
-	private List<Superhero> savedBy;
-
-	public List<Superhero> getSavedBy() {
-		return savedBy;
-	}
-
-	public void setSavedBy(List<Superhero> savedBy) {
-		this.savedBy = savedBy;
-	}
-
-	public Superhero getFavoriteSuperhero() {
-		return favoriteSuperhero;
-	}
-
-	public void setFavoriteSuperhero(Superhero favoriteSuperhero) {
-		this.favoriteSuperhero = favoriteSuperhero;
-	}
-
-	public List<Superhero> getKnowsHeros() {
-		return knowsHeros;
-	}
-
-	public void setKnowsHeros(List<Superhero> knowsHeros) {
-		this.knowsHeros = knowsHeros;
-	}
-
-	public long getId() {
+	public int getId() {
 		return id;
 	}
 
-	public void setId(long id) {
+	public void setId(int id) {
 		this.id = id;
 	}
 
@@ -74,14 +43,4 @@ public class Boy {
 	public void setName(String name) {
 		this.name = name;
 	}
-
-	public List<String> getNickNames() {
-		return nickNames;
-	}
-
-	public void setNickNames(List<String> nickNames) {
-		this.nickNames = nickNames;
-	}
 }
-
-

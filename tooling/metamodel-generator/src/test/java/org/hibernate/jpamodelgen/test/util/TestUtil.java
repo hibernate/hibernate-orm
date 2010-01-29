@@ -96,7 +96,7 @@ public class TestUtil {
 		Assert.assertTrue( hasFieldInMetamodelFor( clazz, fieldName ), errorString );
 	}
 
-	public static void assertFieldTypeInMetaModelFor(Class<?> clazz, String fieldName, Class expectedType, String errorString) {
+	public static void assertAttributeTypeInMetaModelFor(Class<?> clazz, String fieldName, Class<?> expectedType, String errorString) {
 		Field field = getFieldFromMetamodelFor( clazz, fieldName );
 		assertNotNull( field );
 		ParameterizedType type = ( ParameterizedType ) field.getGenericType();
@@ -107,6 +107,18 @@ public class TestUtil {
 		}
 		assertEquals( actualType, expectedType, errorString );
 	}
+
+	public static void assertMapAttributesInMetaModelFor(Class<?> clazz, String fieldName, Class<?> expectedMapKey, Class<?> expectedMapValue, String errorString) {
+		Field field = getFieldFromMetamodelFor( clazz, fieldName );
+		assertNotNull( field );
+		ParameterizedType type = ( ParameterizedType ) field.getGenericType();
+		Type actualMapKeyType = type.getActualTypeArguments()[1];
+		assertEquals( actualMapKeyType, expectedMapKey, errorString );
+
+		Type actualMapKeyValue = type.getActualTypeArguments()[2];
+		assertEquals( actualMapKeyValue, expectedMapValue, errorString );
+	}
+
 
 	public static void assertSuperClassRelationShipInMetamodel(Class<?> entityClass, Class<?> superEntityClass) {
 		String entityModelClassName = entityClass.getName() + META_MODEL_CLASS_POSTFIX;

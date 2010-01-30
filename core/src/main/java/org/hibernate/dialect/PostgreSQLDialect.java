@@ -358,4 +358,17 @@ public class PostgreSQLDialect extends Dialect {
 		// seems to have spotty LOB suppport
 		return false;
 	}
+
+	public String getForUpdateString() {
+		return " for update";
+	}
+
+	public String getWriteLockString(int timeout) {
+		return " for update";
+	}
+
+	public String getReadLockString(int timeout) {
+		return " for share";
+	}
+
 }

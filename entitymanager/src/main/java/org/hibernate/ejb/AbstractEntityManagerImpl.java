@@ -92,6 +92,7 @@ import org.hibernate.ejb.criteria.expression.CompoundSelectionImpl;
 import org.hibernate.ejb.transaction.JoinableCMTTransaction;
 import org.hibernate.ejb.util.CacheModeHelper;
 import org.hibernate.ejb.util.ConfigurationHelper;
+import org.hibernate.ejb.util.LockModeTypeHelper;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.proxy.HibernateProxy;
@@ -851,52 +852,13 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 
 	@SuppressWarnings("deprecation")
 	private static LockModeType getLockModeType(LockMode lockMode) {
-		if ( lockMode == LockMode.NONE )
-			return LockModeType.NONE;
-		else if ( lockMode == LockMode.OPTIMISTIC || lockMode == LockMode.READ )
-			return LockModeType.OPTIMISTIC;
-		else if ( lockMode == LockMode.OPTIMISTIC_FORCE_INCREMENT || lockMode == LockMode.WRITE )
-			return LockModeType.OPTIMISTIC_FORCE_INCREMENT;
-		else if ( lockMode == LockMode.PESSIMISTIC_READ )
-			return LockModeType.PESSIMISTIC_READ;
-		else if ( lockMode == LockMode.PESSIMISTIC_WRITE
-				|| lockMode == LockMode.UPGRADE
-				|| lockMode == LockMode.UPGRADE_NOWAIT) //timeout of 0
-			//TODO check that if we have UPGRADE_NOWAIT we have a timeout of zero?
-			return LockModeType.PESSIMISTIC_WRITE;
-		else if ( lockMode == LockMode.PESSIMISTIC_FORCE_INCREMENT
-				|| lockMode == LockMode.FORCE)
-			return LockModeType.PESSIMISTIC_FORCE_INCREMENT;
-		throw new AssertionFailure("unhandled lock mode " + lockMode );
+		//TODO check that if we have UPGRADE_NOWAIT we have a timeout of zero?
+		return LockModeTypeHelper.getLockModeType( lockMode );
 	}
 
 
 	private static LockMode getLockMode(LockModeType lockMode) {
-		switch ( lockMode ) {
-
-			case READ:
-			case OPTIMISTIC:
-				return LockMode.OPTIMISTIC;
-
-			case OPTIMISTIC_FORCE_INCREMENT:
-			case WRITE:
-				return LockMode.OPTIMISTIC_FORCE_INCREMENT;
-
-			case PESSIMISTIC_READ:
-				return LockMode.PESSIMISTIC_READ;
-
-			case PESSIMISTIC_WRITE:
-				return LockMode.PESSIMISTIC_WRITE;
-
-			case PESSIMISTIC_FORCE_INCREMENT:
-				return LockMode.PESSIMISTIC_FORCE_INCREMENT;
-
-			case NONE:
-				return LockMode.NONE;
-
-			default:
-				throw new AssertionFailure( "Unknown LockModeType: " + lockMode );
-		}
+		return LockModeTypeHelper.getLockMode( lockMode );
 	}
 
 	public boolean isTransactionInProgress() {

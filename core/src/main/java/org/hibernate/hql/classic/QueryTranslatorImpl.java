@@ -1080,7 +1080,7 @@ public class QueryTranslatorImpl extends BasicLoader implements FilterTranslator
 			Iterator iter = lockOptions.getAliasLockIterator();
 			while ( iter.hasNext() ) {
 				Map.Entry me = ( Map.Entry ) iter.next();
-				locks.setAliasLockMode( (LockMode) me.getValue(),  getAliasName( ( String ) me.getKey() ) );
+				locks.setAliasSpecificLockMode( getAliasName( ( String ) me.getKey() ), (LockMode) me.getValue() );
 			}
 			Map keyColumnNames = null;
 			if ( dialect.forUpdateOfColumns() ) {

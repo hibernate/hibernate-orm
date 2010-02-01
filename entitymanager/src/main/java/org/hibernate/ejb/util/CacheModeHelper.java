@@ -29,7 +29,8 @@ import javax.persistence.CacheStoreMode;
 import org.hibernate.CacheMode;
 
 /**
- * TODO : javadoc
+ * Helper to deal with {@link CacheMode} <-> {@link CacheRetrieveMode}/{@link CacheStoreMode}
+ * conversions.
  *
  * @author Steve Ebersole
  */

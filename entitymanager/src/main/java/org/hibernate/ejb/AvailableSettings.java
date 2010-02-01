@@ -192,6 +192,20 @@ public class AvailableSettings {
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	/**
+	 * Query hint (aka {@link javax.persistence.Query#setHint}) for applying
+	 * an alias specific lock mode (aka {@link org.hibernate.Query#setLockMode}).
+	 * <p/>
+	 * Either {@link org.hibernate.LockMode} or {@link javax.persistence.LockModeType}
+	 * are accepted.  Also the String names of either are accepted as well.  <tt>null</tt>
+	 * is additionally accepted as meaning {@link org.hibernate.LockMode#NONE}.
+	 * <p/>
+	 * Usage is to concatenate this setting name and the alias name together, separated
+	 * by a dot.  For example<code>Query.setHint( "org.hibernate.lockMode.a", someLockMode )</code>
+	 * would apply <code>someLockMode</code> to the alias <code>"a"</code>.
+	 */
+	public static final String ALIAS_SPECIFIC_LOCK_MODE = "org.hibernate.lockMode";
+
+	/**
 	 * JAR autodetection artifacts class, hbm
 	 */
 	public static final String AUTODETECTION = "hibernate.archive.autodetection";

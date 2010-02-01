@@ -241,7 +241,7 @@ public abstract class AbstractQueryImpl implements Query {
 		return session;
 	}
 
-	protected abstract LockOptions getLockOptions();
+	public abstract LockOptions getLockOptions();
 
 
 	// Parameter handling code ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

@@ -50,10 +50,11 @@ import org.slf4j.LoggerFactory;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
+import org.hibernate.LockMode;
 import org.hibernate.QueryParameterException;
 import org.hibernate.TypeMismatchException;
 import org.hibernate.SQLQuery;
-import org.hibernate.LockOptions;
+import org.hibernate.ejb.util.LockModeTypeHelper;
 import org.hibernate.engine.query.NamedParameterDescriptor;
 import org.hibernate.engine.query.OrdinalParameterDescriptor;
 import org.hibernate.hql.QueryExecutionRequestException;
@@ -215,6 +216,15 @@ public class QueryImpl<X> extends org.hibernate.ejb.AbstractQueryImpl<X> impleme
 
 	protected void applyFlushMode(FlushMode flushMode) {
 		query.setFlushMode( flushMode );
+	}
+
+	protected boolean canApplyLockModes() {
+		return org.hibernate.impl.QueryImpl.class.isInstance( query );
+	}
+
+	@Override
+	protected void applyAliasSpecificLockMode(String alias, LockMode lockMode) {
+		( (org.hibernate.impl.QueryImpl) query ).getLockOptions().setAliasSpecificLockMode( alias, lockMode );
 	}
 
 	/**
@@ -590,13 +600,16 @@ public class QueryImpl<X> extends org.hibernate.ejb.AbstractQueryImpl<X> impleme
 
 	@SuppressWarnings({ "unchecked" })
 	public TypedQuery<X> setLockMode(javax.persistence.LockModeType lockModeType) {
-
 		if (! getEntityManager().isTransactionInProgress()) {
 			throw new TransactionRequiredException( "no transaction is in progress" );
 		}
-
+		if ( ! canApplyLockModes() ) {
+			throw new IllegalStateException( "Not a JPAQL/Criteria query" );
+		}
 		this.jpaLockMode = lockModeType;
-		query.setLockOptions(getEntityManager().getLockRequest(lockModeType, null));
+		( (org.hibernate.impl.QueryImpl) query ).getLockOptions().setLockMode(
+				LockModeTypeHelper.getLockMode( lockModeType )
+		);
 		return this;
 	}
 

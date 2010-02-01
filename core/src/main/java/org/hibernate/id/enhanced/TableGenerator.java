@@ -429,7 +429,7 @@ public class TableGenerator extends TransactionHelper implements PersistentIdent
 				" from " + tableName + ' ' + alias +
 				" where " + StringHelper.qualify( alias, segmentColumnName ) + "=?";
 		LockOptions lockOptions = new LockOptions(LockMode.UPGRADE);
-		lockOptions.setAliasLockMode(LockMode.UPGRADE, alias);
+		lockOptions.setAliasSpecificLockMode( alias, LockMode.UPGRADE );
 		Map updateTargetColumnsMap = Collections.singletonMap( alias, new String[] { valueColumnName } );
 		return dialect.applyLocksToSql( query, lockOptions, updateTargetColumnsMap );
 	}

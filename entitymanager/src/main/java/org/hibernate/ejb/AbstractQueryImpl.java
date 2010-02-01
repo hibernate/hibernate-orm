@@ -40,6 +40,7 @@ import org.slf4j.LoggerFactory;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
+import org.hibernate.LockMode;
 import org.hibernate.TypeMismatchException;
 import static org.hibernate.ejb.QueryHints.HINT_CACHEABLE;
 import static org.hibernate.ejb.QueryHints.HINT_CACHE_MODE;
@@ -52,6 +53,7 @@ import static org.hibernate.ejb.QueryHints.HINT_TIMEOUT;
 
 import org.hibernate.ejb.util.CacheModeHelper;
 import org.hibernate.ejb.util.ConfigurationHelper;
+import org.hibernate.ejb.util.LockModeTypeHelper;
 import org.hibernate.hql.QueryExecutionRequestException;
 
 /**
@@ -189,6 +191,10 @@ public abstract class AbstractQueryImpl<X> implements TypedQuery<X> {
 
 	protected abstract void applyFlushMode(FlushMode flushMode);
 
+	protected abstract boolean canApplyLockModes();
+
+	protected abstract void applyAliasSpecificLockMode(String alias, LockMode lockMode);
+
 	/**
 	 * {@inheritDoc}
 	 */
@@ -247,10 +253,24 @@ public abstract class AbstractQueryImpl<X> implements TypedQuery<X> {
 						CacheModeHelper.interpretCacheMode( storeMode, retrieveMode )
 				);
 			}
-			/* TODO:
-			else if ( "org.hibernate.lockMode".equals( hintName ) ) {
-				query.setAliasLockMode( alias, lockMode );
-			}*/
+			else if ( hintName.startsWith( AvailableSettings.ALIAS_SPECIFIC_LOCK_MODE ) ) {
+				if ( ! canApplyLockModes() ) {
+					skipped = true;
+				}
+				else {
+					// extract the alias
+					final String alias = hintName.substring( AvailableSettings.ALIAS_SPECIFIC_LOCK_MODE.length() );
+					// determine the LockMode
+					try {
+						final LockMode lockMode = LockModeTypeHelper.interpretLockMode( value );
+						applyAliasSpecificLockMode( alias, lockMode );
+					}
+					catch ( Exception e ) {
+						log.info( "Unable to determine lock mode value : {} -> {}", hintName, value );
+						skipped = true;
+					}
+				}
+			}
 			else {
 				skipped = true;
 				log.info( "Ignoring unrecognized query hint [" + hintName + "]" );

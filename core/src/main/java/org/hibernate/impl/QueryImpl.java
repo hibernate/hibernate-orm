@@ -125,7 +125,7 @@ public class QueryImpl extends AbstractQueryImpl {
 	}
 
 	public Query setLockMode(String alias, LockMode lockMode) {
-		lockOptions.setAliasLockMode(lockMode, alias);
+		lockOptions.setAliasSpecificLockMode( alias, lockMode );
 		return this;
 	}
 	
@@ -136,7 +136,7 @@ public class QueryImpl extends AbstractQueryImpl {
 		return this;
 	}
 
-	protected LockOptions getLockOptions() {
+	public LockOptions getLockOptions() {
 		return lockOptions;
 	}
 

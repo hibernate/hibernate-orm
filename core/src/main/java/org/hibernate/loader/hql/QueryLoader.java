@@ -28,6 +28,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -292,10 +293,10 @@ public class QueryLoader extends BasicLoader {
 
 			LockMode[] lockModesArray = new LockMode[entityAliases.length];
 			for ( int i = 0; i < entityAliases.length; i++ ) {
-				LockMode lockMode = lockOptions.getAliasLockMode( entityAliases[i] );
+				LockMode lockMode = lockOptions.getEffectiveLockMode( entityAliases[i] );
 				if ( lockMode == null ) {
 					//NONE, because its the requested lock mode, not the actual! 
-					lockMode = lockOptions.getLockMode();
+					lockMode = LockMode.NONE;
 				}
 				lockModesArray[i] = lockMode;
 			}
@@ -312,16 +313,16 @@ public class QueryLoader extends BasicLoader {
 		// can't cache this stuff either (per-invocation)
 		// we are given a map of user-alias -> lock mode
 		// create a new map of sql-alias -> lock mode
-		final LockOptions locks = new LockOptions(lockOptions.getLockMode());
-		locks.setScope( lockOptions.getScope());
-		locks.setTimeOut( lockOptions.getTimeOut());
+		final LockOptions locks = new LockOptions( lockOptions.getLockMode() );
+		locks.setScope( lockOptions.getScope() );
+		locks.setTimeOut( lockOptions.getTimeOut() );
 
 		final Map keyColumnNames = dialect.forUpdateOfColumns() ? new HashMap() : null;
-		final Iterator iter = lockOptions.getAliasLockIterator();
-		while ( iter.hasNext() ) {
-			Map.Entry me = ( Map.Entry ) iter.next();
-			final String userAlias = ( String ) me.getKey();
-			final String drivingSqlAlias = ( String ) sqlAliasByEntityAlias.get( userAlias );
+		final Iterator itr = sqlAliasByEntityAlias.entrySet().iterator();
+		while ( itr.hasNext() ) {
+			final Map.Entry entry = (Map.Entry) itr.next();
+			final String userAlias = (String) entry.getKey();
+			final String drivingSqlAlias = (String) entry.getValue();
 			if ( drivingSqlAlias == null ) {
 				throw new IllegalArgumentException( "could not locate alias to apply lock mode : " + userAlias );
 			}
@@ -334,11 +335,15 @@ public class QueryLoader extends BasicLoader {
 			final QueryNode select = ( QueryNode ) queryTranslator.getSqlAST();
 			final Lockable drivingPersister = ( Lockable ) select.getFromClause().getFromElement( userAlias ).getQueryable();
 			final String sqlAlias = drivingPersister.getRootTableAlias( drivingSqlAlias );
-			locks.setAliasLockMode( (LockMode)me.getValue(), sqlAlias);
+
+			final LockMode effectiveLockMode = lockOptions.getEffectiveLockMode( userAlias );
+			locks.setAliasSpecificLockMode( sqlAlias, effectiveLockMode );
+
 			if ( keyColumnNames != null ) {
 				keyColumnNames.put( sqlAlias, drivingPersister.getRootTableIdentifierColumnNames() );
 			}
 		}
+
 		return dialect.applyLocksToSql( sql, locks, keyColumnNames );
 	}
 

@@ -56,7 +56,7 @@ public abstract class AbstractLockHintTest extends UnitTestCase {
 
 		public void verify() {
 			LockOptions lockOptions = new LockOptions(LockMode.UPGRADE);
-			lockOptions.setAliasLockMode(LockMode.UPGRADE,  aliasToLock);
+			lockOptions.setAliasSpecificLockMode( aliasToLock, LockMode.UPGRADE );
 			String actualProcessedSql = dialect.applyLocksToSql( rawSql, lockOptions, Collections.EMPTY_MAP );
 			assertEquals( expectedProcessedSql, actualProcessedSql );
 		}

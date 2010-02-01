@@ -284,7 +284,7 @@ public class CriteriaQueryTranslator implements CriteriaQuery {
 		while ( iter.hasNext() ) {
 			Map.Entry me = ( Map.Entry ) iter.next();
 			final Criteria subcriteria = getAliasedCriteria( ( String ) me.getKey() );
-			lockOptions.setAliasLockMode( (LockMode)me.getValue(), getSQLAlias( subcriteria ) );
+			lockOptions.setAliasSpecificLockMode( getSQLAlias( subcriteria ), (LockMode)me.getValue() );
 		}
 		List values = new ArrayList();
 		List types = new ArrayList();
@@ -293,7 +293,7 @@ public class CriteriaQueryTranslator implements CriteriaQuery {
 			CriteriaImpl.Subcriteria subcriteria = ( CriteriaImpl.Subcriteria ) iter.next();
 			LockMode lm = subcriteria.getLockMode();
 			if ( lm != null ) {
-				lockOptions.setAliasLockMode( lm, getSQLAlias( subcriteria ) );
+				lockOptions.setAliasSpecificLockMode( getSQLAlias( subcriteria ), lm );
 			}
 			if ( subcriteria.getWithClause() != null )
 			{

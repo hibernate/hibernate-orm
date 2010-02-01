@@ -107,7 +107,7 @@ public interface HibernateEntityManagerImplementor extends HibernateEntityManage
 	public PersistenceException wrapStaleStateException(StaleStateException e);
 
 	/**
-	 * Convert from JPA-2 LockModeType & properties into LockOptions
+	 * Convert from JPA 2 {@link LockModeType} & properties into {@link LockOptions}
 	 *
 	 * @param lockModeType is the requested lock type
 	 * @param properties are the lock properties

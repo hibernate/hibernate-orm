@@ -261,7 +261,7 @@ public class SQLQueryImpl extends AbstractQueryImpl implements SQLQuery {
 		throw new UnsupportedOperationException("cannot set lock options for a native SQL query");
 	}
 
-	protected LockOptions getLockOptions() {
+	public LockOptions getLockOptions() {
 		//we never need to apply locks to the SQL
 		return null;
 	}

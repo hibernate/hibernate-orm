@@ -18,7 +18,7 @@
 
 package org.hibernate.jpamodelgen.xml;
 
-import org.hibernate.jpamodelgen.MetaAttribute;
+import org.hibernate.jpamodelgen.model.MetaAttribute;
 
 /**
  * @author Hardy Ferentschik
@@ -37,7 +37,6 @@ public abstract class XmlMetaAttribute implements MetaAttribute {
         this.type = type;
     }
 
-
 	@Override
     public String getDeclarationString() {
         return "public static volatile " + parentEntity.importType(getMetaType()) + "<" + parentEntity.importType(parentEntity.getQualifiedName()) + ", " + parentEntity.importType(getTypeDeclaration()) + "> " + getPropertyName() + ";";
@@ -53,4 +52,14 @@ public abstract class XmlMetaAttribute implements MetaAttribute {
 
     @Override
     abstract public String getMetaType();
+
+	@Override
+	public String toString() {
+		final StringBuilder sb = new StringBuilder();
+		sb.append( "XmlMetaAttribute" );
+		sb.append( "{propertyName='" ).append( propertyName ).append( '\'' );
+		sb.append( ", type='" ).append( type ).append( '\'' );
+		sb.append( '}' );
+		return sb.toString();
+	}
 }

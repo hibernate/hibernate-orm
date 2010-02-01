@@ -40,7 +40,7 @@ public class InheritanceTest extends CompilationTest {
 	}
 
 	@Override
-	protected String getTestPackage() {
-		return Customer.class.getPackage().getName();
+	protected String getPackageNameOfTestSources() {
+		return InheritanceTest.class.getPackage().getName();
 	}
 }

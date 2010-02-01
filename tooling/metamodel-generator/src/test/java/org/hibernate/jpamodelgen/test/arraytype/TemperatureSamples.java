@@ -20,7 +20,7 @@ package org.hibernate.jpamodelgen.test.arraytype;
 import javax.persistence.Entity;
 
 /**
- * @author Hardy Feretnschik
+ * @author Hardy Ferentschik
  */
 @Entity
 public class TemperatureSamples {

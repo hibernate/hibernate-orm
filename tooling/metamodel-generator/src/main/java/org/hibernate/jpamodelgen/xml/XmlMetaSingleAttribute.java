@@ -17,7 +17,7 @@
 */
 package org.hibernate.jpamodelgen.xml;
 
-import org.hibernate.jpamodelgen.MetaSingleAttribute;
+import org.hibernate.jpamodelgen.model.MetaSingleAttribute;
 
 /**
  * @author Hardy Ferentschik

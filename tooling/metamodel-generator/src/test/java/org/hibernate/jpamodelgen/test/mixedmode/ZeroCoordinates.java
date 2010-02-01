@@ -1,7 +1,7 @@
-// $Id$
+// $Id:$
 /*
 * JBoss, Home of Professional Open Source
-* Copyright 2008, Red Hat Middleware LLC, and individual contributors
+* Copyright 2009, Red Hat, Inc. and/or its affiliates, and individual contributors
 * by the @authors tag. See the copyright.txt in the distribution for a
 * full listing of individual contributors.
 *
@@ -15,23 +15,27 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-package org.hibernate.jpamodelgen.test.xmlmapped;
+package org.hibernate.jpamodelgen.test.mixedmode;
+
+import javax.persistence.Embeddable;
+
 
 /**
  * @author Hardy Ferentschik
  */
-public class LivingBeing {
-	boolean reallyAlive;
-
-	public boolean isReallyAlive() {
-		return reallyAlive;
+@Embeddable
+public class ZeroCoordinates {
+	public float getLatitude() {
+		return 0f;
 	}
 
-	public void setReallyAlive(boolean reallyAlive) {
-		this.reallyAlive = reallyAlive;
+	public void setLatitude(float latitude) {
 	}
 
-	public int nonPersistent() {
-		return 0;
+	public float getLongitude() {
+		return 0f;
+	}
+
+	public void setLongitude(float longitude) {
 	}
 }

@@ -15,23 +15,33 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-package org.hibernate.jpamodelgen.test.xmlmapped;
+package org.hibernate.jpamodelgen.model;
+
+import java.util.List;
+import javax.lang.model.element.Name;
+import javax.lang.model.element.TypeElement;
 
 /**
  * @author Hardy Ferentschik
  */
-public class LivingBeing {
-	boolean reallyAlive;
+public interface MetaEntity extends ImportContext {
+	String getSimpleName();
 
-	public boolean isReallyAlive() {
-		return reallyAlive;
-	}
+	String getQualifiedName();
 
-	public void setReallyAlive(boolean reallyAlive) {
-		this.reallyAlive = reallyAlive;
-	}
+	String getPackageName();
 
-	public int nonPersistent() {
-		return 0;
-	}
+	List<MetaAttribute> getMembers();
+
+	String generateImports();
+
+	String importType(String fqcn);
+
+	String staticImport(String fqcn, String member);
+
+	String importType(Name qualifiedName);
+
+	TypeElement getTypeElement();
+
+	boolean isMetaComplete();
 }

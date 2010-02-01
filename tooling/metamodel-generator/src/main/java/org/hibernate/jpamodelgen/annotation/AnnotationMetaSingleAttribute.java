@@ -19,7 +19,7 @@ package org.hibernate.jpamodelgen.annotation;
 
 import javax.lang.model.element.Element;
 
-import org.hibernate.jpamodelgen.MetaSingleAttribute;
+import org.hibernate.jpamodelgen.model.MetaSingleAttribute;
 
 /**
  * @author Max Andersen

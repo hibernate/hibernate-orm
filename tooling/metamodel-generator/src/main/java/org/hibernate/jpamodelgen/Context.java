@@ -17,17 +17,20 @@
 */
 package org.hibernate.jpamodelgen;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.util.Elements;
+import javax.lang.model.util.Types;
 import javax.persistence.AccessType;
 import javax.tools.Diagnostic;
 
-import org.hibernate.jpamodelgen.annotation.AnnotationMetaEntity;
-import org.hibernate.jpamodelgen.util.TypeUtils;
+import org.hibernate.jpamodelgen.model.MetaEntity;
 
 /**
  * @author Max Andersen
@@ -35,84 +38,115 @@ import org.hibernate.jpamodelgen.util.TypeUtils;
  * @author Emmanuel Bernard
  */
 public class Context {
+	private static final String PATH_SEPARATOR = System.getProperty( "file.separator" );
+	private static final String DEFAULT_PERSISTENCE_XML_LOCATION = "/META-INF/persistence.xml";
+	private final Map<String, MetaEntity> metaEntities = new HashMap<String, MetaEntity>();
+	private final Map<String, MetaEntity> metaSuperclassAndEmbeddable = new HashMap<String, MetaEntity>();
+	private final Map<String, AccessTypeInformation> accessTypeInformation = new HashMap<String, AccessTypeInformation>();
 
-	private final Map<String, MetaEntity> metaEntitiesToProcess = new HashMap<String, MetaEntity>();
-	private final Map<String, MetaEntity> metaSuperclassAndEmbeddableToProcess = new HashMap<String, MetaEntity>();
+	private final ProcessingEnvironment pe;
+	private final boolean logDebug;
+	private final String persistenceXmlLocation;
 
-	private ProcessingEnvironment pe;
-	private boolean logDebug = false;
-
-	//used to cache access types
-	private Map<TypeElement, AccessTypeHolder> accessTypes = new HashMap<TypeElement, AccessTypeHolder>();
-	private Set<String> elementsAlreadyProcessed = new HashSet<String>();
-
-	private static class AccessTypeHolder {
-		public AccessType elementAccessType;
-		public AccessType hierarchyAccessType;
-	}
+	private final List<String> ormXmlFiles;
+	private boolean isPersistenceUnitCompletelyXmlConfigured;
+	private AccessType persistenceUnitDefaultAccessType;
 
 	public Context(ProcessingEnvironment pe) {
 		this.pe = pe;
-		String debugParam = pe.getOptions().get( JPAMetaModelEntityProcessor.DEBUG_OPTION );
-		if ( debugParam != null && "true".equals( debugParam ) ) {
-			logDebug = true;
+
+		if ( pe.getOptions().get( JPAMetaModelEntityProcessor.PERSISTENCE_XML_OPTION ) != null ) {
+			String tmp = pe.getOptions().get( JPAMetaModelEntityProcessor.PERSISTENCE_XML_OPTION );
+			if ( !tmp.startsWith( PATH_SEPARATOR ) ) {
+				tmp = PATH_SEPARATOR + tmp;
+			}
+			persistenceXmlLocation = tmp;
 		}
+		else {
+			persistenceXmlLocation = DEFAULT_PERSISTENCE_XML_LOCATION;
+		}
+
+		if ( pe.getOptions().get( JPAMetaModelEntityProcessor.ORM_XML_OPTION ) != null ) {
+			String tmp = pe.getOptions().get( JPAMetaModelEntityProcessor.ORM_XML_OPTION );
+			ormXmlFiles = new ArrayList<String>();
+			for ( String ormFile : tmp.split( "," ) ) {
+				if ( !ormFile.startsWith( PATH_SEPARATOR ) ) {
+					ormFile = PATH_SEPARATOR + ormFile;
+				}
+				ormXmlFiles.add( ormFile );
+			}
+		}
+		else {
+			ormXmlFiles = Collections.emptyList();
+		}
+
+		logDebug = Boolean.parseBoolean( pe.getOptions().get( JPAMetaModelEntityProcessor.DEBUG_OPTION ) );
+
 	}
 
 	public ProcessingEnvironment getProcessingEnvironment() {
 		return pe;
 	}
 
-	public Map<String, MetaEntity> getMetaEntitiesToProcess() {
-		return metaEntitiesToProcess;
+	public Elements getElementUtils() {
+		return pe.getElementUtils();
 	}
 
-	public Map<String, MetaEntity> getMetaSuperclassAndEmbeddableToProcess() {
-		return metaSuperclassAndEmbeddableToProcess;
+	public Types getTypeUtils() {
+		return pe.getTypeUtils();
 	}
 
-	public void addAccessType(TypeElement element, AccessType accessType) {
-		AccessTypeHolder typeHolder = accessTypes.get( element );
-		if ( typeHolder == null ) {
-			typeHolder = new AccessTypeHolder();
-			accessTypes.put( element, typeHolder );
-		}
-		typeHolder.elementAccessType = accessType;
+	public String getPersistenceXmlLocation() {
+		return persistenceXmlLocation;
 	}
 
-	public void addAccessTypeForHierarchy(TypeElement element, AccessType accessType) {
-		AccessTypeHolder typeHolder = accessTypes.get( element );
-		if ( typeHolder == null ) {
-			typeHolder = new AccessTypeHolder();
-			accessTypes.put( element, typeHolder );
-		}
-		typeHolder.hierarchyAccessType = accessType;
+	public List<String> getOrmXmlFiles() {
+		return ormXmlFiles;
 	}
 
-	public AccessType getAccessType(TypeElement element) {
-		final AccessTypeHolder typeHolder = accessTypes.get( element );
-		return typeHolder != null ? typeHolder.elementAccessType : null;
+	public boolean containsMetaEntity(String fqcn) {
+		return metaEntities.containsKey( fqcn );
 	}
 
-	public AccessType getDefaultAccessTypeForHerarchy(TypeElement element) {
-		final AccessTypeHolder typeHolder = accessTypes.get( element );
-		return typeHolder != null ? typeHolder.hierarchyAccessType : null;
+	public MetaEntity getMetaEntity(String fqcn) {
+		return metaEntities.get( fqcn );
 	}
 
-	public Set<String> getElementsAlreadyProcessed() {
-		return elementsAlreadyProcessed;
+	public Collection<MetaEntity> getMetaEntities() {
+		return metaEntities.values();
 	}
 
-	//only process Embeddable or Superclass
-	//does not work for Entity (risk of circularity)
-	public void processElement(TypeElement element, AccessType defaultAccessTypeForHierarchy) {
-		if ( elementsAlreadyProcessed.contains( element.getQualifiedName().toString() ) ) {
-			logMessage( Diagnostic.Kind.OTHER, "Element already processed (ignoring): " + element );
-			return;
-		}
-		ClassWriter.writeFile( new AnnotationMetaEntity( element, this, defaultAccessTypeForHierarchy ), this );
-		TypeUtils.extractClosestRealTypeAsString( element.asType(), this );
-		elementsAlreadyProcessed.add( element.getQualifiedName().toString() );
+	public void addMetaEntity(String fcqn, MetaEntity metaEntity) {
+		metaEntities.put( fcqn, metaEntity );
+	}
+
+	public boolean containsMetaSuperclassOrEmbeddable(String fqcn) {
+		return metaSuperclassAndEmbeddable.containsKey( fqcn );
+	}
+
+	public MetaEntity getMetaSuperclassOrEmbeddable(String fqcn) {
+		return metaSuperclassAndEmbeddable.get( fqcn );
+	}
+
+	public void addMetaSuperclassOrEmbeddable(String fcqn, MetaEntity metaEntity) {
+		metaSuperclassAndEmbeddable.put( fcqn, metaEntity );
+	}
+
+	public Collection<MetaEntity> getMetaSuperclassOrEmbeddable() {
+		return metaSuperclassAndEmbeddable.values();
+	}
+
+	public void addAccessTypeInformation(String fqcn, AccessTypeInformation info) {
+		accessTypeInformation.put( fqcn, info );
+	}
+
+	public AccessTypeInformation getAccessTypeInfo(String fqcn) {
+		return accessTypeInformation.get( fqcn );
+	}
+
+	public TypeElement getTypeElementForFullyQualifiedName(String fqcn) {
+		Elements elementUtils = pe.getElementUtils();
+		return elementUtils.getTypeElement( fqcn );
 	}
 
 	public void logMessage(Diagnostic.Kind type, String message) {
@@ -120,5 +154,34 @@ public class Context {
 			return;
 		}
 		pe.getMessager().printMessage( type, message );
+	}
+
+	public boolean isPersistenceUnitCompletelyXmlConfigured() {
+		return isPersistenceUnitCompletelyXmlConfigured;
+	}
+
+	public void setPersistenceUnitCompletelyXmlConfigured(boolean persistenceUnitCompletelyXmlConfigured) {
+		isPersistenceUnitCompletelyXmlConfigured = persistenceUnitCompletelyXmlConfigured;
+	}
+
+	public AccessType getPersistenceUnitDefaultAccessType() {
+		return persistenceUnitDefaultAccessType;
+	}
+
+	public void setPersistenceUnitDefaultAccessType(AccessType persistenceUnitDefaultAccessType) {
+		this.persistenceUnitDefaultAccessType = persistenceUnitDefaultAccessType;
+	}
+
+	@Override
+	public String toString() {
+		final StringBuilder sb = new StringBuilder();
+		sb.append( "Context" );
+		sb.append( "{accessTypeInformation=" ).append( accessTypeInformation );
+		sb.append( ", logDebug=" ).append( logDebug );
+		sb.append( ", isPersistenceUnitCompletelyXmlConfigured=" ).append( isPersistenceUnitCompletelyXmlConfigured );
+		sb.append( ", ormXmlFiles=" ).append( ormXmlFiles );
+		sb.append( ", persistenceXmlLocation='" ).append( persistenceXmlLocation ).append( '\'' );
+		sb.append( '}' );
+		return sb.toString();
 	}
 }

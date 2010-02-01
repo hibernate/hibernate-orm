@@ -56,7 +56,7 @@ public class ElementCollectionTest extends CompilationTest {
 	}
 
 	@Override
-	protected String getTestPackage() {
-		return House.class.getPackage().getName();
+	protected String getPackageNameOfTestSources() {
+		return ElementCollectionTest.class.getPackage().getName();
 	}
 }

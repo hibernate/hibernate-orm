@@ -1,7 +1,7 @@
-// $Id$
+// $Id:$
 /*
 * JBoss, Home of Professional Open Source
-* Copyright 2008, Red Hat Middleware LLC, and individual contributors
+* Copyright 2009, Red Hat, Inc. and/or its affiliates, and individual contributors
 * by the @authors tag. See the copyright.txt in the distribution for a
 * full listing of individual contributors.
 *
@@ -15,23 +15,29 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-package org.hibernate.jpamodelgen.test.xmlmapped;
+package org.hibernate.jpamodelgen.test.mixedmode;
+
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
 
 /**
  * @author Hardy Ferentschik
  */
-public class LivingBeing {
-	boolean reallyAlive;
+@Entity
+public class Vehicle {
+	// default access type for classes in this hierarchy is FIELD
+	@Id
+	@GeneratedValue
+	private long id;
 
-	public boolean isReallyAlive() {
-		return reallyAlive;
+	public long getId() {
+		return id;
 	}
 
-	public void setReallyAlive(boolean reallyAlive) {
-		this.reallyAlive = reallyAlive;
-	}
-
-	public int nonPersistent() {
-		return 0;
+	public void setId(long id) {
+		this.id = id;
 	}
 }
+
+

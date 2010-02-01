@@ -1,4 +1,4 @@
-// $Id$
+// $Id: RawTypesTest.java 18664 2010-01-28 16:56:51Z hardy.ferentschik $
 /*
 * JBoss, Home of Professional Open Source
 * Copyright 2008, Red Hat Middleware LLC, and individual contributors
@@ -15,10 +15,27 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-package org.hibernate.jpamodelgen;
+package org.hibernate.jpamodelgen.test.rawtypes;
+
+import org.testng.annotations.Test;
+
+import org.hibernate.jpamodelgen.test.util.CompilationTest;
+
+import static org.hibernate.jpamodelgen.test.util.TestUtil.assertMetamodelClassGeneratedFor;
 
 /**
- * @author Hardy Ferentschik
+ * @author Emmanuel Bernard
  */
-public interface MetaSingleAttribute extends MetaAttribute {
+public class RawTypesTest extends CompilationTest {
+
+	@Test
+	public void testGenerics() {
+		assertMetamodelClassGeneratedFor( DeskWithRawType.class );
+		assertMetamodelClassGeneratedFor( EmployeeWithRawType.class );
+	}
+
+	@Override
+	protected String getPackageNameOfTestSources() {
+		return DeskWithRawType.class.getPackage().getName();
+	}
 }

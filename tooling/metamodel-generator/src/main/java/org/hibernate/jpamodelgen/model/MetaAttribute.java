@@ -15,23 +15,17 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-package org.hibernate.jpamodelgen.test.xmlmapped;
+package org.hibernate.jpamodelgen.model;
 
 /**
  * @author Hardy Ferentschik
  */
-public class LivingBeing {
-	boolean reallyAlive;
+public interface MetaAttribute {
+	String getDeclarationString();
 
-	public boolean isReallyAlive() {
-		return reallyAlive;
-	}
+	String getMetaType();
 
-	public void setReallyAlive(boolean reallyAlive) {
-		this.reallyAlive = reallyAlive;
-	}
+	String getPropertyName();
 
-	public int nonPersistent() {
-		return 0;
-	}
+	String getTypeDeclaration();
 }

@@ -15,27 +15,39 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-package org.hibernate.jpamodelgen.test.rawTypes;
+package org.hibernate.jpamodelgen.test.mixedmode;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
 import org.testng.annotations.Test;
 
 import org.hibernate.jpamodelgen.test.util.CompilationTest;
+import org.hibernate.jpamodelgen.test.util.TestUtil;
 
+import static org.hibernate.jpamodelgen.test.util.TestUtil.assertAbsenceOfFieldInMetamodelFor;
 import static org.hibernate.jpamodelgen.test.util.TestUtil.assertMetamodelClassGeneratedFor;
 
 /**
- * @author Emmanuel Bernard
+ * @author Hardy Ferentschik
  */
-public class RawTypesTest extends CompilationTest {
-
+public class XmlMetaCompleteTest extends CompilationTest {
 	@Test
-	public void testGenerics() {
-		assertMetamodelClassGeneratedFor( DeskWithRawType.class );
-		assertMetamodelClassGeneratedFor( EmployeeWithRawType.class );
+	public void testXmlConfiguredEmbeddedClassGenerated() {
+		assertMetamodelClassGeneratedFor( Person.class );
+		assertAbsenceOfFieldInMetamodelFor( Person.class, "name" );
 	}
 
 	@Override
-	protected String getTestPackage() {
-		return DeskWithRawType.class.getPackage().getName();
+	protected String getPackageNameOfTestSources() {
+		return XmlMetaCompleteTest.class.getPackage().getName();
+	}
+
+	@Override
+	protected Collection<String> getOrmFiles() {
+		List<String> ormFiles = new ArrayList<String>();
+		ormFiles.add( TestUtil.fcnToPath( XmlMetaCompleteTest.class.getPackage().getName() ) + "/orm.xml" );
+		return ormFiles;
 	}
 }

@@ -22,7 +22,7 @@ import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.util.Elements;
 
-import org.hibernate.jpamodelgen.MetaAttribute;
+import org.hibernate.jpamodelgen.model.MetaAttribute;
 
 /**
  * @author Max Andersen
@@ -47,7 +47,7 @@ public abstract class AnnotationMetaAttribute implements MetaAttribute {
 	}
 
 	public String getPropertyName() {
-		Elements elementsUtil = parent.getContext().getProcessingEnvironment().getElementUtils();
+		Elements elementsUtil = parent.getContext().getElementUtils();
 		if ( element.getKind() == ElementKind.FIELD ) {
 			return element.getSimpleName().toString();
 		}
@@ -70,5 +70,15 @@ public abstract class AnnotationMetaAttribute implements MetaAttribute {
 
 	public String getTypeDeclaration() {
 		return type;
+	}
+
+	@Override
+	public String toString() {
+		final StringBuilder sb = new StringBuilder();
+		sb.append( "AnnotationMetaAttribute" );
+		sb.append( "{element=" ).append( element );
+		sb.append( ", type='" ).append( type ).append( '\'' );
+		sb.append( '}' );
+		return sb.toString();
 	}
 }

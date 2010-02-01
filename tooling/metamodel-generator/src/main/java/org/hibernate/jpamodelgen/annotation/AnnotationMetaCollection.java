@@ -19,7 +19,7 @@ package org.hibernate.jpamodelgen.annotation;
 
 import javax.lang.model.element.Element;
 
-import org.hibernate.jpamodelgen.MetaCollection;
+import org.hibernate.jpamodelgen.model.MetaCollection;
 
 /**
  * @author Max Andersen

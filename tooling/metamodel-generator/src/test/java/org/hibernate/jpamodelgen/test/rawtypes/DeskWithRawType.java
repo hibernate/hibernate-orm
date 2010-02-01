@@ -1,4 +1,4 @@
-package org.hibernate.jpamodelgen.test.rawTypes;
+package org.hibernate.jpamodelgen.test.rawtypes;
 
 import java.util.Collection;
 import javax.persistence.Basic;

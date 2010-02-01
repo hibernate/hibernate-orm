@@ -47,7 +47,7 @@ public class ArrayTest extends CompilationTest {
 	}
 
 	@Override
-	protected String getTestPackage() {
+	protected String getPackageNameOfTestSources() {
 		return Image.class.getPackage().getName();
 	}
 }

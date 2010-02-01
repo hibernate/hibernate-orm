@@ -17,6 +17,10 @@
 */
 package org.hibernate.jpamodelgen.test.accesstype;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+
 import org.testng.annotations.Test;
 
 import org.hibernate.jpamodelgen.test.util.CompilationTest;
@@ -31,6 +35,11 @@ import static org.hibernate.jpamodelgen.test.util.TestUtil.assertPresenceOfField
  * @author Hardy Ferentschik
  */
 public class AccessTypeTest extends CompilationTest {
+
+	@Test
+	public void testXmlConfiguredEntityGenerated() {
+		TestUtil.assertMetamodelClassGeneratedFor( Order.class );
+	}
 
 	@Test
 	public void testExcludeTransientFieldAndStatic() {
@@ -88,7 +97,14 @@ public class AccessTypeTest extends CompilationTest {
 	}
 
 	@Override
-	protected String getTestPackage() {
-		return Product.class.getPackage().getName();
+	protected String getPackageNameOfTestSources() {
+		return AccessTypeTest.class.getPackage().getName();
+	}
+
+	@Override
+	protected Collection<String> getOrmFiles() {
+		List<String> ormFiles = new ArrayList<String>();
+		ormFiles.add( TestUtil.fcnToPath( AccessTypeTest.class.getPackage().getName() ) + "/orm.xml" );
+		return ormFiles;
 	}
 }

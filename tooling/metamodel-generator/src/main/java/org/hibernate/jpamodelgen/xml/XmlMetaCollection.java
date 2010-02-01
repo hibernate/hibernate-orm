@@ -17,7 +17,7 @@
 */
 package org.hibernate.jpamodelgen.xml;
 
-import org.hibernate.jpamodelgen.MetaCollection;
+import org.hibernate.jpamodelgen.model.MetaCollection;
 
 /**
  * @author Hardy Ferentschik

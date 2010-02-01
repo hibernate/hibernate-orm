@@ -22,7 +22,6 @@ import java.util.List;
 import java.util.Set;
 
 /**
- *
  * @author Max Andersen
  * @author Hardy Ferentschik
  * @author Emmanuel Bernard

@@ -1,7 +1,7 @@
-// $Id$
+// $Id:$
 /*
 * JBoss, Home of Professional Open Source
-* Copyright 2008, Red Hat Middleware LLC, and individual contributors
+* Copyright 2009, Red Hat, Inc. and/or its affiliates, and individual contributors
 * by the @authors tag. See the copyright.txt in the distribution for a
 * full listing of individual contributors.
 *
@@ -15,17 +15,28 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-package org.hibernate.jpamodelgen;
+package org.hibernate.jpamodelgen.test.mixedmode;
 
 /**
  * @author Hardy Ferentschik
  */
-public interface MetaAttribute {
-	String getDeclarationString();
+public class Car extends Vehicle {
+	private String make;
 
-	String getMetaType();
+	public int getHorsePower() {
+		return 0;
+	}
 
-	String getPropertyName();
+	public void setHorsePower(int horsePower) {
+	}
 
-	String getTypeDeclaration();
+	public String getMake() {
+		return make;
+	}
+
+	public void setMake(String make) {
+		this.make = make;
+	}
 }
+
+

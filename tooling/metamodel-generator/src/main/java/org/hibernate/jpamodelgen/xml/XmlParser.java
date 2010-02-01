@@ -20,6 +20,7 @@ package org.hibernate.jpamodelgen.xml;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import javax.lang.model.element.TypeElement;
@@ -36,7 +37,10 @@ import javax.xml.validation.SchemaFactory;
 
 import org.xml.sax.SAXException;
 
+import org.hibernate.jpamodelgen.AccessTypeInformation;
 import org.hibernate.jpamodelgen.Context;
+import org.hibernate.jpamodelgen.util.StringUtil;
+import org.hibernate.jpamodelgen.util.TypeUtils;
 import org.hibernate.jpamodelgen.xml.jaxb.Entity;
 import org.hibernate.jpamodelgen.xml.jaxb.EntityMappings;
 import org.hibernate.jpamodelgen.xml.jaxb.ObjectFactory;
@@ -48,132 +52,145 @@ import org.hibernate.jpamodelgen.xml.jaxb.PersistenceUnitMetadata;
  * @author Hardy Ferentschik
  */
 public class XmlParser {
-
-	private static final String PERSISTENCE_XML = "/META-INF/persistence.xml";
 	private static final String ORM_XML = "/META-INF/orm.xml";
 	private static final String PERSISTENCE_XML_XSD = "persistence_2_0.xsd";
 	private static final String ORM_XSD = "orm_2_0.xsd";
 	private static final String PATH_SEPARATOR = "/";
-	private static final AccessType DEFAULT_XML_ACCESS_TYPE = AccessType.PROPERTY;
 
 	private Context context;
+	private List<EntityMappings> entityMappings;
 
 	public XmlParser(Context context) {
 		this.context = context;
+		this.entityMappings = new ArrayList<EntityMappings>();
 	}
 
-	public void parsePersistenceXml() {
-		Persistence persistence = parseXml( PERSISTENCE_XML, Persistence.class, PERSISTENCE_XML_XSD );
+	public void parseXml() {
+		collectAllEntityMappings();
+		determineDefaultAccessTypeAndMetaCompleteness();
+		determineXmlAccessTypes();
+		if ( !context.isPersistenceUnitCompletelyXmlConfigured() ) {
+			// need to take annotations into consideration, since they can override xml settings
+			// we have to at least determine whether any of the xml configured entities is influenced by annotations
+			determineAnnotationAccessTypes();
+		}
+
+		for ( EntityMappings mappings : entityMappings ) {
+			String defaultPackageName = mappings.getPackage();
+			parseEntities( mappings.getEntity(), defaultPackageName );
+			parseEmbeddable( mappings.getEmbeddable(), defaultPackageName );
+			parseMappedSuperClass( mappings.getMappedSuperclass(), defaultPackageName );
+		}
+	}
+
+	private void collectAllEntityMappings() {
+		Persistence persistence = parseXml(
+				context.getPersistenceXmlLocation(), Persistence.class, PERSISTENCE_XML_XSD
+		);
 		if ( persistence != null ) {
 			List<Persistence.PersistenceUnit> persistenceUnits = persistence.getPersistenceUnit();
 			for ( Persistence.PersistenceUnit unit : persistenceUnits ) {
 				List<String> mappingFiles = unit.getMappingFile();
 				for ( String mappingFile : mappingFiles ) {
-					parsingOrmXml( mappingFile );
+					loadEntityMappings( mappingFile );
 				}
 			}
 		}
-		parsingOrmXml( ORM_XML ); // /META-INF/orm.xml is implicit
-	}
 
-	private void parsingOrmXml(String resource) {
-		EntityMappings mappings = parseXml( resource, EntityMappings.class, ORM_XSD );
-		if ( mappings == null ) {
-			return;
+		// /META-INF/orm.xml is implicit
+		loadEntityMappings( ORM_XML );
+
+		// not really part of the official spec, but the processor allows to specify mapping files directly as
+		// command line options
+		for ( String optionalOrmFiles : context.getOrmXmlFiles() ) {
+			loadEntityMappings( optionalOrmFiles );
 		}
-
-		AccessType accessType = determineGlobalAccessType( mappings );
-
-		parseEntities( mappings, accessType );
-		parseEmbeddable( mappings, accessType );
-		parseMappedSuperClass( mappings, accessType );
 	}
 
-	private void parseEntities(EntityMappings mappings, AccessType accessType) {
-		String packageName = mappings.getPackage();
-		Collection<Entity> entities = mappings.getEntity();
+	private void loadEntityMappings(String resource) {
+		EntityMappings mapping = parseXml( resource, EntityMappings.class, ORM_XSD );
+		if ( mapping != null ) {
+			entityMappings.add( mapping );
+		}
+	}
+
+	private void parseEntities(Collection<Entity> entities, String defaultPackageName) {
 		for ( Entity entity : entities ) {
-			String fullyQualifiedClassName = packageName + "." + entity.getClazz();
+			String fqcn = StringUtil.determineFullyQualifiedClassName( defaultPackageName, entity.getClazz() );
 
-			if ( !xmlMappedTypeExists( fullyQualifiedClassName ) ) {
+			if ( !xmlMappedTypeExists( fqcn ) ) {
 				context.logMessage(
 						Diagnostic.Kind.WARNING,
-						fullyQualifiedClassName + " is mapped in xml, but class does not exists. Skipping meta model generation."
+						fqcn + " is mapped in xml, but class does not exists. Skipping meta model generation."
 				);
 				continue;
 			}
 
 			XmlMetaEntity metaEntity = new XmlMetaEntity(
-					entity, packageName, getXmlMappedType( fullyQualifiedClassName ),
-					context
+					entity, defaultPackageName, getXmlMappedType( fqcn ), context
 			);
-
-			if ( context.getMetaEntitiesToProcess().containsKey( fullyQualifiedClassName ) ) {
+			if ( context.containsMetaEntity( fqcn ) ) {
 				context.logMessage(
 						Diagnostic.Kind.WARNING,
-						fullyQualifiedClassName + " was already processed once. Skipping second occurance."
+						fqcn + " was already processed once. Skipping second occurance."
 				);
 			}
-			context.getMetaEntitiesToProcess().put( fullyQualifiedClassName, metaEntity );
+			context.addMetaEntity( fqcn, metaEntity );
 		}
 	}
 
-	private void parseEmbeddable(EntityMappings mappings, AccessType accessType) {
-		String packageName = mappings.getPackage();
-		Collection<org.hibernate.jpamodelgen.xml.jaxb.Embeddable> embeddables = mappings.getEmbeddable();
+	private void parseEmbeddable(Collection<org.hibernate.jpamodelgen.xml.jaxb.Embeddable> embeddables, String defaultPackageName) {
 		for ( org.hibernate.jpamodelgen.xml.jaxb.Embeddable embeddable : embeddables ) {
-			String fullyQualifiedClassName = packageName + "." + embeddable.getClazz();
+			String fqcn = StringUtil.determineFullyQualifiedClassName( defaultPackageName, embeddable.getClazz() );
+			// we have to extract the package name from the fqcn. Maybe the entity was setting a fqcn directly
+			String pkg = StringUtil.packageNameFromFqcn( fqcn );
 
-			if ( !xmlMappedTypeExists( fullyQualifiedClassName ) ) {
+			if ( !xmlMappedTypeExists( fqcn ) ) {
 				context.logMessage(
 						Diagnostic.Kind.WARNING,
-						fullyQualifiedClassName + " is mapped in xml, but class does not exists. Skipping meta model generation."
+						fqcn + " is mapped in xml, but class does not exists. Skipping meta model generation."
 				);
 				continue;
 			}
 
-			XmlMetaEntity metaEntity = new XmlMetaEntity(
-					embeddable, packageName, getXmlMappedType( fullyQualifiedClassName ),
-					context
-			);
-
-			if ( context.getMetaSuperclassAndEmbeddableToProcess().containsKey( fullyQualifiedClassName ) ) {
+			XmlMetaEntity metaEntity = new XmlMetaEmbeddable( embeddable, pkg, getXmlMappedType( fqcn ), context );
+			if ( context.containsMetaSuperclassOrEmbeddable( fqcn ) ) {
 				context.logMessage(
 						Diagnostic.Kind.WARNING,
-						fullyQualifiedClassName + " was already processed once. Skipping second occurance."
+						fqcn + " was already processed once. Skipping second occurance."
 				);
 			}
-			context.getMetaSuperclassAndEmbeddableToProcess().put( fullyQualifiedClassName, metaEntity );
+			context.addMetaSuperclassOrEmbeddable( fqcn, metaEntity );
 		}
 	}
 
-
-	private void parseMappedSuperClass(EntityMappings mappings, AccessType accessType) {
-		String packageName = mappings.getPackage();
-		Collection<org.hibernate.jpamodelgen.xml.jaxb.MappedSuperclass> mappedSuperClasses = mappings.getMappedSuperclass();
+	private void parseMappedSuperClass(Collection<org.hibernate.jpamodelgen.xml.jaxb.MappedSuperclass> mappedSuperClasses, String defaultPackageName) {
 		for ( org.hibernate.jpamodelgen.xml.jaxb.MappedSuperclass mappedSuperClass : mappedSuperClasses ) {
-			String fullyQualifiedClassName = packageName + "." + mappedSuperClass.getClazz();
+			String fqcn = StringUtil.determineFullyQualifiedClassName(
+					defaultPackageName, mappedSuperClass.getClazz()
+			);
+			// we have to extract the package name from the fqcn. Maybe the entity was setting a fqcn directly
+			String pkg = StringUtil.packageNameFromFqcn( fqcn );
 
-			if ( !xmlMappedTypeExists( fullyQualifiedClassName ) ) {
+			if ( !xmlMappedTypeExists( fqcn ) ) {
 				context.logMessage(
 						Diagnostic.Kind.WARNING,
-						fullyQualifiedClassName + " is mapped in xml, but class does not exists. Skipping meta model generation."
+						fqcn + " is mapped in xml, but class does not exists. Skipping meta model generation."
 				);
 				continue;
 			}
 
-			XmlMetaEntity metaEntity = new XmlMetaEntity(
-					mappedSuperClass, packageName, getXmlMappedType( fullyQualifiedClassName ),
-					context
+			XmlMetaEntity metaEntity = new XmlMetaMappedSuperClass(
+					mappedSuperClass, pkg, getXmlMappedType( fqcn ), context
 			);
 
-			if ( context.getMetaSuperclassAndEmbeddableToProcess().containsKey( fullyQualifiedClassName ) ) {
+			if ( context.containsMetaSuperclassOrEmbeddable( fqcn ) ) {
 				context.logMessage(
 						Diagnostic.Kind.WARNING,
-						fullyQualifiedClassName + " was already processed once. Skipping second occurance."
+						fqcn + " was already processed once. Skipping second occurance."
 				);
 			}
-			context.getMetaSuperclassAndEmbeddableToProcess().put( fullyQualifiedClassName, metaEntity );
+			context.addMetaSuperclassOrEmbeddable( fqcn, metaEntity );
 		}
 	}
 
@@ -184,7 +201,8 @@ public class XmlParser {
 	 * @param clazz The type of jaxb node to return
 	 * @param schemaName The schema to validate against (can be {@code null});
 	 *
-	 * @return The top level jaxb instance contained in the xml file or {@code null} in case the file could not be found.
+	 * @return The top level jaxb instance contained in the xml file or {@code null} in case the file could not be found
+	 *         or could not be unmarshalled.
 	 */
 	private <T> T parseXml(String resource, Class<T> clazz, String schemaName) {
 
@@ -274,35 +292,135 @@ public class XmlParser {
 	}
 
 	private boolean xmlMappedTypeExists(String fullyQualifiedClassName) {
-		Elements utils = context.getProcessingEnvironment().getElementUtils();
+		Elements utils = context.getElementUtils();
 		return utils.getTypeElement( fullyQualifiedClassName ) != null;
 	}
 
 	private TypeElement getXmlMappedType(String fullyQualifiedClassName) {
-		Elements utils = context.getProcessingEnvironment().getElementUtils();
+		Elements utils = context.getElementUtils();
 		return utils.getTypeElement( fullyQualifiedClassName );
 	}
 
-
-	private AccessType determineGlobalAccessType(EntityMappings mappings) {
-		AccessType accessType = DEFAULT_XML_ACCESS_TYPE;
-
+	private AccessType determineEntityAccessType(EntityMappings mappings) {
+		AccessType accessType = context.getPersistenceUnitDefaultAccessType();
 		if ( mappings.getAccess() != null ) {
 			accessType = mapXmlAccessTypeToJpaAccessType( mappings.getAccess() );
-			return accessType; // no need to check persistence unit default
 		}
+		return accessType;
+	}
 
-		PersistenceUnitMetadata meta = mappings.getPersistenceUnitMetadata();
-		if ( meta != null ) {
-			PersistenceUnitDefaults persistenceUnitDefaults = meta.getPersistenceUnitDefaults();
-			if ( persistenceUnitDefaults != null ) {
-				org.hibernate.jpamodelgen.xml.jaxb.AccessType xmlAccessType = persistenceUnitDefaults.getAccess();
-				if ( xmlAccessType != null ) {
-					accessType = mapXmlAccessTypeToJpaAccessType( xmlAccessType );
+	private void determineXmlAccessTypes() {
+		for ( EntityMappings mappings : entityMappings ) {
+			String fqcn;
+			String packageName = mappings.getPackage();
+			AccessType defaultAccessType = determineEntityAccessType( mappings );
+
+			for ( Entity entity : mappings.getEntity() ) {
+				String name = entity.getClazz();
+				fqcn = StringUtil.determineFullyQualifiedClassName( packageName, name );
+				AccessType explicitAccessType = null;
+				org.hibernate.jpamodelgen.xml.jaxb.AccessType type = entity.getAccess();
+				if ( type != null ) {
+					explicitAccessType = mapXmlAccessTypeToJpaAccessType( type );
+				}
+				AccessTypeInformation accessInfo = new AccessTypeInformation(
+						fqcn, explicitAccessType, defaultAccessType
+				);
+				context.addAccessTypeInformation( fqcn, accessInfo );
+			}
+
+			for ( org.hibernate.jpamodelgen.xml.jaxb.Embeddable embeddable : mappings.getEmbeddable() ) {
+				String name = embeddable.getClazz();
+				fqcn = StringUtil.determineFullyQualifiedClassName( packageName, name );
+				AccessType explicitAccessType = null;
+				org.hibernate.jpamodelgen.xml.jaxb.AccessType type = embeddable.getAccess();
+				if ( type != null ) {
+					explicitAccessType = mapXmlAccessTypeToJpaAccessType( type );
+				}
+				AccessTypeInformation accessInfo = new AccessTypeInformation(
+						fqcn, explicitAccessType, defaultAccessType
+				);
+				context.addAccessTypeInformation( fqcn, accessInfo );
+
+			}
+
+			for ( org.hibernate.jpamodelgen.xml.jaxb.MappedSuperclass mappedSuperClass : mappings.getMappedSuperclass() ) {
+				String name = mappedSuperClass.getClazz();
+				fqcn = StringUtil.determineFullyQualifiedClassName( packageName, name );
+				AccessType explicitAccessType = null;
+				org.hibernate.jpamodelgen.xml.jaxb.AccessType type = mappedSuperClass.getAccess();
+				if ( type != null ) {
+					explicitAccessType = mapXmlAccessTypeToJpaAccessType( type );
+				}
+				AccessTypeInformation accessInfo = new AccessTypeInformation(
+						fqcn, explicitAccessType, defaultAccessType
+				);
+				context.addAccessTypeInformation( fqcn, accessInfo );
+			}
+		}
+	}
+
+	private void determineAnnotationAccessTypes() {
+		for ( EntityMappings mappings : entityMappings ) {
+			String fqcn;
+			String packageName = mappings.getPackage();
+
+			for ( Entity entity : mappings.getEntity() ) {
+				String name = entity.getClazz();
+				fqcn = StringUtil.determineFullyQualifiedClassName( packageName, name );
+				TypeElement element = context.getTypeElementForFullyQualifiedName( fqcn );
+				if ( element != null ) {
+					TypeUtils.determineAccessTypeForHierarchy( element, context );
+				}
+			}
+
+			for ( org.hibernate.jpamodelgen.xml.jaxb.MappedSuperclass mappedSuperClass : mappings.getMappedSuperclass() ) {
+				String name = mappedSuperClass.getClazz();
+				fqcn = StringUtil.determineFullyQualifiedClassName( packageName, name );
+				TypeElement element = context.getTypeElementForFullyQualifiedName( fqcn );
+				if ( element != null ) {
+					TypeUtils.determineAccessTypeForHierarchy( element, context );
 				}
 			}
 		}
-		return accessType;
+	}
+
+	/**
+	 * Determines the default access type as specified in the <i>persistence-unit-defaults</i> as well as whether the
+	 * xml configuration is complete and annotations should be ignored.
+	 * <p/>
+	 * Note, the spec says:
+	 * <ul>
+	 * <li>The persistence-unit-metadata element contains metadata for the entire persistence unit. It is
+	 * undefined if this element occurs in multiple mapping files within the same persistence unit.</li>
+	 * <li>If the xml-mapping-metadata-complete subelement is specified, the complete set of mapping
+	 * metadata for the persistence unit is contained in the XML mapping files for the persistence unit, and any
+	 * persistence annotations on the classes are ignored.</li>
+	 * <li>When the xml-mapping-metadata-complete element is specified, any metadata-complete attributes specified
+	 * within the entity, mapped-superclass, and embeddable elements are ignored.<li>
+	 * </ul>
+	 */
+	private void determineDefaultAccessTypeAndMetaCompleteness() {
+		for ( EntityMappings mappings : entityMappings ) {
+			PersistenceUnitMetadata meta = mappings.getPersistenceUnitMetadata();
+			if ( meta != null ) {
+				if ( meta.getXmlMappingMetadataComplete() != null ) {
+					context.setPersistenceUnitCompletelyXmlConfigured( true );
+				}
+
+				PersistenceUnitDefaults persistenceUnitDefaults = meta.getPersistenceUnitDefaults();
+				if ( persistenceUnitDefaults != null ) {
+					org.hibernate.jpamodelgen.xml.jaxb.AccessType xmlAccessType = persistenceUnitDefaults.getAccess();
+					if ( xmlAccessType != null ) {
+						context.setPersistenceUnitDefaultAccessType( mapXmlAccessTypeToJpaAccessType( xmlAccessType ) );
+					}
+				}
+				// for simplicity we stop looking for PersistenceUnitMetadata instances. We assume that all files
+				// are consistent in the data specified in PersistenceUnitMetadata. If not the behaviour is not specified
+				// anyways. It is up to the JPA provider to handle this when bootstrapping
+				break;
+			}
+		}
 	}
 
 	private AccessType mapXmlAccessTypeToJpaAccessType(org.hibernate.jpamodelgen.xml.jaxb.AccessType xmlAccessType) {

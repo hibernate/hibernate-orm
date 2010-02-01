@@ -17,9 +17,14 @@
 */
 package org.hibernate.jpamodelgen.test.xmlmapped;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.testng.annotations.Test;
 
+import org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor;
 import org.hibernate.jpamodelgen.test.util.CompilationTest;
+import org.hibernate.jpamodelgen.test.util.TestUtil;
 
 import static org.hibernate.jpamodelgen.test.util.TestUtil.assertAttributeTypeInMetaModelFor;
 import static org.hibernate.jpamodelgen.test.util.TestUtil.assertMetamodelClassGeneratedFor;
@@ -84,7 +89,6 @@ public class XmlMappingTest extends CompilationTest {
 		assertAttributeTypeInMetaModelFor( Boy.class, "nickNames", String.class, "target class overridden in xml" );
 	}
 
-
 	@Test
 	public void testClassHierarchy() {
 		assertMetamodelClassGeneratedFor( Mammal.class );
@@ -98,7 +102,17 @@ public class XmlMappingTest extends CompilationTest {
 	}
 
 	@Override
-	protected String getTestPackage() {
-		return Address.class.getPackage().getName();
+	protected String getPackageNameOfTestSources() {
+		return XmlMappingTest.class.getPackage().getName();
+	}
+
+	@Override
+	protected Map<String, String> getProcessorOptions() {
+		Map<String, String> properties = new HashMap<String, String>();
+		properties.put(
+				JPAMetaModelEntityProcessor.PERSISTENCE_XML_OPTION,
+				TestUtil.fcnToPath( XmlMappingTest.class.getPackage().getName() ) + "/persistence.xml"
+		);
+		return properties;
 	}
 }

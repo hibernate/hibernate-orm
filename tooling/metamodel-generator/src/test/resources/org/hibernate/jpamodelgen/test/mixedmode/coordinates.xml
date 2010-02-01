@@ -5,16 +5,18 @@
                  xsi:schemaLocation="http://java.sun.com/xml/ns/persistence/orm orm_2_0.xsd"
                  version="2.0"
         >
-    <package>org.hibernate.jpamodelgen.test.xmlmapped</package>
-    <entity class="LivingBeing" access="FIELD" metadata-complete="true">
+    <!-- no implicit or explicit access configured here -->
+    <embeddable class="org.hibernate.jpamodelgen.test.mixedmode.Coordinates">
         <attributes>
-            <basic name="reallyAlive"/>
+            <basic name="longitude"/>
+            <basic name="latitude"/>
         </attributes>
-    </entity>
-    <entity class="Mammal" access="FIELD" metadata-complete="true">
+    </embeddable>
+    <embeddable class="org.hibernate.jpamodelgen.test.mixedmode.ZeroCoordinates">
         <attributes>
-            <id name="id"/>
-            <basic name="subclass"/>
+            <basic name="longitude"/>
+            <basic name="latitude"/>
         </attributes>
-    </entity>
+    </embeddable>
 </entity-mappings>
+

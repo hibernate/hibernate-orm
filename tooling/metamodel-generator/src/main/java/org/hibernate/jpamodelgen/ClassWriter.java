@@ -31,6 +31,9 @@ import javax.lang.model.type.TypeMirror;
 import javax.tools.Diagnostic;
 import javax.tools.FileObject;
 
+import org.hibernate.jpamodelgen.model.MetaAttribute;
+import org.hibernate.jpamodelgen.model.MetaEntity;
+
 /**
  * @author Emmanuel Bernard
  */
@@ -112,8 +115,8 @@ public class ClassWriter {
 			//F..king Ch...t Have those people used their horrible APIs even once?
 			final Element superClassElement = ( ( DeclaredType ) superClass ).asElement();
 			String superClassName = ( ( TypeElement ) superClassElement ).getQualifiedName().toString();
-			if ( context.getMetaEntitiesToProcess().containsKey( superClassName )
-					|| context.getMetaSuperclassAndEmbeddableToProcess().containsKey( superClassName ) ) {
+			if ( context.containsMetaEntity( superClassName )
+					|| context.containsMetaSuperclassOrEmbeddable( superClassName ) ) {
 				pw.print( " extends " + superClassName + "_" );
 			}
 		}

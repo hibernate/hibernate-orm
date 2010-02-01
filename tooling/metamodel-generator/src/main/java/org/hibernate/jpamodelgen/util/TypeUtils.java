@@ -25,15 +25,30 @@ import java.util.Map;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.Element;
+import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
+import javax.lang.model.type.ExecutableType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.type.TypeVariable;
+import javax.lang.model.util.ElementFilter;
+import javax.lang.model.util.Elements;
+import javax.lang.model.util.SimpleTypeVisitor6;
 import javax.lang.model.util.Types;
+import javax.persistence.Access;
+import javax.persistence.AccessType;
+import javax.persistence.Embeddable;
+import javax.persistence.EmbeddedId;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.MappedSuperclass;
+import javax.tools.Diagnostic;
 
+import org.hibernate.jpamodelgen.AccessTypeInformation;
 import org.hibernate.jpamodelgen.Context;
+import org.hibernate.jpamodelgen.MetaModelGenerationException;
 
 /**
  * Utility class.
@@ -44,6 +59,7 @@ import org.hibernate.jpamodelgen.Context;
  */
 public class TypeUtils {
 
+	public static final String DEFAULT_ANNOTATION_PARAMETER_NAME = "value";
 	private static final Map<String, String> PRIMITIVES = new HashMap<String, String>();
 
 	static {
@@ -84,7 +100,7 @@ public class TypeUtils {
 	public static String extractClosestRealTypeAsString(TypeMirror type, Context context) {
 		if ( type instanceof TypeVariable ) {
 			final TypeMirror compositeUpperBound = ( ( TypeVariable ) type ).getUpperBound();
-			final Types types = context.getProcessingEnvironment().getTypeUtils();
+			final Types types = context.getTypeUtils();
 			final List<? extends TypeMirror> upperBounds = types.directSupertypes( compositeUpperBound );
 			if ( upperBounds.size() == 0 ) {
 				return compositeUpperBound.toString();
@@ -180,5 +196,221 @@ public class TypeUtils {
 			}
 		}
 		return returnValue;
+	}
+
+	public static void determineAccessTypeForHierarchy(TypeElement searchedElement, Context context) {
+		String fqcn = searchedElement.getQualifiedName().toString();
+		context.logMessage( Diagnostic.Kind.OTHER, "Determining access type for " + fqcn );
+		AccessTypeInformation accessTypeInfo = context.getAccessTypeInfo( fqcn );
+
+		if ( accessTypeInfo != null && accessTypeInfo.isAccessTypeResolved() ) {
+			context.logMessage(
+					Diagnostic.Kind.OTHER,
+					"AccessType for " + searchedElement.toString() + "found in cache: " + accessTypeInfo
+			);
+			return;
+		}
+
+		// check for explicit access type
+		AccessType forcedAccessType = determineAnnotationSpecifiedAccessType( searchedElement );
+		if ( forcedAccessType != null ) {
+			context.logMessage(
+					Diagnostic.Kind.OTHER, "Explicit access type on " + searchedElement + ":" + forcedAccessType
+			);
+			accessTypeInfo = new AccessTypeInformation( fqcn, forcedAccessType, null );
+			context.addAccessTypeInformation( fqcn, accessTypeInfo );
+			updateEmbeddableAccessType( searchedElement, context, forcedAccessType );
+			return;
+		}
+
+		// need to find the default access type for this class
+		// let's check first if this entity is the root of the class hierarchy and defines an id. If so the
+		// placement of the id annotation determines the access type
+		AccessType defaultAccessType = getAccessTypeInCaseElementIsRoot( searchedElement, context );
+		if ( defaultAccessType != null ) {
+			accessTypeInfo = new AccessTypeInformation( fqcn, null, defaultAccessType );
+			context.addAccessTypeInformation( fqcn, accessTypeInfo );
+			updateEmbeddableAccessType( searchedElement, context, defaultAccessType );
+			return;
+		}
+
+		// if we end up here we need to recursively look for superclasses
+		defaultAccessType = getDefaultAccessForHierarchy( searchedElement, context );
+		if ( defaultAccessType == null ) {
+			defaultAccessType = AccessType.PROPERTY;
+		}
+		accessTypeInfo = new AccessTypeInformation( fqcn, null, defaultAccessType );
+		context.addAccessTypeInformation( fqcn, accessTypeInfo );
+	}
+
+	public static TypeMirror getCollectionElementType(DeclaredType t, String fqNameOfReturnedType, String explicitTargetEntityName, Context context) {
+		TypeMirror collectionElementType;
+		if ( explicitTargetEntityName != null ) {
+			Elements elements = context.getElementUtils();
+			TypeElement element = elements.getTypeElement( explicitTargetEntityName );
+			collectionElementType = element.asType();
+		}
+		else {
+			List<? extends TypeMirror> typeArguments = t.getTypeArguments();
+			if ( typeArguments.size() == 0 ) {
+				throw new MetaModelGenerationException( "Unable to determine collection type" );
+			}
+			else if ( Map.class.getCanonicalName().equals( fqNameOfReturnedType ) ) {
+				collectionElementType = t.getTypeArguments().get( 1 );
+			}
+			else {
+				collectionElementType = t.getTypeArguments().get( 0 );
+			}
+		}
+		return collectionElementType;
+	}
+
+	private static void updateEmbeddableAccessType(TypeElement element, Context context, AccessType defaultAccessType) {
+		List<? extends Element> fieldsOfClass = ElementFilter.fieldsIn( element.getEnclosedElements() );
+		for ( Element field : fieldsOfClass ) {
+			updateEmbeddableAccessTypeForMember( context, defaultAccessType, field );
+		}
+
+		List<? extends Element> methodOfClass = ElementFilter.methodsIn( element.getEnclosedElements() );
+		for ( Element method : methodOfClass ) {
+			updateEmbeddableAccessTypeForMember( context, defaultAccessType, method );
+		}
+	}
+
+	private static void updateEmbeddableAccessTypeForMember(Context context, AccessType defaultAccessType, Element member) {
+		EmbeddedAttributeVisitor visitor = new EmbeddedAttributeVisitor( context );
+		String embeddedClassName = member.asType().accept( visitor, member );
+		if ( embeddedClassName != null ) {
+			AccessTypeInformation accessTypeInfo = context.getAccessTypeInfo( embeddedClassName );
+			if ( accessTypeInfo == null ) {
+				accessTypeInfo = new AccessTypeInformation( embeddedClassName, null, defaultAccessType );
+				context.addAccessTypeInformation( embeddedClassName, accessTypeInfo );
+			}
+			else {
+				accessTypeInfo.setDefaultAccessType( defaultAccessType );
+			}
+		}
+	}
+
+	private static AccessType getDefaultAccessForHierarchy(TypeElement element, Context context) {
+		AccessType defaultAccessType = null;
+		TypeElement superClass = element;
+		do {
+			superClass = TypeUtils.getSuperclassTypeElement( superClass );
+			if ( superClass != null ) {
+				String fqcn = superClass.getQualifiedName().toString();
+				AccessTypeInformation accessTypeInfo = context.getAccessTypeInfo( fqcn );
+				if ( accessTypeInfo != null && accessTypeInfo.getDefaultAccessType() != null ) {
+					return accessTypeInfo.getDefaultAccessType();
+				}
+				if ( TypeUtils.containsAnnotation( superClass, Entity.class, MappedSuperclass.class ) ) {
+					defaultAccessType = getAccessTypeInCaseElementIsRoot( superClass, context );
+					if ( defaultAccessType != null ) {
+						accessTypeInfo = new AccessTypeInformation( fqcn, null, defaultAccessType );
+						context.addAccessTypeInformation( fqcn, accessTypeInfo );
+						defaultAccessType = accessTypeInfo.getAccessType();
+					}
+					else {
+						defaultAccessType = getDefaultAccessForHierarchy( superClass, context );
+					}
+				}
+			}
+		}
+		while ( superClass != null );
+		return defaultAccessType;
+	}
+
+	private static AccessType getAccessTypeInCaseElementIsRoot(TypeElement searchedElement, Context context) {
+		AccessType defaultAccessType = null;
+		List<? extends Element> myMembers = searchedElement.getEnclosedElements();
+		for ( Element subElement : myMembers ) {
+			List<? extends AnnotationMirror> entityAnnotations =
+					context.getElementUtils().getAllAnnotationMirrors( subElement );
+			for ( Object entityAnnotation : entityAnnotations ) {
+				AnnotationMirror annotationMirror = ( AnnotationMirror ) entityAnnotation;
+				if ( isIdAnnotation( annotationMirror ) ) {
+					defaultAccessType = getAccessTypeOfIdAnnotation( subElement );
+					break;
+				}
+			}
+		}
+		return defaultAccessType;
+	}
+
+	private static AccessType getAccessTypeOfIdAnnotation(Element element) {
+		AccessType accessType = null;
+		final ElementKind kind = element.getKind();
+		if ( kind == ElementKind.FIELD || kind == ElementKind.METHOD ) {
+			accessType = kind == ElementKind.FIELD ? AccessType.FIELD : AccessType.PROPERTY;
+		}
+		return accessType;
+	}
+
+	private static boolean isIdAnnotation(AnnotationMirror annotationMirror) {
+		return TypeUtils.isAnnotationMirrorOfType( annotationMirror, Id.class )
+				|| TypeUtils.isAnnotationMirrorOfType( annotationMirror, EmbeddedId.class );
+	}
+
+	public static AccessType determineAnnotationSpecifiedAccessType(Element element) {
+		final AnnotationMirror accessAnnotationMirror = TypeUtils.getAnnotationMirror( element, Access.class );
+		AccessType forcedAccessType = null;
+		if ( accessAnnotationMirror != null ) {
+			Element accessElement = ( Element ) TypeUtils.getAnnotationValue(
+					accessAnnotationMirror,
+					DEFAULT_ANNOTATION_PARAMETER_NAME
+			);
+			if ( accessElement.getKind().equals( ElementKind.ENUM_CONSTANT ) ) {
+				if ( accessElement.getSimpleName().toString().equals( AccessType.PROPERTY.toString() ) ) {
+					forcedAccessType = AccessType.PROPERTY;
+				}
+				else if ( accessElement.getSimpleName().toString().equals( AccessType.FIELD.toString() ) ) {
+					forcedAccessType = AccessType.FIELD;
+				}
+			}
+		}
+		return forcedAccessType;
+	}
+
+	public static ElementKind getElementKindForAccessType(AccessType accessType) {
+		if ( AccessType.FIELD.equals( accessType ) ) {
+			return ElementKind.FIELD;
+		}
+		else {
+			return ElementKind.METHOD;
+		}
+	}
+
+	static class EmbeddedAttributeVisitor extends SimpleTypeVisitor6<String, Element> {
+
+		private Context context;
+
+		EmbeddedAttributeVisitor(Context context) {
+			this.context = context;
+		}
+
+		@Override
+		public String visitDeclared(DeclaredType declaredType, Element element) {
+			TypeElement returnedElement = ( TypeElement ) context.getTypeUtils().asElement( declaredType );
+			String fqNameOfReturnType = null;
+			if ( containsAnnotation( returnedElement, Embeddable.class ) ) {
+				fqNameOfReturnType = returnedElement.getQualifiedName().toString();
+			}
+			return fqNameOfReturnType;
+		}
+
+		@Override
+		public String visitExecutable(ExecutableType t, Element p) {
+			if ( !p.getKind().equals( ElementKind.METHOD ) ) {
+				return null;
+			}
+
+			String string = p.getSimpleName().toString();
+			if ( !StringUtil.isPropertyName( string ) ) {
+				return null;
+			}
+
+			TypeMirror returnType = t.getReturnType();
+			return returnType.accept( this, p );
+		}
 	}
 }

@@ -18,14 +18,14 @@
 package org.hibernate.jpamodelgen;
 
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
+import org.hibernate.jpamodelgen.model.ImportContext;
+
 
 /**
- *
  * @author Max Andersen
  * @author Hardy Ferentschik
  * @author Emmanuel Bernard
@@ -35,10 +35,11 @@ public class ImportContextImpl implements ImportContext {
 	Set<String> imports = new TreeSet<String>();
 	Set<String> staticImports = new TreeSet<String>();
 	Map<String, String> simpleNames = new HashMap<String, String>();
-	
+
 	String basePackage = "";
 
 	private static final Map<String, String> PRIMITIVES = new HashMap<String, String>();
+
 	static {
 		PRIMITIVES.put( "char", "Character" );
 
@@ -61,77 +62,81 @@ public class ImportContextImpl implements ImportContext {
 	/**
 	 * Add fqcn to the import list. Returns fqcn as needed in source code.
 	 * Attempts to handle fqcn with array and generics references.
-	 * 
+	 * <p/>
 	 * e.g.
 	 * java.util.Collection<org.marvel.Hulk> imports java.util.Collection and returns Collection
 	 * org.marvel.Hulk[] imports org.marvel.Hulk and returns Hulk
-	 * 
-	 * 
-	 * @param fqcn
+	 *
+	 * @param fqcn Fully qualified class name
+	 *
 	 * @return import string
 	 */
 	public String importType(String fqcn) {
-		String result = fqcn;		
-		
+		String result = fqcn;
+
 		//if(fqcn==null) return "/** (null) **/"; 
-		
+
 		String additionalTypePart = null;
-		if(fqcn.indexOf('<')>=0) {
-			additionalTypePart = result.substring(fqcn.indexOf('<'));
-			result = result.substring(0,fqcn.indexOf('<'));
-			fqcn = result;
-		} else if(fqcn.indexOf('[')>=0) {
-			additionalTypePart = result.substring(fqcn.indexOf('['));
-			result = result.substring(0,fqcn.indexOf('['));
+		if ( fqcn.indexOf( '<' ) >= 0 ) {
+			additionalTypePart = result.substring( fqcn.indexOf( '<' ) );
+			result = result.substring( 0, fqcn.indexOf( '<' ) );
 			fqcn = result;
 		}
-		
+		else if ( fqcn.indexOf( '[' ) >= 0 ) {
+			additionalTypePart = result.substring( fqcn.indexOf( '[' ) );
+			result = result.substring( 0, fqcn.indexOf( '[' ) );
+			fqcn = result;
+		}
+
 		String pureFqcn = fqcn.replace( '$', '.' );
-		
-		boolean canBeSimple = true;
-		
-		
-		String simpleName = unqualify(fqcn);
-		if(simpleNames.containsKey(simpleName)) {
-			String existingFqcn = simpleNames.get(simpleName);
-			if(existingFqcn.equals(pureFqcn)) {
+
+		boolean canBeSimple;
+
+		String simpleName = unqualify( fqcn );
+		if ( simpleNames.containsKey( simpleName ) ) {
+			String existingFqcn = simpleNames.get( simpleName );
+			if ( existingFqcn.equals( pureFqcn ) ) {
 				canBeSimple = true;
-			} else {
+			}
+			else {
 				canBeSimple = false;
 			}
-		} else {
+		}
+		else {
 			canBeSimple = true;
-			simpleNames.put(simpleName, pureFqcn);
+			simpleNames.put( simpleName, pureFqcn );
 			imports.add( pureFqcn );
 		}
-		
-		
-		if ( inSamePackage(fqcn) || (imports.contains( pureFqcn ) && canBeSimple) ) {
-			result = unqualify( result ); // dequalify
-		} else if ( inJavaLang( fqcn ) ) {
+
+
+		if ( inSamePackage( fqcn ) || ( imports.contains( pureFqcn ) && canBeSimple ) ) {
+			result = unqualify( result ); // de-qualify
+		}
+		else if ( inJavaLang( fqcn ) ) {
 			result = result.substring( "java.lang.".length() );
 		}
 
-		if(additionalTypePart!=null) {
+		if ( additionalTypePart != null ) {
 			result = result + additionalTypePart;
-		} 
-		
+		}
+
 		result = result.replace( '$', '.' );
-		return result;		
+		return result;
 	}
-	
+
 	public String staticImport(String fqcn, String member) {
 		String local = fqcn + "." + member;
-		imports.add(local);
-		staticImports.add(local);
-		
-		if(member.equals("*")) {
+		imports.add( local );
+		staticImports.add( local );
+
+		if ( member.equals( "*" ) ) {
 			return "";
-		} else {
+		}
+		else {
 			return member;
 		}
 	}
-	
+
 	private boolean inDefaultPackage(String className) {
 		return className.indexOf( "." ) < 0;
 	}
@@ -143,7 +148,7 @@ public class ImportContextImpl implements ImportContext {
 	private boolean inSamePackage(String className) {
 		String other = qualifier( className );
 		return other == basePackage
-				|| (other != null && other.equals( basePackage ) );
+				|| ( other != null && other.equals( basePackage ) );
 	}
 
 	private boolean inJavaLang(String className) {
@@ -152,33 +157,34 @@ public class ImportContextImpl implements ImportContext {
 
 	public String generateImports() {
 		StringBuffer buf = new StringBuffer();
-		
-		for ( Iterator<String> imps = imports.iterator(); imps.hasNext(); ) {
-				String next = imps.next();
-				if(isPrimitive(next) || inDefaultPackage(next) || inJavaLang(next) || inSamePackage(next)) {
-					// dont add automatically "imported" stuff
-				} else {
-					if(staticImports.contains(next)) {
-						buf.append("import static " + next + ";\r\n");
-					} else {
-						buf.append("import " + next + ";\r\n");
-					}
+
+		for ( String next : imports ) {
+			if ( isPrimitive( next ) || inDefaultPackage( next ) || inJavaLang( next ) || inSamePackage( next ) ) {
+				// dont add automatically "imported" stuff
+			}
+			else {
+				if ( staticImports.contains( next ) ) {
+					buf.append( "import static " + next + ";\r\n" );
 				}
+				else {
+					buf.append( "import " + next + ";\r\n" );
+				}
+			}
 		}
-		
-		if(buf.indexOf( "$" )>=0) {
+
+		if ( buf.indexOf( "$" ) >= 0 ) {
 			return buf.toString();
 		}
-		return buf.toString();            
+		return buf.toString();
 	}
-	
+
 	public static String unqualify(String qualifiedName) {
-		int loc = qualifiedName.lastIndexOf(".");
-		return ( loc < 0 ) ? qualifiedName : qualifiedName.substring( qualifiedName.lastIndexOf(".") + 1 );
+		int loc = qualifiedName.lastIndexOf( "." );
+		return ( loc < 0 ) ? qualifiedName : qualifiedName.substring( qualifiedName.lastIndexOf( "." ) + 1 );
 	}
 
 	public static String qualifier(String qualifiedName) {
-		int loc = qualifiedName.lastIndexOf(".");
+		int loc = qualifiedName.lastIndexOf( "." );
 		return ( loc < 0 ) ? "" : qualifiedName.substring( 0, loc );
 	}
 }

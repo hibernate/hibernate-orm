@@ -6,7 +6,6 @@
                  version="2.0"
         >
     <package>org.hibernate.jpamodelgen.test.accesstype</package>
-    <!-- default package -->
     <entity class="Order" access="FIELD" metadata-complete="true"> <!--means ignore annotations-->
         <attributes>
             <id name="id">
@@ -23,7 +22,6 @@
                 </cascade>
             </one-to-many>
             <element-collection name="notes"/>
-            <!-- new in JPA 2 -->
         </attributes>
     </entity>
 </entity-mappings>

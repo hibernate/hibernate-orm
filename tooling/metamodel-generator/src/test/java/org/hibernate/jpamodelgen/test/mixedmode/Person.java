@@ -15,31 +15,35 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-package org.hibernate.jpamodelgen;
+package org.hibernate.jpamodelgen.test.mixedmode;
 
-import javax.lang.model.element.Name;
-import javax.lang.model.element.TypeElement;
-import java.util.List;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
 
 /**
  * @author Hardy Ferentschik
  */
-public interface MetaEntity extends ImportContext {
-    String getSimpleName();
+@Entity
+public class Person {
+	@Id
+	@GeneratedValue
+	private long id;
+	private String name;
 
-    String getQualifiedName();
+	public long getId() {
+		return id;
+	}
 
-    String getPackageName();
+	public void setId(long id) {
+		this.id = id;
+	}
 
-    List<MetaAttribute> getMembers();
+	public String getName() {
+		return name;
+	}
 
-    String generateImports();
-
-    String importType(String fqcn);
-
-    String staticImport(String fqcn, String member);
-
-    String importType(Name qualifiedName);
-
-	TypeElement getTypeElement();
+	public void setName(String name) {
+		this.name = name;
+	}
 }

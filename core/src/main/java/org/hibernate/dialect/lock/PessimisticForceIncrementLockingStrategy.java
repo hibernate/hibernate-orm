@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2009, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,7 +20,6 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.dialect.lock;
 
@@ -30,25 +29,20 @@ import org.hibernate.HibernateException;
 import org.hibernate.JDBCException;
 import org.hibernate.LockMode;
 import org.hibernate.StaleObjectStateException;
-import org.hibernate.engine.SessionImplementor;
 import org.hibernate.engine.EntityEntry;
-import org.hibernate.persister.entity.Lockable;
+import org.hibernate.engine.SessionImplementor;
 import org.hibernate.persister.entity.EntityPersister;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.hibernate.persister.entity.Lockable;
 
 /**
  * A pessimistic locking strategy that increments the version immediately (obtaining an exclusive write lock).
  * <p/>
  * This strategy is valid for LockMode.PESSIMISTIC_FORCE_INCREMENT
  *
- * @since 3.5
- *
  * @author Scott Marlow
+ * @since 3.5
  */
 public class PessimisticForceIncrementLockingStrategy implements LockingStrategy {
-	private static final Logger log = LoggerFactory.getLogger( PessimisticForceIncrementLockingStrategy.class );
-
 	private final Lockable lockable;
 	private final LockMode lockMode;
 
@@ -56,7 +50,7 @@ public class PessimisticForceIncrementLockingStrategy implements LockingStrategy
 	 * Construct locking strategy.
 	 *
 	 * @param lockable The metadata for the entity to be locked.
-	 * @param lockMode Indictates the type of lock to be acquired.
+	 * @param lockMode Indicates the type of lock to be acquired.
 	 */
 	public PessimisticForceIncrementLockingStrategy(Lockable lockable, LockMode lockMode) {
 		this.lockable = lockable;
@@ -67,26 +61,29 @@ public class PessimisticForceIncrementLockingStrategy implements LockingStrategy
 		}
 	}
 
-   /**
-	 * @see org.hibernate.dialect.lock.LockingStrategy#lock
+	/**
+	 * {@inheritDoc}
 	 */
 	public void lock(
-      Serializable id,
-      Object version,
-      Object object,
-      int timeout,
-		SessionImplementor session) throws StaleObjectStateException, JDBCException {
+			Serializable id,
+			Object version,
+			Object object,
+			int timeout,
+			SessionImplementor session) throws StaleObjectStateException, JDBCException {
 		if ( !lockable.isVersioned() ) {
 			throw new HibernateException( "[" + lockMode + "] not supported for non-versioned entities [" + lockable.getEntityName() + "]" );
 		}
-      EntityEntry entry = session.getPersistenceContext().getEntry(object);
-      final EntityPersister persister = entry.getPersister();
-      Object nextVersion = persister.forceVersionIncrement(
-            entry.getId(), entry.getVersion(), session
-      );
-      entry.forceLocked( object, nextVersion );
+		EntityEntry entry = session.getPersistenceContext().getEntry( object );
+		final EntityPersister persister = entry.getPersister();
+		Object nextVersion = persister.forceVersionIncrement( entry.getId(), entry.getVersion(), session );
+		entry.forceLocked( object, nextVersion );
 	}
 
+	/**
+	 * Retrieve the specific lock mode defined.
+	 *
+	 * @return The specific lock mode.
+	 */
 	protected LockMode getLockMode() {
 		return lockMode;
 	}

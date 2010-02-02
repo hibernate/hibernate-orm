@@ -643,8 +643,13 @@ public abstract class Loader {
 			}
 		}
 
+		applyPostLoadLocks( row, lockModesArray, session );
+
 		return getResultColumnOrRow( row, queryParameters.getResultTransformer(), resultSet, session );
 
+	}
+
+	protected void applyPostLoadLocks(Object[] row, LockMode[] lockModesArray, SessionImplementor session) {
 	}
 
 	/**

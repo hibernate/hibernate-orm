@@ -15,6 +15,13 @@ public class Lock {
 	private Integer version;
 	private String name;
 
+	public Lock() {
+	}
+
+	public Lock(String name) {
+		this.name = name;
+	}
+
 	@Id
 	@GeneratedValue
 	public Integer getId() {

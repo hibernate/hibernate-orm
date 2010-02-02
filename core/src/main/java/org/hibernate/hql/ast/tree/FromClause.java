@@ -136,6 +136,27 @@ public class FromClause extends HqlSqlWalkerNode implements HqlSqlTokenTypes, Di
 		return fromElement;
 	}
 
+	public FromElement findFromElementBySqlAlias(String sqlAlias) {
+		FromElement fromElement = ( FromElement ) fromElementByTableAlias.get( sqlAlias );
+		if ( fromElement == null && parentFromClause != null ) {
+			fromElement = parentFromClause.getFromElement( sqlAlias );
+		}
+		return fromElement;
+	}
+
+	public FromElement findFromElementByUserOrSqlAlias(String userAlias, String sqlAlias) {
+		FromElement fromElement = null;
+		if ( userAlias != null ) {
+			fromElement = getFromElement( userAlias );
+		}
+
+		if ( fromElement == null ) {
+			fromElement = findFromElementBySqlAlias( sqlAlias );
+		}
+
+		return fromElement;
+	}
+
 	private FromElement findIntendedAliasedFromElementBasedOnCrazyJPARequirements(String specifiedAlias) {
 		Iterator itr = fromElementByClassAlias.entrySet().iterator();
 		while ( itr.hasNext() ) {

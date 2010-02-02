@@ -259,7 +259,7 @@ public abstract class AbstractQueryImpl<X> implements TypedQuery<X> {
 				}
 				else {
 					// extract the alias
-					final String alias = hintName.substring( AvailableSettings.ALIAS_SPECIFIC_LOCK_MODE.length() );
+					final String alias = hintName.substring( AvailableSettings.ALIAS_SPECIFIC_LOCK_MODE.length() + 1 );
 					// determine the LockMode
 					try {
 						final LockMode lockMode = LockModeTypeHelper.interpretLockMode( value );

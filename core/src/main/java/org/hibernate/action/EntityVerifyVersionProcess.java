@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2009, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,23 +20,22 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.action;
 
-import org.hibernate.engine.SessionImplementor;
-import org.hibernate.engine.EntityEntry;
-import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.HibernateException;
 import org.hibernate.OptimisticLockException;
+import org.hibernate.engine.EntityEntry;
+import org.hibernate.engine.SessionImplementor;
+import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.pretty.MessageHelper;
 
 /**
  * Verify/Increment the entity version
  *
  * @author Scott Marlow
  */
-public class EntityVerifyVersionProcess implements BeforeTransactionCompletionProcess
-{
+public class EntityVerifyVersionProcess implements BeforeTransactionCompletionProcess {
+	/** @noinspection FieldCanBeLocal,UnusedDeclaration */
 	private final Object object;
 	private final EntityEntry entry;
 
@@ -53,12 +52,13 @@ public class EntityVerifyVersionProcess implements BeforeTransactionCompletionPr
 	public void doBeforeTransactionCompletion(SessionImplementor session) {
 		final EntityPersister persister = entry.getPersister();
 
-		Object latestVersion = persister.getCurrentVersion(
-			entry.getId(), session
-		);
-	   if(!entry.getVersion().equals(latestVersion))
+		Object latestVersion = persister.getCurrentVersion( entry.getId(), session );
+		if ( !entry.getVersion().equals( latestVersion ) ) {
 			throw new OptimisticLockException(
-				"Newer version ("+ latestVersion+
-				") of entity ("+entry.getEntityName()+") found in database.  id=" +  entry.getId());
+					"Newer version [" + latestVersion +
+							"] of entity [" + MessageHelper.infoString( entry.getEntityName(), entry.getId() ) +
+							"] found in database"
+			);
+		}
 	}
 }

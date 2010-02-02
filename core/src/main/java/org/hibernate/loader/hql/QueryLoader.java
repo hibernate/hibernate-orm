@@ -39,6 +39,7 @@ import org.hibernate.QueryException;
 import org.hibernate.ScrollableResults;
 import org.hibernate.LockOptions;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.EntityEntry;
 import org.hibernate.engine.QueryParameters;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.SessionImplementor;
@@ -281,43 +282,50 @@ public class QueryLoader extends BasicLoader {
 	 * @param lockOptions a collection of lock modes specified dynamically via the Query interface
 	 */
 	protected LockMode[] getLockModes(LockOptions lockOptions) {
-
-		if ( lockOptions == null ||
-			lockOptions.getAliasLockCount() == 0 ) {
+		if ( lockOptions == null ) {
 			return defaultLockModes;
 		}
-		else {
-			// unfortunately this stuff can't be cached because
-			// it is per-invocation, not constant for the
-			// QueryTranslator instance
 
-			LockMode[] lockModesArray = new LockMode[entityAliases.length];
-			for ( int i = 0; i < entityAliases.length; i++ ) {
-				LockMode lockMode = lockOptions.getEffectiveLockMode( entityAliases[i] );
-				if ( lockMode == null ) {
-					//NONE, because its the requested lock mode, not the actual! 
-					lockMode = LockMode.NONE;
-				}
-				lockModesArray[i] = lockMode;
-			}
-			return lockModesArray;
+		if ( lockOptions.getAliasLockCount() == 0
+				&& ( lockOptions.getLockMode() == null || LockMode.NONE.equals( lockOptions.getLockMode() ) ) ) {
+			return defaultLockModes;
 		}
+
+		// unfortunately this stuff can't be cached because
+		// it is per-invocation, not constant for the
+		// QueryTranslator instance
+
+		LockMode[] lockModesArray = new LockMode[entityAliases.length];
+		for ( int i = 0; i < entityAliases.length; i++ ) {
+			LockMode lockMode = lockOptions.getEffectiveLockMode( entityAliases[i] );
+			if ( lockMode == null ) {
+				//NONE, because its the requested lock mode, not the actual!
+				lockMode = LockMode.NONE;
+			}
+			lockModesArray[i] = lockMode;
+		}
+
+		return lockModesArray;
 	}
 
 	protected String applyLocks(String sql, LockOptions lockOptions, Dialect dialect) throws QueryException {
+		// can't cache this stuff either (per-invocation)
+		// we are given a map of user-alias -> lock mode
+		// create a new map of sql-alias -> lock mode
+
 		if ( lockOptions == null ||
 			( lockOptions.getLockMode() == LockMode.NONE && lockOptions.getAliasLockCount() == 0 ) ) {
 			return sql;
 		}
 
-		// can't cache this stuff either (per-invocation)
-		// we are given a map of user-alias -> lock mode
-		// create a new map of sql-alias -> lock mode
+		// we need both the set of locks and the columns to reference in locks
+		// as the ultimate output of this section...
 		final LockOptions locks = new LockOptions( lockOptions.getLockMode() );
+		final Map keyColumnNames = dialect.forUpdateOfColumns() ? new HashMap() : null;
+
 		locks.setScope( lockOptions.getScope() );
 		locks.setTimeOut( lockOptions.getTimeOut() );
 
-		final Map keyColumnNames = dialect.forUpdateOfColumns() ? new HashMap() : null;
 		final Iterator itr = sqlAliasByEntityAlias.entrySet().iterator();
 		while ( itr.hasNext() ) {
 			final Map.Entry entry = (Map.Entry) itr.next();
@@ -333,7 +341,9 @@ public class QueryLoader extends BasicLoader {
 			// want to apply the lock against the root table (for all other strategies,
 			// it just happens that driving and root are the same).
 			final QueryNode select = ( QueryNode ) queryTranslator.getSqlAST();
-			final Lockable drivingPersister = ( Lockable ) select.getFromClause().getFromElement( userAlias ).getQueryable();
+			final Lockable drivingPersister = ( Lockable ) select.getFromClause()
+					.findFromElementByUserOrSqlAlias( userAlias, drivingSqlAlias )
+					.getQueryable();
 			final String sqlAlias = drivingPersister.getRootTableAlias( drivingSqlAlias );
 
 			final LockMode effectiveLockMode = lockOptions.getEffectiveLockMode( userAlias );
@@ -344,7 +354,24 @@ public class QueryLoader extends BasicLoader {
 			}
 		}
 
+		// apply the collected locks and columns
 		return dialect.applyLocksToSql( sql, locks, keyColumnNames );
+	}
+
+	protected void applyPostLoadLocks(Object[] row, LockMode[] lockModesArray, SessionImplementor session) {
+		// todo : scalars???
+//		if ( row.length != lockModesArray.length ) {
+//			return;
+//		}
+//
+//		for ( int i = 0; i < lockModesArray.length; i++ ) {
+//			if ( LockMode.OPTIMISTIC_FORCE_INCREMENT.equals( lockModesArray[i] ) ) {
+//				final EntityEntry pcEntry =
+//			}
+//			else if ( LockMode.PESSIMISTIC_FORCE_INCREMENT.equals( lockModesArray[i] ) ) {
+//
+//			}
+//		}
 	}
 
 	protected boolean upgradeLocks() {

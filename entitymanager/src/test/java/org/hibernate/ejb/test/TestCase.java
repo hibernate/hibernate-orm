@@ -28,6 +28,7 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
 import javax.persistence.EntityManager;
@@ -55,6 +56,7 @@ public abstract class TestCase extends HibernateTestCase {
 
 	protected static EntityManagerFactory factory;
 	private EntityManager em;
+	private ArrayList isolatedEms = new ArrayList();
 
 
 	public TestCase() {
@@ -80,7 +82,7 @@ public abstract class TestCase extends HibernateTestCase {
 		factory = ejbconfig.createEntityManagerFactory( getConfig() );
 	}
 
-	protected void handleUnclosedResources(){
+	private void cleanUnclosed(EntityManager em){
 		if(em == null) {
 			return;
 		}
@@ -94,6 +96,13 @@ public abstract class TestCase extends HibernateTestCase {
 			em.close();
 			log.warn( "The EntityManager is not closed. Closing it." );
 		}
+	}
+	protected void handleUnclosedResources(){
+		cleanUnclosed( this.em );
+		for ( Iterator iter = isolatedEms.iterator(); iter.hasNext();) {
+			cleanUnclosed( (EntityManager)iter.next() );
+		}
+
 		cfg = null;
 	}
 
@@ -108,6 +117,12 @@ public abstract class TestCase extends HibernateTestCase {
 			em = factory.createEntityManager();
 		}
 		return em;
+	}
+
+	protected EntityManager createIsolatedEntityManager() {
+		EntityManager isolatedEm = factory.createEntityManager( );
+		isolatedEms.add( isolatedEm );
+		return isolatedEm;
 	}
 
 	/**

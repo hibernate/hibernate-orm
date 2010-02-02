@@ -30,6 +30,7 @@ import java.sql.SQLException;
 import java.sql.Types;
 
 import org.hibernate.Hibernate;
+import org.hibernate.LockOptions;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.NoArgSQLFunction;
 import org.hibernate.dialect.function.PositionSubstringFunction;
@@ -359,16 +360,23 @@ public class PostgreSQLDialect extends Dialect {
 		return false;
 	}
 
+	// locking support
 	public String getForUpdateString() {
 		return " for update";
 	}
 
 	public String getWriteLockString(int timeout) {
-		return " for update";
+		if ( timeout == LockOptions.NO_WAIT )
+			return " for update nowait";
+		else
+			return " for update";
 	}
 
 	public String getReadLockString(int timeout) {
-		return " for share";
+		if ( timeout == LockOptions.NO_WAIT )
+			return " for share nowait";
+		else
+			return " for share";
 	}
 
 }

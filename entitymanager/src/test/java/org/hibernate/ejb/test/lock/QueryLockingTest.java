@@ -23,14 +23,16 @@
  */
 package org.hibernate.ejb.test.lock;
 
+import java.util.Map;
 import javax.persistence.EntityManager;
 import javax.persistence.LockModeType;
 
 import org.hibernate.LockMode;
-import org.hibernate.Session;
+import org.hibernate.cfg.AnnotationConfiguration;
 import org.hibernate.ejb.AvailableSettings;
 import org.hibernate.ejb.QueryImpl;
 import org.hibernate.ejb.test.TestCase;
+import org.hibernate.impl.SessionImpl;
 
 /**
  * TODO : javadoc
@@ -41,13 +43,19 @@ public class QueryLockingTest extends TestCase {
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] { Lock.class };
+		return new Class[] { Lockable.class };
+	}
+
+	@Override
+	@SuppressWarnings({ "unchecked" })
+	protected void addConfigOptions(Map options) {
+		options.put( AnnotationConfiguration.USE_NEW_ID_GENERATOR_MAPPINGS, "true" );
 	}
 
 	public void testOverallLockMode() {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
-		QueryImpl jpaQuery = em.createQuery( "from Lock_ l" ).unwrap( QueryImpl.class );
+		QueryImpl jpaQuery = em.createQuery( "from Lockable l" ).unwrap( QueryImpl.class );
 
 		org.hibernate.impl.QueryImpl hqlQuery = (org.hibernate.impl.QueryImpl) jpaQuery.getHibernateQuery();
 		assertEquals( LockMode.NONE, hqlQuery.getLockOptions().getLockMode() );
@@ -69,10 +77,10 @@ public class QueryLockingTest extends TestCase {
 		em.close();
 	}
 
-	public void testForcedIncrementOverall() {
+	public void testPessimisticForcedIncrementOverall() {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
-		Lock lock = new Lock( "name" );
+		Lockable lock = new Lockable( "name" );
 		em.persist( lock );
 		em.getTransaction().commit();
 		em.close();
@@ -81,14 +89,148 @@ public class QueryLockingTest extends TestCase {
 
 		em = getOrCreateEntityManager();
 		em.getTransaction().begin();
-		Lock reread = em.createQuery( "from Lock_", Lock.class ).setLockMode( LockModeType.PESSIMISTIC_FORCE_INCREMENT ).getSingleResult();
+		Lockable reread = em.createQuery( "from Lockable", Lockable.class ).setLockMode( LockModeType.PESSIMISTIC_FORCE_INCREMENT ).getSingleResult();
+		assertFalse( reread.getVersion().equals( initial ) );
+		em.getTransaction().commit();
+		em.close();
+
+		em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		em.remove( em.getReference( Lockable.class, reread.getId() ) );
+		em.getTransaction().commit();
+		em.close();
+	}
+
+	public void testPessimisticForcedIncrementSpecific() {
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		Lockable lock = new Lockable( "name" );
+		em.persist( lock );
+		em.getTransaction().commit();
+		em.close();
+		Integer initial = lock.getVersion();
+		assertNotNull( initial );
+
+		em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		Lockable reread = em.createQuery( "from Lockable l", Lockable.class )
+				.setHint( AvailableSettings.ALIAS_SPECIFIC_LOCK_MODE+".l", LockModeType.PESSIMISTIC_FORCE_INCREMENT )
+				.getSingleResult();
+		assertFalse( reread.getVersion().equals( initial ) );
+		em.getTransaction().commit();
+		em.close();
+
+		em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		em.remove( em.getReference( Lockable.class, reread.getId() ) );
+		em.getTransaction().commit();
+		em.close();
+	}
+
+	public void testOptimisticForcedIncrementOverall() {
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		Lockable lock = new Lockable( "name" );
+		em.persist( lock );
+		em.getTransaction().commit();
+		em.close();
+		Integer initial = lock.getVersion();
+		assertNotNull( initial );
+
+		em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		Lockable reread = em.createQuery( "from Lockable", Lockable.class ).setLockMode( LockModeType.OPTIMISTIC_FORCE_INCREMENT ).getSingleResult();
+		assertEquals( initial, reread.getVersion() );
 		em.getTransaction().commit();
 		em.close();
 		assertFalse( reread.getVersion().equals( initial ) );
 
 		em = getOrCreateEntityManager();
 		em.getTransaction().begin();
-		em.remove( em.getReference( Lock.class, reread.getId() ) );
+		em.remove( em.getReference( Lockable.class, reread.getId() ) );
+		em.getTransaction().commit();
+		em.close();
+	}
+
+	public void testOptimisticForcedIncrementSpecific() {
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		Lockable lock = new Lockable( "name" );
+		em.persist( lock );
+		em.getTransaction().commit();
+		em.close();
+		Integer initial = lock.getVersion();
+		assertNotNull( initial );
+
+		em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		Lockable reread = em.createQuery( "from Lockable l", Lockable.class )
+				.setHint( AvailableSettings.ALIAS_SPECIFIC_LOCK_MODE+".l", LockModeType.OPTIMISTIC_FORCE_INCREMENT )
+				.getSingleResult();
+		assertEquals( initial, reread.getVersion() );
+		em.getTransaction().commit();
+		em.close();
+		assertFalse( reread.getVersion().equals( initial ) );
+
+		em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		em.remove( em.getReference( Lockable.class, reread.getId() ) );
+		em.getTransaction().commit();
+		em.close();
+	}
+
+	public void testOptimisticOverall() {
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		Lockable lock = new Lockable( "name" );
+		em.persist( lock );
+		em.getTransaction().commit();
+		em.close();
+		Integer initial = lock.getVersion();
+		assertNotNull( initial );
+
+		em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		Lockable reread = em.createQuery( "from Lockable", Lockable.class )
+				.setLockMode( LockModeType.OPTIMISTIC )
+				.getSingleResult();
+		assertEquals( initial, reread.getVersion() );
+		assertTrue( em.unwrap( SessionImpl.class ).getActionQueue().hasBeforeTransactionActions() );
+		em.getTransaction().commit();
+		em.close();
+		assertEquals( initial, reread.getVersion() );
+
+		em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		em.remove( em.getReference( Lockable.class, reread.getId() ) );
+		em.getTransaction().commit();
+		em.close();
+	}
+
+	public void testOptimisticSpecific() {
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		Lockable lock = new Lockable( "name" );
+		em.persist( lock );
+		em.getTransaction().commit();
+		em.close();
+		Integer initial = lock.getVersion();
+		assertNotNull( initial );
+
+		em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		Lockable reread = em.createQuery( "from Lockable l", Lockable.class )
+				.setHint( AvailableSettings.ALIAS_SPECIFIC_LOCK_MODE+".l", LockModeType.OPTIMISTIC )
+				.getSingleResult();
+		assertEquals( initial, reread.getVersion() );
+		assertTrue( em.unwrap( SessionImpl.class ).getActionQueue().hasBeforeTransactionActions() );
+		em.getTransaction().commit();
+		em.close();
+		assertEquals( initial, reread.getVersion() );
+
+		em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		em.remove( em.getReference( Lockable.class, reread.getId() ) );
 		em.getTransaction().commit();
 		em.close();
 	}

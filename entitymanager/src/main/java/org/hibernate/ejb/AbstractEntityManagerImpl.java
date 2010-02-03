@@ -35,6 +35,7 @@ import java.util.List;
 import java.util.Map;
 import javax.persistence.CacheRetrieveMode;
 import javax.persistence.CacheStoreMode;
+import javax.persistence.EntityManager;
 import javax.persistence.EntityNotFoundException;
 import javax.persistence.EntityTransaction;
 import javax.persistence.FlushModeType;
@@ -895,16 +896,16 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 	}
 
 	public <T> T unwrap(Class<T> clazz) {
-		if ( clazz.equals( Session.class ) ) {
+		if ( Session.class.isAssignableFrom( clazz ) ) {
 			return ( T ) getSession();
 		}
-		if ( clazz.equals( SessionImplementor.class ) ) {
+		if ( SessionImplementor.class.isAssignableFrom( clazz ) ) {
 			return ( T ) getSession();
 		}
-		else {
-			//unknown class type
-			throw new PersistenceException( "Hibernate cannot unwrap " + clazz);
+		if ( EntityManager.class.isAssignableFrom( clazz ) ) {
+			return (T) this;
 		}
+		throw new PersistenceException( "Hibernate cannot unwrap " + clazz);
 	}
 
 	private void joinTransaction(boolean ignoreNotJoining) {

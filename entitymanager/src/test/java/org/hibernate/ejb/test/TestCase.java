@@ -193,7 +193,12 @@ public abstract class TestCase extends HibernateTestCase {
 			dds.addAll( Arrays.asList( getEjb3DD() ) );
 			config.put( AvailableSettings.XML_FILE_NAMES, dds );
 		}
+
+		addConfigOptions( config );
 		return config;
+	}
+
+	protected void addConfigOptions(Map options) {
 	}
 
 	@Override

@@ -375,8 +375,11 @@ public class ActionQueue {
 	}
 
 	public boolean hasAfterTransactionActions() {
-		// todo : method is not used anywhere; why is it here?
 		return afterTransactionProcesses.processes.size() > 0;
+	}
+
+	public boolean hasBeforeTransactionActions() {
+		return beforeTransactionProcesses.processes.size() > 0;
 	}
 
 	public boolean hasAnyQueuedActions() {

@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,7 +20,6 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.event.def;
 
@@ -54,6 +53,8 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
+import org.hibernate.type.EmbeddedComponentType;
+import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeFactory;
 
@@ -106,6 +107,31 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 		else {
 			Class idClass = persister.getIdentifierType().getReturnedClass();
 			if ( idClass != null && ! idClass.isInstance( event.getEntityId() ) ) {
+				// we may have the kooky jpa requirement of allowing find-by-id where
+				// "id" is the "simple pk value" of a dependent objects parent.  This
+				// is part of its generally goofy "derived identity" "feature"
+				if ( persister.getEntityMetamodel().getIdentifierProperty().isEmbedded() ) {
+					final EmbeddedComponentType dependentIdType =
+							(EmbeddedComponentType) persister.getEntityMetamodel().getIdentifierProperty().getType();
+					if ( dependentIdType.getSubtypes().length == 1 ) {
+						final Type singleSubType = dependentIdType.getSubtypes()[0];
+						if ( singleSubType.isEntityType() ) {
+							final EntityType dependentParentType = (EntityType) singleSubType;
+							final Type dependentParentIdType = dependentParentType.getIdentifierOrUniqueKeyType( source.getFactory() );
+							if ( dependentParentIdType.getReturnedClass().isInstance( event.getEntityId() ) ) {
+								// yep that's what we have...
+								loadByDerivedIdentitySimplePkValue(
+										event,
+										loadType,
+										persister,
+										dependentIdType,
+										source.getFactory().getEntityPersister( dependentParentType.getAssociatedEntityName() )
+								);
+								return;
+							}
+						}
+					}
+				}
 				throw new TypeMismatchException(
 						"Provided id of the wrong type for class " + persister.getEntityName() + ". Expected: " + idClass + ", got " + event.getEntityId().getClass()
 				);
@@ -134,6 +160,42 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 			log.info("Error performing load command", e);
 			throw e;
 		}
+	}
+
+	private void loadByDerivedIdentitySimplePkValue(
+			LoadEvent event,
+			LoadEventListener.LoadType options,
+			EntityPersister dependentPersister,
+			EmbeddedComponentType dependentIdType,
+			EntityPersister parentPersister) {
+		final EntityKey parentEntityKey = new EntityKey(
+				event.getEntityId(),
+				parentPersister,
+				event.getSession().getEntityMode()
+		);
+		final Object parent = doLoad(
+				event,
+				parentPersister,
+				parentEntityKey,
+				options
+		);
+
+		Serializable dependent = (Serializable) dependentIdType.instantiate( parent, event.getSession() );
+		dependentIdType.setPropertyValues( dependent, new Object[] {parent}, event.getSession().getEntityMode() );
+		final EntityKey dependentEntityKey = new EntityKey(
+				dependent,
+				dependentPersister,
+				event.getSession().getEntityMode()
+		);
+		event.setEntityId( dependent );
+		dependent = (Serializable) doLoad(
+				event,
+				dependentPersister,
+				dependentEntityKey,
+				options
+		);
+
+		event.setResult( dependent );
 	}
 
 	/**

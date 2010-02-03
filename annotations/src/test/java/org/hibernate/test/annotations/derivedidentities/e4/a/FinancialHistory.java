@@ -16,13 +16,18 @@ import javax.persistence.TemporalType;
  */
 @Entity
 public class FinancialHistory implements Serializable {
-	
-	@Temporal(TemporalType.DATE)
-	Date lastupdate;
-
 	@Id
 	//@JoinColumn(name = "FK")
 	@ManyToOne
 	Person patient;
 
+	@Temporal(TemporalType.DATE)
+	Date lastUpdate;
+
+	public FinancialHistory() {
+	}
+
+	public FinancialHistory(Person patient) {
+		this.patient = patient;
+	}
 }

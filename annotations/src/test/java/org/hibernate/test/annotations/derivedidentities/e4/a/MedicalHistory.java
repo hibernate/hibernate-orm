@@ -16,12 +16,18 @@ import javax.persistence.TemporalType;
  */
 @Entity
 public class MedicalHistory implements Serializable {
-
-	@Temporal(TemporalType.DATE)
-	Date lastupdate;
-
 	@Id
 	@JoinColumn(name = "FK")
 	@OneToOne
 	Person patient;
+
+	@Temporal(TemporalType.DATE)
+	Date lastupdate;
+
+	public MedicalHistory() {
+	}
+
+	public MedicalHistory(Person patient) {
+		this.patient = patient;
+	}
 }

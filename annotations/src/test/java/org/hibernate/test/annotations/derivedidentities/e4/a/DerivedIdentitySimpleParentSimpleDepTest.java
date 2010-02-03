@@ -14,55 +14,79 @@ public class DerivedIdentitySimpleParentSimpleDepTest extends TestCase {
 	public void testOneToOneExplicitJoinColumn() throws Exception {
 		assertTrue( SchemaUtil.isColumnPresent( "MedicalHistory", "FK", getCfg() ) );
 		assertTrue( ! SchemaUtil.isColumnPresent( "MedicalHistory", "id", getCfg() ) );
-		Person e = new Person();
-		e.ssn = "aaa";
-		Session s = openSession(  );
-		s.getTransaction().begin();
-		s.persist( e );
-		MedicalHistory d = new MedicalHistory();
-		d.patient = e;
-		s.persist( d );
-		s.flush();
-		s.clear();
-		final Class<MedicalHistory> clazz = MedicalHistory.class;
-		d = getDerivedClassById( e, s, clazz );
-		assertEquals( e.ssn, d.patient.ssn );
-		d.lastupdate = new Date();
-		s.flush();
-		s.clear();
-		d = getDerivedClassById( e, s, clazz );
-		assertNotNull( d.lastupdate );
-		s.getTransaction().rollback();
-		s.close();
-	}
 
-	private <T> T getDerivedClassById(Person e, Session s, Class<T> clazz) {
-		return ( T )
-				s.createQuery( "from " + clazz.getName() + " mh where mh.patient.ssn = :ssn")
-					.setParameter( "ssn", e.ssn ).uniqueResult();
+		Session s = openSession();
+		s.getTransaction().begin();
+		Person person = new Person( "aaa" );
+		s.persist( person );
+		MedicalHistory medicalHistory = new MedicalHistory( person );
+		s.persist( medicalHistory );
+		s.getTransaction().commit();
+		s.close();
+
+		s = openSession();
+		s.getTransaction().begin();
+		medicalHistory = (MedicalHistory) s.get( MedicalHistory.class, "aaa" );
+		assertEquals( person.ssn, medicalHistory.patient.ssn );
+		medicalHistory.lastupdate = new Date();
+		s.getTransaction().commit();
+		s.close();
+
+		s = openSession();
+		s.getTransaction().begin();
+		medicalHistory = (MedicalHistory) s.get( MedicalHistory.class, "aaa" );
+		assertNotNull( medicalHistory.lastupdate );
+		s.delete( medicalHistory );
+		s.getTransaction().commit();
+		s.close();
 	}
 
 	public void testManyToOneExplicitJoinColumn() throws Exception {
 		assertTrue( SchemaUtil.isColumnPresent( "FinancialHistory", "patient_ssn", getCfg() ) );
 		assertTrue( ! SchemaUtil.isColumnPresent( "FinancialHistory", "id", getCfg() ) );
-		Person e = new Person();
-		e.ssn = "aaa";
-		Session s = openSession(  );
+
+		Session s = openSession();
 		s.getTransaction().begin();
+		Person person = new Person( "aaa" );
+		s.persist( person );
+		FinancialHistory financialHistory = new FinancialHistory( person );
+		s.persist( financialHistory );
+		s.getTransaction().commit();
+		s.close();
+
+		s = openSession();
+		s.getTransaction().begin();
+		financialHistory = (FinancialHistory) s.get( FinancialHistory.class, "aaa" );
+		assertEquals( person.ssn, financialHistory.patient.ssn );
+		financialHistory.lastUpdate = new Date();
+		s.getTransaction().commit();
+		s.close();
+
+		s = openSession();
+		s.getTransaction().begin();
+		financialHistory = (FinancialHistory) s.get( FinancialHistory.class, "aaa" );
+		assertNotNull( financialHistory.lastUpdate );
+		s.delete( financialHistory );
+		s.getTransaction().commit();
+		s.close();
+	}
+
+	public void testSimplePkValueLoading() {
+		Session s = openSession();
+		s.getTransaction().begin();
+		Person e = new Person( "aaa" );
 		s.persist( e );
-		FinancialHistory d = new FinancialHistory();
-		d.patient = e;
+		FinancialHistory d = new FinancialHistory( e );
 		s.persist( d );
-		s.flush();
-		s.clear();
-		d = getDerivedClassById(e, s, FinancialHistory.class);
-		assertEquals( e.ssn, d.patient.ssn );
-		d.lastupdate = new Date();
-		s.flush();
-		s.clear();
-		d = getDerivedClassById(e, s, FinancialHistory.class);
-		assertNotNull( d.lastupdate );
-		s.getTransaction().rollback();
+		s.getTransaction().commit();
+		s.close();
+
+		s = openSession();
+		s.getTransaction().begin();
+		FinancialHistory history = (FinancialHistory) s.get( FinancialHistory.class, "aaa" );
+		assertNotNull( history );
+		s.delete( history );
+		s.getTransaction().commit();
 		s.close();
 	}
 

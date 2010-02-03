@@ -11,4 +11,11 @@ import javax.persistence.Id;
 public class Person {
 	@Id
 	String ssn;
+
+	public Person() {
+	}
+
+	public Person(String ssn) {
+		this.ssn = ssn;
+	}
 }

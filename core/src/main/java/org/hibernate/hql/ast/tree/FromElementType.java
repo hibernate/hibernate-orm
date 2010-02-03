@@ -24,11 +24,15 @@
  */
 package org.hibernate.hql.ast.tree;
 
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 import org.hibernate.MappingException;
 import org.hibernate.QueryException;
 import org.hibernate.param.ParameterSpecification;
+import org.hibernate.persister.collection.CollectionPropertyNames;
+import org.hibernate.type.CollectionType;
 import org.hibernate.util.ArrayHelper;
 import org.hibernate.engine.JoinSequence;
 import org.hibernate.hql.CollectionProperties;
@@ -324,10 +328,16 @@ class FromElementType {
 		PropertyMapping propertyMapping = getPropertyMapping( path );
 		// If this from element is a collection and the path is a collection property (maxIndex, etc.) then
 		// generate a sub-query.
+		//
+		// NOTE : in the case of this being a collection property in the select, not generating the subquery
+		// will not generally work.  The specific cases I am thinking about are the minIndex, maxIndex
+		// (most likely minElement, maxElement as well) cases.
+		//	todo : if ^^ is the case we should thrown an exception here rather than waiting for the sql error
+		//		if the dialect supports select-clause subqueries we could go ahead and generate the subquery also
 		if ( !inSelect && queryableCollection != null && CollectionProperties.isCollectionProperty( path ) ) {
 			Map enabledFilters = fromElement.getWalker().getEnabledFilters();
 			String subquery = CollectionSubqueryFactory.createCollectionSubquery(
-					joinSequence,
+					joinSequence.copy().setUseThetaStyle( true ),
 			        enabledFilters,
 					propertyMapping.toColumns( tableAlias, path )
 			);
@@ -397,11 +407,29 @@ class FromElementType {
 		return fromElement.getQueryable().getTableName();
 	}
 
+	private static final List SPECIAL_MANY2MANY_TREATMENT_FUNCTION_NAMES = java.util.Arrays.asList(
+			new String[] {
+					CollectionPropertyNames.COLLECTION_INDEX,
+					CollectionPropertyNames.COLLECTION_MIN_INDEX,
+					CollectionPropertyNames.COLLECTION_MAX_INDEX
+			}
+	);
+
 	PropertyMapping getPropertyMapping(String propertyName) {
 		checkInitialized();
 		if ( queryableCollection == null ) {		// Not a collection?
 			return ( PropertyMapping ) persister;	// Return the entity property mapping.
 		}
+
+		// indexed, many-to-many collections must be treated specially here if the property to
+		// be mapped touches on the index as we must adjust the alias to use the alias from
+		// the association table (which i different than the one passed in
+		if ( queryableCollection.isManyToMany()
+				&& queryableCollection.hasIndex()
+				&& SPECIAL_MANY2MANY_TREATMENT_FUNCTION_NAMES.contains( propertyName ) ) {
+			return new SpecialManyToManyCollectionPropertyMapping();
+		}
+
 		// If the property is a special collection property name, return a CollectionPropertyMapping.
 		if ( CollectionProperties.isCollectionProperty( propertyName ) ) {
 			if ( collectionPropertyMapping == null ) {
@@ -409,12 +437,14 @@ class FromElementType {
 			}
 			return collectionPropertyMapping;
 		}
+
 		if ( queryableCollection.getElementType().isAnyType() ) {
 			// collection of <many-to-any/> mappings...
 			// used to circumvent the component-collection check below...
 			return queryableCollection;
 
 		}
+
 		if ( queryableCollection.getElementType().isComponentType() ) {
 			// Collection of components.
 			if ( propertyName.equals( EntityPersister.ENTITY_ID ) ) {
@@ -425,17 +455,9 @@ class FromElementType {
 	}
 
 	public boolean isCollectionOfValuesOrComponents() {
-		if ( persister == null ) {
-			if ( queryableCollection == null ) {
-				return false;
-			}
-			else {
-				return !queryableCollection.getElementType().isEntityType();
-			}
-		}
-		else {
-			return false;
-		}
+		return persister == null
+				&& queryableCollection != null
+				&& !queryableCollection.getElementType().isEntityType();
 	}
 
 	public boolean isEntity() {
@@ -448,5 +470,63 @@ class FromElementType {
 
 	public void setIndexCollectionSelectorParamSpec(ParameterSpecification indexCollectionSelectorParamSpec) {
 		this.indexCollectionSelectorParamSpec = indexCollectionSelectorParamSpec;
+	}
+
+	private class SpecialManyToManyCollectionPropertyMapping implements PropertyMapping {
+		/**
+		 * {@inheritDoc}
+		 */
+		public Type getType() {
+			return queryableCollection.getCollectionType();
+		}
+
+		private void validate(String propertyName) {
+			if ( ! ( CollectionPropertyNames.COLLECTION_INDEX.equals( propertyName )
+					|| CollectionPropertyNames.COLLECTION_MAX_INDEX.equals( propertyName )
+					|| CollectionPropertyNames.COLLECTION_MIN_INDEX.equals( propertyName ) ) ) {
+				throw new IllegalArgumentException( "Expecting index-related function call" );
+			}
+		}
+
+		/**
+		 * {@inheritDoc}
+		 */
+		public Type toType(String propertyName) throws QueryException {
+			validate( propertyName );
+			return queryableCollection.getIndexType();
+		}
+
+		/**
+		 * {@inheritDoc}
+		 */
+		public String[] toColumns(String alias, String propertyName) throws QueryException {
+			validate( propertyName );
+			final String joinTableAlias = joinSequence.getFirstJoin().getAlias();
+			if ( CollectionPropertyNames.COLLECTION_INDEX.equals( propertyName ) ) {
+				return queryableCollection.toColumns( joinTableAlias, propertyName );
+			}
+
+			final String[] cols = queryableCollection.getIndexColumnNames( joinTableAlias );
+			if ( CollectionPropertyNames.COLLECTION_MIN_INDEX.equals( propertyName ) ) {
+				if ( cols.length != 1 ) {
+					throw new QueryException( "composite collection index in minIndex()" );
+				}
+				return new String[] { "min(" + cols[0] + ')' };
+			}
+			else {
+				if ( cols.length != 1 ) {
+					throw new QueryException( "composite collection index in maxIndex()" );
+				}
+				return new String[] { "max(" + cols[0] + ')' };
+			}
+		}
+
+		/**
+		 * {@inheritDoc}
+		 */
+		public String[] toColumns(String propertyName) throws QueryException, UnsupportedOperationException {
+			validate( propertyName );
+			return queryableCollection.toColumns( propertyName );
+		}
 	}
 }

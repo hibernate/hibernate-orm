@@ -25,6 +25,7 @@
 package org.hibernate.engine;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -66,7 +67,7 @@ public class JoinSequence {
 		return buf.append( '}' ).toString();
 	}
 
-	final class Join {
+	public final class Join {
 
 		private final AssociationType associationType;
 		private final Joinable joinable;
@@ -83,23 +84,23 @@ public class JoinSequence {
 			this.lhsColumns = lhsColumns;
 		}
 
-		String getAlias() {
+		public String getAlias() {
 			return alias;
 		}
 
-		AssociationType getAssociationType() {
+		public AssociationType getAssociationType() {
 			return associationType;
 		}
 
-		Joinable getJoinable() {
+		public Joinable getJoinable() {
 			return joinable;
 		}
 
-		int getJoinType() {
+		public int getJoinType() {
 			return joinType;
 		}
 
-		String[] getLHSColumns() {
+		public String[] getLHSColumns() {
 			return lhsColumns;
 		}
 
@@ -283,7 +284,15 @@ public class JoinSequence {
 	public int getJoinCount() {
 		return joins.size();
 	}
-	
+
+	public Iterator iterateJoins() {
+		return joins.iterator();
+	}
+
+	public Join getFirstJoin() {
+		return (Join) joins.get( 0 );
+	}
+
 	public static interface Selector {
 		public boolean includeSubclasses(String alias);
 	}

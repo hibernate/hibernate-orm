@@ -1510,27 +1510,33 @@ public abstract class AbstractCollectionPersister
 		return buffer.toString();
 	}
 
-	public String[] toColumns(String alias, String propertyName)
-			throws QueryException {
-
+	/**
+	 * {@inheritDoc}
+	 */
+	public String[] toColumns(String alias, String propertyName) throws QueryException {
 		if ( "index".equals( propertyName ) ) {
-			if ( isManyToMany() ) {
-				throw new QueryException( "index() function not supported for many-to-many association" );
-			}
-			return StringHelper.qualify( alias, indexColumnNames );
+			return qualify( alias, indexColumnNames, indexFormulaTemplates );
 		}
-
 		return elementPropertyMapping.toColumns( alias, propertyName );
 	}
 
-	public String[] toColumns(String propertyName)
-			throws QueryException {
+	private String[] indexFragments;
 
+	/**
+	 * {@inheritDoc}
+	 */
+	public String[] toColumns(String propertyName) throws QueryException {
 		if ( "index".equals( propertyName ) ) {
-			if ( isManyToMany() ) {
-				throw new QueryException( "index() function not supported for many-to-many association" );
+			if ( indexFragments == null ) {
+				String[] tmp = new String[indexColumnNames.length];
+				for ( int i = 0; i < indexColumnNames.length; i++ ) {
+					tmp[i] = indexColumnNames[i] == null
+							? indexFormulas[i]
+							: indexColumnNames[i];
+					indexFragments = tmp;
+				}
 			}
-			return indexColumnNames;
+			return indexFragments;
 		}
 
 		return elementPropertyMapping.toColumns( propertyName );

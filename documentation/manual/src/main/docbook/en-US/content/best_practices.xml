@@ -125,7 +125,7 @@
                     In performance-critical areas of the system, some kinds of operations might benefit from 
                     direct JDBC. Do not assume, however, that JDBC is necessarily faster. Please wait until you <emphasis>know</emphasis> something is a bottleneck. 
                     If you need to use direct JDBC, 
-                    you can open a Hibernate <literal>Session</literal> and usingfile:///usr/share/doc/HTML/en-US/index.html that JDBC connection. This 
+                    you can open a Hibernate <literal>Session</literal>, wrap your JDBC operation as a <literal>org.hibernate.jdbc.Work</literal> object and using that JDBC connection. This 
                     way you can still use the same transaction strategy and underlying connection provider.
                 </para>
             </listitem>

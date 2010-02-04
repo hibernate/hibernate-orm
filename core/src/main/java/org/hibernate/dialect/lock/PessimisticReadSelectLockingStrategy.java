@@ -24,6 +24,7 @@
  */
 package org.hibernate.dialect.lock;
 
+import org.hibernate.LockOptions;
 import org.hibernate.persister.entity.Lockable;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.engine.SessionFactoryImplementor;
@@ -72,7 +73,7 @@ public class PessimisticReadSelectLockingStrategy implements LockingStrategy {
 	public PessimisticReadSelectLockingStrategy(Lockable lockable, LockMode lockMode) {
 		this.lockable = lockable;
 		this.lockMode = lockMode;
-		this.sql = generateLockString();
+		this.sql = generateLockString(LockOptions.WAIT_FOREVER);
 	}
 
    /**
@@ -83,6 +84,13 @@ public class PessimisticReadSelectLockingStrategy implements LockingStrategy {
       Object version,
       Object object,
       int timeout, SessionImplementor session) throws StaleObjectStateException, JDBCException {
+		String sql = this.sql;
+		if ( timeout == LockOptions.NO_WAIT ) {
+			sql = generateLockString( LockOptions.NO_WAIT );
+		}
+		else if ( timeout > 0) {
+			sql = generateLockString( timeout );
+		}
 
 		SessionFactoryImplementor factory = session.getFactory();
 		try {
@@ -132,10 +140,12 @@ public class PessimisticReadSelectLockingStrategy implements LockingStrategy {
 		return lockMode;
 	}
 
-	protected String generateLockString() {
+	protected String generateLockString(int lockTimeout) {
 		SessionFactoryImplementor factory = lockable.getFactory();
+		LockOptions lockOptions = new LockOptions(this.lockMode);
+		lockOptions.setTimeOut( lockTimeout );
 		SimpleSelect select = new SimpleSelect( factory.getDialect() )
-				.setLockMode( lockMode )
+				.setLockOptions( lockOptions )
 				.setTableName( lockable.getRootTableName() )
 				.addColumn( lockable.getRootTableIdentifierColumnNames()[0] )
 				.addCondition( lockable.getRootTableIdentifierColumnNames(), "=?" );

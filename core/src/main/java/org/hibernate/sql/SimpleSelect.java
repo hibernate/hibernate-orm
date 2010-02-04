@@ -33,6 +33,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.LockMode;
+import org.hibernate.LockOptions;
 import org.hibernate.dialect.Dialect;
 
 /**
@@ -51,7 +52,7 @@ public class SimpleSelect {
 	private String tableName;
 	private String orderBy;
 	private Dialect dialect;
-	private LockMode lockMode = LockMode.READ;
+	private LockOptions lockOptions = new LockOptions( LockMode.READ);
 	private String comment;
 
 	private List columns = new ArrayList();
@@ -99,8 +100,13 @@ public class SimpleSelect {
 		return this;
 	}
 
+	public SimpleSelect setLockOptions( LockOptions lockOptions ) {
+	   LockOptions.copy(lockOptions, this.lockOptions);
+		return this;
+	}
+
 	public SimpleSelect setLockMode(LockMode lockMode) {
-		this.lockMode = lockMode;
+		this.lockOptions.setLockMode( lockMode );
 		return this;
 	}
 
@@ -172,7 +178,7 @@ public class SimpleSelect {
 		}
 		
 		buf.append(" from ")
-			.append( dialect.appendLockHint(lockMode, tableName) );
+			.append( dialect.appendLockHint(lockOptions.getLockMode(), tableName) );
 		
 		if ( whereTokens.size() > 0 ) {
 			buf.append(" where ")
@@ -181,8 +187,8 @@ public class SimpleSelect {
 		
 		if (orderBy!=null) buf.append(orderBy);
 		
-		if (lockMode!=null) {
-			buf.append( dialect.getForUpdateString(lockMode) );
+		if (lockOptions!=null) {
+			buf.append( dialect.getForUpdateString(lockOptions) );
 		}
 
 		return dialect.transformSelectString( buf.toString() );

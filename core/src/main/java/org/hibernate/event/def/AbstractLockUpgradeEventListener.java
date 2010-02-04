@@ -107,7 +107,7 @@ public class AbstractLockUpgradeEventListener extends AbstractReassociateEventLi
 					entry.forceLocked( object, nextVersion );
 				}
 				else {
-					persister.lock( entry.getId(), entry.getVersion(), object, requestedLockMode, source );
+					persister.lock( entry.getId(), entry.getVersion(), object, lockOptions, source );
 				}
 				entry.setLockMode(requestedLockMode);
 			}

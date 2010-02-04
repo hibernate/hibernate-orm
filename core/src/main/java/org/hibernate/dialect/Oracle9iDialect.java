@@ -26,6 +26,7 @@ package org.hibernate.dialect;
 
 import java.sql.Types;
 
+import org.hibernate.LockOptions;
 import org.hibernate.sql.CaseFragment;
 import org.hibernate.sql.ANSICaseFragment;
 
@@ -58,9 +59,13 @@ public class Oracle9iDialect extends Oracle8iDialect {
 
 	public String getLimitString(String sql, boolean hasOffset) {
 		sql = sql.trim();
+		String forUpdateClause = null;
 		boolean isForUpdate = false;
-		if ( sql.toLowerCase().endsWith(" for update") ) {
-			sql = sql.substring( 0, sql.length()-11 );
+		final int forUpdateIndex = sql.toLowerCase().lastIndexOf( "for update") ;
+		if ( forUpdateIndex > -1 ) {
+			// save 'for update ...' and then remove it
+			forUpdateClause = sql.substring( forUpdateIndex );
+			sql = sql.substring( 0, forUpdateIndex-1 );
 			isForUpdate = true;
 		}
 
@@ -80,7 +85,8 @@ public class Oracle9iDialect extends Oracle8iDialect {
 		}
 
 		if ( isForUpdate ) {
-			pagingSelect.append( " for update" );
+			pagingSelect.append( " " );
+			pagingSelect.append( forUpdateClause );
 		}
 
 		return pagingSelect.toString();
@@ -98,4 +104,28 @@ public class Oracle9iDialect extends Oracle8iDialect {
 		// the standard SQL function name is current_timestamp...
 		return "current_timestamp";
 	}
+
+	// locking support
+	public String getForUpdateString() {
+		return " for update";
+	}
+
+	public String getWriteLockString(int timeout) {
+		if ( timeout == LockOptions.NO_WAIT ) {
+			return " for update nowait";
+		}
+		else if ( timeout > 0 ) {
+			// convert from milliseconds to seconds
+			float seconds = timeout / 1000.0f;
+			timeout = Math.round(seconds);
+			return " for update wait " + timeout;
+		}
+		else
+			return " for update";
+	}
+
+	public String getReadLockString(int timeout) {
+		return getWriteLockString( timeout );
+	}
+	
 }

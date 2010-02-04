@@ -43,6 +43,7 @@ import org.hibernate.jdbc.Work;
 import org.hibernate.junit.FailureExpected;
 import org.hibernate.junit.RequiresDialect;
 import org.hibernate.junit.SkipForDialect;
+import org.hibernate.junit.SkipLog;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.util.StringHelper;
 
@@ -136,7 +137,7 @@ public abstract class HibernateTestCase extends TestCase {
 				builder.append( " (" )
 						.append( failureExpected.jiraKey() )
 						.append( ")" );
-				reportSkip( "Failed with: " + t.toString(), builder.toString()  );
+				SkipLog.LOG.warn( builder.toString(), t );
 			}
 			else {
 				throw t;
@@ -340,8 +341,7 @@ public abstract class HibernateTestCase extends TestCase {
 		builder.append( testDescription );
 		builder.append( " : " );
 		builder.append( reason );
-
-		log.warn( builder.toString() );
+		SkipLog.LOG.warn( builder.toString() );
 	}
 
 	public class RollbackWork implements Work {

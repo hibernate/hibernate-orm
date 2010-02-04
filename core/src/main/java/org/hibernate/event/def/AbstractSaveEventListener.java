@@ -191,7 +191,7 @@ public abstract class AbstractSaveEventListener extends AbstractReassociateEvent
 					throw new NonUniqueObjectException( id, persister.getEntityName() );
 				}
 			}
-			persister.setIdentifier( entity, id, source.getEntityMode() );
+			persister.setIdentifier( entity, id, source );
 		}
 		else {
 			key = null;

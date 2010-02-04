@@ -292,10 +292,10 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener
 				persister.getIdentifier( entity, source.getEntityMode() ) :
 		        null;
 		if ( copyCache.containsKey( entity ) ) {
-			persister.setIdentifier( copyCache.get( entity ), id, source.getEntityMode() );
+			persister.setIdentifier( copyCache.get( entity ), id, source );
 		}
 		else {
-			( ( EventCache ) copyCache ).put( entity, persister.instantiate( id, source.getEntityMode() ), true ); //before cascade!
+			( ( EventCache ) copyCache ).put( entity, persister.instantiate( id, source ), true ); //before cascade!
 			//TODO: should this be Session.instantiate(Persister, ...)?
 		}
 		final Object copy = copyCache.get( entity );

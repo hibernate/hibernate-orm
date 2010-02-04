@@ -221,7 +221,7 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 						MessageHelper.infoString( persister, event.getEntityId(), event.getSession().getFactory() )
 					);
 			}
-			persister.setIdentifier( event.getInstanceToLoad(), event.getEntityId(), event.getSession().getEntityMode() );
+			persister.setIdentifier( event.getInstanceToLoad(), event.getEntityId(), event.getSession() );
 		}
 
 		Object entity = doLoad(event, persister, keyToLoad, options);

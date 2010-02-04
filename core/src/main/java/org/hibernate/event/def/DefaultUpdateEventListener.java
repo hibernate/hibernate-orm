@@ -30,6 +30,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.ObjectDeletedException;
 import org.hibernate.EntityMode;
 import org.hibernate.engine.EntityEntry;
+import org.hibernate.engine.SessionImplementor;
 import org.hibernate.engine.Status;
 import org.hibernate.event.SaveOrUpdateEvent;
 import org.hibernate.persister.entity.EntityPersister;
@@ -62,14 +63,16 @@ public class DefaultUpdateEventListener extends DefaultSaveOrUpdateEventListener
 	 * If the user specified an id, assign it to the instance and use that, 
 	 * otherwise use the id already assigned to the instance
 	 */
-	protected Serializable getUpdateId(Object entity, EntityPersister persister, Serializable requestedId, EntityMode entityMode)
-	throws HibernateException {
-
-		if ( requestedId==null ) {
-			return super.getUpdateId(entity, persister, requestedId, entityMode);
+	protected Serializable getUpdateId(
+			Object entity,
+			EntityPersister persister,
+			Serializable requestedId,
+			SessionImplementor session) throws HibernateException {
+		if ( requestedId == null ) {
+			return super.getUpdateId( entity, persister, requestedId, session );
 		}
 		else {
-			persister.setIdentifier(entity, requestedId, entityMode);
+			persister.setIdentifier( entity, requestedId, session );
 			return requestedId;
 		}
 	}

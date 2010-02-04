@@ -276,7 +276,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 			if ( session.getContextEntityIdentifier( original ) == null  &&
 					ForeignKeys.isTransient( associatedEntityName, original, Boolean.FALSE, session ) ) {
 				final Object copy = session.getFactory().getEntityPersister( associatedEntityName )
-						.instantiate( null, session.getEntityMode() );
+						.instantiate( null, session );
 				//TODO: should this be Session.instantiate(Persister, ...)?
 				copyCache.put( original, copy );
 				return copy;

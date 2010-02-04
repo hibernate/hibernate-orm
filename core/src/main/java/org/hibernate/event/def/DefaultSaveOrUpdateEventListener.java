@@ -239,7 +239,7 @@ public class DefaultSaveOrUpdateEventListener extends AbstractSaveEventListener 
 
 		event.setRequestedId(
 				getUpdateId(
-						entity, persister, event.getRequestedId(), event.getSession().getEntityMode()
+						entity, persister, event.getRequestedId(), event.getSession()
 				)
 		);
 
@@ -253,7 +253,7 @@ public class DefaultSaveOrUpdateEventListener extends AbstractSaveEventListener 
 	 * @param entity The entity.
 	 * @param persister The entity persister
 	 * @param requestedId The requested identifier
-	 * @param entityMode The entity mode.
+	 * @param session The session
 	 *
 	 * @return The id.
 	 *
@@ -263,9 +263,9 @@ public class DefaultSaveOrUpdateEventListener extends AbstractSaveEventListener 
 			Object entity,
 			EntityPersister persister,
 			Serializable requestedId,
-			EntityMode entityMode) {
+			SessionImplementor session) {
 		// use the id assigned to the instance
-		Serializable id = persister.getIdentifier( entity, entityMode );
+		Serializable id = persister.getIdentifier( entity, session.getEntityMode() );
 		if ( id == null ) {
 			// assume this is a newly instantiated transient object
 			// which should be saved rather than updated

@@ -152,8 +152,21 @@ public interface ClassMetadata {
 
 	/**
 	 * Create a class instance initialized with the given identifier
+	 *
+	 * @deprecated Use {@link #instantiate(Serializable, SessionImplementor)} instead
+	 * @noinspection JavaDoc
 	 */
 	public Object instantiate(Serializable id, EntityMode entityMode) throws HibernateException;
+
+	/**
+	 * Create a class instance initialized with the given identifier
+	 *
+	 * @param id The identifier value to use (may be null to represent no value)
+	 * @param session The session from which the request originated.
+	 *
+	 * @return The instantiated entity.
+	 */
+	public Object instantiate(Serializable id, SessionImplementor session);
 
 	/**
 	 * Get the value of a particular (named) property
@@ -186,9 +199,28 @@ public interface ClassMetadata {
 	public Serializable getIdentifier(Object entity, EntityMode entityMode) throws HibernateException;
 
 	/**
-	 * Set the identifier of an instance (or do nothing if no identifier property)
+	 * Inject the identifier value into the given entity.
+	 * </p>
+	 * Has no effect if the entity does not define an identifier property
+	 *
+	 * @param entity The entity to inject with the identifier value.
+	 * @param id The value to be injected as the identifier.
+	 * @param entityMode The entity mode
+	 *
+	 * @deprecated Use {@link #setIdentifier(Object, Serializable, SessionImplementor)} instead.
+	 * @noinspection JavaDoc
 	 */
-	public void setIdentifier(Object object, Serializable id, EntityMode entityMode) throws HibernateException;
+	public void setIdentifier(Object entity, Serializable id, EntityMode entityMode) throws HibernateException;
+
+	/**
+	 * Inject the identifier value into the given entity.
+	 *
+	 * @param entity The entity to inject with the identifier value.
+	 * @param id The value to be injected as the identifier.
+	 * @param session The session from which is requests originates
+	 */
+	public void setIdentifier(Object entity, Serializable id, SessionImplementor session);
+
 
 	/**
 	 * Does the class implement the <tt>Lifecycle</tt> interface?

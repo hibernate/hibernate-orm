@@ -1409,7 +1409,7 @@ public final class SessionImpl extends AbstractSessionImpl
 		checkTransactionSynchStatus();
 		Object result = interceptor.instantiate( persister.getEntityName(), entityMode, id );
 		if ( result == null ) {
-			result = persister.instantiate( id, entityMode );
+			result = persister.instantiate( id, this );
 		}
 		return result;
 	}

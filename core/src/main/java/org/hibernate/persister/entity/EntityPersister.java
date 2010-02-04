@@ -655,10 +655,28 @@ public interface EntityPersister extends OptimisticCacheSource {
 	 */
 	public Serializable getIdentifier(Object object, EntityMode entityMode) throws HibernateException;
 
-	/**
-	 * Set the identifier of an instance (or do nothing if no identifier property)
-	 */
-	public void setIdentifier(Object object, Serializable id, EntityMode entityMode) throws HibernateException;
+    /**
+     * Inject the identifier value into the given entity.
+     * </p>
+     * Has no effect if the entity does not define an identifier property
+     *
+     * @param entity The entity to inject with the identifier value.
+     * @param id The value to be injected as the identifier.
+	 * @param entityMode The entity mode
+	 *
+	 * @deprecated Use {@link #setIdentifier(Object, Serializable, SessionImplementor)} instead.
+	 * @noinspection JavaDoc
+     */
+	public void setIdentifier(Object entity, Serializable id, EntityMode entityMode) throws HibernateException;
+
+    /**
+     * Inject the identifier value into the given entity.
+     *
+     * @param entity The entity to inject with the identifier value.
+     * @param id The value to be injected as the identifier.
+	 * @param session The session from which is requests originates
+     */
+	public void setIdentifier(Object entity, Serializable id, SessionImplementor session);
 
 	/**
 	 * Get the version number (or timestamp) from the object's version property (or return null if not versioned)
@@ -667,8 +685,21 @@ public interface EntityPersister extends OptimisticCacheSource {
 
 	/**
 	 * Create a class instance initialized with the given identifier
+	 *
+	 * @deprecated Use {@link #instantiate(Serializable, SessionImplementor)} instead
+	 * @noinspection JavaDoc
 	 */
 	public Object instantiate(Serializable id, EntityMode entityMode) throws HibernateException;
+
+	/**
+	 * Create a class instance initialized with the given identifier
+	 *
+	 * @param id The identifier value to use (may be null to represent no value)
+	 * @param session The session from which the request originated.
+	 *
+	 * @return The instantiated entity.
+	 */
+	public Object instantiate(Serializable id, SessionImplementor session);
 
 	/**
 	 * Is the given object an instance of this entity?
@@ -687,8 +718,20 @@ public interface EntityPersister extends OptimisticCacheSource {
 	 * @param currentId The currently assigned identifier value.
 	 * @param currentVersion The currently assigned version value.
 	 * @param entityMode The entity mode represented by the entity instance.
+	 *
+	 * @deprecated Use {@link #resetIdentifier(Object, Serializable, Object, SessionImplementor)} instead
 	 */
 	public void resetIdentifier(Object entity, Serializable currentId, Object currentVersion, EntityMode entityMode);
+
+	/**
+	 * Set the identifier and version of the given instance back to its "unsaved" value.
+	 *
+	 * @param entity The entity instance
+	 * @param currentId The currently assigned identifier value.
+	 * @param currentVersion The currently assigned version value.
+	 * @param session The session from which the request originated.
+	 */
+	public void resetIdentifier(Object entity, Serializable currentId, Object currentVersion, SessionImplementor session);
 
 	/**
 	 * A request has already identified the entity-name of this persister as the mapping for the given instance.

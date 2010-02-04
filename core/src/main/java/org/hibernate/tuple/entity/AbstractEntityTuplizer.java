@@ -236,8 +236,19 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 		}
 	}
 
-
+	/**
+	 * {@inheritDoc}
+	 */
 	public void setIdentifier(Object entity, Serializable id) throws HibernateException {
+		// 99% of the time the session is not needed.  Its only needed for certain brain-dead
+		// interpretations of JPA 2 "derived identity" support
+		setIdentifier( entity, id, null );
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public void setIdentifier(Object entity, Serializable id, SessionImplementor session) {
 		if ( entityMetamodel.getIdentifierProperty().isEmbedded() ) {
 			if ( entity != id ) {
 				AbstractComponentType copier = (AbstractComponentType) entityMetamodel.getIdentifierProperty().getType();
@@ -265,16 +276,31 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 		}
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	public void resetIdentifier(Object entity, Serializable currentId, Object currentVersion) {
+		// 99% of the time the session is not needed.  Its only needed for certain brain-dead
+		// interpretations of JPA 2 "derived identity" support
+		resetIdentifier( entity, currentId, currentVersion, null );
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public void resetIdentifier(
+			Object entity,
+			Serializable currentId,
+			Object currentVersion,
+			SessionImplementor session) {
 		if ( entityMetamodel.getIdentifierProperty().getIdentifierGenerator() instanceof Assigned ) {
-			//return currentId;
 		}
 		else {
 			//reset the id
 			Serializable result = entityMetamodel.getIdentifierProperty()
 					.getUnsavedValue()
 					.getDefaultValue( currentId );
-			setIdentifier( entity, result );
+			setIdentifier( entity, result, session );
 			//reset the version
 			VersionProperty versionProperty = entityMetamodel.getVersionProperty();
 			if ( entityMetamodel.isVersioned() ) {
@@ -282,10 +308,8 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 				        entity,
 				        entityMetamodel.getVersionPropertyIndex(),
 						versionProperty.getUnsavedValue().getDefaultValue( currentVersion )
-					);
+				);
 			}
-			//return the id, so we can use it to reset the proxy id
-			//return result;
 		}
 	}
 
@@ -421,15 +445,21 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 	}
 
 	public final Object instantiate(Serializable id) throws HibernateException {
+		// 99% of the time the session is not needed.  Its only needed for certain brain-dead
+		// interpretations of JPA 2 "derived identity" support
+		return instantiate( id, null );
+	}
+
+	public final Object instantiate(Serializable id, SessionImplementor session) {
 		Object result = getInstantiator().instantiate( id );
 		if ( id != null ) {
-			setIdentifier( result, id );
+			setIdentifier( result, id, session );
 		}
 		return result;
 	}
 
 	public final Object instantiate() throws HibernateException {
-		return instantiate( null );
+		return instantiate( null, null );
 	}
 
 	public void afterInitialize(Object entity, boolean lazyPropertiesAreUnfetched, SessionImplementor session) {}

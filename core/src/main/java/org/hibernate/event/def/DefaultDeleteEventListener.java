@@ -163,7 +163,7 @@ public class DefaultDeleteEventListener implements DeleteEventListener {
 		deleteEntity( source, entity, entityEntry, event.isCascadeDeleteEnabled(), persister, transientEntities );
 
 		if ( source.getFactory().getSettings().isIdentifierRollbackEnabled() ) {
-			persister.resetIdentifier( entity, id, version, source.getEntityMode() );
+			persister.resetIdentifier( entity, id, version, source );
 		}
 	}
 

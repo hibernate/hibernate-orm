@@ -62,6 +62,10 @@ public class CustomPersister implements EntityPersister {
 		}
 	}
 
+	private void checkEntityMode(SessionImplementor session) {
+		checkEntityMode( session.getEntityMode() );
+	}
+
 	public boolean isInherited() {
 		return false;
 	}
@@ -183,6 +187,11 @@ public class CustomPersister implements EntityPersister {
 		( (Custom) object ).id = (String) id;
 	}
 
+	public void setIdentifier(Object entity, Serializable id, SessionImplementor session) {
+		checkEntityMode( session );
+		( (Custom) entity ).id = (String) id;
+	}
+
 	public Object getVersion(Object object, EntityMode entityMode) throws HibernateException {
 		checkEntityMode( entityMode );
 		return null;
@@ -190,9 +199,18 @@ public class CustomPersister implements EntityPersister {
 
 	public Object instantiate(Serializable id, EntityMode entityMode) throws HibernateException {
 		checkEntityMode( entityMode );
+		return instantiate( id );
+	}
+
+	private Object instantiate(Serializable id) {
 		Custom c = new Custom();
 		c.id = (String) id;
 		return c;
+	}
+
+	public Object instantiate(Serializable id, SessionImplementor session) {
+		checkEntityMode( session );
+		return instantiate( id );
 	}
 
 	public boolean isInstance(Object object, EntityMode entityMode) {
@@ -207,6 +225,11 @@ public class CustomPersister implements EntityPersister {
 
 	public void resetIdentifier(Object entity, Serializable currentId, Object currentVersion, EntityMode entityMode) {
 		checkEntityMode( entityMode );
+		( ( Custom ) entity ).id = ( String ) currentId;
+	}
+
+	public void resetIdentifier(Object entity, Serializable currentId, Object currentVersion, SessionImplementor session) {
+		checkEntityMode( session );
 		( ( Custom ) entity ).id = ( String ) currentId;
 	}
 

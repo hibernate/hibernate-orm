@@ -114,7 +114,7 @@ public class StatelessSessionImpl extends AbstractSessionImpl
 		else {
 			persister.insert(id, state, entity, this);
 		}
-		persister.setIdentifier(entity, id, EntityMode.POJO);
+		persister.setIdentifier( entity, id, this );
 		return id;
 	}
 
@@ -253,7 +253,7 @@ public class StatelessSessionImpl extends AbstractSessionImpl
 	        Serializable id) throws HibernateException {
 		errorIfClosed();
 		return getFactory().getEntityPersister( entityName )
-				.instantiate( id, EntityMode.POJO );
+				.instantiate( id, this );
 	}
 
 	public Object internalLoad(

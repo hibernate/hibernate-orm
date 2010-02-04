@@ -3801,9 +3801,19 @@ public abstract class AbstractEntityPersister
 		return getTuplizer( entityMode ).getIdentifier( object );
 	}
 
-	public void setIdentifier(Object object, Serializable id, EntityMode entityMode)
+	/**
+	 * {@inheritDoc}
+	 */
+	public void setIdentifier(Object entity, Serializable id, EntityMode entityMode)
 			throws HibernateException {
-		getTuplizer( entityMode ).setIdentifier( object, id );
+		getTuplizer( entityMode ).setIdentifier( entity, id, null );
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public void setIdentifier(Object entity, Serializable id, SessionImplementor session) {
+		getTuplizer( session ).setIdentifier( entity, id, session );
 	}
 
 	public Object getVersion(Object object, EntityMode entityMode)
@@ -3811,9 +3821,20 @@ public abstract class AbstractEntityPersister
 		return getTuplizer( entityMode ).getVersion( object );
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	public Object instantiate(Serializable id, EntityMode entityMode)
 			throws HibernateException {
-		return getTuplizer( entityMode ).instantiate( id );
+		return getTuplizer( entityMode ).instantiate( id, null );
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public Object instantiate(Serializable id, SessionImplementor session)
+			throws HibernateException {
+		return getTuplizer( session ).instantiate( id, session );
 	}
 
 	public boolean isInstance(Object object, EntityMode entityMode) {
@@ -3825,9 +3846,16 @@ public abstract class AbstractEntityPersister
 	}
 
 	public void resetIdentifier(Object entity, Serializable currentId, Object currentVersion, EntityMode entityMode) {
-		getTuplizer( entityMode ).resetIdentifier( entity, currentId, currentVersion );
+		getTuplizer( entityMode ).resetIdentifier( entity, currentId, currentVersion, null );
 	}
 
+	public void resetIdentifier(Object entity, Serializable currentId, Object currentVersion, SessionImplementor session) {
+		getTuplizer( session ).resetIdentifier( entity, currentId, currentVersion, session );
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
 	public EntityPersister getSubclassEntityPersister(
 			Object instance,
 			SessionFactoryImplementor factory,

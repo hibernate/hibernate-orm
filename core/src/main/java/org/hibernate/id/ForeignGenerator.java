@@ -33,6 +33,7 @@ import org.hibernate.TransientObjectException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.ForeignKeys;
 import org.hibernate.engine.SessionImplementor;
+import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
 
@@ -95,18 +96,26 @@ public class ForeignGenerator implements IdentifierGenerator, Configurable {
 	public Serializable generate(SessionImplementor sessionImplementor, Object object) {
 		Session session = ( Session ) sessionImplementor;
 
-		Object associatedObject = sessionImplementor.getFactory()
-				.getClassMetadata( entityName )
+		final ClassMetadata classMetadata = sessionImplementor.getFactory()
+				.getClassMetadata( entityName );
+		Object associatedObject = classMetadata
 		        .getPropertyValue( object, propertyName, session.getEntityMode() );
 		if ( associatedObject == null ) {
 			throw new IdentifierGenerationException(
 					"attempted to assign id from null one-to-one property [" + getRole() + "]"
 			);
 		}
-		
-		EntityType type = (EntityType) sessionImplementor.getFactory()
-        	.getClassMetadata( entityName )
-        	.getPropertyType( propertyName );
+
+		final Type uncheckedType = classMetadata
+				.getPropertyType( propertyName );
+		EntityType type;
+		if (uncheckedType instanceof EntityType) {
+		 	type = (EntityType) uncheckedType;
+		}
+		else {
+			//try identifier mapper
+			type = (EntityType) classMetadata.getPropertyType( "_identifierMapper." + propertyName );
+		}
 
 		Serializable id;
 		try {

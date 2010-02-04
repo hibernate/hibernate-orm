@@ -89,4 +89,8 @@ public interface PropertyHolder {
 	String getEntityName();
 
 	Join addJoin(JoinTable joinTableAnn, boolean noDelayInPkColumnCreation);
+
+	boolean isInIdClass();
+
+	void setInIdClass(Boolean isInIdClass);
 }

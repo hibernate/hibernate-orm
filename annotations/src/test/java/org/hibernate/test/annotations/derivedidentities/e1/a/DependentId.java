@@ -7,5 +7,5 @@ import java.io.Serializable;
  */
 public class DependentId implements Serializable {
 	String name;
-	long empPK;	// corresponds to PK type of Employee
+	long emp;	// corresponds to PK type of Employee
 }

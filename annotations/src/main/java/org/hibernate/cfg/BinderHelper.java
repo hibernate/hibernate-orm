@@ -652,7 +652,7 @@ public class BinderHelper {
 		return StringHelper.qualify( holder.getPath(), property.getPropertyName() );
 	}
 
-	static PropertyData getPropertyAnnotatedWithMapsId(boolean isId, PropertyHolder propertyHolder, String propertyName, ExtendedMappings mappings) {
+	static PropertyData getPropertyOverriddenByMapperOrMapsId(boolean isId, PropertyHolder propertyHolder, String propertyName, ExtendedMappings mappings) {
 		final XClass persistentXClass;
 		try {
 			 persistentXClass = mappings.getReflectionManager()
@@ -661,8 +661,12 @@ public class BinderHelper {
 		catch ( ClassNotFoundException e ) {
 			throw new AssertionFailure( "PersistentClass name cannot be converted into a Class", e);
 		}
-		String propertyPath = isId ? "" : propertyName;
-		final PropertyData annotatedWithMapsId = mappings.getPropertyAnnotatedWithMapsId( persistentXClass, propertyPath );
-		return annotatedWithMapsId;
+		if ( propertyHolder.isInIdClass() ) {
+			return mappings.getPropertyAnnotatedWithIdAndToOne( persistentXClass, propertyName );
+		}
+		else {
+			String propertyPath = isId ? "" : propertyName;
+			return mappings.getPropertyAnnotatedWithMapsId( persistentXClass, propertyPath );
+		}
 	}
 }

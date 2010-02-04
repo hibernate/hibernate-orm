@@ -11,4 +11,6 @@ public class Employee {
 	@Id
 	long empId;
 	String empName;
+
+	String nickname;
 }

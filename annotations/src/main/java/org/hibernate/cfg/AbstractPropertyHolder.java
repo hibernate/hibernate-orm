@@ -55,6 +55,7 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 	private Map<String, JoinTable> currentPropertyJoinTableOverride;
 	private String path;
 	private ExtendedMappings mappings;
+	private Boolean isInIdClass;
 
 
 	public AbstractPropertyHolder(
@@ -64,6 +65,15 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 		this.parent = (AbstractPropertyHolder) parent;
 		this.mappings = mappings;
 		buildHierarchyColumnOverride( clazzToProcess );
+	}
+
+
+	public boolean isInIdClass() {
+		return isInIdClass != null ? isInIdClass : parent != null ? parent.isInIdClass() : false;
+	}
+
+	public void setInIdClass(Boolean isInIdClass) {
+		this.isInIdClass = isInIdClass;
 	}
 
 	public String getPath() {

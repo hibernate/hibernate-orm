@@ -307,7 +307,13 @@ public abstract class EntityType extends AbstractType implements AssociationType
 			id = ( (HibernateProxy) x ).getHibernateLazyInitializer().getIdentifier();
 		}
 		else {
-			id = persister.getIdentifier(x, entityMode);
+			final Class mappedClass = persister.getMappedClass( entityMode );
+			if ( mappedClass.isAssignableFrom( x.getClass() ) ) {
+				id = persister.getIdentifier(x, entityMode);
+			}
+			else {
+				id = (Serializable) x;
+			}
 		}
 		return persister.getIdentifierType().getHashCode(id, entityMode, factory);
 	}
@@ -321,13 +327,20 @@ public abstract class EntityType extends AbstractType implements AssociationType
 			return super.isEqual(x, y, entityMode);
 		}
 
+		final Class mappedClass = persister.getMappedClass( entityMode );
 		Serializable xid;
 		if (x instanceof HibernateProxy) {
 			xid = ( (HibernateProxy) x ).getHibernateLazyInitializer()
 					.getIdentifier();
 		}
 		else {
-			xid = persister.getIdentifier(x, entityMode);
+			if ( mappedClass.isAssignableFrom( x.getClass() ) ) {
+				xid = persister.getIdentifier(x, entityMode);
+			}
+			else {
+				//JPA 2 case where @IdClass contains the id and not the associated entity
+				xid = (Serializable) x;
+			}
 		}
 
 		Serializable yid;
@@ -336,7 +349,13 @@ public abstract class EntityType extends AbstractType implements AssociationType
 					.getIdentifier();
 		}
 		else {
-			yid = persister.getIdentifier(y, entityMode);
+			if ( mappedClass.isAssignableFrom( y.getClass() ) ) {
+				yid = persister.getIdentifier(x, entityMode);
+			}
+			else {
+				//JPA 2 case where @IdClass contains the id and not the associated entity
+				yid = (Serializable) y;
+			}
 		}
 
 		return persister.getIdentifierType()

@@ -188,4 +188,12 @@ public interface ExtendedMappings extends Mappings {
 	 * @return True if the new generators should be used, false otherwise.
 	 */
 	public boolean useNewGeneratorMappings();
+
+	/**
+	 * Return the property annotated with @ToOne and @Id if any.
+	 * Null otherwise
+	 */
+	public PropertyData getPropertyAnnotatedWithIdAndToOne(XClass entityType, String propertyName);
+
+	void addToOneAndIdProperty(XClass entity, PropertyData property);
 }

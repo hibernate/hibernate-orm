@@ -701,6 +701,7 @@ public final class
 			HashMap<String, IdGenerator> localGenerators = new HashMap<String, IdGenerator>();
 			boolean ignoreIdAnnotations = entityBinder.isIgnoreIdAnnotations();
 			entityBinder.setIgnoreIdAnnotations( true );
+			propertyHolder.setInIdClass( true );
 			bindId(
 					generatorType,
 					generator,
@@ -716,6 +717,7 @@ public final class
 					mappings,
 					inheritanceStatePerClass
 			);
+			propertyHolder.setInIdClass( null );
 			inferredData = new PropertyPreloadedData(
 					propertyAccessor, "_identifierMapper", compositeClass
 			);
@@ -728,7 +730,9 @@ public final class
 					entityBinder,
 					true,
 					true,
-					false, mappings, inheritanceStatePerClass
+					false,
+					mappings,
+					inheritanceStatePerClass
 			);
 			entityBinder.setIgnoreIdAnnotations( ignoreIdAnnotations );
 			persistentClass.setIdentifierMapper( mapper );
@@ -1164,7 +1168,7 @@ public final class
 	 *        strategy is used
 	 * @param propertyContainer Metadata about a class and its properties
 	 * @param mappings Mapping meta data
-	 * @return the number of id properties found while iterating the elements of {@code annoatedClass} using
+	 * @return the number of id properties found while iterating the elements of {@code annotatedClass} using
 	 * the determined access strategy, {@code false} otherwise.
 	 */
 	static int addElementsOfClass(
@@ -1206,6 +1210,9 @@ public final class
 		final XAnnotatedElement element = propertyAnnotatedElement.getProperty();
 		if ( element.isAnnotationPresent( Id.class ) || element.isAnnotationPresent( EmbeddedId.class ) ) {
 			annElts.add( 0, propertyAnnotatedElement );
+			if ( element.isAnnotationPresent( ManyToOne.class ) || element.isAnnotationPresent( OneToOne.class ) ) {
+				mappings.addToOneAndIdProperty( entity, propertyAnnotatedElement );
+			}
 			idPropertyCounter++;
 		}
 		else {
@@ -1713,15 +1720,15 @@ public final class
 				//FIXME do the overrideColumnFromMapsIdProperty here and force the idclass type to look like an @embedded
 				//Overrides from @MapsId if needed
 				boolean isOverridden = false;
-				if ( isId || propertyHolder.isOrWithinEmbeddedId() ) {
+				if ( isId || propertyHolder.isOrWithinEmbeddedId() || propertyHolder.isInIdClass() ) {
 					Ejb3Column[] oldColumns = columns;
-					columns = columnsBuilder.overrideColumnFromMapsIdProperty(isId);
+					columns = columnsBuilder.overrideColumnFromMapperOrMapsIdProperty(isId);
 					isOverridden = oldColumns != columns;
 				}
 				if ( isComponent ) {
 					String referencedEntityName = null;
 					if (isOverridden) {
-						final PropertyData mapsIdProperty = BinderHelper.getPropertyAnnotatedWithMapsId(
+						final PropertyData mapsIdProperty = BinderHelper.getPropertyOverriddenByMapperOrMapsId(
 								isId, propertyHolder, property.getName(), mappings
 						);
 						referencedEntityName = mapsIdProperty.getClassOrElementName();
@@ -1761,7 +1768,7 @@ public final class
 					propertyBinder.setLazy( lazy );
 					propertyBinder.setColumns( columns );
 					if (isOverridden) {
-						final PropertyData mapsIdProperty = BinderHelper.getPropertyAnnotatedWithMapsId(
+						final PropertyData mapsIdProperty = BinderHelper.getPropertyOverriddenByMapperOrMapsId(
 								isId, propertyHolder, property.getName(), mappings
 						);
 						propertyBinder.setReferencedEntityName( mapsIdProperty.getClassOrElementName() );
@@ -1771,7 +1778,7 @@ public final class
 
 				}
 				if (isOverridden) {
-						final PropertyData mapsIdProperty = BinderHelper.getPropertyAnnotatedWithMapsId(
+						final PropertyData mapsIdProperty = BinderHelper.getPropertyOverriddenByMapperOrMapsId(
 								isId, propertyHolder, property.getName(), mappings
 						);
 						HashMap<String, IdGenerator> localGenerators = (HashMap<String, IdGenerator>) classGenerators.clone();
@@ -2021,7 +2028,8 @@ public final class
 	}
 
 	public static Component fillComponent(
-          PropertyHolder propertyHolder, PropertyData inferredData, PropertyData baseInferredData,
+          PropertyHolder propertyHolder, PropertyData inferredData,
+		  PropertyData baseInferredData, //base inferred data correspond to the entity reproducing inferredData's properties (ie IdClass)
 		  AccessType propertyAccessor, boolean isNullable, EntityBinder entityBinder,
           boolean isComponentEmbedded, boolean isIdentifierMapper, boolean inSecondPass, ExtendedMappings mappings,
 		  Map<XClass, InheritanceState> inheritanceStatePerClass
@@ -2045,14 +2053,17 @@ public final class
 		XClass returnedClassOrElement = inferredData.getClassOrElement();
 
 		List<PropertyData> baseClassElements = null;
+		Map<String, PropertyData> orderedBaseClassElements = new HashMap<String, PropertyData>();
 		XClass baseReturnedClassOrElement;
-		if(baseInferredData != null)
-		{
+		if(baseInferredData != null) {
 		   baseClassElements = new ArrayList<PropertyData>();
 		   baseReturnedClassOrElement = baseInferredData.getClassOrElement();
 		   bindTypeDefs(baseReturnedClassOrElement, mappings);
 	       PropertyContainer propContainer = new PropertyContainer( baseReturnedClassOrElement, entityXClass );
 		   addElementsOfClass( baseClassElements, propertyAccessor, propContainer, mappings );
+			for (PropertyData element : baseClassElements) {
+				orderedBaseClassElements.put( element.getPropertyName(), element );
+			}
 		}
 
 		//embeddable elements can have type defs
@@ -2069,9 +2080,24 @@ public final class
 			superClass = superClass.getSuperclass();
 		}
 		if ( baseClassElements != null ) {
-			if ( !hasIdClassAnnotations( entityXClass ) ) {
+			//useful to avoid breaking pre JPA 2 mappings
+			if ( !hasAnnotationsOnIdClass( entityXClass ) ) {
 				for ( int i = 0; i < classElements.size(); i++ ) {
-					classElements.set( i, baseClassElements.get( i ) );  //this works since they are in the same order
+					final PropertyData idClassPropertyData = classElements.get( i );
+					final PropertyData entityPropertyData = orderedBaseClassElements.get( idClassPropertyData.getPropertyName() );
+					if ( propertyHolder.isInIdClass() ) {
+						if ( entityPropertyData.getProperty().isAnnotationPresent( ManyToOne.class )
+								|| entityPropertyData.getProperty().isAnnotationPresent( OneToOne.class ) ) {
+							//don't replace here as we need to use the actual original return type
+							//the annotation overriding will be dealt with by a mechanism similar to @MapsId
+						}
+						else {
+							classElements.set( i, entityPropertyData );  //this works since they are in the same order
+						}
+					}
+					else {
+						classElements.set( i, entityPropertyData );  //this works since they are in the same order
+					}
 				}
 			}
 		}
@@ -2087,10 +2113,9 @@ public final class
 			
 			XProperty property = propertyAnnotatedElement.getProperty();
 			if(property.isAnnotationPresent(GeneratedValue.class) &&
-			      property.isAnnotationPresent(Id.class))
-			{
+			      property.isAnnotationPresent(Id.class) ) {
 			   //clone classGenerator and override with local values
-			   HashMap<String, IdGenerator> localGenerators = (HashMap<String, IdGenerator>) new HashMap<String, IdGenerator>();
+			   HashMap<String, IdGenerator> localGenerators = new HashMap<String, IdGenerator>();
 			   localGenerators.putAll( buildLocalGenerators( property, mappings ) );
 
 			   GeneratedValue generatedValue = property.getAnnotation( GeneratedValue.class );
@@ -2647,10 +2672,10 @@ public final class
 		return inheritanceStatePerClass;
 	}
 
-	private static boolean hasIdClassAnnotations(XClass idClass)
+	private static boolean hasAnnotationsOnIdClass(XClass idClass)
 	{
-		if(idClass.getAnnotation(Embeddable.class) != null)
-			return true;
+//		if(idClass.getAnnotation(Embeddable.class) != null)
+//			return true;
 
 		List<XProperty> properties = idClass.getDeclaredProperties( XClass.ACCESS_FIELD );
 		for ( XProperty property : properties ) {

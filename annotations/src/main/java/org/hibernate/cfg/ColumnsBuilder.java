@@ -11,12 +11,10 @@ import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 
 import org.hibernate.AnnotationException;
-import org.hibernate.AssertionFailure;
 import org.hibernate.annotations.CollectionOfElements;
 import org.hibernate.annotations.Columns;
 import org.hibernate.annotations.Formula;
 import org.hibernate.annotations.JoinColumnsOrFormulas;
-import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.cfg.annotations.EntityBinder;
 import org.hibernate.cfg.annotations.Nullability;
@@ -183,15 +181,13 @@ class ColumnsBuilder {
 		return joinColumns;
 	}
 
-	Ejb3Column[] overrideColumnFromMapsIdProperty(boolean isId) {
+	Ejb3Column[] overrideColumnFromMapperOrMapsIdProperty(boolean isId) {
 		Ejb3Column[] result = columns;
-		final PropertyData annotatedWithMapsId = BinderHelper.getPropertyAnnotatedWithMapsId( isId, propertyHolder, property.getName(), mappings );
+		final PropertyData annotatedWithMapsId = BinderHelper.getPropertyOverriddenByMapperOrMapsId( isId, propertyHolder, property.getName(), mappings );
 		if ( annotatedWithMapsId != null ) {
 			result = buildExplicitJoinColumns( annotatedWithMapsId.getProperty(), annotatedWithMapsId );
 			if (result == null) {
 				result = buildDefaultJoinColumnsForXToOne( annotatedWithMapsId.getProperty(), annotatedWithMapsId);
-//				throw new UnsupportedOperationException( "Implicit @JoinColumn is not supported on @MapsId properties: "
-//						+ annotatedWithMapsId.getDeclaringClass() + " " + annotatedWithMapsId.getPropertyName() );
 			}
 		}
 		return result;

@@ -30,6 +30,8 @@ import java.util.Set;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
+import org.hibernate.PropertyAccessException;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.tuple.Instantiator;
 import org.hibernate.tuple.VersionProperty;
 import org.hibernate.tuple.StandardProperty;
@@ -45,6 +47,8 @@ import org.hibernate.property.Setter;
 import org.hibernate.proxy.ProxyFactory;
 import org.hibernate.type.AbstractComponentType;
 import org.hibernate.type.ComponentType;
+import org.hibernate.type.EntityType;
+import org.hibernate.type.Type;
 
 
 /**
@@ -70,6 +74,9 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 	private final ProxyFactory proxyFactory;
 	private final AbstractComponentType identifierMapperType;
 
+	public Type getIdentifierMapperType() {
+		return identifierMapperType;
+	}
 
 	/**
 	 * Build an appropriate Getter for the given property.
@@ -192,13 +199,27 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 				else {
 					ComponentType copier = (ComponentType) entityMetamodel.getIdentifierProperty().getType();
 					id = copier.instantiate( getEntityMode() );
-					copier.setPropertyValues( id, identifierMapperType.getPropertyValues( entity, getEntityMode() ), getEntityMode() );
+					final Object[] propertyValues = identifierMapperType.getPropertyValues( entity, getEntityMode() );
+					Type[] subTypes = identifierMapperType.getSubtypes();
+					Type[] copierSubTypes = copier.getSubtypes();
+					final int length = subTypes.length;
+					for ( int i = 0 ; i < length; i++ ) {
+						//JPA 2 in @IdClass points to the pk of the entity
+						if ( subTypes[i].isAssociationType() && ! copierSubTypes[i].isAssociationType()) {
+							final String associatedEntityName = ( ( EntityType ) subTypes[i] ).getAssociatedEntityName();
+							final EntityPersister entityPersister = getFactory().getEntityPersister(
+									associatedEntityName
+							);
+							propertyValues[i] = entityPersister.getIdentifier( propertyValues[i], getEntityMode() );
+						}
+					}
+					copier.setPropertyValues( id, propertyValues, getEntityMode() );
 				}
 			}
 			else {
-				id = idGetter.get( entity );
-			}
-		}
+                id = idGetter.get( entity );
+            }
+        }
 
 		try {
 			return (Serializable) id;
@@ -229,7 +250,18 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 		else if ( identifierMapperType != null ) {
 			ComponentType extractor = (ComponentType) entityMetamodel.getIdentifierProperty().getType();
 			ComponentType copier = (ComponentType) identifierMapperType;
-			copier.setPropertyValues( entity, extractor.getPropertyValues( id, getEntityMode() ), getEntityMode() );
+			final Object[] propertyValues = extractor.getPropertyValues( id, getEntityMode() );
+			Type[] subTypes = identifierMapperType.getSubtypes();
+			Type[] copierSubTypes = copier.getSubtypes();
+			final int length = subTypes.length;
+			for ( int i = 0 ; i < length; i++ ) {
+				//JPA 2 in @IdClass points to the pk of the entity
+				if ( subTypes[i].isAssociationType() && ! copierSubTypes[i].isAssociationType() ) {
+					final String associatedEntityName = ( ( EntityType ) subTypes[i] ).getAssociatedEntityName();
+					//FIXME find the entity for the given id (propertyValue[i])
+				}
+			}
+			copier.setPropertyValues( entity, propertyValues, getEntityMode() );
 		}
 	}
 
@@ -299,18 +331,27 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 	}
 
 	public Object getPropertyValue(Object entity, String propertyPath) throws HibernateException {
-		final int loc = propertyPath.indexOf('.');
-		final String basePropertyName = loc > 0
+		int loc = propertyPath.indexOf('.');
+		String basePropertyName = loc > 0
 				? propertyPath.substring( 0, loc )
 				: propertyPath;
-		final int index = entityMetamodel.getPropertyIndex( basePropertyName );
-		final Object baseValue = getPropertyValue( entity, index );
+		//final int index = entityMetamodel.getPropertyIndexOrNull( basePropertyName );
+		Integer index = entityMetamodel.getPropertyIndexOrNull( basePropertyName );
+		if (index == null) {
+			propertyPath = "_identifierMapper." + propertyPath;
+			loc = propertyPath.indexOf('.');
+			basePropertyName = loc > 0
+				? propertyPath.substring( 0, loc )
+				: propertyPath;
+		}
+		index = entityMetamodel.getPropertyIndexOrNull( basePropertyName );
+		final Object baseValue = getPropertyValue( entity, index.intValue() );
 		if ( loc > 0 ) {
 			if ( baseValue == null ) {
 				return null;
 			}
 			return getComponentValue(
-					(ComponentType) entityMetamodel.getPropertyTypes()[index],
+					(ComponentType) entityMetamodel.getPropertyTypes()[index.intValue()],
 					baseValue,
 					propertyPath.substring(loc+1)
 			);

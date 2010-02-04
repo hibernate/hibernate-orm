@@ -65,7 +65,6 @@ import org.hibernate.DuplicateMappingException;
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
 import org.hibernate.MappingException;
-import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.annotations.AnyMetaDef;
 import org.hibernate.annotations.Cache;
@@ -158,6 +157,7 @@ public class AnnotationConfiguration extends Configuration {
 	private boolean isDefaultProcessed = false;
 	private boolean isValidatorNotPresentLogged;
 	private Map<XClass,Map<String,PropertyData>> propertiesAnnotatedWithMapsId;
+	private Map<XClass,Map<String,PropertyData>> propertiesAnnotatedWithIdAndToOne;
 
 	public AnnotationConfiguration() {
 		super();
@@ -297,6 +297,7 @@ public class AnnotationConfiguration extends Configuration {
 		setEntityResolver( new EJB3DTDEntityResolver() );
 		anyMetaDefs = new HashMap<String, AnyMetaDef>();
 		propertiesAnnotatedWithMapsId = new HashMap<XClass, Map<String,PropertyData>>();
+		propertiesAnnotatedWithIdAndToOne = new HashMap<XClass, Map<String,PropertyData>>(); 
 		reflectionManager = new JavaReflectionManager();
 		( ( MetadataProviderInjector ) reflectionManager ).setMetadataProvider( new JPAMetadataProvider() );
 
@@ -1291,6 +1292,20 @@ public class AnnotationConfiguration extends Configuration {
 				propertiesAnnotatedWithMapsId.put( entityType, map );
 			}
 			map.put( property.getProperty().getAnnotation( MapsId.class ).value(), property );
+		}
+
+		public PropertyData getPropertyAnnotatedWithIdAndToOne(XClass entityType, String propertyName) {
+			final Map<String, PropertyData> map = propertiesAnnotatedWithIdAndToOne.get( entityType );
+			return map == null ? null : map.get( propertyName );
+		}
+
+		public void addToOneAndIdProperty(XClass entityType, PropertyData property) {
+			Map<String, PropertyData> map = propertiesAnnotatedWithIdAndToOne.get( entityType );
+			if (map == null) {
+				map = new HashMap<String, PropertyData>();
+				propertiesAnnotatedWithIdAndToOne.put( entityType, map );
+			}
+			map.put( property.getPropertyName(), property );
 		}
 
 		private Boolean useNewGeneratorMappings;

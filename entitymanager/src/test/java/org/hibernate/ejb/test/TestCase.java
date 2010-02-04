@@ -38,6 +38,7 @@ import javax.persistence.Persistence;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import org.hibernate.cfg.AnnotationConfiguration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.ejb.AvailableSettings;
@@ -79,6 +80,7 @@ public abstract class TestCase extends HibernateTestCase {
 		if ( recreateSchema() ) {
 			cfg.setProperty( Environment.HBM2DDL_AUTO, "create-drop" );
 		}
+		cfg.setProperty( AnnotationConfiguration.USE_NEW_ID_GENERATOR_MAPPINGS, "true" );
 		factory = ejbconfig.createEntityManagerFactory( getConfig() );
 	}
 

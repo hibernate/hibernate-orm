@@ -23,19 +23,14 @@
  */
 package org.hibernate.type;
 
-import java.io.IOException;
-import java.io.ObjectInputStream;
 import java.io.Serializable;
 import java.lang.reflect.Method;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Properties;
 
-import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.util.StringHelper;
 import org.hibernate.usertype.EnhancedUserType;
@@ -51,6 +46,7 @@ import org.slf4j.LoggerFactory;
  * TODO implements readobject/writeobject to recalculate the enumclasses
  * @author Emmanuel Bernard
  */
+@SuppressWarnings("unchecked")
 public class EnumType implements EnhancedUserType, ParameterizedType, Serializable {
 	/**
 	 * This is the old scheme where logging of parameter bindings and value extractions
@@ -77,21 +73,17 @@ public class EnumType implements EnhancedUserType, ParameterizedType, Serializab
 	public static final String COLUMN = "column";
 	public static final String TYPE = "type";
 
-	private static Map<Class, Object[]> enumValues = new HashMap<Class, Object[]>();
-
 	private Class<? extends Enum> enumClass;
-	private String column;
-	private String table;
+	private transient Object[] enumValues;
 	private String catalog;
 	private String schema;
-	private boolean guessed = false;
 	private int sqlType = Types.INTEGER; //before any guessing
 
 	public int[] sqlTypes() {
 		return new int[]{sqlType};
 	}
 
-	public Class returnedClass() {
+	public Class<? extends Enum> returnedClass() {
 		return enumClass;
 	}
 
@@ -103,6 +95,7 @@ public class EnumType implements EnhancedUserType, ParameterizedType, Serializab
 		return x == null ? 0 : x.hashCode();
 	}
 
+	
 	public Object nullSafeGet(ResultSet rs, String[] names, Object owner) throws HibernateException, SQLException {
 		Object object = rs.getObject( names[0] );
 		if ( rs.wasNull() ) {
@@ -112,16 +105,15 @@ public class EnumType implements EnhancedUserType, ParameterizedType, Serializab
 			return null;
 		}
 		if ( object instanceof Number ) {
-			Object[] values = enumValues.get( enumClass );
-			if ( values == null ) throw new AssertionFailure( "enumValues not preprocessed: " + enumClass );
+			initEnumValues();
 			int ordinal = ( (Number) object ).intValue();
-			if ( ordinal < 0 || ordinal >= values.length ) {
+			if ( ordinal < 0 || ordinal >= enumValues.length ) {
 				throw new IllegalArgumentException( "Unknown ordinal value for enum " + enumClass + ": " + ordinal );
 			}
 			if ( IS_VALUE_TRACING_ENABLED ) {
 				log().debug( "Returning '{}' as column {}", ordinal, names[0] );
 			}
-			return values[ordinal];
+			return enumValues[ordinal];
 		}
 		else {
 			String name = (String) object;
@@ -146,14 +138,14 @@ public class EnumType implements EnhancedUserType, ParameterizedType, Serializab
 		else {
 			boolean isOrdinal = isOrdinal( sqlType );
 			if ( isOrdinal ) {
-				int ordinal = ( (Enum) value ).ordinal();
+				int ordinal = ( (Enum<?>) value ).ordinal();
 				if ( IS_VALUE_TRACING_ENABLED ) {
 					log().debug( "Binding '{}' to parameter: {}", ordinal, index );
 				}
 				st.setObject( index, Integer.valueOf( ordinal ), sqlType );
 			}
 			else {
-				String enumString = ( (Enum) value ).name();
+				String enumString = ( (Enum<?>) value ).name();
 				if ( IS_VALUE_TRACING_ENABLED ) {
 					log().debug( "Binding '{}' to parameter: {}", enumString, index );
 				}
@@ -210,30 +202,31 @@ public class EnumType implements EnhancedUserType, ParameterizedType, Serializab
 		catch (ClassNotFoundException exception) {
 			throw new HibernateException( "Enum class not found", exception );
 		}
-		//this is threadsafe to do it here, setParameterValues() is called sequencially
-		initEnumValue();
+		// is might be good to call it here, to see a possible error immediately
+		// initEnumValue();
+		
 		//nullify unnullified properties yuck!
 		schema = parameters.getProperty( SCHEMA );
 		if ( "".equals( schema ) ) schema = null;
 		catalog = parameters.getProperty( CATALOG );
 		if ( "".equals( catalog ) ) catalog = null;
-		table = parameters.getProperty( TABLE );
-		column = parameters.getProperty( COLUMN );
+//		table = parameters.getProperty( TABLE );
+//		column = parameters.getProperty( COLUMN );
 		String type = parameters.getProperty( TYPE );
 		if ( type != null ) {
 			sqlType = Integer.decode( type ).intValue();
-			guessed = true;
+//			guessed = true;
 		}
 	}
 
-	private void initEnumValue() {
-		Object[] values = enumValues.get( enumClass );
-		if ( values == null ) {
+	/**
+	 * Lazy init of {@link #enumValues}.
+	 */
+	private void initEnumValues() {
+		if ( enumValues == null ) {
 			try {
-				Method method = null;
-				method = enumClass.getDeclaredMethod( "values", new Class[0] );
-				values = (Object[]) method.invoke( null, new Object[0] );
-				enumValues.put( enumClass, values );
+				Method method = enumClass.getDeclaredMethod( "values" );
+				enumValues = (Object[]) method.invoke( null );
 			}
 			catch (Exception e) {
 				throw new HibernateException( "Error while accessing enum.values(): " + enumClass, e );
@@ -241,11 +234,11 @@ public class EnumType implements EnhancedUserType, ParameterizedType, Serializab
 		}
 	}
 
-	private void readObject(ObjectInputStream ois) throws IOException, ClassNotFoundException {
-		//FIXME Hum, I think I break the thread safety here
-		ois.defaultReadObject();
-		initEnumValue();
-	}
+	// is might be good to call initEnumValues() here, to see a possible error immediatelly, otherwise leave it commented
+//	private void readObject(ObjectInputStream ois) throws IOException, ClassNotFoundException {
+//		initEnumValues();
+//		ois.defaultReadObject();
+//	}
 
 	public String objectToSQLString(Object value) {
 		boolean isOrdinal = isOrdinal( sqlType );
@@ -272,12 +265,11 @@ public class EnumType implements EnhancedUserType, ParameterizedType, Serializab
 	public Object fromXMLString(String xmlValue) {
 		try {
 			int ordinal = Integer.parseInt( xmlValue );
-			Object[] values = enumValues.get( enumClass );
-			if ( values == null ) throw new AssertionFailure( "enumValues not preprocessed: " + enumClass );
-			if ( ordinal < 0 || ordinal >= values.length ) {
+			initEnumValues();
+			if ( ordinal < 0 || ordinal >= enumValues.length ) {
 				throw new IllegalArgumentException( "Unknown ordinal value for enum " + enumClass + ": " + ordinal );
 			}
-			return values[ordinal];
+			return enumValues[ordinal];
 		}
 		catch(NumberFormatException e) {
 			try {

@@ -307,17 +307,6 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 		public Object getIdentifier(Object entity, EntityMode entityMode, SessionFactoryImplementor factory) {
 			Object id = mappedIdentifierType.instantiate( entityMode );
 			final Object[] propertyValues = virtualIdComponent.getPropertyValues( entity, entityMode );
-			Type[] subTypes = virtualIdComponent.getSubtypes();
-			Type[] copierSubTypes = mappedIdentifierType.getSubtypes();
-			final int length = subTypes.length;
-			for ( int i = 0 ; i < length; i++ ) {
-				//JPA 2 in @IdClass points to the pk of the entity
-				if ( subTypes[i].isAssociationType() && ! copierSubTypes[i].isAssociationType()) {
-					final String associatedEntityName = ( ( EntityType ) subTypes[i] ).getAssociatedEntityName();
-					final EntityPersister entityPersister = factory.getEntityPersister( associatedEntityName );
-					propertyValues[i] = entityPersister.getIdentifier( propertyValues[i], entityMode );
-				}
-			}
 			mappedIdentifierType.setPropertyValues( id, propertyValues, entityMode );
 			return id;
 		}

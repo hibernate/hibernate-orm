@@ -275,7 +275,7 @@ public class FromClause extends HqlSqlWalkerNode implements HqlSqlTokenTypes, Di
 
 	void addJoinByPathMap(String path, FromElement destination) {
 		if ( log.isDebugEnabled() ) {
-			log.debug( "addJoinByPathMap() : " + path + " -> " + destination );
+			log.debug( "addJoinByPathMap() : " + path + " -> " + destination.getDisplayText() );
 		}
 		fromElementsByPath.put( path, destination );
 	}

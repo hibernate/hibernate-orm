@@ -40,7 +40,6 @@ public class EmbeddableWithMany2OneTest extends TestCase {
 		return new Class[] { Person.class, Country.class };
 	}
 
-	@FailureExpected( jiraKey = "HHH-4883")
 	public void testJoinAcrossEmbedded() {
 		Session session = openSession();
 		session.beginTransaction();

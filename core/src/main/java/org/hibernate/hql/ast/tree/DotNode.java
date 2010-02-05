@@ -445,9 +445,20 @@ public class DotNode extends FromReferenceNode implements DisplayableNode, Selec
 			JoinSequence joinSequence = getSessionFactoryHelper()
 				.createJoinSequence( impliedJoin, propertyType, tableAlias, joinType, joinColumns );
 
+			// If the lhs of the join is a "component join", we need to go back to the
+			// first non-component-join as the origin to properly link aliases and
+			// join columns
+			FromElement lhsFromElement = getLhs().getFromElement();
+			while ( lhsFromElement != null &&  ComponentJoin.class.isInstance( lhsFromElement ) ) {
+				lhsFromElement = lhsFromElement.getOrigin();
+			}
+			if ( lhsFromElement == null ) {
+				throw new QueryException( "Unable to locate appropriate lhs" );
+			}
+
 			FromElementFactory factory = new FromElementFactory(
 			        currentFromClause,
-					getLhs().getFromElement(),
+					lhsFromElement,
 					joinPath,
 					classAlias,
 					joinColumns,

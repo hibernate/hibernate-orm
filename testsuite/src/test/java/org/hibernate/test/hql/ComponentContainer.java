@@ -10,6 +10,13 @@ public class ComponentContainer {
 	private Long id;
 	private ComponentContainer.Address address;
 
+	public ComponentContainer() {
+	}
+
+	public ComponentContainer(Address address) {
+		this.address = address;
+	}
+
 	public Long getId() {
 		return id;
 	}

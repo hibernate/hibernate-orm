@@ -33,7 +33,7 @@ import org.hibernate.TransientObjectException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.ForeignKeys;
 import org.hibernate.engine.SessionImplementor;
-import org.hibernate.metadata.ClassMetadata;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
 
@@ -96,37 +96,35 @@ public class ForeignGenerator implements IdentifierGenerator, Configurable {
 	public Serializable generate(SessionImplementor sessionImplementor, Object object) {
 		Session session = ( Session ) sessionImplementor;
 
-		final ClassMetadata classMetadata = sessionImplementor.getFactory()
-				.getClassMetadata( entityName );
-		Object associatedObject = classMetadata
-		        .getPropertyValue( object, propertyName, session.getEntityMode() );
+		final EntityPersister persister = sessionImplementor.getFactory().getEntityPersister( entityName );
+		Object associatedObject = persister.getPropertyValue( object, propertyName, session.getEntityMode() );
 		if ( associatedObject == null ) {
 			throw new IdentifierGenerationException(
 					"attempted to assign id from null one-to-one property [" + getRole() + "]"
 			);
 		}
 
-		final Type uncheckedType = classMetadata
-				.getPropertyType( propertyName );
-		EntityType type;
-		if (uncheckedType instanceof EntityType) {
-		 	type = (EntityType) uncheckedType;
+		final EntityType foreignValueSourceType;
+		final Type propertyType = persister.getPropertyType( propertyName );
+		if ( propertyType.isEntityType() ) {
+			// the normal case
+			foreignValueSourceType = (EntityType) propertyType;
 		}
 		else {
-			//try identifier mapper
-			type = (EntityType) classMetadata.getPropertyType( "_identifierMapper." + propertyName );
+			// try identifier mapper
+			foreignValueSourceType = (EntityType) persister.getPropertyType( "_identifierMapper." + propertyName );
 		}
 
 		Serializable id;
 		try {
 			id = ForeignKeys.getEntityIdentifierIfNotUnsaved(
-					type.getAssociatedEntityName(), 
+					foreignValueSourceType.getAssociatedEntityName(),
 					associatedObject, 
 					sessionImplementor
 			);
 		}
 		catch (TransientObjectException toe) {
-			id = session.save( type.getAssociatedEntityName(), associatedObject );
+			id = session.save( foreignValueSourceType.getAssociatedEntityName(), associatedObject );
 		}
 
 		if ( session.contains(object) ) {

@@ -19,4 +19,12 @@ public class Dependent {
 	@Id
 	@ManyToOne
 	Employee emp;
+
+	public Dependent() {
+	}
+
+	public Dependent(String name, Employee emp) {
+		this.name = name;
+		this.emp = emp;
+	}
 }

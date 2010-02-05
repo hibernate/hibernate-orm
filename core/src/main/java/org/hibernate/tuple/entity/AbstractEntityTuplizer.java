@@ -28,13 +28,10 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
+import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
-import org.hibernate.PropertyAccessException;
-import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.tuple.Instantiator;
-import org.hibernate.tuple.VersionProperty;
-import org.hibernate.tuple.StandardProperty;
+import org.hibernate.engine.EntityKey;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.id.Assigned;
@@ -42,9 +39,13 @@ import org.hibernate.intercept.LazyPropertyInitializer;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.property.Getter;
 import org.hibernate.property.Setter;
 import org.hibernate.proxy.ProxyFactory;
+import org.hibernate.tuple.Instantiator;
+import org.hibernate.tuple.StandardProperty;
+import org.hibernate.tuple.VersionProperty;
 import org.hibernate.type.AbstractComponentType;
 import org.hibernate.type.ComponentType;
 import org.hibernate.type.EntityType;
@@ -165,7 +166,17 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 		}
 		
 		Component mapper = mappingInfo.getIdentifierMapper();
-		identifierMapperType = mapper==null ? null : (AbstractComponentType) mapper.getType();
+		if ( mapper == null ) {
+			identifierMapperType = null;
+			mappedIdentifierValueMarshaller = null;
+		}
+		else {
+			identifierMapperType = (AbstractComponentType) mapper.getType();
+			mappedIdentifierValueMarshaller = buildMappedIdentifierValueMarshaller(
+					(ComponentType) entityMetamodel.getIdentifierProperty().getType(),
+					(ComponentType) identifierMapperType
+			);
+		}
 	}
 
 	/** Retreives the defined entity-name for the tuplized entity.
@@ -197,23 +208,7 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 					throw new HibernateException( "The class has no identifier property: " + getEntityName() );
 				}
 				else {
-					ComponentType copier = (ComponentType) entityMetamodel.getIdentifierProperty().getType();
-					id = copier.instantiate( getEntityMode() );
-					final Object[] propertyValues = identifierMapperType.getPropertyValues( entity, getEntityMode() );
-					Type[] subTypes = identifierMapperType.getSubtypes();
-					Type[] copierSubTypes = copier.getSubtypes();
-					final int length = subTypes.length;
-					for ( int i = 0 ; i < length; i++ ) {
-						//JPA 2 in @IdClass points to the pk of the entity
-						if ( subTypes[i].isAssociationType() && ! copierSubTypes[i].isAssociationType()) {
-							final String associatedEntityName = ( ( EntityType ) subTypes[i] ).getAssociatedEntityName();
-							final EntityPersister entityPersister = getFactory().getEntityPersister(
-									associatedEntityName
-							);
-							propertyValues[i] = entityPersister.getIdentifier( propertyValues[i], getEntityMode() );
-						}
-					}
-					copier.setPropertyValues( id, propertyValues, getEntityMode() );
+					id = mappedIdentifierValueMarshaller.getIdentifier( entity, getEntityMode(), getFactory() );
 				}
 			}
 			else {
@@ -245,6 +240,7 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 		setIdentifier( entity, id, null );
 	}
 
+
 	/**
 	 * {@inheritDoc}
 	 */
@@ -259,20 +255,140 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 			idSetter.set( entity, id, getFactory() );
 		}
 		else if ( identifierMapperType != null ) {
-			ComponentType extractor = (ComponentType) entityMetamodel.getIdentifierProperty().getType();
-			ComponentType copier = (ComponentType) identifierMapperType;
-			final Object[] propertyValues = extractor.getPropertyValues( id, getEntityMode() );
-			Type[] subTypes = identifierMapperType.getSubtypes();
-			Type[] copierSubTypes = copier.getSubtypes();
+			mappedIdentifierValueMarshaller.setIdentifier( entity, id, session );
+		}
+	}
+
+	private static interface MappedIdentifierValueMarshaller {
+		public Object getIdentifier(Object entity, EntityMode entityMode, SessionFactoryImplementor factory);
+		public void setIdentifier(Object entity, Serializable id, SessionImplementor session);
+	}
+
+	private final MappedIdentifierValueMarshaller mappedIdentifierValueMarshaller;
+
+	private static MappedIdentifierValueMarshaller buildMappedIdentifierValueMarshaller(
+			ComponentType mappedIdClassComponentType,
+			ComponentType virtualIdComponent) {
+		// so basically at this point we know we have a "mapped" composite identifier
+		// which is an awful way to say that the identifier is represented differently
+		// in the entity and in the identifier value.  The incoming value should
+		// be an instance of the mapped identifier class (@IdClass) while the incoming entity
+		// should be an instance of the entity class as defined by metamodel.
+		//
+		// However, even within that we have 2 potential scenarios:
+		//		1) @IdClass types and entity @Id property types match
+		//			- return a NormalMappedIdentifierValueMarshaller
+		//		2) They do not match
+		//			- return a IncrediblySillyJpaMapsIdMappedIdentifierValueMarshaller
+		boolean wereAllEquivalent = true;
+		// the sizes being off is a much bigger problem that should have been caught already...
+		for ( int i = 0; i < virtualIdComponent.getSubtypes().length; i++ ) {
+			if ( virtualIdComponent.getSubtypes()[i].isEntityType()
+					&& ! mappedIdClassComponentType.getSubtypes()[i].isEntityType() ) {
+				wereAllEquivalent = false;
+				break;
+			}
+		}
+
+		return wereAllEquivalent
+				? (MappedIdentifierValueMarshaller) new NormalMappedIdentifierValueMarshaller( virtualIdComponent, mappedIdClassComponentType )
+				: (MappedIdentifierValueMarshaller) new IncrediblySillyJpaMapsIdMappedIdentifierValueMarshaller( virtualIdComponent, mappedIdClassComponentType );
+	}
+
+	private static class NormalMappedIdentifierValueMarshaller implements MappedIdentifierValueMarshaller {
+		private final ComponentType virtualIdComponent;
+		private final ComponentType mappedIdentifierType;
+
+		private NormalMappedIdentifierValueMarshaller(ComponentType virtualIdComponent, ComponentType mappedIdentifierType) {
+			this.virtualIdComponent = virtualIdComponent;
+			this.mappedIdentifierType = mappedIdentifierType;
+		}
+
+		public Object getIdentifier(Object entity, EntityMode entityMode, SessionFactoryImplementor factory) {
+			Object id = mappedIdentifierType.instantiate( entityMode );
+			final Object[] propertyValues = virtualIdComponent.getPropertyValues( entity, entityMode );
+			Type[] subTypes = virtualIdComponent.getSubtypes();
+			Type[] copierSubTypes = mappedIdentifierType.getSubtypes();
 			final int length = subTypes.length;
 			for ( int i = 0 ; i < length; i++ ) {
 				//JPA 2 in @IdClass points to the pk of the entity
-				if ( subTypes[i].isAssociationType() && ! copierSubTypes[i].isAssociationType() ) {
+				if ( subTypes[i].isAssociationType() && ! copierSubTypes[i].isAssociationType()) {
 					final String associatedEntityName = ( ( EntityType ) subTypes[i] ).getAssociatedEntityName();
-					//FIXME find the entity for the given id (propertyValue[i])
+					final EntityPersister entityPersister = factory.getEntityPersister( associatedEntityName );
+					propertyValues[i] = entityPersister.getIdentifier( propertyValues[i], entityMode );
 				}
 			}
-			copier.setPropertyValues( entity, propertyValues, getEntityMode() );
+			mappedIdentifierType.setPropertyValues( id, propertyValues, entityMode );
+			return id;
+		}
+
+		public void setIdentifier(Object entity, Serializable id, SessionImplementor session) {
+			virtualIdComponent.setPropertyValues(
+					entity,
+					mappedIdentifierType.getPropertyValues( id, session ),
+					session.getEntityMode()
+			);
+		}
+	}
+
+	private static class IncrediblySillyJpaMapsIdMappedIdentifierValueMarshaller implements MappedIdentifierValueMarshaller {
+		private final ComponentType virtualIdComponent;
+		private final ComponentType mappedIdentifierType;
+
+		private IncrediblySillyJpaMapsIdMappedIdentifierValueMarshaller(ComponentType virtualIdComponent, ComponentType mappedIdentifierType) {
+			this.virtualIdComponent = virtualIdComponent;
+			this.mappedIdentifierType = mappedIdentifierType;
+		}
+
+		public Object getIdentifier(Object entity, EntityMode entityMode, SessionFactoryImplementor factory) {
+			Object id = mappedIdentifierType.instantiate( entityMode );
+			final Object[] propertyValues = virtualIdComponent.getPropertyValues( entity, entityMode );
+			Type[] subTypes = virtualIdComponent.getSubtypes();
+			Type[] copierSubTypes = mappedIdentifierType.getSubtypes();
+			final int length = subTypes.length;
+			for ( int i = 0 ; i < length; i++ ) {
+				if ( propertyValues[i] == null ) {
+					continue;
+				}
+				//JPA 2 in @IdClass points to the pk of the entity
+				if ( subTypes[i].isAssociationType() && ! copierSubTypes[i].isAssociationType() ) {
+					final String associatedEntityName = ( ( EntityType ) subTypes[i] ).getAssociatedEntityName();
+					final EntityPersister entityPersister = factory.getEntityPersister( associatedEntityName );
+					propertyValues[i] = entityPersister.getIdentifier( propertyValues[i], entityMode );
+				}
+			}
+			mappedIdentifierType.setPropertyValues( id, propertyValues, entityMode );
+			return id;
+		}
+
+		public void setIdentifier(Object entity, Serializable id, SessionImplementor session) {
+			final Object[] extractedValues = mappedIdentifierType.getPropertyValues( id, session.getEntityMode() );
+			final Object[] injectionValues = new Object[ extractedValues.length ];
+			for ( int i = 0; i < virtualIdComponent.getSubtypes().length; i++ ) {
+				final Type virtualPropertyType = virtualIdComponent.getSubtypes()[i];
+				final Type idClassPropertyType = mappedIdentifierType.getSubtypes()[i];
+				if ( virtualPropertyType.isEntityType() && ! idClassPropertyType.isEntityType() ) {
+					final String associatedEntityName = ( (EntityType) virtualPropertyType ).getAssociatedEntityName();
+					final EntityKey entityKey = new EntityKey(
+							(Serializable) extractedValues[i],
+							session.getFactory().getEntityPersister( associatedEntityName ),
+							session.getEntityMode()
+					);
+					// it is conceivable there is a proxy, so check that first
+					Object association = session.getPersistenceContext()
+							.getProxy( entityKey );
+					if ( association == null ) {
+						// otherwise look for an initialized version
+						association = session.getPersistenceContext()
+								.getEntity( entityKey );
+					}
+					injectionValues[i] = association;
+				}
+				else {
+					injectionValues[i] = extractedValues[i];
+				}
+			}
+			virtualIdComponent.setPropertyValues( entity, injectionValues, session.getEntityMode() );
 		}
 	}
 

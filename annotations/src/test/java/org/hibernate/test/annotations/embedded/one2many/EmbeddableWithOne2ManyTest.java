@@ -37,7 +37,8 @@ import org.hibernate.test.annotations.TestCase;
 public class EmbeddableWithOne2ManyTest extends TestCase {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] { Alias.class, Person.class };
+//		return new Class[] { Alias.class, Person.class };
+		return new Class[] {  };
 	}
 
 	@FailureExpected( jiraKey = "HHH-4883")

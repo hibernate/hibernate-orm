@@ -320,11 +320,8 @@ public abstract class AbstractSaveEventListener extends AbstractReassociateEvent
 				log.debug( "executing identity-insert immediately" );
 				source.getActionQueue().execute( insert );
 				id = insert.getGeneratedId();
-				//now done in EntityIdentityInsertAction
-				//persister.setIdentifier( entity, id, source.getEntityMode() );
 				key = new EntityKey( id, persister, source.getEntityMode() );
 				source.getPersistenceContext().checkUniqueness( key, entity );
-				//source.getBatcher().executeBatch(); //found another way to ensure that all batched joined inserts have been executed
 			}
 			else {
 				log.debug( "delaying identity-insert due to no transaction in progress" );

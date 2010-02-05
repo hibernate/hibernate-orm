@@ -337,7 +337,7 @@ public class SettingsFactory implements Serializable {
 		settings.setNamedQueryStartupCheckingEnabled( namedQueryChecking );
 
 		boolean checkNullability = PropertiesHelper.getBoolean(Environment.CHECK_NULLABILITY, properties, true);
-		log.info( "Check Nullability in Core (should be disabled when Bean Validation is on): " + enabledDisabled(useStatistics) );
+		log.info( "Check Nullability in Core (should be disabled when Bean Validation is on): " + enabledDisabled(checkNullability) );
 		settings.setCheckNullability(checkNullability);
 
 

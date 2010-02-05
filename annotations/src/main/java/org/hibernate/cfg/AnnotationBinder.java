@@ -387,7 +387,8 @@ public final class
 					idGen.addParam( org.hibernate.id.enhanced.TableGenerator.VALUE_COLUMN_PARAM, tabGen.valueColumnName() );
 				}
 				idGen.addParam( org.hibernate.id.enhanced.TableGenerator.INCREMENT_PARAM, String.valueOf( tabGen.allocationSize() ) );
-				idGen.addParam( org.hibernate.id.enhanced.TableGenerator.INITIAL_PARAM, String.valueOf( tabGen.initialValue() ) );
+				// See comment on HHH-4884 wrt initialValue.  Basically initialValue is really the stated value + 1
+				idGen.addParam( org.hibernate.id.enhanced.TableGenerator.INITIAL_PARAM, String.valueOf( tabGen.initialValue() + 1 ) );
 				if ( tabGen.uniqueConstraints() != null && tabGen.uniqueConstraints().length > 0 ) {
 					log.warn( "Ignoring unique constraints specified on table generator [{}]", tabGen.name() );
 				}

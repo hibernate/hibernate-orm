@@ -3,6 +3,8 @@ package org.hibernate.test.annotations.id;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.cfg.AnnotationConfiguration;
+import org.hibernate.cfg.Configuration;
 import org.hibernate.mapping.Column;
 import org.hibernate.test.annotations.TestCase;
 import org.hibernate.test.annotations.id.entities.Ball;
@@ -298,4 +300,8 @@ public class IdTest extends TestCase {
 		return new String[] { "org/hibernate/test/annotations/orm.xml" };
 	}
 
+	@Override
+	protected void configure(Configuration cfg) {
+		cfg.setProperty( AnnotationConfiguration.USE_NEW_ID_GENERATOR_MAPPINGS, "true" );
+	}
 }

@@ -67,6 +67,7 @@ public class InheritanceState {
 	private ExtendedMappings mappings;
 	private AccessType accessType;
 	private ElementsToProcess elementsToProcess;
+	private Boolean hasIdClassOrEmbeddedId;
 
 	public InheritanceState(XClass clazz,
 							Map<XClass, InheritanceState> inheritanceStatePerClass,
@@ -167,21 +168,6 @@ public class InheritanceState {
 		isEmbeddableSuperclass = embeddableSuperclass;
 	}
 
-	public XClass getIdentifierTypeIfComponent() {
-		final ReflectionManager reflectionManager = mappings.getReflectionManager();
-		if ( reflectionManager.equals( identifierType, void.class ) ) {
-			IdClass idClass = clazz.getAnnotation( IdClass.class );
-			if (idClass != null) {
-				identifierType =  reflectionManager.toXClass( idClass.value() );
-			}
-			else {
-				//find @EmbeddedId
-				getElementsToProcess();
-			}
-		}
-		return identifierType;
-	}
-
 	void postProcess(PersistentClass persistenceClass, EntityBinder entityBinder) {
 		//make sure we run elements to process
 		getElementsToProcess();
@@ -204,14 +190,32 @@ public class InheritanceState {
 			else {
 				return null;
 			}
-
 		}
 	}
 
+	public Boolean hasIdClassOrEmbeddedId() {
+		if (hasIdClassOrEmbeddedId == null) {
+			hasIdClassOrEmbeddedId = false;
+			if ( getClassWithIdClass( true ) != null ) {
+				hasIdClassOrEmbeddedId = true;
+			}
+			else {
+				final ElementsToProcess process = getElementsToProcess();
+				for(PropertyData property : process.getElements() ) {
+					if ( property.getProperty().isAnnotationPresent( EmbeddedId.class ) ) {
+						hasIdClassOrEmbeddedId = true;
+						break;
+					}
+				}
+			}
+		}
+		return hasIdClassOrEmbeddedId;
+	}
+
 	/*
-	 * Get the annotated elements, guessing the access type from @Id or @EmbeddedId presence.
-	 * Change EntityBinder by side effect
-	 */
+		 * Get the annotated elements, guessing the access type from @Id or @EmbeddedId presence.
+		 * Change EntityBinder by side effect
+		 */
 	public ElementsToProcess getElementsToProcess() {
 		if (elementsToProcess == null) {
 			InheritanceState inheritanceState = inheritanceStatePerClass.get( clazz );

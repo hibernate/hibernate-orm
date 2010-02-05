@@ -1,4 +1,4 @@
-package org.hibernate.test.annotations.derivedidentities.e3.b;
+package org.hibernate.test.annotations.derivedidentities.e3.a;
 
 import org.hibernate.Session;
 import org.hibernate.test.annotations.TestCase;
@@ -7,7 +7,7 @@ import org.hibernate.test.util.SchemaUtil;
 /**
  * @author Emmanuel Bernard
  */
-public class DerivedIdentityEmbeddedIdParentEmbeddedIdDepTest extends TestCase {
+public class DerivedIdentityEmbeddedIdParentIdClassTest  extends TestCase {
 	public void testManyToOne() throws Exception {
 		assertTrue( SchemaUtil.isColumnPresent( "Dependent", "FK1", getCfg() ) );
 		assertTrue( SchemaUtil.isColumnPresent( "Dependent", "FK2", getCfg() ) );
@@ -23,15 +23,21 @@ public class DerivedIdentityEmbeddedIdParentEmbeddedIdDepTest extends TestCase {
 		s.persist( e );
 		Dependent d = new Dependent();
 		d.emp = e;
-		d.id = new DependentId();
-		d.id.name = "Doggy";
+		d.name = "Doggy";
+		DependentId dId = new DependentId();
+		dId.emp = new EmployeeId();
+		dId.emp.firstName = e.empId.firstName;
+		dId.emp.lastName = e.empId.lastName;
+		dId.name = d.name;
 		s.persist( d );
 		s.flush();
 		s.clear();
-		d = (Dependent) s.get( Dependent.class, d.id );
+		d = (Dependent) s.get( Dependent.class, dId );
 		assertNotNull( d.emp );
 		assertEquals( e.empId.firstName, d.emp.empId.firstName );
-		s.getTransaction().rollback();
+		s.delete( d );
+		s.delete( d.emp );
+		s.getTransaction().commit();
 		s.close();
 	}
 

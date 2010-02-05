@@ -183,11 +183,11 @@ class ColumnsBuilder {
 
 	Ejb3Column[] overrideColumnFromMapperOrMapsIdProperty(boolean isId) {
 		Ejb3Column[] result = columns;
-		final PropertyData annotatedWithMapsId = BinderHelper.getPropertyOverriddenByMapperOrMapsId( isId, propertyHolder, property.getName(), mappings );
-		if ( annotatedWithMapsId != null ) {
-			result = buildExplicitJoinColumns( annotatedWithMapsId.getProperty(), annotatedWithMapsId );
+		final PropertyData overridingProperty = BinderHelper.getPropertyOverriddenByMapperOrMapsId( isId, propertyHolder, property.getName(), mappings );
+		if ( overridingProperty != null ) {
+			result = buildExplicitJoinColumns( overridingProperty.getProperty(), overridingProperty );
 			if (result == null) {
-				result = buildDefaultJoinColumnsForXToOne( annotatedWithMapsId.getProperty(), annotatedWithMapsId);
+				result = buildDefaultJoinColumnsForXToOne( overridingProperty.getProperty(), overridingProperty);
 			}
 		}
 		return result;

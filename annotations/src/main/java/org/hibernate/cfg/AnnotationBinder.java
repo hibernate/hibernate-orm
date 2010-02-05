@@ -1712,19 +1712,31 @@ public final class
 			//Either a regular property or a basic @Id or @EmbeddedId while not ignoring id annotations
 			else if ( !isId || !entityBinder.isIgnoreIdAnnotations() ) {
 				//define whether the type is a component or not
-				boolean isComponent;
-				isComponent = property.isAnnotationPresent( Embedded.class )
-						|| property.isAnnotationPresent( EmbeddedId.class )
-						|| returnedClass.isAnnotationPresent( Embeddable.class );
 
-				//FIXME do the overrideColumnFromMapsIdProperty here and force the idclass type to look like an @embedded
+				boolean isComponent = false;
+
 				//Overrides from @MapsId if needed
 				boolean isOverridden = false;
 				if ( isId || propertyHolder.isOrWithinEmbeddedId() || propertyHolder.isInIdClass() ) {
-					Ejb3Column[] oldColumns = columns;
-					columns = columnsBuilder.overrideColumnFromMapperOrMapsIdProperty(isId);
-					isOverridden = oldColumns != columns;
+					//the associated entity could be using an @IdClass making the overridden property a component
+					final PropertyData overridingProperty = BinderHelper.getPropertyOverriddenByMapperOrMapsId( isId, propertyHolder, property.getName(), mappings );
+					if (overridingProperty != null) {
+						isOverridden = true;
+						final InheritanceState state = inheritanceStatePerClass.get( overridingProperty.getClassOrElement() );
+						if (state != null) {
+							isComponent = isComponent || state.hasIdClassOrEmbeddedId();
+						}
+						//Get the new column
+						columns = columnsBuilder.overrideColumnFromMapperOrMapsIdProperty(isId);
+					}
 				}
+
+				isComponent = isComponent
+						|| property.isAnnotationPresent( Embedded.class )
+						|| property.isAnnotationPresent( EmbeddedId.class )
+						|| returnedClass.isAnnotationPresent( Embeddable.class );
+
+
 				if ( isComponent ) {
 					String referencedEntityName = null;
 					if (isOverridden) {
@@ -2085,18 +2097,21 @@ public final class
 				for ( int i = 0; i < classElements.size(); i++ ) {
 					final PropertyData idClassPropertyData = classElements.get( i );
 					final PropertyData entityPropertyData = orderedBaseClassElements.get( idClassPropertyData.getPropertyName() );
-					if ( propertyHolder.isInIdClass() ) {
-						if ( entityPropertyData.getProperty().isAnnotationPresent( ManyToOne.class )
-								|| entityPropertyData.getProperty().isAnnotationPresent( OneToOne.class ) ) {
-							//don't replace here as we need to use the actual original return type
-							//the annotation overriding will be dealt with by a mechanism similar to @MapsId
+					//FIXME 
+					if ( entityPropertyData != null ) {
+						if ( propertyHolder.isInIdClass() ) {
+							if ( entityPropertyData.getProperty().isAnnotationPresent( ManyToOne.class )
+									|| entityPropertyData.getProperty().isAnnotationPresent( OneToOne.class ) ) {
+								//don't replace here as we need to use the actual original return type
+								//the annotation overriding will be dealt with by a mechanism similar to @MapsId
+							}
+							else {
+								classElements.set( i, entityPropertyData );  //this works since they are in the same order
+							}
 						}
 						else {
 							classElements.set( i, entityPropertyData );  //this works since they are in the same order
 						}
-					}
-					else {
-						classElements.set( i, entityPropertyData );  //this works since they are in the same order
 					}
 				}
 			}

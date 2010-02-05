@@ -38,6 +38,7 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.TransientObjectException;
 import org.hibernate.SessionException;
+import org.hibernate.UnresolvableObjectException;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
@@ -882,7 +883,88 @@ public class ReadOnlyProxyTest extends FunctionalTestCase {
 		s.delete( dp );
 		t.commit();
 		s.close();
+	}
 
+
+	public void testReadOnlyRefreshDeleted() {
+		Session s = openSession();
+		s.setCacheMode(CacheMode.IGNORE);
+		Transaction t = s.beginTransaction();
+		DataPoint dp = new DataPoint();
+		dp.setDescription( "original" );
+		dp.setX( new BigDecimal(0.1d).setScale(19, BigDecimal.ROUND_DOWN) );
+		dp.setY( new BigDecimal( Math.cos( dp.getX().doubleValue() ) ).setScale(19, BigDecimal.ROUND_DOWN) );
+		s.save(dp);
+		t.commit();
+		s.close();
+
+		s = openSession();
+		s.setCacheMode(CacheMode.IGNORE);
+		t = s.beginTransaction();
+		HibernateProxy dpProxy = ( HibernateProxy ) s.load( DataPoint.class, dp.getId() );
+		assertFalse( Hibernate.isInitialized( dpProxy ) );
+		t.commit();
+		s.close();
+
+		s = openSession();
+		s.setCacheMode(CacheMode.IGNORE);
+		t = s.beginTransaction();
+		dp = ( DataPoint ) s.get( DataPoint.class, dp.getId() );
+		s.delete( dp );
+		s.flush();
+		try {
+			s.refresh( dp );
+			fail( "should have thrown UnresolvableObjectException" );
+		}
+		catch ( UnresolvableObjectException ex ) {
+			// expected
+		}
+		finally {
+			t.rollback();
+			s.close();
+		}
+
+		s = openSession();
+		t = s.beginTransaction();
+		s.setCacheMode(CacheMode.IGNORE);
+		DataPoint dpProxyInit = ( DataPoint ) s.load( DataPoint.class, dp.getId() );
+		assertEquals( "original", dp.getDescription() );
+		s.delete( dpProxyInit );
+		t.commit();
+		s.close();
+
+		s = openSession();
+		t = s.beginTransaction();
+		assertTrue( dpProxyInit instanceof HibernateProxy );
+		assertTrue( Hibernate.isInitialized( dpProxyInit ) );
+		try {
+			s.refresh( dpProxyInit );
+			fail( "should have thrown UnresolvableObjectException" );
+		}
+		catch ( UnresolvableObjectException ex ) {
+			// expected
+		}
+		finally {
+			t.rollback();
+			s.close();
+		}
+
+		s = openSession();
+		t = s.beginTransaction();
+		assertTrue( dpProxy instanceof HibernateProxy );
+		try {
+			s.refresh( dpProxy );
+			assertFalse( Hibernate.isInitialized( dpProxy ) );
+			Hibernate.initialize( dpProxy );
+			fail( "should have thrown UnresolvableObjectException" );
+		}
+		catch ( UnresolvableObjectException ex ) {
+			// expected
+		}
+		finally {
+			t.rollback();
+			s.close();
+		}
 	}
 
 	public void testReadOnlyRefreshDetached() {

@@ -151,7 +151,9 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 		Object result = persister.load( id, object, event.getLockOptions(), source );
 		// Keep the same read-only/modifiable setting for the entity that it had before refreshing;
 		// If it was transient, then set it to the default for the source.
-		source.setReadOnly( result, ( e == null ? source.isDefaultReadOnly() : e.isReadOnly() ) );
+		if ( result != null ) {
+			source.setReadOnly( result, ( e == null ? source.isDefaultReadOnly() : e.isReadOnly() ) );
+		}
 		source.setFetchProfile(previousFetchProfile);
 		
 		UnresolvableObjectException.throwIfNull( result, id, persister.getEntityName() );

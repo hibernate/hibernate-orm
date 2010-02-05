@@ -683,103 +683,63 @@ public final class
 
 		final boolean subclassAndSingleTableStrategy = inheritanceState.getType() == InheritanceType.SINGLE_TABLE
 				&& inheritanceState.hasParents();
-		//process idclass if any
-		Set<String> idProperties = new HashSet<String>();
-		XClass classWithIdClass = inheritanceState.getClassWithIdClass(false);
-		if ( classWithIdClass != null ) {
-			IdClass idClass = classWithIdClass.getAnnotation( IdClass.class );
-			XClass compositeClass = mappings.getReflectionManager().toXClass( idClass.value() );
-			boolean isComponent = true;
-			AccessType propertyAccessor = entityBinder.getPropertyAccessor( compositeClass );
-			String generatorType = "assigned";
-			String generator = BinderHelper.ANNOTATION_STRING_DEFAULT;
-			PropertyData inferredData = new PropertyPreloadedData(
-					entityBinder.getPropertyAccessType(), "id", compositeClass
-			);
-			PropertyData baseInferredData = new PropertyPreloadedData(
-                  entityBinder.getPropertyAccessType(), "id", classWithIdClass
-            );
-			HashMap<String, IdGenerator> localGenerators = new HashMap<String, IdGenerator>();
-			boolean ignoreIdAnnotations = entityBinder.isIgnoreIdAnnotations();
-			entityBinder.setIgnoreIdAnnotations( true );
-			propertyHolder.setInIdClass( true );
-			bindId(
-					generatorType,
-					generator,
-					inferredData,
-					baseInferredData,
-					null,
-					propertyHolder,
-					localGenerators,
-					isComponent,
-					propertyAccessor, entityBinder,
-					true,
-					false,
-					mappings,
-					inheritanceStatePerClass
-			);
-			propertyHolder.setInIdClass( null );
-			inferredData = new PropertyPreloadedData(
-					propertyAccessor, "_identifierMapper", compositeClass
-			);
-			Component mapper = fillComponent(
-					propertyHolder,
-					inferredData,
-					baseInferredData,
-					propertyAccessor,
-					false,
-					entityBinder,
-					true,
-					true,
-					false,
-					mappings,
-					inheritanceStatePerClass
-			);
-			entityBinder.setIgnoreIdAnnotations( ignoreIdAnnotations );
-			persistentClass.setIdentifierMapper( mapper );
+		Set<String> idPropertiesIfIdClass = new HashSet<String>();
+		boolean isIdClass = mapAsIdClass(
+				inheritanceStatePerClass,
+				inheritanceState,
+				persistentClass,
+				entityBinder,
+				propertyHolder,
+				elementsToProcess,
+				idPropertiesIfIdClass,
+				mappings
+		);
 
-			//If id definition is on a mapped superclass, update the mapping
-			final org.hibernate.mapping.MappedSuperclass superclass = BinderHelper.getMappedSuperclassOrNull(
-					inferredData.getDeclaringClass(),
-					inheritanceStatePerClass,
-					mappings
-			);
-			if (superclass != null) {
-				superclass.setDeclaredIdentifierMapper(mapper);
-			}
-			else {
-				//we are for sure on the entity
-				persistentClass.setDeclaredIdentifierMapper( mapper );
-			}
-
-			Property property = new Property();
-			property.setName( "_identifierMapper" );
-			property.setNodeName( "id" );
-			property.setUpdateable( false );
-			property.setInsertable( false );
-			property.setValue( mapper );
-			property.setPropertyAccessorName( "embedded" );
-			persistentClass.addProperty( property );
-			entityBinder.setIgnoreIdAnnotations( true );
-
-			Iterator properties = mapper.getPropertyIterator();
-			while ( properties.hasNext() ) {
-				idProperties.add( ( (Property) properties.next() ).getName() );
-			}
-		}
-		else {
+		if (!isIdClass) {
 			entityBinder.setWrapIdsInEmbeddedComponents( elementsToProcess.getIdPropertyCount() > 1 );
 		}
-		Set<String> missingIdProperties = new HashSet<String>( idProperties );
-		for (PropertyData propertyAnnotatedElement : elementsToProcess.getElements() ) {
+
+		processIdPropertiesIfNotAlready(
+				inheritanceStatePerClass,
+				mappings,
+				persistentClass,
+				entityBinder,
+				propertyHolder,
+				classGenerators,
+				elementsToProcess,
+				subclassAndSingleTableStrategy,
+				idPropertiesIfIdClass
+		);
+
+		if ( !inheritanceState.hasParents() ) {
+			final RootClass rootClass = (RootClass) persistentClass;
+			mappings.addSecondPass( new CreateKeySecondPass( rootClass ) );
+		}
+		else {
+			superEntity.addSubclass( (Subclass) persistentClass );
+		}
+
+		mappings.addClass( persistentClass );
+
+		//Process secondary tables and complementary definitions (ie o.h.a.Table)
+		mappings.addSecondPass( new SecondaryTableSecondPass( entityBinder, propertyHolder, clazzToProcess ) );
+
+		//add process complementary Table definition (index & all)
+		entityBinder.processComplementaryTableDefinitions( clazzToProcess.getAnnotation( org.hibernate.annotations.Table.class ) );
+		entityBinder.processComplementaryTableDefinitions( clazzToProcess.getAnnotation( org.hibernate.annotations.Tables.class ) );
+
+	}
+
+	private static void processIdPropertiesIfNotAlready(Map<XClass, InheritanceState> inheritanceStatePerClass, ExtendedMappings mappings, PersistentClass persistentClass, EntityBinder entityBinder, PropertyHolder propertyHolder, HashMap<String, IdGenerator> classGenerators, InheritanceState.ElementsToProcess elementsToProcess, boolean subclassAndSingleTableStrategy, Set<String> idPropertiesIfIdClass) {
+		Set<String> missingIdProperties = new HashSet<String>( idPropertiesIfIdClass );
+		for ( PropertyData propertyAnnotatedElement : elementsToProcess.getElements() ) {
 			String propertyName = propertyAnnotatedElement.getPropertyName();
-			if ( !idProperties.contains( propertyName ) ) {
+			if ( !idPropertiesIfIdClass.contains( propertyName ) ) {
 				processElementAnnotations(
 						propertyHolder,
 						subclassAndSingleTableStrategy ?
 								Nullability.FORCED_NULL :
 								Nullability.NO_CONSTRAINT,
-						propertyAnnotatedElement.getProperty(),
 						propertyAnnotatedElement, classGenerators, entityBinder,
 						false, false, false, mappings, inheritanceStatePerClass
 				);
@@ -800,24 +760,157 @@ public final class
 							+ ") in entity annotated with @IdClass:" + persistentClass.getEntityName()
 			);
 		}
+	}
 
-		if ( !inheritanceState.hasParents() ) {
-			final RootClass rootClass = (RootClass) persistentClass;
-			mappings.addSecondPass( new CreateKeySecondPass( rootClass ) );
+	private static boolean mapAsIdClass(Map<XClass, InheritanceState> inheritanceStatePerClass, InheritanceState inheritanceState, PersistentClass persistentClass, EntityBinder entityBinder, PropertyHolder propertyHolder, InheritanceState.ElementsToProcess elementsToProcess, Set<String> idPropertiesIfIdClass, ExtendedMappings mappings) {
+		/*
+		 * We are looking for @IdClass
+		 * In general we map the id class as identifier using the mapping metadata of the main entity's properties
+		 * and we create an identifier mapper containing the id properties of the main entity
+		 *
+		 * In JPA 2, there is a shortcut if the id class is the Pk of the associated class pointed to by the id
+		 * it ought to be treated as an embedded and not a real IdClass (at least in the Hibernate's internal way
+		 */
+		XClass classWithIdClass = inheritanceState.getClassWithIdClass(false);
+		if ( classWithIdClass != null ) {
+			IdClass idClass = classWithIdClass.getAnnotation( IdClass.class );
+			XClass compositeClass = mappings.getReflectionManager().toXClass( idClass.value() );
+			PropertyData inferredData = new PropertyPreloadedData(
+					entityBinder.getPropertyAccessType(), "id", compositeClass
+			);
+			PropertyData baseInferredData = new PropertyPreloadedData(
+                  entityBinder.getPropertyAccessType(), "id", classWithIdClass
+            );
+			AccessType propertyAccessor = entityBinder.getPropertyAccessor( compositeClass );
+			//In JPA 2, there is a shortcut if the IdClass is the Pk of the associated class pointed to by the id
+			//it ought to be treated as an embedded and not a real IdClass (at least in the Hibernate's internal way
+			final boolean isFakeIdClass = isIdClassPkOfTheAssociatedEntity(
+					elementsToProcess,
+					compositeClass,
+					inferredData,
+					baseInferredData,
+					propertyAccessor,
+					inheritanceStatePerClass,
+					mappings
+			);
+
+			if ( isFakeIdClass ) {
+				return false;
+			}
+
+			boolean isComponent = true;
+			String generatorType = "assigned";
+			String generator = BinderHelper.ANNOTATION_STRING_DEFAULT;
+
+			boolean ignoreIdAnnotations = entityBinder.isIgnoreIdAnnotations();
+			entityBinder.setIgnoreIdAnnotations( true );
+			propertyHolder.setInIdClass( true );
+			bindIdClass(
+					generatorType,
+					generator,
+					inferredData,
+					baseInferredData,
+					null,
+					propertyHolder,
+					isComponent,
+					propertyAccessor,
+					entityBinder,
+					true,
+					false,
+					mappings,
+					inheritanceStatePerClass
+			);
+			propertyHolder.setInIdClass( null );
+			inferredData = new PropertyPreloadedData(
+					propertyAccessor, "_identifierMapper", compositeClass
+			);
+			Component mapper = fillComponent(
+				propertyHolder,
+				inferredData,
+				baseInferredData,
+				propertyAccessor,
+				false,
+				entityBinder,
+				true,
+				true,
+				false,
+				mappings,
+				inheritanceStatePerClass
+			);
+			entityBinder.setIgnoreIdAnnotations( ignoreIdAnnotations );
+			persistentClass.setIdentifierMapper( mapper );
+
+			//If id definition is on a mapped superclass, update the mapping
+			final org.hibernate.mapping.MappedSuperclass superclass =
+					BinderHelper.getMappedSuperclassOrNull(
+							inferredData.getDeclaringClass(),
+							inheritanceStatePerClass,
+							mappings
+					);
+			if (superclass != null) {
+				superclass.setDeclaredIdentifierMapper(mapper);
+			}
+			else {
+				//we are for sure on the entity
+				persistentClass.setDeclaredIdentifierMapper( mapper );
+			}
+
+			Property property = new Property();
+			property.setName( "_identifierMapper" );
+			property.setNodeName( "id" );
+			property.setUpdateable( false );
+			property.setInsertable( false );
+			property.setValue( mapper );
+			property.setPropertyAccessorName( "embedded" );
+			persistentClass.addProperty( property );
+			entityBinder.setIgnoreIdAnnotations( true );
+
+			Iterator properties = mapper.getPropertyIterator();
+			while ( properties.hasNext() ) {
+				idPropertiesIfIdClass.add( ( (Property) properties.next() ).getName() );
+			}
+			return true;
 		}
 		else {
-			superEntity.addSubclass( (Subclass) persistentClass );
+			return false;
 		}
+	}
 
-		mappings.addClass( persistentClass );
+	private static boolean isIdClassPkOfTheAssociatedEntity(
+			InheritanceState.ElementsToProcess elementsToProcess,
+			XClass compositeClass,
+			PropertyData inferredData,
+			PropertyData baseInferredData,
+			AccessType propertyAccessor,
+			Map<XClass, InheritanceState> inheritanceStatePerClass,
+			ExtendedMappings mappings) {
+		if ( elementsToProcess.getIdPropertyCount() == 1 ) {
+			final PropertyData idPropertyOnBaseClass = getUniqueIdPropertyFromBaseClass(
+					inferredData, baseInferredData, propertyAccessor, mappings
+			);
+			final InheritanceState state = inheritanceStatePerClass.get( idPropertyOnBaseClass.getClassOrElement() );
+			if (state == null) {
+				return false; //while it is likely a user error, let's consider it is something that might happen
+			}
+			final XClass associatedClassWithIdClass = state.getClassWithIdClass( true );
+			if ( associatedClassWithIdClass == null ) {
+				//we cannot know for sure here unless we try and find the @EmbeddedId
+				//Let's not do this thorough checking but do some extra validation
+				final XProperty property = idPropertyOnBaseClass.getProperty();
+				return property.isAnnotationPresent( ManyToOne.class )
+						|| property.isAnnotationPresent( OneToOne.class );
 
-		//Process secondary tables and complementary definitions (ie o.h.a.Table)
-		mappings.addSecondPass( new SecondaryTableSecondPass( entityBinder, propertyHolder, clazzToProcess ) );
-
-		//add process complementary Table definition (index & all)
-		entityBinder.processComplementaryTableDefinitions( clazzToProcess.getAnnotation( org.hibernate.annotations.Table.class ) );
-		entityBinder.processComplementaryTableDefinitions( clazzToProcess.getAnnotation( org.hibernate.annotations.Tables.class ) );
-
+			}
+			else {
+				final XClass idClass = mappings.getReflectionManager().toXClass(
+						associatedClassWithIdClass.getAnnotation( IdClass.class ).value()
+				);
+				return idClass.equals( compositeClass );
+			}
+		}
+		else {
+			return false;
+		}
 	}
 
 	private static Cache determineCacheSettings(XClass clazzToProcess, ExtendedMappings mappings) {
@@ -1230,7 +1323,7 @@ public final class
 	 * Process annotation of a particular property
 	 */
 	private static void processElementAnnotations(
-			PropertyHolder propertyHolder, Nullability nullability, XProperty property,
+			PropertyHolder propertyHolder, Nullability nullability,
 			PropertyData inferredData, HashMap<String, IdGenerator> classGenerators,
 			EntityBinder entityBinder, boolean isIdentifierMapper,
 			boolean isComponentEmbedded, boolean inSecondPass, ExtendedMappings mappings,
@@ -1246,6 +1339,7 @@ public final class
 				"Processing annotations of {}.{}", propertyHolder.getEntityName(), inferredData.getPropertyName()
 		);
 
+		final XProperty property = inferredData.getProperty();
 		if ( property.isAnnotationPresent( Parent.class ) ) {
 			if ( propertyHolder.isComponent() ) {
 				propertyHolder.setParentProperty( property.getName() );
@@ -1794,7 +1888,7 @@ public final class
 						final PropertyData mapsIdProperty = BinderHelper.getPropertyOverriddenByMapperOrMapsId(
 								isId, propertyHolder, property.getName(), mappings
 						);
-						HashMap<String, IdGenerator> localGenerators = (HashMap<String, IdGenerator>) classGenerators.clone();
+						Map<String, IdGenerator> localGenerators = (HashMap<String, IdGenerator>) classGenerators.clone();
 						final IdGenerator foreignGenerator = new IdGenerator();
 						foreignGenerator.setIdentifierGeneratorStrategy( "assigned" );
 						foreignGenerator.setName( "Hibernate-local--foreign generator" );
@@ -2061,7 +2155,7 @@ public final class
 				inferredData, propertyHolder, mappings
 		);
 
-		final XClass entityXClass = inferredData.getPropertyClass();
+		final XClass xClassProcessed = inferredData.getPropertyClass();
 		List<PropertyData> classElements = new ArrayList<PropertyData>();
 		XClass returnedClassOrElement = inferredData.getClassOrElement();
 
@@ -2069,11 +2163,11 @@ public final class
 		Map<String, PropertyData> orderedBaseClassElements = new HashMap<String, PropertyData>();
 		XClass baseReturnedClassOrElement;
 		if(baseInferredData != null) {
-		   baseClassElements = new ArrayList<PropertyData>();
-		   baseReturnedClassOrElement = baseInferredData.getClassOrElement();
-		   bindTypeDefs(baseReturnedClassOrElement, mappings);
-	       PropertyContainer propContainer = new PropertyContainer( baseReturnedClassOrElement, entityXClass );
-		   addElementsOfClass( baseClassElements, propertyAccessor, propContainer, mappings );
+			baseClassElements = new ArrayList<PropertyData>();
+			baseReturnedClassOrElement = baseInferredData.getClassOrElement();
+			bindTypeDefs(baseReturnedClassOrElement, mappings);
+			PropertyContainer propContainer = new PropertyContainer( baseReturnedClassOrElement, xClassProcessed );
+			addElementsOfClass( baseClassElements, propertyAccessor, propContainer, mappings );
 			for (PropertyData element : baseClassElements) {
 				orderedBaseClassElements.put( element.getPropertyName(), element );
 			}
@@ -2081,38 +2175,42 @@ public final class
 
 		//embeddable elements can have type defs
 		bindTypeDefs(returnedClassOrElement, mappings);
-		PropertyContainer propContainer = new PropertyContainer( returnedClassOrElement, entityXClass );
+		PropertyContainer propContainer = new PropertyContainer( returnedClassOrElement, xClassProcessed );
 		addElementsOfClass( classElements, propertyAccessor, propContainer, mappings);
 
 		//add elements of the embeddable superclass
-		XClass superClass = entityXClass.getSuperclass();
+		XClass superClass = xClassProcessed.getSuperclass();
 		while ( superClass != null && superClass.isAnnotationPresent( MappedSuperclass.class ) ) {
 			//FIXME: proper support of typevariables incl var resolved at upper levels
-			propContainer = new PropertyContainer( superClass, entityXClass );
+			propContainer = new PropertyContainer( superClass, xClassProcessed );
 			addElementsOfClass( classElements, propertyAccessor, propContainer, mappings );
 			superClass = superClass.getSuperclass();
 		}
 		if ( baseClassElements != null ) {
 			//useful to avoid breaking pre JPA 2 mappings
-			if ( !hasAnnotationsOnIdClass( entityXClass ) ) {
+			if ( !hasAnnotationsOnIdClass( xClassProcessed ) ) {
 				for ( int i = 0; i < classElements.size(); i++ ) {
 					final PropertyData idClassPropertyData = classElements.get( i );
 					final PropertyData entityPropertyData = orderedBaseClassElements.get( idClassPropertyData.getPropertyName() );
-					//FIXME 
-					if ( entityPropertyData != null ) {
-						if ( propertyHolder.isInIdClass() ) {
-							if ( entityPropertyData.getProperty().isAnnotationPresent( ManyToOne.class )
-									|| entityPropertyData.getProperty().isAnnotationPresent( OneToOne.class ) ) {
-								//don't replace here as we need to use the actual original return type
-								//the annotation overriding will be dealt with by a mechanism similar to @MapsId
-							}
-							else {
-								classElements.set( i, entityPropertyData );  //this works since they are in the same order
-							}
+					if ( propertyHolder.isInIdClass() ) {
+						if (entityPropertyData == null) {
+							throw new AnnotationException (
+									"Property of @IdClass not found in entity "
+											+ baseInferredData.getPropertyClass().getName() + ": "
+											+ idClassPropertyData.getPropertyName() 
+							);
+						}
+						if ( entityPropertyData.getProperty().isAnnotationPresent( ManyToOne.class )
+								|| entityPropertyData.getProperty().isAnnotationPresent( OneToOne.class ) ) {
+							//don't replace here as we need to use the actual original return type
+							//the annotation overriding will be dealt with by a mechanism similar to @MapsId
 						}
 						else {
 							classElements.set( i, entityPropertyData );  //this works since they are in the same order
 						}
+					}
+					else {
+						classElements.set( i, entityPropertyData );  //this works since they are in the same order
 					}
 				}
 			}
@@ -2122,7 +2220,7 @@ public final class
 					subHolder, isNullable ?
 					Nullability.NO_CONSTRAINT :
 					Nullability.FORCED_NOT_NULL,
-					propertyAnnotatedElement.getProperty(), propertyAnnotatedElement,
+					propertyAnnotatedElement,
 					new HashMap<String, IdGenerator>(), entityBinder, isIdentifierMapper, isComponentEmbedded,
 					inSecondPass, mappings, inheritanceStatePerClass
 			);
@@ -2131,7 +2229,7 @@ public final class
 			if(property.isAnnotationPresent(GeneratedValue.class) &&
 			      property.isAnnotationPresent(Id.class) ) {
 			   //clone classGenerator and override with local values
-			   HashMap<String, IdGenerator> localGenerators = new HashMap<String, IdGenerator>();
+			   Map<String, IdGenerator> localGenerators = new HashMap<String, IdGenerator>();
 			   localGenerators.putAll( buildLocalGenerators( property, mappings ) );
 
 			   GeneratedValue generatedValue = property.getAnnotation( GeneratedValue.class );
@@ -2161,10 +2259,9 @@ public final class
 		return comp;
 	}
 
-    private static void bindId(
+    private static void bindIdClass(
           String generatorType, String generatorName, PropertyData inferredData,
           PropertyData baseInferredData, Ejb3Column[] columns, PropertyHolder propertyHolder,
-          Map<String, IdGenerator> localGenerators,
           boolean isComposite,
           AccessType propertyAccessor, EntityBinder entityBinder, boolean isEmbedded,
           boolean isIdentifierMapper, ExtendedMappings mappings,
@@ -2185,6 +2282,7 @@ public final class
 		String persistentClassName = rootClass.getClassName();
 		SimpleValue id;
 		final String propertyName = inferredData.getPropertyName();
+		HashMap<String, IdGenerator> localGenerators = new HashMap<String, IdGenerator>();
 		if ( isComposite ) {
 			id = fillComponent(
 					propertyHolder, inferredData, baseInferredData, propertyAccessor,
@@ -2203,6 +2301,8 @@ public final class
 			setupComponentTuplizer( property, componentId );
 		}
 		else {
+			//TODO I think this branch is never used. Remove.
+
 			for (Ejb3Column column : columns) {
 				column.forceNotNull(); //this is an id
 			}
@@ -2242,6 +2342,16 @@ public final class
 				rootClass.setDeclaredIdentifierProperty( prop );
 			}
 		}
+	}
+
+	private static PropertyData getUniqueIdPropertyFromBaseClass(PropertyData inferredData, PropertyData baseInferredData, AccessType propertyAccessor, ExtendedMappings mappings) {
+		List<PropertyData> baseClassElements = new ArrayList<PropertyData>();
+		XClass baseReturnedClassOrElement = baseInferredData.getClassOrElement();
+		PropertyContainer propContainer = new PropertyContainer( baseReturnedClassOrElement, inferredData.getPropertyClass() );
+		addElementsOfClass( baseClassElements, propertyAccessor, propContainer, mappings );
+		//Id properties are on top and there is only one
+		final PropertyData idPropertyOnBaseClass = baseClassElements.get( 0 );
+		return idPropertyOnBaseClass;
 	}
 
 	private static void setupComponentTuplizer(XProperty property, Component component) {

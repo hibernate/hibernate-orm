@@ -500,7 +500,7 @@
             <dependency>
                 <groupId>org.hibernate.javax.persistence</groupId>
                 <artifactId>hibernate-jpa-2.0-api</artifactId>
-                <version>1.0.0-SNAPSHOT</version>
+                <version>1.0.0-CR-1</version>
             </dependency>
             <!-- Set the version of the hibernate-commons-annotations to be used throughout the the project -->
             <dependency>

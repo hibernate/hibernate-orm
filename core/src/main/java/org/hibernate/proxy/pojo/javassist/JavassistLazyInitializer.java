@@ -34,6 +34,7 @@ import javassist.util.proxy.ProxyFactory;
 import javassist.util.proxy.ProxyObject;
 
 import org.slf4j.LoggerFactory;
+
 import org.hibernate.HibernateException;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.proxy.pojo.BasicLazyInitializer;
@@ -229,7 +230,7 @@ public class JavassistLazyInitializer extends BasicLazyInitializer implements Me
 		        persistentClass,
 		        interfaces,
 		        getIdentifier(),
-		        ( getSession() != null && getSession().isOpen() ? isReadOnly() : false ),
+		        ( isReadOnlySettingAvailable() ? Boolean.valueOf( isReadOnly() ) : isReadOnlyBeforeAttachedToSession() ),
 		        getIdentifierMethod,
 		        setIdentifierMethod,
 		        componentIdType

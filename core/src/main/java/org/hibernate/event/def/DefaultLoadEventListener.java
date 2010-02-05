@@ -360,9 +360,6 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 			Object proxy = persister.createProxy( event.getEntityId(), event.getSession() );
 			persistenceContext.getBatchFetchQueue().addBatchLoadableEntityKey(keyToLoad);
 			persistenceContext.addProxy(keyToLoad, proxy);
-			( ( HibernateProxy ) proxy )
-					.getHibernateLazyInitializer()
-					.setReadOnly( event.getSession().isDefaultReadOnly() || ! persister.isMutable() );
 			return proxy;
 		}
 	}

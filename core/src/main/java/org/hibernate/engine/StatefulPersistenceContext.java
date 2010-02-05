@@ -672,10 +672,19 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			}
 			else {
 				proxy = persister.createProxy( key.getIdentifier(), session );
-				proxiesByKey.put(key, proxy); //overwrite old proxy
+				Object proxyOrig = proxiesByKey.put(key, proxy); //overwrite old proxy
+				if ( proxyOrig != null ) {
+					if ( ! ( proxyOrig instanceof HibernateProxy ) ) {
+						throw new AssertionFailure(
+								"proxy not of type HibernateProxy; it is " + proxyOrig.getClass()
+						);
+					}
+					// set the read-only/modifiable mode in the new proxy to what it was in the original proxy
+					boolean readOnlyOrig = ( ( HibernateProxy ) proxyOrig ).getHibernateLazyInitializer().isReadOnly();
+					( ( HibernateProxy ) proxy ).getHibernateLazyInitializer().setReadOnly( readOnlyOrig );
+				}
 				return proxy;
-			}
-			
+			}			
 		}
 		else {
 			

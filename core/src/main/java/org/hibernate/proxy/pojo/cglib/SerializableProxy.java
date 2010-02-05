@@ -28,19 +28,17 @@ import java.io.Serializable;
 import java.lang.reflect.Method;
 
 import org.hibernate.HibernateException;
+import org.hibernate.proxy.AbstractSerializableProxy;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.type.AbstractComponentType;
 
 /**
  * Serializable placeholder for <tt>CGLIB</tt> proxies
  */
-public final class SerializableProxy implements Serializable {
+public final class SerializableProxy extends AbstractSerializableProxy {
 
-	private String entityName;
 	private Class persistentClass;
 	private Class[] interfaces;
-	private Serializable id;
-	private boolean readOnly;
 	private Class getIdentifierMethodClass;
 	private Class setIdentifierMethodClass;
 	private String getIdentifierMethodName;
@@ -55,16 +53,14 @@ public final class SerializableProxy implements Serializable {
 		final Class persistentClass,
 		final Class[] interfaces,
 		final Serializable id,
-		final boolean readOnly,
+		final Boolean readOnly,
 		final Method getIdentifierMethod,
 		final Method setIdentifierMethod,
 		AbstractComponentType componentIdType
 	) {
-		this.entityName = entityName;
+		super( entityName, id, readOnly );
 		this.persistentClass = persistentClass;
 		this.interfaces = interfaces;
-		this.id = id;
-		this.readOnly = readOnly;
 		if (getIdentifierMethod!=null) {
 			getIdentifierMethodClass = getIdentifierMethod.getDeclaringClass();
 			getIdentifierMethodName = getIdentifierMethod.getName();
@@ -79,8 +75,8 @@ public final class SerializableProxy implements Serializable {
 
 	private Object readResolve() {
 		try {
-			return CGLIBLazyInitializer.getProxy(
-				entityName,
+			HibernateProxy proxy = CGLIBLazyInitializer.getProxy(
+				getEntityName(),
 				persistentClass,
 				interfaces,
 				getIdentifierMethodName==null ?
@@ -90,12 +86,15 @@ public final class SerializableProxy implements Serializable {
 					null :
 					setIdentifierMethodClass.getDeclaredMethod(setIdentifierMethodName, setIdentifierMethodParams),
 					componentIdType,
-				id,
+				getId(),
 				null
 			);
+
+			setReadOnlyBeforeAttachedToSession( ( CGLIBLazyInitializer ) proxy.getHibernateLazyInitializer() );
+			return proxy;
 		}
 		catch (NoSuchMethodException nsme) {
-			throw new HibernateException("could not create proxy for entity: " + entityName, nsme);
+			throw new HibernateException("could not create proxy for entity: " + getEntityName(), nsme);
 		}
 	}
 

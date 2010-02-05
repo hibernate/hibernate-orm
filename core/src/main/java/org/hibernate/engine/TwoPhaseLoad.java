@@ -190,12 +190,17 @@ public final class TwoPhaseLoad {
 			}
 		}
 
-		boolean isReallyReadOnly = readOnly || !persister.isMutable();
-		Object proxy = persistenceContext.getProxy( entityEntry.getEntityKey() );
-		if ( proxy != null ) {
-			// there is already a proxy for this impl
-			// only set the status to read-only if the proxy is read-only
-			isReallyReadOnly = ( ( HibernateProxy ) proxy ).getHibernateLazyInitializer().isReadOnly();
+		boolean isReallyReadOnly = readOnly;
+		if ( !persister.isMutable() ) {
+			isReallyReadOnly = true;
+		}
+		else {
+			Object proxy = persistenceContext.getProxy( entityEntry.getEntityKey() );
+			if ( proxy != null ) {
+				// there is already a proxy for this impl
+				// only set the status to read-only if the proxy is read-only
+				isReallyReadOnly = ( ( HibernateProxy ) proxy ).getHibernateLazyInitializer().isReadOnly();
+			}
 		}
 		if ( isReallyReadOnly ) {
 			//no need to take a snapshot - this is a 

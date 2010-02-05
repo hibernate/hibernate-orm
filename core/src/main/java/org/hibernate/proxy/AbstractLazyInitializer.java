@@ -26,12 +26,14 @@ package org.hibernate.proxy;
 
 import java.io.Serializable;
 
+import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.LazyInitializationException;
 import org.hibernate.TransientObjectException;
 import org.hibernate.SessionException;
 import org.hibernate.engine.EntityKey;
 import org.hibernate.engine.SessionImplementor;
+import org.hibernate.persister.entity.EntityPersister;
 
 /**
  * Convenience base class for lazy initialization handlers.  Centralizes the basic plumbing of doing lazy
@@ -48,6 +50,7 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 	private boolean readOnly;
 	private boolean unwrap;
 	private transient SessionImplementor session;
+	private Boolean readOnlyBeforeAttachedToSession;
 
 	/**
 	 * For serialization from the non-pojo initializers (HHH-3309)
@@ -65,11 +68,9 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 	protected AbstractLazyInitializer(String entityName, Serializable id, SessionImplementor session) {
 		this.entityName = entityName;
 		this.id = id;
-		this.readOnly = false;
 		// initialize other fields depending on session state
 		if ( session == null ) {
-			// would be better to call unsetSession(), but it is not final...
-			session = null;
+			unsetSession();
 		}
 		else {
 			setSession( session );
@@ -116,18 +117,27 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 	 */
 	public final void setSession(SessionImplementor s) throws HibernateException {
 		if ( s != session ) {
-			readOnly = false;
 			// check for s == null first, since it is least expensive
 			if ( s == null ){
-				// would be better to call unsetSession(), but it is not final...
-				session = null;
+				unsetSession();
 			}
 			else if ( isConnectedToSession() ) {
 				//TODO: perhaps this should be some other RuntimeException...
 				throw new HibernateException("illegally attempted to associate a proxy with two open Sessions");
 			}
 			else {
+				// s != null
 				session = s;
+				if ( readOnlyBeforeAttachedToSession == null ) {
+					// use the default read-only/modifiable setting
+					final EntityPersister persister = s.getFactory().getEntityPersister( entityName );
+					setReadOnly( s.getPersistenceContext().isDefaultReadOnly() || ! persister.isMutable() );
+				}
+				else {
+					// use the read-only/modifiable setting indicated during deserialization
+					setReadOnly( readOnlyBeforeAttachedToSession.booleanValue() );
+					readOnlyBeforeAttachedToSession = null;
+				}
 			}
 		}
 	}
@@ -142,9 +152,10 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 	/**
 	 * {@inheritDoc}
 	 */
-	public void unsetSession() {
+	public final void unsetSession() {
 		session = null;
 		readOnly = false;
+		readOnlyBeforeAttachedToSession = null;
 	}
 
 	/**
@@ -236,32 +247,8 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 	/**
 	 * {@inheritDoc}
 	 */
-	public boolean isReadOnly() {
-		errorIfReadOnlySettingNotAvailable();
-		if ( !isConnectedToSession() ) {
-			throw new TransientObjectException(
-					"The read-only/modifiable setting is only accessible when the proxy is associated with a session." );
-		}
-		return readOnly;
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	public void setReadOnly(boolean readOnly) {
-		errorIfReadOnlySettingNotAvailable();
-		// only update if readOnly is different from current setting
-		if ( this.readOnly != readOnly ) {
-			Object proxy = getProxyOrNull();
-			if ( proxy == null ) {
-				throw new TransientObjectException(
-						"Cannot set the read-only/modifiable mode unless the proxy is associated with a session." );
-			}
-			this.readOnly = readOnly;
-			if ( initialized ) {
-				session.getPersistenceContext().setReadOnly( target, readOnly );
-			}
-		}
+	public final boolean isReadOnlySettingAvailable() {
+		return ( session != null && ! session.isClosed() );
 	}
 
 	private void errorIfReadOnlySettingNotAvailable() {
@@ -273,6 +260,77 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 			throw new SessionException(
 					"Session is closed. The read-only/modifiable setting is only accessible when the proxy is associated with an open session." );
 		}
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public final boolean isReadOnly() {
+		errorIfReadOnlySettingNotAvailable();
+		return readOnly;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public final void setReadOnly(boolean readOnly) {
+		errorIfReadOnlySettingNotAvailable();
+		// only update if readOnly is different from current setting
+		if ( this.readOnly != readOnly ) {
+			final EntityPersister persister = session.getFactory().getEntityPersister( entityName );
+			if ( ! persister.isMutable() && ! readOnly ) {
+				throw new IllegalStateException( "cannot make proxies for immutable entities modifiable");
+			}
+			this.readOnly = readOnly;
+			if ( initialized ) {
+				EntityKey key = generateEntityKeyOrNull( getIdentifier(), session, getEntityName() );
+				if ( key != null && session.getPersistenceContext().containsEntity( key ) ) {
+					session.getPersistenceContext().setReadOnly( target, readOnly );
+				}
+			}
+		}
+	}
+
+	/**
+	 * Get the read-only/modifiable setting that should be put in affect when it is
+	 * attached to a session.
+	 *
+	 * This method should only be called during serialization when read-only/modifiable setting
+	 * is not available (i.e., isReadOnlySettingAvailable() == false)
+	 *
+	 * @returns, null, if the default setting should be used;
+	 *           true, for read-only;
+	 *           false, for modifiable
+	 * @throws IllegalStateException if isReadOnlySettingAvailable() == true
+	 */
+	protected final Boolean isReadOnlyBeforeAttachedToSession() {
+		if ( isReadOnlySettingAvailable() ) {
+			throw new IllegalStateException(
+					"Cannot call isReadOnlyBeforeAttachedToSession when isReadOnlySettingAvailable == true"
+			);
+		}
+		return readOnlyBeforeAttachedToSession;
+	}
+
+	/**
+	 * Set the read-only/modifiable setting that should be put in affect when it is
+	 * attached to a session.
+	 *
+	 * This method should only be called during deserialization, before associating
+	 * the proxy with a session.
+	 *
+	 * @param readOnlyBeforeAttachedToSession, the read-only/modifiable setting to use when
+	 * associated with a session; null indicates that the default should be used.
+	 * @throws IllegalStateException if isReadOnlySettingAvailable() == true
+	 */
+	/* package-private */
+	final void setReadOnlyBeforeAttachedToSession(Boolean readOnlyBeforeAttachedToSession) {
+		if ( isReadOnlySettingAvailable() ) {
+			throw new IllegalStateException(
+					"Cannot call setReadOnlyBeforeAttachedToSession when isReadOnlySettingAvailable == true"
+			);
+		}
+		this.readOnlyBeforeAttachedToSession = readOnlyBeforeAttachedToSession;
 	}
 
 	/**

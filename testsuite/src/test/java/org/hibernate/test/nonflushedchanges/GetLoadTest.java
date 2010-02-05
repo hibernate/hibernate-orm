@@ -185,7 +185,7 @@ public class GetLoadTest extends AbstractOperationTestCase {
 		SimpleJtaTransactionManagerImpl.getInstance().commit();
 	}
 
-	public void testLoadReadOnlyFailureExpected() throws Exception {
+	public void testLoadReadOnly() throws Exception {
 		clearCounts();
 
 		SimpleJtaTransactionManagerImpl.getInstance().begin();

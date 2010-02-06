@@ -33,11 +33,11 @@ import org.hibernate.dialect.function.StandardSQLFunction;
 import org.hibernate.dialect.function.VarArgsSQLFunction;
 
 /**
- * An Ingres SQL dialect.
+ * An SQL dialect for Ingres 9.2.
  * <p/>
  * Known limitations:
- * - only supports simple constants or columns on the left side of an IN, making (1,2,3) in (...) or (<subselect) in (...) non-supported
- * - supports only 31 digits in decimal
+ * - only supports simple constants or columns on the left side of an IN, making (1,2,3) in (...) or (&lt;subselect&gt;) in (...) non-supported
+ * - supports only 39 digits in decimal
  *
  * @author Ian Booth, Bruce Lunsford, Max Rydahl Andersen
  */
@@ -100,6 +100,7 @@ public class IngresDialect extends Dialect {
 		registerFunction( "intextract", new StandardSQLFunction( "intextract", Hibernate.INTEGER ) );
 		registerFunction( "left", new StandardSQLFunction( "left", Hibernate.STRING ) );
 		registerFunction( "locate", new SQLFunctionTemplate( Hibernate.LONG, "locate(?1, ?2)" ) );
+		registerFunction( "length", new StandardSQLFunction( "length", Hibernate.LONG ) );
 		registerFunction( "ln", new StandardSQLFunction( "ln", Hibernate.DOUBLE ) );
 		registerFunction( "log", new StandardSQLFunction( "log", Hibernate.DOUBLE ) );
 		registerFunction( "lower", new StandardSQLFunction( "lower" ) );

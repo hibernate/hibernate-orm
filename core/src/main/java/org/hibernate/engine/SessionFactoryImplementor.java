@@ -25,6 +25,7 @@
 package org.hibernate.engine;
 
 import java.util.Map;
+import java.util.Properties;
 import java.util.Set;
 import java.sql.Connection;
 
@@ -61,6 +62,13 @@ import org.hibernate.type.Type;
  * @author Gavin King
  */
 public interface SessionFactoryImplementor extends Mapping, SessionFactory {
+
+	/**
+	 * Get a copy of the Properties used to configure this session factory.
+	 *
+	 * @return The properties.
+	 */
+	public Properties getProperties();
 
 	/**
 	 * Get the persister for the named entity

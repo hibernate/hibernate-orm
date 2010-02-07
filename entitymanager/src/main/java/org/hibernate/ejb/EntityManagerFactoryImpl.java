@@ -21,7 +21,10 @@
  */
 package org.hibernate.ejb;
 
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Set;
 import java.util.Iterator;
 import java.io.Serializable;
@@ -61,7 +64,9 @@ public class EntityManagerFactoryImpl implements HibernateEntityManagerFactory {
 	private final CriteriaBuilderImpl criteriaBuilder;
 	private final Metamodel metamodel;
 	private final HibernatePersistenceUnitUtil util;
+	private final Map<String,Object> properties;
 
+	@SuppressWarnings( "unchecked" )
 	public EntityManagerFactoryImpl(
 			SessionFactory sessionFactory,
 			PersistenceUnitTransactionType transactionType,
@@ -72,7 +77,6 @@ public class EntityManagerFactoryImpl implements HibernateEntityManagerFactory {
 		this.transactionType = transactionType;
 		this.discardOnClose = discardOnClose;
 		this.sessionInterceptorClass = sessionInterceptorClass;
-		@SuppressWarnings( "unchecked" )
 		final Iterator<PersistentClass> classes = cfg.getClassMappings();
 		//a safe guard till we are confident that metamodel is wll tested
 		if ( !"disabled".equalsIgnoreCase( cfg.getProperty( "hibernate.ejb.metamodel.generation" ) ) ) {
@@ -83,6 +87,19 @@ public class EntityManagerFactoryImpl implements HibernateEntityManagerFactory {
 		}
 		this.criteriaBuilder = new CriteriaBuilderImpl( this );
 		this.util = new HibernatePersistenceUnitUtil( this );
+
+		HashMap<String,Object> props = new HashMap<String, Object>();
+		addAll( props, ( (SessionFactoryImplementor) sessionFactory ).getProperties() );
+		addAll( props, cfg.getProperties() );
+		this.properties = Collections.unmodifiableMap( props );
+	}
+
+	private static void addAll(HashMap<String, Object> propertyMap, Properties properties) {
+		for ( Map.Entry entry : properties.entrySet() ) {
+			if ( String.class.isInstance( entry.getKey() ) ) {
+				propertyMap.put( (String)entry.getKey(), entry.getValue() );
+			}
+		}
 	}
 
 	public EntityManager createEntityManager() {
@@ -102,7 +119,7 @@ public class EntityManagerFactoryImpl implements HibernateEntityManagerFactory {
 	}
 
 	public Metamodel getMetamodel() {
-		return metamodel;  //To change body of implemented methods use File | Settings | File Templates.
+		return metamodel;
 	}
 
 	public void close() {
@@ -110,8 +127,7 @@ public class EntityManagerFactoryImpl implements HibernateEntityManagerFactory {
 	}
 
 	public Map<String, Object> getProperties() {
-		//FIXME
-		return null;  //To change body of implemented methods use File | Settings | File Templates.
+		return properties;
 	}
 
 	public Cache getCache() {

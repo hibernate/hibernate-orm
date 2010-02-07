@@ -467,6 +467,10 @@ public final class SessionFactoryImpl implements SessionFactory, SessionFactoryI
 		this.observer.sessionFactoryCreated( this );
 	}
 
+	public Properties getProperties() {
+		return properties;
+	}
+
 	public IdentifierGeneratorFactory getIdentifierGeneratorFactory() {
 		return null;
 	}

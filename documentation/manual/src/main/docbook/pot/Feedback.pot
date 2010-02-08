@@ -1,0 +1,24 @@
+# 
+# AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: 0\n"
+"POT-Creation-Date: 2010-01-08T04:07:17\n"
+"PO-Revision-Date: 2010-01-08T04:07:17\n"
+"Last-Translator: Automatically generated\n"
+"Language-Team: None\n"
+"MIME-Version: 1.0\n"
+"Content-Type: application/x-publican; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. Tag: title
+#, no-c-format
+msgid "Feedback"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "If you spot a typo in this guide, or if you have thought of a way to make this manual better, we would love to hear from you! Submit a report in <ulink url=\"http://jira.jboss.com/jira/browse/JBPAPP\">JIRA</ulink> against the Product: JBoss Enterprise Application Platform, Version: <replaceable>&lt;version&gt;</replaceable>, Component: <emphasis>Doc</emphasis>. If you have a suggestion for improving the documentation, try to be as specific as possible. If you have found an error, include the section number and some of the surrounding text so we can find it easily."
+msgstr ""
+

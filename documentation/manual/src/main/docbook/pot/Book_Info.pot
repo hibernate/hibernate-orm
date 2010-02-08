@@ -1,0 +1,29 @@
+# 
+# AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: 0\n"
+"POT-Creation-Date: 2010-01-08T04:07:17\n"
+"PO-Revision-Date: 2010-01-08T04:07:17\n"
+"Last-Translator: Automatically generated\n"
+"Language-Team: None\n"
+"MIME-Version: 1.0\n"
+"Content-Type: application/x-publican; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. Tag: title
+#, no-c-format
+msgid "Hibernate Core Reference Guide"
+msgstr ""
+
+#. Tag: subtitle
+#, no-c-format
+msgid "by Gavin King, Christian Bauer, Max Rydahl Andersen, Emmanuel Bernard, and Steve Ebersole and thanks to James Cobb (Graphic Design) and Cheyenne Weaver (Graphic Design)"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The JBoss Hibernate Core 3.3.2.GA Reference Guide"
+msgstr ""
+

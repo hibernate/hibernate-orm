@@ -1,0 +1,35 @@
+# translation of Revision_History.po to
+# Michael H. Smith <mhideo@redhat.com>, 2007.
+# Angela Garcia <agarcia@redhat.com>, 2009, 2010.
+# translation of Collection_Mapping.po to
+# translation of Collection_Mapping.po to
+# translation of Collection_Mapping.po to
+# translation of Collection_Mapping.po to
+# translation of Collection_Mapping.po to
+# translation of Collection_Mapping.po to
+# translation of Collection_Mapping.po to
+# translation of Collection_Mapping.po to
+# translation of Collection_Mapping.po to
+msgid ""
+msgstr ""
+"Project-Id-Version: Revision_History\n"
+"Report-Msgid-Bugs-To: http://bugs.kde.org\n"
+"POT-Creation-Date: 2009-12-11T05:07:38\n"
+"PO-Revision-Date: 2010-01-07 10:57+1000\n"
+"Last-Translator: Angela Garcia <agarcia@redhat.com>\n"
+"Language-Team:  <en@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: KBabel 1.11.4\n"
+
+#. Tag: title
+#, no-c-format
+msgid "Revision History"
+msgstr "Historial de revisiones"
+
+#. Tag: member
+#, no-c-format
+msgid "Merged with EAP5 and translations added"
+msgstr "Combinado con EAP5 y traducciones agregadas"
+

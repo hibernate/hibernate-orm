@@ -1,0 +1,145 @@
+# translation of Feedback.po to
+# translation of Collection_Mapping.po to
+# translation of Collection_Mapping.po to
+# translation of Collection_Mapping.po to
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# Michael H. Smith <mhideo@redhat.com>, 2007.
+# Glaucia Cintra <gcintra@redhat.com>, 2007.
+msgid ""
+msgstr ""
+"Project-Id-Version: Feedback\n"
+"Report-Msgid-Bugs-To: http://bugs.kde.org\n"
+"POT-Creation-Date: 2009-12-03T00:15:25\n"
+"PO-Revision-Date: 2009-10-29 11:44+1000\n"
+"Last-Translator: \n"
+"Language-Team:  <en@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: KBabel 1.11.4\n"
+
+#. Tag: title
+#, no-c-format
+msgid "Feedback"
+msgstr "Comentários"
+
+#. Tag: para
+#, no-c-format
+msgid ""
+"If you spot a typo in this guide, or if you have thought of a way to make "
+"this manual better, we would love to hear from you! Submit a report in "
+"<ulink url=\"http://jira.jboss.com/jira/browse/JBPAPP\">JIRA</ulink> against "
+"the Product: JBoss Enterprise Application Platform, Version: "
+"<replaceable>&lt;version&gt;</replaceable>, Component: <emphasis>Doc</"
+"emphasis>. If you have a suggestion for improving the documentation, try to "
+"be as specific as possible. If you have found an error, include the section "
+"number and some of the surrounding text so we can find it easily."
+msgstr ""
+"Caso você encontre um erro neste guia ou se você achar uma maneira diferente "
+"para melhorar este guia, nós adoraríamos escutar a sua opnião! Submeta um "
+"relatório no <ulink url=\"http://jira.jboss.com/jira/browse/JBPAPP\">JIRA</"
+"ulink> em relação ao Produto: Plataforma do Aplicativo JBoss Enterprise, "
+"Versão: <replaceable>&lt;version&gt;</replaceable>, Componente: "
+"<emphasis>Doc</emphasis>. Caso você tenha uma sugestão para melhoramento "
+"desta documentação, por favor seja o mais específico possível. Caso você "
+"encontre um erro, inclua o número da seção e alguns trechos do texto com o "
+"objetivo de encontrarmos isto com maior facilidade."

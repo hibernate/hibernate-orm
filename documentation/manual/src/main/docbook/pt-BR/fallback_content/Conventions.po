@@ -1,0 +1,216 @@
+# translation of Conventions.po to
+#
+# AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Conventions\n"
+"POT-Creation-Date: 2009-12-11T05:07:40\n"
+"PO-Revision-Date: 2009-12-21 10:25+1000\n"
+"Last-Translator: \n"
+"Language-Team:  <en@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: KBabel 1.11.4\n"
+
+#. Tag: title
+#, no-c-format
+msgid "Document Conventions"
+msgstr "Convenções de Documento"
+
+#. Tag: para
+#, no-c-format
+msgid "This manual uses several conventions to highlight certain words and phrases and draw attention to specific pieces of information."
+msgstr "Este manual usa diversas convenções para destacar certas palavras, frases e chamar atenção às partes específicas de informação. "
+
+#. Tag: para
+#, no-c-format
+msgid "In PDF and paper editions, this manual uses typefaces drawn from the <ulink url=\"https://fedorahosted.org/liberation-fonts/\">Liberation Fonts</ulink> set. The Liberation Fonts set is also used in HTML editions if the set is installed on your system. If not, alternative but equivalent typefaces are displayed. Note: Red Hat Enterprise Linux 5 and later includes the Liberation Fonts set by default."
+msgstr "Nas edições de papel e PDF, este manual usa typefaces extraídas do conjunto <ulink url=\"https://fedorahosted.org/liberation-fonts/\">Liberation Fonts</ulink>. O conjunto das Fontes de Liberação é também usado nas edições HTML, caso o conjunto for instalado no seu sistema. Caso isto não ocorra, typefaces alternativas (porém equivalentes) serão exibidas. Nota: o Red Hat Enterprise Linux 5 e versões superiores incluem o conjunto das Fontes de Liberação por padrão. "
+
+#. Tag: title
+#, no-c-format
+msgid "Typographic Conventions"
+msgstr "Convenções Tipográficas"
+
+#. Tag: para
+#, no-c-format
+msgid "Four typographic conventions are used to call attention to specific words and phrases. These conventions, and the circumstances they apply to, are as follows."
+msgstr "As quatro convenções tipográficas são usadas para chamar a atenção de palavras e frases específicas. Estas convenções  e as circunstâncias em que elas aplicam são as seguintes:"
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>Mono-spaced Bold</literal>"
+msgstr "<literal>Mono-spaced Bold</literal>"
+
+#. Tag: para
+#, no-c-format
+msgid "Used to highlight system input, including shell commands, file names and paths. Also used to highlight keycaps and key combinations. For example:"
+msgstr "Usada para destacar a entrada do sistema, incluindo comandos de janela, nomes e caminhos de arquivo. Além disso, ela é usada para destacar keycaps e combinações de chaves. Por exemplo:"
+
+#. Tag: para
+#, no-c-format
+msgid "To see the contents of the file <filename>my_next_bestselling_novel</filename> in your current working directory, enter the <command>cat my_next_bestselling_novel</command> command at the shell prompt and press <keycap>Enter</keycap> to execute the command."
+msgstr "Para verificar os conteúdos do <filename>my_next_bestselling_novel</filename> de arquivo em seu diretório de trabalho atual, entre o comando <command>cat my_next_bestselling_novel</command> na janela de comando e pressione <keycap>Enter</keycap> para executar o comando."
+
+#. Tag: para
+#, no-c-format
+msgid "The above includes a file name, a shell command and a keycap, all presented in mono-spaced bold and all distinguishable thanks to context."
+msgstr "Isto inclui o nome de arquivo, a janela de comando e um keycap, todos apresentados em negrito com um único espaço e todos distinguidos graças ao contexto."
+
+#. Tag: para
+#, no-c-format
+msgid "Key combinations can be distinguished from keycaps by the hyphen connecting each part of a key combination. For example:"
+msgstr "As combinações de chave podem ser distinguidas de keycaps por cada parte de conexão de hífen de uma combinação de chave. Por exemplo:"
+
+#. Tag: para
+#, no-c-format
+msgid "Press <keycap>Enter</keycap> to execute the command."
+msgstr "Pressione <keycap>Enter</keycap> para executar o comando."
+
+#. Tag: para
+#, no-c-format
+msgid "Press <keycombo><keycap>Ctrl</keycap><keycap>Alt</keycap><keycap>F1</keycap></keycombo> to switch to the first virtual terminal. Press <keycombo><keycap>Ctrl</keycap><keycap>Alt</keycap><keycap>F7</keycap></keycombo> to return to your X-Windows session."
+msgstr "Pressione <keycombo><keycap>Ctrl</keycap><keycap>Alt</keycap><keycap>F1</keycap></keycombo> para mudar para o primeiro terminal virtual. Pressione <keycombo><keycap>Ctrl</keycap><keycap>Alt</keycap><keycap>F7</keycap></keycombo> para retornar à sua sessão do X-Windows."
+
+#. Tag: para
+#, no-c-format
+msgid "The first paragraph highlights the particular keycap to press. The second highlights two key combinations (each a set of three keycaps with each set pressed simultaneously)."
+msgstr "O primeiro parágrafo destaca um keycap particular a pressionar. O segundo destaca duas combinações de chaves (sendo que cada uma é um conjunto de três keycaps com cada conjunto sendo pressionado simultaneamente)."
+
+#. Tag: para
+#, no-c-format
+msgid "If source code is discussed, class names, methods, functions, variable names and returned values mentioned within a paragraph will be presented as above, in <literal>mono-spaced bold</literal>. For example:"
+msgstr "Caso o código de fonte for discutido, nomes de classe, métodos, funções, nomes variáveis e valores retornados e valores retornados mencionados com um parágrafo serão apresentados conforme acima, em <literal>mono-spaced bold</literal>. Por exemplo:"
+
+#. Tag: para
+#, no-c-format
+msgid "File-related classes include <classname>filesystem</classname> for file systems, <classname>file</classname> for files, and <classname>dir</classname> for directories. Each class has its own associated set of permissions."
+msgstr "As classes de arquivo relacionado incluem o <classname>filesystem</classname> para sistemas de arquivo, <classname>file</classname> para arquivos e <classname>dir</classname> para diretórios. Cada classe possui o próprio conjunto associado de permissões."
+
+#. Tag: para
+#, no-c-format
+msgid "<application>Proportional Bold</application>"
+msgstr "<application>Proportional Bold</application>"
+
+#. Tag: para
+#, no-c-format
+msgid "This denotes words or phrases encountered on a system, including application names; dialog box text; labeled buttons; check-box and radio button labels; menu titles and sub-menu titles. For example:"
+msgstr "Isto descreve palavras ou frases encontradas num sistema, incluindo nomes de aplicativos; texto da caixa de diálogo; botões nomeados; caixa de checagem e nomeações de botões de rádio; títulos de menu e sub-menu. Por exemplo:"
+
+#. Tag: para
+#, no-c-format
+msgid "Choose <menuchoice><guimenu>System</guimenu><guisubmenu>Preferences</guisubmenu><guimenuitem>Mouse</guimenuitem></menuchoice> from the main menu bar to launch <application>Mouse Preferences</application>. In the <guilabel>Buttons</guilabel> tab, click the <guilabel>Left-handed mouse</guilabel> check box and click <guibutton>Close</guibutton> to switch the primary mouse button from the left to the right (making the mouse suitable for use in the left hand)."
+msgstr "Escolha <menuchoice><guimenu>System</guimenu><guisubmenu>Preferences</guisubmenu><guimenuitem>Mouse</guimenuitem></menuchoice> a partir da barra de menu principal para lançar <application>Mouse Preferences</application>. Na tab <guilabel>Buttons</guilabel>, clique na caixa de checagem <guilabel>Left-handed mouse</guilabel> e clique no <guibutton>Close</guibutton> para trocar o botão de mouse primário da esquerda para à direita (fazendo o mouse útil para uso com a mão esquerda)."
+
+#. Tag: para
+#, no-c-format
+msgid "To insert a special character into a <application>gedit</application> file, choose <menuchoice><guimenu>Applications</guimenu><guisubmenu>Accessories</guisubmenu><guimenuitem>Character Map</guimenuitem></menuchoice> from the main menu bar. Next, choose <menuchoice><guimenu>Search</guimenu><guimenuitem>Find&hellip;</guimenuitem></menuchoice> from the <application>Character Map</application> menu bar, type the name of the character in the <guilabel>Search</guilabel> field and click <guibutton>Next</guibutton>. The character you sought will be highlighted in the <guilabel>Character Table</guilabel>. Double-click this highlighted character to place it in the <guilabel>Text to copy</guilabel> field and then click the <guibutton>Copy</guibutton> button. Now switch back to your document and choose <menuchoice><guimenu>Edit</guimenu><guimenuitem>Paste</guimenuitem></menuchoice> from the <application>gedit</application> menu bar."
+msgstr "Para inserir um caractere especial num arquivo <application>gedit</application>, escolha <menuchoice><guimenu>Applications</guimenu><guisubmenu>Accessories</guisubmenu><guimenuitem>Character Map</guimenuitem></menuchoice> a partir da barra do menu principal. Em seguida, escolha <menuchoice><guimenu>Search</guimenu><guimenuitem>Find&hellip;</guimenuitem></menuchoice> a partir da barra de menu <application>Character Map</application>, digite o nome do caratere no campo <guilabel>Search</guilabel> e clique em <guibutton>Next</guibutton>. O caractere em que você buscou estará destacado no <guilabel>Character Table</guilabel>. Clique duas vezes neste caractere destacado para posicioná-lo no campo <guilabel>Text to copy</guilabel> e então no botão <guibutton>Copy</guibutton>. Agora volte ao seu documento e escolha <menuchoice><guimenu>Edit</guimenu><guimenuitem>Paste</guimenuitem></menuchoice> a partir da barra do menu <application>gedit</application>."
+
+#. Tag: para
+#, no-c-format
+msgid "The above text includes application names; system-wide menu names and items; application-specific menu names; and buttons and text found within a GUI interface, all presented in proportional bold and all distinguishable by context."
+msgstr "O texto acima inclui os nomes do aplicativo, os nomes e itens do menu de sistema; os nomes de menu de aplicativo específico; e os botões e texto encontrados com uma interface GUI, todos apresentados em negrito e distinguidos pelo contexto."
+
+#. Tag: para
+#, no-c-format
+msgid "<command><replaceable>Mono-spaced Bold Italic</replaceable></command> or <application><replaceable>Proportional Bold Italic</replaceable></application>"
+msgstr "<command><replaceable>Mono-spaced Bold Italic</replaceable></command> ou <application><replaceable>Proportional Bold Italic</replaceable></application>"
+
+#. Tag: para
+#, no-c-format
+msgid "Whether mono-spaced bold or proportional bold, the addition of italics indicates replaceable or variable text. Italics denotes text you do not input literally or displayed text that changes depending on circumstance. For example:"
+msgstr "Sendo negrito mono-espaçado ou negrito proporcional, a adição de itálico indica um texto substituível ou variável. Itálico significa o texto que você não deseje entrar literalmente ou um texto exibido que altera dependendo das circunstâncias. Por exemplo: "
+
+#. Tag: para
+#, no-c-format
+msgid "To connect to a remote machine using ssh, type <command>ssh <replaceable>username</replaceable>@<replaceable>domain.name</replaceable></command> at a shell prompt. If the remote machine is <filename>example.com</filename> and your username on that machine is john, type <command>ssh john@example.com</command>."
+msgstr "Para conectar uma máquina remota usando ssh, digite <command>ssh <replaceable>username</replaceable>@<replaceable>domain.name</replaceable></command> na janela de comando. Caso a máquina seja <filename>example.com</filename> e seu nome do usuário nesta máquina seja john, digite <command>ssh john@example.com</command>."
+
+#. Tag: para
+#, no-c-format
+msgid "The <command>mount -o remount <replaceable>file-system</replaceable></command> command remounts the named file system. For example, to remount the <filename>/home</filename> file system, the command is <command>mount -o remount /home</command>."
+msgstr "O comando <command>mount -o remount <replaceable>file-system</replaceable></command> remonta o sistema do arquivo nomeado. Por exemplo, para remontar o sistema de arquivo, o comando é <command>mount -o remount /home</command>."
+
+#. Tag: para
+#, no-c-format
+msgid "To see the version of a currently installed package, use the <command>rpm -q <replaceable>package</replaceable></command> command. It will return a result as follows: <command><replaceable>package-version-release</replaceable></command>."
+msgstr "Para checar a versão de um pacote já instalado, use o comando <command>rpm -q <replaceable>package</replaceable></command>. Ele retornará um resultado conforme segue: <command><replaceable>package-version-release</replaceable></command>."
+
+#. Tag: para
+#, no-c-format
+msgid "Note the words in bold italics above &mdash; username, domain.name, file-system, package, version and release. Each word is a placeholder, either for text you enter when issuing a command or for text displayed by the system."
+msgstr "Perceba que as palavras em itálico e em negrito acima &mdash; username, domain.name, file-system, package, version e release. Cada palavra é um espaço reservado, tanto para o texto que você entra quando entrando um comando ou para um texto exibido pelo sistema."
+
+#. Tag: para
+#, no-c-format
+msgid "Aside from standard usage for presenting the title of a work, italics denotes the first use of a new and important term. For example:"
+msgstr "Aparte de um uso padrão de representação do título de trabalho, itálico significa o primeiro uso de um novo e importante termo. Por exemplo:"
+
+#. Tag: para
+#, no-c-format
+msgid "Publican is a <firstterm>DocBook</firstterm> publishing system."
+msgstr "Publican é um sistema de publicação <firstterm>DocBook</firstterm>."
+
+#. Tag: title
+#, no-c-format
+msgid "Pull-quote Conventions"
+msgstr "Convenções Pull-quote"
+
+#. Tag: para
+#, no-c-format
+msgid "Terminal output and source code listings are set off visually from the surrounding text."
+msgstr "O resultado do terminal e as listagens de código de fonte são configurados visualmente a partir do texto em volta."
+
+#. Tag: para
+#, no-c-format
+msgid "Output sent to a terminal is set in <computeroutput>mono-spaced roman</computeroutput> and presented thus:"
+msgstr "O resultado enviado a um terminal é configurado em um <computeroutput>mono-spaced roman</computeroutput> e apresentado, dessa forma:"
+
+#. Tag: para
+#, no-c-format
+msgid "Source-code listings are also set in <computeroutput>mono-spaced roman</computeroutput> but add syntax highlighting as follows:"
+msgstr "Listagens de fonte de código são também configuradas em <computeroutput>mono-spaced roman</computeroutput>, porém adicionam o destaque da sintaxe, conforme segue abaixo:"
+
+#. Tag: title
+#, no-c-format
+msgid "Notes and Warnings"
+msgstr "Notas e Avisos"
+
+#. Tag: para
+#, no-c-format
+msgid "Finally, we use three visual styles to draw attention to information that might otherwise be overlooked."
+msgstr "Finalmente, nós usamos os três estilos visuais para chamar atenção à informação que poderá de outra forma ser despercebida."
+
+#. Tag: title
+#, no-c-format
+msgid "Note"
+msgstr "Nota"
+
+#. Tag: para
+#, no-c-format
+msgid "Notes are tips, shortcuts or alternative approaches to the task at hand. Ignoring a note should have no negative consequences, but you might miss out on a trick that makes your life easier."
+msgstr "As notas são dicas, desvios ou abordagens alternativas à tarefa em mãos. O ato de ignorar uma nota não deve ter consequências negativas, porém você poderá perder uma dica que facilitaria o seu processo."
+
+#. Tag: title
+#, no-c-format
+msgid "Important"
+msgstr "Importante"
+
+#. Tag: para
+#, no-c-format
+msgid "Important boxes detail things that are easily missed: configuration changes that only apply to the current session, or services that need restarting before an update will apply. Ignoring a box labeled 'Important' won't cause data loss but may cause irritation and frustration."
+msgstr "As caixas importantes descrevem detalhes que são facilmente esquecidos: alterações de configurações que apenas aplicam a sessão atual, ou serviços que precisam ser reiniciados antes de uma atualização ser aplicada. Ignorando uma caixa nomeada 'Importante' não causará perda de dados, porém poderá causar irritação ou frustração."
+
+#. Tag: title
+#, no-c-format
+msgid "Warning"
+msgstr "Aviso"
+
+#. Tag: para
+#, no-c-format
+msgid "Warnings should not be ignored. Ignoring warnings will most likely cause data loss."
+msgstr "Os avisos não devem ser ignorados. Caso eles sejam ignorados, isto poderá causar perda de dados."
+

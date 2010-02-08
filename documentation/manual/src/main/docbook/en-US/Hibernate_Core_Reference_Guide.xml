@@ -1,4 +1,8 @@
-<?xml version='1.0' encoding="UTF-8"?>
+<?xml version='1.0' encoding='utf-8' ?>
+<!DOCTYPE Book PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
+<!ENTITY % BOOK_ENTITIES SYSTEM "Hibernate_Core_Reference_Guide.ent">
+%BOOK_ENTITIES;
+]>
 <!--
   ~ Hibernate, Relational Persistence for Idiomatic Java
   ~
@@ -22,41 +26,10 @@
   ~ 51 Franklin Street, Fifth Floor
   ~ Boston, MA  02110-1301  USA
   -->
-<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
-        <!ENTITY version "WORKING">
-        <!ENTITY today "TODAY">
-        <!ENTITY copyrightYear "2004">
-        <!ENTITY copyrightHolder "Red Hat Middleware, LLC.">
-]>
 
 <book>
-
-    <bookinfo>
-        <title>HIBERNATE - Relational Persistence for Idiomatic Java</title>
-        <subtitle>Hibernate Reference Documentation</subtitle>
-        <releaseinfo>&version;</releaseinfo>
-        <productnumber>&version;</productnumber>
-        <pubdate>&today;</pubdate>
-        <issuenum>1</issuenum>
-        <mediaobject>
-            <imageobject role="fo">
-                <imagedata fileref="images/hibernate_logo_a.png" align="center" />
-            </imageobject>
-            <imageobject role="html">
-                <imagedata fileref="images/hibernate_logo_a.png" depth="3cm" />
-            </imageobject>
-        </mediaobject>
-        <copyright>
-            <year>&copyrightYear;</year>
-            <holder>&copyrightHolder;</holder>
-        </copyright>
-        <xi:include href="legal_notice.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
-        <xi:include href="author_group.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
-    </bookinfo>
-
-    <toc/>
-
-    <xi:include href="content/preface.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+    <xi:include href="Book_Info.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+    <xi:include href="content/Preface.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
 
     <xi:include href="content/tutorial.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
 
@@ -95,6 +68,7 @@
 
     <xi:include href="content/portability.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
 
-    <xi:include href="content/bibliography.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+    <xi:include href="Revision_History.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+
 </book>
 

@@ -1,0 +1,13 @@
+<?xml version='1.0' encoding='utf-8' ?>
+<!DOCTYPE section PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
+<!ENTITY % BOOK_ENTITIES SYSTEM "Hibernate_Core_Reference_Guide.ent">
+%BOOK_ENTITIES;
+]>
+
+<section id="Feedback">
+	<title>Feedback</title>
+	<para>
+			If you spot a typo in this guide, or if you have thought of a way to make this manual better, we would love to hear from you! Submit a report in <ulink url="http://jira.jboss.com/jira/browse/JBPAPP">JIRA</ulink> against the Product: JBoss Enterprise Application Platform, Version: <replaceable>&lt;version&gt;</replaceable>, Component: <emphasis>Doc</emphasis>. If you have a suggestion for improving the documentation, try to be as specific as possible. If you have found an error, include the section number and some of the surrounding text so we can find it easily.
+	</para>
+</section>
+

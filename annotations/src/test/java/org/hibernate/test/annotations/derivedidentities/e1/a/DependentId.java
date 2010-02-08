@@ -16,4 +16,20 @@ public class DependentId implements Serializable {
 		this.name = name;
 		this.emp = emp;
 	}
+
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	public long getEmp() {
+		return emp;
+	}
+
+	public void setEmp(long emp) {
+		this.emp = emp;
+	}
 }

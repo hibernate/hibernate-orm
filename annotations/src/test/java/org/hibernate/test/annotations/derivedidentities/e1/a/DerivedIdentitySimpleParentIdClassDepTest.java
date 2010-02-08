@@ -1,15 +1,13 @@
 package org.hibernate.test.annotations.derivedidentities.e1.a;
 
 import org.hibernate.Session;
-import org.hibernate.junit.FailureExpected;
 import org.hibernate.test.annotations.TestCase;
 import org.hibernate.test.util.SchemaUtil;
 
 /**
  * @author Emmanuel Bernard
  */
-public class
-		DerivedIdentitySimpleParentIdClassDepTest extends TestCase {
+public class DerivedIdentitySimpleParentIdClassDepTest extends TestCase {
 
 	public void testManyToOne() throws Exception {
 		assertTrue( SchemaUtil.isColumnPresent( "Dependent", "emp_empId", getCfg() ) );
@@ -17,28 +15,22 @@ public class
 
 		Session s = openSession();
 		s.getTransaction().begin();
-		Employee e = new Employee();
-		e.empId = 1;
-		e.empName = "Emmanuel";
-		e.nickname = "Manu";
-		s.persist( e );
-		Dependent d = new Dependent();
-		d.emp = e;
-		d.name = "Doggy";
-		d.emp = e;
+		Employee e = new Employee( 1L, "Emmanuel", "Manu" );
+		Dependent d = new Dependent( "Doggy", e );
 		s.persist( d );
+		s.persist( e );
 		s.getTransaction().commit();
 		s.close();
 
 		s = openSession();
 		s.getTransaction().begin();
-		DependentId dId = new DependentId( d.name, d.emp.empId );
+		DependentId dId = new DependentId( d.getName(), d.getEmp().empId );
 		d = (Dependent) s.get( Dependent.class, dId );
-		assertEquals( e.empId, d.emp.empId );
-		assertEquals( e.empName, d.emp.empName );
-		assertEquals( e.nickname, d.emp.nickname );
+		assertEquals( e.empId, d.getEmp().empId );
+		assertEquals( e.empName, d.getEmp().empName );
+		assertEquals( e.nickname, d.getEmp().nickname );
 		s.delete( d );
-		s.delete( d.emp );
+		s.delete( d.getEmp() );
 		s.getTransaction().commit();
 		s.close();
 	}

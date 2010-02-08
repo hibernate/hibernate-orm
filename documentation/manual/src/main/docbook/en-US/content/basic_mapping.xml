@@ -1,4 +1,8 @@
-<?xml version='1.0' encoding="UTF-8"?>
+<?xml version='1.0' encoding='utf-8' ?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
+<!ENTITY % BOOK_ENTITIES SYSTEM "../Hibernate_Core_Reference_Guide.ent">
+%BOOK_ENTITIES;
+]>
 <!--
   ~ Hibernate, Relational Persistence for Idiomatic Java
   ~
@@ -23,12 +27,10 @@
   ~ Boston, MA  02110-1301  USA
   -->
 
-<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
-
 <chapter id="mapping">
     <title>Basic O/R Mapping</title>
 
-    <sect1 id="mapping-declaration" revision="2">
+    <section id="mapping-declaration" revision="2">
         <title>Mapping declaration</title>
 
         <para>
@@ -48,7 +50,8 @@
             Here is an example mapping:
         </para>
 
-        <programlisting id="mapping-declaration-ex1" revision="1"><![CDATA[<?xml version="1.0"?>
+     <!--     <programlisting id="mapping-declaration-ex1" revision="1"> -->
+        <programlisting><![CDATA[<?xml version="1.0"?>
 <!DOCTYPE hibernate-mapping PUBLIC
       "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
           "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
@@ -123,7 +126,7 @@
 
 
 
-        <sect2 id="mapping-declaration-doctype" revision="3">
+        <section id="mapping-declaration-doctype" revision="3">
             <title>Doctype</title>
 
             <para>
@@ -135,7 +138,7 @@
                 classpath.
             </para>
 
-            <sect3 id="mapping-declaration-entity-resolution">
+            <section id="mapping-declaration-entity-resolution">
                 <title>EntityResolver</title>
                 <para>
                     Hibernate will first attempt to resolve DTDs in its classpath.
@@ -166,29 +169,18 @@
                 <para>
                     The following is an example of utilizing user namespacing:
                 </para>
-                <programlisting><![CDATA[<?xml version="1.0"?>
-<!DOCTYPE hibernate-mapping PUBLIC
-        "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
-        "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd" [
-    <!ENTITY types SYSTEM "classpath://your/domain/types.xml">
-]>
-
-<hibernate-mapping package="your.domain">
-    <class name="MyEntity">
-        <id name="id" type="my-custom-id-type">
-            ...
-        </id>
-    <class>
-    &types;
-</hibernate-mapping>]]></programlisting>
+                 <programlisting language="XML" role="XML">
+<xi:include parse="text" href="../extras/namespacing.xml_sample" xmlns:xi="http://www.w3.org/2001/XInclude" />
+</programlisting> 
+        
                 <para>
                     Where <literal>types.xml</literal> is a resource in the <literal>your.domain</literal>
-                    package and contains a custom <link linkend="mapping-types-custom">typedef</link>.
+                    package and contains a custom typedef (see <xref linkend="mapping-types-custom" />).
                 </para>
-            </sect3>
-        </sect2>
+            </section>
+        </section>
 
-        <sect2 id="mapping-declaration-mapping" revision="3">
+        <section id="mapping-declaration-mapping" revision="3">
             <title>Hibernate-mapping</title>
 
             <para>
@@ -284,9 +276,9 @@
                  <literal>Animal.hbm.xml</literal>.
              </para>
 
-        </sect2>
+        </section>
 
-        <sect2 id="mapping-declaration-class" revision="3">
+        <section id="mapping-declaration-class" revision="3">
             <title>Class</title>
 
             <para>
@@ -601,9 +593,9 @@
                 a nested mapping element.
             </para>
 
-        </sect2>
+        </section>
 
-        <sect2 id="mapping-declaration-id" revision="4">
+        <section id="mapping-declaration-id" revision="4">
             <title>id</title>
 
             <para>
@@ -679,7 +671,7 @@
                 legacy data with composite keys. Its use is strongly discouraged for anything else.
             </para>
 
-            <sect3 id="mapping-declaration-id-generator" revision="2">
+            <section id="mapping-declaration-id-generator" revision="2">
                 <title>Generator</title>
 
                 <para>
@@ -700,7 +692,7 @@
                     All generators implement the interface <literal>org.hibernate.id.IdentifierGenerator</literal>.
                     This is a very simple interface. Some applications can choose to provide their own specialized
                     implementations, however, Hibernate provides a range of built-in implementations. The shortcut
-                    names for the built-in generators are as follows:
+		    names for the built-in generators are as follows: </para>
 
                     <variablelist>
                         <varlistentry>
@@ -827,11 +819,9 @@
                         </listitem>
                         </varlistentry>
                     </variablelist>
+            </section>
 
-                </para>
-            </sect3>
-
-            <sect3 id="mapping-declaration-id-hilo" revision="1">
+            <section id="mapping-declaration-id-hilo" revision="1">
                 <title>Hi/lo algorithm</title>
                 <para>
                     The <literal>hilo</literal> and <literal>seqhilo</literal> generators provide two alternate
@@ -861,9 +851,9 @@
                     server datasource to obtain connections enlisted with JTA, you must configure
                     the <literal>hibernate.transaction.manager_lookup_class</literal>.
                 </para>
-            </sect3>
+            </section>
 
-            <sect3 id="mapping-declaration-id-uuid">
+            <section id="mapping-declaration-id-uuid">
                 <title>UUID algorithm</title>
                 <para>
                     The UUID contains: IP address, startup time of the JVM that is accurate to a quarter
@@ -871,9 +861,9 @@
                     possible to obtain a MAC address or memory address from Java code, so this is
                     the best option without using JNI.
                 </para>
-            </sect3>
+            </section>
 
-            <sect3 id="mapping-declaration-id-sequences">
+            <section id="mapping-declaration-id-sequences">
             <title>Identity columns and sequences</title>
                 <para>
                     For databases that support identity columns (DB2, MySQL, Sybase, MS SQL), you
@@ -898,9 +888,9 @@
                     choose from the <literal>identity</literal>, <literal>sequence</literal> and
                     <literal>hilo</literal> strategies.
                 </para>
-            </sect3>
+            </section>
 
-            <sect3 id="mapping-declaration-id-assigned">
+            <section id="mapping-declaration-id-assigned">
                 <title>Assigned identifiers</title>
                 <para>
                     If you want the application to assign identifiers, as opposed to having
@@ -918,9 +908,9 @@
                     there is a version or timestamp property, or you define
                     <literal>Interceptor.isUnsaved()</literal>.
                 </para>
-            </sect3>
+            </section>
 
-            <sect3 id="mapping-declaration-id-select">
+            <section id="mapping-declaration-id-select">
                 <title>Primary keys assigned by triggers</title>
                 <para>
                     Hibernate does not generate DDL with triggers. It is for legacy schemas only.
@@ -939,11 +929,11 @@
                     whose value is generated by a trigger.
                 </para>
 
-            </sect3>
+            </section>
 
-        </sect2>
+        </section>
 
-        <sect2 id="mapping-declaration-id-enhanced">
+        <section id="mapping-declaration-id-enhanced">
             <title>Enhanced identifier generators</title>
 
             <para>
@@ -965,7 +955,7 @@
                 incrementing values, depending on the capabilities of the dialect being used.  The difference between this
                 and <literal>native</literal> is that table-based and sequence-based storage have the same exact
                 semantic. In fact, sequences are exactly what Hibernate tries to emulate with its table-based
-                generators.  This generator has a number of configuration parameters:
+		generators.  This generator has a number of configuration parameters:</para>
                 <itemizedlist spacing="compact">
                     <listitem>
                         <para>
@@ -1008,7 +998,6 @@
                         </para>
                     </listitem>
                 </itemizedlist>
-            </para>
             <para>
                 The second of these new generators is <literal>org.hibernate.id.enhanced.TableGenerator</literal>, which
                 is intended, firstly, as a replacement for the <literal>table</literal> generator, even though it actually
@@ -1016,7 +1005,7 @@
                 as a re-implementation of <literal>org.hibernate.id.MultipleHiLoPerTableGenerator</literal> that utilizes the
                 notion of pluggable optimizers.  Essentially this generator defines a table capable of holding
                 a number of different increment values simultaneously by using multiple distinctly keyed rows.  This
-                generator has a number of configuration parameters:
+		generator has a number of configuration parameters:</para>
                 <itemizedlist spacing="compact">
                     <listitem>
                         <para>
@@ -1065,14 +1054,13 @@
                     <listitem>
                         <para>
                             <literal>optimizer</literal> (optional - defaults to <literal></literal>):
-                            See <xref linkend="mapping-declaration-id-enhanced-optimizers"/>
+                            See <xref linkend="mapping-declaration-id-enhanced-optimizers" />
                         </para>
                     </listitem>
                 </itemizedlist>
-            </para>
-        </sect2>
+        </section>
 
-        <sect2 id="mapping-declaration-id-enhanced-optimizers">
+        <section id="mapping-declaration-id-enhanced-optimizers">
             <title>Identifier generator optimization</title>
             <para>
                 For identifier generators that store values in the database, it is inefficient for them to hit the
@@ -1107,9 +1095,9 @@
                     </listitem>
                 </itemizedlist>
             </para>
-        </sect2>
+        </section>
 
-        <sect2 id="mapping-declaration-compositeid" revision="3">
+        <section id="mapping-declaration-compositeid" revision="3">
             <title>composite-id</title>
 
             <programlisting><![CDATA[<composite-id
@@ -1224,9 +1212,9 @@
                 for almost all applications.
             </para>
 
-        </sect2>
+        </section>
 
-        <sect2 id="mapping-declaration-discriminator" revision="3">
+        <section id="mapping-declaration-discriminator" revision="3">
             <title>Discriminator</title>
 
             <para>
@@ -1312,9 +1300,9 @@
     formula="case when CLASS_TYPE in ('a', 'b', 'c') then 0 else 1 end"
     type="integer"/>]]></programlisting>
 
-        </sect2>
+        </section>
 
-        <sect2 id="mapping-declaration-version" revision="4">
+        <section id="mapping-declaration-version" revision="4">
             <title>Version (optional)</title>
 
             <para>
@@ -1380,7 +1368,7 @@
                         <para>
                             <literal>generated</literal> (optional - defaults to <literal>never</literal>):
                             specifies that this version property value is generated by the database.
-                            See the discussion of <link linkend="mapping-generated">generated properties</link> for more information.
+                            See the discussion of generated properties for more information (<xref linkend="mapping-generated" />).
                         </para>
                     </callout>
                     <callout arearefs="version7">
@@ -1407,9 +1395,9 @@
                 problems with transitive reattachment in Hibernate. It is especially useful for people
                 using assigned identifiers or composite keys</emphasis>.
             </para>
-        </sect2>
+        </section>
 
-        <sect2 id="mapping-declaration-timestamp" revision="4" >
+        <section id="mapping-declaration-timestamp" revision="4" >
             <title>Timestamp (optional)</title>
 
             <para>
@@ -1482,7 +1470,7 @@
                         <para>
                             <literal>generated</literal> (optional - defaults to <literal>never</literal>):
                             specifies that this timestamp property value is actually generated by the database.
-                            See the discussion of <link linkend="mapping-generated">generated properties</link> for more information.
+                            See the discussion of generated properties for more information (<xref linkend="mapping-generated" />).
                         </para>
                     </callout>
                 </calloutlist>
@@ -1499,10 +1487,10 @@
 		</para>
 	</note>            
 		
-        </sect2>
+        </section>
 
 
-        <sect2 id="mapping-declaration-property" revision="4">
+        <section id="mapping-declaration-property" revision="4">
             <title>Property</title>
 
             <para>
@@ -1620,7 +1608,7 @@
                         <para>
                             <literal>generated</literal> (optional - defaults to <literal>never</literal>):
                             specifies that this property value is actually generated by the database.
-                            See the discussion of <link linkend="mapping-generated">generated properties</link> for more information.
+                            See the discussion of generated properties for more information (<xref linkend="mapping-generated"/>).
                         </para>
                     </callout>
                 </calloutlist>
@@ -1695,9 +1683,9 @@
                 if you do not want to use the attribute.
             </para>
 
-        </sect2>
+        </section>
 
-        <sect2 id="mapping-declaration-manytoone" revision="5">
+        <section id="mapping-declaration-manytoone" revision="5">
             <title>Many-to-one</title>
 
             <para>
@@ -1908,9 +1896,9 @@
 
            <programlisting><![CDATA[<many-to-one name="owner" property-ref="identity.ssn" column="OWNER_SSN"/>]]></programlisting>
 
-        </sect2>
+        </section>
 
-        <sect2 id="mapping-declaration-onetoone" revision="3">
+        <section id="mapping-declaration-onetoone" revision="3">
             <title>One-to-one</title>
 
             <para>
@@ -2084,9 +2072,9 @@
 
            <programlisting><![CDATA[<one-to-one name="employee" class="Employee" property-ref="person"/>]]></programlisting>
 
-        </sect2>
+        </section>
 
-        <sect2 id="mapping-declaration-naturalid">
+        <section id="mapping-declaration-naturalid">
             <title>Natural-id</title>
 
             <programlisting><![CDATA[<natural-id mutable="true|false"/>
@@ -2122,9 +2110,9 @@
                 </listitem>
             </itemizedlist>
 
-        </sect2>
+        </section>
 
-        <sect2 id="mapping-declaration-component" revision="2">
+        <section id="mapping-declaration-component" revision="2">
             <title>Component and dynamic-component</title>
 
             <para>
@@ -2233,9 +2221,9 @@
                 <xref linkend="components-dynamic"/> for more information.
             </para>
 
-        </sect2>
+        </section>
 
-        <sect2 id="mapping-declaration-properties" revision="2">
+        <section id="mapping-declaration-properties" revision="2">
             <title>Properties</title>
 
             <para>
@@ -2336,9 +2324,9 @@
                 legacy data is not recommended.
             </para>
 
-        </sect2>
+        </section>
 
-        <sect2 id="mapping-declaration-subclass" revision="4">
+        <section id="mapping-declaration-subclass" revision="4">
             <title>Subclass</title>
 
             <para>
@@ -2407,9 +2395,9 @@
                 For information about inheritance mappings see <xref linkend="inheritance"/>.
             </para>
 
-        </sect2>
+        </section>
 
-         <sect2 id="mapping-declaration-joinedsubclass" revision="3">
+         <section id="mapping-declaration-joinedsubclass" revision="3">
             <title>Joined-subclass</title>
 
             <para>
@@ -2514,9 +2502,9 @@
                  For information about inheritance mappings see <xref linkend="inheritance"/>.
              </para>
 
-        </sect2>
+        </section>
 
-        <sect2 id="mapping-declaration-unionsubclass" revision="2">
+        <section id="mapping-declaration-unionsubclass" revision="2">
            <title>Union-subclass</title>
 
            <para>
@@ -2590,9 +2578,9 @@
                 For information about inheritance mappings see <xref linkend="inheritance"/>.
             </para>
 
-        </sect2>
+        </section>
 
-   	<sect2 id="mapping-declaration-join" revision="3">
+   	<section id="mapping-declaration-join" revision="3">
             <title>Join</title>
 
             <para>
@@ -2696,9 +2684,9 @@
                 explained later.
             </para>
 
-        </sect2>
+        </section>
 
-        <sect2 id="mapping-declaration-key">
+        <section id="mapping-declaration-key">
             <title>Key</title>                             
 
             <para>                                                                
@@ -2786,9 +2774,9 @@
                 <literal>&lt;key not-null="true"&gt;</literal>.
             </para>
 
-        </sect2>
+        </section>
 
-        <sect2 id="mapping-column" revision="4">
+        <section id="mapping-column" revision="4">
            <title>Column and formula elements</title>
            <para>
                Mapping elements which accept a <literal>column</literal> attribute will alternatively
@@ -2823,9 +2811,9 @@
     <formula>'MAILING'</formula>
 </many-to-one>]]></programlisting>
 
-    </sect2>
+    </section>
 
-        <sect2 id="mapping-declaration-import">
+        <section id="mapping-declaration-import">
             <title>Import</title>
 
             <para>
@@ -2861,9 +2849,9 @@
                 </calloutlist>
             </programlistingco>
 
-        </sect2>
+        </section>
 
-        <sect2 id="mapping-types-anymapping" revision="2">
+        <section id="mapping-types-anymapping" revision="2">
             <title>Any</title>
 
             <para>
@@ -2955,14 +2943,14 @@
                 </calloutlist>
             </programlistingco>
 
-      </sect2>
+      </section>
 
-    </sect1>
+    </section>
 
-    <sect1 id="mapping-types">
+    <section id="mapping-types">
         <title>Hibernate types</title>
 
-        <sect2 id="mapping-types-entitiesvalues" revision="1">
+        <section id="mapping-types-entitiesvalues" revision="1">
             <title>Entities and values</title>
 
             <para>
@@ -3027,9 +3015,9 @@
                 With the exception of collections, all built-in Hibernate types support null semantics.
             </para>
 
-        </sect2>
+        </section>
 
-        <sect2 id="mapping-types-basictypes" revision="3">
+        <section id="mapping-types-basictypes" revision="3">
             <title>Basic value types</title>
 
             <para>
@@ -3183,9 +3171,9 @@
                 represents the <literal>string</literal> type.
             </para>
 
-        </sect2>
+        </section>
 
-        <sect2 id="mapping-types-custom" revision="2">
+        <section id="mapping-types-custom" revision="2">
             <title>Custom value types</title>
 
             <para>
@@ -3271,11 +3259,11 @@
                 monetary values are represented.
             </para>
 
-        </sect2>
+        </section>
 
-    </sect1>
+    </section>
 
-    <sect1 id="mapping-entityname">
+    <section id="mapping-entityname">
         <title>Mapping a class more than once</title>
         <para>
             It is possible to provide more than one mapping for a particular persistent class. In this
@@ -3308,9 +3296,9 @@
             <literal>class</literal>.
         </para>
 
-    </sect1>
+    </section>
 
-    <sect1 id="mapping-quotedidentifiers">
+    <section id="mapping-quotedidentifiers">
             <title>SQL quoted identifiers</title>
             <para>
                 You can force Hibernate to quote an identifier in the generated SQL by enclosing the table or
@@ -3325,17 +3313,17 @@
     ...
 </class>]]></programlisting>
 
-    </sect1>
+    </section>
 
 
-   	<sect1 id="mapping-alternatives">
+   	<section id="mapping-alternatives">
    	<title>Metadata alternatives</title>
 
    	<para>
    	    XML does not suit all users so there are some alternative ways to define O/R mapping metadata in Hibernate.
    	</para>
 
-    <sect2 id="mapping-xdoclet">
+    <section id="mapping-xdoclet">
         <title>Using XDoclet markup</title>
 
         <para>
@@ -3454,9 +3442,9 @@ public class Cat {
             See the Hibernate website for more examples of XDoclet and Hibernate.
         </para>
 
-    </sect2>
+    </section>
 
-    <sect2 id="mapping-annotations" revision="2">
+    <section id="mapping-annotations" revision="2">
         <title>Using JDK 5.0 Annotations</title>
 
         <para>
@@ -3505,10 +3493,10 @@ public class Customer implements Serializable {
         </para>
 	</note>
 
-    </sect2>
-    </sect1>
+    </section>
+    </section>
 
-    <sect1 id="mapping-generated" revision="1">
+    <section id="mapping-generated" revision="1">
         <title>Generated properties</title>
         <para>
             Generated properties are properties that have their values generated by the
@@ -3521,9 +3509,9 @@ public class Customer implements Serializable {
         </para>
         <para>
             Properties marked as generated must additionally be non-insertable and non-updateable.
-            Only <link linkend="mapping-declaration-version">versions</link>,
-            <link linkend="mapping-declaration-timestamp">timestamps</link>, and
-            <link linkend="mapping-declaration-property">simple properties</link>, can be marked as
+            Only versions (<xref linkend="mapping-declaration-version" />), timestamps 
+            (<xref linkend="mapping-declaration-timestamp" />), and simple properties 
+            (<xref linkend="mapping-declaration-property" />), can be marked as
             generated.
         </para>
 	    <para>
@@ -3533,18 +3521,18 @@ public class Customer implements Serializable {
 	    <para>
 		    <literal>insert</literal>: the given property value is generated on
 		    insert, but is not regenerated on subsequent updates.  Properties like created-date
-		    fall into this category.  Even though
-		    <link linkend="mapping-declaration-version">version</link> and
-		    <link linkend="mapping-declaration-timestamp">timestamp</link> properties can
+		    fall into this category.  Even though version 
+		    (<xref linkend="mapping-declaration-version" />) and timestamp 
+		    (<xref linkend="mapping-declaration-timestamp" />) properties can
 		    be marked as generated, this option is not available.
 	    </para>
 	    <para>
 		    <literal>always</literal>: the property value is generated both
 		    on insert and on update.
 	    </para>
-    </sect1>
+    </section>
 
-    <sect1 id="mapping-database-object">
+    <section id="mapping-database-object">
         <title>Auxiliary database objects</title>
         <para>
             Auxiliary database objects allow for the CREATE and DROP of arbitrary database objects. In conjunction with
@@ -3589,6 +3577,6 @@ public class Customer implements Serializable {
         <dialect-scope name="org.hibernate.dialect.Oracle10gDialect"/>
     </database-object>
 </hibernate-mapping>]]></programlisting>
-    </sect1>
+    </section>
 </chapter>
 

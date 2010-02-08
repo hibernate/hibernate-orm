@@ -1,4 +1,8 @@
-<?xml version='1.0' encoding="UTF-8"?>
+<?xml version='1.0' encoding='utf-8' ?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
+<!ENTITY % BOOK_ENTITIES SYSTEM "../Hibernate_Core_Reference_Guide.ent">
+%BOOK_ENTITIES;
+]>
 <!--
   ~ Hibernate, Relational Persistence for Idiomatic Java
   ~
@@ -23,9 +27,14 @@
   ~ Boston, MA  02110-1301  USA
   -->
 
-<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
+<!--  <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
+<!ENTITY % BOOK_ENTITIES SYSTEM "Hibernate_Core_Reference_Guide.ent">
+%BOOK_ENTITIES;
+]
+<!ENTITY % BOOK_ENTITIES SYSTEM "Hibernate_Core_Reference_Guide.ent">
+%BOOK_ENTITIES;
         <!ENTITY mdash "-">
-]>
+]>-->
 
 <chapter id="tutorial">
     <title>Tutorial</title>
@@ -55,7 +64,7 @@
         </para>
     </note>
 
-    <sect1 id="tutorial-firstapp">
+    <section id="tutorial-firstapp">
         <title>Part 1 - The first Hibernate Application</title>
 
         <para>
@@ -72,7 +81,7 @@
             </para>
         </note>
 
-        <sect2 id="tutorial-firstapp-setup">
+        <section id="tutorial-firstapp-setup">
             <title>Setup</title>
 
             <para>
@@ -134,15 +143,15 @@
 
 </project>]]></programlisting>
 
-            <tip>
+            <note>
                 <para>
-                    It is not a requirement to use Maven.  If you wish to use something else to
-                    build this tutoial (such as Ant), the layout will remain the same.  The only
+                    It is not a requirement to use Maven.  If you wish to use another technology to
+                    build this tutorial (such as Ant), the layout will remain the same.  The only
                     change is that you will need to manually account for all the needed
-                    dependencies.  If you use something like <ulink url="http://ant.apache.org/ivy/">Ivy</ulink>
-                    providing transitive dependency management you would still use the dependencies
-                    mentioned below.  Otherwise, you'd need to grab <emphasis>all</emphasis>
-                    dependencies, both explicit and transitive, and add them to the project's
+                    dependencies.  If you use <ulink url="http://ant.apache.org/ivy/">Ivy</ulink>
+                    to provide transitive dependency management you would still use the dependencies
+                    mentioned below.  Otherwise, you will need to find all the
+                    dependencies, both explicit and transitive, and add them to the projects
                     classpath.  If working from the Hibernate distribution bundle, this would mean
                     <filename>hibernate3.jar</filename>, all artifacts in the
                     <filename>lib/required</filename> directory and all files from either the
@@ -150,15 +159,15 @@
                     directory; additionally you will need both the servlet-api jar and one of the slf4j
                     logging backends.
                 </para>
-            </tip>
+            </note>
 
             <para>
                 Save this file as <filename>pom.xml</filename> in the project root directory.
             </para>
-        </sect2>
+        </section>
 
 
-        <sect2 id="tutorial-firstapp-firstclass">
+        <section id="tutorial-firstapp-firstclass">
             <title>The first class</title>
             
             <para>
@@ -238,9 +247,9 @@ public class Event {
                 Save this file to the <filename>src/main/java/org/hibernate/tutorial/domain</filename>
                 directory.
             </para>
-        </sect2>
+        </section>
 
-        <sect2 id="tutorial-firstapp-mapping">
+        <section id="tutorial-firstapp-mapping">
             <title>The mapping file</title>
 
             <para>
@@ -339,12 +348,12 @@ public class Event {
                 and you can plugin in your own strategy.
             </para>
 
-            <tip>
+            <note>
                 <para>
-                    <literal>native</literal> is no longer consider the best strategy in terms of portability.  for further
+                    <literal>native</literal> is no longer considered the best strategy in terms of portability.  for further
                     discussion, see <xref linkend="portability-idgen"/>
                 </para>
-            </tip>
+            </note>
 
             <para>
                 Lastly, we need to tell Hibernate about the remaining entity class
@@ -401,22 +410,22 @@ public class Event {
                 <literal>timestamp</literal> converter.
             </para>
 
-            <tip>
+            <note>
                 <para>
                     Hibernate makes this mapping type determination using reflection when the mapping files
                     are processed.  This can take time and resources, so if startup performance is important
                     you should consider explicitly defining the type to use.
                 </para>
-            </tip>
+            </note>
 
             <para>
                 Save this mapping file as
                 <filename>src/main/resources/org/hibernate/tutorial/domain/Event.hbm.xml</filename>.
             </para>
 
-        </sect2>
+        </section>
 
-        <sect2 id="tutorial-firstapp-configuration" revision="2">
+        <section id="tutorial-firstapp-configuration" revision="2">
             <title>Hibernate configuration</title>
 
             <para>
@@ -427,7 +436,7 @@ public class Event {
 
             <note>
                 <para>
-                    We do this do that the data remains between runs.
+                    We do this so that the data remains between runs.
                 </para>
             </note>
 
@@ -452,12 +461,11 @@ public class Event {
                 Hibernate built-in connection pool for this tutorial.
             </para>
 
-            <caution>
+            <warning>
                 <para>
-                    The built-in Hibernate connection pool is in no way intended for production use.  It
-                    lacks several features found on any decent connection pool.
+                    The built-in Hibernate connection pool is not intended for production use.
                 </para>
-            </caution>
+            </warning>
 
             <para>
                 For Hibernate's configuration, we can use a simple <literal>hibernate.properties</literal> file, a
@@ -521,12 +529,12 @@ public class Event {
                 element specifies the particular SQL variant Hibernate generates.
             </para>
 
-            <tip>
+            <note>
                 <para>
-                    In most cases, Hibernate is able to properly determine which dialect to use.  See
+                   Hibernate is able to correctly determine which dialect to use in most cases.  See
                     <xref linkend="portability-dialectresolver"/> for more information.
                 </para>
-            </tip>
+            </note>
 
             <para>
                 Hibernate's automatic session management for persistence contexts is particularly useful
@@ -542,9 +550,9 @@ public class Event {
                 <filename>src/main/resources</filename> directory.
             </para>
 
-        </sect2>
+        </section>
 
-        <sect2 id="tutorial-firstapp-mvn" revision="1">
+        <section id="tutorial-firstapp-mvn" revision="1">
             <title>Building with Maven</title>
 
             <para>
@@ -575,9 +583,9 @@ public class Event {
 [INFO] Final Memory: 5M/547M
 [INFO] ------------------------------------------------------------------------]]></programlisting>
 
-        </sect2>
+        </section>
 
-        <sect2 id="tutorial-firstapp-helpers" revision="3">
+        <section id="tutorial-firstapp-helpers" revision="3">
             <title>Startup and helpers</title>
 
             <para>
@@ -665,9 +673,9 @@ public class HibernateUtil {
                 Hibernate.
             </para>
 
-        </sect2>
+        </section>
 
-        <sect2 id="tutorial-firstapp-workingpersistence" revision="5">
+        <section id="tutorial-firstapp-workingpersistence" revision="5">
             <title>Loading and storing objects</title>
 
             <para>
@@ -855,11 +863,11 @@ public class EventManager {
                 <command>mvn exec:java -Dexec.mainClass="org.hibernate.tutorial.EventManager" -Dexec.args="list"</command>
             </para>
 
-        </sect2>
+        </section>
 
-    </sect1>
+    </section>
 
-    <sect1 id="tutorial-associations">
+    <section id="tutorial-associations">
         <title>Part 2 - Mapping associations</title>
 
         <para>
@@ -869,7 +877,7 @@ public class EventManager {
             which they participate.
         </para>
 
-        <sect2 id="tutorial-associations-mappinguser" revision="1">
+        <section id="tutorial-associations-mappinguser" revision="1">
             <title>Mapping the Person class</title>
 
             <para>
@@ -928,9 +936,9 @@ public class Person {
                 behavior.
             </para>
 
-        </sect2>
+        </section>
 
-        <sect2 id="tutorial-associations-unidirset" revision="3">
+        <section id="tutorial-associations-unidirset" revision="3">
             <title>A unidirectional Set-based association</title>
 
             <para>
@@ -1019,9 +1027,9 @@ public class Person {
                                                   |_____________|
  ]]></programlisting>
 
-        </sect2>
+        </section>
 
-        <sect2 id="tutorial-associations-working" revision="2">
+        <section id="tutorial-associations-working" revision="2">
             <title>Working the association</title>
 
             <para>
@@ -1140,9 +1148,9 @@ public class Person {
                 entities, but looks almost the same in Java.
             </para>
 
-        </sect2>
+        </section>
 
-        <sect2 id="tutorial-associations-valuecollections">
+        <section id="tutorial-associations-valuecollections">
             <title>Collection of values</title>
 
             <para>
@@ -1232,9 +1240,9 @@ public class Person {
                 optimize this with an eager fetch.
             </para>
 
-        </sect2>
+        </section>
 
-        <sect2 id="tutorial-associations-bidirectional" revision="1">
+        <section id="tutorial-associations-bidirectional" revision="1">
             <title>Bi-directional associations</title>
 
             <para>
@@ -1291,9 +1299,9 @@ public class Person {
                 understand once you see how the bi-directional link between our two entities is created.
             </para>
 
-        </sect2>
+        </section>
 
-        <sect2 id="tutorial-associations-usingbidir">
+        <section id="tutorial-associations-usingbidir">
             <title>Working bi-directional links</title>
 
             <para>
@@ -1347,11 +1355,11 @@ public class Person {
                 and in many-to-many association you can select either side.
             </para>
 
-        </sect2>
+        </section>
 
-    </sect1>
+    </section>
 
-    <sect1 id="tutorial-webapp">
+    <section id="tutorial-webapp">
         <title>Part 3 - The EventManager web application</title>
 
         <para>
@@ -1361,7 +1369,7 @@ public class Person {
             database, and it provides an HTML form to enter new events.
         </para>
 
-        <sect2 id="tutorial-webapp-servlet" revision="2">
+        <section id="tutorial-webapp-servlet" revision="2">
             <title>Writing the basic servlet</title>
 
             <para>
@@ -1441,9 +1449,9 @@ public class EventManagerServlet extends HttpServlet {
                 as you consider rendering your view in JSP, not in a servlet.
             </para>
 
-        </sect2>
+        </section>
 
-        <sect2 id="tutorial-webapp-processing" revision="1">
+        <section id="tutorial-webapp-processing" revision="1">
             <title>Processing and rendering</title>
 
             <para>
@@ -1551,9 +1559,9 @@ public class EventManagerServlet extends HttpServlet {
                 examples.
             </para>
 
-        </sect2>
+        </section>
 
-        <sect2 id="tutorial-webapp-deploy">
+        <section id="tutorial-webapp-deploy">
             <title>Deploying and testing</title>
 
             <para>
@@ -1602,11 +1610,11 @@ public class EventManagerServlet extends HttpServlet {
                 is called) and to get the detailed output if any exceptions occurs.
             </para>
 
-        </sect2>
+        </section>
 
-    </sect1>
+    </section>
 
-    <sect1 id="tutorial-summary" revision="1">
+    <section id="tutorial-summary" revision="1">
         <title>Summary</title>
 
         <para>
@@ -1615,6 +1623,6 @@ public class EventManagerServlet extends HttpServlet {
             <ulink url="http://hibernate.org">website</ulink>.
         </para>
 
-    </sect1>
+    </section>
 
 </chapter>

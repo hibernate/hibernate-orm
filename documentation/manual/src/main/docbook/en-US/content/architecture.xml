@@ -1,4 +1,9 @@
-<?xml version='1.0' encoding="UTF-8"?>
+<?xml version='1.0' encoding='utf-8' ?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
+<!ENTITY % BOOK_ENTITIES SYSTEM "../Hibernate_Core_Reference_Guide.ent">
+%BOOK_ENTITIES;
+]>
+
 <!--
   ~ Hibernate, Relational Persistence for Idiomatic Java
   ~
@@ -22,14 +27,11 @@
   ~ 51 Franklin Street, Fifth Floor
   ~ Boston, MA  02110-1301  USA
   -->
-
-<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
-
 <chapter id="architecture">
 
     <title>Architecture</title>
 
-    <sect1 id="architecture-overview" revision="1">
+    <section id="architecture-overview" revision="1">
         <title>Overview</title>
         
         <para>
@@ -38,14 +40,12 @@
 
         <mediaobject>
             <imageobject role="fo">
-                <imagedata fileref="../images/overview.svg" format="SVG" align="center"/>
+                <imagedata fileref="images/overview.svg" format="SVG" align="center"/>
             </imageobject>
             <imageobject role="html">
-                <imagedata fileref="../images/overview.png" format="PNG" align="center"/>
+                <imagedata fileref="images/overview.png" format="PNG" align="center"/>
             </imageobject>
         </mediaobject>
-
-        
 
         <para>
             We do not have the scope in this document to provide a more detailed view of all the runtime architectures available; 
@@ -58,34 +58,32 @@
             provide persistence services, and persistent objects, to the application.
         </para>
 
-	<para>
-	    The "minimal" architecture has the application
+        <para>
+            The "minimal" architecture has the application
             provide its own JDBC connections and manage its own transactions. This approach
             uses a minimal subset of Hibernate's APIs:
         </para>
 
         <mediaobject>
             <imageobject role="fo">
-                <imagedata fileref="../images/lite.svg" format="SVG" align="center"/>
+                <imagedata fileref="images/lite.svg" format="SVG" align="center"/>
             </imageobject>
             <imageobject role="html">
-                <imagedata fileref="../images/lite.png" format="PNG" align="center"/>
+                <imagedata fileref="images/lite.png" format="PNG" align="center"/>
             </imageobject>
         </mediaobject>
 
-        
-
-	<para>
+        <para>
             The "comprehensive" architecture abstracts the application away from the
             underlying JDBC/JTA APIs and allows Hibernate to manage the details.
         </para>
 
         <mediaobject>
             <imageobject role="fo">
-                <imagedata fileref="../images/full_cream.svg" format="SVG" align="center"/>
+                <imagedata fileref="images/full_cream.svg" format="SVG" align="center"/>
             </imageobject>
             <imageobject role="html">
-                <imagedata fileref="../images/full_cream.png" format="PNG" align="center"/>
+                <imagedata fileref="images/full_cream.png" format="PNG" align="center"/>
             </imageobject>
         </mediaobject>
 
@@ -189,9 +187,9 @@
             <literal>Transaction</literal>/<literal>TransactionFactory</literal> and/or
             <literal>ConnectionProvider</literal> APIs to communicate with JTA or JDBC directly.
         </para>
-    </sect1>
+    </section>
 
-    <sect1 id="architecture-states" revision="1">
+    <section id="architecture-states" revision="1">
         <title>Instance states</title>
         <para>
             An instance of a persistent class can be in one of three different states. These states are
@@ -239,9 +237,9 @@
                 </listitem>
             </varlistentry>
         </variablelist>
-    </sect1>    
+    </section>    
 
-    <sect1 id="architecture-jmx" revision="1">
+    <section id="architecture-jmx" revision="1">
         <title>JMX Integration</title>
 
         <para>
@@ -289,17 +287,17 @@
             Another feature available as a JMX service is runtime Hibernate statistics. See
             <xref linkend="configuration-optional-statistics"/> for more information.
         </para>
-    </sect1>
+    </section>
 
-    <sect1 id="architecture-jca" revision="1">
+    <section id="architecture-jca" revision="1">
         <title>JCA Support</title>
         <para>
             Hibernate can also be configured as a JCA connector. Please see the website for more
             information. Please note, however, that at this stage Hibernate JCA support is under development.
         </para>
-    </sect1>
+    </section>
 
-    <sect1 id="architecture-current-session" revision="2">
+    <section id="architecture-current-session" revision="2">
         <title>Contextual sessions</title>
         <para>
             Most applications using Hibernate need some form of "contextual" session, where a given
@@ -383,7 +381,7 @@
             short names: "jta", "thread", and "managed".
         </para>
         
-    </sect1>
+    </section>
 
 </chapter>
 

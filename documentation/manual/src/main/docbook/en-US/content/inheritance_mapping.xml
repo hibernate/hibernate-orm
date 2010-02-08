@@ -1,4 +1,8 @@
-<?xml version='1.0' encoding="UTF-8"?>
+<?xml version='1.0' encoding='utf-8' ?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
+<!ENTITY % BOOK_ENTITIES SYSTEM "../Hibernate_Core_Reference_Guide.ent">
+%BOOK_ENTITIES;
+]>
 <!--
   ~ Hibernate, Relational Persistence for Idiomatic Java
   ~
@@ -23,12 +27,10 @@
   ~ Boston, MA  02110-1301  USA
   -->
 
-<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
-
 <chapter id="inheritance">
     <title>Inheritance mapping</title>
 
-    <sect1 id="inheritance-strategies" revision="3">
+    <section id="inheritance-strategies" revision="3">
         <title>The three strategies</title>
 
         <para>
@@ -99,7 +101,7 @@
  </hibernate-mapping>]]></programlisting>
 
 
-        <sect2 id="inheritance-tableperclass" >
+        <section id="inheritance-tableperclass" >
         <title>Table per class hierarchy</title>
 
         <para>
@@ -134,9 +136,9 @@
             cannot have <literal>NOT NULL</literal> constraints.
         </para>
         
-        </sect2>
+        </section>
 
-        <sect2 id="inheritance-tablepersubclass">
+        <section id="inheritance-tablepersubclass">
         <title>Table per subclass</title>
 
         <para>
@@ -170,9 +172,9 @@
             is actually a one-to-one association.
         </para>
 
-        </sect2>
+        </section>
 
-        <sect2 id="inheritance-tablepersubclass-discriminator" revision="2">
+        <section id="inheritance-tablepersubclass-discriminator" revision="2">
         <title>Table per subclass: using a discriminator</title>
 
         <para>
@@ -221,9 +223,9 @@
             outer join when querying the superclass.
         </para>
 
-        </sect2>
+        </section>
 
-        <sect2 id="inheritance-mixing-tableperclass-tablepersubclass">
+        <section id="inheritance-mixing-tableperclass-tablepersubclass">
         <title>Mixing table per class hierarchy with table per subclass</title>
 
         <para>
@@ -260,9 +262,9 @@
 
         <programlisting><![CDATA[<many-to-one name="payment" column="PAYMENT_ID" class="Payment"/>]]></programlisting>
     
-        </sect2>
+        </section>
 
-        <sect2 id="inheritance-tableperconcrete" revision="2">
+        <section id="inheritance-tableperconcrete" revision="2">
         <title>Table per concrete class</title>
 
         <para>
@@ -309,9 +311,9 @@
             of the superclass.
         </para>
 
-        </sect2>
+        </section>
 
-        <sect2 id="inheritance-tableperconcreate-polymorphism">
+        <section id="inheritance-tableperconcreate-polymorphism">
         <title>Table per concrete class using implicit polymorphism</title>
 
         <para>
@@ -346,10 +348,10 @@
             Notice that the <literal>Payment</literal> interface 
             is not mentioned explicitly. Also notice that properties of <literal>Payment</literal> are 
             mapped in each of the subclasses. If you want to avoid duplication, consider
-            using XML entities
-            (for example, <literal>[ &lt;!ENTITY allproperties SYSTEM "allproperties.xml"&gt; ]</literal>
+            using XML entities (for example, 
+            <literal>[ &lt;!ENTITY allproperties SYSTEM "allproperties.xml"&gt; ]</literal>
             in the <literal>DOCTYPE</literal> declaration and 
-            <literal>&amp;allproperties;</literal> in the mapping).
+            <literal>&amp;allproperties&semi;</literal> in the mapping).
         </para>
         
         <para>
@@ -370,9 +372,9 @@
     <column name="PAYMENT_ID"/>
 </any>]]></programlisting>
            
-        </sect2>
+        </section>
 
-        <sect2 id="inheritance-mixingpolymorphism">
+        <section id="inheritance-mixingpolymorphism">
         <title>Mixing implicit polymorphism with other inheritance mappings</title>
 
         <para>
@@ -421,11 +423,11 @@
             not instances of <literal>NonelectronicTransaction</literal>.
         </para>
         
-        </sect2>
+        </section>
 
-    </sect1>
+    </section>
 
-    <sect1 id="inheritance-limitations">
+    <section id="inheritance-limitations">
         <title>Limitations</title>
 
         <para>
@@ -436,13 +438,65 @@
         </para>
 
         <para>
-            The following table shows the limitations of table per concrete-class
+            The following list shows the limitations of table per concrete-class
             mappings, and of implicit polymorphism, in Hibernate.
         </para>
+        
+        <variablelist>
+          <varlistentry>
+            <term>table per class-heirarchy</term>
+            <term>table per subclass</term>
+            <listitem>
+              <itemizedlist>
+              <listitem><para>Polymorphic many-to-one: <code>&lt;many-to-one&gt;</code></para></listitem>
+              <listitem><para>Polymorphic one-to-one: <code>&lt;one-to-one&gt;</code></para></listitem>
+              <listitem><para>Polymorphic one-to-many: <code>&lt;one-to-many&gt;</code></para></listitem>
+              <listitem><para>Polymorphic many-to-many: <code>&lt;many-to-many&gt;</code></para></listitem>
+              <listitem><para>Polymorphic <literal>load()</literal> or <literal>get()</literal>: <code>s.get(Payment.class, id)</code></para></listitem>
+              <listitem><para>Polymorphic queries: <code>from Payment p</code></para></listitem>
+              <listitem><para>Polymorphic joins: <code>from Order o join o.payment p</code></para></listitem>
+              </itemizedlist>
+              <para>
+                Outer join fetching is supported.
+              </para>
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term>table per concrete-class (union-subclass)</term>
+            <listitem>
+              <itemizedlist>
+              <listitem><para>Polymorphic many-to-one: <code>&lt;many-to-one&gt;</code></para></listitem>
+              <listitem><para>Polymorphic one-to-one: <code>&lt;one-to-one&gt;</code></para></listitem>
+              <listitem><para>Polymorphic one-to-many: <code>&lt;one-to-many&gt;</code> (for <code>inverse=&quot;true&quot;</code> only)</para></listitem>
+              <listitem><para>Polymorphic many-to-many: <code>&lt;many-to-many&gt;</code></para></listitem>
+              <listitem><para>Polymorphic <literal>load()</literal> or <literal>get()</literal>: <code>s.get(Payment.class, id)</code></para></listitem>
+              <listitem><para>Polymorphic queries: <code>from Payment p</code></para></listitem>
+              <listitem><para>Polymorphic joins: <code>from Order o join o.payment p</code></para></listitem>
+              </itemizedlist>
+              <para>
+                Outer join fetching is supported.
+              </para>
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term>table per concrete class (implicit polymorphism</term>
+            <listitem>
+              <itemizedlist>
+              <listitem><para>Polymorphic many-to-one: <code>&lt;any&gt;</code></para></listitem>
+              <listitem><para>Polymorphic many-to-many: <code>&lt;many-to-many&gt;</code></para></listitem>
+              <listitem><para>Polymorphic <literal>load()</literal> or <literal>get()</literal>: <code>s.createCriteria(Payment.class).add( Restrictions.idEq(id) ).uniqueResult()</code></para></listitem>
+              <listitem><para>Polymorphic queries: <code>from Payment p</code></para></listitem>
+              </itemizedlist>
+              <para>
+                Polymorphic one-to-one, polymorphic one-to-many, polymorphic joins, and outer join fetching are not supported.
+              </para>
+            </listitem>
+          </varlistentry>  
+        </variablelist>
             
-        <table frame="topbot">
+        <!--<table frame="topbot">
             <title>Features of inheritance mappings</title>
-            <tgroup cols='9' align='left' colsep='1' rowsep='1'>
+        <tgroup cols='9' align='left' colsep='1' rowsep='1'>
             <colspec colname='c1' colwidth="1*"/>
             <colspec colname='c2' colwidth="1*"/>
             <colspec colname='c3' colwidth="1*"/>
@@ -451,7 +505,7 @@
             <colspec colname='c6' colwidth="1*"/>
             <colspec colname='c7' colwidth="1*"/>
             <colspec colname='c8' colwidth="1*"/>
-            <colspec colname='c9' colwidth="1*"/>
+	    <colspec colname='c9' colwidth="1*"/>
             <thead>
             <row>
               <entry>Inheritance strategy</entry>
@@ -511,9 +565,9 @@
                 <entry><emphasis>not supported</emphasis></entry>
             </row>
             </tbody>
-            </tgroup>
-        </table>
+           </tgroup>
+        </table>-->
 
-    </sect1>
+    </section>
 
 </chapter>

@@ -1,4 +1,9 @@
-<?xml version='1.0' encoding="UTF-8"?>
+<?xml version='1.0' encoding='utf-8' ?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
+<!ENTITY % BOOK_ENTITIES SYSTEM "../Hibernate_Core_Reference_Guide.ent">
+%BOOK_ENTITIES;
+]>
+
 <!--
   ~ Hibernate, Relational Persistence for Idiomatic Java
   ~
@@ -23,8 +28,6 @@
   ~ Boston, MA  02110-1301  USA
   -->
 
-<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
-
 <chapter id="session-configuration" revision="1">
     <title>Configuration</title>
     
@@ -36,7 +39,7 @@
         the various options. Simply put the example file in your classpath and customize it to suit your needs.
     </para>
 
-    <sect1 id="configuration-programmatic" revision="1">
+    <section id="configuration-programmatic" revision="1">
         <title>Programmatic configuration</title>
 
         <para>
@@ -122,14 +125,14 @@
             be discarded once a <literal>SessionFactory</literal> is created.
         </para>
 
-    </sect1>
+    </section>
     
-    <sect1 id="configuration-sessionfactory">
+    <section id="configuration-sessionfactory">
         <title>Obtaining a SessionFactory</title>
 
         <para>
             When all mappings have been parsed by the <classname>org.hibernate.cfg.Configuration</classname>,
-            the application must obtain a factory for <interfacename>org.hibernate.Session</interfacename> instances.
+            the application must obtain a factory for <classname>org.hibernate.Session</classname> instances.
             This factory is intended to be shared by all application threads:
         </para>
 
@@ -137,13 +140,13 @@
 
         <para>
             Hibernate does allow your application to instantiate more than one
-            <interfacename>org.hibernate.SessionFactory</interfacename>. This is useful if you are using more than
+            <classname>org.hibernate.SessionFactory</classname>. This is useful if you are using more than
             one database.
         </para>
 
-    </sect1>
+    </section>
 
-    <sect1 id="configuration-hibernatejdbc" revision="1">
+    <section id="configuration-hibernatejdbc">
         <title>JDBC connections</title>
 
         <para>
@@ -177,49 +180,49 @@
                 <colspec colname="c2" colwidth="1*"/>
                 <thead>
                     <row>
-                        <entry>Property name</entry>
-                        <entry>Purpose</entry>
+                        <entry><para>Property name</para></entry>
+                        <entry><para>Purpose</para></entry>
                     </row>
                 </thead>
             <tbody>
             <row>
                 <entry>
-                    <property>hibernate.connection.driver_class</property>
-                </entry>
+                    <para><property>hibernate.connection.driver_class</property>
+                </para></entry>
                 <entry>
-                    <emphasis>JDBC driver class</emphasis>
-                </entry>
-            </row>
-            <row>
-                <entry>
-                    <property>hibernate.connection.url</property>
-                </entry>
-                <entry>
-                    <emphasis>JDBC URL</emphasis>
+                    <para><emphasis>JDBC driver class</emphasis></para>
                 </entry>
             </row>
             <row>
                 <entry>
-                    <property>hibernate.connection.username</property>
+                    <para><property>hibernate.connection.url</property></para>
                 </entry>
                 <entry>
-                    <emphasis>database user</emphasis>
-                </entry>
-            </row>
-            <row>
-                <entry>
-                    <property>hibernate.connection.password</property>
-                </entry>
-                <entry>
-                    <emphasis>database user password</emphasis>
+                    <para><emphasis>JDBC URL</emphasis></para>
                 </entry>
             </row>
             <row>
                 <entry>
-                    <property>hibernate.connection.pool_size</property>
+                    <para><property>hibernate.connection.username</property></para>
                 </entry>
                 <entry>
-                    <emphasis>maximum number of pooled connections</emphasis>
+                    <para><emphasis>database user</emphasis></para>
+                </entry>
+            </row>
+            <row>
+                <entry>
+                    <para><property>hibernate.connection.password</property></para>
+                </entry>
+                <entry>
+                    <para><emphasis>database user password</emphasis></para>
+                </entry>
+            </row>
+            <row>
+                <entry>
+                    <para><property>hibernate.connection.pool_size</property></para>
+                </entry>
+                <entry>
+                    <para><emphasis>maximum number of pooled connections</emphasis></para>
                 </entry>
             </row>
             </tbody>
@@ -248,7 +251,8 @@
             The following is an example <filename>hibernate.properties</filename> file for c3p0:
         </para>
 
-        <programlisting id="c3p0-configuration" revision="1"><![CDATA[hibernate.connection.driver_class = org.postgresql.Driver
+        <!--  <programlisting id="c3p0-configuration" revision="1"> -->
+        <programlisting><![CDATA[hibernate.connection.driver_class = org.postgresql.Driver
 hibernate.connection.url = jdbc:postgresql://localhost/mydatabase
 hibernate.connection.username = myuser
 hibernate.connection.password = secret
@@ -271,50 +275,50 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                 <colspec colname="c2" colwidth="1*"/>
                 <thead>
                     <row>
-                        <entry>Property name</entry>
-                        <entry>Purpose</entry>
+                        <entry><para>Property name</para></entry>
+                        <entry><para>Purpose</para></entry>
                     </row>
                 </thead>
             <tbody>
             <row>
                 <entry>
-                    <property>hibernate.connection.datasource</property>
+                    <para><property>hibernate.connection.datasource</property></para>
                 </entry>
-                <entry>
+                <entry><para>
                     <emphasis>datasource JNDI name</emphasis>
-                </entry>
+                </para></entry>
             </row>
             <row>
-                <entry>
+                <entry><para>
                     <property>hibernate.jndi.url</property>
-                </entry>
-                <entry>
+                </para></entry>
+                <entry><para>
                     <emphasis>URL of the JNDI provider</emphasis> (optional)
-                </entry>
+                </para></entry>
             </row>
             <row>
-                <entry>
+                <entry><para>
                     <property>hibernate.jndi.class</property>
-                </entry>
-                <entry>
+                </para></entry>
+                <entry><para>
                     <emphasis>class of the JNDI <literal>InitialContextFactory</literal></emphasis> (optional)
-                </entry>
+                </para></entry>
             </row>
             <row>
-                <entry>
+                <entry><para>
                     <property>hibernate.connection.username</property>
-                </entry>
-                <entry>
+                </para></entry>
+                <entry><para>
                     <emphasis>database user</emphasis> (optional)
-                </entry>
+                </para></entry>
             </row>
             <row>
-                <entry>
+                <entry><para>
                     <property>hibernate.connection.password</property>
-                </entry>
-                <entry>
+                </para></entry>
+                <entry><para>
                     <emphasis>database user password</emphasis> (optional)
-                </entry>
+                </para></entry>
             </row>
             </tbody>
             </tgroup>
@@ -349,22 +353,22 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
             custom implementation via the <property>hibernate.connection.provider_class</property> property.
         </para>
 
-    </sect1>
+    </section>
 
-    <sect1 id="configuration-optional" revision="1">
+    <section id="configuration-optional" revision="1">
         <title>Optional configuration properties</title>
         
         <para>
             There are a number of other properties that control the behavior of Hibernate at runtime. All are optional
             and have reasonable default values.
         </para>
-
+	<warning>
         <para>
-        	<warning><emphasis>Some of these properties are "system-level" only.</emphasis>  System-level properties can
-            be set only via <literal>java -Dproperty=value</literal> or <filename>hibernate.properties</filename>. They
-            <emphasis>cannot</emphasis> be set by the other techniques described above.</warning>
+        	Some of these properties are system-level only. System-level properties can
+            be set only via <code>java -Dproperty=value</code> or <filename>hibernate.properties</filename>. They
+            <emphasis>cannot</emphasis> be set by the other techniques described above.
         </para>
-
+</warning>
         <table frame="topbot" id="configuration-optional-properties" revision="8">
             <title>Hibernate Configuration Properties</title>
             <tgroup cols="2">
@@ -372,18 +376,19 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                 <colspec colname="c2" colwidth="1*"/>
                 <thead>
                     <row>
-                        <entry>Property name</entry>
-                        <entry>Purpose</entry>
+                        <entry><para>Property name</para></entry>
+                        <entry><para>Purpose</para></entry>
                     </row>
                 </thead>
                 <tbody>
                     <row>
-                        <entry>
+                        <entry><para>
                             <property>hibernate.dialect</property>
-                        </entry>
-                        <entry>
+                        </para></entry>
+                        <entry><para>
                             The classname of a Hibernate <classname>org.hibernate.dialect.Dialect</classname> which
                             allows Hibernate to generate SQL optimized for a particular relational database.
+                            </para>
                             <para>
                                 <emphasis role="strong">e.g.</emphasis> 
                                 <literal>full.classname.of.Dialect</literal>
@@ -396,13 +401,13 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                         </entry>
                     </row>
                     <row>
-                        <entry>
+                        <entry><para>
                             <property>hibernate.show_sql</property>
-                        </entry>
-                        <entry>
+                        </para></entry>
+                        <entry><para>
                             Write all SQL statements to console. This is an alternative
                             to setting the log category <literal>org.hibernate.SQL</literal>
-                            to <literal>debug</literal>.
+                            to <literal>debug</literal>.</para>
                             <para>
                                 <emphasis role="strong">e.g.</emphasis> 
                                 <literal>true</literal> | <literal>false</literal>
@@ -410,11 +415,11 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                         </entry>
                     </row>
                     <row>
-                        <entry>
+                        <entry><para>
                             <property>hibernate.format_sql</property>
-                        </entry>
-                        <entry>
-                            Pretty print the SQL in the log and console.
+                        </para></entry>
+                        <entry><para>
+                            Pretty print the SQL in the log and console.</para>
                             <para>
                                 <emphasis role="strong">e.g.</emphasis> 
                                 <literal>true</literal> | <literal>false</literal>
@@ -422,12 +427,12 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                         </entry>
                     </row>
                     <row>
-                        <entry>
+                        <entry><para>
                             <property>hibernate.default_schema</property>
-                        </entry>
-                        <entry>
+                        </para></entry>
+                        <entry><para>
                             Qualify unqualified table names with the given schema/tablespace
-                            in generated SQL.
+                            in generated SQL.</para>
                             <para>
                                 <emphasis role="strong">e.g.</emphasis> 
                                 <literal>SCHEMA_NAME</literal>
@@ -435,12 +440,12 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                         </entry>
                     </row>
                     <row>
-                        <entry>
-                            <property>hibernate.default_catalog</property>
+                        <entry><para>
+                            <property>hibernate.default_catalog</property></para>
                         </entry>
-                        <entry>
+                        <entry><para>
                             Qualifies unqualified table names with the given catalog
-                            in generated SQL.
+                            in generated SQL.</para>
                             <para>
                                 <emphasis role="strong">e.g.</emphasis> 
                                 <literal>CATALOG_NAME</literal>
@@ -448,12 +453,12 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                         </entry>
                     </row>
                     <row>
-                        <entry>
+                        <entry><para>
                             <property>hibernate.session_factory_name</property>
-                        </entry>
-                        <entry>
+                        </para></entry>
+                        <entry><para>
                             The <interfacename>org.hibernate.SessionFactory</interfacename> will be automatically
-                            bound to this name in JNDI after it has been created.
+                            bound to this name in JNDI after it has been created.</para>
                             <para>
                                 <emphasis role="strong">e.g.</emphasis> 
                                 <literal>jndi/composite/name</literal>
@@ -461,13 +466,13 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                         </entry>
                     </row>
                     <row>
-                        <entry>
+                        <entry><para>
                             <property>hibernate.max_fetch_depth</property>
-                        </entry>
-                        <entry>
+                        </para></entry>
+                        <entry><para>
                             Sets a maximum "depth" for the outer join fetch tree
                             for single-ended associations (one-to-one, many-to-one).
-                            A <literal>0</literal> disables default outer join fetching.
+                            A <literal>0</literal> disables default outer join fetching.</para>
                             <para>
                                 <emphasis role="strong">e.g.</emphasis> 
                                 recommended values between <literal>0</literal> and 
@@ -476,11 +481,11 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                         </entry>
                     </row>
                     <row>
-                        <entry>
+                        <entry><para>
                             <property>hibernate.default_batch_fetch_size</property>
-                        </entry>
-                        <entry>
-                            Sets a default size for Hibernate batch fetching of associations.
+                        </para></entry>
+                        <entry><para>
+                            Sets a default size for Hibernate batch fetching of associations.</para>
                             <para>
                                 <emphasis role="strong">e.g.</emphasis> 
                                 recommended values <literal>4</literal>, <literal>8</literal>, 
@@ -489,12 +494,12 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                         </entry>
                     </row>
                     <row>
-                        <entry>
+                        <entry><para>
                             <property>hibernate.default_entity_mode</property>
-                        </entry>
-                        <entry>
+                        </para></entry>
+                        <entry><para>
                             Sets a default mode for entity representation for all sessions
-                            opened from this <literal>SessionFactory</literal>
+                            opened from this <literal>SessionFactory</literal>.</para>
                             <para>
                                 <literal>dynamic-map</literal>, <literal>dom4j</literal>,
                                 <literal>pojo</literal>
@@ -502,13 +507,13 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                         </entry>
                     </row>
                     <row>
-                        <entry>
+                        <entry><para>
                             <property>hibernate.order_updates</property>
-                        </entry>
-                        <entry>
+                        </para></entry>
+                        <entry><para>
                             Forces Hibernate to order SQL updates by the primary key value
                             of the items being updated. This will result in fewer transaction
-                            deadlocks in highly concurrent systems.
+                            deadlocks in highly concurrent systems.</para>
                             <para>
                                 <emphasis role="strong">e.g.</emphasis> 
                                 <literal>true</literal> | <literal>false</literal>
@@ -516,12 +521,12 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                         </entry>
                     </row>
                     <row>
-                        <entry>
+                        <entry><para>
                             <property>hibernate.generate_statistics</property>
-                        </entry>
-                        <entry>
+                        </para></entry>
+                        <entry><para>
                             If enabled, Hibernate will collect statistics useful for
-                            performance tuning.
+                            performance tuning.</para>
                             <para>
                                 <emphasis role="strong">e.g.</emphasis>
                                 <literal>true</literal> | <literal>false</literal>
@@ -529,12 +534,12 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                         </entry>
                     </row>
                     <row>
-                        <entry>
+                        <entry><para>
                             <property>hibernate.use_identifier_rollback</property>
-                        </entry>
-                        <entry>
+                        </para></entry>
+                        <entry><para>
                             If enabled, generated identifier properties will be
-                            reset to default values when objects are deleted.
+                            reset to default values when objects are deleted.</para>
                             <para>
                                 <emphasis role="strong">e.g.</emphasis>
                                 <literal>true</literal> | <literal>false</literal>
@@ -542,12 +547,12 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                         </entry>
                     </row>
                     <row>
-                        <entry>
+                        <entry><para>
                             <property>hibernate.use_sql_comments</property>
-                        </entry>
-                        <entry>
+                        </para></entry>
+                        <entry><para>
                             If turned on, Hibernate will generate comments inside the SQL, for
-                            easier debugging, defaults to <literal>false</literal>.
+                            easier debugging, defaults to <literal>false</literal>.</para>
                             <para>
                                 <emphasis role="strong">e.g.</emphasis>
                                 <literal>true</literal> | <literal>false</literal>
@@ -561,30 +566,32 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
         <table frame="topbot" id="configuration-jdbc-properties" revision="8">
             <title>Hibernate JDBC and Connection Properties</title>
             <tgroup cols="2">
+<!--
                 <colspec colname="c1" colwidth="1*"/>
                 <colspec colname="c2" colwidth="1*"/>
+-->
                 <thead>
                     <row>
-                        <entry>Property name</entry>
-                        <entry>Purpose</entry>
+                        <entry><para>Property name</para></entry>
+                        <entry><para>Purpose</para></entry>
                     </row>
                 </thead>
                 <tbody>
                     <row>
-                        <entry>
+                        <entry><para>
                             <property>hibernate.jdbc.fetch_size</property>
-                        </entry>
-                        <entry>
+                        </para></entry>
+                        <entry><para>
                             A non-zero value determines the JDBC fetch size (calls
                             <literal>Statement.setFetchSize()</literal>).
-                        </entry>
+                        </para></entry>
                     </row>
                     <row>
-                        <entry>
+                        <entry><para>
                             <property>hibernate.jdbc.batch_size</property>
-                        </entry>
-                        <entry>
-                            A non-zero value enables use of JDBC2 batch updates by Hibernate.
+                        </para></entry>
+                        <entry><para>
+                            A non-zero value enables use of JDBC2 batch updates by Hibernate.</para>
                             <para>
                                 <emphasis role="strong">e.g.</emphasis>
                                 recommended values between <literal>5</literal> and <literal>30</literal>
@@ -592,14 +599,14 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                         </entry>
                     </row>
                     <row>
-                        <entry>
+                        <entry><para>
                             <property>hibernate.jdbc.batch_versioned_data</property>
-                        </entry>
-                        <entry>
+                        </para></entry>
+                        <entry><para>
                             Set this property to <literal>true</literal> if your JDBC driver returns
                             correct row counts from <literal>executeBatch()</literal>. Iit is usually
                             safe to turn this option on. Hibernate will then use batched DML for
-                            automatically versioned data. Defaults to <literal>false</literal>.
+                            automatically versioned data. Defaults to <literal>false</literal>.</para>
                             <para>
                                 <emphasis role="strong">e.g.</emphasis>
                                 <literal>true</literal> | <literal>false</literal>
@@ -607,12 +614,12 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                         </entry>
                     </row>
                     <row>
-                        <entry>
+                        <entry><para>
                             <property>hibernate.jdbc.factory_class</property>
-                        </entry>
-                        <entry>
+                        </para></entry>
+                        <entry><para>
                             Select a custom <interfacename>org.hibernate.jdbc.Batcher</interfacename>. Most applications
-                            will not need this configuration property.
+                            will not need this configuration property.</para>
                             <para>
                                 <emphasis role="strong">e.g.</emphasis>
                                 <literal>classname.of.BatcherFactory</literal>
@@ -620,13 +627,13 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                         </entry>
                     </row>
                     <row>
-                        <entry>
+                        <entry><para>
                             <property>hibernate.jdbc.use_scrollable_resultset</property>
-                        </entry>
-                        <entry>
+                        </para></entry>
+                        <entry><para>
                             Enables use of JDBC2 scrollable resultsets by Hibernate.
                             This property is only necessary when using user-supplied
-                            JDBC connections. Hibernate uses connection metadata otherwise.
+                            JDBC connections. Hibernate uses connection metadata otherwise.</para>
                             <para>
                                 <emphasis role="strong">e.g.</emphasis> 
                                 <literal>true</literal> | <literal>false</literal>
@@ -634,12 +641,12 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                         </entry>
                     </row>
                     <row>
-                        <entry>
+                        <entry><para>
                             <property>hibernate.jdbc.use_streams_for_binary</property>
-                        </entry>
-                        <entry>
+                        </para></entry>
+                        <entry><para>
                             Use streams when writing/reading <literal>binary</literal> or <literal>serializable</literal>
-                            types to/from JDBC. <emphasis>*system-level property*</emphasis>
+                            types to/from JDBC. <emphasis>*system-level property*</emphasis></para>
                             <para>
                                 <emphasis role="strong">e.g.</emphasis>
                                 <literal>true</literal> | <literal>false</literal>
@@ -647,15 +654,15 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                         </entry>
                     </row>
                     <row>
-                        <entry>
+                        <entry><para>
                             <property>hibernate.jdbc.use_get_generated_keys</property>
-                        </entry>
-                        <entry>
+                        </para></entry>
+                        <entry><para>
                             Enables use of JDBC3 <literal>PreparedStatement.getGeneratedKeys()</literal>
                             to retrieve natively generated keys after insert. Requires JDBC3+ driver
                             and JRE1.4+, set to false if your driver has problems with the Hibernate
                             identifier generators. By default, it tries to determine the driver capabilities
-                            using connection metadata.
+                            using connection metadata.</para>
                             <para>
                                 <emphasis role="strong">e.g.</emphasis>
                                 <literal>true|false</literal>
@@ -663,12 +670,12 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                         </entry>
                     </row>
                     <row>
-                        <entry>
+                        <entry><para>
                             <property>hibernate.connection.provider_class</property>
-                        </entry>
-                        <entry>
+                        </para></entry>
+                        <entry><para>
                             The classname of a custom <interfacename>org.hibernate.connection.ConnectionProvider</interfacename>
-                            which provides JDBC connections to Hibernate.
+                            which provides JDBC connections to Hibernate.</para>
                             <para>
                                 <emphasis role="strong">e.g.</emphasis> 
                                 <literal>classname.of.ConnectionProvider</literal>
@@ -676,25 +683,25 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                         </entry>
                     </row>
                     <row>
-                        <entry>
-                            <property>hibernate.connection.isolation</property>
-                        </entry>
-                        <entry>
-                            Sets the JDBC transaction isolation level. Check <interfacename>java.sql.Connection</interfacename>
-                            for meaningful values, but note that most databases do not support all isolation levels and some
-                            define additional, non-standard isolations.
-                            <para>
-                                <emphasis role="strong">e.g.</emphasis>
-                                <literal>1, 2, 4, 8</literal>
-                            </para>
-                        </entry>
+                    <entry><para>
+                        <property>hibernate.connection.isolation</property>
+                    </para></entry>
+                    <entry><para>
+                        Sets the JDBC transaction isolation level. Check <interfacename>java.sql.Connection</interfacename>
+                        for meaningful values, but note that most databases do not support all isolation levels and some
+                        define additional, non-standard isolations.</para>
+                        <para>
+                            <emphasis role="strong">e.g.</emphasis> 
+                            <literal>1, 2, 4, 8</literal>
+                        </para>
+                    </entry>
                     </row>
                     <row>
-                        <entry>
+                        <entry><para>
                             <property>hibernate.connection.autocommit</property>
-                        </entry>
-                        <entry>
-                            Enables autocommit for JDBC pooled connections (it is not recommended).
+                        </para></entry>
+                        <entry><para>
+                            Enables autocommit for JDBC pooled connections (it is not recommended).</para>
                             <para>
                                 <emphasis role="strong">e.g.</emphasis>
                                 <literal>true</literal> | <literal>false</literal>
@@ -702,10 +709,10 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                         </entry>
                     </row>
                     <row>
-                        <entry>
+                        <entry><para>
                             <property>hibernate.connection.release_mode</property>
-                        </entry>
-                        <entry>
+                        </para></entry>
+                        <entry><para>
                             Specifies when Hibernate should release JDBC connections. By default, 
                             a JDBC connection is held until the session is explicitly closed or
                             disconnected. For an application server JTA datasource, use
@@ -715,7 +722,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                             <literal>after_transaction</literal>. <literal>auto</literal> will
                             choose <literal>after_statement</literal> for the JTA and CMT transaction
                             strategies and <literal>after_transaction</literal> for the JDBC 
-                            transaction strategy.
+                            transaction strategy.</para>
                             <para>
                                 <emphasis role="strong">e.g.</emphasis> 
                                 <literal>auto</literal> (default) | <literal>on_close</literal> |
@@ -732,22 +739,22 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                         </entry>
                     </row>
                     <row>
-                        <entry>
+                        <entry><para>
                             <property>hibernate.connection.</property><emphasis>&lt;propertyName&gt;</emphasis>
-                        </entry>
-                        <entry>
+                        </para></entry>
+                        <entry><para>
                             Pass the JDBC property <emphasis>&lt;propertyName&gt;</emphasis>
                             to <literal>DriverManager.getConnection()</literal>.
-                        </entry>
+                        </para></entry>
                     </row>
                     <row>
-                        <entry>
+                        <entry><para>
                             <property>hibernate.jndi.</property><emphasis>&lt;propertyName&gt;</emphasis>
-                        </entry>
-                        <entry>
+                        </para></entry>
+                        <entry><para>
                             Pass the property <emphasis>&lt;propertyName&gt;</emphasis> to
                             the JNDI <literal>InitialContextFactory</literal>.
-                        </entry>
+                        </para></entry>
                     </row>
                 </tbody>
             </tgroup>
@@ -760,17 +767,17 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                 <colspec colname="c2" colwidth="1*"/>
                 <thead>
                     <row>
-                        <entry>Property name</entry>
-                        <entry>Purpose</entry>
+                        <entry><para>Property name</para></entry>
+                        <entry><para>Purpose</para></entry>
                     </row>
                 </thead>
                 <tbody>
                      <row>
-                        <entry>
+                        <entry><para>
                             <literal>hibernate.cache.provider_class</literal>
-                        </entry>
-                        <entry>
-                            The classname of a custom <literal>CacheProvider</literal>.
+                        </para></entry>
+                        <entry><para>
+                            The classname of a custom <literal>CacheProvider</literal>.</para>
                             <para>
                                 <emphasis role="strong">e.g.</emphasis> 
                                 <literal>classname.of.CacheProvider</literal>
@@ -778,14 +785,14 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                         </entry>
                     </row>
                     <row>
-                        <entry>
+                        <entry><para>
                             <literal>hibernate.cache.use_minimal_puts</literal>
-                        </entry>
-                        <entry>
+                        </para></entry>
+                        <entry><para>
                             Optimizes second-level cache operation to minimize writes, at the
                             cost of more frequent reads. This setting is most useful for 
                             clustered caches and, in Hibernate3, is enabled by default for
-                            clustered cache implementations.
+                            clustered cache implementations.</para>
                             <para>
                                 <emphasis role="strong">e.g.</emphasis> 
                                 <literal>true|false</literal>
@@ -793,11 +800,11 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                         </entry>
                     </row>
                     <row>
-                        <entry>
+                        <entry><para>
                             <literal>hibernate.cache.use_query_cache</literal>
-                        </entry>
-                        <entry>
-                            Enables the query cache. Individual queries still have to be set cachable.
+                        </para></entry>
+                        <entry><para>
+                            Enables the query cache. Individual queries still have to be set cachable.</para>
                             <para>
                                 <emphasis role="strong">e.g.</emphasis> 
                                 <literal>true|false</literal>
@@ -805,13 +812,13 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                         </entry>
                     </row>
                     <row>
-                        <entry>
+                        <entry><para>
                             <literal>hibernate.cache.use_second_level_cache</literal>
-                        </entry>
-                        <entry>
+                        </para></entry>
+                        <entry><para>
                             Can be used to completely disable the second level cache, which is enabled
                             by default for classes which specify a <literal>&lt;cache&gt;</literal>
-                            mapping.
+                            mapping.</para>
                             <para>
                                 <emphasis role="strong">e.g.</emphasis> 
                                 <literal>true|false</literal>
@@ -819,12 +826,12 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                         </entry>
                     </row>
                     <row>
-                        <entry>
+                        <entry><para>
                             <literal>hibernate.cache.query_cache_factory</literal>
-                        </entry>
-                        <entry>
+                        </para></entry>
+                        <entry><para>
                             The classname of a custom <literal>QueryCache</literal> interface,
-                            defaults to the built-in <literal>StandardQueryCache</literal>.
+                            defaults to the built-in <literal>StandardQueryCache</literal>.</para>
                             <para>
                                 <emphasis role="strong">e.g.</emphasis>
                                 <literal>classname.of.QueryCache</literal>
@@ -832,11 +839,11 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                         </entry>
                     </row>
                     <row>
-                        <entry>
+                        <entry><para>
                             <literal>hibernate.cache.region_prefix</literal>
-                        </entry>
-                        <entry>
-                            A prefix to use for second-level cache region names.
+                        </para></entry>
+                        <entry><para>
+                            A prefix to use for second-level cache region names.</para>
                             <para>
                                 <emphasis role="strong">e.g.</emphasis> 
                                 <literal>prefix</literal>
@@ -844,12 +851,12 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                         </entry>
                     </row>
                     <row>
-                        <entry>
+                        <entry><para>
                             <literal>hibernate.cache.use_structured_entries</literal>
-                        </entry>
-                        <entry>
+                        </para></entry>
+                        <entry><para>
                             Forces Hibernate to store data in the second-level cache
-                            in a more human-friendly format.
+                            in a more human-friendly format.</para>
                             <para>
                                 <emphasis role="strong">e.g.</emphasis>
                                 <literal>true|false</literal>
@@ -867,19 +874,19 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                 <colspec colname="c2" colwidth="1*"/>
                 <thead>
                     <row>
-                        <entry>Property name</entry>
-                        <entry>Purpose</entry>
+                        <entry><para>Property name</para></entry>
+                        <entry><para>Purpose</para></entry>
                     </row>
                 </thead>
                 <tbody>
                     <row>
-                        <entry>
+                        <entry><para>
                             <literal>hibernate.transaction.factory_class</literal>
-                        </entry>
-                        <entry>
+                        </para></entry>
+                        <entry><para>
                             The classname of a <literal>TransactionFactory</literal>
                             to use with Hibernate <literal>Transaction</literal> API
-                            (defaults to <literal>JDBCTransactionFactory</literal>).
+                            (defaults to <literal>JDBCTransactionFactory</literal>).</para>
                             <para>
                                 <emphasis role="strong">e.g.</emphasis> 
                                 <literal>classname.of.TransactionFactory</literal>
@@ -887,13 +894,13 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                         </entry>
                     </row>
                     <row>
-                        <entry>
+                        <entry><para>
                             <literal>jta.UserTransaction</literal>
-                        </entry>
-                        <entry>
+                        </para></entry>
+                        <entry><para>
                             A JNDI name used by <literal>JTATransactionFactory</literal> to
                             obtain the JTA <literal>UserTransaction</literal> from the
-                            application server.
+                            application server.</para>
                             <para>
                                 <emphasis role="strong">e.g.</emphasis> 
                                 <literal>jndi/composite/name</literal>
@@ -901,13 +908,14 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                         </entry>
                     </row>
                     <row>
-                        <entry>
-                            <literal>hibernate.transaction.manager_lookup_class</literal>
+                        <entry><para>
+                            <literal>hibernate.transaction.
+                            manager_lookup_class</literal></para>
                         </entry>
-                        <entry>
+                        <entry><para>
                             The classname of a <literal>TransactionManagerLookup</literal>. It is
                             required when JVM-level caching is enabled or when using hilo 
-                            generator in a JTA environment.
+                            generator in a JTA environment.</para>
                             <para>
                                 <emphasis role="strong">e.g.</emphasis> 
                                 <literal>classname.of.TransactionManagerLookup</literal>
@@ -915,14 +923,15 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                         </entry>
                     </row>
                     <row>
-                        <entry>
-                            <literal>hibernate.transaction.flush_before_completion</literal>
-                        </entry>
-                        <entry>
+                        <entry><para>
+                            <literal>hibernate.transaction.
+                            flush_before_completion</literal>
+                        </para></entry>
+                        <entry><para>
                             If enabled, the session will be automatically flushed during the
                             before completion phase of the transaction. Built-in and
                             automatic session context management is preferred, see
-                            <xref linkend="architecture-current-session"/>.
+                            <xref linkend="architecture-current-session"/>.</para>
                             <para>
                                 <emphasis role="strong">e.g.</emphasis> 
                                 <literal>true</literal> | <literal>false</literal>
@@ -930,14 +939,15 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                         </entry>
                     </row>
                     <row>
-                        <entry>
-                            <literal>hibernate.transaction.auto_close_session</literal>
-                        </entry>
-                        <entry>
+                        <entry><para>
+                            <literal>hibernate.transaction.
+                            auto_close_session</literal>
+                        </para></entry>
+                        <entry><para>
                             If enabled, the session will be automatically closed during the
                             after completion phase of the transaction. Built-in and
                             automatic session context management is preferred, see
-                            <xref linkend="architecture-current-session"/>.
+                            <xref linkend="architecture-current-session"/>.</para>
                             <para>
                                 <emphasis role="strong">e.g.</emphasis> 
                                 <literal>true</literal> | <literal>false</literal>
@@ -955,20 +965,21 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                 <colspec colname="c2" colwidth="1*"/>
                 <thead>
                     <row>
-                        <entry>Property name</entry>
-                        <entry>Purpose</entry>
+                        <entry><para>Property name</para></entry>
+                        <entry><para>Purpose</para></entry>
                     </row>
                 </thead>
                 <tbody>
                     <row>
-                        <entry>
-                            <literal>hibernate.current_session_context_class</literal>
-                        </entry>
-                        <entry>
+                        <entry><para>
+                            <literal>hibernate.
+                            current_session_context_class</literal>
+                        </para></entry>
+                        <entry><para>
                             Supply a custom strategy for the scoping of the "current"
                             <literal>Session</literal>. See
                             <xref linkend="architecture-current-session"/> for more
-                            information about the built-in strategies.
+                            information about the built-in strategies.</para>
                             <para>
                                 <emphasis role="strong">e.g.</emphasis>
                                 <literal>jta</literal> | <literal>thread</literal> |
@@ -977,11 +988,11 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                         </entry>
                     </row>
                     <row>
-                        <entry>
+                        <entry><para>
                             <literal>hibernate.query.factory_class</literal>
-                        </entry>
-                        <entry>
-                            Chooses the HQL parser implementation.
+                        </para></entry>
+                        <entry><para>
+                            Chooses the HQL parser implementation.</para>
                             <para>
                                 <emphasis role="strong">e.g.</emphasis> 
                                 <literal>org.hibernate.hql.ast.ASTQueryTranslatorFactory</literal> or
@@ -990,12 +1001,12 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                         </entry>
                     </row>
                     <row>
-                        <entry>
+                        <entry><para>
                             <literal>hibernate.query.substitutions</literal>
-                        </entry>
-                        <entry>
+                        </para></entry>
+                        <entry><para>
                             Is used to map from tokens in Hibernate queries to SQL tokens
-                            (tokens might be function or literal names, for example).
+                            (tokens might be function or literal names, for example).</para>
                             <para>
                                 <emphasis role="strong">e.g.</emphasis> 
                                 <literal>hqlLiteral=SQL_LITERAL, hqlFunction=SQLFUNC</literal>
@@ -1003,15 +1014,15 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                         </entry>
                     </row>
                     <row>
-                        <entry>
+                        <entry><para>
                             <literal>hibernate.hbm2ddl.auto</literal>
-                        </entry>
-                        <entry>
+                        </para></entry>
+                        <entry><para>
                             Automatically validates or exports schema DDL to the database 
                             when the <literal>SessionFactory</literal> is created. With
                             <literal>create-drop</literal>, the database schema will be 
                             dropped when the <literal>SessionFactory</literal> is closed 
-                            explicitly.
+                            explicitly.</para>
                             <para>
                                 <emphasis role="strong">e.g.</emphasis> 
                                 <literal>validate</literal> | <literal>update</literal> | 
@@ -1020,14 +1031,16 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                         </entry>
                     </row>
                     <row>
-                        <entry>
-                            <literal>hibernate.cglib.use_reflection_optimizer</literal>
-                        </entry>
-                        <entry>
+                        <entry><para>
+                            <literal>hibernate.cglib.
+                            use_reflection_optimizer</literal>
+                        </para></entry>
+                        <entry><para>
                             Enables the use of CGLIB instead of runtime reflection (System-level
                             property). Reflection can sometimes be useful when troubleshooting.
                             Hibernate always requires CGLIB even if you turn off the
                             optimizer. You cannot set this property in <literal>hibernate.cfg.xml</literal>.
+                            </para>
                             <para>
                                 <emphasis role="strong">e.g.</emphasis> 
                                 <literal>true</literal> | <literal>false</literal>
@@ -1038,7 +1051,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
             </tgroup>
         </table>
 
-        <sect2 id="configuration-optional-dialects" revision="1">
+        <section id="configuration-optional-dialects" revision="1">
             <title>SQL Dialects</title>
 
             <para>
@@ -1051,91 +1064,93 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
             <table frame="topbot" id="sql-dialects" revision="3">
                 <title>Hibernate SQL Dialects (<literal>hibernate.dialect</literal>)</title>
                 <tgroup cols="2">
+<!--
                     <colspec colwidth="1*"/>
                     <colspec colwidth="2.5*"/>
+-->
                     <thead>
                         <row>
-                            <entry>RDBMS</entry>
-                            <entry>Dialect</entry>
+                            <entry><para>RDBMS</para></entry>
+                            <entry><para>Dialect</para></entry>
                         </row>
                     </thead>
                     <tbody>
                         <row>
-                            <entry>DB2</entry> <entry><literal>org.hibernate.dialect.DB2Dialect</literal></entry>
+                            <entry><para>DB2</para></entry> <entry><para><literal>org.hibernate.dialect.DB2Dialect</literal></para></entry>
                         </row>
                         <row>
-                            <entry>DB2 AS/400</entry> <entry><literal>org.hibernate.dialect.DB2400Dialect</literal></entry>
+                            <entry><para>DB2 AS/400</para></entry> <entry><para><literal>org.hibernate.dialect.DB2400Dialect</literal></para></entry>
                         </row>
                         <row>
-                            <entry>DB2 OS390</entry> <entry><literal>org.hibernate.dialect.DB2390Dialect</literal></entry>
+                            <entry><para>DB2 OS390</para></entry> <entry><para><literal>org.hibernate.dialect.DB2390Dialect</literal></para></entry>
                         </row>
                         <row>
-                            <entry>PostgreSQL</entry> <entry><literal>org.hibernate.dialect.PostgreSQLDialect</literal></entry>
+                            <entry><para>PostgreSQL</para></entry> <entry><para><literal>org.hibernate.dialect.PostgreSQLDialect</literal></para></entry>
                         </row>
                         <row>
-                            <entry>MySQL</entry> <entry><literal>org.hibernate.dialect.MySQLDialect</literal></entry>
+                            <entry><para>MySQL</para></entry> <entry><para><literal>org.hibernate.dialect.MySQLDialect</literal></para></entry>
                         </row>
                         <row>
-                            <entry>MySQL with InnoDB</entry> <entry><literal>org.hibernate.dialect.MySQLInnoDBDialect</literal></entry>
+                            <entry><para>MySQL with InnoDB</para></entry> <entry><para><literal>org.hibernate.dialect.MySQLInnoDBDialect</literal></para></entry>
                         </row>
                         <row>
-                            <entry>MySQL with MyISAM</entry> <entry><literal>org.hibernate.dialect.MySQLMyISAMDialect</literal></entry>
+                            <entry><para>MySQL with MyISAM</para></entry> <entry><para><literal>org.hibernate.dialect.MySQLMyISAMDialect</literal></para></entry>
                         </row>
                         <row>
-                            <entry>Oracle (any version)</entry> <entry><literal>org.hibernate.dialect.OracleDialect</literal></entry>
+                            <entry><para>Oracle (any version)</para></entry> <entry><para><literal>org.hibernate.dialect.OracleDialect</literal></para></entry>
                         </row>
                         <row>
-                            <entry>Oracle 9i</entry> <entry><literal>org.hibernate.dialect.Oracle9iDialect</literal></entry>
+                            <entry><para>Oracle 9i</para></entry> <entry><para><literal>org.hibernate.dialect.Oracle9iDialect</literal></para></entry>
                         </row>
                         <row>
-                            <entry>Oracle 10g</entry> <entry><literal>org.hibernate.dialect.Oracle10gDialect</literal></entry>
+                            <entry><para>Oracle 10g</para></entry> <entry><para><literal>org.hibernate.dialect.Oracle10gDialect</literal></para></entry>
                         </row>
                         <row>
-                            <entry>Sybase</entry> <entry><literal>org.hibernate.dialect.SybaseDialect</literal></entry>
+                            <entry><para>Sybase</para></entry> <entry><para><literal>org.hibernate.dialect.SybaseDialect</literal></para></entry>
                         </row>
                         <row>
-                            <entry>Sybase Anywhere</entry> <entry><literal>org.hibernate.dialect.SybaseAnywhereDialect</literal></entry>
+                            <entry><para>Sybase Anywhere</para></entry> <entry><para><literal>org.hibernate.dialect.SybaseAnywhereDialect</literal></para></entry>
                         </row>
                         <row>
-                            <entry>Microsoft SQL Server</entry> <entry><literal>org.hibernate.dialect.SQLServerDialect</literal></entry>
+                            <entry><para>Microsoft SQL Server</para></entry> <entry><para><literal>org.hibernate.dialect.SQLServerDialect</literal></para></entry>
                         </row>
                         <row>
-                            <entry>SAP DB</entry> <entry><literal>org.hibernate.dialect.SAPDBDialect</literal></entry>
+                            <entry><para>SAP DB</para></entry> <entry><para><literal>org.hibernate.dialect.SAPDBDialect</literal></para></entry>
                         </row>
                         <row>
-                            <entry>Informix</entry> <entry><literal>org.hibernate.dialect.InformixDialect</literal></entry>
+                            <entry><para>Informix</para></entry> <entry><para><literal>org.hibernate.dialect.InformixDialect</literal></para></entry>
                         </row>
                         <row>
-                            <entry>HypersonicSQL</entry> <entry><literal>org.hibernate.dialect.HSQLDialect</literal></entry>
+                            <entry><para>HypersonicSQL</para></entry> <entry><para><literal>org.hibernate.dialect.HSQLDialect</literal></para></entry>
                         </row>
                         <row>
-                            <entry>Ingres</entry> <entry><literal>org.hibernate.dialect.IngresDialect</literal></entry>
+                            <entry><para>Ingres</para></entry> <entry><para><literal>org.hibernate.dialect.IngresDialect</literal></para></entry>
                         </row>
                         <row>
-                            <entry>Progress</entry> <entry><literal>org.hibernate.dialect.ProgressDialect</literal></entry>
+                            <entry><para>Progress</para></entry> <entry><para><literal>org.hibernate.dialect.ProgressDialect</literal></para></entry>
                         </row>
                         <row>
-                            <entry>Mckoi SQL</entry> <entry><literal>org.hibernate.dialect.MckoiDialect</literal></entry>
+                            <entry><para>Mckoi SQL</para></entry> <entry><para><literal>org.hibernate.dialect.MckoiDialect</literal></para></entry>
                         </row>
                         <row>
-                            <entry>Interbase</entry> <entry><literal>org.hibernate.dialect.InterbaseDialect</literal></entry>
+                            <entry><para>Interbase</para></entry> <entry><para><literal>org.hibernate.dialect.InterbaseDialect</literal></para></entry>
                         </row>
                         <row>
-                            <entry>Pointbase</entry> <entry><literal>org.hibernate.dialect.PointbaseDialect</literal></entry>
+                            <entry><para>Pointbase</para></entry> <entry><para><literal>org.hibernate.dialect.PointbaseDialect</literal></para></entry>
                         </row>
                         <row>
-                            <entry>FrontBase</entry> <entry><literal>org.hibernate.dialect.FrontbaseDialect</literal></entry>
+                            <entry><para>FrontBase</para></entry> <entry><para><literal>org.hibernate.dialect.FrontbaseDialect</literal></para></entry>
                         </row>
                         <row>
-                            <entry>Firebird</entry> <entry><literal>org.hibernate.dialect.FirebirdDialect</literal></entry>
+                            <entry><para>Firebird</para></entry> <entry><para><literal>org.hibernate.dialect.FirebirdDialect</literal></para></entry>
                         </row>
                     </tbody>
                 </tgroup>
             </table>
 
-        </sect2>
+        </section>
 
-        <sect2 id="configuration-optional-outerjoin" revision="4">
+        <section id="configuration-optional-outerjoin" revision="4">
             <title>Outer Join Fetching</title>
 
             <para>
@@ -1159,9 +1174,9 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                 See <xref linkend="performance-fetching"/> for more information.
             </para>
 
-        </sect2>
+        </section>
 
-        <sect2 id="configuration-optional-binarystreams" revision="1">
+        <section id="configuration-optional-binarystreams" revision="1">
             <title>Binary Streams</title>
 
             <para>
@@ -1172,9 +1187,9 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                 <emphasis>This is a system-level setting only.</emphasis>
             </para>
 
-        </sect2>
+        </section>
 
-        <sect2 id="configuration-optional-cacheprovider" revision="2">
+        <section id="configuration-optional-cacheprovider" revision="2">
             <title>Second-level and query cache</title>
 
             <para>
@@ -1184,9 +1199,9 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                 more information.
             </para>
 
-        </sect2>
+        </section>
 
-        <sect2 id="configuration-optional-querysubstitution">
+        <section id="configuration-optional-querysubstitution">
             <title>Query Language Substitution</title>
 
             <para>
@@ -1207,9 +1222,9 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                 This would allow you to rename the SQL <literal>LOWER</literal> function.
             </para>
 
-        </sect2>
+        </section>
 
-        <sect2 id="configuration-optional-statistics" revision="2">
+        <section id="configuration-optional-statistics" revision="2">
             <title>Hibernate statistics</title>
 
             <para>
@@ -1220,10 +1235,10 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                 <literal>org.hibernate.stats</literal> for more information.
             </para>
 
-        </sect2>
-    </sect1>
+        </section>
+    </section>
 
-    <sect1 id="configuration-logging">
+    <section id="configuration-logging">
         <title>Logging</title>
 
         <para>
@@ -1252,58 +1267,61 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                     <colspec colwidth="2.5*"/>
                     <thead>
                         <row>
-                            <entry>Category</entry>
-                            <entry>Function</entry>
+                            <entry><para>Category</para></entry>
+                            <entry><para>Function</para></entry>
                         </row>
                     </thead>
                     <tbody>
                         <row>
-                            <entry><literal>org.hibernate.SQL</literal></entry>
-                            <entry>Log all SQL DML statements as they are executed</entry>
+                            <entry><para><literal>org.hibernate.SQL</literal></para></entry>
+                            <entry><para>Log all SQL DML statements as they are executed</para></entry>
                         </row>
                         <row>
-                            <entry><literal>org.hibernate.type</literal></entry>
-                            <entry>Log all JDBC parameters</entry>
+                            <entry><para><literal>org.hibernate.type</literal></para></entry>
+                            <entry><para>Log all JDBC parameters</para></entry>
                         </row>
                         <row>
-                            <entry><literal>org.hibernate.tool.hbm2ddl</literal></entry>
-                            <entry>Log all SQL DDL statements as they are executed</entry>
+                            <entry><para><literal>org.hibernate.tool.
+                            hbm2ddl</literal></para></entry>
+                            <entry><para>Log all SQL DDL statements as they are executed</para></entry>
                         </row>
                         <row>
-                            <entry><literal>org.hibernate.pretty</literal></entry>
-                            <entry>
+                            <entry><para><literal>org.hibernate.pretty</literal></para></entry>
+                            <entry><para>
                                 Log the state of all entities (max 20 entities) associated
                                 with the session at flush time
-                            </entry>
+                            </para></entry>
                         </row>
                         <row>
-                            <entry><literal>org.hibernate.cache</literal></entry>
-                            <entry>Log all second-level cache activity</entry>
+                            <entry><para><literal>org.hibernate.cache</literal></para></entry>
+                            <entry><para>Log all second-level cache activity</para></entry>
                         </row>
                         <row>
-                            <entry><literal>org.hibernate.transaction</literal></entry>
-                            <entry>Log transaction related activity</entry>
+                            <entry><para><literal>org.hibernate.
+                            transaction</literal></para></entry>
+                            <entry><para>Log transaction related activity</para></entry>
                         </row>
                         <row>
-                            <entry><literal>org.hibernate.jdbc</literal></entry>
-                            <entry>Log all JDBC resource acquisition</entry>
+                            <entry><para><literal>org.hibernate.jdbc</literal></para></entry>
+                            <entry><para>Log all JDBC resource acquisition</para></entry>
                         </row>
                         <row>
-                            <entry><literal>org.hibernate.hql.ast.AST</literal></entry>
-                            <entry>
+                            <entry><para><literal>org.hibernate.hql.
+                            ast.AST</literal></para></entry>
+                            <entry><para>
                                 Log HQL and SQL ASTs during query parsing
-                            </entry>
+                            </para></entry>
                         </row>
                         <row>
-                            <entry><literal>org.hibernate.secure</literal></entry>
-                            <entry>Log all JAAS authorization requests</entry>
+                            <entry><para><literal>org.hibernate.secure</literal></para></entry>
+                            <entry><para>Log all JAAS authorization requests</para></entry>
                         </row>
                         <row>
-                            <entry><literal>org.hibernate</literal></entry>
-                            <entry>
+                            <entry><para><literal>org.hibernate</literal></para></entry>
+                            <entry><para>
                                 Log everything. This is a lot of information but it is useful for
                                 troubleshooting
-                            </entry>
+                            </para></entry>
                         </row>
                     </tbody>
                 </tgroup>
@@ -1316,9 +1334,9 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
         </para>
                        
         
-    </sect1>
+    </section>
 
-    <sect1 id="configuration-namingstrategy">
+    <section id="configuration-namingstrategy">
         <title>Implementing a <literal>NamingStrategy</literal></title>
 
         <para>
@@ -1351,9 +1369,9 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
             strategy that might be a useful starting point for some applications.
         </para>
 
-    </sect1>
+    </section>
 
-    <sect1 id="configuration-xmlconfig" revision="2">
+    <section id="configuration-xmlconfig" revision="2">
         <title>XML configuration file</title>
 
         <para>
@@ -1424,9 +1442,9 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
     .configure("catdb.cfg.xml")
     .buildSessionFactory();]]></programlisting>
 
-    </sect1>
+    </section>
 
-    <sect1 id="configuration-j2ee" revision="1">
+    <section id="configuration-j2ee" revision="1">
         <title>J2EE Application Server integration</title>
 
         <para>
@@ -1489,7 +1507,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
             application server shows "connection containment" exceptions.
         </para>
 
-        <sect2 id="configuration-optional-transactionstrategy" revision="3">
+        <section id="configuration-optional-transactionstrategy" revision="3">
             <title>Transaction strategy configuration</title>
 
             <para>
@@ -1555,58 +1573,68 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                     <colspec colwidth="1*"/>
                     <thead>
                         <row>
-                            <entry>Transaction Factory</entry>
-                            <entry align="center">Application Server</entry>
+                            <entry><para>Transaction Factory</para></entry>
+                            <entry align="center"><para>Application Server</para></entry>
                         </row>
                     </thead>
                     <tbody>
                         <row>
-                            <entry><literal>org.hibernate.transaction.JBossTransactionManagerLookup</literal></entry>
-                            <entry align="center">JBoss</entry>
+                            <entry><para><literal>org.hibernate.transaction.
+                            JBossTransactionManagerLookup</literal></para></entry>
+                            <entry align="center"><para>JBoss</para></entry>
                         </row>
                         <row>
-                            <entry><literal>org.hibernate.transaction.WeblogicTransactionManagerLookup</literal></entry>
-                            <entry align="center">Weblogic</entry>
+                            <entry><para><literal>org.hibernate.transaction.
+                            WeblogicTransactionManagerLookup</literal></para></entry>
+                            <entry align="center"><para>Weblogic</para></entry>
                         </row>
                         <row>
-                            <entry><literal>org.hibernate.transaction.WebSphereTransactionManagerLookup</literal></entry>
-                            <entry align="center">WebSphere</entry>
+                            <entry><para><literal>org.hibernate.transaction.
+                            WebSphereTransactionManagerLookup</literal></para></entry>
+                            <entry align="center"><para>WebSphere</para></entry>
                         </row>
                         <row>
-                            <entry><literal>org.hibernate.transaction.WebSphereExtendedJTATransactionLookup</literal></entry>
-                            <entry align="center">WebSphere 6</entry>
+                            <entry><para><literal>org.hibernate.transaction.
+                            WebSphereExtendedJTATransactionLookup</literal></para></entry>
+                            <entry align="center"><para>WebSphere 6</para></entry>
                         </row>
                         <row>
-                            <entry><literal>org.hibernate.transaction.OrionTransactionManagerLookup</literal></entry>
-                            <entry align="center">Orion</entry>
+                            <entry><para><literal>org.hibernate.transaction.
+                            OrionTransactionManagerLookup</literal></para></entry>
+                            <entry align="center"><para>Orion</para></entry>
                         </row>
                         <row>
-                            <entry><literal>org.hibernate.transaction.ResinTransactionManagerLookup</literal></entry>
-                            <entry align="center">Resin</entry>
+                            <entry><para><literal>org.hibernate.transaction.
+                            ResinTransactionManagerLookup</literal></para></entry>
+                            <entry align="center"><para>Resin</para></entry>
                         </row>
                         <row>
-                            <entry><literal>org.hibernate.transaction.JOTMTransactionManagerLookup</literal></entry>
-                            <entry align="center">JOTM</entry>
+                            <entry><para><literal>org.hibernate.transaction.
+                            JOTMTransactionManagerLookup</literal></para></entry>
+                            <entry align="center"><para>JOTM</para></entry>
                         </row>
                         <row>
-                            <entry><literal>org.hibernate.transaction.JOnASTransactionManagerLookup</literal></entry>
-                            <entry align="center">JOnAS</entry>
+                            <entry><para><literal>org.hibernate.transaction.
+                            JOnASTransactionManagerLookup</literal></para></entry>
+                            <entry align="center"><para>JOnAS</para></entry>
                         </row>
                         <row>
-                            <entry><literal>org.hibernate.transaction.JRun4TransactionManagerLookup</literal></entry>
-                            <entry align="center">JRun4</entry>
+                            <entry><para><literal>org.hibernate.transaction.
+                            JRun4TransactionManagerLookup</literal></para></entry>
+                            <entry align="center"><para>JRun4</para></entry>
                         </row>
                         <row>
-                            <entry><literal>org.hibernate.transaction.BESTransactionManagerLookup</literal></entry>
-                            <entry align="center">Borland ES</entry>
+                            <entry><para><literal>org.hibernate.transaction.
+                            BESTransactionManagerLookup</literal></para></entry>
+                            <entry align="center"><para>Borland ES</para></entry>
                         </row>
                     </tbody>
                 </tgroup>
             </table>
 
-        </sect2>
+        </section>
 
-        <sect2 id="configuration-optional-jndi" revision="3">
+        <section id="configuration-optional-jndi" revision="3">
             <title>JNDI-bound <literal>SessionFactory</literal></title>
 
             <para>
@@ -1652,15 +1680,15 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                 class is also a convenient way to startup Hibernate&mdash;see chapter 1.
             </para>
 
-        </sect2>
+        </section>
 
-        <sect2 id="configuration-j2ee-currentsession" revision="4">
+        <section id="configuration-j2ee-currentsession" revision="4">
             <title>Current Session context management with JTA</title>
 
             <para>
                 The easiest way to handle <literal>Sessions</literal> and transactions is
                 Hibernate's automatic "current" <literal>Session</literal> management.
-                For a discussion of contextual sessions see <xref linkend="architecture-current-session"/>.
+                For a discussion of contextual sessions see <xref linkend="architecture-current-session" />.
                 Using the <literal>"jta"</literal> session context, if there is no Hibernate
                 <literal>Session</literal> associated with the current JTA transaction, one will
 	            be started and associated with that JTA transaction the first time you call
@@ -1677,9 +1705,9 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
 	            demarcation with CMT is preferred.
             </para>
 
-        </sect2>
+        </section>
 
-        <sect2 id="configuration-j2ee-jmx" revision="1">
+        <section id="configuration-j2ee-jmx" revision="1">
             <title>JMX deployment</title>
 
             <para>
@@ -1750,9 +1778,9 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect]]></programlisting>
                 documentation for more information about JMX service and EJB deployment.
             </para>
 
-        </sect2>
+        </section>
 
-    </sect1>
+    </section>
 
 </chapter>
 

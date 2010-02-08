@@ -1,4 +1,8 @@
-<?xml version='1.0' encoding="UTF-8"?>
+<?xml version='1.0' encoding='utf-8' ?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
+<!ENTITY % BOOK_ENTITIES SYSTEM "../Hibernate_Core_Reference_Guide.ent">
+%BOOK_ENTITIES;
+]>
 <!--
   ~ Hibernate, Relational Persistence for Idiomatic Java
   ~
@@ -22,8 +26,6 @@
   ~ 51 Franklin Street, Fifth Floor
   ~ Boston, MA  02110-1301  USA
   -->
-
-<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
 
 <chapter id="toolsetguide" revision="2">
     <title>Toolset Guide</title>
@@ -75,7 +77,7 @@
         be used from "inside" Hibernate.
     </para>
 
-    <sect1 id="toolsetguide-s1" revision="2">
+    <section id="toolsetguide-s1" revision="2">
         <title>Automatic schema generation</title>
 
         <para>
@@ -95,7 +97,7 @@
             First, you must customize your mapping files to improve the generated schema. The next section covers schema customization.  
         </para>
 
-        <sect2 id="toolsetguide-s1-2" revision="3">
+        <section id="toolsetguide-s1-2" revision="3">
             <title>Customizing the schema</title>
 
             <para>
@@ -203,80 +205,80 @@
                     <colspec colwidth="2.5*"/>
                     <thead>
                         <row>
-                            <entry>Attribute</entry>
-                            <entry>Values</entry>
-                            <entry>Interpretation</entry>
+                            <entry><para>Attribute</para></entry>
+                            <entry><para>Values</para></entry>
+                            <entry><para>Interpretation</para></entry>
                         </row>
                     </thead>
                     <tbody>
                         <row>
-                            <entry><literal>length</literal></entry>
-                            <entry>number</entry>
-                            <entry>column length</entry>
+                            <entry><para><literal>length</literal></para></entry>
+                            <entry><para>number</para></entry>
+                            <entry><para>column length</para></entry>
                         </row>
                         <row>
-                            <entry><literal>precision</literal></entry>
-                            <entry>number</entry>
-                            <entry>column decimal precision</entry>
+                            <entry><para><literal>precision</literal></para></entry>
+                            <entry><para>number</para></entry>
+                            <entry><para>column decimal precision</para></entry>
                         </row>
                         <row>
-                            <entry><literal>scale</literal></entry>
-                            <entry>number</entry>
-                            <entry>column decimal scale</entry>
+                            <entry><para><literal>scale</literal></para></entry>
+                            <entry><para>number</para></entry>
+                            <entry><para>column decimal scale</para></entry>
                         </row>
                         <row>
-                            <entry><literal>not-null</literal></entry>
-                            <entry><literal>true|false</literal></entry>
-                            <entry>specifies that the column should be non-nullable</entry>
+                            <entry><para><literal>not-null</literal></para></entry>
+                            <entry><para><literal>true|false</literal></para></entry>
+                            <entry><para>specifies that the column should be non-nullable</para></entry>
                         </row>
                         <row>
-                            <entry><literal>unique</literal></entry>
-                            <entry><literal>true|false</literal></entry>
-                            <entry>specifies that the column should have a unique constraint</entry>
+                            <entry><para><literal>unique</literal></para></entry>
+                            <entry><para><literal>true|false</literal></para></entry>
+                            <entry><para>specifies that the column should have a unique constraint</para></entry>
                         </row>
                         <row>
-                            <entry><literal>index</literal></entry>
-                            <entry><literal>index_name</literal></entry>
-                            <entry>specifies the name of a (multi-column) index</entry>
+                            <entry><para><literal>index</literal></para></entry>
+                            <entry><para><literal>index_name</literal></para></entry>
+                            <entry><para>specifies the name of a (multi-column) index</para></entry>
                         </row>
                         <row>
-                            <entry><literal>unique-key</literal></entry>
-                            <entry><literal>unique_key_name</literal></entry>
-                            <entry>specifies the name of a multi-column unique constraint</entry>
+                            <entry><para><literal>unique-key</literal></para></entry>
+                            <entry><para><literal>unique_key_name</literal></para></entry>
+                            <entry><para>specifies the name of a multi-column unique constraint</para></entry>
                         </row>
                         <row>
-                            <entry><literal>foreign-key</literal></entry>
-                            <entry><literal>foreign_key_name</literal></entry>
-                            <entry>
+                            <entry><para><literal>foreign-key</literal></para></entry>
+                            <entry><para><literal>foreign_key_name</literal></para></entry>
+                            <entry><para>
                                 specifies the name of the foreign key constraint generated
                                 for an association, for a <literal>&lt;one-to-one&gt;</literal>, 
                                 <literal>&lt;many-to-one&gt;</literal>, <literal>&lt;key&gt;</literal>, 
                                 or <literal>&lt;many-to-many&gt;</literal> mapping element. Note that
                                 <literal>inverse="true"</literal> sides will not be considered
                                 by <literal>SchemaExport</literal>.
-                            </entry>
+                            </para></entry>
                         </row>
                         <row>
-                            <entry><literal>sql-type</literal></entry>
-                            <entry><literal>SQL column type</literal></entry>
-                            <entry>
+                            <entry><para><literal>sql-type</literal></para></entry>
+                            <entry><para><literal>SQL column type</literal></para></entry>
+                            <entry><para>
                                 overrides the default column type (attribute of 
                                 <literal>&lt;column&gt;</literal> element only)
-                            </entry>
+                            </para></entry>
                        </row>
                        <row>
-                            <entry><literal>default</literal></entry>
-                            <entry>SQL expression</entry>
-                            <entry>
+                            <entry><para><literal>default</literal></para></entry>
+                            <entry><para>SQL expression</para></entry>
+                            <entry><para>
                                 specify a default value for the column
-                            </entry>
+                            </para></entry>
                        </row>
                        <row>
-                            <entry><literal>check</literal></entry>
-                            <entry>SQL expression</entry>
-                            <entry>
+                            <entry><para><literal>check</literal></para></entry>
+                            <entry><para>SQL expression</para></entry>
+                            <entry><para>
                                 create an SQL check constraint on either column or table
-                            </entry>
+                            </para></entry>
                        </row>
                    </tbody>
                 </tgroup>
@@ -304,9 +306,9 @@
                 DDL where supported.
             </para>
 
-        </sect2>
+        </section>
 
-        <sect2 id="toolsetguide-s1-3" revision="2">
+        <section id="toolsetguide-s1-3" revision="2">
             <title>Running the tool</title>
 
             <para>
@@ -328,50 +330,50 @@
                     <colspec colwidth="2*"/>
                     <thead>
                         <row>
-                            <entry>Option</entry>
-                            <entry>Description</entry>
+                            <entry><para>Option</para></entry>
+                            <entry><para>Description</para></entry>
                         </row>
                     </thead>
                     <tbody>
                         <row>
-                            <entry><literal>--quiet</literal></entry>
-                            <entry>do not output the script to stdout</entry>
+                            <entry><para><literal>--quiet</literal></para></entry>
+                            <entry><para>do not output the script to stdout</para></entry>
                         </row>
                         <row>
-                            <entry><literal>--drop</literal></entry>
-                            <entry>only drop the tables</entry>
+                            <entry><para><literal>--drop</literal></para></entry>
+                            <entry><para>only drop the tables</para></entry>
                         </row>
                         <row>
-                            <entry><literal>--create</literal></entry>
-                            <entry>only create the tables</entry>
+                            <entry><para><literal>--create</literal></para></entry>
+                            <entry><para>only create the tables</para></entry>
                         </row>
                         <row>
-                            <entry><literal>--text</literal></entry>
-                            <entry>do not export to the database</entry>
+                            <entry><para><literal>--text</literal></para></entry>
+                            <entry><para>do not export to the database</para></entry>
                         </row>
                         <row>
-                            <entry><literal>--output=my_schema.ddl</literal></entry>
-                            <entry>output the ddl script to a file</entry>
+                            <entry><para><literal>--output=my_schema.ddl</literal></para></entry>
+                            <entry><para>output the ddl script to a file</para></entry>
                         </row>
                         <row>
-                            <entry><literal>--naming=eg.MyNamingStrategy</literal></entry>
-                            <entry>select a <literal>NamingStrategy</literal></entry>
+                            <entry><para><literal>--naming=eg.MyNamingStrategy</literal></para></entry>
+                            <entry><para>select a <literal>NamingStrategy</literal></para></entry>
                         </row>
                          <row>
-                            <entry><literal>--config=hibernate.cfg.xml</literal></entry>
-                            <entry>read Hibernate configuration from an XML file</entry>
+                            <entry><para><literal>--config=hibernate.cfg.xml</literal></para></entry>
+                            <entry><para>read Hibernate configuration from an XML file</para></entry>
                         </row>
                         <row>
-                            <entry><literal>--properties=hibernate.properties</literal></entry>
-                            <entry>read database properties from a file</entry>
+                            <entry><para><literal>--properties=hibernate.properties</literal></para></entry>
+                            <entry><para>read database properties from a file</para></entry>
                         </row>
                         <row>
-                            <entry><literal>--format</literal></entry>
-                            <entry>format the generated SQL nicely in the script</entry>
+                            <entry><para><literal>--format</literal></para></entry>
+                            <entry><para>format the generated SQL nicely in the script</para></entry>
                         </row>
                         <row>
-                            <entry><literal>--delimiter=;</literal></entry>
-                            <entry>set an end of line delimiter for the script</entry>
+                            <entry><para><literal>--delimiter=;</literal></para></entry>
+                            <entry><para>set an end of line delimiter for the script</para></entry>
                         </row>
                     </tbody>
                 </tgroup>
@@ -384,9 +386,9 @@
             <programlisting><![CDATA[Configuration cfg = ....;
 new SchemaExport(cfg).create(false, true);]]></programlisting>
 
-        </sect2>
+        </section>
 
-        <sect2 id="toolsetguide-s1-4">
+        <section id="toolsetguide-s1-4">
             <title>Properties</title>
 
             <para>
@@ -416,38 +418,38 @@ new SchemaExport(cfg).create(false, true);]]></programlisting>
                     <colspec colwidth="2*"/>
                     <thead>
                         <row>
-                            <entry>Property Name</entry>
-                            <entry>Description</entry>
+                            <entry><para>Property Name</para></entry>
+                            <entry><para>Description</para></entry>
                         </row>
                     </thead>
                     <tbody>
                     <row>
-                        <entry><literal>hibernate.connection.driver_class</literal></entry>
-                        <entry>jdbc driver class</entry>
+                        <entry><para><literal>hibernate.connection.driver_class</literal></para></entry>
+                        <entry><para>jdbc driver class</para></entry>
                     </row>
                     <row>
-                        <entry><literal>hibernate.connection.url</literal></entry>
-                        <entry>jdbc url</entry>
+                        <entry><para><literal>hibernate.connection.url</literal></para></entry>
+                        <entry><para>jdbc url</para></entry>
                     </row>
                     <row>
-                        <entry><literal>hibernate.connection.username</literal></entry>
-                        <entry>database user</entry>
+                        <entry><para><literal>hibernate.connection.username</literal></para></entry>
+                        <entry><para>database user</para></entry>
                     </row>
                     <row>
-                        <entry><literal>hibernate.connection.password</literal></entry>
-                        <entry>user password</entry>
+                        <entry><para><literal>hibernate.connection.password</literal></para></entry>
+                        <entry><para>user password</para></entry>
                     </row>
                     <row>
-                        <entry><literal>hibernate.dialect</literal></entry>
-                        <entry>dialect</entry>
+                        <entry><para><literal>hibernate.dialect</literal></para></entry>
+                        <entry><para>dialect</para></entry>
                     </row>
                     </tbody>
                 </tgroup>
             </table>
 
-        </sect2>
+        </section>
 
-        <sect2 id="toolsetguide-s1-5">
+        <section id="toolsetguide-s1-5">
             <title>Using Ant</title>
 
             <para>
@@ -472,9 +474,9 @@ new SchemaExport(cfg).create(false, true);]]></programlisting>
     </schemaexport>
 </target>]]></programlisting>
 
-        </sect2>
+        </section>
 
-        <sect2 id="toolsetguide-s1-6" revision="2">
+        <section id="toolsetguide-s1-6" revision="2">
             <title>Incremental schema updates</title>
 
             <para>
@@ -495,30 +497,30 @@ new SchemaExport(cfg).create(false, true);]]></programlisting>
                     <colspec colwidth="2*"/>
                     <thead>
                         <row>
-                            <entry>Option</entry>
-                            <entry>Description</entry>
+                            <entry><para>Option</para></entry>
+                            <entry><para>Description</para></entry>
                         </row>
                     </thead>
                     <tbody>
                         <row>
-                            <entry><literal>--quiet</literal></entry>
-                            <entry>do not output the script to stdout</entry>
+                            <entry><para><literal>--quiet</literal></para></entry>
+                            <entry><para>do not output the script to stdout</para></entry>
                         </row>
                         <row>
-                            <entry><literal>--text</literal></entry>
-                            <entry>do not export the script to the database</entry>
+                            <entry><para><literal>--text</literal></para></entry>
+                            <entry><para>do not export the script to the database</para></entry>
                         </row>
                         <row>
-                            <entry><literal>--naming=eg.MyNamingStrategy</literal></entry>
-                            <entry>select a <literal>NamingStrategy</literal></entry>
+                            <entry><para><literal>--naming=eg.MyNamingStrategy</literal></para></entry>
+                            <entry><para>select a <literal>NamingStrategy</literal></para></entry>
                         </row>
                         <row>
-                            <entry><literal>--properties=hibernate.properties</literal></entry>
-                            <entry>read database properties from a file</entry>
+                            <entry><para><literal>--properties=hibernate.properties</literal></para></entry>
+                            <entry><para>read database properties from a file</para></entry>
                         </row>
                         <row>
-                            <entry><literal>--config=hibernate.cfg.xml</literal></entry>
-                            <entry>specify a <literal>.cfg.xml</literal> file</entry>
+                            <entry><para><literal>--config=hibernate.cfg.xml</literal></para></entry>
+                            <entry><para>specify a <literal>.cfg.xml</literal> file</para></entry>
                         </row>
                      </tbody>
                 </tgroup>
@@ -531,9 +533,9 @@ new SchemaExport(cfg).create(false, true);]]></programlisting>
             <programlisting><![CDATA[Configuration cfg = ....;
 new SchemaUpdate(cfg).execute(false);]]></programlisting>
 
-        </sect2>
+        </section>
 
-        <sect2 id="toolsetguide-s1-7">
+        <section id="toolsetguide-s1-7">
             <title>Using Ant for incremental schema updates</title>
 
             <para>
@@ -554,9 +556,9 @@ new SchemaUpdate(cfg).execute(false);]]></programlisting>
     </schemaupdate>
 </target>]]></programlisting>
 
-        </sect2>
+        </section>
 
-        <sect2 id="toolsetguide-s1-8" revision="1">
+        <section id="toolsetguide-s1-8" revision="1">
             <title>Schema validation</title>
 
             <para>
@@ -569,7 +571,7 @@ new SchemaUpdate(cfg).execute(false);]]></programlisting>
                 <literal>java -cp </literal><emphasis>hibernate_classpaths</emphasis>
                 <literal>org.hibernate.tool.hbm2ddl.SchemaValidator</literal> <emphasis>options mapping_files</emphasis>
             </para>
-
+<para>The following table displays the <literal>SchemaValidator</literal> command line options: </para>
             <table frame="topbot">
                 <title><literal>SchemaValidator</literal> Command Line Options</title>
                 <tgroup cols="2">
@@ -577,22 +579,22 @@ new SchemaUpdate(cfg).execute(false);]]></programlisting>
                     <colspec colwidth="2*"/>
                     <thead>
                         <row>
-                            <entry>Option</entry>
-                            <entry>Description</entry>
+                            <entry><para>Option</para></entry>
+                            <entry><para>Description</para></entry>
                         </row>
                     </thead>
                     <tbody>
                         <row>
-                            <entry><literal>--naming=eg.MyNamingStrategy</literal></entry>
-                            <entry>select a <literal>NamingStrategy</literal></entry>
+                            <entry><para><literal>--naming=eg.MyNamingStrategy</literal></para></entry>
+                            <entry><para>select a <literal>NamingStrategy</literal></para></entry>
                         </row>
                         <row>
-                            <entry><literal>--properties=hibernate.properties</literal></entry>
-                            <entry>read database properties from a file</entry>
+                            <entry><para><literal>--properties=hibernate.properties</literal></para></entry>
+                            <entry><para>read database properties from a file</para></entry>
                         </row>
                         <row>
-                            <entry><literal>--config=hibernate.cfg.xml</literal></entry>
-                            <entry>specify a <literal>.cfg.xml</literal> file</entry>
+                            <entry><para><literal>--config=hibernate.cfg.xml</literal></para></entry>
+                            <entry><para>specify a <literal>.cfg.xml</literal> file</para></entry>
                         </row>
                      </tbody>
                 </tgroup>
@@ -605,9 +607,9 @@ new SchemaUpdate(cfg).execute(false);]]></programlisting>
             <programlisting><![CDATA[Configuration cfg = ....;
 new SchemaValidator(cfg).validate();]]></programlisting>
 
-        </sect2>
+        </section>
 
-        <sect2 id="toolsetguide-s1-9">
+        <section id="toolsetguide-s1-9">
             <title>Using Ant for schema validation</title>
 
             <para>
@@ -627,9 +629,9 @@ new SchemaValidator(cfg).validate();]]></programlisting>
     </schemavalidator>
 </target>]]></programlisting>
 
-        </sect2>
+        </section>
 
-    </sect1>
+    </section>
 
 </chapter>
 

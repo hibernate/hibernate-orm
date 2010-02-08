@@ -1,4 +1,8 @@
-<?xml version='1.0' encoding="UTF-8"?>
+<?xml version='1.0' encoding='utf-8' ?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
+<!ENTITY % BOOK_ENTITIES SYSTEM "../Hibernate_Core_Reference_Guide.ent">
+%BOOK_ENTITIES;
+]>
 <!--
   ~ Hibernate, Relational Persistence for Idiomatic Java
   ~
@@ -23,15 +27,13 @@
   ~ Boston, MA  02110-1301  USA
   -->
 
-<!DOCTYPE preface PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
-
-<preface id="preface">
+<preface>
     <title>Preface</title>
 
     <para>
         Working with object-oriented software and a relational database can be cumbersome
-        and time consuming in today's enterprise environments. Hibernate is an Object/Relational
-        Mapping tool for Java environments. The term Object/Relational Mapping (ORM) refers to
+        and time consuming in today's enterprise environments. Hibernate is an object/relational
+        mapping tool for Java environments. The term object/relational mapping (ORM) refers to
         the technique of mapping a data representation from an object model to a relational
         data model with a SQL-based schema.
     </para>
@@ -86,12 +88,12 @@
         </listitem>
         <listitem>
             <para>
-                Use this reference documentation as your primary source of
-                information.  Consider reading <biblioref linkend="biblio-JPwH"/>
-                if you need more help with application design, or if you prefer
-                a step-by-step tutorial. Also visit
-                <ulink url="http://caveatemptor.hibernate.org"/> and download
-                the example application from <biblioref linkend="biblio-JPwH"/>.
+                Use this reference documentation as your primary source of information.
+                Consider reading <emphasis>Java Persistence with Hibernate</emphasis>
+                (http://www.manning.com/bauer2) if you need more help with application
+                design, or if you prefer a step-by-step tutorial. Also visit
+                http://caveatemptor.hibernate.org and download the example application
+                for Java Persistence with Hibernate.
             </para>
         </listitem>
         <listitem>
@@ -101,8 +103,8 @@
         </listitem>
         <listitem>
             <para>
-                Links to third party demos, examples, and tutorials are maintained
-                on the Hibernate website.
+                Third party demos, examples, and tutorials are linked on the Hibernate
+                website.
             </para>
         </listitem>
         <listitem>
@@ -128,13 +130,22 @@
          Hibernate is a Professional Open Source project and a critical component of the
          JBoss Enterprise Middleware System (JEMS) suite of products.
      </para>
-
-    <section>
+     
+     <!--  Insert relevant fallback material here. Conventions and is a relevant placement BookInfo.xml-->
+	<!--FOR PUBLICAN -->
+	<xi:include xmlns:xi="http://www.w3.org/2001/XInclude"
+ 				href="Common_Content/Conventions.xml">
+    <!--FOR JDOCBOOK:-->
+    <xi:fallback xmlns:xi="http://www.w3.org/2001/XInclude"/>
+    </xi:include>
+		
+     <section>
         <title>Feedback</title>
         <para>
             Use <ulink url="http://opensource.atlassian.com/projects/hibernate">Hibernate JIRA</ulink>
             to report errors or request enhacements to this documentation.
         </para>
-    </section>
+     </section>
+
 
 </preface>

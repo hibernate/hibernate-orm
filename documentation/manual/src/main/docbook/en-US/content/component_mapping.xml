@@ -1,4 +1,8 @@
-<?xml version='1.0' encoding="UTF-8"?>
+<?xml version='1.0' encoding='utf-8' ?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
+<!ENTITY % BOOK_ENTITIES SYSTEM "../Hibernate_Core_Reference_Guide.ent">
+%BOOK_ENTITIES;
+]>
 <!--
   ~ Hibernate, Relational Persistence for Idiomatic Java
   ~
@@ -23,8 +27,6 @@
   ~ Boston, MA  02110-1301  USA
   -->
 
-<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
-
 <chapter id="components">
     <title>Component Mapping</title>
 
@@ -33,7 +35,7 @@
         throughout Hibernate.
     </para>
 
-    <sect1 id="components-dependentobjects" revision="2" >
+    <section id="components-dependentobjects" revision="2" >
         <title>Dependent objects</title>
 
         <para>
@@ -157,9 +159,9 @@
     </component>
 </class>]]></programlisting>
 
-    </sect1>
+    </section>
 
-    <sect1 id="components-incollections" revision="1">
+    <section id="components-incollections" revision="1">
         <title>Collections of dependent objects</title>
 
         <para>
@@ -179,12 +181,12 @@
 </set>]]></programlisting>
 
 	<important>
-    	<para>
+	<para>
             If you define a <literal>Set</literal> of composite elements, it is 
             important to implement <literal>equals()</literal> and 
-            <literal>hashCode()</literal> correctly.
-        </para>
-	</important>      
+	    <literal>hashCode()</literal> correctly.</para>
+	</important>
+  	
 
         <para>
             Composite elements can contain components but not collections. If your
@@ -258,9 +260,9 @@
             associations to other entities.
         </para>
 
-    </sect1>
+    </section>
 
-    <sect1 id="components-asmapindex">
+    <section id="components-asmapindex">
         <title>Components as Map indices</title>
 
         <para>
@@ -269,9 +271,9 @@
             <literal>hashCode()</literal> and <literal>equals()</literal> correctly on
             the component class.
         </para>
-    </sect1>
+    </section>
 
-    <sect1 id="components-compositeid" revision="1">
+    <section id="components-compositeid" revision="1">
         <title>Components as composite identifiers</title>
 
         <para>
@@ -347,17 +349,15 @@
     <column name="customerId"/>
 </many-to-one>]]></programlisting>
 
-        <tip>
-            <para>
-                The <literal>column</literal> element is an alternative to the
-                <literal>column</literal> attribute everywhere.  Using the
-                <literal>column</literal> element just gives more declaration
-                options, which are mostly useful when utilizing
-                <literal>hbm2ddl</literal>
-            </para>
-        </tip>
-
-        <para>
+	<note>
+	<para>
+            The <literal>&lt;column&gt;</literal> tag is an alternative to the 
+            <literal>column</literal> attribute everywhere. Using the <literal>&lt;column&gt;</literal> 
+            tag just gives more declaration options, which are mostly useful when utilizing <literal>hbm2ddl</literal>.
+        </para>
+	</note>
+        
+<para>
             A <literal>many-to-many</literal> association to <literal>OrderLine</literal> also
             uses the composite foreign key:
         </para>
@@ -409,9 +409,9 @@
     </set>
 </class>]]></programlisting>
 
-    </sect1>
+    </section>
 
-    <sect1 id="components-dynamic" revision="1">
+    <section id="components-dynamic" revision="1">
         <title>Dynamic components</title>
 
         <para>
@@ -433,6 +433,6 @@
             configuration-time metamodel via the <literal>Configuration</literal> object.
         </para>
 
-    </sect1>
+    </section>
 
 </chapter>

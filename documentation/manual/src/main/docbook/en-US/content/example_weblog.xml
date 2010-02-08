@@ -1,4 +1,8 @@
-<?xml version='1.0' encoding="UTF-8"?>
+<?xml version='1.0' encoding='utf-8' ?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
+<!ENTITY % BOOK_ENTITIES SYSTEM "../Hibernate_Core_Reference_Guide.ent">
+%BOOK_ENTITIES;
+]>
 <!--
   ~ Hibernate, Relational Persistence for Idiomatic Java
   ~
@@ -23,12 +27,10 @@
   ~ Boston, MA  02110-1301  USA
   -->
 
-<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
-
 <chapter id="example-weblog">
     <title>Example: Weblog Application</title>
 
-    <sect1 id="example-weblog-classes">
+    <section id="example-weblog-classes">
         <title>Persistent Classes</title>
 
         <para>
@@ -110,9 +112,9 @@ public class BlogItem {
     }
 }]]></programlisting>
 
-    </sect1>
+    </section>
 
-    <sect1 id="example-weblog-mappings">
+    <section id="example-weblog-mappings">
         <title>Hibernate Mappings</title>
 
         <para>
@@ -203,9 +205,9 @@ public class BlogItem {
 
 </hibernate-mapping>]]></programlisting>
 
-    </sect1>
+    </section>
     
-    <sect1 id="example-weblog-code">
+    <section id="example-weblog-code">
         <title>Hibernate Code</title>
 
         <para>
@@ -451,7 +453,7 @@ public class BlogMain {
     }
 }]]></programlisting>
 
-    </sect1>
+    </section>
 
 </chapter>
 

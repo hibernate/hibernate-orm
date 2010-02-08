@@ -68,7 +68,7 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 			EntityPersister persister,
 			Serializable id,
 			EntityMode entityMode,
-			SessionFactoryImplementor factory) throws HibernateException {
+			SessionImplementor session) throws HibernateException {
 
 		if ( id != null && id instanceof DelayedPostInsertIdentifier ) {
 			// this is a situation where the entity id is assigned by a post-insert generator
@@ -78,11 +78,11 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 
 		if ( persister.canExtractIdOutOfEntity() ) {
 
-			Serializable oid = persister.getIdentifier( object, entityMode );
+			Serializable oid = persister.getIdentifier( object, session );
 			if (id==null) {
 				throw new AssertionFailure("null id in " + persister.getEntityName() + " entry (don't flush the Session after an exception occurs)");
 			}
-			if ( !persister.getIdentifierType().isEqual( id, oid, entityMode, factory ) ) {
+			if ( !persister.getIdentifierType().isEqual( id, oid, entityMode, session.getFactory() ) ) {
 				throw new HibernateException(
 						"identifier of an instance of " +
 						persister.getEntityName() +
@@ -174,8 +174,7 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 			EntityEntry entry,
 			EntityMode entityMode,
 			boolean mightBeDirty,
-	        SessionImplementor session
-	) {
+	        SessionImplementor session) {
 		final Object[] loadedState = entry.getLoadedState();
 		final Status status = entry.getStatus();
 		final EntityPersister persister = entry.getPersister();
@@ -189,7 +188,7 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 			values = loadedState;
 		}
 		else {
-			checkId( entity, persister, entry.getId(), entityMode, session.getFactory() );
+			checkId( entity, persister, entry.getId(), entityMode, session );
 
 			// grab its current state
 			values = persister.getPropertyValues( entity, entityMode );

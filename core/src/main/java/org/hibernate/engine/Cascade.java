@@ -251,8 +251,7 @@ public final class Cascade {
 						if ( loadedValue != null ) {
 							final String entityName = entry.getPersister().getEntityName();
 							if ( log.isTraceEnabled() ) {
-								final Serializable id = entry.getPersister()
-										.getIdentifier( loadedValue, eventSource.getEntityMode() );
+								final Serializable id = entry.getPersister().getIdentifier( loadedValue, eventSource );
 								final String description = MessageHelper.infoString( entityName, id );
 								log.trace( "deleting orphaned entity instance: " + description );
 							}

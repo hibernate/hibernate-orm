@@ -28,12 +28,20 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
+import org.hibernate.engine.Cascade;
+import org.hibernate.engine.EntityEntry;
 import org.hibernate.engine.EntityKey;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.SessionImplementor;
+import org.hibernate.event.EventSource;
+import org.hibernate.event.PersistEvent;
+import org.hibernate.event.SaveOrUpdateEvent;
 import org.hibernate.id.Assigned;
 import org.hibernate.intercept.LazyPropertyInitializer;
 import org.hibernate.mapping.Component;
@@ -42,6 +50,7 @@ import org.hibernate.mapping.Property;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.property.Getter;
 import org.hibernate.property.Setter;
+import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.ProxyFactory;
 import org.hibernate.tuple.Instantiator;
 import org.hibernate.tuple.StandardProperty;
@@ -59,6 +68,8 @@ import org.hibernate.type.Type;
  * @author Gavin King
  */
 public abstract class AbstractEntityTuplizer implements EntityTuplizer {
+
+	private static final Logger log = LoggerFactory.getLogger( AbstractEntityTuplizer.class );
 
 	//TODO: currently keeps Getters and Setters (instead of PropertyAccessors) because of the way getGetter() and getSetter() are implemented currently; yuck!
 
@@ -198,6 +209,10 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 	}
 
 	public Serializable getIdentifier(Object entity) throws HibernateException {
+		return getIdentifier( entity, null );
+	}
+
+	public Serializable getIdentifier(Object entity, SessionImplementor session) {
 		final Object id;
 		if ( entityMetamodel.getIdentifierProperty().isEmbedded() ) {
 			id = entity;
@@ -208,7 +223,7 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 					throw new HibernateException( "The class has no identifier property: " + getEntityName() );
 				}
 				else {
-					id = mappedIdentifierValueMarshaller.getIdentifier( entity, getEntityMode(), getFactory() );
+					id = mappedIdentifierValueMarshaller.getIdentifier( entity, getEntityMode(), session );
 				}
 			}
 			else {
@@ -255,13 +270,13 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 			idSetter.set( entity, id, getFactory() );
 		}
 		else if ( identifierMapperType != null ) {
-			mappedIdentifierValueMarshaller.setIdentifier( entity, id, session );
+			mappedIdentifierValueMarshaller.setIdentifier( entity, id, getEntityMode(), session );
 		}
 	}
 
 	private static interface MappedIdentifierValueMarshaller {
-		public Object getIdentifier(Object entity, EntityMode entityMode, SessionFactoryImplementor factory);
-		public void setIdentifier(Object entity, Serializable id, SessionImplementor session);
+		public Object getIdentifier(Object entity, EntityMode entityMode, SessionImplementor session);
+		public void setIdentifier(Object entity, Serializable id, EntityMode entityMode, SessionImplementor session);
 	}
 
 	private final MappedIdentifierValueMarshaller mappedIdentifierValueMarshaller;
@@ -304,18 +319,18 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 			this.mappedIdentifierType = mappedIdentifierType;
 		}
 
-		public Object getIdentifier(Object entity, EntityMode entityMode, SessionFactoryImplementor factory) {
+		public Object getIdentifier(Object entity, EntityMode entityMode, SessionImplementor session) {
 			Object id = mappedIdentifierType.instantiate( entityMode );
 			final Object[] propertyValues = virtualIdComponent.getPropertyValues( entity, entityMode );
 			mappedIdentifierType.setPropertyValues( id, propertyValues, entityMode );
 			return id;
 		}
 
-		public void setIdentifier(Object entity, Serializable id, SessionImplementor session) {
+		public void setIdentifier(Object entity, Serializable id, EntityMode entityMode, SessionImplementor session) {
 			virtualIdComponent.setPropertyValues(
 					entity,
 					mappedIdentifierType.getPropertyValues( id, session ),
-					session.getEntityMode()
+					entityMode
 			);
 		}
 	}
@@ -329,47 +344,79 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 			this.mappedIdentifierType = mappedIdentifierType;
 		}
 
-		public Object getIdentifier(Object entity, EntityMode entityMode, SessionFactoryImplementor factory) {
-			Object id = mappedIdentifierType.instantiate( entityMode );
+		public Object getIdentifier(Object entity, EntityMode entityMode, SessionImplementor session) {
+			final Object id = mappedIdentifierType.instantiate( entityMode );
 			final Object[] propertyValues = virtualIdComponent.getPropertyValues( entity, entityMode );
-			Type[] subTypes = virtualIdComponent.getSubtypes();
-			Type[] copierSubTypes = mappedIdentifierType.getSubtypes();
+			final Type[] subTypes = virtualIdComponent.getSubtypes();
+			final Type[] copierSubTypes = mappedIdentifierType.getSubtypes();
 			final int length = subTypes.length;
 			for ( int i = 0 ; i < length; i++ ) {
 				if ( propertyValues[i] == null ) {
-					continue;
+					throw new HibernateException( "No part of a composite identifier may be null" );
 				}
-				//JPA 2 in @IdClass points to the pk of the entity
+				//JPA 2 @MapsId + @IdClass points to the pk of the entity
 				if ( subTypes[i].isAssociationType() && ! copierSubTypes[i].isAssociationType() ) {
-					final String associatedEntityName = ( ( EntityType ) subTypes[i] ).getAssociatedEntityName();
-					final EntityPersister entityPersister = factory.getEntityPersister( associatedEntityName );
-					propertyValues[i] = entityPersister.getIdentifier( propertyValues[i], entityMode );
+					// we need a session to handle this use case
+					if ( session == null ) {
+						throw new AssertionError(
+								"Deprecated version of getIdentifier (no session) was used but session was required"
+						);
+					}
+					final Object subId;
+					if ( HibernateProxy.class.isInstance( propertyValues[i] ) ) {
+						subId = ( (HibernateProxy) propertyValues[i] ).getHibernateLazyInitializer().getIdentifier();
+					}
+					else {
+						EntityEntry pcEntry = session.getPersistenceContext().getEntry( propertyValues[i] );
+						if ( pcEntry != null ) {
+							subId = pcEntry.getId();
+						}
+						else {
+							log.debug( "Performing implicit derived identity cascade" );
+							final PersistEvent event = new PersistEvent( null, propertyValues[i], (EventSource) session );
+							for ( int x = 0; x < session.getListeners().getPersistEventListeners().length; x++ ) {
+								session.getListeners().getPersistEventListeners()[x].onPersist( event );
+
+							}
+							pcEntry = session.getPersistenceContext().getEntry( propertyValues[i] );
+							if ( pcEntry == null || pcEntry.getId() == null ) {
+								throw new HibernateException( "Unable to process implicit derived identity cascade" );
+							}
+							else {
+								subId = pcEntry.getId();
+							}
+						}
+					}
+					propertyValues[i] = subId;
 				}
 			}
 			mappedIdentifierType.setPropertyValues( id, propertyValues, entityMode );
 			return id;
 		}
 
-		public void setIdentifier(Object entity, Serializable id, SessionImplementor session) {
-			final Object[] extractedValues = mappedIdentifierType.getPropertyValues( id, session.getEntityMode() );
+		public void setIdentifier(Object entity, Serializable id, EntityMode entityMode, SessionImplementor session) {
+			final Object[] extractedValues = mappedIdentifierType.getPropertyValues( id, entityMode );
 			final Object[] injectionValues = new Object[ extractedValues.length ];
 			for ( int i = 0; i < virtualIdComponent.getSubtypes().length; i++ ) {
 				final Type virtualPropertyType = virtualIdComponent.getSubtypes()[i];
 				final Type idClassPropertyType = mappedIdentifierType.getSubtypes()[i];
 				if ( virtualPropertyType.isEntityType() && ! idClassPropertyType.isEntityType() ) {
+					if ( session == null ) {
+						throw new AssertionError(
+								"Deprecated version of getIdentifier (no session) was used but session was required"
+						);
+					}
 					final String associatedEntityName = ( (EntityType) virtualPropertyType ).getAssociatedEntityName();
 					final EntityKey entityKey = new EntityKey(
 							(Serializable) extractedValues[i],
 							session.getFactory().getEntityPersister( associatedEntityName ),
-							session.getEntityMode()
+							entityMode
 					);
 					// it is conceivable there is a proxy, so check that first
-					Object association = session.getPersistenceContext()
-							.getProxy( entityKey );
+					Object association = session.getPersistenceContext().getProxy( entityKey );
 					if ( association == null ) {
 						// otherwise look for an initialized version
-						association = session.getPersistenceContext()
-								.getEntity( entityKey );
+						association = session.getPersistenceContext().getEntity( entityKey );
 					}
 					injectionValues[i] = association;
 				}

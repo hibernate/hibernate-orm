@@ -108,7 +108,7 @@ public class DefaultDeleteEventListener implements DeleteEventListener {
 				performDetachedEntityDeletionCheck( event );
 			}
 
-			id = persister.getIdentifier( entity, source.getEntityMode() );
+			id = persister.getIdentifier( entity, source );
 
 			if ( id == null ) {
 				throw new TransientObjectException(

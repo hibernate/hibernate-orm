@@ -64,7 +64,7 @@ public class Tools {
 		}
 
 
-		return session.getEntityPersister(null, obj).getIdentifier(obj, session.getEntityMode());
+		return session.getEntityPersister( null, obj ).getIdentifier( obj, session );
 	}
 
     public static Object getTargetFromProxy(SessionFactoryImplementor sessionFactoryImplementor, HibernateProxy proxy) {

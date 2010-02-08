@@ -3514,7 +3514,7 @@ public abstract class AbstractEntityPersister
 	public Boolean isTransient(Object entity, SessionImplementor session) throws HibernateException {
 		final Serializable id;
 		if ( canExtractIdOutOfEntity() ) {
-			id = getIdentifier( entity, session.getEntityMode() );
+			id = getIdentifier( entity, session );
 		}
 		else {
 			id = null;
@@ -3796,9 +3796,12 @@ public abstract class AbstractEntityPersister
 		return getTuplizer( entityMode ).getPropertyValue( object, propertyName );
 	}
 
-	public Serializable getIdentifier(Object object, EntityMode entityMode)
-			throws HibernateException {
-		return getTuplizer( entityMode ).getIdentifier( object );
+	public Serializable getIdentifier(Object object, EntityMode entityMode) throws HibernateException {
+		return getTuplizer( entityMode ).getIdentifier( object, null );
+	}
+
+	public Serializable getIdentifier(Object entity, SessionImplementor session) {
+		return getTuplizer( session.getEntityMode() ).getIdentifier( entity, session );
 	}
 
 	/**

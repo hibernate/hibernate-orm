@@ -209,7 +209,7 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener
 				EntityEntry entry = source.getPersistenceContext().getEntry( entity );
 				if ( entry == null ) {
 					EntityPersister persister = source.getEntityPersister( event.getEntityName(), entity );
-					Serializable id = persister.getIdentifier( entity, source.getEntityMode() );
+					Serializable id = persister.getIdentifier( entity, source );
 					if ( id != null ) {
 						EntityKey key = new EntityKey( id, persister, source.getEntityMode() );
 						Object managedEntity = source.getPersistenceContext().getEntity( key );
@@ -289,7 +289,7 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener
 		final EntityPersister persister = source.getEntityPersister( entityName, entity );
 
 		final Serializable id = persister.hasIdentifierProperty() ?
-				persister.getIdentifier( entity, source.getEntityMode() ) :
+				persister.getIdentifier( entity, source ) :
 		        null;
 		if ( copyCache.containsKey( entity ) ) {
 			persister.setIdentifier( copyCache.get( entity ), id, source );
@@ -367,11 +367,11 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener
 
 		Serializable id = event.getRequestedId();
 		if ( id == null ) {
-			id = persister.getIdentifier( entity, source.getEntityMode() );
+			id = persister.getIdentifier( entity, source );
 		}
 		else {
 			// check that entity id = requestedId
-			Serializable entityId = persister.getIdentifier( entity, source.getEntityMode() );
+			Serializable entityId = persister.getIdentifier( entity, source );
 			if ( !persister.getIdentifierType().isEqual( id, entityId, source.getEntityMode(), source.getFactory() ) ) {
 				throw new HibernateException( "merge requested with id not matching id of passed entity" );
 			}
@@ -468,7 +468,7 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener
 	private boolean existsInDatabase(Object entity, EventSource source, EntityPersister persister) {
 		EntityEntry entry = source.getPersistenceContext().getEntry( entity );
 		if ( entry == null ) {
-			Serializable id = persister.getIdentifier( entity, source.getEntityMode() );
+			Serializable id = persister.getIdentifier( entity, source );
 			if ( id != null ) {
 				EntityKey key = new EntityKey( id, persister, source.getEntityMode() );
 				Object managedEntity = source.getPersistenceContext().getEntity( key );

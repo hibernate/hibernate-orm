@@ -209,8 +209,10 @@ public final class ForeignKeys {
 		if (assumed!=null) return assumed.booleanValue();
 		
 		// hit the database, after checking the session cache for a snapshot
-		Object[] snapshot = session.getPersistenceContext()
-		        .getDatabaseSnapshot( persister.getIdentifier( entity, session.getEntityMode() ), persister );
+		Object[] snapshot = session.getPersistenceContext().getDatabaseSnapshot(
+				persister.getIdentifier( entity, session ),
+				persister
+		);
 		return snapshot==null;
 
 	}
@@ -244,7 +246,7 @@ public final class ForeignKeys {
 							(entityName == null ? session.guessEntityName( object ) : entityName)
 					);
 				}
-				id = session.getEntityPersister( entityName, object ).getIdentifier( object, session.getEntityMode() );
+				id = session.getEntityPersister( entityName, object ).getIdentifier( object, session );
 			}
 			return id;
 		}

@@ -403,7 +403,7 @@ public abstract class CollectionType extends AbstractType implements Association
 			if ( ownerMappedClass.isAssignableFrom( keyType.getReturnedClass() ) &&
 					keyType.getReturnedClass().isInstance( key ) ) {
 				// the key is the owning entity itself, so get the ID from the key
-				ownerId = ownerPersister.getIdentifier( key, session.getEntityMode() );
+				ownerId = ownerPersister.getIdentifier( key, session );
 			}
 			else {
 				// TODO: check if key contains the owner ID

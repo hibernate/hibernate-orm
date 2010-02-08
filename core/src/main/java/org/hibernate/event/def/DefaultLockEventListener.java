@@ -71,7 +71,7 @@ public class DefaultLockEventListener extends AbstractLockUpgradeEventListener i
 		EntityEntry entry = source.getPersistenceContext().getEntry(entity);
 		if (entry==null) {
 			final EntityPersister persister = source.getEntityPersister( event.getEntityName(), entity );
-			final Serializable id = persister.getIdentifier( entity, source.getEntityMode() );
+			final Serializable id = persister.getIdentifier( entity, source );
 			if ( !ForeignKeys.isNotTransient( event.getEntityName(), entity, Boolean.FALSE, source ) ) {
 				throw new TransientObjectException(
 						"cannot lock an unsaved transient instance: " +

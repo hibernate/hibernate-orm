@@ -182,6 +182,11 @@ public class CustomPersister implements EntityPersister {
 		return ( (Custom) object ).id;
 	}
 
+	public Serializable getIdentifier(Object entity, SessionImplementor session) {
+		checkEntityMode( session );
+		return ( (Custom) entity ).id;
+	}
+
 	public void setIdentifier(Object object, Serializable id, EntityMode entityMode) throws HibernateException {
 		checkEntityMode( entityMode );
 		( (Custom) object ).id = (String) id;

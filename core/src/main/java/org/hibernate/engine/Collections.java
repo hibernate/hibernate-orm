@@ -85,8 +85,7 @@ public final class Collections {
 		boolean hasOrphanDelete = loadedPersister != null &&
 		                          loadedPersister.hasOrphanDelete();
 		if (hasOrphanDelete) {
-			Serializable ownerId = loadedPersister.getOwnerEntityPersister()
-					.getIdentifier( coll.getOwner(), session.getEntityMode() );
+			Serializable ownerId = loadedPersister.getOwnerEntityPersister().getIdentifier( coll.getOwner(), session );
 			if ( ownerId == null ) {
 				// the owning entity may have been deleted and its identifier unset due to
 				// identifier-rollback; in which case, try to look up its identifier from

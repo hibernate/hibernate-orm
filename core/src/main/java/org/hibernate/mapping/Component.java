@@ -419,8 +419,7 @@ public class Component extends SimpleValue implements MetaAttributable {
 		}
 
 		public Serializable locateGenerationContext(SessionImplementor session, Object incomingObject) {
-			return session.getEntityPersister( entityName, incomingObject )
-					.getIdentifier( incomingObject, session.getEntityMode() );
+			return session.getEntityPersister( entityName, incomingObject ).getIdentifier( incomingObject, session );
 		}
 	}
 

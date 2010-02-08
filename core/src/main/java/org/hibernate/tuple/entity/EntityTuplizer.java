@@ -79,11 +79,25 @@ public interface EntityTuplizer extends Tuplizer {
      * Extract the identifier value from the given entity.
      *
      * @param entity The entity from which to extract the identifier value.
+	 *
      * @return The identifier value.
+	 *
      * @throws HibernateException If the entity does not define an identifier property, or an
-     * error occurrs accessing its value.
+     * error occurs accessing its value.
+	 *
+	 * @deprecated Use {@link #getIdentifier(Object,SessionImplementor)} instead.
      */
 	public Serializable getIdentifier(Object entity) throws HibernateException;
+
+    /**
+     * Extract the identifier value from the given entity.
+     *
+     * @param entity The entity from which to extract the identifier value.
+	 * @param session The session from which is requests originates
+	 *
+     * @return The identifier value.
+     */
+	public Serializable getIdentifier(Object entity, SessionImplementor session);
 
     /**
      * Inject the identifier value into the given entity.

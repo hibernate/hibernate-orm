@@ -92,7 +92,7 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 		
 		if ( e == null ) {
 			persister = source.getEntityPersister(null, object); //refresh() does not pass an entityName
-			id = persister.getIdentifier( object, event.getSession().getEntityMode() );
+			id = persister.getIdentifier( object, event.getSession() );
 			if ( log.isTraceEnabled() ) {
 				log.trace(
 						"refreshing transient " +

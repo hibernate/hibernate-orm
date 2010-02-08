@@ -24,6 +24,7 @@
  */
 package org.hibernate.tuple.entity;
 
+import org.hibernate.engine.SessionImplementor;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.proxy.ProxyFactory;
@@ -117,15 +118,22 @@ public class Dom4jEntityTuplizer extends AbstractEntityTuplizer {
 	 * {@inheritDoc}
 	 */
 	public Serializable getIdentifier(Object entityOrId) throws HibernateException {
-		if (entityOrId instanceof Element) {
-			return super.getIdentifier(entityOrId);
+		return getIdentifier( entityOrId, null );
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public Serializable getIdentifier(Object entityOrId, SessionImplementor session) {
+		if ( entityOrId instanceof Element ) {
+			return super.getIdentifier( entityOrId, session );
 		}
 		else {
 			//it was not embedded, so the argument is just an id
 			return (Serializable) entityOrId;
 		}
 	}
-	
+
 	/**
 	 * {@inheritDoc}
 	 */

@@ -195,8 +195,20 @@ public interface ClassMetadata {
 
 	/**
 	 * Get the identifier of an instance (throw an exception if no identifier property)
+	 * @deprecated Use {@link #getIdentifier(Object,SessionImplementor)} instead
+	 * @noinspection JavaDoc
 	 */
-	public Serializable getIdentifier(Object entity, EntityMode entityMode) throws HibernateException;
+	public Serializable getIdentifier(Object object, EntityMode entityMode) throws HibernateException;
+
+	/**
+	 * Get the identifier of an instance (throw an exception if no identifier property)
+	 *
+	 * @param entity The entity for which to get the identifier
+	 * @param session The session from which the request originated
+	 *
+	 * @return The identifier
+	 */
+	public Serializable getIdentifier(Object entity, SessionImplementor session);
 
 	/**
 	 * Inject the identifier value into the given entity.

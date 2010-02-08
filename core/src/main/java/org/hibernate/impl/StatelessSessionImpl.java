@@ -129,7 +129,7 @@ public class StatelessSessionImpl extends AbstractSessionImpl
 	public void delete(String entityName, Object entity) {
 		errorIfClosed();
 		EntityPersister persister = getEntityPersister(entityName, entity);
-		Serializable id = persister.getIdentifier(entity, EntityMode.POJO);
+		Serializable id = persister.getIdentifier( entity, this );
 		Object version = persister.getVersion(entity, EntityMode.POJO);
 		persister.delete(id, version, entity, this);
 	}
@@ -145,7 +145,7 @@ public class StatelessSessionImpl extends AbstractSessionImpl
 	public void update(String entityName, Object entity) {
 		errorIfClosed();
 		EntityPersister persister = getEntityPersister(entityName, entity);
-		Serializable id = persister.getIdentifier(entity, EntityMode.POJO);
+		Serializable id = persister.getIdentifier( entity, this );
 		Object[] state = persister.getPropertyValues(entity, EntityMode.POJO);
 		Object oldVersion;
 		if ( persister.isVersioned() ) {
@@ -197,7 +197,7 @@ public class StatelessSessionImpl extends AbstractSessionImpl
 
 	public void refresh(String entityName, Object entity, LockMode lockMode) {
 		final EntityPersister persister = this.getEntityPersister( entityName, entity );
-		final Serializable id = persister.getIdentifier( entity, getEntityMode() );
+		final Serializable id = persister.getIdentifier( entity, this );
 		if ( log.isTraceEnabled() ) {
 			log.trace(
 					"refreshing transient " +

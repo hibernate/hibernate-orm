@@ -1,0 +1,46 @@
+# translation of Collection_Mapping.po to
+# Xi HUANG <xhuang@redhat.com>, 2007.
+msgid ""
+msgstr ""
+"Project-Id-Version: Collection_Mapping\n"
+"Report-Msgid-Bugs-To: http://bugs.kde.org\n"
+"POT-Creation-Date: 2009-12-11T05:07:38\n"
+"PO-Revision-Date: 2007-02-26 17:14+1000\n"
+"Last-Translator: Xi HUANG <xhuang@redhat.com>\n"
+"Language-Team:  <en@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: KBabel 1.11.4\n"
+
+#. Tag: title
+#, fuzzy, no-c-format
+msgid "Hibernate Core Reference Guide"
+msgstr "Hibernate リファレンスガイド"
+
+#. Tag: subtitle
+#, no-c-format
+msgid ""
+"by Gavin King, Christian Bauer, Max Rydahl Andersen, Emmanuel Bernard, and "
+"Steve Ebersole and thanks to James Cobb (Graphic Design) and Cheyenne Weaver "
+"(Graphic Design)"
+msgstr ""
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid "The JBoss Hibernate Core 3.3.2.GA Reference Guide"
+msgstr "Hibernate リファレンスガイド"
+
+#, fuzzy
+#~ msgid "for Use with JBoss Enterprise Application Platform 5.0"
+#~ msgstr "JBoss Enterprise Application Platform"
+
+#, fuzzy
+#~ msgid ""
+#~ "The JBoss Enterprise Application Platform Edition of the Hibernate Core "
+#~ "Reference Guide"
+#~ msgstr ""
+#~ "JBoss Enterprise Application Platform 版 Hibernate リファレンスガイド 3.2"
+
+#~ msgid "&HOLDER;"
+#~ msgstr "&HOLDER;"

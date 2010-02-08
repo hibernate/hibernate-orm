@@ -1431,7 +1431,8 @@ public final class
 			);
 		}
 		else {
-			final boolean isMapsId = property.isAnnotationPresent( MapsId.class );
+			final boolean forcePersist = property.isAnnotationPresent( MapsId.class )
+					|| property.isAnnotationPresent( Id.class );
 			if ( property.isAnnotationPresent( ManyToOne.class ) ) {
 				ManyToOne ann = property.getAnnotation( ManyToOne.class );
 
@@ -1454,9 +1455,9 @@ public final class
 						joinColumn.setSecondaryTableName( join.getTable().getName() );
 					}
 				}
-				final boolean mandatory = !ann.optional() || isMapsId;
+				final boolean mandatory = !ann.optional() || forcePersist;
 				bindManyToOne(
-						getCascadeStrategy( ann.cascade(), hibernateCascade, false, isMapsId),
+						getCascadeStrategy( ann.cascade(), hibernateCascade, false, forcePersist),
 						joinColumns,
 						!mandatory,
 						ignoreNotFound, onDeleteCascade,
@@ -1492,9 +1493,9 @@ public final class
 					}
 				}
 				//MapsId means the columns belong to the pk => not null
-				final boolean mandatory = !ann.optional() || isMapsId;
+				final boolean mandatory = !ann.optional() || forcePersist;
 				bindOneToOne(
-						getCascadeStrategy( ann.cascade(), hibernateCascade, ann.orphanRemoval(), isMapsId),
+						getCascadeStrategy( ann.cascade(), hibernateCascade, ann.orphanRemoval(), forcePersist),
 						joinColumns,
 						!mandatory,
 						getFetchMode( ann.fetch() ),
@@ -1529,7 +1530,7 @@ public final class
 						joinColumn.setSecondaryTableName( join.getTable().getName() );
 					}
 				}
-				bindAny( getCascadeStrategy( null, hibernateCascade, false, isMapsId), //@Any has not cascade attribute
+				bindAny( getCascadeStrategy( null, hibernateCascade, false, forcePersist), //@Any has not cascade attribute
 						joinColumns, onDeleteCascade, nullability,
 						propertyHolder, inferredData, entityBinder,
 						isIdentifierMapper, mappings );
@@ -2661,7 +2662,7 @@ public final class
 
 	private static String getCascadeStrategy(
 		javax.persistence.CascadeType[] ejbCascades, Cascade hibernateCascadeAnnotation,
-		boolean orphanRemoval, boolean mapsId) {
+		boolean orphanRemoval, boolean forcePersist) {
 		EnumSet<CascadeType> hibernateCascadeSet = convertToHibernateCascadeType( ejbCascades );
 		CascadeType[] hibernateCascades = hibernateCascadeAnnotation == null ?
 				null :
@@ -2675,7 +2676,7 @@ public final class
 			hibernateCascadeSet.add(CascadeType.DELETE_ORPHAN);
 			hibernateCascadeSet.add(CascadeType.REMOVE);
 		}
-		if (mapsId) {
+		if (forcePersist) {
 			hibernateCascadeSet.add(CascadeType.PERSIST);
 		}
 

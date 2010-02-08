@@ -2201,8 +2201,11 @@ public final class
 											+ idClassPropertyData.getPropertyName() 
 							);
 						}
-						if ( entityPropertyData.getProperty().isAnnotationPresent( ManyToOne.class )
-								|| entityPropertyData.getProperty().isAnnotationPresent( OneToOne.class ) ) {
+						final boolean hasXToOneAnnotation = entityPropertyData.getProperty()
+								.isAnnotationPresent( ManyToOne.class )
+								|| entityPropertyData.getProperty().isAnnotationPresent( OneToOne.class );
+						final boolean isOfDifferentType = ! entityPropertyData.getClassOrElement().equals( idClassPropertyData.getClassOrElement() );
+						if ( hasXToOneAnnotation && isOfDifferentType ) {
 							//don't replace here as we need to use the actual original return type
 							//the annotation overriding will be dealt with by a mechanism similar to @MapsId
 						}

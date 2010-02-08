@@ -1,0 +1,39 @@
+# translation of Book_Info.po to French
+# Myriam Malga <mmalga@redhat.com>, 2007.
+# Xi HUANG <xhuang@redhat.com>, 2007.
+# Corina Roe <croe@redhat.com>, 2009, 2010.
+# translation of Collection_Mapping.po to
+msgid ""
+msgstr ""
+"Project-Id-Version: Book_Info\n"
+"Report-Msgid-Bugs-To: http://bugs.kde.org\n"
+"POT-Creation-Date: 2009-12-11T05:07:38\n"
+"PO-Revision-Date: 2010-01-05 10:10+1000\n"
+"Last-Translator: Corina Roe <croe@redhat.com>\n"
+"Language-Team: French <i18@redhat.com>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: KBabel 1.11.4\n"
+
+#. Tag: title
+#, no-c-format
+msgid "Hibernate Core Reference Guide"
+msgstr "Guide de référence Hibernate Core"
+
+#. Tag: subtitle
+#, no-c-format
+msgid ""
+"by Gavin King, Christian Bauer, Max Rydahl Andersen, Emmanuel Bernard, and "
+"Steve Ebersole and thanks to James Cobb (Graphic Design) and Cheyenne Weaver "
+"(Graphic Design)"
+msgstr ""
+"par Gavin King, Christian Bauer, Max Rydahl Andersen, Emmanuel Bernard, et "
+"Steve Ebersole. Merci à James Cobb (Graphismes) et à Cheyenne Weaver "
+"(Graphismes)"
+
+#. Tag: para
+#, no-c-format
+msgid "The JBoss Hibernate Core 3.3.2.GA Reference Guide"
+msgstr "Guide de référence Hibernate Core 3.3.2.GA"
+

@@ -1,0 +1,22 @@
+# translation of Author_Group.po to French
+# Myriam Malga <mmalga@redhat.com>, 2007.
+# Xi HUANG <xhuang@redhat.com>, 2007.
+# Corina Roe <croe@redhat.com>, 2009.
+# translation of Collection_Mapping.po to
+msgid ""
+msgstr ""
+"Project-Id-Version: Author_Group\n"
+"Report-Msgid-Bugs-To: http://bugs.kde.org\n"
+"POT-Creation-Date: 2009-12-03T00:15:25\n"
+"PO-Revision-Date: 2009-10-28 15:14+1000\n"
+"Last-Translator: Corina Roe <croe@redhat.com>\n"
+"Language-Team: French <i18@redhat.com>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: KBabel 1.11.4\n"
+
+#~ msgid ""
+#~ "<firstname>Red Hat Documentation Group</firstname> <surname></surname>"
+#~ msgstr ""
+#~ "<firstname>Red Hat Documentation Group</firstname> <surname></surname>"

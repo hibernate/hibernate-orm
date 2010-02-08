@@ -1,0 +1,15 @@
+# translation of Collection_Mapping.po to
+# Xi Huang <xhuang@redhat.com>, 2006.
+# Xi HUANG <xhuang@redhat.com>, 2007.
+msgid ""
+msgstr ""
+"Project-Id-Version: Collection_Mapping\n"
+"Report-Msgid-Bugs-To: http://bugs.kde.org\n"
+"POT-Creation-Date: 2009-12-03T00:15:25\n"
+"PO-Revision-Date: 2007-02-26 10:59+1000\n"
+"Last-Translator: Xi HUANG <xhuang@redhat.com>\n"
+"Language-Team:  <en@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: KBabel 1.11.4\n"

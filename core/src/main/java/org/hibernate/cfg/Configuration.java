@@ -67,6 +67,7 @@ import org.hibernate.MappingNotFoundException;
 import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.DuplicateMappingException;
+import org.hibernate.id.IdentifierGeneratorAggregator;
 import org.hibernate.tuple.entity.EntityTuplizerFactory;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.MySQLDialect;
@@ -799,6 +800,9 @@ public class Configuration implements Serializable {
 
 				if ( ig instanceof PersistentIdentifierGenerator ) {
 					generators.put( ( (PersistentIdentifierGenerator) ig ).generatorKey(), ig );
+				}
+				else if ( ig instanceof IdentifierGeneratorAggregator ) {
+					( (IdentifierGeneratorAggregator) ig ).registerPersistentGenerators( generators );
 				}
 			}
 		}

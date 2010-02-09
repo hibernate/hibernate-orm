@@ -27,6 +27,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import org.hibernate.HibernateException;
 import org.hibernate.engine.SessionImplementor;
@@ -61,7 +62,7 @@ import org.hibernate.engine.SessionImplementor;
  *
  * @author Steve Ebersole
  */
-public class CompositeNestedGeneratedValueGenerator implements IdentifierGenerator, Serializable {
+public class CompositeNestedGeneratedValueGenerator implements IdentifierGenerator, Serializable, IdentifierGeneratorAggregator {
 	/**
 	 * Contract for declaring how to locate the context for sub-value injection.
 	 */
@@ -91,6 +92,14 @@ public class CompositeNestedGeneratedValueGenerator implements IdentifierGenerat
 		 * @param injectionContext The context into which the generated value can be injected
 		 */
 		public void execute(SessionImplementor session, Object incomingObject, Object injectionContext);
+
+		/**
+		 * Register any sub generators which implement {@link PersistentIdentifierGenerator} by their
+		 * {@link PersistentIdentifierGenerator#generatorKey generatorKey}.
+		 *
+		 * @param generatorMap The map of generators.
+		 */
+		public void registerPersistentGenerators(Map generatorMap);
 	}
 
 	private final GenerationContextLocator generationContextLocator;
@@ -116,4 +125,14 @@ public class CompositeNestedGeneratedValueGenerator implements IdentifierGenerat
 		return context;
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
+	public void registerPersistentGenerators(Map generatorMap) {
+		final Iterator itr = generationPlans.iterator();
+		while ( itr.hasNext() ) {
+			final GenerationPlan plan = (GenerationPlan) itr.next();
+			plan.registerPersistentGenerators( generatorMap );
+		}
+	}
 }

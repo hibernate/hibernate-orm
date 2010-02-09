@@ -24,26 +24,19 @@
 package org.hibernate.mapping;
 
 import java.io.Serializable;
-import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.hibernate.EntityMode;
-import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.EntityEntry;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.id.CompositeNestedGeneratedValueGenerator;
 import org.hibernate.id.IdentifierGenerator;
+import org.hibernate.id.PersistentIdentifierGenerator;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
-import org.hibernate.property.Getter;
-import org.hibernate.property.PropertyAccessor;
 import org.hibernate.property.Setter;
 import org.hibernate.tuple.component.ComponentMetamodel;
 import org.hibernate.type.ComponentType;
@@ -443,6 +436,12 @@ public class Component extends SimpleValue implements MetaAttributable {
 		public void execute(SessionImplementor session, Object incomingObject, Object injectionContext) {
 			final Object generatedValue = subGenerator.generate( session, incomingObject );
 			injector.set( injectionContext, generatedValue, session.getFactory() );
+		}
+
+		public void registerPersistentGenerators(Map generatorMap) {
+			if ( PersistentIdentifierGenerator.class.isInstance( subGenerator ) ) {
+				generatorMap.put( ( (PersistentIdentifierGenerator) subGenerator ).generatorKey(), subGenerator );
+			}
 		}
 	}
 

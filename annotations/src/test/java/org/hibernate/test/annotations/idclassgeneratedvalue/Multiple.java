@@ -27,8 +27,10 @@ import java.io.Serializable;
 
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.IdClass;
+import javax.persistence.SequenceGenerator;
 
 import org.hibernate.annotations.GenericGenerator;
 
@@ -48,8 +50,8 @@ public class Multiple implements Serializable
    private Long id1;
    
    @Id
-   @GenericGenerator(name = "increment2", strategy = "increment")
-   @GeneratedValue(generator = "increment2")
+   @GeneratedValue(generator = "MULTIPLE_SEQ", strategy = GenerationType.SEQUENCE)
+   @SequenceGenerator( name = "MULTIPLE_SEQ", sequenceName = "MULTIPLE_SEQ")
    private Long id2;
    
    @Id

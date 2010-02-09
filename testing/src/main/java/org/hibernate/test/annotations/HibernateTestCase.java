@@ -29,7 +29,6 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -126,7 +125,7 @@ public abstract class HibernateTestCase extends TestCase {
 				t.fillInStackTrace();
 			}
 			closeResources();
-			if ( failureExpected != null) {
+			if ( failureExpected != null ) {
 				StringBuilder builder = new StringBuilder();
 				if ( StringHelper.isNotEmpty( failureExpected.message() ) ) {
 					builder.append( failureExpected.message() );

@@ -66,12 +66,8 @@ import org.hibernate.util.ConfigHelper;
  * @author Gavin King
  */
 @SuppressWarnings("unchecked")
-public class PackagedEntityManagerTest extends TestCase {
+public class PackagedEntityManagerTest extends junit.framework.TestCase {
 	private static ClassLoader originalClassLoader;
-
-	public Class[] getAnnotatedClasses() {
-		return new Class[] { Item.class, Distributor.class };
-	}
 
 	@Override
 	protected void setUp() throws Exception {
@@ -82,7 +78,9 @@ public class PackagedEntityManagerTest extends TestCase {
 
 	private ClassLoader buildCustomTCCL(ClassLoader parentClassLoader) throws MalformedURLException {
 		// get a URL reference to something we now is part of the classpath (us)
-		URL myUrl = parentClassLoader.getResource( PackagedEntityManagerTest.class.getName().replace( '.', '/' ) + ".class" );
+		URL myUrl = parentClassLoader.getResource(
+				PackagedEntityManagerTest.class.getName().replace( '.', '/' ) + ".class"
+		);
 		File myPath = new File( myUrl.getFile() );
 		// navigate back to '/target'
 		File targetDir = myPath
@@ -97,19 +95,13 @@ public class PackagedEntityManagerTest extends TestCase {
 		for ( File testPackage : testPackagesDir.listFiles() ) {
 			urls.add( testPackage.toURL() );
 		}
-		return new URLClassLoader( urls.toArray( new URL[ urls.size() ] ), parentClassLoader );
+		return new URLClassLoader( urls.toArray( new URL[urls.size()] ), parentClassLoader );
 	}
 
 	@Override
 	public void tearDown() throws Exception {
 		super.tearDown();
 		Thread.currentThread().setContextClassLoader( originalClassLoader );
-	}
-
-	@Override
-	protected void buildConfiguration() throws Exception {
-		super.buildConfiguration();
-		factory = Persistence.createEntityManagerFactory( "manager1" );
 	}
 
 	public void testDefaultPar() throws Exception {
@@ -226,7 +218,6 @@ public class PackagedEntityManagerTest extends TestCase {
 		emf.close();
 	}
 
-
 	public void testExcludeHbmPar() throws Exception {
 		EntityManagerFactory emf = null;
 		try {
@@ -317,7 +308,6 @@ public class PackagedEntityManagerTest extends TestCase {
 		emf.close();
 	}
 
-
 	public void testListeners() throws Exception {
 		EntityManagerFactory emf = Persistence.createEntityManagerFactory( "manager1", new HashMap() );
 		EntityManager em = emf.createEntityManager();
@@ -333,10 +323,9 @@ public class PackagedEntityManagerTest extends TestCase {
 	}
 
 	public void testExtendedEntityManager() {
-
+		EntityManagerFactory emf = Persistence.createEntityManagerFactory( "manager1", new HashMap() );
+		EntityManager em = emf.createEntityManager();
 		Item item = new Item( "Mouse", "Micro$oft mouse" );
-
-		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
 		em.persist( item );
 		assertTrue( em.contains( item ) );
@@ -376,20 +365,21 @@ public class PackagedEntityManagerTest extends TestCase {
 		em.getTransaction().commit();
 
 		em.close();
-
+		emf.close();
 	}
 
 	public void testConfiguration() throws Exception {
+		EntityManagerFactory emf = Persistence.createEntityManagerFactory( "manager1", new HashMap() );
 		Item item = new Item( "Mouse", "Micro$oft mouse" );
 		Distributor res = new Distributor();
 		res.setName( "Bruce" );
 		item.setDistributors( new HashSet<Distributor>() );
 		item.getDistributors().add( res );
-		Statistics stats = ( ( HibernateEntityManagerFactory ) factory ).getSessionFactory().getStatistics();
+		Statistics stats = ( ( HibernateEntityManagerFactory ) emf ).getSessionFactory().getStatistics();
 		stats.clear();
 		stats.setStatisticsEnabled( true );
 
-		EntityManager em = getOrCreateEntityManager();
+		EntityManager em = emf.createEntityManager();
 		em.getTransaction().begin();
 
 		em.persist( res );
@@ -402,7 +392,7 @@ public class PackagedEntityManagerTest extends TestCase {
 		assertEquals( 1, stats.getSecondLevelCachePutCount() );
 		assertEquals( 0, stats.getSecondLevelCacheHitCount() );
 
-		em = getOrCreateEntityManager();
+		em = emf.createEntityManager();
 		em.getTransaction().begin();
 		Item second = em.find( Item.class, item.getName() );
 		assertEquals( 1, second.getDistributors().size() );
@@ -410,7 +400,7 @@ public class PackagedEntityManagerTest extends TestCase {
 		em.getTransaction().commit();
 		em.close();
 
-		em = getOrCreateEntityManager();
+		em = emf.createEntityManager();
 		em.getTransaction().begin();
 		second = em.find( Item.class, item.getName() );
 		assertEquals( 1, second.getDistributors().size() );
@@ -424,10 +414,12 @@ public class PackagedEntityManagerTest extends TestCase {
 
 		stats.clear();
 		stats.setStatisticsEnabled( false );
+		emf.close();
 	}
 
 	public void testExternalJar() throws Exception {
-		EntityManager em = getOrCreateEntityManager();
+		EntityManagerFactory emf = Persistence.createEntityManagerFactory( "manager1", new HashMap() );
+		EntityManager em = emf.createEntityManager();
 		Scooter s = new Scooter();
 		s.setModel( "Abadah" );
 		s.setSpeed( 85l );
@@ -435,17 +427,19 @@ public class PackagedEntityManagerTest extends TestCase {
 		em.persist( s );
 		em.getTransaction().commit();
 		em.close();
-		em = getOrCreateEntityManager();
+		em = emf.createEntityManager();
 		em.getTransaction().begin();
 		s = em.find( Scooter.class, s.getModel() );
 		assertEquals( new Long( 85 ), s.getSpeed() );
 		em.remove( s );
 		em.getTransaction().commit();
 		em.close();
+		emf.close();
 	}
 
 	public void testORMFileOnMainAndExplicitJars() throws Exception {
-		EntityManager em = getOrCreateEntityManager();
+		EntityManagerFactory emf = Persistence.createEntityManagerFactory( "manager1", new HashMap() );
+		EntityManager em = emf.createEntityManager();
 		Seat seat = new Seat();
 		seat.setNumber( "3B" );
 		Airplane plane = new Airplane();
@@ -456,5 +450,6 @@ public class PackagedEntityManagerTest extends TestCase {
 		em.flush();
 		em.getTransaction().rollback();
 		em.close();
+		emf.close();
 	}
 }

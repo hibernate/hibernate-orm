@@ -1,5 +1,7 @@
 package org.hibernate.test.keymanytoone.bidir.embedded;
 
+import java.util.List;
+
 import junit.framework.Test;
 
 import org.hibernate.Session;
@@ -40,6 +42,32 @@ public class KeyManyToOneTest extends FunctionalTestCase {
 		s.save( cust );
 		s.flush();
 		assertEquals( 2, sfi().getStatistics().getEntityInsertCount() );
+		s.delete( cust );
+		s.getTransaction().commit();
+		s.close();
+	}
+
+	public void testQueryingOnMany2One() {
+		Session s = openSession();
+		s.beginTransaction();
+		Customer cust = new Customer( "Acme, Inc." );
+		Order order = new Order( cust, 1 );
+		cust.getOrders().add( order );
+		s.save( cust );
+		s.getTransaction().commit();
+		s.close();
+
+		s = openSession();
+		s.beginTransaction();
+		List results = s.createQuery( "from Order o where o.customer.name = :name" )
+				.setParameter( "name", cust.getName() )
+				.list();
+		assertEquals( 1, results.size() );
+		s.getTransaction().commit();
+		s.close();
+
+		s = openSession();
+		s.beginTransaction();
 		s.delete( cust );
 		s.getTransaction().commit();
 		s.close();

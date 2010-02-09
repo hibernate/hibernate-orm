@@ -27,6 +27,9 @@ package org.hibernate.persister.entity;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import org.hibernate.MappingException;
 import org.hibernate.QueryException;
 import org.hibernate.engine.Mapping;
@@ -44,6 +47,7 @@ import org.hibernate.util.StringHelper;
  * @author Gavin King
  */
 public abstract class AbstractPropertyMapping implements PropertyMapping {
+	private static final Logger log = LoggerFactory.getLogger( AbstractPropertyMapping.class );
 
 	private final Map typesByPropertyPath = new HashMap();
 	private final Map columnsByPropertyPath = new HashMap();
@@ -124,9 +128,24 @@ public abstract class AbstractPropertyMapping implements PropertyMapping {
 		return result;
 	}
 
-	protected void addPropertyPath(String path, Type type, String[] columns,
-			String[] columnReaders, String[] columnReaderTemplates,
+	protected void addPropertyPath(
+			String path,
+			Type type,
+			String[] columns,
+			String[] columnReaders,
+			String[] columnReaderTemplates,
 			String[] formulaTemplates) {
+		// TODO : not quite sure yet of the difference, but this is only needed from annotations for @Id @ManyToOne support
+		if ( typesByPropertyPath.containsKey( path ) ) {
+			if ( log.isTraceEnabled() ) {
+				log.trace(
+						"Skipping duplicate registration of path [" + path
+								+ "], existing type = [" + typesByPropertyPath.get(path)
+								+ "], incoming type = [" + type + "]"
+				);
+			}
+			return;
+		}
 		typesByPropertyPath.put(path, type);
 		columnsByPropertyPath.put(path, columns);
 		columnReadersByPropertyPath.put(path, columnReaders);

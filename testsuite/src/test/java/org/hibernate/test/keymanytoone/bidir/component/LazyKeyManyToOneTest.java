@@ -1,5 +1,7 @@
 package org.hibernate.test.keymanytoone.bidir.component;
 
+import java.util.List;
+
 import junit.framework.Test;
 
 import org.hibernate.Session;
@@ -27,6 +29,32 @@ public class LazyKeyManyToOneTest extends FunctionalTestCase {
 	public void configure(Configuration cfg) {
 		super.configure( cfg );
 		cfg.setProperty( Environment.GENERATE_STATISTICS, "true" );
+	}
+
+	public void testQueryingOnMany2One() {
+		Session s = openSession();
+		s.beginTransaction();
+		Customer cust = new Customer( "Acme, Inc." );
+		Order order = new Order( new Order.Id( cust, 1 ) );
+		cust.getOrders().add( order );
+		s.save( cust );
+		s.getTransaction().commit();
+		s.close();
+
+		s = openSession();
+		s.beginTransaction();
+		List results = s.createQuery( "from Order o where o.id.customer.name = :name" )
+				.setParameter( "name", cust.getName() )
+				.list();
+		assertEquals( 1, results.size() );
+		s.getTransaction().commit();
+		s.close();
+
+		s = openSession();
+		s.beginTransaction();
+		s.delete( cust );
+		s.getTransaction().commit();
+		s.close();
 	}
 
 	public void testSaveCascadedToKeyManyToOne() {

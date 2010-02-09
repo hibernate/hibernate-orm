@@ -1,5 +1,7 @@
 package org.hibernate.test.keymanytoone.bidir.component;
 
+import java.util.List;
+
 import junit.framework.Test;
 
 import org.hibernate.HibernateException;

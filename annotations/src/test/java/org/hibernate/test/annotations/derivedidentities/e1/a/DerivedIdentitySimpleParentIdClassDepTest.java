@@ -1,5 +1,6 @@
 package org.hibernate.test.annotations.derivedidentities.e1.a;
 
+import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.test.annotations.TestCase;
 import org.hibernate.test.util.SchemaUtil;
@@ -50,14 +51,11 @@ public class DerivedIdentitySimpleParentIdClassDepTest extends TestCase {
 		// List depList = s.createQuery("Select d from Dependent d where d.name='LittleP'").list();
 
 		// the following query is not finding the entity 'd' added above
-		List depList = s.createQuery("Select d from Dependent d where d.name='LittleP' and d.emp.name='Paula'").list();
-		Object newDependent = null;
-		if (depList.size() > 0) {
-			 newDependent = (Dependent) depList.get(0);
-		}
-		if (newDependent != d) {
-			fail("PC entity instance (" + d +") does not match returned query result value (" + newDependent);
-		}
+		Query query = s.createQuery("Select d from Dependent d where d.name='LittleP' and d.emp.empName='Paula'");
+		List depList = query.list();
+		assertEquals( 1, depList.size() );
+		Object newDependent = (Dependent) depList.get(0);
+		assertSame( d, newDependent );
 		s.getTransaction().rollback();
 		s.close();
 	}

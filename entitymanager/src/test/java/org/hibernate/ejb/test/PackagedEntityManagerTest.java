@@ -23,6 +23,11 @@
  */
 package org.hibernate.ejb.test;
 
+import java.io.File;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLClassLoader;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Properties;
@@ -62,9 +67,43 @@ import org.hibernate.util.ConfigHelper;
  */
 @SuppressWarnings("unchecked")
 public class PackagedEntityManagerTest extends TestCase {
+	private static ClassLoader originalClassLoader;
 
 	public Class[] getAnnotatedClasses() {
 		return new Class[] { Item.class, Distributor.class };
+	}
+
+	@Override
+	protected void setUp() throws Exception {
+		originalClassLoader = Thread.currentThread().getContextClassLoader();
+		Thread.currentThread().setContextClassLoader( buildCustomTCCL( originalClassLoader ) );
+		super.setUp();
+	}
+
+	private ClassLoader buildCustomTCCL(ClassLoader parentClassLoader) throws MalformedURLException {
+		// get a URL reference to something we now is part of the classpath (us)
+		URL myUrl = parentClassLoader.getResource( PackagedEntityManagerTest.class.getName().replace( '.', '/' ) + ".class" );
+		File myPath = new File( myUrl.getFile() );
+		// navigate back to '/target'
+		File targetDir = myPath
+				.getParentFile()  // target/classes/org/hibernate/ejb/test
+				.getParentFile()  // target/classes/org/hibernate/ejb
+				.getParentFile()  // target/classes/org/hibernate
+				.getParentFile()  // target/classes/org
+				.getParentFile()  // target/classes/
+				.getParentFile(); // target
+		File testPackagesDir = new File( targetDir, "test-packages" );
+		ArrayList<URL> urls = new ArrayList<URL>();
+		for ( File testPackage : testPackagesDir.listFiles() ) {
+			urls.add( testPackage.toURL() );
+		}
+		return new URLClassLoader( urls.toArray( new URL[ urls.size() ] ), parentClassLoader );
+	}
+
+	@Override
+	public void tearDown() throws Exception {
+		super.tearDown();
+		Thread.currentThread().setContextClassLoader( originalClassLoader );
 	}
 
 	@Override

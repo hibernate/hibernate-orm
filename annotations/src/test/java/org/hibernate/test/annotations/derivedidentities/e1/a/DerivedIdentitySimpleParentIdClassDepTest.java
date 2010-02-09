@@ -4,6 +4,8 @@ import org.hibernate.Session;
 import org.hibernate.test.annotations.TestCase;
 import org.hibernate.test.util.SchemaUtil;
 
+import java.util.List;
+
 /**
  * @author Emmanuel Bernard
  */
@@ -32,6 +34,31 @@ public class DerivedIdentitySimpleParentIdClassDepTest extends TestCase {
 		s.delete( d );
 		s.delete( d.getEmp() );
 		s.getTransaction().commit();
+		s.close();
+	}
+
+	public void testQueryNewEntityInPC() throws Exception {
+		Session s = openSession();
+		s.getTransaction().begin();
+		Employee e = new Employee( 1L, "Paula", "P" );
+		Dependent d = new Dependent( "LittleP", e );
+		d.setEmp(e);
+		s.persist( d );
+		s.persist( e );
+
+		// the following would work
+		// List depList = s.createQuery("Select d from Dependent d where d.name='LittleP'").list();
+
+		// the following query is not finding the entity 'd' added above
+		List depList = s.createQuery("Select d from Dependent d where d.name='LittleP' and d.emp.name='Paula'").list();
+		Object newDependent = null;
+		if (depList.size() > 0) {
+			 newDependent = (Dependent) depList.get(0);
+		}
+		if (newDependent != d) {
+			fail("PC entity instance (" + d +") does not match returned query result value (" + newDependent);
+		}
+		s.getTransaction().rollback();
 		s.close();
 	}
 

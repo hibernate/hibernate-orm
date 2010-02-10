@@ -45,6 +45,7 @@ import org.hibernate.engine.SessionImplementor;
 
 /**
  * @author Adam Warski (adam at warski dot org)
+ * @author Hernan Chanfreau
  */
 public class AuditReaderImpl implements AuditReaderImplementor {
     private final AuditConfiguration verCfg;
@@ -209,4 +210,12 @@ public class AuditReaderImpl implements AuditReaderImplementor {
 	public AuditQueryCreator createQuery() {
         return new AuditQueryCreator(verCfg, this);
     }
+	
+    public boolean isEntityClassAudited(Class<?> entityClass) {
+        checkNotNull(entityClass, "Entity class");
+        checkSession();
+
+        String entityName = entityClass.getName();       
+        return (verCfg.getEntCfg().isVersioned(entityName));
+    }	
 }

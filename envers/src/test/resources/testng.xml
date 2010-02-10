@@ -4,6 +4,7 @@
     <test name="All">
         <packages>
             <package name="org.hibernate.envers.test.integration.accesstype" />
+            <package name="org.hibernate.envers.test.integration.auditReader" />
             <package name="org.hibernate.envers.test.integration.basic" />
             <package name="org.hibernate.envers.test.integration.cache" />
             <package name="org.hibernate.envers.test.integration.collection" />

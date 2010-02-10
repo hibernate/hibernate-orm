@@ -32,6 +32,7 @@ import org.hibernate.envers.query.AuditQueryCreator;
 
 /**
  * @author Adam Warski (adam at warski dot org)
+ * @author Hernan Chanfreau
  */
 public interface AuditReader {
     /**
@@ -121,4 +122,12 @@ public interface AuditReader {
      * is closed.
      */
     AuditQueryCreator createQuery();
+
+    /**
+     * Checks if the entityClass was configured to be audited.
+     *  
+     * @param entityClass Class of the entity asking for audit support
+     * @return true if the entityClass is audited.
+     */
+    boolean isEntityClassAudited(Class<?> entityClass);
 }

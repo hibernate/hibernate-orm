@@ -211,10 +211,9 @@ public interface Query {
 	 * The read-only/modifiable setting has no impact on entities/proxies
 	 * returned by the query that existed in the session before the query was executed.
 	 *
-	 * @return true, entities and proxies loaded by the query will be put in read-only mode
-	 *         false, entities and proxies loaded by the query will be put in modifiable mode
+	 * @param readOnly true, entities and proxies loaded by the query will be put in read-only mode
+	 *                 false, entities and proxies loaded by the query will be put in modifiable mode
 	 */
-
 	public Query setReadOnly(boolean readOnly);
 
 	/**

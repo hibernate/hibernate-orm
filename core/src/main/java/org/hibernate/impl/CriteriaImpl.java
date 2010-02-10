@@ -81,6 +81,8 @@ public class CriteriaImpl implements Criteria, Serializable {
 	private FlushMode sessionFlushMode;
 	private CacheMode sessionCacheMode;
 
+	private Boolean readOnly;
+
 	private ResultTransformer resultTransformer = Criteria.ROOT_ENTITY;
 
 
@@ -269,6 +271,36 @@ public class CriteriaImpl implements Criteria, Serializable {
 
 	public Criteria setTimeout(int timeout) {
 		this.timeout = new Integer(timeout);
+		return this;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public boolean isReadOnlyInitialized() {
+		return readOnly != null;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public boolean isReadOnly() {
+		if ( ! isReadOnlyInitialized() && getSession() == null ) {
+			throw new IllegalStateException(
+					"cannot determine readOnly/modifiable setting when it is not initialized and is not initialized and getSession() == null"
+			);
+		}
+		return ( isReadOnlyInitialized() ?
+				readOnly.booleanValue() :
+				getSession().getPersistenceContext().isDefaultReadOnly()
+		);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public Criteria setReadOnly(boolean readOnly) {
+		this.readOnly = Boolean.valueOf( readOnly );
 		return this;
 	}
 
@@ -492,6 +524,19 @@ public class CriteriaImpl implements Criteria, Serializable {
 
 		public Criteria createCriteria(String associationPath, String alias, int joinType, Criterion withClause) throws HibernateException {
 			return new Subcriteria( this, associationPath, alias, joinType, withClause );
+		}
+
+		public boolean isReadOnly() {
+			return CriteriaImpl.this.isReadOnly();
+		}
+
+		public boolean isReadOnlyInitialized() {
+			return CriteriaImpl.this.isReadOnlyInitialized();
+		}
+
+		public Criteria setReadOnly(boolean readOnly) {
+			CriteriaImpl.this.setReadOnly( readOnly );
+			return this;
 		}
 
 		public Criteria setCacheable(boolean cacheable) {

@@ -313,7 +313,61 @@ public interface Criteria extends CriteriaSpecification {
 	 * @return this (for method chaining)
 	 */
 	public Criteria setFirstResult(int firstResult);
-	
+
+	/**
+	 * Was the read-only/modifiable mode explicitly initialized?
+	 *
+	 * @return true, the read-only/modifiable mode was explicitly initialized; false, otherwise.
+	 *
+	 * @see Criteria#setReadOnly(boolean)
+	 */
+	public boolean isReadOnlyInitialized();
+
+	/**
+	 * Should entities and proxies loaded by this Criteria be put in read-only mode? If the
+	 * read-only/modifiable setting was not initialized, then the default
+	 * read-only/modifiable setting for the persistence context is returned instead.
+	 * @see Criteria#setReadOnly(boolean)
+	 * @see org.hibernate.engine.PersistenceContext#isDefaultReadOnly()
+	 *
+	 * The read-only/modifiable setting has no impact on entities/proxies returned by the
+	 * Criteria that existed in the session before the Criteria was executed.
+	 *
+	 * @return true, entities and proxies loaded by the criteria will be put in read-only mode
+	 *         false, entities and proxies loaded by the criteria will be put in modifiable mode
+	 * @throws IllegalStateException if <code>isReadOnlyInitialized()</code> returns <code>false</code>
+	 * and this Criteria is not associated with a session.
+	 * @see Criteria#isReadOnlyInitialized()
+	 */
+	public boolean isReadOnly();
+
+	/**
+	 * Set the read-only/modifiable mode for entities and proxies
+	 * loaded by this Criteria. This setting overrides the default setting
+	 * for the persistence context.
+	 * @see org.hibernate.engine.PersistenceContext#isDefaultReadOnly()
+	 *
+	 * To set the default read-only/modifiable setting used for
+	 * entities and proxies that are loaded into the session:
+	 * @see org.hibernate.engine.PersistenceContext#setDefaultReadOnly(boolean)
+	 * @see org.hibernate.Session#setDefaultReadOnly(boolean)
+	 *
+	 * Read-only entities are not dirty-checked and snapshots of persistent
+	 * state are not maintained. Read-only entities can be modified, but
+	 * changes are not persisted.
+	 *
+	 * When a proxy is initialized, the loaded entity will have the same
+	 * read-only/modifiable setting as the uninitialized
+	 * proxy has, regardless of the session's current setting.
+	 *
+	 * The read-only/modifiable setting has no impact on entities/proxies
+	 * returned by the criteria that existed in the session before the criteria was executed.
+	 *
+	 * @param readOnly true, entities and proxies loaded by the criteria will be put in read-only mode
+	 *                 false, entities and proxies loaded by the criteria will be put in modifiable mode
+	 */
+	public Criteria setReadOnly(boolean readOnly);
+
 	/**
 	 * Set a fetch size for the underlying JDBC query.
 	 *

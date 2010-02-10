@@ -325,6 +325,8 @@ public class CriteriaQueryTranslator implements CriteriaQuery {
 		        valueArray,
 		        lockOptions,
 		        selection,
+		        rootCriteria.isReadOnlyInitialized(),
+		        ( rootCriteria.isReadOnlyInitialized() ? rootCriteria.isReadOnly() : false ),
 		        rootCriteria.getCacheable(),
 		        rootCriteria.getCacheRegion(),
 		        rootCriteria.getComment(),

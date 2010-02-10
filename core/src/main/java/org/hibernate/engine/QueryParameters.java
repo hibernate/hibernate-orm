@@ -102,7 +102,7 @@ public final class QueryParameters {
 	public QueryParameters(
 			final Type[] positionalParameterTypes,
 			final Object[] postionalParameterValues) {
-		this( positionalParameterTypes, postionalParameterValues, null, null, false, null, null, false, null );
+		this( positionalParameterTypes, postionalParameterValues, null, null, false, false, false, null, null, false, null );
 	}
 
 	public QueryParameters(
@@ -138,6 +138,8 @@ public final class QueryParameters {
 			final Object[] positionalParameterValues,
 			final LockOptions lockOptions,
 			final RowSelection rowSelection,
+			final boolean isReadOnlyInitialized,
+			final boolean readOnly,
 			final boolean cacheable,
 			final String cacheRegion,
 			//final boolean forceCacheRefresh,
@@ -150,8 +152,8 @@ public final class QueryParameters {
 				null,
 				lockOptions,
 				rowSelection,
-				false,
-				false,
+				isReadOnlyInitialized,
+				readOnly,
 				cacheable,
 				cacheRegion,
 				comment,

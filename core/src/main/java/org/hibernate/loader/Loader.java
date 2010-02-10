@@ -2170,14 +2170,14 @@ public abstract class Loader {
 				session
 		);
 		
-		List result = getResultFromQueryCache( 
+		List result = getResultFromQueryCache(
 				session, 
 				queryParameters, 
 				querySpaces, 
 				resultTypes, 
 				queryCache, 
 				key 
-		);
+			);
 
 		if ( result == null ) {
 			result = doList( session, queryParameters );
@@ -2207,7 +2207,26 @@ public abstract class Loader {
 		if ( session.getCacheMode().isGetEnabled() ) {
 			boolean isImmutableNaturalKeyLookup = queryParameters.isNaturalKeyLookup()
 					&& getEntityPersisters()[0].getEntityMetamodel().hasImmutableNaturalId();
-			result = queryCache.get( key, resultTypes, isImmutableNaturalKeyLookup, querySpaces, session );
+
+			final PersistenceContext persistenceContext = session.getPersistenceContext();
+			boolean defaultReadOnlyOrig = persistenceContext.isDefaultReadOnly();
+			if ( queryParameters.isReadOnlyInitialized() ) {
+				// The read-only/modifiable mode for the query was explicitly set.
+				// Temporarily set the default read-only/modifiable setting to the query's setting.
+				persistenceContext.setDefaultReadOnly( queryParameters.isReadOnly() );
+			}
+			else {
+				// The read-only/modifiable setting for the query was not initialized.
+				// Use the default read-only/modifiable from the persistence context instead.
+				queryParameters.setReadOnly( persistenceContext.isDefaultReadOnly() );
+			}
+			try {
+				result = queryCache.get( key, resultTypes, isImmutableNaturalKeyLookup, querySpaces, session );
+			}
+			finally {
+				persistenceContext.setDefaultReadOnly( defaultReadOnlyOrig );
+			}
+
 			if ( factory.getStatistics().isStatisticsEnabled() ) {
 				if ( result == null ) {
 					factory.getStatisticsImplementor()

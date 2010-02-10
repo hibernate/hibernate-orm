@@ -5,6 +5,48 @@ match the actual issue resolution (i.e. a bug might not be a bug). Please
 refer to the particular case on JIRA using the issue tracking number to learn
 more about each case.
 
+
+Changes in version 3.5.0-CR-1 (2010.02.10)
+-------------------------------------------
+http://opensource.atlassian.com/projects/hibernate/browse/HHH/fixforversion/11014
+
+** Sub-task
+    * [HHH-4661] - Properly propagate Query.setLockMode to Hibernate Core
+    * [HHH-4664] - Implement EntityManagerFactory#getProperties()
+    * [HHH-4848] - Derived identities: Derived entities using @IdClass and mapping a @XToOne are not supported
+
+** Bug
+    * [HHH-4317] - Memory leak in EnumType class.
+    * [HHH-4824] - localpath appeared in the doc xml
+    * [HHH-4841] - Read-only proxies in NonFlushedChanges are not read-only when applied to a new session
+    * [HHH-4861] - Allow lookup by the "simple" pk type of "parent entity" in "derived identities" cases
+    * [HHH-4877] - "Check Nullability" logging incorrectness in SettingsFactory
+    * [HHH-4880] - EntityManager.refresh does not throw EntityNotFoundException for removed entity
+    * [HHH-4883] - Unable to join across a component
+    * [HHH-4884] - Fix binding of @TableGenerator#initialValue into org.hibernate.id.enhanced.TableGenerator
+    * [HHH-4889] - @IdClass containing an associated entity reference (instead of the pk of this associated entity) should still work
+    * [HHH-4895] - property mappings incorrect for composite ids with many-to-one
+    * [HHH-4896] - Read-only proxy targets initialized from second-level cache are not read-only
+    * [HHH-4898] - Results from read-only Criteria and Query obtained from query cache are not read-only
+    * [HHH-4900] - Wrong immutable type check in IdMetadataGenerator
+    * [HHH-4902] - Handle JPA 2 requirement of setting id attribute to non-null with its equivalent of foreign-generator
+
+** Improvement
+    * [HHH-4578] - Criteria is missing read-only flag
+    * [HHH-4704] - Pass session into EntityTuplizer#setIdentifier
+    * [HHH-4879] - Support HQL index-refering functions for many-to-many, indexed collections
+    * [HHH-4894] - Process composite-id sub-generators PersistentIdentifierGenerator contract(s)
+
+** New Feature
+    * [HHH-4731] - Public API to know if an entity class is audited
+
+** Patch
+    * [HHH-4886] - Merge minor change from IngresDialect.java from 3.3.2 for Ingres 9.2 compatibility
+
+** Task
+    * [HHH-4892] - Simplify testing of persistence packages
+
+
 Changes in version 3.5.0-Beta-4 (2010.01.28)
 -------------------------------------------
 - http://opensource.atlassian.com/projects/hibernate/browse/HHH/fixforversion/11012

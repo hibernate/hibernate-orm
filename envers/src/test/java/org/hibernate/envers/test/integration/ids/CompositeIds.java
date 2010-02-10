@@ -27,10 +27,7 @@ import java.util.Arrays;
 import javax.persistence.EntityManager;
 
 import org.hibernate.envers.test.AbstractEntityTest;
-import org.hibernate.envers.test.entities.ids.EmbId;
-import org.hibernate.envers.test.entities.ids.EmbIdTestEntity;
-import org.hibernate.envers.test.entities.ids.MulId;
-import org.hibernate.envers.test.entities.ids.MulIdTestEntity;
+import org.hibernate.envers.test.entities.ids.*;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
@@ -44,10 +41,13 @@ public class CompositeIds extends AbstractEntityTest {
     private EmbId id2;
     private MulId id3;
     private MulId id4;
+    private EmbIdWithCustomType id5;
+    private EmbIdWithCustomType id6;
 
     public void configure(Ejb3Configuration cfg) {
         cfg.addAnnotatedClass(EmbIdTestEntity.class);
         cfg.addAnnotatedClass(MulIdTestEntity.class);
+        cfg.addAnnotatedClass(EmbIdWithCustomTypeTestEntity.class);
     }
 
     @BeforeClass(dependsOnMethods = "init")
@@ -56,6 +56,8 @@ public class CompositeIds extends AbstractEntityTest {
         id2 = new EmbId(10, 20);
         id3 = new MulId(100, 101);
         id4 = new MulId(102, 103);
+        id5 = new EmbIdWithCustomType(25, CustomEnum.NO);
+        id6 = new EmbIdWithCustomType(27, CustomEnum.YES);
 
         // Revision 1
         EntityManager em = getEntityManager();
@@ -63,6 +65,7 @@ public class CompositeIds extends AbstractEntityTest {
 
         em.persist(new EmbIdTestEntity(id1, "x"));
         em.persist(new MulIdTestEntity(id3.getId1(), id3.getId2(), "a"));
+        em.persist(new EmbIdWithCustomTypeTestEntity(id5, "c"));
 
         em.getTransaction().commit();
 
@@ -72,6 +75,7 @@ public class CompositeIds extends AbstractEntityTest {
 
         em.persist(new EmbIdTestEntity(id2, "y"));
         em.persist(new MulIdTestEntity(id4.getId1(), id4.getId2(), "b"));
+        em.persist(new EmbIdWithCustomTypeTestEntity(id6, "d"));
 
         em.getTransaction().commit();
 
@@ -83,11 +87,15 @@ public class CompositeIds extends AbstractEntityTest {
         EmbIdTestEntity ete2 = em.find(EmbIdTestEntity.class, id2);
         MulIdTestEntity mte3 = em.find(MulIdTestEntity.class, id3);
         MulIdTestEntity mte4 = em.find(MulIdTestEntity.class, id4);
+        EmbIdWithCustomTypeTestEntity cte5 = em.find(EmbIdWithCustomTypeTestEntity.class, id5);
+        EmbIdWithCustomTypeTestEntity cte6 = em.find(EmbIdWithCustomTypeTestEntity.class, id6);
 
         ete1.setStr1("x2");
         ete2.setStr1("y2");
         mte3.setStr1("a2");
         mte4.setStr1("b2");
+        cte5.setStr1("c2");
+        cte6.setStr1("d2");
 
         em.getTransaction().commit();
 
@@ -98,11 +106,15 @@ public class CompositeIds extends AbstractEntityTest {
         ete1 = em.find(EmbIdTestEntity.class, id1);
         ete2 = em.find(EmbIdTestEntity.class, id2);
         mte3 = em.find(MulIdTestEntity.class, id3);
+        cte5 = em.find(EmbIdWithCustomTypeTestEntity.class, id5);
+        cte6 = em.find(EmbIdWithCustomTypeTestEntity.class, id6);
 
         em.remove(ete1);
         em.remove(mte3);
+        em.remove(cte6);
 
         ete2.setStr1("y3");
+        cte5.setStr1("c3");
 
         em.getTransaction().commit();
 
@@ -126,6 +138,10 @@ public class CompositeIds extends AbstractEntityTest {
         assert Arrays.asList(1, 3, 4).equals(getAuditReader().getRevisions(MulIdTestEntity.class, id3));
 
         assert Arrays.asList(2, 3).equals(getAuditReader().getRevisions(MulIdTestEntity.class, id4));
+
+        assert Arrays.asList(1, 3, 4).equals(getAuditReader().getRevisions(EmbIdWithCustomTypeTestEntity.class, id5));
+
+        assert Arrays.asList(2, 3, 4).equals(getAuditReader().getRevisions(EmbIdWithCustomTypeTestEntity.class, id6));
     }
 
     @Test
@@ -175,5 +191,30 @@ public class CompositeIds extends AbstractEntityTest {
         assert getAuditReader().find(MulIdTestEntity.class, id4, 3).equals(ver2);
         assert getAuditReader().find(MulIdTestEntity.class, id4, 4).equals(ver2);
         assert getAuditReader().find(MulIdTestEntity.class, id4, 5).equals(ver2);
+    }
+
+    @Test
+    public void testHistoryOfId5() {
+        EmbIdWithCustomTypeTestEntity ver1 = new EmbIdWithCustomTypeTestEntity(id5, "c");
+        EmbIdWithCustomTypeTestEntity ver2 = new EmbIdWithCustomTypeTestEntity(id5, "c2");
+        EmbIdWithCustomTypeTestEntity ver3 = new EmbIdWithCustomTypeTestEntity(id5, "c3");
+
+        assert getAuditReader().find(EmbIdWithCustomTypeTestEntity.class, id5, 1).equals(ver1);
+        assert getAuditReader().find(EmbIdWithCustomTypeTestEntity.class, id5, 2).equals(ver1);
+        assert getAuditReader().find(EmbIdWithCustomTypeTestEntity.class, id5, 3).equals(ver2);
+        assert getAuditReader().find(EmbIdWithCustomTypeTestEntity.class, id5, 4).equals(ver3);
+        assert getAuditReader().find(EmbIdWithCustomTypeTestEntity.class, id5, 5).equals(ver3);
+    }
+
+    @Test
+    public void testHistoryOfId6() {
+        EmbIdWithCustomTypeTestEntity ver1 = new EmbIdWithCustomTypeTestEntity(id6, "d");
+        EmbIdWithCustomTypeTestEntity ver2 = new EmbIdWithCustomTypeTestEntity(id6, "d2");
+
+        assert getAuditReader().find(EmbIdWithCustomTypeTestEntity.class, id6, 1) == null;
+        assert getAuditReader().find(EmbIdWithCustomTypeTestEntity.class, id6, 2).equals(ver1);
+        assert getAuditReader().find(EmbIdWithCustomTypeTestEntity.class, id6, 3).equals(ver2);
+        assert getAuditReader().find(EmbIdWithCustomTypeTestEntity.class, id6, 4) == null;
+        assert getAuditReader().find(EmbIdWithCustomTypeTestEntity.class, id6, 5) == null;
     }
 }

@@ -42,7 +42,6 @@ import org.hibernate.MappingException;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
-import org.hibernate.type.ImmutableType;
 import org.hibernate.type.Type;
 
 /**
@@ -62,7 +61,7 @@ public final class IdMetadataGenerator {
             Property property = properties.next();
             Type propertyType = property.getType();
             if (!"_identifierMapper".equals(property.getName())) {
-                if (propertyType instanceof ImmutableType) {
+                if (!propertyType.isMutable()) {
                     // Last but one parameter: ids are always insertable
                     mainGenerator.getBasicMetadataGenerator().addBasic(parent,
                             getIdPersistentPropertyAuditingData(property),

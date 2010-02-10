@@ -635,8 +635,9 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 				session.instantiate( subclassPersister, id ) : optionalObject;
 
 		// make it circular-reference safe
+		EntityKey entityKey = new EntityKey( id, subclassPersister, session.getEntityMode() );
 		TwoPhaseLoad.addUninitializedCachedEntity(
-				new EntityKey( id, subclassPersister, session.getEntityMode() ),
+				entityKey,
 				result,
 				subclassPersister,
 				LockMode.NONE,
@@ -659,12 +660,21 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 		if ( log.isTraceEnabled() ) log.trace( "Cached Version: " + version );
 
 		final PersistenceContext persistenceContext = session.getPersistenceContext();
+		boolean isReadOnly = session.isDefaultReadOnly();
+		if ( persister.isMutable() ) {
+			Object proxy = persistenceContext.getProxy( entityKey );
+			if ( proxy != null ) {
+				// there is already a proxy for this impl
+				// only set the status to read-only if the proxy is read-only
+				isReadOnly = ( ( HibernateProxy ) proxy ).getHibernateLazyInitializer().isReadOnly();
+			}
+		}
+		else {
+			isReadOnly = true;
+		}
 		persistenceContext.addEntry(
 				result,
-				( session.isDefaultReadOnly() || ! persister.isMutable() ? 
-						Status.READ_ONLY :
-						Status.MANAGED
-				),
+				( isReadOnly ? Status.READ_ONLY : Status.MANAGED ),
 				values,
 				null,
 				id,

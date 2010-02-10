@@ -1,6 +1,7 @@
 package org.hibernate.test.annotations.derivedidentities.e4.b;
 
 import java.util.Date;
+import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
@@ -16,11 +17,20 @@ import javax.persistence.TemporalType;
 public class MedicalHistory {
 
 	@Id String id; // overriding not allowed ... // default join column name is overridden @MapsId
+
+	@MapsId
+	@JoinColumn(name = "FK")
+    @OneToOne(cascade= CascadeType.ALL)
+	Person patient;
+
 	@Temporal(TemporalType.DATE)
 	Date lastupdate;
 
-	@JoinColumn(name = "FK")
-	@MapsId
-	@OneToOne
-	Person patient;
+	public MedicalHistory() {
+	}
+
+	public MedicalHistory(String id, Person patient) {
+		this.id = id;
+		this.patient = patient;
+	}
 }

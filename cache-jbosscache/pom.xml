@@ -1,3 +1,4 @@
+<?xml version="1.0"?>
 <!--
   ~ Copyright (c) 2009, Red Hat Middleware LLC or third-party contributors as
   ~ indicated by the @author tags or express copyright attribution
@@ -26,7 +27,7 @@
     <parent>
         <groupId>org.hibernate</groupId>
         <artifactId>hibernate-parent</artifactId>
-        <version>3.5.0-SNAPSHOT</version>
+        <version>3.5.0-CR-1</version>
         <relativePath>../parent/pom.xml</relativePath>
     </parent>
     

@@ -1,7 +1,7 @@
 // $Id$
 /*
 * JBoss, Home of Professional Open Source
-* Copyright 2009, Red Hat, Inc. and/or its affiliates, and individual contributors
+* Copyright 2008, Red Hat Middleware LLC, and individual contributors
 * by the @authors tag. See the copyright.txt in the distribution for a
 * full listing of individual contributors.
 *
@@ -15,34 +15,26 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-package org.hibernate.jpamodelgen.test.elementcollection;
-
-import javax.persistence.Entity;
-import javax.persistence.Id;
+package org.hibernate.jpamodelgen.xml;
 
 /**
  * @author Hardy Ferentschik
  */
-@Entity
-public class Cleaner {
-	private int id;
+public class XmlMetaMap extends XmlMetaCollection {
 
-	private String name;
+	private final String keyType;
 
-	@Id
-	public int getId() {
-		return id;
+	public XmlMetaMap(XmlMetaEntity parent, String propertyName, String type, String collectionType, String keyType) {
+		super( parent, propertyName, type, collectionType );
+		this.keyType = keyType;
 	}
 
-	public void setId(int id) {
-		this.id = id;
-	}
-
-	public String getName() {
-		return name;
-	}
-
-	public void setName(String name) {
-		this.name = name;
+	public String getDeclarationString() {
+		return "public static volatile "
+				+ parentEntity.importType( getMetaType() )
+				+ "<" + parentEntity.importType( parentEntity.getQualifiedName() )
+				+ ", " + parentEntity.importType( keyType ) + ", "
+				+ parentEntity.importType( getTypeDeclaration() )
+				+ "> " + getPropertyName() + ";";
 	}
 }

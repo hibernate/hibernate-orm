@@ -20,7 +20,6 @@ package org.hibernate.jpamodelgen.annotation;
 import javax.lang.model.element.Element;
 
 /**
- *
  * @author Max Andersen
  * @author Hardy Ferentschik
  * @author Emmanuel Bernard
@@ -30,13 +29,13 @@ public class AnnotationMetaMap extends AnnotationMetaCollection {
 	private final String keyType;
 
 	public AnnotationMetaMap(AnnotationMetaEntity parent, Element element, String collectionType,
-			String keyType, String elementType) {
-		super(parent, element, collectionType, elementType);
-		this.keyType = keyType;		
+							 String keyType, String elementType) {
+		super( parent, element, collectionType, elementType );
+		this.keyType = keyType;
 	}
 
 	public String getDeclarationString() {
-		return "public static volatile " + parent.importType(getMetaType()) + "<" + parent.importType(parent.getQualifiedName()) + ", " + parent.importType(keyType) + ", " + parent.importType(getTypeDeclaration()) + "> " + getPropertyName() + ";";  
+		return "public static volatile " + parent.importType( getMetaType() ) + "<" + parent.importType( parent.getQualifiedName() ) + ", " + parent
+				.importType( keyType ) + ", " + parent.importType( getTypeDeclaration() ) + "> " + getPropertyName() + ";";
 	}
-
 }

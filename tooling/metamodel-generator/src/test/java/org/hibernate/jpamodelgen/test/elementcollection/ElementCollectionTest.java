@@ -17,9 +17,14 @@
 */
 package org.hibernate.jpamodelgen.test.elementcollection;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+
 import org.testng.annotations.Test;
 
 import org.hibernate.jpamodelgen.test.util.CompilationTest;
+import org.hibernate.jpamodelgen.test.util.TestUtil;
 
 import static org.hibernate.jpamodelgen.test.util.TestUtil.assertMapAttributesInMetaModelFor;
 import static org.hibernate.jpamodelgen.test.util.TestUtil.assertMetamodelClassGeneratedFor;
@@ -55,8 +60,30 @@ public class ElementCollectionTest extends CompilationTest {
 		);
 	}
 
+	/**
+	 * METAGEN-22
+	 */
+	@Test
+	public void testMapKeyClassXmlConfigured() {
+		assertMetamodelClassGeneratedFor( Hostel.class );
+		assertMapAttributesInMetaModelFor(
+				Hostel.class, "roomsByName", String.class, Room.class, "Wrong type in map attribute."
+		);
+
+		assertMapAttributesInMetaModelFor(
+				Hostel.class, "cleaners", Room.class, Cleaner.class, "Wrong type in map attribute."
+		);
+	}
+
 	@Override
 	protected String getPackageNameOfTestSources() {
 		return ElementCollectionTest.class.getPackage().getName();
+	}
+
+	@Override
+	protected Collection<String> getOrmFiles() {
+		List<String> ormFiles = new ArrayList<String>();
+		ormFiles.add( TestUtil.fcnToPath( ElementCollectionTest.class.getPackage().getName() ) + "/hostel.xml" );
+		return ormFiles;
 	}
 }

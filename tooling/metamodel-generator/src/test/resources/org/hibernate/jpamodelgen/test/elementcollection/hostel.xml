@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<entity-mappings xmlns="http://java.sun.com/xml/ns/persistence/orm"
+                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                 xsi:schemaLocation="http://java.sun.com/xml/ns/persistence/orm orm_2_0.xsd"
+                 version="2.0"
+        >
+    <entity class="org.hibernate.jpamodelgen.test.elementcollection.Hostel">
+        <attributes>
+            <one-to-many name="cleaners" target-entity="org.hibernate.jpamodelgen.test.elementcollection.Cleaner">
+                <map-key-class class="org.hibernate.jpamodelgen.test.elementcollection.Room"/>
+            </one-to-many>
+            <element-collection name="roomsByName"
+                                target-class="org.hibernate.jpamodelgen.test.elementcollection.Room">
+                <map-key-class class="java.lang.String"/>
+            </element-collection>
+        </attributes>
+    </entity>
+</entity-mappings>
+

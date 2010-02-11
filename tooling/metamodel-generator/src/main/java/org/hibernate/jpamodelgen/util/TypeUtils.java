@@ -380,8 +380,15 @@ public class TypeUtils {
 		}
 	}
 
-	static class EmbeddedAttributeVisitor extends SimpleTypeVisitor6<String, Element> {
+	public static String getKeyType(DeclaredType t, Context context) {
+		List<? extends TypeMirror> typeArguments = t.getTypeArguments();
+		if ( typeArguments.size() == 0 ) {
+			context.logMessage( Diagnostic.Kind.ERROR, "Unable to determine type argument for " + t );
+		}
+		return extractClosestRealTypeAsString( typeArguments.get( 0 ), context );
+	}
 
+	static class EmbeddedAttributeVisitor extends SimpleTypeVisitor6<String, Element> {
 		private Context context;
 
 		EmbeddedAttributeVisitor(Context context) {

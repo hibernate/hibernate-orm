@@ -1,0 +1,608 @@
+# translation of Collection_Mapping.po to 
+# translation of Collection_Mapping.po to
+# translation of Collection_Mapping.po to
+# translation of Collection_Mapping.po to
+# translation of Collection_Mapping.po to
+# translation of Collection_Mapping.po to
+# Language /mnt/hgfs/base/Hibernate/Reference translations for PACKAGE package.
+# Copyright (C) 2006, 2007 Free Software Foundation, Inc.
+# Automatically generated, 2006.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Collection_Mapping\n"
+"Report-Msgid-Bugs-To: http://bugs.kde.org\n"
+"POT-Creation-Date: 2010-02-10T07:25:35\n"
+"PO-Revision-Date: 2007-02-26 10:27+1000\n"
+"Last-Translator: \n"
+"Language-Team:  <de@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: KBabel 1.9.1\n"
+
+#. Tag: title
+#, no-c-format
+msgid "Filtering data"
+msgstr "Das Filtern von Daten"
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"Hibernate3 provides an innovative new approach to handling data with "
+"\"visibility\" rules. A <emphasis>Hibernate filter</emphasis> is a global, "
+"named, parameterized filter that can be enabled or disabled for a particular "
+"Hibernate session."
+msgstr ""
+"Hibernate3 bietet eine innovative, neue Möglichkeit des Umgangs mit Daten "
+"mittels \"Sichtbarkeits\"regeln. Bei einem <emphasis>Hibernate Filter</"
+"emphasis> handelt es sich um einen allgemeingültig benannten, "
+"parametrisierten Filter, der für eine bestimmte Hibernate Session aktiviert "
+"oder deaktiviert werden kann."
+
+#. Tag: title
+#, no-c-format
+msgid "Hibernate filters"
+msgstr "Hibernate Filter"
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"Hibernate3 has the ability to pre-define filter criteria and attach those "
+"filters at both a class level and a collection level. A filter criteria "
+"allows you to define a restriction clause similar to the existing \"where\" "
+"attribute available on the class and various collection elements. These "
+"filter conditions, however, can be parameterized. The application can then "
+"decide at runtime whether certain filters should be enabled and what their "
+"parameter values should be. Filters can be used like database views, but "
+"they are parameterized inside the application."
+msgstr ""
+"Hibernate3 bietet die zusätzliche Möglichkeit, Filterkriterien im Vorfeld zu "
+"definieren und diese Filter sowohl einer Klasse als auch einer Collection-"
+"Ebene zuzufügen. Ein Filterkriterium ist die Möglichkeit eine "
+"Einschränkungsklausel zu definieren, die dem bestehenden \"where\"-Attribut "
+"an der Klasse sowie an verschiedenen Collection-Elementen sehr ähnlich ist. "
+"Der Unterschied besteht darin, dass diese Filterbedingungen parametrisiert "
+"werden können. Die Anwendung kann zur Runtime die Entscheidung darüber "
+"treffen, ob die vorgegebenen Filter aktiviert werden und wie deren Parameter "
+"lauten sollen. Filter können wie Datenbankansichten verwendet , jedoch "
+"innerhalb der Anwendung parametrisiert werden."
+
+#. Tag: para
+#, no-c-format
+msgid ""
+"In order to use filters, they must first be defined and then attached to the "
+"appropriate mapping elements. To define a filter, use the <literal>&lt;"
+"filter-def/&gt;</literal> element within a <literal>&lt;hibernate-mapping/"
+"&gt;</literal> element:"
+msgstr ""
+"Um Filter zu benutzen müssen diese zunächst definiert und anschließend den "
+"betreffenden Mapping-Elementen zugefügt werden. Um einen Filter zu "
+"definieren, verwenden Sie das <literal>&lt;filter-def/&gt;</literal>-Element "
+"innerhalb eines <literal>&lt;hibernate-mapping/&gt;</literal>-Elements:"
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid "This filter can then be attached to a class:"
+msgstr "Anschließend kann dieser Filter einer Klasse zugefügt werden:"
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid "Or, to a collection:"
+msgstr "oder einer Collection:"
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid "Or, to both or multiples of each at the same time."
+msgstr "oder gar beiden (oder mehreren von beiden) gleichzeitig."
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"The methods on <literal>Session</literal> are: <literal>enableFilter(String "
+"filterName)</literal>, <literal>getEnabledFilter(String filterName)</"
+"literal>, and <literal>disableFilter(String filterName)</literal>. By "
+"default, filters are <emphasis>not</emphasis> enabled for a given session. "
+"Filters must be enabled through use of the <literal>Session.enableFilter()</"
+"literal> method, which returns an instance of the <literal>Filter</literal> "
+"interface. If you used the simple filter defined above, it would look like "
+"this:"
+msgstr ""
+"Die Methoden an <literal>Session</literal> sind: <literal>enableFilter"
+"(String filterName)</literal>, <literal>getEnabledFilter(String filterName)</"
+"literal> und <literal>disableFilter(String filterName)</literal>. "
+"Standardmäßig werden Filter <emphasis>nicht</emphasis> für eine vorgegebene "
+"Session verwendet, sondern müssen mittels der <literal>Session.enabledFilter"
+"()</literal>-Methode, die eine Instanz des <literal>Filter</literal>-"
+"Interface wiedergibt, explizit aktiviert werden. Die Verwendung des oben "
+"definierten, einfachen Filters würde wie folgt aussehen:"
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"Methods on the org.hibernate.Filter interface do allow the method-chaining "
+"common to much of Hibernate."
+msgstr ""
+"Bitte beachten Sie, dass Methoden am org.hibernate.Filter-Interface "
+"Methodenverkettung - wie in den meisten Teilen von Hibernate üblich - "
+"erlauben."
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"The following is a full example, using temporal data with an effective "
+"record date pattern:"
+msgstr ""
+"Nachfolgend sehen Sie ein vollständiges Beispiel unter Verwendung temporaler "
+"Daten mit effektivem Datumsformat für den Datensatz:"
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"In order to ensure that you are provided with currently effective records, "
+"enable the filter on the session prior to retrieving employee data:"
+msgstr ""
+"Anschließend aktivieren Sie einfach den Filter an der Session vor dem Abruf "
+"der Angestelltendaten um sicherzustellen, dass Sie stets die aktuell "
+"wirksamen Datensätze erhalten:"
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"Even though a salary constraint was mentioned explicitly on the results in "
+"the above HQL, because of the enabled filter, the query will return only "
+"currently active employees who have a salary greater than one million "
+"dollars."
+msgstr ""
+"In der vorherigen HQL antwortet die Anfrage wegen des aktivierten Filters "
+"nur mit aktuell aktiven Angestellten, deren Gehalt höher als eine Million "
+"Dollar ist, obwohl lediglich eine Gehaltsbedingung formuliert wurde."
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"If you want to use filters with outer joining, either through HQL or load "
+"fetching, be careful of the direction of the condition expression. It is "
+"safest to set this up for left outer joining. Place the parameter first "
+"followed by the column name(s) after the operator."
+msgstr ""
+"Hinweis: Falls Sie vorhaben, Filter mit \"outer-Joining\" zu verwenden "
+"(entweder durch HQL oder Load-Abruf) achten Sie auf die Richtung des "
+"Bedingungsausdrucks. Am sichersten ist es, das Ganze für \"left-outer-Joining"
+"\" einzurichten. Generell sollte der Parameter zuerst gesetzt werden und "
+"anschließend der (die) Spaltenname(n) nach dem Operator."
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"After being defined, a filter might be attached to multiple entities and/or "
+"collections each with its own condition. This can be problematic when the "
+"conditions are the same each time. Using <literal>&lt;filter-def/&gt;</"
+"literal> allows you to definine a default condition, either as an attribute "
+"or CDATA:"
+msgstr ""
+"Nachdem ein Filter definiert wurde, kann er mehreren Entities und/oder "
+"Collections mit jeweils eigener Bedingung hinzugefügt werden. Das kann eine "
+"langweilige Aufgabe sein, wenn die Bedingungen stets dieselben sind. Daher "
+"erlaubt <literal>&lt;filter-def/&gt;</literal> die Definition einer "
+"Standardbedingung als Attribut oder als CDATA:"
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"This default condition will be used whenever the filter is attached to "
+"something without specifying a condition. This means you can give a specific "
+"condition as part of the attachment of the filter that overrides the default "
+"condition in that particular case."
+msgstr ""
+"Diese Standardbedingung wird dann verwendet, wenn der Filter zu etwas "
+"hinzugefügt wird, ohne dass eine Bedingung spezifiziert wird. Bitte beachten "
+"Sie, dass dies bedeutet, dass Sie eine spezielle Bedingung als Teil des "
+"Filteranhangs festlegen können, die die Standardbedingung in diesem "
+"bestimmten Fall außer Kraft setzt."
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[<filter-def name=\"myFilter\">\n"
+#~ "    <filter-param name=\"myFilterParam\" type=\"string\"/>\n"
+#~ "</filter-def>]]>"
+#~ msgstr ""
+#~ "&lt;filter-def name=\"myFilter\"&gt;\n"
+#~ "    &lt;filter-param name=\"myFilterParam\" type=\"string\"/&gt;\n"
+#~ "&lt;/filter-def&gt;"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[<class name=\"myClass\" ...>\n"
+#~ "    ...\n"
+#~ "    <filter name=\"myFilter\" condition=\":myFilterParam = "
+#~ "MY_FILTERED_COLUMN\"/>\n"
+#~ "</class>]]>"
+#~ msgstr ""
+#~ "&lt;class name=\"myClass\" ...&gt;\n"
+#~ "    ...\n"
+#~ "    &lt;filter name=\"myFilter\" condition=\":myFilterParam = "
+#~ "MY_FILTERED_COLUMN\"/&gt;\n"
+#~ "&lt;/class&gt;"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[<set ...>\n"
+#~ "    <filter name=\"myFilter\" condition=\":myFilterParam = "
+#~ "MY_FILTERED_COLUMN\"/>\n"
+#~ "</set>]]>"
+#~ msgstr ""
+#~ "&lt;set ...&gt;\n"
+#~ "    &lt;filter name=\"myFilter\" condition=\":myFilterParam = "
+#~ "MY_FILTERED_COLUMN\"/&gt;\n"
+#~ "&lt;/set&gt;"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[session.enableFilter(\"myFilter\").setParameter(\"myFilterParam"
+#~ "\", \"some-value\");]]>"
+#~ msgstr ""
+#~ "session.enableFilter(\"myFilter\").setParameter(\"myFilterParam\", \"some-"
+#~ "value\");"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[<filter-def name=\"effectiveDate\">\n"
+#~ "    <filter-param name=\"asOfDate\" type=\"date\"/>\n"
+#~ "</filter-def>\n"
+#~ "\n"
+#~ "<class name=\"Employee\" ...>\n"
+#~ "...\n"
+#~ "    <many-to-one name=\"department\" column=\"dept_id\" class=\"Department"
+#~ "\"/>\n"
+#~ "    <property name=\"effectiveStartDate\" type=\"date\" column="
+#~ "\"eff_start_dt\"/>\n"
+#~ "    <property name=\"effectiveEndDate\" type=\"date\" column=\"eff_end_dt"
+#~ "\"/>\n"
+#~ "...\n"
+#~ "    <!--\n"
+#~ "        Note that this assumes non-terminal records have an eff_end_dt "
+#~ "set to\n"
+#~ "        a max db date for simplicity-sake\n"
+#~ "    -->\n"
+#~ "    <filter name=\"effectiveDate\"\n"
+#~ "            condition=\":asOfDate BETWEEN eff_start_dt and eff_end_dt\"/"
+#~ ">\n"
+#~ "</class>\n"
+#~ "\n"
+#~ "<class name=\"Department\" ...>\n"
+#~ "...\n"
+#~ "    <set name=\"employees\" lazy=\"true\">\n"
+#~ "        <key column=\"dept_id\"/>\n"
+#~ "        <one-to-many class=\"Employee\"/>\n"
+#~ "        <filter name=\"effectiveDate\"\n"
+#~ "                condition=\":asOfDate BETWEEN eff_start_dt and eff_end_dt"
+#~ "\"/>\n"
+#~ "    </set>\n"
+#~ "</class>]]>"
+#~ msgstr ""
+#~ "&lt;filter-def name=\"effectiveDate\"&gt;\n"
+#~ "    &lt;filter-param name=\"asOfDate\" type=\"date\"/&gt;\n"
+#~ "&lt;/filter-def&gt;\n"
+#~ "\n"
+#~ "&lt;class name=\"Employee\" ...&gt;\n"
+#~ "...\n"
+#~ "    &lt;many-to-one name=\"department\" column=\"dept_id\" class="
+#~ "\"Department\"/&gt;\n"
+#~ "    &lt;property name=\"effectiveStartDate\" type=\"date\" column="
+#~ "\"eff_start_dt\"/&gt;\n"
+#~ "    &lt;property name=\"effectiveEndDate\" type=\"date\" column="
+#~ "\"eff_end_dt\"/&gt;\n"
+#~ "...\n"
+#~ "    &lt;!--\n"
+#~ "        Note that this assumes non-terminal records have an eff_end_dt "
+#~ "set to\n"
+#~ "        a max db date for simplicity-sake\n"
+#~ "    --&gt;\n"
+#~ "    &lt;filter name=\"effectiveDate\"\n"
+#~ "            condition=\":asOfDate BETWEEN eff_start_dt and eff_end_dt\"/"
+#~ "&gt;\n"
+#~ "&lt;/class&gt;\n"
+#~ "\n"
+#~ "&lt;class name=\"Department\" ...&gt;\n"
+#~ "...\n"
+#~ "    &lt;set name=\"employees\" lazy=\"true\"&gt;\n"
+#~ "        &lt;key column=\"dept_id\"/&gt;\n"
+#~ "        &lt;one-to-many class=\"Employee\"/&gt;\n"
+#~ "        &lt;filter name=\"effectiveDate\"\n"
+#~ "                condition=\":asOfDate BETWEEN eff_start_dt and eff_end_dt"
+#~ "\"/&gt;\n"
+#~ "    &lt;/set&gt;\n"
+#~ "&lt;/class&gt;"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[Session session = ...;\n"
+#~ "session.enableFilter(\"effectiveDate\").setParameter(\"asOfDate\", new "
+#~ "Date());\n"
+#~ "List results = session.createQuery(\"from Employee as e where e.salary > :"
+#~ "targetSalary\")\n"
+#~ "         .setLong(\"targetSalary\", new Long(1000000))\n"
+#~ "         .list();\n"
+#~ "]]>"
+#~ msgstr ""
+#~ "Session session = ...;\n"
+#~ "session.enabledFilter(\"effectiveDate\").setParameter(\"asOfDate\", new "
+#~ "Date());\n"
+#~ "List results = session.createQuery(\"from Employee as e where e.salary "
+#~ "&gt; :targetSalary\")\n"
+#~ "         .setLong(\"targetSalary\", new Long(1000000))\n"
+#~ "         .list();"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[<filter-def name=\"myFilter\" condition=\"abc > xyz\">...</"
+#~ "filter-def>\n"
+#~ "<filter-def name=\"myOtherFilter\">abc=xyz</filter-def>]]>"
+#~ msgstr ""
+#~ "&lt;filter-def name=\"myFilter\" condition=\"abc &gt; xyz\"&gt;...&lt;/"
+#~ "filter-def&gt;\n"
+#~ "&lt;filter-def name=\"myOtherFilter\"&gt;abc=xyz&lt;/filter-def&gt;"

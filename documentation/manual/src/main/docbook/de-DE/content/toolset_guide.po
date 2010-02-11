@@ -1,0 +1,1469 @@
+# translation of Collection_Mapping.po to 
+# translation of Collection_Mapping.po to
+# translation of Collection_Mapping.po to
+# translation of Collection_Mapping.po to
+# translation of Collection_Mapping.po to
+# translation of Collection_Mapping.po to
+# Language /mnt/hgfs/base/Hibernate/Reference translations for PACKAGE package.
+# Copyright (C) 2006, 2007 Free Software Foundation, Inc.
+# Automatically generated, 2006.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Collection_Mapping\n"
+"Report-Msgid-Bugs-To: http://bugs.kde.org\n"
+"POT-Creation-Date: 2010-02-11T05:38:16\n"
+"PO-Revision-Date: 2007-02-26 10:27+1000\n"
+"Last-Translator: \n"
+"Language-Team:  <de@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: KBabel 1.9.1\n"
+
+#. Tag: title
+#, no-c-format
+msgid "Toolset Guide"
+msgstr "Toolset-Handbuch"
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"Roundtrip engineering with Hibernate is possible using a set of Eclipse "
+"plugins, commandline tools, and Ant tasks."
+msgstr ""
+"\"Roundtrip Engineering\" mit Hibernate ist mit einem Satz von Eclipse-"
+"Plugins, Befehlszeilen-Tools sowie Ant-Aufgaben möglich."
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"<emphasis>Hibernate Tools</emphasis> currently include plugins for the "
+"Eclipse IDE as well as Ant tasks for reverse engineering of existing "
+"databases:"
+msgstr ""
+"Die <emphasis>Hibernate Tools</emphasis> beinhalten gegenwärtig Plug-ins für "
+"die Eclipse-IDE sowie Ant-Aufgaben für invertiertes Engineering bestehender "
+"Datenbanken:"
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"<emphasis>Mapping Editor:</emphasis> an editor for Hibernate XML mapping "
+"files that supports auto-completion and syntax highlighting. It also "
+"supports semantic auto-completion for class names and property/field names, "
+"making it more versatile than a normal XML editor."
+msgstr ""
+"<emphasis>Mapping-Editor:</emphasis> Ein Editor für Hibernate XML-Mapping-"
+"Dateien, der Auto-Vervollständigung und Syntax-Markierung unterstützt. Er "
+"unterstützt außerdem semantische Auto-Vervollständigung für Klassennamen und "
+"Property-/Feldnamen, wodurch er vielseitiger als ein regulärer XML-Editor "
+"ist."
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"<emphasis>Console:</emphasis> the console is a new view in Eclipse. In "
+"addition to a tree overview of your console configurations, you are also "
+"provided with an interactive view of your persistent classes and their "
+"relationships. The console allows you to execute HQL queries against your "
+"database and browse the result directly in Eclipse."
+msgstr ""
+"<emphasis>Console:</emphasis> Die Konsole ist eine neue Ansicht in Eclipse. "
+"Außer einer Baumansicht Ihrer Konsolenkonfiguration können Sie auch eine "
+"interaktive Ansicht Ihrer persistenten Klassen sowie deren Beziehungen "
+"erhalten. Die Konsole ermöglicht es Ihnen, HQL-Anfragen an Ihrer Datenbank "
+"zu stellen und die Ergebnisse direkt in Eclipse zu durchsuchen."
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"<emphasis>Development Wizards:</emphasis> several wizards are provided with "
+"the Hibernate Eclipse tools. You can use a wizard to quickly generate "
+"Hibernate configuration (cfg.xml) files, or to reverse engineer an existing "
+"database schema into POJO source files and Hibernate mapping files. The "
+"reverse engineering wizard supports customizable templates."
+msgstr ""
+"<emphasis>Development Wizards:</emphasis> Unter den Hibernate Eclipse Tools "
+"finden Sie auch mehrere Entwicklungs-Wizards. Sie können einen Wizard zur "
+"schnellen Generierung von Hibernate Konfigurationsdateien (cfg.xml) oder "
+"sogar zur vollständigen Invertierung eines bestehenden Datenbankschemas in "
+"POJO Quelldateien und Hibernate Mapping-Dateien verwenden. Der \"Reverse "
+"Engineering\"-Wizard unterstützt anwenderdefinierte Templates."
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"Please refer to the <emphasis>Hibernate Tools</emphasis> package "
+"documentation for more information."
+msgstr ""
+"Bitte entnehmen Sie dem Paket <emphasis>Hibernate Tools</emphasis> und der "
+"zugehörigen Dokumentation weitere Informationen."
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"However, the Hibernate main package comes bundled with an integrated tool : "
+"<emphasis>SchemaExport</emphasis> aka <literal>hbm2ddl</literal>.It can even "
+"be used from \"inside\" Hibernate."
+msgstr ""
+"Das Hibernate Hauptpaket kommt jedoch gebündelt mit einem integrierten Tool "
+"(es kann sogar direkt von \"innerhalb\" Hibernate aus verwendet werden): "
+"<emphasis>SchemaExport</emphasis> auch bekannt als <literal>hbm2ddl</"
+"literal>."
+
+#. Tag: title
+#, no-c-format
+msgid "Automatic schema generation"
+msgstr "Automatische Schema-Generierung"
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"DDL can be generated from your mapping files by a Hibernate utility. The "
+"generated schema includes referential integrity constraints, primary and "
+"foreign keys, for entity and collection tables. Tables and sequences are "
+"also created for mapped identifier generators."
+msgstr ""
+"DDL kann mittels eines Hibernate Dienstprogramms aus Ihren Mapping-Dateien "
+"generiert werden. Das generierte Schema beinhaltet referentielle "
+"Integritätsbedingungen (Primär- und Fremdschlüssel) für Entity- und "
+"Collection-Tabellen. Tabellen und Reihungen (Sequenzen) werden auch für "
+"gemappte Bezeichnergeneratoren erstellt."
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"You <emphasis>must</emphasis> specify a SQL <literal>Dialect</literal> via "
+"the <literal>hibernate.dialect</literal> property when using this tool, as "
+"DDL is highly vendor-specific."
+msgstr ""
+"Sie <emphasis>müssen</emphasis> einen SQL-<literal>Dialect</literal> mittels "
+"der <literal>hibernate.dialect</literal>-Property bestimmen, wenn Sie dieses "
+"Tool verwenden, da DDL sehr anbieterspezifisch ist."
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"First, you must customize your mapping files to improve the generated "
+"schema. The next section covers schema customization."
+msgstr ""
+"Zunächst passen Sie Ihre Mapping-Dateien an, um das generierte Schema zu "
+"verbessern."
+
+#. Tag: title
+#, no-c-format
+msgid "Customizing the schema"
+msgstr "Anpassung des Schemas"
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"Many Hibernate mapping elements define optional attributes named "
+"<literal>length</literal>, <literal>precision</literal> and <literal>scale</"
+"literal>. You can set the length, precision and scale of a column with this "
+"attribute."
+msgstr ""
+"Zahlreiche Hibernate Mapping-Elemente definieren optionale Attribute mit "
+"Namen <literal>length</literal>, <literal>precision</literal> und "
+"<literal>scale</literal>. Mit diesem Atrribut können Sie Länge, Genauigkeit "
+"und Skalierung einer Reihe einstellen."
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"Some tags also accept a <literal>not-null</literal> attribute for generating "
+"a <literal>NOT NULL</literal> constraint on table columns, and a "
+"<literal>unique</literal> attribute for generating <literal>UNIQUE</literal> "
+"constraint on table columns."
+msgstr ""
+"Einige Tags akzeptieren auch ein <literal>not-null</literal>-Attribut (für "
+"die Generierung einer <literal>NOT NULL</literal>-Bedingung an "
+"Tabellenspalten) sowie ein <literal>unique</literal>-Attribut (für die "
+"Generierung einer <literal>UNIQUE</literal>-Bedingung an Tabellenspalten)."
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"A <literal>unique-key</literal> attribute can be used to group columns in a "
+"single, unique key constraint. Currently, the specified value of the "
+"<literal>unique-key</literal> attribute is <emphasis>not</emphasis> used to "
+"name the constraint in the generated DDL. It is only used to group the "
+"columns in the mapping file."
+msgstr ""
+"Ein <literal>unique-key</literal>-Attribut kann ebenfalls benutzt werden, um "
+"Spalten in einer Bedingung mit einem einzelnen eindeutigen Kennbegriff zu "
+"gruppieren. Zur Zeit wird der spezifizierte Wert des <literal>unique-key</"
+"literal>-Attributs nicht <emphasis>nicht</emphasis> benutzt, um die "
+"Bedingung in der generierten DDL zu benutzen, sondern nur, um die Spalten in "
+"der Mapping-Datei zu gruppieren."
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"An <literal>index</literal> attribute specifies the name of an index that "
+"will be created using the mapped column or columns. Multiple columns can be "
+"grouped into the same index by simply specifying the same index name."
+msgstr ""
+"Ein <literal>index</literal>-Attribut legt den Namen eines Index fest, der "
+"unter Verwendung der gemappten Spalte(n) erstellt wird. Mehrere Spalten "
+"können in denselben Index gruppiert werden, indem einfach derselbe Indexname "
+"festgelegt wird."
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"A <literal>foreign-key</literal> attribute can be used to override the name "
+"of any generated foreign key constraint."
+msgstr ""
+"Ein <literal>foreign-key</literal>-Attribut kann verwendet werden, um den "
+"Namen einer generierten Bedingung des Fremdschlüssels außer Kraft zu setzen."
+
+#. Tag: para
+#, no-c-format
+msgid ""
+"Many mapping elements also accept a child <literal>&lt;column&gt;</literal> "
+"element. This is particularly useful for mapping multi-column types:"
+msgstr ""
+"Zahlreiche Mapping-Elemente akzeptieren auch ein untergeordnetes "
+"<literal>&lt;column&gt;</literal>-Element. Das ist insbesondere für das "
+"Mappen von vielspaltigen Typen hilfreich:"
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"The <literal>default</literal> attribute allows you to specify a default "
+"value for a column.You should assign the same value to the mapped property "
+"before saving a new instance of the mapped class."
+msgstr ""
+"Mit dem <literal>default</literal>-Attribut können Sie einen Standardwert "
+"für eine Spalte festlegen (Sie sollten denselben Wert einer gemappten "
+"Property zuordnen, ehe Sie eine neue Instanz der gemappten Klasse speichern)."
+
+#. Tag: para
+#, no-c-format
+msgid ""
+"The <literal>sql-type</literal> attribute allows the user to override the "
+"default mapping of a Hibernate type to SQL datatype."
+msgstr ""
+"Das <literal>sql-type</literal>-Attribut ermöglicht die Außerkraftsetzung "
+"des Standard-Mappings eines Hibernate-Typs zum SQL-Datentyp."
+
+#. Tag: para
+#, no-c-format
+msgid ""
+"The <literal>check</literal> attribute allows you to specify a check "
+"constraint."
+msgstr ""
+"Das <literal>check</literal>-Attribut ermöglicht es Ihnen, eine "
+"Prüfungsbedingung festzulegen."
+
+#. Tag: para
+#, no-c-format
+msgid "The following table summarizes these optional attributes."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Summary"
+msgstr "Zusammenfassung"
+
+#. Tag: entry
+#, no-c-format
+msgid "Attribute"
+msgstr "Attribut"
+
+#. Tag: entry
+#, no-c-format
+msgid "Values"
+msgstr "Werte"
+
+#. Tag: entry
+#, no-c-format
+msgid "Interpretation"
+msgstr "Bedeutung"
+
+#. Tag: entry
+#, fuzzy, no-c-format
+msgid "<literal>length</literal>"
+msgstr "wählen Sie eine <literal>NamingStrategy</literal>"
+
+#. Tag: entry
+#, no-c-format
+msgid "number"
+msgstr "Zahl"
+
+#. Tag: entry
+#, no-c-format
+msgid "column length"
+msgstr "Spaltenlänge"
+
+#. Tag: entry
+#, fuzzy, no-c-format
+msgid "<literal>precision</literal>"
+msgstr "in <literal>hibernate.properties</literal>"
+
+#. Tag: entry
+#, no-c-format
+msgid "column decimal precision"
+msgstr "Dezimale Genauigkeit der Spalte"
+
+#. Tag: entry
+#, fuzzy, no-c-format
+msgid "<literal>scale</literal>"
+msgstr "wählen Sie eine <literal>NamingStrategy</literal>"
+
+#. Tag: entry
+#, no-c-format
+msgid "column decimal scale"
+msgstr "Dezimale Skalierung der Spalte"
+
+#. Tag: entry
+#, fuzzy, no-c-format
+msgid "<literal>not-null</literal>"
+msgstr "in <literal>hibernate.properties</literal>"
+
+#. Tag: entry
+#, fuzzy, no-c-format
+msgid "<literal>true|false</literal>"
+msgstr "wählen Sie eine <literal>NamingStrategy</literal>"
+
+#. Tag: entry
+#, fuzzy, no-c-format
+msgid "specifies that the column should be non-nullable"
+msgstr "legt fest, dass die Spalte nicht-nullbar sein soll"
+
+#. Tag: entry
+#, fuzzy, no-c-format
+msgid "<literal>unique</literal>"
+msgstr "in <literal>hibernate.properties</literal>"
+
+#. Tag: entry
+#, no-c-format
+msgid "specifies that the column should have a unique constraint"
+msgstr "bestimmt, dass die Spalte eine eindeutige Bedingung besitzt"
+
+#. Tag: entry
+#, fuzzy, no-c-format
+msgid "<literal>index</literal>"
+msgstr "wählen Sie eine <literal>NamingStrategy</literal>"
+
+#. Tag: entry
+#, fuzzy, no-c-format
+msgid "<literal>index_name</literal>"
+msgstr "in <literal>hibernate.properties</literal>"
+
+#. Tag: entry
+#, no-c-format
+msgid "specifies the name of a (multi-column) index"
+msgstr "bestimmt den Namen eines (mehrspaltigen) Index"
+
+#. Tag: entry
+#, fuzzy, no-c-format
+msgid "<literal>unique-key</literal>"
+msgstr "wählen Sie eine <literal>NamingStrategy</literal>"
+
+#. Tag: entry
+#, fuzzy, no-c-format
+msgid "<literal>unique_key_name</literal>"
+msgstr "in <literal>hibernate.properties</literal>"
+
+#. Tag: entry
+#, no-c-format
+msgid "specifies the name of a multi-column unique constraint"
+msgstr "bestimmt den Namen einer mehrspaltigen, eindeutigen Bedingung"
+
+#. Tag: entry
+#, fuzzy, no-c-format
+msgid "<literal>foreign-key</literal>"
+msgstr "wählen Sie eine <literal>NamingStrategy</literal>"
+
+#. Tag: entry
+#, fuzzy, no-c-format
+msgid "<literal>foreign_key_name</literal>"
+msgstr "foreign_key_name"
+
+#. Tag: entry
+#, no-c-format
+msgid ""
+"specifies the name of the foreign key constraint generated for an "
+"association, for a <literal>&lt;one-to-one&gt;</literal>, <literal>&lt;many-"
+"to-one&gt;</literal>, <literal>&lt;key&gt;</literal>, or <literal>&lt;many-"
+"to-many&gt;</literal> mapping element. Note that <literal>inverse=\"true\"</"
+"literal> sides will not be considered by <literal>SchemaExport</literal>."
+msgstr ""
+"legt den Namen einer Bedingung des Fremdschlüssels fest, der für eine "
+"Assoziation generiert wurde für ein <literal>&lt;one-to-one&gt;</literal>, "
+"<literal>&lt;many-to-one&gt;</literal>, <literal>&lt;key&gt;</literal> oder "
+"<literal>&lt;many-to-many&gt;</literal>-Mapping-Element. Bitte beachten Sie, "
+"dass <literal>inverse=\"true\"</literal>-Seiten beim <literal>SchemaExport</"
+"literal> nicht berücksichtigt werden."
+
+#. Tag: entry
+#, fuzzy, no-c-format
+msgid "<literal>sql-type</literal>"
+msgstr "in <literal>hibernate.properties</literal>"
+
+#. Tag: entry
+#, fuzzy, no-c-format
+msgid "<literal>SQL column type</literal>"
+msgstr "in <literal>hibernate.properties</literal>"
+
+#. Tag: entry
+#, no-c-format
+msgid ""
+"overrides the default column type (attribute of <literal>&lt;column&gt;</"
+"literal> element only)"
+msgstr ""
+"setzt den Standard-Spaltentyp außer Kraft (nur Attribut von <literal>&lt;"
+"column&gt;</literal>-Element)"
+
+#. Tag: entry
+#, fuzzy, no-c-format
+msgid "<literal>default</literal>"
+msgstr "in <literal>hibernate.properties</literal>"
+
+#. Tag: entry
+#, no-c-format
+msgid "SQL expression"
+msgstr "SQL-Ausdruck"
+
+#. Tag: entry
+#, no-c-format
+msgid "specify a default value for the column"
+msgstr "bestimmt einen Standardwert für die Spalte"
+
+#. Tag: entry
+#, fuzzy, no-c-format
+msgid "<literal>check</literal>"
+msgstr "in <literal>hibernate.properties</literal>"
+
+#. Tag: entry
+#, no-c-format
+msgid "create an SQL check constraint on either column or table"
+msgstr ""
+"erstellt eine SQL-Überprüfungsbedingung an entweder der Spalte oder der "
+"Tabelle"
+
+#. Tag: para
+#, no-c-format
+msgid ""
+"The <literal>&lt;comment&gt;</literal> element allows you to specify "
+"comments for the generated schema."
+msgstr ""
+"Das <literal>&lt;comment&gt;</literal>-Element erlaubt die Bestimmung von "
+"Kommentaren für das generierte Schema."
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"This results in a <literal>comment on table</literal> or <literal>comment on "
+"column</literal> statement in the generated DDL where supported."
+msgstr ""
+"Dies führt zu einer <literal>comment on table</literal> oder "
+"<literal>comment on column</literal>-Anweisung in der generierten DDL (wenn "
+"unterstützt)."
+
+#. Tag: title
+#, no-c-format
+msgid "Running the tool"
+msgstr "Start des Tools"
+
+#. Tag: para
+#, no-c-format
+msgid ""
+"The <literal>SchemaExport</literal> tool writes a DDL script to standard out "
+"and/or executes the DDL statements."
+msgstr ""
+"Das <literal>SchemaExport</literal>-Tool schreibt ein DDL-Skript um DDL-"
+"Anweisungen zu standardisieren und/oder auszuführen."
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"The following table displays the <literal>SchemaExport</literal> command "
+"line options"
+msgstr "<literal>SchemaExport</literal>-Befehlszeilenoptionen"
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"<literal>java -cp </literal><emphasis>hibernate_classpaths</emphasis> "
+"<literal>org.hibernate.tool.hbm2ddl.SchemaExport</literal> <emphasis>options "
+"mapping_files</emphasis>"
+msgstr ""
+"<literal>java -cp </literal><emphasis>hibernate_classpaths</"
+"emphasis><literal>org.hibernate.tool.hbm2ddl.SchemaExport</"
+"literal><emphasis>options mapping_files</emphasis>"
+
+#. Tag: title
+#, no-c-format
+msgid "<literal>SchemaExport</literal> Command Line Options"
+msgstr "<literal>SchemaExport</literal>-Befehlszeilenoptionen"
+
+#. Tag: entry
+#, no-c-format
+msgid "Option"
+msgstr "Option"
+
+#. Tag: entry
+#, no-c-format
+msgid "Description"
+msgstr "Beschreibung"
+
+#. Tag: entry
+#, fuzzy, no-c-format
+msgid "<literal>--quiet</literal>"
+msgstr "in <literal>hibernate.properties</literal>"
+
+#. Tag: entry
+#, fuzzy, no-c-format
+msgid "do not output the script to stdout"
+msgstr "Skript nicht an stdout ausgeben"
+
+#. Tag: entry
+#, fuzzy, no-c-format
+msgid "<literal>--drop</literal>"
+msgstr "in <literal>hibernate.properties</literal>"
+
+#. Tag: entry
+#, no-c-format
+msgid "only drop the tables"
+msgstr "nur Tabellen droppen"
+
+#. Tag: entry
+#, fuzzy, no-c-format
+msgid "<literal>--create</literal>"
+msgstr "wählen Sie eine <literal>NamingStrategy</literal>"
+
+#. Tag: entry
+#, no-c-format
+msgid "only create the tables"
+msgstr "nur Tabellen erstellen"
+
+#. Tag: entry
+#, fuzzy, no-c-format
+msgid "<literal>--text</literal>"
+msgstr "in <literal>hibernate.properties</literal>"
+
+#. Tag: entry
+#, fuzzy, no-c-format
+msgid "do not export to the database"
+msgstr "nicht in die Datenbank exportieren"
+
+#. Tag: entry
+#, fuzzy, no-c-format
+msgid "<literal>--output=my_schema.ddl</literal>"
+msgstr "wählen Sie eine <literal>NamingStrategy</literal>"
+
+#. Tag: entry
+#, no-c-format
+msgid "output the ddl script to a file"
+msgstr "ddl-Skript an eine Datei ausgeben"
+
+#. Tag: entry
+#, fuzzy, no-c-format
+msgid "<literal>--naming=eg.MyNamingStrategy</literal>"
+msgstr "--naming=eg.MyNamingStrategy"
+
+#. Tag: entry
+#, no-c-format
+msgid "select a <literal>NamingStrategy</literal>"
+msgstr "wählen Sie eine <literal>NamingStrategy</literal>"
+
+#. Tag: entry
+#, fuzzy, no-c-format
+msgid "<literal>--config=hibernate.cfg.xml</literal>"
+msgstr "in <literal>hibernate.properties</literal>"
+
+#. Tag: entry
+#, no-c-format
+msgid "read Hibernate configuration from an XML file"
+msgstr "Hibernate Konfiguration aus einer XML-Datei lesen"
+
+#. Tag: entry
+#, fuzzy, no-c-format
+msgid "<literal>--properties=hibernate.properties</literal>"
+msgstr "in <literal>hibernate.properties</literal>"
+
+#. Tag: entry
+#, no-c-format
+msgid "read database properties from a file"
+msgstr "Datenbank-Properties aus einer Datei lesen"
+
+#. Tag: entry
+#, fuzzy, no-c-format
+msgid "<literal>--format</literal>"
+msgstr "wählen Sie eine <literal>NamingStrategy</literal>"
+
+#. Tag: entry
+#, no-c-format
+msgid "format the generated SQL nicely in the script"
+msgstr "generierte SQL sauber im Skript formatieren"
+
+#. Tag: entry
+#, fuzzy, no-c-format
+msgid "<literal>--delimiter=;</literal>"
+msgstr "wählen Sie eine <literal>NamingStrategy</literal>"
+
+#. Tag: entry
+#, no-c-format
+msgid "set an end of line delimiter for the script"
+msgstr "einen Delimiter für das Zeilenende des Skripts setzen"
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid "You can even embed <literal>SchemaExport</literal> in your application:"
+msgstr ""
+"Sie können sogar <literal>SchemaExport</literal> in Ihre Anwendung einbetten:"
+
+#. Tag: title
+#, no-c-format
+msgid "Properties"
+msgstr "Properties"
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid "Database properties can be specified:"
+msgstr "Datenbank-Properties können bestimmt werden"
+
+#. Tag: para
+#, no-c-format
+msgid ""
+"as system properties with <literal>-D</literal><emphasis>&lt;property&gt;</"
+"emphasis>"
+msgstr ""
+"wie System-Properties mit <literal>-D</literal><emphasis>&lt;property&gt;</"
+"emphasis>"
+
+#. Tag: para
+#, no-c-format
+msgid "in <literal>hibernate.properties</literal>"
+msgstr "in <literal>hibernate.properties</literal>"
+
+#. Tag: para
+#, no-c-format
+msgid "in a named properties file with <literal>--properties</literal>"
+msgstr ""
+"in einer benannten Properties-Datei mit <literal>--properties</literal>"
+
+#. Tag: para
+#, no-c-format
+msgid "The needed properties are:"
+msgstr "Die benötigten Properties sind:"
+
+#. Tag: title
+#, no-c-format
+msgid "SchemaExport Connection Properties"
+msgstr "SchemaExport-Connection-Properties"
+
+#. Tag: entry
+#, no-c-format
+msgid "Property Name"
+msgstr "Property-Name"
+
+#. Tag: entry
+#, fuzzy, no-c-format
+msgid "<literal>hibernate.connection.driver_class</literal>"
+msgstr "hibernate.connection.driver_class"
+
+#. Tag: entry
+#, no-c-format
+msgid "jdbc driver class"
+msgstr "jdbc-Treiberklasse"
+
+#. Tag: entry
+#, fuzzy, no-c-format
+msgid "<literal>hibernate.connection.url</literal>"
+msgstr "in <literal>hibernate.properties</literal>"
+
+#. Tag: entry
+#, no-c-format
+msgid "jdbc url"
+msgstr "jdbc url"
+
+#. Tag: entry
+#, fuzzy, no-c-format
+msgid "<literal>hibernate.connection.username</literal>"
+msgstr "in <literal>hibernate.properties</literal>"
+
+#. Tag: entry
+#, no-c-format
+msgid "database user"
+msgstr "Datenbankbenutzer"
+
+#. Tag: entry
+#, fuzzy, no-c-format
+msgid "<literal>hibernate.connection.password</literal>"
+msgstr "in <literal>hibernate.properties</literal>"
+
+#. Tag: entry
+#, no-c-format
+msgid "user password"
+msgstr "Benutzer-Passwort"
+
+#. Tag: entry
+#, fuzzy, no-c-format
+msgid "<literal>hibernate.dialect</literal>"
+msgstr "in <literal>hibernate.properties</literal>"
+
+#. Tag: entry
+#, no-c-format
+msgid "dialect"
+msgstr "Dialekt"
+
+#. Tag: title
+#, no-c-format
+msgid "Using Ant"
+msgstr "Die Verwendung von Ant"
+
+#. Tag: para
+#, no-c-format
+msgid ""
+"You can call <literal>SchemaExport</literal> from your Ant build script:"
+msgstr ""
+"Sie können <literal>SchemaExport</literal> vom Ihrem Ant-Build-Skript "
+"aufrufen:"
+
+#. Tag: title
+#, no-c-format
+msgid "Incremental schema updates"
+msgstr "Inkrementelle Schema-Aktualisierungen"
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"The <literal>SchemaUpdate</literal> tool will update an existing schema with "
+"\"incremental\" changes. The <literal>SchemaUpdate</literal> depends upon "
+"the JDBC metadata API and, as such, will not work with all JDBC drivers."
+msgstr ""
+"Das <literal>SchemaUpdate</literal>-Tool aktualisiert ein bestehendes Schema "
+"mit \"inkrementellen\" Änderungen. Bitte beachten Sie, das "
+"<literal>SchemaUpdate</literal> sehr vom JDBC-Metadaten-API abhängt und "
+"daher nicht mit allen JDBC-Treibern funktioniert."
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"<literal>java -cp </literal><emphasis>hibernate_classpaths</emphasis> "
+"<literal>org.hibernate.tool.hbm2ddl.SchemaUpdate</literal> <emphasis>options "
+"mapping_files</emphasis>"
+msgstr ""
+"<literal>java -cp </literal><emphasis>hibernate_classpaths</"
+"emphasis><literal>org.hibernate.tool.hbm2ddl.SchemaUpdate</"
+"literal><emphasis>options mapping_files</emphasis>"
+
+#. Tag: title
+#, no-c-format
+msgid "<literal>SchemaUpdate</literal> Command Line Options"
+msgstr "<literal>SchemaUpdate</literal>-Befehlszeilenoptionen"
+
+#. Tag: entry
+#, fuzzy, no-c-format
+msgid "do not export the script to the database"
+msgstr "Skript nicht in die Datenbank exportieren"
+
+#. Tag: entry
+#, no-c-format
+msgid "specify a <literal>.cfg.xml</literal> file"
+msgstr "eine <literal>.cfg.xml</literal>-Datei bestimmen"
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid "You can embed <literal>SchemaUpdate</literal> in your application:"
+msgstr ""
+"Sie können <literal>SchemaUpdate</literal> in Ihre Anwendung einbetten:"
+
+#. Tag: title
+#, no-c-format
+msgid "Using Ant for incremental schema updates"
+msgstr "Die Verwendung von Ant bei inkrementellen Schema-Aktualisierungen"
+
+#. Tag: para
+#, no-c-format
+msgid "You can call <literal>SchemaUpdate</literal> from the Ant script:"
+msgstr "Sie können <literal>SchemaUpdate</literal> vom Ant-Skript aufrufen:"
+
+#. Tag: title
+#, no-c-format
+msgid "Schema validation"
+msgstr "Schema-Validierung"
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"The <literal>SchemaValidator</literal> tool will validate that the existing "
+"database schema \"matches\" your mapping documents. The "
+"<literal>SchemaValidator</literal> depends heavily upon the JDBC metadata "
+"API and, as such, will not work with all JDBC drivers. This tool is "
+"extremely useful for testing."
+msgstr ""
+"Das <literal>SchemaValidator</literal>-Tool validiert, ob das bestehende "
+"Datenbankschema zu Ihren Mapping-Dokumenten \"passt\". Beachten Sie, dass "
+"<literal>SchemaValidator</literal> sehr vom JDBC-Metadata-API abhängt und "
+"daher nicht mit allen JDBC-Treibern funktioniert. Dieses Tool ist beim "
+"Testen von großem Nutzen."
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"<literal>java -cp </literal><emphasis>hibernate_classpaths</emphasis> "
+"<literal>org.hibernate.tool.hbm2ddl.SchemaValidator</literal> "
+"<emphasis>options mapping_files</emphasis>"
+msgstr ""
+"<literal>java -cp </literal><emphasis>hibernate_classpaths</"
+"emphasis><literal>org.hibernate.tool.hbm2ddl.SchemaValidator</"
+"literal><emphasis>options mapping_files</emphasis>"
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"The following table displays the <literal>SchemaValidator</literal> command "
+"line options:"
+msgstr "<literal>SchemaValidator</literal>-Befehlszeilenoptionen"
+
+#. Tag: title
+#, no-c-format
+msgid "<literal>SchemaValidator</literal> Command Line Options"
+msgstr "<literal>SchemaValidator</literal>-Befehlszeilenoptionen"
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid "You can embed <literal>SchemaValidator</literal> in your application:"
+msgstr ""
+"Sie können den <literal>SchemaValidator</literal> in Ihre Anwendung "
+"einbetten:"
+
+#. Tag: title
+#, no-c-format
+msgid "Using Ant for schema validation"
+msgstr "Die Verwendung von Ant zur Schema-Validierung"
+
+#. Tag: para
+#, no-c-format
+msgid "You can call <literal>SchemaValidator</literal> from the Ant script:"
+msgstr ""
+"Sie können <literal>SchemaValidator</literal> vom Ant-Skript aus aufrufen:"
+
+#, fuzzy
+#~ msgid "<![CDATA[<property name=\"zip\" length=\"5\"/>]]>"
+#~ msgstr "&lt;property name=\"zip\" length=\"5\"/&gt;"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[<property name=\"balance\" precision=\"12\" scale=\"2\"/>]]>"
+#~ msgstr "&lt;property name=\"balance\" precision=\"12\" scale=\"2\"/&gt;"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[<many-to-one name=\"bar\" column=\"barId\" not-null=\"true\"/>]]>"
+#~ msgstr ""
+#~ "&lt;many-to-one name=\"bar\" column=\"barId\" not-null=\"true\"/&gt;"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[<element column=\"serialNumber\" type=\"long\" not-null=\"true\" "
+#~ "unique=\"true\"/>]]>"
+#~ msgstr ""
+#~ "&lt;element column=\"serialNumber\" type=\"long\" not-null=\"true\" "
+#~ "unique=\"true\"/&gt;"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[<many-to-one name=\"org\" column=\"orgId\" unique-key="
+#~ "\"OrgEmployeeId\"/>\n"
+#~ "<property name=\"employeeId\" unique-key=\"OrgEmployee\"/>]]>"
+#~ msgstr ""
+#~ "&lt;many-to-one name=\"org\" column=\"orgId\" unique-key=\"OrgEmployeeId"
+#~ "\"/&gt;\n"
+#~ "&lt;property name=\"employeeId\" unique-key=\"OrgEmployee\"/&gt;"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[<property name=\"lastName\" index=\"CustName\"/>\n"
+#~ "<property name=\"firstName\" index=\"CustName\"/>]]>"
+#~ msgstr ""
+#~ "&lt;property name=\"lastName\" index=\"CustName\"/&gt;\n"
+#~ "&lt;property name=\"firstName\" index=\"CustName\"/&gt;"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[<many-to-one name=\"bar\" column=\"barId\" foreign-key=\"FKFooBar"
+#~ "\"/>]]>"
+#~ msgstr ""
+#~ "&lt;many-to-one name=\"bar\" column=\"barId\" foreign-key=\"FKFooBar\"/"
+#~ "&gt;"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[<property name=\"name\" type=\"my.customtypes.Name\"/>\n"
+#~ "    <column name=\"last\" not-null=\"true\" index=\"bar_idx\" length=\"30"
+#~ "\"/>\n"
+#~ "    <column name=\"first\" not-null=\"true\" index=\"bar_idx\" length=\"20"
+#~ "\"/>\n"
+#~ "    <column name=\"initial\"/>\n"
+#~ "</property>]]>"
+#~ msgstr ""
+#~ "&lt;property name=\"name\" type=\"my.customtypes.Name\"/&gt;\n"
+#~ "    &lt;column name=\"last\" not-null=\"true\" index=\"bar_idx\" length="
+#~ "\"30\"/&gt;\n"
+#~ "    &lt;column name=\"first\" not-null=\"true\" index=\"bar_idx\" length="
+#~ "\"20\"/&gt;\n"
+#~ "    &lt;column name=\"initial\"/&gt;\n"
+#~ "&lt;/property&gt;"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[<property name=\"credits\" type=\"integer\" insert=\"false\">\n"
+#~ "    <column name=\"credits\" default=\"10\"/>\n"
+#~ "</property>]]>"
+#~ msgstr ""
+#~ "&lt;property name=\"credits\" type=\"integer\" insert=\"false\"&gt;\n"
+#~ "    &lt;column name=\"credits\" default=\"10\"/&gt;\n"
+#~ "&lt;/property&gt;"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[<version name=\"version\" type=\"integer\" insert=\"false\">\n"
+#~ "    <column name=\"version\" default=\"0\"/>\n"
+#~ "</property>]]>"
+#~ msgstr ""
+#~ "&lt;version name=\"version\" type=\"integer\" insert=\"false\"&gt;\n"
+#~ "    &lt;column name=\"version\" default=\"0\"/&gt;\n"
+#~ "&lt;/property&gt;"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[<property name=\"balance\" type=\"float\">\n"
+#~ "    <column name=\"balance\" sql-type=\"decimal(13,3)\"/>\n"
+#~ "</property>]]>"
+#~ msgstr ""
+#~ "&lt;property name=\"balance\" type=\"float\"&gt;\n"
+#~ "    &lt;column name=\"balance\" sql-type=\"decimal(13,3)\"/&gt;\n"
+#~ "&lt;/property&gt;"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[<property name=\"foo\" type=\"integer\">\n"
+#~ "    <column name=\"foo\" check=\"foo > 10\"/>\n"
+#~ "</property>]]>"
+#~ msgstr ""
+#~ "&lt;property name=\"foo\" type=\"integer\"&gt;\n"
+#~ "    &lt;column name=\"foo\" check=\"foo &gt; 10\"/&gt;\n"
+#~ "&lt;/property&gt;"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[<class name=\"Foo\" table=\"foos\" check=\"bar < 100.0\">\n"
+#~ "    ...\n"
+#~ "    <property name=\"bar\" type=\"float\"/>\n"
+#~ "</class>]]>"
+#~ msgstr ""
+#~ "&lt;class name=\"Foo\" table=\"foos\" check=\"bar &lt; 100.0\"&gt;\n"
+#~ "    ...\n"
+#~ "    &lt;property name=\"bar\" type=\"float\"/&gt;\n"
+#~ "&lt;/class&gt;"
+
+#~ msgid "length"
+#~ msgstr "length"
+
+#~ msgid "precision"
+#~ msgstr "precision"
+
+#~ msgid "scale"
+#~ msgstr "scale"
+
+#~ msgid "not-null"
+#~ msgstr "not-null"
+
+#~ msgid "true|false"
+#~ msgstr "true|false"
+
+#~ msgid "unique"
+#~ msgstr "eindeutig"
+
+#~ msgid "index"
+#~ msgstr "index"
+
+#~ msgid "index_name"
+#~ msgstr "index_name"
+
+#~ msgid "unique-key"
+#~ msgstr "unique-key"
+
+#~ msgid "unique_key_name"
+#~ msgstr "unique_key_name"
+
+#~ msgid "foreign-key"
+#~ msgstr "foreign-key"
+
+#, fuzzy
+#~ msgid "foreign_key_name"
+#~ msgstr "foreign-key"
+
+#~ msgid "sql-type"
+#~ msgstr "sql-type"
+
+#, fuzzy
+#~ msgid "SQL column type"
+#~ msgstr "SQL-Spaltentyp"
+
+#~ msgid "default"
+#~ msgstr "default"
+
+#~ msgid "check"
+#~ msgstr "check"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[<class name=\"Customer\" table=\"CurCust\">\n"
+#~ "    <comment>Current customers only</comment>\n"
+#~ "    ...\n"
+#~ "</class>]]>"
+#~ msgstr ""
+#~ "&lt;class name=\"Customer\" table=\"CurCust\"&gt;\n"
+#~ "    &lt;comment&gt;Current customers only&lt;/comment&gt;\n"
+#~ "    ...\n"
+#~ "&lt;/class&gt;"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[<property name=\"balance\">\n"
+#~ "    <column name=\"bal\">\n"
+#~ "        <comment>Balance in USD</comment>\n"
+#~ "    </column>\n"
+#~ "</property>]]>"
+#~ msgstr ""
+#~ "&lt;property name=\"balance\"&gt;\n"
+#~ "    &lt;column name=\"bal\"&gt;\n"
+#~ "        &lt;comment&gt;Balance in USD&lt;/comment&gt;\n"
+#~ "    &lt;/column&gt;\n"
+#~ "&lt;/property&gt;"
+
+#~ msgid "--quiet"
+#~ msgstr "--quiet"
+
+#~ msgid "--drop"
+#~ msgstr "--drop"
+
+#~ msgid "--create"
+#~ msgstr "--create"
+
+#~ msgid "--text"
+#~ msgstr "--text"
+
+#, fuzzy
+#~ msgid "--output=my_schema.ddl"
+#~ msgstr "--output=my_schema.ddl"
+
+#, fuzzy
+#~ msgid "--config=hibernate.cfg.xml"
+#~ msgstr "--config=hibernate.cfg.xml"
+
+#~ msgid "--properties=hibernate.properties"
+#~ msgstr "--properties=hibernate.properties"
+
+#~ msgid "--format"
+#~ msgstr "--format"
+
+#~ msgid "--delimiter=;"
+#~ msgstr "--delimiter=;"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[Configuration cfg = ....;\n"
+#~ "new SchemaExport(cfg).create(false, true);]]>"
+#~ msgstr ""
+#~ "Configuration cfg = ....;\n"
+#~ "new SchemaExport(cfg).create(false, true);"
+
+#, fuzzy
+#~ msgid "hibernate.connection.driver_class"
+#~ msgstr "hibernate.connection.url"
+
+#~ msgid "hibernate.connection.url"
+#~ msgstr "hibernate.connection.url"
+
+#~ msgid "hibernate.connection.username"
+#~ msgstr "hibernate.connection.username"
+
+#~ msgid "hibernate.connection.password"
+#~ msgstr "hibernate.connection.password"
+
+#~ msgid "hibernate.dialect"
+#~ msgstr "hibernate.dialect"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[<target name=\"schemaexport\">\n"
+#~ "    <taskdef name=\"schemaexport\"\n"
+#~ "        classname=\"org.hibernate.tool.hbm2ddl.SchemaExportTask\"\n"
+#~ "        classpathref=\"class.path\"/>\n"
+#~ "    \n"
+#~ "    <schemaexport\n"
+#~ "        properties=\"hibernate.properties\"\n"
+#~ "        quiet=\"no\"\n"
+#~ "        text=\"no\"\n"
+#~ "        drop=\"no\"\n"
+#~ "        delimiter=\";\"\n"
+#~ "        output=\"schema-export.sql\">\n"
+#~ "        <fileset dir=\"src\">\n"
+#~ "            <include name=\"**/*.hbm.xml\"/>\n"
+#~ "        </fileset>\n"
+#~ "    </schemaexport>\n"
+#~ "</target>]]>"
+#~ msgstr ""
+#~ "&lt;target name=\"schemaexport\"&gt;\n"
+#~ "    &lt;taskdef name=\"schemaexport\"\n"
+#~ "        classname=\"org.hibernate.tool.hbm2ddl.SchemaExportTask\"\n"
+#~ "        classpathref=\"class.path\"/&gt;\n"
+#~ "    \n"
+#~ "    &lt;schemaexport\n"
+#~ "        properties=\"hibernate.properties\"\n"
+#~ "        quiet=\"no\"\n"
+#~ "        text=\"no\"\n"
+#~ "        drop=\"no\"\n"
+#~ "        delimiter=\";\"\n"
+#~ "        output=\"schema-export.sql\"&gt;\n"
+#~ "        &lt;fileset dir=\"src\"&gt;\n"
+#~ "            &lt;include name=\"**/*.hbm.xml\"/&gt;\n"
+#~ "        &lt;/fileset&gt;\n"
+#~ "    &lt;/schemaexport&gt;\n"
+#~ "&lt;/target&gt;"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[Configuration cfg = ....;\n"
+#~ "new SchemaUpdate(cfg).execute(false);]]>"
+#~ msgstr ""
+#~ "Configuration cfg = ....;\n"
+#~ "new SchemaUpdate(cfg).execute(false);"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[<target name=\"schemaupdate\">\n"
+#~ "    <taskdef name=\"schemaupdate\"\n"
+#~ "        classname=\"org.hibernate.tool.hbm2ddl.SchemaUpdateTask\"\n"
+#~ "        classpathref=\"class.path\"/>\n"
+#~ "    \n"
+#~ "    <schemaupdate\n"
+#~ "        properties=\"hibernate.properties\"\n"
+#~ "        quiet=\"no\">\n"
+#~ "        <fileset dir=\"src\">\n"
+#~ "            <include name=\"**/*.hbm.xml\"/>\n"
+#~ "        </fileset>\n"
+#~ "    </schemaupdate>\n"
+#~ "</target>]]>"
+#~ msgstr ""
+#~ "&lt;target name=\"schemaupdate\"&gt;\n"
+#~ "    &lt;taskdef name=\"schemaupdate\"\n"
+#~ "        classname=\"org.hibernate.tool.hbm2ddl.SchemaUpdateTask\"\n"
+#~ "        classpathref=\"class.path\"/&gt;\n"
+#~ "    \n"
+#~ "    &lt;schemaupdate\n"
+#~ "        properties=\"hibernate.properties\"\n"
+#~ "        quiet=\"no\"&gt;\n"
+#~ "        &lt;fileset dir=\"src\"&gt;\n"
+#~ "            &lt;include name=\"**/*.hbm.xml\"/&gt;\n"
+#~ "        &lt;/fileset&gt;\n"
+#~ "    &lt;/schemaupdate&gt;\n"
+#~ "&lt;/target&gt;"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[Configuration cfg = ....;\n"
+#~ "new SchemaValidator(cfg).validate();]]>"
+#~ msgstr ""
+#~ "Configuration cfg = ....;\n"
+#~ "new SchemaValidator(cfg).validate();"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[<target name=\"schemavalidate\">\n"
+#~ "    <taskdef name=\"schemavalidator\"\n"
+#~ "        classname=\"org.hibernate.tool.hbm2ddl.SchemaValidatorTask\"\n"
+#~ "        classpathref=\"class.path\"/>\n"
+#~ "    \n"
+#~ "    <schemavalidator\n"
+#~ "        properties=\"hibernate.properties\">\n"
+#~ "        <fileset dir=\"src\">\n"
+#~ "            <include name=\"**/*.hbm.xml\"/>\n"
+#~ "        </fileset>\n"
+#~ "    </schemavalidator>\n"
+#~ "</target>]]>"
+#~ msgstr ""
+#~ "&lt;target name=\"schemavalidate\"&gt;\n"
+#~ "    &lt;taskdef name=\"schemavalidator\"\n"
+#~ "        classname=\"org.hibernate.tool.hbm2ddl.SchemaValidatorTask\"\n"
+#~ "        classpathref=\"class.path\"/&gt;\n"
+#~ "    \n"
+#~ "    &lt;schemavalidator\n"
+#~ "        properties=\"hibernate.properties\"&gt;\n"
+#~ "        &lt;fileset dir=\"src\"&gt;\n"
+#~ "            &lt;include name=\"**/*.hbm.xml\"/&gt;\n"
+#~ "        &lt;/fileset&gt;\n"
+#~ "    &lt;/schemaupdate&gt;\n"
+#~ "&lt;/target&gt;"

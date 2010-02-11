@@ -1,0 +1,2333 @@
+# translation of Collection_Mapping.po to 
+# translation of Collection_Mapping.po to
+# translation of Collection_Mapping.po to
+# translation of Collection_Mapping.po to
+# translation of Collection_Mapping.po to
+# translation of Collection_Mapping.po to
+# Language /mnt/hgfs/base/Hibernate/Reference translations for PACKAGE package.
+# Copyright (C) 2006, 2007 Free Software Foundation, Inc.
+# Automatically generated, 2006.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Collection_Mapping\n"
+"Report-Msgid-Bugs-To: http://bugs.kde.org\n"
+"POT-Creation-Date: 2010-02-10T07:25:34\n"
+"PO-Revision-Date: 2007-02-26 10:27+1000\n"
+"Last-Translator: \n"
+"Language-Team:  <de@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: KBabel 1.9.1\n"
+
+#. Tag: title
+#, fuzzy, no-c-format
+msgid "Collection mapping"
+msgstr "Collection-Mappings"
+
+#. Tag: title
+#, no-c-format
+msgid "Persistent collections"
+msgstr "Persistente Collections"
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"Hibernate requires that persistent collection-valued fields be declared as "
+"an interface type. For example:"
+msgstr ""
+"In Hibernate müssen persistente Collection-wertige Felder als Interface-Typ "
+"deklariert werden, zum Beispiel:"
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"The actual interface might be <literal>java.util.Set</literal>, "
+"<literal>java.util.Collection</literal>, <literal>java.util.List</literal>, "
+"<literal>java.util.Map</literal>, <literal>java.util.SortedSet</literal>, "
+"<literal>java.util.SortedMap</literal> or anything you like (\"anything you "
+"like\" means you will have to write an implementation of <literal>org."
+"hibernate.usertype.UserCollectionType</literal>.)"
+msgstr ""
+"Das tatsächliche Interface könnte <literal>java.util.Set</literal>, "
+"<literal>java.util.Collection</literal>, <literal>java.util.List</literal>, "
+"<literal>java.util.Map</literal>, <literal>java.util.SortedSet</literal>, "
+"<literal>java.util.SortedMap</literal> oder ... was immer Sie möchten sein! "
+"(Wobei \"was immer Sie möchten\" bedeutet, dass Sie eine Implementierung von "
+"<literal>org.hibernate.usertype.UserCollectionType</literal> werden "
+"schreiben müssen)."
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"Notice how the instance variable was initialized with an instance of "
+"<literal>HashSet</literal>. This is the best way to initialize collection "
+"valued properties of newly instantiated (non-persistent) instances. When you "
+"make the instance persistent, by calling <literal>persist()</literal> for "
+"example, Hibernate will actually replace the <literal>HashSet</literal> with "
+"an instance of Hibernate's own implementation of <literal>Set</literal>. Be "
+"aware of the following errors:"
+msgstr ""
+"Beachten Sie, wie wir die Instanzvariable mit einer Instanz von "
+"<literal>HashSet</literal> initialisiert haben. Dieses ist die beste Art, "
+"neu initialisierte (nicht-persistente) Collection-wertige Properties zu "
+"instanziieren. Wenn Sie - etwa durch Aufruf von <literal>persist()</literal> "
+"- die Instanz persistent machen, so wird Hibernate das <literal>HashSet</"
+"literal> durch eine Instanz seiner eigenen Implementierung von <literal>Set</"
+"literal> ersetzen. Achten Sie auf mögliche Fehler wie den folgenden:"
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"The persistent collections injected by Hibernate behave like "
+"<literal>HashMap</literal>, <literal>HashSet</literal>, <literal>TreeMap</"
+"literal>, <literal>TreeSet</literal> or <literal>ArrayList</literal>, "
+"depending on the interface type."
+msgstr ""
+"Je nach Interface-Typ verhalten sich die von Hibernate eingespeisten "
+"Collections wie <literal>HashMap</literal>, <literal>HashSet</literal>, "
+"<literal>TreeMap</literal>, <literal>TreeSet</literal> oder "
+"<literal>ArrayList</literal>."
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"Collections instances have the usual behavior of value types. They are "
+"automatically persisted when referenced by a persistent object and are "
+"automatically deleted when unreferenced. If a collection is passed from one "
+"persistent object to another, its elements might be moved from one table to "
+"another. Two entities cannot share a reference to the same collection "
+"instance. Due to the underlying relational model, collection-valued "
+"properties do not support null value semantics. Hibernate does not "
+"distinguish between a null collection reference and an empty collection."
+msgstr ""
+"Instanzen von Collections folgen dem Verhalten von Wertetypen. Sie werden "
+"automatisch persistent gemacht, wenn durch ein persistentes Objekt auf sie "
+"verwiesen wird und gelöscht, wenn kein Verweis auf sie existiert. Falls eine "
+"Collection von einem persistenten Objekt an ein anderes weitergegeben wird, "
+"so ist es möglich, dass deren Elemente von einer Tabelle zu einer anderen "
+"Tabelle verschoben werden. Zwei Entities können sich keinen Verweis zu "
+"derselben Instanz einer Collection teilen. Wegen des zu Grunde liegenden "
+"relationalen Modells unterstützen Collection-wertige Properties keine "
+"Nullwert-Semantik. Hibernate unterscheidet nicht zwischen einem Null-"
+"Collection-Verweis und einer leeren Collection."
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"Use persistent collections the same way you use ordinary Java collections. "
+"However, please ensure you understand the semantics of bidirectional "
+"associations (these are discussed later)."
+msgstr ""
+"Sie werden mit all dem jedoch meist wenig zu tun haben. Verwenden Sie "
+"persistente Collections genau so, wie sie reguläre Java-Collections "
+"verwenden würden. Stellen Sie aber sicher, dass Sie die Semantik "
+"bidirektionaler Assoziationen verstehen (wir gehen später noch näher darauf "
+"ein)."
+
+#. Tag: title
+#, no-c-format
+msgid "Collection mappings"
+msgstr "Collection-Mappings"
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"There are quite a range of mappings that can be generated for collections "
+"that cover many common relational models. We suggest you experiment with the "
+"schema generation tool so that you understand how various mapping "
+"declarations translate to database tables."
+msgstr ""
+"Es gibt eine ganze Reihe von Mappings, die für Collections generiert werden "
+"können und die zahlreiche gängige relationale Modelle abdecken. Es ist "
+"wahrscheinlich sinnvoll, wenn Sie mit dem Tool zur Schemagenerierung "
+"experimentieren, um zu sehen, wie die verschiedenen Mapping-Deklarationen "
+"bei Datenbanktabellen umgesetzt werden."
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"The Hibernate mapping element used for mapping a collection depends upon the "
+"type of interface. For example, a <literal>&lt;set&gt;</literal> element is "
+"used for mapping properties of type <literal>Set</literal>."
+msgstr ""
+"Das Hibernate Mapping-Element, das für das Mapping einer Collection "
+"verwendet wird, hängt vom Typ des Interface ab. Zum Beispiel wird ein "
+"<literal>&lt;set&gt;</literal>-Element für Mapping-Properties des Typs "
+"<literal>Set</literal> verwendet."
+
+#. Tag: para
+#, no-c-format
+msgid ""
+"Apart from <literal>&lt;set&gt;</literal>, there is also <literal>&lt;"
+"list&gt;</literal>, <literal>&lt;map&gt;</literal>, <literal>&lt;bag&gt;</"
+"literal>, <literal>&lt;array&gt;</literal> and <literal>&lt;primitive-"
+"array&gt;</literal> mapping elements. The <literal>&lt;map&gt;</literal> "
+"element is representative:"
+msgstr ""
+"Neben <literal>&lt;set&gt;</literal> gibt es auch <literal>&lt;list&gt;</"
+"literal>, <literal>&lt;map&gt;</literal>, <literal>&lt;bag&gt;</literal>, "
+"<literal>&lt;array&gt;</literal> und <literal>&lt;primitive-array&gt;</"
+"literal> Mapping-Elemente. Das <literal>&lt;map&gt;</literal>-Element ist "
+"charakteristisch:"
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid "<literal>name</literal>: the collection property name"
+msgstr "<literal>name</literal> der Property-Name der Collection"
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"<literal>table</literal> (optional - defaults to property name): the name of "
+"the collection table. It is not used for one-to-many associations."
+msgstr ""
+"<literal>table</literal> (optional - standardmäßig der Property-Name) der "
+"Name der Collection-Tabelle (wird nicht für \"One-to-Many\"-Assoziationen "
+"verwendet)"
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"<literal>schema</literal> (optional): the name of a table schema to override "
+"the schema declared on the root element"
+msgstr ""
+"<literal>schema</literal> (optional) der Name eines Tabellenschemas, der das "
+"im Stammelement deklarierte Schema außer Kraft setzt"
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"<literal>lazy</literal> (optional - defaults to <literal>true</literal>): "
+"disables lazy fetching and specifies that the association is always eagerly "
+"fetched. It can also be used to enable \"extra-lazy\" fetching where most "
+"operations do not initialize the collection. This is suitable for large "
+"collections."
+msgstr ""
+"<literal>lazy</literal> (optional - standardmäßig <literal>true</literal>) "
+"kann verwendet werden, um das \"lazy Fetching\" (d.h. das Nachladen "
+"assoziierter Objekte bei Bedarf) zu deaktivieren und zu bestimmen, dass auf "
+"die Assoziation stets mittels \"eager Fetching\" (d.h. zusammengefasstem "
+"Laden von Objekt und assoziierten Objekten mit Verbundoperationen) "
+"zugegriffen wird. Ebenfalls zur Aktivierung von \"extra-lazy\" Fetching "
+"verwendet, bei dem die meisten Vorgänge die Collection nicht initialisieren "
+"(passend für sehr große Collections)"
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"<literal>inverse</literal> (optional - defaults to <literal>false</"
+"literal>): marks this collection as the \"inverse\" end of a bidirectional "
+"association."
+msgstr ""
+"<literal>inverse</literal> (optional - standardmäßig <literal>false</"
+"literal>) kennzeichnen Sie diese Collection als das \"invertierte\" Ende "
+"einer biderektionalen Assoziation"
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"<literal>cascade</literal> (optional - defaults to <literal>none</literal>): "
+"enables operations to cascade to child entities."
+msgstr ""
+"<literal>cascade</literal> (optional - standardmäßig <literal>none</"
+"literal>) aktiviert Vorgänge zur Weitergabe an untergeordnete Entities (sog. "
+"\"child entities\")"
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"<literal>sort</literal> (optional): specifies a sorted collection with "
+"<literal>natural</literal> sort order or a given comparator class."
+msgstr ""
+"<literal>sort</literal> (optional) bestimmt eine sortierte Collection mit "
+"<literal>natural</literal> Sortierordnung oder eine bestimmte Klasse von "
+"Vergleichsprogramm"
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"<literal>order-by</literal> (optional, JDK1.4 only): specifies a table "
+"column or columns that define the iteration order of the <literal>Map</"
+"literal>, <literal>Set</literal> or bag, together with an optional "
+"<literal>asc</literal> or <literal>desc</literal>."
+msgstr ""
+"<literal>order-by</literal> (optional, nur JDK1.4) bestimmt eine (oder "
+"mehrere) Tabellenspalte(n), die die Iterationsreihenfolge von <literal>Map</"
+"literal>, <literal>Set</literal> oder \"Bag\" (d.h. Duplikate, Multimenge) "
+"mit einem optionalen <literal>asc</literal> oder <literal>desc</literal> "
+"definieren"
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"<literal>where</literal> (optional): specifies an arbitrary SQL "
+"<literal>WHERE</literal> condition that is used when retrieving or removing "
+"the collection. This is useful if the collection needs to contain only a "
+"subset of the available data."
+msgstr ""
+"<literal>where</literal> (optional) bestimmt eine arbiträre SQL "
+"<literal>WHERE</literal>-Bedingung, die bei der Abfrage oder Entfernung der "
+"Collection verwendet werden soll (besonders dann nützlich, wenn die "
+"Collection nur einen Untersatz der verfügbaren Daten enthalten soll)"
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"<literal>fetch</literal> (optional, defaults to <literal>select</literal>): "
+"chooses between outer-join fetching, fetching by sequential select, and "
+"fetching by sequential subselect."
+msgstr ""
+"<literal>fetch</literal> (optional, standardmäßig <literal>select</literal>) "
+"Wählen Sie zwischen \"Outer-Join\"-Abruf (d.h. äußerem Verbund), Abruf nach "
+"sequentieller Auswahl und Fetching nach sequentieller Unterauswahl."
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"<literal>batch-size</literal> (optional, defaults to <literal>1</literal>): "
+"specifies a \"batch size\" for lazily fetching instances of this collection."
+msgstr ""
+"<literal>batch-size</literal> (optional, standardmäßig <literal>1</literal>) "
+"bestimmt eine \"Batch-Größe\" für das \"lazy Fetching\" von Instanzen dieser "
+"Collection."
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"<literal>access</literal> (optional - defaults to <literal>property</"
+"literal>): the strategy Hibernate uses for accessing the collection property "
+"value."
+msgstr ""
+"<literal>access</literal> (optional - standardmäßig <literal>property</"
+"literal>): Die von Hibernate zu verwendende Strategie für den Zugriff auf "
+"den Property-Wert der Collection."
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"<literal>optimistic-lock</literal> (optional - defaults to <literal>true</"
+"literal>): specifies that changes to the state of the collection results in "
+"increments of the owning entity's version. For one-to-many associations you "
+"may want to disable this setting."
+msgstr ""
+"<literal>optimistic-lock</literal> (optional - standardmäßig <literal>true</"
+"literal>): Bestimmt die Statusänderungen der Collection-Ergebnisse in "
+"Versionserhöhung der besitzenden Entity. (Bei \"One-to-Many\"-Assoziationen "
+"ist es oftmals sinnvoll, diese Einstellung zu deaktivieren)."
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"<literal>mutable</literal> (optional - defaults to <literal>true</literal>): "
+"a value of <literal>false</literal> specifies that the elements of the "
+"collection never change. This allows for minor performance optimization in "
+"some cases."
+msgstr ""
+"<literal>mutable</literal> (optional - standardmäßig <literal>true</"
+"literal>): Ein Wert von <literal>false</literal> bestimmt, dass die Elemente "
+"der Collection sich niemals ändern (in manchen Fällen eine leichte "
+"Optimierung der Performance)."
+
+#. Tag: title
+#, no-c-format
+msgid "Collection foreign keys"
+msgstr "Collection-Fremdschlüssel"
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"Collection instances are distinguished in the database by the foreign key of "
+"the entity that owns the collection. This foreign key is referred to as the "
+"<emphasis>collection key column</emphasis>, or columns, of the collection "
+"table. The collection key column is mapped by the <literal>&lt;key&gt;</"
+"literal> element."
+msgstr ""
+"Die Instanzen der Collection werden in der Datenbank durch den "
+"Fremdschlüssel der Entity, zu der die Collection gehört, unterschieden. "
+"Dieser Fremdschlüssel wird als <emphasis>Schlüsselspalte der Collection</"
+"emphasis> (oder Spalten) der Collection-Tabelle bezeichnet. Die "
+"Schlüsselspalte der Collection wird durch das <literal>&lt;key&gt;</literal>-"
+"Element gemappt."
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"There can be a nullability constraint on the foreign key column. For most "
+"collections, this is implied. For unidirectional one-to-many associations, "
+"the foreign key column is nullable by default, so you may need to specify "
+"<literal>not-null=\"true\"</literal>."
+msgstr ""
+"Es ist möglich, dass eine \"Nullability\"-Bedingung an der Spalte des "
+"Fremdschlüssels existiert. Für die meisten Collections wird dies "
+"vorausgesetzt. Bei unidirektionalen \"One-to-Many\"-Assoziationen ist die "
+"Spalte des Fremdschlüssels standardmäßig \"nullbar\", weswegen es möglich "
+"ist, dass Sie <literal>not-null=\"true\"</literal> festlegen müssen."
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"The foreign key constraint can use <literal>ON DELETE CASCADE</literal>."
+msgstr ""
+"Die Bedingung für den Fremdschlüssel kann <literal>ON DELETE CASCADE</"
+"literal> verwenden."
+
+#. Tag: para
+#, no-c-format
+msgid ""
+"See the previous chapter for a full definition of the <literal>&lt;key&gt;</"
+"literal> element."
+msgstr ""
+"Die vollständige Definition des <literal>&lt;key&gt;</literal>-Elements "
+"finden Sie im vorangegangenen Kapitel."
+
+#. Tag: title
+#, no-c-format
+msgid "Collection elements"
+msgstr "Collection-Elemente"
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"Collections can contain almost any other Hibernate type, including: basic "
+"types, custom types, components and references to other entities. This is an "
+"important distinction. An object in a collection might be handled with "
+"\"value\" semantics (its life cycle fully depends on the collection owner), "
+"or it might be a reference to another entity with its own life cycle. In the "
+"latter case, only the \"link\" between the two objects is considered to be a "
+"state held by the collection."
+msgstr ""
+"Collections können fast jeden beliebigen anderen Hibernate-Typ enthalten, "
+"einschließlich sämtlicher Grundtypen, angepasster Typen, Komponenten und "
+"natürlich Referenzen zu anderen Entities. Das ist ein wichtiger Unterschied: "
+"Ein Objekt einer Collection könnte mit \"Wert\"semantik bearbeitet werden "
+"(sein Lebenszyklus hängt vollständig vom Besitzer der Collection ab) oder es "
+"könnte ein Verweis auf eine andere Entity mit ihrem eigenen Lebenszyklus "
+"sein. Im letzteren Fall wird nur die \"Verbindung\" zwischen den beiden "
+"Objekten als von der Collection gehaltener Status angesehen."
+
+#. Tag: para
+#, no-c-format
+msgid ""
+"The contained type is referred to as the <emphasis>collection element type</"
+"emphasis>. Collection elements are mapped by <literal>&lt;element&gt;</"
+"literal> or <literal>&lt;composite-element&gt;</literal>, or in the case of "
+"entity references, with <literal>&lt;one-to-many&gt;</literal> or "
+"<literal>&lt;many-to-many&gt;</literal>. The first two map elements with "
+"value semantics, the next two are used to map entity associations."
+msgstr ""
+"Der enthaltene Typ wird als <emphasis>Typ von Collection-Element</emphasis> "
+"bezeichnet. Collection-Elemente werden durch <literal>&lt;element&gt;</"
+"literal> oder <literal>&lt;composite-element&gt;</literal> - oder im Fall "
+"von Entity-Verweisen - durch <literal>&lt;one-to-many&gt;</literal> oder "
+"<literal>&lt;many-to-many&gt;</literal> gemappt. Die ersten beiden Elemente "
+"mappen mit Wertsemantik, die beiden folgenden werden für das Mappen von "
+"Entity-Assoziationen verwendet."
+
+#. Tag: title
+#, no-c-format
+msgid "Indexed collections"
+msgstr "Indizierte Collections"
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"All collection mappings, except those with set and bag semantics, need an "
+"<emphasis>index column</emphasis> in the collection table. An index column "
+"is a column that maps to an array index, or <literal>List</literal> index, "
+"or <literal>Map</literal> key. The index of a <literal>Map</literal> may be "
+"of any basic type, mapped with <literal>&lt;map-key&gt;</literal>. It can be "
+"an entity reference mapped with <literal>&lt;map-key-many-to-many&gt;</"
+"literal>, or it can be a composite type mapped with <literal>&lt;composite-"
+"map-key&gt;</literal>. The index of an array or list is always of type "
+"<literal>integer</literal> and is mapped using the <literal>&lt;list-"
+"index&gt;</literal> element. The mapped column contains sequential integers "
+"that are numbered from zero by default."
+msgstr ""
+"Alle Collection-Mappings - außer denen mit \"Set\"- und \"Bag\"-Semantik - "
+"benötigen eine <emphasis>Indexspalte</emphasis> in der Collection-Tabelle. "
+"Es handelt sich dabei um eine Spalte, die zu einem Verzeichnis von "
+"Datenelementen, <literal>List</literal>-Verzeichnis oder <literal>Map</"
+"literal>-Schlüssel mappt. Der Index einer <literal>Map</literal> kann jeden "
+"Grundtyp besitzen, der mit <literal>&lt;map-key&gt;</literal> gemappt ist. "
+"Es kann ein mit <literal>&lt;map-key-many-to-many&gt;</literal> gemappter "
+"Entity-Verweis oder ein mit <literal>&lt;composite-map-key&gt;</literal> "
+"gemappter zusammengesetzter Typ sein. Der Index eines Datenelements oder "
+"einer Liste ist immer vom Typ her <literal>integer</literal> und wird "
+"mittels <literal>&lt;list-index&gt;</literal>-Element gemappt. Die gemappte "
+"Spalte enthält sequenzielle ganze Zahlen (im Standard ab Null "
+"durchnummeriert)."
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"<literal>column_name</literal> (required): the name of the column holding "
+"the collection index values."
+msgstr ""
+"<literal>class</literal> (erforderlich): Der Name der zugehörigen Klasse."
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"<literal>base</literal> (optional - defaults to <literal>0</literal>): the "
+"value of the index column that corresponds to the first element of the list "
+"or array."
+msgstr ""
+"<literal>cascade</literal> (optional - standardmäßig <literal>none</"
+"literal>) aktiviert Vorgänge zur Weitergabe an untergeordnete Entities (sog. "
+"\"child entities\")"
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"<literal>column</literal> (optional): the name of the column holding the "
+"collection index values."
+msgstr ""
+"<literal>schema</literal> (optional) der Name eines Tabellenschemas, der das "
+"im Stammelement deklarierte Schema außer Kraft setzt"
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"<literal>formula</literal> (optional): a SQL formula used to evaluate the "
+"key of the map."
+msgstr ""
+"<literal>schema</literal> (optional) der Name eines Tabellenschemas, der das "
+"im Stammelement deklarierte Schema außer Kraft setzt"
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid "<literal>type</literal> (required): the type of the map keys."
+msgstr ""
+"<literal>class</literal> (erforderlich): Der Name der zugehörigen Klasse."
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"<literal>column</literal> (optional): the name of the foreign key column for "
+"the collection index values."
+msgstr ""
+"<literal>schema</literal> (optional) der Name eines Tabellenschemas, der das "
+"im Stammelement deklarierte Schema außer Kraft setzt"
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"<literal>formula</literal> (optional): a SQ formula used to evaluate the "
+"foreign key of the map key."
+msgstr ""
+"<literal>schema</literal> (optional) der Name eines Tabellenschemas, der das "
+"im Stammelement deklarierte Schema außer Kraft setzt"
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"<literal>class</literal> (required): the entity class used as the map key."
+msgstr ""
+"<literal>class</literal> (erforderlich): Der Name der zugehörigen Klasse."
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"If your table does not have an index column, and you still wish to use "
+"<literal>List</literal> as the property type, you can map the property as a "
+"Hibernate <emphasis>&lt;bag&gt;</emphasis>. A bag does not retain its order "
+"when it is retrieved from the database, but it can be optionally sorted or "
+"ordered."
+msgstr ""
+"Falls Ihre Tabelle keine Indexspalte besitzt und Sie nach wie vor "
+"<literal>List</literal> als Property-Typ verwenden wollen, so sollten Sie "
+"die Property als eine <emphasis>&lt;Bag&gt;</emphasis> mappen. Eine \"Bag\" "
+"bewahrt ihre Reihenfolge beim Abruf aus der Datenbank nicht, kann aber "
+"optional sortiert oder geordnet werden."
+
+#. Tag: title
+#, no-c-format
+msgid "Collections of values and many-to-many associations"
+msgstr "Collections von Werten und \"Many-to-Many\"-Assoziationen"
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"Any collection of values or many-to-many associations requires a dedicated "
+"<emphasis>collection table</emphasis> with a foreign key column or columns, "
+"<emphasis>collection element column</emphasis> or columns, and possibly an "
+"index column or columns."
+msgstr ""
+"Jede Collection von Werten oder \"Many-to-Many\"-Assoziation erfordert eine "
+"zugeordnete <emphasis>Collection-Tabelle</emphasis> mit einer oder mehreren "
+"Fremdschlüsselspalten, <emphasis>Collection-Element-Spalte(n)</emphasis> "
+"oder möglicherweise einer oder mehreren Indexspalte(n)."
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"For a collection of values use the <literal>&lt;element&gt;</literal> tag. "
+"For example:"
+msgstr ""
+"Für eine Collection von Werten wird das <literal>&lt;element&gt;</literal>-"
+"Tag verwendet."
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"<literal>column</literal> (optional): the name of the column holding the "
+"collection element values."
+msgstr ""
+"<literal>schema</literal> (optional) der Name eines Tabellenschemas, der das "
+"im Stammelement deklarierte Schema außer Kraft setzt"
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"<literal>formula</literal> (optional): an SQL formula used to evaluate the "
+"element."
+msgstr ""
+"<literal>schema</literal> (optional) der Name eines Tabellenschemas, der das "
+"im Stammelement deklarierte Schema außer Kraft setzt"
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid "<literal>type</literal> (required): the type of the collection element."
+msgstr ""
+"<literal>class</literal> (erforderlich): Der Name der zugehörigen Klasse."
+
+#. Tag: para
+#, no-c-format
+msgid ""
+"A <emphasis>many-to-many association</emphasis> is specified using the "
+"<literal>&lt;many-to-many&gt;</literal> element."
+msgstr ""
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"<literal>column</literal> (optional): the name of the element foreign key "
+"column."
+msgstr ""
+"<literal>class</literal> (erforderlich): Der Name der zugehörigen Klasse."
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"<literal>formula</literal> (optional): an SQL formula used to evaluate the "
+"element foreign key value."
+msgstr ""
+"<literal>schema</literal> (optional) der Name eines Tabellenschemas, der das "
+"im Stammelement deklarierte Schema außer Kraft setzt"
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid "<literal>class</literal> (required): the name of the associated class."
+msgstr ""
+"<literal>class</literal> (erforderlich): Der Name der zugehörigen Klasse."
+
+#. Tag: para
+#, no-c-format
+msgid ""
+"<literal>fetch</literal> (optional - defaults to <literal>join</literal>): "
+"enables outer-join or sequential select fetching for this association. This "
+"is a special case; for full eager fetching in a single <literal>SELECT</"
+"literal> of an entity and its many-to-many relationships to other entities, "
+"you would enable <literal>join</literal> fetching,not only of the collection "
+"itself, but also with this attribute on the <literal>&lt;many-to-many&gt;</"
+"literal> nested element."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid ""
+"<literal>unique</literal> (optional): enables the DDL generation of a unique "
+"constraint for the foreign-key column. This makes the association "
+"multiplicity effectively one-to-many."
+msgstr ""
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"<literal>not-found</literal> (optional - defaults to <literal>exception</"
+"literal>): specifies how foreign keys that reference missing rows will be "
+"handled: <literal>ignore</literal> will treat a missing row as a null "
+"association."
+msgstr ""
+"<literal>not-found</literal> (optional - standardmäßig <literal>exception</"
+"literal>): Bestimmt, wie gespeicherte Bezeichner (sog. \"Identifier\"), die "
+"auf fehlende Reihen verweisen, behandelt werden. Mit <literal>ignore</"
+"literal> wird eine fehlende Reihe als Null-Assoziation angesehen."
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"<literal>entity-name</literal> (optional): the entity name of the associated "
+"class, as an alternative to <literal>class</literal>."
+msgstr ""
+"<literal>entity-name</literal> (optional): Der Entity-Name der zugehörigen "
+"Klasse als Alternative zu <literal>class</literal>."
+
+#. Tag: para
+#, no-c-format
+msgid ""
+"<literal>property-ref</literal> (optional): the name of a property of the "
+"associated class that is joined to this foreign key. If not specified, the "
+"primary key of the associated class is used."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Here are some examples."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "A set of strings:"
+msgstr ""
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"A bag containing integers with an iteration order determined by the "
+"<literal>order-by</literal> attribute:"
+msgstr ""
+"Eine ganze Zahlen enthaltende \"Bag\" (mit einer durch das <literal>order-"
+"by</literal>-Attribut bestimmten Reihenfolge):"
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid "An array of entities, in this case, a many-to-many association:"
+msgstr ""
+"Ein Datenelement von Entities - in diesem Fall eine \"Many-to-Many\"-"
+"Assoziation:"
+
+#. Tag: para
+#, no-c-format
+msgid "A map from string indices to dates:"
+msgstr "Eine Map von String-Indexen zu Daten:"
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid "A list of components (this is discussed in the next chapter):"
+msgstr ""
+"Eine List von Komponenten (wird im nachfolgenden Kapitel näher erläutert):"
+
+#. Tag: title
+#, no-c-format
+msgid "One-to-many associations"
+msgstr "\"One-to-Many\"-Assoziationen"
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"A <emphasis>one-to-many association</emphasis> links the tables of two "
+"classes via a foreign key with no intervening collection table. This mapping "
+"loses certain semantics of normal Java collections:"
+msgstr ""
+"Eine <emphasis>\"One-to-Many\"-Assoziation</emphasis> verbindet die Tabellen "
+"zweier Klassen mittels des Fremdschlüssels ohne eine intervenierende "
+"Collection-Tabelle. Dieses Mapping verliert bestimmte Teile der Semantik "
+"regulärer Java-Collections:"
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"An instance of the contained entity class cannot belong to more than one "
+"instance of the collection."
+msgstr ""
+"Eine Instanz der enthaltenen Entity-Klasse kann nicht zu mehr als einer "
+"Instanz der Collection gehören"
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"An instance of the contained entity class cannot appear at more than one "
+"value of the collection index."
+msgstr ""
+"Eine Instanz der enthaltenen Entity-Klasse kann nicht an mehr als einem Wert "
+"des Collection-Index erscheinen"
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"An association from <literal>Product</literal> to <literal>Part</literal> "
+"requires the existence of a foreign key column and possibly an index column "
+"to the <literal>Part</literal> table. A <literal>&lt;one-to-many&gt;</"
+"literal> tag indicates that this is a one-to-many association."
+msgstr ""
+"Eine Assoziation von <literal>Product</literal> zu <literal>Part</literal> "
+"macht die Existenz einer Spalte mit Fremdschlüssel und möglicherweise einer "
+"Indexspalte zur <literal>Part</literal>-Tabelle erforderlich. Ein "
+"<literal>&lt;one-to-many&gt;</literal>-Tag zeigt an, dass dies eine \"One-to-"
+"Many\"-Assoziation ist."
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"<literal>not-found</literal> (optional - defaults to <literal>exception</"
+"literal>): specifies how cached identifiers that reference missing rows will "
+"be handled. <literal>ignore</literal> will treat a missing row as a null "
+"association."
+msgstr ""
+"<literal>not-found</literal> (optional - standardmäßig <literal>exception</"
+"literal>): Bestimmt, wie gespeicherte Bezeichner (sog. \"Identifier\"), die "
+"auf fehlende Reihen verweisen, behandelt werden. Mit <literal>ignore</"
+"literal> wird eine fehlende Reihe als Null-Assoziation angesehen."
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"The <literal>&lt;one-to-many&gt;</literal> element does not need to declare "
+"any columns. Nor is it necessary to specify the <literal>table</literal> "
+"name anywhere."
+msgstr ""
+"Beachten Sie, dass das <literal>&lt;one-to-many&gt;</literal>-Element keine "
+"Spalten deklarieren muss. Es ist außerdem nicht nötig, den <literal>table</"
+"literal>-Namen irgendwo zu bestimmen."
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"If the foreign key column of a <literal>&lt;one-to-many&gt;</literal> "
+"association is declared <literal>NOT NULL</literal>, you must declare the "
+"<literal>&lt;key&gt;</literal> mapping <literal>not-null=\"true\"</literal> "
+"or <emphasis>use a bidirectional association</emphasis> with the collection "
+"mapping marked <literal>inverse=\"true\"</literal>. See the discussion of "
+"bidirectional associations later in this chapter for more information."
+msgstr ""
+"<emphasis>Sehr wichtig:</emphasis> Falls die Fremdschlüsselspalte einer "
+"<literal>&lt;one-to-many&gt;</literal>-Assoziation als <literal>NOT NULL</"
+"literal> deklariert ist, müssen Sie beim <literal>&lt;key&gt;</literal>-"
+"Mapping <literal>not-null=\"true\"</literal> deklarieren oder <emphasis>eine "
+"bidirektionale Assoziation</emphasis> mit als <literal>inverse=\"true\"</"
+"literal> gekennzeichnetem Collection-Mapping verwenden. Wir gehen später in "
+"diesem Kapitel noch näher auf bidirektionale Assoziationen ein."
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"The following example shows a map of <literal>Part</literal> entities by "
+"name, where <literal>partName</literal> is a persistent property of "
+"<literal>Part</literal>. Notice the use of a formula-based index:"
+msgstr ""
+"Dieses Beispiel zeigt die Map von <literal>Part</literal>-Entities nach Name "
+"(wobei <literal>partName</literal> eine persistente Property von "
+"<literal>Part</literal>) ist. Beachten Sie die Verwendung eines "
+"formelbasierten Index."
+
+#. Tag: title
+#, no-c-format
+msgid "Advanced collection mappings"
+msgstr "Fortgeschrittene Collection-Mappings"
+
+#. Tag: title
+#, no-c-format
+msgid "Sorted collections"
+msgstr "Sortierte Collections"
+
+#. Tag: para
+#, no-c-format
+msgid ""
+"Hibernate supports collections implementing <literal>java.util.SortedMap</"
+"literal> and <literal>java.util.SortedSet</literal>. You must specify a "
+"comparator in the mapping file:"
+msgstr ""
+"Hibernate unterstützt <literal>java.util.SortedMap</literal> und "
+"<literal>java.util.SortedSet</literal> implementierende Collections. Sie "
+"müssen ein Vergleichsprogramm in der Mapping-Datei bestimmen:"
+
+#. Tag: para
+#, no-c-format
+msgid ""
+"Allowed values of the <literal>sort</literal> attribute are "
+"<literal>unsorted</literal>, <literal>natural</literal> and the name of a "
+"class implementing <literal>java.util.Comparator</literal>."
+msgstr ""
+"Erlaubte Werte für das <literal>sort</literal>-Attribut sind "
+"<literal>unsorted</literal>, <literal>natural</literal> und der Name einer "
+"Klassenimplementierung <literal>java.util.Comparator</literal>."
+
+#. Tag: para
+#, no-c-format
+msgid ""
+"Sorted collections actually behave like <literal>java.util.TreeSet</literal> "
+"or <literal>java.util.TreeMap</literal>."
+msgstr ""
+"Sortierte Collections verhalten sich tatsächlich wie <literal>java.util."
+"TreeSet</literal> oder <literal>java.util.TreeMap</literal>."
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"If you want the database itself to order the collection elements, use the "
+"<literal>order-by</literal> attribute of <literal>set</literal>, "
+"<literal>bag</literal> or <literal>map</literal> mappings. This solution is "
+"only available under JDK 1.4 or higher and is implemented using "
+"<literal>LinkedHashSet</literal> or <literal>LinkedHashMap</literal>. This "
+"performs the ordering in the SQL query and not in the memory."
+msgstr ""
+"Falls Sie wollen, dass die Datenbank selbst die Elemente der Collection "
+"ordnet, verwenden Sie das <literal>order-by</literal>-Attribut von "
+"<literal>set</literal>, <literal>bag</literal> oder <literal>map</literal>-"
+"Mappings. Diese Lösung ist nur bei JDK 1.4 oder späteren Versionen verfügbar "
+"(sie wird unter <literal>LinkedHashSet</literal> oder "
+"<literal>LinkedHashMap</literal> implementiert). Dadurch wird die Anordnung "
+"in der SQL-Anfrage - nicht im Speicher - durchgeführt."
+
+#. Tag: title
+#, no-c-format
+msgid "Note"
+msgstr ""
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"The value of the <literal>order-by</literal> attribute is an SQL ordering, "
+"not an HQL ordering."
+msgstr ""
+"Beachten Sie, dass der Wert des <literal>order-by</literal>-Attributs eine "
+"SQL-Anordnung, keine HQL-Anordnung ist!"
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"Associations can even be sorted by arbitrary criteria at runtime using a "
+"collection <literal>filter()</literal>:"
+msgstr ""
+"Assoziationen können zur Runtime mittels Collection <literal>filter()</"
+"literal> sogar nach beliebigen Kriterien sortiert werden."
+
+#. Tag: title
+#, no-c-format
+msgid "Bidirectional associations"
+msgstr "Bidirektionale Assoziationen"
+
+#. Tag: para
+#, no-c-format
+msgid ""
+"A <emphasis>bidirectional association</emphasis> allows navigation from both "
+"\"ends\" of the association. Two kinds of bidirectional association are "
+"supported:"
+msgstr ""
+"Eine <emphasis>bidirektionale Assoziation</emphasis> erlaubt die Navigation "
+"von beiden \"Enden\" der Assoziation. Es werden zwei Arten bidirektionaler "
+"Assoziationen unterstützt:"
+
+#. Tag: term
+#, no-c-format
+msgid "one-to-many"
+msgstr "\"One-to-Many\""
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid "set or bag valued at one end and single-valued at the other"
+msgstr ""
+"an einem Ende von \"Set\"- oder \"Bag\"-wertig, am anderen Ende einwertig"
+
+#. Tag: term
+#, no-c-format
+msgid "many-to-many"
+msgstr "\"Many-to-Many\""
+
+#. Tag: para
+#, no-c-format
+msgid "set or bag valued at both ends"
+msgstr "an beiden Enden \"Set\"- oder \"Bag\"-wertig"
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"You can specify a bidirectional many-to-many association by mapping two many-"
+"to-many associations to the same database table and declaring one end as "
+"<emphasis>inverse</emphasis>. You cannot select an indexed collection."
+msgstr ""
+"Sie können eine bidirektionale \"Many-to-Many\"-Assoziation ganz einfach "
+"festlegen, indem Sie zwei \"Many-to-Many\"-Assoziationen zur selben "
+"Datenbanktabelle mappen und ein Ende als <emphasis>invertiert</emphasis> "
+"deklarieren (welches bleibt Ihnen überlassen, es kann jedoch keine "
+"indizierte Collection sein)."
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"Here is an example of a bidirectional many-to-many association that "
+"illustrates how each category can have many items and each item can be in "
+"many categories:"
+msgstr ""
+"Nachfolgend sehen Sie ein Beispiel für eine bidirektionale \"Many-to-Many\"-"
+"Assoziation. Jede Kategorie kann viele Posten besitzen und jeder Posten kann "
+"sich in vielen Kategorien befinden:"
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"Changes made only to the inverse end of the association are <emphasis>not</"
+"emphasis> persisted. This means that Hibernate has two representations in "
+"memory for every bidirectional association: one link from A to B and another "
+"link from B to A. This is easier to understand if you think about the Java "
+"object model and how a many-to-many relationship in Javais created:"
+msgstr ""
+"Änderungen können nur am invertierten Ende der Assoziation gemacht werden "
+"und sind <emphasis>nicht</emphasis> persistiert. Das bedeutet, dass "
+"Hibernate zwei Darstellungen jeder bidirektionalen Assoziation im Speicher "
+"besitzt - eine Verbindung von A zu B und eine weitere Verbindung von B zu A. "
+"Dies ist leichter zu verstehen, wenn man an das Objektmodell von Java denkt "
+"und daran, wie in Java eine \"Many-to-Many\"-Beziehung erstellt wird:"
+
+#. Tag: para
+#, no-c-format
+msgid ""
+"The non-inverse side is used to save the in-memory representation to the "
+"database."
+msgstr ""
+"Die nicht-invertierte Seite wird dazu benutzt, die gespeicherte Darstellung "
+"in der Datenbank zu speichern."
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"You can define a bidirectional one-to-many association by mapping a one-to-"
+"many association to the same table column(s) as a many-to-one association "
+"and declaring the many-valued end <literal>inverse=\"true\"</literal>."
+msgstr ""
+"Sie können eine bidirektionale \"One-to-Many\"-Assoziation definieren, indem "
+"Sie eine \"One-to-Many\"-Assoziation zu derselben (oder denselben) "
+"Tabellenspalte(n) wie eine \"Many-to-One\"-Assoziation mappen und für das "
+"mehrwertige Ende <literal>inverse=\"true\"</literal> deklarieren."
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"Mapping one end of an association with <literal>inverse=\"true\"</literal> "
+"does not affect the operation of cascades as these are orthogonal concepts."
+msgstr ""
+"Das Mappen eines der Enden einer Assoziation mit <literal>inverse=\"true\"</"
+"literal> hat keinen Einfluss auf die Weitergabevorgänge (sog. \"Cascades\"), "
+"es handelt sich um orthogonale Konzepte!"
+
+#. Tag: title
+#, no-c-format
+msgid "Bidirectional associations with indexed collections"
+msgstr "Bidirektionale Assoziationen mit indizierten Collections"
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"A bidirectional association where one end is represented as a <literal>&lt;"
+"list&gt;</literal> or <literal>&lt;map&gt;</literal>, requires special "
+"consideration. If there is a property of the child class that maps to the "
+"index column you can use <literal>inverse=\"true\"</literal> on the "
+"collection mapping:"
+msgstr ""
+"Eine bidirektionale Assoziation, bei der ein Ende als <literal>&lt;list&gt;</"
+"literal> oder <literal>&lt;map&gt;</literal> dargestellt ist, erfordert "
+"besondere Beachtung. Falls eine Property der untergeordneten Klasse (sog. "
+"\"child class\") existiert, die zur Indexspalte mappt, dann gibt es keine "
+"Probleme und wir können mit der Verwendung von <literal>inverse=\"true\"</"
+"literal> beim Collection-Mapping fortfahren:"
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"If there is no such property on the child class, the association cannot be "
+"considered truly bidirectional. That is, there is information available at "
+"one end of the association that is not available at the other end. In this "
+"case, you cannot map the collection <literal>inverse=\"true\"</literal>. "
+"Instead, you could use the following mapping:"
+msgstr ""
+"Falls aber an der untergeordneten Klasse keine solche Property vorhanden "
+"ist, so kann man sich die Assoziation nicht als wahrhaft bidirektional "
+"vorstellen (es sind Informationen an einem Ende vorhanden, die am anderen "
+"Ende nicht verfügbar sind). In diesem Fall können wir die Collection nicht "
+"<literal>inverse=\"true\"</literal> mappen. Statt dessen empfehlen wir "
+"folgendes Mapping:"
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"Note that in this mapping, the collection-valued end of the association is "
+"responsible for updates to the foreign key."
+msgstr ""
+"Bitte beachten Sie, dass bei diesem Mapping das Collection-wertige Ende der "
+"Assoziation für Aktualisierungen am Fremdschlüssel verantwortlich ist. TODO: "
+"Führt dies zu unnötigen Aktualisierungsanweisungen? "
+
+#. Tag: title
+#, no-c-format
+msgid "Ternary associations"
+msgstr "Dreifache Assoziationen"
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"There are three possible approaches to mapping a ternary association. One "
+"approach is to use a <literal>Map</literal> with an association as its index:"
+msgstr ""
+"Es gibt drei mögliche Arten eine dreifache Assoziation zu mappen. Eine davon "
+"ist die Verwendung von <literal>Map</literal> mit einer Assoziation als "
+"deren Index:"
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"A second approach is to remodel the association as an entity class. This is "
+"the most common approach."
+msgstr ""
+"Ein zweiter Weg ist es, die Assoziation einfach als eine Entity-Klasse zu "
+"gestalten. Das ist die am häufigsten gewählte Herangehensweise."
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"A final alternative is to use composite elements, which will be discussed "
+"later."
+msgstr ""
+"Die dritte und letzte Variante besteht in der Verwendung zusammengesetzter "
+"Elemente, auf die wir zu einem späteren Zeitpunkt näher eingehen werden."
+
+#. Tag: title
+#, fuzzy, no-c-format
+msgid "<literal>Using an &lt;idbag&gt;</literal>"
+msgstr "Die Verwendung einer &lt;idbag&gt;"
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"The majority of the many-to-many associations and collections of values "
+"shown previously all map to tables with composite keys, even though it has "
+"been have suggested that entities should have synthetic identifiers "
+"(surrogate keys). A pure association table does not seem to benefit much "
+"from a surrogate key, although a collection of composite values "
+"<emphasis>might</emphasis>. It is for this reason that Hibernate provides a "
+"feature that allows you to map many-to-many associations and collections of "
+"values to a table with a surrogate key."
+msgstr ""
+"Falls Sie unsere Ansicht teilen und ebenfalls der Meinung sind, dass "
+"zusammengesetzte Schlüssel keine gute Sache sind und Entities synthetische "
+"Bezeichner (Surrogatschlüssel) besitzen sollten, dann werden Sie es "
+"wahrscheinlich seltsam finden, dass die bis jetzt von uns gezeigten \"Many-"
+"to-Many\"-Assoziationen und Wert-Collections zu Tabellen mit "
+"zusammengesetzten Schlüsseln mappen! Nun, über diesen Punkt lässt sich "
+"streiten. Einer reinen Assoziationstabelle scheint ein Surrogatschlüssel "
+"(obwohl eine Collection zusammengesetzter Werte das <emphasis>könnte</"
+"emphasis>) nicht viel zu bringen. Trotzdem bietet Hibernate ein Feature, das "
+"es Ihnen ermöglicht, \"Many-to-Many\"-Assoziationen und Wert-Collections zu "
+"einer Tabelle mit einem Surrogatschlüssel zu mappen."
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"The <literal>&lt;idbag&gt;</literal> element lets you map a <literal>List</"
+"literal> (or <literal>Collection</literal>) with bag semantics. For example:"
+msgstr ""
+"Das <literal>&lt;idbag&gt;</literal>-Element lässt Sie eine <literal>List</"
+"literal> (oder <literal>Collection</literal>) mit \"Bag\"-Semantik mappen."
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"An <literal>&lt;idbag&gt;</literal> has a synthetic id generator, just like "
+"an entity class. A different surrogate key is assigned to each collection "
+"row. Hibernate does not, however, provide any mechanism for discovering the "
+"surrogate key value of a particular row."
+msgstr ""
+"Wie Sie sehen hat <literal>&lt;idbag&gt;</literal> einen synthetischen id-"
+"Generator, ganz wie eine Entity-Klasse! Ein anderer Surrogatschlüssel wird "
+"jeder Reihe der Collection zugeordnet. Hibernate bietet jedoch keinen "
+"Mechanismus, um den Wert eines Surrogatschlüssels für eine bestimmte Reihe "
+"herauszufinden."
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"The update performance of an <literal>&lt;idbag&gt;</literal> supersedes a "
+"regular <literal>&lt;bag&gt;</literal>. Hibernate can locate individual rows "
+"efficiently and update or delete them individually, similar to a list, map "
+"or set."
+msgstr ""
+"Beachten Sie, dass die Aktualiserungsperformance einer <literal>&lt;idbag&gt;"
+"</literal> <emphasis>wesentlich</emphasis> besser als eine reguläre "
+"<literal>&lt;bag&gt;</literal> ist! Hibernate kann auf effiziente Weise "
+"einzelne Reihen lokalisieren und sie individuell aktualisieren oder löschen, "
+"ganz wie bei einer Liste, einer Map oder einem Set."
+
+#. Tag: para
+#, no-c-format
+msgid ""
+"In the current implementation, the <literal>native</literal> identifier "
+"generation strategy is not supported for <literal>&lt;idbag&gt;</literal> "
+"collection identifiers."
+msgstr ""
+"In der aktuellen Implementierung wird die <literal>native</literal> "
+"Bezeichnergenerierungsstrategie nicht für <literal>&lt;idbag&gt;</literal> "
+"Collection-Bezeichner unterstützt."
+
+#. Tag: title
+#, no-c-format
+msgid "Collection examples"
+msgstr "Collection-Beispiele"
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid "This section covers collection examples."
+msgstr "Collection-Beispiele"
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"The following class has a collection of <literal>Child</literal> instances:"
+msgstr ""
+"Der folgende Code würde verwendet, um ein neues <literal>Child</literal> "
+"hinzuzufügen"
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"If each child has, at most, one parent, the most natural mapping is a one-to-"
+"many association:"
+msgstr ""
+"besitzt eine Collection von <literal>Child</literal>-Instanzen. Wenn jedes "
+"\"child\" (untergeordnet) höchstens einen \"parent\" (übergeordnet) besitzt, "
+"so ist das natürlichste Mapping eine \"One-to-Many\"-Assoziation:"
+
+#. Tag: para
+#, no-c-format
+msgid "This maps to the following table definitions:"
+msgstr "Das mappt zu den folgenden Tabellendefinitionen:"
+
+#. Tag: para
+#, no-c-format
+msgid ""
+"If the parent is <emphasis>required</emphasis>, use a bidirectional one-to-"
+"many association:"
+msgstr ""
+"Falls der \"parent\" <emphasis>erforderlich</emphasis> ist, verwenden Sie "
+"eine bidirektionale \"One-to-Many\"-Assoziation:"
+
+#. Tag: para
+#, no-c-format
+msgid "Notice the <literal>NOT NULL</literal> constraint:"
+msgstr "Beachten Sie die <literal>NOT NULL</literal>-Bedingung:"
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"Alternatively, if this association must be unidirectional you can declare "
+"the <literal>NOT NULL</literal> constraint on the <literal>&lt;key&gt;</"
+"literal> mapping:"
+msgstr ""
+"Andernfalls - falls Sie absolut darauf bestehen, dass diese Assoziation "
+"unidirektional ist - können Sie die <literal>NOT NULL</literal>-Bedingung am "
+"<literal>&lt;key&gt;</literal>-Mapping deklarieren:"
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"On the other hand, if a child has multiple parents, a many-to-many "
+"association is appropriate:"
+msgstr ""
+"Wenn jedoch ein \"child\" mehrere \"parents\" besitzen kann, ist die \"Many-"
+"to-Many\"-Assoziation passender:"
+
+#. Tag: para
+#, no-c-format
+msgid "Table definitions:"
+msgstr "Tabellendefinitionen:"
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"For more examples and a complete explanation of a parent/child relationship "
+"mapping, see <xref linkend=\"example-parentchild\" /> for more information."
+msgstr ""
+"Weitere Beispiele und eine vollständige Abhandlung des Mappings der \"parent/"
+"child\"-Beziehung finden Sie unter <xref linkend=\"example-parentchild\"/>."
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid "Even more complex association mappings are covered in the next chapter."
+msgstr ""
+"Es sind sogar noch weitaus exotischere Assoziations-Mappings möglich, die "
+"wir im nächsten Kapitel ausführen."
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[public class Product {\n"
+#~ "    private String serialNumber;\n"
+#~ "    private Set parts = new HashSet();\n"
+#~ "    \n"
+#~ "    public Set getParts() { return parts; }\n"
+#~ "    void setParts(Set parts) { this.parts = parts; }\n"
+#~ "    public String getSerialNumber() { return serialNumber; }\n"
+#~ "    void setSerialNumber(String sn) { serialNumber = sn; }\n"
+#~ "}]]>"
+#~ msgstr ""
+#~ "public class Product {\n"
+#~ "    private String serialNumber;\n"
+#~ "    private Set parts = new HashSet();\n"
+#~ "    \n"
+#~ "    public Set getParts() { return parts; }\n"
+#~ "    void setParts(Set parts) { this.parts = parts; }\n"
+#~ "    public String getSerialNumber() { return serialNumber; }\n"
+#~ "    void setSerialNumber(String sn) { serialNumber = sn; }\n"
+#~ "}"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[Cat cat = new DomesticCat();\n"
+#~ "Cat kitten = new DomesticCat();\n"
+#~ "....\n"
+#~ "Set kittens = new HashSet();\n"
+#~ "kittens.add(kitten);\n"
+#~ "cat.setKittens(kittens);\n"
+#~ "session.persist(cat);\n"
+#~ "kittens = cat.getKittens(); // Okay, kittens collection is a Set\n"
+#~ "(HashSet) cat.getKittens(); // Error!]]>"
+#~ msgstr ""
+#~ "Cat cat = new DomesticCat();\n"
+#~ "Cat kitten = new DomesticCat();\n"
+#~ "....\n"
+#~ "Set kittens = new HashSet();\n"
+#~ "kittens.add(kitten);\n"
+#~ "cat.setKittens(kittens);\n"
+#~ "session.persist(cat);\n"
+#~ "kittens = cat.getKittens(); // Okay, kittens collection is a Set\n"
+#~ "(HashSet) cat.getKittens(); // Error!"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[<class name=\"Product\">\n"
+#~ "    <id name=\"serialNumber\" column=\"productSerialNumber\"/>\n"
+#~ "    <set name=\"parts\">\n"
+#~ "        <key column=\"productSerialNumber\" not-null=\"true\"/>\n"
+#~ "        <one-to-many class=\"Part\"/>\n"
+#~ "    </set>\n"
+#~ "</class>]]>"
+#~ msgstr ""
+#~ "&lt;class name=\"Product\"&gt;\n"
+#~ "    &lt;id name=\"serialNumber\" column=\"productSerialNumber\"/&gt;\n"
+#~ "    &lt;set name=\"parts\"&gt;\n"
+#~ "        &lt;key column=\"productSerialNumber\" not-null=\"true\"/&gt;\n"
+#~ "        &lt;one-to-many class=\"Part\"/&gt;\n"
+#~ "    &lt;/set&gt;\n"
+#~ "&lt;/class&gt;"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[<map\n"
+#~ "    name=\"propertyName\"\n"
+#~ "    table=\"table_name\"\n"
+#~ "    schema=\"schema_name\"\n"
+#~ "    lazy=\"true|extra|false\"\n"
+#~ "    inverse=\"true|false\"\n"
+#~ "    cascade=\"all|none|save-update|delete|all-delete-orphan|delete-orphan"
+#~ "\"\n"
+#~ "    sort=\"unsorted|natural|comparatorClass\"\n"
+#~ "    order-by=\"column_name asc|desc\"\n"
+#~ "    where=\"arbitrary sql where condition\"\n"
+#~ "    fetch=\"join|select|subselect\"\n"
+#~ "    batch-size=\"N\"\n"
+#~ "    access=\"field|property|ClassName\"\n"
+#~ "    optimistic-lock=\"true|false\"\n"
+#~ "    mutable=\"true|false\"\n"
+#~ "    node=\"element-name|.\"\n"
+#~ "    embed-xml=\"true|false\"\n"
+#~ ">\n"
+#~ "\n"
+#~ "    <key .... />\n"
+#~ "    <map-key .... />\n"
+#~ "    <element .... />\n"
+#~ "</map>]]>"
+#~ msgstr ""
+#~ "&lt;map\n"
+#~ "    name=\"propertyName\"\n"
+#~ "    table=\"table_name\"\n"
+#~ "    schema=\"schema_name\"\n"
+#~ "    lazy=\"true|extra|false\"\n"
+#~ "    inverse=\"true|false\"\n"
+#~ "    cascade=\"all|none|save-update|delete|all-delete-orphan|delete-orphan"
+#~ "\"\n"
+#~ "    sort=\"unsorted|natural|comparatorClass\"\n"
+#~ "    order-by=\"column_name asc|desc\"\n"
+#~ "    where=\"arbitrary sql where condition\"\n"
+#~ "    fetch=\"join|select|subselect\"\n"
+#~ "    batch-size=\"N\"\n"
+#~ "    access=\"field|property|ClassName\"\n"
+#~ "    optimistic-lock=\"true|false\"\n"
+#~ "    mutable=\"true|false\"\n"
+#~ "    node=\"element-name|.\"\n"
+#~ "    embed-xml=\"true|false\"\n"
+#~ "&gt;\n"
+#~ "\n"
+#~ "    &lt;key .... /&gt;\n"
+#~ "    &lt;map-key .... /&gt;\n"
+#~ "    &lt;element .... /&gt;\n"
+#~ "&lt;/map&gt;"
+
+#, fuzzy
+#~ msgid "<![CDATA[<key column=\"productSerialNumber\" not-null=\"true\"/>]]>"
+#~ msgstr "&lt;key column=\"productSerialNumber\" not-null=\"true\"/&gt;"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[<key column=\"productSerialNumber\" on-delete=\"cascade\"/>]]>"
+#~ msgstr "&lt;key column=\"productSerialNumber\" on-delete=\"cascade\"/&gt;"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[<set name=\"names\" table=\"person_names\">\n"
+#~ "    <key column=\"person_id\"/>\n"
+#~ "    <element column=\"person_name\" type=\"string\"/>\n"
+#~ "</set>]]>"
+#~ msgstr ""
+#~ "&lt;set name=\"names\" table=\"person_names\"&gt;\n"
+#~ "    &lt;key column=\"person_id\"/&gt;\n"
+#~ "    &lt;element column=\"person_name\" type=\"string\"/&gt;\n"
+#~ "&lt;/set&gt;"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[<bag name=\"sizes\" \n"
+#~ "        table=\"item_sizes\" \n"
+#~ "        order-by=\"size asc\">\n"
+#~ "    <key column=\"item_id\"/>\n"
+#~ "    <element column=\"size\" type=\"integer\"/>\n"
+#~ "</bag>]]>"
+#~ msgstr ""
+#~ "&lt;bag name=\"sizes\" \n"
+#~ "        table=\"item_sizes\" \n"
+#~ "        order-by=\"size asc\"&gt;\n"
+#~ "    &lt;key column=\"item_id\"/&gt;\n"
+#~ "    &lt;element column=\"size\" type=\"integer\"/&gt;\n"
+#~ "&lt;/bag&gt;"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[<array name=\"addresses\" \n"
+#~ "        table=\"PersonAddress\" \n"
+#~ "        cascade=\"persist\">\n"
+#~ "    <key column=\"personId\"/>\n"
+#~ "    <list-index column=\"sortOrder\"/>\n"
+#~ "    <many-to-many column=\"addressId\" class=\"Address\"/>\n"
+#~ "</array>]]>"
+#~ msgstr ""
+#~ "&lt;array name=\"addresses\" \n"
+#~ "        table=\"PersonAddress\" \n"
+#~ "        cascade=\"persist\"&gt;\n"
+#~ "    &lt;key column=\"personId\"/&gt;\n"
+#~ "    &lt;list-index column=\"sortOrder\"/&gt;\n"
+#~ "    &lt;many-to-many column=\"addressId\" class=\"Address\"/&gt;\n"
+#~ "&lt;/array&gt;"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[<map name=\"holidays\" \n"
+#~ "        table=\"holidays\" \n"
+#~ "        schema=\"dbo\" \n"
+#~ "        order-by=\"hol_name asc\">\n"
+#~ "    <key column=\"id\"/>\n"
+#~ "    <map-key column=\"hol_name\" type=\"string\"/>\n"
+#~ "    <element column=\"hol_date\" type=\"date\"/>\n"
+#~ "</map>]]>"
+#~ msgstr ""
+#~ "&lt;map name=\"holidays\" \n"
+#~ "        table=\"holidays\" \n"
+#~ "        schema=\"dbo\" \n"
+#~ "        order-by=\"hol_name asc\"&gt;\n"
+#~ "    &lt;key column=\"id\"/&gt;\n"
+#~ "    &lt;map-key column=\"hol_name\" type=\"string\"/&gt;\n"
+#~ "    &lt;element column=\"hol_date\" type=\"date\"/&gt;\n"
+#~ "&lt;/map&gt;"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[<list name=\"carComponents\" \n"
+#~ "        table=\"CarComponents\">\n"
+#~ "    <key column=\"carId\"/>\n"
+#~ "    <list-index column=\"sortOrder\"/>\n"
+#~ "    <composite-element class=\"CarComponent\">\n"
+#~ "        <property name=\"price\"/>\n"
+#~ "        <property name=\"type\"/>\n"
+#~ "        <property name=\"serialNumber\" column=\"serialNum\"/>\n"
+#~ "    </composite-element>\n"
+#~ "</list>]]>"
+#~ msgstr ""
+#~ "&lt;list name=\"carComponents\" \n"
+#~ "        table=\"CarComponents\"&gt;\n"
+#~ "    &lt;key column=\"carId\"/&gt;\n"
+#~ "    &lt;list-index column=\"sortOrder\"/&gt;\n"
+#~ "    &lt;composite-element class=\"CarComponent\"&gt;\n"
+#~ "        &lt;property name=\"price\"/&gt;\n"
+#~ "        &lt;property name=\"type\"/&gt;\n"
+#~ "        &lt;property name=\"serialNumber\" column=\"serialNum\"/&gt;\n"
+#~ "    &lt;/composite-element&gt;\n"
+#~ "&lt;/list&gt;"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[<one-to-many \n"
+#~ "        class=\"ClassName\"\n"
+#~ "        not-found=\"ignore|exception\"\n"
+#~ "        entity-name=\"EntityName\"\n"
+#~ "        node=\"element-name\"\n"
+#~ "        embed-xml=\"true|false\"\n"
+#~ "    />]]>"
+#~ msgstr ""
+#~ "&lt;one-to-many \n"
+#~ "        class=\"ClassName\"\n"
+#~ "        not-found=\"ignore|exception\"\n"
+#~ "        entity-name=\"EntityName\"\n"
+#~ "        node=\"element-name\"\n"
+#~ "        embed-xml=\"true|false\"\n"
+#~ "    /&gt;"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[<map name=\"parts\"\n"
+#~ "        cascade=\"all\">\n"
+#~ "    <key column=\"productId\" not-null=\"true\"/>\n"
+#~ "    <map-key formula=\"partName\"/>\n"
+#~ "    <one-to-many class=\"Part\"/>\n"
+#~ "</map>]]>"
+#~ msgstr ""
+#~ "&lt;map name=\"parts\"\n"
+#~ "        cascade=\"all\"&gt;\n"
+#~ "    &lt;key column=\"productId\" not-null=\"true\"/&gt;\n"
+#~ "    &lt;map-key formula=\"partName\"/&gt;\n"
+#~ "    &lt;one-to-many class=\"Part\"/&gt;\n"
+#~ "&lt;/map&gt;"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[<set name=\"aliases\" \n"
+#~ "            table=\"person_aliases\" \n"
+#~ "            sort=\"natural\">\n"
+#~ "    <key column=\"person\"/>\n"
+#~ "    <element column=\"name\" type=\"string\"/>\n"
+#~ "</set>\n"
+#~ "\n"
+#~ "<map name=\"holidays\" sort=\"my.custom.HolidayComparator\">\n"
+#~ "    <key column=\"year_id\"/>\n"
+#~ "    <map-key column=\"hol_name\" type=\"string\"/>\n"
+#~ "    <element column=\"hol_date\" type=\"date\"/>\n"
+#~ "</map>]]>"
+#~ msgstr ""
+#~ "&lt;set name=\"aliases\" \n"
+#~ "            table=\"person_aliases\" \n"
+#~ "            sort=\"natural\"&gt;\n"
+#~ "    &lt;key column=\"person\"/&gt;\n"
+#~ "    &lt;element column=\"name\" type=\"string\"/&gt;\n"
+#~ "&lt;/set&gt;\n"
+#~ "\n"
+#~ "&lt;map name=\"holidays\" sort=\"my.custom.HolidayComparator\"&gt;\n"
+#~ "    &lt;key column=\"year_id\"/&gt;\n"
+#~ "    &lt;map-key column=\"hol_name\" type=\"string\"/&gt;\n"
+#~ "    &lt;element column=\"hol_date\" type=\"date\"/&gt;\n"
+#~ "&lt;/map&gt;"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[<set name=\"aliases\" table=\"person_aliases\" order-by=\"lower"
+#~ "(name) asc\">\n"
+#~ "    <key column=\"person\"/>\n"
+#~ "    <element column=\"name\" type=\"string\"/>\n"
+#~ "</set>\n"
+#~ "\n"
+#~ "<map name=\"holidays\" order-by=\"hol_date, hol_name\">\n"
+#~ "    <key column=\"year_id\"/>\n"
+#~ "    <map-key column=\"hol_name\" type=\"string\"/>\n"
+#~ "    <element column=\"hol_date type=\"date\"/>\n"
+#~ "</map>]]>"
+#~ msgstr ""
+#~ "&lt;set name=\"aliases\" table=\"person_aliases\" order-by=\"lower(name) "
+#~ "asc\"&gt;\n"
+#~ "    &lt;key column=\"person\"/&gt;\n"
+#~ "    &lt;element column=\"name\" type=\"string\"/&gt;\n"
+#~ "&lt;/set&gt;\n"
+#~ "\n"
+#~ "&lt;map name=\"holidays\" order-by=\"hol_date, hol_name\"&gt;\n"
+#~ "    &lt;key column=\"year_id\"/&gt;\n"
+#~ "    &lt;map-key column=\"hol_name\" type=\"string\"/&gt;\n"
+#~ "    &lt;element column=\"hol_date type=\"date\"/&gt;\n"
+#~ "&lt;/map&gt;"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[sortedUsers = s.createFilter( group.getUsers(), \"order by this."
+#~ "name\" ).list();]]>"
+#~ msgstr ""
+#~ "sortedUsers = s.createFilter( group.getUsers(), \"order by this.name\" )."
+#~ "list();"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[<class name=\"Category\">\n"
+#~ "    <id name=\"id\" column=\"CATEGORY_ID\"/>\n"
+#~ "    ...\n"
+#~ "    <bag name=\"items\" table=\"CATEGORY_ITEM\">\n"
+#~ "        <key column=\"CATEGORY_ID\"/>\n"
+#~ "        <many-to-many class=\"Item\" column=\"ITEM_ID\"/>\n"
+#~ "    </bag>\n"
+#~ "</class>\n"
+#~ "\n"
+#~ "<class name=\"Item\">\n"
+#~ "    <id name=\"id\" column=\"ITEM_ID\"/>\n"
+#~ "    ...\n"
+#~ "\n"
+#~ "    <!-- inverse end -->\n"
+#~ "    <bag name=\"categories\" table=\"CATEGORY_ITEM\" inverse=\"true\">\n"
+#~ "        <key column=\"ITEM_ID\"/>\n"
+#~ "        <many-to-many class=\"Category\" column=\"CATEGORY_ID\"/>\n"
+#~ "    </bag>\n"
+#~ "</class>]]>"
+#~ msgstr ""
+#~ "&lt;class name=\"Category\"&gt;\n"
+#~ "    &lt;id name=\"id\" column=\"CATEGORY_ID\"/&gt;\n"
+#~ "    ...\n"
+#~ "    &lt;bag name=\"items\" table=\"CATEGORY_ITEM\"&gt;\n"
+#~ "        &lt;key column=\"CATEGORY_ID\"/&gt;\n"
+#~ "        &lt;many-to-many class=\"Item\" column=\"ITEM_ID\"/&gt;\n"
+#~ "    &lt;/bag&gt;\n"
+#~ "&lt;/class&gt;\n"
+#~ "\n"
+#~ "&lt;class name=\"Item\"&gt;\n"
+#~ "    &lt;id name=\"id\" column=\"CATEGORY_ID\"/&gt;\n"
+#~ "    ...\n"
+#~ "\n"
+#~ "    &lt;!-- inverse end --&gt;\n"
+#~ "    &lt;bag name=\"categories\" table=\"CATEGORY_ITEM\" inverse=\"true"
+#~ "\"&gt;\n"
+#~ "        &lt;key column=\"ITEM_ID\"/&gt;\n"
+#~ "        &lt;many-to-many class=\"Category\" column=\"CATEGORY_ID\"/&gt;\n"
+#~ "    &lt;/bag&gt;\n"
+#~ "&lt;/class&gt;"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[\n"
+#~ "category.getItems().add(item);          // The category now \"knows\" "
+#~ "about the relationship\n"
+#~ "item.getCategories().add(category);     // The item now \"knows\" about "
+#~ "the relationship\n"
+#~ "\n"
+#~ "session.persist(item);                   // The relationship won't be "
+#~ "saved!\n"
+#~ "session.persist(category);               // The relationship will be "
+#~ "saved]]>"
+#~ msgstr ""
+#~ "category.getItems().add(item);          // The category now \"knows\" "
+#~ "about the relationship\n"
+#~ "item.getCategories().add(category);     // The item now \"knows\" about "
+#~ "the relationship\n"
+#~ "\n"
+#~ "session.persist(item);                   // The relationship won't be "
+#~ "saved!\n"
+#~ "session.persist(category);               // The relationship will be saved"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[<class name=\"Parent\">\n"
+#~ "    <id name=\"id\" column=\"parent_id\"/>\n"
+#~ "    ....\n"
+#~ "    <set name=\"children\" inverse=\"true\">\n"
+#~ "        <key column=\"parent_id\"/>\n"
+#~ "        <one-to-many class=\"Child\"/>\n"
+#~ "    </set>\n"
+#~ "</class>\n"
+#~ "\n"
+#~ "<class name=\"Child\">\n"
+#~ "    <id name=\"id\" column=\"child_id\"/>\n"
+#~ "    ....\n"
+#~ "    <many-to-one name=\"parent\" \n"
+#~ "        class=\"Parent\" \n"
+#~ "        column=\"parent_id\"\n"
+#~ "        not-null=\"true\"/>\n"
+#~ "</class>]]>"
+#~ msgstr ""
+#~ "&lt;class name=\"Parent\"&gt;\n"
+#~ "    &lt;id name=\"id\" column=\"parent_id\"/&gt;\n"
+#~ "    ....\n"
+#~ "    &lt;set name=\"children\" inverse=\"true\"&gt;\n"
+#~ "        &lt;key column=\"parent_id\"/&gt;\n"
+#~ "        &lt;one-to-many class=\"Child\"/&gt;\n"
+#~ "    &lt;/set&gt;\n"
+#~ "&lt;/class&gt;\n"
+#~ "\n"
+#~ "&lt;class name=\"Child\"&gt;\n"
+#~ "    &lt;id name=\"id\" column=\"child_id\"/&gt;\n"
+#~ "    ....\n"
+#~ "    &lt;many-to-one name=\"parent\" \n"
+#~ "        class=\"Parent\" \n"
+#~ "        column=\"parent_id\"\n"
+#~ "        not-null=\"true\"/&gt;\n"
+#~ "&lt;/class&gt;"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[<class name=\"Parent\">\n"
+#~ "    <id name=\"id\" column=\"parent_id\"/>\n"
+#~ "    ....\n"
+#~ "    <map name=\"children\" inverse=\"true\">\n"
+#~ "        <key column=\"parent_id\"/>\n"
+#~ "        <map-key column=\"name\" \n"
+#~ "            type=\"string\"/>\n"
+#~ "        <one-to-many class=\"Child\"/>\n"
+#~ "    </map>\n"
+#~ "</class>\n"
+#~ "\n"
+#~ "<class name=\"Child\">\n"
+#~ "    <id name=\"id\" column=\"child_id\"/>\n"
+#~ "    ....\n"
+#~ "    <property name=\"name\" \n"
+#~ "        not-null=\"true\"/>\n"
+#~ "    <many-to-one name=\"parent\" \n"
+#~ "        class=\"Parent\" \n"
+#~ "        column=\"parent_id\"\n"
+#~ "        not-null=\"true\"/>\n"
+#~ "</class>]]>"
+#~ msgstr ""
+#~ "&lt;class name=\"Parent\"&gt;\n"
+#~ "    &lt;id name=\"id\" column=\"parent_id\"/&gt;\n"
+#~ "    ....\n"
+#~ "    &lt;map name=\"children\" inverse=\"true\"&gt;\n"
+#~ "        &lt;key column=\"parent_id\"/&gt;\n"
+#~ "        &lt;map-key column=\"name\" \n"
+#~ "            type=\"string\"/&gt;\n"
+#~ "        &lt;one-to-many class=\"Child\"/&gt;\n"
+#~ "    &lt;/map&gt;\n"
+#~ "&lt;/class&gt;\n"
+#~ "\n"
+#~ "&lt;class name=\"Child\"&gt;\n"
+#~ "    &lt;id name=\"id\" column=\"child_id\"/&gt;\n"
+#~ "    ....\n"
+#~ "    &lt;property name=\"name\" \n"
+#~ "        not-null=\"true\"/&gt;\n"
+#~ "    &lt;many-to-one name=\"parent\" \n"
+#~ "        class=\"Parent\" \n"
+#~ "        column=\"parent_id\"\n"
+#~ "        not-null=\"true\"/&gt;\n"
+#~ "&lt;/class&gt;"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[<class name=\"Parent\">\n"
+#~ "    <id name=\"id\" column=\"parent_id\"/>\n"
+#~ "    ....\n"
+#~ "    <map name=\"children\">\n"
+#~ "        <key column=\"parent_id\"\n"
+#~ "            not-null=\"true\"/>\n"
+#~ "        <map-key column=\"name\" \n"
+#~ "            type=\"string\"/>\n"
+#~ "        <one-to-many class=\"Child\"/>\n"
+#~ "    </map>\n"
+#~ "</class>\n"
+#~ "\n"
+#~ "<class name=\"Child\">\n"
+#~ "    <id name=\"id\" column=\"child_id\"/>\n"
+#~ "    ....\n"
+#~ "    <many-to-one name=\"parent\" \n"
+#~ "        class=\"Parent\" \n"
+#~ "        column=\"parent_id\"\n"
+#~ "        insert=\"false\"\n"
+#~ "        update=\"false\"\n"
+#~ "        not-null=\"true\"/>\n"
+#~ "</class>]]>"
+#~ msgstr ""
+#~ "&lt;class name=\"Parent\"&gt;\n"
+#~ "    &lt;id name=\"id\" column=\"parent_id\"/&gt;\n"
+#~ "    ....\n"
+#~ "    &lt;map name=\"children\"&gt;\n"
+#~ "        &lt;key column=\"parent_id\"\n"
+#~ "            not-null=\"true\"/&gt;\n"
+#~ "        &lt;map-key column=\"name\" \n"
+#~ "            type=\"string\"/&gt;\n"
+#~ "        &lt;one-to-many class=\"Child\"/&gt;\n"
+#~ "    &lt;/map&gt;\n"
+#~ "&lt;/class&gt;\n"
+#~ "\n"
+#~ "&lt;class name=\"Child\"&gt;\n"
+#~ "    &lt;id name=\"id\" column=\"child_id\"/&gt;\n"
+#~ "    ....\n"
+#~ "    &lt;many-to-one name=\"parent\" \n"
+#~ "        class=\"Parent\" \n"
+#~ "        column=\"parent_id\"\n"
+#~ "        insert=\"false\"\n"
+#~ "        update=\"false\"\n"
+#~ "        not-null=\"true\"/&gt;\n"
+#~ "&lt;/class&gt;"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[<map name=\"contracts\">\n"
+#~ "    <key column=\"employer_id\" not-null=\"true\"/>\n"
+#~ "    <map-key-many-to-many column=\"employee_id\" class=\"Employee\"/>\n"
+#~ "    <one-to-many class=\"Contract\"/>\n"
+#~ "</map>]]>"
+#~ msgstr ""
+#~ "&lt;map name=\"contracts\"&gt;\n"
+#~ "    &lt;key column=\"employer_id\" not-null=\"true\"/&gt;\n"
+#~ "    &lt;map-key-many-to-many column=\"employee_id\" class=\"Employee\"/"
+#~ "&gt;\n"
+#~ "    &lt;one-to-many class=\"Contract\"/&gt;\n"
+#~ "&lt;/map&gt;"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[<map name=\"connections\">\n"
+#~ "    <key column=\"incoming_node_id\"/>\n"
+#~ "    <map-key-many-to-many column=\"outgoing_node_id\" class=\"Node\"/>\n"
+#~ "    <many-to-many column=\"connection_id\" class=\"Connection\"/>\n"
+#~ "</map>]]>"
+#~ msgstr ""
+#~ "&lt;map name=\"connections\"&gt;\n"
+#~ "    &lt;key column=\"incoming_node_id\"/&gt;\n"
+#~ "    &lt;map-key-many-to-many column=\"outgoing_node_id\" class=\"Node\"/"
+#~ "&gt;\n"
+#~ "    &lt;many-to-many column=\"connection_id\" class=\"Connection\"/&gt;\n"
+#~ "&lt;/map&gt;"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[<idbag name=\"lovers\" table=\"LOVERS\">\n"
+#~ "    <collection-id column=\"ID\" type=\"long\">\n"
+#~ "        <generator class=\"sequence\"/>\n"
+#~ "    </collection-id>\n"
+#~ "    <key column=\"PERSON1\"/>\n"
+#~ "    <many-to-many column=\"PERSON2\" class=\"Person\" fetch=\"join\"/>\n"
+#~ "</idbag>]]>"
+#~ msgstr ""
+#~ "&lt;idbag name=\"lovers\" table=\"LOVERS\"&gt;\n"
+#~ "    &lt;collection-id column=\"ID\" type=\"long\"&gt;\n"
+#~ "        &lt;generator class=\"sequence\"/&gt;\n"
+#~ "    &lt;/collection-id&gt;\n"
+#~ "    &lt;key column=\"PERSON1\"/&gt;\n"
+#~ "    &lt;many-to-many column=\"PERSON2\" class=\"Person\" fetch=\"join\"/"
+#~ "&gt;\n"
+#~ "&lt;/idbag&gt;"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[package eg;\n"
+#~ "import java.util.Set;\n"
+#~ "\n"
+#~ "public class Parent {\n"
+#~ "    private long id;\n"
+#~ "    private Set children;\n"
+#~ "\n"
+#~ "    public long getId() { return id; }\n"
+#~ "    private void setId(long id) { this.id=id; }\n"
+#~ "\n"
+#~ "    private Set getChildren() { return children; }\n"
+#~ "    private void setChildren(Set children) { this.children=children; }\n"
+#~ "\n"
+#~ "    ....\n"
+#~ "    ....\n"
+#~ "}]]>"
+#~ msgstr ""
+#~ "package eg;\n"
+#~ "import java.util.Set;\n"
+#~ "\n"
+#~ "public class Parent {\n"
+#~ "    private long id;\n"
+#~ "    private Set children;\n"
+#~ "\n"
+#~ "    public long getId() { return id; }\n"
+#~ "    private void setId(long id) { this.id=id; }\n"
+#~ "\n"
+#~ "    private Set getChildren() { return children; }\n"
+#~ "    private void setChildren(Set children) { this.children=children; }\n"
+#~ "\n"
+#~ "    ....\n"
+#~ "    ....\n"
+#~ "}"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[<hibernate-mapping>\n"
+#~ "\n"
+#~ "    <class name=\"Parent\">\n"
+#~ "        <id name=\"id\">\n"
+#~ "            <generator class=\"sequence\"/>\n"
+#~ "        </id>\n"
+#~ "        <set name=\"children\">\n"
+#~ "            <key column=\"parent_id\"/>\n"
+#~ "            <one-to-many class=\"Child\"/>\n"
+#~ "        </set>\n"
+#~ "    </class>\n"
+#~ "\n"
+#~ "    <class name=\"Child\">\n"
+#~ "        <id name=\"id\">\n"
+#~ "            <generator class=\"sequence\"/>\n"
+#~ "        </id>\n"
+#~ "        <property name=\"name\"/>\n"
+#~ "    </class>\n"
+#~ "\n"
+#~ "</hibernate-mapping>]]>"
+#~ msgstr ""
+#~ "&lt;hibernate-mapping&gt;\n"
+#~ "\n"
+#~ "    &lt;class name=\"Parent\"&gt;\n"
+#~ "        &lt;id name=\"id\"&gt;\n"
+#~ "            &lt;generator class=\"sequence\"/&gt;\n"
+#~ "        &lt;/id&gt;\n"
+#~ "        &lt;set name=\"children\"&gt;\n"
+#~ "            &lt;key column=\"parent_id\"/&gt;\n"
+#~ "            &lt;one-to-many class=\"Child\"/&gt;\n"
+#~ "        &lt;/set&gt;\n"
+#~ "    &lt;/class&gt;\n"
+#~ "\n"
+#~ "    &lt;class name=\"Child\"&gt;\n"
+#~ "        &lt;id name=\"id\"&gt;\n"
+#~ "            &lt;generator class=\"sequence\"/&gt;\n"
+#~ "        &lt;/id&gt;\n"
+#~ "        &lt;property name=\"name\"/&gt;\n"
+#~ "    &lt;/class&gt;\n"
+#~ "\n"
+#~ "&lt;/hibernate-mapping&gt;"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[create table parent ( id bigint not null primary key )\n"
+#~ "create table child ( id bigint not null primary key, name varchar(255), "
+#~ "parent_id bigint )\n"
+#~ "alter table child add constraint childfk0 (parent_id) references parent]]>"
+#~ msgstr ""
+#~ "create table parent ( id bigint not null primary key )\n"
+#~ "create table child ( id bigint not null primary key, name varchar(255), "
+#~ "parent_id bigint )\n"
+#~ "alter table child add constraint childfk0 (parent_id) references parent"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[<hibernate-mapping>\n"
+#~ "\n"
+#~ "    <class name=\"Parent\">\n"
+#~ "        <id name=\"id\">\n"
+#~ "            <generator class=\"sequence\"/>\n"
+#~ "        </id>\n"
+#~ "        <set name=\"children\" inverse=\"true\">\n"
+#~ "            <key column=\"parent_id\"/>\n"
+#~ "            <one-to-many class=\"Child\"/>\n"
+#~ "        </set>\n"
+#~ "    </class>\n"
+#~ "\n"
+#~ "    <class name=\"Child\">\n"
+#~ "        <id name=\"id\">\n"
+#~ "            <generator class=\"sequence\"/>\n"
+#~ "        </id>\n"
+#~ "        <property name=\"name\"/>\n"
+#~ "        <many-to-one name=\"parent\" class=\"Parent\" column=\"parent_id"
+#~ "\" not-null=\"true\"/>\n"
+#~ "    </class>\n"
+#~ "\n"
+#~ "</hibernate-mapping>]]>"
+#~ msgstr ""
+#~ "&lt;hibernate-mapping&gt;\n"
+#~ "\n"
+#~ "    &lt;class name=\"Parent\"&gt;\n"
+#~ "        &lt;id name=\"id\"&gt;\n"
+#~ "            &lt;generator class=\"sequence\"/&gt;\n"
+#~ "        &lt;/id&gt;\n"
+#~ "        &lt;set name=\"children\" inverse=\"true\"&gt;\n"
+#~ "            &lt;key column=\"parent_id\"/&gt;\n"
+#~ "            &lt;one-to-many class=\"Child\"/&gt;\n"
+#~ "        &lt;/set&gt;\n"
+#~ "    &lt;/class&gt;\n"
+#~ "\n"
+#~ "    &lt;class name=\"Child\"&gt;\n"
+#~ "        &lt;id name=\"id\"&gt;\n"
+#~ "            &lt;generator class=\"sequence\"/&gt;\n"
+#~ "        &lt;/id&gt;\n"
+#~ "        &lt;property name=\"name\"/&gt;\n"
+#~ "        &lt;many-to-one name=\"parent\" class=\"Parent\" column="
+#~ "\"parent_id\" not-null=\"true\"/&gt;\n"
+#~ "    &lt;/class&gt;\n"
+#~ "\n"
+#~ "&lt;/hibernate-mapping&gt;"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[create table parent ( id bigint not null primary key )\n"
+#~ "create table child ( id bigint not null\n"
+#~ "                     primary key,\n"
+#~ "                     name varchar(255),\n"
+#~ "                     parent_id bigint not null )\n"
+#~ "alter table child add constraint childfk0 (parent_id) references parent]]>"
+#~ msgstr ""
+#~ "create table parent ( id bigint not null primary key )\n"
+#~ "create table child ( id bigint not null\n"
+#~ "                     primary key,\n"
+#~ "                     name varchar(255),\n"
+#~ "                     parent_id bigint not null )\n"
+#~ "alter table child add constraint childfk0 (parent_id) references parent"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[<hibernate-mapping>\n"
+#~ "\n"
+#~ "    <class name=\"Parent\">\n"
+#~ "        <id name=\"id\">\n"
+#~ "            <generator class=\"sequence\"/>\n"
+#~ "        </id>\n"
+#~ "        <set name=\"children\">\n"
+#~ "            <key column=\"parent_id\" not-null=\"true\"/>\n"
+#~ "            <one-to-many class=\"Child\"/>\n"
+#~ "        </set>\n"
+#~ "    </class>\n"
+#~ "\n"
+#~ "    <class name=\"Child\">\n"
+#~ "        <id name=\"id\">\n"
+#~ "            <generator class=\"sequence\"/>\n"
+#~ "        </id>\n"
+#~ "        <property name=\"name\"/>\n"
+#~ "    </class>\n"
+#~ "\n"
+#~ "</hibernate-mapping>]]>"
+#~ msgstr ""
+#~ "&lt;hibernate-mapping&gt;\n"
+#~ "\n"
+#~ "    &lt;class name=\"Parent\"&gt;\n"
+#~ "        &lt;id name=\"id\"&gt;\n"
+#~ "            &lt;generator class=\"sequence\"/&gt;\n"
+#~ "        &lt;/id&gt;\n"
+#~ "        &lt;set name=\"children\"&gt;\n"
+#~ "            &lt;key column=\"parent_id\" not-null=\"true\"/&gt;\n"
+#~ "            &lt;one-to-many class=\"Child\"/&gt;\n"
+#~ "        &lt;/set&gt;\n"
+#~ "    &lt;/class&gt;\n"
+#~ "\n"
+#~ "    &lt;class name=\"Child\"&gt;\n"
+#~ "        &lt;id name=\"id\"&gt;\n"
+#~ "            &lt;generator class=\"sequence\"/&gt;\n"
+#~ "        &lt;/id&gt;\n"
+#~ "        &lt;property name=\"name\"/&gt;\n"
+#~ "    &lt;/class&gt;\n"
+#~ "\n"
+#~ "&lt;/hibernate-mapping&gt;"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[<hibernate-mapping>\n"
+#~ "\n"
+#~ "    <class name=\"Parent\">\n"
+#~ "        <id name=\"id\">\n"
+#~ "            <generator class=\"sequence\"/>\n"
+#~ "        </id>\n"
+#~ "        <set name=\"children\" table=\"childset\">\n"
+#~ "            <key column=\"parent_id\"/>\n"
+#~ "            <many-to-many class=\"Child\" column=\"child_id\"/>\n"
+#~ "        </set>\n"
+#~ "    </class>\n"
+#~ "\n"
+#~ "    <class name=\"Child\">\n"
+#~ "        <id name=\"id\">\n"
+#~ "            <generator class=\"sequence\"/>\n"
+#~ "        </id>\n"
+#~ "        <property name=\"name\"/>\n"
+#~ "    </class>\n"
+#~ "\n"
+#~ "</hibernate-mapping>]]>"
+#~ msgstr ""
+#~ "&lt;hibernate-mapping&gt;\n"
+#~ "\n"
+#~ "    &lt;class name=\"Parent\"&gt;\n"
+#~ "        &lt;id name=\"id\"&gt;\n"
+#~ "            &lt;generator class=\"sequence\"/&gt;\n"
+#~ "        &lt;/id&gt;\n"
+#~ "        &lt;set name=\"children\" table=\"childset\"&gt;\n"
+#~ "            &lt;key column=\"parent_id\"/&gt;\n"
+#~ "            &lt;many-to-many class=\"Child\" column=\"child_id\"/&gt;\n"
+#~ "        &lt;/set&gt;\n"
+#~ "    &lt;/class&gt;\n"
+#~ "\n"
+#~ "    &lt;class name=\"Child\"&gt;\n"
+#~ "        &lt;id name=\"id\"&gt;\n"
+#~ "            &lt;generator class=\"sequence\"/&gt;\n"
+#~ "        &lt;/id&gt;\n"
+#~ "        &lt;property name=\"name\"/&gt;\n"
+#~ "    &lt;/class&gt;\n"
+#~ "\n"
+#~ "&lt;/hibernate-mapping&gt;"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[create table parent ( id bigint not null primary key )\n"
+#~ "create table child ( id bigint not null primary key, name varchar(255) )\n"
+#~ "create table childset ( parent_id bigint not null,\n"
+#~ "                        child_id bigint not null,\n"
+#~ "                        primary key ( parent_id, child_id ) )\n"
+#~ "alter table childset add constraint childsetfk0 (parent_id) references "
+#~ "parent\n"
+#~ "alter table childset add constraint childsetfk1 (child_id) references "
+#~ "child]]>"
+#~ msgstr ""
+#~ "create table parent ( id bigint not null primary key )\n"
+#~ "create table child ( id bigint not null primary key, name varchar(255) )\n"
+#~ "create table childset ( parent_id bigint not null,\n"
+#~ "                        child_id bigint not null,\n"
+#~ "                        primary key ( parent_id, child_id ) )\n"
+#~ "alter table childset add constraint childsetfk0 (parent_id) references "
+#~ "parent\n"
+#~ "alter table childset add constraint childsetfk1 (child_id) references "
+#~ "child"

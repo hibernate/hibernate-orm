@@ -1,0 +1,149 @@
+# 
+# AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: 0\n"
+"POT-Creation-Date: 2010-02-11T05:38:14\n"
+"PO-Revision-Date: 2010-02-11T05:38:14\n"
+"Last-Translator: Automatically generated\n"
+"Language-Team: None\n"
+"MIME-Version: 1.0\n"
+"Content-Type: application/x-publican; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. Tag: firstname
+#, no-c-format
+msgid "Gavin"
+msgstr ""
+
+#. Tag: firstname
+#, no-c-format
+msgid "Christian"
+msgstr ""
+
+#. Tag: firstname
+#, no-c-format
+msgid "Max"
+msgstr ""
+
+#. Tag: firstname
+#, no-c-format
+msgid "Emmanuel"
+msgstr ""
+
+#. Tag: firstname
+#, no-c-format
+msgid "Steve"
+msgstr ""
+
+#. Tag: firstname
+#, no-c-format
+msgid "James"
+msgstr ""
+
+#. Tag: firstname
+#, no-c-format
+msgid "Cheyenne"
+msgstr ""
+
+#. Tag: firstname
+#, no-c-format
+msgid "Vincent"
+msgstr ""
+
+#. Tag: firstname
+#, no-c-format
+msgid "Sebastien"
+msgstr ""
+
+#. Tag: firstname
+#, no-c-format
+msgid "Michael"
+msgstr ""
+
+#. Tag: firstname
+#, no-c-format
+msgid "Baptiste"
+msgstr ""
+
+#. Tag: firstname
+#, no-c-format
+msgid "Anthony"
+msgstr ""
+
+#. Tag: firstname
+#, no-c-format
+msgid "Alvaro"
+msgstr ""
+
+#. Tag: firstname
+#, no-c-format
+msgid "Anderson"
+msgstr ""
+
+#. Tag: firstname
+#, no-c-format
+msgid "Daniel Vieira"
+msgstr ""
+
+#. Tag: firstname
+#, no-c-format
+msgid "Francisco"
+msgstr ""
+
+#. Tag: firstname
+#, no-c-format
+msgid "Gamarra"
+msgstr ""
+
+#. Tag: firstname
+#, no-c-format
+msgid "Luiz Carlos"
+msgstr ""
+
+#. Tag: firstname
+#, no-c-format
+msgid "Marcel"
+msgstr ""
+
+#. Tag: firstname
+#, no-c-format
+msgid "Paulo"
+msgstr ""
+
+#. Tag: firstname
+#, no-c-format
+msgid "Pablo L."
+msgstr ""
+
+#. Tag: firstname
+#, no-c-format
+msgid "Renato"
+msgstr ""
+
+#. Tag: firstname
+#, no-c-format
+msgid "Rogério"
+msgstr ""
+
+#. Tag: firstname
+#, no-c-format
+msgid "Wanderson"
+msgstr ""
+
+#. Tag: firstname
+#, no-c-format
+msgid "Cao"
+msgstr ""
+
+#. Tag: orgname
+#, no-c-format
+msgid "RedSaga"
+msgstr ""
+
+#. Tag: contrib
+#, no-c-format
+msgid "Translation Lead"
+msgstr ""
+

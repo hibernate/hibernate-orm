@@ -1,0 +1,84 @@
+# 
+# AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: 0\n"
+"POT-Creation-Date: 2010-02-11T05:38:15\n"
+"PO-Revision-Date: 2010-02-11T05:38:15\n"
+"Last-Translator: Automatically generated\n"
+"Language-Team: None\n"
+"MIME-Version: 1.0\n"
+"Content-Type: application/x-publican; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. Tag: title
+#, no-c-format
+msgid "Preface"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Working with object-oriented software and a relational database can be cumbersome and time consuming in today's enterprise environments. Hibernate is an Object/Relational Mapping tool for Java environments. The term Object/Relational Mapping (ORM) refers to the technique of mapping a data representation from an object model to a relational data model with a SQL-based schema."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Hibernate not only takes care of the mapping from Java classes to database tables (and from Java data types to SQL data types), but also provides data query and retrieval facilities. It can also significantly reduce development time otherwise spent with manual data handling in SQL and JDBC."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Hibernate's goal is to relieve the developer from 95 percent of common data persistence related programming tasks. Hibernate may not be the best solution for data-centric applications that only use stored-procedures to implement the business logic in the database, it is most useful with object-oriented domain models and business logic in the Java-based middle-tier. However, Hibernate can certainly help you to remove or encapsulate vendor-specific SQL code and will help with the common task of result set translation from a tabular representation to a graph of objects."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "If you are new to Hibernate and Object/Relational Mapping or even Java, please follow these steps:"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Read <xref linkend=\"tutorial\" /> for a tutorial with step-by-step instructions. The source code for the tutorial is included in the distribution in the <literal>doc/reference/tutorial/</literal> directory."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Read <xref linkend=\"architecture\" /> to understand the environments where Hibernate can be used."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "View the <literal>eg/</literal> directory in the Hibernate distribution. It contains a simple standalone application. Copy your JDBC driver to the <literal>lib/</literal> directory and edit <literal>etc/hibernate.properties</literal>, specifying correct values for your database. From a command prompt in the distribution directory, type <literal>ant eg</literal> (using Ant), or under Windows, type <literal>build eg</literal>."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Use this reference documentation as your primary source of information. Consider reading <biblioref linkend=\"biblio-JPwH\"></biblioref> if you need more help with application design, or if you prefer a step-by-step tutorial. Also visit <ulink url=\"http://caveatemptor.hibernate.org\" /> and download the example application from <biblioref linkend=\"biblio-JPwH\"></biblioref>."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "FAQs are answered on the Hibernate website."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Links to third party demos, examples, and tutorials are maintained on the Hibernate website."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The Community Area on the Hibernate website is a good resource for design patterns and various integration solutions (Tomcat, JBoss AS, Struts, EJB, etc.)."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "If you have questions, use the user forum linked on the Hibernate website. We also provide a JIRA issue tracking system for bug reports and feature requests. If you are interested in the development of Hibernate, join the developer mailing list. If you are interested in translating this documentation into your language, contact us on the developer mailing list."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Commercial development support, production support, and training for Hibernate is available through JBoss Inc. (see http://www.hibernate.org/SupportTraining/). Hibernate is a Professional Open Source project and a critical component of the JBoss Enterprise Middleware System (JEMS) suite of products."
+msgstr ""
+

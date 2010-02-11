@@ -1,0 +1,1186 @@
+# translation of Collection_Mapping.po to 
+# translation of Collection_Mapping.po to
+# translation of Collection_Mapping.po to
+# translation of Collection_Mapping.po to
+# translation of Collection_Mapping.po to
+# translation of Collection_Mapping.po to
+# Language /mnt/hgfs/base/Hibernate/Reference translations for PACKAGE package.
+# Copyright (C) 2006, 2007 Free Software Foundation, Inc.
+# Automatically generated, 2006.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Collection_Mapping\n"
+"Report-Msgid-Bugs-To: http://bugs.kde.org\n"
+"POT-Creation-Date: 2010-02-11T05:38:15\n"
+"PO-Revision-Date: 2007-02-26 10:27+1000\n"
+"Last-Translator: \n"
+"Language-Team:  <de@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: KBabel 1.9.1\n"
+
+#. Tag: title
+#, no-c-format
+msgid "Criteria Queries"
+msgstr "\"Criteria Queries\""
+
+#. Tag: para
+#, no-c-format
+msgid "Hibernate features an intuitive, extensible criteria query API."
+msgstr "Hibernate besitzt eine intuitive, erweiterbare \"Criteria Query\"-API."
+
+#. Tag: title
+#, fuzzy, no-c-format
+msgid "Creating a <literal>Criteria</literal> instance"
+msgstr "Das Erstellen einer Criteria-Instanz"
+
+#. Tag: para
+#, no-c-format
+msgid ""
+"The interface <literal>org.hibernate.Criteria</literal> represents a query "
+"against a particular persistent class. The <literal>Session</literal> is a "
+"factory for <literal>Criteria</literal> instances."
+msgstr ""
+"Das Interface <literal>org.hibernate.Criteria</literal> repräsentiert eine "
+"Anfrage an eine bestimmte persistente Klasse. Bei der <literal>Session</"
+"literal> handelt es sich um eine Factory für <literal>Criteria</literal>-"
+"Instanzen."
+
+#. Tag: title
+#, no-c-format
+msgid "Narrowing the result set"
+msgstr "Den Ergebnissatz eingrenzen"
+
+#. Tag: para
+#, no-c-format
+msgid ""
+"An individual query criterion is an instance of the interface <literal>org."
+"hibernate.criterion.Criterion</literal>. The class <literal>org.hibernate."
+"criterion.Restrictions</literal> defines factory methods for obtaining "
+"certain built-in <literal>Criterion</literal> types."
+msgstr ""
+"Ein individuelles \"Query Criterion\" (Anfragenkriterium) ist eine Instanz "
+"des Interface <literal>org.hibernate.criterion.Criterion</literal>. Die "
+"Klasse <literal>org.hibernate.criterion.Restrictions</literal> definiert "
+"Factory-Methoden, um bestimmte eingebaute <literal>Criterion</literal>-Typen "
+"einzuholen."
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid "Restrictions can be grouped logically."
+msgstr "Einschränkungen können logisch gruppiert werden."
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"There are a range of built-in criterion types (<literal>Restrictions</"
+"literal> subclasses). One of the most useful allows you to specify SQL "
+"directly."
+msgstr ""
+"Es existiert eine ganze Reihe eingebauter \"Criterion\"-Typen "
+"(<literal>Restrictions</literal>-Subklassen), aber einer ist besonders "
+"hilfreich und ermöglicht es Ihnen, die SQL direkt zu spezifizieren."
+
+#. Tag: para
+#, no-c-format
+msgid ""
+"The <literal>{alias}</literal> placeholder with be replaced by the row alias "
+"of the queried entity."
+msgstr ""
+"Der <literal>{alias}</literal>-Platzhalter wird durch den Reihen-Alias der "
+"angefragten Entity ersetzt."
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"You can also obtain a criterion from a <literal>Property</literal> instance. "
+"You can create a <literal>Property</literal> by calling <literal>Property."
+"forName()</literal>:"
+msgstr ""
+"Eine andere Art an das Kriterium zu kommen ist über eine <literal>Property</"
+"literal>-Instanz. Sie können eine <literal>Property</literal> erstellen, "
+"indem Sie <literal>Property.forName()</literal> aufrufen."
+
+#. Tag: title
+#, no-c-format
+msgid "Ordering the results"
+msgstr "Die Ergebnisse ordnen"
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"You can order the results using <literal>org.hibernate.criterion.Order</"
+"literal>."
+msgstr ""
+"Sie können die Ergebnisse mit <literal>org.hibernate.criterion.Order</"
+"literal> ordnen."
+
+#. Tag: title
+#, no-c-format
+msgid "Associations"
+msgstr "Assoziationen"
+
+#. Tag: para
+#, no-c-format
+msgid ""
+"By navigating associations using <literal>createCriteria()</literal> you can "
+"specify constraints upon related entities:"
+msgstr ""
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"The second <literal>createCriteria()</literal> returns a new instance of "
+"<literal>Criteria</literal> that refers to the elements of the "
+"<literal>kittens</literal> collection."
+msgstr ""
+"beachten Sie, dass das zweite <literal>createCriteria()</literal> mit einer "
+"neuen Instanz von <literal>Criteria</literal> reagiert, die auf die Elemente "
+"<literal>kittens</literal>-Collection verweist."
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"There is also an alternate form that is useful in certain circumstances:"
+msgstr "Die folgende Alternative ist unter bestimmten Umständen hilfreich."
+
+#. Tag: para
+#, no-c-format
+msgid ""
+"(<literal>createAlias()</literal> does not create a new instance of "
+"<literal>Criteria</literal>.)"
+msgstr ""
+"(<literal>createAlias()</literal> erstellt keine neue Instanz von "
+"<literal>Criteria</literal>.)"
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"The kittens collections held by the <literal>Cat</literal> instances "
+"returned by the previous two queries are <emphasis>not</emphasis> pre-"
+"filtered by the criteria. If you want to retrieve just the kittens that "
+"match the criteria, you must use a <literal>ResultTransformer</literal>."
+msgstr ""
+"Bitte beachten Sie, dass die in den <literal>Cat</literal>-Instanzen "
+"enthaltenen \"kittens\"-Collections, die von den vorherigen zwei Anfragen "
+"zurückgesendet wurden, <emphasis>nicht</emphasis> nicht durch die Kriterien "
+"vorgefiltert werden! Falls Sie nur die \"Kittens\" erhalten wollen, auf die "
+"die Kriterien zutreffen, so müssen Sie einen <literal>ResultTransformer</"
+"literal> verwenden."
+
+#. Tag: para
+#, no-c-format
+msgid "Additionally you may manipulate the result set using a left outer join:"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid ""
+"This will return all of the <literal>Cat</literal>s with a mate whose name "
+"starts with \"good\" ordered by their mate's age, and all cats who do not "
+"have a mate. This is useful when there is a need to order or limit in the "
+"database prior to returning complex/large result sets, and removes many "
+"instances where multiple queries would have to be performed and the results "
+"unioned by java in memory."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid ""
+"Without this feature, first all of the cats without a mate would need to be "
+"loaded in one query."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid ""
+"A second query would need to retreive the cats with mates who's name started "
+"with \"good\" sorted by the mates age."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Thirdly, in memory; the lists would need to be joined manually."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Dynamic association fetching"
+msgstr "Dynamischer Assoziationsabruf"
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"You can specify association fetching semantics at runtime using "
+"<literal>setFetchMode()</literal>."
+msgstr ""
+"Sie können die Semantik für den Assoziationsabruf während der Runtime mit "
+"<literal>setFetchMode()</literal> spezifizieren."
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"This query will fetch both <literal>mate</literal> and <literal>kittens</"
+"literal> by outer join. See <xref linkend=\"performance-fetching\" /> for "
+"more information."
+msgstr ""
+"Diese Anfrage ruft sowohl <literal>mate</literal> als auch <literal>kittens</"
+"literal> durch den äußeren Verbund (\"outer Join\") ab. Weitere "
+"Informationen finden Sie unter <xref linkend=\"performance-fetching\"/>."
+
+#. Tag: title
+#, no-c-format
+msgid "Example queries"
+msgstr "Beispielanfragen"
+
+#. Tag: para
+#, no-c-format
+msgid ""
+"The class <literal>org.hibernate.criterion.Example</literal> allows you to "
+"construct a query criterion from a given instance."
+msgstr ""
+"Mit der Klasse <literal>org.hibernate.criterion.Example</literal> können Sie "
+"ein Anfragenkriterium aus einer gegebenen Instanz zu konstruieren."
+
+#. Tag: para
+#, no-c-format
+msgid ""
+"Version properties, identifiers and associations are ignored. By default, "
+"null valued properties are excluded."
+msgstr ""
+"Versions-Properties, Bezeichner und Assoziationen werden übergangen. In der "
+"Standardeinstellung werden auch Properties mit dem Wert Null ausgeschlossen."
+
+#. Tag: para
+#, no-c-format
+msgid "You can adjust how the <literal>Example</literal> is applied."
+msgstr ""
+"Sie können anpassen, wie das <literal>Example</literal> angewendet wird."
+
+#. Tag: para
+#, no-c-format
+msgid "You can even use examples to place criteria upon associated objects."
+msgstr ""
+"Sie können sogar Beispiele verwenden, um Kriterien auf assoziierte Objekte "
+"anzuwenden."
+
+#. Tag: title
+#, no-c-format
+msgid "Projections, aggregation and grouping"
+msgstr "Projektionen, Aggregation und Gruppierung"
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"The class <literal>org.hibernate.criterion.Projections</literal> is a "
+"factory for <literal>Projection</literal> instances. You can apply a "
+"projection to a query by calling <literal>setProjection()</literal>."
+msgstr ""
+"Bei der Klasse <literal>org.hibernate.criterion.Projections</literal> "
+"handelt es sich um eine Factory für <literal>Projection</literal>-Instanzen. "
+"Eine Projektion wird auf eine Anfrage angewendet, indem man "
+"<literal>setProjection()</literal> aufruft."
+
+#. Tag: para
+#, no-c-format
+msgid ""
+"There is no explicit \"group by\" necessary in a criteria query. Certain "
+"projection types are defined to be <emphasis>grouping projections</"
+"emphasis>, which also appear in the SQL <literal>group by</literal> clause."
+msgstr ""
+"In einer \"Criteria Query\" ist kein explizites \"gruppieren nach\" "
+"notwendig. Bestimmte Projektionstypen sind als "
+"<emphasis>Gruppierungsprojektionen definiert</emphasis>, die auch in der SQL "
+"<literal>group by</literal>-Klausel auftreten."
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"An alias can be assigned to a projection so that the projected value can be "
+"referred to in restrictions or orderings. Here are two different ways to do "
+"this:"
+msgstr ""
+"Ein Alias kann auf Wunsch einer Projektion zugeordnet werden, so dass auf "
+"den projezierten Wert in Einschränkungen oder Anordnungen verwiesen werden "
+"kann. Es gibt zwei verschiedene Arten das zu tun:"
+
+#. Tag: para
+#, no-c-format
+msgid ""
+"The <literal>alias()</literal> and <literal>as()</literal> methods simply "
+"wrap a projection instance in another, aliased, instance of "
+"<literal>Projection</literal>. As a shortcut, you can assign an alias when "
+"you add the projection to a projection list:"
+msgstr ""
+"Die <literal>alias()</literal> und <literal>as()</literal>-Methoden wrappen "
+"die Projektionsinstanzen in eine andere Alias-Instanz von "
+"<literal>Projection</literal>. Als Tastenkürzel können Sie einen Alias "
+"zuordnen, wenn Sie der Projektionsliste eine Projektion hinzufügen:"
+
+#. Tag: para
+#, no-c-format
+msgid ""
+"You can also use <literal>Property.forName()</literal> to express "
+"projections:"
+msgstr ""
+"Sie können auch <literal>Property.forName()</literal> verwenden, um "
+"Projektionen auszudrücken:"
+
+#. Tag: title
+#, no-c-format
+msgid "Detached queries and subqueries"
+msgstr "Abgesetzte Anfragen und Unteranfragen"
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"The <literal>DetachedCriteria</literal> class allows you to create a query "
+"outside the scope of a session and then execute it using an arbitrary "
+"<literal>Session</literal>."
+msgstr ""
+"Die <literal>DetachedCriteria</literal>-Klasse ermöglicht es Ihnen, eine "
+"Anfrage außerhalb des Gültigkeitsbereichs einer Session zu erstellen und sie "
+"später unter Verwendung einer arbiträren <literal>Session</literal> "
+"auszuführen."
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"A <literal>DetachedCriteria</literal> can also be used to express a "
+"subquery. Criterion instances involving subqueries can be obtained via "
+"<literal>Subqueries</literal> or <literal>Property</literal>."
+msgstr ""
+"Ein <literal>DetachedCriteria</literal> kann auch dazu verwendet werden, "
+"eine Anfrage auszudrücken. Instanzen eines Kriteriums können mittels "
+"<literal>Subqueries</literal> oder <literal>Property</literal> erhalten "
+"werden."
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid "Correlated subqueries are also possible:"
+msgstr "Sogar korrelierende Unteranfragen sind möglich:"
+
+#. Tag: title
+#, no-c-format
+msgid "Queries by natural identifier"
+msgstr "Anfrage über natürlichen Bezeichner"
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"For most queries, including criteria queries, the query cache is not "
+"efficient because query cache invalidation occurs too frequently. However, "
+"there is a special kind of query where you can optimize the cache "
+"invalidation algorithm: lookups by a constant natural key. In some "
+"applications, this kind of query occurs frequently. The criteria API "
+"provides special provision for this use case."
+msgstr ""
+"Für die meisten Anfragen, einschließlich \"Criteria Queries\", ist das "
+"Anfragen-Cache nicht sehr effizient, weil zu oft eine Aufhebung des Anfragen-"
+"Caches stattfindet. Es gibt jedoch eine besondere Art der Anfrage, bei der "
+"der Aufhebungsalgorithmus des Caches optimiert werden kann: Suchläufe nach "
+"einem konstanten natürlichen Schlüssel. In einigen Anwendungen kommt diese "
+"Art der Anfrage häufig vor. Die \"Criteria\"-API sorgt in diesem Fall "
+"speziell vor."
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"First, map the natural key of your entity using <literal>&lt;natural-id&gt;</"
+"literal> and enable use of the second-level cache."
+msgstr ""
+"Als erstes sollten Sie den natürlichen Schlüssel Ihrer Entity unter "
+"Verwendung von <literal>&lt;natural-id&gt;</literal> mappen und die "
+"Verwendung des Caches der zweiten Ebene aktivieren."
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"This functionality is not intended for use with entities with "
+"<emphasis>mutable</emphasis> natural keys."
+msgstr ""
+"Bitte beachten Sie, dass diese Funktionalität nicht für die Verwendung mit "
+"Entities mit <emphasis>veränderlichen</emphasis> natürlichen Schlüsseln "
+"vorgesehen ist."
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"Once you have enabled the Hibernate query cache, the <literal>Restrictions."
+"naturalId()</literal> allows you to make use of the more efficient cache "
+"algorithm."
+msgstr ""
+"Nun ermöglicht uns <literal>Restrictions.naturalId()</literal> die "
+"Verwendung des effizienteren Cache-Algorithmus."
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[Criteria crit = sess.createCriteria(Cat.class);\n"
+#~ "crit.setMaxResults(50);\n"
+#~ "List cats = crit.list();]]>"
+#~ msgstr ""
+#~ "Criteria crit = sess.createCriteria(Cat.class);\n"
+#~ "crit.setMaxResults(50);\n"
+#~ "List cats = crit.list();"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[List cats = sess.createCriteria(Cat.class)\n"
+#~ "    .add( Restrictions.like(\"name\", \"Fritz%\") )\n"
+#~ "    .add( Restrictions.between(\"weight\", minWeight, maxWeight) )\n"
+#~ "    .list();]]>"
+#~ msgstr ""
+#~ "List cats = sess.createCriteria(Cat.class)\n"
+#~ "    .add( Restrictions.like(\"name\", \"Fritz&#37;\") )\n"
+#~ "    .add( Restrictions.between(\"weight\", minWeight, maxWeight) )\n"
+#~ "    .list();"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[List cats = sess.createCriteria(Cat.class)\n"
+#~ "    .add( Restrictions.like(\"name\", \"Fritz%\") )\n"
+#~ "    .add( Restrictions.or(\n"
+#~ "        Restrictions.eq( \"age\", new Integer(0) ),\n"
+#~ "        Restrictions.isNull(\"age\")\n"
+#~ "    ) )\n"
+#~ "    .list();]]>"
+#~ msgstr ""
+#~ "List cats = sess.createCriteria(Cat.class)\n"
+#~ "    .add( Restrictions.like(\"name\", \"Fritz&#37;\") )\n"
+#~ "    .add( Restrictions.or(\n"
+#~ "        Restrictions.eq( \"age\", new Integer(0) ),\n"
+#~ "        Restrictions.isNull(\"age\")\n"
+#~ "    ) )\n"
+#~ "    .list();"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[List cats = sess.createCriteria(Cat.class)\n"
+#~ "    .add( Restrictions.in( \"name\", new String[] { \"Fritz\", \"Izi\", "
+#~ "\"Pk\" } ) )\n"
+#~ "    .add( Restrictions.disjunction()\n"
+#~ "        .add( Restrictions.isNull(\"age\") )\n"
+#~ "        .add( Restrictions.eq(\"age\", new Integer(0) ) )\n"
+#~ "        .add( Restrictions.eq(\"age\", new Integer(1) ) )\n"
+#~ "        .add( Restrictions.eq(\"age\", new Integer(2) ) )\n"
+#~ "    ) )\n"
+#~ "    .list();]]>"
+#~ msgstr ""
+#~ "List cats = sess.createCriteria(Cat.class)\n"
+#~ "    .add( Restrictions.in( \"name\", new String[] { \"Fritz\", \"Izi\", "
+#~ "\"Pk\" } ) )\n"
+#~ "    .add( Restrictions.disjunction()\n"
+#~ "        .add( Restrictions.isNull(\"age\") )\n"
+#~ "        .add( Restrictions.eq(\"age\", new Integer(0) ) )\n"
+#~ "        .add( Restrictions.eq(\"age\", new Integer(1) ) )\n"
+#~ "        .add( Restrictions.eq(\"age\", new Integer(2) ) )\n"
+#~ "    ) )\n"
+#~ "    .list();"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[List cats = sess.createCriteria(Cat.class)\n"
+#~ "    .add( Restrictions.sqlRestriction(\"lower({alias}.name) like lower(?)"
+#~ "\", \"Fritz%\", Hibernate.STRING) )\n"
+#~ "    .list();]]>"
+#~ msgstr ""
+#~ "List cats = sess.createCriteria(Cat.class)\n"
+#~ "    .add( Restrictions.sqlRestriction(\"lower({alias}.name) like lower(?)"
+#~ "\", \"Fritz&#37;\", \n"
+#~ "        Hibernate.STRING) )\n"
+#~ "    .list();"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[\n"
+#~ "Property age = Property.forName(\"age\");\n"
+#~ "List cats = sess.createCriteria(Cat.class)\n"
+#~ "    .add( Restrictions.disjunction()\n"
+#~ "        .add( age.isNull() )\n"
+#~ "        .add( age.eq( new Integer(0) ) )\n"
+#~ "        .add( age.eq( new Integer(1) ) )\n"
+#~ "        .add( age.eq( new Integer(2) ) )\n"
+#~ "    ) )\n"
+#~ "    .add( Property.forName(\"name\").in( new String[] { \"Fritz\", \"Izi"
+#~ "\", \"Pk\" } ) )\n"
+#~ "    .list();]]>"
+#~ msgstr ""
+#~ "Property age = Property.forName(\"age\");\n"
+#~ "List cats = sess.createCriteria(Cat.class)\n"
+#~ "    .add( Restrictions.disjunction()\n"
+#~ "        .add( age.isNull() )\n"
+#~ "        .add( age.eq( new Integer(0) ) )\n"
+#~ "        .add( age.eq( new Integer(1) ) )\n"
+#~ "        .add( age.eq( new Integer(2) ) )\n"
+#~ "    ) )\n"
+#~ "    .add( Property.forName(\"name\").in( new String[] { \"Fritz\", \"Izi"
+#~ "\", \"Pk\" } ) )\n"
+#~ "    .list();"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[List cats = sess.createCriteria(Cat.class)\n"
+#~ "    .add( Restrictions.like(\"name\", \"F%\")\n"
+#~ "    .addOrder( Order.asc(\"name\") )\n"
+#~ "    .addOrder( Order.desc(\"age\") )\n"
+#~ "    .setMaxResults(50)\n"
+#~ "    .list();]]>"
+#~ msgstr ""
+#~ "List cats = sess.createCriteria(Cat.class)\n"
+#~ "    .add( Restrictions.like(\"name\", \"F&#37;\")\n"
+#~ "    .addOrder( Order.asc(\"name\") )\n"
+#~ "    .addOrder( Order.desc(\"age\") )\n"
+#~ "    .setMaxResults(50)\n"
+#~ "    .list();"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[List cats = sess.createCriteria(Cat.class)\n"
+#~ "    .add( Property.forName(\"name\").like(\"F%\") )\n"
+#~ "    .addOrder( Property.forName(\"name\").asc() )\n"
+#~ "    .addOrder( Property.forName(\"age\").desc() )\n"
+#~ "    .setMaxResults(50)\n"
+#~ "    .list();]]>"
+#~ msgstr ""
+#~ "List cats = sess.createCriteria(Cat.class)\n"
+#~ "    .add( Property.forName(\"name\").like(\"F&#37;\") )\n"
+#~ "    .addOrder( Property.forName(\"name\").asc() )\n"
+#~ "    .addOrder( Property.forName(\"age\").desc() )\n"
+#~ "    .setMaxResults(50)\n"
+#~ "    .list();"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[List cats = sess.createCriteria(Cat.class)\n"
+#~ "    .add( Restrictions.like(\"name\", \"F%\") )\n"
+#~ "    .createCriteria(\"kittens\")\n"
+#~ "        .add( Restrictions.like(\"name\", \"F%\") )\n"
+#~ "    .list();]]>"
+#~ msgstr ""
+#~ "List cats = sess.createCriteria(Cat.class)\n"
+#~ "    .add( Restrictions.like(\"name\", \"F&#37;\") )\n"
+#~ "    .createCriteria(\"kittens\")\n"
+#~ "        .add( Restrictions.like(\"name\", \"F&#37;\") )\n"
+#~ "    .list();"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[List cats = sess.createCriteria(Cat.class)\n"
+#~ "    .createAlias(\"kittens\", \"kt\")\n"
+#~ "    .createAlias(\"mate\", \"mt\")\n"
+#~ "    .add( Restrictions.eqProperty(\"kt.name\", \"mt.name\") )\n"
+#~ "    .list();]]>"
+#~ msgstr ""
+#~ "List cats = sess.createCriteria(Cat.class)\n"
+#~ "    .createAlias(\"kittens\", \"kt\")\n"
+#~ "    .createAlias(\"mate\", \"mt\")\n"
+#~ "    .add( Restrictions.eqProperty(\"kt.name\", \"mt.name\") )\n"
+#~ "    .list();"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[List cats = sess.createCriteria(Cat.class)\n"
+#~ "    .createCriteria(\"kittens\", \"kt\")\n"
+#~ "        .add( Restrictions.eq(\"name\", \"F%\") )\n"
+#~ "    .setResultTransformer(Criteria.ALIAS_TO_ENTITY_MAP)\n"
+#~ "    .list();\n"
+#~ "Iterator iter = cats.iterator();\n"
+#~ "while ( iter.hasNext() ) {\n"
+#~ "    Map map = (Map) iter.next();\n"
+#~ "    Cat cat = (Cat) map.get(Criteria.ROOT_ALIAS);\n"
+#~ "    Cat kitten = (Cat) map.get(\"kt\");\n"
+#~ "}]]>"
+#~ msgstr ""
+#~ "List cats = sess.createCriteria(Cat.class)\n"
+#~ "    .createCriteria(\"kittens\", \"kt\")\n"
+#~ "        .add( Restrictions.eq(\"name\", \"F&#37;\") )\n"
+#~ "    .setResultTransformer(Criteria.ALIAS_TO_ENTITY_MAP)\n"
+#~ "    .list();\n"
+#~ "Iterator iter = cats.iterator();\n"
+#~ "while ( iter.hasNext() ) {\n"
+#~ "    Map map = (Map) iter.next();\n"
+#~ "    Cat cat = (Cat) map.get(Criteria.ROOT_ALIAS);\n"
+#~ "    Cat kitten = (Cat) map.get(\"kt\");\n"
+#~ "}"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[List cats = sess.createCriteria(Cat.class)\n"
+#~ "    .add( Restrictions.like(\"name\", \"Fritz%\") )\n"
+#~ "    .setFetchMode(\"mate\", FetchMode.EAGER)\n"
+#~ "    .setFetchMode(\"kittens\", FetchMode.EAGER)\n"
+#~ "    .list();]]>"
+#~ msgstr ""
+#~ "List cats = sess.createCriteria(Cat.class)\n"
+#~ "    .add( Restrictions.like(\"name\", \"Fritz&#37;\") )\n"
+#~ "    .setFetchMode(\"mate\", FetchMode.EAGER)\n"
+#~ "    .setFetchMode(\"kittens\", FetchMode.EAGER)\n"
+#~ "    .list();"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[Cat cat = new Cat();\n"
+#~ "cat.setSex('F');\n"
+#~ "cat.setColor(Color.BLACK);\n"
+#~ "List results = session.createCriteria(Cat.class)\n"
+#~ "    .add( Example.create(cat) )\n"
+#~ "    .list();]]>"
+#~ msgstr ""
+#~ "Cat cat = new Cat();\n"
+#~ "cat.setSex('F');\n"
+#~ "cat.setColor(Color.BLACK);\n"
+#~ "List results = session.createCriteria(Cat.class)\n"
+#~ "    .add( Example.create(cat) )\n"
+#~ "    .list();"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[Example example = Example.create(cat)\n"
+#~ "    .excludeZeroes()           //exclude zero valued properties\n"
+#~ "    .excludeProperty(\"color\")  //exclude the property named \"color\"\n"
+#~ "    .ignoreCase()              //perform case insensitive string "
+#~ "comparisons\n"
+#~ "    .enableLike();             //use like for string comparisons\n"
+#~ "List results = session.createCriteria(Cat.class)\n"
+#~ "    .add(example)\n"
+#~ "    .list();]]>"
+#~ msgstr ""
+#~ "Example example = Example.create(cat)\n"
+#~ "    .excludeZeroes()           //exclude zero valued properties\n"
+#~ "    .excludeProperty(\"color\")  //exclude the property named \"color\"\n"
+#~ "    .ignoreCase()              //perform case insensitive string "
+#~ "comparisons\n"
+#~ "    .enableLike();             //use like for string comparisons\n"
+#~ "List results = session.createCriteria(Cat.class)\n"
+#~ "    .add(example)\n"
+#~ "    .list();"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[List results = session.createCriteria(Cat.class)\n"
+#~ "    .add( Example.create(cat) )\n"
+#~ "    .createCriteria(\"mate\")\n"
+#~ "        .add( Example.create( cat.getMate() ) )\n"
+#~ "    .list();]]>"
+#~ msgstr ""
+#~ "List results = session.createCriteria(Cat.class)\n"
+#~ "    .add( Example.create(cat) )\n"
+#~ "    .createCriteria(\"mate\")\n"
+#~ "        .add( Example.create( cat.getMate() ) )\n"
+#~ "    .list();"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[List results = session.createCriteria(Cat.class)\n"
+#~ "    .setProjection( Projections.rowCount() )\n"
+#~ "    .add( Restrictions.eq(\"color\", Color.BLACK) )\n"
+#~ "    .list();]]>"
+#~ msgstr ""
+#~ "List results = session.createCriteria(Cat.class)\n"
+#~ "    .setProjection( Projections.rowCount() )\n"
+#~ "    .add( Restrictions.eq(\"color\", Color.BLACK) )\n"
+#~ "    .list();"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[List results = session.createCriteria(Cat.class)\n"
+#~ "    .setProjection( Projections.projectionList()\n"
+#~ "        .add( Projections.rowCount() )\n"
+#~ "        .add( Projections.avg(\"weight\") )\n"
+#~ "        .add( Projections.max(\"weight\") )\n"
+#~ "        .add( Projections.groupProperty(\"color\") )\n"
+#~ "    )\n"
+#~ "    .list();]]>"
+#~ msgstr ""
+#~ "List results = session.createCriteria(Cat.class)\n"
+#~ "    .setProjection( Projections.projectionList()\n"
+#~ "        .add( Projections.rowCount() )\n"
+#~ "        .add( Projections.avg(\"weight\") )\n"
+#~ "        .add( Projections.max(\"weight\") )\n"
+#~ "        .add( Projections.groupProperty(\"color\") )\n"
+#~ "    )\n"
+#~ "    .list();"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[List results = session.createCriteria(Cat.class)\n"
+#~ "    .setProjection( Projections.alias( Projections.groupProperty(\"color"
+#~ "\"), \"colr\" ) )\n"
+#~ "    .addOrder( Order.asc(\"colr\") )\n"
+#~ "    .list();]]>"
+#~ msgstr ""
+#~ "List results = session.createCriteria(Cat.class)\n"
+#~ "    .setProjection( Projections.alias( Projections.groupProperty(\"color"
+#~ "\"), \"colr\" ) )\n"
+#~ "    .addOrder( Order.asc(\"colr\") )\n"
+#~ "    .list();"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[List results = session.createCriteria(Cat.class)\n"
+#~ "    .setProjection( Projections.groupProperty(\"color\").as(\"colr\") )\n"
+#~ "    .addOrder( Order.asc(\"colr\") )\n"
+#~ "    .list();]]>"
+#~ msgstr ""
+#~ "List results = session.createCriteria(Cat.class)\n"
+#~ "    .setProjection( Projections.groupProperty(\"color\").as(\"colr\") )\n"
+#~ "    .addOrder( Order.asc(\"colr\") )\n"
+#~ "    .list();"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[List results = session.createCriteria(Cat.class)\n"
+#~ "    .setProjection( Projections.projectionList()\n"
+#~ "        .add( Projections.rowCount(), \"catCountByColor\" )\n"
+#~ "        .add( Projections.avg(\"weight\"), \"avgWeight\" )\n"
+#~ "        .add( Projections.max(\"weight\"), \"maxWeight\" )\n"
+#~ "        .add( Projections.groupProperty(\"color\"), \"color\" )\n"
+#~ "    )\n"
+#~ "    .addOrder( Order.desc(\"catCountByColor\") )\n"
+#~ "    .addOrder( Order.desc(\"avgWeight\") )\n"
+#~ "    .list();]]>"
+#~ msgstr ""
+#~ "List results = session.createCriteria(Cat.class)\n"
+#~ "    .setProjection( Projections.projectionList()\n"
+#~ "        .add( Projections.rowCount(), \"catCountByColor\" )\n"
+#~ "        .add( Projections.avg(\"weight\"), \"avgWeight\" )\n"
+#~ "        .add( Projections.max(\"weight\"), \"maxWeight\" )\n"
+#~ "        .add( Projections.groupProperty(\"color\"), \"color\" )\n"
+#~ "    )\n"
+#~ "    .addOrder( Order.desc(\"catCountByColor\") )\n"
+#~ "    .addOrder( Order.desc(\"avgWeight\") )\n"
+#~ "    .list();"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[List results = session.createCriteria(Domestic.class, \"cat\")\n"
+#~ "    .createAlias(\"kittens\", \"kit\")\n"
+#~ "    .setProjection( Projections.projectionList()\n"
+#~ "        .add( Projections.property(\"cat.name\"), \"catName\" )\n"
+#~ "        .add( Projections.property(\"kit.name\"), \"kitName\" )\n"
+#~ "    )\n"
+#~ "    .addOrder( Order.asc(\"catName\") )\n"
+#~ "    .addOrder( Order.asc(\"kitName\") )\n"
+#~ "    .list();]]>"
+#~ msgstr ""
+#~ "List results = session.createCriteria(Domestic.class, \"cat\")\n"
+#~ "    .createAlias(\"kittens\", \"kit\")\n"
+#~ "    .setProjection( Projections.projectionList()\n"
+#~ "        .add( Projections.property(\"cat.name\"), \"catName\" )\n"
+#~ "        .add( Projections.property(\"kit.name\"), \"kitName\" )\n"
+#~ "    )\n"
+#~ "    .addOrder( Order.asc(\"catName\") )\n"
+#~ "    .addOrder( Order.asc(\"kitName\") )\n"
+#~ "    .list();"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[List results = session.createCriteria(Cat.class)\n"
+#~ "    .setProjection( Property.forName(\"name\") )\n"
+#~ "    .add( Property.forName(\"color\").eq(Color.BLACK) )\n"
+#~ "    .list();]]>"
+#~ msgstr ""
+#~ "List results = session.createCriteria(Cat.class)\n"
+#~ "    .setProjection( Property.forName(\"name\") )\n"
+#~ "    .add( Property.forName(\"color\").eq(Color.BLACK) )\n"
+#~ "    .list();"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[List results = session.createCriteria(Cat.class)\n"
+#~ "    .setProjection( Projections.projectionList()\n"
+#~ "        .add( Projections.rowCount().as(\"catCountByColor\") )\n"
+#~ "        .add( Property.forName(\"weight\").avg().as(\"avgWeight\") )\n"
+#~ "        .add( Property.forName(\"weight\").max().as(\"maxWeight\") )\n"
+#~ "        .add( Property.forName(\"color\").group().as(\"color\" )\n"
+#~ "    )\n"
+#~ "    .addOrder( Order.desc(\"catCountByColor\") )\n"
+#~ "    .addOrder( Order.desc(\"avgWeight\") )\n"
+#~ "    .list();]]>"
+#~ msgstr ""
+#~ "List results = session.createCriteria(Cat.class)\n"
+#~ "    .setProjection( Projections.projectionList()\n"
+#~ "        .add( Projections.rowCount().as(\"catCountByColor\") )\n"
+#~ "        .add( Property.forName(\"weight\").avg().as(\"avgWeight\") )\n"
+#~ "        .add( Property.forName(\"weight\").max().as(\"maxWeight\") )\n"
+#~ "        .add( Property.forName(\"color\").group().as(\"color\" )\n"
+#~ "    )\n"
+#~ "    .addOrder( Order.desc(\"catCountByColor\") )\n"
+#~ "    .addOrder( Order.desc(\"avgWeight\") )\n"
+#~ "    .list();"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[DetachedCriteria query = DetachedCriteria.forClass(Cat.class)\n"
+#~ "    .add( Property.forName(\"sex\").eq('F') );\n"
+#~ "    \n"
+#~ "Session session = ....;\n"
+#~ "Transaction txn = session.beginTransaction();\n"
+#~ "List results = query.getExecutableCriteria(session).setMaxResults(100)."
+#~ "list();\n"
+#~ "txn.commit();\n"
+#~ "session.close();]]>"
+#~ msgstr ""
+#~ "DetachedCriteria query = DetachedCriteria.forClass(Cat.class)\n"
+#~ "    .add( Property.forName(\"sex\").eq('F') );\n"
+#~ "    \n"
+#~ "Session session = ....;\n"
+#~ "Transaction txn = session.beginTransaction();\n"
+#~ "List results = query.getExecutableCriteria(session).setMaxResults(100)."
+#~ "list();\n"
+#~ "txn.commit();\n"
+#~ "session.close();"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[DetachedCriteria avgWeight = DetachedCriteria.forClass(Cat."
+#~ "class)\n"
+#~ "    .setProjection( Property.forName(\"weight\").avg() );\n"
+#~ "session.createCriteria(Cat.class)\n"
+#~ "    .add( Property.forName(\"weight\").gt(avgWeight) )\n"
+#~ "    .list();]]>"
+#~ msgstr ""
+#~ "DetachedCriteria avgWeight = DetachedCriteria.forClass(Cat.class)\n"
+#~ "    .setProjection( Property.forName(\"weight\").avg() );\n"
+#~ "session.createCriteria(Cat.class)\n"
+#~ "    .add( Property.forName(\"weight).gt(avgWeight) )\n"
+#~ "    .list();"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[DetachedCriteria weights = DetachedCriteria.forClass(Cat.class)\n"
+#~ "    .setProjection( Property.forName(\"weight\") );\n"
+#~ "session.createCriteria(Cat.class)\n"
+#~ "    .add( Subqueries.geAll(\"weight\", weights) )\n"
+#~ "    .list();]]>"
+#~ msgstr ""
+#~ "DetachedCriteria weights = DetachedCriteria.forClass(Cat.class)\n"
+#~ "    .setProjection( Property.forName(\"weight\") );\n"
+#~ "session.createCriteria(Cat.class)\n"
+#~ "    .add( Subqueries.geAll(\"weight\", weights) )\n"
+#~ "    .list();"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[DetachedCriteria avgWeightForSex = DetachedCriteria.forClass(Cat."
+#~ "class, \"cat2\")\n"
+#~ "    .setProjection( Property.forName(\"weight\").avg() )\n"
+#~ "    .add( Property.forName(\"cat2.sex\").eqProperty(\"cat.sex\") );\n"
+#~ "session.createCriteria(Cat.class, \"cat\")\n"
+#~ "    .add( Property.forName(\"weight\").gt(avgWeightForSex) )\n"
+#~ "    .list();]]>"
+#~ msgstr ""
+#~ "DetachedCriteria avgWeightForSex = DetachedCriteria.forClass(Cat.class, "
+#~ "\"cat2\")\n"
+#~ "    .setProjection( Property.forName(\"weight\").avg() )\n"
+#~ "    .add( Property.forName(\"cat2.sex\").eqProperty(\"cat.sex\") );\n"
+#~ "session.createCriteria(Cat.class, \"cat\")\n"
+#~ "    .add( Property.forName(\"weight).gt(avgWeightForSex) )\n"
+#~ "    .list();"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[<class name=\"User\">\n"
+#~ "    <cache usage=\"read-write\"/>\n"
+#~ "    <id name=\"id\">\n"
+#~ "        <generator class=\"increment\"/>\n"
+#~ "    </id>\n"
+#~ "    <natural-id>\n"
+#~ "        <property name=\"name\"/>\n"
+#~ "        <property name=\"org\"/>\n"
+#~ "    </natural-id>\n"
+#~ "    <property name=\"password\"/>\n"
+#~ "</class>]]>"
+#~ msgstr ""
+#~ "&lt;class name=\"User\"&gt;\n"
+#~ "    &lt;cache usage=\"read-write\"/&gt;\n"
+#~ "    &lt;id name=\"id\"&gt;\n"
+#~ "        &lt;generator class=\"increment\"/&gt;\n"
+#~ "    &lt;/id&gt;\n"
+#~ "    &lt;natural-id&gt;\n"
+#~ "        &lt;property name=\"name\"/&gt;\n"
+#~ "        &lt;property name=\"org\"/&gt;\n"
+#~ "    &lt;/natural-id&gt;\n"
+#~ "    &lt;property name=\"password\"/&gt;\n"
+#~ "&lt;/class&gt;"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[session.createCriteria(User.class)\n"
+#~ "    .add( Restrictions.naturalId()\n"
+#~ "        .set(\"name\", \"gavin\")\n"
+#~ "        .set(\"org\", \"hb\") \n"
+#~ "    ).setCacheable(true)\n"
+#~ "    .uniqueResult();]]>"
+#~ msgstr ""
+#~ "session.createCriteria(User.class)\n"
+#~ "    .add( Restrictions.naturalId()\n"
+#~ "        .set(\"name\", \"gavin\")\n"
+#~ "        .set(\"org\", \"hb\") \n"
+#~ "    ).setCacheable(true)\n"
+#~ "    .uniqueResult();"

@@ -1,0 +1,822 @@
+# translation of Collection_Mapping.po to 
+# translation of Collection_Mapping.po to
+# translation of Collection_Mapping.po to
+# translation of Collection_Mapping.po to
+# translation of Collection_Mapping.po to
+# translation of Collection_Mapping.po to
+# Language /mnt/hgfs/base/Hibernate/Reference translations for PACKAGE package.
+# Copyright (C) 2006, 2007 Free Software Foundation, Inc.
+# Automatically generated, 2006.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Collection_Mapping\n"
+"Report-Msgid-Bugs-To: http://bugs.kde.org\n"
+"POT-Creation-Date: 2010-02-10T07:25:35\n"
+"PO-Revision-Date: 2007-02-26 10:27+1000\n"
+"Last-Translator: \n"
+"Language-Team:  <de@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: KBabel 1.9.1\n"
+
+#. Tag: title
+#, no-c-format
+msgid "XML Mapping"
+msgstr "XML-Mapping"
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"<emphasis> XML Mapping is an experimental feature in Hibernate 3.0 and is "
+"currently under active development. </emphasis>"
+msgstr ""
+"Bitte beachten Sie, dass es sich hierbei um ein experimentelles Feature in "
+"Hibernate 3.0 handelt, an dem aktuell noch eine rege Entwicklungstätigkeit "
+"stattfindet."
+
+#. Tag: title
+#, no-c-format
+msgid "Working with XML data"
+msgstr "Das Arbeiten mit XML-Daten"
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"Hibernate allows you to work with persistent XML data in much the same way "
+"you work with persistent POJOs. A parsed XML tree can be thought of as "
+"another way of representing the relational data at the object level, instead "
+"of POJOs."
+msgstr ""
+"Hibernate ermöglicht Ihnen die Arbeit mit persistenten XML-Daten auf "
+"ähnliche Weise wie dies bei persistenten POJOs der Fall ist. Man kann sich "
+"einen auf seine Syntax geprüften XML-Baum einfach als andere Weise der "
+"Repräsentation relationaler Daten auf Objektebene anstelle von POJOs "
+"vorstellen."
+
+#. Tag: para
+#, no-c-format
+msgid ""
+"Hibernate supports dom4j as API for manipulating XML trees. You can write "
+"queries that retrieve dom4j trees from the database and have any "
+"modification you make to the tree automatically synchronized to the "
+"database. You can even take an XML document, parse it using dom4j, and write "
+"it to the database with any of Hibernate's basic operations: <literal>persist"
+"(), saveOrUpdate(), merge(), delete(), replicate()</literal> (merging is not "
+"yet supported)."
+msgstr ""
+"Hibernate unterstützt dom4j als API zur Verarbeitung von XML-Bäumen. Sie "
+"können Anfragen, die dom4j-Bäume von der Datenbank abrufen, schreiben, wobei "
+"alle Modifikationen am Baum automatisch mit der Datenbank synchronisiert "
+"werden. Sie können sogar ein XML-Dokument unter Verwendung von dom4j auf die "
+"Syntax prüfen und mittels Hibernates Grundvorgängen: <literal>persist(), "
+"saveOrUpdate(), merge(), delete(), replicate()</literal> (\"Merging\" wird "
+"noch nicht unterstützt) in die Datenbank schreiben."
+
+#. Tag: para
+#, no-c-format
+msgid ""
+"This feature has many applications including data import/export, "
+"externalization of entity data via JMS or SOAP and XSLT-based reporting."
+msgstr ""
+"Dieses Feature bietet zahlreiche Anwendungen einschließlich des Imports/"
+"Exports von Daten, Externalisierung von Entity-Daten via JMS oder SOAP und "
+"XSLT-basiertem Reporting."
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"A single mapping can be used to simultaneously map properties of a class and "
+"nodes of an XML document to the database, or, if there is no class to map, "
+"it can be used to map just the XML."
+msgstr ""
+"Ein einzelnes Mapping kann für das gleichzeitige Mappen von Properties einer "
+"Klasse und Knoten (\"Nodes\") eines XML-Dokuments zu einer Datenbank "
+"verwendet werden. Falls keine zu mappende Klasse existiert, kann auch nur "
+"das XML gemappt werden."
+
+#. Tag: title
+#, no-c-format
+msgid "Specifying XML and class mapping together"
+msgstr "Spezifizierung des gemeinsamen Mappens von XML und Klasse"
+
+#. Tag: para
+#, no-c-format
+msgid "Here is an example of mapping a POJO and XML simultaneously:"
+msgstr "Hier ist ein Beispiel für das gleichzeitige Mappen eines POJO und XML:"
+
+#. Tag: title
+#, no-c-format
+msgid "Specifying only an XML mapping"
+msgstr "Spezifizierung des Mappens von nur XML"
+
+#. Tag: para
+#, no-c-format
+msgid "Here is an example where there is no POJO class:"
+msgstr "Dieses ist ein Beispiel ohne POJO-Klasse:"
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"This mapping allows you to access the data as a dom4j tree, or as a graph of "
+"property name/value pairs or java <literal>Map</literal>s. The property "
+"names are purely logical constructs that can be referred to in HQL queries."
+msgstr ""
+"Dieses Mapping erlaubt es Ihnen, auf Daten als dom4j-Baum oder als Graph von "
+"Property-Name/Wertepaaren zuzugreifen (Java <literal>Map</literal>s). Die "
+"Property-Namen sind rein logische Konstrukte, auf die in HQL-Anfragen "
+"verwiesen werden kann."
+
+#. Tag: title
+#, no-c-format
+msgid "XML mapping metadata"
+msgstr "XML-Mapping Metadaten"
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"A range of Hibernate mapping elements accept the <literal>node</literal> "
+"attribute. This lets you specify the name of an XML attribute or element "
+"that holds the property or entity data. The format of the <literal>node</"
+"literal> attribute must be one of the following:"
+msgstr ""
+"Zahlreiche Hibernate Mapping-Elemente akzeptieren das <literal>node</"
+"literal>-Attribut. Mit diesem können Sie den Namen eines XML-Attributs oder "
+"Elements festlegen, das die Property oder Entity-Daten enthält. Das Format "
+"des <literal>node</literal>-Attributs muss wie folgt aussehen:"
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid "<literal>\"element-name\"</literal>: map to the named XML element"
+msgstr "<literal>\"element-name\"</literal> - mappt zum benannten XML-Element"
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid "<literal>\"@attribute-name\"</literal>: map to the named XML attribute"
+msgstr ""
+"<literal>\"@attribute-name\"</literal> - mappt zum benannten XML-Attribut"
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid "<literal>\".\"</literal>: map to the parent element"
+msgstr "<literal>\".\"</literal> - mappt zum übergeordneten Element"
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"<literal>\"element-name/@attribute-name\"</literal>: map to the named "
+"attribute of the named element"
+msgstr ""
+"<literal>\"element-name/@attribute-name\"</literal> - mappt zum benannten "
+"Attribut des benannten Elements"
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"For collections and single valued associations, there is an additional "
+"<literal>embed-xml</literal> attribute. If <literal>embed-xml=\"true\"</"
+"literal>, the default, the XML tree for the associated entity (or collection "
+"of value type) will be embedded directly in the XML tree for the entity that "
+"owns the association. Otherwise, if <literal>embed-xml=\"false\"</literal>, "
+"then only the referenced identifier value will appear in the XML for single "
+"point associations and collections will not appear at all."
+msgstr ""
+"Für Datenerfassung und einwertige Assoziationen gibt es ein zusätzliches "
+"<literal>embed-xml</literal>-Attribut. Falls <literal>embed-xml=\"true\"</"
+"literal> der Standard, so wird der XML-Baum für die zugehörige Entity (oder "
+"Collection vom Wertetyp) direkt im XML-Baum der Entity, zu der die "
+"Assoziation gehört, eingebettet. Im anderen Fall, falls <literal>embed-xml="
+"\"false\"</literal>, erscheint nur der referenzierte Bezeichnerwert in der "
+"XML für \"Single-Point\"-Assoziationen während Collections gar nicht "
+"erscheinen."
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"Do not leave <literal>embed-xml=\"true\"</literal> for too many "
+"associations, since XML does not deal well with circularity."
+msgstr ""
+"Sie sollten die Einstellung <literal>embed-xml=\"true\"</literal> nicht für "
+"zu viele Assoziationen anwenden, da XML Schwierigkeiten mit Zirkularität "
+"haben kann!"
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"In this case, the collection of account ids is embedded, but not the actual "
+"account data. The following HQL query:"
+msgstr ""
+"in diesem Fall haben wir die Collection von Konten-IDs einzubetten, nicht "
+"jedoch die eigentlichen Kontodaten. Die folgende HQL-Anfrage:"
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid "would return datasets such as this:"
+msgstr "Würde Datensätze wie die Folgenden wiedergeben:"
+
+#. Tag: para
+#, no-c-format
+msgid ""
+"If you set <literal>embed-xml=\"true\"</literal> on the <literal>&lt;one-to-"
+"many&gt;</literal> mapping, the data might look more like this:"
+msgstr ""
+"Wenn Sie die Einstellung <literal>embed-xml=\"true\"</literal> im "
+"<literal>&lt;one-to-many&gt;</literal>-Mapping vornehmen, so sehen die Daten "
+"eher wie folgt aus:"
+
+#. Tag: title
+#, no-c-format
+msgid "Manipulating XML data"
+msgstr "Manipulation von XML-Daten"
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"You can also re-read and update XML documents in the application. You can do "
+"this by obtaining a dom4j session:"
+msgstr ""
+"Wir wollen nun XML-Dokumente in der Anwendung nochmals lesen und "
+"aktualisieren. Dies erfolgt durch Erhalt einer dom4j-Session:"
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"When implementing XML-based data import/export, it is useful to combine this "
+"feature with Hibernate's <literal>replicate()</literal> operation."
+msgstr ""
+"Es ist sehr hilfreich, dieses Feature mit Hibernates <literal>replicate()</"
+"literal>-Vorgang zu kombinieren, um XML-basierten Datenimport/-export zu "
+"implementieren."
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[<class name=\"Account\" \n"
+#~ "        table=\"ACCOUNTS\" \n"
+#~ "        node=\"account\">\n"
+#~ "        \n"
+#~ "    <id name=\"accountId\" \n"
+#~ "            column=\"ACCOUNT_ID\" \n"
+#~ "            node=\"@id\"/>\n"
+#~ "            \n"
+#~ "    <many-to-one name=\"customer\" \n"
+#~ "            column=\"CUSTOMER_ID\" \n"
+#~ "            node=\"customer/@id\" \n"
+#~ "            embed-xml=\"false\"/>\n"
+#~ "            \n"
+#~ "    <property name=\"balance\" \n"
+#~ "            column=\"BALANCE\" \n"
+#~ "            node=\"balance\"/>\n"
+#~ "            \n"
+#~ "    ...\n"
+#~ "    \n"
+#~ "</class>]]>"
+#~ msgstr ""
+#~ "&lt;class name=\"Account\" \n"
+#~ "        table=\"ACCOUNTS\" \n"
+#~ "        node=\"account\"&gt;\n"
+#~ "        \n"
+#~ "    &lt;id name=\"accountId\" \n"
+#~ "            column=\"ACCOUNT_ID\" \n"
+#~ "            node=\"@id\"/&gt;\n"
+#~ "            \n"
+#~ "    &lt;many-to-one name=\"customer\" \n"
+#~ "            column=\"CUSTOMER_ID\" \n"
+#~ "            node=\"customer/@id\" \n"
+#~ "            embed-xml=\"false\"/&gt;\n"
+#~ "            \n"
+#~ "    &lt;property name=\"balance\" \n"
+#~ "            column=\"BALANCE\" \n"
+#~ "            node=\"balance\"/&gt;\n"
+#~ "            \n"
+#~ "    ...\n"
+#~ "    \n"
+#~ "&lt;/class&gt;"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[<class entity-name=\"Account\" \n"
+#~ "        table=\"ACCOUNTS\" \n"
+#~ "        node=\"account\">\n"
+#~ "        \n"
+#~ "    <id name=\"id\" \n"
+#~ "            column=\"ACCOUNT_ID\" \n"
+#~ "            node=\"@id\" \n"
+#~ "            type=\"string\"/>\n"
+#~ "            \n"
+#~ "    <many-to-one name=\"customerId\" \n"
+#~ "            column=\"CUSTOMER_ID\" \n"
+#~ "            node=\"customer/@id\" \n"
+#~ "            embed-xml=\"false\" \n"
+#~ "            entity-name=\"Customer\"/>\n"
+#~ "            \n"
+#~ "    <property name=\"balance\" \n"
+#~ "            column=\"BALANCE\" \n"
+#~ "            node=\"balance\" \n"
+#~ "            type=\"big_decimal\"/>\n"
+#~ "            \n"
+#~ "    ...\n"
+#~ "    \n"
+#~ "</class>]]>"
+#~ msgstr ""
+#~ "&lt;class entity-name=\"Account\" \n"
+#~ "        table=\"ACCOUNTS\" \n"
+#~ "        node=\"account\"&gt;\n"
+#~ "        \n"
+#~ "    &lt;id name=\"id\" \n"
+#~ "            column=\"ACCOUNT_ID\" \n"
+#~ "            node=\"@id\" \n"
+#~ "            type=\"string\"/&gt;\n"
+#~ "            \n"
+#~ "    &lt;many-to-one name=\"customerId\" \n"
+#~ "            column=\"CUSTOMER_ID\" \n"
+#~ "            node=\"customer/@id\" \n"
+#~ "            embed-xml=\"false\" \n"
+#~ "            entity-name=\"Customer\"/&gt;\n"
+#~ "            \n"
+#~ "    &lt;property name=\"balance\" \n"
+#~ "            column=\"BALANCE\" \n"
+#~ "            node=\"balance\" \n"
+#~ "            type=\"big_decimal\"/&gt;\n"
+#~ "            \n"
+#~ "    ...\n"
+#~ "    \n"
+#~ "&lt;/class&gt;"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[<class name=\"Customer\" \n"
+#~ "        table=\"CUSTOMER\" \n"
+#~ "        node=\"customer\">\n"
+#~ "        \n"
+#~ "    <id name=\"id\" \n"
+#~ "            column=\"CUST_ID\" \n"
+#~ "            node=\"@id\"/>\n"
+#~ "            \n"
+#~ "    <map name=\"accounts\" \n"
+#~ "            node=\".\" \n"
+#~ "            embed-xml=\"true\">\n"
+#~ "        <key column=\"CUSTOMER_ID\" \n"
+#~ "                not-null=\"true\"/>\n"
+#~ "        <map-key column=\"SHORT_DESC\" \n"
+#~ "                node=\"@short-desc\" \n"
+#~ "                type=\"string\"/>\n"
+#~ "        <one-to-many entity-name=\"Account\"\n"
+#~ "                embed-xml=\"false\" \n"
+#~ "                node=\"account\"/>\n"
+#~ "    </map>\n"
+#~ "    \n"
+#~ "    <component name=\"name\" \n"
+#~ "            node=\"name\">\n"
+#~ "        <property name=\"firstName\" \n"
+#~ "                node=\"first-name\"/>\n"
+#~ "        <property name=\"initial\" \n"
+#~ "                node=\"initial\"/>\n"
+#~ "        <property name=\"lastName\" \n"
+#~ "                node=\"last-name\"/>\n"
+#~ "    </component>\n"
+#~ "    \n"
+#~ "    ...\n"
+#~ "    \n"
+#~ "</class>]]>"
+#~ msgstr ""
+#~ "&lt;class name=\"Customer\" \n"
+#~ "        table=\"CUSTOMER\" \n"
+#~ "        node=\"customer\"&gt;\n"
+#~ "        \n"
+#~ "    &lt;id name=\"id\" \n"
+#~ "            column=\"CUST_ID\" \n"
+#~ "            node=\"@id\"/&gt;\n"
+#~ "            \n"
+#~ "    &lt;map name=\"accounts\" \n"
+#~ "            node=\".\" \n"
+#~ "            embed-xml=\"true\"&gt;\n"
+#~ "        &lt;key column=\"CUSTOMER_ID\" \n"
+#~ "                not-null=\"true\"/&gt;\n"
+#~ "        &lt;map-key column=\"SHORT_DESC\" \n"
+#~ "                node=\"@short-desc\" \n"
+#~ "                type=\"string\"/&gt;\n"
+#~ "        &lt;one-to-many entity-name=\"Account\"\n"
+#~ "                embed-xml=\"false\" \n"
+#~ "                node=\"account\"/&gt;\n"
+#~ "    &lt;/map&gt;\n"
+#~ "    \n"
+#~ "    &lt;component name=\"name\" \n"
+#~ "            node=\"name\"&gt;\n"
+#~ "        &lt;property name=\"firstName\" \n"
+#~ "                node=\"first-name\"/&gt;\n"
+#~ "        &lt;property name=\"initial\" \n"
+#~ "                node=\"initial\"/&gt;\n"
+#~ "        &lt;property name=\"lastName\" \n"
+#~ "                node=\"last-name\"/&gt;\n"
+#~ "    &lt;/component&gt;\n"
+#~ "    \n"
+#~ "    ...\n"
+#~ "    \n"
+#~ "&lt;/class&gt;"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[from Customer c left join fetch c.accounts where c.lastName "
+#~ "like :lastName]]>"
+#~ msgstr ""
+#~ "from Customer c left join fetch c.accounts where c.lastName like :lastName"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[<customer id=\"123456789\">\n"
+#~ "    <account short-desc=\"Savings\">987632567</account>\n"
+#~ "    <account short-desc=\"Credit Card\">985612323</account>\n"
+#~ "    <name>\n"
+#~ "        <first-name>Gavin</first-name>\n"
+#~ "        <initial>A</initial>\n"
+#~ "        <last-name>King</last-name>\n"
+#~ "    </name>\n"
+#~ "    ...\n"
+#~ "</customer>]]>"
+#~ msgstr ""
+#~ "&lt;customer id=\"123456789\"&gt;\n"
+#~ "    &lt;account short-desc=\"Savings\"&gt;987632567&lt;/account&gt;\n"
+#~ "    &lt;account short-desc=\"Credit Card\"&gt;985612323&lt;/account&gt;\n"
+#~ "    &lt;name&gt;\n"
+#~ "        &lt;first-name&gt;Gavin&lt;/first-name&gt;\n"
+#~ "        &lt;initial&gt;A&lt;/initial&gt;\n"
+#~ "        &lt;last-name&gt;King&lt;/last-name&gt;\n"
+#~ "    &lt;/name&gt;\n"
+#~ "    ...\n"
+#~ "&lt;/customer&gt;"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[<customer id=\"123456789\">\n"
+#~ "    <account id=\"987632567\" short-desc=\"Savings\">\n"
+#~ "        <customer id=\"123456789\"/>\n"
+#~ "        <balance>100.29</balance>\n"
+#~ "    </account>\n"
+#~ "    <account id=\"985612323\" short-desc=\"Credit Card\">\n"
+#~ "        <customer id=\"123456789\"/>\n"
+#~ "        <balance>-2370.34</balance>\n"
+#~ "    </account>\n"
+#~ "    <name>\n"
+#~ "        <first-name>Gavin</first-name>\n"
+#~ "        <initial>A</initial>\n"
+#~ "        <last-name>King</last-name>\n"
+#~ "    </name>\n"
+#~ "    ...\n"
+#~ "</customer>]]>"
+#~ msgstr ""
+#~ "&lt;customer id=\"123456789\"&gt;\n"
+#~ "    &lt;account id=\"987632567\" short-desc=\"Savings\"&gt;\n"
+#~ "        &lt;customer id=\"123456789\"/&gt;\n"
+#~ "        &lt;balance&gt;100.29&lt;/balance&gt;\n"
+#~ "    &lt;/account&gt;\n"
+#~ "    &lt;account id=\"985612323\" short-desc=\"Credit Card\"&gt;\n"
+#~ "        &lt;customer id=\"123456789\"/&gt;\n"
+#~ "        &lt;balance&gt;-2370.34&lt;/balance&gt;\n"
+#~ "    &lt;/account&gt;\n"
+#~ "    &lt;name&gt;\n"
+#~ "        &lt;first-name&gt;Gavin&lt;/first-name&gt;\n"
+#~ "        &lt;initial&gt;A&lt;/initial&gt;\n"
+#~ "        &lt;last-name&gt;King&lt;/last-name&gt;\n"
+#~ "    &lt;/name&gt;\n"
+#~ "    ...\n"
+#~ "&lt;/customer&gt;"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[Document doc = ....;\n"
+#~ "       \n"
+#~ "Session session = factory.openSession();\n"
+#~ "Session dom4jSession = session.getSession(EntityMode.DOM4J);\n"
+#~ "Transaction tx = session.beginTransaction();\n"
+#~ "\n"
+#~ "List results = dom4jSession\n"
+#~ "    .createQuery(\"from Customer c left join fetch c.accounts where c."
+#~ "lastName like :lastName\")\n"
+#~ "    .list();\n"
+#~ "for ( int i=0; i<results.size(); i++ ) {\n"
+#~ "    //add the customer data to the XML document\n"
+#~ "    Element customer = (Element) results.get(i);\n"
+#~ "    doc.add(customer);\n"
+#~ "}\n"
+#~ "\n"
+#~ "tx.commit();\n"
+#~ "session.close();]]>"
+#~ msgstr ""
+#~ "Document doc = ....;\n"
+#~ "       \n"
+#~ "Session session = factory.openSession();\n"
+#~ "Session dom4jSession = session.getSession(EntityMode.DOM4J);\n"
+#~ "Transaction tx = session.beginTransaction();\n"
+#~ "\n"
+#~ "List results = dom4jSession\n"
+#~ "    .createQuery(\"from Customer c left join fetch c.accounts where c."
+#~ "lastName like :lastName\")\n"
+#~ "    .list();\n"
+#~ "for ( int i=0; i&lt;results.size(); i++ ) {\n"
+#~ "    //add the customer data to the XML document\n"
+#~ "    Element customer = (Element) results.get(i);\n"
+#~ "    doc.add(customer);\n"
+#~ "}\n"
+#~ "\n"
+#~ "tx.commit();\n"
+#~ "session.close();"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[Session session = factory.openSession();\n"
+#~ "Session dom4jSession = session.getSession(EntityMode.DOM4J);\n"
+#~ "Transaction tx = session.beginTransaction();\n"
+#~ "\n"
+#~ "Element cust = (Element) dom4jSession.get(\"Customer\", customerId);\n"
+#~ "for ( int i=0; i<results.size(); i++ ) {\n"
+#~ "    Element customer = (Element) results.get(i);\n"
+#~ "    //change the customer name in the XML and database\n"
+#~ "    Element name = customer.element(\"name\");\n"
+#~ "    name.element(\"first-name\").setText(firstName);\n"
+#~ "    name.element(\"initial\").setText(initial);\n"
+#~ "    name.element(\"last-name\").setText(lastName);\n"
+#~ "}\n"
+#~ "\n"
+#~ "tx.commit();\n"
+#~ "session.close();]]>"
+#~ msgstr ""
+#~ "Session session = factory.openSession();\n"
+#~ "Session dom4jSession = session.getSession(EntityMode.DOM4J);\n"
+#~ "Transaction tx = session.beginTransaction();\n"
+#~ "\n"
+#~ "Element cust = (Element) dom4jSession.get(\"Customer\", customerId);\n"
+#~ "for ( int i=0; i&lt;results.size(); i++ ) {\n"
+#~ "    Element customer = (Element) results.get(i);\n"
+#~ "    //change the customer name in the XML and database\n"
+#~ "    Element name = customer.element(\"name\");\n"
+#~ "    name.element(\"first-name\").setText(firstName);\n"
+#~ "    name.element(\"initial\").setText(initial);\n"
+#~ "    name.element(\"last-name\").setText(lastName);\n"
+#~ "}\n"
+#~ "\n"
+#~ "tx.commit();\n"
+#~ "session.close();"

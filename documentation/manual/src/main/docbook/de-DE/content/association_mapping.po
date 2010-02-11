@@ -1,0 +1,1425 @@
+# translation of Collection_Mapping.po to 
+# translation of Collection_Mapping.po to
+# translation of Collection_Mapping.po to
+# translation of Collection_Mapping.po to
+# translation of Collection_Mapping.po to
+# translation of Collection_Mapping.po to
+# Language /mnt/hgfs/base/Hibernate/Reference translations for PACKAGE package.
+# Copyright (C) 2006, 2007 Free Software Foundation, Inc.
+# Automatically generated, 2006.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Collection_Mapping\n"
+"Report-Msgid-Bugs-To: http://bugs.kde.org\n"
+"POT-Creation-Date: 2010-02-10T07:25:34\n"
+"PO-Revision-Date: 2007-02-26 10:27+1000\n"
+"Last-Translator: \n"
+"Language-Team:  <de@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: KBabel 1.9.1\n"
+
+#. Tag: title
+#, no-c-format
+msgid "Association Mappings"
+msgstr "Assoziations-Mappings"
+
+#. Tag: title
+#, no-c-format
+msgid "Introduction"
+msgstr "Einführung"
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"Association mappings are often the most difficult thing to implement "
+"correctly. In this section we examine some canonical cases one by one, "
+"starting with unidirectional mappings and then bidirectional cases. We will "
+"use <literal>Person</literal> and <literal>Address</literal> in all the "
+"examples."
+msgstr ""
+"Assoziations-Mappings sind häufig die am schwierigsten einzustellenden "
+"Aspekte. In diesem Abschnitt gehen wir Schritt für Schritt die einzelnen "
+"Fälle durch, wobei wir zunächst auf unidirektionale Mappings eingehen, ehe "
+"wir mit bidirektionalen Fällen weitermachen. In sämtlichen Beispielen werden "
+"<literal>Person</literal> und <literal>Address</literal> verwendet."
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"Associations will be classified by multiplicity and whether or not they map "
+"to an intervening join table."
+msgstr ""
+"Wir klassifizieren Assoziationen danach, ob sie zu einer intervenierenden "
+"Verbundtabelle mappen sowie nach Multiplizität."
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"Nullable foreign keys are not considered to be good practice in traditional "
+"data modelling, so our examples do not use nullable foreign keys. This is "
+"not a requirement of Hibernate, and the mappings will work if you drop the "
+"nullability constraints."
+msgstr ""
+"Nullbare Fremdschlüssel werden nicht als optimales Verfahren bei der "
+"herkömmlichen Datenmodellierung angesehen, daher verwenden wir in allen "
+"unseren Beispielen Fremdschlüssel die nicht Null sind. Das ist keine "
+"Anforderung von Hibernate und sämtliche Mappings funktionieren, wenn Sie die "
+"\"Nullability\"-Bedingungen aufheben."
+
+#. Tag: title
+#, no-c-format
+msgid "Unidirectional associations"
+msgstr "Unidirektionale Assoziationen"
+
+#. Tag: title
+#, fuzzy, no-c-format
+msgid "Many-to-one"
+msgstr "many-to-one"
+
+#. Tag: para
+#, no-c-format
+msgid ""
+"A <emphasis>unidirectional many-to-one association</emphasis> is the most "
+"common kind of unidirectional association."
+msgstr ""
+"Eine <emphasis>unidirektionale \"Many-to-One\"-Assoziation</emphasis> ist "
+"der gängigste Typ unidirektionaler Assoziationen."
+
+#. Tag: title
+#, fuzzy, no-c-format
+msgid "One-to-one"
+msgstr "one-to-one"
+
+#. Tag: para
+#, no-c-format
+msgid ""
+"A <emphasis>unidirectional one-to-one association on a foreign key</"
+"emphasis> is almost identical. The only difference is the column unique "
+"constraint."
+msgstr ""
+"Eine <emphasis>unidirektionale \"One-to-One\"-Assoziation an einem "
+"Fremdschlüssel</emphasis> ist fast identisch. Der einzige Unterschied "
+"besteht in der Spalte der eindeutigen Bedingung."
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"A <emphasis>unidirectional one-to-one association on a primary key</"
+"emphasis> usually uses a special id generator In this example, however, we "
+"have reversed the direction of the association:"
+msgstr ""
+"Eine <emphasis>unidirektionale \"One-to-One\"-Assoziation an einem "
+"Primärschlüssel</emphasis> verwendet in der Regel einen speziellen id-"
+"Generator. (Bitte beachten Sie, dass wir in diesem Beispiel die Richtung der "
+"Assoziation umgedreht haben)."
+
+#. Tag: title
+#, fuzzy, no-c-format
+msgid "One-to-many"
+msgstr "\"One-to-Many\""
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"A <emphasis>unidirectional one-to-many association on a foreign key</"
+"emphasis> is an unusual case, and is not recommended."
+msgstr ""
+"Eine <emphasis>unidirektionale \"One-to-Many\"-Assoziation an einem "
+"Fremdschlüssel</emphasis> ist sehr ungewöhnlich und wird nicht empfohlen."
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid "You should instead use a join table for this kind of association."
+msgstr ""
+"Wir halten die Verwendung einer Verbundtabelle (sog. \"Join-Table\") bei "
+"dieser Art von Assoziation für besser."
+
+#. Tag: title
+#, no-c-format
+msgid "Unidirectional associations with join tables"
+msgstr "Unidirektionale Assoziationen mit Verbundtabellen"
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"A <emphasis>unidirectional one-to-many association on a join table</"
+"emphasis> is the preferred option. Specifying <literal>unique=\"true\"</"
+"literal>, changes the multiplicity from many-to-many to one-to-many."
+msgstr ""
+"Eine <emphasis>unidirektionale \"One-to-Many\"-Assoziation an einer "
+"Verbundtabelle</emphasis> ist vorzuziehen. Bitte beachten Sie, dass durch "
+"die Spezifizierung von <literal>unique=\"true\"</literal>, die Multiplizität "
+"von \"Many-to-Many\" zu \"One-to-Many\" geändert wurde."
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"A <emphasis>unidirectional many-to-one association on a join table</"
+"emphasis> is common when the association is optional. For example:"
+msgstr ""
+"Eine <emphasis>unidirektionale \"Many-to-One\"-Assoziation an einer "
+"Verbundtabelle</emphasis> ist recht gängig, wenn es sich um eine optionale "
+"Assoziation handelt."
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"A <emphasis>unidirectional one-to-one association on a join table</emphasis> "
+"is possible, but extremely unusual."
+msgstr ""
+"Eine <emphasis>unidirektionale \"One-to-One\"-Assoziation an einer "
+"Verbundtabelle</emphasis> ist zwar sehr ungewöhnlich, aber möglich."
+
+#. Tag: title
+#, fuzzy, no-c-format
+msgid "Many-to-many"
+msgstr "\"Many-to-Many\""
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"Finally, here is an example of a <emphasis>unidirectional many-to-many "
+"association</emphasis>."
+msgstr ""
+"Es gibt jedoch auch eine <emphasis>unidirektionale \"Many-to-Many\"-"
+"Assoziation</emphasis>."
+
+#. Tag: title
+#, no-c-format
+msgid "Bidirectional associations"
+msgstr "Bidirektionale Assoziationen"
+
+#. Tag: title
+#, fuzzy, no-c-format
+msgid "one-to-many / many-to-one"
+msgstr "\"One-to-Many\" / \"Many-to-One\""
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"A <emphasis>bidirectional many-to-one association</emphasis> is the most "
+"common kind of association. The following example illustrates the standard "
+"parent/child relationship."
+msgstr ""
+"Eine <emphasis>bidirektionale \"Many-to-One\"-Assoziation</emphasis> ist der "
+"gängigste Assoziationstyp. (Die standardmäßige \"Parent/Child\"-Beziehung)."
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"If you use a <literal>List</literal>, or other indexed collection, set the "
+"<literal>key</literal> column of the foreign key to <literal>not null</"
+"literal>. Hibernate will manage the association from the collections side to "
+"maintain the index of each element, making the other side virtually inverse "
+"by setting <literal>update=\"false\"</literal> and <literal>insert=\"false"
+"\"</literal>:"
+msgstr ""
+"Falls Sie eine <literal>List</literal> (oder eine andere indizierte "
+"Collection) verwenden, müssen Sie die <literal>key</literal>-Spalte des "
+"Fremdschlüssels auf <literal>not null</literal> setzen und Hibernate die "
+"Assoziation von Collection-Seite aus verwalten lassen, um den Index jeden "
+"Elements aufrechtzuerhalten (die andere Seite durch Einstellung von "
+"<literal>update=\"false\"</literal> und <literal>insert=\"false\"</literal> "
+"somit invertierend):"
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"If the underlying foreign key column is <literal>NOT NULL</literal>, it is "
+"important that you define <literal>not-null=\"true\"</literal> on the "
+"<literal>&lt;key&gt;</literal> element of the collection mapping. Do not "
+"only declare <literal>not-null=\"true\"</literal> on a possible nested "
+"<literal>&lt;column&gt;</literal> element, but on the <literal>&lt;key&gt;</"
+"literal> element."
+msgstr ""
+"Es ist wichtig, <literal>not-null=\"true\"</literal> im <literal>&lt;key&gt;"
+"</literal>-Element des Collection-Mappings zu definieren, falls die zu "
+"Grunde liegende Spalte des Fremdschlüssels <literal>NOT NULL</literal> ist. "
+"Deklarieren Sie nicht nur <literal>not-null=\"true\"</literal> für ein "
+"mögliches verschachteltes <literal>&lt;column&gt;</literal>-Element, sondern "
+"für das <literal>&lt;key&gt;</literal>-Element."
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"A <emphasis>bidirectional one-to-one association on a foreign key</emphasis> "
+"is common:"
+msgstr ""
+"Eine <emphasis>bidirektionale \"One-to-One\"-Assoziation an einem "
+"Fremdschlüssel</emphasis> ist recht gängig."
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"A <emphasis>bidirectional one-to-one association on a primary key</emphasis> "
+"uses the special id generator:"
+msgstr ""
+"Eine <emphasis>bidirektionale \"One-to-One\"-Assoziation an einem "
+"Primärschlüssel</emphasis> verwendet einen speziellen id-Generator."
+
+#. Tag: title
+#, no-c-format
+msgid "Bidirectional associations with join tables"
+msgstr "Bidirektionale Assoziationen mit Verbundtabellen"
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"The following is an example of a <emphasis>bidirectional one-to-many "
+"association on a join table</emphasis>. The <literal>inverse=\"true\"</"
+"literal> can go on either end of the association, on the collection, or on "
+"the join."
+msgstr ""
+"Eine <emphasis>bidirektionale \"One-to-Many\"-Assoziation an einer "
+"Verbundtabelle</emphasis>. Bitte beachten Sie, dass <literal>inverse=\"true"
+"\"</literal> sich an beiden Enden der Assoziation, der Datenerfassung oder "
+"des \"Join\" befinden kann."
+
+#. Tag: title
+#, no-c-format
+msgid "one to one"
+msgstr "\"One-to-One\""
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"A <emphasis>bidirectional one-to-one association on a join table</emphasis> "
+"is possible, but extremely unusual."
+msgstr ""
+"Eine <emphasis>bidirektionale \"One-to-One\"-Assoziation an einer "
+"Verbundtabelle</emphasis> ist zwar ungewöhnlich, aber möglich."
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"Here is an example of a <emphasis>bidirectional many-to-many association</"
+"emphasis>."
+msgstr ""
+"Desweiteren gibt es eine <emphasis>bidirektionale \"Many-to-Many\"-"
+"Assoziation</emphasis>."
+
+#. Tag: title
+#, no-c-format
+msgid "More complex association mappings"
+msgstr "Komplexere Assoziations-Mappings"
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"More complex association joins are <emphasis>extremely</emphasis> rare. "
+"Hibernate handles more complex situations by using SQL fragments embedded in "
+"the mapping document. For example, if a table with historical account "
+"information data defines <literal>accountNumber</literal>, "
+"<literal>effectiveEndDate</literal> and <literal>effectiveStartDate</"
+"literal>columns, it would be mapped as follows:"
+msgstr ""
+"Komplexere Assoziationsverbünde sind <emphasis>sehr</emphasis> selten. "
+"Hibernate macht es möglich, auch komplexe Situationen durch Verwendung von "
+"im Mapping-Dokument eingebetteten SQL-Fragmenten zu berarbeiten. Wenn etwa "
+"eine Tabelle mit historischen Daten zu Kontoinformationen "
+"<literal>accountNumber</literal>, <literal>effectiveEndDate</literal> und "
+"<literal>effectiveStartDate</literal>-Spalten definiert, so lautet das "
+"Mapping wie folgt:"
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"You can then map an association to the <emphasis>current</emphasis> "
+"instance, the one with null <literal>effectiveEndDate</literal>, by using:"
+msgstr ""
+"Anschließend kann eine Assoziation zur <emphasis>aktuellen</emphasis> "
+"Instanz gemappt werden (diejenige mit \"Null\" <literal>effectiveEndDate</"
+"literal>). Dies geschieht unter Verwendung von:"
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"In a more complex example, imagine that the association between "
+"<literal>Employee</literal> and <literal>Organization</literal> is "
+"maintained in an <literal>Employment</literal> table full of historical "
+"employment data. An association to the employee's <emphasis>most recent</"
+"emphasis> employer, the one with the most recent <literal>startDate</"
+"literal>, could be mapped in the following way:"
+msgstr ""
+"Bei einem komplexeren Beispiel könnte etwa die Assoziation zwischen "
+"<literal>Employee</literal> und <literal>Organization</literal> in einer "
+"<literal>Employment</literal>-Tabelle voll historischer Beschäftigungsdaten "
+"geführt werden. Eine Assoziation zum <emphasis>aktuellsten</emphasis> "
+"Arbeitgeber eines Beschäftigten (derjenige mit dem aktuellsten "
+"<literal>startDate</literal>) könnte folgendermaßen gemappt werden:"
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"This functionality allows a degree of creativity and flexibility, but it is "
+"more practical to handle these kinds of cases using HQL or a criteria query."
+msgstr ""
+"Diese Funktionalität erlaubt es Ihnen zwar kreativ zu sein, aber es ist in "
+"der Regel praktischer diese Fälle mittels HQL oder einer Kriterienanfrage zu "
+"behandeln."
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[<class name=\"Person\">\n"
+#~ "    <id name=\"id\" column=\"personId\">\n"
+#~ "        <generator class=\"native\"/>\n"
+#~ "    </id>\n"
+#~ "    <many-to-one name=\"address\" \n"
+#~ "        column=\"addressId\"\n"
+#~ "        not-null=\"true\"/>\n"
+#~ "</class>\n"
+#~ "\n"
+#~ "<class name=\"Address\">\n"
+#~ "    <id name=\"id\" column=\"addressId\">\n"
+#~ "        <generator class=\"native\"/>\n"
+#~ "    </id>\n"
+#~ "</class>]]>"
+#~ msgstr ""
+#~ "&lt;class name=\"Person\"&gt;\n"
+#~ "    &lt;id name=\"id\" column=\"personId\"&gt;\n"
+#~ "        &lt;generator class=\"native\"/&gt;\n"
+#~ "    &lt;/id&gt;\n"
+#~ "    &lt;many-to-one name=\"address\" \n"
+#~ "        column=\"addressId\"\n"
+#~ "        not-null=\"true\"/&gt;\n"
+#~ "&lt;/class&gt;\n"
+#~ "\n"
+#~ "&lt;class name=\"Address\"&gt;\n"
+#~ "    &lt;id name=\"id\" column=\"addressId\"&gt;\n"
+#~ "        &lt;generator class=\"native\"/&gt;\n"
+#~ "    &lt;/id&gt;\n"
+#~ "&lt;/class&gt;"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[\n"
+#~ "create table Person ( personId bigint not null primary key, addressId "
+#~ "bigint not null )\n"
+#~ "create table Address ( addressId bigint not null primary key )\n"
+#~ "        ]]>"
+#~ msgstr ""
+#~ "create table Person ( personId bigint not null primary key, addressId "
+#~ "bigint not null )\n"
+#~ "create table Address ( addressId bigint not null primary key )"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[<class name=\"Person\">\n"
+#~ "    <id name=\"id\" column=\"personId\">\n"
+#~ "        <generator class=\"native\"/>\n"
+#~ "    </id>\n"
+#~ "    <many-to-one name=\"address\" \n"
+#~ "        column=\"addressId\" \n"
+#~ "        unique=\"true\"\n"
+#~ "        not-null=\"true\"/>\n"
+#~ "</class>\n"
+#~ "\n"
+#~ "<class name=\"Address\">\n"
+#~ "    <id name=\"id\" column=\"addressId\">\n"
+#~ "        <generator class=\"native\"/>\n"
+#~ "    </id>\n"
+#~ "</class>]]>"
+#~ msgstr ""
+#~ "&lt;class name=\"Person\"&gt;\n"
+#~ "    &lt;id name=\"id\" column=\"personId\"&gt;\n"
+#~ "        &lt;generator class=\"native\"/&gt;\n"
+#~ "    &lt;/id&gt;\n"
+#~ "    &lt;many-to-one name=\"address\" \n"
+#~ "        column=\"addressId\" \n"
+#~ "        unique=\"true\"\n"
+#~ "        not-null=\"true\"/&gt;\n"
+#~ "&lt;/class&gt;\n"
+#~ "\n"
+#~ "&lt;class name=\"Address\"&gt;\n"
+#~ "    &lt;id name=\"id\" column=\"addressId\"&gt;\n"
+#~ "        &lt;generator class=\"native\"/&gt;\n"
+#~ "    &lt;/id&gt;\n"
+#~ "&lt;/class&gt;"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[\n"
+#~ "create table Person ( personId bigint not null primary key, addressId "
+#~ "bigint not null unique )\n"
+#~ "create table Address ( addressId bigint not null primary key )\n"
+#~ "        ]]>"
+#~ msgstr ""
+#~ "create table Person ( personId bigint not null primary key, addressId "
+#~ "bigint not null unique )\n"
+#~ "create table Address ( addressId bigint not null primary key )"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[<class name=\"Person\">\n"
+#~ "    <id name=\"id\" column=\"personId\">\n"
+#~ "        <generator class=\"native\"/>\n"
+#~ "    </id>\n"
+#~ "</class>\n"
+#~ "\n"
+#~ "<class name=\"Address\">\n"
+#~ "    <id name=\"id\" column=\"personId\">\n"
+#~ "        <generator class=\"foreign\">\n"
+#~ "            <param name=\"property\">person</param>\n"
+#~ "        </generator>\n"
+#~ "    </id>\n"
+#~ "    <one-to-one name=\"person\" constrained=\"true\"/>\n"
+#~ "</class>]]>"
+#~ msgstr ""
+#~ "&lt;class name=\"Person\"&gt;\n"
+#~ "    &lt;id name=\"id\" column=\"personId\"&gt;\n"
+#~ "        &lt;generator class=\"native\"/&gt;\n"
+#~ "    &lt;/id&gt;\n"
+#~ "&lt;/class&gt;\n"
+#~ "\n"
+#~ "&lt;class name=\"Address\"&gt;\n"
+#~ "    &lt;id name=\"id\" column=\"personId\"&gt;\n"
+#~ "        &lt;generator class=\"foreign\"&gt;\n"
+#~ "            &lt;param name=\"property\"&gt;person&lt;/param&gt;\n"
+#~ "        &lt;/generator&gt;\n"
+#~ "    &lt;/id&gt;\n"
+#~ "    &lt;one-to-one name=\"person\" constrained=\"true\"/&gt;\n"
+#~ "&lt;/class&gt;"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[\n"
+#~ "create table Person ( personId bigint not null primary key )\n"
+#~ "create table Address ( personId bigint not null primary key )\n"
+#~ "        ]]>"
+#~ msgstr ""
+#~ "create table Person ( personId bigint not null primary key )\n"
+#~ "create table Address ( personId bigint not null primary key )"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[<class name=\"Person\">\n"
+#~ "    <id name=\"id\" column=\"personId\">\n"
+#~ "        <generator class=\"native\"/>\n"
+#~ "    </id>\n"
+#~ "    <set name=\"addresses\">\n"
+#~ "        <key column=\"personId\" \n"
+#~ "            not-null=\"true\"/>\n"
+#~ "        <one-to-many class=\"Address\"/>\n"
+#~ "    </set>\n"
+#~ "</class>\n"
+#~ "\n"
+#~ "<class name=\"Address\">\n"
+#~ "    <id name=\"id\" column=\"addressId\">\n"
+#~ "        <generator class=\"native\"/>\n"
+#~ "    </id>\n"
+#~ "</class>]]>"
+#~ msgstr ""
+#~ "&lt;class name=\"Person\"&gt;\n"
+#~ "    &lt;id name=\"id\" column=\"personId\"&gt;\n"
+#~ "        &lt;generator class=\"native\"/&gt;\n"
+#~ "    &lt;/id&gt;\n"
+#~ "    &lt;set name=\"addresses\"&gt;\n"
+#~ "        &lt;key column=\"personId\" \n"
+#~ "            not-null=\"true\"/&gt;\n"
+#~ "        &lt;one-to-many class=\"Address\"/&gt;\n"
+#~ "    &lt;/set&gt;\n"
+#~ "&lt;/class&gt;\n"
+#~ "\n"
+#~ "&lt;class name=\"Address\"&gt;\n"
+#~ "    &lt;id name=\"id\" column=\"addressId\"&gt;\n"
+#~ "        &lt;generator class=\"native\"/&gt;\n"
+#~ "    &lt;/id&gt;\n"
+#~ "&lt;/class&gt;"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[\n"
+#~ "create table Person ( personId bigint not null primary key )\n"
+#~ "create table Address ( addressId bigint not null primary key, personId "
+#~ "bigint not null )\n"
+#~ "        ]]>"
+#~ msgstr ""
+#~ "create table Person ( personId bigint not null primary key )\n"
+#~ "create table Address ( addressId bigint not null primary key, personId "
+#~ "bigint not null )"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[<class name=\"Person\">\n"
+#~ "    <id name=\"id\" column=\"personId\">\n"
+#~ "        <generator class=\"native\"/>\n"
+#~ "    </id>\n"
+#~ "    <set name=\"addresses\" table=\"PersonAddress\">\n"
+#~ "        <key column=\"personId\"/>\n"
+#~ "        <many-to-many column=\"addressId\"\n"
+#~ "            unique=\"true\"\n"
+#~ "            class=\"Address\"/>\n"
+#~ "    </set>\n"
+#~ "</class>\n"
+#~ "\n"
+#~ "<class name=\"Address\">\n"
+#~ "    <id name=\"id\" column=\"addressId\">\n"
+#~ "        <generator class=\"native\"/>\n"
+#~ "    </id>\n"
+#~ "</class>]]>"
+#~ msgstr ""
+#~ "&lt;class name=\"Person\"&gt;\n"
+#~ "    &lt;id name=\"id\" column=\"personId\"&gt;\n"
+#~ "        &lt;generator class=\"native\"/&gt;\n"
+#~ "    &lt;/id&gt;\n"
+#~ "    &lt;set name=\"addresses\" table=\"PersonAddress\"&gt;\n"
+#~ "        &lt;key column=\"personId\"/&gt;\n"
+#~ "        &lt;many-to-many column=\"addressId\"\n"
+#~ "            unique=\"true\"\n"
+#~ "            class=\"Address\"/&gt;\n"
+#~ "    &lt;/set&gt;\n"
+#~ "&lt;/class&gt;\n"
+#~ "\n"
+#~ "&lt;class name=\"Address\"&gt;\n"
+#~ "    &lt;id name=\"id\" column=\"addressId\"&gt;\n"
+#~ "        &lt;generator class=\"native\"/&gt;\n"
+#~ "    &lt;/id&gt;\n"
+#~ "&lt;/class&gt;"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[\n"
+#~ "create table Person ( personId bigint not null primary key )\n"
+#~ "create table PersonAddress ( personId not null, addressId bigint not null "
+#~ "primary key )\n"
+#~ "create table Address ( addressId bigint not null primary key )\n"
+#~ "        ]]>"
+#~ msgstr ""
+#~ "create table Person ( personId bigint not null primary key )\n"
+#~ "create table PersonAddress ( personId not null, addressId bigint \n"
+#~ "    not null primary key )\n"
+#~ "create table Address ( addressId bigint not null primary key )"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[<class name=\"Person\">\n"
+#~ "    <id name=\"id\" column=\"personId\">\n"
+#~ "        <generator class=\"native\"/>\n"
+#~ "    </id>\n"
+#~ "    <join table=\"PersonAddress\" \n"
+#~ "        optional=\"true\">\n"
+#~ "        <key column=\"personId\" unique=\"true\"/>\n"
+#~ "        <many-to-one name=\"address\"\n"
+#~ "            column=\"addressId\" \n"
+#~ "            not-null=\"true\"/>\n"
+#~ "    </join>\n"
+#~ "</class>\n"
+#~ "\n"
+#~ "<class name=\"Address\">\n"
+#~ "    <id name=\"id\" column=\"addressId\">\n"
+#~ "        <generator class=\"native\"/>\n"
+#~ "    </id>\n"
+#~ "</class>]]>"
+#~ msgstr ""
+#~ "&lt;class name=\"Person\"&gt;\n"
+#~ "    &lt;id name=\"id\" column=\"personId\"&gt;\n"
+#~ "        &lt;generator class=\"native\"/&gt;\n"
+#~ "    &lt;/id&gt;\n"
+#~ "    &lt;join table=\"PersonAddress\" \n"
+#~ "        optional=\"true\"&gt;\n"
+#~ "        &lt;key column=\"personId\" unique=\"true\"/&gt;\n"
+#~ "        &lt;many-to-one name=\"address\"\n"
+#~ "            column=\"addressId\" \n"
+#~ "            not-null=\"true\"/&gt;\n"
+#~ "    &lt;/join&gt;\n"
+#~ "&lt;/class&gt;\n"
+#~ "\n"
+#~ "&lt;class name=\"Address\"&gt;\n"
+#~ "    &lt;id name=\"id\" column=\"addressId\"&gt;\n"
+#~ "        &lt;generator class=\"native\"/&gt;\n"
+#~ "    &lt;/id&gt;\n"
+#~ "&lt;/class&gt;"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[\n"
+#~ "create table Person ( personId bigint not null primary key )\n"
+#~ "create table PersonAddress ( personId bigint not null primary key, "
+#~ "addressId bigint not null )\n"
+#~ "create table Address ( addressId bigint not null primary key )\n"
+#~ "        ]]>"
+#~ msgstr ""
+#~ "create table Person ( personId bigint not null primary key )\n"
+#~ "create table PersonAddress ( personId bigint not null primary key, "
+#~ "addressId bigint not null )\n"
+#~ "create table Address ( addressId bigint not null primary key )"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[<class name=\"Person\">\n"
+#~ "    <id name=\"id\" column=\"personId\">\n"
+#~ "        <generator class=\"native\"/>\n"
+#~ "    </id>\n"
+#~ "    <join table=\"PersonAddress\" \n"
+#~ "        optional=\"true\">\n"
+#~ "        <key column=\"personId\" \n"
+#~ "            unique=\"true\"/>\n"
+#~ "        <many-to-one name=\"address\"\n"
+#~ "            column=\"addressId\" \n"
+#~ "            not-null=\"true\"\n"
+#~ "            unique=\"true\"/>\n"
+#~ "    </join>\n"
+#~ "</class>\n"
+#~ "\n"
+#~ "<class name=\"Address\">\n"
+#~ "    <id name=\"id\" column=\"addressId\">\n"
+#~ "        <generator class=\"native\"/>\n"
+#~ "    </id>\n"
+#~ "</class>]]>"
+#~ msgstr ""
+#~ "&lt;class name=\"Person\"&gt;\n"
+#~ "    &lt;id name=\"id\" column=\"personId\"&gt;\n"
+#~ "        &lt;generator class=\"native\"/&gt;\n"
+#~ "    &lt;/id&gt;\n"
+#~ "    &lt;join table=\"PersonAddress\" \n"
+#~ "        optional=\"true\"&gt;\n"
+#~ "        &lt;key column=\"personId\" \n"
+#~ "            unique=\"true\"/&gt;\n"
+#~ "        &lt;many-to-one name=\"address\"\n"
+#~ "            column=\"addressId\" \n"
+#~ "            not-null=\"true\"\n"
+#~ "            unique=\"true\"/&gt;\n"
+#~ "    &lt;/join&gt;\n"
+#~ "&lt;/class&gt;\n"
+#~ "\n"
+#~ "&lt;class name=\"Address\"&gt;\n"
+#~ "    &lt;id name=\"id\" column=\"addressId\"&gt;\n"
+#~ "        &lt;generator class=\"native\"/&gt;\n"
+#~ "    &lt;/id&gt;\n"
+#~ "&lt;/class&gt;"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[\n"
+#~ "create table Person ( personId bigint not null primary key )\n"
+#~ "create table PersonAddress ( personId bigint not null primary key, "
+#~ "addressId bigint not null unique )\n"
+#~ "create table Address ( addressId bigint not null primary key )\n"
+#~ "        ]]>"
+#~ msgstr ""
+#~ "create table Person ( personId bigint not null primary key )\n"
+#~ "create table PersonAddress ( personId bigint not null primary key, "
+#~ "addressId bigint\n"
+#~ "    not null unique )\n"
+#~ "create table Address ( addressId bigint not null primary key )"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[<class name=\"Person\">\n"
+#~ "    <id name=\"id\" column=\"personId\">\n"
+#~ "        <generator class=\"native\"/>\n"
+#~ "    </id>\n"
+#~ "    <set name=\"addresses\" table=\"PersonAddress\">\n"
+#~ "        <key column=\"personId\"/>\n"
+#~ "        <many-to-many column=\"addressId\"\n"
+#~ "            class=\"Address\"/>\n"
+#~ "    </set>\n"
+#~ "</class>\n"
+#~ "\n"
+#~ "<class name=\"Address\">\n"
+#~ "    <id name=\"id\" column=\"addressId\">\n"
+#~ "        <generator class=\"native\"/>\n"
+#~ "    </id>\n"
+#~ "</class>]]>"
+#~ msgstr ""
+#~ "&lt;class name=\"Person\"&gt;\n"
+#~ "    &lt;id name=\"id\" column=\"personId\"&gt;\n"
+#~ "        &lt;generator class=\"native\"/&gt;\n"
+#~ "    &lt;/id&gt;\n"
+#~ "    &lt;set name=\"addresses\" table=\"PersonAddress\"&gt;\n"
+#~ "        &lt;key column=\"personId\"/&gt;\n"
+#~ "        &lt;many-to-many column=\"addressId\"\n"
+#~ "            class=\"Address\"/&gt;\n"
+#~ "    &lt;/set&gt;\n"
+#~ "&lt;/class&gt;\n"
+#~ "\n"
+#~ "&lt;class name=\"Address\"&gt;\n"
+#~ "    &lt;id name=\"id\" column=\"addressId\"&gt;\n"
+#~ "        &lt;generator class=\"native\"/&gt;\n"
+#~ "    &lt;/id&gt;\n"
+#~ "&lt;/class&gt;"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[\n"
+#~ "create table Person ( personId bigint not null primary key )\n"
+#~ "create table PersonAddress ( personId bigint not null, addressId bigint "
+#~ "not null, primary key (personId, addressId) )\n"
+#~ "create table Address ( addressId bigint not null primary key )\n"
+#~ "        ]]>"
+#~ msgstr ""
+#~ "create table Person ( personId bigint not null primary key )\n"
+#~ "create table PersonAddress ( personId bigint not null, addressId bigint "
+#~ "not null, \n"
+#~ "    primary key (personId, addressId) )\n"
+#~ "create table Address ( addressId bigint not null primary key )"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[<class name=\"Person\">\n"
+#~ "    <id name=\"id\" column=\"personId\">\n"
+#~ "        <generator class=\"native\"/>\n"
+#~ "    </id>\n"
+#~ "    <many-to-one name=\"address\" \n"
+#~ "        column=\"addressId\"\n"
+#~ "        not-null=\"true\"/>\n"
+#~ "</class>\n"
+#~ "\n"
+#~ "<class name=\"Address\">\n"
+#~ "    <id name=\"id\" column=\"addressId\">\n"
+#~ "        <generator class=\"native\"/>\n"
+#~ "    </id>\n"
+#~ "    <set name=\"people\" inverse=\"true\">\n"
+#~ "        <key column=\"addressId\"/>\n"
+#~ "        <one-to-many class=\"Person\"/>\n"
+#~ "    </set>\n"
+#~ "</class>]]>"
+#~ msgstr ""
+#~ "&lt;class name=\"Person\"&gt;\n"
+#~ "    &lt;id name=\"id\" column=\"personId\"&gt;\n"
+#~ "        &lt;generator class=\"native\"/&gt;\n"
+#~ "    &lt;/id&gt;\n"
+#~ "    &lt;many-to-one name=\"address\" \n"
+#~ "        column=\"addressId\"\n"
+#~ "        not-null=\"true\"/&gt;\n"
+#~ "&lt;/class&gt;\n"
+#~ "\n"
+#~ "&lt;class name=\"Address\"&gt;\n"
+#~ "    &lt;id name=\"id\" column=\"addressId\"&gt;\n"
+#~ "        &lt;generator class=\"native\"/&gt;\n"
+#~ "    &lt;/id&gt;\n"
+#~ "    &lt;set name=\"people\" inverse=\"true\"&gt;\n"
+#~ "        &lt;key column=\"addressId\"/&gt;\n"
+#~ "        &lt;one-to-many class=\"Person\"/&gt;\n"
+#~ "    &lt;/set&gt;\n"
+#~ "&lt;/class&gt;"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[<class name=\"Person\">\n"
+#~ "   <id name=\"id\"/>\n"
+#~ "   ...\n"
+#~ "   <many-to-one name=\"address\"\n"
+#~ "      column=\"addressId\"\n"
+#~ "      not-null=\"true\"\n"
+#~ "      insert=\"false\"\n"
+#~ "      update=\"false\"/>\n"
+#~ "</class>\n"
+#~ "\n"
+#~ "<class name=\"Address\">\n"
+#~ "   <id name=\"id\"/>\n"
+#~ "   ...\n"
+#~ "   <list name=\"people\">\n"
+#~ "      <key column=\"addressId\" not-null=\"true\"/>\n"
+#~ "      <list-index column=\"peopleIdx\"/>\n"
+#~ "      <one-to-many class=\"Person\"/>\n"
+#~ "   </list>\n"
+#~ "</class>]]>"
+#~ msgstr ""
+#~ "&lt;class name=\"Person\"&gt;\n"
+#~ "   &lt;id name=\"id\"/&gt;\n"
+#~ "   ...\n"
+#~ "   &lt;many-to-one name=\"address\"\n"
+#~ "      column=\"addressId\"\n"
+#~ "      not-null=\"true\"\n"
+#~ "      insert=\"false\"\n"
+#~ "      update=\"false\"/&gt;\n"
+#~ "&lt;/class&gt;\n"
+#~ "\n"
+#~ "&lt;class name=\"Address\"&gt;\n"
+#~ "   &lt;id name=\"id\"/&gt;\n"
+#~ "   ...\n"
+#~ "   &lt;list name=\"people\"&gt;\n"
+#~ "      &lt;key column=\"addressId\" not-null=\"true\"/&gt;\n"
+#~ "      &lt;list-index column=\"peopleIdx\"/&gt;\n"
+#~ "      &lt;one-to-many class=\"Person\"/&gt;\n"
+#~ "   &lt;/list&gt;\n"
+#~ "&lt;/class&gt;"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[<class name=\"Person\">\n"
+#~ "    <id name=\"id\" column=\"personId\">\n"
+#~ "        <generator class=\"native\"/>\n"
+#~ "    </id>\n"
+#~ "    <many-to-one name=\"address\" \n"
+#~ "        column=\"addressId\" \n"
+#~ "        unique=\"true\"\n"
+#~ "        not-null=\"true\"/>\n"
+#~ "</class>\n"
+#~ "\n"
+#~ "<class name=\"Address\">\n"
+#~ "    <id name=\"id\" column=\"addressId\">\n"
+#~ "        <generator class=\"native\"/>\n"
+#~ "    </id>\n"
+#~ "   <one-to-one name=\"person\" \n"
+#~ "        property-ref=\"address\"/>\n"
+#~ "</class>]]>"
+#~ msgstr ""
+#~ "&lt;class name=\"Person\"&gt;\n"
+#~ "    &lt;id name=\"id\" column=\"personId\"&gt;\n"
+#~ "        &lt;generator class=\"native\"/&gt;\n"
+#~ "    &lt;/id&gt;\n"
+#~ "    &lt;many-to-one name=\"address\" \n"
+#~ "        column=\"addressId\" \n"
+#~ "        unique=\"true\"\n"
+#~ "        not-null=\"true\"/&gt;\n"
+#~ "&lt;/class&gt;\n"
+#~ "\n"
+#~ "&lt;class name=\"Address\"&gt;\n"
+#~ "    &lt;id name=\"id\" column=\"addressId\"&gt;\n"
+#~ "        &lt;generator class=\"native\"/&gt;\n"
+#~ "    &lt;/id&gt;\n"
+#~ "   &lt;one-to-one name=\"person\" \n"
+#~ "        property-ref=\"address\"/&gt;\n"
+#~ "&lt;/class&gt;"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[<class name=\"Person\">\n"
+#~ "    <id name=\"id\" column=\"personId\">\n"
+#~ "        <generator class=\"native\"/>\n"
+#~ "    </id>\n"
+#~ "    <one-to-one name=\"address\"/>\n"
+#~ "</class>\n"
+#~ "\n"
+#~ "<class name=\"Address\">\n"
+#~ "    <id name=\"id\" column=\"personId\">\n"
+#~ "        <generator class=\"foreign\">\n"
+#~ "            <param name=\"property\">person</param>\n"
+#~ "        </generator>\n"
+#~ "    </id>\n"
+#~ "    <one-to-one name=\"person\" \n"
+#~ "        constrained=\"true\"/>\n"
+#~ "</class>]]>"
+#~ msgstr ""
+#~ "&lt;class name=\"Person\"&gt;\n"
+#~ "    &lt;id name=\"id\" column=\"personId\"&gt;\n"
+#~ "        &lt;generator class=\"native\"/&gt;\n"
+#~ "    &lt;/id&gt;\n"
+#~ "    &lt;one-to-one name=\"address\"/&gt;\n"
+#~ "&lt;/class&gt;\n"
+#~ "\n"
+#~ "&lt;class name=\"Address\"&gt;\n"
+#~ "    &lt;id name=\"id\" column=\"personId\"&gt;\n"
+#~ "        &lt;generator class=\"foreign\"&gt;\n"
+#~ "            &lt;param name=\"property\"&gt;person&lt;/param&gt;\n"
+#~ "        &lt;/generator&gt;\n"
+#~ "    &lt;/id&gt;\n"
+#~ "    &lt;one-to-one name=\"person\" \n"
+#~ "        constrained=\"true\"/&gt;\n"
+#~ "&lt;/class&gt;"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[<class name=\"Person\">\n"
+#~ "    <id name=\"id\" column=\"personId\">\n"
+#~ "        <generator class=\"native\"/>\n"
+#~ "    </id>\n"
+#~ "    <set name=\"addresses\" \n"
+#~ "        table=\"PersonAddress\">\n"
+#~ "        <key column=\"personId\"/>\n"
+#~ "        <many-to-many column=\"addressId\"\n"
+#~ "            unique=\"true\"\n"
+#~ "            class=\"Address\"/>\n"
+#~ "    </set>\n"
+#~ "</class>\n"
+#~ "\n"
+#~ "<class name=\"Address\">\n"
+#~ "    <id name=\"id\" column=\"addressId\">\n"
+#~ "        <generator class=\"native\"/>\n"
+#~ "    </id>\n"
+#~ "    <join table=\"PersonAddress\" \n"
+#~ "        inverse=\"true\" \n"
+#~ "        optional=\"true\">\n"
+#~ "        <key column=\"addressId\"/>\n"
+#~ "        <many-to-one name=\"person\"\n"
+#~ "            column=\"personId\"\n"
+#~ "            not-null=\"true\"/>\n"
+#~ "    </join>\n"
+#~ "</class>]]>"
+#~ msgstr ""
+#~ "&lt;class name=\"Person\"&gt;\n"
+#~ "    &lt;id name=\"id\" column=\"personId\"&gt;\n"
+#~ "        &lt;generator class=\"native\"/&gt;\n"
+#~ "    &lt;/id&gt;\n"
+#~ "    &lt;set name=\"addresses\" \n"
+#~ "        table=\"PersonAddress\"&gt;\n"
+#~ "        &lt;key column=\"personId\"/&gt;\n"
+#~ "        &lt;many-to-many column=\"addressId\"\n"
+#~ "            unique=\"true\"\n"
+#~ "            class=\"Address\"/&gt;\n"
+#~ "    &lt;/set&gt;\n"
+#~ "&lt;/class&gt;\n"
+#~ "\n"
+#~ "&lt;class name=\"Address\"&gt;\n"
+#~ "    &lt;id name=\"id\" column=\"addressId\"&gt;\n"
+#~ "        &lt;generator class=\"native\"/&gt;\n"
+#~ "    &lt;/id&gt;\n"
+#~ "    &lt;join table=\"PersonAddress\" \n"
+#~ "        inverse=\"true\" \n"
+#~ "        optional=\"true\"&gt;\n"
+#~ "        &lt;key column=\"addressId\"/&gt;\n"
+#~ "        &lt;many-to-one name=\"person\"\n"
+#~ "            column=\"personId\"\n"
+#~ "            not-null=\"true\"/&gt;\n"
+#~ "    &lt;/join&gt;\n"
+#~ "&lt;/class&gt;"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[\n"
+#~ "create table Person ( personId bigint not null primary key )\n"
+#~ "create table PersonAddress ( personId bigint not null, addressId bigint "
+#~ "not null primary key )\n"
+#~ "create table Address ( addressId bigint not null primary key )\n"
+#~ "        ]]>"
+#~ msgstr ""
+#~ "create table Person ( personId bigint not null primary key )\n"
+#~ "create table PersonAddress ( personId bigint not null, addressId bigint "
+#~ "not null primary key )\n"
+#~ "create table Address ( addressId bigint not null primary key )"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[<class name=\"Person\">\n"
+#~ "    <id name=\"id\" column=\"personId\">\n"
+#~ "        <generator class=\"native\"/>\n"
+#~ "    </id>\n"
+#~ "    <join table=\"PersonAddress\" \n"
+#~ "        optional=\"true\">\n"
+#~ "        <key column=\"personId\" \n"
+#~ "            unique=\"true\"/>\n"
+#~ "        <many-to-one name=\"address\"\n"
+#~ "            column=\"addressId\" \n"
+#~ "            not-null=\"true\"\n"
+#~ "            unique=\"true\"/>\n"
+#~ "    </join>\n"
+#~ "</class>\n"
+#~ "\n"
+#~ "<class name=\"Address\">\n"
+#~ "    <id name=\"id\" column=\"addressId\">\n"
+#~ "        <generator class=\"native\"/>\n"
+#~ "    </id>\n"
+#~ "    <join table=\"PersonAddress\" \n"
+#~ "        optional=\"true\"\n"
+#~ "        inverse=\"true\">\n"
+#~ "        <key column=\"addressId\" \n"
+#~ "            unique=\"true\"/>\n"
+#~ "        <many-to-one name=\"person\"\n"
+#~ "            column=\"personId\" \n"
+#~ "            not-null=\"true\"\n"
+#~ "            unique=\"true\"/>\n"
+#~ "    </join>\n"
+#~ "</class>]]>"
+#~ msgstr ""
+#~ "&lt;class name=\"Person\"&gt;\n"
+#~ "    &lt;id name=\"id\" column=\"personId\"&gt;\n"
+#~ "        &lt;generator class=\"native\"/&gt;\n"
+#~ "    &lt;/id&gt;\n"
+#~ "    &lt;join table=\"PersonAddress\" \n"
+#~ "        optional=\"true\"&gt;\n"
+#~ "        &lt;key column=\"personId\" \n"
+#~ "            unique=\"true\"/&gt;\n"
+#~ "        &lt;many-to-one name=\"address\"\n"
+#~ "            column=\"addressId\" \n"
+#~ "            not-null=\"true\"\n"
+#~ "            unique=\"true\"/&gt;\n"
+#~ "    &lt;/join&gt;\n"
+#~ "&lt;/class&gt;\n"
+#~ "\n"
+#~ "&lt;class name=\"Address\"&gt;\n"
+#~ "    &lt;id name=\"id\" column=\"addressId\"&gt;\n"
+#~ "        &lt;generator class=\"native\"/&gt;\n"
+#~ "    &lt;/id&gt;\n"
+#~ "    &lt;join table=\"PersonAddress\" \n"
+#~ "        optional=\"true\"\n"
+#~ "        inverse=\"true\"&gt;\n"
+#~ "        &lt;key column=\"addressId\" \n"
+#~ "            unique=\"true\"/&gt;\n"
+#~ "        &lt;many-to-one name=\"person\"\n"
+#~ "            column=\"personId\" \n"
+#~ "            not-null=\"true\"\n"
+#~ "            unique=\"true\"/&gt;\n"
+#~ "    &lt;/join&gt;\n"
+#~ "&lt;/class&gt;"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[<class name=\"Person\">\n"
+#~ "    <id name=\"id\" column=\"personId\">\n"
+#~ "        <generator class=\"native\"/>\n"
+#~ "    </id>\n"
+#~ "    <set name=\"addresses\" table=\"PersonAddress\">\n"
+#~ "        <key column=\"personId\"/>\n"
+#~ "        <many-to-many column=\"addressId\"\n"
+#~ "            class=\"Address\"/>\n"
+#~ "    </set>\n"
+#~ "</class>\n"
+#~ "\n"
+#~ "<class name=\"Address\">\n"
+#~ "    <id name=\"id\" column=\"addressId\">\n"
+#~ "        <generator class=\"native\"/>\n"
+#~ "    </id>\n"
+#~ "    <set name=\"people\" inverse=\"true\" table=\"PersonAddress\">\n"
+#~ "        <key column=\"addressId\"/>\n"
+#~ "        <many-to-many column=\"personId\"\n"
+#~ "            class=\"Person\"/>\n"
+#~ "    </set>\n"
+#~ "</class>]]>"
+#~ msgstr ""
+#~ "&lt;class name=\"Person\"&gt;\n"
+#~ "    &lt;id name=\"id\" column=\"personId\"&gt;\n"
+#~ "        &lt;generator class=\"native\"/&gt;\n"
+#~ "    &lt;/id&gt;\n"
+#~ "    &lt;set name=\"addresses\" table=\"PersonAddress\"&gt;\n"
+#~ "        &lt;key column=\"personId\"/&gt;\n"
+#~ "        &lt;many-to-many column=\"addressId\"\n"
+#~ "            class=\"Address\"/&gt;\n"
+#~ "    &lt;/set&gt;\n"
+#~ "&lt;/class&gt;\n"
+#~ "\n"
+#~ "&lt;class name=\"Address\"&gt;\n"
+#~ "    &lt;id name=\"id\" column=\"addressId\"&gt;\n"
+#~ "        &lt;generator class=\"native\"/&gt;\n"
+#~ "    &lt;/id&gt;\n"
+#~ "    &lt;set name=\"people\" inverse=\"true\" table=\"PersonAddress\"&gt;\n"
+#~ "        &lt;key column=\"addressId\"/&gt;\n"
+#~ "        &lt;many-to-many column=\"personId\"\n"
+#~ "            class=\"Person\"/&gt;\n"
+#~ "    &lt;/set&gt;\n"
+#~ "&lt;/class&gt;"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[<properties name=\"currentAccountKey\">\n"
+#~ "    <property name=\"accountNumber\" type=\"string\" not-null=\"true\"/>\n"
+#~ "    <property name=\"currentAccount\" type=\"boolean\">\n"
+#~ "        <formula>case when effectiveEndDate is null then 1 else 0 end</"
+#~ "formula>\n"
+#~ "    </property>\n"
+#~ "</properties>\n"
+#~ "<property name=\"effectiveEndDate\" type=\"date\"/>\n"
+#~ "<property name=\"effectiveStateDate\" type=\"date\" not-null=\"true\"/>]]>"
+#~ msgstr ""
+#~ "&lt;properties name=\"currentAccountKey\"&gt;\n"
+#~ "    &lt;property name=\"accountNumber\" type=\"string\" not-null=\"true\"/"
+#~ "&gt;\n"
+#~ "    &lt;property name=\"currentAccount\" type=\"boolean\"&gt;\n"
+#~ "        &lt;formula&gt;case when effectiveEndDate is null then 1 else 0 "
+#~ "end&lt;/formula&gt;\n"
+#~ "    &lt;/property&gt;\n"
+#~ "&lt;/properties&gt;\n"
+#~ "&lt;property name=\"effectiveEndDate\" type=\"date\"/&gt;\n"
+#~ "&lt;property name=\"effectiveStateDate\" type=\"date\" not-null=\"true\"/"
+#~ "&gt;"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[<many-to-one name=\"currentAccountInfo\" \n"
+#~ "        property-ref=\"currentAccountKey\"\n"
+#~ "        class=\"AccountInfo\">\n"
+#~ "    <column name=\"accountNumber\"/>\n"
+#~ "    <formula>'1'</formula>\n"
+#~ "</many-to-one>]]>"
+#~ msgstr ""
+#~ "&lt;many-to-one name=\"currentAccountInfo\" \n"
+#~ "        property-ref=\"currentAccountKey\"\n"
+#~ "        class=\"AccountInfo\"&gt;\n"
+#~ "    &lt;column name=\"accountNumber\"/&gt;\n"
+#~ "    &lt;formula&gt;'1'&lt;/formula&gt;\n"
+#~ "&lt;/many-to-one&gt;"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[<join>\n"
+#~ "    <key column=\"employeeId\"/>\n"
+#~ "    <subselect>\n"
+#~ "        select employeeId, orgId \n"
+#~ "        from Employments \n"
+#~ "        group by orgId \n"
+#~ "        having startDate = max(startDate)\n"
+#~ "    </subselect>\n"
+#~ "    <many-to-one name=\"mostRecentEmployer\" \n"
+#~ "            class=\"Organization\" \n"
+#~ "            column=\"orgId\"/>\n"
+#~ "</join>]]>"
+#~ msgstr ""
+#~ "&lt;join&gt;\n"
+#~ "    &lt;key column=\"employeeId\"/&gt;\n"
+#~ "    &lt;subselect&gt;\n"
+#~ "        select employeeId, orgId \n"
+#~ "        from Employments \n"
+#~ "        group by orgId \n"
+#~ "        having startDate = max(startDate)\n"
+#~ "    &lt;/subselect&gt;\n"
+#~ "    &lt;many-to-one name=\"mostRecentEmployer\" \n"
+#~ "            class=\"Organization\" \n"
+#~ "            column=\"orgId\"/&gt;\n"
+#~ "&lt;/join&gt;"

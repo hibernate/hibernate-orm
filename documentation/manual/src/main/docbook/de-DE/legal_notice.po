@@ -1,0 +1,49 @@
+# 
+# AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: 0\n"
+"POT-Creation-Date: 2010-02-11T05:38:16\n"
+"PO-Revision-Date: 2010-02-11T05:38:16\n"
+"Last-Translator: Automatically generated\n"
+"Language-Team: None\n"
+"MIME-Version: 1.0\n"
+"Content-Type: application/x-publican; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. Tag: title
+#, no-c-format
+msgid "Legal Notice"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<address> <street>1801 Varsity Drive</street> <city>Raleigh</city>, <state>NC</state><postcode>27606-2072</postcode><country>USA</country> <phone>Phone: +1 919 754 3700</phone> <phone>Phone: 888 733 4281</phone> <fax>Fax: +1 919 754 3701</fax> <pob>PO Box 13588</pob><city>Research Triangle Park</city>, <state>NC</state><postcode>27709</postcode><country>USA</country> </address>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Copyright <trademark class=\"copyright\"></trademark> 2007 by Red Hat, Inc. This copyrighted material is made available to anyone wishing to use, modify, copy, or redistribute it subject to the terms and conditions of the GNU <ulink url=\"http://www.gnu.org/licenses/lgpl-2.1.html\">Lesser General Public License</ulink>, as published by the Free Software Foundation."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Red Hat and the Red Hat \"Shadow Man\" logo are registered trademarks of Red Hat, Inc. in the United States and other countries."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "All other trademarks referenced herein are the property of their respective owners."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The GPG fingerprint of the security@redhat.com key is:"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "CA 20 86 86 2B D6 9D FC 65 F6 EC C4 21 91 80 CD DB 42 A6 0E"
+msgstr ""
+

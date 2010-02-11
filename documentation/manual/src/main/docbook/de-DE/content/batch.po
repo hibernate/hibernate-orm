@@ -1,0 +1,984 @@
+# translation of Collection_Mapping.po to 
+# translation of Collection_Mapping.po to
+# translation of Collection_Mapping.po to
+# translation of Collection_Mapping.po to
+# translation of Collection_Mapping.po to
+# translation of Collection_Mapping.po to
+# Language /mnt/hgfs/base/Hibernate/Reference translations for PACKAGE package.
+# Copyright (C) 2006, 2007 Free Software Foundation, Inc.
+# Automatically generated, 2006.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Collection_Mapping\n"
+"Report-Msgid-Bugs-To: http://bugs.kde.org\n"
+"POT-Creation-Date: 2010-02-11T05:38:15\n"
+"PO-Revision-Date: 2007-02-26 10:27+1000\n"
+"Last-Translator: \n"
+"Language-Team:  <de@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: KBabel 1.9.1\n"
+
+#. Tag: title
+#, no-c-format
+msgid "Batch processing"
+msgstr "Batch-Verarbeitung"
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"A naive approach to inserting 100,000 rows in the database using Hibernate "
+"might look like this:"
+msgstr ""
+"Eine unkomplizierte Einfügung von 100.000 Reihen in die Datenbank mittels "
+"Hibernate könnte wie folgt aussehen:"
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"This would fall over with an <literal>OutOfMemoryException</literal> "
+"somewhere around the 50,000th row. That is because Hibernate caches all the "
+"newly inserted <literal>Customer</literal> instances in the session-level "
+"cache. In this chapter we will show you how to avoid this problem."
+msgstr ""
+"Dies würde mit der Ausnahme <literal>OutOfMemoryException</literal> irgendwo "
+"um die 50.000ste Reihe herum kippen, da Hibernate alle neu eingefügten "
+"<literal>Customer</literal>-Instanzen im Cache der Session-Ebene speichert."
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"If you are undertaking batch processing you will need to enable the use of "
+"JDBC batching. This is absolutely essential if you want to achieve optimal "
+"performance. Set the JDBC batch size to a reasonable number (10-50, for "
+"example):"
+msgstr ""
+"In diesem Kapitel wollen wir Ihnen zeigen, wie dieses Problem vermieden "
+"werden kann. Zunächst jedoch muss bei der Verwendung von Batch-Verarbeitung "
+"(auch: Stapelverarbeitung) die Einstellung \"JDBC-Batching\" aktiviert sein, "
+"falls eine zufriedenstellende Leistung erzielt werden soll. Die Größe des "
+"JDBC-Batch (m.a.W. die Stapelgröße) sollte dabei sinnvoll gewählt sein (z.B. "
+"10-50):"
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"Hibernate disables insert batching at the JDBC level transparently if you "
+"use an <literal>identity</literal> identifier generator."
+msgstr ""
+"Bitte beachten Sie, dass Hibernate das Einfügungs-Batching auf JDBC-Ebene "
+"transparent deaktiviert, falls Sie einen <literal>identiy</literal> "
+"Bezeichner-Generator verwenden."
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"You can also do this kind of work in a process where interaction with the "
+"second-level cache is completely disabled:"
+msgstr ""
+"Sie können diesen Vorgang auch durchführen, wenn das Cache der zweiten Ebene "
+"vollständig deaktiviert ist:"
+
+#. Tag: para
+#, no-c-format
+msgid ""
+"However, this is not absolutely necessary, since we can explicitly set the "
+"<literal>CacheMode</literal> to disable interaction with the second-level "
+"cache."
+msgstr ""
+"Dies ist jedoch nicht unbedingt erforderlich, da der <literal>CacheMode</"
+"literal> so eingestellt werden kann, dass die Interaktion mit dem Cache der "
+"zweiten Ebene deaktiviert ist."
+
+#. Tag: title
+#, no-c-format
+msgid "Batch inserts"
+msgstr "Batch-Einfügungen (\"Batch-Inserts\")"
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"When making new objects persistent <literal>flush()</literal> and then "
+"<literal>clear()</literal> the session regularly in order to control the "
+"size of the first-level cache."
+msgstr ""
+"Werden neue Objekte persistent gemacht, so muss in der Session regelmäßig "
+"<literal>flush()</literal> und anschließend <literal>clear()</literal> "
+"erfolgen, um die Größe des Caches der ersten Ebene zu kontrollieren."
+
+#. Tag: title
+#, no-c-format
+msgid "Batch updates"
+msgstr "Batch-Aktualisierungen"
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"For retrieving and updating data, the same ideas apply. In addition, you "
+"need to use <literal>scroll()</literal> to take advantage of server-side "
+"cursors for queries that return many rows of data."
+msgstr ""
+"Beim Abruf und der Aktualisierung von Daten gilt dasselbe. Desweiteren "
+"müssen Sie hier <literal>scroll()</literal> verwenden, um für Anfragen, die "
+"mit zahlreichen Datenreihen reagieren, die Vorteile des Cursors auf "
+"Serverseite auszunutzen."
+
+#. Tag: title
+#, no-c-format
+msgid "The StatelessSession interface"
+msgstr "Das Interface der StatelessSession"
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"Alternatively, Hibernate provides a command-oriented API that can be used "
+"for streaming data to and from the database in the form of detached objects. "
+"A <literal>StatelessSession</literal> has no persistence context associated "
+"with it and does not provide many of the higher-level life cycle semantics. "
+"In particular, a stateless session does not implement a first-level cache "
+"nor interact with any second-level or query cache. It does not implement "
+"transactional write-behind or automatic dirty checking. Operations performed "
+"using a stateless session never cascade to associated instances. Collections "
+"are ignored by a stateless session. Operations performed via a stateless "
+"session bypass Hibernate's event model and interceptors. Due to the lack of "
+"a first-level cache, Stateless sessions are vulnerable to data aliasing "
+"effects. A stateless session is a lower-level abstraction that is much "
+"closer to the underlying JDBC."
+msgstr ""
+"Alternativ bietet Hibernate ein befehlsorientiertes API, das in Form von "
+"abgesetzten Objekten für das Streaming von Daten von und zur Datenbank "
+"verwendet werden kann. Eine <literal>StatelessSession</literal> verfügt "
+"nicht über einen mit ihr assozierten Persistenzkontext und bietet nicht viel "
+"von der Lebenszyklus-Semantik der höheren Ebene. Insbesondere implementiert "
+"eine \"stateless Session\" weder ein Cache auf erster Ebene noch interagiert "
+"sie mit irgendeinem Anfragen-Cache oder Cache der zweiten Ebene. Es werden "
+"weder transaktionales Hinterher-Speichern noch automatisches \"Dirty-Checking"
+"\" (auf vorherigen Zugriff) implementiert. Vorgänge, die unter Verwendung "
+"einer stateless Session erfolgen, werden nie an zugehörige Instanzen "
+"weitergeleitet. Collections werden von einer stateless Session ebenfalls "
+"übergangen. Vorgänge, die unter Verwendung einer stateless Session erfolgen, "
+"umgehen außerdem Hibernates Ereignismodell und Interzeptoren. Es kann in "
+"stateless Sessions außerdem zu Datenverfälschungen (sog. \"Data Aliasing\") "
+"kommen, da ein Cache auf erster Ebene fehlt. Eine stateless Session ist eine "
+"Abstraktion auf niedrigerer Ebene, wesentlich näher an der zu Grunde "
+"liegenden JDBC."
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"In this code example, the <literal>Customer</literal> instances returned by "
+"the query are immediately detached. They are never associated with any "
+"persistence context."
+msgstr ""
+"Bitte beachten Sie, dass in diesem Code-Beispiel die durch die Anfrage "
+"erstellten <literal>Customer</literal>-Instanzen sofort abgesetzt werden. "
+"Sie werden zu keinem Zeitpunkt mit einem Persistenzkontext assoziiert."
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"The <literal>insert(), update()</literal> and <literal>delete()</literal> "
+"operations defined by the <literal>StatelessSession</literal> interface are "
+"considered to be direct database row-level operations. They result in the "
+"immediate execution of a SQL <literal>INSERT, UPDATE</literal> or "
+"<literal>DELETE</literal> respectively. They have different semantics to the "
+"<literal>save(), saveOrUpdate()</literal> and <literal>delete()</literal> "
+"operations defined by the <literal>Session</literal> interface."
+msgstr ""
+"Die vom <literal>StatelessSession</literal>-Interface definierten "
+"<literal>insert(), update()</literal> und <literal>delete()</literal> "
+"Vorgänge werden als direkte Datenbankvorgänge auf Reihenebene angesehen, die "
+"eine sofortige Ausführung einer SQL <literal>INSERT, UPDATE</literal> bzw. "
+"<literal>DELETE</literal> mit sich bringen. Sie besitzen daher eine andere "
+"Semantik als <literal>save(), saveOrUpdate()</literal> und <literal>delete()"
+"</literal>-Vorgänge, die durch das <literal>Session</literal>-Interface "
+"definiert werden."
+
+#. Tag: title
+#, no-c-format
+msgid "DML-style operations"
+msgstr "Vorgänge im DML-Stil"
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"As already discussed, automatic and transparent object/relational mapping is "
+"concerned with the management of the object state. The object state is "
+"available in memory. This means that manipulating data directly in the "
+"database (using the SQL <literal>Data Manipulation Language</literal> (DML) "
+"the statements: <literal>INSERT</literal>, <literal>UPDATE</literal>, "
+"<literal>DELETE</literal>) will not affect in-memory state. However, "
+"Hibernate provides methods for bulk SQL-style DML statement execution that "
+"is performed through the Hibernate Query Language (<link linkend=\"queryhql"
+"\">HQL</link>)."
+msgstr ""
+"Wie bereits erläutert, hängt das automatische und transparente "
+"objektrelationale Mapping mit dem Management des Objektstatus zusammen. Das "
+"bedeutet, dass der Objektstatus im Speicher verfügbar ist, weswegen (unter "
+"Verwendung der SQL <literal>Data Manipulation Language</literal> (DML) "
+"Anweisungen: <literal>INSERT</literal>, <literal>UPDATE</literal>, "
+"<literal>DELETE</literal>) Daten direkt in der Datenbank den gespeicherten "
+"Status nicht manipulieren.Hibernate bietet jedoch Methoden für die "
+"Massenausführung von DML-Anweisungen im SQL-Stil, was durch die Hibernate "
+"Query Language (<xref linkend=\"queryhql\"/>) erfolgt."
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"The pseudo-syntax for <literal>UPDATE</literal> and <literal>DELETE</"
+"literal> statements is: <literal>( UPDATE | DELETE ) FROM? EntityName (WHERE "
+"where_conditions)?</literal>."
+msgstr ""
+"Die Pseudo-Syntax für <literal>UPDATE</literal> und <literal>DELETE</"
+"literal>-Anweisungen lautet: <literal>( UPDATE | DELETE ) FROM? EntityName "
+"(WHERE where_conditions)?</literal>. Hierzu einige wichtige Punkte:"
+
+#. Tag: para
+#, no-c-format
+msgid "Some points to note:"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "In the from-clause, the FROM keyword is optional"
+msgstr "In der \"from\"-Klausel, ist der \"FROM\"-Schlüsselbegriff optional"
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"There can only be a single entity named in the from-clause. It can, however, "
+"be aliased. If the entity name is aliased, then any property references must "
+"be qualified using that alias. If the entity name is not aliased, then it is "
+"illegal for any property references to be qualified."
+msgstr ""
+"In der \"from\"-Klausel kann nur eine einzelne Entity genannt werden; sie "
+"kann optional auch einen Alias-Namen tragen. Falls der Name der Entity ein "
+"Alias ist, müssen sämtliche Property-Verweise unter Verwendung dieses Alias "
+"qualifiziert sein. Ist dies nicht der Fall, so ist es unzulässig Property-"
+"Verweise zu qualifizieren."
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"No <link linkend=\"queryhql-joins-forms\">joins</link>, either implicit or "
+"explicit, can be specified in a bulk HQL query. Sub-queries can be used in "
+"the where-clause, where the subqueries themselves may contain joins."
+msgstr ""
+"Kein <xref linkend=\"queryhql-joins-forms\"/> (weder implizit noch explizit) "
+"kann in einer Massen-HQL-Anfrage spezifiziert werden. Unteranfragen (sog. "
+"\"Subqueries\") können in der \"where\"-Klausel verwendet werden; die "
+"Unteranfragen selbst können Verbünde (sog. \"Joins\") enthalten."
+
+#. Tag: para
+#, no-c-format
+msgid "The where-clause is also optional."
+msgstr "Die \"where\"-Klausel ist ebenfalls optional."
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"As an example, to execute an HQL <literal>UPDATE</literal>, use the "
+"<literal>Query.executeUpdate()</literal> method. The method is named for "
+"those familiar with JDBC's <literal>PreparedStatement.executeUpdate()</"
+"literal>:"
+msgstr ""
+"Um zum Beispiel HQL <literal>UPDATE</literal> auszuführen, verwenden Sie die "
+"<literal>Query.executeUpdate()</literal>-Methode (die Methode wird für "
+"diejenigen genannt, die mit JDBCs <literal>PreparedStatement.executeUpdate()"
+"</literal>) vertraut sind:"
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"In keeping with the EJB3 specification, HQL <literal>UPDATE</literal> "
+"statements, by default, do not effect the <link linkend=\"mapping-"
+"declaration-version\">version</link> or the <link linkend=\"mapping-"
+"declaration-timestamp\">timestamp</link> property values for the affected "
+"entities. However, you can force Hibernate to reset the <literal>version</"
+"literal> or <literal>timestamp</literal> property values through the use of "
+"a <literal>versioned update</literal>. This is achieved by adding the "
+"<literal>VERSIONED</literal> keyword after the <literal>UPDATE</literal> "
+"keyword."
+msgstr ""
+"HQL <literal>UPDATE</literal>-Anweisungen haben standardmäßig keinen "
+"Einfluss auf die <xref linkend=\"mapping-declaration-version\"/>-Version "
+"oder die <xref linkend=\"mapping-declaration-timestamp\"/>-Zeitstempel-"
+"Property-Werte der betreffenden Entities; dies erfolgt in Übereinstimmung "
+"mit der EJB3-Spezifikation. Sie können Hibernate jedoch zwingen, die "
+"<literal>version</literal> oder <literal>timestamp</literal> Property-Werte "
+"ordnungsgemäß zurückzusetzen, indem Sie ein <literal>versioned update</"
+"literal> verwenden. Dies geschieht durch Hinzufügen des <literal>VERSIONED</"
+"literal>-Schlüsselbegriffs hinter dem <literal>UPDATE</literal>-"
+"Schlüsselbegriff."
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"Custom version types, <literal>org.hibernate.usertype.UserVersionType</"
+"literal>, are not allowed in conjunction with a <literal>update versioned</"
+"literal> statement."
+msgstr ""
+"Bitte beachten Sie, dass angepasste Versionstypen (<literal>org.hibernate."
+"usertype.UserVersionType</literal>) nicht in Verbindung mit einer "
+"<literal>update versioned</literal>-Anweisung erlaubt sind."
+
+#. Tag: para
+#, no-c-format
+msgid ""
+"To execute an HQL <literal>DELETE</literal>, use the same <literal>Query."
+"executeUpdate()</literal> method:"
+msgstr ""
+"Um HQL <literal>DELETE</literal>auszuführen, verwenden Sie dieselbe "
+"<literal>Query.executeUpdate()</literal>-Methode:"
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"The <literal>int</literal> value returned by the <literal>Query.executeUpdate"
+"()</literal> method indicates the number of entities effected by the "
+"operation. This may or may not correlate to the number of rows effected in "
+"the database. An HQL bulk operation might result in multiple actual SQL "
+"statements being executed (for joined-subclass, for example). The returned "
+"number indicates the number of actual entities affected by the statement. "
+"Going back to the example of joined-subclass, a delete against one of the "
+"subclasses may actually result in deletes against not just the table to "
+"which that subclass is mapped, but also the \"root\" table and potentially "
+"joined-subclass tables further down the inheritance hierarchy."
+msgstr ""
+"Der durch die <literal>Query.executeUpdate()</literal>-Methode erhaltene "
+"<literal>int</literal>-Wert gibt die Anzahl der durch den Vorgang "
+"betroffenen Entities an. Beachten Sie, dass dies mit der Anzahl der "
+"betroffenen Datenbankreihen korrelieren kann oder auch nicht. Ein HQL-"
+"Massenvorgang kann in der Ausführung mehrerer tatsächlicher SQL-Anweisungen "
+"resultieren, etwa für verbundene Subklassen. Die erhaltene Zahl gibt die "
+"Anzahl tatsächlicher Entities an, die von der Anweisung betroffen sind. Um "
+"auf das Beispiel der verbundenen Subklassen zurückzukommen - eine der "
+"Subklassen betreffende Löschung kann zu Löschungen nicht nur der Tabelle, zu "
+"der diese Subklasse gemappt ist, sondern auch zur \"Root\"-Tabelle und "
+"möglicherweise verbundenen Subklassentabellen führen, die in der "
+"Vererbungshierarchie weiter unten angesiedelt sind."
+
+#. Tag: para
+#, no-c-format
+msgid ""
+"The pseudo-syntax for <literal>INSERT</literal> statements is: "
+"<literal>INSERT INTO EntityName properties_list select_statement</literal>. "
+"Some points to note:"
+msgstr ""
+"Die Pseudo-Syntax für <literal>INSERT</literal>-Anweisungen lautet: "
+"<literal>INSERT INTO EntityName properties_list select_statement</literal>. "
+"Hierzu einige wichtige Punkte:"
+
+#. Tag: para
+#, no-c-format
+msgid ""
+"Only the INSERT INTO ... SELECT ... form is supported; not the INSERT "
+"INTO ... VALUES ... form."
+msgstr ""
+"Nur INSERT INTO ... SELECT ... wird unterstützt, nicht jedoch INSERT "
+"INTO ... VALUES ...."
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"The properties_list is analogous to the <literal>column specification</"
+"literal> in the SQL <literal>INSERT</literal> statement. For entities "
+"involved in mapped inheritance, only properties directly defined on that "
+"given class-level can be used in the properties_list. Superclass properties "
+"are not allowed and subclass properties do not make sense. In other words, "
+"<literal>INSERT</literal> statements are inherently non-polymorphic."
+msgstr ""
+"Die properties_list ist analog zur <literal>column speficiation</literal> in "
+"der SQL <literal>INSERT</literal>-Anweisung. Für in gemappte Vererbung "
+"involvierte Entities können nur Properties verwendet werden, die direkt auf "
+"dieser bestimmten Klassenebene in der properties_list definiert sind. "
+"Superklassen-Properties sind nicht gestattet und Subklassen-Properties "
+"machen keinen Sinn. Mit anderen Worten <literal>INSERT</literal>-Anweisungen "
+"sind inhärent nicht-polymorph."
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"select_statement can be any valid HQL select query, with the caveat that the "
+"return types must match the types expected by the insert. Currently, this is "
+"checked during query compilation rather than allowing the check to relegate "
+"to the database. This might, however, cause problems between Hibernate "
+"<literal>Type</literal>s which are <emphasis>equivalent</emphasis> as "
+"opposed to <emphasis>equal</emphasis>. This might cause issues with "
+"mismatches between a property defined as a <literal>org.hibernate.type."
+"DateType</literal> and a property defined as a <literal>org.hibernate.type."
+"TimestampType</literal>, even though the database might not make a "
+"distinction or might be able to handle the conversion."
+msgstr ""
+"Ein select_statement kann jede gültige HQL-Auswahlanfrage sein, mit dem "
+"Vorbehalt, dass Rückmeldungstypen mit den durch die Einfügung erwarteten "
+"Typen übereinstimmen müssen. Derzeit wird dies während der "
+"Anfragenkompilierung statt beim Rückverweis auf die Datenbank geprüft. Bitte "
+"beachten Sie, dass dies zu Problemen zwischen Hibernate <literal>Type</"
+"literal>en, die <emphasis>äquivalent</emphasis> und nicht <emphasis>gleich</"
+"emphasis> sind, führen kann. Es kann dadurch zu Fehlzuordnungen zwischen "
+"einer als <literal>org.hibernate.type.DateType</literal> definierten "
+"Property und einer als <literal>org.hibernate.type.TimestampType</literal> "
+"definierten Property kommen, selbst wenn die Datenbank keine Unterscheidung "
+"macht oder die Konversion durchführen könnte."
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"For the id property, the insert statement gives you two options. You can "
+"either explicitly specify the id property in the properties_list, in which "
+"case its value is taken from the corresponding select expression, or omit it "
+"from the properties_list, in which case a generated value is used. This "
+"latter option is only available when using id generators that operate in the "
+"database; attempting to use this option with any \"in memory\" type "
+"generators will cause an exception during parsing. For the purposes of this "
+"discussion, in-database generators are considered to be <literal>org."
+"hibernate.id.SequenceGenerator</literal> (and its subclasses) and any "
+"implementers of <literal>org.hibernate.id.PostInsertIdentifierGenerator</"
+"literal>. The most notable exception here is <literal>org.hibernate.id."
+"TableHiLoGenerator</literal>, which cannot be used because it does not "
+"expose a selectable way to get its values."
+msgstr ""
+"Bei der id-Property bietet die Einfügungsanweisung zwei Möglichkeiten. Sie "
+"können die Property entweder explizit in der properties_list festlegen (in "
+"diesem Fall wird deren Wert vom zugehörigen Auswahlausdruck genommen) oder "
+"sie aus von der properties_list löschen (in diesem Fall wird ein generierter "
+"Wert verwendet). Diese letztere Option ist nur verfügbar, wenn innerhalb der "
+"Datenbank operierende id-Generatoren verwendet werden. Der Versuch diese "
+"Option mit jeglichen \"in memory\"-Typen zu verwenden führt während des "
+"Parsens zu einer Ausnahmemeldung. Bitte beachten Sie, dass in diesem "
+"Zusammenhang Generatoren innerhalb der Datenbank als <literal>org.hibernate."
+"id.SequenceGenerator</literal> (und dessen Subklassen) sowie jegliche "
+"Implementierungen von <literal>org.hibernate.id."
+"PostInsertIdentifierGenerator</literal> angesehen werden. Die wohl "
+"wichtigste Ausnahme ist hier <literal>org.hibernate.id.TableHiLoGenerator</"
+"literal>, der nicht gewählt werden kann, da er keine wählbare Weise bietet, "
+"um an seine Werte zu gelangen."
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"For properties mapped as either <literal>version</literal> or "
+"<literal>timestamp</literal>, the insert statement gives you two options. "
+"You can either specify the property in the properties_list, in which case "
+"its value is taken from the corresponding select expressions, or omit it "
+"from the properties_list, in which case the <literal>seed value</literal> "
+"defined by the <literal>org.hibernate.type.VersionType</literal> is used."
+msgstr ""
+"Für entweder als <literal>version</literal> oder <literal>timestamp</"
+"literal> gemappte Properties bietet die Einfügungsanweisung zwei Optionen. "
+"Sie können die Property entweder explizit in der properties_list festlegen "
+"(in diesem Fall wird deren Wert vom zugehörigen Auswahlausdruck genommen) "
+"oder sie aus von der properties_list löschen (in diesem Fall wird der durch "
+"<literal>org.hibernate.type.VersionType</literal> definierte <literal>seed "
+"value</literal> verwendet)."
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"The following is an example of an HQL <literal>INSERT</literal> statement "
+"execution:"
+msgstr ""
+"Ein Beispiel für die Ausführung einer HQL <literal>INSERT</literal>-"
+"Anweisung:"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[Session session = sessionFactory.openSession();\n"
+#~ "Transaction tx = session.beginTransaction();\n"
+#~ "for ( int i=0; i<100000; i++ ) {\n"
+#~ "    Customer customer = new Customer(.....);\n"
+#~ "    session.save(customer);\n"
+#~ "}\n"
+#~ "tx.commit();\n"
+#~ "session.close();]]>"
+#~ msgstr ""
+#~ "Session session = sessionFactory.openSession();\n"
+#~ "Transaction tx = session.beginTransaction();\n"
+#~ "for ( int i=0; i&lt;100000; i++ ) {\n"
+#~ "    Customer customer = new Customer(.....);\n"
+#~ "    session.save(customer);\n"
+#~ "}\n"
+#~ "tx.commit();\n"
+#~ "session.close();"
+
+#, fuzzy
+#~ msgid "<![CDATA[hibernate.jdbc.batch_size 20]]>"
+#~ msgstr "hibernate.jdbc.batch_size 20"
+
+#, fuzzy
+#~ msgid "<![CDATA[hibernate.cache.use_second_level_cache false]]>"
+#~ msgstr "hibernate.cache.use_second_level_cache false"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[Session session = sessionFactory.openSession();\n"
+#~ "Transaction tx = session.beginTransaction();\n"
+#~ "   \n"
+#~ "for ( int i=0; i<100000; i++ ) {\n"
+#~ "    Customer customer = new Customer(.....);\n"
+#~ "    session.save(customer);\n"
+#~ "    if ( i % 20 == 0 ) { //20, same as the JDBC batch size\n"
+#~ "        //flush a batch of inserts and release memory:\n"
+#~ "        session.flush();\n"
+#~ "        session.clear();\n"
+#~ "    }\n"
+#~ "}\n"
+#~ "   \n"
+#~ "tx.commit();\n"
+#~ "session.close();]]>"
+#~ msgstr ""
+#~ "Session session = sessionFactory.openSession();\n"
+#~ "Transaction tx = session.beginTransaction();\n"
+#~ "   \n"
+#~ "for ( int i=0; i&lt;100000; i++ ) {\n"
+#~ "    Customer customer = new Customer(.....);\n"
+#~ "    session.save(customer);\n"
+#~ "    if ( i &#37; 20 == 0 ) { //20, same as the JDBC batch size\n"
+#~ "        //flush a batch of inserts and release memory:\n"
+#~ "        session.flush();\n"
+#~ "        session.clear();\n"
+#~ "    }\n"
+#~ "}\n"
+#~ "   \n"
+#~ "tx.commit();\n"
+#~ "session.close();"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[Session session = sessionFactory.openSession();\n"
+#~ "Transaction tx = session.beginTransaction();\n"
+#~ "   \n"
+#~ "ScrollableResults customers = session.getNamedQuery(\"GetCustomers\")\n"
+#~ "    .setCacheMode(CacheMode.IGNORE)\n"
+#~ "    .scroll(ScrollMode.FORWARD_ONLY);\n"
+#~ "int count=0;\n"
+#~ "while ( customers.next() ) {\n"
+#~ "    Customer customer = (Customer) customers.get(0);\n"
+#~ "    customer.updateStuff(...);\n"
+#~ "    if ( ++count % 20 == 0 ) {\n"
+#~ "        //flush a batch of updates and release memory:\n"
+#~ "        session.flush();\n"
+#~ "        session.clear();\n"
+#~ "    }\n"
+#~ "}\n"
+#~ "   \n"
+#~ "tx.commit();\n"
+#~ "session.close();]]>"
+#~ msgstr ""
+#~ "Session session = sessionFactory.openSession();\n"
+#~ "Transaction tx = session.beginTransaction();\n"
+#~ "   \n"
+#~ "ScrollableResults customers = session.getNamedQuery(\"GetCustomers\")\n"
+#~ "    .setCacheMode(CacheMode.IGNORE)\n"
+#~ "    .scroll(ScrollMode.FORWARD_ONLY);\n"
+#~ "int count=0;\n"
+#~ "while ( customers.next() ) {\n"
+#~ "    Customer customer = (Customer) customers.get(0);\n"
+#~ "    customer.updateStuff(...);\n"
+#~ "    if ( ++count &#37; 20 == 0 ) {\n"
+#~ "        //flush a batch of updates and release memory:\n"
+#~ "        session.flush();\n"
+#~ "        session.clear();\n"
+#~ "    }\n"
+#~ "}\n"
+#~ "   \n"
+#~ "tx.commit();\n"
+#~ "session.close();"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[StatelessSession session = sessionFactory.openStatelessSession"
+#~ "();\n"
+#~ "Transaction tx = session.beginTransaction();\n"
+#~ "   \n"
+#~ "ScrollableResults customers = session.getNamedQuery(\"GetCustomers\")\n"
+#~ "    .scroll(ScrollMode.FORWARD_ONLY);\n"
+#~ "while ( customers.next() ) {\n"
+#~ "    Customer customer = (Customer) customers.get(0);\n"
+#~ "    customer.updateStuff(...);\n"
+#~ "    session.update(customer);\n"
+#~ "}\n"
+#~ "   \n"
+#~ "tx.commit();\n"
+#~ "session.close();]]>"
+#~ msgstr ""
+#~ "StatelessSession session = sessionFactory.openStatelessSession();\n"
+#~ "Transaction tx = session.beginTransaction();\n"
+#~ "   \n"
+#~ "ScrollableResults customers = session.getNamedQuery(\"GetCustomers\")\n"
+#~ "    .scroll(ScrollMode.FORWARD_ONLY);\n"
+#~ "while ( customers.next() ) {\n"
+#~ "    Customer customer = (Customer) customers.get(0);\n"
+#~ "    customer.updateStuff(...);\n"
+#~ "    session.update(customer);\n"
+#~ "}\n"
+#~ "   \n"
+#~ "tx.commit();\n"
+#~ "session.close();"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[Session session = sessionFactory.openSession();\n"
+#~ "Transaction tx = session.beginTransaction();\n"
+#~ "\n"
+#~ "String hqlUpdate = \"update Customer c set c.name = :newName where c.name "
+#~ "= :oldName\";\n"
+#~ "// or String hqlUpdate = \"update Customer set name = :newName where name "
+#~ "= :oldName\";\n"
+#~ "int updatedEntities = s.createQuery( hqlUpdate )\n"
+#~ "        .setString( \"newName\", newName )\n"
+#~ "        .setString( \"oldName\", oldName )\n"
+#~ "        .executeUpdate();\n"
+#~ "tx.commit();\n"
+#~ "session.close();]]>"
+#~ msgstr ""
+#~ "Session session = sessionFactory.openSession();\n"
+#~ "Transaction tx = session.beginTransaction();\n"
+#~ "\n"
+#~ "String hqlUpdate = \"update Customer c set c.name = :newName where c.name "
+#~ "= :oldName\";\n"
+#~ "// or String hqlUpdate = \"update Customer set name = :newName where name "
+#~ "= :oldName\";\n"
+#~ "int updatedEntities = s.createQuery( hqlUpdate )\n"
+#~ "        .setString( \"newName\", newName )\n"
+#~ "        .setString( \"oldName\", oldName )\n"
+#~ "        .executeUpdate();\n"
+#~ "tx.commit();\n"
+#~ "session.close();"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[Session session = sessionFactory.openSession();\n"
+#~ "Transaction tx = session.beginTransaction();\n"
+#~ "String hqlVersionedUpdate = \"update versioned Customer set name = :"
+#~ "newName where name = :oldName\";\n"
+#~ "int updatedEntities = s.createQuery( hqlUpdate )\n"
+#~ "        .setString( \"newName\", newName )\n"
+#~ "        .setString( \"oldName\", oldName )\n"
+#~ "        .executeUpdate();\n"
+#~ "tx.commit();\n"
+#~ "session.close();]]>"
+#~ msgstr ""
+#~ "Session session = sessionFactory.openSession();\n"
+#~ "Transaction tx = session.beginTransaction();\n"
+#~ "String hqlVersionedUpdate = \"update versioned Customer set name = :"
+#~ "newName where name = :oldName\";\n"
+#~ "int updatedEntities = s.createQuery( hqlUpdate )\n"
+#~ "        .setString( \"newName\", newName )\n"
+#~ "        .setString( \"oldName\", oldName )\n"
+#~ "        .executeUpdate();\n"
+#~ "tx.commit();\n"
+#~ "session.close();"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[Session session = sessionFactory.openSession();\n"
+#~ "Transaction tx = session.beginTransaction();\n"
+#~ "\n"
+#~ "String hqlDelete = \"delete Customer c where c.name = :oldName\";\n"
+#~ "// or String hqlDelete = \"delete Customer where name = :oldName\";\n"
+#~ "int deletedEntities = s.createQuery( hqlDelete )\n"
+#~ "        .setString( \"oldName\", oldName )\n"
+#~ "        .executeUpdate();\n"
+#~ "tx.commit();\n"
+#~ "session.close();]]>"
+#~ msgstr ""
+#~ "Session session = sessionFactory.openSession();\n"
+#~ "Transaction tx = session.beginTransaction();\n"
+#~ "\n"
+#~ "String hqlDelete = \"delete Customer c where c.name = :oldName\";\n"
+#~ "// or String hqlDelete = \"delete Customer where name = :oldName\";\n"
+#~ "int deletedEntities = s.createQuery( hqlDelete )\n"
+#~ "        .setString( \"oldName\", oldName )\n"
+#~ "        .executeUpdate();\n"
+#~ "tx.commit();\n"
+#~ "session.close();"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[Session session = sessionFactory.openSession();\n"
+#~ "Transaction tx = session.beginTransaction();\n"
+#~ "\n"
+#~ "String hqlInsert = \"insert into DelinquentAccount (id, name) select c."
+#~ "id, c.name from Customer c where ...\";\n"
+#~ "int createdEntities = s.createQuery( hqlInsert )\n"
+#~ "        .executeUpdate();\n"
+#~ "tx.commit();\n"
+#~ "session.close();]]>"
+#~ msgstr ""
+#~ "Session session = sessionFactory.openSession();\n"
+#~ "Transaction tx = session.beginTransaction();\n"
+#~ "\n"
+#~ "String hqlInsert = \"insert into DelinquentAccount (id, name) select c."
+#~ "id, c.name from Customer \n"
+#~ "    c where ...\";\n"
+#~ "int createdEntities = s.createQuery( hqlInsert )\n"
+#~ "        .executeUpdate();\n"
+#~ "tx.commit();\n"
+#~ "session.close();"

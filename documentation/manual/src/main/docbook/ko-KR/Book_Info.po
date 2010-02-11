@@ -1,0 +1,29 @@
+# 
+# AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: 0\n"
+"POT-Creation-Date: 2010-02-04T04:51:21\n"
+"PO-Revision-Date: 2010-02-04T04:51:21\n"
+"Last-Translator: Automatically generated\n"
+"Language-Team: None\n"
+"MIME-Version: 1.0\n"
+"Content-Type: application/x-publican; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. Tag: title
+#, no-c-format
+msgid "HIBERNATE - Relational Persistence for Idiomatic Java"
+msgstr ""
+
+#. Tag: subtitle
+#, no-c-format
+msgid "Hibernate Reference Documentation"
+msgstr ""
+
+#. Tag: releaseinfo
+#, no-c-format
+msgid "&versionNumber;"
+msgstr ""
+

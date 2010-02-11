@@ -1,0 +1,22 @@
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
+<!ENTITY % BOOK_ENTITIES SYSTEM "Hibernate_Envers_-_Easy_Entity_Auditing.ent">
+%BOOK_ENTITIES;        
+]>
+
+
+   <bookinfo id="Hibernate_Envers_-_Easy_Entity_Auditing.xml">
+        <title>Hibernate Envers - Easy Entity Auditing</title>
+        <subtitle>Hibernate Envers Reference Documentation</subtitle>
+        <releaseinfo>&versionNumber;</releaseinfo>
+	<edition>1.0</edition>
+	<pubsnumber>1</pubsnumber>
+        <productname>JBoss Hibernate Envers</productname>
+        <productnumber>&versionNumber;</productnumber>
+        <issuenum>1</issuenum>
+        <copyright>
+            <year>&copyrightYear;</year>
+            <holder>&copyrightHolder;</holder>
+        </copyright>
+        <xi:include href="legal_notice.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+	<!-- include translators... -->
+    </bookinfo>

@@ -23,7 +23,10 @@
   ~ Boston, MA  02110-1301  USA
   -->
 
-<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
+<!ENTITY % BOOK_ENTITIES SYSTEM "../Hibernate_Envers_-_Easy_Entity_Auditing.ent">
+%BOOK_ENTITIES;
+]>
 
 <chapter id="migration">
     <title>Migration from Envers standalone</title>
@@ -39,7 +42,7 @@
         with Oracle and other databases, which don't allow tables and field names to start with "_".
     </para>
 
-    <sect1 id="migrations-code">
+    <section id="migrations-code">
 
         <title>Changes to code</title>
 
@@ -54,9 +57,9 @@
             projections and order. Please refer to the Javadoc for further details.
         </para>
 
-    </sect1>
+    </section>
 
-    <sect1 id="migrations-configuration">
+    <section id="migrations-configuration">
 
         <title>Changes to configuration</title>
 
@@ -111,9 +114,9 @@
             See <xref linkend="configuration"/> for details on the configuration and a description of the
             configuration options.
         </para>
-    </sect1>
+    </section>
 
-    <sect1 id="migrations-revisionlog">
+    <section id="migrations-revisionlog">
 
         <title>Changes to the revision entity</title>
 
@@ -153,5 +156,5 @@ public class ExampleRevEntity {
     // Getters, setters, equals, hashCode ...
 }]]></programlisting>
 
-    </sect1>
+    </section>
 </chapter>

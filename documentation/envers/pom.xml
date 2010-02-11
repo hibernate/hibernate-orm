@@ -23,7 +23,7 @@
                 <groupId>org.jboss.maven.plugins</groupId>
                 <artifactId>maven-jdocbook-plugin</artifactId>
                 <configuration>
-                    <sourceDocumentName>Envers_Reference.xml</sourceDocumentName>
+                    <sourceDocumentName>Hibernate_Envers_-_Easy_Entity_Auditing.xml</sourceDocumentName>
                     <masterTranslation>en-US</masterTranslation>
                     <imageResource>
                         <directory>${basedir}/src/main/docbook/en-US</directory>

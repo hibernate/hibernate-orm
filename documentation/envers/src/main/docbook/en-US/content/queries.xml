@@ -23,7 +23,10 @@
   ~ Boston, MA  02110-1301  USA
   -->
 
-<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
+<!ENTITY % BOOK_ENTITIES SYSTEM "../Hibernate_Envers_-_Easy_Entity_Auditing.ent">
+%BOOK_ENTITIES;
+]>
 
 <chapter id="queries">
 
@@ -55,7 +58,7 @@
         than corresponding queries on "live" data, as they involve correlated subselects.
     </para>
 
-    <sect1 id="entities-at-revision">
+    <section id="entities-at-revision">
 
         <title>Querying for entities of a class at a given revision</title>
 
@@ -101,9 +104,9 @@ query.add(AuditEntity.relatedId("address").eq(relatedEntityId));]]></programlist
     .setMaxResults(2)
     .getResultList();]]></programlisting>
 
-    </sect1>
+    </section>
 
-    <sect1 id="revisions-of-entity">
+    <section id="revisions-of-entity">
 
         <title>Querying for revisions, at which entities of a given class changed</title>
 
@@ -121,17 +124,23 @@ query.add(AuditEntity.relatedId("address").eq(relatedEntityId));]]></programlist
 
         <orderedlist>
             <listitem>
+                <para>
                 using <literal>AuditEntity.revisionNumber()</literal> you can specify constraints, projections
                 and order on the revision number, in which the audited entity was modified
+                </para>
             </listitem>
             <listitem>
+                <para>
                 similarly, using <literal>AuditEntity.revisionProperty(propertyName)</literal> you can specify constraints,
                 projections and order on a property of the revision entity, corresponding to the revision
                 in which the audited entity was modified
+                </para>
             </listitem>
             <listitem>
+                <para>
                 <literal>AuditEntity.revisionType()</literal> gives you access as above to the type of
                 the revision (ADD, MOD, DEL).
+                </para>
             </listitem>
         </orderedlist>
 
@@ -198,6 +207,6 @@ query.add(AuditEntity.relatedId("address").eq(relatedEntityId));]]></programlist
             <literal>null</literal>.
         </para>
 
-    </sect1>
+    </section>
 
 </chapter>

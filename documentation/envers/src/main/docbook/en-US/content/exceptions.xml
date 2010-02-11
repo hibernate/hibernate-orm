@@ -23,12 +23,15 @@
   ~ Boston, MA  02110-1301  USA
   -->
 
-<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
+<!ENTITY % BOOK_ENTITIES SYSTEM "../Hibernate_Envers_-_Easy_Entity_Auditing.ent">
+%BOOK_ENTITIES;
+]>
 
 <chapter id="exceptions">
     <title>Mapping exceptions</title>
 
-    <sect1 id="exceptions-wontbesupported">
+    <section id="exceptions-wontbesupported">
 
         <title>What isn't and will not be supported</title>
 
@@ -59,9 +62,9 @@
             </listitem>
         </orderedlist>
 
-    </sect1>
+    </section>
 
-    <sect1 id="exceptions-willbesupported" revision="2">
+    <section id="exceptions-willbesupported" revision="2">
 
         <title>What isn't and <emphasis>will</emphasis> be supported</title>
 
@@ -73,9 +76,9 @@
             </listitem>
         </orderedlist>
 
-    </sect1>
+    </section>
 
-    <sect1 id="exceptions-onetomanyjoincolumn" revision="3">
+    <section id="exceptions-onetomanyjoincolumn" revision="3">
 
         <title><literal>@OneToMany</literal>+<literal>@JoinColumn</literal></title>
 
@@ -106,6 +109,6 @@
             Envers works. Please note that the annotation is experimental and may change in the future.
         </para>
 
-    </sect1>
+    </section>
 
 </chapter>

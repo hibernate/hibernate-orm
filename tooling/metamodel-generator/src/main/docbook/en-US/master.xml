@@ -1,0 +1,283 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- $Id$ -->
+<!--
+	~ JBoss, Home of Professional Open Source
+	~ Copyright 2010, Red Hat, Inc. and/or its affiliates, and individual contributors
+	~ by the @authors tag. See the copyright.txt in the distribution for a
+	~ full listing of individual contributors.
+	~
+	~ Licensed under the Apache License, Version 2.0 (the "License");
+	~ you may not use this file except in compliance with the License.
+	~ You may obtain a copy of the License at
+	~ http://www.apache.org/licenses/LICENSE-2.0
+	~ Unless required by applicable law or agreed to in writing, software
+	~ distributed under the License is distributed on an "AS IS" BASIS,
+	~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+	~ See the License for the specific language governing permissions and
+	~ limitations under the License.
+-->
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
+"http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
+<!ENTITY versionNumber "1.0.0">
+<!ENTITY copyrightYear "2010">
+<!ENTITY copyrightHolder "Red Hat Middleware, LLC.">
+]>
+<book lang="en">
+  <bookinfo>
+    <title>Hibernate Metamodel Generator</title>
+
+    <subtitle>JPA 2 Static Metamodel Annotation Processor</subtitle>
+
+    <subtitle>Reference Guide</subtitle>
+
+    <releaseinfo>&versionNumber;</releaseinfo>
+
+    <productnumber>&versionNumber;</productnumber>
+
+    <copyright>
+      <year>&copyrightYear;</year>
+
+      <holder>&copyrightHolder;</holder>
+    </copyright>
+  </bookinfo>
+
+  <toc></toc>
+
+  <chapter id="introduction">
+    <title>Introduction</title>
+
+    <section id="whatisit" revision="1">
+      <title>What is it about?</title>
+
+      <para>Hibernate Static Metamodel Generator is an annotation processor
+      with the task of creating the static metamodel classes for JPA 2
+      entities. In the following I will show how to integrate the annotation
+      processor into your build environment.</para>
+    </section>
+
+    <section id="installation" revision="1">
+      <title>Installation</title>
+
+      <para><section revision="1">
+          <title>Prerequisites</title>
+
+          <para />
+        </section></para>
+    </section>
+  </chapter>
+
+  <chapter>
+    <title>Usage</title>
+
+    <para>In most cases the annotation processor will automatically run
+    provided the annotation processor jar is on the classpath. This happens
+    due to Java's Service Provider contract and the fact the the Hibernate
+    Static Metamodel Generator jar files contains the file
+    <classname>javax.annotation.processing.Processor</classname> in the
+    <filename>META-INF/services</filename> listing
+    <classname>org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor</classname>
+    as annotation processor.</para>
+
+    <section>
+      <title>Usage from the command line</title>
+
+      <para><section revision="1">
+          <title>Usage with Ant</title>
+        </section>As mentioned before, the annotation processor will run
+      automatically in a Java 6 environment. In case you want configure the
+      processor explicitly or disable it you can use the compilerarg option of
+      the Javac Task. The supported command javac line options are listed
+      here. <section revision="1">
+          <title>Usage with Maven</title>
+        </section>There are several ways of running the annotation processor
+      as part of a Maven build. It will automatically run if you are using a
+      JDK 6 compiler and the annotation processor jar is on the classpath. In
+      case you have more than one annotation processors on your classpath you
+      can explicitly pass the processor option to the compiler plugin:</para>
+
+      <para><example>
+          <title>Maven compiler plugin configuration - direct
+          execution</title>
+
+          <programlisting>&lt;plugin&gt;
+    &lt;artifactId&gt;maven-compiler-plugin&lt;/artifactId&gt;
+    &lt;configuration&gt;
+        &lt;source&gt;1.6&lt;/source&gt;
+        &lt;target&gt;1.6&lt;/target&gt;
+        &lt;compilerArguments&gt;
+            &lt;processor&gt;org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor&lt;/processor&gt;
+        &lt;/compilerArguments&gt;
+    &lt;/configuration&gt;
+&lt;/plugin&gt;</programlisting>
+        </example></para>
+
+      <para>The maven-compiler-plugin approach has the disadvantage that the
+      maven compiler plugin does currently not allow to specify multiple
+      compiler arguments (MCOMPILER-62) and that messages from the Messenger
+      API are suppressed (MCOMPILER-66). A better approach is to disable
+      annotation processing for the compiler plugin:</para>
+
+      <example>
+        <title>Maven compiler plugin configuration - indirect
+        execution</title>
+
+        <programlisting>&lt;plugin&gt;
+    &lt;artifactId&gt;maven-compiler-plugin&lt;/artifactId&gt;
+    &lt;configuration&gt;
+        &lt;source&gt;1.6&lt;/source&gt;
+        &lt;target&gt;1.6&lt;/target&gt;
+        &lt;compilerArgument&gt;-proc:none&lt;/compilerArgument&gt;
+    &lt;/configuration&gt;
+&lt;/plugin&gt;</programlisting>
+      </example>
+
+      <para>and use the maven-annotation-plugin for annotation processing (you
+      will need the following additional maven repositories -
+      maven-annotation-plugin and jfrog):</para>
+
+      <example>
+        <title>Maven compiler plugin configuration with
+        maven-annotation-plugin</title>
+
+        <programlisting>&lt;plugin&gt;
+    &lt;groupId&gt;org.bsc.maven&lt;/groupId&gt;
+    &lt;artifactId&gt;maven-processor-plugin&lt;/artifactId&gt;
+    &lt;executions&gt;
+        &lt;execution&gt;
+            &lt;id&gt;process&lt;/id&gt;
+            &lt;goals&gt;
+                &lt;goal&gt;process&lt;/goal&gt;
+            &lt;/goals&gt;
+            &lt;phase&gt;generate-sources&lt;/phase&gt;
+            &lt;configuration&gt;
+                &lt;!-- source output directory --&gt;
+                &lt;outputDirectory&gt;target/metamodel&lt;/outputDirectory&gt;
+            &lt;/configuration&gt;
+        &lt;/execution&gt;
+    &lt;/executions&gt;
+&lt;/plugin&gt;
+&lt;plugin&gt;
+    &lt;groupId&gt;org.codehaus.mojo&lt;/groupId&gt;
+    &lt;artifactId&gt;build-helper-maven-plugin&lt;/artifactId&gt;
+    &lt;version&gt;1.3&lt;/version&gt;
+    &lt;executions&gt;
+        &lt;execution&gt;
+            &lt;id&gt;add-source&lt;/id&gt;
+            &lt;phase&gt;generate-sources&lt;/phase&gt;
+            &lt;goals&gt;
+                &lt;goal&gt;add-source&lt;/goal&gt;
+            &lt;/goals&gt;
+            &lt;configuration&gt;
+                &lt;sources&gt;
+                    &lt;source&gt;target/metamodel&lt;/source&gt;
+                &lt;/sources&gt;
+            &lt;/configuration&gt;
+        &lt;/execution&gt;
+    &lt;/executions&gt;
+&lt;/plugin&gt;</programlisting>
+      </example>
+    </section>
+
+    <section>
+      <title>Usage within the IDE</title>
+
+      <section>
+        <title>Idea</title>
+
+        <mediaobject>
+          <imageobject role="fo">
+            <imagedata align="center" contentdepth="" contentwidth="150mm"
+                       fileref="idea-annotation-processor-config.png"
+                       scalefit="" />
+          </imageobject>
+
+          <imageobject role="html">
+            <imagedata depth="" fileref="idea-annotation-processor-config.png"
+                       scalefit="1" />
+          </imageobject>
+        </mediaobject>
+
+        <para></para>
+      </section>
+
+      <section>
+        <title>Eclipse</title>
+
+        <mediaobject>
+          <imageobject role="fo">
+            <imagedata align="center" contentdepth="" contentwidth="150mm"
+                       fileref="eclipse-annotation-processor-config.png"
+                       scalefit="" />
+          </imageobject>
+
+          <imageobject role="html">
+            <imagedata depth=""
+                       fileref="eclipse-annotation-processor-config.png"
+                       scalefit="1" />
+          </imageobject>
+        </mediaobject>
+      </section>
+
+      <section>
+        <title>NetBeans</title>
+
+        <para>Of course you also want to have annotation processing available
+        in your favorite IDE. In Eclipse (at least since the latest Galileo
+        release) exists an additional configuration section under Java
+        Compiler where you can configure all kinds of aspects of annotation
+        processing. Just check the "Enable annotation processing" option,
+        configure the directory for the generated sources and finally add the
+        Hibernate Static Metamodel Generator and JPA 2 jar files to the
+        factory path.</para>
+      </section>
+    </section>
+
+    <section>
+      <title>Options</title>
+
+      <para>The annotaton processor accepts a series of custom properties
+      which can be passed to the processor execution in the format
+      <literal>-A[property]=[value]</literal>. The supported properties
+      are:<table>
+          <title>Annotation processor options (passed via
+          -A[property]=[value])</title>
+
+          <tgroup cols="2">
+            <tbody>
+              <row>
+                <entry>Option name</entry>
+
+                <entry>Option value and usage</entry>
+              </row>
+
+              <row>
+                <entry>debug</entry>
+
+                <entry>if set to <literal>true</literal> additional trace
+                information will be outputted by the processor</entry>
+              </row>
+
+              <row>
+                <entry>persistenceXml</entry>
+
+                <entry>Per default the processor looks in
+                <filename>/META-INF</filename> for persistence.xml. Specifying
+                this option a <filename>persitence.xml</filename> file from a
+                different location can be specified (has to be on the
+                classpath)</entry>
+              </row>
+
+              <row>
+                <entry>ormXml</entry>
+
+                <entry>Allows to specify additional entity mapping files. The
+                specified value for this option is a comma separated string of
+                mapping file names. Even when this option is specified
+                <filename>/META-INF/orm.xml</filename> is implicit.</entry>
+              </row>
+            </tbody>
+          </tgroup>
+        </table></para>
+    </section>
+  </chapter>
+</book>

@@ -1,32 +1,34 @@
+# translation of Collection_Mapping.po to
+# Xi Huang <xhuang@redhat.com>, 2006.
+# Xi HUANG <xhuang@redhat.com>, 2007.
 msgid ""
 msgstr ""
-"Project-Id-Version: PACKAGE VERSION\n"
+"Project-Id-Version: Collection_Mapping\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2009-07-14 19:55+0000\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
-"Language-Team: LANGUAGE <LL@li.org>\n"
+"POT-Creation-Date: 2010-02-11T05:38:15\n"
+"PO-Revision-Date: 2009-11-06 10:05+1000\n"
+"Last-Translator: Xi HUANG <xhuang@redhat.com>\n"
+"Language-Team:  <en@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"X-Generator: KBabel 1.11.4\n"
 
 #. Tag: title
-#: best_practices.xml:29
 #, no-c-format
 msgid "Best Practices"
-msgstr "最佳实践(Best Practices)"
+msgstr "最佳实践（Best Practices）"
 
 #. Tag: term
-#: best_practices.xml:33
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "Write fine-grained classes and map them using <literal>&lt;component&gt;</"
 "literal>:"
 msgstr ""
-"设计细颗粒度的持久类并且使用<literal>&lt;component&gt;</literal>来实现映射。"
+"设计细颗粒度的持久类并且使用 <literal>&lt;component&gt;</literal> 来实现映"
+"射："
 
 #. Tag: para
-#: best_practices.xml:35
 #, no-c-format
 msgid ""
 "Use an <literal>Address</literal> class to encapsulate <literal>street</"
@@ -34,35 +36,31 @@ msgid ""
 "<literal>postcode</literal>. This encourages code reuse and simplifies "
 "refactoring."
 msgstr ""
-"使用一个<literal>Address</literal>持久类来封装 <literal>street</literal>, "
-"<literal>suburb</literal>, <literal>state</literal>, <literal>postcode</"
-"literal>. 这将有利于代码重用和简化代码重构(refactoring)的工作。"
+"使用一个 <literal>Address</literal> 持久类来封装　<literal>street</literal>，"
+"<literal>suburb</literal>，<literal>state</literal>，<literal>postcode</"
+"literal>。 这将有利于代码重用和简化代码重构（refactoring）的工作。"
 
 #. Tag: term
-#: best_practices.xml:43
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "Declare identifier properties on persistent classes:"
-msgstr "对持久类声明标识符属性( identifier properties)。"
+msgstr "对持久类声明标识符属性（identifier properties）："
 
 #. Tag: para
-#: best_practices.xml:45
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "Hibernate makes identifier properties optional. There are a range of reasons "
 "why you should use them. We recommend that identifiers be 'synthetic', that "
 "is, generated with no business meaning."
 msgstr ""
-"Hibernate中标识符属性是可选的，不过有很多原因来说明你应该使用标识符属性。我们"
-"建议标识符应该是“人造”的(自动生成，不涉及业务含义)。"
+"Hibernate 中标识符属性是可选的，不过有很多原因来说明你应该使用标识符属性。我"
+"们建议标识符应该是“人造”的（自动生成，不涉及业务含义）。 "
 
 #. Tag: term
-#: best_practices.xml:53
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "Identify natural keys:"
-msgstr "使用自然键(natural keys)标识"
+msgstr "使用自然键（natural keys）标识："
 
 #. Tag: para
-#: best_practices.xml:55
 #, no-c-format
 msgid ""
 "Identify natural keys for all entities, and map them using <literal>&lt;"
@@ -70,102 +68,90 @@ msgid ""
 "<literal>hashCode()</literal> to compare the properties that make up the "
 "natural key."
 msgstr ""
-"对所有的实体都标识出自然键，用<literal>&lt;natural-id&gt;</literal>进行映射。"
-"实现<literal>equals()</literal>和<literal>hashCode()</literal>，在其中用组成"
-"自然键的属性进行比较。"
+"对所有的实体都标识出自然键，用 <literal>&lt;natural-id&gt;</literal> 进行映"
+"射。实现 <literal>equals()</literal> 和 <literal>hashCode()</literal>，在其中"
+"用组成自然键的属性进行比较。"
 
 #. Tag: term
-#: best_practices.xml:63
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "Place each class mapping in its own file:"
-msgstr "为每个持久类写一个映射文件"
+msgstr "为每个持久类写一个映射文件："
 
 #. Tag: para
-#: best_practices.xml:65
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "Do not use a single monolithic mapping document. Map <literal>com.eg.Foo</"
 "literal> in the file <literal>com/eg/Foo.hbm.xml</literal>. This makes "
 "sense, particularly in a team environment."
 msgstr ""
 "不要把所有的持久类映射都写到一个大文件中。把 <literal>com.eg.Foo</literal> 映"
-"射到<literal>com/eg/Foo.hbm.xml</literal>中， 在团队开发环境中，这一点显得特"
-"别有意义。"
+"射到 <literal>com/eg/Foo.hbm.xml</literal> 中。在团队开发环境中，这一点尤其重"
+"要。"
 
 #. Tag: term
-#: best_practices.xml:73
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "Load mappings as resources:"
-msgstr "把映射文件作为资源加载"
+msgstr "把映射文件作为资源加载："
 
 #. Tag: para
-#: best_practices.xml:75
 #, no-c-format
 msgid "Deploy the mappings along with the classes they map."
 msgstr "把映射文件和他们的映射类放在一起进行部署。"
 
 #. Tag: term
-#: best_practices.xml:81
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "Consider externalizing query strings:"
-msgstr "考虑把查询字符串放在程序外面"
+msgstr "考虑把查询字符串放在程序外面："
 
 #. Tag: para
-#: best_practices.xml:83
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "This is recommended if your queries call non-ANSI-standard SQL functions. "
 "Externalizing the query strings to mapping files will make the application "
 "more portable."
 msgstr ""
-"如果你的查询中调用了非ANSI标准的SQL函数，那么这条实践经验对你适用。把查询字符"
-"串放在映射文件中可以让程序具有更好的可移植性。"
+"如果你的查询中调用了非 ANSI 标准的 SQL 函数，那么这条实践经验对你适用。把查询"
+"字符串放在映射文件中可以让程序具有更好的可移植性。 "
 
 #. Tag: term
-#: best_practices.xml:91
 #, no-c-format
 msgid "Use bind variables."
 msgstr "使用绑定变量"
 
 #. Tag: para
-#: best_practices.xml:93
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "As in JDBC, always replace non-constant values by \"?\". Do not use string "
 "manipulation to bind a non-constant value in a query. You should also "
 "consider using named parameters in queries."
 msgstr ""
-"就像在JDBC编程中一样，应该总是用占位符\"?\"来替换非常量值，不要在查询中用字符"
-"串值来构造非常量值！更好的办法是在查询中使用命名参数。"
+"就像在 JDBC 编程中一样，应该总是用占位符 \"?\" 来替换非常量值，不要在查询中用"
+"字符串值来构造非常量值。你也应该考虑在查询中使用命名参数。"
 
 #. Tag: term
-#: best_practices.xml:101
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "Do not manage your own JDBC connections:"
-msgstr "不要自己来管理JDBC connections"
+msgstr "不要自己来管理 JDBC 连接："
 
 #. Tag: para
-#: best_practices.xml:103
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "Hibernate allows the application to manage JDBC connections, but his "
 "approach should be considered a last-resort. If you cannot use the built-in "
 "connection providers, consider providing your own implementation of "
 "<literal>org.hibernate.connection.ConnectionProvider</literal>."
 msgstr ""
-"Hibernate允许应用程序自己来管理JDBC connections，但是应该作为最后没有办法的办"
-"法。如果你不能使用Hibernate内建的connections providers，那么考虑实现自己来实"
-"现<literal>org.hibernate.connection.ConnectionProvider</literal>"
+"Hibernate 允许应用程序自己来管理 JDBC 连接，但是应该作为最后没有办法的办法。"
+"如果你不能使用 Hibernate 内建的 connections providers，那么考虑实现自己来实"
+"现 <literal>org.hibernate.connection.ConnectionProvider</literal>。"
 
 #. Tag: term
-#: best_practices.xml:111
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "Consider using a custom type:"
-msgstr "考虑使用用户自定义类型(custom type)"
+msgstr "考虑使用用户自定义类型（custom type）："
 
 #. Tag: para
-#: best_practices.xml:113
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "Suppose you have a Java type from a library that needs to be persisted but "
 "does not provide the accessors needed to map it as a component. You should "
@@ -173,51 +159,41 @@ msgid ""
 "approach frees the application code from implementing transformations to/"
 "from a Hibernate type."
 msgstr ""
-"假设你有一个Java类型，来自某些类库，需要被持久化，但是该类没有提供映射操作需"
-"要的存取方法。那么你应该考虑实现<literal>org.hibernate.UserType</literal>接"
-"口。这种办法使程序代码写起来更加自如，不再需要考虑类与Hibernate type之间的相"
-"互转换。"
+"假设你有一个 Java 类型，来自某些类库，需要被持久化，但是该类没有提供映射操作"
+"需要的存取方法。那么你应该考虑实现 <literal>org.hibernate.UserType</literal> "
+"接口。这种办法使程序代码写起来更加自如，不再需要考虑类与 Hibernate type 之间"
+"的相互转换。 "
 
 #. Tag: term
-#: best_practices.xml:122
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "Use hand-coded JDBC in bottlenecks:"
-msgstr "在性能瓶颈的地方使用硬编码的JDBC"
+msgstr "在性能瓶颈的地方使用硬编码的 JDBC："
 
 #. Tag: para
-#: best_practices.xml:124
 #, fuzzy, no-c-format
 msgid ""
 "In performance-critical areas of the system, some kinds of operations might "
 "benefit from direct JDBC. Do not assume, however, that JDBC is necessarily "
 "faster. Please wait until you <emphasis>know</emphasis> something is a "
 "bottleneck. If you need to use direct JDBC, you can open a Hibernate "
-"<literal>Session</literal> and usingfile:///usr/share/doc/HTML/en-US/index."
-"html that JDBC connection. This way you can still use the same transaction "
-"strategy and underlying connection provider."
+"<literal>Session</literal>, wrap your JDBC operation as a <literal>org."
+"hibernate.jdbc.Work</literal> object and using that JDBC connection. This "
+"way you can still use the same transaction strategy and underlying "
+"connection provider."
 msgstr ""
-"In performance-critical areas of the system, some kinds of operations might "
-"benefit from direct JDBC. But please, wait until you <emphasis>know</"
-"emphasis> something is a bottleneck. And don't assume that direct JDBC is "
-"necessarily faster. If you need to use direct JDBC, it might be worth "
-"opening a Hibernate <literal>Session</literal> and using that JDBC "
-"connection. That way you can still use the same transaction strategy and "
-"underlying connection provider. 在系统中对性能要求很严格的一些部分，某些操作"
-"也许直接使用JDBC会更好。但是请先<emphasis>确认</emphasis>这的确是一个瓶颈，并"
-"且不要想当然认为JDBC一定会更快。如果确实需要直接使用JDBC，那么最好打开一个 "
-"Hibernate <literal>Session</literal> 然后从 <literal>Session</literal>获得"
-"connection，按照这种办法你仍然可以使用同样的transaction策略和底层的"
-"connection provider。"
+"在系统中对性能要求很严格的一些部分，某些操作也许直接使用 JDBC 会更好。但是请"
+"先<emphasis>确认</emphasis>这的确是一个瓶颈，并且不要想当然认为 JDBC 一定会更"
+"快。如果确实需要直接使用 JDBC，那么最好打开一个 Hibernate <literal>Session</"
+"literal> 然后从 <literal>Session</literal> 获得 connection，按照这种办法你仍"
+"然可以使用同样的 transaction 策略和底层的 connection provider。 "
 
 #. Tag: term
-#: best_practices.xml:134
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "Understand <literal>Session</literal> flushing:"
-msgstr "理解<literal>Session</literal>清洗（ flushing）"
+msgstr "理解 <literal>Session</literal> 冲刷（flushing）："
 
 #. Tag: para
-#: best_practices.xml:136
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "Sometimes the Session synchronizes its persistent state with the database. "
 "Performance will be affected if this process occurs too often. You can "
@@ -225,19 +201,17 @@ msgid ""
 "even by changing the order of queries and other operations within a "
 "particular transaction."
 msgstr ""
-"Session会不时的向数据库同步持久化状态，如果这种操作进行的过于频繁，性能会受到"
-"一定的影响。有时候你可以通过禁止自动flushing，尽量最小化非必要的flushing操"
-"作，或者更进一步，在一个特定的transaction中改变查询和其它操作的顺序。"
+"Session 会不时的向数据库同步持久化状态，如果这种操作进行的过于频繁，性能会受"
+"到一定的影响。有时候你可以通过禁止自动 flushing，尽量最小化非必要的 flushing "
+"操作，或者更进一步，在一个特定的 transaction 中改变查询和其它操作的顺序。 "
 
 #. Tag: term
-#: best_practices.xml:145
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "In a three tiered architecture, consider using detached objects:"
-msgstr "在三层结构中，考虑使用托管对象（detached object）"
+msgstr "在三层结构中，考虑使用脱管对象（detached object）："
 
 #. Tag: para
-#: best_practices.xml:147
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "When using a servlet/session bean architecture, you can pass persistent "
 "objects loaded in the session bean to and from the servlet/JSP layer. Use a "
@@ -245,20 +219,18 @@ msgid ""
 "or <literal>Session.saveOrUpdate()</literal> to synchronize objects with the "
 "database."
 msgstr ""
-"当使用一个servlet / session bean 类型的架构的时候, 你可以把已加载的持久对象在"
-"session bean层和servlet / JSP 层之间来回传递。使用新的session来为每个请求服"
-"务，使用 <literal>Session.merge()</literal> 或者<literal>Session.saveOrUpdate"
-"()</literal>来与数据库同步。"
+"当使用一个 servlet / session bean 类型的架构的时候, 你可以把已加载的持久对象"
+"在 session bean 层和 servlet / JSP 层之间来回传递。使用新的 session 来为每个"
+"请求服务，使用 <literal>Session.merge()</literal> 或者 <literal>Session."
+"saveOrUpdate()</literal> 来与数据库同步。 "
 
 #. Tag: term
-#: best_practices.xml:156
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "In a two tiered architecture, consider using long persistence contexts:"
-msgstr "在两层结构中，考虑使用长持久上下文(long persistence contexts)."
+msgstr "在两层结构中，考虑使用长持久上下文（long persistence contexts）："
 
 #. Tag: para
-#: best_practices.xml:158
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "Database Transactions have to be as short as possible for best scalability. "
 "However, it is often necessary to implement long running "
@@ -273,23 +245,21 @@ msgid ""
 "across more than one application transaction or you will be working with "
 "stale data."
 msgstr ""
-"为了得到最佳的可伸缩性，数据库事务(Database Transaction)应该尽可能的短。但"
-"是，程序常常需要实现长时间运行的<emphasis>“应用程序事务(Application "
-"Transaction)”</emphasis>，包含一个从用户的观点来看的原子操作。这个应用程序事"
-"务可能跨越多次从用户请求到得到反馈的循环。用脱管对象(与session脱离的对象)来实"
-"现应用程序事务是常见的。或者，尤其在两层结构中，把Hibernate Session从JDBC连接"
-"中脱离开，下次需要用的时候再连接上。绝不要把一个Session用在多个应用程序事务"
-"(Application Transaction)中，否则你的数据可能会过期失效。"
+"为了得到最佳的可伸缩性，数据库事务（Database Transaction）应该尽可能的短。但"
+"是，程序常常需要实现长时间运行的<emphasis>“应用程序事务（Application "
+"Transaction）”</emphasis>，包含一个从用户的观点来看的原子操作。这个应用程序事"
+"务可能跨越多次从用户请求到得到反馈的循环。用脱管对象（与 session 脱离的对象）"
+"来实现应用程序事务是常见的。或者，尤其在两层结构中，把 Hibernate Session 从 "
+"JDBC 连接中脱离开，下次需要用的时候再连接上。绝不要把一个 Session 用在多个应"
+"用程序事务（Application Transaction）中，否则你的数据可能会过期失效。"
 
 #. Tag: term
-#: best_practices.xml:172
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "Do not treat exceptions as recoverable:"
-msgstr "不要把异常看成可恢复的"
+msgstr "不要把异常看成可恢复的："
 
 #. Tag: para
-#: best_practices.xml:174
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "This is more of a necessary practice than a \"best\" practice. When an "
 "exception occurs, roll back the <literal>Transaction</literal> and close the "
@@ -300,20 +270,18 @@ msgid ""
 "<literal>Session.get()</literal> or a query instead."
 msgstr ""
 "这一点甚至比“最佳实践”还要重要，这是“必备常识”。当异常发生的时候，必须要回滚 "
-"<literal>Transaction</literal> ，关闭<literal>Session</literal>。如果你不这样"
-"做的话，Hibernate无法保证内存状态精确的反应持久状态。尤其不要使用"
-"<literal>Session.load()</literal>来判断一个给定标识符的对象实例在数据库中是否"
-"存在，应该使用<literal>Session.get()</literal>或者进行一次查询."
+"<literal>Transaction</literal> ，关闭 <literal>Session</literal>。如果你不这"
+"样做的话，Hibernate 无法保证内存状态精确的反应持久状态。尤其不要使用 "
+"<literal>Session.load()</literal> 来判断一个给定标识符的对象实例在数据库中是"
+"否存在，应该使用 <literal>Session.get()</literal> 或者进行一次查询。"
 
 #. Tag: term
-#: best_practices.xml:184
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "Prefer lazy fetching for associations:"
-msgstr "对于关联优先考虑lazy fetching"
+msgstr "对于关联优先考虑 lazy fetching："
 
 #. Tag: para
-#: best_practices.xml:186
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "Use eager fetching sparingly. Use proxies and lazy collections for most "
 "associations to classes that are not likely to be completely held in the "
@@ -323,26 +291,24 @@ msgid ""
 "to a particular use case, use a query with a <literal>left join fetch</"
 "literal>."
 msgstr ""
-"谨慎的使用主动抓取(eager fetching)。对于关联来说，若其目标是无法在第二级缓存"
-"中完全缓存所有实例的类，应该使用代理(proxies)与/或具有延迟加载属性的集合"
-"(lazy collections)。若目标是可以被缓存的，尤其是缓存的命中率非常高的情况下，"
-"应该使用<literal>lazy=\"false\"</literal>，明确的禁止掉eager fetching。如果那"
-"些特殊的确实适合使用join fetch 的场合，请在查询中使用<literal>left join "
-"fetch</literal>。"
+"谨慎的使用主动抓取（eager fetching）。对于关联来说，若其目标是无法在第二级缓"
+"存中完全缓存所有实例的类，应该使用代理（proxies）与/或具有延迟加载属性的集合"
+"（lazy collections）。若目标是可以被缓存的，尤其是缓存的命中率非常高的情况"
+"下，应该使用 <literal>lazy=\"false\"</literal>，明确的禁止掉 eager fetching。"
+"如果那些特殊的确实适合使用 join fetch 的场合，请在查询中使用 <literal>left "
+"join fetch</literal>。 "
 
 #. Tag: term
-#: best_practices.xml:196
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "Use the <emphasis>open session in view</emphasis> pattern, or a disciplined "
 "<emphasis>assembly phase</emphasis> to avoid problems with unfetched data:"
 msgstr ""
-"使用<emphasis>open session in view</emphasis>模式，或者执行严格的<emphasis>装"
-"配期(assembly phase)</emphasis>策略来避免再次抓取数据带来的问题"
+"使用 <emphasis>open session in view</emphasis> 模式，或者执行严格的<emphasis>"
+"装配期（assembly phase）</emphasis>策略来避免再次抓取数据带来的问题："
 
 #. Tag: para
-#: best_practices.xml:201
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "Hibernate frees the developer from writing tedious <emphasis>Data Transfer "
 "Objects</emphasis> (DTO). In a traditional EJB architecture, DTOs serve dual "
@@ -357,24 +323,22 @@ msgid ""
 "objects. This is not a limitation of Hibernate. It is a fundamental "
 "requirement of safe transactional data access."
 msgstr ""
-"Hibernate让开发者们摆脱了繁琐的<emphasis>Data Transfer Objects</emphasis> "
-"(DTO)。在传统的EJB结构中，DTO有双重作用：首先，他们解决了entity bean无法序列"
-"化的问题；其次，他们隐含地定义了一个装配期，在此期间，所有在view层需要用到的"
-"数据，都被抓取、集中到了DTO中，然后控制才被装到表示层。Hibernate终结了第一个"
-"作用。然而，除非你做好了在整个渲染过程中都维护一个打开的持久化上下文(session)"
-"的准备，你仍然需要一个装配期（想象一下，你的业务方法与你的表示层有严格的契"
-"约，数据总是被放置到托管对象中）。这并非是Hibernate的限制！这是实现安全的事务"
-"化数据访问的基本需求。"
+"Hibernate 让开发者们摆脱了繁琐的 <emphasis>Data Transfer Objects</emphasis>"
+"（DTO）。在传统的 EJB 结构中，DTO 有双重作用：首先，他们解决了 entity bean 无"
+"法序列化的问题；其次，他们隐含地定义了一个装配期，在此期间，所有在 view 层需"
+"要用到的数据，都被抓取、集中到了 DTO 中，然后控制才被装到表示层。Hibernate 终"
+"结了第一个作用。然而，除非你做好了在整个渲染过程中都维护一个打开的持久化上下"
+"文（session）的准备，你仍然需要一个装配期（想象一下，你的业务方法与你的表示层"
+"有严格的契约，数据总是被放置到脱管对象中）。这并非是 Hibernate 的限制，这是实"
+"现安全的事务化数据访问的基本需求。"
 
 #. Tag: term
-#: best_practices.xml:215
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "Consider abstracting your business logic from Hibernate:"
-msgstr "考虑把Hibernate代码从业务逻辑代码中抽象出来"
+msgstr "考虑把 Hibernate 代码从业务逻辑代码中抽象出来："
 
 #. Tag: para
-#: best_practices.xml:217
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "Hide Hibernate data-access code behind an interface. Combine the "
 "<emphasis>DAO</emphasis> and <emphasis>Thread Local Session</emphasis> "
@@ -383,21 +347,19 @@ msgid ""
 "however, intended for \"sufficiently large\" applications. It is not "
 "appropriate for an application with five tables."
 msgstr ""
-"把Hibernate的数据存取代码隐藏到接口(interface)的后面，组合使用<emphasis>DAO</"
-"emphasis>和<emphasis>Thread Local Session</emphasis>模式。通过Hibernate的"
-"<literal>UserType</literal>，你甚至可以用硬编码的JDBC来持久化那些本该被"
-"Hibernate持久化的类。 (该建议更适用于规模足够大应用软件中，对于那些只有5张表"
-"的应用程序并不适合。)"
+"把 Hibernate 的数据存取代码隐藏到接口（interface）的后面，组合使用 "
+"<emphasis>DAO</emphasis> 和 <emphasis>Thread Local Session</emphasis> 模式。"
+"通过 Hibernate 的<literal>UserType</literal>，你甚至可以用硬编码的 JDBC 来持"
+"久化那些本该被 Hibernate 持久化的类。然而，该建议更适用于规模足够大应用软件"
+"中，对于那些只有 5 张表的应用程序并不适合。"
 
 #. Tag: term
-#: best_practices.xml:227
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "Do not use exotic association mappings:"
-msgstr "不要用怪异的连接映射"
+msgstr "不要用怪异的连接映射："
 
 #. Tag: para
-#: best_practices.xml:229
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "Practical test cases for real many-to-many associations are rare. Most of "
 "the time you need additional information stored in the \"link table\". In "
@@ -408,17 +370,14 @@ msgid ""
 msgstr ""
 "多对多连接用得好的例子实际上相当少见。大多数时候你在“连接表”中需要保存额外的"
 "信息。这种情况下，用两个指向中介类的一对多的连接比较好。实际上，我们认为绝大"
-"多数的连接是一对多和多对一的，你应该谨慎使用其它连接风格，用之前问自己一句，"
-"是否真的必须这么做。"
+"多数的连接是一对多和多对一的。i因此，你应该谨慎使用其它连接风格。"
 
 #. Tag: term
-#: best_practices.xml:239
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "Prefer bidirectional associations:"
-msgstr "偏爱双向关联"
+msgstr "偏爱双向关联："
 
 #. Tag: para
-#: best_practices.xml:241
 #, no-c-format
 msgid ""
 "Unidirectional associations are more difficult to query. In a large "

@@ -23,12 +23,16 @@
   ~ Boston, MA  02110-1301  USA
   -->
 
-<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
+<!ENTITY % BOOK_ENTITIES SYSTEM "../HIBERNATE_-_Relational_Persistence_for_Idiomatic_Java.ent">
+%BOOK_ENTITIES;
+
+]>
 
 <chapter id="example-weblog">
     <title>Example: Weblog Application</title>
 
-    <sect1 id="example-weblog-classes">
+    <section id="example-weblog-classes">
         <title>Persistent Classes</title>
 
         <para>
@@ -110,9 +114,9 @@ public class BlogItem {
     }
 }]]></programlisting>
 
-    </sect1>
+    </section>
 
-    <sect1 id="example-weblog-mappings">
+    <section id="example-weblog-mappings">
         <title>Hibernate Mappings</title>
 
         <para>
@@ -203,9 +207,9 @@ public class BlogItem {
 
 </hibernate-mapping>]]></programlisting>
 
-    </sect1>
+    </section>
     
-    <sect1 id="example-weblog-code">
+    <section id="example-weblog-code">
         <title>Hibernate Code</title>
 
         <para>
@@ -451,7 +455,7 @@ public class BlogMain {
     }
 }]]></programlisting>
 
-    </sect1>
+    </section>
 
 </chapter>
 

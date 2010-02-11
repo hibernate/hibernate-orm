@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2009-07-14 19:56+0000\n"
+"POT-Creation-Date: 2010-02-04T04:51:22\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -11,13 +11,11 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 
 #. Tag: title
-#: tutorial.xml:31
 #, no-c-format
 msgid "Tutorial"
 msgstr ""
 
 #. Tag: para
-#: tutorial.xml:33
 #, no-c-format
 msgid ""
 "Intended for new users, this chapter provides an step-by-step introduction "
@@ -28,7 +26,6 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: tutorial.xml:42
 #, no-c-format
 msgid ""
 "This tutorial expects the user have knowledge of both Java and SQL. If you "
@@ -37,7 +34,6 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: tutorial.xml:51
 #, no-c-format
 msgid ""
 "The distribution contains another example application under the "
@@ -45,13 +41,11 @@ msgid ""
 msgstr ""
 
 #. Tag: title
-#: tutorial.xml:59
 #, no-c-format
 msgid "Part 1 - The first Hibernate Application"
 msgstr "파트 1 - 첫 번째 Hibernate 어플리케이션"
 
 #. Tag: para
-#: tutorial.xml:61
 #, fuzzy, no-c-format
 msgid ""
 "For this example, we will set up a small database application that can store "
@@ -61,7 +55,6 @@ msgstr ""
 "어플리케이션과 이들 이벤트들의 호스트들에 대한 정보를 필요로 한다고 가정하자."
 
 #. Tag: para
-#: tutorial.xml:67
 #, no-c-format
 msgid ""
 "Although you can use whatever database you feel comfortable using, we will "
@@ -71,13 +64,11 @@ msgid ""
 msgstr ""
 
 #. Tag: title
-#: tutorial.xml:76
 #, no-c-format
 msgid "Setup"
 msgstr ""
 
 #. Tag: para
-#: tutorial.xml:78
 #, no-c-format
 msgid ""
 "The first thing we need to do is to set up the development environment. We "
@@ -91,7 +82,6 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: tutorial.xml:88
 #, no-c-format
 msgid ""
 "We will be using Maven in this tutorial, taking advantage of its transitive "
@@ -99,61 +89,7 @@ msgid ""
 "automatically set up a project for us based on the maven descriptor."
 msgstr ""
 
-#. Tag: programlisting
-#: tutorial.xml:94
-#, no-c-format
-msgid ""
-"<![CDATA[<project xmlns=\"http://maven.apache.org/POM/4.0.0\"\n"
-"         xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n"
-"         xsi:schemaLocation=\"http://maven.apache.org/POM/4.0.0 http://maven."
-"apache.org/xsd/maven-4.0.0.xsd\">\n"
-"\n"
-"    <modelVersion>4.0.0</modelVersion>\n"
-"\n"
-"    <groupId>org.hibernate.tutorials</groupId>\n"
-"    <artifactId>hibernate-tutorial</artifactId>\n"
-"    <version>1.0.0-SNAPSHOT</version>\n"
-"    <name>First Hibernate Tutorial</name>\n"
-"\n"
-"    <build>\n"
-"         <!-- we dont want the version to be part of the generated war file "
-"name -->\n"
-"         <finalName>${artifactId}</finalName>\n"
-"    </build>\n"
-"\n"
-"    <dependencies>\n"
-"        <dependency>\n"
-"            <groupId>org.hibernate</groupId>\n"
-"            <artifactId>hibernate-core</artifactId>\n"
-"        </dependency>\n"
-"\n"
-"        <!-- Because this is a web app, we also have a dependency on the "
-"servlet api. -->\n"
-"        <dependency>\n"
-"            <groupId>javax.servlet</groupId>\n"
-"            <artifactId>servlet-api</artifactId>\n"
-"        </dependency>\n"
-"\n"
-"        <!-- Hibernate uses slf4j for logging, for our purposes here use the "
-"simple backend -->\n"
-"        <dependency>\n"
-"            <groupId>org.slf4j</groupId>\n"
-"            <artifactId>slf4j-simple</artifactId>\n"
-"        </dependency>\n"
-"\n"
-"        <!-- Hibernate gives you a choice of bytecode providers between "
-"cglib and javassist -->\n"
-"        <dependency>\n"
-"            <groupId>javassist</groupId>\n"
-"            <artifactId>javassist</artifactId>\n"
-"        </dependency>\n"
-"    </dependencies>\n"
-"\n"
-"</project>]]>"
-msgstr ""
-
 #. Tag: para
-#: tutorial.xml:97
 #, no-c-format
 msgid ""
 "It is not a requirement to use Maven. If you wish to use something else to "
@@ -172,20 +108,17 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: tutorial.xml:114
 #, no-c-format
 msgid ""
 "Save this file as <filename>pom.xml</filename> in the project root directory."
 msgstr ""
 
 #. Tag: title
-#: tutorial.xml:121
 #, no-c-format
 msgid "The first class"
 msgstr "첫 번째 클래스"
 
 #. Tag: para
-#: tutorial.xml:123
 #, fuzzy, no-c-format
 msgid ""
 "Next, we create a class that represents the event we want to store in the "
@@ -194,50 +127,7 @@ msgstr ""
 "다음으로 우리는 우리가 데이터베이스 속에 저장시키고자 원하는 이벤트를 표현하"
 "는 한 개의 클래스를 생성시킨다."
 
-#. Tag: programlisting
-#: tutorial.xml:128
-#, no-c-format
-msgid ""
-"<![CDATA[package org.hibernate.tutorial.domain;\n"
-"\n"
-"import java.util.Date;\n"
-"\n"
-"public class Event {\n"
-"    private Long id;\n"
-"\n"
-"    private String title;\n"
-"    private Date date;\n"
-"\n"
-"    public Event() {}\n"
-"\n"
-"    public Long getId() {\n"
-"        return id;\n"
-"    }\n"
-"\n"
-"    private void setId(Long id) {\n"
-"        this.id = id;\n"
-"    }\n"
-"\n"
-"    public Date getDate() {\n"
-"        return date;\n"
-"    }\n"
-"\n"
-"    public void setDate(Date date) {\n"
-"        this.date = date;\n"
-"    }\n"
-"\n"
-"    public String getTitle() {\n"
-"        return title;\n"
-"    }\n"
-"\n"
-"    public void setTitle(String title) {\n"
-"        this.title = title;\n"
-"    }\n"
-"}]]>"
-msgstr ""
-
 #. Tag: para
-#: tutorial.xml:130
 #, fuzzy, no-c-format
 msgid ""
 "This class uses standard JavaBean naming conventions for property getter and "
@@ -254,7 +144,6 @@ msgstr ""
 "다."
 
 #. Tag: para
-#: tutorial.xml:138
 #, fuzzy, no-c-format
 msgid ""
 "The <literal>id</literal> property holds a unique identifier value for a "
@@ -282,7 +171,6 @@ msgstr ""
 "있으며, 당신은 당신의 어플리케이션 설계에 적합하도록 그것을 부합시킬 수 있다."
 
 #. Tag: para
-#: tutorial.xml:153
 #, fuzzy, no-c-format
 msgid ""
 "The no-argument constructor is a requirement for all persistent classes; "
@@ -297,7 +185,6 @@ msgstr ""
 "없는 효율적인 데이터 검색에 필요하다."
 
 #. Tag: para
-#: tutorial.xml:161
 #, no-c-format
 msgid ""
 "Save this file to the <filename>src/main/java/org/hibernate/tutorial/domain</"
@@ -305,13 +192,11 @@ msgid ""
 msgstr ""
 
 #. Tag: title
-#: tutorial.xml:168
 #, no-c-format
 msgid "The mapping file"
 msgstr "The mapping file"
 
 #. Tag: para
-#: tutorial.xml:170
 #, no-c-format
 msgid ""
 "Hibernate needs to know how to load and store objects of the persistent "
@@ -325,27 +210,11 @@ msgstr ""
 "사용해야 하는 그 테이블 내의 컬럼들이 무엇인지를 Hibernate에게 알려준다."
 
 #. Tag: para
-#: tutorial.xml:178
 #, no-c-format
 msgid "The basic structure of a mapping file looks like this:"
 msgstr "매핑 파일의 기본 구조는 다음과 같다:"
 
-#. Tag: programlisting
-#: tutorial.xml:182
-#, no-c-format
-msgid ""
-"<![CDATA[<?xml version=\"1.0\"?>\n"
-"<!DOCTYPE hibernate-mapping PUBLIC\n"
-"        \"-//Hibernate/Hibernate Mapping DTD 3.0//EN\"\n"
-"        \"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd\">\n"
-"\n"
-"<hibernate-mapping package=\"org.hibernate.tutorial.domain\">\n"
-"[...]\n"
-"</hibernate-mapping>]]>"
-msgstr ""
-
 #. Tag: para
-#: tutorial.xml:184
 #, fuzzy, no-c-format
 msgid ""
 "Hibernate DTD is sophisticated. You can use it for auto-completion of XML "
@@ -367,7 +236,6 @@ msgstr ""
 "Hibernate 배포본의 <literal>src/</literal> 디렉토리 속에 포함되어 있다."
 
 #. Tag: para
-#: tutorial.xml:197
 #, fuzzy, no-c-format
 msgid ""
 "We will omit the DTD declaration in future examples to shorten the code. It "
@@ -377,7 +245,6 @@ msgstr ""
 "것은 물론 옵션이 아니다."
 
 #. Tag: para
-#: tutorial.xml:203
 #, fuzzy, no-c-format
 msgid ""
 "Between the two <literal>hibernate-mapping</literal> tags, include a "
@@ -390,21 +257,7 @@ msgstr ""
 "수 있고, 그것은 첫번째-급의 엔티티들이 아니다)은 SQL 데이터베이스 내의 테이블"
 "에 대한 그런 매핑을 필요로 한다:"
 
-#. Tag: programlisting
-#: tutorial.xml:210
-#, no-c-format
-msgid ""
-"<![CDATA[<hibernate-mapping package=\"org.hibernate.tutorial.domain\">\n"
-"\n"
-"    <class name=\"Event\" table=\"EVENTS\">\n"
-"\n"
-"    </class>\n"
-"\n"
-"</hibernate-mapping>]]>"
-msgstr ""
-
 #. Tag: para
-#: tutorial.xml:212
 #, fuzzy, no-c-format
 msgid ""
 "So far we have told Hibernate how to persist and load object of class "
@@ -421,23 +274,7 @@ msgstr ""
 "리는 대용 키 프라이머리 키 컬럼에 대한 Hibernate의 식별자 생성 방도를 구성한"
 "다:"
 
-#. Tag: programlisting
-#: tutorial.xml:222
-#, no-c-format
-msgid ""
-"<![CDATA[<hibernate-mapping package=\"org.hibernate.tutorial.domain\">\n"
-"\n"
-"    <class name=\"Event\" table=\"EVENTS\">\n"
-"        <id name=\"id\" column=\"EVENT_ID\">\n"
-"            <generator class=\"native\"/>\n"
-"        </id>\n"
-"    </class>\n"
-"\n"
-"</hibernate-mapping>]]>"
-msgstr ""
-
 #. Tag: para
-#: tutorial.xml:224
 #, no-c-format
 msgid ""
 "The <literal>id</literal> element is the declaration of the identifier "
@@ -449,7 +286,6 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: tutorial.xml:234
 #, no-c-format
 msgid ""
 "The nested <literal>generator</literal> element specifies the identifier "
@@ -462,15 +298,14 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: tutorial.xml:246
 #, no-c-format
 msgid ""
 "<literal>native</literal> is no longer consider the best strategy in terms "
-"of portability. for further discussion, see"
+"of portability. for further discussion, see <xref linkend=\"portability-idgen"
+"\" />"
 msgstr ""
 
 #. Tag: para
-#: tutorial.xml:252
 #, fuzzy, no-c-format
 msgid ""
 "Lastly, we need to tell Hibernate about the remaining entity class "
@@ -479,26 +314,7 @@ msgstr ""
 "마지막으로 우리는 매핑 파일 속에서 클래스의 영속 프로퍼티들에 대한 선언들을 "
 "포함한다. 디폴트로, 클래스의 프로퍼티들은 영속적인 것으로 간주되지 않는다:"
 
-#. Tag: programlisting
-#: tutorial.xml:258
-#, no-c-format
-msgid ""
-"<![CDATA[\n"
-"<hibernate-mapping package=\"org.hibernate.tutorial.domain\">\n"
-"\n"
-"    <class name=\"Event\" table=\"EVENTS\">\n"
-"        <id name=\"id\" column=\"EVENT_ID\">\n"
-"            <generator class=\"native\"/>\n"
-"        </id>\n"
-"        <property name=\"date\" type=\"timestamp\" column=\"EVENT_DATE\"/>\n"
-"        <property name=\"title\"/>\n"
-"    </class>\n"
-"\n"
-"</hibernate-mapping>]]>"
-msgstr ""
-
 #. Tag: para
-#: tutorial.xml:260
 #, fuzzy, no-c-format
 msgid ""
 "Similar to the <literal>id</literal> element, the <literal>name</literal> "
@@ -514,7 +330,6 @@ msgstr ""
 "게 될 것이다."
 
 #. Tag: para
-#: tutorial.xml:271
 #, fuzzy, no-c-format
 msgid ""
 "Why does the <literal>date</literal> property mapping include the "
@@ -532,7 +347,6 @@ msgstr ""
 "는 그것을 다른 이름으로 더 좋게 매핑 시킨다."
 
 #. Tag: para
-#: tutorial.xml:281
 #, fuzzy, no-c-format
 msgid ""
 "The <literal>title</literal> mapping also lacks a <literal>type</literal> "
@@ -567,7 +381,6 @@ msgstr ""
 "고 선언한다."
 
 #. Tag: para
-#: tutorial.xml:297
 #, no-c-format
 msgid ""
 "Hibernate makes this mapping type determination using reflection when the "
@@ -577,7 +390,6 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: tutorial.xml:304
 #, no-c-format
 msgid ""
 "Save this mapping file as <filename>src/main/resources/org/hibernate/"
@@ -585,13 +397,11 @@ msgid ""
 msgstr ""
 
 #. Tag: title
-#: tutorial.xml:312
 #, no-c-format
 msgid "Hibernate configuration"
 msgstr "Hibernate 구성"
 
 #. Tag: para
-#: tutorial.xml:314
 #, no-c-format
 msgid ""
 "At this point, you should have the persistent class and its mapping file in "
@@ -600,13 +410,11 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: tutorial.xml:321
 #, no-c-format
 msgid "We do this do that the data remains between runs."
 msgstr ""
 
 #. Tag: para
-#: tutorial.xml:326
 #, fuzzy, no-c-format
 msgid ""
 "We will utilize the Maven exec plugin to launch the HSQLDB server by "
@@ -628,7 +436,6 @@ msgstr ""
 "에 있는 모든 파일들을 삭제하고 다시 HSQL DB를 시작하라."
 
 #. Tag: para
-#: tutorial.xml:337
 #, no-c-format
 msgid ""
 "Hibernate will be connecting to the database on behalf of your application, "
@@ -642,7 +449,6 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: tutorial.xml:348
 #, no-c-format
 msgid ""
 "The built-in Hibernate connection pool is in no way intended for production "
@@ -650,7 +456,6 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: tutorial.xml:354
 #, fuzzy, no-c-format
 msgid ""
 "For Hibernate's configuration, we can use a simple <literal>hibernate."
@@ -663,63 +468,12 @@ msgstr ""
 "xml</literal> 파일, 또는 심지어 완전한 프로그램 상의 설정을 사용할 수 있다. "
 "대부분의 사용자들은 XMl 구성 파일을 선호한다:"
 
-#. Tag: programlisting
-#: tutorial.xml:360
-#, no-c-format
-msgid ""
-"<![CDATA[<?xml version='1.0' encoding='utf-8'?>\n"
-"<!DOCTYPE hibernate-configuration PUBLIC\n"
-"        \"-//Hibernate/Hibernate Configuration DTD 3.0//EN\"\n"
-"        \"http://hibernate.sourceforge.net/hibernate-configuration-3.0.dtd"
-"\">\n"
-"\n"
-"<hibernate-configuration>\n"
-"\n"
-"    <session-factory>\n"
-"\n"
-"        <!-- Database connection settings -->\n"
-"        <property name=\"connection.driver_class\">org.hsqldb.jdbcDriver</"
-"property>\n"
-"        <property name=\"connection.url\">jdbc:hsqldb:hsql://localhost</"
-"property>\n"
-"        <property name=\"connection.username\">sa</property>\n"
-"        <property name=\"connection.password\"></property>\n"
-"\n"
-"        <!-- JDBC connection pool (use the built-in) -->\n"
-"        <property name=\"connection.pool_size\">1</property>\n"
-"\n"
-"        <!-- SQL dialect -->\n"
-"        <property name=\"dialect\">org.hibernate.dialect.HSQLDialect</"
-"property>\n"
-"\n"
-"        <!-- Enable Hibernate's automatic session context management -->\n"
-"        <property name=\"current_session_context_class\">thread</property>\n"
-"\n"
-"        <!-- Disable the second-level cache  -->\n"
-"        <property name=\"cache.provider_class\">org.hibernate.cache."
-"NoCacheProvider</property>\n"
-"\n"
-"        <!-- Echo all executed SQL to stdout -->\n"
-"        <property name=\"show_sql\">true</property>\n"
-"\n"
-"        <!-- Drop and re-create the database schema on startup -->\n"
-"        <property name=\"hbm2ddl.auto\">update</property>\n"
-"\n"
-"        <mapping resource=\"org/hibernate/tutorial/domain/Event.hbm.xml\"/>\n"
-"\n"
-"    </session-factory>\n"
-"\n"
-"</hibernate-configuration>]]>"
-msgstr ""
-
 #. Tag: para
-#: tutorial.xml:363
 #, no-c-format
 msgid "Notice that this configuration file specifies a different DTD"
 msgstr ""
 
 #. Tag: para
-#: tutorial.xml:366
 #, fuzzy, no-c-format
 msgid ""
 "You configure Hibernate's <literal>SessionFactory</literal>. SessionFactory "
@@ -734,7 +488,6 @@ msgstr ""
 "factory&gt;</literal> 구성들을 사용하라."
 
 #. Tag: para
-#: tutorial.xml:373
 #, no-c-format
 msgid ""
 "The first four <literal>property</literal> elements contain the necessary "
@@ -743,15 +496,13 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: tutorial.xml:380
 #, no-c-format
 msgid ""
 "In most cases, Hibernate is able to properly determine which dialect to use. "
-"See <xref linkend=\"portability-dialectresolver\"/> for more information."
+"See <xref linkend=\"portability-dialectresolver\" /> for more information."
 msgstr ""
 
 #. Tag: para
-#: tutorial.xml:386
 #, fuzzy, no-c-format
 msgid ""
 "Hibernate's automatic session management for persistence contexts is "
@@ -771,7 +522,6 @@ msgstr ""
 "수 있다. 마지막으로 우리는 영속 클래스들을 위한 매핑 파일(들)을 추가시킨다."
 
 #. Tag: para
-#: tutorial.xml:395
 #, no-c-format
 msgid ""
 "Save this file as <filename>hibernate.cfg.xml</filename> into the "
@@ -779,13 +529,11 @@ msgid ""
 msgstr ""
 
 #. Tag: title
-#: tutorial.xml:403
 #, fuzzy, no-c-format
 msgid "Building with Maven"
 msgstr "Ant로 빌드하기"
 
 #. Tag: para
-#: tutorial.xml:405
 #, no-c-format
 msgid ""
 "We will now build the tutorial with Maven. You will need to have Maven "
@@ -796,43 +544,12 @@ msgid ""
 "make sure we can compile everything so far:"
 msgstr ""
 
-#. Tag: programlisting
-#: tutorial.xml:415
-#, no-c-format
-msgid ""
-"<![CDATA[[hibernateTutorial]$ mvn compile\n"
-"[INFO] Scanning for projects...\n"
-"[INFO] "
-"------------------------------------------------------------------------\n"
-"[INFO] Building First Hibernate Tutorial\n"
-"[INFO]    task-segment: [compile]\n"
-"[INFO] "
-"------------------------------------------------------------------------\n"
-"[INFO] [resources:resources]\n"
-"[INFO] Using default encoding to copy filtered resources.\n"
-"[INFO] [compiler:compile]\n"
-"[INFO] Compiling 1 source file to /home/steve/projects/sandbox/"
-"hibernateTutorial/target/classes\n"
-"[INFO] "
-"------------------------------------------------------------------------\n"
-"[INFO] BUILD SUCCESSFUL\n"
-"[INFO] "
-"------------------------------------------------------------------------\n"
-"[INFO] Total time: 2 seconds\n"
-"[INFO] Finished at: Tue Jun 09 12:25:25 CDT 2009\n"
-"[INFO] Final Memory: 5M/547M\n"
-"[INFO] "
-"------------------------------------------------------------------------]]>"
-msgstr ""
-
 #. Tag: title
-#: tutorial.xml:420
 #, no-c-format
 msgid "Startup and helpers"
 msgstr "시작과 helper들"
 
 #. Tag: para
-#: tutorial.xml:422
 #, fuzzy, no-c-format
 msgid ""
 "It is time to load and store some <literal>Event</literal> objects, but "
@@ -856,7 +573,6 @@ msgstr ""
 "전역 객체이다."
 
 #. Tag: para
-#: tutorial.xml:436
 #, fuzzy, no-c-format
 msgid ""
 "We will create a <literal>HibernateUtil</literal> helper class that takes "
@@ -868,42 +584,7 @@ msgstr ""
 "<emphasis>ThreadLocal Session</emphasis> 패턴이 여기서 유용하며, 우리는 현재"
 "의 작업 단위를 현재의 쓰레드와 연관지워 유지한다. 구현을 살펴보자:"
 
-#. Tag: programlisting
-#: tutorial.xml:442
-#, no-c-format
-msgid ""
-"<![CDATA[package org.hibernate.tutorial.util;\n"
-"\n"
-"import org.hibernate.SessionFactory;\n"
-"import org.hibernate.cfg.Configuration;\n"
-"\n"
-"public class HibernateUtil {\n"
-"\n"
-"    private static final SessionFactory sessionFactory = buildSessionFactory"
-"();\n"
-"\n"
-"    private static SessionFactory buildSessionFactory() {\n"
-"        try {\n"
-"            // Create the SessionFactory from hibernate.cfg.xml\n"
-"            return new Configuration().configure().buildSessionFactory();\n"
-"        }\n"
-"        catch (Throwable ex) {\n"
-"            // Make sure you log the exception, as it might be swallowed\n"
-"            System.err.println(\"Initial SessionFactory creation failed.\" + "
-"ex);\n"
-"            throw new ExceptionInInitializerError(ex);\n"
-"        }\n"
-"    }\n"
-"\n"
-"    public static SessionFactory getSessionFactory() {\n"
-"        return sessionFactory;\n"
-"    }\n"
-"\n"
-"}]]>"
-msgstr ""
-
 #. Tag: para
-#: tutorial.xml:444
 #, no-c-format
 msgid ""
 "Save this code as <filename>src/main/java/org/hibernate/tutorial/util/"
@@ -911,7 +592,6 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: tutorial.xml:449
 #, fuzzy, no-c-format
 msgid ""
 "This class not only produces the global <interfacename>org.hibernate."
@@ -930,7 +610,6 @@ msgstr ""
 "</literal>에 대한 호출은 쓰레드와 현재 연관되어 있는 작업 단위를 종료시킨다."
 
 #. Tag: para
-#: tutorial.xml:458
 #, fuzzy, no-c-format
 msgid ""
 "If you give the <interfacename>org.hibernate.SessionFactory</interfacename> "
@@ -952,7 +631,6 @@ msgstr ""
 "으로 바인드시킬 수 있을 것이다."
 
 #. Tag: para
-#: tutorial.xml:467
 #, fuzzy, no-c-format
 msgid ""
 "You now need to configure a logging system. Hibernate uses commons logging "
@@ -974,7 +652,6 @@ msgstr ""
 "Hibernate 시작 메시지는 stdout 상에 보여진다."
 
 #. Tag: para
-#: tutorial.xml:477
 #, fuzzy, no-c-format
 msgid ""
 "The tutorial infrastructure is complete and you are now ready to do some "
@@ -984,13 +661,11 @@ msgstr ""
 "을 행할 준비가 되어 있다."
 
 #. Tag: title
-#: tutorial.xml:485
 #, no-c-format
 msgid "Loading and storing objects"
 msgstr "객체 로딩과 객체 저장"
 
 #. Tag: para
-#: tutorial.xml:487
 #, fuzzy, no-c-format
 msgid ""
 "We are now ready to start doing some real worjk with Hibernate. Let's start "
@@ -1001,49 +676,7 @@ msgstr ""
 "우리는 한 개의 <literal>main()</literal> 메소드를 가진 한 개의 "
 "<literal>EventManager</literal> 클래스를 작성한다:"
 
-#. Tag: programlisting
-#: tutorial.xml:493
-#, no-c-format
-msgid ""
-"<![CDATA[package org.hibernate.tutorial;\n"
-"\n"
-"import org.hibernate.Session;\n"
-"\n"
-"import java.util.*;\n"
-"\n"
-"import org.hibernate.tutorial.domain.Event;\n"
-"import org.hibernate.tutorial.util.HibernateUtil;\n"
-"\n"
-"public class EventManager {\n"
-"\n"
-"    public static void main(String[] args) {\n"
-"        EventManager mgr = new EventManager();\n"
-"\n"
-"        if (args[0].equals(\"store\")) {\n"
-"            mgr.createAndStoreEvent(\"My Event\", new Date());\n"
-"        }\n"
-"\n"
-"        HibernateUtil.getSessionFactory().close();\n"
-"    }\n"
-"\n"
-"    private void createAndStoreEvent(String title, Date theDate) {\n"
-"        Session session = HibernateUtil.getSessionFactory().getCurrentSession"
-"();\n"
-"        session.beginTransaction();\n"
-"\n"
-"        Event theEvent = new Event();\n"
-"        theEvent.setTitle(title);\n"
-"        theEvent.setDate(theDate);\n"
-"        session.save(theEvent);\n"
-"\n"
-"        session.getTransaction().commit();\n"
-"    }\n"
-"\n"
-"}]]>"
-msgstr ""
-
 #. Tag: para
-#: tutorial.xml:495
 #, fuzzy, no-c-format
 msgid ""
 "In <literal>createAndStoreEvent()</literal> we created a new <literal>Event</"
@@ -1058,7 +691,6 @@ msgstr ""
 "펴보자."
 
 #. Tag: para
-#: tutorial.xml:502
 #, fuzzy, no-c-format
 msgid ""
 "A <interface>org.hibernate.Session</interface> is designed to represent a "
@@ -1078,7 +710,6 @@ msgstr ""
 "가능한 <literal>Transaction</literal> API를 사용한다."
 
 #. Tag: para
-#: tutorial.xml:515
 #, fuzzy, no-c-format
 msgid ""
 "What does <literal>sessionFactory.getCurrentSession()</literal> do? First, "
@@ -1101,7 +732,6 @@ msgstr ""
 "scope(영역), 작업 단위가 시작될 때와 작업 단위가 종료될 때를 고려해야 한다."
 
 #. Tag: para
-#: tutorial.xml:529
 #, no-c-format
 msgid ""
 "Hibernate offers three methods of current session tracking. The \"thread\" "
@@ -1111,7 +741,6 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: tutorial.xml:538
 #, fuzzy, no-c-format
 msgid ""
 "A <interface>org.hibernate.Session</interface> begins when the first call to "
@@ -1136,7 +765,6 @@ msgstr ""
 "질 수 있는데, 우리는 이 튜토리얼의 뒷부분에서 이것을 다룰 것이다.)."
 
 #. Tag: para
-#: tutorial.xml:551
 #, fuzzy, no-c-format
 msgid ""
 "Related to the unit of work scope, should the Hibernate <interface>org."
@@ -1164,10 +792,9 @@ msgstr ""
 "진다."
 
 #. Tag: para
-#: tutorial.xml:568
 #, fuzzy, no-c-format
 msgid ""
-"See <xref linkend=\"transactions\"/> for more information about transaction "
+"See <xref linkend=\"transactions\" /> for more information about transaction "
 "handling and demarcation. The previous example also skipped any error "
 "handling and rollback."
 msgstr ""
@@ -1175,7 +802,6 @@ msgstr ""
 ">을 살펴보라. 우리는 또한 앞의 예제에서 임의의 오류 처리와 롤백을 생략했다."
 
 #. Tag: para
-#: tutorial.xml:574
 #, no-c-format
 msgid ""
 "To run this, we will make use of the Maven exec plugin to call our class "
@@ -1184,13 +810,11 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: tutorial.xml:581
 #, no-c-format
 msgid "You may need to perform <command>mvn compile</command> first."
 msgstr ""
 
 #. Tag: para
-#: tutorial.xml:586
 #, fuzzy, no-c-format
 msgid ""
 "You should see Hibernate starting up and, depending on your configuration, "
@@ -1199,78 +823,33 @@ msgstr ""
 "컴파일, 구성에 따른 Hibernate 시작 후에, 당신은 많은 로그 출력을 보게 될 것이"
 "다. 끝에서 당신은 다음 라인을 발견할 것이다:"
 
-#. Tag: programlisting
-#: tutorial.xml:591
-#, no-c-format
-msgid ""
-"<![CDATA[[java] Hibernate: insert into EVENTS (EVENT_DATE, title, EVENT_ID) "
-"values (?, ?, ?)]]>"
-msgstr ""
-
 #. Tag: para
-#: tutorial.xml:593
 #, no-c-format
 msgid "This is the <literal>INSERT</literal> executed by Hibernate."
 msgstr ""
 
 #. Tag: para
-#: tutorial.xml:597
 #, fuzzy, no-c-format
 msgid "To list stored events an option is added to the main method:"
 msgstr ""
 "이제 우리는 마찬가지로 저장된 이벤트들을 열거하고자 원하며, 우리는 main 메소"
 "드에 한 개의 옵션을 추가한다:"
 
-#. Tag: programlisting
-#: tutorial.xml:601
-#, no-c-format
-msgid ""
-"<![CDATA[        if (args[0].equals(\"store\")) {\n"
-"            mgr.createAndStoreEvent(\"My Event\", new Date());\n"
-"        }\n"
-"        else if (args[0].equals(\"list\")) {\n"
-"            List events = mgr.listEvents();\n"
-"            for (int i = 0; i < events.size(); i++) {\n"
-"                Event theEvent = (Event) events.get(i);\n"
-"                System.out.println(\n"
-"                        \"Event: \" + theEvent.getTitle() + \" Time: \" + "
-"theEvent.getDate()\n"
-"                );\n"
-"            }\n"
-"        }]]>"
-msgstr ""
-
 #. Tag: para
-#: tutorial.xml:603
 #, fuzzy, no-c-format
 msgid "A new <literal>listEvents() method is also added</literal>:"
 msgstr ""
 "우리는 또한 새로운 <literal>listEvents() method</literal> 메소드를 추가 시킨"
 "다:"
 
-#. Tag: programlisting
-#: tutorial.xml:607
-#, no-c-format
-msgid ""
-"<![CDATA[    private List listEvents() {\n"
-"        Session session = HibernateUtil.getSessionFactory().getCurrentSession"
-"();\n"
-"        session.beginTransaction();\n"
-"        List result = session.createQuery(\"from Event\").list();\n"
-"        session.getTransaction().commit();\n"
-"        return result;\n"
-"    }]]>"
-msgstr ""
-
 #. Tag: para
-#: tutorial.xml:609
 #, fuzzy, no-c-format
 msgid ""
 "Here, we are using a Hibernate Query Language (HQL) query to load all "
 "existing <literal>Event</literal> objects from the database. Hibernate will "
 "generate the appropriate SQL, send it to the database and populate "
 "<literal>Event</literal> objects with the data. You can create more complex "
-"queries with HQL. See <xref linkend=\"queryhql\"/> for more information."
+"queries with HQL. See <xref linkend=\"queryhql\" /> for more information."
 msgstr ""
 "여기서 우리가 행할 것은 데이터베이스로부터 모든 존재하는 <literal>Event</"
 "literal> 객체들을 로드시키기 위해 HQL (Hibernate Query Language) 질의를 사용"
@@ -1279,7 +858,6 @@ msgstr ""
 "물론 HQL로서 보다 복잡한 질의들을 생성시킬 수 있다."
 
 #. Tag: para
-#: tutorial.xml:617
 #, no-c-format
 msgid ""
 "Now we can call our new functionality, again using the Maven exec plugin: "
@@ -1288,13 +866,11 @@ msgid ""
 msgstr ""
 
 #. Tag: title
-#: tutorial.xml:627
 #, no-c-format
 msgid "Part 2 - Mapping associations"
 msgstr "파트 2 - 연관들을 매핑하기"
 
 #. Tag: para
-#: tutorial.xml:629
 #, fuzzy, no-c-format
 msgid ""
 "So far we have mapped a single persistent entity class to a table in "
@@ -1307,39 +883,16 @@ msgstr ""
 "람들을 추가하고 그들이 참여하는 이벤트들의 목록을 저장할 것이다."
 
 #. Tag: title
-#: tutorial.xml:637
 #, no-c-format
 msgid "Mapping the Person class"
 msgstr "Person 클래스 매핑하기"
 
 #. Tag: para
-#: tutorial.xml:639
 #, fuzzy, no-c-format
 msgid "The first cut of the <literal>Person</literal> class looks like this:"
 msgstr "클래스의 첫 번째 장면은 간단하다:"
 
-#. Tag: programlisting
-#: tutorial.xml:643
-#, no-c-format
-msgid ""
-"<![CDATA[package org.hibernate.tutorial.domain;\n"
-"\n"
-"public class Person {\n"
-"\n"
-"    private Long id;\n"
-"    private int age;\n"
-"    private String firstname;\n"
-"    private String lastname;\n"
-"\n"
-"    public Person() {}\n"
-"\n"
-"    // Accessor methods for all properties, private setter for 'id'\n"
-"\n"
-"}]]>"
-msgstr ""
-
 #. Tag: para
-#: tutorial.xml:645
 #, no-c-format
 msgid ""
 "Save this to a file named <filename>src/main/java/org/hibernate/tutorial/"
@@ -1347,47 +900,18 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: tutorial.xml:650
 #, no-c-format
 msgid ""
 "Next, create the new mapping file as <filename>src/main/resources/org/"
 "hibernate/tutorial/domain/Person.hbm.xml</filename>"
 msgstr ""
 
-#. Tag: programlisting
-#: tutorial.xml:655
-#, no-c-format
-msgid ""
-"<![CDATA[<hibernate-mapping package=\"org.hibernate.tutorial.domain\">\n"
-"\n"
-"    <class name=\"Person\" table=\"PERSON\">\n"
-"        <id name=\"id\" column=\"PERSON_ID\">\n"
-"            <generator class=\"native\"/>\n"
-"        </id>\n"
-"        <property name=\"age\"/>\n"
-"        <property name=\"firstname\"/>\n"
-"        <property name=\"lastname\"/>\n"
-"    </class>\n"
-"\n"
-"</hibernate-mapping>]]>"
-msgstr ""
-
 #. Tag: para
-#: tutorial.xml:657
 #, no-c-format
 msgid "Finally, add the new mapping to Hibernate's configuration:"
 msgstr "마지막으로 새로운 매핑을 Hibernate의 구성에 추가하라:"
 
-#. Tag: programlisting
-#: tutorial.xml:661
-#, no-c-format
-msgid ""
-"<![CDATA[<mapping resource=\"events/Event.hbm.xml\"/>\n"
-"<mapping resource=\"events/Person.hbm.xml\"/>]]>"
-msgstr ""
-
 #. Tag: para
-#: tutorial.xml:663
 #, fuzzy, no-c-format
 msgid ""
 "Create an association between these two entities. Persons can participate in "
@@ -1400,13 +924,11 @@ msgstr ""
 "(multiplicity), 그리고 콜렉션 특징."
 
 #. Tag: title
-#: tutorial.xml:673
 #, no-c-format
 msgid "A unidirectional Set-based association"
 msgstr "단방향 Set-기반의 연관"
 
 #. Tag: para
-#: tutorial.xml:675
 #, fuzzy, no-c-format
 msgid ""
 "By adding a collection of events to the <literal>Person</literal> class, you "
@@ -1424,26 +946,7 @@ msgstr ""
 "literal>를 사용한다. 왜냐하면 그 콜렉션은 중복 요소들을 포함하기 않을 것이고 "
 "그 순서가 우리와 관련되어 있지 않기 때문이다."
 
-#. Tag: programlisting
-#: tutorial.xml:686
-#, no-c-format
-msgid ""
-"<![CDATA[public class Person {\n"
-"\n"
-"    private Set events = new HashSet();\n"
-"\n"
-"    public Set getEvents() {\n"
-"        return events;\n"
-"    }\n"
-"\n"
-"    public void setEvents(Set events) {\n"
-"        this.events = events;\n"
-"    }\n"
-"}]]>"
-msgstr ""
-
 #. Tag: para
-#: tutorial.xml:688
 #, fuzzy, no-c-format
 msgid ""
 "Before mapping this association, let's consider the other side. We could "
@@ -1465,28 +968,7 @@ msgstr ""
 "to-many</emphasis> 연관이라고 명명한다. 그러므로 우리는 Hibernate의 many-to-"
 "many 매핑을 사용한다:"
 
-#. Tag: programlisting
-#: tutorial.xml:701
-#, no-c-format
-msgid ""
-"<![CDATA[<class name=\"Person\" table=\"PERSON\">\n"
-"    <id name=\"id\" column=\"PERSON_ID\">\n"
-"        <generator class=\"native\"/>\n"
-"    </id>\n"
-"    <property name=\"age\"/>\n"
-"    <property name=\"firstname\"/>\n"
-"    <property name=\"lastname\"/>\n"
-"\n"
-"    <set name=\"events\" table=\"PERSON_EVENT\">\n"
-"        <key column=\"PERSON_ID\"/>\n"
-"        <many-to-many column=\"EVENT_ID\" class=\"Event\"/>\n"
-"    </set>\n"
-"\n"
-"</class>]]>"
-msgstr ""
-
 #. Tag: para
-#: tutorial.xml:703
 #, fuzzy, no-c-format
 msgid ""
 "Hibernate supports a broad range of collection mappings, a <literal>set</"
@@ -1513,38 +995,16 @@ msgstr ""
 "에 있는 클래스)를 Hibernate에게 알려주어야 한다."
 
 #. Tag: para
-#: tutorial.xml:719
 #, no-c-format
 msgid "The database schema for this mapping is therefore:"
 msgstr "따라서 이 매핑을 위한 데이터베이스 스키마는 다음과 같다:"
 
-#. Tag: programlisting
-#: tutorial.xml:723
-#, no-c-format
-msgid ""
-"<![CDATA[\n"
-"    _____________        __________________\n"
-"   |             |      |                  |       _____________\n"
-"   |   EVENTS    |      |   PERSON_EVENT   |      |             |\n"
-"   |_____________|      |__________________|      |    PERSON   |\n"
-"   |             |      |                  |      |_____________|\n"
-"   | *EVENT_ID   | <--> | *EVENT_ID        |      |             |\n"
-"   |  EVENT_DATE |      | *PERSON_ID       | <--> | *PERSON_ID  |\n"
-"   |  TITLE      |      |__________________|      |  AGE        |\n"
-"   |_____________|                                |  FIRSTNAME  |\n"
-"                                                  |  LASTNAME   |\n"
-"                                                  |_____________|\n"
-" ]]>"
-msgstr ""
-
 #. Tag: title
-#: tutorial.xml:728
 #, no-c-format
 msgid "Working the association"
 msgstr "연관들에 작업하기"
 
 #. Tag: para
-#: tutorial.xml:730
 #, fuzzy, no-c-format
 msgid ""
 "Now we will bring some people and events together in a new method in "
@@ -1553,25 +1013,7 @@ msgstr ""
 "<literal>EventManager</literal> 속에 있는 한 개의 새로운 메소드 내에 몇몇 사"
 "람들과 이벤트들을 함께 가져오자:"
 
-#. Tag: programlisting
-#: tutorial.xml:734
-#, no-c-format
-msgid ""
-"<![CDATA[    private void addPersonToEvent(Long personId, Long eventId) {\n"
-"        Session session = HibernateUtil.getSessionFactory().getCurrentSession"
-"();\n"
-"        session.beginTransaction();\n"
-"\n"
-"        Person aPerson = (Person) session.load(Person.class, personId);\n"
-"        Event anEvent = (Event) session.load(Event.class, eventId);\n"
-"        aPerson.getEvents().add(anEvent);\n"
-"\n"
-"        session.getTransaction().commit();\n"
-"    }]]>"
-msgstr ""
-
 #. Tag: para
-#: tutorial.xml:736
 #, fuzzy, no-c-format
 msgid ""
 "After loading a <literal>Person</literal> and an <literal>Event</literal>, "
@@ -1605,7 +1047,6 @@ msgstr ""
 "션의 커밋(또는 롤백)으로 끝이난다."
 
 #. Tag: para
-#: tutorial.xml:755
 #, fuzzy, no-c-format
 msgid ""
 "You can load person and event in different units of work. Or you can modify "
@@ -1620,43 +1061,7 @@ msgstr ""
 "상태를 <emphasis>detached</emphasis>라고 부른다). (매우 사실적이지 않은) 코"
 "드 내에서 이것은 다음과 같을 수 있다:"
 
-#. Tag: programlisting
-#: tutorial.xml:764
-#, no-c-format
-msgid ""
-"<![CDATA[    private void addPersonToEvent(Long personId, Long eventId) {\n"
-"        Session session = HibernateUtil.getSessionFactory().getCurrentSession"
-"();\n"
-"        session.beginTransaction();\n"
-"\n"
-"        Person aPerson = (Person) session\n"
-"                .createQuery(\"select p from Person p left join fetch p."
-"events where p.id = :pid\")\n"
-"                .setParameter(\"pid\", personId)\n"
-"                .uniqueResult(); // Eager fetch the collection so we can use "
-"it detached\n"
-"        Event anEvent = (Event) session.load(Event.class, eventId);\n"
-"\n"
-"        session.getTransaction().commit();\n"
-"\n"
-"        // End of first unit of work\n"
-"\n"
-"        aPerson.getEvents().add(anEvent); // aPerson (and its collection) is "
-"detached\n"
-"\n"
-"        // Begin second unit of work\n"
-"\n"
-"        Session session2 = HibernateUtil.getSessionFactory()."
-"getCurrentSession();\n"
-"        session2.beginTransaction();\n"
-"        session2.update(aPerson); // Reattachment of aPerson\n"
-"\n"
-"        session2.getTransaction().commit();\n"
-"    }]]>"
-msgstr ""
-
 #. Tag: para
-#: tutorial.xml:766
 #, fuzzy, no-c-format
 msgid ""
 "The call to <literal>update</literal> makes a detached object persistent "
@@ -1672,7 +1077,6 @@ msgstr ""
 "(추가/삭제)를 포함한다."
 
 #. Tag: para
-#: tutorial.xml:775
 #, fuzzy, no-c-format
 msgid ""
 "This is not much use in our example, but it is an important concept you can "
@@ -1690,22 +1094,7 @@ msgstr ""
 "literal> 메소드가 그것을 반환시킨다(당신은 그 식별자를 반환시키는 앞의 메소드"
 "들 중 몇몇을 변경시켜야 할 것이다):"
 
-#. Tag: programlisting
-#: tutorial.xml:783
-#, no-c-format
-msgid ""
-"<![CDATA[        else if (args[0].equals(\"addpersontoevent\")) {\n"
-"            Long eventId = mgr.createAndStoreEvent(\"My Event\", new Date"
-"());\n"
-"            Long personId = mgr.createAndStorePerson(\"Foo\", \"Bar\");\n"
-"            mgr.addPersonToEvent(personId, eventId);\n"
-"            System.out.println(\"Added person \" + personId + \" to event \" "
-"+ eventId);\n"
-"        }]]>"
-msgstr ""
-
 #. Tag: para
-#: tutorial.xml:785
 #, fuzzy, no-c-format
 msgid ""
 "This is an example of an association between two equally important classes : "
@@ -1736,7 +1125,6 @@ msgstr ""
 "<literal>MonetaryAmount</literal>을 작성할 수 있다."
 
 #. Tag: para
-#: tutorial.xml:803
 #, fuzzy, no-c-format
 msgid ""
 "You can also design a collection of value types. This is conceptually "
@@ -1748,13 +1136,11 @@ msgstr ""
 "진다."
 
 #. Tag: title
-#: tutorial.xml:812
 #, no-c-format
 msgid "Collection of values"
 msgstr "값들을 가진 콜렉션"
 
 #. Tag: para
-#: tutorial.xml:814
 #, no-c-format
 msgid ""
 "Let's add a collection of email addresses to the <literal>Person</literal> "
@@ -1762,39 +1148,12 @@ msgid ""
 "interfacename> of <classname>java.lang.String</classname> instances:"
 msgstr ""
 
-#. Tag: programlisting
-#: tutorial.xml:820
-#, no-c-format
-msgid ""
-"<![CDATA[    private Set emailAddresses = new HashSet();\n"
-"\n"
-"    public Set getEmailAddresses() {\n"
-"        return emailAddresses;\n"
-"    }\n"
-"\n"
-"    public void setEmailAddresses(Set emailAddresses) {\n"
-"        this.emailAddresses = emailAddresses;\n"
-"    }]]>"
-msgstr ""
-
 #. Tag: para
-#: tutorial.xml:822
 #, fuzzy, no-c-format
 msgid "The mapping of this <literal>Set</literal> is as follows:"
 msgstr "이 <literal>Set</literal>에 대한 매핑은 다음과 같다:"
 
-#. Tag: programlisting
-#: tutorial.xml:826
-#, no-c-format
-msgid ""
-"<![CDATA[        <set name=\"emailAddresses\" table=\"PERSON_EMAIL_ADDR\">\n"
-"            <key column=\"PERSON_ID\"/>\n"
-"            <element type=\"string\" column=\"EMAIL_ADDR\"/>\n"
-"        </set>]]>"
-msgstr ""
-
 #. Tag: para
-#: tutorial.xml:828
 #, fuzzy, no-c-format
 msgid ""
 "The difference compared with the earlier mapping is the use of the "
@@ -1820,39 +1179,11 @@ msgstr ""
 "속성은 <literal>String</literal> 값들이 실제로 저장될 컬럼 이름을 정의한다."
 
 #. Tag: para
-#: tutorial.xml:844
 #, fuzzy, no-c-format
 msgid "Here is the updated schema:"
 msgstr "업데이트된 스키마를 살펴보라:"
 
-#. Tag: programlisting
-#: tutorial.xml:848
-#, no-c-format
-msgid ""
-"<![CDATA[\n"
-"  _____________        __________________\n"
-" |             |      |                  |       _____________\n"
-" |   EVENTS    |      |   PERSON_EVENT   |      |             |       "
-"___________________\n"
-" |_____________|      |__________________|      |    PERSON   |      "
-"|                   |\n"
-" |             |      |                  |      |_____________|      | "
-"PERSON_EMAIL_ADDR |\n"
-" | *EVENT_ID   | <--> | *EVENT_ID        |      |             |      |"
-"___________________|\n"
-" |  EVENT_DATE |      | *PERSON_ID       | <--> | *PERSON_ID  | <--> |  "
-"*PERSON_ID       |\n"
-" |  TITLE      |      |__________________|      |  AGE        |      |  "
-"*EMAIL_ADDR      |\n"
-" |_____________|                                |  FIRSTNAME  |      |"
-"___________________|\n"
-"                                                |  LASTNAME   |\n"
-"                                                |_____________|\n"
-" ]]>"
-msgstr ""
-
 #. Tag: para
-#: tutorial.xml:850
 #, fuzzy, no-c-format
 msgid ""
 "You can see that the primary key of the collection table is in fact a "
@@ -1866,7 +1197,6 @@ msgstr ""
 "미론이다."
 
 #. Tag: para
-#: tutorial.xml:856
 #, fuzzy, no-c-format
 msgid ""
 "You can now try to add elements to this collection, just like we did before "
@@ -1876,27 +1206,7 @@ msgstr ""
 "요소들을 시도하고 이 콜렉션에 추가할 수 있다. 그것은 Java에서 동일한 코드이"
 "다."
 
-#. Tag: programlisting
-#: tutorial.xml:861
-#, no-c-format
-msgid ""
-"<![CDATA[    private void addEmailToPerson(Long personId, String "
-"emailAddress) {\n"
-"        Session session = HibernateUtil.getSessionFactory().getCurrentSession"
-"();\n"
-"        session.beginTransaction();\n"
-"\n"
-"        Person aPerson = (Person) session.load(Person.class, personId);\n"
-"        // adding to the emailAddress collection might trigger a lazy load "
-"of the collection\n"
-"        aPerson.getEmailAddresses().add(emailAddress);\n"
-"\n"
-"        session.getTransaction().commit();\n"
-"    }]]>"
-msgstr ""
-
 #. Tag: para
-#: tutorial.xml:863
 #, fuzzy, no-c-format
 msgid ""
 "This time we did not use a <emphasis>fetch</emphasis> query to initialize "
@@ -1910,13 +1220,11 @@ msgstr ""
 "라."
 
 #. Tag: title
-#: tutorial.xml:872
 #, no-c-format
 msgid "Bi-directional associations"
 msgstr "Bi-directional associations"
 
 #. Tag: para
-#: tutorial.xml:874
 #, fuzzy, no-c-format
 msgid ""
 "Next you will map a bi-directional association. You will make the "
@@ -1932,7 +1240,6 @@ msgstr ""
 "고 검색될 수 있다."
 
 #. Tag: para
-#: tutorial.xml:882
 #, no-c-format
 msgid ""
 "A relational database is more flexible than a network programming language, "
@@ -1941,7 +1248,6 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: tutorial.xml:890
 #, fuzzy, no-c-format
 msgid ""
 "First, add a collection of participants to the <literal>Event</literal> "
@@ -1950,41 +1256,13 @@ msgstr ""
 "먼저, 참여자들을 가진 한 개의 콜렉션을 <literal>Event</literal> Event 클래스"
 "에 추가시켜라:"
 
-#. Tag: programlisting
-#: tutorial.xml:895
-#, no-c-format
-msgid ""
-"<![CDATA[    private Set participants = new HashSet();\n"
-"\n"
-"    public Set getParticipants() {\n"
-"        return participants;\n"
-"    }\n"
-"\n"
-"    public void setParticipants(Set participants) {\n"
-"        this.participants = participants;\n"
-"    }]]>"
-msgstr ""
-
 #. Tag: para
-#: tutorial.xml:897
 #, fuzzy, no-c-format
 msgid ""
 "Now map this side of the association in <literal>Event.hbm.xml</literal>."
 msgstr "이제 <literal>Event.hbm.xml</literal> 내에 연관의 이 쪽도 매핑하라."
 
-#. Tag: programlisting
-#: tutorial.xml:901
-#, no-c-format
-msgid ""
-"<![CDATA[        <set name=\"participants\" table=\"PERSON_EVENT\" inverse="
-"\"true\">\n"
-"            <key column=\"EVENT_ID\"/>\n"
-"            <many-to-many column=\"PERSON_ID\" class=\"events.Person\"/>\n"
-"        </set>]]>"
-msgstr ""
-
 #. Tag: para
-#: tutorial.xml:903
 #, fuzzy, no-c-format
 msgid ""
 "These are normal <literal>set</literal> mappings in both mapping documents. "
@@ -2001,7 +1279,6 @@ msgstr ""
 "내에 있는 <literal>inverse=\"true\"</literal> 속성이다."
 
 #. Tag: para
-#: tutorial.xml:911
 #, fuzzy, no-c-format
 msgid ""
 "What this means is that Hibernate should take the other side, the "
@@ -2015,13 +1292,11 @@ msgstr ""
 "해하기가 훨씬 더 쉬울 것이다."
 
 #. Tag: title
-#: tutorial.xml:920
 #, no-c-format
 msgid "Working bi-directional links"
 msgstr "양방향 링크들에 작업하기"
 
 #. Tag: para
-#: tutorial.xml:922
 #, fuzzy, no-c-format
 msgid ""
 "First, keep in mind that Hibernate does not affect normal Java semantics. "
@@ -2045,7 +1320,6 @@ msgstr ""
 "것을 행하는 것을 결코 잊지 말아야 한다."
 
 #. Tag: para
-#: tutorial.xml:932
 #, fuzzy, no-c-format
 msgid ""
 "Many developers program defensively and create link management methods to "
@@ -2054,31 +1328,7 @@ msgstr ""
 "많은 개발자들은 방비책을 프로그램하고 양 측들을 정확하게 설정하기 위한 하나"
 "의 링크 관리 메소드들을 생성시킨다. 예를 들면 <literal>Person</literal>에서 :"
 
-#. Tag: programlisting
-#: tutorial.xml:937
-#, no-c-format
-msgid ""
-"<![CDATA[    protected Set getEvents() {\n"
-"        return events;\n"
-"    }\n"
-"\n"
-"    protected void setEvents(Set events) {\n"
-"        this.events = events;\n"
-"    }\n"
-"\n"
-"    public void addToEvent(Event event) {\n"
-"        this.getEvents().add(event);\n"
-"        event.getParticipants().add(this);\n"
-"    }\n"
-"\n"
-"    public void removeFromEvent(Event event) {\n"
-"        this.getEvents().remove(event);\n"
-"        event.getParticipants().remove(this);\n"
-"    }]]>"
-msgstr ""
-
 #. Tag: para
-#: tutorial.xml:939
 #, fuzzy, no-c-format
 msgid ""
 "The get and set methods for the collection are now protected. This allows "
@@ -2092,7 +1342,6 @@ msgstr ""
 "금지시킨다. 당신은 다른 측 상에 있는 콜렉션에 대해 동일한 것을 행할 것이다."
 
 #. Tag: para
-#: tutorial.xml:946
 #, fuzzy, no-c-format
 msgid ""
 "What about the <literal>inverse</literal> mapping attribute? For you, and "
@@ -2123,13 +1372,11 @@ msgstr ""
 "이든 선택할 수 있으며 차이점은 없다."
 
 #. Tag: title
-#: tutorial.xml:962
 #, no-c-format
 msgid "Part 3 - The EventManager web application"
 msgstr "파트 3 - EventManager 웹 어플리케이션"
 
 #. Tag: para
-#: tutorial.xml:964
 #, fuzzy, no-c-format
 msgid ""
 "A Hibernate web application uses <literal>Session</literal> and "
@@ -2145,13 +1392,11 @@ msgstr ""
 "열할 수 있고, 그것은 새로운 이벤트들을 입력하기 위한 HTML form을 제공한다."
 
 #. Tag: title
-#: tutorial.xml:972
 #, no-c-format
 msgid "Writing the basic servlet"
 msgstr "기본 서블릿 작성하기"
 
 #. Tag: para
-#: tutorial.xml:974
 #, fuzzy, no-c-format
 msgid ""
 "First we need create our basic processing servlet. Since our servlet only "
@@ -2161,52 +1406,7 @@ msgstr ""
 "서블릿은 HTTP <literal>GET</literal> 요청들 만을 처리하므로, 우리가 구현하는 "
 "메소드는 <literal>doGet()</literal>이다:"
 
-#. Tag: programlisting
-#: tutorial.xml:980
-#, no-c-format
-msgid ""
-"<![CDATA[package org.hibernate.tutorial.web;\n"
-"\n"
-"// Imports\n"
-"\n"
-"public class EventManagerServlet extends HttpServlet {\n"
-"\n"
-"    protected void doGet(\n"
-"            HttpServletRequest request,\n"
-"            HttpServletResponse response) throws ServletException, "
-"IOException {\n"
-"\n"
-"        SimpleDateFormat dateFormatter = new SimpleDateFormat( \"dd.MM.yyyy"
-"\" );\n"
-"\n"
-"        try {\n"
-"            // Begin unit of work\n"
-"            HibernateUtil.getSessionFactory().getCurrentSession()."
-"beginTransaction();\n"
-"\n"
-"            // Process request and render page...\n"
-"\n"
-"            // End unit of work\n"
-"            HibernateUtil.getSessionFactory().getCurrentSession()."
-"getTransaction().commit();\n"
-"        }\n"
-"        catch (Exception ex) {\n"
-"            HibernateUtil.getSessionFactory().getCurrentSession()."
-"getTransaction().rollback();\n"
-"            if ( ServletException.class.isInstance( ex ) ) {\n"
-"                throw ( ServletException ) ex;\n"
-"            }\n"
-"            else {\n"
-"                throw new ServletException( ex );\n"
-"            }\n"
-"        }\n"
-"    }\n"
-"\n"
-"}]]>"
-msgstr ""
-
 #. Tag: para
-#: tutorial.xml:982
 #, no-c-format
 msgid ""
 "Save this servlet as <filename>src/main/java/org/hibernate/tutorial/web/"
@@ -2214,7 +1414,6 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: tutorial.xml:987
 #, fuzzy, no-c-format
 msgid ""
 "The pattern applied here is called <emphasis>session-per-request</emphasis>. "
@@ -2233,7 +1432,6 @@ msgstr ""
 "commit 모드를 사용하지 않는다)."
 
 #. Tag: para
-#: tutorial.xml:996
 #, no-c-format
 msgid ""
 "Do <emphasis>not</emphasis> use a new Hibernate <literal>Session</literal> "
@@ -2248,7 +1446,6 @@ msgstr ""
 "하라."
 
 #. Tag: para
-#: tutorial.xml:1003
 #, fuzzy, no-c-format
 msgid ""
 "Next, the possible actions of the request are processed and the response "
@@ -2258,7 +1455,6 @@ msgstr ""
 "장 그부분으로 갈 것이다."
 
 #. Tag: para
-#: tutorial.xml:1008
 #, fuzzy, no-c-format
 msgid ""
 "Finally, the unit of work ends when processing and rendering are complete. "
@@ -2280,57 +1476,18 @@ msgstr ""
 "할 때 그것을 필요로 할 것이다."
 
 #. Tag: title
-#: tutorial.xml:1022
 #, no-c-format
 msgid "Processing and rendering"
 msgstr "프로세싱과 렌더링"
 
 #. Tag: para
-#: tutorial.xml:1024
 #, fuzzy, no-c-format
 msgid ""
 "Now you can implement the processing of the request and the rendering of the "
 "page."
 msgstr "요청의 처리와 페이지의 렌더링을 구현하자."
 
-#. Tag: programlisting
-#: tutorial.xml:1028
-#, no-c-format
-msgid ""
-"<![CDATA[        // Write HTML header\n"
-"        PrintWriter out = response.getWriter();\n"
-"        out.println(\"<html><head><title>Event Manager</title></head><body>"
-"\");\n"
-"\n"
-"        // Handle actions\n"
-"        if ( \"store\".equals(request.getParameter(\"action\")) ) {\n"
-"\n"
-"            String eventTitle = request.getParameter(\"eventTitle\");\n"
-"            String eventDate = request.getParameter(\"eventDate\");\n"
-"\n"
-"            if ( \"\".equals(eventTitle) || \"\".equals(eventDate) ) {\n"
-"                out.println(\"<b><i>Please enter event title and date.</i></"
-"b>\");\n"
-"            }\n"
-"            else {\n"
-"                createAndStoreEvent(eventTitle, dateFormatter.parse"
-"(eventDate));\n"
-"                out.println(\"<b><i>Added event.</i></b>\");\n"
-"            }\n"
-"        }\n"
-"\n"
-"        // Print page\n"
-"       printEventForm(out);\n"
-"       listEvents(out, dateFormatter);\n"
-"\n"
-"       // Write HTML footer\n"
-"       out.println(\"</body></html>\");\n"
-"       out.flush();\n"
-"       out.close();]]>"
-msgstr ""
-
 #. Tag: para
-#: tutorial.xml:1030
 #, fuzzy, no-c-format
 msgid ""
 "This coding style, with a mix of Java and HTML, would not scale in a more "
@@ -2347,25 +1504,7 @@ msgstr ""
 "든 이벤트들의 목록이 프린트된다. 첫 번째 메소드는 시행적이고 오직 HTML을 출력"
 "한다:"
 
-#. Tag: programlisting
-#: tutorial.xml:1039
-#, no-c-format
-msgid ""
-"<![CDATA[    private void printEventForm(PrintWriter out) {\n"
-"        out.println(\"<h2>Add new event:</h2>\");\n"
-"        out.println(\"<form>\");\n"
-"        out.println(\"Title: <input name='eventTitle' length='50'/><br/>"
-"\");\n"
-"        out.println(\"Date (e.g. 24.12.2009): <input name='eventDate' "
-"length='10'/><br/>\");\n"
-"        out.println(\"<input type='submit' name='action' value='store'/>"
-"\");\n"
-"        out.println(\"</form>\");\n"
-"    }]]>"
-msgstr ""
-
 #. Tag: para
-#: tutorial.xml:1041
 #, no-c-format
 msgid ""
 "The <literal>listEvents()</literal> method uses the Hibernate "
@@ -2374,38 +1513,7 @@ msgstr ""
 "<literal>listEvents()</literal> 메소드는 하나의 질의를 실행하기 위해서 현재"
 "의 쓰레드에 결합된 Hibernate <literal>Session</literal>을 사용한다:"
 
-#. Tag: programlisting
-#: tutorial.xml:1047
-#, no-c-format
-msgid ""
-"<![CDATA[    private void listEvents(PrintWriter out, SimpleDateFormat "
-"dateFormatter) {\n"
-"\n"
-"        List result = HibernateUtil.getSessionFactory()\n"
-"                .getCurrentSession().createCriteria(Event.class).list();\n"
-"        if (result.size() > 0) {\n"
-"            out.println(\"<h2>Events in database:</h2>\");\n"
-"            out.println(\"<table border='1'>\");\n"
-"            out.println(\"<tr>\");\n"
-"            out.println(\"<th>Event title</th>\");\n"
-"            out.println(\"<th>Event date</th>\");\n"
-"            out.println(\"</tr>\");\n"
-"            Iterator it = result.iterator();\n"
-"            while (it.hasNext()) {\n"
-"                Event event = (Event) it.next();\n"
-"                out.println(\"<tr>\");\n"
-"                out.println(\"<td>\" + event.getTitle() + \"</td>\");\n"
-"                out.println(\"<td>\" + dateFormatter.format(event.getDate()) "
-"+ \"</td>\");\n"
-"                out.println(\"</tr>\");\n"
-"            }\n"
-"            out.println(\"</table>\");\n"
-"        }\n"
-"    }]]>"
-msgstr ""
-
 #. Tag: para
-#: tutorial.xml:1049
 #, no-c-format
 msgid ""
 "Finally, the <literal>store</literal> action is dispatched to the "
@@ -2416,23 +1524,7 @@ msgstr ""
 "literal> 메소드로 디스패치된다. 그것은 현재 쓰레드의 <literal>Session</"
 "literal>을 사용한다:"
 
-#. Tag: programlisting
-#: tutorial.xml:1055
-#, no-c-format
-msgid ""
-"<![CDATA[    protected void createAndStoreEvent(String title, Date theDate) "
-"{\n"
-"        Event theEvent = new Event();\n"
-"        theEvent.setTitle(title);\n"
-"        theEvent.setDate(theDate);\n"
-"\n"
-"        HibernateUtil.getSessionFactory()\n"
-"                .getCurrentSession().save(theEvent);\n"
-"    }]]>"
-msgstr ""
-
 #. Tag: para
-#: tutorial.xml:1057
 #, fuzzy, no-c-format
 msgid ""
 "The servlet is now complete. A request to the servlet will be processed in a "
@@ -2454,13 +1546,11 @@ msgstr ""
 "키를 보라."
 
 #. Tag: title
-#: tutorial.xml:1071
 #, no-c-format
 msgid "Deploying and testing"
 msgstr "배치하기 그리고 테스트하기"
 
 #. Tag: para
-#: tutorial.xml:1073
 #, no-c-format
 msgid ""
 "To deploy this application for testing we must create a Web ARchive (WAR). "
@@ -2468,32 +1558,7 @@ msgid ""
 "web.xml</filename>"
 msgstr ""
 
-#. Tag: programlisting
-#: tutorial.xml:1079
-#, no-c-format
-msgid ""
-"<![CDATA[<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
-"<web-app version=\"2.4\"\n"
-"    xmlns=\"http://java.sun.com/xml/ns/j2ee\"\n"
-"    xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n"
-"    xsi:schemaLocation=\"http://java.sun.com/xml/ns/j2ee http://java.sun.com/"
-"xml/ns/j2ee/web-app_2_4.xsd\">\n"
-"\n"
-"    <servlet>\n"
-"        <servlet-name>Event Manager</servlet-name>\n"
-"        <servlet-class>org.hibernate.tutorial.web.EventManagerServlet</"
-"servlet-class>\n"
-"    </servlet>\n"
-"\n"
-"    <servlet-mapping>\n"
-"        <servlet-name>Event Manager</servlet-name>\n"
-"        <url-pattern>/eventmanager</url-pattern>\n"
-"    </servlet-mapping>\n"
-"</web-app>]]>"
-msgstr ""
-
 #. Tag: para
-#: tutorial.xml:1081
 #, fuzzy, no-c-format
 msgid ""
 "To build and deploy call <literal>mvn package</literal> in your project "
@@ -2507,16 +1572,14 @@ msgstr ""
 "을 배치하기 위해 임의의 Tomcat 구성을 변경하지 않아야 한다."
 
 #. Tag: para
-#: tutorial.xml:1088
 #, no-c-format
 msgid ""
 "If you do not have Tomcat installed, download it from <ulink url=\"http://"
-"tomcat.apache.org/\"></ulink> and follow the installation instructions. Our "
+"tomcat.apache.org/\" /> and follow the installation instructions. Our "
 "application requires no changes to the standard Tomcat configuration."
 msgstr ""
 
 #. Tag: para
-#: tutorial.xml:1096
 #, no-c-format
 msgid ""
 "Once deployed and Tomcat is running, access the application at "
@@ -2534,13 +1597,11 @@ msgstr ""
 "록 하라."
 
 #. Tag: title
-#: tutorial.xml:1109
 #, no-c-format
 msgid "Summary"
 msgstr "요약"
 
 #. Tag: para
-#: tutorial.xml:1111
 #, fuzzy, no-c-format
 msgid ""
 "This tutorial covered the basics of writing a simple standalone Hibernate "

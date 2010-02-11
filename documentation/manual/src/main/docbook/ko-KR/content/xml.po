@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2009-07-14 19:56+0000\n"
+"POT-Creation-Date: 2010-02-04T04:51:23\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -11,29 +11,25 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 
 #. Tag: title
-#: xml.xml:29
 #, no-c-format
 msgid "XML Mapping"
 msgstr "XML 매핑"
 
-#. Tag: emphasis
-#: xml.xml:31
+#. Tag: para
 #, fuzzy, no-c-format
 msgid ""
-"XML Mapping is an experimental feature in Hibernate 3.0 and is currently "
-"under active development."
+"<emphasis> XML Mapping is an experimental feature in Hibernate 3.0 and is "
+"currently under active development. </emphasis>"
 msgstr ""
 "이것은 Hibernate3.0에서 실험적인 특징이고 매우 활동적으로 개발 중에 있음을 노"
 "트하라."
 
 #. Tag: title
-#: xml.xml:37
 #, no-c-format
 msgid "Working with XML data"
 msgstr "XML 데이터로 작업하기"
 
 #. Tag: para
-#: xml.xml:39
 #, fuzzy, no-c-format
 msgid ""
 "Hibernate allows you to work with persistent XML data in much the same way "
@@ -48,7 +44,6 @@ msgstr ""
 "수 있다."
 
 #. Tag: para
-#: xml.xml:46
 #, no-c-format
 msgid ""
 "Hibernate supports dom4j as API for manipulating XML trees. You can write "
@@ -68,7 +63,6 @@ msgstr ""
 "literal>(merging(병합)은 아직 지원되지 않는다)."
 
 #. Tag: para
-#: xml.xml:56
 #, no-c-format
 msgid ""
 "This feature has many applications including data import/export, "
@@ -78,7 +72,6 @@ msgstr ""
 "통한 엔티티 데이터의 구체화를 포함하는 많은 어플리케이션들을 갖는다."
 
 #. Tag: para
-#: xml.xml:61
 #, fuzzy, no-c-format
 msgid ""
 "A single mapping can be used to simultaneously map properties of a class and "
@@ -90,86 +83,26 @@ msgstr ""
 "것은 단지 XML을 매핑시키는데 사용될 수도 있다."
 
 #. Tag: title
-#: xml.xml:68
 #, no-c-format
 msgid "Specifying XML and class mapping together"
 msgstr "XML과 클래스 매핑을 함께 지정하기"
 
 #. Tag: para
-#: xml.xml:70
 #, no-c-format
 msgid "Here is an example of mapping a POJO and XML simultaneously:"
 msgstr "다음은 POJO와 XML을 동시에 매핑시키는 예제이다 :"
 
-#. Tag: programlisting
-#: xml.xml:74
-#, no-c-format
-msgid ""
-"<![CDATA[<class name=\"Account\" \n"
-"        table=\"ACCOUNTS\" \n"
-"        node=\"account\">\n"
-"        \n"
-"    <id name=\"accountId\" \n"
-"            column=\"ACCOUNT_ID\" \n"
-"            node=\"@id\"/>\n"
-"            \n"
-"    <many-to-one name=\"customer\" \n"
-"            column=\"CUSTOMER_ID\" \n"
-"            node=\"customer/@id\" \n"
-"            embed-xml=\"false\"/>\n"
-"            \n"
-"    <property name=\"balance\" \n"
-"            column=\"BALANCE\" \n"
-"            node=\"balance\"/>\n"
-"            \n"
-"    ...\n"
-"    \n"
-"</class>]]>"
-msgstr ""
-
 #. Tag: title
-#: xml.xml:78
 #, no-c-format
 msgid "Specifying only an XML mapping"
 msgstr "XML 매핑만을 지정하기"
 
 #. Tag: para
-#: xml.xml:80
 #, no-c-format
 msgid "Here is an example where there is no POJO class:"
 msgstr "다음은 POJO 클래스가 존재하지 않는 예제이다:"
 
-#. Tag: programlisting
-#: xml.xml:84
-#, no-c-format
-msgid ""
-"<![CDATA[<class entity-name=\"Account\" \n"
-"        table=\"ACCOUNTS\" \n"
-"        node=\"account\">\n"
-"        \n"
-"    <id name=\"id\" \n"
-"            column=\"ACCOUNT_ID\" \n"
-"            node=\"@id\" \n"
-"            type=\"string\"/>\n"
-"            \n"
-"    <many-to-one name=\"customerId\" \n"
-"            column=\"CUSTOMER_ID\" \n"
-"            node=\"customer/@id\" \n"
-"            embed-xml=\"false\" \n"
-"            entity-name=\"Customer\"/>\n"
-"            \n"
-"    <property name=\"balance\" \n"
-"            column=\"BALANCE\" \n"
-"            node=\"balance\" \n"
-"            type=\"big_decimal\"/>\n"
-"            \n"
-"    ...\n"
-"    \n"
-"</class>]]>"
-msgstr ""
-
 #. Tag: para
-#: xml.xml:86
 #, fuzzy, no-c-format
 msgid ""
 "This mapping allows you to access the data as a dom4j tree, or as a graph of "
@@ -182,13 +115,11 @@ msgstr ""
 "다."
 
 #. Tag: title
-#: xml.xml:97
 #, no-c-format
 msgid "XML mapping metadata"
 msgstr "XML 매핑 메타데이터"
 
 #. Tag: para
-#: xml.xml:99
 #, fuzzy, no-c-format
 msgid ""
 "A range of Hibernate mapping elements accept the <literal>node</literal> "
@@ -201,26 +132,22 @@ msgstr ""
 "하도록 한다. <literal>node</literal> 속성의 포맷은 다음 중 하나이어야 한다:"
 
 #. Tag: para
-#: xml.xml:108
 #, fuzzy, no-c-format
 msgid "<literal>\"element-name\"</literal>: map to the named XML element"
 msgstr "<literal>\"element-name\"</literal> - 명명된 XML 요소로 매핑시킨다"
 
 #. Tag: para
-#: xml.xml:111
 #, fuzzy, no-c-format
 msgid "<literal>\"@attribute-name\"</literal>: map to the named XML attribute"
 msgstr ""
 "<literal>\"@attribute-name\"</literal> - 명명된 XML 속성으로 매핑시킨다"
 
 #. Tag: para
-#: xml.xml:114
 #, fuzzy, no-c-format
 msgid "<literal>\".\"</literal>: map to the parent element"
 msgstr "<literal>\".\"</literal> - 부모 요소로 매핑 시킨다"
 
 #. Tag: para
-#: xml.xml:117
 #, fuzzy, no-c-format
 msgid ""
 "<literal>\"element-name/@attribute-name\"</literal>: map to the named "
@@ -230,7 +157,6 @@ msgstr ""
 "성으로 매핑시킨다"
 
 #. Tag: para
-#: xml.xml:124
 #, fuzzy, no-c-format
 msgid ""
 "For collections and single valued associations, there is an additional "
@@ -249,7 +175,6 @@ msgstr ""
 "인트 연관들에 대해 나타날 것이고 콜렉션들은 단순히 전혀 나타나지 않을 것이다."
 
 #. Tag: para
-#: xml.xml:134
 #, fuzzy, no-c-format
 msgid ""
 "Do not leave <literal>embed-xml=\"true\"</literal> for too many "
@@ -259,48 +184,7 @@ msgstr ""
 "지 말도록 주의해야 한다. 왜냐하면 XML이 순환적으로 잘 처리하지 못하기 때문이"
 "다!"
 
-#. Tag: programlisting
-#: xml.xml:139
-#, no-c-format
-msgid ""
-"<![CDATA[<class name=\"Customer\" \n"
-"        table=\"CUSTOMER\" \n"
-"        node=\"customer\">\n"
-"        \n"
-"    <id name=\"id\" \n"
-"            column=\"CUST_ID\" \n"
-"            node=\"@id\"/>\n"
-"            \n"
-"    <map name=\"accounts\" \n"
-"            node=\".\" \n"
-"            embed-xml=\"true\">\n"
-"        <key column=\"CUSTOMER_ID\" \n"
-"                not-null=\"true\"/>\n"
-"        <map-key column=\"SHORT_DESC\" \n"
-"                node=\"@short-desc\" \n"
-"                type=\"string\"/>\n"
-"        <one-to-many entity-name=\"Account\"\n"
-"                embed-xml=\"false\" \n"
-"                node=\"account\"/>\n"
-"    </map>\n"
-"    \n"
-"    <component name=\"name\" \n"
-"            node=\"name\">\n"
-"        <property name=\"firstName\" \n"
-"                node=\"first-name\"/>\n"
-"        <property name=\"initial\" \n"
-"                node=\"initial\"/>\n"
-"        <property name=\"lastName\" \n"
-"                node=\"last-name\"/>\n"
-"    </component>\n"
-"    \n"
-"    ...\n"
-"    \n"
-"</class>]]>"
-msgstr ""
-
 #. Tag: para
-#: xml.xml:141
 #, fuzzy, no-c-format
 msgid ""
 "In this case, the collection of account ids is embedded, but not the actual "
@@ -309,38 +193,12 @@ msgstr ""
 "이 경우에, 우리는 실제 account 데이터가 아닌, account id들을 가진 콜렉션을 삽"
 "입시키기로 결정했다. 다음 HQL 질의:"
 
-#. Tag: programlisting
-#: xml.xml:146
-#, no-c-format
-msgid ""
-"<![CDATA[from Customer c left join fetch c.accounts where c.lastName like :"
-"lastName]]>"
-msgstr ""
-
 #. Tag: para
-#: xml.xml:148
 #, fuzzy, no-c-format
 msgid "would return datasets such as this:"
 msgstr "는 다음과 같은 데이터셋들을 반환할 것이다:"
 
-#. Tag: programlisting
-#: xml.xml:152
-#, no-c-format
-msgid ""
-"<![CDATA[<customer id=\"123456789\">\n"
-"    <account short-desc=\"Savings\">987632567</account>\n"
-"    <account short-desc=\"Credit Card\">985612323</account>\n"
-"    <name>\n"
-"        <first-name>Gavin</first-name>\n"
-"        <initial>A</initial>\n"
-"        <last-name>King</last-name>\n"
-"    </name>\n"
-"    ...\n"
-"</customer>]]>"
-msgstr ""
-
 #. Tag: para
-#: xml.xml:154
 #, no-c-format
 msgid ""
 "If you set <literal>embed-xml=\"true\"</literal> on the <literal>&lt;one-to-"
@@ -350,36 +208,12 @@ msgstr ""
 "<literal>embed-xml=\"true\"</literal>를 설정할 경우, 데이터는 다음과 같이 보"
 "일 수도 있다:"
 
-#. Tag: programlisting
-#: xml.xml:159
-#, no-c-format
-msgid ""
-"<![CDATA[<customer id=\"123456789\">\n"
-"    <account id=\"987632567\" short-desc=\"Savings\">\n"
-"        <customer id=\"123456789\"/>\n"
-"        <balance>100.29</balance>\n"
-"    </account>\n"
-"    <account id=\"985612323\" short-desc=\"Credit Card\">\n"
-"        <customer id=\"123456789\"/>\n"
-"        <balance>-2370.34</balance>\n"
-"    </account>\n"
-"    <name>\n"
-"        <first-name>Gavin</first-name>\n"
-"        <initial>A</initial>\n"
-"        <last-name>King</last-name>\n"
-"    </name>\n"
-"    ...\n"
-"</customer>]]>"
-msgstr ""
-
 #. Tag: title
-#: xml.xml:165
 #, no-c-format
 msgid "Manipulating XML data"
 msgstr "XML 데이터 처리하기"
 
 #. Tag: para
-#: xml.xml:167
 #, fuzzy, no-c-format
 msgid ""
 "You can also re-read and update XML documents in the application. You can do "
@@ -388,54 +222,7 @@ msgstr ""
 "우리의 어플리케이션 내에서 XML 문서들을 다시 읽어들이고 업데이트 시키자. 우리"
 "는 dom4j 세션을 얻어서 이것을 행한다:"
 
-#. Tag: programlisting
-#: xml.xml:172
-#, no-c-format
-msgid ""
-"<![CDATA[Document doc = ....;\n"
-"       \n"
-"Session session = factory.openSession();\n"
-"Session dom4jSession = session.getSession(EntityMode.DOM4J);\n"
-"Transaction tx = session.beginTransaction();\n"
-"\n"
-"List results = dom4jSession\n"
-"    .createQuery(\"from Customer c left join fetch c.accounts where c."
-"lastName like :lastName\")\n"
-"    .list();\n"
-"for ( int i=0; i<results.size(); i++ ) {\n"
-"    //add the customer data to the XML document\n"
-"    Element customer = (Element) results.get(i);\n"
-"    doc.add(customer);\n"
-"}\n"
-"\n"
-"tx.commit();\n"
-"session.close();]]>"
-msgstr ""
-
-#. Tag: programlisting
-#: xml.xml:174
-#, no-c-format
-msgid ""
-"<![CDATA[Session session = factory.openSession();\n"
-"Session dom4jSession = session.getSession(EntityMode.DOM4J);\n"
-"Transaction tx = session.beginTransaction();\n"
-"\n"
-"Element cust = (Element) dom4jSession.get(\"Customer\", customerId);\n"
-"for ( int i=0; i<results.size(); i++ ) {\n"
-"    Element customer = (Element) results.get(i);\n"
-"    //change the customer name in the XML and database\n"
-"    Element name = customer.element(\"name\");\n"
-"    name.element(\"first-name\").setText(firstName);\n"
-"    name.element(\"initial\").setText(initial);\n"
-"    name.element(\"last-name\").setText(lastName);\n"
-"}\n"
-"\n"
-"tx.commit();\n"
-"session.close();]]>"
-msgstr ""
-
 #. Tag: para
-#: xml.xml:176
 #, fuzzy, no-c-format
 msgid ""
 "When implementing XML-based data import/export, it is useful to combine this "

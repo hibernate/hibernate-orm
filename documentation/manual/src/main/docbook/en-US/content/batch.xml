@@ -23,7 +23,11 @@
   ~ Boston, MA  02110-1301  USA
   -->
 
-<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
+<!ENTITY % BOOK_ENTITIES SYSTEM "../HIBERNATE_-_Relational_Persistence_for_Idiomatic_Java.ent">
+%BOOK_ENTITIES;
+
+]>
 
 <chapter id="batch">
     <title>Batch processing</title>
@@ -75,7 +79,7 @@ session.close();]]></programlisting>
         <literal>CacheMode</literal> to disable interaction with the second-level cache.
     </para>
 
-    <sect1 id="batch-inserts">
+    <section id="batch-inserts">
         <title>Batch inserts</title>
 
         <para>
@@ -100,9 +104,9 @@ for ( int i=0; i<100000; i++ ) {
 tx.commit();
 session.close();]]></programlisting>
 
-    </sect1>
+    </section>
 
-    <sect1 id="batch-update" >
+    <section id="batch-update" >
         <title>Batch updates</title>
 
         <para>
@@ -131,9 +135,9 @@ while ( customers.next() ) {
 tx.commit();
 session.close();]]></programlisting>
 
-    </sect1>
+    </section>
     
-    <sect1 id="batch-statelesssession">
+    <section id="batch-statelesssession">
         <title>The StatelessSession interface</title>
         <para>
             Alternatively, Hibernate provides a command-oriented API that can be used for 
@@ -180,9 +184,9 @@ session.close();]]></programlisting>
             interface.
         </para>
 
-    </sect1>
+    </section>
 
-    <sect1 id="batch-direct" revision="3">
+    <section id="batch-direct" revision="3">
         <title>DML-style operations</title>
 
         <para>
@@ -372,6 +376,6 @@ int createdEntities = s.createQuery( hqlInsert )
 tx.commit();
 session.close();]]></programlisting>
 
-    </sect1>
+    </section>
 
 </chapter>

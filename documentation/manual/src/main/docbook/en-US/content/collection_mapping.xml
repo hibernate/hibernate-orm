@@ -23,12 +23,16 @@
   ~ Boston, MA  02110-1301  USA
   -->
 
-<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
+<!ENTITY % BOOK_ENTITIES SYSTEM "../HIBERNATE_-_Relational_Persistence_for_Idiomatic_Java.ent">
+%BOOK_ENTITIES;
+
+]>
 
 <chapter id="collections">
     <title>Collection mapping</title>
 
-    <sect1 id="collections-persistent" revision="3">
+    <section id="collections-persistent" revision="3">
         <title>Persistent collections</title>
         
         <para>
@@ -99,9 +103,9 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
             the semantics of bidirectional associations (these are discussed later).
         </para>
 
-    </sect1>
+    </section>
 
-    <sect1 id="collections-mapping" revision="4">
+    <section id="collections-mapping" revision="4">
         <title>Collection mappings</title>
 
         <tip>
@@ -270,7 +274,7 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
             </calloutlist>
         </programlistingco>
 
-        <sect2 id="collections-foreignkeys" >
+        <section id="collections-foreignkeys" >
            <title>Collection foreign keys</title>
     
             <para>
@@ -301,9 +305,9 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
                 element.
             </para>
             
-        </sect2>
+        </section>
         
-        <sect2 id="collections-elements" >
+        <section id="collections-elements" >
             <title>Collection elements</title>
     
             <para>
@@ -324,9 +328,9 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
                 associations.
             </para>
             
-        </sect2>
+        </section>
         
-        <sect2 id="collections-indexed">
+        <section id="collections-indexed">
             <title>Indexed collections</title>
     
             <para>
@@ -439,9 +443,9 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
                 optionally sorted or ordered.
             </para>
             
-        </sect2>
+        </section>
 
-    <sect2 id="collections-ofvalues" revision="2">
+    <section id="collections-ofvalues" revision="2">
         <title>Collections of values and many-to-many associations</title>
 
         <para>
@@ -643,9 +647,9 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
     </composite-element>
 </list>]]></programlisting>
 
-    </sect2>
+    </section>
 
-    <sect2 id="collections-onetomany">
+    <section id="collections-onetomany">
         <title>One-to-many associations</title>
 
         <para>
@@ -740,14 +744,14 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
     <map-key formula="partName"/>
     <one-to-many class="Part"/>
 </map>]]></programlisting>
-    </sect2>
+    </section>
     
-    </sect1>
+    </section>
 
-    <sect1 id="collections-advancedmappings">
+    <section id="collections-advancedmappings">
         <title>Advanced collection mappings</title>
 
-    <sect2 id="collections-sorted" revision="2">
+    <section id="collections-sorted" revision="2">
         <title>Sorted collections</title>
 
         <para>
@@ -814,9 +818,9 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
 
         <programlisting role="JAVA"><![CDATA[sortedUsers = s.createFilter( group.getUsers(), "order by this.name" ).list();]]></programlisting>
 
-    </sect2>
+    </section>
 
-     <sect2 id="collections-bidirectional" revision="1">
+     <section id="collections-bidirectional" revision="1">
         <title>Bidirectional associations</title>
 
         <para>
@@ -925,9 +929,9 @@ session.persist(category);               // The relationship will be saved]]></p
             affect the operation of cascades as these are orthogonal concepts.
         </para>
 
-    </sect2>
+    </section>
 
-    <sect2 id="collections-indexedbidirectional">
+    <section id="collections-indexedbidirectional">
         <title>Bidirectional associations with indexed collections</title>
         <para>
             A bidirectional association where one end is represented as a <literal>&lt;list&gt;</literal>
@@ -993,9 +997,9 @@ session.persist(category);               // The relationship will be saved]]></p
            updates to the foreign key. <!--TODO: Does this really result in some unnecessary update statements?-->
        </para>
 
-    </sect2>
+    </section>
     
-    <sect2 id="collections-ternary">
+    <section id="collections-ternary">
         <title>Ternary associations</title>
 
         <para>
@@ -1024,9 +1028,9 @@ session.persist(category);               // The relationship will be saved]]></p
             A final alternative is to use composite elements, which will be discussed later. 
         </para>
         
-    </sect2>
+    </section>
     
-    <sect2 id="collections-idbag" revision="1">
+    <section id="collections-idbag" revision="1">
         <title><literal>Using an &lt;idbag&gt;</literal></title>
 
         <para>
@@ -1070,13 +1074,13 @@ session.persist(category);               // The relationship will be saved]]></p
             strategy is not supported for <literal>&lt;idbag&gt;</literal> collection identifiers.
         </para>
 
-    </sect2>
+    </section>
 
-    </sect1>
+    </section>
     
     <!--undocumenting this stuff -->
     
-    <!--sect1 id="collections-heterogeneous">
+    <!--section id="collections-heterogeneous">
         <title>Heterogeneous Associations</title>
 
         <para>
@@ -1086,9 +1090,9 @@ session.persist(category);               // The relationship will be saved]]></p
             rarely, if ever.
         </para>
 
-    </sect1-->
+    </section-->
 
-    <sect1 id="collections-example" revision="1">
+    <section id="collections-example" revision="1">
         <title>Collection examples</title>
 
         <para>
@@ -1264,6 +1268,6 @@ alter table childset add constraint childsetfk1 (child_id) references child]]></
             in the next chapter.
         </para>
 
-    </sect1>
+    </section>
 
 </chapter>

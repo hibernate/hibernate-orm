@@ -1,198 +1,93 @@
-# SOME DESCRIPTIVE TITLE.
-# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+# 
+# AUTHOR <EMAIL@ADDRESS>, YEAR.
 #
-#, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: PACKAGE VERSION\n"
-"Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2009-07-14 19:56+0000\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
-"Language-Team: LANGUAGE <kde-i18n-doc@kde.org>\n"
+"Project-Id-Version: 0\n"
+"POT-Creation-Date: 2010-02-11T05:38:15\n"
+"PO-Revision-Date: 2010-02-11T05:38:15\n"
+"Last-Translator: Automatically generated\n"
+"Language-Team: None\n"
 "MIME-Version: 1.0\n"
-"Content-Type: application/x-xml2pot; charset=UTF-8\n"
+"Content-Type: application/x-publican; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
 #. Tag: title
-#: filters.xml:29
 #, no-c-format
 msgid "Filtering data"
 msgstr ""
 
 #. Tag: para
-#: filters.xml:31
 #, no-c-format
 msgid "Hibernate3 provides an innovative new approach to handling data with \"visibility\" rules. A <emphasis>Hibernate filter</emphasis> is a global, named, parameterized filter that can be enabled or disabled for a particular Hibernate session."
 msgstr ""
 
 #. Tag: title
-#: filters.xml:38
 #, no-c-format
 msgid "Hibernate filters"
 msgstr ""
 
 #. Tag: para
-#: filters.xml:40
 #, no-c-format
 msgid "Hibernate3 has the ability to pre-define filter criteria and attach those filters at both a class level and a collection level. A filter criteria allows you to define a restriction clause similar to the existing \"where\" attribute available on the class and various collection elements. These filter conditions, however, can be parameterized. The application can then decide at runtime whether certain filters should be enabled and what their parameter values should be. Filters can be used like database views, but they are parameterized inside the application."
 msgstr ""
 
 #. Tag: para
-#: filters.xml:50
 #, no-c-format
 msgid "In order to use filters, they must first be defined and then attached to the appropriate mapping elements. To define a filter, use the <literal>&lt;filter-def/&gt;</literal> element within a <literal>&lt;hibernate-mapping/&gt;</literal> element:"
 msgstr ""
 
-#. Tag: programlisting
-#: filters.xml:56
-#, no-c-format
-msgid ""
-      "<![CDATA[<filter-def name=\"myFilter\">\n"
-      "    <filter-param name=\"myFilterParam\" type=\"string\"/>\n"
-      "</filter-def>]]>"
-msgstr ""
-
 #. Tag: para
-#: filters.xml:58
 #, no-c-format
 msgid "This filter can then be attached to a class:"
 msgstr ""
 
-#. Tag: programlisting
-#: filters.xml:62
-#, no-c-format
-msgid ""
-      "<![CDATA[<class name=\"myClass\" ...>\n"
-      "    ...\n"
-      "    <filter name=\"myFilter\" condition=\":myFilterParam = MY_FILTERED_COLUMN\"/>\n"
-      "</class>]]>"
-msgstr ""
-
 #. Tag: para
-#: filters.xml:64
 #, no-c-format
 msgid "Or, to a collection:"
 msgstr ""
 
-#. Tag: programlisting
-#: filters.xml:68
-#, no-c-format
-msgid ""
-      "<![CDATA[<set ...>\n"
-      "    <filter name=\"myFilter\" condition=\":myFilterParam = MY_FILTERED_COLUMN\"/>\n"
-      "</set>]]>"
-msgstr ""
-
 #. Tag: para
-#: filters.xml:70
 #, no-c-format
 msgid "Or, to both or multiples of each at the same time."
 msgstr ""
 
 #. Tag: para
-#: filters.xml:74
 #, no-c-format
 msgid "The methods on <literal>Session</literal> are: <literal>enableFilter(String filterName)</literal>, <literal>getEnabledFilter(String filterName)</literal>, and <literal>disableFilter(String filterName)</literal>. By default, filters are <emphasis>not</emphasis> enabled for a given session. Filters must be enabled through use of the <literal>Session.enableFilter()</literal> method, which returns an instance of the <literal>Filter</literal> interface. If you used the simple filter defined above, it would look like this:"
 msgstr ""
 
-#. Tag: programlisting
-#: filters.xml:83
-#, no-c-format
-msgid "<![CDATA[session.enableFilter(\"myFilter\").setParameter(\"myFilterParam\", \"some-value\");]]>"
-msgstr ""
-
 #. Tag: para
-#: filters.xml:85
 #, no-c-format
 msgid "Methods on the org.hibernate.Filter interface do allow the method-chaining common to much of Hibernate."
 msgstr ""
 
 #. Tag: para
-#: filters.xml:89
 #, no-c-format
 msgid "The following is a full example, using temporal data with an effective record date pattern:"
 msgstr ""
 
-#. Tag: programlisting
-#: filters.xml:93
-#, no-c-format
-msgid ""
-      "<![CDATA[<filter-def name=\"effectiveDate\">\n"
-      "    <filter-param name=\"asOfDate\" type=\"date\"/>\n"
-      "</filter-def>\n"
-      "\n"
-      "<class name=\"Employee\" ...>\n"
-      "...\n"
-      "    <many-to-one name=\"department\" column=\"dept_id\" class=\"Department\"/>\n"
-      "    <property name=\"effectiveStartDate\" type=\"date\" column=\"eff_start_dt\"/>\n"
-      "    <property name=\"effectiveEndDate\" type=\"date\" column=\"eff_end_dt\"/>\n"
-      "...\n"
-      "    <!--\n"
-      "        Note that this assumes non-terminal records have an eff_end_dt set to\n"
-      "        a max db date for simplicity-sake\n"
-      "    -->\n"
-      "    <filter name=\"effectiveDate\"\n"
-      "            condition=\":asOfDate BETWEEN eff_start_dt and eff_end_dt\"/>\n"
-      "</class>\n"
-      "\n"
-      "<class name=\"Department\" ...>\n"
-      "...\n"
-      "    <set name=\"employees\" lazy=\"true\">\n"
-      "        <key column=\"dept_id\"/>\n"
-      "        <one-to-many class=\"Employee\"/>\n"
-      "        <filter name=\"effectiveDate\"\n"
-      "                condition=\":asOfDate BETWEEN eff_start_dt and eff_end_dt\"/>\n"
-      "    </set>\n"
-      "</class>]]>"
-msgstr ""
-
 #. Tag: para
-#: filters.xml:95
 #, no-c-format
 msgid "In order to ensure that you are provided with currently effective records, enable the filter on the session prior to retrieving employee data:"
 msgstr ""
 
-#. Tag: programlisting
-#: filters.xml:100
-#, no-c-format
-msgid ""
-      "<![CDATA[Session session = ...;\n"
-      "session.enableFilter(\"effectiveDate\").setParameter(\"asOfDate\", new Date());\n"
-      "List results = session.createQuery(\"from Employee as e where e.salary > :targetSalary\")\n"
-      "         .setLong(\"targetSalary\", new Long(1000000))\n"
-      "         .list();\n"
-      "]]>"
-msgstr ""
-
 #. Tag: para
-#: filters.xml:102
 #, no-c-format
 msgid "Even though a salary constraint was mentioned explicitly on the results in the above HQL, because of the enabled filter, the query will return only currently active employees who have a salary greater than one million dollars."
 msgstr ""
 
 #. Tag: para
-#: filters.xml:108
 #, no-c-format
 msgid "If you want to use filters with outer joining, either through HQL or load fetching, be careful of the direction of the condition expression. It is safest to set this up for left outer joining. Place the parameter first followed by the column name(s) after the operator."
 msgstr ""
 
 #. Tag: para
-#: filters.xml:115
 #, no-c-format
 msgid "After being defined, a filter might be attached to multiple entities and/or collections each with its own condition. This can be problematic when the conditions are the same each time. Using <literal>&lt;filter-def/&gt;</literal> allows you to definine a default condition, either as an attribute or CDATA:"
 msgstr ""
 
-#. Tag: programlisting
-#: filters.xml:122
-#, no-c-format
-msgid ""
-      "<![CDATA[<filter-def name=\"myFilter\" condition=\"abc > xyz\">...</filter-def>\n"
-      "<filter-def name=\"myOtherFilter\">abc=xyz</filter-def>]]>"
-msgstr ""
-
 #. Tag: para
-#: filters.xml:124
 #, no-c-format
 msgid "This default condition will be used whenever the filter is attached to something without specifying a condition. This means you can give a specific condition as part of the attachment of the filter that overrides the default condition in that particular case."
 msgstr ""

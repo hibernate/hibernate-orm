@@ -23,7 +23,11 @@
   ~ Boston, MA  02110-1301  USA
   -->
 
-<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
+<!ENTITY % BOOK_ENTITIES SYSTEM "../HIBERNATE_-_Relational_Persistence_for_Idiomatic_Java.ent">
+%BOOK_ENTITIES;
+
+]>
 
 <chapter id="filters">
     <title>Filtering data</title>
@@ -34,7 +38,7 @@
         enabled or disabled for a particular Hibernate session.
     </para>
 
-    <sect1 id="objectstate-filters" revision="1">
+    <section id="objectstate-filters" revision="1">
         <title>Hibernate filters</title>
 
         <para>
@@ -167,7 +171,7 @@ List results = session.createQuery("from Employee as e where e.salary > :targetS
             particular case.
         </para>
 
-    </sect1>
+    </section>
 
 </chapter>
 

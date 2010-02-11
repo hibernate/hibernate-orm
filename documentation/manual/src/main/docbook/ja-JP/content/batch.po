@@ -1,48 +1,34 @@
+# translation of Collection_Mapping.po to
+# Xi HUANG <xhuang@redhat.com>, 2007, 2010.
 msgid ""
 msgstr ""
-"Project-Id-Version: PACKAGE VERSION\n"
+"Project-Id-Version: Collection_Mapping\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2009-07-14 19:55+0000\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
-"Language-Team: LANGUAGE <LL@li.org>\n"
+"POT-Creation-Date: 2010-02-11T05:38:15\n"
+"PO-Revision-Date: 2010-01-13 15:16+1000\n"
+"Last-Translator: Xi HUANG <xhuang@redhat.com>\n"
+"Language-Team:  <en@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"X-Generator: KBabel 1.11.4\n"
 
 #. Tag: title
-#: batch.xml:29
 #, no-c-format
 msgid "Batch processing"
 msgstr "バッチ処理"
 
 #. Tag: para
-#: batch.xml:31
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "A naive approach to inserting 100,000 rows in the database using Hibernate "
 "might look like this:"
 msgstr ""
-"Hibernateを使ってデータベースに100,000行を挿入する愚直な方法は、このようなも"
+"Hibernate を使ってデータベースに100,000行を挿入する愚直な方法は、このようなも"
 "のです："
 
-#. Tag: programlisting
-#: batch.xml:36
-#, no-c-format
-msgid ""
-"<![CDATA[Session session = sessionFactory.openSession();\n"
-"Transaction tx = session.beginTransaction();\n"
-"for ( int i=0; i<100000; i++ ) {\n"
-"    Customer customer = new Customer(.....);\n"
-"    session.save(customer);\n"
-"}\n"
-"tx.commit();\n"
-"session.close();]]>"
-msgstr ""
-
 #. Tag: para
-#: batch.xml:38
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "This would fall over with an <literal>OutOfMemoryException</literal> "
 "somewhere around the 50,000th row. That is because Hibernate caches all the "
@@ -50,158 +36,90 @@ msgid ""
 "cache. In this chapter we will show you how to avoid this problem."
 msgstr ""
 "これは50,000番目の行のあたりで <literal>OutOfMemoryException</literal> で失敗"
-"するでしょう。 Hibernateがセッションレベルキャッシュで、 新しく挿入されたすべ"
+"するでしょう。 Hibernate がセッションレベルキャッシュで、新しく挿入されたすべ"
 "ての <literal>Customer</literal> インスタンスをキャッシュするからです。"
 
 #. Tag: para
-#: batch.xml:45
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "If you are undertaking batch processing you will need to enable the use of "
 "JDBC batching. This is absolutely essential if you want to achieve optimal "
 "performance. Set the JDBC batch size to a reasonable number (10-50, for "
 "example):"
 msgstr ""
-"この章では、この問題を回避する方法を紹介します。 しかしバッチ処理をするなら、"
-"JDBCバッチが使用可能であることが非常に重要です。 そうでなければ手頃なパフォー"
-"マンスが得られません。 JDBCバッチサイズを手頃な数値（例えば、10から50）に設定"
-"してください："
-
-#. Tag: programlisting
-#: batch.xml:52
-#, no-c-format
-msgid "<![CDATA[hibernate.jdbc.batch_size 20]]>"
-msgstr ""
+"この章では、この問題を回避する方法を紹介します。しかしバッチ処理をするなら、 "
+"JDBC バッチが使用可能であることが非常に重要です。そうでなければ手頃なパフォー"
+"マンスが得られません。 JDBC バッチサイズを手頃な数値（例えば、10から50）に設"
+"定してください："
 
 #. Tag: para
-#: batch.xml:54
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "Hibernate disables insert batching at the JDBC level transparently if you "
 "use an <literal>identity</literal> identifier generator."
 msgstr ""
-"Note that Hibernate disables insert batching at the JDBC level transparently "
-"if you use an <literal>identiy</literal> identifier generator."
+"<literal>identiy</literal> 識別子生成を使う場合は、Hibernate は JDBC レベルで"
+"インサートバッチングを無効にすることに注意してください。"
 
 #. Tag: para
-#: batch.xml:59
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "You can also do this kind of work in a process where interaction with the "
 "second-level cache is completely disabled:"
 msgstr ""
-"また二次キャッシュが全く効かないプロセスで、 このような作業をしたいと思うかも"
+"また二次キャッシュが全く効かないプロセスで、このような作業をしたいと思うかも"
 "しれません："
 
-#. Tag: programlisting
-#: batch.xml:64
-#, no-c-format
-msgid "<![CDATA[hibernate.cache.use_second_level_cache false]]>"
-msgstr ""
-
 #. Tag: para
-#: batch.xml:66
 #, no-c-format
 msgid ""
 "However, this is not absolutely necessary, since we can explicitly set the "
 "<literal>CacheMode</literal> to disable interaction with the second-level "
 "cache."
 msgstr ""
-"しかし、これは絶対に必要というわけではありません。 なぜなら明示的に "
-"<literal>CacheMode</literal> を設定して、 二次キャッシュとの相互作用を無効に"
-"することができるからです。"
+"しかし、これは絶対に必要というわけではありません。なぜなら明示的に "
+"<literal>CacheMode</literal> を設定して、二次キャッシュとの相互作用を無効にす"
+"ることができるからです。"
 
 #. Tag: title
-#: batch.xml:72
 #, no-c-format
 msgid "Batch inserts"
 msgstr "バッチ挿入"
 
 #. Tag: para
-#: batch.xml:74
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "When making new objects persistent <literal>flush()</literal> and then "
 "<literal>clear()</literal> the session regularly in order to control the "
 "size of the first-level cache."
 msgstr ""
-"新しいオブジェクトを永続化するとき、一次キャッシュのサイズを制限するため、 "
+"新しいオブジェクトを永続化するとき、一次キャッシュのサイズを制限するため、"
 "セッションを <literal>flush()</literal> して <literal>clear()</literal> しな"
 "ければなりません。"
 
-#. Tag: programlisting
-#: batch.xml:80
-#, no-c-format
-msgid ""
-"<![CDATA[Session session = sessionFactory.openSession();\n"
-"Transaction tx = session.beginTransaction();\n"
-"   \n"
-"for ( int i=0; i<100000; i++ ) {\n"
-"    Customer customer = new Customer(.....);\n"
-"    session.save(customer);\n"
-"    if ( i % 20 == 0 ) { //20, same as the JDBC batch size\n"
-"        //flush a batch of inserts and release memory:\n"
-"        session.flush();\n"
-"        session.clear();\n"
-"    }\n"
-"}\n"
-"   \n"
-"tx.commit();\n"
-"session.close();]]>"
-msgstr ""
-
 #. Tag: title
-#: batch.xml:85
 #, no-c-format
 msgid "Batch updates"
 msgstr "バッチ更新"
 
 #. Tag: para
-#: batch.xml:87
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "For retrieving and updating data, the same ideas apply. In addition, you "
 "need to use <literal>scroll()</literal> to take advantage of server-side "
 "cursors for queries that return many rows of data."
 msgstr ""
-"データを復元したり更新したりするには同じアイディアを適用します。 それに加え"
-"て、データの行を多く返すクエリに対して有効な サーバーサイドのカーソルの利点を"
+"データを復元したり更新したりするには同じアイディアを適用します。それに加え"
+"て、データの行を多く返すクエリに対して有効なサーバーサイドのカーソルの利点を"
 "生かしたければ <literal>scroll()</literal> を使う必要があります。"
 
-#. Tag: programlisting
-#: batch.xml:93
-#, no-c-format
-msgid ""
-"<![CDATA[Session session = sessionFactory.openSession();\n"
-"Transaction tx = session.beginTransaction();\n"
-"   \n"
-"ScrollableResults customers = session.getNamedQuery(\"GetCustomers\")\n"
-"    .setCacheMode(CacheMode.IGNORE)\n"
-"    .scroll(ScrollMode.FORWARD_ONLY);\n"
-"int count=0;\n"
-"while ( customers.next() ) {\n"
-"    Customer customer = (Customer) customers.get(0);\n"
-"    customer.updateStuff(...);\n"
-"    if ( ++count % 20 == 0 ) {\n"
-"        //flush a batch of updates and release memory:\n"
-"        session.flush();\n"
-"        session.clear();\n"
-"    }\n"
-"}\n"
-"   \n"
-"tx.commit();\n"
-"session.close();]]>"
-msgstr ""
-
 #. Tag: title
-#: batch.xml:98
 #, no-c-format
 msgid "The StatelessSession interface"
-msgstr "StatelessSessionインターフェイス"
+msgstr "StatelessSession インターフェース"
 
 #. Tag: para
-#: batch.xml:99
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "Alternatively, Hibernate provides a command-oriented API that can be used "
 "for streaming data to and from the database in the form of detached objects. "
@@ -217,54 +135,33 @@ msgid ""
 "effects. A stateless session is a lower-level abstraction that is much "
 "closer to the underlying JDBC."
 msgstr ""
-"また別の方法として、Hibernateはコマンド指向のAPIを用意しています。 これは分離"
-"オブジェクトの形で、 データベースとのデータストリームのやり取りに使うことがで"
-"きます。 <literal>StatelessSession</literal> は関連する永続コンテキストを持た"
-"ず、 高レベルのライフサイクルセマンティクスの多くを提供しません。 特にステー"
-"トレスセッションは、一時キャッシュを実装せず、 またどのような二次キャッシュや"
-"クエリキャッシュとも相互作用しません。 トランザクショナルなwrite-behindや自動"
-"ダーティチェックも実装しません。 ステートレスセッションを使って行われる操作"
-"が、 関連するインスタンスへカスケードされることは決してありません。 コレク"
-"ションは、ステートレスセッションからは無視されます。 ステートレスセッションを"
-"通して行われる操作は、 Hibernateのイベントモデルやインターセプタの影響を受け"
-"ません。 一時キャッシュを持たないため、 ステートレスセッションは別名を持つ"
-"データに上手く対処できません。 ステートレスセッションは低レベルの抽象化であ"
-"り、JDBCに非常によく似ています。"
-
-#. Tag: programlisting
-#: batch.xml:114
-#, no-c-format
-msgid ""
-"<![CDATA[StatelessSession session = sessionFactory.openStatelessSession();\n"
-"Transaction tx = session.beginTransaction();\n"
-"   \n"
-"ScrollableResults customers = session.getNamedQuery(\"GetCustomers\")\n"
-"    .scroll(ScrollMode.FORWARD_ONLY);\n"
-"while ( customers.next() ) {\n"
-"    Customer customer = (Customer) customers.get(0);\n"
-"    customer.updateStuff(...);\n"
-"    session.update(customer);\n"
-"}\n"
-"   \n"
-"tx.commit();\n"
-"session.close();]]>"
-msgstr ""
+"また別の方法として、 Hibernate はコマンド指向の API を用意しています。これは"
+"分離オブジェクトの形で、データベースとのデータストリームのやり取りに使うこと"
+"ができます。 <literal>StatelessSession</literal> は関連する永続コンテキストを"
+"持たず、高レベルのライフサイクルセマンティクスの多くを提供しません。特にス"
+"テートレスセッションは、一次キャッシュを実装せず、またどのような二次キャッ"
+"シュやクエリキャッシュとも相互作用しません。トランザクショナルな write-"
+"behind や自動ダーティチェックも実装しません。ステートレスセッションを使って行"
+"われる操作が、関連するインスタンスへカスケードされることは決してありません。"
+"コレクションは、ステートレスセッションからは無視されます。ステートレスセッ"
+"ションを通して行われる操作は、 Hibernate のイベントモデルやインターセプタの影"
+"響を受けません。一次キャッシュを持たないため、ステートレスセッションは別名を"
+"持つデータに上手く対処できません。ステートレスセッションは低レベルの抽象化で"
+"あり、 JDBC に非常によく似ています。"
 
 #. Tag: para
-#: batch.xml:116
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "In this code example, the <literal>Customer</literal> instances returned by "
 "the query are immediately detached. They are never associated with any "
 "persistence context."
 msgstr ""
 "このコード例では、クエリが返す <literal>Customer</literal> インスタンスは即座"
-"に（セッションから）分離されることに注意してください。 これは、どのような永続"
-"コンテキストとも決して関連しません。"
+"に （セッションから） 分離されることに注意してください。これは、どのような永"
+"続コンテキストとも決して関連しません。"
 
 #. Tag: para
-#: batch.xml:122
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "The <literal>insert(), update()</literal> and <literal>delete()</literal> "
 "operations defined by the <literal>StatelessSession</literal> interface are "
@@ -274,21 +171,20 @@ msgid ""
 "<literal>save(), saveOrUpdate()</literal> and <literal>delete()</literal> "
 "operations defined by the <literal>Session</literal> interface."
 msgstr ""
-"<literal>StatelessSession</literal> インターフェイスで定義されている "
-"<literal>insert(), update(), delete()</literal> は、 低レベルの直接的なデータ"
-"ベース操作と考えられます。 結果として、SQLの <literal>INSERT, UPDATE, "
-"DELETE</literal> がそれぞれ即座に実行されます。 このように、これらは "
-"<literal>Session</literal> インターフェイスで定義されている <literal>save(), "
-"saveOrUpdate(), delete()</literal> とは非常に異なる意味を持ちます。"
+"<literal>StatelessSession</literal> インターフェースで定義されている "
+"<literal>insert(), update()</literal> と <literal>delete()</literal> の操作"
+"は、低レベルの直接的なデータベース操作と考えられます。結果として、 SQL の "
+"<literal>INSERT, UPDATE</literal> または <literal>DELETE</literal> がそれぞれ"
+"即座に実行されます。このように、これらは <literal>Session</literal> インター"
+"フェースで定義されている <literal>save(), saveOrUpdate()</literal> と "
+"<literal>delete()</literal> とは非常に異なる意味を持ちます。"
 
 #. Tag: title
-#: batch.xml:135
 #, no-c-format
 msgid "DML-style operations"
-msgstr "DMLスタイルの操作"
+msgstr "DML スタイルの操作"
 
 #. Tag: para
-#: batch.xml:137
 #, fuzzy, no-c-format
 msgid ""
 "As already discussed, automatic and transparent object/relational mapping is "
@@ -302,17 +198,17 @@ msgid ""
 "\">HQL</link>)."
 msgstr ""
 "すでに議論したように、自動的かつ透過的なオブジェクト/リレーショナルマッピング"
-"は、 オブジェクトの状態の管理であると考えられます。 これはメモリ内のオブジェ"
-"クトの状態を利用できるということです。 そのため（SQLの <literal>データ操作言"
-"語</literal> (DML) 文： <literal>INSERT</literal>, <literal>UPDATE</"
-"literal>, <literal>DELETE</literal> を使って）データベース内のデータを直接操"
-"作しても、 メモリ内の状態には影響を与えません。 しかしHibernateは、バルクSQL"
-"スタイルのDML文実行に対応するメソッドを用意しています。 これはHibernateクエリ"
-"言語（<xref linkend=\"queryhql\">HQL</xref>） を通して実行されます。"
+"は、オブジェクトの状態の管理であると考えられます。これはメモリ内のオブジェク"
+"トの状態を利用できるということです。そのため （SQLの <literal>データ操作言語"
+"</literal> (DML) 文： <literal>INSERT</literal>、 <literal>UPDATE</"
+"literal>、 <literal>DELETE</literal> を使って）データベース内のデータを直接操"
+"作しても、メモリ内の状態には影響を与えません。しかし Hibernate は、バルク "
+"SQL スタイルの DML 文実行に対応するメソッドを用意しています。これは "
+"Hibernate クエリ言語 (<xref linkend=\"queryhql\"/> HQL) を通して実行されま"
+"す。"
 
 #. Tag: para
-#: batch.xml:146
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "The pseudo-syntax for <literal>UPDATE</literal> and <literal>DELETE</"
 "literal> statements is: <literal>( UPDATE | DELETE ) FROM? EntityName (WHERE "
@@ -320,87 +216,61 @@ msgid ""
 msgstr ""
 "<literal>UPDATE</literal> と <literal>DELETE</literal> 文の疑似構文は： "
 "<literal>( UPDATE | DELETE ) FROM? エンティティ名 (WHERE 条件節)?</literal> "
-"です。 注意すべき点がいくつかあります："
+"です。注意すべき点がいくつかあります："
 
 #. Tag: para
-#: batch.xml:151
 #, no-c-format
 msgid "Some points to note:"
 msgstr ""
 
 #. Tag: para
-#: batch.xml:157
 #, no-c-format
 msgid "In the from-clause, the FROM keyword is optional"
-msgstr "from節において、FROMキーワードはオプションです。"
+msgstr "from 節において、 FROM キーワードはオプションです。"
 
 #. Tag: para
-#: batch.xml:162
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "There can only be a single entity named in the from-clause. It can, however, "
 "be aliased. If the entity name is aliased, then any property references must "
 "be qualified using that alias. If the entity name is not aliased, then it is "
 "illegal for any property references to be qualified."
 msgstr ""
-"from節では単一のエンティティ名だけが可能で、 任意で別名を付けることができま"
-"す。 エンティティ名に別名が与えられると、どのようなプロパティ参照も、 その別"
-"名を使って修飾しなければなりません。 もしエンティティ名に別名が与えられなけれ"
-"ば、 どのようなプロパティ参照も修飾してはなりません。"
+"from 節では単一のエンティティ名だけが可能で、任意で別名を付けることができま"
+"す。エンティティ名に別名が与えられると、どのようなプロパティ参照も、その別名"
+"を使って修飾しなければなりません。もしエンティティ名に別名が与えられなけれ"
+"ば、どのようなプロパティ参照も修飾してはなりません。"
 
 #. Tag: para
-#: batch.xml:170
 #, fuzzy, no-c-format
 msgid ""
 "No <link linkend=\"queryhql-joins-forms\">joins</link>, either implicit or "
 "explicit, can be specified in a bulk HQL query. Sub-queries can be used in "
 "the where-clause, where the subqueries themselves may contain joins."
 msgstr ""
-"（暗黙的であれ明示的であれ）<xref linkend=\"queryhql-joins-forms\">結合</"
-"xref> をバルクHQLクエリ内で指定することはできません。 サブクエリはwhere節で使"
-"うことができます サブクエリそのものは、結合を含められます。"
+"（暗黙的であれ明示的であれ） <xref linkend=\"queryhql-joins-forms\"/> 結合を"
+"バルク HQL クエリ内で指定することはできません。サブクエリは where 節で使うこ"
+"とができます。サブクエリそのものは、結合を含められます。"
 
 #. Tag: para
-#: batch.xml:177
 #, no-c-format
 msgid "The where-clause is also optional."
-msgstr "where節はオプションです。"
+msgstr "where 節はオプションです。"
 
 #. Tag: para
-#: batch.xml:183
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "As an example, to execute an HQL <literal>UPDATE</literal>, use the "
 "<literal>Query.executeUpdate()</literal> method. The method is named for "
 "those familiar with JDBC's <literal>PreparedStatement.executeUpdate()</"
 "literal>:"
 msgstr ""
-"例として、HQLの <literal>UPDATE</literal> を実行するには、 <literal>Query."
-"executeUpdate()</literal> メソッドを使ってください。 （このメソッドはおなじみ"
-"のJDBC <literal>PreparedStatement.executeUpdate()</literal> から名付けられま"
-"した）： d"
-
-#. Tag: programlisting
-#: batch.xml:189
-#, no-c-format
-msgid ""
-"<![CDATA[Session session = sessionFactory.openSession();\n"
-"Transaction tx = session.beginTransaction();\n"
-"\n"
-"String hqlUpdate = \"update Customer c set c.name = :newName where c.name = :"
-"oldName\";\n"
-"// or String hqlUpdate = \"update Customer set name = :newName where name = :"
-"oldName\";\n"
-"int updatedEntities = s.createQuery( hqlUpdate )\n"
-"        .setString( \"newName\", newName )\n"
-"        .setString( \"oldName\", oldName )\n"
-"        .executeUpdate();\n"
-"tx.commit();\n"
-"session.close();]]>"
-msgstr ""
+"例として、 HQL の <literal>UPDATE</literal> を実行するには、 <literal>Query."
+"executeUpdate()</literal> メソッドを使ってください。（このメソッドはおなじみ"
+"の JDBC <literal>PreparedStatement.executeUpdate()</literal> から名付けられま"
+"した）："
 
 #. Tag: para
-#: batch.xml:191
 #, fuzzy, no-c-format
 msgid ""
 "In keeping with the EJB3 specification, HQL <literal>UPDATE</literal> "
@@ -413,72 +283,37 @@ msgid ""
 "<literal>VERSIONED</literal> keyword after the <literal>UPDATE</literal> "
 "keyword."
 msgstr ""
-"HQLの <literal>UPDATE</literal> 文は、デフォルトでは、作用するエンティティの "
-"<xref linkend=\"mapping-declaration-version\">version</xref> や <xref "
-"linkend=\"mapping-declaration-timestamp\">timestamp</xref> プロパティの値には"
-"影響しません。 これはEJB3の仕様にも受け継がれています。 しかし "
+"HQL の <literal>UPDATE</literal> 文は、デフォルトでは、作用するエンティティ"
+"の <xref linkend=\"mapping-declaration-version\"/> バージョンや <xref "
+"linkend=\"mapping-declaration-timestamp\"/> タイムスタンプのプロパティの値に"
+"は影響しません。これは EJB3 の仕様にも受け継がれています。しかし "
 "<literal>versioned update</literal> を使って、 <literal>version</literal> や "
 "<literal>timestamp</literal> プロパティの値を強制的にリセットさせることができ"
-"ます。 これは <literal>UPDATE</literal> キーワードの後に <literal>VERSIONED</"
+"ます。これは <literal>UPDATE</literal> キーワードの後に <literal>VERSIONED</"
 "literal> キーワードを追加することで行えます。"
 
-#. Tag: programlisting
-#: batch.xml:201
-#, no-c-format
-msgid ""
-"<![CDATA[Session session = sessionFactory.openSession();\n"
-"Transaction tx = session.beginTransaction();\n"
-"String hqlVersionedUpdate = \"update versioned Customer set name = :newName "
-"where name = :oldName\";\n"
-"int updatedEntities = s.createQuery( hqlUpdate )\n"
-"        .setString( \"newName\", newName )\n"
-"        .setString( \"oldName\", oldName )\n"
-"        .executeUpdate();\n"
-"tx.commit();\n"
-"session.close();]]>"
-msgstr ""
-
 #. Tag: para
-#: batch.xml:203
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "Custom version types, <literal>org.hibernate.usertype.UserVersionType</"
 "literal>, are not allowed in conjunction with a <literal>update versioned</"
 "literal> statement."
 msgstr ""
 "カスタムバージョン型（<literal>org.hibernate.usertype.UserVersionType</"
-"literal>） は <literal>update versioned</literal> 文と一緒に使えないことに注"
-"意してください。"
+"literal>）は <literal>update versioned</literal> 文と一緒に使えないことに注意"
+"してください。"
 
 #. Tag: para
-#: batch.xml:208
 #, no-c-format
 msgid ""
 "To execute an HQL <literal>DELETE</literal>, use the same <literal>Query."
 "executeUpdate()</literal> method:"
 msgstr ""
-"HQLの <literal>DELETE</literal> を実行するには、 同じ <literal>Query."
+"HQL の <literal>DELETE</literal> を実行するには、同じ <literal>Query."
 "executeUpdate()</literal> メソッドを使ってください："
 
-#. Tag: programlisting
-#: batch.xml:213
-#, no-c-format
-msgid ""
-"<![CDATA[Session session = sessionFactory.openSession();\n"
-"Transaction tx = session.beginTransaction();\n"
-"\n"
-"String hqlDelete = \"delete Customer c where c.name = :oldName\";\n"
-"// or String hqlDelete = \"delete Customer where name = :oldName\";\n"
-"int deletedEntities = s.createQuery( hqlDelete )\n"
-"        .setString( \"oldName\", oldName )\n"
-"        .executeUpdate();\n"
-"tx.commit();\n"
-"session.close();]]>"
-msgstr ""
-
 #. Tag: para
-#: batch.xml:215
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "The <literal>int</literal> value returned by the <literal>Query.executeUpdate"
 "()</literal> method indicates the number of entities effected by the "
@@ -492,16 +327,15 @@ msgid ""
 "joined-subclass tables further down the inheritance hierarchy."
 msgstr ""
 "<literal>Query.executeUpdate()</literal> メソッドが返す <literal>int</"
-"literal> の値は、この操作が影響を及ぼしたエンティティの数です。 これが影響す"
-"るデータベース内の行数と、相互に関係するかどうかを考えてみてください。 HQLバ"
-"ルク操作は、結果として、実際のSQL文が複数実行されることになります。 例えば"
-"joined-subclassです。 返される数は、その文によって影響された実際のエンティ"
-"ティの数を示します。 joined-subclassの例に戻ると、サブクラスの一つに対する削"
-"除は、 そのサブクラスがマッピングされたテーブルだけではなく、 「ルート」テー"
-"ブルと継承階層をさらに下ったjoined-subclassのテーブルの削除になります。"
+"literal> の値は、この操作が影響を及ぼしたエンティティの数です。これが影響する"
+"データベース内の行数と、相互に関係するかどうかを考えてみてください。 HQL バル"
+"ク操作は、結果として、実際の SQL 文が複数実行されることになります。例えば "
+"joined-subclass です。返される数は、その文によって影響された実際のエンティ"
+"ティの数を示します。 joined-subclass の例に戻ると、サブクラスの一つに対する削"
+"除は、そのサブクラスがマッピングされたテーブルだけではなく、「ルート」テーブ"
+"ルと継承階層をさらに下った joined-subclass のテーブルの削除になります。"
 
 #. Tag: para
-#: batch.xml:226
 #, no-c-format
 msgid ""
 "The pseudo-syntax for <literal>INSERT</literal> statements is: "
@@ -509,11 +343,9 @@ msgid ""
 "Some points to note:"
 msgstr ""
 "<literal>INSERT</literal> 文の疑似構文は： <literal>INSERT INTO エンティティ"
-"名 プロパティリスト select文</literal> です。 注意すべき点がいくつかありま"
-"す："
+"名プロパティリスト select 文</literal> です。注意すべき点がいくつかあります："
 
 #. Tag: para
-#: batch.xml:234
 #, no-c-format
 msgid ""
 "Only the INSERT INTO ... SELECT ... form is supported; not the INSERT "
@@ -523,8 +355,7 @@ msgstr ""
 "INTO ... VALUES ... の形式はサポートされていません。"
 
 #. Tag: para
-#: batch.xml:237
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "The properties_list is analogous to the <literal>column specification</"
 "literal> in the SQL <literal>INSERT</literal> statement. For entities "
@@ -533,16 +364,15 @@ msgid ""
 "are not allowed and subclass properties do not make sense. In other words, "
 "<literal>INSERT</literal> statements are inherently non-polymorphic."
 msgstr ""
-"プロパティリストは、SQLの <literal>INSERT</literal> 文における <literal>カラ"
-"ムの仕様</literal> に類似しています。 継承のマッピングに含まれるエンティティ"
-"に対して、 クラスレベルで直接定義されたプロパティだけが、プロパティリストに使"
-"えます。 スーパークラスのプロパティは認められず、サブクラスのプロパティは効果"
-"がありません。 言い換えると <literal>INSERT</literal> 文は、本質的にポリモー"
+"プロパティリストは、 SQL の <literal>INSERT</literal> 文における <literal>カ"
+"ラムの仕様</literal> に類似しています。継承のマッピングに含まれるエンティティ"
+"に対して、クラスレベルで直接定義されたプロパティだけが、プロパティリストに使"
+"えます。スーパークラスのプロパティは認められず、サブクラスのプロパティは効果"
+"がありません。言い換えると <literal>INSERT</literal> 文は、本質的にポリモー"
 "フィックではありません。"
 
 #. Tag: para
-#: batch.xml:247
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "select_statement can be any valid HQL select query, with the caveat that the "
 "return types must match the types expected by the insert. Currently, this is "
@@ -555,19 +385,18 @@ msgid ""
 "TimestampType</literal>, even though the database might not make a "
 "distinction or might be able to handle the conversion."
 msgstr ""
-"select文の返り値の型がinsert文が期待する型とマッチしていれば、 そのselect文は"
-"妥当なHQL selectクエリとなりえます。 現在このチェックをデータベースへ任せるの"
-"ではなく、クエリのコンパイル時にチェックします。 このことは、"
-"<emphasis>equal</emphasis>とは違い、 Hibernateの <literal>Type</literal> 間"
-"の <emphasis>equivalent</emphasis> に関する 問題を引き起こすことに注意してく"
-"ださい。 これは <literal>org.hibernate.type.DataType</literal> として定義され"
-"たプロパティと、 <literal>org.hibernate.type.TimestampType</literal> として定"
-"義されたプロパティの間のミスマッチの問題を引き起こします。 データベースがそれ"
-"らを区別できなくても、変換することができても、この問題は発生します。"
+"select 文の返り値の型が insert 文が期待する型とマッチしていれば、その select "
+"文は妥当な HQL select クエリとなりえます。現在このチェックをデータベースへ任"
+"せるのではなく、クエリのコンパイル時にチェックします。このことは、 "
+"<emphasis>equal</emphasis> とは違い、 Hibernate の <literal>Type</literal> 間"
+"の <emphasis>equivalent</emphasis> に関する問題を引き起こすことに注意してくだ"
+"さい。これは <literal>org.hibernate.type.DateType</literal> として定義された"
+"プロパティと、 <literal>org.hibernate.type.TimestampType</literal> として定義"
+"されたプロパティの間のミスマッチの問題を引き起こします。データベースがそれら"
+"を区別できなくても、変換することができても、この問題は発生します。"
 
 #. Tag: para
-#: batch.xml:259
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "For the id property, the insert statement gives you two options. You can "
 "either explicitly specify the id property in the properties_list, in which "
@@ -583,21 +412,21 @@ msgid ""
 "TableHiLoGenerator</literal>, which cannot be used because it does not "
 "expose a selectable way to get its values."
 msgstr ""
-"idプロパティに対して、insert文には二つの選択肢があります。 プロパティリストで"
-"明示的にidプロパティを指定するか （この場合、対応するselect式から値が取られま"
-"す）、 プロパティリストから除外するか （この場合、生成される値が使われます）"
-"のいずれかです。 後者の選択肢は、データベース内を操作するidジェネレータを使う"
-"ときのみ、利用可能です。 この選択肢を採る場合、「インメモリ」型のジェネレータ"
-"を使うと、構文解析時に例外が発生します。 この議論では、インデータベース型ジェ"
-"ネレータは <literal>org.hibernate.id.SequenceGenerator</literal> （とそのサブ"
-"クラス）と、<literal>org.hibernate.id.PostInsertIdentifierGenerator</"
-"literal> の実装であると考えています。 ここで最も注意すべき例外は、"
-"<literal>org.hibernate.id.TableHiLoGenerator</literal> です。 値を取得する選"
-"択可能な方法がないため、このジェネレータを使うことはできません。"
+"id プロパティに対して、 insert 文には二つの選択肢があります。プロパティリスト"
+"で明示的に id プロパティを指定するか （この場合、対応する select 式から値が取"
+"られます）、プロパティリストからそれを除外するかのいずれかです (この場合、生"
+"成される値が使われます)。 後者の選択肢は、データベース内を操作する id ジェネ"
+"レータを使うときのみ、利用可能です。この選択肢を採る場合、「インメモリ」型の"
+"ジェネレータを使うと、構文解析時に例外が発生します。この議論では、インデータ"
+"ベース型ジェネレータは <literal>org.hibernate.id.SequenceGenerator</literal> "
+"（とそのサブクラス） と、 <literal>org.hibernate.id."
+"PostInsertIdentifierGenerator</literal> の実装であると考えています。ここで最"
+"も注意すべき例外は、 <literal>org.hibernate.id.TableHiLoGenerator</literal> "
+"です。値を取得する選択可能な方法がないため、このジェネレータを使うことはでき"
+"ません。"
 
 #. Tag: para
-#: batch.xml:274
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "For properties mapped as either <literal>version</literal> or "
 "<literal>timestamp</literal>, the insert statement gives you two options. "
@@ -607,31 +436,251 @@ msgid ""
 "defined by the <literal>org.hibernate.type.VersionType</literal> is used."
 msgstr ""
 "<literal>version</literal> や <literal>timestamp</literal> としてマッピングさ"
-"れるプロパティに対して、 insert文には二つの選択肢があります。 プロパティリス"
-"トで明示的にプロパティを指定するか （この場合、対応するselect式から値が取られ"
-"ます）、 プロパティリストから除外するか （この場合、<literal>org.hibernate."
+"れるプロパティに対して、 insert 文には二つの選択肢があります。プロパティリス"
+"トで明示的にプロパティを指定するか（この場合、対応する select 式から値が取ら"
+"れます）、プロパティリストから除外するか（この場合、 <literal>org.hibernate."
 "type.VersionType</literal> で定義された <literal>シード値</literal> が使われ"
 "ます）のいずれかです。"
 
 #. Tag: para
-#: batch.xml:284
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "The following is an example of an HQL <literal>INSERT</literal> statement "
 "execution:"
-msgstr "HQLの <literal>INSERT</literal> 文の実行例です："
+msgstr "HQL の <literal>INSERT</literal> 文の実行例です："
 
-#. Tag: programlisting
-#: batch.xml:288
-#, no-c-format
-msgid ""
-"<![CDATA[Session session = sessionFactory.openSession();\n"
-"Transaction tx = session.beginTransaction();\n"
-"\n"
-"String hqlInsert = \"insert into DelinquentAccount (id, name) select c.id, c."
-"name from Customer c where ...\";\n"
-"int createdEntities = s.createQuery( hqlInsert )\n"
-"        .executeUpdate();\n"
-"tx.commit();\n"
-"session.close();]]>"
-msgstr ""
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[Session session = sessionFactory.openSession();\n"
+#~ "Transaction tx = session.beginTransaction();\n"
+#~ "for ( int i=0; i<100000; i++ ) {\n"
+#~ "    Customer customer = new Customer(.....);\n"
+#~ "    session.save(customer);\n"
+#~ "}\n"
+#~ "tx.commit();\n"
+#~ "session.close();]]>"
+#~ msgstr ""
+#~ "Session session = sessionFactory.openSession();\n"
+#~ "Transaction tx = session.beginTransaction();\n"
+#~ "for ( int i=0; i&lt;100000; i++ ) {\n"
+#~ "    Customer customer = new Customer(.....);\n"
+#~ "    session.save(customer);\n"
+#~ "}\n"
+#~ "tx.commit();\n"
+#~ "session.close();"
+
+#, fuzzy
+#~ msgid "<![CDATA[hibernate.jdbc.batch_size 20]]>"
+#~ msgstr "hibernate.jdbc.batch_size 20"
+
+#, fuzzy
+#~ msgid "<![CDATA[hibernate.cache.use_second_level_cache false]]>"
+#~ msgstr "hibernate.cache.use_second_level_cache false"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[Session session = sessionFactory.openSession();\n"
+#~ "Transaction tx = session.beginTransaction();\n"
+#~ "   \n"
+#~ "for ( int i=0; i<100000; i++ ) {\n"
+#~ "    Customer customer = new Customer(.....);\n"
+#~ "    session.save(customer);\n"
+#~ "    if ( i % 20 == 0 ) { //20, same as the JDBC batch size\n"
+#~ "        //flush a batch of inserts and release memory:\n"
+#~ "        session.flush();\n"
+#~ "        session.clear();\n"
+#~ "    }\n"
+#~ "}\n"
+#~ "   \n"
+#~ "tx.commit();\n"
+#~ "session.close();]]>"
+#~ msgstr ""
+#~ "Session session = sessionFactory.openSession();\n"
+#~ "Transaction tx = session.beginTransaction();\n"
+#~ "   \n"
+#~ "for ( int i=0; i&lt;100000; i++ ) {\n"
+#~ "    Customer customer = new Customer(.....);\n"
+#~ "    session.save(customer);\n"
+#~ "    if ( i &#37; 20 == 0 ) { //20, same as the JDBC batch size\n"
+#~ "        //flush a batch of inserts and release memory:\n"
+#~ "        session.flush();\n"
+#~ "        session.clear();\n"
+#~ "    }\n"
+#~ "}\n"
+#~ "   \n"
+#~ "tx.commit();\n"
+#~ "session.close();"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[Session session = sessionFactory.openSession();\n"
+#~ "Transaction tx = session.beginTransaction();\n"
+#~ "   \n"
+#~ "ScrollableResults customers = session.getNamedQuery(\"GetCustomers\")\n"
+#~ "    .setCacheMode(CacheMode.IGNORE)\n"
+#~ "    .scroll(ScrollMode.FORWARD_ONLY);\n"
+#~ "int count=0;\n"
+#~ "while ( customers.next() ) {\n"
+#~ "    Customer customer = (Customer) customers.get(0);\n"
+#~ "    customer.updateStuff(...);\n"
+#~ "    if ( ++count % 20 == 0 ) {\n"
+#~ "        //flush a batch of updates and release memory:\n"
+#~ "        session.flush();\n"
+#~ "        session.clear();\n"
+#~ "    }\n"
+#~ "}\n"
+#~ "   \n"
+#~ "tx.commit();\n"
+#~ "session.close();]]>"
+#~ msgstr ""
+#~ "Session session = sessionFactory.openSession();\n"
+#~ "Transaction tx = session.beginTransaction();\n"
+#~ "   \n"
+#~ "ScrollableResults customers = session.getNamedQuery(\"GetCustomers\")\n"
+#~ "    .setCacheMode(CacheMode.IGNORE)\n"
+#~ "    .scroll(ScrollMode.FORWARD_ONLY);\n"
+#~ "int count=0;\n"
+#~ "while ( customers.next() ) {\n"
+#~ "    Customer customer = (Customer) customers.get(0);\n"
+#~ "    customer.updateStuff(...);\n"
+#~ "    if ( ++count &#37; 20 == 0 ) {\n"
+#~ "        //flush a batch of updates and release memory:\n"
+#~ "        session.flush();\n"
+#~ "        session.clear();\n"
+#~ "    }\n"
+#~ "}\n"
+#~ "   \n"
+#~ "tx.commit();\n"
+#~ "session.close();"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[StatelessSession session = sessionFactory.openStatelessSession"
+#~ "();\n"
+#~ "Transaction tx = session.beginTransaction();\n"
+#~ "   \n"
+#~ "ScrollableResults customers = session.getNamedQuery(\"GetCustomers\")\n"
+#~ "    .scroll(ScrollMode.FORWARD_ONLY);\n"
+#~ "while ( customers.next() ) {\n"
+#~ "    Customer customer = (Customer) customers.get(0);\n"
+#~ "    customer.updateStuff(...);\n"
+#~ "    session.update(customer);\n"
+#~ "}\n"
+#~ "   \n"
+#~ "tx.commit();\n"
+#~ "session.close();]]>"
+#~ msgstr ""
+#~ "StatelessSession session = sessionFactory.openStatelessSession();\n"
+#~ "Transaction tx = session.beginTransaction();\n"
+#~ "   \n"
+#~ "ScrollableResults customers = session.getNamedQuery(\"GetCustomers\")\n"
+#~ "    .scroll(ScrollMode.FORWARD_ONLY);\n"
+#~ "while ( customers.next() ) {\n"
+#~ "    Customer customer = (Customer) customers.get(0);\n"
+#~ "    customer.updateStuff(...);\n"
+#~ "    session.update(customer);\n"
+#~ "}\n"
+#~ "   \n"
+#~ "tx.commit();\n"
+#~ "session.close();"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[Session session = sessionFactory.openSession();\n"
+#~ "Transaction tx = session.beginTransaction();\n"
+#~ "\n"
+#~ "String hqlUpdate = \"update Customer c set c.name = :newName where c.name "
+#~ "= :oldName\";\n"
+#~ "// or String hqlUpdate = \"update Customer set name = :newName where name "
+#~ "= :oldName\";\n"
+#~ "int updatedEntities = s.createQuery( hqlUpdate )\n"
+#~ "        .setString( \"newName\", newName )\n"
+#~ "        .setString( \"oldName\", oldName )\n"
+#~ "        .executeUpdate();\n"
+#~ "tx.commit();\n"
+#~ "session.close();]]>"
+#~ msgstr ""
+#~ "Session session = sessionFactory.openSession();\n"
+#~ "Transaction tx = session.beginTransaction();\n"
+#~ "\n"
+#~ "String hqlUpdate = \"update Customer c set c.name = :newName where c.name "
+#~ "= :oldName\";\n"
+#~ "// or String hqlUpdate = \"update Customer set name = :newName where name "
+#~ "= :oldName\";\n"
+#~ "int updatedEntities = s.createQuery( hqlUpdate )\n"
+#~ "        .setString( \"newName\", newName )\n"
+#~ "        .setString( \"oldName\", oldName )\n"
+#~ "        .executeUpdate();\n"
+#~ "tx.commit();\n"
+#~ "session.close();"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[Session session = sessionFactory.openSession();\n"
+#~ "Transaction tx = session.beginTransaction();\n"
+#~ "String hqlVersionedUpdate = \"update versioned Customer set name = :"
+#~ "newName where name = :oldName\";\n"
+#~ "int updatedEntities = s.createQuery( hqlUpdate )\n"
+#~ "        .setString( \"newName\", newName )\n"
+#~ "        .setString( \"oldName\", oldName )\n"
+#~ "        .executeUpdate();\n"
+#~ "tx.commit();\n"
+#~ "session.close();]]>"
+#~ msgstr ""
+#~ "Session session = sessionFactory.openSession();\n"
+#~ "Transaction tx = session.beginTransaction();\n"
+#~ "String hqlVersionedUpdate = \"update versioned Customer set name = :"
+#~ "newName where name = :oldName\";\n"
+#~ "int updatedEntities = s.createQuery( hqlUpdate )\n"
+#~ "        .setString( \"newName\", newName )\n"
+#~ "        .setString( \"oldName\", oldName )\n"
+#~ "        .executeUpdate();\n"
+#~ "tx.commit();\n"
+#~ "session.close();"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[Session session = sessionFactory.openSession();\n"
+#~ "Transaction tx = session.beginTransaction();\n"
+#~ "\n"
+#~ "String hqlDelete = \"delete Customer c where c.name = :oldName\";\n"
+#~ "// or String hqlDelete = \"delete Customer where name = :oldName\";\n"
+#~ "int deletedEntities = s.createQuery( hqlDelete )\n"
+#~ "        .setString( \"oldName\", oldName )\n"
+#~ "        .executeUpdate();\n"
+#~ "tx.commit();\n"
+#~ "session.close();]]>"
+#~ msgstr ""
+#~ "Session session = sessionFactory.openSession();\n"
+#~ "Transaction tx = session.beginTransaction();\n"
+#~ "\n"
+#~ "String hqlDelete = \"delete Customer c where c.name = :oldName\";\n"
+#~ "// or String hqlDelete = \"delete Customer where name = :oldName\";\n"
+#~ "int deletedEntities = s.createQuery( hqlDelete )\n"
+#~ "        .setString( \"oldName\", oldName )\n"
+#~ "        .executeUpdate();\n"
+#~ "tx.commit();\n"
+#~ "session.close();"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[Session session = sessionFactory.openSession();\n"
+#~ "Transaction tx = session.beginTransaction();\n"
+#~ "\n"
+#~ "String hqlInsert = \"insert into DelinquentAccount (id, name) select c."
+#~ "id, c.name from Customer c where ...\";\n"
+#~ "int createdEntities = s.createQuery( hqlInsert )\n"
+#~ "        .executeUpdate();\n"
+#~ "tx.commit();\n"
+#~ "session.close();]]>"
+#~ msgstr ""
+#~ "Session session = sessionFactory.openSession();\n"
+#~ "Transaction tx = session.beginTransaction();\n"
+#~ "\n"
+#~ "String hqlInsert = \"insert into DelinquentAccount (id, name) select c."
+#~ "id, c.name from Customer \n"
+#~ "    c where ...\";\n"
+#~ "int createdEntities = s.createQuery( hqlInsert )\n"
+#~ "        .executeUpdate();\n"
+#~ "tx.commit();\n"
+#~ "session.close();"

@@ -1,23 +1,129 @@
+# translation of Preface.po to
+# translation of preface.po to
+# translation of Collection_Mapping.po to
+# translation of Collection_Mapping.po to
+# translation of Collection_Mapping.po to
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# Michael H. Smith <mhideo@redhat.com>, 2007.
+# Glaucia Cintra <gcintra@redhat.com>, 2007.
 msgid ""
 msgstr ""
-"Project-Id-Version: PACKAGE VERSION\n"
+"Project-Id-Version: Preface\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2009-07-14 19:56+0000\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
-"Language-Team: LANGUAGE <LL@li.org>\n"
+"POT-Creation-Date: 2010-02-11T05:38:15\n"
+"PO-Revision-Date: 2009-12-19 18:38+1000\n"
+"Last-Translator: \n"
+"Language-Team:  <en@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"X-Generator: KBabel 1.11.4\n"
 
 #. Tag: title
-#: preface.xml:29
 #, no-c-format
 msgid "Preface"
 msgstr "Prefácio"
 
 #. Tag: para
-#: preface.xml:31
 #, fuzzy, no-c-format
 msgid ""
 "Working with object-oriented software and a relational database can be "
@@ -27,31 +133,29 @@ msgid ""
 "representation from an object model to a relational data model with a SQL-"
 "based schema."
 msgstr ""
-"Trabalhando com software orientado a objetos e banco de dados relacional, "
-"podemos ter alguns incômodos hoje em dia em ambientes empresariais. "
-"Hibernate é uma ferramenta que mapeia o objeto/relacional para o ambiente "
-"Java. O termo de mapeamento de objeto/relacional (ou ORM  Object/Relational "
-"Mapping) se refere a técnica de mapear uma representação de dados de um "
-"modelo de objeto para dados de modelo relacional com o esquema baseado em SQL"
+"O trabalho com o software objeto relacional e banco de dados relacionais, "
+"pode ser incômodo e desgastante atualmente num meio empresarial. Hibernate é "
+"um objeto/relacional de mapeamento de ferramentas nos meios Java. O termo "
+"objeto/relacional de mapeamento ( ORM ) refere-se à técnica de mapeamento de "
+"dados, representada desde o objeto modelo aos dados relacionais modelo com "
+"um esquema baseado na SQL. "
 
 #. Tag: para
-#: preface.xml:39
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "Hibernate not only takes care of the mapping from Java classes to database "
 "tables (and from Java data types to SQL data types), but also provides data "
 "query and retrieval facilities. It can also significantly reduce development "
 "time otherwise spent with manual data handling in SQL and JDBC."
 msgstr ""
-"O Hibernate não somente cuida do mapeamento de classes em Java para tabelas "
-"de banco de dados (e de tipos de dados em Java para tipos de dados em SQL), "
-"como também fornece facilidade de consultas e recuperação de dados, podendo "
-"também reduzir significantemente o tempo de desenvolvimento gasto com a "
-"manipulação manual de dados no SQL e JDBC."
+"O Hibernate não cuida apenas do mapeamento desde às classes de Java até as "
+"mesas de banco de dados (e de tipos de dados Java até tipos de dados da "
+"SQL), mas também proporciona a consulta de dados e facildades de recuperação "
+"que pode significativamente reduzir o tempo de desenvolvimento. Do "
+"contrário, consumido com o manual de dados executados em SQL e JDBC. "
 
 #. Tag: para
-#: preface.xml:46
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "Hibernate's goal is to relieve the developer from 95 percent of common data "
 "persistence related programming tasks. Hibernate may not be the best "
@@ -62,52 +166,48 @@ msgid ""
 "specific SQL code and will help with the common task of result set "
 "translation from a tabular representation to a graph of objects."
 msgstr ""
-"O objetivo do Hibernate é de aliviar o desenvolvedor de 95 por cento das "
-"tarefas de programação relacionadas aos dados comuns de persistência. O "
-"Hibernate talvez não seja a melhor solução para aplicações de dados-data-"
-"centric que somente usa stored-procedures para implementar a lógica de "
-"negócio no banco de dados, isto é muito utilizado com o domínio de modelos "
-"orientado a objetos e lógicas de negócio em camadas do meio (middle-tier) "
-"baseadas em Java. Porém, o Hibernate poderá certamente ajuda-lo a remover ou "
-"encapsular o código SQL de um vendedor específico, ajudando também com a "
-"tarefa comum da tradução do resultado ajustado de uma representação para um "
+"A meta de Hibernate é aliviar o desenvolvedor em 95% de dados comuns de "
+"persistência relacionados as tarefas de programação. O Hibernate talvez não "
+"seja a melhor solução para as aplicações centradas em dados, das quais "
+"apenas usam procedimentos armazenados para a implementação das lógicas "
+"comerciais no banco de dados. Isto é mais utilizado orientando o objeto aos "
+"modelos de domínio e lógicas comerciais na camada intermediária baseada em "
+"Java. No entanto, o Hibernate pode certamente ajudá-lo a remover ou "
+"condensar o específico código fornecedor SQL, e ajudará com a tarefa comum "
+"de resultado estabelecido pela tradução desde a representação tabular até um "
 "gráfico de objetos."
 
 #. Tag: para
-#: preface.xml:56
 #, no-c-format
 msgid ""
 "If you are new to Hibernate and Object/Relational Mapping or even Java, "
 "please follow these steps:"
 msgstr ""
-"Se você for novo no Hibernate e no mapeamento Objeto/Relacional, ou até "
-"mesmo em Java, por favor, siga os seguintes passos."
+"Por favor siga  os seguintes passos, caso você seja inexperiente com o "
+"Hibernate, Mapeamento Objeto/Relacional ou mesmo Java:"
 
 #. Tag: para
-#: preface.xml:63
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
-"Read <xref linkend=\"tutorial\"/> for a tutorial with step-by-step "
+"Read <xref linkend=\"tutorial\" /> for a tutorial with step-by-step "
 "instructions. The source code for the tutorial is included in the "
 "distribution in the <literal>doc/reference/tutorial/</literal> directory."
 msgstr ""
-"Leia <xref linkend=\"tutorial\"/> para um tutorial com instruções passo-a-"
-"passo. O código fonte para do tutorial está incluído na distribuição no "
-"diretório <literal>doc/reference/tutorial/</literal>."
+"Leia <xref linkend=\"tutorial\"/> com passo-a-passo de instruções tutoriais. "
+"O código de origem tutorial está incluído no diretório de distribuição "
+"<literal>doc/reference/tutorial/</literal>. "
 
 #. Tag: para
-#: preface.xml:71
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
-"Read <xref linkend=\"architecture\"/> to understand the environments where "
+"Read <xref linkend=\"architecture\" /> to understand the environments where "
 "Hibernate can be used."
 msgstr ""
-"Leia o <xref linkend=\"architecture\"/> para entender o ambiente onde o "
-"Hibernate pode ser utilizado."
+"Leia <xref linkend=\"architecture\"/> para melhor entendimento dos meios "
+"onde Hibernate pode ser utilizado.  "
 
 #. Tag: para
-#: preface.xml:77
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "View the <literal>eg/</literal> directory in the Hibernate distribution. It "
 "contains a simple standalone application. Copy your JDBC driver to the "
@@ -116,64 +216,58 @@ msgid ""
 "command prompt in the distribution directory, type <literal>ant eg</literal> "
 "(using Ant), or under Windows, type <literal>build eg</literal>."
 msgstr ""
-"Dê uma olhada no diretório de exemplo <literal>eg/</literal> da distribuição "
-"do Hibernate, ele contém uma simples aplicação standalone. Copie seu driver "
-"JDBC para o diretório <literal>lib/</literal> e edite o arquivo <literal>etc/"
-"hibernate.properties</literal>, especificando corretamente os valores para "
-"seu banco de dados. Usando o prompt de commando no diretorio de "
-"distribuicao, digite <literal>ant eg</literal> (usando Ant), ou no Windows, "
-"digite <literal>build eg</literal>."
+"Verifique no diretório <literal>eg/</literal> em sua distribuição de "
+"Hibernate, do qual possui uma simples aplicação autônoma. Copie seu driver "
+"JDBC para o diretório <literal>lib/</literal> e edite <literal>eg/hibernate."
+"properties</literal>, especificando valores corretos para o seu banco de "
+"dados. No diretório de distribuição sob o comando aviso, digite <literal>ant "
+"eg</literal> (usando Ant), ou sob Windows, digite <literal>build eg</"
+"literal>. "
 
 #. Tag: para
-#: preface.xml:88
 #, fuzzy, no-c-format
 msgid ""
 "Use this reference documentation as your primary source of information. "
 "Consider reading <biblioref linkend=\"biblio-JPwH\"></biblioref> if you need "
 "more help with application design, or if you prefer a step-by-step tutorial. "
-"Also visit <ulink url=\"http://caveatemptor.hibernate.org\"></ulink> and "
-"download the example application from <biblioref linkend=\"biblio-JPwH\"></"
-"biblioref>."
+"Also visit <ulink url=\"http://caveatemptor.hibernate.org\" /> and download "
+"the example application from <biblioref linkend=\"biblio-JPwH\"></biblioref>."
 msgstr ""
-"Use esta documentação de referencia como sua fonte primaria de informação. "
-"Considere ler também o livro <emphasis>Java Persistence with Hibernate</"
-"emphasis> (http://www.manning.com/bauer2) caso você precise de mais ajuda "
-"com o desenvolvimento de aplicações ou caso prefira um tutorial passo-a-"
-"passo. Também visite o site http://caveatemptor.hibernate.org e faça o "
-"download da aplicação de exemplo do Java Persistence with Hibernate."
+"Utilize esta documentação de referência como a sua primeira fonte de "
+"informação. Considere a leitura <emphasis> Persistência Java com Hibernate </"
+"emphasis> (http://www.manning.com/bauer2), caso você precise de auxílio com "
+"a aplicação de design, ou tutorial com passo-a-passo, caso seja desejado. "
+"Você pode também visitar http://caveatemptor.hibernate.org e fazer o "
+"download do exemplo de aplicação da Persistência Java com Hibernate."
 
 #. Tag: para
-#: preface.xml:98
 #, no-c-format
 msgid "FAQs are answered on the Hibernate website."
 msgstr ""
-"FAQs (perguntas feitas com mais freqüência) estão respondidas no site do "
-"Hibernate"
+"As respostas das perguntas mais freqüentes podem ser encontradas no website "
+"Hibernate. "
 
 #. Tag: para
-#: preface.xml:103
 #, fuzzy, no-c-format
 msgid ""
 "Links to third party demos, examples, and tutorials are maintained on the "
 "Hibernate website."
 msgstr ""
-"Demonstrações, exemplos e tutorials estão disponíveis no site do Hibernate."
+"A terceira parte de demonstração, exemplos e tutoriais estão vinculadas no "
+"website Hibernate. "
 
 #. Tag: para
-#: preface.xml:109
 #, no-c-format
 msgid ""
 "The Community Area on the Hibernate website is a good resource for design "
 "patterns and various integration solutions (Tomcat, JBoss AS, Struts, EJB, "
 "etc.)."
 msgstr ""
-"A Área da comunidade no site do Hibernate é uma boa fonte de recursos para "
-"padrões de projeto e várias soluções de integração (Tomcat, JBoss AS, "
-"Struts, EJB, etc.)."
+"A Área de Comunidade no website Hibernate é um bom recurso para parceiros de "
+"design e várias soluções integradas. ( Tomcat, JBoss AS, Struts, EJB, etc. )"
 
 #. Tag: para
-#: preface.xml:117
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "If you have questions, use the user forum linked on the Hibernate website. "
 "We also provide a JIRA issue tracking system for bug reports and feature "
@@ -181,14 +275,15 @@ msgid ""
 "developer mailing list. If you are interested in translating this "
 "documentation into your language, contact us on the developer mailing list."
 msgstr ""
-"Caso você tenha dúvidas, use o fórum dos usuários encontrado no site do "
-"Hibernate. Nós também fornecemos um sistema para controle de bugs (JIRA) "
-"para relatórios de erros e requisições de features. Se você está interessado "
-"no desenvolvimento do Hibernate, junte-se a lista de e-mail dos "
-"desenvolvedores."
+"Em caso de dúvidas, utilize o fórum do usuário encontrado no website "
+"Hibernate. Nós também provemos o JIRA sistema de questão de rastreamento "
+"para os relatórios de erros de programação e recursos solicitados. Se você "
+"tem interesse no desenvolvimento do Hibernate, participe da lista de correio "
+"eletrônico do desenvolvedor. Caso você tenha interesse em traduzir este "
+"documento na sua própria língua, por favor entre em contato conosco através "
+"da lista de correio eletrônico do desenvolvedor.  "
 
 #. Tag: para
-#: preface.xml:125
 #, no-c-format
 msgid ""
 "Commercial development support, production support, and training for "
@@ -197,8 +292,8 @@ msgid ""
 "critical component of the JBoss Enterprise Middleware System (JEMS) suite of "
 "products."
 msgstr ""
-"Suporte comercial de desenvolvimento, suporte de produção e treinamento para "
-"o Hibernate está disponível através do JBoss Inc. (veja http://www.hibernate."
-"org/SupportTraining). O Hibernate é um Projeto Profissional de Código Aberto "
-"e um componente crítico da suíte de produtos JBoss Enterprise Middleware "
-"System (JEMS)."
+"O suporte do desenvolvimento comercial, suporte de produção e treinamento de "
+"Hibernate está disponível através do JBoss Inc. ( see http://www.hibernate."
+"org/SupportTraining/ ). Hibernate é um projeto de Fonte Aberta Profissional "
+"e componente crítico do Sistema Jboss de Empreendimento e Middleware "
+"( JEMS ) suíte de produtos. "

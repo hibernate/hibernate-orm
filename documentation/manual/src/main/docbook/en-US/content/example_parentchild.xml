@@ -23,7 +23,11 @@
   ~ Boston, MA  02110-1301  USA
   -->
 
-<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
+<!ENTITY % BOOK_ENTITIES SYSTEM "../HIBERNATE_-_Relational_Persistence_for_Idiomatic_Java.ent">
+%BOOK_ENTITIES;
+
+]>
 
 <chapter id="example-parentchild">
     <title>Example: Parent/Child</title>
@@ -41,7 +45,7 @@
         
     </para>
     
-    <sect1 id="example-parentchild-collections">
+    <section id="example-parentchild-collections">
         <title>A note about collections</title>
 
         <para>
@@ -82,9 +86,9 @@
             child is bound to the life cycle of the parent.
         </para>
     
-    </sect1>
+    </section>
 
-    <sect1 id="example-parentchild-bidir">
+    <section id="example-parentchild-bidir">
         <title>Bidirectional one-to-many</title>
 
         <para>
@@ -195,9 +199,9 @@ p.addChild(c);
 session.save(c);
 session.flush();]]></programlisting>
 
-     </sect1>
+     </section>
      
-     <sect1 id="example-parentchild-cascades">
+     <section id="example-parentchild-cascades">
          <title>Cascading life cycle</title>
      
          <para>
@@ -268,9 +272,9 @@ session.flush();]]></programlisting>
              <literal>setParent()</literal>.
          </para>
                
-     </sect1>
+     </section>
      
-     <sect1 id="example-parentchild-update">
+     <section id="example-parentchild-update">
          <title>Cascades and <literal>unsaved-value</literal></title>
      
          <para>
@@ -306,9 +310,9 @@ session.flush();]]></programlisting>
              row exists.
          </para>
 
-     </sect1>
+     </section>
 
-     <sect1 id="example-parentchild-conclusion">
+     <section id="example-parentchild-conclusion">
          <title>Conclusion</title>
 
          <para>
@@ -323,6 +327,6 @@ session.flush();]]></programlisting>
              cannot own collections and they should not be the child of any entity other than the unique parent.
          </para>
      
-     </sect1>
+     </section>
      
 </chapter>

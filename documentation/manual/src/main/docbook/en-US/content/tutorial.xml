@@ -24,8 +24,11 @@
   -->
 
 <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
-        <!ENTITY mdash "-">
+<!ENTITY % BOOK_ENTITIES SYSTEM "../HIBERNATE_-_Relational_Persistence_for_Idiomatic_Java.ent">
+%BOOK_ENTITIES;
+<!ENTITY mdash "-">
 ]>
+        
 
 <chapter id="tutorial">
     <title>Tutorial</title>
@@ -55,7 +58,7 @@
         </para>
     </note>
 
-    <sect1 id="tutorial-firstapp">
+    <section id="tutorial-firstapp">
         <title>Part 1 - The first Hibernate Application</title>
 
         <para>
@@ -72,7 +75,7 @@
             </para>
         </note>
 
-        <sect2 id="tutorial-firstapp-setup">
+        <section id="tutorial-firstapp-setup">
             <title>Setup</title>
 
             <para>
@@ -155,10 +158,10 @@
             <para>
                 Save this file as <filename>pom.xml</filename> in the project root directory.
             </para>
-        </sect2>
+        </section>
 
 
-        <sect2 id="tutorial-firstapp-firstclass">
+        <section id="tutorial-firstapp-firstclass">
             <title>The first class</title>
             
             <para>
@@ -238,9 +241,9 @@ public class Event {
                 Save this file to the <filename>src/main/java/org/hibernate/tutorial/domain</filename>
                 directory.
             </para>
-        </sect2>
+        </section>
 
-        <sect2 id="tutorial-firstapp-mapping">
+        <section id="tutorial-firstapp-mapping">
             <title>The mapping file</title>
 
             <para>
@@ -414,9 +417,9 @@ public class Event {
                 <filename>src/main/resources/org/hibernate/tutorial/domain/Event.hbm.xml</filename>.
             </para>
 
-        </sect2>
+        </section>
 
-        <sect2 id="tutorial-firstapp-configuration" revision="2">
+        <section id="tutorial-firstapp-configuration" revision="2">
             <title>Hibernate configuration</title>
 
             <para>
@@ -542,9 +545,9 @@ public class Event {
                 <filename>src/main/resources</filename> directory.
             </para>
 
-        </sect2>
+        </section>
 
-        <sect2 id="tutorial-firstapp-mvn" revision="1">
+        <section id="tutorial-firstapp-mvn" revision="1">
             <title>Building with Maven</title>
 
             <para>
@@ -575,9 +578,9 @@ public class Event {
 [INFO] Final Memory: 5M/547M
 [INFO] ------------------------------------------------------------------------]]></programlisting>
 
-        </sect2>
+        </section>
 
-        <sect2 id="tutorial-firstapp-helpers" revision="3">
+        <section id="tutorial-firstapp-helpers" revision="3">
             <title>Startup and helpers</title>
 
             <para>
@@ -665,9 +668,9 @@ public class HibernateUtil {
                 Hibernate.
             </para>
 
-        </sect2>
+        </section>
 
-        <sect2 id="tutorial-firstapp-workingpersistence" revision="5">
+        <section id="tutorial-firstapp-workingpersistence" revision="5">
             <title>Loading and storing objects</title>
 
             <para>
@@ -855,11 +858,11 @@ public class EventManager {
                 <command>mvn exec:java -Dexec.mainClass="org.hibernate.tutorial.EventManager" -Dexec.args="list"</command>
             </para>
 
-        </sect2>
+        </section>
 
-    </sect1>
+    </section>
 
-    <sect1 id="tutorial-associations">
+    <section id="tutorial-associations">
         <title>Part 2 - Mapping associations</title>
 
         <para>
@@ -869,7 +872,7 @@ public class EventManager {
             which they participate.
         </para>
 
-        <sect2 id="tutorial-associations-mappinguser" revision="1">
+        <section id="tutorial-associations-mappinguser" revision="1">
             <title>Mapping the Person class</title>
 
             <para>
@@ -928,9 +931,9 @@ public class Person {
                 behavior.
             </para>
 
-        </sect2>
+        </section>
 
-        <sect2 id="tutorial-associations-unidirset" revision="3">
+        <section id="tutorial-associations-unidirset" revision="3">
             <title>A unidirectional Set-based association</title>
 
             <para>
@@ -1019,9 +1022,9 @@ public class Person {
                                                   |_____________|
  ]]></programlisting>
 
-        </sect2>
+        </section>
 
-        <sect2 id="tutorial-associations-working" revision="2">
+        <section id="tutorial-associations-working" revision="2">
             <title>Working the association</title>
 
             <para>
@@ -1140,9 +1143,9 @@ public class Person {
                 entities, but looks almost the same in Java.
             </para>
 
-        </sect2>
+        </section>
 
-        <sect2 id="tutorial-associations-valuecollections">
+        <section id="tutorial-associations-valuecollections">
             <title>Collection of values</title>
 
             <para>
@@ -1232,9 +1235,9 @@ public class Person {
                 optimize this with an eager fetch.
             </para>
 
-        </sect2>
+        </section>
 
-        <sect2 id="tutorial-associations-bidirectional" revision="1">
+        <section id="tutorial-associations-bidirectional" revision="1">
             <title>Bi-directional associations</title>
 
             <para>
@@ -1291,9 +1294,9 @@ public class Person {
                 understand once you see how the bi-directional link between our two entities is created.
             </para>
 
-        </sect2>
+        </section>
 
-        <sect2 id="tutorial-associations-usingbidir">
+        <section id="tutorial-associations-usingbidir">
             <title>Working bi-directional links</title>
 
             <para>
@@ -1347,11 +1350,11 @@ public class Person {
                 and in many-to-many association you can select either side.
             </para>
 
-        </sect2>
+        </section>
 
-    </sect1>
+    </section>
 
-    <sect1 id="tutorial-webapp">
+    <section id="tutorial-webapp">
         <title>Part 3 - The EventManager web application</title>
 
         <para>
@@ -1361,7 +1364,7 @@ public class Person {
             database, and it provides an HTML form to enter new events.
         </para>
 
-        <sect2 id="tutorial-webapp-servlet" revision="2">
+        <section id="tutorial-webapp-servlet" revision="2">
             <title>Writing the basic servlet</title>
 
             <para>
@@ -1441,9 +1444,9 @@ public class EventManagerServlet extends HttpServlet {
                 as you consider rendering your view in JSP, not in a servlet.
             </para>
 
-        </sect2>
+        </section>
 
-        <sect2 id="tutorial-webapp-processing" revision="1">
+        <section id="tutorial-webapp-processing" revision="1">
             <title>Processing and rendering</title>
 
             <para>
@@ -1551,9 +1554,9 @@ public class EventManagerServlet extends HttpServlet {
                 examples.
             </para>
 
-        </sect2>
+        </section>
 
-        <sect2 id="tutorial-webapp-deploy">
+        <section id="tutorial-webapp-deploy">
             <title>Deploying and testing</title>
 
             <para>
@@ -1602,11 +1605,11 @@ public class EventManagerServlet extends HttpServlet {
                 is called) and to get the detailed output if any exceptions occurs.
             </para>
 
-        </sect2>
+        </section>
 
-    </sect1>
+    </section>
 
-    <sect1 id="tutorial-summary" revision="1">
+    <section id="tutorial-summary" revision="1">
         <title>Summary</title>
 
         <para>
@@ -1615,6 +1618,6 @@ public class EventManagerServlet extends HttpServlet {
             <ulink url="http://hibernate.org">website</ulink>.
         </para>
 
-    </sect1>
+    </section>
 
 </chapter>

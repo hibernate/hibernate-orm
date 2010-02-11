@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2009-07-14 19:56+0000\n"
+"POT-Creation-Date: 2010-02-04T04:51:22\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -11,43 +11,36 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 
 #. Tag: title
-#: inheritance_mapping.xml:29
 #, fuzzy, no-c-format
 msgid "Inheritance mapping"
 msgstr "상속 매핑"
 
 #. Tag: title
-#: inheritance_mapping.xml:32
 #, fuzzy, no-c-format
 msgid "The three strategies"
 msgstr "세 가지 방도들"
 
 #. Tag: para
-#: inheritance_mapping.xml:34
 #, no-c-format
 msgid "Hibernate supports the three basic inheritance mapping strategies:"
 msgstr "Hibernate는 세 가지 기본적인 상속 매핑 방도들을 지원한다:"
 
 #. Tag: para
-#: inheritance_mapping.xml:40
 #, no-c-format
 msgid "table per class hierarchy"
 msgstr "table per class hierarchy"
 
 #. Tag: para
-#: inheritance_mapping.xml:45
 #, fuzzy, no-c-format
-msgid "<para>table per subclass</para>"
-msgstr "table per subclass"
+msgid "table per subclass"
+msgstr "Table per subclass"
 
 #. Tag: para
-#: inheritance_mapping.xml:50
 #, no-c-format
 msgid "table per concrete class"
 msgstr "table per concrete class"
 
 #. Tag: para
-#: inheritance_mapping.xml:56
 #, no-c-format
 msgid ""
 "In addition, Hibernate supports a fourth, slightly different kind of "
@@ -55,13 +48,11 @@ msgid ""
 msgstr "게다가 Hibernate는 네 번째의 약간 다른 종류의 다형성을 지원한다:"
 
 #. Tag: para
-#: inheritance_mapping.xml:63
 #, no-c-format
 msgid "implicit polymorphism"
 msgstr "implicit polymorphism(함축적인 다형성)"
 
 #. Tag: para
-#: inheritance_mapping.xml:69
 #, fuzzy, no-c-format
 msgid ""
 "It is possible to use different mapping strategies for different branches of "
@@ -86,7 +77,6 @@ msgstr ""
 "도와 table per subclass 방도를 함께 혼합시키는 것이 가능하다(아래를 보라)."
 
 #. Tag: para
-#: inheritance_mapping.xml:83
 #, fuzzy, no-c-format
 msgid ""
 "It is possible to define <literal>subclass</literal>, <literal>union-"
@@ -110,27 +100,12 @@ msgstr ""
 "의 순서는 extends 키워드를 사용할 때 상관없다. 하나의 매핑 파일 내의 순서는 "
 "여전히 서브클래스들에 앞서 슈퍼클래스들을 정의하는데 여전히 필요하다."
 
-#. Tag: programlisting
-#: inheritance_mapping.xml:94
-#, no-c-format
-msgid ""
-"<![CDATA[\n"
-" <hibernate-mapping>\n"
-"     <subclass name=\"DomesticCat\" extends=\"Cat\" discriminator-value=\"D"
-"\">\n"
-"          <property name=\"name\" type=\"string\"/>\n"
-"     </subclass>\n"
-" </hibernate-mapping>]]>"
-msgstr ""
-
 #. Tag: title
-#: inheritance_mapping.xml:98
 #, no-c-format
 msgid "Table per class hierarchy"
 msgstr "Table per class hierarchy"
 
 #. Tag: para
-#: inheritance_mapping.xml:100
 #, fuzzy, no-c-format
 msgid ""
 "Suppose we have an interface <literal>Payment</literal> with the "
@@ -143,32 +118,7 @@ msgstr ""
 "<literal>Payment</literal>를 갖고 있다고 가정하자. table per hierarchy 매핑"
 "은 다음과 같을 것이다:"
 
-#. Tag: programlisting
-#: inheritance_mapping.xml:107
-#, no-c-format
-msgid ""
-"<![CDATA[<class name=\"Payment\" table=\"PAYMENT\">\n"
-"    <id name=\"id\" type=\"long\" column=\"PAYMENT_ID\">\n"
-"        <generator class=\"native\"/>\n"
-"    </id>\n"
-"    <discriminator column=\"PAYMENT_TYPE\" type=\"string\"/>\n"
-"    <property name=\"amount\" column=\"AMOUNT\"/>\n"
-"    ...\n"
-"    <subclass name=\"CreditCardPayment\" discriminator-value=\"CREDIT\">\n"
-"        <property name=\"creditCardType\" column=\"CCTYPE\"/>\n"
-"        ...\n"
-"    </subclass>\n"
-"    <subclass name=\"CashPayment\" discriminator-value=\"CASH\">\n"
-"        ...\n"
-"    </subclass>\n"
-"    <subclass name=\"ChequePayment\" discriminator-value=\"CHEQUE\">\n"
-"        ...\n"
-"    </subclass>\n"
-"</class>]]>"
-msgstr ""
-
 #. Tag: para
-#: inheritance_mapping.xml:109
 #, fuzzy, no-c-format
 msgid ""
 "Exactly one table is required. There is a limitation of this mapping "
@@ -180,45 +130,16 @@ msgstr ""
 "은 <literal>NOT NULL</literal> 컨스트레인트들을 가질 수 없다."
 
 #. Tag: title
-#: inheritance_mapping.xml:118
 #, no-c-format
 msgid "Table per subclass"
 msgstr "Table per subclass"
 
 #. Tag: para
-#: inheritance_mapping.xml:120
 #, fuzzy, no-c-format
 msgid "A table per subclass mapping looks like this:"
 msgstr "table per subclass 매핑은 다음과 같을 것이다:"
 
-#. Tag: programlisting
-#: inheritance_mapping.xml:124
-#, no-c-format
-msgid ""
-"<![CDATA[<class name=\"Payment\" table=\"PAYMENT\">\n"
-"    <id name=\"id\" type=\"long\" column=\"PAYMENT_ID\">\n"
-"        <generator class=\"native\"/>\n"
-"    </id>\n"
-"    <property name=\"amount\" column=\"AMOUNT\"/>\n"
-"    ...\n"
-"    <joined-subclass name=\"CreditCardPayment\" table=\"CREDIT_PAYMENT\">\n"
-"        <key column=\"PAYMENT_ID\"/>\n"
-"        <property name=\"creditCardType\" column=\"CCTYPE\"/>\n"
-"        ...\n"
-"    </joined-subclass>\n"
-"    <joined-subclass name=\"CashPayment\" table=\"CASH_PAYMENT\">\n"
-"        <key column=\"PAYMENT_ID\"/>\n"
-"        ...\n"
-"    </joined-subclass>\n"
-"    <joined-subclass name=\"ChequePayment\" table=\"CHEQUE_PAYMENT\">\n"
-"        <key column=\"PAYMENT_ID\"/>\n"
-"        ...\n"
-"    </joined-subclass>\n"
-"</class>]]>"
-msgstr ""
-
 #. Tag: para
-#: inheritance_mapping.xml:126
 #, fuzzy, no-c-format
 msgid ""
 "Four tables are required. The three subclass tables have primary key "
@@ -230,13 +151,11 @@ msgstr ""
 "one 연관이다)."
 
 #. Tag: title
-#: inheritance_mapping.xml:135
 #, fuzzy, no-c-format
 msgid "Table per subclass: using a discriminator"
 msgstr "discriminator를 사용하는, table per subclass"
 
 #. Tag: para
-#: inheritance_mapping.xml:137
 #, fuzzy, no-c-format
 msgid ""
 "Hibernate's implementation of table per subclass does not require a "
@@ -257,41 +176,7 @@ msgstr ""
 "이 <literal>&lt;subclass&gt;</literal>와 <literal>&lt;join&gt;</literal>의 사"
 "용을 결합시킬 수도 있다:"
 
-#. Tag: programlisting
-#: inheritance_mapping.xml:149
-#, no-c-format
-msgid ""
-"<![CDATA[<class name=\"Payment\" table=\"PAYMENT\">\n"
-"    <id name=\"id\" type=\"long\" column=\"PAYMENT_ID\">\n"
-"        <generator class=\"native\"/>\n"
-"    </id>\n"
-"    <discriminator column=\"PAYMENT_TYPE\" type=\"string\"/>\n"
-"    <property name=\"amount\" column=\"AMOUNT\"/>\n"
-"    ...\n"
-"    <subclass name=\"CreditCardPayment\" discriminator-value=\"CREDIT\">\n"
-"        <join table=\"CREDIT_PAYMENT\">\n"
-"            <key column=\"PAYMENT_ID\"/>\n"
-"            <property name=\"creditCardType\" column=\"CCTYPE\"/>\n"
-"            ...\n"
-"        </join>\n"
-"    </subclass>\n"
-"    <subclass name=\"CashPayment\" discriminator-value=\"CASH\">\n"
-"        <join table=\"CASH_PAYMENT\">\n"
-"            <key column=\"PAYMENT_ID\"/>\n"
-"            ...\n"
-"        </join>\n"
-"    </subclass>\n"
-"    <subclass name=\"ChequePayment\" discriminator-value=\"CHEQUE\">\n"
-"        <join table=\"CHEQUE_PAYMENT\" fetch=\"select\">\n"
-"            <key column=\"PAYMENT_ID\"/>\n"
-"            ...\n"
-"        </join>\n"
-"    </subclass>\n"
-"</class>]]>"
-msgstr ""
-
 #. Tag: para
-#: inheritance_mapping.xml:151
 #, no-c-format
 msgid ""
 "The optional <literal>fetch=\"select\"</literal> declaration tells Hibernate "
@@ -303,13 +188,11 @@ msgstr ""
 "치시키지 않도록 Hibernate에게 알려준다."
 
 #. Tag: title
-#: inheritance_mapping.xml:160
 #, no-c-format
 msgid "Mixing table per class hierarchy with table per subclass"
 msgstr "table per class hierarchy와 table per subclass를 혼합하기"
 
 #. Tag: para
-#: inheritance_mapping.xml:162
 #, fuzzy, no-c-format
 msgid ""
 "You can even mix the table per hierarchy and table per subclass strategies "
@@ -318,34 +201,7 @@ msgstr ""
 "당신은 이 접근법을 사용하여 table per hierarchy 방도와 table per subclass 방"
 "도를 혼합시킬 수 있다:"
 
-#. Tag: programlisting
-#: inheritance_mapping.xml:167
-#, no-c-format
-msgid ""
-"<![CDATA[<class name=\"Payment\" table=\"PAYMENT\">\n"
-"    <id name=\"id\" type=\"long\" column=\"PAYMENT_ID\">\n"
-"        <generator class=\"native\"/>\n"
-"    </id>\n"
-"    <discriminator column=\"PAYMENT_TYPE\" type=\"string\"/>\n"
-"    <property name=\"amount\" column=\"AMOUNT\"/>\n"
-"    ...\n"
-"    <subclass name=\"CreditCardPayment\" discriminator-value=\"CREDIT\">\n"
-"        <join table=\"CREDIT_PAYMENT\">\n"
-"            <property name=\"creditCardType\" column=\"CCTYPE\"/>\n"
-"            ...\n"
-"        </join>\n"
-"    </subclass>\n"
-"    <subclass name=\"CashPayment\" discriminator-value=\"CASH\">\n"
-"        ...\n"
-"    </subclass>\n"
-"    <subclass name=\"ChequePayment\" discriminator-value=\"CHEQUE\">\n"
-"        ...\n"
-"    </subclass>\n"
-"</class>]]>"
-msgstr ""
-
 #. Tag: para
-#: inheritance_mapping.xml:169
 #, no-c-format
 msgid ""
 "For any of these mapping strategies, a polymorphic association to the root "
@@ -356,22 +212,12 @@ msgstr ""
 "대한 하나의 다형성 연관은 <literal>&lt;many-to-one&gt;</literal>을 사용하여 "
 "매핑된다."
 
-#. Tag: programlisting
-#: inheritance_mapping.xml:175
-#, no-c-format
-msgid ""
-"<![CDATA[<many-to-one name=\"payment\" column=\"PAYMENT_ID\" class=\"Payment"
-"\"/>]]>"
-msgstr ""
-
 #. Tag: title
-#: inheritance_mapping.xml:180
 #, no-c-format
 msgid "Table per concrete class"
 msgstr "Table per concrete class"
 
 #. Tag: para
-#: inheritance_mapping.xml:182
 #, fuzzy, no-c-format
 msgid ""
 "There are two ways we can map the table per concrete class strategy. First, "
@@ -381,31 +227,7 @@ msgstr ""
 "이 존재한다. 첫 번째는 <literal>&lt;union-subclass&gt;</literal>를 사용하는 "
 "것이다."
 
-#. Tag: programlisting
-#: inheritance_mapping.xml:187
-#, no-c-format
-msgid ""
-"<![CDATA[<class name=\"Payment\">\n"
-"    <id name=\"id\" type=\"long\" column=\"PAYMENT_ID\">\n"
-"        <generator class=\"sequence\"/>\n"
-"    </id>\n"
-"    <property name=\"amount\" column=\"AMOUNT\"/>\n"
-"    ...\n"
-"    <union-subclass name=\"CreditCardPayment\" table=\"CREDIT_PAYMENT\">\n"
-"        <property name=\"creditCardType\" column=\"CCTYPE\"/>\n"
-"        ...\n"
-"    </union-subclass>\n"
-"    <union-subclass name=\"CashPayment\" table=\"CASH_PAYMENT\">\n"
-"        ...\n"
-"    </union-subclass>\n"
-"    <union-subclass name=\"ChequePayment\" table=\"CHEQUE_PAYMENT\">\n"
-"        ...\n"
-"    </union-subclass>\n"
-"</class>]]>"
-msgstr ""
-
 #. Tag: para
-#: inheritance_mapping.xml:189
 #, no-c-format
 msgid ""
 "Three tables are involved for the subclasses. Each table defines columns for "
@@ -415,7 +237,6 @@ msgstr ""
 "퍼티들을 포함하여, 그 클래스의 모든 프로퍼티들에 대한 컬럼들을 정의한다."
 
 #. Tag: para
-#: inheritance_mapping.xml:194
 #, fuzzy, no-c-format
 msgid ""
 "The limitation of this approach is that if a property is mapped on the "
@@ -431,7 +252,6 @@ msgstr ""
 "계층구조의 모든 unioned 서브클래스들을 가로질러 공유되어야 한다."
 
 #. Tag: para
-#: inheritance_mapping.xml:203
 #, fuzzy, no-c-format
 msgid ""
 "If your superclass is abstract, map it with <literal>abstract=\"true\"</"
@@ -445,48 +265,16 @@ msgstr ""
 "스들을 소유하는데 필요하다."
 
 #. Tag: title
-#: inheritance_mapping.xml:213
 #, fuzzy, no-c-format
 msgid "Table per concrete class using implicit polymorphism"
 msgstr "함축적인 다형성을 사용하는, table per concrete class"
 
 #. Tag: para
-#: inheritance_mapping.xml:215
 #, no-c-format
 msgid "An alternative approach is to make use of implicit polymorphism:"
 msgstr "대안적인 접근법은 함축적인 다형성을 사용하는 것이다:"
 
-#. Tag: programlisting
-#: inheritance_mapping.xml:219
-#, no-c-format
-msgid ""
-"<![CDATA[<class name=\"CreditCardPayment\" table=\"CREDIT_PAYMENT\">\n"
-"    <id name=\"id\" type=\"long\" column=\"CREDIT_PAYMENT_ID\">\n"
-"        <generator class=\"native\"/>\n"
-"    </id>\n"
-"    <property name=\"amount\" column=\"CREDIT_AMOUNT\"/>\n"
-"    ...\n"
-"</class>\n"
-"\n"
-"<class name=\"CashPayment\" table=\"CASH_PAYMENT\">\n"
-"    <id name=\"id\" type=\"long\" column=\"CASH_PAYMENT_ID\">\n"
-"        <generator class=\"native\"/>\n"
-"    </id>\n"
-"    <property name=\"amount\" column=\"CASH_AMOUNT\"/>\n"
-"    ...\n"
-"</class>\n"
-"\n"
-"<class name=\"ChequePayment\" table=\"CHEQUE_PAYMENT\">\n"
-"    <id name=\"id\" type=\"long\" column=\"CHEQUE_PAYMENT_ID\">\n"
-"        <generator class=\"native\"/>\n"
-"    </id>\n"
-"    <property name=\"amount\" column=\"CHEQUE_AMOUNT\"/>\n"
-"    ...\n"
-"</class>]]>"
-msgstr ""
-
 #. Tag: para
-#: inheritance_mapping.xml:221
 #, fuzzy, no-c-format
 msgid ""
 "Notice that the <literal>Payment</literal> interface is not mentioned "
@@ -494,18 +282,17 @@ msgid ""
 "mapped in each of the subclasses. If you want to avoid duplication, consider "
 "using XML entities (for example, <literal>[ &lt;!ENTITY allproperties SYSTEM "
 "\"allproperties.xml\"&gt; ]</literal> in the <literal>DOCTYPE</literal> "
-"declaration and <literal>&amp;allproperties;</literal> in the mapping)."
+"declaration and <literal>&amp;allproperties&semi;</literal> in the mapping)."
 msgstr ""
 "어느 곳에서도 우리가 명시적으로 <literal>Payment</literal> 인터페이스를 언급"
 "하지 않음을 주목하라. 또한 <literal>Payment</literal>의 프로퍼티들이 서브클래"
 "스들 각각에서 매핑된다는 점을 주목하라. 만일 당신이 중복을 피하고자 원한다"
 "면, XML 엔티티들을 사용하는 것을 고려하라(예를 들어 매핑에서 "
-"<literal>DOCTYPE</literal> 선언과 <literal>&amp;allproperties;</literal>에서 "
+"<literal>DOCTYPE</literal> 선언과 <literal>&amp;allproperties&semi;</literal>에서 "
 "<literal>[ &lt;!ENTITY allproperties SYSTEM \"allproperties.xml\"&gt; ]</"
 "literal>)."
 
 #. Tag: para
-#: inheritance_mapping.xml:231
 #, no-c-format
 msgid ""
 "The disadvantage of this approach is that Hibernate does not generate SQL "
@@ -515,7 +302,6 @@ msgstr ""
 "<literal>UNION</literal>들을 생성시키는 않는다는 점이다."
 
 #. Tag: para
-#: inheritance_mapping.xml:236
 #, no-c-format
 msgid ""
 "For this mapping strategy, a polymorphic association to <literal>Payment</"
@@ -524,27 +310,12 @@ msgstr ""
 "이 매핑 방도의 경우, <literal>Payment</literal>에 대한 하나의 다형성 연관은 "
 "대개 <literal>&lt;any&gt;</literal>를 사용하여 매핑된다."
 
-#. Tag: programlisting
-#: inheritance_mapping.xml:241
-#, no-c-format
-msgid ""
-"<![CDATA[<any name=\"payment\" meta-type=\"string\" id-type=\"long\">\n"
-"    <meta-value value=\"CREDIT\" class=\"CreditCardPayment\"/>\n"
-"    <meta-value value=\"CASH\" class=\"CashPayment\"/>\n"
-"    <meta-value value=\"CHEQUE\" class=\"ChequePayment\"/>\n"
-"    <column name=\"PAYMENT_CLASS\"/>\n"
-"    <column name=\"PAYMENT_ID\"/>\n"
-"</any>]]>"
-msgstr ""
-
 #. Tag: title
-#: inheritance_mapping.xml:246
 #, no-c-format
 msgid "Mixing implicit polymorphism with other inheritance mappings"
 msgstr "함축적인 다형성을 다른 상속 매핑들과 혼합하기"
 
 #. Tag: para
-#: inheritance_mapping.xml:248
 #, fuzzy, no-c-format
 msgid ""
 "Since the subclasses are each mapped in their own <literal>&lt;class&gt;</"
@@ -559,41 +330,7 @@ msgstr ""
 "게 또 다른 상속 계층구조의 부분일 수 있다! (그리고 당신은 <literal>Payment</"
 "literal> 인터페이스에 대해 여전히 다형성 질의들을 사용할 수 있다.)"
 
-#. Tag: programlisting
-#: inheritance_mapping.xml:256
-#, no-c-format
-msgid ""
-"<![CDATA[<class name=\"CreditCardPayment\" table=\"CREDIT_PAYMENT\">\n"
-"    <id name=\"id\" type=\"long\" column=\"CREDIT_PAYMENT_ID\">\n"
-"        <generator class=\"native\"/>\n"
-"    </id>\n"
-"    <discriminator column=\"CREDIT_CARD\" type=\"string\"/>\n"
-"    <property name=\"amount\" column=\"CREDIT_AMOUNT\"/>\n"
-"    ...\n"
-"    <subclass name=\"MasterCardPayment\" discriminator-value=\"MDC\"/>\n"
-"    <subclass name=\"VisaPayment\" discriminator-value=\"VISA\"/>\n"
-"</class>\n"
-"\n"
-"<class name=\"NonelectronicTransaction\" table=\"NONELECTRONIC_TXN\">\n"
-"    <id name=\"id\" type=\"long\" column=\"TXN_ID\">\n"
-"        <generator class=\"native\"/>\n"
-"    </id>\n"
-"    ...\n"
-"    <joined-subclass name=\"CashPayment\" table=\"CASH_PAYMENT\">\n"
-"        <key column=\"PAYMENT_ID\"/>\n"
-"        <property name=\"amount\" column=\"CASH_AMOUNT\"/>\n"
-"        ...\n"
-"    </joined-subclass>\n"
-"    <joined-subclass name=\"ChequePayment\" table=\"CHEQUE_PAYMENT\">\n"
-"        <key column=\"PAYMENT_ID\"/>\n"
-"        <property name=\"amount\" column=\"CHEQUE_AMOUNT\"/>\n"
-"        ...\n"
-"    </joined-subclass>\n"
-"</class>]]>"
-msgstr ""
-
 #. Tag: para
-#: inheritance_mapping.xml:258
 #, fuzzy, no-c-format
 msgid ""
 "Once again, <literal>Payment</literal> is not mentioned explicitly. If we "
@@ -613,13 +350,11 @@ msgstr ""
 "<literal>NonelectronicTransaction</literal>의 인스턴스들을 반환하지 않는다."
 
 #. Tag: title
-#: inheritance_mapping.xml:273
 #, no-c-format
 msgid "Limitations"
 msgstr "제약들"
 
 #. Tag: para
-#: inheritance_mapping.xml:275
 #, fuzzy, no-c-format
 msgid ""
 "There are limitations to the \"implicit polymorphism\" approach to the table "
@@ -631,7 +366,6 @@ msgstr ""
 "서는 다소 덜 제한적인 제약들이 존재한다:"
 
 #. Tag: para
-#: inheritance_mapping.xml:282
 #, no-c-format
 msgid ""
 "The following table shows the limitations of table per concrete-class "
@@ -641,140 +375,106 @@ msgstr ""
 "고 함축적인 다형성에 대한 제약들을 보여준다."
 
 #. Tag: title
-#: inheritance_mapping.xml:288
 #, no-c-format
 msgid "Features of inheritance mappings"
 msgstr "상속 매핑들의 특징들"
 
 #. Tag: entry
-#: inheritance_mapping.xml:301
 #, no-c-format
 msgid "Inheritance strategy"
 msgstr "상속 방도"
 
 #. Tag: entry
-#: inheritance_mapping.xml:302
 #, no-c-format
 msgid "Polymorphic many-to-one"
 msgstr "다형성 다대일"
 
 #. Tag: entry
-#: inheritance_mapping.xml:303
 #, no-c-format
 msgid "Polymorphic one-to-one"
 msgstr "다형성 일대일"
 
 #. Tag: entry
-#: inheritance_mapping.xml:304
 #, no-c-format
 msgid "Polymorphic one-to-many"
 msgstr "다형성 일대다"
 
 #. Tag: entry
-#: inheritance_mapping.xml:305
 #, no-c-format
 msgid "Polymorphic many-to-many"
 msgstr "다형성 다대다"
 
 #. Tag: entry
-#: inheritance_mapping.xml:306
 #, no-c-format
 msgid "Polymorphic <literal>load()/get()</literal>"
 msgstr ""
 
 #. Tag: entry
-#: inheritance_mapping.xml:307
 #, no-c-format
 msgid "Polymorphic queries"
 msgstr "다형성 질의들"
 
 #. Tag: entry
-#: inheritance_mapping.xml:308
 #, no-c-format
 msgid "Polymorphic joins"
 msgstr "다형성 조인들"
 
 #. Tag: entry
-#: inheritance_mapping.xml:309
 #, no-c-format
 msgid "Outer join fetching"
 msgstr "Outer 조인 페칭"
 
 #. Tag: entry
-#: inheritance_mapping.xml:314
 #, no-c-format
 msgid "table per class-hierarchy"
 msgstr "table per class-hierarchy"
 
-#. Tag: literal
-#: inheritance_mapping.xml:315 inheritance_mapping.xml:326
-#: inheritance_mapping.xml:337
-#, no-c-format
-msgid "&lt;many-to-one&gt;"
+#. Tag: entry
+#, fuzzy, no-c-format
+msgid "<literal>&lt;many-to-one&gt;</literal>"
 msgstr "&lt;many-to-one&gt;"
 
-#. Tag: literal
-#: inheritance_mapping.xml:316 inheritance_mapping.xml:327
-#: inheritance_mapping.xml:338
-#, no-c-format
-msgid "&lt;one-to-one&gt;"
+#. Tag: entry
+#, fuzzy, no-c-format
+msgid "<literal>&lt;one-to-one&gt;</literal>"
 msgstr "&lt;one-to-one&gt;"
 
-#. Tag: literal
-#: inheritance_mapping.xml:317 inheritance_mapping.xml:328
-#, no-c-format
-msgid "&lt;one-to-many&gt;"
+#. Tag: entry
+#, fuzzy, no-c-format
+msgid "<literal>&lt;one-to-many&gt;</literal>"
 msgstr "&lt;one-to-many&gt;"
 
-#. Tag: literal
-#: inheritance_mapping.xml:318 inheritance_mapping.xml:329
-#: inheritance_mapping.xml:340
-#, no-c-format
-msgid "&lt;many-to-many&gt;"
+#. Tag: entry
+#, fuzzy, no-c-format
+msgid "<literal>&lt;many-to-many&gt;</literal>"
 msgstr "&lt;many-to-many&gt;"
 
-#. Tag: literal
-#: inheritance_mapping.xml:319 inheritance_mapping.xml:330
-#: inheritance_mapping.xml:341
-#, no-c-format
-msgid "s.get(Payment.class, id)"
+#. Tag: entry
+#, fuzzy, no-c-format
+msgid "<literal>s.get(Payment.class, id)</literal>"
 msgstr "s.get(Payment.class, id)"
 
-#. Tag: literal
-#: inheritance_mapping.xml:320 inheritance_mapping.xml:331
-#: inheritance_mapping.xml:342 inheritance_mapping.xml:353
+#. Tag: entry
 #, no-c-format
-msgid "from Payment p"
-msgstr "from Payment p"
+msgid "<literal>from Payment p</literal>"
+msgstr ""
 
-#. Tag: literal
-#: inheritance_mapping.xml:321 inheritance_mapping.xml:332
-#: inheritance_mapping.xml:343
-#, no-c-format
-msgid "from Order o join o.payment p"
+#. Tag: entry
+#, fuzzy, no-c-format
+msgid "<literal>from Order o join o.payment p</literal>"
 msgstr "from Order o join o.payment p"
 
-#. Tag: emphasis
-#: inheritance_mapping.xml:322 inheritance_mapping.xml:333
-#: inheritance_mapping.xml:344
+#. Tag: entry
 #, no-c-format
-msgid "supported"
-msgstr "지원됨"
+msgid "<emphasis>supported</emphasis>"
+msgstr ""
 
 #. Tag: entry
-#: inheritance_mapping.xml:325
-#, fuzzy, no-c-format
-msgid "<entry>table per subclass</entry>"
-msgstr "table per subclass"
-
-#. Tag: entry
-#: inheritance_mapping.xml:336
 #, no-c-format
 msgid "table per concrete-class (union-subclass)"
 msgstr "table per concrete-class (union-subclass)"
 
 #. Tag: entry
-#: inheritance_mapping.xml:339
 #, no-c-format
 msgid ""
 "<literal>&lt;one-to-many&gt;</literal> (for <literal>inverse=\"true\"</"
@@ -782,37 +482,52 @@ msgid ""
 msgstr ""
 
 #. Tag: entry
-#: inheritance_mapping.xml:347
 #, no-c-format
 msgid "table per concrete class (implicit polymorphism)"
 msgstr "table per concrete class (implicit polymorphism)"
 
-#. Tag: literal
-#: inheritance_mapping.xml:348
+#. Tag: entry
 #, no-c-format
-msgid "&lt;any&gt;"
-msgstr "&lt;any&gt;"
+msgid "<literal>&lt;any&gt;</literal>"
+msgstr ""
 
-#. Tag: emphasis
-#: inheritance_mapping.xml:349 inheritance_mapping.xml:350
-#: inheritance_mapping.xml:354 inheritance_mapping.xml:355
+#. Tag: entry
 #, no-c-format
-msgid "not supported"
-msgstr "지원되지 않음"
+msgid "<emphasis>not supported</emphasis>"
+msgstr ""
 
-#. Tag: literal
-#: inheritance_mapping.xml:351
-#, no-c-format
-msgid "&lt;many-to-any&gt;"
+#. Tag: entry
+#, fuzzy, no-c-format
+msgid "<literal>&lt;many-to-any&gt;</literal>"
 msgstr "&lt;many-to-any&gt;"
 
-#. Tag: literal
-#: inheritance_mapping.xml:352
-#, no-c-format
+#. Tag: entry
+#, fuzzy, no-c-format
 msgid ""
-"s.createCriteria(Payment.class).add( Restrictions.idEq(id) ).uniqueResult()"
+"<literal>s.createCriteria(Payment.class).add( Restrictions.idEq(id) )."
+"uniqueResult()</literal>"
 msgstr ""
 "s.createCriteria(Payment.class).add( Restrictions.idEq(id) ).uniqueResult()"
+
+#, fuzzy
+#~ msgid "<para>table per subclass</para>"
+#~ msgstr "table per subclass"
+
+#~ msgid "from Payment p"
+#~ msgstr "from Payment p"
+
+#~ msgid "supported"
+#~ msgstr "지원됨"
+
+#, fuzzy
+#~ msgid "<entry>table per subclass</entry>"
+#~ msgstr "table per subclass"
+
+#~ msgid "&lt;any&gt;"
+#~ msgstr "&lt;any&gt;"
+
+#~ msgid "not supported"
+#~ msgstr "지원되지 않음"
 
 #~ msgid "load()/get()"
 #~ msgstr "load()/get()"

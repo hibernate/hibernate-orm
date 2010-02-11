@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2009-07-14 19:56+0000\n"
+"POT-Creation-Date: 2010-02-04T04:51:22\n"
 "PO-Revision-Date: 2009-07-14 19:56+0000\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
@@ -14,19 +14,16 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 
 #. Tag: title
-#: portability.xml:26
 #, no-c-format
 msgid "Database Portability Considerations"
 msgstr ""
 
 #. Tag: title
-#: portability.xml:29
 #, no-c-format
 msgid "Portability Basics"
 msgstr ""
 
 #. Tag: para
-#: portability.xml:31
 #, no-c-format
 msgid ""
 "One of the selling points of Hibernate (and really Object/Relational Mapping "
@@ -40,13 +37,11 @@ msgid ""
 msgstr ""
 
 #. Tag: title
-#: portability.xml:42
 #, no-c-format
 msgid "Dialect"
 msgstr ""
 
 #. Tag: para
-#: portability.xml:44
 #, no-c-format
 msgid ""
 "The first line of portability for Hibernate is the dialect, which is a "
@@ -60,13 +55,11 @@ msgid ""
 msgstr ""
 
 #. Tag: title
-#: portability.xml:55
 #, no-c-format
 msgid "Dialect resolution"
 msgstr ""
 
 #. Tag: para
-#: portability.xml:57
 #, no-c-format
 msgid ""
 "Originally, Hibernate would always require that users specify which dialect "
@@ -77,7 +70,6 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: portability.xml:64
 #, no-c-format
 msgid ""
 "Starting with version 3.2, Hibernate introduced the notion of automatically "
@@ -89,15 +81,14 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: portability.xml:72
 #, no-c-format
 msgid ""
 "Starting with version 3.3, Hibernate has a fare more powerful way to "
 "automatically determine which dialect to should be used by relying on a "
 "series of delegates which implement the <interfacename>org.hibernate.dialect."
 "resolver.DialectResolver</interfacename> which defines only a single method:"
-"<programlisting><![CDATA[public Dialect resolveDialect(DatabaseMetaData "
-"metaData) throws JDBCConnectionException]]></programlisting>. The basic "
+"<programlisting role=\"JAVA\">public Dialect resolveDialect(DatabaseMetaData "
+"metaData) throws JDBCConnectionException</programlisting>. The basic "
 "contract here is that if the resolver 'understands' the given database "
 "metadata then it returns the corresponding Dialect; if not it returns null "
 "and the process continues to the next resolver. The signature also "
@@ -110,7 +101,6 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: portability.xml:85
 #, no-c-format
 msgid ""
 "The cool part about these resolvers is that users can also register their "
@@ -126,13 +116,11 @@ msgid ""
 msgstr ""
 
 #. Tag: title
-#: portability.xml:98
 #, no-c-format
 msgid "Identifier generation"
 msgstr ""
 
 #. Tag: para
-#: portability.xml:100
 #, no-c-format
 msgid ""
 "When considering portability between databases, another important decision "
@@ -151,38 +139,63 @@ msgid ""
 "reference entities within a persistence context it must then issue the "
 "insert immediately when the users requests the entitiy be associated with "
 "the session (like via save() e.g.) regardless of current transactional "
-"semantics. <note> <para> Hibernate was changed slightly once the implication "
-"of this was better understood so that the insert is delayed in cases where "
-"that is feasible. </para> </note> The underlying issue is that the actual "
-"semanctics of the application itself changes in these cases."
+"semantics."
 msgstr ""
 
 #. Tag: para
-#: portability.xml:125
+#, no-c-format
+msgid ""
+"Hibernate was changed slightly once the implication of this was better "
+"understood so that the insert is delayed in cases where that is feasible."
+msgstr ""
+
+#. Tag: note
+#, no-c-format
+msgid ""
+"The underlying issue is that the actual semanctics of the application itself "
+"changes in these cases."
+msgstr ""
+
+#. Tag: para
 #, no-c-format
 msgid ""
 "Starting with version 3.2.3, Hibernate comes with a set of <ulink url="
 "\"http://in.relation.to/2082.lace\">enhanced</ulink> identifier generators "
-"targetting portability in a much different way. <note> <para> There are "
-"specifically 2 bundled <emphasis>enhanced</emphasis>generators: "
-"<itemizedlist> <listitem> <para> <classname>org.hibernate.id.enhanced."
-"SequenceStyleGenerator</classname> </para> </listitem> <listitem> <para> "
-"<classname>org.hibernate.id.enhanced.TableGenerator</classname> </para> </"
-"listitem> </itemizedlist> </para> </note> The idea behind these generators "
-"is to port the actual semantics of the identifer value generation to the "
-"different databases. For example, the <classname>org.hibernate.id.enhanced."
-"SequenceStyleGenerator</classname> mimics the behavior of a sequence on "
-"databases which do not support sequences by using a table."
+"targetting portability in a much different way."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid ""
+"There are specifically 2 bundled <emphasis>enhanced</emphasis>generators:"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<classname>org.hibernate.id.enhanced.SequenceStyleGenerator</classname>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<classname>org.hibernate.id.enhanced.TableGenerator</classname>"
+msgstr ""
+
+#. Tag: note
+#, no-c-format
+msgid ""
+"The idea behind these generators is to port the actual semantics of the "
+"identifer value generation to the different databases. For example, the "
+"<classname>org.hibernate.id.enhanced.SequenceStyleGenerator</classname> "
+"mimics the behavior of a sequence on databases which do not support "
+"sequences by using a table."
 msgstr ""
 
 #. Tag: title
-#: portability.xml:154
 #, no-c-format
 msgid "Database functions"
 msgstr ""
 
 #. Tag: para
-#: portability.xml:157
 #, no-c-format
 msgid ""
 "This is an area in Hibernate in need of improvement. In terms of portability "
@@ -191,7 +204,6 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: portability.xml:164
 #, no-c-format
 msgid ""
 "SQL functions can be referenced in many ways by users. However, not all "
@@ -202,7 +214,6 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: portability.xml:170
 #, no-c-format
 msgid ""
 "Technically this function registration is handled through the <classname>org."
@@ -213,7 +224,6 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: portability.xml:177
 #, no-c-format
 msgid ""
 "It is sort of implemented such that users can programatically register "
@@ -222,13 +232,11 @@ msgid ""
 msgstr ""
 
 #. Tag: title
-#: portability.xml:187
 #, no-c-format
 msgid "Type mappings"
 msgstr ""
 
 #. Tag: para
-#: portability.xml:189
 #, no-c-format
 msgid "This section scheduled for completion at a later date..."
 msgstr ""

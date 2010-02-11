@@ -23,13 +23,17 @@
   ~ Boston, MA  02110-1301  USA
   -->
 
-<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
+<!ENTITY % BOOK_ENTITIES SYSTEM "../HIBERNATE_-_Relational_Persistence_for_Idiomatic_Java.ent">
+%BOOK_ENTITIES;
+
+]>
 
 <chapter id="associations">
 
     <title>Association Mappings</title>
 
-    <sect1 id="assoc-intro" revision="1">
+    <section id="assoc-intro" revision="1">
         <title>Introduction</title>
         
         <para>
@@ -52,12 +56,12 @@
         	nullability constraints.
         </para>
         
-    </sect1>
+    </section>
 
-    <sect1 id="assoc-unidirectional" revision="1">
+    <section id="assoc-unidirectional" revision="1">
         <title>Unidirectional associations</title>
         
-        <sect2 id="assoc-unidirectional-m21">
+        <section id="assoc-unidirectional-m21">
         <title>Many-to-one</title>
         
         <para>
@@ -84,9 +88,9 @@ create table Person ( personId bigint not null primary key, addressId bigint not
 create table Address ( addressId bigint not null primary key )
         ]]></programlisting>
         
-        </sect2>
+        </section>
 
-        <sect2 id="assoc-unidirectional-121">
+        <section id="assoc-unidirectional-121">
         <title>One-to-one</title>
         
         <para>
@@ -139,9 +143,9 @@ create table Person ( personId bigint not null primary key )
 create table Address ( personId bigint not null primary key )
         ]]></programlisting>
         
-        </sect2>
+        </section>
         
-        <sect2 id="assoc-unidirectional-12m">
+        <section id="assoc-unidirectional-12m">
         <title>One-to-many</title>
         
         <para>
@@ -174,14 +178,14 @@ create table Address ( addressId bigint not null primary key, personId bigint no
           You should instead use a join table for this kind of association.
         </para>
         
-        </sect2>
+        </section>
     
-    </sect1>
+    </section>
 
-    <sect1 id="assoc-unidirectional-join" revision="1">
+    <section id="assoc-unidirectional-join" revision="1">
         <title>Unidirectional associations with join tables</title>
         
-        <sect2 id="assoc-unidirectional-join-12m">
+        <section id="assoc-unidirectional-join-12m">
         <title>One-to-many</title>
         
         <para>
@@ -213,9 +217,9 @@ create table PersonAddress ( personId not null, addressId bigint not null primar
 create table Address ( addressId bigint not null primary key )
         ]]></programlisting>
         
-        </sect2>
+        </section>
 
-        <sect2 id="assoc-unidirectional-join-m21">
+        <section id="assoc-unidirectional-join-m21">
         <title>Many-to-one</title>
         
         <para>
@@ -247,9 +251,9 @@ create table PersonAddress ( personId bigint not null primary key, addressId big
 create table Address ( addressId bigint not null primary key )
         ]]></programlisting>
         
-        </sect2>
+        </section>
 
-        <sect2 id="assoc-unidirectional-join-121">
+        <section id="assoc-unidirectional-join-121">
         <title>One-to-one</title>
         
         <para>
@@ -283,9 +287,9 @@ create table PersonAddress ( personId bigint not null primary key, addressId big
 create table Address ( addressId bigint not null primary key )
         ]]></programlisting>
         
-        </sect2>
+        </section>
 
-        <sect2 id="assoc-unidirectional-join-m2m">
+        <section id="assoc-unidirectional-join-m2m">
         <title>Many-to-many</title>
         
         <para>
@@ -314,14 +318,14 @@ create table PersonAddress ( personId bigint not null, addressId bigint not null
 create table Address ( addressId bigint not null primary key )
         ]]></programlisting>
         
-        </sect2>
+        </section>
 
-    </sect1>
+    </section>
 
-    <sect1 id="assoc-bidirectional" revision="1">
+    <section id="assoc-bidirectional" revision="1">
         <title>Bidirectional associations</title>
         
-        <sect2 id="assoc-bidirectional-m21" revision="2">
+        <section id="assoc-bidirectional-m21" revision="2">
         <title>one-to-many / many-to-one</title>
         
         <para>
@@ -392,9 +396,9 @@ create table Address ( addressId bigint not null primary key )
                 element.
             </para>
 
-        </sect2>
+        </section>
         
-        <sect2 id="assoc-bidirectional-121">
+        <section id="assoc-bidirectional-121">
         <title>One-to-one</title>
         
         <para>
@@ -450,14 +454,14 @@ create table Person ( personId bigint not null primary key )
 create table Address ( personId bigint not null primary key )
         ]]></programlisting>
         
-        </sect2>
+        </section>
         
-    </sect1>
+    </section>
 
-    <sect1 id="assoc-bidirectional-join" revision="1">
+    <section id="assoc-bidirectional-join" revision="1">
         <title>Bidirectional associations with join tables</title>
         
-        <sect2 id="assoc-bidirectional-join-12m">
+        <section id="assoc-bidirectional-join-12m">
         <title>one-to-many / many-to-one</title>
         
         <para>
@@ -498,9 +502,9 @@ create table PersonAddress ( personId bigint not null, addressId bigint not null
 create table Address ( addressId bigint not null primary key )
         ]]></programlisting>
         
-        </sect2>
+        </section>
 
-         <sect2 id="assoc-bidirectional-join-121">
+         <section id="assoc-bidirectional-join-121">
         <title>one to one</title>
         
         <para>
@@ -544,9 +548,9 @@ create table PersonAddress ( personId bigint not null primary key, addressId big
 create table Address ( addressId bigint not null primary key )
         ]]></programlisting>
 
-        </sect2>
+        </section>
         
-        <sect2 id="assoc-bidirectional-join-m2m" revision="1">
+        <section id="assoc-bidirectional-join-m2m" revision="1">
         <title>Many-to-many</title>
         
         <para>
@@ -581,11 +585,11 @@ create table PersonAddress ( personId bigint not null, addressId bigint not null
 create table Address ( addressId bigint not null primary key )
         ]]></programlisting>
         
-        </sect2>
+        </section>
         
-    </sect1>
+    </section>
     
-    <sect1 id="assoc-complex">
+    <section id="assoc-complex">
         <title>More complex association mappings</title>
         
         <para>
@@ -644,7 +648,7 @@ create table Address ( addressId bigint not null primary key )
             to handle these kinds of cases using HQL or a criteria query.
         </para>
 
-    </sect1>
+    </section>
 
 </chapter>
 

@@ -1,99 +1,102 @@
-#, fuzzy
+# translation of architecture.po to
+# Michael H. Smith <mhideo@redhat.com>, 2007.
+# Angela Garcia <agarcia@redhat.com>, 2009, 2010.
+# translation of Collection_Mapping.po to
+# translation of Collection_Mapping.po to
+# translation of Collection_Mapping.po to
+# translation of Collection_Mapping.po to
+# translation of Collection_Mapping.po to
+# translation of Collection_Mapping.po to
+# translation of Collection_Mapping.po to
+# translation of Collection_Mapping.po to
+# translation of Collection_Mapping.po to
 msgid ""
 msgstr ""
+"Project-Id-Version: architecture\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2009-06-10 21:02+0000\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"POT-Creation-Date: 2010-02-10T07:25:34\n"
+"PO-Revision-Date: 2010-01-04 10:30+1000\n"
+"Last-Translator: Angela Garcia <agarcia@redhat.com>\n"
+"Language-Team:  <en@li.org>\n"
+"MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: KBabel 1.11.4\n"
 
 #. Tag: title
-#: architecture.xml:30
 #, no-c-format
 msgid "Architecture"
 msgstr "Arquitectura"
 
 #. Tag: title
-#: architecture.xml:33
 #, no-c-format
 msgid "Overview"
-msgstr "Visi&#x00f3;n General"
+msgstr "Sinopsis"
 
 #. Tag: para
-#: architecture.xml:35
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "The diagram below provides a high-level view of the Hibernate architecture:"
-msgstr "Una visi&#x00f3;n a (muy) alto nivel de la arquitectura de Hibernate:"
+msgstr ""
+"El diagrama a continuación brinda una perspectiva a alto nivel de la "
+"arquitectura de Hibernate:"
 
 #. Tag: para
-#: architecture.xml:50
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "We do not have the scope in this document to provide a more detailed view of "
 "all the runtime architectures available; Hibernate is flexible and supports "
 "several different approaches. We will, however, show the two extremes: "
 "\"minimal\" architecture and \"comprehensive\" architecture."
 msgstr ""
-"Nos gustar&#x00ed;a mostrar una vista m&#x00e1;s detallada de la "
-"arquitectura de tiempo de ejecuci&#x00f3;n. Desafortunadamente, Hibernate es "
-"flexible y soporta diferentes enfoques. Mostraremos los dos extremos. En la "
-"arquitectura \"sencilla\", es la aplicaci&#x00f3;n la que provee su propias "
-"conexiones JDBC y gestiona sus propias transacciones. Este enfoque usa un "
-"m&#x00ed;nimo subconjunto de la API de Hibernate:"
+"Este documento no incluye una sinopsis detallada de la arquitecturas en "
+"tiempo de ejecución disponibles; Hibernate es flexible y soporta diferentes "
+"enfoques. Sin embargo, mostraremos los dos extremos: la arquitectura \"mínima"
+"\" y la arquitectura \"completa\"."
 
 #. Tag: para
-#: architecture.xml:56
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "This next diagram illustrates how Hibernate utilizes database and "
 "configuration data to provide persistence services, and persistent objects, "
 "to the application."
 msgstr ""
-"Este diagrama muestra a Hibernate usando la base de datos y los datos de "
-"configuraci&#x00f3;n para proveer servicios de persistencia (y objetos "
-"persistentes) a la aplicaci&#x00f3;n."
+"Este diagrama ilustra la manera en que Hibernate utiliza la base de datos y "
+"los datos de configuración para proporcionar servicios de persistencia y "
+"objetos persistentes a la aplicación."
 
 #. Tag: para
-#: architecture.xml:61
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "The \"minimal\" architecture has the application provide its own JDBC "
 "connections and manage its own transactions. This approach uses a minimal "
 "subset of Hibernate's APIs:"
 msgstr ""
-"Nos gustar&#x00ed;a mostrar una vista m&#x00e1;s detallada de la "
-"arquitectura de tiempo de ejecuci&#x00f3;n. Desafortunadamente, Hibernate es "
-"flexible y soporta diferentes enfoques. Mostraremos los dos extremos. En la "
-"arquitectura \"sencilla\", es la aplicaci&#x00f3;n la que provee su propias "
-"conexiones JDBC y gestiona sus propias transacciones. Este enfoque usa un "
-"m&#x00ed;nimo subconjunto de la API de Hibernate:"
+"La arquitectura \"mínima\" hace que la aplicación proporcione sus propias "
+"conexiones JDBC y que administre sus propias transacciones. Este enfoque "
+"utiliza un subgrupo mínimo de las APIs de Hibernate:"
 
 #. Tag: para
-#: architecture.xml:78
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "The \"comprehensive\" architecture abstracts the application away from the "
 "underlying JDBC/JTA APIs and allows Hibernate to manage the details."
 msgstr ""
-"La arquitectura \"full cream\" abstrae a la aplicaci&#x00f3;n de las APIs de "
-"JDBC/JTA y deja que Hibernate se encargue de los detalles."
+"La arquitectura \"completa\" abstrae la aplicación de las APIs de JDBC/JTA y "
+"permite que Hibernate se encargue de los detalles."
 
 #. Tag: para
-#: architecture.xml:92
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "Here are some definitions of the objects depicted in the diagrams:"
-msgstr "He aqu&#x00ed; algunas definiciones de los objetos en los diagramas:"
+msgstr "He aquí algunas definiciones de los objetos en los diagramas: "
 
 #. Tag: term
-#: architecture.xml:97
 #, no-c-format
 msgid "SessionFactory (<literal>org.hibernate.SessionFactory</literal>)"
 msgstr "SessionFactory (<literal>org.hibernate.SessionFactory</literal>)"
 
 #. Tag: para
-#: architecture.xml:99
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "A threadsafe, immutable cache of compiled mappings for a single database. A "
 "factory for <literal>Session</literal> and a client of "
@@ -101,21 +104,19 @@ msgid ""
 "hold an optional (second-level) cache of data that is reusable between "
 "transactions at a process, or cluster, level."
 msgstr ""
-"Cach&#x00e9; threadsafe (inmutable) de mapeos compilados para una sola base "
-"de datos. Es una f&#x00e1;brica de <literal>Session</literal> y un cliente "
-"de <literal>ConnectionProvider</literal>. Opcionalmente, puede mantener una "
-"cach&#x00e9; (de segundo nivel) de datos reusables entre transacciones, a un "
-"nivel de proceso o de cluster."
+"Un caché threadsafe (inmutable) de mapeos compilados para una sola base de "
+"datos. Una fábrica de <literal>Session</literal> y un cliente de "
+"<literal>ConnectionProvider</literal>, <literal>SessionFactory</literal> "
+"puede mantener un caché opcional (de segundo nivel) de datos reusables entre "
+"transacciones a nivel de proceso o de clúster."
 
 #. Tag: term
-#: architecture.xml:109
 #, no-c-format
 msgid "Session (<literal>org.hibernate.Session</literal>)"
 msgstr "Session (<literal>org.hibernate.Session</literal>)"
 
 #. Tag: para
-#: architecture.xml:111
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "A single-threaded, short-lived object representing a conversation between "
 "the application and the persistent store. It wraps a JDBC connection and is "
@@ -123,22 +124,20 @@ msgid ""
 "holds a mandatory first-level cache of persistent objects that are used when "
 "navigating the object graph or looking up objects by identifier."
 msgstr ""
-"Objeto mono-hebra, de corta vida que representa una conversaci&#x00f3;n "
-"entre la aplicaci&#x00f3;n y el almacenamiento persistente. Envuelve una "
-"conexi&#x00f3;n JDBC. Es una f&#x00e1;brica de <literal>Transaction</"
-"literal>. Mantiene una cach&#x00e9; requerida (de primer nivel) de objetos "
-"persistentes, usada mientras se navega el grafo de objetos o se recuperen "
-"objetos por identificador."
+"Un objeto mono-hebra, de corta vida que representa una conversación entre la "
+"aplicación y el almacenamiento persistente. Envuelve una conexión JDBC y es "
+"una fábrica de <literal>Transaction</literal>. <literal>Session</literal> "
+"mantiene un caché requerido de primer nivel de objetos persistentes, que se "
+"utiliza cuando se navega el gráfico de objetos o mientras se buscan objetos "
+"por identificador."
 
 #. Tag: term
-#: architecture.xml:121
 #, no-c-format
 msgid "Persistent objects and collections"
 msgstr "Objetos y colecciones persistentes"
 
 #. Tag: para
-#: architecture.xml:123
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "Short-lived, single threaded objects containing persistent state and "
 "business function. These can be ordinary JavaBeans/POJOs. They are "
@@ -147,45 +146,39 @@ msgid ""
 "in any application layer (for example, directly as data transfer objects to "
 "and from presentation)."
 msgstr ""
-"Objetos de corta vida, mono-hebra conteniendo estado persistente y "
-"funci&#x00f3;nalidad de negocio. Estos pueden ser JavaBeans/POJOs (Plain Old "
-"Java Objects, o sea, cualquier objeto Java), la &#x00fa;nica cosa especial "
-"en ellos es que estan asociados actualmente con una (y s&#x00f3;lo una) "
-"<literal>Session</literal>. Tan pronto como la <literal>Session</literal> "
-"sea cerrada, ser&#x00e1;n separados y estar&#x00e1;n libres para ser usados "
-"en cualquier capa de aplicaci&#x00f3;n. (por ejemplo, directamente como "
-"objetos de transferencia de datos hacia y desde la capa de presentaci&#x00f3;"
-"n)."
+"Objetos de corta vida, mono-hebra contienen un estado persistente así como "
+"una funcionalidad empresarial. Estos pueden ser JavaBeans/POJOs normales. "
+"Estos se encuentran asociados con exactamente una <literal>Session</"
+"literal>. Tan pronto como la <literal>Session</literal> se cierre, serán "
+"separados y estarán libres para utilizarlos en cualquier capa de aplicación, "
+"(por ejemplo, directamente como objetos de transferencia de datos hacia y "
+"desde la presentación)."
 
 #. Tag: term
-#: architecture.xml:133
 #, no-c-format
 msgid "Transient and detached objects and collections"
 msgstr "Objetos y colecciones transitorios y separados"
 
 #. Tag: para
-#: architecture.xml:135
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "Instances of persistent classes that are not currently associated with a "
 "<literal>Session</literal>. They may have been instantiated by the "
 "application and not yet persisted, or they may have been instantiated by a "
 "closed <literal>Session</literal>."
 msgstr ""
-"Instancias de clases persistentes que no estan acutualmente asociadas con "
-"una <literal>Session</literal>. Pueden haber sido instanciadas por la "
-"aplicaci&#x00f3;n y (a&#x00fa;n) no haber sido hechas persistentes, o pueden "
-"haber sido instanciadas por una <literal>Session</literal> cerrada."
+"Instancias de clases persistentes que no se encuentran actualmente asociadas "
+"con una <literal>Session</literal>. Pueden haber sido instanciadas por la "
+"aplicación y aún no haber sido persistidas, o pueden haber sido instanciadas "
+"por una <literal>Session</literal> cerrada."
 
 #. Tag: term
-#: architecture.xml:144
 #, no-c-format
 msgid "Transaction (<literal>org.hibernate.Transaction</literal>)"
 msgstr "Transaction (<literal>org.hibernate.Transaction</literal>)"
 
 #. Tag: para
-#: architecture.xml:146
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "(Optional) A single-threaded, short-lived object used by the application to "
 "specify atomic units of work. It abstracts the application from the "
@@ -194,16 +187,15 @@ msgid ""
 "transaction demarcation, either using the underlying API or "
 "<literal>Transaction</literal>, is never optional."
 msgstr ""
-"(Opcional) Un objeto de corta vida, mono-hebra, usado por la aplicaci&#x00f3;"
-"n para especificar unidades at&#x00f3;micas de trabajo. Abstrae a la "
-"aplicaci&#x00f3;n de las subyacentes transacciones JDBC, JTA o CORBA. En "
-"algunos casos, una <literal>Session</literal> puede extenderse sobre varias "
-"<literal>Transaction</literal>s. Sin embargo, la demarcaci&#x00f3;n de la "
-"transacci&#x00f3;n, ya sea usando la API subyacente o <literal>Transaction</"
-"literal>, nunca es opcional!"
+"(Opcional) Un objeto de corta vida, mono-hebra que la aplicación utiliza "
+"para especificar unidades atómicas de trabajo. Abstrae la aplicación de las "
+"transacciones subyacentes JDBC, JTA o CORBA. En algunos casos, una "
+"<literal>Session</literal> puede extenderse sobre varias "
+"<literal>Transaction</literal>es. Sin embargo, la demarcación de la "
+"transacción, ya sea utilizando la API subyacente o <literal>Transaction</"
+"literal>, nunca es opcional."
 
 #. Tag: term
-#: architecture.xml:157
 #, no-c-format
 msgid ""
 "ConnectionProvider (<literal>org.hibernate.connection.ConnectionProvider</"
@@ -213,22 +205,19 @@ msgstr ""
 "literal>)"
 
 #. Tag: para
-#: architecture.xml:159
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "(Optional) A factory for, and pool of, JDBC connections. It abstracts the "
 "application from underlying <literal>Datasource</literal> or "
 "<literal>DriverManager</literal>. It is not exposed to application, but it "
 "can be extended and/or implemented by the developer."
 msgstr ""
-"(Opcional) Una f&#x00e1;brica (y pool) de conexiones JDBC. Abstrae a la "
-"aplicaci&#x00f3;n del <literal>Datasource</literal> o "
-"<literal>DriverManager</literal> subyacente. No se expone a la "
-"aplicaci&#x00f3;n, pero puede ser extendido/implementado por el "
-"desarrollador."
+"(Opcional) Una fábrica y pool de conexiones JDBC. Abstrae a la aplicación "
+"del <literal>Datasource</literal> o <literal>DriverManager</literal> "
+"subyacente. No se expone a la aplicación, pero puede ser extendido/"
+"implementado por el desarrollador."
 
 #. Tag: term
-#: architecture.xml:167
 #, no-c-format
 msgid ""
 "TransactionFactory (<literal>org.hibernate.TransactionFactory</literal>)"
@@ -236,59 +225,52 @@ msgstr ""
 "TransactionFactory (<literal>org.hibernate.TransactionFactory</literal>)"
 
 #. Tag: para
-#: architecture.xml:169
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "(Optional) A factory for <literal>Transaction</literal> instances. It is not "
 "exposed to the application, but it can be extended and/or implemented by the "
 "developer."
 msgstr ""
-"(Opcional) Una f&#x00e1;brica de instancias de <literal>Transaction</"
-"literal>. No se expone a la aplicaci&#x00f3;n, pero puede ser extendido/"
-"implementado por el desarrollador."
+"(Opcional) Una fábrica de instancias de <literal>Transaction</literal>. No "
+"se expone a la aplicación pero puede ser extendido/implementado por el "
+"desarrollador. "
 
-#. Tag: emphasis
-#: architecture.xml:176
-#, no-c-format
-msgid "Extension Interfaces"
-msgstr "Interfaces de Extensi&#x00f3;n"
+#. Tag: term
+#, fuzzy, no-c-format
+msgid "<emphasis>Extension Interfaces</emphasis>"
+msgstr "<emphasis>Interfaces de extensión</emphasis>"
 
 #. Tag: para
-#: architecture.xml:178
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "Hibernate offers a range of optional extension interfaces you can implement "
 "to customize the behavior of your persistence layer. See the API "
 "documentation for details."
 msgstr ""
-"Hibernate ofrece muchas interfaces de extensi&#x00f3;n opcional que puedes "
-"implementar para modificar a medida el comportamiento de tu capa de "
-"persistencia. Para m&#x00e1;s detalles, mira la documentaci&#x00f3;n de la "
-"API."
+"Hibernate ofrece un rango de interfaces de extensión opcionales que puede "
+"implementar para personalizar el comportamiento de su capa de persistencia. "
+"Para obtener más detalles, vea la documentación de la API."
 
 #. Tag: para
-#: architecture.xml:187
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "Given a \"minimal\" architecture, the application bypasses the "
 "<literal>Transaction</literal>/<literal>TransactionFactory</literal> and/or "
 "<literal>ConnectionProvider</literal> APIs to communicate with JTA or JDBC "
 "directly."
 msgstr ""
-"Dada una arquitectura \"sencilla\", la aplicaci&#x00f3;n pasa por alto las "
-"APIs de <literal>Transaction</literal>/<literal>TransactionFactory</literal> "
-"y/o <literal>ConnectionProvider</literal>, para hablar directamente a JTA o "
-"JDBC."
+"Dada una arquitectura \"sencilla\", la aplicación evita las APIs de "
+"<literal>Transaction</literal>/<literal>TransactionFactory</literal> y/o "
+"<literal>ConnectionProvider</literal>, para comunicarse directamente con JTA "
+"o JDBC."
 
 #. Tag: title
-#: architecture.xml:195
 #, no-c-format
 msgid "Instance states"
 msgstr "Estados de instancia"
 
 #. Tag: para
-#: architecture.xml:196
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "An instance of a persistent class can be in one of three different states. "
 "These states are defined in relation to a <emphasis>persistence context</"
@@ -296,35 +278,32 @@ msgid ""
 "persistence context. The three different states are as follows:"
 msgstr ""
 "Una instancia de una clase persistente puede estar en uno de tres estados "
-"diferentes, definidos respecto de su <emphasis>contexto de persistencia</"
-"emphasis>. El objeto <literal>Session</literal> de Hibernate es el contexto "
-"de persistencia:"
+"diferentes. Estos estados se definen con respecto a su <emphasis>contexto de "
+"persistencia</emphasis>. El objeto <literal>Session</literal> de Hibernate "
+"es el contexto de persistencia. Los tres estados diferentes son los "
+"siguientes:"
 
 #. Tag: term
-#: architecture.xml:204
 #, no-c-format
 msgid "transient"
 msgstr "transitorio"
 
 #. Tag: para
-#: architecture.xml:206
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "The instance is not associated with any persistence context. It has no "
 "persistent identity or primary key value."
 msgstr ""
-"La instancia no est&#x00e1; y nunca estuvo asociada con un contexto de "
-"persistencia. No tiene identidad persistente (valor de clave primaria)."
+"La instancia no está asociada con un contexto de persistencia. No tiene "
+"identidad persistente o valor de clave principal."
 
 #. Tag: term
-#: architecture.xml:214
 #, no-c-format
 msgid "persistent"
 msgstr "persistente"
 
 #. Tag: para
-#: architecture.xml:216
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "The instance is currently associated with a persistence context. It has a "
 "persistent identity (primary key value) and can have a corresponding row in "
@@ -332,22 +311,20 @@ msgid ""
 "<emphasis>guarantees</emphasis> that persistent identity is equivalent to "
 "Java identity in relation to the in-memory location of the object."
 msgstr ""
-"La instancia est&#x00e1; actualmente asociada con un contexto de "
-"persistencia. Tiene una identidad persistente (valor de clave primaria) y, "
-"quiz&#x00e1;s, una fila correspondiente en la base de datos. Para un "
-"contexto de persistencia en particular, Hibernate <emphasis>garantiza</"
-"emphasis> que la identidad persistente es equivalente a la identidad Java "
-"(localizaci&#x00f3;n en memoria del objeto)."
+"La instancia se encuentra actualmente asociada con un contexto de "
+"persistencia. Tiene una identidad persistente (valor de clave principal) y "
+"puede tener una fila correspondiente en la base de datos. Para un contexto "
+"de persistencia en particular, Hibernate <emphasis>garantiza</emphasis> que "
+"la identidad persistente es equivalente a la identidad Java en relación con "
+"la ubicación del objeto."
 
 #. Tag: term
-#: architecture.xml:228
 #, no-c-format
 msgid "detached"
 msgstr "separado"
 
 #. Tag: para
-#: architecture.xml:230
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "The instance was once associated with a persistence context, but that "
 "context was closed, or the instance was serialized to another process. It "
@@ -355,49 +332,44 @@ msgid ""
 "For detached instances, Hibernate does not guarantee the relationship "
 "between persistent identity and Java identity."
 msgstr ""
-"La instancia estuvo una vez asociada con un contexto de persistencia, pero "
-"ese contexto fue cerrado, o la instancia fue serializada a otro proceso. "
-"Tiene una identidad persistente y, quiz&#x00e1;s, una fila correspondiente "
-"en la base de datos. Para las instancias separadas, Hibernate no establece "
-"ninguna garant&#x00ed;a sobre la relaci&#x00f3;n entre identidad persistente "
-"e identidad Java."
+"La instancia estuvo alguna vez asociada con un contexto de persistencia, "
+"pero ese contexto se cerró, o la instancia fue serializada a otro proceso. "
+"Tiene una identidad persistente y puede tener una fila correspondiente en la "
+"base de datos. Para las instancias separadas, Hibernate no establece ninguna "
+"garantía sobre la relación entre identidad persistente e identidad Java."
 
 #. Tag: title
-#: architecture.xml:245
 #, no-c-format
 msgid "JMX Integration"
-msgstr "Integraci&#x00f3;n JMX"
+msgstr "Integración JMX"
 
 #. Tag: para
-#: architecture.xml:247
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "JMX is the J2EE standard for the management of Java components. Hibernate "
 "can be managed via a JMX standard service. AN MBean implementation is "
 "provided in the distribution: <literal>org.hibernate.jmx.HibernateService</"
 "literal>."
 msgstr ""
-"JMX es el est&#x00e1;ndar J2EE para la gesti&#x00f3;n de componentes Java. "
-"Hibernate puede ser gestionado por medio de un servicio est&#x00e1;ndar JMX. "
-"Proveemos una implementaci&#x00f3;n de MBean en la distribuci&#x00f3;n, "
-"<literal>org.hibernate.jmx.HibernateService</literal>."
+"JMX es el estándar J2EE para la gestión de componentes Java. Hibernate se "
+"puede administrar por medio de un servicio estándar JMX. Brindamos una "
+"implementación de MBean en la distribución: <literal>org.hibernate.jmx."
+"HibernateService</literal>."
 
 #. Tag: para
-#: architecture.xml:253
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "For an example of how to deploy Hibernate as a JMX service on the JBoss "
 "Application Server, please see the JBoss User Guide. JBoss AS also provides "
 "these benefits if you deploy using JMX:"
 msgstr ""
-"Para ejemplo de c&#x00f3;mo desplegar Hibernate como un servicio JMX en un "
-"Servidor de Aplicaciones JBoss, por favor, mira la Gu&#x00ed;a del Usuario "
-"de JBoss. En JBoss AS, tienes adem&#x00e1;s estos beneficios si despliegas "
-"usando JMX:"
+"Para ver un ejemplo de cómo desplegar Hibernate como un servicio JMX en un "
+"servidor de aplicaciones JBoss, por favor, refiérase al manual del usuario "
+"de JBoss. JBoss AS también proporciona estos beneficios si despliega "
+"utilizando JMX:"
 
 #. Tag: para
-#: architecture.xml:261
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "<emphasis>Session Management</emphasis>: the Hibernate <literal>Session</"
 "literal>'s life cycle can be automatically bound to the scope of a JTA "
@@ -409,20 +381,18 @@ msgid ""
 "the <literal>HibernateContext</literal> to access a <literal>Session</"
 "literal>."
 msgstr ""
-"<emphasis>Gesti&#x00f3;n de Sesi&#x00f3;n:</emphasis> El ciclo de vida de la "
-"<literal>Session</literal> de Hibernate puede estar autom&#x00e1;ticamente "
-"ligado al &#x00e1;mbito de una transacci&#x00f3;n JTA. Esto significa que ya "
-"no tienes que abrir ni cerrar la <literal>Session</literal> manualmente, "
-"esto pasa a ser trabajo de un interceptor EJB de JBoss. Adem&#x00e1;s "
-"tampoco tienes que preocuparte m&#x00e1;s de la demarcaci&#x00f3;n de la "
-"transacci&#x00f3;n (a menos que que quieras escribir una capa de persitencia "
-"portable, por supuesto, usa la API de <literal>Transaction</literal> de "
-"Hibernate para esto). Para acceder a una <literal>Session</literal> llama al "
-"<literal>HibernateContext</literal>."
+"<emphasis>Administración de Sesión:</emphasis> El ciclo de vida de la "
+"<literal>Session</literal> de Hibernate puede estar ligado automáticamente "
+"al ámbito de una transacción JTA. Esto significa que ya no tiene que abrir "
+"ni cerrar la <literal>Session</literal> manualmente, esto pasa a ser el "
+"trabajo de un interceptor EJB de JBoss. Además tampoco tiene que preocuparse "
+"más de la demarcación de la transacción en su código (a menos de que quiera "
+"escribir una capa de persitencia portátil, utilice la API de "
+"<literal>Transaction</literal> de Hibernate para hacer esto). Para acceder a "
+"una <literal>Session</literal> llame al <literal>HibernateContext</literal>."
 
 #. Tag: para
-#: architecture.xml:273
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "<emphasis>HAR deployment</emphasis>: the Hibernate JMX service is deployed "
 "using a JBoss service deployment descriptor in an EAR and/or SAR file, as it "
@@ -432,63 +402,56 @@ msgid ""
 "deployment, JBoss will automatically detect all mapping files in your HAR "
 "file."
 msgstr ""
-"<emphasis>Despliegue de HAR:</emphasis> Usualmente despliegas el servicio "
-"JMX de Hibernate usando un descriptor de despliegue de servicio de JBoss (en "
-"un fichero EAR y/o SAR), que soporta todas las opciones de "
-"configuraci&#x00f3;n usuales de una <literal>SessionFactory</literal> de "
-"Hibernate. Sin embargo, todav&#x00ed;a tienes que nombrar todos tus ficheros "
-"de mapeo en el descriptor de despliegue. Si decides usar el depliegue de HAR "
-"opcional, JBoss detectar&#x00e1; autom&#x00e1;ticamente todos los ficheros "
-"de mapeo en tu fichero HAR."
+"<emphasis>Despliegue HAR:</emphasis>: el servicio JMX de Hibernate se "
+"implementa usando un descriptor de despliegue de servicio de JBoss en un "
+"archivo EAR y/o SAR, que soporta todas las opciones de configuración usuales "
+"de una <literal>SessionFactory</literal> de Hibernate. Sin embargo, todavía "
+"tiene que nombrar todos sus archivos de mapeo en el descriptor de "
+"despliegue. Si utiliza el depliegue HAR opcional, JBoss detectará "
+"automáticamente todos los archivos de mapeo en su archivo HAR."
 
 #. Tag: para
-#: architecture.xml:284
 #, no-c-format
 msgid ""
 "Consult the JBoss AS user guide for more information about these options."
 msgstr ""
-"Para m&#x00e1;s informaci&#x00f3;n sobre estas opciones, consulta la "
-"Gu&#x00ed;a de Usuario del JBoss AS."
+"Para más información sobre estas opciones, consulte el Manual de Usuario de "
+"JBoss AS."
 
 #. Tag: para
-#: architecture.xml:288
 #, fuzzy, no-c-format
 msgid ""
 "Another feature available as a JMX service is runtime Hibernate statistics. "
-"See <xref linkend=\"configuration-optional-statistics\"/> for more "
+"See <xref linkend=\"configuration-optional-statistics\" /> for more "
 "information."
 msgstr ""
-"Otra funcionalidad disponible como un servicio JMX son las estad&#x00ed;"
-"sticas en tiempo de ejecuci&#x00f3;n de Hibernate. Mira <xref linkend="
-"\"configuration-optional-statistics\"/>."
+"Otra funcionalidad disponible como un servicio de JMX son las estadísticas "
+"en tiempo de ejecución de Hibernate. Consulte <xref linkend=\"configuration-"
+"optional-statistics\" /> para obtener mayor información."
 
 #. Tag: title
-#: architecture.xml:295
 #, no-c-format
 msgid "JCA Support"
-msgstr "Soporte JCA:"
+msgstr "Soporte JCA"
 
 #. Tag: para
-#: architecture.xml:296
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "Hibernate can also be configured as a JCA connector. Please see the website "
 "for more information. Please note, however, that at this stage Hibernate JCA "
 "support is under development."
 msgstr ""
-"Hiberate puede adem&#x00e1;s ser configurado como un conector JCA. Por favor "
-"mira el sitio web para m&#x00e1;s detalles. Por favor ten en cuenta que el "
-"soporte de JCA de Hibernate est&#x00e1; a&#x00fa;n considerado experimental."
+"Hibernate también puede ser configurado como un conector JCA. Por favor "
+"refiérase al sitio web para encontrar más detalles. Sin embargo, tenga en "
+"cuenta que el soporte de JCA de Hibernate aún está bajo desarrollo."
 
 #. Tag: title
-#: architecture.xml:303
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "Contextual sessions"
-msgstr "UNTRANSLATED! Contextual Sessions"
+msgstr "Sesiones contextuales"
 
 #. Tag: para
-#: architecture.xml:304
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "Most applications using Hibernate need some form of \"contextual\" session, "
 "where a given session is in effect throughout the scope of a given context. "
@@ -500,19 +463,20 @@ msgid ""
 "utilized third-party frameworks, such as Spring or Pico, which provided "
 "proxy/interception-based contextual sessions."
 msgstr ""
-"Most applications using Hibernate need some form of \"contextual\" sessions, "
-"where a given session is in effect throughout the scope of a given context. "
-"However, across applications the definition of what constitutes a context is "
-"typically different; and different contexts define different scopes to the "
-"notion of current. Applications using Hibernate prior to version 3.0 tended "
-"to utilize either home-grown <literal>ThreadLocal</literal>-based contextual "
-"sessions, helper classes such as <literal>HibernateUtil</literal>, or "
-"utilized third-party frameworks (such as Spring or Pico) which provided "
-"proxy/interception-based contextual sessions."
+"La mayoría de las aplicaciones que utilizan Hibernate necesitan alguna forma "
+"de sesiones \"contextuales\", en donde una sesión dada se encuentra en "
+"efecto en todo el campo de acción de un contexto dado. Sin embargo, a través "
+"de las aplicaciones la definición de lo que constituye un contexto es "
+"usualmente diferente y diferentes contextos definen diferentes campos de "
+"acción para la noción de actual. Las aplicaciones que utiliza Hibernate "
+"antes de la version 3.0 tienden a utilizar ya sea sesiones contextuales con "
+"base <literal>ThreadLocal</literal> desarrollados en casa, las clases "
+"ayudantes tales como <literal>HibernateUtil</literal>, o enfoques de "
+"terceros utilizados, como Spring o Pico, los cuales brindaban sesiones "
+"contextuales con base proxy/intercepción."
 
 #. Tag: para
-#: architecture.xml:313
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "Starting with version 3.0.1, Hibernate added the <literal>SessionFactory."
 "getCurrentSession()</literal> method. Initially, this assumed usage of "
@@ -524,20 +488,20 @@ msgid ""
 "deployed into a <literal>J2EE</literal> container. Based on that, the "
 "<literal>JTA</literal>-based contextual sessions are all you need to use."
 msgstr ""
-"Starting with version 3.0.1, Hibernate added the <literal>SessionFactory."
-"getCurrentSession()</literal> method. Initially, this assumed usage of "
-"<literal>JTA</literal> transactions, where the <literal>JTA</literal> "
-"transaction defined both the scope and context of a current session. The "
-"Hibernate team maintains that, given the maturity of the numerous stand-"
-"alone <literal>JTA TransactionManager</literal> implementations out there, "
-"most (if not all) applications should be using <literal>JTA</literal> "
-"transaction management whether or not they are deployed into a "
-"<literal>J2EE</literal> container. Based on that, the <literal>JTA</literal>-"
-"based contextual sessions is all you should ever need to use."
+"Comenzando con la version 3.0.1, Hibernate agregó el método "
+"<literal>SessionFactory.getCurrentSession()</literal>. Inicialmente, este "
+"asumió la utilización de las transacciones <literal>JTA</literal>, en donde "
+"la transacción <literal>JTA</literal> definia tanto el contexto como el "
+"campo de acción de una sesión actual. Dada la madurez de númerosas "
+"implementaciones <literal>JTA TransactionManager</literal> autónomas "
+"existentes, la mayoría, si no es que todas, las aplicaciones deberían "
+"utilizar la administración de transacciones <literal>JTA</literal> en el "
+"caso de que se deplieguen o no en un contenedor <literal>J2EE</literal>. Con "
+"base en esto, las sesiones contextuales basadas en <literal>JTA</literal> es "
+"todo lo que usted necesita utilizar."
 
 #. Tag: para
-#: architecture.xml:323
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "However, as of version 3.1, the processing behind <literal>SessionFactory."
 "getCurrentSession()</literal> is now pluggable. To that end, a new extension "
@@ -546,16 +510,16 @@ msgid ""
 "current_session_context_class</literal>, have been added to allow "
 "pluggability of the scope and context of defining current sessions."
 msgstr ""
-"However, as of version 3.1, the processing behind <literal>SessionFactory."
-"getCurrentSession()</literal> is now pluggable. To that end, a new extension "
-"interface (<literal>org.hibernate.context.CurrentSessionContext</literal>) "
-"and a new configuration parameter (<literal>hibernate."
-"current_session_context_class</literal>) have been added to allow "
-"pluggability of the scope and context of defining current sessions."
+"Sin embargo, desde la versión 3.1, el procesamiento detrás de "
+"<literal>SessionFactory.getCurrentSession()</literal> ahora es conectable. "
+"Para ese fin, se ha añadido una nueva interfaz de extensión, <literal>org."
+"hibernate.context.CurrentSessionContext</literal>, y un nuevo parámetro de "
+"configuración, <literal>hibernate.current_session_context_class</literal> "
+"para permitir la conexión del campo de acción y el contexto de definición de "
+"las sesiones actuales."
 
 #. Tag: para
-#: architecture.xml:330
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "See the Javadocs for the <literal>org.hibernate.context."
 "CurrentSessionContext</literal> interface for a detailed discussion of its "
@@ -564,54 +528,51 @@ msgid ""
 "contextual session. Out-of-the-box, Hibernate comes with three "
 "implementations of this interface:"
 msgstr ""
-"See the Javadocs for the <literal>org.hibernate.context."
-"CurrentSessionContext</literal> interface for a detailed discussion of its "
-"contract. It defines a single method, <literal>currentSession()</literal>, "
-"by which the implementation is responsible for tracking the current "
-"contextual session. Out-of-the-box, Hibernate comes with three "
-"implementations of this interface."
+"Refiérase a los Javadocs para la interfaz <literal>org.hibernate.context."
+"CurrentSessionContext</literal> para poder ver una discusión detallada de su "
+"contrato. Define un método único, <literal>currentSession()</literal>, por "
+"medio del cual la implementación es responsable de rastrear la sesión "
+"contextual actual. Tal como viene empacada, Hibernate incluye tres "
+"implementaciones de esta interfaz:"
 
 #. Tag: para
-#: architecture.xml:340
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "<literal>org.hibernate.context.JTASessionContext</literal>: current sessions "
 "are tracked and scoped by a <literal>JTA</literal> transaction. The "
 "processing here is exactly the same as in the older JTA-only approach. See "
 "the Javadocs for details."
 msgstr ""
-"<literal>org.hibernate.context.JTASessionContext</literal> - current "
-"sessions are tracked and scoped by a <literal>JTA</literal> transaction. The "
-"processing here is exactly the same as in the older JTA-only approach. See "
-"the Javadocs for details."
+"<literal>org.hibernate.context.JTASessionContext</literal>: una transacción "
+"<literal>JTA</literal> rastrea y asume las sesiones actuales. Aquí el "
+"procesamiento es exactamente el mismo que en el enfoque más antiguo de JTA-"
+"sólamente. Refiérase a los Javadocs para obtener más información."
 
 #. Tag: para
-#: architecture.xml:348
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "<literal>org.hibernate.context.ThreadLocalSessionContext</literal>:current "
 "sessions are tracked by thread of execution. See the Javadocs for details."
 msgstr ""
-"<literal>org.hibernate.context.ThreadLocalSessionContext</literal> - current "
-"sessions are tracked by thread of execution. Again, see the Javadocs for "
-"details."
+"<literal>org.hibernate.context.ThreadLocalSessionContext</literal>: las "
+"sesiones actuales son rastreadas por un hilo de ejecución. Consulte los "
+"Javadocs para obtener más detalles."
 
 #. Tag: para
-#: architecture.xml:354
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "<literal>org.hibernate.context.ManagedSessionContext</literal>: current "
 "sessions are tracked by thread of execution. However, you are responsible to "
 "bind and unbind a <literal>Session</literal> instance with static methods on "
 "this class: it does not open, flush, or close a <literal>Session</literal>."
 msgstr ""
-"<literal>org.hibernate.context.ManagedSessionContext</literal> - current "
-"sessions are tracked by thread of execution. However, you are responsible to "
-"bind and unbind a <literal>Session</literal> instance with static methods on "
-"this class, it does never open, flush, or close a <literal>Session</literal>."
+"<literal>org.hibernate.context.ManagedSessionContext</literal>: las sesiones "
+"actuales son rastreadas por un hilo de ejecución. Sin embargo, usted es "
+"responsable de vincular y desvincular una instancia <literal>Session</"
+"literal> con métodos estáticos en esta clase: no abre, vacia o cierra una "
+"<literal>Session</literal>."
 
 #. Tag: para
-#: architecture.xml:363
 #, fuzzy, no-c-format
 msgid ""
 "The first two implementations provide a \"one session - one database "
@@ -624,24 +585,26 @@ msgid ""
 "utilize the JTA interfaces to demarcate transactions. If you execute in an "
 "EJB container that supports CMT, transaction boundaries are defined "
 "declaratively and you do not need any transaction or session demarcation "
-"operations in your code. Refer to <xref linkend=\"transactions\"/> for more "
+"operations in your code. Refer to <xref linkend=\"transactions\" /> for more "
 "information and code examples."
 msgstr ""
-"The first two implementations provide a \"one session - one database "
-"transaction\" programming model, also known and used as <emphasis>session-"
-"per-request</emphasis>. The beginning and end of a Hibernate session is "
-"defined by the duration of a database transaction. If you use programatic "
-"transaction demarcation in plain JSE without JTA, you are adviced to use the "
-"Hibernate <literal>Transaction</literal> API to hide the underlying "
-"transaction system from your code. If you use JTA, use the JTA interfaces to "
-"demarcate transactions. If you execute in an EJB container that supports "
-"CMT, transaction boundaries are defined declaratively and you don't need any "
-"transaction or session demarcation operations in your code. Refer to <xref "
-"linkend=\"transactions\"/> for more information and code examples."
+"Las primeras dos implementaciones brindan un modelo de programación \"una "
+"sesión - una transacción de la base de datos\". También conocido y utilizado "
+"como una <emphasis>sesión-por-petición</emphasis>. El inicio y el final de "
+"una sesión Hibernate se define por la duración de una transacción de una "
+"base de datos. Si utiliza la demarcación de transacción programática en JSE "
+"sencillo sin JTA, se le aconseja que utilice el API <literal>Transaction</"
+"literal> de Hibernate para esconder el sistema de transacción subyacente de "
+"su código. Si utiliza JTA, utilice las interfaces JTA para demarcar "
+"transacciones. Si utiliza JTA, puede utilizar las interfaces JTA para "
+"demarcar transacciones. Si ejecuta en un contenedor EJB que soporta CMT, los "
+"límites de la transacción están definidos declarativamente y no necesita "
+"ninguna operación de demarcación de sesión o transacción en su código. "
+"Consulte <xref linkend=\"transactions\" /> para obtener más información y "
+"ejemplos de código."
 
 #. Tag: para
-#: architecture.xml:375
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "The <literal>hibernate.current_session_context_class</literal> configuration "
 "parameter defines which <literal>org.hibernate.context."
@@ -654,19 +617,13 @@ msgid ""
 "however, there are three corresponding short names: \"jta\", \"thread\", and "
 "\"managed\"."
 msgstr ""
-"The <literal>hibernate.current_session_context_class</literal> configuration "
-"parameter defines which <literal>org.hibernate.context."
-"CurrentSessionContext</literal> implementation should be used. Note that for "
-"backwards compatibility, if this config param is not set but a <literal>org."
-"hibernate.transaction.TransactionManagerLookup</literal> is configured, "
-"Hibernate will use the <literal>org.hibernate.context.JTASessionContext</"
-"literal>. Typically, the value of this parameter would just name the "
-"implementation class to use; for the three out-of-the-box implementations, "
-"however, there are three corresponding short names, \"jta\", \"thread\", and "
-"\"managed\"."
-
-#~ msgid "ROLES_OF_TRANSLATORS"
-#~ msgstr "<!--TRANS:ROLES_OF_TRANSLATORS-->"
-
-#~ msgid "CREDIT_FOR_TRANSLATORS"
-#~ msgstr "<!--TRANS:CREDIT_FOR_TRANSLATORS-->"
+"El parámetro de configuración <literal>hibernate."
+"current_session_context_class</literal> define cuales implementaciones "
+"<literal>org.hibernate.context.CurrentSessionContext</literal> deben "
+"utilizarse. Para compatibilidad con versiones anteriores, si este parámetro "
+"de configuración no está establecido pero si tiene configurado un "
+"<literal>org.hibernate.transaction.TransactionManagerLookup</literal>, "
+"Hibernate utilizará el <literal>org.hibernate.context.JTASessionContext</"
+"literal>. Usualmente el valor de este parámetro sólamente nombraría la clase "
+"de implementación a utilizar. Sin embargo, para las tres implementaciones "
+"incluídas existen tress nombres cortos: \"jta\", \"thread\" y \"managed\"."

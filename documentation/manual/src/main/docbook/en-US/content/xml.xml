@@ -23,7 +23,11 @@
   ~ Boston, MA  02110-1301  USA
   -->
 
-<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
+<!ENTITY % BOOK_ENTITIES SYSTEM "../HIBERNATE_-_Relational_Persistence_for_Idiomatic_Java.ent">
+%BOOK_ENTITIES;
+
+]>
 
 <chapter id="xml">
     <title>XML Mapping</title>
@@ -33,7 +37,7 @@
         active development.
     </emphasis></para>
 
-    <sect1 id="xml-intro" revision="1">
+    <section id="xml-intro" revision="1">
         <title>Working with XML data</title>
 
         <para>
@@ -64,7 +68,7 @@
             it can be used to map just the XML.
         </para>
         
-        <sect2 id="xml-intro-mapping">
+        <section id="xml-intro-mapping">
             <title>Specifying XML and class mapping together</title>
 
             <para>
@@ -91,9 +95,9 @@
     ...
     
 </class>]]></programlisting>
-        </sect2>
+        </section>
         
-        <sect2 id="xml-onlyxml">
+        <section id="xml-onlyxml">
             <title>Specifying only an XML mapping</title>
 
             <para>
@@ -130,11 +134,11 @@
                 are purely logical constructs that can be referred to in HQL queries.
             </para>
 
-        </sect2>
+        </section>
         
-     </sect1>
+     </section>
      
-    <sect1 id="xml-mapping" revision="1">
+    <section id="xml-mapping" revision="1">
         <title>XML mapping metadata</title>
 
         <para>
@@ -256,10 +260,10 @@
     ...
 </customer>]]></programlisting>
        
-    </sect1>
+    </section>
     
     
-    <sect1 id="xml-manipulation" revision="1">
+    <section id="xml-manipulation" revision="1">
         <title>Manipulating XML data</title>
         
         <para>
@@ -307,7 +311,7 @@ session.close();]]></programlisting>
             operation.
         </para>
        
-    </sect1>
+    </section>
      
 </chapter>
 

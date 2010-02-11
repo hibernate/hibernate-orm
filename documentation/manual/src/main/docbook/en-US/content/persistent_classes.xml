@@ -23,7 +23,11 @@
   ~ Boston, MA  02110-1301  USA
   -->
 
-<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
+<!ENTITY % BOOK_ENTITIES SYSTEM "../HIBERNATE_-_Relational_Persistence_for_Idiomatic_Java.ent">
+%BOOK_ENTITIES;
+
+]>
 
 <chapter id="persistent-classes" revision="2">
     <title>Persistent Classes</title>
@@ -43,7 +47,7 @@
         ways (using trees of <literal>Map</literal> instances, for example).
     </para>
 
-    <sect1 id="persistent-classes-pojo">
+    <section id="persistent-classes-pojo">
         <title>A simple POJO example</title>
 
         <para>
@@ -134,7 +138,7 @@ public class Cat {
         </para>
 
 
-        <sect2 id="persistent-classes-pojo-constructor" revision="1">
+        <section id="persistent-classes-pojo-constructor" revision="1">
             <title>Implement a no-argument constructor</title>
 
             <para>
@@ -144,9 +148,9 @@ public class Cat {
                 default constructor with at least <emphasis>package</emphasis> visibility for runtime proxy 
                 generation in Hibernate.
             </para>
-        </sect2>
+        </section>
 
-        <sect2 id="persistent-classes-pojo-identifier" revision="2">
+        <section id="persistent-classes-pojo-identifier" revision="2">
             <title>Provide an identifier property (optional)</title>
 
             <para>
@@ -191,9 +195,9 @@ public class Cat {
                 We recommend that you declare consistently-named identifier properties on persistent
                 classes and that you use a nullable (i.e., non-primitive) type.
             </para>
-        </sect2>
+        </section>
 
-        <sect2 id="persistent-classes-pojo-final">
+        <section id="persistent-classes-pojo-final">
             <title>Prefer non-final classes (optional)</title>
             <para>
                 A central feature of Hibernate, <emphasis>proxies</emphasis>, depends upon the
@@ -210,9 +214,9 @@ public class Cat {
                 non-final classes. If you want to use a class with a <literal>public final</literal> 
                 method, you must explicitly disable proxying by setting <literal>lazy="false"</literal>.
             </para>
-        </sect2>
+        </section>
         
-        <sect2 id="persistent-classes-pojo-accessors" revision="2">
+        <section id="persistent-classes-pojo-accessors" revision="2">
             <title>Declare accessors and mutators for persistent fields (optional)</title>
 
             <para>
@@ -231,11 +235,11 @@ public class Cat {
                 <literal>private</literal> get / set pair.
             </para>
 
-        </sect2>
+        </section>
 
-    </sect1>
+    </section>
 
-    <sect1 id="persistent-classes-inheritance">
+    <section id="persistent-classes-inheritance">
         <title>Implementing inheritance</title>
 
         <para>
@@ -255,9 +259,9 @@ public class DomesticCat extends Cat {
                 this.name=name;
         }
 }]]></programlisting>
-    </sect1>
+    </section>
 
-    <sect1 id="persistent-classes-equalshashcode" revision="1">
+    <section id="persistent-classes-equalshashcode" revision="1">
         <title>Implementing <literal>equals()</literal> and <literal>hashCode()</literal></title>
 
         <para>
@@ -340,9 +344,9 @@ public class DomesticCat extends Cat {
             candidates for a business key.
         </para>
 
-    </sect1>
+    </section>
 
-    <sect1 id="persistent-classes-dynamicmodels">
+    <section id="persistent-classes-dynamicmodels">
         <title>Dynamic models</title>
 
         
@@ -485,9 +489,9 @@ dynamicSession.close()
             in <xref linkend="xml"/>.
         </para>
 
-    </sect1>
+    </section>
 
-    <sect1 id="persistent-classes-tuplizers" revision="1">
+    <section id="persistent-classes-tuplizers" revision="1">
         <title>Tuplizers</title>
 
         <para>
@@ -554,10 +558,10 @@ public class CustomMapTuplizerImpl
 }]]></programlisting>
 
 
-    </sect1>
+    </section>
 
 
-    <sect1 id="persistent-classes-entity-name-resolver" revision="0">
+    <section id="persistent-classes-entity-name-resolver" revision="0">
         <title>EntityNameResolvers</title>
 
         <para>
@@ -701,7 +705,7 @@ public class MyEntityTuplizer extends PojoEntityTuplizer {
                 </listitem>
             </orderedlist>
         </para>
-    </sect1>
+    </section>
 
 </chapter>
 

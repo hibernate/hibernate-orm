@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Branch 3_3\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2009-06-16 18:47+0000\n"
+"POT-Creation-Date: 2010-02-04T04:51:21\n"
 "PO-Revision-Date: 2009-06-16 18:47+0000\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
@@ -13,209 +13,137 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#. Tag: author
-#: author_group.xml:27
+#. Tag: firstname
 #, no-c-format
-msgid "<firstname>Gavin</firstname> <surname>King</surname>"
+msgid "Gavin"
 msgstr ""
 
-#. Tag: author
-#: author_group.xml:31
+#. Tag: firstname
 #, no-c-format
-msgid "<firstname>Christian</firstname> <surname>Bauer</surname>"
+msgid "Christian"
 msgstr ""
 
-#. Tag: author
-#: author_group.xml:35
+#. Tag: firstname
 #, no-c-format
-msgid ""
-"<firstname>Max</firstname> <othername>Rydahl</othername> <surname>Andersen</"
-"surname>"
+msgid "Max"
 msgstr ""
 
-#. Tag: author
-#: author_group.xml:40
+#. Tag: firstname
 #, no-c-format
-msgid ""
-"<author><firstname>Emmanuel</firstname> <surname>Bernard</surname></author>"
+msgid "Emmanuel"
 msgstr ""
 
-#. Tag: author
-#: author_group.xml:44
+#. Tag: firstname
 #, no-c-format
-msgid "<firstname>Steve</firstname> <surname>Ebersole</surname>"
+msgid "Steve"
 msgstr ""
 
-#. Tag: othercredit
-#: author_group.xml:49
+#. Tag: firstname
 #, no-c-format
-msgid "<firstname>James</firstname> <surname>Cobb</surname>"
+msgid "James"
 msgstr ""
 
-#. Tag: shortaffil
-#: author_group.xml:53 author_group.xml:60
+#. Tag: firstname
 #, no-c-format
-msgid "Graphic Design"
+msgid "Cheyenne"
 msgstr ""
 
-#. Tag: othercredit
-#: author_group.xml:56
+#. Tag: firstname
 #, no-c-format
-msgid "<firstname>Cheyenne</firstname> <surname>Weaver</surname>"
+msgid "Vincent"
 msgstr ""
 
-#. Tag: othercredit
-#: author_group.xml:69
+#. Tag: firstname
 #, no-c-format
-msgid ""
-"<othername><![CDATA[Bernardo Antonio Buffa Colom&#x00e9]]></othername> "
-"<email>kreimer@bbs.frc.utn.edu.ar</email>"
+msgid "Sebastien"
 msgstr ""
 
-#. Tag: othercredit
-#: author_group.xml:79
+#. Tag: firstname
 #, no-c-format
-msgid "<firstname>Vincent</firstname> <surname>Ricard</surname>"
+msgid "Michael"
 msgstr ""
 
-#. Tag: othercredit
-#: author_group.xml:83
+#. Tag: firstname
 #, no-c-format
-msgid "<firstname>Sebastien</firstname> <surname>Cesbron</surname>"
+msgid "Baptiste"
 msgstr ""
 
-#. Tag: othercredit
-#: author_group.xml:87
+#. Tag: firstname
 #, no-c-format
-msgid "<firstname>Michael</firstname> <surname>Courcy</surname>"
+msgid "Anthony"
 msgstr ""
 
-#. Tag: othercredit
-#: author_group.xml:91
+#. Tag: firstname
 #, no-c-format
-msgid "<firstname>Vincent</firstname> <surname>Giguère</surname>"
+msgid "Alvaro"
 msgstr ""
 
-#. Tag: othercredit
-#: author_group.xml:95
+#. Tag: firstname
 #, no-c-format
-msgid "<firstname>Baptiste</firstname> <surname>Mathus</surname>"
+msgid "Anderson"
 msgstr ""
 
-#. Tag: othercredit
-#: author_group.xml:99
+#. Tag: firstname
 #, no-c-format
-msgid ""
-"<othercredit><firstname>Emmanuel</firstname> <surname>Bernard</surname></"
-"othercredit>"
+msgid "Daniel Vieira"
 msgstr ""
 
-#. Tag: othercredit
-#: author_group.xml:103
+#. Tag: firstname
 #, no-c-format
-msgid "<firstname>Anthony</firstname> <surname>Patricio</surname>"
+msgid "Francisco"
 msgstr ""
 
-#. Tag: othercredit
-#: author_group.xml:113
+#. Tag: firstname
 #, no-c-format
-msgid ""
-"<firstname>Alvaro</firstname> <surname>Netto</surname> "
-"<email>alvaronetto@cetip.com.br</email>"
+msgid "Gamarra"
 msgstr ""
 
-#. Tag: othercredit
-#: author_group.xml:118
+#. Tag: firstname
 #, no-c-format
-msgid ""
-"<firstname>Anderson</firstname> <surname>Braulio</surname> "
-"<email>andersonbraulio@gmail.com</email>"
+msgid "Luiz Carlos"
 msgstr ""
 
-#. Tag: othercredit
-#: author_group.xml:123
+#. Tag: firstname
 #, no-c-format
-msgid ""
-"<firstname>Daniel Vieira</firstname> <surname>Costa</surname> "
-"<email>danielvc@gmail.com</email>"
+msgid "Marcel"
 msgstr ""
 
-#. Tag: othercredit
-#: author_group.xml:128
+#. Tag: firstname
 #, no-c-format
-msgid ""
-"<firstname>Francisco</firstname> <surname>gamarra</surname> <email>francisco."
-"gamarra@gmail.com</email>"
+msgid "Paulo"
 msgstr ""
 
-#. Tag: othercredit
-#: author_group.xml:133
+#. Tag: firstname
 #, no-c-format
-msgid ""
-"<firstname>Gamarra</firstname> <email>mauricio.gamarra@gmail.com</email>"
+msgid "Pablo L."
 msgstr ""
 
-#. Tag: othercredit
-#: author_group.xml:137
+#. Tag: firstname
 #, no-c-format
-msgid ""
-"<firstname>Luiz Carlos</firstname> <surname>Rodrigues</surname> "
-"<email>luizcarlos_rodrigues@yahoo.com.br</email>"
+msgid "Renato"
 msgstr ""
 
-#. Tag: othercredit
-#: author_group.xml:142
+#. Tag: firstname
 #, no-c-format
-msgid ""
-"<firstname>Marcel</firstname> <surname>Castelo</surname> <email>marcel."
-"castelo@gmail.com</email>"
+msgid "Rogério"
 msgstr ""
 
-#. Tag: othercredit
-#: author_group.xml:147
+#. Tag: firstname
 #, no-c-format
-msgid ""
-"<firstname>Paulo</firstname> <surname>César</surname> <email>paulocol@gmail."
-"com</email>"
+msgid "Wanderson"
 msgstr ""
 
-#. Tag: othercredit
-#: author_group.xml:152
+#. Tag: firstname
 #, no-c-format
-msgid ""
-"<firstname>Pablo L.</firstname> <surname>de Miranda</surname> "
-"<email>pablolmiranda@gmail.com</email>"
+msgid "Cao"
 msgstr ""
 
-#. Tag: othercredit
-#: author_group.xml:157
+#. Tag: orgname
 #, no-c-format
-msgid ""
-"<firstname>Renato</firstname> <surname>Deggau</surname> <email>rdeggau@gmail."
-"com</email>"
+msgid "RedSaga"
 msgstr ""
 
-#. Tag: othercredit
-#: author_group.xml:162
+#. Tag: contrib
 #, no-c-format
-msgid ""
-"<firstname>Rogério</firstname> <surname>Araújo</surname> "
-"<email>rgildoaraujo@yahoo.com.br</email>"
-msgstr ""
-
-#. Tag: othercredit
-#: author_group.xml:167
-#, no-c-format
-msgid ""
-"<firstname>Wanderson</firstname> <surname>Siqueira</surname> "
-"<email>wandersonxs@gmail.com</email>"
-msgstr ""
-
-#. Tag: othercredit
-#: author_group.xml:178
-#, no-c-format
-msgid ""
-"<firstname>Cao</firstname> <surname>Xiaogang</surname> <affiliation> "
-"<orgname>RedSaga</orgname> </affiliation> <contrib>Translation Lead</"
-"contrib> <email>caoxg@yahoo.com</email>"
+msgid "Translation Lead"
 msgstr ""

@@ -1,41 +1,53 @@
-#, fuzzy
+# translation of filters.po to
+# Michael H. Smith <mhideo@redhat.com>, 2007.
+# Angela Garcia <agarcia@redhat.com>, 2009.
+# translation of Collection_Mapping.po to
+# translation of Collection_Mapping.po to
+# translation of Collection_Mapping.po to
+# translation of Collection_Mapping.po to
+# translation of Collection_Mapping.po to
+# translation of Collection_Mapping.po to
+# translation of Collection_Mapping.po to
+# translation of Collection_Mapping.po to
+# translation of Collection_Mapping.po to
 msgid ""
 msgstr ""
+"Project-Id-Version: filters\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2009-06-10 21:02+0000\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"POT-Creation-Date: 2010-02-10T07:25:35\n"
+"PO-Revision-Date: 2009-11-11 08:28+1000\n"
+"Last-Translator: Angela Garcia <agarcia@redhat.com>\n"
+"Language-Team:  <en@li.org>\n"
+"MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: KBabel 1.11.4\n"
 
 #. Tag: title
-#: filters.xml:29
 #, no-c-format
 msgid "Filtering data"
-msgstr "Filtrando datos"
+msgstr "Filtración de datos"
 
 #. Tag: para
-#: filters.xml:31
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "Hibernate3 provides an innovative new approach to handling data with "
 "\"visibility\" rules. A <emphasis>Hibernate filter</emphasis> is a global, "
 "named, parameterized filter that can be enabled or disabled for a particular "
 "Hibernate session."
 msgstr ""
-"Hibernate3 provee un nuevo enfoque innovador para manejar datos con reglas "
-"de \"visibilidad\". Un <emphasis>filtro de Hibernate</emphasis> es un filtro "
-"global, con nombre y parametrizado que puede ser habilitado o deshabilitado "
-"para una sesión de Hibernate en particular."
+"Hibernate3 proporciona un nuevo enfoque innovador para manejar datos con "
+"reglas de \"visibilidad\". Un <emphasis>filtro Hibernate</emphasis> es un "
+"filtro global, con nombre y parametrizado que puede ser habilitado o "
+"deshabilitado para una sesión de Hibernate especifica."
 
 #. Tag: title
-#: filters.xml:38
 #, no-c-format
 msgid "Hibernate filters"
 msgstr "Filtros de Hibernate"
 
 #. Tag: para
-#: filters.xml:40
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "Hibernate3 has the ability to pre-define filter criteria and attach those "
 "filters at both a class level and a collection level. A filter criteria "
@@ -46,18 +58,17 @@ msgid ""
 "parameter values should be. Filters can be used like database views, but "
 "they are parameterized inside the application."
 msgstr ""
-"Hibernate3 añade la habilidad de predefinir criterios de filtros y unir esos "
-"filtros tanto a nivel de una clase como de una colección. Un criterio de "
-"filtro es la habilidad de definir una cláusula de restricción muy similar al "
-"atributo existente \"where\" disponible en el elemento class y varios "
-"elementos de colección. Excepto en que estos filtros pueden ser "
-"parametrizados. La aplicación puede tomar la decisión en tiempo de ejecución "
-"de qué filtros deben estar habilitados y cuáles deben ser sus parámetros. "
-"Los filtros pueden ser usados como vistas de base de datos, pero "
+"Hibernate3 tiene la habilidad de predefinir criterios de filtros y unir esos "
+"filtros tanto a nivel de clase como de colección. Un criterio de filtro le "
+"permite definir una cláusula de restricción muy similar al atributo "
+"existente \"where\" disponible en el elemento class y en varios elementos de "
+"colección. Sin embargo, las condiciones de estos filtros se pueden "
+"parametrizar. La aplicación puede tomar la decisión en tiempo de ejecución "
+"de si los filtros deben estar habilitados y cuáles deben ser sus parámetros. "
+"Los filtros se pueden utilizar como vistas de la base de datos, pero "
 "parametrizados dentro de la aplicación."
 
 #. Tag: para
-#: filters.xml:50
 #, no-c-format
 msgid ""
 "In order to use filters, they must first be defined and then attached to the "
@@ -65,74 +76,28 @@ msgid ""
 "filter-def/&gt;</literal> element within a <literal>&lt;hibernate-mapping/"
 "&gt;</literal> element:"
 msgstr ""
-"Para usar los filtros, éstos deben primero ser definidos y luego unidos a "
-"los elementos de mapeo apropiados. Para definir un filtro, usa el elemento "
-"<literal>&lt;filter-def/&gt;</literal> dentro de un elemento <literal>&lt;"
-"hibernate-mapping/&gt;</literal>:"
-
-#. Tag: programlisting
-#: filters.xml:56
-#, no-c-format
-msgid ""
-"<![CDATA[<filter-def name=\"myFilter\">\n"
-"    <filter-param name=\"myFilterParam\" type=\"string\"/>\n"
-"</filter-def>]]>"
-msgstr ""
-"<![CDATA[<filter-def name=\"myFilter\">\n"
-"    <filter-param name=\"myFilterParam\" type=\"string\"/>\n"
-"</filter-def>]]>"
+"Para utilizar los filtros, éstos se deben definir primero y luego se unen a "
+"los elementos de mapeo apropiados. Para definir un filtro, utilice el "
+"elemento <literal>&lt;filter-def/&gt;</literal> dentro de un elemento "
+"<literal>&lt;hibernate-mapping/&gt;</literal>:"
 
 #. Tag: para
-#: filters.xml:58
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "This filter can then be attached to a class:"
-msgstr "Entonces este filtro puede ser unido a una clase:"
-
-#. Tag: programlisting
-#: filters.xml:62
-#, no-c-format
-msgid ""
-"<![CDATA[<class name=\"myClass\" ...>\n"
-"    ...\n"
-"    <filter name=\"myFilter\" condition=\":myFilterParam = MY_FILTERED_COLUMN"
-"\"/>\n"
-"</class>]]>"
-msgstr ""
-"<![CDATA[<class name=\"myClass\" ...>\n"
-"    ...\n"
-"    <filter name=\"myFilter\" condition=\":myFilterParam = MY_FILTERED_COLUMN"
-"\"/>\n"
-"</class>]]>"
+msgstr "Luego este filtro se puede adjuntar a una clase:"
 
 #. Tag: para
-#: filters.xml:64
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "Or, to a collection:"
-msgstr "o a una colección:"
+msgstr "O a una colección:"
 
-#. Tag: programlisting
-#: filters.xml:68
+#. Tag: para
 #, no-c-format
-msgid ""
-"<![CDATA[<set ...>\n"
-"    <filter name=\"myFilter\" condition=\":myFilterParam = MY_FILTERED_COLUMN"
-"\"/>\n"
-"</set>]]>"
-msgstr ""
-"<![CDATA[<set ...>\n"
-"    <filter name=\"myFilter\" condition=\":myFilterParam = MY_FILTERED_COLUMN"
-"\"/>\n"
-"</set>]]>"
-
-#. Tag: para
-#: filters.xml:70
-#, fuzzy, no-c-format
 msgid "Or, to both or multiples of each at the same time."
-msgstr "o incluso a ambos (o muchos de cada uno) al mismo tiempo."
+msgstr "O incluso a ambos o múltiples de cada uno al mismo tiempo."
 
 #. Tag: para
-#: filters.xml:74
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "The methods on <literal>Session</literal> are: <literal>enableFilter(String "
 "filterName)</literal>, <literal>getEnabledFilter(String filterName)</"
@@ -145,177 +110,69 @@ msgid ""
 msgstr ""
 "Los métodos en <literal>Session</literal> son: <literal>enableFilter(String "
 "filterName)</literal>, <literal>getEnabledFilter(String filterName)</"
-"literal>, y <literal>disableFilter(String filterName)</literal>. Por "
-"defecto, los filtros <emphasis>no</emphasis> están habilitados para una "
-"sesión dada; deben ser habilitados explícitamente por medio del uso del "
-"método <literal>Session.enableFilter()</literal>, que devuelve una instancia "
-"de la interface <literal>Filter</literal>. Usando el filtro simple definido "
-"arriba, esto se vería así:"
-
-#. Tag: programlisting
-#: filters.xml:83
-#, no-c-format
-msgid ""
-"<![CDATA[session.enableFilter(\"myFilter\").setParameter(\"myFilterParam\", "
-"\"some-value\");]]>"
-msgstr ""
-"<![CDATA[session.enableFilter(\"myFilter\").setParameter(\"myFilterParam\", "
-"\"some-value\");]]>"
+"literal> y <literal>disableFilter(String filterName)</literal>. Por defecto, "
+"los filtros <emphasis>no</emphasis> están habilitados para una sesión dada. "
+"Los filtros deben ser habilitados explícitamente por medio del uso del "
+"método <literal>Session.enableFilter()</literal>, el cual retorna una "
+"instancia de la interfaz <literal>Filter</literal>. Si se utiliza el filtro "
+"simple definido anteriormente, esto se vería así:"
 
 #. Tag: para
-#: filters.xml:85
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "Methods on the org.hibernate.Filter interface do allow the method-chaining "
 "common to much of Hibernate."
 msgstr ""
-"Nota que los métodos en la interface org.hibernate.Filter permiten el "
-"encadenamiento de métodos común en gran parte de Hibernate."
+"Los métodos en la interfaz org.hibernate.Filter permiten el encadenamiento "
+"de métodos, lo cual es bastante común en gran parte de Hibernate."
 
 #. Tag: para
-#: filters.xml:89
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "The following is a full example, using temporal data with an effective "
 "record date pattern:"
 msgstr ""
-"Un ejemplo completo, usando datos temporales con un patrón efectivo de "
-"fechas de registro:"
-
-#. Tag: programlisting
-#: filters.xml:93
-#, no-c-format
-msgid ""
-"<![CDATA[<filter-def name=\"effectiveDate\">\n"
-"    <filter-param name=\"asOfDate\" type=\"date\"/>\n"
-"</filter-def>\n"
-"\n"
-"<class name=\"Employee\" ...>\n"
-"...\n"
-"    <many-to-one name=\"department\" column=\"dept_id\" class=\"Department\"/"
-">\n"
-"    <property name=\"effectiveStartDate\" type=\"date\" column=\"eff_start_dt"
-"\"/>\n"
-"    <property name=\"effectiveEndDate\" type=\"date\" column=\"eff_end_dt\"/"
-">\n"
-"...\n"
-"    <!--\n"
-"        Note that this assumes non-terminal records have an eff_end_dt set "
-"to\n"
-"        a max db date for simplicity-sake\n"
-"    -->\n"
-"    <filter name=\"effectiveDate\"\n"
-"            condition=\":asOfDate BETWEEN eff_start_dt and eff_end_dt\"/>\n"
-"</class>\n"
-"\n"
-"<class name=\"Department\" ...>\n"
-"...\n"
-"    <set name=\"employees\" lazy=\"true\">\n"
-"        <key column=\"dept_id\"/>\n"
-"        <one-to-many class=\"Employee\"/>\n"
-"        <filter name=\"effectiveDate\"\n"
-"                condition=\":asOfDate BETWEEN eff_start_dt and eff_end_dt\"/"
-">\n"
-"    </set>\n"
-"</class>]]>"
-msgstr ""
-"<![CDATA[<filter-def name=\"effectiveDate\">\n"
-"    <filter-param name=\"asOfDate\" type=\"date\"/>\n"
-"</filter-def>\n"
-"\n"
-"<class name=\"Employee\" ...>\n"
-"...\n"
-"    <many-to-one name=\"department\" column=\"dept_id\" class=\"Department\"/"
-">\n"
-"    <property name=\"effectiveStartDate\" type=\"date\" column=\"eff_start_dt"
-"\"/>\n"
-"    <property name=\"effectiveEndDate\" type=\"date\" column=\"eff_end_dt\"/"
-">\n"
-"...\n"
-"    <!--\n"
-"        Note that this assumes non-terminal records have an eff_end_dt set "
-"to\n"
-"        a max db date for simplicity-sake\n"
-"    -->\n"
-"    <filter name=\"effectiveDate\"\n"
-"            condition=\":asOfDate BETWEEN eff_start_dt and eff_end_dt\"/>\n"
-"</class>\n"
-"\n"
-"<class name=\"Department\" ...>\n"
-"...\n"
-"    <set name=\"employees\" lazy=\"true\">\n"
-"        <key column=\"dept_id\"/>\n"
-"        <one-to-many class=\"Employee\"/>\n"
-"        <filter name=\"effectiveDate\"\n"
-"                condition=\":asOfDate BETWEEN eff_start_dt and eff_end_dt\"/"
-">\n"
-"    </set>\n"
-"</class>]]>"
+"Este es un ejemplo completo, utilizando datos temporales con un patrón "
+"efectivo de fechas de registro: "
 
 #. Tag: para
-#: filters.xml:95
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "In order to ensure that you are provided with currently effective records, "
 "enable the filter on the session prior to retrieving employee data:"
 msgstr ""
-"Entonces, en orden de asegurar que siempre tendrás de vuelta registros "
-"actualmente efectivos, simplemente habilita el filtro en la sesión previo a "
-"recuperar los datos de empleados:"
-
-#. Tag: programlisting
-#: filters.xml:100
-#, no-c-format
-msgid ""
-"<![CDATA[Session session = ...;\n"
-"session.enableFilter(\"effectiveDate\").setParameter(\"asOfDate\", new Date"
-"());\n"
-"List results = session.createQuery(\"from Employee as e where e.salary > :"
-"targetSalary\")\n"
-"         .setLong(\"targetSalary\", new Long(1000000))\n"
-"         .list();\n"
-"]]>"
-msgstr ""
-"<![CDATA[Session session = ...;\n"
-"session.enableFilter(\"effectiveDate\").setParameter(\"asOfDate\", new Date"
-"());\n"
-"List results = session.createQuery(\"from Employee as e where e.salary > :"
-"targetSalary\")\n"
-"         .setLong(\"targetSalary\", new Long(1000000))\n"
-"         .list();\n"
-"]]>"
+"Con el fin de asegurarse de que siempre recibirá los registros efectivos "
+"actualmente, habilite el filtro en la sesión antes de recuperar los datos de "
+"los empleados:"
 
 #. Tag: para
-#: filters.xml:102
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "Even though a salary constraint was mentioned explicitly on the results in "
 "the above HQL, because of the enabled filter, the query will return only "
 "currently active employees who have a salary greater than one million "
 "dollars."
 msgstr ""
-"En el HQL de arriba, aunque sólo hemos mencionado explícitamente una "
-"restricción de salario en los resultados, debido al filtro habilitado la "
-"consulta sólo devolverá empleados actualmente activos que tengan un salario "
-"mayor que un millón de dólares."
+"En el HQL anterior, aunque sólo mencionamos explícitamente una restricción "
+"de salario en los resultados, debido al filtro habilitado la consulta sólo "
+"retornará empleados actualmente activos que tengan un salario mayor a un "
+"millón de dólares."
 
 #. Tag: para
-#: filters.xml:108
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "If you want to use filters with outer joining, either through HQL or load "
 "fetching, be careful of the direction of the condition expression. It is "
 "safest to set this up for left outer joining. Place the parameter first "
 "followed by the column name(s) after the operator."
 msgstr ""
-"Nota: si planeas usar filtros con unión externa (outer joining) (bien a "
-"través de HQL, o bien de recuperación de carga) sé cuidadoso en la dirección "
-"de expresión de la condición. Lo más seguro es establecer esto para unión "
-"externa izquierda (left outer joining). En general, coloca el primer "
-"parámetro seguido del nombre(s) de columna(s) después del operador."
+"Si quiere utilizar filtros con unión externa, ya sea a través de HQL, o bien "
+"de recuperación de carga, tenga cuidado en la dirección de expresión de la "
+"condición. Lo más seguro es configurar esto para una unión externa "
+"izquierda. Coloque el parámetro primero seguido del nombre(s) de la(s) "
+"columna(s) después del operador."
 
 #. Tag: para
-#: filters.xml:115
 #, no-c-format
 msgid ""
 "After being defined, a filter might be attached to multiple entities and/or "
@@ -324,18 +181,13 @@ msgid ""
 "literal> allows you to definine a default condition, either as an attribute "
 "or CDATA:"
 msgstr ""
-
-#. Tag: programlisting
-#: filters.xml:122
-#, no-c-format
-msgid ""
-"<![CDATA[<filter-def name=\"myFilter\" condition=\"abc > xyz\">...</filter-"
-"def>\n"
-"<filter-def name=\"myOtherFilter\">abc=xyz</filter-def>]]>"
-msgstr ""
+"Después de definir un filtro, este se puede unir a múltiples entidades y/o "
+"colecciones cada una con su propia condición. Esto puede llegar a ser "
+"problemático cuando las condiciones son las mismas. Así que el usar "
+"<literal>&lt;filter-def/&gt;</literal> le permite definir una condición por "
+"defecto, ya sea como atributo o como CDATA:"
 
 #. Tag: para
-#: filters.xml:124
 #, no-c-format
 msgid ""
 "This default condition will be used whenever the filter is attached to "
@@ -343,9 +195,144 @@ msgid ""
 "condition as part of the attachment of the filter that overrides the default "
 "condition in that particular case."
 msgstr ""
+"Esta condición predeterminada se utilizará cuando se una el filtro a algo "
+"sin especificar una condición. Esto significa que usted le puede dar una "
+"condición especifica como parte del anexo del filtro, el cual substituye la "
+"condición por defecto en ese caso en particular."
 
-#~ msgid "ROLES_OF_TRANSLATORS"
-#~ msgstr "<!--TRANS:ROLES_OF_TRANSLATORS-->"
+#~ msgid ""
+#~ "<![CDATA[<filter-def name=\"myFilter\">\n"
+#~ "    <filter-param name=\"myFilterParam\" type=\"string\"/>\n"
+#~ "</filter-def>]]>"
+#~ msgstr ""
+#~ "<![CDATA[<filter-def name=\"myFilter\">\n"
+#~ "    <filter-param name=\"myFilterParam\" type=\"string\"/>\n"
+#~ "</filter-def>]]>"
 
-#~ msgid "CREDIT_FOR_TRANSLATORS"
-#~ msgstr "<!--TRANS:CREDIT_FOR_TRANSLATORS-->"
+#~ msgid ""
+#~ "<![CDATA[<class name=\"myClass\" ...>\n"
+#~ "    ...\n"
+#~ "    <filter name=\"myFilter\" condition=\":myFilterParam = "
+#~ "MY_FILTERED_COLUMN\"/>\n"
+#~ "</class>]]>"
+#~ msgstr ""
+#~ "<![CDATA[<class name=\"myClass\" ...>\n"
+#~ "    ...\n"
+#~ "    <filter name=\"myFilter\" condition=\":myFilterParam = "
+#~ "MY_FILTERED_COLUMN\"/>\n"
+#~ "</class>]]>"
+
+#~ msgid ""
+#~ "<![CDATA[<set ...>\n"
+#~ "    <filter name=\"myFilter\" condition=\":myFilterParam = "
+#~ "MY_FILTERED_COLUMN\"/>\n"
+#~ "</set>]]>"
+#~ msgstr ""
+#~ "<![CDATA[<set ...>\n"
+#~ "    <filter name=\"myFilter\" condition=\":myFilterParam = "
+#~ "MY_FILTERED_COLUMN\"/>\n"
+#~ "</set>]]>"
+
+#~ msgid ""
+#~ "<![CDATA[session.enableFilter(\"myFilter\").setParameter(\"myFilterParam"
+#~ "\", \"some-value\");]]>"
+#~ msgstr ""
+#~ "<![CDATA[session.enableFilter(\"myFilter\").setParameter(\"myFilterParam"
+#~ "\", \"some-value\");]]>"
+
+#~ msgid ""
+#~ "<![CDATA[<filter-def name=\"effectiveDate\">\n"
+#~ "    <filter-param name=\"asOfDate\" type=\"date\"/>\n"
+#~ "</filter-def>\n"
+#~ "\n"
+#~ "<class name=\"Employee\" ...>\n"
+#~ "...\n"
+#~ "    <many-to-one name=\"department\" column=\"dept_id\" class=\"Department"
+#~ "\"/>\n"
+#~ "    <property name=\"effectiveStartDate\" type=\"date\" column="
+#~ "\"eff_start_dt\"/>\n"
+#~ "    <property name=\"effectiveEndDate\" type=\"date\" column=\"eff_end_dt"
+#~ "\"/>\n"
+#~ "...\n"
+#~ "    <!--\n"
+#~ "        Note that this assumes non-terminal records have an eff_end_dt "
+#~ "set to\n"
+#~ "        a max db date for simplicity-sake\n"
+#~ "    -->\n"
+#~ "    <filter name=\"effectiveDate\"\n"
+#~ "            condition=\":asOfDate BETWEEN eff_start_dt and eff_end_dt\"/"
+#~ ">\n"
+#~ "</class>\n"
+#~ "\n"
+#~ "<class name=\"Department\" ...>\n"
+#~ "...\n"
+#~ "    <set name=\"employees\" lazy=\"true\">\n"
+#~ "        <key column=\"dept_id\"/>\n"
+#~ "        <one-to-many class=\"Employee\"/>\n"
+#~ "        <filter name=\"effectiveDate\"\n"
+#~ "                condition=\":asOfDate BETWEEN eff_start_dt and eff_end_dt"
+#~ "\"/>\n"
+#~ "    </set>\n"
+#~ "</class>]]>"
+#~ msgstr ""
+#~ "<![CDATA[<filter-def name=\"effectiveDate\">\n"
+#~ "    <filter-param name=\"asOfDate\" type=\"date\"/>\n"
+#~ "</filter-def>\n"
+#~ "\n"
+#~ "<class name=\"Employee\" ...>\n"
+#~ "...\n"
+#~ "    <many-to-one name=\"department\" column=\"dept_id\" class=\"Department"
+#~ "\"/>\n"
+#~ "    <property name=\"effectiveStartDate\" type=\"date\" column="
+#~ "\"eff_start_dt\"/>\n"
+#~ "    <property name=\"effectiveEndDate\" type=\"date\" column=\"eff_end_dt"
+#~ "\"/>\n"
+#~ "...\n"
+#~ "    <!--\n"
+#~ "        Note that this assumes non-terminal records have an eff_end_dt "
+#~ "set to\n"
+#~ "        a max db date for simplicity-sake\n"
+#~ "    -->\n"
+#~ "    <filter name=\"effectiveDate\"\n"
+#~ "            condition=\":asOfDate BETWEEN eff_start_dt and eff_end_dt\"/"
+#~ ">\n"
+#~ "</class>\n"
+#~ "\n"
+#~ "<class name=\"Department\" ...>\n"
+#~ "...\n"
+#~ "    <set name=\"employees\" lazy=\"true\">\n"
+#~ "        <key column=\"dept_id\"/>\n"
+#~ "        <one-to-many class=\"Employee\"/>\n"
+#~ "        <filter name=\"effectiveDate\"\n"
+#~ "                condition=\":asOfDate BETWEEN eff_start_dt and eff_end_dt"
+#~ "\"/>\n"
+#~ "    </set>\n"
+#~ "</class>]]>"
+
+#~ msgid ""
+#~ "<![CDATA[Session session = ...;\n"
+#~ "session.enableFilter(\"effectiveDate\").setParameter(\"asOfDate\", new "
+#~ "Date());\n"
+#~ "List results = session.createQuery(\"from Employee as e where e.salary > :"
+#~ "targetSalary\")\n"
+#~ "         .setLong(\"targetSalary\", new Long(1000000))\n"
+#~ "         .list();\n"
+#~ "]]>"
+#~ msgstr ""
+#~ "<![CDATA[Session session = ...;\n"
+#~ "session.enableFilter(\"effectiveDate\").setParameter(\"asOfDate\", new "
+#~ "Date());\n"
+#~ "List results = session.createQuery(\"from Employee as e where e.salary > :"
+#~ "targetSalary\")\n"
+#~ "         .setLong(\"targetSalary\", new Long(1000000))\n"
+#~ "         .list();\n"
+#~ "]]>"
+
+#~ msgid ""
+#~ "<![CDATA[<filter-def name=\"myFilter\" condition=\"abc > xyz\">...</"
+#~ "filter-def>\n"
+#~ "<filter-def name=\"myOtherFilter\">abc=xyz</filter-def>]]>"
+#~ msgstr ""
+#~ "<![CDATA[<filter-def name=\"myFilter\" condition=\"abc > xyz\">...</"
+#~ "filter-def>\n"
+#~ "<filter-def name=\"myOtherFilter\">abc=xyz</filter-def>]]>"

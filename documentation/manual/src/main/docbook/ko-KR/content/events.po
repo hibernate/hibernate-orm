@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2009-07-14 19:55+0000\n"
+"POT-Creation-Date: 2010-02-04T04:51:22\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -11,13 +11,11 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 
 #. Tag: title
-#: events.xml:29
 #, no-c-format
 msgid "Interceptors and events"
 msgstr "인터셉터들과 이벤트들"
 
 #. Tag: para
-#: events.xml:31
 #, fuzzy, no-c-format
 msgid ""
 "It is useful for the application to react to certain events that occur "
@@ -29,13 +27,11 @@ msgstr ""
 "기능의 구현을 허용해준다."
 
 #. Tag: title
-#: events.xml:38
 #, no-c-format
 msgid "Interceptors"
 msgstr "인터셉터들"
 
 #. Tag: para
-#: events.xml:40
 #, fuzzy, no-c-format
 msgid ""
 "The <literal>Interceptor</literal> interface provides callbacks from the "
@@ -58,7 +54,6 @@ msgstr ""
 "literal> 프로퍼티를 업데이트 한다."
 
 #. Tag: para
-#: events.xml:51
 #, fuzzy, no-c-format
 msgid ""
 "You can either implement <literal>Interceptor</literal> directly or extend "
@@ -67,97 +62,7 @@ msgstr ""
 "당신은 <literal>Interceptor</literal>를 직접 구현해야 하거나 (더 좋게는) "
 "<literal>EmptyInterceptor</literal>를 확장(extend)해야 한다."
 
-#. Tag: programlisting
-#: events.xml:56
-#, no-c-format
-msgid ""
-"<![CDATA[package org.hibernate.test;\n"
-"\n"
-"import java.io.Serializable;\n"
-"import java.util.Date;\n"
-"import java.util.Iterator;\n"
-"\n"
-"import org.hibernate.EmptyInterceptor;\n"
-"import org.hibernate.Transaction;\n"
-"import org.hibernate.type.Type;\n"
-"\n"
-"public class AuditInterceptor extends EmptyInterceptor {\n"
-"\n"
-"    private int updates;\n"
-"    private int creates;\n"
-"    private int loads;\n"
-"\n"
-"    public void onDelete(Object entity,\n"
-"                         Serializable id,\n"
-"                         Object[] state,\n"
-"                         String[] propertyNames,\n"
-"                         Type[] types) {\n"
-"        // do nothing\n"
-"    }\n"
-"\n"
-"    public boolean onFlushDirty(Object entity,\n"
-"                                Serializable id,\n"
-"                                Object[] currentState,\n"
-"                                Object[] previousState,\n"
-"                                String[] propertyNames,\n"
-"                                Type[] types) {\n"
-"\n"
-"        if ( entity instanceof Auditable ) {\n"
-"            updates++;\n"
-"            for ( int i=0; i < propertyNames.length; i++ ) {\n"
-"                if ( \"lastUpdateTimestamp\".equals( propertyNames[i] ) ) {\n"
-"                    currentState[i] = new Date();\n"
-"                    return true;\n"
-"                }\n"
-"            }\n"
-"        }\n"
-"        return false;\n"
-"    }\n"
-"\n"
-"    public boolean onLoad(Object entity,\n"
-"                          Serializable id,\n"
-"                          Object[] state,\n"
-"                          String[] propertyNames,\n"
-"                          Type[] types) {\n"
-"        if ( entity instanceof Auditable ) {\n"
-"            loads++;\n"
-"        }\n"
-"        return false;\n"
-"    }\n"
-"\n"
-"    public boolean onSave(Object entity,\n"
-"                          Serializable id,\n"
-"                          Object[] state,\n"
-"                          String[] propertyNames,\n"
-"                          Type[] types) {\n"
-"\n"
-"        if ( entity instanceof Auditable ) {\n"
-"            creates++;\n"
-"            for ( int i=0; i<propertyNames.length; i++ ) {\n"
-"                if ( \"createTimestamp\".equals( propertyNames[i] ) ) {\n"
-"                    state[i] = new Date();\n"
-"                    return true;\n"
-"                }\n"
-"            }\n"
-"        }\n"
-"        return false;\n"
-"    }\n"
-"\n"
-"    public void afterTransactionCompletion(Transaction tx) {\n"
-"        if ( tx.wasCommitted() ) {\n"
-"            System.out.println(\"Creations: \" + creates + \", Updates: \" + "
-"updates, \"Loads: \" + loads);\n"
-"        }\n"
-"        updates=0;\n"
-"        creates=0;\n"
-"        loads=0;\n"
-"    }\n"
-"\n"
-"}]]>"
-msgstr ""
-
 #. Tag: para
-#: events.xml:58
 #, fuzzy, no-c-format
 msgid ""
 "There are two kinds of inteceptors: <literal>Session</literal>-scoped and "
@@ -167,7 +72,6 @@ msgstr ""
 "화 그리고 <literal>SessionFactory</literal>-영역화."
 
 #. Tag: para
-#: events.xml:63
 #, no-c-format
 msgid ""
 "A <literal>Session</literal>-scoped interceptor is specified when a session "
@@ -178,14 +82,7 @@ msgstr ""
 "<literal>Interceptor</literal>를 수용하는 오버로드된 SessionFactory."
 "openSession() 메소드들 중 하나를 사용하여 열릴 때 지정된다."
 
-#. Tag: programlisting
-#: events.xml:69
-#, no-c-format
-msgid "<![CDATA[Session session = sf.openSession( new AuditInterceptor() );]]>"
-msgstr ""
-
 #. Tag: para
-#: events.xml:71
 #, fuzzy, no-c-format
 msgid ""
 "A <literal>SessionFactory</literal>-scoped interceptor is registered with "
@@ -206,21 +103,12 @@ msgstr ""
 "야 한다. 왜냐하면 다중 세션들은 (잠정적으로) 이 인터셉터를 동시적으로 사용할 "
 "것이기 때문이다."
 
-#. Tag: programlisting
-#: events.xml:80
-#, no-c-format
-msgid ""
-"<![CDATA[new Configuration().setInterceptor( new AuditInterceptor() );]]>"
-msgstr ""
-
 #. Tag: title
-#: events.xml:85
 #, no-c-format
 msgid "Event system"
 msgstr "이벤트 시스템"
 
 #. Tag: para
-#: events.xml:87
 #, fuzzy, no-c-format
 msgid ""
 "If you have to react to particular events in your persistence layer, you can "
@@ -233,7 +121,6 @@ msgstr ""
 "있다."
 
 #. Tag: para
-#: events.xml:93
 #, fuzzy, no-c-format
 msgid ""
 "All the methods of the <literal>Session</literal> interface correlate to an "
@@ -266,7 +153,6 @@ msgstr ""
 "이 있을 것이다."
 
 #. Tag: para
-#: events.xml:108
 #, fuzzy, no-c-format
 msgid ""
 "The listeners should be considered singletons. This means they are shared "
@@ -277,7 +163,6 @@ msgstr ""
 "장하지 말아야 함을 의미한다."
 
 #. Tag: para
-#: events.xml:113
 #, fuzzy, no-c-format
 msgid ""
 "A custom listener implements the appropriate interface for the event it "
@@ -297,25 +182,7 @@ msgstr ""
 "에 지정될 수 있다 (properties 파일을 통한 선언적인 구성은 지원되지 않는다). "
 "다음은 맞춤형 load 이벤트 리스너에 대한 예제이다:"
 
-#. Tag: programlisting
-#: events.xml:123
-#, no-c-format
-msgid ""
-"<![CDATA[public class MyLoadListener implements LoadEventListener {\n"
-"    // this is the single method defined by the LoadEventListener interface\n"
-"    public void onLoad(LoadEvent event, LoadEventListener.LoadType "
-"loadType)\n"
-"            throws HibernateException {\n"
-"        if ( !MySecurity.isAuthorized( event.getEntityClassName(), event."
-"getEntityId() ) ) {\n"
-"            throw MySecurityException(\"Unauthorized access\");\n"
-"        }\n"
-"    }\n"
-"}]]>"
-msgstr ""
-
 #. Tag: para
-#: events.xml:125
 #, no-c-format
 msgid ""
 "You also need a configuration entry telling Hibernate to use the listener in "
@@ -324,40 +191,12 @@ msgstr ""
 "당신은 또한 디폴트 리스너에 덧붙여 그 리스너를 사용하도록 Hibernate에게 알려"
 "주는 구성 엔트리를 필요로 한다:"
 
-#. Tag: programlisting
-#: events.xml:130
-#, no-c-format
-msgid ""
-"<![CDATA[<hibernate-configuration>\n"
-"    <session-factory>\n"
-"        ...\n"
-"        <event type=\"load\">\n"
-"            <listener class=\"com.eg.MyLoadListener\"/>\n"
-"            <listener class=\"org.hibernate.event.def."
-"DefaultLoadEventListener\"/>\n"
-"        </event>\n"
-"    </session-factory>\n"
-"</hibernate-configuration>]]>"
-msgstr ""
-
 #. Tag: para
-#: events.xml:132
 #, fuzzy, no-c-format
 msgid "Instead, you can register it programmatically:"
 msgstr "대신에 당신은 그것을 프로그래밍 방식으로 등록할 수도 있다:"
 
-#. Tag: programlisting
-#: events.xml:136
-#, no-c-format
-msgid ""
-"<![CDATA[Configuration cfg = new Configuration();\n"
-"LoadEventListener[] stack = { new MyLoadListener(), new "
-"DefaultLoadEventListener() };\n"
-"cfg.EventListeners().setLoadEventListeners(stack);]]>"
-msgstr ""
-
 #. Tag: para
-#: events.xml:138
 #, fuzzy, no-c-format
 msgid ""
 "Listeners registered declaratively cannot share instances. If the same class "
@@ -373,7 +212,6 @@ msgstr ""
 "당신은 프로그래밍 방식의 등록 접근법을 사용해야 한다."
 
 #. Tag: para
-#: events.xml:146
 #, fuzzy, no-c-format
 msgid ""
 "Why implement an interface and define the specific type during "
@@ -388,13 +226,11 @@ msgstr ""
 "전환시키는 것을 더 쉽게 해준다."
 
 #. Tag: title
-#: events.xml:156
 #, no-c-format
 msgid "Hibernate declarative security"
 msgstr "Hibernate 선언적인 보안"
 
 #. Tag: para
-#: events.xml:157
 #, fuzzy, no-c-format
 msgid ""
 "Usually, declarative security in Hibernate applications is managed in a "
@@ -408,7 +244,6 @@ msgstr ""
 "션 기능이다."
 
 #. Tag: para
-#: events.xml:163
 #, no-c-format
 msgid ""
 "First, you must configure the appropriate event listeners, to enable the use "
@@ -417,22 +252,7 @@ msgstr ""
 "먼저, 당신은 JAAS authorization 사용을 이용 가능하도록 하기 위해 적절한 이벤"
 "트 리스터들을 구성해야 한다."
 
-#. Tag: programlisting
-#: events.xml:168
-#, no-c-format
-msgid ""
-"<![CDATA[<listener type=\"pre-delete\" class=\"org.hibernate.secure."
-"JACCPreDeleteEventListener\"/>\n"
-"<listener type=\"pre-update\" class=\"org.hibernate.secure."
-"JACCPreUpdateEventListener\"/>\n"
-"<listener type=\"pre-insert\" class=\"org.hibernate.secure."
-"JACCPreInsertEventListener\"/>\n"
-"<listener type=\"pre-load\" class=\"org.hibernate.secure."
-"JACCPreLoadEventListener\"/>]]>"
-msgstr ""
-
 #. Tag: para
-#: events.xml:170
 #, fuzzy, no-c-format
 msgid ""
 "Note that <literal>&lt;listener type=\"...\" class=\"...\"/&gt;</literal> is "
@@ -446,7 +266,6 @@ msgstr ""
 "축형임을 노트하라."
 
 #. Tag: para
-#: events.xml:176
 #, fuzzy, no-c-format
 msgid ""
 "Next, while still in <literal>hibernate.cfg.xml</literal>, bind the "
@@ -455,17 +274,7 @@ msgstr ""
 "다음으로, 여전히 <literal>hibernate.cfg.xml</literal> 내에서 퍼미션들을 role"
 "들에 바인드 시킨다 :"
 
-#. Tag: programlisting
-#: events.xml:180
-#, no-c-format
-msgid ""
-"<![CDATA[<grant role=\"admin\" entity-name=\"User\" actions=\"insert,update,"
-"read\"/>\n"
-"<grant role=\"su\" entity-name=\"User\" actions=\"*\"/>]]>"
-msgstr ""
-
 #. Tag: para
-#: events.xml:182
 #, no-c-format
 msgid "The role names are the roles understood by your JACC provider."
 msgstr ""

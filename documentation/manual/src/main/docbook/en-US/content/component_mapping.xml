@@ -23,7 +23,11 @@
   ~ Boston, MA  02110-1301  USA
   -->
 
-<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
+<!ENTITY % BOOK_ENTITIES SYSTEM "../HIBERNATE_-_Relational_Persistence_for_Idiomatic_Java.ent">
+%BOOK_ENTITIES;
+
+]>
 
 <chapter id="components">
     <title>Component Mapping</title>
@@ -33,7 +37,7 @@
         throughout Hibernate.
     </para>
 
-    <sect1 id="components-dependentobjects" revision="2" >
+    <section id="components-dependentobjects" revision="2" >
         <title>Dependent objects</title>
 
         <para>
@@ -157,9 +161,9 @@
     </component>
 </class>]]></programlisting>
 
-    </sect1>
+    </section>
 
-    <sect1 id="components-incollections" revision="1">
+    <section id="components-incollections" revision="1">
         <title>Collections of dependent objects</title>
 
         <para>
@@ -258,9 +262,9 @@
             associations to other entities.
         </para>
 
-    </sect1>
+    </section>
 
-    <sect1 id="components-asmapindex">
+    <section id="components-asmapindex">
         <title>Components as Map indices</title>
 
         <para>
@@ -269,9 +273,9 @@
             <literal>hashCode()</literal> and <literal>equals()</literal> correctly on
             the component class.
         </para>
-    </sect1>
+    </section>
 
-    <sect1 id="components-compositeid" revision="1">
+    <section id="components-compositeid" revision="1">
         <title>Components as composite identifiers</title>
 
         <para>
@@ -409,9 +413,9 @@
     </set>
 </class>]]></programlisting>
 
-    </sect1>
+    </section>
 
-    <sect1 id="components-dynamic" revision="1">
+    <section id="components-dynamic" revision="1">
         <title>Dynamic components</title>
 
         <para>
@@ -433,6 +437,6 @@
             configuration-time metamodel via the <literal>Configuration</literal> object.
         </para>
 
-    </sect1>
+    </section>
 
 </chapter>

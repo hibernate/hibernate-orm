@@ -1,20 +1,35 @@
-#, fuzzy
+# translation of Preface.po to
+# Michael H. Smith <mhideo@redhat.com>, 2007.
+# Angela Garcia <agarcia@redhat.com>, 2009, 2010.
+# translation of preface.po to
+# translation of Collection_Mapping.po to
+# translation of Collection_Mapping.po to
+# translation of Collection_Mapping.po to
+# translation of Collection_Mapping.po to
+# translation of Collection_Mapping.po to
+# translation of Collection_Mapping.po to
+# translation of Collection_Mapping.po to
+# translation of Collection_Mapping.po to
+# translation of Collection_Mapping.po to
 msgid ""
 msgstr ""
+"Project-Id-Version: Preface\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2009-06-16 18:47+0000\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"POT-Creation-Date: 2010-02-11T05:38:15\n"
+"PO-Revision-Date: 2010-01-07 10:45+1000\n"
+"Last-Translator: Angela Garcia <agarcia@redhat.com>\n"
+"Language-Team:  <en@li.org>\n"
+"MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: KBabel 1.11.4\n"
 
 #. Tag: title
-#: preface.xml:29
 #, no-c-format
 msgid "Preface"
 msgstr "Prefacio"
 
 #. Tag: para
-#: preface.xml:31
 #, fuzzy, no-c-format
 msgid ""
 "Working with object-oriented software and a relational database can be "
@@ -24,31 +39,30 @@ msgid ""
 "representation from an object model to a relational data model with a SQL-"
 "based schema."
 msgstr ""
-"Trabajar con software orientado a objetos y una base de datos relacional "
-"puede ser inc&#x00f3;modo y consumir tiempo en los entornos de empresa de "
-"hoy. Hibernate es una herramienta de mapeo objeto/relacional para entornos "
-"Java. El t&#x00e9;rmino mapeo objeto/relacional (MOR) hace referencia a la "
-"t&#x00e9;cnica de mapear una representaci&#x00f3;n de datos desde un modelo "
-"de objetos a un modelo de datos relacional con un esquema basado en SQL."
+"El trabajar con software orientado a objetos y con una base de datos "
+"relacional puede llegar a ser engorroso y puede llegar a tomar bastante "
+"tiempo en los entornos empresariales de hoy en día. Hibernate es una "
+"herramienta de mapeo objeto/relacional para entornos Java. El término mapeo "
+"objeto/relacional (ORM) se refiere a la técnica de mapear una representación "
+"de datos desde un modelo de objeto a un modelo de datos relacionales con un "
+"esquema basado en SQL."
 
 #. Tag: para
-#: preface.xml:39
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "Hibernate not only takes care of the mapping from Java classes to database "
 "tables (and from Java data types to SQL data types), but also provides data "
 "query and retrieval facilities. It can also significantly reduce development "
 "time otherwise spent with manual data handling in SQL and JDBC."
 msgstr ""
-"Hibernate no s&#x00f3;lo se encarga de mapear de clases Java a tablas de "
-"base de datos (y de tipos de datos de Java a tipos de datos SQL), sino que "
-"tambi&#x00e9;n provee facilidades de consulta y recuperaci&#x00f3;n de datos "
-"y puede reducir significativamente el tiempo de desarrollo que de otra forma "
-"se gasta en el manejo de los datos en SQL y JDBC."
+"Hibernate no sólamente se ocupa del mapeo desde las clases Java a las tablas "
+"de las bases de datos (y desde los tipos de datos de Java a los tipos de "
+"datos de SQL), sino que también facilita la consulta y recuperación de "
+"datos. Esto puede reducir de manera importante el tiempo de desarrollo que "
+"se tomaría con el manejo de datos de forma manual en SQL y JDBC."
 
 #. Tag: para
-#: preface.xml:46
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "Hibernate's goal is to relieve the developer from 95 percent of common data "
 "persistence related programming tasks. Hibernate may not be the best "
@@ -59,51 +73,49 @@ msgid ""
 "specific SQL code and will help with the common task of result set "
 "translation from a tabular representation to a graph of objects."
 msgstr ""
-"La meta de Hibernate es relevar al desarrollador del 95 por ciento de las "
-"tareas comunes relacionadas a la programaci&#x00f3;n de la persistencia de "
-"los datos. Hibernate puede no ser la mejor soluci&#x00f3;n para aplicaciones "
-"que usan solamente procedimientos almacenados para implementar la l&#x00f3;"
-"gica de negocio en la base de datos, es mas &#x00fa;til con modelos de "
-"dominio orientados a objetos y l&#x00f3;gica de negocio en middle-tier "
-"basada en Java. Sin embargo, Hibernate ciertamente puede ayudarte a quitar o "
-"encapsular c&#x00f3;digo SQL espec&#x00ed;fico de vendedor y ayudar&#x00e1; "
-"con la tarea com&#x00fa;n de traducci&#x00f3;n de resultados desde una "
-"representaci&#x00f3;n tabular a un grafo de objetos."
+"La meta de Hibernate es aliviar el trabajo del desarrollador en 95% de la "
+"persistencia de datos comunes relacionados con tareas de programación. Es "
+"posible que Hibernate no sea la mejor solución para aquellas aplicaciones "
+"centralizadas en datos que sólamente utilizan los procedimientos almacenados "
+"para implementar la lógica empresarial en la base de datos, Hibernate es "
+"mucho más útil con modelos de dominio orientados a objetos y con lógica "
+"empresarial middle-tier con base en Java. Sin embargo, Hibernate ciertamente "
+"le puede ayudar a eliminar o a encapsular código SQL específico del vendedor "
+"y le ayudará con la tarea común de traducción del grupo de resultados desde "
+"una representación tabular a un grafo de objetos."
 
 #. Tag: para
-#: preface.xml:56
 #, no-c-format
 msgid ""
 "If you are new to Hibernate and Object/Relational Mapping or even Java, "
 "please follow these steps:"
 msgstr ""
-"Si eres nuevo en Hibernate y lo del Mapeo Objeto/Relacional o incluso en "
-"Java, sigue por favor estos pasos:"
+"Si usted es nuevo en el tema de Hibernate y del Mapeo Objeto/Relacional o "
+"inclusive en Java por favor siga los siguientes pasos:"
 
 #. Tag: para
-#: preface.xml:63
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
-"Read <xref linkend=\"tutorial\"/> for a tutorial with step-by-step "
+"Read <xref linkend=\"tutorial\" /> for a tutorial with step-by-step "
 "instructions. The source code for the tutorial is included in the "
 "distribution in the <literal>doc/reference/tutorial/</literal> directory."
 msgstr ""
-"Lee <xref linkend=\"tutorial\"/> para un tutorial de 30 minutos, usando "
-"Tomcat."
+"Consulte el <xref linkend=\"tutorial\"/>, el cual es un tutorial con "
+"instrucciones paso por paso. El código fuente para el tutorial se encuentra "
+"incluido en la distribución en el directorio <literal>doc/reference/tutorial/"
+"</literal>. "
 
 #. Tag: para
-#: preface.xml:71
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
-"Read <xref linkend=\"architecture\"/> to understand the environments where "
+"Read <xref linkend=\"architecture\" /> to understand the environments where "
 "Hibernate can be used."
 msgstr ""
-"Lee <xref linkend=\"architecture\"/> para entender los entornos en los que "
-"puede ser usado Hibernate."
+"Consulte el <xref linkend=\"architecture\" /> para comprender los entornos "
+"en donde se puede utilizar Hibernate."
 
 #. Tag: para
-#: preface.xml:77
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "View the <literal>eg/</literal> directory in the Hibernate distribution. It "
 "contains a simple standalone application. Copy your JDBC driver to the "
@@ -112,64 +124,59 @@ msgid ""
 "command prompt in the distribution directory, type <literal>ant eg</literal> "
 "(using Ant), or under Windows, type <literal>build eg</literal>."
 msgstr ""
-"Dale una mirada al directorio <literal>eg/</literal> en la distribuci&#x00f3;"
-"n de Hibernate, contiene una aplicaci&#x00f3;n independiente simple. Copia "
-"tu driver JDBC al directorio <literal>lib/</literal> y edita <literal>etc/"
-"hibernate.properties</literal>, especificando los valores correctos para tu "
-"base de datos. Desde l&#x00ed;nea de comandos en el directorio de la "
-"distribuci&#x00f3;n, tipea <literal>ant eg</literal> (usando Ant), o bajo "
-"Windows, tipea <literal>build eg</literal>."
+"Déle un vistazo al directorio <literal>eg/</literal> en la distribución de "
+"Hibernate. Este comprende una aplicación autónoma simple. Copie su "
+"compilador JDBC al directorio <literal>lib/</literal> y edite <literal>etc/"
+"hibernate.properties</literal>, especificando los valores correctos para su "
+"base de datos. Desde un intérprete de comandos en el directorio de la "
+"distribución, escriba <literal>ant eg</literal> (utilizando Ant), o bajo "
+"Windows, escriba <literal>build eg</literal>."
 
 #. Tag: para
-#: preface.xml:88
 #, fuzzy, no-c-format
 msgid ""
 "Use this reference documentation as your primary source of information. "
 "Consider reading <biblioref linkend=\"biblio-JPwH\"></biblioref> if you need "
 "more help with application design, or if you prefer a step-by-step tutorial. "
-"Also visit <ulink url=\"http://caveatemptor.hibernate.org\"></ulink> and "
-"download the example application from <biblioref linkend=\"biblio-JPwH\"></"
-"biblioref>."
+"Also visit <ulink url=\"http://caveatemptor.hibernate.org\" /> and download "
+"the example application from <biblioref linkend=\"biblio-JPwH\"></biblioref>."
 msgstr ""
-"Usa esta documentaci&#x00f3;n de referencia como tu fuente de "
-"informaci&#x00f3;n primaria. Ten en consideraci&#x00f3;n leer <emphasis>Java "
-"Persistence with Hibernate</emphasis> (http://www.manning.com/bauer2) si "
-"necesitas mas ayuda con el dise&#x00f1;o de aplicaciones o si prefieres un "
-"tutorial paso a paso. Visita tambi&#x00e9;n http://caveatemptor.hibernate."
-"org y descarga la aplicaci&#x00f3;n de ejemplo para Java Persistence with "
-"Hibernate."
+"Utilice esta documentación de referencia como su fuente principal de "
+"información. Considere el leer <emphasis>Java Persistence with Hibernate</"
+"emphasis> (http://www.manning.com/bauer2) si necesita más ayuda con el "
+"diseño de la aplicación o si prefiere un tutorial paso por paso. También "
+"visite http://caveatemptor.hibernate.org y descargue la aplicación  "
+"deejemplo para la persistencia de Java con Hibernate."
 
 #. Tag: para
-#: preface.xml:98
 #, no-c-format
 msgid "FAQs are answered on the Hibernate website."
-msgstr "Los FAQs son respondidos en el sitio web de Hibernate."
+msgstr ""
+"En el sitio web de Hibernate encontrará las respuestas a las preguntas más "
+"frecuentes."
 
 #. Tag: para
-#: preface.xml:103
 #, fuzzy, no-c-format
 msgid ""
 "Links to third party demos, examples, and tutorials are maintained on the "
 "Hibernate website."
 msgstr ""
-"En el sitio web de Hibernate hay enlaces a demos de terceros, ejemplos y "
-"tutoriales."
+"En el sitio web de Hibernate encontrará un enlace a la demostraciones de "
+"terceros, ejemplos y tutoriales."
 
 #. Tag: para
-#: preface.xml:109
 #, no-c-format
 msgid ""
 "The Community Area on the Hibernate website is a good resource for design "
 "patterns and various integration solutions (Tomcat, JBoss AS, Struts, EJB, "
 "etc.)."
 msgstr ""
-"El Area de Comunidad en el sitio web de Hibernate es una buena fuente de "
-"patrones de dise&#x00f1;o y varias soluciones de integraci&#x00f3;n (Tomcat, "
-"JBoss, Struts, EJB, etc.)."
+"El área de la comunidad en el sitio web de Hibernate es un buen recurso para "
+"encontrar patrones de diseño y varias soluciones de integración (Tomcat, "
+"JBoss AS, Struts, EJB, etc)."
 
 #. Tag: para
-#: preface.xml:117
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "If you have questions, use the user forum linked on the Hibernate website. "
 "We also provide a JIRA issue tracking system for bug reports and feature "
@@ -177,15 +184,14 @@ msgid ""
 "developer mailing list. If you are interested in translating this "
 "documentation into your language, contact us on the developer mailing list."
 msgstr ""
-"Si tienes preguntas, usa el foro de usuarios enlazado en el sitio web de "
-"Hibernate. Tambi&#x00e9;n proveemos un sistema de seguimiento JIRA para "
-"reportes de defectos y peticiones de nuevas caracter&#x00ed;sticas. Si estas "
-"interesado en el desarrollo de Hibernate, &#x00fa;nete a la lista de correo "
-"de desarrolladores. Si estas interesado en traducir esta documentaci&#x00f3;"
-"n a tu lenguaje, cont&#x00e1;ctanos en la lista de correo de desarrolladores."
+"Si tiene alguna pregunta, diríjase al sitio web de Hibernate en donde "
+"encontrará un enlace al foro de usuarios. También proporcionamos un sistema "
+"de localización para reportes de errores JIRA y solicitud de funciones. Si "
+"está interesado en el desarrollo de Hibernate, únase a la lista de correo de "
+"los desarrolladores. Si le interesa traducir esta documentación a su propio "
+"idioma, contáctenos en la lista de correo de los desarrolladores."
 
 #. Tag: para
-#: preface.xml:125
 #, no-c-format
 msgid ""
 "Commercial development support, production support, and training for "
@@ -194,29 +200,8 @@ msgid ""
 "critical component of the JBoss Enterprise Middleware System (JEMS) suite of "
 "products."
 msgstr ""
-"A trav&#x00e9;s de JBoss Inc. (see http://www.hibernate.org/"
-"SupportTraining/) hay disponibilidad de soporte comercial de desarrollo, "
-"soporte de producci&#x00f3;n y entrenamiento en Hibernate. Hibernate es un "
-"proyecto de la suite de productos de c&#x00f3;digo abierto JBoss "
-"Professional."
-
-#. Tag: title
-#: preface.xml:133
-#, no-c-format
-msgid "Feedback"
-msgstr ""
-
-#. Tag: para
-#: preface.xml:134
-#, no-c-format
-msgid ""
-"Use <ulink url=\"http://opensource.atlassian.com/projects/hibernate"
-"\">Hibernate JIRA</ulink> to report errors or request enhacements to this "
-"documentation."
-msgstr ""
-
-#~ msgid "ROLES_OF_TRANSLATORS"
-#~ msgstr "<!--TRANS:ROLES_OF_TRANSLATORS-->"
-
-#~ msgid "CREDIT_FOR_TRANSLATORS"
-#~ msgstr "<!--TRANS:CREDIT_FOR_TRANSLATORS-->"
+"JBoss Inc. proporciona soporte para desarrollo comercial, soporte para "
+"producción y entrenamiento (vea http://www.hibernate.org/SupportTraining/). "
+"Hibernate es un proyecto de Código Abierto Profesional y es un componente "
+"crítico de la suite de productos de JBoss Enterprise Middleware System "
+"(JEMS)."

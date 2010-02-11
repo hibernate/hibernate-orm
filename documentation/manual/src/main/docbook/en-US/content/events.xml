@@ -23,7 +23,11 @@
   ~ Boston, MA  02110-1301  USA
   -->
 
-<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
+<!ENTITY % BOOK_ENTITIES SYSTEM "../HIBERNATE_-_Relational_Persistence_for_Idiomatic_Java.ent">
+%BOOK_ENTITIES;
+
+]>
 
 <chapter id="events">
     <title>Interceptors and events</title>
@@ -34,7 +38,7 @@
         functionality and the extension of Hibernate functionality.
     </para>
 
-    <sect1 id="objectstate-interceptors" revision="3">
+    <section id="objectstate-interceptors" revision="3">
         <title>Interceptors</title>
 
         <para>
@@ -160,9 +164,9 @@ public class AuditInterceptor extends EmptyInterceptor {
     
         <programlisting role="JAVA"><![CDATA[new Configuration().setInterceptor( new AuditInterceptor() );]]></programlisting>
 
-    </sect1>
+    </section>
 
-     <sect1 id="objectstate-events" revision="4">
+     <section id="objectstate-events" revision="4">
         <title>Event system</title>
 
         <para>
@@ -249,9 +253,9 @@ cfg.EventListeners().setLoadEventListeners(stack);]]></programlisting>
             or off during configuration.
         </para>
 
-    </sect1>
+    </section>
     
-    <sect1 id="objectstate-decl-security" revision="2">
+    <section id="objectstate-decl-security" revision="2">
         <title>Hibernate declarative security</title>
         <para>
             Usually, declarative security in Hibernate applications is managed in a session facade
@@ -286,7 +290,7 @@ cfg.EventListeners().setLoadEventListeners(stack);]]></programlisting>
             The role names are the roles understood by your JACC provider.
         </para>
        
-    </sect1>
+    </section>
 
 </chapter>
 

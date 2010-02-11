@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2009-08-17 20:22+0000\n"
+"POT-Creation-Date: 2010-02-04T04:51:22\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -11,13 +11,11 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 
 #. Tag: title
-#: example_parentchild.xml:29
 #, no-c-format
 msgid "Example: Parent/Child"
 msgstr "예제: 부모/자식"
 
 #. Tag: para
-#: example_parentchild.xml:31
 #, fuzzy, no-c-format
 msgid ""
 "One of the first things that new users want to do with Hibernate is to model "
@@ -49,13 +47,11 @@ msgstr ""
 "다!"
 
 #. Tag: title
-#: example_parentchild.xml:45
 #, no-c-format
 msgid "A note about collections"
 msgstr "콜렉션들에 관한 노트"
 
 #. Tag: para
-#: example_parentchild.xml:47
 #, fuzzy, no-c-format
 msgid ""
 "Hibernate collections are considered to be a logical part of their owning "
@@ -67,7 +63,6 @@ msgstr ""
 "음은 다음 결과들을 갖는다:"
 
 #. Tag: para
-#: example_parentchild.xml:54
 #, fuzzy, no-c-format
 msgid ""
 "When you remove/add an object from/to a collection, the version number of "
@@ -77,7 +72,6 @@ msgstr ""
 "버전 번호가 증가된다."
 
 #. Tag: para
-#: example_parentchild.xml:60
 #, fuzzy, no-c-format
 msgid ""
 "If an object that was removed from a collection is an instance of a value "
@@ -92,7 +86,6 @@ msgstr ""
 "가시키는 것은 그것의 상태가 즉시 영속화 되도록 강제시킬 것이다."
 
 #. Tag: para
-#: example_parentchild.xml:68
 #, fuzzy, no-c-format
 msgid ""
 "Conversely, if an entity is removed from a collection (a one-to-many or many-"
@@ -108,7 +101,6 @@ msgstr ""
 "티가 영속화 되도록 강제시키지 않는다."
 
 #. Tag: para
-#: example_parentchild.xml:78
 #, fuzzy, no-c-format
 msgid ""
 "Adding an entity to a collection, by default, merely creates a link between "
@@ -124,13 +116,11 @@ msgstr ""
 "있다."
 
 #. Tag: title
-#: example_parentchild.xml:88
 #, no-c-format
 msgid "Bidirectional one-to-many"
 msgstr "양방향 one-to-many"
 
 #. Tag: para
-#: example_parentchild.xml:90
 #, no-c-format
 msgid ""
 "Suppose we start with a simple <literal>&lt;one-to-many&gt;</literal> "
@@ -139,41 +129,17 @@ msgstr ""
 "<literal>Parent</literal>로부터 <literal>Child</literal>로의 간단한 "
 "<literal>&lt;one-to-many&gt;</literal> 연관관계로 시작한다고 가정하자."
 
-#. Tag: programlisting
-#: example_parentchild.xml:95
-#, no-c-format
-msgid ""
-"<![CDATA[<set name=\"children\">\n"
-"    <key column=\"parent_id\"/>\n"
-"    <one-to-many class=\"Child\"/>\n"
-"</set>]]>"
-msgstr ""
-
 #. Tag: para
-#: example_parentchild.xml:97
 #, fuzzy, no-c-format
 msgid "If we were to execute the following code:"
 msgstr "우리가 다음 코드를 실행시켰다면"
 
-#. Tag: programlisting
-#: example_parentchild.xml:101
-#, no-c-format
-msgid ""
-"<![CDATA[Parent p = .....;\n"
-"Child c = new Child();\n"
-"p.getChildren().add(c);\n"
-"session.save(c);\n"
-"session.flush();]]>"
-msgstr ""
-
 #. Tag: para
-#: example_parentchild.xml:103
 #, no-c-format
 msgid "Hibernate would issue two SQL statements:"
 msgstr "Hibernate는 두 개의 SQL 문장들을 실행할 것이다:"
 
 #. Tag: para
-#: example_parentchild.xml:109
 #, no-c-format
 msgid ""
 "an <literal>INSERT</literal> to create the record for <literal>c</literal>"
@@ -181,7 +147,6 @@ msgstr ""
 "<literal>c</literal>에 대한 레코드를 생성시키는 <literal>INSERT</literal>"
 
 #. Tag: para
-#: example_parentchild.xml:112
 #, no-c-format
 msgid ""
 "an <literal>UPDATE</literal> to create the link from <literal>p</literal> to "
@@ -191,7 +156,6 @@ msgstr ""
 "<literal>UPDATE</literal>"
 
 #. Tag: para
-#: example_parentchild.xml:119
 #, fuzzy, no-c-format
 msgid ""
 "This is not only inefficient, but also violates any <literal>NOT NULL</"
@@ -204,24 +168,12 @@ msgstr ""
 "에서 <literal>not-null=\"true\"</literal>를 지정함으로써 null 허용 가능 컨스"
 "트레인트 위반을 정정할 수 있다:"
 
-#. Tag: programlisting
-#: example_parentchild.xml:125
-#, no-c-format
-msgid ""
-"<![CDATA[<set name=\"children\">\n"
-"    <key column=\"parent_id\" not-null=\"true\"/>\n"
-"    <one-to-many class=\"Child\"/>\n"
-"</set>]]>"
-msgstr ""
-
 #. Tag: para
-#: example_parentchild.xml:127
 #, no-c-format
 msgid "However, this is not the recommended solution."
 msgstr "하지만 이것은 권장되는 해결책이 아니다."
 
 #. Tag: para
-#: example_parentchild.xml:130
 #, fuzzy, no-c-format
 msgid ""
 "The underlying cause of this behavior is that the link (the foreign key "
@@ -236,16 +188,7 @@ msgstr ""
 "지 않는다는 점이다. 따라서 해결책은 <literal>Child</literal> 매핑의 링크 부분"
 "을 만드는 것이다."
 
-#. Tag: programlisting
-#: example_parentchild.xml:137
-#, no-c-format
-msgid ""
-"<![CDATA[<many-to-one name=\"parent\" column=\"parent_id\" not-null=\"true\"/"
-">]]>"
-msgstr ""
-
 #. Tag: para
-#: example_parentchild.xml:139
 #, fuzzy, no-c-format
 msgid ""
 "You also need to add the <literal>parent</literal> property to the "
@@ -255,7 +198,6 @@ msgstr ""
 "래스에 추가시킬 필요가 있다.)"
 
 #. Tag: para
-#: example_parentchild.xml:143
 #, fuzzy, no-c-format
 msgid ""
 "Now that the <literal>Child</literal> entity is managing the state of the "
@@ -266,44 +208,19 @@ msgstr ""
 "고, 우리는 링크를 업데이트 시키지 말도록 콜렉션에게 통보한다. 우리는 "
 "<literal>inverse</literal> 속성을 사용한다."
 
-#. Tag: programlisting
-#: example_parentchild.xml:148
-#, no-c-format
-msgid ""
-"<![CDATA[<set name=\"children\" inverse=\"true\">\n"
-"    <key column=\"parent_id\"/>\n"
-"    <one-to-many class=\"Child\"/>\n"
-"</set>]]>"
-msgstr ""
-
 #. Tag: para
-#: example_parentchild.xml:150
 #, fuzzy, no-c-format
 msgid "The following code would be used to add a new <literal>Child</literal>:"
 msgstr ""
 "다음 코드는 새로운 <literal>Child</literal>를 추가시키는데 사용될 것이다"
 
-#. Tag: programlisting
-#: example_parentchild.xml:154
-#, no-c-format
-msgid ""
-"<![CDATA[Parent p = (Parent) session.load(Parent.class, pid);\n"
-"Child c = new Child();\n"
-"c.setParent(p);\n"
-"p.getChildren().add(c);\n"
-"session.save(c);\n"
-"session.flush();]]>"
-msgstr ""
-
 #. Tag: para
-#: example_parentchild.xml:156
 #, fuzzy, no-c-format
 msgid "Only one SQL <literal>INSERT</literal> would now be issued."
 msgstr ""
 "그리고 이제, 유일하게 한 개의 SQL <literal>INSERT</literal>가 실행될 것이다!"
 
 #. Tag: para
-#: example_parentchild.xml:160
 #, fuzzy, no-c-format
 msgid ""
 "You could also create an <literal>addChild()</literal> method of "
@@ -312,41 +229,17 @@ msgstr ""
 "약간 거칠게, 우리는 <literal>Parent</literal>의 <literal>addChild()</"
 "literal> 메소드를 생성시킬 수 있다."
 
-#. Tag: programlisting
-#: example_parentchild.xml:165
-#, no-c-format
-msgid ""
-"<![CDATA[public void addChild(Child c) {\n"
-"    c.setParent(this);\n"
-"    children.add(c);\n"
-"}]]>"
-msgstr ""
-
 #. Tag: para
-#: example_parentchild.xml:167
 #, fuzzy, no-c-format
 msgid "The code to add a <literal>Child</literal> looks like this:"
 msgstr "이제, <literal>Child</literal>를 추가하는 코드는 다음과 같다"
 
-#. Tag: programlisting
-#: example_parentchild.xml:171
-#, no-c-format
-msgid ""
-"<![CDATA[Parent p = (Parent) session.load(Parent.class, pid);\n"
-"Child c = new Child();\n"
-"p.addChild(c);\n"
-"session.save(c);\n"
-"session.flush();]]>"
-msgstr ""
-
 #. Tag: title
-#: example_parentchild.xml:176
 #, no-c-format
 msgid "Cascading life cycle"
 msgstr "케스케이딩 생명주기"
 
 #. Tag: para
-#: example_parentchild.xml:178
 #, fuzzy, no-c-format
 msgid ""
 "You can address the frustrations of the explicit call to <literal>save()</"
@@ -355,34 +248,12 @@ msgstr ""
 "<literal>save()</literal>에 대한 명시적인 호출은 여전히 성가시다. 우리는 케스"
 "케이딩을 사용하여 이것을 얘기할 것이다."
 
-#. Tag: programlisting
-#: example_parentchild.xml:183
-#, no-c-format
-msgid ""
-"<![CDATA[<set name=\"children\" inverse=\"true\" cascade=\"all\">\n"
-"    <key column=\"parent_id\"/>\n"
-"    <one-to-many class=\"Child\"/>\n"
-"</set>]]>"
-msgstr ""
-
 #. Tag: para
-#: example_parentchild.xml:185
 #, fuzzy, no-c-format
 msgid "This simplifies the code above to:"
 msgstr "다음은 위의 코드를 단순화 시킨다"
 
-#. Tag: programlisting
-#: example_parentchild.xml:189
-#, no-c-format
-msgid ""
-"<![CDATA[Parent p = (Parent) session.load(Parent.class, pid);\n"
-"Child c = new Child();\n"
-"p.addChild(c);\n"
-"session.flush();]]>"
-msgstr ""
-
 #. Tag: para
-#: example_parentchild.xml:191
 #, fuzzy, no-c-format
 msgid ""
 "Similarly, we do not need to iterate over the children when saving or "
@@ -393,34 +264,12 @@ msgstr ""
 "해 반복하는 것을 필요로 하지 않는다. 다음은 데이터베이스로부터 <literal>p</"
 "literal>와 모든 그것의 자식들을 제거시킨다."
 
-#. Tag: programlisting
-#: example_parentchild.xml:196
-#, no-c-format
-msgid ""
-"<![CDATA[Parent p = (Parent) session.load(Parent.class, pid);\n"
-"session.delete(p);\n"
-"session.flush();]]>"
-msgstr ""
-
 #. Tag: para
-#: example_parentchild.xml:198
 #, fuzzy, no-c-format
 msgid "However, the following code:"
 msgstr "하지만, 다음 코드"
 
-#. Tag: programlisting
-#: example_parentchild.xml:202
-#, no-c-format
-msgid ""
-"<![CDATA[Parent p = (Parent) session.load(Parent.class, pid);\n"
-"Child c = (Child) p.getChildren().iterator().next();\n"
-"p.getChildren().remove(c);\n"
-"c.setParent(null);\n"
-"session.flush();]]>"
-msgstr ""
-
 #. Tag: para
-#: example_parentchild.xml:204
 #, fuzzy, no-c-format
 msgid ""
 "will not remove <literal>c</literal> from the database. In this case, it "
@@ -434,19 +283,7 @@ msgstr ""
 "적으로 <literal>Child</literal>를 <literal>delete()</literal> 시킬 필요가 있"
 "다."
 
-#. Tag: programlisting
-#: example_parentchild.xml:210
-#, no-c-format
-msgid ""
-"<![CDATA[Parent p = (Parent) session.load(Parent.class, pid);\n"
-"Child c = (Child) p.getChildren().iterator().next();\n"
-"p.getChildren().remove(c);\n"
-"session.delete(c);\n"
-"session.flush();]]>"
-msgstr ""
-
 #. Tag: para
-#: example_parentchild.xml:212
 #, fuzzy, no-c-format
 msgid ""
 "In our case, a <literal>Child</literal> cannot exist without its parent. So "
@@ -459,19 +296,7 @@ msgstr ""
 "literal>를 제거할 경우, 우리는 그것이 정말로 삭제되기를 원한다. 이를 위해 우"
 "리는 <literal>cascade=\"all-delete-orphan\"</literal>을 사용해야 한다."
 
-#. Tag: programlisting
-#: example_parentchild.xml:218
-#, no-c-format
-msgid ""
-"<![CDATA[<set name=\"children\" inverse=\"true\" cascade=\"all-delete-orphan"
-"\">\n"
-"    <key column=\"parent_id\"/>\n"
-"    <one-to-many class=\"Child\"/>\n"
-"</set>]]>"
-msgstr ""
-
 #. Tag: para
-#: example_parentchild.xml:220
 #, fuzzy, no-c-format
 msgid ""
 "Even though the collection mapping specifies <literal>inverse=\"true\"</"
@@ -487,13 +312,11 @@ msgstr ""
 "</literal>를 호출하는 것으로는 충분하지 않다."
 
 #. Tag: title
-#: example_parentchild.xml:230
 #, no-c-format
 msgid "Cascades and <literal>unsaved-value</literal>"
 msgstr "케스케이드들과 <literal>unsaved-value</literal>"
 
 #. Tag: para
-#: example_parentchild.xml:232
 #, fuzzy, no-c-format
 msgid ""
 "Suppose we loaded up a <literal>Parent</literal> in one <literal>Session</"
@@ -506,7 +329,7 @@ msgid ""
 "literal> have generated identifier properties of type <literal>Long</"
 "literal>. Hibernate will use the identifier and version/timestamp property "
 "value to determine which of the children are new. (See <xref linkend="
-"\"objectstate-saveorupdate\"/>.) <emphasis>In Hibernate3, it is no longer "
+"\"objectstate-saveorupdate\" />.) <emphasis>In Hibernate3, it is no longer "
 "necessary to specify an <literal>unsaved-value</literal> explicitly.</"
 "emphasis>"
 msgstr ""
@@ -524,7 +347,6 @@ msgstr ""
 "로 지정할 필요가 없다.</emphasis>"
 
 #. Tag: para
-#: example_parentchild.xml:244
 #, fuzzy, no-c-format
 msgid ""
 "The following code will update <literal>parent</literal> and <literal>child</"
@@ -533,20 +355,7 @@ msgstr ""
 "다음 코드는 <literal>parent</literal>와 <literal>child</literal>를 업데이트하"
 "고 <literal>newChild</literal>를 삽입시킬 것이다."
 
-#. Tag: programlisting
-#: example_parentchild.xml:249
-#, no-c-format
-msgid ""
-"<![CDATA[//parent and child were both loaded in a previous session\n"
-"parent.addChild(child);\n"
-"Child newChild = new Child();\n"
-"parent.addChild(newChild);\n"
-"session.update(parent);\n"
-"session.flush();]]>"
-msgstr ""
-
 #. Tag: para
-#: example_parentchild.xml:251
 #, fuzzy, no-c-format
 msgid ""
 "This may be suitable for the case of a generated identifier, but what about "
@@ -566,13 +375,11 @@ msgstr ""
 "존재하는지를 알기 위해 데이터베이스를 질의할 것이다."
 
 #. Tag: title
-#: example_parentchild.xml:263
 #, no-c-format
 msgid "Conclusion"
 msgstr "결론"
 
 #. Tag: para
-#: example_parentchild.xml:265
 #, fuzzy, no-c-format
 msgid ""
 "The sections we have just covered can be a bit confusing. However, in "
@@ -584,7 +391,6 @@ msgstr ""
 "들은 많은 장소들에서 부모/자식 패턴을 사용한다."
 
 #. Tag: para
-#: example_parentchild.xml:270
 #, fuzzy, no-c-format
 msgid ""
 "We mentioned an alternative in the first paragraph. None of the above issues "

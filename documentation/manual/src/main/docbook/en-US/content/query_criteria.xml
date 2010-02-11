@@ -23,7 +23,11 @@
   ~ Boston, MA  02110-1301  USA
   -->
 
-<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
+<!ENTITY % BOOK_ENTITIES SYSTEM "../HIBERNATE_-_Relational_Persistence_for_Idiomatic_Java.ent">
+%BOOK_ENTITIES;
+
+]>
 
 <chapter id="querycriteria">
     <title>Criteria Queries</title>
@@ -32,7 +36,7 @@
         Hibernate features an intuitive, extensible criteria query API.
     </para>
     
-    <sect1 id="querycriteria-creating">
+    <section id="querycriteria-creating">
         <title>Creating a <literal>Criteria</literal> instance</title>
 
         <para>
@@ -45,9 +49,9 @@
 crit.setMaxResults(50);
 List cats = crit.list();]]></programlisting>
 
-    </sect1>
+    </section>
      
-    <sect1 id="querycriteria-narrowing">
+    <section id="querycriteria-narrowing">
         <title>Narrowing the result set</title>
 
         <para>
@@ -117,9 +121,9 @@ List cats = sess.createCriteria(Cat.class)
     .add( Property.forName("name").in( new String[] { "Fritz", "Izi", "Pk" } ) )
     .list();]]></programlisting>
     
-   </sect1>
+   </section>
      
-    <sect1 id="querycriteria-ordering">
+    <section id="querycriteria-ordering">
         <title>Ordering the results</title>
 
         <para>
@@ -140,9 +144,9 @@ List cats = sess.createCriteria(Cat.class)
     .setMaxResults(50)
     .list();]]></programlisting>
     
-    </sect1>
+    </section>
     
-    <sect1 id="querycriteria-associations" revision="2">
+    <section id="querycriteria-associations" revision="2">
         <title>Associations</title>
 
         <para>
@@ -224,9 +228,9 @@ while ( iter.hasNext() ) {
 	<para>
 		Thirdly, in memory; the lists would need to be joined manually.
 	</para>
-    </sect1>
+    </section>
     
-    <sect1 id="querycriteria-dynamicfetching" revision="1">
+    <section id="querycriteria-dynamicfetching" revision="1">
         <title>Dynamic association fetching</title>
 
         <para>
@@ -245,9 +249,9 @@ while ( iter.hasNext() ) {
             by outer join. See <xref linkend="performance-fetching"/> for more information.
         </para>
     
-    </sect1>
+    </section>
      
-    <sect1 id="querycriteria-examples">
+    <section id="querycriteria-examples">
         <title>Example queries</title>
 
         <para>
@@ -290,9 +294,9 @@ List results = session.createCriteria(Cat.class)
         .add( Example.create( cat.getMate() ) )
     .list();]]></programlisting>
     
-    </sect1>
+    </section>
     
-    <sect1 id="querycriteria-projection">
+    <section id="querycriteria-projection">
         <title>Projections, aggregation and grouping</title>
         <para>
             The class <literal>org.hibernate.criterion.Projections</literal> is a
@@ -384,9 +388,9 @@ List results = session.createCriteria(Cat.class)
     .addOrder( Order.desc("avgWeight") )
     .list();]]></programlisting>
     
-    </sect1>
+    </section>
     
-    <sect1 id="querycriteria-detachedqueries">
+    <section id="querycriteria-detachedqueries">
         <title>Detached queries and subqueries</title>
         <para>
             The <literal>DetachedCriteria</literal> class allows you to create a query outside the scope 
@@ -431,13 +435,13 @@ session.createCriteria(Cat.class, "cat")
     .add( Property.forName("weight").gt(avgWeightForSex) )
     .list();]]></programlisting>
 
-    </sect1>
+    </section>
 
         <!--TODO: ResultSetTransformer + aliasing. AliasToBeanTransformer allow returning arbitrary 
                   user objects - similar to setResultClass in JDO2. General use of ResultTransformer 
                   could also be explained. -->
                
-    <sect1 id="query-criteria-naturalid">
+    <section id="query-criteria-naturalid">
         <title>Queries by natural identifier</title>
         
         <para>
@@ -483,6 +487,6 @@ session.createCriteria(Cat.class, "cat")
     ).setCacheable(true)
     .uniqueResult();]]></programlisting>
             
-    </sect1>
+    </section>
     
 </chapter>

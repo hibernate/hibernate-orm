@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2009-08-17 20:22+0000\n"
+"POT-Creation-Date: 2010-02-04T04:51:22\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -11,19 +11,16 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 
 #. Tag: title
-#: performance.xml:29
 #, no-c-format
 msgid "Improving performance"
 msgstr "퍼포먼스 개선하기"
 
 #. Tag: title
-#: performance.xml:32
 #, no-c-format
 msgid "Fetching strategies"
 msgstr "페칭 방도들"
 
 #. Tag: para
-#: performance.xml:34
 #, fuzzy, no-c-format
 msgid ""
 "Hibernate uses a <emphasis>fetching strategy</emphasis> to retrieve "
@@ -37,13 +34,11 @@ msgstr ""
 "<literal>Criteria</literal> 질의에 의해 오버라이드 될 수도 있다."
 
 #. Tag: para
-#: performance.xml:41
 #, no-c-format
 msgid "Hibernate3 defines the following fetching strategies:"
 msgstr "Hibernate3는 다음 페칭 방도들을 정의한다:"
 
 #. Tag: para
-#: performance.xml:47
 #, fuzzy, no-c-format
 msgid ""
 "<emphasis>Join fetching</emphasis>: Hibernate retrieves the associated "
@@ -55,7 +50,6 @@ msgstr ""
 "을 검색한다."
 
 #. Tag: para
-#: performance.xml:54
 #, fuzzy, no-c-format
 msgid ""
 "<emphasis>Select fetching</emphasis>: a second <literal>SELECT</literal> is "
@@ -69,7 +63,6 @@ msgstr ""
 "이 두 번째 select는 당신이 그 연관에 실제로 액세스할 때 오직 실행될 것이다."
 
 #. Tag: para
-#: performance.xml:63
 #, fuzzy, no-c-format
 msgid ""
 "<emphasis>Subselect fetching</emphasis>: a second <literal>SELECT</literal> "
@@ -85,7 +78,6 @@ msgstr ""
 "그 연관에 접근할 때 오직 실행될 것이다."
 
 #. Tag: para
-#: performance.xml:72
 #, fuzzy, no-c-format
 msgid ""
 "<emphasis>Batch fetching</emphasis>: an optimization strategy for select "
@@ -99,13 +91,11 @@ msgstr ""
 "를 검색한다."
 
 #. Tag: para
-#: performance.xml:81
 #, no-c-format
 msgid "Hibernate also distinguishes between:"
 msgstr "Hibernate는 또한 다음 사이를 구별 짓는다:"
 
 #. Tag: para
-#: performance.xml:87
 #, fuzzy, no-c-format
 msgid ""
 "<emphasis>Immediate fetching</emphasis>: an association, collection or "
@@ -115,7 +105,6 @@ msgstr ""
 "성이 즉시 페치된다."
 
 #. Tag: para
-#: performance.xml:93
 #, fuzzy, no-c-format
 msgid ""
 "<emphasis>Lazy collection fetching</emphasis>: a collection is fetched when "
@@ -127,7 +116,6 @@ msgstr ""
 "다.)"
 
 #. Tag: para
-#: performance.xml:100
 #, fuzzy, no-c-format
 msgid ""
 "<emphasis>\"Extra-lazy\" collection fetching</emphasis>: individual elements "
@@ -140,7 +128,6 @@ msgstr ""
 "체 콜렉션을 메모리 내로 페치하려고 시도하지 않는다(매우 큰 콜렉션에 적합함)"
 
 #. Tag: para
-#: performance.xml:108
 #, fuzzy, no-c-format
 msgid ""
 "<emphasis>Proxy fetching</emphasis>: a single-valued association is fetched "
@@ -151,7 +138,6 @@ msgstr ""
 "객체에 대해 호출될 때 단일 값 연관이 페치된다."
 
 #. Tag: para
-#: performance.xml:115
 #, fuzzy, no-c-format
 msgid ""
 "<emphasis>\"No-proxy\" fetching</emphasis>: a single-valued association is "
@@ -168,7 +154,6 @@ msgstr ""
 "코드 수단을 필요로 하며 드물게 필요하다."
 
 #. Tag: para
-#: performance.xml:125
 #, fuzzy, no-c-format
 msgid ""
 "<emphasis>Lazy attribute fetching</emphasis>: an attribute or single valued "
@@ -180,7 +165,6 @@ msgstr ""
 "게 필요하다."
 
 #. Tag: para
-#: performance.xml:134
 #, fuzzy, no-c-format
 msgid ""
 "We have two orthogonal notions here: <emphasis>when</emphasis> is the "
@@ -198,13 +182,11 @@ msgstr ""
 "할 수 있다."
 
 #. Tag: title
-#: performance.xml:143
 #, no-c-format
 msgid "Working with lazy associations"
 msgstr "lazy 연관들로 작업하기"
 
 #. Tag: para
-#: performance.xml:145
 #, fuzzy, no-c-format
 msgid ""
 "By default, Hibernate3 uses lazy select fetching for collections and lazy "
@@ -216,7 +198,6 @@ msgstr ""
 "션들에서 거의 모든 연관들에 대해 유의미하다."
 
 #. Tag: para
-#: performance.xml:151
 #, fuzzy, no-c-format
 msgid ""
 "If you set <literal>hibernate.default_batch_fetch_size</literal>, Hibernate "
@@ -229,7 +210,6 @@ msgstr ""
 "에서 이용 가능할 수 있다)."
 
 #. Tag: para
-#: performance.xml:158
 #, fuzzy, no-c-format
 msgid ""
 "Please be aware that access to a lazy association outside of the context of "
@@ -239,25 +219,7 @@ msgstr ""
 "Hibernate 세션 컨텍스트 외부에서 lazy 연관에 대한 접근은 예외상황으로 귀결될 "
 "것이다. 예를 들면 :"
 
-#. Tag: programlisting
-#: performance.xml:164
-#, no-c-format
-msgid ""
-"<![CDATA[s = sessions.openSession();\n"
-"Transaction tx = s.beginTransaction();\n"
-"            \n"
-"User u = (User) s.createQuery(\"from User u where u.name=:userName\")\n"
-"    .setString(\"userName\", userName).uniqueResult();\n"
-"Map permissions = u.getPermissions();\n"
-"\n"
-"tx.commit();\n"
-"s.close();\n"
-"\n"
-"Integer accessLevel = (Integer) permissions.get(\"accounts\");  // Error!]]>"
-msgstr ""
-
 #. Tag: para
-#: performance.xml:166
 #, fuzzy, no-c-format
 msgid ""
 "Since the permissions collection was not initialized when the "
@@ -273,7 +235,6 @@ msgstr ""
 "키는 것이다."
 
 #. Tag: para
-#: performance.xml:174
 #, fuzzy, no-c-format
 msgid ""
 "Alternatively, you can use a non-lazy collection or association, by "
@@ -291,7 +252,6 @@ msgstr ""
 "될 것이다!"
 
 #. Tag: para
-#: performance.xml:183
 #, fuzzy, no-c-format
 msgid ""
 "On the other hand, you can use join fetching, which is non-lazy by nature, "
@@ -306,13 +266,11 @@ msgstr ""
 "단일 값 연관들과 콜렉션들에 대해 동일하다."
 
 #. Tag: title
-#: performance.xml:194
 #, no-c-format
 msgid "Tuning fetch strategies"
 msgstr "페치 방도들을 튜닝하기"
 
 #. Tag: para
-#: performance.xml:196
 #, no-c-format
 msgid ""
 "Select fetching (the default) is extremely vulnerable to N+1 selects "
@@ -321,25 +279,7 @@ msgstr ""
 "select 페칭(디폴트)은 N+1 selects 문제점들에 매우 취약해서, 우리는 매핑 문서"
 "에서 join 페칭을 사용 가능하게 하기를 원할 수도 있다:"
 
-#. Tag: programlisting
-#: performance.xml:201
-#, no-c-format
-msgid ""
-"<![CDATA[<set name=\"permissions\" \n"
-"            fetch=\"join\">\n"
-"    <key column=\"userId\"/>\n"
-"    <one-to-many class=\"Permission\"/>\n"
-"</set]]>"
-msgstr ""
-
-#. Tag: programlisting
-#: performance.xml:203
-#, no-c-format
-msgid "<![CDATA[<many-to-one name=\"mother\" class=\"Cat\" fetch=\"join\"/>]]>"
-msgstr ""
-
 #. Tag: para
-#: performance.xml:205
 #, no-c-format
 msgid ""
 "The <literal>fetch</literal> strategy defined in the mapping document "
@@ -348,31 +288,26 @@ msgstr ""
 "매핑 문서 내에 정의된 <literal>fetch</literal> 방도는 다음에 영향을 준다:"
 
 #. Tag: para
-#: performance.xml:211
 #, no-c-format
 msgid "retrieval via <literal>get()</literal> or <literal>load()</literal>"
 msgstr "<literal>get()</literal> 또는 <literal>load()</literal>를 통한 검색"
 
 #. Tag: para
-#: performance.xml:216
 #, no-c-format
 msgid "retrieval that happens implicitly when an association is navigated"
 msgstr "연관이 네비게이트될 때 함축적으로 발생하는 검색"
 
 #. Tag: para
-#: performance.xml:221
 #, no-c-format
 msgid "<literal>Criteria</literal> queries"
 msgstr "<literal>Criteria</literal> 질의들"
 
 #. Tag: para
-#: performance.xml:226
 #, no-c-format
 msgid "HQL queries if <literal>subselect</literal> fetching is used"
 msgstr "<literal>subselect</literal> 페칭이 사용될 경우에 HQL 질의들"
 
 #. Tag: para
-#: performance.xml:232
 #, fuzzy, no-c-format
 msgid ""
 "Irrespective of the fetching strategy you use, the defined non-lazy graph is "
@@ -384,7 +319,6 @@ msgstr ""
 "사용되는 몇몇 즉시적인 select들로 귀결될 수 있음을 노트하라."
 
 #. Tag: para
-#: performance.xml:238
 #, fuzzy, no-c-format
 msgid ""
 "Usually, the mapping document is not used to customize fetching. Instead, we "
@@ -402,7 +336,6 @@ msgstr ""
 "<literal>setFetchMode(FetchMode.JOIN)</literal>을 사용한다."
 
 #. Tag: para
-#: performance.xml:247
 #, fuzzy, no-c-format
 msgid ""
 "If you want to change the fetching strategy used by <literal>get()</literal> "
@@ -413,18 +346,7 @@ msgstr ""
 "용된 페칭 방도를 변경시킬 수 있기를 당신이 원한다고 느낄 경우, 단순하게 "
 "<literal>Criteria</literal> 질의를 사용하라. 예를 들면:"
 
-#. Tag: programlisting
-#: performance.xml:253
-#, no-c-format
-msgid ""
-"<![CDATA[User user = (User) session.createCriteria(User.class)\n"
-"                .setFetchMode(\"permissions\", FetchMode.JOIN)\n"
-"                .add( Restrictions.idEq(userId) )\n"
-"                .uniqueResult();]]>"
-msgstr ""
-
 #. Tag: para
-#: performance.xml:255
 #, fuzzy, no-c-format
 msgid ""
 "This is Hibernate's equivalent of what some ORM solutions call a \"fetch plan"
@@ -434,7 +356,6 @@ msgstr ""
 "등가물이다.)"
 
 #. Tag: para
-#: performance.xml:259
 #, fuzzy, no-c-format
 msgid ""
 "A completely different approach to problems with N+1 selects is to use the "
@@ -444,13 +365,11 @@ msgstr ""
 "시를 사용하는 것이다."
 
 #. Tag: title
-#: performance.xml:267
 #, no-c-format
 msgid "Single-ended association proxies"
 msgstr "Single-ended 연관 프락시"
 
 #. Tag: para
-#: performance.xml:269
 #, fuzzy, no-c-format
 msgid ""
 "Lazy fetching for collections is implemented using Hibernate's own "
@@ -467,7 +386,6 @@ msgstr ""
 "기화 프락시들을 구현한다."
 
 #. Tag: para
-#: performance.xml:277
 #, fuzzy, no-c-format
 msgid ""
 "At startup, Hibernate3 generates proxies by default for all persistent "
@@ -479,7 +397,6 @@ msgstr ""
 "관에 대해 lazy 페칭을 이용 가능하게 하는데 그것들을 사용한다."
 
 #. Tag: para
-#: performance.xml:283
 #, fuzzy, no-c-format
 msgid ""
 "The mapping file may declare an interface to use as the proxy interface for "
@@ -495,7 +412,6 @@ msgstr ""
 "든 영속 클래스들에 대해 이 생성자를 권장한다!</emphasis>"
 
 #. Tag: para
-#: performance.xml:290
 #, fuzzy, no-c-format
 msgid ""
 "There are potential problems to note when extending this approach to "
@@ -504,20 +420,7 @@ msgstr ""
 "다형성 클래스들에 대해 이 접근법을 확장할 때 의식해야 하는 몇몇 난처함들이 존"
 "재한다. 예를 들면."
 
-#. Tag: programlisting
-#: performance.xml:294
-#, no-c-format
-msgid ""
-"<![CDATA[<class name=\"Cat\" proxy=\"Cat\">\n"
-"    ......\n"
-"    <subclass name=\"DomesticCat\">\n"
-"        .....\n"
-"    </subclass>\n"
-"</class>]]>"
-msgstr ""
-
 #. Tag: para
-#: performance.xml:296
 #, no-c-format
 msgid ""
 "Firstly, instances of <literal>Cat</literal> will never be castable to "
@@ -528,39 +431,12 @@ msgstr ""
 "인 경우조차도, <literal>Cat</literal>의 인스턴스들은 결코 "
 "<literal>DomesticCat</literal>으로 타입캐스트가 가능하지 않을 것이다:"
 
-#. Tag: programlisting
-#: performance.xml:302
-#, no-c-format
-msgid ""
-"<![CDATA[Cat cat = (Cat) session.load(Cat.class, id);  // instantiate a "
-"proxy (does not hit the db)\n"
-"if ( cat.isDomesticCat() ) {                  // hit the db to initialize "
-"the proxy\n"
-"    DomesticCat dc = (DomesticCat) cat;       // Error!\n"
-"    ....\n"
-"}]]>"
-msgstr ""
-
 #. Tag: para
-#: performance.xml:304
 #, fuzzy, no-c-format
 msgid "Secondly, it is possible to break proxy <literal>==</literal>:"
 msgstr "두번째로, 프락시 <literal>==</literal>를 파기할 가능성이 있다."
 
-#. Tag: programlisting
-#: performance.xml:308
-#, no-c-format
-msgid ""
-"<![CDATA[Cat cat = (Cat) session.load(Cat.class, id);            // "
-"instantiate a Cat proxy\n"
-"DomesticCat dc = \n"
-"        (DomesticCat) session.load(DomesticCat.class, id);  // acquire new "
-"DomesticCat proxy!\n"
-"System.out.println(cat==dc);                            // false]]>"
-msgstr ""
-
 #. Tag: para
-#: performance.xml:310
 #, no-c-format
 msgid ""
 "However, the situation is not quite as bad as it looks. Even though we now "
@@ -571,16 +447,7 @@ msgstr ""
 "프락시 객체들에 대한 두 개의 참조를 가질지라도, 기본 인스턴스는 여전히 동일"
 "한 객체들일 것이다:"
 
-#. Tag: programlisting
-#: performance.xml:315
-#, no-c-format
-msgid ""
-"<![CDATA[cat.setWeight(11.0);  // hit the db to initialize the proxy\n"
-"System.out.println( dc.getWeight() );  // 11.0]]>"
-msgstr ""
-
 #. Tag: para
-#: performance.xml:317
 #, fuzzy, no-c-format
 msgid ""
 "Third, you cannot use a CGLIB proxy for a <literal>final</literal> class or "
@@ -590,7 +457,6 @@ msgstr ""
 "literal> 메소드들을 가진 클래스에 대해 CGLIB 프락시를 사용하지 않을 수 있다."
 
 #. Tag: para
-#: performance.xml:322
 #, fuzzy, no-c-format
 msgid ""
 "Finally, if your persistent object acquires any resources upon instantiation "
@@ -604,7 +470,6 @@ msgstr ""
 "브클래스이다."
 
 #. Tag: para
-#: performance.xml:328
 #, fuzzy, no-c-format
 msgid ""
 "These problems are all due to fundamental limitations in Java's single "
@@ -620,20 +485,7 @@ msgstr ""
 "지니스 메소드들을 선언하는 인터페이스를 구현해야 한다. 당신은 매핑 파일 속에 "
 "이들 인터페이스들을 지정해야 한다. 예를 들면."
 
-#. Tag: programlisting
-#: performance.xml:336
-#, no-c-format
-msgid ""
-"<![CDATA[<class name=\"CatImpl\" proxy=\"Cat\">\n"
-"    ......\n"
-"    <subclass name=\"DomesticCatImpl\" proxy=\"DomesticCat\">\n"
-"        .....\n"
-"    </subclass>\n"
-"</class>]]>"
-msgstr ""
-
 #. Tag: para
-#: performance.xml:338
 #, fuzzy, no-c-format
 msgid ""
 "Then proxies for instances of <literal>Cat</literal> and "
@@ -644,30 +496,17 @@ msgstr ""
 "인 경우조차도, <literal>Cat</literal>의 인스턴스들은 결코 "
 "<literal>DomesticCat</literal>으로 타입캐스트가 가능하지 않을 것이다:"
 
-#. Tag: programlisting
-#: performance.xml:343
-#, no-c-format
-msgid ""
-"<![CDATA[Cat cat = (Cat) session.load(CatImpl.class, catid);\n"
-"Iterator iter = session.createQuery(\"from CatImpl as cat where cat."
-"name='fritz'\").iterate();\n"
-"Cat fritz = (Cat) iter.next();]]>"
-msgstr ""
-
 #. Tag: title
-#: performance.xml:346
 #, no-c-format
 msgid "Note"
 msgstr ""
 
 #. Tag: para
-#: performance.xml:347
 #, fuzzy, no-c-format
 msgid "<literal>list()</literal> does not usually return proxies."
 msgstr "<literal>Criteria</literal> 질의들"
 
 #. Tag: para
-#: performance.xml:352
 #, no-c-format
 msgid ""
 "Relationships are also lazily initialized. This means you must declare any "
@@ -679,7 +518,6 @@ msgstr ""
 "야 함을 의미한다."
 
 #. Tag: para
-#: performance.xml:357
 #, fuzzy, no-c-format
 msgid ""
 "Certain operations do <emphasis>not</emphasis> require proxy initialization:"
@@ -687,7 +525,6 @@ msgstr ""
 "어떤 오퍼레이션들은 프락시 초기화를 필요로 하지 <emphasis>않는다</emphasis>"
 
 #. Tag: para
-#: performance.xml:363
 #, fuzzy, no-c-format
 msgid ""
 "<literal>equals()</literal>: if the persistent class does not override "
@@ -697,7 +534,6 @@ msgstr ""
 "를 오버라이드 시키지 않는 경우"
 
 #. Tag: para
-#: performance.xml:369
 #, fuzzy, no-c-format
 msgid ""
 "<literal>hashCode()</literal>: if the persistent class does not override "
@@ -707,13 +543,11 @@ msgstr ""
 "literal>를 오버라이드 시키지 않는 경우"
 
 #. Tag: para
-#: performance.xml:375
 #, no-c-format
 msgid "The identifier getter method"
 msgstr "식별자 getter 메소드"
 
 #. Tag: para
-#: performance.xml:381
 #, no-c-format
 msgid ""
 "Hibernate will detect persistent classes that override <literal>equals()</"
@@ -723,7 +557,6 @@ msgstr ""
 "오버라이드 시키는 영속 클래스들을 검출할 것이다."
 
 #. Tag: para
-#: performance.xml:386
 #, fuzzy, no-c-format
 msgid ""
 "By choosing <literal>lazy=\"no-proxy\"</literal> instead of the default "
@@ -737,13 +570,11 @@ msgstr ""
 "프락시 초기화로 귀결될 것이다."
 
 #. Tag: title
-#: performance.xml:396
 #, no-c-format
 msgid "Initializing collections and proxies"
 msgstr "콜렉션들과 프락시들을 초기화 시키기"
 
 #. Tag: para
-#: performance.xml:398
 #, fuzzy, no-c-format
 msgid ""
 "A <literal>LazyInitializationException</literal> will be thrown by Hibernate "
@@ -757,7 +588,6 @@ msgstr ""
 "literal>이 Hibernate에 의해 던져질 것이다."
 
 #. Tag: para
-#: performance.xml:404
 #, fuzzy, no-c-format
 msgid ""
 "Sometimes a proxy or collection needs to be initialized before closing the "
@@ -773,7 +603,6 @@ msgstr ""
 "코드로 편의적이지 않다."
 
 #. Tag: para
-#: performance.xml:411
 #, fuzzy, no-c-format
 msgid ""
 "The static methods <literal>Hibernate.initialize()</literal> and "
@@ -793,7 +622,6 @@ msgstr ""
 "kittens의 콜렉션에 대해 유사한 효과를 갖는다."
 
 #. Tag: para
-#: performance.xml:420
 #, fuzzy, no-c-format
 msgid ""
 "Another option is to keep the <literal>Session</literal> open until all "
@@ -812,7 +640,6 @@ msgstr ""
 "히 하는 문제일 수 있다. 이 쟁점을 다루는 두 가지 기본 방법들이 존재한다:"
 
 #. Tag: para
-#: performance.xml:431
 #, fuzzy, no-c-format
 msgid ""
 "In a web-based application, a servlet filter can be used to close the "
@@ -834,7 +661,6 @@ msgstr ""
 "다. 이 \"Open Session in View\" 패턴에 관한 예제들은 Hibernate 위키를 보라."
 
 #. Tag: para
-#: performance.xml:444
 #, fuzzy, no-c-format
 msgid ""
 "In an application with a separate business tier, the business logic must "
@@ -861,7 +687,6 @@ msgstr ""
 "emphasis> 패턴을 채택할 경우에 더 쉽다."
 
 #. Tag: para
-#: performance.xml:459
 #, fuzzy, no-c-format
 msgid ""
 "You can also attach a previously loaded object to a new <literal>Session</"
@@ -878,7 +703,6 @@ msgstr ""
 "이기 때문이다!"
 
 #. Tag: para
-#: performance.xml:469
 #, fuzzy, no-c-format
 msgid ""
 "Sometimes you do not want to initialize a large collection, but still need "
@@ -889,7 +713,6 @@ msgstr ""
 "의 사이즈와 같은) 그것에 대한 어떤 정보 또는 데이터의 부분집합을 필요로 한다."
 
 #. Tag: para
-#: performance.xml:474
 #, no-c-format
 msgid ""
 "You can use a collection filter to get the size of a collection without "
@@ -898,16 +721,7 @@ msgstr ""
 "당신은 그것을 초기화 시키지 않고서 콜렉션의 사이즈를 얻는데 콜렉션 필터를 사"
 "용할 수 있다:"
 
-#. Tag: programlisting
-#: performance.xml:478
-#, no-c-format
-msgid ""
-"<![CDATA[( (Integer) s.createFilter( collection, \"select count(*)\" ).list"
-"().get(0) ).intValue()]]>"
-msgstr ""
-
 #. Tag: para
-#: performance.xml:480
 #, no-c-format
 msgid ""
 "The <literal>createFilter()</literal> method is also used to efficiently "
@@ -917,22 +731,12 @@ msgstr ""
 "<literal>createFilter()</literal> 메소드는 또한 전체 콜렉션을 초기화 시킬 필"
 "요 없이 콜렉션의 부분집합들을 효율적으로 검색하는데 사용된다:"
 
-#. Tag: programlisting
-#: performance.xml:485
-#, no-c-format
-msgid ""
-"<![CDATA[s.createFilter( lazyCollection, \"\").setFirstResult(0)."
-"setMaxResults(10).list();]]>"
-msgstr ""
-
 #. Tag: title
-#: performance.xml:490
 #, no-c-format
 msgid "Using batch fetching"
 msgstr "batch 페칭 사용하기"
 
 #. Tag: para
-#: performance.xml:492
 #, fuzzy, no-c-format
 msgid ""
 "Using batch fetching, Hibernate can load several uninitialized proxies if "
@@ -947,7 +751,6 @@ msgstr ""
 "고 콜렉션 레벨에서."
 
 #. Tag: para
-#: performance.xml:498
 #, fuzzy, no-c-format
 msgid ""
 "Batch fetching for classes/entities is easier to understand. Consider the "
@@ -973,14 +776,7 @@ msgstr ""
 "<literal>Person</literal> 매핑에서 <literal>batch-size</literal>를 지정함으로"
 "써 이 동작을 튜닝시킬 수 있다:"
 
-#. Tag: programlisting
-#: performance.xml:508
-#, no-c-format
-msgid "<![CDATA[<class name=\"Person\" batch-size=\"10\">...</class>]]>"
-msgstr ""
-
 #. Tag: para
-#: performance.xml:510
 #, fuzzy, no-c-format
 msgid ""
 "Hibernate will now execute only three queries: the pattern is 10, 10, 5."
@@ -989,7 +785,6 @@ msgstr ""
 "다."
 
 #. Tag: para
-#: performance.xml:514
 #, fuzzy, no-c-format
 msgid ""
 "You can also enable batch fetching of collections. For example, if each "
@@ -1010,19 +805,7 @@ msgstr ""
 "batch 페칭을 사용가능하게 할 경우, Hibernate는 콜렉션들을 미리-페치 시킬 수 "
 "있다:"
 
-#. Tag: programlisting
-#: performance.xml:523
-#, no-c-format
-msgid ""
-"<![CDATA[<class name=\"Person\">\n"
-"    <set name=\"cats\" batch-size=\"3\">\n"
-"        ...\n"
-"    </set>\n"
-"</class>]]>"
-msgstr ""
-
 #. Tag: para
-#: performance.xml:525
 #, no-c-format
 msgid ""
 "With a <literal>batch-size</literal> of 3, Hibernate will load 3, 3, 3, 1 "
@@ -1036,7 +819,6 @@ msgstr ""
 "에 의존한다."
 
 #. Tag: para
-#: performance.xml:531
 #, fuzzy, no-c-format
 msgid ""
 "Batch fetching of collections is particularly useful if you have a nested "
@@ -1050,13 +832,11 @@ msgstr ""
 "은 옵션일 수 있을지라도) 콜렉션들에 대한 batch 페칭이 특히 유용하다."
 
 #. Tag: title
-#: performance.xml:540
 #, no-c-format
 msgid "Using subselect fetching"
 msgstr "subselect 페칭 사용하기"
 
 #. Tag: para
-#: performance.xml:542
 #, fuzzy, no-c-format
 msgid ""
 "If one lazy collection or single-valued proxy has to be fetched, Hibernate "
@@ -1068,13 +848,69 @@ msgstr ""
 "다. 이것은 조각난 로딩 없이 batch 페칭과 동일한 방식으로 동작한다."
 
 #. Tag: title
-#: performance.xml:553
+#, fuzzy, no-c-format
+msgid "Fetch profiles"
+msgstr "페칭 방도들"
+
+#. Tag: para
+#, no-c-format
+msgid ""
+"Another way to affect the fetching strategy for loading associated objects "
+"is through something called a fetch profile, which is a named configuration "
+"associated with the <interfacename>org.hibernate.SessionFactory</"
+"interfacename> but enabled, by name, on the <interfacename>org.hibernate."
+"Session</interfacename>. Once enabled on a <interfacename>org.hibernate."
+"Session</interfacename>, the fetch profile wull be in affect for that "
+"<interfacename>org.hibernate.Session</interfacename> until it is explicitly "
+"disabled."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid ""
+"So what does that mean? Well lets explain that by way of an example. Say we "
+"have the following mappings:"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid ""
+"Now normally when you get a reference to a particular customer, that "
+"customer's set of orders will be lazy meaning we will not yet have loaded "
+"those orders from the database. Normally this is a good thing. Now lets say "
+"that you have a certain use case where it is more efficient to load the "
+"customer and their orders together. One way certainly is to use \"dynamic "
+"fetching\" strategies via an HQL or criteria queries. But another option is "
+"to use a fetch profile to achieve that. Just add the following to your "
+"mapping:"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "or even:"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid ""
+"Now the following code will actually load both the customer <emphasis>and "
+"their orders</emphasis>:"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid ""
+"Currently only join style fetch profiles are supported, but they plan is to "
+"support additional styles. See <ulink url=\"http://opensource.atlassian.com/"
+"projects/hibernate/browse/HHH-3414\">HHH-3414</ulink> for details."
+msgstr ""
+
+#. Tag: title
 #, no-c-format
 msgid "Using lazy property fetching"
 msgstr "lazy 프로퍼티 페칭 사용하기"
 
 #. Tag: para
-#: performance.xml:555
 #, fuzzy, no-c-format
 msgid ""
 "Hibernate3 supports the lazy fetching of individual properties. This "
@@ -1093,7 +929,6 @@ msgstr ""
 "몇 프로퍼티들을 로드시키는 것 만이 유용할 수도 있다."
 
 #. Tag: para
-#: performance.xml:564
 #, no-c-format
 msgid ""
 "To enable lazy property loading, set the <literal>lazy</literal> attribute "
@@ -1102,24 +937,7 @@ msgstr ""
 "lazy 프로퍼티 로딩을 이용가능하게 하려면, 당신의 특정 property 매핑들에 대해 "
 "<literal>lazy</literal> 속성을 설정하라:"
 
-#. Tag: programlisting
-#: performance.xml:569
-#, no-c-format
-msgid ""
-"<![CDATA[<class name=\"Document\">\n"
-"       <id name=\"id\">\n"
-"        <generator class=\"native\"/>\n"
-"    </id>\n"
-"    <property name=\"name\" not-null=\"true\" length=\"50\"/>\n"
-"    <property name=\"summary\" not-null=\"true\" length=\"200\" lazy=\"true"
-"\"/>\n"
-"    <property name=\"text\" not-null=\"true\" length=\"2000\" lazy=\"true\"/"
-">\n"
-"</class>]]>"
-msgstr ""
-
 #. Tag: para
-#: performance.xml:571
 #, fuzzy, no-c-format
 msgid ""
 "Lazy property loading requires buildtime bytecode instrumentation. If your "
@@ -1131,33 +949,11 @@ msgstr ""
 "시하고 즉각적인 페칭으로 후퇴할 것이다."
 
 #. Tag: para
-#: performance.xml:577
 #, no-c-format
 msgid "For bytecode instrumentation, use the following Ant task:"
 msgstr "bytecode 수단으로, 다음 Ant 태스크를 사용하라:"
 
-#. Tag: programlisting
-#: performance.xml:581
-#, no-c-format
-msgid ""
-"<![CDATA[<target name=\"instrument\" depends=\"compile\">\n"
-"    <taskdef name=\"instrument\" classname=\"org.hibernate.tool.instrument."
-"InstrumentTask\">\n"
-"        <classpath path=\"${jar.path}\"/>\n"
-"        <classpath path=\"${classes.dir}\"/>\n"
-"        <classpath refid=\"lib.class.path\"/>\n"
-"    </taskdef>\n"
-"\n"
-"    <instrument verbose=\"true\">\n"
-"        <fileset dir=\"${testclasses.dir}/org/hibernate/auction/model\">\n"
-"            <include name=\"*.class\"/>\n"
-"        </fileset>\n"
-"    </instrument>\n"
-"</target>]]>"
-msgstr ""
-
 #. Tag: para
-#: performance.xml:583
 #, fuzzy, no-c-format
 msgid ""
 "A different way of avoiding unnecessary column reads, at least for read-only "
@@ -1171,7 +967,6 @@ msgstr ""
 "호되는 해결책이다."
 
 #. Tag: para
-#: performance.xml:590
 #, fuzzy, no-c-format
 msgid ""
 "You can force the usual eager fetching of properties using <literal>fetch "
@@ -1181,13 +976,11 @@ msgstr ""
 "에 대한 통상의 eager 페칭을 강제시킬 수 있다."
 
 #. Tag: title
-#: performance.xml:600
 #, no-c-format
 msgid "The Second Level Cache"
 msgstr "두번째 레벨 캐시"
 
 #. Tag: para
-#: performance.xml:602
 #, fuzzy, no-c-format
 msgid ""
 "A Hibernate <literal>Session</literal> is a transaction-level cache of "
@@ -1206,7 +999,6 @@ msgstr ""
 "른 어플리케이션에 의해 영속 저장소에 대해 행해진 변경들을 결코 알지 못한다."
 
 #. Tag: para
-#: performance.xml:610
 #, fuzzy, no-c-format
 msgid ""
 "You have the option to tell Hibernate which caching implementation to use by "
@@ -1240,43 +1032,36 @@ msgstr ""
 "폴트 내장이 아니다."
 
 #. Tag: title
-#: performance.xml:621
 #, no-c-format
 msgid "Cache Providers"
 msgstr "캐시 프로바이더들"
 
 #. Tag: entry
-#: performance.xml:630 performance.xml:818
 #, no-c-format
 msgid "Cache"
 msgstr "캐시"
 
 #. Tag: entry
-#: performance.xml:631
 #, no-c-format
 msgid "Provider class"
 msgstr "프로바이더 클래스"
 
 #. Tag: entry
-#: performance.xml:632
 #, no-c-format
 msgid "Type"
 msgstr "타입"
 
 #. Tag: entry
-#: performance.xml:633
 #, no-c-format
 msgid "Cluster Safe"
 msgstr "클러스터 안전"
 
 #. Tag: entry
-#: performance.xml:634
 #, no-c-format
 msgid "Query Cache Supported"
 msgstr "질의 캐시 지원"
 
 #. Tag: entry
-#: performance.xml:639 performance.xml:827
 #, fuzzy, no-c-format
 msgid "Hashtable (not intended for production use)"
 msgstr ""
@@ -1285,139 +1070,144 @@ msgstr ""
 "#-#-#-#-#  - (PACKAGE VERSION)  #-#-#-#-#\n"
 "Hashtable (제품용으로 고안되지 않음)"
 
-#. Tag: literal
-#: performance.xml:640
-#, no-c-format
-msgid "org.hibernate.cache.HashtableCacheProvider"
+#. Tag: entry
+#, fuzzy, no-c-format
+msgid "<literal>org.hibernate.cache.HashtableCacheProvider</literal>"
 msgstr "org.hibernate.cache.HashtableCacheProvider"
 
 #. Tag: entry
-#: performance.xml:641
 #, no-c-format
 msgid "memory"
 msgstr "memory"
 
 #. Tag: entry
-#: performance.xml:643 performance.xml:650 performance.xml:657
-#: performance.xml:828 performance.xml:829 performance.xml:830
-#: performance.xml:835 performance.xml:836 performance.xml:837
-#: performance.xml:842 performance.xml:843 performance.xml:844
-#: performance.xml:849 performance.xml:850 performance.xml:856
-#: performance.xml:859 performance.xml:863 performance.xml:866
-#, no-c-format
-msgid "<entry>yes</entry>"
+#, fuzzy, no-c-format
+msgid "yes"
 msgstr ""
+"#-#-#-#-#  - (PACKAGE VERSION)  #-#-#-#-#\n"
+"yes\n"
+"#-#-#-#-#  - (PACKAGE VERSION)  #-#-#-#-#\n"
+"yes\n"
+"#-#-#-#-#  - (PACKAGE VERSION)  #-#-#-#-#\n"
+"yes\n"
+"#-#-#-#-#  - (PACKAGE VERSION)  #-#-#-#-#\n"
+"예\n"
+"#-#-#-#-#  - (PACKAGE VERSION)  #-#-#-#-#\n"
+"예\n"
+"#-#-#-#-#  - (PACKAGE VERSION)  #-#-#-#-#\n"
+"예\n"
+"#-#-#-#-#  - (PACKAGE VERSION)  #-#-#-#-#\n"
+"예\n"
+"#-#-#-#-#  - (PACKAGE VERSION)  #-#-#-#-#\n"
+"예\n"
+"#-#-#-#-#  - (PACKAGE VERSION)  #-#-#-#-#\n"
+"예\n"
+"#-#-#-#-#  - (PACKAGE VERSION)  #-#-#-#-#\n"
+"예\n"
+"#-#-#-#-#  - (PACKAGE VERSION)  #-#-#-#-#\n"
+"예\n"
+"#-#-#-#-#  - (PACKAGE VERSION)  #-#-#-#-#\n"
+"예\n"
+"#-#-#-#-#  - (PACKAGE VERSION)  #-#-#-#-#\n"
+"예\n"
+"#-#-#-#-#  - (PACKAGE VERSION)  #-#-#-#-#\n"
+"예\n"
+"#-#-#-#-#  - (PACKAGE VERSION)  #-#-#-#-#\n"
+"예\n"
+"#-#-#-#-#  - (PACKAGE VERSION)  #-#-#-#-#\n"
+"예"
 
 #. Tag: entry
-#: performance.xml:646 performance.xml:834
 #, no-c-format
 msgid "EHCache"
 msgstr "EHCache"
 
-#. Tag: literal
-#: performance.xml:647
-#, no-c-format
-msgid "org.hibernate.cache.EhCacheProvider"
+#. Tag: entry
+#, fuzzy, no-c-format
+msgid "<literal>org.hibernate.cache.EhCacheProvider</literal>"
 msgstr "org.hibernate.cache.EhCacheProvider"
 
 #. Tag: entry
-#: performance.xml:648 performance.xml:655
 #, no-c-format
 msgid "memory, disk"
 msgstr "memory, disk"
 
 #. Tag: entry
-#: performance.xml:653 performance.xml:841
 #, no-c-format
 msgid "OSCache"
 msgstr "OSCache"
 
-#. Tag: literal
-#: performance.xml:654
-#, no-c-format
-msgid "org.hibernate.cache.OSCacheProvider"
+#. Tag: entry
+#, fuzzy, no-c-format
+msgid "<literal>org.hibernate.cache.OSCacheProvider</literal>"
 msgstr "org.hibernate.cache.OSCacheProvider"
 
 #. Tag: entry
-#: performance.xml:660 performance.xml:848
 #, no-c-format
 msgid "SwarmCache"
 msgstr "SwarmCache"
 
-#. Tag: literal
-#: performance.xml:661
-#, no-c-format
-msgid "org.hibernate.cache.SwarmCacheProvider"
+#. Tag: entry
+#, fuzzy, no-c-format
+msgid "<literal>org.hibernate.cache.SwarmCacheProvider</literal>"
 msgstr "org.hibernate.cache.SwarmCacheProvider"
 
 #. Tag: entry
-#: performance.xml:662
 #, no-c-format
 msgid "clustered (ip multicast)"
 msgstr "clustered (ip multicast)"
 
 #. Tag: entry
-#: performance.xml:663
 #, no-c-format
 msgid "yes (clustered invalidation)"
 msgstr "yes (clustered invalidation)"
 
 #. Tag: entry
-#: performance.xml:667 performance.xml:855
 #, fuzzy, no-c-format
 msgid "JBoss Cache 1.x"
 msgstr "JBoss TreeCache"
 
-#. Tag: literal
-#: performance.xml:668
-#, no-c-format
-msgid "org.hibernate.cache.TreeCacheProvider"
+#. Tag: entry
+#, fuzzy, no-c-format
+msgid "<literal>org.hibernate.cache.TreeCacheProvider</literal>"
 msgstr "org.hibernate.cache.TreeCacheProvider"
 
 #. Tag: entry
-#: performance.xml:669 performance.xml:676
 #, no-c-format
 msgid "clustered (ip multicast), transactional"
 msgstr "clustered (ip multicast), transactional"
 
 #. Tag: entry
-#: performance.xml:670
 #, no-c-format
 msgid "yes (replication)"
 msgstr "yes (replication)"
 
 #. Tag: entry
-#: performance.xml:671 performance.xml:678
 #, no-c-format
 msgid "yes (clock sync req.)"
 msgstr "yes (clock sync req.)"
 
 #. Tag: entry
-#: performance.xml:674 performance.xml:862
 #, fuzzy, no-c-format
 msgid "JBoss Cache 2"
 msgstr "JBoss TreeCache"
 
-#. Tag: literal
-#: performance.xml:675
+#. Tag: entry
 #, fuzzy, no-c-format
-msgid "org.hibernate.cache.jbc.JBossCacheRegionFactory"
+msgid "<literal>org.hibernate.cache.jbc.JBossCacheRegionFactory</literal>"
 msgstr "org.hibernate.cache.EhCacheProvider"
 
 #. Tag: entry
-#: performance.xml:677
 #, fuzzy, no-c-format
 msgid "yes (replication or invalidation)"
 msgstr "yes (clustered invalidation)"
 
 #. Tag: title
-#: performance.xml:685
 #, no-c-format
 msgid "Cache mappings"
 msgstr "Cache 매핑들"
 
 #. Tag: para
-#: performance.xml:687
 #, no-c-format
 msgid ""
 "The <literal>&lt;cache&gt;</literal> element of a class or collection "
@@ -1426,19 +1216,7 @@ msgstr ""
 "클래스 또는 콜렉션 매핑의 <literal>&lt;cache&gt;</literal> 요소는 다음 형식"
 "을 갖는다:"
 
-#. Tag: programlisting
-#: performance.xml:698
-#, no-c-format
-msgid ""
-"<![CDATA[<cache \n"
-"    usage=\"transactional|read-write|nonstrict-read-write|read-only\"\n"
-"    region=\"RegionName\"\n"
-"    include=\"all|non-lazy\"\n"
-"/>]]>"
-msgstr ""
-
 #. Tag: para
-#: performance.xml:701
 #, no-c-format
 msgid ""
 "<literal>usage</literal> (required) specifies the caching strategy: "
@@ -1450,7 +1228,6 @@ msgstr ""
 "literal> 또는 <literal>read-only</literal>"
 
 #. Tag: para
-#: performance.xml:710
 #, fuzzy, no-c-format
 msgid ""
 "<literal>region</literal> (optional: defaults to the class or collection "
@@ -1460,7 +1237,6 @@ msgstr ""
 "second level 캐시 영역의 이름을 지정한다"
 
 #. Tag: para
-#: performance.xml:717
 #, fuzzy, no-c-format
 msgid ""
 "<literal>include</literal> (optional: defaults to <literal>all</literal>) "
@@ -1474,7 +1250,6 @@ msgstr ""
 "다"
 
 #. Tag: para
-#: performance.xml:727
 #, fuzzy, no-c-format
 msgid ""
 "Alternatively, you can specify <literal>&lt;class-cache&gt;</literal> and "
@@ -1486,7 +1261,6 @@ msgstr ""
 "</literal> 요소들을 지정할 수도 있다."
 
 #. Tag: para
-#: performance.xml:732
 #, no-c-format
 msgid ""
 "The <literal>usage</literal> attribute specifies a <emphasis>cache "
@@ -1496,13 +1270,11 @@ msgstr ""
 "한다."
 
 #. Tag: title
-#: performance.xml:739
 #, no-c-format
 msgid "Strategy: read only"
 msgstr "방도: 읽기 전용"
 
 #. Tag: para
-#: performance.xml:741
 #, fuzzy, no-c-format
 msgid ""
 "If your application needs to read, but not modify, instances of a persistent "
@@ -1515,24 +1287,12 @@ msgstr ""
 "다. 이것은 가장 간단한 최상의 퍼포먼스를 위한 방도이다. 그것은 클러스터 내 사"
 "용에는 완벽하게 안전하다."
 
-#. Tag: programlisting
-#: performance.xml:747
-#, no-c-format
-msgid ""
-"<![CDATA[<class name=\"eg.Immutable\" mutable=\"false\">\n"
-"    <cache usage=\"read-only\"/>\n"
-"    ....\n"
-"</class>]]>"
-msgstr ""
-
 #. Tag: title
-#: performance.xml:753
 #, no-c-format
 msgid "Strategy: read/write"
 msgstr "방도: 읽기/쓰기"
 
 #. Tag: para
-#: performance.xml:755
 #, fuzzy, no-c-format
 msgid ""
 "If the application needs to update data, a <literal>read-write</literal> "
@@ -1559,28 +1319,12 @@ msgstr ""
 "실히 해야 한다. 미리 만들어진 캐시 프로바이더들은 그렇게 행하지 <emphasis>않"
 "는다</emphasis>."
 
-#. Tag: programlisting
-#: performance.xml:766
-#, no-c-format
-msgid ""
-"<![CDATA[<class name=\"eg.Cat\" .... >\n"
-"    <cache usage=\"read-write\"/>\n"
-"    ....\n"
-"    <set name=\"kittens\" ... >\n"
-"        <cache usage=\"read-write\"/>\n"
-"        ....\n"
-"    </set>\n"
-"</class>]]>"
-msgstr ""
-
 #. Tag: title
-#: performance.xml:771
 #, no-c-format
 msgid "Strategy: nonstrict read/write"
 msgstr "방도: 엄격하지 않은 읽기/쓰기"
 
 #. Tag: para
-#: performance.xml:773
 #, fuzzy, no-c-format
 msgid ""
 "If the application only occasionally needs to update data (i.e. if it is "
@@ -1602,13 +1346,11 @@ msgstr ""
 "literal>가 호출될 때 트랜잭션이 완료되도록 확실히 해야 한다."
 
 #. Tag: title
-#: performance.xml:785
 #, no-c-format
 msgid "Strategy: transactional"
 msgstr "방도: transactional"
 
 #. Tag: para
-#: performance.xml:787
 #, fuzzy, no-c-format
 msgid ""
 "The <literal>transactional</literal> cache strategy provides support for "
@@ -1622,13 +1364,11 @@ msgstr ""
 "manager_lookup_class</literal>를 지정해야 한다."
 
 #. Tag: title
-#: performance.xml:796
 #, fuzzy, no-c-format
 msgid "Cache-provider/concurrency-strategy compatibility"
 msgstr "캐시 동시성 방도 지원"
 
 #. Tag: para
-#: performance.xml:799
 #, fuzzy, no-c-format
 msgid ""
 "None of the cache providers support all of the cache concurrency strategies."
@@ -1637,7 +1377,6 @@ msgstr ""
 "음 테이블은 어느 프로바이더들이 어느 동시성 방도들과 호환되는지를 보여준다."
 
 #. Tag: para
-#: performance.xml:804
 #, fuzzy, no-c-format
 msgid ""
 "The following table shows which providers are compatible with which "
@@ -1647,43 +1386,36 @@ msgstr ""
 "음 테이블은 어느 프로바이더들이 어느 동시성 방도들과 호환되는지를 보여준다."
 
 #. Tag: title
-#: performance.xml:809
 #, no-c-format
 msgid "Cache Concurrency Strategy Support"
 msgstr "캐시 동시성 방도 지원"
 
 #. Tag: entry
-#: performance.xml:819
 #, no-c-format
 msgid "read-only"
 msgstr "읽기 전용"
 
 #. Tag: entry
-#: performance.xml:820
 #, no-c-format
 msgid "nonstrict-read-write"
 msgstr "엄격하지 않은 읽기-쓰기"
 
 #. Tag: entry
-#: performance.xml:821
 #, no-c-format
 msgid "read-write"
 msgstr "읽기-쓰기"
 
 #. Tag: entry
-#: performance.xml:822
 #, no-c-format
 msgid "transactional"
 msgstr "transactional"
 
 #. Tag: title
-#: performance.xml:877
 #, no-c-format
 msgid "Managing the caches"
 msgstr "캐시들을 관리하기"
 
 #. Tag: para
-#: performance.xml:879
 #, fuzzy, no-c-format
 msgid ""
 "Whenever you pass an object to <literal>save()</literal>, <literal>update()</"
@@ -1701,7 +1433,6 @@ msgstr ""
 "다."
 
 #. Tag: para
-#: performance.xml:886
 #, fuzzy, no-c-format
 msgid ""
 "When <literal>flush()</literal> is subsequently called, the state of that "
@@ -1717,21 +1448,7 @@ msgstr ""
 "을 경우, <literal>evict()</literal> 메소드는 first-level 캐시로부터 그 객체"
 "와 그것의 콜렉션들을 제거하는데 사용될 수 있다."
 
-#. Tag: programlisting
-#: performance.xml:894
-#, no-c-format
-msgid ""
-"<![CDATA[ScrollableResult cats = sess.createQuery(\"from Cat as cat\").scroll"
-"(); //a huge result set\n"
-"while ( cats.next() ) {\n"
-"    Cat cat = (Cat) cats.get(0);\n"
-"    doSomethingWithACat(cat);\n"
-"    sess.evict(cat);\n"
-"}]]>"
-msgstr ""
-
 #. Tag: para
-#: performance.xml:896
 #, no-c-format
 msgid ""
 "The <literal>Session</literal> also provides a <literal>contains()</literal> "
@@ -1741,7 +1458,6 @@ msgstr ""
 "하는데 <literal>contains()</literal> 메소드를 제공한다."
 
 #. Tag: para
-#: performance.xml:901
 #, fuzzy, no-c-format
 msgid ""
 "To evict all objects from the session cache, call <literal>Session.clear()</"
@@ -1751,7 +1467,6 @@ msgstr ""
 "clear()</literal>를 호출하라."
 
 #. Tag: para
-#: performance.xml:905
 #, no-c-format
 msgid ""
 "For the second-level cache, there are methods defined on "
@@ -1762,20 +1477,7 @@ msgstr ""
 "전체 콜렉션 role의 캐시된 상태를 퇴거시키는 <literal>SessionFactory</"
 "literal> 상에 정의된 메소드들이 존재한다."
 
-#. Tag: programlisting
-#: performance.xml:911
-#, no-c-format
-msgid ""
-"<![CDATA[sessionFactory.evict(Cat.class, catId); //evict a particular Cat\n"
-"sessionFactory.evict(Cat.class);  //evict all Cats\n"
-"sessionFactory.evictCollection(\"Cat.kittens\", catId); //evict a particular "
-"collection of kittens\n"
-"sessionFactory.evictCollection(\"Cat.kittens\"); //evict all kitten "
-"collections]]>"
-msgstr ""
-
 #. Tag: para
-#: performance.xml:913
 #, fuzzy, no-c-format
 msgid ""
 "The <literal>CacheMode</literal> controls how a particular session interacts "
@@ -1785,7 +1487,6 @@ msgstr ""
 "용하는지를 제어한다"
 
 #. Tag: para
-#: performance.xml:920
 #, fuzzy, no-c-format
 msgid ""
 "<literal>CacheMode.NORMAL</literal>: will read items from and write items to "
@@ -1795,7 +1496,6 @@ msgstr ""
 "들이고 second-level 캐시로 아이템들을 기록한다"
 
 #. Tag: para
-#: performance.xml:925
 #, fuzzy, no-c-format
 msgid ""
 "<literal>CacheMode.GET</literal>: will read items from the second-level "
@@ -1805,7 +1505,6 @@ msgstr ""
 "이지만, 데이터를 업데이트할 때를 제외하면 second-level 캐시로 기록하지 않는다"
 
 #. Tag: para
-#: performance.xml:931
 #, fuzzy, no-c-format
 msgid ""
 "<literal>CacheMode.PUT</literal>: will write items to the second-level "
@@ -1815,7 +1514,6 @@ msgstr ""
 "만, second-level 캐시로부터 읽어들이지 않는다"
 
 #. Tag: para
-#: performance.xml:937
 #, fuzzy, no-c-format
 msgid ""
 "<literal>CacheMode.REFRESH</literal>: will write items to the second-level "
@@ -1829,7 +1527,6 @@ msgstr ""
 "cache.use_minimal_puts</literal>의 효과를 무시한다"
 
 #. Tag: para
-#: performance.xml:945
 #, no-c-format
 msgid ""
 "To browse the contents of a second-level or query cache region, use the "
@@ -1838,17 +1535,7 @@ msgstr ""
 "second-level 캐시 또는 질의 캐시 영역의 내용물을 브라우징하려면 "
 "<literal>Statistics</literal> API를 사용하라:"
 
-#. Tag: programlisting
-#: performance.xml:950
-#, no-c-format
-msgid ""
-"<![CDATA[Map cacheEntries = sessionFactory.getStatistics()\n"
-"        .getSecondLevelCacheStatistics(regionName)\n"
-"        .getEntries();]]>"
-msgstr ""
-
 #. Tag: para
-#: performance.xml:952
 #, fuzzy, no-c-format
 msgid ""
 "You will need to enable statistics and, optionally, force Hibernate to keep "
@@ -1858,66 +1545,79 @@ msgstr ""
 "을 보다 인간에게 이해가능한 형식으로 유지시키도록 강제시키는 것이 필요할 것이"
 "다:"
 
-#. Tag: programlisting
-#: performance.xml:957
-#, no-c-format
-msgid ""
-"<![CDATA[hibernate.generate_statistics true\n"
-"hibernate.cache.use_structured_entries true]]>"
-msgstr ""
-
 #. Tag: title
-#: performance.xml:962
 #, no-c-format
 msgid "The Query Cache"
 msgstr "질의 캐시"
 
 #. Tag: para
-#: performance.xml:964
 #, fuzzy, no-c-format
 msgid ""
 "Query result sets can also be cached. This is only useful for queries that "
-"are run frequently with the same parameters. You will first need to enable "
-"the query cache:"
+"are run frequently with the same parameters."
 msgstr ""
 "질의 결과 셋들이 또한 캐시될 수도 있다. 이것은 동일한 파라미터들을 가지고 자"
 "주 실행되는 질의들에만 유용하다. 질의 캐시를 사용하기 위해 당신은 먼저 그것"
 "을 이용 가능하도록 해야 한다:"
 
-#. Tag: programlisting
-#: performance.xml:969
+#. Tag: title
 #, no-c-format
-msgid "<![CDATA[hibernate.cache.use_query_cache true]]>"
+msgid "Enabling query caching"
 msgstr ""
 
 #. Tag: para
-#: performance.xml:971
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
-"This setting creates two new cache regions: one holding cached query result "
-"sets (<literal>org.hibernate.cache.StandardQueryCache</literal>), the other "
-"holding timestamps of the most recent updates to queryable tables "
-"(<literal>org.hibernate.cache.UpdateTimestampsCache</literal>). Note that "
-"the query cache does not cache the state of the actual entities in the "
-"result set; it caches only identifier values and results of value type. The "
-"query cache should always be used in conjunction with the second-level cache."
+"Caching of query results introduces some overhead in terms of your "
+"applications normal transactional processing. For example, if you cache "
+"results of a query against Person Hibernate will need to keep track of when "
+"those results should be invalidated because changes have been committed "
+"against Person. That, coupled with the fact that most applications simply "
+"gain no benefit from caching query results, leads Hibernate to disable "
+"caching of query results by default. To use query caching, you will first "
+"need to enable the query cache:"
 msgstr ""
-"이 설정은 두 개의 새로운 캐시 영역들 - 캐시된 질의 결과 셋들을 보관하는 것 "
-"(<literal>org.hibernate.cache.StandardQueryCache</literal>), 질의 가능한 테이"
-"블들에 대한 가장 최신 업데이트들에 대한 timestamp들을 보관하는 다른 것 "
-"(<literal>org.hibernate.cache.UpdateTimestampsCache</literal>)-의 생성을 강제"
-"한다 . 질의 캐시는 결과 셋 내에 실제 엔티티들의 상태를 캐시시키지 않음을 노트"
-"하라; 그것은 오직 식별자 값들과 값 타입의 결과들 만을 캐시시킨다. 따라서 질"
-"의 캐시는 항상 second-level 캐시와 함께 사용되어야 한다."
 
 #. Tag: para
-#: performance.xml:981
+#, no-c-format
+msgid "This setting creates two new cache regions:"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid ""
+"<classname>org.hibernate.cache.StandardQueryCache</classname>, holding the "
+"cached query results"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid ""
+"<classname>org.hibernate.cache.UpdateTimestampsCache</classname>, holding "
+"timestamps of the most recent updates to queryable tables. These are used to "
+"validate the results as they are served from the query cache."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid ""
+"If you configure your underlying cache implementation to use expiry or "
+"timeouts is is very important that the cache timeout of the underlying cache "
+"region for the UpdateTimestampsCache be set to a higher value than the "
+"timeouts of any of the query caches. In fact, we recommend that the the "
+"UpdateTimestampsCache region not be configured for expiry at all. Note, in "
+"particular, that an LRU cache expiry policy is never appropriate."
+msgstr ""
+
+#. Tag: para
 #, fuzzy, no-c-format
 msgid ""
-"Most queries do not benefit from caching, so by default, queries are not "
-"cached. To enable caching, call <literal>Query.setCacheable(true)</literal>. "
-"This call allows the query to look for existing cache results or add its "
-"results to the cache when it is executed."
+"As mentioned above, most queries do not benefit from caching or their "
+"results. So by default, individual queries are not cached even after "
+"enabling query caching. To enable results caching for a particular query, "
+"call <literal>org.hibernate.Query.setCacheable(true)</literal>. This call "
+"allows the query to look for existing cache results or add its results to "
+"the cache when it is executed."
 msgstr ""
 "대부분의 질의들은 캐싱으로부터 이점이 없기에, 디폴트로 질의들은 캐시되지 않는"
 "다. 캐싱을 이용 가능하도록 하려면, <literal>Query.setCacheable(true)</"
@@ -1925,7 +1625,21 @@ msgstr ""
 "거나 질의가 실행될 때 그것의 결과들을 캐시에 추가하는 것을 허용해준다."
 
 #. Tag: para
-#: performance.xml:988
+#, no-c-format
+msgid ""
+"The query cache does not cache the state of the actual entities in the "
+"cache; it caches only identifier values and results of value type. For this "
+"reaso, the query cache should always be used in conjunction with the second-"
+"level cache for those entities expected to be cached as part of a query "
+"result cache (just as with collection caching)."
+msgstr ""
+
+#. Tag: title
+#, fuzzy, no-c-format
+msgid "Query cache regions"
+msgstr "질의 캐시 지원"
+
+#. Tag: para
 #, fuzzy, no-c-format
 msgid ""
 "If you require fine-grained control over query cache expiration policies, "
@@ -1936,30 +1650,18 @@ msgstr ""
 "은 <literal>Query.setCacheRegion()</literal>을 호출함으로써 특별한 질의에 대"
 "해 명명되니 캐시 영역을 지정할 수도 있다."
 
-#. Tag: programlisting
-#: performance.xml:994
-#, no-c-format
-msgid ""
-"<![CDATA[List blogs = sess.createQuery(\"from Blog blog where blog.blogger "
-"= :blogger\")\n"
-"    .setEntity(\"blogger\", blogger)\n"
-"    .setMaxResults(15)\n"
-"    .setCacheable(true)\n"
-"    .setCacheRegion(\"frontpages\")\n"
-"    .list();]]>"
-msgstr ""
-
 #. Tag: para
-#: performance.xml:996
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
-"If the query should force a refresh of its query cache region, you should "
-"call <literal>Query.setCacheMode(CacheMode.REFRESH)</literal>. This is "
-"particularly useful in cases where underlying data may have been updated via "
-"a separate process (i.e., not modified through Hibernate) and allows the "
-"application to selectively refresh particular query result sets. This is a "
-"more efficient alternative to eviction of a query cache region via "
-"<literal>SessionFactory.evictQueries()</literal>."
+"If you want to force the query cache to refresh one of its regions "
+"(disregard any cached results it finds there) you can use <literal>org."
+"hibernate.Query.setCacheMode(CacheMode.REFRESH)</literal>. In conjunction "
+"with the region you have defined for the given query, Hibernate will "
+"selectively force the results cached in that particular region to be "
+"refreshed. This is particularly useful in cases where underlying data may "
+"have been updated via a separate process and is a far more efficient "
+"alternative to bulk eviction of the region via <literal>org.hibernate."
+"SessionFactory.evictQueries()</literal>."
 msgstr ""
 "만일 질의가 그것의 질의 캐시 영역의 갱신을 강제시켜야 하는 경우에, 당신은 "
 "<literal>Query.setCacheMode(CacheMode.REFRESH)</literal>를 호출해야 한다. 이"
@@ -1970,13 +1672,11 @@ msgstr ""
 "시키는 보다 효과적인 대안이다."
 
 #. Tag: title
-#: performance.xml:1008
 #, no-c-format
 msgid "Understanding Collection performance"
 msgstr "콜렉션 퍼포먼스 이해하기"
 
 #. Tag: para
-#: performance.xml:1010
 #, no-c-format
 msgid ""
 "In the previous sections we have covered collections and their applications. "
@@ -1985,37 +1685,31 @@ msgid ""
 msgstr ""
 
 #. Tag: title
-#: performance.xml:1017
 #, no-c-format
 msgid "Taxonomy"
 msgstr "분류"
 
 #. Tag: para
-#: performance.xml:1019
 #, no-c-format
 msgid "Hibernate defines three basic kinds of collections:"
 msgstr "Hibernate는 세 가지 기본적인 종류의 콜렉션들을 정의한다:"
 
 #. Tag: para
-#: performance.xml:1023
 #, no-c-format
 msgid "collections of values"
 msgstr "값들을 가진 콜렉션들"
 
 #. Tag: para
-#: performance.xml:1026
 #, fuzzy, no-c-format
 msgid "one-to-many associations"
 msgstr "one to many 연관들"
 
 #. Tag: para
-#: performance.xml:1029
 #, fuzzy, no-c-format
 msgid "many-to-many associations"
 msgstr "many to many 연관들"
 
 #. Tag: para
-#: performance.xml:1033
 #, no-c-format
 msgid ""
 "This classification distinguishes the various table and foreign key "
@@ -2032,25 +1726,21 @@ msgstr ""
 "한다. 이것은 다음 분류를 제안한다:"
 
 #. Tag: para
-#: performance.xml:1044
 #, no-c-format
 msgid "indexed collections"
 msgstr "인덱싱 된 콜렉션들"
 
 #. Tag: para
-#: performance.xml:1047
 #, no-c-format
 msgid "sets"
 msgstr "set들"
 
 #. Tag: para
-#: performance.xml:1050
 #, no-c-format
 msgid "bags"
 msgstr "bag들"
 
 #. Tag: para
-#: performance.xml:1054
 #, fuzzy, no-c-format
 msgid ""
 "All indexed collections (maps, lists, and arrays) have a primary key "
@@ -2066,7 +1756,6 @@ msgstr ""
 "고 특정 행은 효율적으로 위치지워질 수 있다."
 
 #. Tag: para
-#: performance.xml:1062
 #, fuzzy, no-c-format
 msgid ""
 "Sets have a primary key consisting of <literal>&lt;key&gt;</literal> and "
@@ -2090,7 +1779,6 @@ msgstr ""
 "로 선언해야 한다.)"
 
 #. Tag: para
-#: performance.xml:1073
 #, fuzzy, no-c-format
 msgid ""
 "<literal>&lt;idbag&gt;</literal> mappings define a surrogate key, so they "
@@ -2100,7 +1788,6 @@ msgstr ""
 "상 업데이트에 매우 효율적이다. 사실, 그것들은 최상의 경우이다."
 
 #. Tag: para
-#: performance.xml:1078
 #, fuzzy, no-c-format
 msgid ""
 "Bags are the worst case since they permit duplicate element values and, as "
@@ -2116,7 +1803,6 @@ msgstr ""
 "문제를 해결한다. 이것은 매우 비효율적이다."
 
 #. Tag: para
-#: performance.xml:1086
 #, fuzzy, no-c-format
 msgid ""
 "For a one-to-many association, the \"primary key\" may not be the physical "
@@ -2130,14 +1816,12 @@ msgstr ""
 "영한다.)"
 
 #. Tag: title
-#: performance.xml:1096
 #, no-c-format
 msgid ""
 "Lists, maps, idbags and sets are the most efficient collections to update"
 msgstr "List, map, idbag, set들은 update에 가장 효율적인 콜렉션들이다"
 
 #. Tag: para
-#: performance.xml:1098
 #, fuzzy, no-c-format
 msgid ""
 "From the discussion above, it should be clear that indexed collections and "
@@ -2148,7 +1832,6 @@ msgstr ""
 "고 업데이트함에 있어 가장 효율적인 오퍼레이션을 허용해준다."
 
 #. Tag: para
-#: performance.xml:1104
 #, fuzzy, no-c-format
 msgid ""
 "There is, arguably, one more advantage that indexed collections have over "
@@ -2168,7 +1851,6 @@ msgstr ""
 "다."
 
 #. Tag: para
-#: performance.xml:1113
 #, fuzzy, no-c-format
 msgid ""
 "After observing that arrays cannot be lazy, you can conclude that lists, "
@@ -2184,7 +1866,6 @@ msgstr ""
 "한 것이기 때문이다."
 
 #. Tag: para
-#: performance.xml:1121
 #, fuzzy, no-c-format
 msgid ""
 "However, in well-designed Hibernate domain models, most collections are in "
@@ -2199,13 +1880,11 @@ msgstr ""
 "고, 따라서 콜렉션 업데이트 퍼포먼스에 대한 검토들은 단순히 적용되지 않는다."
 
 #. Tag: title
-#: performance.xml:1131
 #, no-c-format
 msgid "Bags and lists are the most efficient inverse collections"
 msgstr "Bag들과 list들은 가장 효율적인 inverse 콜렉션들이다"
 
 #. Tag: para
-#: performance.xml:1133
 #, fuzzy, no-c-format
 msgid ""
 "There is a particular case, however, in which bags, and also lists, are much "
@@ -2226,25 +1905,12 @@ msgstr ""
 "상 bag 또는 <literal>List</literal>에 대해 true를 반환해야하기 때문이다. 이것"
 "은 훨씬 다음 공통적인 코드를 더 빠르게 만들 수 있다."
 
-#. Tag: programlisting
-#: performance.xml:1143
-#, no-c-format
-msgid ""
-"<![CDATA[Parent p = (Parent) sess.load(Parent.class, id);\n"
-"Child c = new Child();\n"
-"c.setParent(p);\n"
-"p.getChildren().add(c);  //no need to fetch the collection!\n"
-"sess.flush();]]>"
-msgstr ""
-
 #. Tag: title
-#: performance.xml:1148
 #, no-c-format
 msgid "One shot delete"
 msgstr "원 샷 delete"
 
 #. Tag: para
-#: performance.xml:1150
 #, fuzzy, no-c-format
 msgid ""
 "Deleting collection elements one by one can sometimes be extremely "
@@ -2259,7 +1925,6 @@ msgstr ""
 "을 내릴 것이고 우리는 모두 행했다!"
 
 #. Tag: para
-#: performance.xml:1157
 #, fuzzy, no-c-format
 msgid ""
 "Suppose you added a single element to a collection of size twenty and then "
@@ -2273,7 +1938,6 @@ msgstr ""
 "령 내릴 것이다. 이것은 확실히 마음에 든다."
 
 #. Tag: para
-#: performance.xml:1163
 #, no-c-format
 msgid ""
 "However, suppose that we remove eighteen elements, leaving two and then add "
@@ -2284,13 +1948,11 @@ msgstr ""
 "다."
 
 #. Tag: para
-#: performance.xml:1170
 #, no-c-format
 msgid "delete eighteen rows one by one and then insert three rows"
 msgstr "하나씩 열 여덟 개의 행들을 삭제한 다음에 세 개의 행들을 삽입시킨다"
 
 #. Tag: para
-#: performance.xml:1173
 #, fuzzy, no-c-format
 msgid ""
 "remove the whole collection in one SQL <literal>DELETE</literal> and insert "
@@ -2300,7 +1962,6 @@ msgstr ""
 "의 현재 요소들을 (하나씩) insert 시킨다"
 
 #. Tag: para
-#: performance.xml:1178
 #, fuzzy, no-c-format
 msgid ""
 "Hibernate cannot know that the second option is probably quicker. It would "
@@ -2313,7 +1974,6 @@ msgstr ""
 "다.)"
 
 #. Tag: para
-#: performance.xml:1184
 #, fuzzy, no-c-format
 msgid ""
 "Fortunately, you can force this behavior (i.e. the second strategy) at any "
@@ -2325,7 +1985,6 @@ msgstr ""
 "시킬 수 있다. 이것은 시간이 흐름에 따라 매우 유용하고 강력해질 수 있다."
 
 #. Tag: para
-#: performance.xml:1190
 #, fuzzy, no-c-format
 msgid ""
 "One-shot-delete does not apply to collections mapped <literal>inverse=\"true"
@@ -2335,13 +1994,11 @@ msgstr ""
 "매핑된 콜렉션들에 적용되지 않는다."
 
 #. Tag: title
-#: performance.xml:1199
 #, no-c-format
 msgid "Monitoring performance"
 msgstr "퍼포먼스 모니터링하기"
 
 #. Tag: para
-#: performance.xml:1201
 #, no-c-format
 msgid ""
 "Optimization is not much use without monitoring and access to performance "
@@ -2355,13 +2012,11 @@ msgstr ""
 "이용 가능하다."
 
 #. Tag: title
-#: performance.xml:1208
 #, no-c-format
 msgid "Monitoring a SessionFactory"
 msgstr "SessionFactory 모니터링 하기"
 
 #. Tag: para
-#: performance.xml:1210
 #, no-c-format
 msgid ""
 "You can access <literal>SessionFactory</literal> metrics in two ways. Your "
@@ -2374,7 +2029,6 @@ msgstr ""
 "레이 하는 것이다."
 
 #. Tag: para
-#: performance.xml:1216
 #, fuzzy, no-c-format
 msgid ""
 "Hibernate can also use JMX to publish metrics if you enable the "
@@ -2387,38 +2041,7 @@ msgstr ""
 "당신의<literal>SessionFactory</literal>에 대해 한 개의 MBean 또는 팩토리 당 "
 "한 개를 이용 가능하게 할 수 있다. 최소한의 구성 예제들은 다음 코드를 보라:"
 
-#. Tag: programlisting
-#: performance.xml:1223
-#, no-c-format
-msgid ""
-"<![CDATA[// MBean service registration for a specific SessionFactory\n"
-"Hashtable tb = new Hashtable();\n"
-"tb.put(\"type\", \"statistics\");\n"
-"tb.put(\"sessionFactory\", \"myFinancialApp\");\n"
-"ObjectName on = new ObjectName(\"hibernate\", tb); // MBean object name\n"
-"\n"
-"StatisticsService stats = new StatisticsService(); // MBean implementation\n"
-"stats.setSessionFactory(sessionFactory); // Bind the stats to a "
-"SessionFactory\n"
-"server.registerMBean(stats, on); // Register the Mbean on the server]]>"
-msgstr ""
-
-#. Tag: programlisting
-#: performance.xml:1226
-#, no-c-format
-msgid ""
-"<![CDATA[// MBean service registration for all SessionFactory's\n"
-"Hashtable tb = new Hashtable();\n"
-"tb.put(\"type\", \"statistics\");\n"
-"tb.put(\"sessionFactory\", \"all\");\n"
-"ObjectName on = new ObjectName(\"hibernate\", tb); // MBean object name\n"
-"\n"
-"StatisticsService stats = new StatisticsService(); // MBean implementation\n"
-"server.registerMBean(stats, on); // Register the MBean on the server]]>"
-msgstr ""
-
 #. Tag: para
-#: performance.xml:1228
 #, fuzzy, no-c-format
 msgid ""
 "You can activate and deactivate the monitoring for a "
@@ -2428,7 +2051,6 @@ msgstr ""
 "수 있다"
 
 #. Tag: para
-#: performance.xml:1233
 #, no-c-format
 msgid ""
 "at configuration time, set <literal>hibernate.generate_statistics</literal> "
@@ -2438,7 +2060,6 @@ msgstr ""
 "<literal>false</literal>"
 
 #. Tag: para
-#: performance.xml:1240
 #, no-c-format
 msgid ""
 "at runtime: <literal>sf.getStatistics().setStatisticsEnabled(true)</literal> "
@@ -2448,7 +2069,6 @@ msgstr ""
 "는 <literal>hibernateStatsBean.setStatisticsEnabled(true)</literal>"
 
 #. Tag: para
-#: performance.xml:1247
 #, fuzzy, no-c-format
 msgid ""
 "Statistics can be reset programmatically using the <literal>clear()</"
@@ -2460,13 +2080,11 @@ msgstr ""
 "를 사용하여 logger(info 레벨)에게 전송될 수 있다."
 
 #. Tag: title
-#: performance.xml:1256
 #, no-c-format
 msgid "Metrics"
 msgstr "Metrics"
 
 #. Tag: para
-#: performance.xml:1258
 #, fuzzy, no-c-format
 msgid ""
 "Hibernate provides a number of metrics, from basic information to more "
@@ -2480,7 +2098,6 @@ msgstr ""
 "다:"
 
 #. Tag: para
-#: performance.xml:1265
 #, no-c-format
 msgid ""
 "Metrics related to the general <literal>Session</literal> usage, such as "
@@ -2490,7 +2107,6 @@ msgstr ""
 "<literal>Session</literal> 사용에 관련된 metrics."
 
 #. Tag: para
-#: performance.xml:1271
 #, fuzzy, no-c-format
 msgid ""
 "Metrics related to the entities, collections, queries, and caches as a whole "
@@ -2500,7 +2116,6 @@ msgstr ""
 "metrics로 알려져 있음),"
 
 #. Tag: para
-#: performance.xml:1277
 #, no-c-format
 msgid ""
 "Detailed metrics related to a particular entity, collection, query or cache "
@@ -2508,7 +2123,6 @@ msgid ""
 msgstr "특정한 엔티티, 콜렉션, 질의 또는 캐시 영역에 관련된 상세 metrics."
 
 #. Tag: para
-#: performance.xml:1284
 #, fuzzy, no-c-format
 msgid ""
 "For example, you can check the cache hit, miss, and put ratio of entities, "
@@ -2524,7 +2138,6 @@ msgstr ""
 "있다."
 
 #. Tag: para
-#: performance.xml:1291
 #, fuzzy, no-c-format
 msgid ""
 "Simple getters are used to access the global metrics (i.e. not tied to a "
@@ -2547,30 +2160,7 @@ msgstr ""
 "<literal>QueryStatistics</literal>를 참조하라. 다음 코드는 간단한 예제를 보여"
 "준다:"
 
-#. Tag: programlisting
-#: performance.xml:1301
-#, no-c-format
-msgid ""
-"<![CDATA[Statistics stats = HibernateUtil.sessionFactory.getStatistics();\n"
-"\n"
-"double queryCacheHitCount  = stats.getQueryCacheHitCount();\n"
-"double queryCacheMissCount = stats.getQueryCacheMissCount();\n"
-"double queryCacheHitRatio =\n"
-"  queryCacheHitCount / (queryCacheHitCount + queryCacheMissCount);\n"
-"\n"
-"log.info(\"Query Hit ratio:\" + queryCacheHitRatio);\n"
-"\n"
-"EntityStatistics entityStats =\n"
-"  stats.getEntityStatistics( Cat.class.getName() );\n"
-"long changes =\n"
-"        entityStats.getInsertCount()\n"
-"        + entityStats.getUpdateCount()\n"
-"        + entityStats.getDeleteCount();\n"
-"log.info(Cat.class.getName() + \" changed \" + changes + \"times\"  );]]>"
-msgstr ""
-
 #. Tag: para
-#: performance.xml:1303
 #, fuzzy, no-c-format
 msgid ""
 "You can work on all entities, collections, queries and region caches, by "
@@ -2584,6 +2174,25 @@ msgstr ""
 "에 대한 이름들의 목록을 검색할 수 있다: <literal>getQueries()</literal>, "
 "<literal>getEntityNames()</literal>, <literal>getCollectionRoleNames()</"
 "literal>, 그리고 <literal>getSecondLevelCacheRegionNames()</literal>."
+
+#, fuzzy
+#~ msgid ""
+#~ "This setting creates two new cache regions: one holding cached query "
+#~ "result sets (<literal>org.hibernate.cache.StandardQueryCache</literal>), "
+#~ "the other holding timestamps of the most recent updates to queryable "
+#~ "tables (<literal>org.hibernate.cache.UpdateTimestampsCache</literal>). "
+#~ "Note that the query cache does not cache the state of the actual entities "
+#~ "in the result set; it caches only identifier values and results of value "
+#~ "type. The query cache should always be used in conjunction with the "
+#~ "second-level cache."
+#~ msgstr ""
+#~ "이 설정은 두 개의 새로운 캐시 영역들 - 캐시된 질의 결과 셋들을 보관하는 "
+#~ "것 (<literal>org.hibernate.cache.StandardQueryCache</literal>), 질의 가능"
+#~ "한 테이블들에 대한 가장 최신 업데이트들에 대한 timestamp들을 보관하는 다"
+#~ "른 것 (<literal>org.hibernate.cache.UpdateTimestampsCache</literal>)-의 생"
+#~ "성을 강제한다 . 질의 캐시는 결과 셋 내에 실제 엔티티들의 상태를 캐시시키"
+#~ "지 않음을 노트하라; 그것은 오직 식별자 값들과 값 타입의 결과들 만을 캐시시"
+#~ "킨다. 따라서 질의 캐시는 항상 second-level 캐시와 함께 사용되어야 한다."
 
 #~ msgid ""
 #~ "where <literal>CatImpl</literal> implements the interface <literal>Cat</"
@@ -2621,39 +2230,3 @@ msgstr ""
 #~ "한다. 두 번째 경우에 우리는 JNDI 이름을 사용하기 전에 세션 팩토리가 보관하"
 #~ "고 있는 JNDI 이름을 부여해야 한다. <literal>hibernateStatsBean."
 #~ "setSessionFactoryJNDIName(\"my/JNDI/Name\")</literal>을 사용하라."
-
-#, fuzzy
-#~ msgid "yes"
-#~ msgstr ""
-#~ "#-#-#-#-#  - (PACKAGE VERSION)  #-#-#-#-#\n"
-#~ "yes\n"
-#~ "#-#-#-#-#  - (PACKAGE VERSION)  #-#-#-#-#\n"
-#~ "yes\n"
-#~ "#-#-#-#-#  - (PACKAGE VERSION)  #-#-#-#-#\n"
-#~ "yes\n"
-#~ "#-#-#-#-#  - (PACKAGE VERSION)  #-#-#-#-#\n"
-#~ "예\n"
-#~ "#-#-#-#-#  - (PACKAGE VERSION)  #-#-#-#-#\n"
-#~ "예\n"
-#~ "#-#-#-#-#  - (PACKAGE VERSION)  #-#-#-#-#\n"
-#~ "예\n"
-#~ "#-#-#-#-#  - (PACKAGE VERSION)  #-#-#-#-#\n"
-#~ "예\n"
-#~ "#-#-#-#-#  - (PACKAGE VERSION)  #-#-#-#-#\n"
-#~ "예\n"
-#~ "#-#-#-#-#  - (PACKAGE VERSION)  #-#-#-#-#\n"
-#~ "예\n"
-#~ "#-#-#-#-#  - (PACKAGE VERSION)  #-#-#-#-#\n"
-#~ "예\n"
-#~ "#-#-#-#-#  - (PACKAGE VERSION)  #-#-#-#-#\n"
-#~ "예\n"
-#~ "#-#-#-#-#  - (PACKAGE VERSION)  #-#-#-#-#\n"
-#~ "예\n"
-#~ "#-#-#-#-#  - (PACKAGE VERSION)  #-#-#-#-#\n"
-#~ "예\n"
-#~ "#-#-#-#-#  - (PACKAGE VERSION)  #-#-#-#-#\n"
-#~ "예\n"
-#~ "#-#-#-#-#  - (PACKAGE VERSION)  #-#-#-#-#\n"
-#~ "예\n"
-#~ "#-#-#-#-#  - (PACKAGE VERSION)  #-#-#-#-#\n"
-#~ "예"

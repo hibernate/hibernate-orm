@@ -23,7 +23,11 @@
   ~ Boston, MA  02110-1301  USA
   -->
 
-<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
+<!ENTITY % BOOK_ENTITIES SYSTEM "../HIBERNATE_-_Relational_Persistence_for_Idiomatic_Java.ent">
+%BOOK_ENTITIES;
+
+]>
 
 <chapter id="toolsetguide" revision="2">
     <title>Toolset Guide</title>
@@ -75,7 +79,7 @@
         be used from "inside" Hibernate.
     </para>
 
-    <sect1 id="toolsetguide-s1" revision="2">
+    <section id="toolsetguide-s1" revision="2">
         <title>Automatic schema generation</title>
 
         <para>
@@ -95,7 +99,7 @@
             First, you must customize your mapping files to improve the generated schema. The next section covers schema customization.  
         </para>
 
-        <sect2 id="toolsetguide-s1-2" revision="3">
+        <section id="toolsetguide-s1-2" revision="3">
             <title>Customizing the schema</title>
 
             <para>
@@ -304,9 +308,9 @@
                 DDL where supported.
             </para>
 
-        </sect2>
+        </section>
 
-        <sect2 id="toolsetguide-s1-3" revision="2">
+        <section id="toolsetguide-s1-3" revision="2">
             <title>Running the tool</title>
 
             <para>
@@ -384,9 +388,9 @@
             <programlisting role="JAVA"><![CDATA[Configuration cfg = ....;
 new SchemaExport(cfg).create(false, true);]]></programlisting>
 
-        </sect2>
+        </section>
 
-        <sect2 id="toolsetguide-s1-4">
+        <section id="toolsetguide-s1-4">
             <title>Properties</title>
 
             <para>
@@ -445,9 +449,9 @@ new SchemaExport(cfg).create(false, true);]]></programlisting>
                 </tgroup>
             </table>
 
-        </sect2>
+        </section>
 
-        <sect2 id="toolsetguide-s1-5">
+        <section id="toolsetguide-s1-5">
             <title>Using Ant</title>
 
             <para>
@@ -472,9 +476,9 @@ new SchemaExport(cfg).create(false, true);]]></programlisting>
     </schemaexport>
 </target>]]></programlisting>
 
-        </sect2>
+        </section>
 
-        <sect2 id="toolsetguide-s1-6" revision="2">
+        <section id="toolsetguide-s1-6" revision="2">
             <title>Incremental schema updates</title>
 
             <para>
@@ -531,9 +535,9 @@ new SchemaExport(cfg).create(false, true);]]></programlisting>
             <programlisting role="JAVA"><![CDATA[Configuration cfg = ....;
 new SchemaUpdate(cfg).execute(false);]]></programlisting>
 
-        </sect2>
+        </section>
 
-        <sect2 id="toolsetguide-s1-7">
+        <section id="toolsetguide-s1-7">
             <title>Using Ant for incremental schema updates</title>
 
             <para>
@@ -554,9 +558,9 @@ new SchemaUpdate(cfg).execute(false);]]></programlisting>
     </schemaupdate>
 </target>]]></programlisting>
 
-        </sect2>
+        </section>
 
-        <sect2 id="toolsetguide-s1-8" revision="1">
+        <section id="toolsetguide-s1-8" revision="1">
             <title>Schema validation</title>
 
             <para>
@@ -606,9 +610,9 @@ new SchemaUpdate(cfg).execute(false);]]></programlisting>
             <programlisting role="JAVA"><![CDATA[Configuration cfg = ....;
 new SchemaValidator(cfg).validate();]]></programlisting>
 
-        </sect2>
+        </section>
 
-        <sect2 id="toolsetguide-s1-9">
+        <section id="toolsetguide-s1-9">
             <title>Using Ant for schema validation</title>
 
             <para>
@@ -628,9 +632,9 @@ new SchemaValidator(cfg).validate();]]></programlisting>
     </schemavalidator>
 </target>]]></programlisting>
 
-        </sect2>
+        </section>
 
-    </sect1>
+    </section>
 
 </chapter>
 

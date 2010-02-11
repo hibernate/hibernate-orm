@@ -38,13 +38,13 @@
                 </executions>
 
                 <configuration>
-                    <sourceDocumentName>Hibernate_Reference.xml</sourceDocumentName>
+                    <sourceDocumentName>HIBERNATE_-_Relational_Persistence_for_Idiomatic_Java.xml</sourceDocumentName>
                     <masterTranslation>en-US</masterTranslation>
                     <translations>
                         <translation>es-ES</translation>
                         <translation>fr-FR</translation>
                         <translation>ja-JP</translation>
-                        <translation>ko-KR</translation>
+                        <!-- <translation>ko-KR</translation> -->
                         <translation>pt-BR</translation>
                         <translation>zh-CN</translation>
                     </translations>

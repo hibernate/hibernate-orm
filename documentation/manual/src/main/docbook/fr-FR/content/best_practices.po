@@ -1,33 +1,36 @@
+# translation of best_practices.po to French
+# Myriam Malga <mmalga@redhat.com>, 2007.
+# Xi HUANG <xhuang@redhat.com>, 2007.
+# Corina Roe <croe@redhat.com>, 2009.
+# translation of Collection_Mapping.po to
 msgid ""
 msgstr ""
-"Project-Id-Version: PACKAGE VERSION\n"
+"Project-Id-Version: best_practices\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2009-07-14 19:55+0000\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
-"Language-Team: LANGUAGE <LL@li.org>\n"
+"POT-Creation-Date: 2010-02-11T05:38:15\n"
+"PO-Revision-Date: 2009-11-10 16:06+1000\n"
+"Last-Translator: Corina Roe <croe@redhat.com>\n"
+"Language-Team: French <i18@redhat.com>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"X-Generator: KBabel 1.11.4\n"
 
 #. Tag: title
-#: best_practices.xml:29
 #, no-c-format
 msgid "Best Practices"
 msgstr "Meilleures pratiques"
 
 #. Tag: term
-#: best_practices.xml:33
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "Write fine-grained classes and map them using <literal>&lt;component&gt;</"
 "literal>:"
 msgstr ""
-"Découpez finement vos classes et mappez les en utilisant <literal>&lt;"
-"component&gt;</literal>."
+"Découpez finement vos classes et mappez-les en utilisant <literal>&lt;"
+"component&gt;</literal> :"
 
 #. Tag: para
-#: best_practices.xml:35
 #, no-c-format
 msgid ""
 "Use an <literal>Address</literal> class to encapsulate <literal>street</"
@@ -35,37 +38,33 @@ msgid ""
 "<literal>postcode</literal>. This encourages code reuse and simplifies "
 "refactoring."
 msgstr ""
-"Utilisez une classe <literal>Adresse</literal> pour encapsuler <literal>Rue</"
-"literal>, <literal>Region</literal>, <literal>CodePostal</literal>. Ceci "
-"permet la réutilisation du code et simplifie la maintenance."
+"Utilisez une classe <literal>Address</literal> pour résumer <literal>street</"
+"literal>, <literal>suburb</literal>, <literal>state</literal>, "
+"<literal>postcode</literal>. Ceci permet la réutilisation du code et "
+"simplifie la maintenance. "
 
 #. Tag: term
-#: best_practices.xml:43
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "Declare identifier properties on persistent classes:"
-msgstr "Déclarez des propriétés d'identifiants dans les classes persistantes."
+msgstr "Déclarez des propriétés d'identifiants dans les classes persistantes :"
 
 #. Tag: para
-#: best_practices.xml:45
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "Hibernate makes identifier properties optional. There are a range of reasons "
 "why you should use them. We recommend that identifiers be 'synthetic', that "
 "is, generated with no business meaning."
 msgstr ""
-"Hibernate rend les propriétés d'identifiants optionnelles. Il existe "
-"beaucoup de raisons pour lesquelles vous devriez les utiliser. Nous "
-"recommandons que vous utilisiez des identifiants techniques (générés, et "
-"sans connotation métier)."
+"Hibernate rend les propriétés d'identifiants optionnelles. Il est recommandé "
+"de les utiliser pour de nombreuses raisons. Utilisez les identifiants comme "
+"'synthetic' (générés, et sans connotation métier)."
 
 #. Tag: term
-#: best_practices.xml:53
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "Identify natural keys:"
-msgstr "Identifiez les clefs naturelles."
+msgstr "Identifiez les clefs naturelles :"
 
 #. Tag: para
-#: best_practices.xml:55
 #, no-c-format
 msgid ""
 "Identify natural keys for all entities, and map them using <literal>&lt;"
@@ -73,20 +72,18 @@ msgid ""
 "<literal>hashCode()</literal> to compare the properties that make up the "
 "natural key."
 msgstr ""
-"Identifiez les clefs naturelles pour toutes les entités, et mappez les avec "
+"Identifiez les clefs naturelles pour toutes les entités, et mappez-les avec "
 "<literal>&lt;natural-id&gt;</literal>. Implémentez <literal>equals()</"
 "literal> et <literal>hashCode()</literal> pour comparer les propriétés qui "
-"composent la clef naturelle."
+"composent la clef naturelle. "
 
 #. Tag: term
-#: best_practices.xml:63
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "Place each class mapping in its own file:"
-msgstr "Placez chaque mapping de classe dans son propre fichier."
+msgstr "Placez chaque mapping de classe dans son propre fichier :"
 
 #. Tag: para
-#: best_practices.xml:65
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "Do not use a single monolithic mapping document. Map <literal>com.eg.Foo</"
 "literal> in the file <literal>com/eg/Foo.hbm.xml</literal>. This makes "
@@ -94,87 +91,77 @@ msgid ""
 msgstr ""
 "N'utilisez pas un unique document de mapping. Mappez <literal>com.eg.Foo</"
 "literal> dans le fichier <literal>com/eg/Foo.hbm.xml</literal>. Cela prend "
-"tout son sens lors d'un travail en équipe."
+"tout son sens lors d'un travail en équipe. "
 
 #. Tag: term
-#: best_practices.xml:73
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "Load mappings as resources:"
-msgstr "Chargez les mappings comme des ressources."
+msgstr "Chargez les mappings comme des ressources :"
 
 #. Tag: para
-#: best_practices.xml:75
 #, no-c-format
 msgid "Deploy the mappings along with the classes they map."
 msgstr "Déployez les mappings en même temps que les classes qu'ils mappent."
 
 #. Tag: term
-#: best_practices.xml:81
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "Consider externalizing query strings:"
-msgstr "Pensez à externaliser les chaînes de caractères."
+msgstr "Pensez à externaliser les chaînes de requêtes :"
 
 #. Tag: para
-#: best_practices.xml:83
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "This is recommended if your queries call non-ANSI-standard SQL functions. "
 "Externalizing the query strings to mapping files will make the application "
 "more portable."
 msgstr ""
 "Ceci est une bonne habitude si vos requêtes appellent des fonctions SQL qui "
-"ne sont pas au standard ANSI. Cette externalisation dans les fichiers de "
-"mapping rendra votre application plus portable."
+"ne sont pas au standard ANSI. Cette externalisation des chaînes de requête "
+"dans les fichiers de mapping rendra votre application plus portable. "
 
 #. Tag: term
-#: best_practices.xml:91
 #, no-c-format
 msgid "Use bind variables."
-msgstr "Utilisez les variables \"bindées\"."
+msgstr "Utilisez les variables bindées."
 
 #. Tag: para
-#: best_practices.xml:93
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "As in JDBC, always replace non-constant values by \"?\". Do not use string "
 "manipulation to bind a non-constant value in a query. You should also "
 "consider using named parameters in queries."
 msgstr ""
-"Comme en JDBC, remplacez toujours les valeurs non constantes par \"?\". "
-"N'utilisez jamais la manipulation des chaînes de caractères pour remplacer "
-"des valeurs non constantes dans une requête ! Encore mieux, utilisez les "
+"Comme dans JDBC, remplacez toujours les valeurs non constantes par \"?\". "
+"N'utilisez jamais la manipulation des chaînes de caractères pour lier des "
+"valeurs non constantes dans une requête ! Encore mieux, utilisez les "
 "paramètres nommés dans les requêtes."
 
 #. Tag: term
-#: best_practices.xml:101
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "Do not manage your own JDBC connections:"
-msgstr "Ne gérez pas vous même les connexions JDBC."
+msgstr "Ne gérez pas vous-même les connexions JDBC :"
 
 #. Tag: para
-#: best_practices.xml:103
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "Hibernate allows the application to manage JDBC connections, but his "
 "approach should be considered a last-resort. If you cannot use the built-in "
 "connection providers, consider providing your own implementation of "
 "<literal>org.hibernate.connection.ConnectionProvider</literal>."
 msgstr ""
-"Hibernate laisse l'application gérer les connexions JDBC. Vous ne devriez "
-"gérer vos connexions qu'en dernier recours. Si vous ne pouvez pas utiliser "
-"les systèmes de connexions livrés, réfléchissez à l'idée de fournir votre "
-"propre implémentation de <literal>org.hibernate.connection."
-"ConnectionProvider</literal>."
+"Hibernate permet à l'application de gérer les connexions JDBC. Vous ne "
+"devriez gérer vos connexions qu'en dernier recours. Si vous ne pouvez pas "
+"utiliser les systèmes de connexions livrés, considérez la fourniture de "
+"votre propre implémentation de <literal>org.hibernate.connection."
+"ConnectionProvider</literal>. "
 
 #. Tag: term
-#: best_practices.xml:111
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "Consider using a custom type:"
-msgstr "Pensez à utiliser les types utilisateurs."
+msgstr "Considérez l'utilisation de types personnalisés :"
 
 #. Tag: para
-#: best_practices.xml:113
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "Suppose you have a Java type from a library that needs to be persisted but "
 "does not provide the accessors needed to map it as a component. You should "
@@ -182,48 +169,45 @@ msgid ""
 "approach frees the application code from implementing transformations to/"
 "from a Hibernate type."
 msgstr ""
-"Supposez que vous ayez une type Java, de telle bibliothèque, qui a besoin "
+"Supposez que vous ayez un type Java, de telle bibliothèque, qui a besoin "
 "d'être persisté mais qui ne fournit pas les accesseurs nécessaires pour le "
 "mapper comme composant. Vous devriez implémenter <literal>org.hibernate."
-"UserType</literal>.Cette approche libère le code de l'application de "
-"l'implémentation des transformations vers / depuis les types Hibernate."
+"UserType</literal>. Cette approche évite au code de l'application, "
+"l'implémentation de transformations vers / depuis les types Hibernate. "
 
 #. Tag: term
-#: best_practices.xml:122
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "Use hand-coded JDBC in bottlenecks:"
-msgstr "Utilisez du JDBC pur dans les goulets d'étranglement."
+msgstr "Utilisez du JDBC pur dans les goulots d'étranglement :"
 
 #. Tag: para
-#: best_practices.xml:124
 #, fuzzy, no-c-format
 msgid ""
 "In performance-critical areas of the system, some kinds of operations might "
 "benefit from direct JDBC. Do not assume, however, that JDBC is necessarily "
 "faster. Please wait until you <emphasis>know</emphasis> something is a "
 "bottleneck. If you need to use direct JDBC, you can open a Hibernate "
-"<literal>Session</literal> and usingfile:///usr/share/doc/HTML/en-US/index."
-"html that JDBC connection. This way you can still use the same transaction "
-"strategy and underlying connection provider."
+"<literal>Session</literal>, wrap your JDBC operation as a <literal>org."
+"hibernate.jdbc.Work</literal> object and using that JDBC connection. This "
+"way you can still use the same transaction strategy and underlying "
+"connection provider."
 msgstr ""
-"Dans certaines parties critiques de votre système d'un point de vue "
-"performance, quelques opérations peuvent tirer partie d'un appel JDBC natif. "
-"Mais attendez de <emphasis>savoir</emphasis> que c'est un goulet "
+"En ce qui concerne les performances dans certaines parties critiques de "
+"votre système, quelques opérations peuvent tirer partie d'un appel JDBC "
+"natif. Mais attendez de <emphasis>savoir</emphasis> que c'est un goulet "
 "d'étranglement. Ne supposez jamais qu'un appel JDBC sera forcément plus "
-"rapide. Si vous avez besoin d'utiliser JDBC directement, ouvrez une "
+"rapide. Si vous devez utiliser JDBC directement, ouvrez une "
 "<literal>Session</literal> Hibernate et utilisez la connexion SQL sous-"
 "jacente. Ainsi vous pourrez utiliser la même stratégie de transation et la "
-"même gestion des connexions."
+"même gestion des connexions. "
 
 #. Tag: term
-#: best_practices.xml:134
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "Understand <literal>Session</literal> flushing:"
-msgstr "Comprendre le flush de <literal>Session</literal>."
+msgstr "Comprenez le flush de <literal>Session</literal> :"
 
 #. Tag: para
-#: best_practices.xml:136
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "Sometimes the Session synchronizes its persistent state with the database. "
 "Performance will be affected if this process occurs too often. You can "
@@ -234,20 +218,18 @@ msgstr ""
 "De temps en temps la Session synchronise ses états persistants avec la base "
 "de données. Les performances seront affectées si ce processus arrive trop "
 "souvent. Vous pouvez parfois minimiser les flush non nécessaires en "
-"désactivant le flush automatique ou même en changeant l'ordre des opérations "
-"menées dans une transaction particulière."
+"désactivant le flush automatique ou même en changeant l'ordre des requêtes "
+"et autres opérations effectuées dans une transaction particulière. "
 
 #. Tag: term
-#: best_practices.xml:145
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "In a three tiered architecture, consider using detached objects:"
 msgstr ""
-"Dans une architecture à trois couches, pensez à utiliser "
-"<literal>saveOrUpdate()</literal>."
+"Dans une architecture à trois couches, vous pouvez utilisez des objets "
+"détachés :"
 
 #. Tag: para
-#: best_practices.xml:147
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "When using a servlet/session bean architecture, you can pass persistent "
 "objects loaded in the session bean to and from the servlet/JSP layer. Use a "
@@ -256,23 +238,21 @@ msgid ""
 "database."
 msgstr ""
 "Quand vous utilisez une architecture à base de servlet / session bean, vous "
-"pourriez passer des objets chargés dans le bean session vers et depuis la "
+"pouvez passer des objets chargés dans le bean session vers et depuis la "
 "couche servlet / JSP. Utilisez une nouvelle session pour traiter chaque "
 "requête. Utilisez <literal>Session.merge()</literal> ou <literal>Session."
 "saveOrUpdate()</literal> pour synchroniser les objets avec la base de "
-"données."
+"données. "
 
 #. Tag: term
-#: best_practices.xml:156
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "In a two tiered architecture, consider using long persistence contexts:"
 msgstr ""
-"Dans une architecture à deux couches, pensez à utiliser la déconnexion de "
-"session."
+"Dans une architecture à deux couches, pensez à utiliser les contextes de "
+"persistance longue :"
 
 #. Tag: para
-#: best_practices.xml:158
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "Database Transactions have to be as short as possible for best scalability. "
 "However, it is often necessary to implement long running "
@@ -288,28 +268,26 @@ msgid ""
 "stale data."
 msgstr ""
 "Les transactions de bases de données doivent être aussi courtes que possible "
-"pour une meilleure montée en charge.Cependant, il est souvent nécessaire "
+"pour une meilleure extensibilité. Cependant, il est souvent nécessaire "
 "d'implémenter de longues <emphasis>transactions applicatives</emphasis>, une "
 "simple unité de travail du point de vue de l'utilisateur. Une transaction "
 "applicative peut s'étaler sur plusieurs cycles de requêtes/réponses du "
 "client. Il est commun d'utiliser des objets détachés pour implémenter des "
 "transactions applicatives. Une alternative, extrêmement appropriée dans une "
-"architecture à 2 couches, est de maintenir un seul contact de persistance "
+"architecture à deux couches, est de maintenir un seul contact de persistance "
 "ouvert (session) pour toute la durée de vie de la transaction applicative et "
 "simplement se déconnecter de la connexion JDBC à la fin de chaque requête, "
 "et se reconnecter au début de la requête suivante. Ne partagez jamais une "
-"seule session avec plus d'une transaction applicative, ou vous travaillerez "
-"avec des données périmées."
+"seule session avec plus d'une transaction applicative, ou bien vous "
+"travaillerez avec des données périmées. "
 
 #. Tag: term
-#: best_practices.xml:172
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "Do not treat exceptions as recoverable:"
-msgstr "Considérez que les exceptions ne sont pas rattrapables."
+msgstr "Considérez que les exceptions ne sont pas rattrapables :"
 
 #. Tag: para
-#: best_practices.xml:174
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "This is more of a necessary practice than a \"best\" practice. When an "
 "exception occurs, roll back the <literal>Transaction</literal> and close the "
@@ -324,18 +302,17 @@ msgstr ""
 "<literal>Transaction</literal> et fermer la <literal>Session</literal>. "
 "Sinon, Hibernate ne peut garantir l'intégrité des états persistants en "
 "mémoire. En particulier, n'utilisez pas <literal>Session.load()</literal> "
-"pour déterminer si une instance avec un identifiant donné existe en base de "
-"données, utilisez <literal>Session.get()</literal> ou un requête."
+"pour déterminer si une instance avec l'identifiant donné existe en base de "
+"données, à la place utilisez <literal>Session.get()</literal> ou une "
+"requête. "
 
 #. Tag: term
-#: best_practices.xml:184
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "Prefer lazy fetching for associations:"
-msgstr "Préférez le chargement tardif des associations."
+msgstr "Préférez le chargement différé des associations :"
 
 #. Tag: para
-#: best_practices.xml:186
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "Use eager fetching sparingly. Use proxies and lazy collections for most "
 "associations to classes that are not likely to be completely held in the "
@@ -348,27 +325,25 @@ msgstr ""
 "Utilisez le chargement complet avec modération. Utilisez les proxies et les "
 "collections chargées tardivement pour la plupart des associations vers des "
 "classes qui ne sont pas susceptibles d'être complètement retenues dans le "
-"cache de second niveau. Pour les assocations de classes en cache, où il y a "
-"une extrêmement forte probabilité que l'élément soit en cache, désactivez "
-"explicitement le chargement par jointures ouvertes en utilisant "
-"<literal>outer-join=\"false\"</literal>. Lorsqu'un chargement par jointure "
-"ouverte est approprié pour un cas d'utilisation particulier, utilisez une "
-"requête avec un <literal>left join fetch</literal>."
+"cache de second niveau. Pour les associations de classes en cache, où il y a "
+"une forte probabilité que l'élément soit en cache, désactivez explicitement "
+"le chargement par jointures ouvertes en utilisant <literal>outer-join=\"false"
+"\"</literal>. Lorsqu'un chargement par jointure ouverte est approprié pour "
+"un cas d'utilisation particulier, utilisez une requête avec un <literal>left "
+"join fetch</literal>. "
 
 #. Tag: term
-#: best_practices.xml:196
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "Use the <emphasis>open session in view</emphasis> pattern, or a disciplined "
 "<emphasis>assembly phase</emphasis> to avoid problems with unfetched data:"
 msgstr ""
 "Utilisez le pattern <emphasis>d'une ouverture de session dans une vue</"
 "emphasis>, ou une <emphasis>phase d'assemblage</emphasis> disciplinée pour "
-"éviter des problèmes avec des données non rapatriées."
+"éviter des problèmes avec des données non rapatriées :"
 
 #. Tag: para
-#: best_practices.xml:201
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "Hibernate frees the developer from writing tedious <emphasis>Data Transfer "
 "Objects</emphasis> (DTO). In a traditional EJB architecture, DTOs serve dual "
@@ -384,28 +359,28 @@ msgid ""
 "requirement of safe transactional data access."
 msgstr ""
 "Hibernate libère les développeurs de l'écriture fastidieuse des "
-"<emphasis>objets de transfert de données (NdT : Data Transfer Objects)</"
-"emphasis> (DTO). Dans une architecture EJB traditionnelle, les DTOs ont deux "
-"buts : premièrement, ils contournent le problème des \"entity bean\" qui ne "
-"sont pas sérialisables ; deuxièmement, ils définissent implicitement une "
-"phase d'assemblage où toutes les données utilisées par la vue sont "
-"rapatriées et organisées dans les DTOs avant de retourner sous le contrôle "
-"de la couche de présentation. Hibernate élimine le premier but. Pourtant, "
-"vous aurez encore besoin d'une phase d'assemblage (pensez vos méthodes "
-"métier comme ayant un contrat strict avec la couche de présentation à propos "
-"de quelles données sont disponibles dans les objets détachés) à moins que "
-"vous soyez préparés à garder le contexte de persistance (la session) ouvert "
-"à travers tout le processus de rendu de la vue."
+"<emphasis>objets de transfert de données </emphasis> (DTO). Dans une "
+"architecture EJB traditionnelle, les DTO ont deux buts : premièrement, ils "
+"contournent le problème des beans entités qui ne sont pas sérialisables ; "
+"deuxièmement, ils définissent implicitement une phase d'assemblage où toutes "
+"les données utilisées par la vue sont rapatriées et organisées dans les DTO "
+"avant de retourner sous le contrôle de la couche de présentation. Hibernate "
+"élimine le premier but. Cependant, vous aurez encore besoin d'une phase "
+"d'assemblage (pensez à vos méthodes métier comme ayant un contrat strict "
+"avec la couche de présentation, en ce qui concerne les données disponibles "
+"dans les objets détachés) à moins que vous soyez préparés à garder le "
+"contexte de persistance (la session) ouvert à travers tout le processus de "
+"rendu de la vue. Ceci ne représente pas une limitation de Hibernate! Au "
+"contraire c'est une exigence fondamentale d'un accès sécurisé aux données "
+"transactionnelles. "
 
 #. Tag: term
-#: best_practices.xml:215
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "Consider abstracting your business logic from Hibernate:"
-msgstr "Pensez à abstraite votre logique métier d'Hibernate."
+msgstr "Pensez à abstraire votre logique métier d'Hibernate :"
 
 #. Tag: para
-#: best_practices.xml:217
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "Hide Hibernate data-access code behind an interface. Combine the "
 "<emphasis>DAO</emphasis> and <emphasis>Thread Local Session</emphasis> "
@@ -415,21 +390,19 @@ msgid ""
 "appropriate for an application with five tables."
 msgstr ""
 "Cachez le mécanisme d'accès aux données (Hibernate) derrière une interface. "
-"Combinez les patterns <emphasis>DAO</emphasis> et <emphasis>Thread Local "
+"Combinez les modèles <emphasis>DAO</emphasis> et <emphasis>Thread Local "
 "Session</emphasis>. Vous pouvez même avoir quelques classes persistées par "
 "du JDBC pur, associées à Hibernate via un <literal>UserType</literal> (ce "
 "conseil est valable pour des applications de taille respectables ; il n'est "
-"pas valable pour une application avec cinq tables)."
+"pas valable pour une application avec cinq tables). "
 
 #. Tag: term
-#: best_practices.xml:227
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "Do not use exotic association mappings:"
-msgstr "N'utilisez pas d'associations de mapping exotiques."
+msgstr "N'utilisez pas d'associations de mapping exotiques :"
 
 #. Tag: para
-#: best_practices.xml:229
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "Practical test cases for real many-to-many associations are rare. Most of "
 "the time you need additional information stored in the \"link table\". In "
@@ -438,23 +411,21 @@ msgid ""
 "to-one. For this reason, you should proceed cautiously when using any other "
 "association style."
 msgstr ""
-"De bons cas d'utilisation pour de vraies associations plusieurs-vers-"
-"plusieurs sont rares. La plupart du temps vous avez besoin d'informations "
+"Les utilisations appropriées de vraies associations plusieurs-à-plusieurs "
+"sont rares. La plupart du temps vous avez besoin d'informations "
 "additionnelles stockées dans la table d'association. Dans ce cas, il est "
-"préférable d'utiliser deux associations un-vers-plusieurs vers une classe de "
+"préférable d'utiliser deux associations un-à-plusieurs vers une classe de "
 "liaisons intermédiaire. En fait, nous pensons que la plupart des "
-"associations sont de type un-vers-plusieurs ou plusieurs-vers-un, vous devez "
-"être très attentifs lorsque vous utilisez autre chose et vous demander si "
-"c'est vraiment nécessaire."
+"associations sont de type un-à-plusieurs ou plusieurs-à-un, vous devez être "
+"très prudent lorsque vous utilisez toute autre association et vous demander "
+"si c'est vraiment nécessaire. "
 
 #. Tag: term
-#: best_practices.xml:239
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "Prefer bidirectional associations:"
-msgstr "Préférez les associations bidirectionnelles."
+msgstr "Préférez les associations bidirectionnelles :"
 
 #. Tag: para
-#: best_practices.xml:241
 #, no-c-format
 msgid ""
 "Unidirectional associations are more difficult to query. In a large "
@@ -463,4 +434,4 @@ msgid ""
 msgstr ""
 "Les associations unidirectionnelles sont plus difficiles à questionner. Dans "
 "une grande application, la plupart des associations devraient être "
-"navigables dans les deux directions dans les requêtes."
+"navigables dans les deux directions dans les requêtes. "

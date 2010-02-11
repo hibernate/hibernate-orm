@@ -23,7 +23,11 @@
   ~ Boston, MA  02110-1301  USA
   -->
 
-<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
+<!ENTITY % BOOK_ENTITIES SYSTEM "../HIBERNATE_-_Relational_Persistence_for_Idiomatic_Java.ent">
+%BOOK_ENTITIES;
+
+]>
 
 <chapter id="objectstate">
     <title>Working with objects</title>
@@ -44,7 +48,7 @@
         relevant for the application developer when tuning the performance of the system.
     </para>
 
-    <sect1 id="objectstate-overview">
+    <section id="objectstate-overview">
         <title>Hibernate object states</title>
 
         <para>
@@ -95,9 +99,9 @@
             trigger a transition) in more detail.
         </para>
 
-    </sect1>
+    </section>
 
-    <sect1 id="objectstate-makingpersistent" revision="1">
+    <section id="objectstate-makingpersistent" revision="1">
         <title>Making objects persistent</title>
 
         <para>
@@ -177,9 +181,9 @@ sess.save( pk, new Long(1234) );]]></programlisting>
             Transitive persistence is discussed later in this chapter.
         </para>
         
-    </sect1>
+    </section>
 
-    <sect1 id="objectstate-loading">
+    <section id="objectstate-loading">
         <title>Loading an object</title>
 
         <para>
@@ -259,9 +263,9 @@ sess.refresh(cat); //re-read the state (after the trigger executes)]]></programl
             <xref linkend="performance-fetching"/>.
         </para>
 
-    </sect1>
+    </section>
 
-    <sect1 id="objectstate-querying" revision="1">
+    <section id="objectstate-querying" revision="1">
         <title>Querying</title>
 
         <para>
@@ -273,7 +277,7 @@ sess.refresh(cat); //re-read the state (after the trigger executes)]]></programl
             optional support from Hibernate for result set conversion into objects.
         </para>
 
-        <sect2 id="objectstate-querying-executing" revision="1">
+        <section id="objectstate-querying-executing" revision="1">
             <title>Executing queries</title>
 
             <para>
@@ -318,7 +322,7 @@ Set uniqueMothers = new HashSet(mothersWithKittens.list());]]></programlisting>
                 these duplicates through a <literal>Set</literal>.
             </para>
 
-            <sect3 id="objectstate-querying-executing-iterate">
+            <section id="objectstate-querying-executing-iterate">
                 <title>Iterating results</title>
 
                 <para>
@@ -345,9 +349,9 @@ while ( iter.hasNext() ) {
         break;
     }
 }]]></programlisting>
-            </sect3>
+            </section>
             
-            <sect3 id="objectstate-querying-executing-tuples">
+            <section id="objectstate-querying-executing-tuples">
                 <title>Queries that return tuples</title>
 
                 <para>
@@ -367,9 +371,9 @@ while ( kittensAndMothers.hasNext() ) {
     ....
 }]]></programlisting>
 
-            </sect3>
+            </section>
 
-            <sect3 id="objectstate-querying-executing-scalar" revision="1">
+            <section id="objectstate-querying-executing-scalar" revision="1">
                 <title>Scalar results</title>
 
                 <para>
@@ -392,9 +396,9 @@ while ( results.hasNext() ) {
     .....
 }]]></programlisting>
 
-            </sect3>
+            </section>
 
-            <sect3 id="objectstate-querying-executing-parameters">
+            <section id="objectstate-querying-executing-parameters">
                 <title>Bind parameters</title>
 
                 <para>
@@ -442,9 +446,9 @@ Query q = sess.createQuery("from DomesticCat cat where cat.name in (:namesList)"
 q.setParameterList("namesList", names);
 List cats = q.list();]]></programlisting>
 
-            </sect3>
+            </section>
 
-            <sect3 id="objectstate-querying-executing-pagination">
+            <section id="objectstate-querying-executing-pagination">
                 <title>Pagination</title>
 
                 <para>
@@ -463,9 +467,9 @@ List cats = q.list();]]></programlisting>
                     SQL of your DBMS.
                 </para>
 
-            </sect3>
+            </section>
 
-            <sect3 id="objectstate-querying-executing-scrolling">
+            <section id="objectstate-querying-executing-scrolling">
                 <title>Scrollable iteration</title>
 
                 <para>
@@ -503,9 +507,9 @@ cats.close()]]></programlisting>
                     if you need offline pagination functionality.
                 </para>
 
-            </sect3>
+            </section>
 
-            <sect3 id="objectstate-querying-executing-named" revision="1">
+            <section id="objectstate-querying-executing-named" revision="1">
                 <title>Externalizing named queries</title>
 
                 <para>
@@ -543,11 +547,11 @@ List cats = q.list();]]></programlisting>
                     <literal>eg.Cat.ByNameAndMaximumWeight</literal>.
                 </para>
 
-            </sect3>
+            </section>
 
-        </sect2>
+        </section>
 
-        <sect2 id="objectstate-filtering" revision="1">
+        <section id="objectstate-filtering" revision="1">
             <title>Filtering collections</title>
             <para>
                 A collection <emphasis>filter</emphasis> is a special type of query that can be applied to
@@ -588,9 +592,9 @@ List cats = q.list();]]></programlisting>
     .setFirstResult(0).setMaxResults(10)
     .list();]]></programlisting>
 
-        </sect2>
+        </section>
 
-        <sect2 id="objecstate-querying-criteria" revision="1">
+        <section id="objecstate-querying-criteria" revision="1">
            <title>Criteria queries</title>
 
             <para>
@@ -609,9 +613,9 @@ List cats = crit.list();]]></programlisting>
                 API are discussed in more detail in <xref linkend="querycriteria"/>.
             </para>
 
-        </sect2>
+        </section>
 
-        <sect2 id="objectstate-querying-nativesql" revision="2">
+        <section id="objectstate-querying-nativesql" revision="2">
             <title>Queries in native SQL</title>
 
             <para>
@@ -639,11 +643,11 @@ List cats = crit.list();]]></programlisting>
                 <xref linkend="querysql"/>.
             </para>
 
-        </sect2>
+        </section>
 
-    </sect1>
+    </section>
 
-    <sect1 id="objectstate-modifying" revision="1">
+    <section id="objectstate-modifying" revision="1">
         <title>Modifying persistent objects</title>
 
         <para>
@@ -682,9 +686,9 @@ sess.flush();  // changes to cat are automatically detected and persisted]]></pr
         </para>
 </important>
 
-    </sect1>
+    </section>
 
-    <sect1 id="objectstate-detached" revision="2">
+    <section id="objectstate-detached" revision="2">
         <title>Modifying detached objects</title>
 
         <para>
@@ -757,9 +761,9 @@ sess.lock(pk, LockMode.UPGRADE);]]></programlisting>
             Other models for long units of work are discussed in <xref linkend="transactions-optimistic"/>.
         </para>
 
-    </sect1>
+    </section>
 
-    <sect1 id="objectstate-saveorupdate">
+    <section id="objectstate-saveorupdate">
         <title>Automatic state detection</title>
 
         <para>
@@ -895,9 +899,9 @@ secondSession.saveOrUpdate(mate);  // save the new instance (mate has a null id)
             </listitem>
         </itemizedlist>
 
-    </sect1>
+    </section>
 
-    <sect1 id="objectstate-deleting" revision="1">
+    <section id="objectstate-deleting" revision="1">
         <title>Deleting persistent objects</title>
 
         <para>
@@ -917,9 +921,9 @@ secondSession.saveOrUpdate(mate);  // save the new instance (mate has a null id)
             children.
         </para>
 
-    </sect1>
+    </section>
     
-    <sect1 id="objectstate-replicating" revision="1">
+    <section id="objectstate-replicating" revision="1">
     	<title>Replicating object between two different datastores</title>
     	
     	<para>
@@ -981,9 +985,9 @@ session2.close();]]></programlisting>
             rolling back changes made during non-ACID transactions and more.
         </para>
     	
-    </sect1>
+    </section>
 
-    <sect1 id="objectstate-flushing">
+    <section id="objectstate-flushing">
         <title>Flushing the Session</title>
 
         <para>
@@ -1094,9 +1098,9 @@ sess.close();]]></programlisting>
             behavior, we discuss it in <xref linkend="transactions"/>.
         </para>
 
-    </sect1>
+    </section>
 
-    <sect1 id="objectstate-transitive" revision="1">
+    <section id="objectstate-transitive" revision="1">
         <title>Transitive persistence</title>
 
         <para>
@@ -1248,9 +1252,9 @@ sess.close();]]></programlisting>
             <literal>Session</literal>.
         </para>
 
-    </sect1>
+    </section>
 
-    <sect1 id="objectstate-metadata">
+    <section id="objectstate-metadata">
         <title>Using metadata</title>
 
         <para>
@@ -1282,7 +1286,7 @@ for ( int i=0; i<propertyNames.length; i++ ) {
     }
 }]]></programlisting>
         
-    </sect1>
+    </section>
 
 </chapter>
 

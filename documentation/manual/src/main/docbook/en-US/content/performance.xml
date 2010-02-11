@@ -23,12 +23,16 @@
   ~ Boston, MA  02110-1301  USA
   -->
 
-<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
+<!ENTITY % BOOK_ENTITIES SYSTEM "../HIBERNATE_-_Relational_Persistence_for_Idiomatic_Java.ent">
+%BOOK_ENTITIES;
+
+]>
 
 <chapter id="performance">
     <title>Improving performance</title>
 
-    <sect1 id="performance-fetching" revision="2">
+    <section id="performance-fetching" revision="2">
         <title>Fetching strategies</title>
 
         <para>
@@ -139,7 +143,7 @@
             in any detached instance of a particular class.
         </para>
  
-        <sect2 id="performance-fetching-lazy">
+        <section id="performance-fetching-lazy">
             <title>Working with lazy associations</title>
             
             <para>
@@ -198,9 +202,9 @@ Integer accessLevel = (Integer) permissions.get("accounts");  // Error!]]></prog
                 collections.
             </para>
         
-        </sect2>
+        </section>
         
-        <sect2 id="performance-fetching-custom" revision="4">
+        <section id="performance-fetching-custom" revision="4">
             <title>Tuning fetch strategies</title>
             
             <para>
@@ -278,9 +282,9 @@ Integer accessLevel = (Integer) permissions.get("accounts");  // Error!]]></prog
                 second-level cache.
             </para>
 
-        </sect2>
+        </section>
 
-        <sect2 id="performance-fetching-proxies" revision="2">
+        <section id="performance-fetching-proxies" revision="2">
             <title>Single-ended association proxies</title>
 
             <para>
@@ -427,9 +431,9 @@ Cat fritz = (Cat) iter.next();]]></programlisting>
                 will result in immediate proxy initialization.
             </para>
 
-        </sect2>
+        </section>
 
-        <sect2 id="performance-fetching-initialization" revision="1">
+        <section id="performance-fetching-initialization" revision="1">
             <title>Initializing collections and proxies</title>
 
             <para>
@@ -521,9 +525,9 @@ Cat fritz = (Cat) iter.next();]]></programlisting>
 
             <programlisting role="JAVA"><![CDATA[s.createFilter( lazyCollection, "").setFirstResult(0).setMaxResults(10).list();]]></programlisting>
 
-        </sect2>
+        </section>
 
-        <sect2 id="performance-fetching-batch">
+        <section id="performance-fetching-batch">
             <title>Using batch fetching</title>
 
             <para>
@@ -575,9 +579,9 @@ Cat fritz = (Cat) iter.next();]]></programlisting>
                 <emphasis>materialized path</emphasis> might be a better option for read-mostly trees.
             </para>
 
-        </sect2>
+        </section>
 
-        <sect2 id="performance-fetching-subselect">
+        <section id="performance-fetching-subselect">
             <title>Using subselect fetching</title>
 
             <para>
@@ -588,9 +592,9 @@ Cat fritz = (Cat) iter.next();]]></programlisting>
             
             <!-- TODO: Write more about this -->
 
-        </sect2>
+        </section>
 
-        <sect2 id="performance-fetching-profiles">
+        <section id="performance-fetching-profiles">
             <title>Fetch profiles</title>
 
             <para>
@@ -657,9 +661,9 @@ Cat fritz = (Cat) iter.next();]]></programlisting>
                 styles.  See <ulink url="http://opensource.atlassian.com/projects/hibernate/browse/HHH-3414">HHH-3414</ulink>
                 for details.
             </para>
-        </sect2>
+        </section>
 
-        <sect2 id="performance-fetching-lazyproperties">
+        <section id="performance-fetching-lazyproperties">
             <title>Using lazy property fetching</title>
 
             <para>
@@ -721,10 +725,10 @@ Cat fritz = (Cat) iter.next();]]></programlisting>
                 properties</literal> in HQL.
             </para>
 
-        </sect2>
-    </sect1>
+        </section>
+    </section>
 
-    <sect1 id="performance-cache" revision="1">
+    <section id="performance-cache" revision="1">
         <title>The Second Level Cache</title>
 
         <para>
@@ -809,7 +813,7 @@ Cat fritz = (Cat) iter.next();]]></programlisting>
             </tgroup>
         </table>
 
-        <sect2 id="performance-cache-mapping" revision="2">
+        <section id="performance-cache-mapping" revision="2">
             <title>Cache mappings</title>
 
             <para>
@@ -865,9 +869,9 @@ Cat fritz = (Cat) iter.next();]]></programlisting>
                 The <literal>usage</literal> attribute specifies a <emphasis>cache concurrency strategy</emphasis>.
             </para>
 
-        </sect2>
+        </section>
 
-        <sect2 id="performance-cache-readonly">
+        <section id="performance-cache-readonly">
             <title>Strategy: read only</title>
 
             <para>
@@ -881,10 +885,10 @@ Cat fritz = (Cat) iter.next();]]></programlisting>
     ....
 </class>]]></programlisting>
 
-        </sect2>
+        </section>
 
 
-        <sect2 id="performance-cache-readwrite">
+        <section id="performance-cache-readwrite">
             <title>Strategy: read/write</title>
 
             <para>
@@ -907,9 +911,9 @@ Cat fritz = (Cat) iter.next();]]></programlisting>
     </set>
 </class>]]></programlisting>
 
-        </sect2>
+        </section>
 
-        <sect2 id="performance-cache-nonstrict">
+        <section id="performance-cache-nonstrict">
             <title>Strategy: nonstrict read/write</title>
 
             <para>
@@ -921,9 +925,9 @@ Cat fritz = (Cat) iter.next();]]></programlisting>
                 <literal>Session.close()</literal> or <literal>Session.disconnect()</literal> is called.
             </para>
 
-        </sect2>
+        </section>
 
-        <sect2 id="performance-cache-transactional">
+        <section id="performance-cache-transactional">
             <title>Strategy: transactional</title>
 
             <para>
@@ -932,9 +936,9 @@ Cat fritz = (Cat) iter.next();]]></programlisting>
                 specify <literal>hibernate.transaction.manager_lookup_class</literal>. 
             </para>
 
-        </sect2>
+        </section>
 
-        <sect2 id="performance-cache-compat-matrix">
+        <section id="performance-cache-compat-matrix">
             <title>Cache-provider/concurrency-strategy compatibility</title>
 
             <important>
@@ -1011,11 +1015,11 @@ Cat fritz = (Cat) iter.next();]]></programlisting>
                 </tgroup>
             </table>
 
-        </sect2>
+        </section>
 
-    </sect1>
+    </section>
 
-    <sect1 id="performance-sessioncache" revision="2">
+    <section id="performance-sessioncache" revision="2">
         <title>Managing the caches</title>
 
         <para>
@@ -1109,9 +1113,9 @@ sessionFactory.evictCollection("Cat.kittens"); //evict all kitten collections]]>
         <programlisting><![CDATA[hibernate.generate_statistics true
 hibernate.cache.use_structured_entries true]]></programlisting>       
                 
-    </sect1>
+    </section>
 
-    <sect1 id="performance-querycache" revision="1">
+    <section id="performance-querycache" revision="1">
         <title>The Query Cache</title>
 
         <para>
@@ -1119,7 +1123,7 @@ hibernate.cache.use_structured_entries true]]></programlisting>
             frequently with the same parameters.
         </para>
 
-        <sect2 id="performance-querycache-enable">
+        <section id="performance-querycache-enable">
             <title>Enabling query caching</title>
             <para>
                 Caching of query results introduces some overhead in terms of your applications normal
@@ -1175,9 +1179,9 @@ hibernate.cache.use_structured_entries true]]></programlisting>
                     collection caching).
                 </para>
             </note>
-        </sect2>
+        </section>
 
-        <sect2 id="performance-querycache-regions">
+        <section id="performance-querycache-regions">
             <title>Query cache regions</title>
             <para>
                 If you require fine-grained control over query cache expiration policies, you can
@@ -1201,10 +1205,10 @@ hibernate.cache.use_structured_entries true]]></programlisting>
                 efficient alternative to bulk eviction of the region via
                 <literal>org.hibernate.SessionFactory.evictQueries()</literal>.
             </para>
-        </sect2>
-    </sect1>
+        </section>
+    </section>
 
-    <sect1 id="performance-collections">
+    <section id="performance-collections">
         <title>Understanding Collection performance</title>
 
         <para>
@@ -1213,7 +1217,7 @@ hibernate.cache.use_structured_entries true]]></programlisting>
             collections at runtime.
         </para>
 
-        <sect2 id="performance-collections-taxonomy">
+        <section id="performance-collections-taxonomy">
             <title>Taxonomy</title>
 
             <para>Hibernate defines three basic kinds of collections:</para>
@@ -1290,9 +1294,9 @@ hibernate.cache.use_structured_entries true]]></programlisting>
                 collection.
             </para>
 
-        </sect2>
+        </section>
 
-        <sect2 id="performance-collections-mostefficientupdate">
+        <section id="performance-collections-mostefficientupdate">
             <title>Lists, maps, idbags and sets are the most efficient collections to update</title>
 
             <para>
@@ -1325,9 +1329,9 @@ hibernate.cache.use_structured_entries true]]></programlisting>
                 considerations of collection update performance simply do not apply.
             </para>
 
-        </sect2>
+        </section>
 
-        <sect2 id="performance-collections-mostefficentinverse">
+        <section id="performance-collections-mostefficentinverse">
             <title>Bags and lists are the most efficient inverse collections</title>
 
             <para>
@@ -1346,9 +1350,9 @@ c.setParent(p);
 p.getChildren().add(c);  //no need to fetch the collection!
 sess.flush();]]></programlisting>
 
-        </sect2>
+        </section>
 
-        <sect2 id="performance-collections-oneshotdelete">
+        <section id="performance-collections-oneshotdelete">
             <title>One shot delete</title>
 
             <para>
@@ -1395,11 +1399,11 @@ sess.flush();]]></programlisting>
                 One-shot-delete does not apply to collections mapped <literal>inverse="true"</literal>.
             </para>
 
-        </sect2>
+        </section>
 
-    </sect1>
+    </section>
 
-    <sect1 id="performance-monitoring" revision="1">
+    <section id="performance-monitoring" revision="1">
         <title>Monitoring performance</title>
 
         <para>
@@ -1408,7 +1412,7 @@ sess.flush();]]></programlisting>
             Statistics in Hibernate are available per <literal>SessionFactory</literal>.
         </para>
 
-        <sect2 id="performance-monitoring-sf" revision="2">
+        <section id="performance-monitoring-sf" revision="2">
             <title>Monitoring a SessionFactory</title>
 
             <para>
@@ -1469,9 +1473,9 @@ server.registerMBean(stats, on); // Register the MBean on the server]]></program
                 method.
             </para>
 
-        </sect2>
+        </section>
 
-        <sect2 id="performance-monitoring-metrics" revision="1">
+        <section id="performance-monitoring-metrics" revision="1">
             <title>Metrics</title>
 
             <para>
@@ -1542,8 +1546,8 @@ log.info(Cat.class.getName() + " changed " + changes + "times"  );]]></programli
                 <literal>getSecondLevelCacheRegionNames()</literal>.
             </para>
 
-        </sect2>
+        </section>
 
-    </sect1>
+    </section>
 
 </chapter>

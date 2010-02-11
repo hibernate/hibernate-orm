@@ -1,23 +1,24 @@
+# translation of Collection_Mapping.po to
+# Xi HUANG <xhuang@redhat.com>, 2007, 2009.
 msgid ""
 msgstr ""
-"Project-Id-Version: PACKAGE VERSION\n"
+"Project-Id-Version: Collection_Mapping\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2009-07-14 19:56+0000\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
-"Language-Team: LANGUAGE <LL@li.org>\n"
+"POT-Creation-Date: 2010-02-11T05:38:15\n"
+"PO-Revision-Date: 2009-12-21 17:17+1000\n"
+"Last-Translator: Xi HUANG <xhuang@redhat.com>\n"
+"Language-Team:  <en@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"X-Generator: KBabel 1.11.4\n"
 
 #. Tag: title
-#: preface.xml:29
 #, no-c-format
 msgid "Preface"
 msgstr "前書き"
 
 #. Tag: para
-#: preface.xml:31
 #, fuzzy, no-c-format
 msgid ""
 "Working with object-oriented software and a relational database can be "
@@ -27,29 +28,28 @@ msgid ""
 "representation from an object model to a relational data model with a SQL-"
 "based schema."
 msgstr ""
-"今日の企業環境において、オブジェクト指向ソフトウェアとリレーショナルデータ"
-"ベースに関わる作業は 煩雑で膨大な時間を必要とします。 HibernateはJava環境のオ"
-"ブジェクト/リレーショナルマッピングツールです。 オブジェクト/リレーショナル"
-"マッピング（ORM）とは、 オブジェクトモデルからSQLベーススキーマのリレーショナ"
-"ルデータモデルへと、 データ表現をマッピングする（対応付ける）技術のことです。"
+"オブジェクト指向のソフトウェアやリレーショナルデータベースの使用は、 今日のエ"
+"ンタープライズ環境では非常に繁雑で時間のかかる作業となります。 Hibernate は "
+"Java 環境用のオブジェクト/リレーショナルマッピングツールです。 オブジェクト/"
+"リレーショナルマッピング (ORM) とはデータ表現をオブジェクトモデルから SQL "
+"ベースのスキーマによるリレーショナルデータモデルにマッピングする技術のことを"
+"指します。 "
 
 #. Tag: para
-#: preface.xml:39
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "Hibernate not only takes care of the mapping from Java classes to database "
 "tables (and from Java data types to SQL data types), but also provides data "
 "query and retrieval facilities. It can also significantly reduce development "
 "time otherwise spent with manual data handling in SQL and JDBC."
 msgstr ""
-"HibernateはJavaクラスからデータベーステーブルへ（そしてJavaデータ型からSQL"
-"データ型へ） のマッピングを処理するだけではなく、データのクエリと復元の仕組み"
-"も提供します。 このおかげでSQLとJDBCを使った手作業でのデータ処理に費やされて"
-"いた開発時間を大幅に削減できます。"
+"Hibernate は Java クラスからデータベーステーブルへのマッピング(及び Java デー"
+"タタイプから SQL データタイプへのマッピング)を行うだけでなくデータのクエリや"
+"検索機能も提供するため、 SQL や JDBC での手作業によるデータ処理を除き開発に要"
+"する時間を大幅に削減することが可能になります。"
 
 #. Tag: para
-#: preface.xml:46
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "Hibernate's goal is to relieve the developer from 95 percent of common data "
 "persistence related programming tasks. Hibernate may not be the best "
@@ -60,49 +60,47 @@ msgid ""
 "specific SQL code and will help with the common task of result set "
 "translation from a tabular representation to a graph of objects."
 msgstr ""
-"Hibernateの最終目標は、データの永続化に関わる一般的なプログラミング作業の95％"
-"から開発者を解放することです。 Hibernateはビジネスロジックの実装にストアドプ"
-"ロシージャを使う データ中心アプリケーションに対してのベストソリューションであ"
-"るに留まりません。 オブジェクト指向ドメインモデルとJavaベースの中間層でのビジ"
-"ネスロジックに対して最も役に立ちます。 しかしHibernateはベンダ固有のSQLコード"
-"を削減またはカプセル化したり、 表形式からオブジェクトのグラフへとリザルトセッ"
-"トを変換するなどの、 一般的なタスクにも役立つでしょう。"
+"Hibernate の目標は、 開発者にとってのプログラミングにおける一般的なデータ永続"
+"性の作業の 95 % を軽減することです。 Hibernate データベース内でビジネスロジッ"
+"クを実現するストアドプロシージャのみを使用するデータ処理中心のアプリケーショ"
+"ンに対しては最適ではないかもしれませんが、 Java ベースの中間層でのビジネスロ"
+"ジック及びオブジェクト指向のドメインモデルを使用する場合に最も役に立ちます。 "
+"Hibernate は開発者がベンダー固有の SQL コードの除去あるいはカプセル化を行う際"
+"に便利なため、 表形式の表現からオブジェクトのグラフへの結果セットの変換に関す"
+"る一般的な作業に役立ちます。"
 
 #. Tag: para
-#: preface.xml:56
 #, no-c-format
 msgid ""
 "If you are new to Hibernate and Object/Relational Mapping or even Java, "
 "please follow these steps:"
 msgstr ""
-"Hibernateやオブジェクト/リレーショナルマッピング、 さらにはJavaが初めての方"
-"は、以下のステップに従ってください："
+"Hibernate 及びオブジェクト/リレーショナルマッピング、 あるいは Java が不慣れ"
+"な方は、 次の手順を行ってください。"
 
 #. Tag: para
-#: preface.xml:63
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
-"Read <xref linkend=\"tutorial\"/> for a tutorial with step-by-step "
+"Read <xref linkend=\"tutorial\" /> for a tutorial with step-by-step "
 "instructions. The source code for the tutorial is included in the "
 "distribution in the <literal>doc/reference/tutorial/</literal> directory."
 msgstr ""
-"<xref linkend=\"tutorial\"/> を読んでください。 段階的に解説していきます。 "
-"チュートリアルのソースコードはディストリビューションの <literal>doc/"
-"reference/tutorial</literal> ディレクトリに含まれています。"
+"ステップバイステップの解説が行われているチュートリアルとして <xref linkend="
+"\"tutorial\"/> をお読みください。 チュートリアルのソースコードはそのディスト"
+"リビューションの <literal>doc/reference/tutorial/</literal> ディレクトリ配下"
+"にあります。"
 
 #. Tag: para
-#: preface.xml:71
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
-"Read <xref linkend=\"architecture\"/> to understand the environments where "
+"Read <xref linkend=\"architecture\" /> to understand the environments where "
 "Hibernate can be used."
 msgstr ""
-"<xref linkend=\"architecture\"/> を読んで、Hibernateが利用可能な環境を理解し"
-"てください。"
+"Hibernate が使用できる環境について理解するため、 <xref linkend=\"architecture"
+"\"/> をお読みください。"
 
 #. Tag: para
-#: preface.xml:77
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "View the <literal>eg/</literal> directory in the Hibernate distribution. It "
 "contains a simple standalone application. Copy your JDBC driver to the "
@@ -111,62 +109,57 @@ msgid ""
 "command prompt in the distribution directory, type <literal>ant eg</literal> "
 "(using Ant), or under Windows, type <literal>build eg</literal>."
 msgstr ""
-"Hibernateディストリビューションの <literal>eg/</literal> ディレクトリを見てく"
-"ださい。 簡単なスタンドアローンのアプリケーションがあります。 JDBCドライバを "
-"<literal>lib/</literal> ディレクトリにコピーして、 自分のデータベースに合う正"
-"しい値を指定するように <literal>etc/hibernate.properties</literal> を編集して"
-"ください。 ディストリビューションディレクトリから、コマンドプロンプトで "
-"<literal>ant eg</literal> とタイプしてください（Antを使います）。 またWindows"
-"環境では <literal>build eg</literal> とタイプしてください。"
+"Hibernate ディストリビューション内の <literal>eg/</literal> ディレクトリ内を"
+"見てください。 シンプルなスタンドアローンのアプリケーションが含まれていま"
+"す。 ご使用の JDBC ドライバを <literal>lib/</literal> ディレクトリにコピーし"
+"てから使用するデータベースに対して正しい値を指定するよう <literal>etc/"
+"hibernate.properties</literal> を編集します。 ディストリビューションディレク"
+"トリ内のコマンドプロンプトから、 <literal>ant eg</literal> (Ant を使用)と入力"
+"するか、 Windows 環境の場合は <literal>build eg</literal> と入力します。"
 
 #. Tag: para
-#: preface.xml:88
 #, fuzzy, no-c-format
 msgid ""
 "Use this reference documentation as your primary source of information. "
 "Consider reading <biblioref linkend=\"biblio-JPwH\"></biblioref> if you need "
 "more help with application design, or if you prefer a step-by-step tutorial. "
-"Also visit <ulink url=\"http://caveatemptor.hibernate.org\"></ulink> and "
-"download the example application from <biblioref linkend=\"biblio-JPwH\"></"
-"biblioref>."
+"Also visit <ulink url=\"http://caveatemptor.hibernate.org\" /> and download "
+"the example application from <biblioref linkend=\"biblio-JPwH\"></biblioref>."
 msgstr ""
-"このリファレンスドキュメントを第一の情報源として利用してください。 アプリケー"
-"ション設計についてのさらなる情報や段階的なチュートリアルを探しているなら、 "
-"<emphasis>Java Persistence with Hibernate</emphasis>（http://www.manning.com/"
-"bauer2） をおすすめします。 またhttp://caveatemptor.hibernate.orgから Java "
-"Persistence with Hibernateの例題のアプリケーションをダウンロードできます。"
+"おもな情報源として本リファレンスドキュメントをご利用ください。 アプリケーショ"
+"ンのデザインに関する詳細、 ステップバイステップによる解説が必要な場合は、 "
+"<emphasis>Hibernate in Action</emphasis> (http://www.manning.com/bauer) をお"
+"読みになってもいいでしょう。 また、 http://caveatemptor.hibernate.org から "
+"Hibernate in Action のサンプルアプリケーションをダウンロードすることもできま"
+"す。"
 
 #. Tag: para
-#: preface.xml:98
 #, no-c-format
 msgid "FAQs are answered on the Hibernate website."
-msgstr "FAQはHibernateウェブサイトにあります。"
+msgstr "よくある質問とその答え (FAQ) は Hibernate ウェブサイトでご覧ください。"
 
 #. Tag: para
-#: preface.xml:103
 #, fuzzy, no-c-format
 msgid ""
 "Links to third party demos, examples, and tutorials are maintained on the "
 "Hibernate website."
 msgstr ""
-"サードパーティのデモ、例、チュートリアルはHibernateウェブサイトにリンクがあり"
-"ます。"
+"サードパーティのデモ、 サンプル、 チュートリアルなどは Hibernate のウェブサイ"
+"ト上にリンクされています。"
 
 #. Tag: para
-#: preface.xml:109
 #, no-c-format
 msgid ""
 "The Community Area on the Hibernate website is a good resource for design "
 "patterns and various integration solutions (Tomcat, JBoss AS, Struts, EJB, "
 "etc.)."
 msgstr ""
-"Hibernateウェブサイトのコミュニティエリアは、デザインパターンやさまざまな統合"
-"ソリューション （Tomcat, JBoss AS, Struts, EJB, 等）についてのよい情報源で"
-"す。"
+"Hibernate ウェブサイト上の Community Area はデザインのパターンやさまざまな統"
+"合ソリューション (Tomcat、 JBoss AS、 Struts、 EJB など)を検索する上で興味深"
+"いリソースになります。"
 
 #. Tag: para
-#: preface.xml:117
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "If you have questions, use the user forum linked on the Hibernate website. "
 "We also provide a JIRA issue tracking system for bug reports and feature "
@@ -174,14 +167,13 @@ msgid ""
 "developer mailing list. If you are interested in translating this "
 "documentation into your language, contact us on the developer mailing list."
 msgstr ""
-"質問があればHibernateウェブサイトのユーザフォーラムを活用してください。 また"
-"バグレポートとフィーチャリクエストのためJIRA課題追跡システムを用意していま"
-"す。 Hibernateの開発に興味があれば、開発者メーリングリストに参加してくださ"
-"い。 このドキュメントをあなたの国の言葉に翻訳したい場合は、 開発者メーリング"
-"リストで私たちにコンタクトを取ってください。"
+"質問がある場合は、 Hibernate ウェブサイト上にリンクされたユーザーフォーラムを"
+"ご利用ください。 また、 バグ報告及び今後のリクエストに関しては JIRA (問題追跡"
+"システム) を提供しています。 Hibernate, の開発に興味がある方は、 開発者用メー"
+"リングリストにご参加ください。 本ドキュメントの翻訳に興味がある方は、 開発者"
+"用メーリングリストよりご連絡ください。"
 
 #. Tag: para
-#: preface.xml:125
 #, no-c-format
 msgid ""
 "Commercial development support, production support, and training for "
@@ -190,7 +182,8 @@ msgid ""
 "critical component of the JBoss Enterprise Middleware System (JEMS) suite of "
 "products."
 msgstr ""
-"商用開発のサポート、製品のサポート、HibernateのトレーニングはJBoss Inc.が提供"
-"しています （http://www.hibernate.org/SupportTraining/を見てください）。 "
-"HibernateはProfessional Open Sourceプロジェクト、 そしてJBoss Enterprise "
-"Middleware System（JEMS）プロダクトスイートのクリティカルコンポーネントです。"
+"Hibernate に関する商業用開発サポート、 実稼働サポート、 トレーニングについて"
+"は JBoss Inc よりご利用頂けます (http://www.hibernate.org/SupportTraining/ を"
+"参照)。 Hibernate はプロフェッショナルなオープンソースプロジェクトであり、 "
+"JBoss Enterprise Middleware System (JEMS) スィート製品の重要なコンポーネント"
+"になります。"

@@ -1,41 +1,51 @@
-#, fuzzy
+# translation of query_hql.po to
+# Michael H. Smith <mhideo@redhat.com>, 2007.
+# Angela Garcia <agarcia@redhat.com>, 2009, 2010.
+# translation of Collection_Mapping.po to
+# translation of Collection_Mapping.po to
+# translation of Collection_Mapping.po to
+# translation of Collection_Mapping.po to
+# translation of Collection_Mapping.po to
+# translation of Collection_Mapping.po to
+# translation of Collection_Mapping.po to
+# translation of Collection_Mapping.po to
+# translation of Collection_Mapping.po to
 msgid ""
 msgstr ""
+"Project-Id-Version: query_hql\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2009-06-10 21:02+0000\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"POT-Creation-Date: 2010-02-11T05:38:15\n"
+"PO-Revision-Date: 2010-01-05 17:47+1000\n"
+"Last-Translator: Angela Garcia <agarcia@redhat.com>\n"
+"Language-Team:  <en@li.org>\n"
+"MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: KBabel 1.11.4\n"
 
 #. Tag: title
-#: query_hql.xml:29
 #, no-c-format
 msgid "HQL: The Hibernate Query Language"
-msgstr "HQL: El Lenguaje de Consulta de Hibernate"
+msgstr "HQL: El lenguaje de consulta de Hibernate"
 
 #. Tag: para
-#: query_hql.xml:31
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "Hibernate uses a powerful query language (HQL) that is similar in appearance "
 "to SQL. Compared with SQL, however, HQL is fully object-oriented and "
 "understands notions like inheritance, polymorphism and association."
 msgstr ""
-"Hibernate est&#x00e1; equipado con un lenguaje de consulta extremadamente "
-"potente que (intencionalmente en absoluto) se parece much&#x00ed;simo a SQL. "
-"Pero no te enga&#x00f1;es por la sintaxis; HQL es completamente orientado a "
-"objetos, entendiendo nociones como herencia, polimorfismo y asociaci&#x00f3;"
-"n."
+"Hibernate utiliza un lenguaje de consulta potente (HQL) que se parece a SQL. "
+"Sin embargo, comparado con SQL, HQL es completamente orientado a objetos y "
+"comprende nociones como herencia, polimorfismo y asociación."
 
 #. Tag: title
-#: query_hql.xml:38
 #, no-c-format
 msgid "Case Sensitivity"
-msgstr "Sensibilidad a May&#x00fa;sculas"
+msgstr "Sensibilidad a mayúsculas"
 
 #. Tag: para
-#: query_hql.xml:40
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "With the exception of names of Java classes and properties, queries are case-"
 "insensitive. So <literal>SeLeCT</literal> is the same as <literal>sELEct</"
@@ -43,280 +53,164 @@ msgid ""
 "hibernate.eg.FOO</literal> is not <literal>org.hibernate.eg.Foo</literal>, "
 "and <literal>foo.barSet</literal> is not <literal>foo.BARSET</literal>."
 msgstr ""
-"Las consultas son insensibles a may&#x00fa;sculas, excepto para nombres de "
-"clases Java y propiedades. De modo que <literal>SeLeCT</literal> es lo mismo "
-"que <literal>sELEct</literal> e igual a <literal>SELECT</literal>, pero "
-"<literal>org.hibernate.eg.FOO</literal> no lo es a <literal>org.hibernate.eg."
-"Foo</literal> y <literal>foo.barSet</literal> no es igual a <literal>foo."
-"BARSET</literal>."
+"Las consultas no son sensibles a mayúsculas, a excepción de los nombres de "
+"las clases y propiedades Java. De modo que <literal>SeLeCT</literal> es lo "
+"mismo que <literal>sELEct</literal> e igual a <literal>SELECT</literal>, "
+"pero <literal>org.hibernate.eg.FOO</literal> no es lo mismo que <literal>org."
+"hibernate.eg.Foo</literal> y <literal>foo.barSet</literal> no es igual a "
+"<literal>foo.BARSET</literal>."
 
 #. Tag: para
-#: query_hql.xml:51
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "This manual uses lowercase HQL keywords. Some users find queries with "
 "uppercase keywords more readable, but this convention is unsuitable for "
 "queries embedded in Java code."
 msgstr ""
-"Este manual usa palabras clave HQL en min&#x00fa;sculas. Algunos usuarios "
-"encuentran las consultas con palabras clave en may&#x00fa;sculas m&#x00e1;s "
-"le&#x00ed;bles, pero encontramos esta convenci&#x00f3;n fea cuando se encaja "
-"en c&#x00f3;digo Java."
+"Este manual utiliza palabras clave HQL en minúsculas. Algunos usuarios "
+"encuentran que las consultas con palabras clave en mayúsculas son más "
+"fáciles de leer, pero esta convención no es apropiada para las peticiones "
+"incluidas en código Java."
 
 #. Tag: title
-#: query_hql.xml:59
 #, no-c-format
 msgid "The from clause"
-msgstr "La cl&#x00e1;usula from"
+msgstr "La cláusula from"
 
 #. Tag: para
-#: query_hql.xml:61
 #, no-c-format
 msgid "The simplest possible Hibernate query is of the form:"
-msgstr "La consulta m&#x00e1;s simple posible de Hibernate es de la forma:"
-
-#. Tag: programlisting
-#: query_hql.xml:65
-#, no-c-format
-msgid "<![CDATA[from eg.Cat]]>"
-msgstr "<![CDATA[from eg.Cat]]>"
+msgstr "La consulta posible más simple de Hibernate es de esta manera:"
 
 #. Tag: para
-#: query_hql.xml:67
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "This returns all instances of the class <literal>eg.Cat</literal>. You do "
 "not usually need to qualify the class name, since <literal>auto-import</"
 "literal> is the default. For example:"
 msgstr ""
-"que simplemente devuelve todas las instancias de la clase <literal>eg.Cat</"
-"literal>. Usualmente no necesitamos cualificar el nombre de la clase, ya que "
-"<literal>auto-import</literal> est&#x00e1; por defecto. De modo que casi "
-"siempre escribimos solamente:"
-
-#. Tag: programlisting
-#: query_hql.xml:73
-#, no-c-format
-msgid "<![CDATA[from Cat]]>"
-msgstr "<![CDATA[from Cat]]>"
+"Esto retorna todas las instancias de la clase <literal>eg.Cat</literal>. "
+"Usualmente no es necesario calificar el nombre de la clase ya que "
+"<literal>auto-import</literal> es el valor predeterminado. Por ejemplo:"
 
 #. Tag: para
-#: query_hql.xml:75
 #, no-c-format
 msgid ""
 "In order to refer to the <literal>Cat</literal> in other parts of the query, "
 "you will need to assign an <emphasis>alias</emphasis>. For example:"
 msgstr ""
-
-#. Tag: programlisting
-#: query_hql.xml:81 query_hql.xml:396
-#, no-c-format
-msgid "<![CDATA[from Cat as cat]]>"
-msgstr "<![CDATA[from Cat as cat]]>"
+"Con el fin de referirse al <literal>Cat</literal> en otras partes de la "
+"petición, necesitará asignar un <emphasis>alias</emphasis>. Por ejemplo:"
 
 #. Tag: para
-#: query_hql.xml:83
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "This query assigns the alias <literal>cat</literal> to <literal>Cat</"
 "literal> instances, so you can use that alias later in the query. The "
 "<literal>as</literal> keyword is optional. You could also write:"
 msgstr ""
-"Esta consulta asigna el alias <literal>cat</literal> a las instancias de "
-"<literal>Cat</literal>, de modo que podr&#x00ed;amos usar ese alias luego en "
-"la consulta. La palabra clave <literal>as</literal> es opcional; "
-"tambi&#x00e9;n podr&#x00ed;amos escribir:"
-
-#. Tag: programlisting
-#: query_hql.xml:89
-#, no-c-format
-msgid "<![CDATA[from Cat cat]]>"
-msgstr "<![CDATA[from Cat cat]]>"
+"Esta consulta asigna el alias <literal>cat</literal> a las instancias "
+"<literal>Cat</literal>, de modo que puede utilizar ese alias luego en la "
+"consulta. La palabra clave <literal>as</literal> es opcional. También podría "
+"escribir:"
 
 #. Tag: para
-#: query_hql.xml:91
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "Multiple classes can appear, resulting in a cartesian product or \"cross\" "
 "join."
 msgstr ""
-"Pueden aparecer m&#x00fa;ltiples clases, resultando en un producto "
-"cartesiano o uni&#x00f3;n \"cruzada\" (cross join)."
-
-#. Tag: programlisting
-#: query_hql.xml:95
-#, no-c-format
-msgid "<![CDATA[from Formula, Parameter]]>"
-msgstr "<![CDATA[from Formula, Parameter]]>"
-
-#. Tag: programlisting
-#: query_hql.xml:96
-#, no-c-format
-msgid "<![CDATA[from Formula as form, Parameter as param]]>"
-msgstr "<![CDATA[from Formula as form, Parameter as param]]>"
+"Pueden aparecer múltiples clases, lo que causa un producto cartesiano o una "
+"unión \"cruzada\" (cross join)."
 
 #. Tag: para
-#: query_hql.xml:98
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "It is good practice to name query aliases using an initial lowercase as this "
 "is consistent with Java naming standards for local variables (e.g. "
 "<literal>domesticCat</literal>)."
 msgstr ""
-"Se considera buena pr&#x00e1;ctica el nombrar los alias de consulta usando "
-"una inicial en min&#x00fa;sculas, consistente con los est&#x00e1;ndares de "
-"nombrado de Java para variables locales (por ejemplo, <literal>domesticCat</"
-"literal>)."
+"Se considera como una buena práctica el nombrar los alias de consulta "
+"utilizando una inicial en minúsculas, consistente con los estándares de "
+"nombrado de Java para las variables locales (por ejemplo, "
+"<literal>domesticCat</literal>). "
 
 #. Tag: title
-#: query_hql.xml:107
 #, no-c-format
 msgid "Associations and joins"
 msgstr "Asociaciones y uniones (joins)"
 
 #. Tag: para
-#: query_hql.xml:109
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "You can also assign aliases to associated entities or to elements of a "
 "collection of values using a <literal>join</literal>. For example:"
 msgstr ""
-"Podemos tambi&#x00e9;n asignar aliases a entidades asociadas, e incluso a "
-"elementos de una colecci&#x00f3;n de valores, usando una <literal>join</"
-"literal>."
-
-#. Tag: programlisting
-#: query_hql.xml:114
-#, no-c-format
-msgid ""
-"<![CDATA[from Cat as cat\n"
-"    inner join cat.mate as mate\n"
-"    left outer join cat.kittens as kitten]]>"
-msgstr ""
-"<![CDATA[from Cat as cat \n"
-"    inner join cat.mate as mate\n"
-"    left outer join cat.kittens as kitten]]>"
-
-#. Tag: programlisting
-#: query_hql.xml:116
-#, no-c-format
-msgid "<![CDATA[from Cat as cat left join cat.mate.kittens as kittens]]>"
-msgstr "<![CDATA[from Cat as cat left join cat.mate.kittens as kittens]]>"
-
-#. Tag: programlisting
-#: query_hql.xml:118
-#, no-c-format
-msgid "<![CDATA[from Formula form full join form.parameter param]]>"
-msgstr "<![CDATA[from Formula form full join form.parameter param]]>"
+"También puede asignar alias a entidades asociadas o a elementos de una "
+"colección de valores utilizando una <literal>join</literal>. Por ejemplo:"
 
 #. Tag: para
-#: query_hql.xml:120
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "The supported join types are borrowed from ANSI SQL:"
-msgstr "Los tipos de join soportados son prestados de ANSI SQL"
-
-#. Tag: literal
-#: query_hql.xml:127
-#, no-c-format
-msgid "inner join"
-msgstr "inner join"
-
-#. Tag: literal
-#: query_hql.xml:132
-#, no-c-format
-msgid "left outer join"
-msgstr "left outer join"
-
-#. Tag: literal
-#: query_hql.xml:137
-#, no-c-format
-msgid "right outer join"
-msgstr "right outer join"
+msgstr "Los tipos de uniones soportadas se tomaron prestados de ANSI SQL"
 
 #. Tag: para
-#: query_hql.xml:141
+#, no-c-format
+msgid "<literal>inner join</literal>"
+msgstr "<literal>inner join</literal>"
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid "<literal>left outer join</literal>"
+msgstr "<literal>inner join</literal>"
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid "<literal>right outer join</literal>"
+msgstr "<literal>inner join</literal>"
+
+#. Tag: para
 #, no-c-format
 msgid "<literal>full join</literal> (not usually useful)"
-msgstr "<literal>full join</literal> (no &#x00fa;til usualmente)"
+msgstr "<literal>full join</literal> (no es útil usualmente)"
 
 #. Tag: para
-#: query_hql.xml:147
 #, no-c-format
 msgid ""
 "The <literal>inner join</literal>, <literal>left outer join</literal> and "
 "<literal>right outer join</literal> constructs may be abbreviated."
 msgstr ""
 "Las construcciones <literal>inner join</literal>, <literal>left outer join</"
-"literal> y <literal>right outer join</literal> pueden ser abreviadas."
-
-#. Tag: programlisting
-#: query_hql.xml:152
-#, no-c-format
-msgid ""
-"<![CDATA[from Cat as cat\n"
-"    join cat.mate as mate\n"
-"    left join cat.kittens as kitten]]>"
-msgstr ""
-"<![CDATA[from Cat as cat \n"
-"    join cat.mate as mate\n"
-"    left join cat.kittens as kitten]]>"
+"literal> y <literal>right outer join</literal> se pueden abreviar."
 
 #. Tag: para
-#: query_hql.xml:154
 #, no-c-format
 msgid ""
 "You may supply extra join conditions using the HQL <literal>with</literal> "
 "keyword."
 msgstr ""
-"Puedes proveer condiciones de uni&#x00f3;n extra usando la palabra clave "
+"Puede proveer condiciones extras de unión utilizando la palabra clave "
 "<literal>with</literal> de HQL."
 
-#. Tag: programlisting
-#: query_hql.xml:159
-#, no-c-format
-msgid ""
-"<![CDATA[from Cat as cat\n"
-"    left join cat.kittens as kitten\n"
-"        with kitten.bodyWeight > 10.0]]>"
-msgstr ""
-"<![CDATA[from Cat as cat \n"
-"    left join cat.kittens as kitten \n"
-"        with kitten.bodyWeight > 10.0]]>"
-
 #. Tag: para
-#: query_hql.xml:161
 #, fuzzy, no-c-format
 msgid ""
 "A \"fetch\" join allows associations or collections of values to be "
 "initialized along with their parent objects using a single select. This is "
 "particularly useful in the case of a collection. It effectively overrides "
 "the outer join and lazy declarations of the mapping file for associations "
-"and collections. See <xref linkend=\"performance-fetching\"/> for more "
+"and collections. See <xref linkend=\"performance-fetching\" /> for more "
 "information."
 msgstr ""
-"En adici&#x00f3;n, un \"fetch\" join permite a las asociaciones o "
-"colecciones de valores ser inicializadas junto a sus objetos padres, usando "
-"una sola selecci&#x00f3;n. Esto es particularmente &#x00fa;til en el case de "
-"una colecci&#x00f3;n. Efectivamente sobrescribe el outer join y las "
-"declaraciones perezosas (lazy) del fichero de mapeo para asociaciones y "
-"colecciones. Ver <xref linkend=\"performance-fetching\"/> para m&#x00e1;s "
-"informaci&#x00f3;n."
-
-#. Tag: programlisting
-#: query_hql.xml:169
-#, no-c-format
-msgid ""
-"<![CDATA[from Cat as cat\n"
-"    inner join fetch cat.mate\n"
-"    left join fetch cat.kittens]]>"
-msgstr ""
-"<![CDATA[from Cat as cat \n"
-"    inner join fetch cat.mate\n"
-"    left join fetch cat.kittens]]>"
+"Una unión de \"recuperación\" le permite a las asociaciones o colecciones de "
+"valores que se inicialicen junto a sus objetos padres, usando un sólo "
+"select. Esto es útil particularmente en el caso de una colección. "
+"Efectivamente sobrescribe la unión externa y las declaraciones perezosas del "
+"archivo de mapeo para asociaciones y colecciones. Consulte <xref linkend="
+"\"performance-fetching\" /> para obtener más información."
 
 #. Tag: para
-#: query_hql.xml:171
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "A fetch join does not usually need to assign an alias, because the "
 "associated objects should not be used in the <literal>where</literal> clause "
@@ -325,31 +219,16 @@ msgid ""
 "The only reason you might need an alias is if you are recursively join "
 "fetching a further collection:"
 msgstr ""
-"Usualmente a un fetch join no se necesita asign&#x00e1;rsele un alias, "
-"porque los objetos asociados no deben ser usados en la cl&#x00e1;usula "
-"<literal>where</literal> (ni en cualquier otra cl&#x00e1;usula). Adem&#x00e1;"
-"s, los objetos asociados no son devueltos directamente en los resultados de "
-"consulta. En cambio, pueden ser accedidos v&#x00ed;a el objeto padre. La "
-"&#x00fa;nica raz&#x00f3;n por la que necesitar&#x00ed;amos un alias es "
-"estamos uniendo recursivamente otra colecci&#x00f3;n:"
-
-#. Tag: programlisting
-#: query_hql.xml:179
-#, no-c-format
-msgid ""
-"<![CDATA[from Cat as cat\n"
-"    inner join fetch cat.mate\n"
-"    left join fetch cat.kittens child\n"
-"    left join fetch child.kittens]]>"
-msgstr ""
-"<![CDATA[from Cat as cat \n"
-"    inner join fetch cat.mate\n"
-"    left join fetch cat.kittens child\n"
-"    left join fetch child.kittens]]>"
+"Usualmente no se necesita asignársele un alias a una unión de recuperación "
+"ya que los objetos asociados no se deben utilizar en la cláusula "
+"<literal>where</literal> (ni en cualquier otra cláusula). Los objetos "
+"asociados no se retornan directamente en los resultados de la consulta. En "
+"cambio, se pueden acceder por medio del objeto padre. La única razón por la "
+"que necesitaríamos un alias es si estamos uniendo recursivamente otra "
+"colección:"
 
 #. Tag: para
-#: query_hql.xml:181
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "The <literal>fetch</literal> construct cannot be used in queries called "
 "using <literal>iterate()</literal> (though <literal>scroll()</literal> can "
@@ -366,79 +245,61 @@ msgid ""
 "<literal>full join fetch</literal> and <literal>right join fetch</literal> "
 "are not meaningful."
 msgstr ""
-"Nota que la construcci&#x00f3;n <literal>fetch</literal> no puede usarse en "
-"consultas llamadas usando <literal>scroll()</literal> o <literal>iterate()</"
-"literal>. Ni debe usarse <literal>fetch</literal> junto con "
-"<literal>setMaxResults()</literal> o <literal>setFirstResult()</literal>. "
-"Tampoco puede usarse <literal>fetch</literal> junto a una condici&#x00f3;n "
-"<literal>with</literal> ad hoc. Es posible crear un producto cartesiano "
-"trayendo por join m&#x00e1;s de una colecci&#x00f3;n en una colecci&#x00f3;"
-"n, as&#x00ed; que ten cuidado en este caso. Traer por join m&#x00fa;ltiples "
-"roles de colecci&#x00f3;n tambi&#x00e9;n da a veces resultados inesperados "
-"para mapeos de bag, as&#x00ed; que s&#x00e9; cuidadoso sobre c&#x00f3;mo "
-"formular tus consultas en este caso. Finalmente, nota que <literal>full join "
-"fetch</literal> y <literal>right join fetch</literal> no son significativos."
+"La construcción <literal>fetch</literal> no puede utilizarse en consultas "
+"llamadas que usen <literal>iterate()</literal> (aunque se puede utilizar "
+"<literal>scroll()</literal>). <literal>Fetch</literal> se debe usar junto "
+"con <literal>setMaxResults()</literal> o <literal>setFirstResult()</literal> "
+"ya que estas operaciones se basan en las filas de resultados, las cuales "
+"usualmente contienen duplicados para la recuperación de colección temprana, "
+"por lo tanto, el número de filas no es lo que se esperaría. <literal>Fetch</"
+"literal> no se debe usar junto con una condición <literal>with</literal> "
+"improvisadas. Es posible crear un producto cartesiano por medio de una "
+"recuperación por union más de una colección en una consulta, así que tenga "
+"cuidado en este caso. La recuperación por unión de múltiples roles de "
+"colección también da resultados a veces inesperados para mapeos de bag, así "
+"que tenga cuidado de cómo formular sus consultas en este caso. Finalmente, "
+"observe que <literal>full join fetch</literal> y <literal>right join fetch</"
+"literal> no son significativos."
 
 #. Tag: para
-#: query_hql.xml:196
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "If you are using property-level lazy fetching (with bytecode "
 "instrumentation), it is possible to force Hibernate to fetch the lazy "
 "properties in the first query immediately using <literal>fetch all "
 "properties</literal>."
 msgstr ""
-"Si est&#x00e1;s usando recuperaci&#x00f3;n perezosa a nivel de propiedad "
-"(con instrumentaci&#x00f3;n de bytecode), es posible forzar a Hibernate a "
-"traer las propiedades perezosas inmediatamente (en la primera consulta) "
-"usando <literal>fetch all properties</literal>."
-
-#. Tag: programlisting
-#: query_hql.xml:202
-#, no-c-format
-msgid "<![CDATA[from Document fetch all properties order by name]]>"
-msgstr "<![CDATA[from Document fetch all properties order by name]]>"
-
-#. Tag: programlisting
-#: query_hql.xml:203
-#, no-c-format
-msgid ""
-"<![CDATA[from Document doc fetch all properties where lower(doc.name) like '%"
-"cats%']]>"
-msgstr ""
-"<![CDATA[from Document doc fetch all properties where lower(doc.name) like '%"
-"cats%']]>"
+"Si está utilizando una recuperación perezosa a nivel de propiedad (con "
+"instrumentación de código byte), es posible forzar a Hibernate a traer las "
+"propiedades perezosas inmediatamente utilizando <literal>fetch all "
+"properties</literal>."
 
 #. Tag: title
-#: query_hql.xml:208
 #, no-c-format
 msgid "Forms of join syntax"
-msgstr "UNTRANSLATED!!! Forms of join syntax"
+msgstr "Formas de sintaxis unida"
 
 #. Tag: para
-#: query_hql.xml:210
 #, no-c-format
 msgid ""
 "HQL supports two forms of association joining: <literal>implicit</literal> "
 "and <literal>explicit</literal>."
 msgstr ""
-"HQL supports two forms of association joining: <literal>implicit</literal> "
-"and <literal>explicit</literal>."
+"HQL soporta dos formas de unión de asociación: <literal>implicit</literal> y "
+"<literal>explicit</literal>."
 
 #. Tag: para
-#: query_hql.xml:214
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "The queries shown in the previous section all use the <literal>explicit</"
 "literal> form, that is, where the join keyword is explicitly used in the "
 "from clause. This is the recommended form."
 msgstr ""
-"The queries shown in the previous section all use the <literal>explicit</"
-"literal> form where the join keyword is explicitly used in the from clause. "
-"This is the recommended form."
+"Las consultas que se mostraron en la sección anterior todas utilizan la "
+"forma <literal>explicit</literal>, en donde la palabra clave join se utiliza "
+"explícitamente en la claúsula from. Esta es la forma recomendada."
 
 #. Tag: para
-#: query_hql.xml:219
 #, no-c-format
 msgid ""
 "The <literal>implicit</literal> form does not use the join keyword. Instead, "
@@ -446,56 +307,46 @@ msgid ""
 "literal> joins can appear in any of the HQL clauses. <literal>implicit</"
 "literal> join result in inner joins in the resulting SQL statement."
 msgstr ""
-"The <literal>implicit</literal> form does not use the join keyword. Instead, "
-"the associations are \"dereferenced\" using dot-notation. <literal>implicit</"
-"literal> joins can appear in any of the HQL clauses. <literal>implicit</"
-"literal> join result in inner joins in the resulting SQL statement."
-
-#. Tag: programlisting
-#: query_hql.xml:226
-#, no-c-format
-msgid "<![CDATA[from Cat as cat where cat.mate.name like '%s%']]>"
-msgstr "<![CDATA[from Cat as cat where cat.mate.name like '%s%']]>"
+"La forma <literal>implicit</literal> no utiliza la palabra clave join. Las "
+"asociaciones se \"desreferencian\" utilizando la notación punto. Uniones "
+"<literal>implicit</literal> pueden aparecer en cualquiera de las cláusulas "
+"HQL. La unión <literal>implicit</literal> causa uniones internas (inner "
+"joins) en la declaración SQL que resulta."
 
 #. Tag: title
-#: query_hql.xml:230
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "Referring to identifier property"
-msgstr "Refering to identifier property"
+msgstr "Referencia a la propiedad identificadora "
 
 #. Tag: para
-#: query_hql.xml:232
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "There are 2 ways to refer to an entity's identifier property:"
 msgstr ""
-"There are, generally speaking, 2 ways to refer to an entity's identifier "
-"property:"
+"Hay dos maneras de referirse a la propiedad identificadora de una entidad:"
 
 #. Tag: para
-#: query_hql.xml:237
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "The special property (lowercase) <literal>id</literal> may be used to "
 "reference the identifier property of an entity <emphasis>provided that the "
 "entity does not define a non-identifier property named id</emphasis>."
 msgstr ""
-"The special property (lowercase) <literal>id</literal> may be used to "
-"reference the identifier property of an entity <emphasis>provided that "
-"entity does not define a non-identifier property named id</emphasis>."
+"La propiedad especial (en minúsculas) <literal>id</literal> se puede "
+"utilizar para referenciar la propiedad identificadora de una entidad "
+"<emphasis> dado que la entidad no defina un id del nombre de la propiedad no-"
+"identificadora</emphasis>."
 
 #. Tag: para
-#: query_hql.xml:244
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "If the entity defines a named identifier property, you can use that property "
 "name."
 msgstr ""
-"If the entity defines a named identifier property, you may use that property "
-"name."
+"Si la entidad define una propiedad identificadora nombrada, puede utilizar "
+"ese nombre de propiedad."
 
 #. Tag: para
-#: query_hql.xml:250
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "References to composite identifier properties follow the same naming rules. "
 "If the entity has a non-identifier property named id, the composite "
@@ -503,15 +354,15 @@ msgid ""
 "the special <literal>id</literal> property can be used to reference the "
 "identifier property."
 msgstr ""
-"References to composite identifier properties follow the same naming rules. "
-"If the entity has a non-identifier property named id, the composite "
-"identifier property can only be referenced by its defined named; otherwise, "
-"the special <literal>id</literal> property can be used to rerference the "
-"identifier property."
+"Las referencias a propiedades identificadoras compuestas siguen las mismas "
+"reglas de nombramiento. Si la entidad no tiene un id del nombre de la "
+"propiedad no-identificadora, la propiedad identificadora compuesta sólamente "
+"puede ser referenciada por su nombre definido. De otra manera se puede "
+"utilizar la propiedad <literal>id</literal> especial para referenciar la "
+"propiedad identificadora."
 
 #. Tag: para
-#: query_hql.xml:258
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "Please note that, starting in version 3.2.2, this has changed significantly. "
 "In previous versions, <literal>id</literal> <emphasis>always</emphasis> "
@@ -519,323 +370,156 @@ msgid ""
 "ramification of that decision was that non-identifier properties named "
 "<literal>id</literal> could never be referenced in Hibernate queries."
 msgstr ""
-"Note: this has changed significantly starting in version 3.2.2. In previous "
-"versions, <literal>id</literal> <emphasis>always</emphasis> referred to the "
-"identifier property no matter what its actual name. A ramification of that "
-"decision was that non-identifier properties named <literal>id</literal> "
-"could never be referenced in Hibernate queries."
+"Observe que esto ha cambiado bastante desde la version 3.2.2. En versiones "
+"previas, <literal>id</literal><emphasis>siempre</emphasis> se refería a la "
+"propiedad identificadora sin importar su nombre real. Una ramificación de "
+"esa decisión fue que las propiedades no-identificadoras nombradas "
+"<literal>id</literal> nunca podrían ser referenciadas en consultas de "
+"Hibernate. "
 
 #. Tag: title
-#: query_hql.xml:269
 #, no-c-format
 msgid "The select clause"
-msgstr "La cl&#x00e1;usula select"
+msgstr "La cláusula select"
 
 #. Tag: para
-#: query_hql.xml:271
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "The <literal>select</literal> clause picks which objects and properties to "
 "return in the query result set. Consider the following:"
 msgstr ""
-"La cl&#x00e1;usula <literal>select</literal> escoge qu&#x00e9; objetos y "
-"propiedades devolver in el conjunto resultado de la consulta. Considera:"
-
-#. Tag: programlisting
-#: query_hql.xml:276
-#, no-c-format
-msgid ""
-"<![CDATA[select mate\n"
-"from Cat as cat\n"
-"    inner join cat.mate as mate]]>"
-msgstr ""
-"<![CDATA[select mate \n"
-"from Cat as cat \n"
-"    inner join cat.mate as mate]]>"
+"La cláusula <literal>select</literal> escoge qué objetos y propiedades "
+"devolver en el conjunto de resultados de la consulta. Considere lo siguiente:"
 
 #. Tag: para
-#: query_hql.xml:278
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "The query will select <literal>mate</literal>s of other <literal>Cat</"
 "literal>s. You can express this query more compactly as:"
 msgstr ""
-"La consulta seleccionar&#x00e1; <literal>mate</literal>s de otros "
-"<literal>Cat</literal>s. Realmente, puedes expresar esta consulta en un "
-"forma m&#x00e1;s compacta como:"
-
-#. Tag: programlisting
-#: query_hql.xml:283
-#, no-c-format
-msgid "<![CDATA[select cat.mate from Cat cat]]>"
-msgstr "<![CDATA[select cat.mate from Cat cat]]>"
+"La consulta seleccionará <literal>mate</literal>s de otros <literal>Cat</"
+"literal>s. Puede expresar esta consulta de una manera más compacta así:"
 
 #. Tag: para
-#: query_hql.xml:285
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "Queries can return properties of any value type including properties of "
 "component type:"
 msgstr ""
-"Las consultas pueden devolver propiedades de cualquier tipo de valor "
-"incluyendo propiedades de tipo componente:"
-
-#. Tag: programlisting
-#: query_hql.xml:289
-#, no-c-format
-msgid ""
-"<![CDATA[select cat.name from DomesticCat cat\n"
-"where cat.name like 'fri%']]>"
-msgstr ""
-"<![CDATA[select cat.name from DomesticCat cat\n"
-"where cat.name like 'fri%']]>"
-
-#. Tag: programlisting
-#: query_hql.xml:291
-#, no-c-format
-msgid "<![CDATA[select cust.name.firstName from Customer as cust]]>"
-msgstr "<![CDATA[select cust.name.firstName from Customer as cust]]>"
+"Las consultas pueden retornar propiedades de cualquier tipo de valor "
+"incluyendo propiedades del tipo componente:"
 
 #. Tag: para
-#: query_hql.xml:293
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "Queries can return multiple objects and/or properties as an array of type "
 "<literal>Object[]</literal>:"
 msgstr ""
-"Las consultas pueden devolver m&#x00fa;ltiples objetos y/o propiedades como "
-"un array de tipo <literal>Object[]</literal>,"
-
-#. Tag: programlisting
-#: query_hql.xml:298
-#, no-c-format
-msgid ""
-"<![CDATA[select mother, offspr, mate.name\n"
-"from DomesticCat as mother\n"
-"    inner join mother.mate as mate\n"
-"    left outer join mother.kittens as offspr]]>"
-msgstr ""
-"<![CDATA[select mother, offspr, mate.name \n"
-"from DomesticCat as mother\n"
-"    inner join mother.mate as mate\n"
-"    left outer join mother.kittens as offspr]]>"
+"Las consultas pueden retornar múltiples objetos y/o propiedades como un "
+"array de tipo <literal>Object[]</literal>,"
 
 #. Tag: para
-#: query_hql.xml:300
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "Or as a <literal>List</literal>:"
-msgstr "o como una <literal>List</literal>,"
-
-#. Tag: programlisting
-#: query_hql.xml:304
-#, no-c-format
-msgid ""
-"<![CDATA[select new list(mother, offspr, mate.name)\n"
-"from DomesticCat as mother\n"
-"    inner join mother.mate as mate\n"
-"    left outer join mother.kittens as offspr]]>"
-msgstr ""
-"<![CDATA[select new list(mother, offspr, mate.name)\n"
-"from DomesticCat as mother\n"
-"    inner join mother.mate as mate\n"
-"    left outer join mother.kittens as offspr]]>"
+msgstr "O como una <literal>List</literal>:"
 
 #. Tag: para
-#: query_hql.xml:306
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "Or - assuming that the class <literal>Family</literal> has an appropriate "
 "constructor - as an actual typesafe Java object:"
 msgstr ""
-"asumiendo que la clase <literal>Family</literal> tiene un constructor "
-"apropiado."
-
-#. Tag: programlisting
-#: query_hql.xml:310
-#, no-c-format
-msgid ""
-"<![CDATA[select new Family(mother, mate, offspr)\n"
-"from DomesticCat as mother\n"
-"    join mother.mate as mate\n"
-"    left join mother.kittens as offspr]]>"
-msgstr ""
-"<![CDATA[select new Family(mother, mate, offspr)\n"
-"from DomesticCat as mother\n"
-"    join mother.mate as mate\n"
-"    left join mother.kittens as offspr]]>"
+"O asumiendo que la clase <literal>Family</literal> tiene un constructor "
+"apropiado - como un objeto Java de tipo seguro:"
 
 #. Tag: para
-#: query_hql.xml:313
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "You can assign aliases to selected expressions using <literal>as</literal>:"
 msgstr ""
-"Puedes asignar aliases para seleccionar expresiones usando <literal>as</"
+"Puede asignar alias para expresiones seleccionadas utilizando <literal>as</"
 "literal>:"
 
-#. Tag: programlisting
-#: query_hql.xml:317
-#, no-c-format
-msgid ""
-"<![CDATA[select max(bodyWeight) as max, min(bodyWeight) as min, count(*) as "
-"n\n"
-"from Cat cat]]>"
-msgstr ""
-"<![CDATA[select max(bodyWeight) as max, min(bodyWeight) as min, count(*) as "
-"n\n"
-"from Cat cat]]>"
-
 #. Tag: para
-#: query_hql.xml:319
 #, no-c-format
 msgid ""
 "This is most useful when used together with <literal>select new map</"
 "literal>:"
 msgstr ""
-"Esto es lo m&#x00e1;s &#x00fa;til cuando se usa junto con <literal>select "
-"new map</literal>:"
-
-#. Tag: programlisting
-#: query_hql.xml:323
-#, no-c-format
-msgid ""
-"<![CDATA[select new map( max(bodyWeight) as max, min(bodyWeight) as min, "
-"count(*) as n )\n"
-"from Cat cat]]>"
-msgstr ""
-"<![CDATA[select new map( max(bodyWeight) as max, min(bodyWeight) as min, "
-"count(*) as n )\n"
-"from Cat cat]]>"
+"Esto es lo más útil cuando se usa junto con <literal>select new map</"
+"literal>:"
 
 #. Tag: para
-#: query_hql.xml:325
 #, no-c-format
 msgid ""
 "This query returns a <literal>Map</literal> from aliases to selected values."
 msgstr ""
-"Esta consulta devuelve un <literal>Map</literal> de aliases a valores "
+"Esta consulta devuelve un <literal>Map</literal> de alias a valores "
 "seleccionados."
 
 #. Tag: title
-#: query_hql.xml:332
 #, no-c-format
 msgid "Aggregate functions"
-msgstr "Funciones de agregaci&#x00f3;n"
+msgstr "Funciones de agregación"
 
 #. Tag: para
-#: query_hql.xml:334
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "HQL queries can even return the results of aggregate functions on properties:"
 msgstr ""
-"Las consultas HQL pueden incluso devolver resultados de funciones de "
-"agregaci&#x00f3;n sobre propiedades:"
-
-#. Tag: programlisting
-#: query_hql.xml:338
-#, no-c-format
-msgid ""
-"<![CDATA[select avg(cat.weight), sum(cat.weight), max(cat.weight), count"
-"(cat)\n"
-"from Cat cat]]>"
-msgstr ""
-"<![CDATA[select avg(cat.weight), sum(cat.weight), max(cat.weight), count"
-"(cat)\n"
-"from Cat cat]]>"
+"Las consultas HQL pueden incluso retornar resultados de funciones de "
+"agregación sobre propiedades:"
 
 #. Tag: para
-#: query_hql.xml:349
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "The supported aggregate functions are:"
-msgstr "Las funciones de agregaci&#x00f3;n soportadas son"
-
-#. Tag: literal
-#: query_hql.xml:356
-#, no-c-format
-msgid "avg(...), sum(...), min(...), max(...)"
-msgstr "avg(...), sum(...), min(...), max(...)"
-
-#. Tag: literal
-#: query_hql.xml:361
-#, no-c-format
-msgid "count(*)"
-msgstr "count(*)"
-
-#. Tag: literal
-#: query_hql.xml:366
-#, no-c-format
-msgid "count(...), count(distinct ...), count(all...)"
-msgstr "count(...), count(distinct ...), count(all...)"
+msgstr "Las funciones de agregación soportadas son:"
 
 #. Tag: para
-#: query_hql.xml:371
 #, fuzzy, no-c-format
+msgid "<literal>avg(...), sum(...), min(...), max(...)</literal>"
+msgstr "<literal>avg(...), sum(...), min(...), max(...)</literal>"
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>count(*)</literal>"
+msgstr "<literal>count(*)</literal>"
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid "<literal>count(...), count(distinct ...), count(all...)</literal>"
+msgstr "<literal>count(...), count(distinct ...), count(all...)</literal>"
+
+#. Tag: para
+#, no-c-format
 msgid ""
 "You can use arithmetic operators, concatenation, and recognized SQL "
 "functions in the select clause:"
 msgstr ""
-"Puedes usar operadores aritm&#x00e9;ticos, concatenaci&#x00f3;n, y funciones "
-"SQL reconocidas en la cl&#x00e1;usula select:"
-
-#. Tag: programlisting
-#: query_hql.xml:376
-#, no-c-format
-msgid ""
-"<![CDATA[select cat.weight + sum(kitten.weight)\n"
-"from Cat cat\n"
-"    join cat.kittens kitten\n"
-"group by cat.id, cat.weight]]>"
-msgstr ""
-"<![CDATA[select cat.weight + sum(kitten.weight) \n"
-"from Cat cat \n"
-"    join cat.kittens kitten\n"
-"group by cat.id, cat.weight]]>"
-
-#. Tag: programlisting
-#: query_hql.xml:378
-#, no-c-format
-msgid ""
-"<![CDATA[select firstName||' '||initial||' '||upper(lastName) from Person]]>"
-msgstr ""
-"<![CDATA[select firstName||' '||initial||' '||upper(lastName) from Person]]>"
+"Puede utilizar operadores aritméticos, concatenación y funciones SQL "
+"reconocidas en la cláusula select:"
 
 #. Tag: para
-#: query_hql.xml:380
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "The <literal>distinct</literal> and <literal>all</literal> keywords can be "
 "used and have the same semantics as in SQL."
 msgstr ""
-"Las palabras clave <literal>distinct</literal> y <literal>all</literal> "
-"pueden ser usadas y tienen las misma sem&#x00e1;ntica que en SQL."
-
-#. Tag: programlisting
-#: query_hql.xml:385
-#, no-c-format
-msgid ""
-"<![CDATA[select distinct cat.name from Cat cat\n"
-"\n"
-"select count(distinct cat.name), count(cat) from Cat cat]]>"
-msgstr ""
-"<![CDATA[select distinct cat.name from Cat cat\n"
-"\n"
-"select count(distinct cat.name), count(cat) from Cat cat]]>"
+"Las palabras clave <literal>distinct</literal> y <literal>all</literal> se "
+"pueden utilizar y tienen las misma semántica que en SQL."
 
 #. Tag: title
-#: query_hql.xml:390
 #, no-c-format
 msgid "Polymorphic queries"
-msgstr "Consultas polim&#x00f3;rficas"
+msgstr "Consultas polimórficas"
 
 #. Tag: para
-#: query_hql.xml:392
 #, no-c-format
 msgid "A query like:"
 msgstr "Una consulta como:"
 
 #. Tag: para
-#: query_hql.xml:398
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "returns instances not only of <literal>Cat</literal>, but also of subclasses "
 "like <literal>DomesticCat</literal>. Hibernate queries can name "
@@ -844,291 +528,173 @@ msgid ""
 "that extend that class or implement the interface. The following query would "
 "return all persistent objects:"
 msgstr ""
-"devuelve instancias no s&#x00f3;lo de <literal>Cat</literal>, sino "
-"tambi&#x00e9;n de subclases como <literal>DomesticCat</literal>. Las "
-"consultas de Hibernate pueden mencionar <emphasis>cualquier</emphasis> clase "
-"o interface Java en la cl&#x00e1;usula <literal>from</literal>. La consulta "
-"devolver&#x00e1; instancias de todas las clases persistentes que extiendan "
-"esa clase o implementen la interface. La siguiente consulta devolver&#x00ed;"
-"a todos los objetos persistentes."
-
-#. Tag: programlisting
-#: query_hql.xml:406
-#, no-c-format
-msgid "<![CDATA[from java.lang.Object o]]>"
-msgstr "<![CDATA[from java.lang.Object o]]>"
+"devuelve instancias no sólamente de <literal>Cat</literal>, sino también de "
+"subclases como <literal>DomesticCat</literal>. Las consultas de Hibernate "
+"pueden nombrar <emphasis>cualquier</emphasis> clase o interfaz Java en la "
+"cláusula <literal>from</literal>. La consulta retornará instancias de todas "
+"las clases persistentes que extiendan esa clase o implementen la interfaz. "
+"La siguiente consulta retornaría todos los objetos persistentes."
 
 #. Tag: para
-#: query_hql.xml:408
 #, no-c-format
 msgid ""
 "The interface <literal>Named</literal> might be implemented by various "
 "persistent classes:"
 msgstr ""
-"La interface <literal>Named</literal> podr&#x00ed;a ser implementada por "
-"varias clases persistentes:"
-
-#. Tag: programlisting
-#: query_hql.xml:413
-#, no-c-format
-msgid "<![CDATA[from Named n, Named m where n.name = m.name]]>"
-msgstr "<![CDATA[from Named n, Named m where n.name = m.name]]>"
+"La interfaz <literal>Named</literal> se podría implementar por varias clases "
+"persistentes:"
 
 #. Tag: para
-#: query_hql.xml:415
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "These last two queries will require more than one SQL <literal>SELECT</"
 "literal>. This means that the <literal>order by</literal> clause does not "
 "correctly order the whole result set. It also means you cannot call these "
 "queries using <literal>Query.scroll()</literal>."
 msgstr ""
-"Nota que estas dos &#x00fa;ltimas consultas requerir&#x00e1;n m&#x00e1;s de "
-"un <literal>SELECT</literal> SQL. Esto significa que la cl&#x00e1;usula "
-"<literal>order by</literal> no ordenar&#x00e1; correctamente todo el "
-"conjunto resultado. (Significa adem&#x00e1;s que no puedes llamar estas "
-"consulta usando <literal>Query.scroll()</literal>.)"
+"Las dos últimas consultas requerirán más de un <literal>SELECT</literal> "
+"SQL. Esto significa que la cláusula <literal>order by</literal> no ordenará "
+"correctamente todo el conjunto que resulte. También significa que no puede "
+"llamar estas consulta usando <literal>Query.scroll()</literal>."
 
 #. Tag: title
-#: query_hql.xml:424
 #, no-c-format
 msgid "The where clause"
-msgstr "La cl&#x00e1;usula where"
+msgstr "La cláusula where"
 
 #. Tag: para
-#: query_hql.xml:426
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "The <literal>where</literal> clause allows you to refine the list of "
 "instances returned. If no alias exists, you can refer to properties by name:"
 msgstr ""
-"La cl&#x00e1;usula where te permite estrechar la lista de instancias "
-"devueltas. Si no existe ning&#x00fa;n alias. puedes referirte a las "
+"La cláusula <literal>where</literal> le permite refinar la lista de "
+"instancias retornadas. Si no existe ningún alias, puede referirse a las "
 "propiedades por nombre:"
 
-#. Tag: programlisting
-#: query_hql.xml:431
-#, no-c-format
-msgid "<![CDATA[from Cat where name='Fritz']]>"
-msgstr "<![CDATA[from Cat where name='Fritz']]>"
-
 #. Tag: para
-#: query_hql.xml:433
 #, no-c-format
 msgid "If there is an alias, use a qualified property name:"
-msgstr "Si existe un alias, usan un nombre cualificado de propiedad:"
-
-#. Tag: programlisting
-#: query_hql.xml:437
-#, no-c-format
-msgid "<![CDATA[from Cat as cat where cat.name='Fritz']]>"
-msgstr "<![CDATA[from Cat as cat where cat.name='Fritz']]>"
+msgstr "Si existe un alias, use un nombre de propiedad calificado:"
 
 #. Tag: para
-#: query_hql.xml:439
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "This returns instances of <literal>Cat</literal> named 'Fritz'."
-msgstr "devuelve las instancias de <literal>Cat</literal> llamadas 'Fritz'."
+msgstr "Esto retorna instancias de <literal>Cat</literal> llamadas 'Fritz'."
 
 #. Tag: para
-#: query_hql.xml:443
-#, fuzzy, no-c-format
-msgid ""
-"The following query: <programlisting><![CDATA[select foo\n"
-"from Foo foo, Bar bar\n"
-"where foo.startDate = bar.date]]></programlisting> returns all instances of "
-"<literal>Foo</literal> with an instance of <literal>bar</literal> with a "
-"<literal>date</literal> property equal to the <literal>startDate</literal> "
-"property of the <literal>Foo</literal>. Compound path expressions make the "
-"<literal>where</literal> clause extremely powerful. Consider the following:"
-msgstr ""
-"devolver&#x00e1; todas las instancias de <literal>Foo</literal> para las "
-"cuales exista una instancia de <literal>bar</literal> con una propiedad "
-"<literal>date</literal> igual a la propiedad <literal>startDate</literal> "
-"del <literal>Foo</literal>. Las expresiones de ruta compuestas hacen la "
-"cl&#x00e1;usula <literal>where</literal> extremadamente potente. Considera:"
-
-#. Tag: programlisting
-#: query_hql.xml:454
 #, no-c-format
-msgid "<![CDATA[from Cat cat where cat.mate.name is not null]]>"
-msgstr "<![CDATA[from Cat cat where cat.mate.name is not null]]>"
+msgid "The following query:"
+msgstr "La siguiente petición:"
 
 #. Tag: para
-#: query_hql.xml:456
-#, fuzzy, no-c-format
+#, no-c-format
+msgid ""
+"returns all instances of <literal>Foo</literal> with an instance of "
+"<literal>bar</literal> with a <literal>date</literal> property equal to the "
+"<literal>startDate</literal> property of the <literal>Foo</literal>. "
+"Compound path expressions make the <literal>where</literal> clause extremely "
+"powerful. Consider the following:"
+msgstr ""
+"retornará todas las instancias de <literal>Foo</literal> con una instancia "
+"de <literal>bar</literal> con una propiedad <literal>date</literal> igual a "
+"la propiedad <literal>startDate</literal> del <literal>Foo</literal>. Las "
+"expresiones de ruta compuestas hacen la cláusula <literal>where</literal> "
+"extremadamente potente. Tome en consideración lo siguiente:"
+
+#. Tag: para
+#, no-c-format
 msgid ""
 "This query translates to an SQL query with a table (inner) join. For example:"
 msgstr ""
-"Esta consulta se traduce en una consulta SQL con una uni&#x00f3;n de tabla "
-"(interna). Si fueses a escribir algo como"
-
-#. Tag: programlisting
-#: query_hql.xml:461
-#, no-c-format
-msgid ""
-"<![CDATA[from Foo foo\n"
-"where foo.bar.baz.customer.address.city is not null]]>"
-msgstr ""
-"<![CDATA[from Foo foo  \n"
-"where foo.bar.baz.customer.address.city is not null]]>"
+"Esta consulta se traduce a una consulta SQL con una unión de tabla "
+"(interna). Por ejemplo:"
 
 #. Tag: para
-#: query_hql.xml:463
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "would result in a query that would require four table joins in SQL."
 msgstr ""
-"terminar&#x00ed;as con una consulta que requerir&#x00ed;a cuatro uniones de "
-"tablas en SQL."
+"terminaría con una consulta que requeriría cuatro uniones de tablas en SQL. "
 
 #. Tag: para
-#: query_hql.xml:467
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "The <literal>=</literal> operator can be used to compare not only "
 "properties, but also instances:"
 msgstr ""
-"El operador <literal>=</literal> puede ser usado para comparar no s&#x00f3;"
-"lo propiedades, sino tambi&#x00e9;n instancias:"
-
-#. Tag: programlisting
-#: query_hql.xml:472
-#, no-c-format
-msgid "<![CDATA[from Cat cat, Cat rival where cat.mate = rival.mate]]>"
-msgstr "<![CDATA[from Cat cat, Cat rival where cat.mate = rival.mate]]>"
-
-#. Tag: programlisting
-#: query_hql.xml:474
-#, no-c-format
-msgid ""
-"<![CDATA[select cat, mate\n"
-"from Cat cat, Cat mate\n"
-"where cat.mate = mate]]>"
-msgstr ""
-"<![CDATA[select cat, mate \n"
-"from Cat cat, Cat mate\n"
-"where cat.mate = mate]]>"
+"El operador <literal>=</literal> se puede utilizar para comparar no "
+"sólamente propiedades sino también instancias:"
 
 #. Tag: para
-#: query_hql.xml:476
 #, fuzzy, no-c-format
 msgid ""
 "The special property (lowercase) <literal>id</literal> can be used to "
 "reference the unique identifier of an object. See <xref linkend=\"queryhql-"
-"identifier-property\"/> for more information."
+"identifier-property\" /> for more information."
 msgstr ""
-"La propiedad especial (en min&#x00fa;sculas) <literal>id</literal> puede ser "
-"usada para referenciar el identificador &#x00fa;nico de un objeto. "
-"(Tambi&#x00e9;n puedes usar su nombre de propiedad.)"
+"La propiedad especial <literal>id</literal> (en minúsculas) se puede "
+"utilizar para referenciar el identificador único de un objeto. Consulte "
+"<xref linkend=\"queryhql-identifier-property\" /> para obtener más "
+"información."
 
-#. Tag: programlisting
-#: query_hql.xml:482
+#. Tag: para
 #, no-c-format
-msgid ""
-"<![CDATA[from Cat as cat where cat.id = 123\n"
-"\n"
-"from Cat as cat where cat.mate.id = 69]]>"
-msgstr ""
-"<![CDATA[from Cat as cat where cat.id = 123\n"
-"\n"
-"from Cat as cat where cat.mate.id = 69]]>"
-
-#. Tag: para
-#: query_hql.xml:484
-#, fuzzy, no-c-format
 msgid "The second query is efficient and does not require a table join."
-msgstr ""
-"La segunda consulta es eficiente. &#x00a1;No se requiere ninguna uni&#x00f3;"
-"n de tablas!"
+msgstr "La segunda consulta es eficiente y no se necesita una unión de tablas."
 
 #. Tag: para
-#: query_hql.xml:488
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "Properties of composite identifiers can also be used. Consider the following "
 "example where <literal>Person</literal> has composite identifiers consisting "
 "of <literal>country</literal> and <literal>medicareNumber</literal>:"
 msgstr ""
-"Tambi&#x00e9;n pueden ser usadas las propiedades de identificadores "
-"compuestos. Sup&#x00f3;n que <literal>Person</literal> tiene un "
-"identificador compuesto consistente en <literal>country</literal> y "
-"<literal>medicareNumber</literal>."
-
-#. Tag: programlisting
-#: query_hql.xml:494
-#, no-c-format
-msgid ""
-"<![CDATA[from bank.Person person\n"
-"where person.id.country = 'AU'\n"
-"    and person.id.medicareNumber = 123456]]>"
-msgstr ""
-"<![CDATA[from bank.Person person\n"
-"where person.id.country = 'AU' \n"
-"    and person.id.medicareNumber = 123456]]>"
-
-#. Tag: programlisting
-#: query_hql.xml:496
-#, no-c-format
-msgid ""
-"<![CDATA[from bank.Account account\n"
-"where account.owner.id.country = 'AU'\n"
-"    and account.owner.id.medicareNumber = 123456]]>"
-msgstr ""
-"<![CDATA[from bank.Account account\n"
-"where account.owner.id.country = 'AU' \n"
-"    and account.owner.id.medicareNumber = 123456]]>"
+"También se pueden utilizar las propiedades de identificadores compuestos. "
+"Considere el siguiente ejemplo en donde <literal>Person</literal> tiene "
+"identificadores compuestos que consisten de <literal>country</literal> y "
+"<literal>medicareNumber</literal>:"
 
 #. Tag: para
-#: query_hql.xml:498
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "Once again, the second query does not require a table join."
-msgstr ""
-"Una vez m&#x00e1;s, la segunda consulta no requiere ninguna uni&#x00f3;n de "
-"tablas."
+msgstr "Una vez más, la segunda consulta no requiere una unión de tablas."
 
 #. Tag: para
-#: query_hql.xml:502
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
-"See <xref linkend=\"queryhql-identifier-property\"/> for more information "
+"See <xref linkend=\"queryhql-identifier-property\" /> for more information "
 "regarding referencing identifier properties)"
 msgstr ""
+"Consulte <xref linkend=\"queryhql-identifier-property\" /> para obtener "
+"mayor información con relación a la referencia de propiedades del "
+"identificador)"
 
 #. Tag: para
-#: query_hql.xml:507
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "The special property <literal>class</literal> accesses the discriminator "
 "value of an instance in the case of polymorphic persistence. A Java class "
 "name embedded in the where clause will be translated to its discriminator "
 "value."
 msgstr ""
-"Asimismo, la propiedad especial <literal>class</literal> acccede al valor "
-"discriminador de una instancia en el caso de persistencia polim&#x00f3;"
-"rfica. Un nombre de clase Java embebido en la cl&#x00e1;usula where "
-"ser&#x00e1; traducido a su valor discriminador."
-
-#. Tag: programlisting
-#: query_hql.xml:513
-#, no-c-format
-msgid "<![CDATA[from Cat cat where cat.class = DomesticCat]]>"
-msgstr "<![CDATA[from Cat cat where cat.class = DomesticCat]]>"
+"La propiedad especial <literal>class</literal> acccede al valor "
+"discriminador de una instancia en el caso de persistencia polimórfica. Un "
+"nombre de clase Java incluído en la cláusula where será traducido a su valor "
+"discriminador."
 
 #. Tag: para
-#: query_hql.xml:515
 #, fuzzy, no-c-format
 msgid ""
 "You can also use components or composite user types, or properties of said "
-"component types. See <xref linkend=\"queryhql-components\"/> for more "
+"component types. See <xref linkend=\"queryhql-components\" /> for more "
 "information."
 msgstr ""
-"You may also use components or composite user types, or properties of said "
-"component types. See <xref linkend=\"queryhql-components\"/> for more "
-"details."
+"También puede utilizar componentes o tipos de usuario compuesto o "
+"propiedades de dichos tipos de componentes. Consulte <xref linkend="
+"\"queryhql-components\" /> para obtener más detalles."
 
 #. Tag: para
-#: query_hql.xml:520
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "An \"any\" type has the special properties <literal>id</literal> and "
 "<literal>class</literal> that allows you to express a join in the following "
@@ -1136,79 +702,60 @@ msgid ""
 "<literal>&lt;any&gt;</literal>):"
 msgstr ""
 "Un tipo \"any\" tiene las propiedades especiales <literal>id</literal> y "
-"<literal>class</literal>, permit&#x00e9;ndonos expresar un join en la "
-"siguiente forma (donde <literal>AuditLog.item</literal> es una propiedad "
-"mapeada con <literal>&lt;any&gt;</literal>)."
-
-#. Tag: programlisting
-#: query_hql.xml:526
-#, no-c-format
-msgid ""
-"<![CDATA[from AuditLog log, Payment payment\n"
-"where log.item.class = 'Payment' and log.item.id = payment.id]]>"
-msgstr ""
-"<![CDATA[from AuditLog log, Payment payment \n"
-"where log.item.class = 'Payment' and log.item.id = payment.id]]>"
+"<literal>class</literal>, permiténdole expresar una unión de la siguiente "
+"forma (en donde <literal>AuditLog.item</literal> es una propiedad mapeada "
+"con <literal>&lt;any&gt;</literal>)."
 
 #. Tag: para
-#: query_hql.xml:528
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "The <literal>log.item.class</literal> and <literal>payment.class</literal> "
 "would refer to the values of completely different database columns in the "
 "above query."
 msgstr ""
-"Nota que <literal>log.item.class</literal> y <literal>payment.class</"
-"literal> har&#x00ed;an referencia a los valores de columnas de base de datos "
+"La <literal>log.item.class</literal> y <literal>payment.class</literal> "
+"harían referencia a los valores de columnas de la base de datos "
 "completamente diferentes en la consulta anterior."
 
 #. Tag: title
-#: query_hql.xml:536
 #, no-c-format
 msgid "Expressions"
 msgstr "Expresiones"
 
 #. Tag: para
-#: query_hql.xml:538
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "Expressions used in the <literal>where</literal> clause include the "
 "following:"
 msgstr ""
-"Las expresiones permitidas en la cl&#x00e1;usula <literal>where</literal> "
-"incluyen la mayor&#x00ed;a del tipo de cosas que podr&#x00ed;as escribir en "
-"SQL:"
+"Las expresiones utilizadas en la cláusula <literal>where</literal> incluyen "
+"lo siguiente:"
 
 #. Tag: para
-#: query_hql.xml:545
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "mathematical operators: <literal>+, -, *, /</literal>"
-msgstr "operadores matem&#x00e1;ticos <literal>+, -, *, /</literal>"
+msgstr "operadores matemáticos: <literal>+, -, *, /</literal>"
 
 #. Tag: para
-#: query_hql.xml:550
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "binary comparison operators: <literal>=, &gt;=, &lt;=, &lt;&gt;, !=, like</"
 "literal>"
 msgstr ""
-"operadores de comparaci&#x00f3;n binarios <literal>=, &gt;=, &lt;=, &lt;"
-"&gt;, !=, like</literal>"
+"operadores de comparación binarios: <literal>=, &gt;=, &lt;=, &lt;&gt;, !=, "
+"like</literal>"
 
 #. Tag: para
-#: query_hql.xml:555
 #, no-c-format
 msgid "logical operations <literal>and, or, not</literal>"
-msgstr "operadores l&#x00f3;gicos <literal>and, or, not</literal>"
+msgstr "operadores lógicos <literal>and, or, not</literal>"
 
 #. Tag: para
-#: query_hql.xml:560
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "Parentheses <literal>( )</literal> that indicates grouping"
-msgstr "Par&#x00e9;ntesis <literal>( )</literal>, indicando agrupaci&#x00f3;n"
+msgstr "Paréntesis <literal>( )</literal> que indican agrupación"
 
 #. Tag: para
-#: query_hql.xml:565
 #, no-c-format
 msgid ""
 "<literal>in</literal>, <literal>not in</literal>, <literal>between</"
@@ -1222,7 +769,6 @@ msgstr ""
 "<literal>member of</literal> y <literal>not member of</literal>"
 
 #. Tag: para
-#: query_hql.xml:578
 #, no-c-format
 msgid ""
 "\"Simple\" case, <literal>case ... when ... then ... else ... end</literal>, "
@@ -1232,28 +778,25 @@ msgstr ""
 "y caso \"buscado\", <literal>case when ... then ... else ... end</literal>"
 
 #. Tag: para
-#: query_hql.xml:584
 #, no-c-format
 msgid ""
 "string concatenation <literal>...||...</literal> or <literal>concat(...,...)"
 "</literal>"
 msgstr ""
-"concatenaci&#x00f3;n de cadenas <literal>...||...</literal> o <literal>concat"
+"concatenación de cadenas <literal>...||...</literal> o <literal>concat"
 "(...,...)</literal>"
 
 #. Tag: para
-#: query_hql.xml:589
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "<literal>current_date()</literal>, <literal>current_time()</literal>, and "
 "<literal>current_timestamp()</literal>"
 msgstr ""
-"<literal>current_date()</literal>, <literal>current_time()</literal>, "
+"<literal>current_date()</literal>, <literal>current_time()</literal> y "
 "<literal>current_timestamp()</literal>"
 
 #. Tag: para
-#: query_hql.xml:595
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "<literal>second(...)</literal>, <literal>minute(...)</literal>, <literal>hour"
 "(...)</literal>, <literal>day(...)</literal>, <literal>month(...)</literal>, "
@@ -1261,38 +804,34 @@ msgid ""
 msgstr ""
 "<literal>second(...)</literal>, <literal>minute(...)</literal>, <literal>hour"
 "(...)</literal>, <literal>day(...)</literal>, <literal>month(...)</literal>, "
-"<literal>year(...)</literal>,"
+"and <literal>year(...)</literal>"
 
 #. Tag: para
-#: query_hql.xml:602
 #, no-c-format
 msgid ""
 "Any function or operator defined by EJB-QL 3.0: <literal>substring(), trim"
 "(), lower(), upper(), length(), locate(), abs(), sqrt(), bit_length(), mod()"
 "</literal>"
 msgstr ""
-"Cualquier funci&#x00f3;n u operador definido por EJB-QL 3.0: "
-"<literal>substring(), trim(), lower(), upper(), length(), locate(), abs(), "
-"sqrt(), bit_length(), mod()</literal>"
+"Cualquier función u operador definido por EJB-QL 3.0: <literal>substring(), "
+"trim(), lower(), upper(), length(), locate(), abs(), sqrt(), bit_length(), "
+"mod()</literal>"
 
 #. Tag: para
-#: query_hql.xml:608
 #, no-c-format
 msgid "<literal>coalesce()</literal> and <literal>nullif()</literal>"
 msgstr "<literal>coalesce()</literal> y <literal>nullif()</literal>"
 
 #. Tag: para
-#: query_hql.xml:613
 #, no-c-format
 msgid ""
 "<literal>str()</literal> for converting numeric or temporal values to a "
 "readable string"
 msgstr ""
-"<literal>str()</literal> para convertir valores num&#x00e9;ricos o "
-"temporales a una cadena legible."
+"<literal>str()</literal> para convertir valores numéricos o temporales a una "
+"cadena legible."
 
 #. Tag: para
-#: query_hql.xml:619
 #, no-c-format
 msgid ""
 "<literal>cast(... as ...)</literal>, where the second argument is the name "
@@ -1301,23 +840,21 @@ msgid ""
 "the underlying database"
 msgstr ""
 "<literal>cast(... as ...)</literal>, donde el segundo argumento es el nombre "
-"de un tipo Hibernate , y <literal>extract(... from ...)</literal> si "
-"<literal>cast()</literal> y <literal>extract()</literal> fuesen soportados "
-"por la base de datos subyacente."
+"de un tipo de Hibernate , y <literal>extract(... from ...)</literal> si "
+"<literal>cast()</literal> y <literal>extract()</literal> es soportado por la "
+"base de datos subyacente."
 
 #. Tag: para
-#: query_hql.xml:627
 #, no-c-format
 msgid ""
 "the HQL <literal>index()</literal> function, that applies to aliases of a "
 "joined indexed collection"
 msgstr ""
-"la funci&#x00f3;n <literal>index()</literal> de HQL, que se aplica a alias "
-"de una colecci&#x00f3;n indexada unida."
+"la función <literal>index()</literal> de HQL, que se aplica a alias de una "
+"colección indexada unida."
 
 #. Tag: para
-#: query_hql.xml:633
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "HQL functions that take collection-valued path expressions: <literal>size(), "
 "minelement(), maxelement(), minindex(), maxindex()</literal>, along with the "
@@ -1325,42 +862,38 @@ msgid ""
 "functions that can be quantified using <literal>some, all, exists, any, in</"
 "literal>."
 msgstr ""
-"funciones de HQL que tomen expresiones de ruta valuadas en colecciones: "
+"Las funciones de HQL que tomen expresiones de ruta valuadas en colecciones: "
 "<literal>size(), minelement(), maxelement(), minindex(), maxindex()</"
-"literal>, junto a las funciones especiales <literal>elements()</literal> and "
-"<literal>indices</literal> que pueden ser cuantificadas usando "
+"literal>, junto con las funciones especiales <literal>elements()</literal> e "
+"<literal>indices</literal>, las cuales se pueden cuantificar utilizando "
 "<literal>some, all, exists, any, in</literal>."
 
 #. Tag: para
-#: query_hql.xml:641
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "Any database-supported SQL scalar function like <literal>sign()</literal>, "
 "<literal>trunc()</literal>, <literal>rtrim()</literal>, and <literal>sin()</"
 "literal>"
 msgstr ""
-"Cualquier funci&#x00f3;n escalar SQL soportada por la base de datos como "
+"Cualquier función escalar SQL soportada por la base de datos como "
 "<literal>sign()</literal>, <literal>trunc()</literal>, <literal>rtrim()</"
-"literal>, <literal>sin()</literal>"
+"literal> y <literal>sin()</literal>"
 
 #. Tag: para
-#: query_hql.xml:647
 #, no-c-format
 msgid "JDBC-style positional parameters <literal>?</literal>"
-msgstr "par&#x00e1;metros posicionales JDBC <literal>?</literal>"
+msgstr "parámetros posicionales JDBC <literal>?</literal>"
 
 #. Tag: para
-#: query_hql.xml:652
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "named parameters <literal>:name</literal>, <literal>:start_date</literal>, "
 "and <literal>:x1</literal>"
 msgstr ""
-"par&#x00e1;metros con nombre <literal>:name</literal>, <literal>:start_date</"
-"literal>, <literal>:x1</literal>"
+"parámetros con nombre <literal>:name</literal>, <literal>:start_date</"
+"literal> y <literal>:x1</literal>"
 
 #. Tag: para
-#: query_hql.xml:657
 #, no-c-format
 msgid ""
 "SQL literals <literal>'foo'</literal>, <literal>69</literal>, <literal>6.66E"
@@ -1370,134 +903,66 @@ msgstr ""
 "+2</literal>, <literal>'1970-01-01 10:00:01.0'</literal>"
 
 #. Tag: para
-#: query_hql.xml:663
 #, no-c-format
 msgid ""
 "Java <literal>public static final</literal> constants <literal>eg.Color."
 "TABBY</literal>"
 msgstr ""
-"constantes Java <literal>public static final</literal> <literal>eg.Color."
+"constantes Java <literal>public static final</literal><literal>eg.Color."
 "TABBY</literal>"
 
 #. Tag: para
-#: query_hql.xml:669
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "<literal>in</literal> and <literal>between</literal> can be used as follows:"
 msgstr ""
-"<literal>in</literal> y <literal>between</literal> pueden usarse como sigue:"
-
-#. Tag: programlisting
-#: query_hql.xml:673
-#, no-c-format
-msgid "<![CDATA[from DomesticCat cat where cat.name between 'A' and 'B']]>"
-msgstr "<![CDATA[from DomesticCat cat where cat.name between 'A' and 'B']]>"
-
-#. Tag: programlisting
-#: query_hql.xml:675
-#, no-c-format
-msgid ""
-"<![CDATA[from DomesticCat cat where cat.name in ( 'Foo', 'Bar', 'Baz' )]]>"
-msgstr ""
-"<![CDATA[from DomesticCat cat where cat.name in ( 'Foo', 'Bar', 'Baz' )]]>"
+"<literal>in</literal> y <literal>between</literal> pueden utilizarse así:"
 
 #. Tag: para
-#: query_hql.xml:677
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "The negated forms can be written as follows:"
-msgstr "y pueden escribirse las formas negadas"
-
-#. Tag: programlisting
-#: query_hql.xml:681
-#, no-c-format
-msgid "<![CDATA[from DomesticCat cat where cat.name not between 'A' and 'B']]>"
-msgstr ""
-"<![CDATA[from DomesticCat cat where cat.name not between 'A' and 'B']]>"
-
-#. Tag: programlisting
-#: query_hql.xml:683
-#, no-c-format
-msgid ""
-"<![CDATA[from DomesticCat cat where cat.name not in ( 'Foo', 'Bar', 'Baz' )]]"
-">"
-msgstr ""
-"<![CDATA[from DomesticCat cat where cat.name not in ( 'Foo', 'Bar', 'Baz' )]]"
-">"
+msgstr "Las formas negadas se pueden escribir así:"
 
 #. Tag: para
-#: query_hql.xml:685
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "Similarly, <literal>is null</literal> and <literal>is not null</literal> can "
 "be used to test for null values."
 msgstr ""
-"Asimismo, <literal>is null</literal> y <literal>is not null</literal> pueden "
-"ser usadas para comprobar valores nulos."
+"De manera similar, <literal>is null</literal> y <literal>is not null</"
+"literal> se pueden utilizar para probar valores nulos."
 
 #. Tag: para
-#: query_hql.xml:690
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "Booleans can be easily used in expressions by declaring HQL query "
 "substitutions in Hibernate configuration:"
 msgstr ""
-"Los booleanos pueden ser f&#x00e1;cilmente usados en expresiones declarando "
-"substituciones de consulta HQL en la configuraci&#x00f3;n de Hibernate:"
-
-#. Tag: programlisting
-#: query_hql.xml:695
-#, no-c-format
-msgid ""
-"<![CDATA[<property name=\"hibernate.query.substitutions\">true 1, false 0</"
-"property>]]>"
-msgstr ""
-"<![CDATA[<property name=\"hibernate.query.substitutions\">true 1, false 0</"
-"property>]]>"
+"Los valores booleanos se pueden utilizar fácilmente en expresiones "
+"declarando substituciones de consulta HQL en la configuración de Hibernate:"
 
 #. Tag: para
-#: query_hql.xml:697
 #, no-c-format
 msgid ""
 "This will replace the keywords <literal>true</literal> and <literal>false</"
 "literal> with the literals <literal>1</literal> and <literal>0</literal> in "
 "the translated SQL from this HQL:"
 msgstr ""
-"Esto remplazar&#x00e1; las palabras clave <literal>true</literal> y "
-"<literal>false</literal> con los literales <literal>1</literal> y "
-"<literal>0</literal> en el SQL traducido de este HQL:"
-
-#. Tag: programlisting
-#: query_hql.xml:702
-#, no-c-format
-msgid "<![CDATA[from Cat cat where cat.alive = true]]>"
-msgstr "<![CDATA[from Cat cat where cat.alive = true]]>"
+"Esto remplazará las palabras clave <literal>true</literal> y <literal>false</"
+"literal> con los literales <literal>1</literal> y <literal>0</literal> en el "
+"SQL traducido de este HQL:"
 
 #. Tag: para
-#: query_hql.xml:704
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "You can test the size of a collection with the special property "
 "<literal>size</literal> or the special <literal>size()</literal> function."
 msgstr ""
-"Puedes comprobar el tama&#x00f1;o de una colecci&#x00f3;n con la propiedad "
-"especial <literal>size</literal>, o la funci&#x00f3;n especial <literal>size"
-"()</literal>."
-
-#. Tag: programlisting
-#: query_hql.xml:709
-#, no-c-format
-msgid "<![CDATA[from Cat cat where cat.kittens.size > 0]]>"
-msgstr "<![CDATA[from Cat cat where cat.kittens.size > 0]]>"
-
-#. Tag: programlisting
-#: query_hql.xml:711
-#, no-c-format
-msgid "<![CDATA[from Cat cat where size(cat.kittens) > 0]]>"
-msgstr "<![CDATA[from Cat cat where size(cat.kittens) > 0]]>"
+"Puede comprobar el tamaño de una colección con la propiedad especial "
+"<literal>size</literal> o la función especial <literal>size()</literal>."
 
 #. Tag: para
-#: query_hql.xml:713
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "For indexed collections, you can refer to the minimum and maximum indices "
 "using <literal>minindex</literal> and <literal>maxindex</literal> functions. "
@@ -1505,88 +970,28 @@ msgid ""
 "of basic type using the <literal>minelement</literal> and "
 "<literal>maxelement</literal> functions. For example:"
 msgstr ""
-"Para colecciones indexadas, puedes referirte a los &#x00ed;ndices m&#x00e1;"
-"ximo y m&#x00ed;nimo usando las funciones <literal>minindex</literal> y "
-"<literal>maxindex</literal>. Similarmente, puedes referirte a los elementos "
-"m&#x00e1;ximo y m&#x00ed;nimo de una colecci&#x00f3;n de tipo b&#x00e1;sico "
-"usando las funciones <literal>minelement</literal> y <literal>maxelement</"
-"literal>."
-
-#. Tag: programlisting
-#: query_hql.xml:721
-#, no-c-format
-msgid ""
-"<![CDATA[from Calendar cal where maxelement(cal.holidays) > current_date]]>"
-msgstr ""
-"<![CDATA[from Calendar cal where maxelement(cal.holidays) > current_date]]>"
-
-#. Tag: programlisting
-#: query_hql.xml:723
-#, no-c-format
-msgid "<![CDATA[from Order order where maxindex(order.items) > 100]]>"
-msgstr "<![CDATA[from Order order where maxindex(order.items) > 100]]>"
-
-#. Tag: programlisting
-#: query_hql.xml:725
-#, no-c-format
-msgid "<![CDATA[from Order order where minelement(order.items) > 10000]]>"
-msgstr "<![CDATA[from Order order where minelement(order.items) > 10000]]>"
+"Para las colecciones indexadas, puede referirse a los índices máximo y "
+"mínimo utilizando las funciones <literal>minindex</literal> y "
+"<literal>maxindex</literal>. De manera similar, se puede referir a los "
+"elementos máximo y mínimo de una colección de tipo básico utilizando las "
+"funciones <literal>minelement</literal> y <literal>maxelement</literal>. Por "
+"ejemplo: "
 
 #. Tag: para
-#: query_hql.xml:727
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "The SQL functions <literal>any, some, all, exists, in</literal> are "
 "supported when passed the element or index set of a collection "
 "(<literal>elements</literal> and <literal>indices</literal> functions) or "
 "the result of a subquery (see below):"
 msgstr ""
-"Las funciones SQL <literal>any, some, all, exists, in</literal> est&#x00e1;n "
-"soportadas cuando se les pasa el conjunto de elementos o &#x00ed;ndices de "
-"una colecci&#x00f3;n (funciones <literal>elements</literal> y "
-"<literal>indices</literal>) o el resultado de una subconsulta (ver debajo)."
-
-#. Tag: programlisting
-#: query_hql.xml:733
-#, no-c-format
-msgid ""
-"<![CDATA[select mother from Cat as mother, Cat as kit\n"
-"where kit in elements(foo.kittens)]]>"
-msgstr ""
-"<![CDATA[select mother from Cat as mother, Cat as kit\n"
-"where kit in elements(foo.kittens)]]>"
-
-#. Tag: programlisting
-#: query_hql.xml:735
-#, no-c-format
-msgid ""
-"<![CDATA[select p from NameList list, Person p\n"
-"where p.name = some elements(list.names)]]>"
-msgstr ""
-"<![CDATA[select p from NameList list, Person p\n"
-"where p.name = some elements(list.names)]]>"
-
-#. Tag: programlisting
-#: query_hql.xml:737
-#, no-c-format
-msgid "<![CDATA[from Cat cat where exists elements(cat.kittens)]]>"
-msgstr "<![CDATA[from Cat cat where exists elements(cat.kittens)]]>"
-
-#. Tag: programlisting
-#: query_hql.xml:739
-#, no-c-format
-msgid "<![CDATA[from Player p where 3 > all elements(p.scores)]]>"
-msgstr "<![CDATA[from Player p where 3 > all elements(p.scores)]]>"
-
-#. Tag: programlisting
-#: query_hql.xml:741
-#, no-c-format
-msgid "<![CDATA[from Show show where 'fizard' in indices(show.acts)]]>"
-msgstr "<![CDATA[from Show show where 'fizard' in indices(show.acts)]]>"
+"Las funciones SQL <literal>any, some, all, exists, in</literal> están "
+"soportadas cuando se les pasa el conjunto de elementos o índices de una "
+"colección (las funciones <literal>elements</literal> e <literal>indices</"
+"literal>) o el resultado de una subconsulta (vea a continuación):"
 
 #. Tag: para
-#: query_hql.xml:743
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "Note that these constructs - <literal>size</literal>, <literal>elements</"
 "literal>, <literal>indices</literal>, <literal>minindex</literal>, "
@@ -1594,226 +999,74 @@ msgid ""
 "<literal>maxelement</literal> - can only be used in the where clause in "
 "Hibernate3."
 msgstr ""
-"Nota que estas construcciones - <literal>size</literal>, <literal>elements</"
+"Note que estas construcciones - <literal>size</literal>, <literal>elements</"
 "literal>, <literal>indices</literal>, <literal>minindex</literal>, "
 "<literal>maxindex</literal>, <literal>minelement</literal>, "
-"<literal>maxelement</literal> - pueden ser usadas solamente en la cl&#x00e1;"
-"usula where en Hibernate3."
+"<literal>maxelement</literal> - solo se pueden utilizar en la cláusula where "
+"en Hibernate3."
 
 #. Tag: para
-#: query_hql.xml:750
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "Elements of indexed collections (arrays, lists, and maps) can be referred to "
 "by index in a where clause only:"
 msgstr ""
-"Los elementos de colecciones indexadas (arrays, listas, mapas) pueden ser "
-"referidos por &#x00ed;ndice (en una cl&#x00e1;usula where solamente):"
-
-#. Tag: programlisting
-#: query_hql.xml:755
-#, no-c-format
-msgid "<![CDATA[from Order order where order.items[0].id = 1234]]>"
-msgstr "<![CDATA[from Order order where order.items[0].id = 1234]]>"
-
-#. Tag: programlisting
-#: query_hql.xml:757
-#, no-c-format
-msgid ""
-"<![CDATA[select person from Person person, Calendar calendar\n"
-"where calendar.holidays['national day'] = person.birthDay\n"
-"    and person.nationality.calendar = calendar]]>"
-msgstr ""
-"<![CDATA[select person from Person person, Calendar calendar\n"
-"where calendar.holidays['national day'] = person.birthDay\n"
-"    and person.nationality.calendar = calendar]]>"
-
-#. Tag: programlisting
-#: query_hql.xml:759
-#, no-c-format
-msgid ""
-"<![CDATA[select item from Item item, Order order\n"
-"where order.items[ order.deliveredItemIndices[0] ] = item and order.id = 11]]"
-">"
-msgstr ""
-"<![CDATA[select item from Item item, Order order\n"
-"where order.items[ order.deliveredItemIndices[0] ] = item and order.id = 11]]"
-">"
-
-#. Tag: programlisting
-#: query_hql.xml:761
-#, no-c-format
-msgid ""
-"<![CDATA[select item from Item item, Order order\n"
-"where order.items[ maxindex(order.items) ] = item and order.id = 11]]>"
-msgstr ""
-"<![CDATA[select item from Item item, Order order\n"
-"where order.items[ maxindex(order.items) ] = item and order.id = 11]]>"
+"Los elementos de colecciones indexadas (arrays, listas, mapas) se pueden "
+"referir por índice sólamente en una cláusula where:"
 
 #. Tag: para
-#: query_hql.xml:763
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "The expression inside <literal>[]</literal> can even be an arithmetic "
 "expression:"
 msgstr ""
-"La expresi&#x00f3;n dentro de <literal>[]</literal> puede incluso ser una "
-"expresi&#x00f3;n aritm&#x00e9;tica."
-
-#. Tag: programlisting
-#: query_hql.xml:767
-#, no-c-format
-msgid ""
-"<![CDATA[select item from Item item, Order order\n"
-"where order.items[ size(order.items) - 1 ] = item]]>"
-msgstr ""
-"<![CDATA[select item from Item item, Order order\n"
-"where order.items[ size(order.items) - 1 ] = item]]>"
+"La expresión dentro de <literal>[]</literal> puede incluso ser una expresión "
+"aritmética:"
 
 #. Tag: para
-#: query_hql.xml:769
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "HQL also provides the built-in <literal>index()</literal> function for "
 "elements of a one-to-many association or collection of values."
 msgstr ""
-"HQL provee adem&#x00e1;s el funci&#x00f3;n prefabricada <literal>index()</"
-"literal>, para elementos de una asociaci&#x00f3;n uno-a-muchos o "
-"colecci&#x00f3;n de valores."
-
-#. Tag: programlisting
-#: query_hql.xml:774
-#, no-c-format
-msgid ""
-"<![CDATA[select item, index(item) from Order order\n"
-"    join order.items item\n"
-"where index(item) < 5]]>"
-msgstr ""
-"<![CDATA[select item, index(item) from Order order \n"
-"    join order.items item\n"
-"where index(item) < 5]]>"
+"HQL también proporciona la función incorporada <literal>index()</literal>, "
+"para los elementos de una asociación uno-a-muchos o una colección de valores."
 
 #. Tag: para
-#: query_hql.xml:776
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "Scalar SQL functions supported by the underlying database can be used:"
 msgstr ""
-"Pueden usarse las funciones SQL escalares soportadas por la base de datos "
-"subyacente"
-
-#. Tag: programlisting
-#: query_hql.xml:780
-#, no-c-format
-msgid "<![CDATA[from DomesticCat cat where upper(cat.name) like 'FRI%']]>"
-msgstr "<![CDATA[from DomesticCat cat where upper(cat.name) like 'FRI%']]>"
+"Se pueden utilizar las funciones SQL escalares soportadas por la base de "
+"datos subyacente:"
 
 #. Tag: para
-#: query_hql.xml:782
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "Consider how much longer and less readable the following query would be in "
 "SQL:"
 msgstr ""
-"Si a&#x00fa;n no est&#x00e1;s convencido de todo esto, piensa cu&#x00e1;nto "
-"m&#x00e1;s largo y menos le&#x00ed;ble ser&#x00ed;a la siguiente consulta en "
-"SQL:"
-
-#. Tag: programlisting
-#: query_hql.xml:787
-#, no-c-format
-msgid ""
-"<![CDATA[select cust\n"
-"from Product prod,\n"
-"    Store store\n"
-"    inner join store.customers cust\n"
-"where prod.name = 'widget'\n"
-"    and store.location.name in ( 'Melbourne', 'Sydney' )\n"
-"    and prod = all elements(cust.currentOrder.lineItems)]]>"
-msgstr ""
-"<![CDATA[select cust\n"
-"from Product prod,\n"
-"    Store store\n"
-"    inner join store.customers cust\n"
-"where prod.name = 'widget'\n"
-"    and store.location.name in ( 'Melbourne', 'Sydney' )\n"
-"    and prod = all elements(cust.currentOrder.lineItems)]]>"
+"Considere qué tan larga y menos leíble sería la siguiente consulta en SQL:"
 
 #. Tag: para
-#: query_hql.xml:789
 #, no-c-format
 msgid "<emphasis>Hint:</emphasis> something like"
 msgstr "<emphasis>Ayuda:</emphasis> algo como"
 
-#. Tag: programlisting
-#: query_hql.xml:793
-#, no-c-format
-msgid ""
-"<![CDATA[SELECT cust.name, cust.address, cust.phone, cust.id, cust."
-"current_order\n"
-"FROM customers cust,\n"
-"    stores store,\n"
-"    locations loc,\n"
-"    store_customers sc,\n"
-"    product prod\n"
-"WHERE prod.name = 'widget'\n"
-"    AND store.loc_id = loc.id\n"
-"    AND loc.name IN ( 'Melbourne', 'Sydney' )\n"
-"    AND sc.store_id = store.id\n"
-"    AND sc.cust_id = cust.id\n"
-"    AND prod.id = ALL(\n"
-"        SELECT item.prod_id\n"
-"        FROM line_items item, orders o\n"
-"        WHERE item.order_id = o.id\n"
-"            AND cust.current_order = o.id\n"
-"    )]]>"
-msgstr ""
-"<![CDATA[SELECT cust.name, cust.address, cust.phone, cust.id, cust."
-"current_order\n"
-"FROM customers cust,\n"
-"    stores store,\n"
-"    locations loc,\n"
-"    store_customers sc,\n"
-"    product prod\n"
-"WHERE prod.name = 'widget'\n"
-"    AND store.loc_id = loc.id\n"
-"    AND loc.name IN ( 'Melbourne', 'Sydney' )\n"
-"    AND sc.store_id = store.id\n"
-"    AND sc.cust_id = cust.id\n"
-"    AND prod.id = ALL(\n"
-"        SELECT item.prod_id\n"
-"        FROM line_items item, orders o\n"
-"        WHERE item.order_id = o.id\n"
-"            AND cust.current_order = o.id\n"
-"    )]]>"
-
 #. Tag: title
-#: query_hql.xml:798
 #, no-c-format
 msgid "The order by clause"
-msgstr "La cl&#x00e1;usula order by"
+msgstr "La cláusula order by"
 
 #. Tag: para
-#: query_hql.xml:800
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "The list returned by a query can be ordered by any property of a returned "
 "class or components:"
 msgstr ""
-"La lista devuelta por una consulta puede ser ordenada por cualquier "
-"propiedad de una clase devuelta o componentes:"
-
-#. Tag: programlisting
-#: query_hql.xml:804
-#, no-c-format
-msgid ""
-"<![CDATA[from DomesticCat cat\n"
-"order by cat.name asc, cat.weight desc, cat.birthdate]]>"
-msgstr ""
-"<![CDATA[from DomesticCat cat\n"
-"order by cat.name asc, cat.weight desc, cat.birthdate]]>"
+"La lista retornada por una consulta se puede ordenar por cualquier propiedad "
+"de una clase retornada o componentes:"
 
 #. Tag: para
-#: query_hql.xml:806
 #, no-c-format
 msgid ""
 "The optional <literal>asc</literal> or <literal>desc</literal> indicate "
@@ -1823,100 +1076,38 @@ msgstr ""
 "ordenamiento ascendente o descendente respectivamente."
 
 #. Tag: title
-#: query_hql.xml:813
 #, no-c-format
 msgid "The group by clause"
-msgstr "La cl&#x00e1;usula group by"
+msgstr "La cláusula group by"
 
 #. Tag: para
-#: query_hql.xml:815
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "A query that returns aggregate values can be grouped by any property of a "
 "returned class or components:"
 msgstr ""
-"Una consulta que devuelve valores agregados puede ser agrupada por cualquier "
-"propiedad de una clase devuelta o componentes:"
-
-#. Tag: programlisting
-#: query_hql.xml:819
-#, no-c-format
-msgid ""
-"<![CDATA[select cat.color, sum(cat.weight), count(cat)\n"
-"from Cat cat\n"
-"group by cat.color]]>"
-msgstr ""
-"<![CDATA[select cat.color, sum(cat.weight), count(cat) \n"
-"from Cat cat\n"
-"group by cat.color]]>"
-
-#. Tag: programlisting
-#: query_hql.xml:821
-#, no-c-format
-msgid ""
-"<![CDATA[select foo.id, avg(name), max(name)\n"
-"from Foo foo join foo.names name\n"
-"group by foo.id]]>"
-msgstr ""
-"<![CDATA[select foo.id, avg(name), max(name) \n"
-"from Foo foo join foo.names name\n"
-"group by foo.id]]>"
+"Una consulta que retorna valores agregados  se puede agrupar por cualquier "
+"propiedad de una clase retornada o componentes:"
 
 #. Tag: para
-#: query_hql.xml:823
 #, no-c-format
 msgid "A <literal>having</literal> clause is also allowed."
-msgstr ""
-"Se permite tambi&#x00e9;n una cl&#x00e1;usula <literal>having</literal>."
-
-#. Tag: programlisting
-#: query_hql.xml:827
-#, no-c-format
-msgid ""
-"<![CDATA[select cat.color, sum(cat.weight), count(cat)\n"
-"from Cat cat\n"
-"group by cat.color\n"
-"having cat.color in (eg.Color.TABBY, eg.Color.BLACK)]]>"
-msgstr ""
-"<![CDATA[select cat.color, sum(cat.weight), count(cat) \n"
-"from Cat cat\n"
-"group by cat.color \n"
-"having cat.color in (eg.Color.TABBY, eg.Color.BLACK)]]>"
+msgstr "Se permite también una cláusula <literal>having</literal>."
 
 #. Tag: para
-#: query_hql.xml:829
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "SQL functions and aggregate functions are allowed in the <literal>having</"
 "literal> and <literal>order by</literal> clauses if they are supported by "
 "the underlying database (i.e., not in MySQL)."
 msgstr ""
-"Las funciones y funciones de agregaci&#x00f3;n SQL est&#x00e1;n permitidas "
-"en las cl&#x00e1;usulas <literal>having</literal> y <literal>order by</"
-"literal>, si est&#x00e1;n soportadas por la base de datos subyacente (por "
-"ejemplo, no en MySQL)."
-
-#. Tag: programlisting
-#: query_hql.xml:835
-#, no-c-format
-msgid ""
-"<![CDATA[select cat\n"
-"from Cat cat\n"
-"    join cat.kittens kitten\n"
-"group by cat.id, cat.name, cat.other, cat.properties\n"
-"having avg(kitten.weight) > 100\n"
-"order by count(kitten) asc, sum(kitten.weight) desc]]>"
-msgstr ""
-"<![CDATA[select cat\n"
-"from Cat cat\n"
-"    join cat.kittens kitten\n"
-"group by cat\n"
-"having avg(kitten.weight) > 100\n"
-"order by count(kitten) asc, sum(kitten.weight) desc]]>"
+"Las funciones SQL y las funciones de agregación SQL están permitidas en las "
+"cláusulas <literal>having</literal> y <literal>order by</literal>, si están "
+"soportadas por la base de datos subyacente (por ejemplo, no lo están en "
+"MySQL). "
 
 #. Tag: para
-#: query_hql.xml:837
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "Neither the <literal>group by</literal> clause nor the <literal>order by</"
 "literal> clause can contain arithmetic expressions. Hibernate also does not "
@@ -1924,18 +1115,19 @@ msgid ""
 "cat</literal> if all properties of <literal>cat</literal> are non-"
 "aggregated. You have to list all non-aggregated properties explicitly."
 msgstr ""
-"Nota que ni la cl&#x00e1;usula <literal>group by</literal> ni la cl&#x00e1;"
-"usula <literal>order by</literal> pueden contener expresiones aritm&#x00e9;"
-"ticas."
+"La cláusula <literal>group by</literal> ni la cláusula <literal>order by</"
+"literal> pueden contener expresiones aritméticas. Hibernate tampocoo expande "
+"una entidad agrupada así que no puede escribir <literal>group by cat</"
+"literal> si todas las propiedades de <literal>cat</literal> son no-"
+"agregadas. Tiene que enumerar todas la propiedades no-agregadas "
+"explícitamente."
 
 #. Tag: title
-#: query_hql.xml:849
 #, no-c-format
 msgid "Subqueries"
 msgstr "Subconsultas"
 
 #. Tag: para
-#: query_hql.xml:851
 #, no-c-format
 msgid ""
 "For databases that support subselects, Hibernate supports subqueries within "
@@ -1944,106 +1136,36 @@ msgid ""
 "to an alias in the outer query) are allowed."
 msgstr ""
 "Para bases de datos que soportan subconsultas, Hibernate soporta "
-"subconsultas dentro de consultas. Una subconsulta debe ser encerrada entre "
-"par&#x00e9;ntesis (frecuentemente por una llamada a una funci&#x00f3;n de "
-"agregaci&#x00f3;n SQL). Incluso se permiten subconsultas correlacionadas "
-"(subconsultas que hacen referencia a un alias en la consulta exterior)."
-
-#. Tag: programlisting
-#: query_hql.xml:857
-#, no-c-format
-msgid ""
-"<![CDATA[from Cat as fatcat\n"
-"where fatcat.weight > (\n"
-"    select avg(cat.weight) from DomesticCat cat\n"
-")]]>"
-msgstr ""
-"<![CDATA[from Cat as fatcat\n"
-"                                      where fatcat.weight > (\n"
-"                select avg(cat.weight) from DomesticCat cat\n"
-"                )]]>"
-
-#. Tag: programlisting
-#: query_hql.xml:859
-#, no-c-format
-msgid ""
-"<![CDATA[from DomesticCat as cat\n"
-"where cat.name = some (\n"
-"    select name.nickName from Name as name\n"
-")]]>"
-msgstr ""
-"<![CDATA[from DomesticCat as cat\n"
-"                                      where cat.name = some (\n"
-"                                      select name.nickName from Name as "
-"name\n"
-"                                      )]]>"
-
-#. Tag: programlisting
-#: query_hql.xml:861
-#, no-c-format
-msgid ""
-"<![CDATA[from Cat as cat\n"
-"where not exists (\n"
-"    from Cat as mate where mate.mate = cat\n"
-")]]>"
-msgstr ""
-"<![CDATA[from Cat as cat\n"
-"                                      where not exists (\n"
-"                                      from Cat as mate where mate.mate = "
-"cat\n"
-"                                      )]]>"
-
-#. Tag: programlisting
-#: query_hql.xml:863
-#, no-c-format
-msgid ""
-"<![CDATA[from DomesticCat as cat\n"
-"where cat.name not in (\n"
-"    select name.nickName from Name as name\n"
-")]]>"
-msgstr ""
-"<![CDATA[from DomesticCat as cat\n"
-"                                      where cat.name not in (\n"
-"                                      select name.nickName from Name as "
-"name\n"
-"                                      )]]>"
-
-#. Tag: programlisting
-#: query_hql.xml:865
-#, no-c-format
-msgid ""
-"<![CDATA[select cat.id, (select max(kit.weight) from cat.kitten kit)\n"
-"from Cat as cat]]>"
-msgstr ""
-"<![CDATA[select cat.id, (select max(kit.weight) from cat.kitten kit)\n"
-"                                        from Cat as cat]]>"
+"subconsultas dentro de consultas. Una subconsulta se debe encerrar entre "
+"paréntesis (frecuentemente por una llamada a una función de agregación SQL). "
+"Incluso se permiten subconsultas correlacionadas (subconsultas que se "
+"refieren a un alias en la consulta exterior)."
 
 #. Tag: para
-#: query_hql.xml:867
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "Note that HQL subqueries can occur only in the select or where clauses."
 msgstr ""
-"Note that HQL subqueries may occur only in the select or where clauses."
+"Note que las subconsultas HQL pueden ocurrir sólamente en las cláusulas "
+"select o where."
 
 #. Tag: para
-#: query_hql.xml:871
 #, fuzzy, no-c-format
 msgid ""
 "Note that subqueries can also utilize <literal>row value constructor</"
-"literal> syntax. See <xref linkend=\"queryhql-tuple\"/> for more information."
+"literal> syntax. See <xref linkend=\"queryhql-tuple\" /> for more "
+"information."
 msgstr ""
-"Note that subqueries can also utilize <literal>row value constructor</"
-"literal> syntax. See <xref linkend=\"queryhql-tuple\"/> for more details."
+"Note que las subconsultas también pueden utilizar la sintaxis <literal>row "
+"value constructor</literal>. Consulte la <xref linkend=\"queryhql-tuple\" /> "
+"para obtener más información."
 
 #. Tag: title
-#: query_hql.xml:879
 #, no-c-format
 msgid "HQL examples"
 msgstr "Ejemplos de HQL"
 
 #. Tag: para
-#: query_hql.xml:881
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "Hibernate queries can be quite powerful and complex. In fact, the power of "
 "the query language is one of Hibernate's main strengths. The following "
@@ -2051,16 +1173,14 @@ msgid ""
 "projects. Please note that most queries you will write will be much simpler "
 "than the following examples."
 msgstr ""
-"Las consultas de Hibernate pueden ser abolutamente potentes y complejas, De "
-"hecho, el poder del lenguaje de consulta es uno de los puntos principales de "
-"venta de Hibernate. He aqu&#x00ed; algunos consultas de ejemplo muy "
-"similares a consultas que he usado en un proyecto reciente. &#x00a1;Nota que "
-"la mayor&#x00ed;a de las consultas que escribir&#x00e1;s som mucho m&#x00e1;"
-"s simples que estas!"
+"Las consultas de Hibernate pueden ser bastante potentes y complejas. De "
+"hecho, el poder del lenguaje de consulta es uno de las fortalezas "
+"principales de Hibernate. He aquí algunos ejemplos de consultas muy "
+"similares a las consultas de proyectos recientes. Note que la mayoría de las "
+"consultas que escribirá son mucho más simples que los siguientes ejemplos."
 
 #. Tag: para
-#: query_hql.xml:887
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "The following query returns the order id, number of items, the given minimum "
 "total value and the total value of the order for all unpaid orders for a "
@@ -2070,102 +1190,25 @@ msgid ""
 "<literal>PRODUCT</literal>, <literal>CATALOG</literal> and <literal>PRICE</"
 "literal> tables has four inner joins and an (uncorrelated) subselect."
 msgstr ""
-"La siguiente consulta devuelve el order id, n&#x00fa;mero de items y valor "
-"total de la orden para todas las ordenes inpagas de un cliente en particular "
-"y valor total m&#x00ed;nimo dados, ordenando los resultados por valor total. "
-"Al determinar los precios, usa el cat&#x00e1;logo actual. La consulta SQL "
+"La siguiente consulta retorna el order id, número de items y valor total "
+"mínimo dado y el valor de la orden para todas las órdenes no pagadas de un "
+"cliente en particular. Los resultados se ordenan de acuerdo al valor total. "
+"Al determinar los precios, usa el catálogo actual. La consulta SQL "
 "resultante, contra las tablas <literal>ORDER</literal>, <literal>ORDER_LINE</"
-"literal>, <literal>PRODUCT</literal>, <literal>CATALOG</literal> and "
-"<literal>PRICE</literal> tiene cuatro joins interiores y una subselect (no "
-"correlacionada)."
-
-#. Tag: programlisting
-#: query_hql.xml:896
-#, no-c-format
-msgid ""
-"<![CDATA[select order.id, sum(price.amount), count(item)\n"
-"from Order as order\n"
-"    join order.lineItems as item\n"
-"    join item.product as product,\n"
-"    Catalog as catalog\n"
-"    join catalog.prices as price\n"
-"where order.paid = false\n"
-"    and order.customer = :customer\n"
-"    and price.product = product\n"
-"    and catalog.effectiveDate < sysdate\n"
-"    and catalog.effectiveDate >= all (\n"
-"        select cat.effectiveDate\n"
-"        from Catalog as cat\n"
-"        where cat.effectiveDate < sysdate\n"
-"    )\n"
-"group by order\n"
-"having sum(price.amount) > :minAmount\n"
-"order by sum(price.amount) desc]]>"
-msgstr ""
-"<![CDATA[select order.id, sum(price.amount), count(item)\n"
-"from Order as order\n"
-"    join order.lineItems as item\n"
-"    join item.product as product,\n"
-"    Catalog as catalog\n"
-"    join catalog.prices as price\n"
-"where order.paid = false\n"
-"    and order.customer = :customer\n"
-"    and price.product = product\n"
-"    and catalog.effectiveDate < sysdate\n"
-"    and catalog.effectiveDate >= all (\n"
-"        select cat.effectiveDate \n"
-"        from Catalog as cat\n"
-"        where cat.effectiveDate < sysdate\n"
-"    )\n"
-"group by order\n"
-"having sum(price.amount) > :minAmount\n"
-"order by sum(price.amount) desc]]>"
+"literal>, <literal>PRODUCT</literal>, <literal>CATALOG</literal> y "
+"<literal>PRICE</literal> tiene cuatro uniones interiores y una subselección "
+"(no correlacionada)."
 
 #. Tag: para
-#: query_hql.xml:898
 #, no-c-format
 msgid ""
 "What a monster! Actually, in real life, I'm not very keen on subqueries, so "
 "my query was really more like this:"
 msgstr ""
-"&#x00a1;Qu&#x00e9; monstruo! Realmente, en la vida real, no estoy muy "
-"afilado en subconsultas, de modo que mi consulta fue realmente algo como "
-"esto:"
-
-#. Tag: programlisting
-#: query_hql.xml:903
-#, no-c-format
-msgid ""
-"<![CDATA[select order.id, sum(price.amount), count(item)\n"
-"from Order as order\n"
-"    join order.lineItems as item\n"
-"    join item.product as product,\n"
-"    Catalog as catalog\n"
-"    join catalog.prices as price\n"
-"where order.paid = false\n"
-"    and order.customer = :customer\n"
-"    and price.product = product\n"
-"    and catalog = :currentCatalog\n"
-"group by order\n"
-"having sum(price.amount) > :minAmount\n"
-"order by sum(price.amount) desc]]>"
-msgstr ""
-"<![CDATA[select order.id, sum(price.amount), count(item)\n"
-"from Order as order\n"
-"    join order.lineItems as item\n"
-"    join item.product as product,\n"
-"    Catalog as catalog\n"
-"    join catalog.prices as price\n"
-"where order.paid = false\n"
-"    and order.customer = :customer\n"
-"    and price.product = product\n"
-"    and catalog = :currentCatalog\n"
-"group by order\n"
-"having sum(price.amount) > :minAmount\n"
-"order by sum(price.amount) desc]]>"
+"¡Qué monstruo! Realmente, en la vida real, no me gustan mucho las "
+"subconsultas, de modo que mi consulta fue realmente algo como esto:"
 
 #. Tag: para
-#: query_hql.xml:905
 #, no-c-format
 msgid ""
 "The next query counts the number of payments in each status, excluding all "
@@ -2175,84 +1218,23 @@ msgid ""
 "<literal>PAYMENT</literal>, <literal>PAYMENT_STATUS</literal> and "
 "<literal>PAYMENT_STATUS_CHANGE</literal> tables."
 msgstr ""
-"La pr&#x00f3;xima consulta cuenta el n&#x00fa;mero de pagos en cada estado, "
-"excluyendo todos los pagos en el estado <literal>AWAITING_APPROVAL</literal> "
-"donde el estado m&#x00e1;s reciente fue hecho por el usuario actual. Se "
-"traduce en una consulta SQL con dos joins interiores y una subselect "
-"correlacionada contra las tablas <literal>PAYMENT</literal>, "
-"<literal>PAYMENT_STATUS</literal> y <literal>PAYMENT_STATUS_CHANGE</literal>."
-
-#. Tag: programlisting
-#: query_hql.xml:913
-#, no-c-format
-msgid ""
-"<![CDATA[select count(payment), status.name\n"
-"from Payment as payment\n"
-"    join payment.currentStatus as status\n"
-"    join payment.statusChanges as statusChange\n"
-"where payment.status.name <> PaymentStatus.AWAITING_APPROVAL\n"
-"    or (\n"
-"        statusChange.timeStamp = (\n"
-"            select max(change.timeStamp)\n"
-"            from PaymentStatusChange change\n"
-"            where change.payment = payment\n"
-"        )\n"
-"        and statusChange.user <> :currentUser\n"
-"    )\n"
-"group by status.name, status.sortOrder\n"
-"order by status.sortOrder]]>"
-msgstr ""
-"<![CDATA[select count(payment), status.name \n"
-"from Payment as payment \n"
-"    join payment.currentStatus as status\n"
-"    join payment.statusChanges as statusChange\n"
-"where payment.status.name <> PaymentStatus.AWAITING_APPROVAL\n"
-"    or (\n"
-"        statusChange.timeStamp = ( \n"
-"            select max(change.timeStamp) \n"
-"            from PaymentStatusChange change \n"
-"            where change.payment = payment\n"
-"        )\n"
-"        and statusChange.user <> :currentUser\n"
-"    )\n"
-"group by status.name, status.sortOrder\n"
-"order by status.sortOrder]]>"
+"La próxima consulta cuenta el número de pagos en cada estado, excluyendo "
+"todos los pagos en el estado <literal>AWAITING_APPROVAL</literal> donde el "
+"cambio más reciente al estado lo hizo el usuario actual. Se traduce en una "
+"consulta SQL con dos uniones interiores y una subselección correlacionada "
+"contra las tablas <literal>PAYMENT</literal>, <literal>PAYMENT_STATUS</"
+"literal> y <literal>PAYMENT_STATUS_CHANGE</literal>."
 
 #. Tag: para
-#: query_hql.xml:915
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "If the <literal>statusChanges</literal> collection was mapped as a list, "
 "instead of a set, the query would have been much simpler to write."
 msgstr ""
-"Si hubiese mapeado la colecci&#x00f3;n <literal>statusChanges</literal> como "
-"una lista, en vez de un conjunto, la consulta habr&#x00ed;a sido mucho "
-"m&#x00e1;s simple de escribir."
-
-#. Tag: programlisting
-#: query_hql.xml:920
-#, no-c-format
-msgid ""
-"<![CDATA[select count(payment), status.name\n"
-"from Payment as payment\n"
-"    join payment.currentStatus as status\n"
-"where payment.status.name <> PaymentStatus.AWAITING_APPROVAL\n"
-"    or payment.statusChanges[ maxIndex(payment.statusChanges) ].user <> :"
-"currentUser\n"
-"group by status.name, status.sortOrder\n"
-"order by status.sortOrder]]>"
-msgstr ""
-"<![CDATA[select count(payment), status.name \n"
-"from Payment as payment\n"
-"    join payment.currentStatus as status\n"
-"where payment.status.name <> PaymentStatus.AWAITING_APPROVAL\n"
-"    or payment.statusChanges[ maxIndex(payment.statusChanges) ].user <> :"
-"currentUser\n"
-"group by status.name, status.sortOrder\n"
-"order by status.sortOrder]]>"
+"Si la colección <literal>statusChanges</literal> se mapeara como una lista, "
+"en vez de un conjunto, la consulta habría sido mucho más simple de escribir."
 
 #. Tag: para
-#: query_hql.xml:922
 #, no-c-format
 msgid ""
 "The next query uses the MS SQL Server <literal>isNull()</literal> function "
@@ -2263,372 +1245,156 @@ msgid ""
 "<literal>ACCOUNT_TYPE</literal>, <literal>ORGANIZATION</literal> and "
 "<literal>ORG_USER</literal> tables."
 msgstr ""
-"La pr&#x00f3;xima consulta usa la funci&#x00f3;n <literal>isNull()</literal> "
-"de MS SQL Server para devolver todas las cuentas y pagos inpagos de la "
-"organizaci&#x00f3;n a la que pertenece el usuario actual. Se traduce en una "
-"consulta SQL con tres joins interiores, un join exterior y una subconsulta "
-"contra las tablas <literal>ACCOUNT</literal>, <literal>PAYMENT</literal>, "
-"<literal>PAYMENT_STATUS</literal>, <literal>ACCOUNT_TYPE</literal>, "
-"<literal>ORGANIZATION</literal> y <literal>ORG_USER</literal>."
-
-#. Tag: programlisting
-#: query_hql.xml:931
-#, no-c-format
-msgid ""
-"<![CDATA[select account, payment\n"
-"from Account as account\n"
-"    left outer join account.payments as payment\n"
-"where :currentUser in elements(account.holder.users)\n"
-"    and PaymentStatus.UNPAID = isNull(payment.currentStatus.name, "
-"PaymentStatus.UNPAID)\n"
-"order by account.type.sortOrder, account.accountNumber, payment.dueDate]]>"
-msgstr ""
-"<![CDATA[select account, payment\n"
-"from Account as account\n"
-"    left outer join account.payments as payment\n"
-"where :currentUser in elements(account.holder.users)\n"
-"    and PaymentStatus.UNPAID = isNull(payment.currentStatus.name, "
-"PaymentStatus.UNPAID)\n"
-"order by account.type.sortOrder, account.accountNumber, payment.dueDate]]>"
+"La próxima consulta utiliza la función <literal>isNull()</literal> de MS SQL "
+"Server para devolver todas las cuentas y pagos aún no cancelados de la "
+"organización a la que pertenece el usuario actual. Se traduce como una "
+"consulta SQL con tres uniones interiores, una unión exterior y una "
+"subselección contra las tablas <literal>ACCOUNT</literal>, <literal>PAYMENT</"
+"literal>, <literal>PAYMENT_STATUS</literal>, <literal>ACCOUNT_TYPE</"
+"literal>, <literal>ORGANIZATION</literal> y <literal>ORG_USER</literal>."
 
 #. Tag: para
-#: query_hql.xml:933
 #, no-c-format
 msgid ""
 "For some databases, we would need to do away with the (correlated) subselect."
 msgstr ""
-"Para algunas bases de datos, necesitar&#x00ed;amos eliminar la subselect "
+"Para algunas bases de datos, necesitaríamos eliminar la subselección "
 "(correlacionada)."
 
-#. Tag: programlisting
-#: query_hql.xml:937
-#, no-c-format
-msgid ""
-"<![CDATA[select account, payment\n"
-"from Account as account\n"
-"    join account.holder.users as user\n"
-"    left outer join account.payments as payment\n"
-"where :currentUser = user\n"
-"    and PaymentStatus.UNPAID = isNull(payment.currentStatus.name, "
-"PaymentStatus.UNPAID)\n"
-"order by account.type.sortOrder, account.accountNumber, payment.dueDate]]>"
-msgstr ""
-"<![CDATA[select account, payment\n"
-"from Account as account\n"
-"    join account.holder.users as user\n"
-"    left outer join account.payments as payment\n"
-"where :currentUser = user\n"
-"    and PaymentStatus.UNPAID = isNull(payment.currentStatus.name, "
-"PaymentStatus.UNPAID)\n"
-"order by account.type.sortOrder, account.accountNumber, payment.dueDate]]>"
-
 #. Tag: title
-#: query_hql.xml:942
 #, no-c-format
 msgid "Bulk update and delete"
-msgstr "Sentencias UPDATE y DELETE masivas"
+msgstr "Declaraciones UPDATE y DELETE masivas"
 
 #. Tag: para
-#: query_hql.xml:944
 #, fuzzy, no-c-format
 msgid ""
 "HQL now supports <literal>update</literal>, <literal>delete</literal> and "
 "<literal>insert ... select ...</literal> statements. See <xref linkend="
-"\"batch-direct\"/> for more information."
+"\"batch-direct\" /> for more information."
 msgstr ""
-"HQL soporta ahora sentencias UPDATE y DELETE en HQL. Ver <xref linkend="
-"\"batch-direct\"/> para detalles."
+"HQL ahora soporta declaraciones <literal>update</literal>, <literal>delete</"
+"literal> e <literal>insert ... select ...</literal>. Consulte la <xref "
+"linkend=\"batch-direct\" /> para obtener mayor información. "
 
 #. Tag: title
-#: query_hql.xml:952
 #, no-c-format
 msgid "Tips &amp; Tricks"
 msgstr "Consejos y Trucos"
 
 #. Tag: para
-#: query_hql.xml:954
-#, fuzzy, no-c-format
-msgid "You can count the number of query results without returning them:"
-msgstr ""
-"Puedes contar el n&#x00fa;mero de resultados de una consulta sin devolverlos "
-"realmente:"
-
-#. Tag: programlisting
-#: query_hql.xml:958
 #, no-c-format
-msgid ""
-"<![CDATA[( (Integer) session.createQuery(\"select count(*) from ....\")."
-"iterate().next() ).intValue()]]>"
-msgstr ""
-"<![CDATA[( (Integer) session.createQuery(\"select count(*) from ....\")."
-"iterate().next() ).intValue()]]>"
+msgid "You can count the number of query results without returning them:"
+msgstr "Puede contar el número de resultados de una consulta sin retornarlos:"
 
 #. Tag: para
-#: query_hql.xml:960
 #, no-c-format
 msgid "To order a result by the size of a collection, use the following query:"
 msgstr ""
-"Para ordenar un resultado por el tama&#x00f1;o de una colecci&#x00f3;n, usa "
-"la siguiente consulta:"
-
-#. Tag: programlisting
-#: query_hql.xml:964
-#, no-c-format
-msgid ""
-"<![CDATA[select usr.id, usr.name\n"
-"from User as usr\n"
-"    left join usr.messages as msg\n"
-"group by usr.id, usr.name\n"
-"order by count(msg)]]>"
-msgstr ""
-"<![CDATA[select usr.id, usr.name\n"
-"from User as usr \n"
-"    left join usr.messages as msg\n"
-"group by usr.id, usr.name\n"
-"order by count(msg)]]>"
+"Para ordenar un resultado por el tamaño de una colección, utilice la "
+"siguiente consulta:"
 
 #. Tag: para
-#: query_hql.xml:966
 #, no-c-format
 msgid ""
 "If your database supports subselects, you can place a condition upon "
 "selection size in the where clause of your query:"
 msgstr ""
-"Si tu base de datos soporta subselects, puedes colocar una condici&#x00f3;n "
-"sobre el tama&#x00f1;o de selecci&#x00f3;n en la cl&#x00e1;usula where de tu "
-"consulta:"
-
-#. Tag: programlisting
-#: query_hql.xml:971
-#, no-c-format
-msgid "<![CDATA[from User usr where size(usr.messages) >= 1]]>"
-msgstr "<![CDATA[from User usr where size(usr.messages) >= 1]]>"
+"Si su base de datos soporta subselecciones, puede colocar una condición "
+"sobre el tamaño de selección en la cláusula where de su consulta:"
 
 #. Tag: para
-#: query_hql.xml:973
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "If your database does not support subselects, use the following query:"
-msgstr "Si tu base de datos no soporta subselects, usa la siguiente consulta:"
-
-#. Tag: programlisting
-#: query_hql.xml:977
-#, no-c-format
-msgid ""
-"<![CDATA[select usr.id, usr.name\n"
-"from User usr.name\n"
-"    join usr.messages msg\n"
-"group by usr.id, usr.name\n"
-"having count(msg) >= 1]]>"
 msgstr ""
-"<![CDATA[select usr.id, usr.name\n"
-"from User usr.name\n"
-"    join usr.messages msg\n"
-"group by usr.id, usr.name\n"
-"having count(msg) >= 1]]>"
+"Si su base de datos no soporta subselecciones, utilice la siguiente "
+"consulta: "
 
 #. Tag: para
-#: query_hql.xml:980
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "As this solution cannot return a <literal>User</literal> with zero messages "
 "because of the inner join, the following form is also useful:"
 msgstr ""
-"Como esta soluci&#x00f3;n no puede devolver un <literal>User</literal> con "
-"cero mensajes debido a la uni&#x00f3;n interior, la siguiente forma es "
-"tambi&#x00e9;n &#x00fa;til:"
-
-#. Tag: programlisting
-#: query_hql.xml:985
-#, no-c-format
-msgid ""
-"<![CDATA[select usr.id, usr.name\n"
-"from User as usr\n"
-"    left join usr.messages as msg\n"
-"group by usr.id, usr.name\n"
-"having count(msg) = 0]]>"
-msgstr ""
-"<![CDATA[select usr.id, usr.name\n"
-"from User as usr\n"
-"    left join usr.messages as msg\n"
-"group by usr.id, usr.name\n"
-"having count(msg) = 0]]>"
+"Como esta solución no puede retornar un <literal>User</literal> con cero "
+"mensajes debido a la unión interior, la siguiente forma también es útil:"
 
 #. Tag: para
-#: query_hql.xml:987
 #, no-c-format
 msgid "Properties of a JavaBean can be bound to named query parameters:"
 msgstr ""
-"Las propiedades de un JavaBean pueden ser ligadas al par&#x00e1;metros de "
+"Las propiedades de un JavaBean pueden ser ligadas a los parámetros de "
 "consulta con nombre:"
 
-#. Tag: programlisting
-#: query_hql.xml:991
-#, no-c-format
-msgid ""
-"<![CDATA[Query q = s.createQuery(\"from foo Foo as foo where foo.name=:name "
-"and foo.size=:size\");\n"
-"q.setProperties(fooBean); // fooBean has getName() and getSize()\n"
-"List foos = q.list();]]>"
-msgstr ""
-"<![CDATA[Query q = s.createQuery(\"from foo Foo as foo where foo.name=:name "
-"and foo.size=:size\");\n"
-"q.setProperties(fooBean); // fooBean has getName() and getSize()\n"
-"List foos = q.list();]]>"
-
 #. Tag: para
-#: query_hql.xml:993
 #, no-c-format
 msgid ""
 "Collections are pageable by using the <literal>Query</literal> interface "
 "with a filter:"
 msgstr ""
-"Las colecciones son paginables usando la interface <literal>Query</literal> "
+"Las colecciones son paginables usando la interfaz <literal>Query</literal> "
 "con un filtro:"
 
-#. Tag: programlisting
-#: query_hql.xml:997
-#, no-c-format
-msgid ""
-"<![CDATA[Query q = s.createFilter( collection, \"\" ); // the trivial "
-"filter\n"
-"q.setMaxResults(PAGE_SIZE);\n"
-"q.setFirstResult(PAGE_SIZE * pageNumber);\n"
-"List page = q.list();]]>"
-msgstr ""
-"<![CDATA[Query q = s.createFilter( collection, \"\" ); // the trivial "
-"filter\n"
-"q.setMaxResults(PAGE_SIZE);\n"
-"q.setFirstResult(PAGE_SIZE * pageNumber);\n"
-"List page = q.list();]]>"
-
 #. Tag: para
-#: query_hql.xml:999
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "Collection elements can be ordered or grouped using a query filter:"
 msgstr ""
-"Los elementos de colecci&#x00f3;n pueden ser ordenados o agrupados usando un "
-"filtro de consulta:"
-
-#. Tag: programlisting
-#: query_hql.xml:1003
-#, no-c-format
-msgid ""
-"<![CDATA[Collection orderedCollection = s.filter( collection, \"order by "
-"this.amount\" );\n"
-"Collection counts = s.filter( collection, \"select this.type, count(this) "
-"group by this.type\" );]]>"
-msgstr ""
-"<![CDATA[Collection orderedCollection = s.filter( collection, \"order by "
-"this.amount\" );\n"
-"Collection counts = s.filter( collection, \"select this.type, count(this) "
-"group by this.type\" );]]>"
+"Los elementos de colección se pueden ordenar o agrupar usando un filtro de "
+"consulta:"
 
 #. Tag: para
-#: query_hql.xml:1005
 #, no-c-format
 msgid "You can find the size of a collection without initializing it:"
-msgstr ""
-"Puedes hallar el tama&#x00f1;o de una colecci&#x00f3;n sin inicializarla:"
-
-#. Tag: programlisting
-#: query_hql.xml:1009
-#, no-c-format
-msgid ""
-"<![CDATA[( (Integer) session.createQuery(\"select count(*) from ....\")."
-"iterate().next() ).intValue();]]>"
-msgstr ""
-"<![CDATA[( (Integer) session.createQuery(\"select count(*) from ....\")."
-"iterate().next() ).intValue();]]>"
+msgstr "Puede hallar el tamaño de una colección sin inicializarla:"
 
 #. Tag: title
-#: query_hql.xml:1014
 #, no-c-format
 msgid "Components"
-msgstr "UNTRANSLATED! Components"
+msgstr "Componentes"
 
 #. Tag: para
-#: query_hql.xml:1016
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "Components can be used similarly to the simple value types that are used in "
 "HQL queries. They can appear in the <literal>select</literal> clause as "
 "follows:"
 msgstr ""
-"Components might be used in just about every way that simple value types can "
-"be used in HQL queries. They can appear in the <literal>select</literal> "
-"clause:"
-
-#. Tag: programlisting
-#: query_hql.xml:1021 query_hql.xml:1067
-#, no-c-format
-msgid "<![CDATA[select p.name from Person p]]>"
-msgstr "<![CDATA[select p.name from Person p]]>"
-
-#. Tag: programlisting
-#: query_hql.xml:1022
-#, no-c-format
-msgid "<![CDATA[select p.name.first from Person p]]>"
-msgstr "<![CDATA[select p.name.first from Person p]]>"
+"Los componentes se pueden utilizar de la misma manera en que se pueden "
+"utilizar los tipos de valores simples en consultas HQL. Pueden aparecer en "
+"la cláusula <literal>select</literal> así:"
 
 #. Tag: para
-#: query_hql.xml:1024
 #, no-c-format
 msgid ""
 "where the Person's name property is a component. Components can also be used "
 "in the <literal>where</literal> clause:"
 msgstr ""
-"where the Person's name property is a component. Components can also be used "
-"in the <literal>where</literal> clause:"
-
-#. Tag: programlisting
-#: query_hql.xml:1029
-#, no-c-format
-msgid "<![CDATA[from Person p where p.name = :name]]>"
-msgstr "<![CDATA[from Person p where p.name = :name]]>"
-
-#. Tag: programlisting
-#: query_hql.xml:1030
-#, no-c-format
-msgid "<![CDATA[from Person p where p.name.first = :firstName]]>"
-msgstr "<![CDATA[from Person p where p.name.first = :firstName]]>"
+"en donde el nombre de la Persona es un componente. Los componentes también "
+"se pueden utilizar en la cláusula <literal>where</literal>:"
 
 #. Tag: para
-#: query_hql.xml:1032
 #, no-c-format
 msgid "Components can also be used in the <literal>order by</literal> clause:"
-msgstr "Components can also be used in the <literal>order by</literal> clause:"
-
-#. Tag: programlisting
-#: query_hql.xml:1036
-#, no-c-format
-msgid "<![CDATA[from Person p order by p.name]]>"
-msgstr "<![CDATA[from Person p order by p.name]]>"
-
-#. Tag: programlisting
-#: query_hql.xml:1037
-#, no-c-format
-msgid "<![CDATA[from Person p order by p.name.first]]>"
-msgstr "<![CDATA[from Person p order by p.name.first]]>"
+msgstr ""
+"Los componentes también se pueden utilizar en la cláusula <literal>where</"
+"literal>:"
 
 #. Tag: para
-#: query_hql.xml:1039
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
 "Another common use of components is in <link linkend=\"queryhql-tuple\">row "
 "value constructors</link>."
 msgstr ""
-"Another common use of components is in <link linkend=\"queryhql-tuple\">row "
-"value constructors</link>."
+"Otro uso común de los componentes se encuentra en <xref linkend=\"queryhql-"
+"tuple\" />."
 
 #. Tag: title
-#: query_hql.xml:1045
 #, no-c-format
 msgid "Row value constructor syntax"
-msgstr "Row value constructor syntax"
+msgstr "Sintaxis del constructor de valores por fila"
 
 #. Tag: para
-#: query_hql.xml:1047
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "HQL supports the use of ANSI SQL <literal>row value constructor</literal> "
 "syntax, sometimes referred to AS <literal>tuple</literal> syntax, even "
@@ -2636,111 +1402,56 @@ msgid ""
 "generally referring to multi-valued comparisons, typically associated with "
 "components. Consider an entity Person which defines a name component:"
 msgstr ""
-"HQL supports the use of ANSI SQL <literal>row value constructor</literal> "
-"syntax (sometimes called <literal>tuple</literal> syntax), even though the "
-"underlying database may not support that notion. Here we are generally "
-"referring to multi-valued comparisons, typically associated with components. "
-"Consider an entity Person which defines a name component:"
-
-#. Tag: programlisting
-#: query_hql.xml:1054
-#, no-c-format
-msgid ""
-"<![CDATA[from Person p where p.name.first='John' and p.name."
-"last='Jingleheimer-Schmidt']]>"
-msgstr ""
-"<![CDATA[from Person p where p.name.first='John' and p.name."
-"last='Jingleheimer-Schmidt']]>"
+"HQL soporta la utilización de la sintaxis <literal>row value constructor</"
+"literal> de SQL ANSI que a veces se denomina sintaxis <literal>tuple</"
+"literal>, aunque puede que la base de datos subyacentes no soporte esa "
+"noción. Aquí estamos refiriéndonos generalmente a las comparaciones "
+"multivaluadas que se asocian típicamente con los componentes. Considere una "
+"entidad Persona, la cual define un componente de nombre:"
 
 #. Tag: para
-#: query_hql.xml:1056
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "That is valid syntax although it is a little verbose. You can make this more "
 "concise by using <literal>row value constructor</literal> syntax:"
 msgstr ""
-"That's valid syntax, although a little verbose. It be nice to make this a "
-"bit more concise and use <literal>row value constructor</literal> syntax:"
-
-#. Tag: programlisting
-#: query_hql.xml:1061
-#, no-c-format
-msgid "<![CDATA[from Person p where p.name=('John', 'Jingleheimer-Schmidt')]]>"
-msgstr ""
-"<![CDATA[from Person p where p.name=('John', 'Jingleheimer-Schmidt')]]>"
+"Esa es una sintaxis válida aunque un poco verbosa. Puede hacerlo un poco más "
+"conciso utilizando la sintaxis <literal>row value constructor</literal>:"
 
 #. Tag: para
-#: query_hql.xml:1063
 #, no-c-format
 msgid ""
 "It can also be useful to specify this in the <literal>select</literal> "
 "clause:"
 msgstr ""
-"It can also be useful to specify this in the <literal>select</literal> "
-"clause:"
+"También puede ser útil especificar esto en la cláusula <literal>select</"
+"literal>:"
 
 #. Tag: para
-#: query_hql.xml:1069
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "Using <literal>row value constructor</literal> syntax can also be beneficial "
 "when using subqueries that need to compare against multiple values:"
 msgstr ""
-"Another time using <literal>row value constructor</literal> syntax can be "
-"beneficial is when using subqueries needing to compare against multiple "
-"values:"
-
-#. Tag: programlisting
-#: query_hql.xml:1074
-#, no-c-format
-msgid ""
-"<![CDATA[from Cat as cat\n"
-"where not ( cat.name, cat.color ) in (\n"
-"    select cat.name, cat.color from DomesticCat cat\n"
-")]]>"
-msgstr ""
-"<![CDATA[from Cat as cat\n"
-"                                          where not ( cat.name, cat.color ) "
-"in (\n"
-"                                          select cat.name, cat.color from "
-"DomesticCat cat\n"
-"                                          )]]>"
+"También puede ser beneficioso el utilizar la sintaxis <literal>row value "
+"constructor</literal> cuando se utilizan subconsultas que necesitan "
+"compararse con valores múltiples:"
 
 #. Tag: para
-#: query_hql.xml:1076
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "One thing to consider when deciding if you want to use this syntax, is that "
 "the query will be dependent upon the ordering of the component sub-"
 "properties in the metadata."
 msgstr ""
-"One thing to consider when deciding if you want to use this syntax is that "
-"the query will be dependent upon the ordering of the component sub-"
-"properties in the metadata."
+"Algo que se debe tomar en consideración al decidir si quiere usar esta "
+"sintaxis es que la consulta dependerá del orden de las sub-propiedades "
+"componentes en los metadatos."
 
-#~ msgid ""
-#~ "Most of the time, you will need to assign an <emphasis>alias</emphasis>, "
-#~ "since you will want to refer to the <literal>Cat</literal> in other parts "
-#~ "of the query."
-#~ msgstr ""
-#~ "La mayor&#x00ed;a del tiempo, necesitar&#x00e1;s asignar un "
-#~ "<emphasis>alias</emphasis>, ya que querr&#x00e1;s referirte al "
-#~ "<literal>Cat</literal> en otras partes de la consulta."
+#, fuzzy
+#~ msgid "left outer join"
+#~ msgstr "<literal>left outer join</literal>"
 
-#~ msgid "or as an actual typesafe Java object,"
-#~ msgstr "o como un objeto real Java de tipo seguro,"
-
-#~ msgid ""
-#~ "<![CDATA[select foo\n"
-#~ "from Foo foo, Bar bar\n"
-#~ "where foo.startDate = bar.date]]>"
-#~ msgstr ""
-#~ "<![CDATA[select foo \n"
-#~ "from Foo foo, Bar bar\n"
-#~ "where foo.startDate = bar.date]]>"
-
-#~ msgid "ROLES_OF_TRANSLATORS"
-#~ msgstr "<!--TRANS:ROLES_OF_TRANSLATORS-->"
-
-#~ msgid "CREDIT_FOR_TRANSLATORS"
-#~ msgstr "<!--TRANS:CREDIT_FOR_TRANSLATORS-->"
+#, fuzzy
+#~ msgid "right outer join"
+#~ msgstr "<literal>right outer join</literal>"

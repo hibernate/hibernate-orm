@@ -23,7 +23,11 @@
   ~ Boston, MA  02110-1301  USA
   -->
 
-<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
+<!ENTITY % BOOK_ENTITIES SYSTEM "../HIBERNATE_-_Relational_Persistence_for_Idiomatic_Java.ent">
+%BOOK_ENTITIES;
+
+]>
 
 <chapter id="queryhql" revision="1">
     <title>HQL: The Hibernate Query Language</title>
@@ -34,7 +38,7 @@
         and understands notions like inheritance, polymorphism and association.
     </para>
 
-    <sect1 id="queryhql-casesensitivity">
+    <section id="queryhql-casesensitivity">
         <title>Case Sensitivity</title>
 
         <para>
@@ -53,9 +57,9 @@
             more readable, but this convention is unsuitable for queries embedded in Java code.
         </para>
 
-    </sect1>
+    </section>
 
-    <sect1 id="queryhql-from">
+    <section id="queryhql-from">
         <title>The from clause</title>
 
         <para>
@@ -101,9 +105,9 @@
             (e.g. <literal>domesticCat</literal>).
         </para>
 
-    </sect1>
+    </section>
 
-    <sect1 id="queryhql-joins" revision="2">
+    <section id="queryhql-joins" revision="2">
         <title>Associations and joins</title>
 
         <para>
@@ -213,9 +217,9 @@
         <programlisting><![CDATA[from Document fetch all properties order by name]]></programlisting>
         <programlisting><![CDATA[from Document doc fetch all properties where lower(doc.name) like '%cats%']]></programlisting>
 
-    </sect1>
+    </section>
 
-    <sect1 id="queryhql-joins-forms">
+    <section id="queryhql-joins-forms">
         <title>Forms of join syntax</title>
 
 	    <para>
@@ -235,9 +239,9 @@
 	    </para>
 
         <programlisting><![CDATA[from Cat as cat where cat.mate.name like '%s%']]></programlisting>
-	</sect1>
+	</section>
 
-    <sect1 id="queryhql-identifier-property">
+    <section id="queryhql-identifier-property">
         <title>Referring to identifier property</title>
 
         <para>
@@ -274,9 +278,9 @@
         </para>
 	</important>  
 
-  </sect1>
+  </section>
 
-    <sect1 id="queryhql-select">
+    <section id="queryhql-select">
         <title>The select clause</title>
 
         <para>
@@ -351,9 +355,9 @@ from Cat cat]]></programlisting>
             This query returns a <literal>Map</literal> from aliases to selected values.
         </para>
 
-    </sect1>
+    </section>
 
-    <sect1 id="queryhql-aggregation">
+    <section id="queryhql-aggregation">
         <title>Aggregate functions</title>
 
         <para>
@@ -416,9 +420,9 @@ group by cat.id, cat.weight]]></programlisting>
 
 select count(distinct cat.name), count(cat) from Cat cat]]></programlisting>
 
-    </sect1>
+    </section>
 
-    <sect1 id="queryhql-polymorphism">
+    <section id="queryhql-polymorphism">
         <title>Polymorphic queries</title>
 
         <para>
@@ -450,9 +454,9 @@ select count(distinct cat.name), count(cat) from Cat cat]]></programlisting>
             It also means you cannot call these queries using <literal>Query.scroll()</literal>.
         </para>
 
-    </sect1>
+    </section>
 
-    <sect1 id="queryhql-where" revision="1">
+    <section id="queryhql-where" revision="1">
         <title>The where clause</title>
 
         <para>
@@ -577,9 +581,9 @@ where log.item.class = 'Payment' and log.item.id = payment.id]]></programlisting
             would refer to the values of completely different database columns in the above query.
         </para>
 
-    </sect1>
+    </section>
 
-    <sect1 id="queryhql-expressions">
+    <section id="queryhql-expressions">
         <title>Expressions</title>
 
         <para>
@@ -870,9 +874,9 @@ WHERE prod.name = 'widget'
             AND cust.current_order = o.id
     )]]></programlisting>
 
-    </sect1>
+    </section>
 
-    <sect1 id="queryhql-ordering">
+    <section id="queryhql-ordering">
         <title>The order by clause</title>
 
         <para>
@@ -886,9 +890,9 @@ order by cat.name asc, cat.weight desc, cat.birthdate]]></programlisting>
             The optional <literal>asc</literal> or <literal>desc</literal> indicate ascending or descending order
             respectively.
         </para>
-    </sect1>
+    </section>
 
-    <sect1 id="queryhql-grouping" revision="1">
+    <section id="queryhql-grouping" revision="1">
         <title>The group by clause</title>
 
         <para>
@@ -934,9 +938,9 @@ order by count(kitten) asc, sum(kitten.weight) desc]]></programlisting>
             non-aggregated properties explicitly.
         </para>
 
-    </sect1>
+    </section>
 
-    <sect1 id="queryhql-subqueries" revision="3">
+    <section id="queryhql-subqueries" revision="3">
         <title>Subqueries</title>
 
         <para>
@@ -977,9 +981,9 @@ from Cat as cat]]></programlisting>
             <xref linkend="queryhql-tuple"/> for more information.
         </para>
 
-    </sect1>
+    </section>
 
-    <sect1 id="queryhql-examples">
+    <section id="queryhql-examples">
         <title>HQL examples</title>
 
         <para>
@@ -1100,9 +1104,9 @@ where :currentUser = user
     and PaymentStatus.UNPAID = isNull(payment.currentStatus.name, PaymentStatus.UNPAID)
 order by account.type.sortOrder, account.accountNumber, payment.dueDate]]></programlisting>
 
-   </sect1>
+   </section>
 
-    <sect1 id="queryhql-bulk" revision="2">
+    <section id="queryhql-bulk" revision="2">
         <title>Bulk update and delete</title>
 
         <para>
@@ -1110,9 +1114,9 @@ order by account.type.sortOrder, account.accountNumber, payment.dueDate]]></prog
             <literal>insert ... select ...</literal> statements.
             See <xref linkend="batch-direct"/> for more information.
         </para>
-    </sect1>
+    </section>
 
-    <sect1 id="queryhql-tipstricks">
+    <section id="queryhql-tipstricks">
         <title>Tips &amp; Tricks</title>
 
         <para>
@@ -1190,9 +1194,9 @@ Collection counts = s.filter( collection, "select this.type, count(this) group b
 
         <programlisting role="JAVA"><![CDATA[( (Integer) session.createQuery("select count(*) from ....").iterate().next() ).intValue();]]></programlisting>
 
-    </sect1>
+    </section>
 
-    <sect1 id="queryhql-components">
+    <section id="queryhql-components">
         <title>Components</title>
 
         <para>
@@ -1221,9 +1225,9 @@ Collection counts = s.filter( collection, "select this.type, count(this) group b
         <para>
             Another common use of components is in <link linkend="queryhql-tuple">row value constructors</link>.
         </para>
-    </sect1>
+    </section>
 
-    <sect1 id="queryhql-tuple">
+    <section id="queryhql-tuple">
         <title>Row value constructor syntax</title>
 
         <para>
@@ -1263,7 +1267,7 @@ where not ( cat.name, cat.color ) in (
             be dependent upon the ordering of the component sub-properties in the metadata.
         </para>
 
-    </sect1>
+    </section>
 
 </chapter>
 

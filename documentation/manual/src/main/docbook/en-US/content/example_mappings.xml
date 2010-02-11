@@ -23,7 +23,11 @@
   ~ Boston, MA  02110-1301  USA
   -->
 
-<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
+<!ENTITY % BOOK_ENTITIES SYSTEM "../HIBERNATE_-_Relational_Persistence_for_Idiomatic_Java.ent">
+%BOOK_ENTITIES;
+
+]>
 
 <chapter id="example-mappings">
     <title>Example: Various Mappings</title>
@@ -33,7 +37,7 @@
         This chapters explores some more complex association mappings.
     </para>
     
-    <sect1 id="example-mappings-emp">
+    <section id="example-mappings-emp">
         <title>Employer/Employee</title>
 
         <para>
@@ -46,10 +50,10 @@
 
         <mediaobject>
             <imageobject role="html">
-                <imagedata fileref="../images/EmployerEmployee.png" format="PNG" align="center" />
+                <imagedata fileref="images/EmployerEmployee.png" format="PNG" align="center" />
             </imageobject>
             <imageobject role="fo">
-                <imagedata fileref="../images/EmployerEmployee.png" format="PNG" align="center" width="17cm" />
+                <imagedata fileref="images/EmployerEmployee.png" format="PNG" align="center" width="17cm" />
             </imageobject>
         </mediaobject>
         
@@ -144,9 +148,9 @@ create sequence employee_id_seq
 create sequence employment_id_seq
 create sequence employer_id_seq]]></programlisting>
 
-    </sect1>
+    </section>
     
-    <sect1 id="example-mappings-authorwork">
+    <section id="example-mappings-authorwork">
         <title>Author/Work</title>
 
         <para>
@@ -160,10 +164,10 @@ create sequence employer_id_seq]]></programlisting>
 
         <mediaobject>
             <imageobject role="html">
-                <imagedata fileref="../images/AuthorWork.png" format="PNG" align="center" />
+                <imagedata fileref="images/AuthorWork.png" format="PNG" align="center" />
             </imageobject>
             <imageobject role="fo">
-                <imagedata fileref="../images/AuthorWork.png" format="PNG" align="center" width="17cm" />
+                <imagedata fileref="images/AuthorWork.png" format="PNG" align="center" width="17cm" />
             </imageobject>
         </mediaobject>
         
@@ -266,9 +270,9 @@ alter table author_work
 alter table author_work
     add constraint author_workFK1 foreign key (work_id) references works]]></programlisting>
 
-    </sect1>
+    </section>
 
-    <sect1 id="example-mappings-customerorderproduct">
+    <section id="example-mappings-customerorderproduct">
         <title>Customer/Order/Product</title>
 
         <para>
@@ -284,10 +288,10 @@ alter table author_work
 
         <mediaobject>
             <imageobject role="html">
-                <imagedata fileref="../images/CustomerOrderProduct.png" format="PNG" align="center" />
+                <imagedata fileref="images/CustomerOrderProduct.png" format="PNG" align="center" />
             </imageobject>
             <imageobject role="fo">
-                <imagedata fileref="../images/CustomerOrderProduct.png" format="PNG" align="center" width="17cm" />
+                <imagedata fileref="images/CustomerOrderProduct.png" format="PNG" align="center" width="17cm" />
             </imageobject>
         </mediaobject>
         
@@ -374,9 +378,9 @@ alter table line_items
 alter table line_items
     add constraint line_itemsFK1 foreign key (order_id) references orders]]></programlisting>
 
-    </sect1>
+    </section>
     
-    <sect1 id="misc">
+    <section id="misc">
         <title>Miscellaneous example mappings</title>
         
         <para>
@@ -387,7 +391,7 @@ alter table line_items
         
       <!--  <<para>TODO: put words around this stuff</para>-->
         
-        <sect2 id="example-mappings-typed-onetone">
+        <section id="example-mappings-typed-onetone">
             <title>"Typed" one-to-one association</title>
 <programlisting role="XML"><![CDATA[<class name="Person">
     <id name="name"/>
@@ -415,9 +419,9 @@ alter table line_items
     <property name="state"/>
     <property name="zip"/>
 </class>]]></programlisting>
-        </sect2>
+        </section>
         
-        <sect2 id="example-mappings-composite-key">
+        <section id="example-mappings-composite-key">
             <title>Composite key example</title>
 <programlisting role="XML"><![CDATA[<class name="Customer">
 
@@ -532,9 +536,9 @@ alter table line_items
     </property>
     
 </class>]]></programlisting>
-        </sect2>
+        </section>
         
-        <sect2 id="example-mappings-composite-key-manytomany">
+        <section id="example-mappings-composite-key-manytomany">
             <title>Many-to-many with shared composite key attribute</title>
 <programlisting role="XML"><![CDATA[<class name="User" table="`User`">
     <composite-id>
@@ -571,9 +575,9 @@ alter table line_items
     </set>
 </class>
 ]]></programlisting>
-        </sect2>
+        </section>
 
-        <sect2 id="example-mappings-content-discrimination">
+        <section id="example-mappings-content-discrimination">
             <title>Content based discrimination</title>
 <programlisting role="XML"><![CDATA[<class name="Person"
     discriminator-value="P">
@@ -625,9 +629,9 @@ alter table line_items
     </subclass>
     
 </class>]]></programlisting>
-        </sect2>
+        </section>
 
-        <sect2 id="example-mappings-association-alternatekeys" revision="2">
+        <section id="example-mappings-association-alternatekeys" revision="2">
             <title>Associations on alternate keys</title>
 <programlisting role="XML"><![CDATA[<class name="Person">
     
@@ -678,9 +682,9 @@ alter table line_items
     <property name="type" not-null="true"/>
     
 </class>]]></programlisting>
-        </sect2>
+        </section>
 
-    </sect1>
+    </section>
 
 </chapter>
 

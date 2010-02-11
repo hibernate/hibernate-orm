@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2009-07-14 19:56+0000\n"
+"POT-Creation-Date: 2010-02-04T04:51:22\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -11,13 +11,11 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 
 #. Tag: title
-#: preface.xml:29
 #, no-c-format
 msgid "Preface"
 msgstr "머리말"
 
 #. Tag: para
-#: preface.xml:31
 #, fuzzy, no-c-format
 msgid ""
 "Working with object-oriented software and a relational database can be "
@@ -34,7 +32,6 @@ msgstr ""
 "하는 기술을 언급한다."
 
 #. Tag: para
-#: preface.xml:39
 #, fuzzy, no-c-format
 msgid ""
 "Hibernate not only takes care of the mapping from Java classes to database "
@@ -48,7 +45,6 @@ msgstr ""
 "시간을 현저하게 단축시켜줄 수 있다."
 
 #. Tag: para
-#: preface.xml:46
 #, fuzzy, no-c-format
 msgid ""
 "Hibernate's goal is to relieve the developer from 95 percent of common data "
@@ -69,7 +65,6 @@ msgstr ""
 "객체들의 그래프로 결과 셋을 변환하는 공통된 태스크를 도와줄 것이다."
 
 #. Tag: para
-#: preface.xml:56
 #, no-c-format
 msgid ""
 "If you are new to Hibernate and Object/Relational Mapping or even Java, "
@@ -79,10 +74,9 @@ msgstr ""
 "면, 다음 단계들을 따르기 바란다:"
 
 #. Tag: para
-#: preface.xml:63
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
-"Read <xref linkend=\"tutorial\"/> for a tutorial with step-by-step "
+"Read <xref linkend=\"tutorial\" /> for a tutorial with step-by-step "
 "instructions. The source code for the tutorial is included in the "
 "distribution in the <literal>doc/reference/tutorial/</literal> directory."
 msgstr ""
@@ -91,17 +85,15 @@ msgstr ""
 "tutorial/</literal> 디렉토리에 포함되어 있다."
 
 #. Tag: para
-#: preface.xml:71
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
-"Read <xref linkend=\"architecture\"/> to understand the environments where "
+"Read <xref linkend=\"architecture\" /> to understand the environments where "
 "Hibernate can be used."
 msgstr ""
 "Hibernate가 사용될 수 있는 환경을 이해려면 <xref linkend=\"architecture\"/> "
 "를 읽어라."
 
 #. Tag: para
-#: preface.xml:77
 #, fuzzy, no-c-format
 msgid ""
 "View the <literal>eg/</literal> directory in the Hibernate distribution. It "
@@ -120,15 +112,13 @@ msgstr ""
 "이프 하라."
 
 #. Tag: para
-#: preface.xml:88
 #, fuzzy, no-c-format
 msgid ""
 "Use this reference documentation as your primary source of information. "
 "Consider reading <biblioref linkend=\"biblio-JPwH\"></biblioref> if you need "
 "more help with application design, or if you prefer a step-by-step tutorial. "
-"Also visit <ulink url=\"http://caveatemptor.hibernate.org\"></ulink> and "
-"download the example application from <biblioref linkend=\"biblio-JPwH\"></"
-"biblioref>."
+"Also visit <ulink url=\"http://caveatemptor.hibernate.org\" /> and download "
+"the example application from <biblioref linkend=\"biblio-JPwH\"></biblioref>."
 msgstr ""
 "당신의 주된 정보의 소스로서 이 참조 문서를 사용하라. 만일 어플리케이션 설계"
 "에 대해 더 많은 도움을 필요로 하거나 당신이 단계적인 튜토리얼을 선호한다면 "
@@ -137,13 +127,11 @@ msgstr ""
 "여 Java Persistence with Hibernate용 예제 어플리케이션을 다운로드 하라."
 
 #. Tag: para
-#: preface.xml:98
 #, no-c-format
 msgid "FAQs are answered on the Hibernate website."
 msgstr "FAQ들은 Hibernate 웹 사이트 상에 답변되어 있다."
 
 #. Tag: para
-#: preface.xml:103
 #, fuzzy, no-c-format
 msgid ""
 "Links to third party demos, examples, and tutorials are maintained on the "
@@ -153,7 +141,6 @@ msgstr ""
 "있다."
 
 #. Tag: para
-#: preface.xml:109
 #, no-c-format
 msgid ""
 "The Community Area on the Hibernate website is a good resource for design "
@@ -164,7 +151,6 @@ msgstr ""
 "(Tomcat, JBoss AS, Struts, EJB 등.)에 관한 좋은 리소스이다."
 
 #. Tag: para
-#: preface.xml:117
 #, fuzzy, no-c-format
 msgid ""
 "If you have questions, use the user forum linked on the Hibernate website. "
@@ -180,7 +166,6 @@ msgstr ""
 "에 접촉하라."
 
 #. Tag: para
-#: preface.xml:125
 #, no-c-format
 msgid ""
 "Commercial development support, production support, and training for "

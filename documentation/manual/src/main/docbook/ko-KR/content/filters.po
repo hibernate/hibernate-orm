@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2009-07-14 19:56+0000\n"
+"POT-Creation-Date: 2010-02-04T04:51:22\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -11,13 +11,11 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 
 #. Tag: title
-#: filters.xml:29
 #, no-c-format
 msgid "Filtering data"
 msgstr "데이터 필터링하기"
 
 #. Tag: para
-#: filters.xml:31
 #, fuzzy, no-c-format
 msgid ""
 "Hibernate3 provides an innovative new approach to handling data with "
@@ -31,13 +29,11 @@ msgstr ""
 "라미터화 된 필터이다."
 
 #. Tag: title
-#: filters.xml:38
 #, no-c-format
 msgid "Hibernate filters"
 msgstr "Hibernate 필터들"
 
 #. Tag: para
-#: filters.xml:40
 #, fuzzy, no-c-format
 msgid ""
 "Hibernate3 has the ability to pre-define filter criteria and attach those "
@@ -59,7 +55,6 @@ msgstr ""
 "화 된다."
 
 #. Tag: para
-#: filters.xml:50
 #, no-c-format
 msgid ""
 "In order to use filters, they must first be defined and then attached to the "
@@ -71,56 +66,22 @@ msgstr ""
 "가되어야 한다. 필터를 정의하기 위해, <literal>&lt;hibernate-mapping/&gt;</"
 "literal> 요소 내부에 <literal>&lt;filter-def/&gt;</literal> 요소를 사용하라:"
 
-#. Tag: programlisting
-#: filters.xml:56
-#, no-c-format
-msgid ""
-"<![CDATA[<filter-def name=\"myFilter\">\n"
-"    <filter-param name=\"myFilterParam\" type=\"string\"/>\n"
-"</filter-def>]]>"
-msgstr ""
-
 #. Tag: para
-#: filters.xml:58
 #, fuzzy, no-c-format
 msgid "This filter can then be attached to a class:"
 msgstr "그때 이 필터는 클래스에 첨가될 수 있다:"
 
-#. Tag: programlisting
-#: filters.xml:62
-#, no-c-format
-msgid ""
-"<![CDATA[<class name=\"myClass\" ...>\n"
-"    ...\n"
-"    <filter name=\"myFilter\" condition=\":myFilterParam = MY_FILTERED_COLUMN"
-"\"/>\n"
-"</class>]]>"
-msgstr ""
-
 #. Tag: para
-#: filters.xml:64
 #, fuzzy, no-c-format
 msgid "Or, to a collection:"
 msgstr "또는 콜렉션에 첨가될 수 있다:"
 
-#. Tag: programlisting
-#: filters.xml:68
-#, no-c-format
-msgid ""
-"<![CDATA[<set ...>\n"
-"    <filter name=\"myFilter\" condition=\":myFilterParam = MY_FILTERED_COLUMN"
-"\"/>\n"
-"</set>]]>"
-msgstr ""
-
 #. Tag: para
-#: filters.xml:70
 #, fuzzy, no-c-format
 msgid "Or, to both or multiples of each at the same time."
 msgstr "또는 동시에 양자에(또는 각각의 여러번) 첨가될 수 있다."
 
 #. Tag: para
-#: filters.xml:74
 #, fuzzy, no-c-format
 msgid ""
 "The methods on <literal>Session</literal> are: <literal>enableFilter(String "
@@ -141,16 +102,7 @@ msgstr ""
 "<literal>Filter</literal> 인터페이스의 인스턴스를 반환한다. 위에 정의된 간단"
 "한 필터를 사용하면, 이것은 다음과 같을 것이다:"
 
-#. Tag: programlisting
-#: filters.xml:83
-#, no-c-format
-msgid ""
-"<![CDATA[session.enableFilter(\"myFilter\").setParameter(\"myFilterParam\", "
-"\"some-value\");]]>"
-msgstr ""
-
 #. Tag: para
-#: filters.xml:85
 #, fuzzy, no-c-format
 msgid ""
 "Methods on the org.hibernate.Filter interface do allow the method-chaining "
@@ -160,53 +112,13 @@ msgstr ""
 "method-chaining을 허용한다는 점을 노트하라."
 
 #. Tag: para
-#: filters.xml:89
 #, fuzzy, no-c-format
 msgid ""
 "The following is a full example, using temporal data with an effective "
 "record date pattern:"
 msgstr "유효한 기록 날짜 패턴을 가진 시간 데이터를 사용하는 전체 예제 :"
 
-#. Tag: programlisting
-#: filters.xml:93
-#, no-c-format
-msgid ""
-"<![CDATA[<filter-def name=\"effectiveDate\">\n"
-"    <filter-param name=\"asOfDate\" type=\"date\"/>\n"
-"</filter-def>\n"
-"\n"
-"<class name=\"Employee\" ...>\n"
-"...\n"
-"    <many-to-one name=\"department\" column=\"dept_id\" class=\"Department\"/"
-">\n"
-"    <property name=\"effectiveStartDate\" type=\"date\" column=\"eff_start_dt"
-"\"/>\n"
-"    <property name=\"effectiveEndDate\" type=\"date\" column=\"eff_end_dt\"/"
-">\n"
-"...\n"
-"    <!--\n"
-"        Note that this assumes non-terminal records have an eff_end_dt set "
-"to\n"
-"        a max db date for simplicity-sake\n"
-"    -->\n"
-"    <filter name=\"effectiveDate\"\n"
-"            condition=\":asOfDate BETWEEN eff_start_dt and eff_end_dt\"/>\n"
-"</class>\n"
-"\n"
-"<class name=\"Department\" ...>\n"
-"...\n"
-"    <set name=\"employees\" lazy=\"true\">\n"
-"        <key column=\"dept_id\"/>\n"
-"        <one-to-many class=\"Employee\"/>\n"
-"        <filter name=\"effectiveDate\"\n"
-"                condition=\":asOfDate BETWEEN eff_start_dt and eff_end_dt\"/"
-">\n"
-"    </set>\n"
-"</class>]]>"
-msgstr ""
-
 #. Tag: para
-#: filters.xml:95
 #, fuzzy, no-c-format
 msgid ""
 "In order to ensure that you are provided with currently effective records, "
@@ -215,22 +127,7 @@ msgstr ""
 "그때 당신이 현재 유효한 레코드들을 항상 얻는 것을 확실히 하기 위해, employee "
 "데이터를 검색하기 전에 세션 상에 필터를 간단하게 이용 가능하게 하라:"
 
-#. Tag: programlisting
-#: filters.xml:100
-#, no-c-format
-msgid ""
-"<![CDATA[Session session = ...;\n"
-"session.enableFilter(\"effectiveDate\").setParameter(\"asOfDate\", new Date"
-"());\n"
-"List results = session.createQuery(\"from Employee as e where e.salary > :"
-"targetSalary\")\n"
-"         .setLong(\"targetSalary\", new Long(1000000))\n"
-"         .list();\n"
-"]]>"
-msgstr ""
-
 #. Tag: para
-#: filters.xml:102
 #, fuzzy, no-c-format
 msgid ""
 "Even though a salary constraint was mentioned explicitly on the results in "
@@ -243,7 +140,6 @@ msgstr ""
 "인 현재 채용중인 직원들만을 반환할 것이다."
 
 #. Tag: para
-#: filters.xml:108
 #, fuzzy, no-c-format
 msgid ""
 "If you want to use filters with outer joining, either through HQL or load "
@@ -257,7 +153,6 @@ msgstr ""
 "첫번째에 파라미터를 위치지워라."
 
 #. Tag: para
-#: filters.xml:115
 #, fuzzy, no-c-format
 msgid ""
 "After being defined, a filter might be attached to multiple entities and/or "
@@ -271,17 +166,7 @@ msgstr ""
 "다. 따라서 <literal>&lt;filter-def/&gt;</literal>은 attribute 든 CDATA 든 어"
 "느것이든 디폴트 조건을 정의하는 것을 허용해준다:"
 
-#. Tag: programlisting
-#: filters.xml:122
-#, no-c-format
-msgid ""
-"<![CDATA[<filter-def name=\"myFilter\" condition=\"abc > xyz\">...</filter-"
-"def>\n"
-"<filter-def name=\"myOtherFilter\">abc=xyz</filter-def>]]>"
-msgstr ""
-
 #. Tag: para
-#: filters.xml:124
 #, fuzzy, no-c-format
 msgid ""
 "This default condition will be used whenever the filter is attached to "

@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2009-07-14 19:55+0000\n"
+"POT-Creation-Date: 2010-02-04T04:51:21\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -11,19 +11,16 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 
 #. Tag: title
-#: basic_mapping.xml:29
 #, no-c-format
 msgid "Basic O/R Mapping"
 msgstr "기본 O/R 매핑"
 
 #. Tag: title
-#: basic_mapping.xml:32
 #, no-c-format
 msgid "Mapping declaration"
 msgstr "매핑 선언"
 
 #. Tag: para
-#: basic_mapping.xml:34
 #, fuzzy, no-c-format
 msgid ""
 "Object/relational mappings are usually defined in an XML document. The "
@@ -36,7 +33,6 @@ msgstr ""
 "아닌, 영속 클래스 선언들로 생성된다는 의미에서 자바 중심적이다."
 
 #. Tag: para
-#: basic_mapping.xml:41
 #, fuzzy, no-c-format
 msgid ""
 "Please note that even though many Hibernate users choose to write the XML by "
@@ -48,83 +44,11 @@ msgstr ""
 "도구들이 존재한다는 점을 노트하라."
 
 #. Tag: para
-#: basic_mapping.xml:47
 #, fuzzy, no-c-format
 msgid "Here is an example mapping:"
 msgstr "예제 매핑으로 시작하자:"
 
-#. Tag: programlisting
-#: basic_mapping.xml:51
-#, no-c-format
-msgid ""
-"<![CDATA[<?xml version=\"1.0\"?>\n"
-"<!DOCTYPE hibernate-mapping PUBLIC\n"
-"      \"-//Hibernate/Hibernate Mapping DTD 3.0//EN\"\n"
-"          \"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd\">\n"
-"\n"
-"<hibernate-mapping package=\"eg\">\n"
-"\n"
-"        <class name=\"Cat\"\n"
-"            table=\"cats\"\n"
-"            discriminator-value=\"C\">\n"
-"\n"
-"                <id name=\"id\">\n"
-"                        <generator class=\"native\"/>\n"
-"                </id>\n"
-"\n"
-"                <discriminator column=\"subclass\"\n"
-"                     type=\"character\"/>\n"
-"\n"
-"                <property name=\"weight\"/>\n"
-"\n"
-"                <property name=\"birthdate\"\n"
-"                    type=\"date\"\n"
-"                    not-null=\"true\"\n"
-"                    update=\"false\"/>\n"
-"\n"
-"                <property name=\"color\"\n"
-"                    type=\"eg.types.ColorUserType\"\n"
-"                    not-null=\"true\"\n"
-"                    update=\"false\"/>\n"
-"\n"
-"                <property name=\"sex\"\n"
-"                    not-null=\"true\"\n"
-"                    update=\"false\"/>\n"
-"\n"
-"                <property name=\"litterId\"\n"
-"                    column=\"litterId\"\n"
-"                    update=\"false\"/>\n"
-"\n"
-"                <many-to-one name=\"mother\"\n"
-"                    column=\"mother_id\"\n"
-"                    update=\"false\"/>\n"
-"\n"
-"                <set name=\"kittens\"\n"
-"                    inverse=\"true\"\n"
-"                    order-by=\"litter_id\">\n"
-"                        <key column=\"mother_id\"/>\n"
-"                        <one-to-many class=\"Cat\"/>\n"
-"                </set>\n"
-"\n"
-"                <subclass name=\"DomesticCat\"\n"
-"                    discriminator-value=\"D\">\n"
-"\n"
-"                        <property name=\"name\"\n"
-"                            type=\"string\"/>\n"
-"\n"
-"                </subclass>\n"
-"\n"
-"        </class>\n"
-"\n"
-"        <class name=\"Dog\">\n"
-"                <!-- mapping for Dog could go here -->\n"
-"        </class>\n"
-"\n"
-"</hibernate-mapping>]]>"
-msgstr ""
-
 #. Tag: para
-#: basic_mapping.xml:53
 #, fuzzy, no-c-format
 msgid ""
 "We will now discuss the content of the mapping document. We will only "
@@ -140,13 +64,11 @@ msgstr ""
 "성.)"
 
 #. Tag: title
-#: basic_mapping.xml:64
 #, no-c-format
 msgid "Doctype"
 msgstr "Doctype"
 
 #. Tag: para
-#: basic_mapping.xml:66
 #, fuzzy, no-c-format
 msgid ""
 "All XML mappings should declare the doctype shown. The actual DTD can be "
@@ -164,13 +86,11 @@ msgstr ""
 "당신의 DTD 선언을 체크하라."
 
 #. Tag: title
-#: basic_mapping.xml:76
 #, no-c-format
 msgid "EntityResolver"
 msgstr "EntityResolver"
 
 #. Tag: para
-#: basic_mapping.xml:77
 #, fuzzy, no-c-format
 msgid ""
 "Hibernate will first attempt to resolve DTDs in its classpath. It does this "
@@ -186,7 +106,6 @@ msgstr ""
 "의 다른 systemId namespace들을 인지해낸다."
 
 #. Tag: para
-#: basic_mapping.xml:85
 #, fuzzy, no-c-format
 msgid ""
 "a <literal>hibernate namespace</literal> is recognized whenever the resolver "
@@ -200,7 +119,6 @@ msgstr ""
 "엔티티들을 해석하려고 시도한다."
 
 #. Tag: para
-#: basic_mapping.xml:94
 #, fuzzy, no-c-format
 msgid ""
 "a <literal>user namespace</literal> is recognized whenever the resolver "
@@ -215,34 +133,11 @@ msgstr ""
 "스로더를 통해 이들 엔티티들을 해석하려고 시도할 것이다."
 
 #. Tag: para
-#: basic_mapping.xml:103
 #, fuzzy, no-c-format
 msgid "The following is an example of utilizing user namespacing:"
 msgstr "user namespacing을 활용하는 예제:"
 
-#. Tag: programlisting
-#: basic_mapping.xml:106
-#, no-c-format
-msgid ""
-"<![CDATA[<?xml version=\"1.0\"?>\n"
-"<!DOCTYPE hibernate-mapping PUBLIC\n"
-"        \"-//Hibernate/Hibernate Mapping DTD 3.0//EN\"\n"
-"        \"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd\" [\n"
-"    <!ENTITY types SYSTEM \"classpath://your/domain/types.xml\">\n"
-"]>\n"
-"\n"
-"<hibernate-mapping package=\"your.domain\">\n"
-"    <class name=\"MyEntity\">\n"
-"        <id name=\"id\" type=\"my-custom-id-type\">\n"
-"            ...\n"
-"        </id>\n"
-"    <class>\n"
-"    &types;\n"
-"</hibernate-mapping>]]>"
-msgstr ""
-
 #. Tag: para
-#: basic_mapping.xml:107
 #, no-c-format
 msgid ""
 "Where <literal>types.xml</literal> is a resource in the <literal>your."
@@ -254,13 +149,11 @@ msgstr ""
 "xref>를 포함한다."
 
 #. Tag: title
-#: basic_mapping.xml:115
 #, fuzzy, no-c-format
 msgid "Hibernate-mapping"
 msgstr "hibernate-mapping"
 
 #. Tag: para
-#: basic_mapping.xml:117
 #, fuzzy, no-c-format
 msgid ""
 "This element has several optional attributes. The <literal>schema</literal> "
@@ -284,35 +177,17 @@ msgstr ""
 "를 지정한다. <literal>auto-import</literal> 속성은 디폴트로 우리가 질의 언어 "
 "속에서 수식어가 붙지 않은(unqualified) 클래스 이름들을 사용하게 할 것이다."
 
-#. Tag: programlisting
-#: basic_mapping.xml:138
-#, no-c-format
-msgid ""
-"<![CDATA[<hibernate-mapping\n"
-"         schema=\"schemaName\"\n"
-"         catalog=\"catalogName\"\n"
-"         default-cascade=\"cascade_style\"\n"
-"         default-access=\"field|property|ClassName\"\n"
-"         default-lazy=\"true|false\"\n"
-"         auto-import=\"true|false\"\n"
-"         package=\"package.name\"\n"
-" />]]>"
-msgstr ""
-
 #. Tag: para
-#: basic_mapping.xml:141
 #, fuzzy, no-c-format
 msgid "<literal>schema</literal> (optional): the name of a database schema."
 msgstr "<literal>schema</literal> (옵션): 데이터베이스 스키마의 이름."
 
 #. Tag: para
-#: basic_mapping.xml:146
 #, fuzzy, no-c-format
 msgid "<literal>catalog</literal> (optional): the name of a database catalog."
 msgstr "<literal>catalog</literal> (옵션): 데이터베이스 카다록의 이름."
 
 #. Tag: para
-#: basic_mapping.xml:151
 #, fuzzy, no-c-format
 msgid ""
 "<literal>default-cascade</literal> (optional - defaults to <literal>none</"
@@ -322,7 +197,6 @@ msgstr ""
 "literal>): 디폴트 cascade 스타일."
 
 #. Tag: para
-#: basic_mapping.xml:157
 #, fuzzy, no-c-format
 msgid ""
 "<literal>default-access</literal> (optional - defaults to <literal>property</"
@@ -334,7 +208,6 @@ msgstr ""
 "<literal>PropertyAccessor</literal>에 대한 맞춤형 구현일 수 있다."
 
 #. Tag: para
-#: basic_mapping.xml:164
 #, fuzzy, no-c-format
 msgid ""
 "<literal>default-lazy</literal> (optional - defaults to <literal>true</"
@@ -346,7 +219,6 @@ msgstr ""
 "대한 디폴트 값."
 
 #. Tag: para
-#: basic_mapping.xml:171
 #, fuzzy, no-c-format
 msgid ""
 "<literal>auto-import</literal> (optional - defaults to <literal>true</"
@@ -358,7 +230,6 @@ msgstr ""
 "이름들을 사용할 수 있는지를 지정한다."
 
 #. Tag: para
-#: basic_mapping.xml:178
 #, fuzzy, no-c-format
 msgid ""
 "<literal>package</literal> (optional): specifies a package prefix to use for "
@@ -368,7 +239,6 @@ msgstr ""
 "스 이름들에 대해 가정할 패키지 접두어를 지정한다."
 
 #. Tag: para
-#: basic_mapping.xml:186
 #, fuzzy, no-c-format
 msgid ""
 "If you have two persistent classes with the same unqualified name, you "
@@ -381,7 +251,6 @@ msgstr ""
 "할 경우에 Hibernate는 예외상황을 던질 것이다."
 
 #. Tag: para
-#: basic_mapping.xml:192
 #, fuzzy, no-c-format
 msgid ""
 "The <literal>hibernate-mapping</literal> element allows you to nest several "
@@ -401,13 +270,11 @@ msgstr ""
 "는 <literal>Animal.hbm.xml</literal>."
 
 #. Tag: title
-#: basic_mapping.xml:205
 #, fuzzy, no-c-format
 msgid "Class"
 msgstr "class"
 
 #. Tag: para
-#: basic_mapping.xml:207
 #, fuzzy, no-c-format
 msgid ""
 "You can declare a persistent class using the <literal>class</literal> "
@@ -416,38 +283,7 @@ msgstr ""
 "당신은 <literal>class</literal> 요소를 사용하여 영속 클래스를 선언할 수도 있"
 "다:"
 
-#. Tag: programlisting
-#: basic_mapping.xml:235
-#, no-c-format
-msgid ""
-"<![CDATA[<class\n"
-"        name=\"ClassName\"\n"
-"        table=\"tableName\"\n"
-"        discriminator-value=\"discriminator_value\"\n"
-"        mutable=\"true|false\"\n"
-"        schema=\"owner\"\n"
-"        catalog=\"catalog\"\n"
-"        proxy=\"ProxyInterface\"\n"
-"        dynamic-update=\"true|false\"\n"
-"        dynamic-insert=\"true|false\"\n"
-"        select-before-update=\"true|false\"\n"
-"        polymorphism=\"implicit|explicit\"\n"
-"        where=\"arbitrary sql where condition\"\n"
-"        persister=\"PersisterClass\"\n"
-"        batch-size=\"N\"\n"
-"        optimistic-lock=\"none|version|dirty|all\"\n"
-"        lazy=\"true|false\"\n"
-"        entity-name=\"EntityName\"\n"
-"        check=\"arbitrary sql check condition\"\n"
-"        rowid=\"rowid\"\n"
-"        subselect=\"SQL expression\"\n"
-"        abstract=\"true|false\"\n"
-"        node=\"element-name\"\n"
-"/>]]>"
-msgstr ""
-
 #. Tag: para
-#: basic_mapping.xml:238
 #, fuzzy, no-c-format
 msgid ""
 "<literal>name</literal> (optional): the fully qualified Java class name of "
@@ -459,7 +295,6 @@ msgstr ""
 "고 가정된다."
 
 #. Tag: para
-#: basic_mapping.xml:245
 #, fuzzy, no-c-format
 msgid ""
 "<literal>table</literal> (optional - defaults to the unqualified class "
@@ -469,7 +304,6 @@ msgstr ""
 "의 데이터베이스 테이블의 이름."
 
 #. Tag: para
-#: basic_mapping.xml:251
 #, fuzzy, no-c-format
 msgid ""
 "<literal>discriminator-value</literal> (optional - defaults to the class "
@@ -482,7 +316,6 @@ msgstr ""
 "값들은<literal>null</literal>과 <literal>not null</literal>을 포함한다."
 
 #. Tag: para
-#: basic_mapping.xml:258
 #, fuzzy, no-c-format
 msgid ""
 "<literal>mutable</literal> (optional - defaults to <literal>true</literal>): "
@@ -492,7 +325,6 @@ msgstr ""
 "들의 인스턴스들이 가변적인지를 (가변적이지 않은지를) 지정한다."
 
 #. Tag: para
-#: basic_mapping.xml:264 basic_mapping.xml:2231
 #, fuzzy, no-c-format
 msgid ""
 "<literal>schema</literal> (optional): overrides the schema name specified by "
@@ -506,7 +338,6 @@ msgstr ""
 "literal> 요소에 의해 지정된 스키마 이름을 오버라이드 시킨다"
 
 #. Tag: para
-#: basic_mapping.xml:270 basic_mapping.xml:2237
 #, fuzzy, no-c-format
 msgid ""
 "<literal>catalog</literal> (optional): overrides the catalog name specified "
@@ -520,7 +351,6 @@ msgstr ""
 "literal> 요소에 의해 지정된 카타록 이름을 오버라이드 시킨다."
 
 #. Tag: para
-#: basic_mapping.xml:276
 #, fuzzy, no-c-format
 msgid ""
 "<literal>proxy</literal> (optional): specifies an interface to use for lazy "
@@ -530,7 +360,6 @@ msgstr ""
 "스를 지정한다. 당신은 클래스 그 자체의 이름을 지정할 수 도 있다."
 
 #. Tag: para
-#: basic_mapping.xml:282
 #, fuzzy, no-c-format
 msgid ""
 "<literal>dynamic-update</literal> (optional - defaults to <literal>false</"
@@ -542,7 +371,6 @@ msgstr ""
 "값들이 변경된 그들 컬럼들 만을 포함할 것인지를 지정한다."
 
 #. Tag: para
-#: basic_mapping.xml:289
 #, fuzzy, no-c-format
 msgid ""
 "<literal>dynamic-insert</literal> (optional - defaults to <literal>false</"
@@ -554,7 +382,6 @@ msgstr ""
 "의 값이 null이 아닌 컬럼들 만을 포함할 것인지를 지정한다."
 
 #. Tag: para
-#: basic_mapping.xml:296
 #, fuzzy, no-c-format
 msgid ""
 "<literal>select-before-update</literal> (optional - defaults to "
@@ -574,7 +401,6 @@ msgstr ""
 "Hibernate는 특별한 SQL <literal>SELECT</literal>를 실행할 것임을 의미한다."
 
 #. Tag: para
-#: basic_mapping.xml:306
 #, fuzzy, no-c-format
 msgid ""
 "<literal>polymorphism</literal> (optional - defaults to <literal>implicit</"
@@ -586,7 +412,6 @@ msgstr ""
 "것인지를 결정한다."
 
 #. Tag: para
-#: basic_mapping.xml:312
 #, fuzzy, no-c-format
 msgid ""
 "<literal>where</literal> (optional): specifies an arbitrary SQL "
@@ -597,7 +422,6 @@ msgstr ""
 "인 SQL <literal>WHERE</literal> 조건을 지정한다"
 
 #. Tag: para
-#: basic_mapping.xml:318
 #, fuzzy, no-c-format
 msgid ""
 "<literal>persister</literal> (optional): specifies a custom "
@@ -607,7 +431,6 @@ msgstr ""
 "를 지정한다."
 
 #. Tag: para
-#: basic_mapping.xml:323
 #, fuzzy, no-c-format
 msgid ""
 "<literal>batch-size</literal> (optional - defaults to <literal>1</literal>): "
@@ -618,7 +441,6 @@ msgstr ""
 "에 의해 이 클래스의 인스턴스들을 페치시키는 \"배치 사이즈\"를 지정한다."
 
 #. Tag: para
-#: basic_mapping.xml:329
 #, fuzzy, no-c-format
 msgid ""
 "<literal>optimistic-lock</literal> (optional - defaults to <literal>version</"
@@ -628,7 +450,6 @@ msgstr ""
 "literal>): optimistic 잠금 방도를 결정한다."
 
 #. Tag: para
-#: basic_mapping.xml:335
 #, fuzzy, no-c-format
 msgid ""
 "<literal>lazy</literal> (optional): lazy fetching can be disabled by setting "
@@ -638,7 +459,6 @@ msgstr ""
 "로써 Lazy fetching이 전체적으로 사용불가능하게 될 수 있다."
 
 #. Tag: para
-#: basic_mapping.xml:341
 #, fuzzy, no-c-format
 msgid ""
 "<literal>entity-name</literal> (optional - defaults to the class name): "
@@ -646,7 +466,7 @@ msgid ""
 "different tables. It also allows entity mappings that are represented by "
 "Maps or XML at the Java level. In these cases, you should provide an "
 "explicit arbitrary name for the entity. See <xref linkend=\"persistent-"
-"classes-dynamicmodels\"/> and <xref linkend=\"xml\"/> for more information."
+"classes-dynamicmodels\" /> and <xref linkend=\"xml\" /> for more information."
 msgstr ""
 "<literal>entity-name</literal>(옵션, 디폴트는 클래스 이름): Hibernate3는 하나"
 "의 클래스가 (잠정적으로 다른 테이블들로) 여러번 매핑되는 것을 허용해주고, "
@@ -659,7 +479,6 @@ msgstr ""
 "\"persistent-classes-dynamicmodels\"/>과 <xref linkend=\"xml\"/>을 보라."
 
 #. Tag: para
-#: basic_mapping.xml:351
 #, fuzzy, no-c-format
 msgid ""
 "<literal>check</literal> (optional): an SQL expression used to generate a "
@@ -670,7 +489,6 @@ msgstr ""
 "<emphasis>check</emphasis> constraint를 생성시키는데 사용되는 SQL 표현식."
 
 #. Tag: para
-#: basic_mapping.xml:357
 #, fuzzy, no-c-format
 msgid ""
 "<literal>rowid</literal> (optional): Hibernate can use ROWIDs on databases. "
@@ -686,7 +504,6 @@ msgstr ""
 "튜플(tuple)의 물리적이니 위치를 표현한다."
 
 #. Tag: para
-#: basic_mapping.xml:364
 #, fuzzy, no-c-format
 msgid ""
 "<literal>subselect</literal> (optional): maps an immutable and read-only "
@@ -698,7 +515,6 @@ msgstr ""
 "용하지만, 사용을 자제하라. 추가 정보는 아래를 보라."
 
 #. Tag: para
-#: basic_mapping.xml:371
 #, fuzzy, no-c-format
 msgid ""
 "<literal>abstract</literal> (optional): is used to mark abstract "
@@ -708,7 +524,6 @@ msgstr ""
 "literal> 계층 구조들 내에서 abstract 슈퍼클래스들을 마크하는데 사용된다."
 
 #. Tag: para
-#: basic_mapping.xml:379
 #, fuzzy, no-c-format
 msgid ""
 "It is acceptable for the named persistent class to be an interface. You can "
@@ -724,7 +539,6 @@ msgstr ""
 "Foo$Bar</literal>를 사용하여 클래스 이름을 지정해야 한다."
 
 #. Tag: para
-#: basic_mapping.xml:386
 #, fuzzy, no-c-format
 msgid ""
 "Immutable classes, <literal>mutable=\"false\"</literal>, cannot be updated "
@@ -736,7 +550,6 @@ msgstr ""
 "떤 마이너 퍼포먼스 최적화를 행하게끔 허용해준다."
 
 #. Tag: para
-#: basic_mapping.xml:391
 #, fuzzy, no-c-format
 msgid ""
 "The optional <literal>proxy</literal> attribute enables lazy initialization "
@@ -751,7 +564,6 @@ msgstr ""
 "출될 때 로드될 것이다. 아래 \"Lazy 초기화를 위한 프락시들\"을 보라."
 
 #. Tag: para
-#: basic_mapping.xml:398
 #, fuzzy, no-c-format
 msgid ""
 "<emphasis>Implicit</emphasis> polymorphism means that instances of the class "
@@ -782,7 +594,6 @@ msgstr ""
 "\"경량급\" 클래스를 허용한다)."
 
 #. Tag: para
-#: basic_mapping.xml:410
 #, fuzzy, no-c-format
 msgid ""
 "The <literal>persister</literal> attribute lets you customize the "
@@ -804,7 +615,6 @@ msgstr ""
 "<literal>org.hibernate.test.CustomPersister</literal>를 보라."
 
 #. Tag: para
-#: basic_mapping.xml:421
 #, fuzzy, no-c-format
 msgid ""
 "The <literal>dynamic-update</literal> and <literal>dynamic-insert</literal> "
@@ -820,7 +630,6 @@ msgstr ""
 "만 다른 경우들에서는 퍼포먼스를 실제로 감소시킬 수도 있다. 적절하게 사용하라."
 
 #. Tag: para
-#: basic_mapping.xml:429
 #, fuzzy, no-c-format
 msgid ""
 "Use of <literal>select-before-update</literal> will usually decrease "
@@ -834,7 +643,6 @@ msgstr ""
 "방지하는데 매우 유용하다."
 
 #. Tag: para
-#: basic_mapping.xml:435
 #, no-c-format
 msgid ""
 "If you enable <literal>dynamic-update</literal>, you will have a choice of "
@@ -844,19 +652,16 @@ msgstr ""
 "optimistic 잠금 전략들을 선택하게 될 것이다:"
 
 #. Tag: para
-#: basic_mapping.xml:441
 #, fuzzy, no-c-format
 msgid "<literal>version</literal>: check the version/timestamp columns"
 msgstr "<literal>version</literal>은 version/timestamp 컬럼들을 체크한다"
 
 #. Tag: para
-#: basic_mapping.xml:446
 #, fuzzy, no-c-format
 msgid "<literal>all</literal>: check all columns"
 msgstr "<literal>all</literal>은 모든 컬럼들을 체크한다"
 
 #. Tag: para
-#: basic_mapping.xml:451
 #, fuzzy, no-c-format
 msgid ""
 "<literal>dirty</literal>: check the changed columns, allowing some "
@@ -866,13 +671,11 @@ msgstr ""
 "을 체크한다"
 
 #. Tag: para
-#: basic_mapping.xml:456
 #, fuzzy, no-c-format
 msgid "<literal>none</literal>: do not use optimistic locking"
 msgstr "<literal>none</literal>은 optimistic 잠금을 사용하지 않는다"
 
 #. Tag: para
-#: basic_mapping.xml:461
 #, fuzzy, no-c-format
 msgid ""
 "It is <emphasis>strongly</emphasis> recommended that you use version/"
@@ -887,7 +690,6 @@ msgstr ""
 "용될 때)."
 
 #. Tag: para
-#: basic_mapping.xml:468
 #, fuzzy, no-c-format
 msgid ""
 "There is no difference between a view and a base table for a Hibernate "
@@ -904,26 +706,7 @@ msgstr ""
 "터베이스 속에 뷰를 생성시킬 수 없다. 이 경우에, 당신은 불변의 읽기 전용 엔티"
 "티를 주어진 SQL subselect 표현식으로 매핑시킬 수 있다:"
 
-#. Tag: programlisting
-#: basic_mapping.xml:476
-#, no-c-format
-msgid ""
-"<![CDATA[<class name=\"Summary\">\n"
-"    <subselect>\n"
-"        select item.name, max(bid.amount), count(*)\n"
-"        from item\n"
-"        join bid on bid.item_id = item.id\n"
-"        group by item.name\n"
-"    </subselect>\n"
-"    <synchronize table=\"item\"/>\n"
-"    <synchronize table=\"bid\"/>\n"
-"    <id name=\"name\"/>\n"
-"    ...\n"
-"</class>]]>"
-msgstr ""
-
 #. Tag: para
-#: basic_mapping.xml:478
 #, fuzzy, no-c-format
 msgid ""
 "Declare the tables to synchronize this entity with, ensuring that auto-flush "
@@ -937,13 +720,11 @@ msgstr ""
 "양자로서 이용 가능하다."
 
 #. Tag: title
-#: basic_mapping.xml:488
 #, no-c-format
-msgid "<title>id</title>"
-msgstr ""
+msgid "id"
+msgstr "id"
 
 #. Tag: para
-#: basic_mapping.xml:490
 #, no-c-format
 msgid ""
 "Mapped classes <emphasis>must</emphasis> declare the primary key column of "
@@ -957,38 +738,19 @@ msgstr ""
 "는 자바빈즈-스타일 프로퍼티를 가질 것이다. <literal>&lt;id&gt;</literal> 요소"
 "는 그 프로퍼티로부터 프라이머리 키 컬럼으로의 매핑을 정의한다."
 
-#. Tag: programlisting
-#: basic_mapping.xml:505
-#, no-c-format
-msgid ""
-"<![CDATA[<id\n"
-"        name=\"propertyName\"\n"
-"        type=\"typename\"\n"
-"        column=\"column_name\"\n"
-"        unsaved-value=\"null|any|none|undefined|id_value\"\n"
-"        access=\"field|property|ClassName\">\n"
-"        node=\"element-name|@attribute-name|element/@attribute|.\"\n"
-"\n"
-"        <generator class=\"generatorClass\"/>\n"
-"</id>]]>"
-msgstr ""
-
 #. Tag: para
-#: basic_mapping.xml:508
 #, fuzzy, no-c-format
 msgid ""
 "<literal>name</literal> (optional): the name of the identifier property."
 msgstr "<literal>name</literal> (옵션): 식별자 프로퍼티의 이름."
 
 #. Tag: para
-#: basic_mapping.xml:513 basic_mapping.xml:1351
 #, no-c-format
 msgid ""
 "<literal>type</literal> (optional): a name that indicates the Hibernate type."
 msgstr "<literal>type</literal> (옵션): Hibernate 타입을 나타내는 이름."
 
 #. Tag: para
-#: basic_mapping.xml:518
 #, fuzzy, no-c-format
 msgid ""
 "<literal>column</literal> (optional - defaults to the property name): the "
@@ -998,7 +760,6 @@ msgstr ""
 "의 이름."
 
 #. Tag: para
-#: basic_mapping.xml:524
 #, fuzzy, no-c-format
 msgid ""
 "<literal>unsaved-value</literal> (optional - defaults to a \"sensible\" "
@@ -1012,7 +773,6 @@ msgstr ""
 "자 프로퍼티 값."
 
 #. Tag: para
-#: basic_mapping.xml:532
 #, fuzzy, no-c-format
 msgid ""
 "<literal>access</literal> (optional - defaults to <literal>property</"
@@ -1048,7 +808,6 @@ msgstr ""
 "Hibernate가 프로퍼티 값에 접근하는데 사용할 방도."
 
 #. Tag: para
-#: basic_mapping.xml:540
 #, no-c-format
 msgid ""
 "If the <literal>name</literal> attribute is missing, it is assumed that the "
@@ -1058,7 +817,6 @@ msgstr ""
 "다고 가정된다."
 
 #. Tag: para
-#: basic_mapping.xml:545
 #, no-c-format
 msgid ""
 "The <literal>unsaved-value</literal> attribute is almost never needed in "
@@ -1067,7 +825,6 @@ msgstr ""
 "<literal>unsaved-value</literal> 속성은 Hibernate3에서는 거의 필요하지 않다."
 
 #. Tag: para
-#: basic_mapping.xml:549
 #, fuzzy, no-c-format
 msgid ""
 "There is an alternative <literal>&lt;composite-id&gt;</literal> declaration "
@@ -1079,13 +836,11 @@ msgstr ""
 "것에 대한 그것의 사용에 대해 강력하게 반대한다."
 
 #. Tag: title
-#: basic_mapping.xml:555
 #, no-c-format
 msgid "Generator"
 msgstr "Generator"
 
 #. Tag: para
-#: basic_mapping.xml:557
 #, no-c-format
 msgid ""
 "The optional <literal>&lt;generator&gt;</literal> child element names a Java "
@@ -1099,20 +854,7 @@ msgstr ""
 "만일 임의의 파라미터들이 생성기 인스턴스를 구성하거나 초기화 시키는데 필요할 "
 "경우, 그것들은 <literal>&lt;param&gt;</literal> 요소 를 사용하여 전달된다."
 
-#. Tag: programlisting
-#: basic_mapping.xml:564
-#, no-c-format
-msgid ""
-"<![CDATA[<id name=\"id\" type=\"long\" column=\"cat_id\">\n"
-"        <generator class=\"org.hibernate.id.TableHiLoGenerator\">\n"
-"                <param name=\"table\">uid_table</param>\n"
-"                <param name=\"column\">next_hi_value_column</param>\n"
-"        </generator>\n"
-"</id>]]>"
-msgstr ""
-
 #. Tag: para
-#: basic_mapping.xml:566
 #, fuzzy, no-c-format
 msgid ""
 "All generators implement the interface <literal>org.hibernate.id."
@@ -1127,14 +869,12 @@ msgstr ""
 "미리 빈드된 구현들의 영역들을 제공한다. 빌드-인 생성기(generator)들에 대한 단"
 "축 이름들이 존재한다: <placeholder-1/>"
 
-#. Tag: literal
-#: basic_mapping.xml:574
-#, no-c-format
-msgid "increment"
-msgstr "increment"
+#. Tag: term
+#, fuzzy, no-c-format
+msgid "<literal>increment</literal>"
+msgstr "<literal>all</literal>은 모든 컬럼들을 체크한다"
 
 #. Tag: para
-#: basic_mapping.xml:576
 #, no-c-format
 msgid ""
 "generates identifiers of type <literal>long</literal>, <literal>short</"
@@ -1147,14 +887,12 @@ msgstr ""
 "literal> 타입의 식별자들을 생성시킨다. <emphasis>클러스터 내에서는 사용하지 "
 "말라.</emphasis>"
 
-#. Tag: literal
-#: basic_mapping.xml:585
-#, no-c-format
-msgid "identity"
-msgstr "identity"
+#. Tag: term
+#, fuzzy, no-c-format
+msgid "<literal>identity</literal>"
+msgstr "<literal>all</literal>은 모든 컬럼들을 체크한다"
 
 #. Tag: para
-#: basic_mapping.xml:587
 #, no-c-format
 msgid ""
 "supports identity columns in DB2, MySQL, MS SQL Server, Sybase and "
@@ -1165,14 +903,12 @@ msgstr ""
 "반환되는 식별자는 <literal>long</literal>, <literal>short</literal> 또는 "
 "<literal>int</literal> 타입이다."
 
-#. Tag: literal
-#: basic_mapping.xml:595
-#, no-c-format
-msgid "sequence"
-msgstr "sequence"
+#. Tag: term
+#, fuzzy, no-c-format
+msgid "<literal>sequence</literal>"
+msgstr "<literal>all</literal>은 모든 컬럼들을 체크한다"
 
 #. Tag: para
-#: basic_mapping.xml:597
 #, no-c-format
 msgid ""
 "uses a sequence in DB2, PostgreSQL, Oracle, SAP DB, McKoi or a generator in "
@@ -1183,14 +919,12 @@ msgstr ""
 "생성기(generator)를 사용한다. 반환되는 식별자는 <literal>long</literal>, "
 "<literal>short</literal> 또는 <literal>int</literal> 타입이다."
 
-#. Tag: literal
-#: basic_mapping.xml:605
-#, no-c-format
-msgid "hilo"
-msgstr "hilo"
+#. Tag: term
+#, fuzzy, no-c-format
+msgid "<literal>hilo</literal>"
+msgstr "<literal>all</literal>은 모든 컬럼들을 체크한다"
 
 #. Tag: para
-#: basic_mapping.xml:607
 #, no-c-format
 msgid ""
 "uses a hi/lo algorithm to efficiently generate identifiers of type "
@@ -1206,14 +940,12 @@ msgstr ""
 "들을 효과적으로 생성시키는데 hi/lo 알고리즘을 사용한다. hi/lo 알고리즘은 특"
 "정 데이터베이스에 대해서만 유일한 식별자들을 생성시킨다."
 
-#. Tag: literal
-#: basic_mapping.xml:617
-#, no-c-format
-msgid "seqhilo"
-msgstr "seqhilo"
+#. Tag: term
+#, fuzzy, no-c-format
+msgid "<literal>seqhilo</literal>"
+msgstr "<literal>all</literal>은 모든 컬럼들을 체크한다"
 
 #. Tag: para
-#: basic_mapping.xml:619
 #, no-c-format
 msgid ""
 "uses a hi/lo algorithm to efficiently generate identifiers of type "
@@ -1224,14 +956,12 @@ msgstr ""
 "<literal>short</literal> 또는 <literal>int</literal> 타입의 식별자들을 효과적"
 "으로 생성시키는데 hi/lo 알고리즘을 사용한다."
 
-#. Tag: literal
-#: basic_mapping.xml:627
-#, no-c-format
-msgid "uuid"
-msgstr "uuid"
+#. Tag: term
+#, fuzzy, no-c-format
+msgid "<literal>uuid</literal>"
+msgstr "<literal>all</literal>은 모든 컬럼들을 체크한다"
 
 #. Tag: para
-#: basic_mapping.xml:629
 #, fuzzy, no-c-format
 msgid ""
 "uses a 128-bit UUID algorithm to generate identifiers of type string that "
@@ -1242,26 +972,22 @@ msgstr ""
 "위해 128 비트 UUID 알고리즘을 사용한다. UUID는 길이가 32인 16진수들의 문자열"
 "로서 인코딩 된다."
 
-#. Tag: literal
-#: basic_mapping.xml:637
-#, no-c-format
-msgid "guid"
-msgstr "guid"
+#. Tag: term
+#, fuzzy, no-c-format
+msgid "<literal>guid</literal>"
+msgstr "<literal>all</literal>은 모든 컬럼들을 체크한다"
 
 #. Tag: para
-#: basic_mapping.xml:639
 #, no-c-format
 msgid "uses a database-generated GUID string on MS SQL Server and MySQL."
 msgstr "MS SQL Server와 MySQL 상에서 데이터베이스 생성 GUID 문자열을 사용한다."
 
-#. Tag: literal
-#: basic_mapping.xml:645
-#, no-c-format
-msgid "native"
-msgstr "native"
+#. Tag: term
+#, fuzzy, no-c-format
+msgid "<literal>native</literal>"
+msgstr "<literal>all</literal>은 모든 컬럼들을 체크한다"
 
 #. Tag: para
-#: basic_mapping.xml:647
 #, fuzzy, no-c-format
 msgid ""
 "selects <literal>identity</literal>, <literal>sequence</literal> or "
@@ -1271,14 +997,12 @@ msgstr ""
 "기본 데이터베이스의 가용성들에 의존하여 <literal>identity</literal>, "
 "<literal>sequence</literal> 또는 <literal>hilo</literal>를 찾아낸다."
 
-#. Tag: literal
-#: basic_mapping.xml:655
-#, no-c-format
-msgid "assigned"
-msgstr "assigned"
+#. Tag: term
+#, fuzzy, no-c-format
+msgid "<literal>assigned</literal>"
+msgstr "<literal>all</literal>은 모든 컬럼들을 체크한다"
 
 #. Tag: para
-#: basic_mapping.xml:657
 #, fuzzy, no-c-format
 msgid ""
 "lets the application assign an identifier to the object before <literal>save"
@@ -1289,14 +1013,12 @@ msgstr ""
 "체에 할당하도록 한다. <literal>&lt;generator&gt;</literal> 요소가 지정되지 않"
 "을 경우 이것이 디폴트 방도이다."
 
-#. Tag: literal
-#: basic_mapping.xml:665
-#, no-c-format
-msgid "select"
-msgstr "select"
+#. Tag: term
+#, fuzzy, no-c-format
+msgid "<literal>select</literal>"
+msgstr "<literal>all</literal>은 모든 컬럼들을 체크한다"
 
 #. Tag: para
-#: basic_mapping.xml:667
 #, fuzzy, no-c-format
 msgid ""
 "retrieves a primary key, assigned by a database trigger, by selecting the "
@@ -1305,14 +1027,12 @@ msgstr ""
 "어떤 유일 키에 의해 행을 select하고 프라이머리 키 값을 검색함으로써 데이터베"
 "이스 트리거에 의해 할당된 프라이머리 키를 검색한다."
 
-#. Tag: literal
-#: basic_mapping.xml:674
-#, no-c-format
-msgid "foreign"
-msgstr "foreign"
+#. Tag: term
+#, fuzzy, no-c-format
+msgid "<literal>foreign</literal>"
+msgstr "<literal>all</literal>은 모든 컬럼들을 체크한다"
 
 #. Tag: para
-#: basic_mapping.xml:676
 #, fuzzy, no-c-format
 msgid ""
 "uses the identifier of another associated object. It is usually used in "
@@ -1322,14 +1042,12 @@ msgstr ""
 "또 다른 연관된 객체의 식별자를 사용한다. 대개 <literal>&lt;one-to-one&gt;</"
 "literal> 프라이머리 키 연관관계와 함께 사용된다."
 
-#. Tag: literal
-#: basic_mapping.xml:683
-#, no-c-format
-msgid "sequence-identity"
-msgstr "sequence-identity"
+#. Tag: term
+#, fuzzy, no-c-format
+msgid "<literal>sequence-identity</literal>"
+msgstr "<literal>all</literal>은 모든 컬럼들을 체크한다"
 
 #. Tag: para
-#: basic_mapping.xml:685
 #, fuzzy, no-c-format
 msgid ""
 "a specialized sequence generation strategy that utilizes a database sequence "
@@ -1347,13 +1065,11 @@ msgstr ""
 "게 되어 있음을 노트하라."
 
 #. Tag: title
-#: basic_mapping.xml:702
 #, no-c-format
 msgid "Hi/lo algorithm"
 msgstr "Hi/lo algorithm"
 
 #. Tag: para
-#: basic_mapping.xml:703
 #, fuzzy, no-c-format
 msgid ""
 "The <literal>hilo</literal> and <literal>seqhilo</literal> generators "
@@ -1368,33 +1084,7 @@ msgstr ""
 "\" 데이터베이스 테이블을 필요로 한다. 두 번째는 (지원되는) Oracle 스타일의 시"
 "퀀스를 사용한다."
 
-#. Tag: programlisting
-#: basic_mapping.xml:710
-#, no-c-format
-msgid ""
-"<![CDATA[<id name=\"id\" type=\"long\" column=\"cat_id\">\n"
-"        <generator class=\"hilo\">\n"
-"                <param name=\"table\">hi_value</param>\n"
-"                <param name=\"column\">next_value</param>\n"
-"                <param name=\"max_lo\">100</param>\n"
-"        </generator>\n"
-"</id>]]>"
-msgstr ""
-
-#. Tag: programlisting
-#: basic_mapping.xml:712
-#, no-c-format
-msgid ""
-"<![CDATA[<id name=\"id\" type=\"long\" column=\"cat_id\">\n"
-"        <generator class=\"seqhilo\">\n"
-"                <param name=\"sequence\">hi_value</param>\n"
-"                <param name=\"max_lo\">100</param>\n"
-"        </generator>\n"
-"</id>]]>"
-msgstr ""
-
 #. Tag: para
-#: basic_mapping.xml:714
 #, fuzzy, no-c-format
 msgid ""
 "Unfortunately, you cannot use <literal>hilo</literal> when supplying your "
@@ -1410,13 +1100,11 @@ msgstr ""
 "해야 한다."
 
 #. Tag: title
-#: basic_mapping.xml:723
 #, no-c-format
 msgid "UUID algorithm"
 msgstr "UUID 알고리즘"
 
 #. Tag: para
-#: basic_mapping.xml:724
 #, fuzzy, no-c-format
 msgid ""
 "The UUID contains: IP address, startup time of the JVM that is accurate to a "
@@ -1430,13 +1118,11 @@ msgstr ""
 "최상의 것이다."
 
 #. Tag: title
-#: basic_mapping.xml:733
 #, no-c-format
 msgid "Identity columns and sequences"
 msgstr "식별 컬럼들과 시퀀스들"
 
 #. Tag: para
-#: basic_mapping.xml:734
 #, fuzzy, no-c-format
 msgid ""
 "For databases that support identity columns (DB2, MySQL, Sybase, MS SQL), "
@@ -1451,29 +1137,7 @@ msgstr ""
 "당신은 <literal>sequence</literal> 스타일 키 생성을 사용할 수도 있다. 이들 방"
 "도들 모두 새로운 객체를 insert하기 위해 두 개의 SQL 질의들을 필요로 한다."
 
-#. Tag: programlisting
-#: basic_mapping.xml:742
-#, no-c-format
-msgid ""
-"<![CDATA[<id name=\"id\" type=\"long\" column=\"person_id\">\n"
-"        <generator class=\"sequence\">\n"
-"                <param name=\"sequence\">person_id_sequence</param>\n"
-"        </generator>\n"
-"</id>]]>"
-msgstr ""
-
-#. Tag: programlisting
-#: basic_mapping.xml:744
-#, no-c-format
-msgid ""
-"<![CDATA[<id name=\"id\" type=\"long\" column=\"person_id\" unsaved-value=\"0"
-"\">\n"
-"        <generator class=\"identity\"/>\n"
-"</id>]]>"
-msgstr ""
-
 #. Tag: para
-#: basic_mapping.xml:746
 #, fuzzy, no-c-format
 msgid ""
 "For cross-platform development, the <literal>native</literal> strategy will, "
@@ -1486,13 +1150,11 @@ msgstr ""
 "literal>, <literal>hilo</literal> 방도 중에서 선택될 것이다."
 
 #. Tag: title
-#: basic_mapping.xml:754
 #, no-c-format
 msgid "Assigned identifiers"
 msgstr "할당된 식별자들"
 
 #. Tag: para
-#: basic_mapping.xml:755
 #, fuzzy, no-c-format
 msgid ""
 "If you want the application to assign identifiers, as opposed to having "
@@ -1512,7 +1174,6 @@ msgstr ""
 "트 특징이다"
 
 #. Tag: para
-#: basic_mapping.xml:764
 #, fuzzy, no-c-format
 msgid ""
 "The <literal>assigned</literal> generator makes Hibernate use "
@@ -1529,13 +1190,11 @@ msgstr ""
 "록 한다."
 
 #. Tag: title
-#: basic_mapping.xml:774
 #, no-c-format
 msgid "Primary keys assigned by triggers"
 msgstr "트리거들에 의해 할당된 프라이머리 키들"
 
 #. Tag: para
-#: basic_mapping.xml:775
 #, fuzzy, no-c-format
 msgid ""
 "Hibernate does not generate DDL with triggers. It is for legacy schemas only."
@@ -1543,19 +1202,7 @@ msgstr ""
 "리거시 스키마에 대해서만(Hibernate는 트리거들을 가진 DDL을 생성시키지 않는"
 "다)."
 
-#. Tag: programlisting
-#: basic_mapping.xml:779
-#, no-c-format
-msgid ""
-"<![CDATA[<id name=\"id\" type=\"long\" column=\"person_id\">\n"
-"        <generator class=\"select\">\n"
-"                <param name=\"key\">socialSecurityNumber</param>\n"
-"        </generator>\n"
-"</id>]]>"
-msgstr ""
-
 #. Tag: para
-#: basic_mapping.xml:781
 #, fuzzy, no-c-format
 msgid ""
 "In the above example, there is a unique valued property named "
@@ -1568,13 +1215,11 @@ msgstr ""
 "생성되는 <literal>person_id</literal>로 명명된 대용키가 존재한다."
 
 #. Tag: title
-#: basic_mapping.xml:793
 #, no-c-format
 msgid "Enhanced identifier generators"
 msgstr "NOT TRANSLATED!Enhanced identifier generators"
 
 #. Tag: para
-#: basic_mapping.xml:795
 #, fuzzy, no-c-format
 msgid ""
 "Starting with release 3.2.3, there are 2 new generators which represent a re-"
@@ -1594,7 +1239,6 @@ msgstr ""
 "current releases and can be referenced by FQN."
 
 #. Tag: para
-#: basic_mapping.xml:803
 #, fuzzy, no-c-format
 msgid ""
 "The first of these new generators is <literal>org.hibernate.id.enhanced."
@@ -1632,7 +1276,6 @@ msgstr ""
 "<placeholder-1/>"
 
 #. Tag: para
-#: basic_mapping.xml:817
 #, fuzzy, no-c-format
 msgid ""
 "<literal>sequence_name</literal> (optional, defaults to "
@@ -1644,7 +1287,6 @@ msgstr ""
 "to be used."
 
 #. Tag: para
-#: basic_mapping.xml:823
 #, fuzzy, no-c-format
 msgid ""
 "<literal>initial_value</literal> (optional, defaults to <literal>1</"
@@ -1658,7 +1300,6 @@ msgstr ""
 "\"STARTS WITH\"."
 
 #. Tag: para
-#: basic_mapping.xml:830
 #, fuzzy, no-c-format
 msgid ""
 "<literal>increment_size</literal> (optional - defaults to <literal>1</"
@@ -1672,7 +1313,6 @@ msgstr ""
 "named \"INCREMENT BY\"."
 
 #. Tag: para
-#: basic_mapping.xml:837
 #, fuzzy, no-c-format
 msgid ""
 "<literal>force_table_use</literal> (optional - defaults to <literal>false</"
@@ -1684,7 +1324,6 @@ msgstr ""
 "though the dialect might support sequence?"
 
 #. Tag: para
-#: basic_mapping.xml:844
 #, fuzzy, no-c-format
 msgid ""
 "<literal>value_column</literal> (optional - defaults to <literal>next_val</"
@@ -1696,17 +1335,16 @@ msgstr ""
 "table which is used to hold the value."
 
 #. Tag: para
-#: basic_mapping.xml:851
 #, fuzzy, no-c-format
 msgid ""
 "<literal>optimizer</literal> (optional - defaults to <literal>none</"
-"literal>): See"
+"literal>): See <xref linkend=\"mapping-declaration-id-enhanced-optimizers\" /"
+">"
 msgstr ""
-"<literal>cascade</literal> (optional- defaults to <literal>none</literal>): "
-"cascade 스타일."
+"<literal>optimizer</literal> (optional, defaults to <literal>none</"
+"literal>): See <xref linkend=\"mapping-declaration-id-enhanced-optimizers\"/>"
 
 #. Tag: para
-#: basic_mapping.xml:858
 #, fuzzy, no-c-format
 msgid ""
 "The second of these new generators is <literal>org.hibernate.id.enhanced."
@@ -1732,7 +1370,6 @@ msgstr ""
 "parameters: <placeholder-1/>"
 
 #. Tag: para
-#: basic_mapping.xml:868
 #, fuzzy, no-c-format
 msgid ""
 "<literal>table_name</literal> (optional - defaults to "
@@ -1742,7 +1379,6 @@ msgstr ""
 "<literal>hibernate_sequences</literal>): The name of the table to be used."
 
 #. Tag: para
-#: basic_mapping.xml:874
 #, fuzzy, no-c-format
 msgid ""
 "<literal>value_column_name</literal> (optional - defaults to "
@@ -1754,7 +1390,6 @@ msgstr ""
 "used to hold the value."
 
 #. Tag: para
-#: basic_mapping.xml:880
 #, fuzzy, no-c-format
 msgid ""
 "<literal>segment_column_name</literal> (optional - defaults to "
@@ -1768,7 +1403,6 @@ msgstr ""
 "identifies which increment value to use."
 
 #. Tag: para
-#: basic_mapping.xml:887
 #, fuzzy, no-c-format
 msgid ""
 "<literal>segment_value</literal> (optional - defaults to <literal>default</"
@@ -1780,7 +1414,6 @@ msgstr ""
 "pull increment values for this generator."
 
 #. Tag: para
-#: basic_mapping.xml:894
 #, fuzzy, no-c-format
 msgid ""
 "<literal>segment_value_length</literal> (optional - defaults to "
@@ -1792,7 +1425,6 @@ msgstr ""
 "segment key column."
 
 #. Tag: para
-#: basic_mapping.xml:900
 #, fuzzy, no-c-format
 msgid ""
 "<literal>initial_value</literal> (optional - defaults to <literal>1</"
@@ -1802,7 +1434,6 @@ msgstr ""
 "literal>): The initial value to be retrieved from the table."
 
 #. Tag: para
-#: basic_mapping.xml:906
 #, fuzzy, no-c-format
 msgid ""
 "<literal>increment_size</literal> (optional - defaults to <literal>1</"
@@ -1812,23 +1443,20 @@ msgstr ""
 "literal>): The value by which subsequent calls to the table should differ."
 
 #. Tag: para
-#: basic_mapping.xml:912
 #, fuzzy, no-c-format
 msgid ""
 "<literal>optimizer</literal> (optional - defaults to <literal></literal>): "
-"See"
+"See <xref linkend=\"mapping-declaration-id-enhanced-optimizers\" />"
 msgstr ""
-"<literal>cascade</literal> (optional- defaults to <literal>none</literal>): "
-"cascade 스타일."
+"<literal>optimizer</literal> (optional, defaults to <literal>none</"
+"literal>): See <xref linkend=\"mapping-declaration-id-enhanced-optimizers\"/>"
 
 #. Tag: title
-#: basic_mapping.xml:922
 #, no-c-format
 msgid "Identifier generator optimization"
 msgstr "NOT TRANSLATED! Identifier generator optimization"
 
 #. Tag: para
-#: basic_mapping.xml:923
 #, fuzzy, no-c-format
 msgid ""
 "For identifier generators that store values in the database, it is "
@@ -1836,7 +1464,7 @@ msgid ""
 "a new identifier value. Instead, you can group a bunch of them in memory and "
 "only hit the database when you have exhausted your in-memory value group. "
 "This is the role of the pluggable optimizers. Currently only the two "
-"enhanced generators (<xref linkend=\"mapping-declaration-id-enhanced\"/> "
+"enhanced generators (<xref linkend=\"mapping-declaration-id-enhanced\" /> "
 "support this operation."
 msgstr ""
 "For identifier generators which store values in the database, it is "
@@ -1848,7 +1476,6 @@ msgstr ""
 "\"/> support this notion. <placeholder-1/>"
 
 #. Tag: para
-#: basic_mapping.xml:931
 #, fuzzy, no-c-format
 msgid ""
 "<literal>none</literal> (generally this is the default if no optimizer was "
@@ -1860,7 +1487,6 @@ msgstr ""
 "each and every request."
 
 #. Tag: para
-#: basic_mapping.xml:937
 #, fuzzy, no-c-format
 msgid ""
 "<literal>hilo</literal>: applies a hi/lo algorithm around the database "
@@ -1878,7 +1504,6 @@ msgstr ""
 "define a group \"hi value\"."
 
 #. Tag: para
-#: basic_mapping.xml:946
 #, fuzzy, no-c-format
 msgid ""
 "<literal>pooled</literal>: as with the case of <literal>hilo</literal>, this "
@@ -1896,32 +1521,11 @@ msgstr ""
 "refers to the values coming from the database."
 
 #. Tag: title
-#: basic_mapping.xml:959
 #, no-c-format
 msgid "composite-id"
 msgstr "composite-id"
 
-#. Tag: programlisting
-#: basic_mapping.xml:961
-#, no-c-format
-msgid ""
-"<![CDATA[<composite-id\n"
-"        name=\"propertyName\"\n"
-"        class=\"ClassName\"\n"
-"        mapped=\"true|false\"\n"
-"        access=\"field|property|ClassName\">\n"
-"        node=\"element-name|.\"\n"
-"\n"
-"        <key-property name=\"propertyName\" type=\"typename\" column="
-"\"column_name\"/>\n"
-"        <key-many-to-one name=\"propertyName class=\"ClassName\" column="
-"\"column_name\"/>\n"
-"        ......\n"
-"</composite-id>]]>"
-msgstr ""
-
 #. Tag: para
-#: basic_mapping.xml:963
 #, fuzzy, no-c-format
 msgid ""
 "A table with a composite key can be mapped with multiple properties of the "
@@ -1934,18 +1538,7 @@ msgstr ""
 "는 자식 요소들로서 <literal>&lt;key-property&gt;</literal> 프로퍼티 매핑과 "
 "<literal>&lt;key-many-to-one&gt;</literal> 매핑들을 허용한다."
 
-#. Tag: programlisting
-#: basic_mapping.xml:970
-#, no-c-format
-msgid ""
-"<![CDATA[<composite-id>\n"
-"        <key-property name=\"medicareNumber\"/>\n"
-"        <key-property name=\"dependent\"/>\n"
-"</composite-id>]]>"
-msgstr ""
-
 #. Tag: para
-#: basic_mapping.xml:972
 #, fuzzy, no-c-format
 msgid ""
 "The persistent class <emphasis>must</emphasis> override <literal>equals()</"
@@ -1958,7 +1551,6 @@ msgstr ""
 "을 구현해야 한다."
 
 #. Tag: para
-#: basic_mapping.xml:978
 #, fuzzy, no-c-format
 msgid ""
 "Unfortunately, this approach means that a persistent object is its own "
@@ -1977,7 +1569,6 @@ msgstr ""
 "composite 식별자로 부르고, 중대한 어플리케이션들에 대해 그것을 억제시킨다."
 
 #. Tag: para
-#: basic_mapping.xml:987
 #, no-c-format
 msgid ""
 "A second approach is what we call a <emphasis>mapped</emphasis> composite "
@@ -1990,18 +1581,7 @@ msgstr ""
 "기서 식별자 프로퍼티들은 영속 클래스와 별도의 식별자 클래스 양자 상에 중복된"
 "다."
 
-#. Tag: programlisting
-#: basic_mapping.xml:993
-#, no-c-format
-msgid ""
-"<![CDATA[<composite-id class=\"MedicareId\" mapped=\"true\">\n"
-"        <key-property name=\"medicareNumber\"/>\n"
-"        <key-property name=\"dependent\"/>\n"
-"</composite-id>]]>"
-msgstr ""
-
 #. Tag: para
-#: basic_mapping.xml:995
 #, fuzzy, no-c-format
 msgid ""
 "In this example, both the composite identifier class, <literal>MedicareId</"
@@ -2019,14 +1599,12 @@ msgstr ""
 "명백한&mdash;코드 중복이다."
 
 #. Tag: para
-#: basic_mapping.xml:1004
 #, no-c-format
 msgid ""
 "The following attributes are used to specify a mapped composite identifier:"
 msgstr "다음 속성들은 매핑된 composite 식별자를 지정하는데 사용된다:"
 
 #. Tag: para
-#: basic_mapping.xml:1010
 #, fuzzy, no-c-format
 msgid ""
 "<literal>mapped</literal> (optional - defaults to <literal>false</literal>): "
@@ -2039,7 +1617,6 @@ msgstr ""
 "래스와 composite 식별자 클래스 양자를 참조함을 나타낸다."
 
 #. Tag: para
-#: basic_mapping.xml:1018
 #, fuzzy, no-c-format
 msgid ""
 "<literal>class</literal> (optional - but required for a mapped composite "
@@ -2049,12 +1626,11 @@ msgstr ""
 "서는 필수적임): 하나의 composite 식별자로서 사용되는 클래스."
 
 #. Tag: para
-#: basic_mapping.xml:1025
 #, fuzzy, no-c-format
 msgid ""
 "We will describe a third, even more convenient approach, where the composite "
 "identifier is implemented as a component class in <xref linkend=\"components-"
-"compositeid\"/>. The attributes described below apply only to this "
+"compositeid\" />. The attributes described below apply only to this "
 "alternative approach:"
 msgstr ""
 "우리는 <xref linkend=\"components-compositeid\"/>에서 composite 식별자가 하나"
@@ -2062,7 +1638,6 @@ msgstr ""
 "이다. 아래에 설명되어 있는 속성들은 이 대체적인 접근법에만 적용된다:"
 
 #. Tag: para
-#: basic_mapping.xml:1033
 #, fuzzy, no-c-format
 msgid ""
 "<literal>name</literal> (optional - required for this approach): a property "
@@ -2073,9 +1648,6 @@ msgstr ""
 "component 식별자를 소유하는 컴포넌트 타입의 프로퍼티(9장을 보라)."
 
 #. Tag: para
-#: basic_mapping.xml:1039 basic_mapping.xml:1260 basic_mapping.xml:1372
-#: basic_mapping.xml:1561 basic_mapping.xml:1735 basic_mapping.xml:1905
-#: basic_mapping.xml:2484
 #, fuzzy, no-c-format
 msgid ""
 "<literal>access</literal> (optional - defaults to <literal>property</"
@@ -2110,7 +1682,6 @@ msgstr ""
 "Hibernate가 프로퍼티 값에 접근하는데 사용할 방도."
 
 #. Tag: para
-#: basic_mapping.xml:1045
 #, fuzzy, no-c-format
 msgid ""
 "<literal>class</literal> (optional - defaults to the property type "
@@ -2121,7 +1692,6 @@ msgstr ""
 "타입): 하나의 composite 식별자로서 사용되는 컴포넌트 클래스(다음 절을 보라)."
 
 #. Tag: para
-#: basic_mapping.xml:1052
 #, fuzzy, no-c-format
 msgid ""
 "The third approach, an <emphasis>identifier component</emphasis>, is "
@@ -2131,13 +1701,11 @@ msgstr ""
 "리케이션들에 대해 우리가 권장하는 것이다."
 
 #. Tag: title
-#: basic_mapping.xml:1060
 #, fuzzy, no-c-format
 msgid "Discriminator"
 msgstr "discriminator"
 
 #. Tag: para
-#: basic_mapping.xml:1062
 #, fuzzy, no-c-format
 msgid ""
 "The <literal>&lt;discriminator&gt;</literal> element is required for "
@@ -2159,21 +1727,7 @@ msgstr ""
 "literal>, <literal>short</literal>, <literal>boolean</literal>, "
 "<literal>yes_no</literal>, <literal>true_false</literal>."
 
-#. Tag: programlisting
-#: basic_mapping.xml:1080
-#, no-c-format
-msgid ""
-"<![CDATA[<discriminator\n"
-"        column=\"discriminator_column\"\n"
-"        type=\"discriminator_type\"\n"
-"        force=\"true|false\"\n"
-"        insert=\"true|false\"\n"
-"        formula=\"arbitrary sql expression\"\n"
-"/>]]>"
-msgstr ""
-
 #. Tag: para
-#: basic_mapping.xml:1083
 #, fuzzy, no-c-format
 msgid ""
 "<literal>column</literal> (optional - defaults to <literal>class</literal>): "
@@ -2183,7 +1737,6 @@ msgstr ""
 "discriminator 컬럼명."
 
 #. Tag: para
-#: basic_mapping.xml:1089
 #, fuzzy, no-c-format
 msgid ""
 "<literal>type</literal> (optional - defaults to <literal>string</literal>): "
@@ -2193,7 +1746,6 @@ msgstr ""
 "Hibernate 타입을 나타내는 이름"
 
 #. Tag: para
-#: basic_mapping.xml:1095
 #, fuzzy, no-c-format
 msgid ""
 "<literal>force</literal> (optional - defaults to <literal>false</literal>): "
@@ -2205,7 +1757,6 @@ msgstr ""
 "discriminator 값들을 지정하도록 \"강제한다\"."
 
 #. Tag: para
-#: basic_mapping.xml:1102
 #, fuzzy, no-c-format
 msgid ""
 "<literal>insert</literal> (optional - defaults to <literal>true</literal>): "
@@ -2219,7 +1770,6 @@ msgstr ""
 "literal>들 속에 그 컬럼을 포함하지 않도록 통보한다.)"
 
 #. Tag: para
-#: basic_mapping.xml:1110
 #, fuzzy, no-c-format
 msgid ""
 "<literal>formula</literal> (optional): an arbitrary SQL expression that is "
@@ -2230,7 +1780,6 @@ msgstr ""
 "SQL 표현식. 컨텐츠 기반의 판별을 허용해준다."
 
 #. Tag: para
-#: basic_mapping.xml:1118
 #, no-c-format
 msgid ""
 "Actual values of the discriminator column are specified by the "
@@ -2242,7 +1791,6 @@ msgstr ""
 "literal> 속성에 의해 지정된다."
 
 #. Tag: para
-#: basic_mapping.xml:1124
 #, fuzzy, no-c-format
 msgid ""
 "The <literal>force</literal> attribute is only useful if the table contains "
@@ -2254,7 +1802,6 @@ msgstr ""
 "그 경우가 아닐 것이다."
 
 #. Tag: para
-#: basic_mapping.xml:1130
 #, fuzzy, no-c-format
 msgid ""
 "The <literal>formula</literal> attribute allows you to declare an arbitrary "
@@ -2263,23 +1810,12 @@ msgstr ""
 "<literal>formula</literal> 속성을 사용하여 당신은 행의 타입을 판단하는데 사용"
 "될 임의의 SQL 표현식을 선언할 수 있다:"
 
-#. Tag: programlisting
-#: basic_mapping.xml:1135
-#, no-c-format
-msgid ""
-"<![CDATA[<discriminator\n"
-"    formula=\"case when CLASS_TYPE in ('a', 'b', 'c') then 0 else 1 end\"\n"
-"    type=\"integer\"/>]]>"
-msgstr ""
-
 #. Tag: title
-#: basic_mapping.xml:1140
 #, fuzzy, no-c-format
 msgid "Version (optional)"
 msgstr "version (옵션)"
 
 #. Tag: para
-#: basic_mapping.xml:1142
 #, fuzzy, no-c-format
 msgid ""
 "The <literal>&lt;version&gt;</literal> element is optional and indicates "
@@ -2291,24 +1827,7 @@ msgstr ""
 "를 포함한다는 것을 나타낸다. 이것은 당신이 <emphasis>긴 트랜잭션(long "
 "transaction)들</emphasis>을 사용할 계획이라면 특히 유용하다 (아래를 보라)."
 
-#. Tag: programlisting
-#: basic_mapping.xml:1158
-#, no-c-format
-msgid ""
-"<![CDATA[<version\n"
-"        column=\"version_column\"\n"
-"        name=\"propertyName\"\n"
-"        type=\"typename\"\n"
-"        access=\"field|property|ClassName\"\n"
-"        unsaved-value=\"null|negative|undefined\"\n"
-"        generated=\"never|always\"\n"
-"        insert=\"true|false\"\n"
-"        node=\"element-name|@attribute-name|element/@attribute|.\"\n"
-"/>]]>"
-msgstr ""
-
 #. Tag: para
-#: basic_mapping.xml:1161
 #, fuzzy, no-c-format
 msgid ""
 "<literal>column</literal> (optional - defaults to the property name): the "
@@ -2318,14 +1837,12 @@ msgstr ""
 "럼의 이름."
 
 #. Tag: para
-#: basic_mapping.xml:1167
 #, fuzzy, no-c-format
 msgid ""
 "<literal>name</literal>: the name of a property of the persistent class."
 msgstr "<literal>name</literal>: 영속 클래스의 프로퍼티 명."
 
 #. Tag: para
-#: basic_mapping.xml:1172
 #, fuzzy, no-c-format
 msgid ""
 "<literal>type</literal> (optional - defaults to <literal>integer</literal>): "
@@ -2335,7 +1852,6 @@ msgstr ""
 "호의 타입."
 
 #. Tag: para
-#: basic_mapping.xml:1178
 #, fuzzy, no-c-format
 msgid ""
 "<literal>access</literal> (optional - defaults to <literal>property</"
@@ -2370,7 +1886,6 @@ msgstr ""
 "Hibernate가 프로퍼티 값에 접근하는데 사용할 방도."
 
 #. Tag: para
-#: basic_mapping.xml:1184
 #, fuzzy, no-c-format
 msgid ""
 "<literal>unsaved-value</literal> (optional - defaults to <literal>undefined</"
@@ -2385,7 +1900,6 @@ msgstr ""
 "(<literal>undefined</literal>는 식별자 프로퍼티 값이 사용될 것임을 지정한다.)"
 
 #. Tag: para
-#: basic_mapping.xml:1193
 #, fuzzy, no-c-format
 msgid ""
 "<literal>generated</literal> (optional - defaults to <literal>never</"
@@ -2399,7 +1913,6 @@ msgstr ""
 "보라."
 
 #. Tag: para
-#: basic_mapping.xml:1200
 #, fuzzy, no-c-format
 msgid ""
 "<literal>insert</literal> (optional - defaults to <literal>true</literal>): "
@@ -2413,7 +1926,6 @@ msgstr ""
 "literal>로 설정될 수 있다."
 
 #. Tag: para
-#: basic_mapping.xml:1210
 #, fuzzy, no-c-format
 msgid ""
 "Version numbers can be of Hibernate type <literal>long</literal>, "
@@ -2425,7 +1937,6 @@ msgstr ""
 "<literal>calendar</literal> 타입일 수 있다."
 
 #. Tag: para
-#: basic_mapping.xml:1215
 #, fuzzy, no-c-format
 msgid ""
 "A version or timestamp property should never be null for a detached "
@@ -2445,13 +1956,11 @@ msgstr ""
 "히 유용하다!</emphasis>"
 
 #. Tag: title
-#: basic_mapping.xml:1226
 #, fuzzy, no-c-format
 msgid "Timestamp (optional)"
 msgstr "timestamp (옵션)"
 
 #. Tag: para
-#: basic_mapping.xml:1228
 #, fuzzy, no-c-format
 msgid ""
 "The optional <literal>&lt;timestamp&gt;</literal> element indicates that the "
@@ -2464,23 +1973,7 @@ msgstr ""
 "Timestamp은 고유하게 optimistic 잠금에 대한 다소 안전한 구현이다. 하지만 때때"
 "로 어플리케이션은 다른 방법들로 timestamp들을 사용할 수도 있다."
 
-#. Tag: programlisting
-#: basic_mapping.xml:1244
-#, no-c-format
-msgid ""
-"<![CDATA[<timestamp\n"
-"        column=\"timestamp_column\"\n"
-"        name=\"propertyName\"\n"
-"        access=\"field|property|ClassName\"\n"
-"        unsaved-value=\"null|undefined\"\n"
-"        source=\"vm|db\"\n"
-"        generated=\"never|always\"\n"
-"        node=\"element-name|@attribute-name|element/@attribute|.\"\n"
-"/>]]>"
-msgstr ""
-
 #. Tag: para
-#: basic_mapping.xml:1247
 #, fuzzy, no-c-format
 msgid ""
 "<literal>column</literal> (optional - defaults to the property name): the "
@@ -2490,7 +1983,6 @@ msgstr ""
 "는 컬럼 명."
 
 #. Tag: para
-#: basic_mapping.xml:1253
 #, fuzzy, no-c-format
 msgid ""
 "<literal>name</literal>: the name of a JavaBeans style property of Java type "
@@ -2501,7 +1993,6 @@ msgstr ""
 "는 <literal>Timestamp</literal> 타입을 가진 자바빈즈 스타일의 프로퍼티 이름."
 
 #. Tag: para
-#: basic_mapping.xml:1266
 #, fuzzy, no-c-format
 msgid ""
 "<literal>unsaved-value</literal> (optional - defaults to <literal>null</"
@@ -2516,7 +2007,6 @@ msgstr ""
 "(<literal>undefined</literal>는 식별자 프로퍼티 값이 사용될 것임을 지정한다.)"
 
 #. Tag: para
-#: basic_mapping.xml:1275
 #, fuzzy, no-c-format
 msgid ""
 "<literal>source</literal> (optional - defaults to <literal>vm</literal>): "
@@ -2538,7 +2028,6 @@ msgstr ""
 "에 있어 사용이 안전하지 않을 수 있음을 노트하라(예를 들면 오라클 8)."
 
 #. Tag: para
-#: basic_mapping.xml:1287
 #, fuzzy, no-c-format
 msgid ""
 "<literal>generated</literal> (optional - defaults to <literal>never</"
@@ -2551,13 +2040,11 @@ msgstr ""
 "linkend=\"mapping-generated\">산출되는 프로퍼티들</xref>에 대한 논의들 보라."
 
 #. Tag: title
-#: basic_mapping.xml:1298 basic_mapping.xml:2890
 #, no-c-format
 msgid "Note"
 msgstr ""
 
 #. Tag: para
-#: basic_mapping.xml:1299
 #, fuzzy, no-c-format
 msgid ""
 "<literal>&lt;Timestamp&gt;</literal> is equivalent to <literal>&lt;version "
@@ -2571,13 +2058,11 @@ msgstr ""
 "literal>과 같다"
 
 #. Tag: title
-#: basic_mapping.xml:1311
 #, fuzzy, no-c-format
 msgid "Property"
 msgstr "프로퍼티"
 
 #. Tag: para
-#: basic_mapping.xml:1313
 #, fuzzy, no-c-format
 msgid ""
 "The <literal>&lt;property&gt;</literal> element declares a persistent "
@@ -2586,34 +2071,7 @@ msgstr ""
 "<literal>&lt;property&gt;</literal> 요소는 클래스의 자바빈즈 스타일의 영속 프"
 "로퍼티를 선언한다."
 
-#. Tag: programlisting
-#: basic_mapping.xml:1335
-#, no-c-format
-msgid ""
-"<![CDATA[<property\n"
-"        name=\"propertyName\"\n"
-"        column=\"column_name\"\n"
-"        type=\"typename\"\n"
-"        update=\"true|false\"\n"
-"        insert=\"true|false\"\n"
-"        formula=\"arbitrary SQL expression\"\n"
-"        access=\"field|property|ClassName\"\n"
-"        lazy=\"true|false\"\n"
-"        unique=\"true|false\"\n"
-"        not-null=\"true|false\"\n"
-"        optimistic-lock=\"true|false\"\n"
-"        generated=\"never|insert|always\"\n"
-"        node=\"element-name|@attribute-name|element/@attribute|.\"\n"
-"        index=\"index_name\"\n"
-"        unique_key=\"unique_key_id\"\n"
-"        length=\"L\"\n"
-"        precision=\"P\"\n"
-"        scale=\"S\"\n"
-"/>]]>"
-msgstr ""
-
 #. Tag: para
-#: basic_mapping.xml:1338
 #, no-c-format
 msgid ""
 "<literal>name</literal>: the name of the property, with an initial lowercase "
@@ -2621,7 +2079,6 @@ msgid ""
 msgstr "<literal>name</literal>: 첫 소문자로 시작하는 프로퍼티 이름."
 
 #. Tag: para
-#: basic_mapping.xml:1344
 #, fuzzy, no-c-format
 msgid ""
 "<literal>column</literal> (optional - defaults to the property name): the "
@@ -2633,7 +2090,6 @@ msgstr ""
 "literal> 요소(들)에 의해 지정될 수도 있다."
 
 #. Tag: para
-#: basic_mapping.xml:1356
 #, fuzzy, no-c-format
 msgid ""
 "<literal>update, insert</literal> (optional - defaults to <literal>true</"
@@ -2651,7 +2107,6 @@ msgstr ""
 "기화 되는 순수하게 \"파생된(derived)\" 프로퍼티를 허용해준다."
 
 #. Tag: para
-#: basic_mapping.xml:1365
 #, no-c-format
 msgid ""
 "<literal>formula</literal> (optional): an SQL expression that defines the "
@@ -2663,7 +2118,6 @@ msgstr ""
 "매핑을 갖지 않는다."
 
 #. Tag: para
-#: basic_mapping.xml:1378
 #, fuzzy, no-c-format
 msgid ""
 "<literal>lazy</literal> (optional - defaults to <literal>false</literal>): "
@@ -2675,7 +2129,6 @@ msgstr ""
 "(빌드-시 바이트코드 수단을 필요로 한다)."
 
 #. Tag: para
-#: basic_mapping.xml:1385
 #, fuzzy, no-c-format
 msgid ""
 "<literal>unique</literal> (optional): enables the DDL generation of a unique "
@@ -2687,7 +2140,6 @@ msgstr ""
 "는 것을 허용해준다."
 
 #. Tag: para
-#: basic_mapping.xml:1392
 #, fuzzy, no-c-format
 msgid ""
 "<literal>not-null</literal> (optional): enables the DDL generation of a "
@@ -2697,7 +2149,6 @@ msgstr ""
 "DDL 생성을 가능하게 만든다."
 
 #. Tag: para
-#: basic_mapping.xml:1398 basic_mapping.xml:1581
 #, fuzzy, no-c-format
 msgid ""
 "<literal>optimistic-lock</literal> (optional - defaults to <literal>true</"
@@ -2711,7 +2162,6 @@ msgstr ""
 "버전 증가가 발생할 경우인지를 결정한다."
 
 #. Tag: para
-#: basic_mapping.xml:1406
 #, fuzzy, no-c-format
 msgid ""
 "<literal>generated</literal> (optional - defaults to <literal>never</"
@@ -2724,13 +2174,11 @@ msgstr ""
 "linkend=\"mapping-generated\">산출되는 프로퍼티들</xref>에 대한 논의를 보라."
 
 #. Tag: para
-#: basic_mapping.xml:1415
 #, no-c-format
 msgid "<emphasis>typename</emphasis> could be:"
 msgstr "<emphasis>typename</emphasis>은 다음일 수 있다:"
 
 #. Tag: para
-#: basic_mapping.xml:1421
 #, fuzzy, no-c-format
 msgid ""
 "The name of a Hibernate basic type: <literal>integer, string, character, "
@@ -2740,7 +2188,6 @@ msgstr ""
 "date, timestamp, float, binary, serializable, object, blob</literal>)."
 
 #. Tag: para
-#: basic_mapping.xml:1427
 #, fuzzy, no-c-format
 msgid ""
 "The name of a Java class with a default basic type: <literal>int, float, "
@@ -2752,13 +2199,11 @@ msgstr ""
 "literal>)."
 
 #. Tag: para
-#: basic_mapping.xml:1433
 #, no-c-format
 msgid "The name of a serializable Java class."
 msgstr "serializable Java 클래스의 이름."
 
 #. Tag: para
-#: basic_mapping.xml:1438
 #, fuzzy, no-c-format
 msgid ""
 "The class name of a custom type: <literal>com.illflow.type.MyCustomType</"
@@ -2768,7 +2213,6 @@ msgstr ""
 "literal>)."
 
 #. Tag: para
-#: basic_mapping.xml:1444
 #, fuzzy, no-c-format
 msgid ""
 "If you do not specify a type, Hibernate will use reflection upon the named "
@@ -2788,7 +2232,6 @@ msgstr ""
 "이를 구별하기 위해, 또는 맞춤 타입을 지정하기 위해.)"
 
 #. Tag: para
-#: basic_mapping.xml:1454
 #, fuzzy, no-c-format
 msgid ""
 "The <literal>access</literal> attribute allows you to control how Hibernate "
@@ -2808,7 +2251,6 @@ msgstr ""
 "티 접근을 위한 당신 자신의 방도를 지정할 수도 있다."
 
 #. Tag: para
-#: basic_mapping.xml:1463
 #, fuzzy, no-c-format
 msgid ""
 "A powerful feature is derived properties. These properties are by definition "
@@ -2821,21 +2263,7 @@ msgstr ""
 "선언하고, 이것은 인스턴스를 로드시키는 SQL 질의 내의 <literal>SELECT</"
 "literal> 절 서브질의로 번역된다:"
 
-#. Tag: programlisting
-#: basic_mapping.xml:1470
-#, no-c-format
-msgid ""
-"<![CDATA[\n"
-"<property name=\"totalPrice\"\n"
-"    formula=\"( SELECT SUM (li.quantity*p.price) FROM LineItem li, Product "
-"p\n"
-"                WHERE li.productId = p.productId\n"
-"                AND li.customerId = customerId\n"
-"                AND li.orderNumber = orderNumber )\"/>]]>"
-msgstr ""
-
 #. Tag: para
-#: basic_mapping.xml:1472
 #, fuzzy, no-c-format
 msgid ""
 "You can reference the entity table by not declaring an alias on a particular "
@@ -2849,13 +2277,11 @@ msgstr ""
 "<literal>&lt;formula&gt;</literal> 매핑 요소를 사용할 수 있음을 노트하라."
 
 #. Tag: title
-#: basic_mapping.xml:1482
 #, fuzzy, no-c-format
 msgid "Many-to-one"
 msgstr "many-to-one"
 
 #. Tag: para
-#: basic_mapping.xml:1484
 #, fuzzy, no-c-format
 msgid ""
 "An ordinary association to another persistent class is declared using a "
@@ -2868,43 +2294,12 @@ msgstr ""
 "블 내에 있는 foreign 키는 대상 테이블의 프라이머리 키 컬럼(들)을 참조하고 있"
 "다."
 
-#. Tag: programlisting
-#: basic_mapping.xml:1512
-#, no-c-format
-msgid ""
-"<![CDATA[<many-to-one\n"
-"        name=\"propertyName\"\n"
-"        column=\"column_name\"\n"
-"        class=\"ClassName\"\n"
-"        cascade=\"cascade_style\"\n"
-"        fetch=\"join|select\"\n"
-"        update=\"true|false\"\n"
-"        insert=\"true|false\"\n"
-"        property-ref=\"propertyNameFromAssociatedClass\"\n"
-"        access=\"field|property|ClassName\"\n"
-"        unique=\"true|false\"\n"
-"        not-null=\"true|false\"\n"
-"        optimistic-lock=\"true|false\"\n"
-"        lazy=\"proxy|no-proxy|false\"\n"
-"        not-found=\"ignore|exception\"\n"
-"        entity-name=\"EntityName\"\n"
-"        formula=\"arbitrary SQL expression\"\n"
-"        node=\"element-name|@attribute-name|element/@attribute|.\"\n"
-"        embed-xml=\"true|false\"\n"
-"        index=\"index_name\"\n"
-"        unique_key=\"unique_key_id\"\n"
-"        foreign-key=\"foreign_key_name\"\n"
-"/>]]>"
-msgstr ""
-
 #. Tag: para
-#: basic_mapping.xml:1515 basic_mapping.xml:1696 basic_mapping.xml:1882
 #, fuzzy, no-c-format
 msgid "<literal>name</literal>: the name of the property."
 msgstr "<literal>name</literal>: 프로퍼티의 이름."
 
 #. Tag: para
-#: basic_mapping.xml:1520 basic_mapping.xml:2311
 #, fuzzy, no-c-format
 msgid ""
 "<literal>column</literal> (optional): the name of the foreign key column. "
@@ -2919,7 +2314,6 @@ msgstr ""
 "된 <literal>&lt;column&gt;</literal> 요소(들)에 의해 지정될 수 있다."
 
 #. Tag: para
-#: basic_mapping.xml:1527 basic_mapping.xml:1701
 #, fuzzy, no-c-format
 msgid ""
 "<literal>class</literal> (optional - defaults to the property type "
@@ -2929,7 +2323,6 @@ msgstr ""
 "타입): 연관된 클래스의 이름."
 
 #. Tag: para
-#: basic_mapping.xml:1533 basic_mapping.xml:1707
 #, fuzzy, no-c-format
 msgid ""
 "<literal>cascade</literal> (optional): specifies which operations should be "
@@ -2939,7 +2332,6 @@ msgstr ""
 "객체로 케스케이드 될 것인지를 지정한다."
 
 #. Tag: para
-#: basic_mapping.xml:1539 basic_mapping.xml:1722
 #, fuzzy, no-c-format
 msgid ""
 "<literal>fetch</literal> (optional - defaults to <literal>select</literal>): "
@@ -2953,7 +2345,6 @@ msgstr ""
 "join 페칭 또는 순차적인 select 페칭 중에서 선택하라."
 
 #. Tag: para
-#: basic_mapping.xml:1545
 #, fuzzy, no-c-format
 msgid ""
 "<literal>update, insert</literal> (optional - defaults to <literal>true</"
@@ -2971,7 +2362,6 @@ msgstr ""
 "연관관계 값을 허용한다."
 
 #. Tag: para
-#: basic_mapping.xml:1554
 #, fuzzy, no-c-format
 msgid ""
 "<literal>property-ref</literal> (optional): the name of a property of the "
@@ -2983,7 +2373,6 @@ msgstr ""
 "다."
 
 #. Tag: para
-#: basic_mapping.xml:1567
 #, fuzzy, no-c-format
 msgid ""
 "<literal>unique</literal> (optional): enables the DDL generation of a unique "
@@ -2997,7 +2386,6 @@ msgstr ""
 "일로 만든다."
 
 #. Tag: para
-#: basic_mapping.xml:1575
 #, fuzzy, no-c-format
 msgid ""
 "<literal>not-null</literal> (optional): enables the DDL generation of a "
@@ -3007,7 +2395,6 @@ msgstr ""
 "스트레인트의 DDL 생성을 가능하도록 해준다."
 
 #. Tag: para
-#: basic_mapping.xml:1589
 #, fuzzy, no-c-format
 msgid ""
 "<literal>lazy</literal> (optional - defaults to <literal>proxy</literal>): "
@@ -3024,7 +2411,6 @@ msgstr ""
 "는 그 연관이 항상 eagerly 페치될 것임을 지정한다."
 
 #. Tag: para
-#: basic_mapping.xml:1599
 #, fuzzy, no-c-format
 msgid ""
 "<literal>not-found</literal> (optional - defaults to <literal>exception</"
@@ -3038,7 +2424,6 @@ msgstr ""
 "것이다."
 
 #. Tag: para
-#: basic_mapping.xml:1606 basic_mapping.xml:1760
 #, fuzzy, no-c-format
 msgid ""
 "<literal>entity-name</literal> (optional): the entity name of the associated "
@@ -3046,7 +2431,6 @@ msgid ""
 msgstr "<literal>entity-name</literal> (옵션): 연관된 클래스의 엔티티 이름."
 
 #. Tag: para
-#: basic_mapping.xml:1611
 #, no-c-format
 msgid ""
 "<literal>formula</literal> (optional): an SQL expression that defines the "
@@ -3056,7 +2440,6 @@ msgstr ""
 "대한 값을 정의하는 SQL 표현식."
 
 #. Tag: para
-#: basic_mapping.xml:1619
 #, fuzzy, no-c-format
 msgid ""
 "Setting a value of the <literal>cascade</literal> attribute to any "
@@ -3067,7 +2450,7 @@ msgid ""
 "second, special values: <literal>delete-orphan</literal>; and third,"
 "<literal>all</literal> comma-separated combinations of operation names: "
 "<literal>cascade=\"persist,merge,evict\"</literal> or <literal>cascade=\"all,"
-"delete-orphan\"</literal>. See <xref linkend=\"objectstate-transitive\"/> "
+"delete-orphan\"</literal>. See <xref linkend=\"objectstate-transitive\" /> "
 "for a full explanation. Note that single valued, many-to-one and one-to-one, "
 "associations do not support orphan delete."
 msgstr ""
@@ -3083,23 +2466,13 @@ msgstr ""
 "과 one-to-one 연관)은 orphan delete를 지원하지 않음을 노트하라."
 
 #. Tag: para
-#: basic_mapping.xml:1632
 #, fuzzy, no-c-format
 msgid ""
 "Here is an example of a typical <literal>many-to-one</literal> declaration:"
 msgstr ""
 "일반적인 <literal>many-to-one</literal> 선언은 다음과 같이 간단하게 보여진다:"
 
-#. Tag: programlisting
-#: basic_mapping.xml:1636
-#, no-c-format
-msgid ""
-"<![CDATA[<many-to-one name=\"product\" class=\"Product\" column=\"PRODUCT_ID"
-"\"/>]]>"
-msgstr ""
-
 #. Tag: para
-#: basic_mapping.xml:1638
 #, fuzzy, no-c-format
 msgid ""
 "The <literal>property-ref</literal> attribute should only be used for "
@@ -3117,37 +2490,18 @@ msgstr ""
 "(<literal>unique</literal> 속성은 SchemaExport 도구로 Hibernate의 DDL 생성을 "
 "제어한다.)"
 
-#. Tag: programlisting
-#: basic_mapping.xml:1647
-#, no-c-format
-msgid ""
-"<![CDATA[<property name=\"serialNumber\" unique=\"true\" type=\"string\" "
-"column=\"SERIAL_NUMBER\"/>]]>"
-msgstr ""
-
 #. Tag: para
-#: basic_mapping.xml:1649
 #, no-c-format
 msgid "Then the mapping for <literal>OrderItem</literal> might use:"
 msgstr ""
 "그런 다음 <literal>OrderItem</literal>에 대한 매핑은 다음을 사용할 것이다:"
 
-#. Tag: programlisting
-#: basic_mapping.xml:1653
-#, no-c-format
-msgid ""
-"<![CDATA[<many-to-one name=\"product\" property-ref=\"serialNumber\" column="
-"\"PRODUCT_SERIAL_NUMBER\"/>]]>"
-msgstr ""
-
 #. Tag: para
-#: basic_mapping.xml:1655
 #, fuzzy, no-c-format
 msgid "This is not encouraged, however."
 msgstr "하지만 이것은 확실히 권장되지 않는다."
 
 #. Tag: para
-#: basic_mapping.xml:1659
 #, no-c-format
 msgid ""
 "If the referenced unique key comprises multiple properties of the associated "
@@ -3159,7 +2513,6 @@ msgstr ""
 "매핑할 것이다."
 
 #. Tag: para
-#: basic_mapping.xml:1664
 #, fuzzy, no-c-format
 msgid ""
 "If the referenced unique key is the property of a component, you can specify "
@@ -3168,22 +2521,12 @@ msgstr ""
 "만일 참조된 유일키가 컴포넌트의 프로퍼티일 경우, 당신은 하나의 프로퍼티 경로"
 "를 지정할 수 있다:"
 
-#. Tag: programlisting
-#: basic_mapping.xml:1668
-#, no-c-format
-msgid ""
-"<![CDATA[<many-to-one name=\"owner\" property-ref=\"identity.ssn\" column="
-"\"OWNER_SSN\"/>]]>"
-msgstr ""
-
 #. Tag: title
-#: basic_mapping.xml:1673
 #, fuzzy, no-c-format
 msgid "One-to-one"
 msgstr "one-to-one"
 
 #. Tag: para
-#: basic_mapping.xml:1675
 #, no-c-format
 msgid ""
 "A one-to-one association to another persistent class is declared using a "
@@ -3192,29 +2535,7 @@ msgstr ""
 "또 다른 영속 클래스에 대한 one-to-one 연관관계는 <literal>one-to-one</"
 "literal> 요소를 사용하여 선언된다."
 
-#. Tag: programlisting
-#: basic_mapping.xml:1693
-#, no-c-format
-msgid ""
-"<![CDATA[<one-to-one\n"
-"        name=\"propertyName\"\n"
-"        class=\"ClassName\"\n"
-"        cascade=\"cascade_style\"\n"
-"        constrained=\"true|false\"\n"
-"        fetch=\"join|select\"\n"
-"        property-ref=\"propertyNameFromAssociatedClass\"\n"
-"        access=\"field|property|ClassName\"\n"
-"        formula=\"any SQL expression\"\n"
-"        lazy=\"proxy|no-proxy|false\"\n"
-"        entity-name=\"EntityName\"\n"
-"        node=\"element-name|@attribute-name|element/@attribute|.\"\n"
-"        embed-xml=\"true|false\"\n"
-"        foreign-key=\"foreign_key_name\"\n"
-"/>]]>"
-msgstr ""
-
 #. Tag: para
-#: basic_mapping.xml:1713
 #, fuzzy, no-c-format
 msgid ""
 "<literal>constrained</literal> (optional): specifies that a foreign key "
@@ -3231,7 +2552,6 @@ msgstr ""
 "(또한 스키마 내보내기 도구에 의해 사용된다)."
 
 #. Tag: para
-#: basic_mapping.xml:1728
 #, fuzzy, no-c-format
 msgid ""
 "<literal>property-ref</literal> (optional): the name of a property of the "
@@ -3243,7 +2563,6 @@ msgstr ""
 "리 키가 사용된다."
 
 #. Tag: para
-#: basic_mapping.xml:1741
 #, fuzzy, no-c-format
 msgid ""
 "<literal>formula</literal> (optional): almost all one-to-one associations "
@@ -3259,7 +2578,6 @@ msgstr ""
 "라.)"
 
 #. Tag: para
-#: basic_mapping.xml:1749
 #, fuzzy, no-c-format
 msgid ""
 "<literal>lazy</literal> (optional - defaults to <literal>proxy</literal>): "
@@ -3280,25 +2598,21 @@ msgstr ""
 "eager 페치시킬 것이다!</emphasis>"
 
 #. Tag: para
-#: basic_mapping.xml:1767
 #, fuzzy, no-c-format
 msgid "There are two varieties of one-to-one associations:"
 msgstr "one-to-one 연관관계에는 두 가지 변종이 존재한다:"
 
 #. Tag: para
-#: basic_mapping.xml:1771
 #, no-c-format
 msgid "primary key associations"
 msgstr "프라이머리 키 연관관계들"
 
 #. Tag: para
-#: basic_mapping.xml:1774
 #, no-c-format
 msgid "unique foreign key associations"
 msgstr "유일 foreign 키 연관관계들"
 
 #. Tag: para
-#: basic_mapping.xml:1779
 #, fuzzy, no-c-format
 msgid ""
 "Primary key associations do not need an extra table column. If two rows are "
@@ -3313,7 +2627,6 @@ msgstr ""
 "야 한다!"
 
 #. Tag: para
-#: basic_mapping.xml:1786
 #, fuzzy, no-c-format
 msgid ""
 "For a primary key association, add the following mappings to "
@@ -3322,22 +2635,7 @@ msgstr ""
 "프라이머리 키 연관에 대해, 다음 매핑들을 <literal>Employee</literal>와 "
 "<literal>Person</literal> 각각에 추가하라."
 
-#. Tag: programlisting
-#: basic_mapping.xml:1791
-#, no-c-format
-msgid "<![CDATA[<one-to-one name=\"person\" class=\"Person\"/>]]>"
-msgstr ""
-
-#. Tag: programlisting
-#: basic_mapping.xml:1792
-#, no-c-format
-msgid ""
-"<![CDATA[<one-to-one name=\"employee\" class=\"Employee\" constrained=\"true"
-"\"/>]]>"
-msgstr ""
-
 #. Tag: para
-#: basic_mapping.xml:1794
 #, fuzzy, no-c-format
 msgid ""
 "Ensure that the primary keys of the related rows in the PERSON and EMPLOYEE "
@@ -3348,25 +2646,7 @@ msgstr ""
 "이 동일함을 확실히 해야 한다! 우리는 <literal>foreign</literal>로 명명되는 특"
 "별한 Hibernate 식별자 생성 방도를 사용한다:"
 
-#. Tag: programlisting
-#: basic_mapping.xml:1800
-#, no-c-format
-msgid ""
-"<![CDATA[<class name=\"person\" table=\"PERSON\">\n"
-"    <id name=\"id\" column=\"PERSON_ID\">\n"
-"        <generator class=\"foreign\">\n"
-"            <param name=\"property\">employee</param>\n"
-"        </generator>\n"
-"    </id>\n"
-"    ...\n"
-"    <one-to-one name=\"employee\"\n"
-"        class=\"Employee\"\n"
-"        constrained=\"true\"/>\n"
-"</class>]]>"
-msgstr ""
-
 #. Tag: para
-#: basic_mapping.xml:1802
 #, fuzzy, no-c-format
 msgid ""
 "A newly saved instance of <literal>Person</literal> is assigned the same "
@@ -3378,7 +2658,6 @@ msgstr ""
 "된 <literal>Employee</literal> 인스턴스와 동일한 프라이머리 키를 할당받는다."
 
 #. Tag: para
-#: basic_mapping.xml:1808
 #, fuzzy, no-c-format
 msgid ""
 "Alternatively, a foreign key with a unique constraint, from "
@@ -3388,16 +2667,7 @@ msgstr ""
 "달리, <literal>Employee</literal>로부터 <literal>Person</literal>으로의 유일 "
 "컨스트레인트를 가진 하나의 foreign key는 다음과 같이 표현될 수 있다:"
 
-#. Tag: programlisting
-#: basic_mapping.xml:1813
-#, no-c-format
-msgid ""
-"<![CDATA[<many-to-one name=\"person\" class=\"Person\" column=\"PERSON_ID\" "
-"unique=\"true\"/>]]>"
-msgstr ""
-
 #. Tag: para
-#: basic_mapping.xml:1815
 #, fuzzy, no-c-format
 msgid ""
 "This association can be made bidirectional by adding the following to the "
@@ -3406,33 +2676,12 @@ msgstr ""
 "그리고 이 연관은 다음을 <literal>Person</literal> 매핑에 추가함으로써 양방향"
 "이 될 수 있다:"
 
-#. Tag: programlisting
-#: basic_mapping.xml:1820
-#, no-c-format
-msgid ""
-"<![CDATA[<one-to-one name=\"employee\" class=\"Employee\" property-ref="
-"\"person\"/>]]>"
-msgstr ""
-
 #. Tag: title
-#: basic_mapping.xml:1825
 #, fuzzy, no-c-format
 msgid "Natural-id"
 msgstr "natural-id"
 
-#. Tag: programlisting
-#: basic_mapping.xml:1827
-#, no-c-format
-msgid ""
-"<![CDATA[<natural-id mutable=\"true|false\"/>\n"
-"        <property ... />\n"
-"        <many-to-one ... />\n"
-"        ......\n"
-"</natural-id>]]>"
-msgstr ""
-
 #. Tag: para
-#: basic_mapping.xml:1829
 #, fuzzy, no-c-format
 msgid ""
 "Although we recommend the use of surrogate keys as primary keys, you should "
@@ -3452,7 +2701,6 @@ msgstr ""
 "핑은 보다 자가 설명적이게 될 것이다."
 
 #. Tag: para
-#: basic_mapping.xml:1838
 #, fuzzy, no-c-format
 msgid ""
 "It is recommended that you implement <literal>equals()</literal> and "
@@ -3464,7 +2712,6 @@ msgstr ""
 "력하게 권장한다."
 
 #. Tag: para
-#: basic_mapping.xml:1843
 #, fuzzy, no-c-format
 msgid ""
 "This mapping is not intended for use with entities that have natural primary "
@@ -3474,7 +2721,6 @@ msgstr ""
 "아니다."
 
 #. Tag: para
-#: basic_mapping.xml:1849
 #, fuzzy, no-c-format
 msgid ""
 "<literal>mutable</literal> (optional - defaults to <literal>false</"
@@ -3485,13 +2731,11 @@ msgstr ""
 "로, narutal 식별자 프로퍼티들은 변경될 수 없는 것(상수)으로 가정된다."
 
 #. Tag: title
-#: basic_mapping.xml:1859
 #, fuzzy, no-c-format
 msgid "Component and dynamic-component"
 msgstr "component, dynamic-component"
 
 #. Tag: para
-#: basic_mapping.xml:1861
 #, fuzzy, no-c-format
 msgid ""
 "The <literal>&lt;component&gt;</literal> element maps properties of a child "
@@ -3503,30 +2747,7 @@ msgstr ""
 "래스에 대한 테이블의 컬럼들로 매핑시킨다. 컴포넌트들은 그것들 자신의 프로퍼티"
 "들, 컴포넌트들, 또는 콜렉션들을 선언한다. 이래 \"컴포넌트들\"을 보라."
 
-#. Tag: programlisting
-#: basic_mapping.xml:1879
-#, no-c-format
-msgid ""
-"<![CDATA[<component\n"
-"        name=\"propertyName\"\n"
-"        class=\"className\"\n"
-"        insert=\"true|false\"\n"
-"        update=\"true|false\"\n"
-"        access=\"field|property|ClassName\"\n"
-"        lazy=\"true|false\"\n"
-"        optimistic-lock=\"true|false\"\n"
-"        unique=\"true|false\"\n"
-"        node=\"element-name|.\"\n"
-">\n"
-"\n"
-"        <property ...../>\n"
-"        <many-to-one .... />\n"
-"        ........\n"
-"</component>]]>"
-msgstr ""
-
 #. Tag: para
-#: basic_mapping.xml:1887
 #, fuzzy, no-c-format
 msgid ""
 "<literal>class</literal> (optional - defaults to the property type "
@@ -3536,7 +2757,6 @@ msgstr ""
 "타입): 컴포넌트(자식) 클래스의 이름."
 
 #. Tag: para
-#: basic_mapping.xml:1893 basic_mapping.xml:1982
 #, fuzzy, no-c-format
 msgid ""
 "<literal>insert</literal>: do the mapped columns appear in SQL "
@@ -3550,7 +2770,6 @@ msgstr ""
 "에 나타날 것인가?"
 
 #. Tag: para
-#: basic_mapping.xml:1899 basic_mapping.xml:1988
 #, fuzzy, no-c-format
 msgid ""
 "<literal>update</literal>: do the mapped columns appear in SQL "
@@ -3564,7 +2783,6 @@ msgstr ""
 "에 나타날 것인가?"
 
 #. Tag: para
-#: basic_mapping.xml:1911
 #, fuzzy, no-c-format
 msgid ""
 "<literal>lazy</literal> (optional - defaults to <literal>false</literal>): "
@@ -3576,7 +2794,6 @@ msgstr ""
 "부를 지정한다 (빌드 시 바이트코드 수단을 필요로 한다)."
 
 #. Tag: para
-#: basic_mapping.xml:1918
 #, fuzzy, no-c-format
 msgid ""
 "<literal>optimistic-lock</literal> (optional - defaults to <literal>true</"
@@ -3590,7 +2807,6 @@ msgstr ""
 "발생할 것인지 여부를 결정한다."
 
 #. Tag: para
-#: basic_mapping.xml:1926 basic_mapping.xml:2002
 #, fuzzy, no-c-format
 msgid ""
 "<literal>unique</literal> (optional - defaults to <literal>false</literal>): "
@@ -3601,7 +2817,6 @@ msgstr ""
 "스트레인트가 컴포넌트의 모든 매핑된 컬럼들에 대해 존재하는지 여부를 지정한다."
 
 #. Tag: para
-#: basic_mapping.xml:1935
 #, no-c-format
 msgid ""
 "The child <literal>&lt;property&gt;</literal> tags map properties of the "
@@ -3611,7 +2826,6 @@ msgstr ""
 "테이블 컬럼들로 매핑시킨다."
 
 #. Tag: para
-#: basic_mapping.xml:1940
 #, no-c-format
 msgid ""
 "The <literal>&lt;component&gt;</literal> element allows a <literal>&lt;"
@@ -3623,12 +2837,11 @@ msgstr ""
 "요소를 허용한다."
 
 #. Tag: para
-#: basic_mapping.xml:1946
 #, fuzzy, no-c-format
 msgid ""
 "The <literal>&lt;dynamic-component&gt;</literal> element allows a "
 "<literal>Map</literal> to be mapped as a component, where the property names "
-"refer to keys of the map. See <xref linkend=\"components-dynamic\"/> for "
+"refer to keys of the map. See <xref linkend=\"components-dynamic\" /> for "
 "more information."
 msgstr ""
 "<literal>&lt;dynamic-component&gt;</literal> 요소는 컴포넌트로서 매핑될"
@@ -3636,13 +2849,11 @@ msgstr ""
 "한다. <xref linkend=\"components-dynamic\"/>을 보라."
 
 #. Tag: title
-#: basic_mapping.xml:1955
 #, fuzzy, no-c-format
 msgid "Properties"
 msgstr "properties"
 
 #. Tag: para
-#: basic_mapping.xml:1957
 #, fuzzy, no-c-format
 msgid ""
 "The <literal>&lt;properties&gt;</literal> element allows the definition of a "
@@ -3657,26 +2868,7 @@ msgstr ""
 "준다는 점이다. 또한 그것은 다중 컬럼 유일 컨스트레인느를 정의하는 편리한 방법"
 "이다."
 
-#. Tag: programlisting
-#: basic_mapping.xml:1973
-#, no-c-format
-msgid ""
-"<![CDATA[<properties\n"
-"        name=\"logicalName\"\n"
-"        insert=\"true|false\"\n"
-"        update=\"true|false\"\n"
-"        optimistic-lock=\"true|false\"\n"
-"        unique=\"true|false\"\n"
-">\n"
-"\n"
-"        <property ...../>\n"
-"        <many-to-one .... />\n"
-"        ........\n"
-"</properties>]]>"
-msgstr ""
-
 #. Tag: para
-#: basic_mapping.xml:1976
 #, fuzzy, no-c-format
 msgid ""
 "<literal>name</literal>: the logical name of the grouping. It is "
@@ -3686,7 +2878,6 @@ msgstr ""
 "<emphasis>아니다</emphasis>."
 
 #. Tag: para
-#: basic_mapping.xml:1994
 #, fuzzy, no-c-format
 msgid ""
 "<literal>optimistic-lock</literal> (optional - defaults to <literal>true</"
@@ -3700,7 +2891,6 @@ msgstr ""
 "생할 것인지 여부를 결정한다."
 
 #. Tag: para
-#: basic_mapping.xml:2011
 #, no-c-format
 msgid ""
 "For example, if we have the following <literal>&lt;properties&gt;</literal> "
@@ -3709,25 +2899,7 @@ msgstr ""
 "예를 들어, 만일 우리가 다음 <literal>&lt;properties&gt;</literal> 매핑을 가"
 "질 경우:"
 
-#. Tag: programlisting
-#: basic_mapping.xml:2015
-#, no-c-format
-msgid ""
-"<![CDATA[<class name=\"Person\">\n"
-"    <id name=\"personNumber\"/>\n"
-"\n"
-"    ...\n"
-"    <properties name=\"name\"\n"
-"            unique=\"true\" update=\"false\">\n"
-"        <property name=\"firstName\"/>\n"
-"        <property name=\"initial\"/>\n"
-"        <property name=\"lastName\"/>\n"
-"    </properties>\n"
-"</class>]]>"
-msgstr ""
-
 #. Tag: para
-#: basic_mapping.xml:2017
 #, fuzzy, no-c-format
 msgid ""
 "You might have some legacy data association that refers to this unique key "
@@ -3736,20 +2908,7 @@ msgstr ""
 "그 때 우리는 프라이머리 키가 아닌, <literal>Person</literal> 테이블의 이 유"
 "일 키를 참조하는 어떤 리거시 데이터 연관을 가질 수 있다:"
 
-#. Tag: programlisting
-#: basic_mapping.xml:2022
-#, no-c-format
-msgid ""
-"<![CDATA[<many-to-one name=\"person\"\n"
-"         class=\"Person\" property-ref=\"name\">\n"
-"    <column name=\"firstName\"/>\n"
-"    <column name=\"initial\"/>\n"
-"    <column name=\"lastName\"/>\n"
-"</many-to-one>]]>"
-msgstr ""
-
 #. Tag: para
-#: basic_mapping.xml:2024
 #, fuzzy, no-c-format
 msgid ""
 "The use of this outside the context of mapping legacy data is not "
@@ -3759,13 +2918,11 @@ msgstr ""
 "는 것을 권장하지 않는다."
 
 #. Tag: title
-#: basic_mapping.xml:2032
 #, fuzzy, no-c-format
 msgid "Subclass"
 msgstr "subclass"
 
 #. Tag: para
-#: basic_mapping.xml:2034
 #, fuzzy, no-c-format
 msgid ""
 "Polymorphic persistence requires the declaration of each subclass of the "
@@ -3776,28 +2933,7 @@ msgstr ""
 "필요로 한다.(권장되는) table-per-class-hierarchy(테이블 당 클래스 계층구조) "
 "매핑 방도의 경우, <literal>&lt;subclass&gt;</literal> 선언이 사용된다."
 
-#. Tag: programlisting
-#: basic_mapping.xml:2047
-#, no-c-format
-msgid ""
-"<![CDATA[<subclass\n"
-"        name=\"ClassName\"\n"
-"        discriminator-value=\"discriminator_value\"\n"
-"        proxy=\"ProxyInterface\"\n"
-"        lazy=\"true|false\"\n"
-"        dynamic-update=\"true|false\"\n"
-"        dynamic-insert=\"true|false\"\n"
-"        entity-name=\"EntityName\"\n"
-"        node=\"element-name\"\n"
-"        extends=\"SuperclassName\">\n"
-"\n"
-"        <property .... />\n"
-"        .....\n"
-"</subclass>]]>"
-msgstr ""
-
 #. Tag: para
-#: basic_mapping.xml:2050 basic_mapping.xml:2108 basic_mapping.xml:2171
 #, fuzzy, no-c-format
 msgid ""
 "<literal>name</literal>: the fully qualified class name of the subclass."
@@ -3810,7 +2946,6 @@ msgstr ""
 "<literal>name</literal>: 서브클래스의 전체 수식어가 붙은 클래스 명."
 
 #. Tag: para
-#: basic_mapping.xml:2055
 #, fuzzy, no-c-format
 msgid ""
 "<literal>discriminator-value</literal> (optional - defaults to the class "
@@ -3820,7 +2955,6 @@ msgstr ""
 "서브클래스들을 구분짓는 값."
 
 #. Tag: para
-#: basic_mapping.xml:2061
 #, fuzzy, no-c-format
 msgid ""
 "<literal>proxy</literal> (optional): specifies a class or interface used for "
@@ -3837,7 +2971,6 @@ msgstr ""
 "스 또는 인터페이스를 지정한다."
 
 #. Tag: para
-#: basic_mapping.xml:2067
 #, fuzzy, no-c-format
 msgid ""
 "<literal>lazy</literal> (optional - defaults to <literal>true</literal>): "
@@ -3855,7 +2988,6 @@ msgstr ""
 "<literal>lazy=\"false\"</literal> 설정은 lazy 페칭을 사용불가능하게 만든다."
 
 #. Tag: para
-#: basic_mapping.xml:2075
 #, fuzzy, no-c-format
 msgid ""
 "Each subclass declares its own persistent properties and subclasses. "
@@ -3871,21 +3003,18 @@ msgstr ""
 "다. none이 지정될 경우, 전체 수식어가 붙은 자바 클래스 이름이 사용된다."
 
 #. Tag: para
-#: basic_mapping.xml:2083 basic_mapping.xml:2141 basic_mapping.xml:2199
 #, fuzzy, no-c-format
 msgid ""
-"For information about inheritance mappings see <xref linkend=\"inheritance\"/"
-">."
+"For information about inheritance mappings see <xref linkend=\"inheritance"
+"\" />."
 msgstr "상속 매핑들에 대한 정보는 <xref linkend=\"inheritance\"/>을 보라."
 
 #. Tag: title
-#: basic_mapping.xml:2090
 #, fuzzy, no-c-format
 msgid "Joined-subclass"
 msgstr "joined-subclass"
 
 #. Tag: para
-#: basic_mapping.xml:2092
 #, fuzzy, no-c-format
 msgid ""
 "Each subclass can also be mapped to its own table. This is called the table-"
@@ -3897,40 +3026,12 @@ msgstr ""
 "per-subclass 매핑 방도). 상속된 상태는 슈퍼클래스의 테이블과 조인함으로써 검"
 "색된다. 우리는 <literal>&lt;joined-subclass&gt;</literal> 요소를 사용한다."
 
-#. Tag: programlisting
-#: basic_mapping.xml:2105
-#, no-c-format
-msgid ""
-"<![CDATA[<joined-subclass\n"
-"        name=\"ClassName\"\n"
-"        table=\"tablename\"\n"
-"        proxy=\"ProxyInterface\"\n"
-"        lazy=\"true|false\"\n"
-"        dynamic-update=\"true|false\"\n"
-"        dynamic-insert=\"true|false\"\n"
-"        schema=\"schema\"\n"
-"        catalog=\"catalog\"\n"
-"        extends=\"SuperclassName\"\n"
-"        persister=\"ClassName\"\n"
-"        subselect=\"SQL expression\"\n"
-"        entity-name=\"EntityName\"\n"
-"        node=\"element-name\">\n"
-"\n"
-"        <key .... >\n"
-"\n"
-"        <property .... />\n"
-"        .....\n"
-"</joined-subclass>]]>"
-msgstr ""
-
 #. Tag: para
-#: basic_mapping.xml:2113 basic_mapping.xml:2176
 #, fuzzy, no-c-format
 msgid "<literal>table</literal>: the name of the subclass table."
 msgstr "<literal>table</literal>: 서브클래스 테이블의 이름."
 
 #. Tag: para
-#: basic_mapping.xml:2118 basic_mapping.xml:2181
 #, fuzzy, no-c-format
 msgid ""
 "<literal>proxy</literal> (optional): specifies a class or interface to use "
@@ -3947,7 +3048,6 @@ msgstr ""
 "스 또는 인터페이스를 지정한다."
 
 #. Tag: para
-#: basic_mapping.xml:2124 basic_mapping.xml:2187
 #, fuzzy, no-c-format
 msgid ""
 "<literal>lazy</literal> (optional, defaults to <literal>true</literal>): "
@@ -3965,7 +3065,6 @@ msgstr ""
 "<literal>lazy=\"false\"</literal> 설정은 lazy 페칭을 사용불가능하게 만든다."
 
 #. Tag: para
-#: basic_mapping.xml:2132
 #, fuzzy, no-c-format
 msgid ""
 "A discriminator column is not required for this mapping strategy. Each "
@@ -3978,52 +3077,12 @@ msgstr ""
 "는 테이블 컬럼을 선언해야 한다. 이 장의 시작 부분에 있는 매핑은 다음과 같이 "
 "다시 작성될 것이다:"
 
-#. Tag: programlisting
-#: basic_mapping.xml:2139
-#, no-c-format
-msgid ""
-"<![CDATA[<?xml version=\"1.0\"?>\n"
-"<!DOCTYPE hibernate-mapping PUBLIC\n"
-"        \"-//Hibernate/Hibernate Mapping DTD//EN\"\n"
-"        \"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd\">\n"
-"\n"
-"<hibernate-mapping package=\"eg\">\n"
-"\n"
-"        <class name=\"Cat\" table=\"CATS\">\n"
-"                <id name=\"id\" column=\"uid\" type=\"long\">\n"
-"                        <generator class=\"hilo\"/>\n"
-"                </id>\n"
-"                <property name=\"birthdate\" type=\"date\"/>\n"
-"                <property name=\"color\" not-null=\"true\"/>\n"
-"                <property name=\"sex\" not-null=\"true\"/>\n"
-"                <property name=\"weight\"/>\n"
-"                <many-to-one name=\"mate\"/>\n"
-"                <set name=\"kittens\">\n"
-"                        <key column=\"MOTHER\"/>\n"
-"                        <one-to-many class=\"Cat\"/>\n"
-"                </set>\n"
-"                <joined-subclass name=\"DomesticCat\" table=\"DOMESTIC_CATS"
-"\">\n"
-"                    <key column=\"CAT\"/>\n"
-"                    <property name=\"name\" type=\"string\"/>\n"
-"                </joined-subclass>\n"
-"        </class>\n"
-"\n"
-"        <class name=\"eg.Dog\">\n"
-"                <!-- mapping for Dog could go here -->\n"
-"        </class>\n"
-"\n"
-"</hibernate-mapping>]]>"
-msgstr ""
-
 #. Tag: title
-#: basic_mapping.xml:2148
 #, fuzzy, no-c-format
 msgid "Union-subclass"
 msgstr "union-subclass"
 
 #. Tag: para
-#: basic_mapping.xml:2150
 #, fuzzy, no-c-format
 msgid ""
 "A third option is to map only the concrete classes of an inheritance "
@@ -4045,46 +3104,18 @@ msgstr ""
 "관)을 사용하고자 원할 경우, 당신은 <literal>&lt;union-subclass&gt;</literal> "
 "매핑을 사용할 필요가 있다."
 
-#. Tag: programlisting
-#: basic_mapping.xml:2168
-#, no-c-format
-msgid ""
-"<![CDATA[<union-subclass\n"
-"        name=\"ClassName\"\n"
-"        table=\"tablename\"\n"
-"        proxy=\"ProxyInterface\"\n"
-"        lazy=\"true|false\"\n"
-"        dynamic-update=\"true|false\"\n"
-"        dynamic-insert=\"true|false\"\n"
-"        schema=\"schema\"\n"
-"        catalog=\"catalog\"\n"
-"        extends=\"SuperclassName\"\n"
-"        abstract=\"true|false\"\n"
-"        persister=\"ClassName\"\n"
-"        subselect=\"SQL expression\"\n"
-"        entity-name=\"EntityName\"\n"
-"        node=\"element-name\">\n"
-"\n"
-"        <property .... />\n"
-"        .....\n"
-"</union-subclass>]]>"
-msgstr ""
-
 #. Tag: para
-#: basic_mapping.xml:2195
 #, no-c-format
 msgid ""
 "No discriminator column or key column is required for this mapping strategy."
 msgstr "이 매핑 방도에는 판별자 컬럼이나 키 컬럼이 필요하지 않다."
 
 #. Tag: title
-#: basic_mapping.xml:2206
 #, fuzzy, no-c-format
 msgid "Join"
 msgstr "join"
 
 #. Tag: para
-#: basic_mapping.xml:2208
 #, fuzzy, no-c-format
 msgid ""
 "Using the <literal>&lt;join&gt;</literal> element, it is possible to map "
@@ -4095,33 +3126,12 @@ msgstr ""
 "존재할 때, 하나의 클래스에 속한 프로퍼티들을 여러 테이블들로 매핑시키는 것이 "
 "가능하다."
 
-#. Tag: programlisting
-#: basic_mapping.xml:2222
-#, no-c-format
-msgid ""
-"<![CDATA[<join\n"
-"        table=\"tablename\"\n"
-"        schema=\"owner\"\n"
-"        catalog=\"catalog\"\n"
-"        fetch=\"join|select\"\n"
-"        inverse=\"true|false\"\n"
-"        optional=\"true|false\">\n"
-"\n"
-"        <key ... />\n"
-"\n"
-"        <property ... />\n"
-"        ...\n"
-"</join>]]>"
-msgstr ""
-
 #. Tag: para
-#: basic_mapping.xml:2226
 #, fuzzy, no-c-format
 msgid "<literal>table</literal>: the name of the joined table."
 msgstr "<literal>table</literal>: 조인된 테이블의 이름."
 
 #. Tag: para
-#: basic_mapping.xml:2243
 #, fuzzy, no-c-format
 msgid ""
 "<literal>fetch</literal> (optional - defaults to <literal>join</literal>): "
@@ -4146,7 +3156,6 @@ msgstr ""
 "<literal>&lt;join&gt;</literal>을 검색하는데 사용될 것이다."
 
 #. Tag: para
-#: basic_mapping.xml:2256
 #, fuzzy, no-c-format
 msgid ""
 "<literal>inverse</literal> (optional - defaults to <literal>false</"
@@ -4158,7 +3167,6 @@ msgstr ""
 "이트하려고 시도하지 않을 것이다."
 
 #. Tag: para
-#: basic_mapping.xml:2263
 #, fuzzy, no-c-format
 msgid ""
 "<literal>optional</literal> (optional - defaults to <literal>false</"
@@ -4172,7 +3180,6 @@ msgstr ""
 "용할 것이다."
 
 #. Tag: para
-#: basic_mapping.xml:2272
 #, fuzzy, no-c-format
 msgid ""
 "For example, address information for a person can be mapped to a separate "
@@ -4181,26 +3188,7 @@ msgstr ""
 "예를 들어, (모든 프로퍼티들에 대해 value 타입 의미를 유지하면서) 개인의 주소 "
 "정보는 별도의 테이블에 매핑될 수 있다:"
 
-#. Tag: programlisting
-#: basic_mapping.xml:2277
-#, no-c-format
-msgid ""
-"<![CDATA[<class name=\"Person\"\n"
-"    table=\"PERSON\">\n"
-"\n"
-"    <id name=\"id\" column=\"PERSON_ID\">...</id>\n"
-"\n"
-"    <join table=\"ADDRESS\">\n"
-"        <key column=\"ADDRESS_ID\"/>\n"
-"        <property name=\"address\"/>\n"
-"        <property name=\"zip\"/>\n"
-"        <property name=\"country\"/>\n"
-"    </join>\n"
-"    ...]]>"
-msgstr ""
-
 #. Tag: para
-#: basic_mapping.xml:2279
 #, fuzzy, no-c-format
 msgid ""
 "This feature is often only useful for legacy data models. We recommend fewer "
@@ -4214,13 +3202,11 @@ msgstr ""
 "는 것에 유용하다."
 
 #. Tag: title
-#: basic_mapping.xml:2289
-#, no-c-format
-msgid "<title>Key</title>"
-msgstr ""
+#, fuzzy, no-c-format
+msgid "Key"
+msgstr "key"
 
 #. Tag: para
-#: basic_mapping.xml:2291
 #, fuzzy, no-c-format
 msgid ""
 "The <literal>&lt;key&gt;</literal> element has featured a few times within "
@@ -4233,22 +3219,7 @@ msgstr ""
 "타나고, 그것은 조인된 테이블의 foreign 키를 정의하고, 그것은 원래의 테이블의 "
 "프라이머리 키를 참조한다."
 
-#. Tag: programlisting
-#: basic_mapping.xml:2307
-#, no-c-format
-msgid ""
-"<![CDATA[<key\n"
-"        column=\"columnname\"\n"
-"        on-delete=\"noaction|cascade\"\n"
-"        property-ref=\"propertyName\"\n"
-"        not-null=\"true|false\"\n"
-"        update=\"true|false\"\n"
-"        unique=\"true|false\"\n"
-"/>]]>"
-msgstr ""
-
 #. Tag: para
-#: basic_mapping.xml:2318
 #, fuzzy, no-c-format
 msgid ""
 "<literal>on-delete</literal> (optional - defaults to <literal>noaction</"
@@ -4260,7 +3231,6 @@ msgstr ""
 "록 할 것인지 여부를 지정한다."
 
 #. Tag: para
-#: basic_mapping.xml:2325
 #, fuzzy, no-c-format
 msgid ""
 "<literal>property-ref</literal> (optional): specifies that the foreign key "
@@ -4271,7 +3241,6 @@ msgstr ""
 "머리 키가 아닌 컬럼들을 참조함을 지정한다. (리거시 데이터에 제공됨.)"
 
 #. Tag: para
-#: basic_mapping.xml:2332
 #, fuzzy, no-c-format
 msgid ""
 "<literal>not-null</literal> (optional): specifies that the foreign key "
@@ -4282,7 +3251,6 @@ msgstr ""
 "다(이것은 foreign 키가 또한 프라이머리 키의 부분일 때마다 함축된다)."
 
 #. Tag: para
-#: basic_mapping.xml:2339
 #, fuzzy, no-c-format
 msgid ""
 "<literal>update</literal> (optional): specifies that the foreign key should "
@@ -4293,7 +3261,6 @@ msgstr ""
 "지정한다(이것은 foreign 키가 또한 프라이머리 키의 부분일 때마다 함축된다)."
 
 #. Tag: para
-#: basic_mapping.xml:2346
 #, fuzzy, no-c-format
 msgid ""
 "<literal>unique</literal> (optional): specifies that the foreign key should "
@@ -4305,7 +3272,6 @@ msgstr ""
 "다)."
 
 #. Tag: para
-#: basic_mapping.xml:2354
 #, fuzzy, no-c-format
 msgid ""
 "For systems where delete performance is important, we recommend that all "
@@ -4323,7 +3289,6 @@ msgstr ""
 "있어라."
 
 #. Tag: para
-#: basic_mapping.xml:2362
 #, fuzzy, no-c-format
 msgid ""
 "The <literal>not-null</literal> and <literal>update</literal> attributes are "
@@ -4339,13 +3304,11 @@ msgstr ""
 "emphasis>."
 
 #. Tag: title
-#: basic_mapping.xml:2372
 #, fuzzy, no-c-format
 msgid "Column and formula elements"
 msgstr "column 요소와 formula 요소"
 
 #. Tag: para
-#: basic_mapping.xml:2373
 #, fuzzy, no-c-format
 msgid ""
 "Mapping elements which accept a <literal>column</literal> attribute will "
@@ -4357,61 +3320,34 @@ msgstr ""
 "column&gt;</literal> 서브요소를 수용할 것이다. 비슷하게 <literal>&lt;"
 "formula&gt;</literal>는 <literal>formula</literal> 속성에 대한 대안이다."
 
-#. Tag: programlisting
-#: basic_mapping.xml:2379
+#. Tag: para
 #, no-c-format
 msgid ""
-"<![CDATA[<column\n"
-"        name=\"column_name\"\n"
-"        length=\"N\"\n"
-"        precision=\"N\"\n"
-"        scale=\"N\"\n"
-"        not-null=\"true|false\"\n"
-"        unique=\"true|false\"\n"
-"        unique-key=\"multicolumn_unique_key_name\"\n"
-"        index=\"index_name\"\n"
-"        sql-type=\"sql_type_name\"\n"
-"        check=\"SQL expression\"\n"
-"        default=\"SQL expression\"/>]]>"
-msgstr ""
-
-#. Tag: programlisting
-#: basic_mapping.xml:2381
-#, no-c-format
-msgid "<![CDATA[<formula>SQL expression</formula>]]>"
+"Most of the attributes on <literal>column</literal> provide a means of "
+"tailoring the DDL during automatic schema generation. The <literal>read</"
+"literal> and <literal>write</literal> attributes allow you to specify custom "
+"SQL that Hibernate will use to access the column's value. For more on this, "
+"see the discussion of <link linkend=\"mapping-column-read-and-write\">column "
+"read and write expressions</link>."
 msgstr ""
 
 #. Tag: para
-#: basic_mapping.xml:2383
 #, fuzzy, no-c-format
 msgid ""
-"<literal>column</literal> and <literal>formula</literal> attributes can even "
-"be combined within the same property or association mapping to express, for "
-"example, exotic join conditions."
+"The <literal>column</literal> and <literal>formula</literal> elements can "
+"even be combined within the same property or association mapping to express, "
+"for example, exotic join conditions."
 msgstr ""
 "<literal>column</literal> 속성과 <literal>formula</literal> 속성은 예를 들어 "
 "신종 조인 조건들을 표현하기 위해 동일한 property 또는 연관관계 매핑 내에 결합"
 "될 수 있다."
 
-#. Tag: programlisting
-#: basic_mapping.xml:2389
-#, no-c-format
-msgid ""
-"<![CDATA[<many-to-one name=\"homeAddress\" class=\"Address\"\n"
-"        insert=\"false\" update=\"false\">\n"
-"    <column name=\"person_id\" not-null=\"true\" length=\"10\"/>\n"
-"    <formula>'MAILING'</formula>\n"
-"</many-to-one>]]>"
-msgstr ""
-
 #. Tag: title
-#: basic_mapping.xml:2394
 #, fuzzy, no-c-format
 msgid "Import"
 msgstr "import"
 
 #. Tag: para
-#: basic_mapping.xml:2396
 #, fuzzy, no-c-format
 msgid ""
 "If your application has two persistent classes with the same name, and you "
@@ -4426,24 +3362,7 @@ msgstr ""
 "의존하기 보다 명시적으로 \"임포트 될 \" 것이다. 당신은 심지어 명시적으로 매핑"
 "되지 않는 클래스들과 인터페이스들을 임포트 시킬 수(가져오기 할 수) 있다."
 
-#. Tag: programlisting
-#: basic_mapping.xml:2403
-#, no-c-format
-msgid "<![CDATA[<import class=\"java.lang.Object\" rename=\"Universe\"/>]]>"
-msgstr ""
-
-#. Tag: programlisting
-#: basic_mapping.xml:2410
-#, no-c-format
-msgid ""
-"<![CDATA[<import\n"
-"        class=\"ClassName\"\n"
-"        rename=\"ShortName\"\n"
-"/>]]>"
-msgstr ""
-
 #. Tag: para
-#: basic_mapping.xml:2413
 #, fuzzy, no-c-format
 msgid ""
 "<literal>class</literal>: the fully qualified class name of any Java class."
@@ -4452,7 +3371,6 @@ msgstr ""
 "름."
 
 #. Tag: para
-#: basic_mapping.xml:2418
 #, fuzzy, no-c-format
 msgid ""
 "<literal>rename</literal> (optional - defaults to the unqualified class "
@@ -4462,13 +3380,11 @@ msgstr ""
 "질의 언어 내에서 사용될 이름."
 
 #. Tag: title
-#: basic_mapping.xml:2429
-#, no-c-format
-msgid "<title>Any</title>"
-msgstr ""
+#, fuzzy, no-c-format
+msgid "Any"
+msgstr "any"
 
 #. Tag: para
-#: basic_mapping.xml:2431
 #, fuzzy, no-c-format
 msgid ""
 "There is one more type of property mapping. The <literal>&lt;any&gt;</"
@@ -4490,7 +3406,6 @@ msgstr ""
 "에서만 이것을 사용해야 한다."
 
 #. Tag: para
-#: basic_mapping.xml:2441
 #, fuzzy, no-c-format
 msgid ""
 "The <literal>meta-type</literal> attribute allows the application to specify "
@@ -4504,54 +3419,17 @@ msgstr ""
 "을 가진 영속 클래스들로 매핑시키는 맞춤형 타입을 지정하도록 한다. 당신은 "
 "meta-type의 값들로부터 클래스 이름들로의 매핑을 지정해야 한다."
 
-#. Tag: programlisting
-#: basic_mapping.xml:2448
-#, no-c-format
-msgid ""
-"<![CDATA[<any name=\"being\" id-type=\"long\" meta-type=\"string\">\n"
-"    <meta-value value=\"TBL_ANIMAL\" class=\"Animal\"/>\n"
-"    <meta-value value=\"TBL_HUMAN\" class=\"Human\"/>\n"
-"    <meta-value value=\"TBL_ALIEN\" class=\"Alien\"/>\n"
-"    <column name=\"table_name\"/>\n"
-"    <column name=\"id\"/>\n"
-"</any>]]>"
-msgstr ""
-
-#. Tag: programlisting
-#: basic_mapping.xml:2459
-#, no-c-format
-msgid ""
-"<![CDATA[<any\n"
-"        name=\"propertyName\"\n"
-"        id-type=\"idtypename\"\n"
-"        meta-type=\"metatypename\"\n"
-"        cascade=\"cascade_style\"\n"
-"        access=\"field|property|ClassName\"\n"
-"        optimistic-lock=\"true|false\"\n"
-">\n"
-"        <meta-value ... />\n"
-"        <meta-value ... />\n"
-"        .....\n"
-"        <column .... />\n"
-"        <column .... />\n"
-"        .....\n"
-"</any>]]>"
-msgstr ""
-
 #. Tag: para
-#: basic_mapping.xml:2462
 #, no-c-format
 msgid "<literal>name</literal>: the property name."
 msgstr "<literal>name</literal>: 프로퍼티 이름."
 
 #. Tag: para
-#: basic_mapping.xml:2467
 #, no-c-format
 msgid "<literal>id-type</literal>: the identifier type."
 msgstr "<literal>id-type</literal>: 식별자 타입."
 
 #. Tag: para
-#: basic_mapping.xml:2472
 #, fuzzy, no-c-format
 msgid ""
 "<literal>meta-type</literal> (optional - defaults to <literal>string</"
@@ -4561,7 +3439,6 @@ msgstr ""
 "discriminator 매핑에 허용되는 임의의 타입."
 
 #. Tag: para
-#: basic_mapping.xml:2478
 #, no-c-format
 msgid ""
 "<literal>cascade</literal> (optional- defaults to <literal>none</literal>): "
@@ -4571,7 +3448,6 @@ msgstr ""
 "cascade 스타일."
 
 #. Tag: para
-#: basic_mapping.xml:2490
 #, fuzzy, no-c-format
 msgid ""
 "<literal>optimistic-lock</literal> (optional - defaults to <literal>true</"
@@ -4585,19 +3461,16 @@ msgstr ""
 "할 것인지 여부를 정의한다."
 
 #. Tag: title
-#: basic_mapping.xml:2505
 #, fuzzy, no-c-format
 msgid "Hibernate types"
 msgstr "Hibernate 타입들"
 
 #. Tag: title
-#: basic_mapping.xml:2508
 #, no-c-format
 msgid "Entities and values"
 msgstr "엔티티들과 값들"
 
 #. Tag: para
-#: basic_mapping.xml:2510
 #, no-c-format
 msgid ""
 "In relation to the persistence service, Java language-level objects are "
@@ -4605,7 +3478,6 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: basic_mapping.xml:2515
 #, fuzzy, no-c-format
 msgid ""
 "An <emphasis>entity</emphasis> exists independently of any other objects "
@@ -4628,7 +3500,6 @@ msgstr ""
 "다. 그것들 또한 버전화 될 수 있다."
 
 #. Tag: para
-#: basic_mapping.xml:2526
 #, fuzzy, no-c-format
 msgid ""
 "An entity's persistent state consists of references to other entities and "
@@ -4651,7 +3522,6 @@ msgstr ""
 "의 엔티티들이나 콜렉션들에 의해 공유될 수 없다."
 
 #. Tag: para
-#: basic_mapping.xml:2537
 #, fuzzy, no-c-format
 msgid ""
 "Until now, we have been using the term \"persistent class\" to refer to "
@@ -4678,13 +3548,11 @@ msgstr ""
 "composition이나 aggregation은 대개 value 타입으로 변환된다."
 
 #. Tag: para
-#: basic_mapping.xml:2551
 #, fuzzy, no-c-format
 msgid "We will revisit both concepts throughout this reference guide."
 msgstr "우리는 문서를 통해 두 개념들을 다시 고찰할 것이다."
 
 #. Tag: para
-#: basic_mapping.xml:2555
 #, fuzzy, no-c-format
 msgid ""
 "The challenge is to map the Java type system, and the developers' definition "
@@ -4710,7 +3578,6 @@ msgstr ""
 "현할 수 있다."
 
 #. Tag: para
-#: basic_mapping.xml:2568
 #, fuzzy, no-c-format
 msgid ""
 "With the exception of collections, all built-in Hibernate types support null "
@@ -4719,13 +3586,11 @@ msgstr ""
 "콜렉션들을 제외한 모든 미리 빌드된 Hibernate 타입들은 null 의미를 지원한다."
 
 #. Tag: title
-#: basic_mapping.xml:2575
 #, no-c-format
 msgid "Basic value types"
 msgstr "기본 value 타입들"
 
 #. Tag: para
-#: basic_mapping.xml:2577
 #, fuzzy, no-c-format
 msgid ""
 "The built-in <emphasis>basic mapping types</emphasis> can be roughly "
@@ -4734,18 +3599,16 @@ msgstr ""
 "미리-만들어진 <emphasis>기본 매핑 타입들</emphasis>은 대략 다음과 같이 카테고"
 "리로 분류된다 <placeholder-1/>"
 
-#. Tag: literal
-#: basic_mapping.xml:2582
-#, no-c-format
+#. Tag: term
+#, fuzzy, no-c-format
 msgid ""
-"integer, long, short, float, double, character, byte, boolean, yes_no, "
-"true_false"
+"<literal>integer, long, short, float, double, character, byte, boolean, "
+"yes_no, true_false</literal>"
 msgstr ""
 "integer, long, short, float, double, character, byte, boolean, yes_no, "
 "true_false"
 
 #. Tag: para
-#: basic_mapping.xml:2585
 #, no-c-format
 msgid ""
 "Type mappings from Java primitives or wrapper classes to appropriate (vendor-"
@@ -4758,14 +3621,12 @@ msgstr ""
 "<literal>true_false</literal>는 Java <literal>boolean</literal>이나 "
 "<literal>java.lang.Boolean</literal>에 대한 모든 대체적인 인코딩들이다."
 
-#. Tag: literal
-#: basic_mapping.xml:2594
-#, no-c-format
-msgid "string"
-msgstr "string"
+#. Tag: term
+#, fuzzy, no-c-format
+msgid "<literal>string</literal>"
+msgstr "<literal>all</literal>은 모든 컬럼들을 체크한다"
 
 #. Tag: para
-#: basic_mapping.xml:2596
 #, no-c-format
 msgid ""
 "A type mapping from <literal>java.lang.String</literal> to <literal>VARCHAR</"
@@ -4774,14 +3635,12 @@ msgstr ""
 "<literal>java.lang.String</literal>으로부터 <literal>VARCHAR</literal> (또는 "
 "Oracle <literal>VARCHAR2</literal>)로의 타입 매핑."
 
-#. Tag: literal
-#: basic_mapping.xml:2603
-#, no-c-format
-msgid "date, time, timestamp"
+#. Tag: term
+#, fuzzy, no-c-format
+msgid "<literal>date, time, timestamp</literal>"
 msgstr "date, time, timestamp"
 
 #. Tag: para
-#: basic_mapping.xml:2605
 #, no-c-format
 msgid ""
 "Type mappings from <literal>java.util.Date</literal> and its subclasses to "
@@ -4792,14 +3651,12 @@ msgstr ""
 "<literal>DATE</literal>, <literal>TIME</literal>, <literal>TIMESTAMP</"
 "literal> (또는 등가물)로의 타입 매핑들."
 
-#. Tag: literal
-#: basic_mapping.xml:2613
-#, no-c-format
-msgid "calendar, calendar_date"
+#. Tag: term
+#, fuzzy, no-c-format
+msgid "<literal>calendar, calendar_date</literal>"
 msgstr "calendar, calendar_date"
 
 #. Tag: para
-#: basic_mapping.xml:2615
 #, no-c-format
 msgid ""
 "Type mappings from <literal>java.util.Calendar</literal> to SQL types "
@@ -4808,14 +3665,12 @@ msgstr ""
 "<literal>java.util.Calendar</literal>로부터 SQL 타입들인 <literal>TIMESTAMP</"
 "literal>, <literal>DATE</literal> (또는 등가물)로의 타입 매핑들."
 
-#. Tag: literal
-#: basic_mapping.xml:2623
-#, no-c-format
-msgid "big_decimal, big_integer"
+#. Tag: term
+#, fuzzy, no-c-format
+msgid "<literal>big_decimal, big_integer</literal>"
 msgstr "big_decimal, big_integer"
 
 #. Tag: para
-#: basic_mapping.xml:2625
 #, no-c-format
 msgid ""
 "Type mappings from <literal>java.math.BigDecimal</literal> and <literal>java."
@@ -4826,14 +3681,12 @@ msgstr ""
 "literal>로부터 <literal>NUMERIC</literal> (또는 Oracle <literal>NUMBER</"
 "literal>)로의 타입 매핑들."
 
-#. Tag: literal
-#: basic_mapping.xml:2633
-#, no-c-format
-msgid "locale, timezone, currency"
+#. Tag: term
+#, fuzzy, no-c-format
+msgid "<literal>locale, timezone, currency</literal>"
 msgstr "locale, timezone, currency"
 
 #. Tag: para
-#: basic_mapping.xml:2635
 #, no-c-format
 msgid ""
 "Type mappings from <literal>java.util.Locale</literal>, <literal>java.util."
@@ -4850,14 +3703,12 @@ msgstr ""
 "매핑된다. <literal>TimeZone</literal>의 인스턴스들은 그것들의 <literal>ID</"
 "literal>로 매핑된다."
 
-#. Tag: literal
-#: basic_mapping.xml:2647
-#, no-c-format
-msgid "class"
-msgstr "class"
+#. Tag: term
+#, fuzzy, no-c-format
+msgid "<literal>class</literal>"
+msgstr "<literal>all</literal>은 모든 컬럼들을 체크한다"
 
 #. Tag: para
-#: basic_mapping.xml:2649
 #, no-c-format
 msgid ""
 "A type mapping from <literal>java.lang.Class</literal> to <literal>VARCHAR</"
@@ -4868,26 +3719,22 @@ msgstr ""
 "Oracle <literal>VARCHAR2</literal>)로의 타입 매핑. <literal>Class</literal>"
 "는 그것의 전체 수식어가 붙은 이름으로 매핑된다."
 
-#. Tag: literal
-#: basic_mapping.xml:2657
-#, no-c-format
-msgid "binary"
-msgstr "binary"
+#. Tag: term
+#, fuzzy, no-c-format
+msgid "<literal>binary</literal>"
+msgstr "<literal>all</literal>은 모든 컬럼들을 체크한다"
 
 #. Tag: para
-#: basic_mapping.xml:2659
 #, no-c-format
 msgid "Maps byte arrays to an appropriate SQL binary type."
 msgstr "byte 배열들을 적절한 SQL binary 타입으로 매핑시킨다."
 
-#. Tag: literal
-#: basic_mapping.xml:2665
-#, no-c-format
-msgid "text"
-msgstr "text"
+#. Tag: term
+#, fuzzy, no-c-format
+msgid "<literal>text</literal>"
+msgstr "<literal>all</literal>은 모든 컬럼들을 체크한다"
 
 #. Tag: para
-#: basic_mapping.xml:2667
 #, no-c-format
 msgid ""
 "Maps long Java strings to a SQL <literal>CLOB</literal> or <literal>TEXT</"
@@ -4896,14 +3743,12 @@ msgstr ""
 "long Java 문자열을 SQL <literal>CLOB</literal> 또는 <literal>TEXT</literal> "
 "타입으로 매핑시킨다"
 
-#. Tag: literal
-#: basic_mapping.xml:2674
-#, no-c-format
-msgid "serializable"
-msgstr "serializable"
+#. Tag: term
+#, fuzzy, no-c-format
+msgid "<literal>serializable</literal>"
+msgstr "<literal>all</literal>은 모든 컬럼들을 체크한다"
 
 #. Tag: para
-#: basic_mapping.xml:2676
 #, fuzzy, no-c-format
 msgid ""
 "Maps serializable Java types to an appropriate SQL binary type. You can also "
@@ -4914,14 +3759,12 @@ msgstr ""
 "한 디폴트로 기본 타입이 아닌 serializable 자바 클래스 또는 인터페이스의 이름"
 "을 가진 Hibernate 타입 <literal>serializable</literal>을 나타낼 수도 있다."
 
-#. Tag: literal
-#: basic_mapping.xml:2685
-#, no-c-format
-msgid "clob, blob"
-msgstr "clob, blob"
+#. Tag: term
+#, fuzzy, no-c-format
+msgid "<literal>clob, blob</literal>"
+msgstr "<literal>all</literal>은 모든 컬럼들을 체크한다"
 
 #. Tag: para
-#: basic_mapping.xml:2687
 #, fuzzy, no-c-format
 msgid ""
 "Type mappings for the JDBC classes <literal>java.sql.Clob</literal> and "
@@ -4934,18 +3777,16 @@ msgstr ""
 "냐하면 blob 또는 clob 객체는 트랜잭션 외부에서 재사용될 수 없기 때문이다.(게"
 "다가 드라이버 지원이 비일관적이고 페치되어야 한다)"
 
-#. Tag: literal
-#: basic_mapping.xml:2697
-#, no-c-format
+#. Tag: term
+#, fuzzy, no-c-format
 msgid ""
-"imm_date, imm_time, imm_timestamp, imm_calendar, imm_calendar_date, "
-"imm_serializable, imm_binary"
+"<literal>imm_date, imm_time, imm_timestamp, imm_calendar, imm_calendar_date, "
+"imm_serializable, imm_binary</literal>"
 msgstr ""
 "imm_date, imm_time, imm_timestamp, imm_calendar, imm_calendar_date, "
 "imm_serializable, imm_binary"
 
 #. Tag: para
-#: basic_mapping.xml:2701
 #, fuzzy, no-c-format
 msgid ""
 "Type mappings for what are considered mutable Java types. This is where "
@@ -4965,7 +3806,6 @@ msgstr ""
 "를 그 프로퍼티에 할당해야 한다."
 
 #. Tag: para
-#: basic_mapping.xml:2716
 #, fuzzy, no-c-format
 msgid ""
 "Unique identifiers of entities and collections can be of any basic type "
@@ -4978,7 +3818,6 @@ msgstr ""
 "어느 것일 수 있다. (Composite 식별자들이 또한 허용된다. 아래를 보라.)"
 
 #. Tag: para
-#: basic_mapping.xml:2722
 #, no-c-format
 msgid ""
 "The basic value types have corresponding <literal>Type</literal> constants "
@@ -4992,13 +3831,11 @@ msgstr ""
 "다."
 
 #. Tag: title
-#: basic_mapping.xml:2731
 #, no-c-format
 msgid "Custom value types"
 msgstr "맞춤형 value 타입들"
 
 #. Tag: para
-#: basic_mapping.xml:2733
 #, fuzzy, no-c-format
 msgid ""
 "It is relatively easy for developers to create their own value types. For "
@@ -5022,7 +3859,6 @@ msgstr ""
 "literal>/ <literal>setName()</literal>를 가질 수 있다."
 
 #. Tag: para
-#: basic_mapping.xml:2744
 #, fuzzy, no-c-format
 msgid ""
 "To implement a custom type, implement either <literal>org.hibernate."
@@ -5036,19 +3872,7 @@ msgstr ""
 "수식어가 붙은 클래스명을 사용하여 프로퍼티들을 선언하라. 가능한 종류의 것들"
 "을 보려면 <literal>org.hibernate.test.DoubleStringType</literal>을 체크하라."
 
-#. Tag: programlisting
-#: basic_mapping.xml:2752
-#, no-c-format
-msgid ""
-"<![CDATA[<property name=\"twoStrings\" type=\"org.hibernate.test."
-"DoubleStringType\">\n"
-"    <column name=\"first_string\"/>\n"
-"    <column name=\"second_string\"/>\n"
-"</property>]]>"
-msgstr ""
-
 #. Tag: para
-#: basic_mapping.xml:2754
 #, no-c-format
 msgid ""
 "Notice the use of <literal>&lt;column&gt;</literal> tags to map a property "
@@ -5058,7 +3882,6 @@ msgstr ""
 "literal> 태그의 사용을 주목하라."
 
 #. Tag: para
-#: basic_mapping.xml:2759
 #, no-c-format
 msgid ""
 "The <literal>CompositeUserType</literal>, <literal>EnhancedUserType</"
@@ -5071,7 +3894,6 @@ msgstr ""
 "literal> 인터페이스들은 더 많은 특화된 사용들을 위한 지원을 제공한다."
 
 #. Tag: para
-#: basic_mapping.xml:2765
 #, fuzzy, no-c-format
 msgid ""
 "You can even supply parameters to a <literal>UserType</literal> in the "
@@ -5086,19 +3908,7 @@ msgstr ""
 "해야 한다. 당신의 맞춤형 타입에 파라미터들을 제공하기 위해, 당신은 당신의 매"
 "핑 파일들 속에 <literal>&lt;type&gt;</literal> 요소를 사용할 수 있다."
 
-#. Tag: programlisting
-#: basic_mapping.xml:2773
-#, no-c-format
-msgid ""
-"<![CDATA[<property name=\"priority\">\n"
-"    <type name=\"com.mycompany.usertypes.DefaultValueIntegerType\">\n"
-"        <param name=\"default\">0</param>\n"
-"    </type>\n"
-"</property>]]>"
-msgstr ""
-
 #. Tag: para
-#: basic_mapping.xml:2775
 #, no-c-format
 msgid ""
 "The <literal>UserType</literal> can now retrieve the value for the parameter "
@@ -5110,7 +3920,6 @@ msgstr ""
 "검색할 수 있다."
 
 #. Tag: para
-#: basic_mapping.xml:2780
 #, fuzzy, no-c-format
 msgid ""
 "If you regularly use a certain <literal>UserType</literal>, it is useful to "
@@ -5125,24 +3934,7 @@ msgstr ""
 "고, 또한 만일 그 타입이 파라미터화 된 경우에 디폴트 파라미터 값들의 리스트를 "
 "포함할 수도 있다."
 
-#. Tag: programlisting
-#: basic_mapping.xml:2787
-#, no-c-format
-msgid ""
-"<![CDATA[<typedef class=\"com.mycompany.usertypes.DefaultValueIntegerType\" "
-"name=\"default_zero\">\n"
-"    <param name=\"default\">0</param>\n"
-"</typedef>]]>"
-msgstr ""
-
-#. Tag: programlisting
-#: basic_mapping.xml:2789
-#, no-c-format
-msgid "<![CDATA[<property name=\"priority\" type=\"default_zero\"/>]]>"
-msgstr ""
-
 #. Tag: para
-#: basic_mapping.xml:2791
 #, no-c-format
 msgid ""
 "It is also possible to override the parameters supplied in a typedef on a "
@@ -5152,7 +3944,6 @@ msgstr ""
 "공된 파라미터들을 오버라이드 시키는 것이 가능하다."
 
 #. Tag: para
-#: basic_mapping.xml:2796
 #, fuzzy, no-c-format
 msgid ""
 "Even though Hibernate's rich range of built-in types and support for "
@@ -5175,13 +3966,11 @@ msgstr ""
 "경들에 대해 장차 검증될 것이다."
 
 #. Tag: title
-#: basic_mapping.xml:2812
 #, no-c-format
 msgid "Mapping a class more than once"
 msgstr "하나의 클래스를 한 번 이상 매핑하기"
 
 #. Tag: para
-#: basic_mapping.xml:2813
 #, fuzzy, no-c-format
 msgid ""
 "It is possible to provide more than one mapping for a particular persistent "
@@ -5198,31 +3987,7 @@ msgstr ""
 "할 때, 질의들을 작성할 때, 또는 명명된 엔티티에 대한 연관들을 매핑할 때 당신"
 "으로 하여금 엔티티 이름을 지정하도록 한다."
 
-#. Tag: programlisting
-#: basic_mapping.xml:2821
-#, no-c-format
-msgid ""
-"<![CDATA[<class name=\"Contract\" table=\"Contracts\"\n"
-"        entity-name=\"CurrentContract\">\n"
-"    ...\n"
-"    <set name=\"history\" inverse=\"true\"\n"
-"            order-by=\"effectiveEndDate desc\">\n"
-"        <key column=\"currentContractId\"/>\n"
-"        <one-to-many entity-name=\"HistoricalContract\"/>\n"
-"    </set>\n"
-"</class>\n"
-"\n"
-"<class name=\"Contract\" table=\"ContractHistory\"\n"
-"        entity-name=\"HistoricalContract\">\n"
-"    ...\n"
-"    <many-to-one name=\"currentContract\"\n"
-"            column=\"currentContractId\"\n"
-"            entity-name=\"CurrentContract\"/>\n"
-"</class>]]>"
-msgstr ""
-
 #. Tag: para
-#: basic_mapping.xml:2823
 #, fuzzy, no-c-format
 msgid ""
 "Associations are now specified using <literal>entity-name</literal> instead "
@@ -5232,13 +3997,11 @@ msgstr ""
 "을 사용하여 어떻게 지정되는지를 주목하라."
 
 #. Tag: title
-#: basic_mapping.xml:2831
 #, no-c-format
 msgid "SQL quoted identifiers"
 msgstr "SQL 인용부호 표시된 식별자들"
 
 #. Tag: para
-#: basic_mapping.xml:2832
 #, fuzzy, no-c-format
 msgid ""
 "You can force Hibernate to quote an identifier in the generated SQL by "
@@ -5253,26 +4016,12 @@ msgstr ""
 "할 것이다(대개 이중 인용부호 이지만, SQL Server의 경우에는 모난 괄호들이고 "
 "MySQL의 경우에는 역인용부호(`))."
 
-#. Tag: programlisting
-#: basic_mapping.xml:2839
-#, no-c-format
-msgid ""
-"<![CDATA[<class name=\"LineItem\" table=\"`Line Item`\">\n"
-"    <id name=\"id\" column=\"`Item Id`\"/><generator class=\"assigned\"/></"
-"id>\n"
-"    <property name=\"itemNumber\" column=\"`Item #`\"/>\n"
-"    ...\n"
-"</class>]]>"
-msgstr ""
-
 #. Tag: title
-#: basic_mapping.xml:2845
 #, no-c-format
 msgid "Metadata alternatives"
 msgstr "Metadata 대안들"
 
 #. Tag: para
-#: basic_mapping.xml:2847
 #, fuzzy, no-c-format
 msgid ""
 "XML does not suit all users so there are some alternative ways to define O/R "
@@ -5282,13 +4031,11 @@ msgstr ""
 "정의하는 몇몇 대안적인 방법들이 존재한다."
 
 #. Tag: title
-#: basic_mapping.xml:2852
 #, no-c-format
 msgid "Using XDoclet markup"
 msgstr "XDoclet 마크업 사용하기"
 
 #. Tag: para
-#: basic_mapping.xml:2854
 #, fuzzy, no-c-format
 msgid ""
 "Many Hibernate users prefer to embed mapping information directly in "
@@ -5303,130 +4050,17 @@ msgstr ""
 "으로 간주되기 때문이다. 하지만 우리는 XDoclet 매핑들을 가진 <literal>Cat</"
 "literal> 클래스에 관한 다음 예제를 포함한다."
 
-#. Tag: programlisting
-#: basic_mapping.xml:2861
-#, no-c-format
-msgid ""
-"<![CDATA[package eg;\n"
-"import java.util.Set;\n"
-"import java.util.Date;\n"
-"\n"
-"/**\n"
-" * @hibernate.class\n"
-" *  table=\"CATS\"\n"
-" */\n"
-"public class Cat {\n"
-"    private Long id; // identifier\n"
-"    private Date birthdate;\n"
-"    private Cat mother;\n"
-"    private Set kittens\n"
-"    private Color color;\n"
-"    private char sex;\n"
-"    private float weight;\n"
-"\n"
-"    /*\n"
-"     * @hibernate.id\n"
-"     *  generator-class=\"native\"\n"
-"     *  column=\"CAT_ID\"\n"
-"     */\n"
-"    public Long getId() {\n"
-"        return id;\n"
-"    }\n"
-"    private void setId(Long id) {\n"
-"        this.id=id;\n"
-"    }\n"
-"\n"
-"    /**\n"
-"     * @hibernate.many-to-one\n"
-"     *  column=\"PARENT_ID\"\n"
-"     */\n"
-"    public Cat getMother() {\n"
-"        return mother;\n"
-"    }\n"
-"    void setMother(Cat mother) {\n"
-"        this.mother = mother;\n"
-"    }\n"
-"\n"
-"    /**\n"
-"     * @hibernate.property\n"
-"     *  column=\"BIRTH_DATE\"\n"
-"     */\n"
-"    public Date getBirthdate() {\n"
-"        return birthdate;\n"
-"    }\n"
-"    void setBirthdate(Date date) {\n"
-"        birthdate = date;\n"
-"    }\n"
-"    /**\n"
-"     * @hibernate.property\n"
-"     *  column=\"WEIGHT\"\n"
-"     */\n"
-"    public float getWeight() {\n"
-"        return weight;\n"
-"    }\n"
-"    void setWeight(float weight) {\n"
-"        this.weight = weight;\n"
-"    }\n"
-"\n"
-"    /**\n"
-"     * @hibernate.property\n"
-"     *  column=\"COLOR\"\n"
-"     *  not-null=\"true\"\n"
-"     */\n"
-"    public Color getColor() {\n"
-"        return color;\n"
-"    }\n"
-"    void setColor(Color color) {\n"
-"        this.color = color;\n"
-"    }\n"
-"    /**\n"
-"     * @hibernate.set\n"
-"     *  inverse=\"true\"\n"
-"     *  order-by=\"BIRTH_DATE\"\n"
-"     * @hibernate.collection-key\n"
-"     *  column=\"PARENT_ID\"\n"
-"     * @hibernate.collection-one-to-many\n"
-"     */\n"
-"    public Set getKittens() {\n"
-"        return kittens;\n"
-"    }\n"
-"    void setKittens(Set kittens) {\n"
-"        this.kittens = kittens;\n"
-"    }\n"
-"    // addKitten not needed by Hibernate\n"
-"    public void addKitten(Cat kitten) {\n"
-"        kittens.add(kitten);\n"
-"    }\n"
-"\n"
-"    /**\n"
-"     * @hibernate.property\n"
-"     *  column=\"SEX\"\n"
-"     *  not-null=\"true\"\n"
-"     *  update=\"false\"\n"
-"     */\n"
-"    public char getSex() {\n"
-"        return sex;\n"
-"    }\n"
-"    void setSex(char sex) {\n"
-"        this.sex=sex;\n"
-"    }\n"
-"}]]>"
-msgstr ""
-
 #. Tag: para
-#: basic_mapping.xml:2863
 #, fuzzy, no-c-format
 msgid "See the Hibernate website for more examples of XDoclet and Hibernate."
 msgstr "XDoclet과 ibernate에 관한 추가 예제들은 Hibernate 웹 사이트를 보라."
 
 #. Tag: title
-#: basic_mapping.xml:2870
 #, no-c-format
 msgid "Using JDK 5.0 Annotations"
 msgstr "JDK 5.0 Annotations 사용하기"
 
 #. Tag: para
-#: basic_mapping.xml:2872
 #, fuzzy, no-c-format
 msgid ""
 "JDK 5.0 introduced XDoclet-style annotations at the language level that are "
@@ -5451,41 +4085,11 @@ msgstr ""
 "(JSR-220)과 Hibernate3 metadata 양자가 지원된다."
 
 #. Tag: para
-#: basic_mapping.xml:2883
 #, no-c-format
 msgid "This is an example of a POJO class annotated as an EJB entity bean:"
 msgstr "다음은 EJB 엔티티 빈으로서 주석이 붙은 POJO 클래스에 관한 예제이다:"
 
-#. Tag: programlisting
-#: basic_mapping.xml:2887
-#, no-c-format
-msgid ""
-"<![CDATA[@Entity(access = AccessType.FIELD)\n"
-"public class Customer implements Serializable {\n"
-"\n"
-"    @Id;\n"
-"    Long id;\n"
-"\n"
-"    String firstName;\n"
-"    String lastName;\n"
-"    Date birthday;\n"
-"\n"
-"    @Transient\n"
-"    Integer age;\n"
-"\n"
-"    @Embedded\n"
-"    private Address homeAddress;\n"
-"\n"
-"    @OneToMany(cascade=CascadeType.ALL)\n"
-"    @JoinColumn(name=\"CUSTOMER_ID\")\n"
-"    Set<Order> orders;\n"
-"\n"
-"    // Getter/setter and business methods\n"
-"}]]>"
-msgstr ""
-
 #. Tag: para
-#: basic_mapping.xml:2891
 #, fuzzy, no-c-format
 msgid ""
 "Support for JDK 5.0 Annotations (and JSR-220) is currently under "
@@ -5496,13 +4100,11 @@ msgstr ""
 "완성되지 않았음을 노트하라. 상세한 것은 Hibernate Anotations를 참조하라."
 
 #. Tag: title
-#: basic_mapping.xml:2901
 #, fuzzy, no-c-format
 msgid "Generated properties"
 msgstr "산출되는 프로퍼티들"
 
 #. Tag: para
-#: basic_mapping.xml:2902
 #, fuzzy, no-c-format
 msgid ""
 "Generated properties are properties that have their values generated by the "
@@ -5522,7 +4124,6 @@ msgstr ""
 "로 직후에 산출되는 값들을 검색하기 위해 하나의 select 명령을 내린다."
 
 #. Tag: para
-#: basic_mapping.xml:2911
 #, fuzzy, no-c-format
 msgid ""
 "Properties marked as generated must additionally be non-insertable and non-"
@@ -5539,7 +4140,6 @@ msgstr ""
 "단순 프로퍼티들</xref> 만이 generated로 마크될 수 있다."
 
 #. Tag: para
-#: basic_mapping.xml:2918
 #, fuzzy, no-c-format
 msgid ""
 "<literal>never</literal> (the default): the given property value is not "
@@ -5549,7 +4149,6 @@ msgstr ""
 "에 생성되지 않을 것임을 의미한다."
 
 #. Tag: para
-#: basic_mapping.xml:2922
 #, fuzzy, no-c-format
 msgid ""
 "<literal>insert</literal>: the given property value is generated on insert, "
@@ -5567,7 +4166,6 @@ msgstr ""
 "라도, 이 옵션은 거기서 이용 불가능함을 노트하라..."
 
 #. Tag: para
-#: basic_mapping.xml:2930
 #, fuzzy, no-c-format
 msgid ""
 "<literal>always</literal>: the property value is generated both on insert "
@@ -5577,13 +4175,55 @@ msgstr ""
 "성됨을 기술한다."
 
 #. Tag: title
-#: basic_mapping.xml:2937
+#, no-c-format
+msgid "Column read and write expressions"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid ""
+"Hibernate allows you to customize the SQL it uses to read and write the "
+"values of columns mapped to <link linkend=\"mapping-declaration-property"
+"\">simple properties</link>. For example, if your database provides a set of "
+"data encryption functions, you can invoke them for individual columns like "
+"this: <programlisting role=\"XML\">&lt;property name=\"creditCardNumber"
+"\"&gt; &lt;column name=\"credit_card_num\" read=\"decrypt(credit_card_num)\" "
+"write=\"encrypt(?)\"/&gt; &lt;/property&gt;</programlisting>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid ""
+"Hibernate applies the custom expressions automatically whenever the property "
+"is referenced in a query. This functionality is similar to a derived-"
+"property <literal>formula</literal> with two differences:"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid ""
+"The property is backed by one or more columns that are exported as part of "
+"automatic schema generation."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The property is read-write, not read-only."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid ""
+"The <literal>write</literal> expression, if specified, must contain exactly "
+"one '?' placeholder for the value."
+msgstr ""
+
+#. Tag: title
 #, fuzzy, no-c-format
 msgid "Auxiliary database objects"
 msgstr "보조 데이터베이스 객체들"
 
 #. Tag: para
-#: basic_mapping.xml:2938
 #, fuzzy, no-c-format
 msgid ""
 "Auxiliary database objects allow for the CREATE and DROP of arbitrary "
@@ -5604,7 +4244,6 @@ msgstr ""
 "을 정의하는 두 가지 모드들이 본질적으로 존재한다..."
 
 #. Tag: para
-#: basic_mapping.xml:2947
 #, fuzzy, no-c-format
 msgid ""
 "The first mode is to explicitly list the CREATE and DROP commands in the "
@@ -5613,21 +4252,7 @@ msgstr ""
 "첫 번째 모드는 매핑 파일 바깥에서 CREATE 및 DROP 명령들을 명시적으로 나열하"
 "는 것이다:"
 
-#. Tag: programlisting
-#: basic_mapping.xml:2951
-#, no-c-format
-msgid ""
-"<![CDATA[<hibernate-mapping>\n"
-"    ...\n"
-"    <database-object>\n"
-"        <create>CREATE TRIGGER my_trigger ...</create>\n"
-"        <drop>DROP TRIGGER my_trigger</drop>\n"
-"    </database-object>\n"
-"</hibernate-mapping>]]>"
-msgstr ""
-
 #. Tag: para
-#: basic_mapping.xml:2952
 #, fuzzy, no-c-format
 msgid ""
 "The second mode is to supply a custom class that constructs the CREATE and "
@@ -5638,20 +4263,7 @@ msgstr ""
 "춤 클래스를 제공하는 것이다. 이 맞춤 클래스는 <literal>org.hibernate.mapping."
 "AuxiliaryDatabaseObject</literal> 인터페이스를 구현해야 한다."
 
-#. Tag: programlisting
-#: basic_mapping.xml:2957
-#, no-c-format
-msgid ""
-"<![CDATA[<hibernate-mapping>\n"
-"    ...\n"
-"    <database-object>\n"
-"        <definition class=\"MyTriggerDefinition\"/>\n"
-"    </database-object>\n"
-"</hibernate-mapping>]]>"
-msgstr ""
-
 #. Tag: para
-#: basic_mapping.xml:2958
 #, fuzzy, no-c-format
 msgid ""
 "Additionally, these database objects can be optionally scoped so that they "
@@ -5660,19 +4272,75 @@ msgstr ""
 "덧붙여 이들 데이터베이스 객체들은 어떤 dialect들이 사용될 때 그것들이 단지 적"
 "용될 수 있도록 선택적으로 변동될 수 있다."
 
-#. Tag: programlisting
-#: basic_mapping.xml:2962
-#, no-c-format
-msgid ""
-"<![CDATA[<hibernate-mapping>\n"
-"    ...\n"
-"    <database-object>\n"
-"        <definition class=\"MyTriggerDefinition\"/>\n"
-"        <dialect-scope name=\"org.hibernate.dialect.Oracle9iDialect\"/>\n"
-"        <dialect-scope name=\"org.hibernate.dialect.Oracle10gDialect\"/>\n"
-"    </database-object>\n"
-"</hibernate-mapping>]]>"
-msgstr ""
+#~ msgid "increment"
+#~ msgstr "increment"
+
+#~ msgid "identity"
+#~ msgstr "identity"
+
+#~ msgid "sequence"
+#~ msgstr "sequence"
+
+#~ msgid "hilo"
+#~ msgstr "hilo"
+
+#~ msgid "seqhilo"
+#~ msgstr "seqhilo"
+
+#~ msgid "uuid"
+#~ msgstr "uuid"
+
+#~ msgid "guid"
+#~ msgstr "guid"
+
+#~ msgid "native"
+#~ msgstr "native"
+
+#~ msgid "assigned"
+#~ msgstr "assigned"
+
+#~ msgid "select"
+#~ msgstr "select"
+
+#~ msgid "foreign"
+#~ msgstr "foreign"
+
+#~ msgid "sequence-identity"
+#~ msgstr "sequence-identity"
+
+#, fuzzy
+#~ msgid ""
+#~ "<literal>optimizer</literal> (optional - defaults to <literal>none</"
+#~ "literal>): See"
+#~ msgstr ""
+#~ "<literal>cascade</literal> (optional- defaults to <literal>none</"
+#~ "literal>): cascade 스타일."
+
+#, fuzzy
+#~ msgid ""
+#~ "<literal>optimizer</literal> (optional - defaults to <literal></"
+#~ "literal>): See"
+#~ msgstr ""
+#~ "<literal>cascade</literal> (optional- defaults to <literal>none</"
+#~ "literal>): cascade 스타일."
+
+#~ msgid "string"
+#~ msgstr "string"
+
+#~ msgid "class"
+#~ msgstr "class"
+
+#~ msgid "binary"
+#~ msgstr "binary"
+
+#~ msgid "text"
+#~ msgstr "text"
+
+#~ msgid "serializable"
+#~ msgstr "serializable"
+
+#~ msgid "clob, blob"
+#~ msgstr "clob, blob"
 
 #~ msgid ""
 #~ "<literal>type</literal> (optional): A name that indicates the Hibernate "
@@ -5705,31 +4373,9 @@ msgstr ""
 #~ "영속 서비스에 관한 여러 Java 언어-레벨의 객체들을 이해하기 위해, 우리는 그"
 #~ "것들을 다음 두 개의 그룹들로 분류할 필요가 있다:"
 
-#, fuzzy
-#~ msgid "<literal>class</literal>"
-#~ msgstr "<literal>all</literal>은 모든 컬럼들을 체크한다"
-
-#~ msgid "id"
-#~ msgstr "id"
-
-#~ msgid ""
-#~ "<literal>optimizer</literal> (optional, defaults to <literal>none</"
-#~ "literal>): See <xref linkend=\"mapping-declaration-id-enhanced-optimizers"
-#~ "\"/>"
-#~ msgstr ""
-#~ "<literal>optimizer</literal> (optional, defaults to <literal>none</"
-#~ "literal>): See <xref linkend=\"mapping-declaration-id-enhanced-optimizers"
-#~ "\"/>"
-
 #~ msgid ""
 #~ "<literal>optimizer</literal> (optional, defaults to <literal/>): See "
 #~ "<xref linkend=\"mapping-declaration-id-enhanced-optimizers\"/>"
 #~ msgstr ""
 #~ "<literal>optimizer</literal> (optional, defaults to <literal/>): See "
 #~ "<xref linkend=\"mapping-declaration-id-enhanced-optimizers\"/>"
-
-#~ msgid "key"
-#~ msgstr "key"
-
-#~ msgid "any"
-#~ msgstr "any"

@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2009-07-14 19:56+0000\n"
+"POT-Creation-Date: 2010-02-04T04:51:22\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -11,13 +11,11 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 
 #. Tag: title
-#: toolset_guide.xml:29
 #, no-c-format
 msgid "Toolset Guide"
 msgstr "도구셋 안내"
 
 #. Tag: para
-#: toolset_guide.xml:31
 #, fuzzy, no-c-format
 msgid ""
 "Roundtrip engineering with Hibernate is possible using a set of Eclipse "
@@ -27,7 +25,6 @@ msgstr ""
 "들, 뿐만 아니라 Ant 태스크들을 사용하여 가능하다."
 
 #. Tag: para
-#: toolset_guide.xml:36
 #, fuzzy, no-c-format
 msgid ""
 "<emphasis>Hibernate Tools</emphasis> currently include plugins for the "
@@ -39,7 +36,6 @@ msgstr ""
 "하고 있다:"
 
 #. Tag: para
-#: toolset_guide.xml:42
 #, fuzzy, no-c-format
 msgid ""
 "<emphasis>Mapping Editor:</emphasis> an editor for Hibernate XML mapping "
@@ -53,7 +49,6 @@ msgstr ""
 "론적 자동 완성 기능을 지원한다."
 
 #. Tag: para
-#: toolset_guide.xml:47
 #, fuzzy, no-c-format
 msgid ""
 "<emphasis>Console:</emphasis> the console is a new view in Eclipse. In "
@@ -69,7 +64,6 @@ msgstr ""
 "해준다."
 
 #. Tag: para
-#: toolset_guide.xml:54
 #, fuzzy, no-c-format
 msgid ""
 "<emphasis>Development Wizards:</emphasis> several wizards are provided with "
@@ -85,7 +79,6 @@ msgstr ""
 "지니어링 마법사는 맞춤 가능한 템플릿들을 제공한다."
 
 #. Tag: para
-#: toolset_guide.xml:67
 #, fuzzy, no-c-format
 msgid ""
 "Please refer to the <emphasis>Hibernate Tools</emphasis> package "
@@ -95,7 +88,6 @@ msgstr ""
 "하길 바란다."
 
 #. Tag: para
-#: toolset_guide.xml:72
 #, fuzzy, no-c-format
 msgid ""
 "However, the Hibernate main package comes bundled with an integrated tool : "
@@ -107,13 +99,11 @@ msgstr ""
 "emphasis> 별칭은 <literal>hbm2ddl</literal>."
 
 #. Tag: title
-#: toolset_guide.xml:79
 #, no-c-format
 msgid "Automatic schema generation"
 msgstr "자동적인 스키마 생성"
 
 #. Tag: para
-#: toolset_guide.xml:81
 #, fuzzy, no-c-format
 msgid ""
 "DDL can be generated from your mapping files by a Hibernate utility. The "
@@ -127,7 +117,6 @@ msgstr ""
 "식별자 생성기들에 대해 생성된다."
 
 #. Tag: para
-#: toolset_guide.xml:88
 #, fuzzy, no-c-format
 msgid ""
 "You <emphasis>must</emphasis> specify a SQL <literal>Dialect</literal> via "
@@ -139,7 +128,6 @@ msgstr ""
 "정<emphasis>해야 한다</emphasis>."
 
 #. Tag: para
-#: toolset_guide.xml:94
 #, fuzzy, no-c-format
 msgid ""
 "First, you must customize your mapping files to improve the generated "
@@ -148,13 +136,11 @@ msgstr ""
 "먼저 생성된 스키마를 개선시키기 위해 당신의 매핑 파일들을 맞춤화 시켜라."
 
 #. Tag: title
-#: toolset_guide.xml:99
 #, no-c-format
 msgid "Customizing the schema"
 msgstr "스키마 맞춤화 시키기"
 
 #. Tag: para
-#: toolset_guide.xml:101
 #, fuzzy, no-c-format
 msgid ""
 "Many Hibernate mapping elements define optional attributes named "
@@ -169,20 +155,7 @@ msgstr ""
 "<literal>scale</literal>로 명명된 옵션 속성들을 정의하고 있다. 당신은 이 속성"
 "으로서 컬럼이 길이, 정밀도, 크기를 설정할 수 있다."
 
-#. Tag: programlisting
-#: toolset_guide.xml:108
-#, no-c-format
-msgid "<![CDATA[<property name=\"zip\" length=\"5\"/>]]>"
-msgstr ""
-
-#. Tag: programlisting
-#: toolset_guide.xml:109
-#, no-c-format
-msgid "<![CDATA[<property name=\"balance\" precision=\"12\" scale=\"2\"/>]]>"
-msgstr ""
-
 #. Tag: para
-#: toolset_guide.xml:111
 #, fuzzy, no-c-format
 msgid ""
 "Some tags also accept a <literal>not-null</literal> attribute for generating "
@@ -195,23 +168,7 @@ msgstr ""
 "<literal>UNIQUE</literal> 컨스트레인트를 생성시키는) <literal>unique</"
 "literal> 속성을 수용한다."
 
-#. Tag: programlisting
-#: toolset_guide.xml:117
-#, no-c-format
-msgid ""
-"<![CDATA[<many-to-one name=\"bar\" column=\"barId\" not-null=\"true\"/>]]>"
-msgstr ""
-
-#. Tag: programlisting
-#: toolset_guide.xml:119
-#, no-c-format
-msgid ""
-"<![CDATA[<element column=\"serialNumber\" type=\"long\" not-null=\"true\" "
-"unique=\"true\"/>]]>"
-msgstr ""
-
 #. Tag: para
-#: toolset_guide.xml:121
 #, fuzzy, no-c-format
 msgid ""
 "A <literal>unique-key</literal> attribute can be used to group columns in a "
@@ -225,17 +182,7 @@ msgstr ""
 "된 값은 산출된 DDL내에서 컨스트레인트를 명명하는데 사용되지 <emphasis>않고</"
 "emphasis>, 오직 매핑 파일 내에서 컬럼들을 그룹 지우는데 사용된다."
 
-#. Tag: programlisting
-#: toolset_guide.xml:129
-#, no-c-format
-msgid ""
-"<![CDATA[<many-to-one name=\"org\" column=\"orgId\" unique-key="
-"\"OrgEmployeeId\"/>\n"
-"<property name=\"employeeId\" unique-key=\"OrgEmployee\"/>]]>"
-msgstr ""
-
 #. Tag: para
-#: toolset_guide.xml:131
 #, fuzzy, no-c-format
 msgid ""
 "An <literal>index</literal> attribute specifies the name of an index that "
@@ -246,16 +193,7 @@ msgstr ""
 "덱스의 이름을 지정한다. 간단하게 동일한 인덱스 이름을 지정함으로써 여러 컬럼"
 "들이 동일한 인덱스 내로 그룹지워질 수도 있다."
 
-#. Tag: programlisting
-#: toolset_guide.xml:137
-#, no-c-format
-msgid ""
-"<![CDATA[<property name=\"lastName\" index=\"CustName\"/>\n"
-"<property name=\"firstName\" index=\"CustName\"/>]]>"
-msgstr ""
-
 #. Tag: para
-#: toolset_guide.xml:139
 #, fuzzy, no-c-format
 msgid ""
 "A <literal>foreign-key</literal> attribute can be used to override the name "
@@ -264,16 +202,7 @@ msgstr ""
 "<literal>foreign-key</literal> 속성은 임의의 산출된 foreign 키 컨스트레인트"
 "의 이름을 오버라이드 시키는데 사용될 수 도 있다."
 
-#. Tag: programlisting
-#: toolset_guide.xml:144
-#, no-c-format
-msgid ""
-"<![CDATA[<many-to-one name=\"bar\" column=\"barId\" foreign-key=\"FKFooBar\"/"
-">]]>"
-msgstr ""
-
 #. Tag: para
-#: toolset_guide.xml:146
 #, no-c-format
 msgid ""
 "Many mapping elements also accept a child <literal>&lt;column&gt;</literal> "
@@ -282,21 +211,7 @@ msgstr ""
 "많은 매핑 요소들은 또한 하나의 자식 <literal>&lt;column&gt;</literal> 요소를 "
 "허용한다. 이것은 특히 다중 컬럼 타입들을 매핑하는데 유용하다:"
 
-#. Tag: programlisting
-#: toolset_guide.xml:151
-#, no-c-format
-msgid ""
-"<![CDATA[<property name=\"name\" type=\"my.customtypes.Name\"/>\n"
-"    <column name=\"last\" not-null=\"true\" index=\"bar_idx\" length=\"30\"/"
-">\n"
-"    <column name=\"first\" not-null=\"true\" index=\"bar_idx\" length=\"20\"/"
-">\n"
-"    <column name=\"initial\"/>\n"
-"</property>]]>"
-msgstr ""
-
 #. Tag: para
-#: toolset_guide.xml:153
 #, fuzzy, no-c-format
 msgid ""
 "The <literal>default</literal> attribute allows you to specify a default "
@@ -309,26 +224,7 @@ msgstr ""
 "다(당신은 매핑된 클래스의 새로운 인스턴스를 저장하기 전에 매핑된 프로퍼티에 "
 "동일한 값을 할당하게 될 것이다)."
 
-#. Tag: programlisting
-#: toolset_guide.xml:159
-#, no-c-format
-msgid ""
-"<![CDATA[<property name=\"credits\" type=\"integer\" insert=\"false\">\n"
-"    <column name=\"credits\" default=\"10\"/>\n"
-"</property>]]>"
-msgstr ""
-
-#. Tag: programlisting
-#: toolset_guide.xml:161
-#, no-c-format
-msgid ""
-"<![CDATA[<version name=\"version\" type=\"integer\" insert=\"false\">\n"
-"    <column name=\"version\" default=\"0\"/>\n"
-"</property>]]>"
-msgstr ""
-
 #. Tag: para
-#: toolset_guide.xml:163
 #, no-c-format
 msgid ""
 "The <literal>sql-type</literal> attribute allows the user to override the "
@@ -337,17 +233,7 @@ msgstr ""
 "<literal>sql-type</literal> 속성은 SQL 데이터타입에 대한 Hibernate 타입의 디"
 "폴트 매핑을 오버라이드 시키는 것을 사용자에게 허용해준다."
 
-#. Tag: programlisting
-#: toolset_guide.xml:168
-#, no-c-format
-msgid ""
-"<![CDATA[<property name=\"balance\" type=\"float\">\n"
-"    <column name=\"balance\" sql-type=\"decimal(13,3)\"/>\n"
-"</property>]]>"
-msgstr ""
-
 #. Tag: para
-#: toolset_guide.xml:170
 #, no-c-format
 msgid ""
 "The <literal>check</literal> attribute allows you to specify a check "
@@ -356,177 +242,132 @@ msgstr ""
 "<literal>check</literal> 속성은 check 컨스트레인트를 지정하는 것을 당신에게 "
 "허용해준다."
 
-#. Tag: programlisting
-#: toolset_guide.xml:174
-#, no-c-format
-msgid ""
-"<![CDATA[<property name=\"foo\" type=\"integer\">\n"
-"    <column name=\"foo\" check=\"foo > 10\"/>\n"
-"</property>]]>"
-msgstr ""
-
-#. Tag: programlisting
-#: toolset_guide.xml:176
-#, no-c-format
-msgid ""
-"<![CDATA[<class name=\"Foo\" table=\"foos\" check=\"bar < 100.0\">\n"
-"    ...\n"
-"    <property name=\"bar\" type=\"float\"/>\n"
-"</class>]]>"
-msgstr ""
-
 #. Tag: para
-#: toolset_guide.xml:179
 #, no-c-format
 msgid "The following table summarizes these optional attributes."
 msgstr ""
 
 #. Tag: title
-#: toolset_guide.xml:182
 #, no-c-format
 msgid "Summary"
 msgstr "요약"
 
 #. Tag: entry
-#: toolset_guide.xml:189
 #, no-c-format
 msgid "Attribute"
 msgstr "속성"
 
 #. Tag: entry
-#: toolset_guide.xml:190
 #, no-c-format
 msgid "Values"
 msgstr "값들"
 
 #. Tag: entry
-#: toolset_guide.xml:191
 #, no-c-format
 msgid "Interpretation"
 msgstr "해석"
 
-#. Tag: literal
-#: toolset_guide.xml:196
-#, no-c-format
-msgid "length"
-msgstr "length"
+#. Tag: entry
+#, fuzzy, no-c-format
+msgid "<literal>length</literal>"
+msgstr "<literal>hibernate.properties</literal> 내에서"
 
 #. Tag: entry
-#: toolset_guide.xml:197 toolset_guide.xml:202 toolset_guide.xml:207
 #, no-c-format
 msgid "number"
 msgstr "number"
 
 #. Tag: entry
-#: toolset_guide.xml:198
 #, no-c-format
 msgid "column length"
 msgstr "컬럼 길이"
 
-#. Tag: literal
-#: toolset_guide.xml:201
-#, no-c-format
-msgid "precision"
-msgstr "precision"
+#. Tag: entry
+#, fuzzy, no-c-format
+msgid "<literal>precision</literal>"
+msgstr "<literal>hibernate.properties</literal> 내에서"
 
 #. Tag: entry
-#: toolset_guide.xml:203
 #, no-c-format
 msgid "column decimal precision"
 msgstr "컬럼 decimal 정밀도"
 
-#. Tag: literal
-#: toolset_guide.xml:206
-#, no-c-format
-msgid "scale"
-msgstr "scale"
+#. Tag: entry
+#, fuzzy, no-c-format
+msgid "<literal>scale</literal>"
+msgstr "<literal>hibernate.properties</literal> 내에서"
 
 #. Tag: entry
-#: toolset_guide.xml:208
 #, no-c-format
 msgid "column decimal scale"
 msgstr "컬럼 decimal 크기"
 
-#. Tag: literal
-#: toolset_guide.xml:211
-#, no-c-format
-msgid "not-null"
-msgstr "not-null"
-
-#. Tag: literal
-#: toolset_guide.xml:212 toolset_guide.xml:217
-#, no-c-format
-msgid "true|false"
-msgstr "true|false"
+#. Tag: entry
+#, fuzzy, no-c-format
+msgid "<literal>not-null</literal>"
+msgstr "<literal>hibernate.properties</literal> 내에서"
 
 #. Tag: entry
-#: toolset_guide.xml:213
+#, fuzzy, no-c-format
+msgid "<literal>true|false</literal>"
+msgstr "<literal>hibernate.properties</literal> 내에서"
+
+#. Tag: entry
 #, fuzzy, no-c-format
 msgid "specifies that the column should be non-nullable"
 msgstr "컬럼이 null이 아니어야 함을 지정한다"
 
-#. Tag: literal
-#: toolset_guide.xml:216
-#, no-c-format
-msgid "unique"
-msgstr "unique"
+#. Tag: entry
+#, fuzzy, no-c-format
+msgid "<literal>unique</literal>"
+msgstr "<literal>hibernate.properties</literal> 내에서"
 
 #. Tag: entry
-#: toolset_guide.xml:218
 #, no-c-format
 msgid "specifies that the column should have a unique constraint"
 msgstr "컬럼이 하나의 유일 컨스트레인트를 가져야함을 지정한다"
 
-#. Tag: literal
-#: toolset_guide.xml:221
-#, no-c-format
-msgid "index"
-msgstr "index"
-
-#. Tag: literal
-#: toolset_guide.xml:222
-#, no-c-format
-msgid "index_name"
-msgstr "index_name"
+#. Tag: entry
+#, fuzzy, no-c-format
+msgid "<literal>index</literal>"
+msgstr "<literal>hibernate.properties</literal> 내에서"
 
 #. Tag: entry
-#: toolset_guide.xml:223
+#, fuzzy, no-c-format
+msgid "<literal>index_name</literal>"
+msgstr "<literal>hibernate.properties</literal> 내에서"
+
+#. Tag: entry
 #, no-c-format
 msgid "specifies the name of a (multi-column) index"
 msgstr "(다중-컬럼) 인덱스의 이름을 지정한다"
 
-#. Tag: literal
-#: toolset_guide.xml:226
-#, no-c-format
-msgid "unique-key"
-msgstr "unique-key"
-
-#. Tag: literal
-#: toolset_guide.xml:227
-#, no-c-format
-msgid "unique_key_name"
-msgstr "unique_key_name"
+#. Tag: entry
+#, fuzzy, no-c-format
+msgid "<literal>unique-key</literal>"
+msgstr "<literal>hibernate.properties</literal> 내에서"
 
 #. Tag: entry
-#: toolset_guide.xml:228
+#, fuzzy, no-c-format
+msgid "<literal>unique_key_name</literal>"
+msgstr "<literal>hibernate.properties</literal> 내에서"
+
+#. Tag: entry
 #, no-c-format
 msgid "specifies the name of a multi-column unique constraint"
 msgstr "다중-컬럼 유일 컨스트레인트의 이름을 지정한다"
 
-#. Tag: literal
-#: toolset_guide.xml:231
-#, no-c-format
-msgid "foreign-key"
-msgstr "foreign-key"
+#. Tag: entry
+#, fuzzy, no-c-format
+msgid "<literal>foreign-key</literal>"
+msgstr "<literal>hibernate.properties</literal> 내에서"
 
-#. Tag: literal
-#: toolset_guide.xml:232
-#, no-c-format
-msgid "foreign_key_name"
+#. Tag: entry
+#, fuzzy, no-c-format
+msgid "<literal>foreign_key_name</literal>"
 msgstr "foreign_key_name"
 
 #. Tag: entry
-#: toolset_guide.xml:233
 #, fuzzy, no-c-format
 msgid ""
 "specifies the name of the foreign key constraint generated for an "
@@ -540,20 +381,17 @@ msgstr ""
 "다.<placeholder-5/> 측들은 <placeholder-6/>에 의해 고려되지 않을 것임을 노트"
 "하라."
 
-#. Tag: literal
-#: toolset_guide.xml:243
-#, no-c-format
-msgid "sql-type"
-msgstr "sql-type"
+#. Tag: entry
+#, fuzzy, no-c-format
+msgid "<literal>sql-type</literal>"
+msgstr "<literal>hibernate.properties</literal> 내에서"
 
-#. Tag: literal
-#: toolset_guide.xml:244
-#, no-c-format
-msgid "SQL column type"
+#. Tag: entry
+#, fuzzy, no-c-format
+msgid "<literal>SQL column type</literal>"
 msgstr "SQL column type"
 
 #. Tag: entry
-#: toolset_guide.xml:245
 #, fuzzy, no-c-format
 msgid ""
 "overrides the default column type (attribute of <literal>&lt;column&gt;</"
@@ -561,38 +399,32 @@ msgid ""
 msgstr ""
 "디폴트 컬럼 타입을 오버라이드 시킨다 (<placeholder-1/> 요소의 속성에만)"
 
-#. Tag: literal
-#: toolset_guide.xml:251
-#, no-c-format
-msgid "default"
-msgstr "default"
+#. Tag: entry
+#, fuzzy, no-c-format
+msgid "<literal>default</literal>"
+msgstr "<literal>hibernate.properties</literal> 내에서"
 
 #. Tag: entry
-#: toolset_guide.xml:252 toolset_guide.xml:259
 #, no-c-format
 msgid "SQL expression"
 msgstr "SQL expression"
 
 #. Tag: entry
-#: toolset_guide.xml:253
 #, no-c-format
 msgid "specify a default value for the column"
 msgstr "컬럼에 대한 디폴트 값을 지정한다"
 
-#. Tag: literal
-#: toolset_guide.xml:258
-#, no-c-format
-msgid "check"
-msgstr "check"
+#. Tag: entry
+#, fuzzy, no-c-format
+msgid "<literal>check</literal>"
+msgstr "<literal>hibernate.properties</literal> 내에서"
 
 #. Tag: entry
-#: toolset_guide.xml:260
 #, no-c-format
 msgid "create an SQL check constraint on either column or table"
 msgstr "컬럼 또는 테이블에 대한 SQL check 컨스트레인트를 생성시킨다"
 
 #. Tag: para
-#: toolset_guide.xml:268
 #, no-c-format
 msgid ""
 "The <literal>&lt;comment&gt;</literal> element allows you to specify "
@@ -601,29 +433,7 @@ msgstr ""
 "<literal>&lt;comment&gt;</literal> 요소는 생성된 스키마에 대한 주석들을 지정"
 "하는 것을 당신에게 허용해준다."
 
-#. Tag: programlisting
-#: toolset_guide.xml:273
-#, no-c-format
-msgid ""
-"<![CDATA[<class name=\"Customer\" table=\"CurCust\">\n"
-"    <comment>Current customers only</comment>\n"
-"    ...\n"
-"</class>]]>"
-msgstr ""
-
-#. Tag: programlisting
-#: toolset_guide.xml:275
-#, no-c-format
-msgid ""
-"<![CDATA[<property name=\"balance\">\n"
-"    <column name=\"bal\">\n"
-"        <comment>Balance in USD</comment>\n"
-"    </column>\n"
-"</property>]]>"
-msgstr ""
-
 #. Tag: para
-#: toolset_guide.xml:277
 #, fuzzy, no-c-format
 msgid ""
 "This results in a <literal>comment on table</literal> or <literal>comment on "
@@ -633,13 +443,11 @@ msgstr ""
 "는 <literal>comment on column</literal> 문장으로 귀결된다."
 
 #. Tag: title
-#: toolset_guide.xml:286
 #, no-c-format
 msgid "Running the tool"
 msgstr "도구 실행하기"
 
 #. Tag: para
-#: toolset_guide.xml:288
 #, no-c-format
 msgid ""
 "The <literal>SchemaExport</literal> tool writes a DDL script to standard out "
@@ -649,7 +457,6 @@ msgstr ""
 "고/하거나 DDL 문장들을 실행시킨다."
 
 #. Tag: para
-#: toolset_guide.xml:293
 #, fuzzy, no-c-format
 msgid ""
 "The following table displays the <literal>SchemaExport</literal> command "
@@ -657,7 +464,6 @@ msgid ""
 msgstr "<literal>SchemaExport</literal> 명령 라인 옵션들"
 
 #. Tag: para
-#: toolset_guide.xml:295
 #, no-c-format
 msgid ""
 "<literal>java -cp </literal><emphasis>hibernate_classpaths</emphasis> "
@@ -666,116 +472,96 @@ msgid ""
 msgstr ""
 
 #. Tag: title
-#: toolset_guide.xml:301
 #, no-c-format
 msgid "<literal>SchemaExport</literal> Command Line Options"
 msgstr "<literal>SchemaExport</literal> 명령 라인 옵션들"
 
 #. Tag: entry
-#: toolset_guide.xml:307 toolset_guide.xml:457 toolset_guide.xml:527
 #, no-c-format
 msgid "Option"
 msgstr "옵션"
 
 #. Tag: entry
-#: toolset_guide.xml:308 toolset_guide.xml:395 toolset_guide.xml:458
-#: toolset_guide.xml:528
 #, no-c-format
 msgid "Description"
 msgstr "설명"
 
-#. Tag: literal
-#: toolset_guide.xml:313 toolset_guide.xml:463
-#, no-c-format
-msgid "--quiet"
-msgstr "--quiet"
+#. Tag: entry
+#, fuzzy, no-c-format
+msgid "<literal>--quiet</literal>"
+msgstr "<literal>hibernate.properties</literal> 내에서"
 
 #. Tag: entry
-#: toolset_guide.xml:314 toolset_guide.xml:464
 #, fuzzy, no-c-format
 msgid "do not output the script to stdout"
 msgstr "스크립트를 표준출력으로 출력하지 않는다"
 
-#. Tag: literal
-#: toolset_guide.xml:317
-#, no-c-format
-msgid "--drop"
-msgstr "--drop"
+#. Tag: entry
+#, fuzzy, no-c-format
+msgid "<literal>--drop</literal>"
+msgstr "<literal>hibernate.properties</literal> 내에서"
 
 #. Tag: entry
-#: toolset_guide.xml:318
 #, no-c-format
 msgid "only drop the tables"
 msgstr "오직 테이블들을 드롭시킨다"
 
-#. Tag: literal
-#: toolset_guide.xml:321
-#, no-c-format
-msgid "--create"
-msgstr "--create"
+#. Tag: entry
+#, fuzzy, no-c-format
+msgid "<literal>--create</literal>"
+msgstr "<literal>hibernate.properties</literal> 내에서"
 
 #. Tag: entry
-#: toolset_guide.xml:322
 #, no-c-format
 msgid "only create the tables"
 msgstr "오직 테이블들을 생성시킨다"
 
-#. Tag: literal
-#: toolset_guide.xml:325 toolset_guide.xml:467
-#, no-c-format
-msgid "--text"
-msgstr "--text"
+#. Tag: entry
+#, fuzzy, no-c-format
+msgid "<literal>--text</literal>"
+msgstr "<literal>hibernate.properties</literal> 내에서"
 
 #. Tag: entry
-#: toolset_guide.xml:326
 #, fuzzy, no-c-format
 msgid "do not export to the database"
 msgstr "데이터베이스로 내보내기 하지 않는다"
 
-#. Tag: literal
-#: toolset_guide.xml:329
-#, no-c-format
-msgid "--output=my_schema.ddl"
+#. Tag: entry
+#, fuzzy, no-c-format
+msgid "<literal>--output=my_schema.ddl</literal>"
 msgstr "--output=my_schema.ddl"
 
 #. Tag: entry
-#: toolset_guide.xml:330
 #, no-c-format
 msgid "output the ddl script to a file"
 msgstr "ddl 스크립트를 파일로 출력한다"
 
-#. Tag: literal
-#: toolset_guide.xml:333 toolset_guide.xml:471 toolset_guide.xml:533
-#, no-c-format
-msgid "--naming=eg.MyNamingStrategy"
+#. Tag: entry
+#, fuzzy, no-c-format
+msgid "<literal>--naming=eg.MyNamingStrategy</literal>"
 msgstr "--naming=eg.MyNamingStrategy"
 
 #. Tag: entry
-#: toolset_guide.xml:334 toolset_guide.xml:472 toolset_guide.xml:534
 #, fuzzy, no-c-format
 msgid "select a <literal>NamingStrategy</literal>"
 msgstr "<literal>hibernate.properties</literal> 내에서"
 
-#. Tag: literal
-#: toolset_guide.xml:337 toolset_guide.xml:479 toolset_guide.xml:541
-#, no-c-format
-msgid "--config=hibernate.cfg.xml"
+#. Tag: entry
+#, fuzzy, no-c-format
+msgid "<literal>--config=hibernate.cfg.xml</literal>"
 msgstr "--config=hibernate.cfg.xml"
 
 #. Tag: entry
-#: toolset_guide.xml:338
 #, no-c-format
 msgid "read Hibernate configuration from an XML file"
 msgstr "XML 파일로부터 Hibernate 구성을 읽어들인다"
 
-#. Tag: literal
-#: toolset_guide.xml:341 toolset_guide.xml:475 toolset_guide.xml:537
-#, no-c-format
-msgid "--properties=hibernate.properties"
-msgstr "--properties=hibernate.properties"
+#. Tag: entry
+#, fuzzy, no-c-format
+msgid "<literal>--properties=hibernate.properties</literal>"
+msgstr "<literal>hibernate.properties</literal> 내에서"
 
 #. Tag: entry
-#: toolset_guide.xml:342 toolset_guide.xml:476 toolset_guide.xml:538
 #, fuzzy, no-c-format
 msgid "read database properties from a file"
 msgstr ""
@@ -786,60 +572,44 @@ msgstr ""
 "#-#-#-#-#  - (PACKAGE VERSION)  #-#-#-#-#\n"
 "파일로부터 데이터베이스 프로퍼티들을 읽어들인다"
 
-#. Tag: literal
-#: toolset_guide.xml:345
-#, no-c-format
-msgid "--format"
-msgstr "--format"
+#. Tag: entry
+#, fuzzy, no-c-format
+msgid "<literal>--format</literal>"
+msgstr "<literal>hibernate.properties</literal> 내에서"
 
 #. Tag: entry
-#: toolset_guide.xml:346
 #, no-c-format
 msgid "format the generated SQL nicely in the script"
 msgstr "생성된 SQL을 스크립트 내에 좋게 형식지운다"
 
-#. Tag: literal
-#: toolset_guide.xml:349
-#, no-c-format
-msgid "--delimiter=;"
-msgstr "--delimiter=;"
+#. Tag: entry
+#, fuzzy, no-c-format
+msgid "<literal>--delimiter=;</literal>"
+msgstr "<literal>hibernate.properties</literal> 내에서"
 
 #. Tag: entry
-#: toolset_guide.xml:350
 #, no-c-format
 msgid "set an end of line delimiter for the script"
 msgstr "스크립트를 위한 라인 경계의 끝을 설정한다"
 
 #. Tag: para
-#: toolset_guide.xml:356
 #, fuzzy, no-c-format
 msgid "You can even embed <literal>SchemaExport</literal> in your application:"
 msgstr ""
 "당신은 당신의 어플리케이션 내에 <literal>SchemaExport</literal>를 삽입시킬 수"
 "도 있다:"
 
-#. Tag: programlisting
-#: toolset_guide.xml:360
-#, no-c-format
-msgid ""
-"<![CDATA[Configuration cfg = ....;\n"
-"new SchemaExport(cfg).create(false, true);]]>"
-msgstr ""
-
 #. Tag: title
-#: toolset_guide.xml:365
 #, no-c-format
 msgid "Properties"
 msgstr "프로퍼티들"
 
 #. Tag: para
-#: toolset_guide.xml:367
 #, fuzzy, no-c-format
 msgid "Database properties can be specified:"
 msgstr "데이터베이스 프로퍼티들은 다음과 같이 지정될 수 있다"
 
 #. Tag: para
-#: toolset_guide.xml:373
 #, no-c-format
 msgid ""
 "as system properties with <literal>-D</literal><emphasis>&lt;property&gt;</"
@@ -849,103 +619,86 @@ msgstr ""
 "퍼티로서"
 
 #. Tag: para
-#: toolset_guide.xml:376
 #, no-c-format
 msgid "in <literal>hibernate.properties</literal>"
 msgstr "<literal>hibernate.properties</literal> 내에서"
 
 #. Tag: para
-#: toolset_guide.xml:379
 #, no-c-format
 msgid "in a named properties file with <literal>--properties</literal>"
 msgstr "<literal>--properties</literal>를 가진 명명된 프로퍼티들 내에서"
 
 #. Tag: para
-#: toolset_guide.xml:383
 #, no-c-format
 msgid "The needed properties are:"
 msgstr "필요한 프로퍼티들은 다음과 같다:"
 
 #. Tag: title
-#: toolset_guide.xml:388
 #, no-c-format
 msgid "SchemaExport Connection Properties"
 msgstr "SchemaExport 커넥션 프로퍼티들"
 
 #. Tag: entry
-#: toolset_guide.xml:394
 #, no-c-format
 msgid "Property Name"
 msgstr "프로퍼티 이름"
 
-#. Tag: literal
-#: toolset_guide.xml:400
-#, no-c-format
-msgid "hibernate.connection.driver_class"
+#. Tag: entry
+#, fuzzy, no-c-format
+msgid "<literal>hibernate.connection.driver_class</literal>"
 msgstr "hibernate.connection.driver_class"
 
 #. Tag: entry
-#: toolset_guide.xml:401
 #, no-c-format
 msgid "jdbc driver class"
 msgstr "jdbc 드라이버 클래스"
 
-#. Tag: literal
-#: toolset_guide.xml:404
-#, no-c-format
-msgid "hibernate.connection.url"
-msgstr "hibernate.connection.url"
+#. Tag: entry
+#, fuzzy, no-c-format
+msgid "<literal>hibernate.connection.url</literal>"
+msgstr "<literal>hibernate.properties</literal> 내에서"
 
 #. Tag: entry
-#: toolset_guide.xml:405
 #, no-c-format
 msgid "jdbc url"
 msgstr "jdbc url"
 
-#. Tag: literal
-#: toolset_guide.xml:408
-#, no-c-format
-msgid "hibernate.connection.username"
-msgstr "hibernate.connection.username"
+#. Tag: entry
+#, fuzzy, no-c-format
+msgid "<literal>hibernate.connection.username</literal>"
+msgstr "<literal>hibernate.properties</literal> 내에서"
 
 #. Tag: entry
-#: toolset_guide.xml:409
 #, no-c-format
 msgid "database user"
 msgstr "데이터베이스 사용자"
 
-#. Tag: literal
-#: toolset_guide.xml:412
-#, no-c-format
-msgid "hibernate.connection.password"
-msgstr "hibernate.connection.password"
+#. Tag: entry
+#, fuzzy, no-c-format
+msgid "<literal>hibernate.connection.password</literal>"
+msgstr "<literal>hibernate.properties</literal> 내에서"
 
 #. Tag: entry
-#: toolset_guide.xml:413
 #, no-c-format
 msgid "user password"
 msgstr "사용자 패스워드"
 
-#. Tag: literal
-#: toolset_guide.xml:416
-#, no-c-format
-msgid "hibernate.dialect"
-msgstr "hibernate.dialect"
+#. Tag: entry
+#, fuzzy, no-c-format
+msgid "<literal>hibernate.dialect</literal>"
+msgstr "<literal>hibernate.properties</literal> 내에서"
 
 #. Tag: entry
-#: toolset_guide.xml:417
 #, no-c-format
 msgid "dialect"
 msgstr "dialect"
 
 #. Tag: title
-#: toolset_guide.xml:426
 #, no-c-format
 msgid "Using Ant"
 msgstr "Ant 사용하기"
 
 #. Tag: para
-#: toolset_guide.xml:428
 #, no-c-format
 msgid ""
 "You can call <literal>SchemaExport</literal> from your Ant build script:"
@@ -953,37 +706,12 @@ msgstr ""
 "당신은 당신의 Ant 빌드 스크립트에서 <literal>SchemaExport</literal>를 호출할 "
 "수 있다:"
 
-#. Tag: programlisting
-#: toolset_guide.xml:432
-#, no-c-format
-msgid ""
-"<![CDATA[<target name=\"schemaexport\">\n"
-"    <taskdef name=\"schemaexport\"\n"
-"        classname=\"org.hibernate.tool.hbm2ddl.SchemaExportTask\"\n"
-"        classpathref=\"class.path\"/>\n"
-"    \n"
-"    <schemaexport\n"
-"        properties=\"hibernate.properties\"\n"
-"        quiet=\"no\"\n"
-"        text=\"no\"\n"
-"        drop=\"no\"\n"
-"        delimiter=\";\"\n"
-"        output=\"schema-export.sql\">\n"
-"        <fileset dir=\"src\">\n"
-"            <include name=\"**/*.hbm.xml\"/>\n"
-"        </fileset>\n"
-"    </schemaexport>\n"
-"</target>]]>"
-msgstr ""
-
 #. Tag: title
-#: toolset_guide.xml:437
 #, no-c-format
 msgid "Incremental schema updates"
 msgstr "점증하는 스키마 업데이트들"
 
 #. Tag: para
-#: toolset_guide.xml:439
 #, fuzzy, no-c-format
 msgid ""
 "The <literal>SchemaUpdate</literal> tool will update an existing schema with "
@@ -996,7 +724,6 @@ msgstr ""
 "라."
 
 #. Tag: para
-#: toolset_guide.xml:445
 #, no-c-format
 msgid ""
 "<literal>java -cp </literal><emphasis>hibernate_classpaths</emphasis> "
@@ -1005,79 +732,44 @@ msgid ""
 msgstr ""
 
 #. Tag: title
-#: toolset_guide.xml:451
 #, no-c-format
 msgid "<literal>SchemaUpdate</literal> Command Line Options"
 msgstr "<literal>SchemaUpdate</literal> 명령 라인 옵션들"
 
 #. Tag: entry
-#: toolset_guide.xml:468
 #, fuzzy, no-c-format
 msgid "do not export the script to the database"
 msgstr "스크립트를 데이터베이스로 내보내기 하지 않는다"
 
 #. Tag: entry
-#: toolset_guide.xml:480 toolset_guide.xml:542
 #, fuzzy, no-c-format
 msgid "specify a <literal>.cfg.xml</literal> file"
 msgstr "<placeholder-1/> 파일을 지정한다"
 
 #. Tag: para
-#: toolset_guide.xml:486
 #, fuzzy, no-c-format
 msgid "You can embed <literal>SchemaUpdate</literal> in your application:"
 msgstr ""
 "당신은 당신의 어플리케이션 내에 <literal>SchemaUpdate</literal>를 삽입시킬 "
 "수 있다:"
 
-#. Tag: programlisting
-#: toolset_guide.xml:490
-#, no-c-format
-msgid ""
-"<![CDATA[Configuration cfg = ....;\n"
-"new SchemaUpdate(cfg).execute(false);]]>"
-msgstr ""
-
 #. Tag: title
-#: toolset_guide.xml:495
 #, no-c-format
 msgid "Using Ant for incremental schema updates"
 msgstr "점증하는 스키마 업데이트들에 Ant 사용하기"
 
 #. Tag: para
-#: toolset_guide.xml:497
 #, no-c-format
 msgid "You can call <literal>SchemaUpdate</literal> from the Ant script:"
 msgstr ""
 "당신은 Ant 스크립트에서<literal>SchemaUpdate</literal>를 호출할 수 있다:"
 
-#. Tag: programlisting
-#: toolset_guide.xml:501
-#, no-c-format
-msgid ""
-"<![CDATA[<target name=\"schemaupdate\">\n"
-"    <taskdef name=\"schemaupdate\"\n"
-"        classname=\"org.hibernate.tool.hbm2ddl.SchemaUpdateTask\"\n"
-"        classpathref=\"class.path\"/>\n"
-"    \n"
-"    <schemaupdate\n"
-"        properties=\"hibernate.properties\"\n"
-"        quiet=\"no\">\n"
-"        <fileset dir=\"src\">\n"
-"            <include name=\"**/*.hbm.xml\"/>\n"
-"        </fileset>\n"
-"    </schemaupdate>\n"
-"</target>]]>"
-msgstr ""
-
 #. Tag: title
-#: toolset_guide.xml:506
 #, no-c-format
 msgid "Schema validation"
 msgstr "스키마 유효성 검사"
 
 #. Tag: para
-#: toolset_guide.xml:508
 #, fuzzy, no-c-format
 msgid ""
 "The <literal>SchemaValidator</literal> tool will validate that the existing "
@@ -1093,7 +785,6 @@ msgstr ""
 "극히 유용하다."
 
 #. Tag: para
-#: toolset_guide.xml:514
 #, no-c-format
 msgid ""
 "<literal>java -cp </literal><emphasis>hibernate_classpaths</emphasis> "
@@ -1102,7 +793,6 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: toolset_guide.xml:518
 #, fuzzy, no-c-format
 msgid ""
 "The following table displays the <literal>SchemaValidator</literal> command "
@@ -1110,57 +800,102 @@ msgid ""
 msgstr "<literal>SchemaValidator</literal> 명령 라인 옵션들"
 
 #. Tag: title
-#: toolset_guide.xml:521
 #, no-c-format
 msgid "<literal>SchemaValidator</literal> Command Line Options"
 msgstr "<literal>SchemaValidator</literal> 명령 라인 옵션들"
 
 #. Tag: para
-#: toolset_guide.xml:548
 #, fuzzy, no-c-format
 msgid "You can embed <literal>SchemaValidator</literal> in your application:"
 msgstr ""
 "당신은 당신의 어플리케이션 내에 <literal>SchemaValidator</literal>을 삽입시"
 "킬 수 도 있다:"
 
-#. Tag: programlisting
-#: toolset_guide.xml:552
-#, no-c-format
-msgid ""
-"<![CDATA[Configuration cfg = ....;\n"
-"new SchemaValidator(cfg).validate();]]>"
-msgstr ""
-
 #. Tag: title
-#: toolset_guide.xml:557
 #, no-c-format
 msgid "Using Ant for schema validation"
 msgstr "스키마 유효성 검사를 위해 Ant 사용하기"
 
 #. Tag: para
-#: toolset_guide.xml:559
 #, no-c-format
 msgid "You can call <literal>SchemaValidator</literal> from the Ant script:"
 msgstr ""
 "당신은 Ant 스크립트에서 <literal>SchemaValidator</literal>를 호출할 수 있다:"
 
-#. Tag: programlisting
-#: toolset_guide.xml:563
-#, no-c-format
-msgid ""
-"<![CDATA[<target name=\"schemavalidate\">\n"
-"    <taskdef name=\"schemavalidator\"\n"
-"        classname=\"org.hibernate.tool.hbm2ddl.SchemaValidatorTask\"\n"
-"        classpathref=\"class.path\"/>\n"
-"    \n"
-"    <schemavalidator\n"
-"        properties=\"hibernate.properties\">\n"
-"        <fileset dir=\"src\">\n"
-"            <include name=\"**/*.hbm.xml\"/>\n"
-"        </fileset>\n"
-"    </schemavalidator>\n"
-"</target>]]>"
-msgstr ""
+#~ msgid "length"
+#~ msgstr "length"
+
+#~ msgid "precision"
+#~ msgstr "precision"
+
+#~ msgid "scale"
+#~ msgstr "scale"
+
+#~ msgid "not-null"
+#~ msgstr "not-null"
+
+#~ msgid "true|false"
+#~ msgstr "true|false"
+
+#~ msgid "unique"
+#~ msgstr "unique"
+
+#~ msgid "index"
+#~ msgstr "index"
+
+#~ msgid "index_name"
+#~ msgstr "index_name"
+
+#~ msgid "unique-key"
+#~ msgstr "unique-key"
+
+#~ msgid "unique_key_name"
+#~ msgstr "unique_key_name"
+
+#~ msgid "foreign-key"
+#~ msgstr "foreign-key"
+
+#~ msgid "sql-type"
+#~ msgstr "sql-type"
+
+#~ msgid "default"
+#~ msgstr "default"
+
+#~ msgid "check"
+#~ msgstr "check"
+
+#~ msgid "--quiet"
+#~ msgstr "--quiet"
+
+#~ msgid "--drop"
+#~ msgstr "--drop"
+
+#~ msgid "--create"
+#~ msgstr "--create"
+
+#~ msgid "--text"
+#~ msgstr "--text"
+
+#~ msgid "--properties=hibernate.properties"
+#~ msgstr "--properties=hibernate.properties"
+
+#~ msgid "--format"
+#~ msgstr "--format"
+
+#~ msgid "--delimiter=;"
+#~ msgstr "--delimiter=;"
+
+#~ msgid "hibernate.connection.url"
+#~ msgstr "hibernate.connection.url"
+
+#~ msgid "hibernate.connection.username"
+#~ msgstr "hibernate.connection.username"
+
+#~ msgid "hibernate.connection.password"
+#~ msgstr "hibernate.connection.password"
+
+#~ msgid "hibernate.dialect"
+#~ msgstr "hibernate.dialect"
 
 #~ msgid "Ant Tasks:"
 #~ msgstr "Ant 태스크들:"

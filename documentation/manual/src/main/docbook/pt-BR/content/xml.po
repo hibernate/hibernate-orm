@@ -1,41 +1,143 @@
+# translation of xml.po to
+# translation of Collection_Mapping.po to
+# translation of Collection_Mapping.po to
+# translation of Collection_Mapping.po to
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2006.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# , 2007.
+# Michael H. Smith <mhideo@redhat.com>, 2007.
+# Glaucia Cintra <gcintra@redhat.com>, 2007.
 msgid ""
 msgstr ""
-"Project-Id-Version: PACKAGE VERSION\n"
+"Project-Id-Version: xml\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2009-07-14 19:56+0000\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
-"Language-Team: LANGUAGE <LL@li.org>\n"
+"POT-Creation-Date: 2010-02-10T07:25:35\n"
+"PO-Revision-Date: 2009-12-21 07:56+1000\n"
+"Last-Translator: \n"
+"Language-Team:  <en@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"X-Generator: KBabel 1.11.4\n"
 
 #. Tag: title
-#: xml.xml:29
 #, no-c-format
 msgid "XML Mapping"
 msgstr "Mapeamento XML"
 
-#. Tag: emphasis
-#: xml.xml:31
+#. Tag: para
 #, fuzzy, no-c-format
 msgid ""
-"XML Mapping is an experimental feature in Hibernate 3.0 and is currently "
-"under active development."
+"<emphasis> XML Mapping is an experimental feature in Hibernate 3.0 and is "
+"currently under active development. </emphasis>"
 msgstr ""
-"Note that this is an experimental feature in Hibernate 3.0 and is under "
-"extremely active development. Veja que essa é uma feature experimental no "
-"Hibernate 3.0 e o desenvolvimento esta bastante ativo."
+"<emphasis> O Mapeamento XML é um recurso experimental no Hibernate 3.0 e "
+"está sob constante desenvolvimento. </emphasis>"
 
 #. Tag: title
-#: xml.xml:37
 #, no-c-format
 msgid "Working with XML data"
 msgstr "Trabalhando com dados em XML"
 
 #. Tag: para
-#: xml.xml:39
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "Hibernate allows you to work with persistent XML data in much the same way "
 "you work with persistent POJOs. A parsed XML tree can be thought of as "
@@ -43,12 +145,11 @@ msgid ""
 "of POJOs."
 msgstr ""
 "O Hibernate permite que se trabalhe com dados persistentes em XML quase da "
-"mesma maneira como você trabalhar com POJOs persistentes. Uma árvore XML "
-"parseada, pode ser imaginada como apenas uma maneira de representar os dados "
-"relacionais como objetos, ao invés dos POJOs."
+"mesma maneira como você trabalha com POJOs persistentes. Uma árvore XML "
+"analisada, pode ser considerada como apenas uma maneira de representar os "
+"dados relacionais como objetos, ao invés dos POJOs. "
 
 #. Tag: para
-#: xml.xml:46
 #, no-c-format
 msgid ""
 "Hibernate supports dom4j as API for manipulating XML trees. You can write "
@@ -62,13 +163,12 @@ msgstr ""
 "O Hibernate suporta a API dom4j para manipular árvores XML. Você pode "
 "escrever queries que retornem árvores dom4j do banco de dados e "
 "automaticamente sincronizar com o banco de dados qualquer modificação feita "
-"nessas árvores. Você pode até mesmo pegar um documento XML, parsear usando o "
-"dom4j, e escrever as alterações no banco de dados usando quaisquer operações "
-"básicas do Hibernate: <literal>persist(), saveOrUpdate(),merge(), delete(), "
-"replicate()</literal> (merging ainda não é suportado)"
+"nessas árvores. Você pode até mesmo pegar um documento XML, analisá-lo "
+"usando o dom4j, e escrever as alterações no banco de dados usando quaisquer "
+"operações básicas do Hibernate: <literal>persist(), saveOrUpdate(),merge(), "
+"delete(), replicate()</literal> (a mesclagem ainda não é suportada)"
 
 #. Tag: para
-#: xml.xml:56
 #, no-c-format
 msgid ""
 "This feature has many applications including data import/export, "
@@ -79,8 +179,7 @@ msgstr ""
 "usando XSLT."
 
 #. Tag: para
-#: xml.xml:61
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "A single mapping can be used to simultaneously map properties of a class and "
 "nodes of an XML document to the database, or, if there is no class to map, "
@@ -89,156 +188,88 @@ msgstr ""
 "Um mapeamento simples pode ser usado para simultaneamente mapear "
 "propriedades da classe e nós de um documento XML para um banco de dados ou, "
 "se não houver classe para mapear, pode ser usado simplesmente para mapear o "
-"XML."
+"XML. "
 
 #. Tag: title
-#: xml.xml:68
 #, no-c-format
 msgid "Specifying XML and class mapping together"
 msgstr ""
-"Especificando o mapeamento de uma classe e de um arquivo XML simultaneamente"
+"Especificando o mapeamento de uma classe e de um arquivo XML simultaneamente "
 
 #. Tag: para
-#: xml.xml:70
 #, no-c-format
 msgid "Here is an example of mapping a POJO and XML simultaneously:"
 msgstr "Segue um exemplo de como mapear um POJO e um XML ao mesmo tempo:"
 
-#. Tag: programlisting
-#: xml.xml:74
-#, no-c-format
-msgid ""
-"<![CDATA[<class name=\"Account\" \n"
-"        table=\"ACCOUNTS\" \n"
-"        node=\"account\">\n"
-"        \n"
-"    <id name=\"accountId\" \n"
-"            column=\"ACCOUNT_ID\" \n"
-"            node=\"@id\"/>\n"
-"            \n"
-"    <many-to-one name=\"customer\" \n"
-"            column=\"CUSTOMER_ID\" \n"
-"            node=\"customer/@id\" \n"
-"            embed-xml=\"false\"/>\n"
-"            \n"
-"    <property name=\"balance\" \n"
-"            column=\"BALANCE\" \n"
-"            node=\"balance\"/>\n"
-"            \n"
-"    ...\n"
-"    \n"
-"</class>]]>"
-msgstr ""
-
 #. Tag: title
-#: xml.xml:78
 #, no-c-format
 msgid "Specifying only an XML mapping"
 msgstr "Especificando somente um mapeamento XML"
 
 #. Tag: para
-#: xml.xml:80
 #, no-c-format
 msgid "Here is an example where there is no POJO class:"
 msgstr "Segue um exemplo que não contém uma classe POJO:"
 
-#. Tag: programlisting
-#: xml.xml:84
-#, no-c-format
-msgid ""
-"<![CDATA[<class entity-name=\"Account\" \n"
-"        table=\"ACCOUNTS\" \n"
-"        node=\"account\">\n"
-"        \n"
-"    <id name=\"id\" \n"
-"            column=\"ACCOUNT_ID\" \n"
-"            node=\"@id\" \n"
-"            type=\"string\"/>\n"
-"            \n"
-"    <many-to-one name=\"customerId\" \n"
-"            column=\"CUSTOMER_ID\" \n"
-"            node=\"customer/@id\" \n"
-"            embed-xml=\"false\" \n"
-"            entity-name=\"Customer\"/>\n"
-"            \n"
-"    <property name=\"balance\" \n"
-"            column=\"BALANCE\" \n"
-"            node=\"balance\" \n"
-"            type=\"big_decimal\"/>\n"
-"            \n"
-"    ...\n"
-"    \n"
-"</class>]]>"
-msgstr ""
-
 #. Tag: para
-#: xml.xml:86
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "This mapping allows you to access the data as a dom4j tree, or as a graph of "
 "property name/value pairs or java <literal>Map</literal>s. The property "
 "names are purely logical constructs that can be referred to in HQL queries."
 msgstr ""
 "Esse mapeamento permite que você acesse os dados como uma árvore dom4j ou um "
-"grafo de de pares nome de propriedade/valor (<literal>Map</literal>s do "
-"Java). Os nomes de propriedades são somente construções lógicas que podem "
-"ser referenciadas em consultas HQL."
+"gráfico de pares de nome/valor de propriedade  ou <literal>Map</literal>s do "
+"Java. Os nomes de propriedades são somente construções lógicas que podem ser "
+"referenciadas em consultas HQL. "
 
 #. Tag: title
-#: xml.xml:97
 #, no-c-format
 msgid "XML mapping metadata"
 msgstr "Mapeando metadados com XML"
 
 #. Tag: para
-#: xml.xml:99
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "A range of Hibernate mapping elements accept the <literal>node</literal> "
 "attribute. This lets you specify the name of an XML attribute or element "
 "that holds the property or entity data. The format of the <literal>node</"
 "literal> attribute must be one of the following:"
 msgstr ""
-"Muitos elementos do mapeamento do Hibernate aceitam o atributo "
-"<literal>node</literal>. Por meio dele, você pode especificar o nome de um "
-"atributo ou elemento XML que contém a propriedade ou os dados da entidade. O "
-"formato do atributo <literal>node</literal> deve ser o seguinte:"
+"Muitos elementos do mapeamento do Hibernate aceitam a função <literal>node</"
+"literal>. Através dele, você pode especificar o nome de uma função ou "
+"elemento XML que contenha a propriedade ou os dados da entidade. O formato "
+"da função <literal>node</literal> deve ser o seguinte: "
 
 #. Tag: para
-#: xml.xml:108
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "<literal>\"element-name\"</literal>: map to the named XML element"
 msgstr ""
-"<literal>\"element-name\"</literal> - mapeia para o elemento XML com "
-"determinado nome"
+"<literal>\"element-name\"</literal>: mapeia para o elemento XML nomeado"
 
 #. Tag: para
-#: xml.xml:111
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "<literal>\"@attribute-name\"</literal>: map to the named XML attribute"
 msgstr ""
-"<literal>\"@attribute-name\"</literal> - mapeia para o atributo XML com "
+"<literal>\"@attribute-name\"</literal>: mapeia para a função XML com "
 "determinado nome"
 
 #. Tag: para
-#: xml.xml:114
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "<literal>\".\"</literal>: map to the parent element"
-msgstr "<literal>\".\"</literal> - mapeia para o elemento pai"
+msgstr "<literal>\".\"</literal>: mapeia para o elemento pai"
 
 #. Tag: para
-#: xml.xml:117
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "<literal>\"element-name/@attribute-name\"</literal>: map to the named "
 "attribute of the named element"
 msgstr ""
-"<literal>\"element-name/@attribute-name\"</literal> - mapeia para para o "
-"atributo com determinado nome do elemento com determinado nome"
+"<literal>\"element-name/@attribute-name\"</literal>: mapeia para a função "
+"nomeada com o elemento nomeado"
 
 #. Tag: para
-#: xml.xml:124
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "For collections and single valued associations, there is an additional "
 "<literal>embed-xml</literal> attribute. If <literal>embed-xml=\"true\"</"
@@ -248,208 +279,69 @@ msgid ""
 "then only the referenced identifier value will appear in the XML for single "
 "point associations and collections will not appear at all."
 msgstr ""
-"Para coleções e associações simples, existe o atributo adicional "
-"<literal>embed-xml</literal>. Se o atributo <literal>embed-xml=\"true\"</"
+"Para coleções e associações de valores simples, existe uma função adicional "
+"<literal>embed-xml</literal>. Se a função <literal>embed-xml=\"true\"</"
 "literal>, que é o valor padrão, a árvore XML para a entidade associada (ou "
 "coleção de determinado tipo de valor) será embutida diretamente na árvore "
 "XML que contém a associação. Por outro lado, se <literal>embed-xml=\"false"
 "\"</literal>, então apenas o valor do identificador referenciado irá "
-"aparecer no XML para associações simples e coleções simplesmentenão irão "
-"aparecer."
+"aparecer no XML para associações simples e as coleções simplesmente não irão "
+"aparecer. "
 
 #. Tag: para
-#: xml.xml:134
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "Do not leave <literal>embed-xml=\"true\"</literal> for too many "
 "associations, since XML does not deal well with circularity."
 msgstr ""
-"Você precisa tomar cuidado em não deixar o<literal>embed-xml=\"true\"</"
+"Você precisa tomar cuidado para não deixar o <literal>embed-xml=\"true\"</"
 "literal> para muitas associações, pois o XML não suporta bem referências "
-"circulares."
-
-#. Tag: programlisting
-#: xml.xml:139
-#, no-c-format
-msgid ""
-"<![CDATA[<class name=\"Customer\" \n"
-"        table=\"CUSTOMER\" \n"
-"        node=\"customer\">\n"
-"        \n"
-"    <id name=\"id\" \n"
-"            column=\"CUST_ID\" \n"
-"            node=\"@id\"/>\n"
-"            \n"
-"    <map name=\"accounts\" \n"
-"            node=\".\" \n"
-"            embed-xml=\"true\">\n"
-"        <key column=\"CUSTOMER_ID\" \n"
-"                not-null=\"true\"/>\n"
-"        <map-key column=\"SHORT_DESC\" \n"
-"                node=\"@short-desc\" \n"
-"                type=\"string\"/>\n"
-"        <one-to-many entity-name=\"Account\"\n"
-"                embed-xml=\"false\" \n"
-"                node=\"account\"/>\n"
-"    </map>\n"
-"    \n"
-"    <component name=\"name\" \n"
-"            node=\"name\">\n"
-"        <property name=\"firstName\" \n"
-"                node=\"first-name\"/>\n"
-"        <property name=\"initial\" \n"
-"                node=\"initial\"/>\n"
-"        <property name=\"lastName\" \n"
-"                node=\"last-name\"/>\n"
-"    </component>\n"
-"    \n"
-"    ...\n"
-"    \n"
-"</class>]]>"
-msgstr ""
+"circulares. "
 
 #. Tag: para
-#: xml.xml:141
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "In this case, the collection of account ids is embedded, but not the actual "
 "account data. The following HQL query:"
 msgstr ""
-"Nesse caso, decidimos embutir a colenção de account ids, e não os dados de "
-"accounts. A query HQL a seguir:"
-
-#. Tag: programlisting
-#: xml.xml:146
-#, no-c-format
-msgid ""
-"<![CDATA[from Customer c left join fetch c.accounts where c.lastName like :"
-"lastName]]>"
-msgstr ""
+"Nesse caso, decidimos incorporar a coleção de ids de contas, e não os dados "
+"de contas. Segue a abaixo a consulta HQL:"
 
 #. Tag: para
-#: xml.xml:148
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "would return datasets such as this:"
-msgstr "Retornaria um conjunto de dados como esse:"
-
-#. Tag: programlisting
-#: xml.xml:152
-#, no-c-format
-msgid ""
-"<![CDATA[<customer id=\"123456789\">\n"
-"    <account short-desc=\"Savings\">987632567</account>\n"
-"    <account short-desc=\"Credit Card\">985612323</account>\n"
-"    <name>\n"
-"        <first-name>Gavin</first-name>\n"
-"        <initial>A</initial>\n"
-"        <last-name>King</last-name>\n"
-"    </name>\n"
-"    ...\n"
-"</customer>]]>"
-msgstr ""
+msgstr "Retornaria um conjunto de dados como esse: "
 
 #. Tag: para
-#: xml.xml:154
 #, no-c-format
 msgid ""
 "If you set <literal>embed-xml=\"true\"</literal> on the <literal>&lt;one-to-"
 "many&gt;</literal> mapping, the data might look more like this:"
 msgstr ""
-"Se você setar <literal>embed-xml=\"true\"</literal> em um mapeamento "
+"Se você ajustar <literal>embed-xml=\"true\"</literal> em um mapeamento "
 "<literal>&lt;one-to-many&gt;</literal>, os dados se pareceriam com o "
 "seguinte:"
 
-#. Tag: programlisting
-#: xml.xml:159
-#, no-c-format
-msgid ""
-"<![CDATA[<customer id=\"123456789\">\n"
-"    <account id=\"987632567\" short-desc=\"Savings\">\n"
-"        <customer id=\"123456789\"/>\n"
-"        <balance>100.29</balance>\n"
-"    </account>\n"
-"    <account id=\"985612323\" short-desc=\"Credit Card\">\n"
-"        <customer id=\"123456789\"/>\n"
-"        <balance>-2370.34</balance>\n"
-"    </account>\n"
-"    <name>\n"
-"        <first-name>Gavin</first-name>\n"
-"        <initial>A</initial>\n"
-"        <last-name>King</last-name>\n"
-"    </name>\n"
-"    ...\n"
-"</customer>]]>"
-msgstr ""
-
 #. Tag: title
-#: xml.xml:165
 #, no-c-format
 msgid "Manipulating XML data"
 msgstr "Manipulando dados em XML"
 
 #. Tag: para
-#: xml.xml:167
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "You can also re-read and update XML documents in the application. You can do "
 "this by obtaining a dom4j session:"
 msgstr ""
 "Vamos reler e atualizar documentos em XML em nossa aplicação. Nós fazemos "
-"isso obtendo uma session do dom4j:"
-
-#. Tag: programlisting
-#: xml.xml:172
-#, no-c-format
-msgid ""
-"<![CDATA[Document doc = ....;\n"
-"       \n"
-"Session session = factory.openSession();\n"
-"Session dom4jSession = session.getSession(EntityMode.DOM4J);\n"
-"Transaction tx = session.beginTransaction();\n"
-"\n"
-"List results = dom4jSession\n"
-"    .createQuery(\"from Customer c left join fetch c.accounts where c."
-"lastName like :lastName\")\n"
-"    .list();\n"
-"for ( int i=0; i<results.size(); i++ ) {\n"
-"    //add the customer data to the XML document\n"
-"    Element customer = (Element) results.get(i);\n"
-"    doc.add(customer);\n"
-"}\n"
-"\n"
-"tx.commit();\n"
-"session.close();]]>"
-msgstr ""
-
-#. Tag: programlisting
-#: xml.xml:174
-#, no-c-format
-msgid ""
-"<![CDATA[Session session = factory.openSession();\n"
-"Session dom4jSession = session.getSession(EntityMode.DOM4J);\n"
-"Transaction tx = session.beginTransaction();\n"
-"\n"
-"Element cust = (Element) dom4jSession.get(\"Customer\", customerId);\n"
-"for ( int i=0; i<results.size(); i++ ) {\n"
-"    Element customer = (Element) results.get(i);\n"
-"    //change the customer name in the XML and database\n"
-"    Element name = customer.element(\"name\");\n"
-"    name.element(\"first-name\").setText(firstName);\n"
-"    name.element(\"initial\").setText(initial);\n"
-"    name.element(\"last-name\").setText(lastName);\n"
-"}\n"
-"\n"
-"tx.commit();\n"
-"session.close();]]>"
-msgstr ""
+"isso obtendo uma sessão do dom4j: "
 
 #. Tag: para
-#: xml.xml:176
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "When implementing XML-based data import/export, it is useful to combine this "
 "feature with Hibernate's <literal>replicate()</literal> operation."
 msgstr ""
 "É extremamente útil combinar essa funcionalidade com a operação "
 "<literal>replicate()</literal> do Hibernate para implementar importação/"
-"exportação baseadas em XML."
+"exportação de dados baseados em XML."

@@ -1,24 +1,25 @@
+# translation of Collection_Mapping.po to
+# Xi HUANG <xhuang@redhat.com>, 2007, 2010.
 msgid ""
 msgstr ""
-"Project-Id-Version: PACKAGE VERSION\n"
+"Project-Id-Version: Collection_Mapping\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2009-07-14 19:56+0000\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
-"Language-Team: LANGUAGE <LL@li.org>\n"
+"POT-Creation-Date: 2010-02-11T05:38:15\n"
+"PO-Revision-Date: 2010-01-18 15:09+1000\n"
+"Last-Translator: Xi HUANG <xhuang@redhat.com>\n"
+"Language-Team:  <en@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"X-Generator: KBabel 1.11.4\n"
 
 #. Tag: title
-#: query_sql.xml:29
 #, no-c-format
 msgid "Native SQL"
-msgstr "ネイティブSQL"
+msgstr "ネイティブ SQL"
 
 #. Tag: para
-#: query_sql.xml:31
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "You can also express queries in the native SQL dialect of your database. "
 "This is useful if you want to utilize database-specific features such as "
@@ -26,118 +27,87 @@ msgid ""
 "provides a clean migration path from a direct SQL/JDBC based application to "
 "Hibernate."
 msgstr ""
-"データベースのネイティブSQL方言を使ってクエリを表現することもできます。 クエ"
-"リヒントやOracleの <literal>CONNECT</literal> キーワードのように、 データベー"
-"ス独自の機能を利用したいときに使えます。 SQL/JDBCを直接使用しているアプリケー"
-"ションからHibernateへの移行も容易にしています。"
+"データベースのネイティブ SQL 方言を使ってクエリを表現することもできます。クエ"
+"リヒントや Oracle の <literal>CONNECT</literal> キーワードのように、データ"
+"ベース独自の機能を利用したいときに使えます。 SQL/JDBC を直接使用しているアプ"
+"リケーションから Hibernate への移行も容易にしています。"
 
 #. Tag: para
-#: query_sql.xml:37
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "Hibernate3 allows you to specify handwritten SQL, including stored "
 "procedures, for all create, update, delete, and load operations."
 msgstr ""
-"Hibernate3では、生成、更新、削除、読み込み処理のようなすべての SQL（ストアド"
-"プロシージャを含む）を手書きできます。"
+"Hibernate3 では、生成、更新、削除、読み込み処理のようなすべての SQL （ストア"
+"ドプロシージャを含む）を手書きできます。"
 
 #. Tag: title
-#: query_sql.xml:41
-#, no-c-format
+#, fuzzy, no-c-format
 msgid "Using a <literal>SQLQuery</literal>"
-msgstr "<literal>SQLQuery</literal> の使用"
+msgstr "もしくは <literal>List</literal> として、"
 
 #. Tag: para
-#: query_sql.xml:43
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "Execution of native SQL queries is controlled via the <literal>SQLQuery</"
 "literal> interface, which is obtained by calling <literal>Session."
 "createSQLQuery()</literal>. The following sections describe how to use this "
 "API for querying."
 msgstr ""
-"ネイティブなSQLクエリの実行は <literal>SQLQuery</literal> インターフェイスを"
-"通して制御します。 <literal>SQLQuery</literal> インターフェイスは "
-"<literal>Session.createSQLQuery()</literal> を呼び出して取得します。 このAPI"
+"ネイティブな SQL クエリの実行は <literal>SQLQuery</literal> インターフェース"
+"を通して制御します。 <literal>SQLQuery</literal> インターフェースは "
+"<literal>Session.createSQLQuery()</literal> を呼び出して取得します。この API "
 "を使って問い合わせする方法を以下で説明します。"
 
 #. Tag: title
-#: query_sql.xml:49
 #, no-c-format
 msgid "Scalar queries"
 msgstr "スカラーのクエリ"
 
 #. Tag: para
-#: query_sql.xml:51
 #, no-c-format
 msgid "The most basic SQL query is to get a list of scalars (values)."
-msgstr "最も基本的なSQLクエリはスカラー（値）のリストを得ることです。"
-
-#. Tag: programlisting
-#: query_sql.xml:54
-#, no-c-format
-msgid ""
-"<![CDATA[sess.createSQLQuery(\"SELECT * FROM CATS\").list();\n"
-"sess.createSQLQuery(\"SELECT ID, NAME, BIRTHDATE FROM CATS\").list();\n"
-"]]>"
-msgstr ""
+msgstr "最も基本的な SQL クエリはスカラー（値）のリストを得ることです。"
 
 #. Tag: para
-#: query_sql.xml:56
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "These will return a List of Object arrays (Object[]) with scalar values for "
 "each column in the CATS table. Hibernate will use ResultSetMetadata to "
 "deduce the actual order and types of the returned scalar values."
 msgstr ""
-"これらはどちらも、CATSテーブルの各カラムのスカラー値を含む Object配列（Object"
-"[]）のリストを返します。 返すスカラー値の実際の順番と型を推定するために、 "
-"HibernateはResultSetMetadataを使用します。"
+"これらはどちらも、 CATS テーブルの各カラムのスカラー値を含む Object 配列"
+"（Object[]）のリストを返します。返すスカラー値の実際の順番と型を推定するため"
+"に、 Hibernate は ResultSetMetadata を使用します。"
 
 #. Tag: para
-#: query_sql.xml:61
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "To avoid the overhead of using <literal>ResultSetMetadata</literal>, or "
 "simply to be more explicit in what is returned, one can use "
 "<literal>addScalar()</literal>:"
 msgstr ""
-"<literal>ResultSetMetadata</literal> を使用するオーバーヘッドを避けるため、 "
-"もしくは単に何が返されるか明確にするため、<literal>addScalar()</literal> を使"
+"<literal>ResultSetMetadata</literal> を使用するオーバーヘッドを避けるため、も"
+"しくは単に何が返されるか明確にするため、 <literal>addScalar()</literal> を使"
 "えます。"
 
-#. Tag: programlisting
-#: query_sql.xml:65
-#, no-c-format
-msgid ""
-"<![CDATA[sess.createSQLQuery(\"SELECT * FROM CATS\")\n"
-" .addScalar(\"ID\", Hibernate.LONG)\n"
-" .addScalar(\"NAME\", Hibernate.STRING)\n"
-" .addScalar(\"BIRTHDATE\", Hibernate.DATE)\n"
-"]]>"
-msgstr ""
-
 #. Tag: para
-#: query_sql.xml:67 query_sql.xml:113 query_sql.xml:198 query_sql.xml:349
 #, no-c-format
 msgid "This query specified:"
-msgstr "このクエリで指定されているものを下記に示します。"
+msgstr "このクエリで指定されているものを下記に示します:"
 
 #. Tag: para
-#: query_sql.xml:71 query_sql.xml:117 query_sql.xml:353
 #, no-c-format
 msgid "the SQL query string"
-msgstr "SQLクエリ文字列"
+msgstr "SQL クエリ文字列"
 
 #. Tag: para
-#: query_sql.xml:75
 #, no-c-format
 msgid "the columns and types to return"
 msgstr "返されるカラムと型"
 
 #. Tag: para
-#: query_sql.xml:79
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "This will return Object arrays, but now it will not use "
 "<literal>ResultSetMetadata</literal> but will instead explicitly get the ID, "
@@ -146,47 +116,32 @@ msgid ""
 "be returned, even though the query is using <literal>*</literal> and could "
 "return more than the three listed columns."
 msgstr ""
-"これはまだObject配列を返しますが、 <literal>ResultSetMetdata</literal> を使用"
-"しません。 ただし、その代わりに基礎にあるリザルトセットから ID、NAME、"
-"BIRTHDATE カラムをそれぞれ Long、String、Short として明示的に取得します。 こ"
-"れは３つのカラムを返すのみであることも意味します。 たとえ、クエリが "
-"<literal>*</literal> を使用し、 列挙した３つより多くのカラムを返せるとしても"
-"です。"
+"これはまだ Object 配列を返しますが、 <literal>ResultSetMetdata</literal> を使"
+"用しません。ただし、その代わりに基礎にあるリザルトセットから ID、NAME、"
+"BIRTHDATE カラムをそれぞれ Long、String、Short として明示的に取得します。これ"
+"は３つのカラムを返すのみであることも意味します。たとえ、クエリが <literal>*</"
+"literal> を使用し、列挙した３つより多くのカラムを返せるとしてもです。"
 
 #. Tag: para
-#: query_sql.xml:87
 #, no-c-format
 msgid ""
 "It is possible to leave out the type information for all or some of the "
 "scalars."
 msgstr "スカラーの型情報を省くこともできます。"
 
-#. Tag: programlisting
-#: query_sql.xml:90
-#, no-c-format
-msgid ""
-"<![CDATA[sess.createSQLQuery(\"SELECT * FROM CATS\")\n"
-" .addScalar(\"ID\", Hibernate.LONG)\n"
-" .addScalar(\"NAME\")\n"
-" .addScalar(\"BIRTHDATE\")\n"
-"]]>"
-msgstr ""
-
 #. Tag: para
-#: query_sql.xml:92
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "This is essentially the same query as before, but now "
 "<literal>ResultSetMetaData</literal> is used to determine the type of NAME "
 "and BIRTHDATE, where as the type of ID is explicitly specified."
 msgstr ""
-"これは本質的に前と同じクエリですが、、 NAME と BIRTHDATE の型を決めるために "
-"<literal>ResultSetMetaData</literal> を使用します。一方、ID の型は明示的に指"
+"これは本質的に前と同じクエリですが、 NAME と BIRTHDATE の型を決めるために "
+"<literal>ResultSetMetaData</literal> を使用します。一方、 ID の型は明示的に指"
 "定されています。"
 
 #. Tag: para
-#: query_sql.xml:96
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "How the java.sql.Types returned from ResultSetMetaData is mapped to "
 "Hibernate types is controlled by the Dialect. If a specific type is not "
@@ -194,18 +149,16 @@ msgid ""
 "it via calls to <literal>registerHibernateType</literal> in the Dialect."
 msgstr ""
 "ResultSetMetaData から返される java.sql.Types を Hibernate の型に マッピング"
-"することは、Dialect が制御します。 明示された型がマッピングされていないか、結"
+"することは、 Dialect が制御します。明示された型がマッピングされていないか、結"
 "果の型が期待したものと異なる場合、 Dialect の "
-"<literal>registerHibernateType</literal> を呼び出し、 カスタマイズできます。"
+"<literal>registerHibernateType</literal> を呼び出し、カスタマイズできます。"
 
 #. Tag: title
-#: query_sql.xml:104
 #, no-c-format
 msgid "Entity queries"
 msgstr "エンティティのクエリ"
 
 #. Tag: para
-#: query_sql.xml:106
 #, no-c-format
 msgid ""
 "The above queries were all about returning scalar values, basically "
@@ -213,40 +166,27 @@ msgid ""
 "get entity objects from a native sql query via <literal>addEntity()</"
 "literal>."
 msgstr ""
-"ここまでのクエリは、すべてスカラー値を返すものでした。 基本的に、リザルトセッ"
-"トから「未加工」の値を返します。 以降では、<literal>addEntity()</literal> に"
-"より、ネイティブSQLクエリから エンティティオブジェクトを取得する方法を示しま"
+"ここまでのクエリは、すべてスカラー値を返すものでした。基本的に、リザルトセッ"
+"トから「未加工」の値を返します。以降では、 <literal>addEntity()</literal> に"
+"より、ネイティブ SQL クエリからエンティティオブジェクトを取得する方法を示しま"
 "す。"
 
-#. Tag: programlisting
-#: query_sql.xml:111
-#, no-c-format
-msgid ""
-"<![CDATA[sess.createSQLQuery(\"SELECT * FROM CATS\").addEntity(Cat.class);\n"
-"sess.createSQLQuery(\"SELECT ID, NAME, BIRTHDATE FROM CATS\").addEntity(Cat."
-"class);\n"
-"]]>"
-msgstr ""
-
 #. Tag: para
-#: query_sql.xml:121
 #, no-c-format
 msgid "the entity returned by the query"
-msgstr "クエリが返すエンティティとSQLテーブルの別名"
+msgstr "クエリが返すエンティティと SQL テーブルの別名"
 
 #. Tag: para
-#: query_sql.xml:125
 #, no-c-format
 msgid ""
 "Assuming that Cat is mapped as a class with the columns ID, NAME and "
 "BIRTHDATE the above queries will both return a List where each element is a "
 "Cat entity."
 msgstr ""
-"CatがID, NAME, BIRTHDATEのカラムを使ってクラスにマッピングされる場合、 上記の"
-"クエリはどちらも、要素がCatエンティティであるリストを返します。"
+"Cat が ID 、 NAME 、 BIRTHDATE のカラムを使ってクラスにマッピングされる場合、"
+"上記のクエリはどちらも、要素が Cat エンティティであるリストを返します。"
 
 #. Tag: para
-#: query_sql.xml:129
 #, no-c-format
 msgid ""
 "If the entity is mapped with a <literal>many-to-one</literal> to another "
@@ -257,35 +197,23 @@ msgid ""
 "to-one</literal> to a <literal>Dog</literal>:"
 msgstr ""
 "エンティティを別のエンティティに <literal>多対一</literal> でマッピングしてい"
-"る場合は、 ネイティブクエリを実行する際に、この別のエンティティを返すことも要"
-"求します。 さもなければ、データベース固有の「column not found(カラムが見つか"
-"りません)」エラーが発生します。 * 表記を使用した際は、追加のカラムが自動的に"
-"返されますが、 次の例のように、<literal>Dog</literal> に <literal>多対一</"
-"literal> であることを 明示することを私たちは好みます。"
-
-#. Tag: programlisting
-#: query_sql.xml:137
-#, no-c-format
-msgid ""
-"<![CDATA[sess.createSQLQuery(\"SELECT ID, NAME, BIRTHDATE, DOG_ID FROM CATS"
-"\").addEntity(Cat.class);\n"
-"]]>"
-msgstr ""
+"る場合は、ネイティブクエリを実行する際に、この別のエンティティを返すことも要"
+"求します。さもなければ、データベース固有の「column not found(カラムが見つかり"
+"ません)」エラーが発生します。 * 表記を使用した際は、追加のカラムが自動的に返"
+"されますが、次の例のように、 <literal>Dog</literal> に <literal>多対一</"
+"literal> であることを明示することを私たちは好みます。"
 
 #. Tag: para
-#: query_sql.xml:139
 #, no-c-format
 msgid "This will allow cat.getDog() to function properly."
 msgstr "これにより cat.getDog() が正しく機能します。"
 
 #. Tag: title
-#: query_sql.xml:143
 #, no-c-format
 msgid "Handling associations and collections"
 msgstr "関連とコレクションの操作"
 
 #. Tag: para
-#: query_sql.xml:145
 #, no-c-format
 msgid ""
 "It is possible to eagerly join in the <literal>Dog</literal> to avoid the "
@@ -294,23 +222,11 @@ msgid ""
 "association or collection."
 msgstr ""
 "プロキシを初期化するための余分な処理を避けるため、 <literal>Dog</literal> の"
-"中で即時結合できます。 これは <literal>addJoin()</literal> メソッドにより行い"
-"ます。 関連もしくはコレクションに結合できます。"
-
-#. Tag: programlisting
-#: query_sql.xml:150
-#, no-c-format
-msgid ""
-"<![CDATA[sess.createSQLQuery(\"SELECT c.ID, NAME, BIRTHDATE, DOG_ID, D_ID, "
-"D_NAME FROM CATS c, DOGS d WHERE c.DOG_ID = d.D_ID\")\n"
-" .addEntity(\"cat\", Cat.class)\n"
-" .addJoin(\"cat.dog\");\n"
-"]]>"
-msgstr ""
+"中で即時結合できます。これは <literal>addJoin()</literal> メソッドにより行い"
+"ます。関連もしくはコレクションに結合できます。"
 
 #. Tag: para
-#: query_sql.xml:152
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "In this example, the returned <literal>Cat</literal>'s will have their "
 "<literal>dog</literal> property fully initialized without any extra "
@@ -319,80 +235,53 @@ msgid ""
 "do the same eager joining for collections, e.g. if the <literal>Cat</"
 "literal> had a one-to-many to <literal>Dog</literal> instead."
 msgstr ""
-"この例の中で、返される <literal>Cat</literal> は、 データベースへの余分処理な"
-"しで、 完全に初期化された <literal>dog</literal> プロパティを持ちます。 結合"
-"対象のプロパティへのパスを指定できるように、 別名（「cat」）を追加したことに"
-"注意してください。 コレクションの即時結合も同じようにできます。 たとえば、"
+"この例の中で、返される <literal>Cat</literal> は、データベースへの余分処理な"
+"しで、完全に初期化された <literal>dog</literal> プロパティを持ちます。結合対"
+"象のプロパティへのパスを指定できるように、別名（「cat」）を追加したことに注意"
+"してください。コレクションの即時結合も同じようにできます。たとえば、 "
 "<literal>Cat</literal> が一対多で <literal>Dog</literal> を持っていた場合、次"
 "のようになります。"
 
-#. Tag: programlisting
-#: query_sql.xml:160
-#, no-c-format
-msgid ""
-"<![CDATA[sess.createSQLQuery(\"SELECT ID, NAME, BIRTHDATE, D_ID, D_NAME, "
-"CAT_ID FROM CATS c, DOGS d WHERE c.ID = d.CAT_ID\")\n"
-" .addEntity(\"cat\", Cat.class)\n"
-" .addJoin(\"cat.dogs\");\n"
-"]]>"
-msgstr ""
-
 #. Tag: para
-#: query_sql.xml:162
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "At this stage you are reaching the limits of what is possible with native "
 "queries, without starting to enhance the sql queries to make them usable in "
 "Hibernate. Problems can arise when returning multiple entities of the same "
 "type or when the default alias/column names are not enough."
 msgstr ""
-"現在のところ、 Hibernateで使いやすくするためのSQLクエリの拡張なしに、 ネイ"
-"ティブクエリで何かを可能にする限界に来ています。 同じ型のエンティティを複数返"
-"す際や、デフォルトの別名や列名で十分ではない場合に、 問題は起こり始めます。"
+"現在のところ、 Hibernate で使いやすくするための SQL クエリの拡張なしに、ネイ"
+"ティブクエリで何かを可能にする限界に来ています。同じ型のエンティティを複数返"
+"す際や、デフォルトの別名や列名で十分ではない場合に、問題は起こり始めます。"
 
 #. Tag: title
-#: query_sql.xml:170
 #, no-c-format
 msgid "Returning multiple entities"
 msgstr "複数エンティティの取得"
 
 #. Tag: para
-#: query_sql.xml:172
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "Until now, the result set column names are assumed to be the same as the "
 "column names specified in the mapping document. This can be problematic for "
 "SQL queries that join multiple tables, since the same column names can "
 "appear in more than one table."
 msgstr ""
-"ここまでは、リザルトセットのカラム名は、 マッピングファイルで指定されたカラム"
-"名と同じであると仮定していました。 複数のテーブルが同じカラム名を持つ場合があ"
-"るため、 複数テーブルを結合するSQLクエリで問題となる場合があります。"
+"ここまでは、リザルトセットのカラム名は、マッピングドキュメントで指定されたカ"
+"ラム名と同じであると仮定していました。複数のテーブルが同じカラム名を持つ場合"
+"があるため、複数テーブルを結合する SQL クエリで問題となる場合があります。"
 
 #. Tag: para
-#: query_sql.xml:177
 #, no-c-format
 msgid ""
 "Column alias injection is needed in the following query (which most likely "
 "will fail):"
 msgstr ""
-"下記のような（失敗しそうな）クエリでは、 カラム別名インジェクション（column "
-"alias injection）が必要です。"
-
-#. Tag: programlisting
-#: query_sql.xml:180
-#, no-c-format
-msgid ""
-"<![CDATA[sess.createSQLQuery(\"SELECT c.*, m.*  FROM CATS c, CATS m WHERE c."
-"MOTHER_ID = c.ID\")\n"
-" .addEntity(\"cat\", Cat.class)\n"
-" .addEntity(\"mother\", Cat.class)\n"
-"]]>"
-msgstr ""
+"下記のような（失敗しそうな）クエリでは、カラム別名インジェクション（column "
+"alias injection）が必要です："
 
 #. Tag: para
-#: query_sql.xml:184
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "The query was intended to return two Cat instances per row: a cat and its "
 "mother. The query will, however, fail because there is a conflict of names; "
@@ -401,48 +290,33 @@ msgid ""
 "NAME\", etc. which are not equal to the columns specified in the mappings "
 "(\"ID\" and \"NAME\")."
 msgstr ""
-"このクエリの意図は、 １行ごとに２つのCatインスタンス、つまり猫とその母親を返"
-"すということです。 同じカラム名にマッピングすることにより名前が衝突するため、"
-"このクエリは失敗します。 ベータベースによっては、返されるカラムの別名が \"c."
-"ID\"、\"c.NAME\" などの形式であり、 マッピングで指定されたカラム（\"ID\" と "
+"このクエリの意図は、１行ごとに２つの Cat インスタンス、つまり猫とその母親を返"
+"すということです。同じカラム名にマッピングすることにより名前が衝突するため、"
+"このクエリは失敗します。ベータベースによっては、返されるカラムの別名が \"c.ID"
+"\"、\"c.NAME\" などの形式であり、マッピングで指定されたカラム（\"ID\" と "
 "\"NAME\"）と等しくないため、失敗します。"
 
 #. Tag: para
-#: query_sql.xml:193
 #, no-c-format
 msgid "The following form is not vulnerable to column name duplication:"
-msgstr "下記の形式は、カラム名が重複しても大丈夫です。"
-
-#. Tag: programlisting
-#: query_sql.xml:196
-#, no-c-format
-msgid ""
-"<![CDATA[sess.createSQLQuery(\"SELECT {cat.*}, {mother.*}  FROM CATS c, CATS "
-"m WHERE c.MOTHER_ID = c.ID\")\n"
-" .addEntity(\"cat\", Cat.class)\n"
-" .addEntity(\"mother\", Cat.class)\n"
-"]]>"
-msgstr ""
+msgstr "下記の形式は、カラム名が重複しても大丈夫です："
 
 #. Tag: para
-#: query_sql.xml:202
 #, no-c-format
 msgid ""
 "the SQL query string, with placeholders for Hibernate to inject column "
 "aliases"
 msgstr ""
-"SQLクエリ文字列 （Hibernateがカラムの別名を挿入するためのプレースホルダを含"
+"SQL クエリ文字列 （Hibernate がカラムの別名を挿入するためのプレースホルダを含"
 "む）"
 
 #. Tag: para
-#: query_sql.xml:207
 #, no-c-format
 msgid "the entities returned by the query"
 msgstr "クエリによって返されるエンティティ"
 
 #. Tag: para
-#: query_sql.xml:211
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "The {cat.*} and {mother.*} notation used above is a shorthand for \"all "
 "properties\". Alternatively, you can list the columns explicitly, but even "
@@ -452,390 +326,287 @@ msgid ""
 "from a different table (cat_log) to the one declared in the mapping "
 "metadata. You can even use the property aliases in the where clause."
 msgstr ""
-"上記で使用している {cat.*} と {mother.*} という表記は、 「すべてのプロパ"
-"ティ」を表す省略形です。 代わりに、明示的にカラムを列挙してもよいですが、 そ"
-"の場合は、Hibernateに各プロパティに対応するSQLカラムの別名を挿入させるべきで"
-"しょう。 カラムの別名のためのプレースホルダは、テーブルの別名によって修飾され"
-"たプロパティ名です。 下記の例では、別のテーブル cat_log から マッピングメタ"
-"データで定義された Cat とその母親を復元します。 もし好むなら、where節の中で"
+"上記で使用している {cat.*} と {mother.*} という表記は、「すべてのプロパティ」"
+"を表す省略形です。代わりに、明示的にカラムを列挙してもよいですが、その場合"
+"は、 Hibernate に各プロパティに対応する SQL カラムの別名を挿入させるべきで"
+"しょう。カラムの別名のためのプレースホルダは、テーブルの別名によって修飾され"
+"たプロパティ名です。下記の例では、別のテーブル cat_log から マッピングメタ"
+"データで定義された Cat とその母親を復元します。もし好むなら、 where 節の中で"
 "も、プロパティの別名を使えます。"
 
-#. Tag: programlisting
-#: query_sql.xml:220
-#, no-c-format
-msgid ""
-"<![CDATA[String sql = \"SELECT ID as {c.id}, NAME as {c.name}, \" + \n"
-"         \"BIRTHDATE as {c.birthDate}, MOTHER_ID as {c.mother}, {mother.*} "
-"\" +\n"
-"         \"FROM CAT_LOG c, CAT_LOG m WHERE {c.mother} = c.ID\";\n"
-"\n"
-"List loggedCats = sess.createSQLQuery(sql)\n"
-"        .addEntity(\"cat\", Cat.class)\n"
-"        .addEntity(\"mother\", Cat.class).list()\n"
-"]]>"
-msgstr ""
-
 #. Tag: title
-#: query_sql.xml:223
 #, no-c-format
 msgid "Alias and property references"
 msgstr "別名とプロパティのリファレンス"
 
 #. Tag: para
-#: query_sql.xml:225
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "In most cases the above alias injection is needed. For queries relating to "
 "more complex mappings, like composite properties, inheritance "
 "discriminators, collections etc., you can use specific aliases that allow "
 "Hibernate to inject the proper aliases."
 msgstr ""
-"多くの場合、上記のような別名インジェクションが必要です。 ただし、複合プロパ"
-"ティ、継承識別子、コレクションなどのような より複雑なマッピングと関連するクエ"
-"リがなければです。 ある特定の別名を使用することにより、Hibernateは適切な別名"
+"多くの場合、上記のような別名インジェクションが必要です。ただし、複合プロパ"
+"ティ、継承識別子、コレクションなどのようなより複雑なマッピングと関連するクエ"
+"リがなければです。ある特定の別名を使用することにより、 Hibernate は適切な別名"
 "を挿入できます。"
 
 #. Tag: para
-#: query_sql.xml:230
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "The following table shows the different ways you can use the alias "
 "injection. Please note that the alias names in the result are simply "
 "examples; each alias will have a unique and probably different name when "
 "used."
 msgstr ""
-"別名インジェクションとして使用できるものを下表に示します。 注意：下表の別名は"
-"一例です。 それぞれの別名は一意であり、使用する際にはおそらく異なる名前を持ち"
+"別名インジェクションとして使用できるものを下表に示します。注記：下表の別名は"
+"一例です。それぞれの別名は一意であり、使用する際にはおそらく異なる名前を持ち"
 "ます。"
 
 #. Tag: title
-#: query_sql.xml:236
 #, no-c-format
 msgid "Alias injection names"
 msgstr "別名に挿入する名前"
 
 #. Tag: entry
-#: query_sql.xml:247
 #, no-c-format
 msgid "Description"
 msgstr "説明"
 
 #. Tag: entry
-#: query_sql.xml:249
 #, no-c-format
 msgid "Syntax"
 msgstr "構文"
 
 #. Tag: entry
-#: query_sql.xml:251
 #, no-c-format
 msgid "Example"
 msgstr "例"
 
 #. Tag: entry
-#: query_sql.xml:257
 #, no-c-format
 msgid "A simple property"
 msgstr "単純なプロパティ"
 
-#. Tag: literal
-#: query_sql.xml:259
-#, no-c-format
-msgid "{[aliasname].[propertyname]"
-msgstr "{[aliasname].[propertyname]}"
-
-#. Tag: literal
-#: query_sql.xml:261
-#, no-c-format
-msgid "A_NAME as {item.name}"
-msgstr "A_NAME as {item.name}"
+#. Tag: entry
+#, fuzzy, no-c-format
+msgid "<literal>{[aliasname].[propertyname]</literal>"
+msgstr "<literal>{[aliasname].[propertyname]</literal>"
 
 #. Tag: entry
-#: query_sql.xml:265
+#, fuzzy, no-c-format
+msgid "<literal>A_NAME as {item.name}</literal>"
+msgstr "<literal>{item.*}</literal>"
+
+#. Tag: entry
 #, no-c-format
 msgid "A composite property"
 msgstr "複合プロパティ"
 
-#. Tag: literal
-#: query_sql.xml:267
-#, no-c-format
-msgid "{[aliasname].[componentname].[propertyname]}"
-msgstr "{[aliasname].[componentname].[propertyname]}"
-
-#. Tag: literal
-#: query_sql.xml:269
-#, no-c-format
-msgid "CURRENCY as {item.amount.currency}, VALUE as {item.amount.value}"
-msgstr "CURRENCY as {item.amount.currency}, VALUE as {item.amount.value}"
+#. Tag: entry
+#, fuzzy, no-c-format
+msgid "<literal>{[aliasname].[componentname].[propertyname]}</literal>"
+msgstr "<literal>{[aliasname].[componentname].[propertyname]}</literal>"
 
 #. Tag: entry
-#: query_sql.xml:274
+#, fuzzy, no-c-format
+msgid ""
+"<literal>CURRENCY as {item.amount.currency}, VALUE as {item.amount.value}</"
+"literal>"
+msgstr ""
+"<literal>CURRENCY as {item.amount.currency}, VALUE as {item.amount.value}</"
+"literal>"
+
+#. Tag: entry
 #, no-c-format
 msgid "Discriminator of an entity"
 msgstr "エンティティのクラスを識別する値"
 
-#. Tag: literal
-#: query_sql.xml:276
-#, no-c-format
-msgid "{[aliasname].class}"
-msgstr "{[aliasname].class}"
-
-#. Tag: literal
-#: query_sql.xml:278
-#, no-c-format
-msgid "DISC as {item.class}"
-msgstr "DISC as {item.class}"
+#. Tag: entry
+#, fuzzy, no-c-format
+msgid "<literal>{[aliasname].class}</literal>"
+msgstr "<literal>{item.*}</literal>"
 
 #. Tag: entry
-#: query_sql.xml:282
+#, fuzzy, no-c-format
+msgid "<literal>DISC as {item.class}</literal>"
+msgstr "<literal>{item.*}</literal>"
+
+#. Tag: entry
 #, no-c-format
 msgid "All properties of an entity"
 msgstr "エンティティの全プロパティ"
 
-#. Tag: literal
-#: query_sql.xml:284 query_sql.xml:332
-#, no-c-format
-msgid "{[aliasname].*}"
-msgstr "{[aliasname].*}"
-
-#. Tag: literal
-#: query_sql.xml:286
-#, no-c-format
-msgid "{item.*}"
-msgstr "{item.*}"
+#. Tag: entry
+#, fuzzy, no-c-format
+msgid "<literal>{[aliasname].*}</literal>"
+msgstr "<literal>{item.*}</literal>"
 
 #. Tag: entry
-#: query_sql.xml:290
+#, no-c-format
+msgid "<literal>{item.*}</literal>"
+msgstr "<literal>{item.*}</literal>"
+
+#. Tag: entry
 #, no-c-format
 msgid "A collection key"
 msgstr "コレクションのキー"
 
-#. Tag: literal
-#: query_sql.xml:292
-#, no-c-format
-msgid "{[aliasname].key}"
-msgstr "{[aliasname].key}"
-
-#. Tag: literal
-#: query_sql.xml:294
-#, no-c-format
-msgid "ORGID as {coll.key}"
-msgstr "ORGID as {coll.key}"
+#. Tag: entry
+#, fuzzy, no-c-format
+msgid "<literal>{[aliasname].key}</literal>"
+msgstr "<literal>{item.*}</literal>"
 
 #. Tag: entry
-#: query_sql.xml:298
+#, fuzzy, no-c-format
+msgid "<literal>ORGID as {coll.key}</literal>"
+msgstr "<literal>{coll.*}</literal>"
+
+#. Tag: entry
 #, no-c-format
 msgid "The id of an collection"
-msgstr "コレクションのID"
-
-#. Tag: literal
-#: query_sql.xml:300
-#, no-c-format
-msgid "{[aliasname].id}"
-msgstr "{[aliasname].id}"
-
-#. Tag: literal
-#: query_sql.xml:302
-#, no-c-format
-msgid "EMPID as {coll.id}"
-msgstr "EMPID as {coll.id}"
+msgstr "コレクションの ID"
 
 #. Tag: entry
-#: query_sql.xml:306
+#, fuzzy, no-c-format
+msgid "<literal>{[aliasname].id}</literal>"
+msgstr "<literal>{item.*}</literal>"
+
+#. Tag: entry
+#, fuzzy, no-c-format
+msgid "<literal>EMPID as {coll.id}</literal>"
+msgstr "<literal>{coll.*}</literal>"
+
+#. Tag: entry
 #, no-c-format
 msgid "The element of an collection"
 msgstr "コレクションの要素"
 
-#. Tag: literal
-#: query_sql.xml:308
-#, no-c-format
-msgid "{[aliasname].element}"
-msgstr "{[aliasname].element}"
-
-#. Tag: literal
-#: query_sql.xml:310
-#, no-c-format
-msgid "XID as {coll.element}"
-msgstr "XID as {coll.element}"
+#. Tag: entry
+#, fuzzy, no-c-format
+msgid "<literal>{[aliasname].element}</literal>"
+msgstr "<literal>{coll.element.*}</literal>"
 
 #. Tag: entry
-#: query_sql.xml:314
 #, fuzzy, no-c-format
+msgid "<literal>XID as {coll.element}</literal>"
+msgstr "<literal>{coll.element.*}</literal>"
+
+#. Tag: entry
+#, no-c-format
 msgid "property of the element in the collection"
 msgstr "コレクションの要素のプロパティ"
 
-#. Tag: literal
-#: query_sql.xml:316
-#, no-c-format
-msgid "{[aliasname].element.[propertyname]}"
-msgstr "{[aliasname].element.[propertyname]}"
-
-#. Tag: literal
-#: query_sql.xml:318
-#, no-c-format
-msgid "NAME as {coll.element.name}"
-msgstr "NAME as {coll.element.name}"
+#. Tag: entry
+#, fuzzy, no-c-format
+msgid "<literal>{[aliasname].element.[propertyname]}</literal>"
+msgstr "<literal>{[aliasname].element.[propertyname]}</literal>"
 
 #. Tag: entry
-#: query_sql.xml:322
+#, fuzzy, no-c-format
+msgid "<literal>NAME as {coll.element.name}</literal>"
+msgstr "<literal>{coll.element.*}</literal>"
+
+#. Tag: entry
 #, no-c-format
 msgid "All properties of the element in the collection"
 msgstr "コレクションの要素の全プロパティ"
 
-#. Tag: literal
-#: query_sql.xml:324
-#, no-c-format
-msgid "{[aliasname].element.*}"
-msgstr "{[aliasname].element.*}"
-
-#. Tag: literal
-#: query_sql.xml:326
-#, no-c-format
-msgid "{coll.element.*}"
-msgstr "{coll.element.*}"
+#. Tag: entry
+#, fuzzy, no-c-format
+msgid "<literal>{[aliasname].element.*}</literal>"
+msgstr "<literal>{coll.element.*}</literal>"
 
 #. Tag: entry
-#: query_sql.xml:330
+#, no-c-format
+msgid "<literal>{coll.element.*}</literal>"
+msgstr "<literal>{coll.element.*}</literal>"
+
+#. Tag: entry
 #, no-c-format
 msgid "All properties of the the collection"
 msgstr "コレクションの全プロパティ"
 
-#. Tag: literal
-#: query_sql.xml:334
+#. Tag: entry
 #, no-c-format
-msgid "{coll.*}"
-msgstr "{coll.*}"
+msgid "<literal>{coll.*}</literal>"
+msgstr "<literal>{coll.*}</literal>"
 
 #. Tag: title
-#: query_sql.xml:343
 #, no-c-format
 msgid "Returning non-managed entities"
 msgstr "管理されていないエンティティの取得"
 
 #. Tag: para
-#: query_sql.xml:345
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "It is possible to apply a ResultTransformer to native SQL queries, allowing "
 "it to return non-managed entities."
 msgstr ""
-"ネイティブSQLクエリに ResultTransformer を適用できます。 下記のように、例え"
+"ネイティブ SQL クエリに ResultTransformer を適用できます。下記のように、例え"
 "ば、管理されていないエンティティを返します。"
 
-#. Tag: programlisting
-#: query_sql.xml:347
-#, no-c-format
-msgid ""
-"<![CDATA[sess.createSQLQuery(\"SELECT NAME, BIRTHDATE FROM CATS\")\n"
-"        .setResultTransformer(Transformers.aliasToBean(CatDTO.class))]]>"
-msgstr ""
-
 #. Tag: para
-#: query_sql.xml:357
 #, no-c-format
 msgid "a result transformer"
 msgstr "結果を変換したもの"
 
 #. Tag: para
-#: query_sql.xml:361
 #, no-c-format
 msgid ""
 "The above query will return a list of <literal>CatDTO</literal> which has "
 "been instantiated and injected the values of NAME and BIRTHNAME into its "
 "corresponding properties or fields."
 msgstr ""
-"上記のクエリは、インスタンス化し、NAME と BIRTHDATE の値を 対応するプロパティ"
+"上記のクエリは、インスタンス化し、 NAME と BIRTHDATE の値を対応するプロパティ"
 "もしくはフィールドに挿入した <literal>CatDTO</literal> のリストを返します。"
 
 #. Tag: title
-#: query_sql.xml:368
 #, no-c-format
 msgid "Handling inheritance"
 msgstr "継承の制御"
 
 #. Tag: para
-#: query_sql.xml:370
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "Native SQL queries which query for entities that are mapped as part of an "
 "inheritance must include all properties for the baseclass and all its "
 "subclasses."
 msgstr ""
-"継承の一部としてマッピングされたエンティティを問い合わせるネイティブSQLクエリ"
-"は、 ベースのクラスとそのすべてのサブクラスのプロパティすべてを含まなければな"
-"りません。"
+"継承の一部としてマッピングされたエンティティを問い合わせるネイティブ SQL クエ"
+"リは、ベースのクラスとそのすべてのサブクラスのプロパティすべてを含まなければ"
+"なりません。"
 
 #. Tag: title
-#: query_sql.xml:376
 #, no-c-format
 msgid "Parameters"
 msgstr "パラメータ"
 
 #. Tag: para
-#: query_sql.xml:378
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "Native SQL queries support positional as well as named parameters:"
 msgstr ""
-"ネイティブSQLクエリは、以下のように、 名前付きパラメータ（:name）と同様に位置"
-"パラメータをサポートします。"
-
-#. Tag: programlisting
-#: query_sql.xml:381
-#, no-c-format
-msgid ""
-"<![CDATA[Query query = sess.createSQLQuery(\"SELECT * FROM CATS WHERE NAME "
-"like ?\").addEntity(Cat.class);\n"
-"List pusList = query.setString(0, \"Pus%\").list();\n"
-"     \n"
-"query = sess.createSQLQuery(\"SELECT * FROM CATS WHERE NAME like :name\")."
-"addEntity(Cat.class);\n"
-"List pusList = query.setString(\"name\", \"Pus%\").list();          ]]>"
-msgstr ""
+"ネイティブ SQL クエリは、以下のように、名前付きパラメータ（:name）と同様に位"
+"置パラメータをサポートします:"
 
 #. Tag: title
-#: query_sql.xml:389
 #, no-c-format
 msgid "Named SQL queries"
-msgstr "名前付きSQLクエリ"
+msgstr "名前付き SQL クエリ"
 
 #. Tag: para
-#: query_sql.xml:391
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "Named SQL queries can be defined in the mapping document and called in "
 "exactly the same way as a named HQL query. In this case, you do "
 "<emphasis>not</emphasis> need to call <literal>addEntity()</literal>."
 msgstr ""
-"名前付きSQLクエリはマッピングドキュメントで定義することができ、 名前付きHQLク"
-"エリと全く同じ方法で呼ぶことができます。 この場合、<literal>addEntity()</"
-"literal> を呼び出す必要は <emphasis>ない</emphasis> です。"
-
-#. Tag: programlisting
-#: query_sql.xml:396
-#, no-c-format
-msgid ""
-"<![CDATA[<sql-query name=\"persons\">\n"
-"    <return alias=\"person\" class=\"eg.Person\"/>\n"
-"    SELECT person.NAME AS {person.name},\n"
-"           person.AGE AS {person.age},\n"
-"           person.SEX AS {person.sex}\n"
-"    FROM PERSON person\n"
-"    WHERE person.NAME LIKE :namePattern\n"
-"</sql-query>]]>"
-msgstr ""
-
-#. Tag: programlisting
-#: query_sql.xml:398
-#, no-c-format
-msgid ""
-"<![CDATA[List people = sess.getNamedQuery(\"persons\")\n"
-"    .setString(\"namePattern\", namePattern)\n"
-"    .setMaxResults(50)\n"
-"    .list();]]>"
-msgstr ""
+"名前付き SQL クエリはマッピングドキュメントで定義することができ、名前付き "
+"HQL クエリと全く同じ方法で呼ぶことができます。この場合、 <literal>addEntity()"
+"</literal> を呼び出す必要は <emphasis>ありません</emphasis> 。"
 
 #. Tag: para
-#: query_sql.xml:400
 #, fuzzy, no-c-format
 msgid ""
 "The <literal>&lt;return-join&gt;</literal> element is use to join "
@@ -846,182 +617,66 @@ msgstr ""
 "<literal>&lt;return-join&gt;</literal> と <literal>&lt;load-collection&gt;</"
 "literal> 要素を使います。"
 
-#. Tag: programlisting
-#: query_sql.xml:404
-#, no-c-format
-msgid ""
-"<![CDATA[<sql-query name=\"personsWith\">\n"
-"    <return alias=\"person\" class=\"eg.Person\"/>\n"
-"    <return-join alias=\"address\" property=\"person.mailingAddress\"/>\n"
-"    SELECT person.NAME AS {person.name},\n"
-"           person.AGE AS {person.age},\n"
-"           person.SEX AS {person.sex},\n"
-"           address.STREET AS {address.street},\n"
-"           address.CITY AS {address.city},\n"
-"           address.STATE AS {address.state},\n"
-"           address.ZIP AS {address.zip}\n"
-"    FROM PERSON person\n"
-"    JOIN ADDRESS address\n"
-"        ON person.ID = address.PERSON_ID AND address.TYPE='MAILING'\n"
-"    WHERE person.NAME LIKE :namePattern\n"
-"</sql-query>]]>"
-msgstr ""
-
 #. Tag: para
-#: query_sql.xml:406
 #, no-c-format
 msgid ""
 "A named SQL query may return a scalar value. You must declare the column "
 "alias and Hibernate type using the <literal>&lt;return-scalar&gt;</literal> "
 "element:"
 msgstr ""
-"名前付きSQLクエリはスカラ値を返すこともできます。 <literal>&lt;return-"
-"scalar&gt;</literal> 要素を使って、 列の別名とHibernateの型を宣言しなければな"
-"りません。"
-
-#. Tag: programlisting
-#: query_sql.xml:410
-#, no-c-format
-msgid ""
-"<![CDATA[<sql-query name=\"mySqlQuery\">\n"
-"    <return-scalar column=\"name\" type=\"string\"/>\n"
-"    <return-scalar column=\"age\" type=\"long\"/>\n"
-"    SELECT p.NAME AS name,\n"
-"           p.AGE AS age,\n"
-"    FROM PERSON p WHERE p.NAME LIKE 'Hiber%'\n"
-"</sql-query>]]>"
-msgstr ""
+"名前付き SQL クエリはスカラ値を返すこともできます。 <literal>&lt;return-"
+"scalar&gt;</literal> 要素を使って、列の別名と Hibernate の型を宣言しなければ"
+"なりません:"
 
 #. Tag: para
-#: query_sql.xml:412
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "You can externalize the resultset mapping information in a <literal>&lt;"
 "resultset&gt;</literal> element which will allow you to either reuse them "
 "across several named queries or through the <literal>setResultSetMapping()</"
 "literal> API."
 msgstr ""
-"リザルトセットのマッピング情報を <literal>&lt;resultset&gt;</literal> に外出"
-"しすることができます。 複数の名前付きクエリで再利用したり、"
-"<literal>setResultSetMapping()</literal> APIを通して再利用したりできます。"
-
-#. Tag: programlisting
-#: query_sql.xml:417
-#, no-c-format
-msgid ""
-"<![CDATA[<resultset name=\"personAddress\">\n"
-"    <return alias=\"person\" class=\"eg.Person\"/>\n"
-"    <return-join alias=\"address\" property=\"person.mailingAddress\"/>\n"
-"</resultset>\n"
-"\n"
-"<sql-query name=\"personsWith\" resultset-ref=\"personAddress\">\n"
-"    SELECT person.NAME AS {person.name},\n"
-"           person.AGE AS {person.age},\n"
-"           person.SEX AS {person.sex},\n"
-"           address.STREET AS {address.street},\n"
-"           address.CITY AS {address.city},\n"
-"           address.STATE AS {address.state},\n"
-"           address.ZIP AS {address.zip}\n"
-"    FROM PERSON person\n"
-"    JOIN ADDRESS address\n"
-"        ON person.ID = address.PERSON_ID AND address.TYPE='MAILING'\n"
-"    WHERE person.NAME LIKE :namePattern\n"
-"</sql-query>]]>"
-msgstr ""
+"リザルトセットのマッピング情報を <literal>&lt;resultset&gt;</literal> に外部"
+"化することができます。複数の名前付きクエリで再利用したり、 "
+"<literal>setResultSetMapping()</literal> API を通して再利用したりできます。"
 
 #. Tag: para
-#: query_sql.xml:419
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "You can, alternatively, use the resultset mapping information in your hbm "
 "files directly in java code."
 msgstr ""
-"代わりに、hbmファイル内のリザルトセットのマッピング情報を 直接Javaコードの中"
-"で使用できます。"
-
-#. Tag: programlisting
-#: query_sql.xml:422
-#, no-c-format
-msgid ""
-"<![CDATA[List cats = sess.createSQLQuery(\n"
-"        \"select {cat.*}, {kitten.*} from cats cat, cats kitten where kitten."
-"mother = cat.id\"\n"
-"    )\n"
-"    .setResultSetMapping(\"catAndKitten\")\n"
-"    .list();]]>"
-msgstr ""
+"代わりに、 hbm ファイル内のリザルトセットのマッピング情報を直接 Java コードの"
+"中で使用できます。"
 
 #. Tag: title
-#: query_sql.xml:425
 #, no-c-format
 msgid "Using return-property to explicitly specify column/alias names"
 msgstr "列と列の別名を明示的に指定するために return-property を使う"
 
 #. Tag: para
-#: query_sql.xml:428
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "You can explicitly tell Hibernate what column aliases to use with "
 "<literal>&lt;return-property&gt;</literal>, instead of using the <literal>{}"
 "</literal>-syntax to let Hibernate inject its own aliases.For example:"
 msgstr ""
 "別名を挿入するために <literal>{}</literal> 構文を使う代わりに、 <literal>&lt;"
-"return-property&gt;</literal> を使い、 どの列の別名を使うのかを明示できます。"
-
-#. Tag: programlisting
-#: query_sql.xml:433
-#, no-c-format
-msgid ""
-"<![CDATA[<sql-query name=\"mySqlQuery\">\n"
-"    <return alias=\"person\" class=\"eg.Person\">\n"
-"        <return-property name=\"name\" column=\"myName\"/>\n"
-"        <return-property name=\"age\" column=\"myAge\"/>\n"
-"        <return-property name=\"sex\" column=\"mySex\"/>\n"
-"    </return>\n"
-"    SELECT person.NAME AS myName,\n"
-"           person.AGE AS myAge,\n"
-"           person.SEX AS mySex,\n"
-"    FROM PERSON person WHERE person.NAME LIKE :name\n"
-"</sql-query>\n"
-"]]>"
-msgstr ""
+"return-property&gt;</literal> を使い、どの列の別名を使うのかを明示できます。"
 
 #. Tag: para
-#: query_sql.xml:435
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "<literal>&lt;return-property&gt;</literal> also works with multiple columns. "
 "This solves a limitation with the <literal>{}</literal>-syntax which cannot "
 "allow fine grained control of multi-column properties."
 msgstr ""
-"<literal>&lt;return-property&gt;</literal> は複数の列も扱えます。 これは、複"
-"数列のプロパティをきめ細かく制御できないという、 <literal>{}</literal> 構文の"
-"制限を解決します。"
-
-#. Tag: programlisting
-#: query_sql.xml:440
-#, no-c-format
-msgid ""
-"<![CDATA[<sql-query name=\"organizationCurrentEmployments\">\n"
-"    <return alias=\"emp\" class=\"Employment\">\n"
-"        <return-property name=\"salary\">\n"
-"            <return-column name=\"VALUE\"/>\n"
-"            <return-column name=\"CURRENCY\"/>\n"
-"        </return-property>\n"
-"        <return-property name=\"endDate\" column=\"myEndDate\"/>\n"
-"    </return>\n"
-"        SELECT EMPLOYEE AS {emp.employee}, EMPLOYER AS {emp.employer},\n"
-"        STARTDATE AS {emp.startDate}, ENDDATE AS {emp.endDate},\n"
-"        REGIONCODE as {emp.regionCode}, EID AS {emp.id}, VALUE, CURRENCY\n"
-"        FROM EMPLOYMENT\n"
-"        WHERE EMPLOYER = :id AND ENDDATE IS NULL\n"
-"        ORDER BY STARTDATE ASC\n"
-"</sql-query>]]>"
-msgstr ""
+"<literal>&lt;return-property&gt;</literal> は複数の列も扱えます。これは、複数"
+"列のプロパティをきめ細かく制御できないという、 <literal>{}</literal> 構文の制"
+"限を解決します。"
 
 #. Tag: para
-#: query_sql.xml:442
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "In this example <literal>&lt;return-property&gt;</literal> was used in "
 "combination with the <literal>{}</literal>-syntax for injection. This allows "
@@ -1029,27 +684,25 @@ msgid ""
 msgstr ""
 "この例では、挿入のための <literal>{}</literal> 構文といっしょに、 "
 "<literal>&lt;return-property&gt;</literal> を使っていることに注意してくださ"
-"い。 列とプロパティをどのように参照するかを選べます。"
+"い。列とプロパティをどのように参照するかを選べます。"
 
 #. Tag: para
-#: query_sql.xml:447
 #, no-c-format
 msgid ""
 "If your mapping has a discriminator you must use <literal>&lt;return-"
 "discriminator&gt;</literal> to specify the discriminator column."
 msgstr ""
 "マッピングに discriminator が含まれている場合、 discriminator の列を指定する"
-"ために、&lt;return-discriminator&gt; を使わなければなりません。"
+"ために、 <literal>&lt;return-discriminator&gt;</literal> を使わなければなりま"
+"せん。"
 
 #. Tag: title
-#: query_sql.xml:453
 #, no-c-format
 msgid "Using stored procedures for querying"
 msgstr "問い合わせするためにストアドプロシージャを使う"
 
 #. Tag: para
-#: query_sql.xml:455
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "Hibernate3 provides support for queries via stored procedures and functions. "
 "Most of the following documentation is equivalent for both. The stored "
@@ -1057,80 +710,37 @@ msgid ""
 "able to work with Hibernate. An example of such a stored function in Oracle "
 "9 and higher is as follows:"
 msgstr ""
-"Hibernateはバージョン3から、ストアドプロシージャとストアド関数経由の問い合わ"
-"せが サポートされました。 以降の文書の多くは、両方に当てはまります。 ストアド"
-"プロシージャやストアド関数をHibernateで使うためには、 1番目の出力パラメータと"
+"Hibernate はバージョン3から、ストアドプロシージャとストアド関数経由の問い合わ"
+"せがサポートされました。以降の文書の多くは、両方に当てはまります。ストアドプ"
+"ロシージャやストアド関数を Hibernate で使うためには、1番目の出力パラメータと"
 "してリザルトセットを返さなければなりません。 Oracle 9（もしくはそれ以上のバー"
-"ジョン）のストアドプロシージャの例を以下に示します。"
-
-#. Tag: programlisting
-#: query_sql.xml:461
-#, no-c-format
-msgid ""
-"<![CDATA[CREATE OR REPLACE FUNCTION selectAllEmployments\n"
-"    RETURN SYS_REFCURSOR\n"
-"AS\n"
-"    st_cursor SYS_REFCURSOR;\n"
-"BEGIN\n"
-"    OPEN st_cursor FOR\n"
-" SELECT EMPLOYEE, EMPLOYER,\n"
-" STARTDATE, ENDDATE,\n"
-" REGIONCODE, EID, VALUE, CURRENCY\n"
-" FROM EMPLOYMENT;\n"
-"      RETURN  st_cursor;\n"
-" END;]]>"
-msgstr ""
+"ジョン）のストアドプロシージャの例を以下に示します:"
 
 #. Tag: para
-#: query_sql.xml:463
 #, no-c-format
 msgid "To use this query in Hibernate you need to map it via a named query."
 msgstr ""
-"Hibernateでこのクエリを使うためには、 名前付きクエリでマッピングする必要があ"
+"Hibernate でこのクエリを使うためには、名前付きクエリでマッピングする必要があ"
 "ります。"
 
-#. Tag: programlisting
-#: query_sql.xml:466
-#, no-c-format
-msgid ""
-"<![CDATA[<sql-query name=\"selectAllEmployees_SP\" callable=\"true\">\n"
-"    <return alias=\"emp\" class=\"Employment\">\n"
-"        <return-property name=\"employee\" column=\"EMPLOYEE\"/>\n"
-"        <return-property name=\"employer\" column=\"EMPLOYER\"/>\n"
-"        <return-property name=\"startDate\" column=\"STARTDATE\"/>\n"
-"        <return-property name=\"endDate\" column=\"ENDDATE\"/>\n"
-"        <return-property name=\"regionCode\" column=\"REGIONCODE\"/>\n"
-"        <return-property name=\"id\" column=\"EID\"/>\n"
-"        <return-property name=\"salary\">\n"
-"            <return-column name=\"VALUE\"/>\n"
-"            <return-column name=\"CURRENCY\"/>\n"
-"        </return-property>\n"
-"    </return>\n"
-"    { ? = call selectAllEmployments() }\n"
-"</sql-query>]]>"
-msgstr ""
-
 #. Tag: para
-#: query_sql.xml:468
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "Stored procedures currently only return scalars and entities. <literal>&lt;"
 "return-join&gt;</literal> and <literal>&lt;load-collection&gt;</literal> are "
 "not supported."
 msgstr ""
-"注意：今のところ、ストアドプロシージャはスカラとエンティティを返すのみです。 "
+"注記：今のところ、ストアドプロシージャはスカラとエンティティを返すのみです。 "
 "<literal>&lt;return-join&gt;</literal> と <literal>&lt;load-collection&gt;</"
 "literal> はサポートされていません。"
 
 #. Tag: title
-#: query_sql.xml:473
 #, no-c-format
 msgid "Rules/limitations for using stored procedures"
 msgstr "ストアドプロシージャを使う上でのルールと制限"
 
 #. Tag: para
-#: query_sql.xml:475
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "You cannot use stored procedures with Hibernate unless you follow some "
 "procedure/function rules. If they do not follow those rules they are not "
@@ -1139,45 +749,41 @@ msgid ""
 "different for each database, since database vendors have different stored "
 "procedure semantics/syntax."
 msgstr ""
-"Hibernateでストアドプロシージャや関数を使うためには、 そのプロシージャはいく"
-"つかのルールに準拠する必要があります。 ルールに準拠していないプロシージャは、"
-"Hibernateで使うことはできません。 それでも、準拠していないプロシージャを使い"
+"Hibernate でストアドプロシージャや関数を使うためには、そのプロシージャはいく"
+"つかのルールに準拠する必要があります。ルールに準拠していないプロシージャは、 "
+"Hibernate で使うことはできません。それでも、準拠していないプロシージャを使い"
 "たいのであれば、 <literal>session.connection()</literal> を通じて実行しなけれ"
-"ばなりません。 ルールはデータベースごとに異なります。 ストアドプロシージャの"
-"セマンティックスとシンタックスは、 データベースベンダごとに異なるためです。"
+"ばなりません。ルールはデータベースごとに異なります。ストアドプロシージャのセ"
+"マンティックスとシンタックスは、データベースベンダごとに異なるためです。"
 
 #. Tag: para
-#: query_sql.xml:482
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "Stored procedure queries cannot be paged with <literal>setFirstResult()/"
 "setMaxResults()</literal>."
 msgstr ""
-"<literal>setFirstResult()/setMaxResults()</literal> を使って、 ストアドプロ"
+"<literal>setFirstResult()/setMaxResults()</literal> を使って、ストアドプロ"
 "シージャクエリをページ分けすることはできません。"
 
 #. Tag: para
-#: query_sql.xml:485
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "The recommended call form is standard SQL92: <literal>{ ? = call functionName"
 "(&lt;parameters&gt;) }</literal> or <literal>{ ? = call procedureName(&lt;"
 "parameters&gt;}</literal>. Native call syntax is not supported."
 msgstr ""
-"推奨する呼び出し方は、標準であるSQL92に従うことです。 <literal>{ ? = call "
+"推奨する呼び出し方は、標準である SQL92 に従うことです。 <literal>{ ? = call "
 "functionName(&lt;parameters&gt;) }</literal> や <literal>{ ? = call "
-"procedureName(&lt;parameters&gt;) }</literal> です。 ネイティブな呼び出し構文"
-"はサポートされていません。"
+"procedureName(&lt;parameters&gt;}</literal> です。ネイティブな呼び出し構文は"
+"サポートされていません。"
 
 #. Tag: para
-#: query_sql.xml:490
 #, no-c-format
 msgid "For Oracle the following rules apply:"
-msgstr "Oracleには下記のルールが適用されます。"
+msgstr "Oracle には下記のルールが適用されます:"
 
 #. Tag: para
-#: query_sql.xml:494
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "A function must return a result set. The first parameter of a procedure must "
 "be an <literal>OUT</literal> that returns a result set. This is done by "
@@ -1185,131 +791,98 @@ msgid ""
 "you need to define a <literal>REF CURSOR</literal> type. See Oracle "
 "literature for further information."
 msgstr ""
-"関数はリザルトセットを返さなければなりません。 プロシージャの第一引数はリザル"
-"トセットを返すため、 <literal>OUT</literal> でなければなりません。 Oracle 9と"
-"10では、<literal>SYS_REFCURSOR</literal> を使うことによってできます。 Oracle"
-"では <literal>REF CURSOR</literal> 型を定義する必要があります。 Oracleの文献"
-"を参照してください。"
+"関数はリザルトセットを返さなければなりません。プロシージャの第一引数はリザル"
+"トセットを返すため、 <literal>OUT</literal> でなければなりません。 Oracle 9 "
+"と 10 では、 <literal>SYS_REFCURSOR</literal> を使うことによってできます。 "
+"Oracle では <literal>REF CURSOR</literal> 型を定義する必要があります。 "
+"Oracle の文献を参照してください。"
 
 #. Tag: para
-#: query_sql.xml:503
 #, no-c-format
 msgid "For Sybase or MS SQL server the following rules apply:"
-msgstr "SybaseとMS SQLサーバーに適用されるルールを下記に示します。"
+msgstr "Sybase と MS SQL サーバーに適用されるルールを下記に示します:"
 
 #. Tag: para
-#: query_sql.xml:507
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "The procedure must return a result set. Note that since these servers can "
 "return multiple result sets and update counts, Hibernate will iterate the "
 "results and take the first result that is a result set as its return value. "
 "Everything else will be discarded."
 msgstr ""
-"プロシージャはリザルトセットを返さなければなりません。 サーバーは複数のリザル"
-"トセットと更新カウントを返しますが、 Hibernateは1つ目のリザルトセットだけを返"
-"すことに注意してください。 その他はすべて捨てられます。"
+"プロシージャはリザルトセットを返さなければなりません。サーバーは複数のリザル"
+"トセットと更新カウントを返しますが、 Hibernate は1つ目のリザルトセットだけを"
+"返すことに注意してください。その他はすべて捨てられます。"
 
 #. Tag: para
-#: query_sql.xml:515
 #, no-c-format
 msgid ""
 "If you can enable <literal>SET NOCOUNT ON</literal> in your procedure it "
 "will probably be more efficient, but this is not a requirement."
 msgstr ""
-"プロシージャの中で <literal>SET NOCOUNT ON</literal> を有効にできれば、 おそ"
-"らく効率がよくなるでしょう。 しかし、これは必要条件ではありません。"
+"プロシージャの中で <literal>SET NOCOUNT ON</literal> を有効にできれば、おそら"
+"く効率がよくなるでしょう。しかし、これは必要条件ではありません。"
 
 #. Tag: title
-#: query_sql.xml:525
 #, no-c-format
 msgid "Custom SQL for create, update and delete"
-msgstr "作成、更新、削除のためのカスタムSQL"
+msgstr "作成、更新、削除のためのカスタム SQL"
 
 #. Tag: para
-#: query_sql.xml:527
 #, no-c-format
 msgid ""
-"Hibernate3 can use custom SQL statements for create, update, and delete "
-"operations. The class and collection persisters in Hibernate already contain "
-"a set of configuration time generated strings (insertsql, deletesql, "
-"updatesql etc.). The mapping tags <literal>&lt;sql-insert&gt;</literal>, "
-"<literal>&lt;sql-delete&gt;</literal>, and <literal>&lt;sql-update&gt;</"
-"literal> override these strings:"
+"Hibernate3 can use custom SQL for create, update, and delete operations. The "
+"SQL can be overridden at the statement level or inidividual column level. "
+"This section describes statement overrides. For columns, see <xref linkend="
+"\"mapping-column-read-and-write\" />."
 msgstr ""
-"Hibernate3は作成、更新、削除処理のためのカスタムSQL文を使用できます。 クラス"
-"とコレクションの永続化機構は、コンフィグレーション時に生成された文字列 "
-"（insertsql、deletesql、updatesqlなど）のセットをすでに保持しています。 これ"
+
+#. Tag: para
+#, fuzzy, no-c-format
+msgid ""
+"The class and collection persisters in Hibernate already contain a set of "
+"configuration time generated strings (insertsql, deletesql, updatesql etc.). "
+"The mapping tags <literal>&lt;sql-insert&gt;</literal>, <literal>&lt;sql-"
+"delete&gt;</literal>, and <literal>&lt;sql-update&gt;</literal> override "
+"these strings:"
+msgstr ""
+"Hibernate3 は作成、更新、削除処理のためのカスタム SQL 文を使用できます。クラ"
+"スとコレクションの永続化機構は、コンフィグレーション時に生成された文字列 "
+"（insertsql、deletesql、updatesql など）のセットをすでに保持しています。これ"
 "らの文字列より、 <literal>&lt;sql-insert&gt;</literal>、 <literal>&lt;sql-"
 "delete&gt;</literal>、 <literal>&lt;sql-update&gt;</literal> というマッピング"
-"タグが優先されます。"
-
-#. Tag: programlisting
-#: query_sql.xml:535
-#, no-c-format
-msgid ""
-"<![CDATA[<class name=\"Person\">\n"
-"    <id name=\"id\">\n"
-"        <generator class=\"increment\"/>\n"
-"    </id>\n"
-"    <property name=\"name\" not-null=\"true\"/>\n"
-"    <sql-insert>INSERT INTO PERSON (NAME, ID) VALUES ( UPPER(?), ? )</sql-"
-"insert>\n"
-"    <sql-update>UPDATE PERSON SET NAME=UPPER(?) WHERE ID=?</sql-update>\n"
-"    <sql-delete>DELETE FROM PERSON WHERE ID=?</sql-delete>\n"
-"</class>]]>"
-msgstr ""
+"タグが優先されます:"
 
 #. Tag: para
-#: query_sql.xml:537
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "The SQL is directly executed in your database, so you can use any dialect "
 "you like. This will reduce the portability of your mapping if you use "
 "database specific SQL."
 msgstr ""
-"SQLを直接データベースで実行するため、好みの方言を自由に使用できます。 データ"
-"ベース独自のSQLを使えば、当然マッピングのポータビリティが下がります。"
+"SQL を直接データベースで実行するため、好みの方言を自由に使用できます。データ"
+"ベース独自の SQL を使えば、当然マッピングのポータビリティが下がります。"
 
 #. Tag: para
-#: query_sql.xml:541
 #, no-c-format
 msgid ""
 "Stored procedures are supported if the <literal>callable</literal> attribute "
 "is set:"
 msgstr ""
-"<literal>callable</literal> 属性をセットすれば、 ストアドプロシージャを使用で"
-"きます。"
-
-#. Tag: programlisting
-#: query_sql.xml:544
-#, no-c-format
-msgid ""
-"<![CDATA[<class name=\"Person\">\n"
-"    <id name=\"id\">\n"
-"        <generator class=\"increment\"/>\n"
-"    </id>\n"
-"    <property name=\"name\" not-null=\"true\"/>\n"
-"    <sql-insert callable=\"true\">{call createPerson (?, ?)}</sql-insert>\n"
-"    <sql-delete callable=\"true\">{? = call deletePerson (?)}</sql-delete>\n"
-"    <sql-update callable=\"true\">{? = call updatePerson (?, ?)}</sql-"
-"update>\n"
-"</class>]]>"
-msgstr ""
+"<literal>callable</literal> 属性をセットすれば、ストアドプロシージャを使用で"
+"きます:"
 
 #. Tag: para
-#: query_sql.xml:546
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "The order of the positional parameters is vital, as they must be in the same "
 "sequence as Hibernate expects them."
 msgstr ""
-"今のところ、位置パラメータの順番はとても重要です。 すなわち、Hibernateが期待"
+"今のところ、位置パラメータの順番はとても重要です。すなわち、 Hibernate が期待"
 "する順序でなければなりません。"
 
 #. Tag: para
-#: query_sql.xml:549
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "You can view the expected order by enabling debug logging for the "
 "<literal>org.hibernate.persister.entity</literal> level. With this level "
@@ -1318,153 +891,728 @@ msgid ""
 "your custom SQL in the mapping files, as this will override the Hibernate "
 "generated static SQL."
 msgstr ""
-"<literal>org.hiberante.persister.entity</literal> レベルのデバッグログを 有効"
-"にすることによって、期待される順番を確かめられます。 このレベルを有効にするこ"
-"とにより、エンティティの作成、更新、削除などで 使用される静的なSQLが出力され"
-"ます。 （期待される順序を確認するためには、Hibernateが生成する静的なSQLをオー"
-"バーライドする カスタムSQLをマッピングファイルに含めないことを忘れないでくだ"
-"さい。）"
+"<literal>org.hiberante.persister.entity</literal> レベルのデバッグログを有効"
+"にすることによって、期待される順番を確かめられます。このレベルを有効にするこ"
+"とにより、エンティティの作成、更新、削除などで使用される静的な SQL が出力され"
+"ます。（期待される順序を確認するためには、 Hibernate が生成する静的な SQL を"
+"オーバーライドするカスタム SQL をマッピングファイルに含めないことを忘れないで"
+"ください。）"
 
 #. Tag: para
-#: query_sql.xml:556
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "The stored procedures are in most cases required to return the number of "
 "rows inserted, updated and deleted, as Hibernate has some runtime checks for "
 "the success of the statement. Hibernate always registers the first statement "
 "parameter as a numeric output parameter for the CUD operations:"
 msgstr ""
-"ストアドプロシージャは挿入/更新/削除された行数を返す必要があります （読み込み"
-"の場合は、返さないよりは返す方がよいです）。 実行時にHibernateがSQL文の成功を"
-"チェックするからです。 Hibernateは、CUD処理のための数値の出力パラメータとし"
-"て、 SQL文の最初のパラメータをいつも記録します。"
-
-#. Tag: programlisting
-#: query_sql.xml:562
-#, no-c-format
-msgid ""
-"<![CDATA[CREATE OR REPLACE FUNCTION updatePerson (uid IN NUMBER, uname IN "
-"VARCHAR2)\n"
-"    RETURN NUMBER IS\n"
-"BEGIN\n"
-"\n"
-"    update PERSON\n"
-"    set\n"
-"        NAME = uname,\n"
-"    where\n"
-"        ID = uid;\n"
-"\n"
-"    return SQL%ROWCOUNT;\n"
-"\n"
-"END updatePerson;]]>"
-msgstr ""
+"ストアドプロシージャは挿入/更新/削除された行数を返す必要があります（読み込み"
+"の場合は、返さないよりは返す方がよいです）。実行時に Hibernate が SQL 文の成"
+"功をチェックするからです。 Hibernate は、 CUD 処理のための数値の出力パラメー"
+"タとして、 SQL 文の最初のパラメータをいつも記録します:"
 
 #. Tag: title
-#: query_sql.xml:566
 #, no-c-format
 msgid "Custom SQL for loading"
-msgstr "ロードのためのカスタムSQL"
+msgstr "ロードのためのカスタム SQL"
 
 #. Tag: para
-#: query_sql.xml:568
-#, fuzzy, no-c-format
-msgid "You can also declare your own SQL (or HQL) queries for entity loading:"
-msgstr ""
-"エンティティを読み込むための独自のSQL（もしくはHQL）クエリも宣言できます。"
-
-#. Tag: programlisting
-#: query_sql.xml:571
 #, no-c-format
 msgid ""
-"<![CDATA[<sql-query name=\"person\">\n"
-"    <return alias=\"pers\" class=\"Person\" lock-mode=\"upgrade\"/>\n"
-"    SELECT NAME AS {pers.name}, ID AS {pers.id}\n"
-"    FROM PERSON\n"
-"    WHERE ID=?\n"
-"    FOR UPDATE\n"
-"</sql-query>]]>"
+"You can also declare your own SQL (or HQL) queries for entity loading. As "
+"with inserts, updates, and deletes, this can be done at the individual "
+"column level as described in <xref linkend=\"mapping-column-read-and-write"
+"\" /> or at the statement level. Here is an example of a statement level "
+"override:"
 msgstr ""
 
 #. Tag: para
-#: query_sql.xml:573
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "This is just a named query declaration, as discussed earlier. You can "
 "reference this named query in a class mapping:"
 msgstr ""
-"これは、まさに（以前議論した）名前付きクエリの宣言です。 この名前付きクエリを"
-"クラスのマッピングから参照できます。"
-
-#. Tag: programlisting
-#: query_sql.xml:576
-#, no-c-format
-msgid ""
-"<![CDATA[<class name=\"Person\">\n"
-"    <id name=\"id\">\n"
-"        <generator class=\"increment\"/>\n"
-"    </id>\n"
-"    <property name=\"name\" not-null=\"true\"/>\n"
-"    <loader query-ref=\"person\"/>\n"
-"</class>]]>"
-msgstr ""
+"これは、まさに（以前議論した）名前付きクエリの宣言です。この名前付きクエリを"
+"クラスのマッピングから参照できます:"
 
 #. Tag: para
-#: query_sql.xml:578
 #, no-c-format
 msgid "This even works with stored procedures."
 msgstr "これはストアドプロシージャでさえも動作します。"
 
 #. Tag: para
-#: query_sql.xml:580
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "You can even define a query for collection loading:"
-msgstr "次のように、コレクションをロードするためのクエリさえ定義してよいです。"
-
-#. Tag: programlisting
-#: query_sql.xml:582
-#, no-c-format
-msgid ""
-"<![CDATA[<set name=\"employments\" inverse=\"true\">\n"
-"    <key/>\n"
-"    <one-to-many class=\"Employment\"/>\n"
-"    <loader query-ref=\"employments\"/>\n"
-"</set>]]>"
-msgstr ""
-
-#. Tag: programlisting
-#: query_sql.xml:584
-#, no-c-format
-msgid ""
-"<![CDATA[<sql-query name=\"employments\">\n"
-"    <load-collection alias=\"emp\" role=\"Person.employments\"/>\n"
-"    SELECT {emp.*}\n"
-"    FROM EMPLOYMENT emp\n"
-"    WHERE EMPLOYER = :id\n"
-"    ORDER BY STARTDATE ASC, EMPLOYEE ASC\n"
-"</sql-query>]]>"
-msgstr ""
+msgstr "次のように、コレクションをロードするためのクエリさえ定義してよいです:"
 
 #. Tag: para
-#: query_sql.xml:586
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "You can also define an entity loader that loads a collection by join "
 "fetching:"
 msgstr ""
-"次のように、結合フェッチによりコレクションをロードする エンティティローダーを"
-"定義できます。"
+"次のように、結合フェッチによりコレクションをロードするエンティティローダーを"
+"定義できます:"
 
-#. Tag: programlisting
-#: query_sql.xml:589
-#, no-c-format
-msgid ""
-"<![CDATA[<sql-query name=\"person\">\n"
-"    <return alias=\"pers\" class=\"Person\"/>\n"
-"    <return-join alias=\"emp\" property=\"pers.employments\"/>\n"
-"    SELECT NAME AS {pers.*}, {emp.*}\n"
-"    FROM PERSON pers\n"
-"    LEFT OUTER JOIN EMPLOYMENT emp\n"
-"        ON pers.ID = emp.PERSON_ID\n"
-"    WHERE ID=?\n"
-"</sql-query>]]>"
-msgstr ""
+#~ msgid ""
+#~ "You can also declare your own SQL (or HQL) queries for entity loading:"
+#~ msgstr ""
+#~ "エンティティを読み込むための独自の SQL （もしくは HQL）クエリも宣言できま"
+#~ "す:"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[sess.createSQLQuery(\"SELECT * FROM CATS\").list();\n"
+#~ "sess.createSQLQuery(\"SELECT ID, NAME, BIRTHDATE FROM CATS\").list();\n"
+#~ "]]>"
+#~ msgstr ""
+#~ "sess.createSQLQuery(\"SELECT * FROM CATS\").list();\n"
+#~ "sess.createSQLQuery(\"SELECT ID, NAME, BIRTHDATE FROM CATS\").list();"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[sess.createSQLQuery(\"SELECT * FROM CATS\")\n"
+#~ " .addScalar(\"ID\", Hibernate.LONG)\n"
+#~ " .addScalar(\"NAME\", Hibernate.STRING)\n"
+#~ " .addScalar(\"BIRTHDATE\", Hibernate.DATE)\n"
+#~ "]]>"
+#~ msgstr ""
+#~ "sess.createSQLQuery(\"SELECT * FROM CATS\")\n"
+#~ " .addScalar(\"ID\", Hibernate.LONG)\n"
+#~ " .addScalar(\"NAME\", Hibernate.STRING)\n"
+#~ " .addScalar(\"BIRTHDATE\", Hibernate.DATE)"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[sess.createSQLQuery(\"SELECT * FROM CATS\")\n"
+#~ " .addScalar(\"ID\", Hibernate.LONG)\n"
+#~ " .addScalar(\"NAME\")\n"
+#~ " .addScalar(\"BIRTHDATE\")\n"
+#~ "]]>"
+#~ msgstr ""
+#~ "sess.createSQLQuery(\"SELECT * FROM CATS\")\n"
+#~ " .addScalar(\"ID\", Hibernate.LONG)\n"
+#~ " .addScalar(\"NAME\")\n"
+#~ " .addScalar(\"BIRTHDATE\")"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[sess.createSQLQuery(\"SELECT * FROM CATS\").addEntity(Cat."
+#~ "class);\n"
+#~ "sess.createSQLQuery(\"SELECT ID, NAME, BIRTHDATE FROM CATS\").addEntity"
+#~ "(Cat.class);\n"
+#~ "]]>"
+#~ msgstr ""
+#~ "sess.createSQLQuery(\"SELECT * FROM CATS\").addEntity(Cat.class);\n"
+#~ "sess.createSQLQuery(\"SELECT ID, NAME, BIRTHDATE FROM CATS\").addEntity"
+#~ "(Cat.class);"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[sess.createSQLQuery(\"SELECT ID, NAME, BIRTHDATE, DOG_ID FROM "
+#~ "CATS\").addEntity(Cat.class);\n"
+#~ "]]>"
+#~ msgstr ""
+#~ "sess.createSQLQuery(\"SELECT ID, NAME, BIRTHDATE, DOG_ID FROM CATS\")."
+#~ "addEntity(Cat.class);"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[sess.createSQLQuery(\"SELECT c.ID, NAME, BIRTHDATE, DOG_ID, "
+#~ "D_ID, D_NAME FROM CATS c, DOGS d WHERE c.DOG_ID = d.D_ID\")\n"
+#~ " .addEntity(\"cat\", Cat.class)\n"
+#~ " .addJoin(\"cat.dog\");\n"
+#~ "]]>"
+#~ msgstr ""
+#~ "sess.createSQLQuery(\"SELECT c.ID, NAME, BIRTHDATE, DOG_ID, D_ID, D_NAME "
+#~ "FROM CATS c, DOGS d \n"
+#~ "    WHERE c.DOG_ID = d.D_ID\")\n"
+#~ " .addEntity(\"cat\", Cat.class)\n"
+#~ " .addJoin(\"cat.dog\");"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[sess.createSQLQuery(\"SELECT ID, NAME, BIRTHDATE, D_ID, D_NAME, "
+#~ "CAT_ID FROM CATS c, DOGS d WHERE c.ID = d.CAT_ID\")\n"
+#~ " .addEntity(\"cat\", Cat.class)\n"
+#~ " .addJoin(\"cat.dogs\");\n"
+#~ "]]>"
+#~ msgstr ""
+#~ "sess.createSQLQuery(\"SELECT ID, NAME, BIRTHDATE, D_ID, D_NAME, CAT_ID "
+#~ "FROM CATS c, DOGS d\n"
+#~ "    WHERE c.ID = d.CAT_ID\")\n"
+#~ " .addEntity(\"cat\", Cat.class)\n"
+#~ " .addJoin(\"cat.dogs\");"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[sess.createSQLQuery(\"SELECT c.*, m.*  FROM CATS c, CATS m WHERE "
+#~ "c.MOTHER_ID = c.ID\")\n"
+#~ " .addEntity(\"cat\", Cat.class)\n"
+#~ " .addEntity(\"mother\", Cat.class)\n"
+#~ "]]>"
+#~ msgstr ""
+#~ "sess.createSQLQuery(\"SELECT c.*, m.*  FROM CATS c, CATS m WHERE c."
+#~ "MOTHER_ID = c.ID\")\n"
+#~ " .addEntity(\"cat\", Cat.class)\n"
+#~ " .addEntity(\"mother\", Cat.class)"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[sess.createSQLQuery(\"SELECT {cat.*}, {mother.*}  FROM CATS c, "
+#~ "CATS m WHERE c.MOTHER_ID = c.ID\")\n"
+#~ " .addEntity(\"cat\", Cat.class)\n"
+#~ " .addEntity(\"mother\", Cat.class)\n"
+#~ "]]>"
+#~ msgstr ""
+#~ "sess.createSQLQuery(\"SELECT {cat.*}, {mother.*}  FROM CATS c, CATS m "
+#~ "WHERE c.MOTHER_ID = c.ID\")\n"
+#~ " .addEntity(\"cat\", Cat.class)\n"
+#~ " .addEntity(\"mother\", Cat.class)"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[String sql = \"SELECT ID as {c.id}, NAME as {c.name}, \" + \n"
+#~ "         \"BIRTHDATE as {c.birthDate}, MOTHER_ID as {c.mother}, {mother."
+#~ "*} \" +\n"
+#~ "         \"FROM CAT_LOG c, CAT_LOG m WHERE {c.mother} = c.ID\";\n"
+#~ "\n"
+#~ "List loggedCats = sess.createSQLQuery(sql)\n"
+#~ "        .addEntity(\"cat\", Cat.class)\n"
+#~ "        .addEntity(\"mother\", Cat.class).list()\n"
+#~ "]]>"
+#~ msgstr ""
+#~ "String sql = \"SELECT ID as {c.id}, NAME as {c.name}, \" + \n"
+#~ "         \"BIRTHDATE as {c.birthDate}, MOTHER_ID as {c.mother}, {mother."
+#~ "*} \" +\n"
+#~ "         \"FROM CAT_LOG c, CAT_LOG m WHERE {c.mother} = c.ID\";\n"
+#~ "\n"
+#~ "List loggedCats = sess.createSQLQuery(sql)\n"
+#~ "        .addEntity(\"cat\", Cat.class)\n"
+#~ "        .addEntity(\"mother\", Cat.class).list()"
+
+#, fuzzy
+#~ msgid "A_NAME as {item.name}"
+#~ msgstr "<literal>A_NAME as {item.name}</literal>"
+
+#, fuzzy
+#~ msgid "{[aliasname].class}"
+#~ msgstr "<literal>{[aliasname].class}</literal>"
+
+#, fuzzy
+#~ msgid "DISC as {item.class}"
+#~ msgstr "<literal>DISC as {item.class}</literal>"
+
+#, fuzzy
+#~ msgid "{[aliasname].*}"
+#~ msgstr "<literal>{[aliasname].*}</literal>"
+
+#~ msgid "{item.*}"
+#~ msgstr "{item.*}"
+
+#, fuzzy
+#~ msgid "{[aliasname].key}"
+#~ msgstr "<literal>{[aliasname].key}</literal>"
+
+#, fuzzy
+#~ msgid "ORGID as {coll.key}"
+#~ msgstr "<literal>ORGID as {coll.key}</literal>"
+
+#, fuzzy
+#~ msgid "{[aliasname].id}"
+#~ msgstr "<literal>{[aliasname].id}</literal>"
+
+#, fuzzy
+#~ msgid "EMPID as {coll.id}"
+#~ msgstr "<literal>EMPID as {coll.id}</literal>"
+
+#, fuzzy
+#~ msgid "{[aliasname].element}"
+#~ msgstr "<literal>{[aliasname].element}</literal>"
+
+#, fuzzy
+#~ msgid "XID as {coll.element}"
+#~ msgstr "<literal>XID as {coll.element}</literal>"
+
+#, fuzzy
+#~ msgid "NAME as {coll.element.name}"
+#~ msgstr "<literal>NAME as {coll.element.name}</literal>"
+
+#, fuzzy
+#~ msgid "{[aliasname].element.*}"
+#~ msgstr "<literal>{[aliasname].element.*}</literal>"
+
+#, fuzzy
+#~ msgid "{coll.element.*}"
+#~ msgstr "{coll.*}"
+
+#~ msgid "{coll.*}"
+#~ msgstr "{coll.*}"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[sess.createSQLQuery(\"SELECT NAME, BIRTHDATE FROM CATS\")\n"
+#~ "        .setResultTransformer(Transformers.aliasToBean(CatDTO.class))]]>"
+#~ msgstr ""
+#~ "sess.createSQLQuery(\"SELECT NAME, BIRTHDATE FROM CATS\")\n"
+#~ "        .setResultTransformer(Transformers.aliasToBean(CatDTO.class))"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[Query query = sess.createSQLQuery(\"SELECT * FROM CATS WHERE "
+#~ "NAME like ?\").addEntity(Cat.class);\n"
+#~ "List pusList = query.setString(0, \"Pus%\").list();\n"
+#~ "     \n"
+#~ "query = sess.createSQLQuery(\"SELECT * FROM CATS WHERE NAME like :name\")."
+#~ "addEntity(Cat.class);\n"
+#~ "List pusList = query.setString(\"name\", \"Pus%\").list();          ]]>"
+#~ msgstr ""
+#~ "Query query = sess.createSQLQuery(\"SELECT * FROM CATS WHERE NAME like ?"
+#~ "\").addEntity(Cat.class);\n"
+#~ "List pusList = query.setString(0, \"Pus&#37;\").list();\n"
+#~ "     \n"
+#~ "query = sess.createSQLQuery(\"SELECT * FROM CATS WHERE NAME like :name\")."
+#~ "addEntity(Cat.class);\n"
+#~ "List pusList = query.setString(\"name\", \"Pus&#37;\").list();"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[<sql-query name=\"persons\">\n"
+#~ "    <return alias=\"person\" class=\"eg.Person\"/>\n"
+#~ "    SELECT person.NAME AS {person.name},\n"
+#~ "           person.AGE AS {person.age},\n"
+#~ "           person.SEX AS {person.sex}\n"
+#~ "    FROM PERSON person\n"
+#~ "    WHERE person.NAME LIKE :namePattern\n"
+#~ "</sql-query>]]>"
+#~ msgstr ""
+#~ "&lt;sql-query name=\"persons\"&gt;\n"
+#~ "    &lt;return alias=\"person\" class=\"eg.Person\"/&gt;\n"
+#~ "    SELECT person.NAME AS {person.name},\n"
+#~ "           person.AGE AS {person.age},\n"
+#~ "           person.SEX AS {person.sex}\n"
+#~ "    FROM PERSON person\n"
+#~ "    WHERE person.NAME LIKE :namePattern\n"
+#~ "&lt;/sql-query&gt;"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[List people = sess.getNamedQuery(\"persons\")\n"
+#~ "    .setString(\"namePattern\", namePattern)\n"
+#~ "    .setMaxResults(50)\n"
+#~ "    .list();]]>"
+#~ msgstr ""
+#~ "List people = sess.getNamedQuery(\"persons\")\n"
+#~ "    .setString(\"namePattern\", namePattern)\n"
+#~ "    .setMaxResults(50)\n"
+#~ "    .list();"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[<sql-query name=\"personsWith\">\n"
+#~ "    <return alias=\"person\" class=\"eg.Person\"/>\n"
+#~ "    <return-join alias=\"address\" property=\"person.mailingAddress\"/>\n"
+#~ "    SELECT person.NAME AS {person.name},\n"
+#~ "           person.AGE AS {person.age},\n"
+#~ "           person.SEX AS {person.sex},\n"
+#~ "           address.STREET AS {address.street},\n"
+#~ "           address.CITY AS {address.city},\n"
+#~ "           address.STATE AS {address.state},\n"
+#~ "           address.ZIP AS {address.zip}\n"
+#~ "    FROM PERSON person\n"
+#~ "    JOIN ADDRESS address\n"
+#~ "        ON person.ID = address.PERSON_ID AND address.TYPE='MAILING'\n"
+#~ "    WHERE person.NAME LIKE :namePattern\n"
+#~ "</sql-query>]]>"
+#~ msgstr ""
+#~ "&lt;sql-query name=\"personsWith\"&gt;\n"
+#~ "    &lt;return alias=\"person\" class=\"eg.Person\"/&gt;\n"
+#~ "    &lt;return-join alias=\"address\" property=\"person.mailingAddress\"/"
+#~ "&gt;\n"
+#~ "    SELECT person.NAME AS {person.name},\n"
+#~ "           person.AGE AS {person.age},\n"
+#~ "           person.SEX AS {person.sex},\n"
+#~ "           adddress.STREET AS {address.street},\n"
+#~ "           adddress.CITY AS {address.city},\n"
+#~ "           adddress.STATE AS {address.state},\n"
+#~ "           adddress.ZIP AS {address.zip}\n"
+#~ "    FROM PERSON person\n"
+#~ "    JOIN ADDRESS adddress\n"
+#~ "        ON person.ID = address.PERSON_ID AND address.TYPE='MAILING'\n"
+#~ "    WHERE person.NAME LIKE :namePattern\n"
+#~ "&lt;/sql-query&gt;"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[<sql-query name=\"mySqlQuery\">\n"
+#~ "    <return-scalar column=\"name\" type=\"string\"/>\n"
+#~ "    <return-scalar column=\"age\" type=\"long\"/>\n"
+#~ "    SELECT p.NAME AS name,\n"
+#~ "           p.AGE AS age,\n"
+#~ "    FROM PERSON p WHERE p.NAME LIKE 'Hiber%'\n"
+#~ "</sql-query>]]>"
+#~ msgstr ""
+#~ "&lt;sql-query name=\"mySqlQuery\"&gt;\n"
+#~ "    &lt;return-scalar column=\"name\" type=\"string\"/&gt;\n"
+#~ "    &lt;return-scalar column=\"age\" type=\"long\"/&gt;\n"
+#~ "    SELECT p.NAME AS name,\n"
+#~ "           p.AGE AS age,\n"
+#~ "    FROM PERSON p WHERE p.NAME LIKE 'Hiber&#37;'\n"
+#~ "&lt;/sql-query&gt;"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[<resultset name=\"personAddress\">\n"
+#~ "    <return alias=\"person\" class=\"eg.Person\"/>\n"
+#~ "    <return-join alias=\"address\" property=\"person.mailingAddress\"/>\n"
+#~ "</resultset>\n"
+#~ "\n"
+#~ "<sql-query name=\"personsWith\" resultset-ref=\"personAddress\">\n"
+#~ "    SELECT person.NAME AS {person.name},\n"
+#~ "           person.AGE AS {person.age},\n"
+#~ "           person.SEX AS {person.sex},\n"
+#~ "           address.STREET AS {address.street},\n"
+#~ "           address.CITY AS {address.city},\n"
+#~ "           address.STATE AS {address.state},\n"
+#~ "           address.ZIP AS {address.zip}\n"
+#~ "    FROM PERSON person\n"
+#~ "    JOIN ADDRESS address\n"
+#~ "        ON person.ID = address.PERSON_ID AND address.TYPE='MAILING'\n"
+#~ "    WHERE person.NAME LIKE :namePattern\n"
+#~ "</sql-query>]]>"
+#~ msgstr ""
+#~ "&lt;resultset name=\"personAddress\"&gt;\n"
+#~ "    &lt;return alias=\"person\" class=\"eg.Person\"/&gt;\n"
+#~ "    &lt;return-join alias=\"address\" property=\"person.mailingAddress\"/"
+#~ "&gt;\n"
+#~ "&lt;/resultset&gt;\n"
+#~ "\n"
+#~ "&lt;sql-query name=\"personsWith\" resultset-ref=\"personAddress\"&gt;\n"
+#~ "    SELECT person.NAME AS {person.name},\n"
+#~ "           person.AGE AS {person.age},\n"
+#~ "           person.SEX AS {person.sex},\n"
+#~ "           adddress.STREET AS {address.street},\n"
+#~ "           adddress.CITY AS {address.city},\n"
+#~ "           adddress.STATE AS {address.state},\n"
+#~ "           adddress.ZIP AS {address.zip}\n"
+#~ "    FROM PERSON person\n"
+#~ "    JOIN ADDRESS adddress\n"
+#~ "        ON person.ID = address.PERSON_ID AND address.TYPE='MAILING'\n"
+#~ "    WHERE person.NAME LIKE :namePattern\n"
+#~ "&lt;/sql-query&gt;"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[List cats = sess.createSQLQuery(\n"
+#~ "        \"select {cat.*}, {kitten.*} from cats cat, cats kitten where "
+#~ "kitten.mother = cat.id\"\n"
+#~ "    )\n"
+#~ "    .setResultSetMapping(\"catAndKitten\")\n"
+#~ "    .list();]]>"
+#~ msgstr ""
+#~ "List cats = sess.createSQLQuery(\n"
+#~ "        \"select {cat.*}, {kitten.*} from cats cat, cats kitten where "
+#~ "kitten.mother = cat.id\"\n"
+#~ "    )\n"
+#~ "    .setResultSetMapping(\"catAndKitten\")\n"
+#~ "    .list();"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[<sql-query name=\"mySqlQuery\">\n"
+#~ "    <return alias=\"person\" class=\"eg.Person\">\n"
+#~ "        <return-property name=\"name\" column=\"myName\"/>\n"
+#~ "        <return-property name=\"age\" column=\"myAge\"/>\n"
+#~ "        <return-property name=\"sex\" column=\"mySex\"/>\n"
+#~ "    </return>\n"
+#~ "    SELECT person.NAME AS myName,\n"
+#~ "           person.AGE AS myAge,\n"
+#~ "           person.SEX AS mySex,\n"
+#~ "    FROM PERSON person WHERE person.NAME LIKE :name\n"
+#~ "</sql-query>\n"
+#~ "]]>"
+#~ msgstr ""
+#~ "&lt;sql-query name=\"mySqlQuery\"&gt;\n"
+#~ "    &lt;return alias=\"person\" class=\"eg.Person\"&gt;\n"
+#~ "        &lt;return-property name=\"name\" column=\"myName\"/&gt;\n"
+#~ "        &lt;return-property name=\"age\" column=\"myAge\"/&gt;\n"
+#~ "        &lt;return-property name=\"sex\" column=\"mySex\"/&gt;\n"
+#~ "    &lt;/return&gt;\n"
+#~ "    SELECT person.NAME AS myName,\n"
+#~ "           person.AGE AS myAge,\n"
+#~ "           person.SEX AS mySex,\n"
+#~ "    FROM PERSON person WHERE person.NAME LIKE :name\n"
+#~ "&lt;/sql-query&gt;"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[<sql-query name=\"organizationCurrentEmployments\">\n"
+#~ "    <return alias=\"emp\" class=\"Employment\">\n"
+#~ "        <return-property name=\"salary\">\n"
+#~ "            <return-column name=\"VALUE\"/>\n"
+#~ "            <return-column name=\"CURRENCY\"/>\n"
+#~ "        </return-property>\n"
+#~ "        <return-property name=\"endDate\" column=\"myEndDate\"/>\n"
+#~ "    </return>\n"
+#~ "        SELECT EMPLOYEE AS {emp.employee}, EMPLOYER AS {emp.employer},\n"
+#~ "        STARTDATE AS {emp.startDate}, ENDDATE AS {emp.endDate},\n"
+#~ "        REGIONCODE as {emp.regionCode}, EID AS {emp.id}, VALUE, CURRENCY\n"
+#~ "        FROM EMPLOYMENT\n"
+#~ "        WHERE EMPLOYER = :id AND ENDDATE IS NULL\n"
+#~ "        ORDER BY STARTDATE ASC\n"
+#~ "</sql-query>]]>"
+#~ msgstr ""
+#~ "&lt;sql-query name=\"organizationCurrentEmployments\"&gt;\n"
+#~ "    &lt;return alias=\"emp\" class=\"Employment\"&gt;\n"
+#~ "        &lt;return-property name=\"salary\"&gt;\n"
+#~ "            &lt;return-column name=\"VALUE\"/&gt;\n"
+#~ "            &lt;return-column name=\"CURRENCY\"/&gt;\n"
+#~ "        &lt;/return-property&gt;\n"
+#~ "        &lt;return-property name=\"endDate\" column=\"myEndDate\"/&gt;\n"
+#~ "    &lt;/return&gt;\n"
+#~ "        SELECT EMPLOYEE AS {emp.employee}, EMPLOYER AS {emp.employer},\n"
+#~ "        STARTDATE AS {emp.startDate}, ENDDATE AS {emp.endDate},\n"
+#~ "        REGIONCODE as {emp.regionCode}, EID AS {emp.id}, VALUE, CURRENCY\n"
+#~ "        FROM EMPLOYMENT\n"
+#~ "        WHERE EMPLOYER = :id AND ENDDATE IS NULL\n"
+#~ "        ORDER BY STARTDATE ASC\n"
+#~ "&lt;/sql-query&gt;"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[CREATE OR REPLACE FUNCTION selectAllEmployments\n"
+#~ "    RETURN SYS_REFCURSOR\n"
+#~ "AS\n"
+#~ "    st_cursor SYS_REFCURSOR;\n"
+#~ "BEGIN\n"
+#~ "    OPEN st_cursor FOR\n"
+#~ " SELECT EMPLOYEE, EMPLOYER,\n"
+#~ " STARTDATE, ENDDATE,\n"
+#~ " REGIONCODE, EID, VALUE, CURRENCY\n"
+#~ " FROM EMPLOYMENT;\n"
+#~ "      RETURN  st_cursor;\n"
+#~ " END;]]>"
+#~ msgstr ""
+#~ "CREATE OR REPLACE FUNCTION selectAllEmployments\n"
+#~ "    RETURN SYS_REFCURSOR\n"
+#~ "AS\n"
+#~ "    st_cursor SYS_REFCURSOR;\n"
+#~ "BEGIN\n"
+#~ "    OPEN st_cursor FOR\n"
+#~ " SELECT EMPLOYEE, EMPLOYER,\n"
+#~ " STARTDATE, ENDDATE,\n"
+#~ " REGIONCODE, EID, VALUE, CURRENCY\n"
+#~ " FROM EMPLOYMENT;\n"
+#~ "      RETURN  st_cursor;\n"
+#~ " END;"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[<sql-query name=\"selectAllEmployees_SP\" callable=\"true\">\n"
+#~ "    <return alias=\"emp\" class=\"Employment\">\n"
+#~ "        <return-property name=\"employee\" column=\"EMPLOYEE\"/>\n"
+#~ "        <return-property name=\"employer\" column=\"EMPLOYER\"/>\n"
+#~ "        <return-property name=\"startDate\" column=\"STARTDATE\"/>\n"
+#~ "        <return-property name=\"endDate\" column=\"ENDDATE\"/>\n"
+#~ "        <return-property name=\"regionCode\" column=\"REGIONCODE\"/>\n"
+#~ "        <return-property name=\"id\" column=\"EID\"/>\n"
+#~ "        <return-property name=\"salary\">\n"
+#~ "            <return-column name=\"VALUE\"/>\n"
+#~ "            <return-column name=\"CURRENCY\"/>\n"
+#~ "        </return-property>\n"
+#~ "    </return>\n"
+#~ "    { ? = call selectAllEmployments() }\n"
+#~ "</sql-query>]]>"
+#~ msgstr ""
+#~ "&lt;sql-query name=\"selectAllEmployees_SP\" callable=\"true\"&gt;\n"
+#~ "    &lt;return alias=\"emp\" class=\"Employment\"&gt;\n"
+#~ "        &lt;return-property name=\"employee\" column=\"EMPLOYEE\"/&gt;\n"
+#~ "        &lt;return-property name=\"employer\" column=\"EMPLOYER\"/&gt;\n"
+#~ "        &lt;return-property name=\"startDate\" column=\"STARTDATE\"/&gt;\n"
+#~ "        &lt;return-property name=\"endDate\" column=\"ENDDATE\"/&gt;\n"
+#~ "        &lt;return-property name=\"regionCode\" column=\"REGIONCODE\"/"
+#~ "&gt;\n"
+#~ "        &lt;return-property name=\"id\" column=\"EID\"/&gt;\n"
+#~ "        &lt;return-property name=\"salary\"&gt;\n"
+#~ "            &lt;return-column name=\"VALUE\"/&gt;\n"
+#~ "            &lt;return-column name=\"CURRENCY\"/&gt;\n"
+#~ "        &lt;/return-property&gt;\n"
+#~ "    &lt;/return&gt;\n"
+#~ "    { ? = call selectAllEmployments() }\n"
+#~ "&lt;/sql-query&gt;"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[<class name=\"Person\">\n"
+#~ "    <id name=\"id\">\n"
+#~ "        <generator class=\"increment\"/>\n"
+#~ "    </id>\n"
+#~ "    <property name=\"name\" not-null=\"true\"/>\n"
+#~ "    <sql-insert>INSERT INTO PERSON (NAME, ID) VALUES ( UPPER(?), ? )</sql-"
+#~ "insert>\n"
+#~ "    <sql-update>UPDATE PERSON SET NAME=UPPER(?) WHERE ID=?</sql-update>\n"
+#~ "    <sql-delete>DELETE FROM PERSON WHERE ID=?</sql-delete>\n"
+#~ "</class>]]>"
+#~ msgstr ""
+#~ "&lt;class name=\"Person\"&gt;\n"
+#~ "    &lt;id name=\"id\"&gt;\n"
+#~ "        &lt;generator class=\"increment\"/&gt;\n"
+#~ "    &lt;/id&gt;\n"
+#~ "    &lt;property name=\"name\" not-null=\"true\"/&gt;\n"
+#~ "    &lt;sql-insert&gt;INSERT INTO PERSON (NAME, ID) VALUES ( UPPER(?), ? )"
+#~ "&lt;/sql-insert&gt;\n"
+#~ "    &lt;sql-update&gt;UPDATE PERSON SET NAME=UPPER(?) WHERE ID=?&lt;/sql-"
+#~ "update&gt;\n"
+#~ "    &lt;sql-delete&gt;DELETE FROM PERSON WHERE ID=?&lt;/sql-delete&gt;\n"
+#~ "&lt;/class&gt;"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[<class name=\"Person\">\n"
+#~ "    <id name=\"id\">\n"
+#~ "        <generator class=\"increment\"/>\n"
+#~ "    </id>\n"
+#~ "    <property name=\"name\" not-null=\"true\"/>\n"
+#~ "    <sql-insert callable=\"true\">{call createPerson (?, ?)}</sql-"
+#~ "insert>\n"
+#~ "    <sql-delete callable=\"true\">{? = call deletePerson (?)}</sql-"
+#~ "delete>\n"
+#~ "    <sql-update callable=\"true\">{? = call updatePerson (?, ?)}</sql-"
+#~ "update>\n"
+#~ "</class>]]>"
+#~ msgstr ""
+#~ "&lt;class name=\"Person\"&gt;\n"
+#~ "    &lt;id name=\"id\"&gt;\n"
+#~ "        &lt;generator class=\"increment\"/&gt;\n"
+#~ "    &lt;/id&gt;\n"
+#~ "    &lt;property name=\"name\" not-null=\"true\"/&gt;\n"
+#~ "    &lt;sql-insert callable=\"true\"&gt;{call createPerson (?, ?)}&lt;/"
+#~ "sql-insert&gt;\n"
+#~ "    &lt;sql-delete callable=\"true\"&gt;{? = call deletePerson (?)}&lt;/"
+#~ "sql-delete&gt;\n"
+#~ "    &lt;sql-update callable=\"true\"&gt;{? = call updatePerson (?, ?)}"
+#~ "&lt;/sql-update&gt;\n"
+#~ "&lt;/class&gt;"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[CREATE OR REPLACE FUNCTION updatePerson (uid IN NUMBER, uname IN "
+#~ "VARCHAR2)\n"
+#~ "    RETURN NUMBER IS\n"
+#~ "BEGIN\n"
+#~ "\n"
+#~ "    update PERSON\n"
+#~ "    set\n"
+#~ "        NAME = uname,\n"
+#~ "    where\n"
+#~ "        ID = uid;\n"
+#~ "\n"
+#~ "    return SQL%ROWCOUNT;\n"
+#~ "\n"
+#~ "END updatePerson;]]>"
+#~ msgstr ""
+#~ "CREATE OR REPLACE FUNCTION updatePerson (uid IN NUMBER, uname IN "
+#~ "VARCHAR2)\n"
+#~ "    RETURN NUMBER IS\n"
+#~ "BEGIN\n"
+#~ "\n"
+#~ "    update PERSON\n"
+#~ "    set\n"
+#~ "        NAME = uname,\n"
+#~ "    where\n"
+#~ "        ID = uid;\n"
+#~ "\n"
+#~ "    return SQL&#37;ROWCOUNT;\n"
+#~ "\n"
+#~ "END updatePerson;"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[<sql-query name=\"person\">\n"
+#~ "    <return alias=\"pers\" class=\"Person\" lock-mode=\"upgrade\"/>\n"
+#~ "    SELECT NAME AS {pers.name}, ID AS {pers.id}\n"
+#~ "    FROM PERSON\n"
+#~ "    WHERE ID=?\n"
+#~ "    FOR UPDATE\n"
+#~ "</sql-query>]]>"
+#~ msgstr ""
+#~ "&lt;sql-query name=\"person\"&gt;\n"
+#~ "    &lt;return alias=\"pers\" class=\"Person\" lock-mode=\"upgrade\"/"
+#~ "&gt;\n"
+#~ "    SELECT NAME AS {pers.name}, ID AS {pers.id}\n"
+#~ "    FROM PERSON\n"
+#~ "    WHERE ID=?\n"
+#~ "    FOR UPDATE\n"
+#~ "&lt;/sql-query&gt;"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[<class name=\"Person\">\n"
+#~ "    <id name=\"id\">\n"
+#~ "        <generator class=\"increment\"/>\n"
+#~ "    </id>\n"
+#~ "    <property name=\"name\" not-null=\"true\"/>\n"
+#~ "    <loader query-ref=\"person\"/>\n"
+#~ "</class>]]>"
+#~ msgstr ""
+#~ "&lt;class name=\"Person\"&gt;\n"
+#~ "    &lt;id name=\"id\"&gt;\n"
+#~ "        &lt;generator class=\"increment\"/&gt;\n"
+#~ "    &lt;/id&gt;\n"
+#~ "    &lt;property name=\"name\" not-null=\"true\"/&gt;\n"
+#~ "    &lt;loader query-ref=\"person\"/&gt;\n"
+#~ "&lt;/class&gt;"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[<set name=\"employments\" inverse=\"true\">\n"
+#~ "    <key/>\n"
+#~ "    <one-to-many class=\"Employment\"/>\n"
+#~ "    <loader query-ref=\"employments\"/>\n"
+#~ "</set>]]>"
+#~ msgstr ""
+#~ "&lt;set name=\"employments\" inverse=\"true\"&gt;\n"
+#~ "    &lt;key/&gt;\n"
+#~ "    &lt;one-to-many class=\"Employment\"/&gt;\n"
+#~ "    &lt;loader query-ref=\"employments\"/&gt;\n"
+#~ "&lt;/set&gt;"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[<sql-query name=\"employments\">\n"
+#~ "    <load-collection alias=\"emp\" role=\"Person.employments\"/>\n"
+#~ "    SELECT {emp.*}\n"
+#~ "    FROM EMPLOYMENT emp\n"
+#~ "    WHERE EMPLOYER = :id\n"
+#~ "    ORDER BY STARTDATE ASC, EMPLOYEE ASC\n"
+#~ "</sql-query>]]>"
+#~ msgstr ""
+#~ "&lt;sql-query name=\"employments\"&gt;\n"
+#~ "    &lt;load-collection alias=\"emp\" role=\"Person.employments\"/&gt;\n"
+#~ "    SELECT {emp.*}\n"
+#~ "    FROM EMPLOYMENT emp\n"
+#~ "    WHERE EMPLOYER = :id\n"
+#~ "    ORDER BY STARTDATE ASC, EMPLOYEE ASC\n"
+#~ "&lt;/sql-query&gt;"
+
+#, fuzzy
+#~ msgid ""
+#~ "<![CDATA[<sql-query name=\"person\">\n"
+#~ "    <return alias=\"pers\" class=\"Person\"/>\n"
+#~ "    <return-join alias=\"emp\" property=\"pers.employments\"/>\n"
+#~ "    SELECT NAME AS {pers.*}, {emp.*}\n"
+#~ "    FROM PERSON pers\n"
+#~ "    LEFT OUTER JOIN EMPLOYMENT emp\n"
+#~ "        ON pers.ID = emp.PERSON_ID\n"
+#~ "    WHERE ID=?\n"
+#~ "</sql-query>]]>"
+#~ msgstr ""
+#~ "&lt;sql-query name=\"person\"&gt;\n"
+#~ "    &lt;return alias=\"pers\" class=\"Person\"/&gt;\n"
+#~ "    &lt;return-join alias=\"emp\" property=\"pers.employments\"/&gt;\n"
+#~ "    SELECT NAME AS {pers.*}, {emp.*}\n"
+#~ "    FROM PERSON pers\n"
+#~ "    LEFT OUTER JOIN EMPLOYMENT emp\n"
+#~ "        ON pers.ID = emp.PERSON_ID\n"
+#~ "    WHERE ID=?\n"
+#~ "&lt;/sql-query&gt;"

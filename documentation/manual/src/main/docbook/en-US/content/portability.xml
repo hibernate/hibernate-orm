@@ -20,12 +20,17 @@
   ~ 51 Franklin Street, Fifth Floor
   ~ Boston, MA  02110-1301  USA
   -->
-<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
+<!ENTITY % BOOK_ENTITIES SYSTEM "../HIBERNATE_-_Relational_Persistence_for_Idiomatic_Java.ent">
+%BOOK_ENTITIES;
+
+]>
 
 <chapter id="portability">
     <title>Database Portability Considerations</title>
 
-    <sect1 id="portability-basics">
+    <section id="portability-basics">
         <title>Portability Basics</title>
 
         <para>
@@ -36,9 +41,9 @@
             the exact scenario, the basic idea is that you want Hibernate to help you run against any number
             of databases without changes to your code, and ideally without any changes to the mapping metadata.
         </para>
-    </sect1>
+    </section>
 
-    <sect1 id="portability-dialect">
+    <section id="portability-dialect">
         <title>Dialect</title>
 
         <para>
@@ -49,9 +54,9 @@
             of dialects for many of the most popular databases.  If you find that your particular database is
             not among them, it is not terribly difficult to write your own.
         </para>
-    </sect1>
+    </section>
 
-    <sect1 id="portability-dialectresolver">
+    <section id="portability-dialectresolver">
         <title>Dialect resolution</title>
 
         <para>
@@ -92,9 +97,9 @@
             <constant>DIALECT_RESOLVERS</constant> constant on
             <classname>org.hibernate.cfg.Environment</classname>).
         </para>
-    </sect1>
+    </section>
 
-    <sect1 id="portability-idgen">
+    <section id="portability-idgen">
         <title>Identifier generation</title>
 
         <para>
@@ -148,9 +153,9 @@
             <classname>org.hibernate.id.enhanced.SequenceStyleGenerator</classname> mimics the behavior of
             a sequence on databases which do not support sequences by using a table.
         </para>
-    </sect1>
+    </section>
 
-    <sect1 id="portability-functions">
+    <section id="portability-functions">
         <title>Database functions</title>
 
         <warning>
@@ -181,9 +186,9 @@
                 </para>
             </important>
         </para>
-    </sect1>
+    </section>
 
-    <sect1 id="portability-types">
+    <section id="portability-types">
         <title>Type mappings</title>
 
         <para>
@@ -192,13 +197,13 @@
 
         <!--
             todo :
-        <sect2 id="portability-types-lobs">
+        <section id="portability-types-lobs">
             <title>BLOB/CLOB mappings</title>
-        </sect2>
+        </section>
 
-        <sect2 id="portability-types-bool">
+        <section id="portability-types-bool">
             <title>Boolean mappings</title>
-        </sect2>
+        </section>
         -->
-    </sect1>
+    </section>
 </chapter>

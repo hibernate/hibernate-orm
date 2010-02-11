@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2009-07-14 19:56+0000\n"
+"POT-Creation-Date: 2010-02-04T04:51:22\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -11,13 +11,11 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 
 #. Tag: title
-#: transactions.xml:29
 #, fuzzy, no-c-format
 msgid "Transactions and Concurrency"
 msgstr "트랜잭션들과 동시성"
 
 #. Tag: para
-#: transactions.xml:31
 #, fuzzy, no-c-format
 msgid ""
 "The most important point about Hibernate and concurrency control is that it "
@@ -32,7 +30,6 @@ msgstr ""
 "랜잭션 격리 명세에 약간의 시간을 할애할 것을 매우 권장한다."
 
 #. Tag: para
-#: transactions.xml:38
 #, fuzzy, no-c-format
 msgid ""
 "Hibernate does not lock objects in memory. Your application can expect the "
@@ -48,7 +45,6 @@ msgstr ""
 "읽기를 제공한다."
 
 #. Tag: para
-#: transactions.xml:46
 #, fuzzy, no-c-format
 msgid ""
 "In addition to versioning for automatic optimistic concurrency control, "
@@ -62,7 +58,6 @@ msgstr ""
 "이 장의 뒷부분에서 논의된다."
 
 #. Tag: para
-#: transactions.xml:53
 #, fuzzy, no-c-format
 msgid ""
 "The discussion of concurrency control in Hibernate begins with the "
@@ -76,13 +71,11 @@ msgstr ""
 "시작한다."
 
 #. Tag: title
-#: transactions.xml:60
 #, no-c-format
 msgid "Session and transaction scopes"
 msgstr "세션 영역과 트랜잭션 영역"
 
 #. Tag: para
-#: transactions.xml:62
 #, fuzzy, no-c-format
 msgid ""
 "A <literal>SessionFactory</literal> is an expensive-to-create, threadsafe "
@@ -96,7 +89,6 @@ msgstr ""
 "생성된다."
 
 #. Tag: para
-#: transactions.xml:68
 #, fuzzy, no-c-format
 msgid ""
 "A <literal>Session</literal> is an inexpensive, non-threadsafe object that "
@@ -112,7 +104,6 @@ msgstr ""
 "지 않을 것이므로, 사용될 때까지 리소스들을 소비하지 않는다."
 
 #. Tag: para
-#: transactions.xml:76
 #, fuzzy, no-c-format
 msgid ""
 "In order to reduce lock contention in the database, a database transaction "
@@ -129,7 +120,6 @@ msgstr ""
 "는 것은 대개 결코 좋은 설계는 아니다."
 
 #. Tag: para
-#: transactions.xml:84
 #, fuzzy, no-c-format
 msgid ""
 "What is the scope of a unit of work? Can a single Hibernate "
@@ -144,13 +134,11 @@ msgstr ""
 "그리고 당신은 데이터베이스 트랜잭션 경계들을 어떻게 한정하는가?"
 
 #. Tag: title
-#: transactions.xml:92
 #, no-c-format
 msgid "Unit of work"
 msgstr "작업 단위"
 
 #. Tag: para
-#: transactions.xml:94
 #, no-c-format
 msgid ""
 "First, let's define a unit of work. A unit of work is a design pattern "
@@ -160,13 +148,12 @@ msgid ""
 "citation> In other words, its a series of operations we wish to carry out "
 "against the database together. Basically, it is a transaction, though "
 "fulfilling a unit of work will often span multiple physical database "
-"transactions (see <xref linkend=\"transactions-basics-apptx\"/>). So really "
+"transactions (see <xref linkend=\"transactions-basics-apptx\" />). So really "
 "we are talking about a more abstract notion of a transaction. The term "
 "\"business transaction\" is also sometimes used in lieu of unit of work."
 msgstr ""
 
 #. Tag: para
-#: transactions.xml:111
 #, fuzzy, no-c-format
 msgid ""
 "Do not use the <emphasis>session-per-operation</emphasis> antipattern: do "
@@ -200,7 +187,6 @@ msgstr ""
 "씬 더 유지가능하고 확장적이다."
 
 #. Tag: para
-#: transactions.xml:126
 #, fuzzy, no-c-format
 msgid ""
 "The most common pattern in a multi-user client/server application is "
@@ -226,7 +212,6 @@ msgstr ""
 "적합하다."
 
 #. Tag: para
-#: transactions.xml:138
 #, fuzzy, no-c-format
 msgid ""
 "The challenge lies in the implementation. Hibernate provides built-in "
@@ -254,14 +239,13 @@ msgstr ""
 "literal>을 선호하라."
 
 #. Tag: para
-#: transactions.xml:150
 #, fuzzy, no-c-format
 msgid ""
 "Your application code can access a \"current session\" to process the "
 "request by calling <literal>sessionFactory.getCurrentSession()</literal>. "
 "You will always get a <literal>Session</literal> scoped to the current "
 "database transaction. This has to be configured for either resource-local or "
-"JTA environments, see <xref linkend=\"architecture-current-session\"/>."
+"JTA environments, see <xref linkend=\"architecture-current-session\" />."
 msgstr ""
 "당신의 어플리케이션 코드는 어디서든 필요할 때 종종 <literal>sessionFactory."
 "getCurrentSession()</literal>을 간단히 호출함으로써 요청을 처리할 \"현재 세션"
@@ -271,7 +255,6 @@ msgstr ""
 "session\"/>을 보라."
 
 #. Tag: para
-#: transactions.xml:158
 #, fuzzy, no-c-format
 msgid ""
 "You can extend the scope of a <literal>Session</literal> and database "
@@ -295,13 +278,11 @@ msgstr ""
 "emphasis> 패턴을 둘러싼 팁들과 예제들은 Hibernate 웹 사이트와 포럼을 보라."
 
 #. Tag: title
-#: transactions.xml:173
 #, no-c-format
 msgid "Long conversations"
 msgstr "장기간의 대화"
 
 #. Tag: para
-#: transactions.xml:175
 #, fuzzy, no-c-format
 msgid ""
 "The session-per-request pattern is not the only way of designing units of "
@@ -317,7 +298,6 @@ msgstr ""
 "용되지 않는다. 다음 예제를 검토하자:"
 
 #. Tag: para
-#: transactions.xml:185
 #, fuzzy, no-c-format
 msgid ""
 "The first screen of a dialog opens. The data seen by the user has been "
@@ -329,7 +309,6 @@ msgstr ""
 "객체들을 변경시키는 것이 자유롭다."
 
 #. Tag: para
-#: transactions.xml:192
 #, fuzzy, no-c-format
 msgid ""
 "The user clicks \"Save\" after 5 minutes and expects their modifications to "
@@ -341,7 +320,6 @@ msgstr ""
 "를 기대한다."
 
 #. Tag: para
-#: transactions.xml:200
 #, fuzzy, no-c-format
 msgid ""
 "From the point of view of the user, we call this unit of work a long-running "
@@ -354,7 +332,6 @@ msgstr ""
 "재한다."
 
 #. Tag: para
-#: transactions.xml:206
 #, fuzzy, no-c-format
 msgid ""
 "A first naive implementation might keep the <literal>Session</literal> and "
@@ -370,7 +347,6 @@ msgstr ""
 "용 숫자를 높이는 것을 허용하지 않을 것이기 때문이다."
 
 #. Tag: para
-#: transactions.xml:214
 #, fuzzy, no-c-format
 msgid ""
 "You have to use several database transactions to implement the conversation. "
@@ -393,7 +369,6 @@ msgstr ""
 "쉽다:"
 
 #. Tag: para
-#: transactions.xml:227
 #, fuzzy, no-c-format
 msgid ""
 "<emphasis>Automatic Versioning</emphasis>: Hibernate can perform automatic "
@@ -407,7 +382,6 @@ msgstr ""
 "의 끝에서 체크한다."
 
 #. Tag: para
-#: transactions.xml:235
 #, fuzzy, no-c-format
 msgid ""
 "<emphasis>Detached Objects</emphasis>: if you decide to use the "
@@ -426,7 +400,6 @@ msgstr ""
 "변경들을 격리시키는데 사용된다."
 
 #. Tag: para
-#: transactions.xml:245
 #, fuzzy, no-c-format
 msgid ""
 "<emphasis>Extended (or Long) Session</emphasis>: the Hibernate "
@@ -447,7 +420,6 @@ msgstr ""
 "flush되는 것이 허용되지 않지만 명시적으로 flush되는 것은 허용된다."
 
 #. Tag: para
-#: transactions.xml:258
 #, fuzzy, no-c-format
 msgid ""
 "Both <emphasis>session-per-request-with-detached-objects</emphasis> and "
@@ -461,13 +433,11 @@ msgstr ""
 "한다."
 
 #. Tag: title
-#: transactions.xml:267
 #, no-c-format
 msgid "Considering object identity"
 msgstr "객체 identity 고려하기"
 
 #. Tag: para
-#: transactions.xml:269
 #, fuzzy, no-c-format
 msgid ""
 "An application can concurrently access the same persistent state in two "
@@ -481,31 +451,26 @@ msgstr ""
 "identity에 대한 두 개의 다른 개념들이 존재한다:"
 
 #. Tag: term
-#: transactions.xml:278
 #, no-c-format
 msgid "Database Identity"
 msgstr "데이터베이스 Identity"
 
-#. Tag: literal
-#: transactions.xml:281
-#, no-c-format
-msgid "foo.getId().equals( bar.getId() )"
+#. Tag: para
+#, fuzzy, no-c-format
+msgid "<literal>foo.getId().equals( bar.getId() )</literal>"
 msgstr "foo.getId().equals( bar.getId() )"
 
 #. Tag: term
-#: transactions.xml:286
 #, no-c-format
 msgid "JVM Identity"
 msgstr "JVM Identity"
 
-#. Tag: literal
-#: transactions.xml:289
+#. Tag: para
 #, no-c-format
-msgid "foo==bar"
-msgstr "foo==bar"
+msgid "<literal>foo==bar</literal>"
+msgstr ""
 
 #. Tag: para
-#: transactions.xml:295
 #, fuzzy, no-c-format
 msgid ""
 "For objects attached to a <emphasis>particular</emphasis> <literal>Session</"
@@ -526,7 +491,6 @@ msgstr ""
 "여, optimistic 접근법을 사용하여 해결된다."
 
 #. Tag: para
-#: transactions.xml:304
 #, fuzzy, no-c-format
 msgid ""
 "This approach leaves Hibernate and the database to worry about concurrency. "
@@ -546,7 +510,6 @@ msgstr ""
 "<literal>==</literal>를 안전하게 사용할 수가 있다."
 
 #. Tag: para
-#: transactions.xml:313
 #, fuzzy, no-c-format
 msgid ""
 "However, an application that uses <literal>==</literal> outside of a "
@@ -591,13 +554,11 @@ msgstr ""
 "가 구현되어야 하는 방법임을 노트하라."
 
 #. Tag: title
-#: transactions.xml:334
 #, no-c-format
 msgid "Common issues"
 msgstr "공통된 쟁점들"
 
 #. Tag: para
-#: transactions.xml:336
 #, fuzzy, no-c-format
 msgid ""
 "Do not use the anti-patterns <emphasis>session-per-user-session</emphasis> "
@@ -613,7 +574,6 @@ msgstr ""
 "들을 확실히 이해하라:"
 
 #. Tag: para
-#: transactions.xml:345
 #, fuzzy, no-c-format
 msgid ""
 "A <literal>Session</literal> is not thread-safe. Things that work "
@@ -635,7 +595,6 @@ msgstr ""
 "에서 동일한 <literal>Session</literal>을 사용할 수도 있다."
 
 #. Tag: para
-#: transactions.xml:356
 #, fuzzy, no-c-format
 msgid ""
 "An exception thrown by Hibernate means you have to rollback your database "
@@ -658,7 +617,6 @@ msgstr ""
 "이 아니고 당신이 어떻게든 롤백 후에 시작해야 하기 때문이다."
 
 #. Tag: para
-#: transactions.xml:368
 #, fuzzy, no-c-format
 msgid ""
 "The <literal>Session</literal> caches every object that is in a persistent "
@@ -667,7 +625,7 @@ msgid ""
 "until you get an OutOfMemoryException. One solution is to call <literal>clear"
 "()</literal> and <literal>evict()</literal> to manage the <literal>Session</"
 "literal> cache, but you should consider a Stored Procedure if you need mass "
-"data operations. Some solutions are shown in <xref linkend=\"batch\"/>. "
+"data operations. Some solutions are shown in <xref linkend=\"batch\" />. "
 "Keeping a <literal>Session</literal> open for the duration of a user session "
 "also means a higher probability of stale data."
 msgstr ""
@@ -684,13 +642,11 @@ msgstr ""
 "데이터에 대한 높은 확률을 의미한다."
 
 #. Tag: title
-#: transactions.xml:386
 #, no-c-format
 msgid "Database transaction demarcation"
 msgstr "데이터베이스 트랜잭션 경계 설정"
 
 #. Tag: para
-#: transactions.xml:388
 #, fuzzy, no-c-format
 msgid ""
 "Database, or system, transaction boundaries are always necessary. No "
@@ -712,7 +668,6 @@ msgstr ""
 "작은 트랜잭션들의 경우보다는 더 좋게 수행될 것이다."
 
 #. Tag: para
-#: transactions.xml:398
 #, fuzzy, no-c-format
 msgid ""
 "A Hibernate application can run in non-managed (i.e., standalone, simple "
@@ -736,7 +691,6 @@ msgstr ""
 "더 이상 필요하지 않다."
 
 #. Tag: para
-#: transactions.xml:408
 #, fuzzy, no-c-format
 msgid ""
 "However, it is often desirable to keep your persistence layer portable "
@@ -756,7 +710,6 @@ msgstr ""
 "한 그것의 사용을 강력하게 권장한다."
 
 #. Tag: para
-#: transactions.xml:417
 #, fuzzy, no-c-format
 msgid ""
 "Ending a <literal>Session</literal> usually involves four distinct phases:"
@@ -764,31 +717,26 @@ msgstr ""
 "대개 <literal>Session</literal> 종료는 네 개의 구분되는 단계들을 수반한다:"
 
 #. Tag: para
-#: transactions.xml:423
 #, no-c-format
 msgid "flush the session"
 msgstr "세션을 flush 시킨다"
 
 #. Tag: para
-#: transactions.xml:428
 #, no-c-format
 msgid "commit the transaction"
 msgstr "트랜잭션을 커밋 시킨다"
 
 #. Tag: para
-#: transactions.xml:433
 #, no-c-format
 msgid "close the session"
 msgstr "세션을 닫는다"
 
 #. Tag: para
-#: transactions.xml:438
 #, no-c-format
 msgid "handle exceptions"
 msgstr "예외상황들을 처리한다"
 
 #. Tag: para
-#: transactions.xml:444
 #, fuzzy, no-c-format
 msgid ""
 "We discussed Flushing the session earlier, so we will now have a closer look "
@@ -800,13 +748,11 @@ msgstr ""
 "다."
 
 #. Tag: title
-#: transactions.xml:451
 #, no-c-format
 msgid "Non-managed environment"
 msgstr "관리되지 않는 환경"
 
 #. Tag: para
-#: transactions.xml:453
 #, fuzzy, no-c-format
 msgid ""
 "If a Hibernate persistence layer runs in a non-managed environment, database "
@@ -819,32 +765,7 @@ msgstr ""
 "한 (예를 들면 DataSource가 아닌) 커넥션 풀(pool)들로부터 처리된다. session/"
 "transaction 처리 관용구는 다음과 같다:"
 
-#. Tag: programlisting
-#: transactions.xml:460
-#, no-c-format
-msgid ""
-"<![CDATA[// Non-managed environment idiom\n"
-"Session sess = factory.openSession();\n"
-"Transaction tx = null;\n"
-"try {\n"
-"    tx = sess.beginTransaction();\n"
-"\n"
-"    // do some work\n"
-"    ...\n"
-"\n"
-"    tx.commit();\n"
-"}\n"
-"catch (RuntimeException e) {\n"
-"    if (tx != null) tx.rollback();\n"
-"    throw e; // or display error message\n"
-"}\n"
-"finally {\n"
-"    sess.close();\n"
-"}]]>"
-msgstr ""
-
 #. Tag: para
-#: transactions.xml:462
 #, fuzzy, no-c-format
 msgid ""
 "You do not have to <literal>flush()</literal> the <literal>Session</literal> "
@@ -864,7 +785,6 @@ msgstr ""
 "에서 이식성이 있고 실행된다."
 
 #. Tag: para
-#: transactions.xml:471
 #, fuzzy, no-c-format
 msgid ""
 "As outlined earlier, a much more flexible solution is Hibernate's built-in "
@@ -873,27 +793,7 @@ msgstr ""
 "보다 더 유연한 해결책은 앞서 설명했듯이 Hibernate의 미리 빌드되어 있는 \"현"
 "재 세션\" 컨텍스트 관리이다:"
 
-#. Tag: programlisting
-#: transactions.xml:476
-#, no-c-format
-msgid ""
-"<![CDATA[// Non-managed environment idiom with getCurrentSession()\n"
-"try {\n"
-"    factory.getCurrentSession().beginTransaction();\n"
-"\n"
-"    // do some work\n"
-"    ...\n"
-"\n"
-"    factory.getCurrentSession().getTransaction().commit();\n"
-"}\n"
-"catch (RuntimeException e) {\n"
-"    factory.getCurrentSession().getTransaction().rollback();\n"
-"    throw e; // or display error message\n"
-"}]]>"
-msgstr ""
-
 #. Tag: para
-#: transactions.xml:478
 #, fuzzy, no-c-format
 msgid ""
 "You will not see these code snippets in a regular application; fatal "
@@ -915,7 +815,6 @@ msgstr ""
 "부분에서 논의된다."
 
 #. Tag: para
-#: transactions.xml:488
 #, fuzzy, no-c-format
 msgid ""
 "You should select <literal>org.hibernate.transaction.JDBCTransactionFactory</"
@@ -928,13 +827,11 @@ msgstr ""
 "current_session_context_class</literal>를 선택해야 함을 노트하라."
 
 #. Tag: title
-#: transactions.xml:497
 #, no-c-format
 msgid "Using JTA"
 msgstr "JTA 사용하기"
 
 #. Tag: para
-#: transactions.xml:499
 #, fuzzy, no-c-format
 msgid ""
 "If your persistence layer runs in an application server (for example, behind "
@@ -950,7 +847,6 @@ msgstr ""
 "방도들을 제공한다."
 
 #. Tag: para
-#: transactions.xml:506
 #, fuzzy, no-c-format
 msgid ""
 "If you use bean-managed transactions (BMT), Hibernate will tell the "
@@ -963,32 +859,7 @@ msgstr ""
 "료하도록 어플리케이션 서버에게 알려줄 것이다. 따라서 트랜잭션 관리 코드는 "
 "non-managed 환경과 동일하다."
 
-#. Tag: programlisting
-#: transactions.xml:512
-#, no-c-format
-msgid ""
-"<![CDATA[// BMT idiom\n"
-"Session sess = factory.openSession();\n"
-"Transaction tx = null;\n"
-"try {\n"
-"    tx = sess.beginTransaction();\n"
-"\n"
-"    // do some work\n"
-"    ...\n"
-"\n"
-"    tx.commit();\n"
-"}\n"
-"catch (RuntimeException e) {\n"
-"    if (tx != null) tx.rollback();\n"
-"    throw e; // or display error message\n"
-"}\n"
-"finally {\n"
-"    sess.close();\n"
-"}]]>"
-msgstr ""
-
 #. Tag: para
-#: transactions.xml:514
 #, fuzzy, no-c-format
 msgid ""
 "If you want to use a transaction-bound <literal>Session</literal>, that is, "
@@ -999,31 +870,7 @@ msgstr ""
 "을 위한 <literal>getCurrentSession()</literal> 기능을 사용하고자 원할 경우, "
 "당신은 JTA <literal>UserTransaction</literal> API를 직접 사용해야 할 것이다:"
 
-#. Tag: programlisting
-#: transactions.xml:520
-#, no-c-format
-msgid ""
-"<![CDATA[// BMT idiom with getCurrentSession()\n"
-"try {\n"
-"    UserTransaction tx = (UserTransaction)new InitialContext()\n"
-"                            .lookup(\"java:comp/UserTransaction\");\n"
-"\n"
-"    tx.begin();\n"
-"\n"
-"    // Do some work on Session bound to transaction\n"
-"    factory.getCurrentSession().load(...);\n"
-"    factory.getCurrentSession().persist(...);\n"
-"\n"
-"    tx.commit();\n"
-"}\n"
-"catch (RuntimeException e) {\n"
-"    tx.rollback();\n"
-"    throw e; // or display error message\n"
-"}]]>"
-msgstr ""
-
 #. Tag: para
-#: transactions.xml:522
 #, fuzzy, no-c-format
 msgid ""
 "With CMT, transaction demarcation is completed in session bean deployment "
@@ -1032,20 +879,7 @@ msgstr ""
 "CMT의 경우, 트랜잭션 관할[경계 설정]은 프로그램 상이 아닌, session bean 배치 "
 "디스크립터들 속에서 행해진다. 그러므로 코드는 다음으로 감소된다:"
 
-#. Tag: programlisting
-#: transactions.xml:527
-#, no-c-format
-msgid ""
-"<![CDATA[// CMT idiom\n"
-" Session sess = factory.getCurrentSession();\n"
-"\n"
-" // do some work\n"
-" ...\n"
-"]]>"
-msgstr ""
-
 #. Tag: para
-#: transactions.xml:529
 #, fuzzy, no-c-format
 msgid ""
 "In a CMT/EJB, even rollback happens automatically. An unhandled "
@@ -1064,7 +898,6 @@ msgstr ""
 "emphasis>"
 
 #. Tag: para
-#: transactions.xml:537
 #, fuzzy, no-c-format
 msgid ""
 "When configuring Hibernate's transaction factory, choose <literal>org."
@@ -1085,7 +918,6 @@ msgstr ""
 "또는 <literal>\"jta\"</literal>로 설정되도록 하라."
 
 #. Tag: para
-#: transactions.xml:546
 #, fuzzy, no-c-format
 msgid ""
 "The <literal>getCurrentSession()</literal> operation has one downside in a "
@@ -1115,13 +947,11 @@ msgstr ""
 "쉽게 피할 수 있다.)"
 
 #. Tag: title
-#: transactions.xml:562
 #, no-c-format
 msgid "Exception handling"
 msgstr "예외상황 처리"
 
 #. Tag: para
-#: transactions.xml:564
 #, fuzzy, no-c-format
 msgid ""
 "If the <literal>Session</literal> throws an exception, including any "
@@ -1143,7 +973,6 @@ msgstr ""
 "를 호출하여 닫혀지도록 확실히 하라."
 
 #. Tag: para
-#: transactions.xml:575
 #, fuzzy, no-c-format
 msgid ""
 "The <literal>HibernateException</literal>, which wraps most of the errors "
@@ -1169,7 +998,6 @@ msgstr ""
 "가능하지 않고 적절한 액션이 취해져야 한다."
 
 #. Tag: para
-#: transactions.xml:587
 #, fuzzy, no-c-format
 msgid ""
 "Hibernate wraps <literal>SQLException</literal>s thrown while interacting "
@@ -1201,7 +1029,6 @@ msgstr ""
 "를 보라). 표준 <literal>JDBCException</literal> 서브타입은 다음과 같다:"
 
 #. Tag: para
-#: transactions.xml:603
 #, fuzzy, no-c-format
 msgid ""
 "<literal>JDBCConnectionException</literal>: indicates an error with the "
@@ -1211,7 +1038,6 @@ msgstr ""
 "타낸다."
 
 #. Tag: para
-#: transactions.xml:609
 #, fuzzy, no-c-format
 msgid ""
 "<literal>SQLGrammarException</literal>: indicates a grammar or syntax "
@@ -1221,7 +1047,6 @@ msgstr ""
 "제점을 나타낸다."
 
 #. Tag: para
-#: transactions.xml:615
 #, fuzzy, no-c-format
 msgid ""
 "<literal>ConstraintViolationException</literal>: indicates some form of "
@@ -1231,7 +1056,6 @@ msgstr ""
 "떤 형식을 나타낸다."
 
 #. Tag: para
-#: transactions.xml:621
 #, fuzzy, no-c-format
 msgid ""
 "<literal>LockAcquisitionException</literal>: indicates an error acquiring a "
@@ -1241,7 +1065,6 @@ msgstr ""
 "필수적인 잠금 레벨을 획득하는 오류를 나타낸다."
 
 #. Tag: para
-#: transactions.xml:627
 #, fuzzy, no-c-format
 msgid ""
 "<literal>GenericJDBCException</literal>: a generic exception which did not "
@@ -1251,13 +1074,11 @@ msgstr ""
 "되지 않았던 일반적인 예외상황."
 
 #. Tag: title
-#: transactions.xml:637
 #, no-c-format
 msgid "Transaction timeout"
 msgstr "트랜잭션 타임아웃"
 
 #. Tag: para
-#: transactions.xml:639
 #, fuzzy, no-c-format
 msgid ""
 "An important feature provided by a managed environment like EJB, that is "
@@ -1282,33 +1103,7 @@ msgstr ""
 "다. 이 기능은 Hibernate <literal>Transaction</literal> 객체에 의해 추상화 된"
 "다."
 
-#. Tag: programlisting
-#: transactions.xml:652
-#, no-c-format
-msgid ""
-"<![CDATA[\n"
-"Session sess = factory.openSession();\n"
-"try {\n"
-"    //set transaction timeout to 3 seconds\n"
-"    sess.getTransaction().setTimeout(3);\n"
-"    sess.getTransaction().begin();\n"
-"\n"
-"    // do some work\n"
-"    ...\n"
-"\n"
-"    sess.getTransaction().commit()\n"
-"}\n"
-"catch (RuntimeException e) {\n"
-"    sess.getTransaction().rollback();\n"
-"    throw e; // or display error message\n"
-"}\n"
-"finally {\n"
-"    sess.close();\n"
-"}]]>"
-msgstr ""
-
 #. Tag: para
-#: transactions.xml:654
 #, fuzzy, no-c-format
 msgid ""
 "<literal>setTimeout()</literal> cannot be called in a CMT bean, where "
@@ -1318,13 +1113,11 @@ msgstr ""
 "라. 여기서 트랜잭션 타임아웃들은 선언적으로 정의되어야 한다."
 
 #. Tag: title
-#: transactions.xml:664
 #, no-c-format
 msgid "Optimistic concurrency control"
 msgstr "Optimistic 동시성 제어"
 
 #. Tag: para
-#: transactions.xml:666
 #, fuzzy, no-c-format
 msgid ""
 "The only approach that is consistent with high concurrency and high "
@@ -1344,13 +1137,11 @@ msgstr ""
 "지하는 이점을 갖고 있다."
 
 #. Tag: title
-#: transactions.xml:677
 #, no-c-format
 msgid "Application version checking"
 msgstr "어플리케이션 버전 체킹"
 
 #. Tag: para
-#: transactions.xml:679
 #, fuzzy, no-c-format
 msgid ""
 "In an implementation without much help from Hibernate, each interaction with "
@@ -1367,26 +1158,7 @@ msgstr ""
 "드시킬 책임이 있다. 이 접근법은 대화 트랜잭션을 확실히 격리시키기 위해 그것 "
 "자신의 버전 체킹을 수행하도록 어플리케이션에게 강제시킨다."
 
-#. Tag: programlisting
-#: transactions.xml:688
-#, no-c-format
-msgid ""
-"<![CDATA[// foo is an instance loaded by a previous Session\n"
-"session = factory.openSession();\n"
-"Transaction t = session.beginTransaction();\n"
-"\n"
-"int oldVersion = foo.getVersion();\n"
-"session.load( foo, foo.getKey() ); // load the current state\n"
-"if ( oldVersion != foo.getVersion() ) throw new StaleObjectStateException"
-"();\n"
-"foo.setProperty(\"bar\");\n"
-"\n"
-"t.commit();\n"
-"session.close();]]>"
-msgstr ""
-
 #. Tag: para
-#: transactions.xml:690
 #, no-c-format
 msgid ""
 "The <literal>version</literal> property is mapped using <literal>&lt;"
@@ -1398,7 +1170,6 @@ msgstr ""
 "킬 것이다."
 
 #. Tag: para
-#: transactions.xml:696
 #, fuzzy, no-c-format
 msgid ""
 "If you are operating in a low-data-concurrency environment, and do not "
@@ -1416,7 +1187,6 @@ msgstr ""
 "들을 병합시킬 기회 없이 업데이트들 손실을 겪을 수도 있기 때문이다."
 
 #. Tag: para
-#: transactions.xml:705
 #, fuzzy, no-c-format
 msgid ""
 "Manual version checking is only feasible in trivial circumstances and not "
@@ -1432,13 +1202,11 @@ msgstr ""
 "전 체킹을 제공한다."
 
 #. Tag: title
-#: transactions.xml:716
 #, no-c-format
 msgid "Extended session and automatic versioning"
 msgstr "확장된 세션과 자동적인 버전화"
 
 #. Tag: para
-#: transactions.xml:718
 #, fuzzy, no-c-format
 msgid ""
 "A single <literal>Session</literal> instance and its persistent instances "
@@ -1462,7 +1230,6 @@ msgstr ""
 "되지 않은 데이터를 가지고 비지니스 대화를 재시작하는 기회이다)."
 
 #. Tag: para
-#: transactions.xml:727
 #, fuzzy, no-c-format
 msgid ""
 "The <literal>Session</literal> is disconnected from any underlying JDBC "
@@ -1477,23 +1244,7 @@ msgstr ""
 "에 그 자체 관계할 필요가 없거나 그것은 모든 데이터베이스 트랜잭션에서 인스턴"
 "스들을 다시 로드시킬 필요가 없다."
 
-#. Tag: programlisting
-#: transactions.xml:735
-#, no-c-format
-msgid ""
-"<![CDATA[// foo is an instance loaded earlier by the old session\n"
-"Transaction t = session.beginTransaction(); // Obtain a new JDBC connection, "
-"start transaction\n"
-"\n"
-"foo.setProperty(\"bar\");\n"
-"\n"
-"session.flush();    // Only for last transaction in conversation\n"
-"t.commit();         // Also return JDBC connection\n"
-"session.close();    // Only for last transaction in conversation]]>"
-msgstr ""
-
 #. Tag: para
-#: transactions.xml:736
 #, fuzzy, no-c-format
 msgid ""
 "The <literal>foo</literal> object knows which <literal>Session</literal> it "
@@ -1528,7 +1279,6 @@ msgstr ""
 "<literal>close()</literal>할 것이다."
 
 #. Tag: para
-#: transactions.xml:751
 #, fuzzy, no-c-format
 msgid ""
 "This pattern is problematic if the <literal>Session</literal> is too big to "
@@ -1548,13 +1298,11 @@ msgstr ""
 "은 또한 곧 실없는 데이터가 될 것이기 때문이다."
 
 #. Tag: title
-#: transactions.xml:762
 #, no-c-format
 msgid "Note"
 msgstr ""
 
 #. Tag: para
-#: transactions.xml:763
 #, fuzzy, no-c-format
 msgid ""
 "Earlier versions of Hibernate required explicit disconnection and "
@@ -1566,7 +1314,6 @@ msgstr ""
 "효과를 가지므로, 이들 방법들은 진부하게 되었다.)"
 
 #. Tag: para
-#: transactions.xml:769
 #, fuzzy, no-c-format
 msgid ""
 "Keep the disconnected <literal>Session</literal> close to the persistence "
@@ -1582,7 +1329,6 @@ msgstr ""
 "에 전송하지 말라 (또는 그것을 별도의 티어에 직렬화 시키지도 말라)."
 
 #. Tag: para
-#: transactions.xml:777
 #, fuzzy, no-c-format
 msgid ""
 "The extended session pattern, or <emphasis>session-per-conversation</"
@@ -1597,13 +1343,11 @@ msgstr ""
 "며, 예제들은 Hibernate Wiki를 보라."
 
 #. Tag: title
-#: transactions.xml:787
 #, no-c-format
 msgid "Detached objects and automatic versioning"
 msgstr "Detached 객체들과 자동적인 버전화"
 
 #. Tag: para
-#: transactions.xml:789
 #, no-c-format
 msgid ""
 "Each interaction with the persistent store occurs in a new <literal>Session</"
@@ -1621,22 +1365,7 @@ msgstr ""
 "</literal>, <literal>Session.saveOrUpdate()</literal>, <literal>Session.merge"
 "()</literal>를 사용하여 그것들을 다시 첨부시킨다."
 
-#. Tag: programlisting
-#: transactions.xml:797
-#, no-c-format
-msgid ""
-"<![CDATA[// foo is an instance loaded by a previous Session\n"
-"foo.setProperty(\"bar\");\n"
-"session = factory.openSession();\n"
-"Transaction t = session.beginTransaction();\n"
-"session.saveOrUpdate(foo); // Use merge() if \"foo\" might have been loaded "
-"already\n"
-"t.commit();\n"
-"session.close();]]>"
-msgstr ""
-
 #. Tag: para
-#: transactions.xml:799
 #, fuzzy, no-c-format
 msgid ""
 "Again, Hibernate will check instance versions during flush, throwing an "
@@ -1646,7 +1375,6 @@ msgstr ""
 "이 발생할 경우에 예외상황을 던질 것이다."
 
 #. Tag: para
-#: transactions.xml:804
 #, fuzzy, no-c-format
 msgid ""
 "You can also call <literal>lock()</literal> instead of <literal>update()</"
@@ -1660,13 +1388,11 @@ msgstr ""
 "용할 수 있다."
 
 #. Tag: title
-#: transactions.xml:813
 #, no-c-format
 msgid "Customizing automatic versioning"
 msgstr "자동적인 버전화를 맞춤화 시키기"
 
 #. Tag: para
-#: transactions.xml:815
 #, fuzzy, no-c-format
 msgid ""
 "You can disable Hibernate's automatic version increment for particular "
@@ -1680,7 +1406,6 @@ msgstr ""
 "dirty 일 경우에 더 이상 버전을 증가시키지 않을 것이다."
 
 #. Tag: para
-#: transactions.xml:822
 #, fuzzy, no-c-format
 msgid ""
 "Legacy database schemas are often static and cannot be modified. Or, other "
@@ -1706,7 +1431,6 @@ msgstr ""
 "으로만 동작함을 노트하라."
 
 #. Tag: para
-#: transactions.xml:834
 #, fuzzy, no-c-format
 msgid ""
 "Concurrent modification can be permitted in instances where the changes that "
@@ -1720,7 +1444,6 @@ msgstr ""
 "비교만 할 것이다."
 
 #. Tag: para
-#: transactions.xml:840
 #, fuzzy, no-c-format
 msgid ""
 "In both cases, with dedicated version/timestamp columns or with a full/dirty "
@@ -1750,13 +1473,11 @@ msgstr ""
 "징을 맞춤화 시킬 수 있다."
 
 #. Tag: title
-#: transactions.xml:858
 #, fuzzy, no-c-format
 msgid "Pessimistic locking"
 msgstr "Pessimistic 잠금"
 
 #. Tag: para
-#: transactions.xml:860
 #, fuzzy, no-c-format
 msgid ""
 "It is not intended that users spend much time worrying about locking "
@@ -1772,7 +1493,6 @@ msgstr ""
 "작 시에 잠금들을 다시 얻고자 원할 수도 있다."
 
 #. Tag: para
-#: transactions.xml:867
 #, fuzzy, no-c-format
 msgid ""
 "Hibernate will always use the locking mechanism of the database; it never "
@@ -1782,7 +1502,6 @@ msgstr ""
 "을 항상 사용할 것이다!"
 
 #. Tag: para
-#: transactions.xml:872
 #, fuzzy, no-c-format
 msgid ""
 "The <literal>LockMode</literal> class defines the different lock levels that "
@@ -1792,7 +1511,6 @@ msgstr ""
 "금 레벨들을 정의한다. 잠금은 다음 메커니즘들에 의해 얻어진다:"
 
 #. Tag: para
-#: transactions.xml:879
 #, no-c-format
 msgid ""
 "<literal>LockMode.WRITE</literal> is acquired automatically when Hibernate "
@@ -1802,7 +1520,6 @@ msgstr ""
 "insert 할 때 자동적으로 획득된다."
 
 #. Tag: para
-#: transactions.xml:885
 #, fuzzy, no-c-format
 msgid ""
 "<literal>LockMode.UPGRADE</literal> can be acquired upon explicit user "
@@ -1814,7 +1531,6 @@ msgstr ""
 "literal>를 사용하여 명시적인 사용자 요청 상에서 얻어질 수 있다."
 
 #. Tag: para
-#: transactions.xml:891
 #, fuzzy, no-c-format
 msgid ""
 "<literal>LockMode.UPGRADE_NOWAIT</literal> can be acquired upon explicit "
@@ -1826,7 +1542,6 @@ msgstr ""
 "도 있다."
 
 #. Tag: para
-#: transactions.xml:897
 #, fuzzy, no-c-format
 msgid ""
 "<literal>LockMode.READ</literal> is acquired automatically when Hibernate "
@@ -1838,7 +1553,6 @@ msgstr ""
 "질 수도 있다. 명시적인 사용자 요청에 의해 다시 얻어질 수도 있다."
 
 #. Tag: para
-#: transactions.xml:904
 #, no-c-format
 msgid ""
 "<literal>LockMode.NONE</literal> represents the absence of a lock. All "
@@ -1853,14 +1567,12 @@ msgstr ""
 "출을 통해 세션과 연관된 객체들이 또한 이 잠금 모드로 시작된다."
 
 #. Tag: para
-#: transactions.xml:913
 #, no-c-format
 msgid ""
 "The \"explicit user request\" is expressed in one of the following ways:"
 msgstr "\"명시적인 사용자 요청\"은 다음 방법들 중 하나로 표현된다:"
 
 #. Tag: para
-#: transactions.xml:919
 #, no-c-format
 msgid ""
 "A call to <literal>Session.load()</literal>, specifying a <literal>LockMode</"
@@ -1870,19 +1582,16 @@ msgstr ""
 "한 호출."
 
 #. Tag: para
-#: transactions.xml:924
 #, no-c-format
 msgid "A call to <literal>Session.lock()</literal>."
 msgstr "<literal>Session.lock()</literal>에 대한 호출."
 
 #. Tag: para
-#: transactions.xml:929
 #, no-c-format
 msgid "A call to <literal>Query.setLockMode()</literal>."
 msgstr "<literal>Query.setLockMode()</literal>에 대한 호출."
 
 #. Tag: para
-#: transactions.xml:935
 #, no-c-format
 msgid ""
 "If <literal>Session.load()</literal> is called with <literal>UPGRADE</"
@@ -1901,7 +1610,6 @@ msgstr ""
 "그 객체에 대해 <literal>lock()</literal>을 호출한다."
 
 #. Tag: para
-#: transactions.xml:944
 #, fuzzy, no-c-format
 msgid ""
 "<literal>Session.lock()</literal> performs a version number check if the "
@@ -1917,7 +1625,6 @@ msgstr ""
 "literal>가 사용된다.)"
 
 #. Tag: para
-#: transactions.xml:951
 #, fuzzy, no-c-format
 msgid ""
 "If the requested lock mode is not supported by the database, Hibernate uses "
@@ -1929,13 +1636,11 @@ msgstr ""
 "이 이식 가능할 것임을 확실히 해준다."
 
 #. Tag: title
-#: transactions.xml:960
 #, fuzzy, no-c-format
 msgid "Connection release modes"
 msgstr "연결 해제 모드들"
 
 #. Tag: para
-#: transactions.xml:962
 #, fuzzy, no-c-format
 msgid ""
 "One of the legacies of Hibernate 2.x JDBC connection management meant that a "
@@ -1959,7 +1664,6 @@ msgstr ""
 "ConnectionReleaseMode</literal>의 열거된 값들에 의해 식별된다:"
 
 #. Tag: para
-#: transactions.xml:976
 #, fuzzy, no-c-format
 msgid ""
 "<literal>ON_CLOSE</literal>: is the legacy behavior described above. The "
@@ -1971,7 +1675,6 @@ msgstr ""
 "넥션을 보관할 필요가 있을 때 하나의 커넥션을 획득한다."
 
 #. Tag: para
-#: transactions.xml:983
 #, fuzzy, no-c-format
 msgid ""
 "<literal>AFTER_TRANSACTION</literal>: releases connections after a "
@@ -1981,7 +1684,6 @@ msgstr ""
 "Transaction</literal>이 완료된 후에 연결들을 해제하라고 말한다."
 
 #. Tag: para
-#: transactions.xml:989
 #, fuzzy, no-c-format
 msgid ""
 "<literal>AFTER_STATEMENT</literal> (also referred to as aggressive release): "
@@ -1997,7 +1699,6 @@ msgstr ""
 "ScrollableResults</literal>의 사용을 통해서이다."
 
 #. Tag: para
-#: transactions.xml:999
 #, fuzzy, no-c-format
 msgid ""
 "The configuration parameter <literal>hibernate.connection.release_mode</"
@@ -2008,7 +1709,6 @@ msgstr ""
 "release_mode</literal>가 사용된다. 가능한 값들은 다음과 같다:"
 
 #. Tag: para
-#: transactions.xml:1006
 #, fuzzy, no-c-format
 msgid ""
 "<literal>auto</literal> (the default): this choice delegates to the release "
@@ -2029,7 +1729,6 @@ msgstr ""
 "다."
 
 #. Tag: para
-#: transactions.xml:1016
 #, fuzzy, no-c-format
 msgid ""
 "<literal>on_close</literal>: uses ConnectionReleaseMode.ON_CLOSE. This "
@@ -2040,7 +1739,6 @@ msgstr ""
 "는다."
 
 #. Tag: para
-#: transactions.xml:1022
 #, fuzzy, no-c-format
 msgid ""
 "<literal>after_transaction</literal>: uses ConnectionReleaseMode."
@@ -2056,7 +1754,6 @@ msgstr ""
 "AFTER_STATEMENT인 것처럼 해제될 것임을 또한 노트하라."
 
 #. Tag: para
-#: transactions.xml:1030
 #, fuzzy, no-c-format
 msgid ""
 "<literal>after_statement</literal>: uses ConnectionReleaseMode."
@@ -2077,3 +1774,6 @@ msgstr ""
 "<literal>ConnectionProvider.getConnection()</literal>을 호출할 때마다 우리가 "
 "동일한 기본 JDBC 커넥션을 다시 필요로 할 수 있는 환경들에서 또는 우리가 동일"
 "한 커넥션을 얻는 것에 상관없는 auto-commit 환경에서 오직 안전하다."
+
+#~ msgid "foo==bar"
+#~ msgstr "foo==bar"

@@ -23,12 +23,16 @@
   ~ Boston, MA  02110-1301  USA
   -->
 
-<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
+<!ENTITY % BOOK_ENTITIES SYSTEM "../HIBERNATE_-_Relational_Persistence_for_Idiomatic_Java.ent">
+%BOOK_ENTITIES;
+
+]>
 
 <chapter id="inheritance">
     <title>Inheritance mapping</title>
 
-    <sect1 id="inheritance-strategies" revision="3">
+    <section id="inheritance-strategies" revision="3">
         <title>The three strategies</title>
 
         <para>
@@ -99,7 +103,7 @@
  </hibernate-mapping>]]></programlisting>
 
 
-        <sect2 id="inheritance-tableperclass" >
+        <section id="inheritance-tableperclass" >
         <title>Table per class hierarchy</title>
 
         <para>
@@ -134,9 +138,9 @@
             cannot have <literal>NOT NULL</literal> constraints.
         </para>
         
-        </sect2>
+        </section>
 
-        <sect2 id="inheritance-tablepersubclass">
+        <section id="inheritance-tablepersubclass">
         <title>Table per subclass</title>
 
         <para>
@@ -170,9 +174,9 @@
             is actually a one-to-one association.
         </para>
 
-        </sect2>
+        </section>
 
-        <sect2 id="inheritance-tablepersubclass-discriminator" revision="2">
+        <section id="inheritance-tablepersubclass-discriminator" revision="2">
         <title>Table per subclass: using a discriminator</title>
 
         <para>
@@ -221,9 +225,9 @@
             outer join when querying the superclass.
         </para>
 
-        </sect2>
+        </section>
 
-        <sect2 id="inheritance-mixing-tableperclass-tablepersubclass">
+        <section id="inheritance-mixing-tableperclass-tablepersubclass">
         <title>Mixing table per class hierarchy with table per subclass</title>
 
         <para>
@@ -260,9 +264,9 @@
 
         <programlisting role="XML"><![CDATA[<many-to-one name="payment" column="PAYMENT_ID" class="Payment"/>]]></programlisting>
     
-        </sect2>
+        </section>
 
-        <sect2 id="inheritance-tableperconcrete" revision="2">
+        <section id="inheritance-tableperconcrete" revision="2">
         <title>Table per concrete class</title>
 
         <para>
@@ -309,9 +313,9 @@
             of the superclass.
         </para>
 
-        </sect2>
+        </section>
 
-        <sect2 id="inheritance-tableperconcreate-polymorphism">
+        <section id="inheritance-tableperconcreate-polymorphism">
         <title>Table per concrete class using implicit polymorphism</title>
 
         <para>
@@ -349,7 +353,7 @@
             using XML entities
             (for example, <literal>[ &lt;!ENTITY allproperties SYSTEM "allproperties.xml"&gt; ]</literal>
             in the <literal>DOCTYPE</literal> declaration and 
-            <literal>&amp;allproperties;</literal> in the mapping).
+            <literal>&amp;allproperties&semi;</literal> in the mapping).
         </para>
         
         <para>
@@ -370,9 +374,9 @@
     <column name="PAYMENT_ID"/>
 </any>]]></programlisting>
            
-        </sect2>
+        </section>
 
-        <sect2 id="inheritance-mixingpolymorphism">
+        <section id="inheritance-mixingpolymorphism">
         <title>Mixing implicit polymorphism with other inheritance mappings</title>
 
         <para>
@@ -421,11 +425,11 @@
             not instances of <literal>NonelectronicTransaction</literal>.
         </para>
         
-        </sect2>
+        </section>
 
-    </sect1>
+    </section>
 
-    <sect1 id="inheritance-limitations">
+    <section id="inheritance-limitations">
         <title>Limitations</title>
 
         <para>
@@ -514,6 +518,6 @@
             </tgroup>
         </table>
 
-    </sect1>
+    </section>
 
 </chapter>

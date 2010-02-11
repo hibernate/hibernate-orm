@@ -23,7 +23,11 @@
   ~ Boston, MA  02110-1301  USA
   -->
 
-<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
+<!ENTITY % BOOK_ENTITIES SYSTEM "../HIBERNATE_-_Relational_Persistence_for_Idiomatic_Java.ent">
+%BOOK_ENTITIES;
+
+]>
 
 <chapter id="querysql" revision="2">
   <title>Native SQL</title>
@@ -37,7 +41,7 @@
   <para>Hibernate3 allows you to specify handwritten SQL, including stored
   procedures, for all create, update, delete, and load operations.</para>
 
-  <sect1 id="querysql-creating" revision="4">
+  <section id="querysql-creating" revision="4">
     <title>Using a <literal>SQLQuery</literal></title>
 
     <para>Execution of native SQL queries is controlled via the
@@ -45,7 +49,7 @@
     <literal>Session.createSQLQuery()</literal>. The following sections describe how
     to use this API for querying.</para>
 
-    <sect2>
+    <section>
       <title>Scalar queries</title>
 
       <para>The most basic SQL query is to get a list of scalars
@@ -108,9 +112,9 @@ sess.createSQLQuery("SELECT ID, NAME, BIRTHDATE FROM CATS").list();
       not mapped, or does not result in the expected type, it is possible to
       customize it via calls to <literal>registerHibernateType</literal> in
       the Dialect.</para>
-    </sect2>
+    </section>
 
-    <sect2>
+    <section>
       <title>Entity queries</title>
 
       <para>The above queries were all about returning scalar values,
@@ -150,9 +154,9 @@ sess.createSQLQuery("SELECT ID, NAME, BIRTHDATE FROM CATS").addEntity(Cat.class)
 ]]></programlisting>
 
       <para>This will allow cat.getDog() to function properly.</para>
-    </sect2>
+    </section>
 
-    <sect2>
+    <section>
       <title>Handling associations and collections</title>
 
       <para>It is possible to eagerly join in the <literal>Dog</literal> to
@@ -183,9 +187,9 @@ sess.createSQLQuery("SELECT ID, NAME, BIRTHDATE FROM CATS").addEntity(Cat.class)
             enhance the sql queries to make them usable in Hibernate. Problems can arise when returning
             multiple entities of the same type or when the default alias/column names are not enough.
         </para>
-    </sect2>
+    </section>
 
-    <sect2>
+    <section>
       <title>Returning multiple entities</title>
 
       <para>Until now, the result set column names are assumed to be the same
@@ -251,7 +255,7 @@ List loggedCats = sess.createSQLQuery(sql)
         .addEntity("mother", Cat.class).list()
 ]]></programlisting>
 
-      <sect3 id="querysql-aliasreferences" revision="2">
+      <section id="querysql-aliasreferences" revision="2">
         <title>Alias and property references</title>
 
         <para>In most cases the above alias injection is needed. For
@@ -368,10 +372,10 @@ List loggedCats = sess.createSQLQuery(sql)
             </tbody>
           </tgroup>
         </table>
-      </sect3>
-    </sect2>
+      </section>
+    </section>
 
-    <sect2>
+    <section>
       <title>Returning non-managed entities</title>
 
       <para>It is possible to apply a ResultTransformer to native SQL queries, allowing it to return non-managed entities.</para>
@@ -395,17 +399,17 @@ List loggedCats = sess.createSQLQuery(sql)
         The above query will return a list of <literal>CatDTO</literal> which has been instantiated and injected the values of NAME and BIRTHNAME into its corresponding
         properties or fields.
         </para>
-    </sect2>
+    </section>
 
-    <sect2>
+    <section>
       <title>Handling inheritance</title>
 
       <para>Native SQL queries which query for entities that are mapped as part
       of an inheritance must include all properties for the baseclass and all
       its subclasses.</para>
-    </sect2>
+    </section>
 
-    <sect2>
+    <section>
       <title>Parameters</title>
 
       <para>Native SQL queries support positional as well as named
@@ -416,13 +420,13 @@ List pusList = query.setString(0, "Pus%").list();
      
 query = sess.createSQLQuery("SELECT * FROM CATS WHERE NAME like :name").addEntity(Cat.class);
 List pusList = query.setString("name", "Pus%").list();          ]]></programlisting>
-    </sect2>
+    </section>
     
     
         
-  </sect1>
+  </section>
 
-  <sect1 id="querysql-namedqueries" revision="3">
+  <section id="querysql-namedqueries" revision="3">
     <title>Named SQL queries</title>
 
     <para>Named SQL queries can be defined in the mapping document and called
@@ -509,7 +513,7 @@ List pusList = query.setString("name", "Pus%").list();          ]]></programlist
     .setResultSetMapping("catAndKitten")
     .list();]]></programlisting>
 
-    <sect2 id="propertyresults">
+    <section id="propertyresults">
       <title>Using return-property to explicitly specify column/alias
       names</title>
 
@@ -560,9 +564,9 @@ List pusList = query.setString("name", "Pus%").list();          ]]></programlist
       <para>If your mapping has a discriminator you must use
       <literal>&lt;return-discriminator&gt;</literal> to specify the
       discriminator column.</para>
-    </sect2>
+    </section>
 
-    <sect2 id="sp_query" revision="1">
+    <section id="sp_query" revision="1">
       <title>Using stored procedures for querying</title>
 
       <para>Hibernate3 provides support for queries via stored procedures
@@ -607,7 +611,7 @@ BEGIN
       entities. <literal>&lt;return-join&gt;</literal> and
       <literal>&lt;load-collection&gt;</literal> are not supported.</para>
 
-      <sect3 id="querysql-limits-storedprocedures" revision="1">
+      <section id="querysql-limits-storedprocedures" revision="1">
         <title>Rules/limitations for using stored procedures</title>
 
         <para>You cannot use stored procedures with Hibernate unless you follow some procedure/function
@@ -655,11 +659,11 @@ BEGIN
             requirement.</para>
           </listitem>
         </itemizedlist>
-      </sect3>
-    </sect2>
-  </sect1>
+      </section>
+    </section>
+  </section>
 
-  <sect1 id="querysql-cud">
+  <section id="querysql-cud">
     <title>Custom SQL for create, update and delete</title>
 
     <para>Hibernate3 can use custom SQL for create, update, and delete operations.
@@ -731,9 +735,9 @@ BEGIN
     return SQL%ROWCOUNT;
 
 END updatePerson;]]></programlisting>
-  </sect1>
+  </section>
 
-  <sect1 id="querysql-load">
+  <section id="querysql-load">
     <title>Custom SQL for loading</title>
 
     <para>You can also declare your own SQL (or HQL) queries for entity
@@ -792,5 +796,5 @@ END updatePerson;]]></programlisting>
         ON pers.ID = emp.PERSON_ID
     WHERE ID=?
 </sql-query>]]></programlisting>
-  </sect1>
+  </section>
 </chapter>

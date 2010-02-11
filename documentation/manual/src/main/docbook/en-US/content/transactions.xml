@@ -23,7 +23,11 @@
   ~ Boston, MA  02110-1301  USA
   -->
 
-<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
+<!ENTITY % BOOK_ENTITIES SYSTEM "../HIBERNATE_-_Relational_Persistence_for_Idiomatic_Java.ent">
+%BOOK_ENTITIES;
+
+]>
 
 <chapter id="transactions" revision="2">
     <title>Transactions and Concurrency</title>
@@ -56,7 +60,7 @@
         <literal>Session</literal>, as well as database transactions and long conversations.
     </para>
 
-    <sect1 id="transactions-basics" revision="1">
+    <section id="transactions-basics" revision="1">
         <title>Session and transaction scopes</title>
 
         <para>
@@ -88,7 +92,7 @@
             database transaction boundaries? These questions are addressed in the following sections.
         </para>
 
-        <sect2 id="transactions-basics-uow" revision="1">
+        <section id="transactions-basics-uow" revision="1">
             <title>Unit of work</title>
 
             <para>
@@ -167,9 +171,9 @@
                 this <emphasis>Open Session in View</emphasis> pattern.
              </para>
 
-        </sect2>
+        </section>
 
-        <sect2 id="transactions-basics-apptx" revision="1">
+        <section id="transactions-basics-apptx" revision="1">
             <title>Long conversations</title>
 
             <para>
@@ -261,9 +265,9 @@
                 These disadvantages are discussed later in this chapter in the context of optimistic concurrency control.
             </para>
 
-        </sect2>
+        </section>
 
-        <sect2 id="transactions-basics-identity">
+        <section id="transactions-basics-identity">
             <title>Considering object identity</title>
 
             <para>
@@ -328,9 +332,9 @@
                 a Hibernate issue, but simply how Java object identity and equality has to be implemented.
             </para>
 
-        </sect2>
+        </section>
 
-        <sect2 id="transactions-basics-issues">
+        <section id="transactions-basics-issues">
             <title>Common issues</title>
 
              <para>
@@ -378,11 +382,11 @@
                 </listitem>
             </itemizedlist>
 
-        </sect2>
+        </section>
 
-    </sect1>
+    </section>
 
-    <sect1 id="transactions-demarcation">
+    <section id="transactions-demarcation">
         <title>Database transaction demarcation</title>
 
         <para>
@@ -447,7 +451,7 @@
         </para>
 
 
-        <sect2 id="transactions-demarcation-nonmanaged" revision="2">
+        <section id="transactions-demarcation-nonmanaged" revision="2">
             <title>Non-managed environment</title>
 
             <para>
@@ -520,9 +524,9 @@ catch (RuntimeException e) {
                 <literal>hibernate.current_session_context_class</literal>.
             </para>
             
-        </sect2>
+        </section>
 
-        <sect2 id="transactions-demarcation-jta" revision="3">
+        <section id="transactions-demarcation-jta" revision="3">
             <title>Using JTA</title>
 
             <para>
@@ -623,9 +627,9 @@ catch (RuntimeException e) {
                 <literal>iterate()</literal> from the JTA or CMT code.)
             </para>
 
-        </sect2>
+        </section>
 
-        <sect2 id="transactions-demarcation-exceptions">
+        <section id="transactions-demarcation-exceptions">
             <title>Exception handling</title>
 
             <para>
@@ -698,9 +702,9 @@ catch (RuntimeException e) {
                 </listitem>
             </itemizedlist>
 
-        </sect2>
+        </section>
 
-        <sect2 id="transactions-demarcation-timeout">
+        <section id="transactions-demarcation-timeout">
             <title>Transaction timeout</title>
 
             <para>
@@ -741,11 +745,11 @@ finally {
                 where transaction timeouts must be defined declaratively.
             </para>
             
-        </sect2>
+        </section>
         
-    </sect1>
+    </section>
 
-    <sect1 id="transactions-optimistic">
+    <section id="transactions-optimistic">
         <title>Optimistic concurrency control</title>
 
         <para>
@@ -758,7 +762,7 @@ finally {
             also has the benefit of preventing lost updates in single database transactions.
         </para>
 
-        <sect2 id="transactions-optimistic-manual">
+        <section id="transactions-optimistic-manual">
             <title>Application version checking</title>
 
             <para>
@@ -805,9 +809,9 @@ session.close();]]></programlisting>
                 as the design paradigm.
             </para>
 
-        </sect2>
+        </section>
 
-        <sect2 id="transactions-optimistic-longsession">
+        <section id="transactions-optimistic-longsession">
             <title>Extended session and automatic versioning</title>
 
             <para>
@@ -883,9 +887,9 @@ session.close();    // Only for last transaction in conversation]]></programlist
                 for this. See the Hibernate Wiki for examples.
             </para>
 
-        </sect2>
+        </section>
 
-        <sect2 id="transactions-optimistic-detached">
+        <section id="transactions-optimistic-detached">
             <title>Detached objects and automatic versioning</title>
 
             <para>
@@ -915,9 +919,9 @@ session.close();]]></programlisting>
                 caches) if you are sure that the object has not been modified.
             </para>
 
-        </sect2>
+        </section>
 
-        <sect2 id="transactions-optimistic-customizing">
+        <section id="transactions-optimistic-customizing">
             <title>Customizing automatic versioning</title>
 
             <para>
@@ -958,11 +962,11 @@ session.close();]]></programlisting>
                 the instance to ensure that changes did occur before updating the row.
             </para>
 
-        </sect2>
+        </section>
 
-    </sect1>
+    </section>
 
-    <sect1 id="transactions-locking">
+    <section id="transactions-locking">
         <title>Pessimistic locking</title>
 
         <para>
@@ -1062,9 +1066,9 @@ session.close();]]></programlisting>
             portable.
         </para>
 
-    </sect1>
+    </section>
 
-    <sect1 id="transactions-connection-release">
+    <section id="transactions-connection-release">
         <title>Connection release modes</title>
 
         <para>
@@ -1147,7 +1151,7 @@ session.close();]]></programlisting>
             </listitem>
         </itemizedlist>
 
-    </sect1>
+    </section>
 
 </chapter>
 

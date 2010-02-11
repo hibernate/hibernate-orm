@@ -47,10 +47,7 @@ public class DerivedIdentitySimpleParentIdClassDepTest extends TestCase {
 		s.persist( d );
 		s.persist( e );
 
-		// the following would work
-		// List depList = s.createQuery("Select d from Dependent d where d.name='LittleP'").list();
-
-		// the following query is not finding the entity 'd' added above
+		// find the entity added above
 		Query query = s.createQuery("Select d from Dependent d where d.name='LittleP' and d.emp.empName='Paula'");
 		List depList = query.list();
 		assertEquals( 1, depList.size() );

@@ -90,6 +90,8 @@ public class XmlMetaEntity implements MetaEntity {
 		this( mappedSuperclass.getClazz(), packageName, element, context, mappedSuperclass.isMetadataComplete() );
 		this.attributes = mappedSuperclass.getAttributes();
 		this.embeddableAttributes = null;
+		// entities can be directly initialised
+		init();
 	}
 
 	protected XmlMetaEntity(Embeddable embeddable, String packageName, TypeElement element, Context context) {

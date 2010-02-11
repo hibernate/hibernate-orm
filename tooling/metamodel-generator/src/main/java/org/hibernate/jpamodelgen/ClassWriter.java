@@ -116,7 +116,7 @@ public class ClassWriter {
 			final Element superClassElement = ( ( DeclaredType ) superClass ).asElement();
 			String superClassName = ( ( TypeElement ) superClassElement ).getQualifiedName().toString();
 			if ( context.containsMetaEntity( superClassName )
-					|| context.containsMetaSuperclassOrEmbeddable( superClassName ) ) {
+					|| context.containsMetaEmbeddable( superClassName ) ) {
 				pw.print( " extends " + superClassName + "_" );
 			}
 		}

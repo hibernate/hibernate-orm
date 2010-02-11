@@ -39,6 +39,7 @@ import org.xml.sax.SAXException;
 
 import org.hibernate.jpamodelgen.AccessTypeInformation;
 import org.hibernate.jpamodelgen.Context;
+import org.hibernate.jpamodelgen.util.Constants;
 import org.hibernate.jpamodelgen.util.StringUtil;
 import org.hibernate.jpamodelgen.util.TypeUtils;
 import org.hibernate.jpamodelgen.xml.jaxb.Entity;
@@ -55,7 +56,6 @@ public class XmlParser {
 	private static final String ORM_XML = "/META-INF/orm.xml";
 	private static final String PERSISTENCE_XML_XSD = "persistence_2_0.xsd";
 	private static final String ORM_XSD = "orm_2_0.xsd";
-	private static final String PATH_SEPARATOR = "/";
 
 	private Context context;
 	private List<EntityMappings> entityMappings;
@@ -154,13 +154,13 @@ public class XmlParser {
 			}
 
 			XmlMetaEntity metaEntity = new XmlMetaEmbeddable( embeddable, pkg, getXmlMappedType( fqcn ), context );
-			if ( context.containsMetaSuperclassOrEmbeddable( fqcn ) ) {
+			if ( context.containsMetaEmbeddable( fqcn ) ) {
 				context.logMessage(
 						Diagnostic.Kind.WARNING,
 						fqcn + " was already processed once. Skipping second occurance."
 				);
 			}
-			context.addMetaSuperclassOrEmbeddable( fqcn, metaEntity );
+			context.addMetaEmbeddable( fqcn, metaEntity );
 		}
 	}
 
@@ -180,17 +180,17 @@ public class XmlParser {
 				continue;
 			}
 
-			XmlMetaEntity metaEntity = new XmlMetaMappedSuperClass(
+			XmlMetaEntity metaEntity = new XmlMetaEntity(
 					mappedSuperClass, pkg, getXmlMappedType( fqcn ), context
 			);
 
-			if ( context.containsMetaSuperclassOrEmbeddable( fqcn ) ) {
+			if ( context.containsMetaEmbeddable( fqcn ) ) {
 				context.logMessage(
 						Diagnostic.Kind.WARNING,
 						fqcn + " was already processed once. Skipping second occurance."
 				);
 			}
-			context.addMetaSuperclassOrEmbeddable( fqcn, metaEntity );
+			context.addMetaEntity( fqcn, metaEntity );
 		}
 	}
 
@@ -263,7 +263,7 @@ public class XmlParser {
 			ormStream = fileObject.openInputStream();
 		}
 		catch ( IOException e1 ) {
-			// TODO
+			// TODO - METAGEN-12
 			// unfortunately, the Filer.getResource API seems not to be able to load from /META-INF. One gets a
 			// FilerException with the message with "Illegal name /META-INF". This means that we have to revert to
 			// using the classpath. This might mean that we find a persistence.xml which is 'part of another jar.
@@ -274,20 +274,20 @@ public class XmlParser {
 	}
 
 	private String getPackage(String resourceName) {
-		if ( !resourceName.contains( PATH_SEPARATOR ) ) {
+		if ( !resourceName.contains( Constants.PATH_SEPARATOR ) ) {
 			return "";
 		}
 		else {
-			return resourceName.substring( 0, resourceName.lastIndexOf( PATH_SEPARATOR ) );
+			return resourceName.substring( 0, resourceName.lastIndexOf( Constants.PATH_SEPARATOR ) );
 		}
 	}
 
 	private String getRelativeName(String resourceName) {
-		if ( !resourceName.contains( PATH_SEPARATOR ) ) {
+		if ( !resourceName.contains( Constants.PATH_SEPARATOR ) ) {
 			return resourceName;
 		}
 		else {
-			return resourceName.substring( resourceName.lastIndexOf( PATH_SEPARATOR ) + 1 );
+			return resourceName.substring( resourceName.lastIndexOf( Constants.PATH_SEPARATOR ) + 1 );
 		}
 	}
 
@@ -329,11 +329,11 @@ public class XmlParser {
 				context.addAccessTypeInformation( fqcn, accessInfo );
 			}
 
-			for ( org.hibernate.jpamodelgen.xml.jaxb.Embeddable embeddable : mappings.getEmbeddable() ) {
-				String name = embeddable.getClazz();
+			for ( org.hibernate.jpamodelgen.xml.jaxb.MappedSuperclass mappedSuperClass : mappings.getMappedSuperclass() ) {
+				String name = mappedSuperClass.getClazz();
 				fqcn = StringUtil.determineFullyQualifiedClassName( packageName, name );
 				AccessType explicitAccessType = null;
-				org.hibernate.jpamodelgen.xml.jaxb.AccessType type = embeddable.getAccess();
+				org.hibernate.jpamodelgen.xml.jaxb.AccessType type = mappedSuperClass.getAccess();
 				if ( type != null ) {
 					explicitAccessType = mapXmlAccessTypeToJpaAccessType( type );
 				}
@@ -341,14 +341,13 @@ public class XmlParser {
 						fqcn, explicitAccessType, defaultAccessType
 				);
 				context.addAccessTypeInformation( fqcn, accessInfo );
-
 			}
 
-			for ( org.hibernate.jpamodelgen.xml.jaxb.MappedSuperclass mappedSuperClass : mappings.getMappedSuperclass() ) {
-				String name = mappedSuperClass.getClazz();
+			for ( org.hibernate.jpamodelgen.xml.jaxb.Embeddable embeddable : mappings.getEmbeddable() ) {
+				String name = embeddable.getClazz();
 				fqcn = StringUtil.determineFullyQualifiedClassName( packageName, name );
 				AccessType explicitAccessType = null;
-				org.hibernate.jpamodelgen.xml.jaxb.AccessType type = mappedSuperClass.getAccess();
+				org.hibernate.jpamodelgen.xml.jaxb.AccessType type = embeddable.getAccess();
 				if ( type != null ) {
 					explicitAccessType = mapXmlAccessTypeToJpaAccessType( type );
 				}

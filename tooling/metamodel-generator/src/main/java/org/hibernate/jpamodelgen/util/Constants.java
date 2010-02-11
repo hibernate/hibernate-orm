@@ -63,7 +63,10 @@ public class Constants {
 		BASIC_ARRAY_TYPES.add( "java.lang.Byte" );
 	}
 
-	private Constants(){}
+	public static final String PATH_SEPARATOR = "/";
+
+	private Constants() {
+	}
 }
 
 

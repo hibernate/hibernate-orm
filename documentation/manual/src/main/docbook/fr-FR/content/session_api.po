@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: session_api\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2009-12-03T00:15:27\n"
+"POT-Creation-Date: 2010-02-10T07:25:35\n"
 "PO-Revision-Date: 2010-01-05 09:57+1000\n"
 "Last-Translator: Corina Roe <croe@redhat.com>\n"
 "Language-Team: French <i18@redhat.com>\n"
@@ -281,7 +281,8 @@ msgstr ""
 #. Tag: para
 #, no-c-format
 msgid "Alternatively, you can load state into a given instance:"
-msgstr "Alternativement, vous pouvez charger un état dans une instance donnée :"
+msgstr ""
+"Alternativement, vous pouvez charger un état dans une instance donnée :"
 
 #. Tag: para
 #, no-c-format
@@ -354,15 +355,14 @@ msgstr ""
 "certaines propriétés de l'objet."
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
 "How much does Hibernate load from the database and how many SQL "
 "<literal>SELECT</literal>s will it use? This depends on the "
 "<emphasis>fetching strategy</emphasis>. This is explained in <xref linkend="
 "\"performance-fetching\" />."
 msgstr ""
-"Combien de "
-"données Hibernate charge-t-il de la base de données et combien de "
+"Combien de données Hibernate charge-t-il de la base de données et combien de "
 "<literal>SELECT</literal>s utilisera-t-il ? Cela dépend de la "
 "<emphasis>stratégie de récupération</emphasis> et cela est expliqué dans "
 "<xref linkend=\"performance-fetching\" />."
@@ -516,7 +516,8 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "named parameters are insensitive to the order they occur in the query string"
+msgid ""
+"named parameters are insensitive to the order they occur in the query string"
 msgstr ""
 "les paramètres nommés sont insensibles à l'ordre dans lequel ils "
 "apparaissent dans la chaîne de la requête"
@@ -607,7 +608,8 @@ msgstr ""
 #. Tag: para
 #, no-c-format
 msgid "Parameter binding and executing is done programatically:"
-msgstr "La liaison de paramètres et l'exécution sont effectués par programmation :"
+msgstr ""
+"La liaison de paramètres et l'exécution sont effectués par programmation :"
 
 #. Tag: para
 #, no-c-format
@@ -705,7 +707,7 @@ msgstr ""
 "intuitive de requête <literal>Criteria</literal> pour ces cas :"
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
 "The <literal>Criteria</literal> and the associated <literal>Example</"
 "literal> API are discussed in more detail in <xref linkend=\"querycriteria"
@@ -736,7 +738,7 @@ msgstr ""
 "mettre les alias SQL entre accolades : "
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
 "SQL queries can contain named and positional parameters, just like Hibernate "
 "queries. More information about native SQL queries in Hibernate can be found "
@@ -791,7 +793,7 @@ msgstr ""
 "instances détachées. "
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
 "Hibernate does not offer its own API for direct execution of "
 "<literal>UPDATE</literal> or <literal>DELETE</literal> statements. Hibernate "
@@ -814,8 +816,8 @@ msgstr ""
 "masse entre en conflit avec le mapping objet/relationnel pour les "
 "applications orientées processus de transactions en ligne. Les futures "
 "versions de Hibernate pourront cependant fournir des fonctions particulières "
-"d'opération de masse. Voir <xref linkend=\"batch\" /> pour des "
-"astuces possibles d'opérations groupées. "
+"d'opération de masse. Voir <xref linkend=\"batch\" /> pour des astuces "
+"possibles d'opérations groupées. "
 
 #. Tag: title
 #, no-c-format
@@ -881,7 +883,7 @@ msgstr ""
 "exécutée. "
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
 "The application should individually <literal>update()</literal> detached "
 "instances that are reachable from the given detached instance "
@@ -921,7 +923,7 @@ msgstr ""
 "n'est pas le seul cas d'utilisation pour <literal>lock()</literal>. "
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
 "Other models for long units of work are discussed in <xref linkend="
 "\"transactions-optimistic\" />."
@@ -1092,7 +1094,8 @@ msgstr "l'instance persistante est retournée"
 msgid ""
 "the given instance does not become associated with the session, it remains "
 "detached"
-msgstr "l'instance donnée ne devient pas associée à la session, elle reste détachée"
+msgstr ""
+"l'instance donnée ne devient pas associée à la session, elle reste détachée"
 
 #. Tag: title
 #, no-c-format
@@ -1230,7 +1233,8 @@ msgstr "avant certaines exécutions de requête"
 #. Tag: para
 #, no-c-format
 msgid "from <literal>org.hibernate.Transaction.commit()</literal>"
-msgstr "lors d'un appel à <literal>org.hibernate.Transaction.commit()</literal>"
+msgstr ""
+"lors d'un appel à <literal>org.hibernate.Transaction.commit()</literal>"
 
 #. Tag: para
 #, no-c-format
@@ -1307,7 +1311,7 @@ msgstr ""
 "jamais de données périmées, ni des données fausses. "
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
 "It is possible to change the default behavior so that flush occurs less "
 "frequently. The <literal>FlushMode</literal> class defines three different "
@@ -1329,7 +1333,7 @@ msgstr ""
 "moment (voir <xref linkend=\"transactions-optimistic-longsession\" />)."
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
 "During flush, an exception might occur (e.g. if a DML operation violates a "
 "constraint). Since handling exceptions involves some understanding of "
@@ -1640,4 +1644,3 @@ msgstr ""
 "literal> et <literal>CollectionMetadata</literal> et la hiérarchie "
 "<literal>Type</literal>. Les instances des interfaces de méta-données "
 "peuvent être obtenues à partir de la <literal>SessionFactory</literal>. "
-

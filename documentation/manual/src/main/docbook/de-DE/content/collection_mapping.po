@@ -275,7 +275,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Collection_Mapping\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2009-12-03T00:15:26\n"
+"POT-Creation-Date: 2010-02-10T07:25:34\n"
 "PO-Revision-Date: 2007-02-26 10:27+1000\n"
 "Last-Translator: \n"
 "Language-Team:  <de@li.org>\n"
@@ -751,11 +751,13 @@ msgstr ""
 "im Stammelement deklarierte Schema außer Kraft setzt"
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
 "<literal>formula</literal> (optional): a SQL formula used to evaluate the "
 "key of the map."
 msgstr ""
+"<literal>schema</literal> (optional) der Name eines Tabellenschemas, der das "
+"im Stammelement deklarierte Schema außer Kraft setzt"
 
 #. Tag: para
 #, fuzzy, no-c-format
@@ -773,11 +775,13 @@ msgstr ""
 "im Stammelement deklarierte Schema außer Kraft setzt"
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
 "<literal>formula</literal> (optional): a SQ formula used to evaluate the "
 "foreign key of the map key."
 msgstr ""
+"<literal>schema</literal> (optional) der Name eines Tabellenschemas, der das "
+"im Stammelement deklarierte Schema außer Kraft setzt"
 
 #. Tag: para
 #, fuzzy, no-c-format
@@ -868,11 +872,13 @@ msgstr ""
 "<literal>class</literal> (erforderlich): Der Name der zugehörigen Klasse."
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
 "<literal>formula</literal> (optional): an SQL formula used to evaluate the "
 "element foreign key value."
 msgstr ""
+"<literal>schema</literal> (optional) der Name eines Tabellenschemas, der das "
+"im Stammelement deklarierte Schema außer Kraft setzt"
 
 #. Tag: para
 #, fuzzy, no-c-format
@@ -1301,8 +1307,7 @@ msgstr ""
 #, fuzzy, no-c-format
 msgid ""
 "Note that in this mapping, the collection-valued end of the association is "
-"responsible for updates to the foreign key. <!-- TODO: Does this really "
-"result in some unnecessary update statements? -->"
+"responsible for updates to the foreign key."
 msgstr ""
 "Bitte beachten Sie, dass bei diesem Mapping das Collection-wertige Ende der "
 "Assoziation für Aktualisierungen am Fremdschlüssel verantwortlich ist. TODO: "

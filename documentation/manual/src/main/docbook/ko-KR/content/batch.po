@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2009-06-10 21:02+0000\n"
+"POT-Creation-Date: 2010-02-10T07:25:34\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -11,13 +11,11 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 
 #. Tag: title
-#: batch.xml:29
 #, no-c-format
 msgid "Batch processing"
 msgstr "Batch 처리"
 
 #. Tag: para
-#: batch.xml:31
 #, fuzzy, no-c-format
 msgid ""
 "A naive approach to inserting 100,000 rows in the database using Hibernate "
@@ -26,22 +24,7 @@ msgstr ""
 "Hibernate를 사용하여 데이터베이스 내에서 100 000 개의 행들을 삽입시키는 본래"
 "의 접근법은 다음과 같다:"
 
-#. Tag: programlisting
-#: batch.xml:36
-#, no-c-format
-msgid ""
-"<![CDATA[Session session = sessionFactory.openSession();\n"
-"Transaction tx = session.beginTransaction();\n"
-"for ( int i=0; i<100000; i++ ) {\n"
-"    Customer customer = new Customer(.....);\n"
-"    session.save(customer);\n"
-"}\n"
-"tx.commit();\n"
-"session.close();]]>"
-msgstr ""
-
 #. Tag: para
-#: batch.xml:38
 #, fuzzy, no-c-format
 msgid ""
 "This would fall over with an <literal>OutOfMemoryException</literal> "
@@ -54,7 +37,6 @@ msgstr ""
 "된 <literal>Customer</literal> 인스턴스들을 캐시시키기 때문이다."
 
 #. Tag: para
-#: batch.xml:45
 #, fuzzy, no-c-format
 msgid ""
 "If you are undertaking batch processing you will need to enable the use of "
@@ -67,14 +49,7 @@ msgstr ""
 "우에 당신이 JDBC 배치 사용을 가능하게 하는 것은 절대적으로 필요하다. JDBC 배"
 "치 사이즈를 적당한 숫자(10-50)로 설정하라:"
 
-#. Tag: programlisting
-#: batch.xml:52
-#, no-c-format
-msgid "<![CDATA[hibernate.jdbc.batch_size 20]]>"
-msgstr ""
-
 #. Tag: para
-#: batch.xml:54
 #, fuzzy, no-c-format
 msgid ""
 "Hibernate disables insert batching at the JDBC level transparently if you "
@@ -85,7 +60,6 @@ msgstr ""
 "라."
 
 #. Tag: para
-#: batch.xml:59
 #, fuzzy, no-c-format
 msgid ""
 "You can also do this kind of work in a process where interaction with the "
@@ -94,14 +68,7 @@ msgstr ""
 "당신은 또한 second-level 캐시를 가진 상호작용이 완전하게 불가능한 프로세스 내"
 "에서 이런 종류의 작업을 행하고 싶어할 수도 있다:"
 
-#. Tag: programlisting
-#: batch.xml:64
-#, no-c-format
-msgid "<![CDATA[hibernate.cache.use_second_level_cache false]]>"
-msgstr ""
-
 #. Tag: para
-#: batch.xml:66
 #, no-c-format
 msgid ""
 "However, this is not absolutely necessary, since we can explicitly set the "
@@ -113,13 +80,11 @@ msgstr ""
 "를 설정할 수 있기 때문이다."
 
 #. Tag: title
-#: batch.xml:72
 #, no-c-format
 msgid "Batch inserts"
 msgstr "Batch inserts"
 
 #. Tag: para
-#: batch.xml:74
 #, fuzzy, no-c-format
 msgid ""
 "When making new objects persistent <literal>flush()</literal> and then "
@@ -130,35 +95,12 @@ msgstr ""
 "위해 세션을 정기적으로 <literal>flush()</literal> 시키고 나서 <literal>clear"
 "()</literal> 시켜야 한다."
 
-#. Tag: programlisting
-#: batch.xml:80
-#, no-c-format
-msgid ""
-"<![CDATA[Session session = sessionFactory.openSession();\n"
-"Transaction tx = session.beginTransaction();\n"
-"   \n"
-"for ( int i=0; i<100000; i++ ) {\n"
-"    Customer customer = new Customer(.....);\n"
-"    session.save(customer);\n"
-"    if ( i % 20 == 0 ) { //20, same as the JDBC batch size\n"
-"        //flush a batch of inserts and release memory:\n"
-"        session.flush();\n"
-"        session.clear();\n"
-"    }\n"
-"}\n"
-"   \n"
-"tx.commit();\n"
-"session.close();]]>"
-msgstr ""
-
 #. Tag: title
-#: batch.xml:85
 #, no-c-format
 msgid "Batch updates"
 msgstr "Batch updates"
 
 #. Tag: para
-#: batch.xml:87
 #, fuzzy, no-c-format
 msgid ""
 "For retrieving and updating data, the same ideas apply. In addition, you "
@@ -169,39 +111,12 @@ msgstr ""
 "이터 행들을 반환하는 질의들에 대해 서버-측 커서들의 장점을 취하는데 "
 "<literal>scroll()</literal>을 사용할 필요가 있다."
 
-#. Tag: programlisting
-#: batch.xml:93
-#, no-c-format
-msgid ""
-"<![CDATA[Session session = sessionFactory.openSession();\n"
-"Transaction tx = session.beginTransaction();\n"
-"   \n"
-"ScrollableResults customers = session.getNamedQuery(\"GetCustomers\")\n"
-"    .setCacheMode(CacheMode.IGNORE)\n"
-"    .scroll(ScrollMode.FORWARD_ONLY);\n"
-"int count=0;\n"
-"while ( customers.next() ) {\n"
-"    Customer customer = (Customer) customers.get(0);\n"
-"    customer.updateStuff(...);\n"
-"    if ( ++count % 20 == 0 ) {\n"
-"        //flush a batch of updates and release memory:\n"
-"        session.flush();\n"
-"        session.clear();\n"
-"    }\n"
-"}\n"
-"   \n"
-"tx.commit();\n"
-"session.close();]]>"
-msgstr ""
-
 #. Tag: title
-#: batch.xml:98
 #, no-c-format
 msgid "The StatelessSession interface"
 msgstr "StatelessSession 인터페이스"
 
 #. Tag: para
-#: batch.xml:99
 #, fuzzy, no-c-format
 msgid ""
 "Alternatively, Hibernate provides a command-oriented API that can be used "
@@ -232,27 +147,7 @@ msgstr ""
 "상태없는 세션은 기본 JDBC에 훨씬 더 가까운 하나의 보다 낮은 레벨의 추상화"
 "(abstraction)이다."
 
-#. Tag: programlisting
-#: batch.xml:114
-#, no-c-format
-msgid ""
-"<![CDATA[StatelessSession session = sessionFactory.openStatelessSession();\n"
-"Transaction tx = session.beginTransaction();\n"
-"   \n"
-"ScrollableResults customers = session.getNamedQuery(\"GetCustomers\")\n"
-"    .scroll(ScrollMode.FORWARD_ONLY);\n"
-"while ( customers.next() ) {\n"
-"    Customer customer = (Customer) customers.get(0);\n"
-"    customer.updateStuff(...);\n"
-"    session.update(customer);\n"
-"}\n"
-"   \n"
-"tx.commit();\n"
-"session.close();]]>"
-msgstr ""
-
 #. Tag: para
-#: batch.xml:116
 #, fuzzy, no-c-format
 msgid ""
 "In this code example, the <literal>Customer</literal> instances returned by "
@@ -264,7 +159,6 @@ msgstr ""
 "않는다."
 
 #. Tag: para
-#: batch.xml:122
 #, fuzzy, no-c-format
 msgid ""
 "The <literal>insert(), update()</literal> and <literal>delete()</literal> "
@@ -284,13 +178,11 @@ msgstr ""
 "들과는 매우 다른 의미들을 갖는다."
 
 #. Tag: title
-#: batch.xml:135
 #, no-c-format
 msgid "DML-style operations"
 msgstr "DML-스타일 연산들"
 
 #. Tag: para
-#: batch.xml:137
 #, fuzzy, no-c-format
 msgid ""
 "As already discussed, automatic and transparent object/relational mapping is "
@@ -300,8 +192,8 @@ msgid ""
 "the statements: <literal>INSERT</literal>, <literal>UPDATE</literal>, "
 "<literal>DELETE</literal>) will not affect in-memory state. However, "
 "Hibernate provides methods for bulk SQL-style DML statement execution that "
-"is performed through the Hibernate Query Language (<link linkend=\"queryhql"
-"\">HQL</link>)."
+"is performed through the Hibernate Query Language (<xref linkend=\"queryhql"
+"\" />)."
 msgstr ""
 "이미 논의했듯이, 자동적이고 투명한 객체/관계형 매핑은 객체 상태에 대한 관리"
 "에 관계된다. 이것은 객체 상태가 메모리 내에서 이용 가능함을 의미하므로, (SQL "
@@ -313,7 +205,6 @@ msgstr ""
 "실행을 위한 메소드들을 제공한다."
 
 #. Tag: para
-#: batch.xml:146
 #, fuzzy, no-c-format
 msgid ""
 "The pseudo-syntax for <literal>UPDATE</literal> and <literal>DELETE</"
@@ -325,19 +216,16 @@ msgstr ""
 "where_conditions)?</literal>. 노트할 몇 가지:"
 
 #. Tag: para
-#: batch.xml:151
 #, no-c-format
 msgid "Some points to note:"
 msgstr ""
 
 #. Tag: para
-#: batch.xml:157
 #, no-c-format
 msgid "In the from-clause, the FROM keyword is optional"
 msgstr "from-절에서, FROM 키워드는 옵션이다"
 
 #. Tag: para
-#: batch.xml:162
 #, fuzzy, no-c-format
 msgid ""
 "There can only be a single entity named in the from-clause. It can, however, "
@@ -351,25 +239,22 @@ msgstr ""
 "임의의 프로퍼티 참조들에 대해 수식되는 것은 규칙에 어긋난다."
 
 #. Tag: para
-#: batch.xml:170
 #, fuzzy, no-c-format
 msgid ""
-"No <link linkend=\"queryhql-joins-forms\">joins</link>, either implicit or "
-"explicit, can be specified in a bulk HQL query. Sub-queries can be used in "
-"the where-clause, where the subqueries themselves may contain joins."
+"No <xref linkend=\"queryhql-joins-forms\" />, either implicit or explicit, "
+"can be specified in a bulk HQL query. Sub-queries can be used in the where-"
+"clause, where the subqueries themselves may contain joins."
 msgstr ""
 "<xref linkend=\"queryhql-joins-forms\">join들</xref>은 (함축적이든 명시적이"
 "든) 대량 HQL 질의 속에 지정될 수 없다. 서브-질의들이 where-절에 사용될 수 있"
 "다; 서브질의들 그 자신들은 조인들을 포함할 수 있다."
 
 #. Tag: para
-#: batch.xml:177
 #, no-c-format
 msgid "The where-clause is also optional."
 msgstr "where-절 또한 옵션이다."
 
 #. Tag: para
-#: batch.xml:183
 #, fuzzy, no-c-format
 msgid ""
 "As an example, to execute an HQL <literal>UPDATE</literal>, use the "
@@ -382,36 +267,16 @@ msgstr ""
 "<literal>PreparedStatement.executeUpdate()</literal>와 유사하게 명명된다)를 "
 "사용하라:"
 
-#. Tag: programlisting
-#: batch.xml:189
-#, no-c-format
-msgid ""
-"<![CDATA[Session session = sessionFactory.openSession();\n"
-"Transaction tx = session.beginTransaction();\n"
-"\n"
-"String hqlUpdate = \"update Customer c set c.name = :newName where c.name = :"
-"oldName\";\n"
-"// or String hqlUpdate = \"update Customer set name = :newName where name = :"
-"oldName\";\n"
-"int updatedEntities = s.createQuery( hqlUpdate )\n"
-"        .setString( \"newName\", newName )\n"
-"        .setString( \"oldName\", oldName )\n"
-"        .executeUpdate();\n"
-"tx.commit();\n"
-"session.close();]]>"
-msgstr ""
-
 #. Tag: para
-#: batch.xml:191
 #, fuzzy, no-c-format
 msgid ""
 "In keeping with the EJB3 specification, HQL <literal>UPDATE</literal> "
-"statements, by default, do not effect the <link linkend=\"mapping-"
-"declaration-version\">version</link> or the <link linkend=\"mapping-"
-"declaration-timestamp\">timestamp</link> property values for the affected "
-"entities. However, you can force Hibernate to reset the <literal>version</"
-"literal> or <literal>timestamp</literal> property values through the use of "
-"a <literal>versioned update</literal>. This is achieved by adding the "
+"statements, by default, do not effect the version (<xref linkend=\"mapping-"
+"declaration-version\" />) or the timestamp (<xref linkend=\"mapping-"
+"declaration-timestamp\" />) property values for the affected entities. "
+"However, you can force Hibernate to reset the <literal>version</literal> or "
+"<literal>timestamp</literal> property values through the use of a "
+"<literal>versioned update</literal>. This is achieved by adding the "
 "<literal>VERSIONED</literal> keyword after the <literal>UPDATE</literal> "
 "keyword."
 msgstr ""
@@ -424,24 +289,7 @@ msgstr ""
 "적절하게 재설정하도록 강제할 수 있다. 이것은 <literal>UPDATE</literal> 키워"
 "드 뒤에 <literal>VERSIONED</literal> 키워드를 추가시켜서 성취된다."
 
-#. Tag: programlisting
-#: batch.xml:201
-#, no-c-format
-msgid ""
-"<![CDATA[Session session = sessionFactory.openSession();\n"
-"Transaction tx = session.beginTransaction();\n"
-"String hqlVersionedUpdate = \"update versioned Customer set name = :newName "
-"where name = :oldName\";\n"
-"int updatedEntities = s.createQuery( hqlUpdate )\n"
-"        .setString( \"newName\", newName )\n"
-"        .setString( \"oldName\", oldName )\n"
-"        .executeUpdate();\n"
-"tx.commit();\n"
-"session.close();]]>"
-msgstr ""
-
 #. Tag: para
-#: batch.xml:203
 #, fuzzy, no-c-format
 msgid ""
 "Custom version types, <literal>org.hibernate.usertype.UserVersionType</"
@@ -453,7 +301,6 @@ msgstr ""
 "용되지 않음을 노트하라."
 
 #. Tag: para
-#: batch.xml:208
 #, no-c-format
 msgid ""
 "To execute an HQL <literal>DELETE</literal>, use the same <literal>Query."
@@ -462,24 +309,7 @@ msgstr ""
 "HQL <literal>DELETE</literal>를 실행하려면, 같은 메소드 <literal>Query."
 "executeUpdate()</literal>를 사용하라:"
 
-#. Tag: programlisting
-#: batch.xml:213
-#, no-c-format
-msgid ""
-"<![CDATA[Session session = sessionFactory.openSession();\n"
-"Transaction tx = session.beginTransaction();\n"
-"\n"
-"String hqlDelete = \"delete Customer c where c.name = :oldName\";\n"
-"// or String hqlDelete = \"delete Customer where name = :oldName\";\n"
-"int deletedEntities = s.createQuery( hqlDelete )\n"
-"        .setString( \"oldName\", oldName )\n"
-"        .executeUpdate();\n"
-"tx.commit();\n"
-"session.close();]]>"
-msgstr ""
-
 #. Tag: para
-#: batch.xml:215
 #, fuzzy, no-c-format
 msgid ""
 "The <literal>int</literal> value returned by the <literal>Query.executeUpdate"
@@ -505,7 +335,6 @@ msgstr ""
 "다."
 
 #. Tag: para
-#: batch.xml:226
 #, no-c-format
 msgid ""
 "The pseudo-syntax for <literal>INSERT</literal> statements is: "
@@ -518,7 +347,6 @@ msgstr ""
 "EntityName properties_list select_statement</literal>. 노트할 몇 가지:"
 
 #. Tag: para
-#: batch.xml:234
 #, no-c-format
 msgid ""
 "Only the INSERT INTO ... SELECT ... form is supported; not the INSERT "
@@ -528,7 +356,6 @@ msgstr ""
 "VALUES ... 형식은 지원되지 않는다."
 
 #. Tag: para
-#: batch.xml:237
 #, fuzzy, no-c-format
 msgid ""
 "The properties_list is analogous to the <literal>column specification</"
@@ -546,7 +373,6 @@ msgstr ""
 "다형적이지 않다."
 
 #. Tag: para
-#: batch.xml:247
 #, fuzzy, no-c-format
 msgid ""
 "select_statement can be any valid HQL select query, with the caveat that the "
@@ -571,7 +397,6 @@ msgstr ""
 "literal>으로 정의된 프로퍼티 사이에 불일치 쟁점들을 일으킨다."
 
 #. Tag: para
-#: batch.xml:259
 #, fuzzy, no-c-format
 msgid ""
 "For the id property, the insert statement gives you two options. You can "
@@ -602,7 +427,6 @@ msgstr ""
 "에 사용될 수 없는 <literal>org.hibernate.id.TableHiLoGenerator</literal>이다."
 
 #. Tag: para
-#: batch.xml:274
 #, fuzzy, no-c-format
 msgid ""
 "For properties mapped as either <literal>version</literal> or "
@@ -620,24 +444,8 @@ msgstr ""
 "<literal>seed value</literal> 값이 사용되는 경우)."
 
 #. Tag: para
-#: batch.xml:284
 #, fuzzy, no-c-format
 msgid ""
 "The following is an example of an HQL <literal>INSERT</literal> statement "
 "execution:"
 msgstr "예제 HQL <literal>INSERT</literal> 문장 실행:"
-
-#. Tag: programlisting
-#: batch.xml:288
-#, no-c-format
-msgid ""
-"<![CDATA[Session session = sessionFactory.openSession();\n"
-"Transaction tx = session.beginTransaction();\n"
-"\n"
-"String hqlInsert = \"insert into DelinquentAccount (id, name) select c.id, c."
-"name from Customer c where ...\";\n"
-"int createdEntities = s.createQuery( hqlInsert )\n"
-"        .executeUpdate();\n"
-"tx.commit();\n"
-"session.close();]]>"
-msgstr ""

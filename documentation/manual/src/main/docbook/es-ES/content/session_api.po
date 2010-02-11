@@ -14,7 +14,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: session_api\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2009-12-03T00:15:27\n"
+"POT-Creation-Date: 2010-02-10T07:25:35\n"
 "PO-Revision-Date: 2010-01-07 10:43+1000\n"
 "Last-Translator: Angela Garcia <agarcia@redhat.com>\n"
 "Language-Team:  <en@li.org>\n"
@@ -359,7 +359,7 @@ msgstr ""
 "propiedades del objeto."
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
 "How much does Hibernate load from the database and how many SQL "
 "<literal>SELECT</literal>s will it use? This depends on the "
@@ -368,8 +368,8 @@ msgid ""
 msgstr ""
 "¿Cuánto carga Hibernate de la base de datos y cuántos <literal>SELECT</"
 "literal>s de SQL utilizará? Esto depende de la <emphasis>estrategia de "
-"recuperación</emphasis>. Esto se explica en la <xref linkend="
-"\"performance-fetching\" />."
+"recuperación</emphasis>. Esto se explica en la <xref linkend=\"performance-"
+"fetching\" />."
 
 #. Tag: title
 #, no-c-format
@@ -518,7 +518,8 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "named parameters are insensitive to the order they occur in the query string"
+msgid ""
+"named parameters are insensitive to the order they occur in the query string"
 msgstr ""
 "los parámetros con nombre son insensibles al orden en que aparecen en la "
 "cadena de consulta"
@@ -705,15 +706,14 @@ msgstr ""
 "consulta <literal>Criteria</literal> para estos casos: "
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
 "The <literal>Criteria</literal> and the associated <literal>Example</"
 "literal> API are discussed in more detail in <xref linkend=\"querycriteria"
 "\" />."
 msgstr ""
 "Las APIs de <literal>Criteria</literal> y el <literal>Example</literal> "
-"asociado se discuten en más detalle en el xref linkend=\"querycriteria"
-"\" />."
+"asociado se discuten en más detalle en el xref linkend=\"querycriteria\" />."
 
 #. Tag: title
 #, no-c-format
@@ -737,7 +737,7 @@ msgstr ""
 "alias de SQL entre llaves:"
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
 "SQL queries can contain named and positional parameters, just like Hibernate "
 "queries. More information about native SQL queries in Hibernate can be found "
@@ -792,7 +792,7 @@ msgstr ""
 "instancias separadas."
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
 "Hibernate does not offer its own API for direct execution of "
 "<literal>UPDATE</literal> or <literal>DELETE</literal> statements. Hibernate "
@@ -880,7 +880,7 @@ msgstr ""
 "instancias separadas es la primera operación que se ejecuta."
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
 "The application should individually <literal>update()</literal> detached "
 "instances that are reachable from the given detached instance "
@@ -891,10 +891,9 @@ msgstr ""
 "La aplicación debe actualizar <literal>update()</literal> individualmente "
 "las instancias separadas alcanzables por la instancia separada dada "
 "<emphasis>sólo</emphasis> si quiere que su estado se actualice. Esto puede "
-"ser automatizado la utilizando la <emphasis>persistencia transitiva</emphasis>. "
-"Consulte la <xref "
-"linkend=\"objectstate-transitive\" /> para obtener mayor "
-"información. "
+"ser automatizado la utilizando la <emphasis>persistencia transitiva</"
+"emphasis>. Consulte la <xref linkend=\"objectstate-transitive\" /> para "
+"obtener mayor información. "
 
 #. Tag: para
 #, no-c-format
@@ -921,7 +920,7 @@ msgstr ""
 "re-unión no es el único caso de uso para <literal>lock()</literal>."
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
 "Other models for long units of work are discussed in <xref linkend="
 "\"transactions-optimistic\" />."
@@ -1054,7 +1053,8 @@ msgstr ""
 #. Tag: para
 #, no-c-format
 msgid "otherwise <literal>update()</literal> the object"
-msgstr "de otra manera actualice el objeto llamando a <literal>update()</literal>"
+msgstr ""
+"de otra manera actualice el objeto llamando a <literal>update()</literal>"
 
 #. Tag: para
 #, no-c-format
@@ -1263,7 +1263,8 @@ msgstr "todas los borrados de colecciones"
 #. Tag: para
 #, no-c-format
 msgid "all collection element deletions, updates and insertions"
-msgstr "todos los borrados, actualizaciones e inserciones de elementos de colección"
+msgstr ""
+"todos los borrados, actualizaciones e inserciones de elementos de colección"
 
 #. Tag: para
 #, no-c-format
@@ -1305,7 +1306,7 @@ msgstr ""
 "desactualizados o incorrectos."
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
 "It is possible to change the default behavior so that flush occurs less "
 "frequently. The <literal>FlushMode</literal> class defines three different "
@@ -1318,14 +1319,16 @@ msgid ""
 msgstr ""
 "Es posible cambiar el comportamiento predeterminado de modo que el vaciado "
 "ocurra con menos frecuencia. La clase <literal>FlushMode</literal> define "
-"tres modos diferentes: sólo en tiempo de guardar los cambios cuando la API de <literal>Transaction</literal> de Hibernate se utiliza, vaciado automático utilizando la rutina explicada, o nunca vaciar a menos de que se "
+"tres modos diferentes: sólo en tiempo de guardar los cambios cuando la API "
+"de <literal>Transaction</literal> de Hibernate se utiliza, vaciado "
+"automático utilizando la rutina explicada, o nunca vaciar a menos de que se "
 "llame a <literal>flush()</literal> explícitamente. El último modo es útil "
 "para unidades de trabajo largas, donde se mantiene abierta una "
 "<literal>Session</literal> y es desconectada por largo tiempo (vea la <xref "
 "linkend=\"transactions-optimistic-longsession\"/>)."
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
 "During flush, an exception might occur (e.g. if a DML operation violates a "
 "constraint). Since handling exceptions involves some understanding of "
@@ -1335,8 +1338,7 @@ msgstr ""
 "Durante el vaciado se puede presentar una excepción (por ejemplo, si una "
 "operación DML viola una restricción). Ya que el manejo de excepciones "
 "implica algo de comprensión del comportamiento transaccional de Hibernate, "
-"lo discutimos en <xref linkend="
-"\"transactions\" />."
+"lo discutimos en <xref linkend=\"transactions\" />."
 
 #. Tag: title
 #, no-c-format
@@ -1566,7 +1568,8 @@ msgstr ""
 msgid ""
 "If a parent is deleted, all children are passed to <literal>delete()</"
 "literal>"
-msgstr "Si se borra un padre, se pasan todos los hijos a <literal>delete()</literal>"
+msgstr ""
+"Si se borra un padre, se pasan todos los hijos a <literal>delete()</literal>"
 
 #. Tag: para
 #, no-c-format
@@ -1635,4 +1638,3 @@ msgstr ""
 "<literal>ClassMetadata</literal> y <literal>CollectionMetadata</literal> y "
 "la jerarquía <literal>Type</literal>. Las instancias de las interfaces de "
 "metadatos se pueden obtener de la <literal>SessionFactory</literal>."
-

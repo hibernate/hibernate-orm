@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Collection_Mapping\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2009-12-09T04:05:51\n"
+"POT-Creation-Date: 2010-02-10T07:25:35\n"
 "PO-Revision-Date: 2010-01-07 09:59+1000\n"
 "Last-Translator: Xi HUANG <xhuang@redhat.com>\n"
 "Language-Team:  <en@li.org>\n"
@@ -860,6 +860,10 @@ msgstr ""
 #~ "    &lt;/joined-subclass&gt;\n"
 #~ "&lt;/class&gt;"
 
+#, fuzzy
+#~ msgid "<term>table per subclass</term>"
+#~ msgstr "<entry>table per subclass</entry>"
+
 #~ msgid "Features of inheritance mappings"
 #~ msgstr "継承マッピングの機能"
 
@@ -904,9 +908,6 @@ msgstr ""
 
 #~ msgid "supported"
 #~ msgstr "サポート"
-
-#~ msgid "<entry>table per subclass</entry>"
-#~ msgstr "<entry>table per subclass</entry>"
 
 #~ msgid "&lt;any&gt;"
 #~ msgstr "&lt;any&gt;"

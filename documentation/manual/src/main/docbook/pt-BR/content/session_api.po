@@ -108,7 +108,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: session_api\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2009-12-03T00:15:27\n"
+"POT-Creation-Date: 2010-02-10T07:25:35\n"
 "PO-Revision-Date: 2009-12-21 07:37+1000\n"
 "Last-Translator: \n"
 "Language-Team:  <en@li.org>\n"
@@ -451,7 +451,7 @@ msgstr ""
 "propriedades do objeto."
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
 "How much does Hibernate load from the database and how many SQL "
 "<literal>SELECT</literal>s will it use? This depends on the "
@@ -459,8 +459,9 @@ msgid ""
 "\"performance-fetching\" />."
 msgstr ""
 "O quanto Hibernate carrega do banco de dados e quantos SQL <literal>SELECT</"
-"literal> ele irá usar? Isto depende da estratégia de <emphasis>estratégia de busca</"
-"emphasis> usada e explicada na <xref linkend=\"performance-fetching\"/>."
+"literal> ele irá usar? Isto depende da estratégia de <emphasis>estratégia de "
+"busca</emphasis> usada e explicada na <xref linkend=\"performance-fetching\"/"
+">."
 
 #. Tag: title
 #, no-c-format
@@ -610,7 +611,8 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "named parameters are insensitive to the order they occur in the query string"
+msgid ""
+"named parameters are insensitive to the order they occur in the query string"
 msgstr ""
 "Parâmetros nomeados são insensíveis à ordem que eles ocorrem na faixa de "
 "consulta"
@@ -795,7 +797,7 @@ msgstr ""
 "<literal>Critério</literal> intuitiva para estes casos: "
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
 "The <literal>Criteria</literal> and the associated <literal>Example</"
 "literal> API are discussed in more detail in <xref linkend=\"querycriteria"
@@ -826,7 +828,7 @@ msgstr ""
 "deve incluir as aliases SQL dentro de chaves: "
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
 "SQL queries can contain named and positional parameters, just like Hibernate "
 "queries. More information about native SQL queries in Hibernate can be found "
@@ -880,7 +882,7 @@ msgstr ""
 "instâncias desanexadas."
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
 "Hibernate does not offer its own API for direct execution of "
 "<literal>UPDATE</literal> or <literal>DELETE</literal> statements. Hibernate "
@@ -967,7 +969,7 @@ msgstr ""
 "executada. "
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
 "The application should individually <literal>update()</literal> detached "
 "instances that are reachable from the given detached instance "
@@ -1007,7 +1009,7 @@ msgstr ""
 "único caso de uso para <literal>lock()</literal>.  "
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
 "Other models for long units of work are discussed in <xref linkend="
 "\"transactions-optimistic\" />."
@@ -1391,7 +1393,7 @@ msgstr ""
 "retornará dados errados. "
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
 "It is possible to change the default behavior so that flush occurs less "
 "frequently. The <literal>FlushMode</literal> class defines three different "
@@ -1407,13 +1409,13 @@ msgstr ""
 "diferentes: somente limpe em um tempo submetido: somente quando a API da "
 "<literal>Transaction</literal> do Hibernate for usada, limpe automaticamente "
 "usando uma rotina explicada, ou nunca limpe a menos que o <literal>flush()</"
-"literal> seja chamado explicitamente. O último modo é útil para execução "
-"de unidades de trabalho longas, onde uma <literal>Session</literal> é mantida "
+"literal> seja chamado explicitamente. O último modo é útil para execução de "
+"unidades de trabalho longas, onde uma <literal>Session</literal> é mantida "
 "aberta e disconectada por um longo tempo (veja <xref linkend=\"transactions-"
 "optimistic-longsession\"/>)."
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
 "During flush, an exception might occur (e.g. if a DML operation violates a "
 "constraint). Since handling exceptions involves some understanding of "
@@ -1719,4 +1721,3 @@ msgstr ""
 "literal> e <literal>CollectionMetadata</literal> e pela hierarquia "
 "<literal>Type</literal>. Instâncias das interfaces de metadados podem ser "
 "obtidas a partir do <literal>SessionFactory</literal>. "
-

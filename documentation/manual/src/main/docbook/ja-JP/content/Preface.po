@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Collection_Mapping\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2009-12-23T01:43:43\n"
+"POT-Creation-Date: 2010-02-10T07:25:34\n"
 "PO-Revision-Date: 2009-12-21 17:17+1000\n"
 "Last-Translator: Xi HUANG <xhuang@redhat.com>\n"
 "Language-Team:  <en@li.org>\n"
@@ -79,7 +79,7 @@ msgstr ""
 "な方は、 次の手順を行ってください。"
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
 "Read <xref linkend=\"tutorial\" /> for a tutorial with step-by-step "
 "instructions. The source code for the tutorial is included in the "
@@ -91,7 +91,7 @@ msgstr ""
 "にあります。"
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
 "Read <xref linkend=\"architecture\" /> to understand the environments where "
 "Hibernate can be used."

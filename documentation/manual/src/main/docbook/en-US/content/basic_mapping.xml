@@ -50,7 +50,7 @@
             Here is an example mapping:
         </para>
 
-     <!--     <programlisting id="mapping-declaration-ex1" revision="1"> -->
+    
         <programlisting><![CDATA[<?xml version="1.0"?>
 <!DOCTYPE hibernate-mapping PUBLIC
       "-//Hibernate/Hibernate Mapping DTD 3.0//EN"

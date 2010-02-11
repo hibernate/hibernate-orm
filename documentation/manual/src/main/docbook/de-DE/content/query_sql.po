@@ -275,7 +275,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Collection_Mapping\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2009-12-03T00:15:27\n"
+"POT-Creation-Date: 2010-02-10T07:25:35\n"
 "PO-Revision-Date: 2007-02-26 10:27+1000\n"
 "Last-Translator: \n"
 "Language-Team:  <de@li.org>\n"
@@ -693,7 +693,7 @@ msgstr "{[aliasname].[propertyname]"
 #. Tag: entry
 #, fuzzy, no-c-format
 msgid "<literal>A_NAME as {item.name}</literal>"
-msgstr "A_NAME as {item.name}"
+msgstr "oder als eine <literal>List</literal>,"
 
 #. Tag: entry
 #, no-c-format
@@ -720,12 +720,12 @@ msgstr "Diskriminator einer Entity"
 #. Tag: entry
 #, fuzzy, no-c-format
 msgid "<literal>{[aliasname].class}</literal>"
-msgstr "{[aliasname].class}"
+msgstr "oder als eine <literal>List</literal>,"
 
 #. Tag: entry
 #, fuzzy, no-c-format
 msgid "<literal>DISC as {item.class}</literal>"
-msgstr "DISC as {item.class}"
+msgstr "oder als eine <literal>List</literal>,"
 
 #. Tag: entry
 #, no-c-format
@@ -735,7 +735,7 @@ msgstr "Alle Properties einer Entity"
 #. Tag: entry
 #, fuzzy, no-c-format
 msgid "<literal>{[aliasname].*}</literal>"
-msgstr "{[aliasname].*}"
+msgstr "oder als eine <literal>List</literal>,"
 
 #. Tag: entry
 #, fuzzy, no-c-format
@@ -750,12 +750,12 @@ msgstr "Ein Collection-Schlüssel"
 #. Tag: entry
 #, fuzzy, no-c-format
 msgid "<literal>{[aliasname].key}</literal>"
-msgstr "{[aliasname].key}"
+msgstr "oder als eine <literal>List</literal>,"
 
 #. Tag: entry
 #, fuzzy, no-c-format
 msgid "<literal>ORGID as {coll.key}</literal>"
-msgstr "ORGID als {coll.key}"
+msgstr "oder als eine <literal>List</literal>,"
 
 #. Tag: entry
 #, no-c-format
@@ -765,12 +765,12 @@ msgstr "Die id einer Collection"
 #. Tag: entry
 #, fuzzy, no-c-format
 msgid "<literal>{[aliasname].id}</literal>"
-msgstr "{[aliasname].id}"
+msgstr "oder als eine <literal>List</literal>,"
 
 #. Tag: entry
 #, fuzzy, no-c-format
 msgid "<literal>EMPID as {coll.id}</literal>"
-msgstr "EMPID als {coll.id}"
+msgstr "oder als eine <literal>List</literal>,"
 
 #. Tag: entry
 #, no-c-format
@@ -780,12 +780,12 @@ msgstr "Das Element einer Collection"
 #. Tag: entry
 #, fuzzy, no-c-format
 msgid "<literal>{[aliasname].element}</literal>"
-msgstr "{[aliasname].element}"
+msgstr "{coll.element.*}"
 
 #. Tag: entry
 #, fuzzy, no-c-format
 msgid "<literal>XID as {coll.element}</literal>"
-msgstr "XID als {coll.element}"
+msgstr "{coll.element.*}"
 
 #. Tag: entry
 #, fuzzy, no-c-format
@@ -800,7 +800,7 @@ msgstr "{[aliasname].element.[propertyname]}"
 #. Tag: entry
 #, fuzzy, no-c-format
 msgid "<literal>NAME as {coll.element.name}</literal>"
-msgstr "NAME als {coll.element.name}"
+msgstr "{coll.element.*}"
 
 #. Tag: entry
 #, no-c-format
@@ -810,7 +810,7 @@ msgstr "Alle Properties des Elements in der Collection"
 #. Tag: entry
 #, fuzzy, no-c-format
 msgid "<literal>{[aliasname].element.*}</literal>"
-msgstr "{[aliasname].element.*}"
+msgstr "{coll.element.*}"
 
 #. Tag: entry
 #, fuzzy, no-c-format
@@ -1388,8 +1388,60 @@ msgstr ""
 #~ "        .addEntity(\"cat\", Cat.class)\n"
 #~ "        .addEntity(\"mother\", Cat.class).list()"
 
+#, fuzzy
+#~ msgid "A_NAME as {item.name}"
+#~ msgstr "A_NAME as {item.name}"
+
+#, fuzzy
+#~ msgid "{[aliasname].class}"
+#~ msgstr "{[aliasname].class}"
+
+#, fuzzy
+#~ msgid "DISC as {item.class}"
+#~ msgstr "DISC as {item.class}"
+
+#, fuzzy
+#~ msgid "{[aliasname].*}"
+#~ msgstr "{[aliasname].*}"
+
 #~ msgid "{item.*}"
 #~ msgstr "{item.*}"
+
+#, fuzzy
+#~ msgid "{[aliasname].key}"
+#~ msgstr "{[aliasname].key}"
+
+#, fuzzy
+#~ msgid "ORGID as {coll.key}"
+#~ msgstr "ORGID als {coll.key}"
+
+#, fuzzy
+#~ msgid "{[aliasname].id}"
+#~ msgstr "{[aliasname].id}"
+
+#, fuzzy
+#~ msgid "EMPID as {coll.id}"
+#~ msgstr "EMPID als {coll.id}"
+
+#, fuzzy
+#~ msgid "{[aliasname].element}"
+#~ msgstr "{[aliasname].element}"
+
+#, fuzzy
+#~ msgid "XID as {coll.element}"
+#~ msgstr "XID als {coll.element}"
+
+#, fuzzy
+#~ msgid "NAME as {coll.element.name}"
+#~ msgstr "NAME als {coll.element.name}"
+
+#, fuzzy
+#~ msgid "{[aliasname].element.*}"
+#~ msgstr "{[aliasname].element.*}"
+
+#, fuzzy
+#~ msgid "{coll.element.*}"
+#~ msgstr "{coll.*}"
 
 #~ msgid "{coll.*}"
 #~ msgstr "{coll.*}"

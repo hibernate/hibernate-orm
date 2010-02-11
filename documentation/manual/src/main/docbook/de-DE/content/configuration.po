@@ -275,7 +275,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Collection_Mapping\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2010-01-08T04:07:18\n"
+"POT-Creation-Date: 2010-02-10T07:25:34\n"
 "PO-Revision-Date: 2007-02-26 10:27+1000\n"
 "Last-Translator: \n"
 "Language-Team:  <de@li.org>\n"
@@ -418,11 +418,13 @@ msgstr ""
 "erläutert)."
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
 "If you want to get started quickly<filename>hibernate.properties</filename> "
 "is the easiest approach."
 msgstr ""
+"Legen Sie <literal>hibernate.properties</literal> in ein Stammverzeichnis "
+"des Klassenpfads."
 
 #. Tag: para
 #, fuzzy, no-c-format
@@ -546,9 +548,9 @@ msgid "<property>hibernate.connection.url</property>"
 msgstr "hibernate.connection.url"
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid "<emphasis>JDBC URL</emphasis>"
-msgstr ""
+msgstr "jdbc-Treiberklasse"
 
 #. Tag: para
 #, fuzzy, no-c-format
@@ -1531,8 +1533,8 @@ msgid ""
 msgstr ""
 "Falls aktiviert, wird die Session automatisch während der Vorabschlussphase "
 "der Transaktion geräumt. Eingebautes, automatisches Session-"
-"Kontextmanagement wird bevorzugt, siehe <xref linkend=\"architecture-"
-"current-session\"/>."
+"Kontextmanagement wird bevorzugt, siehe <xref linkend=\"architecture-current-"
+"session\"/>."
 
 #. Tag: para
 #, fuzzy, no-c-format
@@ -1570,8 +1572,8 @@ msgid ""
 msgstr ""
 "Geben Sie eine (anwenderdefinierte) Strategie für den Gültigkeitsbereich der "
 "\"aktuellen\" <literal>Session</literal> ein. Weitere Informationen zu "
-"eingebauten Strategien finden Sie unter <xref linkend=\"architecture-"
-"current-session\"/>."
+"eingebauten Strategien finden Sie unter <xref linkend=\"architecture-current-"
+"session\"/>."
 
 #. Tag: para
 #, fuzzy, no-c-format

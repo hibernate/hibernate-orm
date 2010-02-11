@@ -1,6 +1,6 @@
-<!ENTITY HOLDER "Red Hat, Inc">
-<!ENTITY YEAR "2009">
-<!ENTITY JBPAPP "JBoss Enterprise Application Platform">
-<!ENTITY VER "5.0">
+<!ENTITY version "WORKING">
+<!ENTITY today "TODAY">
+<!ENTITY copyrightYear "2004">
+<!ENTITY copyrightHolder "Red Hat Middleware, LLC.">
 <!ENTITY semi ";">
 

@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: persistent_classes\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2010-01-08T04:07:19\n"
+"POT-Creation-Date: 2010-02-10T07:25:35\n"
 "PO-Revision-Date: 2009-12-07 09:36+1000\n"
 "Last-Translator: Xi HUANG <xhuang@redhat.com>\n"
 "Language-Team:  <en@li.org>\n"
@@ -127,7 +127,7 @@ msgid ""
 msgstr "实际上，一些功能只对那些声明了标识符属性的类起作用： "
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
 "Transitive reattachment for detached objects (cascade update or cascade "
 "merge) - see <xref linkend=\"objectstate-transitive\" />"
@@ -136,12 +136,12 @@ msgstr ""
 "\"objectstate-transitive\"/>"
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid "<literal>Session.saveOrUpdate()</literal>"
 msgstr "<literal>Session.saveOrUpdate()</literal>"
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid "<literal>Session.merge()</literal>"
 msgstr "<literal>Session.merge()</literal>"
 
@@ -333,7 +333,7 @@ msgstr ""
 "世界里标识我们的实例（是一个<emphasis>自然的</emphasis>候选码）。"
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
 "A business key does not have to be as solid as a database primary key "
 "candidate (see <xref linkend=\"transactions-basics-identity\" />). Immutable "
@@ -354,7 +354,7 @@ msgid "Note"
 msgstr "注意"
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
 "<emphasis>The following features are currently considered experimental and "
 "may change in the near future.</emphasis>"
@@ -376,7 +376,7 @@ msgstr ""
 "用写持久化类，只写映射文件就行了。 "
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
 "By default, Hibernate works in normal POJO mode. You can set a default "
 "entity representation mode for a particular <literal>SessionFactory</"
@@ -460,7 +460,7 @@ msgstr ""
 "<literal>close()</literal>，同样的，把事务和连接的处理交给原来的工作单元。 "
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
 "More information about the XML representation capabilities can be found in "
 "<xref linkend=\"xml\" />."

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Revision_History\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2009-12-11T05:07:38\n"
+"POT-Creation-Date: 2010-02-10T07:25:34\n"
 "PO-Revision-Date: 2010-01-05 10:11+1000\n"
 "Last-Translator: Corina Roe <croe@redhat.com>\n"
 "Language-Team: French <i18@redhat.com>\n"
@@ -21,8 +21,22 @@ msgstr ""
 msgid "Revision History"
 msgstr "Historique de révision  "
 
+#. Tag: firstname
+#, no-c-format
+msgid "Ben"
+msgstr ""
+
+#. Tag: firstname
+#, no-c-format
+msgid "Jared"
+msgstr ""
+
+#. Tag: firstname
+#, no-c-format
+msgid "Richard"
+msgstr ""
+
 #. Tag: member
 #, no-c-format
 msgid "Merged with EAP5 and translations added"
 msgstr "Fusionnée avec EAP5 avec l'addition de traductions"
-

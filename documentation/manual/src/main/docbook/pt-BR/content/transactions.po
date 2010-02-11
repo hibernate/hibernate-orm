@@ -108,7 +108,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: transactions\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2010-01-08T04:07:20\n"
+"POT-Creation-Date: 2010-02-10T07:25:35\n"
 "PO-Revision-Date: 2009-12-21 07:53+1000\n"
 "Last-Translator: \n"
 "Language-Team:  <en@li.org>\n"
@@ -250,7 +250,7 @@ msgid "Unit of work"
 msgstr "Unidade de trabalho"
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
 "First, let's define a unit of work. A unit of work is a design pattern "
 "described by Martin Fowler as <quote> [maintaining] a list of objects "
@@ -365,7 +365,7 @@ msgstr ""
 "de código. "
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
 "Your application code can access a \"current session\" to process the "
 "request by calling <literal>sessionFactory.getCurrentSession()</literal>. "
@@ -589,7 +589,7 @@ msgid "Database Identity"
 msgstr "Identidade da base de dados"
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid "<literal>foo.getId().equals( bar.getId() )</literal>"
 msgstr "<literal>foo.getId().equals( bar.getId() )</literal>"
 
@@ -757,7 +757,7 @@ msgstr ""
 "recuperáveis e você tem que iniciar após o rollback de qualquer maneira. "
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
 "The <literal>Session</literal> caches every object that is in a persistent "
 "state (watched and checked for dirty state by Hibernate). If you keep it "

@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Collection_Mapping\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2010-01-08T04:07:19\n"
+"POT-Creation-Date: 2010-02-10T07:25:35\n"
 "PO-Revision-Date: 2009-12-07 09:35+1000\n"
 "Last-Translator: Xi HUANG <xhuang@redhat.com>\n"
 "Language-Team:  <en@li.org>\n"
@@ -283,8 +283,8 @@ msgstr ""
 "请注意这里没有显性地提及 <literal>Payment</literal> 接口。<literal>Payment</"
 "literal> 的属性映射到每个子类。如果你想避免重复，请考虑使用 XML 实体（如："
 "<literal>DOCTYPE</literal> 声明里的  <literal>[ &lt;!ENTITY allproperties "
-"SYSTEM \"allproperties.xml\"&gt; ]</literal> 和映射里的 "
-"<literal>&amp;allproperties&semi;</literal>）。"
+"SYSTEM \"allproperties.xml\"&gt; ]</literal> 和映射里的 <literal>&amp;"
+"allproperties&semi;</literal>）。"
 
 #. Tag: para
 #, no-c-format
@@ -420,7 +420,7 @@ msgid "table per concrete-class (union-subclass)"
 msgstr "每个具体类一张表（union-subclass）"
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
 "Polymorphic one-to-many: <code>&lt;one-to-many&gt;</code> (for <code>inverse="
 "\"true\"</code> only)"
@@ -848,6 +848,10 @@ msgstr "多态性一对一、多态性一对多，不支持多态性 join 和 ou
 #~ "    &lt;/joined-subclass&gt;\n"
 #~ "&lt;/class&gt;"
 
+#, fuzzy
+#~ msgid "<term>table per subclass</term>"
+#~ msgstr "<entry>每个子类一张表</entry>"
+
 #~ msgid "Features of inheritance mappings"
 #~ msgstr "继承映射特性（Features of inheritance mappings）"
 
@@ -892,9 +896,6 @@ msgstr "多态性一对一、多态性一对多，不支持多态性 join 和 ou
 
 #~ msgid "supported"
 #~ msgstr "支持"
-
-#~ msgid "<entry>table per subclass</entry>"
-#~ msgstr "<entry>每个子类一张表</entry>"
 
 #~ msgid "&lt;any&gt;"
 #~ msgstr "&lt;any&gt;"

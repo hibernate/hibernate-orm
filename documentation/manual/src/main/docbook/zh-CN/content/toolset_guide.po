@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Collection_Mapping\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2010-01-08T04:07:20\n"
+"POT-Creation-Date: 2010-02-10T07:25:35\n"
 "PO-Revision-Date: 2009-12-04 15:04+1000\n"
 "Last-Translator: Xi HUANG <xhuang@redhat.com>\n"
 "Language-Team:  <en@li.org>\n"
@@ -76,11 +76,6 @@ msgstr ""
 "了几个向导；你可以用向导快速生成 Hibernate 配置文件（cfg.xml），你甚至还可以"
 "同现存的数据库 schema 中反向工程出 POJO 源代码与 Hibernate 映射文件。反向工程"
 "支持可定制的模版。 "
-
-#. Tag: para
-#, no-c-format
-msgid "<!-- <emphasis>Ant Tasks:</emphasis> -->"
-msgstr "<!-- <emphasis>Ant Tasks:</emphasis> -->"
 
 #. Tag: para
 #, no-c-format
@@ -380,9 +375,9 @@ msgid "<literal>sql-type</literal>"
 msgstr "<literal>sql-type</literal>"
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid "<literal>SQL column type</literal>"
-msgstr "<literal>SQL column type</literal>"
+msgstr "<literal>sql-type</literal>"
 
 #. Tag: para
 #, no-c-format
@@ -521,9 +516,9 @@ msgid "do not export to the database"
 msgstr "不执行在数据库中运行的步骤 "
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid "<literal>--output=my_schema.ddl</literal>"
-msgstr "<literal>--output=my_schema.ddl</literal>"
+msgstr "<literal>scale</literal>"
 
 #. Tag: para
 #, no-c-format
@@ -531,7 +526,7 @@ msgid "output the ddl script to a file"
 msgstr "把输出的 ddl 脚本输出到一个文件"
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid "<literal>--naming=eg.MyNamingStrategy</literal>"
 msgstr "<literal>--naming=eg.MyNamingStrategy</literal>"
 
@@ -541,9 +536,9 @@ msgid "select a <literal>NamingStrategy</literal>"
 msgstr "选择 <literal>NamingStrategy</literal>"
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid "<literal>--config=hibernate.cfg.xml</literal>"
-msgstr "<literal>--config=hibernate.cfg.xml</literal>"
+msgstr "<literal>hibernate.dialect</literal>"
 
 #. Tag: para
 #, no-c-format
@@ -956,8 +951,16 @@ msgstr "你可以在 Ant 脚本中调用 <literal>SchemaValidator</literal>："
 #~ msgid "foreign-key"
 #~ msgstr "foreign-key"
 
+#, fuzzy
+#~ msgid "foreign_key_name"
+#~ msgstr "foreign-key"
+
 #~ msgid "sql-type"
 #~ msgstr "sql-type"
+
+#, fuzzy
+#~ msgid "SQL column type"
+#~ msgstr "<literal>SQL column type</literal>"
 
 #~ msgid "default"
 #~ msgstr "default"
@@ -1003,6 +1006,14 @@ msgstr "你可以在 Ant 脚本中调用 <literal>SchemaValidator</literal>："
 #~ msgid "--text"
 #~ msgstr "--text"
 
+#, fuzzy
+#~ msgid "--output=my_schema.ddl"
+#~ msgstr "<literal>--output=my_schema.ddl</literal>"
+
+#, fuzzy
+#~ msgid "--config=hibernate.cfg.xml"
+#~ msgstr "<literal>--config=hibernate.cfg.xml</literal>"
+
 #~ msgid "--properties=hibernate.properties"
 #~ msgstr "--properties=hibernate.properties"
 
@@ -1019,6 +1030,10 @@ msgstr "你可以在 Ant 脚本中调用 <literal>SchemaValidator</literal>："
 #~ msgstr ""
 #~ "Configuration cfg = ....;\n"
 #~ "new SchemaExport(cfg).create(false, true);"
+
+#, fuzzy
+#~ msgid "hibernate.connection.driver_class"
+#~ msgstr "hibernate.connection.url"
 
 #~ msgid "hibernate.connection.url"
 #~ msgstr "hibernate.connection.url"
@@ -1143,3 +1158,6 @@ msgstr "你可以在 Ant 脚本中调用 <literal>SchemaValidator</literal>："
 #~ "        &lt;/fileset&gt;\n"
 #~ "    &lt;/schemaupdate&gt;\n"
 #~ "&lt;/target&gt;"
+
+#~ msgid "<!-- <emphasis>Ant Tasks:</emphasis> -->"
+#~ msgstr "<!-- <emphasis>Ant Tasks:</emphasis> -->"

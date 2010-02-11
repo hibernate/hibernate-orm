@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Collection_Mapping\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2009-12-03T00:15:26\n"
+"POT-Creation-Date: 2010-02-10T07:25:35\n"
 "PO-Revision-Date: 2010-01-20 14:25+1000\n"
 "Last-Translator: Xi HUANG <xhuang@redhat.com>\n"
 "Language-Team:  <en@li.org>\n"
@@ -1006,7 +1006,7 @@ msgid "Hashtable (not intended for production use)"
 msgstr "Hashtable（製品用として意図していません）"
 
 #. Tag: entry
-#, no-c-format
+#, fuzzy, no-c-format
 msgid "<literal>org.hibernate.cache.HashtableCacheProvider</literal>"
 msgstr "<literal>org.hibernate.cache.HashtableCacheProvider</literal>"
 
@@ -1026,7 +1026,7 @@ msgid "EHCache"
 msgstr "EHCache"
 
 #. Tag: entry
-#, no-c-format
+#, fuzzy, no-c-format
 msgid "<literal>org.hibernate.cache.EhCacheProvider</literal>"
 msgstr "<literal>org.hibernate.cache.EhCacheProvider</literal>"
 
@@ -1041,7 +1041,7 @@ msgid "OSCache"
 msgstr "OSCache"
 
 #. Tag: entry
-#, no-c-format
+#, fuzzy, no-c-format
 msgid "<literal>org.hibernate.cache.OSCacheProvider</literal>"
 msgstr "<literal>org.hibernate.cache.OSCacheProvider</literal>"
 
@@ -1051,7 +1051,7 @@ msgid "SwarmCache"
 msgstr "SwarmCache"
 
 #. Tag: entry
-#, no-c-format
+#, fuzzy, no-c-format
 msgid "<literal>org.hibernate.cache.SwarmCacheProvider</literal>"
 msgstr "<literal>org.hibernate.cache.SwarmCacheProvider</literal>"
 
@@ -1071,7 +1071,7 @@ msgid "JBoss Cache 1.x"
 msgstr ""
 
 #. Tag: entry
-#, no-c-format
+#, fuzzy, no-c-format
 msgid "<literal>org.hibernate.cache.TreeCacheProvider</literal>"
 msgstr "<literal>org.hibernate.cache.TreeCacheProvider</literal>"
 
@@ -1096,7 +1096,7 @@ msgid "JBoss Cache 2"
 msgstr ""
 
 #. Tag: entry
-#, no-c-format
+#, fuzzy, no-c-format
 msgid "<literal>org.hibernate.cache.jbc2.JBossCacheRegionFactory</literal>"
 msgstr "<literal>org.hibernate.cache.jbc2.JBossCacheRegionFactory</literal>"
 

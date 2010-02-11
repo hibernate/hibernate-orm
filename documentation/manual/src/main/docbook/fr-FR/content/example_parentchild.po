@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: example_parentchild\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2009-12-03T00:15:26\n"
+"POT-Creation-Date: 2010-02-10T07:25:35\n"
 "PO-Revision-Date: 2010-01-05 09:05+1000\n"
 "Last-Translator: Corina Roe <croe@redhat.com>\n"
 "Language-Team: French <i18@redhat.com>\n"
@@ -151,7 +151,8 @@ msgstr "Hibernate exécuterait deux ordres SQL :"
 
 #. Tag: para
 #, no-c-format
-msgid "an <literal>INSERT</literal> to create the record for <literal>c</literal>"
+msgid ""
+"an <literal>INSERT</literal> to create the record for <literal>c</literal>"
 msgstr ""
 "un <literal>INSERT</literal> pour créer l'enregistrement pour <literal>c</"
 "literal>"
@@ -326,10 +327,11 @@ msgstr ""
 #. Tag: title
 #, no-c-format
 msgid "Cascades and <literal>unsaved-value</literal>"
-msgstr "Cascades et <literal>unsaved-value</literal> (valeurs non sauvegardées)"
+msgstr ""
+"Cascades et <literal>unsaved-value</literal> (valeurs non sauvegardées)"
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
 "Suppose we loaded up a <literal>Parent</literal> in one <literal>Session</"
 "literal>, made some changes in a UI action and wanted to persist these "
@@ -356,10 +358,9 @@ msgstr ""
 "identifiants du type <literal>Long</literal>. Hibernate utilisera la "
 "propriété de l'identifiant et la propriété de la version/horodatage pour "
 "déterminer quels fils sont nouveaux (vous pouvez aussi utiliser la propriété "
-"version ou timestamp, consultez <xref linkend=\"objectstate-saveorupdate\" />.)"
-" <emphasis>Dans Hibernate3, il n'est plus "
-"nécessaire de spécifier une <literal>unsaved-value</literal> explicitement.</"
-"emphasis> "
+"version ou timestamp, consultez <xref linkend=\"objectstate-saveorupdate\" /"
+">.) <emphasis>Dans Hibernate3, il n'est plus nécessaire de spécifier une "
+"<literal>unsaved-value</literal> explicitement.</emphasis> "
 
 #. Tag: para
 #, no-c-format
@@ -425,4 +426,3 @@ msgstr ""
 "les classes d'éléments composites : les éléments composites ne peuvent "
 "contenir de collections, et ils ne peuvent être les fils d'entités autres "
 "que l'unique parent. "
-

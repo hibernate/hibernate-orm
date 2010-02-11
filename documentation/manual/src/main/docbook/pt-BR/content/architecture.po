@@ -108,7 +108,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: architecture\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2009-12-03T00:15:25\n"
+"POT-Creation-Date: 2010-02-10T07:25:34\n"
 "PO-Revision-Date: 2009-12-18 14:20+1000\n"
 "Last-Translator: \n"
 "Language-Team:  <en@li.org>\n"
@@ -129,7 +129,8 @@ msgstr "Visão Geral"
 
 #. Tag: para
 #, no-c-format
-msgid "The diagram below provides a high-level view of the Hibernate architecture:"
+msgid ""
+"The diagram below provides a high-level view of the Hibernate architecture:"
 msgstr ""
 "O diagrama abaixo fornece uma visão de altíssimo nível da arquitetura do "
 "Hibernate:"
@@ -311,8 +312,10 @@ msgstr ""
 
 #. Tag: term
 #, no-c-format
-msgid "TransactionFactory (<literal>org.hibernate.TransactionFactory</literal>)"
-msgstr "Transaction Factory (<literal>org.hibernate.TransactionFactory</literal>)"
+msgid ""
+"TransactionFactory (<literal>org.hibernate.TransactionFactory</literal>)"
+msgstr ""
+"Transaction Factory (<literal>org.hibernate.TransactionFactory</literal>)"
 
 #. Tag: para
 #, no-c-format
@@ -326,7 +329,7 @@ msgstr ""
 "programador."
 
 #. Tag: term
-#, no-c-format
+#, fuzzy, no-c-format
 msgid "<emphasis>Extension Interfaces</emphasis>"
 msgstr "<emphasis>Interfaces de Extensão</emphasis>"
 
@@ -501,21 +504,22 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Consult the JBoss AS user guide for more information about these options."
+msgid ""
+"Consult the JBoss AS user guide for more information about these options."
 msgstr ""
 "Consulte o manual do usuário do JBoss AS, para obter maiores informações "
 "sobre essas opções."
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
 "Another feature available as a JMX service is runtime Hibernate statistics. "
 "See <xref linkend=\"configuration-optional-statistics\" /> for more "
 "information."
 msgstr ""
 "Outra opção disponível como um serviço JMX são as estatísticas de execução "
-"do Hibernate. Veja a <xref linkend=\"configuration-optional-statistics"
-"\"/> para maiores informações."
+"do Hibernate. Veja a <xref linkend=\"configuration-optional-statistics\"/> "
+"para maiores informações."
 
 #. Tag: title
 #, no-c-format
@@ -657,7 +661,7 @@ msgstr ""
 "uma <literal>Session</literal>. "
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
 "The first two implementations provide a \"one session - one database "
 "transaction\" programming model. This is also also known and used as "
@@ -676,10 +680,10 @@ msgstr ""
 "uma transação do banco de dados\", também conhecida e usada como "
 "<emphasis>sessão por requisição</emphasis>. O começo e o fim de uma sessão "
 "Hibernate é definida pela duração da transação do banco de dados. Se você "
-"usar a demarcação programática de transação em JSE puro sem JTA, recomenda-se "
-"que utilize a API Hibernate <literal>Transaction</literal> para esconder o "
-"sistema de transação adjacente do seu código. Se você utiliza o JTA, use as "
-"interfaces JTA para demarcar as transações. Se você executar em um "
+"usar a demarcação programática de transação em JSE puro sem JTA, recomenda-"
+"se que utilize a API Hibernate <literal>Transaction</literal> para esconder "
+"o sistema de transação adjacente do seu código. Se você utiliza o JTA, use "
+"as interfaces JTA para demarcar as transações. Se você executar em um "
 "recipiente EJB que suporta CMT, os limites das transações são definidas "
 "declarativamente e você não precisará de qualquer transação ou operação de "
 "demarcação de sessão no seu código. Consulte o <xref linkend=\"transactions"
@@ -709,4 +713,3 @@ msgstr ""
 "valor deste parâmetro nomearia apenas a classe de implementação para usar; "
 "para as três implementações fora da caixa, entretanto, há dois pequenos "
 "nomes correspondentes, \"jta\", \"thread\", e \"managed\"."
-

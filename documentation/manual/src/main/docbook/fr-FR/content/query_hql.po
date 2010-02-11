@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: query_hql\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2010-01-08T04:07:19\n"
+"POT-Creation-Date: 2010-02-10T07:25:35\n"
 "PO-Revision-Date: 2010-01-05 09:46+1000\n"
 "Last-Translator: Corina Roe <croe@redhat.com>\n"
 "Language-Team: French <i18@redhat.com>\n"
@@ -157,14 +157,14 @@ msgid "<literal>inner join</literal>"
 msgstr "<literal>inner join</literal> (jointure interne)"
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid "<literal>left outer join</literal>"
-msgstr "<literal>left outer join</literal> (jointure ouverte par la gauche)"
+msgstr "<literal>inner join</literal> (jointure interne)"
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid "<literal>right outer join</literal>"
-msgstr "<literal>right outer join</literal> (jointure ouverte par la droite)"
+msgstr "<literal>inner join</literal> (jointure interne)"
 
 #. Tag: para
 #, no-c-format
@@ -193,7 +193,7 @@ msgstr ""
 "utilisant le mot-clef HQL <literal>with</literal>."
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
 "A \"fetch\" join allows associations or collections of values to be "
 "initialized along with their parent objects using a single select. This is "
@@ -477,7 +477,7 @@ msgid "The supported aggregate functions are:"
 msgstr "Les fonctions d'agrégation supportées sont :"
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid "<literal>avg(...), sum(...), min(...), max(...)</literal>"
 msgstr "<literal>avg(...), sum(...), min(...), max(...)</literal>"
 
@@ -487,7 +487,7 @@ msgid "<literal>count(*)</literal>"
 msgstr "<literal>count(*)</literal>"
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid "<literal>count(...), count(distinct ...), count(all...)</literal>"
 msgstr "<literal>count(...), count(distinct ...), count(all...)</literal>"
 
@@ -630,7 +630,7 @@ msgstr ""
 "des propriétés que des instances : "
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
 "The special property (lowercase) <literal>id</literal> can be used to "
 "reference the unique identifier of an object. See <xref linkend=\"queryhql-"
@@ -665,7 +665,7 @@ msgstr ""
 "Une fois de plus, la seconde requête ne nécessite pas de jointure de table. "
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
 "See <xref linkend=\"queryhql-identifier-property\" /> for more information "
 "regarding referencing identifier properties)"
@@ -688,7 +688,7 @@ msgstr ""
 "valeur discriminante. "
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
 "You can also use components or composite user types, or properties of said "
 "component types. See <xref linkend=\"queryhql-components\" /> for more "
@@ -1155,7 +1155,7 @@ msgstr ""
 "select ou where. "
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
 "Note that subqueries can also utilize <literal>row value constructor</"
 "literal> syntax. See <xref linkend=\"queryhql-tuple\" /> for more "
@@ -1277,7 +1277,7 @@ msgid "Bulk update and delete"
 msgstr "Nombreuses mises à jour et suppressions "
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
 "HQL now supports <literal>update</literal>, <literal>delete</literal> and "
 "<literal>insert ... select ...</literal> statements. See <xref linkend="
@@ -1460,3 +1460,12 @@ msgstr ""
 "Si vous décidez d'utiliser cette syntaxe, il vous faudra prendre en "
 "considération le fait que la requête sera dépendante de la commande des sous-"
 "propriétés du composant dans les métadonnées. "
+
+#, fuzzy
+#~ msgid "left outer join"
+#~ msgstr "<literal>left outer join</literal> (jointure ouverte par la gauche)"
+
+#, fuzzy
+#~ msgid "right outer join"
+#~ msgstr ""
+#~ "<literal>right outer join</literal> (jointure ouverte par la droite)"

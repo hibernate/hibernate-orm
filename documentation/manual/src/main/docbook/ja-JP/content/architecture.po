@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Collection_Mapping\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2009-12-03T00:15:25\n"
+"POT-Creation-Date: 2010-02-10T07:25:34\n"
 "PO-Revision-Date: 2010-01-13 10:25+1000\n"
 "Last-Translator: Xi HUANG <xhuang@redhat.com>\n"
 "Language-Team:  <en@li.org>\n"
@@ -224,7 +224,7 @@ msgstr ""
 "ケーションには公開されませんが、開発者が継承または実装することは可能です。"
 
 #. Tag: term
-#, no-c-format
+#, fuzzy, no-c-format
 msgid "<emphasis>Extension Interfaces</emphasis>"
 msgstr "<emphasis>Extension Interfaces</emphasis>"
 
@@ -401,7 +401,7 @@ msgstr ""
 "ザーガイドを参考にしてください。"
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
 "Another feature available as a JMX service is runtime Hibernate statistics. "
 "See <xref linkend=\"configuration-optional-statistics\" /> for more "
@@ -551,7 +551,7 @@ msgstr ""
 "ラッシュ、クローズしません。"
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
 "The first two implementations provide a \"one session - one database "
 "transaction\" programming model. This is also also known and used as "

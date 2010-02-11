@@ -14,7 +14,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: performance\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2009-12-03T00:15:26\n"
+"POT-Creation-Date: 2010-02-10T07:25:35\n"
 "PO-Revision-Date: 2010-01-04 15:23+1000\n"
 "Last-Translator: Angela Garcia <agarcia@redhat.com>\n"
 "Language-Team:  <en@li.org>\n"
@@ -335,7 +335,8 @@ msgstr "las consultas de <literal>Criteria</literal>"
 #. Tag: para
 #, no-c-format
 msgid "HQL queries if <literal>subselect</literal> fetching is used"
-msgstr "las consultas HQL si se utiliza la recuperación <literal>subselect</literal>"
+msgstr ""
+"las consultas HQL si se utiliza la recuperación <literal>subselect</literal>"
 
 #. Tag: para
 #, no-c-format
@@ -557,7 +558,8 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Certain operations do <emphasis>not</emphasis> require proxy initialization:"
+msgid ""
+"Certain operations do <emphasis>not</emphasis> require proxy initialization:"
 msgstr ""
 "Ciertas operaciones <emphasis>no</emphasis> requieren inicialización de "
 "proxies:"
@@ -826,8 +828,10 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Hibernate will now execute only three queries: the pattern is 10, 10, 5."
-msgstr "Hibernate ahora ejecutará sólamente tres consultas: el patrón es 10, 10, 5."
+msgid ""
+"Hibernate will now execute only three queries: the pattern is 10, 10, 5."
+msgstr ""
+"Hibernate ahora ejecutará sólamente tres consultas: el patrón es 10, 10, 5."
 
 #. Tag: para
 #, no-c-format
@@ -942,7 +946,8 @@ msgstr ""
 #. Tag: para
 #, no-c-format
 msgid "For bytecode instrumentation, use the following Ant task:"
-msgstr "Para la instrumentación del código byte, utilice la siguiente tarea Ant:"
+msgstr ""
+"Para la instrumentación del código byte, utilice la siguiente tarea Ant:"
 
 #. Tag: para
 #, no-c-format
@@ -1048,7 +1053,7 @@ msgid "Hashtable (not intended for production use)"
 msgstr "Hashtable (no fue pensado para la utilización en producción)"
 
 #. Tag: entry
-#, no-c-format
+#, fuzzy, no-c-format
 msgid "<literal>org.hibernate.cache.HashtableCacheProvider</literal>"
 msgstr "<literal>org.hibernate.cache.HashtableCacheProvider</literal>"
 
@@ -1068,7 +1073,7 @@ msgid "EHCache"
 msgstr "EHCache"
 
 #. Tag: entry
-#, no-c-format
+#, fuzzy, no-c-format
 msgid "<literal>org.hibernate.cache.EhCacheProvider</literal>"
 msgstr "<literal>org.hibernate.cache.EhCacheProvider</literal>"
 
@@ -1083,7 +1088,7 @@ msgid "OSCache"
 msgstr "OSCache"
 
 #. Tag: entry
-#, no-c-format
+#, fuzzy, no-c-format
 msgid "<literal>org.hibernate.cache.OSCacheProvider</literal>"
 msgstr "<literal>org.hibernate.cache.OSCacheProvider</literal>"
 
@@ -1093,7 +1098,7 @@ msgid "SwarmCache"
 msgstr "SwarmCache"
 
 #. Tag: entry
-#, no-c-format
+#, fuzzy, no-c-format
 msgid "<literal>org.hibernate.cache.SwarmCacheProvider</literal>"
 msgstr "<literal>org.hibernate.cache.SwarmCacheProvider</literal>"
 
@@ -1113,7 +1118,7 @@ msgid "JBoss Cache 1.x"
 msgstr "JBoss Cache 1.x"
 
 #. Tag: entry
-#, no-c-format
+#, fuzzy, no-c-format
 msgid "<literal>org.hibernate.cache.TreeCacheProvider</literal>"
 msgstr "<literal>org.hibernate.cache.TreeCacheProvider</literal>"
 
@@ -1138,7 +1143,7 @@ msgid "JBoss Cache 2"
 msgstr "JBoss Cache 2"
 
 #. Tag: entry
-#, no-c-format
+#, fuzzy, no-c-format
 msgid "<literal>org.hibernate.cache.jbc2.JBossCacheRegionFactory</literal>"
 msgstr "<literal>org.hibernate.cache.jbc2.JBossCacheRegionFactory</literal>"
 
@@ -1318,7 +1323,8 @@ msgstr "Compatibilidad de proveedor de caché/estrategia de concurrencia"
 
 #. Tag: para
 #, no-c-format
-msgid "None of the cache providers support all of the cache concurrency strategies."
+msgid ""
+"None of the cache providers support all of the cache concurrency strategies."
 msgstr ""
 "Ninguno de los provedores de caché soporta todas las estrategias de "
 "concurrencia al caché. "
@@ -1733,7 +1739,8 @@ msgstr ""
 
 #. Tag: title
 #, no-c-format
-msgid "Lists, maps, idbags and sets are the most efficient collections to update"
+msgid ""
+"Lists, maps, idbags and sets are the most efficient collections to update"
 msgstr ""
 "Las listas, mapas, idbags y conjuntos son las colecciones más eficientes de "
 "actualizar"
@@ -2102,4 +2109,3 @@ msgstr ""
 "<literal>getQueries()</literal>, <literal>getEntityNames()</literal>, "
 "<literal>getCollectionRoleNames()</literal> y "
 "<literal>getSecondLevelCacheRegionNames()</literal>."
-

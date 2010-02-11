@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Collection_Mapping\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2009-12-11T05:07:38\n"
+"POT-Creation-Date: 2010-02-10T07:25:34\n"
 "PO-Revision-Date: 2010-01-11 10:10+1000\n"
 "Last-Translator: Xi HUANG <xhuang@redhat.com>\n"
 "Language-Team:  <en@li.org>\n"
@@ -19,22 +19,32 @@ msgstr ""
 msgid "Hibernate Core Reference Guide"
 msgstr "Hibernate Core 参考指南"
 
-#. Tag: subtitle
+#. Tag: releaseinfo
 #, no-c-format
-msgid "by Gavin King, Christian Bauer, Max Rydahl Andersen, Emmanuel Bernard, and Steve Ebersole and thanks to James Cobb (Graphic Design) and Cheyenne Weaver (Graphic Design)"
-msgstr "by Gavin King, Christian Bauer, Max Rydahl Andersen, Emmanuel Bernard, and Steve Ebersole and thanks to James Cobb (Graphic Design) and Cheyenne Weaver (Graphic Design)"
+msgid "&version;"
+msgstr ""
 
 #. Tag: para
 #, fuzzy, no-c-format
 msgid "The JBoss Hibernate Core 3.3.2.GA Reference Guide"
 msgstr "Hibernate Core 参考指南"
 
+#~ msgid ""
+#~ "by Gavin King, Christian Bauer, Max Rydahl Andersen, Emmanuel Bernard, "
+#~ "and Steve Ebersole and thanks to James Cobb (Graphic Design) and Cheyenne "
+#~ "Weaver (Graphic Design)"
+#~ msgstr ""
+#~ "by Gavin King, Christian Bauer, Max Rydahl Andersen, Emmanuel Bernard, "
+#~ "and Steve Ebersole and thanks to James Cobb (Graphic Design) and Cheyenne "
+#~ "Weaver (Graphic Design)"
+
+#~ msgid "&HOLDER;"
+#~ msgstr "&HOLDER;"
+
 #~ msgid "for Use with JBoss Enterprise Application Platform 5.0"
 #~ msgstr "适用于 JBoss 企业级应用程序平台 5.0"
+
 #~ msgid ""
 #~ "The JBoss Enterprise Application Platform Edition of the Hibernate Core "
 #~ "Reference Guide"
 #~ msgstr "面向 JBoss 企业级应用程序平台的 Hibernate Core 参考指南版本"
-#~ msgid "&HOLDER;"
-#~ msgstr "&HOLDER;"
-

@@ -275,7 +275,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Collection_Mapping\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2010-01-08T04:07:19\n"
+"POT-Creation-Date: 2010-02-10T07:25:35\n"
 "PO-Revision-Date: 2007-02-26 10:27+1000\n"
 "Last-Translator: \n"
 "Language-Team:  <de@li.org>\n"
@@ -1140,6 +1140,10 @@ msgstr ""
 #~ "    &lt;/joined-subclass&gt;\n"
 #~ "&lt;/class&gt;"
 
+#, fuzzy
+#~ msgid "<term>table per subclass</term>"
+#~ msgstr "<entry>Tabelle-pro-Subklasse</entry>"
+
 #~ msgid "Features of inheritance mappings"
 #~ msgstr "Features von Vererbungsmappings"
 
@@ -1184,9 +1188,6 @@ msgstr ""
 
 #~ msgid "supported"
 #~ msgstr "unterstützt"
-
-#~ msgid "<entry>table per subclass</entry>"
-#~ msgstr "<entry>Tabelle-pro-Subklasse</entry>"
 
 #~ msgid "&lt;any&gt;"
 #~ msgstr "&lt;any&gt;"

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: xml\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2009-12-03T00:15:27\n"
+"POT-Creation-Date: 2010-02-10T07:25:35\n"
 "PO-Revision-Date: 2010-01-05 10:08+1000\n"
 "Last-Translator: Corina Roe <croe@redhat.com>\n"
 "Language-Team: French <i18@redhat.com>\n"
@@ -22,13 +22,13 @@ msgid "XML Mapping"
 msgstr "Mappage XML"
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
 "<emphasis> XML Mapping is an experimental feature in Hibernate 3.0 and is "
 "currently under active development. </emphasis>"
 msgstr ""
-"<emphasis>Notez que cette fonctionnalité est expérimentale dans Hibernate 3.0 et est "
-"en développement extrêmement actif. </emphasis>"
+"<emphasis>Notez que cette fonctionnalité est expérimentale dans Hibernate "
+"3.0 et est en développement extrêmement actif. </emphasis>"
 
 #. Tag: title
 #, no-c-format
@@ -148,7 +148,8 @@ msgstr "<literal>\"element-name\"</literal> - mappe vers l'élément XML nommé 
 #. Tag: para
 #, no-c-format
 msgid "<literal>\"@attribute-name\"</literal>: map to the named XML attribute"
-msgstr "<literal>\"@attribute-name\"</literal> - mappe vers l'attribut XML nommé "
+msgstr ""
+"<literal>\"@attribute-name\"</literal> - mappe vers l'attribut XML nommé "
 
 #. Tag: para
 #, no-c-format
@@ -240,4 +241,3 @@ msgstr ""
 "Il est extrêmement utile de combiner cette fonctionnalité avec l'opération "
 "<literal>replicate()</literal> de Hibernate pour implémenter des imports/"
 "exports de données XML. "
-

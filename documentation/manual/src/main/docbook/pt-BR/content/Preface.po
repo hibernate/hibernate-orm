@@ -109,7 +109,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Preface\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2010-01-08T04:07:17\n"
+"POT-Creation-Date: 2010-02-10T07:25:34\n"
 "PO-Revision-Date: 2009-12-19 18:38+1000\n"
 "Last-Translator: \n"
 "Language-Team:  <en@li.org>\n"
@@ -187,7 +187,7 @@ msgstr ""
 "Hibernate, Mapeamento Objeto/Relacional ou mesmo Java:"
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
 "Read <xref linkend=\"tutorial\" /> for a tutorial with step-by-step "
 "instructions. The source code for the tutorial is included in the "
@@ -198,7 +198,7 @@ msgstr ""
 "<literal>doc/reference/tutorial/</literal>. "
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
 "Read <xref linkend=\"architecture\" /> to understand the environments where "
 "Hibernate can be used."

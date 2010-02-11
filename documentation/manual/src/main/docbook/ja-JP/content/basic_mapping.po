@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Collection_Mapping\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2009-12-23T01:43:44\n"
+"POT-Creation-Date: 2010-02-10T07:25:34\n"
 "PO-Revision-Date: 2010-01-06 10:49+1000\n"
 "Last-Translator: Xi HUANG <xhuang@redhat.com>\n"
 "Language-Team:  <en@li.org>\n"
@@ -849,9 +849,9 @@ msgstr ""
 "は以下のショートカット名があります："
 
 #. Tag: term
-#, no-c-format
+#, fuzzy, no-c-format
 msgid "<literal>increment</literal>"
-msgstr ""
+msgstr "<literal>sequence-identity</literal>"
 
 #. Tag: para
 #, no-c-format
@@ -867,9 +867,9 @@ msgstr ""
 "emphasis> 。"
 
 #. Tag: term
-#, no-c-format
+#, fuzzy, no-c-format
 msgid "<literal>identity</literal>"
-msgstr ""
+msgstr "<literal>sequence-identity</literal>"
 
 #. Tag: para
 #, no-c-format
@@ -883,9 +883,9 @@ msgstr ""
 "literal> , <literal>int</literal> のいずれかです。"
 
 #. Tag: term
-#, no-c-format
+#, fuzzy, no-c-format
 msgid "<literal>sequence</literal>"
-msgstr ""
+msgstr "<literal>sequence-identity</literal>"
 
 #. Tag: para
 #, no-c-format
@@ -899,9 +899,9 @@ msgstr ""
 "<literal>short</literal> , <literal>int</literal> のいずれかです。"
 
 #. Tag: term
-#, no-c-format
+#, fuzzy, no-c-format
 msgid "<literal>hilo</literal>"
-msgstr ""
+msgstr "<literal>sequence-identity</literal>"
 
 #. Tag: para
 #, no-c-format
@@ -920,9 +920,9 @@ msgstr ""
 "lo アルゴリズムは特定のデータベースに対してのみユニークな識別子を生成します。"
 
 #. Tag: term
-#, no-c-format
+#, fuzzy, no-c-format
 msgid "<literal>seqhilo</literal>"
-msgstr ""
+msgstr "<literal>sequence-identity</literal>"
 
 #. Tag: para
 #, no-c-format
@@ -936,9 +936,9 @@ msgstr ""
 "ベースシーケンスを与えます。"
 
 #. Tag: term
-#, no-c-format
+#, fuzzy, no-c-format
 msgid "<literal>uuid</literal>"
-msgstr ""
+msgstr "<literal>sequence-identity</literal>"
 
 #. Tag: para
 #, no-c-format
@@ -952,9 +952,9 @@ msgstr ""
 "進数字の文字列としてエンコードされます。"
 
 #. Tag: term
-#, no-c-format
+#, fuzzy, no-c-format
 msgid "<literal>guid</literal>"
-msgstr ""
+msgstr "<literal>sequence-identity</literal>"
 
 #. Tag: para
 #, no-c-format
@@ -963,9 +963,9 @@ msgstr ""
 "MS SQL サーバーと MySQL でデータベースが生成する GUID 文字列を使用します。"
 
 #. Tag: term
-#, no-c-format
+#, fuzzy, no-c-format
 msgid "<literal>native</literal>"
-msgstr ""
+msgstr "<literal>sequence-identity</literal>"
 
 #. Tag: para
 #, no-c-format
@@ -979,9 +979,9 @@ msgstr ""
 "す。"
 
 #. Tag: term
-#, no-c-format
+#, fuzzy, no-c-format
 msgid "<literal>assigned</literal>"
-msgstr ""
+msgstr "<literal>sequence-identity</literal>"
 
 #. Tag: para
 #, no-c-format
@@ -995,9 +995,9 @@ msgstr ""
 "定されていなければ、これがデフォルトの戦略になります。"
 
 #. Tag: term
-#, no-c-format
+#, fuzzy, no-c-format
 msgid "<literal>select</literal>"
-msgstr ""
+msgstr "<literal>sequence-identity</literal>"
 
 #. Tag: para
 #, no-c-format
@@ -1009,9 +1009,9 @@ msgstr ""
 "割り当てた主キーを取得します。"
 
 #. Tag: term
-#, no-c-format
+#, fuzzy, no-c-format
 msgid "<literal>foreign</literal>"
-msgstr ""
+msgstr "<literal>sequence-identity</literal>"
 
 #. Tag: para
 #, no-c-format
@@ -1235,12 +1235,14 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
 "<literal>sequence_name</literal> (optional, defaults to "
 "<literal>hibernate_sequence</literal>): the name of the sequence or table to "
 "be used."
 msgstr ""
+"<literal>column</literal>（オプション - デフォルトは <literal>class</"
+"literal> ）： 識別カラムの名前。"
 
 #. Tag: para
 #, no-c-format
@@ -1261,28 +1263,35 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
 "<literal>force_table_use</literal> (optional - defaults to <literal>false</"
 "literal>): should we force the use of a table as the backing structure even "
 "though the dialect might support sequence?"
 msgstr ""
+"<literal>force</literal> （オプション - デフォルトは <literal>false</"
+"literal> ）： ルートクラスのすべてのインスタンスを検索する場合であっても、 "
+"Hibernate が使用できる識別カラムの指定を「強制」します。"
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
 "<literal>value_column</literal> (optional - defaults to <literal>next_val</"
 "literal>): only relevant for table structures, it is the name of the column "
 "on the table which is used to hold the value."
 msgstr ""
+"<literal>column</literal>（オプション - デフォルトは <literal>class</"
+"literal> ）： 識別カラムの名前。"
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
 "<literal>optimizer</literal> (optional - defaults to <literal>none</"
 "literal>): See <xref linkend=\"mapping-declaration-id-enhanced-optimizers\" /"
 ">"
 msgstr ""
+"<literal>type</literal> （オプション - デフォルトは <literal>integer</"
+"literal> ）：バージョン番号の型。"
 
 #. Tag: para
 #, no-c-format
@@ -1300,19 +1309,23 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
 "<literal>table_name</literal> (optional - defaults to "
 "<literal>hibernate_sequences</literal>): the name of the table to be used."
 msgstr ""
+"<literal>type</literal> （オプション - デフォルトは <literal>integer</"
+"literal> ）：バージョン番号の型。"
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
 "<literal>value_column_name</literal> (optional - defaults to "
 "<literal>next_val</literal>): the name of the column on the table that is "
 "used to hold the value."
 msgstr ""
+"<literal>column</literal>（オプション - デフォルトは <literal>class</"
+"literal> ）： 識別カラムの名前。"
 
 #. Tag: para
 #, no-c-format
@@ -1324,46 +1337,56 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
 "<literal>segment_value</literal> (optional - defaults to <literal>default</"
 "literal>): The \"segment key\" value for the segment from which we want to "
 "pull increment values for this generator."
 msgstr ""
+"<literal>access</literal> (オプション - デフォルトは <literal>property</"
+"literal> ): Hibernate がプロパティの値にアクセスするために使用すべき戦略。"
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
 "<literal>segment_value_length</literal> (optional - defaults to "
 "<literal>255</literal>): Used for schema generation; the column size to "
 "create this segment key column."
 msgstr ""
+"<literal>column</literal>（オプション - デフォルトは <literal>class</"
+"literal> ）： 識別カラムの名前。"
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
 "<literal>initial_value</literal> (optional - defaults to <literal>1</"
 "literal>): The initial value to be retrieved from the table."
 msgstr ""
+"<literal>type</literal> （オプション - デフォルトは <literal>integer</"
+"literal> ）：バージョン番号の型。"
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
 "<literal>increment_size</literal> (optional - defaults to <literal>1</"
 "literal>): The value by which subsequent calls to the table should differ."
 msgstr ""
+"<literal>type</literal> （オプション - デフォルトは <literal>integer</"
+"literal> ）：バージョン番号の型。"
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
 "<literal>optimizer</literal> (optional - defaults to <literal></literal>): "
 "See <xref linkend=\"mapping-declaration-id-enhanced-optimizers\" />"
 msgstr ""
+"<literal>type</literal> （オプション - デフォルトは <literal>integer</"
+"literal> ）：バージョン番号の型。"
 
 #. Tag: title
-#, no-c-format
+#, fuzzy, no-c-format
 msgid "Identifier generator optimization"
-msgstr ""
+msgstr "識別子の getter メソッド"
 
 #. Tag: para
 #, no-c-format
@@ -3412,9 +3435,9 @@ msgstr ""
 "または <literal>java.lang.Boolean</literal> の代替エンコードです。"
 
 #. Tag: term
-#, no-c-format
+#, fuzzy, no-c-format
 msgid "<literal>string</literal>"
-msgstr ""
+msgstr "<literal>sequence-identity</literal>"
 
 #. Tag: para
 #, no-c-format
@@ -3495,9 +3518,9 @@ msgstr ""
 "タンスは、それらの <literal>ID</literal> にマッピングされます。"
 
 #. Tag: term
-#, no-c-format
+#, fuzzy, no-c-format
 msgid "<literal>class</literal>"
-msgstr ""
+msgstr "<literal>sequence-identity</literal>"
 
 #. Tag: para
 #, no-c-format
@@ -3511,9 +3534,9 @@ msgstr ""
 "literal> はその完全修飾された名前にマッピングされます。"
 
 #. Tag: term
-#, no-c-format
+#, fuzzy, no-c-format
 msgid "<literal>binary</literal>"
-msgstr ""
+msgstr "<literal>sequence-identity</literal>"
 
 #. Tag: para
 #, no-c-format
@@ -3521,9 +3544,9 @@ msgid "Maps byte arrays to an appropriate SQL binary type."
 msgstr "バイト配列は、適切な SQL のバイナリ型にマッピングされます。"
 
 #. Tag: term
-#, no-c-format
+#, fuzzy, no-c-format
 msgid "<literal>text</literal>"
-msgstr ""
+msgstr "<literal>sequence-identity</literal>"
 
 #. Tag: para
 #, no-c-format
@@ -3535,9 +3558,9 @@ msgstr ""
 "literal> 型にマッピングされます。"
 
 #. Tag: term
-#, no-c-format
+#, fuzzy, no-c-format
 msgid "<literal>serializable</literal>"
-msgstr ""
+msgstr "<literal>sequence-identity</literal>"
 
 #. Tag: para
 #, no-c-format
@@ -3552,9 +3575,9 @@ msgstr ""
 "こともできます。"
 
 #. Tag: term
-#, no-c-format
+#, fuzzy, no-c-format
 msgid "<literal>clob, blob</literal>"
-msgstr ""
+msgstr "<literal>calendar, calendar_date</literal>"
 
 #. Tag: para
 #, no-c-format

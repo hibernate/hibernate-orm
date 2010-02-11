@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Collection_Mapping\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2010-01-08T04:07:19\n"
+"POT-Creation-Date: 2010-02-10T07:25:35\n"
 "PO-Revision-Date: 2009-12-07 21:13+1000\n"
 "Last-Translator: Xi HUANG <xhuang@redhat.com>\n"
 "Language-Team:  <en@li.org>\n"
@@ -177,7 +177,7 @@ msgstr ""
 "通过 HQL 的 <literal>with</literal> 关键字，你可以提供额外的 join 条件。"
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
 "A \"fetch\" join allows associations or collections of values to be "
 "initialized along with their parent objects using a single select. This is "
@@ -432,7 +432,7 @@ msgid "The supported aggregate functions are:"
 msgstr "受支持的聚集函数如下： "
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid "<literal>avg(...), sum(...), min(...), max(...)</literal>"
 msgstr "<literal>avg(...), sum(...), min(...), max(...)</literal>"
 
@@ -442,7 +442,7 @@ msgid "<literal>count(*)</literal>"
 msgstr "<literal>count(*)</literal>"
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid "<literal>count(...), count(distinct ...), count(all...)</literal>"
 msgstr "<literal>count(...), count(distinct ...), count(all...)</literal>"
 
@@ -573,7 +573,7 @@ msgstr ""
 "<literal>=</literal> 运算符不仅可以被用来比较属性的值，也可以用来比较实例： "
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
 "The special property (lowercase) <literal>id</literal> can be used to "
 "reference the unique identifier of an object. See <xref linkend=\"queryhql-"
@@ -604,7 +604,7 @@ msgid "Once again, the second query does not require a table join."
 msgstr "第二个查询也不需要进行表连接。 "
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
 "See <xref linkend=\"queryhql-identifier-property\" /> for more information "
 "regarding referencing identifier properties)"
@@ -625,7 +625,7 @@ msgstr ""
 "名字将被转换为该类的鉴别值。 "
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
 "You can also use components or composite user types, or properties of said "
 "component types. See <xref linkend=\"queryhql-components\" /> for more "
@@ -1067,7 +1067,7 @@ msgid "Note that HQL subqueries can occur only in the select or where clauses."
 msgstr "注意，HQL 自查询只可以在 select 或者 where 子句中出现。 "
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
 "Note that subqueries can also utilize <literal>row value constructor</"
 "literal> syntax. See <xref linkend=\"queryhql-tuple\" /> for more "
@@ -1175,7 +1175,7 @@ msgid "Bulk update and delete"
 msgstr "批量的 UPDATE 和 DELETE"
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
 "HQL now supports <literal>update</literal>, <literal>delete</literal> and "
 "<literal>insert ... select ...</literal> statements. See <xref linkend="
@@ -1345,6 +1345,10 @@ msgstr ""
 #~ msgstr "from eg.Cat"
 
 #, fuzzy
+#~ msgid "<![CDATA[from Cat]]>"
+#~ msgstr "from eg.Cat"
+
+#, fuzzy
 #~ msgid "<![CDATA[from Cat as cat]]>"
 #~ msgstr "from Cat as cat"
 
@@ -1382,6 +1386,10 @@ msgstr ""
 #~ msgstr "<literal>inner join</literal>（内连接）"
 
 #~ msgid "left outer join"
+#~ msgstr "<literal>left outer join</literal>（左外连接）"
+
+#, fuzzy
+#~ msgid "right outer join"
 #~ msgstr "<literal>left outer join</literal>（左外连接）"
 
 #, fuzzy

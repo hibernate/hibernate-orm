@@ -14,7 +14,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: architecture\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2009-12-03T00:15:25\n"
+"POT-Creation-Date: 2010-02-10T07:25:34\n"
 "PO-Revision-Date: 2010-01-04 10:30+1000\n"
 "Last-Translator: Angela Garcia <agarcia@redhat.com>\n"
 "Language-Team:  <en@li.org>\n"
@@ -35,7 +35,8 @@ msgstr "Sinopsis"
 
 #. Tag: para
 #, no-c-format
-msgid "The diagram below provides a high-level view of the Hibernate architecture:"
+msgid ""
+"The diagram below provides a high-level view of the Hibernate architecture:"
 msgstr ""
 "El diagrama a continuación brinda una perspectiva a alto nivel de la "
 "arquitectura de Hibernate:"
@@ -218,8 +219,10 @@ msgstr ""
 
 #. Tag: term
 #, no-c-format
-msgid "TransactionFactory (<literal>org.hibernate.TransactionFactory</literal>)"
-msgstr "TransactionFactory (<literal>org.hibernate.TransactionFactory</literal>)"
+msgid ""
+"TransactionFactory (<literal>org.hibernate.TransactionFactory</literal>)"
+msgstr ""
+"TransactionFactory (<literal>org.hibernate.TransactionFactory</literal>)"
 
 #. Tag: para
 #, no-c-format
@@ -233,7 +236,7 @@ msgstr ""
 "desarrollador. "
 
 #. Tag: term
-#, no-c-format
+#, fuzzy, no-c-format
 msgid "<emphasis>Extension Interfaces</emphasis>"
 msgstr "<emphasis>Interfaces de extensión</emphasis>"
 
@@ -409,20 +412,22 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Consult the JBoss AS user guide for more information about these options."
+msgid ""
+"Consult the JBoss AS user guide for more information about these options."
 msgstr ""
 "Para más información sobre estas opciones, consulte el Manual de Usuario de "
 "JBoss AS."
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
 "Another feature available as a JMX service is runtime Hibernate statistics. "
 "See <xref linkend=\"configuration-optional-statistics\" /> for more "
 "information."
 msgstr ""
-"Otra funcionalidad disponible como un servicio de JMX son las estadísticas en "
-"tiempo de ejecución de Hibernate. Consulte <xref linkend=\"configuration-optional-statistics\" /> para obtener mayor información."
+"Otra funcionalidad disponible como un servicio de JMX son las estadísticas "
+"en tiempo de ejecución de Hibernate. Consulte <xref linkend=\"configuration-"
+"optional-statistics\" /> para obtener mayor información."
 
 #. Tag: title
 #, no-c-format
@@ -568,7 +573,7 @@ msgstr ""
 "<literal>Session</literal>."
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
 "The first two implementations provide a \"one session - one database "
 "transaction\" programming model. This is also also known and used as "
@@ -587,15 +592,16 @@ msgstr ""
 "sesión - una transacción de la base de datos\". También conocido y utilizado "
 "como una <emphasis>sesión-por-petición</emphasis>. El inicio y el final de "
 "una sesión Hibernate se define por la duración de una transacción de una "
-"base de datos. Si utiliza la demarcación de transacción programática en JSE sencillo sin JTA, se le aconseja que utilice el API "
-"<literal>Transaction</literal> de Hibernate para esconder el sistema de "
-"transacción subyacente de su código. Si utiliza JTA, utilice las interfaces "
-"JTA para demarcar transacciones. Si utiliza JTA, puede utilizar las interfaces JTA "
-"para demarcar transacciones. Si ejecuta en un contenedor EJB que soporta "
-"CMT, los límites de la transacción están definidos declarativamente y no "
-"necesita ninguna operación de demarcación de sesión o transacción en su "
-"código. Consulte <xref linkend=\"transactions\" /> para obtener más "
-"información y ejemplos de código."
+"base de datos. Si utiliza la demarcación de transacción programática en JSE "
+"sencillo sin JTA, se le aconseja que utilice el API <literal>Transaction</"
+"literal> de Hibernate para esconder el sistema de transacción subyacente de "
+"su código. Si utiliza JTA, utilice las interfaces JTA para demarcar "
+"transacciones. Si utiliza JTA, puede utilizar las interfaces JTA para "
+"demarcar transacciones. Si ejecuta en un contenedor EJB que soporta CMT, los "
+"límites de la transacción están definidos declarativamente y no necesita "
+"ninguna operación de demarcación de sesión o transacción en su código. "
+"Consulte <xref linkend=\"transactions\" /> para obtener más información y "
+"ejemplos de código."
 
 #. Tag: para
 #, no-c-format
@@ -621,4 +627,3 @@ msgstr ""
 "literal>. Usualmente el valor de este parámetro sólamente nombraría la clase "
 "de implementación a utilizar. Sin embargo, para las tres implementaciones "
 "incluídas existen tress nombres cortos: \"jta\", \"thread\" y \"managed\"."
-

@@ -275,7 +275,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Collection_Mapping\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2010-01-08T04:07:19\n"
+"POT-Creation-Date: 2010-02-10T07:25:35\n"
 "PO-Revision-Date: 2007-02-26 10:27+1000\n"
 "Last-Translator: \n"
 "Language-Team:  <de@li.org>\n"
@@ -1736,6 +1736,10 @@ msgstr ""
 #~ msgstr "from eg.Cat"
 
 #, fuzzy
+#~ msgid "<![CDATA[from Cat]]>"
+#~ msgstr "from eg.Cat"
+
+#, fuzzy
 #~ msgid "<![CDATA[from Cat as cat]]>"
 #~ msgstr "from Cat as cat"
 
@@ -1773,6 +1777,10 @@ msgstr ""
 #~ msgstr "inner join"
 
 #~ msgid "left outer join"
+#~ msgstr "left outer join"
+
+#, fuzzy
+#~ msgid "right outer join"
 #~ msgstr "left outer join"
 
 #, fuzzy

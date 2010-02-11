@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Collection_Mapping\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2009-12-11T05:07:38\n"
+"POT-Creation-Date: 2010-02-10T07:25:34\n"
 "PO-Revision-Date: 2010-01-11 10:09+1000\n"
 "Last-Translator: Xi HUANG <xhuang@redhat.com>\n"
 "Language-Team:  <en@li.org>\n"
@@ -19,8 +19,22 @@ msgstr ""
 msgid "Revision History"
 msgstr "修订历史记录"
 
+#. Tag: firstname
+#, no-c-format
+msgid "Ben"
+msgstr ""
+
+#. Tag: firstname
+#, no-c-format
+msgid "Jared"
+msgstr ""
+
+#. Tag: firstname
+#, no-c-format
+msgid "Richard"
+msgstr ""
+
 #. Tag: member
 #, no-c-format
 msgid "Merged with EAP5 and translations added"
 msgstr "和 EAP5 版本进行合并且添加了相关翻译"
-

@@ -14,7 +14,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: query_criteria\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2009-12-03T00:15:27\n"
+"POT-Creation-Date: 2010-02-10T07:25:35\n"
 "PO-Revision-Date: 2010-01-05 17:44+1000\n"
 "Last-Translator: Angela Garcia <agarcia@redhat.com>\n"
 "Language-Team:  <en@li.org>\n"
@@ -146,7 +146,8 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "There is also an alternate form that is useful in certain circumstances:"
+msgid ""
+"There is also an alternate form that is useful in certain circumstances:"
 msgstr "Hay una alternativa que es útil en ciertas circunstancias:"
 
 #. Tag: para
@@ -187,7 +188,7 @@ msgstr ""
 "ejecución usando <literal>setFetchMode()</literal>. "
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
 "This query will fetch both <literal>mate</literal> and <literal>kittens</"
 "literal> by outer join. See <xref linkend=\"performance-fetching\" /> for "
@@ -228,7 +229,8 @@ msgstr "Puede modificar la aplicación del <literal>Example</literal>."
 #. Tag: para
 #, no-c-format
 msgid "You can even use examples to place criteria upon associated objects."
-msgstr "Puede incluso usar ejemplos para colocar criterios sobre objetos asociados."
+msgstr ""
+"Puede incluso usar ejemplos para colocar criterios sobre objetos asociados."
 
 #. Tag: title
 #, no-c-format
@@ -375,4 +377,3 @@ msgstr ""
 "Una vez que haya habilitado el caché de consulta de Hibernate, "
 "<literal>Restrictions.naturalId()</literal> le permite hacer uso del "
 "algoritmo de caché más eficiente."
-

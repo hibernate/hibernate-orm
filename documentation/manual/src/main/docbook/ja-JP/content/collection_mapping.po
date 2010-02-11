@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Collection_Mapping\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2009-12-03T00:15:26\n"
+"POT-Creation-Date: 2010-02-10T07:25:34\n"
 "PO-Revision-Date: 2010-01-06 16:08+1000\n"
 "Last-Translator: Xi HUANG <xhuang@redhat.com>\n"
 "Language-Team:  <en@li.org>\n"
@@ -431,26 +431,30 @@ msgstr ""
 "納します （デフォルトでは0から番号が付けられます）。"
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
 "<literal>column_name</literal> (required): the name of the column holding "
 "the collection index values."
-msgstr ""
+msgstr "<literal>class</literal> （必須）: 関連クラスの名前。"
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
 "<literal>base</literal> (optional - defaults to <literal>0</literal>): the "
 "value of the index column that corresponds to the first element of the list "
 "or array."
 msgstr ""
+"<literal>cascade</literal> （オプション - デフォルトは <literal>none</"
+"literal>）：子エンティティへのカスケード操作を有効にします。"
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
 "<literal>column</literal> (optional): the name of the column holding the "
 "collection index values."
 msgstr ""
+"<literal>schema</literal> （オプション）：テーブルスキーマの名前。ルート要素"
+"で宣言されているスキーマより優先されます。"
 
 #. Tag: para
 #, no-c-format
@@ -460,16 +464,18 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid "<literal>type</literal> (required): the type of the map keys."
-msgstr ""
+msgstr "<literal>class</literal> （必須）: 関連クラスの名前。"
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
 "<literal>column</literal> (optional): the name of the foreign key column for "
 "the collection index values."
 msgstr ""
+"<literal>schema</literal> （オプション）：テーブルスキーマの名前。ルート要素"
+"で宣言されているスキーマより優先されます。"
 
 #. Tag: para
 #, no-c-format
@@ -479,10 +485,10 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
 "<literal>class</literal> (required): the entity class used as the map key."
-msgstr ""
+msgstr "<literal>class</literal> （必須）: 関連クラスの名前。"
 
 #. Tag: para
 #, fuzzy, no-c-format
@@ -526,23 +532,27 @@ msgstr ""
 "す。"
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
 "<literal>column</literal> (optional): the name of the column holding the "
 "collection element values."
 msgstr ""
+"<literal>schema</literal> （オプション）：テーブルスキーマの名前。ルート要素"
+"で宣言されているスキーマより優先されます。"
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
 "<literal>formula</literal> (optional): an SQL formula used to evaluate the "
 "element."
 msgstr ""
+"<literal>schema</literal> （オプション）：テーブルスキーマの名前。ルート要素"
+"で宣言されているスキーマより優先されます。"
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid "<literal>type</literal> (required): the type of the collection element."
-msgstr ""
+msgstr "<literal>class</literal> （必須）: 関連クラスの名前。"
 
 #. Tag: para
 #, no-c-format
@@ -552,11 +562,11 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
 "<literal>column</literal> (optional): the name of the element foreign key "
 "column."
-msgstr ""
+msgstr "<literal>class</literal> （必須）: 関連クラスの名前。"
 
 #. Tag: para
 #, no-c-format
@@ -971,11 +981,10 @@ msgstr ""
 "をマッピングできません。代わりに、次のようなマッピングが使えます："
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
 "Note that in this mapping, the collection-valued end of the association is "
-"responsible for updates to the foreign key. <!-- TODO: Does this really "
-"result in some unnecessary update statements? -->"
+"responsible for updates to the foreign key."
 msgstr ""
 "注意： このマッピングでは、関連のコレクション値の側は、外部キーをアップデート"
 "する責任があります。 <!-- TODO: これは本当にいくつかの不必要なアップデートス"
@@ -1013,7 +1022,7 @@ msgstr ""
 "最後は composite 要素を使うアプローチです。これに関する議論は後ほど行います。"
 
 #. Tag: title
-#, no-c-format
+#, fuzzy, no-c-format
 msgid "<literal>Using an &lt;idbag&gt;</literal>"
 msgstr "&lt;idbag&gt;の使用"
 
@@ -1155,7 +1164,7 @@ msgid "Table definitions:"
 msgstr "テーブル定義は以下のようになります:"
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
 "For more examples and a complete explanation of a parent/child relationship "
 "mapping, see <xref linkend=\"example-parentchild\" /> for more information."

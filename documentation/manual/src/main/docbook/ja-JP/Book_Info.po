@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Collection_Mapping\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2009-12-11T05:07:38\n"
+"POT-Creation-Date: 2010-02-10T07:25:34\n"
 "PO-Revision-Date: 2007-02-26 17:14+1000\n"
 "Last-Translator: Xi HUANG <xhuang@redhat.com>\n"
 "Language-Team:  <en@li.org>\n"
@@ -18,18 +18,18 @@ msgstr ""
 msgid "Hibernate Core Reference Guide"
 msgstr "Hibernate リファレンスガイド"
 
-#. Tag: subtitle
+#. Tag: releaseinfo
 #, no-c-format
-msgid ""
-"by Gavin King, Christian Bauer, Max Rydahl Andersen, Emmanuel Bernard, and "
-"Steve Ebersole and thanks to James Cobb (Graphic Design) and Cheyenne Weaver "
-"(Graphic Design)"
+msgid "&version;"
 msgstr ""
 
 #. Tag: para
 #, fuzzy, no-c-format
 msgid "The JBoss Hibernate Core 3.3.2.GA Reference Guide"
 msgstr "Hibernate リファレンスガイド"
+
+#~ msgid "&HOLDER;"
+#~ msgstr "&HOLDER;"
 
 #, fuzzy
 #~ msgid "for Use with JBoss Enterprise Application Platform 5.0"
@@ -41,6 +41,3 @@ msgstr "Hibernate リファレンスガイド"
 #~ "Reference Guide"
 #~ msgstr ""
 #~ "JBoss Enterprise Application Platform 版 Hibernate リファレンスガイド 3.2"
-
-#~ msgid "&HOLDER;"
-#~ msgstr "&HOLDER;"

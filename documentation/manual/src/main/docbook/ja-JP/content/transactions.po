@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Collection_Mapping\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2009-12-23T01:43:45\n"
+"POT-Creation-Date: 2010-02-10T07:25:35\n"
 "PO-Revision-Date: 2010-01-13 11:23+1000\n"
 "Last-Translator: Xi HUANG <xhuang@redhat.com>\n"
 "Language-Team:  <en@li.org>\n"
@@ -245,7 +245,7 @@ msgstr ""
 "literal> API のほうがよいです。"
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
 "Your application code can access a \"current session\" to process the "
 "request by calling <literal>sessionFactory.getCurrentSession()</literal>. "
@@ -461,7 +461,7 @@ msgid "Database Identity"
 msgstr "データベース識別子"
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid "<literal>foo.getId().equals( bar.getId() )</literal>"
 msgstr "<literal>foo.getId().equals( bar.getId() )</literal>"
 
@@ -620,7 +620,7 @@ msgstr ""
 "らです。とにかくロールバックした後にやり直すべきです。"
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
 "The <literal>Session</literal> caches every object that is in a persistent "
 "state (watched and checked for dirty state by Hibernate). If you keep it "
@@ -769,7 +769,7 @@ msgstr ""
 "す："
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
 "You do not have to <literal>flush()</literal> the <literal>Session</literal> "
 "explicitly: the call to <literal>commit()</literal> automatically triggers "

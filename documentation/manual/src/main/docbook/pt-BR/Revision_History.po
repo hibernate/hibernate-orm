@@ -108,7 +108,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Revision_History\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2009-12-11T05:07:38\n"
+"POT-Creation-Date: 2010-02-10T07:25:34\n"
 "PO-Revision-Date: 2009-12-21 10:35+1000\n"
 "Last-Translator: \n"
 "Language-Team:  <en@li.org>\n"
@@ -122,8 +122,22 @@ msgstr ""
 msgid "Revision History"
 msgstr "Histórico de Revisão"
 
+#. Tag: firstname
+#, no-c-format
+msgid "Ben"
+msgstr ""
+
+#. Tag: firstname
+#, no-c-format
+msgid "Jared"
+msgstr ""
+
+#. Tag: firstname
+#, no-c-format
+msgid "Richard"
+msgstr ""
+
 #. Tag: member
 #, no-c-format
 msgid "Merged with EAP5 and translations added"
 msgstr "Obtido com EAP5 e traduções adicionais"
-

@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Collection_Mapping\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2009-12-23T01:43:44\n"
+"POT-Creation-Date: 2010-02-10T07:25:34\n"
 "PO-Revision-Date: 2010-01-13 15:16+1000\n"
 "Last-Translator: Xi HUANG <xhuang@redhat.com>\n"
 "Language-Team:  <en@li.org>\n"
@@ -185,7 +185,7 @@ msgid "DML-style operations"
 msgstr "DML スタイルの操作"
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
 "As already discussed, automatic and transparent object/relational mapping is "
 "concerned with the management of the object state. The object state is "
@@ -242,7 +242,7 @@ msgstr ""
 "ば、どのようなプロパティ参照も修飾してはなりません。"
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
 "No <xref linkend=\"queryhql-joins-forms\" />, either implicit or explicit, "
 "can be specified in a bulk HQL query. Sub-queries can be used in the where-"
@@ -271,7 +271,7 @@ msgstr ""
 "した）："
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
 "In keeping with the EJB3 specification, HQL <literal>UPDATE</literal> "
 "statements, by default, do not effect the version (<xref linkend=\"mapping-"

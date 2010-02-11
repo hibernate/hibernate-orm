@@ -251,7 +251,7 @@
             The following is an example <filename>hibernate.properties</filename> file for c3p0:
         </para>
 
-        <!--  <programlisting id="c3p0-configuration" revision="1"> -->
+        
         <programlisting><![CDATA[hibernate.connection.driver_class = org.postgresql.Driver
 hibernate.connection.url = jdbc:postgresql://localhost/mydatabase
 hibernate.connection.username = myuser

@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2009-06-10 21:02+0000\n"
+"POT-Creation-Date: 2010-02-10T07:25:34\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -11,26 +11,22 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 
 #. Tag: title
-#: architecture.xml:30
 #, no-c-format
 msgid "Architecture"
 msgstr "아키텍처"
 
 #. Tag: title
-#: architecture.xml:33
 #, no-c-format
 msgid "Overview"
 msgstr "개요"
 
 #. Tag: para
-#: architecture.xml:35
 #, fuzzy, no-c-format
 msgid ""
 "The diagram below provides a high-level view of the Hibernate architecture:"
 msgstr "Hibernate 아키텍처에 대한 (매우) 높은 수준의 개요::"
 
 #. Tag: para
-#: architecture.xml:50
 #, fuzzy, no-c-format
 msgid ""
 "We do not have the scope in this document to provide a more detailed view of "
@@ -45,7 +41,6 @@ msgstr ""
 "의 최소 부분집합을 사용한다:"
 
 #. Tag: para
-#: architecture.xml:56
 #, fuzzy, no-c-format
 msgid ""
 "This next diagram illustrates how Hibernate utilizes database and "
@@ -56,7 +51,6 @@ msgstr ""
 "해 데이터베이스와 컨피그레이션을 사용하는 Hibernate를 보여준다."
 
 #. Tag: para
-#: architecture.xml:61
 #, fuzzy, no-c-format
 msgid ""
 "The \"minimal\" architecture has the application provide its own JDBC "
@@ -70,7 +64,6 @@ msgstr ""
 "의 최소 부분집합을 사용한다:"
 
 #. Tag: para
-#: architecture.xml:78
 #, fuzzy, no-c-format
 msgid ""
 "The \"comprehensive\" architecture abstracts the application away from the "
@@ -80,7 +73,6 @@ msgstr ""
 "Hibernate로 하여금 상세한 것을 처리하게 한다."
 
 #. Tag: para
-#: architecture.xml:92
 #, fuzzy, no-c-format
 msgid "Here are some definitions of the objects depicted in the diagrams:"
 msgstr ""
@@ -88,13 +80,11 @@ msgstr ""
 "1/>"
 
 #. Tag: term
-#: architecture.xml:97
 #, no-c-format
 msgid "SessionFactory (<literal>org.hibernate.SessionFactory</literal>)"
 msgstr "SessionFactory (<literal>org.hibernate.SessionFactory</literal>)"
 
 #. Tag: para
-#: architecture.xml:99
 #, fuzzy, no-c-format
 msgid ""
 "A threadsafe, immutable cache of compiled mappings for a single database. A "
@@ -109,13 +99,11 @@ msgstr ""
 "캐시를 보관할 수도 있다."
 
 #. Tag: term
-#: architecture.xml:109
 #, no-c-format
 msgid "Session (<literal>org.hibernate.Session</literal>)"
 msgstr "Session (<literal>org.hibernate.Session</literal>)"
 
 #. Tag: para
-#: architecture.xml:111
 #, fuzzy, no-c-format
 msgid ""
 "A single-threaded, short-lived object representing a conversation between "
@@ -130,13 +118,11 @@ msgstr ""
 "들에 대한 필수적인(첫 번째 레벨의) 캐시를 보관한다."
 
 #. Tag: term
-#: architecture.xml:121
 #, no-c-format
 msgid "Persistent objects and collections"
 msgstr "영속 객체들과 콜렉션들"
 
 #. Tag: para
-#: architecture.xml:123
 #, fuzzy, no-c-format
 msgid ""
 "Short-lived, single threaded objects containing persistent state and "
@@ -155,13 +141,11 @@ msgstr ""
 "직접적으로 프리젠테이션 계층으로부터 데이터 전송 객체들로서)."
 
 #. Tag: term
-#: architecture.xml:133
 #, no-c-format
 msgid "Transient and detached objects and collections"
 msgstr "전이(Transient, 필자 주-과도) 객체들과 콜렉션들"
 
 #. Tag: para
-#: architecture.xml:135
 #, fuzzy, no-c-format
 msgid ""
 "Instances of persistent classes that are not currently associated with a "
@@ -174,13 +158,11 @@ msgstr ""
 "것들은 닫혀진<literal>Session</literal>에 의해 초기화 되었을 수도 있다."
 
 #. Tag: term
-#: architecture.xml:144
 #, no-c-format
 msgid "Transaction (<literal>org.hibernate.Transaction</literal>)"
 msgstr "Transaction (<literal>org.hibernate.Transaction</literal>)"
 
 #. Tag: para
-#: architecture.xml:146
 #, fuzzy, no-c-format
 msgid ""
 "(Optional) A single-threaded, short-lived object used by the application to "
@@ -198,7 +180,6 @@ msgstr ""
 "이 아니다!"
 
 #. Tag: term
-#: architecture.xml:157
 #, no-c-format
 msgid ""
 "ConnectionProvider (<literal>org.hibernate.connection.ConnectionProvider</"
@@ -208,7 +189,6 @@ msgstr ""
 "literal>)"
 
 #. Tag: para
-#: architecture.xml:159
 #, fuzzy, no-c-format
 msgid ""
 "(Optional) A factory for, and pool of, JDBC connections. It abstracts the "
@@ -222,7 +202,6 @@ msgstr ""
 "장/구현 된다."
 
 #. Tag: term
-#: architecture.xml:167
 #, no-c-format
 msgid ""
 "TransactionFactory (<literal>org.hibernate.TransactionFactory</literal>)"
@@ -230,7 +209,6 @@ msgstr ""
 "TransactionFactory (<literal>org.hibernate.TransactionFactory</literal>)"
 
 #. Tag: para
-#: architecture.xml:169
 #, fuzzy, no-c-format
 msgid ""
 "(Optional) A factory for <literal>Transaction</literal> instances. It is not "
@@ -240,14 +218,12 @@ msgstr ""
 "(옵션) <literal>Transaction</literal> 인스턴스들에 대한 팩토리. 어플리케이션"
 "에 노출되지는 않지만 개발자에 의해 확장/구현 된다."
 
-#. Tag: emphasis
-#: architecture.xml:176
-#, no-c-format
-msgid "Extension Interfaces"
+#. Tag: term
+#, fuzzy, no-c-format
+msgid "<emphasis>Extension Interfaces</emphasis>"
 msgstr "Extension Interfaces"
 
 #. Tag: para
-#: architecture.xml:178
 #, fuzzy, no-c-format
 msgid ""
 "Hibernate offers a range of optional extension interfaces you can implement "
@@ -258,7 +234,6 @@ msgstr ""
 "는 선택적인 확장 인터페이스들을 제공한다. 상세한 것은 API 문서를 보라."
 
 #. Tag: para
-#: architecture.xml:187
 #, fuzzy, no-c-format
 msgid ""
 "Given a \"minimal\" architecture, the application bypasses the "
@@ -271,13 +246,11 @@ msgstr ""
 "literal> 그리고/또는 <literal>ConnectionProvider</literal> API들을 무시한다."
 
 #. Tag: title
-#: architecture.xml:195
 #, no-c-format
 msgid "Instance states"
 msgstr "인스턴스 상태들"
 
 #. Tag: para
-#: architecture.xml:196
 #, fuzzy, no-c-format
 msgid ""
 "An instance of a persistent class can be in one of three different states. "
@@ -290,13 +263,11 @@ msgstr ""
 "Hibernate <literal>Session</literal> 객체는 영속 컨텍스트이다:"
 
 #. Tag: term
-#: architecture.xml:204
 #, no-c-format
 msgid "transient"
 msgstr "transient"
 
 #. Tag: para
-#: architecture.xml:206
 #, fuzzy, no-c-format
 msgid ""
 "The instance is not associated with any persistence context. It has no "
@@ -306,13 +277,11 @@ msgstr ""
 "것은 영속 식별자(프라이머리 키 값)을 갖지 않는다."
 
 #. Tag: term
-#: architecture.xml:214
 #, no-c-format
 msgid "persistent"
 msgstr "persistent"
 
 #. Tag: para
-#: architecture.xml:216
 #, fuzzy, no-c-format
 msgid ""
 "The instance is currently associated with a persistence context. It has a "
@@ -327,13 +296,11 @@ msgstr ""
 "위치)와 같다는 점을 <emphasis>보증한다</emphasis>."
 
 #. Tag: term
-#: architecture.xml:228
 #, no-c-format
 msgid "detached"
 msgstr "detached"
 
 #. Tag: para
-#: architecture.xml:230
 #, fuzzy, no-c-format
 msgid ""
 "The instance was once associated with a persistence context, but that "
@@ -348,13 +315,11 @@ msgstr ""
 "는 영속 identity과 Java identity 사이의 관계를 보증하지 않는다."
 
 #. Tag: title
-#: architecture.xml:245
 #, no-c-format
 msgid "JMX Integration"
 msgstr "JMX 통합"
 
 #. Tag: para
-#: architecture.xml:247
 #, fuzzy, no-c-format
 msgid ""
 "JMX is the J2EE standard for the management of Java components. Hibernate "
@@ -367,7 +332,6 @@ msgstr ""
 "jmx.HibernateService</literal>를 제공한다."
 
 #. Tag: para
-#: architecture.xml:253
 #, fuzzy, no-c-format
 msgid ""
 "For an example of how to deploy Hibernate as a JMX service on the JBoss "
@@ -379,7 +343,6 @@ msgstr ""
 "일 당신이 JMX를 사용하여 배치할 경우 당신은 또한 다음 이점들을 얻는다:"
 
 #. Tag: para
-#: architecture.xml:261
 #, fuzzy, no-c-format
 msgid ""
 "<emphasis>Session Management</emphasis>: the Hibernate <literal>Session</"
@@ -402,7 +365,6 @@ msgstr ""
 "literal>에 접근하기 위해 <literal>HibernateContext</literal>를 호출한다."
 
 #. Tag: para
-#: architecture.xml:273
 #, fuzzy, no-c-format
 msgid ""
 "<emphasis>HAR deployment</emphasis>: the Hibernate JMX service is deployed "
@@ -421,7 +383,6 @@ msgstr ""
 "당신의 HAR 파일 내에 있는 모든 매핑 파일들을 자동적으로 검출해낼 것이다."
 
 #. Tag: para
-#: architecture.xml:284
 #, no-c-format
 msgid ""
 "Consult the JBoss AS user guide for more information about these options."
@@ -430,24 +391,21 @@ msgstr ""
 "라."
 
 #. Tag: para
-#: architecture.xml:288
 #, fuzzy, no-c-format
 msgid ""
 "Another feature available as a JMX service is runtime Hibernate statistics. "
-"See <xref linkend=\"configuration-optional-statistics\"/> for more "
+"See <xref linkend=\"configuration-optional-statistics\" /> for more "
 "information."
 msgstr ""
 "JMX 서비스로서 이용 가능한 또다른 특징은 런타임 Hibernate 통계이다. <xref "
 "linkend=\"configuration-optional-statistics\"/>를 보라."
 
 #. Tag: title
-#: architecture.xml:295
 #, no-c-format
 msgid "JCA Support"
 msgstr "JCA 지원"
 
 #. Tag: para
-#: architecture.xml:296
 #, fuzzy, no-c-format
 msgid ""
 "Hibernate can also be configured as a JCA connector. Please see the website "
@@ -459,13 +417,11 @@ msgstr ""
 "다."
 
 #. Tag: title
-#: architecture.xml:303
 #, fuzzy, no-c-format
 msgid "Contextual sessions"
 msgstr "컨텍스트 상의 세션들"
 
 #. Tag: para
-#: architecture.xml:304
 #, fuzzy, no-c-format
 msgid ""
 "Most applications using Hibernate need some form of \"contextual\" session, "
@@ -489,7 +445,6 @@ msgstr ""
 "같은 )제 3의 프레임웍들을 활용하는 경향이 있었다."
 
 #. Tag: para
-#: architecture.xml:313
 #, fuzzy, no-c-format
 msgid ""
 "Starting with version 3.0.1, Hibernate added the <literal>SessionFactory."
@@ -514,7 +469,6 @@ msgstr ""
 "전부다."
 
 #. Tag: para
-#: architecture.xml:323
 #, fuzzy, no-c-format
 msgid ""
 "However, as of version 3.1, the processing behind <literal>SessionFactory."
@@ -532,7 +486,6 @@ msgstr ""
 "스트의 플러그 가능성을 허용하기 위해 추가되었다."
 
 #. Tag: para
-#: architecture.xml:330
 #, fuzzy, no-c-format
 msgid ""
 "See the Javadocs for the <literal>org.hibernate.context."
@@ -549,7 +502,6 @@ msgstr ""
 "페이스에 대한 세 개의 구현들을 부수적으로 포함하고 있다."
 
 #. Tag: para
-#: architecture.xml:340
 #, fuzzy, no-c-format
 msgid ""
 "<literal>org.hibernate.context.JTASessionContext</literal>: current sessions "
@@ -562,7 +514,6 @@ msgstr ""
 "이전의 JTA-전용 접근과 정확하게 동일하다. 상세한 것은 javadocs를 보라."
 
 #. Tag: para
-#: architecture.xml:348
 #, fuzzy, no-c-format
 msgid ""
 "<literal>org.hibernate.context.ThreadLocalSessionContext</literal>:current "
@@ -572,7 +523,6 @@ msgstr ""
 "세션들은 실행 쓰레드에 의해 추적된다. 상세한 것은 다시 javadocs를 보라."
 
 #. Tag: para
-#: architecture.xml:354
 #, fuzzy, no-c-format
 msgid ""
 "<literal>org.hibernate.context.ManagedSessionContext</literal>: current "
@@ -587,7 +537,6 @@ msgstr ""
 "<literal>Session</literal>."
 
 #. Tag: para
-#: architecture.xml:363
 #, fuzzy, no-c-format
 msgid ""
 "The first two implementations provide a \"one session - one database "
@@ -600,7 +549,7 @@ msgid ""
 "utilize the JTA interfaces to demarcate transactions. If you execute in an "
 "EJB container that supports CMT, transaction boundaries are defined "
 "declaratively and you do not need any transaction or session demarcation "
-"operations in your code. Refer to <xref linkend=\"transactions\"/> for more "
+"operations in your code. Refer to <xref linkend=\"transactions\" /> for more "
 "information and code examples."
 msgstr ""
 "처음의 두 구현들은 <emphasis>session-per-request</emphasis>로 알려지고 사용되"
@@ -616,7 +565,6 @@ msgstr ""
 "\"transactions\"/>를 참조하라."
 
 #. Tag: para
-#: architecture.xml:375
 #, fuzzy, no-c-format
 msgid ""
 "The <literal>hibernate.current_session_context_class</literal> configuration "

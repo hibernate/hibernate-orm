@@ -108,7 +108,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: portability\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2010-01-08T04:07:19\n"
+"POT-Creation-Date: 2010-02-10T07:25:35\n"
 "PO-Revision-Date: 2009-12-19 18:37+1000\n"
 "Last-Translator: \n"
 "Language-Team:  <en@li.org>\n"
@@ -215,7 +215,7 @@ msgstr ""
 "com antecedência e que em ocasião alguma era configurável ou substituível."
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
 "Starting with version 3.3, Hibernate has a fare more powerful way to "
 "automatically determine which dialect to should be used by relying on a "
@@ -352,13 +352,13 @@ msgstr ""
 "There are specifically 2 bundled <emphasis>enhanced</emphasis>generators:"
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid "<classname>org.hibernate.id.enhanced.SequenceStyleGenerator</classname>"
 msgstr ""
 "<classname>org.hibernate.id.enhanced.SequenceStyleGenerator</classname>"
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid "<classname>org.hibernate.id.enhanced.TableGenerator</classname>"
 msgstr "<classname>org.hibernate.id.enhanced.TableGenerator</classname>"
 

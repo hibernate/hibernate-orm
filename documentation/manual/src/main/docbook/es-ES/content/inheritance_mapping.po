@@ -14,7 +14,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: inheritance_mapping\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2010-01-08T04:07:19\n"
+"POT-Creation-Date: 2010-02-10T07:25:35\n"
 "PO-Revision-Date: 2010-01-08 11:55+1000\n"
 "Last-Translator: Angela Garcia <agarcia@redhat.com>\n"
 "Language-Team:  <en@li.org>\n"
@@ -44,9 +44,9 @@ msgid "table per class hierarchy"
 msgstr "tabla por jerarquía de clases"
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid "table per subclass"
-msgstr "tabla por subclase"
+msgstr "Tabla por subclase"
 
 #. Tag: para
 #, no-c-format
@@ -450,7 +450,7 @@ msgid "table per concrete-class (union-subclass)"
 msgstr "tabla por clase concreta (union-subclass)"
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
 "Polymorphic one-to-many: <code>&lt;one-to-many&gt;</code> (for <code>inverse="
 "\"true\"</code> only)"
@@ -487,3 +487,11 @@ msgid ""
 msgstr ""
 "No se soporta polimórfico uno-a-uno, polimórfico uno-a-muchos, uniones "
 "polimórficas y búsquedas de unión externa."
+
+#, fuzzy
+#~ msgid "<para>table per subclass</para>"
+#~ msgstr "tabla por subclase"
+
+#, fuzzy
+#~ msgid "<term>table per subclass</term>"
+#~ msgstr "tabla por subclase"

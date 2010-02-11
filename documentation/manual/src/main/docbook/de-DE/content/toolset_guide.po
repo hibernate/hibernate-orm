@@ -275,7 +275,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Collection_Mapping\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2010-01-08T04:07:20\n"
+"POT-Creation-Date: 2010-02-10T07:25:35\n"
 "PO-Revision-Date: 2007-02-26 10:27+1000\n"
 "Last-Translator: \n"
 "Language-Team:  <de@li.org>\n"
@@ -353,11 +353,6 @@ msgstr ""
 "sogar zur vollständigen Invertierung eines bestehenden Datenbankschemas in "
 "POJO Quelldateien und Hibernate Mapping-Dateien verwenden. Der \"Reverse "
 "Engineering\"-Wizard unterstützt anwenderdefinierte Templates."
-
-#. Tag: para
-#, no-c-format
-msgid "<!-- <emphasis>Ant Tasks:</emphasis> -->"
-msgstr ""
 
 #. Tag: para
 #, fuzzy, no-c-format
@@ -675,7 +670,7 @@ msgstr "in <literal>hibernate.properties</literal>"
 #. Tag: para
 #, fuzzy, no-c-format
 msgid "<literal>SQL column type</literal>"
-msgstr "SQL-Spaltentyp"
+msgstr "in <literal>hibernate.properties</literal>"
 
 #. Tag: para
 #, no-c-format
@@ -822,7 +817,7 @@ msgstr "nicht in die Datenbank exportieren"
 #. Tag: para
 #, fuzzy, no-c-format
 msgid "<literal>--output=my_schema.ddl</literal>"
-msgstr "--output=my_schema.ddl"
+msgstr "wählen Sie eine <literal>NamingStrategy</literal>"
 
 #. Tag: para
 #, no-c-format
@@ -842,7 +837,7 @@ msgstr "wählen Sie eine <literal>NamingStrategy</literal>"
 #. Tag: para
 #, fuzzy, no-c-format
 msgid "<literal>--config=hibernate.cfg.xml</literal>"
-msgstr "--config=hibernate.cfg.xml"
+msgstr "in <literal>hibernate.properties</literal>"
 
 #. Tag: para
 #, no-c-format
@@ -1265,8 +1260,16 @@ msgstr ""
 #~ msgid "foreign-key"
 #~ msgstr "foreign-key"
 
+#, fuzzy
+#~ msgid "foreign_key_name"
+#~ msgstr "foreign-key"
+
 #~ msgid "sql-type"
 #~ msgstr "sql-type"
+
+#, fuzzy
+#~ msgid "SQL column type"
+#~ msgstr "SQL-Spaltentyp"
 
 #~ msgid "default"
 #~ msgstr "default"
@@ -1312,6 +1315,14 @@ msgstr ""
 #~ msgid "--text"
 #~ msgstr "--text"
 
+#, fuzzy
+#~ msgid "--output=my_schema.ddl"
+#~ msgstr "--output=my_schema.ddl"
+
+#, fuzzy
+#~ msgid "--config=hibernate.cfg.xml"
+#~ msgstr "--config=hibernate.cfg.xml"
+
 #~ msgid "--properties=hibernate.properties"
 #~ msgstr "--properties=hibernate.properties"
 
@@ -1328,6 +1339,10 @@ msgstr ""
 #~ msgstr ""
 #~ "Configuration cfg = ....;\n"
 #~ "new SchemaExport(cfg).create(false, true);"
+
+#, fuzzy
+#~ msgid "hibernate.connection.driver_class"
+#~ msgstr "hibernate.connection.url"
 
 #~ msgid "hibernate.connection.url"
 #~ msgstr "hibernate.connection.url"

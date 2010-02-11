@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: query_criteria\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2009-12-03T00:15:27\n"
+"POT-Creation-Date: 2010-02-10T07:25:35\n"
 "PO-Revision-Date: 2010-01-05 09:43+1000\n"
 "Last-Translator: Corina Roe <croe@redhat.com>\n"
 "Language-Team: French <i18@redhat.com>\n"
@@ -24,7 +24,8 @@ msgstr "Requêtes par critères"
 #. Tag: para
 #, no-c-format
 msgid "Hibernate features an intuitive, extensible criteria query API."
-msgstr "Hibernate offre une API d'interrogation par critères intuitive et extensible."
+msgstr ""
+"Hibernate offre une API d'interrogation par critères intuitive et extensible."
 
 #. Tag: title
 #, no-c-format
@@ -138,7 +139,8 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "There is also an alternate form that is useful in certain circumstances:"
+msgid ""
+"There is also an alternate form that is useful in certain circumstances:"
 msgstr "La forme alternative suivante est utile dans certains cas :"
 
 #. Tag: para
@@ -179,7 +181,7 @@ msgstr ""
 "association en utilisant <literal>setFetchMode()</literal>."
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
 "This query will fetch both <literal>mate</literal> and <literal>kittens</"
 "literal> by outer join. See <xref linkend=\"performance-fetching\" /> for "
@@ -373,4 +375,3 @@ msgstr ""
 "Une fois que vous aurez activé le cache de requête d'Hibernate, "
 "<literal>Restrictions.naturalId()</literal> vous permettra de rendre "
 "l'utilisation de l'algorithme de cache plus efficace."
-

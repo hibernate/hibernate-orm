@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Collection_Mapping\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2010-01-08T04:07:18\n"
+"POT-Creation-Date: 2010-02-10T07:25:34\n"
 "PO-Revision-Date: 2010-01-11 10:36+1000\n"
 "Last-Translator: Xi HUANG <xhuang@redhat.com>\n"
 "Language-Team:  <en@li.org>\n"
@@ -21,8 +21,12 @@ msgstr "组件（Component）映射"
 
 #. Tag: para
 #, no-c-format
-msgid "The notion of a <emphasis>component</emphasis> is re-used in several different contexts and purposes throughout Hibernate."
-msgstr "<emphasis>组件（Component）</emphasis>这个概念在 Hibernate 中几处不同的地方为了不同的目的被重复使用。"
+msgid ""
+"The notion of a <emphasis>component</emphasis> is re-used in several "
+"different contexts and purposes throughout Hibernate."
+msgstr ""
+"<emphasis>组件（Component）</emphasis>这个概念在 Hibernate 中几处不同的地方为"
+"了不同的目的被重复使用。"
 
 #. Tag: title
 #, no-c-format
@@ -31,13 +35,29 @@ msgstr "依赖对象（Dependent objects）"
 
 #. Tag: para
 #, no-c-format
-msgid "A component is a contained object that is persisted as a value type and not an entity reference. The term \"component\" refers to the object-oriented notion of composition and not to architecture-level components. For example, you can model a person like this:"
-msgstr "组件（Component）是一个被包含的对象，在持久化的过程中，它被当作值类型，而并非一个实体的引用。在这篇文档中，组件这一术语指的是面向对象的合成概念（而并不是系统构架层次上的组件的概念）。举个例子，你对人（Person）这个概念可以像下面这样来建模： "
+msgid ""
+"A component is a contained object that is persisted as a value type and not "
+"an entity reference. The term \"component\" refers to the object-oriented "
+"notion of composition and not to architecture-level components. For example, "
+"you can model a person like this:"
+msgstr ""
+"组件（Component）是一个被包含的对象，在持久化的过程中，它被当作值类型，而并非"
+"一个实体的引用。在这篇文档中，组件这一术语指的是面向对象的合成概念（而并不是"
+"系统构架层次上的组件的概念）。举个例子，你对人（Person）这个概念可以像下面这"
+"样来建模： "
 
 #. Tag: para
 #, no-c-format
-msgid "Now <literal>Name</literal> can be persisted as a component of <literal>Person</literal>. <literal>Name</literal> defines getter and setter methods for its persistent properties, but it does not need to declare any interfaces or identifier properties."
-msgstr "在持久化的过程中，<literal>姓名（Name）</literal>可以作为<literal>人（Person）</literal>的一个组件。需要注意的是：你应该为<literal>姓名</literal>的持久化属性定义 getter 和 setter 方法，但是你不需要实现任何的接口或申明标识符字段。  "
+msgid ""
+"Now <literal>Name</literal> can be persisted as a component of "
+"<literal>Person</literal>. <literal>Name</literal> defines getter and setter "
+"methods for its persistent properties, but it does not need to declare any "
+"interfaces or identifier properties."
+msgstr ""
+"在持久化的过程中，<literal>姓名（Name）</literal>可以作为<literal>人"
+"（Person）</literal>的一个组件。需要注意的是：你应该为<literal>姓名</literal>"
+"的持久化属性定义 getter 和 setter 方法，但是你不需要实现任何的接口或申明标识"
+"符字段。  "
 
 #. Tag: para
 #, no-c-format
@@ -46,23 +66,54 @@ msgstr "以下是这个例子的 Hibernate 映射文件： "
 
 #. Tag: para
 #, no-c-format
-msgid "The person table would have the columns <literal>pid</literal>, <literal>birthday</literal>, <literal>initial</literal>, <literal>first</literal> and <literal>last</literal>."
-msgstr "人员（Person）表中将包括 <literal>pid</literal>，<literal>birthday</literal>，<literal>initial</literal>，<literal>first</literal>和 <literal>last</literal> 等字段。"
+msgid ""
+"The person table would have the columns <literal>pid</literal>, "
+"<literal>birthday</literal>, <literal>initial</literal>, <literal>first</"
+"literal> and <literal>last</literal>."
+msgstr ""
+"人员（Person）表中将包括 <literal>pid</literal>，<literal>birthday</"
+"literal>，<literal>initial</literal>，<literal>first</literal>和 "
+"<literal>last</literal> 等字段。"
 
 #. Tag: para
 #, no-c-format
-msgid "Like value types, components do not support shared references. In other words, two persons could have the same name, but the two person objects would contain two independent name objects that were only \"the same\" by value. The null value semantics of a component are <emphasis>ad hoc</emphasis>. When reloading the containing object, Hibernate will assume that if all component columns are null, then the entire component is null. This is suitable for most purposes."
-msgstr "就像所有的值类型一样，组件不支持共享引用。换句话说，两个人可能重名，但是两个 Person 对象应该包含两个独立的 Name 对象，只不过这两个 Name 对象具有“同样”的值。组件的值可以为空，其定义如下。 每当 Hibernate 重新加载一个包含组件的对象，如果该组件的所有字段为空，Hibernate 将假定整个组件为空。在大多数情况下，这样假定应该是没有问题的。"
+msgid ""
+"Like value types, components do not support shared references. In other "
+"words, two persons could have the same name, but the two person objects "
+"would contain two independent name objects that were only \"the same\" by "
+"value. The null value semantics of a component are <emphasis>ad hoc</"
+"emphasis>. When reloading the containing object, Hibernate will assume that "
+"if all component columns are null, then the entire component is null. This "
+"is suitable for most purposes."
+msgstr ""
+"就像所有的值类型一样，组件不支持共享引用。换句话说，两个人可能重名，但是两个 "
+"Person 对象应该包含两个独立的 Name 对象，只不过这两个 Name 对象具有“同样”的"
+"值。组件的值可以为空，其定义如下。 每当 Hibernate 重新加载一个包含组件的对"
+"象，如果该组件的所有字段为空，Hibernate 将假定整个组件为空。在大多数情况下，"
+"这样假定应该是没有问题的。"
 
 #. Tag: para
 #, no-c-format
-msgid "The properties of a component can be of any Hibernate type (collections, many-to-one associations, other components, etc). Nested components should <emphasis>not</emphasis> be considered an exotic usage. Hibernate is intended to support a fine-grained object model."
-msgstr "组件的属性可以是任意一种 Hibernate 类型（包括集合，多对多关联，以及其它组件等等）。嵌套组件不应该被当作一种特殊的应用（Nested components should not be considered an exotic usage）。Hibernate 倾向于支持细颗粒度的（fine-grained）对象模型。"
+msgid ""
+"The properties of a component can be of any Hibernate type (collections, "
+"many-to-one associations, other components, etc). Nested components should "
+"<emphasis>not</emphasis> be considered an exotic usage. Hibernate is "
+"intended to support a fine-grained object model."
+msgstr ""
+"组件的属性可以是任意一种 Hibernate 类型（包括集合，多对多关联，以及其它组件等"
+"等）。嵌套组件不应该被当作一种特殊的应用（Nested components should not be "
+"considered an exotic usage）。Hibernate 倾向于支持细颗粒度的（fine-grained）"
+"对象模型。"
 
 #. Tag: para
 #, no-c-format
-msgid "The <literal>&lt;component&gt;</literal> element allows a <literal>&lt;parent&gt;</literal> subelement that maps a property of the component class as a reference back to the containing entity."
-msgstr "<literal>&lt;component&gt;</literal> 元素允许加入一个 <literal>&lt;parent&gt;</literal> 子元素，在组件类内部就可以有一个指向其容器的实体的反向引用。"
+msgid ""
+"The <literal>&lt;component&gt;</literal> element allows a <literal>&lt;"
+"parent&gt;</literal> subelement that maps a property of the component class "
+"as a reference back to the containing entity."
+msgstr ""
+"<literal>&lt;component&gt;</literal> 元素允许加入一个 <literal>&lt;parent&gt;"
+"</literal> 子元素，在组件类内部就可以有一个指向其容器的实体的反向引用。"
 
 #. Tag: title
 #, no-c-format
@@ -71,33 +122,93 @@ msgstr "在集合中出现的依赖对象（Collections of dependent objects）"
 
 #. Tag: para
 #, fuzzy, no-c-format
-msgid "Collections of components are supported (e.g. an array of type <literal>Name</literal>). Declare your component collection by replacing the <literal>&lt;element&gt;</literal> tag with a <literal>&lt;composite-element&gt;</literal> tag:"
-msgstr "Hibernate 支持组件的集合（例如：一个元素是姓名（Name）这种类型的数组）。你可以使用 <literal>&lt;composite-element&gt;</literal> 标签替代 <literal>&lt;element&gt;</literal> 标签来定义你的组件集合。"
+msgid ""
+"Collections of components are supported (e.g. an array of type "
+"<literal>Name</literal>). Declare your component collection by replacing the "
+"<literal>&lt;element&gt;</literal> tag with a <literal>&lt;composite-"
+"element&gt;</literal> tag:"
+msgstr ""
+"Hibernate 支持组件的集合（例如：一个元素是姓名（Name）这种类型的数组）。你可"
+"以使用 <literal>&lt;composite-element&gt;</literal> 标签替代 <literal>&lt;"
+"element&gt;</literal> 标签来定义你的组件集合。"
 
 #. Tag: para
 #, no-c-format
-msgid "If you define a <literal>Set</literal> of composite elements, it is important to implement <literal>equals()</literal> and <literal>hashCode()</literal> correctly."
-msgstr "注意，如果你定义的 Set 包含组合元素（composite-element），正确地实现 <literal>equals()</literal> 和 <literal>hashCode()</literal> 是非常重要的。 "
+msgid ""
+"If you define a <literal>Set</literal> of composite elements, it is "
+"important to implement <literal>equals()</literal> and <literal>hashCode()</"
+"literal> correctly."
+msgstr ""
+"注意，如果你定义的 Set 包含组合元素（composite-element），正确地实现 "
+"<literal>equals()</literal> 和 <literal>hashCode()</literal> 是非常重要的。 "
 
 #. Tag: para
 #, no-c-format
-msgid "Composite elements can contain components but not collections. If your composite element contains components, use the <literal>&lt;nested-composite-element&gt;</literal> tag. This case is a collection of components which themselves have components. You may want to consider if a one-to-many association is more appropriate. Remodel the composite element as an entity, but be aware that even though the Java model is the same, the relational model and persistence semantics are still slightly different."
-msgstr "组合元素可以包含组件，但是不能包含集合。如果你的组合元素自身包含组件，你必须使用 <literal>&lt;nested-composite-element&gt;</literal> 标签。这是一个相当特殊的案例 — 在一个组件的集合里，那些组件本身又可以包含其他的组件。这个时候你就应该考虑一下使用 one-to-many 关联是否会更恰当。尝试对这个组合元素重新建模为一个实体 — 但是需要注意的是，虽然 Java 模型和重新建模前是一样的，关系模型和持久性语义会有细微的变化。 "
+msgid ""
+"Composite elements can contain components but not collections. If your "
+"composite element contains components, use the <literal>&lt;nested-composite-"
+"element&gt;</literal> tag. This case is a collection of components which "
+"themselves have components. You may want to consider if a one-to-many "
+"association is more appropriate. Remodel the composite element as an entity, "
+"but be aware that even though the Java model is the same, the relational "
+"model and persistence semantics are still slightly different."
+msgstr ""
+"组合元素可以包含组件，但是不能包含集合。如果你的组合元素自身包含组件，你必须"
+"使用 <literal>&lt;nested-composite-element&gt;</literal> 标签。这是一个相当特"
+"殊的案例 — 在一个组件的集合里，那些组件本身又可以包含其他的组件。这个时候你就"
+"应该考虑一下使用 one-to-many 关联是否会更恰当。尝试对这个组合元素重新建模为一"
+"个实体 — 但是需要注意的是，虽然 Java 模型和重新建模前是一样的，关系模型和持久"
+"性语义会有细微的变化。 "
 
 #. Tag: para
 #, no-c-format
-msgid "A composite element mapping does not support null-able properties if you are using a <literal>&lt;set&gt;</literal>. There is no separate primary key column in the composite element table. Hibernate uses each column's value to identify a record when deleting objects, which is not possible with null values. You have to either use only not-null properties in a composite-element or choose a <literal>&lt;list&gt;</literal>, <literal>&lt;map&gt;</literal>, <literal>&lt;bag&gt;</literal> or <literal>&lt;idbag&gt;</literal>."
-msgstr "请注意如果你使用 <literal>&lt;set&gt;</literal> 标签，一个组合元素的映射不支持可能为空的属性. 当删除对象时，Hibernate 必须使用每一个字段的值来确定一条记录（在组合元素表中，没有单独的关键字段），如果有为 null 的字段，这样做就不可能了。你必须作出一个选择，要么在组合元素中使用不能为空的属性，要么选择使用 <literal>&lt;list&gt;</literal>，<literal>&lt;map&gt;</literal>，<literal>&lt;bag&gt;</literal> 或者 <literal>&lt;idbag&gt;</literal> 而不是 <literal>&lt;set&gt;</literal>。 "
+msgid ""
+"A composite element mapping does not support null-able properties if you are "
+"using a <literal>&lt;set&gt;</literal>. There is no separate primary key "
+"column in the composite element table. Hibernate uses each column's value to "
+"identify a record when deleting objects, which is not possible with null "
+"values. You have to either use only not-null properties in a composite-"
+"element or choose a <literal>&lt;list&gt;</literal>, <literal>&lt;map&gt;</"
+"literal>, <literal>&lt;bag&gt;</literal> or <literal>&lt;idbag&gt;</literal>."
+msgstr ""
+"请注意如果你使用 <literal>&lt;set&gt;</literal> 标签，一个组合元素的映射不支"
+"持可能为空的属性. 当删除对象时，Hibernate 必须使用每一个字段的值来确定一条记"
+"录（在组合元素表中，没有单独的关键字段），如果有为 null 的字段，这样做就不可"
+"能了。你必须作出一个选择，要么在组合元素中使用不能为空的属性，要么选择使用 "
+"<literal>&lt;list&gt;</literal>，<literal>&lt;map&gt;</literal>，"
+"<literal>&lt;bag&gt;</literal> 或者 <literal>&lt;idbag&gt;</literal> 而不是 "
+"<literal>&lt;set&gt;</literal>。 "
 
 #. Tag: para
 #, no-c-format
-msgid "A special case of a composite element is a composite element with a nested <literal>&lt;many-to-one&gt;</literal> element. This mapping allows you to map extra columns of a many-to-many association table to the composite element class. The following is a many-to-many association from <literal>Order</literal> to <literal>Item</literal>, where <literal>purchaseDate</literal>, <literal>price</literal> and <literal>quantity</literal> are properties of the association:"
-msgstr "组合元素有个特别的用法是它可以包含一个<literal>&lt;many-to-one&gt;</literal>元素。类似这样的映射允许你将一个 many-to-many 关联表的额外字段映射为组合元素类。接下来的的例子是从 <literal>Order</literal> 到 <literal>Item</literal> 的一个多对多的关联关系，关联属性是 <literal>purchaseDate</literal>，<literal>price</literal> 和 <literal>quantity</literal> 。 "
+msgid ""
+"A special case of a composite element is a composite element with a nested "
+"<literal>&lt;many-to-one&gt;</literal> element. This mapping allows you to "
+"map extra columns of a many-to-many association table to the composite "
+"element class. The following is a many-to-many association from "
+"<literal>Order</literal> to <literal>Item</literal>, where "
+"<literal>purchaseDate</literal>, <literal>price</literal> and "
+"<literal>quantity</literal> are properties of the association:"
+msgstr ""
+"组合元素有个特别的用法是它可以包含一个<literal>&lt;many-to-one&gt;</literal>"
+"元素。类似这样的映射允许你将一个 many-to-many 关联表的额外字段映射为组合元素"
+"类。接下来的的例子是从 <literal>Order</literal> 到 <literal>Item</literal> 的"
+"一个多对多的关联关系，关联属性是 <literal>purchaseDate</literal>，"
+"<literal>price</literal> 和 <literal>quantity</literal> 。 "
 
 #. Tag: para
 #, no-c-format
-msgid "There cannot be a reference to the purchase on the other side for bidirectional association navigation. Components are value types and do not allow shared references. A single <literal>Purchase</literal> can be in the set of an <literal>Order</literal>, but it cannot be referenced by the <literal>Item</literal> at the same time."
-msgstr "当然，当你定义 Item 时，你无法引用这些 purchase，因此你无法实现双向关联查询。记住组件是值类型，并且不允许共享引用。某一个特定的 <literal>Purchase</literal> 可以放在 <literal>Order</literal> 的集合中，但它不能同时被 <literal>Item</literal> 所引用。 "
+msgid ""
+"There cannot be a reference to the purchase on the other side for "
+"bidirectional association navigation. Components are value types and do not "
+"allow shared references. A single <literal>Purchase</literal> can be in the "
+"set of an <literal>Order</literal>, but it cannot be referenced by the "
+"<literal>Item</literal> at the same time."
+msgstr ""
+"当然，当你定义 Item 时，你无法引用这些 purchase，因此你无法实现双向关联查询。"
+"记住组件是值类型，并且不允许共享引用。某一个特定的 <literal>Purchase</"
+"literal> 可以放在 <literal>Order</literal> 的集合中，但它不能同时被 "
+"<literal>Item</literal> 所引用。 "
 
 #. Tag: para
 #, no-c-format
@@ -106,7 +217,9 @@ msgstr "其实组合元素的这个用法可以扩展到三重或多重关联:"
 
 #. Tag: para
 #, no-c-format
-msgid "Composite elements can appear in queries using the same syntax as associations to other entities."
+msgid ""
+"Composite elements can appear in queries using the same syntax as "
+"associations to other entities."
 msgstr "在查询中，表达组合元素的语法和关联到其他实体的语法是一样的。 "
 
 #. Tag: title
@@ -116,8 +229,15 @@ msgstr "组件作为 Map 的索引（Components as Map indices ）"
 
 #. Tag: para
 #, no-c-format
-msgid "The <literal>&lt;composite-map-key&gt;</literal> element allows you to map a component class as the key of a <literal>Map</literal>. Ensure that you override <literal>hashCode()</literal> and <literal>equals()</literal> correctly on the component class."
-msgstr "<literal>&lt;composite-map-key&gt;</literal> 元素允许你映射一个组件类作为一个 <literal>Map</literal> 的 key，前提是你必须正确的在这个类中重写了 <literal>hashCode()</literal> 和 <literal>equals()</literal> 方法。 "
+msgid ""
+"The <literal>&lt;composite-map-key&gt;</literal> element allows you to map a "
+"component class as the key of a <literal>Map</literal>. Ensure that you "
+"override <literal>hashCode()</literal> and <literal>equals()</literal> "
+"correctly on the component class."
+msgstr ""
+"<literal>&lt;composite-map-key&gt;</literal> 元素允许你映射一个组件类作为一"
+"个 <literal>Map</literal> 的 key，前提是你必须正确的在这个类中重写了 "
+"<literal>hashCode()</literal> 和 <literal>equals()</literal> 方法。 "
 
 #. Tag: title
 #, no-c-format
@@ -126,8 +246,11 @@ msgstr "组件作为联合标识符（Components as composite identifiers）"
 
 #. Tag: para
 #, no-c-format
-msgid "You can use a component as an identifier of an entity class. Your component class must satisfy certain requirements:"
-msgstr "你可以使用一个组件作为一个实体类的标识符。你的组件类必须满足以下要求： "
+msgid ""
+"You can use a component as an identifier of an entity class. Your component "
+"class must satisfy certain requirements:"
+msgstr ""
+"你可以使用一个组件作为一个实体类的标识符。你的组件类必须满足以下要求： "
 
 #. Tag: para
 #, no-c-format
@@ -136,8 +259,12 @@ msgstr "它必须实现 <literal>java.io.Serializable</literal> 接口"
 
 #. Tag: para
 #, no-c-format
-msgid "It must re-implement <literal>equals()</literal> and <literal>hashCode()</literal> consistently with the database's notion of composite key equality."
-msgstr "它必须重新实现 <literal>equals()</literal> 和 <literal>hashCode()</literal> 方法，始终和组合关键字在数据库中的概念保持一致 "
+msgid ""
+"It must re-implement <literal>equals()</literal> and <literal>hashCode()</"
+"literal> consistently with the database's notion of composite key equality."
+msgstr ""
+"它必须重新实现 <literal>equals()</literal> 和 <literal>hashCode()</literal> "
+"方法，始终和组合关键字在数据库中的概念保持一致 "
 
 #. Tag: title
 #, no-c-format
@@ -146,38 +273,75 @@ msgstr "注意"
 
 #. Tag: para
 #, no-c-format
-msgid "In Hibernate3, although the second requirement is not an absolutely hard requirement of Hibernate, it is recommended."
-msgstr "注意：在 Hibernate3 中，第二个要求并非是 Hibernate 强制必须的。但最好这样做。 "
+msgid ""
+"In Hibernate3, although the second requirement is not an absolutely hard "
+"requirement of Hibernate, it is recommended."
+msgstr ""
+"注意：在 Hibernate3 中，第二个要求并非是 Hibernate 强制必须的。但最好这样"
+"做。 "
 
 #. Tag: para
 #, no-c-format
-msgid "You cannot use an <literal>IdentifierGenerator</literal> to generate composite keys. Instead the application must assign its own identifiers."
-msgstr "你不能使用一个 <literal>IdentifierGenerator</literal> 产生组合关键字。一个应用程序必须分配它自己的标识符。 "
+msgid ""
+"You cannot use an <literal>IdentifierGenerator</literal> to generate "
+"composite keys. Instead the application must assign its own identifiers."
+msgstr ""
+"你不能使用一个 <literal>IdentifierGenerator</literal> 产生组合关键字。一个应"
+"用程序必须分配它自己的标识符。 "
 
 #. Tag: para
 #, no-c-format
-msgid "Use the <literal>&lt;composite-id&gt;</literal> tag, with nested <literal>&lt;key-property&gt;</literal> elements, in place of the usual <literal>&lt;id&gt;</literal> declaration. For example, the <literal>OrderLine</literal> class has a primary key that depends upon the (composite) primary key of <literal>Order</literal>."
-msgstr "使用 <literal>&lt;composite-id&gt;</literal> 标签（并且内嵌 <literal>&lt;key-property&gt;</literal> 元素）代替通常的 <literal>&lt;id&gt;</literal> 标签。比如，<literal>OrderLine</literal> 类具有一个主键，这个主键依赖于 <literal>Order</literal> 的（联合）主键。 "
+msgid ""
+"Use the <literal>&lt;composite-id&gt;</literal> tag, with nested "
+"<literal>&lt;key-property&gt;</literal> elements, in place of the usual "
+"<literal>&lt;id&gt;</literal> declaration. For example, the "
+"<literal>OrderLine</literal> class has a primary key that depends upon the "
+"(composite) primary key of <literal>Order</literal>."
+msgstr ""
+"使用 <literal>&lt;composite-id&gt;</literal> 标签（并且内嵌 <literal>&lt;key-"
+"property&gt;</literal> 元素）代替通常的 <literal>&lt;id&gt;</literal> 标签。"
+"比如，<literal>OrderLine</literal> 类具有一个主键，这个主键依赖于 "
+"<literal>Order</literal> 的（联合）主键。 "
 
 #. Tag: para
 #, no-c-format
-msgid "Any foreign keys referencing the <literal>OrderLine</literal> table are now composite. Declare this in your mappings for other classes. An association to <literal>OrderLine</literal> is mapped like this:"
-msgstr "现在，任何指向 <literal>OrderLine</literal> 的外键都是复合的。在你的映射文件中，必须为其他类也这样声明。例如，一个指向 <literal>OrderLine</literal> 的关联可能被这样映射： "
+msgid ""
+"Any foreign keys referencing the <literal>OrderLine</literal> table are now "
+"composite. Declare this in your mappings for other classes. An association "
+"to <literal>OrderLine</literal> is mapped like this:"
+msgstr ""
+"现在，任何指向 <literal>OrderLine</literal> 的外键都是复合的。在你的映射文件"
+"中，必须为其他类也这样声明。例如，一个指向 <literal>OrderLine</literal> 的关"
+"联可能被这样映射： "
 
 #. Tag: para
 #, no-c-format
-msgid "The <literal>&lt;column&gt;</literal> tag is an alternative to the <literal>column</literal> attribute everywhere. Using the <literal>&lt;column&gt;</literal> tag just gives more declaration options, which are mostly useful when utilizing <literal>hbm2ddl</literal>."
-msgstr "（注意在各个地方 <literal>&lt;column&gt;</literal> 标签都是 <literal>column</literal> 属性的替代写法。） "
+msgid ""
+"The <literal>&lt;column&gt;</literal> tag is an alternative to the "
+"<literal>column</literal> attribute everywhere. Using the <literal>&lt;"
+"column&gt;</literal> tag just gives more declaration options, which are "
+"mostly useful when utilizing <literal>hbm2ddl</literal>."
+msgstr ""
+"（注意在各个地方 <literal>&lt;column&gt;</literal> 标签都是 <literal>column</"
+"literal> 属性的替代写法。） "
 
 #. Tag: para
 #, no-c-format
-msgid "A <literal>many-to-many</literal> association to <literal>OrderLine</literal> also uses the composite foreign key:"
-msgstr "指向 <literal>OrderLine</literal> 的<literal>多对多</literal>关联也使用联合外键："
+msgid ""
+"A <literal>many-to-many</literal> association to <literal>OrderLine</"
+"literal> also uses the composite foreign key:"
+msgstr ""
+"指向 <literal>OrderLine</literal> 的<literal>多对多</literal>关联也使用联合外"
+"键："
 
 #. Tag: para
 #, no-c-format
-msgid "The collection of <literal>OrderLine</literal>s in <literal>Order</literal> would use:"
-msgstr "在 <literal>Order</literal> 中，<literal>OrderLine</literal> 的集合则是这样： "
+msgid ""
+"The collection of <literal>OrderLine</literal>s in <literal>Order</literal> "
+"would use:"
+msgstr ""
+"在 <literal>Order</literal> 中，<literal>OrderLine</literal> 的集合则是这"
+"样： "
 
 #. Tag: para
 #, no-c-format
@@ -186,7 +350,9 @@ msgstr "与通常一样，<literal>&lt;one-to-many&gt;</literal> 元素不声明
 
 #. Tag: para
 #, no-c-format
-msgid "If <literal>OrderLine</literal> itself owns a collection, it also has a composite foreign key."
+msgid ""
+"If <literal>OrderLine</literal> itself owns a collection, it also has a "
+"composite foreign key."
 msgstr "假若 <literal>OrderLine</literal> 本身拥有一个集合，它也具有组合外键。"
 
 #. Tag: title
@@ -201,8 +367,20 @@ msgstr "你甚至可以映射 <literal>Map</literal> 类型的属性： "
 
 #. Tag: para
 #, no-c-format
-msgid "The semantics of a <literal>&lt;dynamic-component&gt;</literal> mapping are identical to <literal>&lt;component&gt;</literal>. The advantage of this kind of mapping is the ability to determine the actual properties of the bean at deployment time just by editing the mapping document. Runtime manipulation of the mapping document is also possible, using a DOM parser. You can also access, and change, Hibernate's configuration-time metamodel via the <literal>Configuration</literal> object."
-msgstr "从 <literal>&lt;dynamic-component&gt;</literal> 映射的语义上来讲，它和 <literal>&lt;component&gt;</literal> 是相同的。这种映射类型的优点在于通过修改映射文件，就可以具有在部署时检测真实属性的能力。利用一个 DOM 解析器，也可以在程序运行时操作映射文件。更好的是，你可以通过 <literal>Configuration</literal> 对象来访问（或者修改）Hibernate 的运行时元模型。 "
+msgid ""
+"The semantics of a <literal>&lt;dynamic-component&gt;</literal> mapping are "
+"identical to <literal>&lt;component&gt;</literal>. The advantage of this "
+"kind of mapping is the ability to determine the actual properties of the "
+"bean at deployment time just by editing the mapping document. Runtime "
+"manipulation of the mapping document is also possible, using a DOM parser. "
+"You can also access, and change, Hibernate's configuration-time metamodel "
+"via the <literal>Configuration</literal> object."
+msgstr ""
+"从 <literal>&lt;dynamic-component&gt;</literal> 映射的语义上来讲，它和 "
+"<literal>&lt;component&gt;</literal> 是相同的。这种映射类型的优点在于通过修改"
+"映射文件，就可以具有在部署时检测真实属性的能力。利用一个 DOM 解析器，也可以在"
+"程序运行时操作映射文件。更好的是，你可以通过 <literal>Configuration</"
+"literal> 对象来访问（或者修改）Hibernate 的运行时元模型。 "
 
 #~ msgid ""
 #~ "<![CDATA[public class Person {\n"
@@ -256,6 +434,7 @@ msgstr "从 <literal>&lt;dynamic-component&gt;</literal> 映射的语义上来�
 #~ "    ......\n"
 #~ "    ......\n"
 #~ "}]]>"
+
 #~ msgid ""
 #~ "<![CDATA[public class Name {\n"
 #~ "    char initial;\n"
@@ -304,6 +483,7 @@ msgstr "从 <literal>&lt;dynamic-component&gt;</literal> 映射的语义上来�
 #~ "        this.initial = initial;\n"
 #~ "    }\n"
 #~ "}]]>"
+
 #~ msgid ""
 #~ "<![CDATA[<class name=\"eg.Person\" table=\"person\">\n"
 #~ "    <id name=\"Key\" column=\"pid\" type=\"string\">\n"
@@ -330,6 +510,7 @@ msgstr "从 <literal>&lt;dynamic-component&gt;</literal> 映射的语义上来�
 #~ "        <property name=\"last\"/>\n"
 #~ "    </component>\n"
 #~ "</class>]]>"
+
 #~ msgid ""
 #~ "<![CDATA[<class name=\"eg.Person\" table=\"person\">\n"
 #~ "    <id name=\"Key\" column=\"pid\" type=\"string\">\n"
@@ -358,6 +539,7 @@ msgstr "从 <literal>&lt;dynamic-component&gt;</literal> 映射的语义上来�
 #~ "        <property name=\"last\"/>\n"
 #~ "    </component>\n"
 #~ "</class>]]>"
+
 #~ msgid ""
 #~ "<![CDATA[<set name=\"someNames\" table=\"some_names\" lazy=\"true\">\n"
 #~ "    <key column=\"id\"/>\n"
@@ -578,4 +760,3 @@ msgstr "从 <literal>&lt;dynamic-component&gt;</literal> 映射的语义上来�
 #~ "    &lt;property name=\"bar\" column=\"BAR\" type=\"integer\"/&gt;\n"
 #~ "    &lt;many-to-one name=\"baz\" class=\"Baz\" column=\"BAZ_ID\"/&gt;\n"
 #~ "&lt;/dynamic-component&gt;"
-

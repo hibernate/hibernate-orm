@@ -1,278 +1,564 @@
-# 
-# AUTHOR <EMAIL@ADDRESS>, YEAR.
+# SOME DESCRIPTIVE TITLE.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
 #
+#, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: 0\n"
-"POT-Creation-Date: 2010-01-08T04:07:19\n"
-"PO-Revision-Date: 2010-01-08T04:07:19\n"
-"Last-Translator: Automatically generated\n"
-"Language-Team: None\n"
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: http://bugs.kde.org\n"
+"POT-Creation-Date: 2010-02-10 07:36+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <kde-i18n-doc@kde.org>\n"
 "MIME-Version: 1.0\n"
-"Content-Type: application/x-publican; charset=UTF-8\n"
+"Content-Type: application/x-xml2pot; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
 #. Tag: title
+#: inheritance_mapping.xml:31
 #, no-c-format
 msgid "Inheritance mapping"
 msgstr ""
 
 #. Tag: title
+#: inheritance_mapping.xml:34
 #, no-c-format
 msgid "The three strategies"
 msgstr ""
 
 #. Tag: para
+#: inheritance_mapping.xml:36
 #, no-c-format
 msgid "Hibernate supports the three basic inheritance mapping strategies:"
 msgstr ""
 
 #. Tag: para
+#: inheritance_mapping.xml:42
 #, no-c-format
 msgid "table per class hierarchy"
 msgstr ""
 
 #. Tag: para
+#: inheritance_mapping.xml:47
 #, no-c-format
-msgid "table per subclass"
+msgid "<para>table per subclass</para>"
 msgstr ""
 
 #. Tag: para
+#: inheritance_mapping.xml:52
 #, no-c-format
 msgid "table per concrete class"
 msgstr ""
 
 #. Tag: para
+#: inheritance_mapping.xml:58
 #, no-c-format
 msgid "In addition, Hibernate supports a fourth, slightly different kind of polymorphism:"
 msgstr ""
 
 #. Tag: para
+#: inheritance_mapping.xml:65
 #, no-c-format
 msgid "implicit polymorphism"
 msgstr ""
 
 #. Tag: para
+#: inheritance_mapping.xml:71
 #, no-c-format
 msgid "It is possible to use different mapping strategies for different branches of the same inheritance hierarchy. You can then make use of implicit polymorphism to achieve polymorphism across the whole hierarchy. However, Hibernate does not support mixing <literal>&lt;subclass&gt;</literal>, <literal>&lt;joined-subclass&gt;</literal> and <literal>&lt;union-subclass&gt;</literal> mappings under the same root <literal>&lt;class&gt;</literal> element. It is possible to mix together the table per hierarchy and table per subclass strategies under the the same <literal>&lt;class&gt;</literal> element, by combining the <literal>&lt;subclass&gt;</literal> and <literal>&lt;join&gt;</literal> elements (see below for an example)."
 msgstr ""
 
 #. Tag: para
+#: inheritance_mapping.xml:85
 #, no-c-format
 msgid "It is possible to define <literal>subclass</literal>, <literal>union-subclass</literal>, and <literal>joined-subclass</literal> mappings in separate mapping documents directly beneath <literal>hibernate-mapping</literal>. This allows you to extend a class hierarchy by adding a new mapping file. You must specify an <literal>extends</literal> attribute in the subclass mapping, naming a previously mapped superclass. Previously this feature made the ordering of the mapping documents important. Since Hibernate3, the ordering of mapping files is irrelevant when using the extends keyword. The ordering inside a single mapping file still needs to be defined as superclasses before subclasses."
 msgstr ""
 
+#. Tag: programlisting
+#: inheritance_mapping.xml:96
+#, no-c-format
+msgid ""
+      "<![CDATA[\n"
+      " <hibernate-mapping>\n"
+      "     <subclass name=\"DomesticCat\" extends=\"Cat\" discriminator-value=\"D\">\n"
+      "          <property name=\"name\" type=\"string\"/>\n"
+      "     </subclass>\n"
+      " </hibernate-mapping>]]>"
+msgstr ""
+
 #. Tag: title
+#: inheritance_mapping.xml:100
 #, no-c-format
 msgid "Table per class hierarchy"
 msgstr ""
 
 #. Tag: para
+#: inheritance_mapping.xml:102
 #, no-c-format
 msgid "Suppose we have an interface <literal>Payment</literal> with the implementors <literal>CreditCardPayment</literal>, <literal>CashPayment</literal>, and <literal>ChequePayment</literal>. The table per hierarchy mapping would display in the following way:"
 msgstr ""
 
+#. Tag: programlisting
+#: inheritance_mapping.xml:109
+#, no-c-format
+msgid ""
+      "<![CDATA[<class name=\"Payment\" table=\"PAYMENT\">\n"
+      "    <id name=\"id\" type=\"long\" column=\"PAYMENT_ID\">\n"
+      "        <generator class=\"native\"/>\n"
+      "    </id>\n"
+      "    <discriminator column=\"PAYMENT_TYPE\" type=\"string\"/>\n"
+      "    <property name=\"amount\" column=\"AMOUNT\"/>\n"
+      "    ...\n"
+      "    <subclass name=\"CreditCardPayment\" discriminator-value=\"CREDIT\">\n"
+      "        <property name=\"creditCardType\" column=\"CCTYPE\"/>\n"
+      "        ...\n"
+      "    </subclass>\n"
+      "    <subclass name=\"CashPayment\" discriminator-value=\"CASH\">\n"
+      "        ...\n"
+      "    </subclass>\n"
+      "    <subclass name=\"ChequePayment\" discriminator-value=\"CHEQUE\">\n"
+      "        ...\n"
+      "    </subclass>\n"
+      "</class>]]>"
+msgstr ""
+
 #. Tag: para
+#: inheritance_mapping.xml:111
 #, no-c-format
 msgid "Exactly one table is required. There is a limitation of this mapping strategy: columns declared by the subclasses, such as <literal>CCTYPE</literal>, cannot have <literal>NOT NULL</literal> constraints."
 msgstr ""
 
 #. Tag: title
+#: inheritance_mapping.xml:120
 #, no-c-format
 msgid "Table per subclass"
 msgstr ""
 
 #. Tag: para
+#: inheritance_mapping.xml:122
 #, no-c-format
 msgid "A table per subclass mapping looks like this:"
 msgstr ""
 
+#. Tag: programlisting
+#: inheritance_mapping.xml:126
+#, no-c-format
+msgid ""
+      "<![CDATA[<class name=\"Payment\" table=\"PAYMENT\">\n"
+      "    <id name=\"id\" type=\"long\" column=\"PAYMENT_ID\">\n"
+      "        <generator class=\"native\"/>\n"
+      "    </id>\n"
+      "    <property name=\"amount\" column=\"AMOUNT\"/>\n"
+      "    ...\n"
+      "    <joined-subclass name=\"CreditCardPayment\" table=\"CREDIT_PAYMENT\">\n"
+      "        <key column=\"PAYMENT_ID\"/>\n"
+      "        <property name=\"creditCardType\" column=\"CCTYPE\"/>\n"
+      "        ...\n"
+      "    </joined-subclass>\n"
+      "    <joined-subclass name=\"CashPayment\" table=\"CASH_PAYMENT\">\n"
+      "        <key column=\"PAYMENT_ID\"/>\n"
+      "        ...\n"
+      "    </joined-subclass>\n"
+      "    <joined-subclass name=\"ChequePayment\" table=\"CHEQUE_PAYMENT\">\n"
+      "        <key column=\"PAYMENT_ID\"/>\n"
+      "        ...\n"
+      "    </joined-subclass>\n"
+      "</class>]]>"
+msgstr ""
+
 #. Tag: para
+#: inheritance_mapping.xml:128
 #, no-c-format
 msgid "Four tables are required. The three subclass tables have primary key associations to the superclass table so the relational model is actually a one-to-one association."
 msgstr ""
 
 #. Tag: title
+#: inheritance_mapping.xml:137
 #, no-c-format
 msgid "Table per subclass: using a discriminator"
 msgstr ""
 
 #. Tag: para
+#: inheritance_mapping.xml:139
 #, no-c-format
 msgid "Hibernate's implementation of table per subclass does not require a discriminator column. Other object/relational mappers use a different implementation of table per subclass that requires a type discriminator column in the superclass table. The approach taken by Hibernate is much more difficult to implement, but arguably more correct from a relational point of view. If you want to use a discriminator column with the table per subclass strategy, you can combine the use of <literal>&lt;subclass&gt;</literal> and <literal>&lt;join&gt;</literal>, as follows:"
 msgstr ""
 
+#. Tag: programlisting
+#: inheritance_mapping.xml:151
+#, no-c-format
+msgid ""
+      "<![CDATA[<class name=\"Payment\" table=\"PAYMENT\">\n"
+      "    <id name=\"id\" type=\"long\" column=\"PAYMENT_ID\">\n"
+      "        <generator class=\"native\"/>\n"
+      "    </id>\n"
+      "    <discriminator column=\"PAYMENT_TYPE\" type=\"string\"/>\n"
+      "    <property name=\"amount\" column=\"AMOUNT\"/>\n"
+      "    ...\n"
+      "    <subclass name=\"CreditCardPayment\" discriminator-value=\"CREDIT\">\n"
+      "        <join table=\"CREDIT_PAYMENT\">\n"
+      "            <key column=\"PAYMENT_ID\"/>\n"
+      "            <property name=\"creditCardType\" column=\"CCTYPE\"/>\n"
+      "            ...\n"
+      "        </join>\n"
+      "    </subclass>\n"
+      "    <subclass name=\"CashPayment\" discriminator-value=\"CASH\">\n"
+      "        <join table=\"CASH_PAYMENT\">\n"
+      "            <key column=\"PAYMENT_ID\"/>\n"
+      "            ...\n"
+      "        </join>\n"
+      "    </subclass>\n"
+      "    <subclass name=\"ChequePayment\" discriminator-value=\"CHEQUE\">\n"
+      "        <join table=\"CHEQUE_PAYMENT\" fetch=\"select\">\n"
+      "            <key column=\"PAYMENT_ID\"/>\n"
+      "            ...\n"
+      "        </join>\n"
+      "    </subclass>\n"
+      "</class>]]>"
+msgstr ""
+
 #. Tag: para
+#: inheritance_mapping.xml:153
 #, no-c-format
 msgid "The optional <literal>fetch=\"select\"</literal> declaration tells Hibernate not to fetch the <literal>ChequePayment</literal> subclass data using an outer join when querying the superclass."
 msgstr ""
 
 #. Tag: title
+#: inheritance_mapping.xml:162
 #, no-c-format
 msgid "Mixing table per class hierarchy with table per subclass"
 msgstr ""
 
 #. Tag: para
+#: inheritance_mapping.xml:164
 #, no-c-format
 msgid "You can even mix the table per hierarchy and table per subclass strategies using the following approach:"
 msgstr ""
 
+#. Tag: programlisting
+#: inheritance_mapping.xml:169
+#, no-c-format
+msgid ""
+      "<![CDATA[<class name=\"Payment\" table=\"PAYMENT\">\n"
+      "    <id name=\"id\" type=\"long\" column=\"PAYMENT_ID\">\n"
+      "        <generator class=\"native\"/>\n"
+      "    </id>\n"
+      "    <discriminator column=\"PAYMENT_TYPE\" type=\"string\"/>\n"
+      "    <property name=\"amount\" column=\"AMOUNT\"/>\n"
+      "    ...\n"
+      "    <subclass name=\"CreditCardPayment\" discriminator-value=\"CREDIT\">\n"
+      "        <join table=\"CREDIT_PAYMENT\">\n"
+      "            <property name=\"creditCardType\" column=\"CCTYPE\"/>\n"
+      "            ...\n"
+      "        </join>\n"
+      "    </subclass>\n"
+      "    <subclass name=\"CashPayment\" discriminator-value=\"CASH\">\n"
+      "        ...\n"
+      "    </subclass>\n"
+      "    <subclass name=\"ChequePayment\" discriminator-value=\"CHEQUE\">\n"
+      "        ...\n"
+      "    </subclass>\n"
+      "</class>]]>"
+msgstr ""
+
 #. Tag: para
+#: inheritance_mapping.xml:171
 #, no-c-format
 msgid "For any of these mapping strategies, a polymorphic association to the root <literal>Payment</literal> class is mapped using <literal>&lt;many-to-one&gt;</literal>."
 msgstr ""
 
+#. Tag: programlisting
+#: inheritance_mapping.xml:177
+#, no-c-format
+msgid "<![CDATA[<many-to-one name=\"payment\" column=\"PAYMENT_ID\" class=\"Payment\"/>]]>"
+msgstr ""
+
 #. Tag: title
+#: inheritance_mapping.xml:182
 #, no-c-format
 msgid "Table per concrete class"
 msgstr ""
 
 #. Tag: para
+#: inheritance_mapping.xml:184
 #, no-c-format
 msgid "There are two ways we can map the table per concrete class strategy. First, you can use <literal>&lt;union-subclass&gt;</literal>."
 msgstr ""
 
+#. Tag: programlisting
+#: inheritance_mapping.xml:189
+#, no-c-format
+msgid ""
+      "<![CDATA[<class name=\"Payment\">\n"
+      "    <id name=\"id\" type=\"long\" column=\"PAYMENT_ID\">\n"
+      "        <generator class=\"sequence\"/>\n"
+      "    </id>\n"
+      "    <property name=\"amount\" column=\"AMOUNT\"/>\n"
+      "    ...\n"
+      "    <union-subclass name=\"CreditCardPayment\" table=\"CREDIT_PAYMENT\">\n"
+      "        <property name=\"creditCardType\" column=\"CCTYPE\"/>\n"
+      "        ...\n"
+      "    </union-subclass>\n"
+      "    <union-subclass name=\"CashPayment\" table=\"CASH_PAYMENT\">\n"
+      "        ...\n"
+      "    </union-subclass>\n"
+      "    <union-subclass name=\"ChequePayment\" table=\"CHEQUE_PAYMENT\">\n"
+      "        ...\n"
+      "    </union-subclass>\n"
+      "</class>]]>"
+msgstr ""
+
 #. Tag: para
+#: inheritance_mapping.xml:191
 #, no-c-format
 msgid "Three tables are involved for the subclasses. Each table defines columns for all properties of the class, including inherited properties."
 msgstr ""
 
 #. Tag: para
+#: inheritance_mapping.xml:196
 #, no-c-format
 msgid "The limitation of this approach is that if a property is mapped on the superclass, the column name must be the same on all subclass tables. The identity generator strategy is not allowed in union subclass inheritance. The primary key seed has to be shared across all unioned subclasses of a hierarchy."
 msgstr ""
 
 #. Tag: para
+#: inheritance_mapping.xml:205
 #, no-c-format
 msgid "If your superclass is abstract, map it with <literal>abstract=\"true\"</literal>. If it is not abstract, an additional table (it defaults to <literal>PAYMENT</literal> in the example above), is needed to hold instances of the superclass."
 msgstr ""
 
 #. Tag: title
+#: inheritance_mapping.xml:215
 #, no-c-format
 msgid "Table per concrete class using implicit polymorphism"
 msgstr ""
 
 #. Tag: para
+#: inheritance_mapping.xml:217
 #, no-c-format
 msgid "An alternative approach is to make use of implicit polymorphism:"
 msgstr ""
 
+#. Tag: programlisting
+#: inheritance_mapping.xml:221
+#, no-c-format
+msgid ""
+      "<![CDATA[<class name=\"CreditCardPayment\" table=\"CREDIT_PAYMENT\">\n"
+      "    <id name=\"id\" type=\"long\" column=\"CREDIT_PAYMENT_ID\">\n"
+      "        <generator class=\"native\"/>\n"
+      "    </id>\n"
+      "    <property name=\"amount\" column=\"CREDIT_AMOUNT\"/>\n"
+      "    ...\n"
+      "</class>\n"
+      "\n"
+      "<class name=\"CashPayment\" table=\"CASH_PAYMENT\">\n"
+      "    <id name=\"id\" type=\"long\" column=\"CASH_PAYMENT_ID\">\n"
+      "        <generator class=\"native\"/>\n"
+      "    </id>\n"
+      "    <property name=\"amount\" column=\"CASH_AMOUNT\"/>\n"
+      "    ...\n"
+      "</class>\n"
+      "\n"
+      "<class name=\"ChequePayment\" table=\"CHEQUE_PAYMENT\">\n"
+      "    <id name=\"id\" type=\"long\" column=\"CHEQUE_PAYMENT_ID\">\n"
+      "        <generator class=\"native\"/>\n"
+      "    </id>\n"
+      "    <property name=\"amount\" column=\"CHEQUE_AMOUNT\"/>\n"
+      "    ...\n"
+      "</class>]]>"
+msgstr ""
+
 #. Tag: para
+#: inheritance_mapping.xml:223
 #, no-c-format
 msgid "Notice that the <literal>Payment</literal> interface is not mentioned explicitly. Also notice that properties of <literal>Payment</literal> are mapped in each of the subclasses. If you want to avoid duplication, consider using XML entities (for example, <literal>[ &lt;!ENTITY allproperties SYSTEM \"allproperties.xml\"&gt; ]</literal> in the <literal>DOCTYPE</literal> declaration and <literal>&amp;allproperties&semi;</literal> in the mapping)."
 msgstr ""
 
 #. Tag: para
+#: inheritance_mapping.xml:233
 #, no-c-format
 msgid "The disadvantage of this approach is that Hibernate does not generate SQL <literal>UNION</literal>s when performing polymorphic queries."
 msgstr ""
 
 #. Tag: para
+#: inheritance_mapping.xml:238
 #, no-c-format
 msgid "For this mapping strategy, a polymorphic association to <literal>Payment</literal> is usually mapped using <literal>&lt;any&gt;</literal>."
 msgstr ""
 
+#. Tag: programlisting
+#: inheritance_mapping.xml:243
+#, no-c-format
+msgid ""
+      "<![CDATA[<any name=\"payment\" meta-type=\"string\" id-type=\"long\">\n"
+      "    <meta-value value=\"CREDIT\" class=\"CreditCardPayment\"/>\n"
+      "    <meta-value value=\"CASH\" class=\"CashPayment\"/>\n"
+      "    <meta-value value=\"CHEQUE\" class=\"ChequePayment\"/>\n"
+      "    <column name=\"PAYMENT_CLASS\"/>\n"
+      "    <column name=\"PAYMENT_ID\"/>\n"
+      "</any>]]>"
+msgstr ""
+
 #. Tag: title
+#: inheritance_mapping.xml:248
 #, no-c-format
 msgid "Mixing implicit polymorphism with other inheritance mappings"
 msgstr ""
 
 #. Tag: para
+#: inheritance_mapping.xml:250
 #, no-c-format
 msgid "Since the subclasses are each mapped in their own <literal>&lt;class&gt;</literal> element, and since <literal>Payment</literal> is just an interface), each of the subclasses could easily be part of another inheritance hierarchy. You can still use polymorphic queries against the <literal>Payment</literal> interface."
 msgstr ""
 
+#. Tag: programlisting
+#: inheritance_mapping.xml:258
+#, no-c-format
+msgid ""
+      "<![CDATA[<class name=\"CreditCardPayment\" table=\"CREDIT_PAYMENT\">\n"
+      "    <id name=\"id\" type=\"long\" column=\"CREDIT_PAYMENT_ID\">\n"
+      "        <generator class=\"native\"/>\n"
+      "    </id>\n"
+      "    <discriminator column=\"CREDIT_CARD\" type=\"string\"/>\n"
+      "    <property name=\"amount\" column=\"CREDIT_AMOUNT\"/>\n"
+      "    ...\n"
+      "    <subclass name=\"MasterCardPayment\" discriminator-value=\"MDC\"/>\n"
+      "    <subclass name=\"VisaPayment\" discriminator-value=\"VISA\"/>\n"
+      "</class>\n"
+      "\n"
+      "<class name=\"NonelectronicTransaction\" table=\"NONELECTRONIC_TXN\">\n"
+      "    <id name=\"id\" type=\"long\" column=\"TXN_ID\">\n"
+      "        <generator class=\"native\"/>\n"
+      "    </id>\n"
+      "    ...\n"
+      "    <joined-subclass name=\"CashPayment\" table=\"CASH_PAYMENT\">\n"
+      "        <key column=\"PAYMENT_ID\"/>\n"
+      "        <property name=\"amount\" column=\"CASH_AMOUNT\"/>\n"
+      "        ...\n"
+      "    </joined-subclass>\n"
+      "    <joined-subclass name=\"ChequePayment\" table=\"CHEQUE_PAYMENT\">\n"
+      "        <key column=\"PAYMENT_ID\"/>\n"
+      "        <property name=\"amount\" column=\"CHEQUE_AMOUNT\"/>\n"
+      "        ...\n"
+      "    </joined-subclass>\n"
+      "</class>]]>"
+msgstr ""
+
 #. Tag: para
+#: inheritance_mapping.xml:260
 #, no-c-format
 msgid "Once again, <literal>Payment</literal> is not mentioned explicitly. If we execute a query against the <literal>Payment</literal> interface, for example <literal>from Payment</literal>, Hibernate automatically returns instances of <literal>CreditCardPayment</literal> (and its subclasses, since they also implement <literal>Payment</literal>), <literal>CashPayment</literal> and <literal>ChequePayment</literal>, but not instances of <literal>NonelectronicTransaction</literal>."
 msgstr ""
 
 #. Tag: title
+#: inheritance_mapping.xml:275
 #, no-c-format
 msgid "Limitations"
 msgstr ""
 
 #. Tag: para
+#: inheritance_mapping.xml:277
 #, no-c-format
 msgid "There are limitations to the \"implicit polymorphism\" approach to the table per concrete-class mapping strategy. There are somewhat less restrictive limitations to <literal>&lt;union-subclass&gt;</literal> mappings."
 msgstr ""
 
 #. Tag: para
+#: inheritance_mapping.xml:284
 #, no-c-format
 msgid "The following list shows the limitations of table per concrete-class mappings, and of implicit polymorphism, in Hibernate."
 msgstr ""
 
 #. Tag: term
+#: inheritance_mapping.xml:291
 #, no-c-format
 msgid "table per class-heirarchy"
 msgstr ""
 
+#. Tag: term
+#: inheritance_mapping.xml:292
+#, no-c-format
+msgid "<term>table per subclass</term>"
+msgstr ""
+
 #. Tag: para
+#: inheritance_mapping.xml:295 inheritance_mapping.xml:312
 #, no-c-format
 msgid "Polymorphic many-to-one: <code>&lt;many-to-one&gt;</code>"
 msgstr ""
 
 #. Tag: para
+#: inheritance_mapping.xml:296 inheritance_mapping.xml:313
 #, no-c-format
 msgid "Polymorphic one-to-one: <code>&lt;one-to-one&gt;</code>"
 msgstr ""
 
 #. Tag: para
+#: inheritance_mapping.xml:297
 #, no-c-format
 msgid "Polymorphic one-to-many: <code>&lt;one-to-many&gt;</code>"
 msgstr ""
 
 #. Tag: para
+#: inheritance_mapping.xml:298 inheritance_mapping.xml:315 inheritance_mapping.xml:330
 #, no-c-format
 msgid "Polymorphic many-to-many: <code>&lt;many-to-many&gt;</code>"
 msgstr ""
 
 #. Tag: para
+#: inheritance_mapping.xml:299 inheritance_mapping.xml:316
 #, no-c-format
 msgid "Polymorphic <literal>load()</literal> or <literal>get()</literal>: <code>s.get(Payment.class, id)</code>"
 msgstr ""
 
 #. Tag: para
+#: inheritance_mapping.xml:300 inheritance_mapping.xml:317 inheritance_mapping.xml:332
 #, no-c-format
 msgid "Polymorphic queries: <code>from Payment p</code>"
 msgstr ""
 
 #. Tag: para
+#: inheritance_mapping.xml:301 inheritance_mapping.xml:318
 #, no-c-format
 msgid "Polymorphic joins: <code>from Order o join o.payment p</code>"
 msgstr ""
 
 #. Tag: para
+#: inheritance_mapping.xml:303 inheritance_mapping.xml:320
 #, no-c-format
 msgid "Outer join fetching is supported."
 msgstr ""
 
 #. Tag: term
+#: inheritance_mapping.xml:309
 #, no-c-format
 msgid "table per concrete-class (union-subclass)"
 msgstr ""
 
 #. Tag: para
+#: inheritance_mapping.xml:314
 #, no-c-format
-msgid "Polymorphic one-to-many: <code>&lt;one-to-many&gt;</code> (for <code>inverse=\"true\"</code> only)"
+msgid "Polymorphic one-to-many: <code>&lt;one-to-many&gt;</code> (for <code>inverse=&quot;true&quot;</code> only)"
 msgstr ""
 
 #. Tag: term
+#: inheritance_mapping.xml:326
 #, no-c-format
 msgid "table per concrete class (implicit polymorphism"
 msgstr ""
 
 #. Tag: para
+#: inheritance_mapping.xml:329
 #, no-c-format
 msgid "Polymorphic many-to-one: <code>&lt;any&gt;</code>"
 msgstr ""
 
 #. Tag: para
+#: inheritance_mapping.xml:331
 #, no-c-format
 msgid "Polymorphic <literal>load()</literal> or <literal>get()</literal>: <code>s.createCriteria(Payment.class).add( Restrictions.idEq(id) ).uniqueResult()</code>"
 msgstr ""
 
 #. Tag: para
+#: inheritance_mapping.xml:334
 #, no-c-format
 msgid "Polymorphic one-to-one, polymorphic one-to-many, polymorphic joins, and outer join fetching are not supported."
 msgstr ""

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: architecture\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2009-12-03T00:15:25\n"
+"POT-Creation-Date: 2010-02-10T07:25:34\n"
 "PO-Revision-Date: 2010-01-04 16:40+1000\n"
 "Last-Translator: Corina Roe <croe@redhat.com>\n"
 "Language-Team: French <i18@redhat.com>\n"
@@ -28,7 +28,8 @@ msgstr "Généralités"
 
 #. Tag: para
 #, no-c-format
-msgid "The diagram below provides a high-level view of the Hibernate architecture:"
+msgid ""
+"The diagram below provides a high-level view of the Hibernate architecture:"
 msgstr ""
 "Le diagramme ci-dessus procure une vue - (très) haut niveau - de "
 "l'architecture Hibernate :"
@@ -211,8 +212,10 @@ msgstr ""
 
 #. Tag: term
 #, no-c-format
-msgid "TransactionFactory (<literal>org.hibernate.TransactionFactory</literal>)"
-msgstr "TransactionFactory (<literal>org.hibernate.TransactionFactory</literal>)"
+msgid ""
+"TransactionFactory (<literal>org.hibernate.TransactionFactory</literal>)"
+msgstr ""
+"TransactionFactory (<literal>org.hibernate.TransactionFactory</literal>)"
 
 #. Tag: para
 #, no-c-format
@@ -226,7 +229,7 @@ msgstr ""
 "développeur. "
 
 #. Tag: term
-#, no-c-format
+#, fuzzy, no-c-format
 msgid "<emphasis>Extension Interfaces</emphasis>"
 msgstr "<emphasis>Interfaces d'extension</emphasis> "
 
@@ -405,20 +408,22 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Consult the JBoss AS user guide for more information about these options."
+msgid ""
+"Consult the JBoss AS user guide for more information about these options."
 msgstr ""
 "Consultez le guide d'utilisation de JBoss AS pour plus d'informations sur "
 "ces options."
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
 "Another feature available as a JMX service is runtime Hibernate statistics. "
 "See <xref linkend=\"configuration-optional-statistics\" /> for more "
 "information."
 msgstr ""
 "Les statistiques Hibernate (runtime) représentent une autre fonctionnalité "
-"qui est disponible en tant que service JMX. Voyez pour cela les <xref linkend=\"configuration-optional-statistics\" />."
+"qui est disponible en tant que service JMX. Voyez pour cela les <xref "
+"linkend=\"configuration-optional-statistics\" />."
 
 #. Tag: title
 #, no-c-format
@@ -563,7 +568,7 @@ msgstr ""
 "ni ne nettoie ou ne ferme une <literal>Session</literal>."
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
 "The first two implementations provide a \"one session - one database "
 "transaction\" programming model. This is also also known and used as "
@@ -588,8 +593,8 @@ msgstr ""
 "jacent à votre code. Si vous exécutez sous un conteneur EJB qui prend en "
 "charge CMT, vous n'avez besoin d'aucune opération de démarcation de session "
 "ou transaction dans votre code puisque tout est géré de manière déclarative. "
-"Référez vous au <xref linkend=\"transactions\" /> pour plus "
-"d'informations et des exemples de code."
+"Référez vous au <xref linkend=\"transactions\" /> pour plus d'informations "
+"et des exemples de code."
 
 #. Tag: para
 #, no-c-format
@@ -616,4 +621,3 @@ msgstr ""
 "d'implémentation à utiliser. Pour les trois implémentations prêtes à "
 "utiliser, toutefois, il y a trois noms brefs correspondants : \"jta\", "
 "\"thread\" et \"managed\"."
-

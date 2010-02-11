@@ -275,7 +275,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Collection_Mapping\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2009-12-03T00:15:27\n"
+"POT-Creation-Date: 2010-02-10T07:25:35\n"
 "PO-Revision-Date: 2007-02-26 10:27+1000\n"
 "Last-Translator: \n"
 "Language-Team:  <de@li.org>\n"
@@ -624,7 +624,8 @@ msgstr ""
 "An diesem Punkt stellt sich eine wichtige Frage: Wie viel lädt Hibernate aus "
 "der Datenbank und wie viele SQL <literal>SELECT</literal>s werden verwendet? "
 "Nun, das hängt von der <emphasis>Abrufstrategie</emphasis> (sog. \"fetching "
-"strategy\") ab und wird in <xref linkend=\"performance-fetching\"/> näher erläutert."
+"strategy\") ab und wird in <xref linkend=\"performance-fetching\"/> näher "
+"erläutert."
 
 #. Tag: title
 #, no-c-format
@@ -975,8 +976,7 @@ msgid ""
 "\" />."
 msgstr ""
 "Die <literal>Criteria</literal> und die zugehörige <literal>Example</"
-"literal>-API werden unter <xref linkend=\"querycriteria\"/> näher "
-"erläutert."
+"literal>-API werden unter <xref linkend=\"querycriteria\"/> näher erläutert."
 
 #. Tag: title
 #, no-c-format
@@ -1080,8 +1080,8 @@ msgstr ""
 "Massenvorgängen in Konflikt zu objekt/relationalem Mapping für Anwendungen, "
 "die an der Bearbeitung von online Transaktionen orientiert sind. Zukünftige "
 "Versionen von Hibernate werden möglicherweise spezielle Funktionen für "
-"Massenvorgänge bieten. Unter <xref linkend=\"batch\"/> finden Sie "
-"einige mögliche Tricks zur Batch-Bearbeitung."
+"Massenvorgänge bieten. Unter <xref linkend=\"batch\"/> finden Sie einige "
+"mögliche Tricks zur Batch-Bearbeitung."
 
 #. Tag: title
 #, no-c-format
@@ -1602,8 +1602,7 @@ msgstr ""
 "explizit erfolgt. Der letzte Modus ist insbesondere bei langen "
 "Arbeitseinheiten von Nutzen, wenn eine <literal>Session</literal> über "
 "längere Zeit hinweg geöffnet und abgekuppelt bleibt (siehe <xref linkend="
-"\"transactions-optimistic-longsession\"/"
-">)."
+"\"transactions-optimistic-longsession\"/>)."
 
 #. Tag: para
 #, fuzzy, no-c-format

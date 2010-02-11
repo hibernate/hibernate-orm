@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Collection_Mapping\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2009-12-23T01:43:44\n"
+"POT-Creation-Date: 2010-02-10T07:25:34\n"
 "PO-Revision-Date: 2009-12-21 17:12+1000\n"
 "Last-Translator: Xi HUANG <xhuang@redhat.com>\n"
 "Language-Team:  <en@li.org>\n"
@@ -145,11 +145,13 @@ msgstr ""
 "filename> （後述）に設定します。"
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
 "If you want to get started quickly<filename>hibernate.properties</filename> "
 "is the easiest approach."
 msgstr ""
+"<literal>hibernate.properties</literal> をクラスパスのルートディレクトリに置"
+"きます。"
 
 #. Tag: para
 #, no-c-format
@@ -272,9 +274,9 @@ msgid "<property>hibernate.connection.url</property>"
 msgstr "<property>hibernate.connection.url</property>"
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid "<emphasis>JDBC URL</emphasis>"
-msgstr ""
+msgstr "JDBC のドライバークラス"
 
 #. Tag: para
 #, no-c-format

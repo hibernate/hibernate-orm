@@ -4,8 +4,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: 0\n"
-"POT-Creation-Date: 2010-01-08T04:07:17\n"
-"PO-Revision-Date: 2010-01-08T04:07:17\n"
+"POT-Creation-Date: 2010-02-10T07:25:34\n"
+"PO-Revision-Date: 2010-02-10T07:25:34\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: None\n"
 "MIME-Version: 1.0\n"
@@ -15,6 +15,21 @@ msgstr ""
 #. Tag: title
 #, no-c-format
 msgid "Revision History"
+msgstr ""
+
+#. Tag: firstname
+#, no-c-format
+msgid "Ben"
+msgstr ""
+
+#. Tag: firstname
+#, no-c-format
+msgid "Jared"
+msgstr ""
+
+#. Tag: firstname
+#, no-c-format
+msgid "Richard"
 msgstr ""
 
 #. Tag: member

@@ -275,7 +275,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Collection_Mapping\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2010-01-08T04:07:18\n"
+"POT-Creation-Date: 2010-02-10T07:25:34\n"
 "PO-Revision-Date: 2007-02-26 10:27+1000\n"
 "Last-Translator: \n"
 "Language-Team:  <de@li.org>\n"
@@ -1233,9 +1233,9 @@ msgstr ""
 "generiert Bezeichner, die für eine bestimmte Datenbank eindeutig sind."
 
 #. Tag: term
-#, no-c-format
+#, fuzzy, no-c-format
 msgid "<literal>seqhilo</literal>"
-msgstr ""
+msgstr "<literal>all</literal> Prüfung aller Spalten"
 
 #. Tag: para
 #, no-c-format
@@ -1327,9 +1327,9 @@ msgstr ""
 "Primärschlüssels abgefragt wird."
 
 #. Tag: term
-#, no-c-format
+#, fuzzy, no-c-format
 msgid "<literal>foreign</literal>"
-msgstr ""
+msgstr "<literal>name</literal>: Der Property-Name."
 
 #. Tag: para
 #, fuzzy, no-c-format
@@ -1578,13 +1578,16 @@ msgstr ""
 "korrespondiert."
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
 "<literal>increment_size</literal> (optional - defaults to <literal>1</"
 "literal>): the value by which subsequent calls to the sequence/table should "
 "differ. In sequence creation terms, this is analogous to the clause "
 "typically named \"INCREMENT BY\"."
 msgstr ""
+"<literal>base</literal> (optional, standardmäßig <literal>0</literal>): Der "
+"Wert der Indexspalte, die mit dem ersten Element der Liste oder Array "
+"korrespondiert."
 
 #. Tag: para
 #, fuzzy, no-c-format
@@ -1712,9 +1715,9 @@ msgstr ""
 "<literal>none</literal>): der \"Cascade-Style\" (Weitergabestil)."
 
 #. Tag: title
-#, no-c-format
+#, fuzzy, no-c-format
 msgid "Identifier generator optimization"
-msgstr ""
+msgstr "Die \"Getter\"-Methode des Bezeichners"
 
 #. Tag: para
 #, no-c-format
@@ -3879,9 +3882,9 @@ msgstr ""
 "literal>."
 
 #. Tag: term
-#, no-c-format
+#, fuzzy, no-c-format
 msgid "<literal>string</literal>"
-msgstr ""
+msgstr "<literal>name</literal>: Der Property-Name."
 
 #. Tag: para
 #, no-c-format

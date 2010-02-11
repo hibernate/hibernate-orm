@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Collection_Mapping\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2009-12-23T01:43:45\n"
+"POT-Creation-Date: 2010-02-10T07:25:35\n"
 "PO-Revision-Date: 2010-01-13 17:08+1000\n"
 "Last-Translator: Xi HUANG <xhuang@redhat.com>\n"
 "Language-Team:  <en@li.org>\n"
@@ -177,7 +177,7 @@ msgstr ""
 "できます。"
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
 "A \"fetch\" join allows associations or collections of values to be "
 "initialized along with their parent objects using a single select. This is "
@@ -441,7 +441,7 @@ msgid "The supported aggregate functions are:"
 msgstr "サポートしている集約関数は以下のものです。"
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid "<literal>avg(...), sum(...), min(...), max(...)</literal>"
 msgstr "<literal>avg(...), sum(...), min(...), max(...)</literal>"
 
@@ -451,7 +451,7 @@ msgid "<literal>count(*)</literal>"
 msgstr "<literal>count(*)</literal>"
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid "<literal>count(...), count(distinct ...), count(all...)</literal>"
 msgstr "<literal>count(...), count(distinct ...), count(all...)</literal>"
 
@@ -592,7 +592,7 @@ msgstr ""
 "比較するためにも使われます。："
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
 "The special property (lowercase) <literal>id</literal> can be used to "
 "reference the unique identifier of an object. See <xref linkend=\"queryhql-"
@@ -644,7 +644,7 @@ msgstr ""
 "め込まれた Java のクラス名はその discriminator 値に変換されます。"
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
 "You can also use components or composite user types, or properties of said "
 "component types. See <xref linkend=\"queryhql-components\" /> for more "
@@ -1100,7 +1100,7 @@ msgstr ""
 "い。"
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
 "Note that subqueries can also utilize <literal>row value constructor</"
 "literal> syntax. See <xref linkend=\"queryhql-tuple\" /> for more "
@@ -1214,7 +1214,7 @@ msgid "Bulk update and delete"
 msgstr "大量の UPDATE と DELETE"
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
 "HQL now supports <literal>update</literal>, <literal>delete</literal> and "
 "<literal>insert ... select ...</literal> statements. See <xref linkend="
@@ -1322,7 +1322,7 @@ msgid "Components can also be used in the <literal>order by</literal> clause:"
 msgstr "コンポーネントは <literal>order by</literal> 節でも使用可能です:"
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
 "Another common use of components is in row value constructors (<xref linkend="
 "\"queryhql-tuple\" />)."
@@ -1390,6 +1390,10 @@ msgstr ""
 #~ msgstr "from eg.Cat"
 
 #, fuzzy
+#~ msgid "<![CDATA[from Cat]]>"
+#~ msgstr "from eg.Cat"
+
+#, fuzzy
 #~ msgid "<![CDATA[from Cat as cat]]>"
 #~ msgstr "from Cat as cat"
 
@@ -1427,6 +1431,10 @@ msgstr ""
 #~ msgstr "inner join"
 
 #~ msgid "left outer join"
+#~ msgstr "left outer join"
+
+#, fuzzy
+#~ msgid "right outer join"
 #~ msgstr "left outer join"
 
 #, fuzzy

@@ -1,20 +1,20 @@
 <?xml version='1.0' encoding='utf-8' ?>
-<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
 <!ENTITY % BOOK_ENTITIES SYSTEM "Hibernate_Core_Reference_Guide.ent">
 %BOOK_ENTITIES;
 ]>
 
+
 <bookinfo id="Hibernate_Core_Reference_Guide">
 	<title>Hibernate Core Reference Guide</title>
-	<subtitle>by Gavin King, Christian Bauer, Max Rydahl Andersen, Emmanuel Bernard,
-and Steve Ebersole
-and thanks to James Cobb (Graphic Design) and Cheyenne Weaver (Graphic
-Design)</subtitle>
-	<edition>1.0</edition>
+	<subtitle></subtitle>
+        <releaseinfo>&version;</releaseinfo>
+        <productnumber>&version;</productnumber>
+        <edition>1.0</edition>
 	<pubsnumber>1</pubsnumber>
 	<productname>JBoss Hibernate Core</productname>
 	<productnumber></productnumber>
-	<pubdate>,  2009</pubdate>
+	<pubdate>&today;</pubdate>
 	<isbn>N/A</isbn>
 	<abstract><para>The JBoss Hibernate Core 3.3.2.GA Reference Guide</para>
 	</abstract>
@@ -26,12 +26,14 @@ Design)</subtitle>
 	  </inlinemediaobject>
 	</corpauthor>
 	<copyright>
-		<year>&YEAR;</year>
-		<holder>&HOLDER;</holder>
+		<year>&copyrightYear;</year>
+                <holder>&copyrightHolder;</holder>
 	</copyright>
+       <xi:include href="Author_Group.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
 	
-	<!--  Insert relevant fallback material here. Legal_Notice and Author Group is a relevant placement BookInfo.xml-->
-	
+	<!-- Insert relevant fallback material here. Legal_Notice and Author Group is a relevant placement BookInfo.xml-->
+
+      
 	<!-- No legal Notice in Community docs so commenting out -->
     <!--    <xi:include xmlns:xi="http://www.w3.org/2001/XInclude"
     href="Common_Content/Legal_Notice.xml">
@@ -51,3 +53,5 @@ Design)</subtitle>
 	-->
 	
 </bookinfo>
+
+

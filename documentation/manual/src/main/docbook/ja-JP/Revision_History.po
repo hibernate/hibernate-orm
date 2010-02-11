@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Collection_Mapping\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2009-12-11T05:07:38\n"
+"POT-Creation-Date: 2010-02-10T07:25:34\n"
 "PO-Revision-Date: 2007-02-26 17:14+1000\n"
 "Last-Translator: Xi HUANG <xhuang@redhat.com>\n"
 "Language-Team:  <en@li.org>\n"
@@ -16,6 +16,21 @@ msgstr ""
 #. Tag: title
 #, no-c-format
 msgid "Revision History"
+msgstr ""
+
+#. Tag: firstname
+#, no-c-format
+msgid "Ben"
+msgstr ""
+
+#. Tag: firstname
+#, no-c-format
+msgid "Jared"
+msgstr ""
+
+#. Tag: firstname
+#, no-c-format
+msgid "Richard"
 msgstr ""
 
 #. Tag: member

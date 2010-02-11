@@ -108,7 +108,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: collection_mapping\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2009-12-03T00:15:26\n"
+"POT-Creation-Date: 2010-02-10T07:25:34\n"
 "PO-Revision-Date: 2009-12-19 08:32+1000\n"
 "Last-Translator: \n"
 "Language-Team:  <en@li.org>\n"
@@ -448,8 +448,10 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "The foreign key constraint can use <literal>ON DELETE CASCADE</literal>."
-msgstr "A restrição da chave exterior pode usar <literal>ON DELETE CASCADE</literal>."
+msgid ""
+"The foreign key constraint can use <literal>ON DELETE CASCADE</literal>."
+msgstr ""
+"A restrição da chave exterior pode usar <literal>ON DELETE CASCADE</literal>."
 
 #. Tag: para
 #, no-c-format
@@ -541,7 +543,9 @@ msgstr ""
 msgid ""
 "<literal>column_name</literal> (required): the name of the column holding "
 "the collection index values."
-msgstr "<literal>column_name</literal> (requerido): O nome da coluna que mantém os valores do índice da coleção."
+msgstr ""
+"<literal>column_name</literal> (requerido): O nome da coluna que mantém os "
+"valores do índice da coleção."
 
 #. Tag: para
 #, no-c-format
@@ -549,21 +553,28 @@ msgid ""
 "<literal>base</literal> (optional - defaults to <literal>0</literal>): the "
 "value of the index column that corresponds to the first element of the list "
 "or array."
-msgstr "<literal>base</literal> (opcional - padrão para <literal>0</literal>): o valor da coluna de índice que corresponde ao primeiro elemento da lista ou matriz."
+msgstr ""
+"<literal>base</literal> (opcional - padrão para <literal>0</literal>): o "
+"valor da coluna de índice que corresponde ao primeiro elemento da lista ou "
+"matriz."
 
 #. Tag: para
 #, no-c-format
 msgid ""
 "<literal>column</literal> (optional): the name of the column holding the "
 "collection index values."
-msgstr "<literal>column</literal>(opcional): o nome da coluna que mnatém os valores do índice de coleção."
+msgstr ""
+"<literal>column</literal>(opcional): o nome da coluna que mnatém os valores "
+"do índice de coleção."
 
 #. Tag: para
 #, no-c-format
 msgid ""
 "<literal>formula</literal> (optional): a SQL formula used to evaluate the "
 "key of the map."
-msgstr "<literal>formula</literal> (opcional): Uma fórmula SQL usada para avaliar a chave ou o mapa."
+msgstr ""
+"<literal>formula</literal> (opcional): Uma fórmula SQL usada para avaliar a "
+"chave ou o mapa."
 
 #. Tag: para
 #, no-c-format
@@ -575,19 +586,26 @@ msgstr "<literal>type</literal> (requerido): o tipo de chaves de mapa."
 msgid ""
 "<literal>column</literal> (optional): the name of the foreign key column for "
 "the collection index values."
-msgstr "<literal>column</literal> (opcional): o nome de uma coluna de chave exterior para os valores do índice de coleção."
+msgstr ""
+"<literal>column</literal> (opcional): o nome de uma coluna de chave exterior "
+"para os valores do índice de coleção."
 
 #. Tag: para
 #, no-c-format
 msgid ""
 "<literal>formula</literal> (optional): a SQ formula used to evaluate the "
 "foreign key of the map key."
-msgstr "<literal>formula</literal> (opcional): uma fórmula SQ usada para avaliar a chave exterior da chave do mapa."
+msgstr ""
+"<literal>formula</literal> (opcional): uma fórmula SQ usada para avaliar a "
+"chave exterior da chave do mapa."
 
 #. Tag: para
 #, no-c-format
-msgid "<literal>class</literal> (required): the entity class used as the map key."
-msgstr "<literal>class</literal> (requerido): a classe da entidade usada como chave do mapa."
+msgid ""
+"<literal>class</literal> (required): the entity class used as the map key."
+msgstr ""
+"<literal>class</literal> (requerido): a classe da entidade usada como chave "
+"do mapa."
 
 #. Tag: para
 #, no-c-format
@@ -636,14 +654,18 @@ msgstr ""
 msgid ""
 "<literal>column</literal> (optional): the name of the column holding the "
 "collection element values."
-msgstr "<literal>column</literal> (opcional): o nome da coluna que mantém os valores do elemento da coleção."
+msgstr ""
+"<literal>column</literal> (opcional): o nome da coluna que mantém os valores "
+"do elemento da coleção."
 
 #. Tag: para
 #, no-c-format
 msgid ""
 "<literal>formula</literal> (optional): an SQL formula used to evaluate the "
 "element."
-msgstr "<literal>formula</literal> (opcional): uma fórmula usada para avaliar o elemento."
+msgstr ""
+"<literal>formula</literal> (opcional): uma fórmula usada para avaliar o "
+"elemento."
 
 #. Tag: para
 #, no-c-format
@@ -655,21 +677,27 @@ msgstr "<literal>type</literal> (requerido): o tipo do elemento de coleção."
 msgid ""
 "A <emphasis>many-to-many association</emphasis> is specified using the "
 "<literal>&lt;many-to-many&gt;</literal> element."
-msgstr "A <emphasis>associação muitos-para-muitos</emphasis> é especificada usando o elemento <literal>&lt;many-to-many&gt;</literal>. "
+msgstr ""
+"A <emphasis>associação muitos-para-muitos</emphasis> é especificada usando o "
+"elemento <literal>&lt;many-to-many&gt;</literal>. "
 
 #. Tag: para
 #, no-c-format
 msgid ""
 "<literal>column</literal> (optional): the name of the element foreign key "
 "column."
-msgstr "<literal>column</literal> (opcional): o nome da coluna da chave exterior do elemento."
+msgstr ""
+"<literal>column</literal> (opcional): o nome da coluna da chave exterior do "
+"elemento."
 
 #. Tag: para
 #, no-c-format
 msgid ""
 "<literal>formula</literal> (optional): an SQL formula used to evaluate the "
 "element foreign key value."
-msgstr "<literal>formula</literal> (opcional): uma fórmula SQL usada para avaliar o valor da chave exterior do elemento."
+msgstr ""
+"<literal>formula</literal> (opcional): uma fórmula SQL usada para avaliar o "
+"valor da chave exterior do elemento."
 
 #. Tag: para
 #, no-c-format
@@ -687,9 +715,13 @@ msgid ""
 "itself, but also with this attribute on the <literal>&lt;many-to-many&gt;</"
 "literal> nested element."
 msgstr ""
-"<literal>fetch</literal> (opcional - padrão para <literal>join</literal>): ativa a busca de seleção seqüencial ou união exterior para esta associação. Isto é um caso especial; para uma busca completa num <literal>SELECT</"
-"literal> único de uma entidade e suas relações muitos-para-muitos com outras entidades, você deverá ativar a busca <literal>join</literal>, não apenas a própria coleção, mas também este atributo no elemento aninhado <literal>&lt;many-to-many&gt;</"
-"literal>."
+"<literal>fetch</literal> (opcional - padrão para <literal>join</literal>): "
+"ativa a busca de seleção seqüencial ou união exterior para esta associação. "
+"Isto é um caso especial; para uma busca completa num <literal>SELECT</"
+"literal> único de uma entidade e suas relações muitos-para-muitos com outras "
+"entidades, você deverá ativar a busca <literal>join</literal>, não apenas a "
+"própria coleção, mas também este atributo no elemento aninhado <literal>&lt;"
+"many-to-many&gt;</literal>."
 
 #. Tag: para
 #, no-c-format
@@ -697,7 +729,10 @@ msgid ""
 "<literal>unique</literal> (optional): enables the DDL generation of a unique "
 "constraint for the foreign-key column. This makes the association "
 "multiplicity effectively one-to-many."
-msgstr "<literal>unique</literal> (opcional): ativa a geração DDl de uma restrição única para a coluna de chave exterior. Isto realiza efetivamente a multiplicidade da associação um-para-muitos."
+msgstr ""
+"<literal>unique</literal> (opcional): ativa a geração DDl de uma restrição "
+"única para a coluna de chave exterior. Isto realiza efetivamente a "
+"multiplicidade da associação um-para-muitos."
 
 #. Tag: para
 #, no-c-format
@@ -727,7 +762,10 @@ msgid ""
 "<literal>property-ref</literal> (optional): the name of a property of the "
 "associated class that is joined to this foreign key. If not specified, the "
 "primary key of the associated class is used."
-msgstr "<literal>property-ref</literal> (opcional): o nome de uma propriedade de classe associada que é unida a esta chave exterior. caso não especificada, a chave primária da classe associada será usada."
+msgstr ""
+"<literal>property-ref</literal> (opcional): o nome de uma propriedade de "
+"classe associada que é unida a esta chave exterior. caso não especificada, a "
+"chave primária da classe associada será usada."
 
 #. Tag: para
 #, no-c-format
@@ -751,7 +789,8 @@ msgstr ""
 #. Tag: para
 #, no-c-format
 msgid "An array of entities, in this case, a many-to-many association:"
-msgstr "Uma matriz de entidades, neste caso, uma associação muitos-para-muitos: "
+msgstr ""
+"Uma matriz de entidades, neste caso, uma associação muitos-para-muitos: "
 
 #. Tag: para
 #, no-c-format
@@ -1025,7 +1064,8 @@ msgstr ""
 msgid ""
 "The non-inverse side is used to save the in-memory representation to the "
 "database."
-msgstr "A outra ponta é usada para salvar a representação em memória à base de dados."
+msgstr ""
+"A outra ponta é usada para salvar a representação em memória à base de dados."
 
 #. Tag: para
 #, no-c-format
@@ -1085,11 +1125,10 @@ msgstr ""
 "literal>. Devemos usar o seguinte mapeamento: "
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
 "Note that in this mapping, the collection-valued end of the association is "
-"responsible for updates to the foreign key. <!-- TODO: Does this really "
-"result in some unnecessary update statements? -->"
+"responsible for updates to the foreign key."
 msgstr ""
 "Veja que neste mapeamento, o lado de coleção válida da associação é "
 "responsável pela atualização da chave exterior. <!-- TODO: Does this really "
@@ -1128,7 +1167,7 @@ msgstr ""
 "mais tarde. "
 
 #. Tag: title
-#, no-c-format
+#, fuzzy, no-c-format
 msgid "<literal>Using an &lt;idbag&gt;</literal>"
 msgstr "<literal>Using an &lt;idbag&gt;</literal>"
 
@@ -1212,8 +1251,10 @@ msgstr "Esta sessão cobre os exemplos de coleções."
 
 #. Tag: para
 #, no-c-format
-msgid "The following class has a collection of <literal>Child</literal> instances:"
-msgstr "A seguinte classe possui uma coleção de instâncias <literal>Child</literal>:"
+msgid ""
+"The following class has a collection of <literal>Child</literal> instances:"
+msgstr ""
+"A seguinte classe possui uma coleção de instâncias <literal>Child</literal>:"
 
 #. Tag: para
 #, no-c-format
@@ -1269,7 +1310,7 @@ msgid "Table definitions:"
 msgstr "Definições das tabelas:"
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
 "For more examples and a complete explanation of a parent/child relationship "
 "mapping, see <xref linkend=\"example-parentchild\" /> for more information."
@@ -1283,4 +1324,3 @@ msgid "Even more complex association mappings are covered in the next chapter."
 msgstr ""
 "Até mesmo o mapeamento de associações mais complexos serão discutimos no "
 "próximo capítulo."
-

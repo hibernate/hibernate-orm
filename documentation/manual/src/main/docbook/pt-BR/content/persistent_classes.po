@@ -108,7 +108,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: persistent_classes\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2010-01-08T04:07:19\n"
+"POT-Creation-Date: 2010-02-10T07:25:35\n"
 "PO-Revision-Date: 2009-12-19 17:20+1000\n"
 "Last-Translator: \n"
 "Language-Team:  <en@li.org>\n"
@@ -244,7 +244,7 @@ msgstr ""
 "que declaram uma propriedade de identificador:"
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
 "Transitive reattachment for detached objects (cascade update or cascade "
 "merge) - see <xref linkend=\"objectstate-transitive\" />"
@@ -253,12 +253,12 @@ msgstr ""
 "mesclagem de cascata) - veja <xref linkend=\"objectstate-transitive\" />"
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid "<literal>Session.saveOrUpdate()</literal>"
 msgstr "<literal>Session.saveOrUpdate()</literal>"
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid "<literal>Session.merge()</literal>"
 msgstr "<literal>Session.merge()</literal>"
 
@@ -465,7 +465,7 @@ msgstr ""
 "emphasis>): "
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
 "A business key does not have to be as solid as a database primary key "
 "candidate (see <xref linkend=\"transactions-basics-identity\" />). Immutable "
@@ -487,7 +487,7 @@ msgid "Note"
 msgstr "Nota"
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
 "<emphasis>The following features are currently considered experimental and "
 "may change in the near future.</emphasis>"
@@ -512,7 +512,7 @@ msgstr ""
 "mapeamentos. "
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
 "By default, Hibernate works in normal POJO mode. You can set a default "
 "entity representation mode for a particular <literal>SessionFactory</"
@@ -606,7 +606,7 @@ msgstr ""
 "manuseio da conexão para a unidade primária do trabalho. "
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
 "More information about the XML representation capabilities can be found in "
 "<xref linkend=\"xml\" />."

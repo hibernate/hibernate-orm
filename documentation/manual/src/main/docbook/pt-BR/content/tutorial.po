@@ -108,7 +108,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: tutorial\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2010-01-08T04:07:20\n"
+"POT-Creation-Date: 2010-02-10T07:25:35\n"
 "PO-Revision-Date: 2009-12-21 07:55+1000\n"
 "Last-Translator: \n"
 "Language-Team:  <en@li.org>\n"
@@ -471,7 +471,7 @@ msgstr ""
 "o plugin na sua própria estratégia."
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
 "<literal>native</literal> is no longer considered the best strategy in terms "
 "of portability. for further discussion, see <xref linkend=\"portability-idgen"
@@ -697,7 +697,7 @@ msgstr ""
 "gera."
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
 "Hibernate is able to correctly determine which dialect to use in most cases. "
 "See <xref linkend=\"portability-dialectresolver\" /> for more information."
@@ -1010,7 +1010,7 @@ msgstr ""
 "aplicativo  da web real será demonstrado mais adiante neste tutorial."
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
 "See <xref linkend=\"transactions\" /> for more information about transaction "
 "handling and demarcation. The previous example also skipped any error "
@@ -1067,7 +1067,7 @@ msgstr ""
 "literal>: "
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
 "Here, we are using a Hibernate Query Language (HQL) query to load all "
 "existing <literal>Event</literal> objects from the database. Hibernate will "
@@ -1830,7 +1830,7 @@ msgstr ""
 "para seu diretório Tomcat <literal>webapp</literal>. "
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
 "If you do not have Tomcat installed, download it from <ulink url=\"http://"
 "tomcat.apache.org/\" /> and follow the installation instructions. Our "

@@ -14,7 +14,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Book_Info\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2009-12-11T05:07:38\n"
+"POT-Creation-Date: 2010-02-10T07:25:34\n"
 "PO-Revision-Date: 2010-01-07 10:56+1000\n"
 "Last-Translator: Angela Garcia <agarcia@redhat.com>\n"
 "Language-Team:  <en@li.org>\n"
@@ -28,18 +28,21 @@ msgstr ""
 msgid "Hibernate Core Reference Guide"
 msgstr "Manual de referencia de Hibernate Core"
 
-#. Tag: subtitle
+#. Tag: releaseinfo
 #, no-c-format
-msgid ""
-"by Gavin King, Christian Bauer, Max Rydahl Andersen, Emmanuel Bernard, and "
-"Steve Ebersole and thanks to James Cobb (Graphic Design) and Cheyenne Weaver "
-"(Graphic Design)"
+msgid "&version;"
 msgstr ""
-"por Gavin King, Christian Bauer, Max Rydahl Andersen, Emmanuel Bernard y Steve Ebersole. Gracias a James Cobb (diseño gráfico) y Cheyenne Weaver "
-"(diseño gráfico)"
 
 #. Tag: para
 #, no-c-format
 msgid "The JBoss Hibernate Core 3.3.2.GA Reference Guide"
 msgstr "Manual de referencia de JBoss Hibernate Core 3.3.2.GA "
 
+#~ msgid ""
+#~ "by Gavin King, Christian Bauer, Max Rydahl Andersen, Emmanuel Bernard, "
+#~ "and Steve Ebersole and thanks to James Cobb (Graphic Design) and Cheyenne "
+#~ "Weaver (Graphic Design)"
+#~ msgstr ""
+#~ "por Gavin King, Christian Bauer, Max Rydahl Andersen, Emmanuel Bernard y "
+#~ "Steve Ebersole. Gracias a James Cobb (diseño gráfico) y Cheyenne Weaver "
+#~ "(diseño gráfico)"

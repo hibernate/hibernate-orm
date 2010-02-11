@@ -108,7 +108,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: batch\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2010-01-08T04:07:18\n"
+"POT-Creation-Date: 2010-02-10T07:25:34\n"
 "PO-Revision-Date: 2009-12-19 07:46+1000\n"
 "Last-Translator: \n"
 "Language-Team:  <en@li.org>\n"
@@ -294,7 +294,7 @@ msgid "DML-style operations"
 msgstr "Operações no estilo DML"
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
 "As already discussed, automatic and transparent object/relational mapping is "
 "concerned with the management of the object state. The object state is "
@@ -353,7 +353,7 @@ msgstr ""
 "referências de propriedade serem qualificadas."
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
 "No <xref linkend=\"queryhql-joins-forms\" />, either implicit or explicit, "
 "can be specified in a bulk HQL query. Sub-queries can be used in the where-"

@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Collection_Mapping\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2009-12-03T00:15:27\n"
+"POT-Creation-Date: 2010-02-10T07:25:35\n"
 "PO-Revision-Date: 2009-12-07 21:18+1000\n"
 "Last-Translator: Xi HUANG <xhuang@redhat.com>\n"
 "Language-Team:  <en@li.org>\n"
@@ -20,9 +20,13 @@ msgid "XML Mapping"
 msgstr "XML 映射"
 
 #. Tag: para
-#, no-c-format
-msgid "<emphasis> XML Mapping is an experimental feature in Hibernate 3.0 and is currently under active development. </emphasis>"
-msgstr "<emphasis>注意 XML 映射只是 Hibernate 3.0 的一个实验性的特性。这一特性仍在积极开发中。</emphasis>"
+#, fuzzy, no-c-format
+msgid ""
+"<emphasis> XML Mapping is an experimental feature in Hibernate 3.0 and is "
+"currently under active development. </emphasis>"
+msgstr ""
+"<emphasis>注意 XML 映射只是 Hibernate 3.0 的一个实验性的特性。这一特性仍在积"
+"极开发中。</emphasis>"
 
 #. Tag: title
 #, no-c-format
@@ -31,23 +35,51 @@ msgstr "用 XML 数据进行工作"
 
 #. Tag: para
 #, no-c-format
-msgid "Hibernate allows you to work with persistent XML data in much the same way you work with persistent POJOs. A parsed XML tree can be thought of as another way of representing the relational data at the object level, instead of POJOs."
-msgstr "Hibernate 使得你可以用 XML 数据来进行工作，恰如你用持久化的 POJO 进行工作那样。解析过的 XML 树 可以被认为是代替 POJO 的另外一种在对象层面上表示关系型数据的途径。"
+msgid ""
+"Hibernate allows you to work with persistent XML data in much the same way "
+"you work with persistent POJOs. A parsed XML tree can be thought of as "
+"another way of representing the relational data at the object level, instead "
+"of POJOs."
+msgstr ""
+"Hibernate 使得你可以用 XML 数据来进行工作，恰如你用持久化的 POJO 进行工作那"
+"样。解析过的 XML 树 可以被认为是代替 POJO 的另外一种在对象层面上表示关系型数"
+"据的途径。"
 
 #. Tag: para
 #, no-c-format
-msgid "Hibernate supports dom4j as API for manipulating XML trees. You can write queries that retrieve dom4j trees from the database and have any modification you make to the tree automatically synchronized to the database. You can even take an XML document, parse it using dom4j, and write it to the database with any of Hibernate's basic operations: <literal>persist(), saveOrUpdate(), merge(), delete(), replicate()</literal> (merging is not yet supported)."
-msgstr "Hibernate 支持采用 dom4j 作为操作 XML 树的 API。你可以写一些查询从数据库中检索出 dom4j 树，随后你对这颗树做的任何修改都将自动同步回数据库。你甚至可以用 dom4j 解析 一篇 XML 文档，然后使用 Hibernate 的任一基本操作将它写入数据库：<literal>persist()，saveOrUpdate()，merge()，delete()，replicate()</literal> （合并操作merge()目前还不支持）。"
+msgid ""
+"Hibernate supports dom4j as API for manipulating XML trees. You can write "
+"queries that retrieve dom4j trees from the database and have any "
+"modification you make to the tree automatically synchronized to the "
+"database. You can even take an XML document, parse it using dom4j, and write "
+"it to the database with any of Hibernate's basic operations: <literal>persist"
+"(), saveOrUpdate(), merge(), delete(), replicate()</literal> (merging is not "
+"yet supported)."
+msgstr ""
+"Hibernate 支持采用 dom4j 作为操作 XML 树的 API。你可以写一些查询从数据库中检"
+"索出 dom4j 树，随后你对这颗树做的任何修改都将自动同步回数据库。你甚至可以用 "
+"dom4j 解析 一篇 XML 文档，然后使用 Hibernate 的任一基本操作将它写入数据库："
+"<literal>persist()，saveOrUpdate()，merge()，delete()，replicate()</literal> "
+"（合并操作merge()目前还不支持）。"
 
 #. Tag: para
 #, no-c-format
-msgid "This feature has many applications including data import/export, externalization of entity data via JMS or SOAP and XSLT-based reporting."
-msgstr "这一特性可以应用在很多场合，包括数据导入导出，通过 JMS 或 SOAP 具体化实体数据以及 基于 XSLT 的报表。"
+msgid ""
+"This feature has many applications including data import/export, "
+"externalization of entity data via JMS or SOAP and XSLT-based reporting."
+msgstr ""
+"这一特性可以应用在很多场合，包括数据导入导出，通过 JMS 或 SOAP 具体化实体数据"
+"以及 基于 XSLT 的报表。"
 
 #. Tag: para
 #, no-c-format
-msgid "A single mapping can be used to simultaneously map properties of a class and nodes of an XML document to the database, or, if there is no class to map, it can be used to map just the XML."
-msgstr "一个单一的映射就可以将类的属性和 XML 文档的节点同时映射到数据库。如果不需要映射类，它也可以用来只映射 XML 文档。 "
+msgid ""
+"A single mapping can be used to simultaneously map properties of a class and "
+"nodes of an XML document to the database, or, if there is no class to map, "
+"it can be used to map just the XML."
+msgstr ""
+"一个单一的映射就可以将类的属性和 XML 文档的节点同时映射到数据库。如果不需要映"
+"射类，它也可以用来只映射 XML 文档。 "
 
 #. Tag: title
 #, no-c-format
@@ -71,8 +103,14 @@ msgstr "这是一个不映射 POJO 的例子："
 
 #. Tag: para
 #, no-c-format
-msgid "This mapping allows you to access the data as a dom4j tree, or as a graph of property name/value pairs or java <literal>Map</literal>s. The property names are purely logical constructs that can be referred to in HQL queries."
-msgstr "这个映射使得你既可以把数据作为一棵 dom4j 树那样访问，又可以作为由属性键值对（java <literal>Map</literal>）组成的图那样访问。属性名字纯粹是逻辑上的结构，你可以在 HQL 查询中引用它。"
+msgid ""
+"This mapping allows you to access the data as a dom4j tree, or as a graph of "
+"property name/value pairs or java <literal>Map</literal>s. The property "
+"names are purely logical constructs that can be referred to in HQL queries."
+msgstr ""
+"这个映射使得你既可以把数据作为一棵 dom4j 树那样访问，又可以作为由属性键值对"
+"（java <literal>Map</literal>）组成的图那样访问。属性名字纯粹是逻辑上的结构，"
+"你可以在 HQL 查询中引用它。"
 
 #. Tag: title
 #, no-c-format
@@ -81,8 +119,15 @@ msgstr "XML 映射元数据"
 
 #. Tag: para
 #, no-c-format
-msgid "A range of Hibernate mapping elements accept the <literal>node</literal> attribute. This lets you specify the name of an XML attribute or element that holds the property or entity data. The format of the <literal>node</literal> attribute must be one of the following:"
-msgstr "许多 Hibernate 映射元素具有 <literal>node</literal> 属性。这使你可以指定用来保存 属性或实体数据的 XML 属性或元素。<literal>node</literal> 属性必须是下列格式之一： "
+msgid ""
+"A range of Hibernate mapping elements accept the <literal>node</literal> "
+"attribute. This lets you specify the name of an XML attribute or element "
+"that holds the property or entity data. The format of the <literal>node</"
+"literal> attribute must be one of the following:"
+msgstr ""
+"许多 Hibernate 映射元素具有 <literal>node</literal> 属性。这使你可以指定用来"
+"保存 属性或实体数据的 XML 属性或元素。<literal>node</literal> 属性必须是下列"
+"格式之一： "
 
 #. Tag: para
 #, no-c-format
@@ -101,23 +146,47 @@ msgstr "<literal>\".\"</literal>：映射为父元素"
 
 #. Tag: para
 #, no-c-format
-msgid "<literal>\"element-name/@attribute-name\"</literal>: map to the named attribute of the named element"
-msgstr "<literal>\"element-name/@attribute-name\"</literal>：映射为指定元素的指定属性"
+msgid ""
+"<literal>\"element-name/@attribute-name\"</literal>: map to the named "
+"attribute of the named element"
+msgstr ""
+"<literal>\"element-name/@attribute-name\"</literal>：映射为指定元素的指定属性"
 
 #. Tag: para
 #, no-c-format
-msgid "For collections and single valued associations, there is an additional <literal>embed-xml</literal> attribute. If <literal>embed-xml=\"true\"</literal>, the default, the XML tree for the associated entity (or collection of value type) will be embedded directly in the XML tree for the entity that owns the association. Otherwise, if <literal>embed-xml=\"false\"</literal>, then only the referenced identifier value will appear in the XML for single point associations and collections will not appear at all."
-msgstr "对于集合和单值的关联，有一个额外的 <literal>embed-xml</literal> 属性可用。这个属性的缺省值是真（<literal>embed-xml=\"true\"</literal>）。如果 <literal>embed-xml=\"true\"</literal>，则对应于被关联实体或值类型的集合的XML树将直接嵌入拥有这些关联的实体的 XML 树中。否则，如果 <literal>embed-xml=\"false\"</literal>，那么对于单值的关联，仅被引用的实体的标识符出现在 XML 树中（被引用实体本身不出现），而集合则根本不出现。"
+msgid ""
+"For collections and single valued associations, there is an additional "
+"<literal>embed-xml</literal> attribute. If <literal>embed-xml=\"true\"</"
+"literal>, the default, the XML tree for the associated entity (or collection "
+"of value type) will be embedded directly in the XML tree for the entity that "
+"owns the association. Otherwise, if <literal>embed-xml=\"false\"</literal>, "
+"then only the referenced identifier value will appear in the XML for single "
+"point associations and collections will not appear at all."
+msgstr ""
+"对于集合和单值的关联，有一个额外的 <literal>embed-xml</literal> 属性可用。这"
+"个属性的缺省值是真（<literal>embed-xml=\"true\"</literal>）。如果 "
+"<literal>embed-xml=\"true\"</literal>，则对应于被关联实体或值类型的集合的XML"
+"树将直接嵌入拥有这些关联的实体的 XML 树中。否则，如果 <literal>embed-xml="
+"\"false\"</literal>，那么对于单值的关联，仅被引用的实体的标识符出现在 XML 树"
+"中（被引用实体本身不出现），而集合则根本不出现。"
 
 #. Tag: para
 #, no-c-format
-msgid "Do not leave <literal>embed-xml=\"true\"</literal> for too many associations, since XML does not deal well with circularity."
-msgstr "你应该小心，不要让太多关联的 embed-xml 属性为真（<literal>embed-xml=\"true\"</literal>），因为 XML 不能很好地处理循环引用。"
+msgid ""
+"Do not leave <literal>embed-xml=\"true\"</literal> for too many "
+"associations, since XML does not deal well with circularity."
+msgstr ""
+"你应该小心，不要让太多关联的 embed-xml 属性为真（<literal>embed-xml=\"true"
+"\"</literal>），因为 XML 不能很好地处理循环引用。"
 
 #. Tag: para
 #, no-c-format
-msgid "In this case, the collection of account ids is embedded, but not the actual account data. The following HQL query:"
-msgstr "在这个例子中，我们决定嵌入帐目号码（account id）的集合，但不嵌入实际的帐目数据。下面的 HQL 查询： "
+msgid ""
+"In this case, the collection of account ids is embedded, but not the actual "
+"account data. The following HQL query:"
+msgstr ""
+"在这个例子中，我们决定嵌入帐目号码（account id）的集合，但不嵌入实际的帐目数"
+"据。下面的 HQL 查询： "
 
 #. Tag: para
 #, no-c-format
@@ -126,8 +195,12 @@ msgstr "返回的数据集将是这样： "
 
 #. Tag: para
 #, no-c-format
-msgid "If you set <literal>embed-xml=\"true\"</literal> on the <literal>&lt;one-to-many&gt;</literal> mapping, the data might look more like this:"
-msgstr "如果你把一对多映射 <literal>&lt;one-to-many&gt;</literal> 的 embed-xml 属性置为真（<literal>embed-xml=\"true\"</literal>），则数据看上去就像这样："
+msgid ""
+"If you set <literal>embed-xml=\"true\"</literal> on the <literal>&lt;one-to-"
+"many&gt;</literal> mapping, the data might look more like this:"
+msgstr ""
+"如果你把一对多映射 <literal>&lt;one-to-many&gt;</literal> 的 embed-xml 属性置"
+"为真（<literal>embed-xml=\"true\"</literal>），则数据看上去就像这样："
 
 #. Tag: title
 #, no-c-format
@@ -136,13 +209,21 @@ msgstr "操作 XML 数据"
 
 #. Tag: para
 #, no-c-format
-msgid "You can also re-read and update XML documents in the application. You can do this by obtaining a dom4j session:"
-msgstr "你也可以重新读入和更新应用程序中的 XML 文档。通过获取一个 dom4j 会话可以做到这一点："
+msgid ""
+"You can also re-read and update XML documents in the application. You can do "
+"this by obtaining a dom4j session:"
+msgstr ""
+"你也可以重新读入和更新应用程序中的 XML 文档。通过获取一个 dom4j 会话可以做到"
+"这一点："
 
 #. Tag: para
 #, no-c-format
-msgid "When implementing XML-based data import/export, it is useful to combine this feature with Hibernate's <literal>replicate()</literal> operation."
-msgstr "将这一特色与 Hibernate 的 <literal>replicate()</literal> 操作结合起来对于实现的基于 XML 的数据导入/导出将非常有用。"
+msgid ""
+"When implementing XML-based data import/export, it is useful to combine this "
+"feature with Hibernate's <literal>replicate()</literal> operation."
+msgstr ""
+"将这一特色与 Hibernate 的 <literal>replicate()</literal> 操作结合起来对于实现"
+"的基于 XML 的数据导入/导出将非常有用。"
 
 #~ msgid ""
 #~ "<![CDATA[<class name=\"Account\" \n"
@@ -186,6 +267,7 @@ msgstr "将这一特色与 Hibernate 的 <literal>replicate()</literal> 操作�
 #~ "    ...\n"
 #~ "    \n"
 #~ "</class>]]>"
+
 #~ msgid ""
 #~ "<![CDATA[<class entity-name=\"Account\" \n"
 #~ "        table=\"ACCOUNTS\" \n"
@@ -234,6 +316,7 @@ msgstr "将这一特色与 Hibernate 的 <literal>replicate()</literal> 操作�
 #~ "    ...\n"
 #~ "    \n"
 #~ "</class>]]>"
+
 #~ msgid ""
 #~ "<![CDATA[<class name=\"Customer\" \n"
 #~ "        table=\"CUSTOMER\" \n"
@@ -304,12 +387,14 @@ msgstr "将这一特色与 Hibernate 的 <literal>replicate()</literal> 操作�
 #~ "    ...\n"
 #~ "    \n"
 #~ "</class>]]>"
+
 #~ msgid ""
 #~ "<![CDATA[from Customer c left join fetch c.accounts where c.lastName "
 #~ "like :lastName]]>"
 #~ msgstr ""
 #~ "<![CDATA[from Customer c left join fetch c.accounts where c.lastName "
 #~ "like :lastName]]>"
+
 #~ msgid ""
 #~ "<![CDATA[<customer id=\"123456789\">\n"
 #~ "    <account short-desc=\"Savings\">987632567</account>\n"
@@ -332,6 +417,7 @@ msgstr "将这一特色与 Hibernate 的 <literal>replicate()</literal> 操作�
 #~ "    </name>\n"
 #~ "    ...\n"
 #~ "</customer>]]>"
+
 #~ msgid ""
 #~ "<![CDATA[<customer id=\"123456789\">\n"
 #~ "    <account id=\"987632567\" short-desc=\"Savings\">\n"
@@ -366,6 +452,7 @@ msgstr "将这一特色与 Hibernate 的 <literal>replicate()</literal> 操作�
 #~ "    </name>\n"
 #~ "    ...\n"
 #~ "</customer>]]>"
+
 #~ msgid ""
 #~ "<![CDATA[Document doc = ....;\n"
 #~ "       \n"
@@ -400,42 +487,42 @@ msgstr "将这一特色与 Hibernate 的 <literal>replicate()</literal> 操作�
 #~ "    //add the customer data to the XML document\n"
 #~ "    Element customer = (Element) results.get(i);\n"
 #~ "    doc.add(customer);\n"
-#~ "}\n"
-#~ "\n"
-#~ "tx.commit();\n"
-#~ "session.close();]]>"
-#~ msgid ""
-#~ "<![CDATA[Session session = factory.openSession();\n"
-#~ "Session dom4jSession = session.getSession(EntityMode.DOM4J);\n"
-#~ "Transaction tx = session.beginTransaction();\n"
-#~ "\n"
-#~ "Element cust = (Element) dom4jSession.get(\"Customer\", customerId);\n"
-#~ "for ( int i=0; i<results.size(); i++ ) {\n"
-#~ "    Element customer = (Element) results.get(i);\n"
-#~ "    //change the customer name in the XML and database\n"
-#~ "    Element name = customer.element(\"name\");\n"
-#~ "    name.element(\"first-name\").setText(firstName);\n"
-#~ "    name.element(\"initial\").setText(initial);\n"
-#~ "    name.element(\"last-name\").setText(lastName);\n"
-#~ "}\n"
-#~ "\n"
-#~ "tx.commit();\n"
-#~ "session.close();]]>"
-#~ msgstr ""
-#~ "<![CDATA[Session session = factory.openSession();\n"
-#~ "Session dom4jSession = session.getSession(EntityMode.DOM4J);\n"
-#~ "Transaction tx = session.beginTransaction();\n"
-#~ "\n"
-#~ "Element cust = (Element) dom4jSession.get(\"Customer\", customerId);\n"
-#~ "for ( int i=0; i<results.size(); i++ ) {\n"
-#~ "    Element customer = (Element) results.get(i);\n"
-#~ "    //change the customer name in the XML and database\n"
-#~ "    Element name = customer.element(\"name\");\n"
-#~ "    name.element(\"first-name\").setText(firstName);\n"
-#~ "    name.element(\"initial\").setText(initial);\n"
-#~ "    name.element(\"last-name\").setText(lastName);\n"
 #~ "}\n"
 #~ "\n"
 #~ "tx.commit();\n"
 #~ "session.close();]]>"
 
+#~ msgid ""
+#~ "<![CDATA[Session session = factory.openSession();\n"
+#~ "Session dom4jSession = session.getSession(EntityMode.DOM4J);\n"
+#~ "Transaction tx = session.beginTransaction();\n"
+#~ "\n"
+#~ "Element cust = (Element) dom4jSession.get(\"Customer\", customerId);\n"
+#~ "for ( int i=0; i<results.size(); i++ ) {\n"
+#~ "    Element customer = (Element) results.get(i);\n"
+#~ "    //change the customer name in the XML and database\n"
+#~ "    Element name = customer.element(\"name\");\n"
+#~ "    name.element(\"first-name\").setText(firstName);\n"
+#~ "    name.element(\"initial\").setText(initial);\n"
+#~ "    name.element(\"last-name\").setText(lastName);\n"
+#~ "}\n"
+#~ "\n"
+#~ "tx.commit();\n"
+#~ "session.close();]]>"
+#~ msgstr ""
+#~ "<![CDATA[Session session = factory.openSession();\n"
+#~ "Session dom4jSession = session.getSession(EntityMode.DOM4J);\n"
+#~ "Transaction tx = session.beginTransaction();\n"
+#~ "\n"
+#~ "Element cust = (Element) dom4jSession.get(\"Customer\", customerId);\n"
+#~ "for ( int i=0; i<results.size(); i++ ) {\n"
+#~ "    Element customer = (Element) results.get(i);\n"
+#~ "    //change the customer name in the XML and database\n"
+#~ "    Element name = customer.element(\"name\");\n"
+#~ "    name.element(\"first-name\").setText(firstName);\n"
+#~ "    name.element(\"initial\").setText(initial);\n"
+#~ "    name.element(\"last-name\").setText(lastName);\n"
+#~ "}\n"
+#~ "\n"
+#~ "tx.commit();\n"
+#~ "session.close();]]>"

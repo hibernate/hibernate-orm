@@ -4,8 +4,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: 0\n"
-"POT-Creation-Date: 2010-01-08T04:07:17\n"
-"PO-Revision-Date: 2010-01-08T04:07:17\n"
+"POT-Creation-Date: 2010-02-10T07:25:34\n"
+"PO-Revision-Date: 2010-02-10T07:25:34\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: None\n"
 "MIME-Version: 1.0\n"
@@ -17,9 +17,9 @@ msgstr ""
 msgid "Hibernate Core Reference Guide"
 msgstr ""
 
-#. Tag: subtitle
+#. Tag: releaseinfo
 #, no-c-format
-msgid "by Gavin King, Christian Bauer, Max Rydahl Andersen, Emmanuel Bernard, and Steve Ebersole and thanks to James Cobb (Graphic Design) and Cheyenne Weaver (Graphic Design)"
+msgid "&version;"
 msgstr ""
 
 #. Tag: para

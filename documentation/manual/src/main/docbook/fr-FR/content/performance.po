@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: performance\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2009-12-03T00:15:26\n"
+"POT-Creation-Date: 2010-02-10T07:25:35\n"
 "PO-Revision-Date: 2010-01-05 09:38+1000\n"
 "Last-Translator: Corina Roe <croe@redhat.com>\n"
 "Language-Team: French <i18@redhat.com>\n"
@@ -314,12 +314,14 @@ msgstr ""
 #. Tag: para
 #, no-c-format
 msgid "retrieval via <literal>get()</literal> or <literal>load()</literal>"
-msgstr "La récupération via <literal>get()</literal> ou <literal>load()</literal>"
+msgstr ""
+"La récupération via <literal>get()</literal> ou <literal>load()</literal>"
 
 #. Tag: para
 #, no-c-format
 msgid "retrieval that happens implicitly when an association is navigated"
-msgstr "La récupération implicite lorsque l'on navigue à travers une association"
+msgstr ""
+"La récupération implicite lorsque l'on navigue à travers une association"
 
 #. Tag: para
 #, no-c-format
@@ -557,7 +559,8 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Certain operations do <emphasis>not</emphasis> require proxy initialization:"
+msgid ""
+"Certain operations do <emphasis>not</emphasis> require proxy initialization:"
 msgstr ""
 "Certaines opérations ne nécessitent <emphasis>pas</emphasis> "
 "l'initialisation du proxy :"
@@ -832,7 +835,8 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Hibernate will now execute only three queries: the pattern is 10, 10, 5."
+msgid ""
+"Hibernate will now execute only three queries: the pattern is 10, 10, 5."
 msgstr ""
 "Hibernate exécutera désormais trois requêtes, en chargeant respectivement "
 "10, 10, et 5 entités. "
@@ -1061,7 +1065,7 @@ msgid "Hashtable (not intended for production use)"
 msgstr "Table de hachage (ne pas utiliser en production)"
 
 #. Tag: entry
-#, no-c-format
+#, fuzzy, no-c-format
 msgid "<literal>org.hibernate.cache.HashtableCacheProvider</literal>"
 msgstr "<literal>org.hibernate.cache.HashtableCacheProvider</literal>"
 
@@ -1081,7 +1085,7 @@ msgid "EHCache"
 msgstr "EHCache"
 
 #. Tag: entry
-#, no-c-format
+#, fuzzy, no-c-format
 msgid "<literal>org.hibernate.cache.EhCacheProvider</literal>"
 msgstr "<literal>org.hibernate.cache.EhCacheProvider</literal>"
 
@@ -1096,7 +1100,7 @@ msgid "OSCache"
 msgstr "OSCache"
 
 #. Tag: entry
-#, no-c-format
+#, fuzzy, no-c-format
 msgid "<literal>org.hibernate.cache.OSCacheProvider</literal>"
 msgstr "<literal>org.hibernate.cache.OSCacheProvider</literal>"
 
@@ -1106,7 +1110,7 @@ msgid "SwarmCache"
 msgstr "SwarmCache"
 
 #. Tag: entry
-#, no-c-format
+#, fuzzy, no-c-format
 msgid "<literal>org.hibernate.cache.SwarmCacheProvider</literal>"
 msgstr "<literal>org.hibernate.cache.SwarmCacheProvider</literal>"
 
@@ -1126,7 +1130,7 @@ msgid "JBoss Cache 1.x"
 msgstr "JBoss Cache 1.x"
 
 #. Tag: entry
-#, no-c-format
+#, fuzzy, no-c-format
 msgid "<literal>org.hibernate.cache.TreeCacheProvider</literal>"
 msgstr "    org.hibernate.cache.TreeCacheProvider"
 
@@ -1151,7 +1155,7 @@ msgid "JBoss Cache 2"
 msgstr "JBoss Cache 2"
 
 #. Tag: entry
-#, no-c-format
+#, fuzzy, no-c-format
 msgid "<literal>org.hibernate.cache.jbc2.JBossCacheRegionFactory</literal>"
 msgstr "<literal>org.hibernate.cache.jbc2.JBossCacheRegionFactory</literal>"
 
@@ -1333,7 +1337,8 @@ msgstr "Support de stratégie de concurrence du fournisseur-cache"
 
 #. Tag: para
 #, no-c-format
-msgid "None of the cache providers support all of the cache concurrency strategies."
+msgid ""
+"None of the cache providers support all of the cache concurrency strategies."
 msgstr ""
 "Aucun des caches livrés ne supporte toutes les stratégies de concurrence. Le "
 "tableau suivant montre quels caches sont compatibles avec quelles stratégies "
@@ -1754,7 +1759,8 @@ msgstr ""
 
 #. Tag: title
 #, no-c-format
-msgid "Lists, maps, idbags and sets are the most efficient collections to update"
+msgid ""
+"Lists, maps, idbags and sets are the most efficient collections to update"
 msgstr ""
 "Les lists, les maps, les idbags et les ensembles sont les collections les "
 "plus efficaces pour la mise à jour "
@@ -1825,7 +1831,8 @@ msgstr ""
 #. Tag: title
 #, no-c-format
 msgid "Bags and lists are the most efficient inverse collections"
-msgstr "Les sacs et les listes sont les plus efficaces pour les collections inverses"
+msgstr ""
+"Les sacs et les listes sont les plus efficaces pour les collections inverses"
 
 #. Tag: para
 #, no-c-format
@@ -2128,4 +2135,3 @@ msgstr ""
 "<literal>getQueries()</literal>, <literal>getEntityNames()</literal>, "
 "<literal>getCollectionRoleNames()</literal>, et "
 "<literal>getSecondLevelCacheRegionNames()</literal>. "
-

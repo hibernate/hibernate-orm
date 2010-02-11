@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Collection_Mapping\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2010-01-08T04:07:20\n"
+"POT-Creation-Date: 2010-02-10T07:25:35\n"
 "PO-Revision-Date: 2010-01-20 15:00+1000\n"
 "Last-Translator: Xi HUANG <xhuang@redhat.com>\n"
 "Language-Team:  <en@li.org>\n"
@@ -79,11 +79,6 @@ msgstr ""
 "と Hibernate のマッピングファイルへと、完全にリバースエンジニアリングすること"
 "ができます。リバースエンジニアリングウィザードはカスタマイズ可能なテンプレー"
 "トをサポートします。"
-
-#. Tag: para
-#, no-c-format
-msgid "<!-- <emphasis>Ant Tasks:</emphasis> -->"
-msgstr ""
 
 #. Tag: para
 #, no-c-format
@@ -389,9 +384,9 @@ msgid "<literal>sql-type</literal>"
 msgstr "<literal>sql-type</literal>"
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid "<literal>SQL column type</literal>"
-msgstr "SQL のカラム型"
+msgstr "<literal>sql-type</literal>"
 
 #. Tag: para
 #, no-c-format
@@ -533,9 +528,9 @@ msgid "do not export to the database"
 msgstr "データベースにエクスポートしません"
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid "<literal>--output=my_schema.ddl</literal>"
-msgstr "<literal>--output=my_schema.ddl</literal>"
+msgstr "<literal>scale</literal>"
 
 #. Tag: para
 #, no-c-format
@@ -543,7 +538,7 @@ msgid "output the ddl script to a file"
 msgstr "DDL スクリプトをファイルに出力します"
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid "<literal>--naming=eg.MyNamingStrategy</literal>"
 msgstr "<literal>--naming=eg.MyNamingStrategy</literal>"
 
@@ -553,9 +548,9 @@ msgid "select a <literal>NamingStrategy</literal>"
 msgstr "<literal>NamingStrategy</literal> を選択"
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid "<literal>--config=hibernate.cfg.xml</literal>"
-msgstr "<literal>--config=hibernate.cfg.xml</literal>"
+msgstr "<literal>hibernate.dialect</literal>"
 
 #. Tag: para
 #, no-c-format
@@ -977,8 +972,16 @@ msgstr "Ant スクリプトから <literal>SchemaValidator</literal> を呼び�
 #~ msgid "foreign-key"
 #~ msgstr "foreign-key"
 
+#, fuzzy
+#~ msgid "foreign_key_name"
+#~ msgstr "foreign-key"
+
 #~ msgid "sql-type"
 #~ msgstr "sql-type"
+
+#, fuzzy
+#~ msgid "SQL column type"
+#~ msgstr "SQL のカラム型"
 
 #~ msgid "default"
 #~ msgstr "default"
@@ -1024,6 +1027,14 @@ msgstr "Ant スクリプトから <literal>SchemaValidator</literal> を呼び�
 #~ msgid "--text"
 #~ msgstr "--text"
 
+#, fuzzy
+#~ msgid "--output=my_schema.ddl"
+#~ msgstr "<literal>--output=my_schema.ddl</literal>"
+
+#, fuzzy
+#~ msgid "--config=hibernate.cfg.xml"
+#~ msgstr "<literal>--config=hibernate.cfg.xml</literal>"
+
 #~ msgid "--properties=hibernate.properties"
 #~ msgstr "--properties=hibernate.properties"
 
@@ -1040,6 +1051,10 @@ msgstr "Ant スクリプトから <literal>SchemaValidator</literal> を呼び�
 #~ msgstr ""
 #~ "Configuration cfg = ....;\n"
 #~ "new SchemaExport(cfg).create(false, true);"
+
+#, fuzzy
+#~ msgid "hibernate.connection.driver_class"
+#~ msgstr "hibernate.connection.url"
 
 #~ msgid "hibernate.connection.url"
 #~ msgstr "hibernate.connection.url"

@@ -306,7 +306,7 @@ public class AnnotationMetaEntity implements MetaEntity {
 				keyType = typeMirror.toString();
 			}
 			else {
-				keyType = getKeyType( declaredType );
+				keyType = TypeUtils.getKeyType( declaredType, context );
 			}
 			return new AnnotationMetaMap(
 					parent,
@@ -339,14 +339,6 @@ public class AnnotationMetaEntity implements MetaEntity {
 				}
 				return "?";
 			}
-		}
-
-		private String getKeyType(DeclaredType t) {
-			List<? extends TypeMirror> typeArguments = t.getTypeArguments();
-			if ( typeArguments.size() == 0 ) {
-				context.logMessage( Diagnostic.Kind.ERROR, "Entity: " + getQualifiedName() );
-			}
-			return TypeUtils.extractClosestRealTypeAsString( typeArguments.get( 0 ), context );
 		}
 
 		/**

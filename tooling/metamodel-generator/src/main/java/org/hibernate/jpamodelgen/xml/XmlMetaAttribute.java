@@ -25,33 +25,34 @@ import org.hibernate.jpamodelgen.model.MetaAttribute;
  */
 public abstract class XmlMetaAttribute implements MetaAttribute {
 
-    private XmlMetaEntity parentEntity;
+	protected final XmlMetaEntity parentEntity;
+	private final String propertyName;
+	private final String type;
 
-    private String propertyName;
-
-    private String type;
-
-    XmlMetaAttribute(XmlMetaEntity parent, String propertyName, String type) {
-        this.parentEntity = parent;
-        this.propertyName = propertyName;
-        this.type = type;
-    }
+	XmlMetaAttribute(XmlMetaEntity parent, String propertyName, String type) {
+		this.parentEntity = parent;
+		this.propertyName = propertyName;
+		this.type = type;
+	}
 
 	@Override
-    public String getDeclarationString() {
-        return "public static volatile " + parentEntity.importType(getMetaType()) + "<" + parentEntity.importType(parentEntity.getQualifiedName()) + ", " + parentEntity.importType(getTypeDeclaration()) + "> " + getPropertyName() + ";";
-    }
+	public String getDeclarationString() {
+		return "public static volatile " + parentEntity.importType( getMetaType() )
+				+ "<" + parentEntity.importType( parentEntity.getQualifiedName() )
+				+ ", " + parentEntity.importType( getTypeDeclaration() )
+				+ "> " + getPropertyName() + ";";
+	}
 
-    public String getPropertyName() {
-        return propertyName;
-    }
+	public String getPropertyName() {
+		return propertyName;
+	}
 
-    public String getTypeDeclaration() {
+	public String getTypeDeclaration() {
 		return type;
 	}
 
-    @Override
-    abstract public String getMetaType();
+	@Override
+	abstract public String getMetaType();
 
 	@Override
 	public String toString() {

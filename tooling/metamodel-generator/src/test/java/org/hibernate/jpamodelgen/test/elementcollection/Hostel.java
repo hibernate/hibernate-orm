@@ -20,8 +20,6 @@ package org.hibernate.jpamodelgen.test.elementcollection;
 import java.util.Map;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
 import javax.persistence.MapKeyClass;
 import javax.persistence.OneToMany;
 
@@ -29,21 +27,10 @@ import javax.persistence.OneToMany;
 /**
  * @author Hardy Ferentschik
  */
-@Entity
-public class Hotel {
-	private int id;
+public class Hostel {
 	private Map roomsByName;
+
 	private Map cleaners;
-
-	@Id
-	@GeneratedValue
-	public int getId() {
-		return id;
-	}
-
-	public void setId(int id) {
-		this.id = id;
-	}
 
 	@ElementCollection(targetClass = Room.class)
 	@MapKeyClass(String.class)
@@ -55,8 +42,6 @@ public class Hotel {
 		this.roomsByName = roomsByName;
 	}
 
-	@OneToMany(targetEntity = Cleaner.class)
-	@MapKeyClass(Room.class)
 	public Map getCleaners() {
 		return cleaners;
 	}

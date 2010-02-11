@@ -31,6 +31,7 @@ import javax.persistence.AccessType;
 import javax.tools.Diagnostic;
 
 import org.hibernate.jpamodelgen.model.MetaEntity;
+import org.hibernate.jpamodelgen.util.Constants;
 
 /**
  * @author Max Andersen
@@ -38,10 +39,19 @@ import org.hibernate.jpamodelgen.model.MetaEntity;
  * @author Emmanuel Bernard
  */
 public class Context {
-	private static final String PATH_SEPARATOR = System.getProperty( "file.separator" );
 	private static final String DEFAULT_PERSISTENCE_XML_LOCATION = "/META-INF/persistence.xml";
+
+	/**
+	 * Used for keeping track of parsed entities and mapped super classes (xml + annotations).
+	 */
 	private final Map<String, MetaEntity> metaEntities = new HashMap<String, MetaEntity>();
-	private final Map<String, MetaEntity> metaSuperclassAndEmbeddable = new HashMap<String, MetaEntity>();
+
+	/**
+	 * Used for keeping track of parsed embeddable entities. These entities have to be kept separate since
+	 * they are lazily initialized.
+	 */
+	private final Map<String, MetaEntity> metaEmbeddables = new HashMap<String, MetaEntity>();
+
 	private final Map<String, AccessTypeInformation> accessTypeInformation = new HashMap<String, AccessTypeInformation>();
 
 	private final ProcessingEnvironment pe;
@@ -57,8 +67,8 @@ public class Context {
 
 		if ( pe.getOptions().get( JPAMetaModelEntityProcessor.PERSISTENCE_XML_OPTION ) != null ) {
 			String tmp = pe.getOptions().get( JPAMetaModelEntityProcessor.PERSISTENCE_XML_OPTION );
-			if ( !tmp.startsWith( PATH_SEPARATOR ) ) {
-				tmp = PATH_SEPARATOR + tmp;
+			if ( !tmp.startsWith( Constants.PATH_SEPARATOR ) ) {
+				tmp = Constants.PATH_SEPARATOR + tmp;
 			}
 			persistenceXmlLocation = tmp;
 		}
@@ -70,8 +80,8 @@ public class Context {
 			String tmp = pe.getOptions().get( JPAMetaModelEntityProcessor.ORM_XML_OPTION );
 			ormXmlFiles = new ArrayList<String>();
 			for ( String ormFile : tmp.split( "," ) ) {
-				if ( !ormFile.startsWith( PATH_SEPARATOR ) ) {
-					ormFile = PATH_SEPARATOR + ormFile;
+				if ( !ormFile.startsWith( Constants.PATH_SEPARATOR ) ) {
+					ormFile = Constants.PATH_SEPARATOR + ormFile;
 				}
 				ormXmlFiles.add( ormFile );
 			}
@@ -81,7 +91,6 @@ public class Context {
 		}
 
 		logDebug = Boolean.parseBoolean( pe.getOptions().get( JPAMetaModelEntityProcessor.DEBUG_OPTION ) );
-
 	}
 
 	public ProcessingEnvironment getProcessingEnvironment() {
@@ -120,20 +129,20 @@ public class Context {
 		metaEntities.put( fcqn, metaEntity );
 	}
 
-	public boolean containsMetaSuperclassOrEmbeddable(String fqcn) {
-		return metaSuperclassAndEmbeddable.containsKey( fqcn );
+	public boolean containsMetaEmbeddable(String fqcn) {
+		return metaEmbeddables.containsKey( fqcn );
 	}
 
-	public MetaEntity getMetaSuperclassOrEmbeddable(String fqcn) {
-		return metaSuperclassAndEmbeddable.get( fqcn );
+	public MetaEntity getMetaEmbeddable(String fqcn) {
+		return metaEmbeddables.get( fqcn );
 	}
 
-	public void addMetaSuperclassOrEmbeddable(String fcqn, MetaEntity metaEntity) {
-		metaSuperclassAndEmbeddable.put( fcqn, metaEntity );
+	public void addMetaEmbeddable(String fqcn, MetaEntity metaEntity) {
+		metaEmbeddables.put( fqcn, metaEntity );
 	}
 
-	public Collection<MetaEntity> getMetaSuperclassOrEmbeddable() {
-		return metaSuperclassAndEmbeddable.values();
+	public Collection<MetaEntity> getMetaEmbeddables() {
+		return metaEmbeddables.values();
 	}
 
 	public void addAccessTypeInformation(String fqcn, AccessTypeInformation info) {

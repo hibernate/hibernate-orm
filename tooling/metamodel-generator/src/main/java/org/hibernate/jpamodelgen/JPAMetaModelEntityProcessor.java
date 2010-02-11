@@ -128,7 +128,7 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 		// we cannot process the delayed entities in any order. There might be dependencies between them.
 		// we need to process the top level entities first
 		// TODO make sure that we don't run into circular dependencies here
-		Collection<MetaEntity> toProcessEntities = context.getMetaSuperclassOrEmbeddable();
+		Collection<MetaEntity> toProcessEntities = context.getMetaEmbeddables();
 		while ( !toProcessEntities.isEmpty() ) {
 			Set<MetaEntity> processedEntities = new HashSet<MetaEntity>();
 			for ( MetaEntity entity : toProcessEntities ) {
@@ -218,7 +218,7 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 		}
 		else if ( TypeUtils.isAnnotationMirrorOfType( mirror, MappedSuperclass.class )
 				|| TypeUtils.isAnnotationMirrorOfType( mirror, Embeddable.class ) ) {
-			alreadyExistingMetaEntity = context.getMetaSuperclassOrEmbeddable( fqn );
+			alreadyExistingMetaEntity = context.getMetaEmbeddable( fqn );
 		}
 		return alreadyExistingMetaEntity;
 	}
@@ -228,10 +228,10 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 			context.addMetaEntity( metaEntity.getQualifiedName(), metaEntity );
 		}
 		else if ( TypeUtils.isAnnotationMirrorOfType( mirror, MappedSuperclass.class ) ) {
-			context.addMetaSuperclassOrEmbeddable( metaEntity.getQualifiedName(), metaEntity );
+			context.addMetaEntity( metaEntity.getQualifiedName(), metaEntity );
 		}
 		else if ( TypeUtils.isAnnotationMirrorOfType( mirror, Embeddable.class ) ) {
-			context.addMetaSuperclassOrEmbeddable( metaEntity.getQualifiedName(), metaEntity );
+			context.addMetaEmbeddable( metaEntity.getQualifiedName(), metaEntity );
 		}
 	}
 

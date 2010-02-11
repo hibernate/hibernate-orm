@@ -30,6 +30,7 @@ import java.sql.SQLException;
 import java.sql.Types;
 
 import org.hibernate.Hibernate;
+import org.hibernate.LockOptions;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.NoArgSQLFunction;
 import org.hibernate.dialect.function.StandardSQLFunction;
@@ -331,6 +332,21 @@ public class MySQLDialect extends Dialect {
 
 	public boolean supportsRowValueConstructorSyntax() {
 		return true;
+	}
+
+
+	// locking support
+
+	public String getForUpdateString() {
+		return " for update";
+	}
+
+	public String getWriteLockString(int timeout) {
+		return " for update";
+	}
+
+	public String getReadLockString(int timeout) {
+		return " lock in share mode";
 	}
 
 

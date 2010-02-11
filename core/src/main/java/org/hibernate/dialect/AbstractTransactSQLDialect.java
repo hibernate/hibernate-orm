@@ -170,6 +170,7 @@ abstract class AbstractTransactSQLDialect extends Dialect {
 	}
 
 	public String applyLocksToSql(String sql, LockOptions aliasedLockOptions, Map keyColumnNames) {
+		// TODO:  merge additional lockoptions support in Dialect.applyLocksToSql 
 		Iterator itr = aliasedLockOptions.getAliasLockIterator();
 		StringBuffer buffer = new StringBuffer( sql );
 		int correction = 0;

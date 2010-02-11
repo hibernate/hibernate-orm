@@ -101,13 +101,12 @@ public class ForUpdateFragment {
 	}
 
 	public String toFragmentString() {
-
-		if ( aliases.length() == 0) {
-			if ( lockOptions != null ) {
-				return dialect.getForUpdateString(lockOptions);
-			}
-			else if ( lockMode != null ) {
-				return dialect.getForUpdateString(lockMode);
+		if ( lockOptions!= null ) {
+			return dialect.getForUpdateString( aliases.toString(), lockOptions );
+		}
+		else if ( aliases.length() == 0) {
+			if ( lockMode != null ) {
+				return dialect.getForUpdateString( lockMode );
 			}
 			return "";
 		}

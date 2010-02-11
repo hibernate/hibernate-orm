@@ -1095,6 +1095,20 @@ public abstract class Dialect {
 	}
 
 	/**
+	 * Get the <tt>FOR UPDATE OF column_list</tt> fragment appropriate for this
+	 * dialect given the aliases of the columns to be write locked.
+	 *
+	 * @param aliases The columns to be write locked.
+	 * @param lockOptions 
+	 * @return The appropriate <tt>FOR UPDATE OF column_list</tt> clause string.
+	 */
+	public String getForUpdateString(String aliases, LockOptions lockOptions) {
+		// by default we simply return the getForUpdateString() result since
+		// the default is to say no support for "FOR UPDATE OF ..."
+		return getForUpdateString(lockOptions);
+	}
+
+	/**
 	 * Retrieves the <tt>FOR UPDATE NOWAIT</tt> syntax specific to this dialect.
 	 *
 	 * @return The appropriate <tt>FOR UPDATE NOWAIT</tt> clause string.

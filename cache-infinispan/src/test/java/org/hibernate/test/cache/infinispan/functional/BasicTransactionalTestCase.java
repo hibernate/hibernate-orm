@@ -287,4 +287,47 @@ public class BasicTransactionalTestCase extends SingleNodeTestCase {
          commitOrRollbackTx();
       }
    }
+
+   public void testQueryCacheHitInSameTransaction() throws Exception {
+      Session s = null;
+      Item item = new Item("galder", "Galder's Item");
+
+      beginTx();
+      try {
+         s = openSession();
+         s.getTransaction().begin();
+         s.persist(item);
+         s.getTransaction().commit();
+         s.close();
+      } catch (Exception e) {
+         setRollbackOnlyTx(e);
+      } finally {
+         commitOrRollbackTx();
+      }
+
+      beginTx();
+      try {
+         s = openSession();
+         Statistics stats = s.getSessionFactory().getStatistics();
+         s.createQuery("from Item").setCacheable(true).list();
+         s.createQuery("from Item").setCacheable(true).list();
+         assertEquals(1, stats.getQueryCacheHitCount());
+         s.close();
+      } catch (Exception e) {
+         setRollbackOnlyTx(e);
+      } finally {
+         commitOrRollbackTx();
+      }
+
+      beginTx();
+      try {
+         s = openSession();
+         s.createQuery("delete from Item").executeUpdate();
+         s.close();
+      } catch (Exception e) {
+         setRollbackOnlyTx(e);
+      } finally {
+         commitOrRollbackTx();
+      }
+   }   
 }

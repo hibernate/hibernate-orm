@@ -194,28 +194,21 @@ public abstract class BaseRegion implements Region {
    }
 
    /**
-    * Performs a JBoss Cache <code>get(Fqn, Object)</code> after first
-    * {@link #suspend suspending any ongoing transaction}. Wraps any exception
-    * in a {@link CacheException}. Ensures any ongoing transaction is resumed.
-    * 
+    * Performs a Infinispan <code>get(Fqn, Object)</code>
+    *
     * @param key The key of the item to get
     * @param opt any option to add to the get invocation. May be <code>null</code>
     * @param suppressTimeout should any TimeoutException be suppressed?
     * @return The retrieved object
       * @throws CacheException issue managing transaction or talking to cache
     */
-   protected Object suspendAndGet(Object key, FlagAdapter opt, boolean suppressTimeout) throws CacheException {
-       Transaction tx = suspend();
-       try {
-           if (suppressTimeout)
-               return cacheAdapter.getAllowingTimeout(key);
-           else
-               return cacheAdapter.get(key);
-       } finally {
-           resume(tx);
-       }
+   protected Object get(Object key, FlagAdapter opt, boolean suppressTimeout) throws CacheException {
+      if (suppressTimeout)
+         return cacheAdapter.getAllowingTimeout(key);
+      else
+         return cacheAdapter.get(key);
    }
-
+   
    public Object getOwnerForPut() {
       Transaction tx = null;
       try {

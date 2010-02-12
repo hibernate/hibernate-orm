@@ -58,7 +58,7 @@ public class TimestampsRegionImpl extends BaseGeneralDataRegion implements Times
    public Object get(Object key) throws CacheException {
       Object value = localCache.get(key);
       if (value == null && checkValid()) {
-         value = suspendAndGet(key, null, false);
+         value = get(key, null, false);
          if (value != null)
             localCache.put(key, value);
       }

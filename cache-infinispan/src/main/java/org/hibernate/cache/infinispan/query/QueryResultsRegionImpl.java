@@ -50,12 +50,13 @@ public class QueryResultsRegionImpl extends BaseTransactionalDataRegion implemen
       if (!checkValid())
          return null;
 
-      // Don't hold the JBC node lock throughout the tx, as that
-      // prevents updates
+      // In Infinispan get doesn't acquire any locks, so no need to suspend the tx.
+      // In the past, when get operations acquired locks, suspending the tx was a way
+      // to avoid holding locks that would prevent updates.
       // Add a zero (or low) timeout option so we don't block
       // waiting for tx's that did a put to commit
-      return suspendAndGet(key, FlagAdapter.ZERO_LOCK_ACQUISITION_TIMEOUT, true);
-   }
+      return get(key, FlagAdapter.ZERO_LOCK_ACQUISITION_TIMEOUT, true);
+   }   
 
    public void put(Object key, Object value) throws CacheException {
       if (checkValid()) {

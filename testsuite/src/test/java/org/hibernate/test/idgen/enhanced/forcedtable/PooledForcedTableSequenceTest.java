@@ -2,13 +2,15 @@ package org.hibernate.test.idgen.enhanced.forcedtable;
 
 import junit.framework.Test;
 
-import org.hibernate.junit.functional.DatabaseSpecificFunctionalTestCase;
-import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
-import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.Session;
 import org.hibernate.id.enhanced.OptimizerFactory;
 import org.hibernate.id.enhanced.SequenceStyleGenerator;
 import org.hibernate.id.enhanced.TableStructure;
-import org.hibernate.Session;
+import org.hibernate.junit.functional.DatabaseSpecificFunctionalTestCase;
+import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
+import org.hibernate.persister.entity.EntityPersister;
+
+import static org.hibernate.id.IdentifierGeneratorHelper.BasicHolder;
 
 /**
  * {@inheritDoc}
@@ -54,19 +56,21 @@ public class PooledForcedTableSequenceTest extends DatabaseSpecificFunctionalTes
 			s.save( entities[i] );
 			long expectedId = i + 1;
 			assertEquals( expectedId, entities[i].getId().longValue() );
-			assertEquals( 2, generator.getDatabaseStructure().getTimesAccessed() ); // initialization calls table twice
-			assertEquals( increment + 1, optimizer.getLastSourceValue() ); // initialization calls table twice
-			assertEquals( i + 1, optimizer.getLastValue() );
-			assertEquals( increment + 1, optimizer.getLastSourceValue() );
+			// NOTE : initialization calls table twice
+			assertEquals( 2, generator.getDatabaseStructure().getTimesAccessed() );
+			assertEquals( increment + 1, ( (BasicHolder) optimizer.getLastSourceValue() ).getActualLongValue() );
+			assertEquals( i + 1, ( (BasicHolder) optimizer.getLastValue() ).getActualLongValue() );
+			assertEquals( increment + 1, ( (BasicHolder) optimizer.getLastSourceValue() ).getActualLongValue() );
 		}
 		// now force a "clock over"
 		entities[ increment ] = new Entity( "" + increment );
 		s.save( entities[ increment ] );
 		long expectedId = optimizer.getIncrementSize() + 1;
 		assertEquals( expectedId, entities[ optimizer.getIncrementSize() ].getId().longValue() );
-		assertEquals( 3, generator.getDatabaseStructure().getTimesAccessed() ); // initialization (2) + clock over
-		assertEquals( ( increment * 2 ) + 1, optimizer.getLastSourceValue() ); // initialization (2) + clock over
-		assertEquals( increment + 1, optimizer.getLastValue() );
+		// initialization (2) + clock over
+		assertEquals( 3, generator.getDatabaseStructure().getTimesAccessed() );
+		assertEquals( ( increment * 2 ) + 1, ( (BasicHolder) optimizer.getLastSourceValue() ).getActualLongValue() );
+		assertEquals( increment + 1, ( (BasicHolder) optimizer.getLastValue() ).getActualLongValue() );
 		s.getTransaction().commit();
 
 		s.beginTransaction();

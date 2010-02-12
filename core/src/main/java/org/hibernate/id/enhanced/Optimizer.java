@@ -26,6 +26,8 @@ package org.hibernate.id.enhanced;
 
 import java.io.Serializable;
 
+import org.hibernate.id.IntegralDataTypeHolder;
+
 /**
  * Performs optimization on an optimizable identifier generator.  Typically
  * this optimization takes the form of trying to ensure we do not have to
@@ -51,12 +53,12 @@ public interface Optimizer {
 	/**
 	 * A common means to access the last value obtained from the underlying
 	 * source.  This is intended for testing purposes, since accessing the
-	 * unerlying database source directly is much more difficult.
+	 * underlying database source directly is much more difficult.
 	 *
 	 * @return The last value we obtained from the underlying source;
-	 * -1 indicates we have not yet consulted with the source.
+	 * null indicates we have not yet consulted with the source.
 	 */
-	public long getLastSourceValue();
+	public IntegralDataTypeHolder getLastSourceValue();
 
 	/**
 	 * Retrieves the defined increment size.

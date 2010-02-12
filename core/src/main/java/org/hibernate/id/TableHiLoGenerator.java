@@ -29,7 +29,6 @@ import java.util.Properties;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.hibernate.HibernateException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.type.Type;
@@ -58,10 +57,10 @@ public class TableHiLoGenerator extends TableGenerator {
 	 */
 	public static final String MAX_LO = "max_lo";
 
-	private long hi;
-	private int lo;
 	private int maxLo;
-	private Class returnClass;
+	private int lo;
+
+	private IntegralDataTypeHolder value;
 
 	private static final Logger log = LoggerFactory.getLogger(TableHiLoGenerator.class);
 
@@ -69,26 +68,29 @@ public class TableHiLoGenerator extends TableGenerator {
 		super.configure(type, params, d);
 		maxLo = PropertiesHelper.getInt(MAX_LO, params, Short.MAX_VALUE);
 		lo = maxLo + 1; // so we "clock over" on the first invocation
-		returnClass = type.getReturnedClass();
 	}
 
-	public synchronized Serializable generate(SessionImplementor session, Object obj) 
-	throws HibernateException {
-        if (maxLo < 1) {
+	public synchronized Serializable generate(SessionImplementor session, Object obj) {
+		// maxLo < 1 indicates a hilo generator with no hilo :?
+        if ( maxLo < 1 ) {
 			//keep the behavior consistent even for boundary usages
-			long val = ( (Number) super.generate(session, obj) ).longValue();
-			if (val == 0) val = ( (Number) super.generate(session, obj) ).longValue();
-			return IdentifierGeneratorHelper.createNumber( val, returnClass );
-		}
-		if (lo>maxLo) {
-			long hival = ( (Number) super.generate(session, obj) ).longValue();
-			lo = (hival == 0) ? 1 : 0;
-			hi = hival * (maxLo+1);
-			log.debug("new hi value: " + hival);
+			IntegralDataTypeHolder value = null;
+			while ( value == null || value.lt( 0 ) ) {
+				value = generateHolder( session );
+			}
+			return value.makeValue();
 		}
 
-		return IdentifierGeneratorHelper.createNumber( hi + lo++, returnClass );
+		if ( lo > maxLo ) {
+			IntegralDataTypeHolder hiVal = generateHolder( session );
+			lo = ( hiVal.eq( 0 ) ) ? 1 : 0;
+			value = hiVal.copy().multiplyBy( maxLo+1 ).add( lo );
+			if ( log.isDebugEnabled() ) {
+				log.debug("new hi value: " + hiVal);
+			}
+		}
 
+		return value.makeValueThenIncrement();
 	}
 
 }

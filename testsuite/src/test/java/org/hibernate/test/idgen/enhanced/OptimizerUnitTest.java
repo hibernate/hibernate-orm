@@ -3,6 +3,8 @@ package org.hibernate.test.idgen.enhanced;
 import junit.framework.Test;
 import junit.framework.TestSuite;
 
+import org.hibernate.id.IdentifierGeneratorHelper;
+import org.hibernate.id.IntegralDataTypeHolder;
 import org.hibernate.junit.UnitTestCase;
 import org.hibernate.id.enhanced.Optimizer;
 import org.hibernate.id.enhanced.OptimizerFactory;
@@ -88,7 +90,7 @@ public class OptimizerUnitTest extends UnitTestCase {
 			next = ( Long ) optimizer.generate( sequence );
 			assertEquals( i, next.intValue() );
 		}
-		assertEquals( 2, sequence.getTimesCalled() ); // twice to initialze state
+		assertEquals( 2, sequence.getTimesCalled() ); // twice to initialize state
 		assertEquals( 11, sequence.getCurrentValue() );
 		// force a "clock over"
 		next = ( Long ) optimizer.generate( sequence );
@@ -98,7 +100,7 @@ public class OptimizerUnitTest extends UnitTestCase {
 	}
 
 	private static class SourceMock implements AccessCallback {
-		private long value;
+		private IdentifierGeneratorHelper.BasicHolder value = new IdentifierGeneratorHelper.BasicHolder( Long.class );
 		private int increment;
 		private int timesCalled = 0;
 
@@ -108,12 +110,12 @@ public class OptimizerUnitTest extends UnitTestCase {
 
 		public SourceMock(long initialValue, int increment) {
 			this.increment = increment;
-			this.value = initialValue - increment;
+			this.value.initialize( initialValue - increment );
 		}
 
-		public long getNextValue() {
+		public IntegralDataTypeHolder getNextValue() {
 			timesCalled++;
-			return ( value += increment );
+			return value.add( increment ).copy();
 		}
 
 		public int getTimesCalled() {
@@ -121,7 +123,7 @@ public class OptimizerUnitTest extends UnitTestCase {
 		}
 
 		public long getCurrentValue() {
-			return value;
+			return value.getActualLongValue();
 		}
 	}
 

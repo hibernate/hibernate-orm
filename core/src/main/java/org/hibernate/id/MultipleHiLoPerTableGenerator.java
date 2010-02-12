@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,7 +20,6 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.id;
 
@@ -104,9 +103,10 @@ public class MultipleHiLoPerTableGenerator
 	//hilo params
 	public static final String MAX_LO = "max_lo";
 
-	private long hi;
-	private int lo;
 	private int maxLo;
+	private int lo;
+	private IntegralDataTypeHolder value;
+
 	private Class returnClass;
 	private int keySize;
 
@@ -146,7 +146,7 @@ public class MultipleHiLoPerTableGenerator
 	}
 
 	public Serializable doWorkInCurrentTransaction(Connection conn, String sql) throws SQLException {
-		int result;
+		IntegralDataTypeHolder value = IdentifierGeneratorHelper.getIntegralDataTypeHolder( returnClass );
 		int rows;
 		do {
 			// The loop ensures atomicity of the
@@ -158,18 +158,16 @@ public class MultipleHiLoPerTableGenerator
 			PreparedStatement qps = conn.prepareStatement(query);
 			PreparedStatement ips = null;
 			try {
-				//qps.setString(1, key);
 				ResultSet rs = qps.executeQuery();
 				boolean isInitialized = rs.next();
 				if ( !isInitialized ) {
-					result = 0;
-					ips = conn.prepareStatement(insert);
-					//ips.setString(1, key);
-					ips.setInt(1, result);
+					value.initialize( 0 );
+					ips = conn.prepareStatement( insert );
+					value.bind( ips, 1 );
 					ips.execute();
 				}
 				else {
-					result = rs.getInt(1);
+					value.initialize( rs, 0 );
 				}
 				rs.close();
 			}
@@ -184,12 +182,10 @@ public class MultipleHiLoPerTableGenerator
 				qps.close();
 			}
 
-			//sql = update;
 			PreparedStatement ups = conn.prepareStatement(update);
 			try {
-				ups.setInt( 1, result + 1 );
-				ups.setInt( 2, result );
-				//ups.setString( 3, key );
+				value.copy().increment().bind( ups, 1 );
+				value.bind( ups, 2 );
 				rows = ups.executeUpdate();
 			}
 			catch (SQLException sqle) {
@@ -201,24 +197,30 @@ public class MultipleHiLoPerTableGenerator
 			}
 		}
 		while (rows==0);
-		return new Integer(result);
+		return value;
 	}
 
 	public synchronized Serializable generate(SessionImplementor session, Object obj)
 		throws HibernateException {
-		if (maxLo < 1) {
+		// maxLo < 1 indicates a hilo generator with no hilo :?
+		if ( maxLo < 1 ) {
 			//keep the behavior consistent even for boundary usages
-			int val = ( (Integer) doWorkInNewTransaction(session) ).intValue();
-			if (val == 0) val = ( (Integer) doWorkInNewTransaction(session) ).intValue();
-			return IdentifierGeneratorHelper.createNumber( val, returnClass );
+			IntegralDataTypeHolder value = null;
+			while ( value == null || value.lt( 1 ) ) {
+				value = (IntegralDataTypeHolder) doWorkInNewTransaction( session );
+			}
+			return value.makeValue();
 		}
-		if (lo>maxLo) {
-			int hival = ( (Integer) doWorkInNewTransaction(session) ).intValue();
-			lo = (hival == 0) ? 1 : 0;
-			hi = hival * (maxLo+1);
-			log.debug("new hi value: " + hival);
+
+		if ( lo > maxLo ) {
+			IntegralDataTypeHolder hiVal = (IntegralDataTypeHolder) doWorkInNewTransaction( session );
+			lo = ( hiVal.eq( 0 ) ) ? 1 : 0;
+			value = hiVal.copy().multiplyBy( maxLo+1 ).add( lo );
+			if ( log.isDebugEnabled() ) {
+				log.debug("new hi value: " + hiVal);
+			}
 		}
-		return IdentifierGeneratorHelper.createNumber( hi + lo++, returnClass );
+		return value.makeValueThenIncrement();
 	}
 
 	public void configure(Type type, Properties params, Dialect dialect) throws MappingException {

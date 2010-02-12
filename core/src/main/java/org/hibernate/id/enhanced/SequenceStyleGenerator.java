@@ -178,7 +178,15 @@ public class SequenceStyleGenerator implements PersistentIdentifierGenerator, Co
 			}
 		}
 
-		this.databaseStructure = buildDatabaseStructure( params, dialect, forceTableUse, sequenceName, initialValue, incrementSize );
+		this.databaseStructure = buildDatabaseStructure(
+				type,
+				params,
+				dialect,
+				forceTableUse,
+				sequenceName,
+				initialValue,
+				incrementSize
+		);
 
 		this.optimizer = OptimizerFactory.buildOptimizer( optimizationStrategy, identifierType.getReturnedClass(), incrementSize );
 		this.databaseStructure.prepare( optimizer );
@@ -291,15 +299,16 @@ public class SequenceStyleGenerator implements PersistentIdentifierGenerator, Co
 	/**
 	 * Build the database structure.
 	 *
+	 * @param type The Hibernate type of the identifier property
 	 * @param params The params supplied in the generator config (plus some standard useful extras).
 	 * @param dialect The dialect being used.
 	 * @param forceTableUse Should a table be used even if the dialect supports sequences?
 	 * @param sequenceName The name to use for the sequence or table.
 	 * @param initialValue The initial value.
-	 * @param incrementSize the increment size to use (after any adjustments).
-	 * @return The db structure representation
+	 * @param incrementSize the increment size to use (after any adjustments).       @return The db structure representation
 	 */
 	protected DatabaseStructure buildDatabaseStructure(
+			Type type,
 			Properties params,
 			Dialect dialect,
 			boolean forceTableUse,
@@ -308,11 +317,11 @@ public class SequenceStyleGenerator implements PersistentIdentifierGenerator, Co
 			int incrementSize) {
 		boolean useSequence = dialect.supportsSequences() && !forceTableUse;
 		if ( useSequence ) {
-			return new SequenceStructure( dialect, sequenceName, initialValue, incrementSize );
+			return new SequenceStructure( dialect, sequenceName, initialValue, incrementSize, type.getReturnedClass() );
 		}
 		else {
 			String valueColumnName = determineValueColumnName( params, dialect );
-			return new TableStructure( dialect, sequenceName, valueColumnName, initialValue, incrementSize );
+			return new TableStructure( dialect, sequenceName, valueColumnName, initialValue, incrementSize, type.getReturnedClass() );
 		}
 	}
 

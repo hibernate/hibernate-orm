@@ -2,13 +2,15 @@ package org.hibernate.test.idgen.enhanced.forcedtable;
 
 import junit.framework.Test;
 
+import org.hibernate.Session;
+import org.hibernate.id.enhanced.OptimizerFactory;
+import org.hibernate.id.enhanced.SequenceStyleGenerator;
+import org.hibernate.id.enhanced.TableStructure;
 import org.hibernate.junit.functional.DatabaseSpecificFunctionalTestCase;
 import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.id.enhanced.SequenceStyleGenerator;
-import org.hibernate.id.enhanced.TableStructure;
-import org.hibernate.id.enhanced.OptimizerFactory;
-import org.hibernate.Session;
+
+import static org.hibernate.id.IdentifierGeneratorHelper.BasicHolder;
 
 /**
  * {@inheritDoc}
@@ -54,7 +56,7 @@ public class BasicForcedTableSequenceTest extends DatabaseSpecificFunctionalTest
 			long expectedId = i + 1;
 			assertEquals( expectedId, entities[i].getId().longValue() );
 			assertEquals( expectedId, generator.getDatabaseStructure().getTimesAccessed() );
-			assertEquals( expectedId, generator.getOptimizer().getLastSourceValue() );
+			assertEquals( expectedId, ( (BasicHolder) generator.getOptimizer().getLastSourceValue() ).getActualLongValue() );
 		}
 		s.getTransaction().commit();
 

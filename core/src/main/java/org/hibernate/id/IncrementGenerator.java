@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,7 +20,6 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.id;
 
@@ -53,20 +52,21 @@ import org.hibernate.util.StringHelper;
  * (The tables parameter specified a comma-separated list of table names.)
  *
  * @author Gavin King
+ * @author Steve Ebersole
  */
 public class IncrementGenerator implements IdentifierGenerator, Configurable {
-
 	private static final Logger log = LoggerFactory.getLogger(IncrementGenerator.class);
 
-	private long next;
-	private String sql;
 	private Class returnClass;
+	private String sql;
+
+	private IntegralDataTypeHolder previousValueHolder;
 
 	public synchronized Serializable generate(SessionImplementor session, Object object) throws HibernateException {
 		if ( sql != null ) {
-			getNext( session );
+			initializePreviousValueHolder( session );
 		}
-		return IdentifierGeneratorHelper.createNumber( next++, returnClass );
+		return previousValueHolder.makeValueThenIncrement();
 	}
 
 	public void configure(Type type, Properties params, Dialect dialect) throws MappingException {
@@ -117,22 +117,23 @@ public class IncrementGenerator implements IdentifierGenerator, Configurable {
 		sql = "select max(" + column + ") from " + buf.toString();
 	}
 
-	private void getNext( SessionImplementor session ) {
+	private void initializePreviousValueHolder(SessionImplementor session) {
+		previousValueHolder = IdentifierGeneratorHelper.getIntegralDataTypeHolder( returnClass );
+
 		log.debug( "fetching initial value: " + sql );
 		try {
-			PreparedStatement st = session.getBatcher().prepareSelectStatement(sql);
+			PreparedStatement st = session.getBatcher().prepareSelectStatement( sql );
 			try {
 				ResultSet rs = st.executeQuery();
 				try {
 					if ( rs.next() ) {
-						next = rs.getLong(1) + 1;
-						if ( rs.wasNull() ) next = 1;
+						previousValueHolder.initialize( rs, 0L ).increment();
 					}
 					else {
-						next = 1;
+						previousValueHolder.initialize( 1L );
 					}
-					sql=null;
-					log.debug("first free id: " + next);
+					sql = null;
+					log.debug( "first free id: " + previousValueHolder.makeValue() );
 				}
 				finally {
 					rs.close();
@@ -141,7 +142,6 @@ public class IncrementGenerator implements IdentifierGenerator, Configurable {
 			finally {
 				session.getBatcher().closeStatement(st);
 			}
-			
 		}
 		catch (SQLException sqle) {
 			throw JDBCExceptionHelper.convert(

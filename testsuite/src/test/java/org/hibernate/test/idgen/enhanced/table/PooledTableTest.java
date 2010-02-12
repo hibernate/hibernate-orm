@@ -9,6 +9,8 @@ import org.hibernate.id.enhanced.OptimizerFactory;
 import org.hibernate.id.enhanced.TableGenerator;
 import org.hibernate.Session;
 
+import static org.hibernate.id.IdentifierGeneratorHelper.BasicHolder;
+
 /**
  * {@inheritDoc}
  *
@@ -42,16 +44,16 @@ public class PooledTableTest extends FunctionalTestCase {
 			entities[i] = new Entity( "" + ( i + 1 ) );
 			s.save( entities[i] );
 			assertEquals( 2, generator.getTableAccessCount() ); // initialization calls seq twice
-			assertEquals( increment + 1, optimizer.getLastSourceValue() ); // initialization calls seq twice
-			assertEquals( i + 1, optimizer.getLastValue() );
-			assertEquals( increment + 1, optimizer.getLastSourceValue() );
+			assertEquals( increment + 1, ( (BasicHolder) optimizer.getLastSourceValue() ).getActualLongValue() ); // initialization calls seq twice
+			assertEquals( i + 1, ( (BasicHolder) optimizer.getLastValue() ).getActualLongValue() );
+			assertEquals( increment + 1, ( (BasicHolder) optimizer.getLastSourceValue() ).getActualLongValue() );
 		}
 		// now force a "clock over"
 		entities[ increment ] = new Entity( "" + increment );
 		s.save( entities[ increment ] );
 		assertEquals( 3, generator.getTableAccessCount() ); // initialization (2) + clock over
-		assertEquals( ( increment * 2 ) + 1, optimizer.getLastSourceValue() ); // initialization (2) + clock over
-		assertEquals( increment + 1, optimizer.getLastValue() );
+		assertEquals( ( increment * 2 ) + 1, ( (BasicHolder) optimizer.getLastSourceValue() ).getActualLongValue() ); // initialization (2) + clock over
+		assertEquals( increment + 1, ( (BasicHolder) optimizer.getLastValue() ).getActualLongValue() );
 		s.getTransaction().commit();
 
 		s.beginTransaction();

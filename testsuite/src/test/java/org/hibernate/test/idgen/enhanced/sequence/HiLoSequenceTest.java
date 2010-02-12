@@ -9,6 +9,9 @@ import org.hibernate.id.enhanced.OptimizerFactory;
 import org.hibernate.id.enhanced.SequenceStyleGenerator;
 import org.hibernate.persister.entity.EntityPersister;
 
+import static org.hibernate.id.IdentifierGeneratorHelper.BasicHolder;
+
+
 /**
  * {@inheritDoc}
  *
@@ -42,17 +45,17 @@ public class HiLoSequenceTest extends FunctionalTestCase {
 			entities[i] = new Entity( "" + ( i + 1 ) );
 			s.save( entities[i] );
 			assertEquals( 1, generator.getDatabaseStructure().getTimesAccessed() ); // initialization
-			assertEquals( 1, optimizer.getLastSourceValue() ); // initialization
-			assertEquals( i + 1, optimizer.getLastValue() );
-			assertEquals( increment + 1, optimizer.getHiValue() );
+			assertEquals( 1, ( (BasicHolder) optimizer.getLastSourceValue() ).getActualLongValue() ); // initialization
+			assertEquals( i + 1, ( (BasicHolder) optimizer.getLastValue() ).getActualLongValue() );
+			assertEquals( increment + 1, ( (BasicHolder) optimizer.getHiValue() ).getActualLongValue() );
 		}
 		// now force a "clock over"
 		entities[ increment ] = new Entity( "" + increment );
 		s.save( entities[ increment ] );
 		assertEquals( 2, generator.getDatabaseStructure().getTimesAccessed() ); // initialization
-		assertEquals( 2, optimizer.getLastSourceValue() ); // initialization
-		assertEquals( increment + 1, optimizer.getLastValue() );
-		assertEquals( ( increment * 2 ) + 1, optimizer.getHiValue() );
+		assertEquals( 2, ( (BasicHolder) optimizer.getLastSourceValue() ).getActualLongValue() ); // initialization
+		assertEquals( increment + 1, ( (BasicHolder) optimizer.getLastValue() ).getActualLongValue() );
+		assertEquals( ( increment * 2 ) + 1, ( (BasicHolder) optimizer.getHiValue() ).getActualLongValue() );
 
 		s.getTransaction().commit();
 

@@ -91,7 +91,9 @@ public class VersionValue {
 			}
 		}
 		public Object getDefaultValue(Object currentValue) {
-			return IdentifierGeneratorHelper.createNumber( -1l, currentValue.getClass() );
+			return IdentifierGeneratorHelper.getIntegralDataTypeHolder( currentValue.getClass() )
+					.initialize( -1L )
+					.makeValue();
 		}
 		public String toString() {
 			return "VERSION_NEGATIVE";

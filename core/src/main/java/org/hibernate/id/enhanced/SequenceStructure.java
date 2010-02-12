@@ -35,6 +35,8 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.exception.JDBCExceptionHelper;
 import org.hibernate.HibernateException;
+import org.hibernate.id.IdentifierGeneratorHelper;
+import org.hibernate.id.IntegralDataTypeHolder;
 
 /**
  * Describes a sequence.
@@ -47,14 +49,21 @@ public class SequenceStructure implements DatabaseStructure {
 	private final String sequenceName;
 	private final int initialValue;
 	private final int incrementSize;
+	private final Class numberType;
 	private final String sql;
 	private boolean applyIncrementSizeToSourceValues;
 	private int accessCounter;
 
-	public SequenceStructure(Dialect dialect, String sequenceName, int initialValue, int incrementSize) {
+	public SequenceStructure(
+			Dialect dialect,
+			String sequenceName,
+			int initialValue,
+			int incrementSize,
+			Class numberType) {
 		this.sequenceName = sequenceName;
 		this.initialValue = initialValue;
 		this.incrementSize = incrementSize;
+		this.numberType = numberType;
 		sql = dialect.getSequenceNextValString( sequenceName );
 	}
 
@@ -91,7 +100,7 @@ public class SequenceStructure implements DatabaseStructure {
 	 */
 	public AccessCallback buildCallback(final SessionImplementor session) {
 		return new AccessCallback() {
-			public long getNextValue() {
+			public IntegralDataTypeHolder getNextValue() {
 				accessCounter++;
 				try {
 					PreparedStatement st = session.getBatcher().prepareSelectStatement( sql );
@@ -99,11 +108,12 @@ public class SequenceStructure implements DatabaseStructure {
 						ResultSet rs = st.executeQuery();
 						try {
 							rs.next();
-							long result = rs.getLong( 1 );
+							IntegralDataTypeHolder value = IdentifierGeneratorHelper.getIntegralDataTypeHolder( numberType );
+							value.initialize( rs, 1 );
 							if ( log.isDebugEnabled() ) {
-								log.debug("Sequence identifier generated: " + result);
+								log.debug( "Sequence value obtained: " + value.makeValue() );
 							}
-							return result;
+							return value;
 						}
 						finally {
 							try {

@@ -50,17 +50,21 @@ import org.hibernate.util.PropertiesHelper;
  * table to store the last generated value. It is not
  * intended that applications use this strategy directly.
  * However, it may be used to build other (efficient)
- * strategies. The returned type is <tt>Integer</tt>.<br>
- * <br>
- * The hi value MUST be fetched in a seperate transaction
- * to the <tt>Session</tt> transaction so the generator must
- * be able to obtain a new connection and commit it. Hence
- * this implementation may not be used when Hibernate is
- * fetching connections  when the user is supplying
- * connections.<br>
- * <br>
- * The returned value is of type <tt>integer</tt>.<br>
- * <br>
+ * strategies. The returned type is any supported by
+ * {@link IntegralDataTypeHolder}
+ * <p/>
+ * The value MUST be fetched in a separate transaction
+ * from that of the main {@link SessionImplementor session}
+ * transaction so the generator must be able to obtain a new
+ * connection and commit it. Hence this implementation may only
+ * be used when Hibernate is fetching connections, not when the
+ * user is supplying connections.
+ * <p/>
+ * Again, the return types supported here are any of the ones
+ * supported by {@link IntegralDataTypeHolder}.  This is new
+ * as of 3.5.  Prior to that this generator only returned {@link Integer}
+ * values.
+ * <p/>
  * Mapping parameters supported: table, column
  *
  * @see TableHiLoGenerator
@@ -83,12 +87,15 @@ public class TableGenerator extends TransactionHelper
 
 	private static final Logger log = LoggerFactory.getLogger(TableGenerator.class);
 
+	private Type identifierType;
 	private String tableName;
 	private String columnName;
 	private String query;
 	private String update;
 
 	public void configure(Type type, Properties params, Dialect dialect) {
+		identifierType = type;
+
 		ObjectNameNormalizer normalizer = ( ObjectNameNormalizer ) params.get( IDENTIFIER_NORMALIZER );
 
 		tableName = PropertiesHelper.getString( TABLE, params, DEFAULT_TABLE_NAME );
@@ -127,12 +134,13 @@ public class TableGenerator extends TransactionHelper
 			" = ?";
 	}
 
-	public synchronized Serializable generate(SessionImplementor session, Object object)
-		throws HibernateException {
-		int result = ( (Integer) doWorkInNewTransaction(session) ).intValue();
-		return new Integer(result);
+	public synchronized Serializable generate(SessionImplementor session, Object object) {
+		return generateHolder( session ).makeValue();
 	}
 
+	protected IntegralDataTypeHolder generateHolder(SessionImplementor session) {
+		return (IntegralDataTypeHolder) doWorkInNewTransaction( session );
+	}
 
 	public String[] sqlCreateStrings(Dialect dialect) throws HibernateException {
 		return new String[] {
@@ -157,8 +165,19 @@ public class TableGenerator extends TransactionHelper
 		return tableName;
 	}
 
+	/**
+	 * Get the next value.
+	 *
+	 * @param conn The sql connection to use.
+	 * @param sql n/a
+	 *
+	 * @return Prior to 3.5 this method returned an {@link Integer}.  Since 3.5 it now
+	 * returns a {@link IntegralDataTypeHolder}
+	 *
+	 * @throws SQLException
+	 */
 	public Serializable doWorkInCurrentTransaction(Connection conn, String sql) throws SQLException {
-		int result;
+		IntegralDataTypeHolder value = buildHolder();
 		int rows;
 		do {
 			// The loop ensures atomicity of the
@@ -175,7 +194,7 @@ public class TableGenerator extends TransactionHelper
 					log.error(err);
 					throw new IdentifierGenerationException(err);
 				}
-				result = rs.getInt(1);
+				value.initialize( rs, 1 );
 				rs.close();
 			}
 			catch (SQLException sqle) {
@@ -190,8 +209,8 @@ public class TableGenerator extends TransactionHelper
 			SQL_STATEMENT_LOGGER.logStatement( sql, FormatStyle.BASIC );
 			PreparedStatement ups = conn.prepareStatement(update);
 			try {
-				ups.setInt( 1, result + 1 );
-				ups.setInt( 2, result );
+				value.copy().increment().bind( ups, 1 );
+				value.bind( ups, 2 );
 				rows = ups.executeUpdate();
 			}
 			catch (SQLException sqle) {
@@ -203,6 +222,10 @@ public class TableGenerator extends TransactionHelper
 			}
 		}
 		while (rows==0);
-		return new Integer(result);
+		return value;
+	}
+
+	protected IntegralDataTypeHolder buildHolder() {
+		return IdentifierGeneratorHelper.getIntegralDataTypeHolder( identifierType.getReturnedClass() );
 	}
 }

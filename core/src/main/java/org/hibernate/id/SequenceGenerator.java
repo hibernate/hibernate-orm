@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,7 +20,6 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.id;
 
@@ -98,19 +97,19 @@ public class SequenceGenerator implements PersistentIdentifierGenerator, Configu
 		sql = dialect.getSequenceNextValString( sequenceName );
 	}
 
-	public Serializable generate(SessionImplementor session, Object obj) 
-	throws HibernateException {
-		
-		try {
+	public Serializable generate(SessionImplementor session, Object obj) {
+		return generateHolder( session ).makeValue();
+	}
 
+	protected IntegralDataTypeHolder generateHolder(SessionImplementor session) {
+		try {
 			PreparedStatement st = session.getBatcher().prepareSelectStatement(sql);
 			try {
 				ResultSet rs = st.executeQuery();
 				try {
 					rs.next();
-					Serializable result = IdentifierGeneratorHelper.get(
-							rs, identifierType
-						);
+					IntegralDataTypeHolder result = buildHolder();
+					result.initialize( rs, 1 );
 					if ( log.isDebugEnabled() ) {
 						log.debug("Sequence identifier generated: " + result);
 					}
@@ -123,7 +122,7 @@ public class SequenceGenerator implements PersistentIdentifierGenerator, Configu
 			finally {
 				session.getBatcher().closeStatement(st);
 			}
-			
+
 		}
 		catch (SQLException sqle) {
 			throw JDBCExceptionHelper.convert(
@@ -131,9 +130,12 @@ public class SequenceGenerator implements PersistentIdentifierGenerator, Configu
 					sqle,
 					"could not get next sequence value",
 					sql
-				);
+			);
 		}
+	}
 
+	protected IntegralDataTypeHolder buildHolder() {
+		return IdentifierGeneratorHelper.getIntegralDataTypeHolder( identifierType.getReturnedClass() );
 	}
 
 	public String[] sqlCreateStrings(Dialect dialect) throws HibernateException {

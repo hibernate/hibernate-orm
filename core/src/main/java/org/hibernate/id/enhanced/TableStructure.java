@@ -40,6 +40,8 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.engine.TransactionHelper;
 import org.hibernate.id.IdentifierGenerationException;
+import org.hibernate.id.IdentifierGeneratorHelper;
+import org.hibernate.id.IntegralDataTypeHolder;
 import org.hibernate.jdbc.util.FormatStyle;
 import org.hibernate.jdbc.util.SQLStatementLogger;
 
@@ -56,17 +58,25 @@ public class TableStructure extends TransactionHelper implements DatabaseStructu
 	private final String valueColumnName;
 	private final int initialValue;
 	private final int incrementSize;
+	private final Class numberType;
 	private final String selectQuery;
 	private final String updateQuery;
 
 	private boolean applyIncrementSizeToSourceValues;
 	private int accessCounter;
 
-	public TableStructure(Dialect dialect, String tableName, String valueColumnName, int initialValue, int incrementSize) {
+	public TableStructure(
+			Dialect dialect,
+			String tableName,
+			String valueColumnName,
+			int initialValue,
+			int incrementSize,
+			Class numberType) {
 		this.tableName = tableName;
 		this.initialValue = initialValue;
 		this.incrementSize = incrementSize;
 		this.valueColumnName = valueColumnName;
+		this.numberType = numberType;
 
 		selectQuery = "select " + valueColumnName + " as id_val" +
 				" from " + dialect.appendLockHint( LockMode.PESSIMISTIC_WRITE, tableName ) +
@@ -117,8 +127,8 @@ public class TableStructure extends TransactionHelper implements DatabaseStructu
 	 */
 	public AccessCallback buildCallback(final SessionImplementor session) {
 		return new AccessCallback() {
-			public long getNextValue() {
-				return ( ( Number ) doWorkInNewTransaction( session ) ).longValue();
+			public IntegralDataTypeHolder getNextValue() {
+				return ( IntegralDataTypeHolder ) doWorkInNewTransaction( session );
 			}
 		};
 	}
@@ -152,7 +162,7 @@ public class TableStructure extends TransactionHelper implements DatabaseStructu
 	 * {@inheritDoc}
 	 */
 	protected Serializable doWorkInCurrentTransaction(Connection conn, String sql) throws SQLException {
-		long result;
+		IntegralDataTypeHolder value = IdentifierGeneratorHelper.getIntegralDataTypeHolder( numberType );
 		int rows;
 		do {
 			SQL_STATEMENT_LOGGER.logStatement( selectQuery, FormatStyle.BASIC );
@@ -164,7 +174,7 @@ public class TableStructure extends TransactionHelper implements DatabaseStructu
 					log.error( err );
 					throw new IdentifierGenerationException( err );
 				}
-				result = selectRS.getLong( 1 );
+				value.initialize( selectRS, 1 );
 				selectRS.close();
 			}
 			catch ( SQLException sqle ) {
@@ -178,9 +188,10 @@ public class TableStructure extends TransactionHelper implements DatabaseStructu
 			SQL_STATEMENT_LOGGER.logStatement( updateQuery, FormatStyle.BASIC );
 			PreparedStatement updatePS = conn.prepareStatement( updateQuery );
 			try {
-				int increment = applyIncrementSizeToSourceValues ? incrementSize : 1;
-				updatePS.setLong( 1, result + increment );
-				updatePS.setLong( 2, result );
+				final int increment = applyIncrementSizeToSourceValues ? incrementSize : 1;
+				final IntegralDataTypeHolder updateValue = value.copy().add( increment );
+				updateValue.bind( updatePS, 1 );
+				value.bind( updatePS, 2 );
 				rows = updatePS.executeUpdate();
 			}
 			catch ( SQLException sqle ) {
@@ -194,7 +205,7 @@ public class TableStructure extends TransactionHelper implements DatabaseStructu
 
 		accessCounter++;
 
-		return new Long( result );
+		return value;
 	}
 
 }

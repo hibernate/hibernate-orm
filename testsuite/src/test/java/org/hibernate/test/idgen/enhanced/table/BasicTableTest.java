@@ -8,6 +8,8 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.id.enhanced.TableGenerator;
 import org.hibernate.Session;
 
+import static org.hibernate.id.IdentifierGeneratorHelper.BasicHolder;
+
 /**
  * {@inheritDoc}
  *
@@ -41,7 +43,7 @@ public class BasicTableTest extends FunctionalTestCase {
 			long expectedId = i + 1;
 			assertEquals( expectedId, entities[i].getId().longValue() );
 			assertEquals( expectedId, generator.getTableAccessCount() );
-			assertEquals( expectedId, generator.getOptimizer().getLastSourceValue() );
+			assertEquals( expectedId, ( (BasicHolder) generator.getOptimizer().getLastSourceValue() ).getActualLongValue() );
 		}
 		s.getTransaction().commit();
 

@@ -39,6 +39,8 @@ import org.slf4j.LoggerFactory;
 
 import org.hibernate.engine.TransactionHelper;
 import org.hibernate.engine.SessionImplementor;
+import org.hibernate.id.IdentifierGeneratorHelper;
+import org.hibernate.id.IntegralDataTypeHolder;
 import org.hibernate.id.PersistentIdentifierGenerator;
 import org.hibernate.id.Configurable;
 import org.hibernate.type.Type;
@@ -287,7 +289,7 @@ public class TableGenerator extends TransactionHelper implements PersistentIdent
 	public void configure(Type type, Properties params, Dialect dialect) throws MappingException {
 		identifierType = type;
 
-		tableName = determneGeneratorTableName( params, dialect );
+		tableName = determineGeneratorTableName( params, dialect );
 		segmentColumnName = determineSegmentColumnName( params, dialect );
 		valueColumnName = determineValueColumnName( params, dialect );
 
@@ -316,7 +318,7 @@ public class TableGenerator extends TransactionHelper implements PersistentIdent
 	 * @param dialect The dialect in effect
 	 * @return The table name to use.
 	 */
-	protected String determneGeneratorTableName(Properties params, Dialect dialect) {
+	protected String determineGeneratorTableName(Properties params, Dialect dialect) {
 		String name = PropertiesHelper.getString( TABLE_PARAM, params, DEF_TABLE );
 		boolean isGivenNameUnqualified = name.indexOf( '.' ) < 0;
 		if ( isGivenNameUnqualified ) {
@@ -450,8 +452,8 @@ public class TableGenerator extends TransactionHelper implements PersistentIdent
 	public synchronized Serializable generate(final SessionImplementor session, Object obj) {
 		return optimizer.generate(
 				new AccessCallback() {
-					public long getNextValue() {
-						return ( ( Number ) doWorkInNewTransaction( session ) ).longValue();
+					public IntegralDataTypeHolder getNextValue() {
+						return ( IntegralDataTypeHolder ) doWorkInNewTransaction( session );
 					}
 				}
 		);
@@ -461,7 +463,7 @@ public class TableGenerator extends TransactionHelper implements PersistentIdent
 	 * {@inheritDoc}
 	 */
 	public Serializable doWorkInCurrentTransaction(Connection conn, String sql) throws SQLException {
-		int result;
+		IntegralDataTypeHolder value = IdentifierGeneratorHelper.getIntegralDataTypeHolder( identifierType.getReturnedClass() );
 		int rows;
 		do {
 			SQL_STATEMENT_LOGGER.logStatement( selectQuery, FormatStyle.BASIC );
@@ -470,13 +472,13 @@ public class TableGenerator extends TransactionHelper implements PersistentIdent
 				selectPS.setString( 1, segmentValue );
 				ResultSet selectRS = selectPS.executeQuery();
 				if ( !selectRS.next() ) {
+					value.initialize( initialValue );
 					PreparedStatement insertPS = null;
 					try {
-						result = initialValue;
 						SQL_STATEMENT_LOGGER.logStatement( insertQuery, FormatStyle.BASIC );
 						insertPS = conn.prepareStatement( insertQuery );
 						insertPS.setString( 1, segmentValue );
-						insertPS.setLong( 2, result );
+						value.bind( insertPS, 2 );
 						insertPS.execute();
 					}
 					finally {
@@ -486,7 +488,7 @@ public class TableGenerator extends TransactionHelper implements PersistentIdent
 					}
 				}
 				else {
-					result = selectRS.getInt( 1 );
+					value.initialize( selectRS, 1 );
 				}
 				selectRS.close();
 			}
@@ -501,10 +503,15 @@ public class TableGenerator extends TransactionHelper implements PersistentIdent
 			SQL_STATEMENT_LOGGER.logStatement( updateQuery, FormatStyle.BASIC );
 			PreparedStatement updatePS = conn.prepareStatement( updateQuery );
 			try {
-				long newValue = optimizer.applyIncrementSizeToSourceValues()
-						? result + incrementSize : result + 1;
-				updatePS.setLong( 1, newValue );
-				updatePS.setLong( 2, result );
+				final IntegralDataTypeHolder updateValue = value.copy();
+				if ( optimizer.applyIncrementSizeToSourceValues() ) {
+					updateValue.add( incrementSize );
+				}
+				else {
+					updateValue.increment();
+				}
+				updateValue.bind( updatePS, 1 );
+				value.bind( updatePS, 2 );
 				updatePS.setString( 3, segmentValue );
 				rows = updatePS.executeUpdate();
 			}
@@ -520,7 +527,7 @@ public class TableGenerator extends TransactionHelper implements PersistentIdent
 
 		accessCount++;
 
-		return new Integer( result );
+		return value;
 	}
 
 	/**

@@ -443,7 +443,8 @@ public class TableBinder {
 						for (Ejb3JoinColumn joinCol : columns) {
 							String referencedColumn = joinCol.getReferencedColumn();
 							referencedColumn = mappings.getPhysicalColumnName( referencedColumn, table );
-							if ( referencedColumn.equals( col.getName() ) ) {
+							//In JPA 2 referencedColumnName is case insensitive
+							if ( referencedColumn.equalsIgnoreCase( col.getName() ) ) {
 								//proper join column
 								if ( joinCol.isNameDeferred() ) {
 									joinCol.linkValueUsingDefaultColumnNaming(

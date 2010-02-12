@@ -564,7 +564,7 @@ public class Ejb3JoinColumn extends Ejb3Column {
 		for (Ejb3JoinColumn ejb3Column : columns) {
 			String logicalReferencedColumnName = ejb3Column.getReferencedColumn();
 			if ( StringHelper.isNotEmpty( logicalReferencedColumnName ) ) {
-				String referencedColumnName = null;
+				String referencedColumnName;
 				try {
 					referencedColumnName = mappings.getPhysicalColumnName( logicalReferencedColumnName, matchingTable );
 				}

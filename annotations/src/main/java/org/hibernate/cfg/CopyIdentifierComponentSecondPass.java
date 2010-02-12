@@ -54,7 +54,8 @@ public class CopyIdentifierComponentSecondPass implements SecondPass {
 			if ( referencedColumnName == null || BinderHelper.isDefault( referencedColumnName ) ) {
 				break;
 			}
-			columnByReferencedName.put( referencedColumnName, joinColumn );
+			//JPA 2 requires referencedColumnNames to be case insensitive
+			columnByReferencedName.put( referencedColumnName.toLowerCase(), joinColumn );
 		}
 		//try default column orientation
 		int index = 0;
@@ -103,7 +104,8 @@ public class CopyIdentifierComponentSecondPass implements SecondPass {
 						if ( isExplicitReference ) {
 							final String columnName = column.getName();
 							logicalColumnName = mappings.getLogicalColumnName( columnName, referencedPersistentClass.getTable() );
-							joinColumn = columnByReferencedName.get( logicalColumnName );
+							//JPA 2 requires referencedColumnNames to be case insensitive
+							joinColumn = columnByReferencedName.get( logicalColumnName.toLowerCase() );
 						}
 						else {
 							joinColumn = columnByReferencedName.get( "" + index );

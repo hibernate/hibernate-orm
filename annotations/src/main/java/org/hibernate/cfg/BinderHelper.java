@@ -275,7 +275,7 @@ public class BinderHelper {
 		List<Property> orderedProperties = new ArrayList<Property>();
 		for (Column column : orderedColumns) {
 			boolean found = false;
-			for (Property property : columnsToProperty.get( column )) {
+			for (Property property : columnsToProperty.get( column ) ) {
 				if ( property.getColumnSpan() == 1 ) {
 					orderedProperties.add( property );
 					found = true;
@@ -439,7 +439,7 @@ public class BinderHelper {
 			return persistentClass; //shortcut for implicit referenced column names
 		}
 		PersistentClass current = persistentClass;
-		Object result = null;
+		Object result;
 		boolean found = false;
 		do {
 			result = current;

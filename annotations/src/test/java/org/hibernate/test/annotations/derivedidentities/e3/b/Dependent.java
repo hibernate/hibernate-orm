@@ -22,7 +22,7 @@ public class Dependent {
 
 	@MapsId("empPK")
 	@JoinColumns({
-			@JoinColumn(name = "FK1", referencedColumnName = "firstName"),
+			@JoinColumn(name = "FK1", referencedColumnName = "FIRSTNAME"),
 			@JoinColumn(name = "FK2", referencedColumnName = "lastName")
 	})
 	@ManyToOne

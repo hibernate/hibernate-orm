@@ -61,12 +61,12 @@ public final class IdMetadataGenerator {
             Property property = properties.next();
             Type propertyType = property.getType();
             if (!"_identifierMapper".equals(property.getName())) {
-                if (!propertyType.isMutable()) {
-                    // Last but one parameter: ids are always insertable
-                    mainGenerator.getBasicMetadataGenerator().addBasic(parent,
-                            getIdPersistentPropertyAuditingData(property),
-                            property.getValue(), mapper, true, key);
-                } else {
+                // Last but one parameter: ids are always insertable
+                boolean added =  mainGenerator.getBasicMetadataGenerator().addBasic(parent,
+                        getIdPersistentPropertyAuditingData(property),
+                        property.getValue(), mapper, true, key);
+
+                if (!added) {
                     throw new MappingException("Type not supported: " + propertyType.getClass().getName());
                 }
             }

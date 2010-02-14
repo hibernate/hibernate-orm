@@ -102,7 +102,7 @@ em.find( Cat.class, new Long(catId) );</programlisting>
     <para>In some cases, you don't really want to load the object state, but
     just having a reference to it (ie a proxy). You can get this reference
     using the <literal>getReference()</literal> method. This is especially
-    useful to link a child to its parent wo having to load the parent.</para>
+    useful to link a child to its parent without having to load the parent.</para>
 
     <programlisting>child = new Child();
 child.SetName("Henry");

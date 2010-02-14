@@ -194,7 +194,7 @@
       view of the application user, and implement it using an extended
       persistence context. Please refer to the Hibernate reference manual or
       the book Hibernate In Action for more information about this pattern.
-      JBoss Seam is a framework tht link together JSF and EJB3 around the
+      JBoss Seam is a framework that link together JSF and EJB3 around the
       notion of conversation and unit of work. For an application-managed
       entity manager the persistence context is created when the entity
       manager is created and kept until the entity manager is closed. In an

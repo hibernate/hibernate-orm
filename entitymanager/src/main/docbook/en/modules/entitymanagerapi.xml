@@ -310,7 +310,7 @@ item = (Item) q.getSingleResult(); //from a class columns names match the mappin
 
         <note>
           <para>For more information about scalar support in named queries,
-          please refers to the Hibenate Annotations documentation</para>
+          please refers to the Hibernate Annotations documentation</para>
         </note>
       </section>
 

@@ -236,15 +236,6 @@
                         <descriptor>src/main/assembly/dist.xml</descriptor>
                     </descriptors>
                 </configuration>
-                <executions>
-                    <execution>
-                        <id>make-assembly</id>
-                        <phase>site</phase>
-                        <goals>
-                            <goal>assembly</goal>
-                        </goals>
-                    </execution>
-                </executions>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -254,7 +245,7 @@
                     <autoVersionSubmodules>true</autoVersionSubmodules>
                     <allowTimestampedSnapshots>true</allowTimestampedSnapshots>
                     <remoteTagging>true</remoteTagging>
-                    <goals>package deploy</goals>
+                    <goals>package deploy javadoc:javadoc org.jboss.maven.plugins:maven-jdocbook-plugin:2.2.0:resources org.jboss.maven.plugins:maven-jdocbook-plugin:2.2.0:generate assembly:assembly</goals>
                 </configuration>
             </plugin>
             <plugin>

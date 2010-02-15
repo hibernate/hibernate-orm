@@ -22,7 +22,6 @@
     <id>dist</id>
     <formats>
         <format>tar.gz</format>
-        <format>tar.bz2</format>
         <format>zip</format>
     </formats>
 
@@ -33,22 +32,6 @@
             <scope>runtime</scope>
         </dependencySet>
     </dependencySets>
-
-    <files>
-        <file>
-            <source>readme.txt</source>
-            <outputDirectory>/</outputDirectory>
-            <filtered>true</filtered>
-        </file>
-        <file>
-            <source>license.txt</source>
-            <outputDirectory>/</outputDirectory>
-        </file>
-        <file>
-            <source>issues.txt</source>
-            <outputDirectory>/</outputDirectory>
-        </file>
-    </files>
 
     <fileSets>
         <fileSet>
@@ -67,15 +50,16 @@
             <outputDirectory>docs/api</outputDirectory>
         </fileSet>
         <fileSet>
+            <directory>target/docbook/publish</directory>
+            <outputDirectory>docs/reference</outputDirectory>
+        </fileSet>
+        <fileSet>
             <directory>.</directory>
             <outputDirectory/>
             <useDefaultExcludes>true</useDefaultExcludes>
             <excludes>
-                <exclude>*.txt</exclude>
                 <exclude>**/target/**</exclude>
-                <exclude>*.iml</exclude>
             </excludes>
         </fileSet>
     </fileSets>
-
 </assembly>

@@ -5,9 +5,10 @@
                  xsi:schemaLocation="http://java.sun.com/xml/ns/persistence/orm orm_2_0.xsd"
                  version="2.0"
         >
+    <package>org.hibernate.jpamodelgen.test.elementcollection</package>
     <entity class="org.hibernate.jpamodelgen.test.elementcollection.Hostel">
         <attributes>
-            <one-to-many name="cleaners" target-entity="org.hibernate.jpamodelgen.test.elementcollection.Cleaner">
+            <one-to-many name="cleaners" target-entity="Cleaner">
                 <map-key-class class="org.hibernate.jpamodelgen.test.elementcollection.Room"/>
             </one-to-many>
             <element-collection name="roomsByName"

@@ -29,12 +29,12 @@ public class StringUtil {
 	private StringUtil() {
 	}
 
-	public static String determineFullyQualifiedClassName(String packageName, String name) {
+	public static String determineFullyQualifiedClassName(String defaultPackage, String name) {
 		if ( isFullyQualified( name ) ) {
 			return name;
 		}
 		else {
-			return packageName + NAME_SEPARATOR + name;
+			return defaultPackage + NAME_SEPARATOR + name;
 		}
 	}
 

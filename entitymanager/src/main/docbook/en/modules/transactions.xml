@@ -110,7 +110,7 @@
       injected (or looked up) entity managers share the same persistence
       context for a particular JTA transaction. The beauty of EJB3 is that you
       don't have to care about that anymore and just see data access through
-      entity manager and demaraction of transaction scope on session beans as
+      entity manager and demarcation of transaction scope on session beans as
       completely orthogonal.</para>
 
       <para>The challenge is the implementation of this (and other) behavior
@@ -371,7 +371,7 @@
   <sect1 id="transactions-demarcation">
     <title>Database transaction demarcation</title>
 
-    <para>Datatabase (or system) transaction boundaries are always necessary.
+    <para>Database (or system) transaction boundaries are always necessary.
     No communication with the database can occur outside of a database
     transaction (this seems to confuse many developers who are used to the
     auto-commit mode). Always use clear transaction boundaries, even for
@@ -581,7 +581,7 @@ finally {
       <literal>iterate()</literal>. You <emphasis>must</emphasis> release the
       underlying database cursor by calling
       <literal>ScrollableResults.close()</literal> or
-      <literal>Hibernate.close(Iterator)</literal> explicity from a
+      <literal>Hibernate.close(Iterator)</literal> explicitly from a
       <literal>finally</literal> block. (Of course, most applications can
       easily avoid using <literal>scroll()</literal> or
       <literal>iterate()</literal> at all from the CMT code.)</para>
@@ -638,8 +638,8 @@ finally {
 
       <para>Hibernate wraps <literal>SQLException</literal>s thrown while
       interacting with the database in a <literal>JDBCException</literal>. In
-      fact, Hibernate will attempt to convert the eexception into a more
-      meningful subclass of <literal>JDBCException</literal>. The underlying
+      fact, Hibernate will attempt to convert the exception into a more
+      meaningful subclass of <literal>JDBCException</literal>. The underlying
       <literal>SQLException</literal> is always available via
       <literal>JDBCException.getCause()</literal>. Hibernate converts the
       <literal>SQLException</literal> into an appropriate
@@ -724,9 +724,9 @@ finally {
       intermediate conversation work will be processed in methods not
       involving transaction. The end of the conversation will be processed
       inside a <literal>JTA</literal> transaction. Hence all queued operations
-      will be executed to the database and commited. If you are interested in
+      will be executed to the database and committed. If you are interested in
       the notion of conversation inside your application, have a look at JBoss
-      Seam. Jboss Seam emphasizes the concept of conversation and entity
+      Seam. JBoss Seam emphasizes the concept of conversation and entity
       manager lifecycle and bind EJB3 and JSF together.</para>
     </sect2>
 
@@ -811,7 +811,7 @@ em.close();</programlisting>
 
       <para>Clearly, manual version checking is only feasible in very trivial
       circumstances and not practical for most applications. Often not only
-      single instances, but complete graphs of modified ojects have to be
+      single instances, but complete graphs of modified objects have to be
       checked. Hibernate offers automatic version checking with either
       detached instances or an extended entity manager and persistence context
       as the design paradigm.</para>

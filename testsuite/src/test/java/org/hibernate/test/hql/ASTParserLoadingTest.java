@@ -106,6 +106,20 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 		return new FunctionalTestClassTestSuite( ASTParserLoadingTest.class );
 	}
 
+	public void testJpaTypeOperator() {
+		// just checking syntax here...
+		Session s = openSession();
+		s.beginTransaction();
+
+		// control
+		s.createQuery( "from Animal a where a.class = Dog" ).list();
+
+		s.createQuery( "from Animal a where type(a) = Dog" ).list();
+
+		s.getTransaction().commit();
+		s.close();
+	}
+
 	public void testComponentJoins() {
 		Session s = openSession();
 		s.beginTransaction();

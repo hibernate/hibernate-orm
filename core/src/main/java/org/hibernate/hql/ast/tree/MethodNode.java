@@ -63,12 +63,34 @@ public class MethodNode extends AbstractSelectExpression implements SelectExpres
 		AST exprList = name.getNextSibling();
 		// If the expression list has exactly one expression, and the type of the expression is a collection
 		// then this might be a collection function, such as index(c) or size(c).
-		if ( ASTUtil.hasExactlyOneChild( exprList ) && isCollectionPropertyMethod() ) {
-			collectionProperty( exprList.getFirstChild(), name );
+		if ( ASTUtil.hasExactlyOneChild( exprList ) ) {
+			if ( "type".equals( methodName ) ) {
+				typeDiscriminator( exprList.getFirstChild() );
+				return;
+			}
+			if ( isCollectionPropertyMethod() ) {
+				collectionProperty( exprList.getFirstChild(), name );
+				return;
+			}
 		}
-		else {
-			dialectFunction( exprList );
+
+		dialectFunction( exprList );
+	}
+
+	private void typeDiscriminator(AST path) throws SemanticException {
+		if ( path == null ) {
+			throw new SemanticException( "type() discriminator reference has no path!" );
 		}
+
+		FromReferenceNode pathAsFromReferenceNode = (FromReferenceNode) path;
+		FromElement typeFromElement = pathAsFromReferenceNode.getFromElement();
+		Type type = typeFromElement.getPropertyType( "class", "class" );
+		setDataType( type );
+
+		String[] columns = typeFromElement.toColumns( typeFromElement.getTableAlias(), "class", inSelect );
+		setText( columns[0] );
+
+		setType( SqlTokenTypes.SQL_TOKEN );
 	}
 
 	public SQLFunction getSQLFunction() {

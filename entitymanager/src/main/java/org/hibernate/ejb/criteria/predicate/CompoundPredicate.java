@@ -116,9 +116,9 @@ public class CompoundPredicate
 
 	public String render(CriteriaQueryCompiler.RenderingContext renderingContext) {
 		if ( getExpressions().size() == 0 ) {
-			return getOperator() == Predicate.BooleanOperator.AND
-					? "true"
-					: "false";
+			return getOperator() == BooleanOperator.AND
+					? "1=1" // true
+					: "0=1"; // false
 		}
 		if ( getExpressions().size() == 1 ) {
 			return ( (Renderable) getExpressions().get(0) ).render( renderingContext );

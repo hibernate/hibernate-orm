@@ -25,6 +25,7 @@ package org.hibernate.ejb.criteria.basic;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.util.List;
 import javax.persistence.EntityManager;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
@@ -67,6 +68,18 @@ public class ExpressionsTest extends AbstractMetamodelSpecificTest {
 		em.getTransaction().commit();
 		em.close();
 		super.tearDown();
+	}
+
+	public void testEmptyConjunction() {
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		CriteriaQuery<Product> criteria = builder.createQuery( Product.class );
+		criteria.from( Product.class );
+		criteria.where( builder.and() );
+		List<Product> result = em.createQuery( criteria ).getResultList();
+		assertEquals( 1, result.size() );
+		em.getTransaction().commit();
+		em.close();
 	}
 
 	public void testDiff() {

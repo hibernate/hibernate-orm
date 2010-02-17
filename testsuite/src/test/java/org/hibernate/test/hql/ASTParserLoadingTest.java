@@ -38,6 +38,7 @@ import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.hql.ast.ASTQueryTranslatorFactory;
 import org.hibernate.junit.functional.FunctionalTestCase;
 import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
+import org.hibernate.persister.entity.DiscriminatorType;
 import org.hibernate.stat.QueryStatistics;
 import org.hibernate.test.any.IntegerPropertyValue;
 import org.hibernate.test.any.PropertySet;
@@ -111,10 +112,26 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 		Session s = openSession();
 		s.beginTransaction();
 
+		///////////////////////////////////////////////////////////////
+		// where clause
 		// control
 		s.createQuery( "from Animal a where a.class = Dog" ).list();
-
+        // test
 		s.createQuery( "from Animal a where type(a) = Dog" ).list();
+
+		///////////////////////////////////////////////////////////////
+		// select clause (at some point we should unify these)
+		// control
+		Query query = s.createQuery( "select a.class from Animal a where a.class = Dog" );
+		query.list(); // checks syntax
+		assertEquals( 1, query.getReturnTypes().length );
+		assertEquals( Integer.class, query.getReturnTypes()[0].getReturnedClass() ); // always integer for joined
+        // test
+		query = s.createQuery( "select type(a) from Animal a where type(a) = Dog" );
+		query.list(); // checks syntax
+		assertEquals( 1, query.getReturnTypes().length );
+		assertEquals( DiscriminatorType.class, query.getReturnTypes()[0].getClass() );
+		assertEquals( Class.class, query.getReturnTypes()[0].getReturnedClass() );
 
 		s.getTransaction().commit();
 		s.close();

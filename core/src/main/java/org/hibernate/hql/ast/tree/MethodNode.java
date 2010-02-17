@@ -29,6 +29,7 @@ import java.util.Arrays;
 import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.hql.CollectionProperties;
 import org.hibernate.hql.antlr.SqlTokenTypes;
+import org.hibernate.hql.ast.TypeDiscriminatorMetadata;
 import org.hibernate.hql.ast.util.ASTUtil;
 import org.hibernate.hql.ast.util.ColumnHelper;
 import org.hibernate.persister.collection.CollectionPropertyNames;
@@ -83,13 +84,11 @@ public class MethodNode extends AbstractSelectExpression implements SelectExpres
 		}
 
 		FromReferenceNode pathAsFromReferenceNode = (FromReferenceNode) path;
-		FromElement typeFromElement = pathAsFromReferenceNode.getFromElement();
-		Type type = typeFromElement.getPropertyType( "class", "class" );
-		setDataType( type );
+		FromElement fromElement = pathAsFromReferenceNode.getFromElement();
+		TypeDiscriminatorMetadata typeDiscriminatorMetadata = fromElement.getTypeDiscriminatorMetadata();
 
-		String[] columns = typeFromElement.toColumns( typeFromElement.getTableAlias(), "class", inSelect );
-		setText( columns[0] );
-
+		setDataType( typeDiscriminatorMetadata.getResolutionType() );
+		setText( typeDiscriminatorMetadata.getSqlFragment() );
 		setType( SqlTokenTypes.SQL_TOKEN );
 	}
 
@@ -217,7 +216,6 @@ public class MethodNode extends AbstractSelectExpression implements SelectExpres
 	}
 
 	protected void prepareSelectColumns(String[] columns) {
-		return;
 	}
 
 	public FromElement getFromElement() {

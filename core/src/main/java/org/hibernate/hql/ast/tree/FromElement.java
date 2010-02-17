@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.ArrayList;
 
 import org.hibernate.QueryException;
+import org.hibernate.hql.ast.TypeDiscriminatorMetadata;
 import org.hibernate.param.ParameterSpecification;
 import org.hibernate.engine.JoinSequence;
 import org.hibernate.hql.QueryTranslator;
@@ -37,6 +38,7 @@ import org.hibernate.hql.antlr.SqlTokenTypes;
 import org.hibernate.hql.ast.util.ASTUtil;
 import org.hibernate.hql.ast.HqlSqlWalker;
 import org.hibernate.persister.collection.QueryableCollection;
+import org.hibernate.persister.entity.DiscriminatorMetadata;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.PropertyMapping;
 import org.hibernate.persister.entity.Queryable;
@@ -427,6 +429,58 @@ public class FromElement extends HqlSqlWalkerNode implements DisplayableNode, Pa
 			return origin.getRealOrigin();
 		}
 		return origin;
+	}
+
+	public static final String DISCRIMINATOR_PROPERTY_NAME = "class";
+	private TypeDiscriminatorMetadata typeDiscriminatorMetadata;
+
+	private static class TypeDiscriminatorMetadataImpl implements TypeDiscriminatorMetadata {
+		private final DiscriminatorMetadata persisterDiscriminatorMetadata;
+		private final String alias;
+
+		private TypeDiscriminatorMetadataImpl(
+				DiscriminatorMetadata persisterDiscriminatorMetadata,
+				String alias) {
+			this.persisterDiscriminatorMetadata = persisterDiscriminatorMetadata;
+			this.alias = alias;
+		}
+
+		/**
+		 * {@inheritDoc}
+		 */
+		public String getSqlFragment() {
+			return persisterDiscriminatorMetadata.getSqlFragment( alias );
+		}
+
+		/**
+		 * {@inheritDoc}
+		 */
+		public Type getResolutionType() {
+			return persisterDiscriminatorMetadata.getResolutionType();
+		}
+	}
+
+	public TypeDiscriminatorMetadata getTypeDiscriminatorMetadata() {
+		if ( typeDiscriminatorMetadata == null ) {
+			typeDiscriminatorMetadata = buildTypeDiscriminatorMetadata();
+		}
+		return typeDiscriminatorMetadata;
+	}
+
+	private TypeDiscriminatorMetadata buildTypeDiscriminatorMetadata() {
+		final String aliasToUse = getTableAlias();
+		Queryable queryable = getQueryable();
+		if ( queryable == null ) {
+			QueryableCollection collection = getQueryableCollection();
+			if ( ! collection.getElementType().isEntityType() ) {
+				throw new QueryException( "type discrimination cannot be applied to value collection [" + collection.getRole() + "]" );
+			}
+			queryable = (Queryable) collection.getElementPersister();
+		}
+
+		handlePropertyBeingDereferenced( getDataType(), DISCRIMINATOR_PROPERTY_NAME );
+
+		return new TypeDiscriminatorMetadataImpl( queryable.getTypeDiscriminatorMetadata(), aliasToUse );
 	}
 
 	public Type getPropertyType(String propertyName, String propertyPath) {

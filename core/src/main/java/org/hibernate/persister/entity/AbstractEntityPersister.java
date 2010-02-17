@@ -87,6 +87,7 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Selectable;
 import org.hibernate.metadata.ClassMetadata;
+import org.hibernate.persister.entity.DiscriminatorMetadata;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.property.BackrefPropertyAccessor;
 import org.hibernate.sql.Alias;
@@ -1498,6 +1499,27 @@ public abstract class AbstractEntityPersister
 		else {
 			return Declarer.SUBCLASS;
 		}
+	}
+
+	private DiscriminatorMetadata discriminatorMetadata;
+
+	public DiscriminatorMetadata getTypeDiscriminatorMetadata() {
+		if ( discriminatorMetadata == null ) {
+			discriminatorMetadata = buildTypeDiscriminatorMetadata();
+		}
+		return discriminatorMetadata;
+	}
+
+	private DiscriminatorMetadata buildTypeDiscriminatorMetadata() {
+		return new DiscriminatorMetadata() {
+			public String getSqlFragment(String sqlQualificationAlias) {
+				return toColumns( sqlQualificationAlias, ENTITY_CLASS )[0];
+			}
+
+			public Type getResolutionType() {
+				return new DiscriminatorType( getDiscriminatorType(), AbstractEntityPersister.this );
+			}
+		};
 	}
 
 	protected String generateTableAlias(String rootAlias, int tableNumber) {

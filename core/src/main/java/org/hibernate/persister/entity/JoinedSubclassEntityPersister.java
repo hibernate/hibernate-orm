@@ -49,6 +49,7 @@ import org.hibernate.mapping.Subclass;
 import org.hibernate.mapping.Table;
 import org.hibernate.sql.CaseFragment;
 import org.hibernate.sql.SelectFragment;
+import org.hibernate.type.AbstractType;
 import org.hibernate.type.Type;
 import org.hibernate.util.ArrayHelper;
 

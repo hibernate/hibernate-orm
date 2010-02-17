@@ -24,6 +24,7 @@
  */
 package org.hibernate.persister.entity;
 
+import org.hibernate.persister.entity.DiscriminatorMetadata;
 import org.hibernate.sql.SelectFragment;
 
 /**
@@ -164,6 +165,14 @@ public interface Queryable extends Loadable, PropertyMapping, Joinable {
 	 * @return The alias used for "filter conditions" within the where clause.
 	 */
 	public String generateFilterConditionAlias(String rootAlias);
+
+	/**
+	 * Retrieve the information needed to properly deal with this entity's discriminator
+	 * in a query.
+	 *
+	 * @return The entity discriminator metadata
+	 */
+	public DiscriminatorMetadata getTypeDiscriminatorMetadata();
 
 	public static class Declarer {
 		public static final Declarer CLASS = new Declarer( "class" );

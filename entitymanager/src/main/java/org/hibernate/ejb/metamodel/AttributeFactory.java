@@ -36,6 +36,9 @@ import javax.persistence.metamodel.PluralAttribute;
 import javax.persistence.metamodel.Type;
 import javax.persistence.metamodel.IdentifiableType;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import org.hibernate.EntityMode;
 import org.hibernate.type.EmbeddedComponentType;
 import org.hibernate.type.ComponentType;
@@ -61,6 +64,8 @@ import org.hibernate.type.EntityType;
  * @author Emmanuel Bernard
  */
 public class AttributeFactory {
+	private static final Logger log = LoggerFactory.getLogger( AttributeFactory.class );
+
 	private final MetadataContext context;
 
 	public AttributeFactory(MetadataContext context) {
@@ -78,6 +83,7 @@ public class AttributeFactory {
 	 */
 	@SuppressWarnings({ "unchecked" })
 	public <X, Y> AttributeImplementor<X, Y> buildAttribute(AbstractManagedType<X> ownerType, Property property) {
+		log.trace( "Building attribute [{}.{}]", ownerType.getJavaType().getName(), property.getName() );
 		//a back ref is a virtual property created by Hibernate, let's hide it from the JPA model.
 		if ( property.isBackRef() ) return null;
 		final AttributeContext<X> attributeContext = wrap( ownerType, property );
@@ -128,6 +134,7 @@ public class AttributeFactory {
 	 */
 	@SuppressWarnings({ "unchecked" })
 	public <X, Y> SingularAttributeImpl<X, Y> buildIdAttribute(AbstractIdentifiableType<X> ownerType, Property property) {
+		log.trace( "Building identifier attribute [{}.{}]", ownerType.getJavaType().getName(), property.getName() );
 		final AttributeContext<X> attributeContext = wrap( ownerType, property );
 		final SingularAttributeMetadata<X,Y> attributeMetadata =
 				(SingularAttributeMetadata<X, Y>) determineAttributeMetadata( attributeContext, IDENTIFIER_MEMBER_RESOLVER );
@@ -153,6 +160,7 @@ public class AttributeFactory {
 	 */
 	@SuppressWarnings({ "unchecked" })
 	public <X, Y> SingularAttributeImpl<X, Y> buildVersionAttribute(AbstractIdentifiableType<X> ownerType, Property property) {
+		log.trace( "Building version attribute [{}.{}]", ownerType.getJavaType().getName(), property.getName() );
 		final AttributeContext<X> attributeContext = wrap( ownerType, property );
 		final SingularAttributeMetadata<X,Y> attributeMetadata =
 				(SingularAttributeMetadata<X, Y>) determineAttributeMetadata( attributeContext, VERSION_MEMBER_RESOLVER );
@@ -429,14 +437,14 @@ public class AttributeFactory {
 	private <X,Y> AttributeMetadata<X,Y> determineAttributeMetadata(
 			AttributeContext<X> attributeContext,
 			MemberResolver memberResolver) {
+		log.trace( "Starting attribute metadata determination [{}]", attributeContext.getPropertyMapping().getName() );
 		final Member member = memberResolver.resolveMember( attributeContext );
-		// TODO (steve->emmanuel) not so sure this is true any longer...
-		// FIXME the logical level for *To* is different from the Hibernate physical model.
-		//		ie a @ManyToOne @AssocTable is a many-to-many for hibernate
-		//		and a @OneToMany @AssocTable is a many-to-many for hibernate
-		// FIXME so basically Attribute.PersistentAttributeType is crap at the moment
+		log.trace( "    Determined member [{}]", member );
+
 		final Value value = attributeContext.getPropertyMapping().getValue();
 		final org.hibernate.type.Type type = value.getType();
+		log.trace( "    determined type [name={}, class={}]", type.getName(), type.getClass().getName() );
+
 		if ( type.isAnyType() ) {
 			throw new UnsupportedOperationException( "any not supported yet" );
 		}

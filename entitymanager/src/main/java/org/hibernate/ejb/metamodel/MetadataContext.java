@@ -21,29 +21,30 @@
  */
 package org.hibernate.ejb.metamodel;
 
+import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.List;
-import java.util.ArrayList;
-import java.lang.reflect.Field;
 import javax.persistence.metamodel.Attribute;
-import javax.persistence.metamodel.SingularAttribute;
 import javax.persistence.metamodel.IdentifiableType;
+import javax.persistence.metamodel.SingularAttribute;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 
+import org.hibernate.annotations.common.AssertionFailure;
+import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
-import org.hibernate.engine.SessionFactoryImplementor;
-import org.hibernate.annotations.common.AssertionFailure;
 
 /**
  * Defines a context for storing information during the building of the {@link MetamodelImpl}.
@@ -52,8 +53,8 @@ import org.hibernate.annotations.common.AssertionFailure;
  * cross-references into the built metamodel classes.
  * <p/>
  * At the end of the day, clients are interested in the {@link #getEntityTypeMap} and {@link #getEmbeddableTypeMap}
- * results, which represent all the registered {@link #registerEntityType entities} and
- *  {@link #registerEmbeddedableType embeddabled} respectively.
+ * results, which represent all the registered {@linkplain #registerEntityType entities} and
+ *  {@linkplain #registerEmbeddedableType embeddables} respectively.
  *
  * @author Steve Ebersole
  * @author Emmanuel Bernard
@@ -94,9 +95,9 @@ class MetadataContext {
 	}
 
 	/**
-	 * Retrieves the {@link Class java type} to {@link EntityType} map.
+	 * Retrieves the {@linkplain Class java type} to {@link EntityTypeImpl} map.
 	 *
-	 * @return The {@link Class java type} to {@link EntityType} map.
+	 * @return The {@linkplain Class java type} to {@link EntityTypeImpl} map.
 	 */
 	public Map<Class<?>, EntityTypeImpl<?>> getEntityTypeMap() {
 		return Collections.unmodifiableMap( entityTypes );
@@ -159,49 +160,62 @@ class MetadataContext {
 
 	@SuppressWarnings({ "unchecked" })
 	public void wrapUp() {
+		log.trace( "Wrapping up metadata context..." );
 		//we need to process types from superclasses to subclasses
 		for (Object mapping : orderedMappings) {
 			if ( PersistentClass.class.isAssignableFrom( mapping.getClass() ) ) {
 				@SuppressWarnings( "unchecked" )
 				final PersistentClass safeMapping = (PersistentClass) mapping;
-				final EntityTypeImpl<?> jpa2Mapping = entityTypesByPersistentClass.get( safeMapping );
-				applyIdMetadata( safeMapping, jpa2Mapping );
-				applyVersionAttribute( safeMapping, jpa2Mapping );
-				Iterator<Property> properties = ( Iterator<Property> ) safeMapping.getDeclaredPropertyIterator();
-				while ( properties.hasNext() ) {
-					final Property property = properties.next();
-					if ( property.getValue() == safeMapping.getIdentifierMapper() ) {
-						// property represents special handling for id-class mappings but we have already
-						// accounted for the embedded property mappings in #applyIdMetadata &&
-						// #buildIdClassAttributes
-						continue;
+				log.trace( "Starting entity [{}]", safeMapping.getEntityName() );
+				try {
+					final EntityTypeImpl<?> jpa2Mapping = entityTypesByPersistentClass.get( safeMapping );
+					applyIdMetadata( safeMapping, jpa2Mapping );
+					applyVersionAttribute( safeMapping, jpa2Mapping );
+					Iterator<Property> properties = ( Iterator<Property> ) safeMapping.getDeclaredPropertyIterator();
+					while ( properties.hasNext() ) {
+						final Property property = properties.next();
+						if ( property.getValue() == safeMapping.getIdentifierMapper() ) {
+							// property represents special handling for id-class mappings but we have already
+							// accounted for the embedded property mappings in #applyIdMetadata &&
+							// #buildIdClassAttributes
+							continue;
+						}
+						final Attribute attribute = attributeFactory.buildAttribute( jpa2Mapping, property );
+						if ( attribute != null ) {
+							jpa2Mapping.getBuilder().addAttribute( attribute );
+						}
 					}
-					final Attribute attribute = attributeFactory.buildAttribute( jpa2Mapping, property );
-					if ( attribute != null ) {
-						jpa2Mapping.getBuilder().addAttribute( attribute );
-					}
+					jpa2Mapping.lock();
+					populateStaticMetamodel( jpa2Mapping );
 				}
-				jpa2Mapping.lock();
-				populateStaticMetamodel( jpa2Mapping );
+				finally {
+					log.trace( "Completed entity [{}]", safeMapping.getEntityName() );
+				}
 			}
 			else if ( MappedSuperclass.class.isAssignableFrom( mapping.getClass() ) ) {
 				@SuppressWarnings( "unchecked" )
 				final MappedSuperclass safeMapping = (MappedSuperclass) mapping;
-				final MappedSuperclassTypeImpl<?> jpa2Mapping = mappedSuperclassByMappedSuperclassMapping.get(
-						safeMapping
-				);
-				applyIdMetadata( safeMapping, jpa2Mapping );
-				applyVersionAttribute( safeMapping, jpa2Mapping );
-				Iterator<Property> properties = ( Iterator<Property> ) safeMapping.getDeclaredPropertyIterator();
-				while ( properties.hasNext() ) {
-					final Property property = properties.next();
-					final Attribute attribute = attributeFactory.buildAttribute( jpa2Mapping, property );
-					if ( attribute != null ) {
-						jpa2Mapping.getBuilder().addAttribute( attribute );
+				log.trace( "Starting mapped superclass [{}]", safeMapping.getMappedClass().getName() );
+				try {
+					final MappedSuperclassTypeImpl<?> jpa2Mapping = mappedSuperclassByMappedSuperclassMapping.get(
+							safeMapping
+					);
+					applyIdMetadata( safeMapping, jpa2Mapping );
+					applyVersionAttribute( safeMapping, jpa2Mapping );
+					Iterator<Property> properties = ( Iterator<Property> ) safeMapping.getDeclaredPropertyIterator();
+					while ( properties.hasNext() ) {
+						final Property property = properties.next();
+						final Attribute attribute = attributeFactory.buildAttribute( jpa2Mapping, property );
+						if ( attribute != null ) {
+							jpa2Mapping.getBuilder().addAttribute( attribute );
+						}
 					}
+					jpa2Mapping.lock();
+					populateStaticMetamodel( jpa2Mapping );
 				}
-				jpa2Mapping.lock();
-				populateStaticMetamodel( jpa2Mapping );
+				finally {
+					log.trace( "Completed mapped superclass [{}]", safeMapping.getMappedClass().getName() );
+				}
 			}
 			else {
 				throw new AssertionFailure( "Unexpected mapping type: " + mapping.getClass() );
@@ -296,6 +310,7 @@ class MetadataContext {
 	private <X> Set<SingularAttribute<? super X, ?>> buildIdClassAttributes(
 			MappedSuperclassTypeImpl<X> jpaMappingType,
 			MappedSuperclass mappingType) {
+		log.trace( "Building old-school composite identifier [{}]", mappingType.getMappedClass().getName() );
 		Set<SingularAttribute<? super X, ?>> attributes = new HashSet<SingularAttribute<? super X, ?>>();
 		@SuppressWarnings( "unchecked" )
 		Iterator<Property> properties = mappingType.getIdentifierMapper().getPropertyIterator();

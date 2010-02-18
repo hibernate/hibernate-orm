@@ -132,7 +132,6 @@ public abstract class CompilationTest {
 			builder.append( entry.getValue() );
 			options.add( builder.toString() );
 		}
-		options.add( "-Adebug=true" );
 		return options;
 	}
 

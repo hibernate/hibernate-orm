@@ -1,4 +1,4 @@
-// $Id: Image.java 17903 2009-11-04 13:22:37Z hardy.ferentschik $
+// $Id$
 /*
 * JBoss, Home of Professional Open Source
 * Copyright 2008, Red Hat Middleware LLC, and individual contributors

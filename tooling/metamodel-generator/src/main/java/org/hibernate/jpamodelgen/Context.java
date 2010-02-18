@@ -56,6 +56,7 @@ public class Context {
 
 	private final ProcessingEnvironment pe;
 	private final boolean logDebug;
+	private final boolean lazyXmlParsing;
 	private final String persistenceXmlLocation;
 
 	private final List<String> ormXmlFiles;
@@ -90,6 +91,7 @@ public class Context {
 			ormXmlFiles = Collections.emptyList();
 		}
 
+		lazyXmlParsing = Boolean.parseBoolean( pe.getOptions().get( JPAMetaModelEntityProcessor.LAZY_XML_PARSING ) );
 		logDebug = Boolean.parseBoolean( pe.getOptions().get( JPAMetaModelEntityProcessor.DEBUG_OPTION ) );
 	}
 
@@ -125,8 +127,8 @@ public class Context {
 		return metaEntities.values();
 	}
 
-	public void addMetaEntity(String fcqn, MetaEntity metaEntity) {
-		metaEntities.put( fcqn, metaEntity );
+	public void addMetaEntity(String fqcn, MetaEntity metaEntity) {
+		metaEntities.put( fqcn, metaEntity );
 	}
 
 	public boolean containsMetaEmbeddable(String fqcn) {
@@ -181,12 +183,17 @@ public class Context {
 		this.persistenceUnitDefaultAccessType = persistenceUnitDefaultAccessType;
 	}
 
+	public boolean doLazyXmlParsing() {
+		return lazyXmlParsing;
+	}
+
 	@Override
 	public String toString() {
 		final StringBuilder sb = new StringBuilder();
 		sb.append( "Context" );
 		sb.append( "{accessTypeInformation=" ).append( accessTypeInformation );
 		sb.append( ", logDebug=" ).append( logDebug );
+		sb.append( ", lazyXmlParsing=" ).append( lazyXmlParsing );
 		sb.append( ", isPersistenceUnitCompletelyXmlConfigured=" ).append( isPersistenceUnitCompletelyXmlConfigured );
 		sb.append( ", ormXmlFiles=" ).append( ormXmlFiles );
 		sb.append( ", persistenceXmlLocation='" ).append( persistenceXmlLocation ).append( '\'' );

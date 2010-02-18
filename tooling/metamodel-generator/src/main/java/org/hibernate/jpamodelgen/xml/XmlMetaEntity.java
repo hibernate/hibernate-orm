@@ -360,6 +360,9 @@ public class XmlMetaEntity implements MetaEntity {
 	}
 
 	private void parseEmbeddableAttributes(EmbeddableAttributes attributes) {
+		if ( attributes == null ) {
+			return;
+		}
 		for ( Basic basic : attributes.getBasic() ) {
 			parseBasic( basic );
 		}

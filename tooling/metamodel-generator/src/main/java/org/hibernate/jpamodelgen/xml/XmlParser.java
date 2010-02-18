@@ -17,8 +17,15 @@
 */
 package org.hibernate.jpamodelgen.xml;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutput;
+import java.io.ObjectOutputStream;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -40,6 +47,7 @@ import org.xml.sax.SAXException;
 import org.hibernate.jpamodelgen.AccessTypeInformation;
 import org.hibernate.jpamodelgen.Context;
 import org.hibernate.jpamodelgen.util.Constants;
+import org.hibernate.jpamodelgen.util.FileTimeStampChecker;
 import org.hibernate.jpamodelgen.util.StringUtil;
 import org.hibernate.jpamodelgen.util.TypeUtils;
 import org.hibernate.jpamodelgen.xml.jaxb.Entity;
@@ -56,6 +64,7 @@ public class XmlParser {
 	private static final String ORM_XML = "/META-INF/orm.xml";
 	private static final String PERSISTENCE_XML_XSD = "persistence_2_0.xsd";
 	private static final String ORM_XSD = "orm_2_0.xsd";
+	private static final String SERIALIZATION_FILE_NAME = "Hibernate-Static-Metamodel-Generator.tmp";
 
 	private Context context;
 	private List<EntityMappings> entityMappings;
@@ -66,7 +75,13 @@ public class XmlParser {
 	}
 
 	public void parseXml() {
-		collectAllEntityMappings();
+		Collection<String> mappingFileNames = determineMappingFileNames();
+
+		if ( context.doLazyXmlParsing() && mappingFilesUnchanged( mappingFileNames ) ) {
+			return;
+		}
+
+		loadEntityMappings( mappingFileNames );
 		determineDefaultAccessTypeAndMetaCompleteness();
 		determineXmlAccessTypes();
 		if ( !context.isPersistenceUnitCompletelyXmlConfigured() ) {
@@ -83,35 +98,107 @@ public class XmlParser {
 		}
 	}
 
-	private void collectAllEntityMappings() {
+	private Collection<String> determineMappingFileNames() {
+		Collection<String> mappingFileNames = new ArrayList<String>();
+
 		Persistence persistence = parseXml(
 				context.getPersistenceXmlLocation(), Persistence.class, PERSISTENCE_XML_XSD
 		);
 		if ( persistence != null ) {
 			List<Persistence.PersistenceUnit> persistenceUnits = persistence.getPersistenceUnit();
 			for ( Persistence.PersistenceUnit unit : persistenceUnits ) {
-				List<String> mappingFiles = unit.getMappingFile();
-				for ( String mappingFile : mappingFiles ) {
-					loadEntityMappings( mappingFile );
-				}
+				mappingFileNames.addAll( unit.getMappingFile() );
 			}
 		}
 
 		// /META-INF/orm.xml is implicit
-		loadEntityMappings( ORM_XML );
+		mappingFileNames.add( ORM_XML );
 
 		// not really part of the official spec, but the processor allows to specify mapping files directly as
 		// command line options
-		for ( String optionalOrmFiles : context.getOrmXmlFiles() ) {
-			loadEntityMappings( optionalOrmFiles );
+		mappingFileNames.addAll( context.getOrmXmlFiles() );
+		return mappingFileNames;
+	}
+
+	private void loadEntityMappings(Collection<String> mappingFileNames) {
+		for ( String mappingFile : mappingFileNames ) {
+			EntityMappings mapping = parseXml( mappingFile, EntityMappings.class, ORM_XSD );
+			if ( mapping != null ) {
+				entityMappings.add( mapping );
+			}
 		}
 	}
 
-	private void loadEntityMappings(String resource) {
-		EntityMappings mapping = parseXml( resource, EntityMappings.class, ORM_XSD );
-		if ( mapping != null ) {
-			entityMappings.add( mapping );
+	private boolean mappingFilesUnchanged(Collection<String> mappingFileNames) {
+		boolean mappingFilesUnchanged = false;
+		FileTimeStampChecker fileStampCheck = new FileTimeStampChecker();
+		for ( String mappingFile : mappingFileNames ) {
+			try {
+				URL url = this.getClass().getResource( mappingFile );
+				if ( url == null ) {
+					continue;
+				}
+				File file = new File( url.toURI() );
+				context.logMessage( Diagnostic.Kind.OTHER, "Check file  " + mappingFile );
+				if ( file.exists() ) {
+					fileStampCheck.add( mappingFile, file.lastModified() );
+				}
+			}
+			catch ( URISyntaxException e ) {
+				// in doubt return false
+				return false;
+			}
 		}
+
+		FileTimeStampChecker serializedTimeStampCheck = loadTimeStampCache();
+		if ( serializedTimeStampCheck.equals( fileStampCheck ) ) {
+			context.logMessage( Diagnostic.Kind.OTHER, "XML parsing will be skipped due to unchanged xml files" );
+			mappingFilesUnchanged = true;
+		}
+		else {
+			saveTimeStampCache( fileStampCheck );
+		}
+
+		return mappingFilesUnchanged;
+	}
+
+	private void saveTimeStampCache(FileTimeStampChecker fileStampCheck) {
+		try {
+			File file = getSerializationTmpFile();
+			ObjectOutput out = new ObjectOutputStream( new FileOutputStream( file ) );
+			out.writeObject( fileStampCheck );
+			out.close();
+			context.logMessage(
+					Diagnostic.Kind.OTHER, "Serialized " + fileStampCheck + " into " + file.getAbsolutePath()
+			);
+		}
+		catch ( IOException e ) {
+			// ignore - if the serialization failed we just have to keep parsing the xml
+			context.logMessage( Diagnostic.Kind.OTHER, "Error serializing  " + fileStampCheck );
+		}
+	}
+
+	private File getSerializationTmpFile() {
+		File tmpDir = new File( System.getProperty( "java.io.tmpdir" ) );
+		return new File( tmpDir, SERIALIZATION_FILE_NAME );
+	}
+
+	private FileTimeStampChecker loadTimeStampCache() {
+		FileTimeStampChecker serializedTimeStampCheck = new FileTimeStampChecker();
+		File file = null;
+		try {
+			file = getSerializationTmpFile();
+			if ( file.exists() ) {
+				ObjectInputStream in = new ObjectInputStream( new FileInputStream( file ) );
+				serializedTimeStampCheck = ( FileTimeStampChecker ) in.readObject();
+				in.close();
+			}
+		}
+		catch ( Exception e ) {
+			// ignore - if the de-serialization failed we just have to keep parsing the xml
+			context.logMessage( Diagnostic.Kind.OTHER, "Error de-serializing  " + file );
+		}
+		return serializedTimeStampCheck;
 	}
 
 	private void parseEntities(Collection<Entity> entities, String defaultPackageName) {
@@ -254,7 +341,6 @@ public class XmlParser {
 	private InputStream getInputStreamForResource(String resource) {
 		String pkg = getPackage( resource );
 		String name = getRelativeName( resource );
-		context.logMessage( Diagnostic.Kind.OTHER, "Reading resource " + resource );
 		InputStream ormStream;
 		try {
 			FileObject fileObject = context.getProcessingEnvironment()

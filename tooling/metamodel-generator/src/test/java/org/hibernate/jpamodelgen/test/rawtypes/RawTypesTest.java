@@ -1,4 +1,4 @@
-// $Id: RawTypesTest.java 18664 2010-01-28 16:56:51Z hardy.ferentschik $
+// $Id$
 /*
 * JBoss, Home of Professional Open Source
 * Copyright 2008, Red Hat Middleware LLC, and individual contributors

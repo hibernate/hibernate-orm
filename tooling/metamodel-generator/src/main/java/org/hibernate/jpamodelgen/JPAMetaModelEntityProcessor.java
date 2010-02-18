@@ -64,16 +64,22 @@ import static javax.lang.model.SourceVersion.RELEASE_6;
 @SupportedOptions({
 		JPAMetaModelEntityProcessor.DEBUG_OPTION,
 		JPAMetaModelEntityProcessor.PERSISTENCE_XML_OPTION,
-		JPAMetaModelEntityProcessor.ORM_XML_OPTION
+		JPAMetaModelEntityProcessor.ORM_XML_OPTION,
+		JPAMetaModelEntityProcessor.FULLY_ANNOTATION_CONFIGURED_OPTION,
+		JPAMetaModelEntityProcessor.LAZY_XML_PARSING
 })
 public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 	public static final String DEBUG_OPTION = "debug";
 	public static final String PERSISTENCE_XML_OPTION = "persistenceXml";
 	public static final String ORM_XML_OPTION = "ormXmlList";
+	public static final String FULLY_ANNOTATION_CONFIGURED_OPTION = "fullyAnnotationConfigured";
+	public static final String LAZY_XML_PARSING = "lazyXmlParsing";
+
 	private static final Boolean ALLOW_OTHER_PROCESSORS_TO_CLAIM_ANNOTATIONS = Boolean.FALSE;
 
 	private boolean xmlProcessed = false;
 	private Context context;
+	private boolean fullyAnnotationConfigured = false;
 
 	public void init(ProcessingEnvironment env) {
 		super.init( env );
@@ -81,12 +87,13 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 		context.logMessage(
 				Diagnostic.Kind.NOTE, "Hibernate JPA 2 Static-Metamodel Generator " + Version.getVersionString()
 		);
+
+		String tmp = env.getOptions().get( JPAMetaModelEntityProcessor.FULLY_ANNOTATION_CONFIGURED_OPTION );
+		fullyAnnotationConfigured = Boolean.parseBoolean( tmp );
 	}
 
 	@Override
-	public boolean process(final Set<? extends TypeElement> annotations,
-						   final RoundEnvironment roundEnvironment) {
-
+	public boolean process(final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnvironment) {
 		if ( roundEnvironment.processingOver() ) {
 			context.logMessage( Diagnostic.Kind.OTHER, "Last processing round." );
 			createMetaModelClasses();
@@ -94,7 +101,7 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 			return ALLOW_OTHER_PROCESSORS_TO_CLAIM_ANNOTATIONS;
 		}
 
-		if ( !xmlProcessed ) {
+		if ( !fullyAnnotationConfigured && !xmlProcessed ) {
 			XmlParser parser = new XmlParser( context );
 			parser.parseXml();
 			xmlProcessed = true;
@@ -156,7 +163,7 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 			for ( Element subElement : ElementFilter.fieldsIn( entity.getTypeElement().getEnclosedElements() ) ) {
 				TypeMirror mirror = subElement.asType();
 				if ( !TypeKind.DECLARED.equals( mirror.getKind() ) ) {
-					 continue;
+					continue;
 				}
 				boolean contains = mirror.accept( visitor, subElement );
 				if ( contains ) {

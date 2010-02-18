@@ -92,7 +92,7 @@ public class Order_ {
 
       <example id="criteria-example" label="">
         <title>Example of typesafe query using the metamodel class
-        <classname>Order_</classname> </title>
+        <classname>Order_</classname></title>
 
         <programlisting>CriteriaBuilder cb = entityManager.getCriteriaBuilder();
 CriteriaQuery&lt;Order&gt; cq = cb.createQuery(Order.class);
@@ -109,7 +109,7 @@ cq.where( cb.equal(itemNode.get(Item_.id), 5 ) ).distinct(true);
       url="http://jcp.org/en/jsr/detail?id=317">JPA 2 specification</ulink>
       and its definition is included for completeness in the following
       paragraphs . Feel free to skip ahead to <xref linkend="chapter-usage" />
-      if you are not interested into the gory details. </para>
+      if you are not interested into the gory details.</para>
 
       <para>The annotation processor produces for every managed class in the
       persistence unit a metamodel class based on these rules:</para>
@@ -188,8 +188,8 @@ cq.where( cb.equal(itemNode.get(Item_.id), 5 ) ).distinct(true);
   <chapter id="chapter-usage">
     <title>Usage</title>
 
-    <para> The jar file for the annotation processor can be found in the
-    <ulink url="http://repository.jboss.com/">JBoss Maven repository</ulink>
+    <para>The jar file for the annotation processor can be found in the <ulink
+    url="http://repository.jboss.com/">JBoss Maven repository</ulink>
     under:</para>
 
     <example id="maven-dependency" label="">
@@ -233,7 +233,7 @@ cq.where( cb.equal(itemNode.get(Item_.id), 5 ) ).distinct(true);
       url="http://ant.apache.org/manual/CoreTasks/javac.html">Ant Javac
       Task</ulink> can be configured to just run annotation
       processing.<example id="javac-task-example">
-          <title>Ant Javac Task configuration </title>
+          <title>Ant Javac Task configuration</title>
 
           <programlisting>&lt;javac srcdir="${src.dir}"
     destdir="${target.dir}"
@@ -407,7 +407,12 @@ cq.where( cb.equal(itemNode.get(Item_.id), 5 ) ).distinct(true);
       <section>
         <title>NetBeans</title>
 
-        <para>TODO</para>
+        <para>Netbeans support for annotation processors is at the time of
+        this wrinting still in the making. Refer to NetBeans issues <ulink
+        url="http://www.netbeans.org/issues/show_bug.cgi?id=111065">111065</ulink>,
+        <ulink
+        url="http://www.netbeans.org/issues/show_bug.cgi?id=111293">111293</ulink>
+        and <ulink url="???">111294</ulink>.</para>
       </section>
     </section>
 
@@ -454,6 +459,22 @@ cq.where( cb.equal(itemNode.get(Item_.id), 5 ) ).distinct(true);
                 specified value for this option is a comma separated string of
                 mapping file names. Even when this option is specified
                 <filename>/META-INF/orm.xml</filename> is implicit.</entry>
+              </row>
+
+              <row>
+                <entry>lazyXmlParsing</entry>
+
+                <entry>Possible values are <literal>true</literal> or
+                <literal>false</literal>. If set to <literal>true</literal>
+                the annotation processor tries to determine whether any of the
+                xml files has changed between invocations and if unchanged
+                skips the xml parsing. This feature is experimental and
+                contains the risk of wron results in some cases of mixed mode
+                configurations. To determine wether a file has been modified a
+                temporary file
+                <filename>Hibernate-Static-Metamodel-Generator.tmp</filename>
+                is used. This file gets created in the
+                <literal>java.io.tmpdir</literal> directory.</entry>
               </row>
             </tbody>
           </tgroup>

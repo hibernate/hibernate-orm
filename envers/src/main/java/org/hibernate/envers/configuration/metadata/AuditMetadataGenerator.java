@@ -345,7 +345,7 @@ public final class AuditMetadataGenerator {
 
 		if (!isAudited) {
 			String entityName = pc.getEntityName();
-			IdMappingData idMapper = idMetadataGenerator.addId(pc);
+			IdMappingData idMapper = idMetadataGenerator.addId(pc, false);
 
             if (idMapper == null) {
                 // Unsupported id mapping, e.g. key-many-to-one. If the entity is used in auditing, an exception
@@ -375,7 +375,7 @@ public final class AuditMetadataGenerator {
         AuditTableData auditTableData = new AuditTableData(auditEntityName, auditTableName, schema, catalog);
 
         // Generating a mapping for the id
-        IdMappingData idMapper = idMetadataGenerator.addId(pc);
+        IdMappingData idMapper = idMetadataGenerator.addId(pc, true);
 
         InheritanceType inheritanceType = InheritanceType.get(pc);
 

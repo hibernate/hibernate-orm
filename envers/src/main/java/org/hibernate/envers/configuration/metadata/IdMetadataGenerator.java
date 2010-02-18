@@ -56,7 +56,8 @@ public final class IdMetadataGenerator {
     }
 
     @SuppressWarnings({"unchecked"})
-    private void addIdProperties(Element parent, Iterator<Property> properties, SimpleMapperBuilder mapper, boolean key) {
+    private boolean addIdProperties(Element parent, Iterator<Property> properties, SimpleMapperBuilder mapper, boolean key,
+                                    boolean audited) {
         while (properties.hasNext()) {
             Property property = properties.next();
             Type propertyType = property.getType();
@@ -67,14 +68,23 @@ public final class IdMetadataGenerator {
                         property.getValue(), mapper, true, key);
 
                 if (!added) {
-                    throw new MappingException("Type not supported: " + propertyType.getClass().getName());
+                    // If the entity is audited, and a non-supported id component is used, throwing an exception.
+                    // If the entity is not audited, then we simply don't support this entity, even in
+                    // target relation mode not audited.
+                    if (audited) {
+                        throw new MappingException("Type not supported: " + propertyType.getClass().getName());
+                    } else {
+                        return false;
+                    }
                 }
             }
         }
+
+        return true;
     }
 
     @SuppressWarnings({"unchecked"})
-    IdMappingData addId(PersistentClass pc) {
+    IdMappingData addId(PersistentClass pc, boolean audited) {
         // Xml mapping which will be used for relations
         Element rel_id_mapping = new DefaultElement("properties");
         // Xml mapping which will be used for the primary key of the versions table
@@ -93,20 +103,28 @@ public final class IdMetadataGenerator {
             // Multiple id
 
             mapper = new MultipleIdMapper(((Component) pc.getIdentifier()).getComponentClassName());
-            addIdProperties(rel_id_mapping, (Iterator<Property>) id_mapper.getPropertyIterator(), mapper, false);
+            if (!addIdProperties(rel_id_mapping, (Iterator<Property>) id_mapper.getPropertyIterator(), mapper, false, audited)) {
+                return null;
+            }
 
             // null mapper - the mapping where already added the first time, now we only want to generate the xml
-            addIdProperties(orig_id_mapping, (Iterator<Property>) id_mapper.getPropertyIterator(), null, true);
+            if (!addIdProperties(orig_id_mapping, (Iterator<Property>) id_mapper.getPropertyIterator(), null, true, audited)) {
+                return null;
+            }
         } else if (id_prop.isComposite()) {
             // Embedded id
 
             Component id_component = (Component) id_prop.getValue();
 
             mapper = new EmbeddedIdMapper(getIdPropertyData(id_prop), id_component.getComponentClassName());
-            addIdProperties(rel_id_mapping, (Iterator<Property>) id_component.getPropertyIterator(), mapper, false);
+            if (!addIdProperties(rel_id_mapping, (Iterator<Property>) id_component.getPropertyIterator(), mapper, false, audited)) {
+                return null;
+            }
 
             // null mapper - the mapping where already added the first time, now we only want to generate the xml
-            addIdProperties(orig_id_mapping, (Iterator<Property>) id_component.getPropertyIterator(), null, true);
+            if (!addIdProperties(orig_id_mapping, (Iterator<Property>) id_component.getPropertyIterator(), null, true, audited)) {
+                return null;
+            }
         } else {
             // Single id
             

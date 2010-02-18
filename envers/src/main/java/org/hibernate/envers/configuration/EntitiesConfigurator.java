@@ -84,7 +84,7 @@ public class EntitiesConfigurator {
         classesAuditingData.updateCalculatedFields();
 
         AuditMetadataGenerator auditMetaGen = new AuditMetadataGenerator(cfg, globalCfg, verEntCfg,
-                revisionInfoRelationMapping, auditEntityNameRegister, classesAuditingData);
+                revisionInfoRelationMapping, auditEntityNameRegister);
 
         // First pass
         for (Map.Entry<PersistentClass, ClassAuditingData> pcDatasEntry : classesAuditingData.getAllClassAuditedData()) {

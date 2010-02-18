@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
   ~ Hibernate, Relational Persistence for Idiomatic Java
-  ~
-  ~ Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+  ~ Copyright (c) 2008, Red Hat Inc. or third-party contributors as
   ~ indicated by the @author tags or express copyright attribution
   ~ statements applied by the authors.  All third-party contributions are
   ~ distributed under license by Red Hat Middleware LLC.
@@ -27,46 +26,45 @@
 <chapter id="entity">
   <title>Entity Beans</title>
 
-  <sect1 id="entity-overview" revision="2">
+  <section id="entity-overview" revision="2">
     <title>Intro</title>
 
-    <para>This section covers Java Persistence 2.0 mapping annotations as well
-    as Hibernate-specific extensions.</para>
-  </sect1>
+    <para>This section explains how to describe persistence mappings using
+    Java Persistence 2.0 annotations as well as Hibernate-specific annotation
+    extensions.</para>
+  </section>
 
-  <sect1 id="entity-mapping" revision="2">
-    <title>Mapping with EJB3/JPA Annotations</title>
+  <section id="entity-mapping" revision="2">
+    <title>Mapping with JPA (Java Persistence Annotations)</title>
 
-    <para>EJB3 entities are plain POJOs. Actually they represent the exact
-    same concept as the Hibernate persistent entities. Their mappings are
-    defined through JDK 5.0 annotations (an XML descriptor syntax for
-    overriding is defined in the EJB3 specification). Annotations can be split
-    in two categories, the logical mapping annotations (allowing you to
-    describe the object model, the class associations, etc.) and the physical
-    mapping annotations (describing the physical schema, tables, columns,
-    indexes, etc). We will mix annotations from both categories in the
-    following code examples.</para>
+    <para>JPA entities are plain POJOs. Actually, they are Hibernate
+    persistent entities. Their mappings are defined through JDK 5.0
+    annotations instead of hbm.xml files. A JPA 2 XML descriptor syntax for
+    overriding is defined as well). Annotations can be split in two
+    categories, the logical mapping annotations (describing the object model,
+    the association between two entities etc.) and the physical mapping
+    annotations (describing the physical schema, tables, columns, indexes,
+    etc). We will mix annotations from both categories in the following code
+    examples.</para>
 
-    <para>EJB3 annotations are in the <literal>javax.persistence.*</literal>
-    package. Most JDK 5 compliant IDE (like Eclipse, IntelliJ IDEA and
-    Netbeans) can autocomplete annotation interfaces and attributes for you
-    (even without a specific "EJB3" module, since EJB3 annotations are plain
-    JDK 5 annotations).</para>
+    <para>JPA annotations are in the <literal>javax.persistence.*</literal>
+    package. You favorite IDE can auto-complete annotations and their
+    attributes for you (even without a specific "JPA" module, since JPA
+    annotations are plain JDK 5 annotations).</para>
 
-    <para>For more and runnable concrete examples read the JBoss EJB 3.0
-    tutorial or review the Hibernate Annotations test suite. Most of the unit
-    tests have been designed to represent a concrete example and be a
-    inspiration source.</para>
+    <para>A good an complete set of working examples can be found in the
+    Hibernate Annotations test suite itself: most of the unit tests have been
+    designed to represent a concrete example and be a source of inspiration
+    for you. You can get the test suite sources in the distribution.</para>
 
-    <sect2 id="entity-mapping-entity">
-      <title>Declaring an entity bean</title>
+    <section id="entity-mapping-entity">
+      <title>Marking a POJO as persistent entity</title>
 
-      <para>Every bound persistent POJO class is an entity bean and is
-      declared using the <literal>@Entity</literal> annotation (at the class
+      <para>Every persistent POJO class is an entity bean and is declared
+      using the <literal>@Entity</literal> annotation (at the class
       level):</para>
 
-      <programlisting>
-@Entity
+      <programlisting>@Entity
 public class Flight implements Serializable {
     Long id;
 
@@ -74,28 +72,30 @@ public class Flight implements Serializable {
     public Long getId() { return id; }
 
     public void setId(Long id) { this.id = id; }
-}
-         </programlisting>
+}         </programlisting>
 
       <para><literal>@Entity</literal> declares the class as an entity bean
       (i.e. a persistent POJO class), <literal>@Id</literal> declares the
       identifier property of this entity bean. The other mapping declarations
-      are implicit. This configuration by exception concept is central to the
-      new EJB3 specification and a major improvement. The class Flight is
-      mapped to the Flight table, using the column id as its primary key
-      column.</para>
+      are implicit. The class Flight is mapped to the Flight table, using the
+      column id as its primary key column.</para>
+
+      <note>
+        <para>The concept of configuration by exception is central to the JPA
+        specification.</para>
+      </note>
 
       <para>Depending on whether you annotate fields or methods, the access
       type used by Hibernate will be <literal>field</literal> or
       <literal>property</literal>. The EJB3 spec requires that you declare
       annotations on the element type that will be accessed, i.e. the getter
       method if you use <literal>property</literal> access, the field if you
-      use <literal>field</literal> access. Mixing EJB3 annotations in both
-      fields and methods should be avoided. Hibernate will guess the access
-      type from the position of <literal>@Id</literal> or
+      use <literal>field</literal> access. Mixing annotations in both fields
+      and methods should be avoided. Hibernate will guess the access type from
+      the position of <literal>@Id</literal> or
       <literal>@EmbeddedId</literal>.</para>
 
-      <sect3>
+      <section>
         <title>Defining the table</title>
 
         <para><literal>@Table</literal> is set at the class level; it allows
@@ -103,19 +103,20 @@ public class Flight implements Serializable {
         bean mapping. If no <literal>@Table</literal> is defined the default
         values are used: the unqualified class name of the entity.</para>
 
-        <programlisting>
-@Entity
+        <programlisting>@Entity
 @Table(name="tbl_sky")
 public class Sky implements Serializable {
-...
-            </programlisting>
+   ...
+}            </programlisting>
 
-        <para>The <literal>@Table</literal> element also contains a
-        <literal>schema</literal> and a <literal>catalog</literal> attributes,
+        <para>The <literal>@Table</literal> element contains a
+        <literal>schema</literal> and <literal>catalog</literal> attributes,
         if they need to be defined. You can also define unique constraints to
         the table using the <literal>@UniqueConstraint</literal> annotation in
         conjunction with <literal>@Table</literal> (for a unique constraint
-        bound to a single column, refer to <literal>@Column</literal>).</para>
+        bound to a single column, it is recommended to use the
+        <code>@Column.unique</code> approach (refer to
+        <literal>@Column</literal> for more information).</para>
 
         <programlisting>@Table(name="tbl_sky",
     <emphasis role="bold">uniqueConstraints = {@UniqueConstraint(columnNames={"month", "day"})}</emphasis>
@@ -126,21 +127,23 @@ public class Sky implements Serializable {
         column names.</para>
 
         <remark>The logical column name is defined by the Hibernate
-        NamingStrategy implementation. The default EJB3 naming strategy use
-        the physical column name as the logical column name. Note that this
-        may be different than the property name (if the column name is
-        explicit). Unless you override the NamingStrategy, you shouldn't worry
-        about that.</remark>
-      </sect3>
+        <classname>NamingStrategy</classname> implementation. The default JPA
+        naming strategy uses the physical column name as the logical column
+        name but it could be different if for example you append fld_ to all
+        your columns using a custom <classname>NamingStrategy</classname>
+        implementation. Note that the logical column name is not necessarily
+        equals to the property name esp when the column name is explicitly
+        set. Unless you override the <classname>NamingStrategy</classname>,
+        you shouldn't worry about that.</remark>
+      </section>
 
-      <sect3 id="entity-mapping-entity-version" revision="1">
+      <section id="entity-mapping-entity-version" revision="1">
         <title>Versioning for optimistic locking</title>
 
         <para>You can add optimistic locking capability to an entity bean
         using the <literal>@Version</literal> annotation:</para>
 
-        <programlisting>
-@Entity
+        <programlisting>@Entity
 public class Flight implements Serializable {
 ...
     @Version
@@ -154,29 +157,31 @@ public class Flight implements Serializable {
         otherwise see with the last-commit-wins strategy).</para>
 
         <para>The version column may be a numeric (the recommended solution)
-        or a timestamp as per the EJB3 spec. Hibernate support any kind of
-        type provided that you define and implement the appropriate
+        or a timestamp. Hibernate supports any kind of type provided that you
+        define and implement the appropriate
         <classname>UserVersionType</classname>.</para>
 
         <para>The application must not alter the version number set up by
         Hibernate in any way. To artificially increase the version number,
         check in Hibernate Entity Manager's reference documentation
-        <literal>LockMode.WRITE</literal></para>
-      </sect3>
-    </sect2>
+        <literal>LockModeType.OPTIMISTIC_FORCE_INCREMENT</literal> or
+        <literal>LockModeType.PESSIMISTIC_FORCE_INCREMENT</literal>.</para>
+      </section>
+    </section>
 
-    <sect2 id="entity-mapping-property" revision="1">
+    <section id="entity-mapping-property" revision="1">
       <title>Mapping simple properties</title>
 
-      <sect3>
+      <section>
         <title>Declaring basic property mappings</title>
 
-        <para>Every non static non transient property (field or method) of an
-        entity bean is considered persistent, unless you annotate it as
-        <literal>@Transient</literal>. Not having an annotation for your
-        property is equivalent to the appropriate <literal>@Basic</literal>
-        annotation. The <literal>@Basic</literal> annotation allows you to
-        declare the fetching strategy for a property:</para>
+        <para>Every non static non transient property (field or method
+        depending on the access type) of an entity bean is considered
+        persistent, unless you annotate it as <literal>@Transient</literal>.
+        Not having an annotation for your property is equivalent to the
+        appropriate <literal>@Basic</literal> annotation. The
+        <literal>@Basic</literal> annotation allows you to declare the
+        fetching strategy for a property:</para>
 
         <programlisting>public transient int counter; //transient property
 
@@ -212,30 +217,32 @@ Starred getNote() { ... } //enum persisted as String in database</programlisting
 
         <note>
           <para>To enable property level lazy fetching, your classes have to
-          be instrumented: bytecode is added to the original one to enable
+          be instrumented: bytecode is added to the original class to enable
           such feature, please refer to the Hibernate reference documentation.
           If your classes are not instrumented, property level lazy loading is
           silently ignored.</para>
         </note>
 
         <para>The recommended alternative is to use the projection capability
-        of EJB-QL or Criteria queries.</para>
+        of JP-QL (Java Persistence Query Language) or Criteria queries.</para>
 
-        <para>EJB3 support property mapping of all basic types supported by
+        <para>JPA support property mapping of all basic types supported by
         Hibernate (all basic Java types , their respective wrappers and
         serializable classes). Hibernate Annotations support out of the box
-        Enum type mapping either into a ordinal column (saving the enum
+        enum type mapping either into a ordinal column (saving the enum
         ordinal) or a string based column (saving the enum string
         representation): the persistence representation, defaulted to ordinal,
-        can be overriden through the <literal>@Enumerated</literal> annotation
-        as shown in the <literal>note</literal> property example.</para>
+        can be overridden through the <literal>@Enumerated</literal>
+        annotation as shown in the <literal>note</literal> property
+        example.</para>
 
-        <para>In core Java APIs, the temporal precision is not defined. When
-        dealing with temporal data you might want to describe the expected
-        precision in database. Temporal data can have <literal>DATE</literal>,
-        <literal>TIME</literal>, or <literal>TIMESTAMP</literal> precision (ie
-        the actual date, only the time, or both). Use the
-        <literal>@Temporal</literal> annotation to fine tune that.</para>
+        <para>In plain Java APIs, the temporal precision of time is not
+        defined. When dealing with temporal data you might want to describe
+        the expected precision in database. Temporal data can have
+        <literal>DATE</literal>, <literal>TIME</literal>, or
+        <literal>TIMESTAMP</literal> precision (ie the actual date, only the
+        time, or both). Use the <literal>@Temporal</literal> annotation to
+        fine tune that.</para>
 
         <para><literal>@Lob</literal> indicates that the property should be
         persisted in a Blob or a Clob depending on the property type:
@@ -263,9 +270,15 @@ public byte[] getFullCode() {
         and if the property is not annotated with <literal>@Lob</literal>,
         then the Hibernate <literal>serializable</literal> type is
         used.</para>
-      </sect3>
+      </section>
 
-      <sect3 id="entity-mapping-property-column" revision="1">
+      <section>
+        <title></title>
+
+        <para></para>
+      </section>
+
+      <section id="entity-mapping-property-column" revision="1">
         <title>Declaring column attributes</title>
 
         <para>The column(s) used for a property mapping can be defined using
@@ -409,9 +422,9 @@ public String getName() { ... }
             </callout>
           </calloutlist>
         </programlistingco>
-      </sect3>
+      </section>
 
-      <sect3>
+      <section>
         <title>Embedded objects (aka components)</title>
 
         <para>It is possible to declare an embedded component inside an entity
@@ -512,9 +525,9 @@ public class Country implements Serializable {
         <classname>DefaultComponentSafeNamingStrategy</classname> is a small
         improvement over the default EJB3NamingStrategy that allows embedded
         objects to be defaulted even if used twice in the same entity.</para>
-      </sect3>
+      </section>
 
-      <sect3>
+      <section>
         <title>Non-annotated property defaults</title>
 
         <para>If a property is not annotated, the following rules
@@ -522,26 +535,32 @@ public class Country implements Serializable {
 
         <itemizedlist>
           <listitem>
-             If the property is of a single type, it is mapped as @Basic 
+            <para>If the property is of a single type, it is mapped as
+            @Basic</para>
           </listitem>
 
           <listitem>
-             Otherwise, if the type of the property is annotated as @Embeddable, it is mapped as @Embedded 
+            <para>Otherwise, if the type of the property is annotated as
+            @Embeddable, it is mapped as @Embedded</para>
           </listitem>
 
           <listitem>
-             Otherwise, if the type of the property is Serializable, it is mapped as @Basic in a column holding the object in its serialized version 
+            <para>Otherwise, if the type of the property is Serializable, it
+            is mapped as @Basic in a column holding the object in its
+            serialized version</para>
           </listitem>
 
           <listitem>
-             Otherwise, if the type of the property is java.sql.Clob or java.sql.Blob, it is mapped as @Lob with the appropriate LobType 
+            <para>Otherwise, if the type of the property is java.sql.Clob or
+            java.sql.Blob, it is mapped as @Lob with the appropriate
+            LobType</para>
           </listitem>
         </itemizedlist>
-      </sect3>
-    </sect2>
+      </section>
+    </section>
 
-    <sect2 id="entity-mapping-identifier" label=""
-           xreflabel="Mapping identifier properties">
+    <section id="entity-mapping-identifier" label=""
+             xreflabel="Mapping identifier properties">
       <title>Mapping identifier properties</title>
 
       <para>The <literal>@Id</literal> annotation lets you define which
@@ -552,19 +571,20 @@ public class Country implements Serializable {
 
       <itemizedlist>
         <listitem>
-           AUTO - either identity column, sequence or table depending on the underlying DB 
+          <para>AUTO - either identity column, sequence or table depending on
+          the underlying DB</para>
         </listitem>
 
         <listitem>
-           TABLE - table holding the id 
+          <para>TABLE - table holding the id</para>
         </listitem>
 
         <listitem>
-           IDENTITY - identity column 
+          <para>IDENTITY - identity column</para>
         </listitem>
 
         <listitem>
-           SEQUENCE - sequence 
+          <para>SEQUENCE - sequence</para>
         </listitem>
       </itemizedlist>
 
@@ -683,15 +703,17 @@ public class Store implements Serializable {
 
       <itemizedlist>
         <listitem>
-           annotate the component property as @Id and make the component class @Embeddable 
+          <para>annotate the component property as @Id and make the component
+          class @Embeddable</para>
         </listitem>
 
         <listitem>
-           annotate the component property as @EmbeddedId 
+          <para>annotate the component property as @EmbeddedId</para>
         </listitem>
 
         <listitem>
-           annotate the class as @IdClass and annotate each property of the entity involved in the primary key with @Id 
+          <para>annotate the class as @IdClass and annotate each property of
+          the entity involved in the primary key with @Id</para>
         </listitem>
       </itemizedlist>
 
@@ -781,24 +803,27 @@ public class TvMagazinPk implements Serializable {
     public Presenter presenter;
 }
 </programlisting>
-    </sect2>
+    </section>
 
-    <sect2>
+    <section>
       <title>Mapping inheritance</title>
 
       <para>EJB3 supports the three types of inheritance:</para>
 
       <itemizedlist>
         <listitem>
-           Table per Class Strategy: the &lt;union-class&gt; element in Hibernate 
+          <para>Table per Class Strategy: the &lt;union-class&gt; element in
+          Hibernate</para>
         </listitem>
 
         <listitem>
-           Single Table per Class Hierarchy Strategy: the &lt;subclass&gt; element in Hibernate 
+          <para>Single Table per Class Hierarchy Strategy: the
+          &lt;subclass&gt; element in Hibernate</para>
         </listitem>
 
         <listitem>
-           Joined Subclass Strategy: the &lt;joined-subclass&gt; element in Hibernate 
+          <para>Joined Subclass Strategy: the &lt;joined-subclass&gt; element
+          in Hibernate</para>
         </listitem>
       </itemizedlist>
 
@@ -810,7 +835,7 @@ public class TvMagazinPk implements Serializable {
         <para>Annotating interfaces is currently not supported.</para>
       </note>
 
-      <sect3>
+      <section>
         <title>Table per class</title>
 
         <para>This strategy has many drawbacks (esp. with polymorphic queries
@@ -832,9 +857,9 @@ public class Flight implements Serializable {
         shared across several tables. Consequently, when using this strategy,
         you should not use <literal>AUTO </literal>nor
         <literal>IDENTITY</literal>.</para>
-      </sect3>
+      </section>
 
-      <sect3>
+      <section>
         <title>Single table per class hierarchy</title>
 
         <para>All properties of all super- and subclasses are mapped into the
@@ -874,9 +899,9 @@ public class A320 extends Plane { ... }
         <para><literal>@Inheritance</literal> and
         <literal>@DiscriminatorColumn</literal> should only be defined at the
         top of the entity hierarchy.</para>
-      </sect3>
+      </section>
 
-      <sect3>
+      <section>
         <title>Joined subclasses</title>
 
         <para>The<literal> @PrimaryKeyJoinColumn</literal> and
@@ -902,9 +927,9 @@ public class AmericaCupClass  extends Boat { ... }
         <literal>AmericaCupClass</literal> table is joined with
         <literal>Boat</literal> using the join condition <code>Boat.id =
         AmericaCupClass.BOAT_ID</code>.</para>
-      </sect3>
+      </section>
 
-      <sect3>
+      <section>
         <title>Inherit properties from superclasses</title>
 
         <para>This is sometimes useful to share common properties through a
@@ -1005,13 +1030,13 @@ public class Plane extends FlyingObject {
         <literal>@Entity</literal> classes,
         <literal>@MappedSuperclass</literal> classes and properties pointing
         to an <literal>@Embeddable</literal> object.</para>
-      </sect3>
-    </sect2>
+      </section>
+    </section>
 
-    <sect2 id="entity-mapping-association">
+    <section id="entity-mapping-association">
       <title>Mapping entity bean associations/relationships</title>
 
-      <sect3>
+      <section>
         <title>One-to-one</title>
 
         <para>You can associate entity beans through a one-to-one relationship
@@ -1143,9 +1168,9 @@ public class Passport implements Serializable {
 
         <para>You must declare the join table name and the join columns
         explicitly in such a mapping.</para>
-      </sect3>
+      </section>
 
-      <sect3>
+      <section>
         <title>Many-to-one</title>
 
         <para>Many-to-one associations are declared at the property level with
@@ -1216,13 +1241,13 @@ public class Flight implements Serializable {
     ...
 }
             </programlisting>
-      </sect3>
+      </section>
 
-      <sect3 id="entity-mapping-association-collections" revision="1">
+      <section id="entity-mapping-association-collections" revision="1">
         <title>Collections</title>
 
-        <sect4 id="entity-mapping-association-collections-overview"
-               revision="1">
+        <section id="entity-mapping-association-collections-overview"
+                 revision="1">
           <title>Overview</title>
 
           <para>You can map <classname>Collection</classname>,
@@ -1390,17 +1415,17 @@ public class Version {
           <para>Unless the collection is a generic, you will have to define
           <literal>targetEntity</literal>. This is a annotation attribute that
           take the target entity class as a value.</para>
-        </sect4>
+        </section>
 
-        <sect4 id="entity-mapping-association-collection-onetomany"
-               revision="2">
+        <section id="entity-mapping-association-collection-onetomany"
+                 revision="2">
           <title>One-to-many</title>
 
           <para>One-to-many associations are declared at the property level
           with the annotation <literal>@OneToMany</literal>. One to many
           associations may be bidirectional.</para>
 
-          <sect5>
+          <section>
             <title>Bidirectional</title>
 
             <para>Since many to one are (almost) always the owner side of a
@@ -1451,9 +1476,9 @@ public class Soldier {
     public Troop getTroop() {
     ...
 }</programlisting>
-          </sect5>
+          </section>
 
-          <sect5>
+          <section>
             <title>Unidirectional</title>
 
             <para>A unidirectional one to many using a foreign key column in
@@ -1481,9 +1506,9 @@ public class Ticket implements Serializable {
             <para><literal>Customer</literal> describes a unidirectional
             relationship with <literal>Ticket</literal> using the join column
             <literal>CUST_ID</literal>.</para>
-          </sect5>
+          </section>
 
-          <sect5>
+          <section>
             <title>Unidirectional with join table</title>
 
             <para>A unidirectional one to many with join table is much
@@ -1516,10 +1541,10 @@ public class Monkey {
             (<literal>joinColumns</literal>) and a foreign key
             <literal>monkey_id</literal> to <literal>Monkey</literal>
             (<literal>inversejoinColumns</literal>).</para>
-          </sect5>
+          </section>
 
-          <sect5 id="entity-mapping-association-collection-manytomany-default"
-                 revision="1">
+          <section id="entity-mapping-association-collection-manytomany-default"
+                   revision="1">
             <title>Defaults</title>
 
             <para>Without describing any physical mapping, a unidirectional
@@ -1555,14 +1580,14 @@ public class Tiger {
             name, <keycap>_</keycap>, trainer id) and a foreign key
             <literal>trainedTigers_id</literal> to <literal>Monkey</literal>
             (property name, <keycap>_</keycap>, Tiger primary column).</para>
-          </sect5>
-        </sect4>
+          </section>
+        </section>
 
-        <sect4 id="eentity-mapping-association-collection-manytomany"
-               revision="">
+        <section id="eentity-mapping-association-collection-manytomany"
+                 revision="">
           <title>Many-to-many</title>
 
-          <sect5>
+          <section>
             <title>Definition</title>
 
             <para>A many-to-many association is defined logically using the
@@ -1619,9 +1644,9 @@ public class Employee implements Serializable {
             describe the physical mapping: a simple
             <literal>mappedBy</literal> argument containing the owner side
             property name bind the two.</para>
-          </sect5>
+          </section>
 
-          <sect5>
+          <section>
             <title>Default values</title>
 
             <para>As any other annotations, most values are guessed in a many
@@ -1691,11 +1716,11 @@ public class Customer {
             the <literal>Store</literal> table. The
             <literal>customers_id</literal> column is a foreign key to the
             <literal>Customer</literal> table.</para>
-          </sect5>
-        </sect4>
-      </sect3>
+          </section>
+        </section>
+      </section>
 
-      <sect3 id="entity-mapping-association-cascade">
+      <section id="entity-mapping-association-cascade">
         <title>Transitive persistence with cascading</title>
 
         <para>You probably have noticed the <literal>cascade</literal>
@@ -1706,23 +1731,29 @@ public class Customer {
 
         <itemizedlist>
           <listitem>
-             CascadeType.PERSIST: cascades the persist (create) operation to associated entities persist() is called or if the entity is managed 
+            <para>CascadeType.PERSIST: cascades the persist (create) operation
+            to associated entities persist() is called or if the entity is
+            managed</para>
           </listitem>
 
           <listitem>
-             CascadeType.MERGE: cascades the merge operation to associated entities if merge() is called or if the entity is managed 
+            <para>CascadeType.MERGE: cascades the merge operation to
+            associated entities if merge() is called or if the entity is
+            managed</para>
           </listitem>
 
           <listitem>
-             CascadeType.REMOVE: cascades the remove operation to associated entities if delete() is called 
+            <para>CascadeType.REMOVE: cascades the remove operation to
+            associated entities if delete() is called</para>
           </listitem>
 
           <listitem>
-             CascadeType.REFRESH: cascades the refresh operation to associated entities if refresh() is called 
+            <para>CascadeType.REFRESH: cascades the refresh operation to
+            associated entities if refresh() is called</para>
           </listitem>
 
           <listitem>
-             CascadeType.ALL: all of the above 
+            <para>CascadeType.ALL: all of the above</para>
           </listitem>
         </itemizedlist>
 
@@ -1734,9 +1765,9 @@ public class Customer {
 
         <para>Please refer to the chapter 6.3 of the EJB3 specification for
         more information on cascading and create/merge semantics.</para>
-      </sect3>
+      </section>
 
-      <sect3 id="entity-mapping-association-fetching" revision="1">
+      <section id="entity-mapping-association-fetching" revision="1">
         <title>Association fetching</title>
 
         <para>You have the ability to either eagerly or lazily fetch
@@ -1758,10 +1789,10 @@ public class Customer {
         allows you to override laziness when doing a particular query. This is
         very useful to improve performance and is decided on a use case to use
         case basis.</para>
-      </sect3>
-    </sect2>
+      </section>
+    </section>
 
-    <sect2>
+    <section>
       <title>Mapping composite primary and foreign keys</title>
 
       <para>Composite primary keys use a embedded class as the primary key
@@ -1853,9 +1884,9 @@ public class ParentPk implements Serializable {
 
       <para>Note the explicit usage of the
       <literal>referencedColumnName</literal>.</para>
-    </sect2>
+    </section>
 
-    <sect2>
+    <section>
       <title>Mapping secondary tables</title>
 
       <para>You can map a single entity bean to several tables using the
@@ -1913,14 +1944,14 @@ public class Cat implements Serializable {
 
       <para>Check out the JBoss EJB 3 tutorial or the Hibernate Annotations
       unit test suite for more examples.</para>
-    </sect2>
-  </sect1>
+    </section>
+  </section>
 
-  <sect1 id="entity-mapping-query">
+  <section id="entity-mapping-query">
     <title>Mapping Queries</title>
 
-    <sect2 id="entity-mapping-query-hql" label="Mapping JPAQL/HQL queries"
-           revision="1">
+    <section id="entity-mapping-query-hql" label="Mapping JPAQL/HQL queries"
+             revision="1">
       <title>Mapping JPAQL/HQL queries</title>
 
       <para>You can map EJBQL/HQL queries using annotations.
@@ -2032,9 +2063,9 @@ public class MyDao {
           </tbody>
         </tgroup>
       </table>
-    </sect2>
+    </section>
 
-    <sect2 id="entity-mapping-query-native" revision="2">
+    <section id="entity-mapping-query-native" revision="2">
       <title>Mapping native queries</title>
 
       <para>You can also map a native query (ie a plain SQL query). To achieve
@@ -2255,10 +2286,10 @@ public class SpaceShip {</programlisting>
       introduced: <literal>org.hibernate.callable</literal> which can be true
       or false depending on whether the query is a stored procedure or
       not.</para>
-    </sect2>
-  </sect1>
+    </section>
+  </section>
 
-  <sect1 id="entity-hibspec" xreflabel="Hibernate Annotation Extensions">
+  <section id="entity-hibspec" xreflabel="Hibernate Annotation Extensions">
     <title>Hibernate Annotation Extensions</title>
 
     <para>Hibernate 3.1 offers a variety of additional annotations that you
@@ -2270,7 +2301,7 @@ public class SpaceShip {</programlisting>
     <classname>org.hibernate.annotations</classname> package contains all
     these annotations extensions.</para>
 
-    <sect2 id="entity-hibspec-entity" revision="4">
+    <section id="entity-hibspec-entity" revision="4">
       <title>Entity</title>
 
       <para>You can fine tune some of the actions done by Hibernate on
@@ -2280,27 +2311,33 @@ public class SpaceShip {</programlisting>
       additional metadata that may be needed beyond what is defined in the
       standard <literal>@Entity</literal> <itemizedlist>
           <listitem>
-             mutable: whether this entity is mutable or not 
+            <para>mutable: whether this entity is mutable or not</para>
           </listitem>
 
           <listitem>
-             dynamicInsert: allow dynamic SQL for inserts 
+            <para>dynamicInsert: allow dynamic SQL for inserts</para>
           </listitem>
 
           <listitem>
-             dynamicUpdate: allow dynamic SQL for updates 
+            <para>dynamicUpdate: allow dynamic SQL for updates</para>
           </listitem>
 
           <listitem>
-             selectBeforeUpdate: Specifies that Hibernate should never perform an SQL UPDATE unless it is certain that an object is actually modified. 
+            <para>selectBeforeUpdate: Specifies that Hibernate should never
+            perform an SQL UPDATE unless it is certain that an object is
+            actually modified.</para>
           </listitem>
 
           <listitem>
-             polymorphism: whether the entity polymorphism is of PolymorphismType.IMPLICIT (default) or PolymorphismType.EXPLICIT 
+            <para>polymorphism: whether the entity polymorphism is of
+            PolymorphismType.IMPLICIT (default) or
+            PolymorphismType.EXPLICIT</para>
           </listitem>
 
           <listitem>
-             optimisticLock: optimistic locking strategy (OptimisticLockType.VERSION, OptimisticLockType.NONE, OptimisticLockType.DIRTY or OptimisticLockType.ALL) 
+            <para>optimisticLock: optimistic locking strategy
+            (OptimisticLockType.VERSION, OptimisticLockType.NONE,
+            OptimisticLockType.DIRTY or OptimisticLockType.ALL)</para>
           </listitem>
         </itemizedlist></para>
 
@@ -2423,15 +2460,15 @@ public class Vegetable { ... }
 @Entity
 @OnDelete(action=OnDeleteAction.CASCADE)
 public class Carrot extends Vegetable { ... }</programlisting></para>
-    </sect2>
+    </section>
 
-    <sect2 id="entity-hibspec-identifier" label="Identifier" revision="2">
+    <section id="entity-hibspec-identifier" label="Identifier" revision="2">
       <title>Identifier</title>
 
       <para>Hibernate Annotations goes beyond the Java Persistence
       specification when defining identifiers.</para>
 
-      <sect3>
+      <section>
         <title>Generators</title>
 
         <para><literal><literal>@org.hibernate.annotations.GenericGenerator</literal>
@@ -2478,9 +2515,9 @@ public Integer getId() {</programlisting></para>
      }
 )
 package org.hibernate.test.model</programlisting>
-      </sect3>
+      </section>
 
-      <sect3>
+      <section>
         <title>@NaturalId</title>
 
         <para>While not used as identifier property, some (group of)
@@ -2519,13 +2556,13 @@ List results = s.createCriteria( Citizen.class )
         <para>Note that the group of properties representing the natural
         identifier have to be unique (Hibernate will generate a unique
         constraint if the database schema is generated).</para>
-      </sect3>
-    </sect2>
+      </section>
+    </section>
 
-    <sect2 id="entity-hibspec-property" revision="2">
+    <section id="entity-hibspec-property" revision="2">
       <title>Property</title>
 
-      <sect3>
+      <section>
         <title>Access type</title>
 
         <para>The default access type is determined from the position of the
@@ -2570,8 +2607,8 @@ List results = s.createCriteria( Citizen.class )
 
         <itemizedlist>
           <listitem>
-            <para>The access type is overriden for the annotated element, if
-            overriden on a class, all the properties of the given class
+            <para>The access type is overridden for the annotated element, if
+            overridden on a class, all the properties of the given class
             inherit the access type.</para>
           </listitem>
 
@@ -2689,9 +2726,9 @@ public class Country implements Serializable {
     }
 }
 </programlisting>
-      </sect3>
+      </section>
 
-      <sect3>
+      <section>
         <title>Formula</title>
 
         <para>Sometimes, you want the Database to do some computation for you
@@ -2705,9 +2742,9 @@ public long getObjectVolume()</programlisting>
 
         <para>The SQL fragment can be as complex as you want and even include
         subselects.</para>
-      </sect3>
+      </section>
 
-      <sect3>
+      <section>
         <title>Type</title>
 
         <para><literal>@org.hibernate.annotations.Type</literal> overrides the
@@ -2731,11 +2768,9 @@ public long getObjectVolume()</programlisting>
         <literal>@Type</literal> annotation.</para>
 
         <note>
-           Package level annotations are placed in a file named 
-
-          <filename>package-info.java</filename>
-
-           in the appropriate package. Place your annotations before the package declaration. 
+          <para>Package level annotations are placed in a file named
+          <filename>package-info.java</filename> in the appropriate package.
+          Place your annotations before the package declaration.</para>
         </note>
 
         <programlisting>
@@ -2802,9 +2837,9 @@ public class MonetaryAmount implements Serializable {
     private Currency currency;
     ...
 }</programlisting>
-      </sect3>
+      </section>
 
-      <sect3>
+      <section>
         <title>Index</title>
 
         <para>You can define an index on a particular column using the
@@ -2816,9 +2851,9 @@ public class MonetaryAmount implements Serializable {
 public String getStoryPart1() {
     return storyPart1;
 }</programlisting>
-      </sect3>
+      </section>
 
-      <sect3>
+      <section>
         <title>@Parent</title>
 
         <para>When inside an embeddable object, you can define one of the
@@ -2838,9 +2873,9 @@ public class Address {
 
 
 person == person.address.owner</programlisting>
-      </sect3>
+      </section>
 
-      <sect3>
+      <section>
         <title>Generated properties</title>
 
         <para>Some properties are generated at insert or update time by your
@@ -2867,9 +2902,9 @@ public class Antenna {
         <para><literal>@Version</literal> properties cannot be
         <literal>@Generated(INSERT)</literal> by design, it has to be either
         <literal>NEVER</literal> or <literal>ALWAYS</literal>.</para>
-      </sect3>
+      </section>
 
-      <sect3>
+      <section>
         <title>@Target</title>
 
         <para>Sometimes, the type guessed by reflection is not the one you
@@ -2886,9 +2921,9 @@ public class Antenna {
     }</programlisting>
 
         <para></para>
-      </sect3>
+      </section>
 
-      <sect3>
+      <section>
         <title>Optimistic lock</title>
 
         <para>It is sometimes useful to avoid increasing the version number
@@ -2898,10 +2933,10 @@ public class Antenna {
 
         <para>More formally, specifies that updates to this property do not
         require acquisition of the optimistic lock.</para>
-      </sect3>
-    </sect2>
+      </section>
+    </section>
 
-    <sect2 id="entity-hibspec-inheritance" revision="3">
+    <section id="entity-hibspec-inheritance" revision="3">
       <title>Inheritance</title>
 
       <para>SINGLE_TABLE is a very powerful strategy but sometimes, and
@@ -2939,9 +2974,9 @@ public class Document extends File {</programlisting>
       <para>The foreign key from the <literal>Document</literal> table to the
       <literal>File</literal> table will be named
       <literal>FK_DOCU_FILE</literal>.</para>
-    </sect2>
+    </section>
 
-    <sect2 id="entity-hibspec-singleassoc">
+    <section id="entity-hibspec-singleassoc">
       <title>Single Association related annotations</title>
 
       <para>By default, when Hibernate cannot resolve the association because
@@ -2993,7 +3028,7 @@ public class Child {
 
 alter table Child add constraint FK_PARENT foreign key (parent_id) references Parent</programlisting>
 
-      <sect3 id="entity-hibspec-singleassoc-fetching">
+      <section id="entity-hibspec-singleassoc-fetching">
         <title>Lazy options and fetching modes</title>
 
         <para>EJB3 comes with the <literal>fetch</literal> option to define
@@ -3091,9 +3126,9 @@ alter table Child add constraint FK_PARENT foreign key (parent_id) references Pa
             </tbody>
           </tgroup>
         </table>
-      </sect3>
+      </section>
 
-      <sect3 id="entity-hibspec-singleassoc-any">
+      <section id="entity-hibspec-singleassoc-any">
         <title>@Any</title>
 
         <para>The <classname>@Any</classname> annotation defines a polymorphic
@@ -3148,38 +3183,43 @@ package org.hibernate.test.annotations.any;
     public Property getMainProperty() {
         return mainProperty;
     }</programlisting>
-      </sect3>
-    </sect2>
+      </section>
+    </section>
 
-    <sect2 id="entity-hibspec-collection" revision="2">
+    <section id="entity-hibspec-collection" revision="2">
       <title>Collection related annotations</title>
 
-      <sect3 id="entity-hibspec-collection-enhance" revision="3">
+      <section id="entity-hibspec-collection-enhance" revision="3">
         <title>Enhance collection settings</title>
 
         <para>It is possible to set <itemizedlist>
             <listitem>
-               the batch size for collections using @BatchSize 
+              <para>the batch size for collections using @BatchSize</para>
             </listitem>
 
             <listitem>
-               the where clause, using @Where (applied on the target entity) or @WhereJoinTable (applied on the association table) 
+              <para>the where clause, using @Where (applied on the target
+              entity) or @WhereJoinTable (applied on the association
+              table)</para>
             </listitem>
 
             <listitem>
-               the check clause, using @Check 
+              <para>the check clause, using @Check</para>
             </listitem>
 
             <listitem>
-               the SQL order by clause, using @OrderBy 
+              <para>the SQL order by clause, using @OrderBy</para>
             </listitem>
 
             <listitem>
-               the delete cascade strategy through @OnDelete(action=OnDeleteAction.CASCADE) 
+              <para>the delete cascade strategy through
+              @OnDelete(action=OnDeleteAction.CASCADE)</para>
             </listitem>
 
             <listitem>
-               the collection immutability using @Immutable: if set specifies that the elements of the collection never change (a minor performance optimization in some cases) 
+              <para>the collection immutability using @Immutable: if set
+              specifies that the elements of the collection never change (a
+              minor performance optimization in some cases)</para>
             </listitem>
 
             <listitem>
@@ -3230,12 +3270,12 @@ public class Woman {
 
 alter table Man_Woman add constraint TO_WOMAN_FK foreign key (woman_id) references Woman
 alter table Man_Woman add constraint TO_MAN_FK foreign key (man_id) references Man</programlisting>
-      </sect3>
+      </section>
 
-      <sect3 id="entity-hibspec-collection-extratype" revision="1">
+      <section id="entity-hibspec-collection-extratype" revision="1">
         <title>Extra collection types</title>
 
-        <sect4>
+        <section>
           <title>List</title>
 
           <para>Beyond EJB3, Hibernate Annotations supports true
@@ -3259,9 +3299,9 @@ public List&lt;Drawer&gt; getDrawers() {
             limitations of it, consider using
             <literal>@CollectionId</literal>.</para>
           </note>
-        </sect4>
+        </section>
 
-        <sect4 id="entity-hibspec-collection-extratype-map" revision="1">
+        <section id="entity-hibspec-collection-extratype-map" revision="1">
           <title>Map</title>
 
           <para>Hibernate Annotations also supports true Map mappings, if
@@ -3285,10 +3325,10 @@ public List&lt;Drawer&gt; getDrawers() {
     private Map&lt;Luggage, Size&gt; sizePerLuggage = new HashMap&lt;Luggage, Size&gt;();</programlisting>
 
           <para></para>
-        </sect4>
+        </section>
 
-        <sect4 id="entity-hibspec-collection-extratype-indexbidir"
-               revision="2">
+        <section id="entity-hibspec-collection-extratype-indexbidir"
+                 revision="2">
           <title>Bidirectional association with indexed collections</title>
 
           <para>A bidirectional association where one end is an indexed
@@ -3347,9 +3387,9 @@ public class Child {
 
           <para>Note that in this mapping, the collection-valued end of the
           association is responsible for updating the foreign key.</para>
-        </sect4>
+        </section>
 
-        <sect4>
+        <section>
           <title>Bag with primary key</title>
 
           <para>Another interesting feature is the ability to define a
@@ -3378,9 +3418,9 @@ public class Passport {
     private Collection&lt;Stamp&gt; visaStamp = new ArrayList();
     ...
 }</programlisting>
-        </sect4>
+        </section>
 
-        <sect4>
+        <section>
           <title>Collection of element or composite elements</title>
 
           <para>Hibernate Annotations also supports collections of core types
@@ -3520,9 +3560,9 @@ public class Toy {
             elements the old way still work but is considered deprecated and
             is going to be unsupported in future releases</para>
           </note>
-        </sect4>
+        </section>
 
-        <sect4>
+        <section>
           <title>@ManyToAny</title>
 
           <para><classname>@ManyToAny</classname> allows polymorphic
@@ -3552,11 +3592,11 @@ public class Toy {
           <classname>@ManyToAny</classname> can use named
           <classname>@AnyDef</classname>s, see <xref
           linkend="entity-hibspec-singleassoc-any" /> for more info.</para>
-        </sect4>
-      </sect3>
-    </sect2>
+        </section>
+      </section>
+    </section>
 
-    <sect2 id="entity-hibspec-cascade" xreflabel="Cascade">
+    <section id="entity-hibspec-cascade" xreflabel="Cascade">
       <title>Cascade</title>
 
       <para>Hibernate offers more operations than the Java Persistence
@@ -3625,9 +3665,9 @@ public Collection&lt;Employer&gt; getEmployers()</programlisting>
 
       <para>It is recommended to use @Cascade to compliment @*To*(cascade=...)
       as shown in the previous example.</para>
-    </sect2>
+    </section>
 
-    <sect2>
+    <section>
       <title>Cache</title>
 
       <para>In order to optimize your database accesses, you can activate the
@@ -3654,11 +3694,11 @@ public class Forest { ... }</programlisting>
 
       <programlistingco>
         <areaspec>
-          <area coords="2 55" id="hm1" />
+          <area coords="2 55" id="cache-hm1" />
 
-          <area coords="3 55" id="hm2" />
+          <area coords="3 55" id="cache-hm2" />
 
-          <area coords="4 55" id="hm3" />
+          <area coords="4 55" id="cache-hm3" />
         </areaspec>
 
         <programlisting>@Cache(
@@ -3668,26 +3708,26 @@ public class Forest { ... }</programlisting>
 )</programlisting>
 
         <calloutlist>
-          <callout arearefs="hm1">
+          <callout arearefs="cache-hm1">
             <para>usage: the given cache concurrency strategy (NONE,
             READ_ONLY, NONSTRICT_READ_WRITE, READ_WRITE, TRANSACTIONAL)</para>
           </callout>
 
-          <callout arearefs="hm2">
+          <callout arearefs="cache-hm2">
             <para>region (optional): the cache region (default to the fqcn of
             the class or the fq role name of the collection)</para>
           </callout>
 
-          <callout arearefs="hm3">
+          <callout arearefs="cache-hm3">
             <para><literal>include</literal> (optional): all to include all
             properties, non-lazy to only include non lazy properties (default
             all).</para>
           </callout>
         </calloutlist>
       </programlistingco>
-    </sect2>
+    </section>
 
-    <sect2 id="entity-hibspec-filters">
+    <section id="entity-hibspec-filters">
       <title>Filters</title>
 
       <para>Hibernate has the ability to apply arbitrary filters on top of
@@ -3733,9 +3773,9 @@ public class Forest { ... }</programlisting></para>
     //filter on the association table
     @FilterJoinTable(name="security", condition=":userlevel &gt;= requredLevel")
     public Set&lt;Forest&gt; getForests() { ... }</programlisting>
-    </sect2>
+    </section>
 
-    <sect2 id="entity-hibspec-query">
+    <section id="entity-hibspec-query">
       <title>Queries</title>
 
       <para>Since Hibernate has more features on named queries than the one
@@ -3794,9 +3834,9 @@ public class Forest { ... }</programlisting></para>
       <literal>@javax.persistence.NamedQuery</literal> annotations through the
       detyped <literal>@QueryHint</literal>. Another key advantage is the
       ability to set those annotations at a package level.</para>
-    </sect2>
+    </section>
 
-    <sect2 id="entity-hibspec-customsql" revision="1">
+    <section id="entity-hibspec-customsql" revision="1">
       <title>Custom SQL for CRUD operations</title>
 
       <para>Hibernate gives you the ability to override every single SQL
@@ -3893,9 +3933,9 @@ public class Cat implements Serializable {</programlisting>
       <para>The previous example also show that you can give a comment to a
       given table (promary or secondary): This comment will be used for DDL
       generation.</para>
-    </sect2>
+    </section>
 
-    <sect2>
+    <section>
       <title>Tuplizer</title>
 
       <para><classname>org.hibernate.tuple.Tuplizer</classname>, and its
@@ -3936,6 +3976,6 @@ public interface Cuisine {
 
 
 }</programlisting>
-    </sect2>
-  </sect1>
+    </section>
+  </section>
 </chapter>

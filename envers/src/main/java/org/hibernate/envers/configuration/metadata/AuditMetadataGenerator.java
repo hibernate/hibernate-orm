@@ -30,7 +30,6 @@ import java.util.Map;
 import org.dom4j.Element;
 import org.hibernate.envers.configuration.GlobalConfiguration;
 import org.hibernate.envers.configuration.AuditEntitiesConfiguration;
-import org.hibernate.envers.configuration.ClassesAuditingData;
 import org.hibernate.envers.configuration.metadata.reader.ClassAuditingData;
 import org.hibernate.envers.configuration.metadata.reader.PropertyAuditingData;
 import org.hibernate.envers.entities.EntityConfiguration;

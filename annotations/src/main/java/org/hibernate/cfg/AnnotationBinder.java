@@ -981,7 +981,7 @@ public final class
 
 	static void prepareDefaultCacheConcurrencyStrategy(Properties properties) {
 		if ( DEFAULT_CACHE_CONCURRENCY_STRATEGY != null ) {
-			log.info( "Default cache concurrency strategy already defined" );
+			log.trace( "Default cache concurrency strategy already defined" );
 			return;
 		}
 
@@ -998,7 +998,7 @@ public final class
 			return;
 		}
 
-		log.info( "Setting default cache concurrency strategy via config [" + strategy.name() + "]" );
+		log.debug( "Setting default cache concurrency strategy via config [" + strategy.name() + "]" );
 		DEFAULT_CACHE_CONCURRENCY_STRATEGY = strategy;
 	}
 

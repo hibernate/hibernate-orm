@@ -109,13 +109,14 @@ public class AnnotationConfiguration extends Configuration {
 	 * to use when either {@link javax.persistence.Cacheable @Cacheable} or
 	 * {@link Cache @Cache} is used.  {@link Cache @Cache(strategy="..")} is used to override.
 	 */
-	public static final String DEFAULT_CACHE_CONCURRENCY_STRATEGY = "org.hibernate.cache.default_cache_concurrency_strategy";
+	public static final String DEFAULT_CACHE_CONCURRENCY_STRATEGY = "hibernate.cache.default_cache_concurrency_strategy";
 
 	/**
-	 * Setting which indicates the Hibernate {@link org.hibernate.id.IdentifierGenerator} name to use as the mapping
-	 * for {@link javax.persistence.GenerationType#AUTO @GeneratedValue(strategy=AUTO...)}
+	 * Setting which indicates whether or not the new {@link org.hibernate.id.IdentifierGenerator} are used
+	 * for AUTO, TABLE and SEQUENCE.
+	 * Default to false to keep backward compatibility.
 	 */
-	public static final String USE_NEW_ID_GENERATOR_MAPPINGS = "org.hibernate.id.new_generator_mappings";
+	public static final String USE_NEW_ID_GENERATOR_MAPPINGS = "hibernate.id.new_generator_mappings";
 
 	/**
 	 * Class name of the class needed to enable Search.

@@ -314,6 +314,17 @@ public class CriteriaBuilderImpl implements CriteriaBuilder, Serializable {
 	 * {@inheritDoc}
 	 */
 	public Predicate isTrue(Expression<Boolean> expression) {
+		if ( CompoundPredicate.class.isInstance( expression ) ) {
+			final CompoundPredicate predicate = (CompoundPredicate) expression;
+			if ( predicate.getOperator() == Predicate.BooleanOperator.OR
+					&& predicate.getExpressions().size() == 0 ) {
+				predicate.not();
+			}
+			return predicate;
+		}
+		else if ( Predicate.class.isInstance( expression ) ) {
+			return (Predicate) expression;
+		}
 		return new BooleanAssertionPredicate( this, expression, Boolean.TRUE );
 	}
 
@@ -321,6 +332,22 @@ public class CriteriaBuilderImpl implements CriteriaBuilder, Serializable {
 	 * {@inheritDoc}
 	 */
 	public Predicate isFalse(Expression<Boolean> expression) {
+		if ( CompoundPredicate.class.isInstance( expression ) ) {
+			final CompoundPredicate predicate = (CompoundPredicate) expression;
+			if ( predicate.getOperator() == Predicate.BooleanOperator.OR
+					&& predicate.getExpressions().size() == 0 ) {
+				// nothing to do
+			}
+			else {
+				predicate.not();
+			}
+			return predicate;
+		}
+		else if ( Predicate.class.isInstance( expression ) ) {
+			final Predicate predicate = (Predicate) expression;
+			predicate.not();
+			return predicate;
+		}
 		return new BooleanAssertionPredicate( this, expression, Boolean.FALSE );
 	}
 

@@ -116,7 +116,11 @@ public class CompoundPredicate
 
 	public String render(CriteriaQueryCompiler.RenderingContext renderingContext) {
 		if ( getExpressions().size() == 0 ) {
-			return getOperator() == BooleanOperator.AND
+			boolean implicitTrue = getOperator() == BooleanOperator.AND;
+			if ( isNegated() ) {
+				implicitTrue = !implicitTrue;
+			}
+			return implicitTrue
 					? "1=1" // true
 					: "0=1"; // false
 		}

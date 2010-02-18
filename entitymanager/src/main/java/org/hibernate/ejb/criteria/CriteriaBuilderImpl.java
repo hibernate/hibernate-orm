@@ -73,6 +73,7 @@ import org.hibernate.ejb.criteria.expression.function.UpperFunction;
 import org.hibernate.ejb.criteria.path.PluralAttributePath;
 import org.hibernate.ejb.criteria.predicate.BooleanAssertionPredicate;
 import org.hibernate.ejb.criteria.predicate.BooleanExpressionPredicate;
+import org.hibernate.ejb.criteria.predicate.BooleanStaticAssertionPredicate;
 import org.hibernate.ejb.criteria.predicate.NullnessPredicate;
 import org.hibernate.ejb.criteria.predicate.CompoundPredicate;
 import org.hibernate.ejb.criteria.predicate.ComparisonPredicate;
@@ -316,9 +317,11 @@ public class CriteriaBuilderImpl implements CriteriaBuilder, Serializable {
 	public Predicate isTrue(Expression<Boolean> expression) {
 		if ( CompoundPredicate.class.isInstance( expression ) ) {
 			final CompoundPredicate predicate = (CompoundPredicate) expression;
-			if ( predicate.getOperator() == Predicate.BooleanOperator.OR
-					&& predicate.getExpressions().size() == 0 ) {
-				predicate.not();
+			if ( predicate.getExpressions().size() == 0 ) {
+				return new BooleanStaticAssertionPredicate(
+						this,
+						predicate.getOperator() == Predicate.BooleanOperator.AND
+				);
 			}
 			return predicate;
 		}
@@ -334,13 +337,13 @@ public class CriteriaBuilderImpl implements CriteriaBuilder, Serializable {
 	public Predicate isFalse(Expression<Boolean> expression) {
 		if ( CompoundPredicate.class.isInstance( expression ) ) {
 			final CompoundPredicate predicate = (CompoundPredicate) expression;
-			if ( predicate.getOperator() == Predicate.BooleanOperator.OR
-					&& predicate.getExpressions().size() == 0 ) {
-				// nothing to do
+			if ( predicate.getExpressions().size() == 0 ) {
+				return new BooleanStaticAssertionPredicate(
+						this,
+						predicate.getOperator() == Predicate.BooleanOperator.OR 
+				);
 			}
-			else {
-				predicate.not();
-			}
+			predicate.not();
 			return predicate;
 		}
 		else if ( Predicate.class.isInstance( expression ) ) {
@@ -351,7 +354,7 @@ public class CriteriaBuilderImpl implements CriteriaBuilder, Serializable {
 		return new BooleanAssertionPredicate( this, expression, Boolean.FALSE );
 	}
 
-	/**
+	/**s
 	 * {@inheritDoc}
 	 */
 	public Predicate isNull(Expression<?> x) {

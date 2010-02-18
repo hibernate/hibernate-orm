@@ -82,6 +82,66 @@ public class ExpressionsTest extends AbstractMetamodelSpecificTest {
 		em.close();
 	}
 
+	public void testEmptyConjunctionIsTrue() {
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		CriteriaQuery<Product> criteria = builder.createQuery( Product.class );
+		criteria.from( Product.class );
+		criteria.where( builder.isTrue( builder.and() ) );
+		List<Product> result = em.createQuery( criteria ).getResultList();
+		assertEquals( 1, result.size() );
+		em.getTransaction().commit();
+		em.close();
+	}
+
+	public void testEmptyConjunctionIsFalse() {
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		CriteriaQuery<Product> criteria = builder.createQuery( Product.class );
+		criteria.from( Product.class );
+		criteria.where( builder.isFalse( builder.and() ) );
+		List<Product> result = em.createQuery( criteria ).getResultList();
+		assertEquals( 0, result.size() );
+		em.getTransaction().commit();
+		em.close();
+	}
+
+	public void testEmptyDisjunction() {
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		CriteriaQuery<Product> criteria = builder.createQuery( Product.class );
+		criteria.from( Product.class );
+		criteria.where( builder.disjunction() );
+		List<Product> result = em.createQuery( criteria ).getResultList();
+		assertEquals( 0, result.size() );
+		em.getTransaction().commit();
+		em.close();
+	}
+
+	public void testEmptyDisjunctionIsTrue() {
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		CriteriaQuery<Product> criteria = builder.createQuery( Product.class );
+		criteria.from( Product.class );
+		criteria.where( builder.isTrue( builder.disjunction() ) );
+		List<Product> result = em.createQuery( criteria ).getResultList();
+		assertEquals( 0, result.size() );
+		em.getTransaction().commit();
+		em.close();
+	}
+
+	public void testEmptyDisjunctionIsFalse() {
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		CriteriaQuery<Product> criteria = builder.createQuery( Product.class );
+		criteria.from( Product.class );
+		criteria.where( builder.isFalse( builder.disjunction() ) );
+		List<Product> result = em.createQuery( criteria ).getResultList();
+		assertEquals( 1, result.size() );
+		em.getTransaction().commit();
+		em.close();
+	}
+
 	public void testDiff() {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();

@@ -30,8 +30,8 @@
   <sect1 id="entity-overview" revision="2">
     <title>Intro</title>
 
-    <para>This section covers EJB 3.0 (aka Java Persistence) entity
-    annotations and Hibernate-specific extensions.</para>
+    <para>This section covers Java Persistence 2.0 mapping annotations as well
+    as Hibernate-specific extensions.</para>
   </sect1>
 
   <sect1 id="entity-mapping" revision="2">
@@ -2530,7 +2530,7 @@ List results = s.createCriteria( Citizen.class )
 
         <para>The default access type is determined from the position of the
         <literal>@Id</literal> or <literal>@EmbeddedId</literal> annotation in
-        the entity hierarchy. </para>
+        the entity hierarchy.</para>
 
         <note>
           <para>The placement of annotations within a class hierarchy has to
@@ -2572,7 +2572,7 @@ List results = s.createCriteria( Citizen.class )
           <listitem>
             <para>The access type is overriden for the annotated element, if
             overriden on a class, all the properties of the given class
-            inherit the access type. </para>
+            inherit the access type.</para>
           </listitem>
 
           <listitem>
@@ -2582,7 +2582,7 @@ List results = s.createCriteria( Citizen.class )
             getters are scanned for annotations, if the enitiy is marked as
             <literal>@Access(AccessType.FIELD)</literal> or
             <literal>@AccessType("field")</literal> respectively, the fields
-            are scanned for annotations. </para>
+            are scanned for annotations.</para>
           </listitem>
         </itemizedlist>
 
@@ -2731,11 +2731,11 @@ public long getObjectVolume()</programlisting>
         <literal>@Type</literal> annotation.</para>
 
         <note>
-          Package level annotations are placed in a file named 
+           Package level annotations are placed in a file named 
 
           <filename>package-info.java</filename>
 
-           in the appropriate package. Place your annotations before the package declaration.
+           in the appropriate package. Place your annotations before the package declaration. 
         </note>
 
         <programlisting>

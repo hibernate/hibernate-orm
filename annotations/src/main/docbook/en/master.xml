@@ -23,9 +23,9 @@
   ~ Boston, MA  02110-1301  USA
   -->
 <!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
-        <!ENTITY versionNumber "3.4.0.GA">
+        <!ENTITY versionNumber "3.5.0.GA">
         <!ENTITY copyrightYear "2004">
-        <!ENTITY copyrightHolder "Red Hat Middleware, LLC.">
+        <!ENTITY copyrightHolder "Red Hat Inc. and the various authors">
 ]>
 <book lang="en">
   <bookinfo>
@@ -40,6 +40,17 @@
         <imagedata fileref="images/hibernate_logo_a.png" format="png" />
       </imageobject>
     </mediaobject>
+      <copyright>
+            <year>&copyrightYear;</year>
+            <holder>&copyrightHolder;</holder>
+        </copyright>
+      <authorgroup>
+   <author>
+      <firstname>Emmanuel</firstname>
+      <surname>Bernard</surname>
+   </author>
+          <!--TODO add translators like core did -->
+      </authorgroup>
   </bookinfo>
 
   <toc/>

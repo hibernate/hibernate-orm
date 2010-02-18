@@ -27,7 +27,7 @@
 <chapter id="additionalmodules">
   <title>Additional modules</title>
 
-  <para>Hibernate Annotations mainly focus on persistence metadata. The
+  <para>Hibernate Annotations mainly focuses on persistence metadata. The
   project also have a nice integration with some external modules.</para>
 
   <section>
@@ -71,7 +71,7 @@
 
       <para>To enable the Hibernate - Bean Validation integration, simply add
       a Bean Validation provider (preferably Hibernate Validation 4) in your
-      classpath. </para>
+      classpath.</para>
     </section>
 
     <section>
@@ -86,8 +86,9 @@
       <para>You can customize the Bean Validation integration by setting the
       validation mode. Use the
       <literal>javax.persistence.validation.mode</literal> property and set it
-      up for example in your <filename>persistence.xml</filename> file.
-      Several options are possible:</para>
+      up for example in your <filename>persistence.xml</filename> file or your
+      <filename>hibernate.cfg.xml</filename> file. Several options are
+      possible:</para>
 
       <itemizedlist>
         <listitem>
@@ -200,12 +201,14 @@
       <classname>ConstraintViolationException</classname> which exposes the
       set of <classname>ConstraintViolation</classname>s.</para>
 
-      <para>This exception is wrapped into an
-      <classname>HibernateException</classname> or a
-      <classname>PersistenceException</classname>. Note that generally,
-      catchable violation are validated at a higher level (for example in Seam
-      / JSF 2 via the JSF - Bean Validation integration or in your business
-      layer by explicitly calling Bean Validation).</para>
+      <para>This exception is wrapped in a
+      <classname>RollbackException</classname> when the violation happens at
+      commit time. Otherwise the
+      <classname>ConstraintViolationException</classname> is returned (for
+      example when calling <methodname>flush()</methodname>. Note that
+      generally, catchable violations are validated at a higher level (for
+      example in Seam / JSF 2 via the JSF - Bean Validation integration or in
+      your business layer by explicitly calling Bean Validation).</para>
 
       <para>An application code will rarely be looking for a
       <classname>ConstraintViolationException</classname> raised by Hibernate.
@@ -233,7 +236,7 @@
 
         <listitem>
           <para><classname>@Min</classname>, <classname>@Max</classname> lead
-          to column checks (like <code>value &lt;= max</code>) </para>
+          to column checks (like <code>value &lt;= max</code>)</para>
         </listitem>
 
         <listitem>

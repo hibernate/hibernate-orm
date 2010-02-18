@@ -1,4 +1,4 @@
-<?xml version='1.0' encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <!--
   ~ Hibernate, Relational Persistence for Idiomatic Java
   ~
@@ -22,8 +22,8 @@
   ~ 51 Franklin Street, Fifth Floor
   ~ Boston, MA  02110-1301  USA
   -->
-
-<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
+"http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
 <chapter>
   <title id="setup" revision="1">Setting up an annotations project</title>
 
@@ -32,26 +32,30 @@
 
     <itemizedlist>
       <listitem>
+        <para>Make sure you have JDK 5.0 installed or above.</para>
+      </listitem>
+
+      <listitem>
         <para><ulink url="http://www.hibernate.org/6.html">Download</ulink>
-        and unpack the Hibernate Annotations distribution from the Hibernate
-        website.</para>
+        and unpack the Hibernate Core distribution from the Hibernate website.
+        Hibernate 3.5 and onward contains the Hibernate Annotation
+        jars.</para>
       </listitem>
 
       <listitem>
-        <para><emphasis>This release requires Hibernate Core 3.3 and
-        above.</emphasis></para>
-      </listitem>
+        <para>Alternatively add the following dependency in your dependency
+        manager (like Maven or Ivy). Here is an example</para>
 
-      <listitem>
-        <para>This release is known to work on Hibernate Core 3.3.0.SP1</para>
-      </listitem>
-
-      <listitem>
-        <para>Make sure you have JDK 5.0 installed or above. You can of course
-        continue using XDoclet and get some of the benefits of
-        annotation-based metadata with older JDK versions. Note that this
-        document only describes JDK 5.0 annotations and you have to refer to
-        the XDoclet documentation for more information.</para>
+        <programlisting>&lt;project ...&gt;
+  ...
+  &lt;dependencies&gt;
+    &lt;dependency&gt;
+      &lt;groupId&gt;org.hibernate&lt;/groupId&gt;
+      &lt;artifactId&gt;hibernate-core&lt;/artifactId&gt;
+      &lt;version&gt;${hibernate-core-version}&lt;/version&gt;
+    &lt;/dependency&gt;
+  &lt;/dependencies&gt;
+&lt;/project&gt;</programlisting>
       </listitem>
     </itemizedlist>
   </section>
@@ -62,34 +66,73 @@
     <para>First, set up your classpath (after you have created a new project
     in your favorite IDE): <itemizedlist>
         <listitem>
-          <para>Copy all Hibernate3 core and required 3rd party library files
-          (see lib/README.txt in Hibernate).</para>
+          <para>Copy all Hibernate3 core and required 3rd party library
+          files.</para>
         </listitem>
 
         <listitem>
           <para>Copy <filename>hibernate-annotations.jar</filename>,
           <filename>lib/hibernate-comons-annotations.jar</filename> and
-          <filename>lib/ejb3-persistence.jar</filename> from the Hibernate
-          Annotations distribution to your classpath as well.</para>
+          <filename>lib/hibernate-jpa-2.0-api.jar</filename> from the
+          distribution to your classpath as well.</para>
         </listitem>
       </itemizedlist></para>
 
-    <para>If you wish to use <ulink
-    url="http://validator.hibernate.org">Hibernate Validator</ulink>, download
-    it from the Hibernate website and add
-    <filename>hibernate-validator.jar</filename> in your classpath.</para>
+    <para>Alternatively, import your pom.xml in your favorite IDE and let the
+    dependencies be resolved automatically,</para>
+
+    <note>
+      <title>What is hibernate-jpa-2.0-api-x.y.z.jar</title>
+
+      <para>This is the JAR containing the JPA 2.0 API, it is fully compliant
+      with the spec and passed the TCK signature test. You typically don't
+      need it when you deploy your application in a Java EE 6 application
+      server (like JBoss AS 6 for example).</para>
+    </note>
+
+    <para>We recommend you use <ulink
+    url="http://validator.hibernate.org">Hibernate Validator</ulink> and the
+    Bean VAlidation specification capabilities. Download Hibernate Validator 4
+    or above from the Hibernate website and add
+    <filename>hibernate-validator.jar</filename> and
+    <filename>validation-api.jar</filename> in your classpath. Alternatively
+    add the following dependency in your
+    <filename>pom.xml</filename>.<programlisting>&lt;project ...&gt;
+  ...
+  &lt;dependencies&gt;
+    &lt;dependency&gt;
+      &lt;groupId&gt;org.hibernate&lt;/groupId&gt;
+      &lt;artifactId&gt;hibernate-validator&lt;/artifactId&gt;
+      &lt;version&gt;${hibernate-validator-version}&lt;/version&gt;
+    &lt;/dependency&gt;
+  &lt;/dependencies&gt;
+&lt;/project&gt;</programlisting></para>
 
     <para>If you wish to use <ulink
     url="http://search.hibernate.org">Hibernate Search</ulink>, download it
     from the Hibernate website and add
     <filename>hibernate-search.jar</filename> and
-    <filename>lucene-core-x.y.z.jar</filename> in your classpath.</para>
+    <filename>lucene-core-x.y.z.jar</filename> in your classpath.
+    Alternatively add the following dependency in your
+    <filename>pom.xml</filename>.<programlisting>&lt;project ...&gt;
+  ...
+  &lt;dependencies&gt;
+    &lt;dependency&gt;
+      &lt;groupId&gt;org.hibernate&lt;/groupId&gt;
+      &lt;artifactId&gt;hibernate-search&lt;/artifactId&gt;
+      &lt;version&gt;${hibernate-search-version}&lt;/version&gt;
+    &lt;/dependency&gt;
+  &lt;/dependencies&gt;
+&lt;/project&gt;</programlisting></para>
 
-    <para>We also recommend a small wrapper class to startup Hibernate in a
-    static initializer block, known as <classname>HibernateUtil</classname>.
-    You might have seen this class in various forms in other areas of the
-    Hibernate documentation. For Annotation support you have to enhance this
-    helper class as follows: <programlisting>package hello;
+    <para>We recommend you use the JPA 2 APIs to bootstrap Hibernate (see the
+    Hibernate EntityManager documentation for more information). If you use
+    Hibernate Core and its native APIs read on.</para>
+
+    <para>If you boot Hibernate yourself, make sure to use the
+    <classname>AnnotationConfiguration</classname> class instead of the
+    <classname>Configuration</classname> class. Here is an example using the
+    (legacy) <classname>HibernateUtil</classname> approach: <programlisting>package hello;
 
 import org.hibernate.*;
 import org.hibernate.cfg.*;
@@ -128,50 +171,49 @@ private static final SessionFactory sessionFactory;
     "-//Hibernate/Hibernate Configuration DTD 3.0//EN"
     "http://hibernate.sourceforge.net/hibernate-configuration-3.0.dtd"&gt;
 
-        &lt;hibernate-configuration&gt;
-          &lt;session-factory&gt;
-            <emphasis role="bold">&lt;mapping package="test.animals"/&gt;
-            &lt;mapping class="test.Flight"/&gt;
-            &lt;mapping class="test.Sky"/&gt;
-            &lt;mapping class="test.Person"/&gt;
-            &lt;mapping class="test.animals.Dog"/&gt;</emphasis>
-<emphasis role="bold">            &lt;mapping resource="test/animals/orm.xml"/&gt;</emphasis>
-          &lt;/session-factory&gt;
-        &lt;/hibernate-configuration&gt;
-        </programlisting>
+&lt;hibernate-configuration&gt;
+  &lt;session-factory&gt;
+    <emphasis role="bold">&lt;mapping package="test.animals"/&gt;
+    &lt;mapping class="test.Flight"/&gt;
+    &lt;mapping class="test.Sky"/&gt;
+    &lt;mapping class="test.Person"/&gt;
+    &lt;mapping class="test.animals.Dog"/&gt;</emphasis>
+<emphasis role="bold">    &lt;mapping resource="test/animals/orm.xml"/&gt;</emphasis>
+  &lt;/session-factory&gt;
+&lt;/hibernate-configuration&gt;        </programlisting>
 
-    <para>Note that you can mix the hbm.xml use and the new annotation one.
-    The resource element can be either an hbm file or an EJB3 XML deployment
-    descriptor. The distinction is transparent for your configuration
-    process.</para>
+    <para>Note that you can mix the legacy hbm.xml use and the annotation
+    approach. The resource element can be either an hbm file or an EJB3 XML
+    deployment descriptor. The distinction is transparent for your
+    configuration process.</para>
 
     <para>Alternatively, you can define the annotated classes and packages
     using the programmatic API</para>
 
-    <programlisting>            sessionFactory = new <emphasis role="bold">AnnotationConfiguration()
+    <programlisting>sessionFactory = new <emphasis role="bold">AnnotationConfiguration()
                     .addPackage("test.animals") //the fully qualified package name
                     .addAnnotatedClass(Flight.class)
                     .addAnnotatedClass(Sky.class)
                     .addAnnotatedClass(Person.class)
                     .addAnnotatedClass(Dog.class)</emphasis>
 <emphasis role="bold">                    .addResource("test/animals/orm.xml")</emphasis>
-                    configure()..buildSessionFactory();</programlisting>
-
-    <para>You can also use the Hibernate EntityManager which has its own
-    configuration mechanism. Please refer to this project documentation for
-    more details.</para>
+                    .configure()
+                      .buildSessionFactory();</programlisting>
 
     <para>There is no other difference in the way you use Hibernate APIs with
     annotations, except for this startup routine change or in the
     configuration file. You can use your favorite configuration method for
     other properties ( <filename>hibernate.properties</filename>,
-    <filename>hibernate.cfg.xml</filename>, programmatic APIs, etc). You can
-    even mix annotated persistent classes and classic
-    <filename>hbm.cfg.xml</filename> declarations with the same
-    <classname>SessionFactory</classname>. You can however not declare a class
-    several times (whether annotated or through hbm.xml). You cannot mix
-    configuration strategies (hbm vs annotations) in a mapped entity hierarchy
-    either.</para>
+    <filename>hibernate.cfg.xml</filename>, programmatic APIs, etc). </para>
+
+    <note>
+      <para>You can mix annotated persistent classes and classic
+      <filename>hbm.cfg.xml</filename> declarations with the same
+      <classname>SessionFactory</classname>. You can however not declare a
+      class several times (whether annotated or through hbm.xml). You cannot
+      mix configuration strategies (hbm vs annotations) in an entity hierarchy
+      either.</para>
+    </note>
 
     <para>To ease the migration process from hbm files to annotations, the
     configuration mechanism detects the mapping duplication between
@@ -186,8 +228,48 @@ private static final SessionFactory sessionFactory;
   <section>
     <title id="setup-properties">Properties</title>
 
-    <para>Asides from the Hibernate core properties, Hibernate Annotations
-    reacts to the following one</para>
+    <para>On top of the Hibernate Core properties, Hibernate Annotations
+    reacts to the following one.<table>
+        <title>Hibernate Annotations specific properties</title>
+
+        <tgroup cols="2">
+          <thead>
+            <row>
+              <entry align="center">Property</entry>
+
+              <entry align="center">Function</entry>
+            </row>
+          </thead>
+
+          <tbody>
+            <row>
+              <entry><literal>hibernate.cache.default_cache_concurrency_strategy</literal></entry>
+
+              <entry><para>Setting used to give the name of the default
+              <classname>org.hibernate.annotations.CacheConcurrencyStrategy</classname>
+              to use when either <classname>@Cacheable</classname>
+              <classname>@Cache</classname>} is used.
+              <classname>@Cache(strategy="..")</classname> is used to override
+              this default.</para></entry>
+            </row>
+
+            <row>
+              <entry><literal>hibernate.id.new_generator_mappings</literal></entry>
+
+              <entry><para>true or false. Setting which indicates whether or
+              not the new <classname>IdentifierGenerator</classname>
+              implementations are used for AUTO, TABLE and SEQUENCE. Default
+              to false to keep backward compatibility.</para></entry>
+            </row>
+          </tbody>
+        </tgroup>
+      </table><note>
+        <para>We recommend all new projects to use
+        <code>hibernate.id.new_generator_mappings=true</code> as the new
+        generators are more efficient and closer to the JPA 2 specification
+        semantic. However they are not backward compatible with existing
+        databases (if a sequence or a table is used for id generation).</para>
+      </note></para>
   </section>
 
   <section>

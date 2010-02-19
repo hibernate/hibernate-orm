@@ -1,0 +1,301 @@
+<?xml version='1.0' encoding="UTF-8"?>
+<!--
+  ~ Hibernate, Relational Persistence for Idiomatic Java
+  ~
+  ~ Copyright (c) 2010, Red Hat Inc. or third-party contributors as
+  ~ indicated by the @author tags or express copyright attribution
+  ~ statements applied by the authors.  All third-party contributions are
+  ~ distributed under license by Red Hat Inc.
+  ~
+  ~ This copyrighted material is made available to anyone wishing to use, modify,
+  ~ copy, or redistribute it subject to the terms and conditions of the GNU
+  ~ Lesser General Public License, as published by the Free Software Foundation.
+  ~
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+  ~ or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+  ~ for more details.
+  ~
+  ~ You should have received a copy of the GNU Lesser General Public License
+  ~ along with this distribution; if not, write to:
+  ~ Free Software Foundation, Inc.
+  ~ 51 Franklin Street, Fifth Floor
+  ~ Boston, MA  02110-1301  USA
+  -->
+
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+
+<chapter id="querycriteria">
+    <title>JPA Criteria Queries</title>
+
+    <note>
+        <para>
+            This chapter elaborates on the material discussed in
+            <citetitle pubwork="chapter">Chapter 6 Criteria API</citetitle> of the
+            <biblioref linkend="JPA2" endterm="JPA2_ABBREV" />.
+        </para>
+    </note>
+
+    <para>
+        Criteria queries are a programmatic, type-safe way to express a query.  They are type-safe
+        in terms of using interfaces and classes to represent various structural parts of a query
+        such as the query itself, or the select clause, or an order-by, etc.  They can also be
+        type-safe in terms of referencing attributes as we will see in a bit.  Users of the older
+        Hibernate <interfacename>org.hibernate.Criteria</interfacename> query API will recognize
+        the general approach, though we believe the JPA API to be superior as it represents a clean
+        look at the lessons learned from that API.  There are essentially 2 phases to performing
+        a criteria query:
+    </para>
+
+    <orderedlist>
+        <listitem>
+            <para><link linkend="querycriteria-building">Building the criteria instance</link></para>
+            <para><link linkend="querycriteria-executing">Executing the criteria instance</link></para>
+        </listitem>
+    </orderedlist>
+
+    <section id="querycriteria-building">
+        <title>Criteria query building</title>
+
+        <para>
+            Criteria queries are essentially an object graph, where each part of the graph
+            represents an increasing (as we navigate down this graph) more atomic part of
+            query.  The first step in performing a criteria query is building this graph.
+        </para>
+
+        <section id="querycriteria-builder">
+            <title>CriteriaBuilder</title>
+
+            <para>
+                The <interfacename>javax.persistence.criteria.CriteriaBuilder</interfacename> interface is the
+                first thing with which you need to become acquainted to begin using criteria queries.  Its role
+                is a factory for all the individual pieces of the criteria.  You obtain a
+                <interfacename>javax.persistence.criteria.CriteriaBuilder</interfacename> instance by calling
+                the <methodname>javax.persistence.EntityManagerFactory.getCriteriaBuilder</methodname> method:
+            </para>
+
+            <programlisting>CriteriaBuilder builder = entityManagerFactory.getCriteriaBuilder();</programlisting>
+        </section>
+
+        <section id="querycriteria-criteria">
+            <title>CriteriaQuery creation</title>
+
+            <para>
+                Once you have the <interfacename>javax.persistence.criteria.CriteriaBuilder</interfacename> reference
+                you can begin building the pieces of the criteria query.  First, you will need a
+                <interfacename>javax.persistence.criteria.CriteriaQuery</interfacename> instance.
+                <interfacename>javax.persistence.criteria.CriteriaBuilder</interfacename> defines 3 methods
+                for obtaining a <interfacename>javax.persistence.criteria.CriteriaQuery</interfacename>
+                instance:
+            </para>
+
+            <itemizedlist>
+                <listitem>
+                    <programlisting><![CDATA[CriteriaQuery<T> createQuery(Class<T>)]]></programlisting>
+                </listitem>
+                <listitem>
+                    <programlisting><![CDATA[CriteriaQuery<Tuple> createTupleQuery()]]></programlisting>
+                </listitem>
+                <listitem>
+                    <programlisting><![CDATA[CriteriaQuery<Object> createQuery()]]></programlisting>
+                </listitem>
+            </itemizedlist>
+
+            <para>
+                Each serves different purposes depending on the expected type of the query results.  The type
+                is "carried forward" to the <interfacename>javax.persistence.TypedQuery</interfacename> we
+                create from this <interfacename>javax.persistence.criteria.CriteriaQuery</interfacename> as
+                we will see <link linkend="querycriteria-executing">later</link>.
+            </para>
+
+            <section id="querycriteria-criteria-typed">
+                <title>Typed CriteriaQuery</title>
+                <programlisting><![CDATA[CriteriaQuery<Person> personCriteria = builder.createQuery(Person.class);]]></programlisting>
+                <para>
+                    Basically this is saying to create a criteria where the results of this query will be of type
+                    Person.  Person might be an entity or it might not.  The type could even be simple types like
+                    <classname>java.lang.Integer</classname>, <classname>java.lang.String</classname>, etc.  We 
+                    will discuss this topic in more detail in <xref linkend="querycriteria-selection"/>
+                </para>
+            </section>
+
+            <section id="querycriteria-criteria-tuple">
+                <title>Tuple CriteriaQuery</title>
+                <programlisting><![CDATA[CriteriaQuery<Tuple> personCriteria = builder.createTupleQuery();]]></programlisting>
+                <programlisting><![CDATA[CriteriaQuery<Tuple> personCriteria = builder.createQuery(Tuple.class);]]></programlisting>
+                <para>
+                    These two forms are exactly the same.  Both say to create a criteria where the results of this
+                    query will be of type <interfacename>javax.persistence.Tuple</interfacename>.  The term tuple is
+                    taken from mathematics, but its intent here is simply to mean a plurality; namely we are saying
+                    that each query result will actually be multiple values, a projection.  The
+                    <interfacename>javax.persistence.Tuple</interfacename> instance gives us typed access to these
+                    multiple result values after the query has been executed.  We will discuss accessing the query
+                    results via a <interfacename>javax.persistence.Tuple</interfacename> in
+                    <xref linkend="querycriteria-executing"/>.
+                </para>
+            </section>
+
+            <section id="querycriteria-criteria-untyped">
+                <title>Untyped CriteriaQuery</title>
+                <programlisting><![CDATA[CriteriaQuery<Object> personCriteria = builder.createQuery();]]></programlisting>
+                <programlisting><![CDATA[CriteriaQuery<Object> personCriteria = builder.createQuery(Object.class);]]></programlisting>
+                <para>
+                    These two forms are exactly the same.  Both say to create a criteria where the results of this
+                    query could be anything.  Not generally recommended as you obviously lose the type safety.
+                </para>
+            </section>
+
+        </section>
+
+        <section id="querycriteria-from">
+            <title>FROM clause</title>
+            <blockquote>
+                <attribution><biblioref linkend="JPA2" endterm="JPA2_ABBREV" /></attribution>
+                <para>
+                    A CriteriaQuery object defines a query over one or more entity, embeddable, or basic abstract
+                    schema types.  The root objects of the query are entities, from which the other types are reached
+                    by navigation.
+                </para>
+            </blockquote>
+
+            <section id="querycriteria-from-root">
+                <title>Roots</title>
+                <para>
+                    
+                </para>
+            </section>
+            <section id="querycriteria-from-join">
+                <title>Joins</title>
+                <para>todo</para>
+            </section>
+            <section id="querycriteria-from-fetch">
+                <title>Fetches</title>
+                <para>todo</para>
+            </section>
+        </section>
+
+        <section id="querycriteria-path">
+            <title>Path expressions</title>
+            <note>
+                <para>
+                    Roots, joins and fetches are themselves paths as well
+                </para>
+            </note>
+            <para>todo</para>
+        </section>
+
+        <section id="querycriteria-selection">
+            <title>Selections</title>
+            <para>todo</para>
+        </section>
+
+    </section>
+
+    <section id="querycriteria-executing">
+        <title>Criteria query execution</title>
+        <para>todo</para>
+    </section>
+
+    <section id="querycriteria-common">
+        <title>Common use cases</title>
+
+        <section id="querycriteria-common-selectroot">
+            <title>Selecting the root entity</title>
+            <programlisting><![CDATA[// get all people with brown eyes
+CriteriaQuery<Person> personCriteria = build.createQuery( Person.class );
+Root<Person> personRoot = personCriteria.from( Person.class );
+// specifying select here is not strictly needed because 'personRoot'
+// will be the implied selection since we have only a single root;
+// but done here for explicitness
+personCriteria.select( personRoot );
+personCriteria.where( builder.equal( Person_.eyeColor, "brown" ) );
+List<Person> people = em.createQuery( personCriteria ).getResultList();]]></programlisting>
+        </section>
+
+        <section id="querycriteria-common-selectassociation">
+            <title>Selecting an association</title>
+            <programlisting><![CDATA[// get the gender of all people with brown eyes
+CriteriaQuery<Gender> personCriteria = build.createQuery( Gender.class );
+Root<Person> personRoot = personCriteria.from( Person.class );
+// specifying select here is not strictly needed because 'personRoot'
+// will be the implied selection since we have only a single root;
+// but done here for explicitness
+personCriteria.select( personRoot );
+personCriteria.where( builder.equal( Person_.eyeColor, "brown" ) );
+List<Person> people = em.createQuery( personCriteria ).getResultList();]]></programlisting>
+        </section>
+
+        <section id="querycriteria-common-selectvalue">
+            <title>Selecting a value</title>
+            <programlisting><![CDATA[// get the height of all people with brown eyes
+CriteriaQuery<Integer> personCriteria = build.createQuery( Integer.class );
+Root<Person> personRoot = personCriteria.from( Person.class );
+personCriteria.select( personRoot.get( Person.height ) );
+personCriteria.where( builder.equal( Person_.eyeColor, "brown" ) );
+List<Integer> heights = em.createQuery( personCriteria ).getResultList();]]></programlisting>
+        </section>
+
+        <section id="querycriteria-common-selectaggregation">
+            <title>Selecting an aggregated value</title>
+            <programlisting><![CDATA[// get the maximum height of all people with brown eyes
+CriteriaQuery<Integer> personCriteria = build.createQuery( Integer.class );
+Root<Person> personRoot = personCriteria.from( Person.class );
+personCriteria.select( builder.max( personRoot.get( Person.height ) ) );
+personCriteria.where( builder.equal( Person_.eyeColor, "brown" ) );
+Integer maxHeight = em.createQuery( personCriteria ).getSingleResult();]]></programlisting>
+        </section>
+
+        <section id="querycriteria-common-selecttuple">
+            <title>Selecting a tuple</title>
+            <programlisting><![CDATA[// get the id, height and gender of all people with brown eyes
+CriteriaQuery<Tuple> personCriteria = build.createTupleQuery();
+Root<Person> personRoot = personCriteria.from( Person.class );
+Path<Long> idPath = personRoot.get( Person_.id );
+idPath.setAlias( "id" );
+Path<Integer> heightPath = personRoot.get( Person_.height );
+Path<Gender> genderPath = personRoot.get( Person_.gender );
+personCriteria.multiselect( idPath, heightPath, genderPath );
+personCriteria.where( builder.equal( Person_.eyeColor, "brown" ) );
+List<Tuple> tuples = em.createQuery( personCriteria ).getResultList();
+for ( Tuple tuple : tuples ) {
+    // the id value, for example, can be accessed by expression...
+    handleId( tuple.get( idPath ) );
+    // or by position...
+    handleId( tuple.get( 0 ) );
+    // or by the explicit alias we gave it...
+    handleId( tuple.get( "id" ) );
+}]]></programlisting>
+        </section>
+
+        <section id="querycriteria-common-selectconstruct">
+            <title>Selecting a constructed value</title>
+            <programlisting><![CDATA[// get the id, height and gender of all people with brown eyes
+// like we did before, but this time wrap them in a "holder"
+CriteriaQuery<PersonHolder> personCriteria = build.createQuery( PersonHolder.class );
+Root<Person> personRoot = personCriteria.from( Person.class );
+personCriteria.select(
+        builder.construct(
+                PersonHolder.class,
+                personRoot.get( Person_.id ),
+                personRoot.get( Person_.height ),
+                personRoot.get( Person_.gender )
+        )
+);
+List<PersonHolder> people = em.createQuery( personCriteria ).getResultList();]]></programlisting>
+        </section>
+
+        <section id="querycriteria-common-param">
+            <title>Using parameters</title>
+            <programlisting><![CDATA[// get all people with brown eyes
+CriteriaQuery<Person> personCriteria = build.createQuery( Person.class );
+Root<Person> personRoot = personCriteria.from( Person.class );
+personCriteria.select( personRoot );
+ParameterExpression<String> eyeColorParam = builder.parameter( String.class );
+personCriteria.where( builder.equal( Person_.eyeColor, eyeColorParam ) );
+TypedQuery<Person> query = em.createQuery( personCriteria );
+query.setParameter( eyeColorParam, "brown" );
+List<Person> people = query.getResultList();]]></programlisting>
+        </section>
+    </section>
+
+</chapter>

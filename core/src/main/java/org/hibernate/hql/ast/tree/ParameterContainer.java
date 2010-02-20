@@ -28,7 +28,7 @@ import org.hibernate.param.ParameterSpecification;
 
 /**
  * Currently this is needed in order to deal with {@link FromElement FromElements} which
- * conatin "hidden" JDBC parameters from applying filters.
+ * contain "hidden" JDBC parameters from applying filters.
  * <p/>
  * Would love for this to go away, but that would require that Hibernate's
  * internal {@link org.hibernate.engine.JoinSequence join handling} be able to either:<ul>
@@ -60,7 +60,7 @@ public interface ParameterContainer {
 	public void addEmbeddedParameter(ParameterSpecification specification);
 
 	/**
-	 * Determine whether this node contans embedded parameters.  The implication is that
+	 * Determine whether this node contains embedded parameters.  The implication is that
 	 * {@link #getEmbeddedParameters()} is allowed to return null if this method returns false.
 	 *
 	 * @return True if this node contains embedded parameters; false otherwise.

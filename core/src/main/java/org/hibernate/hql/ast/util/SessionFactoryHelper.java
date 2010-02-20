@@ -65,7 +65,7 @@ public class SessionFactoryHelper {
 	/**
 	 * Construct a new SessionFactoryHelper instance.
 	 *
-	 * @param sfi The SessionFactory impl to be encapsualted.
+	 * @param sfi The SessionFactory impl to be encapsulated.
 	 */
 	public SessionFactoryHelper(SessionFactoryImplementor sfi) {
 		this.sfi = sfi;
@@ -83,7 +83,7 @@ public class SessionFactoryHelper {
 
 	/**
 	 * Does the given persister define a physical discriminator column
-	 * for the purpose of inheritence discrimination?
+	 * for the purpose of inheritance discrimination?
 	 *
 	 * @param persister The persister to be checked.
 	 * @return True if the persister does define an actual discriminator column.
@@ -230,9 +230,9 @@ public class SessionFactoryHelper {
 	}
 
 	/**
-	 * Retreive a PropertyMapping describing the given collection role.
+	 * Retrieve a PropertyMapping describing the given collection role.
 	 *
-	 * @param role The collection role for whcih to retrieve the property mapping.
+	 * @param role The collection role for which to retrieve the property mapping.
 	 * @return The property mapping.
 	 */
 	private PropertyMapping getCollectionPropertyMapping(String role) {
@@ -265,7 +265,7 @@ public class SessionFactoryHelper {
 	 *
 	 * @param implicit Should implicit joins (theta-style) or explicit joins (ANSI-style) be rendered
 	 * @param associationType The type representing the thing to be joined into.
-	 * @param tableAlias The table alias to use in qualifing the join conditions
+	 * @param tableAlias The table alias to use in qualifying the join conditions
 	 * @param joinType The type of join to render (inner, outer, etc);  see {@link org.hibernate.sql.JoinFragment}
 	 * @param columns The columns making up the condition of the join.
 	 * @return The generated join sequence.
@@ -290,7 +290,7 @@ public class SessionFactoryHelper {
 		joinSequence.setUseThetaStyle( true );		// TODO: figure out how this should be set.
 ///////////////////////////////////////////////////////////////////////////////
 // This was the reason for failures regarding INDEX_OP and subclass joins on
-// theta-join dialects; not sure what behaviour we were trying to emulate ;)
+// theta-join dialects; not sure what behavior we were trying to emulate ;)
 //		joinSequence = joinSequence.getFromPart();	// Emulate the old addFromOnly behavior.
 		return joinSequence;
 	}
@@ -313,7 +313,7 @@ public class SessionFactoryHelper {
 	}
 
 	/**
-	 * Retreive the number of columns represented by this type.
+	 * Retrieve the number of columns represented by this type.
 	 *
 	 * @param type The type.
 	 * @return The number of columns.

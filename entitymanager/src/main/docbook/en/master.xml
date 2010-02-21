@@ -21,41 +21,33 @@
   ~ Free Software Foundation, Inc.
   ~ 51 Franklin Street, Fifth Floor
   ~ Boston, MA  02110-1301  USA
-  --><!-- This document was created with Syntext Serna Free. -->
+  -->
 <!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
-        <!ENTITY versionNumber "3.4.0.GA">
-        <!ENTITY copyrightYear "2004">
-        <!ENTITY copyrightHolder "Red Hat Inc.">
-        ]>
+<!ENTITY versionNumber "WORKING">
+]>
+
 <book>
+
   <bookinfo>
     <title>Hibernate EntityManager</title>
     <subtitle>User guide</subtitle>
-    <releaseinfo>&versionNumber;</releaseinfo>
-    <mediaobject>
-      <imageobject>
-        <imagedata fileref="images/hibernate_logo_a.png" format="PNG"/>
-      </imageobject>
-    </mediaobject>
+        <releaseinfo>&versionNumber;</releaseinfo>
+        <edition>1.0</edition>
+        <pubsnumber>1</pubsnumber>
+        <pubdate>&today;</pubdate>
+        <productnumber>&versionNumber;</productnumber>
+        <issuenum>1</issuenum>
+        <mediaobject>
+            <imageobject>
+                <imagedata fileref="images/hibernate_logo_a.png" format="PNG"/>
+            </imageobject>
+        </mediaobject>
+        <copyright>
+            <year>2005</year>
+            <holder>Red Hat Inc.</holder>
+        </copyright>
   </bookinfo>
-  <bibliography>
-    <title>References</title>
-    <biblioentry id="JPA2">
-      <abbrev id="JPA2_ABBREV">JPA 2 Specification</abbrev>
-      <title>JSR 317: <trademark>Java</trademark> Persistence API, Version 2.0 </title>
-      <collab>
-        <collabname>Java Persistence 2.0 Expert Group</collabname>
-      </collab>
-      <copyright>
-        <year>2009</year>
-        <holder>SUN MICROSYSTEMS, INC.</holder>
-      </copyright>
-      <bibliomisc>
-        <email>jsr-317-feedback@sun.com</email>
-        <ulink url="http://jcp.org/en/jsr/detail?id=317">JSR 317 JCP Page</ulink>
-      </bibliomisc>
-    </biblioentry>
-  </bibliography>
+
   <toc/>
   <preface>
     <title>Introducing EJB3 Persistence</title>
@@ -84,4 +76,24 @@
   <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="modules/query_ejbql.xml"/>
   <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="modules/query_criteria.xml"/>
   <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="modules/query_native.xml"/>
+
+  <bibliography>
+    <title>References</title>
+    <biblioentry id="JPA2">
+      <abbrev id="JPA2_ABBREV">JPA 2 Specification</abbrev>
+      <title>JSR 317: <trademark>Java</trademark> Persistence API, Version 2.0 </title>
+      <collab>
+        <collabname>Java Persistence 2.0 Expert Group</collabname>
+      </collab>
+      <copyright>
+        <year>2009</year>
+        <holder>SUN MICROSYSTEMS, INC.</holder>
+      </copyright>
+      <bibliomisc>
+        <email>jsr-317-feedback@sun.com</email>
+        <ulink url="http://jcp.org/en/jsr/detail?id=317">JSR 317 JCP Page</ulink>
+      </bibliomisc>
+    </biblioentry>
+  </bibliography>
+
 </book>

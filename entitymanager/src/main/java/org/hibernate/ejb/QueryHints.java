@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2009 by Red Hat Inc and/or its affiliates or by
+ * Copyright (c) 2010 by Red Hat Inc and/or its affiliates or by
  * third-party contributors as indicated by either @author tags or express
  * copyright attribution statements applied by the authors.  All
  * third-party contributions are distributed under license by Red Hat Inc.
@@ -32,7 +32,12 @@ import java.util.HashSet;
  * @author Steve Ebersole
  */
 public class QueryHints {
-	public static final String HINT_TIMEOUT = "org.hibernate.timeout";
+	/**
+	 * @deprecated HINT_TIMEOUT (org.hibernate.timeout),
+	 * instead use SPEC_HINT_TIMEOUT (javax.persistence.query.timeout)
+	 */
+	public static final String HINT_TIMEOUT = "org.hibernate.timeout"; // Query timeout in seconds
+	public static final String SPEC_HINT_TIMEOUT = "javax.persistence.query.timeout"; // timeout in milliseconds
 	public static final String HINT_COMMENT = "org.hibernate.comment";
 	public static final String HINT_FETCH_SIZE = "org.hibernate.fetchSize";
 	public static final String HINT_CACHE_REGION = "org.hibernate.cacheRegion";
@@ -46,6 +51,7 @@ public class QueryHints {
 	private static Set<String> buildHintsSet() {
 		HashSet<String> hints = new HashSet<String>();
 		hints.add( HINT_TIMEOUT );
+		hints.add( SPEC_HINT_TIMEOUT );
 		hints.add( HINT_COMMENT );
 		hints.add( HINT_FETCH_SIZE );
 		hints.add( HINT_CACHE_REGION );

@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2009 by Red Hat Inc and/or its affiliates or by
+ * Copyright (c) 2010 by Red Hat Inc and/or its affiliates or by
  * third-party contributors as indicated by either @author tags or express
  * copyright attribution statements applied by the authors.  All
  * third-party contributions are distributed under license by Red Hat Inc.
@@ -50,6 +50,7 @@ import static org.hibernate.ejb.QueryHints.HINT_FETCH_SIZE;
 import static org.hibernate.ejb.QueryHints.HINT_FLUSH_MODE;
 import static org.hibernate.ejb.QueryHints.HINT_READONLY;
 import static org.hibernate.ejb.QueryHints.HINT_TIMEOUT;
+import static org.hibernate.ejb.QueryHints.SPEC_HINT_TIMEOUT;
 
 import org.hibernate.ejb.util.CacheModeHelper;
 import org.hibernate.ejb.util.ConfigurationHelper;
@@ -203,6 +204,11 @@ public abstract class AbstractQueryImpl<X> implements TypedQuery<X> {
 		try {
 			if ( HINT_TIMEOUT.equals( hintName ) ) {
 				applyTimeout( ConfigurationHelper.getInteger( value ) );
+			}
+			else if ( SPEC_HINT_TIMEOUT.equals( hintName ) ) {
+				// convert milliseconds to seconds
+				int timeout = (int)Math.round(ConfigurationHelper.getInteger( value ).doubleValue() / 1000.0 ); 
+				applyTimeout( new Integer(timeout) );
 			}
 			else if ( HINT_COMMENT.equals( hintName ) ) {
 				applyComment( (String) value );

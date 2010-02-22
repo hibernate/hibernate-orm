@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2010, Red Hat Middleware LLC or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Middleware LLC.
@@ -69,7 +69,7 @@ public abstract class QueryBinder {
 				queryName,
 				getBoolean( queryName, "org.hibernate.cacheable", hints ),
 				getString( queryName, "org.hibernate.cacheRegion", hints ),
-				getInteger( queryName, "org.hibernate.timeout", hints ),
+				getTimeout( queryName, hints ),
 				getInteger( queryName, "org.hibernate.fetchSize", hints ),
 				getFlushMode( queryName, hints ),
 				getCacheMode( queryName, hints ),
@@ -105,7 +105,7 @@ public abstract class QueryBinder {
 					null,
 					getBoolean( queryName, "org.hibernate.cacheable", hints ),
 					getString( queryName, "org.hibernate.cacheRegion", hints ),
-					getInteger( queryName, "org.hibernate.timeout", hints ),
+					getTimeout( queryName, hints ),
 					getInteger( queryName, "org.hibernate.fetchSize", hints ),
 					getFlushMode( queryName, hints ),
 					getCacheMode( queryName, hints ),
@@ -126,7 +126,7 @@ public abstract class QueryBinder {
 					null,
 					getBoolean( queryName, "org.hibernate.cacheable", hints ),
 					getString( queryName, "org.hibernate.cacheRegion", hints ),
-					getInteger( queryName, "org.hibernate.timeout", hints ),
+					getTimeout( queryName, hints ),
 					getInteger( queryName, "org.hibernate.fetchSize", hints ),
 					getFlushMode( queryName, hints ),
 					getCacheMode( queryName, hints ),
@@ -406,5 +406,19 @@ public abstract class QueryBinder {
 			}
 		}
 		return null;
+	}
+
+	private static Integer getTimeout(String queryName, QueryHint[] hints) {
+		Integer timeout = getInteger( queryName, "javax.persistence.query.timeout", hints );
+
+		if ( timeout != null ) {
+			// convert milliseconds to seconds
+			timeout = new Integer ((int)Math.round(timeout.doubleValue() / 1000.0 ) );
+		}
+		else {
+			// timeout is already in seconds
+			timeout = getInteger( queryName, "org.hibernate.timeout", hints );
+		}
+		return timeout;
 	}
 }

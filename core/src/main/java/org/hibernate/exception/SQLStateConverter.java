@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2010, Red Hat Middleware LLC or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Middleware LLC.
@@ -26,6 +26,7 @@ package org.hibernate.exception;
 
 import org.hibernate.JDBCException;
 import org.hibernate.PessimisticLockException;
+import org.hibernate.QueryTimeoutException;
 
 import java.sql.SQLException;
 import java.util.HashSet;
@@ -114,6 +115,13 @@ public class SQLStateConverter implements SQLExceptionConverter {
 			if ( "40XL1".equals( sqlState ) || "40XL2".equals( sqlState )) {
 				// Derby "A lock could not be obtained within the time requested."
 				return new PessimisticLockException( message, sqlException, sql );
+			}
+
+			// MySQL Query execution was interrupted
+			if ( "70100".equals( sqlState ) ||
+				// Oracle user requested cancel of current operation
+				  "72000".equals( sqlState ) ) {
+				throw new QueryTimeoutException(  message, sqlException, sql );
 			}
 		}
 

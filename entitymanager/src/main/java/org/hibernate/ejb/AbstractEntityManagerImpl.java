@@ -1130,6 +1130,11 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 			handlePersistenceException( converted );
 			return converted;
 		}
+		else if ( e instanceof org.hibernate.QueryTimeoutException ) {
+			QueryTimeoutException converted = new QueryTimeoutException(e.getMessage(), e);
+			handlePersistenceException( converted );
+			return converted;
+		}
 		else if ( e instanceof ObjectNotFoundException ) {
 			EntityNotFoundException converted = new EntityNotFoundException( e.getMessage() );
 			handlePersistenceException( converted );

@@ -22,6 +22,8 @@
       <version.hsqldb>1.8.0.2</version.hsqldb>
       <version.cglib>2.2</version.cglib>
       <version.javassist>3.4.GA</version.javassist>
+      <version.org.jboss.naming>5.0.3.GA</version.org.jboss.naming>
+      <version.xapool>1.5.0</version.xapool>       
       <skipUnitTests>true</skipUnitTests>
       <!-- 
          Following is the default jgroups mcast address.  If you find the testsuite runs very slowly, there
@@ -76,6 +78,34 @@
             <artifactId>javassist</artifactId>
             <version>${version.javassist}</version>
             <scope>test</scope>
+        </dependency>
+
+        <dependency>
+          <groupId>org.jboss.naming</groupId>
+          <artifactId>jnp-client</artifactId>
+          <scope>test</scope>
+          <version>${version.org.jboss.naming}</version>
+        </dependency>
+
+        <dependency>
+          <groupId>org.jboss.naming</groupId>
+          <artifactId>jnpserver</artifactId>
+          <scope>test</scope>
+          <version>${version.org.jboss.naming}</version>
+        </dependency>
+
+        <dependency>
+          <groupId>com.experlog</groupId>
+          <artifactId>xapool</artifactId>
+          <scope>test</scope>
+          <version>${version.xapool}</version>
+        </dependency>
+
+        <dependency>
+          <groupId>jboss.jbossts</groupId>
+          <artifactId>jbossjta</artifactId>
+          <version>4.9.0.GA</version>
+          <scope>test</scope>
         </dependency>
     </dependencies>
 

@@ -23,20 +23,18 @@
  */
 package org.hibernate.ejb;
 
-import javax.persistence.PersistenceException;
+import java.util.List;
+import java.util.Map;
 import javax.persistence.LockModeType;
+import javax.persistence.PersistenceException;
 import javax.persistence.TypedQuery;
 import javax.persistence.criteria.Selection;
 
-import org.hibernate.CacheMode;
 import org.hibernate.HibernateException;
-import org.hibernate.StaleStateException;
 import org.hibernate.LockOptions;
+import org.hibernate.StaleStateException;
 import org.hibernate.ejb.criteria.ValueHandlerFactory;
 import org.hibernate.type.Type;
-
-import java.util.List;
-import java.util.Map;
 
 /**
  * Additional internal contracts for the Hibernate {@link javax.persistence.EntityManager} implementation.
@@ -82,6 +80,7 @@ public interface HibernateEntityManagerImplementor extends HibernateEntityManage
 	 *
 	 * @param e The Hibernate excepton.
 	 * @param lockOptions The lock options in effect at the time of exception (can be null)
+	 *
 	 * @return The JPA-specified exception
 	 */
 	public RuntimeException convert(HibernateException e, LockOptions lockOptions);
@@ -93,6 +92,7 @@ public interface HibernateEntityManagerImplementor extends HibernateEntityManage
 	 * Any appropriate/needed calls to {@link #handlePersistenceException} are also made.
 	 *
 	 * @param e The Hibernate excepton.
+	 *
 	 * @return The JPA-specified exception
 	 */
 	public RuntimeException convert(HibernateException e);
@@ -111,6 +111,7 @@ public interface HibernateEntityManagerImplementor extends HibernateEntityManage
 	 *
 	 * @param lockModeType is the requested lock type
 	 * @param properties are the lock properties
+	 *
 	 * @return the LockOptions
 	 */
 	public LockOptions getLockRequest(LockModeType lockModeType, Map<String, Object> properties);
@@ -133,7 +134,7 @@ public interface HibernateEntityManagerImplementor extends HibernateEntityManage
 		 *
 		 * @return The
 		 */
-		public Map<String,Class> getNamedParameterExplicitTypes();
+		public Map<String, Class> getNamedParameterExplicitTypes();
 
 		public ResultMetadataValidator getResultMetadataValidator();
 	}
@@ -146,6 +147,7 @@ public interface HibernateEntityManagerImplementor extends HibernateEntityManage
 	 * @param selection The selection(s)
 	 * @param options The options to use to build the query.
 	 * @param <T> The query type
+	 *
 	 * @return The typed query
 	 */
 	public <T> TypedQuery<T> createQuery(String jpaqlString, Class<T> resultClass, Selection selection, Options options);

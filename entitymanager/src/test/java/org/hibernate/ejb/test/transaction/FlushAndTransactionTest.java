@@ -4,15 +4,15 @@ package org.hibernate.ejb.test.transaction;
 import java.util.List;
 import javax.persistence.EntityManager;
 import javax.persistence.LockModeType;
+import javax.persistence.OptimisticLockException;
+import javax.persistence.PersistenceException;
 import javax.persistence.RollbackException;
 import javax.persistence.TransactionRequiredException;
-import javax.persistence.PersistenceException;
-import javax.persistence.OptimisticLockException;
 
+import org.hibernate.Session;
 import org.hibernate.ejb.HibernateEntityManagerFactory;
 import org.hibernate.ejb.test.TestCase;
 import org.hibernate.stat.Statistics;
-import org.hibernate.Session;
 
 /**
  * @author Emmanuel Bernard
@@ -29,14 +29,14 @@ public class FlushAndTransactionTest extends TestCase {
 			em.flush();
 			fail( "flush has to be inside a Tx" );
 		}
-		catch (TransactionRequiredException e) {
+		catch ( TransactionRequiredException e ) {
 			//success
 		}
 		try {
 			em.lock( book, LockModeType.READ );
 			fail( "lock has to be inside a Tx" );
 		}
-		catch (TransactionRequiredException e) {
+		catch ( TransactionRequiredException e ) {
 			//success
 		}
 		em.getTransaction().begin();
@@ -77,7 +77,7 @@ public class FlushAndTransactionTest extends TestCase {
 		Book book = new Book();
 		book.name = "Le petit prince";
 		EntityManager em = getOrCreateEntityManager();
-		Statistics stats = ( (HibernateEntityManagerFactory) factory ).getSessionFactory().getStatistics();
+		Statistics stats = ( ( HibernateEntityManagerFactory ) factory ).getSessionFactory().getStatistics();
 		stats.clear();
 		stats.setStatisticsEnabled( true );
 
@@ -120,7 +120,7 @@ public class FlushAndTransactionTest extends TestCase {
 		Book book = new Book();
 		book.name = "Le petit prince";
 		EntityManager em = getOrCreateEntityManager();
-		Statistics stats = ( (HibernateEntityManagerFactory) factory ).getSessionFactory().getStatistics();
+		Statistics stats = ( ( HibernateEntityManagerFactory ) factory ).getSessionFactory().getStatistics();
 
 		em.getTransaction().begin();
 		em.persist( book );
@@ -164,26 +164,17 @@ public class FlushAndTransactionTest extends TestCase {
 		em.getTransaction().begin();
 		Book book = new Book();
 		book.name = "Java for Dummies";
-		em.persist( book );
 		em.close();
-		book.name = "C# for Dummies";
+
 		assertFalse( em.isOpen() );
 		try {
 			em.flush();
 			fail( "direct action on a closed em should fail" );
 		}
-		catch (IllegalStateException e) {
+		catch ( IllegalStateException e ) {
 			//success
+			em.getTransaction().rollback();
 		}
-		em.getTransaction().commit();
-		assertFalse( em.isOpen() );
-		em = getOrCreateEntityManager();
-		em.getTransaction().begin();
-		book = em.find( Book.class, book.id );
-		assertEquals( "C# for Dummies", book.name );
-		em.remove( book );
-		em.getTransaction().commit();
-		em.close();
 	}
 
 	public void testTransactionCommitDoesNotFlush() throws Exception {
@@ -196,7 +187,7 @@ public class FlushAndTransactionTest extends TestCase {
 		em.close();
 		em = getOrCreateEntityManager();
 		em.getTransaction().begin();
-		List result = em.createQuery("select book from Book book where book.name = :title").
+		List result = em.createQuery( "select book from Book book where book.name = :title" ).
 				setParameter( "title", book.name ).getResultList();
 		assertEquals( "EntityManager.commit() should trigger a flush()", 1, result.size() );
 		em.getTransaction().commit();
@@ -213,7 +204,7 @@ public class FlushAndTransactionTest extends TestCase {
 		em.close();
 		em = getOrCreateEntityManager();
 		em.getTransaction().begin();
-		List result = em.createQuery("select book from Book book where book.name = :title").
+		List result = em.createQuery( "select book from Book book where book.name = :title" ).
 				setParameter( "title", book.name ).getResultList();
 		assertEquals( "EntityManager.commit() should trigger a flush()", 1, result.size() );
 		assertTrue( em.contains( result.get( 0 ) ) );
@@ -232,23 +223,23 @@ public class FlushAndTransactionTest extends TestCase {
 			em.persist( book );
 			em.flush();
 			em.clear();
-			book.setName( "kitty kid");
+			book.setName( "kitty kid" );
 			em.merge( book );
 			em.flush();
 			em.clear();
-			book.setName( "kitty kid2"); //non updated version
+			book.setName( "kitty kid2" ); //non updated version
 			em.merge( book );
 			em.flush();
 			fail( "optimistic locking exception" );
 		}
-		catch (PersistenceException e) {
+		catch ( PersistenceException e ) {
 			//success
 		}
 		try {
 			em.getTransaction().commit();
 			fail( "Commit should be rollbacked" );
 		}
-		catch (RollbackException e) {
+		catch ( RollbackException e ) {
 			//success
 		}
 		finally {
@@ -266,18 +257,21 @@ public class FlushAndTransactionTest extends TestCase {
 		em.persist( book );
 		em.flush();
 		em.clear();
-		book.setName( "kitty kid");
+		book.setName( "kitty kid" );
 		em.merge( book );
 		em.flush();
 		em.clear();
-		book.setName( "kitty kid2"); //non updated version
+		book.setName( "kitty kid2" ); //non updated version
 		em.unwrap( Session.class ).update( book );
 		try {
 			em.getTransaction().commit();
 			fail( "Commit should be rollbacked" );
 		}
-		catch (RollbackException e) {
-			assertTrue( "During flush a StateStateException is wrapped into a OptimisticLockException", e.getCause() instanceof OptimisticLockException );
+		catch ( RollbackException e ) {
+			assertTrue(
+					"During flush a StateStateException is wrapped into a OptimisticLockException",
+					e.getCause() instanceof OptimisticLockException
+			);
 		}
 		finally {
 			em.close();
@@ -301,7 +295,7 @@ public class FlushAndTransactionTest extends TestCase {
 	}
 
 	public Class[] getAnnotatedClasses() {
-		return new Class[]{
+		return new Class[] {
 				Book.class
 		};
 	}

@@ -63,7 +63,6 @@ import javax.transaction.Status;
 import javax.transaction.Synchronization;
 import javax.transaction.SystemException;
 import javax.transaction.TransactionManager;
-import javax.validation.ConstraintViolationException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -112,6 +111,7 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 	private static final Logger log = LoggerFactory.getLogger( AbstractEntityManagerImpl.class );
 
 	private static final List<String> entityManagerSpecificProperties = new ArrayList<String>();
+
 	static {
 		entityManagerSpecificProperties.add( AvailableSettings.LOCK_SCOPE );
 		entityManagerSpecificProperties.add( AvailableSettings.LOCK_TIMEOUT );
@@ -136,9 +136,9 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 		this.persistenceContextType = type;
 		this.transactionType = transactionType;
 
-		this.lockOptions = new LockOptions( );
+		this.lockOptions = new LockOptions();
 		this.properties = new HashMap<String, Object>();
-		if(properties != null) {
+		if ( properties != null ) {
 			for ( String key : entityManagerSpecificProperties ) {
 				if ( properties.containsKey( key ) ) {
 					this.properties.put( key, properties.get( key ) );
@@ -159,7 +159,7 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 
 	private void applyProperties() {
 		getSession().setFlushMode( ConfigurationHelper.getFlushMode( properties.get( AvailableSettings.FLUSH_MODE ) ) );
-		setLockOptions(this.properties, this.lockOptions);
+		setLockOptions( this.properties, this.lockOptions );
 		getSession().setCacheMode(
 				CacheModeHelper.interpretCacheMode(
 						currentCacheStoreMode(),
@@ -172,16 +172,16 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 		return determineCacheRetrieveMode( properties );
 	}
 
-	private CacheRetrieveMode determineCacheRetrieveMode(Map<String,Object> settings) {
-		return (CacheRetrieveMode) settings.get( AvailableSettings.SHARED_CACHE_RETRIEVE_MODE );
+	private CacheRetrieveMode determineCacheRetrieveMode(Map<String, Object> settings) {
+		return ( CacheRetrieveMode ) settings.get( AvailableSettings.SHARED_CACHE_RETRIEVE_MODE );
 	}
 
 	private CacheStoreMode currentCacheStoreMode() {
 		return determineCacheStoreMode( properties );
 	}
 
-	private CacheStoreMode determineCacheStoreMode(Map<String,Object> settings) {
-		return (CacheStoreMode) properties.get( AvailableSettings.SHARED_CACHE_STORE_MODE );
+	private CacheStoreMode determineCacheStoreMode(Map<String, Object> settings) {
+		return ( CacheStoreMode ) properties.get( AvailableSettings.SHARED_CACHE_STORE_MODE );
 	}
 
 	private void setLockOptions(Map<String, Object> props, LockOptions options) {
@@ -229,19 +229,19 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 	 * set.
 	 */
 	private void setDefaultProperties() {
-		if ( properties.get( AvailableSettings.FLUSH_MODE ) == null) {
+		if ( properties.get( AvailableSettings.FLUSH_MODE ) == null ) {
 			properties.put( AvailableSettings.FLUSH_MODE, getSession().getFlushMode().toString() );
 		}
-		if ( properties.get( AvailableSettings.LOCK_SCOPE ) == null) {
+		if ( properties.get( AvailableSettings.LOCK_SCOPE ) == null ) {
 			this.properties.put( AvailableSettings.LOCK_SCOPE, PessimisticLockScope.EXTENDED.name() );
 		}
-		if ( properties.get( AvailableSettings.LOCK_TIMEOUT ) == null) {
+		if ( properties.get( AvailableSettings.LOCK_TIMEOUT ) == null ) {
 			properties.put( AvailableSettings.LOCK_TIMEOUT, LockOptions.WAIT_FOREVER );
 		}
-		if ( properties.get( AvailableSettings.SHARED_CACHE_RETRIEVE_MODE ) == null) {
+		if ( properties.get( AvailableSettings.SHARED_CACHE_RETRIEVE_MODE ) == null ) {
 			properties.put( AvailableSettings.SHARED_CACHE_RETRIEVE_MODE, CacheModeHelper.DEFAULT_RETRIEVE_MODE );
 		}
-		if ( properties.get( AvailableSettings.SHARED_CACHE_STORE_MODE ) == null) {
+		if ( properties.get( AvailableSettings.SHARED_CACHE_STORE_MODE ) == null ) {
 			properties.put( AvailableSettings.SHARED_CACHE_STORE_MODE, CacheModeHelper.DEFAULT_STORE_MODE );
 		}
 	}
@@ -261,7 +261,7 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 			if ( hqlQuery.getReturnTypes().length != 1 ) {
 				throw new IllegalArgumentException( "Cannot create TypedQuery for query with more than one return" );
 			}
-			if ( ! resultClass.isAssignableFrom( hqlQuery.getReturnTypes()[0].getReturnedClass() ) ) {
+			if ( !resultClass.isAssignableFrom( hqlQuery.getReturnTypes()[0].getReturnedClass() ) ) {
 				throw new IllegalArgumentException(
 						"Type specified for TypedQuery [" +
 								resultClass.getName() +
@@ -290,7 +290,7 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 
 			// determine if we need a result transformer
 			List tupleElements = Tuple.class.equals( resultClass )
-					? ( (CompoundSelectionImpl<Tuple>) selection ).getCompoundSelectionItems()
+					? ( ( CompoundSelectionImpl<Tuple> ) selection ).getCompoundSelectionItems()
 					: null;
 			if ( options.getValueHandlers() != null || tupleElements != null ) {
 				hqlQuery.setResultTransformer(
@@ -321,7 +321,7 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 				valueHandlerResult = tuple;
 			}
 			else {
-				valueHandlerResult = new Object[ tuple.length ];
+				valueHandlerResult = new Object[tuple.length];
 				for ( int i = 0; i < tuple.length; i++ ) {
 					ValueHandlerFactory.ValueHandler valueHandler = valueHandlers.get( i );
 					valueHandlerResult[i] = valueHandler == null
@@ -352,10 +352,12 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 			public <X> X get(TupleElement<X> tupleElement) {
 				int index = tupleElements.indexOf( tupleElement );
 				if ( index < 0 ) {
-					throw new IllegalArgumentException( "Requested tuple element did not correspond to element in the result tuple" );
+					throw new IllegalArgumentException(
+							"Requested tuple element did not correspond to element in the result tuple"
+					);
 				}
 				// index should be "in range" by nature of size check in ctor
-				return (X) tuples[index];
+				return ( X ) tuples[index];
 			}
 
 			public Object get(String alias) {
@@ -364,7 +366,7 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 					alias = alias.trim();
 					if ( alias.length() > 0 ) {
 						int i = 0;
-						for ( TupleElement selection : (List<TupleElement>) tupleElements ) {
+						for ( TupleElement selection : ( List<TupleElement> ) tupleElements ) {
 							if ( alias.equals( selection.getAlias() ) ) {
 								index = i;
 								break;
@@ -383,7 +385,7 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 			}
 
 			public <X> X get(String alias, Class<X> type) {
-				return (X) get( alias );
+				return ( X ) get( alias );
 			}
 
 			public Object get(int i) {
@@ -396,7 +398,7 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 			}
 
 			public <X> X get(int i, Class<X> type) {
-				return (X) get( i );
+				return ( X ) get( i );
 			}
 
 			public Object[] toArray() {
@@ -404,7 +406,7 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 			}
 
 			public List<TupleElement<?>> getElements() {
-				return (List<TupleElement<?>>) tupleElements;
+				return ( List<TupleElement<?>> ) tupleElements;
 			}
 		}
 	}
@@ -440,7 +442,7 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 				if ( namedQuery.getReturnTypes().length != 1 ) {
 					throw new IllegalArgumentException( "Cannot create TypedQuery for query with more than one return" );
 				}
-				if ( ! resultClass.isAssignableFrom( namedQuery.getReturnTypes()[0].getReturnedClass() ) ) {
+				if ( !resultClass.isAssignableFrom( namedQuery.getReturnTypes()[0].getReturnedClass() ) ) {
 					throw new IllegalArgumentException(
 							"Type specified for TypedQuery [" +
 									resultClass.getName() +
@@ -512,19 +514,19 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 
 	@SuppressWarnings("unchecked")
 	public <A> A find(Class<A> entityClass, Object primaryKey) {
-		return find( entityClass, primaryKey, null, null);
+		return find( entityClass, primaryKey, null, null );
 	}
 
 	public <T> T find(Class<T> entityClass, Object primaryKey, Map<String, Object> properties) {
-		return find(entityClass, primaryKey, null, null);
+		return find( entityClass, primaryKey, null, null );
 	}
 
 	@SuppressWarnings("unchecked")
-	public <A> A find(Class<A> entityClass, Object  primaryKey, LockModeType lockModeType) {
-		return find(entityClass, primaryKey, lockModeType, null);
+	public <A> A find(Class<A> entityClass, Object primaryKey, LockModeType lockModeType) {
+		return find( entityClass, primaryKey, lockModeType, null );
 	}
 
-	public <A> A find(Class<A> entityClass, Object  primaryKey, LockModeType lockModeType, Map<String, Object> properties) {
+	public <A> A find(Class<A> entityClass, Object primaryKey, LockModeType lockModeType, Map<String, Object> properties) {
 		CacheMode previousCacheMode = getSession().getCacheMode();
 		CacheMode cacheMode = determineAppropriateLocalCacheMode( properties );
 		LockOptions lockOptions = null;
@@ -536,8 +538,9 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 						getLockRequest( lockModeType, properties )
 				);
 			}
-			else
+			else {
 				return ( A ) getSession().get( entityClass, ( Serializable ) primaryKey );
+			}
 		}
 		catch ( ObjectDeletedException e ) {
 			//the spec is silent about people doing remove() find() on the same PC
@@ -557,7 +560,7 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 			throw new IllegalArgumentException( e.getMessage(), e );
 		}
 		catch ( HibernateException he ) {
-			throw convert( he , lockOptions );
+			throw convert( he, lockOptions );
 		}
 		finally {
 			getSession().setCacheMode( previousCacheMode );
@@ -635,15 +638,15 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 	}
 
 	public void refresh(Object entity) {
-		refresh(entity, null, null);
+		refresh( entity, null, null );
 	}
 
 	public void refresh(Object entity, Map<String, Object> properties) {
-		refresh(entity, null, null);
+		refresh( entity, null, null );
 	}
 
 	public void refresh(Object entity, LockModeType lockModeType) {
-		refresh(entity, lockModeType, null);
+		refresh( entity, lockModeType, null );
 	}
 
 	public void refresh(Object entity, LockModeType lockModeType, Map<String, Object> properties) {
@@ -656,16 +659,18 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 			if ( !getSession().contains( entity ) ) {
 				throw new IllegalArgumentException( "Entity not managed" );
 			}
-			if(lockModeType != null)
-				getSession().refresh( entity, (lockOptions = getLockRequest(lockModeType, properties) ) );
-			else
+			if ( lockModeType != null ) {
+				getSession().refresh( entity, ( lockOptions = getLockRequest( lockModeType, properties ) ) );
+			}
+			else {
 				getSession().refresh( entity );
+			}
 		}
 		catch ( MappingException e ) {
 			throw new IllegalArgumentException( e.getMessage(), e );
 		}
 		catch ( HibernateException he ) {
-			throw convert( he, lockOptions);
+			throw convert( he, lockOptions );
 		}
 		finally {
 			getSession().setCacheMode( previousCacheMode );
@@ -693,7 +698,7 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 		if ( !contains( entity ) ) {
 			throw new IllegalArgumentException( "entity not in the persistence context" );
 		}
-		return getLockModeType(getSession().getCurrentLockMode(entity));
+		return getLockModeType( getSession().getCurrentLockMode( entity ) );
 	}
 
 	public void setProperty(String s, Object o) {
@@ -822,7 +827,7 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 	}
 
 	public void lock(Object entity, LockModeType lockMode) {
-		lock( entity, lockMode, null);
+		lock( entity, lockMode, null );
 	}
 
 	public void lock(Object entity, LockModeType lockModeType, Map<String, Object> properties) {
@@ -834,10 +839,11 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 			if ( !contains( entity ) ) {
 				throw new IllegalArgumentException( "entity not in the persistence context" );
 			}
-			getSession().buildLockRequest( (lockOptions = getLockRequest(lockModeType, properties))).lock( entity );
+			getSession().buildLockRequest( ( lockOptions = getLockRequest( lockModeType, properties ) ) )
+					.lock( entity );
 		}
 		catch ( HibernateException he ) {
-			throw convert( he , lockOptions);
+			throw convert( he, lockOptions );
 		}
 	}
 
@@ -903,9 +909,9 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 			return ( T ) getSession();
 		}
 		if ( EntityManager.class.isAssignableFrom( clazz ) ) {
-			return (T) this;
+			return ( T ) this;
 		}
-		throw new PersistenceException( "Hibernate cannot unwrap " + clazz);
+		throw new PersistenceException( "Hibernate cannot unwrap " + clazz );
 	}
 
 	private void joinTransaction(boolean ignoreNotJoining) {
@@ -989,7 +995,7 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 									catch ( HibernateException he ) {
 										throw convert( he );
 									}
-									catch( PersistenceException pe ) {
+									catch ( PersistenceException pe ) {
 										handlePersistenceException( pe );
 										throw pe;
 									}
@@ -1091,21 +1097,17 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 	 */
 	//FIXME should we remove all calls to this method and use convert(RuntimeException) ?
 	public RuntimeException convert(HibernateException e) {
-		return convert(e, null);
+		return convert( e, null );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	public RuntimeException convert(RuntimeException e) {
 		RuntimeException result = e;
 		if ( e instanceof HibernateException ) {
-			result = convert( (HibernateException) e );
+			result = convert( ( HibernateException ) e );
 		}
-		else if (e instanceof ConstraintViolationException) {
+		else {
 			markAsRollback();
 		}
-		//if any RT exception should mark the tx for rollback, convert the last else if into a else
 		return result;
 	}
 
@@ -1119,12 +1121,12 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 			return converted;
 		}
 		else if ( e instanceof org.hibernate.OptimisticLockException ) {
-			PersistenceException converted = wrapLockException(e, lockOptions);
+			PersistenceException converted = wrapLockException( e, lockOptions );
 			handlePersistenceException( converted );
 			return converted;
 		}
 		else if ( e instanceof org.hibernate.PessimisticLockException ) {
-			PersistenceException converted = wrapLockException(e, lockOptions); 
+			PersistenceException converted = wrapLockException( e, lockOptions );
 			handlePersistenceException( converted );
 			return converted;
 		}
@@ -1206,17 +1208,17 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 	public PersistenceException wrapLockException(HibernateException e, LockOptions lockOptions) {
 		PersistenceException pe;
 		if ( e instanceof org.hibernate.OptimisticLockException ) {
-			 org.hibernate.OptimisticLockException ole = (org.hibernate.OptimisticLockException)e;
-			pe = new OptimisticLockException(ole.getMessage(), ole, ole.getEntity());
+			org.hibernate.OptimisticLockException ole = ( org.hibernate.OptimisticLockException ) e;
+			pe = new OptimisticLockException( ole.getMessage(), ole, ole.getEntity() );
 		}
 		else if ( e instanceof org.hibernate.PessimisticLockException ) {
-			  org.hibernate.PessimisticLockException ple = (org.hibernate.PessimisticLockException)e;
-			if (lockOptions !=null && lockOptions.getTimeOut() > -1) {
+			org.hibernate.PessimisticLockException ple = ( org.hibernate.PessimisticLockException ) e;
+			if ( lockOptions != null && lockOptions.getTimeOut() > -1 ) {
 				// assume lock timeout occurred if a timeout or NO WAIT was specified 
-				pe = new LockTimeoutException(ple.getMessage(), ple, ple.getEntity());
+				pe = new LockTimeoutException( ple.getMessage(), ple, ple.getEntity() );
 			}
 			else {
-				pe = new PessimisticLockException(ple.getMessage(), ple, ple.getEntity());
+				pe = new PessimisticLockException( ple.getMessage(), ple, ple.getEntity() );
 			}
 		}
 		else {
@@ -1224,5 +1226,4 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 		}
 		return pe;
 	}
-
 }

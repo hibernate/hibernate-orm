@@ -23,7 +23,8 @@
          <stateRetrieval fetchInMemoryState="false" timeout="20000"/>
          <sync replTimeout="20000"/>
       </clustering>
-      <locking isolationLevel="READ_COMMITTED" concurrencyLevel="1000" lockAcquisitionTimeout="15000"/>
+      <locking isolationLevel="READ_COMMITTED" concurrencyLevel="1000"
+               lockAcquisitionTimeout="15000" useLockStriping="false" />
       <!-- Eviction configuration.  WakeupInterval defines how often the eviction thread runs, in milliseconds.  
            0 means the eviction thread will never run.  A separate executor is used for eviction in each cache. -->
       <eviction wakeUpInterval="5000" maxEntries="10000" strategy="LRU"/>
@@ -43,7 +44,8 @@
         repeatable-read semantic. Before choosing this config, carefully read the docs
         and make sure you really need REPEATABLE_READ.
        -->
-      <locking isolationLevel="REPEATABLE_READ" concurrencyLevel="1000" lockAcquisitionTimeout="15000"/>
+      <locking isolationLevel="REPEATABLE_READ" concurrencyLevel="1000"
+               lockAcquisitionTimeout="15000" useLockStriping="false"/>
       <!-- Eviction configuration.  WakeupInterval defines how often the eviction thread runs, in milliseconds.  
            0 means the eviction thread will never run.  A separate executor is used for eviction in each cache. -->
       <eviction wakeUpInterval="5000" maxEntries="10000" strategy="LRU"/>
@@ -57,7 +59,8 @@
          <stateRetrieval fetchInMemoryState="false" timeout="20000"/>
          <sync replTimeout="20000"/>
       </clustering>
-      <locking isolationLevel="READ_COMMITTED" concurrencyLevel="1000" lockAcquisitionTimeout="15000"/>
+      <locking isolationLevel="READ_COMMITTED" concurrencyLevel="1000"
+               lockAcquisitionTimeout="15000" useLockStriping="false"/>
       <!-- Eviction configuration.  WakeupInterval defines how often the eviction thread runs, in milliseconds.  
            0 means the eviction thread will never run.  A separate executor is used for eviction in each cache. -->
       <eviction wakeUpInterval="5000" maxEntries="10000" strategy="LRU"/>
@@ -68,7 +71,8 @@
    
    <!-- A config appropriate for query caching. Does not replicate queries. -->
    <namedCache name="local-query">
-      <locking isolationLevel="READ_COMMITTED" concurrencyLevel="1000" lockAcquisitionTimeout="15000"/>
+      <locking isolationLevel="READ_COMMITTED" concurrencyLevel="1000"
+               lockAcquisitionTimeout="15000" useLockStriping="false"/>
       <!--Eviction configuration.  WakeupInterval defines how often the eviction thread runs, in milliseconds.  0 means
          the eviction thread will never run.  A separate executor is used for eviction in each cache. -->
       <eviction wakeUpInterval="5000" maxEntries="10000" strategy="LRU"/>
@@ -81,7 +85,8 @@
          <stateRetrieval fetchInMemoryState="false"/>
          <async/>
       </clustering>
-      <locking isolationLevel="READ_COMMITTED" concurrencyLevel="1000" lockAcquisitionTimeout="15000"/>
+      <locking isolationLevel="READ_COMMITTED" concurrencyLevel="1000"
+               lockAcquisitionTimeout="15000" useLockStriping="false"/>
       <!--Eviction configuration.  WakeupInterval defines how often the eviction thread runs, in milliseconds.  0 means
          the eviction thread will never run.  A separate executor is used for eviction in each cache. -->
       <eviction wakeUpInterval="5000" maxEntries="10000" strategy="LRU"/>
@@ -96,7 +101,8 @@
          <stateRetrieval fetchInMemoryState="true" timeout="20000"/>
          <async/>
       </clustering>
-      <locking isolationLevel="READ_COMMITTED" concurrencyLevel="1000" lockAcquisitionTimeout="15000"/>
+      <locking isolationLevel="READ_COMMITTED" concurrencyLevel="1000"
+               lockAcquisitionTimeout="15000" useLockStriping="false"/>
       <lazyDeserialization enabled="true"/>
       <!--  Don't ever evict modification timestamps -->
       <eviction wakeUpInterval="0" strategy="NONE"/>

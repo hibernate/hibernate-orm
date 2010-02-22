@@ -18,223 +18,196 @@
 -->
 <!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
 "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
-<!ENTITY versionNumber "1.0.0">
+<!ENTITY version "WORKING">
 <!ENTITY copyrightYear "2010">
-<!ENTITY copyrightHolder "Red Hat Middleware, LLC.">
+<!ENTITY copyrightHolder "Red Hat Inc.">
+<!ENTITY jpa2Ref '<citation><xref linkend="JPA2"/></citation>'>
+<!ENTITY jsr269Ref '<citation><xref linkend="JSR_269"/></citation>'>
 ]>
 <book lang="en">
   <bookinfo>
     <title>Hibernate Metamodel Generator</title>
-
     <subtitle>JPA 2 Static Metamodel Annotation Processor</subtitle>
-
     <subtitle>Reference Guide</subtitle>
-
-    <releaseinfo>&versionNumber;</releaseinfo>
-
-    <productnumber>&versionNumber;</productnumber>
-
+    <releaseinfo>&version;</releaseinfo>
+    <productnumber>&version;</productnumber>
     <copyright>
       <year>&copyrightYear;</year>
-
       <holder>&copyrightHolder;</holder>
     </copyright>
   </bookinfo>
-
-  <toc></toc>
-
+  <toc/>
   <chapter id="introduction">
     <title>Introduction</title>
-
     <section id="whatisit" revision="1">
       <title>What is it about?</title>
-
-      <para>JPA 2 defines a new typesafe <classname>Criteria</classname> API
-      which allows criteria queries to be constructed in a strongly-typed
-      manner, using metamodel objects to provide type safety. This type saftey
-      is of course only useful for developers if the task of the metamodel
-      generation can be automated. Hibernate Static Metamodel Generator is an
-      annotation processor based on the annotation processing API defined in
-      <ulink url="???">JSR 269</ulink> with the task of creating the static
-      metamodel classes for JPA 2 entities. The following examples show a
-      managed JPA 2 entity, together with is metamodel class and an example
-      typesafe query.</para>
-
+      <para>JPA 2 defines a new typesafe <classname>Criteria</classname> API which allows criteria
+        queries to be constructed in a strongly-typed manner, using metamodel objects to provide
+        type safety. For developers it is important that the task of the metamodel generation can be
+        automated. Hibernate Static Metamodel Generator is an annotation processor based on the
+        &jsr269Ref; with the task of creating JPA 2 static metamodel classes. The following example
+        show two JPA 2 entities <classname>Order</classname> and <classname>Item</classname>,
+        together with the metamodel class <classname>Order_</classname> and a typesafe query.</para>
       <example id="jpa2-entity-example">
-        <title>JPA 2 annotated entity</title>
-
-        <programlisting>@Entity public class Order {
+        <title>JPA 2 annotated entities <classname>Order</classname> and
+          <classname>Item</classname></title>
+        <programlisting>
+@Entity
+public class Order {
     @Id 
+    @GeneratedValue
     Integer id;
+    
     @ManyToOne 
     Customer customer;
+    
     @OneToMany 
     Set&lt;Item&gt; items;
     BigDecimal totalCost;
     
     // standard setter/getter methods
     ...
-}</programlisting>
+}
+
+@Entity  
+public class Item {	
+    @Id
+    @GeneratedValue
+	  Integer id;
+	
+	  int quantity;
+		
+    @ManyToOne
+    Order order;
+	
+    // standard setter/getter methods
+    ...
+}
+</programlisting>
       </example>
-
       <example id="metamodel-class-example">
-        <title>Matching metamodel class for entity
-        <classname>Order</classname></title>
-
-        <programlisting>@StaticMetamodel(Order.class)
+        <title>Metamodel class  <classname>Order_</classname></title>
+        <programlisting>
+@StaticMetamodel(Order.class)
 public class Order_ {
     public static volatile SingularAttribute&lt;Order, Integer&gt; id;
     public static volatile SingularAttribute&lt;Order, Customer&gt; customer;
     public static volatile SetAttribute&lt;Order, Item&gt; items;
     public static volatile SingularAttribute&lt;Order, BigDecimal&gt; totalCost;
-}</programlisting>
+}
+       </programlisting>
       </example>
-
-      <example id="criteria-example" label="">
-        <title>Example of typesafe query using the metamodel class
-        <classname>Order_</classname></title>
-
-        <programlisting>CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+      <example id="criteria-example">
+        <title>Typesafe citeria query</title>
+        <programlisting>
+CriteriaBuilder cb = entityManager.getCriteriaBuilder();
 CriteriaQuery&lt;Order&gt; cq = cb.createQuery(Order.class);
-SetJoin&lt;Order, Item&gt; itemNode = cq.from(Order.class).join(Order_.orderItems);
+SetJoin&lt;Order, Item&gt; itemNode = cq.from(Order.class).join(Order_.items);
 cq.where( cb.equal(itemNode.get(Item_.id), 5 ) ).distinct(true);
 </programlisting>
       </example>
     </section>
-
     <section>
       <title>Canonical Metamodel</title>
-
-      <para>The structure of the metamodel classes is described in the <ulink
-      url="http://jcp.org/en/jsr/detail?id=317">JPA 2 specification</ulink>
-      and its definition is included for completeness in the following
-      paragraphs . Feel free to skip ahead to <xref linkend="chapter-usage" />
-      if you are not interested into the gory details.</para>
-
-      <para>The annotation processor produces for every managed class in the
-      persistence unit a metamodel class based on these rules:</para>
-
+      <para>The structure of the metamodel classes is described in the  &jpa2Ref;, but for completeness the definition
+        is repeated in the following paragraphs. Feel free to skip ahead to <xref
+          linkend="chapter-usage"/> if you are not interested into the gory details.</para>
+      <para>The annotation processor produces for every managed class in the persistence unit a
+        metamodel class based on these rules:</para>
       <para><itemizedlist>
           <listitem>
-            <para>For each managed class <classname>X</classname> in package
-            p, a metamodel class <classname>X_</classname> in package p is
-            created.</para>
+            <para>For each managed class <classname>X</classname> in package p, a metamodel class
+                <classname>X_</classname> in package p is created.</para>
           </listitem>
-
           <listitem>
-            <para>The name of the metamodel class is derived from the name of
-            the managed class by appending "_" to the name of the managed
-            class.</para>
+            <para>The name of the metamodel class is derived from the name of the managed class by
+              appending "_" to the name of the managed class.</para>
           </listitem>
-
           <listitem>
-            <para>The metamodel class <classname>X_</classname> must be
-            annotated with the
-            <classname>javax.persistence.StaticMetamodel</classname>
-            annotation.</para>
+            <para>The metamodel class <classname>X_</classname> must be annotated with the
+                <classname>javax.persistence.StaticMetamodel</classname> annotation.</para>
           </listitem>
-
           <listitem>
-            <para>If class <classname>X</classname> extends another class
-            <classname>S</classname>, where <classname>S</classname> is the
-            most derived managed class (i.e., entity or mapped superclass)
-            extended by <classname>X</classname>, then class
-            <classname>X_</classname> must extend class
-            <classname>S_</classname>, where <classname>S_</classname> is the
-            metamodel class created for <classname>S</classname>.</para>
+            <para>If class <classname>X</classname> extends another class <classname>S</classname>,
+              where <classname>S</classname> is the most derived managed class (i.e., entity or
+              mapped superclass) extended by <classname>X</classname>, then class
+                <classname>X_</classname> must extend class <classname>S_</classname>, where
+                <classname>S_</classname> is the metamodel class created for
+                <classname>S</classname>.</para>
           </listitem>
-
           <listitem>
-            <para>For every persistent non-collection-valued attribute y
-            declared by class <classname>X</classname>, where the type of y is
-            <classname>Y</classname>, the metamodel class must contain a
-            declaration as follows: <programlisting>public static volatile SingularAttribute&lt;X, Y&gt; y;</programlisting></para>
+            <para>For every persistent non-collection-valued attribute y declared by class
+                <classname>X</classname>, where the type of y is <classname>Y</classname>, the
+              metamodel class must contain a declaration as follows:
+              <programlisting>public static volatile SingularAttribute&lt;X, Y&gt; y;</programlisting></para>
           </listitem>
-
           <listitem>
-            <para>For every persistent collection-valued attribute z declared
-            by class <classname>X</classname>, where the element type of z is
-            <classname>Z</classname>, the metamodel class must contain a
-            declaration as follows:<itemizedlist>
+            <para>For every persistent collection-valued attribute z declared by class
+                <classname>X</classname>, where the element type of z is <classname>Z</classname>,
+              the metamodel class must contain a declaration as follows:<itemizedlist>
                 <listitem>
-                  <para>if the collection type of z is java.util.Collection,
-                  then <programlisting>public static volatile CollectionAttribute&lt;X, Z&gt; z;</programlisting></para>
+                  <para>if the collection type of z is java.util.Collection, then
+                    <programlisting>public static volatile CollectionAttribute&lt;X, Z&gt; z;</programlisting></para>
                 </listitem>
-
                 <listitem>
                   <para>if the collection type of z is java.util.Set, then
-                  <programlisting>public static volatile SetAttribute&lt;X, Z&gt; z;</programlisting></para>
+                    <programlisting>public static volatile SetAttribute&lt;X, Z&gt; z;</programlisting></para>
                 </listitem>
-
                 <listitem>
                   <para>if the collection type of z is java.util.List, then
-                  <programlisting>public static volatile ListAttribute&lt;X, Z&gt; z;</programlisting></para>
+                    <programlisting>public static volatile ListAttribute&lt;X, Z&gt; z;</programlisting></para>
                 </listitem>
-
                 <listitem>
                   <para>if the collection type of z is java.util.Map, then
-                  <programlisting>public static volatile MapAttribute&lt;X, K, Z&gt; z;</programlisting>
-                  where K is the type of the key of the map in class X</para>
+                    <programlisting>public static volatile MapAttribute&lt;X, K, Z&gt; z;</programlisting>
+                    where K is the type of the key of the map in class X</para>
                 </listitem>
               </itemizedlist></para>
           </listitem>
         </itemizedlist>Import statements must be included for the needed
-      <classname>javax.persistence.metamodel</classname> types as appropriate
-      and all classes <classname>X</classname>, <classname>Y</classname>,
-      <classname>Z</classname>, and <classname>K</classname>.</para>
+          <classname>javax.persistence.metamodel</classname> types as appropriate and all classes
+          <classname>X</classname>, <classname>Y</classname>, <classname>Z</classname>, and
+          <classname>K</classname>.</para>
     </section>
   </chapter>
-
   <chapter id="chapter-usage">
     <title>Usage</title>
-
     <para>The jar file for the annotation processor can be found in the <ulink
-    url="http://repository.jboss.com/">JBoss Maven repository</ulink>
-    under:</para>
-
-    <example id="maven-dependency" label="">
-      <title>Maven dependency for Hibernate Static Metamodel Generator</title>
-
+      url="http://repository.jboss.com/">JBoss Maven repository</ulink> using <xref
+        linkend="maven-dependency"/>.</para>
+    <example id="maven-dependency">
+      <title>Maven dependency </title>
       <programlisting>&lt;dependency&gt;
     &lt;groupId&gt;org.hibernate&lt;/groupId&gt;
     &lt;artifactId&gt;hibernate-jpamodelgen&lt;/artifactId&gt;
     &lt;version&gt;1.0.0&lt;/version&gt;
 &lt;/dependency&gt;</programlisting>
     </example>
-
-    <para>Alternatively, a full distribution package can be downloaded from
-    <ulink url="http://sourceforge.net/">SourceForge</ulink>.</para>
-
-    <para>In most cases the annotation processor will automatically run
-    provided a JDK version 6i used and the jar file is added to the classpath.
-    This happens due to <ulink
-    url="http://java.sun.com/j2se/1.4.2/docs/guide/jar/jar.html#Service%20Provider">Java's
-    Service Provider</ulink> contract and the fact the the Hibernate Static
-    Metamodel Generator jar files contains the file
-    <classname>javax.annotation.processing.Processor</classname> in the
-    <filename>META-INF/services</filename> directory. The fully qualified name
-    of the processor itself is:
-    <classname>org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor</classname>.
-    <note>
+    <para>Alternatively, a full distribution package can be downloaded from <ulink
+      url="http://sourceforge.net/projects/hibernate">SourceForge</ulink>.</para>
+    <para>In most cases the annotation processor will automatically run provided
+      the processor jar is added to the classpath and a JDK 6 is used. This happens due to <ulink
+        url="http://java.sun.com/j2se/1.4.2/docs/guide/jar/jar.html#Service%20Provider">Java's
+        Service Provider</ulink> contract and the fact the the Hibernate Static Metamodel Generator
+      jar files contains the file <classname>javax.annotation.processing.Processor</classname> in
+      the <filename>META-INF/services</filename> directory. The fully qualified name of the
+      processor itself is:
+        <classname>org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor</classname>. <note>
         <para>The use of a Java 6 compiler is a prerequisite.</para>
       </note></para>
-
     <section>
       <title>Usage from the command line</title>
-
-      <para><section id="usage-ant" revision="1">
-          <title>Usage with Ant</title>
-        </section>As mentioned before, the annotation processor will run
-      automatically each time the Java compiler is called - provided the jar
-      file is on the classpath. Somtimes it is, however, useful to control the
-      annotation processing in more detail, for example if you exclusively
-      want to run the processor without compiling any other source files.
-      <xref linkend="javac-task-example" /> shows how the <ulink
-      url="http://ant.apache.org/manual/CoreTasks/javac.html">Ant Javac
-      Task</ulink> can be configured to just run annotation
-      processing.<example id="javac-task-example">
-          <title>Ant Javac Task configuration</title>
-
+      <section id="usage-ant" revision="1">
+        <title>Usage with Ant</title>
+        <para>As mentioned before, the annotation processor will run automatically each time the
+          Java compiler is called, provided the jar file is on the classpath. Sometimes, however, it is
+          useful to control the annotation processing in more detail, for example if you
+          exclusively want to run the processor without compiling any other source files. <xref
+            linkend="javac-task-example"/> shows how Ant's <ulink
+            url="http://ant.apache.org/manual/CoreTasks/javac.html">Javac Task</ulink> can be
+          configured to just run annotation processing.</para>
+        <example id="javac-task-example">
+          <title>Javac Task configuration</title>
           <programlisting>&lt;javac srcdir="${src.dir}"
     destdir="${target.dir}"
     failonerror="false"
@@ -242,25 +215,25 @@ cq.where( cb.equal(itemNode.get(Item_.id), 5 ) ).distinct(true);
     classpath="${classpath}"&gt;
     <emphasis role="bold">&lt;compilerarg value="-proc:only"/&gt;</emphasis>
 &lt;/javac&gt;</programlisting>
-        </example>The option <emphasis>-proc:only</emphasis> instructs the
-      compiler to just run the annotation processing. You can also completely
-      disable processing by specifying <emphasis>-proc:none</emphasis>.<tip>
-          <para>Run <literal>'javac -help'</literal> to see which other
-          annotation processor relevant options can be specified.</para>
-        </tip><section revision="1">
-          <title>Usage with Maven</title>
-        </section>There are several ways of running the annotation processor
-      as part of a Maven build. Again, it will automatically run if you are
-      using a JDK 6 compiler and the annotation processor jar is on the
-      classpath. In case you have more than one annotation processors on your
-      classpath you can explicitly pass the processor option to the compiler
-      plugin:</para>
-
-      <para><example>
-          <title>Maven compiler plugin configuration - direct
-          execution</title>
-
-          <programlisting>&lt;plugin&gt;
+        </example>
+        <para>The option <emphasis>-proc:only</emphasis> instructs the compiler to just run the
+          annotation processing. You can also completely disable processing by specifying
+            <emphasis>-proc:none</emphasis>.</para>
+        <tip>
+          <para>Run <literal>'javac -help'</literal> to see which other annotation processor
+            relevant options can be specified.</para>
+        </tip>
+      </section>
+      <section revision="1">
+        <title>Usage with Maven</title>
+        <para>There are several ways of running the annotation processor as part of a Maven build.
+          Again, it will automatically run if you are using a JDK 6 compiler and the annotation
+          processor jar is on the classpath. In case you have more than one annotation processors on
+          your classpath you can explicitly pass the processor option to the compiler plugin:</para>
+        <para>
+          <example>
+            <title>Maven compiler plugin configuration - direct execution</title>
+            <programlisting>&lt;plugin&gt;
     &lt;artifactId&gt;maven-compiler-plugin&lt;/artifactId&gt;
     &lt;configuration&gt;
         &lt;source&gt;1.6&lt;/source&gt;
@@ -270,23 +243,18 @@ cq.where( cb.equal(itemNode.get(Item_.id), 5 ) ).distinct(true);
         &lt;/compilerArguments&gt;
     &lt;/configuration&gt;
 &lt;/plugin&gt;</programlisting>
-        </example></para>
-
-      <para>The maven-compiler-plugin approach has the disadvantage that the
-      maven compiler plugin does currently not allow to specify multiple
-      compiler arguments (<ulink
-      url="http://jira.codehaus.org/browse/MCOMPILER-62">MCOMPILER-62</ulink>)
-      and that messages from the Messenger API are suppressed (<ulink
-      url="http://jira.codehaus.org/browse/MCOMPILER-66">MCOMPILER-66</ulink>).
-      A better approach is to disable annotation processing for the compiler
-      plugin as seen in <xref
-      linkend="disable-processing-maven-compiler-plugin" />.</para>
-
-      <example id="disable-processing-maven-compiler-plugin">
-        <title>Maven compiler plugin configuration - indirect
-        execution</title>
-
-        <programlisting>&lt;plugin&gt;
+          </example>
+        </para>
+        <para>The maven-compiler-plugin approach has the disadvantage that the maven compiler plugin
+          does currently not allow to specify multiple compiler arguments (<ulink
+            url="http://jira.codehaus.org/browse/MCOMPILER-62">MCOMPILER-62</ulink>) and that
+          messages from the Messenger API are suppressed (<ulink
+            url="http://jira.codehaus.org/browse/MCOMPILER-66">MCOMPILER-66</ulink>). A better
+          approach is to disable annotation processing for the compiler plugin as seen in <xref
+            linkend="disable-processing-maven-compiler-plugin"/>.</para>
+        <example id="disable-processing-maven-compiler-plugin">
+          <title>Maven compiler plugin configuration - indirect execution</title>
+          <programlisting>&lt;plugin&gt;
     &lt;artifactId&gt;maven-compiler-plugin&lt;/artifactId&gt;
     &lt;configuration&gt;
         &lt;source&gt;1.6&lt;/source&gt;
@@ -294,23 +262,17 @@ cq.where( cb.equal(itemNode.get(Item_.id), 5 ) ).distinct(true);
         <emphasis role="bold">&lt;compilerArgument&gt;-proc:none&lt;/compilerArgument&gt;</emphasis>
     &lt;/configuration&gt;
 &lt;/plugin&gt;</programlisting>
-      </example>
-
-      <para>Once disabled, the <ulink
-      url="http://code.google.com/p/maven-annotation-plugin/">maven-annotation-plugin</ulink>
-      for annotation processing (you will need the following additional maven
-      repositories - <ulink
-      url="http://maven-annotation-plugin.googlecode.com/svn/trunk/mavenrepo">maven-annotation-plugin</ulink>
-      and <ulink
-      url="http://www.jfrog.org/artifactory/plugins-releases">jfrog</ulink>)
-      can be used. The configuration can be seen in <xref
-      linkend="maven-processor-plugin" />.</para>
-
-      <example id="maven-processor-plugin">
-        <title>Maven compiler plugin configuration with
-        maven-annotation-plugin</title>
-
-        <programlisting>&lt;plugin&gt;
+        </example>
+        <para>Once disabled, the <ulink url="http://code.google.com/p/maven-annotation-plugin/"
+            >maven-annotation-plugin</ulink> for annotation processing (you will need the following
+          additional maven repositories: <ulink
+            url="http://maven-annotation-plugin.googlecode.com/svn/trunk/mavenrepo"
+            >maven-annotation-plugin</ulink> and <ulink
+            url="http://www.jfrog.org/artifactory/plugins-releases">jfrog</ulink>) can be used. The
+          configuration can be seen in <xref linkend="maven-processor-plugin"/>.</para>
+        <example id="maven-processor-plugin">
+          <title>Maven compiler plugin configuration with maven-annotation-plugin</title>
+          <programlisting>&lt;plugin&gt;
     &lt;groupId&gt;org.bsc.maven&lt;/groupId&gt;
     &lt;artifactId&gt;maven-processor-plugin&lt;/artifactId&gt;
     &lt;executions&gt;
@@ -346,150 +308,136 @@ cq.where( cb.equal(itemNode.get(Item_.id), 5 ) ).distinct(true);
         &lt;/execution&gt;
     &lt;/executions&gt;
 &lt;/plugin&gt;</programlisting>
-      </example>
+        </example>
+      </section>
     </section>
-
     <section>
       <title>Usage within the IDE</title>
-
-      <para>Of course you also want to have annotation processing available in
-      your favorite IDE. The following paragraphs and screenshots show you how
-      to enable the Hibernate Static Metamodel Generator within your
-      IDE.</para>
-
+      <para>Of course you also want to have annotation processing available in your favorite IDE.
+        The following paragraphs and screenshots show you how to enable the Hibernate Static
+        Metamodel Generator within your IDE.</para>
       <section>
         <title>Idea</title>
-
-        <para>Intellij Idea contains from version 9.x onwards a specifc
-        configuration section for annotation processing under the project
-        settings window. The screenshots show you how to configure the
-        Hibernate Static Metamodel Generator.</para>
-
+        <para>Intellij Idea contains from version 9.x onwards a specifc configuration section for
+          annotation processing under the project settings window. The screenshots show you how to
+          configure the Hibernate Static Metamodel Generator.</para>
         <mediaobject>
           <imageobject role="fo">
             <imagedata align="center" contentdepth="" contentwidth="150mm"
-                       fileref="idea-annotation-processor-config.png"
-                       scalefit="" />
+              fileref="idea-annotation-processor-config.png" scalefit=""/>
           </imageobject>
-
           <imageobject role="html">
-            <imagedata depth="" fileref="idea-annotation-processor-config.png"
-                       scalefit="1" />
+            <imagedata depth="" fileref="idea-annotation-processor-config.png" scalefit="1"/>
           </imageobject>
         </mediaobject>
       </section>
-
       <section>
         <title>Eclipse</title>
-
-        <para>In Eclipse, from the Galileo release onwards, exists an
-        additional configuration section under Java Compiler. There you can
-        configure all kinds of aspects of annotation processing. Just check
-        the "Enable annotation processing" option, configure the directory for
-        the generated sources and finally add the Hibernate Static Metamodel
-        Generator and JPA 2 jar files to the factory path.</para>
-
+        <para>In Eclipse, from the Galileo release onwards, exists an additional configuration
+          section under Java Compiler. There you can configure all kinds of aspects of annotation
+          processing. Just check the "Enable annotation processing" option, configure the directory
+          for the generated sources and finally add the Hibernate Static Metamodel Generator and JPA
+          2 jar files to the factory path.</para>
         <mediaobject>
           <imageobject role="fo">
             <imagedata align="center" contentdepth="" contentwidth="150mm"
-                       fileref="eclipse-annotation-processor-config.png"
-                       scalefit="" />
+              fileref="eclipse-annotation-processor-config.png" scalefit=""/>
           </imageobject>
-
           <imageobject role="html">
-            <imagedata depth=""
-                       fileref="eclipse-annotation-processor-config.png"
-                       scalefit="1" />
+            <imagedata depth="" fileref="eclipse-annotation-processor-config.png" scalefit="1"/>
           </imageobject>
         </mediaobject>
       </section>
-
       <section>
         <title>NetBeans</title>
-
-        <para>Netbeans support for annotation processors is at the time of
-        this wrinting still in the making. Refer to NetBeans issues <ulink
-        url="http://www.netbeans.org/issues/show_bug.cgi?id=111065">111065</ulink>,
-        <ulink
-        url="http://www.netbeans.org/issues/show_bug.cgi?id=111293">111293</ulink>
-        and <ulink url="???">111294</ulink>.</para>
+        <para>Netbeans support for annotation processors is at the time of this wrinting still in
+          the making. Refer to NetBeans issues <ulink
+            url="http://www.netbeans.org/issues/show_bug.cgi?id=111065">111065</ulink>, <ulink
+            url="http://www.netbeans.org/issues/show_bug.cgi?id=111293">111293</ulink> and <ulink
+            url="http://www.netbeans.org/issues/show_bug.cgi?id=111294">111294</ulink>.</para>
       </section>
     </section>
-
     <section>
       <title>Processor specific options</title>
-
-      <para>The Hibernate Static Metamodel Generator accepts a series of
-      custom options which can be passed to the processor in the format
-      <literal>-A[property]=[value]</literal>. The supported properties
-      are:<table>
-          <title>Annotation processor options (passed via
-          -A[property]=[value])</title>
-
+      <para>The Hibernate Static Metamodel Generator accepts a series of custom options which can be
+        passed to the processor in the format <literal>-A[property]=[value]</literal>. The supported
+        properties are:<table>
+          <title>Annotation processor options (passed via -A[property]=[value])</title>
           <tgroup cols="2">
             <tbody>
               <row>
                 <entry><emphasis role="bold">Option name</emphasis></entry>
-
-                <entry><emphasis role="bold">Option value and
-                usage</emphasis></entry>
+                <entry><emphasis role="bold">Option value and usage</emphasis></entry>
               </row>
-
               <row>
                 <entry>debug</entry>
-
-                <entry>if set to <literal>true</literal> additional trace
-                information will be outputted by the processor</entry>
+                <entry>if set to <literal>true</literal> additional trace information will be
+                  outputted by the processor</entry>
               </row>
-
               <row>
                 <entry>persistenceXml</entry>
-
-                <entry>Per default the processor looks in
-                <filename>/META-INF</filename> for persistence.xml. Specifying
-                this option a <filename>persitence.xml</filename> file from a
-                different location can be specified (has to be on the
-                classpath)</entry>
+                <entry>Per default the processor looks in <filename>/META-INF</filename> for
+                  persistence.xml. Specifying this option a <filename>persitence.xml</filename> file
+                  from a different location can be specified (has to be on the classpath)</entry>
               </row>
-
               <row>
                 <entry>ormXml</entry>
-
-                <entry>Allows to specify additional entity mapping files. The
-                specified value for this option is a comma separated string of
-                mapping file names. Even when this option is specified
-                <filename>/META-INF/orm.xml</filename> is implicit.</entry>
+                <entry>Allows to specify additional entity mapping files. The specified value for
+                  this option is a comma separated string of mapping file names. Even when this
+                  option is specified <filename>/META-INF/orm.xml</filename> is implicit.</entry>
               </row>
-
               <row>
                 <entry>lazyXmlParsing</entry>
-
-                <entry>Possible values are <literal>true</literal> or
-                <literal>false</literal>. If set to <literal>true</literal>
-                the annotation processor tries to determine whether any of the
-                xml files has changed between invocations and if unchanged
-                skips the xml parsing. This feature is experimental and
-                contains the risk of wron results in some cases of mixed mode
-                configurations. To determine wether a file has been modified a
-                temporary file
-                <filename>Hibernate-Static-Metamodel-Generator.tmp</filename>
-                is used. This file gets created in the
-                <literal>java.io.tmpdir</literal> directory.</entry>
+                <entry>Possible values are <literal>true</literal> or <literal>false</literal>. If
+                  set to <literal>true</literal> the annotation processor tries to determine whether
+                  any of the xml files has changed between invocations and if unchanged skips the
+                  xml parsing. This feature is experimental and contains the risk of wron results in
+                  some cases of mixed mode configurations. To determine wether a file has been
+                  modified a temporary file
+                    <filename>Hibernate-Static-Metamodel-Generator.tmp</filename> is used. This file
+                  gets created in the <literal>java.io.tmpdir</literal> directory.</entry>
               </row>
             </tbody>
           </tgroup>
         </table></para>
     </section>
   </chapter>
-
   <appendix>
     <title>Further information</title>
-
     <para>For further usage question or problems consult the <ulink
-    url="https://forum.hibernate.org/viewforum.php?f=9">Hibernate
-    Forum</ulink>. For bug reports use the <ulink
-    url="http://opensource.atlassian.com/projects/hibernate/browse/METAGEN"
-    userlevel="">METAGEN</ulink> project in the Hibernate Jira instance.
-    Feedback is always welcome.</para>
+        url="https://forum.hibernate.org/viewforum.php?f=9">Hibernate Forum</ulink>. For bug reports
+      use the <ulink url="http://opensource.atlassian.com/projects/hibernate/browse/METAGEN"
+        userlevel="">METAGEN</ulink> project in the Hibernate Jira instance. Feedback is always
+      welcome.</para>
   </appendix>
+  <bibliography>
+    <title>References</title>
+    <biblioentry id="JSR_269">
+      <abbrev id="JSR_269_ABBREV">Pluggable Annotation Processing API</abbrev>
+      <title>JSR 269: Pluggable Annotation Processing API</title>
+      <copyright>
+        <year>2006</year>
+        <holder>SUN MICROSYSTEMS, INC.</holder>
+      </copyright>
+      <bibliomisc>
+        <email>jsr-269-feedback@sun.com</email>
+        <ulink url="http://jcp.org/en/jsr/detail?id=269">JSR 269 JCP Page</ulink>
+      </bibliomisc>
+    </biblioentry>
+    <biblioentry id="JPA2">
+      <abbrev id="JPA2_ABBREV">JPA 2 Specification</abbrev>
+      <title>JSR 317: <trademark>Java</trademark> Persistence API, Version 2.0 </title>
+      <collab>
+        <collabname>Java Persistence 2.0 Expert Group</collabname>
+      </collab>
+      <copyright>
+        <year>2009</year>
+        <holder>SUN MICROSYSTEMS, INC.</holder>
+      </copyright>
+      <bibliomisc>
+        <email>jsr-317-feedback@sun.com</email>
+        <ulink url="http://jcp.org/en/jsr/detail?id=317">JSR 317 JCP Page</ulink>
+      </bibliomisc>
+    </biblioentry>
+  </bibliography>
 </book>

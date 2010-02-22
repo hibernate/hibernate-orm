@@ -243,13 +243,13 @@
                     <autoVersionSubmodules>true</autoVersionSubmodules>
                     <allowTimestampedSnapshots>true</allowTimestampedSnapshots>
                     <remoteTagging>true</remoteTagging>
-                    <goals>package deploy javadoc:javadoc org.jboss.maven.plugins:maven-jdocbook-plugin:2.2.0:resources org.jboss.maven.plugins:maven-jdocbook-plugin:2.2.0:generate assembly:assembly</goals>
+                    <goals>package deploy javadoc:javadoc org.jboss.maven.plugins:maven-jdocbook-plugin:2.2.1:resources org.jboss.maven.plugins:maven-jdocbook-plugin:2.2.1:generate assembly:assembly</goals>
                 </configuration>
             </plugin>
             <plugin>
                 <groupId>org.jboss.maven.plugins</groupId>
                 <artifactId>maven-jdocbook-plugin</artifactId>
-                <version>2.2.0</version>
+                <version>2.2.1</version>
                 <extensions>true</extensions>
                 <dependencies>
                     <dependency>

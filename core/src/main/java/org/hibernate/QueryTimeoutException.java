@@ -35,26 +35,12 @@ import java.sql.SQLException;
 
 public class QueryTimeoutException extends JDBCException {
 
-	Object entity;
-
-
-	public QueryTimeoutException( String s, JDBCException je, Object entity ) {
-			super(s, je.getSQLException());
-			this.entity = entity;
-		}
-
-   public QueryTimeoutException( String s, SQLException se, Object entity ) {
-         super(s, se);
-         this.entity = entity;
-      }
+	public QueryTimeoutException( String s, JDBCException je, String sql ) {
+		super(s, je.getSQLException(), sql);
+	}
 
 	public QueryTimeoutException( String s, SQLException se, String sql ) {
-			super(s, se, sql);
-			this.entity = null;
-		}
-
-	public Object getEntity() {
-		return entity;
+		super(s, se, sql);
 	}
 
 }

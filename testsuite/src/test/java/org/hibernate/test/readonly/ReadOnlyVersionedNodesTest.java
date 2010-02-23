@@ -36,7 +36,7 @@ import org.hibernate.cfg.Environment;
 /**
  * @author Gail Badner
  */
-public class ReadOnlyVersionedNodesTest extends FunctionalTestCase {
+public class ReadOnlyVersionedNodesTest extends AbstractReadOnlyTest {
 
 	public ReadOnlyVersionedNodesTest(String str) {
 		super( str );
@@ -44,15 +44,6 @@ public class ReadOnlyVersionedNodesTest extends FunctionalTestCase {
 
 	public String[] getMappings() {
 		return new String[] { "readonly/VersionedNode.hbm.xml" };
-	}
-
-	public String getCacheConcurrencyStrategy() {
-		return null;
-	}
-
-	public void configure(Configuration cfg) {
-		cfg.setProperty( Environment.GENERATE_STATISTICS, "true");
-		cfg.setProperty( Environment.STATEMENT_BATCH_SIZE, "0" );
 	}
 
 	public static Test suite() {
@@ -116,15 +107,20 @@ public class ReadOnlyVersionedNodesTest extends FunctionalTestCase {
 
 		assertUpdateCount( 1 );
 		assertInsertCount( 0 );
+		clearCounts();
 
 		s = openSession();
 		s.beginTransaction();
 		node = ( VersionedNode ) s.get( VersionedNode.class, node.getId() );
 		assertEquals( "diff-node-name", node.getName() );
 		assertEquals( 1, node.getVersion() );
+		s.setReadOnly( node, true );
 		s.delete( node );
 		s.getTransaction().commit();
 		s.close();
+		
+		assertUpdateCount( 0 );
+		assertDeleteCount( 1 );
 	}
 
 	public void testUpdateSetReadOnlyTwice() throws Exception {
@@ -155,9 +151,13 @@ public class ReadOnlyVersionedNodesTest extends FunctionalTestCase {
 		node = ( VersionedNode ) s.get( VersionedNode.class, node.getId() );
 		assertEquals( "node", node.getName() );
 		assertEquals( 0, node.getVersion() );
+		s.setReadOnly( node, true );
 		s.delete( node );
 		s.getTransaction().commit();
 		s.close();
+
+		assertUpdateCount( 0 );
+		assertDeleteCount( 1 );
 	}
 
 	public void testUpdateSetModifiable() throws Exception {
@@ -181,15 +181,20 @@ public class ReadOnlyVersionedNodesTest extends FunctionalTestCase {
 
 		assertUpdateCount( 1 );
 		assertInsertCount( 0 );
+		clearCounts();
 
 		s = openSession();
 		s.beginTransaction();
 		node = ( VersionedNode ) s.get( VersionedNode.class, node.getId() );
 		assertEquals( "node-name", node.getName() );
 		assertEquals( 1, node.getVersion() );
+		s.setReadOnly( node, true );
 		s.delete( node );
 		s.getTransaction().commit();
 		s.close();
+
+		assertUpdateCount( 0 );
+		assertDeleteCount( 1 );
 	}
 
 	public void testUpdateSetReadOnlySetModifiableFailureExpected() throws Exception {
@@ -317,6 +322,7 @@ public class ReadOnlyVersionedNodesTest extends FunctionalTestCase {
 
 		assertUpdateCount( 0 );
 		assertInsertCount( 1 );
+		clearCounts();
 
 		s = openSession();
 		s.beginTransaction();
@@ -328,10 +334,15 @@ public class ReadOnlyVersionedNodesTest extends FunctionalTestCase {
 		assertSame( parent, child.getParent() );
 		assertSame( child, parent.getChildren().iterator().next() );
 		assertEquals( 0, child.getVersion() );
+		s.setReadOnly( parent, true );
+		s.setReadOnly( child, true );
 		s.delete( parent );
 		s.delete( child );
 		s.getTransaction().commit();
 		s.close();
+
+		assertUpdateCount( 0 );
+		assertDeleteCount( 2 );
 	}
 
 	public void testMergeDetachedParentWithNewChildCommitWithReadOnlyParent() throws Exception {
@@ -357,6 +368,7 @@ public class ReadOnlyVersionedNodesTest extends FunctionalTestCase {
 
 		assertUpdateCount( 0 );
 		assertInsertCount( 1 );
+		clearCounts();
 
 		s = openSession();
 		s.beginTransaction();
@@ -368,10 +380,15 @@ public class ReadOnlyVersionedNodesTest extends FunctionalTestCase {
 		assertSame( parent, child.getParent() );
 		assertSame( child, parent.getChildren().iterator().next() );
 		assertEquals( 0, child.getVersion() );
+		s.setReadOnly( parent, true );
+		s.setReadOnly( child, true );
 		s.delete( parent );
 		s.delete( child );
 		s.getTransaction().commit();
 		s.close();
+
+		assertUpdateCount( 0 );
+		assertDeleteCount( 2 );
 	}
 
 	public void testGetParentMakeReadOnlyThenMergeDetachedParentWithNewChildC() throws Exception {
@@ -399,6 +416,7 @@ public class ReadOnlyVersionedNodesTest extends FunctionalTestCase {
 
 		assertUpdateCount( 0 );
 		assertInsertCount( 1 );
+		clearCounts();
 
 		s = openSession();
 		s.beginTransaction();
@@ -414,8 +432,73 @@ public class ReadOnlyVersionedNodesTest extends FunctionalTestCase {
 		s.delete( child );
 		s.getTransaction().commit();
 		s.close();
+
+		assertUpdateCount( 0 );
+		assertDeleteCount( 2 );
 	}
 
+	public void testMergeUnchangedDetachedParentChildren() throws Exception {
+		Session s = openSession();
+		s.beginTransaction();
+		VersionedNode parent = new VersionedNode( "parent", "parent" );
+		VersionedNode child = new VersionedNode( "child", "child");
+		parent.addChild( child );
+		s.persist( parent );
+		s.getTransaction().commit();
+		s.close();
+
+		clearCounts();
+
+		s = openSession();
+		s.beginTransaction();
+		parent = ( VersionedNode ) s.merge( parent );
+		s.getTransaction().commit();
+		s.close();
+
+		assertUpdateCount( 0 );
+		assertInsertCount( 0 );
+		clearCounts();
+
+		s = openSession();
+		s.beginTransaction();
+		VersionedNode parentGet = ( VersionedNode ) s.get( parent.getClass(), parent.getId() );
+		s.merge( parent );
+		s.getTransaction().commit();
+		s.close();
+
+		assertUpdateCount( 0 );
+		assertInsertCount( 0 );
+		clearCounts();
+
+		s = openSession();
+		s.beginTransaction();
+		VersionedNode parentLoad = ( VersionedNode ) s.load( parent.getClass(), parent.getId() );
+		s.merge( parent );
+		s.getTransaction().commit();
+		s.close();
+
+		assertUpdateCount( 0 );
+		assertInsertCount( 0 );
+		clearCounts();
+
+		s = openSession();
+		s.beginTransaction();
+		parent = ( VersionedNode ) s.get( VersionedNode.class, parent.getId() );
+		child = ( VersionedNode ) s.get( VersionedNode.class, child.getId() );
+		assertEquals( parent.getName(), "parent" );
+		assertEquals( 1, parent.getChildren().size() );
+		assertEquals( 0, parent.getVersion() );
+		assertSame( parent, child.getParent() );
+		assertSame( child, parent.getChildren().iterator().next() );
+		assertEquals( 0, child.getVersion() );
+		s.delete( parent );
+		s.delete( child );
+		s.getTransaction().commit();
+		s.close();
+
+		assertUpdateCount( 0 );
+		assertDeleteCount( 2 );
+	}
 
 	public void testAddNewParentToReadOnlyChild() throws Exception {
 		Session s = openSession();
@@ -448,9 +531,13 @@ public class ReadOnlyVersionedNodesTest extends FunctionalTestCase {
 		assertEquals( 0, child.getVersion() );
 		parent = ( VersionedNode ) s.get( VersionedNode.class, parent.getId() );
 		assertNull( parent );
+		s.setReadOnly( child, true );
 		s.delete( child );
 		s.getTransaction().commit();
 		s.close();
+
+		assertUpdateCount( 0 );
+		assertDeleteCount( 1 );
 	}
 
 	public void testUpdateChildWithNewParentCommitWithReadOnlyChild() throws Exception {
@@ -476,6 +563,7 @@ public class ReadOnlyVersionedNodesTest extends FunctionalTestCase {
 
 		assertUpdateCount( 0 );
 		assertInsertCount( 1 );
+		clearCounts();
 
 		s = openSession();
 		s.beginTransaction();
@@ -487,10 +575,15 @@ public class ReadOnlyVersionedNodesTest extends FunctionalTestCase {
 		assertNotNull( parent );
 		assertEquals( 0, parent.getChildren().size() );
 		assertEquals( 0, parent.getVersion() );
+		s.setReadOnly( parent, true );
+		s.setReadOnly( child, true );
 		s.delete( parent );
 		s.delete( child );
 		s.getTransaction().commit();
 		s.close();
+
+		assertUpdateCount( 0 );
+		assertDeleteCount( 2 );
 	}
 
 	public void testMergeDetachedChildWithNewParentCommitWithReadOnlyChild() throws Exception {
@@ -516,6 +609,7 @@ public class ReadOnlyVersionedNodesTest extends FunctionalTestCase {
 
 		assertUpdateCount( 1 );
 		assertInsertCount( 1 );
+		clearCounts();
 
 		s = openSession();
 		s.beginTransaction();
@@ -527,10 +621,15 @@ public class ReadOnlyVersionedNodesTest extends FunctionalTestCase {
 		assertNotNull( parent );
 		assertEquals( 0, parent.getChildren().size() );
 		assertEquals( 1, parent.getVersion() );	// hmmm, why is was version updated?
+		s.setReadOnly( parent, true );
+		s.setReadOnly( child, true );
 		s.delete( parent );
 		s.delete( child );
 		s.getTransaction().commit();
 		s.close();
+
+		assertUpdateCount( 0 );
+		assertDeleteCount( 2 );
 	}
 
 	public void testGetChildMakeReadOnlyThenMergeDetachedChildWithNewParent() throws Exception {
@@ -558,6 +657,7 @@ public class ReadOnlyVersionedNodesTest extends FunctionalTestCase {
 
 		assertUpdateCount( 1 );
 		assertInsertCount( 1 );
+		clearCounts();
 
 		s = openSession();
 		s.beginTransaction();
@@ -569,10 +669,15 @@ public class ReadOnlyVersionedNodesTest extends FunctionalTestCase {
 		assertNotNull( parent );
 		assertEquals( 0, parent.getChildren().size() );
 		assertEquals( 1, parent.getVersion() ); // / hmmm, why is was version updated?
+		s.setReadOnly( parent, true );
+		s.setReadOnly( child, true );
 		s.delete( parent );
 		s.delete( child );
 		s.getTransaction().commit();
 		s.close();
+
+		assertUpdateCount( 0 );
+		assertDeleteCount( 2 );
 	}
 
 	protected void cleanupTest() throws Exception {
@@ -589,24 +694,5 @@ public class ReadOnlyVersionedNodesTest extends FunctionalTestCase {
 
 		s.getTransaction().commit();
 		s.close();
-	}
-
-	protected void clearCounts() {
-		getSessions().getStatistics().clear();
-	}
-
-	protected void assertInsertCount(int expected) {
-		int inserts = ( int ) getSessions().getStatistics().getEntityInsertCount();
-		assertEquals( "unexpected insert count", expected, inserts );
-	}
-
-	protected void assertUpdateCount(int expected) {
-		int updates = ( int ) getSessions().getStatistics().getEntityUpdateCount();
-		assertEquals( "unexpected update counts", expected, updates );
-	}
-
-	protected void assertDeleteCount(int expected) {
-		int deletes = ( int ) getSessions().getStatistics().getEntityDeleteCount();
-		assertEquals( "unexpected delete counts", expected, deletes );
 	}
 }

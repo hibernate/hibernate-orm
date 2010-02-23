@@ -1,5 +1,5 @@
 //$Id: CriteriaQueryTest.java 10976 2006-12-12 23:22:26Z steve.ebersole@jboss.com $
-package org.hibernate.test.readonly.criteria;
+package org.hibernate.test.readonly;
 
 import java.util.Iterator;
 import java.util.List;
@@ -7,6 +7,7 @@ import java.util.Map;
 
 import junit.framework.Test;
 
+import org.hibernate.CacheMode;
 import org.hibernate.Criteria;
 import org.hibernate.FetchMode;
 import org.hibernate.Hibernate;
@@ -30,6 +31,7 @@ import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.test.hql.Animal;
 import org.hibernate.test.hql.Reptile;
+import org.hibernate.test.readonly.AbstractReadOnlyTest;
 import org.hibernate.transform.Transformers;
 import org.hibernate.type.Type;
 import org.hibernate.util.SerializationHelper;
@@ -37,14 +39,14 @@ import org.hibernate.util.SerializationHelper;
 /**
  * @author Gail Badner (adapted from org.hibernate.test.criteria.CriteriaQueryTest by Gavin King)
  */
-public class ReadOnlyCriteriaQueryTest extends FunctionalTestCase {
+public class ReadOnlyCriteriaQueryTest extends AbstractReadOnlyTest {
 	
 	public ReadOnlyCriteriaQueryTest(String str) {
 		super(str);
 	}
 
 	public String[] getMappings() {
-		return new String[] { "readonly/criteria/Enrolment.hbm.xml" };
+		return new String[] { "readonly/Enrolment.hbm.xml" };
 	}
 
 	public void configure(Configuration cfg) {
@@ -54,7 +56,7 @@ public class ReadOnlyCriteriaQueryTest extends FunctionalTestCase {
 		cfg.setProperty( Environment.USE_SECOND_LEVEL_CACHE, "true" );
 		cfg.setProperty( Environment.GENERATE_STATISTICS, "true" );
 	}
-
+	
 	public static Test suite() {
 		return new FunctionalTestClassTestSuite( ReadOnlyCriteriaQueryTest.class );
 	}
@@ -92,6 +94,10 @@ public class ReadOnlyCriteriaQueryTest extends FunctionalTestCase {
 		t.commit();
 		s.close();
 
+		assertInsertCount( 4 );
+		assertUpdateCount( 0 );
+		clearCounts();
+
 		s = openSession();
 		t = s.beginTransaction();
 		Criteria criteria = s.createCriteria( Student.class );
@@ -125,6 +131,9 @@ public class ReadOnlyCriteriaQueryTest extends FunctionalTestCase {
 		s.delete(enrolment);
 		t.commit();
 		s.close();
+
+		assertUpdateCount( 1 );
+		assertDeleteCount( 4 );
 	}
 
 	public void testModifiableSessionReadOnlyCriteria() {

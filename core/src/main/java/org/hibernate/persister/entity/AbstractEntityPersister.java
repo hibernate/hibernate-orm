@@ -63,6 +63,7 @@ import org.hibernate.engine.LoadQueryInfluencers;
 import org.hibernate.engine.Mapping;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.SessionImplementor;
+import org.hibernate.engine.Status;
 import org.hibernate.engine.ValueInclusion;
 import org.hibernate.engine.Versioning;
 import org.hibernate.exception.JDBCExceptionHelper;
@@ -2751,8 +2752,21 @@ public abstract class AbstractEntityPersister
 
 		final boolean[] propsToUpdate;
 		final String[] updateStrings;
-		if ( entityMetamodel.isDynamicUpdate() && dirtyFields != null ) {
-			// For the case of dynamic-update="true", we need to generate the UPDATE SQL
+		EntityEntry entry = session.getPersistenceContext().getEntry( object );
+
+		// Ensure that an immutable or non-modifiable entity is not being updated unless it is
+		// in the process of being deleted.
+		if ( entry == null && ! isMutable() ) {
+			throw new IllegalStateException( "Updating immutable entity that is not in session yet!" );
+		}
+		if ( entry != null && ! isModifiableEntity( entry ) && entry.getStatus() != Status.DELETED ) {
+			throw new IllegalStateException( "Updating non-modifiable entity that is not being deleted!" );
+		}
+		if ( ( entityMetamodel.isDynamicUpdate() || ! isModifiableEntity( entry ) ) && dirtyFields != null ) {
+			// For the following cases we need to generate the UPDATE SQL
+			// - dynamic-update="true"
+			// - a non-modifiable entity (e.g., read-only or immutable) needs to have
+			//   references to transient entities set to null before being deleted
 			propsToUpdate = getPropertiesToUpdate( dirtyFields, hasDirtyCollection );
 			// don't need to check laziness (dirty checking algorithm handles that)
 			updateStrings = new String[span];
@@ -3593,6 +3607,11 @@ public abstract class AbstractEntityPersister
 
 	public boolean isMutable() {
 		return entityMetamodel.isMutable();
+	}
+
+	private boolean isModifiableEntity(EntityEntry entry) {
+
+		return ( entry == null ? isMutable() : entry.isModifiableEntity() );
 	}
 
 	public boolean isAbstract() {

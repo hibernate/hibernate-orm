@@ -52,7 +52,7 @@ import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
  * 
  * @author Gail Badner
  */
-public class ReadOnlyProxyTest extends FunctionalTestCase {
+public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 
 	public ReadOnlyProxyTest(String str) {
 		super(str);
@@ -60,14 +60,6 @@ public class ReadOnlyProxyTest extends FunctionalTestCase {
 
 	public String[] getMappings() {
 		return new String[] { "readonly/DataPoint.hbm.xml", "readonly/TextHolder.hbm.xml" };
-	}
-
-	public void configure(Configuration cfg) {
-		cfg.setProperty(Environment.STATEMENT_BATCH_SIZE, "20");
-	}
-
-	public String getCacheConcurrencyStrategy() {
-		return null;
 	}
 
 	public static Test suite() {

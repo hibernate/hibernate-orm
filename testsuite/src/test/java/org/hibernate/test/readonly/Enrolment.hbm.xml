@@ -3,7 +3,7 @@
 	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
 	"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
 
-<hibernate-mapping package="org.hibernate.test.readonly.criteria">
+<hibernate-mapping package="org.hibernate.test.readonly">
 	
 	<class name="Course">
 		<id name="courseCode">

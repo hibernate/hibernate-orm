@@ -1,5 +1,5 @@
 //$Id: Course.java 5686 2005-02-12 07:27:32Z steveebersole $
-package org.hibernate.test.readonly.criteria;
+package org.hibernate.test.readonly;
 
 /**
  * @author Gavin King

@@ -13,10 +13,10 @@
 			<generator class="increment"/>
 		</id>
 		<property name="x">
-			<column name="xval" not-null="true" precision="25" scale="19" unique-key="xy"/>
+			<column name="xval" not-null="true" precision="25" scale="20" unique-key="xy"/>
 		</property>
 		<property name="y">
-			<column name="yval" not-null="true" precision="25" scale="19" unique-key="xy"/>
+			<column name="yval" not-null="true" precision="25" scale="20" unique-key="xy"/>
 		</property>
 		<property name="description"/>
 	</class>

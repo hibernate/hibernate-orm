@@ -46,6 +46,7 @@ public final class EntityEntry implements Serializable {
 
 	private LockMode lockMode;
 	private Status status;
+	private Status previousStatus;
 	private final Serializable id;
 	private Object[] loadedState;
 	private Object[] deletedState;
@@ -72,6 +73,7 @@ public final class EntityEntry implements Serializable {
 			final boolean disableVersionIncrement,
 			final boolean lazyPropertiesAreUnfetched) {
 		this.status=status;
+		this.previousStatus = null;
 		this.loadedState=loadedState;
 		this.id=id;
 		this.rowId=rowId;
@@ -91,6 +93,7 @@ public final class EntityEntry implements Serializable {
 			final Serializable id,
 			final EntityMode entityMode,
 			final Status status,
+			final Status previousStatus,
 			final Object[] loadedState,
 	        final Object[] deletedState,
 			final Object version,
@@ -104,6 +107,7 @@ public final class EntityEntry implements Serializable {
 		this.id = id;
 		this.entityMode = entityMode;
 		this.status = status;
+		this.previousStatus = previousStatus;
 		this.loadedState = loadedState;
 		this.deletedState = deletedState;
 		this.version = version;
@@ -130,7 +134,10 @@ public final class EntityEntry implements Serializable {
 		if (status==Status.READ_ONLY) {
 			loadedState = null; //memory optimization
 		}
-		this.status = status;
+		if ( this.status != status ) {
+			this.previousStatus = this.status;
+			this.status = status;
+		}
 	}
 
 	public Serializable getId() {
@@ -220,6 +227,7 @@ public final class EntityEntry implements Serializable {
 	 * exists in the database
 	 */
 	public void postDelete() {
+		previousStatus = status;
 		status = Status.GONE;
 		existsInDatabase = false;
 	}
@@ -246,18 +254,29 @@ public final class EntityEntry implements Serializable {
 		return loadedState[propertyIndex];
 	}
 
-	public boolean requiresDirtyCheck(Object entity) {
-		
-		boolean isMutableInstance = 
-				status != Status.READ_ONLY && 
-				persister.isMutable();
-		
-		return isMutableInstance && (
+	public boolean requiresDirtyCheck(Object entity) {		
+		return isModifiableEntity() && (
 				getPersister().hasMutableProperties() ||
 				!FieldInterceptionHelper.isInstrumented( entity ) ||
 				FieldInterceptionHelper.extractFieldInterceptor( entity).isDirty()
 			);
-		
+	}
+
+	/**
+	 * Can the entity be modified?
+	 *
+	 * The entity is modifiable if all of the following are true:
+	 * <ul>
+	 * <li>the entity class is mutable</li>
+	 * <li>the entity is not read-only</li>
+	 * <li>if the current status is Status.DELETED, then the entity was not read-only when it was deleted</li>
+	 * </ul>
+	 * @return true, if the entity is modifiable; false, otherwise,
+	 */
+	public boolean isModifiableEntity() {
+		return ( status != Status.READ_ONLY ) &&
+				! ( status == Status.DELETED && previousStatus == Status.READ_ONLY ) &&
+				getPersister().isMutable();
 	}
 
 	public void forceLocked(Object entity, Object nextVersion) {
@@ -318,6 +337,7 @@ public final class EntityEntry implements Serializable {
 		oos.writeObject( id );
 		oos.writeObject( entityMode.toString() );
 		oos.writeObject( status.toString() );
+		oos.writeObject( ( previousStatus == null ? "" : previousStatus.toString() ) );
 		// todo : potentially look at optimizing these two arrays
 		oos.writeObject( loadedState );
 		oos.writeObject( deletedState );
@@ -344,12 +364,17 @@ public final class EntityEntry implements Serializable {
 	static EntityEntry deserialize(
 			ObjectInputStream ois,
 	        SessionImplementor session) throws IOException, ClassNotFoundException {
+		String previousStatusString = null;
 		return new EntityEntry(
 				( session == null ? null : session.getFactory() ),
 		        ( String ) ois.readObject(),
 				( Serializable ) ois.readObject(),
 	            EntityMode.parse( ( String ) ois.readObject() ),
 				Status.parse( ( String ) ois.readObject() ),
+				( ( previousStatusString = ( String ) ois.readObject() ).length() == 0 ?
+							null :
+							Status.parse( previousStatusString ) 
+				),
 	            ( Object[] ) ois.readObject(),
 	            ( Object[] ) ois.readObject(),
 	            ois.readObject(),

@@ -2,7 +2,7 @@
  * Created on 28-Jan-2005
  *
  */
-package org.hibernate.test.readonly.criteria;
+package org.hibernate.test.readonly;
 
 /**
  * @author max

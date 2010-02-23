@@ -38,7 +38,6 @@ import org.hibernate.classic.Validatable;
 import org.hibernate.engine.EntityEntry;
 import org.hibernate.engine.EntityKey;
 import org.hibernate.engine.Nullability;
-import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.engine.Status;
 import org.hibernate.engine.Versioning;
@@ -254,10 +253,24 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 		
 		if ( log.isTraceEnabled() ) {
 			if ( status == Status.DELETED ) {
-				log.trace(
+				if ( ! persister.isMutable() ) {
+					log.trace(
+						"Updating immutable, deleted entity: " +
+						MessageHelper.infoString( persister, entry.getId(), session.getFactory() )
+					);
+				}
+				else if ( ! entry.isModifiableEntity() ) {
+					log.trace(
+						"Updating non-modifiable, deleted entity: " +
+						MessageHelper.infoString( persister, entry.getId(), session.getFactory() )
+					);
+				}
+				else {
+					log.trace(
 						"Updating deleted entity: " +
 						MessageHelper.infoString( persister, entry.getId(), session.getFactory() )
 					);
+				}
 			}
 			else {
 				log.trace(
@@ -303,7 +316,9 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 						values,
 						dirtyProperties,
 						event.hasDirtyCollection(),
-						entry.getLoadedState(),
+						( status == Status.DELETED && ! entry.isModifiableEntity() ?
+								persister.getPropertyValues( entity, entityMode ) :
+								entry.getLoadedState() ),
 						entry.getVersion(),
 						nextVersion,
 						entity,
@@ -447,7 +462,7 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 	}
 
 	private boolean hasDirtyCollections(FlushEntityEvent event, EntityPersister persister, Status status) {
-		if ( isCollectionDirtyCheckNecessary(persister, status) ) {
+		if ( isCollectionDirtyCheckNecessary(persister, status ) ) {
 			DirtyCollectionSearchVisitor visitor = new DirtyCollectionSearchVisitor( 
 					event.getSession(),
 					persister.getPropertyVersionability()
@@ -463,8 +478,8 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 	}
 
 	private boolean isCollectionDirtyCheckNecessary(EntityPersister persister, Status status) {
-		return status==Status.MANAGED && 
-				persister.isVersioned() && 
+		return status==Status.MANAGED &&
+				persister.isVersioned() &&
 				persister.hasCollections();
 	}
 	
@@ -503,7 +518,27 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 			if ( !cannotDirtyCheck ) {
 				// dirty check against the usual snapshot of the entity
 				dirtyProperties = persister.findDirty( values, loadedState, entity, session );
-				
+			}
+			else if ( entry.getStatus() == Status.DELETED && ! event.getEntityEntry().isModifiableEntity() ) {
+				// A non-modifiable (e.g., read-only or immutable) entity needs to be have
+				// references to transient entities set to null before being deleted. No other
+				// fields should be updated.
+				if ( values != entry.getDeletedState() ) {
+					throw new IllegalStateException(
+							"Entity has status Status.DELETED but values != entry.getDeletedState"
+					);
+				}
+				// Even if loadedState == null, we can dirty-check by comparing currentState and
+				// entry.getDeletedState() because the only fields to be updated are those that
+				// refer to transient entities that are being set to null.
+				// - currentState contains the entity's current property values.
+				// - entry.getDeletedState() contains the entity's current property values with
+				//   references to transient entities set to null.
+				// - dirtyProperties will only contain properties that refer to transient entities
+				final Object[] currentState =
+						persister.getPropertyValues( event.getEntity(), event.getSession().getEntityMode() );
+				dirtyProperties = persister.findDirty( entry.getDeletedState(), currentState, entity, session );
+				cannotDirtyCheck = false;
 			}
 			else {
 				// dirty check against the database snapshot, if possible/necessary

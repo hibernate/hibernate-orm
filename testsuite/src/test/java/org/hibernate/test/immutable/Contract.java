@@ -3,7 +3,10 @@ package org.hibernate.test.immutable;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 public class Contract implements Serializable {
 	
@@ -11,15 +14,36 @@ public class Contract implements Serializable {
 	private String customerName;
 	private String type;
 	private List variations;
+	private Contract parent;
+	private Set subcontracts;
+	private Set plans;
+	private Set parties;
+	private Set infos;
 
 	public Contract() {
 		super();
 	}
 
-	public Contract(String customerName, String type) {
+	public Contract(Plan plan, String customerName, String type) {
+		plans = new HashSet();
+		plans.add( plan );
+		if ( plan != null ) {
+			plan.getContracts().add( this );
+		}
 		this.customerName = customerName;
 		this.type = type;
 		variations = new ArrayList();
+		subcontracts = new HashSet();
+		parties = new HashSet();
+		infos = new HashSet();
+	}
+
+	public Set getPlans() {
+		return plans;
+	}
+
+	public void setPlans(Set plans) {
+		this.plans = plans;
 	}
 
 	public String getCustomerName() {
@@ -54,4 +78,55 @@ public class Contract implements Serializable {
 		this.variations = variations;
 	}
 
+	public Contract getParent() {
+		return parent;
+	}
+
+	public void setParent(Contract parent) {
+		this.parent = parent;
+	}
+
+	public Set getSubcontracts() {
+		return subcontracts;
+	}
+
+	public void setSubcontracts(Set subcontracts) {
+		this.subcontracts = subcontracts;
+	}
+
+	public void addSubcontract(Contract subcontract) {
+		subcontracts.add( subcontract );
+		subcontract.setParent( this );
+	}
+
+	public Set getParties() {
+		return parties;
+	}
+
+	public void setParties(Set parties) {
+		this.parties = parties;
+	}
+
+	public void addParty(Party party) {
+		parties.add( party );
+		party.setContract( this );
+	}
+
+	public void removeParty(Party party) {
+		parties.remove( party );
+		party.setContract( null );
+	}
+
+	public Set getInfos() {
+		return infos;
+	}
+
+	public void setInfos(Set infos) {
+		this.infos = infos;
+	}
+
+	public void addInfo(Info info) {
+		infos.add( info );
+		info.setContract( this );
+	}
 }

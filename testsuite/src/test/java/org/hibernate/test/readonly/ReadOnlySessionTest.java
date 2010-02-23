@@ -48,7 +48,7 @@ import org.hibernate.proxy.HibernateProxy;
  *
  * @author Gail Badner
  */
-public class ReadOnlySessionTest extends FunctionalTestCase {
+public class ReadOnlySessionTest extends AbstractReadOnlyTest {
 
 	public ReadOnlySessionTest(String str) {
 		super(str);
@@ -56,14 +56,6 @@ public class ReadOnlySessionTest extends FunctionalTestCase {
 
 	public String[] getMappings() {
 		return new String[] { "readonly/DataPoint.hbm.xml", "readonly/TextHolder.hbm.xml" };
-	}
-
-	public void configure(Configuration cfg) {
-		cfg.setProperty(Environment.STATEMENT_BATCH_SIZE, "20");
-	}
-
-	public String getCacheConcurrencyStrategy() {
-		return null;
 	}
 
 	public static Test suite() {

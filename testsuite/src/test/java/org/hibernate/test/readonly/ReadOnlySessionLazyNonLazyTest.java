@@ -66,7 +66,7 @@ import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
  *
  * @author Gail Badner
  */
-public class ReadOnlySessionLazyNonLazyTest extends FunctionalTestCase {
+public class ReadOnlySessionLazyNonLazyTest extends AbstractReadOnlyTest {
 
 	public ReadOnlySessionLazyNonLazyTest(String str) {
 		super(str);
@@ -74,14 +74,6 @@ public class ReadOnlySessionLazyNonLazyTest extends FunctionalTestCase {
 
 	public String[] getMappings() {
 		return new String[] { "readonly/DataPoint.hbm.xml" };
-	}
-
-	public void configure(Configuration cfg) {
-		cfg.setProperty(Environment.STATEMENT_BATCH_SIZE, "20");
-	}
-
-	public String getCacheConcurrencyStrategy() {
-		return null;
 	}
 
 	public static Test suite() {
@@ -106,7 +98,6 @@ public class ReadOnlySessionLazyNonLazyTest extends FunctionalTestCase {
 
 		Session s = openSession();
 		assertFalse( s.isDefaultReadOnly() );
-		s.setCacheMode(CacheMode.IGNORE);
 		Transaction t = s.beginTransaction();
 		s.save( cOrig );
 		checkContainer( cOrig, expectedInitializedObjects, expectedReadOnlyObjects, s );
@@ -195,7 +186,6 @@ public class ReadOnlySessionLazyNonLazyTest extends FunctionalTestCase {
 		Set expectedReadOnlyObjects = new HashSet();
 		Session s = openSession();
 		assertFalse( s.isDefaultReadOnly() );
-		s.setCacheMode(CacheMode.IGNORE);
 		Transaction t = s.beginTransaction();
 		s.save( cOrig );
 		checkContainer( cOrig, expectedInitializedObjects, expectedReadOnlyObjects, s );
@@ -278,7 +268,6 @@ public class ReadOnlySessionLazyNonLazyTest extends FunctionalTestCase {
 		DataPoint lazyDataPointOrig = ( DataPoint ) cOrig.getLazyDataPoints().iterator().next();
 		Session s = openSession();
 		assertFalse( s.isDefaultReadOnly() );
-		s.setCacheMode(CacheMode.IGNORE);
 		Transaction t = s.beginTransaction();
 		s.save( cOrig );
 		checkContainer( cOrig, expectedInitializedObjects, expectedReadOnlyObjects, s );
@@ -362,7 +351,6 @@ public class ReadOnlySessionLazyNonLazyTest extends FunctionalTestCase {
 		DataPoint lazyDataPointOrig = ( DataPoint ) cOrig.getLazyDataPoints().iterator().next();
 		Session s = openSession();
 		assertFalse( s.isDefaultReadOnly() );
-		s.setCacheMode(CacheMode.IGNORE);
 		Transaction t = s.beginTransaction();
 		s.save( cOrig );
 		checkContainer( cOrig, expectedInitializedObjects, expectedReadOnlyObjects, s );
@@ -449,7 +437,6 @@ public class ReadOnlySessionLazyNonLazyTest extends FunctionalTestCase {
 		DataPoint lazyDataPointOrig = ( DataPoint ) cOrig.getLazyDataPoints().iterator().next();
 		Session s = openSession();
 		assertFalse( s.isDefaultReadOnly() );
-		s.setCacheMode(CacheMode.IGNORE);
 		Transaction t = s.beginTransaction();
 		s.save( cOrig );
 		checkContainer( cOrig, expectedInitializedObjects, expectedReadOnlyObjects, s );
@@ -533,7 +520,6 @@ public class ReadOnlySessionLazyNonLazyTest extends FunctionalTestCase {
 		DataPoint lazyDataPointOrig = ( DataPoint ) cOrig.getLazyDataPoints().iterator().next();
 		Session s = openSession();
 		assertFalse( s.isDefaultReadOnly() );
-		s.setCacheMode(CacheMode.IGNORE);
 		Transaction t = s.beginTransaction();
 		s.save( cOrig );
 		checkContainer( cOrig, expectedInitializedObjects, expectedReadOnlyObjects, s );
@@ -618,7 +604,6 @@ public class ReadOnlySessionLazyNonLazyTest extends FunctionalTestCase {
 
 		Session s = openSession();
 		assertFalse( s.isDefaultReadOnly() );
-		s.setCacheMode(CacheMode.IGNORE);
 		Transaction t = s.beginTransaction();
 		s.save( cOrig );
 		checkContainer( cOrig, expectedInitializedObjects, expectedReadOnlyObjects, s );
@@ -697,7 +682,6 @@ public class ReadOnlySessionLazyNonLazyTest extends FunctionalTestCase {
 
 		Session s = openSession();
 		assertFalse( s.isDefaultReadOnly() );
-		s.setCacheMode(CacheMode.IGNORE);
 		Transaction t = s.beginTransaction();
 		s.save( cOrig );
 		checkContainer( cOrig, expectedInitializedObjects, expectedReadOnlyObjects, s );
@@ -767,7 +751,6 @@ public class ReadOnlySessionLazyNonLazyTest extends FunctionalTestCase {
 
 		Session s = openSession();
 		assertFalse( s.isDefaultReadOnly() );
-		s.setCacheMode(CacheMode.IGNORE);
 		Transaction t = s.beginTransaction();
 		s.save( cOrig );
 		checkContainer( cOrig, expectedInitializedObjects, expectedReadOnlyObjects, s );
@@ -847,7 +830,6 @@ public class ReadOnlySessionLazyNonLazyTest extends FunctionalTestCase {
 
 		Session s = openSession();
 		assertFalse( s.isDefaultReadOnly() );
-		s.setCacheMode(CacheMode.IGNORE);
 		Transaction t = s.beginTransaction();
 		s.save( cOrig );
 		checkContainer( cOrig, expectedInitializedObjects, expectedReadOnlyObjects, s );
@@ -916,7 +898,6 @@ public class ReadOnlySessionLazyNonLazyTest extends FunctionalTestCase {
 
 		Session s = openSession();
 		assertFalse( s.isDefaultReadOnly() );
-		s.setCacheMode(CacheMode.IGNORE);
 		Transaction t = s.beginTransaction();
 		s.save( cOrig );
 		checkContainer( cOrig, expectedInitializedObjects, expectedReadOnlyObjects, s );
@@ -961,7 +942,6 @@ public class ReadOnlySessionLazyNonLazyTest extends FunctionalTestCase {
 
 		Session s = openSession();
 		assertFalse( s.isDefaultReadOnly() );
-		s.setCacheMode(CacheMode.IGNORE);
 		Transaction t = s.beginTransaction();
 		s.save( cOrig );
 		checkContainer( cOrig, expectedInitializedObjects, expectedReadOnlyObjects, s );
@@ -1045,7 +1025,6 @@ public class ReadOnlySessionLazyNonLazyTest extends FunctionalTestCase {
 
 		Session s = openSession();
 		assertFalse( s.isDefaultReadOnly() );
-		s.setCacheMode(CacheMode.IGNORE);
 		Transaction t = s.beginTransaction();
 		s.save( cOrig );
 		checkContainer( cOrig, expectedInitializedObjects, expectedReadOnlyObjects, s );
@@ -1118,7 +1097,6 @@ public class ReadOnlySessionLazyNonLazyTest extends FunctionalTestCase {
 
 		Session s = openSession();
 		assertFalse( s.isDefaultReadOnly() );
-		s.setCacheMode(CacheMode.IGNORE);
 		Transaction t = s.beginTransaction();
 		s.save( cOrig );
 		checkContainer( cOrig, expectedInitializedObjects, expectedReadOnlyObjects, s );
@@ -1199,7 +1177,6 @@ public class ReadOnlySessionLazyNonLazyTest extends FunctionalTestCase {
 
 		Session s = openSession();
 		assertFalse( s.isDefaultReadOnly() );
-		s.setCacheMode(CacheMode.IGNORE);
 		Transaction t = s.beginTransaction();
 		s.save( cOrig );
 		checkContainer( cOrig, expectedInitializedObjects, expectedReadOnlyObjects, s );
@@ -1257,14 +1234,12 @@ public class ReadOnlySessionLazyNonLazyTest extends FunctionalTestCase {
 
 		Container cOrig = createContainer();
 		Session s = openSession();
-		s.setCacheMode(CacheMode.IGNORE);
 		Transaction t = s.beginTransaction();
 		s.save( cOrig );
 		t.commit();
 		s.close();
 
 		s = openSession();
-		s.setCacheMode(CacheMode.IGNORE);
 		t = s.beginTransaction();
 		List list = s.createQuery( "from Container c left outer join c.nonLazyInfo where c.id = :id" )
 				.setLong( "id", cOrig.getId() )
@@ -1301,14 +1276,12 @@ public class ReadOnlySessionLazyNonLazyTest extends FunctionalTestCase {
 
 		Container cOrig = createContainer();
 		Session s = openSession();
-		s.setCacheMode(CacheMode.IGNORE);
 		Transaction t = s.beginTransaction();
 		s.save( cOrig );
 		t.commit();
 		s.close();
 
 		s = openSession();
-		s.setCacheMode(CacheMode.IGNORE);
 		t = s.beginTransaction();
 		List list = s.createQuery( "from Container c left join fetch c.nonLazyInfo where c.id = :id" )
 				.setLong( "id", cOrig.getId() )
@@ -1348,14 +1321,12 @@ public class ReadOnlySessionLazyNonLazyTest extends FunctionalTestCase {
 
 		Container cOrig = createContainer();
 		Session s = openSession();
-		s.setCacheMode(CacheMode.IGNORE);
 		Transaction t = s.beginTransaction();
 		s.save( cOrig );
 		t.commit();
 		s.close();
 
 		s = openSession();
-		s.setCacheMode(CacheMode.IGNORE);
 		t = s.beginTransaction();
 		Container c = ( Container ) s.get( Container.class, cOrig.getId() );
 		assertNotNull( c );

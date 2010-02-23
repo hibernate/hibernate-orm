@@ -10,7 +10,34 @@
 -->
 
 <hibernate-mapping package="org.hibernate.test.immutable">
-	
+    <class name="Info" mutable="true">
+        <id name="id">
+            <generator class="increment"/>
+        </id>
+        <property name="text"/>        
+        <many-to-one name="contract" not-null="false"/>
+    </class>
+
+    <class name="Plan" mutable="false">
+        <id name="id">
+            <generator class="increment"/>
+        </id>
+        <property name="description" not-null="true"/>
+        <set name="contracts" table="plan_contract" inverse="false" mutable="true" cascade="all" fetch="join">
+            <key column="plan"/>
+            <many-to-many column="contract" class="Contract"/>
+        </set>
+    </class>
+
+    <class name="Party" mutable="false">
+        <id name="id">
+            <generator class="increment"/>
+        </id>
+        <!-- <many-to-one name="contract" update="false" insert="false"/> -->
+        <many-to-one name="contract" not-null="true"/>
+        <property name="name" not-null="true"/>
+    </class>
+
 	<class name="Contract" mutable="false">
 		<id name="id">
 			<generator class="increment"/>
@@ -22,8 +49,27 @@
 			<key column="contract"/>
 			<one-to-many class="ContractVariation"/>
 		</bag>
+        <!-- <many-to-one name="parent" /> -->
+        <many-to-one name="parent" update="false" insert="false"/>
+        <set name="subcontracts" inverse="false"
+                mutable="true" cascade="all" fetch="join">
+            <key column="parent"/>
+            <one-to-many class="Contract"/>
+        </set>
+        <set name="plans" table="plan_contract" inverse="true" mutable="true" cascade="none">
+            <key column="contract"/>
+            <many-to-many column="plan" class="Plan"/>
+        </set>
+        <set name="parties" inverse="true"  mutable="true" cascade="all" fetch="join">
+            <key column="contract"/>
+            <one-to-many class="Party"/>
+        </set>
+        <set name="infos" inverse="true"  mutable="true" cascade="all" fetch="join">
+            <key column="contract"/>
+            <one-to-many class="Info"/>
+        </set>
 	</class>
-	
+
 	<class name="ContractVariation" mutable="false">
 		<composite-id>
 			<key-many-to-one name="contract"/>

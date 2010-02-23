@@ -37,12 +37,16 @@ import org.hibernate.ejb.test.TestCase;
  */
 public class StaticMetadataTest extends TestCase {
 
+	public void testEmbeddedId() throws Exception {
+		assertNotNull( Prcontra_.prcontraPK );
+	}
+
 	public void testInjections() throws Exception {
 		// Address (embeddable)
 		assertNotNull( Address_.address1 );
 		assertNotNull( Address_.address2 );
 		assertNotNull( Address_.city );
-		final EmbeddableType<Address> addressType = (EmbeddableType<Address>) House_.address.getType();
+		final EmbeddableType<Address> addressType = ( EmbeddableType<Address> ) House_.address.getType();
 		assertEquals( addressType.getDeclaredSingularAttribute( "address1" ), Address_.address1 );
 		assertEquals( addressType.getDeclaredSingularAttribute( "address2" ), Address_.address2 );
 		assertTrue( Address_.address1.isOptional() );
@@ -126,7 +130,7 @@ public class StaticMetadataTest extends TestCase {
 
 	@Override
 	public Class[] getAnnotatedClasses() {
-		return new Class[]{
+		return new Class[] {
 				Fridge.class,
 				FoodItem.class,
 				Person.class,
@@ -136,8 +140,9 @@ public class StaticMetadataTest extends TestCase {
 				Cattish.class,
 				Feline.class,
 				Garden.class,
-				Flower.class
+				Flower.class,
+				Prcontra.class,
+				PrcontraPK.class
 		};
 	}
-
 }

@@ -63,7 +63,9 @@ public class OptimisticTransactionalAccessDelegate extends TransactionalAccessDe
      */
     @Override
     public void evict(Object key) throws CacheException {
-        putValidator.keyRemoved(key);
+    	if (!putValidator.invalidateKey(key)) {
+    		throw new CacheException("Failed to invalidate pending putFromLoad calls for key " + key + " from region " + region.getName());
+    	}
         region.ensureRegionRootExists();
 
         Option opt = NonLockingDataVersion.getInvocationOption();
@@ -75,7 +77,9 @@ public class OptimisticTransactionalAccessDelegate extends TransactionalAccessDe
     @Override
     public void evictAll() throws CacheException
     {
-       putValidator.regionRemoved();
+    	if (!putValidator.invalidateRegion()) {
+     	   throw new CacheException("Failed to invalidate pending putFromLoad calls for region " + region.getName());
+        }        
        
        Transaction tx = region.suspend();
        try {        
@@ -116,16 +120,21 @@ public class OptimisticTransactionalAccessDelegate extends TransactionalAccessDe
         if (!region.checkValid())
             return false;
         
-        if (!putValidator.isPutValid(key))
+        if (!putValidator.acquirePutFromLoadLock(key))
            return false;
         
-        region.ensureRegionRootExists();
-
-        // We ignore minimalPutOverride. JBossCache putForExternalRead is
-        // already about as minimal as we can get; it will promptly return
-        // if it discovers that the node we want to write to already exists
-        Option opt = getDataVersionOption(version, version);
-        return CacheHelper.putForExternalRead(cache, regionFqn, key, value, opt);
+        try {
+	        region.ensureRegionRootExists();
+	
+	        // We ignore minimalPutOverride. JBossCache putForExternalRead is
+	        // already about as minimal as we can get; it will promptly return
+	        // if it discovers that the node we want to write to already exists
+	        Option opt = getDataVersionOption(version, version);
+	        return CacheHelper.putForExternalRead(cache, regionFqn, key, value, opt);
+        }
+        finally {
+        	putValidator.releasePutFromLoadLock(key);
+        }
     }
 
     @Override
@@ -134,19 +143,26 @@ public class OptimisticTransactionalAccessDelegate extends TransactionalAccessDe
         if (!region.checkValid())
             return false;
         
-        if (!putValidator.isPutValid(key))
+        if (!putValidator.acquirePutFromLoadLock(key))
            return false;
         
-        region.ensureRegionRootExists();
-
-        Option opt = getDataVersionOption(version, version);
-        return CacheHelper.putForExternalRead(cache, regionFqn, key, value, opt);
+        try {
+	        region.ensureRegionRootExists();
+	
+	        Option opt = getDataVersionOption(version, version);
+	        return CacheHelper.putForExternalRead(cache, regionFqn, key, value, opt);
+        }
+        finally {
+        	putValidator.releasePutFromLoadLock(key);
+        }
     }
 
     @Override
     public void remove(Object key) throws CacheException {
        
-        putValidator.keyRemoved(key);
+    	if (!putValidator.invalidateKey(key)) {
+    		throw new CacheException("Failed to invalidate pending putFromLoad calls for key " + key + " from region " + region.getName());
+    	}
         
         // We remove whether or not the region is valid. Other nodes
         // may have already restored the region so they need to
@@ -160,7 +176,9 @@ public class OptimisticTransactionalAccessDelegate extends TransactionalAccessDe
 
     @Override
     public void removeAll() throws CacheException {
-       putValidator.regionRemoved();
+       if (!putValidator.invalidateRegion()) {
+    	   throw new CacheException("Failed to invalidate pending putFromLoad calls for region " + region.getName());
+       }
        Option opt = NonLockingDataVersion.getInvocationOption();
        CacheHelper.removeAll(cache, regionFqn, opt);
     }

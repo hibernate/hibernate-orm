@@ -23,11 +23,15 @@
  */
 package org.hibernate.test.cache.jbc.access;
 
+import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 
 import javax.transaction.Transaction;
 import javax.transaction.TransactionManager;
@@ -87,7 +91,7 @@ public class PutFromLoadValidatorUnitTestCase extends TestCase {
 		if (transactional) {
 			tm.begin();
 		}
-		assertTrue(testee.isPutValid(KEY1));
+		assertTrue(testee.acquirePutFromLoadLock(KEY1));
 	}
 
 	public void testRegisteredPut() throws Exception {
@@ -105,7 +109,16 @@ public class PutFromLoadValidatorUnitTestCase extends TestCase {
 			tm.begin();
 		}
 		testee.registerPendingPut(KEY1);
-		assertTrue(testee.isPutValid(KEY1));
+		
+		boolean lockable = testee.acquirePutFromLoadLock(KEY1);
+		try {
+			assertTrue(lockable);
+		}
+		finally {
+			if (lockable) {
+				testee.releasePutFromLoadLock(KEY1);
+			}
+		}
 	}
 
 	public void testNakedPutAfterKeyRemoval() throws Exception {
@@ -129,14 +142,23 @@ public class PutFromLoadValidatorUnitTestCase extends TestCase {
 		PutFromLoadValidator testee = new PutFromLoadValidator(
 				transactional ? tm : null);
 		if (removeRegion) {
-			testee.regionRemoved();
+			testee.invalidateRegion();
 		} else {
-			testee.keyRemoved(KEY1);
+			testee.invalidateKey(KEY1);
 		}
 		if (transactional) {
 			tm.begin();
 		}
-		assertFalse(testee.isPutValid(KEY1));
+		
+		boolean lockable = testee.acquirePutFromLoadLock(KEY1);
+		try {
+			assertFalse(lockable);
+		}
+		finally {
+			if (lockable) {
+				testee.releasePutFromLoadLock(KEY1);
+			}
+		}
 
 	}
 
@@ -163,15 +185,24 @@ public class PutFromLoadValidatorUnitTestCase extends TestCase {
 		PutFromLoadValidator testee = new PutFromLoadValidator(
 				transactional ? tm : null);
 		if (removeRegion) {
-			testee.regionRemoved();
+			testee.invalidateRegion();
 		} else {
-			testee.keyRemoved(KEY1);
+			testee.invalidateKey(KEY1);
 		}
 		if (transactional) {
 			tm.begin();
 		}
 		testee.registerPendingPut(KEY1);
-		assertTrue(testee.isPutValid(KEY1));
+		
+		boolean lockable = testee.acquirePutFromLoadLock(KEY1);
+		try {
+			assertTrue(lockable);
+		}
+		finally {
+			if (lockable) {
+				testee.releasePutFromLoadLock(KEY1);
+			}
+		}
 	}
 
 	public void testRegisteredPutWithInterveningKeyRemoval() throws Exception {
@@ -202,11 +233,20 @@ public class PutFromLoadValidatorUnitTestCase extends TestCase {
 		}
 		testee.registerPendingPut(KEY1);
 		if (removeRegion) {
-			testee.regionRemoved();
+			testee.invalidateRegion();
 		} else {
-			testee.keyRemoved(KEY1);
+			testee.invalidateKey(KEY1);
 		}
-		assertFalse(testee.isPutValid(KEY1));
+		
+		boolean lockable = testee.acquirePutFromLoadLock(KEY1);
+		try {
+			assertFalse(lockable);
+		}
+		finally {
+			if (lockable) {
+				testee.releasePutFromLoadLock(KEY1);
+			}
+		}
 	}
 
 	public void testDelayedNakedPutAfterKeyRemoval() throws Exception {
@@ -232,15 +272,24 @@ public class PutFromLoadValidatorUnitTestCase extends TestCase {
 		PutFromLoadValidator testee = new TestValidator(transactional ? tm
 				: null, 100, 1000, 500, 10000);
 		if (removeRegion) {
-			testee.regionRemoved();
+			testee.invalidateRegion();
 		} else {
-			testee.keyRemoved(KEY1);
+			testee.invalidateKey(KEY1);
 		}
 		if (transactional) {
 			tm.begin();
 		}
 		Thread.sleep(110);
-		assertTrue(testee.isPutValid(KEY1));
+		
+		boolean lockable = testee.acquirePutFromLoadLock(KEY1);
+		try {
+			assertTrue(lockable);
+		}
+		finally {
+			if (lockable) {
+				testee.releasePutFromLoadLock(KEY1);
+			}
+		}
 
 	}
 	
@@ -268,8 +317,13 @@ public class PutFromLoadValidatorUnitTestCase extends TestCase {
 					testee.registerPendingPut(KEY1);
 					registeredLatch.countDown();
 					registeredLatch.await(5, TimeUnit.SECONDS);
-					if (testee.isPutValid(KEY1)) {
-						success.incrementAndGet();
+					if (testee.acquirePutFromLoadLock(KEY1)) {
+						try {
+							success.incrementAndGet();
+						}
+						finally {
+							testee.releasePutFromLoadLock(KEY1);
+						}
 					}
 					finishedLatch.countDown();
 				}
@@ -284,7 +338,7 @@ public class PutFromLoadValidatorUnitTestCase extends TestCase {
 		// Start with a removal so the "isPutValid" calls will fail if
 		// any of the concurrent activity isn't handled properly
 		
-		testee.regionRemoved();
+		testee.invalidateRegion();
 		
 		// Do the registration + isPutValid calls
 		executor.execute(r);
@@ -303,13 +357,13 @@ public class PutFromLoadValidatorUnitTestCase extends TestCase {
 	 */
 	public void testRemovalCleanup() throws Exception {
 		TestValidator testee = new TestValidator(null, 200, 1000, 500, 10000);
-		testee.keyRemoved("KEY1");
-		testee.keyRemoved("KEY2");
+		testee.invalidateKey("KEY1");
+		testee.invalidateKey("KEY2");
 		Thread.sleep(210);
 		assertEquals(2, testee.getRemovalQueueLength());
-		testee.keyRemoved("KEY1");
+		testee.invalidateKey("KEY1");
 		assertEquals(2, testee.getRemovalQueueLength());
-		testee.keyRemoved("KEY2");
+		testee.invalidateKey("KEY2");
 		assertEquals(2, testee.getRemovalQueueLength());
 	}
 	
@@ -324,7 +378,7 @@ public class PutFromLoadValidatorUnitTestCase extends TestCase {
 		
 		// Start with a regionRemoval so we can confirm at the end that all
 		// registrations have been cleaned out
-		testee.regionRemoved();
+		testee.invalidateRegion();
 		
 		testee.registerPendingPut("1");
 		testee.registerPendingPut("2");
@@ -332,8 +386,10 @@ public class PutFromLoadValidatorUnitTestCase extends TestCase {
 		testee.registerPendingPut("4");
 		testee.registerPendingPut("5");
 		testee.registerPendingPut("6");
-		testee.isPutValid("6");
-		testee.isPutValid("2");
+		testee.acquirePutFromLoadLock("6");
+		testee.releasePutFromLoadLock("6");
+		testee.acquirePutFromLoadLock("2");
+		testee.releasePutFromLoadLock("2");
         // ppq = [1,2(c),3,4,5,6(c)]
 		assertEquals(6, testee.getPendingPutQueueLength());
 		assertEquals(0, testee.getOveragePendingPutQueueLength());
@@ -358,7 +414,8 @@ public class PutFromLoadValidatorUnitTestCase extends TestCase {
 		
 		// Sleep past "maxPendingPutDelay"
 		Thread.sleep(310);
-		testee.isPutValid("3");
+		testee.acquirePutFromLoadLock("3");
+		testee.releasePutFromLoadLock("3");
 		// White box -- should have cleaned out 1 (overage) and 
 		// moved 7 to overage queue
 		// oppq = [3(c),4,5,7] ppq=[8]
@@ -380,20 +437,115 @@ public class PutFromLoadValidatorUnitTestCase extends TestCase {
 		
 		// Validate that only expected items can do puts, thus indirectly
 		// proving the others have been cleaned out of pendingPuts map
-		assertFalse(testee.isPutValid("1"));
+		boolean locked = testee.acquirePutFromLoadLock("1");
+		if (locked) {
+			testee.releasePutFromLoadLock("1");
+		}
+		assertFalse(locked);
 		// 5 was overage, so should have been cleaned
 		assertEquals(2, testee.getOveragePendingPutQueueLength());
-		assertFalse(testee.isPutValid("2"));
+		locked = testee.acquirePutFromLoadLock("2");
+		if (locked) {
+			testee.releasePutFromLoadLock("1");
+		}
+		assertFalse(locked);
 		// 7 was overage, so should have been cleaned
 		assertEquals(1, testee.getOveragePendingPutQueueLength());
-		assertFalse(testee.isPutValid("3"));
-		assertFalse(testee.isPutValid("4"));
-		assertFalse(testee.isPutValid("5"));
-		assertFalse(testee.isPutValid("6"));
-		assertFalse(testee.isPutValid("7"));
-		assertTrue(testee.isPutValid("8"));
+		locked = testee.acquirePutFromLoadLock("3");
+		if (locked) {
+			testee.releasePutFromLoadLock("1");
+		}
+		assertFalse(locked);
+		locked = testee.acquirePutFromLoadLock("4");
+		if (locked) {
+			testee.releasePutFromLoadLock("1");
+		}
+		assertFalse(locked);
+		locked = testee.acquirePutFromLoadLock("5");
+		if (locked) {
+			testee.releasePutFromLoadLock("1");
+		}
+		assertFalse(locked);
+		locked = testee.acquirePutFromLoadLock("1");
+		if (locked) {
+			testee.releasePutFromLoadLock("1");
+		}
+		assertFalse(testee.acquirePutFromLoadLock("6"));
+		locked = testee.acquirePutFromLoadLock("7");
+		if (locked) {
+			testee.releasePutFromLoadLock("1");
+		}
+		assertFalse(locked);
+		assertTrue(testee.acquirePutFromLoadLock("8"));
+		testee.releasePutFromLoadLock("8");
 		tm.resume(tx);
-		assertTrue(testee.isPutValid("7"));
+		assertTrue(testee.acquirePutFromLoadLock("7"));
+		testee.releasePutFromLoadLock("7");
+	}
+	
+	public void testInvalidateKeyBlocksForInProgressPut() throws Exception {
+		invalidationBlocksForInProgressPutTest(true);
+	}
+	
+	public void testInvalidateRegionBlocksForInProgressPut() throws Exception {
+		invalidationBlocksForInProgressPutTest(false);
+	}
+	
+	private void invalidationBlocksForInProgressPutTest(final boolean keyOnly) throws Exception {
+		final PutFromLoadValidator testee = new PutFromLoadValidator(null);
+		final CountDownLatch removeLatch = new CountDownLatch(1);
+		final CountDownLatch pferLatch = new CountDownLatch(1);
+		final AtomicReference<Object> cache = new AtomicReference<Object>("INITIAL");
+		
+		Callable<Boolean> pferCallable = new Callable<Boolean>() {
+		    public Boolean call() throws Exception {
+		        testee.registerPendingPut(KEY1);
+		        if (testee.acquirePutFromLoadLock(KEY1)) {
+		        	try {
+		        		removeLatch.countDown();
+		        		pferLatch.await();
+				        cache.set("PFER");
+				        return Boolean.TRUE;
+		        	}
+		        	finally {
+		        		testee.releasePutFromLoadLock(KEY1);
+		        	}
+		        }
+		        return Boolean.FALSE;
+		    }
+	    };
+		
+		Callable<Void> invalidateCallable = new Callable<Void>() {
+		    public Void call() throws Exception {
+		        removeLatch.await();
+		        if (keyOnly) {
+		        	testee.invalidateKey(KEY1);
+		        }
+		        else {
+		        	testee.invalidateRegion();
+		        }		        
+		        cache.set(null);
+		        return null;
+		    }
+	    };
+	    
+	    ExecutorService executorService = Executors.newCachedThreadPool();
+	    Future<Boolean> pferFuture = executorService.submit(pferCallable);
+	    Future<Void> invalidateFuture = executorService.submit(invalidateCallable);
+	    
+	    try {
+	    	invalidateFuture.get(1, TimeUnit.SECONDS);
+	    	fail("invalidateFuture did not block");
+	    }
+	    catch (TimeoutException good) {}
+	    
+	    pferLatch.countDown();
+	    
+	    assertTrue(pferFuture.get(5, TimeUnit.SECONDS));
+	    invalidateFuture.get(5, TimeUnit.SECONDS);
+	    
+	    assertNull(cache.get());
+	    
 	}
 
 	private static class TestValidator extends PutFromLoadValidator {
@@ -408,19 +560,16 @@ public class PutFromLoadValidatorUnitTestCase extends TestCase {
 
 		@Override
 		public int getOveragePendingPutQueueLength() {
-			// TODO Auto-generated method stub
 			return super.getOveragePendingPutQueueLength();
 		}
 
 		@Override
 		public int getPendingPutQueueLength() {
-			// TODO Auto-generated method stub
 			return super.getPendingPutQueueLength();
 		}
 
 		@Override
 		public int getRemovalQueueLength() {
-			// TODO Auto-generated method stub
 			return super.getRemovalQueueLength();
 		}
 

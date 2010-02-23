@@ -91,48 +91,72 @@ public class JBossStandaloneJtaExampleTest extends TestCase {
    public void testPersistAndLoadUnderJta() throws Exception {
       Item item;
       SessionFactory sessionFactory = buildSessionFactory();
-      UserTransaction ut = (UserTransaction) ctx.lookup("UserTransaction");
-      ut.begin();
       try {
-         Session session = sessionFactory.openSession();
-         session.getTransaction().begin();
-         item = new Item("anItem", "An item owned by someone");
-         session.persist(item);
-         session.getTransaction().commit();
-         session.close();
-      } catch(Exception e) {
-         ut.setRollbackOnly();
-         throw e;
+         UserTransaction ut = (UserTransaction) ctx.lookup("UserTransaction");
+         ut.begin();
+         try {
+            Session session = sessionFactory.openSession();
+            session.getTransaction().begin();
+            item = new Item("anItem", "An item owned by someone");
+            session.persist(item);
+            session.getTransaction().commit();
+            session.close();
+         } catch(Exception e) {
+            ut.setRollbackOnly();
+            throw e;
+         } finally {
+            if (ut.getStatus() == Status.STATUS_ACTIVE)
+               ut.commit();
+            else
+               ut.rollback();
+         }
+
+         ut = (UserTransaction) ctx.lookup("UserTransaction");
+         ut.begin();
+         try {
+            Session session = sessionFactory.openSession();
+            session.getTransaction().begin();
+            Item found = (Item) session.load(Item.class, item.getId());
+            Statistics stats = session.getSessionFactory().getStatistics();
+            log.info(stats.toString());
+            assertEquals(item.getDescription(), found.getDescription());
+            assertEquals(0, stats.getSecondLevelCacheMissCount());
+            assertEquals(1, stats.getSecondLevelCacheHitCount());
+            session.delete(found);
+            session.getTransaction().commit();
+            session.close();
+         } catch(Exception e) {
+            ut.setRollbackOnly();
+            throw e;
+         } finally {
+            if (ut.getStatus() == Status.STATUS_ACTIVE)
+               ut.commit();
+            else
+               ut.rollback();
+         }
+
+         ut = (UserTransaction) ctx.lookup("UserTransaction");
+         ut.begin();
+         try {
+            Session session = sessionFactory.openSession();
+            session.getTransaction().begin();
+            assertNull(session.get(Item.class, item.getId()));
+            session.getTransaction().commit();
+            session.close();
+         } catch(Exception e) {
+            ut.setRollbackOnly();
+            throw e;
+         } finally {
+            if (ut.getStatus() == Status.STATUS_ACTIVE)
+               ut.commit();
+            else
+               ut.rollback();
+         }
       } finally {
-         if (ut.getStatus() == Status.STATUS_ACTIVE)
-            ut.commit();
-         else
-            ut.rollback();
+         if (sessionFactory != null)
+            sessionFactory.close();
       }
 
-      ut = (UserTransaction) ctx.lookup("UserTransaction");
-      ut.begin();
-      try {
-         Session session = sessionFactory.openSession();
-         session.getTransaction().begin();
-         Item found = (Item) session.load(Item.class, item.getId());
-         Statistics stats = session.getSessionFactory().getStatistics();
-         log.info(stats.toString());
-         assertEquals(item.getDescription(), found.getDescription());
-         assertEquals(0, stats.getSecondLevelCacheMissCount());
-         assertEquals(1, stats.getSecondLevelCacheHitCount());
-         session.delete(found);
-         session.getTransaction().commit();
-         session.close();
-      } catch(Exception e) {
-         ut.setRollbackOnly();
-         throw e;
-      } finally {
-         if (ut.getStatus() == Status.STATUS_ACTIVE)
-            ut.commit();
-         else
-            ut.rollback();
-      }
    }
 
    public static class ExtendedXADataSource extends StandardXADataSource { // XAPOOL
@@ -197,7 +221,7 @@ public class JBossStandaloneJtaExampleTest extends TestCase {
    private void bindDataSource() throws Exception {
       ExtendedXADataSource xads = new ExtendedXADataSource();
       xads.setDriverName("org.hsqldb.jdbcDriver");
-      xads.setUrl("jdbc:hsqldb:mem:/example");
+      xads.setUrl("jdbc:hsqldb:mem:/test");
       ctx.bind("java:/MyDatasource", xads);
    }
 
@@ -238,6 +262,7 @@ public class JBossStandaloneJtaExampleTest extends TestCase {
    }
 
    private SessionFactory buildSessionFactory() {
+      // Extra options located in src/test/resources/hibernate.properties 
       Configuration cfg = new Configuration();
       cfg.setProperty(Environment.DIALECT, "org.hibernate.dialect.HSQLDialect");
       cfg.setProperty(Environment.HBM2DDL_AUTO, "create-drop");
@@ -264,6 +289,6 @@ public class JBossStandaloneJtaExampleTest extends TestCase {
          Collection coll = (Collection) iter.next();
          cfg.setCollectionCacheConcurrencyStrategy(coll.getRole(), "transactional");
       }
-      return cfg.buildSessionFactory();      
+      return cfg.buildSessionFactory();
    }
 }

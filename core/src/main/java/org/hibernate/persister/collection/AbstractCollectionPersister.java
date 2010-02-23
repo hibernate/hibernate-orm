@@ -297,7 +297,7 @@ public abstract class AbstractCollectionPersister
 			// NativeSQL: collect key column and auto-aliases
 			Column col = ( (Column) iter.next() );
 			keyColumnNames[k] = col.getQuotedName(dialect);
-			keyColumnAliases[k] = col.getAlias(dialect);
+			keyColumnAliases[k] = col.getAlias(dialect,collection.getOwner().getRootTable());
 			k++;
 		}
 		

@@ -23,8 +23,15 @@
  */
 package org.hibernate.test.cache.infinispan.collection;
 
+import java.util.concurrent.BrokenBarrierException;
+import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.CyclicBarrier;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.Lock;
 
 import junit.extensions.TestSetup;
 import junit.framework.AssertionFailedError;
@@ -32,19 +39,28 @@ import junit.framework.Test;
 import junit.framework.TestSuite;
 
 import org.hibernate.cache.CacheDataDescription;
+import org.hibernate.cache.CacheException;
 import org.hibernate.cache.CollectionRegion;
 import org.hibernate.cache.access.AccessType;
 import org.hibernate.cache.access.CollectionRegionAccessStrategy;
 import org.hibernate.cache.impl.CacheDataDescriptionImpl;
 import org.hibernate.cache.infinispan.InfinispanRegionFactory;
+import org.hibernate.cache.infinispan.access.PutFromLoadValidator;
+import org.hibernate.cache.infinispan.access.TransactionalAccessDelegate;
+import org.hibernate.cache.infinispan.collection.CollectionRegionImpl;
 import org.hibernate.cache.infinispan.impl.BaseRegion;
 import org.hibernate.cache.infinispan.util.CacheAdapter;
+import org.hibernate.cache.infinispan.util.CacheAdapterImpl;
 import org.hibernate.cache.infinispan.util.FlagAdapter;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.test.cache.infinispan.AbstractNonFunctionalTestCase;
+import org.hibernate.test.cache.infinispan.functional.cluster.DualNodeJtaTransactionManagerImpl;
 import org.hibernate.test.cache.infinispan.util.CacheTestUtil;
 import org.hibernate.util.ComparableComparator;
+import org.infinispan.Cache;
 import org.infinispan.transaction.tm.BatchModeTransactionManager;
+
+import javax.transaction.TransactionManager;
 
 /**
  * Base class for tests of CollectionRegionAccessStrategy impls.
@@ -183,15 +199,64 @@ public abstract class AbstractCollectionRegionAccessStrategyTestCase extends Abs
    public abstract void testCacheConfiguration();
 
    /**
-    * Test method for {@link TransactionalAccess#getRegion()}.
+    * Test method for {@link CollectionRegionAccessStrategy#getRegion()}.
     */
    public void testGetRegion() {
       assertEquals("Correct region", localCollectionRegion, localAccessStrategy.getRegion());
    }
 
+   public void testPutFromLoadRemoveDoesNotProduceStaleData() throws Exception {
+      final CountDownLatch pferLatch = new CountDownLatch(1);
+      final CountDownLatch removeLatch = new CountDownLatch(1);
+      TransactionManager tm = DualNodeJtaTransactionManagerImpl.getInstance("test1234");
+      PutFromLoadValidator validator = new PutFromLoadValidator(tm) {
+         @Override
+         public boolean acquirePutFromLoadLock(Object key) {
+            boolean acquired = super.acquirePutFromLoadLock(key);
+            try {
+               removeLatch.countDown();
+               pferLatch.await(2, TimeUnit.SECONDS);
+            } catch (InterruptedException e) {
+               log.debug("Interrupted");
+               Thread.currentThread().interrupt();
+            } catch (Exception e) {
+               log.error("Error", e);
+               throw new RuntimeException("Error", e);
+            }
+            return acquired;
+         }
+      };
+      final TransactionalAccessDelegate delegate = new TransactionalAccessDelegate((CollectionRegionImpl) localCollectionRegion, validator);
+
+      Callable<Void> pferCallable = new Callable<Void>() {
+         public Void call() throws Exception {
+            delegate.putFromLoad("k1", "v1", 0, null);
+            return null;
+         }
+      };
+
+      Callable<Void> removeCallable = new Callable<Void>() {
+         public Void call() throws Exception {
+            removeLatch.await();
+            delegate.remove("k1");
+            pferLatch.countDown();
+            return null;
+         }
+      };
+
+      ExecutorService executorService = Executors.newCachedThreadPool();
+      Future<Void> pferFuture = executorService.submit(pferCallable);
+      Future<Void> removeFuture = executorService.submit(removeCallable);
+
+      pferFuture.get();
+      removeFuture.get();
+
+      assertFalse(localCache.containsKey("k1"));
+   }
+
    /**
     * Test method for
-    * {@link TransactionalAccess#putFromLoad(java.lang.Object, java.lang.Object, long, java.lang.Object)}
+    * {@link CollectionRegionAccessStrategy#putFromLoad(java.lang.Object, java.lang.Object, long, java.lang.Object)}
     * .
     */
    public void testPutFromLoad() throws Exception {
@@ -200,7 +265,7 @@ public abstract class AbstractCollectionRegionAccessStrategyTestCase extends Abs
 
    /**
     * Test method for
-    * {@link TransactionalAccess#putFromLoad(java.lang.Object, java.lang.Object, long, java.lang.Object, boolean)}
+    * {@link CollectionRegionAccessStrategy#putFromLoad(java.lang.Object, java.lang.Object, long, java.lang.Object, boolean)}
     * .
     */
    public void testPutFromLoadMinimal() throws Exception {
@@ -339,21 +404,21 @@ public abstract class AbstractCollectionRegionAccessStrategyTestCase extends Abs
    }
 
    /**
-    * Test method for {@link TransactionalAccess#remove(java.lang.Object)}.
+    * Test method for {@link CollectionRegionAccessStrategy#remove(java.lang.Object)}.
     */
    public void testRemove() {
       evictOrRemoveTest(false);
    }
 
    /**
-    * Test method for {@link TransactionalAccess#removeAll()}.
+    * Test method for {@link CollectionRegionAccessStrategy#removeAll()}.
     */
    public void testRemoveAll() {
       evictOrRemoveAllTest(false);
    }
 
    /**
-    * Test method for {@link TransactionalAccess#evict(java.lang.Object)}.
+    * Test method for {@link CollectionRegionAccessStrategy#evict(java.lang.Object)}.
     * 
     * FIXME add testing of the "immediately without regard for transaction isolation" bit in the
     * CollectionRegionAccessStrategy API.
@@ -363,7 +428,7 @@ public abstract class AbstractCollectionRegionAccessStrategyTestCase extends Abs
    }
 
    /**
-    * Test method for {@link TransactionalAccess#evictAll()}.
+    * Test method for {@link CollectionRegionAccessStrategy#evictAll()}.
     * 
     * FIXME add testing of the "immediately without regard for transaction isolation" bit in the
     * CollectionRegionAccessStrategy API.

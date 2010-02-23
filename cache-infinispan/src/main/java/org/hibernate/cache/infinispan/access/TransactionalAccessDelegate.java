@@ -68,29 +68,27 @@ public class TransactionalAccessDelegate {
    }
 
    public boolean putFromLoad(Object key, Object value, long txTimestamp, Object version) throws CacheException {
-      if (!region.checkValid()) {
+      if (!region.checkValid())
          return false;
-      }
-      if (!putValidator.isPutValid(key)) {
+
+      if (!putValidator.acquirePutFromLoadLock(key))
          return false;
+
+      try {
+         cacheAdapter.putForExternalRead(key, value);
+      } finally {
+         putValidator.releasePutFromLoadLock(key);
       }
-      cacheAdapter.putForExternalRead(key, value);
+
       return true;
    }
 
    public boolean putFromLoad(Object key, Object value, long txTimestamp, Object version, boolean minimalPutOverride)
             throws CacheException {
-      boolean trace = log.isTraceEnabled();
-      if (!region.checkValid()) {
-         if (trace) log.trace("Region not valid");
-         return false;
-      }
-      if (!putValidator.isPutValid(key)) {
-         if (trace) log.trace("Put {0} not valid", key);
-         return false;
-      }
-      cacheAdapter.putForExternalRead(key, value);
-      return true;
+      // We ignore minimalPutOverride. Infinispan putForExternalRead is
+      // already about as minimal as we can get; it will promptly return
+      // if it discovers that the node we want to write to already exists
+      return putFromLoad(key, value, txTimestamp, version);
    }
 
    public SoftLock lockItem(Object key, Object version) throws CacheException {
@@ -137,25 +135,33 @@ public class TransactionalAccessDelegate {
    }
 
    public void remove(Object key) throws CacheException {
+      if (!putValidator.invalidateKey(key)) {
+         throw new CacheException("Failed to invalidate pending putFromLoad calls for key " + key + " from region " + region.getName());
+      }
       // We update whether or not the region is valid. Other nodes
       // may have already restored the region so they need to
       // be informed of the change.
-      putValidator.keyRemoved(key);
       cacheAdapter.remove(key);
    }
 
    public void removeAll() throws CacheException {
-      putValidator.cleared();
+       if (!putValidator.invalidateRegion()) {
+         throw new CacheException("Failed to invalidate pending putFromLoad calls for region " + region.getName());
+       }
       cacheAdapter.clear();
    }
 
    public void evict(Object key) throws CacheException {
-      putValidator.keyRemoved(key);
+      if (!putValidator.invalidateKey(key)) {
+         throw new CacheException("Failed to invalidate pending putFromLoad calls for key " + key + " from region " + region.getName());
+      }      
       cacheAdapter.remove(key);
    }
 
    public void evictAll() throws CacheException {
-      putValidator.cleared();
+      if (!putValidator.invalidateRegion()) {
+         throw new CacheException("Failed to invalidate pending putFromLoad calls for region " + region.getName());
+      }
       Transaction tx = region.suspend();
       try {
          CacheHelper.sendEvictAllNotification(cacheAdapter, region.getAddress());

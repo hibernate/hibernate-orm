@@ -191,7 +191,7 @@ public class ConcurrentWriteTest extends SingleNodeTestCase {
 
    /**
     * TODO: This will fail until ISPN-??? has been fixed.
-    * 
+    *
     * @throws Exception
     */
    public void testManyUsers() throws Throwable {
@@ -340,8 +340,6 @@ public class ConcurrentWriteTest extends SingleNodeTestCase {
    /**
     * remove existing 'contact' from customer's list of contacts
     * 
-    * @param contact
-    *           contact to remove from customer's contacts
     * @param customerId
     * @throws IllegalStateException
     *            if customer does not own a contact
@@ -421,14 +419,12 @@ public class ConcurrentWriteTest extends SingleNodeTestCase {
          try {
 //            barrier.await();
             for (int i = 0; i < ITERATION_COUNT && !TERMINATE_ALL_USERS; i++) {
-               if (contactExists())
-                  throw new IllegalStateException("contact already exists before add, customerId=" + customerId);
+               contactExists();
                if (trace) log.trace("Add contact for customer " + customerId);
                addContact(customerId);
                if (trace) log.trace("Added contact");
                thinkRandomTime();
-               if (!contactExists())
-                  throw new IllegalStateException("contact missing after successful add, customerId=" + customerId);
+               contactExists();
                thinkRandomTime();
                if (trace) log.trace("Read all customers' first contact");
                // read everyone's contacts
@@ -438,8 +434,7 @@ public class ConcurrentWriteTest extends SingleNodeTestCase {
                if (trace) log.trace("Remove contact of customer" + customerId);
                removeContact(customerId);
                if (trace) log.trace("Removed contact");
-               if (contactExists())
-                  throw new IllegalStateException("contact still exists after successful remove call, customerId=" + customerId);
+               contactExists();
                thinkRandomTime();
                ++completedIterations;
                if (log.isTraceEnabled()) log.trace("Iteration completed {0}", completedIterations);

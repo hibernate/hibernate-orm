@@ -37,10 +37,6 @@ import org.hibernate.ejb.test.TestCase;
  */
 public class StaticMetadataTest extends TestCase {
 
-	public void testEmbeddedId() throws Exception {
-		assertNotNull( Prcontra_.prcontraPK );
-	}
-
 	public void testInjections() throws Exception {
 		// Address (embeddable)
 		assertNotNull( Address_.address1 );
@@ -140,9 +136,7 @@ public class StaticMetadataTest extends TestCase {
 				Cattish.class,
 				Feline.class,
 				Garden.class,
-				Flower.class,
-				Prcontra.class,
-				PrcontraPK.class
+				Flower.class
 		};
 	}
 }

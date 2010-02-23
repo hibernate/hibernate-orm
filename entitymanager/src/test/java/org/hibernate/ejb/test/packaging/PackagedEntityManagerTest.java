@@ -1,3 +1,4 @@
+// $Id:$
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
@@ -21,13 +22,9 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.ejb.test;
+package org.hibernate.ejb.test.packaging;
 
 import java.io.File;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.URLClassLoader;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Properties;
@@ -38,6 +35,8 @@ import javax.persistence.PersistenceException;
 
 import org.hibernate.ejb.AvailableSettings;
 import org.hibernate.ejb.HibernateEntityManagerFactory;
+import org.hibernate.ejb.test.Distributor;
+import org.hibernate.ejb.test.Item;
 import org.hibernate.ejb.test.pack.cfgxmlpar.Morito;
 import org.hibernate.ejb.test.pack.defaultpar.ApplicationServer;
 import org.hibernate.ejb.test.pack.defaultpar.IncrementListener;
@@ -63,48 +62,22 @@ import org.hibernate.stat.Statistics;
 import org.hibernate.util.ConfigHelper;
 
 /**
+ * In this test we verify that  it is possible to bootstrap Hibernate/JPA from
+ * various bundles (war, par, ...) using {@code Persistence.createEntityManagerFactory()}
+ * <p/>
+ * Each test will before its run build the required bundle and place them into the classpath.
+ *
  * @author Gavin King
+ * @author Hardy Ferentschik
  */
 @SuppressWarnings("unchecked")
-public class PackagedEntityManagerTest extends junit.framework.TestCase {
-	private static ClassLoader originalClassLoader;
-
-	@Override
-	protected void setUp() throws Exception {
-		originalClassLoader = Thread.currentThread().getContextClassLoader();
-		Thread.currentThread().setContextClassLoader( buildCustomTCCL( originalClassLoader ) );
-		super.setUp();
-	}
-
-	private ClassLoader buildCustomTCCL(ClassLoader parentClassLoader) throws MalformedURLException {
-		// get a URL reference to something we now is part of the classpath (us)
-		URL myUrl = parentClassLoader.getResource(
-				PackagedEntityManagerTest.class.getName().replace( '.', '/' ) + ".class"
-		);
-		File myPath = new File( myUrl.getFile() );
-		// navigate back to '/target'
-		File targetDir = myPath
-				.getParentFile()  // target/classes/org/hibernate/ejb/test
-				.getParentFile()  // target/classes/org/hibernate/ejb
-				.getParentFile()  // target/classes/org/hibernate
-				.getParentFile()  // target/classes/org
-				.getParentFile()  // target/classes/
-				.getParentFile(); // target
-		File testPackagesDir = new File( targetDir, "test-packages" );
-		ArrayList<URL> urls = new ArrayList<URL>();
-		for ( File testPackage : testPackagesDir.listFiles() ) {
-			urls.add( testPackage.toURL() );
-		}
-		return new URLClassLoader( urls.toArray( new URL[urls.size()] ), parentClassLoader );
-	}
-
-	@Override
-	public void tearDown() throws Exception {
-		super.tearDown();
-		Thread.currentThread().setContextClassLoader( originalClassLoader );
-	}
+public class PackagedEntityManagerTest extends PackagingTestCase {
 
 	public void testDefaultPar() throws Exception {
+		File testPackage = buildDefaultPar();
+		addPackageToClasspath( testPackage );
+
+		// run the test
 		EntityManagerFactory emf = Persistence.createEntityManagerFactory( "defaultpar", new HashMap() );
 		EntityManager em = emf.createEntityManager();
 		ApplicationServer as = new ApplicationServer();
@@ -135,6 +108,9 @@ public class PackagedEntityManagerTest extends junit.framework.TestCase {
 	}
 
 	public void testDefaultParForPersistence_1_0() throws Exception {
+		File testPackage = buildDefaultPar_1_0();
+		addPackageToClasspath( testPackage );
+
 		EntityManagerFactory emf = Persistence.createEntityManagerFactory( "defaultpar_1_0", new HashMap() );
 		EntityManager em = emf.createEntityManager();
 		ApplicationServer1 as = new ApplicationServer1();
@@ -165,6 +141,9 @@ public class PackagedEntityManagerTest extends junit.framework.TestCase {
 	}
 
 	public void testListenersDefaultPar() throws Exception {
+		File testPackage = buildDefaultPar();
+		addPackageToClasspath( testPackage );
+
 		IncrementListener.reset();
 		OtherIncrementListener.reset();
 		EntityManagerFactory emf = Persistence.createEntityManagerFactory( "defaultpar", new HashMap() );
@@ -180,7 +159,7 @@ public class PackagedEntityManagerTest extends junit.framework.TestCase {
 		em.persist( as );
 		em.flush();
 		assertEquals( "Failure in default listeners", 1, IncrementListener.getIncrement() );
-		assertEquals( "Failuer in XML overriden listeners", 1, OtherIncrementListener.getIncrement() );
+		assertEquals( "Failure in XML overriden listeners", 1, OtherIncrementListener.getIncrement() );
 
 		Mouse mouse = new Mouse();
 		mouse.setName( "mickey" );
@@ -201,6 +180,9 @@ public class PackagedEntityManagerTest extends junit.framework.TestCase {
 	}
 
 	public void testExplodedPar() throws Exception {
+		File testPackage = buildExplodedPar();
+		addPackageToClasspath( testPackage );
+
 		EntityManagerFactory emf = Persistence.createEntityManagerFactory( "explodedpar", new HashMap() );
 		EntityManager em = emf.createEntityManager();
 		org.hibernate.ejb.test.pack.explodedpar.Carpet carpet = new Carpet();
@@ -219,6 +201,9 @@ public class PackagedEntityManagerTest extends junit.framework.TestCase {
 	}
 
 	public void testExcludeHbmPar() throws Exception {
+		File testPackage = buildExcludeHbmPar();
+		addPackageToClasspath( testPackage );
+
 		EntityManagerFactory emf = null;
 		try {
 			emf = Persistence.createEntityManagerFactory( "excludehbmpar", new HashMap() );
@@ -252,6 +237,9 @@ public class PackagedEntityManagerTest extends junit.framework.TestCase {
 	}
 
 	public void testCfgXmlPar() throws Exception {
+		File testPackage = buildCfgXmlPar();
+		addPackageToClasspath( testPackage );
+
 		EntityManagerFactory emf = Persistence.createEntityManagerFactory( "cfgxmlpar", new HashMap() );
 		EntityManager em = emf.createEntityManager();
 		Item i = new Item();
@@ -274,6 +262,9 @@ public class PackagedEntityManagerTest extends junit.framework.TestCase {
 	}
 
 	public void testSpacePar() throws Exception {
+		File testPackage = buildSpacePar();
+		addPackageToClasspath( testPackage );
+
 		EntityManagerFactory emf = Persistence.createEntityManagerFactory( "space par", new HashMap() );
 		EntityManager em = emf.createEntityManager();
 		Bug bug = new Bug();
@@ -289,6 +280,9 @@ public class PackagedEntityManagerTest extends junit.framework.TestCase {
 	}
 
 	public void testOverridenPar() throws Exception {
+		File testPackage = buildOverridenPar();
+		addPackageToClasspath( testPackage );
+
 		HashMap properties = new HashMap();
 		properties.put( AvailableSettings.JTA_DATASOURCE, null );
 		Properties p = new Properties();
@@ -309,6 +303,9 @@ public class PackagedEntityManagerTest extends junit.framework.TestCase {
 	}
 
 	public void testListeners() throws Exception {
+		File testPackage = buildExplicitPar();
+		addPackageToClasspath( testPackage );
+
 		EntityManagerFactory emf = Persistence.createEntityManagerFactory( "manager1", new HashMap() );
 		EntityManager em = emf.createEntityManager();
 		EventListeners eventListeners = em.unwrap( SessionImplementor.class ).getListeners();
@@ -322,7 +319,10 @@ public class PackagedEntityManagerTest extends junit.framework.TestCase {
 		emf.close();
 	}
 
-	public void testExtendedEntityManager() {
+	public void testExtendedEntityManager() throws Exception {
+		File testPackage = buildExplicitPar();
+		addPackageToClasspath( testPackage );
+
 		EntityManagerFactory emf = Persistence.createEntityManagerFactory( "manager1", new HashMap() );
 		EntityManager em = emf.createEntityManager();
 		Item item = new Item( "Mouse", "Micro$oft mouse" );
@@ -369,6 +369,9 @@ public class PackagedEntityManagerTest extends junit.framework.TestCase {
 	}
 
 	public void testConfiguration() throws Exception {
+		File testPackage = buildExplicitPar();
+		addPackageToClasspath( testPackage );
+
 		EntityManagerFactory emf = Persistence.createEntityManagerFactory( "manager1", new HashMap() );
 		Item item = new Item( "Mouse", "Micro$oft mouse" );
 		Distributor res = new Distributor();
@@ -418,6 +421,10 @@ public class PackagedEntityManagerTest extends junit.framework.TestCase {
 	}
 
 	public void testExternalJar() throws Exception {
+		File externalJar = buildExternalJar();
+		File testPackage = buildExplicitPar();
+		addPackageToClasspath( testPackage, externalJar );
+
 		EntityManagerFactory emf = Persistence.createEntityManagerFactory( "manager1", new HashMap() );
 		EntityManager em = emf.createEntityManager();
 		Scooter s = new Scooter();
@@ -438,6 +445,9 @@ public class PackagedEntityManagerTest extends junit.framework.TestCase {
 	}
 
 	public void testORMFileOnMainAndExplicitJars() throws Exception {
+		File testPackage = buildExplicitPar();
+		addPackageToClasspath( testPackage );
+
 		EntityManagerFactory emf = Persistence.createEntityManagerFactory( "manager1", new HashMap() );
 		EntityManager em = emf.createEntityManager();
 		Seat seat = new Seat();

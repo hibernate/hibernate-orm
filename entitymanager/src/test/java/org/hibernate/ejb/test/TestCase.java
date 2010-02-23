@@ -1,3 +1,4 @@
+// $Id:$
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
@@ -81,11 +82,16 @@ public abstract class TestCase extends HibernateTestCase {
 			cfg.setProperty( Environment.HBM2DDL_AUTO, "create-drop" );
 		}
 		cfg.setProperty( AnnotationConfiguration.USE_NEW_ID_GENERATOR_MAPPINGS, "true" );
+
+		for ( String mappingFile : getMappings() ) {
+			cfg.addResource( mappingFile );
+		}
+
 		factory = ejbconfig.createEntityManagerFactory( getConfig() );
 	}
 
-	private void cleanUnclosed(EntityManager em){
-		if(em == null) {
+	private void cleanUnclosed(EntityManager em) {
+		if ( em == null ) {
 			return;
 		}
 		if ( em.getTransaction().isActive() ) {
@@ -99,10 +105,11 @@ public abstract class TestCase extends HibernateTestCase {
 			log.warn( "The EntityManager is not closed. Closing it." );
 		}
 	}
-	protected void handleUnclosedResources(){
+
+	protected void handleUnclosedResources() {
 		cleanUnclosed( this.em );
-		for ( Iterator iter = isolatedEms.iterator(); iter.hasNext();) {
-			cleanUnclosed( (EntityManager)iter.next() );
+		for ( Iterator iter = isolatedEms.iterator(); iter.hasNext(); ) {
+			cleanUnclosed( ( EntityManager ) iter.next() );
 		}
 
 		cfg = null;
@@ -122,7 +129,7 @@ public abstract class TestCase extends HibernateTestCase {
 	}
 
 	protected EntityManager createIsolatedEntityManager() {
-		EntityManager isolatedEm = factory.createEntityManager( );
+		EntityManager isolatedEm = factory.createEntityManager();
 		isolatedEms.add( isolatedEm );
 		return isolatedEm;
 	}

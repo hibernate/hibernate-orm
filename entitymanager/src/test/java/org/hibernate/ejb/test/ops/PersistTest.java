@@ -1,223 +1,235 @@
-//$Id$
+// $Id:$
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Inc.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ */
 package org.hibernate.ejb.test.ops;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Map;
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceException;
+import javax.persistence.RollbackException;
 
-import junit.framework.Test;
-import junit.framework.TestSuite;
-import org.hibernate.PersistentObjectException;
-import org.hibernate.Session;
-import org.hibernate.Transaction;
-import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
-import org.hibernate.ejb.test.EJB3TestCase;
-import org.hibernate.exception.ConstraintViolationException;
+import org.hibernate.ejb.EntityManagerFactoryImpl;
+import org.hibernate.ejb.test.TestCase;
 
 /**
  * @author Gavin King
+ * @author Hardy Ferentschik
  */
-public class PersistTest extends EJB3TestCase {
-
-	public PersistTest(String str) {
-		super( str );
-	}
+public class PersistTest extends TestCase {
 
 	public void testCreateTree() {
 
 		clearCounts();
-
-		Session s = openSession();
-		Transaction tx = s.beginTransaction();
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
 		Node root = new Node( "root" );
 		Node child = new Node( "child" );
 		root.addChild( child );
-		s.persist( root );
-		tx.commit();
-		s.close();
+		em.persist( root );
+		em.getTransaction().commit();
+		em.close();
 
 		assertInsertCount( 2 );
 		assertUpdateCount( 0 );
 
-		s = openSession();
-		tx = s.beginTransaction();
-		root = (Node) s.get( Node.class, "root" );
+		em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		root = ( Node ) em.find( Node.class, "root" );
 		Node child2 = new Node( "child2" );
 		root.addChild( child2 );
-		tx.commit();
-		s.close();
+		em.getTransaction().commit();
+		em.close();
 
 		assertInsertCount( 3 );
 		assertUpdateCount( 0 );
 	}
 
 	public void testCreateTreeWithGeneratedId() {
-
 		clearCounts();
 
-		Session s = openSession();
-		Transaction tx = s.beginTransaction();
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
 		NumberedNode root = new NumberedNode( "root" );
 		NumberedNode child = new NumberedNode( "child" );
 		root.addChild( child );
-		s.persist( root );
-		tx.commit();
-		s.close();
+		em.persist( root );
+		em.getTransaction().commit();
+		em.close();
 
 		assertInsertCount( 2 );
 		assertUpdateCount( 0 );
 
-		s = openSession();
-		tx = s.beginTransaction();
-		root = (NumberedNode) s.get( NumberedNode.class, new Long( root.getId() ) );
+		em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		root = ( NumberedNode ) em.find( NumberedNode.class, root.getId() );
 		NumberedNode child2 = new NumberedNode( "child2" );
 		root.addChild( child2 );
-		tx.commit();
-		s.close();
+		em.getTransaction().commit();
+		em.close();
 
 		assertInsertCount( 3 );
 		assertUpdateCount( 0 );
 	}
 
 	public void testCreateException() {
-		Session s = openSession();
-		Transaction tx = s.beginTransaction();
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
 		Node dupe = new Node( "dupe" );
-		s.persist( dupe );
-		s.persist( dupe );
-		tx.commit();
-		s.close();
+		em.persist( dupe );
+		em.persist( dupe );
+		em.getTransaction().commit();
+		em.close();
 
-		s = openSession();
-		tx = s.beginTransaction();
-		s.persist( dupe );
+		em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		em.persist( dupe );
 		try {
-			tx.commit();
+			em.getTransaction().commit();
 			fail( "Cannot persist() twice the same entity" );
 		}
-		catch (ConstraintViolationException cve) {
+		catch ( Exception cve ) {
 			//verify that an exception is thrown!
 		}
-		tx.rollback();
-		s.close();
+		em.close();
 
 		Node nondupe = new Node( "nondupe" );
 		nondupe.addChild( dupe );
 
-		s = openSession();
-		tx = s.beginTransaction();
-		s.persist( nondupe );
+		em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		em.persist( nondupe );
 		try {
-			tx.commit();
+			em.getTransaction().commit();
 			assertFalse( true );
 		}
-		catch (ConstraintViolationException cve) {
+		catch ( RollbackException e ) {
 			//verify that an exception is thrown!
 		}
-		tx.rollback();
-		s.close();
+		em.close();
 	}
 
 	public void testCreateExceptionWithGeneratedId() {
-		Session s = openSession();
-		Transaction tx = s.beginTransaction();
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
 		NumberedNode dupe = new NumberedNode( "dupe" );
-		s.persist( dupe );
-		s.persist( dupe );
-		tx.commit();
-		s.close();
+		em.persist( dupe );
+		em.persist( dupe );
+		em.getTransaction().commit();
+		em.close();
 
-		s = openSession();
-		tx = s.beginTransaction();
+		em = getOrCreateEntityManager();
+		em.getTransaction().begin();
 		try {
-			s.persist( dupe );
+			em.persist( dupe );
 			fail();
 		}
-		catch (PersistentObjectException poe) {
+		catch ( PersistenceException poe ) {
 			//verify that an exception is thrown!
 		}
-		tx.rollback();
-		s.close();
+		em.getTransaction().rollback();
+		em.close();
 
 		NumberedNode nondupe = new NumberedNode( "nondupe" );
 		nondupe.addChild( dupe );
 
-		s = openSession();
-		tx = s.beginTransaction();
+		em = getOrCreateEntityManager();
+		em.getTransaction().begin();
 		try {
-			s.persist( nondupe );
+			em.persist( nondupe );
 			fail();
 		}
-		catch (PersistentObjectException poe) {
+		catch ( PersistenceException poe ) {
 			//verify that an exception is thrown!
 		}
-		tx.rollback();
-		s.close();
+		em.getTransaction().rollback();
+		em.close();
 	}
 
 	public void testBasic() throws Exception {
-		Session s;
-		Transaction tx;
-		s = openSession();
-		tx = s.beginTransaction();
+
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
 		Employer er = new Employer();
 		Employee ee = new Employee();
-		s.persist( ee );
-		Collection erColl = new ArrayList();
-		Collection eeColl = new ArrayList();
+		em.persist( ee );
+		Collection<Employee> erColl = new ArrayList<Employee>();
+		Collection<Employer> eeColl = new ArrayList<Employer>();
 		erColl.add( ee );
 		eeColl.add( er );
 		er.setEmployees( erColl );
 		ee.setEmployers( eeColl );
-		tx.commit();
-		s.close();
+		em.getTransaction().commit();
+		em.close();
 
-		s = openSession();
-		tx = s.beginTransaction();
-		er = (Employer) s.load( Employer.class, er.getId() );
+		em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		er = ( Employer ) em.find( Employer.class, er.getId() );
 		assertNotNull( er );
 		assertNotNull( er.getEmployees() );
 		assertEquals( 1, er.getEmployees().size() );
-		Employee eeFromDb = (Employee) er.getEmployees().iterator().next();
+		Employee eeFromDb = ( Employee ) er.getEmployees().iterator().next();
 		assertEquals( ee.getId(), eeFromDb.getId() );
-		tx.commit();
-		s.close();
+		em.getTransaction().commit();
+		em.close();
 	}
 
 	private void clearCounts() {
-		getSessions().getStatistics().clear();
+		( ( EntityManagerFactoryImpl ) factory ).getSessionFactory().getStatistics().clear();
 	}
 
 	private void assertInsertCount(int count) {
-		int inserts = (int) getSessions().getStatistics().getEntityInsertCount();
+		int inserts = ( int ) ( ( EntityManagerFactoryImpl ) factory ).getSessionFactory()
+				.getStatistics()
+				.getEntityInsertCount();
 		assertEquals( count, inserts );
 	}
 
 	private void assertUpdateCount(int count) {
-		int updates = (int) getSessions().getStatistics().getEntityUpdateCount();
+		int updates = ( int ) ( ( EntityManagerFactoryImpl ) factory ).getSessionFactory()
+				.getStatistics()
+				.getEntityUpdateCount();
 		assertEquals( count, updates );
 	}
 
-	protected void configure(Configuration cfg) {
-		super.configure( cfg );
-		cfg.setProperty( Environment.GENERATE_STATISTICS, "true" );
-		cfg.setProperty( Environment.STATEMENT_BATCH_SIZE, "0" );
+	protected void addConfigOptions(Map options) {
+		options.put( Environment.GENERATE_STATISTICS, "true" );
+		options.put( Environment.STATEMENT_BATCH_SIZE, "0" );
+	}
+
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class<?>[] { Node.class };
 	}
 
 	protected String[] getMappings() {
-		return new String[]{
-				"ops/Node.hbm.xml",
-				"ops/Employer.hbm.xml"
+		return new String[] {
+				"org/hibernate/ejb/test/ops/Node.hbm.xml",
+				"org/hibernate/ejb/test/ops/Employer.hbm.xml"
 		};
 	}
-
-	public static Test suite() {
-		return new TestSuite( PersistTest.class );
-	}
-
-	public String getCacheConcurrencyStrategy() {
-		return null;
-	}
-
 }
 

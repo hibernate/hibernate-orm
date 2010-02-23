@@ -1,3 +1,4 @@
+// $Id:$
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
@@ -28,12 +29,9 @@ import java.io.IOException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.Set;
-
 import javax.persistence.Embeddable;
 import javax.persistence.Entity;
 import javax.persistence.MappedSuperclass;
-
-import junit.framework.TestCase;
 
 import org.hibernate.ejb.packaging.ClassFilter;
 import org.hibernate.ejb.packaging.Entry;
@@ -48,38 +46,13 @@ import org.hibernate.ejb.packaging.JarVisitorFactory;
 import org.hibernate.ejb.packaging.PackageFilter;
 import org.hibernate.ejb.test.pack.defaultpar.ApplicationServer;
 import org.hibernate.ejb.test.pack.explodedpar.Carpet;
-import org.hibernate.junit.FailureExpected;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * @author Emmanuel Bernard
+ * @author Hardy Ferentschik
  */
 @SuppressWarnings("unchecked")
-public class JarVisitorTest extends TestCase {
-	
-	private static final Logger log = LoggerFactory.getLogger(JarVisitorTest.class);
-
-	private static String jarFileBase;
-
-	@Override
-	protected void setUp() throws Exception {
-		URL myUrl = JarVisitorTest.class.getClassLoader().getResource( JarVisitorTest.class.getName().replace( '.', '/' ) + ".class" );
-		File myPath = new File( myUrl.getFile() );
-		// navigate back to '/target'
-		File targetDir = myPath
-				.getParentFile()  // target/classes/org/hibernate/ejb/test/packaging
-				.getParentFile()  // target/classes/org/hibernate/ejb/test
-				.getParentFile()  // target/classes/org/hibernate/ejb
-				.getParentFile()  // target/classes/org/hibernate
-				.getParentFile()  // target/classes/org
-				.getParentFile()  // target/classes
-				.getParentFile(); // target
-		jarFileBase = new File( targetDir, "test-packages" ).toURL().toExternalForm();
-		super.setUp();
-	}
-
+public class JarVisitorTest extends PackagingTestCase {
 
 	public void testHttp() throws Exception {
 		URL url = JarVisitorFactory.getJarURLFromURLEntry(
@@ -92,7 +65,7 @@ public class JarVisitorTest extends TestCase {
 			URLConnection urlConnection = url.openConnection();
 			urlConnection.connect();
 		}
-		catch (IOException ie) {
+		catch ( IOException ie ) {
 			//fail silently
 			return;
 		}
@@ -102,11 +75,12 @@ public class JarVisitorTest extends TestCase {
 		assertEquals( 0, visitor.getMatchingEntries()[2].size() );
 	}
 
-	@FailureExpected( jiraKey = "")
 	public void testInputStreamZippedJar() throws Exception {
-		String jarFileName = jarFileBase + "defaultpar.par";
+		File defaultPar = buildDefaultPar();
+		addPackageToClasspath( defaultPar );
+
 		Filter[] filters = getFilters();
-		JarVisitor jarVisitor = new InputStreamZippedJarVisitor( new URL( jarFileName ), filters, "" );
+		JarVisitor jarVisitor = new InputStreamZippedJarVisitor( defaultPar.toURL(), filters, "" );
 		assertEquals( "defaultpar", jarVisitor.getUnqualifiedJarName() );
 		Set entries = jarVisitor.getMatchingEntries()[1];
 		assertEquals( 3, entries.size() );
@@ -114,16 +88,21 @@ public class JarVisitorTest extends TestCase {
 		assertTrue( entries.contains( entry ) );
 		entry = new Entry( org.hibernate.ejb.test.pack.defaultpar.Version.class.getName(), null );
 		assertTrue( entries.contains( entry ) );
-		assertNull( ( (Entry) entries.iterator().next() ).getInputStream() );
+		assertNull( ( ( Entry ) entries.iterator().next() ).getInputStream() );
 		assertEquals( 2, jarVisitor.getMatchingEntries()[2].size() );
-		for (Entry localEntry : (Set<Entry>) jarVisitor.getMatchingEntries()[2] ) {
+		for ( Entry localEntry : ( Set<Entry> ) jarVisitor.getMatchingEntries()[2] ) {
 			assertNotNull( localEntry.getInputStream() );
 			localEntry.getInputStream().close();
 		}
 	}
 
 	public void testNestedJarProtocol() throws Exception {
-		String jarFileName = jarFileBase + "/nestedjar.ear!/defaultpar.par";
+		File defaultPar = buildDefaultPar();
+		File nestedEar = buildNestedEar( defaultPar );
+		File nestedEarDir = buildNestedEarDir( defaultPar );
+		addPackageToClasspath( nestedEar );
+
+		String jarFileName = nestedEar.toURL().toExternalForm() + "!/defaultpar.par";
 		Filter[] filters = getFilters();
 		JarVisitor jarVisitor = new JarProtocolVisitor( new URL( jarFileName ), filters, "" );
 		//TODO should we fix the name here to reach defaultpar rather than nestedjar ??
@@ -134,14 +113,14 @@ public class JarVisitorTest extends TestCase {
 		assertTrue( entries.contains( entry ) );
 		entry = new Entry( org.hibernate.ejb.test.pack.defaultpar.Version.class.getName(), null );
 		assertTrue( entries.contains( entry ) );
-		assertNull( ( (Entry) entries.iterator().next() ).getInputStream() );
+		assertNull( ( ( Entry ) entries.iterator().next() ).getInputStream() );
 		assertEquals( 2, jarVisitor.getMatchingEntries()[2].size() );
-		for (Entry localEntry : (Set<Entry>) jarVisitor.getMatchingEntries()[2] ) {
+		for ( Entry localEntry : ( Set<Entry> ) jarVisitor.getMatchingEntries()[2] ) {
 			assertNotNull( localEntry.getInputStream() );
 			localEntry.getInputStream().close();
 		}
 
-		jarFileName = jarFileBase + "/nesteddir.ear!/defaultpar.par";
+		jarFileName = nestedEarDir.toURL().toExternalForm() + "!/defaultpar.par";
 		//JarVisitor jarVisitor = new ZippedJarVisitor( jarFileName, true, true );
 		filters = getFilters();
 		jarVisitor = new JarProtocolVisitor( new URL( jarFileName ), filters, "" );
@@ -153,16 +132,19 @@ public class JarVisitorTest extends TestCase {
 		assertTrue( entries.contains( entry ) );
 		entry = new Entry( org.hibernate.ejb.test.pack.defaultpar.Version.class.getName(), null );
 		assertTrue( entries.contains( entry ) );
-		assertNull( ( (Entry) entries.iterator().next() ).getInputStream() );
+		assertNull( ( ( Entry ) entries.iterator().next() ).getInputStream() );
 		assertEquals( 2, jarVisitor.getMatchingEntries()[2].size() );
-		for (Entry localEntry : (Set<Entry>) jarVisitor.getMatchingEntries()[2] ) {
+		for ( Entry localEntry : ( Set<Entry> ) jarVisitor.getMatchingEntries()[2] ) {
 			assertNotNull( localEntry.getInputStream() );
 			localEntry.getInputStream().close();
 		}
 	}
 
 	public void testJarProtocol() throws Exception {
-		String jarFileName = jarFileBase + "/war.war!/WEB-INF/classes";
+		File war = buildWar();
+		addPackageToClasspath( war );
+
+		String jarFileName = war.toURL().toExternalForm() + "!/WEB-INF/classes";
 		Filter[] filters = getFilters();
 		JarVisitor jarVisitor = new JarProtocolVisitor( new URL( jarFileName ), filters, "" );
 		assertEquals( "war", jarVisitor.getUnqualifiedJarName() );
@@ -172,18 +154,20 @@ public class JarVisitorTest extends TestCase {
 		assertTrue( entries.contains( entry ) );
 		entry = new Entry( org.hibernate.ejb.test.pack.war.Version.class.getName(), null );
 		assertTrue( entries.contains( entry ) );
-		assertNull( ( (Entry) entries.iterator().next() ).getInputStream() );
+		assertNull( ( ( Entry ) entries.iterator().next() ).getInputStream() );
 		assertEquals( 2, jarVisitor.getMatchingEntries()[2].size() );
-		for (Entry localEntry : (Set<Entry>) jarVisitor.getMatchingEntries()[2] ) {
+		for ( Entry localEntry : ( Set<Entry> ) jarVisitor.getMatchingEntries()[2] ) {
 			assertNotNull( localEntry.getInputStream() );
 			localEntry.getInputStream().close();
 		}
 	}
 
 	public void testZippedJar() throws Exception {
-		String jarFileName = jarFileBase + "/defaultpar.par";
+		File defaultPar = buildDefaultPar();
+		addPackageToClasspath( defaultPar );
+
 		Filter[] filters = getFilters();
-		JarVisitor jarVisitor = new FileZippedJarVisitor( new URL( jarFileName ), filters, "" );
+		JarVisitor jarVisitor = new FileZippedJarVisitor( defaultPar.toURL(), filters, "" );
 		assertEquals( "defaultpar", jarVisitor.getUnqualifiedJarName() );
 		Set entries = jarVisitor.getMatchingEntries()[1];
 		assertEquals( 3, entries.size() );
@@ -191,19 +175,25 @@ public class JarVisitorTest extends TestCase {
 		assertTrue( entries.contains( entry ) );
 		entry = new Entry( org.hibernate.ejb.test.pack.defaultpar.Version.class.getName(), null );
 		assertTrue( entries.contains( entry ) );
-		assertNull( ( (Entry) entries.iterator().next() ).getInputStream() );
+		assertNull( ( ( Entry ) entries.iterator().next() ).getInputStream() );
 		assertEquals( 2, jarVisitor.getMatchingEntries()[2].size() );
-		for (Entry localEntry : (Set<Entry>) jarVisitor.getMatchingEntries()[2] ) {
+		for ( Entry localEntry : ( Set<Entry> ) jarVisitor.getMatchingEntries()[2] ) {
 			assertNotNull( localEntry.getInputStream() );
 			localEntry.getInputStream().close();
 		}
 	}
 
-
 	public void testExplodedJar() throws Exception {
-		String jarFileName = jarFileBase + "/explodedpar.par";
+		File explodedPar = buildExplodedPar();
+		addPackageToClasspath( explodedPar );
+
 		Filter[] filters = getFilters();
-		JarVisitor jarVisitor = new ExplodedJarVisitor( jarFileName, filters );
+		String dirPath = explodedPar.toURL().toExternalForm();
+		// TODO - shouldn't  ExplodedJarVisitor take care of a trailing slash?
+		if ( dirPath.endsWith( "/" ) ) {
+			dirPath = dirPath.substring( 0, dirPath.length() - 1 );
+		}
+		JarVisitor jarVisitor = new ExplodedJarVisitor( dirPath, filters );
 		assertEquals( "explodedpar", jarVisitor.getUnqualifiedJarName() );
 		Set[] entries = jarVisitor.getMatchingEntries();
 		assertEquals( 1, entries[1].size() );
@@ -212,7 +202,7 @@ public class JarVisitorTest extends TestCase {
 
 		Entry entry = new Entry( Carpet.class.getName(), null );
 		assertTrue( entries[1].contains( entry ) );
-		for (Entry localEntry : (Set<Entry>) jarVisitor.getMatchingEntries()[2] ) {
+		for ( Entry localEntry : ( Set<Entry> ) jarVisitor.getMatchingEntries()[2] ) {
 			assertNotNull( localEntry.getInputStream() );
 			localEntry.getInputStream().close();
 		}
@@ -222,10 +212,9 @@ public class JarVisitorTest extends TestCase {
 	 * EJB-230
 	 */
 	public void testDuplicateFilterExplodedJarExpected() throws Exception {
-		
-		log.warn("Skipping test! See jira issue EJB-230.");
-
-//		String jarFileName = "./build/testresources/explodedpar.par";
+//		File explodedPar = buildExplodedPar();
+//		addPackageToClasspath( explodedPar );
+//
 //		Filter[] filters = getFilters();
 //		Filter[] dupeFilters = new Filter[filters.length * 2];
 //		int index = 0;
@@ -236,20 +225,25 @@ public class JarVisitorTest extends TestCase {
 //		for ( Filter filter : filters ) {
 //			dupeFilters[index++] = filter;
 //		}
-//		JarVisitor jarVisitor = new ExplodedJarVisitor( jarFileName, dupeFilters );
+//		String dirPath = explodedPar.toURL().toExternalForm();
+//		// TODO - shouldn't  ExplodedJarVisitor take care of a trailing slash?
+//		if ( dirPath.endsWith( "/" ) ) {
+//			dirPath = dirPath.substring( 0, dirPath.length() - 1 );
+//		}
+//		JarVisitor jarVisitor = new ExplodedJarVisitor( dirPath, dupeFilters );
 //		assertEquals( "explodedpar", jarVisitor.getUnqualifiedJarName() );
 //		Set[] entries = jarVisitor.getMatchingEntries();
 //		assertEquals( 1, entries[1].size() );
 //		assertEquals( 1, entries[0].size() );
 //		assertEquals( 1, entries[2].size() );
-//		for ( Entry entry : (Set<Entry>) entries[2] ) {
+//		for ( Entry entry : ( Set<Entry> ) entries[2] ) {
 //			InputStream is = entry.getInputStream();
 //			if ( is != null ) {
 //				assertTrue( 0 < is.available() );
 //				is.close();
 //			}
 //		}
-//		for ( Entry entry : (Set<Entry>) entries[5] ) {
+//		for ( Entry entry : ( Set<Entry> ) entries[5] ) {
 //			InputStream is = entry.getInputStream();
 //			if ( is != null ) {
 //				assertTrue( 0 < is.available() );
@@ -262,17 +256,18 @@ public class JarVisitorTest extends TestCase {
 	}
 
 	private Filter[] getFilters() {
-		return new Filter[]{
+		return new Filter[] {
 				new PackageFilter( false, null ) {
 					public boolean accept(String javaElementName) {
 						return true;
 					}
 				},
 				new ClassFilter(
-						false, new Class[]{
-						Entity.class,
-						MappedSuperclass.class,
-						Embeddable.class}
+						false, new Class[] {
+								Entity.class,
+								MappedSuperclass.class,
+								Embeddable.class
+						}
 				) {
 					public boolean accept(String javaElementName) {
 						return true;

@@ -1,3 +1,4 @@
+// $Id:$
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
@@ -286,6 +287,10 @@ public abstract class HibernateTestCase extends TestCase {
 	protected abstract void buildConfiguration() throws Exception;
 
 	protected abstract Class<?>[] getAnnotatedClasses();
+
+	protected String[] getMappings() {
+		return new String[]{};
+	}
 
 	protected abstract void handleUnclosedResources();
 

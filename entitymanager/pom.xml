@@ -1,5 +1,7 @@
 <?xml version="1.0"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
     <modelVersion>4.0.0</modelVersion>
 
@@ -54,6 +56,18 @@
             <groupId>${groupId}</groupId>
             <artifactId>hibernate-testing</artifactId>
             <version>${version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.jboss.shrinkwrap</groupId>
+            <artifactId>shrinkwrap-api</artifactId>
+            <version>1.0.0-alpha-6</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.jboss.shrinkwrap</groupId>
+            <artifactId>shrinkwrap-impl-base</artifactId>
+            <version>1.0.0-SNAPSHOT</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -134,24 +148,6 @@
                             <goal>run</goal>
                         </goals>
                     </execution>
-                    <execution>
-                        <id>package-tests</id>
-                        <phase>process-test-classes</phase>
-                        <configuration>
-                            <tasks>
-                                <property name="package.dir" value="${basedir}/target/test-packages"/>
-                                <property name="package.tmp.dir" value="${basedir}/target/tmp"/>
-                                <property name="classes.dir" value="${project.build.directory}/test-classes"/>
-                                <property name="testresources.dir" value="${basedir}/target/bundles"/>
-                                <ant antfile="${basedir}/build.xml">
-                                    <target name="package"/>
-                                </ant>
-                            </tasks>
-                        </configuration>
-                        <goals>
-                            <goal>run</goal>
-                        </goals>
-                    </execution>
                 </executions>
             </plugin>
             <plugin>
@@ -163,39 +159,12 @@
                 </configuration>
             </plugin>
             <plugin>
-                <groupId>org.jboss.maven.plugins</groupId>
-                <artifactId>maven-test-ext-plugin</artifactId>
-            </plugin>
-            <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
-                    <forkMode>pertest</forkMode>
-                    <additionalClasspathElements>
-                        <additionalClasspathElement>${basedir}/target/test-packages/cfgxmlpar.par
-                        </additionalClasspathElement>
-                        <additionalClasspathElement>${basedir}/target/test-packages/defaultpar.par
-                        </additionalClasspathElement>
-                        <additionalClasspathElement>${basedir}/target/test-packages/defaultpar_1_0.par
-                        </additionalClasspathElement>
-                        <additionalClasspathElement>${basedir}/target/test-packages/excludehbmpar.par
-                        </additionalClasspathElement>
-                        <additionalClasspathElement>${basedir}/target/test-packages/explicitpar.par
-                        </additionalClasspathElement>
-                        <additionalClasspathElement>${basedir}/target/test-packages/explodedpar.par
-                        </additionalClasspathElement>
-                        <additionalClasspathElement>${basedir}/target/test-packages/externaljar.jar
-                        </additionalClasspathElement>
-                        <additionalClasspathElement>${basedir}/target/test-packages/nesteddir.ear
-                        </additionalClasspathElement>
-                        <additionalClasspathElement>${basedir}/target/test-packages/nestedjar.ear
-                        </additionalClasspathElement>
-                        <additionalClasspathElement>${basedir}/target/test-packages/overridenpar.jar
-                        </additionalClasspathElement>
-                        <additionalClasspathElement>${basedir}/target/test-packages/space par.par
-                        </additionalClasspathElement>
-                        <additionalClasspathElement>${basedir}/target/test-packages/war.war</additionalClasspathElement>
-                    </additionalClasspathElements>
+                    <excludes>
+                        <exclude>**/*TestCase.java</exclude>
+                    </excludes>
                 </configuration>
             </plugin>
         </plugins>

@@ -1,14 +1,36 @@
+// $Id:$
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Inc.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ */
 package org.hibernate.ejb.test.packaging;
 
+import java.io.File;
 import java.lang.annotation.Annotation;
-import java.net.URL;
 import java.util.HashSet;
 import java.util.Set;
 import javax.persistence.Embeddable;
 import javax.persistence.Entity;
 import javax.persistence.MappedSuperclass;
-
-import junit.framework.TestCase;
 
 import org.hibernate.ejb.packaging.NamedInputStream;
 import org.hibernate.ejb.packaging.NativeScanner;
@@ -18,34 +40,33 @@ import org.hibernate.ejb.test.pack.defaultpar.ApplicationServer;
 
 /**
  * @author Emmanuel Bernard
+ * @author Hardy Ferentschik
  */
-public class NativeScannerTest extends TestCase {
-	private static final String jarFileBase = "file:./target/test-packages";
-
+public class NativeScannerTest extends PackagingTestCase {
 	public void testNativeScanner() throws Exception {
-		String jarFileName = jarFileBase + "/defaultpar.par";
+		File defaultPar = buildDefaultPar();
+		addPackageToClasspath( defaultPar );
+
 		Scanner scanner = new NativeScanner();
+		assertEquals( "defaultpar", scanner.getUnqualifiedJarName( defaultPar.toURL() ) );
 
-		final URL jarUrl = new URL( jarFileName );
-		assertEquals( "defaultpar", scanner.getUnqualifiedJarName( jarUrl ) );
-
-		Set<Class<? extends Annotation>> annotationsToLookFor = new HashSet<Class<? extends Annotation>>(3);
+		Set<Class<? extends Annotation>> annotationsToLookFor = new HashSet<Class<? extends Annotation>>( 3 );
 		annotationsToLookFor.add( Entity.class );
 		annotationsToLookFor.add( MappedSuperclass.class );
 		annotationsToLookFor.add( Embeddable.class );
-		final Set<Class<?>> classes = scanner.getClassesInJar( jarUrl, annotationsToLookFor );
-			
+		final Set<Class<?>> classes = scanner.getClassesInJar( defaultPar.toURL(), annotationsToLookFor );
+
 		assertEquals( 3, classes.size() );
 		assertTrue( classes.contains( ApplicationServer.class ) );
 		assertTrue( classes.contains( org.hibernate.ejb.test.pack.defaultpar.Version.class ) );
 
-		Set<String> filePatterns = new HashSet<String>(2);
-		filePatterns.add("**/*.hbm.xml");
-		filePatterns.add("META-INF/orm.xml");
-		final Set<NamedInputStream> files = scanner.getFilesInJar( jarUrl, filePatterns );
+		Set<String> filePatterns = new HashSet<String>( 2 );
+		filePatterns.add( "**/*.hbm.xml" );
+		filePatterns.add( "META-INF/orm.xml" );
+		final Set<NamedInputStream> files = scanner.getFilesInJar( defaultPar.toURL(), filePatterns );
 
 		assertEquals( 2, files.size() );
-		for (NamedInputStream file : files ) {
+		for ( NamedInputStream file : files ) {
 			assertNotNull( file.getStream() );
 			file.getStream().close();
 		}

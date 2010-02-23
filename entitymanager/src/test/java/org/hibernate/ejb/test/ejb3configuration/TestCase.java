@@ -1,3 +1,4 @@
+// $Id:$
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
@@ -60,8 +61,6 @@ public abstract class TestCase extends junit.framework.TestCase {
 	protected boolean recreateSchema() {
 		return true;
 	}
-
-	;
 
 	private void buildConfiguration() {
 		configuration = new Ejb3Configuration();

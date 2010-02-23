@@ -204,7 +204,7 @@ private static final SessionFactory sessionFactory;
     annotations, except for this startup routine change or in the
     configuration file. You can use your favorite configuration method for
     other properties ( <filename>hibernate.properties</filename>,
-    <filename>hibernate.cfg.xml</filename>, programmatic APIs, etc). </para>
+    <filename>hibernate.cfg.xml</filename>, programmatic APIs, etc).</para>
 
     <note>
       <para>You can mix annotated persistent classes and classic
@@ -225,7 +225,7 @@ private static final SessionFactory sessionFactory;
     conflict occurs.</para>
   </section>
 
-  <section>
+  <section id="ann-setup-properties">
     <title id="setup-properties">Properties</title>
 
     <para>On top of the Hibernate Core properties, Hibernate Annotations

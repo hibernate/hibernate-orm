@@ -273,9 +273,109 @@ public byte[] getFullCode() {
       </section>
 
       <section>
-        <title></title>
+        <title>Access type</title>
 
-        <para></para>
+        <para>By default the access type of a class hierarchy is defined by
+        the position of the <classname>@Id</classname> or
+        <classname>@EmbeddedId</classname> annotations. If these annotations
+        are on a field, then only fields are considered for persistence and
+        the state is accessed via the field. If there annotations are on a
+        getter, then only the getters are considered for persistence and the
+        state is accessed via the getter/setter. That works well in practice
+        and is the recommended approach.<note>
+            <para>The placement of annotations within a class hierarchy has to
+            be consistent (either field or on property) to be able to
+            determine the default access type. It is recommended to stick to
+            one single annotation placement strategy throughout your whole
+            application.</para>
+          </note></para>
+
+        <para>However in some situations, you need to:</para>
+
+        <itemizedlist>
+          <listitem>
+            <para>force the access type of the entity hierarchy</para>
+          </listitem>
+
+          <listitem>
+            <para>override the access type of a specific entity in the class
+            hierarchy</para>
+          </listitem>
+
+          <listitem>
+            <para>override the access type of an embeddable type</para>
+          </listitem>
+        </itemizedlist>
+
+        <para>The best use case is an embeddable class used by several
+        entities that might not use the same access type. In this case it is
+        better to force the access type at the embeddable class level.</para>
+
+        <para>To force the access type on a given class, use the
+        <classname>@Access</classname> annotation as showed below:</para>
+
+        <programlisting>@Entity
+public class Order {
+   @Id private Long id;
+   public Long getId() { return id; }
+   public void setId(Long id) { this.id = id; }
+
+   @Embedded private Address address;
+   public Address getAddress() { return address; }
+   public void setAddress() { this.address = address; }
+}
+
+@Entity
+public class User {
+   private Long id;
+   @Id public Long getId() { return id; }
+   public void setId(Long id) { this.id = id; }
+
+   private Address address;
+   @Embedded public Address getAddress() { return address; }
+   public void setAddress() { this.address = address; }
+}
+
+@Embeddable
+@Access(AcessType.PROPERTY)
+public class Address {
+   private String street1;
+   public String getStreet1() { return street1; }
+   public void setStreet1() { this.street1 = street1; }
+
+   private hashCode; //not persistent
+}</programlisting>
+
+        <para>You can also override the access type of a single property while
+        keeping the other properties standard.</para>
+
+        <programlisting>@Entity
+public class Order {
+   @Id private Long id;
+   public Long getId() { return id; }
+   public void setId(Long id) { this.id = id; }
+   @Transient private String userId;
+   @Transient private String orderId;
+
+   @Access(AccessType.PROPERTY)
+   public String getOrderNumber() { return userId + ":" + orderId; }
+   public void setOrderNumber() { this.userId = ...; this.orderId = ...; }
+}</programlisting>
+
+        <para>In this example, the default access type is
+        <classname>FIELD</classname> except for the
+        <literal>orderNumber</literal> property. Note that the corresponding
+        field, if any must be marked as <classname>@Transient</classname> or
+        <code>transient</code>.</para>
+
+        <note>
+          <title>@org.hibernate.annotations.AccessType</title>
+
+          <para>The annotation
+          <classname>@org.hibernate.annotations.AccessType</classname> should
+          be considered deprecated for FIELD and PROPERTY access. It is still
+          useful however if you need to use a custom access type.</para>
+        </note>
       </section>
 
       <section id="entity-mapping-property-column" revision="1">
@@ -306,12 +406,6 @@ public byte[] getFullCode() {
 
           <listitem>
             <para>annotated with <literal>@Temporal</literal></para>
-          </listitem>
-
-          <listitem>
-            <para>annotated with
-            <literal>@org.hibernate.annotations.CollectionOfElements</literal>
-            (for Hibernate only)</para>
           </listitem>
         </itemizedlist>
 
@@ -435,8 +529,7 @@ public String getName() { ... }
         <literal>@Embedded</literal> and <literal>@AttributeOverride</literal>
         annotation in the associated property:</para>
 
-        <programlisting>
-@Entity
+        <programlisting>@Entity
 public class Person implements Serializable {
 
     // Persistent component using defaults
@@ -449,19 +542,15 @@ public class Person implements Serializable {
     } )
     Country bornIn;
     ...
-}
-            </programlisting>
+}          </programlisting>
 
-        <programlisting>
-@Embeddable
+        <programlisting>@Embeddable
 public class Address implements Serializable {
     String city;
     Country nationality; //no overriding here
-}
-            </programlisting>
+}            </programlisting>
 
-        <programlisting>
-@Embeddable
+        <programlisting>@Embeddable
 public class Country implements Serializable {
     private String iso2;
     @Column(name="countryName") private String name;
@@ -473,13 +562,11 @@ public class Country implements Serializable {
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
     ...
-}
-            </programlisting>
+}            </programlisting>
 
         <para>An embeddable object inherits the access type of its owning
-        entity (note that you can override that using
-        <literal>@Access</literal> or the Hibernate specific
-        <literal>@AccessType</literal> annotation.</para>
+        entity (note that you can override that using the
+        <literal>@Access</literal> annotation).</para>
 
         <para>The <literal>Person</literal> entity bean has two component
         properties, <literal>homeAddress</literal> and
@@ -492,10 +579,9 @@ public class Country implements Serializable {
         </literal>annotations for each mapped attribute of
         <literal>Country</literal>. As you can see, <literal>Country
         </literal>is also a nested component of <literal>Address</literal>,
-        again using auto-detection by Hibernate and EJB3 defaults. Overriding
-        columns of embedded objects of embedded objects is currently not
-        supported in the EJB3 spec, however, Hibernate Annotations supports it
-        through dotted expressions.</para>
+        again using auto-detection by Hibernate and JPA defaults. Overriding
+        columns of embedded objects of embedded objects is through dotted
+        expressions.</para>
 
         <para><programlisting>    @Embedded
     @AttributeOverrides( {
@@ -504,27 +590,28 @@ public class Country implements Serializable {
             @AttributeOverride(name="<emphasis role="bold">nationality.name</emphasis>", column = @Column(name="nat_CountryName") )
             //nationality columns in homeAddress are overridden
     } )
-    Address homeAddress;</programlisting>Hibernate Annotations supports one
-        more feature that is not explicitly supported by the EJB3
-        specification. You can annotate a embedded object with the
+    Address homeAddress;</programlisting>Hibernate Annotations supports
+        something that is not explicitly supported by the JPA specification.
+        You can annotate a embedded object with the
         <literal>@MappedSuperclass</literal> annotation to make the superclass
         properties persistent (see <literal>@MappedSuperclass</literal> for
         more informations).</para>
 
-        <para>While not supported by the EJB3 specification, Hibernate
-        Annotations allows you to use association annotations in an embeddable
-        object (ie <literal>@*ToOne</literal> nor
-        <literal>@*ToMany</literal>). To override the association columns you
-        can use <literal>@AssociationOverride</literal>.</para>
+        <para>You can also use association annotations in an embeddable object
+        (ie <literal>@OneToOne</literal>, <classname>@ManyToOne</classname>,
+        <classname>@OneToMany</classname> or <literal>@ManyToMany</literal>).
+        To override the association columns you can use
+        <literal>@AssociationOverride</literal>.</para>
 
         <para>If you want to have the same embeddable object type twice in the
-        same entity, the column name defaulting will not work: at least one of
-        the columns will have to be explicit. Hibernate goes beyond the EJB3
-        spec and allows you to enhance the defaulting mechanism through the
-        <classname>NamingStrategy</classname>.
-        <classname>DefaultComponentSafeNamingStrategy</classname> is a small
-        improvement over the default EJB3NamingStrategy that allows embedded
-        objects to be defaulted even if used twice in the same entity.</para>
+        same entity, the column name defaulting will not work as several
+        embedded objects would share the same set of columns. In plain JPA,
+        you need to override at least one set of columns. Hibernate, however,
+        allows you to enhance the default naming mechanism through the
+        <classname>NamingStrategy</classname> interface. You can write a
+        strategy that prevent name clashing in such a situation.
+        <classname>DefaultComponentSafeNamingStrategy</classname> is an
+        example of this.</para>
       </section>
 
       <section>
@@ -545,15 +632,18 @@ public class Country implements Serializable {
           </listitem>
 
           <listitem>
-            <para>Otherwise, if the type of the property is Serializable, it
-            is mapped as @Basic in a column holding the object in its
-            serialized version</para>
+            <para>Otherwise, if the type of the property is
+            <classname>Serializable</classname>, it is mapped as
+            <classname>@Basic</classname> in a column holding the object in
+            its serialized version</para>
           </listitem>
 
           <listitem>
-            <para>Otherwise, if the type of the property is java.sql.Clob or
-            java.sql.Blob, it is mapped as @Lob with the appropriate
-            LobType</para>
+            <para>Otherwise, if the type of the property is
+            <classname>java.sql.Clob</classname> or
+            <classname>java.sql.Blob</classname>, it is mapped as
+            <classname>@Lob</classname> with the appropriate
+            <classname>LobType</classname></para>
           </listitem>
         </itemizedlist>
       </section>
@@ -567,58 +657,65 @@ public class Country implements Serializable {
       property is the identifier of your entity bean. This property can be set
       by the application itself or be generated by Hibernate (preferred). You
       can define the identifier generation strategy thanks to the
-      <literal>@GeneratedValue</literal> annotation:</para>
+      <literal>@GeneratedValue</literal> annotation.</para>
 
-      <itemizedlist>
-        <listitem>
-          <para>AUTO - either identity column, sequence or table depending on
-          the underlying DB</para>
-        </listitem>
+      <section>
+        <title>Generating the identifier property</title>
 
-        <listitem>
-          <para>TABLE - table holding the id</para>
-        </listitem>
+        <para>JPA defines five types of identifier generation
+        strategies:</para>
 
-        <listitem>
-          <para>IDENTITY - identity column</para>
-        </listitem>
+        <itemizedlist>
+          <listitem>
+            <para>AUTO - either identity column, sequence or table depending
+            on the underlying DB</para>
+          </listitem>
 
-        <listitem>
-          <para>SEQUENCE - sequence</para>
-        </listitem>
-      </itemizedlist>
+          <listitem>
+            <para>TABLE - table holding the id</para>
+          </listitem>
 
-      <para>Hibernate provides more id generators than the basic EJB3 ones.
-      Check <xref linkend="entity-hibspec" /> for more informations.</para>
+          <listitem>
+            <para>IDENTITY - identity column</para>
+          </listitem>
 
-      <para>The following example shows a sequence generator using the
-      SEQ_STORE configuration (see below)</para>
+          <listitem>
+            <para>SEQUENCE - sequence</para>
+          </listitem>
 
-      <programlisting>
-@Id @GeneratedValue(strategy=GenerationType.SEQUENCE, generator="SEQ_STORE")
-public Integer getId() { ... }
-         </programlisting>
+          <listitem>
+            <para>identity copy - the identity is copied from another
+            entity</para>
+          </listitem>
+        </itemizedlist>
 
-      <para>The next example uses the identity generator:</para>
+        <para>Hibernate provides more id generators than the basic JPA ones.
+        Check <xref linkend="entity-hibspec" /> for more informations.</para>
 
-      <programlisting>
-@Id @GeneratedValue(strategy=GenerationType.IDENTITY)
-public Long getId() { ... }
-         </programlisting>
+        <para>The following example shows a sequence generator using the
+        SEQ_STORE configuration (see below)</para>
 
-      <para>The <literal>AUTO</literal> generator is the preferred type for
-      portable applications (across several DB vendors). The identifier
-      generation configuration can be shared for several
-      <literal>@Id</literal> mappings with the generator attribute. There are
-      several configurations available through
-      <literal>@SequenceGenerator</literal> and
-      <literal>@TableGenerator</literal>. The scope of a generator can be the
-      application or the class. Class-defined generators are not visible
-      outside the class and can override application level generators.
-      Application level generators are defined at XML level (see <xref
-      linkend="xml-overriding" />):</para>
+        <programlisting>@Id @GeneratedValue(strategy=GenerationType.SEQUENCE, generator="SEQ_STORE")
+public Integer getId() { ... }         </programlisting>
 
-      <programlisting>&lt;table-generator name="EMP_GEN"
+        <para>The next example uses the identity generator:</para>
+
+        <programlisting>@Id @GeneratedValue(strategy=GenerationType.IDENTITY)
+public Long getId() { ... }         </programlisting>
+
+        <para>The <literal>AUTO</literal> generator is the preferred type for
+        portable applications (across several DB vendors). The identifier
+        generation configuration can be shared for several
+        <literal>@Id</literal> mappings with the generator attribute. There
+        are several configurations available through
+        <literal>@SequenceGenerator</literal> and
+        <literal>@TableGenerator</literal>. The scope of a generator can be
+        the application or the class. Class-defined generators are not visible
+        outside the class and can override application level generators.
+        Application level generators are defined at XML level (see <xref
+        linkend="xml-overriding" />):</para>
+
+        <programlisting>&lt;table-generator name="EMP_GEN"
             table="GENERATOR_TABLE"
             pk-column-name="key"
             value-column-name="hi"
@@ -649,37 +746,47 @@ public Long getId() { ... }
 )
          </programlisting>
 
-      <para>If JPA XML (like <filename>META-INF/orm.xml</filename>) is used to
-      define thegenerators, <literal>EMP_GEN</literal> and
-      <literal>SEQ_GEN</literal> are application level generators.
-      <literal>EMP_GEN</literal> defines a table based id generator using the
-      hilo algorithm with a <literal>max_lo</literal> of 20. The hi value is
-      kept in a <literal>table</literal> "<literal>GENERATOR_TABLE</literal>".
-      The information is kept in a row where <literal>pkColumnName</literal>
-      "key" is equals to <literal>pkColumnValue</literal>
-      "<literal>EMP</literal>" and column <literal>valueColumnName</literal>
-      "<literal>hi</literal>" contains the the next high value used.</para>
+        <para>If JPA XML (like <filename>META-INF/orm.xml</filename>) is used
+        to define thegenerators, <literal>EMP_GEN</literal> and
+        <literal>SEQ_GEN</literal> are application level generators.
+        <literal>EMP_GEN</literal> defines a table based id generator using
+        the hilo algorithm with a <literal>max_lo</literal> of 20. The hi
+        value is kept in a <literal>table</literal>
+        "<literal>GENERATOR_TABLE</literal>". The information is kept in a row
+        where <literal>pkColumnName</literal> "key" is equals to
+        <literal>pkColumnValue</literal> "<literal>EMP</literal>" and column
+        <literal>valueColumnName</literal> "<literal>hi</literal>" contains
+        the the next high value used.</para>
 
-      <para><literal>SEQ_GEN</literal> defines a sequence generator using a
-      sequence named <literal>my_sequence</literal>. The allocation size used
-      for this sequence based hilo algorithm is 20. Note that this version of
-      Hibernate Annotations does not handle <literal>initialValue</literal> in
-      the sequence generator. The default allocation size is 50, so if you
-      want to use a sequence and pickup the value each time, you must set the
-      allocation size to 1.</para>
+        <para><literal>SEQ_GEN</literal> defines a sequence generator using a
+        sequence named <literal>my_sequence</literal>. The allocation size
+        used for this sequence based hilo algorithm is 20. Note that this
+        version of Hibernate Annotations does not handle
+        <literal>initialValue</literal> in the sequence generator. The default
+        allocation size is 50, so if you want to use a sequence and pickup the
+        value each time, you must set the allocation size to 1.</para>
 
-      <note>
-        <para>Package level definition is no longer supported by the EJB 3.0
-        specification. However, you can use the
-        <literal>@GenericGenerator</literal> at the package level (see <xref
-        linkend="entity-hibspec-identifier" />).</para>
-      </note>
+        <important>
+          <para>We recommend all new projects to use
+          <code>hibernate.id.new_generator_mappings=true</code> as the new
+          generators are more efficient and closer to the JPA 2 specification
+          semantic. However they are not backward compatible with existing
+          databases (if a sequence or a table is used for id generation). See
+          <xref linkend="ann-setup-properties" /> for more information on how
+          to activate them.</para>
+        </important>
 
-      <para>The next example shows the definition of a sequence generator in a
-      class scope:</para>
+        <note>
+          <para>Package level definition is not supported by the JPA
+          specification. However, you can use the
+          <literal>@GenericGenerator</literal> at the package level (see <xref
+          linkend="entity-hibspec-identifier" />).</para>
+        </note>
 
-      <programlisting>
-@Entity
+        <para>The next example shows the definition of a sequence generator in
+        a class scope:</para>
+
+        <programlisting>@Entity
 @javax.persistence.SequenceGenerator(
     name="SEQ_STORE",
     sequenceName="my_sequence"
@@ -689,120 +796,378 @@ public class Store implements Serializable {
 
     @Id @GeneratedValue(strategy=GenerationType.SEQUENCE, generator="SEQ_STORE")
     public Long getId() { return id; }
+}         </programlisting>
+
+        <para>This class will use a sequence named my_sequence and the
+        SEQ_STORE generator is not visible in other classes. Note that you can
+        check the Hibernate Annotations tests in the
+        <package>org.hibernate.test.annotations.id</package> package for more
+        examples.</para>
+
+        <para>Finally, you can ask Hibernate to copy the identifier from
+        another associated entity. In the Hibernate jargon, it is known as a
+        foreign generator but the JPA mapping reads better and is
+        encouraged.</para>
+
+        <programlisting>@Entity
+class MedicalHistory implements Serializable {
+  <emphasis role="bold">@Id @OneToOne</emphasis>
+  @JoinColumn(name = "person_id")
+  Person patient;
 }
-         </programlisting>
 
-      <para>This class will use a sequence named my_sequence and the SEQ_STORE
-      generator is not visible in other classes. Note that you can check the
-      Hibernate Annotations tests in the
-      <package>org.hibernate.test.annotations.id</package> package for more
-      examples.</para>
+@Entity
+public class Person implements Serializable {
+  @Id @GeneratedValue Integer id;
+}</programlisting>
 
-      <para>You can define a composite primary key through several
-      syntaxes:</para>
+        <para>Or alternatively</para>
 
-      <itemizedlist>
-        <listitem>
-          <para>annotate the component property as @Id and make the component
-          class @Embeddable</para>
-        </listitem>
+        <programlisting>@Entity
+class MedicalHistory implements Serializable {
+  @Id Integer id;
 
-        <listitem>
-          <para>annotate the component property as @EmbeddedId</para>
-        </listitem>
+  <emphasis role="bold">@MapsId @OneToOne</emphasis>
+  @JoinColumn(name = "patient_id")
+  Person patient;
+}
 
-        <listitem>
-          <para>annotate the class as @IdClass and annotate each property of
-          the entity involved in the primary key with @Id</para>
-        </listitem>
-      </itemizedlist>
+@Entity
+class Person {
+  @Id @GeneratedValue Integer id;
+}</programlisting>
 
-      <para>While quite common to the EJB2 developer,
-      <literal>@IdClass</literal> is likely new for Hibernate users. The
-      composite primary key class corresponds to multiple fields or properties
-      of the entity class, and the names of primary key fields or properties
-      in the primary key class and those of the entity class must match and
-      their types must be the same. Let's look at an example:</para>
+        <para>But an identifier does not have to be a single property, it ca
+        be composed of several properties.</para>
+      </section>
 
-      <programlisting>@Entity
-<emphasis role="bold">@IdClass(FootballerPk.class)</emphasis>
-public class Footballer {
-    //part of the id key
-    <emphasis role="bold">@Id</emphasis> public String getFirstname() {
-        return firstname;
-    }
+      <section>
+        <title>Composite identifier</title>
 
-    public void setFirstname(String firstname) {
-        this.firstname = firstname;
-    }
+        <para>You can define a composite primary key through several
+        syntaxes:</para>
 
-    //part of the id key
-    <emphasis role="bold">@Id</emphasis> public String getLastname() {
-        return lastname;
-    }
+        <itemizedlist>
+          <listitem>
+            <para>use a component type to represent the identifier and map it
+            as a property in the entity: you then annotated the property as
+            <classname>@EmbeddedId</classname>. The component type has to be
+            <classname>Serializable</classname>.</para>
+          </listitem>
 
-    public void setLastname(String lastname) {
-        this.lastname = lastname;
-    }
+          <listitem>
+            <para>map multiple properties as <classname>@Id</classname>
+            properties: the identifier type is then the entity class itself
+            and needs to be <classname>Serializable</classname>. This approach
+            is unfortunately not standard and only supported by
+            Hibernate.</para>
+          </listitem>
 
-    public String getClub() {
-        return club;
-    }
+          <listitem>
+            <para>map multiple properties as <classname>@Id</classname>
+            properties and declare an external class to be the identifier
+            type. This class, which needs to be
+            <classname>Serializable</classname>, is declared on the entity via
+            the <classname>@IdClass</classname> annotation. The identifier
+            type must contain the same properties as the identifier properties
+            of the entity: each property name must be the same, its type must
+            be the same as well if the entity property is of a basic type, its
+            type must be the type of the primary key of the associated entity
+            if the entity property is an association (either a
+            <classname>@OneToOne</classname> or a
+            <classname>@ManyToOne</classname>).</para>
+          </listitem>
+        </itemizedlist>
 
-    public void setClub(String club) {
-        this.club = club;
-    }
+        <para>As you can see the last case is far from obvious. It has been
+        inherited from the dark ages of EJB 2 for backward compatibilities and
+        we recommend you not to use it (for simplicity sake).</para>
 
-    //appropriate equals() and hashCode() implementation
+        <para>Let's explore all three cases using examples.</para>
+
+        <section>
+          <title>@EmbeddedId property</title>
+
+          <para>Here is a simple example of
+          <classname>@EmbeddedId</classname>.</para>
+
+          <programlisting>@Entity 
+class User {
+  <emphasis role="bold" security="">@EmbeddedId 
+  @AttributeOverride(name="firstName", column=@Column(name="fld_firstname")
+  UserId id;</emphasis>
+
+  Integer age;
 }
 
 @Embeddable
-public class FootballerPk implements Serializable {
-    //same name and type as in Footballer
-    public String getFirstname() {
-        return firstname;
-    }
+class UserId implements Serializable {
+  String firstName;
+  String lastName;
+}</programlisting>
 
-    public void setFirstname(String firstname) {
-        this.firstname = firstname;
-    }
+          <para>You can notice that the <classname>UserId</classname> class is
+          serializable. To override the column mapping, use
+          <classname>@AttributeOverride</classname>.</para>
 
-    //same name and type as in Footballer
-    public String getLastname() {
-        return lastname;
-    }
+          <para>An embedded id can itself contains the primary key of an
+          associated entity.</para>
 
-    public void setLastname(String lastname) {
-        this.lastname = lastname;
-    }
+          <programlisting>@Entity
+class Customer {
+  @EmbeddedId CustomerId id;
+  boolean preferredCustomer;
 
-    //appropriate equals() and hashCode() implementation
-}
-</programlisting>
-
-      <para>As you may have seen, <literal>@IdClass</literal> points to the
-      corresponding primary key class.</para>
-
-      <para>While not supported by the EJB3 specification, Hibernate allows
-      you to define associations inside a composite identifier. Simply use the
-      regular annotations for that</para>
-
-      <programlisting>@Entity
-@AssociationOverride( name="id.channel", joinColumns = @JoinColumn(name="chan_id") )
-public class TvMagazin {
-    @EmbeddedId public TvMagazinPk id;
-    @Temporal(TemporalType.TIME) Date time;
+  <emphasis role="bold">@MapsId("userId") 
+  @JoinColumns({
+    @JoinColumn(name="userfirstname_fk", referencedColumnName="firstName"),
+    @JoinColumn(name="userlastname_fk", referencedColumnName="lastName")
+  })
+  @OneToOne User user;</emphasis>
 }
 
 @Embeddable
-public class TvMagazinPk implements Serializable {
-    @ManyToOne
-    public Channel channel;
-    public String name;
-    @ManyToOne
-    public Presenter presenter;
+class CustomerId implements Serializable {
+  <emphasis role="bold">UserId userId;</emphasis>
+  String customerNumber;
 }
-</programlisting>
+
+@Entity 
+class User {
+  @EmbeddedId UserId id;
+  Integer age;
+}
+
+@Embeddable
+class UserId implements Serializable {
+  String firstName;
+  String lastName;
+}</programlisting>
+
+          <para>In the embedded id object, the association is represented as
+          the identifier of the associated entity. But you can link its value
+          to a regular association in the entity via the
+          <classname>@MapsId</classname> annotation. The
+          <classname>@MapsId</classname> value correspond to the property name
+          of the embedded id object containing the associated entity's
+          identifier. In the database, it means that the
+          <literal>Customer.user</literal> and the
+          <literal>CustomerId.userId</literal> properties share the same
+          underlying column (<literal>user_fk</literal> in this case). </para>
+
+          <para>In practice, your code only sets the
+          <literal>Customer.user</literal> property and the user id value is
+          copied by Hibernate into the <literal>CustomerId.userId</literal>
+          property.</para>
+
+          <warning>
+            <para>The id value can be copied as late as flush time, don't rely
+            on it until after flush time. </para>
+          </warning>
+
+          <para>While not supported in JPA, Hibernate lets you place your
+          association directly in the embedded id component (instead of having
+          to use the <classname>@MapsId</classname> annotation).</para>
+
+          <programlisting>@Entity
+class Customer {
+  @EmbeddedId CustomerId id;
+  boolean preferredCustomer;
+}
+
+@Embeddable
+class CustomerId implements Serializable {
+  <emphasis role="bold">@OneToOne
+  @JoinColumns({
+    @JoinColumn(name="userfirstname_fk", referencedColumnName="firstName"),
+    @JoinColumn(name="userlastname_fk", referencedColumnName="lastName")
+  }) 
+  User user;</emphasis>
+  String customerNumber;
+}
+
+@Entity 
+class User {
+  @EmbeddedId UserId id;
+  Integer age;
+}
+
+@Embeddable
+class UserId implements Serializable {
+  String firstName;
+  String lastName;
+}</programlisting>
+        </section>
+
+        <section>
+          <title>Multiple @Id properties</title>
+
+          <para>Another arguably more natural) approach is to place
+          <classname>@Id</classname> on multiple properties of my entity. This
+          approach is only supported by Hibernate but does not require an
+          extra embeddable component.</para>
+
+          <programlisting>@Entity
+class Customer <emphasis role="bold">implements Serializable </emphasis>{
+  <emphasis role="bold">@Id @OneToOne
+  @JoinColumns({
+    @JoinColumn(name="userfirstname_fk", referencedColumnName="firstName"),
+    @JoinColumn(name="userlastname_fk", referencedColumnName="lastName")
+  })
+  User user;</emphasis>
+  
+  <emphasis role="bold">@Id</emphasis> String customerNumber;
+
+  boolean preferredCustomer;
+}
+
+@Entity 
+class User {
+  @EmbeddedId UserId id;
+  Integer age;
+}
+
+@Embeddable
+class UserId implements Serializable {
+  String firstName;
+  String lastName;
+}</programlisting>
+
+          <para>In this case <classname>Customer</classname> being it's own
+          identifier representation, it must implement
+          <classname>Serializable</classname>.</para>
+        </section>
+
+        <section>
+          <title>@IdClass</title>
+
+          <para><classname>@IdClass</classname> on an entity points to the
+          class (component) representing the identifier of the class. The
+          properties marked <classname>@Id</classname> on the entity must have
+          their corresponding property on the <classname>@IdClass</classname>.
+          The return type of search twin property must be either identical for
+          basic properties or must correspond to the identifier class of the
+          associated entity for an association.</para>
+
+          <warning>
+            <para>This approach is inherited from the EJB 2 days and we
+            recommend against its use. But, after all it's your application
+            and Hibernate supports it.</para>
+          </warning>
+
+          <programlisting>@Entity
+class Customer {
+  <emphasis role="bold">@Id @OneToOne
+  @JoinColumns({
+    @JoinColumn(name="userfirstname_fk", referencedColumnName="firstName"),
+    @JoinColumn(name="userlastname_fk", referencedColumnName="lastName")
+  }) 
+  User user;</emphasis>
+  
+  <emphasis role="bold">@Id</emphasis> String customerNumber;
+
+  boolean preferredCustomer;
+}
+
+class CustomerId implements Serializable {
+  <emphasis role="bold">UserId user;</emphasis>
+  String customerNumber;
+}
+
+@Entity 
+class User {
+  @EmbeddedId UserId id;
+  Integer age;
+}
+
+@Embeddable
+class UserId implements Serializable {
+  String firstName;
+  String lastName;
+}</programlisting>
+
+          <para><classname>Customer</classname> and
+          <classname>CustomerId</classname> do have the same properties
+          <literal>customerNumber</literal> as well as
+          <literal>user</literal>.</para>
+
+          <para>While not JPA standard, Hibernate let's you declare the
+          vanilla associated property in the
+          <classname>@IdClass</classname>.</para>
+
+          <programlisting>@Entity
+class Customer {
+  <emphasis role="bold">@Id @OneToOne
+  @JoinColumns({
+    @JoinColumn(name="userfirstname_fk", referencedColumnName="firstName"),
+    @JoinColumn(name="userlastname_fk", referencedColumnName="lastName")
+  }) 
+  User user;</emphasis>
+  
+  <emphasis role="bold">@Id</emphasis> String customerNumber;
+
+  boolean preferredCustomer;
+}
+
+class CustomerId implements Serializable {
+  <emphasis role="bold">@OneToOne User user;</emphasis>
+  String customerNumber;
+}
+
+@Entity 
+class User {
+  @EmbeddedId UserId id;
+  Integer age;
+}
+
+@Embeddable
+class UserId implements Serializable {
+  String firstName;
+  String lastName;
+}</programlisting>
+        </section>
+
+        <section>
+          <title>Partial identifier generation</title>
+
+          <para>Hibernate supports the automatic generation of some of the
+          identifier properties. Simply use the
+          <classname>@GeneratedValue</classname> annotation on one or several
+          id properties.</para>
+
+          <warning>
+            <para>The Hibernate team has always felt such a construct as
+            fundamentally wrong. Try hard to fix your data model before using
+            this feature.</para>
+          </warning>
+
+          <programlisting>@Entity 
+public class CustomerInventory implements Serializable {
+  @Id
+  @TableGenerator(name = "inventory",
+    table = "U_SEQUENCES",
+    pkColumnName = "S_ID",
+    valueColumnName = "S_NEXTNUM",
+    pkColumnValue = "inventory",
+    allocationSize = 1000)
+  <emphasis role="bold">@GeneratedValue(strategy = GenerationType.TABLE, generator = "inventory")</emphasis>
+  Integer id;
+
+
+  @Id @ManyToOne(cascade = CascadeType.MERGE)
+  Customer customer;
+}
+
+@Entity
+public class Customer implements Serializable {
+   @Id
+   private int id;
+}</programlisting>
+
+          <para>You can also generate properties inside an
+          <classname>@EmbeddedId</classname> class.</para>
+        </section>
+      </section>
     </section>
 
     <section>
@@ -965,8 +1330,7 @@ public class BaseEntity {
 
         <note>
           <para>The default access type (field or methods) is used, unless you
-          use the <literal>@Access</literal> or
-          <literal>@AccessType</literal></para>
+          use the <literal>@Access</literal> annotation.</para>
         </note>
 
         <note>
@@ -1830,8 +2194,7 @@ public class RegionalArticlePk implements Serializable { ... }
          </programlisting>
 
       <para><literal>@Embeddable</literal> inherit the access type of its
-      owning entity unless <literal>@Access</literal> or the Hibernate
-      specific annotation <literal>@AccessType</literal> is used. Composite
+      owning entity unless <literal>@Access</literal> is used. Composite
       foreign keys (if not using the default sensitive values) are defined on
       associations using the <literal>@JoinColumns</literal> element, which is
       basically an array of <literal>@JoinColumn</literal>. It is considered a
@@ -2561,172 +2924,6 @@ List results = s.createCriteria( Citizen.class )
 
     <section id="entity-hibspec-property" revision="2">
       <title>Property</title>
-
-      <section>
-        <title>Access type</title>
-
-        <para>The default access type is determined from the position of the
-        <literal>@Id</literal> or <literal>@EmbeddedId</literal> annotation in
-        the entity hierarchy.</para>
-
-        <note>
-          <para>The placement of annotations within a class hierarchy has to
-          be consistent (either field or on property) to be able to determine
-          the default access type. It is recommended to stick to one single
-          annotation placement strategy throughout your whole
-          application.</para>
-        </note>
-
-        <para>To finetune the access strategy JPA 2 introduces the @Access
-        annotation. With its help you can define the access type on:</para>
-
-        <itemizedlist>
-          <listitem>
-            <para>an entity</para>
-          </listitem>
-
-          <listitem>
-            <para>a superclass</para>
-          </listitem>
-
-          <listitem>
-            <para>an embeddable object</para>
-          </listitem>
-
-          <listitem>
-            <para>a property</para>
-          </listitem>
-        </itemizedlist>
-
-        <para>Prior to JPA 2 Hibernate used the Hibernate specific annotation
-        <literal>@org.hibernate.annotations.AccessType</literal> to change
-        specific access types. @AccessType still exists to support legacy
-        systems, but the usage of @Access is recommended for new applications.
-        The behaviour of @Access and @AccessType are similar, but there are
-        differences. For both annotations applies:</para>
-
-        <itemizedlist>
-          <listitem>
-            <para>The access type is overridden for the annotated element, if
-            overridden on a class, all the properties of the given class
-            inherit the access type.</para>
-          </listitem>
-
-          <listitem>
-            <para>If an entity is marked as
-            <literal>@Access(AccessType.PROPERTY)</literal> or
-            <literal>@AccessType("property")</literal> respectively, the
-            getters are scanned for annotations, if the enitiy is marked as
-            <literal>@Access(AccessType.FIELD)</literal> or
-            <literal>@AccessType("field")</literal> respectively, the fields
-            are scanned for annotations.</para>
-          </listitem>
-        </itemizedlist>
-
-        <para>In the case where you want to override the access type for a
-        property of an entity which already defines an explicit access type
-        the annotation placement between @Access and @AccessType
-        differs:</para>
-
-        <programlisting><emphasis role="bold">@AccessType("property")</emphasis> // set access type for all properties in Country
-public class Country implements Serializable {
-    private String iso2;
-    private String name;
-
-    public String getIso2() {
-        return iso2;
-    }
-
-    public void setIso2(String iso2) {
-        this.iso2 = iso2;
-    }
-
-    @Column(name = "countryName")
-    <emphasis role="bold">@AccessType("field")</emphasis> // set the access type for name to field
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-}
-</programlisting>
-
-        <programlisting><emphasis role="bold">@Access(AccessType.PROPERTY)</emphasis> // set access type for all properties in Country
-public class Country implements Serializable {
-    private String iso2;
-
-    <emphasis role="bold">@Access(AccessType.FIELD)</emphasis>  // set the access type for name to field
-    private String name;
-
-    public String getIso2() {
-        return iso2;
-    }
-
-    public void setIso2(String iso2) {
-        this.iso2 = iso2;
-    }
-
-    @Column(name = "countryName")
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-}
-</programlisting>
-
-        <note>
-          <para>Watch out for the different annotation placement strategy. In
-          the case of <literal>@Access</literal> the field has to be annotated
-          with the overriding access strategy whereas with
-          <literal>@AccessType</literal> the property gets annotated.</para>
-        </note>
-
-        <para>If a superclass or an embeddable object is not annotated, the
-        default entity access type is used.</para>
-
-        <programlisting>@Entity
-public class Person implements Serializable {
-    @Id  @GeneratedValue //access type field
-    Integer id;
-
-    @Embedded
-    @AttributeOverrides({
-    @AttributeOverride(name = "iso2", column = @Column(name = "bornIso2")),
-    @AttributeOverride(name = "name", column = @Column(name = "bornCountryName"))
-            })
-    Country bornIn;
-}
-
-@Embeddable
-<emphasis role="bold">@AccessType("property")</emphasis> //override access type for all properties in Country
-public class Country implements Serializable {
-    private String iso2;
-    private String name;
-
-    public String getIso2() {
-        return iso2;
-    }
-
-    public void setIso2(String iso2) {
-        this.iso2 = iso2;
-    }
-
-    @Column(name = "countryName")
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-}
-</programlisting>
-      </section>
 
       <section>
         <title>Formula</title>

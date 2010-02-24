@@ -1,9 +1,15 @@
 //$Id$
 package org.hibernate.test.annotations.onetoone;
 
+import java.util.Iterator;
+
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.mapping.Column;
+import org.hibernate.mapping.Join;
+import org.hibernate.mapping.PersistentClass;
+import org.hibernate.mapping.Table;
 import org.hibernate.test.annotations.Customer;
 import org.hibernate.test.annotations.Discount;
 import org.hibernate.test.annotations.Passport;
@@ -37,7 +43,7 @@ public class OneToOneTest extends TestCase {
 		tx = s.beginTransaction();
 		Query q = s.createQuery( "select c from Client c where c.name = :name" );
 		q.setString( "name", c.getName() );
-		c = (Client) q.uniqueResult();
+		c = ( Client ) q.uniqueResult();
 		//c = (Client) s.get(Client.class, c.getId());
 		assertNotNull( c );
 		tx.commit();
@@ -65,7 +71,7 @@ public class OneToOneTest extends TestCase {
 		s.close();
 		s = openSession();
 		tx = s.beginTransaction();
-		c = (Customer) s.get( Customer.class, c.getId() );
+		c = ( Customer ) s.get( Customer.class, c.getId() );
 		assertNotNull( c );
 		p = c.getPassport();
 		assertNotNull( p );
@@ -93,7 +99,7 @@ public class OneToOneTest extends TestCase {
 
 		s = openSession();
 		tx = s.beginTransaction();
-		c = (Client) s.get( Client.class, c.getId() );
+		c = ( Client ) s.get( Client.class, c.getId() );
 		assertNotNull( c );
 		assertNotNull( c.getAddress() );
 		assertEquals( "Paris", c.getAddress().getCity() );
@@ -105,7 +111,7 @@ public class OneToOneTest extends TestCase {
 		Body b = new Body();
 		Heart h = new Heart();
 		b.setHeart( h );
-		b.setId( new Integer( 1 ) );
+		b.setId( 1 );
 		h.setId( b.getId() ); //same PK
 		Session s;
 		Transaction tx;
@@ -118,7 +124,7 @@ public class OneToOneTest extends TestCase {
 
 		s = openSession();
 		tx = s.beginTransaction();
-		b = (Body) s.get( Body.class, b.getId() );
+		b = ( Body ) s.get( Body.class, b.getId() );
 		assertNotNull( b );
 		assertNotNull( b.getHeart() );
 		assertEquals( h.getId(), b.getHeart().getId() );
@@ -151,7 +157,7 @@ public class OneToOneTest extends TestCase {
 
 		s = openSession();
 		tx = s.beginTransaction();
-		c = (Computer) s.get( Computer.class, cid );
+		c = ( Computer ) s.get( Computer.class, cid );
 		assertNotNull( c );
 		assertNotNull( c.getSerial() );
 		assertEquals( sn.getValue(), c.getSerial().getValue() );
@@ -175,13 +181,13 @@ public class OneToOneTest extends TestCase {
 		s.clear();
 
 		Transaction tx = s.beginTransaction();
-		affiliate = (PartyAffiliate) s.get( PartyAffiliate.class, "id" );
+		affiliate = ( PartyAffiliate ) s.get( PartyAffiliate.class, "id" );
 		assertNotNull( affiliate.party );
 		assertEquals( affiliate.partyId, affiliate.party.partyId );
 
 		s.clear();
 
-		party = (Party) s.get( Party.class, "id" );
+		party = ( Party ) s.get( Party.class, "id" );
 		assertNotNull( party.partyAffiliate );
 		assertEquals( party.partyId, party.partyAffiliate.partyId );
 
@@ -196,8 +202,8 @@ public class OneToOneTest extends TestCase {
 		s.getTransaction().begin();
 		Trousers trousers = new Trousers();
 		TrousersZip zip = new TrousersZip();
-		trousers.id = new Integer( 1 );
-		zip.id = new Integer( 2 );
+		trousers.id = 1;
+		zip.id = 2;
 		trousers.zip = zip;
 		zip.trousers = trousers;
 		s.persist( trousers );
@@ -207,13 +213,13 @@ public class OneToOneTest extends TestCase {
 		s.clear();
 
 		Transaction tx = s.beginTransaction();
-		trousers = (Trousers) s.get( Trousers.class, trousers.id );
+		trousers = ( Trousers ) s.get( Trousers.class, trousers.id );
 		assertNotNull( trousers.zip );
 		assertEquals( zip.id, trousers.zip.id );
 
 		s.clear();
 
-		zip = (TrousersZip) s.get( TrousersZip.class, zip.id );
+		zip = ( TrousersZip ) s.get( TrousersZip.class, zip.id );
 		assertNotNull( zip.trousers );
 		assertEquals( trousers.id, zip.trousers.id );
 
@@ -233,7 +239,7 @@ public class OneToOneTest extends TestCase {
 		s.persist( owner );
 		s.flush();
 		s.clear();
-		owner = (Owner) s.get( Owner.class, owner.getId() );
+		owner = ( Owner ) s.get( Owner.class, owner.getId() );
 		assertNotNull( owner );
 		assertNotNull( owner.getAddress() );
 		assertEquals( owner.getId(), owner.getAddress().getId() );
@@ -242,10 +248,34 @@ public class OneToOneTest extends TestCase {
 	}
 
 	/**
+	 * HHH-4606
+	 */
+	public void testJoinColumnConfiguredInXml() {
+		PersistentClass pc = cfg.getClassMapping( Son.class.getName() );
+		Iterator iter = pc.getJoinIterator();
+		Table table = ( ( Join ) iter.next() ).getTable();
+		Iterator columnIter = table.getColumnIterator();
+		boolean fooFound = false;
+		boolean barFound = false;
+		while ( columnIter.hasNext() ) {
+			Column column = ( Column ) columnIter.next();
+			if ( column.getName().equals( "foo" ) ) {
+				fooFound = true;
+			}
+			if ( column.getName().equals( "bar" ) ) {
+				barFound = true;
+			}
+		}
+		assertTrue(
+				"The mapping defines join columns which could not be found in the metadata.", fooFound && barFound
+		);
+	}
+
+	/**
 	 * @see org.hibernate.test.annotations.TestCase#getAnnotatedClasses()
 	 */
 	protected Class[] getAnnotatedClasses() {
-		return new Class[]{
+		return new Class[] {
 				PartyAffiliate.class,
 				Party.class,
 				Trousers.class,
@@ -265,4 +295,7 @@ public class OneToOneTest extends TestCase {
 		};
 	}
 
+	protected String[] getXmlFiles() {
+		return new String[] { "org/hibernate/test/annotations/onetoone/orm.xml" };
+	}
 }

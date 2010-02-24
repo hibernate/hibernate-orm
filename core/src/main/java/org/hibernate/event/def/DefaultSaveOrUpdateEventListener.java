@@ -285,11 +285,9 @@ public class DefaultSaveOrUpdateEventListener extends AbstractSaveEventListener 
 			Object entity,
 			EntityPersister persister) throws HibernateException {
 
-		if ( !persister.isMutable() ) {
-			log.trace( "immutable instance passed to doUpdate(), locking" );
-			reassociate( event, entity, event.getRequestedId(), persister );
-		}
-		else {
+			if ( !persister.isMutable() ) {
+				log.trace( "immutable instance passed to performUpdate()" );
+			}
 
 			if ( log.isTraceEnabled() ) {
 				log.trace(
@@ -329,7 +327,7 @@ public class DefaultSaveOrUpdateEventListener extends AbstractSaveEventListener 
 
 			source.getPersistenceContext().addEntity(
 					entity,
-					Status.MANAGED,
+					( persister.isMutable() ? Status.MANAGED : Status.READ_ONLY ),
 					null, //cachedState,
 					key,
 					persister.getVersion( entity, source.getEntityMode() ),
@@ -350,8 +348,6 @@ public class DefaultSaveOrUpdateEventListener extends AbstractSaveEventListener 
 			}
 
 			cascadeOnUpdate( event, persister, entity );
-
-		}
 	}
 
 	protected boolean invokeUpdateLifecycle(Object entity, EntityPersister persister, EventSource source) {

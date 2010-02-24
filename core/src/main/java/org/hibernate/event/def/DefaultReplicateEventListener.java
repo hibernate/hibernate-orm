@@ -194,7 +194,7 @@ public class DefaultReplicateEventListener extends AbstractSaveEventListener imp
 
 		source.getPersistenceContext().addEntity(
 				entity,
-				Status.MANAGED,
+				( persister.isMutable() ? Status.MANAGED : Status.READ_ONLY ),
 				null,
 				new EntityKey( id, persister, source.getEntityMode() ),
 				version,

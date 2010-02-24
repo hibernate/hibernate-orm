@@ -124,9 +124,4 @@ public class Contract implements Serializable {
 	public void setInfos(Set infos) {
 		this.infos = infos;
 	}
-
-	public void addInfo(Info info) {
-		infos.add( info );
-		info.setContract( this );
-	}
 }

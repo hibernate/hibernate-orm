@@ -88,7 +88,7 @@ public class AbstractReassociateEventListener implements Serializable {
 
 		EntityEntry newEntry = source.getPersistenceContext().addEntity(
 				object,
-				Status.MANAGED,
+				( persister.isMutable() ? Status.MANAGED : Status.READ_ONLY ),
 				values,
 				key,
 				version,

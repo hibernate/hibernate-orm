@@ -309,6 +309,9 @@ public final class EntityEntry implements Serializable {
 			loadedState = null;
 		}
 		else {
+			if ( ! persister.isMutable() ) {
+				throw new IllegalStateException( "Cannot make an immutable entity modifiable." );
+			}
 			setStatus( Status.MANAGED );
 			loadedState = getPersister().getPropertyValues( entity, entityMode );
 		}

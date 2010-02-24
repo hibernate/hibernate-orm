@@ -2,12 +2,15 @@
 package org.hibernate.test.immutable;
 
 import java.io.Serializable;
+import java.util.HashSet;
+import java.util.Set;
 
 public class ContractVariation implements Serializable {
 	
 	private int version;
 	private Contract contract;
 	private String text;
+	private Set infos = new HashSet();
 
 	public Contract getContract() {
 		return contract;
@@ -41,5 +44,13 @@ public class ContractVariation implements Serializable {
 		this.contract = contract;
 		this.version = version;
 		contract.getVariations().add(this);
+	}
+
+	public Set getInfos() {
+		return infos;
+	}
+
+	public void setInfos(Set infos) {
+		this.infos = infos;
 	}
 }

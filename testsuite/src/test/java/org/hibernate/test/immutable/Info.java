@@ -7,7 +7,6 @@ public class Info implements Serializable {
 
 	private long id;
 	private String text;
-	private Contract contract;
 
 	public Info() {
 		super();
@@ -31,13 +30,5 @@ public class Info implements Serializable {
 
 	public void setId(long id) {
 		this.id = id;
-	}
-
-	public Contract getContract() {
-		return contract;
-	}
-
-	public void setContract(Contract contract ) {
-		this.contract = contract;
 	}
 }

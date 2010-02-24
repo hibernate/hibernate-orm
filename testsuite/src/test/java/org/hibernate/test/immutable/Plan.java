@@ -11,6 +11,7 @@ public class Plan implements Serializable {
 	private long id;
 	private String description;
 	private Set contracts;
+	private Set infos;
 
 	public Plan() {
 		this( null );
@@ -19,6 +20,7 @@ public class Plan implements Serializable {
 	public Plan(String description) {
 		this.description = description;
 		contracts = new HashSet();
+		infos = new HashSet();
 	}
 
 	public long getId() {
@@ -76,5 +78,13 @@ public class Plan implements Serializable {
 			sub.getPlans().remove( this );
 			contracts.remove( sub );
 		}
+	}
+
+	public Set getInfos() {
+		return infos;
+	}
+
+	public void setInfos(Set infos) {
+		this.infos = infos;
 	}
 }

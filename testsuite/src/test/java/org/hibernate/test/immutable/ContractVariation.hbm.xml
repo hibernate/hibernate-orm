@@ -15,7 +15,6 @@
             <generator class="increment"/>
         </id>
         <property name="text"/>        
-        <many-to-one name="contract" not-null="false"/>
     </class>
 
     <class name="Plan" mutable="false">
@@ -27,6 +26,10 @@
             <key column="plan"/>
             <many-to-many column="contract" class="Contract"/>
         </set>
+        <set name="infos" inverse="false"  mutable="true" cascade="all-delete-orphan">
+            <key column="plan"/>
+            <one-to-many class="Info"/>
+        </set>
     </class>
 
     <class name="Party" mutable="false">
@@ -36,6 +39,10 @@
         <!-- <many-to-one name="contract" update="false" insert="false"/> -->
         <many-to-one name="contract" not-null="true"/>
         <property name="name" not-null="true"/>
+        <set name="infos" inverse="false"  mutable="true" cascade="all-delete-orphan">
+            <key column="party"/>
+            <one-to-many class="Info"/>
+        </set>
     </class>
 
 	<class name="Contract" mutable="false">
@@ -64,7 +71,7 @@
             <key column="contract"/>
             <one-to-many class="Party"/>
         </set>
-        <set name="infos" inverse="true"  mutable="true" cascade="all" fetch="join">
+        <set name="infos" inverse="false"  mutable="true" cascade="all-delete-orphan">
             <key column="contract"/>
             <one-to-many class="Info"/>
         </set>
@@ -76,6 +83,13 @@
 			<key-property name="version"/>
 		</composite-id>
 		<property name="text" type="text"/>
+        <set name="infos" inverse="false"  mutable="true" cascade="all-delete-orphan">
+            <key>
+                <column name="contract"/>
+                <column name="version"/>
+            </key>
+            <one-to-many class="Info"/>
+        </set>
 	</class>
 	
 </hibernate-mapping>

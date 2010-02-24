@@ -333,7 +333,7 @@ public abstract class AbstractSaveEventListener extends AbstractReassociateEvent
 		Object version = Versioning.getVersion( values, persister );
 		source.getPersistenceContext().addEntity(
 				entity,
-				Status.MANAGED,
+				( persister.isMutable() ? Status.MANAGED : Status.READ_ONLY ),
 				values,
 				key,
 				version,

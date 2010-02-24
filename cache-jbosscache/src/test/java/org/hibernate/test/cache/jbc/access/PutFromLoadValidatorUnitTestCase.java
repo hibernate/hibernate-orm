@@ -91,7 +91,16 @@ public class PutFromLoadValidatorUnitTestCase extends TestCase {
 		if (transactional) {
 			tm.begin();
 		}
-		assertTrue(testee.acquirePutFromLoadLock(KEY1));
+		
+		boolean lockable = testee.acquirePutFromLoadLock(KEY1);
+		try {
+			assertTrue(lockable);
+		}
+		finally {
+			if (lockable) {
+				testee.releasePutFromLoadLock(KEY1);
+			}
+		}
 	}
 
 	public void testRegisteredPut() throws Exception {

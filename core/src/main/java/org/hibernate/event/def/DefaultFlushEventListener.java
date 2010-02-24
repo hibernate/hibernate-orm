@@ -44,8 +44,9 @@ public class DefaultFlushEventListener extends AbstractFlushingEventListener imp
 	 */
 	public void onFlush(FlushEvent event) throws HibernateException {
 		final EventSource source = event.getSession();
-		if ( source.getPersistenceContext().hasNonReadOnlyEntities() ) {
-			
+		if ( source.getPersistenceContext().getEntityEntries().size() > 0 ||
+				source.getPersistenceContext().getCollectionEntries().size() > 0 ) {
+
 			flushEverythingToExecutions(event);
 			performExecutions(source);
 			postFlush(source);
@@ -53,7 +54,7 @@ public class DefaultFlushEventListener extends AbstractFlushingEventListener imp
 			if ( source.getFactory().getStatistics().isStatisticsEnabled() ) {
 				source.getFactory().getStatisticsImplementor().flush();
 			}
-			
+
 		}
 	}
 }

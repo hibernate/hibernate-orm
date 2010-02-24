@@ -280,7 +280,6 @@ public class ImmutableTest extends FunctionalTestCase {
 		// c was loaded into s, so it should be read-only
 		assertTrue( s.isReadOnly( c ) );
 		c.setCustomerName("foo bar");
-		c.getVariations().add( new ContractVariation(3, c) );
 		cv1 = (ContractVariation) c.getVariations().iterator().next();
 		cv1.setText("blah blah");
 		// cv1 and cv2 were loaded into s by hibernate, so they should be read-only
@@ -350,7 +349,6 @@ public class ImmutableTest extends FunctionalTestCase {
 		// c was loaded into s, so it should be read-only
 		assertTrue( s.isReadOnly( c ) );
 		c.setCustomerName("foo bar");
-		c.getVariations().add( new ContractVariation(3, c) );
 		cv1 = (ContractVariation) c.getVariations().iterator().next();
 		cv1.setText("blah blah");
 		// cv1 and cv2 were loaded into s by hibernate, so they should be read-only

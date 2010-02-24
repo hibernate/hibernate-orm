@@ -92,7 +92,8 @@ public class DefaultAutoFlushEventListener extends AbstractFlushingEventListener
 	private boolean flushMightBeNeeded(final EventSource source) {
 		return !source.getFlushMode().lessThan(FlushMode.AUTO) && 
 				source.getDontFlushFromFind() == 0 &&
-				source.getPersistenceContext().hasNonReadOnlyEntities();
+				( source.getPersistenceContext().getEntityEntries().size() > 0 ||
+						source.getPersistenceContext().getCollectionEntries().size() > 0 );
 	}
 
 }

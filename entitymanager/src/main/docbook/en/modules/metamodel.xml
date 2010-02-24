@@ -23,8 +23,8 @@
   ~ Boston, MA  02110-1301  USA
   -->
 <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
-<!ENTITY jpa2Biblio '<xref linkend="JPA2"/>'>
-<!ENTITY jpa2Cite '<citation>&jpa2Biblio;</citation>'>
+<!ENTITY jpa2Ref '<xref linkend="JPA2"/>'>
+<!ENTITY jpa2Cite '<citation>&jpa2Ref;</citation>'>
 <!ENTITY criteriaRef '<xref linkend="querycriteria"/>'>
 <!ENTITY apt '<ulink url="http://java.sun.com/javase/6/docs/technotes/tools/solaris/javac.html#processing">annotation processor</ulink>'>
 ]>
@@ -43,20 +43,19 @@
     <para>
         The metamodel is a set of objects that describe your domain model.
         <interfacename>javax.persistence.metamodel.Metamodel</interfacename> acts as a repository of these metamodel
-        objects and provides access to them.  We ask either the
+        objects and provides access to them, and can be obtained from either the
         <interfacename>javax.persistence.EntityManagerFactory</interfacename> or the
-        <interfacename>javax.persistence.EntityManager</interfacename> for a reference to the
-        <interfacename>javax.persistence.metamodel.Metamodel</interfacename> via their
+        <interfacename>javax.persistence.EntityManager</interfacename> via their
         <methodname>getMetamodel</methodname> method.
     </para>
 
     <para>
         This metamodel is important in 2 ways.  First, it allows providers and frameworks a generic way to
         deal with an application's domain model.  Persistence providers will already have some form of
-        metamodel that they use to describe the domain model being mapped.  This API simply allows general access
-        to that existing information.  A validation framework, for example, could use this information to
-        understand associations; a marshaling framework might use this information to decide how much of an
-        entity graph to marshal.  This usage is beyond the scope of this documentation.
+        metamodel that they use to describe the domain model being mapped.  This API however defines a single,
+        independent access to that existing information.  A validation framework, for example, could use this
+        information to understand associations; a marshaling framework might use this information to decide how
+        much of an entity graph to marshal.  This usage is beyond the scope of this documentation.
     </para>
 
     <important>
@@ -86,7 +85,7 @@
 
         <blockquote>
             <attribution>
-                <citation><xref linkend="JPA2"/>, section 6.2.1.1, pp 198-199</citation>
+                <citation>&jpa2Ref;, section 6.2.1.1, pp 198-199</citation>
             </attribution>
             <para>
                 <itemizedlist>
@@ -233,7 +232,7 @@ public class Person_ {
             When the Hibernate <interfacename>EntityManagerFactory</interfacename> is being built, it will
             look for a canonical metamodel class for each of the managed typed is knows about and if it finds
             any it will inject the appropriate metamodel information into them, as outlined in
-            <citation><xref linkend="JPA2"/>, section 6.2.2, pg 200</citation>
+            <citation>&jpa2Ref;, section 6.2.2, pg 200</citation>
         </para>
     </section>
 

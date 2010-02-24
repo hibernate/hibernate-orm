@@ -214,7 +214,6 @@ public class InfinispanRegionFactoryTestCase extends TestCase {
       InfinispanRegionFactory factory = new InfinispanRegionFactory();
       factory.start(null, p);
       CacheManager manager = factory.getCacheManager();
-      manager.getGlobalConfiguration().setTransportClass(null);
       try {
          EntityRegionImpl region = (EntityRegionImpl) factory.buildEntityRegion("com.acme.Address", p, null);
          assertNull(factory.getTypeOverrides().get("com.acme.Address"));
@@ -296,7 +295,6 @@ public class InfinispanRegionFactoryTestCase extends TestCase {
       InfinispanRegionFactory factory = new InfinispanRegionFactory();
       factory.start(null, p);
       CacheManager manager = factory.getCacheManager();
-      manager.getGlobalConfiguration().setTransportClass(null);
       try {
          assertTrue(factory.getDefinedConfigurations().contains("timestamps"));
          assertTrue(factory.getTypeOverrides().get("timestamps").getCacheName().equals("timestamps"));
@@ -322,7 +320,6 @@ public class InfinispanRegionFactoryTestCase extends TestCase {
       InfinispanRegionFactory factory = new InfinispanRegionFactory();
       factory.start(null, p);
       CacheManager manager = factory.getCacheManager();
-      manager.getGlobalConfiguration().setTransportClass(null);
       try {
          assertFalse(factory.getDefinedConfigurations().contains("timestamp"));
          assertTrue(factory.getDefinedConfigurations().contains("unrecommended-timestamps"));
@@ -430,7 +427,6 @@ public class InfinispanRegionFactoryTestCase extends TestCase {
       InfinispanRegionFactory factory = new InfinispanRegionFactory();
       factory.start(null, p);
       CacheManager manager = factory.getCacheManager();
-      manager.getGlobalConfiguration().setTransportClass(null);
       try {
          assertTrue(manager.getGlobalConfiguration().isExposeGlobalJmxStatistics());
          EntityRegionImpl region = (EntityRegionImpl) factory.buildEntityRegion("com.acme.Address", p, null);
@@ -479,7 +475,6 @@ public class InfinispanRegionFactoryTestCase extends TestCase {
       InfinispanRegionFactory factory = new InfinispanRegionFactory();
       factory.start(null, p);
       CacheManager manager = factory.getCacheManager();
-      manager.getGlobalConfiguration().setTransportClass(null);
       try {
          assertFalse(manager.getGlobalConfiguration().isExposeGlobalJmxStatistics());
          EntityRegionImpl region = (EntityRegionImpl) factory.buildEntityRegion("com.acme.Address", p, null);

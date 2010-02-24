@@ -70,6 +70,7 @@
   <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="modules/architecture.xml"/>
   <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="modules/configuration.xml"/>
   <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="modules/entitymanagerapi.xml"/>
+  <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="modules/metamodel.xml"/>
   <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="modules/transactions.xml"/>
   <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="modules/listeners.xml"/>
   <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="modules/batch.xml"/>

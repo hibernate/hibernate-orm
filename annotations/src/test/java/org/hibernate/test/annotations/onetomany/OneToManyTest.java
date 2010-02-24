@@ -4,6 +4,7 @@ package org.hibernate.test.annotations.onetomany;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.SortedSet;
 import java.util.TreeSet;
@@ -12,6 +13,10 @@ import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.junit.FailureExpected;
+import org.hibernate.mapping.Column;
+import org.hibernate.mapping.PersistentClass;
+import org.hibernate.mapping.Table;
 import org.hibernate.test.annotations.Customer;
 import org.hibernate.test.annotations.Discount;
 import org.hibernate.test.annotations.Passport;
@@ -20,9 +25,10 @@ import org.hibernate.test.annotations.Ticket;
 import org.hibernate.test.annotations.TicketComparator;
 
 /**
- * Test various case of a one to many relationship
+ * Test various case of a one to many relationship.
  *
  * @author Emmanuel Bernard
+ * @author Hardy Ferentschik
  */
 @SuppressWarnings("unchecked")
 public class OneToManyTest extends TestCase {
@@ -77,12 +83,12 @@ public class OneToManyTest extends TestCase {
 		s.clear();
 
 		//testing @OrderBy with explicit values including Formula
-		paris = (City) s.get( City.class, paris.getId() );
+		paris = ( City ) s.get( City.class, paris.getId() );
 		assertEquals( 3, paris.getStreets().size() );
 		assertEquals( chmpsElysees.getStreetName(), paris.getStreets().get( 0 ).getStreetName() );
 		List<Street> mainStreets = paris.getMainStreets();
 		assertEquals( 2, mainStreets.size() );
-		Integer previousId = new Integer( -1 );
+		Integer previousId = -1;
 		for ( Street street : mainStreets ) {
 			assertTrue( previousId < street.getId() );
 			previousId = street.getId();
@@ -115,7 +121,7 @@ public class OneToManyTest extends TestCase {
 
 		s = openSession();
 		tx = s.beginTransaction();
-		trainer = (Trainer) s.get( Trainer.class, trainer.getId() );
+		trainer = ( Trainer ) s.get( Trainer.class, trainer.getId() );
 		assertNotNull( trainer );
 		assertNotNull( trainer.getTrainedTigers() );
 		assertEquals( 2, trainer.getTrainedTigers().size() );
@@ -133,7 +139,7 @@ public class OneToManyTest extends TestCase {
 			tx.commit();
 			fail( "A one to many should not allow several trainer per Tiger" );
 		}
-		catch (HibernateException ce) {
+		catch ( HibernateException ce ) {
 			tx.rollback();
 			//success
 		}
@@ -162,7 +168,7 @@ public class OneToManyTest extends TestCase {
 
 		s = openSession();
 		tx = s.beginTransaction();
-		trainer = (Trainer) s.get( Trainer.class, trainer.getId() );
+		trainer = ( Trainer ) s.get( Trainer.class, trainer.getId() );
 		assertNotNull( trainer );
 		assertNotNull( trainer.getTrainedMonkeys() );
 		assertEquals( 2, trainer.getTrainedMonkeys().size() );
@@ -189,7 +195,7 @@ public class OneToManyTest extends TestCase {
 
 		s = openSession();
 		tx = s.beginTransaction();
-		t = (Troop) s.get( Troop.class, t.getId() );
+		t = ( Troop ) s.get( Troop.class, t.getId() );
 		assertNotNull( t.getSoldiers() );
 		assertFalse( Hibernate.isInitialized( t.getSoldiers() ) );
 		assertEquals( 2, t.getSoldiers().size() );
@@ -199,7 +205,7 @@ public class OneToManyTest extends TestCase {
 
 		s = openSession();
 		tx = s.beginTransaction();
-		t = (Troop) s.createQuery( "from " + Troop.class.getName() + " as t where t.id = :id" )
+		t = ( Troop ) s.createQuery( "from " + Troop.class.getName() + " as t where t.id = :id" )
 				.setParameter( "id", t.getId() ).uniqueResult();
 		assertFalse( Hibernate.isInitialized( t.getSoldiers() ) );
 		tx.commit();
@@ -207,14 +213,14 @@ public class OneToManyTest extends TestCase {
 
 		s = openSession();
 		tx = s.beginTransaction();
-		rambo = (Soldier) s.get( Soldier.class, rambo.getId() );
+		rambo = ( Soldier ) s.get( Soldier.class, rambo.getId() );
 		assertTrue( Hibernate.isInitialized( rambo.getTroop() ) );
 		tx.commit();
 		s.close();
 
 		s = openSession();
 		tx = s.beginTransaction();
-		rambo = (Soldier) s.createQuery( "from " + Soldier.class.getName() + " as s where s.id = :rid" )
+		rambo = ( Soldier ) s.createQuery( "from " + Soldier.class.getName() + " as s where s.id = :rid" )
 				.setParameter( "rid", rambo.getId() ).uniqueResult();
 		assertTrue( "fetching strategy used when we do query", Hibernate.isInitialized( rambo.getTroop() ) );
 		tx.commit();
@@ -236,11 +242,10 @@ public class OneToManyTest extends TestCase {
 		s.close();
 		s = openSession();
 		tx = s.beginTransaction();
-		Troop troop = (Troop) s.get( Troop.class, disney.getId() );
-		Soldier soldier = (Soldier) troop.getSoldiers().iterator().next();
+		Troop troop = ( Troop ) s.get( Troop.class, disney.getId() );
+		Soldier soldier = ( Soldier ) troop.getSoldiers().iterator().next();
 		tx.commit();
 		s.close();
-		//troop.getSoldiers().remove(soldier);
 		troop.getSoldiers().clear();
 		s = openSession();
 		tx = s.beginTransaction();
@@ -249,9 +254,9 @@ public class OneToManyTest extends TestCase {
 		s.close();
 		s = openSession();
 		tx = s.beginTransaction();
-		soldier = (Soldier) s.get( Soldier.class, mickey.getId() );
+		soldier = ( Soldier ) s.get( Soldier.class, mickey.getId() );
 		assertNull( "delete-orphan should work", soldier );
-		troop = (Troop) s.get( Troop.class, disney.getId() );
+		troop = ( Troop ) s.get( Troop.class, disney.getId() );
 		s.delete( troop );
 		tx.commit();
 		s.close();
@@ -272,13 +277,13 @@ public class OneToManyTest extends TestCase {
 		s.close();
 		s = openSession();
 		tx = s.beginTransaction();
-		Troop troop = (Troop) s.get( Troop.class, disney.getId() );
+		Troop troop = ( Troop ) s.get( Troop.class, disney.getId() );
 		s.delete( troop );
 		tx.commit();
 		s.close();
 		s = openSession();
 		tx = s.beginTransaction();
-		Soldier soldier = (Soldier) s.get( Soldier.class, mickey.getId() );
+		Soldier soldier = ( Soldier ) s.get( Soldier.class, mickey.getId() );
 		assertNull( "delete-orphan should work", soldier );
 		tx.commit();
 		s.close();
@@ -306,7 +311,7 @@ public class OneToManyTest extends TestCase {
 
 		s = openSession();
 		tx = s.beginTransaction();
-		c = (Customer) s.load( Customer.class, c.getId() );
+		c = ( Customer ) s.load( Customer.class, c.getId() );
 		assertNotNull( c );
 		assertTrue( Hibernate.isInitialized( c.getTickets() ) );
 		assertNotNull( c.getTickets() );
@@ -335,7 +340,7 @@ public class OneToManyTest extends TestCase {
 
 		s = openSession();
 		tx = s.beginTransaction();
-		c = (Customer) s.load( Customer.class, c.getId() );
+		c = ( Customer ) s.load( Customer.class, c.getId() );
 		assertNotNull( c );
 		assertFalse( Hibernate.isInitialized( c.getDiscountTickets() ) );
 		assertNotNull( c.getDiscountTickets() );
@@ -371,7 +376,7 @@ public class OneToManyTest extends TestCase {
 
 		s = openSession();
 		tx = s.beginTransaction();
-		parent = (Parent) s.get( Parent.class, pk );
+		parent = ( Parent ) s.get( Parent.class, pk );
 		assertNotNull( parent.children );
 		Hibernate.initialize( parent.children );
 		assertEquals( 2, parent.children.size() );
@@ -379,33 +384,50 @@ public class OneToManyTest extends TestCase {
 		s.close();
 	}
 
-// HHH-3577    
-//	public void testOrderByOnSuperclassProperty() {
-//		OrganisationUser user = new OrganisationUser();
-//		user.setFirstName( "Emmanuel" );
-//		user.setLastName( "Bernard" );
-//		user.setIdPerson( new Long(1) );
-//		user.setSomeText( "SomeText" );
-//		Organisation org = new Organisation();
-//		org.setIdOrganisation( new Long(1) );
-//		org.setName( "S Diego Zoo" );
-//		user.setOrganisation( org );
-//		Session s = openSession();
-//		s.getTransaction().begin();
-//		s.persist( user );
-//		s.persist( org );
-//		s.flush();
-//		s.clear();
-//		s.createQuery( "select org from Organisation org left join fetch org.organisationUsers" ).list();
-//		s.getTransaction().rollback();
-//		s.close();
-//	}
+	@FailureExpected(jiraKey = "HHH-3577")
+	public void testOrderByOnSuperclassProperty() {
+		OrganisationUser user = new OrganisationUser();
+		user.setFirstName( "Emmanuel" );
+		user.setLastName( "Bernard" );
+		user.setIdPerson( 1l );
+		user.setSomeText( "SomeText" );
+		Organisation org = new Organisation();
+		org.setIdOrganisation( 1l );
+		org.setName( "S Diego Zoo" );
+		user.setOrganisation( org );
+		Session s = openSession();
+		s.getTransaction().begin();
+		s.persist( user );
+		s.persist( org );
+		s.flush();
+		s.clear();
+		s.createQuery( "select org from Organisation org left join fetch org.organisationUsers" ).list();
+		s.getTransaction().rollback();
+		s.close();
+	}
+
+	/**
+	 * HHH-4605
+	 */
+	public void testJoinColumnConfiguredInXml() {
+		PersistentClass pc = cfg.getClassMapping( Model.class.getName() );
+		Table table = pc.getRootTable();
+		Iterator iter = table.getColumnIterator();
+		boolean joinColumnFound = false;
+		while(iter.hasNext()) {
+			Column column = (Column) iter.next();
+			if(column.getName().equals( "model_manufacturer_join" )) {
+				joinColumnFound = true;
+			}
+		}
+		assertTrue( "The mapping defines a joing column which could not be found in the metadata.", joinColumnFound );
+	}
 
 	/**
 	 * @see org.hibernate.test.annotations.TestCase#getAnnotatedClasses()
 	 */
 	protected Class[] getAnnotatedClasses() {
-		return new Class[]{
+		return new Class[] {
 				Troop.class,
 				Soldier.class,
 				Customer.class,
@@ -423,8 +445,12 @@ public class OneToManyTest extends TestCase {
 				Politician.class,
 				Person.class,
 				Organisation.class,
-				OrganisationUser.class
+				OrganisationUser.class,
+				Model.class
 		};
 	}
 
+	protected String[] getXmlFiles() {
+		return new String[] { "org/hibernate/test/annotations/onetomany/orm.xml" };
+	}
 }

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<entity-mappings xmlns="http://java.sun.com/xml/ns/persistence/orm"
+                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                 version="2.0">
+    <package>org.hibernate.test.annotations.onetomany</package>
+    <entity class="Manufacturer">
+        <attributes>
+            <id name="id">
+                <generated-value strategy="AUTO"/>
+            </id>
+            <one-to-many name="models">
+                <join-column name="model_manufacturer_join"/>
+            </one-to-many>
+        </attributes>
+    </entity>
+</entity-mappings>

@@ -54,6 +54,8 @@ import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLDeleteAll;
 import org.hibernate.annotations.SQLInsert;
 import org.hibernate.annotations.SQLUpdate;
+import org.hibernate.annotations.Subselect;
+import org.hibernate.annotations.Synchronize;
 import org.hibernate.annotations.Tables;
 import org.hibernate.annotations.Tuplizer;
 import org.hibernate.annotations.Tuplizers;
@@ -120,7 +122,9 @@ public class EntityBinder {
 	private boolean cacheLazyProperty;
 	private AccessType propertyAccessType = AccessType.DEFAULT;
 	private boolean wrapIdsInEmbeddedComponents;
-
+	private String subselect;
+	
+	
 	public boolean wrapIdsInEmbeddedComponents() {
 		return wrapIdsInEmbeddedComponents;
 	}
@@ -257,6 +261,7 @@ public class EntityBinder {
 		SQLDelete sqlDelete = annotatedClass.getAnnotation( SQLDelete.class );
 		SQLDeleteAll sqlDeleteAll = annotatedClass.getAnnotation( SQLDeleteAll.class );
 		Loader loader = annotatedClass.getAnnotation( Loader.class );
+		
 		if ( sqlInsert != null ) {
 			persistentClass.setCustomSQLInsert( sqlInsert.sql().trim(), sqlInsert.callable(),
 					ExecuteUpdateResultCheckStyle.parse( sqlInsert.check().toString().toLowerCase() )
@@ -282,6 +287,20 @@ public class EntityBinder {
 			persistentClass.setLoaderName( loader.namedQuery() );
 		}
 
+		if ( annotatedClass.isAnnotationPresent( Synchronize.class )) {
+			Synchronize synchronizedWith = annotatedClass.getAnnotation(Synchronize.class);
+		
+			String [] tables = synchronizedWith.value();
+			for (String table : tables) {
+				persistentClass.addSynchronizedTable(table);
+			}
+		}
+				
+		if ( annotatedClass.isAnnotationPresent(Subselect.class )) {
+			Subselect subselect = annotatedClass.getAnnotation(Subselect.class);
+			this.subselect = subselect.value();
+		}	
+				
 		//tuplizers
 		if ( annotatedClass.isAnnotationPresent( Tuplizers.class ) ) {
 			for (Tuplizer tuplizer : annotatedClass.getAnnotation( Tuplizers.class ).value()) {
@@ -474,7 +493,8 @@ public class EntityBinder {
 				uniqueConstraints,
 				constraints,
 				denormalizedSuperclassTable,
-				mappings
+				mappings,
+				this.subselect
 		);
 
 		if ( persistentClass instanceof TableOwner ) {
@@ -701,7 +721,8 @@ public class EntityBinder {
 				uniqueConstraintHolders,
 				null,
 				null,
-				mappings
+				mappings,
+				null
 		);
 
 		//no check constraints available on joins

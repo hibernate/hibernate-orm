@@ -183,7 +183,8 @@ public class TableBinder {
 				uniqueConstraints,
 				constraints,
 				denormalizedSuperTable,
-				mappings
+				mappings,
+				null
 		);
 	}
 
@@ -200,7 +201,7 @@ public class TableBinder {
 
 		return new AssociationTableNameSource( name, logicalName );
 	}
-
+ 
 	public static Table buildAndFillTable(
 			String schema,
 			String catalog,
@@ -210,7 +211,8 @@ public class TableBinder {
 			List<UniqueConstraintHolder> uniqueConstraints,
 			String constraints,
 			Table denormalizedSuperTable,
-			ExtendedMappings mappings) {
+			ExtendedMappings mappings,
+			String subselect) {
 		schema = BinderHelper.isDefault( schema ) ? mappings.getSchemaName() : schema;
 		catalog = BinderHelper.isDefault( catalog ) ? mappings.getCatalogName() : catalog;
 
@@ -226,7 +228,7 @@ public class TableBinder {
 					catalog,
 					realTableName,
 					isAbstract,
-					null, // subselect
+					subselect, 
 					denormalizedSuperTable
 			);
 		}
@@ -235,7 +237,7 @@ public class TableBinder {
 					schema,
 					catalog,
 					realTableName,
-					null, // subselect
+					subselect, 
 					isAbstract
 			);
 		}

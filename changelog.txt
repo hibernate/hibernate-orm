@@ -6,6 +6,55 @@ refer to the particular case on JIRA using the issue tracking number to learn
 more about each case.
 
 
+Changes in version 3.5.0-CR-2 (2010.02.24)
+-------------------------------------------
+http://opensource.atlassian.com/projects/hibernate/browse/HHH/fixforversion/11011
+
+** Sub-task
+    * [HHH-4605] - Add support for @OneToMany @JoinColumn in XML
+    * [HHH-4606] - Add support for @*ToOne @JoinTable in XML
+    * [HHH-4662] - Implement javax.persistence.query.timeout
+    * [HHH-4676] - Any interceptor exception (RTE) should mark the tx for rollback
+    * [HHH-4765] - Enhance Dialect support for JPA-2 locking
+
+** Bug
+    * [HHH-3817] - JBC second level cache integration can cache stale collection data
+    * [HHH-4583] - Incorrect handling of empty conjunction and disjunction
+    * [HHH-4613] - KEY, VALUE and ENTRY should not be strict keywords
+    * [HHH-4693] - MapProxy - problems during marshalling/demarchalling
+    * [HHH-4809] - Immutable entities added to a session have Status.MANAGED unless loaded by the Session
+    * [HHH-4810] - Persistent immutable and read-only entities are updated before being deleted
+    * [HHH-4825] - mapping order impacting behavior leading to bug
+    * [HHH-4836] - Infinispan: 2L QueryCache don't considers cached queries which belong to current transaction
+    * [HHH-4845] - Investigate why entitymanager test cannot be run in forkMode once
+    * [HHH-4899] - Type not supported: org.hibernate.type.TimestampType
+    * [HHH-4917] - Keyword TYPE not supported
+    * [HHH-4926] - Upgrade to jDocBook 2.2.1
+    * [HHH-4928] - Non-Audited Entity with @ManyToOne in PK causes error in Envers 1.2.2
+    * [HHH-4932] - Upgrade EM to use the latest metamodel generator (CR-1)
+    * [HHH-4944] - putFromLoad calls could store stale data
+    * [HHH-4948] - Session.flush()  does not always cascade save or update to read-only or immutable entities
+
+** Improvement
+    * [HHH-4905] - Allow consistent handling of numeric primary key values by any integral data type
+    * [HHH-4911] - Make referencedColumnName case insensitive
+    * [HHH-4930] - Drop org. prefix on hibernate.cache.default_cache_concurrency_strategy and hibernate.id.new_generator_mappings for consistency
+    * [HHH-4934] - Improve logging in MetadataContext and AttributeFactory
+    * [HHH-4942] - Refactor PackagedEntityManagerTest and JarVisitorTest to use ShrinkWrap
+
+** New Feature
+    * [HHH-3841] - Add support for lock timeouts
+
+** Patch
+    * [HHH-4908] - Multiple failures reported during ReadOnlyProxyTest with Ingres
+
+** Task
+    * [HHH-4640] - Add test with JNDI bound JBoss Transactions Transaction Manager
+    * [HHH-4936] - Document JPA criteria queries
+    * [HHH-4949] - Document JPA 2 metamodel
+    * [HHH-4951] - Correct DTD entities for injecting version and date into docs
+
+
 Changes in version 3.5.0-CR-1 (2010.02.10)
 -------------------------------------------
 http://opensource.atlassian.com/projects/hibernate/browse/HHH/fixforversion/11014

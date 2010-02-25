@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='utf-8' ?>
-<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
+<!DOCTYPE bookinfo PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
 <!ENTITY % BOOK_ENTITIES SYSTEM "HIBERNATE_-_Relational_Persistence_for_Idiomatic_Java.ent">
 %BOOK_ENTITIES;
 ]>
@@ -7,11 +7,11 @@
 <bookinfo id="HIBERNATE_-_Relational_Persistence_for_Idiomatic_Java">
 	<title>HIBERNATE - Relational Persistence for Idiomatic Java</title>
         <subtitle>Hibernate Reference Documentation</subtitle>
-        <releaseinfo>&versionNumber;</releaseinfo>	
+        <releaseinfo>&version;</releaseinfo>
 	<edition>1.0</edition>
 	<pubsnumber>1</pubsnumber>
 	<productname>JBoss Hibernate Core</productname>
-        <productnumber>&versionNumber;</productnumber>
+        <productnumber>&version;</productnumber>
         <pubdate>&today;</pubdate>
         <issuenum>1</issuenum>
         <mediaobject>

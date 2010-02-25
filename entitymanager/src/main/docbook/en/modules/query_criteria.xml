@@ -22,11 +22,7 @@
   ~ 51 Franklin Street, Fifth Floor
   ~ Boston, MA  02110-1301  USA
   -->
-<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
-<!ENTITY jpa2Ref '<xref linkend="JPA2"/>'>
-<!ENTITY jpa2Cite '<citation>&jpa2Ref;</citation>'>
-<!ENTITY staticMetamodelRef '<xref linkend="metamodel-static"/>'>
-]>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" []>
 
 <chapter id="querycriteria">
     <title>Criteria Queries</title>
@@ -70,10 +66,10 @@
 
     <note>
         <para>
-            <citetitle pubwork="chapter">Chapter 6 Criteria API</citetitle> of the &jpa2Cite; already contains a
-            decent amount of reference material pertaining to the various parts of a criteria query.  So rather
-            than duplicate all that content here, lets instead look at some of the more widely anticipated usages
-            of the API.
+            <citetitle pubwork="chapter">Chapter 6 Criteria API</citetitle> of the <citation><xref linkend="JPA2"/></citation>
+            already contains a decent amount of reference material pertaining to the various parts of a criteria query.
+            So rather than duplicate all that content here, lets instead look at some of the more widely anticipated
+            usages of the API.
         </para>
     </note>
 
@@ -129,7 +125,7 @@ for ( Person person : people ) { ... }]]></programlisting>
                         <para>
                             <emphasis>Person_.eyeColor</emphasis> is an example of the static form of metamodel
                             reference.  We will use that form exclusively in this chapter.
-                            See &staticMetamodelRef; for details.
+                            See <xref linkend="metamodel-static"/> for details.
                         </para>
                     </callout>
                 </calloutlist>
@@ -491,7 +487,7 @@ for ( Tuple tuple : valueArray ) {
         <title>FROM clause</title>
         <blockquote>
             <attribution>
-                <citation>&jpa2Ref;, section 6.5.2 Query Roots, pg 262</citation>
+                <citation><xref linkend="JPA2"/>, section 6.5.2 Query Roots, pg 262</citation>
             </attribution>
             <para>
                 A CriteriaQuery object defines a query over one or more entity, embeddable, or basic abstract

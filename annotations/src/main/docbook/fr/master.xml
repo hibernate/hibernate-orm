@@ -6,6 +6,8 @@
 <!ENTITY xml-overriding SYSTEM "modules/xml-overriding.xml">
 <!ENTITY validator SYSTEM "modules/validator.xml">
 <!ENTITY lucene SYSTEM "modules/lucene.xml">
+<!ENTITY version "WORKING">
+<!ENTITY today "TODAY">
 ]>
 <book lang="fr">
   <bookinfo>
@@ -13,7 +15,8 @@
 
     <subtitle>Guide de référence</subtitle>
 
-    <releaseinfo>3.2.0.GA</releaseinfo>
+    <releaseinfo>&version;</releaseinfo>
+    <pubdate>&today;</pubdate>
 
     <mediaobject>
       <imageobject>

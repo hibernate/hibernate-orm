@@ -23,10 +23,7 @@
   ~ Boston, MA  02110-1301  USA
   -->
 <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
-<!ENTITY jpa2Ref '<xref linkend="JPA2"/>'>
-<!ENTITY jpa2Cite '<citation>&jpa2Ref;</citation>'>
-<!ENTITY criteriaRef '<xref linkend="querycriteria"/>'>
-<!ENTITY apt '<ulink url="http://java.sun.com/javase/6/docs/technotes/tools/solaris/javac.html#processing">annotation processor</ulink>'>
+<!ENTITY aptUrl 'http://java.sun.com/javase/6/docs/technotes/tools/solaris/javac.html#processing'>
 ]>
 
 <chapter id="metamodel">
@@ -35,8 +32,9 @@
     <note>
         <para>
             The Metamodel itself is described in <citetitle pubwork="chapter">Chapter 5 Metamodel API</citetitle>
-            of the &jpa2Cite;.  <citetitle pubwork="chapter">Chapter 6 Criteria API</citetitle> of the &jpa2Cite;
-            describes and shows uses of the metamodel in criteria queries, as does &criteriaRef;.
+            of the <citation><xref linkend="JPA2"/></citation>.  <citetitle pubwork="chapter">Chapter 6 Criteria API</citetitle>
+            of the <citation><xref linkend="JPA2"/></citation> describes and shows uses of the metamodel in criteria
+            queries, as does <xref linkend="querycriteria"/>.
         </para>
     </note>
 
@@ -68,11 +66,12 @@
 
     <para>
         Second, from an application writer's perspective, it allows very fluent expression of completely type-safe
-        criteria queries, especially the <emphasis>Static Metamodel</emphasis> approach.  The &jpa2Cite; defines a
-        number of ways the metamodel can be accessed and used, including the <emphasis>Static Metamodel</emphasis>
-        approach, which we will look at later.   The <emphasis>Static Metamodel</emphasis> approach is wonderful
-        when the code has <ulink url="http://en.wikipedia.org/wiki/A_priori_and_a_posteriori">a priori knowledge</ulink>
-        of the domain model.  &criteriaRef; uses this approach exclusively in its examples.
+        criteria queries, especially the <emphasis>Static Metamodel</emphasis> approach.  The
+        <citation><xref linkend="JPA2"/></citation> defines a number of ways the metamodel can be accessed and used,
+        including the <emphasis>Static Metamodel</emphasis> approach, which we will look at later.
+        The <emphasis>Static Metamodel</emphasis> approach is wonderful when the code has
+        <ulink url="http://en.wikipedia.org/wiki/A_priori_and_a_posteriori">a priori knowledge</ulink> of the domain
+        model.  <xref linkend="querycriteria"/> uses this approach exclusively in its examples.
     </para>
 
     <section id="metamodel-static">
@@ -80,12 +79,13 @@
         <para>
             A <emphasis>static metamodel</emphasis> is a series of classes that "mirror" the entities and embeddables
             in the domain model and provide static access to the metadata about the mirrored class's attributes.  We
-            will exclusively discuss what the &jpa2Cite; terms a  <emphasis>Canonical Metamodel</emphasis>:
+            will exclusively discuss what the <citation><xref linkend="JPA2"/></citation> terms a
+            <emphasis>Canonical Metamodel</emphasis>:
         </para>
 
         <blockquote>
             <attribution>
-                <citation>&jpa2Ref;, section 6.2.1.1, pp 198-199</citation>
+                <citation><xref linkend="JPA2"/>, section 6.2.1.1, pp 198-199</citation>
             </attribution>
             <para>
                 <itemizedlist>
@@ -222,9 +222,10 @@ public class Person_ {
         <note>
             <para>
                 These canonical metamodel classes can be generated manually if you wish though it is expected
-                that most developers will prefer use of an &apt;.  Although annotation processors themselves are
-                beyond the scope of this document, the Hibernate team does develop an annotation processor tool for
-                generating a canonical metamodel.  See <citetitle>Hibernate Metamodel Generator</citetitle>.
+                that most developers will prefer use of an <ulink url="&aptUrl;">annotation processor</ulink>.
+                Annotation processors themselves are beyond the scope of this document.  However, the Hibernate team
+                does develop an annotation processor tool for generating a canonical metamodel.
+                See <citetitle>Hibernate Metamodel Generator</citetitle>.
             </para>
         </note>
 
@@ -232,7 +233,7 @@ public class Person_ {
             When the Hibernate <interfacename>EntityManagerFactory</interfacename> is being built, it will
             look for a canonical metamodel class for each of the managed typed is knows about and if it finds
             any it will inject the appropriate metamodel information into them, as outlined in
-            <citation>&jpa2Ref;, section 6.2.2, pg 200</citation>
+            <citation><xref linkend="JPA2"/>, section 6.2.2, pg 200</citation>
         </para>
     </section>
 

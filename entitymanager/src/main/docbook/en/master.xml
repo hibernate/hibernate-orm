@@ -23,7 +23,8 @@
   ~ Boston, MA  02110-1301  USA
   -->
 <!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
-<!ENTITY versionNumber "WORKING">
+<!ENTITY version "WORKING">
+<!ENTITY today "TODAY">
 ]>
 
 <book>
@@ -31,11 +32,11 @@
   <bookinfo>
     <title>Hibernate EntityManager</title>
     <subtitle>User guide</subtitle>
-        <releaseinfo>&versionNumber;</releaseinfo>
+        <releaseinfo>&version;</releaseinfo>
         <edition>1.0</edition>
         <pubsnumber>1</pubsnumber>
         <pubdate>&today;</pubdate>
-        <productnumber>&versionNumber;</productnumber>
+        <productnumber>&version;</productnumber>
         <issuenum>1</issuenum>
         <mediaobject>
             <imageobject>

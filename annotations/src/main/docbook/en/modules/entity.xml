@@ -837,7 +837,11 @@ class Person {
   @Id @GeneratedValue Integer id;
 }</programlisting>
 
-        <para>But an identifier does not have to be a single property, it ca
+        <para>If you are interested in more examples of "derived identities",
+        the JPA 2 specification has a great set of them in chapter
+        2.4.1.3.</para>
+
+        <para>But an identifier does not have to be a single property, it can
         be composed of several properties.</para>
       </section>
 
@@ -1204,19 +1208,17 @@ public class Customer implements Serializable {
         <title>Table per class</title>
 
         <para>This strategy has many drawbacks (esp. with polymorphic queries
-        and associations) explained in the EJB3 spec, the Hibernate reference
+        and associations) explained in the JPA spec, the Hibernate reference
         documentation, Hibernate in Action, and many other places. Hibernate
         work around most of them implementing this strategy using <literal>SQL
         UNION</literal> queries. It is commonly used for the top level of an
         inheritance hierarchy:</para>
 
-        <programlisting>
-@Entity
+        <programlisting>@Entity
 @Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
-public class Flight implements Serializable {
-            </programlisting>
+public class Flight implements Serializable { ... }            </programlisting>
 
-        <para>This strategy support one to many associations provided that
+        <para>This strategy supports one-to-many associations provided that
         they are bidirectional. This strategy does not support the
         <literal>IDENTITY</literal> generator strategy: the id has to be
         shared across several tables. Consequently, when using this strategy,
@@ -1231,8 +1233,7 @@ public class Flight implements Serializable {
         same table, instances are distinguished by a special discriminator
         column:</para>
 
-        <programlisting>
-@Entity
+        <programlisting>@Entity
 @Inheritance(strategy=InheritanceType.SINGLE_TABLE)
 @DiscriminatorColumn(
     name="planetype",
@@ -1243,8 +1244,7 @@ public class Plane { ... }
 
 @Entity
 @DiscriminatorValue("A320")
-public class A320 extends Plane { ... }
-            </programlisting>
+public class A320 extends Plane { ... }          </programlisting>
 
         <para><classname>Plane</classname> is the superclass, it defines the
         inheritance strategy <literal>InheritanceType.SINGLE_TABLE</literal>.
@@ -1273,8 +1273,7 @@ public class A320 extends Plane { ... }
         <literal>@PrimaryKeyJoinColumns</literal> annotations define the
         primary key(s) of the joined subclass table:</para>
 
-        <programlisting>
-@Entity
+        <programlisting>@Entity
 @Inheritance(strategy=InheritanceType.JOINED)
 public class Boat implements Serializable { ... }
 
@@ -1283,8 +1282,7 @@ public class Ferry extends Boat { ... }
 
 @Entity
 @PrimaryKeyJoinColumn(name="BOAT_ID")
-public class AmericaCupClass  extends Boat { ... }
-            </programlisting>
+public class AmericaCupClass  extends Boat { ... }            </programlisting>
 
         <para>All of the above entities use the <literal>JOINED</literal>
         strategy, the <literal>Ferry</literal> table is joined with the
@@ -1378,7 +1376,10 @@ public class FlyingObject implements Serializable {
 
 @Entity
 @AttributeOverride( name="altitude", column = @Column(name="fld_altitude") )
-@AssociationOverride( name="propulsion", joinColumns = @JoinColumn(name="fld_propulsion_fk") )
+@AssociationOverride( 
+   name="propulsion", 
+   joinColumns = @JoinColumn(name="fld_propulsion_fk") 
+)
 public class Plane extends FlyingObject {
     ...
 }</programlisting>
@@ -1410,13 +1411,12 @@ public class Plane extends FlyingObject {
         (note that this FK column in the database should be constrained unique
         to simulate one-to-one multiplicity), or a association table is used
         to store the link between the 2 entities (a unique constraint has to
-        be defined on each fk to ensure the one to one multiplicity)</para>
+        be defined on each fk to ensure the one to one multiplicity).</para>
 
         <para>First, we map a real one-to-one association using shared primary
         keys:</para>
 
-        <programlisting>
-@Entity
+        <programlisting>@Entity
 public class Body {
     @Id
     public Long getId() { return id; }
@@ -1427,25 +1427,22 @@ public class Body {
         return heart;
     }
     ...
-}
-            </programlisting>
+}            </programlisting>
 
-        <programlisting>
-@Entity
+        <programlisting>@Entity
 public class Heart {
     @Id
     public Long getId() { ...}
-}
-            </programlisting>
+}            </programlisting>
 
-        <para>The one to one is marked as true by using the
-        <literal>@PrimaryKeyJoinColumn</literal> annotation.</para>
+        <para>The <literal>@PrimaryKeyJoinColumn</literal> annotation does say
+        that the primary key of the entity is used as the foreign key value to
+        the associated entity.</para>
 
         <para>In the following example, the associated entities are linked
-        through a foreign key column:</para>
+        through an explicit foreign key column:</para>
 
-        <programlisting>
-@Entity
+        <programlisting>@Entity
 public class Customer implements Serializable {
     @OneToOne(cascade = CascadeType.ALL)
     <emphasis role="bold">@JoinColumn(name="passport_fk")</emphasis>
@@ -1458,8 +1455,7 @@ public class Passport implements Serializable {
     @OneToOne(<emphasis role="bold">mappedBy = "passport"</emphasis>)
     public Customer getOwner() {
     ...
-}
-            </programlisting>
+}            </programlisting>
 
         <para>A <classname>Customer</classname> is linked to a
         <classname>Passport</classname>, with a foreign key column named

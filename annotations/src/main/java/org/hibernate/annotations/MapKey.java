@@ -32,13 +32,17 @@ import javax.persistence.Column;
 
 /**
  * Define the map key columns as an explicit column holding the map key
- * This is completly different from {@link javax.persistence.MapKey} which use an existing column
+ * This is completely different from {@link javax.persistence.MapKey} which use an existing column
  * This annotation and {@link javax.persistence.MapKey} are mutually exclusive
  *
+ * @deprecated Use {@link javax.persistence.MapKeyColumn}
+ *             This is the default behavior for Map properties marked as @OneToMany, @ManyToMany
+ *             or @ElementCollection
  * @author Emmanuel Bernard
  */
 @Target({METHOD, FIELD})
 @Retention(RUNTIME)
+@Deprecated
 public @interface MapKey {
 	Column[] columns() default {};
 	/**

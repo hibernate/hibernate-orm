@@ -31,13 +31,17 @@ import javax.persistence.JoinColumn;
 
 /**
  * Define the map key columns as an explicit column holding the map key
- * This is completly different from {@link javax.persistence.MapKey} which use an existing column
+ * This is completely different from {@link javax.persistence.MapKey} which use an existing column
  * This annotation and {@link javax.persistence.MapKey} are mutually exclusive
  *
+ * @deprecated Use {@link javax.persistence.MapKeyJoinColumn} {@link javax.persistence.MapKeyJoinColumns}
+ *             This is the default behavior for Map properties marked as @OneToMany, @ManyToMany
+ *             or @ElementCollection
  * @author Emmanuel Bernard
  */
 @Target({ElementType.METHOD, ElementType.FIELD})
 @Retention(RetentionPolicy.RUNTIME)
+@Deprecated
 public @interface MapKeyManyToMany {
 	JoinColumn[] joinColumns() default {};
 	/**

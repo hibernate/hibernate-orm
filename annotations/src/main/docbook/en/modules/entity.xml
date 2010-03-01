@@ -24,7 +24,7 @@
 <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
 "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
 <chapter id="entity">
-  <title>Entity Beans</title>
+  <title>Mapping Entities</title>
 
   <section id="entity-overview" revision="2">
     <title>Intro</title>
@@ -957,7 +957,7 @@ class UserId implements Serializable {
           identifier. In the database, it means that the
           <literal>Customer.user</literal> and the
           <literal>CustomerId.userId</literal> properties share the same
-          underlying column (<literal>user_fk</literal> in this case). </para>
+          underlying column (<literal>user_fk</literal> in this case).</para>
 
           <para>In practice, your code only sets the
           <literal>Customer.user</literal> property and the user id value is
@@ -966,7 +966,7 @@ class UserId implements Serializable {
 
           <warning>
             <para>The id value can be copied as late as flush time, don't rely
-            on it until after flush time. </para>
+            on it until after flush time.</para>
           </warning>
 
           <para>While not supported in JPA, Hibernate lets you place your
@@ -1399,7 +1399,7 @@ public class Plane extends FlyingObject {
     </section>
 
     <section id="entity-mapping-association">
-      <title>Mapping entity bean associations/relationships</title>
+      <title>Mapping entity associations/relationships</title>
 
       <section>
         <title>One-to-one</title>
@@ -1493,7 +1493,7 @@ public class Passport implements Serializable {
         <literal>passport</literal> and the column id of <literal>Passport
         </literal>is <literal>id</literal>.</para>
 
-        <para>The third possibility (using an association table) is very
+        <para>The third possibility (using an association table) is quite
         exotic.</para>
 
         <programlisting>
@@ -1536,8 +1536,7 @@ public class Passport implements Serializable {
         <para>Many-to-one associations are declared at the property level with
         the annotation <literal>@ManyToOne</literal>:</para>
 
-        <programlisting>
-@Entity()
+        <programlisting>@Entity()
 public class Flight implements Serializable {
     <emphasis role="bold">@ManyToOne</emphasis>( cascade = {CascadeType.PERSIST, CascadeType.MERGE} )
     @JoinColumn(name="COMP_ID")
@@ -1545,8 +1544,7 @@ public class Flight implements Serializable {
         return company;
     }
     ...
-}
-            </programlisting>
+}            </programlisting>
 
         <para>The <literal>@JoinColumn</literal> attribute is optional, the
         default value(s) is like in one to one, the concatenation of the name
@@ -1563,8 +1561,7 @@ public class Flight implements Serializable {
         almost all cases. However this is useful when you want to use
         interfaces as the return type instead of the regular entity.</para>
 
-        <programlisting>
-@Entity()
+        <programlisting>@Entity
 public class Flight implements Serializable {
     @ManyToOne( cascade = {CascadeType.PERSIST, CascadeType.MERGE}, <emphasis
             role="bold">targetEntity=CompanyImpl.class</emphasis> )
@@ -1577,9 +1574,9 @@ public class Flight implements Serializable {
 
 public interface Company {
     ...
-            </programlisting>
+}</programlisting>
 
-        <para>You can alse map a many to one association through an
+        <para>You can also map a many-to-one association through an
         association table. This association table described by the
         <literal>@JoinTable</literal> annotation will contains a foreign key
         referencing back the entity table (through
@@ -1587,8 +1584,7 @@ public interface Company {
         referencing the target entity table (through
         <literal>@JoinTable.inverseJoinColumns</literal>).</para>
 
-        <programlisting>
-@Entity()
+        <programlisting>@Entity
 public class Flight implements Serializable {
     @ManyToOne( cascade = {CascadeType.PERSIST, CascadeType.MERGE} )
     <emphasis role="bold">@JoinTable(name="Flight_Company",
@@ -1599,8 +1595,7 @@ public class Flight implements Serializable {
         return company;
     }
     ...
-}
-            </programlisting>
+}       </programlisting>
       </section>
 
       <section id="entity-mapping-association-collections" revision="1">
@@ -1611,36 +1606,266 @@ public class Flight implements Serializable {
           <title>Overview</title>
 
           <para>You can map <classname>Collection</classname>,
-          <literal>List</literal> (ie ordered lists, not indexed lists),
-          <literal>Map</literal> and <classname>Set</classname>. The EJB3
-          specification describes how to map an ordered list (ie a list
-          ordered at load time) using
-          <literal>@javax.persistence.OrderBy</literal> annotation: this
-          annotation takes into parameter a list of comma separated (target
-          entity) properties to order the collection by (eg <code>firstname
-          asc, age desc</code>), if the string is empty, the collection will
-          be ordered by id. For true indexed collections, please refer to the
-          <xref linkend="entity-hibspec" />. EJB3 allows you to map Maps using
-          as a key one of the target entity property using
-          <literal>@MapKey(name="myProperty")</literal> (myProperty is a
-          property name in the target entity). When using
-          <literal>@MapKey</literal> (without property name), the target
-          entity primary key is used. The map key uses the same column as the
-          property pointed out: there is no additional column defined to hold
-          the map key, and it does make sense since the map key actually
-          represent a target property. Be aware that once loaded, the key is
-          no longer kept in sync with the property, in other words, if you
-          change the property value, the key will not change automatically in
-          your Java model (for true map support please refers to <xref
-          linkend="entity-hibspec" />). Many people confuse
-          <literal>&lt;map&gt;</literal> capabilities and
-          <literal>@MapKey</literal> ones. These are two different features.
-          <literal>@MapKey</literal> still has some limitations, please check
-          the forum or the JIRA tracking system for more informations.</para>
+          <classname>List</classname>, <classname>Map</classname> and
+          <classname>Set</classname> pointing to associated entities as
+          one-to-many or many-to-many associations using the
+          <classname>@OneToMany</classname> or
+          <classname>@ManyToMany</classname> annotation respectively. If the
+          collection is of a basic type or of an embeddable type, use
+          <classname>@ElementCollection</classname>. We will describe that in
+          more detail in the following subsections but let's first focus on
+          some semantic differences between the various collections.</para>
 
-          <para>Hibernate has several notions of collections.</para>
+          <para>Lists can be mapped in two different ways:</para>
 
-          <para></para>
+          <itemizedlist>
+            <listitem>
+              <para>as ordered lists, the order is not materialized in the
+              database</para>
+            </listitem>
+
+            <listitem>
+              <para>as indexed lists, the order is materialized in the
+              database</para>
+            </listitem>
+          </itemizedlist>
+
+          <para>To order lists in memory, add
+          <literal>@javax.persistence.OrderBy</literal> to your property. This
+          annotation takes into parameter a list of comma separated properties
+          (of the target entity) and order the collection accordingly (eg
+          <code>firstname asc, age desc</code>), if the string is empty, the
+          collection will be ordered by the primary key of the target
+          entity.</para>
+
+          <programlisting>@Entity
+public class Customer {
+   @Id @GeneratedValue public Integer getId() { return id; }
+   public void setId(Integer id) { this.id = id; }
+   private Integer id;
+
+   @OneToMany(mappedBy="customer")
+   <emphasis role="bold">@OrderBy("number")</emphasis>
+   public List&lt;Order&gt; getOrders() { return orders; }
+   public void setOrders(List&lt;Order&gt; orders) { this.orders = orders; }
+   private List&lt;Order&gt; orders;
+}
+
+@Entity
+public class Order {
+   @Id @GeneratedValue public Integer getId() { return id; }
+   public void setId(Integer id) { this.id = id; }
+   private Integer id;
+
+   public String getNumber() { return number; }
+   public void setNumber(String number) { this.number = number; }
+   private String number;
+
+   @ManyToOne
+   public Customer getCustomer() { return customer; }
+   public void setCustomer(Customer customer) { this.customer = customer; }
+   private Customer number;
+}
+
+-- Table schema
+|-------------| |----------|
+| Order       | | Customer |
+|-------------| |----------|
+| id          | | id       |
+| number      | |----------| 
+| customer_id |
+|-------------|</programlisting>
+
+          <para>To store the index value in a dedicated column, use the
+          <classname>@javax.persistence.OrderColumn</classname> annotation on
+          your property. This annotations describes the column name and
+          attributes of the column keeping the index value. This column is
+          hosted on the table containing the association foreign key. If the
+          column name is not specified, the default is the name of the
+          referencing property, followed by underscore, followed by
+          <literal>ORDER</literal> (in the following example, it would be
+          <literal>orders_ORDER</literal>).</para>
+
+          <programlisting>@Entity
+public class Customer {
+   @Id @GeneratedValue public Integer getId() { return id; }
+   public void setId(Integer id) { this.id = id; }
+   private Integer id;
+
+   @OneToMany(mappedBy="customer")
+   <emphasis role="bold">@OrderColumn(name"orders_index")</emphasis>
+   public List&lt;Order&gt; getOrders() { return orders; }
+   public void setOrders(List&lt;Order&gt; orders) { this.orders = orders; }
+   private List&lt;Order&gt; orders;
+}
+
+@Entity
+public class Order {
+   @Id @GeneratedValue public Integer getId() { return id; }
+   public void setId(Integer id) { this.id = id; }
+   private Integer id;
+
+   public String getNumber() { return number; }
+   public void setNumber(String number) { this.number = number; }
+   private String number;
+
+   @ManyToOne
+   public Customer getCustomer() { return customer; }
+   public void setCustomer(Customer customer) { this.customer = customer; }
+   private Customer number;
+}
+
+-- Table schema
+|--------------| |----------|
+| Order        | | Customer |
+|--------------| |----------|
+| id           | | id       |
+| number       | |----------| 
+| customer_id  |
+| orders_index |
+|--------------|</programlisting>
+
+          <note>
+            <para>We recommend you to convert
+            <classname>@org.hibernate.annotations.IndexColumn</classname>
+            usages to <classname>@OrderColumn</classname> unless you are
+            making use of the base property. The <literal>base</literal>
+            property lets you define the index value of the first element (aka
+            as base index). The usual value is <literal>0</literal> or
+            <literal>1</literal>. The default is 0 like in Java.</para>
+          </note>
+
+          <para>Likewise, maps can borrow their keys from one of the
+          associated entity properties or have dedicated columns to store an
+          explicit key.</para>
+
+          <para>To use one of the target entity property as a key of the map,
+          use <literal>@MapKey(name="myProperty")</literal>
+          (<literal>myProperty</literal> is a property name in the target
+          entity). When using <literal>@MapKey</literal> (without property
+          name), the target entity primary key is used. The map key uses the
+          same column as the property pointed out: there is no additional
+          column defined to hold the map key, and it does make sense since the
+          map key actually represent a target property. Be aware that once
+          loaded, the key is no longer kept in sync with the property, in
+          other words, if you change the property value, the key will not
+          change automatically in your Java model.</para>
+
+          <programlisting>@Entity
+public class Customer {
+   @Id @GeneratedValue public Integer getId() { return id; }
+   public void setId(Integer id) { this.id = id; }
+   private Integer id;
+
+   @OneToMany(mappedBy="customer")
+   <emphasis role="bold">@MapKey(name"number")</emphasis>
+   public Map&lt;String,Order&gt; getOrders() { return orders; }
+   public void setOrders(Map&lt;String,Order&gt; order) { this.orders = orders; }
+   private Map&lt;String,Order&gt; orders;
+}
+
+@Entity
+public class Order {
+   @Id @GeneratedValue public Integer getId() { return id; }
+   public void setId(Integer id) { this.id = id; }
+   private Integer id;
+
+   public String getNumber() { return number; }
+   public void setNumber(String number) { this.number = number; }
+   private String number;
+
+   @ManyToOne
+   public Customer getCustomer() { return customer; }
+   public void setCustomer(Customer customer) { this.customer = customer; }
+   private Customer number;
+}
+
+-- Table schema
+|-------------| |----------|
+| Order       | | Customer |
+|-------------| |----------|
+| id          | | id       |
+| number      | |----------| 
+| customer_id |
+|-------------|</programlisting>
+
+          <para>Otherwise, the map key is mapped to a dedicated column or
+          columns. To customize things, use one of the following
+          annotations:</para>
+
+          <itemizedlist>
+            <listitem>
+              <para>@<classname>MapKeyColumn</classname> if the map key is a
+              basic type, if you don't specify the column name, the name of
+              the property followed by underscore followed by
+              <literal>KEY</literal> is used (for example
+              <literal>orders_KEY</literal>).</para>
+            </listitem>
+
+            <listitem>
+              <para><classname>@MapKeyEnumerated</classname> /
+              <classname>@MapKeyTemporal</classname> if the map key type is
+              respectively an enum or a <classname>Date</classname>.</para>
+            </listitem>
+
+            <listitem>
+              <para><classname>@MapKeyJoinColumn</classname>/<classname>@MapKeyJoinColumns</classname>
+              if the map key type is another entity.</para>
+            </listitem>
+
+            <listitem>
+              <para><classname>@AttributeOverride</classname>/<classname>@AttributeOverrides</classname>
+              when the map key is a embeddable object. Use
+              <literal>key.</literal> as a prefix for your embeddable object
+              property names.</para>
+            </listitem>
+          </itemizedlist>
+
+          <para>You can also use <classname>@MapKeyClass</classname> to define
+          the type of the key if you don't use generics (at this stage, you
+          should wonder why at this day and age you don't use
+          generics).</para>
+
+          <programlisting>@Entity
+public class Customer {
+   @Id @GeneratedValue public Integer getId() { return id; }
+   public void setId(Integer id) { this.id = id; }
+   private Integer id;
+
+   @OneToMany @JoinTable(name="Cust_Order")
+   <emphasis role="bold">@MapKeyColumn(name"orders_number")</emphasis>
+   public Map&lt;String,Order&gt; getOrders() { return orders; }
+   public void setOrders(Map&lt;String,Order&gt; orders) { this.orders = orders; }
+   private Map&lt;String,Order&gt; orders;
+}
+
+@Entity
+public class Order {
+   @Id @GeneratedValue public Integer getId() { return id; }
+   public void setId(Integer id) { this.id = id; }
+   private Integer id;
+
+   public String getNumber() { return number; }
+   public void setNumber(String number) { this.number = number; }
+   private String number;
+
+   @ManyToOne
+   public Customer getCustomer() { return customer; }
+   public void setCustomer(Customer customer) { this.customer = customer; }
+   private Customer number;
+}
+
+-- Table schema
+|-------------| |----------| |---------------|
+| Order       | | Customer | | Cust_Order    |
+|-------------| |----------| |---------------|
+| id          | | id       | | customer_id   |
+| number      | |----------| | order_id      |
+| customer_id |              | orders_number |
+|-------------|              |---------------|</programlisting>
+
+          <para>Let's now explore the various collection semantics based on
+          the mapping you are choosing.</para>
 
           <table>
             <title>Collections semantics</title>
@@ -1668,18 +1893,18 @@ public class Flight implements Serializable {
 
                   <entry>java.util.List, java.util.Collection</entry>
 
-                  <entry>@org.hibernate.annotations.CollectionOfElements or
-                  @OneToMany or @ManyToMany</entry>
+                  <entry>@ElementCollection or @OneToMany or
+                  @ManyToMany</entry>
                 </row>
 
                 <row>
-                  <entry>Bag semantic with primary key (withtout the
+                  <entry>Bag semantic with primary key (without the
                   limitations of Bag semantic)</entry>
 
                   <entry>java.util.List, java.util.Collection</entry>
 
-                  <entry>(@org.hibernate.annotations.CollectionOfElements or
-                  @OneToMany or @ManyToMany) and @CollectionId</entry>
+                  <entry>(@ElementCollection or @OneToMany or @ManyToMany) and
+                  @CollectionId</entry>
                 </row>
 
                 <row>
@@ -1687,9 +1912,9 @@ public class Flight implements Serializable {
 
                   <entry>java.util.List</entry>
 
-                  <entry>(@org.hibernate.annotations.CollectionOfElements or
-                  @OneToMany or @ManyToMany) and
-                  @org.hibernate.annotations.IndexColumn</entry>
+                  <entry>(@ElementCollection or @OneToMany or @ManyToMany) and
+                  (@OrderColumn or
+                  @org.hibernate.annotations.IndexColumn)</entry>
                 </row>
 
                 <row>
@@ -1697,8 +1922,8 @@ public class Flight implements Serializable {
 
                   <entry>java.util.Set</entry>
 
-                  <entry>@org.hibernate.annotations.CollectionOfElements or
-                  @OneToMany or @ManyToMany</entry>
+                  <entry>@ElementCollection or @OneToMany or
+                  @ManyToMany</entry>
                 </row>
 
                 <row>
@@ -1706,75 +1931,20 @@ public class Flight implements Serializable {
 
                   <entry>java.util.Map</entry>
 
-                  <entry>(@org.hibernate.annotations.CollectionOfElements or
-                  @OneToMany or @ManyToMany) and (nothing or
-                  @org.hibernate.annotations.MapKey/MapKeyManyToMany for true
-                  map support, OR @javax.persistence.MapKey</entry>
+                  <entry>(@ElementCollection or @OneToMany or @ManyToMany) and
+                  ((nothing or @MapKeyJoinColumn/@MapKeyColumn for true map
+                  support) OR @javax.persistence.MapKey)</entry>
                 </row>
               </tbody>
             </tgroup>
           </table>
 
-          <remark>So specifically, java.util.List collections without
-          @org.hibernate.annotations.IndexColumn are going to be considered as
+          <remark>Specifically, java.util.List collections without
+          @OrderColumn or @IndexColumn are going to be considered as
           bags.</remark>
 
-          <para>Collection of primitive, core type or embedded objects is not
-          supported by the EJB3 specification. Hibernate Annotations allows
-          them however (see <xref linkend="entity-hibspec" />).</para>
-
-          <programlisting>@Entity public class City {
-    @OneToMany(mappedBy="city")
-    <emphasis role="bold">@OrderBy("streetName")</emphasis>
-    public List&lt;Street&gt; getStreets() {
-        return streets;
-    }
-...
-}
-
-@Entity public class Street {
-    <emphasis role="bold">public String getStreetName()</emphasis> {
-        return streetName;
-    }
-
-    @ManyToOne
-    public City getCity() {
-        return city;
-    }
-    ...
-}
-
-
-@Entity
-public class Software {
-    @OneToMany(mappedBy="software")
-    <emphasis role="bold">@MapKey(name="codeName")</emphasis>
-    public Map&lt;String, Version&gt; getVersions() {
-        return versions;
-    }
-...
-}
-
-@Entity
-@Table(name="tbl_version")
-public class Version {
-    <emphasis role="bold">public String getCodeName()</emphasis> {...}
-
-    @ManyToOne
-    public Software getSoftware() { ... }
-...
-}</programlisting>
-
-          <para>So <literal>City</literal> has a collection of
-          <literal>Street</literal>s that are ordered by
-          <literal>streetName</literal> (of <literal>Street</literal>) when
-          the collection is loaded. <literal>Software</literal> has a map of
-          <literal>Version</literal>s which key is the
-          <literal>Version</literal> <literal>codeName</literal>.</para>
-
-          <para>Unless the collection is a generic, you will have to define
-          <literal>targetEntity</literal>. This is a annotation attribute that
-          take the target entity class as a value.</para>
+          <para>More support for collections are available via Hibernate
+          specific extensions (see <xref linkend="entity-hibspec" />).</para>
         </section>
 
         <section id="entity-mapping-association-collection-onetomany"

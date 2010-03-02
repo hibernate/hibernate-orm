@@ -35,10 +35,12 @@ import static javax.persistence.FetchType.LAZY;
  * Annotation used to mark a collection as a collection of elements or
  * a collection of embedded objects
  *
+ * @deprecated use @ElementCollection
  * @author Emmanuel Bernard
  */
 @Target({METHOD, FIELD})
 @Retention(RUNTIME)
+@Deprecated
 public @interface CollectionOfElements {
 	/**
 	 * Represent the element class in the collection

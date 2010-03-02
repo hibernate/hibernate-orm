@@ -34,6 +34,8 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 /**
  * Property Access type
  *
+ * Prefer the standard {@link javax.persistence.Access} annotation
+ *
  * @author Emmanuel Bernard
  */
 @Target({ TYPE, METHOD, FIELD })

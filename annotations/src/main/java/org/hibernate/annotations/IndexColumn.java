@@ -31,6 +31,7 @@ import java.lang.annotation.Target;
 
 /**
  * Describe an index column of a List
+ * Prefer the standard {@link javax.persistence.OrderColumn} annotation
  *
  * @author Matthew Inger
  */

@@ -35,9 +35,11 @@ public enum CascadeType {
 	DELETE,
 	SAVE_UPDATE,
 	REPLICATE,
+	/** @deprecated use @OneToOne(orphanRemoval=true) or @OneToMany(orphanRemoval=true) */
+	@Deprecated
 	DELETE_ORPHAN,
 	LOCK,
-	/** @deprecated use DETACH */
+	/** @deprecated use javax.persistence.CascadeType.DETACH */
 	@Deprecated
 	EVICT,
 	DETACH

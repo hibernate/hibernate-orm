@@ -203,7 +203,6 @@ public class NativeScanner implements Scanner {
 					files.add( new NamedInputStream( entry.getName(), entry.getInputStream() ) );
 					leftOver.remove( entry );
 					done = true;
-					continue;
 				}
 			}
 			if (done) continue;
@@ -211,7 +210,6 @@ public class NativeScanner implements Scanner {
 				if ( entry.getName().endsWith( endWithPattern ) ) {
 					files.add( new NamedInputStream( entry.getName(), entry.getInputStream() ) );
 					leftOver.remove( entry );
-					continue;
 				}
 			}
 

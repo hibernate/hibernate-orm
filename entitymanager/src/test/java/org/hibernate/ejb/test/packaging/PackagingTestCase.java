@@ -1,4 +1,4 @@
-// $Id:$
+// $Id$
 /*
 * JBoss, Home of Professional Open Source
 * Copyright 2009, Red Hat, Inc. and/or its affiliates, and individual contributors
@@ -22,6 +22,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import junit.framework.TestCase;
@@ -89,6 +90,8 @@ public abstract class PackagingTestCase extends TestCase {
 		catch ( MalformedURLException e ) {
 			fail( "Unable to build custom class loader" );
 		}
+		targetDir = new File( targetDir, "packages" );
+		targetDir.mkdirs();
 	}
 
 	@Override
@@ -105,11 +108,20 @@ public abstract class PackagingTestCase extends TestCase {
 		Thread.currentThread().setContextClassLoader( originalClassLoader );
 	}
 
-	protected void addPackageToClasspath(File... testPackages) throws MalformedURLException {
+	protected void addPackageToClasspath(File... files) throws MalformedURLException {
 		List<URL> urlList = new ArrayList<URL>();
-		for ( File file : testPackages ) {
+		for ( File file : files ) {
 			urlList.add( file.toURL() );
 		}
+		URLClassLoader classLoader = new URLClassLoader(
+				urlList.toArray( new URL[urlList.size()] ), originalClassLoader
+		);
+		Thread.currentThread().setContextClassLoader( classLoader );
+	}
+
+	protected void addPackageToClasspath(URL... urls) throws MalformedURLException {
+		List<URL> urlList = new ArrayList<URL>();
+		urlList.addAll( Arrays.asList( urls ) );
 		URLClassLoader classLoader = new URLClassLoader(
 				urlList.toArray( new URL[urlList.size()] ), originalClassLoader
 		);

@@ -92,7 +92,7 @@
 
     <para>We recommend you use <ulink
     url="http://validator.hibernate.org">Hibernate Validator</ulink> and the
-    Bean VAlidation specification capabilities. Download Hibernate Validator 4
+    Bean Validation specification capabilities. Download Hibernate Validator 4
     or above from the Hibernate website and add
     <filename>hibernate-validator.jar</filename> and
     <filename>validation-api.jar</filename> in your classpath. Alternatively

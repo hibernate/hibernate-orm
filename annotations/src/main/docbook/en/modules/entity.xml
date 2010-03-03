@@ -2393,8 +2393,8 @@ public class Order {
 
 @Entity class Order { ... }
 
-Customer customer = em.get(Customer.class, 1l);
-Order order = em.get(Order.class, 1l);
+Customer customer = em.find(Customer.class, 1l);
+Order order = em.find(Order.class, 1l);
 customer.getOrders().remove(order); //order will be deleted by cascade</programlisting>
       </section>
 
@@ -2561,9 +2561,128 @@ public class Cat implements Serializable {
       the same column name, the <literal>MainCat</literal> id column has).
       Plus a unique constraint on <literal>storyPart2</literal> has been
       set.</para>
+    </section>
 
-      <para>Check out the JBoss EJB 3 tutorial or the Hibernate Annotations
-      unit test suite for more examples.</para>
+    <section>
+      <title>Caching entities</title>
+
+      <para>Hibernate offers naturally a first level cache for entities called
+      a persistence context via the notion of <classname>Session</classname>.
+      This cache is contextual to the use case at hand. Some entities however
+      are shared by many different use cases and are barely changed. You can
+      cache these in what is called the second level cache.</para>
+
+      <para>By default, entities are not part of the second level cache. While
+      we do not recommend that, you can override this by setting the
+      <literal>shared-cache-mode</literal> element in your persistence.xml
+      file or by using the <literal>javax.persistence.sharedCache.mode
+      property</literal>. The following values are possible:</para>
+
+      <itemizedlist>
+        <listitem>
+          <para><literal>ENABLE_SELECTIVE</literal> (Default and recommended
+          value): entities are not cached unless explicitly marked as
+          cacheable.</para>
+        </listitem>
+
+        <listitem>
+          <para><literal>DISABLE_SELECTIVE</literal>: entities are cached
+          unless explicitly marked as not cacheable.</para>
+        </listitem>
+
+        <listitem>
+          <para><literal>ALL</literal>: all entities are always cached even if
+          marked as non cacheable.</para>
+        </listitem>
+
+        <listitem>
+          <para><literal>NONE</literal>: no entity are cached even if marked
+          as cacheable. This option can make sense to disable second-level
+          cache altogether.</para>
+        </listitem>
+      </itemizedlist>
+
+      <para>The cache concurrency strategy used by default can be set with the
+      <literal>hibernate.cache.default_cache_concurrency_strategy</literal>
+      property:</para>
+
+      <itemizedlist>
+        <listitem>
+          <para><literal>read-only</literal></para>
+        </listitem>
+
+        <listitem>
+          <para><literal>read-write</literal></para>
+        </listitem>
+
+        <listitem>
+          <para><literal>nonstrict-read-write</literal></para>
+        </listitem>
+
+        <listitem>
+          <para><literal>transactional</literal></para>
+        </listitem>
+      </itemizedlist>
+
+      <note>
+        <para>It is recommended to define the cache concurrency strategy per
+        entity rather than using a global one. Use the
+        <classname>@org.hibernate.annotations.Cache</classname> annotation for
+        that.</para>
+      </note>
+
+      <programlisting>@Entity @Cacheable
+@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
+public class Forest { ... }</programlisting>
+
+      <para>Hibernate also let's you cache the content of a collection or the
+      identifiers if the collection contains other entities. Use the
+      <classname>@Cache</classname> annotation on the collection
+      property.</para>
+
+      <programlisting>@OneToMany(cascade=CascadeType.ALL, fetch=FetchType.EAGER)
+@JoinColumn(name="CUST_ID")
+@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
+public SortedSet&lt;Ticket&gt; getTickets() {
+    return tickets;
+}</programlisting>
+
+      <para><literal>@org.hibernate.annotations.Cache</literal> defines the
+      caching strategy and region of a given second level cache.</para>
+
+      <programlistingco>
+        <areaspec>
+          <area coords="2 55" id="cache-hm1" />
+
+          <area coords="3 55" id="cache-hm2" />
+
+          <area coords="4 55" id="cache-hm3" />
+        </areaspec>
+
+        <programlisting>@Cache(
+    CacheConcurrencyStrategy usage();
+    String region() default "";
+    String include() default "all";
+)</programlisting>
+
+        <calloutlist>
+          <callout arearefs="cache-hm1">
+            <para>usage: the given cache concurrency strategy (NONE,
+            READ_ONLY, NONSTRICT_READ_WRITE, READ_WRITE, TRANSACTIONAL)</para>
+          </callout>
+
+          <callout arearefs="cache-hm2">
+            <para>region (optional): the cache region (default to the fqcn of
+            the class or the fq role name of the collection)</para>
+          </callout>
+
+          <callout arearefs="cache-hm3">
+            <para><literal>include</literal> (optional): all to include all
+            properties, non-lazy to only include non lazy properties (default
+            all).</para>
+          </callout>
+        </calloutlist>
+      </programlistingco>
     </section>
   </section>
 
@@ -3932,66 +4051,6 @@ public Collection&lt;Employer&gt; getEmployers()</programlisting>
       <para>It is recommended to use <classname>@Cascade</classname> to
       compliment <classname>@*To*(cascade=...)</classname> as shown in the
       previous example.</para>
-    </section>
-
-    <section>
-      <title>Cache</title>
-
-      <para>In order to optimize your database accesses, you can activate the
-      so called second level cache of Hibernate. This cache is configurable on
-      a per entity and per collection basis.</para>
-
-      <para><literal>@org.hibernate.annotations.Cache</literal> defines the
-      caching strategy and region of a given second level cache. This
-      annotation can be applied on the root entity (not the sub entities), and
-      on the collections.</para>
-
-      <programlisting>@Entity
-@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
-public class Forest { ... }</programlisting>
-
-      <programlisting>    @OneToMany(cascade=CascadeType.ALL, fetch=FetchType.EAGER)
-    @JoinColumn(name="CUST_ID")
-    @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
-    public SortedSet&lt;Ticket&gt; getTickets() {
-        return tickets;
-    }</programlisting>
-
-      <para></para>
-
-      <programlistingco>
-        <areaspec>
-          <area coords="2 55" id="cache-hm1" />
-
-          <area coords="3 55" id="cache-hm2" />
-
-          <area coords="4 55" id="cache-hm3" />
-        </areaspec>
-
-        <programlisting>@Cache(
-    CacheConcurrencyStrategy usage();
-    String region() default "";
-    String include() default "all";
-)</programlisting>
-
-        <calloutlist>
-          <callout arearefs="cache-hm1">
-            <para>usage: the given cache concurrency strategy (NONE,
-            READ_ONLY, NONSTRICT_READ_WRITE, READ_WRITE, TRANSACTIONAL)</para>
-          </callout>
-
-          <callout arearefs="cache-hm2">
-            <para>region (optional): the cache region (default to the fqcn of
-            the class or the fq role name of the collection)</para>
-          </callout>
-
-          <callout arearefs="cache-hm3">
-            <para><literal>include</literal> (optional): all to include all
-            properties, non-lazy to only include non lazy properties (default
-            all).</para>
-          </callout>
-        </calloutlist>
-      </programlistingco>
     </section>
 
     <section id="entity-hibspec-filters">

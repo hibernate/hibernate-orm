@@ -1,11 +1,11 @@
-<?xml version='1.0' encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <!--
   ~ Hibernate, Relational Persistence for Idiomatic Java
   ~
-  ~ Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+  ~ Copyright (c) 2010, Red Hat Inc or third-party contributors as
   ~ indicated by the @author tags or express copyright attribution
   ~ statements applied by the authors.  All third-party contributions are
-  ~ distributed under license by Red Hat Middleware LLC.
+  ~ distributed under license by Red Hat Inc.
   ~
   ~ This copyrighted material is made available to anyone wishing to use, modify,
   ~ copy, or redistribute it subject to the terms and conditions of the GNU
@@ -22,24 +22,23 @@
   ~ 51 Franklin Street, Fifth Floor
   ~ Boston, MA  02110-1301  USA
   -->
-
-<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
+"http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
 <chapter id="architecture">
   <title>Architecture</title>
 
   <section>
     <title>Definitions</title>
 
-    <para>EJB3 is part of the Java EE 5.0 platform. Persistence in EJB3 is
-    available in EJB3 containers, as well as for standalone J2SE applications
+    <para>JPA 2 is part of the Java EE 6.0 platform. Persistence in JPA is
+    available in containers like EJB 3 or the more modern CDI (Java Context
+    and Dependency Injection), as well as in standalone Java SE applications
     that execute outside of a particular container. The following programming
     interfaces and artifacts are available in both environments.</para>
 
     <variablelist spacing="compact">
       <varlistentry>
-        <term>
-          <literal>EntityManagerFactory</literal>
-        </term>
+        <term><literal>EntityManagerFactory</literal></term>
 
         <listitem>
           <para>An entity manager factory provides entity manager instances,
@@ -52,9 +51,7 @@
       </varlistentry>
 
       <varlistentry>
-        <term>
-          <literal>EntityManager</literal>
-        </term>
+        <term><literal>EntityManager</literal></term>
 
         <listitem>
           <para>The <literal>EntityManager</literal> API is used to access a
@@ -128,7 +125,7 @@
   </section>
 
   <section>
-    <title>EJB container environment</title>
+    <title>In container environment (eg. EJB 3)</title>
 
     <section>
       <title>Container-managed entity manager</title>
@@ -170,16 +167,16 @@
       <para>The most common case is to bind the persistence context scope to
       the current transaction scope. This is only doable when JTA transactions
       are used: the persistence context is associated with the JTA transaction
-      life cycle. When a entity manager is invoked, the persistence context is
-      also opened, if there is no persistence context associated with the
+      life cycle. When an entity manager is invoked, the persistence context
+      is also opened, if there is no persistence context associated with the
       current JTA transaction. Otherwise, the associated persistence context
       is used. The persistence context ends when the JTA transaction
       completes. This means that during the JTA transaction, an application
       will be able to work on managed entities of the same persistence
       context. In other words, you don't have to pass the entity manager's
-      persistence context across your EJB method calls, but simply use
-      dependency injection or lookup whenever you need an entity
-      manager.</para>
+      persistence context across your managed beans (CDI) or EJBs method
+      calls, but simply use dependency injection or lookup whenever you need
+      an entity manager.</para>
 
       <para>You can also use an extended persistence context. This can be
       combined with stateful session beans, if you use a container-managed
@@ -194,16 +191,18 @@
       view of the application user, and implement it using an extended
       persistence context. Please refer to the Hibernate reference manual or
       the book Hibernate In Action for more information about this pattern.
-      JBoss Seam is a framework that link together JSF and EJB3 around the
-      notion of conversation and unit of work. For an application-managed
+      </para>
+
+      <para>JBoss Seam 3 is built on top of CDI and has at it's core concept
+      the notion of conversation and unit of work. For an application-managed
       entity manager the persistence context is created when the entity
       manager is created and kept until the entity manager is closed. In an
       extended persistence context, all modification operations (persist,
       merge, remove) executed outside a transaction are queued until the
       persistence context is attached to a transaction. The transaction
       typically occurs at the user process end, allowing the whole process to
-      be commited or rollbacked. For application-managed entity manager only
-      support the exctended persistence context.</para>
+      be committed or rollbacked. For application-managed entity manager only
+      support the extended persistence context.</para>
 
       <para>A resource-local entity manager or an entity manager created with
       <literal>EntityManagerFactory.createEntityManager()</literal>
@@ -235,7 +234,8 @@
           <para>If a stateless session bean, message-driven bean, or stateful
           session bean with a transaction-scoped persistence context calls a
           stateful session bean with an extended persistence context in the
-          same JTA transaction, an IllegalStateException is thrown.</para>
+          same JTA transaction, an
+          <classname>IllegalStateException</classname> is thrown.</para>
         </listitem>
 
         <listitem>
@@ -265,7 +265,7 @@
           <para>If a stateful session bean with an extended persistence
           context calls a stateful session bean with a different extended
           persistence context in the same transaction, an
-          IllegalStateException is thrown.</para>
+          <classname>IllegalStateException</classname> is thrown.</para>
         </listitem>
       </itemizedlist>
     </section>
@@ -274,7 +274,7 @@
   <section id="architecture-javase" revision="1">
     <title>Java SE environments</title>
 
-    <para>In a Java SE environment only extented context application-managed
+    <para>In a Java SE environment only extended context application-managed
     entity managers are available. You can retrieve an entity manger using the
     <literal>EntityManagerFactory</literal> API. Only resource-local entity
     managers are available. In other words, JTA transactions and persistence

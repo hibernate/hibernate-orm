@@ -51,7 +51,7 @@
   &lt;dependencies&gt;
     &lt;dependency&gt;
       &lt;groupId&gt;org.hibernate&lt;/groupId&gt;
-      &lt;artifactId&gt;hibernate-core&lt;/artifactId&gt;
+      &lt;artifactId&gt;hibernate-annotations&lt;/artifactId&gt;
       &lt;version&gt;${hibernate-core-version}&lt;/version&gt;
     &lt;/dependency&gt;
   &lt;/dependencies&gt;
@@ -66,8 +66,8 @@
     <para>First, set up your classpath (after you have created a new project
     in your favorite IDE): <itemizedlist>
         <listitem>
-          <para>Copy all Hibernate3 core and required 3rd party library
-          files.</para>
+          <para>Copy <filename>hibernate-core.jar</filename> and required 3rd
+          party library files.</para>
         </listitem>
 
         <listitem>

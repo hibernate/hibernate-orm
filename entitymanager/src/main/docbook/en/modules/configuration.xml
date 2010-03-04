@@ -1,11 +1,11 @@
-<?xml version='1.0' encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <!--
   ~ Hibernate, Relational Persistence for Idiomatic Java
   ~
-  ~ Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+  ~ Copyright (c) 2008, Red Hat Inc or third-party contributors as
   ~ indicated by the @author tags or express copyright attribution
   ~ statements applied by the authors.  All third-party contributions are
-  ~ distributed under license by Red Hat Middleware LLC.
+  ~ distributed under license by Red Hat Inc.
   ~
   ~ This copyrighted material is made available to anyone wishing to use, modify,
   ~ copy, or redistribute it subject to the terms and conditions of the GNU
@@ -22,22 +22,64 @@
   ~ 51 Franklin Street, Fifth Floor
   ~ Boston, MA  02110-1301  USA
   -->
-
-<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
+"http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
 <chapter id="configuration">
   <title id="setup">Setup and configuration</title>
 
   <section>
     <title>Setup</title>
 
-    <para>The EJB 3.0 / JPA compatible Hibernate EntityManager is built on top
-    of Hibernate core and Hibernate Annotations. You have to use compatible
-    versions of each module. Please consult the compatibility matrix in the
-    hibernate.org download section. The following libraries have to be in your
-    classpath: hibernate3.jar, hibernate-annotations.jar,
+    <para>The JPA 2.0 compatible Hibernate EntityManager is built on top of
+    the core of Hibernate and Hibernate Annotations. Starting from version
+    3.5, we have bundled in a single Hibernate distribution all the necessary
+    modules:</para>
+
+    <itemizedlist>
+      <listitem>
+        <para>Hibernate Core: the native Hibernate APIs and core engine</para>
+      </listitem>
+
+      <listitem>
+        <para>Hibernate Annotations: the annotation-based mapping</para>
+      </listitem>
+
+      <listitem>
+        <para>Hibernate EntityManager: the JPA 2.0 APIs and livecycle semantic
+        implementation</para>
+      </listitem>
+    </itemizedlist>
+
+    <para>The following libraries have to be in your classpath:
+    hibernate-core.jar, hibernate-annotations.jar,
     hibernate-commons-annotations.jar, hibernate-entitymanager.jar and all
     needed third party libraries for each package (incl.
-    ejb-persistence.jar).</para>
+    hibernate-jpa-2.0-api.jar).</para>
+
+    <note>
+      <title>What is hibernate-jpa-2.0-api-x.y.z.jar</title>
+
+      <para>This is the JAR containing the JPA 2.0 API, it is fully compliant
+      with the spec and passed the TCK signature test. You typically don't
+      need it when you deploy your application in a Java EE 6 application
+      server (like JBoss AS 6 for example).</para>
+    </note>
+
+    <para>If you use Maven, add the following dependencies</para>
+
+    <programlisting>&lt;project ...&gt;
+  ...
+  &lt;dependencies&gt;
+    &lt;dependency&gt;
+      &lt;groupId&gt;org.hibernate&lt;/groupId&gt;
+      &lt;artifactId&gt;hibernate-entitymanager&lt;/artifactId&gt;
+      &lt;version&gt;${hibernate-core-version}&lt;/version&gt;
+    &lt;/dependency&gt;
+  &lt;/dependencies&gt;
+&lt;/project&gt;</programlisting>
+
+    <para>All the required dependencies like hibernate-core and
+    hibernate-annotations will be dragged transitively.</para>
   </section>
 
   <section id="setup-configuration"
@@ -52,16 +94,16 @@
       A persistence archive is a JAR file which must define a
       <literal>persistence.xml</literal> file that resides in the
       <filename>META-INF</filename> folder. All properly annotated classes
-      included in the archive (ie having an <literal>@Entity</literal>
+      included in the archive (ie. having an <literal>@Entity</literal>
       annotation), all annotated packages and all Hibernate hbm.xml files
       included in the archive will be added to the persistence unit
       configuration, so by default, your persistence.xml will be quite
       minimalist:</para>
 
       <programlisting>&lt;persistence xmlns="http://java.sun.com/xml/ns/persistence"
-   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-   xsi:schemaLocation="http://java.sun.com/xml/ns/persistence http://java.sun.com/xml/ns/persistence/persistence_1_0.xsd"
-   version="1.0"&gt;
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xsi:schemaLocation="http://java.sun.com/xml/ns/persistence http://java.sun.com/xml/ns/persistence/persistence_2_0.xsd"
+             version="2.0"&gt;
    &lt;persistence-unit name="sample"&gt;
       &lt;jta-data-source&gt;java:/DefaultDS&lt;/jta-data-source&gt;
       &lt;properties&gt;
@@ -75,9 +117,9 @@
       <filename><literal>persistence.xml</literal></filename> file</para>
 
       <programlisting>&lt;persistence xmlns="http://java.sun.com/xml/ns/persistence"
-   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-   xsi:schemaLocation="http://java.sun.com/xml/ns/persistence http://java.sun.com/xml/ns/persistence/persistence_1_0.xsd"
-   version="1.0"&gt;
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xsi:schemaLocation="http://java.sun.com/xml/ns/persistence http://java.sun.com/xml/ns/persistence/persistence_2_0.xsd"
+             version="2.0"&gt;
    &lt;persistence-unit name="manager1" transaction-type="JTA"&gt;
       &lt;provider&gt;org.hibernate.ejb.HibernatePersistence&lt;/provider&gt;
       &lt;jta-data-source&gt;java:/DefaultDS&lt;/jta-data-source&gt;
@@ -86,6 +128,8 @@
       &lt;class&gt;org.acme.Employee&lt;/class&gt;
       &lt;class&gt;org.acme.Person&lt;/class&gt;
       &lt;class&gt;org.acme.Address&lt;/class&gt;
+      &lt;shared-cache-mode&gt;ENABLE_SELECTOVE&lt;/shared-cache-mode&gt;
+      &lt;validation-mode&gt;CALLBACK&lt;/validation-mode&gt;
       &lt;properties&gt;
          &lt;property name="hibernate.dialect" value="org.hibernate.dialect.HSQLDialect"/&gt;
          &lt;property name="hibernate.hbm2ddl.auto" value="create-drop"/&gt;
@@ -199,6 +243,100 @@
         </varlistentry>
 
         <varlistentry>
+          <term>shared-cache-mode</term>
+
+          <listitem>
+            <para>By default, entities are elected for second-level cache if
+            annotated with <classname>@Cacheable</classname>. You can
+            however:</para>
+
+            <itemizedlist>
+              <listitem>
+                <para><literal>ALL</literal>: force caching for all
+                entities</para>
+              </listitem>
+
+              <listitem>
+                <para><literal>NONE</literal>: disable caching for all
+                entities (useful to take second-level cache out of the
+                equation)</para>
+              </listitem>
+
+              <listitem>
+                <para><literal>ENABLE_SELECTIVE</literal> (default): enable
+                caching when explicitly marked</para>
+              </listitem>
+
+              <listitem>
+                <para><literal>DISABLE_SELECTIVE</literal>: enable caching
+                unless explicitly marked as
+                <classname>@Cacheable(false)</classname> (not
+                recommended)</para>
+              </listitem>
+            </itemizedlist>
+
+            <para> See Hibernate Annotation's documentation for more
+            details.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term>validation-mode</term>
+
+          <listitem>
+            <para>By default, Bean Validation (and Hibernate Validator) is
+            activated. When an entity is created, updated (and optionally
+            deleted), it is validated before being sent to the database. The
+            database schema generated by Hibernate also reflects the
+            constraints declared on the entity.</para>
+
+            <para>You can fine-tune that if needed:</para>
+
+            <itemizedlist>
+              <listitem>
+                <para><literal>AUTO</literal>: if Bean Validation is present
+                in the classpath, CALLBACK and DDL are activated.</para>
+              </listitem>
+
+              <listitem>
+                <para><literal>CALLBACK</literal>: entities are validated on
+                creation, update and deletion. If no Bean Validation provider
+                is present, an exception is raised at initialization
+                time.</para>
+              </listitem>
+
+              <listitem>
+                <para><literal>DDL</literal>: (not standard, see below)
+                database schemas are entities are validated on creation,
+                update and deletion. If no Bean Validation provider is
+                present, an exception is raised at initialization time.</para>
+              </listitem>
+
+              <listitem>
+                <para><literal>NONE</literal>: Bean Validation is not used at
+                all</para>
+              </listitem>
+            </itemizedlist>
+
+            <para>Unfortunately, <literal>DDL</literal> is not standard mode
+            (though extremely useful) and you will not be able to put it in
+            <literal>&lt;validation-mode&gt;</literal>. To use it, add a
+            regular property</para>
+
+            <programlisting>&lt;property name="javax.persistence.validation.mode"&gt;
+  ddl
+&lt;/property&gt;</programlisting>
+
+            <para>With this approach, you can mix ddl and callback
+            modes:</para>
+
+            <programlisting>&lt;property name="javax.persistence.validation.mode"&gt;
+  ddl, callback
+&lt;/property&gt;</programlisting>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
           <term><code>properties</code></term>
 
           <listitem>
@@ -206,62 +344,164 @@
             properties. This is where you will define your Hibernate specific
             configurations. This is also where you will have to specify JDBC
             connection information as well.</para>
+
+            <para>Here is a list of JPA 2 standard properties. Be sure to also
+            Hibernate Core's documentation to see Hibernate specific
+            properties.</para>
+
+            <itemizedlist>
+              <listitem>
+                <para><literal>javax.persistence.lock.timeout</literal>
+                pessimistic lock timeout in milliseconds
+                (<classname>Integer</classname> or
+                <classname>String</classname>), this is a hint used by
+                Hibernate but requires support by your underlying
+                database.</para>
+              </listitem>
+
+              <listitem>
+                <para><literal>javax.persistence.query.timeout</literal> query
+                timeout in milliseconds (<classname>Integer</classname> or
+                <classname>String</classname>), this is a hint used by
+                Hibernate but requires support by your underlying database
+                (TODO is that 100% true or do we use some other
+                tricks).</para>
+              </listitem>
+
+              <listitem>
+                <para><literal>javax.persistence.validation.mode</literal>
+                corresponds to the <literal>validation-mode</literal> element.
+                Use it if you wish to use the non standard
+                <literal>DDL</literal> value.</para>
+              </listitem>
+
+              <listitem>
+                <para>javax.persistence.validation.group.pre-persist defines
+                the group or list of groups to validate before persisting an
+                entity. This is a comma separated fully qualified class name
+                string (eg <code>com.acme.groups.Common</code> or
+                <code>com.acme.groups.Common,
+                javax.validation.groups.Default</code>)</para>
+              </listitem>
+            </itemizedlist>
+
+            <note>
+              <para>To know more about Bean Validation and Hibernate
+              Validator, check out Hibernate Validator's reference
+              documentation as well as Hibernate Annotations's documentation
+              on Bean Validation.</para>
+            </note>
+
+            <para>The following properties can only be used in a SE
+            environment where no datasource/JNDI is available:</para>
+
+            <itemizedlist>
+              <listitem>
+                <para><literal>javax.persistence.jdbc.driver</literal>: the
+                fully qualified class name of the driver class</para>
+              </listitem>
+
+              <listitem>
+                <para><literal>javax.persistence.jdbc.url</literal>: the
+                driver specific URL</para>
+              </listitem>
+
+              <listitem>
+                <para><literal>javax.persistence.jdbc.user</literal> the user
+                name used for the database connection</para>
+              </listitem>
+
+              <listitem>
+                <para><literal>javax.persistence.jdbc.password</literal> the
+                password used for the database connection</para>
+              </listitem>
+            </itemizedlist>
           </listitem>
         </varlistentry>
       </variablelist>
 
       <para>Be sure to define the grammar definition in the
-      <literal>persistence</literal> element since the EJB3 specification
-      requires the schema validation. If the systemId ends with
-      <literal>persistence_1_0.xsd</literal>, Hibernate entityManager will use
-      the version embedded in the hibernate-entitymanager.jar. No internet
-      access will be processed.</para>
+      <literal>persistence</literal> element since the JPA specification
+      requires schema validation. If the <literal>systemId</literal> ends with
+      <literal>persistence_2_0.xsd</literal>, Hibernate entityManager will use
+      the version embedded in the hibernate-entitymanager.jar. It won't fetch
+      the resource from the internet.</para>
 
       <programlisting>&lt;persistence xmlns="http://java.sun.com/xml/ns/persistence"
-   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-   xsi:schemaLocation="http://java.sun.com/xml/ns/persistence http://java.sun.com/xml/ns/persistence/persistence_1_0.xsd"
-   version="1.0"&gt;</programlisting>
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xsi:schemaLocation="http://java.sun.com/xml/ns/persistence http://java.sun.com/xml/ns/persistence/persistence_2_0.xsd"
+             version="2.0"&gt;</programlisting>
     </section>
 
     <section id="setup-configuration-bootstrapping" revision="1">
       <title>Bootstrapping</title>
 
-      <para>The EJB3 specification defines a bootstrap procedure to access the
+      <para>The JPA specification defines a bootstrap procedure to access the
       <classname>EntityManagerFactory</classname> and the
       <classname>EntityManager</classname>. The bootstrap class is
       <classname>javax.persistence.Persistence</classname>, e.g.</para>
 
       <programlisting>EntityManagerFactory emf = Persistence.createEntityManagerFactory("manager1");
+
 //or
-Map configOverrides = new HashMap();
+
+Map&lt;String, Object&gt; configOverrides = new HashMap&lt;String, Object&gt;();
 configOverrides.put("hibernate.hbm2ddl.auto", "create-drop");
 EntityManagerFactory programmaticEmf =
     Persistence.createEntityManagerFactory("manager1", configOverrides);</programlisting>
 
       <para>The first version is equivalent to the second with an empty map.
       The map version is a set of overrides that will take precedence over any
-      properties defined in your persistence.xml files. There are a couple of
-      EJB3 properties usable in the map:</para>
+      properties defined in your <filename>persistence.xml</filename> files.
+      All the properties defined in <xref
+      linkend="setup-configuration-packaging" /> can be passed to the
+      <methodname>createEntityManagerFactory</methodname> method and there are
+      a few additional ones:</para>
 
       <itemizedlist>
         <listitem>
-          <para>javax.persistence.provider to define the provider class
-          used</para>
+          <para><literal>javax.persistence.provider</literal> to define the
+          provider class used</para>
         </listitem>
 
         <listitem>
-          <para>javax.persistence.transactionType to define the transaction
-          type used (either JTA or RESOURCE_LOCAL)</para>
+          <para><literal>javax.persistence.transactionType</literal> to define
+          the transaction type used (either <literal>JTA</literal> or
+          <literal>RESOURCE_LOCAL</literal>)</para>
         </listitem>
 
         <listitem>
-          <para>javax.persistence.jtaDataSource to define the JTA datasource
-          name in JNDI</para>
+          <para><literal>javax.persistence.jtaDataSource</literal> to define
+          the JTA datasource name in JNDI</para>
         </listitem>
 
         <listitem>
-          <para>javax.persistence.nonJtaDataSource to define the non JTA
-          datasource name in JNDI</para>
+          <para><literal>javax.persistence.nonJtaDataSource</literal> to
+          define the non JTA datasource name in JNDI</para>
+        </listitem>
+
+        <listitem>
+          <para><literal>javax.persistence.lock.timeout</literal> pessimistic
+          lock timeout in milliseconds (<classname>Integer</classname> or
+          <classname>String</classname>)</para>
+        </listitem>
+
+        <listitem>
+          <para><literal>javax.persistence.query.timeout</literal> query
+          timeout in milliseconds (<classname>Integer</classname> or
+          <classname>String</classname>)</para>
+        </listitem>
+
+        <listitem>
+          <para><literal>javax.persistence.sharedCache.mode</literal>
+          corresponds to the <literal>share-cache-mode</literal> element
+          defined in <xref linkend="setup-configuration-packaging" />.</para>
+        </listitem>
+
+        <listitem>
+          <para><literal>javax.persistence.validation.mode</literal>
+          corresponds to the <literal>validation-mode</literal> element
+          defined in <xref linkend="setup-configuration-packaging" />.</para>
         </listitem>
       </itemizedlist>
 
@@ -423,7 +663,7 @@ EntityManagerFactory programmaticEmf =
         though.</para>
       </note>
 
-      <para>Here is a typical configuration in a J2SE environment</para>
+      <para>Here is a typical configuration in a Java SE environment</para>
 
       <programlisting>&lt;persistence&gt;
    &lt;persistence-unit name="manager1" transaction-type="RESOURCE_LOCAL"&gt;
@@ -431,11 +671,11 @@ EntityManagerFactory programmaticEmf =
       &lt;class&gt;org.hibernate.ejb.test.Distributor&lt;/class&gt;
       &lt;class&gt;org.hibernate.ejb.test.Item&lt;/class&gt;
       &lt;properties&gt;
-         &lt;property name="hibernate.dialect" value="org.hibernate.dialect.HSQLDialect"/&gt;
-         &lt;property name="hibernate.connection.driver_class" value="org.hsqldb.jdbcDriver"/&gt;
-         &lt;property name="hibernate.connection.username" value="sa"/&gt;
-         &lt;property name="hibernate.connection.password" value=""/&gt;
-         &lt;property name="hibernate.connection.url" value="jdbc:hsqldb:."/&gt;
+         &lt;property name="<literal>javax.persistence.jdbc.driver</literal>" value="org.hsqldb.jdbcDriver"/&gt;
+         &lt;property name="<literal>javax.persistence.jdbc.user</literal>" value="sa"/&gt;
+         &lt;property name="<literal>javax.persistence.jdbc.password</literal>" value=""/&gt;
+         &lt;property name="<literal>javax.persistence.jdbc.url</literal>" value="jdbc:hsqldb:."/&gt;
+         &lt;property name="hibernate.dialect" value="org.hibernate.dialect.HSQLDialect"/
          &lt;property name="hibernate.max_fetch_depth" value="3"/&gt;
        
          &lt;!-- cache configuration --&gt;
@@ -603,8 +843,8 @@ EntityManagerFactory emf =
       </tgroup>
     </table>
 
-    <para>Note that the JACC*EventListeners are removed if the security is not
-    enabled.</para>
+    <para>Note that the <classname>JACC*EventListeners</classname> are removed
+    if the security is not enabled.</para>
 
     <para>You can configure the event listeners either through the properties
     (see <xref linkend="setup-configuration" />) or through the
@@ -636,12 +876,13 @@ emf.close(); //close at application end</programlisting>
     manager factory is a wrapper on top of a session factory. Calls to the
     entityManagerFactory are thread safe.</para>
 
-    <para>Thanks to the EntityManagerFactory, you can retrieve an extended
-    entity manager. The extended entity manager keep the same persistence
-    context for the lifetime of the entity manager: in other words, the
-    entities are still managed between two transactions (unless you call
-    entityManager.clear() in between). You can see an entity manager as a
-    small wrapper on top of an Hibernate session.</para>
+    <para>Thanks to the <classname>EntityManagerFactory</classname>, you can
+    retrieve an extended entity manager. The extended entity manager keep the
+    same persistence context for the lifetime of the entity manager: in other
+    words, the entities are still managed between two transactions (unless you
+    call <methodname>entityManager.clear()</methodname> in between). You can
+    see an entity manager as a small wrapper on top of an Hibernate
+    session.</para>
 
     <para>TODO explains emf.createEntityManager(Map)</para>
   </section>

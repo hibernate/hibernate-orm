@@ -36,7 +36,7 @@ public class ConfigurationTest extends junit.framework.TestCase {
 		AnnotationConfiguration cfg = new AnnotationConfiguration();
 		cfg.configure( "org/hibernate/test/annotations/hibernate.cfg.xml" );
 		cfg.setProperty( Environment.HBM2DDL_AUTO, "create-drop" );
-		cfg.setProperty( AnnotationConfiguration.ARTEFACT, "class, whatever" );
+		cfg.setProperty( AnnotationConfiguration.ARTEFACT_PROCESSING_ORDER, "class" );
 		SessionFactory sf = cfg.buildSessionFactory();
 		assertNotNull( sf );
 		Session s = sf.openSession();
@@ -85,7 +85,7 @@ public class ConfigurationTest extends junit.framework.TestCase {
 		AnnotationConfiguration cfg = new AnnotationConfiguration();
 		cfg.configure( "org/hibernate/test/annotations/hibernate.cfg.xml" );
 		cfg.setProperty( Environment.HBM2DDL_AUTO, "create-drop" );
-		cfg.setProperty( AnnotationConfiguration.ARTEFACT, "class, hbm" );
+		cfg.setProperty( AnnotationConfiguration.ARTEFACT_PROCESSING_ORDER, "class, hbm" );
 		cfg.addAnnotatedClass( Boat.class );
 		SessionFactory sf = cfg.buildSessionFactory();
 		assertNotNull( sf );

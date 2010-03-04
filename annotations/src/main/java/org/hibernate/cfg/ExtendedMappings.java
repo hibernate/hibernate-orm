@@ -1,3 +1,4 @@
+// $Id:$
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
@@ -30,12 +31,12 @@ import java.util.Properties;
 import org.hibernate.AnnotationException;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.AnyMetaDef;
-import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.engine.NamedQueryDefinition;
 import org.hibernate.engine.NamedSQLQueryDefinition;
 import org.hibernate.engine.ResultSetMappingDefinition;
+import org.hibernate.mapping.FetchProfile;
 import org.hibernate.mapping.IdGenerator;
 import org.hibernate.mapping.Join;
 import org.hibernate.mapping.PersistentClass;
@@ -47,6 +48,7 @@ import org.hibernate.mapping.Table;
  * at least for named generators
  *
  * @author Emmanuel Bernard
+ * @author Hardy Ferentschik
  */
 public interface ExtendedMappings extends Mappings {
 
@@ -61,6 +63,7 @@ public interface ExtendedMappings extends Mappings {
 	 * Retrieve the id-generator by name.
 	 *
 	 * @param name The generator name.
+	 *
 	 * @return The generator, or null.
 	 */
 	public IdGenerator getGenerator(String name);
@@ -71,6 +74,7 @@ public interface ExtendedMappings extends Mappings {
 	 *
 	 * @param name generator name
 	 * @param localGenerators local generators
+	 *
 	 * @return the appropriate idgenerator or null if not found
 	 */
 	public IdGenerator getGenerator(String name, Map<String, IdGenerator> localGenerators);
@@ -95,6 +99,7 @@ public interface ExtendedMappings extends Mappings {
 	 *
 	 * @param name generator name
 	 * @param localGeneratorTables local generator tables
+	 *
 	 * @return The properties, or null.
 	 */
 	public Properties getGeneratorTableProperties(String name, Map<String, Properties> localGeneratorTables);
@@ -103,6 +108,7 @@ public interface ExtendedMappings extends Mappings {
 	 * Retrieve join metadata for a particular persistent entity.
 	 *
 	 * @param entityName The entity name
+	 *
 	 * @return The join metadata
 	 */
 	public Map<String, Join> getJoins(String entityName);
@@ -112,6 +118,7 @@ public interface ExtendedMappings extends Mappings {
 	 *
 	 * @param persistentClass The persistent entity metadata.
 	 * @param joins The join metadata to add.
+	 *
 	 * @throws MappingException
 	 */
 	public void addJoins(PersistentClass persistentClass, Map<String, Join> joins);
@@ -120,6 +127,7 @@ public interface ExtendedMappings extends Mappings {
 	 * Get and maintain a cache of class type.
 	 *
 	 * @param clazz The XClass mapping
+	 *
 	 * @return The class type.
 	 */
 	public AnnotatedClassType getClassType(XClass clazz);
@@ -129,6 +137,7 @@ public interface ExtendedMappings extends Mappings {
 	 * Add a class type.
 	 *
 	 * @param clazz The XClass mapping.
+	 *
 	 * @return The class type.
 	 */
 	public AnnotatedClassType addClassType(XClass clazz);
@@ -170,7 +179,7 @@ public interface ExtendedMappings extends Mappings {
 	public void addAnyMetaDef(AnyMetaDef defAnn) throws AnnotationException;
 
 	public AnyMetaDef getAnyMetaDef(String name);
-	
+
 	public boolean isInSecondPass();
 
 	/**
@@ -196,4 +205,16 @@ public interface ExtendedMappings extends Mappings {
 	public PropertyData getPropertyAnnotatedWithIdAndToOne(XClass entityType, String propertyName);
 
 	void addToOneAndIdProperty(XClass entity, PropertyData property);
+
+	/**
+	 * Add the specified profile to the list of fetch profiles configured via annotations.
+	 *
+	 * @param fetchProfile the fetch profile
+	 */
+	void addAnnotationConfiguredFetchProfile(FetchProfile fetchProfile);
+
+	/**
+	 * @return {@true} if the provided fetch profile has been configured via xml, {@false otherwise}.
+	 */
+	boolean containsAnnotationConfiguredFetchProfile(FetchProfile fetchProfile);
 }

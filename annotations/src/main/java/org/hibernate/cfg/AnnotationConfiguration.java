@@ -33,7 +33,9 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -55,10 +57,10 @@ import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.xml.sax.ErrorHandler;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
-import org.xml.sax.ErrorHandler;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.DuplicateMappingException;
@@ -68,12 +70,12 @@ import org.hibernate.MappingException;
 import org.hibernate.SessionFactory;
 import org.hibernate.annotations.AnyMetaDef;
 import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.common.AssertionFailure;
 import org.hibernate.annotations.common.reflection.MetadataProvider;
 import org.hibernate.annotations.common.reflection.MetadataProviderInjector;
 import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.java.JavaReflectionManager;
-import org.hibernate.annotations.common.AssertionFailure;
 import org.hibernate.cfg.annotations.Version;
 import org.hibernate.cfg.annotations.reflection.JPAMetadataProvider;
 import org.hibernate.cfg.beanvalidation.BeanValidationActivator;
@@ -84,15 +86,16 @@ import org.hibernate.event.EventListeners;
 import org.hibernate.event.PreInsertEventListener;
 import org.hibernate.event.PreUpdateEventListener;
 import org.hibernate.mapping.Column;
+import org.hibernate.mapping.FetchProfile;
 import org.hibernate.mapping.IdGenerator;
 import org.hibernate.mapping.Join;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.UniqueKey;
+import org.hibernate.util.CollectionHelper;
 import org.hibernate.util.JoinedIterator;
 import org.hibernate.util.ReflectHelper;
 import org.hibernate.util.StringHelper;
-import org.hibernate.util.CollectionHelper;
 
 /**
  * Similar to the {@link Configuration} object but handles EJB3 and Hibernate
@@ -132,8 +135,9 @@ public class AnnotationConfiguration extends Configuration {
 		Version.touch(); //touch version
 	}
 
-	public static final String ARTEFACT = "hibernate.mapping.precedence";
-	public static final String DEFAULT_PRECEDENCE = "hbm, class";
+	public static final String ARTEFACT_PROCESSING_ORDER = "hibernate.mapping.precedence";
+	public static final ConfigurationArtefactType[] DEFAULT_ARTEFACT_PROCESSING_ORDER =
+			new ConfigurationArtefactType[] { ConfigurationArtefactType.HBM, ConfigurationArtefactType.CLASS };
 
 	private Map<String, IdGenerator> namedGenerators;
 	private Map<String, Map<String, Join>> joins;
@@ -152,13 +156,13 @@ public class AnnotationConfiguration extends Configuration {
 	private Map<String, Document> hbmEntities;
 	private List<CacheHolder> caches;
 	private List<Document> hbmDocuments; //user ordering matters, hence the list
-	private String precedence = null;
+	private List<ConfigurationArtefactType> configurationArtefactPrecedence;
 	private boolean inSecondPass = false;
 	private transient ReflectionManager reflectionManager;
 	private boolean isDefaultProcessed = false;
 	private boolean isValidatorNotPresentLogged;
-	private Map<XClass,Map<String,PropertyData>> propertiesAnnotatedWithMapsId;
-	private Map<XClass,Map<String,PropertyData>> propertiesAnnotatedWithIdAndToOne;
+	private Map<XClass, Map<String, PropertyData>> propertiesAnnotatedWithMapsId;
+	private Map<XClass, Map<String, PropertyData>> propertiesAnnotatedWithIdAndToOne;
 
 	public AnnotationConfiguration() {
 		super();
@@ -173,9 +177,10 @@ public class AnnotationConfiguration extends Configuration {
 	 * ordered list.
 	 *
 	 * @param original The list of all entities annotated with {@code @Entity} or {@code @MappedSuperclass}
+	 *
 	 * @return Ordered list of entities including superclasses for entities which have any. Class hierachies are
-	 * listed bottom up (starting from the top level base class). There is no indication in the list when a new class
-	 * (hierarchy) starts.
+	 *         listed bottom up (starting from the top level base class). There is no indication in the list when a new class
+	 *         (hierarchy) starts.
 	 */
 	protected List<XClass> orderAndFillHierarchy(List<XClass> original) {
 		List<XClass> copy = new ArrayList<XClass>( original );
@@ -226,6 +231,8 @@ public class AnnotationConfiguration extends Configuration {
 	 * @param persistentClass the mapped class
 	 *
 	 * @return the configuration object
+	 *
+	 * @throws MappingException in case there is a configuration error for the specified class
 	 */
 	public AnnotationConfiguration addAnnotatedClass(Class persistentClass) throws MappingException {
 		XClass persistentXClass = reflectionManager.toXClass( persistentClass );
@@ -240,11 +247,13 @@ public class AnnotationConfiguration extends Configuration {
 	}
 
 	/**
-	 * Read package level metadata
+	 * Read package level metadata.
 	 *
 	 * @param packageName java package name
 	 *
 	 * @return the configuration object
+	 *
+	 * @throws MappingException in case there is an error in the mapping data
 	 */
 	public AnnotationConfiguration addPackage(String packageName) throws MappingException {
 		log.info( "Mapping package {}", packageName );
@@ -297,11 +306,11 @@ public class AnnotationConfiguration extends Configuration {
 		namingStrategy = EJB3NamingStrategy.INSTANCE;
 		setEntityResolver( new EJB3DTDEntityResolver() );
 		anyMetaDefs = new HashMap<String, AnyMetaDef>();
-		propertiesAnnotatedWithMapsId = new HashMap<XClass, Map<String,PropertyData>>();
-		propertiesAnnotatedWithIdAndToOne = new HashMap<XClass, Map<String,PropertyData>>(); 
+		propertiesAnnotatedWithMapsId = new HashMap<XClass, Map<String, PropertyData>>();
+		propertiesAnnotatedWithIdAndToOne = new HashMap<XClass, Map<String, PropertyData>>();
 		reflectionManager = new JavaReflectionManager();
 		( ( MetadataProviderInjector ) reflectionManager ).setMetadataProvider( new JPAMetadataProvider() );
-
+		configurationArtefactPrecedence = Collections.emptyList();
 	}
 
 	@Override
@@ -327,7 +336,7 @@ public class AnnotationConfiguration extends Configuration {
 		if ( !isDefaultProcessed ) {
 			//use global delimiters if orm.xml declare it
 			final Object isDelimited = reflectionManager.getDefaults().get( "delimited-identifier" );
-			if (isDelimited != null && isDelimited == Boolean.TRUE) {
+			if ( isDelimited != null && isDelimited == Boolean.TRUE ) {
 				getProperties().put( Environment.GLOBALLY_QUOTED_IDENTIFIERS, "true" );
 			}
 
@@ -336,20 +345,18 @@ public class AnnotationConfiguration extends Configuration {
 		}
 
 		//process entities
-		if ( precedence == null ) {
-			precedence = getProperties().getProperty( ARTEFACT );
+		if ( configurationArtefactPrecedence.isEmpty()
+				&& StringHelper.isNotEmpty( getProperties().getProperty( ARTEFACT_PROCESSING_ORDER ) ) ) {
+			configurationArtefactPrecedence = parsePrecedence( getProperties().getProperty( ARTEFACT_PROCESSING_ORDER ) );
 		}
-		if ( precedence == null ) {
-			precedence = DEFAULT_PRECEDENCE;
+		if ( configurationArtefactPrecedence.isEmpty() ) {
+			configurationArtefactPrecedence = Arrays.asList( DEFAULT_ARTEFACT_PROCESSING_ORDER );
 		}
-		StringTokenizer precedences = new StringTokenizer( precedence, ",; ", false );
-		if ( !precedences.hasMoreElements() ) {
-			throw new MappingException( ARTEFACT + " cannot be empty: " + precedence );
-		}
-		while ( precedences.hasMoreElements() ) {
-			String artifact = ( String ) precedences.nextElement();
-			removeConflictedArtifact( artifact );
-			processArtifactsOfType( artifact );
+		configurationArtefactPrecedence = Collections.unmodifiableList( configurationArtefactPrecedence );
+
+		for ( ConfigurationArtefactType p : configurationArtefactPrecedence ) {
+			removeConflictedArtifact( p );
+			processArtifactsOfType( p );
 		}
 
 		int cacheNbr = caches.size();
@@ -381,11 +388,9 @@ public class AnnotationConfiguration extends Configuration {
 			throw ( RuntimeException ) e.getCause();
 		}
 
-		Iterator<Map.Entry<Table,List<UniqueConstraintHolder>>> tables = uniqueConstraintHoldersByTable.entrySet().iterator();
-		while ( tables.hasNext() ) {
-			final Map.Entry<Table,List<UniqueConstraintHolder>> entry = tables.next();
-			final Table table = entry.getKey();
-			final List<UniqueConstraintHolder> uniqueConstraints = entry.getValue();
+		for ( Map.Entry<Table, List<UniqueConstraintHolder>> tableListEntry : uniqueConstraintHoldersByTable.entrySet() ) {
+			final Table table = tableListEntry.getKey();
+			final List<UniqueConstraintHolder> uniqueConstraints = tableListEntry.getValue();
 			int uniqueIndexPerTable = 0;
 			for ( UniqueConstraintHolder holder : uniqueConstraints ) {
 				uniqueIndexPerTable++;
@@ -607,8 +612,8 @@ public class AnnotationConfiguration extends Configuration {
 		}
 	}
 
-	private void processArtifactsOfType(String artifact) {
-		if ( "hbm".equalsIgnoreCase( artifact ) ) {
+	private void processArtifactsOfType(ConfigurationArtefactType p) {
+		if ( ConfigurationArtefactType.HBM.equals( p ) ) {
 			log.debug( "Process hbm files" );
 			for ( Document document : hbmDocuments ) {
 				super.add( document );
@@ -616,7 +621,7 @@ public class AnnotationConfiguration extends Configuration {
 			hbmDocuments.clear();
 			hbmEntities.clear();
 		}
-		else if ( "class".equalsIgnoreCase( artifact ) ) {
+		else if ( ConfigurationArtefactType.CLASS.equals( p ) ) {
 			log.debug( "Process annotated classes" );
 			//bind classes in the correct order calculating some inheritance state
 			List<XClass> orderedClasses = orderAndFillHierarchy( annotatedClasses );
@@ -633,13 +638,10 @@ public class AnnotationConfiguration extends Configuration {
 			annotatedClasses.clear();
 			annotatedClassEntities.clear();
 		}
-		else {
-			log.warn( "Unknown artifact: {}", artifact );
-		}
 	}
 
-	private void removeConflictedArtifact(String artifact) {
-		if ( "hbm".equalsIgnoreCase( artifact ) ) {
+	private void removeConflictedArtifact(ConfigurationArtefactType p) {
+		if ( ConfigurationArtefactType.HBM.equals( p ) ) {
 			for ( String entity : hbmEntities.keySet() ) {
 				if ( annotatedClassEntities.containsKey( entity ) ) {
 					annotatedClasses.remove( annotatedClassEntities.get( entity ) );
@@ -647,7 +649,7 @@ public class AnnotationConfiguration extends Configuration {
 				}
 			}
 		}
-		else if ( "class".equalsIgnoreCase( artifact ) ) {
+		else if ( ConfigurationArtefactType.CLASS.equals( p ) ) {
 			for ( String entity : annotatedClassEntities.keySet() ) {
 				if ( hbmEntities.containsKey( entity ) ) {
 					hbmDocuments.remove( hbmEntities.get( entity ) );
@@ -832,23 +834,19 @@ public class AnnotationConfiguration extends Configuration {
 	}
 
 	public void setPrecedence(String precedence) {
-		this.precedence = precedence;
+		this.configurationArtefactPrecedence = parsePrecedence( precedence );
 	}
 
-	private static class CacheHolder {
-		public CacheHolder(String role, String usage, String region, boolean isClass, boolean cacheLazy) {
-			this.role = role;
-			this.usage = usage;
-			this.region = region;
-			this.isClass = isClass;
-			this.cacheLazy = cacheLazy;
+	private List<ConfigurationArtefactType> parsePrecedence(String s) {
+		if ( StringHelper.isEmpty( s ) ) {
+			return Collections.emptyList();
 		}
-
-		public String role;
-		public String usage;
-		public String region;
-		public boolean isClass;
-		public boolean cacheLazy;
+		StringTokenizer precedences = new StringTokenizer( s, ",; ", false );
+		List<ConfigurationArtefactType> tmpPrecedences = new ArrayList<ConfigurationArtefactType>();
+		while ( precedences.hasMoreElements() ) {
+			tmpPrecedences.add( ConfigurationArtefactType.parsePrecedence( ( String ) precedences.nextElement() ) );
+		}
+		return tmpPrecedences;
 	}
 
 	@Override
@@ -860,11 +858,11 @@ public class AnnotationConfiguration extends Configuration {
 			  * - if it fails because of the version attribute mismatch, try and validate the document with orm_1_0.xsd
 			 */
 			List<SAXParseException> errors = new ArrayList<SAXParseException>();
-			SAXReader saxReader = new SAXReader( );
+			SAXReader saxReader = new SAXReader();
 			saxReader.setEntityResolver( getEntityResolver() );
-			saxReader.setErrorHandler( new ErrorLogger(errors) );
-			saxReader.setMergeAdjacentText(true);
-			saxReader.setValidation(true);
+			saxReader.setErrorHandler( new ErrorLogger( errors ) );
+			saxReader.setMergeAdjacentText( true );
+			saxReader.setValidation( true );
 
 			setValidationFor( saxReader, "orm_2_0.xsd" );
 
@@ -880,7 +878,7 @@ public class AnnotationConfiguration extends Configuration {
 				if ( e.getCause() == null || !( throwable instanceof SAXParseException ) ) {
 					throw new MappingException( "Could not parse JPA mapping document", e );
 				}
-				errors.add( (SAXParseException) throwable );
+				errors.add( ( SAXParseException ) throwable );
 			}
 
 			boolean isV1Schema = false;
@@ -889,11 +887,11 @@ public class AnnotationConfiguration extends Configuration {
 				final String errorMessage = exception.getMessage();
 				//does the error look like a schema mismatch?
 				isV1Schema = doc != null
-						&& errorMessage.contains("1.0")
-						&& errorMessage.contains("2.0")
-						&& errorMessage.contains("version");
+						&& errorMessage.contains( "1.0" )
+						&& errorMessage.contains( "2.0" )
+						&& errorMessage.contains( "version" );
 			}
-			if (isV1Schema) {
+			if ( isV1Schema ) {
 				//reparse with v1
 				errors.clear();
 				setValidationFor( saxReader, "orm_1_0.xsd" );
@@ -903,21 +901,21 @@ public class AnnotationConfiguration extends Configuration {
 				}
 				catch ( DocumentException e ) {
 					//oops asXML fails even if the core doc parses initially
-					throw new AssertionFailure("Error in DOM4J leads to a bug in Hibernate", e);
+					throw new AssertionFailure( "Error in DOM4J leads to a bug in Hibernate", e );
 				}
 
 			}
 			if ( errors.size() != 0 ) {
 				//report errors in exception
-				StringBuilder errorMessage = new StringBuilder( );
-				for (SAXParseException error : errors) {
-					errorMessage.append("Error parsing XML (line")
-								.append(error.getLineNumber())
-								.append(" : column ")
-								.append(error.getColumnNumber())
-								.append("): ")
-								.append(error.getMessage())
-								.append("\n");
+				StringBuilder errorMessage = new StringBuilder();
+				for ( SAXParseException error : errors ) {
+					errorMessage.append( "Error parsing XML (line" )
+							.append( error.getLineNumber() )
+							.append( " : column " )
+							.append( error.getColumnNumber() )
+							.append( "): " )
+							.append( error.getMessage() )
+							.append( "\n" );
 				}
 				throw new MappingException( "Invalid ORM mapping file.\n" + errorMessage.toString() );
 			}
@@ -931,25 +929,6 @@ public class AnnotationConfiguration extends Configuration {
 			catch ( IOException ioe ) {
 				log.warn( "Could not close input stream", ioe );
 			}
-		}
-	}
-
-	private static class ErrorLogger implements ErrorHandler {
-		private List<SAXParseException> errors;
-
-		public ErrorLogger(List<SAXParseException> errors) {
-			this.errors = errors;
-		}
-
-		public void warning(SAXParseException exception) throws SAXException {
-			errors.add( exception );
-		}
-
-		public void error(SAXParseException exception) throws SAXException {
-			errors.add( exception );
-		}
-
-		public void fatalError(SAXParseException exception) throws SAXException {
 		}
 	}
 
@@ -1267,11 +1246,19 @@ public class AnnotationConfiguration extends Configuration {
 	}
 
 	//not a public API
+
 	public ReflectionManager getReflectionManager() {
 		return reflectionManager;
 	}
 
 	protected class ExtendedMappingsImpl extends MappingsImpl implements ExtendedMappings {
+		private Boolean useNewGeneratorMappings;
+		private Collection<FetchProfile> annotationConfiguredProfile;
+
+		public ExtendedMappingsImpl() {
+			annotationConfiguredProfile = new ArrayList<FetchProfile>();
+		}
+
 		public void addDefaultGenerator(IdGenerator generator) {
 			this.addGenerator( generator );
 			defaultNamedGenerators.add( generator.getName() );
@@ -1288,7 +1275,7 @@ public class AnnotationConfiguration extends Configuration {
 
 		public void addPropertyAnnotatedWithMapsId(XClass entityType, PropertyData property) {
 			Map<String, PropertyData> map = propertiesAnnotatedWithMapsId.get( entityType );
-			if (map == null) {
+			if ( map == null ) {
 				map = new HashMap<String, PropertyData>();
 				propertiesAnnotatedWithMapsId.put( entityType, map );
 			}
@@ -1302,14 +1289,12 @@ public class AnnotationConfiguration extends Configuration {
 
 		public void addToOneAndIdProperty(XClass entityType, PropertyData property) {
 			Map<String, PropertyData> map = propertiesAnnotatedWithIdAndToOne.get( entityType );
-			if (map == null) {
+			if ( map == null ) {
 				map = new HashMap<String, PropertyData>();
 				propertiesAnnotatedWithIdAndToOne.put( entityType, map );
 			}
 			map.put( property.getPropertyName(), property );
 		}
-
-		private Boolean useNewGeneratorMappings;
 
 		@SuppressWarnings({ "UnnecessaryUnboxing" })
 		public boolean useNewGeneratorMappings() {
@@ -1382,6 +1367,7 @@ public class AnnotationConfiguration extends Configuration {
 		}
 
 		//FIXME should be private but is part of the ExtendedMapping contract
+
 		public AnnotatedClassType addClassType(XClass clazz) {
 			AnnotatedClassType type;
 			if ( clazz.isAnnotationPresent( Entity.class ) ) {
@@ -1420,16 +1406,10 @@ public class AnnotationConfiguration extends Configuration {
 			return deprecatedStructure;
 		}
 
-		/**
-		 * {@inheritDoc}
-		 */
 		public Map<Table, List<UniqueConstraintHolder>> getUniqueConstraintHoldersByTable() {
 			return uniqueConstraintHoldersByTable;
 		}
 
-		/**
-		 * {@inheritDoc}
-		 */
 		@SuppressWarnings({ "unchecked" })
 		public void addUniqueConstraints(Table table, List uniqueConstraints) {
 			List<UniqueConstraintHolder> constraintHolders = new ArrayList<UniqueConstraintHolder>(
@@ -1437,7 +1417,7 @@ public class AnnotationConfiguration extends Configuration {
 			);
 
 			int keyNameBase = determineCurrentNumberOfUniqueConstraintHolders( table );
-			for ( String[] columns : (List<String[]>)uniqueConstraints ) {
+			for ( String[] columns : ( List<String[]> ) uniqueConstraints ) {
 				final String keyName = "key" + keyNameBase++;
 				constraintHolders.add(
 						new UniqueConstraintHolder().setName( keyName ).setColumns( columns )
@@ -1453,9 +1433,6 @@ public class AnnotationConfiguration extends Configuration {
 					: currentHolders.size();
 		}
 
-		/**
-		 * {@inheritDoc}
-		 */
 		public void addUniqueConstraintHolders(Table table, List<UniqueConstraintHolder> uniqueConstraintHolders) {
 			List<UniqueConstraintHolder> holderList = getUniqueConstraintHoldersByTable().get( table );
 			if ( holderList == null ) {
@@ -1549,6 +1526,55 @@ public class AnnotationConfiguration extends Configuration {
 
 		public AnyMetaDef getAnyMetaDef(String name) {
 			return anyMetaDefs.get( name );
+		}
+
+		public void addAnnotationConfiguredFetchProfile(FetchProfile fetchProfile) {
+			annotationConfiguredProfile.add( fetchProfile );
+		}
+
+		public boolean containsAnnotationConfiguredFetchProfile(FetchProfile fetchProfile) {
+			for ( FetchProfile profile : annotationConfiguredProfile ) {
+				// we need reference equality there!!
+				if ( profile == fetchProfile ) {
+					return true;
+				}
+			}
+			return false;
+		}
+	}
+
+	private static class CacheHolder {
+		public CacheHolder(String role, String usage, String region, boolean isClass, boolean cacheLazy) {
+			this.role = role;
+			this.usage = usage;
+			this.region = region;
+			this.isClass = isClass;
+			this.cacheLazy = cacheLazy;
+		}
+
+		public String role;
+		public String usage;
+		public String region;
+		public boolean isClass;
+		public boolean cacheLazy;
+	}
+
+	private static class ErrorLogger implements ErrorHandler {
+		private List<SAXParseException> errors;
+
+		public ErrorLogger(List<SAXParseException> errors) {
+			this.errors = errors;
+		}
+
+		public void warning(SAXParseException exception) throws SAXException {
+			errors.add( exception );
+		}
+
+		public void error(SAXParseException exception) throws SAXException {
+			errors.add( exception );
+		}
+
+		public void fatalError(SAXParseException exception) throws SAXException {
 		}
 	}
 }

@@ -601,6 +601,95 @@ public class LockTest extends TestCase {
 		}
 	}
 
+	public void testQueryTimeoutEMProps() throws Exception {
+		// TODO:  replace dialect instanceof test with a Dialect.hasCapability
+		if ( ! (getDialect() instanceof Oracle10gDialect)) {
+			log.info("skipping testQueryTimeout");
+			return;
+ 		}
+		EntityManager em = getOrCreateEntityManager();
+		Map queryTimeoutProps = new HashMap();
+		queryTimeoutProps.put("javax.persistence.query.timeout", new Integer(500) ); // 1 sec timeout (should round up)
+		final EntityManager em2 = createIsolatedEntityManager(queryTimeoutProps);
+		Lock lock = new Lock();
+		Thread t = null;
+		FutureTask<Boolean> bgTask = null;
+		final CountDownLatch latch = new CountDownLatch(1);
+		try {
+			lock.setName( "testQueryTimeout" );
+
+			em.getTransaction().begin();
+			em.persist( lock );
+			em.getTransaction().commit();
+			em.clear();
+
+			em.getTransaction().begin();
+			lock = em.getReference( Lock.class, lock.getId() );
+			em.lock( lock, LockModeType.PESSIMISTIC_WRITE );
+			final Integer id = lock.getId();
+			lock.getName();		// force entity to be read
+			log.info("testQueryTimeout: got write lock");
+
+			bgTask = new FutureTask<Boolean>( new Callable() {
+				public Boolean call() {
+					try {
+						boolean timedOut = false;	// true (success) if LockTimeoutException occurred
+						em2.getTransaction().begin();
+						log.info( "testQueryTimeout: (BG) about to read write-locked entity" );
+						// we should block on the following read
+						Lock lock2 = em2.getReference( Lock.class, id );
+						lock2.getName();		//  force entity to be read
+						log.info( "testQueryTimeout: (BG) read write-locked entity" );
+						try {
+							// we should block on the following read
+							Query query = em2.createQuery(
+									  "select L from Lock_ L where L.id < 10000 ");
+							query.setLockMode( LockModeType.PESSIMISTIC_READ );
+							List<Lock> resultList = query.getResultList();
+							String name = resultList.get(0).getName(); //  force entity to be read
+							log.info( "testQueryTimeout: name read =" + name );
+						}
+						catch( QueryTimeoutException e) {
+							// success
+							log.info( "testQueryTimeout: (BG) got expected timeout exception" );
+							 timedOut = true;
+						}
+						catch ( Throwable e) {
+							log.info( "testQueryTimeout: Expected LockTimeoutException but got unexpected exception", e );
+						}
+						em2.getTransaction().commit();
+						return new Boolean( timedOut );
+					}
+					finally {
+						latch.countDown();	// signal that we finished
+					}
+				}
+			} );
+			t = new Thread(bgTask);
+			t.setDaemon( true );
+			t.setName( "testQueryTimeout (bg)" );
+			t.start();
+			boolean latchSet = latch.await( 10, TimeUnit.SECONDS );  // should return quickly on success
+			assertTrue( "background test thread finished (lock timeout is broken)", latchSet);
+			assertTrue( "background test thread timed out on lock attempt", bgTask.get().booleanValue() );
+			em.getTransaction().commit();
+		}
+		finally {
+			if ( em.getTransaction().isActive() ) {
+				em.getTransaction().rollback();
+			}
+			if ( t != null) {	  // wait for background thread to finish before deleting entity
+				t.join();
+			}
+			em.getTransaction().begin();
+			lock = em.getReference( Lock.class, lock.getId() );
+			em.remove( lock );
+			em.getTransaction().commit();
+			em.close();
+			em2.close();
+		}
+	}
+
 
 	public Class[] getAnnotatedClasses() {
 		return new Class[]{

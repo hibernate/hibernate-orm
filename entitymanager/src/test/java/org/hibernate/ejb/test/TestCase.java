@@ -1,4 +1,4 @@
-// $Id:$
+// $Id$
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
@@ -130,6 +130,12 @@ public abstract class TestCase extends HibernateTestCase {
 
 	protected EntityManager createIsolatedEntityManager() {
 		EntityManager isolatedEm = factory.createEntityManager();
+		isolatedEms.add( isolatedEm );
+		return isolatedEm;
+	}
+
+	protected EntityManager createIsolatedEntityManager(Map props) {
+		EntityManager isolatedEm = factory.createEntityManager(props);
 		isolatedEms.add( isolatedEm );
 		return isolatedEm;
 	}

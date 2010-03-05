@@ -118,6 +118,7 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 		entityManagerSpecificProperties.add( AvailableSettings.FLUSH_MODE );
 		entityManagerSpecificProperties.add( AvailableSettings.SHARED_CACHE_RETRIEVE_MODE );
 		entityManagerSpecificProperties.add( AvailableSettings.SHARED_CACHE_STORE_MODE );
+		entityManagerSpecificProperties.add( QueryHints.SPEC_HINT_TIMEOUT );
 	}
 
 	private EntityManagerFactoryImpl entityManagerFactory;
@@ -166,6 +167,17 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 						currentCacheRetrieveMode()
 				)
 		);
+	}
+
+	private Query applyProperties(Query query) {
+		if ( lockOptions.getLockMode() != LockMode.NONE ) {
+			query.setLockMode( getLockMode(lockOptions.getLockMode()));
+		}
+		Object queryTimeout;
+		if ( (queryTimeout = getProperties().get(QueryHints.SPEC_HINT_TIMEOUT)) != null ) {
+			query.setHint ( QueryHints.SPEC_HINT_TIMEOUT, queryTimeout );
+		}
+		return query;
 	}
 
 	private CacheRetrieveMode currentCacheRetrieveMode() {
@@ -248,7 +260,7 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 
 	public Query createQuery(String jpaqlString) {
 		try {
-			return new QueryImpl<Object>( getSession().createQuery( jpaqlString ), this );
+			return applyProperties( new QueryImpl<Object>( getSession().createQuery( jpaqlString ), this ) );
 		}
 		catch ( HibernateException he ) {
 			throw convert( he );

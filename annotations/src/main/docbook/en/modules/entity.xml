@@ -3207,7 +3207,7 @@ public class SpaceShip {</programlisting>
 @Where(clause="1=1")
 @org.hibernate.annotations.Table(name="Forest", indexes = { @Index(name="idx", columnNames = { "name", "length" } ) } )
 @Persister(impl=MyEntityPersister.class)
-public class Forest { ... }</programlisting><programlisting>@Entity
+public class Forest { ... }</programlisting> <programlisting>@Entity
 @Inheritance(
     strategy=InheritanceType.JOINED
 )
@@ -3614,7 +3614,8 @@ public class Child {
 alter table Child add constraint FK_PARENT foreign key (parent_id) references Parent</programlisting>
 
       <section id="entity-hibspec-singleassoc-fetching">
-        <title>Lazy options and fetching modes</title>
+        <title id="section-lazy-options-fetching-modes">Lazy options and
+        fetching modes</title>
 
         <para>JPA comes with the <literal>fetch</literal> option to define
         lazy loading and fetching modes, however Hibernate has a much more
@@ -4300,6 +4301,64 @@ public interface Cuisine {
     public Country getCountry();
     public void setCountry(Country country);
 }</programlisting>
+    </section>
+
+    <section>
+      <title>Fetch profiles</title>
+
+      <para>In <xref linkend="section-lazy-options-fetching-modes" /> we have
+      seen how to affect the fetching strategy for associated objects using
+      the <classname>@Fetch</classname> annotation. An alternative approach is
+      a so called fetch profile. A fetch profile is a named configuration
+      associated with the <classname>org.hibernate.SessionFactory</classname>
+      which gets enabled on the <classname>org.hibernate.Session.</classname>
+      Once enabled on a <classname>org.hibernate.Session</classname>, the
+      fetch profile will be in affect for that session until it is explicitly
+      disabled. Lets look at an example:</para>
+
+      <para><programlisting>@Entity
+<emphasis role="bold">@FetchProfile(name = "customer-with-orders", fetchOverrides = {
+   @FetchProfile.FetchOverride(entity = Customer.class, association = "orders", mode = FetchMode.JOIN)
+})</emphasis>
+public class Customer {
+   @Id
+   @GeneratedValue
+   private long id;
+
+   private String name;
+
+   private long customerNumber;
+
+   @OneToMany
+   private Set&lt;Order&gt; orders;
+
+   // standard getter/setter
+   ...
+}</programlisting>In the normal case the orders association would be lazy
+      loaded by Hibernate, but in a usecase where it is more efficient to load
+      the customer and their orders together you could do something like
+      this:</para>
+
+      <programlisting>Session session = ...;
+session.enableFetchProfile( "customer-with-orders" );  // name matches @FetchProfile name
+Customer customer = (Customer) session.get( Customer.class, customerId );
+session.disableFetchProfile( "customer-with-orders" ); // or just close the session
+...</programlisting>
+
+      <note>
+        <para>Fetch profile definitions are global and it does not matter on
+        which class you place them. You can place the
+        <classname>@FetchProfile</classname> annotation either onto a class or
+        package (package-info.java). In order to define multiple fetch
+        profiles for the same class or package
+        <classname>@FetchProfiles</classname> can be used.</para>
+      </note>
+
+      <para>Currently only join style fetch profiles are supported, but they
+      plan is to support additional styles. See <ulink
+      url="http://opensource.atlassian.com/projects/hibernate/browse/HHH-3414">HHH-3414</ulink>
+      for details. Refer also to the discussion about fetch profiles in the
+      Hibernate Core documentation.</para>
     </section>
   </section>
 </chapter>

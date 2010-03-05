@@ -51,7 +51,7 @@
   &lt;dependencies&gt;
     &lt;dependency&gt;
       &lt;groupId&gt;org.hibernate&lt;/groupId&gt;
-      &lt;artifactId&gt;hibernate-annotations&lt;/artifactId&gt;
+      &lt;artifactId&gt;hibernate-core&lt;/artifactId&gt;
       &lt;version&gt;${hibernate-core-version}&lt;/version&gt;
     &lt;/dependency&gt;
   &lt;/dependencies&gt;
@@ -66,8 +66,8 @@
     <para>First, set up your classpath (after you have created a new project
     in your favorite IDE): <itemizedlist>
         <listitem>
-          <para>Copy <filename>hibernate-core.jar</filename> and required 3rd
-          party library files.</para>
+          <para>Copy all Hibernate3 core and required 3rd party library
+          files.</para>
         </listitem>
 
         <listitem>
@@ -97,7 +97,7 @@
     <filename>hibernate-validator.jar</filename> and
     <filename>validation-api.jar</filename> in your classpath. Alternatively
     add the following dependency in your
-    <filename>pom.xml</filename>.<programlisting>&lt;project ...&gt;
+    <filename>pom.xml</filename>.<programlisting>&lt;project&gt;
   ...
   &lt;dependencies&gt;
     &lt;dependency&gt;
@@ -105,7 +105,9 @@
       &lt;artifactId&gt;hibernate-validator&lt;/artifactId&gt;
       &lt;version&gt;${hibernate-validator-version}&lt;/version&gt;
     &lt;/dependency&gt;
+    ...
   &lt;/dependencies&gt;
+  ...
 &lt;/project&gt;</programlisting></para>
 
     <para>If you wish to use <ulink
@@ -114,7 +116,7 @@
     <filename>hibernate-search.jar</filename> and
     <filename>lucene-core-x.y.z.jar</filename> in your classpath.
     Alternatively add the following dependency in your
-    <filename>pom.xml</filename>.<programlisting>&lt;project ...&gt;
+    <filename>pom.xml</filename>.<programlisting>&lt;project&gt;
   ...
   &lt;dependencies&gt;
     &lt;dependency&gt;
@@ -122,7 +124,9 @@
       &lt;artifactId&gt;hibernate-search&lt;/artifactId&gt;
       &lt;version&gt;${hibernate-search-version}&lt;/version&gt;
     &lt;/dependency&gt;
+    ...
   &lt;/dependencies&gt;
+  ...
 &lt;/project&gt;</programlisting></para>
 
     <para>We recommend you use the JPA 2 APIs to bootstrap Hibernate (see the
@@ -198,7 +202,7 @@ private static final SessionFactory sessionFactory;
                     .addAnnotatedClass(Dog.class)</emphasis>
 <emphasis role="bold">                    .addResource("test/animals/orm.xml")</emphasis>
                     .configure()
-                      .buildSessionFactory();</programlisting>
+                    .buildSessionFactory();</programlisting>
 
     <para>There is no other difference in the way you use Hibernate APIs with
     annotations, except for this startup routine change or in the

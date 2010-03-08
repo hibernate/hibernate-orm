@@ -617,34 +617,32 @@ public class Country implements Serializable {
         <title>Non-annotated property defaults</title>
 
         <para>If a property is not annotated, the following rules
-        apply:</para>
+        apply:<itemizedlist>
+            <listitem>
+              <para>If the property is of a single type, it is mapped as
+              @Basic</para>
+            </listitem>
 
-        <itemizedlist>
-          <listitem>
-            <para>If the property is of a single type, it is mapped as
-            @Basic</para>
-          </listitem>
+            <listitem>
+              <para>Otherwise, if the type of the property is annotated as
+              @Embeddable, it is mapped as @Embedded</para>
+            </listitem>
 
-          <listitem>
-            <para>Otherwise, if the type of the property is annotated as
-            @Embeddable, it is mapped as @Embedded</para>
-          </listitem>
+            <listitem>
+              <para>Otherwise, if the type of the property is
+              <classname>Serializable</classname>, it is mapped as
+              <classname>@Basic</classname> in a column holding the object in
+              its serialized version</para>
+            </listitem>
 
-          <listitem>
-            <para>Otherwise, if the type of the property is
-            <classname>Serializable</classname>, it is mapped as
-            <classname>@Basic</classname> in a column holding the object in
-            its serialized version</para>
-          </listitem>
-
-          <listitem>
-            <para>Otherwise, if the type of the property is
-            <classname>java.sql.Clob</classname> or
-            <classname>java.sql.Blob</classname>, it is mapped as
-            <classname>@Lob</classname> with the appropriate
-            <classname>LobType</classname></para>
-          </listitem>
-        </itemizedlist>
+            <listitem>
+              <para>Otherwise, if the type of the property is
+              <classname>java.sql.Clob</classname> or
+              <classname>java.sql.Blob</classname>, it is mapped as
+              <classname>@Lob</classname> with the appropriate
+              <classname>LobType</classname></para>
+            </listitem>
+          </itemizedlist></para>
       </section>
     </section>
 
@@ -746,7 +744,7 @@ public Long getId() { ... }         </programlisting>
          </programlisting>
 
         <para>If JPA XML (like <filename>META-INF/orm.xml</filename>) is used
-        to define thegenerators, <literal>EMP_GEN</literal> and
+        to define the generators, <literal>EMP_GEN</literal> and
         <literal>SEQ_GEN</literal> are application level generators.
         <literal>EMP_GEN</literal> defines a table based id generator using
         the hilo algorithm with a <literal>max_lo</literal> of 20. The hi
@@ -1005,7 +1003,7 @@ class UserId implements Serializable {
         <section>
           <title>Multiple @Id properties</title>
 
-          <para>Another arguably more natural) approach is to place
+          <para>Another, arguably more natural, approach is to place
           <classname>@Id</classname> on multiple properties of my entity. This
           approach is only supported by Hibernate but does not require an
           extra embeddable component.</para>

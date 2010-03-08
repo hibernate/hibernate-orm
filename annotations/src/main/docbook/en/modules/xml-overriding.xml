@@ -24,7 +24,7 @@
   -->
 
 <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
-<chapter id="xml-overriding" label="Overriding metadata through XML">
+<chapter id="xml-overriding">
   <title>Overriding metadata through XML</title>
 
   <para>The primary target for metadata in EJB3 is annotations, but the EJB3
@@ -83,7 +83,7 @@
       feature.</para>
     </section>
 
-    <section id="xml-overriding-principles-entity" revision="1">
+    <section id="xml-overriding-principles-entity">
       <title>Entity level metadata</title>
 
       <para>You can either define or override metadata informations on a given

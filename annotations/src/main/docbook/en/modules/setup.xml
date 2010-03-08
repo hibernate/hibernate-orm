@@ -25,9 +25,9 @@
 <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
 "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
 <chapter>
-  <title id="setup" revision="1">Setting up an annotations project</title>
+  <title id="setup">Setting up an annotations project</title>
 
-  <section id="setup-requirements" revision="2">
+  <section id="setup-requirements">
     <title>Requirements</title>
 
     <itemizedlist>
@@ -60,7 +60,7 @@
     </itemizedlist>
   </section>
 
-  <section id="setup-configuration" revision="2">
+  <section id="setup-configuration">
     <title>Configuration</title>
 
     <para>First, set up your classpath (after you have created a new project

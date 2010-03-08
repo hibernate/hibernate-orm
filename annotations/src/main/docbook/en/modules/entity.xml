@@ -26,7 +26,7 @@
 <chapter id="entity">
   <title>Mapping Entities</title>
 
-  <section id="entity-overview" revision="2">
+  <section id="entity-overview">
     <title>Intro</title>
 
     <para>This section explains how to describe persistence mappings using
@@ -34,7 +34,7 @@
     extensions.</para>
   </section>
 
-  <section id="entity-mapping" revision="2">
+  <section id="entity-mapping">
     <title>Mapping with JPA (Java Persistence Annotations)</title>
 
     <para>JPA entities are plain POJOs. Actually, they are Hibernate
@@ -136,7 +136,7 @@ public class Sky implements Serializable {
         you shouldn't worry about that.</remark>
       </section>
 
-      <section id="entity-mapping-entity-version" revision="1">
+      <section id="entity-mapping-entity-version">
         <title>Versioning for optimistic locking</title>
 
         <para>You can add optimistic locking capability to an entity using the
@@ -168,7 +168,7 @@ public class Flight implements Serializable {
       </section>
     </section>
 
-    <section id="entity-mapping-property" revision="1">
+    <section id="entity-mapping-property">
       <title>Mapping simple properties</title>
 
       <section>
@@ -377,7 +377,7 @@ public class Order {
         </note>
       </section>
 
-      <section id="entity-mapping-property-column" revision="1">
+      <section id="entity-mapping-property-column">
         <title>Declaring column attributes</title>
 
         <para>The column(s) used for a property mapping can be defined using
@@ -646,8 +646,7 @@ public class Country implements Serializable {
       </section>
     </section>
 
-    <section id="entity-mapping-identifier" label=""
-             xreflabel="Mapping identifier properties">
+    <section id="entity-mapping-identifier">
       <title>Mapping identifier properties</title>
 
       <para>The <literal>@Id</literal> annotation lets you define which
@@ -1593,7 +1592,7 @@ public class Flight implements Serializable {
 }       </programlisting>
       </section>
 
-      <section id="entity-mapping-association-collections" revision="1">
+      <section id="entity-mapping-association-collections">
         <title>Collections</title>
 
         <para>You can map <classname>Collection</classname>,
@@ -1606,8 +1605,7 @@ public class Flight implements Serializable {
         <classname>@ElementCollection</classname>. We will describe that in
         more detail in the following subsections.</para>
 
-        <section id="entity-mapping-association-collection-onetomany"
-                 revision="2">
+        <section id="entity-mapping-association-collection-onetomany">
           <title>One-to-many</title>
 
           <para>One-to-many associations are declared at the property level
@@ -1728,8 +1726,7 @@ public class Monkey {
             (<literal>inversejoinColumns</literal>).</para>
           </section>
 
-          <section id="entity-mapping-association-collection-manytomany-default"
-                   revision="1">
+          <section id="entity-mapping-association-collection-manytomany-default">
             <title>Defaults</title>
 
             <para>Without describing any physical mapping, a unidirectional
@@ -1766,8 +1763,7 @@ public class Tiger {
           </section>
         </section>
 
-        <section id="eentity-mapping-association-collection-manytomany"
-                 revision="">
+        <section id="eentity-mapping-association-collection-manytomany">
           <title>Many-to-many</title>
 
           <section>
@@ -1979,8 +1975,7 @@ public class User {
           </note>
         </section>
 
-        <section id="entity-mapping-association-collections-overview"
-                 revision="1">
+        <section id="entity-mapping-association-collections-overview">
           <title>Indexed collections (List, Map)</title>
 
           <para>Lists can be mapped in two different ways:</para>
@@ -2396,7 +2391,7 @@ Order order = em.find(Order.class, 1l);
 customer.getOrders().remove(order); //order will be deleted by cascade</programlisting>
       </section>
 
-      <section id="entity-mapping-association-fetching" revision="1">
+      <section id="entity-mapping-association-fetching">
         <title>Association fetching</title>
 
         <para>You have the ability to either eagerly or lazily fetch
@@ -2704,8 +2699,7 @@ public SortedSet&lt;Ticket&gt; getTickets() {
     <para>Unfortunately, you lose the type-safety of queries written using the
     Criteria API.</para>
 
-    <section id="entity-mapping-query-hql" label="Mapping JPAQL/HQL queries"
-             revision="1">
+    <section id="entity-mapping-query-hql">
       <title>Mapping JP-QL/HQL queries</title>
 
       <para>You can map JP-QL/HQL queries using annotations.
@@ -2823,7 +2817,7 @@ public class MyDao {
       operations.</para>
     </section>
 
-    <section id="entity-mapping-query-native" revision="2">
+    <section id="entity-mapping-query-native">
       <title>Mapping native queries</title>
 
       <para>You can also map a native query (ie a plain SQL query). To achieve
@@ -3043,7 +3037,7 @@ public class SpaceShip {</programlisting>
     </section>
   </section>
 
-  <section id="entity-hibspec" xreflabel="Hibernate Annotation Extensions">
+  <section id="entity-hibspec">
     <title>Hibernate Annotation Extensions</title>
 
     <para>Hibernate 3.1 offers a variety of additional annotations that you
@@ -3055,7 +3049,7 @@ public class SpaceShip {</programlisting>
     <classname>org.hibernate.annotations</classname> package contains all
     these annotations extensions.</para>
 
-    <section id="entity-hibspec-entity" revision="4">
+    <section id="entity-hibspec-entity">
       <title>Entity</title>
 
       <para>You can fine tune some of the actions done by Hibernate on
@@ -3216,7 +3210,7 @@ public class Vegetable { ... }
 public class Carrot extends Vegetable { ... }</programlisting></para>
     </section>
 
-    <section id="entity-hibspec-identifier" label="Identifier" revision="2">
+    <section id="entity-hibspec-identifier">
       <title>Identifier</title>
 
       <para>Hibernate Annotations goes beyond the Java Persistence
@@ -3313,7 +3307,7 @@ List results = s.createCriteria( Citizen.class )
       </section>
     </section>
 
-    <section id="entity-hibspec-property" revision="2">
+    <section id="entity-hibspec-property">
       <title>Property</title>
 
       <section>
@@ -3519,7 +3513,7 @@ public class Antenna {
       </section>
     </section>
 
-    <section id="entity-hibspec-inheritance" revision="3">
+    <section id="entity-hibspec-inheritance">
       <title>Inheritance</title>
 
       <para>SINGLE_TABLE is a very powerful strategy but sometimes, and
@@ -3771,10 +3765,10 @@ package org.hibernate.test.annotations.any;
       </section>
     </section>
 
-    <section id="entity-hibspec-collection" revision="2">
+    <section id="entity-hibspec-collection">
       <title>Collection related annotations</title>
 
-      <section id="entity-hibspec-collection-enhance" revision="3">
+      <section id="entity-hibspec-collection-enhance">
         <title>Enhance collection settings</title>
 
         <para>It is possible to set <itemizedlist>
@@ -3857,11 +3851,10 @@ alter table Man_Woman add constraint TO_WOMAN_FK foreign key (woman_id) referenc
 alter table Man_Woman add constraint TO_MAN_FK foreign key (man_id) references Man</programlisting>
       </section>
 
-      <section id="entity-hibspec-collection-extratype" revision="1">
+      <section id="entity-hibspec-collection-extratype">
         <title>Extra collection types</title>
 
-        <section id="entity-hibspec-collection-extratype-indexbidir"
-                 revision="2">
+        <section id="entity-hibspec-collection-extratype-indexbidir">
           <title>Bidirectional association with indexed collections</title>
 
           <para>A bidirectional association where one end is an indexed
@@ -3985,7 +3978,7 @@ public class Passport {
       </section>
     </section>
 
-    <section id="entity-hibspec-cascade" xreflabel="Cascade">
+    <section id="entity-hibspec-cascade">
       <title>Cascade</title>
 
       <para>Hibernate offers more operations than the Java Persistence
@@ -4161,7 +4154,7 @@ public class Forest { ... }</programlisting></para>
       ability to set those annotations at a package level.</para>
     </section>
 
-    <section id="entity-hibspec-customsql" revision="1">
+    <section id="entity-hibspec-customsql">
       <title>Custom SQL for CRUD operations</title>
 
       <para>Hibernate gives you the ability to override every single SQL

@@ -122,7 +122,7 @@
         <literal>ddl</literal> together by setting the property to
         <literal>callback, dll</literal></para>
 
-        <programlisting>&lt;persistence ...&gt;
+        <programlisting role="XML" language="XML">&lt;persistence ...&gt;
   &lt;persistence-unit ...&gt;
     ...
     &lt;properties&gt;
@@ -171,15 +171,15 @@
       <example>
         <title>Using custom groups for validation</title>
 
-        <programlisting>&lt;persistence ...&gt;
+        <programlisting role="XML" language="XML">&lt;persistence ...&gt;
   &lt;persistence-unit ...&gt;
     ...
     &lt;properties&gt;
-      &lt;property name="<literal>javax.persistence.validation.group.pre-update</literal>"
+      &lt;property name="javax.persistence.validation.group.pre-update"
                 value="javax.validation.group.Default, com.acme.group.Strict"/&gt;
-      &lt;property name="<literal>javax.persistence.validation.group.pre-remove</literal>"
+      &lt;property name="javax.persistence.validation.group.pre-remove"
                 value="com.acme.group.OnDelete"/&gt;
-      &lt;property name="<literal>org.hibernate.validator.group.ddl</literal>"
+      &lt;property name="org.hibernate.validator.group.ddl"
                 value="com.acme.group.DDL"/&gt;
     &lt;/properties&gt;
   &lt;/persistence-unit&gt;

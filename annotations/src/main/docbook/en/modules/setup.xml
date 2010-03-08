@@ -46,7 +46,7 @@
         <para>Alternatively add the following dependency in your dependency
         manager (like Maven or Ivy). Here is an example</para>
 
-        <programlisting>&lt;project ...&gt;
+        <programlisting role="XML" language="XML">&lt;project ...&gt;
   ...
   &lt;dependencies&gt;
     &lt;dependency&gt;
@@ -97,7 +97,8 @@
     <filename>hibernate-validator.jar</filename> and
     <filename>validation-api.jar</filename> in your classpath. Alternatively
     add the following dependency in your
-    <filename>pom.xml</filename>.<programlisting>&lt;project&gt;
+    <filename>pom.xml</filename>.</para>
+      <programlisting role="XML" language="XML">&lt;project&gt;
   ...
   &lt;dependencies&gt;
     &lt;dependency&gt;
@@ -108,7 +109,7 @@
     ...
   &lt;/dependencies&gt;
   ...
-&lt;/project&gt;</programlisting></para>
+&lt;/project&gt;</programlisting>
 
     <para>If you wish to use <ulink
     url="http://search.hibernate.org">Hibernate Search</ulink>, download it
@@ -116,7 +117,7 @@
     <filename>hibernate-search.jar</filename> and
     <filename>lucene-core-x.y.z.jar</filename> in your classpath.
     Alternatively add the following dependency in your
-    <filename>pom.xml</filename>.<programlisting>&lt;project&gt;
+    <filename>pom.xml</filename>.</para><programlisting role="XML" language="XML">&lt;project&gt;
   ...
   &lt;dependencies&gt;
     &lt;dependency&gt;
@@ -127,7 +128,7 @@
     ...
   &lt;/dependencies&gt;
   ...
-&lt;/project&gt;</programlisting></para>
+&lt;/project&gt;</programlisting>
 
     <para>We recommend you use the JPA 2 APIs to bootstrap Hibernate (see the
     Hibernate EntityManager documentation for more information). If you use
@@ -136,7 +137,8 @@
     <para>If you boot Hibernate yourself, make sure to use the
     <classname>AnnotationConfiguration</classname> class instead of the
     <classname>Configuration</classname> class. Here is an example using the
-    (legacy) <classname>HibernateUtil</classname> approach: <programlisting>package hello;
+    (legacy) <classname>HibernateUtil</classname> approach:</para>
+        <programlisting role="JAVA" language="JAVA">package hello;
 
 import org.hibernate.*;
 import org.hibernate.cfg.*;
@@ -146,12 +148,10 @@ import test.animals.Dog;
 public class HibernateUtil {
 
 private static final SessionFactory sessionFactory;
-
     static {
         try {
-
             sessionFactory = new <emphasis role="bold">AnnotationConfiguration()</emphasis>
-                    configure().buildSessionFactory();
+                    .configure().buildSessionFactory();
         } catch (Throwable ex) {
             // Log exception!
             throw new ExceptionInInitializerError(ex);
@@ -163,7 +163,7 @@ private static final SessionFactory sessionFactory;
         return sessionFactory.openSession();
     }
 }
-            </programlisting></para>
+            </programlisting>
 
     <para>Interesting here is the use of
     <classname>AnnotationConfiguration</classname>. The packages and annotated
@@ -171,20 +171,20 @@ private static final SessionFactory sessionFactory;
     <filename>hibernate.cfg.xml</filename>). Here is the equivalent of the
     above declaration:</para>
 
-    <programlisting>&lt;!DOCTYPE hibernate-configuration PUBLIC
+    <programlisting role="XML" language="XML">&lt;!DOCTYPE hibernate-configuration PUBLIC
     "-//Hibernate/Hibernate Configuration DTD 3.0//EN"
     "http://hibernate.sourceforge.net/hibernate-configuration-3.0.dtd"&gt;
-
 &lt;hibernate-configuration&gt;
   &lt;session-factory&gt;
-    <emphasis role="bold">&lt;mapping package="test.animals"/&gt;
+    &lt;mapping package="test.animals"/&gt;
     &lt;mapping class="test.Flight"/&gt;
     &lt;mapping class="test.Sky"/&gt;
     &lt;mapping class="test.Person"/&gt;
-    &lt;mapping class="test.animals.Dog"/&gt;</emphasis>
-<emphasis role="bold">    &lt;mapping resource="test/animals/orm.xml"/&gt;</emphasis>
+    &lt;mapping class="test.animals.Dog"/&gt;
+
+    &lt;mapping resource="test/animals/orm.xml"/&gt;
   &lt;/session-factory&gt;
-&lt;/hibernate-configuration&gt;        </programlisting>
+&lt;/hibernate-configuration&gt;</programlisting>
 
     <para>Note that you can mix the legacy hbm.xml use and the annotation
     approach. The resource element can be either an hbm file or an EJB3 XML
@@ -194,13 +194,13 @@ private static final SessionFactory sessionFactory;
     <para>Alternatively, you can define the annotated classes and packages
     using the programmatic API</para>
 
-    <programlisting>sessionFactory = new <emphasis role="bold">AnnotationConfiguration()
+    <programlisting role="JAVA" language="JAVA">sessionFactory = new <emphasis role="bold">AnnotationConfiguration()
                     .addPackage("test.animals") //the fully qualified package name
                     .addAnnotatedClass(Flight.class)
                     .addAnnotatedClass(Sky.class)
                     .addAnnotatedClass(Person.class)
-                    .addAnnotatedClass(Dog.class)</emphasis>
-<emphasis role="bold">                    .addResource("test/animals/orm.xml")</emphasis>
+                    .addAnnotatedClass(Dog.class)
+                    .addResource("test/animals/orm.xml")</emphasis>
                     .configure()
                     .buildSessionFactory();</programlisting>
 

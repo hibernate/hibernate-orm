@@ -63,7 +63,7 @@
       <para>Every persistent POJO class is an entity and is declared using the
       <literal>@Entity</literal> annotation (at the class level):</para>
 
-      <programlisting>@Entity
+      <programlisting role="JAVA" language="JAVA">@Entity
 public class Flight implements Serializable {
     Long id;
 
@@ -102,7 +102,7 @@ public class Flight implements Serializable {
         mapping. If no <literal>@Table</literal> is defined the default values
         are used: the unqualified class name of the entity.</para>
 
-        <programlisting>@Entity
+        <programlisting role="JAVA" language="JAVA">@Entity
 @Table(name="tbl_sky")
 public class Sky implements Serializable {
    ...
@@ -117,8 +117,8 @@ public class Sky implements Serializable {
         <code>@Column.unique</code> approach (refer to
         <literal>@Column</literal> for more information).</para>
 
-        <programlisting>@Table(name="tbl_sky",
-    <emphasis role="bold">uniqueConstraints = {@UniqueConstraint(columnNames={"month", "day"})}</emphasis>
+        <programlisting role="JAVA" language="JAVA">@Table(name="tbl_sky",
+    uniqueConstraints = {@UniqueConstraint(columnNames={"month", "day"})}
 )</programlisting>
 
         <para>A unique constraint is applied to the tuple month, day. Note
@@ -142,7 +142,7 @@ public class Sky implements Serializable {
         <para>You can add optimistic locking capability to an entity using the
         <literal>@Version</literal> annotation:</para>
 
-        <programlisting>@Entity
+        <programlisting role="JAVA" language="JAVA">@Entity
 public class Flight implements Serializable {
 ...
     @Version
@@ -182,7 +182,7 @@ public class Flight implements Serializable {
         annotation allows you to declare the fetching strategy for a
         property:</para>
 
-        <programlisting>public transient int counter; //transient property
+        <programlisting role="JAVA" language="JAVA">public transient int counter; //transient property
 
 private String firstname; //persistent property
 
@@ -252,7 +252,7 @@ Starred getNote() { ... } //enum persisted as String in database</programlisting
         <classname>byte[] </classname>and serializable type will be persisted
         in a Blob.</para>
 
-        <programlisting>
+        <programlisting role="JAVA" language="JAVA">
 @Lob
 public String getFullText() {
     return fullText;
@@ -313,7 +313,7 @@ public byte[] getFullCode() {
         <para>To force the access type on a given class, use the
         <classname>@Access</classname> annotation as showed below:</para>
 
-        <programlisting>@Entity
+        <programlisting role="JAVA" language="JAVA">@Entity
 public class Order {
    @Id private Long id;
    public Long getId() { return id; }
@@ -348,7 +348,7 @@ public class Address {
         <para>You can also override the access type of a single property while
         keeping the other properties standard.</para>
 
-        <programlisting>@Entity
+        <programlisting role="JAVA" language="JAVA">@Entity
 public class Order {
    @Id private Long id;
    public Long getId() { return id; }
@@ -408,7 +408,7 @@ public class Order {
           </listitem>
         </itemizedlist>
 
-        <programlisting>
+        <programlisting role="JAVA" language="JAVA">
 @Entity
 public class Flight implements Serializable {
 ...
@@ -448,7 +448,7 @@ public String getName() { ... }
             <area coords="11 55" id="hm10" />
           </areaspec>
 
-          <programlisting>@Column(
+          <programlisting role="JAVA" language="JAVA">@Column(
     name="columnName";
     boolean unique() default false;
     boolean nullable() default true;
@@ -528,7 +528,7 @@ public String getName() { ... }
         <literal>@Embedded</literal> and <literal>@AttributeOverride</literal>
         annotation in the associated property:</para>
 
-        <programlisting>@Entity
+        <programlisting role="JAVA" language="JAVA">@Entity
 public class Person implements Serializable {
 
     // Persistent component using defaults
@@ -543,13 +543,13 @@ public class Person implements Serializable {
     ...
 }          </programlisting>
 
-        <programlisting>@Embeddable
+        <programlisting role="JAVA" language="JAVA">@Embeddable
 public class Address implements Serializable {
     String city;
     Country nationality; //no overriding here
 }            </programlisting>
 
-        <programlisting>@Embeddable
+        <programlisting role="JAVA" language="JAVA">@Embeddable
 public class Country implements Serializable {
     private String iso2;
     @Column(name="countryName") private String name;
@@ -582,14 +582,14 @@ public class Country implements Serializable {
         columns of embedded objects of embedded objects is through dotted
         expressions.</para>
 
-        <para><programlisting>    @Embedded
+        <programlisting role="JAVA" language="JAVA">    @Embedded
     @AttributeOverrides( {
             @AttributeOverride(name="city", column = @Column(name="fld_city") ),
-            @AttributeOverride(name="<emphasis role="bold">nationality.iso2</emphasis>", column = @Column(name="nat_Iso2") ),
-            @AttributeOverride(name="<emphasis role="bold">nationality.name</emphasis>", column = @Column(name="nat_CountryName") )
+            @AttributeOverride(name="nationality.iso2", column = @Column(name="nat_Iso2") ),
+            @AttributeOverride(name="nationality.name", column = @Column(name="nat_CountryName") )
             //nationality columns in homeAddress are overridden
     } )
-    Address homeAddress;</programlisting>Hibernate Annotations supports
+    Address homeAddress;</programlisting><para>Hibernate Annotations supports
         something that is not explicitly supported by the JPA specification.
         You can annotate a embedded object with the
         <literal>@MappedSuperclass</literal> annotation to make the superclass
@@ -691,12 +691,12 @@ public class Country implements Serializable {
         <para>The following example shows a sequence generator using the
         SEQ_STORE configuration (see below)</para>
 
-        <programlisting>@Id @GeneratedValue(strategy=GenerationType.SEQUENCE, generator="SEQ_STORE")
+        <programlisting role="JAVA" language="JAVA">@Id @GeneratedValue(strategy=GenerationType.SEQUENCE, generator="SEQ_STORE")
 public Integer getId() { ... }         </programlisting>
 
         <para>The next example uses the identity generator:</para>
 
-        <programlisting>@Id @GeneratedValue(strategy=GenerationType.IDENTITY)
+        <programlisting role="JAVA" language="JAVA">@Id @GeneratedValue(strategy=GenerationType.IDENTITY)
 public Long getId() { ... }         </programlisting>
 
         <para>The <literal>AUTO</literal> generator is the preferred type for
@@ -711,7 +711,7 @@ public Long getId() { ... }         </programlisting>
         Application level generators are defined at XML level (see <xref
         linkend="xml-overriding" />):</para>
 
-        <programlisting>&lt;table-generator name="EMP_GEN"
+        <programlisting role="JAVA" language="JAVA">&lt;table-generator name="EMP_GEN"
             table="GENERATOR_TABLE"
             pk-column-name="key"
             value-column-name="hi"
@@ -782,7 +782,7 @@ public Long getId() { ... }         </programlisting>
         <para>The next example shows the definition of a sequence generator in
         a class scope:</para>
 
-        <programlisting>@Entity
+        <programlisting role="JAVA" language="JAVA">@Entity
 @javax.persistence.SequenceGenerator(
     name="SEQ_STORE",
     sequenceName="my_sequence"
@@ -805,9 +805,9 @@ public class Store implements Serializable {
         foreign generator but the JPA mapping reads better and is
         encouraged.</para>
 
-        <programlisting>@Entity
+        <programlisting role="JAVA" language="JAVA">@Entity
 class MedicalHistory implements Serializable {
-  <emphasis role="bold">@Id @OneToOne</emphasis>
+  @Id @OneToOne
   @JoinColumn(name = "person_id")
   Person patient;
 }
@@ -819,11 +819,11 @@ public class Person implements Serializable {
 
         <para>Or alternatively</para>
 
-        <programlisting>@Entity
+        <programlisting role="JAVA" language="JAVA">@Entity
 class MedicalHistory implements Serializable {
   @Id Integer id;
 
-  <emphasis role="bold">@MapsId @OneToOne</emphasis>
+  @MapsId @OneToOne
   @JoinColumn(name = "patient_id")
   Person patient;
 }
@@ -891,11 +891,11 @@ class Person {
           <para>Here is a simple example of
           <classname>@EmbeddedId</classname>.</para>
 
-          <programlisting>@Entity 
+          <programlisting role="JAVA" language="JAVA">@Entity
 class User {
-  <emphasis role="bold" security="">@EmbeddedId 
+  @EmbeddedId
   @AttributeOverride(name="firstName", column=@Column(name="fld_firstname")
-  UserId id;</emphasis>
+  UserId id;
 
   Integer age;
 }
@@ -913,22 +913,22 @@ class UserId implements Serializable {
           <para>An embedded id can itself contains the primary key of an
           associated entity.</para>
 
-          <programlisting>@Entity
+          <programlisting role="JAVA" language="JAVA">@Entity
 class Customer {
   @EmbeddedId CustomerId id;
   boolean preferredCustomer;
 
-  <emphasis role="bold">@MapsId("userId") 
+  @MapsId("userId")
   @JoinColumns({
     @JoinColumn(name="userfirstname_fk", referencedColumnName="firstName"),
     @JoinColumn(name="userlastname_fk", referencedColumnName="lastName")
   })
-  @OneToOne User user;</emphasis>
+  @OneToOne User user;
 }
 
 @Embeddable
 class CustomerId implements Serializable {
-  <emphasis role="bold">UserId userId;</emphasis>
+  UserId userId;
   String customerNumber;
 }
 
@@ -969,7 +969,7 @@ class UserId implements Serializable {
           association directly in the embedded id component (instead of having
           to use the <classname>@MapsId</classname> annotation).</para>
 
-          <programlisting>@Entity
+          <programlisting role="JAVA" language="JAVA">@Entity
 class Customer {
   @EmbeddedId CustomerId id;
   boolean preferredCustomer;
@@ -977,12 +977,12 @@ class Customer {
 
 @Embeddable
 class CustomerId implements Serializable {
-  <emphasis role="bold">@OneToOne
+  @OneToOne
   @JoinColumns({
     @JoinColumn(name="userfirstname_fk", referencedColumnName="firstName"),
     @JoinColumn(name="userlastname_fk", referencedColumnName="lastName")
   }) 
-  User user;</emphasis>
+  User user;
   String customerNumber;
 }
 
@@ -1007,16 +1007,16 @@ class UserId implements Serializable {
           approach is only supported by Hibernate but does not require an
           extra embeddable component.</para>
 
-          <programlisting>@Entity
-class Customer <emphasis role="bold">implements Serializable </emphasis>{
-  <emphasis role="bold">@Id @OneToOne
+          <programlisting role="JAVA" language="JAVA">@Entity
+class Customer implements Serializable {
+  @Id @OneToOne
   @JoinColumns({
     @JoinColumn(name="userfirstname_fk", referencedColumnName="firstName"),
     @JoinColumn(name="userlastname_fk", referencedColumnName="lastName")
   })
-  User user;</emphasis>
+  User user;
   
-  <emphasis role="bold">@Id</emphasis> String customerNumber;
+  @Id String customerNumber;
 
   boolean preferredCustomer;
 }
@@ -1055,22 +1055,22 @@ class UserId implements Serializable {
             and Hibernate supports it.</para>
           </warning>
 
-          <programlisting>@Entity
+          <programlisting role="JAVA" language="JAVA">@Entity
 class Customer {
-  <emphasis role="bold">@Id @OneToOne
+  @Id @OneToOne
   @JoinColumns({
     @JoinColumn(name="userfirstname_fk", referencedColumnName="firstName"),
     @JoinColumn(name="userlastname_fk", referencedColumnName="lastName")
   }) 
-  User user;</emphasis>
+  User user;
   
-  <emphasis role="bold">@Id</emphasis> String customerNumber;
+  @Id String customerNumber;
 
   boolean preferredCustomer;
 }
 
 class CustomerId implements Serializable {
-  <emphasis role="bold">UserId user;</emphasis>
+  UserId user;
   String customerNumber;
 }
 
@@ -1095,22 +1095,22 @@ class UserId implements Serializable {
           vanilla associated property in the
           <classname>@IdClass</classname>.</para>
 
-          <programlisting>@Entity
+          <programlisting role="JAVA" language="JAVA">@Entity
 class Customer {
-  <emphasis role="bold">@Id @OneToOne
+  @Id @OneToOne
   @JoinColumns({
     @JoinColumn(name="userfirstname_fk", referencedColumnName="firstName"),
     @JoinColumn(name="userlastname_fk", referencedColumnName="lastName")
   }) 
-  User user;</emphasis>
+  User user;
   
-  <emphasis role="bold">@Id</emphasis> String customerNumber;
+  @Id String customerNumber;
 
   boolean preferredCustomer;
 }
 
 class CustomerId implements Serializable {
-  <emphasis role="bold">@OneToOne User user;</emphasis>
+  @OneToOne User user;
   String customerNumber;
 }
 
@@ -1141,7 +1141,7 @@ class UserId implements Serializable {
             this feature.</para>
           </warning>
 
-          <programlisting>@Entity 
+          <programlisting role="JAVA" language="JAVA">@Entity
 public class CustomerInventory implements Serializable {
   @Id
   @TableGenerator(name = "inventory",
@@ -1150,7 +1150,7 @@ public class CustomerInventory implements Serializable {
     valueColumnName = "S_NEXTNUM",
     pkColumnValue = "inventory",
     allocationSize = 1000)
-  <emphasis role="bold">@GeneratedValue(strategy = GenerationType.TABLE, generator = "inventory")</emphasis>
+  @GeneratedValue(strategy = GenerationType.TABLE, generator = "inventory")
   Integer id;
 
 
@@ -1210,7 +1210,7 @@ public class Customer implements Serializable {
         UNION</literal> queries. It is commonly used for the top level of an
         inheritance hierarchy:</para>
 
-        <programlisting>@Entity
+        <programlisting role="JAVA" language="JAVA">@Entity
 @Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
 public class Flight implements Serializable { ... }            </programlisting>
 
@@ -1229,7 +1229,7 @@ public class Flight implements Serializable { ... }            </programlisting>
         same table, instances are distinguished by a special discriminator
         column:</para>
 
-        <programlisting>@Entity
+        <programlisting role="JAVA" language="JAVA">@Entity
 @Inheritance(strategy=InheritanceType.SINGLE_TABLE)
 @DiscriminatorColumn(
     name="planetype",
@@ -1269,7 +1269,7 @@ public class A320 extends Plane { ... }          </programlisting>
         <literal>@PrimaryKeyJoinColumns</literal> annotations define the
         primary key(s) of the joined subclass table:</para>
 
-        <programlisting>@Entity
+        <programlisting role="JAVA" language="JAVA">@Entity
 @Inheritance(strategy=InheritanceType.JOINED)
 public class Boat implements Serializable { ... }
 
@@ -1296,7 +1296,7 @@ public class AmericaCupClass  extends Boat { ... }            </programlisting>
         mapped entity (ie no specific table for this entity). For that purpose
         you can map them as <literal>@MappedSuperclass</literal>.</para>
 
-        <programlisting>@MappedSuperclass
+        <programlisting role="JAVA" language="JAVA">@MappedSuperclass
 public class BaseEntity {
     @Basic
     @Temporal(TemporalType.TIMESTAMP)
@@ -1351,7 +1351,7 @@ public class BaseEntity {
         root entity level using the <literal>@AttributeOverride</literal>
         annotation.</para>
 
-        <programlisting>@MappedSuperclass
+        <programlisting role="JAVA" language="JAVA">@MappedSuperclass
 public class FlyingObject implements Serializable {
 
     public int getAltitude() {
@@ -1412,7 +1412,7 @@ public class Plane extends FlyingObject {
         <para>First, we map a real one-to-one association using shared primary
         keys:</para>
 
-        <programlisting>@Entity
+        <programlisting role="JAVA" language="JAVA">@Entity
 public class Body {
     @Id
     public Long getId() { return id; }
@@ -1425,7 +1425,7 @@ public class Body {
     ...
 }            </programlisting>
 
-        <programlisting>@Entity
+        <programlisting role="JAVA" language="JAVA">@Entity
 public class Heart {
     @Id
     public Long getId() { ...}
@@ -1438,17 +1438,17 @@ public class Heart {
         <para>In the following example, the associated entities are linked
         through an explicit foreign key column:</para>
 
-        <programlisting>@Entity
+        <programlisting role="JAVA" language="JAVA">@Entity
 public class Customer implements Serializable {
     @OneToOne(cascade = CascadeType.ALL)
-    <emphasis role="bold">@JoinColumn(name="passport_fk")</emphasis>
+    @JoinColumn(name="passport_fk")
     public Passport getPassport() {
         ...
     }
 
 @Entity
 public class Passport implements Serializable {
-    @OneToOne(<emphasis role="bold">mappedBy = "passport"</emphasis>)
+    @OneToOne(mappedBy = "passport")
     public Customer getOwner() {
     ...
 }            </programlisting>
@@ -1492,12 +1492,12 @@ public class Passport implements Serializable {
         <para>The third possibility (using an association table) is quite
         exotic.</para>
 
-        <programlisting>@Entity
+        <programlisting role="JAVA" language="JAVA">@Entity
 public class Customer implements Serializable {
     @OneToOne(cascade = CascadeType.ALL)
-    <emphasis role="bold">@JoinTable(name = "CustomerPassports",
+    @JoinTable(name = "CustomerPassports",
         joinColumns = @JoinColumn(name="customer_fk"),
-        inverseJoinColumns = @JoinColumn(name="passport_fk")</emphasis>
+        inverseJoinColumns = @JoinColumn(name="passport_fk")
     )
     public Passport getPassport() {
         ...
@@ -1505,7 +1505,7 @@ public class Customer implements Serializable {
 
 @Entity
 public class Passport implements Serializable {
-    @OneToOne(<emphasis role="bold">mappedBy = "passport"</emphasis>)
+    @OneToOne(mappedBy = "passport")
     public Customer getOwner() {
     ...
 }          </programlisting>
@@ -1530,9 +1530,9 @@ public class Passport implements Serializable {
         <para>Many-to-one associations are declared at the property level with
         the annotation <literal>@ManyToOne</literal>:</para>
 
-        <programlisting>@Entity()
+        <programlisting role="JAVA" language="JAVA">@Entity()
 public class Flight implements Serializable {
-    <emphasis role="bold">@ManyToOne</emphasis>( cascade = {CascadeType.PERSIST, CascadeType.MERGE} )
+    @ManyToOne( cascade = {CascadeType.PERSIST, CascadeType.MERGE} )
     @JoinColumn(name="COMP_ID")
     public Company getCompany() {
         return company;
@@ -1555,10 +1555,9 @@ public class Flight implements Serializable {
         almost all cases. However this is useful when you want to use
         interfaces as the return type instead of the regular entity.</para>
 
-        <programlisting>@Entity
+        <programlisting role="JAVA" language="JAVA">@Entity
 public class Flight implements Serializable {
-    @ManyToOne( cascade = {CascadeType.PERSIST, CascadeType.MERGE}, <emphasis
-            role="bold">targetEntity=CompanyImpl.class</emphasis> )
+    @ManyToOne( cascade = {CascadeType.PERSIST, CascadeType.MERGE}, targetEntity=CompanyImpl.class )
     @JoinColumn(name="COMP_ID")
     public Company getCompany() {
         return company;
@@ -1578,13 +1577,13 @@ public interface Company {
         referencing the target entity table (through
         <literal>@JoinTable.inverseJoinColumns</literal>).</para>
 
-        <programlisting>@Entity
+        <programlisting role="JAVA" language="JAVA">@Entity
 public class Flight implements Serializable {
     @ManyToOne( cascade = {CascadeType.PERSIST, CascadeType.MERGE} )
-    <emphasis role="bold">@JoinTable(name="Flight_Company",
+    @JoinTable(name="Flight_Company",
         joinColumns = @JoinColumn(name="FLIGHT_ID"),
         inverseJoinColumns = @JoinColumn(name="COMP_ID")
-    )</emphasis>
+    )
     public Company getCompany() {
         return company;
     }
@@ -1620,7 +1619,7 @@ public class Flight implements Serializable {
             association is annotated by
             <literal>@OneToMany(mappedBy=...)</literal></para>
 
-            <programlisting>@Entity
+            <programlisting role="JAVA" language="JAVA">@Entity
 public class Troop {
     @OneToMany(mappedBy="troop")
     public Set&lt;Soldier&gt; getSoldiers() {
@@ -1648,7 +1647,7 @@ public class Soldier {
             false. This solution is not optimized and will produce some
             additional UPDATE statements.</para>
 
-            <programlisting>@Entity
+            <programlisting role="JAVA" language="JAVA">@Entity
 public class Troop {
     @OneToMany
     @JoinColumn(name="troop_fk") //we need to duplicate the physical information
@@ -1675,7 +1674,7 @@ public class Soldier {
             association is described through a
             <literal>@JoinColumn</literal></para>
 
-            <programlisting>@Entity
+            <programlisting role="JAVA" language="JAVA">@Entity
 public class Customer implements Serializable {
     @OneToMany(cascade=CascadeType.ALL, fetch=FetchType.EAGER)
     @JoinColumn(name="CUST_ID")
@@ -1700,7 +1699,7 @@ public class Ticket implements Serializable {
             preferred. This association is described through an
             <literal>@JoinTable</literal>.</para>
 
-            <programlisting>@Entity
+            <programlisting role="JAVA" language="JAVA">@Entity
 public class Trainer {
     @OneToMany
     @JoinTable(
@@ -1741,7 +1740,7 @@ public class Monkey {
             added to the foreign key referencing the other side table to
             reflect the one to many.</para>
 
-            <programlisting>@Entity
+            <programlisting role="JAVA" language="JAVA">@Entity
 public class Trainer {
     @OneToMany
     public Set&lt;Tiger&gt; getTrainedTigers() {
@@ -1777,7 +1776,7 @@ public class Tiger {
             the inverse end (ie. it will be ignored when updating the
             relationship values in the association table):</para>
 
-            <programlisting>@Entity
+            <programlisting role="JAVA" language="JAVA">@Entity
 public class Employer implements Serializable {
     @ManyToMany(
         targetEntity=org.hibernate.test.metadata.manytomany.Employee.class,
@@ -1794,7 +1793,7 @@ public class Employer implements Serializable {
     ...
 }               </programlisting>
 
-            <programlisting>@Entity
+            <programlisting role="JAVA" language="JAVA">@Entity
 public class Employee implements Serializable {
     @ManyToMany(
         cascade = {CascadeType.PERSIST, CascadeType.MERGE},
@@ -1836,7 +1835,7 @@ public class Employee implements Serializable {
             and the other side primary key column(s). These are the same rules
             used for a unidirectional one to many relationship.</para>
 
-            <programlisting>
+            <programlisting role="JAVA" language="JAVA">
 @Entity
 public class Store {
     @ManyToMany(cascade = CascadeType.PERSIST)
@@ -1868,7 +1867,7 @@ public class City {
             the other side primary key column(s). These are the same rules
             used for a unidirectional one to many relationship.</para>
 
-            <programlisting>@Entity
+            <programlisting role="JAVA" language="JAVA">@Entity
 public class Store {
     @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     public Set&lt;Customer&gt; getCustomers() {
@@ -1900,7 +1899,7 @@ public class Customer {
           objects. Use the <classname>@ElementCollection</classname> in this
           case.</para>
 
-          <programlisting>@Entity
+          <programlisting role="JAVA" language="JAVA">@Entity
 public class User {
    [...]
    public String getLastname() { ...}
@@ -1928,7 +1927,7 @@ public class User {
           embeddable object in the collection table, use the
           <classname>@AttributeOverride</classname> annotation.</para>
 
-          <programlisting>@Entity
+          <programlisting role="JAVA" language="JAVA">@Entity
 public class User {
    [...]
    public String getLastname() { ...}
@@ -1957,7 +1956,7 @@ public class Address {
             <literal>key.</literal> prefix to override properties of the
             embeddable object used in the map key.</para>
 
-            <programlisting>@Entity
+            <programlisting role="JAVA" language="JAVA">@Entity
 public class User {
    @ElementCollection
    @AttributeOverrides({
@@ -2000,14 +1999,14 @@ public class User {
           collection will be ordered by the primary key of the target
           entity.</para>
 
-          <programlisting>@Entity
+          <programlisting role="JAVA" language="JAVA">@Entity
 public class Customer {
    @Id @GeneratedValue public Integer getId() { return id; }
    public void setId(Integer id) { this.id = id; }
    private Integer id;
 
    @OneToMany(mappedBy="customer")
-   <emphasis role="bold">@OrderBy("number")</emphasis>
+   @OrderBy("number")
    public List&lt;Order&gt; getOrders() { return orders; }
    public void setOrders(List&lt;Order&gt; orders) { this.orders = orders; }
    private List&lt;Order&gt; orders;
@@ -2048,14 +2047,14 @@ public class Order {
           <literal>ORDER</literal> (in the following example, it would be
           <literal>orders_ORDER</literal>).</para>
 
-          <programlisting>@Entity
+          <programlisting role="JAVA" language="JAVA">@Entity
 public class Customer {
    @Id @GeneratedValue public Integer getId() { return id; }
    public void setId(Integer id) { this.id = id; }
    private Integer id;
 
    @OneToMany(mappedBy="customer")
-   <emphasis role="bold">@OrderColumn(name"orders_index")</emphasis>
+   @OrderColumn(name"orders_index")
    public List&lt;Order&gt; getOrders() { return orders; }
    public void setOrders(List&lt;Order&gt; orders) { this.orders = orders; }
    private List&lt;Order&gt; orders;
@@ -2113,14 +2112,14 @@ public class Order {
           other words, if you change the property value, the key will not
           change automatically in your Java model.</para>
 
-          <programlisting>@Entity
+          <programlisting role="JAVA" language="JAVA">@Entity
 public class Customer {
    @Id @GeneratedValue public Integer getId() { return id; }
    public void setId(Integer id) { this.id = id; }
    private Integer id;
 
    @OneToMany(mappedBy="customer")
-   <emphasis role="bold">@MapKey(name"number")</emphasis>
+   @MapKey(name"number")
    public Map&lt;String,Order&gt; getOrders() { return orders; }
    public void setOrders(Map&lt;String,Order&gt; order) { this.orders = orders; }
    private Map&lt;String,Order&gt; orders;
@@ -2188,14 +2187,14 @@ public class Order {
           should wonder why at this day and age you don't use
           generics).</para>
 
-          <programlisting>@Entity
+          <programlisting role="JAVA" language="JAVA">@Entity
 public class Customer {
    @Id @GeneratedValue public Integer getId() { return id; }
    public void setId(Integer id) { this.id = id; }
    private Integer id;
 
    @OneToMany @JoinTable(name="Cust_Order")
-   <emphasis role="bold">@MapKeyColumn(name"orders_number")</emphasis>
+   @MapKeyColumn(name"orders_number")
    public Map&lt;String,Order&gt; getOrders() { return orders; }
    public void setOrders(Map&lt;String,Order&gt; orders) { this.orders = orders; }
    private Map&lt;String,Order&gt; orders;
@@ -2376,7 +2375,7 @@ public class Order {
         to true. In a way, it means that the associated entity's lifecycle is
         bound to the owning entity just like an embeddable object is.</para>
 
-        <programlisting>@Entity class Customer {
+        <programlisting role="JAVA" language="JAVA">@Entity class Customer {
    @OneToMany(orphanRemoval=true) public Set&lt;Order&gt; getOrders() { return orders; }
    public void setOrders(Set&lt;Order&gt; orders) { this.orders = orders; }
    private Set&lt;Order&gt; orders;
@@ -2429,7 +2428,7 @@ customer.getOrders().remove(order); //order will be deleted by cascade</programl
       You can also use <literal>@IdClass</literal>. These are more detailed in
       <xref linkend="entity-mapping-identifier" />.</para>
 
-      <programlisting>@Entity
+      <programlisting role="JAVA" language="JAVA">@Entity
 public class RegionalArticle implements Serializable {
 
     @Id
@@ -2441,7 +2440,7 @@ public class RegionalArticlePk implements Serializable { ... }       </programli
 
       <para>or alternatively</para>
 
-      <programlisting>@Entity
+      <programlisting role="JAVA" language="JAVA">@Entity
 public class RegionalArticle implements Serializable {
 
     @EmbeddedId
@@ -2459,7 +2458,7 @@ public class RegionalArticlePk implements Serializable { ... }         </program
       explicitly. Otherwise, Hibernate will suppose that you use the same
       order of columns as in the primary key declaration.</para>
 
-      <programlisting>@Entity
+      <programlisting role="JAVA" language="JAVA">@Entity
 public class Parent implements Serializable {
     @Id
     public ParentPk id;
@@ -2475,7 +2474,7 @@ public class Parent implements Serializable {
     ...
 } </programlisting>
 
-      <programlisting>@Entity
+      <programlisting role="JAVA" language="JAVA">@Entity
 public class Child implements Serializable {
     @Id @GeneratedValue
     public Integer id;
@@ -2489,7 +2488,7 @@ public class Child implements Serializable {
     public Parent parent; //unidirectional
 }       </programlisting>
 
-      <programlisting>@Embeddable
+      <programlisting role="JAVA" language="JAVA">@Embeddable
 public class ParentPk implements Serializable {
     String firstName;
     String lastName;
@@ -2510,14 +2509,14 @@ public class ParentPk implements Serializable {
       parameter of <literal>@Column</literal> or
       <literal>@JoinColumn</literal>.</para>
 
-      <programlisting>@Entity
+      <programlisting role="JAVA" language="JAVA">@Entity
 @Table(name="MainCat")
-<emphasis role="bold">@SecondaryTables({
+@SecondaryTables({
     @SecondaryTable(name="Cat1", pkJoinColumns={
         @PrimaryKeyJoinColumn(name="cat_id", referencedColumnName="id")
     ),
     @SecondaryTable(name="Cat2", uniqueConstraints={@UniqueConstraint(columnNames={"storyPart2"})})
-})</emphasis>
+})
 public class Cat implements Serializable {
 
     private Integer id;
@@ -2534,12 +2533,12 @@ public class Cat implements Serializable {
         return name;
     }
     
-    <emphasis role="bold">@Column(table="Cat1")</emphasis>
+    @Column(table="Cat1")
     public String getStoryPart1() {
         return storyPart1;
     }
 
-    <emphasis role="bold">@Column(table="Cat2")</emphasis>
+    @Column(table="Cat2")
     public String getStoryPart2() {
         return storyPart2;
     }
@@ -2624,7 +2623,7 @@ public class Cat implements Serializable {
         that.</para>
       </note>
 
-      <programlisting>@Entity @Cacheable
+      <programlisting role="JAVA" language="JAVA">@Entity @Cacheable
 @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
 public class Forest { ... }</programlisting>
 
@@ -2633,7 +2632,7 @@ public class Forest { ... }</programlisting>
       <classname>@Cache</classname> annotation on the collection
       property.</para>
 
-      <programlisting>@OneToMany(cascade=CascadeType.ALL, fetch=FetchType.EAGER)
+      <programlisting role="JAVA" language="JAVA">@OneToMany(cascade=CascadeType.ALL, fetch=FetchType.EAGER)
 @JoinColumn(name="CUST_ID")
 @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
 public SortedSet&lt;Ticket&gt; getTickets() {
@@ -2652,7 +2651,7 @@ public SortedSet&lt;Ticket&gt; getTickets() {
           <area coords="4 55" id="cache-hm3" />
         </areaspec>
 
-        <programlisting>@Cache(
+        <programlisting role="JAVA" language="JAVA">@Cache(
     CacheConcurrencyStrategy usage();
     String region() default "";
     String include() default "all";
@@ -2709,7 +2708,7 @@ public SortedSet&lt;Ticket&gt; getTickets() {
       manager factory scope. A named query is defined by its name and the
       actual query string.</para>
 
-      <programlisting>&lt;entity-mappings&gt;
+      <programlisting role="JAVA" language="JAVA">&lt;entity-mappings&gt;
     &lt;named-query name="plane.getAll"&gt;
         &lt;query&gt;select p from Plane p&lt;/query&gt;
     &lt;/named-query&gt;
@@ -2739,7 +2738,6 @@ public class MyDao {
 
       <para>The available Hibernate hints are</para>
 
-      <para></para>
 
       <table>
         <title>Query hints</title>
@@ -2839,10 +2837,10 @@ public class MyDao {
       definitions are optional provided that they map to the same column name
       as the one declared on the class property.</para>
 
-      <para><programlisting>@NamedNativeQuery(name="night&amp;area", query="select night.id nid, night.night_duration, "
+      <programlisting role="JAVA" language="JAVA">@NamedNativeQuery(name="night&amp;area", query="select night.id nid, night.night_duration, "
     + " night.night_date, area.id aid, night.area_id, area.name "
     + "from Night night, Area area where night.area_id = area.id", 
-                  <emphasis role="bold">resultSetMapping="joinMapping"</emphasis>)
+                  resultSetMapping="joinMapping")
 @SqlResultSetMapping(name="joinMapping", entities={
     @EntityResult(entityClass=Night.class, fields = {
         @FieldResult(name="id", column="nid"),
@@ -2856,7 +2854,7 @@ public class MyDao {
         @FieldResult(name="name", column="name")
     })
     }
-)</programlisting></para>
+)</programlisting>
 
       <para>In the above example, the <literal>night&amp;area</literal> named
       query use the <literal>joinMapping</literal> result set mapping. This
@@ -2865,12 +2863,12 @@ public class MyDao {
       column name, actually the column name retrieved by the query. Let's now
       see an implicit declaration of the property / column.</para>
 
-      <programlisting>@Entity
-<emphasis role="bold">@SqlResultSetMapping(name="implicit", 
+      <programlisting role="JAVA" language="JAVA">@Entity
+@SqlResultSetMapping(name="implicit",
                      entities=@EntityResult(entityClass=SpaceShip.class))
 @NamedNativeQuery(name="implicitSample", 
                   query="select * from SpaceShip", 
-                  resultSetMapping="implicit")</emphasis>
+                  resultSetMapping="implicit")
 public class SpaceShip {
     private String name;
     private String model;
@@ -2913,15 +2911,15 @@ public class SpaceShip {
       property name for the relationship, followed by a dot ("."), followed by
       the name or the field or property of the primary key.</para>
 
-      <programlisting>@Entity
+      <programlisting role="JAVA" language="JAVA">@Entity
 @SqlResultSetMapping(name="compositekey",
         entities=@EntityResult(entityClass=SpaceShip.class,
             fields = {
                     @FieldResult(name="name", column = "name"),
                     @FieldResult(name="model", column = "model"),
                     @FieldResult(name="speed", column = "speed"),
-<emphasis role="bold">                    @FieldResult(name="captain.firstname", column = "firstn"),
-                    @FieldResult(name="captain.lastname", column = "lastn"),</emphasis>
+                    @FieldResult(name="captain.firstname", column = "firstn"),
+                    @FieldResult(name="captain.lastname", column = "lastn"),
                     @FieldResult(name="dimensions.length", column = "length"),
                     @FieldResult(name="dimensions.width", column = "width")
                     }),
@@ -3016,8 +3014,8 @@ public class Captain implements Serializable {
       mapping, you can use the <literal>resultClass</literal> attribute
       instead of <literal>resultSetMapping</literal>:</para>
 
-      <programlisting><emphasis role="bold">@NamedNativeQuery(name="implicitSample", query="select * from SpaceShip", 
-    resultClass=SpaceShip.class)</emphasis>
+      <programlisting role="JAVA" language="JAVA">@NamedNativeQuery(name="implicitSample", query="select * from SpaceShip",
+    resultClass=SpaceShip.class)
 public class SpaceShip {</programlisting>
 
       <para>In some of your native queries, you'll have to return scalar
@@ -3027,8 +3025,8 @@ public class SpaceShip {</programlisting>
       and scalar returns in the same native query (this is probably not that
       common though).</para>
 
-      <programlisting><emphasis role="bold">@SqlResultSetMapping(name="scalar", columns=@ColumnResult(name="dimension"))
-@NamedNativeQuery(name="scalar", query="select length*width as dimension from SpaceShip", resultSetMapping="scalar")</emphasis></programlisting>
+      <programlisting role="JAVA" language="JAVA">@SqlResultSetMapping(name="scalar", columns=@ColumnResult(name="dimension"))
+@NamedNativeQuery(name="scalar", query="select length*width as dimension from SpaceShip", resultSetMapping="scalar")</programlisting>
 
       <para>An other query hint specific to native queries has been
       introduced: <literal>org.hibernate.callable</literal> which can be true
@@ -3189,7 +3187,7 @@ public class SpaceShip {</programlisting>
       implements persistence via, for example, stored procedure calls,
       serialization to flat files or LDAP.</para>
 
-      <para><programlisting>@Entity
+      <programlisting role="JAVA" language="JAVA">@Entity
 @BatchSize(size=5)
 @org.hibernate.annotations.Entity(
         selectBeforeUpdate = true,
@@ -3199,7 +3197,7 @@ public class SpaceShip {</programlisting>
 @Where(clause="1=1")
 @org.hibernate.annotations.Table(name="Forest", indexes = { @Index(name="idx", columnNames = { "name", "length" } ) } )
 @Persister(impl=MyEntityPersister.class)
-public class Forest { ... }</programlisting> <programlisting>@Entity
+public class Forest { ... }</programlisting> <programlisting role="JAVA" language="JAVA">@Entity
 @Inheritance(
     strategy=InheritanceType.JOINED
 )
@@ -3207,7 +3205,7 @@ public class Vegetable { ... }
 
 @Entity
 @OnDelete(action=OnDeleteAction.CASCADE)
-public class Carrot extends Vegetable { ... }</programlisting></para>
+public class Carrot extends Vegetable { ... }</programlisting>
     </section>
 
     <section id="entity-hibspec-identifier">
@@ -3224,7 +3222,7 @@ public class Carrot extends Vegetable { ... }</programlisting></para>
         allows you to define an Hibernate specific id
         generator.</literal></para>
 
-        <para><programlisting>@Id @GeneratedValue(generator="system-uuid")
+        <programlisting role="JAVA" language="JAVA">@Id @GeneratedValue(generator="system-uuid")
 @GenericGenerator(name="system-uuid", strategy = "uuid")
 public String getId() {
 
@@ -3235,7 +3233,7 @@ public String getId() {
         @Parameter(name="sequence", value="heybabyhey")
     }
 )
-public Integer getId() {</programlisting></para>
+public Integer getId() {</programlisting>
 
         <para><literal>strategy</literal> is the short name of an Hibernate3
         generator strategy or the fully qualified class name of an
@@ -3249,7 +3247,7 @@ public Integer getId() {</programlisting></para>
         annotations, making them application level generators (just like if
         they were in a JPA XML file).</para>
 
-        <programlisting>@GenericGenerators(
+        <programlisting role="JAVA" language="JAVA">@GenericGenerators(
     {
     @GenericGenerator(
         name="hibseq",
@@ -3277,7 +3275,7 @@ package org.hibernate.test.model</programlisting>
         composed of all the properties marked
         <classname>@NaturalId</classname>.</para>
 
-        <programlisting>@Entity
+        <programlisting role="JAVA" language="JAVA">@Entity
 public class Citizen {
     @Id
     @GeneratedValue
@@ -3319,7 +3317,7 @@ List results = s.createCriteria( Citizen.class )
         property into a column. This kind of property is read only (its value
         is calculated by your formula fragment).</para>
 
-        <programlisting>@Formula("obj_length * obj_height * obj_width")
+        <programlisting role="JAVA" language="JAVA">@Formula("obj_length * obj_height * obj_width")
 public long getObjectVolume()</programlisting>
 
         <para>The SQL fragment can be as complex as you want and even include
@@ -3355,7 +3353,7 @@ public long getObjectVolume()</programlisting>
           Place your annotations before the package declaration.</para>
         </note>
 
-        <programlisting>@TypeDef(
+        <programlisting role="JAVA" language="JAVA">@TypeDef(
    name = "phoneNumber",
    defaultForType = PhoneNumber.class,
    typeClass = PhoneNumberType.class
@@ -3374,7 +3372,7 @@ public class ContactDetails {
         <literal>parameters</literal> attribute to customize the
         TypeDef.</para>
 
-        <programlisting>//in org/hibernate/test/annotations/entity/package-info.java
+        <programlisting role="JAVA" language="JAVA">//in org/hibernate/test/annotations/entity/package-info.java
 @TypeDefs(
     {
     @TypeDef(
@@ -3399,7 +3397,7 @@ public class Forest {
         definitions. The <literal>@Columns</literal> has been introduced for
         that purpose.</para>
 
-        <programlisting>@Type(type="org.hibernate.test.annotations.entity.MonetaryAmountUserType")
+        <programlisting role="JAVA" language="JAVA">@Type(type="org.hibernate.test.annotations.entity.MonetaryAmountUserType")
 @Columns(columns = {
     @Column(name="r_amount"),
     @Column(name="r_currency")
@@ -3423,7 +3421,7 @@ public class MonetaryAmount implements Serializable {
         <literal>@Index</literal> annotation on a one column property, the
         columnNames attribute will then be ignored</para>
 
-        <programlisting>@Column(secondaryTable="Cat1")
+        <programlisting role="JAVA" language="JAVA">@Column(secondaryTable="Cat1")
 @Index(name="story1index")
 public String getStoryPart1() {
     return storyPart1;
@@ -3436,7 +3434,7 @@ public String getStoryPart1() {
         <para>When inside an embeddable object, you can define one of the
         properties as a pointer back to the owner element.</para>
 
-        <programlisting>@Entity
+        <programlisting role="JAVA" language="JAVA">@Entity
 public class Person {
     @Embeddable public Address address;
     ...
@@ -3459,7 +3457,7 @@ person == person.address.owner</programlisting>
         database. Hibernate can deal with such properties and triggers a
         subsequent select to read these properties.</para>
 
-        <programlisting>@Entity
+        <programlisting role="JAVA" language="JAVA">@Entity
 public class Antenna {
     @Id public Integer id;
     @Generated(GenerationTime.ALWAYS) 
@@ -3493,8 +3491,8 @@ public class Antenna {
         <literal>targetEntity</literal> attribute available on
         associations.</para>
 
-        <programlisting>    @Embedded
-    <emphasis role="bold">@Target(OwnerImpl.class)</emphasis>
+        <programlisting role="JAVA" language="JAVA">    @Embedded
+    @Target(OwnerImpl.class)
     public Owner getOwner() {
         return owner;
     }</programlisting>
@@ -3525,8 +3523,8 @@ public class Antenna {
       formula for discriminator resolution (no need to have a dedicated
       column).</para>
 
-      <programlisting>@Entity
-<emphasis role="bold">@DiscriminatorFormula("case when forest_type is null then 0 else forest_type end")</emphasis>
+      <programlisting role="JAVA" language="JAVA">@Entity
+@DiscriminatorFormula("case when forest_type is null then 0 else forest_type end")
 public class Forest { ... }</programlisting>
 
       <para>By default, when querying the top entities, Hibernate does not put
@@ -3540,7 +3538,7 @@ public class Forest { ... }</programlisting>
       <para>You can define the foreign key name generated by Hibernate for
       subclass tables in the JOINED inheritance strategy.</para>
 
-      <programlisting>@Entity
+      <programlisting role="JAVA" language="JAVA">@Entity
 @Inheritance(strategy = InheritanceType.JOINED)
 public abstract class File { ... }
 
@@ -3566,7 +3564,7 @@ public class Document extends File {</programlisting>
       <literal>@ManyToOne</literal>, <literal>@OneToMany</literal> or
       <literal>@ManyToMany</literal> association.</para>
 
-      <programlisting>@Entity
+      <programlisting role="JAVA" language="JAVA">@Entity
 public class Child {
     ...
     @ManyToOne
@@ -3578,7 +3576,7 @@ public class Child {
       <para>Sometimes you want to delegate to your database the deletion of
       cascade when a given entity is deleted.</para>
 
-      <programlisting>@Entity
+      <programlisting role="JAVA" language="JAVA">@Entity
 public class Child {
     ...
     @ManyToOne
@@ -3594,11 +3592,11 @@ public class Child {
       fairly unreadable name. You can override the constraint name by use
       <literal>@ForeignKey</literal>.</para>
 
-      <programlisting>@Entity
+      <programlisting role="JAVA" language="JAVA">@Entity
 public class Child {
     ...
     @ManyToOne
-    <emphasis role="bold">@ForeignKey(name="FK_PARENT")</emphasis>
+    @ForeignKey(name="FK_PARENT")
     public Parent getParent() { ... }
     ...
 }
@@ -3724,7 +3722,7 @@ alter table Child add constraint FK_PARENT foreign key (parent_id) references Pa
         <classname>@AnyDef</classname> and <classname>@AnyDefs</classname>
         annotations are used.</para>
 
-        <programlisting>    @Any( metaColumn = @Column( name = "property_type" ), fetch=FetchType.EAGER )
+        <programlisting role="JAVA" language="JAVA">    @Any( metaColumn = @Column( name = "property_type" ), fetch=FetchType.EAGER )
     @AnyMetaDef( 
         idType = "integer", 
         metaType = "string", 
@@ -3745,7 +3743,7 @@ alter table Child add constraint FK_PARENT foreign key (parent_id) references Pa
         reused. It is recommended to place it as a package metadata in this
         case.</para>
 
-        <programlisting>//on a package
+        <programlisting role="JAVA" language="JAVA">//on a package
 @AnyMetaDef( name="property" 
     idType = "integer", 
     metaType = "string", 
@@ -3818,7 +3816,7 @@ package org.hibernate.test.annotations.any;
         <classname>SortedSet</classname> or a <classname>SortedMap</classname>
         interface.</para>
 
-        <programlisting>    @OneToMany(cascade=CascadeType.ALL, fetch=FetchType.EAGER)
+        <programlisting role="JAVA" language="JAVA">    @OneToMany(cascade=CascadeType.ALL, fetch=FetchType.EAGER)
     @JoinColumn(name="CUST_ID")
     @Sort(type = SortType.COMPARATOR, comparator = TicketComparator.class)
     @Where(clause="1=1")
@@ -3837,11 +3835,11 @@ package org.hibernate.test.annotations.any;
         <literal>inverseName</literal> referencing to the other side
         constraint.</para>
 
-        <programlisting>@Entity
+        <programlisting role="JAVA" language="JAVA">@Entity
 public class Woman {
     ...
     @ManyToMany(cascade = {CascadeType.ALL})
-    <emphasis role="bold">@ForeignKey(name = "TO_WOMAN_FK", inverseName = "TO_MAN_FK")</emphasis>
+    @ForeignKey(name = "TO_WOMAN_FK", inverseName = "TO_MAN_FK")
     public Set&lt;Man&gt; getMens() {
         return mens;
     }
@@ -3863,7 +3861,7 @@ alter table Man_Woman add constraint TO_MAN_FK foreign key (man_id) references M
           associated class explicitly maps the indexed value, the use of
           <methodname>mappedBy</methodname> is permitted:</para>
 
-          <programlisting>@Entity
+          <programlisting role="JAVA" language="JAVA">@Entity
 public class Parent {
     @OneToMany(mappedBy="parent")
     @OrderColumn(name="order")
@@ -3891,7 +3889,7 @@ public class Child {
           the collection as <literal>mappedBy</literal>. Instead, we could use
           the following mapping:</para>
 
-          <programlisting>@Entity
+          <programlisting role="JAVA" language="JAVA">@Entity
 public class Parent {
     @OneToMany
     @OrderColumn(name="order")
@@ -3927,18 +3925,18 @@ public class Child {
           generator strategy. The strategy can be <literal>identity</literal>,
           or any defined generator name of your application.</para>
 
-          <programlisting>@Entity
+          <programlisting role="JAVA" language="JAVA">@Entity
 @TableGenerator(name="ids_generator", table="IDS")
 public class Passport {
     ...
 
     @ManyToMany(cascade = CascadeType.ALL)
     @JoinTable(name="PASSPORT_VISASTAMP")
-    <emphasis role="bold">@CollectionId(
+    @CollectionId(
         columns = @Column(name="COLLECTION_ID"), 
         type=@Type(type="long"), 
         generator = "ids_generator"
-    )</emphasis>
+    )
     private Collection&lt;Stamp&gt; visaStamp = new ArrayList();
     ...
 }</programlisting>
@@ -3957,7 +3955,7 @@ public class Passport {
           only in very special cases (eg. audit logs, user session data,
           etc).</para>
 
-          <programlisting>    @ManyToAny(
+          <programlisting role="JAVA" language="JAVA">    @ManyToAny(
             metaColumn = @Column( name = "property_type" ) )
     @AnyMetaDef( 
         idType = "integer", 
@@ -4035,9 +4033,8 @@ public class Passport {
       <literal>PERSIST</literal> at flush time as per the
       specification).</para>
 
-      <programlisting>@OneToMany( cascade = {CascadeType.PERSIST, CascadeType.MERGE} <methodname
-          role="bold">)
-@Cascade(org.hibernate.annotations.CascadeType.REPLICATE)</methodname>
+      <programlisting role="JAVA" language="JAVA">@OneToMany( cascade = {CascadeType.PERSIST, CascadeType.MERGE} )
+@Cascade(org.hibernate.annotations.CascadeType.REPLICATE)
 public Collection&lt;Employer&gt; getEmployers()</programlisting>
 
       <para>It is recommended to use <classname>@Cascade</classname> to
@@ -4068,13 +4065,13 @@ public Collection&lt;Employer&gt; getEmployers()</programlisting>
       entity load or the collection load. <literal>@Filter</literal> is used
       and placed either on the entity or the collection element</para>
 
-      <para><programlisting>@Entity
+      <programlisting role="JAVA" language="JAVA">@Entity
 @FilterDef(name="minLength", parameters=@ParamDef( name="minLength", type="integer" ) )
 @Filters( {
     @Filter(name="betweenLength", condition=":minLength &lt;= length and :maxLength &gt;= length"),
     @Filter(name="minLength", condition=":minLength &lt;= length")
 } )
-public class Forest { ... }</programlisting></para>
+public class Forest { ... }</programlisting>
 
       <para>When the collection use an association table as a relational
       representation, you might want to apply the filter condition to the
@@ -4084,7 +4081,7 @@ public class Forest { ... }</programlisting></para>
       association table, use the <literal>@FilterJoinTable</literal>
       annotation.</para>
 
-      <programlisting>    @OneToMany
+      <programlisting role="JAVA" language="JAVA">    @OneToMany
     @JoinTable
     //filter on the target entity table
     @Filter(name="betweenLength", condition=":minLength &lt;= length and :maxLength &gt;= length")
@@ -4162,13 +4159,13 @@ public class Forest { ... }</programlisting></para>
       you can also override the SQL statement used to load or change the state
       of entities.</para>
 
-      <programlisting>@Entity
+      <programlisting role="JAVA" language="JAVA">@Entity
 @Table(name="CHAOS")
-<emphasis role="bold">@SQLInsert( sql="INSERT INTO CHAOS(size, name, nickname, id) VALUES(?,upper(?),?,?)")
+@SQLInsert( sql="INSERT INTO CHAOS(size, name, nickname, id) VALUES(?,upper(?),?,?)")
 @SQLUpdate( sql="UPDATE CHAOS SET size = ?, name = upper(?), nickname = ? WHERE id = ?")
 @SQLDelete( sql="DELETE CHAOS WHERE id = ?")
 @SQLDeleteAll( sql="DELETE CHAOS")
-</emphasis><emphasis role="bold">@Loader(namedQuery = "chaos")</emphasis>
+@Loader(namedQuery = "chaos")
 @NamedNativeQuery(name="chaos", query="select id, size, name, lower( nickname ) as nickname from CHAOS where id= ?", resultClass = Chaos.class)
 public class Chaos {
     @Id
@@ -4217,10 +4214,10 @@ public class Chaos {
       <para>You can use the exact same set of annotations to override the
       collection related statements.</para>
 
-      <programlisting>@OneToMany
+      <programlisting role="JAVA" language="JAVA">@OneToMany
 @JoinColumn(name="chaos_fk")
-<emphasis role="bold">@SQLInsert( sql="UPDATE CASIMIR_PARTICULE SET chaos_fk = ? where id = ?")
-@SQLDelete( sql="UPDATE CASIMIR_PARTICULE SET chaos_fk = null where id = ?")</emphasis>
+@SQLInsert( sql="UPDATE CASIMIR_PARTICULE SET chaos_fk = ? where id = ?")
+@SQLDelete( sql="UPDATE CASIMIR_PARTICULE SET chaos_fk = null where id = ?")
 private Set&lt;CasimirParticle&gt; particles = new HashSet&lt;CasimirParticle&gt;();</programlisting>
 
       <para>The parameters order is important and is defined by the order
@@ -4237,14 +4234,14 @@ private Set&lt;CasimirParticle&gt; particles = new HashSet&lt;CasimirParticle&gt
       all) attributes <literal>sqlInsert</literal>,
       <literal>sqlUpdate</literal>, <literal>sqlDelete</literal>:</para>
 
-      <programlisting>@Entity
+      <programlisting role="JAVA" language="JAVA">@Entity
 @SecondaryTables({
     @SecondaryTable(name = "`Cat nbr1`"),
     @SecondaryTable(name = "Cat2"})
 @org.hibernate.annotations.Tables( {
     @Table(appliesTo = "Cat", comment = "My cat table" ),
     @Table(appliesTo = "Cat2", foreignKey = @ForeignKey(name="FK_CAT2_CAT"), fetch = FetchMode.SELECT,
-        <emphasis role="bold">sqlInsert=@SQLInsert(sql="insert into Cat2(storyPart2, id) values(upper(?), ?)") )</emphasis>
+        sqlInsert=@SQLInsert(sql="insert into Cat2(storyPart2, id) values(upper(?), ?)") )
 } )
 public class Cat implements Serializable {</programlisting>
 
@@ -4277,8 +4274,8 @@ public class Cat implements Serializable {</programlisting>
       <para>To define tuplixer in annotations, simply use the
       <literal>@Tuplizer</literal> annotation on the according element</para>
 
-      <programlisting>@Entity
-<emphasis role="bold">@Tuplizer(impl = DynamicEntityTuplizer.class)</emphasis>
+      <programlisting role="JAVA" language="JAVA">@Entity
+@Tuplizer(impl = DynamicEntityTuplizer.class)
 public interface Cuisine {
     @Id
     @GeneratedValue
@@ -4288,7 +4285,7 @@ public interface Cuisine {
     public String getName();
     public void setName(String name);
 
-    <emphasis role="bold">@Tuplizer(impl = DynamicComponentTuplizer.class)</emphasis>
+    @Tuplizer(impl = DynamicComponentTuplizer.class)
     public Country getCountry();
     public void setCountry(Country country);
 }</programlisting>
@@ -4307,10 +4304,10 @@ public interface Cuisine {
       fetch profile will be in affect for that session until it is explicitly
       disabled. Lets look at an example:</para>
 
-      <para><programlisting>@Entity
-<emphasis role="bold">@FetchProfile(name = "customer-with-orders", fetchOverrides = {
+      <programlisting role="JAVA" language="JAVA">@Entity
+@FetchProfile(name = "customer-with-orders", fetchOverrides = {
    @FetchProfile.FetchOverride(entity = Customer.class, association = "orders", mode = FetchMode.JOIN)
-})</emphasis>
+})
 public class Customer {
    @Id
    @GeneratedValue
@@ -4325,12 +4322,13 @@ public class Customer {
 
    // standard getter/setter
    ...
-}</programlisting>In the normal case the orders association would be lazy
+}</programlisting>
+        <para>In the normal case the orders association would be lazy
       loaded by Hibernate, but in a usecase where it is more efficient to load
       the customer and their orders together you could do something like
       this:</para>
 
-      <programlisting>Session session = ...;
+      <programlisting role="JAVA" language="JAVA">Session session = ...;
 session.enableFetchProfile( "customer-with-orders" );  // name matches @FetchProfile name
 Customer customer = (Customer) session.get( Customer.class, customerId );
 session.disableFetchProfile( "customer-with-orders" ); // or just close the session

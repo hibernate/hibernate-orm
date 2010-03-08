@@ -53,7 +53,7 @@
       <para>You can define global level metadata available for all XML files.
       You must not define these metadata more than once per deployment.</para>
 
-      <programlisting>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+      <programlisting role="XML" language="XML">&lt;?xml version="1.0" encoding="UTF-8"?&gt;
 
 &lt;entity-mappings 
   xmlns="http://java.sun.com/xml/ns/persistence/orm"
@@ -347,7 +347,7 @@
       <literal>mapped-superclass/attributes</literal> or
       <literal>embeddable/attributes</literal>.</para>
 
-      <programlisting>    &lt;attributes&gt;
+      <programlisting role="XML" language="XML">    &lt;attributes&gt;
         &lt;id name="id"&gt;
             &lt;column name="fld_id"/&gt;
             &lt;generated-value generator="generator" strategy="SEQUENCE"/&gt;
@@ -388,7 +388,7 @@
       <literal>mapped-superclass/attributes</literal> or
       <literal>embeddable/attributes</literal>.</para>
 
-      <programlisting>    &lt;attributes&gt;
+      <programlisting role="XML" language="XML">    &lt;attributes&gt;
         &lt;one-to-many name="players" fetch="EAGER"&gt;
             &lt;map-key name="name"/&gt;
             &lt;join-column name="driver"/&gt;

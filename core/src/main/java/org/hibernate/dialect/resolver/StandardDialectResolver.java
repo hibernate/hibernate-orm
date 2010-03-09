@@ -35,6 +35,8 @@ import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.DerbyDialect;
+import org.hibernate.dialect.Ingres10Dialect;
+import org.hibernate.dialect.Ingres9Dialect;
 import org.hibernate.dialect.IngresDialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.InformixDialect;
@@ -78,6 +80,19 @@ public class StandardDialectResolver extends AbstractDialectResolver{
 		}
 
 		if ( "ingres".equalsIgnoreCase( databaseName ) ) {
+            switch( databaseMajorVersion ) {
+                case 9:
+                    int databaseMinorVersion = metaData.getDatabaseMinorVersion();
+                    if (databaseMinorVersion > 2) {
+                        return new Ingres9Dialect();
+                    }
+                    return new IngresDialect();
+                case 10:
+                    log.warn( "Ingres " + databaseMajorVersion + " is not yet fully supported; using Ingres 9.3 dialect" );
+                    return new Ingres10Dialect();
+                default:
+                    log.warn( "Unknown Ingres major version [" + databaseMajorVersion + "] using Ingres 9.2 dialect" );
+            }
 			return new IngresDialect();
 		}
 

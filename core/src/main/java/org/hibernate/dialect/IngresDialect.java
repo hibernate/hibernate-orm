@@ -27,6 +27,7 @@ package org.hibernate.dialect;
 import java.sql.Types;
 
 import org.hibernate.Hibernate;
+import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.SQLFunctionTemplate;
 import org.hibernate.dialect.function.NoArgSQLFunction;
 import org.hibernate.dialect.function.StandardSQLFunction;
@@ -36,9 +37,12 @@ import org.hibernate.dialect.function.VarArgsSQLFunction;
  * An SQL dialect for Ingres 9.2.
  * <p/>
  * Known limitations:
- * - only supports simple constants or columns on the left side of an IN, making (1,2,3) in (...) or (&lt;subselect&gt;) in (...) non-supported
- * - supports only 39 digits in decimal
- *
+ * <ul>
+ * <li> Only supports simple constants or columns on the left side of an IN, making (1,2,3) in (...) or (&lt;subselect&gt;) in (...) non-supported.
+ * <li> Supports only 39 digits in decimal.
+ * <li> Explicitly set USE_GET_GENERATED_KEYS property to false.
+ * </ul>
+ * 
  * @author Ian Booth, Bruce Lunsford, Max Rydahl Andersen
  */
 public class IngresDialect extends Dialect {
@@ -135,6 +139,17 @@ public class IngresDialect extends Dialect {
 		registerFunction( "uuid_from_char", new StandardSQLFunction( "uuid_from_char", Hibernate.BYTE ) );
 		registerFunction( "uuid_to_char", new StandardSQLFunction( "uuid_to_char", Hibernate.STRING ) );
 		registerFunction( "year", new StandardSQLFunction( "year", Hibernate.INTEGER ) );
+        // Ingres driver supports getGeneratedKeys but only in the following
+        // form:
+        // The Ingres DBMS returns only a single table key or a single object
+        // key per insert statement. Ingres does not return table and object
+        // keys for INSERT AS SELECT statements. Depending on the keys that are
+        // produced by the statement executed, auto-generated key parameters in
+        // execute(), executeUpdate(), and prepareStatement() methods are
+        // ignored and getGeneratedKeys() returns a result-set containing no
+        // rows, a single row with one column, or a single row with two columns.
+        // Ingres JDBC Driver returns table and object keys as BINARY values.
+        getDefaultProperties().setProperty(Environment.USE_GET_GENERATED_KEYS, "false");
 	}
 
 	/**

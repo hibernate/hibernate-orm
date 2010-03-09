@@ -46,7 +46,7 @@
         <para>Alternatively add the following dependency in your dependency
         manager (like Maven or Ivy). Here is an example</para>
 
-        <programlisting role="XML" language="XML">&lt;project ...&gt;
+        <programlisting language="XML" role="XML">&lt;project ...&gt;
   ...
   &lt;dependencies&gt;
     &lt;dependency&gt;
@@ -96,9 +96,9 @@
     or above from the Hibernate website and add
     <filename>hibernate-validator.jar</filename> and
     <filename>validation-api.jar</filename> in your classpath. Alternatively
-    add the following dependency in your
-    <filename>pom.xml</filename>.</para>
-      <programlisting role="XML" language="XML">&lt;project&gt;
+    add the following dependency in your <filename>pom.xml</filename>.</para>
+
+    <programlisting language="XML" role="XML">&lt;project&gt;
   ...
   &lt;dependencies&gt;
     &lt;dependency&gt;
@@ -117,7 +117,9 @@
     <filename>hibernate-search.jar</filename> and
     <filename>lucene-core-x.y.z.jar</filename> in your classpath.
     Alternatively add the following dependency in your
-    <filename>pom.xml</filename>.</para><programlisting role="XML" language="XML">&lt;project&gt;
+    <filename>pom.xml</filename>.</para>
+
+    <programlisting language="XML" role="XML">&lt;project&gt;
   ...
   &lt;dependencies&gt;
     &lt;dependency&gt;
@@ -138,7 +140,8 @@
     <classname>AnnotationConfiguration</classname> class instead of the
     <classname>Configuration</classname> class. Here is an example using the
     (legacy) <classname>HibernateUtil</classname> approach:</para>
-        <programlisting role="JAVA" language="JAVA">package hello;
+
+    <programlisting language="JAVA" role="JAVA">package hello;
 
 import org.hibernate.*;
 import org.hibernate.cfg.*;
@@ -171,7 +174,7 @@ private static final SessionFactory sessionFactory;
     <filename>hibernate.cfg.xml</filename>). Here is the equivalent of the
     above declaration:</para>
 
-    <programlisting role="XML" language="XML">&lt;!DOCTYPE hibernate-configuration PUBLIC
+    <programlisting language="XML" role="XML">&lt;!DOCTYPE hibernate-configuration PUBLIC
     "-//Hibernate/Hibernate Configuration DTD 3.0//EN"
     "http://hibernate.sourceforge.net/hibernate-configuration-3.0.dtd"&gt;
 &lt;hibernate-configuration&gt;
@@ -194,7 +197,8 @@ private static final SessionFactory sessionFactory;
     <para>Alternatively, you can define the annotated classes and packages
     using the programmatic API</para>
 
-    <programlisting role="JAVA" language="JAVA">sessionFactory = new <emphasis role="bold">AnnotationConfiguration()
+    <programlisting language="JAVA" role="JAVA">sessionFactory = new <emphasis
+        role="bold">AnnotationConfiguration()
                     .addPackage("test.animals") //the fully qualified package name
                     .addAnnotatedClass(Flight.class)
                     .addAnnotatedClass(Sky.class)

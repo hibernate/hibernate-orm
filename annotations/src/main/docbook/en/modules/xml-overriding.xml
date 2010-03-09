@@ -1,4 +1,4 @@
-<?xml version='1.0' encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <!--
   ~ Hibernate, Relational Persistence for Idiomatic Java
   ~
@@ -22,8 +22,8 @@
   ~ 51 Franklin Street, Fifth Floor
   ~ Boston, MA  02110-1301  USA
   -->
-
-<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
+"http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
 <chapter id="xml-overriding">
   <title>Overriding metadata through XML</title>
 
@@ -44,7 +44,7 @@
     the annotations one. So if you know the annotations structure, using the
     XML schema will be straightforward for you.</para>
 
-    <para>You can define one ot more XML files describing your metadata, these
+    <para>You can define one or more XML files describing your metadata, these
     files will be merged by the overriding engine.</para>
 
     <section>
@@ -53,7 +53,7 @@
       <para>You can define global level metadata available for all XML files.
       You must not define these metadata more than once per deployment.</para>
 
-      <programlisting role="XML" language="XML">&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+      <programlisting language="XML" role="XML">&lt;?xml version="1.0" encoding="UTF-8"?&gt;
 
 &lt;entity-mappings 
   xmlns="http://java.sun.com/xml/ns/persistence/orm"
@@ -347,7 +347,7 @@
       <literal>mapped-superclass/attributes</literal> or
       <literal>embeddable/attributes</literal>.</para>
 
-      <programlisting role="XML" language="XML">    &lt;attributes&gt;
+      <programlisting language="XML" role="XML">    &lt;attributes&gt;
         &lt;id name="id"&gt;
             &lt;column name="fld_id"/&gt;
             &lt;generated-value generator="generator" strategy="SEQUENCE"/&gt;
@@ -388,7 +388,7 @@
       <literal>mapped-superclass/attributes</literal> or
       <literal>embeddable/attributes</literal>.</para>
 
-      <programlisting role="XML" language="XML">    &lt;attributes&gt;
+      <programlisting language="XML" role="XML">    &lt;attributes&gt;
         &lt;one-to-many name="players" fetch="EAGER"&gt;
             &lt;map-key name="name"/&gt;
             &lt;join-column name="driver"/&gt;

@@ -67,7 +67,7 @@
 
     <para>If you use Maven, add the following dependencies</para>
 
-    <programlisting>&lt;project ...&gt;
+    <programlisting role="XML" language="XML">&lt;project ...&gt;
   ...
   &lt;dependencies&gt;
     &lt;dependency&gt;
@@ -100,7 +100,7 @@
       configuration, so by default, your persistence.xml will be quite
       minimalist:</para>
 
-      <programlisting>&lt;persistence xmlns="http://java.sun.com/xml/ns/persistence"
+      <programlisting  role="XML" language="XML">&lt;persistence xmlns="http://java.sun.com/xml/ns/persistence"
              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
              xsi:schemaLocation="http://java.sun.com/xml/ns/persistence http://java.sun.com/xml/ns/persistence/persistence_2_0.xsd"
              version="2.0"&gt;
@@ -116,7 +116,7 @@
       <para>Here's a more complete example of a
       <filename><literal>persistence.xml</literal></filename> file</para>
 
-      <programlisting>&lt;persistence xmlns="http://java.sun.com/xml/ns/persistence"
+      <programlisting  role="XML" language="XML">&lt;persistence xmlns="http://java.sun.com/xml/ns/persistence"
              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
              xsi:schemaLocation="http://java.sun.com/xml/ns/persistence http://java.sun.com/xml/ns/persistence/persistence_2_0.xsd"
              version="2.0"&gt;
@@ -211,7 +211,7 @@
             environment, the persistence.xml file is not under the same root
             directory or jar than your domain model).</para>
 
-            <programlisting>        &lt;jar-file&gt;file:/home/turin/work/local/lab8/build/classes&lt;/jar-file&gt;</programlisting>
+            <programlisting  role="XML" language="XML">        &lt;jar-file&gt;file:/home/turin/work/local/lab8/build/classes&lt;/jar-file&gt;</programlisting>
           </listitem>
         </varlistentry>
 
@@ -275,7 +275,7 @@
               </listitem>
             </itemizedlist>
 
-            <para> See Hibernate Annotation's documentation for more
+            <para>See Hibernate Annotation's documentation for more
             details.</para>
           </listitem>
         </varlistentry>
@@ -323,14 +323,14 @@
             <literal>&lt;validation-mode&gt;</literal>. To use it, add a
             regular property</para>
 
-            <programlisting>&lt;property name="javax.persistence.validation.mode"&gt;
+            <programlisting  role="XML" language="XML">&lt;property name="javax.persistence.validation.mode"&gt;
   ddl
 &lt;/property&gt;</programlisting>
 
             <para>With this approach, you can mix ddl and callback
             modes:</para>
 
-            <programlisting>&lt;property name="javax.persistence.validation.mode"&gt;
+            <programlisting  role="XML" language="XML">&lt;property name="javax.persistence.validation.mode"&gt;
   ddl, callback
 &lt;/property&gt;</programlisting>
           </listitem>
@@ -427,7 +427,7 @@
       the version embedded in the hibernate-entitymanager.jar. It won't fetch
       the resource from the internet.</para>
 
-      <programlisting>&lt;persistence xmlns="http://java.sun.com/xml/ns/persistence"
+      <programlisting  role="XML" language="XML">&lt;persistence xmlns="http://java.sun.com/xml/ns/persistence"
              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
              xsi:schemaLocation="http://java.sun.com/xml/ns/persistence http://java.sun.com/xml/ns/persistence/persistence_2_0.xsd"
              version="2.0"&gt;</programlisting>
@@ -441,7 +441,7 @@
       <classname>EntityManager</classname>. The bootstrap class is
       <classname>javax.persistence.Persistence</classname>, e.g.</para>
 
-      <programlisting>EntityManagerFactory emf = Persistence.createEntityManagerFactory("manager1");
+      <programlisting role="JAVA" language="JAVA">EntityManagerFactory emf = Persistence.createEntityManagerFactory("manager1");
 
 //or
 
@@ -527,8 +527,6 @@ EntityManagerFactory programmaticEmf =
       <code>createEntityManagerFactory()</code>. Please refer to the Hibernate
       reference documentation for a complete listing. There are however a
       couple of properties available in the EJB3 provider only.</para>
-
-      <para></para>
 
       <table>
         <title>Hibernate Entity Manager specific properties</title>
@@ -665,7 +663,7 @@ EntityManagerFactory programmaticEmf =
 
       <para>Here is a typical configuration in a Java SE environment</para>
 
-      <programlisting>&lt;persistence&gt;
+      <programlisting  role="XML" language="XML">&lt;persistence&gt;
    &lt;persistence-unit name="manager1" transaction-type="RESOURCE_LOCAL"&gt;
       &lt;class&gt;org.hibernate.ejb.test.Cat&lt;/class&gt;
       &lt;class&gt;org.hibernate.ejb.test.Distributor&lt;/class&gt;
@@ -697,7 +695,7 @@ EntityManagerFactory programmaticEmf =
 
       <para>TODO: me more descriptive on some APIs like setDatasource()</para>
 
-      <programlisting>Ejb3Configuration cfg = new Ejb3Configuration();
+      <programlisting  role="JAVA" language="JAVA">Ejb3Configuration cfg = new Ejb3Configuration();
 EntityManagerFactory emf = 
   cfg.addProperties( properties ) //add some properties
      .setInterceptor( myInterceptorImpl ) // set an interceptor
@@ -714,9 +712,9 @@ EntityManagerFactory emf =
     <title>Event listeners</title>
 
     <para>Hibernate Entity Manager needs to enhance Hibernate core to
-    implements all the EJB3 semantics. It does that through the event listener
+    implements all the JPA semantics. It does that through the event listener
     system of Hibernate. Be careful when you use the event system yourself,
-    you might override some of the EJB3 semantics. A safe way is to add your
+    you might override some of the JPA semantics. A safe way is to add your
     event listeners to the list given below.</para>
 
     <table>
@@ -793,15 +791,13 @@ EntityManagerFactory emf =
           <row>
             <entry>pre-insert</entry>
 
-            <entry>org.hibernate.secure.JACCPreInsertEventListener,
-            org.hibernate.valitator.event.ValidateEventListener</entry>
+            <entry>org.hibernate.secure.JACCPreInsertEventListener</entry>
           </row>
 
           <row>
             <entry>pre-insert</entry>
 
-            <entry>org.hibernate.secure.JACCPreUpdateEventListener,
-            org.hibernate.valitator.event.ValidateEventListener</entry>
+            <entry>org.hibernate.secure.JACCPreUpdateEventListener</entry>
           </row>
 
           <row>
@@ -861,7 +857,7 @@ EntityManagerFactory emf =
     <classname>Persistence</classname> class is bootstrap class to create an
     entity manager factory.</para>
 
-    <programlisting>// Use persistence.xml configuration
+    <programlisting  role="JAVA" language="JAVA">// Use persistence.xml configuration
 EntityManagerFactory emf = Persistence.createEntityManagerFactory("manager1")
 EntityManager em = emf.createEntityManager(); // Retrieve an application managed entity manager
 // Work with the EM

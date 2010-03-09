@@ -1,4 +1,4 @@
-<?xml version='1.0' encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <!--
   ~ Hibernate, Relational Persistence for Idiomatic Java
   ~
@@ -22,8 +22,8 @@
   ~ 51 Franklin Street, Fifth Floor
   ~ Boston, MA  02110-1301  USA
   -->
-
-<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
+"http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
 <chapter id="transactions" revision="1">
   <title>Transactions and Concurrency</title>
 
@@ -95,23 +95,22 @@
 
       <para>The most common pattern in a multi-user client/server application
       is <emphasis>entitymanager-per-request</emphasis>. In this model, a
-      request from the client is send to the server (where the EJB3
-      persistence layer runs), a new <literal>EntityManager</literal> is
-      opened, and all database operations are executed in this unit of work.
-      Once the work has been completed (and the response for the client has
-      been prepared), the persistence context is flushed and closed, as well
-      as the entity manager object. You would also use a single database
-      transaction to serve the clients request. The relationship between the
-      two is one-to-one and this model is a perfect fit for many
-      applications.</para>
+      request from the client is send to the server (where the JPA persistence
+      layer runs), a new <literal>EntityManager</literal> is opened, and all
+      database operations are executed in this unit of work. Once the work has
+      been completed (and the response for the client has been prepared), the
+      persistence context is flushed and closed, as well as the entity manager
+      object. You would also use a single database transaction to serve the
+      clients request. The relationship between the two is one-to-one and this
+      model is a perfect fit for many applications.</para>
 
-      <para>This is the default EJB3 persistence model in a Java EE
-      environment (JTA bounded, transaction-scoped persistence context);
-      injected (or looked up) entity managers share the same persistence
-      context for a particular JTA transaction. The beauty of EJB3 is that you
-      don't have to care about that anymore and just see data access through
-      entity manager and demarcation of transaction scope on session beans as
-      completely orthogonal.</para>
+      <para>This is the default JPA persistence model in a Java EE environment
+      (JTA bounded, transaction-scoped persistence context); injected (or
+      looked up) entity managers share the same persistence context for a
+      particular JTA transaction. The beauty of JPA is that you don't have to
+      care about that anymore and just see data access through entity manager
+      and demarcation of transaction scope on session beans as completely
+      orthogonal.</para>
 
       <para>The challenge is the implementation of this (and other) behavior
       outside an EJB3 container: not only has the
@@ -187,14 +186,14 @@
       transactions (the last one) stores the updated data, all others simply
       read data (e.g. in a wizard-style dialog spanning several
       request/response cycles). This is easier to implement than it might
-      sound, especially if you use EJB3 entity manager and persistence context
+      sound, especially if you use JPA entity manager and persistence context
       features:</para>
 
       <itemizedlist>
         <listitem>
           <para><emphasis>Automatic Versioning</emphasis> - An entity manager
           can do automatic optimistic concurrency control for you, it can
-          automatically detect if a concurrent modification occured during
+          automatically detect if a concurrent modification occurred during
           user think time (usually by comparing version numbers or timestamps
           when updating the data in the final resource-local
           transaction).</para>
@@ -249,9 +248,7 @@
           <term>Database Identity</term>
 
           <listitem>
-            <para>
-              <literal>foo.getId().equals( bar.getId() )</literal>
-            </para>
+            <para><literal>foo.getId().equals( bar.getId() )</literal></para>
           </listitem>
         </varlistentry>
 
@@ -259,9 +256,7 @@
           <term>JVM Identity</term>
 
           <listitem>
-            <para>
-              <literal>foo==bar</literal>
-            </para>
+            <para><literal>foo==bar</literal></para>
           </listitem>
         </varlistentry>
       </variablelist>
@@ -371,8 +366,8 @@
   <sect1 id="transactions-demarcation">
     <title>Database transaction demarcation</title>
 
-    <para>Database (or system) transaction boundaries are always necessary.
-    No communication with the database can occur outside of a database
+    <para>Database (or system) transaction boundaries are always necessary. No
+    communication with the database can occur outside of a database
     transaction (this seems to confuse many developers who are used to the
     auto-commit mode). Always use clear transaction boundaries, even for
     read-only operations. Depending on your isolation level and database
@@ -381,8 +376,8 @@
     outside a transaction, though, when you'll need to retain modifications in
     an <literal>EXTENDED</literal> persistence context.</para>
 
-    <para>An EJB3 application can run in non-managed (i.e. standalone, simple
-    Web- or Swing applications) and managed J2EE environments. In a
+    <para>A JPA application can run in non-managed (i.e. standalone, simple
+    Web- or Swing applications) and managed Java EE environments. In a
     non-managed environment, an <literal>EntityManagerFactory</literal> is
     usually responsible for its own database connection pool. The application
     developer has to manually set transaction boundaries, in other words,
@@ -418,7 +413,7 @@
     <sect2 id="transactions-demarcation-nonmanaged">
       <title>Non-managed environment</title>
 
-      <para>If an EJB3 persistence layer runs in a non-managed environment,
+      <para>If an JPA persistence layer runs in a non-managed environment,
       database connections are usually handled by Hibernate's pooling
       mechanism behind the scenes. The common entity manager and transaction
       handling idiom looks like this:</para>
@@ -562,6 +557,11 @@ finally {
       <programlisting>//CMT idiom through injection
 @PersistenceContext(name="sample") EntityManager em;</programlisting>
 
+      <para>Or this if you use Java Context and Dependency Injection
+      (CDI).</para>
+
+      <programlisting>@Inject EntityManager em;</programlisting>
+
       <para>In other words, all you have to do in a managed environment is to
       inject the <literal>EntityManager</literal>, do your data access work,
       and leave the rest to the container. Transaction boundaries are set
@@ -569,12 +569,7 @@ finally {
       session beans. The lifecycle of the entity manager and persistence
       context is completely managed by the container.</para>
 
-      <para>TODO: The following paragraph is very confusing, especially the
-      beginning...</para>
-
-      <para>When using particular Hibernate native APIs, one caveat has to be
-      remembered: <literal>after_statement</literal> connection release mode.
-      Due to a silly limitation of the JTA spec, it is not possible for
+      <para>Due to a silly limitation of the JTA spec, it is not possible for
       Hibernate to automatically clean up any unclosed
       <literal>ScrollableResults</literal> or <literal>Iterator</literal>
       instances returned by <literal>scroll()</literal> or
@@ -610,22 +605,75 @@ finally {
 
       <itemizedlist>
         <listitem>
-          <para>IllegalArgumentException: something wrong happen</para>
+          <para><classname>IllegalArgumentException</classname>: something
+          wrong happen</para>
         </listitem>
 
         <listitem>
-          <para>EntityNotFoundException: an entity was expected but none match
-          the requirement</para>
+          <para><classname>EntityNotFoundException</classname>: an entity was
+          expected but none match the requirement</para>
         </listitem>
 
         <listitem>
-          <para>TransactionRequiredException: this operation has to be in a
+          <para><classname>NonUniqueResultException</classname>: more than one
+          entity is found when calling
+          <methodname>getSingleResult()</methodname></para>
+        </listitem>
+
+        <listitem>
+          <para>NoResultException: when
+          <methodname>getSingleResult()</methodname> does not find any
+          matching entity</para>
+        </listitem>
+
+        <listitem>
+          <para><classname>EntityExistsException</classname>: an existing
+          entity is passed to <methodname>persist()</methodname></para>
+        </listitem>
+
+        <listitem>
+          <para><classname>TransactionRequiredException</classname>: this
+          operation has to be in a transaction</para>
+        </listitem>
+
+        <listitem>
+          <para><classname>IllegalStateException</classname>: the entity
+          manager is used in a wrong way</para>
+        </listitem>
+
+        <listitem>
+          <para><classname>RollbackException</classname>: a failure happens
+          during <methodname>commit()</methodname></para>
+        </listitem>
+
+        <listitem>
+          <para><classname>QueryTimeoutException</classname>: the query takes
+          longer than the specified timeout (see
+          <literal>javax.persistence.query.timeout</literal> - this property
+          is a hint and might not be followed)</para>
+        </listitem>
+
+        <listitem>
+          <para><classname>PessimisticLockException</classname>: when a lock
+          cannot be acquired</para>
+        </listitem>
+
+        <listitem>
+          <para><classname>OptimisticLockException</classname>: an optimistic
+          lock is failing</para>
+        </listitem>
+
+        <listitem>
+          <para><classname>LockTimeoutException</classname>: when a lock takes
+          longer than the expected time to be acquired
+          (<literal>javax.persistence.lock.timeout</literal> in
+          milliseconds)</para>
+        </listitem>
+
+        <listitem>
+          <para><classname>TransactionRequiredException</classname>: an
+          operation requiring a transaction is executed outside of a
           transaction</para>
-        </listitem>
-
-        <listitem>
-          <para>IllegalStateException: the entity manager is used in a wrong
-          way</para>
         </listitem>
       </itemizedlist>
 
@@ -694,10 +742,10 @@ finally {
     <para>In an <literal>EXTENDED</literal> persistence context, all read only
     operations of the entity manager can be executed outside a transaction
     (<literal>find()</literal>, <literal>getReference()</literal>,
-    <literal>refresh()</literal>, and read queries). Some modifications
-    operations can be executed outside a transaction, but they are queued
-    until the persistence context join a transaction: this is the case of
-    <literal>persist()</literal>,
+    <literal>refresh()</literal>, <methodname>detach()</methodname> and read
+    queries). Some modifications operations can be executed outside a
+    transaction, but they are queued until the persistence context join a
+    transaction: this is the case of <literal>persist()</literal>,
     <literal><literal>merge()</literal></literal>,
     <literal>remove()</literal>. Some operations cannot be called outside a
     transaction: <literal>flush()</literal>, <literal>lock()</literal>, and
@@ -706,12 +754,12 @@ finally {
     <sect2>
       <title>Container Managed Entity Manager</title>
 
-      <para>When using an EXTENDED persistence context with a container
-      managed entity manager, the lifecycle of the persistence context is
-      binded to the lifecycle of the Stateful Session Bean. Plus if the entity
-      manager is created outside a transaction, modifications operations
-      (persist, merge, remove) are queued in the persistence context and not
-      executed to the database.</para>
+      <para>When using an <literal>EXTENDED</literal> persistence context with
+      a container managed entity manager, the lifecycle of the persistence
+      context is binded to the lifecycle of the Stateful Session Bean. Plus if
+      the entity manager is created outside a transaction, modifications
+      operations (persist, merge, remove) are queued in the persistence
+      context and not executed to the database.</para>
 
       <para>When a method of the stateful session bean involved or starting a
       transaction is later called, the entity manager join the transaction.
@@ -897,7 +945,7 @@ entityManager.getTransaction().commit();
 entityManager.close();</programlisting>
 
       <para>Again, the entity manager will check instance versions during
-      flush, throwing an exception if conflicting updates occured.</para>
+      flush, throwing an exception if conflicting updates occurred.</para>
     </sect2>
   </sect1>
 </chapter>

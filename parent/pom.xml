@@ -504,7 +504,7 @@
             <dependency>
                 <groupId>org.hibernate</groupId>
                 <artifactId>hibernate-commons-annotations</artifactId>
-                <version>3.2.0.Beta1</version>
+                <version>3.2.0.Final</version>
             </dependency>
             <!--  set the optional Bean Validation and Hibernate Validator to be used throughout the project  -->
             <dependency>

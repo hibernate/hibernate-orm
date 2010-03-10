@@ -2759,15 +2759,29 @@ public abstract class AbstractEntityPersister
 		if ( entry == null && ! isMutable() ) {
 			throw new IllegalStateException( "Updating immutable entity that is not in session yet!" );
 		}
-		if ( entry != null && ! isModifiableEntity( entry ) && entry.getStatus() != Status.DELETED ) {
-			throw new IllegalStateException( "Updating non-modifiable entity that is not being deleted!" );
-		}
-		if ( ( entityMetamodel.isDynamicUpdate() || ! isModifiableEntity( entry ) ) && dirtyFields != null ) {
-			// For the following cases we need to generate the UPDATE SQL
-			// - dynamic-update="true"
-			// - a non-modifiable entity (e.g., read-only or immutable) needs to have
-			//   references to transient entities set to null before being deleted
+		if ( ( entityMetamodel.isDynamicUpdate() && dirtyFields != null ) ) {
+			// We need to generate the UPDATE SQL when dynamic-update="true"
 			propsToUpdate = getPropertiesToUpdate( dirtyFields, hasDirtyCollection );
+			// don't need to check laziness (dirty checking algorithm handles that)
+			updateStrings = new String[span];
+			for ( int j = 0; j < span; j++ ) {
+				updateStrings[j] = tableUpdateNeeded[j] ?
+						generateUpdateString( propsToUpdate, j, oldFields, j == 0 && rowId != null ) :
+						null;
+			}
+		}
+		else if ( ! isModifiableEntity( entry ) ) {
+			// We need to generate UPDATE SQL when a non-modifiable entity (e.g., read-only or immutable)
+			// needs:
+			// - to have references to transient entities set to null before being deleted
+			// - to have version incremented do to a "dirty" association
+			// If dirtyFields == null, then that means that there are no dirty properties to
+			// to be updated; an empty array for the dirty fields needs to be passed to
+			// getPropertiesToUpdate() instead of null.
+			propsToUpdate = getPropertiesToUpdate(
+					( dirtyFields == null ? ArrayHelper.EMPTY_INT_ARRAY : dirtyFields ),
+					hasDirtyCollection
+			);
 			// don't need to check laziness (dirty checking algorithm handles that)
 			updateStrings = new String[span];
 			for ( int j = 0; j < span; j++ ) {

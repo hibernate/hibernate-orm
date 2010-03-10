@@ -141,7 +141,7 @@ public abstract class AbstractFlushingEventListener implements Serializable {
 			Map.Entry me = list[i];
 			EntityEntry entry = (EntityEntry) me.getValue();
 			Status status = entry.getStatus();
-			if ( status == Status.MANAGED || status == Status.SAVING ) {
+			if ( status == Status.MANAGED || status == Status.SAVING || status == Status.READ_ONLY ) {
 				cascadeOnFlush( session, entry.getPersister(), me.getKey(), anything );
 			}
 		}

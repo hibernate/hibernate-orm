@@ -61,39 +61,29 @@
 
     <para>Hibernate, like all other object/relational mapping tools, requires
     metadata that governs the transformation of data from one representation
-    to the other. In Hibernate 2.x mapping metadata is most of the time
-    declared in XML text files. Alternatively XDoclet can be used utilizing
-    Javadoc source code annotations together with a compile time preprocessor.
+    to the other. Hibernate Annotations provides annotation-based mapping metadata.
     </para>
 
-    <para>The same kind of annotation support is now available in the standard
-    JDK, although more powerful and with better tools support. IntelliJ IDEA
-    and Eclipse for example, support auto-completion and syntax highlighting
-    of JDK 5.0 annotations which are compiled into the bytecode and read at
-    runtime using reflection. No external XML files are needed.</para>
-
-    <para>The EJB3 specification recognizes the interest and the success of
+    <para>The JPA specification recognizes the interest and the success of
     the transparent object/relational mapping paradigm. It standardizes the
     basic APIs and the metadata needed for any object/relational persistence
-    mechanism. <emphasis>Hibernate EntityManager</emphasis> implements the
-    programming interfaces and lifecycle rules as defined by the EJB3
+    mechanism.
+    <emphasis>Hibernate EntityManager</emphasis> implements the
+    programming interfaces and lifecycle rules as defined by the JPA
     persistence specification and together with <emphasis>Hibernate
-    Annotations</emphasis> offers a complete (and standalone) EJB3 persistence
-    solution on top of the mature Hibernate core. You may use a combination of
-    all three together, annotations without EJB3 programming interfaces and
-    lifecycle, or even pure native Hibernate, depending on the business and
-    technical needs of your project. At all times you cann fall back to
+    Annotations</emphasis> offers a complete (and standalone) JPA persistence
+    solution on top of the mature Hibernate Core. You may use a combination of
+    all three together, annotations without JPA programming interfaces and
+    lifecycle, or even pure native Hibernate Core, depending on the business and
+    technical needs of your project. At all time you can fall back to
     Hibernate native APIs, or if required, even to native JDBC and SQL.</para>
 
     <para>This release of <emphasis>Hibernate Annotations</emphasis> is based
-    on the final release of the EJB 3.0 / JPA specification (aka <ulink
-    url="http://jcp.org/en/jsr/detail?id=220">JSR-220</ulink>) and
+    on the final release of the JPA 2 specification (aka <ulink
+    url="http://jcp.org/en/jsr/detail?id=317">JSR-317</ulink>) and
     supports all its features (including the optional ones). Hibernate
     specific features and extensions are also available through
-    unstandardized, Hibernate specific annotations. While the Hibernate
-    feature coverage is high, some can not yet be expressed via annotations.
-    The eventual goal is to cover all of them. See the JIRA road map section
-    for more informations.</para>
+    unstandardized, Hibernate specific annotations.</para>
 
     <para>If you are moving from previous Hibernate Annotations versions,
     please have a look at <ulink url="http://www.hibernate.org/398.html">Java

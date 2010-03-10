@@ -4,9 +4,9 @@
 
     <groupId>org.hibernate</groupId>
     <artifactId>hibernate-jpamodelgen</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
+    <version>1.1.0-SNAPSHOT</version>
 
-    <name>JPA 2 Static-Metamodel Generator</name>
+    <name>Hibernate JPA 2 Metamodel Generator</name>
     <description>Annotation Processor to generate JPA 2 static metamodel classes</description>
 
     <inceptionYear>2009</inceptionYear>
@@ -15,7 +15,7 @@
         <dependency>
             <groupId>org.hibernate.javax.persistence</groupId>
             <artifactId>hibernate-jpa-2.0-api</artifactId>
-            <version>1.0.0-CR-1</version>
+            <version>1.0.0.Final</version>
         </dependency>
         <dependency>
             <groupId>org.testng</groupId>
@@ -202,12 +202,12 @@
                 <configuration>
                     <archive>
                         <manifestEntries>
-                            <Implementation-Title>${pom.artifactId}</Implementation-Title>
+	                        <Created-By>${java.version} (${java.vendor})</Created-By>
+                            <Implementation-Title>${pom.name}</Implementation-Title>
+                            <Implementation-URL>http://www.jboss.org/</Implementation-URL>
                             <Implementation-Version>${pom.version}</Implementation-Version>
-                            <Implementation-Vendor>${pom.groupId}</Implementation-Vendor>
-                            <Implementation-Vendor-Id>${pom.groupId}</Implementation-Vendor-Id>
-                            <Implementation-URL>${pom.url}</Implementation-URL>
-                            <Specification-Title>JPA2 Model Generator</Specification-Title>
+                            <Implementation-Vendor>JBoss by Red Hat, Inc.</Implementation-Vendor>
+                            <Implementation-Vendor-Id>http://www.jboss.org/</Implementation-Vendor-Id>
                         </manifestEntries>
                     </archive>
                 </configuration>

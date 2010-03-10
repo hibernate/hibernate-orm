@@ -19,6 +19,7 @@
 <!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
 "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
 <!ENTITY version "WORKING">
+<!ENTITY today "TODAY">
 <!ENTITY copyrightYear "2010">
 <!ENTITY copyrightHolder "Red Hat Inc.">
 <!ENTITY jpa2Ref '<citation><xref linkend="JPA2"/></citation>'>
@@ -26,20 +27,26 @@
 ]>
 <book lang="en">
   <bookinfo>
-    <title>Hibernate Metamodel Generator</title>
-    <subtitle>JPA 2 Static Metamodel Annotation Processor</subtitle>
+    <title>Hibernate JPA 2 Metamodel Generator</title>
     <subtitle>Reference Guide</subtitle>
     <releaseinfo>&version;</releaseinfo>
+    <pubdate>&today;</pubdate>
     <productnumber>&version;</productnumber>
     <copyright>
       <year>&copyrightYear;</year>
       <holder>&copyrightHolder;</holder>
     </copyright>
+    <authorgroup>
+      <author>
+        <firstname>Hardy</firstname>
+        <surname>Ferentschik</surname>
+      </author>
+    </authorgroup>
   </bookinfo>
   <toc/>
   <chapter id="introduction">
     <title>Introduction</title>
-    <section id="whatisit" revision="1">
+    <section id="whatisit">
       <title>What is it about?</title>
       <para>JPA 2 defines a new typesafe <classname>Criteria</classname> API which allows criteria
         queries to be constructed in a strongly-typed manner, using metamodel objects to provide
@@ -51,7 +58,7 @@
       <example id="jpa2-entity-example">
         <title>JPA 2 annotated entities <classname>Order</classname> and
           <classname>Item</classname></title>
-        <programlisting>
+        <programlisting role="JAVA" language="JAVA">
 @Entity
 public class Order {
     @Id 
@@ -87,7 +94,7 @@ public class Item {
       </example>
       <example id="metamodel-class-example">
         <title>Metamodel class  <classname>Order_</classname></title>
-        <programlisting>
+        <programlisting role="JAVA" language="JAVA">
 @StaticMetamodel(Order.class)
 public class Order_ {
     public static volatile SingularAttribute&lt;Order, Integer&gt; id;
@@ -99,11 +106,12 @@ public class Order_ {
       </example>
       <example id="criteria-example">
         <title>Typesafe citeria query</title>
-        <programlisting>
+        <programlisting role="JAVA" language="JAVA">
 CriteriaBuilder cb = entityManager.getCriteriaBuilder();
 CriteriaQuery&lt;Order&gt; cq = cb.createQuery(Order.class);
 SetJoin&lt;Order, Item&gt; itemNode = cq.from(Order.class).join(Order_.items);
 cq.where( cb.equal(itemNode.get(Item_.id), 5 ) ).distinct(true);
+
 </programlisting>
       </example>
     </section>
@@ -139,23 +147,24 @@ cq.where( cb.equal(itemNode.get(Item_.id), 5 ) ).distinct(true);
             <para>For every persistent non-collection-valued attribute y declared by class
                 <classname>X</classname>, where the type of y is <classname>Y</classname>, the
               metamodel class must contain a declaration as follows:
-              <programlisting>public static volatile SingularAttribute&lt;X, Y&gt; y;</programlisting></para>
+            </para>
+             <programlisting>public static volatile SingularAttribute&lt;X, Y&gt; y;</programlisting>
           </listitem>
           <listitem>
             <para>For every persistent collection-valued attribute z declared by class
                 <classname>X</classname>, where the element type of z is <classname>Z</classname>,
               the metamodel class must contain a declaration as follows:<itemizedlist>
                 <listitem>
-                  <para>if the collection type of z is java.util.Collection, then
-                    <programlisting>public static volatile CollectionAttribute&lt;X, Z&gt; z;</programlisting></para>
+                  <para>if the collection type of z is java.util.Collection, then</para>
+                  <programlisting>public static volatile CollectionAttribute&lt;X, Z&gt; z;</programlisting>
                 </listitem>
                 <listitem>
-                  <para>if the collection type of z is java.util.Set, then
-                    <programlisting>public static volatile SetAttribute&lt;X, Z&gt; z;</programlisting></para>
+                  <para>if the collection type of z is java.util.Set, then</para>
+                  <programlisting>public static volatile SetAttribute&lt;X, Z&gt; z;</programlisting>
                 </listitem>
                 <listitem>
-                  <para>if the collection type of z is java.util.List, then
-                    <programlisting>public static volatile ListAttribute&lt;X, Z&gt; z;</programlisting></para>
+                  <para>if the collection type of z is java.util.List, then</para>
+                  <programlisting>public static volatile ListAttribute&lt;X, Z&gt; z;</programlisting>
                 </listitem>
                 <listitem>
                   <para>if the collection type of z is java.util.Map, then
@@ -177,14 +186,14 @@ cq.where( cb.equal(itemNode.get(Item_.id), 5 ) ).distinct(true);
         linkend="maven-dependency"/>.</para>
     <example id="maven-dependency">
       <title>Maven dependency </title>
-      <programlisting>&lt;dependency&gt;
+      <programlisting role="XML" language="XML">&lt;dependency&gt;
     &lt;groupId&gt;org.hibernate&lt;/groupId&gt;
     &lt;artifactId&gt;hibernate-jpamodelgen&lt;/artifactId&gt;
     &lt;version&gt;1.0.0&lt;/version&gt;
 &lt;/dependency&gt;</programlisting>
     </example>
     <para>Alternatively, a full distribution package can be downloaded from <ulink
-      url="http://sourceforge.net/projects/hibernate">SourceForge</ulink>.</para>
+      url="http://sourceforge.net/projects/hibernate/files/hibernate-jpamodelgen">SourceForge</ulink>.</para>
     <para>In most cases the annotation processor will automatically run provided
       the processor jar is added to the classpath and a JDK 6 is used. This happens due to <ulink
         url="http://java.sun.com/j2se/1.4.2/docs/guide/jar/jar.html#Service%20Provider">Java's
@@ -197,7 +206,7 @@ cq.where( cb.equal(itemNode.get(Item_.id), 5 ) ).distinct(true);
       </note></para>
     <section>
       <title>Usage from the command line</title>
-      <section id="usage-ant" revision="1">
+      <section id="usage-ant">
         <title>Usage with Ant</title>
         <para>As mentioned before, the annotation processor will run automatically each time the
           Java compiler is called, provided the jar file is on the classpath. Sometimes, however, it is
@@ -208,12 +217,12 @@ cq.where( cb.equal(itemNode.get(Item_.id), 5 ) ).distinct(true);
           configured to just run annotation processing.</para>
         <example id="javac-task-example">
           <title>Javac Task configuration</title>
-          <programlisting>&lt;javac srcdir="${src.dir}"
+          <programlisting role="XML" language="XML">&lt;javac srcdir="${src.dir}"
     destdir="${target.dir}"
     failonerror="false"
     fork="true"
     classpath="${classpath}"&gt;
-    <emphasis role="bold">&lt;compilerarg value="-proc:only"/&gt;</emphasis>
+    &lt;compilerarg value="-proc:only"/&gt;
 &lt;/javac&gt;</programlisting>
         </example>
         <para>The option <emphasis>-proc:only</emphasis> instructs the compiler to just run the
@@ -224,27 +233,25 @@ cq.where( cb.equal(itemNode.get(Item_.id), 5 ) ).distinct(true);
             relevant options can be specified.</para>
         </tip>
       </section>
-      <section revision="1">
+      <section>
         <title>Usage with Maven</title>
         <para>There are several ways of running the annotation processor as part of a Maven build.
           Again, it will automatically run if you are using a JDK 6 compiler and the annotation
           processor jar is on the classpath. In case you have more than one annotation processors on
           your classpath you can explicitly pass the processor option to the compiler plugin:</para>
-        <para>
           <example>
             <title>Maven compiler plugin configuration - direct execution</title>
-            <programlisting>&lt;plugin&gt;
+            <programlisting role="XML" language="XML">&lt;plugin&gt;
     &lt;artifactId&gt;maven-compiler-plugin&lt;/artifactId&gt;
     &lt;configuration&gt;
         &lt;source&gt;1.6&lt;/source&gt;
         &lt;target&gt;1.6&lt;/target&gt;
         &lt;compilerArguments&gt;
-            <emphasis role="bold">&lt;processor&gt;org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor&lt;/processor&gt;</emphasis>
+            &lt;processor&gt;org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor&lt;/processor&gt;
         &lt;/compilerArguments&gt;
     &lt;/configuration&gt;
 &lt;/plugin&gt;</programlisting>
           </example>
-        </para>
         <para>The maven-compiler-plugin approach has the disadvantage that the maven compiler plugin
           does currently not allow to specify multiple compiler arguments (<ulink
             url="http://jira.codehaus.org/browse/MCOMPILER-62">MCOMPILER-62</ulink>) and that
@@ -254,12 +261,12 @@ cq.where( cb.equal(itemNode.get(Item_.id), 5 ) ).distinct(true);
             linkend="disable-processing-maven-compiler-plugin"/>.</para>
         <example id="disable-processing-maven-compiler-plugin">
           <title>Maven compiler plugin configuration - indirect execution</title>
-          <programlisting>&lt;plugin&gt;
+          <programlisting role="XML" language="XML">&lt;plugin&gt;
     &lt;artifactId&gt;maven-compiler-plugin&lt;/artifactId&gt;
     &lt;configuration&gt;
         &lt;source&gt;1.6&lt;/source&gt;
         &lt;target&gt;1.6&lt;/target&gt;
-        <emphasis role="bold">&lt;compilerArgument&gt;-proc:none&lt;/compilerArgument&gt;</emphasis>
+        &lt;compilerArgument&gt;-proc:none&lt;/compilerArgument&gt;
     &lt;/configuration&gt;
 &lt;/plugin&gt;</programlisting>
         </example>
@@ -271,8 +278,8 @@ cq.where( cb.equal(itemNode.get(Item_.id), 5 ) ).distinct(true);
             url="http://www.jfrog.org/artifactory/plugins-releases">jfrog</ulink>) can be used. The
           configuration can be seen in <xref linkend="maven-processor-plugin"/>.</para>
         <example id="maven-processor-plugin">
-          <title>Maven compiler plugin configuration with maven-annotation-plugin</title>
-          <programlisting>&lt;plugin&gt;
+          <title>Configuration with maven-annotation-plugin</title>
+          <programlisting role="XML" language="XML">&lt;plugin&gt;
     &lt;groupId&gt;org.bsc.maven&lt;/groupId&gt;
     &lt;artifactId&gt;maven-processor-plugin&lt;/artifactId&gt;
     &lt;executions&gt;

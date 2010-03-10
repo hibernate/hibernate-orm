@@ -1,4 +1,4 @@
-<?xml version='1.0' encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <!--
   ~ Hibernate, Relational Persistence for Idiomatic Java
   ~
@@ -22,8 +22,8 @@
   ~ 51 Franklin Street, Fifth Floor
   ~ Boston, MA  02110-1301  USA
   -->
-
-<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
+"http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
 <chapter id="query_native">
   <title>Native query</title>
 
@@ -31,7 +31,7 @@
   database. This is useful if you want to utilize database specific features
   such as query hints or the CONNECT BY option in Oracle. It also provides a
   clean migration path from a direct SQL/JDBC based application to Hibernate.
-  Note that Hibernate3 allows you to specify handwritten SQL (including stored
+  Note that Hibernate allows you to specify handwritten SQL (including stored
   procedures) for all create, update, delete, and load operations (please
   refer to the reference guide for more information.)</para>
 
@@ -42,10 +42,10 @@
     description will help the <literal>EntityManager</literal> to map your
     columns onto entity properties. This is done using the
     <literal>@SqlResultSetMapping</literal> annotation. Each
-    <literal>@SqlResultSetMapping </literal>has a name wich is used when
+    <literal>@SqlResultSetMapping </literal>has a name which is used when
     creating a SQL query on <literal>EntityManager</literal>.</para>
 
-    <programlisting>@SqlResultSetMapping(name="GetNightAndArea", entities={
+    <programlisting role="JAVA" language="JAVA">@SqlResultSetMapping(name="GetNightAndArea", entities={
     @EntityResult(name="org.hibernate.test.annotations.query.Night", fields = {
         @FieldResult(name="id", column="nid"),
         @FieldResult(name="duration", column="night_duration"),
@@ -65,7 +65,7 @@
     <para>You can also define scalar results and even mix entity results and
     scalar results</para>
 
-    <programlisting>@SqlResultSetMapping(name="ScalarAndEntities", 
+    <programlisting role="JAVA" language="JAVA">@SqlResultSetMapping(name="ScalarAndEntities",
     entities={
         @EntityResult(name="org.hibernate.test.annotations.query.Night", fields = {
             @FieldResult(name="id", column="nid"),
@@ -103,7 +103,7 @@
     third one (not yet supported by Hibernate entity manager), returns pure
     scalar results.</para>
 
-    <programlisting>String sqlQuery = "select night.id nid, night.night_duration, night.night_date, area.id aid, "
+    <programlisting role="JAVA" language="JAVA">String sqlQuery = "select night.id nid, night.night_duration, night.night_date, area.id aid, "
     + "night.area_id, area.name from Night night, Area area where night.area_id = area.id "
     + "and night.night_duration &gt;= ?";
 Query q = entityManager.createNativeQuery(sqlQuery, "GetNightAndArea");
@@ -113,7 +113,7 @@ q.getResultList();</programlisting>
     <para>This native query returns nights and area based on the
     <literal>GetNightAndArea</literal> result set.</para>
 
-    <programlisting>String sqlQuery = "select * from tbl_spaceship where owner = ?";
+    <programlisting role="JAVA" language="JAVA">String sqlQuery = "select * from tbl_spaceship where owner = ?";
 Query q = entityManager.createNativeQuery(sqlQuery, SpaceShip.class);
 q.setParameter( 1, "Han" );
 q.getResultList();</programlisting>
@@ -125,11 +125,11 @@ q.getResultList();</programlisting>
   <sect1>
     <title>Named queries</title>
 
-    <para>Native named queries share the same calling API than EJB-QL named
+    <para>Native named queries share the same calling API than JP-QL named
     queries. Your code doesn't need to know the difference between the two.
-    This is very useful for migration from SQL to EJB-QL:</para>
+    This is very useful for migration from SQL to JP-QL:</para>
 
-    <programlisting>Query q = entityManager.createNamedQuery("getSeasonByNativeQuery");
+    <programlisting role="JAVA" language="JAVA">Query q = entityManager.createNamedQuery("getSeasonByNativeQuery");
 q.setParameter( 1, name );
 Season season = (Season) q.getSingleResult();</programlisting>
   </sect1>

@@ -418,7 +418,7 @@
       mechanism behind the scenes. The common entity manager and transaction
       handling idiom looks like this:</para>
 
-      <programlisting>// Non-managed environment idiom
+      <programlisting role="JAVA" language="JAVA">// Non-managed environment idiom
 EntityManager em = emf.createEntityManager();
 EntityTransaction tx = null;
 try {
@@ -501,7 +501,7 @@ finally {
       <para>If you use bean-managed transactions (BMT), the code will look
       like this:</para>
 
-      <programlisting>// BMT idiom
+      <programlisting role="JAVA" language="JAVA">// BMT idiom
 @Resource public UserTransaction utx;
 @Resource public EntityManagerFactory factory;
 
@@ -554,13 +554,13 @@ finally {
       <para>Our entity manager/transaction management idiom for CMT and EJB3
       container-use is reduced to this:</para>
 
-      <programlisting>//CMT idiom through injection
+      <programlisting role="JAVA" language="JAVA">//CMT idiom through injection
 @PersistenceContext(name="sample") EntityManager em;</programlisting>
 
       <para>Or this if you use Java Context and Dependency Injection
       (CDI).</para>
 
-      <programlisting>@Inject EntityManager em;</programlisting>
+      <programlisting role="JAVA" language="JAVA">@Inject EntityManager em;</programlisting>
 
       <para>In other words, all you have to do in a managed environment is to
       inject the <literal>EntityManager</literal>, do your data access work,
@@ -834,7 +834,7 @@ finally {
       the least efficient in terms of database access. It is the approach most
       similar to EJB2 entities:</para>
 
-      <programlisting>// foo is an instance loaded by a previous entity manager
+      <programlisting role="JAVA" language="JAVA">// foo is an instance loaded by a previous entity manager
 em = factory.createEntityManager();
 EntityTransaction t = em.getTransaction();
 t.begin();
@@ -895,7 +895,7 @@ em.close();</programlisting>
       performance impact. The following examples show the idiom in a
       non-managed environment:</para>
 
-      <programlisting>// foo is an instance loaded earlier by the extended entity manager
+      <programlisting role="JAVA" language="JAVA">// foo is an instance loaded earlier by the extended entity manager
 em.getTransaction.begin(); // new connection to data store is obtained and tx started
 foo.setProperty("bar");
 em.getTransaction().commit();  // End tx, flush and check version, disconnect</programlisting>
@@ -936,7 +936,7 @@ em.getTransaction().commit();  // End tx, flush and check version, disconnect</p
       persistence context and then merges the changes using
       <literal>EntityManager.merge()</literal>:</para>
 
-      <programlisting>// foo is an instance loaded by a non-extended entity manager
+      <programlisting role="JAVA" language="JAVA">// foo is an instance loaded by a non-extended entity manager
 foo.setProperty("bar");
 entityManager = factory.createEntityManager();
 entityManager.getTransaction().begin();

@@ -669,10 +669,10 @@ EntityManagerFactory programmaticEmf =
       &lt;class&gt;org.hibernate.ejb.test.Distributor&lt;/class&gt;
       &lt;class&gt;org.hibernate.ejb.test.Item&lt;/class&gt;
       &lt;properties&gt;
-         &lt;property name="<literal>javax.persistence.jdbc.driver</literal>" value="org.hsqldb.jdbcDriver"/&gt;
-         &lt;property name="<literal>javax.persistence.jdbc.user</literal>" value="sa"/&gt;
-         &lt;property name="<literal>javax.persistence.jdbc.password</literal>" value=""/&gt;
-         &lt;property name="<literal>javax.persistence.jdbc.url</literal>" value="jdbc:hsqldb:."/&gt;
+         &lt;property name="javax.persistence.jdbc.driver" value="org.hsqldb.jdbcDriver"/&gt;
+         &lt;property name="javax.persistence.jdbc.user" value="sa"/&gt;
+         &lt;property name="javax.persistence.jdbc.password" value=""/&gt;
+         &lt;property name="javax.persistence.jdbc.url" value="jdbc:hsqldb:."/&gt;
          &lt;property name="hibernate.dialect" value="org.hibernate.dialect.HSQLDialect"/
          &lt;property name="hibernate.max_fetch_depth" value="3"/&gt;
        
@@ -857,7 +857,7 @@ EntityManagerFactory emf =
     <classname>Persistence</classname> class is bootstrap class to create an
     entity manager factory.</para>
 
-    <programlisting  role="JAVA" language="JAVA">// Use persistence.xml configuration
+    <programlisting role="JAVA" language="JAVA">// Use persistence.xml configuration
 EntityManagerFactory emf = Persistence.createEntityManagerFactory("manager1")
 EntityManager em = emf.createEntityManager(); // Retrieve an application managed entity manager
 // Work with the EM

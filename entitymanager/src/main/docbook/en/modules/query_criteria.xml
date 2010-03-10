@@ -49,7 +49,7 @@
   of the
   <interfacename>javax.persistence.EntityManagerFactory</interfacename></para>
 
-  <programlisting>CriteriaBuilder builder = entityManagerFactory.getCriteriaBuilder();</programlisting>
+  <programlisting role="JAVA" language="JAVA">CriteriaBuilder builder = entityManagerFactory.getCriteriaBuilder();</programlisting>
 
   <para>The next step is to obtain a
   <interfacename>javax.persistence.criteria.CriteriaQuery</interfacename>. You
@@ -57,11 +57,11 @@
   <interfacename>javax.persistence.criteria.CriteriaBuilder</interfacename>
   for this purpose.</para>
 
-  <programlisting>CriteriaQuery&lt;T&gt; createQuery(Class&lt;T&gt;)</programlisting>
+  <programlisting role="JAVA" language="JAVA">CriteriaQuery&lt;T&gt; createQuery(Class&lt;T&gt;)</programlisting>
 
-  <programlisting>CriteriaQuery&lt;Tuple&gt; createTupleQuery()</programlisting>
+  <programlisting role="JAVA" language="JAVA">CriteriaQuery&lt;Tuple&gt; createTupleQuery()</programlisting>
 
-  <programlisting>CriteriaQuery&lt;Object&gt; createQuery()</programlisting>
+  <programlisting role="JAVA" language="JAVA">CriteriaQuery&lt;Object&gt; createQuery()</programlisting>
 
   <para>Each serves a different purpose depending on the expected type of the
   query results.</para>
@@ -77,7 +77,7 @@
   <section id="querycriteria-typedquery">
     <title>Typed criteria queries</title>
 
-    <programlisting>CriteriaQuery&lt;T&gt; createQuery(Class&lt;T&gt;)</programlisting>
+    <programlisting role="JAVA" language="JAVA">CriteriaQuery&lt;T&gt; createQuery(Class&lt;T&gt;)</programlisting>
 
     <para>The type of the criteria query (aka the &lt;T&gt;) indicates the
     expected types in the query result. This might be an entity, an Integer,
@@ -106,7 +106,7 @@
             <area coords="4" id="ex.criteria.typedquery.entity.3" />
           </areaspec>
 
-          <programlisting>CriteriaQuery&lt;Person&gt; criteria = builder.createQuery( Person.class );
+          <programlisting role="JAVA" language="JAVA">CriteriaQuery&lt;Person&gt; criteria = builder.createQuery( Person.class );
 Root&lt;Person&gt; personRoot = criteria.from( Person.class );
 criteria.select( personRoot );
 criteria.where( builder.equal( personRoot.get( Person_.eyeColor ), "brown" ) );
@@ -160,7 +160,7 @@ for ( Person person : people ) { ... }</programlisting>
             <area coords="3" id="ex.criteria.typedquery.attr.2" />
           </areaspec>
 
-          <programlisting>CriteriaQuery&lt;Integer&gt; criteria = builder.createQuery( Integer.class );
+          <programlisting role="JAVA" language="JAVA">CriteriaQuery&lt;Integer&gt; criteria = builder.createQuery( Integer.class );
 Root&lt;Person&gt; personRoot = criteria.from( Person.class );
 criteria.select( personRoot.get( Person_.age ) );
 criteria.where( builder.equal( personRoot.get( Person_.eyeColor ), "brown" ) );
@@ -195,7 +195,7 @@ for ( Integer age : ages ) { ... } </programlisting>
             <area coords="3" id="ex.criteria.typedquery.expr.1" />
           </areaspec>
 
-          <programlisting>CriteriaQuery&lt;Integer&gt; criteria = builder.createQuery( Integer.class );
+          <programlisting role="JAVA" language="JAVA">CriteriaQuery&lt;Integer&gt; criteria = builder.createQuery( Integer.class );
 Root&lt;Person&gt; personRoot = criteria.from( Person.class );
 criteria.select( builder.max( personRoot.get( Person_.age ) ) );
 criteria.where( builder.equal( personRoot.get( Person_.eyeColor ), "brown" ) );
@@ -239,7 +239,7 @@ Integer maxAge = em.createQuery( criteria ).getSingleResult();</programlisting>
             <area coords="5" id="ex.criteria.typedquery.array.2" />
           </areaspec>
 
-          <programlisting>CriteriaQuery&lt;Object[]&gt; criteria = builder.createQuery( Object[].class );
+          <programlisting role="JAVA" language="JAVA">CriteriaQuery&lt;Object[]&gt; criteria = builder.createQuery( Object[].class );
 Root&lt;Person&gt; personRoot = criteria.from( Person.class );
 Path&lt;Long&gt; idPath = personRoot.get( Person_.id );
 Path&lt;Integer&gt; agePath = personRoot.get( Person_.age );
@@ -284,7 +284,7 @@ for ( Object[] values : valueArray ) {
             <area coords="5" id="ex.criteria.typedquery.array2.2" />
           </areaspec>
 
-          <programlisting>CriteriaQuery&lt;Object[]&gt; criteria = builder.createQuery( Object[].class );
+          <programlisting role="JAVA" language="JAVA">CriteriaQuery&lt;Object[]&gt; criteria = builder.createQuery( Object[].class );
 Root&lt;Person&gt; personRoot = criteria.from( Person.class );
 Path&lt;Long&gt; idPath = personRoot.get( Person_.id );
 Path&lt;Integer&gt; agePath = personRoot.get( Person_.age );
@@ -351,7 +351,7 @@ for ( Object[] values : valueArray ) {
             </areaset>
           </areaspec>
 
-          <programlisting>public class PersonWrapper {
+          <programlisting role="JAVA" language="JAVA">public class PersonWrapper {
     private final Long id;
     private final Integer age;
     public PersonWrapper(Long id, Integer age) {
@@ -433,7 +433,7 @@ for ( PersonWrapper person : people ) { ... }</programlisting>
           </areaset>
         </areaspec>
 
-        <programlisting>CriteriaQuery&lt;Tuple&gt; criteria = builder.createTupleQuery();
+        <programlisting role="JAVA" language="JAVA">CriteriaQuery&lt;Tuple&gt; criteria = builder.createTupleQuery();
 Root&lt;Person&gt; personRoot = criteria.from( Person.class );
 Path&lt;Long&gt; idPath = personRoot.get( Person_.id );
 Path&lt;Integer&gt; agePath = personRoot.get( Person_.age );
@@ -493,7 +493,7 @@ for ( Tuple tuple : valueArray ) {
           <term>typed</term>
 
           <listitem>
-            <programlisting>&lt;X&gt; X get(TupleElement&lt;X&gt; tupleElement)</programlisting>
+            <programlisting role="JAVA" language="JAVA">&lt;X&gt; X get(TupleElement&lt;X&gt; tupleElement)</programlisting>
 
             <para>This allows typed access to the underlying tuple elements.
             We see this in <xref linkend="ex-criteria-typedquery-tuple" /> in
@@ -508,9 +508,9 @@ for ( Tuple tuple : valueArray ) {
           <term>positional</term>
 
           <listitem>
-            <programlisting>Object get(int i)</programlisting>
+            <programlisting role="JAVA" language="JAVA">Object get(int i)</programlisting>
 
-            <programlisting>&lt;X&gt; X get(int i, Class&lt;X&gt; type)</programlisting>
+            <programlisting role="JAVA" language="JAVA">&lt;X&gt; X get(int i, Class&lt;X&gt; type)</programlisting>
 
             <para>Very similar to what we saw in <xref
             linkend="ex-criteria-typedquery-array" /> and <xref
@@ -527,9 +527,9 @@ for ( Tuple tuple : valueArray ) {
           <term>aliased</term>
 
           <listitem>
-            <programlisting>Object get(String alias)</programlisting>
+            <programlisting role="JAVA" language="JAVA">Object get(String alias)</programlisting>
 
-            <programlisting>&lt;X&gt; X get(String alias, Class&lt;X&gt; type)</programlisting>
+            <programlisting role="JAVA" language="JAVA">&lt;X&gt; X get(String alias, Class&lt;X&gt; type)</programlisting>
 
             <para>Again, only the second form here provides typing, because
             the user explicitly provides the typing on access. We have not
@@ -574,14 +574,14 @@ for ( Tuple tuple : valueArray ) {
       <methodname>from</methodname> methods on
       <interfacename>javax.persistence.criteria.CriteriaQuery</interfacename>:</para>
 
-      <programlisting>&lt;X&gt; Root&lt;X&gt; from(Class&lt;X&gt;)</programlisting>
+      <programlisting role="JAVA" language="JAVA">&lt;X&gt; Root&lt;X&gt; from(Class&lt;X&gt;)</programlisting>
 
-      <programlisting>&lt;X&gt; Root&lt;X&gt; from(EntityType&lt;X&gt;)</programlisting>
+      <programlisting role="JAVA" language="JAVA">&lt;X&gt; Root&lt;X&gt; from(EntityType&lt;X&gt;)</programlisting>
 
       <example>
         <title>Adding a root</title>
 
-        <programlisting>CriteriaQuery&lt;Person&gt; personCriteria = builder.createQuery( Person.class );
+        <programlisting role="JAVA" language="JAVA">CriteriaQuery&lt;Person&gt; personCriteria = builder.createQuery( Person.class );
 // create and add the root
 person.from( Person.class );
 ...</programlisting>
@@ -593,7 +593,7 @@ person.from( Person.class );
       product</ulink> between the newly added root and the others. Here is an
       example matching all single men and all single women:</para>
 
-      <programlisting>CriteriaQuery query = builder.createQuery();
+      <programlisting role="JAVA" language="JAVA">CriteriaQuery query = builder.createQuery();
 Root&lt;Person&gt; men = query.from( Person.class );
 Root&lt;Person&gt; women = query.from( Person.class );
 Predicate menRestriction = builder.and(
@@ -620,7 +620,7 @@ query.where( builder.and( menRestriction, womenRestriction ) );</programlisting>
       <example id="criteria-join-singular">
         <title>Example with Embedded and ManyToOne</title>
 
-        <programlisting>CriteriaQuery&lt;Person&gt; personCriteria = builder.createQuery( Person.class );
+        <programlisting role="JAVA" language="JAVA">CriteriaQuery&lt;Person&gt; personCriteria = builder.createQuery( Person.class );
 Root&lt;Person&gt; personRoot = person.from( Person.class );
 // Person.address is an embedded attribute
 Join&lt;Person,Address&gt; personAddress = personRoot.join( Person_.address );
@@ -632,7 +632,7 @@ Join&lt;Address,Country&gt; addressCountry = personAddress.join( Address_.countr
       <example id="criteria-join-plural">
         <title>Example with Collections</title>
 
-        <programlisting>CriteriaQuery&lt;Person&gt; personCriteria = builder.createQuery( Person.class );
+        <programlisting role="JAVA" language="JAVA">CriteriaQuery&lt;Person&gt; personCriteria = builder.createQuery( Person.class );
 Root&lt;Person&gt; personRoot = person.from( Person.class );
 Join&lt;Person,Order&gt; orders = personRoot.join( Person_.orders );
 Join&lt;Order,LineItem&gt; orderLines = orders.join( Order_.lineItems );
@@ -652,7 +652,7 @@ Join&lt;Order,LineItem&gt; orderLines = orders.join( Order_.lineItems );
       <example id="criteria-fetch-singular">
         <title>Example with Embedded and ManyToOne</title>
 
-        <programlisting>CriteriaQuery&lt;Person&gt; personCriteria = builder.createQuery( Person.class );
+        <programlisting role="JAVA" language="JAVA">CriteriaQuery&lt;Person&gt; personCriteria = builder.createQuery( Person.class );
 Root&lt;Person&gt; personRoot = person.from( Person.class );
 // Person.address is an embedded attribute
 Join&lt;Person,Address&gt; personAddress = personRoot.fetch( Person_.address );
@@ -672,7 +672,7 @@ Join&lt;Address,Country&gt; addressCountry = personAddress.fetch( Address_.count
       <example id="criteria-fetch-plural">
         <title>Example with Collections</title>
 
-        <programlisting>CriteriaQuery&lt;Person&gt; personCriteria = builder.createQuery( Person.class );
+        <programlisting role="JAVA" language="JAVA">CriteriaQuery&lt;Person&gt; personCriteria = builder.createQuery( Person.class );
 Root&lt;Person&gt; personRoot = person.from( Person.class );
 Join&lt;Person,Order&gt; orders = personRoot.fetch( Person_.orders );
 Join&lt;Order,LineItem&gt; orderLines = orders.fetch( Order_.lineItems );
@@ -704,7 +704,7 @@ Join&lt;Order,LineItem&gt; orderLines = orders.fetch( Order_.lineItems );
           <area coords="7" id="ex.criteria.param.3" />
         </areaspec>
 
-        <programlisting>CriteriaQuery&lt;Person&gt; criteria = build.createQuery( Person.class );
+        <programlisting role="JAVA" language="JAVA">CriteriaQuery&lt;Person&gt; criteria = build.createQuery( Person.class );
 Root&lt;Person&gt; personRoot = criteria.from( Person.class );
 criteria.select( personRoot );
 ParameterExpression&lt;String&gt; eyeColorParam = builder.parameter( String.class );

@@ -74,7 +74,7 @@
     <literal>new</literal> operator) it is in <literal>new</literal> state.
     You can make it persistent by associating it to an entity manager:</para>
 
-    <programlisting>DomesticCat fritz = new DomesticCat();
+    <programlisting language="JAVA" role="JAVA">DomesticCat fritz = new DomesticCat();
 fritz.setColor(Color.GINGER);
 fritz.setSex('M');
 fritz.setName("Fritz");
@@ -93,7 +93,7 @@ em.persist(fritz);</programlisting>
     <para>Load an entity instance by its identifier value with the entity
     manager's <code>find()</code> method:</para>
 
-    <programlisting>cat = em.find(Cat.class, catId);
+    <programlisting language="JAVA" role="JAVA">cat = em.find(Cat.class, catId);
 
 // You may need to wrap the primitive identifiers
 long catId = 1234;
@@ -105,7 +105,7 @@ em.find( Cat.class, new Long(catId) );</programlisting>
     useful to link a child to its parent without having to load the
     parent.</para>
 
-    <programlisting>child = new Child();
+    <programlisting language="JAVA" role="JAVA">child = new Child();
 child.SetName("Henry");
 Parent parent = em.getReference(Parent.class, parentId); //no query to the DB
 child.setParent(parent);
@@ -118,7 +118,7 @@ em.persist(child);</programlisting>
     refreshed unless you specify <literal>REFRESH</literal> as a cascade style
     of any associations:</para>
 
-    <programlisting>em.persist(cat);
+    <programlisting language="JAVA" role="JAVA">em.persist(cat);
 em.flush(); // force the SQL insert and triggers to run
 em.refresh(cat); //re-read the state (after the trigger executes)</programlisting>
   </section>
@@ -145,7 +145,7 @@ em.refresh(cat); //re-read the state (after the trigger executes)</programlistin
       the query. Queries are always created using the current entity
       manager:</para>
 
-      <programlisting>List&lt;?&gt; cats = em.createQuery(
+      <programlisting language="JAVA" role="JAVA">List&lt;?&gt; cats = em.createQuery(
     "select cat from Cat as cat where cat.birthdate &lt; ?1")
     .setParameter(1, date, TemporalType.DATE)
     .getResultList();
@@ -176,7 +176,7 @@ Cat mother = (Cat) em.createQuery(
       type-safe approach is the Criteria API explained in <xref
       linkend="querycriteria" />.</para>
 
-      <programlisting>CriteriaQuery&lt;Cat&gt; criteria = builder.createQuery( Cat.class );
+      <programlisting language="JAVA" role="JAVA">CriteriaQuery&lt;Cat&gt; criteria = builder.createQuery( Cat.class );
 Root&lt;Cat&gt; cat = criteria.from( Cat.class );
 criteria.select( cat );
 criteria.where( builder.lt( cat.get( Cat_.birthdate ), catDate ) );
@@ -186,7 +186,7 @@ List&lt;Cat&gt; cats = em.createQuery( criteria ).getResultList(); //notice no d
       using JP-QL (note that it's not as type-safe as the compiler has to
       trust you with the return type.</para>
 
-      <programlisting>//No downcasting since we pass the return type
+      <programlisting language="JAVA" role="JAVA">//No downcasting since we pass the return type
 List&lt;Cat&gt; cats = em.createQuery(
     "select cat from Cat as cat where cat.birthdate &lt; ?1", Cat.class)
     .setParameter(1, date, TemporalType.DATE)
@@ -205,7 +205,7 @@ List&lt;Cat&gt; cats = em.createQuery(
         <para>JPA queries can return tuples of objects if projection is used.
         Each result tuple is returned as an object array:</para>
 
-        <programlisting>Iterator kittensAndMothers = sess.createQuery(
+        <programlisting language="JAVA" role="JAVA">Iterator kittensAndMothers = sess.createQuery(
             "select kitten, mother from Cat kitten join kitten.mother mother")
             .getResultList()
             .iterator();
@@ -233,7 +233,7 @@ while ( kittensAndMothers.hasNext() ) {
         persistent state (in other words, they are considered "read
         only"):</para>
 
-        <programlisting>Iterator results = em.createQuery(
+        <programlisting language="JAVA" role="JAVA">Iterator results = em.createQuery(
         "select cat.color, min(cat.birthdate), count(cat) from Cat cat " +
         "group by cat.color")
         .getResultList()
@@ -258,7 +258,7 @@ while ( results.hasNext() ) {
         in the query string. Named parameters should be preferred, they are
         more robust and easier to read and understand:</para>
 
-        <programlisting>// Named parameter (preferred)
+        <programlisting language="JAVA" role="JAVA">// Named parameter (preferred)
 Query q = em.createQuery("select cat from DomesticCat cat where cat.name = :name");
 q.setParameter("name", "Fritz");
 List cats = q.getResultList();
@@ -284,7 +284,7 @@ List cats = q.list();</programlisting>
         number of rows you want to retrieve and/or the first row you want to
         retrieve), use the following methods:</para>
 
-        <programlisting>Query q = em.createQuery("select cat from DomesticCat cat");
+        <programlisting language="JAVA" role="JAVA">Query q = em.createQuery("select cat from DomesticCat cat");
 q.setFirstResult(20);
 q.setMaxResults(10);
 List cats = q.getResultList(); //return cats from the 20th position to 29th</programlisting>
@@ -298,20 +298,20 @@ List cats = q.getResultList(); //return cats from the 20th position to 29th</pro
 
         <para>You may also define named queries through annotations:</para>
 
-        <programlisting>@javax.persistence.NamedQuery(name="eg.DomesticCat.by.name.and.minimum.weight", 
+        <programlisting language="JAVA" role="JAVA">@javax.persistence.NamedQuery(name="eg.DomesticCat.by.name.and.minimum.weight",
   query="select cat from eg.DomesticCat as cat  where cat.name = ?1 and cat.weight &gt; ?2")</programlisting>
 
         <para>Parameters are bound programmatically to the named query, before
         it is executed:</para>
 
-        <programlisting>Query q = em.createNamedQuery("eg.DomesticCat.by.name.and.minimum.weight");
+        <programlisting language="JAVA" role="JAVA">Query q = em.createNamedQuery("eg.DomesticCat.by.name.and.minimum.weight");
 q.setString(1, name);
 q.setInt(2, minWeight);
 List&lt;?&gt; cats = q.getResultList();</programlisting>
 
         <para>You can also use the slightly more type-safe approach:</para>
 
-        <programlisting>Query q = em.createNamedQuery("eg.DomesticCat.by.name.and.minimum.weight", Cat.class);
+        <programlisting language="JAVA" role="JAVA">Query q = em.createNamedQuery("eg.DomesticCat.by.name.and.minimum.weight", Cat.class);
 q.setString(1, name);
 q.setInt(2, minWeight);
 List&lt;Cat&gt; cats = q.getResultList();</programlisting>
@@ -335,7 +335,7 @@ List&lt;Cat&gt; cats = q.getResultList();</programlisting>
         remember that all entity columns have to be returned for this
         mechanism to work):</para>
 
-        <programlisting>@SqlResultSetMapping(name="getItem", entities = 
+        <programlisting language="JAVA" role="JAVA">@SqlResultSetMapping(name="getItem", entities =
         @EntityResult(entityClass=org.hibernate.ejb.test.Item.class, fields= {
             @FieldResult(name="name", column="itemname"),
             @FieldResult(name="descr", column="itemdescription")
@@ -358,7 +358,7 @@ item = (Item) q.getSingleResult(); //from a class columns names match the mappin
         <title>Query lock and flush mode</title>
 
         <para>You can adjust the flush mode used when executing the query as
-        well as define the lock mode used to load the entities. </para>
+        well as define the lock mode used to load the entities.</para>
 
         <para>Adjusting the flush mode is interesting when one must guaranty
         that a query execution will not trigger a flush operation. Most of the
@@ -367,7 +367,7 @@ item = (Item) q.getSingleResult(); //from a class columns names match the mappin
         <para>Adjusting the lock mode is useful if you need to lock the
         objects returns by the query to a certain level.</para>
 
-        <programlisting>query.setFlushMode(FlushModeType.COMMIT)
+        <programlisting language="JAVA" role="JAVA">query.setFlushMode(FlushModeType.COMMIT)
      .setLockMode(LockModeType.PESSIMISTIC_READ);</programlisting>
 
         <note>
@@ -492,7 +492,7 @@ item = (Item) q.getSingleResult(); //from a class columns names match the mappin
     <methodname>find()</methodname> it, and then manipulate it directly, while
     the persistence context is open:</para>
 
-    <programlisting>Cat cat = em.find( Cat.class, new Long(69) );
+    <programlisting language="JAVA" role="JAVA">Cat cat = em.find( Cat.class, new Long(69) );
 cat.setName("PK");
 em.flush();  // changes to cat are automatically detected and persisted</programlisting>
 
@@ -510,7 +510,7 @@ em.flush();  // changes to cat are automatically detected and persisted</program
     by Hibernate) by closing the EntityManager or in a more fine-grained
     approach by calling the <methodname>detach()</methodname> method.</para>
 
-    <programlisting>Cat cat = em.find( Cat.class, new Long(69) );
+    <programlisting language="JAVA" role="JAVA">Cat cat = em.find( Cat.class, new Long(69) );
 ...
 em.detach(cat);
 cat.setName("New name"); //not propatated to the database</programlisting>
@@ -530,7 +530,7 @@ cat.setName("New name"); //not propatated to the database</programlisting>
     for persistence of modifications made to detached instances using the
     <methodname>EntityManager.merge()</methodname> method:</para>
 
-    <programlisting>// in the first entity manager
+    <programlisting language="JAVA" role="JAVA">// in the first entity manager
 Cat cat = firstEntityManager.find(Cat.class, catId);
 Cat potentialMate = new Cat();
 firstEntityManager.persist(potentialMate);
@@ -563,7 +563,7 @@ secondEntityManager.merge(mate); // update mate</programlisting>
     not a detached instance) to <literal>merge()</literal>, the entity manager
     will figure this out for you:</para>
 
-    <programlisting>// In the first entity manager
+    <programlisting language="JAVA" role="JAVA">// In the first entity manager
 Cat cat = firstEntityManager.find(Cat.class, catID);
 
 // In a higher layer of the application, detached
@@ -739,7 +739,7 @@ secondEntityManager.merge(mate);  // save the new instance</programlisting>
       automatically using the explained routine unless
       <methodname>flush()</methodname> is called explicitly.</para>
 
-      <programlisting>em = emf.createEntityManager();
+      <programlisting language="JAVA" role="JAVA">em = emf.createEntityManager();
 Transaction tx = em.getTransaction().begin();
 em.setFlushMode(FlushModeType.COMMIT); // allow queries to return stale state
 
@@ -817,11 +817,11 @@ em.getTransaction().commit(); // flush occurs</programlisting>
     associated entity (or collection of entities), you must indicate that in
     the association annotation:</para>
 
-    <programlisting>@OneToOne(cascade=CascadeType.PERSIST)</programlisting>
+    <programlisting language="JAVA" role="JAVA">@OneToOne(cascade=CascadeType.PERSIST)</programlisting>
 
     <para>Cascading options can be combined:</para>
 
-    <programlisting>@OneToOne(cascade= { CascadeType.PERSIST, CascadeType.REMOVE, CascadeType.REFRESH } )</programlisting>
+    <programlisting language="JAVA" role="JAVA">@OneToOne(cascade= { CascadeType.PERSIST, CascadeType.REMOVE, CascadeType.REFRESH } )</programlisting>
 
     <para>You may even use <literal>CascadeType.ALL</literal> to specify that
     all operations should be cascaded for a particular association. Remember
@@ -923,5 +923,138 @@ em.getTransaction().commit(); // flush occurs</programlisting>
     given entity. Optimistic locks enforce the lock as late as possible hoping
     nobody changes the data underneath while pessimistic locks enforce the
     lock right away and keep it till the transaction is committed.</para>
+  </section>
+
+  <section>
+    <title>Caching</title>
+
+    <para>When the second-level cache is activated (see <xref
+    linkend="setup-configuration-packaging" /> and the Hibernate Annotations
+    reference documentation), Hibernate ensures it is used and properly
+    updated. You can however adjust these settings by passing two
+    properties:</para>
+
+    <itemizedlist>
+      <listitem>
+        <para><literal>javax.persistence.cache.retrieveMode</literal> which
+        accepts <literal><classname>CacheRetrieveMode</classname></literal>
+        values</para>
+      </listitem>
+
+      <listitem>
+        <para><literal>javax.persistence.cache.storeMode</literal> which
+        accepts <classname>CacheStoreMode</classname> values</para>
+      </listitem>
+    </itemizedlist>
+
+    <para><classname>CacheRetrieveMode</classname> controls how Hibernate
+    accesses information from the second-level cache: <literal>USE</literal>
+    which is the default or <literal>BYPASS</literal> which means ignore the
+    cache. <classname>CacheStoreMode</classname> controls how Hibernate pushes
+    information to the second-level cache: <literal>USE</literal> which is the
+    default and push data in the cache when reading from and writing to the
+    database, <literal>BYPASS</literal> which does not insert new data in the
+    cache (but can invalidate obsolete data) and
+    <classname>REFRESH</classname> which does like default but also force data
+    to be pushed to the cache on database read even if the data is already
+    cached.</para>
+
+    <para>You can set these properties:</para>
+
+    <itemizedlist>
+      <listitem>
+        <para>on a particular <classname>EntityManager</classname> via the
+        <methodname>setProperty</methodname> method</para>
+      </listitem>
+
+      <listitem>
+        <para>on a query via a query hint (<methodname>setHint</methodname>
+        method)</para>
+      </listitem>
+
+      <listitem>
+        <para>when calling <methodname>find()</methodname> and
+        <methodname>refresh()</methodname> and passing the properties in the
+        appropriate <classname>Map</classname></para>
+      </listitem>
+    </itemizedlist>
+
+    <para>JPA also introduces an API to interrogate the second-level cache and
+    evict data manually.</para>
+
+    <programlisting language="JAVA" role="JAVA">Cache cache = entityManagerFactory.getCache();
+
+if ( cache.contains(User.class, userId) ) {
+   //load it as we don't hit the DB
+}
+
+cache.evict(User.class, userId); //manually evict user form the second-level cache
+cache.evict(User.class); //evict all users from the second-level cache
+cache.evictAll(); //purge the second-level cache entirely</programlisting>
+  </section>
+
+  <section>
+    <title>Checking the state of an object</title>
+
+    <para>You can check whether an object is managed by the persistence
+    context</para>
+
+    <programlisting language="JAVA" role="JAVA">entityManager.get(Cat.class, catId);
+...
+boolean isIn = entityManager.contains(cat);
+assert isIn;</programlisting>
+
+    <para>You can also check whether an object, an association or a property
+    is lazy or not. You can do that independently of the underlying
+    persistence provider: </para>
+
+    <programlisting language="JAVA" role="JAVA">PersistenceUtil jpaUtil = Persistence.getPersistenceUtil();
+if ( jpaUtil.isLoaded( customer.getAddress() ) {
+   //display address if loaded
+}
+if ( jpaUtil.isLoaded( customer.getOrders ) ) {
+   //display orders if loaded
+}
+if (jpaUtil.isLoaded(customer, "detailedBio") ) {
+   //display property detailedBio if loaded
+}</programlisting>
+
+    <para>However, if you have access to the entityManagerFactory, we
+    recommend you to use:</para>
+
+    <programlisting language="JAVA" role="JAVA">PersistenceUnitUtil jpaUtil = entityManager.getEntityManagerFactory().getPersistenceUnitUtil();
+
+Customer customer = entityManager.get( Customer.class, customerId );
+
+if ( jpaUtil.isLoaded( customer.getAddress() ) {
+   //display address if loaded
+}
+if ( jpaUtil.isLoaded( customer.getOrders ) ) {
+   //display orders if loaded
+}
+if (jpaUtil.isLoaded(customer, "detailedBio") ) {
+   //display property detailedBio if loaded
+}
+
+log.debug( "Customer id {}", jpaUtil.getIdentifier(customer) );</programlisting>
+
+    <para>The performances are likely to be slightly better and you can get
+    the identifier value from an object (using
+    <methodname>getIdentifier()</methodname>).</para>
+
+    <note>
+      <para>These are roughly the counterpart methods of
+      <methodname>Hibernate.isInitialize</methodname>.</para>
+    </note>
+  </section>
+
+  <section>
+    <title>Native Hibernate API</title>
+
+    <para>You can always fall back to the underlying
+    <classname>Session</classname> API from a given
+    <classname>EntityManager</classname>:</para>
+
+    <programlisting language="JAVA" role="JAVA">Session session = entityManager.unwrap(Session.class);</programlisting>
   </section>
 </chapter>

@@ -1,4 +1,4 @@
-<?xml version='1.0' encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <!--
   ~ Hibernate, Relational Persistence for Idiomatic Java
   ~
@@ -22,18 +22,22 @@
   ~ 51 Franklin Street, Fifth Floor
   ~ Boston, MA  02110-1301  USA
   -->
-
-<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
+"http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
 <chapter id="queryhql">
-  <title>EJB-QL: The Object Query Language</title>
+  <title>JP-QL: The Object Query Language</title>
 
-  <para>
-    EJB3-QL has been heavily inspired by HQL, the native Hibernate Query Language. Both
-    are therefore very close to SQL, but portable and independent of the database schema.
-    People familiar with HQL shouldn't have any problem using EJB-QL. Actually, you
-    use the same query API for EJB-QL and HQL queries. Portable EJB3 applications however
-    should stick to EJB-QL or similar vendor extensions are needed.
-    </para>
+  <para>The Java Persistence Query Language (JP-QL) has been heavily inspired
+  by HQL, the native Hibernate Query Language. Both are therefore very close
+  to SQL, but portable and independent of the database schema. People familiar
+  with HQL shouldn't have any problem using JP-QL. In fact HQL is a strict
+  superset of JP-QL and you use the same query API for both types of queries.
+  Portable JPA applications however should stick to JP-QL.</para>
+
+  <note>
+    <para>For a type-safe approach to query, we highly recommend you to use
+    the Criteria query, see <xref linkend="querycriteria" />.</para>
+  </note>
 
   <sect1 id="queryhql-casesensitivity">
     <title>Case Sensitivity</title>
@@ -45,7 +49,7 @@
     <literal>org.hibernate.eg.Foo</literal> and <literal>foo.barSet</literal>
     is not <literal>foo.BARSET</literal>.</para>
 
-    <para>This manual uses lowercase EJBQL keywords. Some users find queries
+    <para>This manual uses lowercase JP-QL keywords. Some users find queries
     with uppercase keywords more readable, but we find this convention ugly
     when embedded in Java code.</para>
   </sect1>
@@ -53,28 +57,28 @@
   <sect1 id="queryhql-from">
     <title>The from clause</title>
 
-    <para>The simplest possible EJB-QL query is of the form:</para>
+    <para>The simplest possible JP-QL query is of the form:</para>
 
     <programlisting>select c from eg.Cat c</programlisting>
 
     <para>which simply returns all instances of the class
     <literal>eg.Cat</literal>. Unlike HQL, the select clause is not optional
-    in EJB-QL. We don't usually need to qualify the class name, since the
+    in JP-QL. We don't usually need to qualify the class name, since the
     entity name defaults to the unqualified class name
     (<literal>@Entity</literal>). So we almost always just write:</para>
 
     <programlisting>select c from Cat c</programlisting>
 
     <para>As you may have noticed you can assign aliases to classes, the
-    <literal>as</literal> keywork is optional. An alias allows you to refer
-    to <literal>Cat</literal> in other parts of the query.</para>
+    <literal>as</literal> keywork is optional. An alias allows you to refer to
+    <literal>Cat</literal> in other parts of the query.</para>
 
     <programlisting>select cat from Cat as cat</programlisting>
 
     <para>Multiple classes may appear, resulting in a cartesian product or
     "cross" join.</para>
 
-    <programlisting>select form, param from Formula as form, Parameter as param</programlisting>
+    <programlisting>select from, param from Formula as form, Parameter as param</programlisting>
 
     <para>It is considered good practice to name query aliases using an
     initial lowercase, consistent with Java naming standards for local
@@ -88,7 +92,7 @@
     elements of a collection of values, using a
     <literal>join</literal>.</para>
 
-    <programlisting>select cat, mate, kitten from Cat as cat 
+    <programlisting>select cat, mate, kitten from Cat as cat
     inner join cat.mate as mate
     left outer join cat.kittens as kitten</programlisting>
 
@@ -109,18 +113,18 @@
     <para>The <literal>inner join</literal>, <literal>left outer
     join</literal> constructs may be abbreviated.</para>
 
-    <programlisting>select cat, mate, kitten from Cat as cat 
+    <programlisting>select cat, mate, kitten from Cat as cat
     join cat.mate as mate
     left join cat.kittens as kitten</programlisting>
 
     <para>In addition, a "fetch" join allows associations or collections of
     values to be initialized along with their parent objects, using a single
     select. This is particularly useful in the case of a collection. It
-    effectively overrides the fetching options in the associations and collection
-    mapping metadata. See the Performance chapter of the Hibernate reference guide
-    for more information.</para>
+    effectively overrides the fetching options in the associations and
+    collection mapping metadata. See the Performance chapter of the Hibernate
+    reference guide for more information.</para>
 
-    <programlisting>select cat from Cat as cat 
+    <programlisting>select cat from Cat as cat
     inner join fetch cat.mate
     left join fetch cat.kittens</programlisting>
 
@@ -141,15 +145,12 @@
     <literal>iterate()</literal>. Nor should <literal>fetch</literal> be used
     together with <literal>setMaxResults()</literal> or
     <literal>setFirstResult()</literal>. It is possible to create a cartesian
-    product by join fetching more than one collection in a query (as in the example
-    above), be careful the result of this product isn't bigger than you expect.
-    Join fetching multiple collection roles also sometimes gives unexpected results for
-    bag mappings, so be careful about how you formulate your queries in this case.</para>
-
-    <para>
-      TODO: The last statement is useless and typical developer thinking, please elaborate.
-        The word "sometimes" should never appear in any technical documentation.
-    </para>
+    product by join fetching more than one collection in a query (as in the
+    example above), be careful the result of this product isn't bigger than
+    you expect. Join fetching multiple collection roles gives unexpected
+    results for bag mappings as it is impossible for Hibernate to
+    differentiate legit duplicates of a given bag from artificial duplicates
+    created by the multi-table cartesian product.</para>
 
     <para>If you are using property-level lazy fetching (with bytecode
     instrumentation), it is possible to force Hibernate to fetch the lazy
@@ -200,7 +201,8 @@ from DomesticCat as mother
     inner join mother.mate as mate
     left outer join mother.kittens as offspr</programlisting>
 
-    <para>or as an actual typesafe Java object,</para>
+    <para>or as an actual type-safe Java object (often called a view
+    object),</para>
 
     <programlisting>select new Family(mother, mate, offspr)
 from DomesticCat as mother
@@ -254,7 +256,8 @@ from Cat cat</programlisting>
     </itemizedlist>
 
     <para>You may use arithmetic operators, concatenation, and recognized SQL
-    functions in the select clause (dpending on configured dialect, HQL specific feature):</para>
+    functions in the select clause (dpending on configured dialect, HQL
+    specific feature):</para>
 
     <programlisting>select cat.weight + sum(kitten.weight) 
 from Cat cat 
@@ -281,7 +284,7 @@ select count(distinct cat.name), count(cat) from Cat cat</programlisting>
     <para>returns instances not only of <literal>Cat</literal>, but also of
     subclasses like <literal>DomesticCat</literal>. Hibernate queries may name
     <emphasis>any</emphasis> Java class or interface in the
-    <literal>from</literal> clause (portable EJB-QL queries should only name
+    <literal>from</literal> clause (portable JP-QL queries should only name
     mapped entities). The query will return instances of all persistent
     classes that extend that class or implement the interface. The following
     query would return all persistent objects:</para>
@@ -342,7 +345,8 @@ where cat.mate = mate</programlisting>
 
     <para>The special property (lowercase) <literal>id</literal> may be used
     to reference the unique identifier of an object. (You may also use its
-    mapped identifer property name.). Note that this keyword is specific to HQL.</para>
+    mapped identifer property name.). Note that this keyword is specific to
+    HQL.</para>
 
     <programlisting>select cat from Cat as cat where cat.id = 123
 
@@ -427,14 +431,20 @@ where log.item.class = 'Payment' and log.item.id = payment.id</programlisting>
       </listitem>
 
       <listitem>
+        <para><literal>exists</literal>, <literal>all</literal>,
+        <literal>any</literal>, <literal>some</literal> (taking
+        subqueries)</para>
+      </listitem>
+
+      <listitem>
         <para>"Simple" case, <literal>case ... when ... then ... else ...
         end</literal>, and "searched" case, <literal>case when ... then ...
-        else ... end (specific to HQL)</literal></para>
+        else ... end</literal></para>
       </listitem>
 
       <listitem>
         <para>string concatenation <literal>...||...</literal> or
-        <literal>concat(...,...) (use concat() for portable EJB-QL
+        <literal>concat(...,...) (use concat() for portable JP-QL
         queries)</literal></para>
       </listitem>
 
@@ -452,14 +462,21 @@ where log.item.class = 'Payment' and log.item.id = payment.id</programlisting>
       </listitem>
 
       <listitem>
-        <para>Any function or operator defined by EJB-QL 3.0:
-        <literal>substring(), trim(), lower(), upper(), length(), locate(),
-        abs(), sqrt(), bit_length()</literal></para>
+        <para>Any function or operator: <literal>substring(), trim(), lower(),
+        upper(), length(), locate(), abs(), sqrt(),
+        bit_length()</literal></para>
       </listitem>
 
       <listitem>
         <para><literal>coalesce()</literal> and
         <literal>nullif()</literal></para>
+      </listitem>
+
+      <listitem>
+        <para><literal>TYPE ... in ...</literal>, where the first argument is
+        an identifier variable and the second argument is the subclass to
+        restrict polymorphism to (or a list of subclasses surrounded by
+        parenthesis)</para>
       </listitem>
 
       <listitem>
@@ -488,6 +505,11 @@ where log.item.class = 'Payment' and log.item.id = payment.id</programlisting>
       <listitem>
         <para>SQL literals <literal>'foo'</literal>, <literal>69</literal>,
         <literal>'1970-01-01 10:00:01.0'</literal></para>
+      </listitem>
+
+      <listitem>
+        <para>JDBC escape syntax for dates (dependent on your JDBC driver
+        support) (eg. <code>where date = {d '2008-12-31'}</code>)</para>
       </listitem>
 
       <listitem>
@@ -548,7 +570,7 @@ where log.item.class = 'Payment' and log.item.id = payment.id</programlisting>
     supported when passed the element or index set of a collection
     (<literal>elements</literal> and <literal>indices</literal> functions) or
     the result of a subquery (see below). While subqueries are supported by
-    EJB-QL, <literal>elements</literal> and <literal>indices</literal> are
+    JP-QL, <literal>elements</literal> and <literal>indices</literal> are
     specific HQL features.</para>
 
     <programlisting>select mother from Cat as mother, Cat as kit
@@ -567,7 +589,13 @@ where p.name = some elements(list.names)</programlisting>
     <literal>elements</literal>, <literal>indices</literal>,
     <literal>minindex</literal>, <literal>maxindex</literal>,
     <literal>minelement</literal>, <literal>maxelement</literal> - may only be
-    used in the where clause in Hibernate3.</para>
+    used in the where clause in Hibernate.</para>
+
+    <para>JP-QL lets you access the key or the value of a map by using the
+    <literal>KEY()</literal> and <literal>VALUE()</literal> operations (even
+    access the Entry object using <literal>ENTRY()</literal>)</para>
+
+    <programlisting>SELECT i.name, VALUE(p) FROM Item i JOIN i.photos p WHERE KEY(p) LIKE ‘%egret’</programlisting>
 
     <para>In HQL, elements of indexed collections (arrays, lists, maps) may be
     referred to by index (in a where clause only):</para>
@@ -687,7 +715,7 @@ order by count(kitten) asc, sum(kitten.weight) desc</programlisting>
   <sect1 id="queryhql-subqueries">
     <title>Subqueries</title>
 
-    <para>For databases that support subselects, EJB-QL supports subqueries
+    <para>For databases that support subselects, JP-QL supports subqueries
     within queries. A subquery must be surrounded by parentheses (often by an
     SQL aggregate function call). Even correlated subqueries (subqueries that
     refer to an alias in the outer query) are allowed.</para>
@@ -737,11 +765,11 @@ where not ( cat.name, cat.color ) in (
   </sect1>
 
   <sect1 id="queryhql-examples">
-    <title>EJB-QL examples</title>
+    <title>JP-QL examples</title>
 
     <para>Hibernate queries can be quite powerful and complex. In fact, the
     power of the query language is one of Hibernate's main selling points (and
-    now EJB-QL). Here are some example queries very similar to queries that I
+    now JP-QL). Here are some example queries very similar to queries that I
     used on a recent project. Note that most queries you will write are much
     simpler than these!</para>
 
@@ -848,8 +876,8 @@ order by account.type.sortOrder, account.accountNumber, payment.dueDate</program
   <sect1 id="queryhql-bulk">
     <title>Bulk UPDATE &amp; DELETE Statements</title>
 
-    <para>Hibernate now supports UPDATE and DELETE statements in HQL/EJB-QL. See <xref
-    linkend="batch-direct" /> for details.</para>
+    <para>Hibernate now supports UPDATE and DELETE statements in HQL/JP-QL.
+    See <xref linkend="batch-direct" /> for details.</para>
   </sect1>
 
   <sect1 id="queryhql-tipstricks">

@@ -70,6 +70,12 @@
         <surname>Ebersole</surname>
       </author>
 
+      <author>
+        <firstname>Gavin</firstname>
+
+        <surname>King</surname>
+      </author>
+
       <!--TODO add translators like core did -->
     </authorgroup>
   </bookinfo>

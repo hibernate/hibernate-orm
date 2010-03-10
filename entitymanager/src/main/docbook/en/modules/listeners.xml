@@ -45,7 +45,7 @@
     entity class with the <literal>@EntityListeners</literal>
     annotation:</para>
 
-    <programlisting>@Entity 
+    <programlisting role="JAVA" language="JAVA">@Entity
 @EntityListeners(class=Audit.class)
 public class Cat {
     @Id private Integer id;
@@ -221,7 +221,7 @@ public class LastUpdateListener {
     deployment descriptors. There is also an additional feature that can be
     useful: default event listeners.</para>
 
-    <programlisting>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+    <programlisting role="XML" language="XML">&lt;?xml version="1.0" encoding="UTF-8"?&gt;
 
 &lt;entity-mappings xmlns="http://java.sun.com/xml/ns/persistence/orm"
                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"

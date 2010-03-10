@@ -105,7 +105,7 @@
         <title>Making objects persistent</title>
 
         <para>
-            Newly instantiated instances of a a persistent class are considered 
+            Newly instantiated instances of a persistent class are considered 
             <emphasis>transient</emphasis> by Hibernate. We can make a transient 
             instance <emphasis>persistent</emphasis> by associating it with a 
             session:

@@ -363,7 +363,7 @@ List loggedCats = sess.createSQLQuery(sql)
               </row>
 
               <row>
-                <entry>All properties of the the collection</entry>
+                <entry>All properties of the collection</entry>
 
                 <entry><literal>{[aliasname].*}</literal></entry>
 

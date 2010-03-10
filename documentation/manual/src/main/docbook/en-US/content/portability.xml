@@ -169,7 +169,7 @@
         <para>
             SQL functions can be referenced in many ways by users.  However, not all databases
             support the same set of functions.  Hibernate, provides a means of mapping a
-            <emphasis>logical</emphasis> function name to a a delegate which knows how to render
+            <emphasis>logical</emphasis> function name to a delegate which knows how to render
             that particular function, perhaps even using a totally different physical function call.
             <important>
                 <para>

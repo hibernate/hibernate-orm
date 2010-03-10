@@ -362,7 +362,7 @@
 
         <para>
             The first two implementations provide a "one session - one database transaction" programming
-            model. This is also also known and used as <emphasis>session-per-request</emphasis>. The beginning
+            model. This is also known and used as <emphasis>session-per-request</emphasis>. The beginning
             and end of a Hibernate session is defined by the duration of a database transaction.
             If you use programmatic transaction demarcation in plain JSE without JTA, you are advised to
             use the Hibernate <literal>Transaction</literal> API to hide the underlying transaction system

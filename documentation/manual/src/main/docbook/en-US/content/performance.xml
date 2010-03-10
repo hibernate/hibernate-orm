@@ -1156,7 +1156,7 @@ hibernate.cache.use_structured_entries true]]></programlisting>
             <important>
                 <para>
                     If you configure your underlying cache implementation to use expiry or
-                    timeouts is is very important that the cache timeout of the underlying
+                    timeouts is very important that the cache timeout of the underlying
                     cache region for the UpdateTimestampsCache be set to a higher value than
                     the timeouts of any of the query caches.  In fact, we recommend that the
                     the UpdateTimestampsCache region not be configured for expiry at all.  Note,

@@ -10,6 +10,7 @@ import java.util.Set;
 public class Party implements Serializable {
 
 	private long id;
+	private long version;
 	private Contract contract;
 	private String name;
 	private Set infos = new HashSet();
@@ -22,6 +23,14 @@ public class Party implements Serializable {
 		this.name = name;
 	}
 
+	public long getVersion() {
+		return version;
+	}
+
+	public void setVersion(long version) {
+		this.version = version;
+	}
+	
 	public String getName() {
 		return name;
 	}

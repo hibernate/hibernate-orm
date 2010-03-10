@@ -7,6 +7,7 @@ public class Info implements Serializable {
 
 	private long id;
 	private String text;
+	private long version;
 
 	public Info() {
 		super();
@@ -14,6 +15,14 @@ public class Info implements Serializable {
 
 	public Info(String text) {
 		this.text = text;
+	}
+
+	public long getVersion() {
+		return version;
+	}
+
+	public void setVersion(long version) {
+		this.version = version;
 	}
 
 	public String getText() {

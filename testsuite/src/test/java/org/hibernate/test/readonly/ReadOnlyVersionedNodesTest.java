@@ -283,17 +283,17 @@ public class ReadOnlyVersionedNodesTest extends AbstractReadOnlyTest {
 		s.getTransaction().commit();
 		s.close();
 
-		assertUpdateCount( 0 );
-		assertInsertCount( 0 );
+		assertUpdateCount( 1 );
+		assertInsertCount( 1 );
 
 		s = openSession();
 		s.beginTransaction();
 		parent = ( VersionedNode ) s.get( VersionedNode.class, parent.getId() );
 		assertEquals( "parent", parent.getName() );
-		assertEquals( 0, parent.getChildren().size() );
-		assertEquals( 0, parent.getVersion() );
+		assertEquals( 1, parent.getChildren().size() );
+		assertEquals( 1, parent.getVersion() );
 		child = ( VersionedNode ) s.get( VersionedNode.class, child.getId() );
-		assertNull( child );
+		assertNotNull( child );
 		s.delete( parent );
 		s.getTransaction().commit();
 		s.close();
@@ -320,7 +320,7 @@ public class ReadOnlyVersionedNodesTest extends AbstractReadOnlyTest {
 		s.getTransaction().commit();
 		s.close();
 
-		assertUpdateCount( 0 );
+		assertUpdateCount( 1 );
 		assertInsertCount( 1 );
 		clearCounts();
 
@@ -330,7 +330,7 @@ public class ReadOnlyVersionedNodesTest extends AbstractReadOnlyTest {
 		child = ( VersionedNode ) s.get( VersionedNode.class, child.getId() );
 		assertEquals( parent.getName(), "parent" );
 		assertEquals( 1, parent.getChildren().size() );
-		assertEquals( 0, parent.getVersion() );
+		assertEquals( 1, parent.getVersion() );
 		assertSame( parent, child.getParent() );
 		assertSame( child, parent.getChildren().iterator().next() );
 		assertEquals( 0, child.getVersion() );
@@ -366,7 +366,7 @@ public class ReadOnlyVersionedNodesTest extends AbstractReadOnlyTest {
 		s.getTransaction().commit();
 		s.close();
 
-		assertUpdateCount( 0 );
+		assertUpdateCount( 1 );
 		assertInsertCount( 1 );
 		clearCounts();
 
@@ -376,7 +376,7 @@ public class ReadOnlyVersionedNodesTest extends AbstractReadOnlyTest {
 		child = ( VersionedNode ) s.get( VersionedNode.class, child.getId() );
 		assertEquals( parent.getName(), "parent" );
 		assertEquals( 1, parent.getChildren().size() );
-		assertEquals( 0, parent.getVersion() );
+		assertEquals( 1, parent.getVersion() );
 		assertSame( parent, child.getParent() );
 		assertSame( child, parent.getChildren().iterator().next() );
 		assertEquals( 0, child.getVersion() );
@@ -414,7 +414,7 @@ public class ReadOnlyVersionedNodesTest extends AbstractReadOnlyTest {
 		s.getTransaction().commit();
 		s.close();
 
-		assertUpdateCount( 0 );
+		assertUpdateCount( 1 );
 		assertInsertCount( 1 );
 		clearCounts();
 
@@ -424,7 +424,7 @@ public class ReadOnlyVersionedNodesTest extends AbstractReadOnlyTest {
 		child = ( VersionedNode ) s.get( VersionedNode.class, child.getId() );
 		assertEquals( parent.getName(), "parent" );
 		assertEquals( 1, parent.getChildren().size() );
-		assertEquals( 0, parent.getVersion() );
+		assertEquals( 1, parent.getVersion() );
 		assertSame( parent, child.getParent() );
 		assertSame( child, parent.getChildren().iterator().next() );
 		assertEquals( 0, child.getVersion() );
@@ -521,7 +521,7 @@ public class ReadOnlyVersionedNodesTest extends AbstractReadOnlyTest {
 		s.close();
 
 		assertUpdateCount( 0 );
-		assertInsertCount( 0 );
+		assertInsertCount( 1 );
 
 		s = openSession();
 		s.beginTransaction();
@@ -530,7 +530,7 @@ public class ReadOnlyVersionedNodesTest extends AbstractReadOnlyTest {
 		assertNull( child.getParent() );
 		assertEquals( 0, child.getVersion() );
 		parent = ( VersionedNode ) s.get( VersionedNode.class, parent.getId() );
-		assertNull( parent );
+		assertNotNull( parent );
 		s.setReadOnly( child, true );
 		s.delete( child );
 		s.getTransaction().commit();

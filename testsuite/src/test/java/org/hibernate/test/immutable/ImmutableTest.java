@@ -1222,6 +1222,234 @@ public class ImmutableTest extends FunctionalTestCase {
 		assertDeleteCount( 4 );
 	}
 
+	public void testImmutableEntityAddImmutableToInverseMutableCollection() {
+		clearCounts();
+
+		Contract c = new Contract( null, "gavin", "phone");
+		ContractVariation cv1 = new ContractVariation(1, c);
+		cv1.setText("expensive");
+		ContractVariation cv2 = new ContractVariation(2, c);
+		cv2.setText("more expensive");
+		Session s = openSession();
+		Transaction t = s.beginTransaction();
+		s.persist(c);
+		Party party = new Party( "a party" );
+		s.persist( party );
+		t.commit();
+		s.close();
+
+		assertInsertCount( 4 );
+		assertUpdateCount( 0 );
+		clearCounts();
+
+		s = openSession();
+		t = s.beginTransaction();
+		c.addParty( new Party( "a new party" ) );
+		s.update( c );
+		t.commit();
+		s.close();
+
+		assertInsertCount( 1 );
+		assertUpdateCount( 0 );
+		clearCounts();
+
+		s = openSession();
+		t = s.beginTransaction();
+		c.addParty( party );
+		s.update( c );
+		t.commit();
+		s.close();
+
+		s = openSession();
+		t = s.beginTransaction();
+		c = (Contract) s.createCriteria(Contract.class).uniqueResult();
+		assertEquals( c.getCustomerName(), "gavin" );
+		assertEquals( c.getVariations().size(), 2 );
+		Iterator it = c.getVariations().iterator();
+		cv1 = (ContractVariation) it.next();
+		assertEquals( cv1.getText(), "expensive" );
+		cv2 = (ContractVariation) it.next();
+		assertEquals( cv2.getText(), "more expensive" );
+		//assertEquals( 2, c.getParties().size() );
+		s.delete(c);
+		assertEquals( s.createCriteria(Contract.class).setProjection( Projections.rowCount() ).uniqueResult(), new Long(0) );
+		assertEquals( s.createCriteria(ContractVariation.class).setProjection( Projections.rowCount() ).uniqueResult(), new Long(0) );
+		t.commit();
+		s.close();
+
+		assertUpdateCount( 0 );
+		assertDeleteCount( 4 );
+	}
+	
+	public void testImmutableEntityRemoveImmutableFromInverseMutableCollection() {
+		clearCounts();
+
+		Contract c = new Contract( null, "gavin", "phone");
+		ContractVariation cv1 = new ContractVariation(1, c);
+		cv1.setText("expensive");
+		ContractVariation cv2 = new ContractVariation(2, c);
+		cv2.setText("more expensive");
+		Party party = new Party( "party1" );
+		c.addParty( party );
+		Session s = openSession();
+		Transaction t = s.beginTransaction();
+		s.persist(c);
+		t.commit();
+		s.close();
+
+		assertInsertCount( 4 );
+		assertUpdateCount( 0 );
+		clearCounts();
+
+		party = ( Party ) c.getParties().iterator().next();
+		c.removeParty( party );
+
+		s = openSession();
+		t = s.beginTransaction();
+		s.update( c );
+		t.commit();
+		s.close();
+
+		assertUpdateCount( 0 );
+		clearCounts();
+
+		s = openSession();
+		t = s.beginTransaction();
+		c = (Contract) s.createCriteria(Contract.class).uniqueResult();
+		assertEquals( c.getCustomerName(), "gavin" );
+		assertEquals( c.getVariations().size(), 2 );
+		Iterator it = c.getVariations().iterator();
+		cv1 = (ContractVariation) it.next();
+		assertEquals( cv1.getText(), "expensive" );
+		cv2 = (ContractVariation) it.next();
+		assertEquals( cv2.getText(), "more expensive" );
+		//assertEquals( 0, c.getParties().size() );
+		s.delete(c);
+		assertEquals( s.createCriteria(Contract.class).setProjection( Projections.rowCount() ).uniqueResult(), new Long(0) );
+		assertEquals( s.createCriteria(ContractVariation.class).setProjection( Projections.rowCount() ).uniqueResult(), new Long(0) );
+		t.commit();
+		s.close();
+
+		assertUpdateCount( 0 );
+		assertDeleteCount( 4 );
+	}
+
+	public void testImmutableEntityRemoveImmutableFromInverseMutableCollectionByDelete() {
+		clearCounts();
+
+		Contract c = new Contract( null, "gavin", "phone");
+		ContractVariation cv1 = new ContractVariation(1, c);
+		cv1.setText("expensive");
+		ContractVariation cv2 = new ContractVariation(2, c);
+		cv2.setText("more expensive");
+		Party party = new Party( "party1" );
+		c.addParty( party );
+		Session s = openSession();
+		Transaction t = s.beginTransaction();
+		s.persist(c);
+		t.commit();
+		s.close();
+
+		assertInsertCount( 4 );
+		assertUpdateCount( 0 );
+		clearCounts();
+
+		party = ( Party ) c.getParties().iterator().next();
+
+		s = openSession();
+		t = s.beginTransaction();
+		s.delete( party );
+		t.commit();
+		s.close();
+
+		assertUpdateCount( 0 );
+		assertDeleteCount( 1 );
+		clearCounts();
+
+		s = openSession();
+		t = s.beginTransaction();
+		c = (Contract) s.createCriteria(Contract.class).uniqueResult();
+		assertEquals( c.getCustomerName(), "gavin" );
+		assertEquals( c.getVariations().size(), 2 );
+		Iterator it = c.getVariations().iterator();
+		cv1 = (ContractVariation) it.next();
+		assertEquals( cv1.getText(), "expensive" );
+		cv2 = (ContractVariation) it.next();
+		assertEquals( cv2.getText(), "more expensive" );
+		assertEquals( 0, c.getParties().size() );
+		s.delete(c);
+		assertEquals( s.createCriteria(Contract.class).setProjection( Projections.rowCount() ).uniqueResult(), new Long(0) );
+		assertEquals( s.createCriteria(ContractVariation.class).setProjection( Projections.rowCount() ).uniqueResult(), new Long(0) );
+		t.commit();
+		s.close();
+
+		assertUpdateCount( 0 );
+		assertDeleteCount( 3 );
+	}
+
+	public void testImmutableEntityRemoveImmutableFromInverseMutableCollectionByDeref() {
+		clearCounts();
+
+		Contract c = new Contract( null, "gavin", "phone");
+		ContractVariation cv1 = new ContractVariation(1, c);
+		cv1.setText("expensive");
+		ContractVariation cv2 = new ContractVariation(2, c);
+		cv2.setText("more expensive");
+		Party party = new Party( "party1" );
+		c.addParty( party );
+		Session s = openSession();
+		Transaction t = s.beginTransaction();
+		s.persist(c);
+		t.commit();
+		s.close();
+
+		assertInsertCount( 4 );
+		assertUpdateCount( 0 );
+		clearCounts();
+
+		party = ( Party ) c.getParties().iterator().next();
+		party.setContract( null );
+
+		s = openSession();
+		t = s.beginTransaction();
+		s.update( party );
+		t.commit();
+		s.close();
+
+		s = openSession();
+		t = s.beginTransaction();
+		party = ( Party ) s.get( Party.class, party.getId() );
+		assertNotNull( party.getContract() );
+		t.commit();
+		s.close();
+
+		assertUpdateCount( 0 );
+		clearCounts();
+
+		s = openSession();
+		t = s.beginTransaction();
+		c = (Contract) s.createCriteria(Contract.class).uniqueResult();
+		assertEquals( c.getCustomerName(), "gavin" );
+		assertEquals( c.getVariations().size(), 2 );
+		Iterator it = c.getVariations().iterator();
+		cv1 = (ContractVariation) it.next();
+		assertEquals( cv1.getText(), "expensive" );
+		cv2 = (ContractVariation) it.next();
+		assertEquals( cv2.getText(), "more expensive" );
+		assertEquals( 1, c.getParties().size() );
+	    party = ( Party ) c.getParties().iterator().next();
+		assertEquals( "party1", party.getName() );
+		assertSame( c, party.getContract() );
+		s.delete(c);
+		assertEquals( s.createCriteria(Contract.class).setProjection( Projections.rowCount() ).uniqueResult(), new Long(0) );
+		assertEquals( s.createCriteria(ContractVariation.class).setProjection( Projections.rowCount() ).uniqueResult(), new Long(0) );
+		t.commit();
+		s.close();
+
+		assertUpdateCount( 0 );
+		assertDeleteCount( 4 );
+	}
+
 	protected void clearCounts() {
 		getSessions().getStatistics().clear();
 	}

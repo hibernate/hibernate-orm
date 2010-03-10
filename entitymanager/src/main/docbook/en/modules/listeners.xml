@@ -1,4 +1,4 @@
-<?xml version='1.0' encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <!--
   ~ Hibernate, Relational Persistence for Idiomatic Java
   ~
@@ -22,8 +22,8 @@
   ~ 51 Franklin Street, Fifth Floor
   ~ Boston, MA  02110-1301  USA
   -->
-
-<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
+"http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
 <chapter id="listeners">
   <title>Entity listeners and Callback methods</title>
 
@@ -33,7 +33,7 @@
     <para>It is often useful for the application to react to certain events
     that occur inside the persistence mechanism. This allows the
     implementation of certain kinds of generic functionality, and extension of
-    built-in functionality. The EJB3 specification provides two related
+    built-in functionality. The JPA specification provides two related
     mechanisms for this purpose.</para>
 
     <para>A method of the entity may be designated as a callback method to
@@ -89,11 +89,11 @@ public class LastUpdateListener {
     have two methods being annotated by the same callback annotation whether
     it is a callback method or an entity listener method. A callback method is
     a no-arg method with no return type and any arbitrary name. An entity
-    listener has the signature <code>void &lt;METHOD&gt;(Object)</code>
-    where Object is of the actual entity type (note that Hibernate Entity
-    Manager relaxed this constraint and allows <literal>Object</literal> of
+    listener has the signature <code>void &lt;METHOD&gt;(Object)</code> where
+    Object is of the actual entity type (note that Hibernate Entity Manager
+    relaxed this constraint and allows <literal>Object</literal> of
     <literal>java.lang.Object</literal> type (allowing sharing of listeners
-    accross several entities.)</para>
+    across several entities.)</para>
 
     <para>A callback method can raise a
     <classname>RuntimeException</classname>. The current transaction, if any,
@@ -163,7 +163,7 @@ public class LastUpdateListener {
           <row>
             <entry>@PostLoad</entry>
 
-            <entry>Eexecuted after an entity has been loaded into the current
+            <entry>Executed after an entity has been loaded into the current
             persistence context or an entity has been refreshed.</entry>
           </row>
         </tbody>
@@ -179,7 +179,7 @@ public class LastUpdateListener {
     <title>Callbacks and listeners inheritance</title>
 
     <para>You can define several entity listeners per entity at different
-    level of the hierarchy.You can also define several callbacks at different
+    level of the hierarchy. You can also define several callbacks at different
     level of the hierarchy. But you cannot define two listeners for the same
     event in the same entity or the same entity listener.</para>
 
@@ -217,16 +217,16 @@ public class LastUpdateListener {
   <section>
     <title>XML definition</title>
 
-    <para>The EJB3 specification allows annotation overriding through EJB3
-    deployment descriptor. There is also an additional feature that can be
+    <para>The JPA specification allows annotation overriding through JPA
+    deployment descriptors. There is also an additional feature that can be
     useful: default event listeners.</para>
 
     <programlisting>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
 
 &lt;entity-mappings xmlns="http://java.sun.com/xml/ns/persistence/orm"
                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-                 xsi:schemaLocation="http://java.sun.com/xml/ns/persistence/orm orm_1_0.xsd"
-                 version="1.0"
+                 xsi:schemaLocation="http://java.sun.com/xml/ns/persistence/orm orm_2_0.xsd"
+                 version="2.0"
         &gt;
     &lt;persistence-unit-metadata&gt;
         &lt;persistence-unit-defaults&gt;
@@ -258,7 +258,8 @@ public class LastUpdateListener {
     <para>Last but not least, you can define some default entity listeners
     that will apply first on the entity listener stack of all the mapped
     entities of a given persistence unit. If you don't want an entity to
-    inherit the default listeners, you can use @ExcludeDefaultListeners (or
+    inherit the default listeners, you can use
+    <classname>@ExcludeDefaultListeners</classname> (or
     &lt;exclude-default-listeners/&gt;).</para>
   </section>
 </chapter>

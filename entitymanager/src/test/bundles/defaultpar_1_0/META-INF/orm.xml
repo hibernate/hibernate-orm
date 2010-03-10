@@ -5,6 +5,7 @@
                  xsi:schemaLocation="http://java.sun.com/xml/ns/persistence/orm orm_1_0.xsd"
                  version="1.0"
         >
+    <!-- use orm_1_0 on purpose (backward compatibility test -->
     <persistence-unit-metadata>
         <persistence-unit-defaults>
             <entity-listeners>

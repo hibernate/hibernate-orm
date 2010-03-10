@@ -58,8 +58,8 @@
 &lt;entity-mappings 
   xmlns="http://java.sun.com/xml/ns/persistence/orm"
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://java.sun.com/xml/ns/persistence/orm orm_1_0.xsd"
-  version="1.0"&gt;
+  xsi:schemaLocation="http://java.sun.com/xml/ns/persistence/orm orm_2_0.xsd"
+  version="2.0"&gt;
 
     &lt;persistence-unit-metadata&gt;
         &lt;xml-mapping-metadata-complete/&gt;
@@ -117,8 +117,8 @@
 &lt;entity-mappings 
   xmlns="http://java.sun.com/xml/ns/persistence/orm"
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://java.sun.com/xml/ns/persistence/orm orm_1_0.xsd"
-  version="1.0"&gt;
+  xsi:schemaLocation="http://java.sun.com/xml/ns/persistence/orm orm_2_0.xsd"
+  version="2.0"&gt;
 
     &lt;package&gt;org.hibernate.test.annotations.reflection&lt;/package&gt;
     &lt;entity class="Administration" access="PROPERTY" metadata-complete="true"&gt;
@@ -254,8 +254,8 @@
 &lt;entity-mappings 
   xmlns="http://java.sun.com/xml/ns/persistence/orm"
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://java.sun.com/xml/ns/persistence/orm orm_1_0.xsd"
-  version="1.0"&gt;
+  xsi:schemaLocation="http://java.sun.com/xml/ns/persistence/orm orm_2_0.xsd"
+  version="2.0"&gt;
 
     &lt;package&gt;org.hibernate.test.annotations.reflection&lt;/package&gt;
     &lt;entity class="Music" access="PROPERTY" metadata-complete="true"&gt;

@@ -74,7 +74,8 @@ public final class EntityEntry implements Serializable {
 			final boolean lazyPropertiesAreUnfetched) {
 		this.status=status;
 		this.previousStatus = null;
-		this.loadedState=loadedState;
+		// only retain loaded state if the status is not Status.READ_ONLY
+		if ( status != Status.READ_ONLY ) { this.loadedState = loadedState; }
 		this.id=id;
 		this.rowId=rowId;
 		this.existsInDatabase=existsInDatabase;

@@ -530,7 +530,7 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 	}
 
 	public <T> T find(Class<T> entityClass, Object primaryKey, Map<String, Object> properties) {
-		return find( entityClass, primaryKey, null, null );
+		return find( entityClass, primaryKey, null, properties );
 	}
 
 	@SuppressWarnings("unchecked")
@@ -654,7 +654,7 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 	}
 
 	public void refresh(Object entity, Map<String, Object> properties) {
-		refresh( entity, null, null );
+		refresh( entity, null, properties );
 	}
 
 	public void refresh(Object entity, LockModeType lockModeType) {

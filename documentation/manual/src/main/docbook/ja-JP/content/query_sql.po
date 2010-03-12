@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Collection_Mapping\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2010-02-11T05:38:15\n"
+"POT-Creation-Date: 2010-03-12T00:03:47\n"
 "PO-Revision-Date: 2010-01-18 15:09+1000\n"
 "Last-Translator: Xi HUANG <xhuang@redhat.com>\n"
 "Language-Team:  <en@li.org>\n"
@@ -524,8 +524,8 @@ msgid "<literal>{coll.element.*}</literal>"
 msgstr "<literal>{coll.element.*}</literal>"
 
 #. Tag: entry
-#, no-c-format
-msgid "All properties of the the collection"
+#, fuzzy, no-c-format
+msgid "All properties of the collection"
 msgstr "コレクションの全プロパティ"
 
 #. Tag: entry

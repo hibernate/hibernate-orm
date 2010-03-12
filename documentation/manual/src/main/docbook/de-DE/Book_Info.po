@@ -276,7 +276,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Book_Info\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2010-02-11T05:38:14\n"
+"POT-Creation-Date: 2010-03-12T00:03:45\n"
 "PO-Revision-Date: 2010-01-10 09:33+1100\n"
 "Last-Translator: \n"
 "Language-Team:  <en@li.org>\n"
@@ -297,7 +297,7 @@ msgstr "Hibernate Core Referenz-Handbuch"
 
 #. Tag: releaseinfo
 #, no-c-format
-msgid "&versionNumber;"
+msgid "&version;"
 msgstr ""
 
 #~ msgid "The JBoss Hibernate Core 3.3.2.GA Reference Guide"

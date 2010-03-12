@@ -5,7 +5,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Feedback\n"
-"POT-Creation-Date: 2009-12-11T05:07:40\n"
+"POT-Creation-Date: 2010-03-12T00:03:48\n"
 "PO-Revision-Date: 2010-01-11 17:47+1100\n"
 "Last-Translator: \n"
 "Language-Team:  <en@li.org>\n"
@@ -19,20 +19,15 @@ msgstr ""
 msgid "We Need Feedback!"
 msgstr "Wir brauchen Feedback!"
 
-#. Tag: primary
-#, no-c-format
-msgid "feedback"
-msgstr "Feedback"
-
-#. Tag: secondary
-#, no-c-format
-msgid "contact information for this manual"
-msgstr "Kontaktinformationen für dieses Handbuch"
-
 #. Tag: para
 #, no-c-format
 msgid "You should over ride this by creating your own local Feedback.xml file."
 msgstr ""
-"Sie sollte dies außer Kraft setzen, indem Sie Ihre eigene lokale "
-"Feedback.xml-Datei erstellen."
+"Sie sollte dies außer Kraft setzen, indem Sie Ihre eigene lokale Feedback."
+"xml-Datei erstellen."
 
+#~ msgid "feedback"
+#~ msgstr "Feedback"
+
+#~ msgid "contact information for this manual"
+#~ msgstr "Kontaktinformationen für dieses Handbuch"

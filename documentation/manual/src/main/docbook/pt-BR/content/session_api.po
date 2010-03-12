@@ -108,7 +108,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: session_api\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2010-02-10T07:25:35\n"
+"POT-Creation-Date: 2010-03-12T00:03:48\n"
 "PO-Revision-Date: 2009-12-21 07:37+1000\n"
 "Last-Translator: \n"
 "Language-Team:  <en@li.org>\n"
@@ -247,9 +247,9 @@ msgid "Making objects persistent"
 msgstr "Tornando os objetos persistentes"
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
-"Newly instantiated instances of a a persistent class are considered "
+"Newly instantiated instances of a persistent class are considered "
 "<emphasis>transient</emphasis> by Hibernate. We can make a transient "
 "instance <emphasis>persistent</emphasis> by associating it with a session:"
 msgstr ""

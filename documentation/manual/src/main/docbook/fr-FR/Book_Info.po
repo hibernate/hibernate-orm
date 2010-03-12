@@ -1,10 +1,10 @@
-# 
+#
 # AUTHOR <EMAIL@ADDRESS>, YEAR.
 #
 msgid ""
 msgstr ""
 "Project-Id-Version: 0\n"
-"POT-Creation-Date: 2010-02-04T04:51:21\n"
+"POT-Creation-Date: 2010-03-12T00:03:45\n"
 "PO-Revision-Date: 2010-02-04T04:51:21\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: None\n"
@@ -24,6 +24,5 @@ msgstr ""
 
 #. Tag: releaseinfo
 #, no-c-format
-msgid "&versionNumber;"
+msgid "&version;"
 msgstr ""
-

@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Collection_Mapping\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2010-02-11T05:38:15\n"
+"POT-Creation-Date: 2010-03-12T00:03:47\n"
 "PO-Revision-Date: 2010-01-11 10:57+1000\n"
 "Last-Translator: Xi HUANG <xhuang@redhat.com>\n"
 "Language-Team:  <en@li.org>\n"
@@ -255,11 +255,11 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
 "SQL functions can be referenced in many ways by users. However, not all "
 "databases support the same set of functions. Hibernate, provides a means of "
-"mapping a <emphasis>logical</emphasis> function name to a a delegate which "
+"mapping a <emphasis>logical</emphasis> function name to a delegate which "
 "knows how to render that particular function, perhaps even using a totally "
 "different physical function call."
 msgstr ""

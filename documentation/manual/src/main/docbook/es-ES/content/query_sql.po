@@ -14,7 +14,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: query_sql\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2010-02-11T05:38:15\n"
+"POT-Creation-Date: 2010-03-12T00:03:47\n"
 "PO-Revision-Date: 2010-01-05 07:45+1000\n"
 "Last-Translator: Angela Garcia <agarcia@redhat.com>\n"
 "Language-Team:  <en@li.org>\n"
@@ -558,8 +558,8 @@ msgid "<literal>{coll.element.*}</literal>"
 msgstr "<literal>{coll.*}</literal>"
 
 #. Tag: entry
-#, no-c-format
-msgid "All properties of the the collection"
+#, fuzzy, no-c-format
+msgid "All properties of the collection"
 msgstr "Todas las propiedades de la colección"
 
 #. Tag: entry

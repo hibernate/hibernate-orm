@@ -119,7 +119,8 @@ public class CriteriaHQLAlignmentTest extends QueryTranslatorTestCase {
 		human.setBigIntegerValue( new BigInteger("42") );
 		human.setBigDecimalValue( new BigDecimal(45) );
 		s.save(human);
-		
+		s.flush();
+		s.clear();
 		// EJB3: COUNT returns Long
 		Long longValue = (Long) s.createCriteria( Human.class ).setProjection( Projections.rowCount()).uniqueResult();
 		assertEquals(longValue, new Long(1));

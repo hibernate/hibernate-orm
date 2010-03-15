@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Collection_Mapping\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
 "POT-Creation-Date: 2010-02-10T07:25:34\n"
-"PO-Revision-Date: 2009-12-09 12:11+1000\n"
+"PO-Revision-Date: 2010-03-15 08:59+1000\n"
 "Last-Translator: Xi HUANG <xhuang@redhat.com>\n"
 "Language-Team:  <en@li.org>\n"
 "MIME-Version: 1.0\n"
@@ -26,94 +26,33 @@ msgstr "持久化集合类（Persistent collections）"
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"Hibernate requires that persistent collection-valued fields be declared as "
-"an interface type. For example:"
-msgstr ""
-"（译者注：在阅读本章的时候，以后整个手册的阅读过程中，我们都会面临一个名词方"
-"面的问题，那就是“集合”。\"Collections\" 和 \"Set\" 在中文里对应都被翻译为“集"
-"合”，但是他们的含义很不一样。Collections 是一个超集，Set 是其中的一种。大部分"
-"情况下，本译稿中泛指的未加英文注明的“集合”，都应当理解为“Collections”。在有些"
-"二者同时出现，可能造成混淆的地方，我们用“集合类”来特指“Collecions”，“集合"
-"（Set）”来指 \"Set\"，一般都会在后面的括号中给出英文。希望大家在阅读时联系上"
-"下文理解，不要造成误解。 与此同时，“元素”一词对应的英文“element”，也有两个不"
-"同的含义。其一为集合的元素，是内存中的一个变量；另一含义则是 XML 文档中的一个"
-"标签所代表的元素。也请注意区别。本章中，特别是后半部分是需要反复阅读才能理解"
-"清楚的。如果遇到任何疑问，请记住，英文版本的 reference 是惟一标准的参考资"
-"料。） Hibernate 要求持久化集合值字段必须声明为接口，例如："
+msgid "Hibernate requires that persistent collection-valued fields be declared as an interface type. For example:"
+msgstr "（译者注：在阅读本章的时候，以后整个手册的阅读过程中，我们都会面临一个名词方面的问题，那就是“集合”。\"Collections\" 和 \"Set\" 在中文里对应都被翻译为“集合”，但是他们的含义很不一样。Collections 是一个超集，Set 是其中的一种。大部分情况下，本译稿中泛指的未加英文注明的“集合”，都应当理解为“Collections”。在有些二者同时出现，可能造成混淆的地方，我们用“集合类”来特指“Collecions”，“集合（Set）”来指 \"Set\"，一般都会在后面的括号中给出英文。希望大家在阅读时联系上下文理解，不要造成误解。 与此同时，“元素”一词对应的英文“element”，也有两个不同的含义。其一为集合的元素，是内存中的一个变量；另一含义则是 XML 文档中的一个标签所代表的元素。也请注意区别。本章中，特别是后半部分是需要反复阅读才能理解清楚的。如果遇到任何疑问，请记住，英文版本的 reference 是惟一标准的参考资料。） Hibernate 要求持久化集合值字段必须声明为接口，例如："
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"The actual interface might be <literal>java.util.Set</literal>, "
-"<literal>java.util.Collection</literal>, <literal>java.util.List</literal>, "
-"<literal>java.util.Map</literal>, <literal>java.util.SortedSet</literal>, "
-"<literal>java.util.SortedMap</literal> or anything you like (\"anything you "
-"like\" means you will have to write an implementation of <literal>org."
-"hibernate.usertype.UserCollectionType</literal>.)"
-msgstr ""
-"实际的接口可能是 <literal>java.util.Set</literal>、<literal>java.util."
-"Collection</literal>、<literal>java.util.List</literal>、<literal>java.util."
-"Map</literal>、<literal>java.util.SortedSet</literal>、<literal>java.util."
-"SortedMap</literal> 或者任何你喜欢的类型（\"任何你喜欢的类型\" 代表你需要编"
-"写 <literal>org.hibernate.usertype.UserCollectionType</literal> 的实现）。"
+msgid "The actual interface might be <literal>java.util.Set</literal>, <literal>java.util.Collection</literal>, <literal>java.util.List</literal>, <literal>java.util.Map</literal>, <literal>java.util.SortedSet</literal>, <literal>java.util.SortedMap</literal> or anything you like (\"anything you like\" means you will have to write an implementation of <literal>org.hibernate.usertype.UserCollectionType</literal>.)"
+msgstr "实际的接口可能是 <literal>java.util.Set</literal>、<literal>java.util.Collection</literal>、<literal>java.util.List</literal>、<literal>java.util.Map</literal>、<literal>java.util.SortedSet</literal>、<literal>java.util.SortedMap</literal> 或者任何你喜欢的类型（\"任何你喜欢的类型\" 代表你需要编写 <literal>org.hibernate.usertype.UserCollectionType</literal> 的实现）。"
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"Notice how the instance variable was initialized with an instance of "
-"<literal>HashSet</literal>. This is the best way to initialize collection "
-"valued properties of newly instantiated (non-persistent) instances. When you "
-"make the instance persistent, by calling <literal>persist()</literal> for "
-"example, Hibernate will actually replace the <literal>HashSet</literal> with "
-"an instance of Hibernate's own implementation of <literal>Set</literal>. Be "
-"aware of the following errors:"
-msgstr ""
-"注意我们是如何用一个 <literal>HashSet</literal> 实例来初始化实例变量的。这是"
-"用于初始化新创建（尚未持久化）的类实例中集合值属性的最佳方法。当你持久化这个"
-"实例时 — 比如通过调用 <literal>persist()</literal> — Hibernate 会自动把 "
-"<literal>HashSet</literal> 替换为 Hibernate 自己的 <literal>Set</literal> 实"
-"现。注意下面的错误："
+msgid "Notice how the instance variable was initialized with an instance of <literal>HashSet</literal>. This is the best way to initialize collection valued properties of newly instantiated (non-persistent) instances. When you make the instance persistent, by calling <literal>persist()</literal> for example, Hibernate will actually replace the <literal>HashSet</literal> with an instance of Hibernate's own implementation of <literal>Set</literal>. Be aware of the following errors:"
+msgstr "注意我们是如何用一个 <literal>HashSet</literal> 实例来初始化实例变量的。这是用于初始化新创建（尚未持久化）的类实例中集合值属性的最佳方法。当你持久化这个实例时 — 比如通过调用 <literal>persist()</literal> — Hibernate 会自动把 <literal>HashSet</literal> 替换为 Hibernate 自己的 <literal>Set</literal> 实现。注意下面的错误："
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"The persistent collections injected by Hibernate behave like "
-"<literal>HashMap</literal>, <literal>HashSet</literal>, <literal>TreeMap</"
-"literal>, <literal>TreeSet</literal> or <literal>ArrayList</literal>, "
-"depending on the interface type."
-msgstr ""
-"根据不同的接口类型，被 Hibernate 注射的持久化集合类的表现类似 "
-"<literal>HashMap</literal>、<literal>HashSet</literal>、<literal>TreeMap</"
-"literal>、<literal>TreeSet</literal> 或 <literal>ArrayList</literal>。"
+msgid "The persistent collections injected by Hibernate behave like <literal>HashMap</literal>, <literal>HashSet</literal>, <literal>TreeMap</literal>, <literal>TreeSet</literal> or <literal>ArrayList</literal>, depending on the interface type."
+msgstr "根据不同的接口类型，被 Hibernate 注射的持久化集合类的表现类似 <literal>HashMap</literal>、<literal>HashSet</literal>、<literal>TreeMap</literal>、<literal>TreeSet</literal> 或 <literal>ArrayList</literal>。"
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"Collections instances have the usual behavior of value types. They are "
-"automatically persisted when referenced by a persistent object and are "
-"automatically deleted when unreferenced. If a collection is passed from one "
-"persistent object to another, its elements might be moved from one table to "
-"another. Two entities cannot share a reference to the same collection "
-"instance. Due to the underlying relational model, collection-valued "
-"properties do not support null value semantics. Hibernate does not "
-"distinguish between a null collection reference and an empty collection."
-msgstr ""
-"集合类实例具有值类型的通常行为。当被持久化对象引用后，他们会自动被持久化，当"
-"不再被引用后，自动被删除。假若实例被从一个持久化对象传递到另一个，它的元素可"
-"能从一个表转移到另一个表。两个实体不能共享同一个集合类实例的引用。因为底层关"
-"系数据库模型的原因，集合值属性无法支持空值语义；Hibernate 对空的集合引用和空"
-"集合不加区别。 "
+msgid "Collections instances have the usual behavior of value types. They are automatically persisted when referenced by a persistent object and are automatically deleted when unreferenced. If a collection is passed from one persistent object to another, its elements might be moved from one table to another. Two entities cannot share a reference to the same collection instance. Due to the underlying relational model, collection-valued properties do not support null value semantics. Hibernate does not distinguish between a null collection reference and an empty collection."
+msgstr "集合类实例具有值类型的通常行为。当被持久化对象引用后，他们会自动被持久化，当不再被引用后，自动被删除。假若实例被从一个持久化对象传递到另一个，它的元素可能从一个表转移到另一个表。两个实体不能共享同一个集合类实例的引用。因为底层关系数据库模型的原因，集合值属性无法支持空值语义；Hibernate 对空的集合引用和空集合不加区别。 "
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"Use persistent collections the same way you use ordinary Java collections. "
-"However, please ensure you understand the semantics of bidirectional "
-"associations (these are discussed later)."
-msgstr ""
-"你不需要过多的为此担心。就如同你平时使用普通的 Java 集合类一样来使用持久化集"
-"合类。只是要确认你理解了双向关联的语义（后文将进行讨论）。"
+msgid "Use persistent collections the same way you use ordinary Java collections. However, please ensure you understand the semantics of bidirectional associations (these are discussed later)."
+msgstr "你不需要过多的为此担心。就如同你平时使用普通的 Java 集合类一样来使用持久化集合类。只是要确认你理解了双向关联的语义（后文将进行讨论）。"
 
 #. Tag: title
 #, no-c-format
@@ -122,38 +61,18 @@ msgstr "集合映射（ Collection mappings ）"
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"There are quite a range of mappings that can be generated for collections "
-"that cover many common relational models. We suggest you experiment with the "
-"schema generation tool so that you understand how various mapping "
-"declarations translate to database tables."
-msgstr ""
-"从集合类可以产生很大一部分映射，覆盖了很多常见的关系模型。我们建议你试验 "
-"schema 生成工具，来体会一下不同的映射声明是如何被翻译为数据库表的。 "
+msgid "There are quite a range of mappings that can be generated for collections that cover many common relational models. We suggest you experiment with the schema generation tool so that you understand how various mapping declarations translate to database tables."
+msgstr "从集合类可以产生很大一部分映射，覆盖了很多常见的关系模型。我们建议你试验 schema 生成工具，来体会一下不同的映射声明是如何被翻译为数据库表的。 "
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"The Hibernate mapping element used for mapping a collection depends upon the "
-"type of interface. For example, a <literal>&lt;set&gt;</literal> element is "
-"used for mapping properties of type <literal>Set</literal>."
-msgstr ""
-"用于映射集合类的 Hibernate 映射元素取决于接口的类型。比如，<literal>&lt;"
-"set&gt;</literal> 元素用来映射 <literal>Set</literal> 类型的属性。 "
+msgid "The Hibernate mapping element used for mapping a collection depends upon the type of interface. For example, a <literal>&lt;set&gt;</literal> element is used for mapping properties of type <literal>Set</literal>."
+msgstr "用于映射集合类的 Hibernate 映射元素取决于接口的类型。比如，<literal>&lt;set&gt;</literal> 元素用来映射 <literal>Set</literal> 类型的属性。 "
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"Apart from <literal>&lt;set&gt;</literal>, there is also <literal>&lt;"
-"list&gt;</literal>, <literal>&lt;map&gt;</literal>, <literal>&lt;bag&gt;</"
-"literal>, <literal>&lt;array&gt;</literal> and <literal>&lt;primitive-"
-"array&gt;</literal> mapping elements. The <literal>&lt;map&gt;</literal> "
-"element is representative:"
-msgstr ""
-"除了 <literal>&lt;set&gt;</literal>，还有<literal>&lt;list&gt;</literal>，"
-"<literal>&lt;map&gt;</literal>，<literal>&lt;bag&gt;</literal>，<literal>&lt;"
-"array&gt;</literal> 和 <literal>&lt;primitive-array&gt;</literal> 映射元素。"
-"<literal>&lt;map&gt;</literal> 具有代表性："
+msgid "Apart from <literal>&lt;set&gt;</literal>, there is also <literal>&lt;list&gt;</literal>, <literal>&lt;map&gt;</literal>, <literal>&lt;bag&gt;</literal>, <literal>&lt;array&gt;</literal> and <literal>&lt;primitive-array&gt;</literal> mapping elements. The <literal>&lt;map&gt;</literal> element is representative:"
+msgstr "除了 <literal>&lt;set&gt;</literal>，还有<literal>&lt;list&gt;</literal>，<literal>&lt;map&gt;</literal>，<literal>&lt;bag&gt;</literal>，<literal>&lt;array&gt;</literal> 和 <literal>&lt;primitive-array&gt;</literal> 映射元素。<literal>&lt;map&gt;</literal> 具有代表性："
 
 #. Tag: para
 #, no-c-format
@@ -162,138 +81,68 @@ msgstr "<literal>name</literal>：集合属性的名称"
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"<literal>table</literal> (optional - defaults to property name): the name of "
-"the collection table. It is not used for one-to-many associations."
-msgstr ""
-"<literal>table</literal>（可选——默认为属性的名称）这个集合表的名称（不能在一"
-"对多的关联关系中使用）。"
+msgid "<literal>table</literal> (optional - defaults to property name): the name of the collection table. It is not used for one-to-many associations."
+msgstr "<literal>table</literal>（可选——默认为属性的名称）这个集合表的名称（不能在一对多的关联关系中使用）。"
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"<literal>schema</literal> (optional): the name of a table schema to override "
-"the schema declared on the root element"
-msgstr ""
-"<literal>schema</literal>（可选）：表的 schema 的名称，他将覆盖在根元素中定义"
-"的 schema"
+msgid "<literal>schema</literal> (optional): the name of a table schema to override the schema declared on the root element"
+msgstr "<literal>schema</literal>（可选）：表的 schema 的名称，他将覆盖在根元素中定义的 schema"
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"<literal>lazy</literal> (optional - defaults to <literal>true</literal>): "
-"disables lazy fetching and specifies that the association is always eagerly "
-"fetched. It can also be used to enable \"extra-lazy\" fetching where most "
-"operations do not initialize the collection. This is suitable for large "
-"collections."
-msgstr ""
-"<literal>lazy</literal>（可选--默认为 true）可以用来关闭延迟加载（false）：指"
-"定一直使用预先抓取，或者打开 \"extra-lazy\" 抓取，此时大多数操作不会初始化集"
-"合类（适用于非常大的集合）。"
+msgid "<literal>lazy</literal> (optional - defaults to <literal>true</literal>): disables lazy fetching and specifies that the association is always eagerly fetched. It can also be used to enable \"extra-lazy\" fetching where most operations do not initialize the collection. This is suitable for large collections."
+msgstr "<literal>lazy</literal>（可选--默认为 true）可以用来关闭延迟加载（false）：指定一直使用预先抓取，或者打开 \"extra-lazy\" 抓取，此时大多数操作不会初始化集合类（适用于非常大的集合）。"
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"<literal>inverse</literal> (optional - defaults to <literal>false</"
-"literal>): marks this collection as the \"inverse\" end of a bidirectional "
-"association."
-msgstr ""
-"<literal>inverse</literal>（可选 — 默认为 <literal>false</literal>）标记这个"
-"集合作为双向关联关系中的方向一端。 "
+msgid "<literal>inverse</literal> (optional - defaults to <literal>false</literal>): marks this collection as the \"inverse\" end of a bidirectional association."
+msgstr "<literal>inverse</literal>（可选 — 默认为 <literal>false</literal>）标记这个集合作为双向关联关系中的方向一端。 "
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"<literal>cascade</literal> (optional - defaults to <literal>none</literal>): "
-"enables operations to cascade to child entities."
-msgstr ""
-"<literal>cascade</literal>（可选 — 默认为 <literal>none</literal>）让操作级联"
-"到子实体。"
+msgid "<literal>cascade</literal> (optional - defaults to <literal>none</literal>): enables operations to cascade to child entities."
+msgstr "<literal>cascade</literal>（可选 — 默认为 <literal>none</literal>）让操作级联到子实体。"
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"<literal>sort</literal> (optional): specifies a sorted collection with "
-"<literal>natural</literal> sort order or a given comparator class."
-msgstr ""
-"<literal>sort</literal>（可选）指定集合的排序顺序，其可以为自然的"
-"（<literal>natural</literal>）或者给定一个用来比较的类。 "
+msgid "<literal>sort</literal> (optional): specifies a sorted collection with <literal>natural</literal> sort order or a given comparator class."
+msgstr "<literal>sort</literal>（可选）指定集合的排序顺序，其可以为自然的（<literal>natural</literal>）或者给定一个用来比较的类。 "
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"<literal>order-by</literal> (optional, JDK1.4 only): specifies a table "
-"column or columns that define the iteration order of the <literal>Map</"
-"literal>, <literal>Set</literal> or bag, together with an optional "
-"<literal>asc</literal> or <literal>desc</literal>."
-msgstr ""
-"<literal>order-by</literal>（可选，仅用于 jdk1.4）：指定表的字段（一个或几"
-"个）再加上 asc 或者 desc（可选），定义 Map、Set 和 Bag 的迭代顺序。"
+msgid "<literal>order-by</literal> (optional, JDK1.4 only): specifies a table column or columns that define the iteration order of the <literal>Map</literal>, <literal>Set</literal> or bag, together with an optional <literal>asc</literal> or <literal>desc</literal>."
+msgstr "<literal>order-by</literal>（可选，仅用于 jdk1.4）：指定表的字段（一个或几个）再加上 asc 或者 desc（可选），定义 Map、Set 和 Bag 的迭代顺序。"
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"<literal>where</literal> (optional): specifies an arbitrary SQL "
-"<literal>WHERE</literal> condition that is used when retrieving or removing "
-"the collection. This is useful if the collection needs to contain only a "
-"subset of the available data."
-msgstr ""
-"<literal>where</literal>（可选）：指定任意的 SQL where 条件，该条件将在重新载"
-"入或者删除这个集合时使用（当集合中的数据仅仅是所有可用数据的一个子集时这个条"
-"件非常有用）。"
+msgid "<literal>where</literal> (optional): specifies an arbitrary SQL <literal>WHERE</literal> condition that is used when retrieving or removing the collection. This is useful if the collection needs to contain only a subset of the available data."
+msgstr "<literal>where</literal>（可选）：指定任意的 SQL where 条件，该条件将在重新载入或者删除这个集合时使用（当集合中的数据仅仅是所有可用数据的一个子集时这个条件非常有用）。"
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"<literal>fetch</literal> (optional, defaults to <literal>select</literal>): "
-"chooses between outer-join fetching, fetching by sequential select, and "
-"fetching by sequential subselect."
-msgstr ""
-"<literal>fetch</literal>（可选，默认为 <literal>select</literal>）：用于在外"
-"连接抓取、通过后续 select 抓取和通过后续 subselect 抓取之间选择。"
+msgid "<literal>fetch</literal> (optional, defaults to <literal>select</literal>): chooses between outer-join fetching, fetching by sequential select, and fetching by sequential subselect."
+msgstr "<literal>fetch</literal>（可选，默认为 <literal>select</literal>）：用于在外连接抓取、通过后续 select 抓取和通过后续 subselect 抓取之间选择。"
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"<literal>batch-size</literal> (optional, defaults to <literal>1</literal>): "
-"specifies a \"batch size\" for lazily fetching instances of this collection."
-msgstr ""
-"<literal>batch-size</literal>（可选，默认为 <literal>1</literal>）：指定通过"
-"延迟加载取得集合实例的批处理块大小（\"batch size\"）。"
+msgid "<literal>batch-size</literal> (optional, defaults to <literal>1</literal>): specifies a \"batch size\" for lazily fetching instances of this collection."
+msgstr "<literal>batch-size</literal>（可选，默认为 <literal>1</literal>）：指定通过延迟加载取得集合实例的批处理块大小（\"batch size\"）。"
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"<literal>access</literal> (optional - defaults to <literal>property</"
-"literal>): the strategy Hibernate uses for accessing the collection property "
-"value."
-msgstr ""
-"<literal>access</literal>（可选-默认为属性 property）：Hibernate 取得集合属性"
-"值时使用的策略。"
+msgid "<literal>access</literal> (optional - defaults to <literal>property</literal>): the strategy Hibernate uses for accessing the collection property value."
+msgstr "<literal>access</literal>（可选-默认为属性 property）：Hibernate 取得集合属性值时使用的策略。"
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"<literal>optimistic-lock</literal> (optional - defaults to <literal>true</"
-"literal>): specifies that changes to the state of the collection results in "
-"increments of the owning entity's version. For one-to-many associations you "
-"may want to disable this setting."
-msgstr ""
-"<literal>乐观锁</literal>（可选 - 默认为 <literal>true</literal>）：对集合的"
-"状态的改变会是否导致其所属的实体的版本增长（对一对多关联来说，关闭这个属性常"
-"常是有理的）。"
+msgid "<literal>optimistic-lock</literal> (optional - defaults to <literal>true</literal>): specifies that changes to the state of the collection results in increments of the owning entity's version. For one-to-many associations you may want to disable this setting."
+msgstr "<literal>乐观锁</literal>（可选 - 默认为 <literal>true</literal>）：对集合的状态的改变会是否导致其所属的实体的版本增长（对一对多关联来说，关闭这个属性常常是有理的）。"
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"<literal>mutable</literal> (optional - defaults to <literal>true</literal>): "
-"a value of <literal>false</literal> specifies that the elements of the "
-"collection never change. This allows for minor performance optimization in "
-"some cases."
-msgstr ""
-"<literal>mutable（可变）</literal>（可选 — 默认为 <literal>true</literal>）："
-"若值为 <literal>false</literal>，表明集合中的元素不会改变（在某些情况下可以进"
-"行一些小的性能优化）。 "
+msgid "<literal>mutable</literal> (optional - defaults to <literal>true</literal>): a value of <literal>false</literal> specifies that the elements of the collection never change. This allows for minor performance optimization in some cases."
+msgstr "<literal>mutable（可变）</literal>（可选 — 默认为 <literal>true</literal>）：若值为 <literal>false</literal>，表明集合中的元素不会改变（在某些情况下可以进行一些小的性能优化）。 "
 
 #. Tag: title
 #, no-c-format
@@ -302,40 +151,22 @@ msgstr "集合外键（Collection foreign keys）"
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"Collection instances are distinguished in the database by the foreign key of "
-"the entity that owns the collection. This foreign key is referred to as the "
-"<emphasis>collection key column</emphasis>, or columns, of the collection "
-"table. The collection key column is mapped by the <literal>&lt;key&gt;</"
-"literal> element."
-msgstr ""
-"集合实例在数据库中依靠持有集合的实体的外键加以辨别。此外键作为<emphasis>集合"
-"关键字段（collection key column）</emphasis>（或多个字段）加以引用。集合关键"
-"字段通过 <literal>&lt;key&gt;</literal> 元素映射。 "
+msgid "Collection instances are distinguished in the database by the foreign key of the entity that owns the collection. This foreign key is referred to as the <emphasis>collection key column</emphasis>, or columns, of the collection table. The collection key column is mapped by the <literal>&lt;key&gt;</literal> element."
+msgstr "集合实例在数据库中依靠持有集合的实体的外键加以辨别。此外键作为<emphasis>集合关键字段（collection key column）</emphasis>（或多个字段）加以引用。集合关键字段通过 <literal>&lt;key&gt;</literal> 元素映射。 "
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"There can be a nullability constraint on the foreign key column. For most "
-"collections, this is implied. For unidirectional one-to-many associations, "
-"the foreign key column is nullable by default, so you may need to specify "
-"<literal>not-null=\"true\"</literal>."
-msgstr ""
-"在外键字段上可能具有非空约束。对于大多数集合来说，这是隐含的。对单向一对多关"
-"联来说，外键字段默认是可以为空的，因此你可能需要指明 <literal>not-null=\"true"
-"\"</literal>。 "
+msgid "There can be a nullability constraint on the foreign key column. For most collections, this is implied. For unidirectional one-to-many associations, the foreign key column is nullable by default, so you may need to specify <literal>not-null=\"true\"</literal>."
+msgstr "在外键字段上可能具有非空约束。对于大多数集合来说，这是隐含的。对单向一对多关联来说，外键字段默认是可以为空的，因此你可能需要指明 <literal>not-null=\"true\"</literal>。 "
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"The foreign key constraint can use <literal>ON DELETE CASCADE</literal>."
+msgid "The foreign key constraint can use <literal>ON DELETE CASCADE</literal>."
 msgstr "外键约束可以使用 <literal>ON DELETE CASCADE</literal>。 "
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"See the previous chapter for a full definition of the <literal>&lt;key&gt;</"
-"literal> element."
+msgid "See the previous chapter for a full definition of the <literal>&lt;key&gt;</literal> element."
 msgstr "对 <literal>&lt;key&gt;</literal> 元素的完整定义，请参阅前面的章节。"
 
 #. Tag: title
@@ -345,36 +176,13 @@ msgstr "集合元素（Collection elements）"
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"Collections can contain almost any other Hibernate type, including: basic "
-"types, custom types, components and references to other entities. This is an "
-"important distinction. An object in a collection might be handled with "
-"\"value\" semantics (its life cycle fully depends on the collection owner), "
-"or it might be a reference to another entity with its own life cycle. In the "
-"latter case, only the \"link\" between the two objects is considered to be a "
-"state held by the collection."
-msgstr ""
-"集合几乎可以包含任何其他的 Hibernate 类型，包括所有的基本类型、自定义类型、组"
-"件，当然还有对其他实体的引用。存在一个重要的区别：位于集合中的对象可能是根"
-"据“值”语义来操作（其声明周期完全依赖于集合持有者），或者它可能是指向另一个实"
-"体的引用，具有其自己的生命周期。在后者的情况下，被作为集合持有的状态考虑的，"
-"只有两个对象之间的“连接”。 "
+msgid "Collections can contain almost any other Hibernate type, including: basic types, custom types, components and references to other entities. This is an important distinction. An object in a collection might be handled with \"value\" semantics (its life cycle fully depends on the collection owner), or it might be a reference to another entity with its own life cycle. In the latter case, only the \"link\" between the two objects is considered to be a state held by the collection."
+msgstr "集合几乎可以包含任何其他的 Hibernate 类型，包括所有的基本类型、自定义类型、组件，当然还有对其他实体的引用。存在一个重要的区别：位于集合中的对象可能是根据“值”语义来操作（其声明周期完全依赖于集合持有者），或者它可能是指向另一个实体的引用，具有其自己的生命周期。在后者的情况下，被作为集合持有的状态考虑的，只有两个对象之间的“连接”。 "
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"The contained type is referred to as the <emphasis>collection element type</"
-"emphasis>. Collection elements are mapped by <literal>&lt;element&gt;</"
-"literal> or <literal>&lt;composite-element&gt;</literal>, or in the case of "
-"entity references, with <literal>&lt;one-to-many&gt;</literal> or "
-"<literal>&lt;many-to-many&gt;</literal>. The first two map elements with "
-"value semantics, the next two are used to map entity associations."
-msgstr ""
-"被包容的类型被称为<emphasis>集合元素类型（collection element type）</"
-"emphasis>。集合元素通过 <literal>&lt;element&gt;</literal> 或 <literal>&lt;"
-"composite-element&gt;</literal> 映射，或在其是实体引用的时候，通过  "
-"<literal>&lt;one-to-many&gt;</literal> 或 <literal>&lt;many-to-many&gt;</"
-"literal> 映射。前两种用于使用值语义映射元素，后两种用于映射实体关联。"
+msgid "The contained type is referred to as the <emphasis>collection element type</emphasis>. Collection elements are mapped by <literal>&lt;element&gt;</literal> or <literal>&lt;composite-element&gt;</literal>, or in the case of entity references, with <literal>&lt;one-to-many&gt;</literal> or <literal>&lt;many-to-many&gt;</literal>. The first two map elements with value semantics, the next two are used to map entity associations."
+msgstr "被包容的类型被称为<emphasis>集合元素类型（collection element type）</emphasis>。集合元素通过 <literal>&lt;element&gt;</literal> 或 <literal>&lt;composite-element&gt;</literal> 映射，或在其是实体引用的时候，通过  <literal>&lt;one-to-many&gt;</literal> 或 <literal>&lt;many-to-many&gt;</literal> 映射。前两种用于使用值语义映射元素，后两种用于映射实体关联。"
 
 #. Tag: title
 #, no-c-format
@@ -383,58 +191,27 @@ msgstr "索引集合类（Indexed collections）"
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"All collection mappings, except those with set and bag semantics, need an "
-"<emphasis>index column</emphasis> in the collection table. An index column "
-"is a column that maps to an array index, or <literal>List</literal> index, "
-"or <literal>Map</literal> key. The index of a <literal>Map</literal> may be "
-"of any basic type, mapped with <literal>&lt;map-key&gt;</literal>. It can be "
-"an entity reference mapped with <literal>&lt;map-key-many-to-many&gt;</"
-"literal>, or it can be a composite type mapped with <literal>&lt;composite-"
-"map-key&gt;</literal>. The index of an array or list is always of type "
-"<literal>integer</literal> and is mapped using the <literal>&lt;list-"
-"index&gt;</literal> element. The mapped column contains sequential integers "
-"that are numbered from zero by default."
-msgstr ""
-"所有的集合映射，除了 set 和 bag 语义的以外，都需要指定一个集合表的<emphasis>"
-"索引字段（index column）</emphasis> — 用于对应到数组索引，或者 "
-"<literal>List</literal> 的索引，或者 <literal>Map</literal> 的关键字。通过 "
-"<literal>&lt;map-key&gt;</literal>，<literal>Map</literal> 的索引可以是任何基"
-"础类型；若通过 <literal>&lt;map-key-many-to-many&gt;</literal>，它也可以是一"
-"个实体引用；若通过 <literal>&lt;composite-map-key&gt;</literal>，它还可以是一"
-"个组合类型。数组或列表的索引必须是 <literal>integer</literal> 类型，并且使用 "
-"<literal>&lt;list-index&gt;</literal> 元素定义映射。被映射的字段包含有顺序排"
-"列的整数（默认从 0 开始）。 "
+msgid "All collection mappings, except those with set and bag semantics, need an <emphasis>index column</emphasis> in the collection table. An index column is a column that maps to an array index, or <literal>List</literal> index, or <literal>Map</literal> key. The index of a <literal>Map</literal> may be of any basic type, mapped with <literal>&lt;map-key&gt;</literal>. It can be an entity reference mapped with <literal>&lt;map-key-many-to-many&gt;</literal>, or it can be a composite type mapped with <literal>&lt;composite-map-key&gt;</literal>. The index of an array or list is always of type <literal>integer</literal> and is mapped using the <literal>&lt;list-index&gt;</literal> element. The mapped column contains sequential integers that are numbered from zero by default."
+msgstr "所有的集合映射，除了 set 和 bag 语义的以外，都需要指定一个集合表的<emphasis>索引字段（index column）</emphasis> — 用于对应到数组索引，或者 <literal>List</literal> 的索引，或者 <literal>Map</literal> 的关键字。通过 <literal>&lt;map-key&gt;</literal>，<literal>Map</literal> 的索引可以是任何基础类型；若通过 <literal>&lt;map-key-many-to-many&gt;</literal>，它也可以是一个实体引用；若通过 <literal>&lt;composite-map-key&gt;</literal>，它还可以是一个组合类型。数组或列表的索引必须是 <literal>integer</literal> 类型，并且使用 <literal>&lt;list-index&gt;</literal> 元素定义映射。被映射的字段包含有顺序排列的整数（默认从 0 开始）。 "
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"<literal>column_name</literal> (required): the name of the column holding "
-"the collection index values."
+msgid "<literal>column_name</literal> (required): the name of the column holding the collection index values."
 msgstr "<literal>column_name</literal>（必需）：持有集合索引值的字段的名称。 "
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"<literal>base</literal> (optional - defaults to <literal>0</literal>): the "
-"value of the index column that corresponds to the first element of the list "
-"or array."
-msgstr ""
-"<literal>base</literal>（可选 — 默认为 <literal>0</literal>）对应列表或队列的"
-"第一个元素的索引字段的值。"
+msgid "<literal>base</literal> (optional - defaults to <literal>0</literal>): the value of the index column that corresponds to the first element of the list or array."
+msgstr "<literal>base</literal>（可选 — 默认为 <literal>0</literal>）对应列表或队列的第一个元素的索引字段的值。"
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"<literal>column</literal> (optional): the name of the column holding the "
-"collection index values."
+msgid "<literal>column</literal> (optional): the name of the column holding the collection index values."
 msgstr "<literal>column</literal>（可选）：持有集合索引值的字段的名称。"
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"<literal>formula</literal> (optional): a SQL formula used to evaluate the "
-"key of the map."
+msgid "<literal>formula</literal> (optional): a SQL formula used to evaluate the key of the map."
 msgstr "<literal>formula</literal>（可选）：用于对表键求值的 SQL 公式。"
 
 #. Tag: para
@@ -444,76 +221,47 @@ msgstr "<literal>type</literal>（必需）：映射键的类型。 "
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"<literal>column</literal> (optional): the name of the foreign key column for "
-"the collection index values."
+msgid "<literal>column</literal> (optional): the name of the foreign key column for the collection index values."
 msgstr "<literal>column</literal>（可选）：用于集合索引值的外键字段的名称。"
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"<literal>formula</literal> (optional): a SQ formula used to evaluate the "
-"foreign key of the map key."
-msgstr ""
-"<literal>formula</literal>（可选）：用于对映射键的外键求值的 SQL 公式。"
+msgid "<literal>formula</literal> (optional): a SQ formula used to evaluate the foreign key of the map key."
+msgstr "<literal>formula</literal>（可选）：用于对映射键的外键求值的 SQL 公式。"
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"<literal>class</literal> (required): the entity class used as the map key."
+msgid "<literal>class</literal> (required): the entity class used as the map key."
 msgstr "<literal>class</literal>（必需）：用作映射键的实体类的名称。 "
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"If your table does not have an index column, and you still wish to use "
-"<literal>List</literal> as the property type, you can map the property as a "
-"Hibernate <emphasis>&lt;bag&gt;</emphasis>. A bag does not retain its order "
-"when it is retrieved from the database, but it can be optionally sorted or "
-"ordered."
-msgstr ""
-"假若你的表没有一个索引字段，当你仍然希望使用 <literal>List</literal> 作为属性"
-"类型，你应该把此属性映射为 Hibernate <emphasis>&lt;bag&gt;</emphasis>。从数据"
-"库中获取的时候，bag 不维护其顺序，但也可选择性的进行排序。 "
+msgid "If your table does not have an index column, and you still wish to use <literal>List</literal> as the property type, you can map the property as a Hibernate <emphasis>&lt;bag&gt;</emphasis>. A bag does not retain its order when it is retrieved from the database, but it can be optionally sorted or ordered."
+msgstr "假若你的表没有一个索引字段，当你仍然希望使用 <literal>List</literal> 作为属性类型，你应该把此属性映射为 Hibernate <emphasis>&lt;bag&gt;</emphasis>。从数据库中获取的时候，bag 不维护其顺序，但也可选择性的进行排序。 "
 
 #. Tag: title
 #, no-c-format
 msgid "Collections of values and many-to-many associations"
-msgstr ""
-"值集合于多对多关联（Collections of values and many-to-many associations）"
+msgstr "值集合于多对多关联（Collections of values and many-to-many associations）"
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"Any collection of values or many-to-many associations requires a dedicated "
-"<emphasis>collection table</emphasis> with a foreign key column or columns, "
-"<emphasis>collection element column</emphasis> or columns, and possibly an "
-"index column or columns."
-msgstr ""
-"任何值集合或者多对多关联需要专用的具有一个或多个外键字段的 "
-"<emphasis>collection table</emphasis>、一个或多个 <emphasis>collection "
-"element column</emphasis>，以及还可能有一个或多个索引字段。 "
+msgid "Any collection of values or many-to-many associations requires a dedicated <emphasis>collection table</emphasis> with a foreign key column or columns, <emphasis>collection element column</emphasis> or columns, and possibly an index column or columns."
+msgstr "任何值集合或者多对多关联需要专用的具有一个或多个外键字段的 <emphasis>collection table</emphasis>、一个或多个 <emphasis>collection element column</emphasis>，以及还可能有一个或多个索引字段。 "
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"For a collection of values use the <literal>&lt;element&gt;</literal> tag. "
-"For example:"
-msgstr ""
-"对于一个值集合，我们使用 <literal>&lt;element&gt;</literal> 标签。例如："
+msgid "For a collection of values use the <literal>&lt;element&gt;</literal> tag. For example:"
+msgstr "对于一个值集合，我们使用 <literal>&lt;element&gt;</literal> 标签。例如："
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"<literal>column</literal> (optional): the name of the column holding the "
-"collection element values."
+msgid "<literal>column</literal> (optional): the name of the column holding the collection element values."
 msgstr "<literal>column</literal>（可选）：持有集合元素值的字段的名称。"
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"<literal>formula</literal> (optional): an SQL formula used to evaluate the "
-"element."
+msgid "<literal>formula</literal> (optional): an SQL formula used to evaluate the element."
 msgstr "<literal>formula</literal>（可选）：用于对元素求值的 SQL 公式。"
 
 #. Tag: para
@@ -523,25 +271,17 @@ msgstr "<literal>type</literal>（必需）：集合元素的类型。 "
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"A <emphasis>many-to-many association</emphasis> is specified using the "
-"<literal>&lt;many-to-many&gt;</literal> element."
-msgstr ""
-"用 <literal>&lt;many-to-many&gt;</literal> 元素指定 <emphasis>many-to-many "
-"association</emphasis>。"
+msgid "A <emphasis>many-to-many association</emphasis> is specified using the <literal>&lt;many-to-many&gt;</literal> element."
+msgstr "用 <literal>&lt;many-to-many&gt;</literal> 元素指定 <emphasis>many-to-many association</emphasis>。"
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"<literal>column</literal> (optional): the name of the element foreign key "
-"column."
+msgid "<literal>column</literal> (optional): the name of the element foreign key column."
 msgstr "<literal>column</literal>（必需）：元素外键字段的名称。 "
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"<literal>formula</literal> (optional): an SQL formula used to evaluate the "
-"element foreign key value."
+msgid "<literal>formula</literal> (optional): an SQL formula used to evaluate the element foreign key value."
 msgstr "<literal>formula</literal>（可选）：用于对元素外键值求值的 SQL 公式。"
 
 #. Tag: para
@@ -551,61 +291,28 @@ msgstr "<literal>class</literal>（必需）：被关联类的名称。 "
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"<literal>fetch</literal> (optional - defaults to <literal>join</literal>): "
-"enables outer-join or sequential select fetching for this association. This "
-"is a special case; for full eager fetching in a single <literal>SELECT</"
-"literal> of an entity and its many-to-many relationships to other entities, "
-"you would enable <literal>join</literal> fetching,not only of the collection "
-"itself, but also with this attribute on the <literal>&lt;many-to-many&gt;</"
-"literal> nested element."
-msgstr ""
-"<literal>fetch</literal>（可选 - 缺省为 <literal>join</literal>）： 为这个关"
-"联启用外连接或序列性选择抓取。这是一个特例。对于在单个 <literal>SELECT</"
-"literal> 里进行完全的 eager fetching 以及使 <literal>&lt;many-to-many&gt;</"
-"literal> n用多对多关联，你可以启用 <literal>join</literal> fetching，这不仅是"
-"对于集合本身，也对 <literal>&lt;many-to-many&gt;</literal> 嵌套元素的属性。"
+msgid "<literal>fetch</literal> (optional - defaults to <literal>join</literal>): enables outer-join or sequential select fetching for this association. This is a special case; for full eager fetching in a single <literal>SELECT</literal> of an entity and its many-to-many relationships to other entities, you would enable <literal>join</literal> fetching,not only of the collection itself, but also with this attribute on the <literal>&lt;many-to-many&gt;</literal> nested element."
+msgstr "<literal>fetch</literal>（可选 - 缺省为 <literal>join</literal>）： 为这个关联启用外连接或序列性选择抓取。这是一个特例。对于在单个 <literal>SELECT</literal> 里进行完全的 eager fetching 以及使 <literal>&lt;many-to-many&gt;</literal> n用多对多关联，你可以启用 <literal>join</literal> fetching，这不仅是对于集合本身，也对 <literal>&lt;many-to-many&gt;</literal> 嵌套元素的属性。"
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"<literal>unique</literal> (optional): enables the DDL generation of a unique "
-"constraint for the foreign-key column. This makes the association "
-"multiplicity effectively one-to-many."
-msgstr ""
-"<literal>unique</literal>（可选）：未外键字段启用唯一约束的 DDL 生成。这使得"
-"关联一对多的多样性更为有效。"
+msgid "<literal>unique</literal> (optional): enables the DDL generation of a unique constraint for the foreign-key column. This makes the association multiplicity effectively one-to-many."
+msgstr "<literal>unique</literal>（可选）：未外键字段启用唯一约束的 DDL 生成。这使得关联一对多的多样性更为有效。"
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"<literal>not-found</literal> (optional - defaults to <literal>exception</"
-"literal>): specifies how foreign keys that reference missing rows will be "
-"handled: <literal>ignore</literal> will treat a missing row as a null "
-"association."
-msgstr ""
-"<literal>not-found</literal>（可选 - 默认为 <literal>exception</literal>）："
-"指明若缓存的标示值关联的行缺失，该如何处理：<literal>ignore</literal> 会把缺"
-"失的行作为一个空关联处理。 "
+msgid "<literal>not-found</literal> (optional - defaults to <literal>exception</literal>): specifies how foreign keys that reference missing rows will be handled: <literal>ignore</literal> will treat a missing row as a null association."
+msgstr "<literal>not-found</literal>（可选 - 默认为 <literal>exception</literal>）：指明若缓存的标示值关联的行缺失，该如何处理：<literal>ignore</literal> 会把缺失的行作为一个空关联处理。 "
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"<literal>entity-name</literal> (optional): the entity name of the associated "
-"class, as an alternative to <literal>class</literal>."
-msgstr ""
-"<literal>entity-name</literal>（可选）：被关联的类的实体名，作为 "
-"<literal>class</literal> 的替代。 "
+msgid "<literal>entity-name</literal> (optional): the entity name of the associated class, as an alternative to <literal>class</literal>."
+msgstr "<literal>entity-name</literal>（可选）：被关联的类的实体名，作为 <literal>class</literal> 的替代。 "
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"<literal>property-ref</literal> (optional): the name of a property of the "
-"associated class that is joined to this foreign key. If not specified, the "
-"primary key of the associated class is used."
-msgstr ""
-"<literal>property-ref</literal>（可选）：连接至这个外键的关联类的属性名称。如"
-"果未指定，关联类的主键将被使用。"
+msgid "<literal>property-ref</literal> (optional): the name of a property of the associated class that is joined to this foreign key. If not specified, the primary key of the associated class is used."
+msgstr "<literal>property-ref</literal>（可选）：连接至这个外键的关联类的属性名称。如果未指定，关联类的主键将被使用。"
 
 #. Tag: para
 #, no-c-format
@@ -619,19 +326,13 @@ msgstr "一系列字符串："
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"A bag containing integers with an iteration order determined by the "
-"<literal>order-by</literal> attribute:"
-msgstr ""
-"包含一组整数的 bag（还设置了 <literal>order-by</literal> 参数指定了迭代的顺"
-"序）： "
+msgid "A bag containing integers with an iteration order determined by the <literal>order-by</literal> attribute:"
+msgstr "包含一组整数的 bag（还设置了 <literal>order-by</literal> 参数指定了迭代的顺序）： "
 
 #. Tag: para
 #, no-c-format
 msgid "An array of entities, in this case, a many-to-many association:"
-msgstr ""
-"一个实体数组，在这个案例中是一个多对多的关联（注意这里的实体是自动管理生命周"
-"期的对象（lifecycle objects），<literal>cascade=\"all\"</literal>）： "
+msgstr "一个实体数组，在这个案例中是一个多对多的关联（注意这里的实体是自动管理生命周期的对象（lifecycle objects），<literal>cascade=\"all\"</literal>）： "
 
 #. Tag: para
 #, no-c-format
@@ -650,88 +351,43 @@ msgstr "一对多关联（One-to-many Associations）"
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"A <emphasis>one-to-many association</emphasis> links the tables of two "
-"classes via a foreign key with no intervening collection table. This mapping "
-"loses certain semantics of normal Java collections:"
-msgstr ""
-"<emphasis>一对多关联</emphasis><emphasis>通过外键</emphasis>连接两个类对应的"
-"表，而没有中间集合表。 这个关系模型失去了一些 Java 集合的语义："
+msgid "A <emphasis>one-to-many association</emphasis> links the tables of two classes via a foreign key with no intervening collection table. This mapping loses certain semantics of normal Java collections:"
+msgstr "<emphasis>一对多关联</emphasis><emphasis>通过外键</emphasis>连接两个类对应的表，而没有中间集合表。 这个关系模型失去了一些 Java 集合的语义："
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"An instance of the contained entity class cannot belong to more than one "
-"instance of the collection."
+msgid "An instance of the contained entity class cannot belong to more than one instance of the collection."
 msgstr "一个被包含的实体的实例只能被包含在一个集合的实例中。"
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"An instance of the contained entity class cannot appear at more than one "
-"value of the collection index."
+msgid "An instance of the contained entity class cannot appear at more than one value of the collection index."
 msgstr "一个被包含的实体的实例只能对应于集合索引的一个值中。"
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"An association from <literal>Product</literal> to <literal>Part</literal> "
-"requires the existence of a foreign key column and possibly an index column "
-"to the <literal>Part</literal> table. A <literal>&lt;one-to-many&gt;</"
-"literal> tag indicates that this is a one-to-many association."
-msgstr ""
-"一个从 <literal>Product</literal> 到 <literal>Part</literal> 的关联需要关键字"
-"字段，可能还有一个索引字段指向 <literal>Part</literal> 所对应的表。"
-"<literal>&lt;one-to-many&gt;</literal> 标记指明了一个一对多的关联。 "
+msgid "An association from <literal>Product</literal> to <literal>Part</literal> requires the existence of a foreign key column and possibly an index column to the <literal>Part</literal> table. A <literal>&lt;one-to-many&gt;</literal> tag indicates that this is a one-to-many association."
+msgstr "一个从 <literal>Product</literal> 到 <literal>Part</literal> 的关联需要关键字字段，可能还有一个索引字段指向 <literal>Part</literal> 所对应的表。<literal>&lt;one-to-many&gt;</literal> 标记指明了一个一对多的关联。 "
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"<literal>not-found</literal> (optional - defaults to <literal>exception</"
-"literal>): specifies how cached identifiers that reference missing rows will "
-"be handled. <literal>ignore</literal> will treat a missing row as a null "
-"association."
-msgstr ""
-"<literal>not-found</literal>（可选 - 默认为<literal>exception</literal>）：指"
-"明若缓存的标示值关联的行缺失，该如何处理：<literal>ignore</literal> 会把缺失"
-"的行作为一个空关联处理。 "
+msgid "<literal>not-found</literal> (optional - defaults to <literal>exception</literal>): specifies how cached identifiers that reference missing rows will be handled. <literal>ignore</literal> will treat a missing row as a null association."
+msgstr "<literal>not-found</literal>（可选 - 默认为<literal>exception</literal>）：指明若缓存的标示值关联的行缺失，该如何处理：<literal>ignore</literal> 会把缺失的行作为一个空关联处理。 "
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"The <literal>&lt;one-to-many&gt;</literal> element does not need to declare "
-"any columns. Nor is it necessary to specify the <literal>table</literal> "
-"name anywhere."
-msgstr ""
-"注意：<literal>&lt;one-to-many&gt;</literal> 元素不需要定义任何字段。也不需要"
-"指定表名。 "
+msgid "The <literal>&lt;one-to-many&gt;</literal> element does not need to declare any columns. Nor is it necessary to specify the <literal>table</literal> name anywhere."
+msgstr "注意：<literal>&lt;one-to-many&gt;</literal> 元素不需要定义任何字段。也不需要指定表名。 "
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"If the foreign key column of a <literal>&lt;one-to-many&gt;</literal> "
-"association is declared <literal>NOT NULL</literal>, you must declare the "
-"<literal>&lt;key&gt;</literal> mapping <literal>not-null=\"true\"</literal> "
-"or <emphasis>use a bidirectional association</emphasis> with the collection "
-"mapping marked <literal>inverse=\"true\"</literal>. See the discussion of "
-"bidirectional associations later in this chapter for more information."
-msgstr ""
-"<emphasis>重要提示</emphasis>：如果<literal>一对多</literal>关联中的外键字段"
-"定义成 <literal>NOT NULL</literal>，你必须把 <literal>&lt;key&gt;</literal> "
-"映射声明为 <literal>not-null=\"true\"</literal>，或者使用<emphasis>双向关联</"
-"emphasis>，并且标明 <literal>inverse=\"true\"</literal>。参阅本章后面关于双向"
-"关联的讨论。 "
+msgid "If the foreign key column of a <literal>&lt;one-to-many&gt;</literal> association is declared <literal>NOT NULL</literal>, you must declare the <literal>&lt;key&gt;</literal> mapping <literal>not-null=\"true\"</literal> or <emphasis>use a bidirectional association</emphasis> with the collection mapping marked <literal>inverse=\"true\"</literal>. See the discussion of bidirectional associations later in this chapter for more information."
+msgstr "<emphasis>重要提示</emphasis>：如果<literal>一对多</literal>关联中的外键字段定义成 <literal>NOT NULL</literal>，你必须把 <literal>&lt;key&gt;</literal> 映射声明为 <literal>not-null=\"true\"</literal>，或者使用<emphasis>双向关联</emphasis>，并且标明 <literal>inverse=\"true\"</literal>。参阅本章后面关于双向关联的讨论。 "
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"The following example shows a map of <literal>Part</literal> entities by "
-"name, where <literal>partName</literal> is a persistent property of "
-"<literal>Part</literal>. Notice the use of a formula-based index:"
-msgstr ""
-"下面的例子展示一个 <literal>Part</literal> 实体的 map，把 name 作为关键字。"
-"（ <literal>partName</literal> 是 <literal>Part</literal> 的持久化属性）。注"
-"意其中的基于公式的索引的用法。 "
+msgid "The following example shows a map of <literal>Part</literal> entities by name, where <literal>partName</literal> is a persistent property of <literal>Part</literal>. Notice the use of a formula-based index:"
+msgstr "下面的例子展示一个 <literal>Part</literal> 实体的 map，把 name 作为关键字。（ <literal>partName</literal> 是 <literal>Part</literal> 的持久化属性）。注意其中的基于公式的索引的用法。 "
 
 #. Tag: title
 #, no-c-format
@@ -745,49 +401,23 @@ msgstr "有序集合（Sorted collections）"
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"Hibernate supports collections implementing <literal>java.util.SortedMap</"
-"literal> and <literal>java.util.SortedSet</literal>. You must specify a "
-"comparator in the mapping file:"
-msgstr ""
-"Hibernate 支持实现 <literal>java.util.SortedMap</literal> 和 <literal>java."
-"util.SortedSet</literal> 的集合。你必须在映射文件中指定一个比较器："
+msgid "Hibernate supports collections implementing <literal>java.util.SortedMap</literal> and <literal>java.util.SortedSet</literal>. You must specify a comparator in the mapping file:"
+msgstr "Hibernate 支持实现 <literal>java.util.SortedMap</literal> 和 <literal>java.util.SortedSet</literal> 的集合。你必须在映射文件中指定一个比较器："
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"Allowed values of the <literal>sort</literal> attribute are "
-"<literal>unsorted</literal>, <literal>natural</literal> and the name of a "
-"class implementing <literal>java.util.Comparator</literal>."
-msgstr ""
-"<literal>sort</literal> 属性中允许的值包括 <literal>unsorted</literal>，"
-"<literal>natural</literal> 和某个实现了 <literal>java.util.Comparator</"
-"literal> 的类的名称。"
+msgid "Allowed values of the <literal>sort</literal> attribute are <literal>unsorted</literal>, <literal>natural</literal> and the name of a class implementing <literal>java.util.Comparator</literal>."
+msgstr "<literal>sort</literal> 属性中允许的值包括 <literal>unsorted</literal>，<literal>natural</literal> 和某个实现了 <literal>java.util.Comparator</literal> 的类的名称。"
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"Sorted collections actually behave like <literal>java.util.TreeSet</literal> "
-"or <literal>java.util.TreeMap</literal>."
-msgstr ""
-"分类集合的行为事实上象 <literal>java.util.TreeSet</literal> 或者 "
-"<literal>java.util.TreeMap</literal>。"
+msgid "Sorted collections actually behave like <literal>java.util.TreeSet</literal> or <literal>java.util.TreeMap</literal>."
+msgstr "分类集合的行为事实上象 <literal>java.util.TreeSet</literal> 或者 <literal>java.util.TreeMap</literal>。"
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"If you want the database itself to order the collection elements, use the "
-"<literal>order-by</literal> attribute of <literal>set</literal>, "
-"<literal>bag</literal> or <literal>map</literal> mappings. This solution is "
-"only available under JDK 1.4 or higher and is implemented using "
-"<literal>LinkedHashSet</literal> or <literal>LinkedHashMap</literal>. This "
-"performs the ordering in the SQL query and not in the memory."
-msgstr ""
-"如果你希望数据库自己对集合元素排序，可以利用 <literal>set</literal>，"
-"<literal>bag</literal> 或者 <literal>map</literal> 映射中的 <literal>order-"
-"by</literal> 属性。这个解决方案只能在 jdk1.4 或者更高的 jdk 版本中才可以实现"
-"（通过 LinkedHashSet 或者 LinkedHashMap 实现）。它是在 SQL 查询中完成排序，而"
-"不是在内存中。 "
+msgid "If you want the database itself to order the collection elements, use the <literal>order-by</literal> attribute of <literal>set</literal>, <literal>bag</literal> or <literal>map</literal> mappings. This solution is only available under JDK 1.4 or higher and is implemented using <literal>LinkedHashSet</literal> or <literal>LinkedHashMap</literal>. This performs the ordering in the SQL query and not in the memory."
+msgstr "如果你希望数据库自己对集合元素排序，可以利用 <literal>set</literal>，<literal>bag</literal> 或者 <literal>map</literal> 映射中的 <literal>order-by</literal> 属性。这个解决方案只能在 jdk1.4 或者更高的 jdk 版本中才可以实现（通过 LinkedHashSet 或者 LinkedHashMap 实现）。它是在 SQL 查询中完成排序，而不是在内存中。 "
 
 #. Tag: title
 #, no-c-format
@@ -796,20 +426,13 @@ msgstr "注意"
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"The value of the <literal>order-by</literal> attribute is an SQL ordering, "
-"not an HQL ordering."
-msgstr ""
-"注意：这个 <literal>order-by</literal> 属性的值是一个 SQL 排序子句而不是 HQL "
-"的。"
+msgid "The value of the <literal>order-by</literal> attribute is an SQL ordering, not an HQL ordering."
+msgstr "注意：这个 <literal>order-by</literal> 属性的值是一个 SQL 排序子句而不是 HQL 的。"
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"Associations can even be sorted by arbitrary criteria at runtime using a "
-"collection <literal>filter()</literal>:"
-msgstr ""
-"关联还可以在运行时使用集合 <literal>filter()</literal> 根据任意的条件来排序："
+msgid "Associations can even be sorted by arbitrary criteria at runtime using a collection <literal>filter()</literal>:"
+msgstr "关联还可以在运行时使用集合 <literal>filter()</literal> 根据任意的条件来排序："
 
 #. Tag: title
 #, no-c-format
@@ -818,13 +441,8 @@ msgstr "双向关联（Bidirectional associations）"
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"A <emphasis>bidirectional association</emphasis> allows navigation from both "
-"\"ends\" of the association. Two kinds of bidirectional association are "
-"supported:"
-msgstr ""
-"<emphasis>双向关联</emphasis>允许通过关联的任一端访问另外一端。在 Hibernate "
-"中，支持两种类型的双向关联： "
+msgid "A <emphasis>bidirectional association</emphasis> allows navigation from both \"ends\" of the association. Two kinds of bidirectional association are supported:"
+msgstr "<emphasis>双向关联</emphasis>允许通过关联的任一端访问另外一端。在 Hibernate 中，支持两种类型的双向关联： "
 
 #. Tag: term
 #, no-c-format
@@ -848,65 +466,33 @@ msgstr "两端都是 set 或 bag 值"
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"You can specify a bidirectional many-to-many association by mapping two many-"
-"to-many associations to the same database table and declaring one end as "
-"<emphasis>inverse</emphasis>. You cannot select an indexed collection."
-msgstr ""
-"要建立一个双向的多对多关联，只需要映射两个 many-to-many 关联到同一个数据库表"
-"中，并再定义其中的一端为 <emphasis>inverse</emphasis>（使用哪一端要根据你的选"
-"择，但它不能是一个索引集合）。 "
+msgid "You can specify a bidirectional many-to-many association by mapping two many-to-many associations to the same database table and declaring one end as <emphasis>inverse</emphasis>. You cannot select an indexed collection."
+msgstr "要建立一个双向的多对多关联，只需要映射两个 many-to-many 关联到同一个数据库表中，并再定义其中的一端为 <emphasis>inverse</emphasis>（使用哪一端要根据你的选择，但它不能是一个索引集合）。 "
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"Here is an example of a bidirectional many-to-many association that "
-"illustrates how each category can have many items and each item can be in "
-"many categories:"
-msgstr ""
-"这里有一个 many-to-many 的双向关联的例子;每一个 category 都可以有很多 items，"
-"每一个 items 可以属于很多 categories： "
+msgid "Here is an example of a bidirectional many-to-many association that illustrates how each category can have many items and each item can be in many categories:"
+msgstr "这里有一个 many-to-many 的双向关联的例子;每一个 category 都可以有很多 items，每一个 items 可以属于很多 categories： "
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"Changes made only to the inverse end of the association are <emphasis>not</"
-"emphasis> persisted. This means that Hibernate has two representations in "
-"memory for every bidirectional association: one link from A to B and another "
-"link from B to A. This is easier to understand if you think about the Java "
-"object model and how a many-to-many relationship in Javais created:"
-msgstr ""
-"如果只对关联的反向端进行了改变，这个改变<emphasis>不会</emphasis>被持久化。 "
-"这表示 Hibernate 为每个双向关联在内存中存在两次表现，一个从 A 连接到 B，另一"
-"个从 B 连接到 A。如果你回想一下 Java 对象模型，我们是如何在 Java 中创建多对多"
-"关系的，这可以让你更容易理解： "
+msgid "Changes made only to the inverse end of the association are <emphasis>not</emphasis> persisted. This means that Hibernate has two representations in memory for every bidirectional association: one link from A to B and another link from B to A. This is easier to understand if you think about the Java object model and how a many-to-many relationship in Javais created:"
+msgstr "如果只对关联的反向端进行了改变，这个改变<emphasis>不会</emphasis>被持久化。 这表示 Hibernate 为每个双向关联在内存中存在两次表现，一个从 A 连接到 B，另一个从 B 连接到 A。如果你回想一下 Java 对象模型，我们是如何在 Java 中创建多对多关系的，这可以让你更容易理解： "
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"The non-inverse side is used to save the in-memory representation to the "
-"database."
+msgid "The non-inverse side is used to save the in-memory representation to the database."
 msgstr "非反向端用于把内存中的表示保存到数据库中。"
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"You can define a bidirectional one-to-many association by mapping a one-to-"
-"many association to the same table column(s) as a many-to-one association "
-"and declaring the many-valued end <literal>inverse=\"true\"</literal>."
-msgstr ""
-"要建立一个一对多的双向关联，你可以通过把一个一对多关联，作为一个多对一关联映"
-"射到到同一张表的字段上，并且在\"多\"的那一端定义 <literal>inverse=\"true\"</"
-"literal>。 "
+msgid "You can define a bidirectional one-to-many association by mapping a one-to-many association to the same table column(s) as a many-to-one association and declaring the many-valued end <literal>inverse=\"true\"</literal>."
+msgstr "要建立一个一对多的双向关联，你可以通过把一个一对多关联，作为一个多对一关联映射到到同一张表的字段上，并且在\"多\"的那一端定义 <literal>inverse=\"true\"</literal>。 "
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"Mapping one end of an association with <literal>inverse=\"true\"</literal> "
-"does not affect the operation of cascades as these are orthogonal concepts."
-msgstr ""
-"在“一”这一端定义 <literal>inverse=\"true\"</literal> 不会影响级联操作，二者是"
-"正交的概念。"
+msgid "Mapping one end of an association with <literal>inverse=\"true\"</literal> does not affect the operation of cascades as these are orthogonal concepts."
+msgstr "在“一”这一端定义 <literal>inverse=\"true\"</literal> 不会影响级联操作，二者是正交的概念。"
 
 #. Tag: title
 #, no-c-format
@@ -915,36 +501,18 @@ msgstr "双向关联，涉及有序集合类"
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"A bidirectional association where one end is represented as a <literal>&lt;"
-"list&gt;</literal> or <literal>&lt;map&gt;</literal>, requires special "
-"consideration. If there is a property of the child class that maps to the "
-"index column you can use <literal>inverse=\"true\"</literal> on the "
-"collection mapping:"
-msgstr ""
-"对于有一端是 <literal>&lt;list&gt;</literal> 或者 <literal>&lt;map&gt;</"
-"literal> 的双向关联，需要加以特别考虑。假若子类中的一个属性映射到索引字段，没"
-"问题，我们仍然可以在集合类映射上使用 <literal>inverse=\"true\"</literal>： "
+msgid "A bidirectional association where one end is represented as a <literal>&lt;list&gt;</literal> or <literal>&lt;map&gt;</literal>, requires special consideration. If there is a property of the child class that maps to the index column you can use <literal>inverse=\"true\"</literal> on the collection mapping:"
+msgstr "对于有一端是 <literal>&lt;list&gt;</literal> 或者 <literal>&lt;map&gt;</literal> 的双向关联，需要加以特别考虑。假若子类中的一个属性映射到索引字段，没问题，我们仍然可以在集合类映射上使用 <literal>inverse=\"true\"</literal>： "
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"If there is no such property on the child class, the association cannot be "
-"considered truly bidirectional. That is, there is information available at "
-"one end of the association that is not available at the other end. In this "
-"case, you cannot map the collection <literal>inverse=\"true\"</literal>. "
-"Instead, you could use the following mapping:"
-msgstr ""
-"但是，假若子类中没有这样的属性存在，我们不能认为这个关联是真正的双向关联（信"
-"息不对称，在关联的一端有一些另外一端没有的信息）。在这种情况下，我们不能使用 "
-"<literal>inverse=\"true\"</literal>。我们需要这样用： "
+msgid "If there is no such property on the child class, the association cannot be considered truly bidirectional. That is, there is information available at one end of the association that is not available at the other end. In this case, you cannot map the collection <literal>inverse=\"true\"</literal>. Instead, you could use the following mapping:"
+msgstr "但是，假若子类中没有这样的属性存在，我们不能认为这个关联是真正的双向关联（信息不对称，在关联的一端有一些另外一端没有的信息）。在这种情况下，我们不能使用 <literal>inverse=\"true\"</literal>。我们需要这样用： "
 
 #. Tag: para
-#, fuzzy, no-c-format
-msgid ""
-"Note that in this mapping, the collection-valued end of the association is "
-"responsible for updates to the foreign key."
-msgstr "注意在这个映射中，关联中集合类\"值\"一端负责来更新外键。  "
+#, no-c-format
+msgid "Note that in this mapping, the collection-valued end of the association is responsible for updates to the foreign key."
+msgstr "注意在这个映射中，关联中集合类\"值\"一端负责来更新外键。"
 
 #. Tag: title
 #, no-c-format
@@ -953,95 +521,48 @@ msgstr "三重关联（Ternary associations）"
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"There are three possible approaches to mapping a ternary association. One "
-"approach is to use a <literal>Map</literal> with an association as its index:"
-msgstr ""
-"有三种可能的途径来映射一个三重关联。第一种是使用一个 <literal>Map</literal>，"
-"把一个关联作为其索引： "
+msgid "There are three possible approaches to mapping a ternary association. One approach is to use a <literal>Map</literal> with an association as its index:"
+msgstr "有三种可能的途径来映射一个三重关联。第一种是使用一个 <literal>Map</literal>，把一个关联作为其索引： "
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"A second approach is to remodel the association as an entity class. This is "
-"the most common approach."
-msgstr ""
-"第二种方法是简单的把关联重新建模为一个实体类。这使我们最经常使用的方法。 "
+msgid "A second approach is to remodel the association as an entity class. This is the most common approach."
+msgstr "第二种方法是简单的把关联重新建模为一个实体类。这使我们最经常使用的方法。 "
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"A final alternative is to use composite elements, which will be discussed "
-"later."
+msgid "A final alternative is to use composite elements, which will be discussed later."
 msgstr "最后一种选择是使用复合元素，我们会在后面讨论。"
 
 #. Tag: title
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "<literal>Using an &lt;idbag&gt;</literal>"
-msgstr "<literal>使用 an &lt;idbag&gt;</literal>"
+msgstr "<literal>使用 an &lt;idbag&gt;</literal> "
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"The majority of the many-to-many associations and collections of values "
-"shown previously all map to tables with composite keys, even though it has "
-"been have suggested that entities should have synthetic identifiers "
-"(surrogate keys). A pure association table does not seem to benefit much "
-"from a surrogate key, although a collection of composite values "
-"<emphasis>might</emphasis>. It is for this reason that Hibernate provides a "
-"feature that allows you to map many-to-many associations and collections of "
-"values to a table with a surrogate key."
-msgstr ""
-"如果你完全信奉我们对于“联合主键（composite keys）是个坏东西”，和“实体应该使用"
-"（无机的）自己生成的代用标识符（surrogate keys）”的观点，也许你会感到有一些奇"
-"怪，我们目前为止展示的多对多关联和值集合都是映射成为带有联合主键的表的！现"
-"在，这一点非常值得争辩；看上去一个单纯的关联表并不能从代用标识符中获得什么好"
-"处（虽然使用组合值的集合<emphasis>可能</emphasis>会获得一点好处）。不过，"
-"Hibernate 提供了一个（一点点试验性质的）功能，让你把多对多关联和值集合应得到"
-"一个使用代用标识符的表去。 "
+msgid "The majority of the many-to-many associations and collections of values shown previously all map to tables with composite keys, even though it has been have suggested that entities should have synthetic identifiers (surrogate keys). A pure association table does not seem to benefit much from a surrogate key, although a collection of composite values <emphasis>might</emphasis>. It is for this reason that Hibernate provides a feature that allows you to map many-to-many associations and collections of values to a table with a surrogate key."
+msgstr "如果你完全信奉我们对于“联合主键（composite keys）是个坏东西”，和“实体应该使用（无机的）自己生成的代用标识符（surrogate keys）”的观点，也许你会感到有一些奇怪，我们目前为止展示的多对多关联和值集合都是映射成为带有联合主键的表的！现在，这一点非常值得争辩；看上去一个单纯的关联表并不能从代用标识符中获得什么好处（虽然使用组合值的集合<emphasis>可能</emphasis>会获得一点好处）。不过，Hibernate 提供了一个（一点点试验性质的）功能，让你把多对多关联和值集合应得到一个使用代用标识符的表去。 "
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"The <literal>&lt;idbag&gt;</literal> element lets you map a <literal>List</"
-"literal> (or <literal>Collection</literal>) with bag semantics. For example:"
-msgstr ""
-"<literal>&lt;idbag&gt;</literal> 属性让你使用 bag 语义来映射一个 "
-"<literal>List</literal> （或 <literal>Collection</literal>）。 "
+msgid "The <literal>&lt;idbag&gt;</literal> element lets you map a <literal>List</literal> (or <literal>Collection</literal>) with bag semantics. For example:"
+msgstr "<literal>&lt;idbag&gt;</literal> 属性让你使用 bag 语义来映射一个 <literal>List</literal> （或 <literal>Collection</literal>）。 "
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"An <literal>&lt;idbag&gt;</literal> has a synthetic id generator, just like "
-"an entity class. A different surrogate key is assigned to each collection "
-"row. Hibernate does not, however, provide any mechanism for discovering the "
-"surrogate key value of a particular row."
-msgstr ""
-"你可以理解，<literal>&lt;idbag&gt;</literal> 人工的 id 生成器，就好像是实体类"
-"一样！集合的每一行都有一个不同的人造关键字。但是，Hibernate 没有提供任何机制"
-"来让你取得某个特定行的人造关键字。 "
+msgid "An <literal>&lt;idbag&gt;</literal> has a synthetic id generator, just like an entity class. A different surrogate key is assigned to each collection row. Hibernate does not, however, provide any mechanism for discovering the surrogate key value of a particular row."
+msgstr "你可以理解，<literal>&lt;idbag&gt;</literal> 人工的 id 生成器，就好像是实体类一样！集合的每一行都有一个不同的人造关键字。但是，Hibernate 没有提供任何机制来让你取得某个特定行的人造关键字。 "
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"The update performance of an <literal>&lt;idbag&gt;</literal> supersedes a "
-"regular <literal>&lt;bag&gt;</literal>. Hibernate can locate individual rows "
-"efficiently and update or delete them individually, similar to a list, map "
-"or set."
-msgstr ""
-"注意 <literal>&lt;idbag&gt;</literal> 的更新性能要比普通的 <literal>&lt;"
-"bag&gt;</literal> 高得多！Hibernate 可以有效的定位到不同的行，分别进行更新或"
-"删除工作，就如同处理一个 list，map 或者 set 一样。 "
+msgid "The update performance of an <literal>&lt;idbag&gt;</literal> supersedes a regular <literal>&lt;bag&gt;</literal>. Hibernate can locate individual rows efficiently and update or delete them individually, similar to a list, map or set."
+msgstr "注意 <literal>&lt;idbag&gt;</literal> 的更新性能要比普通的 <literal>&lt;bag&gt;</literal> 高得多！Hibernate 可以有效的定位到不同的行，分别进行更新或删除工作，就如同处理一个 list，map 或者 set 一样。 "
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"In the current implementation, the <literal>native</literal> identifier "
-"generation strategy is not supported for <literal>&lt;idbag&gt;</literal> "
-"collection identifiers."
-msgstr ""
-"在目前的实现中，还不支持使用 <literal>identity</literal> 标识符生成器策略来生"
-"成 <literal>&lt;idbag&gt;</literal> 集合的标识符。"
+msgid "In the current implementation, the <literal>native</literal> identifier generation strategy is not supported for <literal>&lt;idbag&gt;</literal> collection identifiers."
+msgstr "在目前的实现中，还不支持使用 <literal>identity</literal> 标识符生成器策略来生成 <literal>&lt;idbag&gt;</literal> 集合的标识符。"
 
 #. Tag: title
 #, no-c-format
@@ -1055,18 +576,13 @@ msgstr "集合例子（Collection example）。"
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"The following class has a collection of <literal>Child</literal> instances:"
+msgid "The following class has a collection of <literal>Child</literal> instances:"
 msgstr "下面的代码是用来添加一个新的 <literal>Child</literal>："
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"If each child has, at most, one parent, the most natural mapping is a one-to-"
-"many association:"
-msgstr ""
-"这个类有一个 <literal>Child</literal> 的实例集合。如果每一个子实例至多有一个"
-"父实例，那么最自然的映射是一个 one-to-many 的关联关系： "
+msgid "If each child has, at most, one parent, the most natural mapping is a one-to-many association:"
+msgstr "这个类有一个 <literal>Child</literal> 的实例集合。如果每一个子实例至多有一个父实例，那么最自然的映射是一个 one-to-many 的关联关系： "
 
 #. Tag: para
 #, no-c-format
@@ -1075,12 +591,8 @@ msgstr "在以下的表定义中反应了这个映射关系："
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"If the parent is <emphasis>required</emphasis>, use a bidirectional one-to-"
-"many association:"
-msgstr ""
-"如果父亲是<emphasis>必须</emphasis>的，那么就可以使用双向 one-to-many 的关联"
-"了："
+msgid "If the parent is <emphasis>required</emphasis>, use a bidirectional one-to-many association:"
+msgstr "如果父亲是<emphasis>必须</emphasis>的，那么就可以使用双向 one-to-many 的关联了："
 
 #. Tag: para
 #, no-c-format
@@ -1089,22 +601,13 @@ msgstr "请注意 <literal>NOT NULL</literal> 的约束:"
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"Alternatively, if this association must be unidirectional you can declare "
-"the <literal>NOT NULL</literal> constraint on the <literal>&lt;key&gt;</"
-"literal> mapping:"
-msgstr ""
-"另外，如果你绝对坚持这个关联应该是单向的，你可以对 <literal>&lt;key&gt;</"
-"literal> 映射声明 <literal>NOT NULL</literal> 约束： "
+msgid "Alternatively, if this association must be unidirectional you can declare the <literal>NOT NULL</literal> constraint on the <literal>&lt;key&gt;</literal> mapping:"
+msgstr "另外，如果你绝对坚持这个关联应该是单向的，你可以对 <literal>&lt;key&gt;</literal> 映射声明 <literal>NOT NULL</literal> 约束： "
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"On the other hand, if a child has multiple parents, a many-to-many "
-"association is appropriate:"
-msgstr ""
-"另外一方面，如果一个子实例可能有多个父实例，那么就应该使用 many-to-many 关"
-"联： "
+msgid "On the other hand, if a child has multiple parents, a many-to-many association is appropriate:"
+msgstr "另外一方面，如果一个子实例可能有多个父实例，那么就应该使用 many-to-many 关联： "
 
 #. Tag: para
 #, no-c-format
@@ -1112,13 +615,9 @@ msgid "Table definitions:"
 msgstr "表定义："
 
 #. Tag: para
-#, fuzzy, no-c-format
-msgid ""
-"For more examples and a complete explanation of a parent/child relationship "
-"mapping, see <xref linkend=\"example-parentchild\" /> for more information."
-msgstr ""
-"更多的例子，以及一个完整的父/子关系映射的排练，请参阅 <xref linkend="
-"\"example-parentchild\"/>。  "
+#, no-c-format
+msgid "For more examples and a complete explanation of a parent/child relationship mapping, see <xref linkend=\"example-parentchild\" /> for more information."
+msgstr "更多的例子，以及一个完整的父/子关系映射的排练，请参阅 <xref linkend=\"example-parentchild\" />。  "
 
 #. Tag: para
 #, no-c-format

@@ -3,6 +3,7 @@ package org.hibernate.dialect;
 import java.sql.Types;
 
 import org.hibernate.Hibernate;
+import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.NoArgSQLFunction;
 
 /**
@@ -41,7 +42,6 @@ public class Ingres9Dialect extends IngresDialect {
 	 */
 	protected void registerDateTimeColumnTypes() {
 		registerColumnType(Types.DATE, "ansidate");
-		//registerColumnType(Types.TIME, "time with time zone");
 		registerColumnType(Types.TIMESTAMP, "timestamp(9) with time zone");
 	}
 
@@ -126,7 +126,7 @@ public class Ingres9Dialect extends IngresDialect {
 	}
 
 	/**
-	 * Retrieve the command used to retrieve the current timestamp from the
+	 * Retrieve the command used to retrieve the current timestammp from the
 	 * database.
 	 * 
 	 * @return The command.
@@ -189,7 +189,7 @@ public class Ingres9Dialect extends IngresDialect {
 	}
 
 	/**
-	 * Does this dialect support bind variables (i.e., prepared statement
+	 * Does this dialect support bind variables (i.e., prepared statememnt
 	 * parameters) for its limit/offset?
 	 * 
 	 * @return false
@@ -199,17 +199,29 @@ public class Ingres9Dialect extends IngresDialect {
 	}
 
 	/**
+	 * Does the <tt>LIMIT</tt> clause take a "maximum" row number instead
+	 * of a total number of returned rows?
+	 */
+	public boolean useMaxForLimit() {
+		return false;
+	}
+
+	/**
 	 * Add a <tt>LIMIT</tt> clause to the given SQL <tt>SELECT</tt>
 	 * 
 	 * @return the modified SQL
 	 */
 	public String getLimitString(String querySelect, int offset, int limit) {
-		StringBuffer sb = new StringBuffer(querySelect.length() + 16);
-		sb.append(querySelect.trim()).insert(6, " first " + limit);
+        StringBuffer soff = new StringBuffer(" offset " + offset);
+        StringBuffer slim = new StringBuffer(" fetch first " + limit + " rows only");
+		StringBuffer sb = new StringBuffer(querySelect.length() +
+            soff.length() + slim.length()).append(querySelect);
 		if (offset > 0) {
-			sb.append(" offset " + offset);
+			sb.append(soff);
 		}
+        if (limit > 0) {
+            sb.append(slim);
+        }
 		return sb.toString();
 	}
-
 }

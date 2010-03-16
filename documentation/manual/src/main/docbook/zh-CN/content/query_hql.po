@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Collection_Mapping\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
 "POT-Creation-Date: 2010-02-11T05:38:15\n"
-"PO-Revision-Date: 2009-12-07 21:13+1000\n"
+"PO-Revision-Date: 2010-03-16 10:03+1000\n"
 "Last-Translator: Xi HUANG <xhuang@redhat.com>\n"
 "Language-Team:  <en@li.org>\n"
 "MIME-Version: 1.0\n"
@@ -21,14 +21,8 @@ msgstr "HQL: Hibernate 查询语言"
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"Hibernate uses a powerful query language (HQL) that is similar in appearance "
-"to SQL. Compared with SQL, however, HQL is fully object-oriented and "
-"understands notions like inheritance, polymorphism and association."
-msgstr ""
-"Hibernate 配备了一种非常强大的查询语言，这种语言看上去很像 SQL。但是不要被语"
-"法结构上的相似所迷惑，HQL 是非常有意识的被设计为完全面向对象的查询，它可以理"
-"解如继承、多态和关联之类的概念。 "
+msgid "Hibernate uses a powerful query language (HQL) that is similar in appearance to SQL. Compared with SQL, however, HQL is fully object-oriented and understands notions like inheritance, polymorphism and association."
+msgstr "Hibernate 配备了一种非常强大的查询语言，这种语言看上去很像 SQL。但是不要被语法结构上的相似所迷惑，HQL 是非常有意识的被设计为完全面向对象的查询，它可以理解如继承、多态和关联之类的概念。 "
 
 #. Tag: title
 #, no-c-format
@@ -37,29 +31,13 @@ msgstr "大小写敏感性问题"
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"With the exception of names of Java classes and properties, queries are case-"
-"insensitive. So <literal>SeLeCT</literal> is the same as <literal>sELEct</"
-"literal> is the same as <literal>SELECT</literal>, but <literal>org."
-"hibernate.eg.FOO</literal> is not <literal>org.hibernate.eg.Foo</literal>, "
-"and <literal>foo.barSet</literal> is not <literal>foo.BARSET</literal>."
-msgstr ""
-"除了 Java 类与属性的名称外，查询语句对大小写并不敏感。 所以 <literal>SeLeCT</"
-"literal> 与 <literal>sELEct</literal> 以及 <literal>SELECT</literal> 是相同"
-"的，但是 <literal>org.hibernate.eg.FOO</literal> 并不等价于 <literal>org."
-"hibernate.eg.Foo</literal> 并且 <literal>foo.barSet</literal> 也不等价于 "
-"<literal>foo.BARSET</literal>。 "
+msgid "With the exception of names of Java classes and properties, queries are case-insensitive. So <literal>SeLeCT</literal> is the same as <literal>sELEct</literal> is the same as <literal>SELECT</literal>, but <literal>org.hibernate.eg.FOO</literal> is not <literal>org.hibernate.eg.Foo</literal>, and <literal>foo.barSet</literal> is not <literal>foo.BARSET</literal>."
+msgstr "除了 Java 类与属性的名称外，查询语句对大小写并不敏感。 所以 <literal>SeLeCT</literal> 与 <literal>sELEct</literal> 以及 <literal>SELECT</literal> 是相同的，但是 <literal>org.hibernate.eg.FOO</literal> 并不等价于 <literal>org.hibernate.eg.Foo</literal> 并且 <literal>foo.barSet</literal> 也不等价于 <literal>foo.BARSET</literal>。 "
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"This manual uses lowercase HQL keywords. Some users find queries with "
-"uppercase keywords more readable, but this convention is unsuitable for "
-"queries embedded in Java code."
-msgstr ""
-"本手册中的 HQL 关键字将使用小写字母。很多用户发现使用完全大写的关键字会使查询"
-"语句的可读性更强，但我们发现，当把查询语句嵌入到 Java 语句中的时候使用大写关"
-"键字比较难看。"
+msgid "This manual uses lowercase HQL keywords. Some users find queries with uppercase keywords more readable, but this convention is unsuitable for queries embedded in Java code."
+msgstr "本手册中的 HQL 关键字将使用小写字母。很多用户发现使用完全大写的关键字会使查询语句的可读性更强，但我们发现，当把查询语句嵌入到 Java 语句中的时候使用大写关键字比较难看。"
 
 #. Tag: title
 #, no-c-format
@@ -73,52 +51,28 @@ msgstr "Hibernate 中最简单的查询语句的形式如下："
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"This returns all instances of the class <literal>eg.Cat</literal>. You do "
-"not usually need to qualify the class name, since <literal>auto-import</"
-"literal> is the default. For example:"
-msgstr ""
-"该子句简单的返回 <literal>eg.Cat</literal> 类的所有实例。通常我们不需要使用类"
-"的全限定名，因为  <literal>auto-import</literal>（自动引入）是缺省的情况。所"
-"以我们几乎只使用如下的简单写法： "
+msgid "This returns all instances of the class <literal>eg.Cat</literal>. You do not usually need to qualify the class name, since <literal>auto-import</literal> is the default. For example:"
+msgstr "该子句简单的返回 <literal>eg.Cat</literal> 类的所有实例。通常我们不需要使用类的全限定名，因为  <literal>auto-import</literal>（自动引入）是缺省的情况。所以我们几乎只使用如下的简单写法： "
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"In order to refer to the <literal>Cat</literal> in other parts of the query, "
-"you will need to assign an <emphasis>alias</emphasis>. For example:"
-msgstr ""
-"为了在这个查询的其他部分里引用 <literal>Cat</literal>，你将需要分配一个"
-"<emphasis>别名</emphasis>。例如："
+msgid "In order to refer to the <literal>Cat</literal> in other parts of the query, you will need to assign an <emphasis>alias</emphasis>. For example:"
+msgstr "为了在这个查询的其他部分里引用 <literal>Cat</literal>，你将需要分配一个<emphasis>别名</emphasis>。例如："
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"This query assigns the alias <literal>cat</literal> to <literal>Cat</"
-"literal> instances, so you can use that alias later in the query. The "
-"<literal>as</literal> keyword is optional. You could also write:"
-msgstr ""
-"这个语句把别名 <literal>cat</literal> 指定给类<literal>Cat</literal> 的实例，"
-"这样我们就可以在随后的查询中使用此别名了。关键字 <literal>as</literal> 是可选"
-"的，我们也可以这样写： "
+msgid "This query assigns the alias <literal>cat</literal> to <literal>Cat</literal> instances, so you can use that alias later in the query. The <literal>as</literal> keyword is optional. You could also write:"
+msgstr "这个语句把别名 <literal>cat</literal> 指定给类<literal>Cat</literal> 的实例，这样我们就可以在随后的查询中使用此别名了。关键字 <literal>as</literal> 是可选的，我们也可以这样写： "
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"Multiple classes can appear, resulting in a cartesian product or \"cross\" "
-"join."
-msgstr ""
-"子句中可以同时出现多个类，其查询结果是产生一个笛卡儿积或产生跨表的连接。 "
+msgid "Multiple classes can appear, resulting in a cartesian product or \"cross\" join."
+msgstr "子句中可以同时出现多个类，其查询结果是产生一个笛卡儿积或产生跨表的连接。 "
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"It is good practice to name query aliases using an initial lowercase as this "
-"is consistent with Java naming standards for local variables (e.g. "
-"<literal>domesticCat</literal>)."
-msgstr ""
-"查询语句中别名的开头部分小写被认为是实践中的好习惯，这样做与 Java 变量的命名"
-"标准保持了一致（比如，<literal>domesticCat</literal>）。 "
+msgid "It is good practice to name query aliases using an initial lowercase as this is consistent with Java naming standards for local variables (e.g. <literal>domesticCat</literal>)."
+msgstr "查询语句中别名的开头部分小写被认为是实践中的好习惯，这样做与 Java 变量的命名标准保持了一致（比如，<literal>domesticCat</literal>）。 "
 
 #. Tag: title
 #, no-c-format
@@ -127,12 +81,8 @@ msgstr "关联（Association）与连接（Join）"
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"You can also assign aliases to associated entities or to elements of a "
-"collection of values using a <literal>join</literal>. For example:"
-msgstr ""
-"我们也可以为相关联的实体甚至是对一个集合中的全部元素指定一个别名，这时要使用"
-"关键字 <literal>join</literal>。 "
+msgid "You can also assign aliases to associated entities or to elements of a collection of values using a <literal>join</literal>. For example:"
+msgstr "我们也可以为相关联的实体甚至是对一个集合中的全部元素指定一个别名，这时要使用关键字 <literal>join</literal>。 "
 
 #. Tag: para
 #, no-c-format
@@ -161,91 +111,33 @@ msgstr "<literal>full join</literal>（全连接，并不常用）"
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"The <literal>inner join</literal>, <literal>left outer join</literal> and "
-"<literal>right outer join</literal> constructs may be abbreviated."
-msgstr ""
-"语句 <literal>inner join</literal>，<literal>left outer join</literal> 以及 "
-"<literal>right outer join</literal> 可以简写。"
+msgid "The <literal>inner join</literal>, <literal>left outer join</literal> and <literal>right outer join</literal> constructs may be abbreviated."
+msgstr "语句 <literal>inner join</literal>，<literal>left outer join</literal> 以及 <literal>right outer join</literal> 可以简写。"
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"You may supply extra join conditions using the HQL <literal>with</literal> "
-"keyword."
-msgstr ""
-"通过 HQL 的 <literal>with</literal> 关键字，你可以提供额外的 join 条件。"
-
-#. Tag: para
-#, fuzzy, no-c-format
-msgid ""
-"A \"fetch\" join allows associations or collections of values to be "
-"initialized along with their parent objects using a single select. This is "
-"particularly useful in the case of a collection. It effectively overrides "
-"the outer join and lazy declarations of the mapping file for associations "
-"and collections. See <xref linkend=\"performance-fetching\" /> for more "
-"information."
-msgstr ""
-"还有，一个 \"fetch\" 连接允许仅仅使用一个选择语句就将相关联的对象或一组值的集"
-"合随着他们的父对象的初始化而被初始化，这种方法在使用到集合的情况下尤其有用，"
-"对于关联和集合来说，它有效的代替了映射文件中的外联接与延迟声明（lazy "
-"declarations）。查看 <xref linkend=\"performance-fetching\" /> 以获得等多的信"
-"息。"
+msgid "You may supply extra join conditions using the HQL <literal>with</literal> keyword."
+msgstr "通过 HQL 的 <literal>with</literal> 关键字，你可以提供额外的 join 条件。"
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"A fetch join does not usually need to assign an alias, because the "
-"associated objects should not be used in the <literal>where</literal> clause "
-"(or any other clause). The associated objects are also not returned directly "
-"in the query results. Instead, they may be accessed via the parent object. "
-"The only reason you might need an alias is if you are recursively join "
-"fetching a further collection:"
-msgstr ""
-"一个 fetch 连接通常不需要被指定别名，因为相关联的对象不应当被用在 "
-"<literal>where</literal> 子句（或其它任何子句）中。同时，相关联的对象并不在查"
-"询的结果中直接返回，但可以通过他们的父对象来访问到他们。 "
+msgid "A \"fetch\" join allows associations or collections of values to be initialized along with their parent objects using a single select. This is particularly useful in the case of a collection. It effectively overrides the outer join and lazy declarations of the mapping file for associations and collections. See <xref linkend=\"performance-fetching\" /> for more information."
+msgstr "还有，一个 \"fetch\" 连接允许仅仅使用一个选择语句就将相关联的对象或一组值的集合随着他们的父对象的初始化而被初始化，这种方法在使用到集合的情况下尤其有用，对于关联和集合来说，它有效的代替了映射文件中的外联接与延迟声明（lazy declarations）。查看 <xref linkend=\"performance-fetching\" /> 以获得等多的信息。 "
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"The <literal>fetch</literal> construct cannot be used in queries called "
-"using <literal>iterate()</literal> (though <literal>scroll()</literal> can "
-"be used). <literal>Fetch</literal> should be used together with "
-"<literal>setMaxResults()</literal> or <literal>setFirstResult()</literal>, "
-"as these operations are based on the result rows which usually contain "
-"duplicates for eager collection fetching, hence, the number of rows is not "
-"what you would expect. <literal>Fetch</literal> should also not be used "
-"together with impromptu <literal>with</literal> condition. It is possible to "
-"create a cartesian product by join fetching more than one collection in a "
-"query, so take care in this case. Join fetching multiple collection roles "
-"can produce unexpected results for bag mappings, so user discretion is "
-"advised when formulating queries in this case. Finally, note that "
-"<literal>full join fetch</literal> and <literal>right join fetch</literal> "
-"are not meaningful."
-msgstr ""
-"假若使用 <literal>iterate()</literal> 来调用查询，请注意 <literal>fetch</"
-"literal> 构造是不能使用的（<literal>scroll()</literal> 可以使用）。"
-"<literal>fetch</literal> 也不应该与 <literal>setMaxResults()</literal> 或 "
-"<literal>setFirstResult()</literal> 共用，这是因为这些操作是基于结果集的，而"
-"在预先抓取集合类时可能包含重复的数据，也就是说无法预先知道精确的行数。"
-"<literal>fetch</literal> 还不能与独立的 <literal>with</literal> 条件一起使"
-"用。通过在一次查询中 fetch 多个集合，可以制造出笛卡尔积，因此请多加注意。对 "
-"bag 映射来说，同时 join fetch 多个集合角色可能在某些情况下给出并非预期的结"
-"果，也请小心。最后注意，使用 <literal>full join fetch</literal> 与 "
-"<literal>right join fetch</literal> 是没有意义的。 "
+msgid "A fetch join does not usually need to assign an alias, because the associated objects should not be used in the <literal>where</literal> clause (or any other clause). The associated objects are also not returned directly in the query results. Instead, they may be accessed via the parent object. The only reason you might need an alias is if you are recursively join fetching a further collection:"
+msgstr "一个 fetch 连接通常不需要被指定别名，因为相关联的对象不应当被用在 <literal>where</literal> 子句（或其它任何子句）中。同时，相关联的对象并不在查询的结果中直接返回，但可以通过他们的父对象来访问到他们。 "
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"If you are using property-level lazy fetching (with bytecode "
-"instrumentation), it is possible to force Hibernate to fetch the lazy "
-"properties in the first query immediately using <literal>fetch all "
-"properties</literal>."
-msgstr ""
-"如果你使用属性级别的延迟获取（lazy fetching）（这是通过重新编写字节码实现"
-"的），可以使用  <literal>fetch all properties</literal> 来强制 Hibernate 立即"
-"取得那些原本需要延迟加载的属性（在第一个查询中）。 "
+msgid "The <literal>fetch</literal> construct cannot be used in queries called using <literal>iterate()</literal> (though <literal>scroll()</literal> can be used). <literal>Fetch</literal> should be used together with <literal>setMaxResults()</literal> or <literal>setFirstResult()</literal>, as these operations are based on the result rows which usually contain duplicates for eager collection fetching, hence, the number of rows is not what you would expect. <literal>Fetch</literal> should also not be used together with impromptu <literal>with</literal> condition. It is possible to create a cartesian product by join fetching more than one collection in a query, so take care in this case. Join fetching multiple collection roles can produce unexpected results for bag mappings, so user discretion is advised when formulating queries in this case. Finally, note that <literal>full join fetch</literal> and <literal>right join fetch</literal> are not meaningful."
+msgstr "假若使用 <literal>iterate()</literal> 来调用查询，请注意 <literal>fetch</literal> 构造是不能使用的（<literal>scroll()</literal> 可以使用）。<literal>fetch</literal> 也不应该与 <literal>setMaxResults()</literal> 或 <literal>setFirstResult()</literal> 共用，这是因为这些操作是基于结果集的，而在预先抓取集合类时可能包含重复的数据，也就是说无法预先知道精确的行数。<literal>fetch</literal> 还不能与独立的 <literal>with</literal> 条件一起使用。通过在一次查询中 fetch 多个集合，可以制造出笛卡尔积，因此请多加注意。对 bag 映射来说，同时 join fetch 多个集合角色可能在某些情况下给出并非预期的结果，也请小心。最后注意，使用 <literal>full join fetch</literal> 与 <literal>right join fetch</literal> 是没有意义的。 "
+
+#. Tag: para
+#, no-c-format
+msgid "If you are using property-level lazy fetching (with bytecode instrumentation), it is possible to force Hibernate to fetch the lazy properties in the first query immediately using <literal>fetch all properties</literal>."
+msgstr "如果你使用属性级别的延迟获取（lazy fetching）（这是通过重新编写字节码实现的），可以使用  <literal>fetch all properties</literal> 来强制 Hibernate 立即取得那些原本需要延迟加载的属性（在第一个查询中）。 "
 
 #. Tag: title
 #, no-c-format
@@ -254,35 +146,18 @@ msgstr "join 语法的形式"
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"HQL supports two forms of association joining: <literal>implicit</literal> "
-"and <literal>explicit</literal>."
-msgstr ""
-"HQL 支持两种关联 join 的形式：<literal>implicit（隐式）</literal> 与 "
-"<literal>explicit（显式）</literal>。"
+msgid "HQL supports two forms of association joining: <literal>implicit</literal> and <literal>explicit</literal>."
+msgstr "HQL 支持两种关联 join 的形式：<literal>implicit（隐式）</literal> 与 <literal>explicit（显式）</literal>。"
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"The queries shown in the previous section all use the <literal>explicit</"
-"literal> form, that is, where the join keyword is explicitly used in the "
-"from clause. This is the recommended form."
-msgstr ""
-"上一节中给出的查询都是使用 <literal>explicit（显式）</literal>形式的，其中 "
-"form 子句中明确给出了 join 关键字。这是建议使用的方式。 "
+msgid "The queries shown in the previous section all use the <literal>explicit</literal> form, that is, where the join keyword is explicitly used in the from clause. This is the recommended form."
+msgstr "上一节中给出的查询都是使用 <literal>explicit（显式）</literal>形式的，其中 form 子句中明确给出了 join 关键字。这是建议使用的方式。 "
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"The <literal>implicit</literal> form does not use the join keyword. Instead, "
-"the associations are \"dereferenced\" using dot-notation. <literal>implicit</"
-"literal> joins can appear in any of the HQL clauses. <literal>implicit</"
-"literal> join result in inner joins in the resulting SQL statement."
-msgstr ""
-"<literal>implicit（隐式）</literal>形式不使用 join 关键字。关联使用\"点号\"来"
-"进行“引用”。<literal>implicit</literal> join 可以在任何 HQL 子句中出现。"
-"<literal>implicit</literal> join 在最终的 SQL 语句中以 inner join 的方式出"
-"现。"
+msgid "The <literal>implicit</literal> form does not use the join keyword. Instead, the associations are \"dereferenced\" using dot-notation. <literal>implicit</literal> joins can appear in any of the HQL clauses. <literal>implicit</literal> join result in inner joins in the resulting SQL statement."
+msgstr "<literal>implicit（隐式）</literal>形式不使用 join 关键字。关联使用\"点号\"来进行“引用”。<literal>implicit</literal> join 可以在任何 HQL 子句中出现。<literal>implicit</literal> join 在最终的 SQL 语句中以 inner join 的方式出现。"
 
 #. Tag: title
 #, no-c-format
@@ -296,48 +171,23 @@ msgstr "通常有两种方法来引用实体的 identifier 属性： "
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"The special property (lowercase) <literal>id</literal> may be used to "
-"reference the identifier property of an entity <emphasis>provided that the "
-"entity does not define a non-identifier property named id</emphasis>."
-msgstr ""
-"特殊属性（lowercase）<literal>id</literal> 可以用来引用实体的 identifier 属"
-"性 <emphasis>假设这个实体没有定义用 non-identifier 属性命名的 id</"
-"emphasis>。 "
+msgid "The special property (lowercase) <literal>id</literal> may be used to reference the identifier property of an entity <emphasis>provided that the entity does not define a non-identifier property named id</emphasis>."
+msgstr "特殊属性（lowercase）<literal>id</literal> 可以用来引用实体的 identifier 属性 <emphasis>假设这个实体没有定义用 non-identifier 属性命名的 id</emphasis>。 "
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"If the entity defines a named identifier property, you can use that property "
-"name."
+msgid "If the entity defines a named identifier property, you can use that property name."
 msgstr "如果这个实体定义了 identifier 属性，你可以使用属性名。 "
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"References to composite identifier properties follow the same naming rules. "
-"If the entity has a non-identifier property named id, the composite "
-"identifier property can only be referenced by its defined named. Otherwise, "
-"the special <literal>id</literal> property can be used to reference the "
-"identifier property."
-msgstr ""
-"对组合 identifier 属性的引用遵循相同的命名规则。如果实体有一个 non-"
-"identifier 属性命名的 id，这个组合 identifier 属性只能用自己定义的名字来引"
-"用；否则，特殊 <literal>id</literal> 属性可以用来引用 identifier 属性。 "
+msgid "References to composite identifier properties follow the same naming rules. If the entity has a non-identifier property named id, the composite identifier property can only be referenced by its defined named. Otherwise, the special <literal>id</literal> property can be used to reference the identifier property."
+msgstr "对组合 identifier 属性的引用遵循相同的命名规则。如果实体有一个 non-identifier 属性命名的 id，这个组合 identifier 属性只能用自己定义的名字来引用；否则，特殊 <literal>id</literal> 属性可以用来引用 identifier 属性。 "
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"Please note that, starting in version 3.2.2, this has changed significantly. "
-"In previous versions, <literal>id</literal> <emphasis>always</emphasis> "
-"referred to the identifier property regardless of its actual name. A "
-"ramification of that decision was that non-identifier properties named "
-"<literal>id</literal> could never be referenced in Hibernate queries."
-msgstr ""
-"注意：从 3.2.2 版本开始，这已经改变了很多。在前面的版本里，不管实际的名字，"
-"<literal>id</literal> <emphasis>总是</emphasis>指向 identifier 属性；而用 "
-"non-identifier 属性命名的 <literal>id</literal> 就从来不在 Hibernate 查询里引"
-"用。  "
+msgid "Please note that, starting in version 3.2.2, this has changed significantly. In previous versions, <literal>id</literal> <emphasis>always</emphasis> referred to the identifier property regardless of its actual name. A ramification of that decision was that non-identifier properties named <literal>id</literal> could never be referenced in Hibernate queries."
+msgstr "注意：从 3.2.2 版本开始，这已经改变了很多。在前面的版本里，不管实际的名字，<literal>id</literal> <emphasis>总是</emphasis>指向 identifier 属性；而用 non-identifier 属性命名的 <literal>id</literal> 就从来不在 Hibernate 查询里引用。  "
 
 #. Tag: title
 #, no-c-format
@@ -346,39 +196,23 @@ msgstr "select 子句"
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"The <literal>select</literal> clause picks which objects and properties to "
-"return in the query result set. Consider the following:"
-msgstr ""
-"<literal>select</literal> 子句选择将哪些对象与属性返回到查询结果集中。考虑如"
-"下情况："
+msgid "The <literal>select</literal> clause picks which objects and properties to return in the query result set. Consider the following:"
+msgstr "<literal>select</literal> 子句选择将哪些对象与属性返回到查询结果集中。考虑如下情况："
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"The query will select <literal>mate</literal>s of other <literal>Cat</"
-"literal>s. You can express this query more compactly as:"
-msgstr ""
-"该语句将选择其它 <literal>Cat</literal> 的 <literal>mate</literal>（其他猫的"
-"配偶）。实际上，你可以更简洁的用以下的查询语句表达相同的含义： "
+msgid "The query will select <literal>mate</literal>s of other <literal>Cat</literal>s. You can express this query more compactly as:"
+msgstr "该语句将选择其它 <literal>Cat</literal> 的 <literal>mate</literal>（其他猫的配偶）。实际上，你可以更简洁的用以下的查询语句表达相同的含义： "
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"Queries can return properties of any value type including properties of "
-"component type:"
-msgstr ""
-"查询语句可以返回值为任何类型的属性，包括返回类型为某种组件（Component）的属"
-"性： "
+msgid "Queries can return properties of any value type including properties of component type:"
+msgstr "查询语句可以返回值为任何类型的属性，包括返回类型为某种组件（Component）的属性： "
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"Queries can return multiple objects and/or properties as an array of type "
-"<literal>Object[]</literal>:"
-msgstr ""
-"查询语句可以返回多个对象和（或）属性，存放在 <literal>Object[]</literal> 队列"
-"中， "
+msgid "Queries can return multiple objects and/or properties as an array of type <literal>Object[]</literal>:"
+msgstr "查询语句可以返回多个对象和（或）属性，存放在 <literal>Object[]</literal> 队列中， "
 
 #. Tag: para
 #, no-c-format
@@ -387,33 +221,23 @@ msgstr "或存放在一个 <literal>List</literal> 对象中："
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"Or - assuming that the class <literal>Family</literal> has an appropriate "
-"constructor - as an actual typesafe Java object:"
-msgstr ""
-"假设类 <literal>Family</literal> 有一个合适的构造函数 - 作为实际的类型安全的 "
-"Java 对象："
+msgid "Or - assuming that the class <literal>Family</literal> has an appropriate constructor - as an actual typesafe Java object:"
+msgstr "假设类 <literal>Family</literal> 有一个合适的构造函数 - 作为实际的类型安全的 Java 对象："
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"You can assign aliases to selected expressions using <literal>as</literal>:"
+msgid "You can assign aliases to selected expressions using <literal>as</literal>:"
 msgstr "你可以使用关键字 <literal>as</literal> 给“被选择了的表达式”指派别名： "
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"This is most useful when used together with <literal>select new map</"
-"literal>:"
+msgid "This is most useful when used together with <literal>select new map</literal>:"
 msgstr "这种做法在与子句 <literal>select new map</literal> 一起使用时最有用："
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"This query returns a <literal>Map</literal> from aliases to selected values."
-msgstr ""
-"该查询返回了一个 <literal>Map</literal> 的对象，内容是别名与被选择的值组成的"
-"名-值映射。"
+msgid "This query returns a <literal>Map</literal> from aliases to selected values."
+msgstr "该查询返回了一个 <literal>Map</literal> 的对象，内容是别名与被选择的值组成的名-值映射。"
 
 #. Tag: title
 #, no-c-format
@@ -422,8 +246,7 @@ msgstr "聚集函数"
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"HQL queries can even return the results of aggregate functions on properties:"
+msgid "HQL queries can even return the results of aggregate functions on properties:"
 msgstr "HQL 查询甚至可以返回作用于属性之上的聚集函数的计算结果： "
 
 #. Tag: para
@@ -432,9 +255,9 @@ msgid "The supported aggregate functions are:"
 msgstr "受支持的聚集函数如下： "
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "<literal>avg(...), sum(...), min(...), max(...)</literal>"
-msgstr "<literal>avg(...), sum(...), min(...), max(...)</literal>"
+msgstr "<literal>avg(...), sum(...), min(...), max(...)</literal> "
 
 #. Tag: para
 #, no-c-format
@@ -442,25 +265,19 @@ msgid "<literal>count(*)</literal>"
 msgstr "<literal>count(*)</literal>"
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "<literal>count(...), count(distinct ...), count(all...)</literal>"
 msgstr "<literal>count(...), count(distinct ...), count(all...)</literal>"
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"You can use arithmetic operators, concatenation, and recognized SQL "
-"functions in the select clause:"
+msgid "You can use arithmetic operators, concatenation, and recognized SQL functions in the select clause:"
 msgstr "你可以在选择子句中使用数学操作符、连接以及经过验证的 SQL 函数： "
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"The <literal>distinct</literal> and <literal>all</literal> keywords can be "
-"used and have the same semantics as in SQL."
-msgstr ""
-"关键字 <literal>distinct</literal> 与 <literal>all</literal> 也可以使用，它们"
-"具有与 SQL 相同的语义。 "
+msgid "The <literal>distinct</literal> and <literal>all</literal> keywords can be used and have the same semantics as in SQL."
+msgstr "关键字 <literal>distinct</literal> 与 <literal>all</literal> 也可以使用，它们具有与 SQL 相同的语义。 "
 
 #. Tag: title
 #, no-c-format
@@ -474,38 +291,18 @@ msgstr "一个如下的查询语句："
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"returns instances not only of <literal>Cat</literal>, but also of subclasses "
-"like <literal>DomesticCat</literal>. Hibernate queries can name "
-"<emphasis>any</emphasis> Java class or interface in the <literal>from</"
-"literal> clause. The query will return instances of all persistent classes "
-"that extend that class or implement the interface. The following query would "
-"return all persistent objects:"
-msgstr ""
-"不仅返回 <literal>Cat</literal> 类的实例，也同时返回子类 "
-"<literal>DomesticCat</literal> 的实例。Hibernate 可以在 <literal>from</"
-"literal> 子句中指定<emphasis>任何</emphasis> Java 类或接口。查询会返回继承了"
-"该类的所有持久化子类的实例或返回声明了该接口的所有持久化类的实例。下面的查询"
-"语句返回所有的被持久化的对象： "
+msgid "returns instances not only of <literal>Cat</literal>, but also of subclasses like <literal>DomesticCat</literal>. Hibernate queries can name <emphasis>any</emphasis> Java class or interface in the <literal>from</literal> clause. The query will return instances of all persistent classes that extend that class or implement the interface. The following query would return all persistent objects:"
+msgstr "不仅返回 <literal>Cat</literal> 类的实例，也同时返回子类 <literal>DomesticCat</literal> 的实例。Hibernate 可以在 <literal>from</literal> 子句中指定<emphasis>任何</emphasis> Java 类或接口。查询会返回继承了该类的所有持久化子类的实例或返回声明了该接口的所有持久化类的实例。下面的查询语句返回所有的被持久化的对象： "
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"The interface <literal>Named</literal> might be implemented by various "
-"persistent classes:"
+msgid "The interface <literal>Named</literal> might be implemented by various persistent classes:"
 msgstr "接口 <literal>Named</literal> 可能被各种各样的持久化类声明："
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"These last two queries will require more than one SQL <literal>SELECT</"
-"literal>. This means that the <literal>order by</literal> clause does not "
-"correctly order the whole result set. It also means you cannot call these "
-"queries using <literal>Query.scroll()</literal>."
-msgstr ""
-"注意，最后的两个查询将需要超过一个的 SQL <literal>SELECT</literal>。这表明 "
-"<literal>order by</literal> 子句没有对整个结果集进行正确的排序。（这也说明你"
-"不能对这样的查询使用 <literal>Query.scroll()</literal> 方法。）"
+msgid "These last two queries will require more than one SQL <literal>SELECT</literal>. This means that the <literal>order by</literal> clause does not correctly order the whole result set. It also means you cannot call these queries using <literal>Query.scroll()</literal>."
+msgstr "注意，最后的两个查询将需要超过一个的 SQL <literal>SELECT</literal>。这表明 <literal>order by</literal> 子句没有对整个结果集进行正确的排序。（这也说明你不能对这样的查询使用 <literal>Query.scroll()</literal> 方法。）"
 
 #. Tag: title
 #, no-c-format
@@ -514,12 +311,8 @@ msgstr "where 子句"
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"The <literal>where</literal> clause allows you to refine the list of "
-"instances returned. If no alias exists, you can refer to properties by name:"
-msgstr ""
-"<literal>where</literal> 子句允许你将返回的实例列表的范围缩小。如果没有指定别"
-"名，你可以使用属性名来直接引用属性： "
+msgid "The <literal>where</literal> clause allows you to refine the list of instances returned. If no alias exists, you can refer to properties by name:"
+msgstr "<literal>where</literal> 子句允许你将返回的实例列表的范围缩小。如果没有指定别名，你可以使用属性名来直接引用属性： "
 
 #. Tag: para
 #, no-c-format
@@ -529,8 +322,7 @@ msgstr "如果指派了别名，需要使用完整的属性名："
 #. Tag: para
 #, no-c-format
 msgid "This returns instances of <literal>Cat</literal> named 'Fritz'."
-msgstr ""
-"返回名为（属性 name 等于）'Fritz' 的 <literal>Cat</literal> 类的实例。 "
+msgstr "返回名为（属性 name 等于）'Fritz' 的 <literal>Cat</literal> 类的实例。 "
 
 #. Tag: para
 #, no-c-format
@@ -539,25 +331,13 @@ msgstr "下面的查询："
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"returns all instances of <literal>Foo</literal> with an instance of "
-"<literal>bar</literal> with a <literal>date</literal> property equal to the "
-"<literal>startDate</literal> property of the <literal>Foo</literal>. "
-"Compound path expressions make the <literal>where</literal> clause extremely "
-"powerful. Consider the following:"
-msgstr ""
-"将返回所有满足下面条件的 <literal>Foo</literal> 类的实例： 存在如下的 "
-"<literal>bar</literal> 的一个实例，其 <literal>date</literal> 属性等于 "
-"<literal>Foo</literal> 的 <literal>startDate</literal> 属性。复合路径表达式使"
-"得 <literal>where</literal> 子句非常的强大，考虑如下情况： "
+msgid "returns all instances of <literal>Foo</literal> with an instance of <literal>bar</literal> with a <literal>date</literal> property equal to the <literal>startDate</literal> property of the <literal>Foo</literal>. Compound path expressions make the <literal>where</literal> clause extremely powerful. Consider the following:"
+msgstr "将返回所有满足下面条件的 <literal>Foo</literal> 类的实例： 存在如下的 <literal>bar</literal> 的一个实例，其 <literal>date</literal> 属性等于 <literal>Foo</literal> 的 <literal>startDate</literal> 属性。复合路径表达式使得 <literal>where</literal> 子句非常的强大，考虑如下情况： "
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"This query translates to an SQL query with a table (inner) join. For example:"
-msgstr ""
-"该查询将被翻译成为一个含有表连接（内连接）的 SQL 查询。如果你打算写像这样的查"
-"询语句："
+msgid "This query translates to an SQL query with a table (inner) join. For example:"
+msgstr "该查询将被翻译成为一个含有表连接（内连接）的 SQL 查询。如果你打算写像这样的查询语句："
 
 #. Tag: para
 #, no-c-format
@@ -566,21 +346,13 @@ msgstr "在 SQL 中，你为达此目的将需要进行一个四表连接的查�
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"The <literal>=</literal> operator can be used to compare not only "
-"properties, but also instances:"
-msgstr ""
-"<literal>=</literal> 运算符不仅可以被用来比较属性的值，也可以用来比较实例： "
+msgid "The <literal>=</literal> operator can be used to compare not only properties, but also instances:"
+msgstr "<literal>=</literal> 运算符不仅可以被用来比较属性的值，也可以用来比较实例： "
 
 #. Tag: para
-#, fuzzy, no-c-format
-msgid ""
-"The special property (lowercase) <literal>id</literal> can be used to "
-"reference the unique identifier of an object. See <xref linkend=\"queryhql-"
-"identifier-property\" /> for more information."
-msgstr ""
-"特殊属性（小写）<literal>id</literal> 可以用来表示一个对象的唯一的标识符。详"
-"情请参考 <xref linkend=\"queryhql-identifier-property\" />。"
+#, no-c-format
+msgid "The special property (lowercase) <literal>id</literal> can be used to reference the unique identifier of an object. See <xref linkend=\"queryhql-identifier-property\" /> for more information."
+msgstr "特殊属性（小写）<literal>id</literal> 可以用来表示一个对象的唯一的标识符。详情请参考 <xref linkend=\"queryhql-identifier-property\" />。 "
 
 #. Tag: para
 #, no-c-format
@@ -589,14 +361,8 @@ msgstr "第二个查询是有效的。此时不需要进行表连接。"
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"Properties of composite identifiers can also be used. Consider the following "
-"example where <literal>Person</literal> has composite identifiers consisting "
-"of <literal>country</literal> and <literal>medicareNumber</literal>:"
-msgstr ""
-"同样也可以使用复合标识符。比如 <literal>Person</literal> 类有一个复合标识符，"
-"它由 <literal>country</literal> 属性与 <literal>medicareNumber</literal> 属性"
-"组成："
+msgid "Properties of composite identifiers can also be used. Consider the following example where <literal>Person</literal> has composite identifiers consisting of <literal>country</literal> and <literal>medicareNumber</literal>:"
+msgstr "同样也可以使用复合标识符。比如 <literal>Person</literal> 类有一个复合标识符，它由 <literal>country</literal> 属性与 <literal>medicareNumber</literal> 属性组成："
 
 #. Tag: para
 #, no-c-format
@@ -604,57 +370,29 @@ msgid "Once again, the second query does not require a table join."
 msgstr "第二个查询也不需要进行表连接。 "
 
 #. Tag: para
-#, fuzzy, no-c-format
-msgid ""
-"See <xref linkend=\"queryhql-identifier-property\" /> for more information "
-"regarding referencing identifier properties)"
-msgstr ""
-"关于引用标识符属性的更多信息，请参考 <xref linkend=\"queryhql-identifier-"
-"property\" />。"
+#, no-c-format
+msgid "See <xref linkend=\"queryhql-identifier-property\" /> for more information regarding referencing identifier properties)"
+msgstr "关于引用标识符属性的更多信息，请参考 <xref linkend=\"queryhql-identifier-property\" />。 "
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"The special property <literal>class</literal> accesses the discriminator "
-"value of an instance in the case of polymorphic persistence. A Java class "
-"name embedded in the where clause will be translated to its discriminator "
-"value."
-msgstr ""
-"同样的，特殊属性 <literal>class</literal> 在进行多态持久化的情况下被用来存取"
-"一个实例的鉴别值（discriminator value）。一个嵌入到 where 子句中的 Java 类的"
-"名字将被转换为该类的鉴别值。 "
-
-#. Tag: para
-#, fuzzy, no-c-format
-msgid ""
-"You can also use components or composite user types, or properties of said "
-"component types. See <xref linkend=\"queryhql-components\" /> for more "
-"information."
-msgstr ""
-"你也可以使用组件或者复合用户类型，以及组件类型的属性。详情请参考 <xref "
-"linkend=\"queryhql-components\" />。"
+msgid "The special property <literal>class</literal> accesses the discriminator value of an instance in the case of polymorphic persistence. A Java class name embedded in the where clause will be translated to its discriminator value."
+msgstr "同样的，特殊属性 <literal>class</literal> 在进行多态持久化的情况下被用来存取一个实例的鉴别值（discriminator value）。一个嵌入到 where 子句中的 Java 类的名字将被转换为该类的鉴别值。 "
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"An \"any\" type has the special properties <literal>id</literal> and "
-"<literal>class</literal> that allows you to express a join in the following "
-"way (where <literal>AuditLog.item</literal> is a property mapped with "
-"<literal>&lt;any&gt;</literal>):"
-msgstr ""
-"一个“任意”类型有两个特殊的属性 <literal>id</literal> 和 <literal>class</"
-"literal>，来允许我们按照下面的方式表达一个连接（<literal>AuditLog.item</"
-"literal> 是一个属性，该属性被映射为 <literal>&lt;any&gt;</literal>）。 "
+msgid "You can also use components or composite user types, or properties of said component types. See <xref linkend=\"queryhql-components\" /> for more information."
+msgstr "你也可以使用组件或者复合用户类型，以及组件类型的属性。详情请参考 <xref linkend=\"queryhql-components\" />。 "
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"The <literal>log.item.class</literal> and <literal>payment.class</literal> "
-"would refer to the values of completely different database columns in the "
-"above query."
-msgstr ""
-"注意，在上面的查询与句中，<literal>log.item.class</literal> 和 "
-"<literal>payment.class</literal> 将涉及到完全不同的数据库中的列。"
+msgid "An \"any\" type has the special properties <literal>id</literal> and <literal>class</literal> that allows you to express a join in the following way (where <literal>AuditLog.item</literal> is a property mapped with <literal>&lt;any&gt;</literal>):"
+msgstr "一个“任意”类型有两个特殊的属性 <literal>id</literal> 和 <literal>class</literal>，来允许我们按照下面的方式表达一个连接（<literal>AuditLog.item</literal> 是一个属性，该属性被映射为 <literal>&lt;any&gt;</literal>）。 "
+
+#. Tag: para
+#, no-c-format
+msgid "The <literal>log.item.class</literal> and <literal>payment.class</literal> would refer to the values of completely different database columns in the above query."
+msgstr "注意，在上面的查询与句中，<literal>log.item.class</literal> 和 <literal>payment.class</literal> 将涉及到完全不同的数据库中的列。"
 
 #. Tag: title
 #, no-c-format
@@ -663,12 +401,8 @@ msgstr "表达式"
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"Expressions used in the <literal>where</literal> clause include the "
-"following:"
-msgstr ""
-"在 <literal>where</literal> 子句中允许使用的表达式包括 大多数你可以在 SQL 使"
-"用的表达式种类： "
+msgid "Expressions used in the <literal>where</literal> clause include the following:"
+msgstr "在 <literal>where</literal> 子句中允许使用的表达式包括 大多数你可以在 SQL 使用的表达式种类： "
 
 #. Tag: para
 #, no-c-format
@@ -677,11 +411,8 @@ msgstr "数学运算符 <literal>+，-，*，/</literal> "
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"binary comparison operators: <literal>=, &gt;=, &lt;=, &lt;&gt;, !=, like</"
-"literal>"
-msgstr ""
-"二进制比较运算符 <literal>=, &gt;=, &lt;=, &lt;&gt;, !=, like</literal> "
+msgid "binary comparison operators: <literal>=, &gt;=, &lt;=, &lt;&gt;, !=, like</literal>"
+msgstr "二进制比较运算符 <literal>=, &gt;=, &lt;=, &lt;&gt;, !=, like</literal> "
 
 #. Tag: para
 #, no-c-format
@@ -695,64 +426,33 @@ msgstr "括号 <literal>( )</literal>，表示分组 "
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"<literal>in</literal>, <literal>not in</literal>, <literal>between</"
-"literal>, <literal>is null</literal>, <literal>is not null</literal>, "
-"<literal>is empty</literal>, <literal>is not empty</literal>, "
-"<literal>member of</literal> and <literal>not member of</literal>"
-msgstr ""
-"<literal>in</literal>, <literal>not in</literal>, <literal>between</"
-"literal>, <literal>is null</literal>, <literal>is not null</literal>, "
-"<literal>is empty</literal>, <literal>is not empty</literal>, "
-"<literal>member of</literal> and <literal>not member of</literal>"
+msgid "<literal>in</literal>, <literal>not in</literal>, <literal>between</literal>, <literal>is null</literal>, <literal>is not null</literal>, <literal>is empty</literal>, <literal>is not empty</literal>, <literal>member of</literal> and <literal>not member of</literal>"
+msgstr "<literal>in</literal>, <literal>not in</literal>, <literal>between</literal>, <literal>is null</literal>, <literal>is not null</literal>, <literal>is empty</literal>, <literal>is not empty</literal>, <literal>member of</literal> and <literal>not member of</literal>"
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"\"Simple\" case, <literal>case ... when ... then ... else ... end</literal>, "
-"and \"searched\" case, <literal>case when ... then ... else ... end</literal>"
-msgstr ""
-"\"Simple\" case, <literal>case ... when ... then ... else ... end</literal>, "
-"and \"searched\" case, <literal>case when ... then ... else ... end</literal>"
+msgid "\"Simple\" case, <literal>case ... when ... then ... else ... end</literal>, and \"searched\" case, <literal>case when ... then ... else ... end</literal>"
+msgstr "\"Simple\" case, <literal>case ... when ... then ... else ... end</literal>, and \"searched\" case, <literal>case when ... then ... else ... end</literal>"
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"string concatenation <literal>...||...</literal> or <literal>concat(...,...)"
-"</literal>"
-msgstr ""
-"字符串连接符 <literal>...||...</literal> or <literal>concat(...,...)</"
-"literal>"
+msgid "string concatenation <literal>...||...</literal> or <literal>concat(...,...)</literal>"
+msgstr "字符串连接符 <literal>...||...</literal> or <literal>concat(...,...)</literal>"
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"<literal>current_date()</literal>, <literal>current_time()</literal>, and "
-"<literal>current_timestamp()</literal>"
-msgstr ""
-"<literal>current_date()</literal>, <literal>current_time()</literal>, and "
-"<literal>current_timestamp()</literal>"
+msgid "<literal>current_date()</literal>, <literal>current_time()</literal>, and <literal>current_timestamp()</literal>"
+msgstr "<literal>current_date()</literal>, <literal>current_time()</literal>, and <literal>current_timestamp()</literal>"
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"<literal>second(...)</literal>, <literal>minute(...)</literal>, <literal>hour"
-"(...)</literal>, <literal>day(...)</literal>, <literal>month(...)</literal>, "
-"and <literal>year(...)</literal>"
-msgstr ""
-"<literal>second(...)</literal>、<literal>minute(...)</literal>、<literal>hour"
-"(...)</literal>、<literal>day(...)</literal>、<literal>month(...)</literal> "
-"和 <literal>year(...)</literal>"
+msgid "<literal>second(...)</literal>, <literal>minute(...)</literal>, <literal>hour(...)</literal>, <literal>day(...)</literal>, <literal>month(...)</literal>, and <literal>year(...)</literal>"
+msgstr "<literal>second(...)</literal>、<literal>minute(...)</literal>、<literal>hour(...)</literal>、<literal>day(...)</literal>、<literal>month(...)</literal> 和 <literal>year(...)</literal>"
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"Any function or operator defined by EJB-QL 3.0: <literal>substring(), trim"
-"(), lower(), upper(), length(), locate(), abs(), sqrt(), bit_length(), mod()"
-"</literal>"
-msgstr ""
-"EJB-QL 3.0 定义的任何功能或操作符：<literal>substring(), trim(), lower(), "
-"upper(), length(), locate(), abs(), sqrt(), bit_length(), mod()</literal>"
+msgid "Any function or operator defined by EJB-QL 3.0: <literal>substring(), trim(), lower(), upper(), length(), locate(), abs(), sqrt(), bit_length(), mod()</literal>"
+msgstr "EJB-QL 3.0 定义的任何功能或操作符：<literal>substring(), trim(), lower(), upper(), length(), locate(), abs(), sqrt(), bit_length(), mod()</literal>"
 
 #. Tag: para
 #, no-c-format
@@ -761,53 +461,28 @@ msgstr "<literal>coalesce()</literal> 和 <literal>nullif()</literal>"
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"<literal>str()</literal> for converting numeric or temporal values to a "
-"readable string"
+msgid "<literal>str()</literal> for converting numeric or temporal values to a readable string"
 msgstr "<literal>str()</literal> 把数字或者时间值转换为可读的字符串"
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"<literal>cast(... as ...)</literal>, where the second argument is the name "
-"of a Hibernate type, and <literal>extract(... from ...)</literal> if ANSI "
-"<literal>cast()</literal> and <literal>extract()</literal> is supported by "
-"the underlying database"
-msgstr ""
-"<literal>cast(... as ...)</literal>，其第二个参数是某 Hibernate 类型的名字，"
-"以及 <literal>extract(... from ...)</literal>，只要 ANSI <literal>cast()</"
-"literal> 和  <literal>extract()</literal> 被底层数据库支持"
+msgid "<literal>cast(... as ...)</literal>, where the second argument is the name of a Hibernate type, and <literal>extract(... from ...)</literal> if ANSI <literal>cast()</literal> and <literal>extract()</literal> is supported by the underlying database"
+msgstr "<literal>cast(... as ...)</literal>，其第二个参数是某 Hibernate 类型的名字，以及 <literal>extract(... from ...)</literal>，只要 ANSI <literal>cast()</literal> 和  <literal>extract()</literal> 被底层数据库支持"
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"the HQL <literal>index()</literal> function, that applies to aliases of a "
-"joined indexed collection"
+msgid "the HQL <literal>index()</literal> function, that applies to aliases of a joined indexed collection"
 msgstr "HQL <literal>index()</literal> 函数，作用于 join 的有序集合的别名。"
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"HQL functions that take collection-valued path expressions: <literal>size(), "
-"minelement(), maxelement(), minindex(), maxindex()</literal>, along with the "
-"special <literal>elements()</literal> and <literal>indices</literal> "
-"functions that can be quantified using <literal>some, all, exists, any, in</"
-"literal>."
-msgstr ""
-"HQL 函数，把集合作为参数：<literal>size(), minelement(), maxelement(), "
-"minindex(), maxindex()</literal>，还有特别的 <literal>elements()</literal> "
-"和 <literal>indices</literal> 函数，可以与数量词加以限定：<literal>some, "
-"all, exists, any, in</literal>。 "
+msgid "HQL functions that take collection-valued path expressions: <literal>size(), minelement(), maxelement(), minindex(), maxindex()</literal>, along with the special <literal>elements()</literal> and <literal>indices</literal> functions that can be quantified using <literal>some, all, exists, any, in</literal>."
+msgstr "HQL 函数，把集合作为参数：<literal>size(), minelement(), maxelement(), minindex(), maxindex()</literal>，还有特别的 <literal>elements()</literal> 和 <literal>indices</literal> 函数，可以与数量词加以限定：<literal>some, all, exists, any, in</literal>。 "
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"Any database-supported SQL scalar function like <literal>sign()</literal>, "
-"<literal>trunc()</literal>, <literal>rtrim()</literal>, and <literal>sin()</"
-"literal>"
-msgstr ""
-"任何数据库支持的 SQL 标量函数，比如 <literal>sign()</literal>, <literal>trunc"
-"()</literal>, <literal>rtrim()</literal>, <literal>sin()</literal> "
+msgid "Any database-supported SQL scalar function like <literal>sign()</literal>, <literal>trunc()</literal>, <literal>rtrim()</literal>, and <literal>sin()</literal>"
+msgstr "任何数据库支持的 SQL 标量函数，比如 <literal>sign()</literal>, <literal>trunc()</literal>, <literal>rtrim()</literal>, <literal>sin()</literal> "
 
 #. Tag: para
 #, no-c-format
@@ -816,38 +491,23 @@ msgstr "JDBC 风格的参数传入 <literal>?</literal>"
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"named parameters <literal>:name</literal>, <literal>:start_date</literal>, "
-"and <literal>:x1</literal>"
-msgstr ""
-"命名参数 <literal>:name</literal>，<literal>:start_date</literal>，<literal>:"
-"x1</literal> "
+msgid "named parameters <literal>:name</literal>, <literal>:start_date</literal>, and <literal>:x1</literal>"
+msgstr "命名参数 <literal>:name</literal>，<literal>:start_date</literal>，<literal>:x1</literal> "
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"SQL literals <literal>'foo'</literal>, <literal>69</literal>, <literal>6.66E"
-"+2</literal>, <literal>'1970-01-01 10:00:01.0'</literal>"
-msgstr ""
-"SQL 直接常量 <literal>'foo'</literal>, <literal>69</literal>, <literal>6.66E"
-"+2</literal>, <literal>'1970-01-01 10:00:01.0'</literal>"
+msgid "SQL literals <literal>'foo'</literal>, <literal>69</literal>, <literal>6.66E+2</literal>, <literal>'1970-01-01 10:00:01.0'</literal>"
+msgstr "SQL 直接常量 <literal>'foo'</literal>, <literal>69</literal>, <literal>6.66E+2</literal>, <literal>'1970-01-01 10:00:01.0'</literal>"
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"Java <literal>public static final</literal> constants <literal>eg.Color."
-"TABBY</literal>"
-msgstr ""
-"Java <literal>public static final</literal> 类型的常量 <literal>eg.Color."
-"TABBY</literal>"
+msgid "Java <literal>public static final</literal> constants <literal>eg.Color.TABBY</literal>"
+msgstr "Java <literal>public static final</literal> 类型的常量 <literal>eg.Color.TABBY</literal>"
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"<literal>in</literal> and <literal>between</literal> can be used as follows:"
-msgstr ""
-"关键字 <literal>in</literal> 与 <literal>between</literal> 可按如下方法使"
-"用： "
+msgid "<literal>in</literal> and <literal>between</literal> can be used as follows:"
+msgstr "关键字 <literal>in</literal> 与 <literal>between</literal> 可按如下方法使用： "
 
 #. Tag: para
 #, no-c-format
@@ -856,106 +516,53 @@ msgstr "而且否定的格式也可以如下书写： "
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"Similarly, <literal>is null</literal> and <literal>is not null</literal> can "
-"be used to test for null values."
-msgstr ""
-"同样，子句 <literal>is null</literal> 与 <literal>is not null</literal> 可以"
-"被用来测试空值（null）。 "
+msgid "Similarly, <literal>is null</literal> and <literal>is not null</literal> can be used to test for null values."
+msgstr "同样，子句 <literal>is null</literal> 与 <literal>is not null</literal> 可以被用来测试空值（null）。 "
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"Booleans can be easily used in expressions by declaring HQL query "
-"substitutions in Hibernate configuration:"
-msgstr ""
-"在 Hibernate 配置文件中声明 HQL“查询替代（query substitutions）”之后，布尔表"
-"达式（Booleans）可以在其他表达式中轻松的使用： "
+msgid "Booleans can be easily used in expressions by declaring HQL query substitutions in Hibernate configuration:"
+msgstr "在 Hibernate 配置文件中声明 HQL“查询替代（query substitutions）”之后，布尔表达式（Booleans）可以在其他表达式中轻松的使用： "
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"This will replace the keywords <literal>true</literal> and <literal>false</"
-"literal> with the literals <literal>1</literal> and <literal>0</literal> in "
-"the translated SQL from this HQL:"
-msgstr ""
-"系统将该 HQL 转换为 SQL 语句时，该设置表明将用字符 <literal>1</literal> 和  "
-"<literal>0</literal> 来取代关键字 <literal>true</literal> 和 <literal>false</"
-"literal>："
+msgid "This will replace the keywords <literal>true</literal> and <literal>false</literal> with the literals <literal>1</literal> and <literal>0</literal> in the translated SQL from this HQL:"
+msgstr "系统将该 HQL 转换为 SQL 语句时，该设置表明将用字符 <literal>1</literal> 和  <literal>0</literal> 来取代关键字 <literal>true</literal> 和 <literal>false</literal>："
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"You can test the size of a collection with the special property "
-"<literal>size</literal> or the special <literal>size()</literal> function."
-msgstr ""
-"你可以用特殊属性 <literal>size</literal>，或是特殊函数 <literal>size()</"
-"literal> 测试一个集合的大小。 "
+msgid "You can test the size of a collection with the special property <literal>size</literal> or the special <literal>size()</literal> function."
+msgstr "你可以用特殊属性 <literal>size</literal>，或是特殊函数 <literal>size()</literal> 测试一个集合的大小。 "
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"For indexed collections, you can refer to the minimum and maximum indices "
-"using <literal>minindex</literal> and <literal>maxindex</literal> functions. "
-"Similarly, you can refer to the minimum and maximum elements of a collection "
-"of basic type using the <literal>minelement</literal> and "
-"<literal>maxelement</literal> functions. For example:"
-msgstr ""
-"对于索引了（有序）的集合，你可以使用 <literal>minindex</literal> 与  "
-"<literal>maxindex</literal> 函数来引用到最小与最大的索引序数。同理，你可以使"
-"用 <literal>minelement</literal> 与 <literal>maxelement</literal> 函数来引用"
-"到一个基本数据类型的集合中最小与最大的元素。例如："
+msgid "For indexed collections, you can refer to the minimum and maximum indices using <literal>minindex</literal> and <literal>maxindex</literal> functions. Similarly, you can refer to the minimum and maximum elements of a collection of basic type using the <literal>minelement</literal> and <literal>maxelement</literal> functions. For example:"
+msgstr "对于索引了（有序）的集合，你可以使用 <literal>minindex</literal> 与  <literal>maxindex</literal> 函数来引用到最小与最大的索引序数。同理，你可以使用 <literal>minelement</literal> 与 <literal>maxelement</literal> 函数来引用到一个基本数据类型的集合中最小与最大的元素。例如："
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"The SQL functions <literal>any, some, all, exists, in</literal> are "
-"supported when passed the element or index set of a collection "
-"(<literal>elements</literal> and <literal>indices</literal> functions) or "
-"the result of a subquery (see below):"
-msgstr ""
-"在传递一个集合的索引集或者是元素集（<literal>elements</literal> 与 "
-"<literal>indices</literal> 函数）或者传递一个子查询的结果的时候，可以使用 "
-"SQL 函数 <literal>any, some，all, exists, in</literal>："
+msgid "The SQL functions <literal>any, some, all, exists, in</literal> are supported when passed the element or index set of a collection (<literal>elements</literal> and <literal>indices</literal> functions) or the result of a subquery (see below):"
+msgstr "在传递一个集合的索引集或者是元素集（<literal>elements</literal> 与 <literal>indices</literal> 函数）或者传递一个子查询的结果的时候，可以使用 SQL 函数 <literal>any, some，all, exists, in</literal>："
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"Note that these constructs - <literal>size</literal>, <literal>elements</"
-"literal>, <literal>indices</literal>, <literal>minindex</literal>, "
-"<literal>maxindex</literal>, <literal>minelement</literal>, "
-"<literal>maxelement</literal> - can only be used in the where clause in "
-"Hibernate3."
-msgstr ""
-"注意，在 Hibernate3 中，这些结构变量 —  <literal>size</literal>，"
-"<literal>elements</literal>，<literal>indices</literal>，<literal>minindex</"
-"literal>，<literal>maxindex</literal>，<literal>minelement</literal>，"
-"<literal>maxelement</literal> — 只能在 where 子句中使用。 "
+msgid "Note that these constructs - <literal>size</literal>, <literal>elements</literal>, <literal>indices</literal>, <literal>minindex</literal>, <literal>maxindex</literal>, <literal>minelement</literal>, <literal>maxelement</literal> - can only be used in the where clause in Hibernate3."
+msgstr "注意，在 Hibernate3 中，这些结构变量 —  <literal>size</literal>，<literal>elements</literal>，<literal>indices</literal>，<literal>minindex</literal>，<literal>maxindex</literal>，<literal>minelement</literal>，<literal>maxelement</literal> — 只能在 where 子句中使用。 "
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"Elements of indexed collections (arrays, lists, and maps) can be referred to "
-"by index in a where clause only:"
-msgstr ""
-"一个被索引过的（有序的）集合的元素（arrays，lists，maps）可以在其他索引中被引"
-"用（只能在 where 子句中）： "
+msgid "Elements of indexed collections (arrays, lists, and maps) can be referred to by index in a where clause only:"
+msgstr "一个被索引过的（有序的）集合的元素（arrays，lists，maps）可以在其他索引中被引用（只能在 where 子句中）： "
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"The expression inside <literal>[]</literal> can even be an arithmetic "
-"expression:"
+msgid "The expression inside <literal>[]</literal> can even be an arithmetic expression:"
 msgstr "在 <literal>[]</literal> 中的表达式甚至可以是一个算数表达式："
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"HQL also provides the built-in <literal>index()</literal> function for "
-"elements of a one-to-many association or collection of values."
-msgstr ""
-"对于一个一对多的关联（one-to-many association）或是值的集合中的元素，HQL 也提"
-"供内建的 <literal>index()</literal> 函数。"
+msgid "HQL also provides the built-in <literal>index()</literal> function for elements of a one-to-many association or collection of values."
+msgstr "对于一个一对多的关联（one-to-many association）或是值的集合中的元素，HQL 也提供内建的 <literal>index()</literal> 函数。"
 
 #. Tag: para
 #, no-c-format
@@ -964,12 +571,8 @@ msgstr "如果底层数据库支持标量的 SQL 函数，它们也可以被使�
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"Consider how much longer and less readable the following query would be in "
-"SQL:"
-msgstr ""
-"如果你还不能对所有的这些深信不疑，想想下面的查询。如果使用 SQL，语句长度会增"
-"长多少，可读性会下降多少： "
+msgid "Consider how much longer and less readable the following query would be in SQL:"
+msgstr "如果你还不能对所有的这些深信不疑，想想下面的查询。如果使用 SQL，语句长度会增长多少，可读性会下降多少： "
 
 #. Tag: para
 #, no-c-format
@@ -983,21 +586,13 @@ msgstr "order by 子句"
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"The list returned by a query can be ordered by any property of a returned "
-"class or components:"
-msgstr ""
-"查询返回的列表（list）可以按照一个返回的类或组件（components）中的任何属性"
-"（property）进行排序： "
+msgid "The list returned by a query can be ordered by any property of a returned class or components:"
+msgstr "查询返回的列表（list）可以按照一个返回的类或组件（components）中的任何属性（property）进行排序： "
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"The optional <literal>asc</literal> or <literal>desc</literal> indicate "
-"ascending or descending order respectively."
-msgstr ""
-"可选的 <literal>asc</literal> 或 <literal>desc</literal> 关键字指明了按照升序"
-"或降序进行排序。"
+msgid "The optional <literal>asc</literal> or <literal>desc</literal> indicate ascending or descending order respectively."
+msgstr "可选的 <literal>asc</literal> 或 <literal>desc</literal> 关键字指明了按照升序或降序进行排序。"
 
 #. Tag: title
 #, no-c-format
@@ -1006,12 +601,8 @@ msgstr "group by 子句"
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"A query that returns aggregate values can be grouped by any property of a "
-"returned class or components:"
-msgstr ""
-"一个返回聚集值（aggregate values）的查询可以按照一个返回的类或组件"
-"（components）中的任何属性（property）进行分组： "
+msgid "A query that returns aggregate values can be grouped by any property of a returned class or components:"
+msgstr "一个返回聚集值（aggregate values）的查询可以按照一个返回的类或组件（components）中的任何属性（property）进行分组： "
 
 #. Tag: para
 #, no-c-format
@@ -1020,29 +611,13 @@ msgstr "<literal>having</literal> 子句在这里也允许使用。"
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"SQL functions and aggregate functions are allowed in the <literal>having</"
-"literal> and <literal>order by</literal> clauses if they are supported by "
-"the underlying database (i.e., not in MySQL)."
-msgstr ""
-"如果底层的数据库支持的话（例如不能在 MySQL 中使用），SQL 的一般函数与聚集函数"
-"也可以出现在 <literal>having</literal> 与 <literal>order by</literal> 子句"
-"中。 "
+msgid "SQL functions and aggregate functions are allowed in the <literal>having</literal> and <literal>order by</literal> clauses if they are supported by the underlying database (i.e., not in MySQL)."
+msgstr "如果底层的数据库支持的话（例如不能在 MySQL 中使用），SQL 的一般函数与聚集函数也可以出现在 <literal>having</literal> 与 <literal>order by</literal> 子句中。 "
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"Neither the <literal>group by</literal> clause nor the <literal>order by</"
-"literal> clause can contain arithmetic expressions. Hibernate also does not "
-"currently expand a grouped entity, so you cannot write <literal>group by "
-"cat</literal> if all properties of <literal>cat</literal> are non-"
-"aggregated. You have to list all non-aggregated properties explicitly."
-msgstr ""
-"注意 <literal>group by</literal> 子句与 <literal>order by</literal> 子句中都"
-"不能包含算术表达式（arithmetic expressions）。也要注意 Hibernate 目前不会扩"
-"展 group 的实体，因此你不能写 <literal>group by cat</literal>，除非 "
-"<literal>cat</literal> 的所有属性都不是聚集的（non-aggregated）。你必须明确的"
-"列出所有的非聚集属性。 "
+msgid "Neither the <literal>group by</literal> clause nor the <literal>order by</literal> clause can contain arithmetic expressions. Hibernate also does not currently expand a grouped entity, so you cannot write <literal>group by cat</literal> if all properties of <literal>cat</literal> are non-aggregated. You have to list all non-aggregated properties explicitly."
+msgstr "注意 <literal>group by</literal> 子句与 <literal>order by</literal> 子句中都不能包含算术表达式（arithmetic expressions）。也要注意 Hibernate 目前不会扩展 group 的实体，因此你不能写 <literal>group by cat</literal>，除非 <literal>cat</literal> 的所有属性都不是聚集的（non-aggregated）。你必须明确的列出所有的非聚集属性。 "
 
 #. Tag: title
 #, no-c-format
@@ -1051,15 +626,8 @@ msgstr "子查询"
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"For databases that support subselects, Hibernate supports subqueries within "
-"queries. A subquery must be surrounded by parentheses (often by an SQL "
-"aggregate function call). Even correlated subqueries (subqueries that refer "
-"to an alias in the outer query) are allowed."
-msgstr ""
-"对于支持子查询的数据库，Hibernate 支持在查询中使用子查询。一个子查询必须被圆"
-"括号包围起来（经常是 SQL 聚集函数的圆括号）。甚至相互关联的子查询（引用到外部"
-"查询中的别名的子查询）也是允许的。"
+msgid "For databases that support subselects, Hibernate supports subqueries within queries. A subquery must be surrounded by parentheses (often by an SQL aggregate function call). Even correlated subqueries (subqueries that refer to an alias in the outer query) are allowed."
+msgstr "对于支持子查询的数据库，Hibernate 支持在查询中使用子查询。一个子查询必须被圆括号包围起来（经常是 SQL 聚集函数的圆括号）。甚至相互关联的子查询（引用到外部查询中的别名的子查询）也是允许的。"
 
 #. Tag: para
 #, no-c-format
@@ -1067,14 +635,9 @@ msgid "Note that HQL subqueries can occur only in the select or where clauses."
 msgstr "注意，HQL 自查询只可以在 select 或者 where 子句中出现。 "
 
 #. Tag: para
-#, fuzzy, no-c-format
-msgid ""
-"Note that subqueries can also utilize <literal>row value constructor</"
-"literal> syntax. See <xref linkend=\"queryhql-tuple\" /> for more "
-"information."
-msgstr ""
-"注意子查询也可以利用 <literal>row value constructor</literal> 语法。请参考 "
-"<xref linkend=\"queryhql-tuple\" /> 来获得详情。 "
+#, no-c-format
+msgid "Note that subqueries can also utilize <literal>row value constructor</literal> syntax. See <xref linkend=\"queryhql-tuple\" /> for more information."
+msgstr "注意子查询也可以利用 <literal>row value constructor</literal> 语法。请参考 <xref linkend=\"queryhql-tuple\" /> 来获得详情。"
 
 #. Tag: title
 #, no-c-format
@@ -1083,90 +646,37 @@ msgstr "HQL 示例 "
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"Hibernate queries can be quite powerful and complex. In fact, the power of "
-"the query language is one of Hibernate's main strengths. The following "
-"example queries are similar to queries that have been used on recent "
-"projects. Please note that most queries you will write will be much simpler "
-"than the following examples."
-msgstr ""
-"Hibernate 查询可以非常的强大与复杂。实际上，Hibernate 的一个主要卖点就是查询"
-"语句的威力。这里有一些例子，它们与我在最近的一个项目中使用的查询非常相似。注"
-"意你能用到的大多数查询比这些要简单的多。"
+msgid "Hibernate queries can be quite powerful and complex. In fact, the power of the query language is one of Hibernate's main strengths. The following example queries are similar to queries that have been used on recent projects. Please note that most queries you will write will be much simpler than the following examples."
+msgstr "Hibernate 查询可以非常的强大与复杂。实际上，Hibernate 的一个主要卖点就是查询语句的威力。这里有一些例子，它们与我在最近的一个项目中使用的查询非常相似。注意你能用到的大多数查询比这些要简单的多。"
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"The following query returns the order id, number of items, the given minimum "
-"total value and the total value of the order for all unpaid orders for a "
-"particular customer. The results are ordered by total value. In determining "
-"the prices, it uses the current catalog. The resulting SQL query, against "
-"the <literal>ORDER</literal>, <literal>ORDER_LINE</literal>, "
-"<literal>PRODUCT</literal>, <literal>CATALOG</literal> and <literal>PRICE</"
-"literal> tables has four inner joins and an (uncorrelated) subselect."
-msgstr ""
-"下面的查询对于某个特定的客户的所有未支付的账单，在给定给最小总价值的情况下，"
-"返回订单的 id，条目的数量和总价值，返回值按照总价值的结果进行排序。为了决定价"
-"格，查询使用了当前目录。作为转换结果的 SQL 查询，使用了<literal>ORDER</"
-"literal>，<literal>ORDER_LINE</literal>，<literal>PRODUCT</literal>，"
-"<literal>CATALOG</literal> 和 <literal>PRICE</literal> 库表。"
+msgid "The following query returns the order id, number of items, the given minimum total value and the total value of the order for all unpaid orders for a particular customer. The results are ordered by total value. In determining the prices, it uses the current catalog. The resulting SQL query, against the <literal>ORDER</literal>, <literal>ORDER_LINE</literal>, <literal>PRODUCT</literal>, <literal>CATALOG</literal> and <literal>PRICE</literal> tables has four inner joins and an (uncorrelated) subselect."
+msgstr "下面的查询对于某个特定的客户的所有未支付的账单，在给定给最小总价值的情况下，返回订单的 id，条目的数量和总价值，返回值按照总价值的结果进行排序。为了决定价格，查询使用了当前目录。作为转换结果的 SQL 查询，使用了<literal>ORDER</literal>，<literal>ORDER_LINE</literal>，<literal>PRODUCT</literal>，<literal>CATALOG</literal> 和 <literal>PRICE</literal> 库表。"
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"What a monster! Actually, in real life, I'm not very keen on subqueries, so "
-"my query was really more like this:"
-msgstr ""
-"这简直是一个怪物！实际上，在现实生活中，我并不热衷于子查询，所以我的查询语句"
-"看起来更像这个："
+msgid "What a monster! Actually, in real life, I'm not very keen on subqueries, so my query was really more like this:"
+msgstr "这简直是一个怪物！实际上，在现实生活中，我并不热衷于子查询，所以我的查询语句看起来更像这个："
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"The next query counts the number of payments in each status, excluding all "
-"payments in the <literal>AWAITING_APPROVAL</literal> status where the most "
-"recent status change was made by the current user. It translates to an SQL "
-"query with two inner joins and a correlated subselect against the "
-"<literal>PAYMENT</literal>, <literal>PAYMENT_STATUS</literal> and "
-"<literal>PAYMENT_STATUS_CHANGE</literal> tables."
-msgstr ""
-"下面一个查询计算每一种状态下的支付的数目，除去所有处于 "
-"<literal>AWAITING_APPROVAL</literal> 状态的支付，因为在该状态下 当前的用户作"
-"出了状态的最新改变。该查询被转换成含有两个内连接以及一个相关联的子选择的 SQL "
-"查询，该查询使用了表 <literal>PAYMENT</literal>，<literal>PAYMENT_STATUS</"
-"literal> 以及  <literal>PAYMENT_STATUS_CHANGE</literal>。"
+msgid "The next query counts the number of payments in each status, excluding all payments in the <literal>AWAITING_APPROVAL</literal> status where the most recent status change was made by the current user. It translates to an SQL query with two inner joins and a correlated subselect against the <literal>PAYMENT</literal>, <literal>PAYMENT_STATUS</literal> and <literal>PAYMENT_STATUS_CHANGE</literal> tables."
+msgstr "下面一个查询计算每一种状态下的支付的数目，除去所有处于 <literal>AWAITING_APPROVAL</literal> 状态的支付，因为在该状态下 当前的用户作出了状态的最新改变。该查询被转换成含有两个内连接以及一个相关联的子选择的 SQL 查询，该查询使用了表 <literal>PAYMENT</literal>，<literal>PAYMENT_STATUS</literal> 以及  <literal>PAYMENT_STATUS_CHANGE</literal>。"
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"If the <literal>statusChanges</literal> collection was mapped as a list, "
-"instead of a set, the query would have been much simpler to write."
-msgstr ""
-"如果我把 <literal>statusChanges</literal> 实例集映射为一个列表（list）而不是"
-"一个集合（set），书写查询语句将更加简单。 "
+msgid "If the <literal>statusChanges</literal> collection was mapped as a list, instead of a set, the query would have been much simpler to write."
+msgstr "如果我把 <literal>statusChanges</literal> 实例集映射为一个列表（list）而不是一个集合（set），书写查询语句将更加简单。 "
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"The next query uses the MS SQL Server <literal>isNull()</literal> function "
-"to return all the accounts and unpaid payments for the organization to which "
-"the current user belongs. It translates to an SQL query with three inner "
-"joins, an outer join and a subselect against the <literal>ACCOUNT</literal>, "
-"<literal>PAYMENT</literal>, <literal>PAYMENT_STATUS</literal>, "
-"<literal>ACCOUNT_TYPE</literal>, <literal>ORGANIZATION</literal> and "
-"<literal>ORG_USER</literal> tables."
-msgstr ""
-"下面一个查询使用了 MS SQL Server 的 <literal>isNull()</literal> 函数用以返回"
-"当前用户所属组织的组织帐号及组织未支付的账。它被转换成一个对表 "
-"<literal>ACCOUNT</literal>，<literal>PAYMENT</literal>，"
-"<literal>PAYMENT_STATUS</literal>，<literal>ACCOUNT_TYPE</literal>，"
-"<literal>ORGANIZATION</literal>  以及 <literal>ORG_USER</literal> 进行的三个"
-"内连接，一个外连接和一个子选择的 SQL 查询。"
+msgid "The next query uses the MS SQL Server <literal>isNull()</literal> function to return all the accounts and unpaid payments for the organization to which the current user belongs. It translates to an SQL query with three inner joins, an outer join and a subselect against the <literal>ACCOUNT</literal>, <literal>PAYMENT</literal>, <literal>PAYMENT_STATUS</literal>, <literal>ACCOUNT_TYPE</literal>, <literal>ORGANIZATION</literal> and <literal>ORG_USER</literal> tables."
+msgstr "下面一个查询使用了 MS SQL Server 的 <literal>isNull()</literal> 函数用以返回当前用户所属组织的组织帐号及组织未支付的账。它被转换成一个对表 <literal>ACCOUNT</literal>，<literal>PAYMENT</literal>，<literal>PAYMENT_STATUS</literal>，<literal>ACCOUNT_TYPE</literal>，<literal>ORGANIZATION</literal>  以及 <literal>ORG_USER</literal> 进行的三个内连接，一个外连接和一个子选择的 SQL 查询。"
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"For some databases, we would need to do away with the (correlated) subselect."
+msgid "For some databases, we would need to do away with the (correlated) subselect."
 msgstr "对于一些数据库，我们需要弃用（相关的）子选择。"
 
 #. Tag: title
@@ -1175,15 +685,9 @@ msgid "Bulk update and delete"
 msgstr "批量的 UPDATE 和 DELETE"
 
 #. Tag: para
-#, fuzzy, no-c-format
-msgid ""
-"HQL now supports <literal>update</literal>, <literal>delete</literal> and "
-"<literal>insert ... select ...</literal> statements. See <xref linkend="
-"\"batch-direct\" /> for more information."
-msgstr ""
-"HQL 现在支持 <literal>update</literal>，<literal>delete</literal> 和 "
-"<literal>insert ... select ...</literal>语句。查阅 <xref linkend=\"batch-"
-"direct\" /> 以获得更多信息。"
+#, no-c-format
+msgid "HQL now supports <literal>update</literal>, <literal>delete</literal> and <literal>insert ... select ...</literal> statements. See <xref linkend=\"batch-direct\" /> for more information."
+msgstr "HQL 现在支持 <literal>update</literal>，<literal>delete</literal> 和 <literal>insert ... select ...</literal>语句。查阅 <xref linkend=\"batch-direct\" /> 以获得更多信息。 "
 
 #. Tag: title
 #, no-c-format
@@ -1202,12 +706,8 @@ msgstr "若想根据一个集合的大小来进行排序，可以使用如下的
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"If your database supports subselects, you can place a condition upon "
-"selection size in the where clause of your query:"
-msgstr ""
-"如果你的数据库支持子选择，你可以在你的查询的 where 子句中为选择的大小"
-"（selection size）指定一个条件："
+msgid "If your database supports subselects, you can place a condition upon selection size in the where clause of your query:"
+msgstr "如果你的数据库支持子选择，你可以在你的查询的 where 子句中为选择的大小（selection size）指定一个条件："
 
 #. Tag: para
 #, no-c-format
@@ -1216,12 +716,8 @@ msgstr "如果你的数据库不支持子选择语句，使用下面的查询：
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"As this solution cannot return a <literal>User</literal> with zero messages "
-"because of the inner join, the following form is also useful:"
-msgstr ""
-"因为内连接（inner join）的原因，这个解决方案不能返回含有零个信息的 "
-"<literal>User</literal> 类的实例，所以这种情况下使用下面的格式将是有帮助的： "
+msgid "As this solution cannot return a <literal>User</literal> with zero messages because of the inner join, the following form is also useful:"
+msgstr "因为内连接（inner join）的原因，这个解决方案不能返回含有零个信息的 <literal>User</literal> 类的实例，所以这种情况下使用下面的格式将是有帮助的： "
 
 #. Tag: para
 #, no-c-format
@@ -1230,18 +726,13 @@ msgstr "JavaBean 的属性可以被绑定到一个命名查询（named query）�
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"Collections are pageable by using the <literal>Query</literal> interface "
-"with a filter:"
-msgstr ""
-"通过将接口 <literal>Query</literal> 与一个过滤器（filter）一起使用，集合"
-"（Collections）是可以分页的："
+msgid "Collections are pageable by using the <literal>Query</literal> interface with a filter:"
+msgstr "通过将接口 <literal>Query</literal> 与一个过滤器（filter）一起使用，集合（Collections）是可以分页的："
 
 #. Tag: para
 #, no-c-format
 msgid "Collection elements can be ordered or grouped using a query filter:"
-msgstr ""
-"通过使用查询过滤器（query filter）可以将集合（Collection）的元素分组或排序： "
+msgstr "通过使用查询过滤器（query filter）可以将集合（Collection）的元素分组或排序： "
 
 #. Tag: para
 #, no-c-format
@@ -1255,22 +746,13 @@ msgstr "组件"
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"Components can be used similarly to the simple value types that are used in "
-"HQL queries. They can appear in the <literal>select</literal> clause as "
-"follows:"
-msgstr ""
-"在 HQL 查询里，组件可以和简单值类型一样使用。它们可以出现在 <literal>select</"
-"literal> 子句里： "
+msgid "Components can be used similarly to the simple value types that are used in HQL queries. They can appear in the <literal>select</literal> clause as follows:"
+msgstr "在 HQL 查询里，组件可以和简单值类型一样使用。它们可以出现在 <literal>select</literal> 子句里： "
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"where the Person's name property is a component. Components can also be used "
-"in the <literal>where</literal> clause:"
-msgstr ""
-"在这里，Person 的 name 属性是一个组件。组件也可以用在 <literal>where</"
-"literal> 子句里："
+msgid "where the Person's name property is a component. Components can also be used in the <literal>where</literal> clause:"
+msgstr "在这里，Person 的 name 属性是一个组件。组件也可以用在 <literal>where</literal> 子句里："
 
 #. Tag: para
 #, no-c-format
@@ -1278,13 +760,9 @@ msgid "Components can also be used in the <literal>order by</literal> clause:"
 msgstr "组件也可以用在 <literal>order by</literal> 子句里："
 
 #. Tag: para
-#, fuzzy, no-c-format
-msgid ""
-"Another common use of components is in <link linkend=\"queryhql-tuple\">row "
-"value constructors</link>."
-msgstr ""
-"组件的另外一个常见用法是在 <xref linkend=\"queryhql-tuple\" /> 行值（row "
-"value）构造函数里。"
+#, no-c-format
+msgid "Another common use of components is in <link linkend=\"queryhql-tuple\">row value constructors</link>."
+msgstr "组件的另外一个常见用法是在 <xref linkend=\"queryhql-tuple\" /> 行值（row value）构造函数里。 "
 
 #. Tag: title
 #, no-c-format
@@ -1293,52 +771,28 @@ msgstr "Row value 构造函数语法"
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"HQL supports the use of ANSI SQL <literal>row value constructor</literal> "
-"syntax, sometimes referred to AS <literal>tuple</literal> syntax, even "
-"though the underlying database may not support that notion. Here, we are "
-"generally referring to multi-valued comparisons, typically associated with "
-"components. Consider an entity Person which defines a name component:"
-msgstr ""
-"HQL 支持 ANSI SQL <literal>row value constructor</literal> 语法（有时也叫作 "
-"<literal>tuple</literal> 语法），即使底层数据库可能不支持这个概念。在这里我们"
-"通常指的是多值（multi-valued）的比较，典型地是和组件相关联。来看看一个定义了 "
-"name 组件的实体 Person："
+msgid "HQL supports the use of ANSI SQL <literal>row value constructor</literal> syntax, sometimes referred to AS <literal>tuple</literal> syntax, even though the underlying database may not support that notion. Here, we are generally referring to multi-valued comparisons, typically associated with components. Consider an entity Person which defines a name component:"
+msgstr "HQL 支持 ANSI SQL <literal>row value constructor</literal> 语法（有时也叫作 <literal>tuple</literal> 语法），即使底层数据库可能不支持这个概念。在这里我们通常指的是多值（multi-valued）的比较，典型地是和组件相关联。来看看一个定义了 name 组件的实体 Person："
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"That is valid syntax although it is a little verbose. You can make this more "
-"concise by using <literal>row value constructor</literal> syntax:"
-msgstr ""
-"那是有效的语法，虽然有点冗长。我们可以使它更加简洁一点，并使用 <literal>row "
-"value constructor</literal> 语法： "
+msgid "That is valid syntax although it is a little verbose. You can make this more concise by using <literal>row value constructor</literal> syntax:"
+msgstr "那是有效的语法，虽然有点冗长。我们可以使它更加简洁一点，并使用 <literal>row value constructor</literal> 语法： "
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"It can also be useful to specify this in the <literal>select</literal> "
-"clause:"
+msgid "It can also be useful to specify this in the <literal>select</literal> clause:"
 msgstr "在 <literal>select</literal> 子句里指定这个也是很有用的："
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"Using <literal>row value constructor</literal> syntax can also be beneficial "
-"when using subqueries that need to compare against multiple values:"
-msgstr ""
-"当使用需要比较多个值的子查询时，采用 <literal>row value constructor</"
-"literal> 语法也很有用处： "
+msgid "Using <literal>row value constructor</literal> syntax can also be beneficial when using subqueries that need to compare against multiple values:"
+msgstr "当使用需要比较多个值的子查询时，采用 <literal>row value constructor</literal> 语法也很有用处： "
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"One thing to consider when deciding if you want to use this syntax, is that "
-"the query will be dependent upon the ordering of the component sub-"
-"properties in the metadata."
-msgstr ""
-"决定是否使用这个语法的一件因素就是：这个查询将依赖于元数据里的组件子属性"
-"（sub-properties）的顺序。 "
+msgid "One thing to consider when deciding if you want to use this syntax, is that the query will be dependent upon the ordering of the component sub-properties in the metadata."
+msgstr "决定是否使用这个语法的一件因素就是：这个查询将依赖于元数据里的组件子属性（sub-properties）的顺序。 "
 
 #, fuzzy
 #~ msgid "<![CDATA[from eg.Cat]]>"
@@ -1381,10 +835,8 @@ msgstr ""
 #, fuzzy
 #~ msgid "<![CDATA[from Formula form full join form.parameter param]]>"
 #~ msgstr "from Formula form full join form.parameter param"
-
 #~ msgid "inner join"
 #~ msgstr "<literal>inner join</literal>（内连接）"
-
 #~ msgid "left outer join"
 #~ msgstr "<literal>left outer join</literal>（左外连接）"
 
@@ -1539,7 +991,6 @@ msgstr ""
 #~ msgstr ""
 #~ "select avg(cat.weight), sum(cat.weight), max(cat.weight), count(cat)\n"
 #~ "from Cat cat"
-
 #~ msgid "count(*)"
 #~ msgstr "count(*)"
 
@@ -2279,3 +1730,4 @@ msgstr ""
 #~ "where not ( cat.name, cat.color ) in (\n"
 #~ "    select cat.name, cat.color from DomesticCat cat\n"
 #~ ")"
+

@@ -60,9 +60,10 @@ public class TypeParameterTest extends FunctionalTestCase {
 		assertEquals("Non-Default value should not be changed", resultSet.getInt("VALUE_THREE"), 5);
 		assertTrue("Default value should have been mapped to null", resultSet.getObject("VALUE_FOUR") == null);
 
-		deleteData();
+		
 		t.commit();
 		s.close();
+		deleteData();
 	}
 
 	public void testLoading() throws Exception {
@@ -83,9 +84,10 @@ public class TypeParameterTest extends FunctionalTestCase {
 		assertEquals("Default value incorrectly loaded", obj.getValueThree(), -1);
 		assertEquals("Default value incorrectly loaded", obj.getValueFour(), -5);
 
-		deleteData();
+		
 		t.commit();
 		s.close();
+		deleteData();
 	}
 
 	private void initData() throws Exception {

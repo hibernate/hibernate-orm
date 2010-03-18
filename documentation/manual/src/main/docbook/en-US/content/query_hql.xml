@@ -1147,7 +1147,7 @@ order by count(msg)]]></programlisting>
         </para>
 
         <programlisting><![CDATA[select usr.id, usr.name
-from User usr.name
+from User usr
     join usr.messages msg
 group by usr.id, usr.name
 having count(msg) >= 1]]></programlisting>

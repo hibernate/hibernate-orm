@@ -427,7 +427,6 @@ public class DomesticCat extends Cat {
 
         <programlisting role="JAVA"><![CDATA[Session s = openSession();
 Transaction tx = s.beginTransaction();
-Session s = openSession();
 
 // Create a customer
 Map david = new HashMap();

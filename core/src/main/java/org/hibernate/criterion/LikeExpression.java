@@ -93,7 +93,7 @@ public class LikeExpression implements Criterion {
 			Criteria criteria,
 			CriteriaQuery criteriaQuery) throws HibernateException {
 		return new TypedValue[] {
-				criteriaQuery.getTypedValue( criteria, propertyName, value.toString().toLowerCase() )
+				criteriaQuery.getTypedValue( criteria, propertyName, ignoreCase ? value.toString().toLowerCase() : value.toString() )
 		};
 	}
 }

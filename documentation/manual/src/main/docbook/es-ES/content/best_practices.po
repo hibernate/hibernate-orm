@@ -1,6 +1,6 @@
 # translation of best_practices.po to
 # Michael H. Smith <mhideo@redhat.com>, 2007.
-# Angela Garcia <agarcia@redhat.com>, 2009.
+# Angela Garcia <agarcia@redhat.com>, 2009, 2010.
 # translation of Collection_Mapping.po to
 # translation of Collection_Mapping.po to
 # translation of Collection_Mapping.po to
@@ -15,7 +15,7 @@ msgstr ""
 "Project-Id-Version: best_practices\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
 "POT-Creation-Date: 2010-02-11T05:38:15\n"
-"PO-Revision-Date: 2009-11-09 09:46+1000\n"
+"PO-Revision-Date: 2010-03-15 12:52+1000\n"
 "Last-Translator: Angela Garcia <agarcia@redhat.com>\n"
 "Language-Team:  <en@li.org>\n"
 "MIME-Version: 1.0\n"
@@ -188,7 +188,7 @@ msgid "Use hand-coded JDBC in bottlenecks:"
 msgstr "Utilice JDBC codificado a mano cuando se encuentre atascado:"
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "In performance-critical areas of the system, some kinds of operations might "
 "benefit from direct JDBC. Do not assume, however, that JDBC is necessarily "
@@ -200,13 +200,11 @@ msgid ""
 "connection provider."
 msgstr ""
 "En áreas de rendimiento crítico del sistema, algunos tipos de operaciones "
-"podrían beneficiarse del JDBC directo. Sin embargo, no asuma que el JDBC "
-"directo es necesariamente más rápido. Por favor, espere hasta que "
+"podrían beneficiarse del JDBC directo. Sin embargo, no asuma que JDBC es necesariamente más rápido. Por favor, espere hasta que "
 "<emphasis>sepa</emphasis> que se encuentra realmente atascado. Si necesita "
 "utilizar JDBC directo, puede abrir una <literal>Session</literal> de "
-"Hibernate y usar esa conexión JDBC file:///usr/share/doc/HTML/en-US/index."
-"html. De esta manera puede usar aún la misma estrategia de transacción y el "
-"mismo proveedor de conexiones subyacente."
+"Hibernate, envuelva su operación JDBC como un objeto <literal>org."
+"hibernate.jdbc.Work</literal> usando esa conexión JDBC. De esta manera puede usar aún la misma estrategia de transacción y el mismo proveedor de conexiones subyacente."
 
 #. Tag: term
 #, no-c-format
@@ -231,8 +229,7 @@ msgstr ""
 #. Tag: term
 #, no-c-format
 msgid "In a three tiered architecture, consider using detached objects:"
-msgstr ""
-"En una arquitectura con tres niveles considere el utilizar objetos separados:"
+msgstr "En una arquitectura con tres niveles considere el utilizar objetos separados:"
 
 #. Tag: para
 #, no-c-format
@@ -436,3 +433,4 @@ msgstr ""
 "Las asociaciones unidireccionales son más difíciles de consultar. En una "
 "aplicación grande, casi todas las asociaciones deben ser navegables en ambas "
 "direcciones en consultas."
+

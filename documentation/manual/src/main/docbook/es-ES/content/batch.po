@@ -15,7 +15,7 @@ msgstr ""
 "Project-Id-Version: batch\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
 "POT-Creation-Date: 2010-02-11T05:38:15\n"
-"PO-Revision-Date: 2010-01-07 10:48+1000\n"
+"PO-Revision-Date: 2010-03-16 10:24+1000\n"
 "Last-Translator: Angela Garcia <agarcia@redhat.com>\n"
 "Language-Team:  <en@li.org>\n"
 "MIME-Version: 1.0\n"
@@ -203,7 +203,7 @@ msgid "DML-style operations"
 msgstr "Operaciones de estilo DML"
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "As already discussed, automatic and transparent object/relational mapping is "
 "concerned with the management of the object state. The object state is "
@@ -217,13 +217,13 @@ msgid ""
 msgstr ""
 "Como se discutió anteriormente, el mapeo objeto/relacional transparente se "
 "refiere a la administración del estado de objetos. El estado del objeto está "
-"disponible en la memoria. Por lo tanto al manipular datos directamente en la "
-"base de datos (utilizando <literal>Data Manipulation Language</literal> "
-"(DML) las declaraciones: <literal>INSERT</literal>, <literal>UPDATE</"
-"literal>, <literal>DELETE</literal>) no afectará el estado en la memoria. "
+"disponible en la memoria. Esto significa que el manipular datos directamente en la "
+"base de datos (utilizando DML (del inglés <literal>Data Manipulation Language</literal>) las declaraciones: <literal>INSERT</literal>, <literal>UPDATE</"
+"literal>, <literal>DELETE</literal>) no afectarán el estado en la memoria. "
 "Sin embargo, Hibernate brinda métodos para la ejecución de declaraciones en "
 "masa DML del estilo de SQL, las cuales se realizan por medio del Lenguaje de "
-"Consulta de Hibernate (<xref linkend=\"queryhql\" />)."
+"Consulta de Hibernate (<link linkend=\"queryhql"
+"\">HQL</link>)."
 
 #. Tag: para
 #, no-c-format
@@ -261,16 +261,16 @@ msgstr ""
 "cualquier referencia de la propiedad."
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "No <link linkend=\"queryhql-joins-forms\">joins</link>, either implicit or "
 "explicit, can be specified in a bulk HQL query. Sub-queries can be used in "
 "the where-clause, where the subqueries themselves may contain joins."
 msgstr ""
-"No se puede especificar ningún <xref linkend=\"queryhql-joins-forms\" />, ya "
-"sea implícito o explícito, en una consulta masiva de HQL. Se pueden utilizar "
-"subconsultas en la cláusula-where y en donde las subconsultas pueden "
-"contener joins en sí mismas. "
+"No se puede especificar ninguna <link linkend=\"queryhql-joins-forms\">unión</link> ya "
+"sea implícita o explícita, en una consulta masiva de HQL. Se pueden utilizar "
+"subconsultas en la cláusula-where y en donde las subconsultas puedan "
+"contener uniones en sí mismas. "
 
 #. Tag: para
 #, no-c-format
@@ -291,7 +291,7 @@ msgstr ""
 "literal> de JDBC:"
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "In keeping with the EJB3 specification, HQL <literal>UPDATE</literal> "
 "statements, by default, do not effect the <link linkend=\"mapping-"
@@ -304,13 +304,13 @@ msgid ""
 "keyword."
 msgstr ""
 "Para mantenerse de acuerdo con la especificación de EJB3, las declaraciones "
-"<literal>UPDATE</literal> de HQL, por defecto no afectan la <xref linkend="
-"\"mapping-declaration-version\" /> o los valores de propiedad <xref linkend="
-"\"mapping-declaration-timestamp\" /> para las entidades afectadas. Sin "
+"<literal>UPDATE</literal> de HQL, por defecto no afectan la <link linkend=\"mapping-"
+"declaration-version\">versión</link> o los valores de la propiedad <link linkend=\"mapping-"
+"declaration-timestamp\">sello de fecha</link> para las entidades afectadas. Sin "
 "embargo, puede obligar a Hibernate a poner en cero apropiadamente los "
-"valores de propiedad <literal>version</literal> o <literal>timestamp</"
-"literal> por medio de la utilización de un <literal>versioned update</"
-"literal>. Esto se logra añadiendo la palabra clave <literal>VERSIONED</"
+"valores de las propiedades <literal>versión</literal> o <literal>sello de fecha</"
+"literal> por medio de la utilización de una <literal>actualización con versión</"
+"literal>. Esto se logra agregando la palabra clave <literal>VERSIONED</"
 "literal> después de la palabra clave <literal>UPDATE</literal>."
 
 #. Tag: para
@@ -481,3 +481,4 @@ msgid ""
 msgstr ""
 "Un ejemplo de la ejecución de la declaración <literal>INSERT</literal> de "
 "HQL:"
+

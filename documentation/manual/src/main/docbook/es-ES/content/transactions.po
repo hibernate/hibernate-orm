@@ -15,7 +15,7 @@ msgstr ""
 "Project-Id-Version: transactions\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
 "POT-Creation-Date: 2010-02-11T05:38:16\n"
-"PO-Revision-Date: 2010-01-07 10:38+1000\n"
+"PO-Revision-Date: 2010-03-15 13:11+1000\n"
 "Last-Translator: Angela Garcia <agarcia@redhat.com>\n"
 "Language-Team:  <en@li.org>\n"
 "MIME-Version: 1.0\n"
@@ -159,7 +159,7 @@ msgid "Unit of work"
 msgstr "Unidad de trabajo"
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "First, let's define a unit of work. A unit of work is a design pattern "
 "described by Martin Fowler as <quote> [maintaining] a list of objects "
@@ -183,7 +183,7 @@ msgstr ""
 "física (consulte <xref linkend=\"transactions-basics-apptx\"/>). Así que "
 "realmente estamos hablando sobre una noción más abstracta de una "
 "transacción. El término \"transacción empresarial\" también se utiliza a "
-"veces en lugar de unidad de trabajo."
+"veces en lugar de unidad de trabajo. "
 
 #. Tag: para
 #, no-c-format
@@ -273,7 +273,7 @@ msgstr ""
 "capítulo."
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "Your application code can access a \"current session\" to process the "
 "request by calling <literal>sessionFactory.getCurrentSession()</literal>. "
@@ -282,10 +282,9 @@ msgid ""
 "JTA environments, see <xref linkend=\"architecture-current-session\" />."
 msgstr ""
 "Su código de aplicación puede acceder a una \"sesión actual\" para procesar "
-"el pedido llamando a <literal>sessionFactory.getCurrentSession()</literal>. "
-"Siempre obtendrá una <literal>Session</literal> con ámbito a la transacción "
+"el pedido llamando a <literal>sessionFactory.getCurrentSession()</literal>. Siempre obtendrá una <literal>Session</literal> con ámbito a la transacción "
 "de la base de datos actual. Esto tiene que ser configurado para entornos JTA "
-"o recurso-local, consulte <xref linkend=\"architecture-current-session\" />."
+"o recursos-locales, consulte <xref linkend=\"architecture-current-session\" />."
 
 #. Tag: para
 #, no-c-format
@@ -498,7 +497,7 @@ msgid "Database Identity"
 msgstr "Identidad de Base de Datos"
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "<literal>foo.getId().equals( bar.getId() )</literal>"
 msgstr "<literal>foo.getId().equals( bar.getId() )</literal>"
 
@@ -668,7 +667,7 @@ msgstr ""
 "después de deshacer de todos modos."
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "The <literal>Session</literal> caches every object that is in a persistent "
 "state (watched and checked for dirty state by Hibernate). If you keep it "
@@ -686,11 +685,11 @@ msgstr ""
 "carga demasiados datos crece sin fin hasta que obtiene una "
 "OutOfMemoryException. Una solución para esto es llamar a <literal>clear()</"
 "literal> y <literal>evict()</literal> para gestionar el caché de la "
-"<literal>Session</literal>, pero probalemente deba considerar un "
-"procedimiento almacenado si necesita operaciones de datos masivas. Se pueden "
+"<literal>Session</literal>, pero probablemente deba considerar un "
+"procedimiento almacenado si necesita operaciones de datos masivs. Se pueden "
 "ver algunas soluciones en <xref linkend=\"batch\"/>. Mantener una "
 "<literal>Session</literal> abierta durante una sesión de usuario también "
-"significa una alta probabilidad de datos desactualizados."
+"significa una alta probabilidad de datos desactualizados. "
 
 #. Tag: title
 #, no-c-format
@@ -767,8 +766,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"Ending a <literal>Session</literal> usually involves four distinct phases:"
+msgid "Ending a <literal>Session</literal> usually involves four distinct phases:"
 msgstr ""
 "Usualmente, el finalizar una <literal>Session</literal> implica cuatro fases "
 "distintas:"
@@ -824,7 +822,7 @@ msgstr ""
 "transacción se ve así:"
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "You do not have to <literal>flush()</literal> the <literal>Session</literal> "
 "explicitly: the call to <literal>commit()</literal> automatically triggers "
@@ -836,8 +834,8 @@ msgid ""
 msgstr ""
 "No tiene que vaciar con <literal>flush()</literal> la <literal>Session</"
 "literal> explícitamente: la llamada a <literal>commit()</literal> "
-"automáticamente dispara la sincronización dependiendo del <xref linkend="
-"\"objectstate-flushing\"/> para la sesión. Una llamada a <literal>close()</"
+"automáticamente dispara la sincronización dependiendo del <link linkend=\"objectstate-flushing"
+"\">FlushMode</link> para la sesión. Una llamada a <literal>close()</"
 "literal> marca el final de una sesión. La implicación principal de "
 "<literal>close()</literal> es que la conexión JDBC será abandonada por la "
 "sesión. Este código Java es portátil y ejecuta en entornos tanto no-"
@@ -1660,8 +1658,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"The \"explicit user request\" is expressed in one of the following ways:"
+msgid "The \"explicit user request\" is expressed in one of the following ways:"
 msgstr ""
 "La \"petición explícita del usuario\" se expresa en una de las siguientes "
 "formas:"
@@ -1874,3 +1871,4 @@ msgstr ""
 "la misma conexión JDBC subyacente cada vez que llamamos a "
 "<literal>ConnectionProvider.getConnection()</literal> o en entornos auto-"
 "commit, en donde no importa si recibimos la misma conexión."
+

@@ -1,149 +1,153 @@
+# translation of author_group.po to
 # Language es-ES translations for Branch package.
-# Automatically generated, 2009.
 #
+# Automatically generated, 2009.
+# Angela Garcia <agarcia@redhat.com>, 2010.
 msgid ""
 msgstr ""
-"Project-Id-Version: Branch 3_3\n"
+"Project-Id-Version: author_group\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
 "POT-Creation-Date: 2010-02-04T04:51:21\n"
-"PO-Revision-Date: 2009-06-16 18:47+0000\n"
-"Last-Translator: Automatically generated\n"
-"Language-Team: none\n"
+"PO-Revision-Date: 2010-03-12 11:24+1000\n"
+"Last-Translator: Angela Garcia <agarcia@redhat.com>\n"
+"Language-Team:  <en@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"X-Generator: KBabel 1.11.4\n"
 
 #. Tag: firstname
 #, no-c-format
 msgid "Gavin"
-msgstr ""
+msgstr "Gavin"
 
 #. Tag: firstname
 #, no-c-format
 msgid "Christian"
-msgstr ""
+msgstr "Christian"
 
 #. Tag: firstname
 #, no-c-format
 msgid "Max"
-msgstr ""
+msgstr "Max"
 
 #. Tag: firstname
 #, no-c-format
 msgid "Emmanuel"
-msgstr ""
+msgstr "Emmanuel"
 
 #. Tag: firstname
 #, no-c-format
 msgid "Steve"
-msgstr ""
+msgstr "Steve"
 
 #. Tag: firstname
 #, no-c-format
 msgid "James"
-msgstr ""
+msgstr "James"
 
 #. Tag: firstname
 #, no-c-format
 msgid "Cheyenne"
-msgstr ""
+msgstr "Cheyenne"
 
 #. Tag: firstname
 #, no-c-format
 msgid "Vincent"
-msgstr ""
+msgstr "Vincent"
 
 #. Tag: firstname
 #, no-c-format
 msgid "Sebastien"
-msgstr ""
+msgstr "Sebastien"
 
 #. Tag: firstname
 #, no-c-format
 msgid "Michael"
-msgstr ""
+msgstr "Michael"
 
 #. Tag: firstname
 #, no-c-format
 msgid "Baptiste"
-msgstr ""
+msgstr "Baptiste"
 
 #. Tag: firstname
 #, no-c-format
 msgid "Anthony"
-msgstr ""
+msgstr "Anthony"
 
 #. Tag: firstname
 #, no-c-format
 msgid "Alvaro"
-msgstr ""
+msgstr "Alvaro"
 
 #. Tag: firstname
 #, no-c-format
 msgid "Anderson"
-msgstr ""
+msgstr "Anderson"
 
 #. Tag: firstname
 #, no-c-format
 msgid "Daniel Vieira"
-msgstr ""
+msgstr "Daniel Vieira"
 
 #. Tag: firstname
 #, no-c-format
 msgid "Francisco"
-msgstr ""
+msgstr "Francisco"
 
 #. Tag: firstname
 #, no-c-format
 msgid "Gamarra"
-msgstr ""
+msgstr "Gamarra"
 
 #. Tag: firstname
 #, no-c-format
 msgid "Luiz Carlos"
-msgstr ""
+msgstr "Luiz Carlos"
 
 #. Tag: firstname
 #, no-c-format
 msgid "Marcel"
-msgstr ""
+msgstr "Marcel"
 
 #. Tag: firstname
 #, no-c-format
 msgid "Paulo"
-msgstr ""
+msgstr "Paulo"
 
 #. Tag: firstname
 #, no-c-format
 msgid "Pablo L."
-msgstr ""
+msgstr "Pablo L."
 
 #. Tag: firstname
 #, no-c-format
 msgid "Renato"
-msgstr ""
+msgstr "Renato"
 
 #. Tag: firstname
 #, no-c-format
 msgid "Rogério"
-msgstr ""
+msgstr "Rogério"
 
 #. Tag: firstname
 #, no-c-format
 msgid "Wanderson"
-msgstr ""
+msgstr "Wanderson"
 
 #. Tag: firstname
 #, no-c-format
 msgid "Cao"
-msgstr ""
+msgstr "Cao"
 
 #. Tag: orgname
 #, no-c-format
 msgid "RedSaga"
-msgstr ""
+msgstr "RedSaga"
 
 #. Tag: contrib
 #, no-c-format
 msgid "Translation Lead"
-msgstr ""
+msgstr "Líder de traducción"
+

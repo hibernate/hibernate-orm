@@ -15,7 +15,7 @@ msgstr ""
 "Project-Id-Version: query_criteria\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
 "POT-Creation-Date: 2010-02-11T05:38:15\n"
-"PO-Revision-Date: 2010-01-05 17:44+1000\n"
+"PO-Revision-Date: 2010-03-17 12:58+1000\n"
 "Last-Translator: Angela Garcia <agarcia@redhat.com>\n"
 "Language-Team:  <en@li.org>\n"
 "MIME-Version: 1.0\n"
@@ -146,8 +146,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"There is also an alternate form that is useful in certain circumstances:"
+msgid "There is also an alternate form that is useful in certain circumstances:"
 msgstr "Hay una alternativa que es útil en ciertas circunstancias:"
 
 #. Tag: para
@@ -176,7 +175,7 @@ msgstr ""
 #. Tag: para
 #, no-c-format
 msgid "Additionally you may manipulate the result set using a left outer join:"
-msgstr ""
+msgstr "Adicionalmente puede manipular el grupo de resultados utilizando una unión externa izquierda:"
 
 #. Tag: para
 #, no-c-format
@@ -188,25 +187,27 @@ msgid ""
 "instances where multiple queries would have to be performed and the results "
 "unioned by java in memory."
 msgstr ""
+"Esto retornará todos los <literal>Cat</literal>s -gatos- con una pareja cuyo nombre empiece por "
+"\"good\" ordenado de acuerdo a la edad de la pareja y todos los cats -gatos- que no tengan una pareja. Esto es útil cuando hay necesidad de ordenar o limitar en la base de datos antes de retornar grupos de resultados complejos/grandes y elimina muchas instancias en donde se tendrían que realizar múltiples consultas y unir en memoria los resultados por medio de java."
 
 #. Tag: para
 #, no-c-format
 msgid ""
 "Without this feature, first all of the cats without a mate would need to be "
 "loaded in one query."
-msgstr ""
+msgstr "Sin esta funcionalidad, primero todos los cats sin una pareja tendrían que cargarse en una petición. "
 
 #. Tag: para
 #, no-c-format
 msgid ""
 "A second query would need to retreive the cats with mates who's name started "
 "with \"good\" sorted by the mates age."
-msgstr ""
+msgstr "Una segunda petición tendría que recuperar los cats -gatos- con las parejas cuyos nombres empiecen por \"good\" ordenado de acuerdo a la edad de las parejas."
 
 #. Tag: para
 #, no-c-format
 msgid "Thirdly, in memory; the lists would need to be joined manually."
-msgstr ""
+msgstr "Tercero, en memoria sería necesario unir las listas manualmente."
 
 #. Tag: title
 #, no-c-format
@@ -223,7 +224,7 @@ msgstr ""
 "ejecución usando <literal>setFetchMode()</literal>. "
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "This query will fetch both <literal>mate</literal> and <literal>kittens</"
 "literal> by outer join. See <xref linkend=\"performance-fetching\" /> for "
@@ -264,8 +265,7 @@ msgstr "Puede modificar la aplicación del <literal>Example</literal>."
 #. Tag: para
 #, no-c-format
 msgid "You can even use examples to place criteria upon associated objects."
-msgstr ""
-"Puede incluso usar ejemplos para colocar criterios sobre objetos asociados."
+msgstr "Puede incluso usar ejemplos para colocar criterios sobre objetos asociados."
 
 #. Tag: title
 #, no-c-format
@@ -412,3 +412,4 @@ msgstr ""
 "Una vez que haya habilitado el caché de consulta de Hibernate, "
 "<literal>Restrictions.naturalId()</literal> le permite hacer uso del "
 "algoritmo de caché más eficiente."
+

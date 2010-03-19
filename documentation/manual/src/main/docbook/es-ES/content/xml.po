@@ -15,7 +15,7 @@ msgstr ""
 "Project-Id-Version: xml\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
 "POT-Creation-Date: 2010-02-10T07:25:35\n"
-"PO-Revision-Date: 2010-01-05 07:52+1000\n"
+"PO-Revision-Date: 2010-03-15 12:56+1000\n"
 "Last-Translator: Angela Garcia <agarcia@redhat.com>\n"
 "Language-Team:  <en@li.org>\n"
 "MIME-Version: 1.0\n"
@@ -29,13 +29,13 @@ msgid "XML Mapping"
 msgstr "Mapeo XML"
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "<emphasis> XML Mapping is an experimental feature in Hibernate 3.0 and is "
 "currently under active development. </emphasis>"
 msgstr ""
 "<emphasis> El mapeo XML es una funcionalidad experimental en Hibernate 3.0 y "
-"se encuentra bajos desarrollo activo. </emphasis>"
+"actualmente se encuentra bajo desarrollo activo. </emphasis>"
 
 #. Tag: title
 #, no-c-format
@@ -149,14 +149,12 @@ msgstr ""
 #. Tag: para
 #, no-c-format
 msgid "<literal>\"element-name\"</literal>: map to the named XML element"
-msgstr ""
-"<literal>\"element-name\"</literal> - mapea al elemento XML mencionado "
+msgstr "<literal>\"element-name\"</literal> - mapea al elemento XML mencionado "
 
 #. Tag: para
 #, no-c-format
 msgid "<literal>\"@attribute-name\"</literal>: map to the named XML attribute"
-msgstr ""
-"<literal>\"@attribute-name\"</literal>: mapea al atributo XML mencionado"
+msgstr "<literal>\"@attribute-name\"</literal>: mapea al atributo XML mencionado"
 
 #. Tag: para
 #, no-c-format
@@ -247,3 +245,4 @@ msgstr ""
 "Es útil combinar esta funcionalidad con la operación <literal>replicate()</"
 "literal> de Hibernate para implementar la importación/exportación de datos "
 "basada en XML."
+

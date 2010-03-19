@@ -13,10 +13,10 @@
 # translation of Collection_Mapping.po to
 msgid ""
 msgstr ""
-"Project-Id-Version: Preface\n"
+"Project-Id-Version: preface\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
 "POT-Creation-Date: 2010-02-11T05:38:15\n"
-"PO-Revision-Date: 2010-01-07 10:45+1000\n"
+"PO-Revision-Date: 2010-03-15 15:31+1000\n"
 "Last-Translator: Angela Garcia <agarcia@redhat.com>\n"
 "Language-Team:  <en@li.org>\n"
 "MIME-Version: 1.0\n"
@@ -30,7 +30,7 @@ msgid "Preface"
 msgstr "Prefacio"
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "Working with object-oriented software and a relational database can be "
 "cumbersome and time consuming in today's enterprise environments. Hibernate "
@@ -42,7 +42,7 @@ msgstr ""
 "El trabajar con software orientado a objetos y con una base de datos "
 "relacional puede llegar a ser engorroso y puede llegar a tomar bastante "
 "tiempo en los entornos empresariales de hoy en día. Hibernate es una "
-"herramienta de mapeo objeto/relacional para entornos Java. El término mapeo "
+"herramienta de mapeo objeto/relacional para entornos Java. El término de mapeo "
 "objeto/relacional (ORM) se refiere a la técnica de mapear una representación "
 "de datos desde un modelo de objeto a un modelo de datos relacionales con un "
 "esquema basado en SQL."
@@ -94,7 +94,7 @@ msgstr ""
 "inclusive en Java por favor siga los siguientes pasos:"
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "Read <xref linkend=\"tutorial\" /> for a tutorial with step-by-step "
 "instructions. The source code for the tutorial is included in the "
@@ -102,11 +102,10 @@ msgid ""
 msgstr ""
 "Consulte el <xref linkend=\"tutorial\"/>, el cual es un tutorial con "
 "instrucciones paso por paso. El código fuente para el tutorial se encuentra "
-"incluido en la distribución en el directorio <literal>doc/reference/tutorial/"
-"</literal>. "
+"incluído en la distribución en el directorio <literal>doc/reference/tutorial/</literal>. "
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "Read <xref linkend=\"architecture\" /> to understand the environments where "
 "Hibernate can be used."
@@ -133,7 +132,7 @@ msgstr ""
 "Windows, escriba <literal>build eg</literal>."
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "Use this reference documentation as your primary source of information. "
 "Consider reading <biblioref linkend=\"biblio-JPwH\"></biblioref> if you need "
@@ -142,11 +141,10 @@ msgid ""
 "the example application from <biblioref linkend=\"biblio-JPwH\"></biblioref>."
 msgstr ""
 "Utilice esta documentación de referencia como su fuente principal de "
-"información. Considere el leer <emphasis>Java Persistence with Hibernate</"
-"emphasis> (http://www.manning.com/bauer2) si necesita más ayuda con el "
+"información. Considere el leer <biblioref linkend=\"biblio-JPwH\"></biblioref> si necesita más ayuda con el "
 "diseño de la aplicación o si prefiere un tutorial paso por paso. También "
-"visite http://caveatemptor.hibernate.org y descargue la aplicación  "
-"deejemplo para la persistencia de Java con Hibernate."
+"visite <ulink url=\"http://caveatemptor.hibernate.org\" /> y descargue la aplicación "
+"de ejemplo de <biblioref linkend=\"biblio-JPwH\"></biblioref>."
 
 #. Tag: para
 #, no-c-format
@@ -156,12 +154,12 @@ msgstr ""
 "frecuentes."
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "Links to third party demos, examples, and tutorials are maintained on the "
 "Hibernate website."
 msgstr ""
-"En el sitio web de Hibernate encontrará un enlace a la demostraciones de "
+"En el sitio web de Hibernate encontrará los enlaces a las demostraciones de "
 "terceros, ejemplos y tutoriales."
 
 #. Tag: para
@@ -205,3 +203,4 @@ msgstr ""
 "Hibernate es un proyecto de Código Abierto Profesional y es un componente "
 "crítico de la suite de productos de JBoss Enterprise Middleware System "
 "(JEMS)."
+

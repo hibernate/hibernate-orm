@@ -15,7 +15,7 @@ msgstr ""
 "Project-Id-Version: collection_mapping\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
 "POT-Creation-Date: 2010-02-10T07:25:34\n"
-"PO-Revision-Date: 2010-01-07 09:44+1000\n"
+"PO-Revision-Date: 2010-03-16 10:27+1000\n"
 "Last-Translator: Angela Garcia <agarcia@redhat.com>\n"
 "Language-Team:  <en@li.org>\n"
 "MIME-Version: 1.0\n"
@@ -357,8 +357,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"The foreign key constraint can use <literal>ON DELETE CASCADE</literal>."
+msgid "The foreign key constraint can use <literal>ON DELETE CASCADE</literal>."
 msgstr ""
 "La restricción de clave foránea puede utilizar <literal>ON DELETE CASCADE</"
 "literal>."
@@ -511,8 +510,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"<literal>class</literal> (required): the entity class used as the map key."
+msgid "<literal>class</literal> (required): the entity class used as the map key."
 msgstr ""
 "<literal>class</literal> (requerido): La clase de entidad que se usa como la "
 "clave mapeada. "
@@ -580,8 +578,7 @@ msgstr ""
 #. Tag: para
 #, no-c-format
 msgid "<literal>type</literal> (required): the type of the collection element."
-msgstr ""
-"<literal>type</literal> (requerido): el tipo del elemento de colección."
+msgstr "<literal>type</literal> (requerido): el tipo del elemento de colección."
 
 #. Tag: para
 #, no-c-format
@@ -1037,13 +1034,13 @@ msgstr ""
 "literal>. En cambio, puede usar el siguiente mapeo:"
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "Note that in this mapping, the collection-valued end of the association is "
 "responsible for updates to the foreign key."
 msgstr ""
 "Note que en este mapeo, el extremo de la asociación valuado en colección es "
-"responsable de las actualizaciones de la clave foránea."
+"responsable de las actualizaciones de la clave foránea. "
 
 #. Tag: title
 #, no-c-format
@@ -1078,7 +1075,7 @@ msgstr ""
 "adelante."
 
 #. Tag: title
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "<literal>Using an &lt;idbag&gt;</literal>"
 msgstr "<literal>Utilización de un &lt;idbag&gt;</literal>"
 
@@ -1163,8 +1160,7 @@ msgstr "Esta sección cubre los ejemplos de colección. "
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"The following class has a collection of <literal>Child</literal> instances:"
+msgid "The following class has a collection of <literal>Child</literal> instances:"
 msgstr ""
 "La siguiente clase tiene una colección de instancias <literal>Child</"
 "literal>:"
@@ -1223,17 +1219,16 @@ msgid "Table definitions:"
 msgstr "Definiciones de tabla:"
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "For more examples and a complete explanation of a parent/child relationship "
 "mapping, see <xref linkend=\"example-parentchild\" /> for more information."
 msgstr ""
 "Para ver más ejemplos y encontrar una explicación completa sobre el mapeo de "
-"relaciones padre/hijo, consulte el <xref linkend=\"example-parentchild\" /> "
-"para obtener mayor información."
+"relaciones padre/hijo, consulte el <xref linkend=\"example-parentchild\" />."
 
 #. Tag: para
 #, no-c-format
 msgid "Even more complex association mappings are covered in the next chapter."
-msgstr ""
-"En el próximo capítulo abordaremos los mapeos de asociaciones más complejas."
+msgstr "En el próximo capítulo abordaremos los mapeos de asociaciones más complejas."
+

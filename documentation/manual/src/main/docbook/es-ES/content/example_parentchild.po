@@ -15,7 +15,7 @@ msgstr ""
 "Project-Id-Version: example_parentchild\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
 "POT-Creation-Date: 2010-02-10T07:25:35\n"
-"PO-Revision-Date: 2010-01-05 17:42+1000\n"
+"PO-Revision-Date: 2010-03-15 12:56+1000\n"
 "Last-Translator: Angela Garcia <agarcia@redhat.com>\n"
 "Language-Team:  <en@li.org>\n"
 "MIME-Version: 1.0\n"
@@ -156,10 +156,8 @@ msgstr "Hibernate publicaría dos declaraciones SQL:"
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"an <literal>INSERT</literal> to create the record for <literal>c</literal>"
-msgstr ""
-"un <literal>INSERT</literal> para crear el registro de <literal>c</literal>"
+msgid "an <literal>INSERT</literal> to create the record for <literal>c</literal>"
+msgstr "un <literal>INSERT</literal> para crear el registro de <literal>c</literal>"
 
 #. Tag: para
 #, no-c-format
@@ -332,7 +330,7 @@ msgid "Cascades and <literal>unsaved-value</literal>"
 msgstr "Cascadas y <literal>unsaved-value</literal>"
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "Suppose we loaded up a <literal>Parent</literal> in one <literal>Session</"
 "literal>, made some changes in a UI action and wanted to persist these "
@@ -358,8 +356,8 @@ msgstr ""
 "tanto <literal>Parent</literal> como <literal>Child</literal> tienen "
 "propiedades identificadoras generadas de tipo <literal>Long</literal>. "
 "Hibernate usará el identificador y el valor de la propiedad de versión/sello "
-"de fecha para determinar cuáles de los hijos son nuevos, (consulte la <xref "
-"linkend=\"objectstate-saveorupdate\" />). <emphasis>En Hibernate3, ya no es "
+"de fecha para determinar cuáles de los hijos son nuevos, (consulte la <xref linkend="
+"\"objectstate-saveorupdate\" />). <emphasis>En Hibernate3, ya no es "
 "necesario especificar un <literal>unsaved-value</literal> explícitamente.</"
 "emphasis>"
 
@@ -425,3 +423,4 @@ msgstr ""
 "de elementos compuestos: los elementos compuestos no pueden poseer sus "
 "propias colecciones y no deben ser el hijo de cualquier otra entidad que no "
 "sea su padre único."
+

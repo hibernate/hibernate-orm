@@ -15,7 +15,7 @@ msgstr ""
 "Project-Id-Version: portability\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
 "POT-Creation-Date: 2010-03-12T00:03:47\n"
-"PO-Revision-Date: 2010-01-07 10:51+1000\n"
+"PO-Revision-Date: 2010-03-17 12:19+1000\n"
 "Last-Translator: Angela Garcia <agarcia@redhat.com>\n"
 "Language-Team:  <en@li.org>\n"
 "MIME-Version: 1.0\n"
@@ -122,7 +122,7 @@ msgstr ""
 "se podía sobreescribir."
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "Starting with version 3.3, Hibernate has a fare more powerful way to "
 "automatically determine which dialect to should be used by relying on a "
@@ -143,8 +143,7 @@ msgstr ""
 "Empezando por la versión 3.3, Hibernate cuenta con una manera más poderosa "
 "de determinar automáticamente cuál dialecto se debe utilizar dependiendo de "
 "una serie de delegados, los cuales implementan el <interfacename>org."
-"hibernate.dialect.resolver.DialectResolver</interfacename> el cual define "
-"solo un método único:<programlisting>public Dialect resolveDialect"
+"hibernate.dialect.resolver.DialectResolver</interfacename>. Este define un método único:<programlisting>public Dialect resolveDialect"
 "(DatabaseMetaData metaData) throws JDBCConnectionException</programlisting>. "
 "El contrato básico aquí es que si el resolvedor 'entiende' los metadatos de "
 "la base de datos dada entonces retorna el dialecto correspondiente; si no "
@@ -189,7 +188,7 @@ msgid "Identifier generation"
 msgstr "Generación del identificador"
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "When considering portability between databases, another important decision "
 "is selecting the identifier generation stratagy you want to use. Originally "
@@ -223,27 +222,26 @@ msgstr ""
 "identificador; es lo que se conoce como una estrategia de generación post-"
 "insert ya que el insert de hecho debe tener lugar antes de saber el valor "
 "del identificador. Ya que Hibernate depende de este valor de identificador "
-"para referenciar de maner única a las entidades dentro de un contexto de "
+"para referenciar de manera única a las entidades dentro de un contexto de "
 "persistencia entonces debe emitir el insert inmediatamente cuando los "
 "usuarios solicitan que la entidad se asocie con la sesión (por ejemplo, por "
-"medio de save()) sin importar la semántica transaccional actual. El problema "
-"subyacente es que la semántica de la aplicación misma cambia en estos casos."
+"medio de save()) sin importar la semántica transaccional actual."
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "Hibernate was changed slightly once the implication of this was better "
 "understood so that the insert is delayed in cases where that is feasible."
 msgstr ""
-"Hibernate se ha mejorado de manera que el insert se retrasa en los casos en "
-"donde es posible. "
+"Hibernate ha cambiado un poco ya que se comprendió un poco mejor las implicaciones de esto de manera que el insert se retrasa en los casos en "
+"donde esto posible. "
 
 #. Tag: note
 #, no-c-format
 msgid ""
 "The underlying issue is that the actual semanctics of the application itself "
 "changes in these cases."
-msgstr ""
+msgstr "El problema subyacente es que la semántica real de la aplicación misma cambia en estos casos."
 
 #. Tag: para
 #, no-c-format
@@ -258,19 +256,16 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"There are specifically 2 bundled <emphasis>enhanced</emphasis>generators:"
-msgstr ""
-"Hay especificamente 2 paquetes de generadores <emphasis>mejorados</emphasis>:"
+msgid "There are specifically 2 bundled <emphasis>enhanced</emphasis>generators:"
+msgstr "Hay especificamente 2 paquetes de generadores <emphasis>mejorados</emphasis>:"
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "<classname>org.hibernate.id.enhanced.SequenceStyleGenerator</classname>"
-msgstr ""
-"<classname>org.hibernate.id.enhanced.SequenceStyleGenerator</classname>"
+msgstr "<classname>org.hibernate.id.enhanced.SequenceStyleGenerator</classname>"
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "<classname>org.hibernate.id.enhanced.TableGenerator</classname>"
 msgstr "<classname>org.hibernate.id.enhanced.TableGenerator</classname>"
 
@@ -300,10 +295,10 @@ msgid ""
 "This is an area in Hibernate in need of improvement. In terms of portability "
 "concerns, this function handling currently works pretty well from HQL; "
 "however, it is quite lacking in all other aspects."
-msgstr ""
+msgstr "Esta es un área en la que Hibernate necesita mejorar. En términos de qué tan portatil puede ser, esta función que se maneja actualmente trabaja bastante bien desde HQL; sin embargo, en otros aspectos le falta mucho. "
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "SQL functions can be referenced in many ways by users. However, not all "
 "databases support the same set of functions. Hibernate, provides a means of "
@@ -313,7 +308,7 @@ msgid ""
 msgstr ""
 "Los usuarios pueden referenciar las funciones de SQL de muchas maneras. Sin "
 "embargo, no todas las bases de datos soportan el mismo grupo de funciones. "
-"Hibernate, proporciona una manera de mapear un nombre de una función "
+"Hibernate proporciona una manera de mapear un nombre de una función "
 "<emphasis>lógica</emphasis> a un delegado, el cual sabe cómo entregar esa "
 "función en particular, tal vez incluso usando una llamada de función física "
 "totalmente diferente."
@@ -348,16 +343,10 @@ msgstr ""
 #. Tag: title
 #, no-c-format
 msgid "Type mappings"
-msgstr ""
+msgstr "Mapeos de tipo"
 
 #. Tag: para
 #, no-c-format
 msgid "This section scheduled for completion at a later date..."
-msgstr ""
+msgstr "Esta sección se completará en un futuro cercano..."
 
-#~ msgid ""
-#~ "This is a new area in Hibernate and as such it is not as mature as the "
-#~ "overall Hibernate experience."
-#~ msgstr ""
-#~ "Esta es una nueva área en Hibernate y como tal no es tan madura como lo "
-#~ "es en general el resto de Hibernate. "

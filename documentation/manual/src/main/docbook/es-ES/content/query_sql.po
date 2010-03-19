@@ -15,7 +15,7 @@ msgstr ""
 "Project-Id-Version: query_sql\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
 "POT-Creation-Date: 2010-03-12T00:03:47\n"
-"PO-Revision-Date: 2010-01-05 07:45+1000\n"
+"PO-Revision-Date: 2010-03-17 12:28+1000\n"
 "Last-Translator: Angela Garcia <agarcia@redhat.com>\n"
 "Language-Team:  <en@li.org>\n"
 "MIME-Version: 1.0\n"
@@ -329,8 +329,7 @@ msgstr ""
 #. Tag: para
 #, no-c-format
 msgid "The following form is not vulnerable to column name duplication:"
-msgstr ""
-"La siguiente forma no es vulnerable a la duplicación de nombres de columnas:"
+msgstr "La siguiente forma no es vulnerable a la duplicación de nombres de columnas:"
 
 #. Tag: para
 #, no-c-format
@@ -424,14 +423,14 @@ msgid "A simple property"
 msgstr "Una propiedad simple"
 
 #. Tag: entry
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "<literal>{[aliasname].[propertyname]</literal>"
 msgstr "<literal>{[aliasname].[propertyname]</literal>"
 
 #. Tag: entry
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "<literal>A_NAME as {item.name}</literal>"
-msgstr "<literal>{item.*}</literal>"
+msgstr "<literal>A_NAME as {item.name}</literal>"
 
 #. Tag: entry
 #, no-c-format
@@ -439,12 +438,12 @@ msgid "A composite property"
 msgstr "Una propiedad compuesta"
 
 #. Tag: entry
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "<literal>{[aliasname].[componentname].[propertyname]}</literal>"
 msgstr "<literal>{[aliasname].[componentname].[propertyname]}</literal>"
 
 #. Tag: entry
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "<literal>CURRENCY as {item.amount.currency}, VALUE as {item.amount.value}</"
 "literal>"
@@ -458,14 +457,14 @@ msgid "Discriminator of an entity"
 msgstr "Discriminador de una entidad"
 
 #. Tag: entry
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "<literal>{[aliasname].class}</literal>"
-msgstr "<literal>{item.*}</literal>"
+msgstr "<literal>{[aliasname].class}</literal>"
 
 #. Tag: entry
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "<literal>DISC as {item.class}</literal>"
-msgstr "<literal>{item.*}</literal>"
+msgstr "<literal>DISC as {item.class}</literal>"
 
 #. Tag: entry
 #, no-c-format
@@ -473,9 +472,9 @@ msgid "All properties of an entity"
 msgstr "Todas las propiedades de una entidad"
 
 #. Tag: entry
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "<literal>{[aliasname].*}</literal>"
-msgstr "<literal>{item.*}</literal>"
+msgstr "<literal>{[aliasname].*}</literal>"
 
 #. Tag: entry
 #, no-c-format
@@ -488,14 +487,14 @@ msgid "A collection key"
 msgstr "Una clave de colección"
 
 #. Tag: entry
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "<literal>{[aliasname].key}</literal>"
-msgstr "<literal>{item.*}</literal>"
+msgstr "<literal>{[aliasname].key}</literal>"
 
 #. Tag: entry
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "<literal>ORGID as {coll.key}</literal>"
-msgstr "<literal>{coll.*}</literal>"
+msgstr "<literal>ORGID as {coll.key}</literal>"
 
 #. Tag: entry
 #, no-c-format
@@ -503,14 +502,14 @@ msgid "The id of an collection"
 msgstr "La identificación -id- de una colección"
 
 #. Tag: entry
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "<literal>{[aliasname].id}</literal>"
-msgstr "<literal>{item.*}</literal>"
+msgstr "<literal>{[aliasname].id}</literal>"
 
 #. Tag: entry
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "<literal>EMPID as {coll.id}</literal>"
-msgstr "<literal>{coll.*}</literal>"
+msgstr "<literal>EMPID as {coll.id}</literal>"
 
 #. Tag: entry
 #, no-c-format
@@ -518,14 +517,14 @@ msgid "The element of an collection"
 msgstr "El elemento de una colección"
 
 #. Tag: entry
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "<literal>{[aliasname].element}</literal>"
-msgstr "<literal>{item.*}</literal>"
+msgstr "<literal>{[aliasname].element}</literal>"
 
 #. Tag: entry
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "<literal>XID as {coll.element}</literal>"
-msgstr "<literal>{coll.*}</literal>"
+msgstr "<literal>XID as {coll.element}</literal>"
 
 #. Tag: entry
 #, no-c-format
@@ -533,12 +532,12 @@ msgid "property of the element in the collection"
 msgstr "propiedad del elemento en la colección "
 
 #. Tag: entry
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "<literal>{[aliasname].element.[propertyname]}</literal>"
 msgstr "<literal>{[aliasname].element.[propertyname]}</literal>"
 
 #. Tag: entry
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "<literal>NAME as {coll.element.name}</literal>"
 msgstr "<literal>NAME as {coll.element.name}</literal>"
 
@@ -548,19 +547,19 @@ msgid "All properties of the element in the collection"
 msgstr "Todas las propiedades del elemeto en la colección"
 
 #. Tag: entry
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "<literal>{[aliasname].element.*}</literal>"
-msgstr "<literal>{item.*}</literal>"
+msgstr "<literal>{[aliasname].element.*}</literal>"
 
 #. Tag: entry
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "<literal>{coll.element.*}</literal>"
-msgstr "<literal>{coll.*}</literal>"
+msgstr "<literal>{coll.element.*}</literal>"
 
 #. Tag: entry
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "All properties of the collection"
-msgstr "Todas las propiedades de la colección"
+msgstr "Todas las propiedades de la colección "
 
 #. Tag: entry
 #, no-c-format
@@ -884,9 +883,12 @@ msgid ""
 "This section describes statement overrides. For columns, see <xref linkend="
 "\"mapping-column-read-and-write\" />."
 msgstr ""
+"Hibernate3 puede utilizar SQL personalizado para crear, actualizar y borrar operaciones. El SQL se puede sobreescribir a nivel de declaración o a nivel de columna individual. "
+"Esta sección describe la sobreescritua de declaraciones. Para las columnas consulte <xref linkend="
+"\"mapping-column-read-and-write\" />."
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "The class and collection persisters in Hibernate already contain a set of "
 "configuration time generated strings (insertsql, deletesql, updatesql etc.). "
@@ -894,12 +896,11 @@ msgid ""
 "delete&gt;</literal>, and <literal>&lt;sql-update&gt;</literal> override "
 "these strings:"
 msgstr ""
-"Hibernate3 puede utilizar declaraciones SQL personalizadas para crear, "
-"actualizar y borrar operaciones. Los persistentes de clase y de colección en "
+"Los persistentes de clase y de colección en "
 "Hibernate ya contienen un grupo de cadenas generadas en tiempo de "
-"configuración (insertsql, deletesql, updatesql etc.). Las etiquetas de mapeo "
+"configuración (insertsql, deletesql, updatesql, etc.). Las etiquetas de mapeo "
 "<literal>&lt;sql-insert&gt;</literal>, <literal>&lt;sql-delete&gt;</"
-"literal>, y <literal>&lt;sql-update&gt;</literal> sobrescriben estas cadenas:"
+"literal> y <literal>&lt;sql-update&gt;</literal> sobrescriben estas cadenas:"
 
 #. Tag: para
 #, no-c-format
@@ -975,6 +976,8 @@ msgid ""
 "\" /> or at the statement level. Here is an example of a statement level "
 "override:"
 msgstr ""
+"También puede declarar su propias peticiones SQL (o HQL) para cargar entidades. Así como con las inserciones, actualizaciones y los borrados, esto se puede realizar a nivel de columna individual tal como se describe en <xref linkend=\"mapping-column-read-and-write"
+"\" /> o a nivel de declaración. Este es un ejemplo de una sobreescritura a nivel de declaración: "
 
 #. Tag: para
 #, no-c-format
@@ -1004,56 +1007,3 @@ msgstr ""
 "También puede definir un cargador de entidad que cargue una colección con "
 "una unión temprana:"
 
-#~ msgid ""
-#~ "You can also declare your own SQL (or HQL) queries for entity loading:"
-#~ msgstr ""
-#~ "También puede declarar sus propias consultas SQL (o HQL) para cargar "
-#~ "entidad:"
-
-#, fuzzy
-#~ msgid "A_NAME as {item.name}"
-#~ msgstr "<literal>A_NAME as {item.name}</literal>"
-
-#, fuzzy
-#~ msgid "{[aliasname].class}"
-#~ msgstr "<literal>{[aliasname].class}</literal>"
-
-#, fuzzy
-#~ msgid "DISC as {item.class}"
-#~ msgstr "<literal>DISC as {item.class}</literal>"
-
-#, fuzzy
-#~ msgid "{[aliasname].*}"
-#~ msgstr "<literal>{[aliasname].*}</literal>"
-
-#, fuzzy
-#~ msgid "{[aliasname].key}"
-#~ msgstr "<literal>{[aliasname].key}</literal>"
-
-#, fuzzy
-#~ msgid "ORGID as {coll.key}"
-#~ msgstr "<literal>ORGID as {coll.key}</literal>"
-
-#, fuzzy
-#~ msgid "{[aliasname].id}"
-#~ msgstr "<literal>{[aliasname].id}</literal>"
-
-#, fuzzy
-#~ msgid "EMPID as {coll.id}"
-#~ msgstr "<literal>EMPID as {coll.id}</literal>"
-
-#, fuzzy
-#~ msgid "{[aliasname].element}"
-#~ msgstr "<literal>{[aliasname].element}</literal>"
-
-#, fuzzy
-#~ msgid "XID as {coll.element}"
-#~ msgstr "<literal>XID as {coll.element}</literal>"
-
-#, fuzzy
-#~ msgid "{[aliasname].element.*}"
-#~ msgstr "<literal>{[aliasname].element.*}</literal>"
-
-#, fuzzy
-#~ msgid "{coll.element.*}"
-#~ msgstr "<literal>{coll.element.*}</literal>"

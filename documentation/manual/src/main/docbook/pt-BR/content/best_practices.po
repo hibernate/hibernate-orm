@@ -109,7 +109,7 @@ msgstr ""
 "Project-Id-Version: best_practices\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
 "POT-Creation-Date: 2010-02-11T05:38:15\n"
-"PO-Revision-Date: 2009-10-22 15:53+1000\n"
+"PO-Revision-Date: 2010-03-15 15:52+1000\n"
 "Last-Translator: \n"
 "Language-Team:  <en@li.org>\n"
 "MIME-Version: 1.0\n"
@@ -281,7 +281,7 @@ msgid "Use hand-coded JDBC in bottlenecks:"
 msgstr "Use código manual JDBC nos afunilamentos:"
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "In performance-critical areas of the system, some kinds of operations might "
 "benefit from direct JDBC. Do not assume, however, that JDBC is necessarily "
@@ -297,7 +297,8 @@ msgstr ""
 "<emphasis>saber</emphasis> se é um afunilamento. E não suponha que o uso "
 "direto do JDBC é necessariamente mais rápido. Se você precisar usar "
 "diretamente o JDBC, vale a pena abrir uma <literal>Session</literal> do "
-"Hibernate e usar uma conexão JDBC. De modo que você possa ainda usar a mesma "
+"Hibernate, embrulhar a sua operaçäo JDBC como um objeto literal>org."
+"hibernate.jdbc.Work</literal> e usar uma conexão JDBC. De modo que você possa ainda usar a mesma "
 "estratégia de transação e ocultar o provedor a conexão."
 
 #. Tag: term
@@ -323,8 +324,7 @@ msgstr ""
 #. Tag: term
 #, no-c-format
 msgid "In a three tiered architecture, consider using detached objects:"
-msgstr ""
-"Em uma arquitetura de três camadas, considere o uso de objetos separados:"
+msgstr "Em uma arquitetura de três camadas, considere o uso de objetos separados:"
 
 #. Tag: para
 #, no-c-format
@@ -527,3 +527,4 @@ msgstr ""
 "As associações unidirecionais são mais difíceis para pesquisar. Em "
 "aplicações grandes, quase todas as associações devem navegar nas duas "
 "direções em consultas. "
+

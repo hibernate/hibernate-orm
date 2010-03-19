@@ -109,7 +109,7 @@ msgstr ""
 "Project-Id-Version: portability\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
 "POT-Creation-Date: 2010-03-12T00:03:47\n"
-"PO-Revision-Date: 2009-12-19 18:37+1000\n"
+"PO-Revision-Date: 2010-03-18 15:20+1000\n"
 "Last-Translator: \n"
 "Language-Team:  <en@li.org>\n"
 "MIME-Version: 1.0\n"
@@ -215,7 +215,7 @@ msgstr ""
 "com antecedência e que em ocasião alguma era configurável ou substituível."
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "Starting with version 3.3, Hibernate has a fare more powerful way to "
 "automatically determine which dialect to should be used by relying on a "
@@ -238,9 +238,8 @@ msgstr ""
 "se numa série de delegações que determinam qual implementação deve ser usada "
 "baseando-se numa série de delegações que implementam o <interfacename>org."
 "hibernate.dialect.resolver.DialectResolver</interfacename> que define apenas "
-"um método único: <programlisting><![CDATA[public Dialect resolveDialect"
-"(DatabaseMetaData metaData) throws JDBCConnectionException]]></"
-"programlisting>. Este contrato básico é que se o solucionador 'entender' o "
+"um método único: <programlisting role=\"JAVA\">public Dialect resolveDialect(DatabaseMetaData "
+"metaData) throws JDBCConnectionException</programlisting>. Este contrato básico é que se o solucionador 'entender' o "
 "metadados do banco de dados dado, ele retornará o Dialeto correspondente. "
 "Caso contrário, ele retornará nulo e o processo continuará ao próximo "
 "solucionador. A assinatura também identifica o <exceptionname>org.hibernate."
@@ -283,7 +282,7 @@ msgid "Identifier generation"
 msgstr "Geração do identificador"
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "When considering portability between databases, another important decision "
 "is selecting the identifier generation stratagy you want to use. Originally "
@@ -320,24 +319,23 @@ msgstr ""
 "entidades com um contexto persistente, ele deverá imprimir a inserção "
 "imediatamente quando as solicitações dos usuários de entidade estiverem "
 "associados com a sessão (como através save() e.g.) independente das "
-"semânticas de transação atual. O problema adjacente é que as semânticas do "
-"próprio aplicativo alteram nestes casos."
+"semânticas de transação atual. "
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "Hibernate was changed slightly once the implication of this was better "
 "understood so that the insert is delayed in cases where that is feasible."
 msgstr ""
 "O Hibernate foi atualizado para que a inserção seja lenta em casos em que "
-"isto é possível. "
+"isto é possível, sendo desta forma melhor compreendido. "
 
 #. Tag: note
 #, no-c-format
 msgid ""
 "The underlying issue is that the actual semanctics of the application itself "
 "changes in these cases."
-msgstr ""
+msgstr "O problema adjacente é que as semânticas atuais do próprio aplicativo altere nestes casos."
 
 #. Tag: para
 #, no-c-format
@@ -352,19 +350,16 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"There are specifically 2 bundled <emphasis>enhanced</emphasis>generators:"
-msgstr ""
-"There are specifically 2 bundled <emphasis>enhanced</emphasis>generators:"
+msgid "There are specifically 2 bundled <emphasis>enhanced</emphasis>generators:"
+msgstr "There are specifically 2 bundled <emphasis>enhanced</emphasis>generators:"
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "<classname>org.hibernate.id.enhanced.SequenceStyleGenerator</classname>"
-msgstr ""
-"<classname>org.hibernate.id.enhanced.SequenceStyleGenerator</classname>"
+msgstr "<classname>org.hibernate.id.enhanced.SequenceStyleGenerator</classname>"
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "<classname>org.hibernate.id.enhanced.TableGenerator</classname>"
 msgstr "<classname>org.hibernate.id.enhanced.TableGenerator</classname>"
 
@@ -394,22 +389,17 @@ msgid ""
 "This is an area in Hibernate in need of improvement. In terms of portability "
 "concerns, this function handling currently works pretty well from HQL; "
 "however, it is quite lacking in all other aspects."
-msgstr ""
+msgstr "Esta é uma área do Hibernate com necessidade de melhoramentos. Este manuseio de função funciona atualmente muito bem com o HQL, quando falamos das preocupações de portabilidade. No entanto, é bastante precária em outros aspectos."
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "SQL functions can be referenced in many ways by users. However, not all "
 "databases support the same set of functions. Hibernate, provides a means of "
 "mapping a <emphasis>logical</emphasis> function name to a delegate which "
 "knows how to render that particular function, perhaps even using a totally "
 "different physical function call."
-msgstr ""
-"SQL functions can be referenced in many ways by users. However, not all "
-"databases support the same set of functions. Hibernate, provides a means of "
-"mapping a <emphasis>logical</emphasis> function name to a a delegate which "
-"knows how to render that particular function, perhaps even using a totally "
-"different physical function call."
+msgstr "As funções SQL podem ser referenciadas em diversas maneiras pelos usuários. No entanto, nem todos os bancos de dados suportam o mesmo conjunto de função. O Hibernate fornece um significado de mapeamento do nome da função <emphasis>lógica</emphasis> para uma delegação que sabe como manusear aquela função em particular, mesmo quando usando uma chamada de função física totalmente diferente."
 
 #. Tag: para
 #, no-c-format
@@ -440,16 +430,10 @@ msgstr ""
 #. Tag: title
 #, no-c-format
 msgid "Type mappings"
-msgstr ""
+msgstr "Tipos de mapeamentos"
 
 #. Tag: para
 #, no-c-format
 msgid "This section scheduled for completion at a later date..."
-msgstr ""
+msgstr "A seção está esquematizada para finalização numa data posterior..."
 
-#~ msgid ""
-#~ "This is a new area in Hibernate and as such it is not as mature as the "
-#~ "overall Hibernate experience."
-#~ msgstr ""
-#~ "This is a new area in Hibernate and as such it is not as mature as the "
-#~ "overall Hibernate experience."

@@ -109,7 +109,7 @@ msgstr ""
 "Project-Id-Version: persistent_classes\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
 "POT-Creation-Date: 2010-02-11T05:38:15\n"
-"PO-Revision-Date: 2009-12-19 17:20+1000\n"
+"PO-Revision-Date: 2010-03-18 14:48+1000\n"
 "Last-Translator: \n"
 "Language-Team:  <en@li.org>\n"
 "MIME-Version: 1.0\n"
@@ -244,7 +244,7 @@ msgstr ""
 "que declaram uma propriedade de identificador:"
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "Transitive reattachment for detached objects (cascade update or cascade "
 "merge) - see <xref linkend=\"objectstate-transitive\" />"
@@ -253,12 +253,12 @@ msgstr ""
 "mesclagem de cascata) - veja <xref linkend=\"objectstate-transitive\" />"
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "<literal>Session.saveOrUpdate()</literal>"
 msgstr "<literal>Session.saveOrUpdate()</literal>"
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "<literal>Session.merge()</literal>"
 msgstr "<literal>Session.merge()</literal>"
 
@@ -366,10 +366,8 @@ msgstr ""
 
 #. Tag: title
 #, no-c-format
-msgid ""
-"Implementing <literal>equals()</literal> and <literal>hashCode()</literal>"
-msgstr ""
-"Implementando <literal>equals()</literal> e <literal>hashCode()</literal> "
+msgid "Implementing <literal>equals()</literal> and <literal>hashCode()</literal>"
+msgstr "Implementando <literal>equals()</literal> e <literal>hashCode()</literal> "
 
 #. Tag: para
 #, no-c-format
@@ -465,15 +463,14 @@ msgstr ""
 "emphasis>): "
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "A business key does not have to be as solid as a database primary key "
 "candidate (see <xref linkend=\"transactions-basics-identity\" />). Immutable "
 "or unique properties are usually good candidates for a business key."
 msgstr ""
 "Note que uma chave de negócios não tem que ser tão sólida quanto um "
-"candidato de chave primária de base de dados (veja <xref linkend="
-"\"transactions-basics-identity\"/>). Propriedades imutáveis ou únicas são "
+"candidato de chave primária de base de dados (veja <xref linkend=\"transactions-basics-identity\" />). Propriedades imutáveis ou únicas são "
 "bons candidatos para uma chave de negócios. "
 
 #. Tag: title
@@ -487,13 +484,13 @@ msgid "Note"
 msgstr "Nota"
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "<emphasis>The following features are currently considered experimental and "
 "may change in the near future.</emphasis>"
 msgstr ""
 "<emphasis>Os recursos seguintes são considerados experimentais no momento e "
-"podem mudar no futuro.</emphasis>"
+"podem mudar no futuro.</emphasis> "
 
 #. Tag: para
 #, no-c-format
@@ -512,7 +509,7 @@ msgstr ""
 "mapeamentos. "
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "By default, Hibernate works in normal POJO mode. You can set a default "
 "entity representation mode for a particular <literal>SessionFactory</"
@@ -522,8 +519,7 @@ msgstr ""
 "Por padrão, o Hibernate funciona em modo POJO normal. Você deve ajustar um "
 "modo de representação de entidade por padrão para uma certa "
 "<literal>SessionFactory</literal> usando a opção de configuração "
-"<literal>default_entity_mode</literal> (veja <xref linkend=\"configuration-"
-"optional-properties\"/>). "
+"<literal>default_entity_mode</literal> (veja <xref linkend=\"configuration-optional-properties\" />). "
 
 #. Tag: para
 #, no-c-format
@@ -606,13 +602,13 @@ msgstr ""
 "manuseio da conexão para a unidade primária do trabalho. "
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "More information about the XML representation capabilities can be found in "
 "<xref linkend=\"xml\" />."
 msgstr ""
 "Você poderá encontrar maiores informações sobre as atividades de "
-"representação XML em <xref linkend=\"xml\" />."
+"representação XML em <xref linkend=\"xml\" />. "
 
 #. Tag: title
 #, no-c-format
@@ -727,15 +723,14 @@ msgstr ""
 "EntityNameResolver</interfacename>, os usuários devem tanto:"
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "Implement a custom <link linkend=\"persistent-classes-tuplizers\">Tuplizer</"
 "link>, implementing the <methodname>getEntityNameResolvers</methodname> "
 "method."
 msgstr ""
-"Implementar um <xref linkend=\"persistent-classes-tuplizers\"/> "
-"personalizado, implementando o método <methodname>getEntityNameResolvers</"
-"methodname>. "
+"Implementar um <link linkend=\"persistent-classes-tuplizers\">Tuplizer</"
+"link> personalizado, implementando o método <methodname>getEntityNameResolvers</methodname>."
 
 #. Tag: para
 #, no-c-format
@@ -749,3 +744,4 @@ msgstr ""
 "classname> (que é a classe de implementação para <interfacename>org."
 "hibernate.SessionFactory</interfacename>) usando o método "
 "<methodname>registerEntityNameResolver</methodname>."
+

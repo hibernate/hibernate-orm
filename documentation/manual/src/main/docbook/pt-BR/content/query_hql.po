@@ -109,7 +109,7 @@ msgstr ""
 "Project-Id-Version: query_hql\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
 "POT-Creation-Date: 2010-02-11T05:38:15\n"
-"PO-Revision-Date: 2009-12-19 18:42+1000\n"
+"PO-Revision-Date: 2010-03-19 09:37+1000\n"
 "Last-Translator: \n"
 "Language-Team:  <en@li.org>\n"
 "MIME-Version: 1.0\n"
@@ -255,14 +255,14 @@ msgid "<literal>inner join</literal>"
 msgstr "<literal>inner join</literal>"
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "<literal>left outer join</literal>"
-msgstr "<literal>inner join</literal>"
+msgstr "<literal>left outer join</literal>"
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "<literal>right outer join</literal>"
-msgstr "<literal>inner join</literal>"
+msgstr "<literal>right outer join</literal>"
 
 #. Tag: para
 #, no-c-format
@@ -288,7 +288,7 @@ msgstr ""
 "<literal>with</literal>."
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "A \"fetch\" join allows associations or collections of values to be "
 "initialized along with their parent objects using a single select. This is "
@@ -300,8 +300,7 @@ msgstr ""
 "A união de \"busca\" permite que associações ou coleções de valores sejam "
 "inicializadas junto com o objeto pai, usando apenas um select. Isso é muito "
 "útil no caso das coleções. Isso efetivamente substitui as declarações união "
-"externa e lazy do arquivo de mapeamento para associações e coleções. Veja a "
-"seção <xref linkend=\"performance-fetching\"/> para mais informações."
+"externa e declarações lazy do arquivo de mapeamento para associações e coleções. Consulte <xref linkend=\"performance-fetching\" /> para mais informações."
 
 #. Tag: para
 #, no-c-format
@@ -530,8 +529,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"You can assign aliases to selected expressions using <literal>as</literal>:"
+msgid "You can assign aliases to selected expressions using <literal>as</literal>:"
 msgstr ""
 "Pode-se designar alias à expressões selecionadas usando <literal>as</"
 "literal>:"
@@ -547,8 +545,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"This query returns a <literal>Map</literal> from aliases to selected values."
+msgid "This query returns a <literal>Map</literal> from aliases to selected values."
 msgstr ""
 "Esta consulta retorna um <literal>Mapa</literal> de referências para valores "
 "selecionados."
@@ -560,8 +557,7 @@ msgstr "Funções de agregação"
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"HQL queries can even return the results of aggregate functions on properties:"
+msgid "HQL queries can even return the results of aggregate functions on properties:"
 msgstr ""
 "As consultas HQL podem retornar o resultado de funções agregadas nas "
 "propriedades:"
@@ -572,7 +568,7 @@ msgid "The supported aggregate functions are:"
 msgstr "As funções agregadas suportadas são: "
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "<literal>avg(...), sum(...), min(...), max(...)</literal>"
 msgstr "<literal>avg(...), sum(...), min(...), max(...)</literal>"
 
@@ -582,7 +578,7 @@ msgid "<literal>count(*)</literal>"
 msgstr "<literal>count(*)</literal>"
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "<literal>count(...), count(distinct ...), count(all...)</literal>"
 msgstr "<literal>count(...), count(distinct ...), count(all...)</literal>"
 
@@ -700,8 +696,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"This query translates to an SQL query with a table (inner) join. For example:"
+msgid "This query translates to an SQL query with a table (inner) join. For example:"
 msgstr ""
 "Esta consulta traduz para uma consulta SQL com uma tabela (inner) união. Por "
 "exemplo:"
@@ -709,8 +704,7 @@ msgstr ""
 #. Tag: para
 #, no-c-format
 msgid "would result in a query that would require four table joins in SQL."
-msgstr ""
-"resultaria numa consulta que necessitasse de união de quatro tabelas, no SQL."
+msgstr "resultaria numa consulta que necessitasse de união de quatro tabelas, no SQL."
 
 #. Tag: para
 #, no-c-format
@@ -722,7 +716,7 @@ msgstr ""
 "propriedades, mas também instâncias: "
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "The special property (lowercase) <literal>id</literal> can be used to "
 "reference the unique identifier of an object. See <xref linkend=\"queryhql-"
@@ -730,7 +724,8 @@ msgid ""
 msgstr ""
 "A propriedade especial (letra minúscula) <literal>id</literal> pode ser "
 "usada para referenciar o identificador único de um objeto. Para maiores "
-"informações consulte a <xref linkend=\"queryhql-identifier-property\"/>.  "
+"informações consulte a <xref linkend=\"queryhql-"
+"identifier-property\" />.  "
 
 #. Tag: para
 #, no-c-format
@@ -752,16 +747,15 @@ msgstr ""
 #. Tag: para
 #, no-c-format
 msgid "Once again, the second query does not require a table join."
-msgstr ""
-"Mais uma vez, a segunda consulta não precisa de nenhuma união de tabela."
+msgstr "Mais uma vez, a segunda consulta não precisa de nenhuma união de tabela."
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "See <xref linkend=\"queryhql-identifier-property\" /> for more information "
 "regarding referencing identifier properties)"
 msgstr ""
-"Veja <xref linkend=\"queryhql-identifier-property\"/> para maiores "
+"Veja <xref linkend=\"queryhql-identifier-property\" /> para maiores "
 "informações a respeito das propriedades do identificador referenciado) "
 
 #. Tag: para
@@ -778,15 +772,14 @@ msgstr ""
 "seu valor discriminante."
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "You can also use components or composite user types, or properties of said "
 "component types. See <xref linkend=\"queryhql-components\" /> for more "
 "information."
 msgstr ""
 "Pode-se também utilizar componentes ou tipos de usuários de composição, ou "
-"propriedades dos tipos de componentes mencionados. Veja <xref linkend="
-"\"queryhql-components\"/> para maiores informações."
+"propriedades dos tipos de componentes mencionados. Veja <xref linkend=\"queryhql-components\" /> para maiores informações."
 
 #. Tag: para
 #, no-c-format
@@ -1009,8 +1002,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"<literal>in</literal> and <literal>between</literal> can be used as follows:"
+msgid "<literal>in</literal> and <literal>between</literal> can be used as follows:"
 msgstr ""
 "<literal>in</literal> e <literal>between</literal> podem ser usadas da "
 "seguinte maneira: "
@@ -1245,14 +1237,14 @@ msgstr ""
 "ou where. "
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "Note that subqueries can also utilize <literal>row value constructor</"
 "literal> syntax. See <xref linkend=\"queryhql-tuple\" /> for more "
 "information."
 msgstr ""
 "Note que as subconsultas também podem utilizar a sintáxe <literal>row value "
-"constructor</literal>. Veja <xref linkend=\"queryhql-tuple\"/> para maiores "
+"constructor</literal>. Veja <xref linkend=\"queryhql-tuple\" /> para maiores "
 "detalhes. "
 
 #. Tag: title
@@ -1353,8 +1345,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"For some databases, we would need to do away with the (correlated) subselect."
+msgid "For some databases, we would need to do away with the (correlated) subselect."
 msgstr ""
 "Para alguns bancos de dados, precisaremos eliminar a subseleção "
 "(correlacionada)."
@@ -1365,7 +1356,7 @@ msgid "Bulk update and delete"
 msgstr "Atualização e correção em lote"
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "HQL now supports <literal>update</literal>, <literal>delete</literal> and "
 "<literal>insert ... select ...</literal> statements. See <xref linkend="
@@ -1373,18 +1364,17 @@ msgid ""
 msgstr ""
 "Agora o HQL suporta declarações, <literal>update</literal>, <literal>delete</"
 "literal> e <literal>insert ... select ...</literal>. Veja <xref linkend="
-"\"batch-direct\"/> para mais detalhes. "
+"\"batch-direct\" />  para mais detalhes. "
 
 #. Tag: title
 #, no-c-format
 msgid "Tips &amp; Tricks"
-msgstr "Dicas e Truques"
+msgstr "Dicas &amp; Truques"
 
 #. Tag: para
 #, no-c-format
 msgid "You can count the number of query results without returning them:"
-msgstr ""
-"Pode-se contar o número de resultados da consulta, sem realmente retorná-los:"
+msgstr "Pode-se contar o número de resultados da consulta, sem realmente retorná-los:"
 
 #. Tag: para
 #, no-c-format
@@ -1405,8 +1395,7 @@ msgstr ""
 #. Tag: para
 #, no-c-format
 msgid "If your database does not support subselects, use the following query:"
-msgstr ""
-"Se seu banco de dados não suporta subseleções, use a consulta a seguir: "
+msgstr "Se seu banco de dados não suporta subseleções, use a consulta a seguir: "
 
 #. Tag: para
 #, no-c-format
@@ -1478,13 +1467,13 @@ msgstr ""
 "literal>:"
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "Another common use of components is in <link linkend=\"queryhql-tuple\">row "
 "value constructors</link>."
 msgstr ""
-"Outro uso comum dos componentes é nos construtores de valores em <xref "
-"linkend=\"queryhql-tuple\" />."
+"Outro uso comum dos componentes é nos <link linkend=\"queryhql-tuple\">row "
+"value constructors</link>."
 
 #. Tag: title
 #, no-c-format
@@ -1522,8 +1511,7 @@ msgstr ""
 msgid ""
 "It can also be useful to specify this in the <literal>select</literal> "
 "clause:"
-msgstr ""
-"Pode também ser útil especificar isto na cláusula <literal>select</literal>:"
+msgstr "Pode também ser útil especificar isto na cláusula <literal>select</literal>:"
 
 #. Tag: para
 #, no-c-format
@@ -1546,10 +1534,3 @@ msgstr ""
 "de que a consulta será dependente da ordenação das sub-propriedades do "
 "componente no metadados. "
 
-#, fuzzy
-#~ msgid "left outer join"
-#~ msgstr "<literal>left outer join</literal>"
-
-#, fuzzy
-#~ msgid "right outer join"
-#~ msgstr "<literal>right outer join</literal>"

@@ -109,7 +109,7 @@ msgstr ""
 "Project-Id-Version: transactions\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
 "POT-Creation-Date: 2010-02-11T05:38:16\n"
-"PO-Revision-Date: 2009-12-21 07:53+1000\n"
+"PO-Revision-Date: 2010-03-19 14:01+1000\n"
 "Last-Translator: \n"
 "Language-Team:  <en@li.org>\n"
 "MIME-Version: 1.0\n"
@@ -250,7 +250,7 @@ msgid "Unit of work"
 msgstr "Unidade de trabalho"
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "First, let's define a unit of work. A unit of work is a design pattern "
 "described by Martin Fowler as <quote> [maintaining] a list of objects "
@@ -264,14 +264,13 @@ msgid ""
 "\"business transaction\" is also sometimes used in lieu of unit of work."
 msgstr ""
 "Primeiro, vamos definir uma unidade de trabalho. Uma unidade de trabalho é "
-"um padrão de design descrito por Martin Fowler como <quote> [maintaining] a "
-"list of objects affected by a business transaction and coordinates the "
-"writing out of changes and the resolution of concurrency problems. </"
-"quote><citation>PoEAA</citation> Em outras palavras, é uma série de "
+"um padrão de design descrito por Martin Fowler como <quote> [maintaining] a list of objects "
+"affected by a business transaction and coordinates the writing out of "
+"changes and the resolution of concurrency problems. </quote><citation>PoEAA</"
+"citation>. Em outras palavras, é uma série de "
 "operações que desejamos cuidar junto ao banco de dados. Basicamente, é uma "
 "transação, que apesar de completar uma unidade de trabalho, sempre "
-"distribuirá transações de banco de dados físico múltiplos (consulte <xref "
-"linkend=\"transactions-basics-apptx\"/>). Portanto, estamos conversando "
+"distribuirá transações de banco de dados físico múltiplos (consulte <xref linkend=\"transactions-basics-apptx\" />. Portanto, estamos conversando "
 "sobre uma noção mais abstrata da transação. O termo \"transação comercial\" "
 "é também usada em acúmulo na unidade de trabalho. "
 
@@ -326,7 +325,7 @@ msgstr ""
 "O modelo mais comum em uma aplicação de cliente/servidor multi-usuário  é "
 "<emphasis>sessão-por-requisição</emphasis>. Neste modelo, uma requisição do "
 "cliente é enviada ao servidor, onde a camada de persistência do Hibernate é "
-"executada, uma <literal>Session</literal> nova do Hibernate é aberta, e "
+"executada. Uma <literal>Session</literal> nova do Hibernate é aberta, e "
 "todas as operações da base de dados são executadas nesta unidade do "
 "trabalho. Logo que o trabalho for completado, e a resposta para o cliente "
 "for preparada, a sessão é descarregada e fechada. Você usaria também uma "
@@ -365,7 +364,7 @@ msgstr ""
 "de código. "
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "Your application code can access a \"current session\" to process the "
 "request by calling <literal>sessionFactory.getCurrentSession()</literal>. "
@@ -378,7 +377,7 @@ msgstr ""
 "getCurrentSession()</literal> em qualquer lugar e com a freqüência "
 "necessária. Você sempre conseguirá uma <literal>Session</literal> limitada a "
 "transação atual. Isto tem que ser configurado para recurso local ou para "
-"ambientes JTA. Veja <xref linkend=\"architecture-current-session\"/>. "
+"ambientes JTA. Veja <xref linkend=\"architecture-current-session\" />."
 
 #. Tag: para
 #, no-c-format
@@ -589,7 +588,7 @@ msgid "Database Identity"
 msgstr "Identidade da base de dados"
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "<literal>foo.getId().equals( bar.getId() )</literal>"
 msgstr "<literal>foo.getId().equals( bar.getId() )</literal>"
 
@@ -757,7 +756,7 @@ msgstr ""
 "recuperáveis e você tem que iniciar após o rollback de qualquer maneira. "
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "The <literal>Session</literal> caches every object that is in a persistent "
 "state (watched and checked for dirty state by Hibernate). If you keep it "
@@ -769,7 +768,7 @@ msgid ""
 "Keeping a <literal>Session</literal> open for the duration of a user session "
 "also means a higher probability of stale data."
 msgstr ""
-"A <literal>Session</literal> obtém cada objeto que se encontra o estado "
+"A <literal>Session</literal> realiza o cache em cada objeto que se encontra o estado "
 "persistente (assistido e checado para o estado dirty do Hibernate). Isto "
 "significa o crescimento contínuo até chegar a um OutOfMemoryException, caso "
 "você mantenha isto aberto por um longo período ou simplesmente carregue "
@@ -854,8 +853,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"Ending a <literal>Session</literal> usually involves four distinct phases:"
+msgid "Ending a <literal>Session</literal> usually involves four distinct phases:"
 msgstr ""
 "Geralmente, finalizar uma <literal>Session</literal> envolve quatro fases "
 "distintas:"
@@ -911,7 +909,7 @@ msgstr ""
 "transação é mais ou menos assim:"
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "You do not have to <literal>flush()</literal> the <literal>Session</literal> "
 "explicitly: the call to <literal>commit()</literal> automatically triggers "
@@ -927,7 +925,7 @@ msgstr ""
 "\"objectstate-flushing\"/>. Uma chamada ao <literal>close()</literal> marca "
 "o fim de uma sessão. A principal implicação do <literal>close()</literal> é "
 "que a conexão JDBC será abandonada pela sessão. Este código Java é portável "
-"e funciona em ambientes não gerenciados e de JTA. "
+"e funciona em ambientes não gerenciados e de JTA.  "
 
 #. Tag: para
 #, no-c-format
@@ -1735,10 +1733,8 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"The \"explicit user request\" is expressed in one of the following ways:"
-msgstr ""
-"O bloqueio obtido \"explicitamente pelo usuário\" se dá nas seguintes formas:"
+msgid "The \"explicit user request\" is expressed in one of the following ways:"
+msgstr "O bloqueio obtido \"explicitamente pelo usuário\" se dá nas seguintes formas:"
 
 #. Tag: para
 #, no-c-format
@@ -1948,3 +1944,4 @@ msgstr ""
 "conexão JDBC adjacente todas as vezes que chamarmos "
 "<literal>ConnectionProvider.getConnection()</literal> quanto em um ambiente "
 "auto-commit, onde não importa se voltamos para a mesma conexão. "
+

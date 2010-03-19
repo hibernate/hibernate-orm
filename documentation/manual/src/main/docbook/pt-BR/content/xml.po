@@ -109,7 +109,7 @@ msgstr ""
 "Project-Id-Version: xml\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
 "POT-Creation-Date: 2010-02-10T07:25:35\n"
-"PO-Revision-Date: 2009-12-21 07:56+1000\n"
+"PO-Revision-Date: 2010-03-19 14:09+1000\n"
 "Last-Translator: \n"
 "Language-Team:  <en@li.org>\n"
 "MIME-Version: 1.0\n"
@@ -123,13 +123,13 @@ msgid "XML Mapping"
 msgstr "Mapeamento XML"
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "<emphasis> XML Mapping is an experimental feature in Hibernate 3.0 and is "
 "currently under active development. </emphasis>"
 msgstr ""
 "<emphasis> O Mapeamento XML é um recurso experimental no Hibernate 3.0 e "
-"está sob constante desenvolvimento. </emphasis>"
+"está sob constante desenvolvimento. </emphasis> "
 
 #. Tag: title
 #, no-c-format
@@ -193,8 +193,7 @@ msgstr ""
 #. Tag: title
 #, no-c-format
 msgid "Specifying XML and class mapping together"
-msgstr ""
-"Especificando o mapeamento de uma classe e de um arquivo XML simultaneamente "
+msgstr "Especificando o mapeamento de uma classe e de um arquivo XML simultaneamente "
 
 #. Tag: para
 #, no-c-format
@@ -244,8 +243,7 @@ msgstr ""
 #. Tag: para
 #, no-c-format
 msgid "<literal>\"element-name\"</literal>: map to the named XML element"
-msgstr ""
-"<literal>\"element-name\"</literal>: mapeia para o elemento XML nomeado"
+msgstr "<literal>\"element-name\"</literal>: mapeia para o elemento XML nomeado"
 
 #. Tag: para
 #, no-c-format
@@ -345,3 +343,4 @@ msgstr ""
 "É extremamente útil combinar essa funcionalidade com a operação "
 "<literal>replicate()</literal> do Hibernate para implementar importação/"
 "exportação de dados baseados em XML."
+

@@ -109,7 +109,7 @@ msgstr ""
 "Project-Id-Version: toolset_guide\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
 "POT-Creation-Date: 2010-02-11T05:38:16\n"
-"PO-Revision-Date: 2009-12-21 07:41+1000\n"
+"PO-Revision-Date: 2010-03-19 10:27+1000\n"
 "Last-Translator: \n"
 "Language-Team:  <en@li.org>\n"
 "MIME-Version: 1.0\n"
@@ -460,9 +460,9 @@ msgid "<literal>unique-key</literal>"
 msgstr "<literal>unique-key</literal>"
 
 #. Tag: entry
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "<literal>unique_key_name</literal>"
-msgstr "<literal>unique-key</literal>"
+msgstr "<literal>unique_key_name</literal>"
 
 #. Tag: entry
 #, no-c-format
@@ -475,9 +475,9 @@ msgid "<literal>foreign-key</literal>"
 msgstr "<literal>foreign-key</literal>"
 
 #. Tag: entry
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "<literal>foreign_key_name</literal>"
-msgstr "<literal>foreign-key</literal>"
+msgstr "<literal>foreign_key_name</literal>"
 
 #. Tag: entry
 #, no-c-format
@@ -501,9 +501,9 @@ msgid "<literal>sql-type</literal>"
 msgstr "<literal>sql-type</literal>"
 
 #. Tag: entry
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "<literal>SQL column type</literal>"
-msgstr "<literal>sql-type</literal>"
+msgstr "<literal>SQL column type</literal>"
 
 #. Tag: entry
 #, no-c-format
@@ -537,8 +537,7 @@ msgstr "<literal>check</literal>"
 #. Tag: entry
 #, no-c-format
 msgid "create an SQL check constraint on either column or table"
-msgstr ""
-"cria uma restrição de verificação de SQL tanto na coluna quanto na tabela"
+msgstr "cria uma restrição de verificação de SQL tanto na coluna quanto na tabela"
 
 #. Tag: para
 #, no-c-format
@@ -648,9 +647,9 @@ msgid "do not export to the database"
 msgstr "não exporte para o banco de dados "
 
 #. Tag: entry
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "<literal>--output=my_schema.ddl</literal>"
-msgstr "<literal>scale</literal>"
+msgstr "<literal>--output=my_schema.ddl</literal>"
 
 #. Tag: entry
 #, no-c-format
@@ -658,7 +657,7 @@ msgid "output the ddl script to a file"
 msgstr "saia do script ddl para um arquivo"
 
 #. Tag: entry
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "<literal>--naming=eg.MyNamingStrategy</literal>"
 msgstr "<literal>--naming=eg.MyNamingStrategy</literal>"
 
@@ -668,7 +667,7 @@ msgid "select a <literal>NamingStrategy</literal>"
 msgstr "seleciona um <literal>NamingStrategy</literal>"
 
 #. Tag: entry
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "<literal>--config=hibernate.cfg.xml</literal>"
 msgstr "<literal>--config=hibernate.cfg.xml</literal>"
 
@@ -678,9 +677,9 @@ msgid "read Hibernate configuration from an XML file"
 msgstr "leia a configuração do Hibernate a partir do arquivo XML"
 
 #. Tag: entry
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "<literal>--properties=hibernate.properties</literal>"
-msgstr "em <literal>hibernate.properties</literal>"
+msgstr "<literal>--properties=hibernate.properties</literal>"
 
 #. Tag: entry
 #, no-c-format
@@ -741,8 +740,7 @@ msgstr "em <literal>hibernate.properties</literal>"
 #. Tag: para
 #, no-c-format
 msgid "in a named properties file with <literal>--properties</literal>"
-msgstr ""
-"em um arquivo de propriedades nomeadas com <literal>--properties</literal>"
+msgstr "em um arquivo de propriedades nomeadas com <literal>--properties</literal>"
 
 #. Tag: para
 #, no-c-format
@@ -760,7 +758,7 @@ msgid "Property Name"
 msgstr "Nome de Propriedade"
 
 #. Tag: entry
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "<literal>hibernate.connection.driver_class</literal>"
 msgstr "<literal>hibernate.connection.driver_class</literal>"
 
@@ -770,9 +768,9 @@ msgid "jdbc driver class"
 msgstr "classe de driver jdbc"
 
 #. Tag: entry
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "<literal>hibernate.connection.url</literal>"
-msgstr "em <literal>hibernate.properties</literal>"
+msgstr "<literal>hibernate.connection.url</literal>"
 
 #. Tag: entry
 #, no-c-format
@@ -780,9 +778,9 @@ msgid "jdbc url"
 msgstr "jdbc url"
 
 #. Tag: entry
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "<literal>hibernate.connection.username</literal>"
-msgstr "em <literal>hibernate.properties</literal>"
+msgstr "<literal>hibernate.connection.username</literal>"
 
 #. Tag: entry
 #, no-c-format
@@ -790,9 +788,9 @@ msgid "database user"
 msgstr "usuário de banco de dados"
 
 #. Tag: entry
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "<literal>hibernate.connection.password</literal>"
-msgstr "em <literal>hibernate.properties</literal>"
+msgstr "<literal>hibernate.connection.password</literal>"
 
 #. Tag: entry
 #, no-c-format
@@ -800,9 +798,9 @@ msgid "user password"
 msgstr "senha do usuário"
 
 #. Tag: entry
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "<literal>hibernate.dialect</literal>"
-msgstr "em <literal>hibernate.properties</literal>"
+msgstr "<literal>hibernate.dialect</literal>"
 
 #. Tag: entry
 #, no-c-format
@@ -816,8 +814,7 @@ msgstr "Usando o Ant"
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"You can call <literal>SchemaExport</literal> from your Ant build script:"
+msgid "You can call <literal>SchemaExport</literal> from your Ant build script:"
 msgstr ""
 "Você pode chamar o <literal>SchemaExport</literal> a partir de seu script de "
 "construção do Ant:"
@@ -868,8 +865,7 @@ msgstr "especifique um arquivo <literal>.cfg.xml</literal>"
 #. Tag: para
 #, no-c-format
 msgid "You can embed <literal>SchemaUpdate</literal> in your application:"
-msgstr ""
-"Você pode incorporar o <literal>SchemaUpdate</literal> em sua aplicação: "
+msgstr "Você pode incorporar o <literal>SchemaUpdate</literal> em sua aplicação: "
 
 #. Tag: title
 #, no-c-format
@@ -879,8 +875,7 @@ msgstr "Utilizando Ant para atualizações de esquema incremental"
 #. Tag: para
 #, no-c-format
 msgid "You can call <literal>SchemaUpdate</literal> from the Ant script:"
-msgstr ""
-"Você pode chamar <literal>SchemaUpdate</literal> a partir do script Ant:"
+msgstr "Você pode chamar <literal>SchemaUpdate</literal> a partir do script Ant:"
 
 #. Tag: title
 #, no-c-format
@@ -930,8 +925,7 @@ msgstr "<literal>SchemaValidator</literal> Opções de Linha de Comando"
 #. Tag: para
 #, no-c-format
 msgid "You can embed <literal>SchemaValidator</literal> in your application:"
-msgstr ""
-"Você pode incorporar o <literal>SchemaValidator</literal> em sua aplicação:"
+msgstr "Você pode incorporar o <literal>SchemaValidator</literal> em sua aplicação:"
 
 #. Tag: title
 #, no-c-format
@@ -941,52 +935,5 @@ msgstr "Utilizando Ant para validação de esquema"
 #. Tag: para
 #, no-c-format
 msgid "You can call <literal>SchemaValidator</literal> from the Ant script:"
-msgstr ""
-"Você pode chamar o <literal>SchemaValidator</literal> a partir do script Ant:"
+msgstr "Você pode chamar o <literal>SchemaValidator</literal> a partir do script Ant:"
 
-#, fuzzy
-#~ msgid "length"
-#~ msgstr "comprimento da coluna"
-
-#, fuzzy
-#~ msgid "precision"
-#~ msgstr "Expressão SQL "
-
-#, fuzzy
-#~ msgid "unique_key_name"
-#~ msgstr "<literal>unique_key_name</literal>"
-
-#, fuzzy
-#~ msgid "foreign_key_name"
-#~ msgstr "<literal>foreign_key_name</literal>"
-
-#, fuzzy
-#~ msgid "SQL column type"
-#~ msgstr "<literal>SQL column type</literal>"
-
-#, fuzzy
-#~ msgid "--output=my_schema.ddl"
-#~ msgstr "<literal>--output=my_schema.ddl</literal>"
-
-#, fuzzy
-#~ msgid "--properties=hibernate.properties"
-#~ msgstr "<literal>--properties=hibernate.properties</literal>"
-
-#, fuzzy
-#~ msgid "hibernate.connection.url"
-#~ msgstr "<literal>hibernate.connection.url</literal>"
-
-#, fuzzy
-#~ msgid "hibernate.connection.username"
-#~ msgstr "<literal>hibernate.connection.username</literal>"
-
-#, fuzzy
-#~ msgid "hibernate.connection.password"
-#~ msgstr "<literal>hibernate.connection.password</literal>"
-
-#, fuzzy
-#~ msgid "hibernate.dialect"
-#~ msgstr "<literal>hibernate.dialect</literal>"
-
-#~ msgid "<!-- <emphasis>Ant Tasks:</emphasis> -->"
-#~ msgstr "<!-- <emphasis>Tarefas Ant:</emphasis> -->"

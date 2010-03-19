@@ -109,7 +109,7 @@ msgstr ""
 "Project-Id-Version: configuration\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
 "POT-Creation-Date: 2010-02-11T05:38:15\n"
-"PO-Revision-Date: 2009-12-19 08:53+1000\n"
+"PO-Revision-Date: 2010-03-17 14:39+1000\n"
 "Last-Translator: \n"
 "Language-Team:  <en@li.org>\n"
 "MIME-Version: 1.0\n"
@@ -275,7 +275,7 @@ msgid "Obtaining a SessionFactory"
 msgstr "Obtendo uma SessionFactory"
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "When all mappings have been parsed by the <classname>org.hibernate.cfg."
 "Configuration</classname>, the application must obtain a factory for "
@@ -285,10 +285,10 @@ msgstr ""
 "Quando todos os mapeamentos forem analisados pelo <classname>org.hibernate."
 "cfg.Configuration</classname>, a aplicação deve obter uma factory para as "
 "instâncias do <interfacename>org.hibernate.Session</interfacename>. O "
-"objetivo desta factory é ser compartilhado por todas as threads da aplicação:"
+"objetivo desta factory é ser compartilhado por todas as threads da aplicação: "
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "Hibernate does allow your application to instantiate more than one "
 "<interfacename>org.hibernate.SessionFactory</interfacename>. This is useful "
@@ -296,7 +296,7 @@ msgid ""
 msgstr ""
 "O Hibernate permite sua aplicação instanciar mais do que um "
 "<interfacename>org.hibernate.SessionFactory</interfacename>. Isto será útil "
-"se você estiver usando mais do que um banco de dados. "
+"se você estiver usando mais do que um banco de dados.  "
 
 #. Tag: title
 #, no-c-format
@@ -585,18 +585,18 @@ msgstr ""
 "lógicos. "
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "<emphasis>Some of these properties are \"system-level\" only.</emphasis> "
 "System-level properties can be set only via <literal>java -Dproperty=value</"
 "literal> or <filename>hibernate.properties</filename>. They "
 "<emphasis>cannot</emphasis> be set by the other techniques described above."
 msgstr ""
-"Algumas destas propriedades são somente em nível de sistema. As propriedades "
+"<emphasis>Algumas destas propriedades são somente em nível de sistema.</emphasis>. As propriedades "
 "em nível de sistema podem ser determinadas somente via <literal>java -"
 "Dproperty=value</literal> ou <literal>hibernate.properties</literal>. Elas "
 "<emphasis>não podem</emphasis> ser configuradas por outras técnicas "
-"descritas abaixo."
+"descritas acima."
 
 #. Tag: title
 #, no-c-format
@@ -690,10 +690,8 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"<emphasis role=\"strong\">e.g.</emphasis> <literal>SCHEMA_NAME</literal>"
-msgstr ""
-"<emphasis role=\"strong\">e.g.</emphasis> <literal>SCHEMA_NAME</literal>"
+msgid "<emphasis role=\"strong\">e.g.</emphasis> <literal>SCHEMA_NAME</literal>"
+msgstr "<emphasis role=\"strong\">e.g.</emphasis> <literal>SCHEMA_NAME</literal>"
 
 #. Tag: entry
 #, no-c-format
@@ -702,18 +700,15 @@ msgstr "<property>hibernate.default_catalog</property>"
 
 #. Tag: entry
 #, no-c-format
-msgid ""
-"Qualifies unqualified table names with the given catalog in generated SQL."
+msgid "Qualifies unqualified table names with the given catalog in generated SQL."
 msgstr ""
 "Qualifica no SQL gerado, os nome das tabelas desqualificadas com catálogo "
 "dado."
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"<emphasis role=\"strong\">e.g.</emphasis> <literal>CATALOG_NAME</literal>"
-msgstr ""
-"<emphasis role=\"strong\">e.g.</emphasis> <literal>CATALOG_NAME</literal>"
+msgid "<emphasis role=\"strong\">e.g.</emphasis> <literal>CATALOG_NAME</literal>"
+msgstr "<emphasis role=\"strong\">e.g.</emphasis> <literal>CATALOG_NAME</literal>"
 
 #. Tag: entry
 #, no-c-format
@@ -771,8 +766,7 @@ msgstr "<property>hibernate.default_batch_fetch_size</property>"
 #. Tag: entry
 #, no-c-format
 msgid "Sets a default size for Hibernate batch fetching of associations."
-msgstr ""
-"Determina um tamanho padrão para busca de associações em lotes do Hibernate."
+msgstr "Determina um tamanho padrão para busca de associações em lotes do Hibernate."
 
 #. Tag: para
 #, no-c-format
@@ -789,12 +783,12 @@ msgid "<property>hibernate.default_entity_mode</property>"
 msgstr "<property>hibernate.default_entity_mode</property>"
 
 #. Tag: entry
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "Sets a default mode for entity representation for all sessions opened from "
 "this <literal>SessionFactory</literal>"
 msgstr ""
-"Determina um modo padrão para representação de entidades para todas as "
+"Determina um modo padrão para representação de entidade para todas as "
 "sessões abertas desta <literal>SessionFactory</literal> "
 
 #. Tag: para
@@ -829,8 +823,7 @@ msgstr "<property>hibernate.generate_statistics</property>"
 
 #. Tag: entry
 #, no-c-format
-msgid ""
-"If enabled, Hibernate will collect statistics useful for performance tuning."
+msgid "If enabled, Hibernate will collect statistics useful for performance tuning."
 msgstr ""
 "Se habilitado, o Hibernate coletará estatísticas úteis para o ajuste do "
 "desempenho. "
@@ -999,8 +992,7 @@ msgstr ""
 #. Tag: para
 #, no-c-format
 msgid "<emphasis role=\"strong\">e.g.</emphasis> <literal>true|false</literal>"
-msgstr ""
-"<emphasis role=\"strong\">exemplo</emphasis> <literal>true|false</literal>  "
+msgstr "<emphasis role=\"strong\">exemplo</emphasis> <literal>true|false</literal>  "
 
 #. Tag: entry
 #, no-c-format
@@ -1048,8 +1040,7 @@ msgstr ""
 #. Tag: para
 #, no-c-format
 msgid "<emphasis role=\"strong\">e.g.</emphasis> <literal>1, 2, 4, 8</literal>"
-msgstr ""
-"<emphasis role=\"strong\">exemplo</emphasis> <literal>1, 2, 4, 8</literal>"
+msgstr "<emphasis role=\"strong\">exemplo</emphasis> <literal>1, 2, 4, 8</literal>"
 
 #. Tag: entry
 #, no-c-format
@@ -1140,10 +1131,8 @@ msgstr ""
 
 #. Tag: entry
 #, no-c-format
-msgid ""
-"<property>hibernate.jndi.</property><emphasis>&lt;propertyName&gt;</emphasis>"
-msgstr ""
-"<property>hibernate.jndi.</property><emphasis>&lt;propertyName&gt;</emphasis>"
+msgid "<property>hibernate.jndi.</property><emphasis>&lt;propertyName&gt;</emphasis>"
+msgstr "<property>hibernate.jndi.</property><emphasis>&lt;propertyName&gt;</emphasis>"
 
 #. Tag: entry
 #, no-c-format
@@ -1167,8 +1156,7 @@ msgstr "<literal>hibernate.cache.provider_class</literal>"
 #. Tag: entry
 #, no-c-format
 msgid "The classname of a custom <literal>CacheProvider</literal>."
-msgstr ""
-"O nome da classe de um  <literal>CacheProvider</literal> personalizado."
+msgstr "O nome da classe de um  <literal>CacheProvider</literal> personalizado."
 
 #. Tag: para
 #, no-c-format
@@ -1203,8 +1191,7 @@ msgstr "<literal>hibernate.cache.use_query_cache</literal>"
 
 #. Tag: entry
 #, no-c-format
-msgid ""
-"Enables the query cache. Individual queries still have to be set cachable."
+msgid "Enables the query cache. Individual queries still have to be set cachable."
 msgstr ""
 "Habilita a cache de consultas. Mesmo assim, consultas individuais ainda têm "
 "que ser habilitadas para o cache."
@@ -1262,8 +1249,7 @@ msgstr "Um prefixo para usar em nomes regionais de cachê de segundo nível"
 #. Tag: para
 #, no-c-format
 msgid "<emphasis role=\"strong\">e.g.</emphasis> <literal>prefix</literal>"
-msgstr ""
-"<emphasis role=\"strong\">exemplo</emphasis> <literal>prefix</literal> "
+msgstr "<emphasis role=\"strong\">exemplo</emphasis> <literal>prefix</literal> "
 
 #. Tag: entry
 #, no-c-format
@@ -1325,9 +1311,9 @@ msgstr ""
 "aplicação. "
 
 #. Tag: entry
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "<literal>hibernate.transaction.manager_lookup_class</literal>"
-msgstr "<literal>hibernate.transaction. manager_lookup_class</literal>"
+msgstr "<literal>hibernate.transaction.manager_lookup_class</literal>"
 
 #. Tag: entry
 #, no-c-format
@@ -1350,9 +1336,9 @@ msgstr ""
 "TransactionManagerLookup</literal> "
 
 #. Tag: entry
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "<literal>hibernate.transaction.flush_before_completion</literal>"
-msgstr "<literal>hibernate.transaction. flush_before_completion</literal>"
+msgstr "<literal>hibernate.transaction.flush_before_completion</literal>"
 
 #. Tag: entry
 #, no-c-format
@@ -1367,9 +1353,9 @@ msgstr ""
 "criada e automática, veja <xref linkend=\"architecture-current-session\" />."
 
 #. Tag: entry
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "<literal>hibernate.transaction.auto_close_session</literal>"
-msgstr "<literal>hibernate.transaction. auto_close_session</literal>"
+msgstr "<literal>hibernate.transaction.auto_close_session</literal>"
 
 #. Tag: entry
 #, no-c-format
@@ -1389,9 +1375,9 @@ msgid "Miscellaneous Properties"
 msgstr "Propriedades Variadas"
 
 #. Tag: entry
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "<literal>hibernate.current_session_context_class</literal>"
-msgstr "<literal>hibernate. current_session_context_class</literal>"
+msgstr "<literal>hibernate.current_session_context_class</literal>"
 
 #. Tag: entry
 #, no-c-format
@@ -1489,9 +1475,9 @@ msgstr ""
 "drop</literal>  "
 
 #. Tag: entry
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "<literal>hibernate.cglib.use_reflection_optimizer</literal>"
-msgstr "<literal>hibernate.cglib. use_reflection_optimizer</literal>"
+msgstr "<literal>hibernate.cglib.use_reflection_optimizer</literal>"
 
 #. Tag: entry
 #, no-c-format
@@ -1881,10 +1867,8 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"This would allow you to rename the SQL <literal>LOWER</literal> function."
-msgstr ""
-"Isto permitirá que você renomeie a função <literal>LOWER</literal> no SQL."
+msgid "This would allow you to rename the SQL <literal>LOWER</literal> function."
+msgstr "Isto permitirá que você renomeie a função <literal>LOWER</literal> no SQL."
 
 #. Tag: title
 #, no-c-format
@@ -1991,9 +1975,9 @@ msgid "Log all JDBC parameters"
 msgstr "Registra todos os parâmetros JDBC"
 
 #. Tag: entry
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "<literal>org.hibernate.tool.hbm2ddl</literal>"
-msgstr "<literal>org.hibernate.tool. hbm2ddl</literal>"
+msgstr "<literal>org.hibernate.tool.hbm2ddl</literal>"
 
 #. Tag: entry
 #, no-c-format
@@ -2025,9 +2009,9 @@ msgid "Log all second-level cache activity"
 msgstr "Registra todas as atividades de cachê de segundo nível"
 
 #. Tag: entry
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "<literal>org.hibernate.transaction</literal>"
-msgstr "<literal>org.hibernate. transaction</literal>"
+msgstr "<literal>org.hibernate.transaction</literal>"
 
 #. Tag: entry
 #, no-c-format
@@ -2045,9 +2029,9 @@ msgid "Log all JDBC resource acquisition"
 msgstr "Registra todas as requisições de recursos JDBC"
 
 #. Tag: entry
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "<literal>org.hibernate.hql.ast.AST</literal>"
-msgstr "<literal>org.hibernate.hql. ast.AST</literal>"
+msgstr "<literal>org.hibernate.hql.ast.AST</literal>"
 
 #. Tag: entry
 #, no-c-format
@@ -2191,14 +2175,12 @@ msgstr ""
 #. Tag: para
 #, no-c-format
 msgid "With the XML configuration, starting Hibernate is then as simple as:"
-msgstr ""
-"Com a configuração do XML, iniciar o Hibernate é então tão simples quanto: "
+msgstr "Com a configuração do XML, iniciar o Hibernate é então tão simples quanto: "
 
 #. Tag: para
 #, no-c-format
 msgid "You can select a different XML configuration file using:"
-msgstr ""
-"Você poderá escolher um arquivo de configuração XML diferente, utilizando:"
+msgstr "Você poderá escolher um arquivo de configuração XML diferente, utilizando:"
 
 #. Tag: title
 #, no-c-format
@@ -2420,11 +2402,9 @@ msgid "Application Server"
 msgstr "Servidor de Aplicação"
 
 #. Tag: entry
-#, fuzzy, no-c-format
-msgid ""
-"<literal>org.hibernate.transaction.JBossTransactionManagerLookup</literal>"
-msgstr ""
-"<literal>org.hibernate.transaction. JBossTransactionManagerLookup</literal>"
+#, no-c-format
+msgid "<literal>org.hibernate.transaction.JBossTransactionManagerLookup</literal>"
+msgstr "<literal>org.hibernate.transaction.JBossTransactionManagerLookup</literal>"
 
 #. Tag: entry
 #, no-c-format
@@ -2432,12 +2412,9 @@ msgid "JBoss"
 msgstr "JBoss"
 
 #. Tag: entry
-#, fuzzy, no-c-format
-msgid ""
-"<literal>org.hibernate.transaction.WeblogicTransactionManagerLookup</literal>"
-msgstr ""
-"<literal>org.hibernate.transaction. WeblogicTransactionManagerLookup</"
-"literal>"
+#, no-c-format
+msgid "<literal>org.hibernate.transaction.WeblogicTransactionManagerLookup</literal>"
+msgstr "<literal>org.hibernate.transaction.WeblogicTransactionManagerLookup</literal>"
 
 #. Tag: entry
 #, no-c-format
@@ -2445,12 +2422,12 @@ msgid "Weblogic"
 msgstr "Weblogic"
 
 #. Tag: entry
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "<literal>org.hibernate.transaction.WebSphereTransactionManagerLookup</"
 "literal>"
 msgstr ""
-"<literal>org.hibernate.transaction. WebSphereTransactionManagerLookup</"
+"<literal>org.hibernate.transaction.WebSphereTransactionManagerLookup</"
 "literal>"
 
 #. Tag: entry
@@ -2459,12 +2436,12 @@ msgid "WebSphere"
 msgstr "WebSphere"
 
 #. Tag: entry
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "<literal>org.hibernate.transaction.WebSphereExtendedJTATransactionLookup</"
 "literal>"
 msgstr ""
-"<literal>org.hibernate.transaction. WebSphereExtendedJTATransactionLookup</"
+"<literal>org.hibernate.transaction.WebSphereExtendedJTATransactionLookup</"
 "literal>"
 
 #. Tag: entry
@@ -2473,11 +2450,9 @@ msgid "WebSphere 6"
 msgstr "WebSphere 6"
 
 #. Tag: entry
-#, fuzzy, no-c-format
-msgid ""
-"<literal>org.hibernate.transaction.OrionTransactionManagerLookup</literal>"
-msgstr ""
-"<literal>org.hibernate.transaction. OrionTransactionManagerLookup</literal>"
+#, no-c-format
+msgid "<literal>org.hibernate.transaction.OrionTransactionManagerLookup</literal>"
+msgstr "<literal>org.hibernate.transaction.OrionTransactionManagerLookup</literal>"
 
 #. Tag: entry
 #, no-c-format
@@ -2485,11 +2460,9 @@ msgid "Orion"
 msgstr "Orion"
 
 #. Tag: entry
-#, fuzzy, no-c-format
-msgid ""
-"<literal>org.hibernate.transaction.ResinTransactionManagerLookup</literal>"
-msgstr ""
-"<literal>org.hibernate.transaction. ResinTransactionManagerLookup</literal>"
+#, no-c-format
+msgid "<literal>org.hibernate.transaction.ResinTransactionManagerLookup</literal>"
+msgstr "<literal>org.hibernate.transaction.ResinTransactionManagerLookup</literal>"
 
 #. Tag: entry
 #, no-c-format
@@ -2497,11 +2470,9 @@ msgid "Resin"
 msgstr "Resin"
 
 #. Tag: entry
-#, fuzzy, no-c-format
-msgid ""
-"<literal>org.hibernate.transaction.JOTMTransactionManagerLookup</literal>"
-msgstr ""
-"<literal>org.hibernate.transaction. JOTMTransactionManagerLookup</literal>"
+#, no-c-format
+msgid "<literal>org.hibernate.transaction.JOTMTransactionManagerLookup</literal>"
+msgstr "<literal>org.hibernate.transaction.JOTMTransactionManagerLookup</literal>"
 
 #. Tag: entry
 #, no-c-format
@@ -2509,11 +2480,9 @@ msgid "JOTM"
 msgstr "JOTM"
 
 #. Tag: entry
-#, fuzzy, no-c-format
-msgid ""
-"<literal>org.hibernate.transaction.JOnASTransactionManagerLookup</literal>"
-msgstr ""
-"<literal>org.hibernate.transaction. JOnASTransactionManagerLookup</literal>"
+#, no-c-format
+msgid "<literal>org.hibernate.transaction.JOnASTransactionManagerLookup</literal>"
+msgstr "<literal>org.hibernate.transaction.JOnASTransactionManagerLookup</literal>"
 
 #. Tag: entry
 #, no-c-format
@@ -2521,11 +2490,9 @@ msgid "JOnAS"
 msgstr "JOnAS"
 
 #. Tag: entry
-#, fuzzy, no-c-format
-msgid ""
-"<literal>org.hibernate.transaction.JRun4TransactionManagerLookup</literal>"
-msgstr ""
-"<literal>org.hibernate.transaction. JRun4TransactionManagerLookup</literal>"
+#, no-c-format
+msgid "<literal>org.hibernate.transaction.JRun4TransactionManagerLookup</literal>"
+msgstr "<literal>org.hibernate.transaction.JRun4TransactionManagerLookup</literal>"
 
 #. Tag: entry
 #, no-c-format
@@ -2533,11 +2500,9 @@ msgid "JRun4"
 msgstr "JRun4"
 
 #. Tag: entry
-#, fuzzy, no-c-format
-msgid ""
-"<literal>org.hibernate.transaction.BESTransactionManagerLookup</literal>"
-msgstr ""
-"<literal>org.hibernate.transaction. BESTransactionManagerLookup</literal>"
+#, no-c-format
+msgid "<literal>org.hibernate.transaction.BESTransactionManagerLookup</literal>"
+msgstr "<literal>org.hibernate.transaction.BESTransactionManagerLookup</literal>"
 
 #. Tag: entry
 #, no-c-format
@@ -2747,3 +2712,4 @@ msgstr ""
 "serviço principal para conseguir uma única unidade de (hot)-deployable. "
 "Consulte a documentação do JBoss AS para maiores informações sobre o serviço "
 "JMX e implementação EJB.  "
+

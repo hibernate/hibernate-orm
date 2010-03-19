@@ -109,7 +109,7 @@ msgstr ""
 "Project-Id-Version: collection_mapping\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
 "POT-Creation-Date: 2010-02-10T07:25:34\n"
-"PO-Revision-Date: 2009-12-19 08:32+1000\n"
+"PO-Revision-Date: 2010-03-15 16:00+1000\n"
 "Last-Translator: \n"
 "Language-Team:  <en@li.org>\n"
 "MIME-Version: 1.0\n"
@@ -448,10 +448,8 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"The foreign key constraint can use <literal>ON DELETE CASCADE</literal>."
-msgstr ""
-"A restrição da chave exterior pode usar <literal>ON DELETE CASCADE</literal>."
+msgid "The foreign key constraint can use <literal>ON DELETE CASCADE</literal>."
+msgstr "A restrição da chave exterior pode usar <literal>ON DELETE CASCADE</literal>."
 
 #. Tag: para
 #, no-c-format
@@ -601,8 +599,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"<literal>class</literal> (required): the entity class used as the map key."
+msgid "<literal>class</literal> (required): the entity class used as the map key."
 msgstr ""
 "<literal>class</literal> (requerido): a classe da entidade usada como chave "
 "do mapa."
@@ -789,8 +786,7 @@ msgstr ""
 #. Tag: para
 #, no-c-format
 msgid "An array of entities, in this case, a many-to-many association:"
-msgstr ""
-"Uma matriz de entidades, neste caso, uma associação muitos-para-muitos: "
+msgstr "Uma matriz de entidades, neste caso, uma associação muitos-para-muitos: "
 
 #. Tag: para
 #, no-c-format
@@ -1064,8 +1060,7 @@ msgstr ""
 msgid ""
 "The non-inverse side is used to save the in-memory representation to the "
 "database."
-msgstr ""
-"A outra ponta é usada para salvar a representação em memória à base de dados."
+msgstr "A outra ponta é usada para salvar a representação em memória à base de dados."
 
 #. Tag: para
 #, no-c-format
@@ -1125,14 +1120,13 @@ msgstr ""
 "literal>. Devemos usar o seguinte mapeamento: "
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "Note that in this mapping, the collection-valued end of the association is "
 "responsible for updates to the foreign key."
 msgstr ""
 "Veja que neste mapeamento, o lado de coleção válida da associação é "
-"responsável pela atualização da chave exterior. <!-- TODO: Does this really "
-"result in some unnecessary update statements? -->"
+"responsável pela atualização da chave exterior. "
 
 #. Tag: title
 #, no-c-format
@@ -1167,7 +1161,7 @@ msgstr ""
 "mais tarde. "
 
 #. Tag: title
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "<literal>Using an &lt;idbag&gt;</literal>"
 msgstr "<literal>Using an &lt;idbag&gt;</literal>"
 
@@ -1251,10 +1245,8 @@ msgstr "Esta sessão cobre os exemplos de coleções."
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"The following class has a collection of <literal>Child</literal> instances:"
-msgstr ""
-"A seguinte classe possui uma coleção de instâncias <literal>Child</literal>:"
+msgid "The following class has a collection of <literal>Child</literal> instances:"
+msgstr "A seguinte classe possui uma coleção de instâncias <literal>Child</literal>:"
 
 #. Tag: para
 #, no-c-format
@@ -1310,7 +1302,7 @@ msgid "Table definitions:"
 msgstr "Definições das tabelas:"
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "For more examples and a complete explanation of a parent/child relationship "
 "mapping, see <xref linkend=\"example-parentchild\" /> for more information."
@@ -1324,3 +1316,4 @@ msgid "Even more complex association mappings are covered in the next chapter."
 msgstr ""
 "Até mesmo o mapeamento de associações mais complexos serão discutimos no "
 "próximo capítulo."
+

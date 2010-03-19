@@ -109,7 +109,7 @@ msgstr ""
 "Project-Id-Version: inheritance_mapping\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
 "POT-Creation-Date: 2010-02-11T05:38:15\n"
-"PO-Revision-Date: 2009-12-19 17:16+1000\n"
+"PO-Revision-Date: 2010-03-17 15:42+1000\n"
 "Last-Translator: \n"
 "Language-Team:  <en@li.org>\n"
 "MIME-Version: 1.0\n"
@@ -130,8 +130,7 @@ msgstr "As três estratégias "
 #. Tag: para
 #, no-c-format
 msgid "Hibernate supports the three basic inheritance mapping strategies:"
-msgstr ""
-"O Hibernate suporta as três estratégias básicas de mapeamento de herança:"
+msgstr "O Hibernate suporta as três estratégias básicas de mapeamento de herança:"
 
 #. Tag: para
 #, no-c-format
@@ -139,9 +138,9 @@ msgid "table per class hierarchy"
 msgstr "tabela por hierarquia de classes"
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "table per subclass"
-msgstr "Tabela por subclasse"
+msgstr "tabela por subclasse"
 
 #. Tag: para
 #, no-c-format
@@ -390,7 +389,7 @@ msgid "An alternative approach is to make use of implicit polymorphism:"
 msgstr "Uma abordagem alternativa é fazer uso de polimorfismo implícito:"
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "Notice that the <literal>Payment</literal> interface is not mentioned "
 "explicitly. Also notice that properties of <literal>Payment</literal> are "
@@ -405,7 +404,7 @@ msgstr ""
 "considere usar entidades de XML (ex. <literal>[ &lt;!ENTITY allproperties "
 "SYSTEM \"allproperties.xml\"&gt; ]</literal> na declaração do "
 "<literal>DOCTYPE</literal> e <literal>&amp; allproperties;</literal> no "
-"mapeamento).  "
+"mapeamento). "
 
 #. Tag: para
 #, no-c-format
@@ -483,108 +482,108 @@ msgstr ""
 "union-subclass&gt;</literal>. "
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "The following table shows the limitations of table per concrete-class "
 "mappings, and of implicit polymorphism, in Hibernate."
 msgstr ""
 "A seguinte tabela demonstra as limitações do mapeamento de tabela por classe "
-"concreta e do polimorfismo implícito no Hibernate."
+"concreta e do polimorfismo implícito no Hibernate. "
 
 #. Tag: title
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "Features of inheritance mappings"
-msgstr "Mapeamento de Herança "
+msgstr "Recurso dos Mapeamentos de Herança "
 
 #. Tag: entry
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "Inheritance strategy"
-msgstr "Mapeamento de Herança "
+msgstr "Estratégia de Herança "
 
 #. Tag: entry
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "Polymorphic many-to-one"
-msgstr "muitos-para-um Polimórfico: <code>&lt;any&gt;</code>"
+msgstr "muitos-para-um Polimórfico"
 
 #. Tag: entry
 #, no-c-format
 msgid "Polymorphic one-to-one"
-msgstr ""
+msgstr "um-para-um Polimórfico"
 
 #. Tag: entry
 #, no-c-format
 msgid "Polymorphic one-to-many"
-msgstr ""
+msgstr "um-para-muitos Polimórfico"
 
 #. Tag: entry
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "Polymorphic many-to-many"
-msgstr "muitos-para-um Polimórfico: <code>&lt;any&gt;</code>"
+msgstr "muitos-para-um Polimórfico"
 
 #. Tag: entry
 #, no-c-format
 msgid "Polymorphic <literal>load()/get()</literal>"
-msgstr ""
+msgstr "Polimórfico <literal>load()/get()</literal>"
 
 #. Tag: entry
 #, no-c-format
 msgid "Polymorphic queries"
-msgstr ""
+msgstr "Consultas Polimórficas"
 
 #. Tag: entry
 #, no-c-format
 msgid "Polymorphic joins"
-msgstr ""
+msgstr "Junçöes Polimórficas"
 
 #. Tag: entry
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "Outer join fetching"
-msgstr "A busca por união externa é suportada."
+msgstr "Busca por união externa"
 
 #. Tag: entry
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "table per class-hierarchy"
-msgstr "tabela por hierarquia de classes"
+msgstr "tabela por hierarquia de class"
 
 #. Tag: entry
 #, no-c-format
 msgid "<literal>&lt;many-to-one&gt;</literal>"
-msgstr ""
+msgstr "<literal>&lt;many-to-one&gt;</literal>"
 
 #. Tag: entry
 #, no-c-format
 msgid "<literal>&lt;one-to-one&gt;</literal>"
-msgstr ""
+msgstr "<literal>&lt;one-to-one&gt;</literal>"
 
 #. Tag: entry
 #, no-c-format
 msgid "<literal>&lt;one-to-many&gt;</literal>"
-msgstr ""
+msgstr "<literal>&lt;one-to-many&gt;</literal>"
 
 #. Tag: entry
 #, no-c-format
 msgid "<literal>&lt;many-to-many&gt;</literal>"
-msgstr ""
+msgstr "<literal>&lt;many-to-many&gt;</literal>"
 
 #. Tag: entry
 #, no-c-format
 msgid "<literal>s.get(Payment.class, id)</literal>"
-msgstr ""
+msgstr "<literal>s.get(Payment.class, id)</literal>"
 
 #. Tag: entry
 #, no-c-format
 msgid "<literal>from Payment p</literal>"
-msgstr ""
+msgstr "<literal>from Payment p</literal>"
 
 #. Tag: entry
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "<literal>from Order o join o.payment p</literal>"
-msgstr "Junções polimórficas: <code>from Order o join o.payment p</code>"
+msgstr "<literal>from Order o join o.payment p</literal>"
 
 #. Tag: entry
 #, no-c-format
 msgid "<emphasis>supported</emphasis>"
-msgstr ""
+msgstr "<emphasis>supported</emphasis>"
 
 #. Tag: entry
 #, no-c-format
@@ -592,80 +591,40 @@ msgid "table per concrete-class (union-subclass)"
 msgstr "tabela por classe concreta (subclasses de união)"
 
 #. Tag: entry
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "<literal>&lt;one-to-many&gt;</literal> (for <literal>inverse=\"true\"</"
 "literal> only)"
 msgstr ""
-"Um-para-muito polimórfico: <literal>&lt;one-to-many&gt;</literal> (somente "
-"para <literal>inverse=\"true\"</literal>)"
+"<literal>&lt;one-to-many&gt;</literal> (for <literal>inverse=\"true\"</"
+"literal> only)"
 
 #. Tag: entry
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "table per concrete class (implicit polymorphism)"
-msgstr "tabela por classe concreta (polimorfismo implícito) "
+msgstr "tabela por classe concreta (polimorfismo implícito)  "
 
 #. Tag: entry
 #, no-c-format
 msgid "<literal>&lt;any&gt;</literal>"
-msgstr ""
+msgstr "<literal>&lt;any&gt;</literal>"
 
 #. Tag: entry
 #, no-c-format
 msgid "<emphasis>not supported</emphasis>"
-msgstr ""
+msgstr "<emphasis>not supported</emphasis>"
 
 #. Tag: entry
 #, no-c-format
 msgid "<literal>&lt;many-to-any&gt;</literal>"
-msgstr ""
+msgstr "<literal>&lt;many-to-any&gt;</literal>"
 
 #. Tag: entry
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "<literal>s.createCriteria(Payment.class).add( Restrictions.idEq(id) )."
 "uniqueResult()</literal>"
 msgstr ""
-"<literal>load()</literal> ou <literal>get()</literal> polimórfico: <code>s."
-"criarCritério(Payment.class).adicionar( Restrições.idEq(id) ).Resultado único"
-"()</code>"
+"<literal>s.createCriteria(Payment.class).add( Restrictions.idEq(id) )."
+"uniqueResult()</literal>"
 
-#~ msgid "table per class-heirarchy"
-#~ msgstr "tabela por hierarquia de classe"
-
-#~ msgid "Polymorphic many-to-one: <code>&lt;many-to-one&gt;</code>"
-#~ msgstr "Muitos-para-um polimórfico: <code>&lt;many-to-one&gt;</code>"
-
-#~ msgid "Polymorphic one-to-one: <code>&lt;one-to-one&gt;</code>"
-#~ msgstr "Um-para-um polimórfico: <code>&lt;one-to-one&gt;</code>"
-
-#~ msgid "Polymorphic one-to-many: <code>&lt;one-to-many&gt;</code>"
-#~ msgstr "Um-para-muitos polimórfico: <code>&lt;one-to-many&gt;</code>"
-
-#~ msgid "Polymorphic many-to-many: <code>&lt;many-to-many&gt;</code>"
-#~ msgstr "Muitos-para-muitos polimórfico: <code>&lt;many-to-many&gt;</code>"
-
-#~ msgid ""
-#~ "Polymorphic <literal>load()</literal> or <literal>get()</literal>: "
-#~ "<code>s.get(Payment.class, id)</code>"
-#~ msgstr ""
-#~ "<literal>load()</literal> ou <literal>get()</literal> polimórfico: "
-#~ "<code>s.get(Payment.class, id)</code>>"
-
-#~ msgid "Polymorphic queries: <code>from Payment p</code>"
-#~ msgstr "Consultas polimórficas: <code>from Payment p</code>"
-
-#~ msgid ""
-#~ "Polymorphic one-to-one, polymorphic one-to-many, polymorphic joins, and "
-#~ "outer join fetching are not supported."
-#~ msgstr ""
-#~ "Um-para-um polimórfico, um-para-muitos polimórfico, junções polimórficas "
-#~ "e a busca de união externa não são suportadas."
-
-#, fuzzy
-#~ msgid "<para>table per subclass</para>"
-#~ msgstr "tabela por subclasse"
-
-#, fuzzy
-#~ msgid "<term>table per subclass</term>"
-#~ msgstr "tabela por subclasse"

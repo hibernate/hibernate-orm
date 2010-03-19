@@ -109,7 +109,7 @@ msgstr ""
 "Project-Id-Version: batch\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
 "POT-Creation-Date: 2010-02-11T05:38:15\n"
-"PO-Revision-Date: 2009-12-19 07:46+1000\n"
+"PO-Revision-Date: 2010-03-17 14:19+1000\n"
 "Last-Translator: \n"
 "Language-Team:  <en@li.org>\n"
 "MIME-Version: 1.0\n"
@@ -120,7 +120,7 @@ msgstr ""
 #. Tag: title
 #, no-c-format
 msgid "Batch processing"
-msgstr "Processamento em lotes"
+msgstr "Batch processing"
 
 #. Tag: para
 #, no-c-format
@@ -294,7 +294,7 @@ msgid "DML-style operations"
 msgstr "Operações no estilo DML"
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "As already discussed, automatic and transparent object/relational mapping is "
 "concerned with the management of the object state. The object state is "
@@ -315,7 +315,8 @@ msgstr ""
 "de dados não irá afetar o estado registrado em memória. Entretanto, o "
 "Hibernate provê métodos para executar instruções de volume de SQL-style DML, "
 "que são totalmente executados com HQL (Hibernate Query Language - Linguagem "
-"de Consulta Hibernate) (<xref linkend=\"queryhql\"/>). "
+"de Consulta Hibernate) (<link linkend=\"queryhql"
+"\">HQL</link>)."
 
 #. Tag: para
 #, no-c-format
@@ -353,13 +354,13 @@ msgstr ""
 "referências de propriedade serem qualificadas."
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "No <link linkend=\"queryhql-joins-forms\">joins</link>, either implicit or "
 "explicit, can be specified in a bulk HQL query. Sub-queries can be used in "
 "the where-clause, where the subqueries themselves may contain joins."
 msgstr ""
-"Nenhum <xref linkend=\"queryhql-joins-forms\" />, tanto implícito ou "
+"Nenhum <link linkend=\"queryhql-joins-forms\">joins</link>, tanto implícito ou "
 "explícito, pode ser especificado em uma consulta de volume HQL. As Sub-"
 "consultas podem ser utilizadas na cláusula onde, em que as subconsultas "
 "podem conter uniões. "
@@ -383,7 +384,7 @@ msgstr ""
 "literal>):"
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "In keeping with the EJB3 specification, HQL <literal>UPDATE</literal> "
 "statements, by default, do not effect the <link linkend=\"mapping-"
@@ -395,9 +396,9 @@ msgid ""
 "<literal>VERSIONED</literal> keyword after the <literal>UPDATE</literal> "
 "keyword."
 msgstr ""
-"As instruções do HQL <literal>UPDATE</literal> por padrão não afetam o <xref "
-"linkend=\"mapping-declaration-version\"/> ou os valores de propriedade <xref "
-"linkend=\"mapping-declaration-timestamp\"/> para as entidades afetadas, de "
+"As instruções do HQL <literal>UPDATE</literal> por padrão não afetam o  <link linkend=\"mapping-"
+"declaration-version\">version</link> ou os valores de propriedade <link linkend=\"mapping-"
+"declaration-timestamp\">timestamp</link> para as entidades afetadas, de "
 "acordo com a especificação EJB3. No entanto, você poderá forçar o Hibernate "
 "a redefinir corretamente os valores de propriedade <literal>version</"
 "literal> ou <literal>timestamp</literal> usando um <literal>versioned "
@@ -567,5 +568,5 @@ msgstr ""
 msgid ""
 "The following is an example of an HQL <literal>INSERT</literal> statement "
 "execution:"
-msgstr ""
-"Segue abaixo o exemplo da execução de um HQL <literal>INSERT</literal>:"
+msgstr "Segue abaixo o exemplo da execução de um HQL <literal>INSERT</literal>:"
+

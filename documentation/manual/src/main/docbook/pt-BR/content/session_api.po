@@ -109,7 +109,7 @@ msgstr ""
 "Project-Id-Version: session_api\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
 "POT-Creation-Date: 2010-03-12T00:03:48\n"
-"PO-Revision-Date: 2009-12-21 07:37+1000\n"
+"PO-Revision-Date: 2010-03-19 10:25+1000\n"
 "Last-Translator: \n"
 "Language-Team:  <en@li.org>\n"
 "MIME-Version: 1.0\n"
@@ -247,7 +247,7 @@ msgid "Making objects persistent"
 msgstr "Tornando os objetos persistentes"
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "Newly instantiated instances of a persistent class are considered "
 "<emphasis>transient</emphasis> by Hibernate. We can make a transient "
@@ -256,7 +256,7 @@ msgstr ""
 "As instâncias recentemente instanciadas de uma classe persistente são "
 "consideradas <emphasis>transientes </emphasis> pelo Hibernate. Podemos "
 "transformar uma instância transiente em <emphasis>persistente</emphasis> "
-"associando-a a uma sessão:"
+"associando-a a uma sessão: "
 
 #. Tag: para
 #, no-c-format
@@ -451,7 +451,7 @@ msgstr ""
 "propriedades do objeto."
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "How much does Hibernate load from the database and how many SQL "
 "<literal>SELECT</literal>s will it use? This depends on the "
@@ -459,9 +459,9 @@ msgid ""
 "\"performance-fetching\" />."
 msgstr ""
 "O quanto Hibernate carrega do banco de dados e quantos SQL <literal>SELECT</"
-"literal> ele irá usar? Isto depende da estratégia de <emphasis>estratégia de "
-"busca</emphasis> usada e explicada na <xref linkend=\"performance-fetching\"/"
-">."
+"literal> ele irá usar? Isto depende da <emphasis>estratégia de "
+"busca</emphasis> usada e explicada na <xref linkend="
+"\"performance-fetching\" />."
 
 #. Tag: title
 #, no-c-format
@@ -611,8 +611,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"named parameters are insensitive to the order they occur in the query string"
+msgid "named parameters are insensitive to the order they occur in the query string"
 msgstr ""
 "Parâmetros nomeados são insensíveis à ordem que eles ocorrem na faixa de "
 "consulta"
@@ -797,14 +796,15 @@ msgstr ""
 "<literal>Critério</literal> intuitiva para estes casos: "
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "The <literal>Criteria</literal> and the associated <literal>Example</"
 "literal> API are discussed in more detail in <xref linkend=\"querycriteria"
 "\" />."
 msgstr ""
 "Um <literal>Criteria</literal> e API associado <literal>Example</literal> "
-"serão discutidos em mais detalhes em <xref linkend=\"querycriteria\"/>. "
+"serão discutidos em mais detalhes em <xref linkend=\"querycriteria"
+"\" />."
 
 #. Tag: title
 #, no-c-format
@@ -828,7 +828,7 @@ msgstr ""
 "deve incluir as aliases SQL dentro de chaves: "
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "SQL queries can contain named and positional parameters, just like Hibernate "
 "queries. More information about native SQL queries in Hibernate can be found "
@@ -882,7 +882,7 @@ msgstr ""
 "instâncias desanexadas."
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "Hibernate does not offer its own API for direct execution of "
 "<literal>UPDATE</literal> or <literal>DELETE</literal> statements. Hibernate "
@@ -905,7 +905,7 @@ msgstr ""
 "massa conflitua com o mapeamento de objeto/relacional para aplicativos de "
 "transações online com processamento. No entanto, versões futuras do "
 "Hibernate poderão oferecer funções especiais de operação em massa. Veja "
-"<xref linkend=\"batch\"/> para alguns possíveis truques de operação em lote. "
+"<xref linkend=\"batch\" />  para alguns possíveis truques de operação em lote. "
 
 #. Tag: title
 #, no-c-format
@@ -969,7 +969,7 @@ msgstr ""
 "executada. "
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "The application should individually <literal>update()</literal> detached "
 "instances that are reachable from the given detached instance "
@@ -980,8 +980,8 @@ msgstr ""
 "A aplicação deve <literal>update()</literal> instâncias desanexadas "
 "individualmente, ao alcance da atual instância desanexada, se e "
 "<emphasis>somente</emphasis> se, esta requerer uma atualização também de seu "
-"estado. Esta ação pode ser automatizada, é claro, utilizando "
-"<emphasis>persistência transitiva</emphasis>, veja <xref linkend="
+"estado. Esta ação pode ser automatizada utilizando "
+"<emphasis>persistência transitiva</emphasis>. Consulte <xref linkend="
 "\"objectstate-transitive\"/> para maiores informações. "
 
 #. Tag: para
@@ -1009,13 +1009,13 @@ msgstr ""
 "único caso de uso para <literal>lock()</literal>.  "
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "Other models for long units of work are discussed in <xref linkend="
 "\"transactions-optimistic\" />."
 msgstr ""
-"Outros modelos para unidades longas de trabalho serão discutidas em <xref "
-"linkend=\"transactions-optimistic\"/>. "
+"Outros modelos para unidades longas de trabalho serão discutidas em <xref linkend="
+"\"transactions-optimistic\" />."
 
 #. Tag: title
 #, no-c-format
@@ -1393,7 +1393,7 @@ msgstr ""
 "retornará dados errados. "
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "It is possible to change the default behavior so that flush occurs less "
 "frequently. The <literal>FlushMode</literal> class defines three different "
@@ -1412,10 +1412,10 @@ msgstr ""
 "literal> seja chamado explicitamente. O último modo é útil para execução de "
 "unidades de trabalho longas, onde uma <literal>Session</literal> é mantida "
 "aberta e disconectada por um longo tempo (veja <xref linkend=\"transactions-"
-"optimistic-longsession\"/>)."
+"optimistic-longsession\"/>). "
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "During flush, an exception might occur (e.g. if a DML operation violates a "
 "constraint). Since handling exceptions involves some understanding of "
@@ -1425,7 +1425,8 @@ msgstr ""
 "Durante uma limpeza, pode ocorrer uma exceção (ex.: se uma operação DML "
 "violar uma restrição). Como o manuseio de exceções envolve algum "
 "entendimento do comportamento transacional do Hibernate, discutiremos sobre "
-"isso em <xref linkend=\"transactions\"/>. "
+"isso em <xref linkend="
+"\"transactions\" />."
 
 #. Tag: title
 #, no-c-format
@@ -1721,3 +1722,4 @@ msgstr ""
 "literal> e <literal>CollectionMetadata</literal> e pela hierarquia "
 "<literal>Type</literal>. Instâncias das interfaces de metadados podem ser "
 "obtidas a partir do <literal>SessionFactory</literal>. "
+

@@ -109,7 +109,7 @@ msgstr ""
 "Project-Id-Version: example_parentchild\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
 "POT-Creation-Date: 2010-02-10T07:25:35\n"
-"PO-Revision-Date: 2009-12-19 08:56+1000\n"
+"PO-Revision-Date: 2010-03-17 14:42+1000\n"
 "Last-Translator: \n"
 "Language-Team:  <en@li.org>\n"
 "MIME-Version: 1.0\n"
@@ -251,10 +251,8 @@ msgstr "O Hibernate editaria duas instruções SQL"
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"an <literal>INSERT</literal> to create the record for <literal>c</literal>"
-msgstr ""
-"um <literal>INSERT</literal> para criar um registro para <literal>c</literal>"
+msgid "an <literal>INSERT</literal> to create the record for <literal>c</literal>"
+msgstr "um <literal>INSERT</literal> para criar um registro para <literal>c</literal>"
 
 #. Tag: para
 #, no-c-format
@@ -342,8 +340,7 @@ msgstr ""
 #. Tag: para
 #, no-c-format
 msgid "The code to add a <literal>Child</literal> looks like this:"
-msgstr ""
-"Agora, o código que adiciona um <literal>Child</literal> se parece com este: "
+msgstr "Agora, o código que adiciona um <literal>Child</literal> se parece com este: "
 
 #. Tag: title
 #, no-c-format
@@ -427,7 +424,7 @@ msgid "Cascades and <literal>unsaved-value</literal>"
 msgstr "Cascatas e <literal>unsaved-value</literal>"
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "Suppose we loaded up a <literal>Parent</literal> in one <literal>Session</"
 "literal>, made some changes in a UI action and wanted to persist these "
@@ -443,7 +440,7 @@ msgid ""
 "necessary to specify an <literal>unsaved-value</literal> explicitly.</"
 "emphasis>"
 msgstr ""
-"Vamos supor que tenhamos carregado um <literal>Parent</literal> em uma  "
+"Vamos supor que tenhamos carregado um <literal>Parent</literal> em uma "
 "<literal>Session</literal>, fizemos algumas mudanças em uma ação UI e "
 "desejamos que persista estas mudanças em uma sessão nova, chamando um "
 "<literal>update()</literal>. O <literal>Parent</literal> irá conter uma "
@@ -453,8 +450,8 @@ msgstr ""
 "os <literal>Parent</literal> e <literal>Child</literal> tenham gerado "
 "propriedades de identificador do tipo <literal>Long</literal>. O Hibernate "
 "usará o identificador e o valor de propriedade da versão/carimbo de data e "
-"hora para determinar qual filho é novo. (Veja <xref linkend=\"objectstate-"
-"saveorupdate\"/>.) <emphasis>no Hibernate3, não é mais necessário "
+"hora para determinar qual filho é novo. (Veja <xref linkend="
+"\"objectstate-saveorupdate\" />.) <emphasis>No Hibernate3, não é mais necessário "
 "especificar um <literal>unsaved-value</literal> explicitamente.</emphasis> "
 
 #. Tag: para
@@ -519,3 +516,4 @@ msgstr ""
 "Infelizmente, existem duas grandes limitações para elementos compostos: "
 "elementos compostos podem não possuir coleções e assim sendo podem não ser "
 "filhos de nenhuma outra entidade a não ser do pai único. "
+

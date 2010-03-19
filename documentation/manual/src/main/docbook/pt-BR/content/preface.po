@@ -107,10 +107,10 @@
 # Glaucia Cintra <gcintra@redhat.com>, 2007.
 msgid ""
 msgstr ""
-"Project-Id-Version: Preface\n"
+"Project-Id-Version: preface\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
 "POT-Creation-Date: 2010-02-11T05:38:15\n"
-"PO-Revision-Date: 2009-12-19 18:38+1000\n"
+"PO-Revision-Date: 2010-03-18 15:24+1000\n"
 "Last-Translator: \n"
 "Language-Team:  <en@li.org>\n"
 "MIME-Version: 1.0\n"
@@ -124,7 +124,7 @@ msgid "Preface"
 msgstr "Prefácio"
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "Working with object-oriented software and a relational database can be "
 "cumbersome and time consuming in today's enterprise environments. Hibernate "
@@ -135,8 +135,8 @@ msgid ""
 msgstr ""
 "O trabalho com o software objeto relacional e banco de dados relacionais, "
 "pode ser incômodo e desgastante atualmente num meio empresarial. Hibernate é "
-"um objeto/relacional de mapeamento de ferramentas nos meios Java. O termo "
-"objeto/relacional de mapeamento ( ORM ) refere-se à técnica de mapeamento de "
+"um Objeto/Relacional de Mapeamento de ferramentas nos meios Java. O termo "
+"Objeto/Relacional de Mapeamento (ORM) refere-se à técnica de mapeamento de "
 "dados, representada desde o objeto modelo aos dados relacionais modelo com "
 "um esquema baseado na SQL. "
 
@@ -187,24 +187,23 @@ msgstr ""
 "Hibernate, Mapeamento Objeto/Relacional ou mesmo Java:"
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "Read <xref linkend=\"tutorial\" /> for a tutorial with step-by-step "
 "instructions. The source code for the tutorial is included in the "
 "distribution in the <literal>doc/reference/tutorial/</literal> directory."
 msgstr ""
-"Leia <xref linkend=\"tutorial\"/> com passo-a-passo de instruções tutoriais. "
-"O código de origem tutorial está incluído no diretório de distribuição "
-"<literal>doc/reference/tutorial/</literal>. "
+"Leia <xref linkend=\"tutorial\" /> com passo-a-passo de instruções tutoriais. "
+"O código de origem tutorial está incluído no diretório de distribuição <literal>doc/reference/tutorial/</literal>."
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "Read <xref linkend=\"architecture\" /> to understand the environments where "
 "Hibernate can be used."
 msgstr ""
 "Leia <xref linkend=\"architecture\"/> para melhor entendimento dos meios "
-"onde Hibernate pode ser utilizado.  "
+"onde Hibernate pode ser utilizado. "
 
 #. Tag: para
 #, no-c-format
@@ -225,7 +224,7 @@ msgstr ""
 "literal>. "
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "Use this reference documentation as your primary source of information. "
 "Consider reading <biblioref linkend=\"biblio-JPwH\"></biblioref> if you need "
@@ -234,11 +233,9 @@ msgid ""
 "the example application from <biblioref linkend=\"biblio-JPwH\"></biblioref>."
 msgstr ""
 "Utilize esta documentação de referência como a sua primeira fonte de "
-"informação. Considere a leitura <emphasis> Persistência Java com Hibernate </"
-"emphasis> (http://www.manning.com/bauer2), caso você precise de auxílio com "
-"a aplicação de design, ou tutorial com passo-a-passo, caso seja desejado. "
-"Você pode também visitar http://caveatemptor.hibernate.org e fazer o "
-"download do exemplo de aplicação da Persistência Java com Hibernate."
+"informação. Considere a leitura <biblioref linkend=\"biblio-JPwH\"></biblioref>, caso você precise de auxílio com a aplicação de design, ou tutorial com passo-a-passo, caso seja desejado. "
+"Você pode também visitar <ulink url=\"http://caveatemptor.hibernate.org\" /> e fazer o "
+"download do exemplo de aplicação da <biblioref linkend=\"biblio-JPwH\"></biblioref>."
 
 #. Tag: para
 #, no-c-format
@@ -248,7 +245,7 @@ msgstr ""
 "Hibernate. "
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "Links to third party demos, examples, and tutorials are maintained on the "
 "Hibernate website."
@@ -297,3 +294,4 @@ msgstr ""
 "org/SupportTraining/ ). Hibernate é um projeto de Fonte Aberta Profissional "
 "e componente crítico do Sistema Jboss de Empreendimento e Middleware "
 "( JEMS ) suíte de produtos. "
+

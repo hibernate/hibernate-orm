@@ -109,7 +109,7 @@ msgstr ""
 "Project-Id-Version: tutorial\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
 "POT-Creation-Date: 2010-02-11T05:38:16\n"
-"PO-Revision-Date: 2009-12-21 07:55+1000\n"
+"PO-Revision-Date: 2010-03-19 14:09+1000\n"
 "Last-Translator: \n"
 "Language-Team:  <en@li.org>\n"
 "MIME-Version: 1.0\n"
@@ -225,7 +225,7 @@ msgstr ""
 "automaticamente um projeto baseado no descritor maven."
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "It is not a requirement to use Maven. If you wish to use something else to "
 "build this tutoial (such as Ant), the layout will remain the same. The only "
@@ -247,19 +247,18 @@ msgstr ""
 "dependências necessárias. Caso você utilize <ulink url=\"http://ant.apache."
 "org/ivy/\">Ivy</ulink> para fornecer um gerenciamento de dependência "
 "transitiva, você continuará a usar as dependências mencionadas abaixo. Do "
-"contrário, você precisará encontrar todas as dependências, ambas explícitas "
+"contrário, você precisará encontrar <emphasis>todas</emphasis> as dependências, ambas explícitas "
 "e transitivas, além de adicioná-las às classpath de projetos. Caso "
 "trabalhando da vinculação de distribuição Hibernate, quer dizer "
 "<filename>hibernate3.jar</filename>, todos os artefatos no diretório "
 "<filename>lib/required</filename> e todos os arquivos a partir do diretório "
 "<filename>lib/bytecode/cglib</filename> ou <filename>lib/bytecode/javassist</"
 "filename>. Adicionalmente, você precisará de ambos servlet-api jar e um dos "
-"slf4j logging backends."
+"slf4j logging backends. "
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"Save this file as <filename>pom.xml</filename> in the project root directory."
+msgid "Save this file as <filename>pom.xml</filename> in the project root directory."
 msgstr ""
 "Salve este arquivo como <filename>pom.xml</filename> no diretório raiz do "
 "projeto."
@@ -471,15 +470,15 @@ msgstr ""
 "o plugin na sua própria estratégia."
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "<literal>native</literal> is no longer consider the best strategy in terms "
 "of portability. for further discussion, see <xref linkend=\"portability-idgen"
 "\" />"
 msgstr ""
 "<literal>native</literal> não é mais considerada a melhor estratégia em "
-"termos de portabilidade. Para maiores informações consulte <xref linkend="
-"\"portability-idgen\" />"
+"termos de portabilidade. Para maiores informações, consulte <xref linkend=\"portability-idgen"
+"\" />"
 
 #. Tag: para
 #, no-c-format
@@ -598,10 +597,9 @@ msgstr ""
 "configurar o HSQLDB para rodar no \"modo do servidor\"."
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid "We do this do that the data remains between runs."
-msgstr ""
-"Nós realizamos isto para que aqueles dados permaneçam entre as execuções."
+msgstr "Nós realizamos isto para que aqueles dados permaneçam entre as execuções. "
 
 #. Tag: para
 #, no-c-format
@@ -644,13 +642,13 @@ msgstr ""
 "do Hibernate para este tutorial."
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "The built-in Hibernate connection pool is in no way intended for production "
 "use. It lacks several features found on any decent connection pool."
 msgstr ""
 "O pool de conexão interna do Hibernate não é recomendado para uso de "
-"produção."
+"produção. Ele possui deficiência em diversos recursos encontrados em qualquer pool de conexão apropriado."
 
 #. Tag: para
 #, no-c-format
@@ -698,13 +696,13 @@ msgstr ""
 "gera."
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "In most cases, Hibernate is able to properly determine which dialect to use. "
 "See <xref linkend=\"portability-dialectresolver\" /> for more information."
 msgstr ""
 "Na maioria dos casos, o Hibernate está apto a determinar corretamente qual "
-"dialeto em uso. Consulte <xref linkend=\"portability-dialectresolver\"/> "
+"dialeto em uso. Consulte <xref linkend=\"portability-dialectresolver\" /> "
 "para maiores informações. "
 
 #. Tag: para
@@ -1011,7 +1009,7 @@ msgstr ""
 "aplicativo  da web real será demonstrado mais adiante neste tutorial."
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "See <xref linkend=\"transactions\" /> for more information about transaction "
 "handling and demarcation. The previous example also skipped any error "
@@ -1019,7 +1017,7 @@ msgid ""
 msgstr ""
 "Dê uma olhada no <xref linkend=\"transactions\"/> para mais informações a "
 "respeito de manipulação de transação e demarcação. Nós também pulamos "
-"qualquer manipulação de erro e rollback no exemplo anterior. "
+"qualquer manipulação de erro e rollback no exemplo anterior.  "
 
 #. Tag: para
 #, no-c-format
@@ -1068,7 +1066,7 @@ msgstr ""
 "literal>: "
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "Here, we are using a Hibernate Query Language (HQL) query to load all "
 "existing <literal>Event</literal> objects from the database. Hibernate will "
@@ -1081,7 +1079,7 @@ msgstr ""
 "dados. O Hibernate irá gerar o SQL apropriado, enviar para o banco de dados "
 "e popular objetos <literal>Event</literal> com os dados. Você pode criar "
 "consultas mais complexas com HQL. Consulte <xref linkend=\"queryhql\"/> para "
-"maiores informações. "
+"maiores informações.  "
 
 #. Tag: para
 #, no-c-format
@@ -1120,8 +1118,7 @@ msgstr "Mapeando a classe Person "
 #. Tag: para
 #, no-c-format
 msgid "The first cut of the <literal>Person</literal> class looks like this:"
-msgstr ""
-"O primeira parte da classe <literal>Person</literal> parece-se com isto: "
+msgstr "O primeira parte da classe <literal>Person</literal> parece-se com isto: "
 
 #. Tag: para
 #, no-c-format
@@ -1503,10 +1500,8 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"Now map this side of the association in <literal>Event.hbm.xml</literal>."
-msgstr ""
-"Agora mapeie este lado da associação em <literal>Event.hbm.xml</literal>. "
+msgid "Now map this side of the association in <literal>Event.hbm.xml</literal>."
+msgstr "Agora mapeie este lado da associação em <literal>Event.hbm.xml</literal>. "
 
 #. Tag: para
 #, no-c-format
@@ -1742,8 +1737,7 @@ msgstr "Processando e renderizando"
 msgid ""
 "Now you can implement the processing of the request and the rendering of the "
 "page."
-msgstr ""
-"Vamos implementar o processamento da solicitação e renderização da página. "
+msgstr "Vamos implementar o processamento da solicitação e renderização da página. "
 
 #. Tag: para
 #, no-c-format
@@ -1831,15 +1825,15 @@ msgstr ""
 "para seu diretório Tomcat <literal>webapp</literal>. "
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "If you do not have Tomcat installed, download it from <ulink url=\"http://"
 "tomcat.apache.org/\" /> and follow the installation instructions. Our "
 "application requires no changes to the standard Tomcat configuration."
 msgstr ""
 "Caso você não possua o Tomcat instalado, baixe isto do <ulink url=\"http://"
-"tomcat.apache.org/\"></ulink> e siga as instruções de instalação. Nosso "
-"aplicativo não solicita alterações à configuração Tomcat padrão."
+"tomcat.apache.org/\" /> e siga as instruções de instalação. Nosso "
+"aplicativo não solicita alterações à configuração Tomcat padrão.  "
 
 #. Tag: para
 #, no-c-format
@@ -1874,3 +1868,4 @@ msgstr ""
 "autônomo simples e um aplicativo da web pequeno. A partir do Hibernate "
 "<ulink url=\"http://hibernate.org\">website</ulink> você poderá encontrar "
 "mais tutoriais disponíveis."
+

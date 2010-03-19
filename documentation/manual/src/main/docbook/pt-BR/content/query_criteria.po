@@ -109,7 +109,7 @@ msgstr ""
 "Project-Id-Version: query_criteria\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
 "POT-Creation-Date: 2010-02-11T05:38:15\n"
-"PO-Revision-Date: 2009-12-19 18:39+1000\n"
+"PO-Revision-Date: 2010-03-19 09:29+1000\n"
 "Last-Translator: \n"
 "Language-Team:  <en@li.org>\n"
 "MIME-Version: 1.0\n"
@@ -125,8 +125,7 @@ msgstr "Consultas por critérios"
 #. Tag: para
 #, no-c-format
 msgid "Hibernate features an intuitive, extensible criteria query API."
-msgstr ""
-"O Hibernate provê uma API de consulta por critério intuitiva e extensível."
+msgstr "O Hibernate provê uma API de consulta por critério intuitiva e extensível."
 
 #. Tag: title
 #, no-c-format
@@ -239,8 +238,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid ""
-"There is also an alternate form that is useful in certain circumstances:"
+msgid "There is also an alternate form that is useful in certain circumstances:"
 msgstr "A seguinte forma alternada é útil em certas circunstâncias:"
 
 #. Tag: para
@@ -269,7 +267,7 @@ msgstr ""
 #. Tag: para
 #, no-c-format
 msgid "Additionally you may manipulate the result set using a left outer join:"
-msgstr ""
+msgstr "Você pode ainda manipular o conjunto do resultado usando a junção exterior restante:"
 
 #. Tag: para
 #, no-c-format
@@ -280,26 +278,26 @@ msgid ""
 "database prior to returning complex/large result sets, and removes many "
 "instances where multiple queries would have to be performed and the results "
 "unioned by java in memory."
-msgstr ""
+msgstr "Isto retornará todos os <literal>Cat</literal>s com um mate (amigo) cujo nome inicia com \"bom\" ordenado pela idade de seu mate e todos os cats que não tem mates. Isto é útil quando houver necessidade de pedir ou limitar a prioridade do banco de dados em retornar conjuntos de resultado complexo/grande e remover muitas instâncias onde consultas múltiplas deveriam ter sido executadas e os resultados unidos pelo java em memória."
 
 #. Tag: para
 #, no-c-format
 msgid ""
 "Without this feature, first all of the cats without a mate would need to be "
 "loaded in one query."
-msgstr ""
+msgstr "Sem este recurso, o primeiro de todos os cats sem um mate teria que ser carregado em uma consulta."
 
 #. Tag: para
 #, no-c-format
 msgid ""
 "A second query would need to retreive the cats with mates who's name started "
 "with \"good\" sorted by the mates age."
-msgstr ""
+msgstr "Uma segunda consulta teria que restaurar os cats com os mates cujos os nomes iniciem com \"bom\" selecionados pelas idades dos mates. "
 
 #. Tag: para
 #, no-c-format
 msgid "Thirdly, in memory; the lists would need to be joined manually."
-msgstr ""
+msgstr "A terceira, em memória; as listas teriam que ser unidas manualmente. "
 
 #. Tag: title
 #, no-c-format
@@ -316,7 +314,7 @@ msgstr ""
 "execução usando <literal>setFetchMode()</literal>. "
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "This query will fetch both <literal>mate</literal> and <literal>kittens</"
 "literal> by outer join. See <xref linkend=\"performance-fetching\" /> for "
@@ -324,7 +322,7 @@ msgid ""
 msgstr ""
 "Esta consulta fará a busca tanto de <literal>mate</literal> quanto de "
 "<literal>kittens</literal> por uma união externa. Para maiores informações, "
-"veja <xref linkend=\"performance-fetching\"/>. "
+"veja <xref linkend=\"performance-fetching\" />. "
 
 #. Tag: title
 #, no-c-format
@@ -507,3 +505,4 @@ msgstr ""
 "Uma vez que você tenha ativado o cache de consulta Hibernate, o "
 "<literal>Restrictions.naturalId()</literal> nos permite que utilizemos um "
 "algoritmo de cache mais eficiente."
+

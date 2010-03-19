@@ -1,11 +1,16 @@
-#, fuzzy
+# translation of legal_notice.po to
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
 "POT-Creation-Date: 2010-02-04T04:51:23\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"PO-Revision-Date: 2010-03-19 15:44+1000\n"
+"Last-Translator: \n"
 "Content-Type: text/plain; charset=UTF-8\n"
+"Project-Id-Version: legal_notice\n"
+"Language-Team:  <en@li.org>\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: KBabel 1.11.4\n"
+"MIME-Version: 1.0\n"
 
 #. Tag: title
 #, no-c-format
@@ -13,7 +18,7 @@ msgid "Legal Notice"
 msgstr "Legal Notice"
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "<address> <street>1801 Varsity Drive</street> <city>Raleigh</city>, "
 "<state>NC</state><postcode>27606-2072</postcode><country>USA</country> "
@@ -22,14 +27,15 @@ msgid ""
 "Triangle Park</city>, <state>NC</state><postcode>27709</"
 "postcode><country>USA</country> </address>"
 msgstr ""
-"<address> <street>1801 Varsity Drive</street> <city>Raleigh</city>, <state>NC</"
-"state><postcode>27606-2072</postcode><country>USA</country> <phone>Phone: +1 "
-"919 754 3700</phone> <phone>Phone: 888 733 4281</phone> <fax>Fax: +1 919 754 "
-"3701</fax> <pob>PO Box 13588</pob><city>Research Triangle Park</city>, "
-"<state>NC</state><postcode>27709</postcode><country>USA</country> </address>"
+"<address> <street>1801 Varsity Drive</street> <city>Raleigh</city>, "
+"<state>NC</state><postcode>27606-2072</postcode><country>USA</country> "
+"<phone>Phone: +1 919 754 3700</phone> <phone>Phone: 888 733 4281</phone> "
+"<fax>Fax: +1 919 754 3701</fax> <pob>PO Box 13588</pob><city>Research "
+"Triangle Park</city>, <state>NC</state><postcode>27709</"
+"postcode><country>USA</country> </address>"
 
 #. Tag: para
-#, fuzzy, no-c-format
+#, no-c-format
 msgid ""
 "Copyright <trademark class=\"copyright\"></trademark> 2007 by Red Hat, Inc. "
 "This copyrighted material is made available to anyone wishing to use, "
@@ -37,7 +43,7 @@ msgid ""
 "GNU <ulink url=\"http://www.gnu.org/licenses/lgpl-2.1.html\">Lesser General "
 "Public License</ulink>, as published by the Free Software Foundation."
 msgstr ""
-"Copyright <trademark class=\"copyright\"></trademark> 2007 by Red Hat, Inc.  "
+"Copyright <trademark class=\"copyright\"></trademark> 2007 by Red Hat, Inc. "
 "This copyrighted material is made available to anyone wishing to use, "
 "modify, copy, or redistribute it subject to the terms and conditions of the "
 "GNU <ulink url=\"http://www.gnu.org/licenses/lgpl-2.1.html\">Lesser General "
@@ -71,8 +77,3 @@ msgstr "The GPG fingerprint of the security@redhat.com key is:"
 msgid "CA 20 86 86 2B D6 9D FC 65 F6 EC C4 21 91 80 CD DB 42 A6 0E"
 msgstr "CA 20 86 86 2B D6 9D FC 65 F6 EC C4 21 91 80 CD DB 42 A6 0E"
 
-#~ msgid "ROLES_OF_TRANSLATORS"
-#~ msgstr "<!--TRANS:ROLES_OF_TRANSLATORS-->"
-
-#~ msgid "CREDIT_FOR_TRANSLATORS"
-#~ msgstr "<!--TRANS:CREDIT_FOR_TRANSLATORS-->"

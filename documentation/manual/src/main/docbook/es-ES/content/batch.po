@@ -15,7 +15,7 @@ msgstr ""
 "Project-Id-Version: batch\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
 "POT-Creation-Date: 2010-02-11T05:38:15\n"
-"PO-Revision-Date: 2010-03-16 10:24+1000\n"
+"PO-Revision-Date: 2010-03-19 12:57+1000\n"
 "Last-Translator: Angela Garcia <agarcia@redhat.com>\n"
 "Language-Team:  <en@li.org>\n"
 "MIME-Version: 1.0\n"
@@ -114,7 +114,7 @@ msgstr ""
 #. Tag: title
 #, no-c-format
 msgid "Batch updates"
-msgstr "Actualizaciones de lotes update/delete en masa"
+msgstr "Actualizaciones de lotes"
 
 #. Tag: para
 #, no-c-format

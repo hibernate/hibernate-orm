@@ -65,7 +65,7 @@
         </id>
         <many-to-one name="course" column="COURSE_ID" class="Course"/>
         <property name="semester" type="int" column="SEMESTER"/>
-        <property name="year" type="int" column="YEAR"/>
+        <property name="year" type="int" column="`YEAR`"/>
         <set name="enrollments" lazy="true" cascade="all">
             <key column="SECTION_ID"/>
             <one-to-many class="Enrollment"/>

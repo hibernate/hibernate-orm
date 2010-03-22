@@ -13,7 +13,7 @@
         </id>
 
         <property name="alias">
-            <column name="alias" length="20"/>
+            <column name="`alias`" length="20"/>
         </property>
 
         <many-to-one name="user"

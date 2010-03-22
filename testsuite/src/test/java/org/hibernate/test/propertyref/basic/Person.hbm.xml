@@ -52,7 +52,7 @@
             <generator class="uuid.hex"/>
         </id>
         <many-to-one name="user" column="userId" property-ref="userId"/>
-        <property name="type" not-null="true"/>
+        <property name="type" column="`type`" not-null="true"/>
     </class>
 
     <class name="Group" table="PROPREF_GRP">

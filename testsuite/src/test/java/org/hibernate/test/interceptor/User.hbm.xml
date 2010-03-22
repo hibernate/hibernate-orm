@@ -13,7 +13,7 @@
 	
 	<class name="User" table="users">
 		<id name="name"/>
-		<property name="password"/>
+		<property name="password" column="`password`"/>
 		<property name="lastUpdated"/>
 		<property name="created"/>
 		<set name="actions" lazy="false" fetch="join">

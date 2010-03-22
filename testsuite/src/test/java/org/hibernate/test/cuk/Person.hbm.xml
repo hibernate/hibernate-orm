@@ -49,7 +49,7 @@
 		<many-to-one name="person" unique="true" not-null="true"/>
 	</class>
 	
-	<class name="Account">
+	<class name="Account" table="`Account`">
 		<id name="accountId" length="32">
 			<generator class="uuid.hex"/>
 		</id>
@@ -57,7 +57,7 @@
 			<column name="userId"/>
 			<column name="userDeleted"/>
 		</many-to-one>
-		<property name="type" not-null="true"/>
+		<property name="type" column="`type`" not-null="true"/>
 	</class>
 
 </hibernate-mapping>

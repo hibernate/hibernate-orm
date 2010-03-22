@@ -15,7 +15,7 @@
 		</set>
 	</class>
 
-    <class name="Value" >
+    <class name="Value" table="`Value`">
 		<id name="id" type="long" column="ID">
 			<generator class="increment"/>
 		</id>

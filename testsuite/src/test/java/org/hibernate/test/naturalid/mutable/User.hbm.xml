@@ -21,7 +21,7 @@
 			<property name="name"/>
 			<property name="org"/>
 		</natural-id>
-		<property name="password"/>
+		<property name="password" column="`password`"/>
 	</class>
 
 </hibernate-mapping>

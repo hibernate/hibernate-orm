@@ -50,7 +50,7 @@
 		
 		<joined-subclass name="Employee" table="JEmployee">
 				<key column="person_id"/>
-				<property name="title" 
+				<property name="title" column="`title`"
 					not-null="true" 
 					length="20"/>
 				<property name="salary" 

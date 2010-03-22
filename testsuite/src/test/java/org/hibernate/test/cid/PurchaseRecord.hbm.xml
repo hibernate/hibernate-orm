@@ -55,7 +55,7 @@
 		    <one-to-many class="PurchaseDetail"/>
 		</set>		
 		
-		<property name="timestamp" column="timestamp"/>
+		<property name="timestamp" column="`timestamp`"/>
     	
     </class>
 

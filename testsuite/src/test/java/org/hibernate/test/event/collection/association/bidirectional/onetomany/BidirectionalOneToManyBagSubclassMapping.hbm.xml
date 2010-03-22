@@ -14,7 +14,7 @@
             <generator class="native"/>
         </id>
 
-        <discriminator column="TYPE" type="string" length="1"/>
+        <discriminator column="`TYPE`" type="string" length="1"/>
 
         <bag name="children"
              inverse="true"

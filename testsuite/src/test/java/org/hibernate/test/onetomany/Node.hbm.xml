@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN" "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping package="org.hibernate.test.onetomany">
+    <class name="Node"
+           table="Node">
+        <cache usage="read-write" region="Node.entities"/>
+        <id name="id" column="id" type="java.lang.Integer">
+            <!--<generator class="native"/> -->
+        </id>
+        <many-to-one name="parentNode"
+                     class="Node"
+                     column="node_id"
+                     lazy="proxy"
+                     not-null="false"
+                     insert="false"
+                     update="false"
+
+                     />
+        <list name="subNodes" cascade="all">
+            <key column="node_id"/>
+            <list-index column="idx"/>
+            <one-to-many class="Node"/>
+        </list>
+    </class>
+</hibernate-mapping>

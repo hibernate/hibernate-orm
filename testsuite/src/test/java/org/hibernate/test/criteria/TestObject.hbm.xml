@@ -5,9 +5,7 @@
 	<class name="TestObject" table="test">
 		<id name="id">
 			<column name="ID" />
-			<generator class="sequence">
-				<param name="sequence">test_seq</param>
-			</generator>
+			<generator class="native" />
 		</id>
 
 		<property name="text" />

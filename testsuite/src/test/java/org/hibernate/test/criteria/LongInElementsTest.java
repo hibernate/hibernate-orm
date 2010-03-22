@@ -34,6 +34,7 @@ import org.hibernate.Transaction;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.dialect.Oracle8iDialect;
 import org.hibernate.dialect.SQLServerDialect;
+import org.hibernate.dialect.TeradataDialect;
 import org.hibernate.junit.functional.FunctionalTestCase;
 import org.hibernate.test.hql.StateProvince;
 
@@ -60,7 +61,8 @@ public class LongInElementsTest extends FunctionalTestCase {
 	// HHH-2166
 	public void testLongInElementsByHQL() {
 		if ( (getDialect() instanceof SQLServerDialect)
-				|| (getDialect() instanceof Oracle8iDialect) ){
+				|| (getDialect() instanceof Oracle8iDialect) 
+				|| (getDialect() instanceof TeradataDialect)){
 			skipExpectedFailure( new Exception("this test fails on oracle and ms sql server, for more info, see HHH-1123") );
 			return;
 		}
@@ -90,7 +92,8 @@ public class LongInElementsTest extends FunctionalTestCase {
 	// HHH-2166
 	public void testLongInElementsByCriteria() {
 		if ( (getDialect() instanceof SQLServerDialect)
-				|| (getDialect() instanceof Oracle8iDialect) ){
+				|| (getDialect() instanceof Oracle8iDialect) 
+				|| (getDialect() instanceof TeradataDialect)){
 			skipExpectedFailure( new Exception("this test fails on oracle and ms sql server, for more info, see HHH-1123") );
 			return;
 		}

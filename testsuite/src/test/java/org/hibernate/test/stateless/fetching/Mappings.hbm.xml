@@ -46,7 +46,7 @@
             <generator class="increment" />
 		</id>
         <property name="description" type="string"/>
-        <many-to-one name="user"/>
+        <many-to-one name="user" column="`user`"/>
         <many-to-one name="resource"/>
         <property name="dueDate" type="timestamp"/>
         <property name="startDate" type="timestamp"/>

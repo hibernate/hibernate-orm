@@ -14,7 +14,7 @@
 		<subclass name="org.hibernate.test.legacy.B" discriminator-value="null" lazy="true">
 			<property name="count" column="count_"/>
 
-			<map name="map">
+			<map name="map" table="`map`">
 				<key column="BID"/>
 				<index column="MAPKEY" type="string"/>
 				<element column="MAPVAL" type="int"/>

@@ -8,7 +8,7 @@
     <class entity-name="Customer" node="customer">
         <id name="customerId" type="string" node="@id"/>
         <component name="name">
-            <property name="first" type="string"/>
+            <property name="first" column="`first`" type="string"/>
             <property name="last" type="string"/>
         </component>
         <property name="address" type="string" node="address"/>
@@ -34,7 +34,7 @@
         </set>
     </class>
 
-    <class entity-name="Account" node="account">
+    <class entity-name="Account" table="`Account`" node="account">
         <id name="accountId" type="string" node="@id"/>
         <many-to-one name="customer" column="customerId" entity-name="Customer" cascade="all" embed-xml="true" />
         <!--not-null="true"-->

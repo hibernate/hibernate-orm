@@ -19,7 +19,7 @@
 		<id name="id" node="@id" type="long">
 			<generator class="increment"/>
 		</id>
-		<discriminator column="role" type="string" length="10"/>
+		<discriminator column="`role`" type="string" length="10"/>
 		<property name="name" node="@name" type="string"/>
 		<subclass entity-name="Techie" node="techie" />
 		<subclass entity-name="Salesdude" node="sales-dude"/>

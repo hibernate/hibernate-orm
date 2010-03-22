@@ -28,7 +28,7 @@
 		<map name="info">
 			<key column="bid"/>
 			<map-key type="string" column="attribute"/>
-			<element type="string" column="value"/>
+			<element type="string" column="`value`"/>
 		</map>
 
 		<union-subclass name="Human" table="humans">

@@ -225,7 +225,7 @@ public class NativeScanner implements Scanner {
 		return files;
 	}
 
-	public Set<NamedInputStream> getFilesInClasspath(URL jartoScan, Set<String> filePatterns) {
+	public Set<NamedInputStream> getFilesInClasspath(Set<String> filePatterns) {
 		throw new AssertionFailure( "Not implemented" );
 	}
 

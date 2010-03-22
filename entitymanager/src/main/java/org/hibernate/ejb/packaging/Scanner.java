@@ -50,11 +50,13 @@ public interface Scanner {
 
 
 	/**
-	 * return all files in the classpath (ie PU visibility) matching one of these file names
+	 * Return all files in the classpath (ie PU visibility) matching one of these file names
 	 * if filePatterns is empty, return all files
 	 * the use case is really exact file name.
+	 *
+	 * NOT USED by HEM at the moment. We use exact file search via getResourceAsStream for now.
 	 */
-	Set<NamedInputStream> getFilesInClasspath(URL jartoScan, Set<String> filePatterns);
+	Set<NamedInputStream> getFilesInClasspath(Set<String> filePatterns);
 
 	/**
 	 * return the unqualified JAR name ie customer-model.jar or store.war

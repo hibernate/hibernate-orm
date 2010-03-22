@@ -1,4 +1,4 @@
-// $Id:$
+// $Id$
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
@@ -26,11 +26,14 @@ package org.hibernate.ejb.test.packaging;
 
 import java.io.File;
 import java.lang.annotation.Annotation;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 import javax.persistence.Embeddable;
 import javax.persistence.Entity;
+import javax.persistence.EntityManagerFactory;
 import javax.persistence.MappedSuperclass;
+import javax.persistence.Persistence;
 
 import org.hibernate.ejb.packaging.NamedInputStream;
 import org.hibernate.ejb.packaging.NativeScanner;
@@ -42,7 +45,7 @@ import org.hibernate.ejb.test.pack.defaultpar.ApplicationServer;
  * @author Emmanuel Bernard
  * @author Hardy Ferentschik
  */
-public class NativeScannerTest extends PackagingTestCase {
+public class ScannerTest extends PackagingTestCase {
 	public void testNativeScanner() throws Exception {
 		File defaultPar = buildDefaultPar();
 		addPackageToClasspath( defaultPar );
@@ -70,5 +73,22 @@ public class NativeScannerTest extends PackagingTestCase {
 			assertNotNull( file.getStream() );
 			file.getStream().close();
 		}
+	}
+
+	public void testCustomScanner() throws Exception {
+		File defaultPar = buildDefaultPar();
+		File explicitPar = buildExplicitPar();
+		addPackageToClasspath( defaultPar, explicitPar );
+		
+		EntityManagerFactory emf;
+		CustomScanner.resetUsed();
+		emf = Persistence.createEntityManagerFactory( "defaultpar", new HashMap() );
+		assertTrue( ! CustomScanner.isUsed() );
+		emf.close();
+
+		CustomScanner.resetUsed();
+		emf = Persistence.createEntityManagerFactory( "manager1", new HashMap() );
+		assertTrue( CustomScanner.isUsed() );
+		emf.close();
 	}
 }

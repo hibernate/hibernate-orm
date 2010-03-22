@@ -11,6 +11,9 @@
         <class>org.hibernate.ejb.test.Item</class>
         <exclude-unlisted-classes>true</exclude-unlisted-classes>
         <properties>
+            <!-- custom scanner test -->
+            <property name="hibernate.ejb.resource_scanner" value="org.hibernate.ejb.test.packaging.CustomScanner"/>
+
             <property name="hibernate.dialect" value="${db.dialect}"/>
             <property name="hibernate.connection.driver_class" value="${jdbc.driver}"/>
             <property name="hibernate.connection.username" value="${jdbc.user}"/>

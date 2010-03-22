@@ -270,9 +270,16 @@ public class AvailableSettings {
 	public static final String CONFIGURATION_JNDI_NAME = "hibernate.ejb.configuration_jndi_name";
 
 	/**
-	 * Used to detrmine flush mode.
+	 * Used to determine flush mode.
 	 */
 	public static final String FLUSH_MODE = "org.hibernate.flushMode";
+
+	/**
+	 * Pass an implementation of {@link org.hibernate.ejb.packaging.Scanner}:
+	 *  - preferably an actual instance
+	 *  - or a class name with a no-arg constructor 
+	 */
+	public static final String SCANNER = "hibernate.ejb.resource_scanner";
 
 	/**
 	 * List of classes names

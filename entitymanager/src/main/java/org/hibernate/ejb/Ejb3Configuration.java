@@ -324,7 +324,7 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 						Scanner scanner = null;
 						URL jarURL = null;
 						if ( metadata.getName() == null ) {
-							scanner = buildScanner();
+							scanner = buildScanner( metadata.getProps() );
 							jarURL = JarVisitorFactory.getJarURLFromURLEntry( url, "/META-INF/persistence.xml" );
 							metadata.setName( scanner.getUnqualifiedJarName(jarURL) );
 						}
@@ -333,7 +333,7 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 						}
 						else if ( persistenceUnitName == null || metadata.getName().equals( persistenceUnitName ) ) {
 							if (scanner == null) {
-								scanner = buildScanner();
+								scanner = buildScanner( metadata.getProps() );
 								jarURL = JarVisitorFactory.getJarURLFromURLEntry( url, "/META-INF/persistence.xml" );
 							}
 							//scan main JAR
@@ -373,8 +373,40 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 		}
 	}
 
-	private NativeScanner buildScanner() {
-		return new NativeScanner();
+	private Scanner buildScanner(Properties properties) {
+		final Object scanner = properties.getProperty( AvailableSettings.SCANNER );
+		if (scanner != null) {
+			Class<?> scannerClass;
+			if ( scanner instanceof String ) {
+				try {
+					scannerClass = ReflectHelper.classForName( (String) scanner, this.getClass() );
+				}
+				catch ( ClassNotFoundException e ) {
+					throw new PersistenceException(  "Cannot find scanner class. " + AvailableSettings.SCANNER + "=" + scanner, e );
+				}
+			}
+			else if (scanner instanceof Class) {
+				scannerClass = (Class<? extends Scanner>) scanner;
+			}
+			else if (scanner instanceof Scanner) {
+				return (Scanner) scanner;
+			}
+			else {
+				throw new PersistenceException(  "Scanner class configuration error: unknown type on the property. " + AvailableSettings.SCANNER );
+			}
+			try {
+				return (Scanner) scannerClass.newInstance();
+			}
+			catch ( InstantiationException e ) {
+				throw new PersistenceException(  "Unable to load Scanner class: " + scannerClass, e );
+			}
+			catch ( IllegalAccessException e ) {
+				throw new PersistenceException(  "Unable to load Scanner class: " + scannerClass, e );
+			}
+		}
+		else {
+			return new NativeScanner();
+		}
 	}
 
 	private static class ScanningContext {
@@ -531,7 +563,9 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 			boolean searchForORMFiles = ! xmlFiles.contains( META_INF_ORM_XML );
 
 			ScanningContext context = new ScanningContext();
-			context.scanner( buildScanner() )
+			final Properties copyOfProperties = (Properties) info.getProperties().clone();
+			ConfigurationHelper.overrideProperties( copyOfProperties, integration );
+			context.scanner( buildScanner( copyOfProperties ) )
 					.searchOrm( searchForORMFiles )
 					.explicitMappingFiles( null ); //URLs provided by the container already
 

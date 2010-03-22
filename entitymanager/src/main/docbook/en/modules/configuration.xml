@@ -67,7 +67,7 @@
 
     <para>If you use Maven, add the following dependencies</para>
 
-    <programlisting role="XML" language="XML">&lt;project ...&gt;
+    <programlisting language="XML" role="XML">&lt;project ...&gt;
   ...
   &lt;dependencies&gt;
     &lt;dependency&gt;
@@ -100,7 +100,7 @@
       configuration, so by default, your persistence.xml will be quite
       minimalist:</para>
 
-      <programlisting  role="XML" language="XML">&lt;persistence xmlns="http://java.sun.com/xml/ns/persistence"
+      <programlisting language="XML" role="XML">&lt;persistence xmlns="http://java.sun.com/xml/ns/persistence"
              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
              xsi:schemaLocation="http://java.sun.com/xml/ns/persistence http://java.sun.com/xml/ns/persistence/persistence_2_0.xsd"
              version="2.0"&gt;
@@ -116,7 +116,7 @@
       <para>Here's a more complete example of a
       <filename><literal>persistence.xml</literal></filename> file</para>
 
-      <programlisting  role="XML" language="XML">&lt;persistence xmlns="http://java.sun.com/xml/ns/persistence"
+      <programlisting language="XML" role="XML">&lt;persistence xmlns="http://java.sun.com/xml/ns/persistence"
              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
              xsi:schemaLocation="http://java.sun.com/xml/ns/persistence http://java.sun.com/xml/ns/persistence/persistence_2_0.xsd"
              version="2.0"&gt;
@@ -211,7 +211,7 @@
             environment, the persistence.xml file is not under the same root
             directory or jar than your domain model).</para>
 
-            <programlisting  role="XML" language="XML">        &lt;jar-file&gt;file:/home/turin/work/local/lab8/build/classes&lt;/jar-file&gt;</programlisting>
+            <programlisting language="XML" role="XML">        &lt;jar-file&gt;file:/home/turin/work/local/lab8/build/classes&lt;/jar-file&gt;</programlisting>
           </listitem>
         </varlistentry>
 
@@ -323,14 +323,14 @@
             <literal>&lt;validation-mode&gt;</literal>. To use it, add a
             regular property</para>
 
-            <programlisting  role="XML" language="XML">&lt;property name="javax.persistence.validation.mode"&gt;
+            <programlisting language="XML" role="XML">&lt;property name="javax.persistence.validation.mode"&gt;
   ddl
 &lt;/property&gt;</programlisting>
 
             <para>With this approach, you can mix ddl and callback
             modes:</para>
 
-            <programlisting  role="XML" language="XML">&lt;property name="javax.persistence.validation.mode"&gt;
+            <programlisting language="XML" role="XML">&lt;property name="javax.persistence.validation.mode"&gt;
   ddl, callback
 &lt;/property&gt;</programlisting>
           </listitem>
@@ -376,12 +376,35 @@
               </listitem>
 
               <listitem>
-                <para>javax.persistence.validation.group.pre-persist defines
-                the group or list of groups to validate before persisting an
-                entity. This is a comma separated fully qualified class name
-                string (eg <code>com.acme.groups.Common</code> or
+                <para><literal>javax.persistence.validation.group.pre-persist</literal>
+                defines the group or list of groups to validate before
+                persisting an entity. This is a comma separated fully
+                qualified class name string (eg
+                <code>com.acme.groups.Common</code> or
                 <code>com.acme.groups.Common,
-                javax.validation.groups.Default</code>)</para>
+                javax.validation.groups.Default</code>). Defaults to the Bean
+                Validation default group.</para>
+              </listitem>
+
+              <listitem>
+                <para><literal>javax.persistence.validation.group.pre-update</literal>
+                defines the group or list of groups to validate before
+                updating an entity. This is a comma separated fully qualified
+                class name string (eg <code>com.acme.groups.Common</code> or
+                <code>com.acme.groups.Common,
+                javax.validation.groups.Default</code>). Defaults to the Bean
+                Validation default group.</para>
+              </listitem>
+
+              <listitem>
+                <para><literal>javax.persistence.validation.group.pre-remove</literal>
+                defines the group or list of groups to validate before
+                persisting an entity. This is a comma separated fully
+                qualified class name string (eg
+                <code>com.acme.groups.Common</code> or
+                <code>com.acme.groups.Common,
+                javax.validation.groups.Default</code>). Defaults to no
+                group.</para>
               </listitem>
             </itemizedlist>
 
@@ -427,7 +450,7 @@
       the version embedded in the hibernate-entitymanager.jar. It won't fetch
       the resource from the internet.</para>
 
-      <programlisting  role="XML" language="XML">&lt;persistence xmlns="http://java.sun.com/xml/ns/persistence"
+      <programlisting language="XML" role="XML">&lt;persistence xmlns="http://java.sun.com/xml/ns/persistence"
              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
              xsi:schemaLocation="http://java.sun.com/xml/ns/persistence http://java.sun.com/xml/ns/persistence/persistence_2_0.xsd"
              version="2.0"&gt;</programlisting>
@@ -441,7 +464,7 @@
       <classname>EntityManager</classname>. The bootstrap class is
       <classname>javax.persistence.Persistence</classname>, e.g.</para>
 
-      <programlisting role="JAVA" language="JAVA">EntityManagerFactory emf = Persistence.createEntityManagerFactory("manager1");
+      <programlisting language="JAVA" role="JAVA">EntityManagerFactory emf = Persistence.createEntityManagerFactory("manager1");
 
 //or
 
@@ -636,9 +659,25 @@ EntityManagerFactory programmaticEmf =
               <entry>If true, the persistence context will be discarded (think
               clear() when the method is called. Otherwise the persistence
               context will stay alive till the transaction completion: all
-              objects will remain managed, and any change will be sy,chronized
+              objects will remain managed, and any change will be synchronized
               with the database (default to false, ie wait the transaction
               completion)</entry>
+            </row>
+
+            <row>
+              <entry>hibernate.ejb.resource_scanner</entry>
+
+              <entry><para>By default, Hibernate EntityManager scans itself
+              the list of resources for annotated classes and persistence
+              deployment descriptors (like orm.xml and hbm.xml
+              files).</para><para>You can customize this scanning strategy by
+              implementing
+              <classname>org.hibernate.ejb.packaging.Scanner</classname>. This
+              property is used by container implementors to improve
+              integration with Hibernate.</para><para>Accepts an instance of
+              <classname>Scanner</classname> or the file name of a no-arg
+              constructor class implementing
+              <classname>Scanner</classname>.</para></entry>
             </row>
           </tbody>
         </tgroup>
@@ -663,7 +702,7 @@ EntityManagerFactory programmaticEmf =
 
       <para>Here is a typical configuration in a Java SE environment</para>
 
-      <programlisting  role="XML" language="XML">&lt;persistence&gt;
+      <programlisting language="XML" role="XML">&lt;persistence&gt;
    &lt;persistence-unit name="manager1" transaction-type="RESOURCE_LOCAL"&gt;
       &lt;class&gt;org.hibernate.ejb.test.Cat&lt;/class&gt;
       &lt;class&gt;org.hibernate.ejb.test.Distributor&lt;/class&gt;
@@ -695,7 +734,7 @@ EntityManagerFactory programmaticEmf =
 
       <para>TODO: me more descriptive on some APIs like setDatasource()</para>
 
-      <programlisting  role="JAVA" language="JAVA">Ejb3Configuration cfg = new Ejb3Configuration();
+      <programlisting language="JAVA" role="JAVA">Ejb3Configuration cfg = new Ejb3Configuration();
 EntityManagerFactory emf = 
   cfg.addProperties( properties ) //add some properties
      .setInterceptor( myInterceptorImpl ) // set an interceptor
@@ -857,7 +896,7 @@ EntityManagerFactory emf =
     <classname>Persistence</classname> class is bootstrap class to create an
     entity manager factory.</para>
 
-    <programlisting role="JAVA" language="JAVA">// Use persistence.xml configuration
+    <programlisting language="JAVA" role="JAVA">// Use persistence.xml configuration
 EntityManagerFactory emf = Persistence.createEntityManagerFactory("manager1")
 EntityManager em = emf.createEntityManager(); // Retrieve an application managed entity manager
 // Work with the EM

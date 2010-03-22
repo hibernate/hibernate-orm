@@ -20,7 +20,7 @@
 	
 	<class name="User" table="users">
 		<id name="name"/>
-		<property name="password"/>
+		<property name="password" column="`password`"/>
 	</class>
 
 </hibernate-mapping>

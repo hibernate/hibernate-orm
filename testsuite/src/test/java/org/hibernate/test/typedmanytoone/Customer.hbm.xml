@@ -46,14 +46,14 @@
 	<class name="Address"
 		table="Address"
 		entity-name="BillingAddress" 
-		where="type='BILLING'" 
-		check="type in ('BILLING', 'SHIPPING')"
+		where="add_type='BILLING'" 
+		check="add_type in ('BILLING', 'SHIPPING')"
 		select-before-update="true" 
 		dynamic-update="true">
 	
 		<composite-id name="addressId"> 
 			<key-property name="addressId"/>
-			<key-property name="type"/>
+			<key-property name="type" column="add_type"/>
 		</composite-id>
 		
 		<property name="street" not-null="true"/>
@@ -66,13 +66,13 @@
 	<class name="Address" 
 		table="Address"
 		entity-name="ShippingAddress"
-		where="type='SHIPPING'"
+		where="add_type='SHIPPING'"
 		select-before-update="true" 
 		dynamic-update="true">
 	
 		<composite-id name="addressId">
 			<key-property name="addressId"/>
-			<key-property name="type"/>
+			<key-property name="type" column="add_type"/>
 		</composite-id>
 		
 		<property name="street" not-null="true"/>

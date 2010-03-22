@@ -39,7 +39,7 @@
 			<column name="courseCode"/>
 		</many-to-one>
 		<property name="semester" not-null="true"/>
-		<property name="year" not-null="true"/>
+		<property name="year" column="`year`" not-null="true"/>
 	</class>
 
 </hibernate-mapping>

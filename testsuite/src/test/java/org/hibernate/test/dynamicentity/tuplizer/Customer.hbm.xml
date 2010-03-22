@@ -16,7 +16,7 @@
 		<id name="id">
             <generator class="native"/>
         </id>
-        <discriminator force="false"/>
+        <discriminator column="t_person_dis" force="false"/>
 		<property name="name"/>
 
         <many-to-one name="address" cascade="all" column="addr_id"/>

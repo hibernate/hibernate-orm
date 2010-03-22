@@ -53,7 +53,7 @@
         <subclass name="Employee" lazy="true" discriminator-value="E">
             <join table="employee" fetch="select">
                 <key column="person_id"/>
-                <property name="title" not-null="true" length="20"/>
+                <property name="title" column="`title`" not-null="true" length="20"/>
                 <property name="salary" length="0"/>
                 <many-to-one name="manager"/>
             </join>

@@ -35,7 +35,7 @@
 		<id name="accountId" length="32">
 			<generator class="uuid"/>
 		</id>
-		<property name="type" not-null="true"/>
+		<property name="type" column="`type`" not-null="true"/>
 		<joined-subclass name="BankAccount" table="J_SBCLS_PROPREF_BACCT">
 			<key column="accountId"/>
 			<properties unique="true" name="bsbAccountNumber">

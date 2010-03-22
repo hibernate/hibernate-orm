@@ -24,7 +24,7 @@
 		</id>
 		<many-to-one name="person" column="personId" unique="true" property-ref="personId"/>
 		<many-to-one name="customer" column="customerPersonId" unique="true" property-ref="personId"/>
-		<property name="type" not-null="true"/>
+		<property name="type" column="`type`" not-null="true"/>
 	</class>
 
 </hibernate-mapping>

@@ -45,7 +45,7 @@
 		
 		<subclass name="Employee" 
 			discriminator-value="E">
-				<property name="title"
+				<property name="title" column="`title`"
 					length="20"/>
 				<property name="salary"
 					length="0"/>

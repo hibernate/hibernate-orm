@@ -121,8 +121,7 @@ public class EntityLoader extends AbstractEntityLoader {
 
 		batchLoader = batchSize > 1;
 		
-		log.debug( "Static select for entity " + entityName + ": " + getSQLString() );
-
+		log.debug( "Static select for entity " + entityName + " [" + lockMode + "]: " + getSQLString() );
 	}
 
 	public EntityLoader(

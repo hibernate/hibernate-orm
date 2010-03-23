@@ -29,6 +29,7 @@ import java.util.List;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.criterion.Restrictions;
+import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.junit.functional.FunctionalTestCase;
 
 
@@ -42,75 +43,50 @@ public class LikeTest extends FunctionalTestCase {
         return new String[]{"criteria/TestObject.hbm.xml"};
     }
     public void testLike(){
-        Session session=openSession();
+        Session session = openSession();
+        Transaction tx = session.beginTransaction();
+        TestObject obj = new TestObject();
         String uniq = "uniq" + System.currentTimeMillis();
-
-        // insert object
-        try {
-            Transaction tx = session.beginTransaction();
-
-            
-            TestObject obj = new TestObject();
-            obj.setText("XyZ " + uniq + " blablabla");
-            
-            session.saveOrUpdate(obj);
-            session.flush();
-            tx.commit();
-        } finally {
-            session.close();
-
-        }
+        obj.setText( "XyZ " + uniq + " blablabla" );
+        session.save( obj );
+        session.flush();
+        tx.commit();
+        session.close();
         String pattern = "XyZ " + uniq + "%";
-
         // retrieve object - case sensitive - works ok
         session = openSession();
-        try {
-            List objects = session.createCriteria(TestObject.class)
-                           .add(Restrictions.like("text", pattern))
-                           .list();
-            
-            assertEquals(1, objects.size());
-        } finally {
-            session.close();
-        }
+        tx = session.beginTransaction();
+        List objects = session.createCriteria( TestObject.class ).add(
+                Restrictions.like( "text", pattern ) ).list();
+        assertEquals( 1, objects.size() );
+        session.clear();
 
         // retrieve object - case insensitive - works ok
-        session = openSession();
-        try {
-            List objects = session.createCriteria(TestObject.class)
-                           .add(Restrictions.like("text", pattern).ignoreCase())
-                           .list();
-            
-            assertEquals(1, objects.size());
-        } finally {
-            session.close();
-        }
+        objects = session.createCriteria( TestObject.class ).add(
+                Restrictions.like( "text", pattern ).ignoreCase() ).list();
 
-        
-        // retrieve object - case insensitive via custom expression - works ok
-        session = openSession();
-        try {
-            List objects = session.createCriteria(TestObject.class)
-                           .add(StringExpression.stringExpression("text", pattern, true))
-                           .list();
-            
-            assertEquals(1, objects.size());
-        } finally {
-            session.close();
-        }
+        assertEquals( 1, objects.size() );
+        session.clear();
+        if ( !( getDialect() instanceof MySQLDialect ) ) {
+            // retrieve object - case insensitive via custom expression - works
+            // ok
+            objects = session.createCriteria( TestObject.class ).add(
+                    StringExpression.stringExpression( "text", pattern, true ) )
+                    .list();
 
-        
-        // retrieve object - case sensitive via custom expression - not working
-        session = openSession();
-        try {
-            List objects = session.createCriteria(TestObject.class)
-                           .add(StringExpression.stringExpression("text", pattern, false))
-                           .list();
-            
-            assertEquals(1, objects.size());
-        } finally {
-            session.close();
+            assertEquals( 1, objects.size() );
+            session.clear();
+
+            // retrieve object - case sensitive via custom expression - not
+            // working
+            objects = session.createCriteria( TestObject.class )
+                    .add(
+                            StringExpression.stringExpression( "text", pattern,
+                                    false ) ).list();
+            assertEquals( 1, objects.size() );
         }
+        tx.rollback();
+        session.close();
         
     }
 }

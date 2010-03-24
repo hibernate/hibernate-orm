@@ -24,23 +24,60 @@
  */
 package org.hibernate.stat;
 
-import java.io.Serializable;
 
 /**
- * Collection related statistics
+ * Entity related statistics
  *
  * @author Gavin King
- * @author Alex Snaps
  */
-public interface CollectionStatistics extends Serializable {
+public class EntityStatisticsImpl extends CategorizedStatistics implements EntityStatistics {
 
-	long getLoadCount();
+	EntityStatisticsImpl(String name) {
+		super(name);
+	}
 
-	long getFetchCount();
+	long loadCount;
+	long updateCount;
+	long insertCount;
+	long deleteCount;
+	long fetchCount;
+	long optimisticFailureCount;
 
-	long getRecreateCount();
+	public long getDeleteCount() {
+		return deleteCount;
+	}
 
-	long getRemoveCount();
+	public long getInsertCount() {
+		return insertCount;
+	}
 
-	long getUpdateCount();
+	public long getLoadCount() {
+		return loadCount;
+	}
+
+	public long getUpdateCount() {
+		return updateCount;
+	}
+
+	public long getFetchCount() {
+		return fetchCount;
+	}
+
+	public long getOptimisticFailureCount() {
+		return optimisticFailureCount;
+	}
+
+	public String toString() {
+		return new StringBuilder()
+				.append("EntityStatistics")
+				.append("[loadCount=").append(this.loadCount)
+				.append(",updateCount=").append(this.updateCount)
+				.append(",insertCount=").append(this.insertCount)
+				.append(",deleteCount=").append(this.deleteCount)
+				.append(",fetchCount=").append(this.fetchCount)
+				.append(",optimisticLockFailureCount=").append(this.optimisticFailureCount)
+				.append(']')
+				.toString();
+	}
+
 }

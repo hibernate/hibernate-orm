@@ -24,23 +24,52 @@
  */
 package org.hibernate.stat;
 
-import java.io.Serializable;
-
 /**
  * Collection related statistics
  *
  * @author Gavin King
- * @author Alex Snaps
  */
-public interface CollectionStatistics extends Serializable {
+public class CollectionStatisticsImpl extends CategorizedStatistics implements CollectionStatistics {
 
-	long getLoadCount();
+	CollectionStatisticsImpl(String role) {
+		super(role);
+	}
 
-	long getFetchCount();
+	long loadCount;
+	long fetchCount;
+	long updateCount;
+	long removeCount;
+	long recreateCount;
 
-	long getRecreateCount();
+	public long getLoadCount() {
+		return loadCount;
+	}
 
-	long getRemoveCount();
+	public long getFetchCount() {
+		return fetchCount;
+	}
 
-	long getUpdateCount();
+	public long getRecreateCount() {
+		return recreateCount;
+	}
+
+	public long getRemoveCount() {
+		return removeCount;
+	}
+
+	public long getUpdateCount() {
+		return updateCount;
+	}
+
+	public String toString() {
+		return new StringBuilder()
+				.append("CollectionStatistics")
+				.append("[loadCount=").append(this.loadCount)
+				.append(",fetchCount=").append(this.fetchCount)
+				.append(",recreateCount=").append(this.recreateCount)
+				.append(",removeCount=").append(this.removeCount)
+				.append(",updateCount=").append(this.updateCount)
+				.append(']')
+				.toString();
+	}
 }

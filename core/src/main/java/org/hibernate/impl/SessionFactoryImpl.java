@@ -30,6 +30,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.ObjectStreamException;
 import java.io.Serializable;
+import java.lang.reflect.Constructor;
 import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -113,6 +114,7 @@ import org.hibernate.pretty.MessageHelper;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.stat.Statistics;
 import org.hibernate.stat.StatisticsImpl;
+import org.hibernate.stat.ConcurrentStatisticsImpl;
 import org.hibernate.stat.StatisticsImplementor;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.hbm2ddl.SchemaUpdate;
@@ -177,7 +179,7 @@ public final class SessionFactoryImpl implements SessionFactory, SessionFactoryI
 	private final transient UpdateTimestampsCache updateTimestampsCache;
 	private final transient Map queryCaches;
 	private final transient Map allCacheRegions = new HashMap();
-	private final transient StatisticsImpl statistics = new StatisticsImpl(this);
+	private final transient Statistics statistics;
 	private final transient EventListeners eventListeners;
 	private final transient CurrentSessionContext currentSessionContext;
 	private final transient EntityNotFoundDelegate entityNotFoundDelegate;
@@ -195,6 +197,27 @@ public final class SessionFactoryImpl implements SessionFactory, SessionFactoryI
 	        EventListeners listeners,
 			SessionFactoryObserver observer) throws HibernateException {
 		log.info("building session factory");
+
+		Statistics concurrentStatistics = null;
+		try {
+			Class concurrentStatsClass = ReflectHelper.classForName("org.hibernate.stat.ConcurrentStatisticsImpl");
+			Constructor constructor = concurrentStatsClass.getConstructor(new Class[]{SessionFactoryImplementor.class});
+			concurrentStatistics = (Statistics) constructor.newInstance(new Object[]{this});
+			log.trace("JDK 1.5 concurrent classes present");
+		} catch (Exception noJava5) {
+			log.trace("JDK 1.5 concurrent classes missing");
+		}
+
+		if (concurrentStatistics != null) {
+			this.statistics = concurrentStatistics;
+		} else {
+			this.statistics = new StatisticsImpl(this);
+		}
+
+		if ( log.isTraceEnabled() ) {
+			log.trace("Statistics initialized with " + statistics.getClass().getName());
+		}
+
 		this.properties = new Properties();
 		this.properties.putAll( cfg.getProperties() );
 		this.interceptor = cfg.getInterceptor();
@@ -1191,7 +1214,7 @@ public final class SessionFactoryImpl implements SessionFactory, SessionFactoryI
 	}
 
 	public StatisticsImplementor getStatisticsImplementor() {
-		return statistics;
+		return (StatisticsImplementor) statistics;
 	}
 
 	public FilterDefinition getFilterDefinition(String filterName) throws HibernateException {

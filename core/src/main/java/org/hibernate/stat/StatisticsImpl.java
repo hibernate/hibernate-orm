@@ -166,12 +166,12 @@ public class StatisticsImpl implements Statistics, StatisticsImplementor {
 	
 	public synchronized void loadEntity(String entityName) {
 		entityLoadCount++;
-		getEntityStatistics(entityName).loadCount++;
+		((EntityStatisticsImpl) getEntityStatistics(entityName)).loadCount++;
 	}
 
 	public synchronized void fetchEntity(String entityName) {
 		entityFetchCount++;
-		getEntityStatistics(entityName).fetchCount++;
+		((EntityStatisticsImpl) getEntityStatistics(entityName)).fetchCount++;
 	}
 
 	/**
@@ -181,9 +181,9 @@ public class StatisticsImpl implements Statistics, StatisticsImplementor {
 	 * @return EntityStatistics object
 	 */
 	public synchronized EntityStatistics getEntityStatistics(String entityName) {
-		EntityStatistics es = (EntityStatistics) entityStatistics.get(entityName);
-		if (es==null) {
-			es = new EntityStatistics(entityName);
+		EntityStatisticsImpl es = (EntityStatisticsImpl) entityStatistics.get(entityName);
+		if (es == null) {
+			es = new EntityStatisticsImpl(entityName);
 			entityStatistics.put(entityName, es);
 		}
 		return es;
@@ -191,19 +191,19 @@ public class StatisticsImpl implements Statistics, StatisticsImplementor {
 	
 	public synchronized void updateEntity(String entityName) {
 		entityUpdateCount++;
-		EntityStatistics es = getEntityStatistics(entityName);
+		EntityStatisticsImpl es = (EntityStatisticsImpl) getEntityStatistics(entityName);
 		es.updateCount++;
 	}
 
 	public synchronized void insertEntity(String entityName) {
 		entityInsertCount++;
-		EntityStatistics es = getEntityStatistics(entityName);
+		EntityStatisticsImpl es = (EntityStatisticsImpl) getEntityStatistics(entityName);
 		es.insertCount++;
 	}
 
 	public synchronized void deleteEntity(String entityName) {
 		entityDeleteCount++;
-		EntityStatistics es = getEntityStatistics(entityName);
+		EntityStatisticsImpl es = (EntityStatisticsImpl) getEntityStatistics(entityName);
 		es.deleteCount++;
 	}
 
@@ -214,9 +214,9 @@ public class StatisticsImpl implements Statistics, StatisticsImplementor {
 	 * @return CollectionStatistics
 	 */
 	public synchronized CollectionStatistics getCollectionStatistics(String role) {
-		CollectionStatistics cs = (CollectionStatistics) collectionStatistics.get(role);
+		CollectionStatisticsImpl cs = (CollectionStatisticsImpl) collectionStatistics.get(role);
 		if (cs==null) {
-			cs = new CollectionStatistics(role);
+			cs = new CollectionStatisticsImpl(role);
 			collectionStatistics.put(role, cs);
 		}
 		return cs;
@@ -224,27 +224,27 @@ public class StatisticsImpl implements Statistics, StatisticsImplementor {
 	
 	public synchronized void loadCollection(String role) {
 		collectionLoadCount++;
-		getCollectionStatistics(role).loadCount++;
+		((CollectionStatisticsImpl) getCollectionStatistics(role)).loadCount++;
 	}
 
 	public synchronized void fetchCollection(String role) {
 		collectionFetchCount++;
-		getCollectionStatistics(role).fetchCount++;
+		((CollectionStatisticsImpl) getCollectionStatistics(role)).fetchCount++;
 	}
 
 	public synchronized void updateCollection(String role) {
 		collectionUpdateCount++;
-		getCollectionStatistics(role).updateCount++;
+		((CollectionStatisticsImpl) getCollectionStatistics(role)).updateCount++;
 	}
 
 	public synchronized void recreateCollection(String role) {
 		collectionRecreateCount++;
-		getCollectionStatistics(role).recreateCount++;
+		((CollectionStatisticsImpl) getCollectionStatistics(role)).recreateCount++;
 	}
 
 	public synchronized void removeCollection(String role) {
 		collectionRemoveCount++;
-		getCollectionStatistics(role).removeCount++;
+		((CollectionStatisticsImpl) getCollectionStatistics(role)).removeCount++;
 	}
 	
 	/**
@@ -254,7 +254,7 @@ public class StatisticsImpl implements Statistics, StatisticsImplementor {
 	 * @return SecondLevelCacheStatistics
 	 */
 	public synchronized SecondLevelCacheStatistics getSecondLevelCacheStatistics(String regionName) {
-		SecondLevelCacheStatistics slcs = ( SecondLevelCacheStatistics ) secondLevelCacheStatistics.get( regionName );
+		SecondLevelCacheStatisticsImpl slcs = (SecondLevelCacheStatisticsImpl) secondLevelCacheStatistics.get(regionName);
 		if ( slcs == null ) {
 			if ( sessionFactory == null ) {
 				return null;
@@ -263,7 +263,7 @@ public class StatisticsImpl implements Statistics, StatisticsImplementor {
 			if ( region == null ) {
 				return null;
 			}
-			slcs = new SecondLevelCacheStatistics( region );
+			slcs = new SecondLevelCacheStatisticsImpl(region);
 			secondLevelCacheStatistics.put( regionName, slcs );
 		}
 		return slcs;
@@ -271,17 +271,17 @@ public class StatisticsImpl implements Statistics, StatisticsImplementor {
 
 	public synchronized void secondLevelCachePut(String regionName) {
 		secondLevelCachePutCount++;
-		getSecondLevelCacheStatistics(regionName).putCount++;
+		((SecondLevelCacheStatisticsImpl) getSecondLevelCacheStatistics(regionName)).putCount++;
 	}
 
 	public synchronized void secondLevelCacheHit(String regionName) {
 		secondLevelCacheHitCount++;
-		getSecondLevelCacheStatistics(regionName).hitCount++;
+		((SecondLevelCacheStatisticsImpl) getSecondLevelCacheStatistics(regionName)).hitCount++;
 	}
 
 	public synchronized void secondLevelCacheMiss(String regionName) {
 		secondLevelCacheMissCount++;
-		getSecondLevelCacheStatistics(regionName).missCount++;
+		((SecondLevelCacheStatisticsImpl) getSecondLevelCacheStatistics(regionName)).missCount++;
 	}
 
 	public synchronized void queryExecuted(String hql, int rows, long time) {
@@ -291,7 +291,7 @@ public class StatisticsImpl implements Statistics, StatisticsImplementor {
 			queryExecutionMaxTimeQueryString = hql;
 		}
 		if (hql!=null) {
-			QueryStatistics qs = getQueryStatistics(hql);
+			QueryStatisticsImpl qs = (QueryStatisticsImpl) getQueryStatistics(hql);
 			qs.executed(rows, time);
 		}
 	}
@@ -299,30 +299,30 @@ public class StatisticsImpl implements Statistics, StatisticsImplementor {
 	public synchronized void queryCacheHit(String hql, String regionName) {
 		queryCacheHitCount++;
 		if (hql!=null) {
-			QueryStatistics qs = getQueryStatistics(hql);
+			QueryStatisticsImpl qs = (QueryStatisticsImpl) getQueryStatistics(hql);
 			qs.cacheHitCount++;
 		}
-		SecondLevelCacheStatistics slcs = getSecondLevelCacheStatistics(regionName);
+		SecondLevelCacheStatisticsImpl slcs = (SecondLevelCacheStatisticsImpl) getSecondLevelCacheStatistics(regionName);
 		slcs.hitCount++;
 	}
 
 	public synchronized void queryCacheMiss(String hql, String regionName) {
 		queryCacheMissCount++;
 		if (hql!=null) {
-			QueryStatistics qs = getQueryStatistics(hql);
+			QueryStatisticsImpl qs = (QueryStatisticsImpl) getQueryStatistics(hql);
 			qs.cacheMissCount++;
 		}
-		SecondLevelCacheStatistics slcs = getSecondLevelCacheStatistics(regionName);
+		SecondLevelCacheStatisticsImpl slcs = (SecondLevelCacheStatisticsImpl) getSecondLevelCacheStatistics(regionName);
 		slcs.missCount++;
 	}
 
 	public synchronized void queryCachePut(String hql, String regionName) {
 		queryCachePutCount++;
 		if (hql!=null) {
-			QueryStatistics qs = getQueryStatistics(hql);
+			QueryStatisticsImpl qs = (QueryStatisticsImpl) getQueryStatistics(hql);
 			qs.cachePutCount++;
 		}
-		SecondLevelCacheStatistics slcs = getSecondLevelCacheStatistics(regionName);
+		SecondLevelCacheStatisticsImpl slcs = (SecondLevelCacheStatisticsImpl) getSecondLevelCacheStatistics(regionName);
 		slcs.putCount++;
 	}
 
@@ -333,9 +333,9 @@ public class StatisticsImpl implements Statistics, StatisticsImplementor {
 	 * @return QueryStatistics
 	 */
 	public synchronized QueryStatistics getQueryStatistics(String queryString) {
-		QueryStatistics qs = (QueryStatistics) queryStatistics.get(queryString);
+		QueryStatisticsImpl qs = (QueryStatisticsImpl) queryStatistics.get(queryString);
 		if (qs==null) {
-			qs = new QueryStatistics(queryString);
+			qs = new QueryStatisticsImpl(queryString);
 			queryStatistics.put(queryString, qs);
 		}
 		return qs;
@@ -614,7 +614,7 @@ public class StatisticsImpl implements Statistics, StatisticsImplementor {
 
 	public void optimisticFailure(String entityName) {
 		optimisticFailureCount++;
-		getEntityStatistics(entityName).optimisticFailureCount++;
+		((EntityStatisticsImpl) getEntityStatistics(entityName)).optimisticFailureCount++;
 	}
 
 	public long getOptimisticFailureCount() {

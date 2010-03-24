@@ -78,9 +78,15 @@ public class BatchingEntityLoader implements UniqueEntityLoader {
 		return null;
 	}
 
-	public Object load(Serializable id, Object optionalObject, SessionImplementor session)
-	throws HibernateException {
-		
+	/**
+	 * {@inheritDoc}
+	 */
+	public Object load(Serializable id, Object optionalObject, SessionImplementor session) {
+		// this form is deprecated!
+		return load( id, optionalObject, session, LockOptions.NONE );
+	}
+
+	public Object load(Serializable id, Object optionalObject, SessionImplementor session, LockOptions lockOptions) {
 		Serializable[] batch = session.getPersistenceContext()
 			.getBatchFetchQueue()
 			.getEntityBatch( persister, id, batchSizes[0], session.getEntityMode() );
@@ -97,7 +103,8 @@ public class BatchingEntityLoader implements UniqueEntityLoader {
 						optionalObject, 
 						persister.getEntityName(), 
 						id, 
-						persister
+						persister,
+						lockOptions
 				);
 				return getObjectFromList(results, id, session); //EARLY EXIT
 			}

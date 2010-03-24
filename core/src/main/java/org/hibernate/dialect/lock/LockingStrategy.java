@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,7 +20,6 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.dialect.lock;
 
@@ -33,7 +32,7 @@ import java.io.Serializable;
 /**
  * A strategy abstraction for how locks are obtained in the underlying database.
  * <p/>
- * All locking provided implemenations assume the underlying database supports
+ * All locking provided implementations assume the underlying database supports
  * (and that the connection is in) at least read-committed transaction isolation.
  * The most glaring exclusion to this is HSQLDB which only offers support for
  * READ_UNCOMMITTED isolation.
@@ -53,9 +52,9 @@ public interface LockingStrategy {
 	 * @param object The object logically being locked (currently not used)
 	 * @param timeout timeout in milliseconds, 0 = no wait, -1 = wait indefinitely
 	 * @param session The session from which the lock request originated
-	 * @throws StaleObjectStateException Indicates an optimisitic lock failure
+	 * @throws StaleObjectStateException Indicates an optimistic lock failure
 	 * as part of acquiring the requested database lock.
-	 * @throws JDBCException
+	 * @throws JDBCException Indicates errors from the <tt>JDBC</tt> driver.
 	 */
 	public void lock(Serializable id, Object version, Object object, int timeout, SessionImplementor session)
 	throws StaleObjectStateException, JDBCException;

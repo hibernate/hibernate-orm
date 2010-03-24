@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,10 +20,10 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.dialect.lock;
 
+import org.hibernate.LockOptions;
 import org.hibernate.persister.entity.Lockable;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.engine.SessionFactoryImplementor;
@@ -51,12 +51,7 @@ import java.sql.SQLException;
  *
  * @author Steve Ebersole
  */
-public class SelectLockingStrategy implements LockingStrategy {
-
-	private final Lockable lockable;
-	private final LockMode lockMode;
-	private final String sql;
-
+public class SelectLockingStrategy extends AbstractSelectLockingStrategy {
 	/**
 	 * Construct a locking strategy based on SQL SELECT statements.
 	 *
@@ -64,9 +59,7 @@ public class SelectLockingStrategy implements LockingStrategy {
 	 * @param lockMode Indictates the type of lock to be acquired.
 	 */
 	public SelectLockingStrategy(Lockable lockable, LockMode lockMode) {
-		this.lockable = lockable;
-		this.lockMode = lockMode;
-		this.sql = generateLockString();
+		super( lockable, lockMode );
 	}
 
 	/**
@@ -78,17 +71,17 @@ public class SelectLockingStrategy implements LockingStrategy {
 	        Object object,
 	        int timeout, 
 	        SessionImplementor session) throws StaleObjectStateException, JDBCException {
-
+		final String sql = determineSql( timeout );
 		SessionFactoryImplementor factory = session.getFactory();
 		try {
 			PreparedStatement st = session.getBatcher().prepareSelectStatement( sql );
 			try {
-				lockable.getIdentifierType().nullSafeSet( st, id, 1, session );
-				if ( lockable.isVersioned() ) {
-					lockable.getVersionType().nullSafeSet(
+				getLockable().getIdentifierType().nullSafeSet( st, id, 1, session );
+				if ( getLockable().isVersioned() ) {
+					getLockable().getVersionType().nullSafeSet(
 							st,
 							version,
-							lockable.getIdentifierType().getColumnSpan( factory ) + 1,
+							getLockable().getIdentifierType().getColumnSpan( factory ) + 1,
 							session
 					);
 				}
@@ -98,9 +91,9 @@ public class SelectLockingStrategy implements LockingStrategy {
 					if ( !rs.next() ) {
 						if ( factory.getStatistics().isStatisticsEnabled() ) {
 							factory.getStatisticsImplementor()
-									.optimisticFailure( lockable.getEntityName() );
+									.optimisticFailure( getLockable().getEntityName() );
 						}
-						throw new StaleObjectStateException( lockable.getEntityName(), id );
+						throw new StaleObjectStateException( getLockable().getEntityName(), id );
 					}
 				}
 				finally {
@@ -116,28 +109,26 @@ public class SelectLockingStrategy implements LockingStrategy {
 			throw JDBCExceptionHelper.convert(
 					session.getFactory().getSQLExceptionConverter(),
 					sqle,
-					"could not lock: " + MessageHelper.infoString( lockable, id, session.getFactory() ),
+					"could not lock: " + MessageHelper.infoString( getLockable(), id, session.getFactory() ),
 					sql
 				);
 		}
 	}
 
-	protected LockMode getLockMode() {
-		return lockMode;
-	}
-
-	protected String generateLockString() {
-		SessionFactoryImplementor factory = lockable.getFactory();
+	protected String generateLockString(int timeout) {
+		SessionFactoryImplementor factory = getLockable().getFactory();
+		LockOptions lockOptions = new LockOptions( getLockMode() );
+		lockOptions.setTimeOut( timeout );
 		SimpleSelect select = new SimpleSelect( factory.getDialect() )
-				.setLockMode( lockMode )
-				.setTableName( lockable.getRootTableName() )
-				.addColumn( lockable.getRootTableIdentifierColumnNames()[0] )
-				.addCondition( lockable.getRootTableIdentifierColumnNames(), "=?" );
-		if ( lockable.isVersioned() ) {
-			select.addCondition( lockable.getVersionColumnName(), "=?" );
+				.setLockOptions( lockOptions )
+				.setTableName( getLockable().getRootTableName() )
+				.addColumn( getLockable().getRootTableIdentifierColumnNames()[0] )
+				.addCondition( getLockable().getRootTableIdentifierColumnNames(), "=?" );
+		if ( getLockable().isVersioned() ) {
+			select.addCondition( getLockable().getVersionColumnName(), "=?" );
 		}
 		if ( factory.getSettings().isCommentsEnabled() ) {
-			select.setComment( lockMode + " lock " + lockable.getEntityName() );
+			select.setComment( getLockMode() + " lock " + getLockable().getEntityName() );
 		}
 		return select.toStatementString();
 	}

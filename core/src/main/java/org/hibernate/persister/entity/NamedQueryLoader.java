@@ -30,6 +30,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
+import org.hibernate.LockOptions;
 import org.hibernate.engine.EntityKey;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.impl.AbstractQueryImpl;
@@ -38,7 +39,9 @@ import org.hibernate.loader.entity.UniqueEntityLoader;
 /**
  * Not really a <tt>Loader</tt>, just a wrapper around a
  * named query.
+ *
  * @author Gavin King
+ * @author Steve Ebersole
  */
 public final class NamedQueryLoader implements UniqueEntityLoader {
 	private final String queryName;
@@ -52,9 +55,14 @@ public final class NamedQueryLoader implements UniqueEntityLoader {
 		this.persister = persister;
 	}
 
-	public Object load(Serializable id, Object optionalObject, SessionImplementor session) 
-	throws HibernateException {
-		
+	public Object load(Serializable id, Object optionalObject, SessionImplementor session, LockOptions lockOptions) {
+		if ( lockOptions != null ) {
+			log.debug( "Ignoring lock-options passed to named query loader" );
+		}
+		return load( id, optionalObject, session );
+	}
+
+	public Object load(Serializable id, Object optionalObject, SessionImplementor session) {
 		if ( log.isDebugEnabled() ) {
 			log.debug(
 					"loading entity: " + persister.getEntityName() + 

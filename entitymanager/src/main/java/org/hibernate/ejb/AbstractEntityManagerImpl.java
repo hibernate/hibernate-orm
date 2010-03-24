@@ -216,14 +216,14 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 			timeout = Integer.parseInt( ( String ) lockTimeout );
 			timeoutSet = true;
 		}
-		else if ( lockTimeout instanceof Integer ) {
-			timeout = ( Integer ) lockTimeout;
+		else if ( lockTimeout instanceof Number ) {
+			timeout = ( (Number) lockTimeout ).intValue();
 			timeoutSet = true;
 		}
 		else if ( lockTimeout != null ) {
 			throw new PersistenceException( "Unable to parse " + AvailableSettings.LOCK_TIMEOUT + ": " + lockTimeout );
 		}
-		if ( timeoutSet != false ) {
+		if ( timeoutSet ) {
 			if ( timeout < 0 ) {
 				options.setTimeOut( LockOptions.WAIT_FOREVER );
 			}

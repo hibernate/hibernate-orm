@@ -173,6 +173,10 @@ public class HSQLDialect extends Dialect {
 		return "null";
 	}
 
+	public boolean supportsLockTimeouts() {
+		return false;
+	}
+
 	public String getForUpdateString() {
 		return "";
 	}

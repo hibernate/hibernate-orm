@@ -12,6 +12,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.Oracle10gDialect;
+import org.hibernate.ejb.AvailableSettings;
 import org.hibernate.ejb.test.TestCase;
 
 import java.util.HashMap;
@@ -26,8 +27,33 @@ import java.util.concurrent.TimeUnit;
  * @author Emmanuel Bernard
  */
 public class LockTest extends TestCase {
-
 	private static final Log log = LogFactory.getLog( LockTest.class );
+
+	public void testFindWithTimeoutHint() {
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		Lock lock = new Lock();
+		lock.setName( "name" );
+		em.persist( lock );
+		em.getTransaction().commit();
+		em.close();
+
+		em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		Map<String, Object> properties = new HashMap<String, Object>();
+		properties.put( AvailableSettings.LOCK_TIMEOUT, 0L );
+		em.find( Lock.class, 1, LockModeType.PESSIMISTIC_WRITE, properties );
+		em.getTransaction().commit();
+		em.close();
+
+		em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		lock = em.find( Lock.class, lock.getId() );
+		em.remove( lock );
+		em.getTransaction().commit();
+		em.close();
+	}
+
 	public void testLockRead() throws Exception {
 		Lock lock = new Lock();
 		lock.setName( "name" );

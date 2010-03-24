@@ -496,7 +496,7 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 		Object entity = persister.load(
 				event.getEntityId(),
 				event.getInstanceToLoad(),
-				event.getLockMode(),
+				event.getLockOptions(),
 				source
 		);
 

@@ -3248,18 +3248,8 @@ public abstract class AbstractEntityPersister
 	 * Load an instance using either the <tt>forUpdateLoader</tt> or the outer joining <tt>loader</tt>,
 	 * depending upon the value of the <tt>lock</tt> parameter
 	 */
-	public Object load(Serializable id, Object optionalObject, LockMode lockMode, SessionImplementor session)
-			throws HibernateException {
-
-		if ( log.isTraceEnabled() ) {
-			log.trace(
-					"Fetching entity: " +
-					MessageHelper.infoString( this, id, getFactory() )
-				);
-		}
-
-		final UniqueEntityLoader loader = getAppropriateLoader( new LockOptions().setLockMode(lockMode), session );
-		return loader.load( id, optionalObject, session );
+	public Object load(Serializable id, Object optionalObject, LockMode lockMode, SessionImplementor session) {
+		return load( id, optionalObject, new LockOptions().setLockMode(lockMode), session );
 	}
 
 	/**
@@ -3277,7 +3267,7 @@ public abstract class AbstractEntityPersister
 		}
 
 		final UniqueEntityLoader loader = getAppropriateLoader(lockOptions, session );
-		return loader.load( id, optionalObject, session );
+		return loader.load( id, optionalObject, session, lockOptions );
 	}
 
 	public void registerAffectingFetchProfile(String fetchProfileName) {
@@ -3320,6 +3310,9 @@ public abstract class AbstractEntityPersister
 			// If the session has associated influencers we need to adjust the
 			// SQL query used for loading based on those influencers
 			return createEntityLoader(lockOptions, session.getLoadQueryInfluencers() );
+		}
+		else if ( lockOptions.getTimeOut() != LockOptions.WAIT_FOREVER ) {
+			return createEntityLoader( lockOptions, session.getLoadQueryInfluencers() );
 		}
 		else {
 			return ( UniqueEntityLoader ) loaders.get( lockOptions.getLockMode() );

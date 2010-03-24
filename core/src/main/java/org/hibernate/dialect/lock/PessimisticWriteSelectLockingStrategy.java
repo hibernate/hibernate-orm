@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2009, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,7 +20,6 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.dialect.lock;
 
@@ -46,62 +45,48 @@ import java.sql.SQLException;
  * <p/>
  * For non-read locks, this is achieved through the Dialect's specific
  * SELECT ... FOR UPDATE syntax.
- * 
+ *
  * This strategy is valid for LockMode.PESSIMISTIC_WRITE
  *
  * This class is a clone of SelectLockingStrategy.
  *
+ * @author Steve Ebersole
+ * @author Scott Marlow
  * @see org.hibernate.dialect.Dialect#getForUpdateString(org.hibernate.LockMode)
  * @see org.hibernate.dialect.Dialect#appendLockHint(org.hibernate.LockMode, String)
  * @since 3.5
- *
- * @author Steve Ebersole
- * @author Scott Marlow
  */
-public class PessimisticWriteSelectLockingStrategy implements LockingStrategy {
-
-	private final Lockable lockable;
-	private final LockMode lockMode;
-	private final String sql;
-
+public class PessimisticWriteSelectLockingStrategy extends AbstractSelectLockingStrategy {
 	/**
 	 * Construct a locking strategy based on SQL SELECT statements.
 	 *
 	 * @param lockable The metadata for the entity to be locked.
-	 * @param lockMode Indictates the type of lock to be acquired.
+	 * @param lockMode Indicates the type of lock to be acquired.
 	 */
 	public PessimisticWriteSelectLockingStrategy(Lockable lockable, LockMode lockMode) {
-		this.lockable = lockable;
-		this.lockMode = lockMode;
-		this.sql = generateLockString(LockOptions.WAIT_FOREVER);
+		super( lockable, lockMode );
 	}
 
-   /**
+	/**
 	 * @see LockingStrategy#lock
 	 */
 	public void lock(
-      Serializable id,
-      Object version,
-      Object object,
-      int timeout, SessionImplementor session) throws StaleObjectStateException, JDBCException {
-		String sql = this.sql;
-		if ( timeout == LockOptions.NO_WAIT ) {
-			sql = generateLockString( LockOptions.NO_WAIT );
-		}
-		else if ( timeout > 0) {
-			sql = generateLockString( timeout );
-		}
-
+			Serializable id,
+			Object version,
+			Object object,
+			int timeout,
+			SessionImplementor session) throws StaleObjectStateException, JDBCException {
+		final String sql = determineSql( timeout );
 		SessionFactoryImplementor factory = session.getFactory();
 		try {
 			PreparedStatement st = session.getBatcher().prepareSelectStatement( sql );
 			try {
-				lockable.getIdentifierType().nullSafeSet( st, id, 1, session );
-				if ( lockable.isVersioned() ) {
-					lockable.getVersionType().nullSafeSet(
+				getLockable().getIdentifierType().nullSafeSet( st, id, 1, session );
+				if ( getLockable().isVersioned() ) {
+					getLockable().getVersionType().nullSafeSet(
 							st,
 							version,
-							lockable.getIdentifierType().getColumnSpan( factory ) + 1,
+							getLockable().getIdentifierType().getColumnSpan( factory ) + 1,
 							session
 					);
 				}
@@ -111,9 +96,9 @@ public class PessimisticWriteSelectLockingStrategy implements LockingStrategy {
 					if ( !rs.next() ) {
 						if ( factory.getStatistics().isStatisticsEnabled() ) {
 							factory.getStatisticsImplementor()
-									.optimisticFailure( lockable.getEntityName() );
+									.optimisticFailure( getLockable().getEntityName() );
 						}
-						throw new StaleObjectStateException( lockable.getEntityName(), id );
+						throw new StaleObjectStateException( getLockable().getEntityName(), id );
 					}
 				}
 				finally {
@@ -129,31 +114,27 @@ public class PessimisticWriteSelectLockingStrategy implements LockingStrategy {
 			JDBCException e = JDBCExceptionHelper.convert(
 					session.getFactory().getSQLExceptionConverter(),
 					sqle,
-					"could not lock: " + MessageHelper.infoString( lockable, id, session.getFactory() ),
+					"could not lock: " + MessageHelper.infoString( getLockable(), id, session.getFactory() ),
 					sql
-				);
-			throw new PessimisticLockException("could not obtain pessimistic lock", e, object);
+			);
+			throw new PessimisticLockException( "could not obtain pessimistic lock", e, object );
 		}
-	}
-
-	protected LockMode getLockMode() {
-		return lockMode;
 	}
 
 	protected String generateLockString(int lockTimeout) {
-		SessionFactoryImplementor factory = lockable.getFactory();
-		LockOptions lockOptions = new LockOptions(this.lockMode);
+		SessionFactoryImplementor factory = getLockable().getFactory();
+		LockOptions lockOptions = new LockOptions( getLockMode() );
 		lockOptions.setTimeOut( lockTimeout );
 		SimpleSelect select = new SimpleSelect( factory.getDialect() )
 				.setLockOptions( lockOptions )
-				.setTableName( lockable.getRootTableName() )
-				.addColumn( lockable.getRootTableIdentifierColumnNames()[0] )
-				.addCondition( lockable.getRootTableIdentifierColumnNames(), "=?" );
-		if ( lockable.isVersioned() ) {
-			select.addCondition( lockable.getVersionColumnName(), "=?" );
+				.setTableName( getLockable().getRootTableName() )
+				.addColumn( getLockable().getRootTableIdentifierColumnNames()[0] )
+				.addCondition( getLockable().getRootTableIdentifierColumnNames(), "=?" );
+		if ( getLockable().isVersioned() ) {
+			select.addCondition( getLockable().getVersionColumnName(), "=?" );
 		}
 		if ( factory.getSettings().isCommentsEnabled() ) {
-			select.setComment( lockMode + " lock " + lockable.getEntityName() );
+			select.setComment( getLockMode() + " lock " + getLockable().getEntityName() );
 		}
 		return select.toStatementString();
 	}

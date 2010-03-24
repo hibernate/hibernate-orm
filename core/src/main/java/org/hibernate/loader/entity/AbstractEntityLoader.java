@@ -32,6 +32,7 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.hibernate.HibernateException;
+import org.hibernate.LockOptions;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.engine.LoadQueryInfluencers;
@@ -60,13 +61,27 @@ public abstract class AbstractEntityLoader extends OuterJoinLoader
 		
 	}
 
-	public Object load(Serializable id, Object optionalObject, SessionImplementor session) 
-	throws HibernateException {
-		return load(session, id, optionalObject, id);
+	/**
+	 * {@inheritDoc}
+	 */
+	public Object load(Serializable id, Object optionalObject, SessionImplementor session) {
+		// this form is deprecated!
+		return load( id, optionalObject, session, LockOptions.NONE );
 	}
 
-	protected Object load(SessionImplementor session, Object id, Object optionalObject, Serializable optionalId) 
-	throws HibernateException {
+	/**
+	 * {@inheritDoc}
+	 */
+	public Object load(Serializable id, Object optionalObject, SessionImplementor session, LockOptions lockOptions) {
+		return load( session, id, optionalObject, id, lockOptions );
+	}
+
+	protected Object load(
+			SessionImplementor session,
+			Object id,
+			Object optionalObject,
+			Serializable optionalId,
+			LockOptions lockOptions) {
 		
 		List list = loadEntity(
 				session, 
@@ -75,7 +90,8 @@ public abstract class AbstractEntityLoader extends OuterJoinLoader
 				optionalObject, 
 				entityName, 
 				optionalId, 
-				persister
+				persister,
+				lockOptions
 			);
 		
 		if ( list.size()==1 ) {

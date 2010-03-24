@@ -148,14 +148,16 @@ public class EntityLoader extends AbstractEntityLoader {
 
 		batchLoader = batchSize > 1;
 
-		log.debug( "Static select for entity " + entityName + ": " + getSQLString() );
+		log.debug(
+				"Static select for entity " + entityName +
+						" [" + lockOptions.getLockMode() + ":" + lockOptions.getTimeOut() + "]: "
+						+ getSQLString() 
+		);
 
 	}
 
-	public Object loadByUniqueKey(
-			SessionImplementor session,
-			Object key) throws HibernateException {
-		return load( session, key, null, null );
+	public Object loadByUniqueKey(SessionImplementor session,Object key) {
+		return load( session, key, null, null, LockOptions.NONE );
 	}
 
 	protected boolean isSingleRowLoader() {

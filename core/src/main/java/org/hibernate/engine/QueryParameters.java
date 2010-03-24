@@ -272,6 +272,10 @@ public final class QueryParameters {
 		return lockOptions;
 	}
 
+	public void setLockOptions(LockOptions lockOptions) {
+		this.lockOptions = lockOptions;
+	}
+
 	public void traceParameters(SessionFactoryImplementor factory) throws HibernateException {
 		Printer print = new Printer( factory );
 		if ( positionalParameterValues.length != 0 ) {

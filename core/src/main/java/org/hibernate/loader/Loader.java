@@ -247,11 +247,10 @@ public abstract class Loader {
 	 * persister from each row of the <tt>ResultSet</tt>. If an object is supplied, will attempt to
 	 * initialize that object. If a collection is supplied, attempt to initialize that collection.
 	 */
-	private List doQueryAndInitializeNonLazyCollections(final SessionImplementor session,
-														final QueryParameters queryParameters,
-														final boolean returnProxies) 
-		throws HibernateException, SQLException {
-
+	private List doQueryAndInitializeNonLazyCollections(
+			final SessionImplementor session,
+			final QueryParameters queryParameters,
+			final boolean returnProxies) throws HibernateException, SQLException {
 		final PersistenceContext persistenceContext = session.getPersistenceContext();
 		boolean defaultReadOnlyOrig = persistenceContext.isDefaultReadOnly();
 		if ( queryParameters.isReadOnlyInitialized() ) {
@@ -1628,6 +1627,24 @@ public abstract class Loader {
 					st.setFetchSize( selection.getFetchSize().intValue() );
 				}
 			}
+
+			// handle lock timeout...
+			LockOptions lockOptions = queryParameters.getLockOptions();
+			if ( lockOptions != null ) {
+				if ( lockOptions.getTimeOut() != LockOptions.WAIT_FOREVER ) {
+					if ( !dialect.supportsLockTimeouts() ) {
+						log.debug(
+								"Lock timeout [" + lockOptions.getTimeOut() +
+										"] requested but dialect reported to not support lock timeouts"
+						);
+					}
+					else if ( dialect.isLockTimeoutParameterized() ) {
+						st.setInt( col++, lockOptions.getTimeOut() );
+					}
+				}
+			}
+
+			log.trace( "Bound [" + col + "] parameters total" );
 		}
 		catch ( SQLException sqle ) {
 			session.getBatcher().closeQueryStatement( st, null );
@@ -1885,15 +1902,17 @@ public abstract class Loader {
 	/**
 	 * Called by subclasses that load entities
 	 * @param persister only needed for logging
+	 * @param lockOptions
 	 */
 	protected final List loadEntity(
-	        final SessionImplementor session,
-	        final Object id,
-	        final Type identifierType,
-	        final Object optionalObject,
-	        final String optionalEntityName,
-	        final Serializable optionalIdentifier,
-	        final EntityPersister persister) throws HibernateException {
+			final SessionImplementor session,
+			final Object id,
+			final Type identifierType,
+			final Object optionalObject,
+			final String optionalEntityName,
+			final Serializable optionalIdentifier,
+			final EntityPersister persister,
+			LockOptions lockOptions) throws HibernateException {
 		
 		if ( log.isDebugEnabled() ) {
 			log.debug( 
@@ -1904,17 +1923,14 @@ public abstract class Loader {
 
 		List result;
 		try {
-			result = doQueryAndInitializeNonLazyCollections( 
-					session,
-					new QueryParameters(
-							new Type[] { identifierType },
-							new Object[] { id },
-							optionalObject,
-							optionalEntityName,
-							optionalIdentifier 
-						),
-					false 
-				);
+			QueryParameters qp = new QueryParameters();
+			qp.setPositionalParameterTypes( new Type[] { identifierType } );
+			qp.setPositionalParameterValues( new Object[] { id } );
+			qp.setOptionalObject( optionalObject );
+			qp.setOptionalEntityName( optionalEntityName );
+			qp.setOptionalId( optionalIdentifier );
+			qp.setLockOptions( lockOptions );
+			result = doQueryAndInitializeNonLazyCollections( session, qp, false );
 		}
 		catch ( SQLException sqle ) {
 			final Loadable[] persisters = getEntityPersisters();
@@ -1951,14 +1967,14 @@ public abstract class Loader {
 
 		List result;
 		try {
-			result = doQueryAndInitializeNonLazyCollections( 
+			result = doQueryAndInitializeNonLazyCollections(
 					session,
-					new QueryParameters( 
+					new QueryParameters(
 							new Type[] { keyType, indexType },
 							new Object[] { key, index }
-						),
-					false 
-				);
+					),
+					false
+			);
 		}
 		catch ( SQLException sqle ) {
 			throw JDBCExceptionHelper.convert(
@@ -1978,15 +1994,17 @@ public abstract class Loader {
 	/**
 	 * Called by wrappers that batch load entities
 	 * @param persister only needed for logging
+	 * @param lockOptions
 	 */
 	public final List loadEntityBatch(
-	        final SessionImplementor session,
-	        final Serializable[] ids,
-	        final Type idType,
-	        final Object optionalObject,
-	        final String optionalEntityName,
-	        final Serializable optionalId,
-	        final EntityPersister persister) throws HibernateException {
+			final SessionImplementor session,
+			final Serializable[] ids,
+			final Type idType,
+			final Object optionalObject,
+			final String optionalEntityName,
+			final Serializable optionalId,
+			final EntityPersister persister,
+			LockOptions lockOptions) throws HibernateException {
 
 		if ( log.isDebugEnabled() ) {
 			log.debug( 
@@ -1999,11 +2017,14 @@ public abstract class Loader {
 		Arrays.fill( types, idType );
 		List result;
 		try {
-			result = doQueryAndInitializeNonLazyCollections( 
-					session,
-					new QueryParameters( types, ids, optionalObject, optionalEntityName, optionalId ),
-					false 
-				);
+			QueryParameters qp = new QueryParameters();
+			qp.setPositionalParameterTypes( types );
+			qp.setPositionalParameterValues( ids );
+			qp.setOptionalObject( optionalObject );
+			qp.setOptionalEntityName( optionalEntityName );
+			qp.setOptionalId( optionalId );
+			qp.setLockOptions( lockOptions );
+			result = doQueryAndInitializeNonLazyCollections( session, qp, false );
 		}
 		catch ( SQLException sqle ) {
 			throw JDBCExceptionHelper.convert(

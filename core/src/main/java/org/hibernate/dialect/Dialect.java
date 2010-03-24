@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,7 +20,6 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.dialect;
 
@@ -941,6 +940,34 @@ public abstract class Dialect {
 
 
 	// lock acquisition support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	/**
+	 * Informational metadata about whether this dialect is known to support
+	 * specifying timeouts for requested lock acquisitions.
+	 *
+	 * @return True is this dialect supports specifying lock timeouts.
+	 */
+	public boolean supportsLockTimeouts() {
+		return true;
+
+	}
+
+	/**
+	 * If this dialect supports specifying lock timeouts, are those timeouts
+	 * rendered into the <tt>SQL</tt> string as parameters.  The implication
+	 * is that Hibernate will need to bind the timeout value as a parameter
+	 * in the {@link java.sql.PreparedStatement}.  If true, the param position
+	 * is always handled as the last parameter; if the dialect specifies the
+	 * lock timeout elsewhere in the <tt>SQL</tt> statement then the timeout
+	 * value should be directly rendered into the statement and this method
+	 * should return false.
+	 *
+	 * @return True if the lock timeout is rendered into the <tt>SQL</tt>
+	 * string as a parameter; false otherwise.
+	 */
+	public boolean isLockTimeoutParameterized() {
+		return false;
+	}
 
 	/**
 	 * Get a strategy instance which knows how to acquire a database-level lock

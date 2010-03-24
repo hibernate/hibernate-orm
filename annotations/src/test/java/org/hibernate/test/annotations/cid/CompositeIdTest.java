@@ -11,6 +11,7 @@ import org.hibernate.Transaction;
 import org.hibernate.Criteria;
 import org.hibernate.criterion.Disjunction;
 import org.hibernate.criterion.Restrictions;
+import org.hibernate.junit.FailureExpected;
 import org.hibernate.junit.SkipForDialect;
 import org.hibernate.test.annotations.TestCase;
 
@@ -253,46 +254,12 @@ public class CompositeIdTest extends TestCase {
 		s.close();
 	}
 
-	@SkipForDialect(value=org.hibernate.dialect.HSQLDialect.class,
-			comment = "HSQLDB does not support ((..., ...),(..., ...))")
 	public void testQueryInAndComposite() {
 
 		Session s = openSession(  );
 		Transaction transaction = s.beginTransaction();
-
-		SomeEntity someEntity = new SomeEntity();
-		someEntity.setId( new SomeEntityId( ) );
-		someEntity.getId().setId( 1 );
-		someEntity.getId().setVersion( 11 );
-		someEntity.setProp( "aa" );
-		s.persist( someEntity );
-		someEntity = new SomeEntity();
-		someEntity.setId( new SomeEntityId( ) );
-		someEntity.getId().setId( 1 );
-		someEntity.getId().setVersion( 12 );
-		someEntity.setProp( "bb" );
-		s.persist( someEntity );
-		someEntity = new SomeEntity();
-		someEntity.setId( new SomeEntityId( ) );
-		someEntity.getId().setId( 10 );
-		someEntity.getId().setVersion( 21 );
-		someEntity.setProp( "cc1" );
-		s.persist( someEntity );
-		someEntity = new SomeEntity();
-		someEntity.setId( new SomeEntityId( ) );
-		someEntity.getId().setId( 10 );
-		someEntity.getId().setVersion( 22 );
-		someEntity.setProp( "cc2" );
-		s.persist( someEntity );
-		someEntity = new SomeEntity();
-		someEntity.setId( new SomeEntityId( ) );
-		someEntity.getId().setId( 10 );
-		someEntity.getId().setVersion( 23 );
-		someEntity.setProp( "cc3" );
-		s.persist( someEntity );
-
-		s.flush();
-
+		createData( s );
+        s.flush();
         List ids = new ArrayList<SomeEntityId>(2);
         ids.add( new SomeEntityId(1,12) );
         ids.add( new SomeEntityId(10,23) );
@@ -308,7 +275,60 @@ public class CompositeIdTest extends TestCase {
 		transaction.rollback();
 		s.close();
 	}
+    public void testQueryInAndCompositeWithHQL() {
+        Session s = openSession(  );
+        Transaction transaction = s.beginTransaction();
+        createData( s );
+        s.flush();
+        List ids = new ArrayList<SomeEntityId>(2);
+        ids.add( new SomeEntityId(1,12) );
+        ids.add( new SomeEntityId(10,23) );
+        ids.add( new SomeEntityId(10,22) );
+        Query query=s.createQuery( "from SomeEntity e where e.id in (:idList)" );
+        query.setParameterList( "idList", ids );
+        List list=query.list();
+        assertEquals( 3, list.size() );
+        transaction.rollback();
+        s.close();
+    }
 
+
+	private void createData(Session s){
+        SomeEntity someEntity = new SomeEntity();
+        someEntity.setId( new SomeEntityId( ) );
+        someEntity.getId().setId( 1 );
+        someEntity.getId().setVersion( 11 );
+        someEntity.setProp( "aa" );
+        s.persist( someEntity );
+        
+        someEntity = new SomeEntity();
+        someEntity.setId( new SomeEntityId( ) );
+        someEntity.getId().setId( 1 );
+        someEntity.getId().setVersion( 12 );
+        someEntity.setProp( "bb" );
+        s.persist( someEntity );
+        
+        someEntity = new SomeEntity();
+        someEntity.setId( new SomeEntityId( ) );
+        someEntity.getId().setId( 10 );
+        someEntity.getId().setVersion( 21 );
+        someEntity.setProp( "cc1" );
+        s.persist( someEntity );
+        
+        someEntity = new SomeEntity();
+        someEntity.setId( new SomeEntityId( ) );
+        someEntity.getId().setId( 10 );
+        someEntity.getId().setVersion( 22 );
+        someEntity.setProp( "cc2" );
+        s.persist( someEntity );
+        
+        someEntity = new SomeEntity();
+        someEntity.setId( new SomeEntityId( ) );
+        someEntity.getId().setId( 10 );
+        someEntity.getId().setVersion( 23 );
+        someEntity.setProp( "cc3" );
+        s.persist( someEntity );
+	}
 	protected Class[] getAnnotatedClasses() {
 		return new Class[] {
 				Parent.class,

@@ -432,14 +432,6 @@ public abstract class FunctionalTestCase extends UnitTestCase implements Executi
 		return false;
 	}
 
-	protected boolean supportsRowValueConstructorSyntaxInInList() {
-		if ( ! getDialect().supportsRowValueConstructorSyntaxInInList() ) {
-			reportSkip( "Dialect does not support 'tuple' syntax as part of an IN value list", "query support" );
-			return false;
-		}
-		return true;
-	}
-
 	protected boolean supportsResultSetPositionQueryMethodsOnForwardOnlyCursor() {
 		if ( ! getDialect().supportsResultSetPositionQueryMethodsOnForwardOnlyCursor() ) {
 			reportSkip( "Driver does not support 'position query' methods on forward-only cursors", "query support" );

@@ -75,7 +75,7 @@ public class BinaryLogicOperatorNode extends HqlSqlWalkerNode implements BinaryO
 	}
 
 	protected final void mutateRowValueConstructorSyntaxesIfNecessary(Type lhsType, Type rhsType) {
-		// TODO : this really needs to be delayed unitl after we definitively know all node types
+		// TODO : this really needs to be delayed until after we definitively know all node types
 		// where this is currently a problem is parameters for which where we cannot unequivocally
 		// resolve an expected type
 		SessionFactoryImplementor sessionFactory = getSessionFactoryHelper().getFactory();
@@ -109,7 +109,7 @@ public class BinaryLogicOperatorNode extends HqlSqlWalkerNode implements BinaryO
 	 * @param valueElements The number of elements in the row value constructor list.
 	 */
 	private void mutateRowValueConstructorSyntax(int valueElements) {
-		// mutation depends on the types of nodes invloved...
+		// mutation depends on the types of nodes involved...
 		int comparisonType = getType();
 		String comparisonText = getText();
 		setType( HqlSqlTokenTypes.AND );
@@ -127,8 +127,21 @@ public class BinaryLogicOperatorNode extends HqlSqlWalkerNode implements BinaryO
 						? null
 						: ( ( ParameterNode ) getRightHandOperand() ).getHqlParameterSpecification();
 
-		AST container = this;
-		for ( int i = valueElements - 1; i > 0; i-- ) {
+		translate( valueElements, comparisonType, comparisonText,
+                lhsElementTexts, rhsElementTexts,
+                lhsEmbeddedCompositeParameterSpecification,
+                rhsEmbeddedCompositeParameterSpecification, this );
+	}
+	/**
+	 * 
+	 */
+    protected void translate( int valueElements, int comparisonType,
+            String comparisonText, String[] lhsElementTexts,
+            String[] rhsElementTexts,
+            ParameterSpecification lhsEmbeddedCompositeParameterSpecification,
+            ParameterSpecification rhsEmbeddedCompositeParameterSpecification,
+            AST container ) {
+        for ( int i = valueElements - 1; i > 0; i-- ) {
 			if ( i == 1 ) {
 				AST op1 = getASTFactory().create( comparisonType, comparisonText );
 				AST lhs1 = getASTFactory().create( HqlSqlTokenTypes.SQL_TOKEN, lhsElementTexts[0] );
@@ -165,9 +178,9 @@ public class BinaryLogicOperatorNode extends HqlSqlWalkerNode implements BinaryO
 				container = newContainer;
 			}
 		}
-	}
+    }
 
-	private static String[] extractMutationTexts(Node operand, int count) {
+	protected static String[] extractMutationTexts(Node operand, int count) {
 		if ( operand instanceof ParameterNode ) {
 			String[] rtn = new String[count];
 			for ( int i = 0; i < count; i++ ) {

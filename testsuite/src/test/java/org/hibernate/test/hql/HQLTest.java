@@ -9,7 +9,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import antlr.RecognitionException;
 import junit.framework.Test;
 
 import org.hibernate.Hibernate;
@@ -30,6 +29,7 @@ import org.hibernate.engine.query.HQLQueryPlan;
 import org.hibernate.engine.query.ReturnMetadata;
 import org.hibernate.hql.QueryTranslator;
 import org.hibernate.hql.QueryTranslatorFactory;
+import org.hibernate.hql.antlr.HqlTokenTypes;
 import org.hibernate.hql.ast.ASTQueryTranslatorFactory;
 import org.hibernate.hql.ast.DetailedSemanticException;
 import org.hibernate.hql.ast.QuerySyntaxException;
@@ -39,8 +39,13 @@ import org.hibernate.hql.ast.tree.ConstructorNode;
 import org.hibernate.hql.ast.tree.DotNode;
 import org.hibernate.hql.ast.tree.FromReferenceNode;
 import org.hibernate.hql.ast.tree.IndexNode;
+import org.hibernate.hql.ast.tree.QueryNode;
 import org.hibernate.hql.ast.tree.SelectClause;
+import org.hibernate.hql.ast.util.ASTUtil;
 import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
+
+import antlr.RecognitionException;
+import antlr.collections.AST;
 
 /**
  * Tests cases where the AST based query translator and the 'classic' query translator generate identical SQL.
@@ -94,7 +99,35 @@ public class HQLTest extends QueryTranslatorTestCase {
 		assertTranslation( "from Animal a where a.offspring.description = 'xyz'" );
 		assertTranslation( "from Animal a where a.offspring.father.description = 'xyz'" );
 	}
+	
+    /**
+     * ClassicQueryTranslatorFactory does not support translate tuple with "in" syntax to "and/or" clause
+     */
+    public void testRowValueConstructorSyntaxInInListFailureExpected() {
+        assertTranslation( "from LineItem l where l.id in (:idList)" );
+    }
 
+    public void testRowValueConstructorSyntaxInInList() {
+    	if (!getDialect().supportsRowValueConstructorSyntaxInInList())
+    		return;
+		QueryTranslatorImpl translator = createNewQueryTranslator("from LineItem l where l.id in (?)");
+		assertInExist("'in' should be translated to 'and'", false, translator);
+		translator = createNewQueryTranslator("from LineItem l where l.id in (('a1',1,'b1'),('a2',2,'b2'))");
+		assertInExist("'in' should be translated to 'and'", false, translator);
+		translator = createNewQueryTranslator("from Animal a where a.id in (?)");
+		assertInExist("only translate tuple with 'in' syntax", true, translator);
+		translator = createNewQueryTranslator("from LineItem l where l.id in (select a1 from Animal a1 left join a1.offspring o where a1.id = 1)");
+		assertInExist("do not translate subqueries", true, translator);
+
+    }
+
+	private void assertInExist( String message, boolean expected, QueryTranslatorImpl translator ) {
+		AST ast = translator.getSqlAST().getWalker().getAST();
+		QueryNode queryNode = (QueryNode) ast;
+		AST inNode = ASTUtil.findTypeInChildren( queryNode, HqlTokenTypes.IN );
+		assertEquals( message, expected, inNode != null );
+	}
+    
 	public void testSubComponentReferences() {
 		assertTranslation( "select c.address.zip.code from ComponentContainer c" );
 		assertTranslation( "select c.address.zip from ComponentContainer c" );

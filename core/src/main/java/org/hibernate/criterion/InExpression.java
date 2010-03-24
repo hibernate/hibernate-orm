@@ -50,18 +50,34 @@ public class InExpression implements Criterion {
 		this.values = values;
 	}
 
-	public String toSqlString(Criteria criteria, CriteriaQuery criteriaQuery)
-	throws HibernateException {
-		String[] columns = criteriaQuery.getColumnsUsingProjection(criteria, propertyName);
-		String singleValueParam = StringHelper.repeat( "?, ", columns.length-1 )  + "?";
-		if ( columns.length>1 ) singleValueParam = '(' + singleValueParam + ')';
-		String params = values.length>0 ?
-			StringHelper.repeat( singleValueParam + ", ", values.length-1 ) + singleValueParam :
-			"";
-		String cols = StringHelper.join(", ", columns);
-		if ( columns.length>1 ) cols = '(' + cols + ')';
-		return cols + " in (" + params + ')';
-	}
+    public String toSqlString( Criteria criteria, CriteriaQuery criteriaQuery )
+            throws HibernateException {
+        String[] columns = criteriaQuery.getColumnsUsingProjection(
+                criteria, propertyName );
+        if ( criteriaQuery.getFactory().getDialect()
+                .supportsRowValueConstructorSyntaxInInList() || columns.length<=1) {
+
+            String singleValueParam = StringHelper.repeat( "?, ",
+                    columns.length - 1 )
+                    + "?";
+            if ( columns.length > 1 )
+                singleValueParam = '(' + singleValueParam + ')';
+            String params = values.length > 0 ? StringHelper.repeat(
+                    singleValueParam + ", ", values.length - 1 )
+                    + singleValueParam : "";
+            String cols = StringHelper.join( ", ", columns );
+            if ( columns.length > 1 )
+                cols = '(' + cols + ')';
+            return cols + " in (" + params + ')';
+        } else {
+           String cols = " ( " + StringHelper.join( " = ? and ", columns ) + "= ? ) ";
+             cols = values.length > 0 ? StringHelper.repeat( cols
+                    + "or ", values.length - 1 )
+                    + cols : "";
+            cols = " ( " + cols + " ) ";
+            return cols;
+        }
+    }
 
 	public TypedValue[] getTypedValues(Criteria criteria, CriteriaQuery criteriaQuery) 
 	throws HibernateException {

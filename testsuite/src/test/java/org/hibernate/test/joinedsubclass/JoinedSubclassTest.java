@@ -92,15 +92,12 @@ public class JoinedSubclassTest extends FunctionalTestCase {
 		joe = (Customer) s.get( Customer.class, new Long( joe.getId() ) );
 
  		mark.setZip("30306");
-		assertEquals( s.createQuery("from Person p where p.address.zip = '30306'").list().size(), 1 );
+        assertEquals( s.createQuery("from Person p where p.address.zip = '30306'" ).list().size(),1 );
 
-		if ( supportsRowValueConstructorSyntaxInInList() ) {
-			s.createCriteria(Person.class).add(
-					Restrictions.in("address", new Address[] { mark.getAddress(), joe.getAddress() } )
-			).list();
-		}
+        s.createCriteria( Person.class ).add(
+                Restrictions.in( "address", new Address[] { mark.getAddress(), joe.getAddress() } ) ).list();
 
-		s.delete(mark);
+        s.delete(mark);
 		s.delete(joe);
 		s.delete(yomomma);
 		assertTrue( s.createQuery("from Person").list().isEmpty() );

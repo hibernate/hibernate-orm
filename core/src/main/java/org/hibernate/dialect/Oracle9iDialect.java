@@ -127,5 +127,12 @@ public class Oracle9iDialect extends Oracle8iDialect {
 	public String getReadLockString(int timeout) {
 		return getWriteLockString( timeout );
 	}
+	/**
+	 * HHH-4907, I don't know if oracle 8 supports this syntax, so I'd think it is better add this 
+	 * method here. Reopen this issue if you found/know 8 supports it.
+	 */
+    public boolean supportsRowValueConstructorSyntaxInInList() {
+        return true;
+    }
 	
 }

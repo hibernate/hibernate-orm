@@ -61,12 +61,17 @@ public class PropertyProjection extends SimpleProjection {
 
 	public String toSqlString(Criteria criteria, int position, CriteriaQuery criteriaQuery) 
 	throws HibernateException {
-		return new StringBuffer()
-			.append( criteriaQuery.getColumn(criteria, propertyName) )
-			.append(" as y")
-			.append(position)
-			.append('_')
-			.toString();
+		StringBuffer buf = new StringBuffer();
+		String[] cols = criteriaQuery.getColumnsUsingProjection( criteria, propertyName );
+		for ( int i=0; i<cols.length; i++ ) {
+			buf.append( cols[i] )
+				.append(" as y")
+				.append(position + i)
+				.append('_');
+			if (i < cols.length -1)
+			   buf.append(", ");
+		}
+		return buf.toString();
 	}
 
 	public boolean isGrouped() {

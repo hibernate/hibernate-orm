@@ -48,6 +48,7 @@ import org.hibernate.persister.entity.OuterJoinLoadable;
 import org.hibernate.persister.entity.Lockable;
 import org.hibernate.transform.ResultTransformer;
 import org.hibernate.type.Type;
+import org.hibernate.util.ArrayHelper;
 
 /**
  * A <tt>Loader</tt> for <tt>Criteria</tt> queries. Note that criteria queries are
@@ -127,8 +128,16 @@ public class CriteriaLoader extends OuterJoinLoader {
 			Type[] types = translator.getProjectedTypes();
 			result = new Object[types.length];
 			String[] columnAliases = translator.getProjectedColumnAliases();
-			for ( int i=0; i<result.length; i++ ) {
-				result[i] = types[i].nullSafeGet(rs, columnAliases[i], session, null);
+			for ( int i=0, pos=0; i<result.length; i++ ) {
+				int numColumns = types[i].getColumnSpan( session.getFactory() );
+				if ( numColumns > 1 ) {
+			    	String[] typeColumnAliases = ArrayHelper.slice( columnAliases, pos, numColumns );
+					result[i] = types[i].nullSafeGet(rs, typeColumnAliases, session, null);
+				}
+				else {
+					result[i] = types[i].nullSafeGet(rs, columnAliases[pos], session, null);
+				}
+				pos += numColumns;
 			}
 			aliases = translator.getProjectedAliases();
 		}

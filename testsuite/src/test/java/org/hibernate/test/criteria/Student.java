@@ -10,6 +10,7 @@ import java.util.Set;
 public class Student {
 	private long studentNumber;
 	private String name;
+	private CityState cityState;
 	private Course preferredCourse;
 	private Set enrolments = new HashSet();
 
@@ -27,6 +28,14 @@ public class Student {
 
 	public void setStudentNumber(long studentNumber) {
 		this.studentNumber = studentNumber;
+	}
+
+	public CityState getCityState() {
+		return cityState;
+	}
+
+	public void setCityState(CityState cityState) {
+		this.cityState = cityState;
 	}
 
 	public Course getPreferredCourse() {

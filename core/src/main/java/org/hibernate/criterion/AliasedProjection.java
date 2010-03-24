@@ -31,7 +31,7 @@ import org.hibernate.type.Type;
 /**
  * @author Gavin King
  */
-public class AliasedProjection implements Projection {
+public class AliasedProjection implements EnhancedProjection {
 	
 	private final Projection projection;
 	private final String alias;
@@ -64,7 +64,13 @@ public class AliasedProjection implements Projection {
 		return projection.getColumnAliases(loc);
 	}
 
-	public Type[] getTypes(String alias, Criteria criteria, CriteriaQuery criteriaQuery) 
+	public String[] getColumnAliases(int loc, Criteria criteria, CriteriaQuery criteriaQuery) {
+		return projection instanceof EnhancedProjection ?
+				( ( EnhancedProjection ) projection ).getColumnAliases( loc, criteria, criteriaQuery ) :
+				getColumnAliases( loc );
+	}
+
+	public Type[] getTypes(String alias, Criteria criteria, CriteriaQuery criteriaQuery)
 	throws HibernateException {
 		return this.alias.equals(alias) ?
 				getTypes(criteria, criteriaQuery) :
@@ -74,6 +80,12 @@ public class AliasedProjection implements Projection {
 	public String[] getColumnAliases(String alias, int loc) {
 		return this.alias.equals(alias) ? 
 				getColumnAliases(loc) :
+				null;
+	}
+
+	public String[] getColumnAliases(String alias, int loc, Criteria criteria, CriteriaQuery criteriaQuery) {
+		return this.alias.equals(alias) ?
+				getColumnAliases( loc, criteria, criteriaQuery ) :
 				null;
 	}
 

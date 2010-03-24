@@ -63,6 +63,8 @@ public class IdentifierProjection extends SimpleProjection {
 				.append(" as y")
 				.append(position + i)
 				.append('_');
+			if (i < cols.length -1)
+			   buf.append(", ");			
 		}
 		return buf.toString();
 	}

@@ -19,6 +19,7 @@ import org.hibernate.criterion.Example;
 import org.hibernate.criterion.MatchMode;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Projection;
+import org.hibernate.criterion.ProjectionList;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Property;
 import org.hibernate.criterion.Restrictions;
@@ -738,6 +739,152 @@ public class CriteriaQueryTest extends FunctionalTestCase {
 		Transaction t = s.beginTransaction();
 		s.createCriteria(Course.class).setProjection( Projections.property("courseCode") ).list();
 		s.createCriteria(Course.class).setProjection( Projections.id() ).list();
+		t.rollback();
+		s.close();
+	}
+
+	public void testProjectedEmbeddedCompositeId() {
+		Session s = openSession();
+		Transaction t = s.beginTransaction();
+
+		Course course = new Course();
+		course.setCourseCode("HIB");
+		course.setDescription("Hibernate Training");
+		s.save(course);
+
+		Student gavin = new Student();
+		gavin.setName("Gavin King");
+		gavin.setStudentNumber(667);
+		s.save(gavin);
+
+		Student xam = new Student();
+		xam.setName("Max Rydahl Andersen");
+		xam.setStudentNumber(101);
+		s.save(xam);
+
+		Enrolment enrolment = new Enrolment();
+		enrolment.setCourse(course);
+		enrolment.setCourseCode(course.getCourseCode());
+		enrolment.setSemester((short) 1);
+		enrolment.setYear((short) 1999);
+		enrolment.setStudent(xam);
+		enrolment.setStudentNumber(xam.getStudentNumber());
+		xam.getEnrolments().add(enrolment);
+		s.save(enrolment);
+
+		enrolment = new Enrolment();
+		enrolment.setCourse(course);
+		enrolment.setCourseCode(course.getCourseCode());
+		enrolment.setSemester((short) 3);
+		enrolment.setYear((short) 1998);
+		enrolment.setStudent(gavin);
+		enrolment.setStudentNumber(gavin.getStudentNumber());
+		gavin.getEnrolments().add(enrolment);
+		s.save(enrolment);
+
+		s.flush();
+
+		List enrolments = ( List ) s.createCriteria( Enrolment.class).setProjection( Projections.id() ).list();
+		t.rollback();
+		s.close();
+	}
+
+	public void testProjectedCompositeId() {
+		Session s = openSession();
+		Transaction t = s.beginTransaction();
+
+		Course course = new Course();
+		course.setCourseCode("HIB");
+		course.setDescription("Hibernate Training");
+		course.getCourseMeetings().add( new CourseMeeting( course, "Monday", 1, "1313 Mockingbird Lane" ) );
+		s.save(course);
+		s.flush();
+
+		List data = ( List ) s.createCriteria( CourseMeeting.class).setProjection( Projections.id() ).list();
+		t.rollback();
+		s.close();
+	}
+
+	public void testProjectedComponent() {
+		Session s = openSession();
+		Transaction t = s.beginTransaction();
+
+		Student gaith = new Student();
+		gaith.setName("Gaith Bell");
+		gaith.setStudentNumber(123);
+		gaith.setCityState( new CityState( "Chicago", "Illinois" ) );
+		s.save( gaith );
+		s.flush();
+
+		List cityStates = ( List ) s.createCriteria( Student.class).setProjection( Projections.property( "cityState" )).list();
+		t.rollback();
+		s.close();
+	}
+
+	public void testProjectedListIncludesComponent() {
+		Session s = openSession();
+		Transaction t = s.beginTransaction();
+
+		Student gaith = new Student();
+		gaith.setName("Gaith Bell");
+		gaith.setStudentNumber(123);
+		gaith.setCityState( new CityState( "Chicago", "Illinois" ) );
+		s.save(gaith);
+		s.flush();
+		List data = ( List ) s.createCriteria( Student.class)
+				.setProjection( Projections.projectionList()
+					.add( Projections.property( "cityState" ) )
+					.add( Projections.property("name") ) )
+				.list();
+		t.rollback();
+		s.close();
+	}
+
+	public void testProjectedListIncludesEmbeddedCompositeId() {
+		Session s = openSession();
+		Transaction t = s.beginTransaction();
+
+		Course course = new Course();
+		course.setCourseCode("HIB");
+		course.setDescription("Hibernate Training");
+		s.save(course);
+
+		Student gavin = new Student();
+		gavin.setName("Gavin King");
+		gavin.setStudentNumber(667);
+		s.save(gavin);
+
+		Student xam = new Student();
+		xam.setName("Max Rydahl Andersen");
+		xam.setStudentNumber(101);
+		s.save(xam);
+
+		Enrolment enrolment = new Enrolment();
+		enrolment.setCourse(course);
+		enrolment.setCourseCode(course.getCourseCode());
+		enrolment.setSemester((short) 1);
+		enrolment.setYear((short) 1999);
+		enrolment.setStudent(xam);
+		enrolment.setStudentNumber(xam.getStudentNumber());
+		xam.getEnrolments().add(enrolment);
+		s.save(enrolment);
+
+		enrolment = new Enrolment();
+		enrolment.setCourse(course);
+		enrolment.setCourseCode(course.getCourseCode());
+		enrolment.setSemester((short) 3);
+		enrolment.setYear((short) 1998);
+		enrolment.setStudent(gavin);
+		enrolment.setStudentNumber(gavin.getStudentNumber());
+		gavin.getEnrolments().add(enrolment);
+		s.save(enrolment);
+		s.flush();
+		List data = ( List ) s.createCriteria( Enrolment.class)
+				.setProjection( Projections.projectionList()
+					.add( Projections.property( "semester" ) )
+					.add( Projections.property("year") )
+					.add( Projections.id() ) )
+				.list();
 		t.rollback();
 		s.close();
 	}

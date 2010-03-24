@@ -31,7 +31,7 @@ import org.hibernate.type.Type;
 /**
  * @author Gavin King
  */
-public class Distinct implements Projection {
+public class Distinct implements EnhancedProjection {
 
 	private final Projection projection;
 	
@@ -63,8 +63,20 @@ public class Distinct implements Projection {
 		return projection.getColumnAliases(loc);
 	}
 
+	public String[] getColumnAliases(int loc, Criteria criteria, CriteriaQuery criteriaQuery) {
+		return projection instanceof EnhancedProjection ?
+				( ( EnhancedProjection ) projection ).getColumnAliases( loc, criteria, criteriaQuery ) :
+				getColumnAliases( loc );
+	}
+
 	public String[] getColumnAliases(String alias, int loc) {
 		return projection.getColumnAliases(alias, loc);
+	}
+
+	public String[] getColumnAliases(String alias, int loc, Criteria criteria, CriteriaQuery criteriaQuery) {
+		return projection instanceof EnhancedProjection ?
+				( ( EnhancedProjection ) projection ).getColumnAliases( alias, loc, criteria, criteriaQuery ) :
+				getColumnAliases( alias, loc );
 	}
 
 	public String[] getAliases() {

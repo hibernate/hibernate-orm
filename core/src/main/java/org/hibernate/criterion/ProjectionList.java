@@ -35,7 +35,7 @@ import org.hibernate.util.ArrayHelper;
 /**
  * @author Gavin King
  */
-public class ProjectionList implements Projection {
+public class ProjectionList implements EnhancedProjection {
 	
 	private List elements = new ArrayList();
 	
@@ -70,7 +70,7 @@ public class ProjectionList implements Projection {
 		for ( int i=0; i<getLength(); i++ ) {
 			Projection proj = getProjection(i);
 			buf.append( proj.toSqlString(criteria, loc, criteriaQuery) );
-			loc += proj.getColumnAliases(loc).length;
+			loc += getColumnAliases(loc, criteria, criteriaQuery, proj ).length;
 			if ( i<elements.size()-1 ) buf.append(", ");
 		}
 		return buf.toString();
@@ -100,6 +100,16 @@ public class ProjectionList implements Projection {
 		return ArrayHelper.toStringArray(result);
 	}
 
+	public String[] getColumnAliases(int loc, Criteria criteria, CriteriaQuery criteriaQuery) {
+		List result = new ArrayList( getLength() );
+		for ( int i=0; i<getLength(); i++ ) {
+			String[] colAliases = getColumnAliases( loc, criteria, criteriaQuery, getProjection( i ) );
+			ArrayHelper.addAll(result, colAliases);
+			loc+=colAliases.length;
+		}
+		return ArrayHelper.toStringArray(result);
+	}
+
 	public String[] getColumnAliases(String alias, int loc) {
 		for ( int i=0; i<getLength(); i++ ) {
 			String[] result = getProjection(i).getColumnAliases(alias, loc);
@@ -107,6 +117,27 @@ public class ProjectionList implements Projection {
 			loc += getProjection(i).getColumnAliases(loc).length;
 		}
 		return null;
+	}
+
+	public String[] getColumnAliases(String alias, int loc, Criteria criteria, CriteriaQuery criteriaQuery) {
+		for ( int i=0; i<getLength(); i++ ) {
+			String[] result = getColumnAliases( alias, loc, criteria, criteriaQuery, getProjection(i) );
+			if (result!=null) return result;
+			loc += getColumnAliases( loc, criteria, criteriaQuery, getProjection( i ) ).length;
+		}
+		return null;
+	}
+
+	private static String[] getColumnAliases(int loc, Criteria criteria, CriteriaQuery criteriaQuery, Projection projection) {
+		return projection instanceof EnhancedProjection ?
+				( ( EnhancedProjection ) projection ).getColumnAliases( loc, criteria, criteriaQuery ) :
+				projection.getColumnAliases( loc );
+	}
+
+	private static String[] getColumnAliases(String alias, int loc, Criteria criteria, CriteriaQuery criteriaQuery, Projection projection) {
+		return projection instanceof EnhancedProjection ?
+				( ( EnhancedProjection ) projection ).getColumnAliases( alias, loc, criteria, criteriaQuery ) :
+				projection.getColumnAliases( alias, loc );
 	}
 
 	public Type[] getTypes(String alias, Criteria criteria, CriteriaQuery criteriaQuery) {
@@ -134,7 +165,7 @@ public class ProjectionList implements Projection {
 	public int getLength() {
 		return elements.size();
 	}
-	
+
 	public String toString() {
 		return elements.toString();
 	}

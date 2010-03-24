@@ -42,6 +42,7 @@ import org.hibernate.LockMode;
 import org.hibernate.MappingException;
 import org.hibernate.QueryException;
 import org.hibernate.LockOptions;
+import org.hibernate.criterion.EnhancedProjection;
 import org.hibernate.hql.ast.util.SessionFactoryHelper;
 import org.hibernate.criterion.CriteriaQuery;
 import org.hibernate.criterion.Criterion;
@@ -362,7 +363,9 @@ public class CriteriaQueryTranslator implements CriteriaQuery {
 	}
 
 	public String[] getProjectedColumnAliases() {
-		return rootCriteria.getProjection().getColumnAliases( 0 );
+		return rootCriteria.getProjection() instanceof EnhancedProjection ?
+				( ( EnhancedProjection ) rootCriteria.getProjection() ).getColumnAliases( 0, rootCriteria, this ) :
+				rootCriteria.getProjection().getColumnAliases( 0 );
 	}
 
 	public String[] getProjectedAliases() {
@@ -426,10 +429,13 @@ public class CriteriaQueryTranslator implements CriteriaQuery {
 
 		//first look for a reference to a projection alias
 		final Projection projection = rootCriteria.getProjection();
-		String[] projectionColumns = projection == null ?
-		                             null :
-		                             projection.getColumnAliases( propertyName, 0 );
-
+		String[] projectionColumns = null;
+		if ( projection != null ) {
+			projectionColumns = ( projection instanceof EnhancedProjection ?
+					( ( EnhancedProjection ) projection ).getColumnAliases( propertyName, 0, rootCriteria, this ) :
+					projection.getColumnAliases( propertyName, 0 )
+			);
+		}
 		if ( projectionColumns == null ) {
 			//it does not refer to an alias of a projection,
 			//look for a property

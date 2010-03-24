@@ -10,21 +10,41 @@
 			<generator class="assigned"/>
 		</id>
 		<property name="description"/>
+        <set name="courseMeetings" inverse="true" cascade="all-delete-orphan">
+            <key column="courseCode"/>
+            <one-to-many class="CourseMeeting"/>
+        </set>
 	</class>
-	
+
+    <class name="CourseMeeting">
+        <composite-id name="id" class="CourseMeetingId">
+            <key-property name="courseCode"/>
+            <key-property name="day"/>
+            <key-property name="period"/>
+            <key-property name="location"/>
+        </composite-id>
+        <many-to-one name="course" insert="false" update="false">
+            <column name="courseCode"/>
+        </many-to-one>
+    </class>
+
 	<class name="Student">
 		<id name="studentNumber">
 		    <column name="studentId"/>
 			<generator class="assigned"/>
 		</id>
 		<property name="name" not-null="true"/>
+        <component name="cityState">
+		    <property name="city" column="address_city"/>
+            <property name="state" column="address_state"/>
+        </component>
 		<set name="enrolments" inverse="true" cascade="delete">
 			<key column="studentId"/>
 			<one-to-many class="Enrolment"/>
 		</set>
         <many-to-one name="preferredCourse" column="preferredCourseCode"/>
 	</class>
-	
+
 	<class name="Enrolment">
 		<composite-id>
 			<key-property name="studentNumber">

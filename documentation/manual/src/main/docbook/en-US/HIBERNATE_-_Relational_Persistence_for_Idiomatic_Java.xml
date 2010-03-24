@@ -80,6 +80,7 @@
     <xi:include href="content/inheritance_mapping.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
 
     <xi:include href="content/session_api.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+    <xi:include href="content/readonly.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
     <xi:include href="content/transactions.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
     <xi:include href="content/events.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
     <xi:include href="content/batch.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />

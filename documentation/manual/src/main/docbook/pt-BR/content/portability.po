@@ -108,7 +108,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: portability\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2010-03-12T00:03:47\n"
+"POT-Creation-Date: 2010-03-25 06:26+0000\n"
 "PO-Revision-Date: 2010-03-18 15:20+1000\n"
 "Last-Translator: \n"
 "Language-Team:  <en@li.org>\n"
@@ -118,16 +118,19 @@ msgstr ""
 "X-Generator: KBabel 1.11.4\n"
 
 #. Tag: title
+#: portability.xml:31
 #, no-c-format
 msgid "Database Portability Considerations"
 msgstr "Considerações da Portabilidade do Banco de Dados"
 
 #. Tag: title
+#: portability.xml:34
 #, no-c-format
 msgid "Portability Basics"
 msgstr "Fundamentos da Portabilidade"
 
 #. Tag: para
+#: portability.xml:36
 #, no-c-format
 msgid ""
 "One of the selling points of Hibernate (and really Object/Relational Mapping "
@@ -151,11 +154,13 @@ msgstr ""
 "ao metadados de mapeamento."
 
 #. Tag: title
+#: portability.xml:47
 #, no-c-format
 msgid "Dialect"
 msgstr "Dialeto"
 
 #. Tag: para
+#: portability.xml:49
 #, no-c-format
 msgid ""
 "The first line of portability for Hibernate is the dialect, which is a "
@@ -177,11 +182,13 @@ msgstr ""
 "está seguindo os mesmos, não será difícil escrever o seu próprio."
 
 #. Tag: title
+#: portability.xml:60
 #, no-c-format
 msgid "Dialect resolution"
 msgstr "Resolução do Dialeto"
 
 #. Tag: para
+#: portability.xml:62
 #, no-c-format
 msgid ""
 "Originally, Hibernate would always require that users specify which dialect "
@@ -198,6 +205,7 @@ msgstr ""
 "determinação do valor."
 
 #. Tag: para
+#: portability.xml:69
 #, no-c-format
 msgid ""
 "Starting with version 3.2, Hibernate introduced the notion of automatically "
@@ -215,42 +223,44 @@ msgstr ""
 "com antecedência e que em ocasião alguma era configurável ou substituível."
 
 #. Tag: para
-#, no-c-format
+#: portability.xml:77
+#, fuzzy, no-c-format
 msgid ""
 "Starting with version 3.3, Hibernate has a fare more powerful way to "
 "automatically determine which dialect to should be used by relying on a "
 "series of delegates which implement the <interfacename>org.hibernate.dialect."
 "resolver.DialectResolver</interfacename> which defines only a single method:"
-"<programlisting role=\"JAVA\">public Dialect resolveDialect(DatabaseMetaData "
-"metaData) throws JDBCConnectionException</programlisting>. The basic "
-"contract here is that if the resolver 'understands' the given database "
-"metadata then it returns the corresponding Dialect; if not it returns null "
-"and the process continues to the next resolver. The signature also "
-"identifies <exceptionname>org.hibernate.exception.JDBCConnectionException</"
-"exceptionname> as possibly being thrown. A JDBCConnectionException here is "
-"interpreted to imply a \"non transient\" (aka non-recoverable) connection "
-"problem and is used to indicate an immediate stop to resolution attempts. "
-"All other exceptions result in a warning and continuing on to the next "
-"resolver."
+"<programlisting role=\"JAVA\"><![CDATA[public Dialect resolveDialect"
+"(DatabaseMetaData metaData) throws JDBCConnectionException]]></"
+"programlisting>. The basic contract here is that if the resolver "
+"'understands' the given database metadata then it returns the corresponding "
+"Dialect; if not it returns null and the process continues to the next "
+"resolver. The signature also identifies <exceptionname>org.hibernate."
+"exception.JDBCConnectionException</exceptionname> as possibly being thrown. "
+"A JDBCConnectionException here is interpreted to imply a \"non transient"
+"\" (aka non-recoverable) connection problem and is used to indicate an "
+"immediate stop to resolution attempts. All other exceptions result in a "
+"warning and continuing on to the next resolver."
 msgstr ""
 "Inicializando com a versão 3.3, o Hibernate possui uma maneira muito mais "
 "potente para determinar automaticamente qual dialeto deve ser usado baseando-"
 "se numa série de delegações que determinam qual implementação deve ser usada "
 "baseando-se numa série de delegações que implementam o <interfacename>org."
 "hibernate.dialect.resolver.DialectResolver</interfacename> que define apenas "
-"um método único: <programlisting role=\"JAVA\">public Dialect resolveDialect(DatabaseMetaData "
-"metaData) throws JDBCConnectionException</programlisting>. Este contrato básico é que se o solucionador 'entender' o "
-"metadados do banco de dados dado, ele retornará o Dialeto correspondente. "
-"Caso contrário, ele retornará nulo e o processo continuará ao próximo "
-"solucionador. A assinatura também identifica o <exceptionname>org.hibernate."
-"exception.JDBCConnectionException</exceptionname> como possivelmente "
-"lançado. Neste caso, o JDBCConnectionException é interpretado para implicar "
-"um problema de conexão (também conhecida com não-recuperável) \"não "
-"transiente\" e é usado para indicar uma parada imediata de tentativas de "
-"resolução. Todas as demais exceções resultam num aviso e dão continuidade ao "
-"próximo solucionador. "
+"um método único: <programlisting role=\"JAVA\">public Dialect resolveDialect"
+"(DatabaseMetaData metaData) throws JDBCConnectionException</programlisting>. "
+"Este contrato básico é que se o solucionador 'entender' o metadados do banco "
+"de dados dado, ele retornará o Dialeto correspondente. Caso contrário, ele "
+"retornará nulo e o processo continuará ao próximo solucionador. A assinatura "
+"também identifica o <exceptionname>org.hibernate.exception."
+"JDBCConnectionException</exceptionname> como possivelmente lançado. Neste "
+"caso, o JDBCConnectionException é interpretado para implicar um problema de "
+"conexão (também conhecida com não-recuperável) \"não transiente\" e é usado "
+"para indicar uma parada imediata de tentativas de resolução. Todas as demais "
+"exceções resultam num aviso e dão continuidade ao próximo solucionador. "
 
 #. Tag: para
+#: portability.xml:90
 #, no-c-format
 msgid ""
 "The cool part about these resolvers is that users can also register their "
@@ -277,12 +287,14 @@ msgstr ""
 "constant> no <classname>org.hibernate.cfg.Environment</classname>)."
 
 #. Tag: title
+#: portability.xml:103
 #, no-c-format
 msgid "Identifier generation"
 msgstr "Geração do identificador"
 
 #. Tag: para
-#, no-c-format
+#: portability.xml:105
+#, fuzzy, no-c-format
 msgid ""
 "When considering portability between databases, another important decision "
 "is selecting the identifier generation stratagy you want to use. Originally "
@@ -300,7 +312,10 @@ msgid ""
 "reference entities within a persistence context it must then issue the "
 "insert immediately when the users requests the entitiy be associated with "
 "the session (like via save() e.g.) regardless of current transactional "
-"semantics."
+"semantics. <note> <para> Hibernate was changed slightly once the implication "
+"of this was better understood so that the insert is delayed in cases where "
+"that is feasible. </para> </note> The underlying issue is that the actual "
+"semanctics of the application itself changes in these cases."
 msgstr ""
 "Quando considerando a portabilidade entre os bancos de dados, outra "
 "importante decisão é selecionar a estratégia de geração do identificador que "
@@ -322,76 +337,44 @@ msgstr ""
 "semânticas de transação atual. "
 
 #. Tag: para
-#, no-c-format
-msgid ""
-"Hibernate was changed slightly once the implication of this was better "
-"understood so that the insert is delayed in cases where that is feasible."
-msgstr ""
-"O Hibernate foi atualizado para que a inserção seja lenta em casos em que "
-"isto é possível, sendo desta forma melhor compreendido. "
-
-#. Tag: note
-#, no-c-format
-msgid ""
-"The underlying issue is that the actual semanctics of the application itself "
-"changes in these cases."
-msgstr "O problema adjacente é que as semânticas atuais do próprio aplicativo altere nestes casos."
-
-#. Tag: para
+#: portability.xml:130
 #, no-c-format
 msgid ""
 "Starting with version 3.2.3, Hibernate comes with a set of <ulink url="
 "\"http://in.relation.to/2082.lace\">enhanced</ulink> identifier generators "
-"targetting portability in a much different way."
+"targetting portability in a much different way. <note> <para> There are "
+"specifically 2 bundled <emphasis>enhanced</emphasis>generators: "
+"<itemizedlist> <listitem> <para> <classname>org.hibernate.id.enhanced."
+"SequenceStyleGenerator</classname> </para> </listitem> <listitem> <para> "
+"<classname>org.hibernate.id.enhanced.TableGenerator</classname> </para> </"
+"listitem> </itemizedlist> </para> </note> The idea behind these generators "
+"is to port the actual semantics of the identifer value generation to the "
+"different databases. For example, the <classname>org.hibernate.id.enhanced."
+"SequenceStyleGenerator</classname> mimics the behavior of a sequence on "
+"databases which do not support sequences by using a table."
 msgstr ""
-"Starting with version 3.2.3, Hibernate comes with a set of <ulink url="
-"\"http://in.relation.to/2082.lace\">enhanced</ulink> identifier generators "
-"targetting portability in a much different way."
-
-#. Tag: para
-#, no-c-format
-msgid "There are specifically 2 bundled <emphasis>enhanced</emphasis>generators:"
-msgstr "There are specifically 2 bundled <emphasis>enhanced</emphasis>generators:"
-
-#. Tag: para
-#, no-c-format
-msgid "<classname>org.hibernate.id.enhanced.SequenceStyleGenerator</classname>"
-msgstr "<classname>org.hibernate.id.enhanced.SequenceStyleGenerator</classname>"
-
-#. Tag: para
-#, no-c-format
-msgid "<classname>org.hibernate.id.enhanced.TableGenerator</classname>"
-msgstr "<classname>org.hibernate.id.enhanced.TableGenerator</classname>"
-
-#. Tag: note
-#, no-c-format
-msgid ""
-"The idea behind these generators is to port the actual semantics of the "
-"identifer value generation to the different databases. For example, the "
-"<classname>org.hibernate.id.enhanced.SequenceStyleGenerator</classname> "
-"mimics the behavior of a sequence on databases which do not support "
-"sequences by using a table."
-msgstr ""
-"The idea behind these generators is to port the actual semantics of the "
-"identifer value generation to the different databases. For example, the "
-"<classname>org.hibernate.id.enhanced.SequenceStyleGenerator</classname> "
-"mimics the behavior of a sequence on databases which do not support "
-"sequences by using a table."
 
 #. Tag: title
+#: portability.xml:159
 #, no-c-format
 msgid "Database functions"
 msgstr "Funções do banco de dados"
 
 #. Tag: para
+#: portability.xml:162
 #, no-c-format
 msgid ""
 "This is an area in Hibernate in need of improvement. In terms of portability "
 "concerns, this function handling currently works pretty well from HQL; "
 "however, it is quite lacking in all other aspects."
-msgstr "Esta é uma área do Hibernate com necessidade de melhoramentos. Este manuseio de função funciona atualmente muito bem com o HQL, quando falamos das preocupações de portabilidade. No entanto, é bastante precária em outros aspectos."
+msgstr ""
+"Esta é uma área do Hibernate com necessidade de melhoramentos. Este manuseio "
+"de função funciona atualmente muito bem com o HQL, quando falamos das "
+"preocupações de portabilidade. No entanto, é bastante precária em outros "
+"aspectos."
 
 #. Tag: para
+#: portability.xml:169
 #, no-c-format
 msgid ""
 "SQL functions can be referenced in many ways by users. However, not all "
@@ -399,9 +382,16 @@ msgid ""
 "mapping a <emphasis>logical</emphasis> function name to a delegate which "
 "knows how to render that particular function, perhaps even using a totally "
 "different physical function call."
-msgstr "As funções SQL podem ser referenciadas em diversas maneiras pelos usuários. No entanto, nem todos os bancos de dados suportam o mesmo conjunto de função. O Hibernate fornece um significado de mapeamento do nome da função <emphasis>lógica</emphasis> para uma delegação que sabe como manusear aquela função em particular, mesmo quando usando uma chamada de função física totalmente diferente."
+msgstr ""
+"As funções SQL podem ser referenciadas em diversas maneiras pelos usuários. "
+"No entanto, nem todos os bancos de dados suportam o mesmo conjunto de "
+"função. O Hibernate fornece um significado de mapeamento do nome da função "
+"<emphasis>lógica</emphasis> para uma delegação que sabe como manusear aquela "
+"função em particular, mesmo quando usando uma chamada de função física "
+"totalmente diferente."
 
 #. Tag: para
+#: portability.xml:175
 #, no-c-format
 msgid ""
 "Technically this function registration is handled through the <classname>org."
@@ -417,6 +407,7 @@ msgstr ""
 "completed as of yet."
 
 #. Tag: para
+#: portability.xml:182
 #, no-c-format
 msgid ""
 "It is sort of implemented such that users can programatically register "
@@ -428,12 +419,62 @@ msgstr ""
 "and those functions will be recognized for HQL."
 
 #. Tag: title
+#: portability.xml:192
 #, no-c-format
 msgid "Type mappings"
 msgstr "Tipos de mapeamentos"
 
 #. Tag: para
+#: portability.xml:194
 #, no-c-format
 msgid "This section scheduled for completion at a later date..."
 msgstr "A seção está esquematizada para finalização numa data posterior..."
 
+#~ msgid ""
+#~ "Hibernate was changed slightly once the implication of this was better "
+#~ "understood so that the insert is delayed in cases where that is feasible."
+#~ msgstr ""
+#~ "O Hibernate foi atualizado para que a inserção seja lenta em casos em que "
+#~ "isto é possível, sendo desta forma melhor compreendido. "
+
+#~ msgid ""
+#~ "The underlying issue is that the actual semanctics of the application "
+#~ "itself changes in these cases."
+#~ msgstr ""
+#~ "O problema adjacente é que as semânticas atuais do próprio aplicativo "
+#~ "altere nestes casos."
+
+#~ msgid ""
+#~ "Starting with version 3.2.3, Hibernate comes with a set of <ulink url="
+#~ "\"http://in.relation.to/2082.lace\">enhanced</ulink> identifier "
+#~ "generators targetting portability in a much different way."
+#~ msgstr ""
+#~ "Starting with version 3.2.3, Hibernate comes with a set of <ulink url="
+#~ "\"http://in.relation.to/2082.lace\">enhanced</ulink> identifier "
+#~ "generators targetting portability in a much different way."
+
+#~ msgid ""
+#~ "There are specifically 2 bundled <emphasis>enhanced</emphasis>generators:"
+#~ msgstr ""
+#~ "There are specifically 2 bundled <emphasis>enhanced</emphasis>generators:"
+
+#~ msgid ""
+#~ "<classname>org.hibernate.id.enhanced.SequenceStyleGenerator</classname>"
+#~ msgstr ""
+#~ "<classname>org.hibernate.id.enhanced.SequenceStyleGenerator</classname>"
+
+#~ msgid "<classname>org.hibernate.id.enhanced.TableGenerator</classname>"
+#~ msgstr "<classname>org.hibernate.id.enhanced.TableGenerator</classname>"
+
+#~ msgid ""
+#~ "The idea behind these generators is to port the actual semantics of the "
+#~ "identifer value generation to the different databases. For example, the "
+#~ "<classname>org.hibernate.id.enhanced.SequenceStyleGenerator</classname> "
+#~ "mimics the behavior of a sequence on databases which do not support "
+#~ "sequences by using a table."
+#~ msgstr ""
+#~ "The idea behind these generators is to port the actual semantics of the "
+#~ "identifer value generation to the different databases. For example, the "
+#~ "<classname>org.hibernate.id.enhanced.SequenceStyleGenerator</classname> "
+#~ "mimics the behavior of a sequence on databases which do not support "
+#~ "sequences by using a table."

@@ -297,7 +297,7 @@ msgstr ""
 "<emphasis>saber</emphasis> se é um afunilamento. E não suponha que o uso "
 "direto do JDBC é necessariamente mais rápido. Se você precisar usar "
 "diretamente o JDBC, vale a pena abrir uma <literal>Session</literal> do "
-"Hibernate, embrulhar a sua operaçäo JDBC como um objeto literal>org."
+"Hibernate, embrulhar a sua operaçäo JDBC como um objeto <literal>org."
 "hibernate.jdbc.Work</literal> e usar uma conexão JDBC. De modo que você possa ainda usar a mesma "
 "estratégia de transação e ocultar o provedor a conexão."
 

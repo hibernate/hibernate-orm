@@ -4,11 +4,10 @@ import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.LikeExpression;
 
 public class StringExpression extends LikeExpression {
-    private final static Character ESCAPE_CODE = new Character( '\\' );
 
     protected StringExpression( String property, String value,
             boolean ignoreCase ) {
-        super( property, value, ESCAPE_CODE, ignoreCase );
+        super( property, value, null, ignoreCase );
     }
 
     public static Criterion stringExpression( String propertyName,

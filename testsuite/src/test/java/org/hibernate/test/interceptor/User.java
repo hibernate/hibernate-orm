@@ -11,6 +11,7 @@ public class User {
 	private Set actions = new HashSet();
 	private Calendar lastUpdated;
 	private Calendar created;
+	private String injectedString;
 	
 	public User(String name, String password) {
 		super();
@@ -49,5 +50,11 @@ public class User {
 	}
 	public void setCreated(Calendar created) {
 		this.created = created;
+	}
+	public String getInjectedString() {
+		return injectedString;
+	}
+	public void setInjectedString(String injectedString) {
+		this.injectedString = injectedString;
 	}
 }

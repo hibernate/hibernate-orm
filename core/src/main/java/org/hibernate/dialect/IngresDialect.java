@@ -41,9 +41,10 @@ import org.hibernate.dialect.function.VarArgsSQLFunction;
  * <li> Only supports simple constants or columns on the left side of an IN, making (1,2,3) in (...) or (&lt;subselect&gt;) in (...) non-supported.
  * <li> Supports only 39 digits in decimal.
  * <li> Explicitly set USE_GET_GENERATED_KEYS property to false.
+ * <li> Perform string casts to varchar; removes space padding.
  * </ul>
  * 
- * @author Ian Booth, Bruce Lunsford, Max Rydahl Andersen
+ * @author Ian Booth, Bruce Lunsford, Max Rydahl Andersen, Raymond Fan
  */
 public class IngresDialect extends Dialect {
 
@@ -139,6 +140,10 @@ public class IngresDialect extends Dialect {
 		registerFunction( "uuid_from_char", new StandardSQLFunction( "uuid_from_char", Hibernate.BYTE ) );
 		registerFunction( "uuid_to_char", new StandardSQLFunction( "uuid_to_char", Hibernate.STRING ) );
 		registerFunction( "year", new StandardSQLFunction( "year", Hibernate.INTEGER ) );
+		// Casting to char of numeric values introduces space padding up to the
+		// maximum width of a value for that return type.  Casting to varchar
+		// does not introduce space padding.
+		registerFunction( "str", new SQLFunctionTemplate(Hibernate.STRING, "cast(?1 as varchar)") );
         // Ingres driver supports getGeneratedKeys but only in the following
         // form:
         // The Ingres DBMS returns only a single table key or a single object

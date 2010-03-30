@@ -83,9 +83,12 @@ public class AttributeFactory {
 	 */
 	@SuppressWarnings({ "unchecked" })
 	public <X, Y> AttributeImplementor<X, Y> buildAttribute(AbstractManagedType<X> ownerType, Property property) {
+		if ( isVirtual( property, ownerType ) ) {
+			// hide virtual properties (fabricated by Hibernate) from the JPA metamodel.
+			log.trace(  "Skipping virtual property {}({})", ownerType.getJavaType().getName(), property.getName() );
+			return null;
+		}
 		log.trace( "Building attribute [{}.{}]", ownerType.getJavaType().getName(), property.getName() );
-		//a back ref is a virtual property created by Hibernate, let's hide it from the JPA model.
-		if ( property.isBackRef() ) return null;
 		final AttributeContext<X> attributeContext = wrap( ownerType, property );
 		final AttributeMetadata<X,Y> attributeMetadata =
 				determineAttributeMetadata( attributeContext, NORMAL_MEMBER_RESOLVER );
@@ -109,6 +112,12 @@ public class AttributeFactory {
 					attributeMetadata.getPersistentAttributeType()
 			);
 		}
+	}
+
+	private <X> boolean isVirtual(Property property, AbstractManagedType<X> ownerType) {
+		// back-refs and embedded components are considered virtual
+		return property.isBackRef()
+				|| ( property.isComposite() && ( (Component) property.getValue() ).isEmbedded() );
 	}
 
 	private <X> AttributeContext<X> wrap(final AbstractManagedType<X> ownerType, final Property property) {

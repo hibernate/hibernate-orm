@@ -26,6 +26,7 @@ import org.hibernate.classic.Session;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.HSQLDialect;
+import org.hibernate.dialect.IngresDialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.engine.EntityEntry;
 import org.hibernate.impl.SessionImpl;
@@ -1034,8 +1035,8 @@ public class ParentChildTest extends LegacyTestCase {
 
 	public void testLoadAfterNonExists() throws HibernateException, SQLException {
 		Session session = openSession();
-		if ( (getDialect() instanceof MySQLDialect) ) {
-			session.connection().setTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
+		if ( ( getDialect() instanceof MySQLDialect ) || ( getDialect() instanceof IngresDialect ) ) {
+			session.connection().setTransactionIsolation( Connection.TRANSACTION_READ_COMMITTED );
 		}
 		session.getTransaction().begin();
 

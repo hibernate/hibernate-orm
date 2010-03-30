@@ -23,50 +23,15 @@
  */
 package org.hibernate.mapping;
 
-import org.hibernate.property.BackrefPropertyAccessor;
-import org.hibernate.property.PropertyAccessor;
-
 /**
- * @author Gavin King
+ * Models a property which does not actually exist in the model.  It is created by Hibernate during
+ * the metamodel binding process. 
+ *
+ * @author Steve Ebersole
  */
-public class Backref extends Property {
-	private String collectionRole;
-	private String entityName;
-
-	/**
-	 * {@inheritDoc}
-	 */
-	public boolean isBackRef() {
-		return true;
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
+public class SyntheticProperty extends Property {
+	@Override
 	public boolean isSynthetic() {
 		return true;
-	}
-
-	public String getCollectionRole() {
-		return collectionRole;
-	}
-
-	public void setCollectionRole(String collectionRole) {
-		this.collectionRole = collectionRole;
-	}
-
-	public boolean isBasicPropertyAccessor() {
-		return false;
-	}
-
-	public PropertyAccessor getPropertyAccessor(Class clazz) {
-		return new BackrefPropertyAccessor(collectionRole, entityName);
-	}
-	
-	public String getEntityName() {
-		return entityName;
-	}
-	public void setEntityName(String entityName) {
-		this.entityName = entityName;
 	}
 }

@@ -412,7 +412,7 @@ session.close();
             
             <para>        
                 To throw away non-flushed changes and make the persistent entity 
-                consistent with its database representation, call:            </para>
+                consistent with its database representation, call:           </para>
             <programlisting role="Java">session.refresh( entity );</programlisting>
 
             <para>

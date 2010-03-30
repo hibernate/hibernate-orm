@@ -203,6 +203,7 @@ public class AvailableSettings {
 	 * by a dot.  For example<code>Query.setHint( "org.hibernate.lockMode.a", someLockMode )</code>
 	 * would apply <code>someLockMode</code> to the alias <code>"a"</code>.
 	 */
+	//Use the org.hibernate prefix. instead of hibernate. as it is a query hint se QueryHints
 	public static final String ALIAS_SPECIFIC_LOCK_MODE = "org.hibernate.lockMode";
 
 	/**
@@ -272,6 +273,7 @@ public class AvailableSettings {
 	/**
 	 * Used to determine flush mode.
 	 */
+	//Use the org.hibernate prefix. instead of hibernate. as it is a query hint se QueryHints
 	public static final String FLUSH_MODE = "org.hibernate.flushMode";
 
 	/**

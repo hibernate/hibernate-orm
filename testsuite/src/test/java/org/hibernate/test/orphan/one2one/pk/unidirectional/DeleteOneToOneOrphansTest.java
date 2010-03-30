@@ -72,6 +72,12 @@ public class DeleteOneToOneOrphansTest extends FunctionalTestCase {
 		assertEquals( 1, results.size() );
 		Employee emp = ( Employee ) results.get( 0 );
 		assertNotNull( emp.getInfo() );
+		results = session.createQuery( "from Employee e, EmployeeInfo i where e.info = i" ).list();
+		assertEquals( 1, results.size() );
+		Object [] result = ( Object [] ) results.get( 0 );
+		emp = ( Employee ) result[ 0 ];
+		assertNotNull( result[ 1 ] );
+		assertSame( emp.getInfo(), result[ 1 ] );
 		emp.setInfo( null );
 		session.getTransaction().commit();
 		session.close();

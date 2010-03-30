@@ -23,6 +23,7 @@
  */
 package org.hibernate.hql.ast.tree;
 
+import org.hibernate.type.OneToOneType;
 import org.hibernate.type.Type;
 import org.hibernate.Hibernate;
 import org.hibernate.TypeMismatchException;
@@ -80,8 +81,8 @@ public class BinaryLogicOperatorNode extends HqlSqlWalkerNode implements BinaryO
 		// resolve an expected type
 		SessionFactoryImplementor sessionFactory = getSessionFactoryHelper().getFactory();
 		if ( lhsType != null && rhsType != null ) {
-			int lhsColumnSpan = lhsType.getColumnSpan( sessionFactory );
-			if ( lhsColumnSpan != rhsType.getColumnSpan( sessionFactory ) ) {
+			int lhsColumnSpan = getColumnSpan( lhsType, sessionFactory );
+			if ( lhsColumnSpan != getColumnSpan( rhsType, sessionFactory ) ) {
 				throw new TypeMismatchException(
 						"left and right hand sides of a binary logic operator were incompatibile [" +
 						lhsType.getName() + " : "+ rhsType.getName() + "]"
@@ -95,6 +96,14 @@ public class BinaryLogicOperatorNode extends HqlSqlWalkerNode implements BinaryO
 				}
 			}
 		}
+	}
+
+	private int getColumnSpan(Type type, SessionFactoryImplementor sfi) {
+		int columnSpan = type.getColumnSpan( sfi );
+		if ( columnSpan == 0 && type instanceof OneToOneType ) {
+			columnSpan = ( ( OneToOneType ) type ).getIdentifierOrUniqueKeyType( sfi ).getColumnSpan( sfi );
+		}
+		return columnSpan;
 	}
 
 	/**

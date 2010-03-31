@@ -140,20 +140,20 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
 
         <programlistingco role="XML">
             <areaspec>
-                <area id="mappingcollection1" coords="2 65"/>
-                <area id="mappingcollection2" coords="3 65"/>
-                <area id="mappingcollection3" coords="4 65"/>
-                <area id="mappingcollection4" coords="5 65"/>
-                <area id="mappingcollection5" coords="6 65"/>
-                <area id="mappingcollection6" coords="7 65"/>
-                <area id="mappingcollection7" coords="8 65"/>
-                <area id="mappingcollection8" coords="9 65"/>
-                <area id="mappingcollection9" coords="10 65"/>
-                <area id="mappingcollection10" coords="11 65"/>
-                <area id="mappingcollection11" coords="12 65"/>
-                <area id="mappingcollection12" coords="13 65"/>
-                <area id="mappingcollection13" coords="14 65"/>
-                <area id="mappingcollection14" coords="15 65"/>
+                <area id="mappingcollection1" coords="2"/>
+                <area id="mappingcollection2" coords="3"/>
+                <area id="mappingcollection3" coords="4"/>
+                <area id="mappingcollection4" coords="5"/>
+                <area id="mappingcollection5" coords="6"/>
+                <area id="mappingcollection6" coords="7"/>
+                <area id="mappingcollection7" coords="8"/>
+                <area id="mappingcollection8" coords="9"/>
+                <area id="mappingcollection9" coords="10"/>
+                <area id="mappingcollection10" coords="11"/>
+                <area id="mappingcollection11" coords="12"/>
+                <area id="mappingcollection12" coords="13"/>
+                <area id="mappingcollection13" coords="14"/>
+                <area id="mappingcollection14" coords="15"/>
             </areaspec>
             <programlisting role="XML"><![CDATA[<map
     name="propertyName"
@@ -348,8 +348,8 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
 
         <programlistingco role="XML">
             <areaspec>
-                <area id="index1" coords="2 45"/>
-                <area id="index2" coords="3 45"/>
+                <area id="index1" coords="2"/>
+                <area id="index2" coords="3"/>
              </areaspec>
             <programlisting role="XML"><![CDATA[<list-index
         column="column_name"
@@ -372,9 +372,9 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
 
         <programlistingco role="XML">
             <areaspec>
-                <area id="mapkey1" coords="2 45"/>
-                <area id="mapkey2" coords="3 45"/>
-                <area id="mapkey3" coords="4 45"/>
+                <area id="mapkey1" coords="2"/>
+                <area id="mapkey2" coords="3"/>
+                <area id="mapkey3" coords="4"/>
              </areaspec>
             <programlisting role="XML"><![CDATA[<map-key
         column="column_name"
@@ -405,9 +405,9 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
 
         <programlistingco role="XML">
             <areaspec>
-                <area id="indexmanytomany1" coords="2 45"/>
-                <area id="indexmanytomany2" coords="3 45"/>
-                <area id="indexmanytomany3" coords="3 45"/>
+                <area id="indexmanytomany1" coords="2"/>
+                <area id="indexmanytomany2" coords="3"/>
+                <area id="indexmanytomany3" coords="3"/>
              </areaspec>
             <programlisting role="XML"><![CDATA[<map-key-many-to-many
         column="column_name"
@@ -461,9 +461,9 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
 
         <programlistingco role="XML">
             <areaspec>
-                <area id="element1b" coords="2 50"/>
-                <area id="element2b" coords="3 50"/>
-                <area id="element3b" coords="4 50"/>
+                <area id="element1b" coords="2"/>
+                <area id="element2b" coords="3"/>
+                <area id="element3b" coords="4"/>
              </areaspec>
             <programlisting role="XML"><![CDATA[<element
         column="column_name"
@@ -504,14 +504,14 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
 
         <programlistingco role="XML">
             <areaspec>
-                <area id="manytomany1" coords="2 60"/>
-                <area id="manytomany2" coords="3 60"/>
-                <area id="manytomany3" coords="4 60"/>
-                <area id="manytomany4" coords="5 60"/>
-                <area id="manytomany5" coords="6 60"/>
-                <area id="manytomany6" coords="7 60"/>
-                <area id="manytomany7" coords="8 60"/>
-                <area id="manytomany8" coords="9 60"/>
+                <area id="manytomany1" coords="2"/>
+                <area id="manytomany2" coords="3"/>
+                <area id="manytomany3" coords="4"/>
+                <area id="manytomany4" coords="5"/>
+                <area id="manytomany5" coords="6"/>
+                <area id="manytomany6" coords="7"/>
+                <area id="manytomany7" coords="8"/>
+                <area id="manytomany8" coords="9"/>
             </areaspec>
             <programlisting role="XML"><![CDATA[<many-to-many
         column="column_name"
@@ -682,9 +682,9 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
 
         <programlistingco role="XML">
             <areaspec>
-                <area id="onetomany1" coords="2 60"/>
-                <area id="onetomany2" coords="3 60"/>
-                <area id="onetomany3" coords="4 60"/>
+                <area id="onetomany1" coords="2"/>
+                <area id="onetomany2" coords="3"/>
+                <area id="onetomany3" coords="4"/>
             </areaspec>
             <programlisting role="XML"><![CDATA[<one-to-many
         class="ClassName"

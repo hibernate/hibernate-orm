@@ -197,13 +197,13 @@
 
              <programlistingco role="XML">
                  <areaspec>
-                     <area id="hm1" coords="2 55"/>
-                     <area id="hm2" coords="3 55"/>
-                     <area id="hm3" coords="4 55"/>
-                     <area id="hm4" coords="5 55"/>
-                     <area id="hm5" coords="6 55"/>
-                     <area id="hm6" coords="7 55"/>
-                     <area id="hm7" coords="8 55"/>
+                     <area id="hm1" coords="2"/>
+                     <area id="hm2" coords="3"/>
+                     <area id="hm3" coords="4"/>
+                     <area id="hm4" coords="5"/>
+                     <area id="hm5" coords="6"/>
+                     <area id="hm6" coords="7"/>
+                     <area id="hm7" coords="8"/>
                  </areaspec>
                  <programlisting role="XML"><![CDATA[<hibernate-mapping
          schema="schemaName"
@@ -288,27 +288,27 @@
 
             <programlistingco role="XML">
                 <areaspec>
-                    <area id="class1" coords="2 55"/>
-                    <area id="class2" coords="3 55" />
-                    <area id="class3" coords="4 55"/>
-                    <area id="class4" coords="5 55" />
-                    <area id="class5" coords="6 55"/>
-                    <area id="class6" coords="7 55" />
-                    <area id="class7" coords="8 55"/>
-                    <area id="class8" coords="9 55" />
-                    <area id="class9" coords="10 55" />
-                    <area id="class10" coords="11 55"/>
-                    <area id="class11" coords="12 55"/>
-                    <area id="class12" coords="13 55"/>
-                    <area id="class13" coords="14 55"/>
-                    <area id="class14" coords="15 55"/>
-                    <area id="class15" coords="16 55"/>
-                    <area id="class16" coords="17 55"/>
-                    <area id="class17" coords="18 55"/>
-                    <area id="class18" coords="19 55"/>
-                    <area id="class19" coords="20 55"/>
-                    <area id="class20" coords="21 55"/>
-                    <area id="class21" coords="22 55"/>
+                    <area id="class1" coords="2"/>
+                    <area id="class2" coords="3" />
+                    <area id="class3" coords="4"/>
+                    <area id="class4" coords="5" />
+                    <area id="class5" coords="6"/>
+                    <area id="class6" coords="7" />
+                    <area id="class7" coords="8"/>
+                    <area id="class8" coords="9" />
+                    <area id="class9" coords="10" />
+                    <area id="class10" coords="11"/>
+                    <area id="class11" coords="12"/>
+                    <area id="class12" coords="13"/>
+                    <area id="class13" coords="14"/>
+                    <area id="class14" coords="15"/>
+                    <area id="class15" coords="16"/>
+                    <area id="class16" coords="17"/>
+                    <area id="class17" coords="18"/>
+                    <area id="class18" coords="19"/>
+                    <area id="class19" coords="20"/>
+                    <area id="class20" coords="21"/>
+                    <area id="class21" coords="22"/>
                 </areaspec>
                 <programlisting role="XML"><![CDATA[<class
         name="ClassName"
@@ -608,11 +608,11 @@
 
             <programlistingco role="XML">
                 <areaspec>
-                    <area id="id1" coords="2 70"/>
-                    <area id="id2" coords="3 70" />
-                    <area id="id3" coords="4 70"/>
-                    <area id="id4" coords="5 70" />
-                    <area id="id5" coords="6 70" />
+                    <area id="id1" coords="2"/>
+                    <area id="id2" coords="3" />
+                    <area id="id3" coords="4"/>
+                    <area id="id4" coords="5" />
+                    <area id="id5" coords="6" />
                 </areaspec>
                 <programlisting role="XML"><![CDATA[<id
         name="propertyName"
@@ -1234,11 +1234,11 @@
 
             <programlistingco role="XML">
                 <areaspec>
-                    <area id="discriminator1" coords="2 60"/>
-                    <area id="discriminator2" coords="3 60" />
-                    <area id="discriminator3" coords="4 60" />
-                    <area id="discriminator4" coords="5 60" />
-                    <area id="discriminator5" coords="6 60" />
+                    <area id="discriminator1" coords="2"/>
+                    <area id="discriminator2" coords="3" />
+                    <area id="discriminator3" coords="4" />
+                    <area id="discriminator4" coords="5" />
+                    <area id="discriminator5" coords="6" />
                 </areaspec>
                 <programlisting role="XML"><![CDATA[<discriminator
         column="discriminator_column"
@@ -1318,13 +1318,13 @@
 
             <programlistingco role="XML">
                 <areaspec>
-                    <area id="version1" coords="2 70"/>
-                    <area id="version2" coords="3 70"/>
-                    <area id="version3" coords="4 70"/>
-                    <area id="version4" coords="5 70"/>
-                    <area id="version5" coords="6 70"/>
-                    <area id="version6" coords="7 70"/>
-                    <area id="version7" coords="8 70"/>
+                    <area id="version1" coords="2"/>
+                    <area id="version2" coords="3"/>
+                    <area id="version3" coords="4"/>
+                    <area id="version4" coords="5"/>
+                    <area id="version5" coords="6"/>
+                    <area id="version6" coords="7"/>
+                    <area id="version7" coords="8"/>
                 </areaspec>
                 <programlisting role="XML"><![CDATA[<version
         column="version_column"
@@ -1414,12 +1414,12 @@
 
             <programlistingco role="XML">
                 <areaspec>
-                    <area id="timestamp1" coords="2 70"/>
-                    <area id="timestamp2" coords="3 70" />
-                    <area id="timestamp3" coords="4 70" />
-                    <area id="timestamp4" coords="5 70" />
-                    <area id="timestamp5" coords="6 70" />
-                    <area id="timestamp6" coords="7 70" />
+                    <area id="timestamp1" coords="2"/>
+                    <area id="timestamp2" coords="3" />
+                    <area id="timestamp3" coords="4" />
+                    <area id="timestamp4" coords="5" />
+                    <area id="timestamp5" coords="6" />
+                    <area id="timestamp6" coords="7" />
                 </areaspec>
                 <programlisting role="XML"><![CDATA[<timestamp
         column="timestamp_column"
@@ -1505,20 +1505,20 @@
 
             <programlistingco role="XML">
                 <areaspec>
-                    <area id="property1" coords="2 70"/>
-                    <area id="property2" coords="3 70"/>
-                    <area id="property3" coords="4 70"/>
+                    <area id="property1" coords="2"/>
+                    <area id="property2" coords="3"/>
+                    <area id="property3" coords="4"/>
                     <areaset id="property4-5" coords="">
-                        <area id="property4" coords='5 70'/>
-                        <area id="property5" coords='6 70'/>
+                        <area id="property4" coords='5'/>
+                        <area id="property5" coords='6'/>
                     </areaset>
-                    <area id="property6" coords="7 70"/>
-                    <area id="property7" coords="8 70"/>
-                    <area id="property8" coords="9 70"/>
-                    <area id="property9" coords="10 70"/>
-                    <area id="property10" coords="11 70"/>
-                    <area id="property11" coords="12 70"/>
-                    <area id="property12" coords="13 70"/>
+                    <area id="property6" coords="7"/>
+                    <area id="property7" coords="8"/>
+                    <area id="property8" coords="9"/>
+                    <area id="property9" coords="10"/>
+                    <area id="property10" coords="11"/>
+                    <area id="property11" coords="12"/>
+                    <area id="property12" coords="13"/>
                 </areaspec>
                 <programlisting role="XML"><![CDATA[<property
         name="propertyName"
@@ -1702,24 +1702,24 @@
 
             <programlistingco role="XML">
                 <areaspec>
-                    <area id="manytoone1" coords="2 70"/>
-                    <area id="manytoone2" coords="3 70"/>
-                    <area id="manytoone3" coords="4 70"/>
-                    <area id="manytoone4" coords="5 70"/>
-                    <area id="manytoone5" coords="6 70"/>
+                    <area id="manytoone1" coords="2"/>
+                    <area id="manytoone2" coords="3"/>
+                    <area id="manytoone3" coords="4"/>
+                    <area id="manytoone4" coords="5"/>
+                    <area id="manytoone5" coords="6"/>
                     <areaset id="manytoone6-7" coords="">
-                        <area id="manytoone6" coords='7 70'/>
-                        <area id="manytoone7" coords='8 70'/>
+                        <area id="manytoone6" coords='7'/>
+                        <area id="manytoone7" coords='8'/>
                     </areaset>
-                    <area id="manytoone8" coords="9 70"/>
-                    <area id="manytoone9" coords="10 70"/>
-                    <area id="manytoone10" coords="11 70"/>
-                    <area id="manytoone11" coords="12 70"/>
-                    <area id="manytoone12" coords="13 70"/>
-                    <area id="manytoone13" coords="14 70"/>
-                    <area id="manytoone14" coords="15 70"/>
-                    <area id="manytoone15" coords="16 70"/>
-                    <area id="manytoone16" coords="17 70"/>
+                    <area id="manytoone8" coords="9"/>
+                    <area id="manytoone9" coords="10"/>
+                    <area id="manytoone10" coords="11"/>
+                    <area id="manytoone11" coords="12"/>
+                    <area id="manytoone12" coords="13"/>
+                    <area id="manytoone13" coords="14"/>
+                    <area id="manytoone14" coords="15"/>
+                    <area id="manytoone15" coords="16"/>
+                    <area id="manytoone16" coords="17"/>
                 </areaspec>
                 <programlisting role="XML"><![CDATA[<many-to-one
         name="propertyName"
@@ -1913,16 +1913,16 @@
 
             <programlistingco role="XML">
                 <areaspec>
-                    <area id="onetoone1" coords="2 70"/>
-                    <area id="onetoone2" coords="3 70"/>
-                    <area id="onetoone3" coords="4 70"/>
-                    <area id="onetoone4" coords="5 70"/>
-                    <area id="onetoone5" coords="6 70"/>
-                    <area id="onetoone6" coords="7 70"/>
-                    <area id="onetoone7" coords="8 70"/>
-                    <area id="onetoone8" coords="9 70"/>
-                    <area id="onetoone9" coords="10 70"/>
-                    <area id="onetoone10" coords="11 70"/>
+                    <area id="onetoone1" coords="2"/>
+                    <area id="onetoone2" coords="3"/>
+                    <area id="onetoone3" coords="4"/>
+                    <area id="onetoone4" coords="5"/>
+                    <area id="onetoone5" coords="6"/>
+                    <area id="onetoone6" coords="7"/>
+                    <area id="onetoone7" coords="8"/>
+                    <area id="onetoone8" coords="9"/>
+                    <area id="onetoone9" coords="10"/>
+                    <area id="onetoone10" coords="11"/>
                 </areaspec>
                 <programlisting role="XML"><![CDATA[<one-to-one
         name="propertyName"
@@ -2129,14 +2129,14 @@
 
             <programlistingco role="XML">
                 <areaspec>
-                    <area id="component1" coords="2 45"/>
-                    <area id="component2" coords="3 45"/>
-                    <area id="component3" coords="4 45"/>
-                    <area id="component4" coords="5 45"/>
-                    <area id="component5" coords="6 45"/>
-                    <area id="component6" coords="7 45"/>
-                    <area id="component7" coords="8 45"/>
-                    <area id="component8" coords="9 45"/>
+                    <area id="component1" coords="2"/>
+                    <area id="component2" coords="3"/>
+                    <area id="component3" coords="4"/>
+                    <area id="component4" coords="5"/>
+                    <area id="component5" coords="6"/>
+                    <area id="component6" coords="7"/>
+                    <area id="component7" coords="8"/>
+                    <area id="component8" coords="9"/>
                 </areaspec>
                 <programlisting role="XML"><![CDATA[<component
         name="propertyName"
@@ -2241,11 +2241,11 @@
 
             <programlistingco role="XML">
                 <areaspec>
-                    <area id="properties1" coords="2 45"/>
-                    <area id="properties2" coords="3 45"/>
-                    <area id="properties3" coords="4 45"/>
-                    <area id="properties4" coords="5 45"/>
-                    <area id="properties5" coords="6 45"/>
+                    <area id="properties1" coords="2"/>
+                    <area id="properties2" coords="3"/>
+                    <area id="properties3" coords="4"/>
+                    <area id="properties4" coords="5"/>
+                    <area id="properties5" coords="6"/>
                 </areaspec>
                 <programlisting role="XML"><![CDATA[<properties
         name="logicalName"
@@ -2342,10 +2342,10 @@
 
             <programlistingco role="XML">
                 <areaspec>
-                    <area id="subclass1" coords="2 55"/>
-                    <area id="subclass2" coords="3 55"/>
-                    <area id="subclass3" coords="4 55"/>
-                    <area id="subclass4" coords="5 55"/>
+                    <area id="subclass1" coords="2"/>
+                    <area id="subclass2" coords="3"/>
+                    <area id="subclass3" coords="4"/>
+                    <area id="subclass4" coords="5"/>
                 </areaspec>
                 <programlisting role="XML"><![CDATA[<subclass
         name="ClassName"
@@ -2413,10 +2413,10 @@
 
             <programlistingco role="XML">
                 <areaspec>
-                    <area id="joinedsubclass1" coords="2 45"/>
-                    <area id="joinedsubclass2" coords="3 45"/>
-                    <area id="joinedsubclass3" coords="4 45"/>
-                    <area id="joinedsubclass4" coords="5 45"/>
+                    <area id="joinedsubclass1" coords="2"/>
+                    <area id="joinedsubclass2" coords="3"/>
+                    <area id="joinedsubclass3" coords="4"/>
+                    <area id="joinedsubclass4" coords="5"/>
                 </areaspec>
                 <programlisting role="XML"><![CDATA[<joined-subclass
         name="ClassName"
@@ -2525,10 +2525,10 @@
 
             <programlistingco role="XML">
                 <areaspec>
-                    <area id="unionsubclass1" coords="2 45"/>
-                    <area id="unionsubclass2" coords="3 45"/>
-                    <area id="unionsubclass3" coords="4 45"/>
-                    <area id="unionsubclass4" coords="5 45"/>
+                    <area id="unionsubclass1" coords="2"/>
+                    <area id="unionsubclass2" coords="3"/>
+                    <area id="unionsubclass3" coords="4"/>
+                    <area id="unionsubclass4" coords="5"/>
                 </areaspec>
                 <programlisting role="XML"><![CDATA[<union-subclass
         name="ClassName"
@@ -2595,12 +2595,12 @@
 
             <programlistingco role="XML">
                 <areaspec>
-                    <area id="join1" coords="2 50"/>
-                    <area id="join2" coords="3 50"/>
-                    <area id="join3" coords="4 50"/>
-                    <area id="join4" coords="5 50"/>
-                    <area id="join5" coords="6 50"/>
-                    <area id="join6" coords="7 50"/>
+                    <area id="join1" coords="2"/>
+                    <area id="join2" coords="3"/>
+                    <area id="join3" coords="4"/>
+                    <area id="join4" coords="5"/>
+                    <area id="join5" coords="6"/>
+                    <area id="join6" coords="7"/>
                 </areaspec>
                 <programlisting role="XML"><![CDATA[<join
         table="tablename"
@@ -2703,12 +2703,12 @@
 
             <programlistingco role="XML">
                 <areaspec>
-                    <area id="key1" coords="2 50"/>
-                    <area id="key2" coords="3 50"/>
-                    <area id="key3" coords="4 50"/>
-                    <area id="key4" coords="5 50"/>                               
-                    <area id="key5" coords="6 50"/>
-                    <area id="key6" coords="7 50"/>
+                    <area id="key1" coords="2"/>
+                    <area id="key2" coords="3"/>
+                    <area id="key3" coords="4"/>
+                    <area id="key4" coords="5"/>
+                    <area id="key5" coords="6"/>
+                    <area id="key6" coords="7"/>
                 </areaspec>
                 <programlisting role="XML"><![CDATA[<key
         column="columnname"
@@ -2842,8 +2842,8 @@
 
             <programlistingco role="XML">
                 <areaspec>
-                    <area id="import1" coords="2 40"/>
-                    <area id="import2" coords="3 40"/>
+                    <area id="import1" coords="2"/>
+                    <area id="import2" coords="3"/>
                 </areaspec>
                 <programlisting role="XML"><![CDATA[<import
         class="ClassName"
@@ -2896,12 +2896,12 @@
 
             <programlistingco role="XML">
                 <areaspec>
-                    <area id="any1" coords="2 50"/>
-                    <area id="any2" coords="3 50"/>
-                    <area id="any3" coords="4 50"/>
-                    <area id="any4" coords="5 50"/>
-                    <area id="any5" coords="6 50"/>
-                    <area id="any6" coords="7 50"/>
+                    <area id="any1" coords="2"/>
+                    <area id="any2" coords="3"/>
+                    <area id="any3" coords="4"/>
+                    <area id="any4" coords="5"/>
+                    <area id="any5" coords="6"/>
+                    <area id="any6" coords="7"/>
                 </areaspec>
                 <programlisting role="XML"><![CDATA[<any
         name="propertyName"

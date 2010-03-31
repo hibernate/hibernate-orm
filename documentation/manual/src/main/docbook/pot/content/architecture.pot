@@ -4,8 +4,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: 0\n"
-"POT-Creation-Date: 2010-02-11T05:38:14\n"
-"PO-Revision-Date: 2010-02-11T05:38:14\n"
+"POT-Creation-Date: 2010-03-31T00:33:04\n"
+"PO-Revision-Date: 2010-03-31T00:33:04\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: None\n"
 "MIME-Version: 1.0\n"
@@ -264,7 +264,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "The first two implementations provide a \"one session - one database transaction\" programming model. This is also also known and used as <emphasis>session-per-request</emphasis>. The beginning and end of a Hibernate session is defined by the duration of a database transaction. If you use programmatic transaction demarcation in plain JSE without JTA, you are advised to use the Hibernate <literal>Transaction</literal> API to hide the underlying transaction system from your code. If you use JTA, you can utilize the JTA interfaces to demarcate transactions. If you execute in an EJB container that supports CMT, transaction boundaries are defined declaratively and you do not need any transaction or session demarcation operations in your code. Refer to <xref linkend=\"transactions\" /> for more information and code examples."
+msgid "The first two implementations provide a \"one session - one database transaction\" programming model. This is also known and used as <emphasis>session-per-request</emphasis>. The beginning and end of a Hibernate session is defined by the duration of a database transaction. If you use programmatic transaction demarcation in plain JSE without JTA, you are advised to use the Hibernate <literal>Transaction</literal> API to hide the underlying transaction system from your code. If you use JTA, you can utilize the JTA interfaces to demarcate transactions. If you execute in an EJB container that supports CMT, transaction boundaries are defined declaratively and you do not need any transaction or session demarcation operations in your code. Refer to <xref linkend=\"transactions\" /> for more information and code examples."
 msgstr ""
 
 #. Tag: para

@@ -91,25 +91,25 @@
 
       <programlistingco>
         <areaspec>
-          <area coords="3 85" id="aa1" />
+          <area coords="3" id="aa1" />
 
-          <area coords="9 85" id="aa2" />
+          <area coords="9" id="aa2" />
 
-          <area coords="10 85" id="aa3" />
+          <area coords="10" id="aa3" />
 
-          <area coords="11 85" id="aa4" />
+          <area coords="11" id="aa4" />
 
-          <area coords="17 85" id="aa5" />
+          <area coords="17" id="aa5" />
 
-          <area coords="23 85" id="aa6" />
+          <area coords="23" id="aa6" />
 
-          <area coords="24 85" id="aa7" />
+          <area coords="24" id="aa7" />
 
-          <area coords="25 85" id="aa8" />
+          <area coords="25" id="aa8" />
 
-          <area coords="26 85" id="aa9" />
+          <area coords="26" id="aa9" />
 
-          <area coords="31 85" id="aa10" />
+          <area coords="31" id="aa10" />
         </areaspec>
 
         <programlisting>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
@@ -238,15 +238,15 @@
 
       <programlistingco>
         <areaspec>
-          <area coords="11 85" id="ab1" />
+          <area coords="11" id="ab1" />
 
-          <area coords="18 85" id="ab2" />
+          <area coords="18" id="ab2" />
 
-          <area coords="22  85" id="ab3" />
+          <area coords="22" id="ab3" />
 
-          <area coords="28 85" id="ab4" />
+          <area coords="28" id="ab4" />
 
-          <area coords="34 85" id="ab5" />
+          <area coords="34" id="ab5" />
         </areaspec>
 
         <programlisting>&lt;?xml version="1.0" encoding="UTF-8"?&gt;

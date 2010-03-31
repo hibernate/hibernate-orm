@@ -823,9 +823,9 @@ Cat fritz = (Cat) iter.next();]]></programlisting>
 
             <programlistingco>
                 <areaspec>
-                    <area id="cache1" coords="2 70"/>
-                    <area id="cache2" coords="3 70"/>
-                    <area id="cache3" coords="4 70"/>
+                    <area id="cache1" coords="2"/>
+                    <area id="cache2" coords="3"/>
+                    <area id="cache3" coords="4"/>
                 </areaspec>
                 <programlisting role="XML"><![CDATA[<cache
     usage="transactional|read-write|nonstrict-read-write|read-only"

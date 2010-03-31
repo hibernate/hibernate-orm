@@ -307,25 +307,25 @@ public String getName() { ... }
 
         <programlistingco>
           <areaspec>
-            <area coords="2 55" id="hm1" />
+            <area coords="2" id="hm1" />
 
-            <area coords="3 55" id="hm2" />
+            <area coords="3" id="hm2" />
 
-            <area coords="4 55" id="hm3" />
+            <area coords="4" id="hm3" />
 
-            <area coords="5 55" id="hm4" />
+            <area coords="5" id="hm4" />
 
-            <area coords="6 55" id="hm5" />
+            <area coords="6" id="hm5" />
 
-            <area coords="7 55" id="hm6" />
+            <area coords="7" id="hm6" />
 
-            <area coords="8 55" id="hm7" />
+            <area coords="8" id="hm7" />
 
-            <area coords="9 55" id="hm8" />
+            <area coords="9" id="hm8" />
 
-            <area coords="10 55" id="hm9" />
+            <area coords="10" id="hm9" />
 
-            <area coords="11 55" id="hm10" />
+            <area coords="11" id="hm10" />
           </areaspec>
 
           <programlisting>@Column(
@@ -3305,11 +3305,11 @@ public class Forest { ... }</programlisting>
 
       <programlistingco>
         <areaspec>
-          <area coords="2 55" id="hm1" />
+          <area coords="2" id="hm1" />
 
-          <area coords="3 55" id="hm2" />
+          <area coords="3" id="hm2" />
 
-          <area coords="4 55" id="hm3" />
+          <area coords="4" id="hm3" />
         </areaspec>
 
         <programlisting>@Cache(

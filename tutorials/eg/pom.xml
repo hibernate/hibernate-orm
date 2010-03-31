@@ -30,7 +30,7 @@
     <parent>
         <groupId>org.hibernate</groupId>
         <artifactId>hibernate-tutorials</artifactId>
-        <version>3.5.0-Final</version>
+        <version>3.5.1-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 

@@ -6,12 +6,12 @@
     <parent>
         <groupId>org.hibernate</groupId>
         <artifactId>hibernate-manual-parent</artifactId>
-        <version>3.5.0-Final</version>
+        <version>3.5.1-SNAPSHOT</version>
     </parent>
     
     <groupId>org.hibernate</groupId>
     <artifactId>hibernate-manual-${translation}</artifactId>
-    <version>3.5.0-Final</version>
+    <version>3.5.1-SNAPSHOT</version>
     <packaging>jdocbook</packaging>
     
     <name>Hibernate Manual (${translation})</name>

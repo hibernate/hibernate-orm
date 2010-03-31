@@ -6,6 +6,59 @@ refer to the particular case on JIRA using the issue tracking number to learn
 more about each case.
 
 
+Changes in version 3.5.0-Final (2010.03.31)
+-------------------------------------------
+http://opensource.atlassian.com/projects/hibernate/browse/HHH/fixforversion/11022
+
+** Sub-task
+    * [HHH-4599] - An embeddable class may contain ToOne or ToMany associations
+    * [HHH-4666] - Implement the clarified rules for resource discovery (esp for <mapping-file> and co)
+    * [HHH-4691] - Validate all new concepts are supported in orm.xml
+
+** Bug
+    * [HHH-2088] - TypeMismatchException on object equality expression from one-to-one relationship
+    * [HHH-2997] - LikeExpression case sensitive not working properly
+    * [HHH-4784] - JDBCTransaction -> commit() -> notifyLocalSynchsBeforeTransactionCompletion()
+    * [HHH-4870] - Cannot determine java-type from given member [null]
+    * [HHH-4919] - DefaultMergeEventListener does not call Interceptor.instantiate() for a new persistent entity (Francesco Degrassi)
+    * [HHH-4931] - two tests in org.hibernate.test.legacy.MultiTableTest fail on Ingres
+    * [HHH-4946] - org.hibernate.test.legacy.FooBarTests testLimit failure with Ingres
+    * [HHH-4958] - Immutable entity snapshot is retained after insert
+    * [HHH-4972] - javax.persistence.query.timeout and javax.persistence.lock.timeout can be passed when creating an EMF
+    * [HHH-4993] - Updates to read-only entity associations made while in persistent state are ignored by flush
+    * [HHH-4998] - org.hibernate.test.hql.ASTParserLoadingTest failure running  testStr with Ingres
+    * [HHH-5000] - duplicate words in the documents
+    * [HHH-5010] - org.hibernate.test.hql.CriteriaHQLAlignmentTest.testCriteriaAggregationReturnType() needs call flush before do the query
+    * [HHH-5013] - the previous select query should not to hold locks in TypeParameterTest#testSave
+
+** Improvement
+    * [HHH-1088] - Add support for projections using composite keys and components
+    * [HHH-4374] - @Subselect
+    * [HHH-4907] - Support for tuple syntax in HQL/Criteria on databases which do not support tuple syntax
+    * [HHH-4940] - Document immutable/read-only entity and immutable collection functionality
+    * [HHH-4989] - Make Statistics concurrent safe when Java 5 is present (Alex Snaps)
+    * [HHH-5008] - Log query lock mode in EntityLoader constructor
+    * [HHH-5022] - Small documentation improvements in chapter 6
+
+** New Feature
+    * [HHH-4812] - Add fetch profile support in annotations
+    * [HHH-4994] - find(Class<T> entityClass, Object primaryKey, Map<String, Object> properties) and refresh(Object entity, Map<String, Object> properties) do not honor properties
+    * [HHH-5026] - Ability to customize Scanner strategies
+
+** Patch
+    * [HHH-4419] -  <synchronize table="table_name"/> is missed using annotations
+    * [HHH-5049] - org.hibernate.test.legacy.ParentChildTest error running testLoadAfterNonExists with Ingres
+
+** Task
+    * [HHH-4933] - Write documentation on JPA 2
+    * [HHH-4990] - Move to commons-annotations 3.2.0.Final
+    * [HHH-4995] - Update dependency versions for JPA 2 and Metamodel Generator
+    * [HHH-4996] - Use monospace fonts in docbook programlistings
+    * [HHH-5035] - upgrade to jdocbook 2.2.3
+    * [HHH-5047] - Remove column coordinates from areaspecs
+    * [HHH-5058] - Include hibernate-jpa-2.0-api (JPA 2 API) in release bundle
+
+
 Changes in version 3.5.0-CR-2 (2010.02.24)
 -------------------------------------------
 http://opensource.atlassian.com/projects/hibernate/browse/HHH/fixforversion/11011

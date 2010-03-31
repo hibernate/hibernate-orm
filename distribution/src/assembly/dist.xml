@@ -91,6 +91,14 @@
         </dependencySet>
 
         <dependencySet>
+            <!-- The lib/jpa dependencySet -->
+            <outputDirectory>lib/jpa</outputDirectory>
+            <includes>
+                <include>org.hibernate.javax.persistence:hibernate-jpa-2.0-api</include>
+            </includes>
+        </dependencySet>
+
+        <dependencySet>
             <outputDirectory>lib/optional/c3p0</outputDirectory>
             <includes>
                 <include>c3p0:c3p0</include>

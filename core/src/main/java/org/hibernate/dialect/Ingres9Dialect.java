@@ -5,6 +5,7 @@ import java.sql.Types;
 import org.hibernate.Hibernate;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.NoArgSQLFunction;
+import org.hibernate.dialect.function.VarArgsSQLFunction;
 
 /**
  * A SQL dialect for Ingres 9.3 and later versions.
@@ -17,6 +18,7 @@ import org.hibernate.dialect.function.NoArgSQLFunction;
  * <li>Added support for pooled sequences</li>
  * <li>Added support for SELECT queries with limit and offset</li>
  * <li>Added getIdentitySelectString</li>
+ * <li>Modified concatination operator</li>
  * </ul>
  * 
  * @author Enrico Schenk, Raymond Fan
@@ -26,6 +28,7 @@ public class Ingres9Dialect extends IngresDialect {
         super();
         registerDateTimeFunctions();
         registerDateTimeColumnTypes();
+        registerFunction( "concat", new VarArgsSQLFunction( Hibernate.STRING, "(", "||", ")" ) );
     }
 
 	/**

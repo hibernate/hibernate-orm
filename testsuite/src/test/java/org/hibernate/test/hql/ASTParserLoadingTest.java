@@ -27,6 +27,7 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.HSQLDialect;
+import org.hibernate.dialect.IngresDialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.Oracle8iDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
@@ -237,6 +238,10 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 	}
 
 	public void testPaginationWithPolymorphicQuery() {
+		if ( getDialect() instanceof IngresDialect ) {
+			// HHH-4961 Ingres does not support this scoping in 9.3.
+			return;
+		}
 		Session s = openSession();
 		s.beginTransaction();
 		Human h = new Human();
@@ -704,6 +709,11 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 	}
 
 	public void testComponentParameterBinding() {
+		if ( getDialect() instanceof IngresDialect ) {
+			// HHH-4970 Subselects are not supported within select target lists
+			// in Ingres
+			return;
+		}
 		// HHH-1774 : parameters are bound incorrectly with component parameters...
 		Session s = openSession();
 		s.beginTransaction();
@@ -1107,6 +1117,11 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 	}
 
 	public void testSelectClauseSubselect() {
+		if ( getDialect() instanceof IngresDialect ) {
+			// HHH-4973 Ingres 9.3 does not support sub-selects in the select
+			// list.
+			return;
+		}
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
 		Zoo zoo = new Zoo();

@@ -1605,6 +1605,10 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 	}
 
 	public void testImplicitPolymorphism() {
+		if(getDialect() instanceof IngresDialect){
+			//HHH-4976 Ingres 9.3 does not support sub-selects in the select list.
+			return;
+		}
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
 

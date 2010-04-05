@@ -1710,6 +1710,11 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 	}
 
 	public void testOneToManyFilter() throws Throwable {
+		if ( getDialect() instanceof IngresDialect ) {
+			// HHH-4977 Ingres 9.3 does not support sub-selects in the select
+			// list.
+			return;
+		}
 		Session session = openSession();
 		Transaction txn = session.beginTransaction();
 

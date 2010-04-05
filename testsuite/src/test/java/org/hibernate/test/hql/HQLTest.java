@@ -15,6 +15,7 @@ import org.hibernate.Hibernate;
 import org.hibernate.QueryException;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.HSQLDialect;
+import org.hibernate.dialect.IngresDialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.Oracle8iDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
@@ -640,12 +641,19 @@ public class HQLTest extends QueryTranslatorTestCase {
 	}
 
 	public void testConcatenation() {
-		if ( getDialect() instanceof MySQLDialect || getDialect() instanceof SybaseDialect || getDialect() instanceof Sybase11Dialect || getDialect() instanceof SybaseASE15Dialect || getDialect() instanceof SybaseAnywhereDialect || getDialect() instanceof SQLServerDialect ) {
+		if ( getDialect() instanceof MySQLDialect || getDialect() instanceof SybaseDialect
+				|| getDialect() instanceof Sybase11Dialect
+				|| getDialect() instanceof SybaseASE15Dialect
+				|| getDialect() instanceof SybaseAnywhereDialect
+				|| getDialect() instanceof SQLServerDialect 
+				|| getDialect() instanceof IngresDialect) {
 			// SybaseASE15Dialect and SybaseAnywhereDialect support '||'
 			// MySQL uses concat(x, y, z)
 			// SQL Server replaces '||' with '+'
 			//
 			// this is syntax checked in {@link ASTParserLoadingTest#testConcatenation} 
+			// Ingres supports both "||" and '+' but IngresDialect originally
+			// uses '+' operator; updated Ingres9Dialect to use "||".
 			return;
 		}
 		assertTranslation("from Human h where h.nickName = '1' || 'ov' || 'tha' || 'few'");

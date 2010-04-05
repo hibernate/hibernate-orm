@@ -155,6 +155,10 @@ public class IngresDialect extends Dialect {
         // rows, a single row with one column, or a single row with two columns.
         // Ingres JDBC Driver returns table and object keys as BINARY values.
         getDefaultProperties().setProperty(Environment.USE_GET_GENERATED_KEYS, "false");
+        // There is no support for a native boolean type that accepts values
+        // of true, false or unknown. Using the tinyint type requires
+        // substitions of true and false.
+        getDefaultProperties().setProperty(Environment.QUERY_SUBSTITUTIONS, "true=1,false=0");
 	}
 
 	/**

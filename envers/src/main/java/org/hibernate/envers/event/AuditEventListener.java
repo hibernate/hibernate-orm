@@ -31,7 +31,7 @@ import org.hibernate.envers.entities.RelationDescription;
 import org.hibernate.envers.entities.RelationType;
 import org.hibernate.envers.entities.mapper.PersistentCollectionChangeData;
 import org.hibernate.envers.entities.mapper.id.IdMapper;
-import org.hibernate.envers.synchronization.AuditSync;
+import org.hibernate.envers.synchronization.AuditProcess;
 import org.hibernate.envers.synchronization.work.*;
 import org.hibernate.envers.tools.Tools;
 import org.hibernate.envers.RevisionType;
@@ -68,7 +68,7 @@ public class AuditEventListener implements PostInsertEventListener, PostUpdateEv
 
     private AuditConfiguration verCfg;
 
-    private void generateBidirectionalCollectionChangeWorkUnits(AuditSync verSync, EntityPersister entityPersister,
+    private void generateBidirectionalCollectionChangeWorkUnits(AuditProcess auditProcess, EntityPersister entityPersister,
                                                                 String entityName, Object[] newState, Object[] oldState,
                                                                 SessionImplementor session) {
         // Checking if this is enabled in configuration ...
@@ -112,7 +112,7 @@ public class AuditEventListener implements PostInsertEventListener, PostUpdateEv
                          	id = (Serializable) idMapper.mapToIdFromEntity(newValue);
                     	}
 
-                        verSync.addWorkUnit(new CollectionChangeWorkUnit(session, toEntityName, verCfg, id, newValue));
+                        auditProcess.addWorkUnit(new CollectionChangeWorkUnit(session, toEntityName, verCfg, id, newValue));
                     }
 
                     if (oldValue != null) {
@@ -132,7 +132,7 @@ public class AuditEventListener implements PostInsertEventListener, PostUpdateEv
 							id = (Serializable) idMapper.mapToIdFromEntity(oldValue);
                     	}
 						
-                        verSync.addWorkUnit(new CollectionChangeWorkUnit(session, toEntityName, verCfg, id, oldValue));
+                        auditProcess.addWorkUnit(new CollectionChangeWorkUnit(session, toEntityName, verCfg, id, oldValue));
                     }
                 }
             }
@@ -143,14 +143,14 @@ public class AuditEventListener implements PostInsertEventListener, PostUpdateEv
         String entityName = event.getPersister().getEntityName();
 
         if (verCfg.getEntCfg().isVersioned(entityName)) {
-            AuditSync verSync = verCfg.getSyncManager().get(event.getSession());
+            AuditProcess auditProcess = verCfg.getSyncManager().get(event.getSession());
 
             AuditWorkUnit workUnit = new AddWorkUnit(event.getSession(), event.getPersister().getEntityName(), verCfg,
                     event.getId(), event.getPersister(), event.getState());
-            verSync.addWorkUnit(workUnit);
+            auditProcess.addWorkUnit(workUnit);
 
             if (workUnit.containsWork()) {
-                generateBidirectionalCollectionChangeWorkUnits(verSync, event.getPersister(), entityName, event.getState(),
+                generateBidirectionalCollectionChangeWorkUnits(auditProcess, event.getPersister(), entityName, event.getState(),
                         null, event.getSession());
             }
         }
@@ -160,14 +160,14 @@ public class AuditEventListener implements PostInsertEventListener, PostUpdateEv
         String entityName = event.getPersister().getEntityName();
 
         if (verCfg.getEntCfg().isVersioned(entityName)) {
-            AuditSync verSync = verCfg.getSyncManager().get(event.getSession());
+            AuditProcess auditProcess = verCfg.getSyncManager().get(event.getSession());
 
             AuditWorkUnit workUnit = new ModWorkUnit(event.getSession(), event.getPersister().getEntityName(), verCfg,
                     event.getId(), event.getPersister(), event.getState(), event.getOldState());
-            verSync.addWorkUnit(workUnit);
+            auditProcess.addWorkUnit(workUnit);
 
             if (workUnit.containsWork()) {
-                generateBidirectionalCollectionChangeWorkUnits(verSync, event.getPersister(), entityName, event.getState(),
+                generateBidirectionalCollectionChangeWorkUnits(auditProcess, event.getPersister(), entityName, event.getState(),
                         event.getOldState(), event.getSession());
             }
         }
@@ -177,20 +177,20 @@ public class AuditEventListener implements PostInsertEventListener, PostUpdateEv
         String entityName = event.getPersister().getEntityName();
 
         if (verCfg.getEntCfg().isVersioned(entityName)) {
-            AuditSync verSync = verCfg.getSyncManager().get(event.getSession());
+            AuditProcess auditProcess = verCfg.getSyncManager().get(event.getSession());
 
             AuditWorkUnit workUnit = new DelWorkUnit(event.getSession(), event.getPersister().getEntityName(), verCfg,
                     event.getId(), event.getPersister(), event.getDeletedState());
-            verSync.addWorkUnit(workUnit);
+            auditProcess.addWorkUnit(workUnit);
 
             if (workUnit.containsWork()) {
-                generateBidirectionalCollectionChangeWorkUnits(verSync, event.getPersister(), entityName, null,
+                generateBidirectionalCollectionChangeWorkUnits(auditProcess, event.getPersister(), entityName, null,
                         event.getDeletedState(), event.getSession());
             }
         }
     }
 
-    private void generateBidirectionalCollectionChangeWorkUnits(AuditSync verSync, AbstractCollectionEvent event,
+    private void generateBidirectionalCollectionChangeWorkUnits(AuditProcess auditProcess, AbstractCollectionEvent event,
                                                                 PersistentCollectionChangeWorkUnit workUnit,
                                                                 RelationDescription rd) {
         // Checking if this is enabled in configuration ...
@@ -209,13 +209,13 @@ public class AuditEventListener implements PostInsertEventListener, PostUpdateEv
                 Object relatedObj = changeData.getChangedElement();
                 Serializable relatedId = (Serializable) relatedIdMapper.mapToIdFromEntity(relatedObj);
 
-                verSync.addWorkUnit(new CollectionChangeWorkUnit(event.getSession(), relatedEntityName, verCfg,
+                auditProcess.addWorkUnit(new CollectionChangeWorkUnit(event.getSession(), relatedEntityName, verCfg,
 						relatedId, relatedObj));
             }
         }
     }
 
-    private void generateFakeBidirecationalRelationWorkUnits(AuditSync verSync, PersistentCollection newColl, Serializable oldColl,
+    private void generateFakeBidirecationalRelationWorkUnits(AuditProcess auditProcess, PersistentCollection newColl, Serializable oldColl,
                                                              String collectionEntityName, String referencingPropertyName,
                                                              AbstractCollectionEvent event,
                                                              RelationDescription rd) {
@@ -242,13 +242,13 @@ public class AuditEventListener implements PostInsertEventListener, PostUpdateEv
             AuditWorkUnit nestedWorkUnit = new CollectionChangeWorkUnit(event.getSession(), realRelatedEntityName, verCfg,
                     relatedId, relatedObj);
 
-            verSync.addWorkUnit(new FakeBidirectionalRelationWorkUnit(event.getSession(), realRelatedEntityName, verCfg,
+            auditProcess.addWorkUnit(new FakeBidirectionalRelationWorkUnit(event.getSession(), realRelatedEntityName, verCfg,
                     relatedId, referencingPropertyName, event.getAffectedOwnerOrNull(), rd, revType,
                     changeData.getChangedElementIndex(), nestedWorkUnit));
         }
 
         // We also have to generate a collection change work unit for the owning entity.
-        verSync.addWorkUnit(new CollectionChangeWorkUnit(event.getSession(), collectionEntityName, verCfg,
+        auditProcess.addWorkUnit(new CollectionChangeWorkUnit(event.getSession(), collectionEntityName, verCfg,
                 event.getAffectedOwnerIdOrNull(), event.getAffectedOwnerOrNull()));
     }
 
@@ -257,7 +257,7 @@ public class AuditEventListener implements PostInsertEventListener, PostUpdateEv
         String entityName = event.getAffectedOwnerEntityName();
 
         if (verCfg.getEntCfg().isVersioned(entityName)) {
-            AuditSync verSync = verCfg.getSyncManager().get(event.getSession());
+            AuditProcess auditProcess = verCfg.getSyncManager().get(event.getSession());
 
             String ownerEntityName = ((AbstractCollectionPersister) collectionEntry.getLoadedPersister()).getOwnerEntityName();
             String referencingPropertyName = collectionEntry.getRole().substring(ownerEntityName.length() + 1);
@@ -266,20 +266,20 @@ public class AuditEventListener implements PostInsertEventListener, PostUpdateEv
             // null in case of collections of non-entities.
             RelationDescription rd = verCfg.getEntCfg().get(entityName).getRelationDescription(referencingPropertyName);
             if (rd != null && rd.getMappedByPropertyName() != null) {
-                generateFakeBidirecationalRelationWorkUnits(verSync, newColl, oldColl, entityName,
+                generateFakeBidirecationalRelationWorkUnits(auditProcess, newColl, oldColl, entityName,
                         referencingPropertyName, event, rd);
             } else {
                 PersistentCollectionChangeWorkUnit workUnit = new PersistentCollectionChangeWorkUnit(event.getSession(),
                         entityName, verCfg, newColl, collectionEntry, oldColl, event.getAffectedOwnerIdOrNull(),
                         referencingPropertyName);
-                verSync.addWorkUnit(workUnit);
+                auditProcess.addWorkUnit(workUnit);
 
                 if (workUnit.containsWork()) {
                     // There are some changes: a revision needs also be generated for the collection owner
-                    verSync.addWorkUnit(new CollectionChangeWorkUnit(event.getSession(), event.getAffectedOwnerEntityName(),
+                    auditProcess.addWorkUnit(new CollectionChangeWorkUnit(event.getSession(), event.getAffectedOwnerEntityName(),
                             verCfg, event.getAffectedOwnerIdOrNull(), event.getAffectedOwnerOrNull()));
 
-                    generateBidirectionalCollectionChangeWorkUnits(verSync, event, workUnit, rd);
+                    generateBidirectionalCollectionChangeWorkUnits(auditProcess, event, workUnit, rd);
                 }
             }
         }

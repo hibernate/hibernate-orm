@@ -35,7 +35,8 @@ import org.hibernate.envers.query.AuditEntity;
 import org.hibernate.envers.query.AuditQueryCreator;
 import static org.hibernate.envers.tools.ArgumentsTools.checkNotNull;
 import static org.hibernate.envers.tools.ArgumentsTools.checkPositive;
-import org.hibernate.envers.synchronization.AuditSync;
+
+import org.hibernate.envers.synchronization.AuditProcess;
 
 import org.hibernate.NonUniqueResultException;
 import org.hibernate.Query;
@@ -201,10 +202,10 @@ public class AuditReaderImpl implements AuditReaderImplementor {
 		}
 
 		// Obtaining the current audit sync
-		AuditSync auditSync = verCfg.getSyncManager().get((EventSource) session);
+		AuditProcess auditProcess = verCfg.getSyncManager().get((EventSource) session);
 
 		// And getting the current revision data
-		return (T) auditSync.getCurrentRevisionData(session, persist);
+		return (T) auditProcess.getCurrentRevisionData(session, persist);
 	}
 
 	public AuditQueryCreator createQuery() {

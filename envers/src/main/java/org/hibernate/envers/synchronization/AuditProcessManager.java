@@ -26,6 +26,8 @@ package org.hibernate.envers.synchronization;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.hibernate.action.AfterTransactionCompletionProcess;
+import org.hibernate.engine.SessionImplementor;
 import org.hibernate.envers.revisioninfo.RevisionInfoGenerator;
 
 import org.hibernate.Transaction;
@@ -34,32 +36,33 @@ import org.hibernate.event.EventSource;
 /**
  * @author Adam Warski (adam at warski dot org)
  */
-public class AuditSyncManager {
-    private final Map<Transaction, AuditSync> auditSyncs;
+public class AuditProcessManager {
+    private final Map<Transaction, AuditProcess> auditProcesses;
     private final RevisionInfoGenerator revisionInfoGenerator;
 
-    public AuditSyncManager(RevisionInfoGenerator revisionInfoGenerator) {
-        auditSyncs = new ConcurrentHashMap<Transaction, AuditSync>();
+    public AuditProcessManager(RevisionInfoGenerator revisionInfoGenerator) {
+        auditProcesses = new ConcurrentHashMap<Transaction, AuditProcess>();
 
         this.revisionInfoGenerator = revisionInfoGenerator;
     }
 
-    public AuditSync get(EventSource session) {
-        Transaction transaction = session.getTransaction();
-
-        AuditSync verSync = auditSyncs.get(transaction);
-        if (verSync == null) {
+    public AuditProcess get(EventSource session) {
+        final Transaction transaction = session.getTransaction();
+        
+        AuditProcess auditProcess = auditProcesses.get(transaction);
+        if (auditProcess == null) {
             // No worries about registering a transaction twice - a transaction is single thread
-            verSync = new AuditSync(this, session, revisionInfoGenerator);
-            auditSyncs.put(transaction, verSync);
+            auditProcess = new AuditProcess(revisionInfoGenerator);
+            auditProcesses.put(transaction, auditProcess);
 
-            transaction.registerSynchronization(verSync);
+            session.getActionQueue().registerProcess(auditProcess);
+            session.getActionQueue().registerProcess(new AfterTransactionCompletionProcess() {
+                public void doAfterTransactionCompletion(boolean success, SessionImplementor session) {
+                    auditProcesses.remove(transaction);
+                }
+            });
         }
 
-        return verSync;
-    }
-
-    public void remove(Transaction transaction) {
-        auditSyncs.remove(transaction);
+        return auditProcess;
     }
 }

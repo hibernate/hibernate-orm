@@ -27,38 +27,31 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.Queue;
-import javax.transaction.Synchronization;
 
+import org.hibernate.action.BeforeTransactionCompletionProcess;
+import org.hibernate.engine.SessionImplementor;
 import org.hibernate.envers.revisioninfo.RevisionInfoGenerator;
 import org.hibernate.envers.synchronization.work.AuditWorkUnit;
 import org.hibernate.envers.tools.Pair;
 
 import org.hibernate.FlushMode;
 import org.hibernate.Session;
-import org.hibernate.Transaction;
-import org.hibernate.event.EventSource;
 
 /**
  * @author Adam Warski (adam at warski dot org)
  */
-public class AuditSync implements Synchronization {
+public class AuditProcess implements BeforeTransactionCompletionProcess {
     private final RevisionInfoGenerator revisionInfoGenerator;
-    private final AuditSyncManager manager;
-    private final EventSource session;
 
-    private final Transaction transaction;
     private final LinkedList<AuditWorkUnit> workUnits;
     private final Queue<AuditWorkUnit> undoQueue;
     private final Map<Pair<String, Object>, AuditWorkUnit> usedIds;
 
     private Object revisionData;
 
-    public AuditSync(AuditSyncManager manager, EventSource session, RevisionInfoGenerator revisionInfoGenerator) {
-        this.manager = manager;
-        this.session = session;
+    public AuditProcess(RevisionInfoGenerator revisionInfoGenerator) {
         this.revisionInfoGenerator = revisionInfoGenerator;
 
-        transaction = session.getTransaction();
         workUnits = new LinkedList<AuditWorkUnit>();
         undoQueue = new LinkedList<AuditWorkUnit>();
         usedIds = new HashMap<Pair<String, Object>, AuditWorkUnit>();
@@ -134,47 +127,30 @@ public class AuditSync implements Synchronization {
 		return revisionData;
 	}
 
-    public void beforeCompletion() {
+    public void doBeforeTransactionCompletion(SessionImplementor session) {
         if (workUnits.size() == 0 && undoQueue.size() == 0) {
             return;
         }
 
-		try {
-			// see: http://www.jboss.com/index.html?module=bb&op=viewtopic&p=4178431
-			if (FlushMode.isManualFlushMode(session.getFlushMode()) || session.isClosed()) {
-				Session temporarySession = null;
-				try {
-					temporarySession = session.getFactory().openTemporarySession();
-
-					executeInSession(temporarySession);
-
-					temporarySession.flush();
-				} finally {
-					if (temporarySession != null) {
-						temporarySession.close();
-					}
-				}
-			} else {
-				executeInSession(session);
-
-				// Explicity flushing the session, as the auto-flush may have already happened.
-				session.flush();
-			}
-		} catch (RuntimeException e) {
-			// Rolling back the transaction in case of any exceptions
-			//noinspection finally
+        // see: http://www.jboss.com/index.html?module=bb&op=viewtopic&p=4178431
+        if (FlushMode.isManualFlushMode(session.getFlushMode())) {
+            Session temporarySession = null;
             try {
-                if (session.getTransaction().isActive()) {
-    			    session.getTransaction().rollback();
-                }
-            } finally {
-                //noinspection ThrowFromFinallyBlock
-                throw e;
-            }
-		}
-    }
+                temporarySession = session.getFactory().openTemporarySession();
 
-    public void afterCompletion(int i) {
-        manager.remove(transaction);
+                executeInSession(temporarySession);
+
+                temporarySession.flush();
+            } finally {
+                if (temporarySession != null) {
+                    temporarySession.close();
+                }
+            }
+        } else {
+            executeInSession((Session) session);
+
+            // Explicity flushing the session, as the auto-flush may have already happened.
+            session.flush();
+        }
     }
 }

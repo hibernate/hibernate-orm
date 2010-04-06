@@ -40,7 +40,7 @@ public class ExceptionListener extends AbstractEntityTest {
         cfg.addAnnotatedClass(ExceptionListenerRevEntity.class);
     }
 
-    @Test
+    @Test(expectedExceptions = RuntimeException.class)
     public void testTransactionRollback() throws InterruptedException {
         // Trying to persist an entity - however the listener should throw an exception, so the entity
 		// shouldn't be persisted
@@ -49,9 +49,12 @@ public class ExceptionListener extends AbstractEntityTest {
         StrTestEntity te = new StrTestEntity("x");
         em.persist(te);
         em.getTransaction().commit();
+    }
 
+    @Test(dependsOnMethods = "testTransactionRollback")
+    public void testDataNotPersisted() {
 		// Checking if the entity became persisted
-		em = getEntityManager();
+		EntityManager em = getEntityManager();
         em.getTransaction().begin();
         Long count = (Long) em.createQuery("select count(s) from StrTestEntity s where s.str = 'x'").getSingleResult();
 		assert count == 0l;

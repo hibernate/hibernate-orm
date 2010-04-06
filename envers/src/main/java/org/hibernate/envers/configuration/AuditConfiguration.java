@@ -30,7 +30,7 @@ import java.util.WeakHashMap;
 import org.hibernate.envers.entities.EntitiesConfigurations;
 import org.hibernate.envers.revisioninfo.RevisionInfoNumberReader;
 import org.hibernate.envers.revisioninfo.RevisionInfoQueryCreator;
-import org.hibernate.envers.synchronization.AuditSyncManager;
+import org.hibernate.envers.synchronization.AuditProcessManager;
 
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.AnnotationConfiguration;
@@ -42,7 +42,7 @@ import org.hibernate.annotations.common.reflection.ReflectionManager;
 public class AuditConfiguration {
     private final GlobalConfiguration globalCfg;
     private final AuditEntitiesConfiguration auditEntCfg;
-    private final AuditSyncManager auditSyncManager;
+    private final AuditProcessManager auditProcessManager;
     private final EntitiesConfigurations entCfg;
     private final RevisionInfoQueryCreator revisionInfoQueryCreator;
     private final RevisionInfoNumberReader revisionInfoNumberReader;
@@ -51,8 +51,8 @@ public class AuditConfiguration {
         return auditEntCfg;
     }
 
-    public AuditSyncManager getSyncManager() {
-        return auditSyncManager;
+    public AuditProcessManager getSyncManager() {
+        return auditProcessManager;
     }
 
     public GlobalConfiguration getGlobalCfg() {
@@ -80,7 +80,7 @@ public class AuditConfiguration {
         RevisionInfoConfigurationResult revInfoCfgResult = revInfoCfg.configure(cfg, reflectionManager);
         auditEntCfg = new AuditEntitiesConfiguration(properties, revInfoCfgResult.getRevisionInfoEntityName());
         globalCfg = new GlobalConfiguration(properties);
-        auditSyncManager = new AuditSyncManager(revInfoCfgResult.getRevisionInfoGenerator());
+        auditProcessManager = new AuditProcessManager(revInfoCfgResult.getRevisionInfoGenerator());
         revisionInfoQueryCreator = revInfoCfgResult.getRevisionInfoQueryCreator();
         revisionInfoNumberReader = revInfoCfgResult.getRevisionInfoNumberReader();
         entCfg = new EntitiesConfigurator().configure(cfg, reflectionManager, globalCfg, auditEntCfg,

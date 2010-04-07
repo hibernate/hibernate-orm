@@ -44,6 +44,104 @@
     <build>
         <plugins>
             <plugin>
+                <groupId>org.codehaus.groovy.maven</groupId>
+                <artifactId>gmaven-plugin</artifactId>
+                <version>1.0</version>
+                <executions>
+                    <execution>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>execute</goal>
+                        </goals>
+                        <configuration>
+                            <source><![CDATA[
+                                def sourcePathName = 'javadocSourcePath'
+                                sourcePath = ant.path( id:sourcePathName ) {
+                                    ant.pathElement( path: '../annotations/src/main/java' )
+                                    ant.pathElement( path: '../cache-ehcache/src/main/java' )
+                                    ant.pathElement( path: '../cache-infinispan/src/main/java' )
+                                    ant.pathElement( path: '../cache-jbosscache/src/main/java' )
+                                    ant.pathElement( path: '../cache-oscache/src/main/java' )
+                                    ant.pathElement( path: '../cache-swarmcache/src/main/java' )
+                                    ant.pathElement( path: '../connection-c3p0/src/main/java' )
+                                    ant.pathElement( path: '../connection-proxool/src/main/java' )
+                                    ant.pathElement( path: '../entitymanager/src/main/java' )
+                                    ant.pathElement( path: '../envers/src/main/java' )
+                                    ant.pathElement( path: '../testing/src/main/java' )
+                                    ant.pathElement( path: '../core/src/main/java:core/target/generated-sources/antlr' )
+                                }
+
+                                def classPathName = 'javadocClassPath'
+                                classPath = ant.path( id:classPathName );
+                                project.compileClasspathElements.each{ element ->
+                                    classPath.createPathElement().path = element
+                                }
+
+                                ant.javadoc(
+                                    executable: '${jdk16_home}/bin/javadoc',
+                                    maxmemory: '512m',
+                                    destdir: 'target/javadocs',
+                                    sourcepathref: sourcePathName,
+                                    classpathref: classPathName,
+                                    overview: '../core/src/main/javadoc/package.html',
+                                    stylesheetfile: '../core/src/main/javadoc/stylesheet.css',
+                                    windowtitle: 'Hibernate JavaDocs',
+                                    doctitle: 'Hibernate JavaDoc (${project.version})',
+                                    bottom: 'Copyright &copy; 2001-2010 <a href="http://redhat.com">Red Hat, Inc.</a>  All Rights Reserved.',
+                                    use: true
+                                ) {
+                                    ant.link( href: 'http://java.sun.com/j2se/1.5.0/docs/api' )
+                                    ant.link( href: 'http://java.sun.com/javaee/5/docs/api/' )
+                                    ant.tag( name: 'todo', description: 'To do:' )
+                                    ant.tag( name: 'noinspection', enabled: false )
+                                    ant.group( title: 'Core API' ) {
+                                        ant.package( name: 'org.hibernate' )
+                                        ant.package( name: 'org.hibernate.classic' )
+                                        ant.package( name: 'org.hibernate.criterion' )
+                                        ant.package( name: 'org.hibernate.mapping' )
+                                        ant.package( name: 'org.hibernate.metadata' )
+                                        ant.package( name: 'org.hibernate.cfg' )
+                                        ant.package( name: 'org.hibernate.stat' )
+                                    }
+                                    ant.group( title: 'Extension SPI' ) {
+                                        ant.package( name: 'org.hibernate.id*' )
+                                        ant.package( name: 'org.hibernate.connection' )
+                                        ant.package( name: 'org.hibernate.transaction' )
+                                        ant.package( name: 'org.hibernate.type' )
+                                        ant.package( name: 'org.hibernate.dialect*' )
+                                        ant.package( name: 'org.hibernate.cache*' )
+                                        ant.package( name: 'org.hibernate.event*' )
+                                        ant.package( name: 'org.hibernate.property' )
+                                        ant.package( name: 'org.hibernate.loader*' )
+                                        ant.package( name: 'org.hibernate.persister*' )
+                                        ant.package( name: ':org.hibernate.proxy' )
+                                        ant.package( name: 'org.hibernate.tuple' )
+                                        ant.package( name: 'org.hibernate.transform' )
+                                        ant.package( name: 'org.hibernate.collection' )
+                                        ant.package( name: 'org.hibernate.jdbc' )
+                                        ant.package( name: 'org.hibernate.usertype' )
+                                    }
+                                    ant.group( title: 'Bytecode providers' ) {
+                                        ant.package( name: 'org.hibernate.bytecode*' )
+                                        ant.package( name: 'org.hibernate.intercept*' )
+                                    }
+                                    ant.group( title: 'Infinispan Integration' ) {
+                                        ant.package( name: 'org.hibernate.cache.infinispan*' )
+                                    }
+                                    ant.group( title: 'JBossCache Integration' ) {
+                                        ant.package( name: 'org.hibernate.cache.jbc*' )
+                                    }
+                                    ant.group( title: 'Testing Support' ) {
+                                        ant.package( name: 'org.hibernate.junit*' )
+                                    }
+                                }
+                                ]]>
+                            </source>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-assembly-plugin</artifactId>
                 <executions>
@@ -159,6 +257,50 @@
             <groupId>cglib</groupId>
             <artifactId>cglib</artifactId>
             <optional>true</optional>
+        </dependency>
+
+        <!-- Because Maven is retarded -->
+        <dependency>
+            <groupId>org.hibernate</groupId>
+            <artifactId>hibernate-validator</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>javax.validation</groupId>
+            <artifactId>validation-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.jboss.javaee</groupId>
+            <artifactId>jboss-jacc-api_JDK4</artifactId>
+            <version>1.1.0</version>
+            <scope>provided</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.jboss.javaee</groupId>
+                    <artifactId>jboss-servlet-api_3.0</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.jboss.logging</groupId>
+                    <artifactId>jboss-logging-spi</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.jboss</groupId>
+                    <artifactId>jboss-common-core</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>3.8.1</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>ant</groupId>
+            <artifactId>ant</artifactId>
+            <version>1.6.5</version>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
 

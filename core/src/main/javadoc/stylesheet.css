@@ -1,0 +1,118 @@
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Inc.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ */
+
+/*
+ * Custom Hibernate javadoc style sheet
+ */
+
+/* Page background color */
+body {
+    font-family: Arial;
+	background-color: white;
+	font-size: 10pt;
+}
+td {
+    font-family: Arial;
+	font-size: 10pt;
+}
+
+/* Table colors */
+.TableHeadingColor     { background: #F4F4F4 }
+.TableSubHeadingColor  { background: #F4F4F4 }
+.TableRowColor         { background: #FFFFFF }
+
+/* Font used in left-hand frame lists */
+.FrameTitleFont   { font-size: normal; font-family: Arial }
+.FrameHeadingFont { font-size: normal; font-family: Arial }
+.FrameItemFont    { font-size: normal; font-family: Arial }
+
+/* Navigation bar fonts and colors */
+.NavBarCell1    { background-color:#F4F4F4;}
+.NavBarCell1Rev { background-color:silver;}
+.NavBarFont1    { font-family: Arial, Helvetica, sans-serif; color:#000000;}
+.NavBarFont1Rev { font-family: Arial, Helvetica, sans-serif; color:#FFFFFF;}
+.NavBarCell2    { font-family: Arial, Helvetica, sans-serif; background-color:#FFFFFF;}
+.NavBarCell3    { font-family: Arial, Helvetica, sans-serif; background-color:#FFFFFF;}
+
+/* Links */
+A { color: #003399; }
+A:active { color: #003399; }
+A:visited { color: #888888; }
+
+
+P, OL, UL, LI, DL, DT, DD, BLOCKQUOTE {
+    color: #000000;
+}
+
+TD, TH, SPAN {
+    color: #000000;
+}
+
+BLOCKQUOTE {
+    margin-right: 0px;
+}
+
+TT {
+font-size: 90%;
+    font-family: "Courier New", Courier, monospace;
+    color: #000000;
+}
+
+PRE {
+font-size: 90%;
+    padding: 5px;
+    border-style: solid;
+    border-width: 1px;
+    border-color: #CCCCCC;
+    background-color: #F4F4F4;
+}
+
+UL, OL, LI {
+    list-style: disc;
+}
+
+HR  {
+    width: 100%;
+    height: 1px;
+    background-color: #CCCCCC;
+    border-width: 0px;
+    padding: 0px;
+    color: #CCCCCC;
+}
+
+.variablelist {
+    padding-top: 10;
+    padding-bottom:10;
+    margin:0;
+}
+
+.itemizedlist, UL {
+    padding-top: 0;
+    padding-bottom:0;
+    margin:0;
+}
+
+.term {
+    font-weight:bold;
+}

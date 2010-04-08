@@ -44,10 +44,18 @@ public interface CriteriaQuery {
 	/**
 	 * Get the names of the columns mapped by a property path,
 	 * ignoring projection aliases
+	 * @throws org.hibernate.QueryException if the property maps to more than 1 column
 	 */
 	public String getColumn(Criteria criteria, String propertyPath) 
 	throws HibernateException;
 	
+	/**
+	 * Get the names of the columns mapped by a property path,
+	 * ignoring projection aliases
+	 */
+	public String[] getColumns(String propertyPath, Criteria criteria)
+	throws HibernateException;
+
 	/**
 	 * Get the type of a property path, ignoring projection aliases
 	 */

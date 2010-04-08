@@ -27,6 +27,7 @@ package org.hibernate.criterion;
 import org.hibernate.Criteria;
 import org.hibernate.HibernateException;
 import org.hibernate.type.Type;
+import org.hibernate.util.StringHelper;
 
 /**
  * A property value, or grouped property value
@@ -62,7 +63,7 @@ public class PropertyProjection extends SimpleProjection {
 	public String toSqlString(Criteria criteria, int position, CriteriaQuery criteriaQuery) 
 	throws HibernateException {
 		StringBuffer buf = new StringBuffer();
-		String[] cols = criteriaQuery.getColumnsUsingProjection( criteria, propertyName );
+		String[] cols = criteriaQuery.getColumns( propertyName, criteria );
 		for ( int i=0; i<cols.length; i++ ) {
 			buf.append( cols[i] )
 				.append(" as y")
@@ -84,7 +85,7 @@ public class PropertyProjection extends SimpleProjection {
 			return super.toGroupSqlString(criteria, criteriaQuery);
 		}
 		else {
-			return criteriaQuery.getColumn(criteria, propertyName);
+			return StringHelper.join( ", ", criteriaQuery.getColumns( propertyName, criteria ) );
 		}
 	}
 

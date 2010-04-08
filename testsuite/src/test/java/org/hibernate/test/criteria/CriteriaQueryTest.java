@@ -1,6 +1,7 @@
 //$Id: CriteriaQueryTest.java 10976 2006-12-12 23:22:26Z steve.ebersole@jboss.com $
 package org.hibernate.test.criteria;
 
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -9,6 +10,8 @@ import junit.framework.Test;
 import org.hibernate.Criteria;
 import org.hibernate.FetchMode;
 import org.hibernate.Hibernate;
+import org.hibernate.JDBCException;
+import org.hibernate.QueryException;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
@@ -186,7 +189,143 @@ public class CriteriaQueryTest extends FunctionalTestCase {
 		session.close();
 		
 	}
-	
+
+	public void testSubselectWithComponent() {
+
+		Session session = openSession();
+		Transaction t = session.beginTransaction();
+
+		Course course = new Course();
+		course.setCourseCode("HIB");
+		course.setDescription("Hibernate Training");
+		session.persist(course);
+
+		CityState odessaWa = new CityState( "Odessa", "WA" );
+
+		Student gavin = new Student();
+		gavin.setName("Gavin King");
+		gavin.setStudentNumber(232);
+		gavin.setCityState( odessaWa );
+		session.persist(gavin);
+
+		Enrolment enrolment2 = new Enrolment();
+		enrolment2.setCourse(course);
+		enrolment2.setCourseCode(course.getCourseCode());
+		enrolment2.setSemester((short) 3);
+		enrolment2.setYear((short) 1998);
+		enrolment2.setStudent(gavin);
+		enrolment2.setStudentNumber(gavin.getStudentNumber());
+		gavin.getEnrolments().add(enrolment2);
+		session.persist(enrolment2);
+
+		DetachedCriteria dc = DetachedCriteria.forClass(Student.class)
+			.add( Property.forName("cityState").eq( odessaWa ) )
+			.setProjection( Property.forName("cityState") );
+
+		session.createCriteria(Student.class)
+			.add( Subqueries.exists(dc) )
+			.list();
+		t.commit();
+		session.close();
+
+		session = openSession();
+		t = session.beginTransaction();
+		try {
+			session.createCriteria(Student.class)
+				.add( Subqueries.propertyEqAll("cityState", dc) )
+				.list();
+			fail( "should have failed because cannot compare subquery results with multiple columns" );
+		}
+		catch ( QueryException ex ) {
+			// expected
+		}
+		finally {
+			t.rollback();
+			session.close();
+		}
+
+		session = openSession();
+		t = session.beginTransaction();
+		try {
+			session.createCriteria(Student.class)
+				.add( Property.forName("cityState").eqAll(dc) )
+				.list();
+			fail( "should have failed because cannot compare subquery results with multiple columns" );
+		}
+		catch ( QueryException ex ) {
+			// expected
+		}
+		finally {
+			t.rollback();
+			session.close();
+		}
+
+		session = openSession();
+		t = session.beginTransaction();
+		try {
+			session.createCriteria(Student.class)
+				.add( Subqueries.in( odessaWa, dc) )
+				.list();
+			fail( "should have failed because cannot compare subquery results with multiple columns" );
+		}
+		catch ( JDBCException ex ) {
+			// expected
+		}
+		finally {
+			t.rollback();
+			session.close();
+		}
+
+		session = openSession();
+		t = session.beginTransaction();
+		DetachedCriteria dc2 = DetachedCriteria.forClass(Student.class, "st1")
+			.add( Property.forName("st1.cityState").eqProperty("st2.cityState") )
+			.setProjection( Property.forName("cityState") );
+		try {
+			session.createCriteria(Student.class, "st2")
+				.add( Subqueries.eq( odessaWa, dc2) )
+				.list();
+			fail( "should have failed because cannot compare subquery results with multiple columns" );
+		}
+		catch ( JDBCException ex ) {
+			// expected
+		}
+		finally {
+			t.rollback();
+			session.close();
+		}
+
+		session = openSession();
+		t = session.beginTransaction();
+		DetachedCriteria dc3 = DetachedCriteria.forClass(Student.class, "st")
+			.createCriteria("enrolments")
+				.createCriteria("course")
+					.add( Property.forName("description").eq("Hibernate Training") )
+					.setProjection( Property.forName("st.cityState") );
+		try {
+			session.createCriteria(Enrolment.class, "e")
+				.add( Subqueries.eq( odessaWa, dc3) )
+				.list();
+			fail( "should have failed because cannot compare subquery results with multiple columns" );
+		}
+		catch ( JDBCException ex ) {
+			// expected
+		}
+		finally {
+			t.rollback();
+			session.close();
+		}
+
+		session = openSession();
+		t = session.beginTransaction();
+		session.delete(enrolment2);
+		session.delete(gavin);
+		session.delete(course);
+		t.commit();
+		session.close();
+
+	}
+
 	public void testDetachedCriteria() {
 		
 		DetachedCriteria dc = DetachedCriteria.forClass(Student.class)
@@ -511,11 +650,15 @@ public class CriteriaQueryTest extends FunctionalTestCase {
 		Course course = new Course();
 		course.setCourseCode("HIB");
 		course.setDescription("Hibernate Training");
+		course.getCourseMeetings().add( new CourseMeeting( course, "Monday", 1, "1313 Mockingbird Lane" ) );
 		s.save(course);
-		
+
 		Student gavin = new Student();
 		gavin.setName("Gavin King");
 		gavin.setStudentNumber(667);
+		CityState odessaWa = new CityState( "Odessa", "WA" );
+		gavin.setCityState( odessaWa );
+		gavin.setPreferredCourse( course );
 		s.save(gavin);
 		
 		Student xam = new Student();
@@ -544,7 +687,65 @@ public class CriteriaQueryTest extends FunctionalTestCase {
 		s.save(enrolment);
 		
 		s.flush();
-		
+
+		List  resultList = s.createCriteria(Enrolment.class)
+			.setProjection( Projections.projectionList()
+					.add( Property.forName( "student" ), "student" )
+					.add( Property.forName( "course" ), "course" )
+					.add( Property.forName( "semester" ), "semester" )
+					.add( Property.forName("year"), "year" )
+			)
+			.list();
+		assertEquals( 2, resultList.size() );
+		for ( Iterator it = resultList.iterator(); it.hasNext(); ) {
+			Object[] objects = ( Object[] ) it.next();
+			assertEquals( 4, objects.length );
+			assertTrue( objects[ 0 ] instanceof Student );
+			assertTrue( objects[ 1 ] instanceof Course );
+			assertTrue( objects[ 2 ] instanceof Short );
+			assertTrue( objects[ 3 ] instanceof Short );
+		}
+
+		resultList = s.createCriteria(Student.class)
+			.setProjection( Projections.projectionList()
+					.add( Projections.id().as( "studentNumber" ))
+					.add( Property.forName( "name" ), "name" )
+					.add( Property.forName( "cityState" ), "cityState" )
+					.add( Property.forName("preferredCourse"), "preferredCourse" )
+			)
+			.list();
+		assertEquals( 2, resultList.size() );
+		for ( Iterator it = resultList.iterator(); it.hasNext(); ) {
+			Object[] objects = ( Object[] ) it.next();
+			assertEquals( 4, objects.length );
+			assertTrue( objects[ 0 ] instanceof Long );
+			assertTrue( objects[ 1 ] instanceof String );
+			if ( "Gavin King".equals( objects[ 1 ] ) ) {
+				assertTrue( objects[ 2 ] instanceof CityState );
+				assertTrue( objects[ 3 ] instanceof Course );
+			}
+			else {
+				assertNull( objects[ 2 ] );
+				assertNull( objects[ 3 ] );
+			}
+		}
+
+		Object[] aResult = ( Object[] ) s.createCriteria(Student.class)
+			.add( Restrictions.idEq( new Long( 667 ) ) )
+			.setProjection( Projections.projectionList()
+					.add( Projections.id().as( "studentNumber" ))
+					.add( Property.forName( "name" ), "name" )
+					.add( Property.forName( "cityState" ), "cityState" )
+					.add( Property.forName("preferredCourse"), "preferredCourse" )
+			)
+			.uniqueResult();
+		assertNotNull( aResult );
+		assertEquals( 4, aResult.length );
+		assertTrue( aResult[ 0 ] instanceof Long );
+		assertTrue( aResult[ 1 ] instanceof String );
+		assertTrue( aResult[ 2 ] instanceof CityState );
+		assertTrue( aResult[ 3 ] instanceof Course );
+
 		Long count = (Long) s.createCriteria(Enrolment.class)
 			.setProjection( Property.forName("studentNumber").count().setDistinct() )
 			.uniqueResult();
@@ -621,7 +822,23 @@ public class CriteriaQueryTest extends FunctionalTestCase {
 		StudentDTO dto = (StudentDTO) resultWithAliasedBean.get(0);
 		assertNotNull(dto.getDescription());
 		assertNotNull(dto.getName());
-	
+
+		CourseMeeting courseMeetingDto = ( CourseMeeting ) s.createCriteria(CourseMeeting.class)
+			.setProjection( Projections.projectionList()
+					.add( Property.forName("id").as("id") )
+					.add( Property.forName("course").as("course") )
+			)
+			.addOrder( Order.desc("id") )
+			.setResultTransformer( Transformers.aliasToBean(CourseMeeting.class) )
+			.uniqueResult();
+
+		assertNotNull( courseMeetingDto.getId() );
+		assertEquals( course.getCourseCode(), courseMeetingDto.getId().getCourseCode() );
+		assertEquals( "Monday", courseMeetingDto.getId().getDay() );
+		assertEquals( "1313 Mockingbird Lane", courseMeetingDto.getId().getLocation() );
+		assertEquals( 1, courseMeetingDto.getId().getPeriod() );
+		assertEquals( course.getDescription(), courseMeetingDto.getCourse().getDescription() );
+
 		s.createCriteria(Student.class)
 			.add( Restrictions.like("name", "Gavin", MatchMode.START) )
 			.addOrder( Order.asc("name") )
@@ -675,6 +892,204 @@ public class CriteriaQueryTest extends FunctionalTestCase {
 		s.delete(xam);
 		s.delete(course);
 		
+		t.commit();
+		s.close();
+	}
+
+	public void testDistinctProjectionsOfComponents() {
+		Session s = openSession();
+		Transaction t = s.beginTransaction();
+
+		Course course = new Course();
+		course.setCourseCode("HIB");
+		course.setDescription("Hibernate Training");
+		s.save(course);
+
+		Student gavin = new Student();
+		gavin.setName("Gavin King");
+		gavin.setStudentNumber(667);
+		gavin.setCityState( new CityState( "Odessa", "WA" ) );
+		s.save(gavin);
+
+		Student xam = new Student();
+		xam.setName("Max Rydahl Andersen");
+		xam.setStudentNumber(101);
+		xam.setPreferredCourse( course );
+		xam.setCityState( new CityState( "Odessa", "WA" ) );
+		s.save(xam);
+
+		Enrolment enrolment = new Enrolment();
+		enrolment.setCourse(course);
+		enrolment.setCourseCode(course.getCourseCode());
+		enrolment.setSemester((short) 1);
+		enrolment.setYear((short) 1999);
+		enrolment.setStudent(xam);
+		enrolment.setStudentNumber(xam.getStudentNumber());
+		xam.getEnrolments().add(enrolment);
+		s.save(enrolment);
+
+		enrolment = new Enrolment();
+		enrolment.setCourse(course);
+		enrolment.setCourseCode(course.getCourseCode());
+		enrolment.setSemester((short) 3);
+		enrolment.setYear((short) 1998);
+		enrolment.setStudent(gavin);
+		enrolment.setStudentNumber(gavin.getStudentNumber());
+		gavin.getEnrolments().add(enrolment);
+		s.save(enrolment);
+
+		s.flush();
+
+		Object result = s.createCriteria( Student.class )
+			.setProjection( Projections.distinct( Property.forName( "cityState" ) ) )
+			.uniqueResult();
+		assertTrue( result instanceof CityState );
+		assertEquals( ( ( CityState ) result ).getCity(), "Odessa" );
+		assertEquals( ( ( CityState ) result ).getState(), "WA" );		
+
+		result = s.createCriteria( Student.class )
+			.setProjection( Projections.distinct( Property.forName( "cityState" ).as( "cityState" ) ) )
+				.addOrder( Order.asc( "cityState" ) )
+			.uniqueResult();
+		assertTrue( result instanceof CityState );
+		assertEquals( ( ( CityState ) result ).getCity(), "Odessa" );
+		assertEquals( ( ( CityState ) result ).getState(), "WA" );
+
+		t.commit();
+		s.close();
+
+		s = openSession();
+		t = s.beginTransaction();
+		try {
+			result = s.createCriteria( Student.class )
+				.setProjection( Projections.count( "cityState" ) )
+				.uniqueResult();
+			fail( "should have failed with QueryException" );
+		}
+		catch ( QueryException ex ) {
+			//expected
+		}
+		finally {
+			t.rollback();
+		}
+		s.close();
+
+		s = openSession();
+		t = s.beginTransaction();
+		s.delete(gavin);
+		s.delete(xam);
+		s.delete(course);
+
+		t.commit();
+		s.close();
+	}
+
+	public void testGroupByComponent() {
+		Session s = openSession();
+		Transaction t = s.beginTransaction();
+
+		Course course = new Course();
+		course.setCourseCode("HIB");
+		course.setDescription("Hibernate Training");
+		s.save(course);
+
+		Student gavin = new Student();
+		gavin.setName("Gavin King");
+		gavin.setStudentNumber(667);
+		gavin.setCityState( new CityState( "Odessa", "WA" ) );
+		s.save(gavin);
+
+		Student xam = new Student();
+		xam.setName("Max Rydahl Andersen");
+		xam.setStudentNumber(101);
+		xam.setPreferredCourse( course );
+		xam.setCityState( new CityState( "Odessa", "WA" ) );
+		s.save(xam);
+
+		Enrolment enrolment = new Enrolment();
+		enrolment.setCourse(course);
+		enrolment.setCourseCode(course.getCourseCode());
+		enrolment.setSemester((short) 1);
+		enrolment.setYear((short) 1999);
+		enrolment.setStudent(xam);
+		enrolment.setStudentNumber(xam.getStudentNumber());
+		xam.getEnrolments().add(enrolment);
+		s.save(enrolment);
+
+		enrolment = new Enrolment();
+		enrolment.setCourse(course);
+		enrolment.setCourseCode(course.getCourseCode());
+		enrolment.setSemester((short) 3);
+		enrolment.setYear((short) 1998);
+		enrolment.setStudent(gavin);
+		enrolment.setStudentNumber(gavin.getStudentNumber());
+		gavin.getEnrolments().add(enrolment);
+		s.save(enrolment);
+
+		s.flush();
+
+		Object result = s.createCriteria( Student.class )
+			.setProjection( Projections.groupProperty( "cityState" ) )
+			.uniqueResult();
+		assertTrue( result instanceof CityState );
+		assertEquals( ( ( CityState ) result ).getCity(), "Odessa" );
+		assertEquals( ( ( CityState ) result ).getState(), "WA" );
+
+		result = s.createCriteria( Student.class, "st")
+			.setProjection( Projections.groupProperty( "st.cityState" ) )
+			.uniqueResult();
+		assertTrue( result instanceof CityState );
+		assertEquals( ( ( CityState ) result ).getCity(), "Odessa" );
+		assertEquals( ( ( CityState ) result ).getState(), "WA" );
+
+		result = s.createCriteria( Student.class, "st")
+			.setProjection( Projections.groupProperty( "st.cityState" ) )
+				.addOrder( Order.asc( "cityState" ) )
+			.uniqueResult();
+		assertTrue( result instanceof CityState );
+		assertEquals( ( ( CityState ) result ).getCity(), "Odessa" );
+		assertEquals( ( ( CityState ) result ).getState(), "WA" );
+
+		result = s.createCriteria( Student.class, "st")
+			.setProjection( Projections.groupProperty( "st.cityState" ).as( "cityState" ) )
+				.addOrder( Order.asc( "cityState" ) )
+			.uniqueResult();
+		assertTrue( result instanceof CityState );
+		assertEquals( ( ( CityState ) result ).getCity(), "Odessa" );
+		assertEquals( ( ( CityState ) result ).getState(), "WA" );
+
+		result = s.createCriteria( Student.class, "st")
+			.setProjection( Projections.groupProperty( "st.cityState" ).as( "cityState" ) )
+				.addOrder( Order.asc( "cityState" ) )
+			.uniqueResult();
+		assertTrue( result instanceof CityState );
+		assertEquals( ( ( CityState ) result ).getCity(), "Odessa" );
+		assertEquals( ( ( CityState ) result ).getState(), "WA" );
+
+		result = s.createCriteria( Student.class, "st")
+			.setProjection( Projections.groupProperty( "st.cityState" ).as( "cityState" ) )
+			.add( Restrictions.eq( "st.cityState", new CityState( "Odessa", "WA" ) ) )
+			.addOrder( Order.asc( "cityState" ) )
+			.uniqueResult();
+		assertTrue( result instanceof CityState );
+		assertEquals( ( ( CityState ) result ).getCity(), "Odessa" );
+		assertEquals( ( ( CityState ) result ).getState(), "WA" );
+
+		List list = s.createCriteria(Enrolment.class)
+			.createAlias("student", "st")
+			.createAlias("course", "co")
+			.setProjection( Projections.projectionList()
+					.add( Property.forName("co.courseCode").group() )
+					.add( Property.forName("st.cityState").group() )
+					.add( Property.forName("year").group() )
+			)
+			.list();
+
+
+		s.delete(gavin);
+		s.delete(xam);
+		s.delete(course);
+
 		t.commit();
 		s.close();
 	}
@@ -801,6 +1216,22 @@ public class CriteriaQueryTest extends FunctionalTestCase {
 		s.flush();
 
 		List data = ( List ) s.createCriteria( CourseMeeting.class).setProjection( Projections.id() ).list();
+		t.rollback();
+		s.close();
+	}
+
+	public void testProjectedCompositeIdWithAlias() {
+		Session s = openSession();
+		Transaction t = s.beginTransaction();
+
+		Course course = new Course();
+		course.setCourseCode("HIB");
+		course.setDescription("Hibernate Training");
+		course.getCourseMeetings().add( new CourseMeeting( course, "Monday", 1, "1313 Mockingbird Lane" ) );
+		s.save(course);
+		s.flush();
+
+		List data = ( List ) s.createCriteria( CourseMeeting.class).setProjection( Projections.id().as( "id" ) ).list();
 		t.rollback();
 		s.close();
 	}

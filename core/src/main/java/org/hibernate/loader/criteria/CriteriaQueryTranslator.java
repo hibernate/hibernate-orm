@@ -477,7 +477,7 @@ public class CriteriaQueryTranslator implements CriteriaQuery {
 		);
 	}
 
-	private String[] getColumns(
+	public String[] getColumns(
 			String propertyName,
 	        Criteria subcriteria) throws HibernateException {
 		return getPropertyMapping( getEntityName( subcriteria, propertyName ) )

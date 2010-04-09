@@ -420,7 +420,7 @@ public final class Environment {
 	 */
 	public static final String USE_SECOND_LEVEL_CACHE = "hibernate.cache.use_second_level_cache";
 	/**
-	 * Optimize the cache for mimimal puts instead of minimal gets
+	 * Optimize the cache for minimal puts instead of minimal gets
 	 */
 	public static final String USE_MINIMAL_PUTS = "hibernate.cache.use_minimal_puts";
 	/**
@@ -450,7 +450,7 @@ public final class Environment {
 	public static final String QUERY_TRANSLATOR = "hibernate.query.factory_class";
 
 	/**
-	 * A comma-seperated list of token substitutions to use when translating a Hibernate
+	 * A comma-separated list of token substitutions to use when translating a Hibernate
 	 * query to SQL
 	 */
 	public static final String QUERY_SUBSTITUTIONS = "hibernate.query.substitutions";
@@ -487,7 +487,7 @@ public final class Environment {
 	public static final String ORDER_UPDATES = "hibernate.order_updates";
 
 	/**
-	 * Enable ordering of insert statements for the purpose of more effecient JDBC batching.
+	 * Enable ordering of insert statements for the purpose of more efficient JDBC batching.
 	 */
 	public static final String ORDER_INSERTS = "hibernate.order_inserts";
 

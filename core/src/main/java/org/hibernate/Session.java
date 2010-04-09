@@ -168,7 +168,6 @@ public interface Session extends Serializable {
 	 *
 	 * @return The session factory.
 	 * @see SessionFactory
-
 	 */
 	public SessionFactory getSessionFactory();
 
@@ -761,7 +760,6 @@ public interface Session extends Serializable {
 	 * Return the persistent instance of the given entity class with the given identifier,
 	 * or null if there is no such persistent instance. (If the instance is already associated
 	 * with the session, return that instance. This method never returns an uninitialized instance.)
-	 * Obtain the specified lock mode if the instance exists.
 	 *
 	 * @param clazz a persistent class
 	 * @param id an identifier
@@ -840,7 +838,6 @@ public interface Session extends Serializable {
 	 */
 	public Object get(String entityName, Serializable id, LockOptions lockOptions) throws HibernateException;
 
-	
 	/**
 	 * Return the entity name for a persistent entity
 	 *   
@@ -921,7 +918,6 @@ public interface Session extends Serializable {
 	 * @throws HibernateException Generally indicates wrapped {@link java.sql.SQLException}
 	 */
 	public void doWork(Work work) throws HibernateException;
-
 
 	/**
 	 * Disconnect the <tt>Session</tt> from the current JDBC connection. If

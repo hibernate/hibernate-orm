@@ -102,7 +102,7 @@ public class SettingsFactory implements Serializable {
 		JdbcSupport jdbcSupport = null;
 
 		// 'hibernate.temp.use_jdbc_metadata_defaults' is a temporary magic value.
-		// The need for it is intended to be alleviated with future developement, thus it is
+		// The need for it is intended to be alleviated with future development, thus it is
 		// not defined as an Environment constant...
 		//
 		// it is used to control whether we should consult the JDBC metadata to determine

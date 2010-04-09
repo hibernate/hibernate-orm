@@ -258,7 +258,7 @@
 		
 		<component name="collectionComponent">
 			<component name="nested">
-				<property name="str"/>
+				<property name="str" column="`str`"/>
 				<bag name="foos" cascade="all">
 					<key column="baz_compon_id"/>
 					<one-to-many class="org.hibernate.test.legacy.Foo"/>

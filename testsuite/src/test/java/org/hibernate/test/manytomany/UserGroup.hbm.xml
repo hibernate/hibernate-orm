@@ -21,7 +21,7 @@
 		</composite-id>
 		<set name="groups" table="UserGroup">
 			<key>
-				<column name="userName"/>
+				<column name="`userName`"/>
 				<column name="org"/>
 			</key>
 			<many-to-many class="Group">
@@ -43,7 +43,7 @@
 				<column name="org"/>
 			</key>
 			<many-to-many class="User">
-				<column name="userName"/>
+				<column name="`userName`"/>
 				<formula>org</formula>
 			</many-to-many>
 		</set>

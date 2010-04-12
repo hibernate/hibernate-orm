@@ -75,6 +75,12 @@ public class FetchingScrollableResultsImpl extends AbstractScrollableResults {
 			return false;
 		}
 
+		if ( isResultSetEmpty() ) {
+			currentRow = null;
+			currentPosition = 0;
+			return false;
+		}
+
 		Object row = getLoader().loadSequentialRowsForward(
 				getResultSet(),
 				getSession(),
@@ -183,13 +189,16 @@ public class FetchingScrollableResultsImpl extends AbstractScrollableResults {
 	public boolean last() throws HibernateException {
 		boolean more = false;
 		if ( maxPosition != null ) {
+			if ( currentPosition > maxPosition.intValue() ) {
+				more = previous();
+			}
 			for ( int i = currentPosition; i < maxPosition.intValue(); i++ ) {
 				more = next();
 			}
 		}
 		else {
 			try {
-				if ( getResultSet().isAfterLast() ) {
+				if ( isResultSetEmpty() || getResultSet().isAfterLast() ) {
 					// should not be able to reach last without maxPosition being set
 					// unless there are no results
 					return false;
@@ -313,4 +322,18 @@ public class FetchingScrollableResultsImpl extends AbstractScrollableResults {
 		}
 		return scroll( rowNumber - currentPosition );
 	}
+
+	private boolean isResultSetEmpty() {
+		try {
+			return currentPosition == 0 && ! getResultSet().isBeforeFirst() && ! getResultSet().isAfterLast();
+		}
+		catch( SQLException e ) {
+			throw JDBCExceptionHelper.convert(
+			        getSession().getFactory().getSQLExceptionConverter(),
+			        e,
+			        "Could not determine if resultset is empty due to exception calling isBeforeFirst or isAfterLast()"
+			);
+		}
+	}
+
 }

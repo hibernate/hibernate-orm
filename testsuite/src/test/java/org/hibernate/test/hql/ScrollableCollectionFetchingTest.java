@@ -1,6 +1,8 @@
 // $Id: ScrollableCollectionFetchingTest.java 10977 2006-12-12 23:28:04Z steve.ebersole@jboss.com $
 package org.hibernate.test.hql;
 
+import java.util.List;
+
 import junit.framework.Test;
 
 import org.hibernate.HibernateException;
@@ -42,6 +44,195 @@ public class ScrollableCollectionFetchingTest extends FunctionalTestCase {
 		catch( HibernateException e ) {
 			// expected result...
 		}
+
+		txn.commit();
+		s.close();
+	}
+
+	public void testScrollingJoinFetchesEmptyResultSet() {
+		Session s = openSession();
+		Transaction txn = s.beginTransaction();
+
+		assertTrue(s
+		        .createQuery( "from Animal a left join fetch a.offspring where a.description like :desc order by a.id" )
+		        .setString( "desc", "root%" )
+		        .list()
+				.isEmpty() );
+
+		ScrollableResults results = s
+		        .createQuery( "from Animal a left join fetch a.offspring where a.description like :desc order by a.id" )
+		        .setString( "desc", "root%" )
+		        .scroll();
+
+		assertFalse( results.isFirst() );
+		assertFalse( results.isLast() );
+
+		assertFalse( results.next() );
+		assertFalse( results.isFirst() );
+		assertFalse( results.isLast() );
+
+		assertFalse( results.previous() );
+		assertFalse( results.isFirst() );
+		assertFalse( results.isLast() );
+
+		results.beforeFirst();
+		assertFalse( results.isFirst() );
+		assertFalse( results.isLast() );
+		assertFalse( results.next() );
+
+		assertFalse( results.first() );
+		assertFalse( results.isFirst() );
+		assertFalse( results.isLast() );
+		assertFalse( results.next() );
+
+		results.afterLast();
+		assertFalse( results.isFirst() );
+		assertFalse( results.isLast() );
+		assertFalse( results.next() );
+
+		assertFalse( results.last() );
+		assertFalse( results.isFirst() );
+		assertFalse( results.isLast() );
+		assertFalse( results.next() );
+
+		for ( int i=1; i<3; i++ ) {
+			assertFalse( results.scroll( i ) );
+			assertFalse( results.isFirst() );
+			assertFalse( results.isLast() );
+
+			assertFalse( results.scroll( - i ) );
+			assertFalse( results.isFirst() );
+			assertFalse( results.isLast() );
+
+			assertFalse( results.setRowNumber( i ) );
+			assertFalse( results.isFirst() );
+			assertFalse( results.isLast() );
+
+			assertFalse( results.setRowNumber( - i ) );
+			assertFalse( results.isFirst() );
+			assertFalse( results.isLast() );
+		}
+
+		txn.commit();
+		s.close();
+	}
+
+	public void testScrollingJoinFetchesSingleRowResultSet() {
+		Session s = openSession();
+		Transaction txn = s.beginTransaction();
+
+		Animal mother = new Animal();
+		mother.setDescription( "root-1" );
+
+		Animal daughter = new Animal();
+		daughter.setDescription( "daughter" );
+
+		daughter.setMother( mother );
+		mother.addOffspring( daughter );
+
+		s.save( mother );
+		s.save( daughter );
+
+		txn.commit();
+		s.close();
+
+		s = openSession();
+		txn = s.beginTransaction();
+
+		assertNotNull(s
+		        .createQuery( "from Animal a left join fetch a.offspring where a.description like :desc order by a.id" )
+		        .setString( "desc", "root%" )
+		        .uniqueResult() );
+
+		ScrollableResults results = s
+		        .createQuery( "from Animal a left join fetch a.offspring where a.description like :desc order by a.id" )
+		        .setString( "desc", "root%" )
+		        .scroll();
+
+		assertFalse( results.isFirst() );
+		assertFalse( results.isLast() );
+		assertFalse( results.previous() );		
+
+		assertTrue( results.next() );
+		assertTrue( results.isFirst() );
+		assertTrue( results.isLast() );
+
+		assertFalse( results.next() );
+		assertFalse( results.isFirst() );
+		assertFalse( results.isLast() );
+
+		assertTrue( results.previous() );
+		assertTrue( results.isFirst() );
+		assertTrue( results.isLast() );
+
+		assertFalse( results.previous() );
+		assertFalse( results.isFirst() );
+		assertFalse( results.isLast() );
+
+		assertTrue( results.next() );
+		assertTrue( results.isFirst() );
+		assertTrue( results.isLast() );
+
+		results.beforeFirst();
+		assertFalse( results.isFirst() );
+		assertFalse( results.isLast() );
+		assertFalse( results.previous() );
+
+		assertTrue( results.first() );
+		assertTrue( results.isFirst() );
+		assertTrue( results.isLast() );
+		assertFalse( results.next() );
+
+		results.afterLast();
+		assertFalse( results.isFirst() );
+		assertFalse( results.isLast() );
+		assertFalse( results.next() );
+
+		assertTrue( results.last() );
+		assertTrue( results.isFirst() );
+		assertTrue( results.isLast() );
+		assertFalse( results.next() );
+
+		assertTrue( results.first() );
+		assertTrue( results.isFirst() );
+		assertTrue( results.isLast() );		
+
+		for ( int i=1; i<3; i++ ) {
+			assertTrue( results.setRowNumber( 1 ) );
+			assertTrue( results.isFirst() );
+			assertTrue( results.isLast() );
+
+			assertFalse( results.scroll( i ) );
+			assertFalse( results.isFirst() );
+			assertFalse( results.isLast() );
+
+			assertTrue( results.setRowNumber( 1 ) );
+			assertTrue( results.isFirst() );
+			assertTrue( results.isLast() );
+
+			assertFalse( results.scroll( - i ) );
+			assertFalse( results.isFirst() );
+			assertFalse( results.isLast() );
+
+			if ( i != 1 ) {
+				assertFalse( results.setRowNumber( i ) );
+				assertFalse( results.isFirst() );
+				assertFalse( results.isLast() );
+
+				assertFalse( results.setRowNumber( - i ) );
+				assertFalse( results.isFirst() );
+				assertFalse( results.isLast() );
+			}
+		}
+
+		txn.commit();
+		s.close();
+
+		s = openSession();
+		txn = s.beginTransaction();
+
+		s.createQuery( "delete Animal where not description like 'root%'" ).executeUpdate();
+		s.createQuery( "delete Animal" ).executeUpdate();
 
 		txn.commit();
 		s.close();

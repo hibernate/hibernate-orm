@@ -435,6 +435,26 @@ public class QueryTest extends TestCase {
 
 	}
 
+	public void testTypedNamedNativeQuery() {
+		Item item = new Item( "Mouse", "Micro$oft mouse" );
+
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		em.persist( item );
+		assertTrue( em.contains( item ) );
+		em.getTransaction().commit();
+
+		em.getTransaction().begin();
+		item = em.createNamedQuery( "nativeItem1", Item.class ).getSingleResult();
+		item = em.createNamedQuery( "nativeItem2", Item.class ).getSingleResult();
+		assertNotNull( item );
+		assertEquals( "Micro$oft mouse", item.getDescr() );
+		em.remove( item );
+		em.getTransaction().commit();
+
+		em.close();
+	}
+
 	public Class[] getAnnotatedClasses() {
 		return new Class[]{
 				Item.class,

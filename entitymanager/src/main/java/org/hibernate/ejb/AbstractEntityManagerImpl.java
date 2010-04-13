@@ -93,12 +93,17 @@ import org.hibernate.ejb.transaction.JoinableCMTTransaction;
 import org.hibernate.ejb.util.CacheModeHelper;
 import org.hibernate.ejb.util.ConfigurationHelper;
 import org.hibernate.ejb.util.LockModeTypeHelper;
+import org.hibernate.engine.NamedSQLQueryDefinition;
+import org.hibernate.engine.ResultSetMappingDefinition;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.SessionImplementor;
+import org.hibernate.engine.query.sql.NativeSQLQueryReturn;
+import org.hibernate.engine.query.sql.NativeSQLQueryRootReturn;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.transaction.TransactionFactory;
 import org.hibernate.transform.BasicTransformerAdapter;
 import org.hibernate.util.JTAHelper;
+import org.hibernate.util.ReflectHelper;
 
 /**
  * @author <a href="mailto:gavin@hibernate.org">Gavin King</a>
@@ -449,18 +454,60 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 
 	public <T> TypedQuery<T> createNamedQuery(String name, Class<T> resultClass) {
 		try {
+			/*
+			 * Get the named query.
+			 * If the named query is a SQL query, get the expected returned type from the query definition
+			 * or its associated result set mapping
+			 * If the named query is a HQL query, use getReturnType()
+			 */
 			org.hibernate.Query namedQuery = getSession().getNamedQuery( name );
+			//TODO clean this up to avoid downcasting
+			final SessionFactoryImplementor factoryImplementor = ( SessionFactoryImplementor ) entityManagerFactory.getSessionFactory();
+			final NamedSQLQueryDefinition queryDefinition = factoryImplementor.getNamedSQLQuery( name );
 			try {
-				if ( namedQuery.getReturnTypes().length != 1 ) {
-					throw new IllegalArgumentException( "Cannot create TypedQuery for query with more than one return" );
+				if ( queryDefinition != null ) {
+					Class<?> actualReturnedClass;
+
+					final NativeSQLQueryReturn[] queryReturns;
+					if ( queryDefinition.getQueryReturns() != null ) {
+						queryReturns = queryDefinition.getQueryReturns();
+					}
+					else if ( queryDefinition.getResultSetRef() != null ) {
+						final ResultSetMappingDefinition rsMapping = factoryImplementor.getResultSetMapping(
+								queryDefinition.getResultSetRef()
+						);
+						queryReturns = rsMapping.getQueryReturns();
+					}
+					else {
+						throw new AssertionFailure( "Unsupported named query model. Please report the bug in Hibernate EntityManager");
+					}
+					if ( queryReturns.length > 1 ) {
+						throw new IllegalArgumentException( "Cannot create TypedQuery for query with more than one return" );
+					}
+					final NativeSQLQueryReturn nativeSQLQueryReturn = queryReturns[0];
+					if ( nativeSQLQueryReturn instanceof NativeSQLQueryRootReturn ) {
+						final String entityClassName = ( ( NativeSQLQueryRootReturn ) nativeSQLQueryReturn ).getReturnEntityName();
+						try {
+							actualReturnedClass = ReflectHelper.classForName( entityClassName, AbstractEntityManagerImpl.class );
+						}
+						catch ( ClassNotFoundException e ) {
+							throw new AssertionFailure( "Unable to instantiate class declared on named native query: " + name + " " + entityClassName );
+						}
+						if ( !resultClass.isAssignableFrom( actualReturnedClass ) ) {
+							throw buildIncompatibleException( resultClass, actualReturnedClass );
+						}
+					}
+					else {
+						//TODO support other NativeSQLQueryReturn type. For now let it go.
+					}
 				}
-				if ( !resultClass.isAssignableFrom( namedQuery.getReturnTypes()[0].getReturnedClass() ) ) {
-					throw new IllegalArgumentException(
-							"Type specified for TypedQuery [" +
-									resultClass.getName() +
-									"] is incompatible with query return type [" +
-									namedQuery.getReturnTypes()[0].getReturnedClass() + "]"
-					);
+				else {
+					if ( namedQuery.getReturnTypes().length != 1 ) {
+						throw new IllegalArgumentException( "Cannot create TypedQuery for query with more than one return" );
+					}
+					if ( !resultClass.isAssignableFrom( namedQuery.getReturnTypes()[0].getReturnedClass() ) ) {
+						throw buildIncompatibleException( resultClass, namedQuery.getReturnTypes()[0].getReturnedClass() );
+					}
 				}
 				return new QueryImpl<T>( namedQuery, this );
 			}
@@ -471,6 +518,15 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 		catch ( MappingException e ) {
 			throw new IllegalArgumentException( "Named query not found: " + name );
 		}
+	}
+
+	private IllegalArgumentException buildIncompatibleException(Class<?> resultClass, Class<?> actualResultClass) {
+		return new IllegalArgumentException(
+							"Type specified for TypedQuery [" +
+									resultClass.getName() +
+									"] is incompatible with query return type [" +
+									actualResultClass + "]"
+					);
 	}
 
 	public Query createNativeQuery(String sqlString) {

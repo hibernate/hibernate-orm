@@ -1,6 +1,7 @@
 //$Id$
 package org.hibernate.test.annotations.join;
 
+import java.util.ArrayList;
 import java.util.Date;
 
 import org.hibernate.Criteria;
@@ -114,7 +115,20 @@ public class JoinTest extends TestCase {
 		tx.commit();
 		s.close();
 	}
-
+	
+	public void testReferenceColumnWithBacktics() throws Exception {
+		Session s=openSession();
+		s.beginTransaction();
+		SysGroupsOrm g=new SysGroupsOrm();
+		SysUserOrm u=new SysUserOrm();
+		u.setGroups( new ArrayList<SysGroupsOrm>() );
+		u.getGroups().add( g );
+		s.save( g );
+		s.save( u );
+		s.getTransaction().commit();
+		s.close();
+	}
+	
 	public void testUniqueConstaintOnSecondaryTable() throws Exception {
 		Cat cat = new Cat();
 		cat.setStoryPart2( "My long story" );
@@ -200,7 +214,9 @@ public class JoinTest extends TestCase {
 				Dog.class,
 				A.class,
 				B.class,
-				C.class
+				C.class,
+				SysGroupsOrm.class,
+				SysUserOrm.class
 		};
 	}
 }

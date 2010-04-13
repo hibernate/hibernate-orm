@@ -350,7 +350,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 		}
 		else {
 			if ( mappedClass.isAssignableFrom( y.getClass() ) ) {
-				yid = persister.getIdentifier(x, entityMode);
+				yid = persister.getIdentifier(y, entityMode);
 			}
 			else {
 				//JPA 2 case where @IdClass contains the id and not the associated entity

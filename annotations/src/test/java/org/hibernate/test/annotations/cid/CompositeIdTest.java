@@ -1,18 +1,16 @@
 //$Id$
 package org.hibernate.test.annotations.cid;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.ArrayList;
 
+import org.hibernate.Criteria;
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.Criteria;
 import org.hibernate.criterion.Disjunction;
 import org.hibernate.criterion.Restrictions;
-import org.hibernate.junit.FailureExpected;
-import org.hibernate.junit.SkipForDialect;
 import org.hibernate.test.annotations.TestCase;
 
 /**

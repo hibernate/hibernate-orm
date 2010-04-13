@@ -30,8 +30,6 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.test.annotations.TestCase;
 
-import org.hibernate.junit.FailureExpected;
-
 /**
  * A test.
  *

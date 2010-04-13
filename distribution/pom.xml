@@ -77,14 +77,16 @@
                                     classPath.createPathElement().path = element
                                 }
 
+                                targetDir = 'target/javadocs';
+
                                 ant.javadoc(
                                     executable: '${jdk16_home}/bin/javadoc',
                                     maxmemory: '512m',
-                                    destdir: 'target/javadocs',
+                                    destdir: targetDir ,
                                     sourcepathref: sourcePathName,
                                     classpathref: classPathName,
-                                    overview: '../core/src/main/javadoc/package.html',
-                                    stylesheetfile: '../core/src/main/javadoc/stylesheet.css',
+                                    overview: 'src/javadoc/package.html',
+                                    stylesheetfile: 'src/javadoc/stylesheet.css',
                                     windowtitle: 'Hibernate JavaDocs',
                                     doctitle: 'Hibernate JavaDoc (${project.version})',
                                     bottom: 'Copyright &copy; 2001-2010 <a href="http://redhat.com">Red Hat, Inc.</a>  All Rights Reserved.',
@@ -134,6 +136,12 @@
                                     ant.group( title: 'Testing Support' ) {
                                         ant.package( name: 'org.hibernate.junit*' )
                                     }
+                                }
+
+                                imagesDir = targetDir + '/images'
+                                ant.mkdir( dir: imagesDir )
+                                ant.copy( toDir: imagesDir ) {
+                                    fileset( dir: "src/javadoc/images" )
                                 }
                                 ]]>
                             </source>

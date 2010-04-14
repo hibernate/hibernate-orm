@@ -93,7 +93,7 @@ fontBaseDir: Similar to baseDir, except that this value is used for fonts. If
     <font-triplet name="Mincho" style="italic" weight="bold"/>
    </font>
   -->
- <font metrics-file="simhei.xml" embed-file="simhei.ttf" kerning="yes">
+ <!-- font metrics-file="simhei.xml" embed-file="simhei.ttf" kerning="yes">
 	<font-triplet name="simhei" style="normal" weight="normal"/> 
 	<font-triplet name="simhei" style="normal" weight="bold"/> 
 	<font-triplet name="simhei" style="italic" weight="normal"/> 
@@ -104,7 +104,7 @@ fontBaseDir: Similar to baseDir, except that this value is used for fonts. If
 	<font-triplet name="simsun" style="normal" weight="bold"/> 
 	<font-triplet name="simsun" style="italic" weight="normal"/> 
 	<font-triplet name="simsun" style="italic" weight="bold"/> 
- </font>
+ </font -->
 </fonts>
 
 

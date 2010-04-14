@@ -102,7 +102,7 @@ public class QueryImpl<X> extends org.hibernate.ejb.AbstractQueryImpl<X> impleme
 			final NamedParameterDescriptor descriptor =
 					queryImpl.getParameterMetadata().getNamedParameterDescriptor( name );
 			Class javaType = namedParameterTypeRedefinition.get( name );
-			if ( javaType != null ) {
+			if ( javaType != null && mightNeedRedefinition( javaType ) ) {
 				descriptor.resetExpectedType(
 						TypeFactory.heuristicType( javaType.getName() )
 				);
@@ -138,6 +138,11 @@ public class QueryImpl<X> extends org.hibernate.ejb.AbstractQueryImpl<X> impleme
 		}
 
 		this.parameters = java.util.Collections.unmodifiableSet( parameters );
+	}
+
+	private boolean mightNeedRedefinition(Class javaType) {
+		// for now, only really no for dates/times/timestamps
+		return java.util.Date.class.isAssignableFrom( javaType );
 	}
 
 	private static class ParameterImpl implements Parameter {

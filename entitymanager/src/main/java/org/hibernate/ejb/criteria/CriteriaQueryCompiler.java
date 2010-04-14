@@ -60,19 +60,74 @@ import org.hibernate.util.StringHelper;
 public class CriteriaQueryCompiler implements Serializable {
 	private static final Logger log = LoggerFactory.getLogger( CriteriaQueryCompiler.class );
 
+	/**
+	 * Used to describe implicit (not defined in criteria query) parameters.
+	 */
 	public static interface ImplicitParameterBinding {
+		/**
+		 * Retrieve the generated name of the implicit parameter.
+		 *
+		 * @return The parameter name.
+		 */
 		public String getParameterName();
+
+		/**
+		 * Get the java type of the "thing" that led to the implicit parameter.  Used from
+		 * {@link org.hibernate.ejb.HibernateEntityManagerImplementor.Options#getNamedParameterExplicitTypes()}
+		 * in determining "guessed type" overriding.
+		 *
+		 * @return The java type
+		 */
 		public Class getJavaType();
+
+		/**
+		 * Bind the implicit parameter's value to the JPA query.
+		 *
+		 * @param typedQuery The JPA query.
+		 */
 		public void bind(TypedQuery typedQuery);
 	}
 
+	/**
+	 * Used to provide a context and services to the rendering.
+	 */
 	public static interface RenderingContext {
+		/**
+		 * Generate a correlation name.
+		 *
+		 * @return The generated correlation name
+		 */
 		public String generateAlias();
+
+		/**
+		 * Generate a name for a parameter into the JPAQL query.
+		 *
+		 * @return The generated para name
+		 */
 		public String generateParameterName();
 
+		/**
+		 * Register parameters explicitly encountered in the criteria query.
+		 *
+		 * @param criteriaQueryParameter The parameter expression
+		 * @param jpaqlParameterName The generated name for the parameter
+		 */
 		public void registerExplicitParameter(ParameterExpression<?> criteriaQueryParameter, String jpaqlParameterName);
+
+		/**
+		 * Register a parameter that was not part of the criteria query (at least not as a parameter).
+		 *
+		 * @param binding The parameter description.
+		 */
 		public void registerImplicitParameterBinding(ImplicitParameterBinding binding);
 
+		/**
+		 * Given a java type, determine the proper cast type name.
+		 *
+		 * @param javaType The java type.
+		 *
+		 * @return The cast type name.
+		 */
 		public String getCastType(Class javaType);
 	}
 

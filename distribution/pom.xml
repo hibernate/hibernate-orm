@@ -57,18 +57,19 @@
                             <source><![CDATA[
                                 def sourcePathName = 'javadocSourcePath'
                                 sourcePath = ant.path( id:sourcePathName ) {
-                                    ant.pathElement( path: '../annotations/src/main/java' )
-                                    ant.pathElement( path: '../cache-ehcache/src/main/java' )
-                                    ant.pathElement( path: '../cache-infinispan/src/main/java' )
-                                    ant.pathElement( path: '../cache-jbosscache/src/main/java' )
-                                    ant.pathElement( path: '../cache-oscache/src/main/java' )
-                                    ant.pathElement( path: '../cache-swarmcache/src/main/java' )
-                                    ant.pathElement( path: '../connection-c3p0/src/main/java' )
-                                    ant.pathElement( path: '../connection-proxool/src/main/java' )
-                                    ant.pathElement( path: '../entitymanager/src/main/java' )
-                                    ant.pathElement( path: '../envers/src/main/java' )
-                                    ant.pathElement( path: '../testing/src/main/java' )
-                                    ant.pathElement( path: '../core/src/main/java:core/target/generated-sources/antlr' )
+                                    ant.pathElement( path: "${pom.basedir}/../annotations/src/main/java" )
+                                    ant.pathElement( path: "${pom.basedir}/../cache-ehcache/src/main/java" )
+                                    ant.pathElement( path: "${pom.basedir}/../cache-infinispan/src/main/java" )
+                                    ant.pathElement( path: "${pom.basedir}/../cache-jbosscache/src/main/java" )
+                                    ant.pathElement( path: "${pom.basedir}/../cache-oscache/src/main/java" )
+                                    ant.pathElement( path: "${pom.basedir}/../cache-swarmcache/src/main/java" )
+                                    ant.pathElement( path: "${pom.basedir}/../connection-c3p0/src/main/java" )
+                                    ant.pathElement( path: "${pom.basedir}/../connection-proxool/src/main/java" )
+                                    ant.pathElement( path: "${pom.basedir}/../entitymanager/src/main/java" )
+                                    ant.pathElement( path: "${pom.basedir}/../envers/src/main/java" )
+                                    ant.pathElement( path: "${pom.basedir}/../testing/src/main/java" )
+                                    ant.pathElement( path: "${pom.basedir}/../core/src/main/java" )
+                                    ant.pathElement( path: "../core/target/generated-sources/antlr" )
                                 }
 
                                 def classPathName = 'javadocClassPath'
@@ -77,7 +78,7 @@
                                     classPath.createPathElement().path = element
                                 }
 
-                                targetDir = 'target/javadocs';
+                                targetDir = "${pom.basedir}/target/javadocs";
 
                                 ant.javadoc(
                                     executable: '${jdk16_home}/bin/javadoc',
@@ -85,10 +86,10 @@
                                     destdir: targetDir ,
                                     sourcepathref: sourcePathName,
                                     classpathref: classPathName,
-                                    overview: 'src/javadoc/package.html',
-                                    stylesheetfile: 'src/javadoc/stylesheet.css',
+                                    overview: '${pom.basedir}/src/javadoc/package.html',
+                                    stylesheetfile: '${pom.basedir}/src/javadoc/stylesheet.css',
                                     windowtitle: 'Hibernate JavaDocs',
-                                    doctitle: 'Hibernate JavaDoc (${project.version})',
+                                    doctitle: 'Hibernate JavaDoc (${pom.version})',
                                     bottom: 'Copyright &copy; 2001-2010 <a href="http://redhat.com">Red Hat, Inc.</a>  All Rights Reserved.',
                                     use: true
                                 ) {
@@ -141,7 +142,7 @@
                                 imagesDir = targetDir + '/images'
                                 ant.mkdir( dir: imagesDir )
                                 ant.copy( toDir: imagesDir ) {
-                                    fileset( dir: "src/javadoc/images" )
+                                    fileset( dir: "${pom.basedir}/src/javadoc/images" )
                                 }
                                 ]]>
                             </source>

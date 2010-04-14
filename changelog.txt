@@ -6,6 +6,47 @@ refer to the particular case on JIRA using the issue tracking number to learn
 more about each case.
 
 
+Changes in version 3.5.1 (2010.04.14)
+-------------------------------------------
+http://opensource.atlassian.com/projects/hibernate/browse/HHH/fixforversion/11021
+
+** Bug
+    * [HHH-2809] - dialect changes: limit string
+    * [HHH-3543] - method org.hibernate.transaction.JDBCTransaction.notifyLocalSynchsBeforeTransactionCompletion "swallows" all exceptions occured inside it
+    * [HHH-4077] - Misuse of NamingStrategy and logical column names in HbmBinder
+    * [HHH-4721] - Error in AuditSync.beforeCompletion() does not result in faillure of JDBCTransaction
+    * [HHH-4912] - testManyToManyWithFormula induces error with Ingres dialect
+    * [HHH-4938] - Multiple errors reported during legacy FooBarTest with Ingres
+    * [HHH-4961] - org.hibernate.test.hql.ASTParserLoadingTest error running  testPaginationWithPolymorphicQuery with Ingres
+    * [HHH-4965] - Implicit parameters abusively use TypeFactory.heuristicType losing UserType and XToOneType info
+    * [HHH-4970] - org.hibernate.test.hql.ASTParserLoadingTest error running testComponentParameterBinding with Ingres
+    * [HHH-4973] - org.hibernate.test.hql.ASTParserLoadingTest error running testSelectClauseSubselect with Ingres
+    * [HHH-4976] - org.hibernate.test.hql.ASTParserLoadingTest error running testImplicitPolymorphism with Ingres
+    * [HHH-4977] - org.hibernate.test.hql.ASTParserLoadingTest error running testOneToManyFilter with Ingres
+    * [HHH-5045] - org.hibernate.test.hql.HQLTest failure running testConcatenation with Ingres
+    * [HHH-5059] - callouts and programlistings with highlighting
+    * [HHH-5082] - QueryException thrown when grouping by component
+    * [HHH-5096] -  FetchingScrollableResultsImpl.last() does not move to the last result if cursor is after the last result
+    * [HHH-5102] - Instances of a subclass can't be loaded
+    * [HHH-5103] - Specifying the referencedColumnName in a @JoinColumn in backtics like `uid` fails
+    * [HHH-5104] - EntityType.isEqual() test x equals x but should test x equals y  (Thierry-Dimitri Roy)
+    * [HHH-5106] - UnsupportedOperationException on SQL named native queries when using the type-safe API
+
+** Improvement
+    * [HHH-3962] - Ingres Hibernate dialect for EAP 4.3.0 GA CP04
+
+** Patch
+    * [HHH-2470] - Use of session.createSQLQuery causes memory leak (Harry Mark and Michael Stevens)
+    * [HHH-5003] - IngresDialect requires query substitutions for boolean values
+    * [HHH-5076] - Multiple failures reported during ReadOnlyProxyTest with Ingres
+
+** Task
+    * [HHH-3997] - Build aggregated javadocs
+    * [HHH-5083] - Align javadoc styles better with docbook / website
+    * [HHH-5084] - Improve overview for aggregated javadocs
+    * [HHH-5116] - Remove copyrighted fonts from annotations
+
+
 Changes in version 3.5.0-Final (2010.03.31)
 -------------------------------------------
 http://opensource.atlassian.com/projects/hibernate/browse/HHH/fixforversion/11022

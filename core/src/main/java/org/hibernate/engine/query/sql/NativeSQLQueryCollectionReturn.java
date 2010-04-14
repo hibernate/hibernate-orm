@@ -40,6 +40,7 @@ import org.hibernate.LockMode;
 public class NativeSQLQueryCollectionReturn extends NativeSQLQueryNonScalarReturn {
 	private String ownerEntityName;
 	private String ownerProperty;
+	private final int hashCode;
 
 	/**
 	 * Construct a native-sql return representing a collection initializer
@@ -61,6 +62,7 @@ public class NativeSQLQueryCollectionReturn extends NativeSQLQueryNonScalarRetur
 		super( alias, propertyResults, lockMode );
 		this.ownerEntityName = ownerEntityName;
 		this.ownerProperty = ownerProperty;
+		this.hashCode = determineHashCode();
 	}
 
 	/**
@@ -79,5 +81,39 @@ public class NativeSQLQueryCollectionReturn extends NativeSQLQueryNonScalarRetur
 	 */
 	public String getOwnerProperty() {
 		return ownerProperty;
+	}
+
+	public boolean equals(Object o) {
+		if ( this == o ) {
+			return true;
+		}
+		if ( o == null || getClass() != o.getClass() ) {
+			return false;
+		}
+		if ( !super.equals( o ) ) {
+			return false;
+		}
+
+		NativeSQLQueryCollectionReturn that = ( NativeSQLQueryCollectionReturn ) o;
+
+		if ( ownerEntityName != null ? !ownerEntityName.equals( that.ownerEntityName ) : that.ownerEntityName != null ) {
+			return false;
+		}
+		if ( ownerProperty != null ? !ownerProperty.equals( that.ownerProperty ) : that.ownerProperty != null ) {
+			return false;
+		}
+
+		return true;
+	}
+
+	public int hashCode() {
+		return hashCode;
+	}
+	
+	private int determineHashCode() {
+		int result = super.hashCode();
+		result = 31 * result + ( ownerEntityName != null ? ownerEntityName.hashCode() : 0 );
+		result = 31 * result + ( ownerProperty != null ? ownerProperty.hashCode() : 0 );
+		return result;
 	}
 }

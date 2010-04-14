@@ -37,6 +37,7 @@ import org.hibernate.LockMode;
  */
 public class NativeSQLQueryRootReturn extends NativeSQLQueryNonScalarReturn {
 	private String returnEntityName;
+	private final int hashCode;
 
 	/**
 	 * Construct a return representing an entity returned at the root
@@ -60,7 +61,7 @@ public class NativeSQLQueryRootReturn extends NativeSQLQueryNonScalarReturn {
 	public NativeSQLQueryRootReturn(String alias, String entityName, Map propertyResults, LockMode lockMode) {
 		super( alias, propertyResults, lockMode );
 		this.returnEntityName = entityName;
-
+		this.hashCode = determineHashCode();
 	}
 
 	/**
@@ -72,4 +73,33 @@ public class NativeSQLQueryRootReturn extends NativeSQLQueryNonScalarReturn {
 		return returnEntityName;
 	}
 
+	public boolean equals(Object o) {
+		if ( this == o ) {
+			return true;
+		}
+		if ( o == null || getClass() != o.getClass() ) {
+			return false;
+		}
+		if ( ! super.equals( o ) ) {
+			return false;
+		}
+
+		NativeSQLQueryRootReturn that = ( NativeSQLQueryRootReturn ) o;
+
+		if ( returnEntityName != null ? !returnEntityName.equals( that.returnEntityName ) : that.returnEntityName != null ) {
+			return false;
+		}
+
+		return true;
+	}
+
+	public int hashCode() {
+		return hashCode;
+	}
+
+	private int determineHashCode() {
+		int result = super.hashCode();
+		result = 31 * result + ( returnEntityName != null ? returnEntityName.hashCode() : 0 );
+		return result;
+	}
 }

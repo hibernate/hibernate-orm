@@ -42,6 +42,7 @@ public abstract class NativeSQLQueryNonScalarReturn implements NativeSQLQueryRet
 	private final String alias;
 	private final LockMode lockMode;
 	private final Map propertyResults = new HashMap();
+	private final int hashCode;
 
 	/**
 	 * Constructs some form of non-scalar return descriptor
@@ -59,6 +60,7 @@ public abstract class NativeSQLQueryNonScalarReturn implements NativeSQLQueryRet
 		if ( propertyResults != null ) {
 			this.propertyResults.putAll( propertyResults );
 		}
+		this.hashCode = determineHashCode();
 	}
 
 	/**
@@ -86,5 +88,40 @@ public abstract class NativeSQLQueryNonScalarReturn implements NativeSQLQueryRet
 	 */
 	public Map getPropertyResultsMap() {
 		return Collections.unmodifiableMap( propertyResults );
+	}
+
+	public int hashCode() {
+		return hashCode;
+	}
+
+	private int determineHashCode() {
+		int result = alias != null ? alias.hashCode() : 0;
+		result = 31 * result + ( getClass().getName().hashCode() );
+		result = 31 * result + ( lockMode != null ? lockMode.hashCode() : 0 );
+		result = 31 * result + ( propertyResults != null ? propertyResults.hashCode() : 0 );
+		return result;
+	}
+
+	public boolean equals(Object o) {
+		if ( this == o ) {
+			return true;
+		}
+		if ( o == null || getClass() != o.getClass() ) {
+			return false;
+		}
+
+		NativeSQLQueryNonScalarReturn that = ( NativeSQLQueryNonScalarReturn ) o;
+
+		if ( alias != null ? !alias.equals( that.alias ) : that.alias != null ) {
+			return false;
+		}
+		if ( lockMode != null ? !lockMode.equals( that.lockMode ) : that.lockMode != null ) {
+			return false;
+		}
+		if ( propertyResults != null ? !propertyResults.equals( that.propertyResults ) : that.propertyResults != null ) {
+			return false;
+		}
+
+		return true;
 	}
 }

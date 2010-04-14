@@ -27,7 +27,7 @@
     <parent>
         <artifactId>hibernate-parent</artifactId>
         <groupId>org.hibernate</groupId>
-        <version>3.5.1-SNAPSHOT</version>
+        <version>3.5.1-Final</version>
         <relativePath>../parent/pom.xml</relativePath>
     </parent>
 

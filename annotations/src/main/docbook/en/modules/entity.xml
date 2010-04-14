@@ -448,7 +448,7 @@ public String getName() { ... }
             <area coords="11" id="hm10" />
           </areaspec>
 
-          <programlisting language="JAVA" role="JAVA">@Column(
+          <programlisting>@Column(
     name="columnName";
     boolean unique() default false;
     boolean nullable() default true;
@@ -2652,7 +2652,7 @@ public SortedSet&lt;Ticket&gt; getTickets() {
           <area coords="4" id="cache-hm3" />
         </areaspec>
 
-        <programlisting language="JAVA" role="JAVA">@Cache(
+        <programlisting>@Cache(
     CacheConcurrencyStrategy usage();
     String region() default "";
     String include() default "all";

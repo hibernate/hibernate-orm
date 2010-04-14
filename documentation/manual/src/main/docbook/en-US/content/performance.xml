@@ -827,7 +827,7 @@ Cat fritz = (Cat) iter.next();]]></programlisting>
                     <area id="cache2" coords="3"/>
                     <area id="cache3" coords="4"/>
                 </areaspec>
-                <programlisting role="XML"><![CDATA[<cache
+                <programlisting><![CDATA[<cache
     usage="transactional|read-write|nonstrict-read-write|read-only"
     region="RegionName"
     include="all|non-lazy"

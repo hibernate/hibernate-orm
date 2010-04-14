@@ -108,7 +108,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: performance\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2010-03-12T00:03:47\n"
+"POT-Creation-Date: 2010-02-11T05:38:15\n"
 "PO-Revision-Date: 2010-03-18 14:45+1000\n"
 "Last-Translator: \n"
 "Language-Team:  <en@li.org>\n"
@@ -407,7 +407,8 @@ msgstr "recupera via <literal>get()</literal> ou <literal>load()</literal>"
 #. Tag: para
 #, no-c-format
 msgid "retrieval that happens implicitly when an association is navigated"
-msgstr "Recuperações que acontecem implicitamente quando navegamos por uma associação"
+msgstr ""
+"Recuperações que acontecem implicitamente quando navegamos por uma associação"
 
 #. Tag: para
 #, no-c-format
@@ -638,8 +639,10 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Certain operations do <emphasis>not</emphasis> require proxy initialization:"
-msgstr "Algumas operações <emphasis>não</emphasis> requerem inicialização por proxy: "
+msgid ""
+"Certain operations do <emphasis>not</emphasis> require proxy initialization:"
+msgstr ""
+"Algumas operações <emphasis>não</emphasis> requerem inicialização por proxy: "
 
 #. Tag: para
 #, no-c-format
@@ -840,7 +843,8 @@ msgstr ""
 msgid ""
 "You can use a collection filter to get the size of a collection without "
 "initializing it:"
-msgstr "Você pode usar um filtro de coleção para saber seu tamanho sem inicializá-la:"
+msgstr ""
+"Você pode usar um filtro de coleção para saber seu tamanho sem inicializá-la:"
 
 #. Tag: para
 #, no-c-format
@@ -900,8 +904,10 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Hibernate will now execute only three queries: the pattern is 10, 10, 5."
-msgstr "O Hibernate irá executar agora apenas três consultas; o padrão é 10, 10, 5."
+msgid ""
+"Hibernate will now execute only three queries: the pattern is 10, 10, 5."
+msgstr ""
+"O Hibernate irá executar agora apenas três consultas; o padrão é 10, 10, 5."
 
 #. Tag: para
 #, no-c-format
@@ -983,17 +989,23 @@ msgid ""
 "<interfacename>org.hibernate.Session</interfacename> until it is explicitly "
 "disabled."
 msgstr ""
-"Outra forma de afetar a estratégia de busca para o carregamento de objetos associados é através do chamado perfil de busca, que é uma associação de configuração de nomeada com o <interfacename>org.hibernate.SessionFactory</"
+"Outra forma de afetar a estratégia de busca para o carregamento de objetos "
+"associados é através do chamado perfil de busca, que é uma associação de "
+"configuração de nomeada com o <interfacename>org.hibernate.SessionFactory</"
 "interfacename>, porém ativado pelo nome no <interfacename>org.hibernate."
 "Session</interfacename>. Uma vez ativado no <interfacename>org.hibernate."
-"Session</interfacename>, o perfil de busca será afetado pelo <interfacename>org.hibernate.Session</interfacename> até que o mesmo seja completamente desativado."
+"Session</interfacename>, o perfil de busca será afetado pelo "
+"<interfacename>org.hibernate.Session</interfacename> até que o mesmo seja "
+"completamente desativado."
 
 #. Tag: para
 #, no-c-format
 msgid ""
 "So what does that mean? Well lets explain that by way of an example. Say we "
 "have the following mappings:"
-msgstr "O que isto significa? A explicação será através de um exemplo. Vamos dizer que nós temos os seguintes mapeamentos:"
+msgstr ""
+"O que isto significa? A explicação será através de um exemplo. Vamos dizer "
+"que nós temos os seguintes mapeamentos:"
 
 #. Tag: para
 #, no-c-format
@@ -1006,7 +1018,16 @@ msgid ""
 "fetching\" strategies via an HQL or criteria queries. But another option is "
 "to use a fetch profile to achieve that. Just add the following to your "
 "mapping:"
-msgstr "Normalmente, quando você recebe uma referência para um cliente em particular, o conjunto do cliente de pedidos será lento, significando que nós ainda não baixamos estes pedidos a partir do banco de dados. Na maioria das vezes isto é bom. Agora vamos imaginar que você possui um determinado caso de uso, onde é mais eficiente carregar o cliente e outros pedidos juntos. Uma maneira correta é utilizar as estratégias de \"busca dinâmica\" através de um HQL ou consultas de critério. Entretanto, outra opção é usar um perfil de busca para atingir o mesmo objeto. Apenas adicione o seguinte a seu mapeamento:"
+msgstr ""
+"Normalmente, quando você recebe uma referência para um cliente em "
+"particular, o conjunto do cliente de pedidos será lento, significando que "
+"nós ainda não baixamos estes pedidos a partir do banco de dados. Na maioria "
+"das vezes isto é bom. Agora vamos imaginar que você possui um determinado "
+"caso de uso, onde é mais eficiente carregar o cliente e outros pedidos "
+"juntos. Uma maneira correta é utilizar as estratégias de \"busca dinâmica\" "
+"através de um HQL ou consultas de critério. Entretanto, outra opção é usar "
+"um perfil de busca para atingir o mesmo objeto. Apenas adicione o seguinte a "
+"seu mapeamento:"
 
 #. Tag: para
 #, no-c-format
@@ -1018,7 +1039,9 @@ msgstr "ou ainda:"
 msgid ""
 "Now the following code will actually load both the customer <emphasis>and "
 "their orders</emphasis>:"
-msgstr "Agora que o código seguinte irá carregar ambos cliente <emphasis>e outros pedidos</emphasis>:"
+msgstr ""
+"Agora que o código seguinte irá carregar ambos cliente <emphasis>e outros "
+"pedidos</emphasis>:"
 
 #. Tag: para
 #, no-c-format
@@ -1027,7 +1050,8 @@ msgid ""
 "support additional styles. See <ulink url=\"http://opensource.atlassian.com/"
 "projects/hibernate/browse/HHH-3414\">HHH-3414</ulink> for details."
 msgstr ""
-"Apenas os perfis de busca em estilo são suportados, mas planeja-se o suporte de estilos adicionais. Consulte <ulink url=\"http://opensource.atlassian.com/"
+"Apenas os perfis de busca em estilo são suportados, mas planeja-se o suporte "
+"de estilos adicionais. Consulte <ulink url=\"http://opensource.atlassian.com/"
 "projects/hibernate/browse/HHH-3414\">HHH-3414</ulink> para maiores detalhes."
 
 #. Tag: title
@@ -1451,7 +1475,8 @@ msgstr "Compatibilidade de Estratégia de Concorrência de Cache Provedor"
 
 #. Tag: para
 #, no-c-format
-msgid "None of the cache providers support all of the cache concurrency strategies."
+msgid ""
+"None of the cache providers support all of the cache concurrency strategies."
 msgstr ""
 "Nenhum provedor de cache suporta todas as estratégias de concorrência de "
 "cache. "
@@ -1656,7 +1681,16 @@ msgid ""
 "gain no benefit from caching query results, leads Hibernate to disable "
 "caching of query results by default. To use query caching, you will first "
 "need to enable the query cache:"
-msgstr "A aplicação do cache nos resultados de consulta introduz alguns resultados referentes o seu processamento transacional normal de aplicações. Por exemplo, se você realizar o cache nos resultados de uma consulta do Person Hibernate, você precisará acompanhar quando estes resultados deverão ser inválidos devido alterações salvas no Person. Tudo isto, acompanhado com o fato de que a maioria dos aplicativos não recebem benefício algum ao realizar o cache nos resultados da consulta, levando o Hibernate a desativar o cache de resultados de consulta por padrão. Para uso do cache de consulta, você primeiro precisa ativar o cache de consulta:"
+msgstr ""
+"A aplicação do cache nos resultados de consulta introduz alguns resultados "
+"referentes o seu processamento transacional normal de aplicações. Por "
+"exemplo, se você realizar o cache nos resultados de uma consulta do Person "
+"Hibernate, você precisará acompanhar quando estes resultados deverão ser "
+"inválidos devido alterações salvas no Person. Tudo isto, acompanhado com o "
+"fato de que a maioria dos aplicativos não recebem benefício algum ao "
+"realizar o cache nos resultados da consulta, levando o Hibernate a desativar "
+"o cache de resultados de consulta por padrão. Para uso do cache de consulta, "
+"você primeiro precisa ativar o cache de consulta:"
 
 #. Tag: para
 #, no-c-format
@@ -1668,7 +1702,9 @@ msgstr "Esta configuração cria duas novas regiões de cache:"
 msgid ""
 "<classname>org.hibernate.cache.StandardQueryCache</classname>, holding the "
 "cached query results"
-msgstr "<classname>org.hibernate.cache.StandardQueryCache</classname>, mantendo os resultados da consulta com cache."
+msgstr ""
+"<classname>org.hibernate.cache.StandardQueryCache</classname>, mantendo os "
+"resultados da consulta com cache."
 
 #. Tag: para
 #, no-c-format
@@ -1676,18 +1712,28 @@ msgid ""
 "<classname>org.hibernate.cache.UpdateTimestampsCache</classname>, holding "
 "timestamps of the most recent updates to queryable tables. These are used to "
 "validate the results as they are served from the query cache."
-msgstr "<classname>org.hibernate.cache.UpdateTimestampsCache</classname>, mantém os timestamps das atualizações mais recentes para tabelas consultáveis. Elas são usadas para validar os resultados uma vez que elas são servidas a partir do cache de consulta."
+msgstr ""
+"<classname>org.hibernate.cache.UpdateTimestampsCache</classname>, mantém os "
+"timestamps das atualizações mais recentes para tabelas consultáveis. Elas "
+"são usadas para validar os resultados uma vez que elas são servidas a partir "
+"do cache de consulta."
 
 #. Tag: para
-#, no-c-format
+#, fuzzy, no-c-format
 msgid ""
 "If you configure your underlying cache implementation to use expiry or "
-"timeouts is very important that the cache timeout of the underlying cache "
+"timeouts is is very important that the cache timeout of the underlying cache "
 "region for the UpdateTimestampsCache be set to a higher value than the "
 "timeouts of any of the query caches. In fact, we recommend that the the "
 "UpdateTimestampsCache region not be configured for expiry at all. Note, in "
 "particular, that an LRU cache expiry policy is never appropriate."
-msgstr "Se você configurar sua implementação de cache adjacente para usar expirar ou intervalo, é bastante importante que o intervalo do cache da região de cache adjacente para o UpdateTimestampsCache seja coonfigurado num valor mais alto que os intervalos de qualquer um dos caches de consulta. Na realidade, nós recomendamos que a região UpdateTimestampsCache não seja configurada para expirar. Perceba que uma política expirar do cache LRU nunca será apropriada."
+msgstr ""
+"Se você configurar sua implementação de cache adjacente para usar expirar ou "
+"intervalo, é bastante importante que o intervalo do cache da região de cache "
+"adjacente para o UpdateTimestampsCache seja coonfigurado num valor mais alto "
+"que os intervalos de qualquer um dos caches de consulta. Na realidade, nós "
+"recomendamos que a região UpdateTimestampsCache não seja configurada para "
+"expirar. Perceba que uma política expirar do cache LRU nunca será apropriada."
 
 #. Tag: para
 #, no-c-format
@@ -1699,8 +1745,11 @@ msgid ""
 "allows the query to look for existing cache results or add its results to "
 "the cache when it is executed."
 msgstr ""
-"Conforme mencionado acima, a maioria das consultas não se beneficiam do cache ou de seus resultados. Portanto por padrão, "
-"as consultas individuais não estão em cache mesmo depois de ativar o cache de consulta. Para habilitar o caching de resultados, chame <literal>org.hibernate.Query.setCacheable(true)</literal>. Esta chamada permite que a consulta procure "
+"Conforme mencionado acima, a maioria das consultas não se beneficiam do "
+"cache ou de seus resultados. Portanto por padrão, as consultas individuais "
+"não estão em cache mesmo depois de ativar o cache de consulta. Para "
+"habilitar o caching de resultados, chame <literal>org.hibernate.Query."
+"setCacheable(true)</literal>. Esta chamada permite que a consulta procure "
 "por resultados de caches existentes ou adicione seus resultados ao cache "
 "quando for executado. "
 
@@ -1712,7 +1761,13 @@ msgid ""
 "reaso, the query cache should always be used in conjunction with the second-"
 "level cache for those entities expected to be cached as part of a query "
 "result cache (just as with collection caching)."
-msgstr "O cache de consulta não realiza o cache ao estado de entidades atuais no cache, ele apenas realiza o cache nos valores identificadores e resultados do tipo de valor. Por esta razão, o cache de consulta deve sempre ser usado em conjunção com o cache de segundo nível para as entidades esperadas a sofrerem o cache como parte de um cache de resultado de consulta (apenas com o cache de coleção)."
+msgstr ""
+"O cache de consulta não realiza o cache ao estado de entidades atuais no "
+"cache, ele apenas realiza o cache nos valores identificadores e resultados "
+"do tipo de valor. Por esta razão, o cache de consulta deve sempre ser usado "
+"em conjunção com o cache de segundo nível para as entidades esperadas a "
+"sofrerem o cache como parte de um cache de resultado de consulta (apenas com "
+"o cache de coleção)."
 
 #. Tag: title
 #, no-c-format
@@ -1744,12 +1799,16 @@ msgid ""
 "alternative to bulk eviction of the region via <literal>org.hibernate."
 "SessionFactory.evictQueries()</literal>."
 msgstr ""
-"Se você quiser forçar um cache de consulta para uma atualização de sua região (independente de quaisquer resultados com cache encontrados nesta região), "
-"você poderá usar <literal>org."
-"hibernate.Query.setCacheMode(CacheMode.REFRESH)</literal>. Juntamente com a região que você definiu para o cache gerado, o Hibernate seletivamente forçará os resultados com cache, naquela região particular a ser atualizada. Isto é particularmente útil em casos onde dados adjacentes podem ter sido "
-"atualizados através de um processo em separado , além de ser uma alternativa mais "
-"eficiente se aplicada ao despejo de uma região de cache através "
-"de <literal>SessionFactory.evictQueries()</literal>."
+"Se você quiser forçar um cache de consulta para uma atualização de sua "
+"região (independente de quaisquer resultados com cache encontrados nesta "
+"região), você poderá usar <literal>org.hibernate.Query.setCacheMode"
+"(CacheMode.REFRESH)</literal>. Juntamente com a região que você definiu para "
+"o cache gerado, o Hibernate seletivamente forçará os resultados com cache, "
+"naquela região particular a ser atualizada. Isto é particularmente útil em "
+"casos onde dados adjacentes podem ter sido atualizados através de um "
+"processo em separado , além de ser uma alternativa mais eficiente se "
+"aplicada ao despejo de uma região de cache através de "
+"<literal>SessionFactory.evictQueries()</literal>."
 
 #. Tag: title
 #, no-c-format
@@ -1905,7 +1964,8 @@ msgstr ""
 
 #. Tag: title
 #, no-c-format
-msgid "Lists, maps, idbags and sets are the most efficient collections to update"
+msgid ""
+"Lists, maps, idbags and sets are the most efficient collections to update"
 msgstr ""
 "Listas, mapas, bags de id e conjuntos são coleções mais eficientes para "
 "atualizar"
@@ -2270,4 +2330,3 @@ msgstr ""
 "</literal>, <literal>getEntityNames()</literal>, "
 "<literal>getCollectionRoleNames()</literal>, e "
 "<literal>getSecondLevelCacheRegionNames()</literal>. "
-

@@ -205,7 +205,7 @@
                      <area id="hm6" coords="7"/>
                      <area id="hm7" coords="8"/>
                  </areaspec>
-                 <programlisting role="XML"><![CDATA[<hibernate-mapping
+                 <programlisting><![CDATA[<hibernate-mapping
          schema="schemaName"
          catalog="catalogName"
          default-cascade="cascade_style"
@@ -310,7 +310,7 @@
                     <area id="class20" coords="21"/>
                     <area id="class21" coords="22"/>
                 </areaspec>
-                <programlisting role="XML"><![CDATA[<class
+                <programlisting><![CDATA[<class
         name="ClassName"
         table="tableName"
         discriminator-value="discriminator_value"
@@ -614,7 +614,7 @@
                     <area id="id4" coords="5" />
                     <area id="id5" coords="6" />
                 </areaspec>
-                <programlisting role="XML"><![CDATA[<id
+                <programlisting><![CDATA[<id
         name="propertyName"
         type="typename"
         column="column_name"
@@ -1240,7 +1240,7 @@
                     <area id="discriminator4" coords="5" />
                     <area id="discriminator5" coords="6" />
                 </areaspec>
-                <programlisting role="XML"><![CDATA[<discriminator
+                <programlisting><![CDATA[<discriminator
         column="discriminator_column"
         type="discriminator_type"
         force="true|false"
@@ -1326,7 +1326,7 @@
                     <area id="version6" coords="7"/>
                     <area id="version7" coords="8"/>
                 </areaspec>
-                <programlisting role="XML"><![CDATA[<version
+                <programlisting><![CDATA[<version
         column="version_column"
         name="propertyName"
         type="typename"
@@ -1421,7 +1421,7 @@
                     <area id="timestamp5" coords="6" />
                     <area id="timestamp6" coords="7" />
                 </areaspec>
-                <programlisting role="XML"><![CDATA[<timestamp
+                <programlisting><![CDATA[<timestamp
         column="timestamp_column"
         name="propertyName"
         access="field|property|ClassName"
@@ -1520,7 +1520,7 @@
                     <area id="property11" coords="12"/>
                     <area id="property12" coords="13"/>
                 </areaspec>
-                <programlisting role="XML"><![CDATA[<property
+                <programlisting><![CDATA[<property
         name="propertyName"
         column="column_name"
         type="typename"
@@ -1721,7 +1721,7 @@
                     <area id="manytoone15" coords="16"/>
                     <area id="manytoone16" coords="17"/>
                 </areaspec>
-                <programlisting role="XML"><![CDATA[<many-to-one
+                <programlisting><![CDATA[<many-to-one
         name="propertyName"
         column="column_name"
         class="ClassName"
@@ -1924,7 +1924,7 @@
                     <area id="onetoone9" coords="10"/>
                     <area id="onetoone10" coords="11"/>
                 </areaspec>
-                <programlisting role="XML"><![CDATA[<one-to-one
+                <programlisting><![CDATA[<one-to-one
         name="propertyName"
         class="ClassName"
         cascade="cascade_style"
@@ -2138,7 +2138,7 @@
                     <area id="component7" coords="8"/>
                     <area id="component8" coords="9"/>
                 </areaspec>
-                <programlisting role="XML"><![CDATA[<component
+                <programlisting><![CDATA[<component
         name="propertyName"
         class="className"
         insert="true|false"
@@ -2247,7 +2247,7 @@
                     <area id="properties4" coords="5"/>
                     <area id="properties5" coords="6"/>
                 </areaspec>
-                <programlisting role="XML"><![CDATA[<properties
+                <programlisting><![CDATA[<properties
         name="logicalName"
         insert="true|false"
         update="true|false"
@@ -2347,7 +2347,7 @@
                     <area id="subclass3" coords="4"/>
                     <area id="subclass4" coords="5"/>
                 </areaspec>
-                <programlisting role="XML"><![CDATA[<subclass
+                <programlisting><![CDATA[<subclass
         name="ClassName"
         discriminator-value="discriminator_value"
         proxy="ProxyInterface"
@@ -2418,7 +2418,7 @@
                     <area id="joinedsubclass3" coords="4"/>
                     <area id="joinedsubclass4" coords="5"/>
                 </areaspec>
-                <programlisting role="XML"><![CDATA[<joined-subclass
+                <programlisting><![CDATA[<joined-subclass
         name="ClassName"
         table="tablename"
         proxy="ProxyInterface"
@@ -2530,7 +2530,7 @@
                     <area id="unionsubclass3" coords="4"/>
                     <area id="unionsubclass4" coords="5"/>
                 </areaspec>
-                <programlisting role="XML"><![CDATA[<union-subclass
+                <programlisting><![CDATA[<union-subclass
         name="ClassName"
         table="tablename"
         proxy="ProxyInterface"
@@ -2602,7 +2602,7 @@
                     <area id="join5" coords="6"/>
                     <area id="join6" coords="7"/>
                 </areaspec>
-                <programlisting role="XML"><![CDATA[<join
+                <programlisting><![CDATA[<join
         table="tablename"
         schema="owner"
         catalog="catalog"
@@ -2710,7 +2710,7 @@
                     <area id="key5" coords="6"/>
                     <area id="key6" coords="7"/>
                 </areaspec>
-                <programlisting role="XML"><![CDATA[<key
+                <programlisting><![CDATA[<key
         column="columnname"
         on-delete="noaction|cascade"
         property-ref="propertyName"
@@ -2845,7 +2845,7 @@
                     <area id="import1" coords="2"/>
                     <area id="import2" coords="3"/>
                 </areaspec>
-                <programlisting role="XML"><![CDATA[<import
+                <programlisting><![CDATA[<import
         class="ClassName"
         rename="ShortName"
 />]]></programlisting>
@@ -2903,7 +2903,7 @@
                     <area id="any5" coords="6"/>
                     <area id="any6" coords="7"/>
                 </areaspec>
-                <programlisting role="XML"><![CDATA[<any
+                <programlisting><![CDATA[<any
         name="propertyName"
         id-type="idtypename"
         meta-type="metatypename"

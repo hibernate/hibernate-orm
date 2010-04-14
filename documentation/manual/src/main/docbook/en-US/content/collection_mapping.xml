@@ -155,7 +155,7 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
                 <area id="mappingcollection13" coords="14"/>
                 <area id="mappingcollection14" coords="15"/>
             </areaspec>
-            <programlisting role="XML"><![CDATA[<map
+            <programlisting><![CDATA[<map
     name="propertyName"
     table="table_name"
     schema="schema_name"
@@ -351,7 +351,7 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
                 <area id="index1" coords="2"/>
                 <area id="index2" coords="3"/>
              </areaspec>
-            <programlisting role="XML"><![CDATA[<list-index
+            <programlisting><![CDATA[<list-index
         column="column_name"
         base="0|1|..."/>]]></programlisting>
             <calloutlist>
@@ -376,7 +376,7 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
                 <area id="mapkey2" coords="3"/>
                 <area id="mapkey3" coords="4"/>
              </areaspec>
-            <programlisting role="XML"><![CDATA[<map-key
+            <programlisting><![CDATA[<map-key
         column="column_name"
         formula="any SQL expression"
         type="type_name"
@@ -409,7 +409,7 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
                 <area id="indexmanytomany2" coords="3"/>
                 <area id="indexmanytomany3" coords="3"/>
              </areaspec>
-            <programlisting role="XML"><![CDATA[<map-key-many-to-many
+            <programlisting><![CDATA[<map-key-many-to-many
         column="column_name"
         formula="any SQL expression"
         class="ClassName"
@@ -465,7 +465,7 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
                 <area id="element2b" coords="3"/>
                 <area id="element3b" coords="4"/>
              </areaspec>
-            <programlisting role="XML"><![CDATA[<element
+            <programlisting><![CDATA[<element
         column="column_name"
         formula="any SQL expression"
         type="typename"
@@ -513,7 +513,7 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
                 <area id="manytomany7" coords="8"/>
                 <area id="manytomany8" coords="9"/>
             </areaspec>
-            <programlisting role="XML"><![CDATA[<many-to-many
+            <programlisting><![CDATA[<many-to-many
         column="column_name"
         formula="any SQL expression"
         class="ClassName"
@@ -686,7 +686,7 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
                 <area id="onetomany2" coords="3"/>
                 <area id="onetomany3" coords="4"/>
             </areaspec>
-            <programlisting role="XML"><![CDATA[<one-to-many
+            <programlisting><![CDATA[<one-to-many
         class="ClassName"
         not-found="ignore|exception"
         entity-name="EntityName"

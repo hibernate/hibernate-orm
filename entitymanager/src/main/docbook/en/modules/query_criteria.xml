@@ -106,7 +106,7 @@
             <area coords="4" id="ex.criteria.typedquery.entity.3" />
           </areaspec>
 
-          <programlisting role="JAVA" language="JAVA">CriteriaQuery&lt;Person&gt; criteria = builder.createQuery( Person.class );
+          <programlisting>CriteriaQuery&lt;Person&gt; criteria = builder.createQuery( Person.class );
 Root&lt;Person&gt; personRoot = criteria.from( Person.class );
 criteria.select( personRoot );
 criteria.where( builder.equal( personRoot.get( Person_.eyeColor ), "brown" ) );
@@ -160,7 +160,7 @@ for ( Person person : people ) { ... }</programlisting>
             <area coords="3" id="ex.criteria.typedquery.attr.2" />
           </areaspec>
 
-          <programlisting role="JAVA" language="JAVA">CriteriaQuery&lt;Integer&gt; criteria = builder.createQuery( Integer.class );
+          <programlisting>CriteriaQuery&lt;Integer&gt; criteria = builder.createQuery( Integer.class );
 Root&lt;Person&gt; personRoot = criteria.from( Person.class );
 criteria.select( personRoot.get( Person_.age ) );
 criteria.where( builder.equal( personRoot.get( Person_.eyeColor ), "brown" ) );
@@ -195,7 +195,7 @@ for ( Integer age : ages ) { ... } </programlisting>
             <area coords="3" id="ex.criteria.typedquery.expr.1" />
           </areaspec>
 
-          <programlisting role="JAVA" language="JAVA">CriteriaQuery&lt;Integer&gt; criteria = builder.createQuery( Integer.class );
+          <programlisting>CriteriaQuery&lt;Integer&gt; criteria = builder.createQuery( Integer.class );
 Root&lt;Person&gt; personRoot = criteria.from( Person.class );
 criteria.select( builder.max( personRoot.get( Person_.age ) ) );
 criteria.where( builder.equal( personRoot.get( Person_.eyeColor ), "brown" ) );
@@ -239,7 +239,7 @@ Integer maxAge = em.createQuery( criteria ).getSingleResult();</programlisting>
             <area coords="5" id="ex.criteria.typedquery.array.2" />
           </areaspec>
 
-          <programlisting role="JAVA" language="JAVA">CriteriaQuery&lt;Object[]&gt; criteria = builder.createQuery( Object[].class );
+          <programlisting>CriteriaQuery&lt;Object[]&gt; criteria = builder.createQuery( Object[].class );
 Root&lt;Person&gt; personRoot = criteria.from( Person.class );
 Path&lt;Long&gt; idPath = personRoot.get( Person_.id );
 Path&lt;Integer&gt; agePath = personRoot.get( Person_.age );
@@ -284,7 +284,7 @@ for ( Object[] values : valueArray ) {
             <area coords="5" id="ex.criteria.typedquery.array2.2" />
           </areaspec>
 
-          <programlisting role="JAVA" language="JAVA">CriteriaQuery&lt;Object[]&gt; criteria = builder.createQuery( Object[].class );
+          <programlisting>CriteriaQuery&lt;Object[]&gt; criteria = builder.createQuery( Object[].class );
 Root&lt;Person&gt; personRoot = criteria.from( Person.class );
 Path&lt;Long&gt; idPath = personRoot.get( Person_.id );
 Path&lt;Integer&gt; agePath = personRoot.get( Person_.age );
@@ -351,7 +351,7 @@ for ( Object[] values : valueArray ) {
             </areaset>
           </areaspec>
 
-          <programlisting role="JAVA" language="JAVA">public class PersonWrapper {
+          <programlisting>public class PersonWrapper {
     private final Long id;
     private final Integer age;
     public PersonWrapper(Long id, Integer age) {
@@ -433,7 +433,7 @@ for ( PersonWrapper person : people ) { ... }</programlisting>
           </areaset>
         </areaspec>
 
-        <programlisting role="JAVA" language="JAVA">CriteriaQuery&lt;Tuple&gt; criteria = builder.createTupleQuery();
+        <programlisting>CriteriaQuery&lt;Tuple&gt; criteria = builder.createTupleQuery();
 Root&lt;Person&gt; personRoot = criteria.from( Person.class );
 Path&lt;Long&gt; idPath = personRoot.get( Person_.id );
 Path&lt;Integer&gt; agePath = personRoot.get( Person_.age );
@@ -704,7 +704,7 @@ Join&lt;Order,LineItem&gt; orderLines = orders.fetch( Order_.lineItems );
           <area coords="7" id="ex.criteria.param.3" />
         </areaspec>
 
-        <programlisting role="JAVA" language="JAVA">CriteriaQuery&lt;Person&gt; criteria = build.createQuery( Person.class );
+        <programlisting>CriteriaQuery&lt;Person&gt; criteria = build.createQuery( Person.class );
 Root&lt;Person&gt; personRoot = criteria.from( Person.class );
 criteria.select( personRoot );
 ParameterExpression&lt;String&gt; eyeColorParam = builder.parameter( String.class );

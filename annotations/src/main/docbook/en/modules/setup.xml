@@ -32,14 +32,13 @@
 
     <itemizedlist>
       <listitem>
-        <para>Make sure you have JDK 5.0 installed or above.</para>
+        <para>Make sure you have JDK 5.0 or above installed.</para>
       </listitem>
 
       <listitem>
-        <para><ulink url="http://www.hibernate.org/6.html">Download</ulink>
-        and unpack the Hibernate Core distribution from the Hibernate website.
-        Hibernate 3.5 and onward contains the Hibernate Annotation
-        jars.</para>
+        <para>Download and unpack the Hibernate Core distribution from the
+        Hibernate website. Hibernate 3.5 and onward contains Hibernate
+        Annotations.</para>
       </listitem>
 
       <listitem>
@@ -51,7 +50,7 @@
   &lt;dependencies&gt;
     &lt;dependency&gt;
       &lt;groupId&gt;org.hibernate&lt;/groupId&gt;
-      &lt;artifactId&gt;hibernate-core&lt;/artifactId&gt;
+      &lt;artifactId&gt;hibernate-annotations&lt;/artifactId&gt;
       &lt;version&gt;${hibernate-core-version}&lt;/version&gt;
     &lt;/dependency&gt;
   &lt;/dependencies&gt;
@@ -66,15 +65,15 @@
     <para>First, set up your classpath (after you have created a new project
     in your favorite IDE): <itemizedlist>
         <listitem>
-          <para>Copy all Hibernate3 core and required 3rd party library
-          files.</para>
+          <para>Copy <filename>hibernate3.jar</filename> and the required 3rd
+          party libraries available in
+          <filename>lib/required</filename>.</para>
         </listitem>
 
         <listitem>
-          <para>Copy <filename>hibernate-annotations.jar</filename>,
-          <filename>lib/hibernate-comons-annotations.jar</filename> and
-          <filename>lib/hibernate-jpa-2.0-api.jar</filename> from the
-          distribution to your classpath as well.</para>
+          <para>Copy
+          <filename>lib/jpa/hibernate-jpa-2.0-api-1.0.0.Final.jar</filename>
+          to your classpath as well.</para>
         </listitem>
       </itemizedlist></para>
 
@@ -92,8 +91,9 @@
 
     <para>We recommend you use <ulink
     url="http://validator.hibernate.org">Hibernate Validator</ulink> and the
-    Bean Validation specification capabilities. Download Hibernate Validator 4
-    or above from the Hibernate website and add
+    Bean Validation specification capabilities as its integration with Java
+    Persistence 2 has been standardized. Download Hibernate Validator 4 or
+    above from the Hibernate website and add
     <filename>hibernate-validator.jar</filename> and
     <filename>validation-api.jar</filename> in your classpath. Alternatively
     add the following dependency in your <filename>pom.xml</filename>.</para>
@@ -114,9 +114,8 @@
     <para>If you wish to use <ulink
     url="http://search.hibernate.org">Hibernate Search</ulink>, download it
     from the Hibernate website and add
-    <filename>hibernate-search.jar</filename> and
-    <filename>lucene-core-x.y.z.jar</filename> in your classpath.
-    Alternatively add the following dependency in your
+    <filename>hibernate-search.jar</filename> and its dependencies in your
+    classpath. Alternatively add the following dependency in your
     <filename>pom.xml</filename>.</para>
 
     <programlisting language="XML" role="XML">&lt;project&gt;

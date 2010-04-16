@@ -504,6 +504,13 @@ public final class AnnotationBinder {
 	public static void bindClass(
 			XClass clazzToProcess, Map<XClass, InheritanceState> inheritanceStatePerClass, ExtendedMappings mappings
 	) throws MappingException {
+		//@Entity and @MappedSuperclass on the same class leads to a NPE down the road
+		if ( clazzToProcess.isAnnotationPresent( Entity.class ) 
+				&&  clazzToProcess.isAnnotationPresent( MappedSuperclass.class ) ) {
+			throw new AnnotationException( "An entity cannot be annotated with both @Entity and @MappedSuperclass: "
+					+ clazzToProcess.getName() );
+		}
+
 		//TODO: be more strict with secondarytable allowance (not for ids, not for secondary table join columns etc)
 		InheritanceState inheritanceState = inheritanceStatePerClass.get( clazzToProcess );
 		AnnotatedClassType classType = mappings.getClassType( clazzToProcess );

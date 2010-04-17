@@ -162,7 +162,7 @@ public class PostgreSQLDialect extends Dialect {
 	}
 
 	public String getCascadeConstraintsString() {
-		return "";//" cascade";
+		return " cascade";
 	}
 	public boolean dropConstraints() {
 		return true;

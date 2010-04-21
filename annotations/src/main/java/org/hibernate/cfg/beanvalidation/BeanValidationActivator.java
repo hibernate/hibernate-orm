@@ -50,7 +50,7 @@ public class BeanValidationActivator {
 			properties.setProperty( Environment.CHECK_NULLABILITY, "false" );
 		}
 
-		if ( modes.contains( ValidationMode.NONE ) ) return;
+		if ( ! ( modes.contains( ValidationMode.CALLBACK ) || modes.contains( ValidationMode.AUTO ) ) ) return;
 
 		try {
 			Class<?> activator = ReflectHelper.classForName( TYPE_SAFE_ACTIVATOR_CLASS, BeanValidationActivator.class );

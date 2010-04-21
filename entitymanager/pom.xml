@@ -73,7 +73,7 @@
                 Only really needed for the antrun plugin defined below (which in turn is only really needed
                 to work around a missing feature on the compile plugin; lovely no?).  However I have not
                 found a way to declare this dependency local to the antrun plugin and then reference it
-                from the <javac/>'s <classpath/> :(
+                from the <javac />'s <classpath /> :(
             -->
             <groupId>${project.groupId}</groupId>
             <artifactId>hibernate-jpamodelgen</artifactId>
@@ -125,12 +125,12 @@
                 <!-- Define one configuration outside executions and without a phase in order to allow 'mvn antrun:run' -->
                 <configuration>
                     <tasks>
-                        <property name="target.dir" value="${project.build.directory}/generated-src/jpamodelgen"/>
-                        <property name="src.dir" value="${project.build.testSourceDirectory}"/>
-                        <property name="jdk16_home" value="${jdk16_home}"/>
-                        <property name="classpath" refid="maven.test.classpath"/>
+                        <property name="target.dir" value="${project.build.directory}/generated-src/jpamodelgen" />
+                        <property name="src.dir" value="${project.build.testSourceDirectory}" />
+                        <property name="jdk16_home" value="${jdk16_home}" />
+                        <property name="classpath" refid="maven.test.classpath" />
                         <ant antfile="${basedir}/build.xml">
-                            <target name="generate-metamodel"/>
+                            <target name="generate-metamodel" />
                         </ant>
                     </tasks>
                 </configuration>

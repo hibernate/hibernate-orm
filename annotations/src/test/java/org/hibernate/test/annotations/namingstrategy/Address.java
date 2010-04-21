@@ -1,4 +1,4 @@
-// $Id:$
+// $Id$
 package org.hibernate.test.annotations.namingstrategy;
 
 import javax.persistence.Entity;

@@ -1,4 +1,4 @@
-// $Id:$
+// $Id$
 package org.hibernate.test.annotations.fkcircularity;
 
 import java.io.PrintWriter;

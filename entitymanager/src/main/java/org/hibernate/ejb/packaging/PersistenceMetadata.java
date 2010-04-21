@@ -1,4 +1,4 @@
-// $Id:$
+// $Id$
 /*
  * Copyright (c) 2009, Red Hat Middleware LLC or third-party contributors as
  * indicated by the @author tags or express copyright attribution

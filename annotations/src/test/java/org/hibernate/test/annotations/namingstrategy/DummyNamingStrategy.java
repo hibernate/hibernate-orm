@@ -1,4 +1,4 @@
-// $Id:$
+// $Id$
 package org.hibernate.test.annotations.namingstrategy;
 
 import org.hibernate.cfg.EJB3NamingStrategy;

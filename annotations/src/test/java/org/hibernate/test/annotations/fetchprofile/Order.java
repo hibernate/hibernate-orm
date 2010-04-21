@@ -1,4 +1,4 @@
-// $Id:$
+// $Id$
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *

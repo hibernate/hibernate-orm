@@ -334,15 +334,14 @@
 
     <distributionManagement>
         <repository>
-            <!-- Copy the dist to the local checkout of the JBoss maven2 repo ${maven.repository.root} -->
-            <!-- It is anticipated that ${maven.repository.root} be set in user's settings.xml -->
-            <id>repository.jboss.org</id>
-            <url>file://${maven.repository.root}</url>
+            <id>jboss-releases-repository</id>
+            <name>JBoss Releases Repository</name>
+            <url>https://repository.jboss.org/nexus/service/local/staging/deploy/maven2/</url>
         </repository>
         <snapshotRepository>
-            <id>snapshots.jboss.org</id>
-            <name>JBoss Snapshot Repository</name>
-            <url>dav:https://snapshots.jboss.org/maven2</url>
+            <id>jboss-snapshots-repository</id>
+            <name>JBoss Snapshots Repository</name>
+            <url>https://repository.jboss.org/nexus/content/repositories/snapshots/</url>
         </snapshotRepository>
     </distributionManagement>
 

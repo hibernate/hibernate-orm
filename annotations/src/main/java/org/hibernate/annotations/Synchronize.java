@@ -17,5 +17,8 @@ import java.lang.annotation.Target;
 @Target(TYPE)
 @Retention(RUNTIME)
 public @interface Synchronize {
+	/**
+	 * Table names
+	 */
 	String [] value();
 }

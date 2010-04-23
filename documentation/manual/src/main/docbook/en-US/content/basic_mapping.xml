@@ -374,10 +374,218 @@ public class Dog { ... }</programlisting>
     </section>
 
     <section id="mapping-declaration-class" revision="3">
-      <title>Class</title>
+      <title>Entity</title>
 
-      <para>You can declare a persistent class using the
-      <literal>class</literal> element. For example:</para>
+      <para>An entity is a regular Java object (aka POJO) which will be
+      persisted by Hibernate.</para>
+
+      <para>To mark an object as an entity in annotations, use the
+      <classname>@Entity</classname> annotation.</para>
+
+      <programlisting language="JAVA" role="JAVA">@Entity
+public class Flight implements Serializable {
+    Long id;
+
+    @Id
+    public Long getId() { return id; }
+
+    public void setId(Long id) { this.id = id; }
+}         </programlisting>
+
+      <para>That's pretty much it, the rest is optional. There are however any
+      options to tweak your entity mapping, let's explore them.</para>
+
+      <para><classname>@Table</classname> lets you define the table the entity
+      will be persisted into. If undefined, the table name is the unqualified
+      class name of the entity. You can also optionally define the catalog,
+      the schema as well as unique constraints on the table.</para>
+
+      <programlisting role="JAVA">@Entity
+@Table(name="TBL_FLIGHT", 
+       schema="AIR_COMMAND", 
+       uniqueConstraints=
+           @UniqueConstraint(
+               name="flight_number", 
+               columnNames={"comp_prefix", "flight_number"} ) )
+public class Flight implements Serializable {
+    @Column(name="comp_prefix")
+    public String getCompagnyPrefix() { return companyPrefix; }
+
+    @Column(name="flight_number")
+    public String getNumber() { return number; }
+}</programlisting>
+
+      <para>The constraint name is optional (generated if left undefined). The
+      column names composing the constraint correspond to the column names as
+      defined before the Hibernate <classname>NamingStrategy</classname> is
+      applied.</para>
+
+      <para><literal>@Entity.name</literal> lets you define the shortcut name
+      of the entity you can used in JP-QL and HQL queries. It defaults to the
+      unqualified class name of the class.</para>
+
+      <para>Hibernate goes beyond the JPA specification and provide additional
+      configurations. Some of them are hosted on
+      <classname>@org.hibernate.annotations.Entity</classname>:</para>
+
+      <itemizedlist>
+        <listitem>
+          <para><literal>mutable</literal> (defaults to true): Immutable
+          classes, <literal>mutable=false</literal>, cannot be updated or
+          deleted by the application. This allows Hibernate to make some minor
+          performance optimizations.</para>
+        </listitem>
+
+        <listitem>
+          <para><literal>dynamicInsert</literal> /
+          <literal>dynamicUpdate</literal> (defaults to false): specifies that
+          <literal>INSERT</literal> / <literal>UPDATE</literal> SQL should be
+          generated at runtime and contain only the columns whose values are
+          not null. The <literal>dynamic-update</literal> and
+          <literal>dynamic-insert</literal> settings are not inherited by
+          subclasses. Although these settings can increase performance in some
+          cases, they can actually decrease performance in others.</para>
+        </listitem>
+
+        <listitem>
+          <para><literal>selectBeforeUpdate</literal> (defaults to false):
+          specifies that Hibernate should <emphasis>never</emphasis> perform
+          an SQL <literal>UPDATE</literal> unless it is certain that an object
+          is actually modified. Only when a transient object has been
+          associated with a new session using <literal>update()</literal>,
+          will Hibernate perform an extra SQL <literal>SELECT</literal> to
+          determine if an <literal>UPDATE</literal> is actually required. Use
+          of <literal>select-before-update</literal> will usually decrease
+          performance. It is useful to prevent a database update trigger being
+          called unnecessarily if you reattach a graph of detached instances
+          to a <literal>Session</literal>.</para>
+        </listitem>
+
+        <listitem>
+          <para><literal>polymorphism</literal> (defaults to
+          <literal>IMPLICIT</literal>): determines whether implicit or
+          explicit query polymorphism is used. <emphasis>Implicit</emphasis>
+          polymorphism means that instances of the class will be returned by a
+          query that names any superclass or implemented interface or class,
+          and that instances of any subclass of the class will be returned by
+          a query that names the class itself. <emphasis>Explicit</emphasis>
+          polymorphism means that class instances will be returned only by
+          queries that explicitly name that class. Queries that name the class
+          will return only instances of subclasses mapped. For most purposes,
+          the default <literal>polymorphism=IMPLICIT</literal> is appropriate.
+          Explicit polymorphism is useful when two different classes are
+          mapped to the same table This allows a "lightweight" class that
+          contains a subset of the table columns.</para>
+        </listitem>
+
+        <listitem>
+          <para><literal>persister</literal>: specifies a custom
+          <literal>ClassPersister</literal>. The <literal>persister</literal>
+          attribute lets you customize the persistence strategy used for the
+          class. You can, for example, specify your own subclass of
+          <literal>org.hibernate.persister.EntityPersister</literal>, or you
+          can even provide a completely new implementation of the interface
+          <literal>org.hibernate.persister.ClassPersister</literal> that
+          implements, for example, persistence via stored procedure calls,
+          serialization to flat files or LDAP. See
+          <literal>org.hibernate.test.CustomPersister</literal> for a simple
+          example of "persistence" to a <literal>Hashtable</literal>.</para>
+        </listitem>
+
+        <listitem>
+          <para><literal>optimisticLock</literal> (defaults to
+          <literal>VERSION</literal>): determines the optimistic locking
+          strategy. If you enable <literal>dynamicUpdate</literal>, you will
+          have a choice of optimistic locking strategies:</para>
+
+          <itemizedlist>
+            <listitem>
+              <para><literal>version</literal>: check the version/timestamp
+              columns</para>
+            </listitem>
+
+            <listitem>
+              <para><literal>all</literal>: check all columns</para>
+            </listitem>
+
+            <listitem>
+              <para><literal>dirty</literal>: check the changed columns,
+              allowing some concurrent updates</para>
+            </listitem>
+
+            <listitem>
+              <para><literal>none</literal>: do not use optimistic
+              locking</para>
+            </listitem>
+          </itemizedlist>
+
+          <para>It is <emphasis>strongly</emphasis> recommended that you use
+          version/timestamp columns for optimistic locking with Hibernate.
+          This strategy optimizes performance and correctly handles
+          modifications made to detached instances (i.e. when
+          <literal>Session.merge()</literal> is used).</para>
+        </listitem>
+      </itemizedlist>
+
+      <tip>
+        <para>Be sure to import
+        <classname>@javax.persistence.Entity</classname> to mark a class as an
+        entity. It's a common mistake to import
+        <classname>@org.hibernate.annotations.Entity</classname> by
+        accident.</para>
+      </tip>
+
+      <para>You can also alter how Hibernate deals with lazy initialization
+      for this class. On <classname>@Proxy</classname>, use
+      <literal>lazy</literal>=false to disable lazy fetching (not
+      recommended). You can also specify an interface to use for lazy
+      initializing proxies (defaults to the class itself): use
+      <literal>proxyClass</literal> on <classname>@Proxy</classname>.
+      Hibernate will initially return proxies (Javassist or CGLIB) that
+      implement the named interface. The persistent object will load when a
+      method of the proxy is invoked. See "Initializing collections and
+      proxies" below.</para>
+
+      <para><classname>@BatchSize</classname> specifies a "batch size" for
+      fetching instances of this class by identifier. Not yet loaded instances
+      are loaded batch-size at a time (default 1). </para>
+
+      <para>You can specific an arbitrary SQL WHERE condition to be used when
+      retrieving objects of this class. Use <classname>@Where</classname> for
+      that.</para>
+
+      <para>In the same vein, <classname>@Check</classname> lets you define an
+      SQL expression used to generate a multi-row <emphasis>check</emphasis>
+      constraint for automatic schema generation.</para>
+
+      <para>There is no difference between a view and a base table for a
+      Hibernate mapping. This is transparent at the database level, although
+      some DBMS do not support views properly, especially with updates.
+      Sometimes you want to use a view, but you cannot create one in the
+      database (i.e. with a legacy schema). In this case, you can map an
+      immutable and read-only entity to a given SQL subselect expression using
+      <classname>@org.hibernate.annotations.Subselect</classname>:</para>
+
+      <programlisting role="JAVA">@Entity
+@Subselect("select item.name, max(bid.amount), count(*) "
+        + "from item "
+        + "join bid on bid.item_id = item.id "
+        + "group by item.name")
+@Synchronize( {"item", "bid"} ) //tables impacted
+public class Summary {
+    @Id
+    public String getId() { return id; }
+    ...
+}</programlisting>
+
+      <para>Declare the tables to synchronize this entity with, ensuring that
+      auto-flush happens correctly and that queries against the derived entity
+      do not return stale data. The <literal>&lt;subselect&gt;</literal> is
+      available both as an attribute and a nested mapping element.</para>
+
+      <para>We will now explore the same options using the hbm.xml structure.
+      You can declare a persistent class using the <literal>class</literal>
+      element. For example:</para>
 
       <programlistingco role="XML">
         <areaspec>
@@ -600,91 +808,7 @@ public class Dog { ... }</programlisting>
       <emphasis>static</emphasis> inner class. Specify the class name using
       the standard form i.e. <literal>e.g.Foo$Bar</literal>.</para>
 
-      <para>Immutable classes, <literal>mutable="false"</literal>, cannot be
-      updated or deleted by the application. This allows Hibernate to make
-      some minor performance optimizations.</para>
-
-      <para>The optional <literal>proxy</literal> attribute enables lazy
-      initialization of persistent instances of the class. Hibernate will
-      initially return CGLIB proxies that implement the named interface. The
-      persistent object will load when a method of the proxy is invoked. See
-      "Initializing collections and proxies" below.</para>
-
-      <para><emphasis>Implicit</emphasis> polymorphism means that instances of
-      the class will be returned by a query that names any superclass or
-      implemented interface or class, and that instances of any subclass of
-      the class will be returned by a query that names the class itself.
-      <emphasis>Explicit</emphasis> polymorphism means that class instances
-      will be returned only by queries that explicitly name that class.
-      Queries that name the class will return only instances of subclasses
-      mapped inside this <literal>&lt;class&gt;</literal> declaration as a
-      <literal>&lt;subclass&gt;</literal> or
-      <literal>&lt;joined-subclass&gt;</literal>. For most purposes, the
-      default <literal>polymorphism="implicit"</literal> is appropriate.
-      Explicit polymorphism is useful when two different classes are mapped to
-      the same table This allows a "lightweight" class that contains a subset
-      of the table columns.</para>
-
-      <para>The <literal>persister</literal> attribute lets you customize the
-      persistence strategy used for the class. You can, for example, specify
-      your own subclass of
-      <literal>org.hibernate.persister.EntityPersister</literal>, or you can
-      even provide a completely new implementation of the interface
-      <literal>org.hibernate.persister.ClassPersister</literal> that
-      implements, for example, persistence via stored procedure calls,
-      serialization to flat files or LDAP. See
-      <literal>org.hibernate.test.CustomPersister</literal> for a simple
-      example of "persistence" to a <literal>Hashtable</literal>.</para>
-
-      <para>The <literal>dynamic-update</literal> and
-      <literal>dynamic-insert</literal> settings are not inherited by
-      subclasses, so they can also be specified on the
-      <literal>&lt;subclass&gt;</literal> or
-      <literal>&lt;joined-subclass&gt;</literal> elements. Although these
-      settings can increase performance in some cases, they can actually
-      decrease performance in others.</para>
-
-      <para>Use of <literal>select-before-update</literal> will usually
-      decrease performance. It is useful to prevent a database update trigger
-      being called unnecessarily if you reattach a graph of detached instances
-      to a <literal>Session</literal>.</para>
-
-      <para>If you enable <literal>dynamic-update</literal>, you will have a
-      choice of optimistic locking strategies:</para>
-
-      <itemizedlist>
-        <listitem>
-          <para><literal>version</literal>: check the version/timestamp
-          columns</para>
-        </listitem>
-
-        <listitem>
-          <para><literal>all</literal>: check all columns</para>
-        </listitem>
-
-        <listitem>
-          <para><literal>dirty</literal>: check the changed columns, allowing
-          some concurrent updates</para>
-        </listitem>
-
-        <listitem>
-          <para><literal>none</literal>: do not use optimistic locking</para>
-        </listitem>
-      </itemizedlist>
-
-      <para>It is <emphasis>strongly</emphasis> recommended that you use
-      version/timestamp columns for optimistic locking with Hibernate. This
-      strategy optimizes performance and correctly handles modifications made
-      to detached instances (i.e. when <literal>Session.merge()</literal> is
-      used).</para>
-
-      <para>There is no difference between a view and a base table for a
-      Hibernate mapping. This is transparent at the database level, although
-      some DBMS do not support views properly, especially with updates.
-      Sometimes you want to use a view, but you cannot create one in the
-      database (i.e. with a legacy schema). In this case, you can map an
-      immutable and read-only entity to a given SQL subselect
-      expression:</para>
+      <para>Here is how to do a virtual view (subselect) in XML:</para>
 
       <programlisting role="XML">&lt;class name="Summary"&gt;
     &lt;subselect&gt;
@@ -699,10 +823,8 @@ public class Dog { ... }</programlisting>
     ...
 &lt;/class&gt;</programlisting>
 
-      <para>Declare the tables to synchronize this entity with, ensuring that
-      auto-flush happens correctly and that queries against the derived entity
-      do not return stale data. The <literal>&lt;subselect&gt;</literal> is
-      available both as an attribute and a nested mapping element.</para>
+      <para>The <literal>&lt;subselect&gt;</literal> is available both as an
+      attribute and a nested mapping element.</para>
     </section>
 
     <section id="mapping-declaration-id" revision="4">

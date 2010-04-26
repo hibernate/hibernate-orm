@@ -430,13 +430,6 @@ public class Flight implements Serializable {
 
       <itemizedlist>
         <listitem>
-          <para><literal>mutable</literal> (defaults to true): Immutable
-          classes, <literal>mutable=false</literal>, cannot be updated or
-          deleted by the application. This allows Hibernate to make some minor
-          performance optimizations.</para>
-        </listitem>
-
-        <listitem>
           <para><literal>dynamicInsert</literal> /
           <literal>dynamicUpdate</literal> (defaults to false): specifies that
           <literal>INSERT</literal> / <literal>UPDATE</literal> SQL should be
@@ -535,6 +528,11 @@ public class Flight implements Serializable {
         accident.</para>
       </tip>
 
+      <para>Some entities are not mutable. They cannot be updated or deleted
+      by the application. This allows Hibernate to make some minor performance
+      optimizations.. Use the <classname>@Immutable</classname>
+      annotation.</para>
+
       <para>You can also alter how Hibernate deals with lazy initialization
       for this class. On <classname>@Proxy</classname>, use
       <literal>lazy</literal>=false to disable lazy fetching (not
@@ -548,7 +546,7 @@ public class Flight implements Serializable {
 
       <para><classname>@BatchSize</classname> specifies a "batch size" for
       fetching instances of this class by identifier. Not yet loaded instances
-      are loaded batch-size at a time (default 1). </para>
+      are loaded batch-size at a time (default 1).</para>
 
       <para>You can specific an arbitrary SQL WHERE condition to be used when
       retrieving objects of this class. Use <classname>@Where</classname> for
@@ -828,13 +826,24 @@ public class Summary {
     </section>
 
     <section id="mapping-declaration-id" revision="4">
-      <title>id</title>
+      <title>identifiers</title>
 
       <para>Mapped classes <emphasis>must</emphasis> declare the primary key
       column of the database table. Most classes will also have a
-      JavaBeans-style property holding the unique identifier of an instance.
-      The <literal>&lt;id&gt;</literal> element defines the mapping from that
-      property to the primary key column.</para>
+      JavaBeans-style property holding the unique identifier of an
+      instance.</para>
+
+      <para>Mark the identifier property with
+      <classname>@Id</classname>.</para>
+
+      <programlisting role="JAVA">@Entity
+public class Person {
+   @Id Integer getId() { ... }
+   ...
+}</programlisting>
+
+      <para>In hbm.xml, use the <literal>&lt;id&gt;</literal> element which
+      defines the mapping from that property to the primary key column.</para>
 
       <programlistingco role="XML">
         <areaspec>
@@ -896,11 +905,446 @@ public class Summary {
       that the class has no identifier property.</para>
 
       <para>The <literal>unsaved-value</literal> attribute is almost never
-      needed in Hibernate3.</para>
+      needed in Hibernate3 and indeed has no corresponding element in
+      annotations.</para>
 
-      <para>There is an alternative <literal>&lt;composite-id&gt;</literal>
-      declaration that allows access to legacy data with composite keys. Its
-      use is strongly discouraged for anything else.</para>
+      <para>You can also declare the identifier as a composite identifier.
+      This allows access to legacy data with composite keys. Its use is
+      strongly discouraged for anything else.</para>
+
+      <section>
+        <title>Composite identifier</title>
+
+        <para>You can define a composite primary key through several
+        syntaxes:</para>
+
+        <itemizedlist>
+          <listitem>
+            <para>use a component type to represent the identifier and map it
+            as a property in the entity: you then annotated the property as
+            <classname>@EmbeddedId</classname>. The component type has to be
+            <classname>Serializable</classname>.</para>
+          </listitem>
+
+          <listitem>
+            <para>map multiple properties as <classname>@Id</classname>
+            properties: the identifier type is then the entity class itself
+            and needs to be <classname>Serializable</classname>. This approach
+            is unfortunately not standard and only supported by
+            Hibernate.</para>
+          </listitem>
+
+          <listitem>
+            <para>map multiple properties as <classname>@Id</classname>
+            properties and declare an external class to be the identifier
+            type. This class, which needs to be
+            <classname>Serializable</classname>, is declared on the entity via
+            the <classname>@IdClass</classname> annotation. The identifier
+            type must contain the same properties as the identifier properties
+            of the entity: each property name must be the same, its type must
+            be the same as well if the entity property is of a basic type, its
+            type must be the type of the primary key of the associated entity
+            if the entity property is an association (either a
+            <classname>@OneToOne</classname> or a
+            <classname>@ManyToOne</classname>).</para>
+          </listitem>
+        </itemizedlist>
+
+        <para>As you can see the last case is far from obvious. It has been
+        inherited from the dark ages of EJB 2 for backward compatibilities and
+        we recommend you not to use it (for simplicity sake).</para>
+
+        <para>Let's explore all three cases using examples.</para>
+
+        <section>
+          <title>Property using a component type</title>
+
+          <para>Here is a simple example of
+          <classname>@EmbeddedId</classname>.</para>
+
+          <programlisting language="JAVA" role="JAVA">@Entity
+class User {
+   @EmbeddedId
+   @AttributeOverride(name="firstName", column=@Column(name="fld_firstname")
+   UserId id;
+
+   Integer age;
+}
+
+@Embeddable
+class UserId implements Serializable {
+   String firstName;
+   String lastName;
+}</programlisting>
+
+          <para>You can notice that the <classname>UserId</classname> class is
+          serializable. To override the column mapping, use
+          <classname>@AttributeOverride</classname>.</para>
+
+          <para>An embedded id can itself contains the primary key of an
+          associated entity.</para>
+
+          <programlisting language="JAVA" role="JAVA">@Entity
+class Customer {
+   @EmbeddedId CustomerId id;
+   boolean preferredCustomer;
+
+   @MapsId("userId")
+   @JoinColumns({
+      @JoinColumn(name="userfirstname_fk", referencedColumnName="firstName"),
+      @JoinColumn(name="userlastname_fk", referencedColumnName="lastName")
+   })
+   @OneToOne User user;
+}
+
+@Embeddable
+class CustomerId implements Serializable {
+   UserId userId;
+   String customerNumber;
+}
+
+@Entity 
+class User {
+   @EmbeddedId UserId id;
+   Integer age;
+}
+
+@Embeddable
+class UserId implements Serializable {
+   String firstName;
+   String lastName;
+}</programlisting>
+
+          <para>In the embedded id object, the association is represented as
+          the identifier of the associated entity. But you can link its value
+          to a regular association in the entity via the
+          <classname>@MapsId</classname> annotation. The
+          <classname>@MapsId</classname> value correspond to the property name
+          of the embedded id object containing the associated entity's
+          identifier. In the database, it means that the
+          <literal>Customer.user</literal> and the
+          <literal>CustomerId.userId</literal> properties share the same
+          underlying column (<literal>user_fk</literal> in this case).</para>
+
+          <para>In practice, your code only sets the
+          <literal>Customer.user</literal> property and the user id value is
+          copied by Hibernate into the <literal>CustomerId.userId</literal>
+          property.</para>
+
+          <warning>
+            <para>The id value can be copied as late as flush time, don't rely
+            on it until after flush time.</para>
+          </warning>
+
+          <para>While not supported in JPA, Hibernate lets you place your
+          association directly in the embedded id component (instead of having
+          to use the <classname>@MapsId</classname> annotation).</para>
+
+          <programlisting language="JAVA" role="JAVA">@Entity
+class Customer {
+   @EmbeddedId CustomerId id;
+   boolean preferredCustomer;
+}
+
+@Embeddable
+class CustomerId implements Serializable {
+   @OneToOne
+   @JoinColumns({
+      @JoinColumn(name="userfirstname_fk", referencedColumnName="firstName"),
+      @JoinColumn(name="userlastname_fk", referencedColumnName="lastName")
+   }) 
+   User user;
+   String customerNumber;
+}
+
+@Entity 
+class User {
+   @EmbeddedId UserId id;
+   Integer age;
+}
+
+@Embeddable
+class UserId implements Serializable {
+   String firstName;
+   String lastName;
+}</programlisting>
+
+          <para>Let's now rewrite these examples using the hbm.xml syntax.
+          </para>
+
+          <programlisting role="XML">&lt;composite-id
+        name="propertyName"
+        class="ClassName"
+        mapped="true|false"
+        access="field|property|ClassName"&gt;
+        node="element-name|."
+
+        &lt;key-property name="propertyName" type="typename" column="column_name"/&gt;
+        &lt;key-many-to-one name="propertyName class="ClassName" column="column_name"/&gt;
+        ......
+&lt;/composite-id&gt;</programlisting>
+
+          <para>First a simple example:</para>
+
+          <programlisting role="XML">&lt;class name="User"&gt;
+   &lt;composite-id name="id" class="UserId"&gt;
+      &lt;key-property name="firstName" column="fld_firstname"/&gt;
+      &lt;key-property name="lastName"/&gt;
+   &lt;/composite-id&gt;
+&lt;/class&gt;</programlisting>
+
+          <para>Then an example showing how an association can be
+          mapped.</para>
+
+          <programlisting role="XML">&lt;class name="Customer"&gt;
+   &lt;composite-id name="id" class="CustomerId"&gt;
+      &lt;key-property name="firstName" column="userfirstname_fk"/&gt;
+      &lt;key-property name="lastName" column="userfirstname_fk"/&gt;
+      &lt;key-property name="customerNumber"/&gt;
+   &lt;/composite-id&gt;
+
+   &lt;property name="preferredCustomer"/&gt;
+
+   &lt;many-to-one name="user"&gt;
+      &lt;column name="userfirstname_fk" updatable="false" insertable="false"/&gt;
+      &lt;column name="userlastname_fk" updatable="false" insertable="false"/&gt;
+   &lt;/many-to-one&gt;
+&lt;/class&gt;
+
+&lt;class name="User"&gt;
+   &lt;composite-id name="id" class="UserId"&gt;
+      &lt;key-property name="firstName"/&gt;
+      &lt;key-property name="lastName"/&gt;
+   &lt;/composite-id&gt;
+
+   &lt;property name="age"/&gt;
+&lt;/class&gt;</programlisting>
+
+          <para>Notice a few things in the previous example:</para>
+
+          <itemizedlist>
+            <listitem>
+              <para>the order of the properties (and column) matters. It must
+              be the same between the association and the primary key of the
+              associated entity</para>
+            </listitem>
+
+            <listitem>
+              <para>the many to one uses the same columns as the primary key
+              and thus must be marked as read only
+              (<literal>insertable</literal> and <literal>updatable</literal>
+              to false).</para>
+            </listitem>
+
+            <listitem>
+              <para>unlike with <classname>@MapsId</classname>, the id value
+              of the associated entity is not transparently copied, check the
+              <literal>foreign</literal> id generator for more
+              information.</para>
+            </listitem>
+          </itemizedlist>
+
+          <para>The last example shows how to map association directly in the
+          embedded id component.</para>
+
+          <programlisting role="XML">&lt;class name="Customer"&gt;
+   &lt;composite-id name="id" class="CustomerId"&gt;
+      &lt;key-many-to-one name="user"&gt;
+         &lt;column name="userfirstname_fk"/&gt;
+         &lt;column name="userlastname_fk"/&gt;
+      &lt;/key-many-to-one&gt;
+      &lt;key-property name="customerNumber"/&gt;
+   &lt;/composite-id&gt;
+
+   &lt;property name="preferredCustomer"/&gt;
+
+   &lt;many-to-one name="user"&gt;
+      &lt;column name="userfirstname_fk" updatable="false" insertable="false"/&gt;
+      &lt;column name="userlastname_fk" updatable="false" insertable="false"/&gt;
+   &lt;/many-to-one&gt;
+&lt;/class&gt;
+
+&lt;class name="User"&gt;
+   &lt;composite-id name="id" class="UserId"&gt;
+      &lt;key-property name="firstName"/&gt;
+      &lt;key-property name="lastName"/&gt;
+   &lt;/composite-id&gt;
+
+   &lt;property name="age"/&gt;
+&lt;/class&gt;</programlisting>
+        </section>
+
+        <section>
+          <title>Multiple @Id properties</title>
+
+          <para>XXXXXXXXXXXXXXXXXXXXXXXXXXXXX</para>
+
+          <para>Another, arguably more natural, approach is to place
+          <classname>@Id</classname> on multiple properties of my entity. This
+          approach is only supported by Hibernate but does not require an
+          extra embeddable component.</para>
+
+          <programlisting language="JAVA" role="JAVA">@Entity
+class Customer implements Serializable {
+  @Id @OneToOne
+  @JoinColumns({
+    @JoinColumn(name="userfirstname_fk", referencedColumnName="firstName"),
+    @JoinColumn(name="userlastname_fk", referencedColumnName="lastName")
+  })
+  User user;
+  
+  @Id String customerNumber;
+
+  boolean preferredCustomer;
+}
+
+@Entity 
+class User {
+  @EmbeddedId UserId id;
+  Integer age;
+}
+
+@Embeddable
+class UserId implements Serializable {
+  String firstName;
+  String lastName;
+}</programlisting>
+
+          <para>In this case <classname>Customer</classname> being it's own
+          identifier representation, it must implement
+          <classname>Serializable</classname>.</para>
+        </section>
+
+        <section>
+          <title>@IdClass</title>
+
+          <para><classname>@IdClass</classname> on an entity points to the
+          class (component) representing the identifier of the class. The
+          properties marked <classname>@Id</classname> on the entity must have
+          their corresponding property on the <classname>@IdClass</classname>.
+          The return type of search twin property must be either identical for
+          basic properties or must correspond to the identifier class of the
+          associated entity for an association.</para>
+
+          <warning>
+            <para>This approach is inherited from the EJB 2 days and we
+            recommend against its use. But, after all it's your application
+            and Hibernate supports it.</para>
+          </warning>
+
+          <programlisting language="JAVA" role="JAVA">@Entity
+class Customer {
+  @Id @OneToOne
+  @JoinColumns({
+    @JoinColumn(name="userfirstname_fk", referencedColumnName="firstName"),
+    @JoinColumn(name="userlastname_fk", referencedColumnName="lastName")
+  }) 
+  User user;
+  
+  @Id String customerNumber;
+
+  boolean preferredCustomer;
+}
+
+class CustomerId implements Serializable {
+  UserId user;
+  String customerNumber;
+}
+
+@Entity 
+class User {
+  @EmbeddedId UserId id;
+  Integer age;
+}
+
+@Embeddable
+class UserId implements Serializable {
+  String firstName;
+  String lastName;
+}</programlisting>
+
+          <para><classname>Customer</classname> and
+          <classname>CustomerId</classname> do have the same properties
+          <literal>customerNumber</literal> as well as
+          <literal>user</literal>.</para>
+
+          <para>While not JPA standard, Hibernate let's you declare the
+          vanilla associated property in the
+          <classname>@IdClass</classname>.</para>
+
+          <programlisting language="JAVA" role="JAVA">@Entity
+class Customer {
+  @Id @OneToOne
+  @JoinColumns({
+    @JoinColumn(name="userfirstname_fk", referencedColumnName="firstName"),
+    @JoinColumn(name="userlastname_fk", referencedColumnName="lastName")
+  }) 
+  User user;
+  
+  @Id String customerNumber;
+
+  boolean preferredCustomer;
+}
+
+class CustomerId implements Serializable {
+  @OneToOne User user;
+  String customerNumber;
+}
+
+@Entity 
+class User {
+  @EmbeddedId UserId id;
+  Integer age;
+}
+
+@Embeddable
+class UserId implements Serializable {
+  String firstName;
+  String lastName;
+}</programlisting>
+        </section>
+
+        <section>
+          <title>Partial identifier generation</title>
+
+          <para>Hibernate supports the automatic generation of some of the
+          identifier properties. Simply use the
+          <classname>@GeneratedValue</classname> annotation on one or several
+          id properties.</para>
+
+          <warning>
+            <para>The Hibernate team has always felt such a construct as
+            fundamentally wrong. Try hard to fix your data model before using
+            this feature.</para>
+          </warning>
+
+          <programlisting language="JAVA" role="JAVA">@Entity
+public class CustomerInventory implements Serializable {
+  @Id
+  @TableGenerator(name = "inventory",
+    table = "U_SEQUENCES",
+    pkColumnName = "S_ID",
+    valueColumnName = "S_NEXTNUM",
+    pkColumnValue = "inventory",
+    allocationSize = 1000)
+  @GeneratedValue(strategy = GenerationType.TABLE, generator = "inventory")
+  Integer id;
+
+
+  @Id @ManyToOne(cascade = CascadeType.MERGE)
+  Customer customer;
+}
+
+@Entity
+public class Customer implements Serializable {
+   @Id
+   private int id;
+}</programlisting>
+
+          <para>You can also generate properties inside an
+          <classname>@EmbeddedId</classname> class.</para>
+        </section>
+      </section>
 
       <section id="mapping-declaration-id-generator" revision="2">
         <title>Generator</title>

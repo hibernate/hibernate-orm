@@ -36,7 +36,11 @@ import java.lang.annotation.Target;
 @Target(TYPE)
 @Retention(RUNTIME)
 public @interface Entity {
-	/** Is this entity mutable (read only) or not */
+	/**
+	 * Is this entity mutable (read only) or not
+	 *
+	 * @deprecated use {@link org.hibernate.annotations.Immutable} 
+	 */
 	boolean mutable() default true;
 	/** Needed column only in SQL on insert */
 	boolean dynamicInsert() default false;

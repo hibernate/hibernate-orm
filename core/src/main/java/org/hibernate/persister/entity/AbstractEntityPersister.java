@@ -3225,8 +3225,8 @@ public abstract class AbstractEntityPersister
 						readLoader :
 						createEntityLoader( LockMode.PESSIMISTIC_FORCE_INCREMENT )
 			);
-		loaders.put( LockMode.OPTIMISTIC, readLoader );
-		loaders.put( LockMode.OPTIMISTIC_FORCE_INCREMENT, readLoader );
+		loaders.put( LockMode.OPTIMISTIC, createEntityLoader( LockMode.OPTIMISTIC) );
+		loaders.put( LockMode.OPTIMISTIC_FORCE_INCREMENT, createEntityLoader(LockMode.OPTIMISTIC_FORCE_INCREMENT) );
 	
 		loaders.put(
 				"merge",

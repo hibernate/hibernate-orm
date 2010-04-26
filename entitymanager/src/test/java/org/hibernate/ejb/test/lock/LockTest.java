@@ -210,6 +210,28 @@ public class LockTest extends TestCase {
 		em.close();
 	}
 
+   public void testLockOptimisticForceIncrementDifferentEm() throws Exception {
+		 Lock lock = new Lock();
+		 lock.setName( "force" );
+		 EntityManager em1 = createIsolatedEntityManager();
+		 em1.getTransaction().begin();
+		 em1.persist( lock );
+		 em1.getTransaction().commit();
+		 em1.close();
+
+		 EntityManager em2 = createIsolatedEntityManager();
+		 em2.getTransaction().begin();
+		 lock = em2.find( Lock.class, lock.getId(), LockModeType.OPTIMISTIC );
+		 assertEquals( "lock mode should be OPTIMISTIC ", LockModeType.OPTIMISTIC, em2.getLockMode(lock) );
+		 em2.lock( lock, LockModeType.OPTIMISTIC_FORCE_INCREMENT );
+		 assertEquals( "lock mode should be OPTIMISTIC_FORCE_INCREMENT ", LockModeType.OPTIMISTIC_FORCE_INCREMENT, em2.getLockMode(lock) );
+		 em2.getTransaction().commit();
+		 em2.getTransaction().begin();
+		 em2.remove( lock );
+		 em2.getTransaction().commit();
+		 em2.close();
+	}
+
 	public void testContendedPessimisticLock() throws Exception {
 
 		EntityManager em = getOrCreateEntityManager();

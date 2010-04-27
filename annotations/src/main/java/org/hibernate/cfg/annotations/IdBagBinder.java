@@ -80,6 +80,10 @@ public class IdBagBinder extends BagBinder {
 					Collections.EMPTY_MAP,
 					mappings
 			);
+			//we need to make sure all id columns must be not-null.
+			for(Ejb3Column idColumn:idColumns){
+				idColumn.setNullable(false);
+			}
 			Table table = collection.getCollectionTable();
 			simpleValue.setTable( table );
 			simpleValue.setColumns( idColumns );

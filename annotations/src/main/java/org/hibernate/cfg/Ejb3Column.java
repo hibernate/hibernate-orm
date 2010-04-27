@@ -439,11 +439,9 @@ public class Ejb3Column {
 					column.setPropertyName(
 							BinderHelper.getRelativePath( propertyHolder, inferredData.getPropertyName() )
 					);
-					//although in theory, null is an acceptable value in a Map key
-					//we need force this column to be not null, as it intended to be the primary key. 
-					if ( nullability != Nullability.FORCED_NULL ) {
-						column.setNullable( false );
-					}
+			 		column.setNullable(
+						col.nullable()
+					); //TODO force to not null if available? This is a (bad) user choice.
 					column.setUnique( col.unique() );
 					column.setInsertable( col.insertable() );
 					column.setUpdatable( col.updatable() );

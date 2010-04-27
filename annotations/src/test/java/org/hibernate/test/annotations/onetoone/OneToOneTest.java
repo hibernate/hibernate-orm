@@ -3,6 +3,7 @@ package org.hibernate.test.annotations.onetoone;
 
 import java.util.Iterator;
 
+import org.hibernate.EmptyInterceptor;
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
@@ -174,8 +175,8 @@ public class OneToOneTest extends TestCase {
 		party.partyId = "id";
 		party.partyAffiliate = affiliate;
 		affiliate.party = party;
+		
 		s.persist( party );
-		s.persist( affiliate );
 		s.getTransaction().commit();
 
 		s.clear();
@@ -272,6 +273,41 @@ public class OneToOneTest extends TestCase {
 	}
 
 	/**
+	 * HHH-5109 @OneToOne - too many joins
+	 * This test uses an interceptor to verify that correct number of joins
+	 * are generated. 
+	 */
+	public void testPkOneToOneSelectStatementDoesNotGenerateExtraJoin() {
+		
+		Session s = openSession(new JoinCounter(1));
+		Transaction tx = s.beginTransaction();
+		Owner owner = new Owner();
+		OwnerAddress address = new OwnerAddress();
+		owner.setAddress( address );
+		address.setOwner( owner );
+		s.persist( owner );
+		s.flush();
+		s.clear();
+		
+		owner = ( Owner ) s.get( Owner.class, owner.getId() );
+		assertNotNull( owner );
+		assertNotNull( owner.getAddress() );
+		assertEquals( owner.getId(), owner.getAddress().getId() );
+		s.flush();
+		s.clear();
+		
+		address = ( OwnerAddress ) s.get( OwnerAddress.class, address.getId() );
+		assertNotNull( address );
+		assertNotNull( address.getOwner() );
+		assertEquals( address.getId(), address.getOwner().getId() );
+		
+		tx.rollback();
+		s.close();
+	}
+	
+	
+	
+	/**
 	 * @see org.hibernate.test.annotations.TestCase#getAnnotatedClasses()
 	 */
 	protected Class[] getAnnotatedClasses() {
@@ -298,4 +334,55 @@ public class OneToOneTest extends TestCase {
 	protected String[] getXmlFiles() {
 		return new String[] { "org/hibernate/test/annotations/onetoone/orm.xml" };
 	}
+}
+
+
+/**
+ * Verifies that generated 'select' statement has desired number of joins 
+ * @author Sharath Reddy
+ *
+ */
+class JoinCounter extends EmptyInterceptor {
+	 
+	private static final long serialVersionUID = -3689681272273261051L;
+	
+	private int expectedNumberOfJoins = 0;
+			
+	public JoinCounter(int val) {
+		super();
+		this.expectedNumberOfJoins = val;
+	}
+
+	public String onPrepareStatement(String sql) {
+				
+		int numberOfJoins = 0;
+		if (sql.startsWith("select")) {
+			 numberOfJoins = count(sql, "join");
+			 TestCase.assertEquals(expectedNumberOfJoins, numberOfJoins);
+		}
+						
+		return sql;
+	 }
+	
+	 /**
+	   * Count the number of instances of substring within a string.
+	   *
+	   * @param string     String to look for substring in.
+	   * @param substring  Sub-string to look for.
+	   * @return           Count of substrings in string.
+	   */
+	  private int count(final String string, final String substring)
+	  {
+	     int count = 0;
+	     int idx = 0;
+
+	     while ((idx = string.indexOf(substring, idx)) != -1)
+	     {
+	        idx++;
+	        count++;
+	     }
+
+	     return count;
+	  }
+	
 }

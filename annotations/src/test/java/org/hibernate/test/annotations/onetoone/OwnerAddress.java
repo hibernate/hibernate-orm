@@ -18,7 +18,7 @@ public class OwnerAddress {
 	@GenericGenerator(strategy = "foreign", name = "fk", parameters = @Parameter(name="property", value="owner"))
 	private Integer id;
 
-	@OneToOne(mappedBy="address", optional = false)
+	@OneToOne(mappedBy="address")
 	private Owner owner;
 
 	public Integer getId() {

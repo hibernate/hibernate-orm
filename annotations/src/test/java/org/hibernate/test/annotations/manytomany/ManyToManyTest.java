@@ -15,6 +15,7 @@ import org.hibernate.Hibernate;
 import org.hibernate.JDBCException;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.criterion.Restrictions;
 import org.hibernate.test.annotations.TestCase;
 
 /**
@@ -80,6 +81,29 @@ public class ManyToManyTest extends TestCase {
 		s.close();
 	}
 
+	public void testCanUseCriteriaQuery() throws Exception {
+		Session s;
+		Transaction tx;
+		s = openSession();
+		tx = s.beginTransaction();
+		Store fnac = new Store();
+		fnac.setName( "Fnac" );
+		Supplier emi = new Supplier();
+		emi.setName( "Emmanuel" );
+		emi.setSuppStores( new HashSet<Store>() );
+		fnac.setSuppliers( new HashSet<Supplier>() );
+		fnac.getSuppliers().add( emi );
+		emi.getSuppStores().add( fnac );
+		s.persist( fnac );
+		tx.commit();
+		s.close();
+
+		s = openSession();
+		List result = s.createCriteria( Supplier.class ).createAlias( "suppStores", "s" ).add(
+				Restrictions.eq( "s.name", "Fnac" ) ).list();
+		assertEquals( 1, result.size() );
+		s.close();
+	}
 	public void testDefaultCompositePk() throws Exception {
 		Session s;
 		Transaction tx;

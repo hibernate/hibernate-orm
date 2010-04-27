@@ -473,7 +473,7 @@ public class JoinWalker {
 	 * {@link JoinFragment#LEFT_OUTER_JOIN}, or -1 to indicate no joining.
 	 * @throws MappingException ??
 	 */
-	private int getJoinType(
+	protected int getJoinType(
 			AssociationType associationType,
 			FetchMode config,
 			String path,

@@ -31,6 +31,7 @@ import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.engine.EntityEntry;
 import org.hibernate.impl.SessionImpl;
 import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
+import org.hibernate.proxy.HibernateProxy;
 
 
 public class ParentChildTest extends LegacyTestCase {
@@ -207,7 +208,7 @@ public class ParentChildTest extends LegacyTestCase {
 		s.close();
 	}
 
-	public void testComplexCriteriaFailureExpected() throws Exception {
+	public void testComplexCriteria() throws Exception {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
 		Baz baz = new Baz();
@@ -335,6 +336,109 @@ public class ParentChildTest extends LegacyTestCase {
 		s.delete( s.get(Foo.class, foo2.getKey() ) );
 		s.delete(baz);
 		t.commit();
+		s.close();
+	}
+
+	public void testArrayHQL() {
+		Session s = openSession();
+		Transaction t = s.beginTransaction();
+		Baz baz = new Baz();
+		s.save(baz);
+		Foo foo1 = new Foo();
+		s.save(foo1);
+		baz.setFooArray( new FooProxy[] { foo1 } );
+
+		s.flush();
+		s.clear();
+
+		baz = ( Baz ) s.createQuery("from Baz b left join fetch b.fooArray").uniqueResult();
+		assertEquals( 1, baz.getFooArray().length );
+
+		t.rollback();
+		s.close();
+
+	}
+
+	public void testArrayCriteria() {
+
+		Session s = openSession();
+		Transaction t = s.beginTransaction();
+		Baz baz = new Baz();
+		s.save(baz);
+		Foo foo1 = new Foo();
+		s.save(foo1);
+		baz.setFooArray( new FooProxy[] { foo1 } );
+
+		s.flush();
+		s.clear();
+
+		baz = ( Baz ) s.createCriteria(Baz.class).createCriteria( "fooArray" ).uniqueResult();
+		assertEquals( 1, baz.getFooArray().length );
+
+		t.rollback();
+		s.close();
+	}
+
+	public void testLazyManyToOneHQL() {
+		Session s = openSession();
+		Transaction t = s.beginTransaction();
+		Baz baz = new Baz();
+		s.save(baz);
+		Foo foo1 = new Foo();
+		s.save(foo1);
+		baz.setFoo( foo1 );
+
+		s.flush();
+		s.clear();
+
+		baz = ( Baz ) s.createQuery("from Baz b").uniqueResult();
+		assertFalse( Hibernate.isInitialized( baz.getFoo() ) );
+		assertTrue( baz.getFoo() instanceof HibernateProxy );
+
+		t.rollback();
+		s.close();
+
+	}
+
+	public void testLazyManyToOneCriteria() {
+
+		Session s = openSession();
+		Transaction t = s.beginTransaction();
+		Baz baz = new Baz();
+		s.save(baz);
+		Foo foo1 = new Foo();
+		s.save(foo1);
+		baz.setFoo( foo1 );
+
+		s.flush();
+		s.clear();
+
+		baz = ( Baz ) s.createCriteria( Baz.class ).uniqueResult();
+		assertTrue( Hibernate.isInitialized( baz.getFoo() ) );
+		assertFalse( baz.getFoo() instanceof HibernateProxy );
+
+		t.rollback();
+		s.close();
+	}
+
+	public void testLazyManyToOneGet() {
+
+		Session s = openSession();
+		Transaction t = s.beginTransaction();
+		Baz baz = new Baz();
+		s.save(baz);
+		Foo foo1 = new Foo();
+		s.save(foo1);
+		baz.setFoo( foo1 );
+
+		s.flush();
+		s.clear();
+
+		baz = ( Baz ) s.get( Baz.class, baz.getCode() );
+		assertTrue( Hibernate.isInitialized( baz.getFoo() ) );
+		assertFalse( baz.getFoo() instanceof HibernateProxy );
+
+		t.rollback();
 		s.close();
 	}
 

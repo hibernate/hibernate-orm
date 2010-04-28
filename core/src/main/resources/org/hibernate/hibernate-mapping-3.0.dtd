@@ -840,10 +840,10 @@ list index, or key of a map). -->
 	<!ATTLIST list-index column CDATA #IMPLIED>
 	<!ATTLIST list-index base CDATA "0">
 
-<!ELEMENT map-key ((column|formula)*)>
+<!ELEMENT map-key ((column|formula)*,type?)>
 	<!ATTLIST map-key column CDATA #IMPLIED>
 	<!ATTLIST map-key formula CDATA #IMPLIED>
-	<!ATTLIST map-key type CDATA #REQUIRED>
+	<!ATTLIST map-key type CDATA #IMPLIED>
 	<!ATTLIST map-key length CDATA #IMPLIED>
 	<!ATTLIST map-key node CDATA #IMPLIED>
 

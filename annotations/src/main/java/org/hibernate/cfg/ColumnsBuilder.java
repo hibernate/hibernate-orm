@@ -15,6 +15,7 @@ import org.hibernate.annotations.CollectionOfElements;
 import org.hibernate.annotations.Columns;
 import org.hibernate.annotations.Formula;
 import org.hibernate.annotations.JoinColumnsOrFormulas;
+import org.hibernate.annotations.JoinFormula;
 import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.cfg.annotations.EntityBinder;
 import org.hibernate.cfg.annotations.Nullability;
@@ -176,6 +177,13 @@ class ColumnsBuilder {
 						ann, null, entityBinder.getSecondaryTables(),
 						propertyHolder, inferredData.getPropertyName(), mappings
 				);
+			}
+			else if (property.isAnnotationPresent( JoinFormula.class)) {
+				JoinFormula ann = property.getAnnotation( JoinFormula.class );
+				joinColumns = new Ejb3JoinColumn[1];
+				joinColumns[0] = Ejb3JoinColumn.buildJoinFormula(
+										ann, null, entityBinder.getSecondaryTables(), 
+										propertyHolder, inferredData.getPropertyName(), mappings);
 			}
 		}
 		return joinColumns;

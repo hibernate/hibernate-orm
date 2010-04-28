@@ -165,7 +165,7 @@ public class Ejb3JoinColumn extends Ejb3Column {
 	/**
 	 * build join formula
 	 */
-	private static Ejb3JoinColumn buildJoinFormula(
+	public static Ejb3JoinColumn buildJoinFormula(
 			JoinFormula ann,
 			String mappedBy, Map<String, Join> joins,
 			PropertyHolder propertyHolder,

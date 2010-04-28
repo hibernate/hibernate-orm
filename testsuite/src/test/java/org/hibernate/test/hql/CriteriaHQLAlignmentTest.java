@@ -8,6 +8,10 @@ import java.util.Collections;
 import junit.framework.Test;
 
 import org.hibernate.Hibernate;
+import org.hibernate.QueryException;
+import org.hibernate.Transaction;
+import org.hibernate.dialect.HSQLDialect;
+import org.hibernate.exception.SQLGrammarException;
 import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
 import org.hibernate.classic.Session;
 import org.hibernate.criterion.Projections;
@@ -168,6 +172,142 @@ public class CriteriaHQLAlignmentTest extends QueryTranslatorTestCase {
 		
 		s.delete( human );
 		s.flush();
+		s.close();
+	}
+
+	public void testCountReturnValues() {
+		Session s = openSession();
+		Transaction t = s.beginTransaction();
+		Human human1 = new Human();
+		human1.setName( new Name( "John", 'Q', "Public" ) );
+		human1.setNickName( "Johnny" );
+		s.save(human1);
+		Human human2 = new Human();
+		human2.setName( new Name( "John", 'A', "Doe" ) );
+		human2.setNickName( "Johnny" );
+		s.save( human2 );
+		Human human3 = new Human();
+		human3.setName( new Name( "John", 'A', "Doe" ) );
+		human3.setNickName( "Jack" );
+		s.save( human3 );
+		Human human4 = new Human();
+		human4.setName( new Name( "John", 'A', "Doe" ) );
+		s.save( human4 );
+		t.commit();
+		s.close();
+
+		s = openSession();
+		t = s.beginTransaction();
+
+		Long count = ( Long ) s.createQuery( "select count( * ) from Human" ).uniqueResult();
+		assertEquals( 4, count.longValue() );
+		s.clear();
+		count = ( Long ) s.createCriteria( Human.class )
+				.setProjection( Projections.rowCount() )
+				.uniqueResult();
+		assertEquals( 4, count.longValue() );
+		s.clear();
+
+		count = ( Long ) s.createQuery( "select count( nickName ) from Human" ).uniqueResult();
+		assertEquals( 3, count.longValue() );
+		s.clear();
+		count = ( Long ) s.createCriteria( Human.class )
+				.setProjection( Projections.count( "nickName" ) )
+				.uniqueResult();
+		assertEquals( 3, count.longValue() );
+		s.clear();
+
+		count = ( Long ) s.createQuery( "select count( distinct nickName ) from Human" ).uniqueResult();
+		assertEquals( 2, count.longValue() );
+		s.clear();
+		count = ( Long ) s.createCriteria( Human.class )
+				.setProjection( Projections.count( "nickName" ).setDistinct() )
+				.uniqueResult();
+		assertEquals( 2, count.longValue() );
+		s.clear();
+
+		s = openSession();
+		t = s.beginTransaction();
+		try {
+			count = ( Long ) s.createQuery( "select count( distinct name ) from Human" ).uniqueResult();
+			assertEquals( 2, count.longValue() );
+		}
+		catch ( SQLGrammarException ex ) {
+			// HSQLDB's cannot handle more than 1 argument in SELECT COUNT( DISTINCT ... ) )
+			if ( ! ( getDialect() instanceof HSQLDialect ) )  {
+				throw ex;
+			}
+		}
+		finally {
+			t.rollback();
+			s.close();
+		}
+
+		s = openSession();
+		t = s.beginTransaction();
+		try {
+			count = ( Long ) s.createCriteria( Human.class )
+				.setProjection( Projections.count( "name" ).setDistinct() )
+				.uniqueResult();
+			assertEquals( 2, count.longValue() );
+		}
+		catch ( SQLGrammarException ex ) {
+			// HSQLDB's cannot handle more than 1 argument in SELECT COUNT( DISTINCT ... ) )
+			if ( ! ( getDialect() instanceof HSQLDialect ) )  {
+				throw ex;
+			}
+		}
+		finally {
+			t.rollback();
+			s.close();
+		}
+
+		s = openSession();
+		t = s.beginTransaction();
+		count = ( Long ) s.createQuery( "select count( distinct name.first ) from Human" ).uniqueResult();
+		assertEquals( 1, count.longValue() );
+		s.clear();
+		count = ( Long ) s.createCriteria( Human.class )
+				.setProjection( Projections.count( "name.first" ).setDistinct() )
+				.uniqueResult();
+		assertEquals( 1, count.longValue() );
+		t.commit();
+		s.close();
+
+		s = openSession();
+		t = s.beginTransaction();
+		try {
+			count = ( Long ) s.createQuery( "select count( name ) from Human" ).uniqueResult();
+			fail( "should have failed due to SQLGrammarException" );
+		}
+		catch ( SQLGrammarException ex ) {
+			// expected
+		}
+		finally {
+			t.rollback();
+			s.close();
+		}
+
+		s = openSession();
+		t = s.beginTransaction();
+		try {
+			count = ( Long ) s.createCriteria( Human.class )
+				.setProjection( Projections.count( "name" ) )
+				.uniqueResult();
+			fail( "should have failed due to SQLGrammarException" );
+		}
+		catch ( SQLGrammarException ex ) {
+			// expected
+		}
+		finally {
+			t.rollback();
+			s.close();
+		}
+
+		s = openSession();
+		t = s.beginTransaction();
+		s.createQuery( "delete from Human" ).executeUpdate();
+		t.commit();
 		s.close();
 	}
 

@@ -170,7 +170,31 @@ public class CriteriaJoinWalker extends AbstractEntityJoinWalker {
 			}
 		}
 	}
-	
+
+	protected int getJoinType(
+			AssociationType associationType,
+			FetchMode config,
+			String path,
+			String lhsTable,
+			String[] lhsColumns,
+			boolean nullable,
+			int currentDepth,
+			CascadeStyle cascadeStyle) throws MappingException {
+		return ( translator.isJoin( path ) ?
+				translator.getJoinType( path ) :
+				super.getJoinType(
+						associationType,
+						config,
+						path,
+						lhsTable,
+						lhsColumns,
+						nullable,
+						currentDepth,
+						cascadeStyle
+				)
+		);
+	}
+
 	private static boolean isDefaultFetchMode(FetchMode fetchMode) {
 		return fetchMode==null || fetchMode==FetchMode.DEFAULT;
 	}

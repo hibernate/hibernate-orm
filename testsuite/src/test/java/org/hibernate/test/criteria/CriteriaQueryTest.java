@@ -27,6 +27,8 @@ import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Property;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.criterion.Subqueries;
+import org.hibernate.dialect.HSQLDialect;
+import org.hibernate.exception.SQLGrammarException;
 import org.hibernate.junit.functional.FunctionalTestCase;
 import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
 import org.hibernate.test.hql.Animal;
@@ -515,6 +517,16 @@ public class CriteriaQueryTest extends FunctionalTestCase {
 			.uniqueResult();
 		assertEquals(count, new Long(2));
 		
+		count = (Long) s.createCriteria(Enrolment.class)
+			.setProjection( Projections.countDistinct("studentNumber") )
+			.uniqueResult();
+		assertEquals(count, new Long(2));
+
+		count = (Long) s.createCriteria(Enrolment.class)
+			.setProjection( Projections.countDistinct("courseCode").as( "cnt" ) )
+			.uniqueResult();
+		assertEquals(count, new Long(1));
+
 		Object object = s.createCriteria(Enrolment.class)
 			.setProjection( Projections.projectionList()
 					.add( Projections.count("studentNumber") )
@@ -955,6 +967,15 @@ public class CriteriaQueryTest extends FunctionalTestCase {
 		assertEquals( ( ( CityState ) result ).getCity(), "Odessa" );
 		assertEquals( ( ( CityState ) result ).getState(), "WA" );
 
+		result = s.createCriteria( Student.class )
+			.setProjection( Projections.count( "cityState.city" ) )
+			.uniqueResult();
+		assertEquals( 2, ( ( Long ) result ).longValue() );
+
+		result = s.createCriteria( Student.class )
+			.setProjection( Projections.countDistinct( "cityState.city" ) )
+			.uniqueResult();
+		assertEquals( 1, ( ( Long ) result ).longValue() );
 		t.commit();
 		s.close();
 
@@ -964,15 +985,34 @@ public class CriteriaQueryTest extends FunctionalTestCase {
 			result = s.createCriteria( Student.class )
 				.setProjection( Projections.count( "cityState" ) )
 				.uniqueResult();
-			fail( "should have failed with QueryException" );
+			fail( "expected SQLGrammarException" );
 		}
-		catch ( QueryException ex ) {
-			//expected
+		catch ( SQLGrammarException ex ) {
+			// expected
 		}
 		finally {
 			t.rollback();
+			s.close();
 		}
-		s.close();
+
+		s = openSession();
+		t = s.beginTransaction();
+		try {
+			result = s.createCriteria( Student.class )
+				.setProjection( Projections.countDistinct( "cityState" ) )
+				.uniqueResult();
+			assertEquals( 1, ( ( Long ) result ).longValue() );
+		}
+		catch ( SQLGrammarException ex ) {
+			// HSQLDB's cannot handle more than 1 argument in SELECT COUNT( DISTINCT ... ) )
+			if ( ! ( getDialect() instanceof HSQLDialect ) )  {
+				throw ex;
+			}
+		}
+		finally {
+			t.rollback();
+			s.close();
+		}
 
 		s = openSession();
 		t = s.beginTransaction();
@@ -1214,9 +1254,45 @@ public class CriteriaQueryTest extends FunctionalTestCase {
 		course.getCourseMeetings().add( new CourseMeeting( course, "Monday", 1, "1313 Mockingbird Lane" ) );
 		s.save(course);
 		s.flush();
-
+		s.clear();
 		List data = ( List ) s.createCriteria( CourseMeeting.class).setProjection( Projections.id() ).list();
-		t.rollback();
+		t.commit();
+		s.close();
+
+		s = openSession();
+		t = s.beginTransaction();
+		try {
+			s.createCriteria( CourseMeeting.class).setProjection( Projections.count( "id" ) ).list();
+			fail( "should have thrown SQLGrammarException" );
+		}
+		catch ( SQLGrammarException ex ) {
+			// expected
+		}
+		finally {
+			t.rollback();
+			s.close();
+		}
+
+		s = openSession();
+		t = s.beginTransaction();
+		try {
+			Object result = s.createCriteria( CourseMeeting.class).setProjection( Projections.countDistinct( "id" ) ).list();
+		}
+		catch ( SQLGrammarException ex ) {
+			// HSQLDB's cannot handle more than 1 argument in SELECT COUNT( DISTINCT ... ) )
+			if ( ! ( getDialect() instanceof HSQLDialect ) )  {
+				throw ex;
+			}
+		}
+		finally {
+			t.rollback();
+			s.close();
+		}
+
+		s = openSession();
+		t = s.beginTransaction();
+		s.delete( course );
+		t.commit();
 		s.close();
 	}
 

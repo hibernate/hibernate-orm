@@ -953,26 +953,6 @@
             </properties>
         </profile>
 
-        <profile>
-            <id>mysql5-gbadner</id>
-            <dependencies>
-                <dependency>
-                    <groupId>mysql</groupId>
-                    <artifactId>mysql-connector-java</artifactId>
-                    <version>5.0.5</version>
-                    <scope>test</scope>
-                </dependency>
-            </dependencies>
-            <properties>
-                <db.dialect>org.hibernate.dialect.MySQL5InnoDBDialect</db.dialect>
-                <jdbc.driver>com.mysql.jdbc.Driver</jdbc.driver>
-                <jdbc.url>jdbc:mysql://localhost/test</jdbc.url>
-                <jdbc.user>root</jdbc.user>
-                <jdbc.pass></jdbc.pass>
-                <jdbc.isolation />
-            </properties>
-        </profile>
-
     </profiles>
 
     <properties>

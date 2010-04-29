@@ -17,17 +17,17 @@
         <property name="text"/>        
     </class>
 
-    <class name="Plan" mutable="false">
+    <class name="Plan" table="tbl_plan" mutable="false">
         <id name="id">
             <generator class="increment"/>
         </id>
         <property name="description" not-null="true"/>
         <set name="contracts" table="plan_contract" inverse="false" mutable="true" cascade="all" fetch="join">
-            <key column="plan"/>
+            <key column="col_plan"/>
             <many-to-many column="contract" class="Contract"/>
         </set>
         <set name="infos" inverse="false"  mutable="true" cascade="all-delete-orphan">
-            <key column="plan"/>
+            <key column="col_plan"/>
             <one-to-many class="Info"/>
         </set>
     </class>

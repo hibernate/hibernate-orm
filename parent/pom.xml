@@ -549,7 +549,7 @@
             <url>https://repository.jboss.org/nexus/service/local/staging/deploy/maven2/</url>
         </repository>
         <snapshotRepository>
-            <id>jboss-snapshots-repositor</id>
+            <id>jboss-snapshots-repository</id>
             <name>JBoss Snapshot Repository</name>
             <url>https://repository.jboss.org/nexus/content/repositories/snapshots/</url>
         </snapshotRepository>

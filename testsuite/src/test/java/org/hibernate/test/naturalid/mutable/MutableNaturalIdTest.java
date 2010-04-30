@@ -244,6 +244,115 @@ public class MutableNaturalIdTest extends FunctionalTestCase {
 		s.close();
 	}
 
+	public void testNaturalIdDeleteUsingCache() {
+		Session s = openSession();
+		s.beginTransaction();
+		User u = new User( "steve", "hb", "superSecret" );
+		s.persist( u );
+		s.getTransaction().commit();
+		s.close();
+
+		getSessions().getStatistics().clear();
+
+		s = openSession();
+		s.beginTransaction();
+		u = ( User ) s.createCriteria( User.class )
+				.add( Restrictions.naturalId()
+						.set("name", "steve")
+						.set("org", "hb")
+				)
+				.setCacheable( true )
+				.uniqueResult();
+		assertNotNull( u );
+		s.getTransaction().commit();
+		s.close();
+
+		assertEquals( getSessions().getStatistics().getQueryExecutionCount(), 1 );
+		assertEquals( getSessions().getStatistics().getQueryCacheHitCount(), 0 );
+		assertEquals( getSessions().getStatistics().getQueryCachePutCount(), 1 );
+
+		getSessions().getStatistics().clear();
+
+		s = openSession();
+		s.beginTransaction();
+		u = ( User ) s.createCriteria( User.class )
+				.add( Restrictions.naturalId()
+						.set("name", "steve")
+						.set("org", "hb")
+				)
+				.setCacheable( true )
+				.uniqueResult();
+		assertNotNull( u );
+		assertEquals( getSessions().getStatistics().getQueryExecutionCount(), 0 );
+		assertEquals( getSessions().getStatistics().getQueryCacheHitCount(), 1 );
+
+		s.delete( u );
+
+		s.getTransaction().commit();
+		s.close();
+
+		s = openSession();
+		s.beginTransaction();
+		u = ( User ) s.createCriteria( User.class )
+				.add( Restrictions.naturalId()
+						.set("name", "steve")
+						.set("org", "hb")
+				)
+				.setCacheable( true )
+				.uniqueResult();
+		assertNull( u );
+		s.getTransaction().commit();
+		s.close();
+	}
+
+	public void testNaturalIdRecreateUsingCache() {
+		testNaturalIdDeleteUsingCache();
+
+		Session s = openSession();
+		s.beginTransaction();
+		User u = new User( "steve", "hb", "superSecret" );
+		s.persist( u );
+		s.getTransaction().commit();
+		s.close();
+
+		getSessions().getStatistics().clear();
+
+		s = openSession();
+		s.beginTransaction();
+		u = ( User ) s.createCriteria( User.class )
+				.add( Restrictions.naturalId()
+						.set("name", "steve")
+						.set("org", "hb")
+				)
+				.setCacheable( true )
+				.uniqueResult();
+		assertNotNull( u );
+
+		assertEquals( getSessions().getStatistics().getQueryExecutionCount(), 1 );
+		assertEquals( getSessions().getStatistics().getQueryCacheHitCount(), 0 );
+		assertEquals( getSessions().getStatistics().getQueryCachePutCount(), 1 );
+
+		getSessions().getStatistics().clear();
+
+		s = openSession();
+		s.beginTransaction();
+		u = ( User ) s.createCriteria( User.class )
+				.add( Restrictions.naturalId()
+						.set("name", "steve")
+						.set("org", "hb")
+				)
+				.setCacheable( true )
+				.uniqueResult();
+		assertNotNull( u );
+		assertEquals( getSessions().getStatistics().getQueryExecutionCount(), 0 );
+		assertEquals( getSessions().getStatistics().getQueryCacheHitCount(), 1 );
+
+		s.delete( u );
+
+		s.getTransaction().commit();
+		s.close();
+	}
+
 	public void testQuerying() throws Exception {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();

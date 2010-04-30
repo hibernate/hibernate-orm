@@ -70,6 +70,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
 import org.hibernate.MappingException;
 import org.hibernate.MappingNotFoundException;
+import org.hibernate.ObjectNotFoundException;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.AnnotationConfiguration;
 import org.hibernate.cfg.Configuration;
@@ -131,6 +132,9 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 	private static class Ejb3EntityNotFoundDelegate implements EntityNotFoundDelegate, Serializable {
 		public void handleEntityNotFound(String entityName, Serializable id) {
 			throw new EntityNotFoundException("Unable to find " + entityName  + " with id " + id);
+		}
+		public boolean isEntityNotFoundException(RuntimeException exception) {
+			return EntityNotFoundException.class.isInstance( exception );
 		}
 	}
 

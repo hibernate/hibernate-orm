@@ -446,6 +446,9 @@ public final class SessionFactoryImpl implements SessionFactory, SessionFactoryI
 				public void handleEntityNotFound(String entityName, Serializable id) {
 					throw new ObjectNotFoundException( id, entityName );
 				}
+				public boolean isEntityNotFoundException(RuntimeException exception) {
+					return ObjectNotFoundException.class.isInstance( exception );
+				}
 			};
 		}
 		this.entityNotFoundDelegate = entityNotFoundDelegate;

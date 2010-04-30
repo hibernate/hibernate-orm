@@ -55,6 +55,9 @@ public abstract class AbstractJPATest extends FunctionalTestCase {
 		public void handleEntityNotFound(String entityName, Serializable id) {
 			throw new EntityNotFoundException( entityName, id );
 		}
+		public boolean isEntityNotFoundException(RuntimeException exception) {
+			return EntityNotFoundException.class.isInstance( exception );
+		}
 	}
 
 	/**

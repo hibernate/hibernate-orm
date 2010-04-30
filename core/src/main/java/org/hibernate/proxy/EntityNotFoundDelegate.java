@@ -33,4 +33,5 @@ import java.io.Serializable;
  */
 public interface EntityNotFoundDelegate {
 	public void handleEntityNotFound(String entityName, Serializable id);
+	public boolean isEntityNotFoundException(RuntimeException exception);
 }

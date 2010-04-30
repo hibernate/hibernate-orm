@@ -826,7 +826,7 @@ public class Summary {
     </section>
 
     <section id="mapping-declaration-id" revision="4">
-      <title>identifiers</title>
+      <title>Identifiers</title>
 
       <para>Mapped classes <emphasis>must</emphasis> declare the primary key
       column of the database table. Most classes will also have a
@@ -957,7 +957,7 @@ public class Person {
         <para>Let's explore all three cases using examples.</para>
 
         <section>
-          <title>Property using a component type</title>
+          <title>id as a property using a component type</title>
 
           <para>Here is a simple example of
           <classname>@EmbeddedId</classname>.</para>
@@ -1001,6 +1001,8 @@ class Customer {
 class CustomerId implements Serializable {
    UserId userId;
    String customerNumber;
+
+   //implements equals and hashCode
 }
 
 @Entity 
@@ -1013,6 +1015,8 @@ class User {
 class UserId implements Serializable {
    String firstName;
    String lastName;
+
+   //implements equals and hashCode
 }</programlisting>
 
           <para>In the embedded id object, the association is represented as
@@ -1025,6 +1029,12 @@ class UserId implements Serializable {
           <literal>Customer.user</literal> and the
           <literal>CustomerId.userId</literal> properties share the same
           underlying column (<literal>user_fk</literal> in this case).</para>
+
+          <tip>
+            <para>The component type used as identifier must implement
+            <methodname>equals()</methodname> and
+            <methodname>hashCode()</methodname>.</para>
+          </tip>
 
           <para>In practice, your code only sets the
           <literal>Customer.user</literal> property and the user id value is
@@ -1055,6 +1065,8 @@ class CustomerId implements Serializable {
    }) 
    User user;
    String customerNumber;
+
+   //implements equals and hashCode
 }
 
 @Entity 
@@ -1067,10 +1079,13 @@ class User {
 class UserId implements Serializable {
    String firstName;
    String lastName;
+
+
+   //implements equals and hashCode
 }</programlisting>
 
-          <para>Let's now rewrite these examples using the hbm.xml syntax.
-          </para>
+          <para>Let's now rewrite these examples using the hbm.xml
+          syntax.</para>
 
           <programlisting role="XML">&lt;composite-id
         name="propertyName"
@@ -1157,11 +1172,78 @@ class UserId implements Serializable {
    &lt;/composite-id&gt;
 
    &lt;property name="preferredCustomer"/&gt;
+&lt;/class&gt;
 
-   &lt;many-to-one name="user"&gt;
-      &lt;column name="userfirstname_fk" updatable="false" insertable="false"/&gt;
-      &lt;column name="userlastname_fk" updatable="false" insertable="false"/&gt;
-   &lt;/many-to-one&gt;
+&lt;class name="User"&gt;
+   &lt;composite-id name="id" class="UserId"&gt;
+      &lt;key-property name="firstName"/&gt;
+      &lt;key-property name="lastName"/&gt;
+   &lt;/composite-id&gt;
+
+   &lt;property name="age"/&gt;
+&lt;/class&gt;</programlisting>
+
+          <para>This is the recommended approach to map composite identifier.
+          The following options should not be considered unless some
+          constraint are present.</para>
+        </section>
+
+        <section>
+          <title>Multiple id properties without identifier type</title>
+
+          <para>Another, arguably more natural, approach is to place
+          <classname>@Id</classname> on multiple properties of your entity.
+          This approach is only supported by Hibernate (not JPA compliant) but
+          does not require an extra embeddable component.</para>
+
+          <programlisting language="JAVA" role="JAVA">@Entity
+class Customer implements Serializable {
+   @Id @OneToOne
+   @JoinColumns({
+      @JoinColumn(name="userfirstname_fk", referencedColumnName="firstName"),
+      @JoinColumn(name="userlastname_fk", referencedColumnName="lastName")
+   })
+   User user;
+  
+   @Id String customerNumber;
+
+   boolean preferredCustomer;
+
+   //implements equals and hashCode
+}
+
+@Entity 
+class User {
+   @EmbeddedId UserId id;
+   Integer age;
+}
+
+@Embeddable
+class UserId implements Serializable {
+   String firstName;
+   String lastName;
+
+   //implements equals and hashCode
+}</programlisting>
+
+          <para>In this case <classname>Customer</classname> is its own
+          identifier representation: it must implement
+          <classname>Serializable</classname> and must implement
+          <methodname>equals()</methodname> and
+          <methodname>hashCode()</methodname>.</para>
+
+          <para>In hbm.xml, the same mapping is:</para>
+
+          <programlisting role="XML">&lt;class name="Customer"&gt;
+   &lt;composite-id&gt;
+      &lt;key-many-to-one name="user"&gt;
+         &lt;column name="userfirstname_fk"/&gt;
+         &lt;column name="userlastname_fk"/&gt;
+      &lt;/key-many-to-one&gt;
+      &lt;key-property name="customerNumber"/&gt;
+   &lt;/composite-id&gt;
+
+   &lt;property name="preferredCustomer"/&gt;
 &lt;/class&gt;
 
 &lt;class name="User"&gt;
@@ -1175,48 +1257,8 @@ class UserId implements Serializable {
         </section>
 
         <section>
-          <title>Multiple @Id properties</title>
-
-          <para>XXXXXXXXXXXXXXXXXXXXXXXXXXXXX</para>
-
-          <para>Another, arguably more natural, approach is to place
-          <classname>@Id</classname> on multiple properties of my entity. This
-          approach is only supported by Hibernate but does not require an
-          extra embeddable component.</para>
-
-          <programlisting language="JAVA" role="JAVA">@Entity
-class Customer implements Serializable {
-  @Id @OneToOne
-  @JoinColumns({
-    @JoinColumn(name="userfirstname_fk", referencedColumnName="firstName"),
-    @JoinColumn(name="userlastname_fk", referencedColumnName="lastName")
-  })
-  User user;
-  
-  @Id String customerNumber;
-
-  boolean preferredCustomer;
-}
-
-@Entity 
-class User {
-  @EmbeddedId UserId id;
-  Integer age;
-}
-
-@Embeddable
-class UserId implements Serializable {
-  String firstName;
-  String lastName;
-}</programlisting>
-
-          <para>In this case <classname>Customer</classname> being it's own
-          identifier representation, it must implement
-          <classname>Serializable</classname>.</para>
-        </section>
-
-        <section>
-          <title>@IdClass</title>
+          <title>Multiple id properties with with a dedicated identifier
+          type</title>
 
           <para><classname>@IdClass</classname> on an entity points to the
           class (component) representing the identifier of the class. The
@@ -1233,68 +1275,83 @@ class UserId implements Serializable {
           </warning>
 
           <programlisting language="JAVA" role="JAVA">@Entity
-class Customer {
-  @Id @OneToOne
-  @JoinColumns({
-    @JoinColumn(name="userfirstname_fk", referencedColumnName="firstName"),
-    @JoinColumn(name="userlastname_fk", referencedColumnName="lastName")
-  }) 
-  User user;
+@IdClass(CustomerId.class)
+class Customer implements Serializable {
+   @Id @OneToOne
+   @JoinColumns({
+      @JoinColumn(name="userfirstname_fk", referencedColumnName="firstName"),
+      @JoinColumn(name="userlastname_fk", referencedColumnName="lastName")
+   }) 
+   User user;
   
-  @Id String customerNumber;
+   @Id String customerNumber;
 
-  boolean preferredCustomer;
+   boolean preferredCustomer;
 }
 
 class CustomerId implements Serializable {
-  UserId user;
-  String customerNumber;
+   UserId user;
+   String customerNumber;
+
+   //implements equals and hashCode
 }
 
 @Entity 
 class User {
-  @EmbeddedId UserId id;
-  Integer age;
+   @EmbeddedId UserId id;
+   Integer age;
+
+   //implements equals and hashCode
 }
 
 @Embeddable
 class UserId implements Serializable {
-  String firstName;
-  String lastName;
+   String firstName;
+   String lastName;
+
+   //implements equals and hashCode
 }</programlisting>
 
           <para><classname>Customer</classname> and
           <classname>CustomerId</classname> do have the same properties
           <literal>customerNumber</literal> as well as
-          <literal>user</literal>.</para>
+          <literal>user</literal>. <classname>CustomerId</classname> must be
+          <classname>Serializable</classname> and implement
+          <classname>equals()</classname> and
+          <classname>hashCode()</classname>.</para>
 
           <para>While not JPA standard, Hibernate let's you declare the
           vanilla associated property in the
           <classname>@IdClass</classname>.</para>
 
           <programlisting language="JAVA" role="JAVA">@Entity
-class Customer {
-  @Id @OneToOne
-  @JoinColumns({
-    @JoinColumn(name="userfirstname_fk", referencedColumnName="firstName"),
-    @JoinColumn(name="userlastname_fk", referencedColumnName="lastName")
-  }) 
-  User user;
+@IdClass(CustomerId.class)
+class Customer implements Serializable {
+   @Id @OneToOne
+   @JoinColumns({
+      @JoinColumn(name="userfirstname_fk", referencedColumnName="firstName"),
+      @JoinColumn(name="userlastname_fk", referencedColumnName="lastName")
+   }) 
+   User user;
   
-  @Id String customerNumber;
+   @Id String customerNumber;
 
-  boolean preferredCustomer;
+   boolean preferredCustomer;
 }
 
 class CustomerId implements Serializable {
-  @OneToOne User user;
-  String customerNumber;
+   @OneToOne User user;
+   String customerNumber;
+
+   //implements equals and hashCode
 }
 
 @Entity 
 class User {
-  @EmbeddedId UserId id;
-  Integer age;
+   @EmbeddedId UserId id;
+   Integer age;
+
+   //implements equals and hashCode
 }
 
 @Embeddable
@@ -1302,23 +1359,774 @@ class UserId implements Serializable {
   String firstName;
   String lastName;
 }</programlisting>
+
+          <para>This feature is of limited interest though as you are likely
+          to have chosen the <classname>@IdClass</classname> approach to stay
+          JPA compliant or you have a quite twisted mind.</para>
+
+          <para>Here are the equivalent on hbm.xml files:</para>
+
+          <programlisting role="XML">&lt;class name="Customer"&gt;
+   &lt;composite-id class="CustomerId" mapped="true"&gt;
+      &lt;key-many-to-one name="user"&gt;
+         &lt;column name="userfirstname_fk"/&gt;
+         &lt;column name="userlastname_fk"/&gt;
+      &lt;/key-many-to-one&gt;
+      &lt;key-property name="customerNumber"/&gt;
+   &lt;/composite-id&gt;
+
+   &lt;property name="preferredCustomer"/&gt;
+&lt;/class&gt;
+
+&lt;class name="User"&gt;
+   &lt;composite-id name="id" class="UserId"&gt;
+      &lt;key-property name="firstName"/&gt;
+      &lt;key-property name="lastName"/&gt;
+   &lt;/composite-id&gt;
+
+   &lt;property name="age"/&gt;
+&lt;/class&gt;</programlisting>
+        </section>
+      </section>
+
+      <section id="mapping-declaration-id-generator" revision="2">
+        <title>Identifier generator</title>
+
+        <para>Hibernate can generate and populate identifier values for you
+        automatically. This is the recommended approach over "business" or
+        "natural" id (especially composite ids).</para>
+
+        <para>Hibernate offers various generation strategies, let's explore
+        the most common ones first that happens to be standardized by
+        JPA:</para>
+
+        <itemizedlist>
+          <listitem>
+            <para>IDENTITY: supports identity columns in DB2, MySQL, MS SQL
+            Server, Sybase and HypersonicSQL. The returned identifier is of
+            type <literal>long</literal>, <literal>short</literal> or
+            <literal>int</literal>.</para>
+          </listitem>
+
+          <listitem>
+            <para>SEQUENCE (called <literal>seqhilo</literal> in Hibernate):
+            uses a hi/lo algorithm to efficiently generate identifiers of type
+            <literal>long</literal>, <literal>short</literal> or
+            <literal>int</literal>, given a named database sequence.</para>
+          </listitem>
+
+          <listitem>
+            <para>TABLE (called
+            <classname>MultipleHiLoPerTableGenerator</classname> in Hibernate)
+            : uses a hi/lo algorithm to efficiently generate identifiers of
+            type <literal>long</literal>, <literal>short</literal> or
+            <literal>int</literal>, given a table and column as a source of hi
+            values. The hi/lo algorithm generates identifiers that are unique
+            only for a particular database.</para>
+          </listitem>
+
+          <listitem>
+            <para>AUTO: selects <literal>IDENTITY</literal>,
+            <literal>SEQUENCE</literal> or <literal>TABLE</literal> depending
+            upon the capabilities of the underlying database.</para>
+          </listitem>
+        </itemizedlist>
+
+        <important>
+          <para>We recommend all new projects to use the new enhanced
+          identifier generators. They are deactivated by default for entities
+          using annotations but can be activated using
+          <code>hibernate.id.new_generator_mappings=true</code>. These new
+          generators are more efficient and closer to the JPA 2 specification
+          semantic.</para>
+
+          <para>However they are not backward compatible with existing
+          Hibernate based application (if a sequence or a table is used for id
+          generation). See XXXXXXX <xref linkend="ann-setup-properties" /> for
+          more information on how to activate them.</para>
+        </important>
+
+        <para>To mark an id property as generated, use the
+        <classname>@GeneratedValue</classname> annotation. You can specify the
+        strategy used (default to <literal>AUTO</literal>) by setting
+        <literal>strategy</literal>.</para>
+
+        <programlisting role="JAVA">@Entity
+public class Customer {
+   @Id @GeneratedValue
+   Integer getId() { ... };
+}
+
+@Entity 
+public class Invoice {
+   @Id @GeneratedValue(strategy=GenerationType.IDENTITY)
+   Integer getId() { ... };
+}</programlisting>
+
+        <para><literal>SEQUENCE</literal> and <literal>TABLE</literal> require
+        additional configurations that you can set using
+        <classname>@SequenceGenerator</classname> and
+        <classname>@TableGenerator</classname>:</para>
+
+        <itemizedlist>
+          <listitem>
+            <para><literal>name</literal>: name of the generator</para>
+          </listitem>
+
+          <listitem>
+            <para><literal>table</literal> / <literal>sequenceName</literal>:
+            name of the table or the sequence (defaulting respectively to
+            <literal>hibernate_sequences</literal> and
+            <literal>hibernate_sequence</literal>)</para>
+          </listitem>
+
+          <listitem>
+            <para><literal>catalog</literal> /
+            <literal>schema</literal>:</para>
+          </listitem>
+
+          <listitem>
+            <para><literal>initialValue</literal>: the value from which the id
+            is to start generating</para>
+          </listitem>
+
+          <listitem>
+            <para><literal>allocationSize</literal>: the amount to increment
+            by when allocating id numbers from the generator</para>
+          </listitem>
+        </itemizedlist>
+
+        <para>In addition, the <classname>TABLE</classname> strategy also let
+        you customize:</para>
+
+        <itemizedlist>
+          <listitem>
+            <para><literal>pkColumnName</literal>: the column name containing
+            the entity identifier</para>
+          </listitem>
+
+          <listitem>
+            <para><literal>valueColumnName</literal>: the column name
+            containing the identifier value</para>
+          </listitem>
+
+          <listitem>
+            <para><literal>pkColumnValue</literal>: the entity
+            identifier</para>
+          </listitem>
+
+          <listitem>
+            <para><literal>uniqueConstraints</literal>: any potential column
+            constraint on the table containing the ids</para>
+          </listitem>
+        </itemizedlist>
+
+        <para>To link a table or sequence generator definition with an actual
+        generated property, use the same name in both the definition
+        <literal>name</literal> and the generator value
+        <literal>generator</literal> as shown below.</para>
+
+        <programlisting language="JAVA" role="JAVA">@Id 
+@GeneratedValue(
+    strategy=GenerationType.SEQUENCE, 
+    generator="SEQ_GEN")
+@javax.persistence.SequenceGenerator(
+    name="SEQ_GEN",
+    sequenceName="my_sequence",
+    allocationSize=20
+)
+public Integer getId() { ... }        </programlisting>
+
+        <para>The scope of a generator definitioncan be the application or the
+        class. Class-defined generators are not visible outside the class and
+        can override application level generators. Application level
+        generators are defined in JPA's XML deployment descriptors (see XXXXXX
+        <xref linkend="xml-overriding" />):</para>
+
+        <programlisting language="JAVA" role="JAVA">&lt;table-generator name="EMP_GEN"
+            table="GENERATOR_TABLE"
+            pk-column-name="key"
+            value-column-name="hi"
+            pk-column-value="EMP"
+            allocation-size="20"/&gt;
+
+//and the annotation equivalent
+
+@javax.persistence.TableGenerator(
+    name="EMP_GEN",
+    table="GENERATOR_TABLE",
+    pkColumnName = "key",
+    valueColumnName = "hi"
+    pkColumnValue="EMP",
+    allocationSize=20
+)
+
+&lt;sequence-generator name="SEQ_GEN" 
+    sequence-name="my_sequence"
+    allocation-size="20"/&gt;
+
+//and the annotation equivalent
+
+@javax.persistence.SequenceGenerator(
+    name="SEQ_GEN",
+    sequenceName="my_sequence",
+    allocationSize=20
+)
+         </programlisting>
+
+        <para>If a JPA XML descriptor (like
+        <filename>META-INF/orm.xml</filename>) is used to define the
+        generators, <literal>EMP_GEN</literal> and <literal>SEQ_GEN</literal>
+        are application level generators.</para>
+
+        <note>
+          <para>Package level definition is not supported by the JPA
+          specification. However, you can use the
+          <literal>@GenericGenerator</literal> at the package level (see <xref
+          linkend="entity-hibspec-identifier" />).</para>
+        </note>
+
+        <para>These are the four standard JPA generators. Hibernate goes
+        beyond that and provide additional generators or additional options as
+        we will see below. You can also write your own custom identifier
+        generator by implementing
+        <classname>org.hibernate.id.IdentifierGenerator</classname>.</para>
+
+        <para>To define a custom generator, use the
+        <classname>@GenericGenerator</classname> annotation (and its plural
+        counter part <classname>@GenericGenerators</classname>) that describes
+        the class of the identifier generator or its short cut name (as
+        described below) and a list of key/value parameters. When using
+        <classname>@GenericGenerator</classname> and assigning it via
+        <classname>@GeneratedValue.generator</classname>, the
+        <classname>@GeneratedValue.strategy</classname> is ignored: leave it
+        blank.</para>
+
+        <programlisting language="JAVA" role="JAVA">@Id @GeneratedValue(generator="system-uuid")
+@GenericGenerator(name="system-uuid", strategy = "uuid")
+public String getId() {
+
+@Id @GeneratedValue(generator="trigger-generated")
+@GenericGenerator(
+    name="trigger-generated", 
+    strategy = "select",
+    parameters = @Parameter(name="key", value = "socialSecurityNumber")
+)
+public String getId() {</programlisting>
+
+        <para>The hbm.xml approach uses the optional
+        <literal>&lt;generator&gt;</literal> child element inside
+        <literal>&lt;id&gt;</literal>. If any parameters are required to
+        configure or initialize the generator instance, they are passed using
+        the <literal>&lt;param&gt;</literal> element.</para>
+
+        <programlisting role="XML">&lt;id name="id" type="long" column="cat_id"&gt;
+        &lt;generator class="org.hibernate.id.TableHiLoGenerator"&gt;
+                &lt;param name="table"&gt;uid_table&lt;/param&gt;
+                &lt;param name="column"&gt;next_hi_value_column&lt;/param&gt;
+        &lt;/generator&gt;
+&lt;/id&gt;</programlisting>
+
+        <section>
+          <title>Various additional generators</title>
+
+          <para>All generators implement the interface
+          <literal>org.hibernate.id.IdentifierGenerator</literal>. This is a
+          very simple interface. Some applications can choose to provide their
+          own specialized implementations, however, Hibernate provides a range
+          of built-in implementations. The shortcut names for the built-in
+          generators are as follows: <variablelist>
+              <varlistentry>
+                <term><literal>increment</literal></term>
+
+                <listitem>
+                  <para>generates identifiers of type <literal>long</literal>,
+                  <literal>short</literal> or <literal>int</literal> that are
+                  unique only when no other process is inserting data into the
+                  same table. <emphasis>Do not use in a
+                  cluster.</emphasis></para>
+                </listitem>
+              </varlistentry>
+
+              <varlistentry>
+                <term><literal>identity</literal></term>
+
+                <listitem>
+                  <para>supports identity columns in DB2, MySQL, MS SQL
+                  Server, Sybase and HypersonicSQL. The returned identifier is
+                  of type <literal>long</literal>, <literal>short</literal> or
+                  <literal>int</literal>.</para>
+                </listitem>
+              </varlistentry>
+
+              <varlistentry>
+                <term><literal>sequence</literal></term>
+
+                <listitem>
+                  <para>uses a sequence in DB2, PostgreSQL, Oracle, SAP DB,
+                  McKoi or a generator in Interbase. The returned identifier
+                  is of type <literal>long</literal>, <literal>short</literal>
+                  or <literal>int</literal></para>
+                </listitem>
+              </varlistentry>
+
+              <varlistentry>
+                <term><literal>hilo</literal></term>
+
+                <listitem>
+                  <para id="mapping-declaration-id-hilodescription"
+                  revision="1">uses a hi/lo algorithm to efficiently generate
+                  identifiers of type <literal>long</literal>,
+                  <literal>short</literal> or <literal>int</literal>, given a
+                  table and column (by default
+                  <literal>hibernate_unique_key</literal> and
+                  <literal>next_hi</literal> respectively) as a source of hi
+                  values. The hi/lo algorithm generates identifiers that are
+                  unique only for a particular database.</para>
+                </listitem>
+              </varlistentry>
+
+              <varlistentry>
+                <term><literal>seqhilo</literal></term>
+
+                <listitem>
+                  <para>uses a hi/lo algorithm to efficiently generate
+                  identifiers of type <literal>long</literal>,
+                  <literal>short</literal> or <literal>int</literal>, given a
+                  named database sequence.</para>
+                </listitem>
+              </varlistentry>
+
+              <varlistentry>
+                <term><literal>uuid</literal></term>
+
+                <listitem>
+                  <para>uses a 128-bit UUID algorithm to generate identifiers
+                  of type string that are unique within a network (the IP
+                  address is used). The UUID is encoded as a string of 32
+                  hexadecimal digits in length.</para>
+                </listitem>
+              </varlistentry>
+
+              <varlistentry>
+                <term><literal>guid</literal></term>
+
+                <listitem>
+                  <para>uses a database-generated GUID string on MS SQL Server
+                  and MySQL.</para>
+                </listitem>
+              </varlistentry>
+
+              <varlistentry>
+                <term><literal>native</literal></term>
+
+                <listitem>
+                  <para>selects <literal>identity</literal>,
+                  <literal>sequence</literal> or <literal>hilo</literal>
+                  depending upon the capabilities of the underlying
+                  database.</para>
+                </listitem>
+              </varlistentry>
+
+              <varlistentry>
+                <term><literal>assigned</literal></term>
+
+                <listitem>
+                  <para>lets the application assign an identifier to the
+                  object before <literal>save()</literal> is called. This is
+                  the default strategy if no
+                  <literal>&lt;generator&gt;</literal> element is
+                  specified.</para>
+                </listitem>
+              </varlistentry>
+
+              <varlistentry>
+                <term><literal>select</literal></term>
+
+                <listitem>
+                  <para>retrieves a primary key, assigned by a database
+                  trigger, by selecting the row by some unique key and
+                  retrieving the primary key value.</para>
+                </listitem>
+              </varlistentry>
+
+              <varlistentry>
+                <term><literal>foreign</literal></term>
+
+                <listitem>
+                  <para>uses the identifier of another associated object. It
+                  is usually used in conjunction with a
+                  <literal>&lt;one-to-one&gt;</literal> primary key
+                  association.</para>
+                </listitem>
+              </varlistentry>
+
+              <varlistentry>
+                <term><literal>sequence-identity</literal></term>
+
+                <listitem>
+                  <para>a specialized sequence generation strategy that
+                  utilizes a database sequence for the actual value
+                  generation, but combines this with JDBC3 getGeneratedKeys to
+                  return the generated identifier value as part of the insert
+                  statement execution. This strategy is only supported on
+                  Oracle 10g drivers targeted for JDK 1.4. Comments on these
+                  insert statements are disabled due to a bug in the Oracle
+                  drivers.</para>
+                </listitem>
+              </varlistentry>
+            </variablelist></para>
+        </section>
+
+        <section id="mapping-declaration-id-hilo" revision="1">
+          <title>Hi/lo algorithm</title>
+
+          <para>The <literal>hilo</literal> and <literal>seqhilo</literal>
+          generators provide two alternate implementations of the hi/lo
+          algorithm. The first implementation requires a "special" database
+          table to hold the next available "hi" value. Where supported, the
+          second uses an Oracle-style sequence.</para>
+
+          <programlisting role="XML">&lt;id name="id" type="long" column="cat_id"&gt;
+        &lt;generator class="hilo"&gt;
+                &lt;param name="table"&gt;hi_value&lt;/param&gt;
+                &lt;param name="column"&gt;next_value&lt;/param&gt;
+                &lt;param name="max_lo"&gt;100&lt;/param&gt;
+        &lt;/generator&gt;
+&lt;/id&gt;</programlisting>
+
+          <programlisting role="XML">&lt;id name="id" type="long" column="cat_id"&gt;
+        &lt;generator class="seqhilo"&gt;
+                &lt;param name="sequence"&gt;hi_value&lt;/param&gt;
+                &lt;param name="max_lo"&gt;100&lt;/param&gt;
+        &lt;/generator&gt;
+&lt;/id&gt;</programlisting>
+
+          <para>Unfortunately, you cannot use <literal>hilo</literal> when
+          supplying your own <literal>Connection</literal> to Hibernate. When
+          Hibernate uses an application server datasource to obtain
+          connections enlisted with JTA, you must configure the
+          <literal>hibernate.transaction.manager_lookup_class</literal>.</para>
+        </section>
+
+        <section id="mapping-declaration-id-uuid">
+          <title>UUID algorithm</title>
+
+          <para>The UUID contains: IP address, startup time of the JVM that is
+          accurate to a quarter second, system time and a counter value that
+          is unique within the JVM. It is not possible to obtain a MAC address
+          or memory address from Java code, so this is the best option without
+          using JNI.</para>
+        </section>
+
+        <section id="mapping-declaration-id-sequences">
+          <title>Identity columns and sequences</title>
+
+          <para>For databases that support identity columns (DB2, MySQL,
+          Sybase, MS SQL), you can use <literal>identity</literal> key
+          generation. For databases that support sequences (DB2, Oracle,
+          PostgreSQL, Interbase, McKoi, SAP DB) you can use
+          <literal>sequence</literal> style key generation. Both of these
+          strategies require two SQL queries to insert a new object. For
+          example:</para>
+
+          <programlisting role="XML">&lt;id name="id" type="long" column="person_id"&gt;
+        &lt;generator class="sequence"&gt;
+                &lt;param name="sequence"&gt;person_id_sequence&lt;/param&gt;
+        &lt;/generator&gt;
+&lt;/id&gt;</programlisting>
+
+          <programlisting role="XML">&lt;id name="id" type="long" column="person_id" unsaved-value="0"&gt;
+        &lt;generator class="identity"/&gt;
+&lt;/id&gt;</programlisting>
+
+          <para>For cross-platform development, the <literal>native</literal>
+          strategy will, depending on the capabilities of the underlying
+          database, choose from the <literal>identity</literal>,
+          <literal>sequence</literal> and <literal>hilo</literal>
+          strategies.</para>
+        </section>
+
+        <section id="mapping-declaration-id-assigned">
+          <title>Assigned identifiers</title>
+
+          <para>If you want the application to assign identifiers, as opposed
+          to having Hibernate generate them, you can use the
+          <literal>assigned</literal> generator. This special generator uses
+          the identifier value already assigned to the object's identifier
+          property. The generator is used when the primary key is a natural
+          key instead of a surrogate key. This is the default behavior if you
+          do not specify <classname>@GeneratedValue</classname> nor
+          <literal>&lt;generator&gt;</literal> elements.</para>
+
+          <para>The <literal>assigned</literal> generator makes Hibernate use
+          <literal>unsaved-value="undefined"</literal>. This forces Hibernate
+          to go to the database to determine if an instance is transient or
+          detached, unless there is a version or timestamp property, or you
+          define <literal>Interceptor.isUnsaved()</literal>.</para>
+        </section>
+
+        <section id="mapping-declaration-id-select">
+          <title>Primary keys assigned by triggers</title>
+
+          <para>Hibernate does not generate DDL with triggers. It is for
+          legacy schemas only.</para>
+
+          <programlisting role="XML">&lt;id name="id" type="long" column="person_id"&gt;
+        &lt;generator class="select"&gt;
+                &lt;param name="key"&gt;socialSecurityNumber&lt;/param&gt;
+        &lt;/generator&gt;
+&lt;/id&gt;</programlisting>
+
+          <para>In the above example, there is a unique valued property named
+          <literal>socialSecurityNumber</literal>. It is defined by the class,
+          as a natural key and a surrogate key named
+          <literal>person_id</literal>, whose value is generated by a
+          trigger.</para>
         </section>
 
         <section>
-          <title>Partial identifier generation</title>
+          <title>Identity copy (foreign generator)</title>
 
-          <para>Hibernate supports the automatic generation of some of the
-          identifier properties. Simply use the
-          <classname>@GeneratedValue</classname> annotation on one or several
-          id properties.</para>
-
-          <warning>
-            <para>The Hibernate team has always felt such a construct as
-            fundamentally wrong. Try hard to fix your data model before using
-            this feature.</para>
-          </warning>
+          <para>Finally, you can ask Hibernate to copy the identifier from
+          another associated entity. In the Hibernate jargon, it is known as a
+          foreign generator but the JPA mapping reads better and is
+          encouraged.</para>
 
           <programlisting language="JAVA" role="JAVA">@Entity
+class MedicalHistory implements Serializable {
+  @Id @OneToOne
+  @JoinColumn(name = "person_id")
+  Person patient;
+}
+
+@Entity
+public class Person implements Serializable {
+  @Id @GeneratedValue Integer id;
+}</programlisting>
+
+          <para>Or alternatively</para>
+
+          <programlisting language="JAVA" role="JAVA">@Entity
+class MedicalHistory implements Serializable {
+  @Id Integer id;
+
+  @MapsId @OneToOne
+  @JoinColumn(name = "patient_id")
+  Person patient;
+}
+
+@Entity
+class Person {
+  @Id @GeneratedValue Integer id;
+}</programlisting>
+
+          <para>In hbm.xml use the following approach:</para>
+
+          <programlisting role="XML">&lt;class name="MedicalHistory"&gt;
+   &lt;id name="id"&gt;
+      &lt;generator class="foreign"&gt;
+         &lt;param name="property"&gt;patient&lt;/param&gt;
+      &lt;/generator&gt;
+   &lt;/id&gt;
+   &lt;one-to-one name="patient" class="Person" constrained="true"/&gt;
+&lt;/class&gt;</programlisting>
+        </section>
+      </section>
+
+      <section id="mapping-declaration-id-enhanced">
+        <title>Enhanced identifier generators</title>
+
+        <para>Starting with release 3.2.3, there are 2 new generators which
+        represent a re-thinking of 2 different aspects of identifier
+        generation. The first aspect is database portability; the second is
+        optimization Optimization means that you do not have to query the
+        database for every request for a new identifier value. These two new
+        generators are intended to take the place of some of the named
+        generators described above, starting in 3.3.x. However, they are
+        included in the current releases and can be referenced by FQN.</para>
+
+        <para>The first of these new generators is
+        <literal>org.hibernate.id.enhanced.SequenceStyleGenerator</literal>
+        which is intended, firstly, as a replacement for the
+        <literal>sequence</literal> generator and, secondly, as a better
+        portability generator than <literal>native</literal>. This is because
+        <literal>native</literal> generally chooses between
+        <literal>identity</literal> and <literal>sequence</literal> which have
+        largely different semantics that can cause subtle issues in
+        applications eyeing portability.
+        <literal>org.hibernate.id.enhanced.SequenceStyleGenerator</literal>,
+        however, achieves portability in a different manner. It chooses
+        between a table or a sequence in the database to store its
+        incrementing values, depending on the capabilities of the dialect
+        being used. The difference between this and <literal>native</literal>
+        is that table-based and sequence-based storage have the same exact
+        semantic. In fact, sequences are exactly what Hibernate tries to
+        emulate with its table-based generators. This generator has a number
+        of configuration parameters: <itemizedlist spacing="compact">
+            <listitem>
+              <para><literal>sequence_name</literal> (optional, defaults to
+              <literal>hibernate_sequence</literal>): the name of the sequence
+              or table to be used.</para>
+            </listitem>
+
+            <listitem>
+              <para><literal>initial_value</literal> (optional, defaults to
+              <literal>1</literal>): the initial value to be retrieved from
+              the sequence/table. In sequence creation terms, this is
+              analogous to the clause typically named "STARTS WITH".</para>
+            </listitem>
+
+            <listitem>
+              <para><literal>increment_size</literal> (optional - defaults to
+              <literal>1</literal>): the value by which subsequent calls to
+              the sequence/table should differ. In sequence creation terms,
+              this is analogous to the clause typically named "INCREMENT
+              BY".</para>
+            </listitem>
+
+            <listitem>
+              <para><literal>force_table_use</literal> (optional - defaults to
+              <literal>false</literal>): should we force the use of a table as
+              the backing structure even though the dialect might support
+              sequence?</para>
+            </listitem>
+
+            <listitem>
+              <para><literal>value_column</literal> (optional - defaults to
+              <literal>next_val</literal>): only relevant for table
+              structures, it is the name of the column on the table which is
+              used to hold the value.</para>
+            </listitem>
+
+            <listitem>
+              <para><literal>optimizer</literal> (optional - defaults to
+              <literal>none</literal>): See <xref
+              linkend="mapping-declaration-id-enhanced-optimizers" /></para>
+            </listitem>
+          </itemizedlist></para>
+
+        <para>The second of these new generators is
+        <literal>org.hibernate.id.enhanced.TableGenerator</literal>, which is
+        intended, firstly, as a replacement for the <literal>table</literal>
+        generator, even though it actually functions much more like
+        <literal>org.hibernate.id.MultipleHiLoPerTableGenerator</literal>, and
+        secondly, as a re-implementation of
+        <literal>org.hibernate.id.MultipleHiLoPerTableGenerator</literal> that
+        utilizes the notion of pluggable optimizers. Essentially this
+        generator defines a table capable of holding a number of different
+        increment values simultaneously by using multiple distinctly keyed
+        rows. This generator has a number of configuration parameters:
+        <itemizedlist spacing="compact">
+            <listitem>
+              <para><literal>table_name</literal> (optional - defaults to
+              <literal>hibernate_sequences</literal>): the name of the table
+              to be used.</para>
+            </listitem>
+
+            <listitem>
+              <para><literal>value_column_name</literal> (optional - defaults
+              to <literal>next_val</literal>): the name of the column on the
+              table that is used to hold the value.</para>
+            </listitem>
+
+            <listitem>
+              <para><literal>segment_column_name</literal> (optional -
+              defaults to <literal>sequence_name</literal>): the name of the
+              column on the table that is used to hold the "segment key". This
+              is the value which identifies which increment value to
+              use.</para>
+            </listitem>
+
+            <listitem>
+              <para><literal>segment_value</literal> (optional - defaults to
+              <literal>default</literal>): The "segment key" value for the
+              segment from which we want to pull increment values for this
+              generator.</para>
+            </listitem>
+
+            <listitem>
+              <para><literal>segment_value_length</literal> (optional -
+              defaults to <literal>255</literal>): Used for schema generation;
+              the column size to create this segment key column.</para>
+            </listitem>
+
+            <listitem>
+              <para><literal>initial_value</literal> (optional - defaults to
+              <literal>1</literal>): The initial value to be retrieved from
+              the table.</para>
+            </listitem>
+
+            <listitem>
+              <para><literal>increment_size</literal> (optional - defaults to
+              <literal>1</literal>): The value by which subsequent calls to
+              the table should differ.</para>
+            </listitem>
+
+            <listitem>
+              <para><literal>optimizer</literal> (optional - defaults to
+              <literal></literal>): See <xref
+              linkend="mapping-declaration-id-enhanced-optimizers" /></para>
+            </listitem>
+          </itemizedlist></para>
+
+        <section id="mapping-declaration-id-enhanced-optimizers">
+          <title>Identifier generator optimization</title>
+
+          <para>For identifier generators that store values in the database,
+          it is inefficient for them to hit the database on each and every
+          call to generate a new identifier value. Instead, you can group a
+          bunch of them in memory and only hit the database when you have
+          exhausted your in-memory value group. This is the role of the
+          pluggable optimizers. Currently only the two enhanced generators
+          (<xref linkend="mapping-declaration-id-enhanced" /> support this
+          operation. <itemizedlist spacing="compact">
+              <listitem>
+                <para><literal>none</literal> (generally this is the default
+                if no optimizer was specified): this will not perform any
+                optimizations and hit the database for each and every
+                request.</para>
+              </listitem>
+
+              <listitem>
+                <para><literal>hilo</literal>: applies a hi/lo algorithm
+                around the database retrieved values. The values from the
+                database for this optimizer are expected to be sequential. The
+                values retrieved from the database structure for this
+                optimizer indicates the "group number". The
+                <literal>increment_size</literal> is multiplied by that value
+                in memory to define a group "hi value".</para>
+              </listitem>
+
+              <listitem>
+                <para><literal>pooled</literal>: as with the case of
+                <literal>hilo</literal>, this optimizer attempts to minimize
+                the number of hits to the database. Here, however, we simply
+                store the starting value for the "next group" into the
+                database structure rather than a sequential value in
+                combination with an in-memory grouping algorithm. Here,
+                <literal>increment_size</literal> refers to the values coming
+                from the database.</para>
+              </listitem>
+            </itemizedlist></para>
+        </section>
+      </section>
+
+      <section>
+        <title>Partial identifier generation</title>
+
+        <para>Hibernate supports the automatic generation of some of the
+        identifier properties. Simply use the
+        <classname>@GeneratedValue</classname> annotation on one or several id
+        properties.</para>
+
+        <warning>
+          <para>The Hibernate team has always felt such a construct as
+          fundamentally wrong. Try hard to fix your data model before using
+          this feature.</para>
+        </warning>
+
+        <programlisting language="JAVA" role="JAVA">@Entity
 public class CustomerInventory implements Serializable {
   @Id
   @TableGenerator(name = "inventory",
@@ -1341,558 +2149,9 @@ public class Customer implements Serializable {
    private int id;
 }</programlisting>
 
-          <para>You can also generate properties inside an
-          <classname>@EmbeddedId</classname> class.</para>
-        </section>
+        <para>You can also generate properties inside an
+        <classname>@EmbeddedId</classname> class.</para>
       </section>
-
-      <section id="mapping-declaration-id-generator" revision="2">
-        <title>Generator</title>
-
-        <para>The optional <literal>&lt;generator&gt;</literal> child element
-        names a Java class used to generate unique identifiers for instances
-        of the persistent class. If any parameters are required to configure
-        or initialize the generator instance, they are passed using the
-        <literal>&lt;param&gt;</literal> element.</para>
-
-        <programlisting role="XML">&lt;id name="id" type="long" column="cat_id"&gt;
-        &lt;generator class="org.hibernate.id.TableHiLoGenerator"&gt;
-                &lt;param name="table"&gt;uid_table&lt;/param&gt;
-                &lt;param name="column"&gt;next_hi_value_column&lt;/param&gt;
-        &lt;/generator&gt;
-&lt;/id&gt;</programlisting>
-
-        <para>All generators implement the interface
-        <literal>org.hibernate.id.IdentifierGenerator</literal>. This is a
-        very simple interface. Some applications can choose to provide their
-        own specialized implementations, however, Hibernate provides a range
-        of built-in implementations. The shortcut names for the built-in
-        generators are as follows: <variablelist>
-            <varlistentry>
-              <term><literal>increment</literal></term>
-
-              <listitem>
-                <para>generates identifiers of type <literal>long</literal>,
-                <literal>short</literal> or <literal>int</literal> that are
-                unique only when no other process is inserting data into the
-                same table. <emphasis>Do not use in a
-                cluster.</emphasis></para>
-              </listitem>
-            </varlistentry>
-
-            <varlistentry>
-              <term><literal>identity</literal></term>
-
-              <listitem>
-                <para>supports identity columns in DB2, MySQL, MS SQL Server,
-                Sybase and HypersonicSQL. The returned identifier is of type
-                <literal>long</literal>, <literal>short</literal> or
-                <literal>int</literal>.</para>
-              </listitem>
-            </varlistentry>
-
-            <varlistentry>
-              <term><literal>sequence</literal></term>
-
-              <listitem>
-                <para>uses a sequence in DB2, PostgreSQL, Oracle, SAP DB,
-                McKoi or a generator in Interbase. The returned identifier is
-                of type <literal>long</literal>, <literal>short</literal> or
-                <literal>int</literal></para>
-              </listitem>
-            </varlistentry>
-
-            <varlistentry>
-              <term><literal>hilo</literal></term>
-
-              <listitem>
-                <para id="mapping-declaration-id-hilodescription"
-                revision="1">uses a hi/lo algorithm to efficiently generate
-                identifiers of type <literal>long</literal>,
-                <literal>short</literal> or <literal>int</literal>, given a
-                table and column (by default
-                <literal>hibernate_unique_key</literal> and
-                <literal>next_hi</literal> respectively) as a source of hi
-                values. The hi/lo algorithm generates identifiers that are
-                unique only for a particular database.</para>
-              </listitem>
-            </varlistentry>
-
-            <varlistentry>
-              <term><literal>seqhilo</literal></term>
-
-              <listitem>
-                <para>uses a hi/lo algorithm to efficiently generate
-                identifiers of type <literal>long</literal>,
-                <literal>short</literal> or <literal>int</literal>, given a
-                named database sequence.</para>
-              </listitem>
-            </varlistentry>
-
-            <varlistentry>
-              <term><literal>uuid</literal></term>
-
-              <listitem>
-                <para>uses a 128-bit UUID algorithm to generate identifiers of
-                type string that are unique within a network (the IP address
-                is used). The UUID is encoded as a string of 32 hexadecimal
-                digits in length.</para>
-              </listitem>
-            </varlistentry>
-
-            <varlistentry>
-              <term><literal>guid</literal></term>
-
-              <listitem>
-                <para>uses a database-generated GUID string on MS SQL Server
-                and MySQL.</para>
-              </listitem>
-            </varlistentry>
-
-            <varlistentry>
-              <term><literal>native</literal></term>
-
-              <listitem>
-                <para>selects <literal>identity</literal>,
-                <literal>sequence</literal> or <literal>hilo</literal>
-                depending upon the capabilities of the underlying
-                database.</para>
-              </listitem>
-            </varlistentry>
-
-            <varlistentry>
-              <term><literal>assigned</literal></term>
-
-              <listitem>
-                <para>lets the application assign an identifier to the object
-                before <literal>save()</literal> is called. This is the
-                default strategy if no <literal>&lt;generator&gt;</literal>
-                element is specified.</para>
-              </listitem>
-            </varlistentry>
-
-            <varlistentry>
-              <term><literal>select</literal></term>
-
-              <listitem>
-                <para>retrieves a primary key, assigned by a database trigger,
-                by selecting the row by some unique key and retrieving the
-                primary key value.</para>
-              </listitem>
-            </varlistentry>
-
-            <varlistentry>
-              <term><literal>foreign</literal></term>
-
-              <listitem>
-                <para>uses the identifier of another associated object. It is
-                usually used in conjunction with a
-                <literal>&lt;one-to-one&gt;</literal> primary key
-                association.</para>
-              </listitem>
-            </varlistentry>
-
-            <varlistentry>
-              <term><literal>sequence-identity</literal></term>
-
-              <listitem>
-                <para>a specialized sequence generation strategy that utilizes
-                a database sequence for the actual value generation, but
-                combines this with JDBC3 getGeneratedKeys to return the
-                generated identifier value as part of the insert statement
-                execution. This strategy is only supported on Oracle 10g
-                drivers targeted for JDK 1.4. Comments on these insert
-                statements are disabled due to a bug in the Oracle
-                drivers.</para>
-              </listitem>
-            </varlistentry>
-          </variablelist></para>
-      </section>
-
-      <section id="mapping-declaration-id-hilo" revision="1">
-        <title>Hi/lo algorithm</title>
-
-        <para>The <literal>hilo</literal> and <literal>seqhilo</literal>
-        generators provide two alternate implementations of the hi/lo
-        algorithm. The first implementation requires a "special" database
-        table to hold the next available "hi" value. Where supported, the
-        second uses an Oracle-style sequence.</para>
-
-        <programlisting role="XML">&lt;id name="id" type="long" column="cat_id"&gt;
-        &lt;generator class="hilo"&gt;
-                &lt;param name="table"&gt;hi_value&lt;/param&gt;
-                &lt;param name="column"&gt;next_value&lt;/param&gt;
-                &lt;param name="max_lo"&gt;100&lt;/param&gt;
-        &lt;/generator&gt;
-&lt;/id&gt;</programlisting>
-
-        <programlisting role="XML">&lt;id name="id" type="long" column="cat_id"&gt;
-        &lt;generator class="seqhilo"&gt;
-                &lt;param name="sequence"&gt;hi_value&lt;/param&gt;
-                &lt;param name="max_lo"&gt;100&lt;/param&gt;
-        &lt;/generator&gt;
-&lt;/id&gt;</programlisting>
-
-        <para>Unfortunately, you cannot use <literal>hilo</literal> when
-        supplying your own <literal>Connection</literal> to Hibernate. When
-        Hibernate uses an application server datasource to obtain connections
-        enlisted with JTA, you must configure the
-        <literal>hibernate.transaction.manager_lookup_class</literal>.</para>
-      </section>
-
-      <section id="mapping-declaration-id-uuid">
-        <title>UUID algorithm</title>
-
-        <para>The UUID contains: IP address, startup time of the JVM that is
-        accurate to a quarter second, system time and a counter value that is
-        unique within the JVM. It is not possible to obtain a MAC address or
-        memory address from Java code, so this is the best option without
-        using JNI.</para>
-      </section>
-
-      <section id="mapping-declaration-id-sequences">
-        <title>Identity columns and sequences</title>
-
-        <para>For databases that support identity columns (DB2, MySQL, Sybase,
-        MS SQL), you can use <literal>identity</literal> key generation. For
-        databases that support sequences (DB2, Oracle, PostgreSQL, Interbase,
-        McKoi, SAP DB) you can use <literal>sequence</literal> style key
-        generation. Both of these strategies require two SQL queries to insert
-        a new object. For example:</para>
-
-        <programlisting role="XML">&lt;id name="id" type="long" column="person_id"&gt;
-        &lt;generator class="sequence"&gt;
-                &lt;param name="sequence"&gt;person_id_sequence&lt;/param&gt;
-        &lt;/generator&gt;
-&lt;/id&gt;</programlisting>
-
-        <programlisting role="XML">&lt;id name="id" type="long" column="person_id" unsaved-value="0"&gt;
-        &lt;generator class="identity"/&gt;
-&lt;/id&gt;</programlisting>
-
-        <para>For cross-platform development, the <literal>native</literal>
-        strategy will, depending on the capabilities of the underlying
-        database, choose from the <literal>identity</literal>,
-        <literal>sequence</literal> and <literal>hilo</literal>
-        strategies.</para>
-      </section>
-
-      <section id="mapping-declaration-id-assigned">
-        <title>Assigned identifiers</title>
-
-        <para>If you want the application to assign identifiers, as opposed to
-        having Hibernate generate them, you can use the
-        <literal>assigned</literal> generator. This special generator uses the
-        identifier value already assigned to the object's identifier property.
-        The generator is used when the primary key is a natural key instead of
-        a surrogate key. This is the default behavior if you do not specify a
-        <literal>&lt;generator&gt;</literal> element.</para>
-
-        <para>The <literal>assigned</literal> generator makes Hibernate use
-        <literal>unsaved-value="undefined"</literal>. This forces Hibernate to
-        go to the database to determine if an instance is transient or
-        detached, unless there is a version or timestamp property, or you
-        define <literal>Interceptor.isUnsaved()</literal>.</para>
-      </section>
-
-      <section id="mapping-declaration-id-select">
-        <title>Primary keys assigned by triggers</title>
-
-        <para>Hibernate does not generate DDL with triggers. It is for legacy
-        schemas only.</para>
-
-        <programlisting role="XML">&lt;id name="id" type="long" column="person_id"&gt;
-        &lt;generator class="select"&gt;
-                &lt;param name="key"&gt;socialSecurityNumber&lt;/param&gt;
-        &lt;/generator&gt;
-&lt;/id&gt;</programlisting>
-
-        <para>In the above example, there is a unique valued property named
-        <literal>socialSecurityNumber</literal>. It is defined by the class,
-        as a natural key and a surrogate key named
-        <literal>person_id</literal>, whose value is generated by a
-        trigger.</para>
-      </section>
-    </section>
-
-    <section id="mapping-declaration-id-enhanced">
-      <title>Enhanced identifier generators</title>
-
-      <para>Starting with release 3.2.3, there are 2 new generators which
-      represent a re-thinking of 2 different aspects of identifier generation.
-      The first aspect is database portability; the second is optimization
-      Optimization means that you do not have to query the database for every
-      request for a new identifier value. These two new generators are
-      intended to take the place of some of the named generators described
-      above, starting in 3.3.x. However, they are included in the current
-      releases and can be referenced by FQN.</para>
-
-      <para>The first of these new generators is
-      <literal>org.hibernate.id.enhanced.SequenceStyleGenerator</literal>
-      which is intended, firstly, as a replacement for the
-      <literal>sequence</literal> generator and, secondly, as a better
-      portability generator than <literal>native</literal>. This is because
-      <literal>native</literal> generally chooses between
-      <literal>identity</literal> and <literal>sequence</literal> which have
-      largely different semantics that can cause subtle issues in applications
-      eyeing portability.
-      <literal>org.hibernate.id.enhanced.SequenceStyleGenerator</literal>,
-      however, achieves portability in a different manner. It chooses between
-      a table or a sequence in the database to store its incrementing values,
-      depending on the capabilities of the dialect being used. The difference
-      between this and <literal>native</literal> is that table-based and
-      sequence-based storage have the same exact semantic. In fact, sequences
-      are exactly what Hibernate tries to emulate with its table-based
-      generators. This generator has a number of configuration parameters:
-      <itemizedlist spacing="compact">
-          <listitem>
-            <para><literal>sequence_name</literal> (optional, defaults to
-            <literal>hibernate_sequence</literal>): the name of the sequence
-            or table to be used.</para>
-          </listitem>
-
-          <listitem>
-            <para><literal>initial_value</literal> (optional, defaults to
-            <literal>1</literal>): the initial value to be retrieved from the
-            sequence/table. In sequence creation terms, this is analogous to
-            the clause typically named "STARTS WITH".</para>
-          </listitem>
-
-          <listitem>
-            <para><literal>increment_size</literal> (optional - defaults to
-            <literal>1</literal>): the value by which subsequent calls to the
-            sequence/table should differ. In sequence creation terms, this is
-            analogous to the clause typically named "INCREMENT BY".</para>
-          </listitem>
-
-          <listitem>
-            <para><literal>force_table_use</literal> (optional - defaults to
-            <literal>false</literal>): should we force the use of a table as
-            the backing structure even though the dialect might support
-            sequence?</para>
-          </listitem>
-
-          <listitem>
-            <para><literal>value_column</literal> (optional - defaults to
-            <literal>next_val</literal>): only relevant for table structures,
-            it is the name of the column on the table which is used to hold
-            the value.</para>
-          </listitem>
-
-          <listitem>
-            <para><literal>optimizer</literal> (optional - defaults to
-            <literal>none</literal>): See <xref
-            linkend="mapping-declaration-id-enhanced-optimizers" /></para>
-          </listitem>
-        </itemizedlist></para>
-
-      <para>The second of these new generators is
-      <literal>org.hibernate.id.enhanced.TableGenerator</literal>, which is
-      intended, firstly, as a replacement for the <literal>table</literal>
-      generator, even though it actually functions much more like
-      <literal>org.hibernate.id.MultipleHiLoPerTableGenerator</literal>, and
-      secondly, as a re-implementation of
-      <literal>org.hibernate.id.MultipleHiLoPerTableGenerator</literal> that
-      utilizes the notion of pluggable optimizers. Essentially this generator
-      defines a table capable of holding a number of different increment
-      values simultaneously by using multiple distinctly keyed rows. This
-      generator has a number of configuration parameters: <itemizedlist
-          spacing="compact">
-          <listitem>
-            <para><literal>table_name</literal> (optional - defaults to
-            <literal>hibernate_sequences</literal>): the name of the table to
-            be used.</para>
-          </listitem>
-
-          <listitem>
-            <para><literal>value_column_name</literal> (optional - defaults to
-            <literal>next_val</literal>): the name of the column on the table
-            that is used to hold the value.</para>
-          </listitem>
-
-          <listitem>
-            <para><literal>segment_column_name</literal> (optional - defaults
-            to <literal>sequence_name</literal>): the name of the column on
-            the table that is used to hold the "segment key". This is the
-            value which identifies which increment value to use.</para>
-          </listitem>
-
-          <listitem>
-            <para><literal>segment_value</literal> (optional - defaults to
-            <literal>default</literal>): The "segment key" value for the
-            segment from which we want to pull increment values for this
-            generator.</para>
-          </listitem>
-
-          <listitem>
-            <para><literal>segment_value_length</literal> (optional - defaults
-            to <literal>255</literal>): Used for schema generation; the column
-            size to create this segment key column.</para>
-          </listitem>
-
-          <listitem>
-            <para><literal>initial_value</literal> (optional - defaults to
-            <literal>1</literal>): The initial value to be retrieved from the
-            table.</para>
-          </listitem>
-
-          <listitem>
-            <para><literal>increment_size</literal> (optional - defaults to
-            <literal>1</literal>): The value by which subsequent calls to the
-            table should differ.</para>
-          </listitem>
-
-          <listitem>
-            <para><literal>optimizer</literal> (optional - defaults to
-            <literal></literal>): See <xref
-            linkend="mapping-declaration-id-enhanced-optimizers" /></para>
-          </listitem>
-        </itemizedlist></para>
-    </section>
-
-    <section id="mapping-declaration-id-enhanced-optimizers">
-      <title>Identifier generator optimization</title>
-
-      <para>For identifier generators that store values in the database, it is
-      inefficient for them to hit the database on each and every call to
-      generate a new identifier value. Instead, you can group a bunch of them
-      in memory and only hit the database when you have exhausted your
-      in-memory value group. This is the role of the pluggable optimizers.
-      Currently only the two enhanced generators (<xref
-      linkend="mapping-declaration-id-enhanced" /> support this operation.
-      <itemizedlist spacing="compact">
-          <listitem>
-            <para><literal>none</literal> (generally this is the default if no
-            optimizer was specified): this will not perform any optimizations
-            and hit the database for each and every request.</para>
-          </listitem>
-
-          <listitem>
-            <para><literal>hilo</literal>: applies a hi/lo algorithm around
-            the database retrieved values. The values from the database for
-            this optimizer are expected to be sequential. The values retrieved
-            from the database structure for this optimizer indicates the
-            "group number". The <literal>increment_size</literal> is
-            multiplied by that value in memory to define a group "hi
-            value".</para>
-          </listitem>
-
-          <listitem>
-            <para><literal>pooled</literal>: as with the case of
-            <literal>hilo</literal>, this optimizer attempts to minimize the
-            number of hits to the database. Here, however, we simply store the
-            starting value for the "next group" into the database structure
-            rather than a sequential value in combination with an in-memory
-            grouping algorithm. Here, <literal>increment_size</literal> refers
-            to the values coming from the database.</para>
-          </listitem>
-        </itemizedlist></para>
-    </section>
-
-    <section id="mapping-declaration-compositeid" revision="3">
-      <title>composite-id</title>
-
-      <programlisting role="XML">&lt;composite-id
-        name="propertyName"
-        class="ClassName"
-        mapped="true|false"
-        access="field|property|ClassName"&gt;
-        node="element-name|."
-
-        &lt;key-property name="propertyName" type="typename" column="column_name"/&gt;
-        &lt;key-many-to-one name="propertyName class="ClassName" column="column_name"/&gt;
-        ......
-&lt;/composite-id&gt;</programlisting>
-
-      <para>A table with a composite key can be mapped with multiple
-      properties of the class as identifier properties. The
-      <literal>&lt;composite-id&gt;</literal> element accepts
-      <literal>&lt;key-property&gt;</literal> property mappings and
-      <literal>&lt;key-many-to-one&gt;</literal> mappings as child
-      elements.</para>
-
-      <programlisting role="XML">&lt;composite-id&gt;
-        &lt;key-property name="medicareNumber"/&gt;
-        &lt;key-property name="dependent"/&gt;
-&lt;/composite-id&gt;</programlisting>
-
-      <para>The persistent class <emphasis>must</emphasis> override
-      <literal>equals()</literal> and <literal>hashCode()</literal> to
-      implement composite identifier equality. It must also implement
-      <literal>Serializable</literal>.</para>
-
-      <para>Unfortunately, this approach means that a persistent object is its
-      own identifier. There is no convenient "handle" other than the object
-      itself. You must instantiate an instance of the persistent class itself
-      and populate its identifier properties before you can
-      <literal>load()</literal> the persistent state associated with a
-      composite key. We call this approach an <emphasis>embedded</emphasis>
-      composite identifier, and discourage it for serious applications.</para>
-
-      <para>A second approach is what we call a <emphasis>mapped</emphasis>
-      composite identifier, where the identifier properties named inside the
-      <literal>&lt;composite-id&gt;</literal> element are duplicated on both
-      the persistent class and a separate identifier class.</para>
-
-      <programlisting role="XML">&lt;composite-id class="MedicareId" mapped="true"&gt;
-        &lt;key-property name="medicareNumber"/&gt;
-        &lt;key-property name="dependent"/&gt;
-&lt;/composite-id&gt;</programlisting>
-
-      <para>In this example, both the composite identifier class,
-      <literal>MedicareId</literal>, and the entity class itself have
-      properties named <literal>medicareNumber</literal> and
-      <literal>dependent</literal>. The identifier class must override
-      <literal>equals()</literal> and <literal>hashCode()</literal> and
-      implement <literal>Serializable</literal>. The main disadvantage of this
-      approach is code duplication.</para>
-
-      <para>The following attributes are used to specify a mapped composite
-      identifier:</para>
-
-      <itemizedlist spacing="compact">
-        <listitem>
-          <para><literal>mapped</literal> (optional - defaults to
-          <literal>false</literal>): indicates that a mapped composite
-          identifier is used, and that the contained property mappings refer
-          to both the entity class and the composite identifier class.</para>
-        </listitem>
-
-        <listitem>
-          <para><literal>class</literal> (optional - but required for a mapped
-          composite identifier): the class used as a composite
-          identifier.</para>
-        </listitem>
-      </itemizedlist>
-
-      <para>We will describe a third, even more convenient approach, where the
-      composite identifier is implemented as a component class in <xref
-      linkend="components-compositeid" />. The attributes described below
-      apply only to this alternative approach:</para>
-
-      <itemizedlist spacing="compact">
-        <listitem>
-          <para><literal>name</literal> (optional - required for this
-          approach): a property of component type that holds the composite
-          identifier. Please see chapter 9 for more information.</para>
-        </listitem>
-
-        <listitem>
-          <para><literal>access</literal> (optional - defaults to
-          <literal>property</literal>): the strategy Hibernate uses for
-          accessing the property value.</para>
-        </listitem>
-
-        <listitem>
-          <para><literal>class</literal> (optional - defaults to the property
-          type determined by reflection): the component class used as a
-          composite identifier. Please see the next section for more
-          information.</para>
-        </listitem>
-      </itemizedlist>
-
-      <para>The third approach, an <emphasis>identifier component</emphasis>,
-      is recommended for almost all applications.</para>
     </section>
 
     <section id="mapping-declaration-discriminator" revision="3">

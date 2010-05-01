@@ -71,7 +71,7 @@ public class OrderByFragmentTranslator {
 			log.trace( printer.showAsString( parser.getAST(), "--- {order-by fragment} ---" ) );
 		}
 
-		GeneratedOrderByFragmentRenderer renderer = new GeneratedOrderByFragmentRenderer();
+		OrderByFragmentRenderer renderer = new OrderByFragmentRenderer();
 		try {
 			renderer.orderByFragment( parser.getAST() );
 		}

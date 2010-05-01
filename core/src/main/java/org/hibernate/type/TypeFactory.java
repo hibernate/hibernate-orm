@@ -63,8 +63,11 @@ public final class TypeFactory implements Serializable {
 		private SessionFactoryImplementor factory;
 
 		public void injectSessionFactory(SessionFactoryImplementor factory) {
-			if ( factory != null ) {
-				log.warn( "Scoping types to session factory7 after already scoped" );
+			if ( this.factory != null ) {
+				log.warn( "Scoping types to session factory {} after already scoped {}", this.factory, factory );
+			}
+			else {
+				log.trace( "Scoping types to session factory {}", factory );
 			}
 			this.factory = factory;
 		}

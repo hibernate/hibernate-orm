@@ -26,6 +26,7 @@ package org.hibernate.mapping;
 
 import org.hibernate.FetchMode;
 import org.hibernate.MappingException;
+import org.hibernate.cfg.Mappings;
 import org.hibernate.engine.Mapping;
 import org.hibernate.type.Type;
 import org.hibernate.util.ReflectHelper;
@@ -43,8 +44,8 @@ public abstract class ToOne extends SimpleValue implements Fetchable {
 	private boolean lazy = true;
 	protected boolean unwrapProxy;
 
-	protected ToOne(Table table) {
-		super(table);
+	protected ToOne(Mappings mappings, Table table) {
+		super( mappings, table );
 	}
 
 	public FetchMode getFetchMode() {
@@ -122,10 +123,3 @@ public abstract class ToOne extends SimpleValue implements Fetchable {
 	}
 	
 }
-
-
-
-
-
-
-

@@ -147,8 +147,8 @@ public class BinderHelper {
 			if ( properties != null ) {
 				//todo how about properties.size() == 1, this should be much simpler
 				Component embeddedComp = columnOwner instanceof PersistentClass ?
-						new Component( (PersistentClass) columnOwner ) :
-						new Component( (Join) columnOwner );
+						new Component( mappings, (PersistentClass) columnOwner ) :
+						new Component( mappings, (Join) columnOwner );
 				embeddedComp.setEmbedded( true );
 				embeddedComp.setNodeName( syntheticPropertyName );
 				embeddedComp.setComponentClassName( embeddedComp.getOwner().getClassName() );
@@ -533,7 +533,7 @@ public class BinderHelper {
 									boolean cascadeOnDelete, Nullability nullability, PropertyHolder propertyHolder,
 									EntityBinder entityBinder, boolean optional, ExtendedMappings mappings) {
 		//All FK columns should be in the same table
-		Any value = new Any( columns[0].getTable() );
+		Any value = new Any( mappings, columns[0].getTable() );
 		AnyMetaDef metaAnnDef = inferredData.getProperty().getAnnotation( AnyMetaDef.class );
 
 		if ( metaAnnDef != null ) {
@@ -548,7 +548,7 @@ public class BinderHelper {
 			value.setMetaType( metaAnnDef.metaType() );
 
 			HashMap values = new HashMap();
-			org.hibernate.type.Type metaType = TypeFactory.heuristicType( value.getMetaType() );
+			org.hibernate.type.Type metaType = mappings.getTypeResolver().heuristicType( value.getMetaType() );
 			for (MetaValue metaValue : metaAnnDef.metaValues()) {
 				try {
 					Object discrim = ( (org.hibernate.type.DiscriminatorType) metaType ).stringToObject( metaValue

@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,128 +20,52 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.type;
 
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Timestamp;
-import java.sql.Types;
 import java.util.Calendar;
 import java.util.Comparator;
-import java.util.Date;
 import java.util.GregorianCalendar;
 
-import org.hibernate.EntityMode;
-import org.hibernate.Hibernate;
-import org.hibernate.HibernateException;
 import org.hibernate.engine.SessionImplementor;
-import org.hibernate.cfg.Environment;
-import org.hibernate.util.CalendarComparator;
+import org.hibernate.type.descriptor.java.CalendarTypeDescriptor;
+import org.hibernate.type.descriptor.sql.TimestampTypeDescriptor;
 
 /**
- * <tt>calendar</tt>: A type mapping for a <tt>Calendar</tt> object that
- * represents a datetime.
+ * A type that maps between {@link java.sql.Types#TIMESTAMP TIMESTAMP} and {@link Calendar}
+ *
  * @author Gavin King
+ * @author Steve Ebersole
  */
-public class CalendarType extends MutableType implements VersionType {
+public class CalendarType
+		extends AbstractSingleColumnStandardBasicType<Calendar>
+		implements VersionType<Calendar> {
 
-	public Object get(ResultSet rs, String name) throws HibernateException, SQLException {
+	public static final CalendarType INSTANCE = new CalendarType();
 
-		Timestamp ts = rs.getTimestamp(name);
-		if (ts!=null) {
-			Calendar cal = new GregorianCalendar();
-			if ( Environment.jvmHasTimestampBug() ) {
-				cal.setTime( new Date( ts.getTime() + ts.getNanos() / 1000000 ) );
-			}
-			else {
-				cal.setTime(ts);
-			}
-			return cal;
-		}
-		else {
-			return null;
-		}
-
-	}
-
-	public void set(PreparedStatement st, Object value, int index) throws HibernateException, SQLException {
-		final Calendar cal = (Calendar) value;
-		//st.setTimestamp( index,  new Timestamp( cal.getTimeInMillis() ), cal ); //JDK 1.5 only
-		st.setTimestamp( index,  new Timestamp( cal.getTime().getTime() ), cal );
-	}
-
-	public int sqlType() {
-		return Types.TIMESTAMP;
-	}
-
-	public String toString(Object value) throws HibernateException {
-		return Hibernate.TIMESTAMP.toString( ( (Calendar) value ).getTime() );
-	}
-
-	public Object fromStringValue(String xml) throws HibernateException {
-		Calendar result = new GregorianCalendar();
-		result.setTime( ( (Date) Hibernate.TIMESTAMP.fromStringValue(xml) ) );
-		return result;
-	}
-
-	public Object deepCopyNotNull(Object value) throws HibernateException {
-		return ( (Calendar) value ).clone();
-	}
-
-	public Class getReturnedClass() {
-		return Calendar.class;
-	}
-	
-	public int compare(Object x, Object y, EntityMode entityMode) {
-		return CalendarComparator.INSTANCE.compare(x, y);
-	}
-
-	public boolean isEqual(Object x, Object y) {
-		if (x==y) return true;
-		if (x==null || y==null) return false;
-
-		Calendar calendar1 = (Calendar) x;
-		Calendar calendar2 = (Calendar) y;
-
-		return calendar1.get(Calendar.MILLISECOND) == calendar2.get(Calendar.MILLISECOND)
-			&& calendar1.get(Calendar.SECOND) == calendar2.get(Calendar.SECOND)
-			&& calendar1.get(Calendar.MINUTE) == calendar2.get(Calendar.MINUTE)
-			&& calendar1.get(Calendar.HOUR_OF_DAY) == calendar2.get(Calendar.HOUR_OF_DAY)
-			&& calendar1.get(Calendar.DAY_OF_MONTH) == calendar2.get(Calendar.DAY_OF_MONTH)
-			&& calendar1.get(Calendar.MONTH) == calendar2.get(Calendar.MONTH)
-			&& calendar1.get(Calendar.YEAR) == calendar2.get(Calendar.YEAR);
-	}
-
-	public int getHashCode(Object x, EntityMode entityMode) {
-		Calendar calendar = (Calendar) x;
-		int hashCode = 1;
-		hashCode = 31 * hashCode + calendar.get(Calendar.MILLISECOND);
-		hashCode = 31 * hashCode + calendar.get(Calendar.SECOND);
-		hashCode = 31 * hashCode + calendar.get(Calendar.MINUTE);
-		hashCode = 31 * hashCode + calendar.get(Calendar.HOUR_OF_DAY);
-		hashCode = 31 * hashCode + calendar.get(Calendar.DAY_OF_MONTH);
-		hashCode = 31 * hashCode + calendar.get(Calendar.MONTH);
-		hashCode = 31 * hashCode + calendar.get(Calendar.YEAR);
-		return hashCode;
+	public CalendarType() {
+		super( TimestampTypeDescriptor.INSTANCE, CalendarTypeDescriptor.INSTANCE );
 	}
 
 	public String getName() {
 		return "calendar";
 	}
 
-	public Object next(Object current, SessionImplementor session) {
+	@Override
+	public String[] getRegistrationKeys() {
+		return new String[] { getName(), Calendar.class.getName(), GregorianCalendar.class.getName() };
+	}
+
+	public Calendar next(Calendar current, SessionImplementor session) {
 		return seed( session );
 	}
 
-	public Object seed(SessionImplementor session) {
+	public Calendar seed(SessionImplementor session) {
 		return Calendar.getInstance();
 	}
 
-	public Comparator getComparator() {
-		return CalendarComparator.INSTANCE;
+	public Comparator<Calendar> getComparator() {
+		return getJavaTypeDescriptor().getComparator();
 	}
 
 }

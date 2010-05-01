@@ -10,6 +10,8 @@ import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.ForeignKeys;
 import org.hibernate.engine.SessionImplementor;
+import org.hibernate.type.IntegerType;
+import org.hibernate.type.StringType;
 import org.hibernate.type.Type;
 import org.hibernate.usertype.CompositeUserType;
 
@@ -19,10 +21,10 @@ public class MultiplicityType implements CompositeUserType {
 		"count", "glarch"
 	};
 	private static final int[] SQL_TYPES = new int[] {
-		Hibernate.INTEGER.sqlType(), Hibernate.STRING.sqlType()
+		IntegerType.INSTANCE.getSqlTypeDescriptor().getSqlType(), StringType.INSTANCE.getSqlTypeDescriptor().getSqlType()
 	};
 	private static final Type[] TYPES = new Type[] {
-		Hibernate.INTEGER, Hibernate.entity(Glarch.class)
+		IntegerType.INSTANCE, Hibernate.entity(Glarch.class)
 	};
 
 	public String[] getPropertyNames() {
@@ -78,7 +80,7 @@ public class MultiplicityType implements CompositeUserType {
 	public Object nullSafeGet(ResultSet rs, String[] names, SessionImplementor session, Object owner)
 		throws HibernateException, SQLException {
 
-		Integer c = (Integer) Hibernate.INTEGER.nullSafeGet( rs, names[0] );
+		Integer c = (Integer) IntegerType.INSTANCE.nullSafeGet( rs, names[0], session );
 		GlarchProxy g = (GlarchProxy) Hibernate.entity(Glarch.class).nullSafeGet(rs, names[1], session, owner);
 		Multiplicity m = new Multiplicity();
 		m.count = c==null ? 0 : c.intValue();

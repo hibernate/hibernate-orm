@@ -395,7 +395,7 @@ public class SessionFactoryHelper {
 		Type argumentType = null;
 		if ( first != null ) {
 			if ( "cast".equals(functionName) ) {
-				argumentType = TypeFactory.heuristicType( first.getNextSibling().getText() );
+				argumentType = sfi.getTypeResolver().heuristicType( first.getNextSibling().getText() );
 			}
 			else if ( first instanceof SqlNode ) {
 				argumentType = ( (SqlNode) first ).getDataType();

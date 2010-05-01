@@ -55,7 +55,7 @@ public class JavaConstantNode extends Node implements ExpectedTypeAwareNode, Ses
 		if ( StringHelper.isNotEmpty( s ) ) {
 			constantExpression = s;
 			constantValue = ReflectHelper.getConstantValue( s );
-			heuristicType = TypeFactory.heuristicType( constantValue.getClass().getName() );
+			heuristicType = factory.getTypeResolver().heuristicType( constantValue.getClass().getName() );
 			super.setText( s );
 		}
 	}
@@ -72,7 +72,12 @@ public class JavaConstantNode extends Node implements ExpectedTypeAwareNode, Ses
 		this.factory = factory;
 	}
 
-	private String resolveToLiteralString(Type type) {
+	public String getRenderText(SessionFactoryImplementor sessionFactory) {
+		Type type = expectedType == null
+				? heuristicType
+				: Number.class.isAssignableFrom( heuristicType.getReturnedClass() )
+						? heuristicType
+						: expectedType;
 		try {
 			LiteralType literalType = ( LiteralType ) type;
 			Dialect dialect = factory.getDialect();
@@ -81,10 +86,5 @@ public class JavaConstantNode extends Node implements ExpectedTypeAwareNode, Ses
 		catch ( Throwable t ) {
 			throw new QueryException( QueryTranslator.ERROR_CANNOT_FORMAT_LITERAL + constantExpression, t );
 		}
-	}
-
-	public String getRenderText(SessionFactoryImplementor sessionFactory) {
-		Type type = expectedType == null ? heuristicType : expectedType;
-		return resolveToLiteralString( type );
 	}
 }

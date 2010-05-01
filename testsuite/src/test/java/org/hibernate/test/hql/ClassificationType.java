@@ -1,5 +1,6 @@
 package org.hibernate.test.hql;
 
+import org.hibernate.type.IntegerType;
 import org.hibernate.usertype.EnhancedUserType;
 import org.hibernate.HibernateException;
 import org.hibernate.Hibernate;
@@ -46,7 +47,7 @@ public class ClassificationType implements EnhancedUserType {
 	}
 
 	public Object nullSafeGet(ResultSet rs, String[] names, Object owner) throws HibernateException, SQLException {
-		Integer ordinal = ( Integer ) Hibernate.INTEGER.nullSafeGet( rs, names[0] );
+		Integer ordinal = ( Integer ) IntegerType.INSTANCE.nullSafeGet( rs, names[0] );
 		return Classification.valueOf( ordinal );
 	}
 

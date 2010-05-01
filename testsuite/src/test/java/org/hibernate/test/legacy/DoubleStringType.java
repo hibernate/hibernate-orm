@@ -10,6 +10,7 @@ import java.sql.Types;
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.SessionImplementor;
+import org.hibernate.type.StringType;
 import org.hibernate.type.Type;
 import org.hibernate.usertype.CompositeUserType;
 
@@ -50,8 +51,8 @@ public class DoubleStringType implements CompositeUserType {
 	public Object nullSafeGet(ResultSet rs,	String[] names, SessionImplementor session,	Object owner)
 	throws HibernateException, SQLException {
 
-		String first = (String) Hibernate.STRING.nullSafeGet(rs, names[0]);
-		String second = (String) Hibernate.STRING.nullSafeGet(rs, names[1]);
+		String first = StringType.INSTANCE.nullSafeGet( rs, names[0], session );
+		String second = StringType.INSTANCE.nullSafeGet( rs, names[1], session );
 
 		return ( first==null && second==null ) ? null : new String[] { first, second };
 	}
@@ -61,8 +62,8 @@ public class DoubleStringType implements CompositeUserType {
 
 		String[] strings = (value==null) ? new String[2] : (String[]) value;
 
-		Hibernate.STRING.nullSafeSet(st, strings[0], index);
-		Hibernate.STRING.nullSafeSet(st, strings[1], index+1);
+		StringType.INSTANCE.nullSafeSet( st, strings[0], index, session );
+		StringType.INSTANCE.nullSafeSet( st, strings[1], index+1, session );
 	}
 
 	public String[] getPropertyNames() {
@@ -70,7 +71,7 @@ public class DoubleStringType implements CompositeUserType {
 	}
 
 	public Type[] getPropertyTypes() {
-		return new Type[] { Hibernate.STRING, Hibernate.STRING };
+		return new Type[] { StringType.INSTANCE, StringType.INSTANCE };
 	}
 
 	public Object getPropertyValue(Object component, int property) {
@@ -103,10 +104,3 @@ public class DoubleStringType implements CompositeUserType {
 	}
 
 }
-
-
-
-
-
-
-

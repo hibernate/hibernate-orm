@@ -9,6 +9,8 @@ import org.dom4j.Element;
 import org.dom4j.util.NodeComparator;
 
 import org.hibernate.EntityMode;
+import org.hibernate.cfg.Configuration;
+import org.hibernate.cfg.Mappings;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.SimpleValue;
@@ -25,8 +27,15 @@ public class Dom4jAccessorTest extends TestCase {
 
 	public static final Element DOM = generateTestElement();
 
+	private Mappings mappings;
+
 	public Dom4jAccessorTest(String name) {
 		super( name );
+	}
+
+	@Override
+	protected void setUp() throws Exception {
+		mappings = new Configuration().createMappings();
 	}
 
 	public void testStringElementExtraction() throws Throwable {
@@ -108,7 +117,7 @@ public class Dom4jAccessorTest extends TestCase {
 	}
 
 	private Property generateIdProperty() {
-		SimpleValue value = new SimpleValue();
+		SimpleValue value = new SimpleValue( mappings );
 		value.setTypeName( "long" );
 
 		Property property = new Property();
@@ -120,7 +129,7 @@ public class Dom4jAccessorTest extends TestCase {
 	}
 
 	private Property generateTextProperty() {
-		SimpleValue value = new SimpleValue();
+		SimpleValue value = new SimpleValue(mappings);
 		value.setTypeName( "string" );
 
 		Property property = new Property();
@@ -132,7 +141,7 @@ public class Dom4jAccessorTest extends TestCase {
 	}
 
 	private Property generateAccountIdProperty() {
-		SimpleValue value = new SimpleValue();
+		SimpleValue value = new SimpleValue(mappings);
 		value.setTypeName( "long" );
 
 		Property property = new Property();
@@ -144,7 +153,7 @@ public class Dom4jAccessorTest extends TestCase {
 	}
 
 	private Property generateNameProperty() {
-		SimpleValue value = new SimpleValue();
+		SimpleValue value = new SimpleValue(mappings);
 		value.setTypeName( "string" );
 
 		Property property = new Property();

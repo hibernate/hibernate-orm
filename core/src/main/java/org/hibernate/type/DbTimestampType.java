@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,7 +20,6 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.type;
 
@@ -29,6 +28,7 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.ResultSet;
 import java.sql.CallableStatement;
+import java.util.Date;
 
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.dialect.Dialect;
@@ -48,13 +48,21 @@ import org.slf4j.LoggerFactory;
  *
  * @author Steve Ebersole
  */
-public class DbTimestampType extends TimestampType implements VersionType {
+public class DbTimestampType extends TimestampType {
+	public static final DbTimestampType INSTANCE = new DbTimestampType();
 
 	private static final Logger log = LoggerFactory.getLogger( DbTimestampType.class );
 	
-	public String getName() { return "dbtimestamp"; }
+	public String getName() {
+		return "dbtimestamp";
+	}
 
-	public Object seed(SessionImplementor session) {
+	@Override
+	public String[] getRegistrationKeys() {
+		return new String[] { getName() };
+	}
+
+	public Date seed(SessionImplementor session) {
 		if ( session == null ) {
 			log.trace( "incoming session was null; using current jvm time" );
 			return super.seed( session );
@@ -68,7 +76,7 @@ public class DbTimestampType extends TimestampType implements VersionType {
 		}
 	}
 
-	private Timestamp getCurrentTimestamp(SessionImplementor session) {
+	private Date getCurrentTimestamp(SessionImplementor session) {
 		Dialect dialect = session.getFactory().getDialect();
 		String timestampSelectString = dialect.getCurrentTimestampSelectString();
 		if ( dialect.isCurrentTimestampSelectStringCallable() ) {

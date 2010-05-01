@@ -132,8 +132,10 @@ import org.hibernate.secure.JACCConfiguration;
 import org.hibernate.tool.hbm2ddl.DatabaseMetadata;
 import org.hibernate.tool.hbm2ddl.TableMetadata;
 import org.hibernate.tool.hbm2ddl.IndexMetadata;
+import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.SerializationException;
 import org.hibernate.type.Type;
+import org.hibernate.type.TypeResolver;
 import org.hibernate.util.ArrayHelper;
 import org.hibernate.util.CollectionHelper;
 import org.hibernate.util.ConfigHelper;
@@ -187,6 +189,7 @@ public class Configuration implements Serializable {
 	protected Map extendsQueue;
 
 	protected Map sqlFunctions;
+	private TypeResolver typeResolver = new TypeResolver();
 
 	private EntityTuplizerFactory entityTuplizerFactory;
 //	private ComponentTuplizerFactory componentTuplizerFactory; todo : HHH-3517 and HHH-1907
@@ -2279,6 +2282,10 @@ public class Configuration implements Serializable {
 		sqlFunctions.put( functionName, function );
 	}
 
+	public TypeResolver getTypeResolver() {
+		return typeResolver;
+	}
+
 	public SessionFactoryObserver getSessionFactoryObserver() {
 		return sessionFactoryObserver;
 	}
@@ -2381,6 +2388,9 @@ public class Configuration implements Serializable {
 			Configuration.this.namingStrategy = namingStrategy;
 		}
 
+		public TypeResolver getTypeResolver() {
+			return typeResolver;
+		}
 
 		public Iterator iterateClasses() {
 			return classes.values().iterator();

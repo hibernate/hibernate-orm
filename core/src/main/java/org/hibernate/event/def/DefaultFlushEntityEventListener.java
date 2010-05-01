@@ -555,11 +555,28 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 			cannotDirtyCheck = false;
 			interceptorHandledDirtyCheck = true;
 		}
-		
+
+		logDirtyProperties( id, dirtyProperties, persister );
+
 		event.setDirtyProperties(dirtyProperties);
 		event.setDirtyCheckHandledByInterceptor(interceptorHandledDirtyCheck);
 		event.setDirtyCheckPossible(!cannotDirtyCheck);
 		
+	}
+
+	private void logDirtyProperties(Serializable id, int[] dirtyProperties, EntityPersister persister) {
+		if ( log.isTraceEnabled() && dirtyProperties != null && dirtyProperties.length > 0 ) {
+			final String[] allPropertyNames = persister.getPropertyNames();
+			final String[] dirtyPropertyNames = new String[ dirtyProperties.length ];
+			for ( int i = 0; i < dirtyProperties.length; i++ ) {
+				dirtyPropertyNames[i] = allPropertyNames[ dirtyProperties[i]];
+			}
+			log.trace(
+					"Found dirty properties [{}] : {}",
+					MessageHelper.infoString( persister.getEntityName(), id ),
+					dirtyPropertyNames
+			);
+		}
 	}
 
 	private Object[] getDatabaseSnapshot(SessionImplementor session, EntityPersister persister, Serializable id) {

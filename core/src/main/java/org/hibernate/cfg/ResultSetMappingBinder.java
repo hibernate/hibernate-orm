@@ -81,7 +81,7 @@ public abstract class ResultSetMappingBinder {
 				String typeFromXML = HbmBinder.getTypeFromXML( returnElem );
 				Type type = null;
 				if(typeFromXML!=null) {
-					type = TypeFactory.heuristicType( typeFromXML );
+					type = mappings.getTypeResolver().heuristicType( typeFromXML );
 					if ( type == null ) {
 						throw new MappingException( "could not determine type " + type );
 					}

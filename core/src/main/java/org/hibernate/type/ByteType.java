@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,77 +20,76 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.type;
 
 import java.io.Serializable;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Types;
 import java.util.Comparator;
 
-import org.hibernate.util.ComparableComparator;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.SessionImplementor;
+import org.hibernate.type.descriptor.java.ByteTypeDescriptor;
+import org.hibernate.type.descriptor.sql.TinyIntTypeDescriptor;
 
 /**
- * <tt>byte</tt>: A type that maps an SQL TINYINT to a Java Byte.
+ * A type that maps between {@link java.sql.Types#TINYINT TINYINT} and {@link Byte}
+ *
  * @author Gavin King
+ * @author Steve Ebersole
  */
-public class ByteType extends PrimitiveType implements DiscriminatorType, VersionType {
+@SuppressWarnings({ "UnnecessaryBoxing" })
+public class ByteType
+		extends AbstractSingleColumnStandardBasicType<Byte>
+		implements PrimitiveType<Byte>, DiscriminatorType<Byte>, VersionType<Byte> {
+
+	public static final ByteType INSTANCE = new ByteType();
 
 	private static final Byte ZERO = new Byte( (byte) 0 );
 
+	public ByteType() {
+		super( TinyIntTypeDescriptor.INSTANCE, ByteTypeDescriptor.INSTANCE );
+	}
+
+	public String getName() {
+		return "byte";
+	}
+
+	@Override
+	public String[] getRegistrationKeys() {
+		return new String[] { getName(), byte.class.getName(), Byte.class.getName() };
+	}
+
 	public Serializable getDefaultValue() {
 		return ZERO;
-	}
-	
-	public Object get(ResultSet rs, String name) throws SQLException {
-		return new Byte( rs.getByte(name) );
 	}
 
 	public Class getPrimitiveClass() {
 		return byte.class;
 	}
 
-	public Class getReturnedClass() {
-		return Byte.class;
+	public String objectToSQLString(Byte value, Dialect dialect) {
+		return toString( value );
 	}
 
-	public void set(PreparedStatement st, Object value, int index) throws SQLException {
-		st.setByte( index, ( (Byte) value ).byteValue() );
+	public Byte stringToObject(String xml) {
+		return fromString( xml );
 	}
 
-	public int sqlType() {
-		return Types.TINYINT;
+	public Byte fromStringValue(String xml) {
+		return fromString( xml );
 	}
 
-	public String getName() { return "byte"; }
-
-	public String objectToSQLString(Object value, Dialect dialect) throws Exception {
-		return value.toString();
+	@SuppressWarnings({ "UnnecessaryUnboxing" })
+	public Byte next(Byte current, SessionImplementor session) {
+		return Byte.valueOf( (byte) ( current.byteValue() + 1 ) );
 	}
 
-	public Object stringToObject(String xml) throws Exception {
-		return new Byte(xml);
-	}
-
-	public Object fromStringValue(String xml) {
-		return new Byte(xml);
-	}
-
-	public Object next(Object current, SessionImplementor session) {
-		return new Byte( (byte) ( ( (Byte) current ).byteValue() + 1 ) );
-	}
-
-	public Object seed(SessionImplementor session) {
+	public Byte seed(SessionImplementor session) {
 		return ZERO;
 	}
 
-	public Comparator getComparator() {
-		return ComparableComparator.INSTANCE;
+	public Comparator<Byte> getComparator() {
+		return getJavaTypeDescriptor().getComparator();
 	}
-	
+
 }

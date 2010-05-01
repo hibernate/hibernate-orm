@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,75 +20,48 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.type;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.PreparedStatement;
-import java.sql.Types;
+import java.io.Serializable;
 
 import org.hibernate.dialect.Dialect;
+import org.hibernate.type.descriptor.java.BooleanTypeDescriptor;
+import org.hibernate.type.descriptor.sql.IntegerTypeDescriptor;
 
 /**
- * Maps {@link Types#INTEGER interger} database values to boolean java values.  Zero is considered false;
- * <tt>NULL</tt> maps to {@link #getDefaultValue()}; any other value is considered true.
+ * A type that maps between {@link java.sql.Types#INTEGER INTEGER} and {@link Boolean} (using 1 and 0)
  *
  * @author Steve Ebersole
- * @see #getName()
  */
-public class NumericBooleanType extends BooleanType {
+public class NumericBooleanType 
+		extends AbstractSingleColumnStandardBasicType<Boolean>
+		implements PrimitiveType<Boolean>, DiscriminatorType<Boolean> {
 
-	/**
-	 * {@inheritDoc}
-	 * <p/>
-	 * This type's name is <tt>numeric_boolean</tt>
-	 */
+	public static final NumericBooleanType INSTANCE = new NumericBooleanType();
+
+	public NumericBooleanType() {
+		super( IntegerTypeDescriptor.INSTANCE, BooleanTypeDescriptor.INSTANCE );
+	}
+
 	public String getName() {
 		return "numeric_boolean";
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
-	public Object get(ResultSet rs, String name) throws SQLException {
-		int value = rs.getInt( name );
-		if ( rs.wasNull() ) {
-			return getDefaultValue();
-		}
-		else if ( value == 0 ) {
-			return Boolean.FALSE;
-		}
-		else {
-			return Boolean.TRUE;
-		}
+	public Class getPrimitiveClass() {
+		return boolean.class;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
-	public void set(PreparedStatement st, Object value, int index) throws SQLException {
-		if ( value == null ) {
-			st.setNull( index, Types.INTEGER );
-		}
-		else {
-			boolean bool = ( ( Boolean ) value ).booleanValue();
-			st.setInt( index, bool ? 1 : 0 );
-		}
+	public Serializable getDefaultValue() {
+		return Boolean.FALSE;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
-	public String objectToSQLString(Object value, Dialect dialect) throws Exception {
-		return ( ( Boolean ) value ).booleanValue() ? "1" : "0";
+	public Boolean stringToObject(String string) {
+		return fromString( string );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
-	public int sqlType() {
-		return Types.INTEGER;
+	@SuppressWarnings({ "UnnecessaryUnboxing" })
+	public String objectToSQLString(Boolean value, Dialect dialect) {
+		return value.booleanValue() ? "1" : "0";
 	}
 }

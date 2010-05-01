@@ -1098,7 +1098,7 @@ public abstract class CollectionBinder {
 					.getRecursiveProperty( propRef )
 					.getValue();
 		}
-		DependantValue key = new DependantValue( collValue.getCollectionTable(), keyVal );
+		DependantValue key = new DependantValue( mappings, collValue.getCollectionTable(), keyVal );
 		key.setTypeName( null );
 		Ejb3Column.checkPropertyConsistency( joinColumns, collValue.getOwnerEntityName() );
 		key.setNullable( joinColumns.length == 0 || joinColumns[0].isNullable() );
@@ -1246,7 +1246,7 @@ public abstract class CollectionBinder {
 		ManyToOne element = null;
 		if ( isCollectionOfEntities ) {
 			element =
-					new ManyToOne( collValue.getCollectionTable() );
+					new ManyToOne( mappings,  collValue.getCollectionTable() );
 			collValue.setElement( element );
 			element.setReferencedEntityName( collType.getName() );
 			//element.setFetchMode( fetchMode );

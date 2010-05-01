@@ -41,8 +41,8 @@ import org.hibernate.loader.CollectionAliases;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
-import org.hibernate.type.NullableType;
 import org.hibernate.type.Type;
+import org.hibernate.type.XmlRepresentableType;
 import org.hibernate.util.CollectionHelper;
 
 /**
@@ -164,7 +164,7 @@ public abstract class PersistentIndexedElementHolder extends AbstractPersistentC
 		
 		final Type indexType = persister.getIndexType();
 		final Object indexValue = persister.readIndex( rs, descriptor.getSuffixedIndexAliases(), getSession() );
-		final String index = ( (NullableType) indexType ).toXMLString( indexValue, factory );
+		final String index = ( (XmlRepresentableType) indexType ).toXMLString( indexValue, factory );
 		setIndex(elem, indexNode, index);
 		return object;
 	}
@@ -202,13 +202,14 @@ public abstract class PersistentIndexedElementHolder extends AbstractPersistentC
 		HashMap deletes = (HashMap) snapshot.clone();
 		deletes.keySet().removeAll( ( (HashMap) getSnapshot(persister) ).keySet() );
 		ArrayList deleteList = new ArrayList( deletes.size() );
-		Iterator iter = deletes.entrySet().iterator();
-		while ( iter.hasNext() ) {
-			Map.Entry me = (Map.Entry) iter.next();
+		for ( Object o : deletes.entrySet() ) {
+			Map.Entry me = (Map.Entry) o;
 			final Object object = indexIsFormula ?
-				me.getValue() :
-				( (NullableType) indexType ).fromXMLString( (String) me.getKey(), persister.getFactory() );
-			if (object!=null) deleteList.add(object);
+					me.getValue() :
+					( (XmlRepresentableType) indexType ).fromXMLString( (String) me.getKey(), persister.getFactory() );
+			if ( object != null ) {
+				deleteList.add( object );
+			}
 		}
 		
 		return deleteList.iterator();
@@ -233,7 +234,7 @@ public abstract class PersistentIndexedElementHolder extends AbstractPersistentC
 	public Object getIndex(Object entry, int i, CollectionPersister persister) {
 		String index = ( (IndexedValue) entry ).index;
 		final Type indexType = persister.getIndexType();
-		return ( (NullableType) indexType ).fromXMLString( index, persister.getFactory() );
+		return ( (XmlRepresentableType) indexType ).fromXMLString( index, persister.getFactory() );
 	}
 
 	public Object getElement(Object entry) {

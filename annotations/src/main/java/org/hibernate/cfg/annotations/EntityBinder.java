@@ -586,13 +586,11 @@ public class EntityBinder {
 		for (Ejb3JoinColumn joinColumn : ejb3JoinColumns) {
 			joinColumn.forceNotNull();
 		}
-		bindJoinToPersistentClass( join, ejb3JoinColumns );
+		bindJoinToPersistentClass( join, ejb3JoinColumns, mappings );
 	}
 
-	private void bindJoinToPersistentClass(
-			Join join, Ejb3JoinColumn[] ejb3JoinColumns
-	) {
-		SimpleValue key = new DependantValue( join.getTable(), persistentClass.getIdentifier() );
+	private void bindJoinToPersistentClass(Join join, Ejb3JoinColumn[] ejb3JoinColumns, ExtendedMappings mappings) {
+		SimpleValue key = new DependantValue( mappings, join.getTable(), persistentClass.getIdentifier() );
 		join.setKey( key );
 		setFKNameIfDefined( join );
 		key.setCascadeDeleteEnabled( false );

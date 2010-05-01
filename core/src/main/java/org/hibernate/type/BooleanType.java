@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,63 +20,60 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.type;
 
 import java.io.Serializable;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Types;
 
 import org.hibernate.dialect.Dialect;
+import org.hibernate.type.descriptor.java.BooleanTypeDescriptor;
+import org.hibernate.type.descriptor.sql.BitTypeDescriptor;
+import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 
 /**
- * <tt>boolean</tt>: A type that maps an SQL BIT to a Java Boolean.
+ * A type that maps between {@link java.sql.Types#BIT BIT} and {@link Boolean}
+ *
  * @author Gavin King
+ * @author Steve Ebersole
  */
-public class BooleanType extends PrimitiveType implements DiscriminatorType {
+public class BooleanType
+		extends AbstractSingleColumnStandardBasicType<Boolean>
+		implements PrimitiveType<Boolean>, DiscriminatorType<Boolean> {
+	public static final BooleanType INSTANCE = new BooleanType();
 
-	public Serializable getDefaultValue() {
-		return Boolean.FALSE;
+	public BooleanType() {
+		this( BitTypeDescriptor.INSTANCE, BooleanTypeDescriptor.INSTANCE );
 	}
-	
-	public Object get(ResultSet rs, String name) throws SQLException {
-		return rs.getBoolean(name) ? Boolean.TRUE : Boolean.FALSE;
+
+	protected BooleanType(SqlTypeDescriptor sqlTypeDescriptor, BooleanTypeDescriptor javaTypeDescriptor) {
+		super( sqlTypeDescriptor, javaTypeDescriptor );
+	}
+
+	public String getName() {
+		return "boolean";
+	}
+
+	@Override
+	public String[] getRegistrationKeys() {
+		return new String[] { getName(), boolean.class.getName(), Boolean.class.getName() };
 	}
 
 	public Class getPrimitiveClass() {
 		return boolean.class;
 	}
 
-	public Class getReturnedClass() {
-		return Boolean.class;
+	public Serializable getDefaultValue() {
+		return Boolean.FALSE;
 	}
 
-	public void set(PreparedStatement st, Object value, int index)
-	throws SQLException {
-		st.setBoolean( index, ( (Boolean) value ).booleanValue() );
+	public Boolean stringToObject(String string) {
+		return fromString( string );
 	}
 
-	public int sqlType() {
-		return Types.BIT;
+	@SuppressWarnings({ "UnnecessaryUnboxing" })
+	public String objectToSQLString(Boolean value, Dialect dialect) {
+		return dialect.toBooleanValueString( value.booleanValue() );
 	}
-
-	public String getName() { return "boolean"; }
-
-	public String objectToSQLString(Object value, Dialect dialect) throws Exception {
-		return dialect.toBooleanValueString( ( (Boolean) value ).booleanValue() );
-	}
-
-	public Object stringToObject(String xml) throws Exception {
-		return fromStringValue(xml);
-	}
-
-	public Object fromStringValue(String xml) {
-		return Boolean.valueOf(xml);
-	}
-
 }
 
 

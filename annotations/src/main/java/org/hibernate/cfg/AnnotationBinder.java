@@ -655,7 +655,7 @@ public final class AnnotationBinder {
 			if ( persistentClass.getEntityPersisterClass() == null ) {
 				persistentClass.getRootClass().setEntityPersisterClass( JoinedSubclassEntityPersister.class );
 			}
-			SimpleValue key = new DependantValue( jsc.getTable(), jsc.getIdentifier() );
+			SimpleValue key = new DependantValue( mappings, jsc.getTable(), jsc.getIdentifier() );
 			jsc.setKey( key );
 			ForeignKey fk = clazzToProcess.getAnnotation( ForeignKey.class );
 			if ( fk != null && !BinderHelper.isDefault( fk.name() ) ) {
@@ -686,7 +686,8 @@ public final class AnnotationBinder {
 							( RootClass ) persistentClass,
 							discriminatorColumn,
 							entityBinder.getSecondaryTables(),
-							propertyHolder
+							propertyHolder,
+							mappings
 					);
 					entityBinder.bindDiscriminatorValue();//bind it again since the type might have changed
 				}
@@ -1229,7 +1230,7 @@ public final class AnnotationBinder {
 	private static void bindFilterDef(FilterDef defAnn, ExtendedMappings mappings) {
 		Map<String, org.hibernate.type.Type> params = new HashMap<String, org.hibernate.type.Type>();
 		for ( ParamDef param : defAnn.parameters() ) {
-			params.put( param.name(), TypeFactory.heuristicType( param.type() ) );
+			params.put( param.name(), mappings.getTypeResolver().heuristicType( param.type() ) );
 		}
 		FilterDefinition def = new FilterDefinition( defAnn.name(), defAnn.defaultCondition(), params );
 		log.info( "Binding filter definition: {}", def.getFilterName() );
@@ -1301,16 +1302,17 @@ public final class AnnotationBinder {
 
 	private static void bindDiscriminatorToPersistentClass(
 			RootClass rootClass,
-			Ejb3DiscriminatorColumn discriminatorColumn, Map<String, Join> secondaryTables,
-			PropertyHolder propertyHolder
-	) {
+			Ejb3DiscriminatorColumn discriminatorColumn,
+			Map<String, Join> secondaryTables,
+			PropertyHolder propertyHolder,
+			ExtendedMappings mappings) {
 		if ( rootClass.getDiscriminator() == null ) {
 			if ( discriminatorColumn == null ) {
 				throw new AssertionFailure( "discriminator column should have been built" );
 			}
 			discriminatorColumn.setJoins( secondaryTables );
 			discriminatorColumn.setPropertyHolder( propertyHolder );
-			SimpleValue discrim = new SimpleValue( rootClass.getTable() );
+			SimpleValue discrim = new SimpleValue( mappings, rootClass.getTable() );
 			rootClass.setDiscriminator( discrim );
 			discriminatorColumn.linkWithValue( discrim );
 			discrim.setTypeName( discriminatorColumn.getDiscriminatorTypeName() );
@@ -2187,7 +2189,7 @@ public final class AnnotationBinder {
 			Ejb3JoinColumn[] columns) {
 		Component comp;
 		if ( referencedEntityName != null ) {
-			comp = createComponent( propertyHolder, inferredData, isComponentEmbedded, isIdentifierMapper );
+			comp = createComponent( propertyHolder, inferredData, isComponentEmbedded, isIdentifierMapper, mappings );
 			SecondPass sp = new CopyIdentifierComponentSecondPass(
 					comp,
 					referencedEntityName,
@@ -2265,7 +2267,7 @@ public final class AnnotationBinder {
 		 * Because it's a value type, there is no bidirectional association, hence second pass
 		 * ordering does not matter
 		 */
-		Component comp = createComponent( propertyHolder, inferredData, isComponentEmbedded, isIdentifierMapper );
+		Component comp = createComponent( propertyHolder, inferredData, isComponentEmbedded, isIdentifierMapper, mappings );
 		String subpath = BinderHelper.getPath( propertyHolder, inferredData );
 		log.trace( "Binding component with path: {}", subpath );
 		PropertyHolder subHolder = PropertyHolderBuilder.buildPropertyHolder(
@@ -2373,8 +2375,13 @@ public final class AnnotationBinder {
 		return comp;
 	}
 
-	public static Component createComponent(PropertyHolder propertyHolder, PropertyData inferredData, boolean isComponentEmbedded, boolean isIdentifierMapper) {
-		Component comp = new Component( propertyHolder.getPersistentClass() );
+	public static Component createComponent(
+			PropertyHolder propertyHolder,
+			PropertyData inferredData,
+			boolean isComponentEmbedded,
+			boolean isIdentifierMapper,
+			ExtendedMappings mappings) {
+		Component comp = new Component( mappings, propertyHolder.getPersistentClass() );
 		comp.setEmbedded( isComponentEmbedded );
 		//yuk
 		comp.setTable( propertyHolder.getTable() );
@@ -2474,7 +2481,11 @@ public final class AnnotationBinder {
 		}
 	}
 
-	private static PropertyData getUniqueIdPropertyFromBaseClass(PropertyData inferredData, PropertyData baseInferredData, AccessType propertyAccessor, ExtendedMappings mappings) {
+	private static PropertyData getUniqueIdPropertyFromBaseClass(
+			PropertyData inferredData,
+			PropertyData baseInferredData,
+			AccessType propertyAccessor,
+			ExtendedMappings mappings) {
 		List<PropertyData> baseClassElements = new ArrayList<PropertyData>();
 		XClass baseReturnedClassOrElement = baseInferredData.getClassOrElement();
 		PropertyContainer propContainer = new PropertyContainer(
@@ -2482,8 +2493,7 @@ public final class AnnotationBinder {
 		);
 		addElementsOfClass( baseClassElements, propertyAccessor, propContainer, mappings );
 		//Id properties are on top and there is only one
-		final PropertyData idPropertyOnBaseClass = baseClassElements.get( 0 );
-		return idPropertyOnBaseClass;
+		return baseClassElements.get( 0 );
 	}
 
 	private static void setupComponentTuplizer(XProperty property, Component component) {
@@ -2513,7 +2523,7 @@ public final class AnnotationBinder {
 			ExtendedMappings mappings
 	) {
 		//All FK columns should be in the same table
-		org.hibernate.mapping.ManyToOne value = new org.hibernate.mapping.ManyToOne( columns[0].getTable() );
+		org.hibernate.mapping.ManyToOne value = new org.hibernate.mapping.ManyToOne( mappings, columns[0].getTable() );
 		// This is a @OneToOne mapped to a physical o.h.mapping.ManyToOne
 		if ( unique ) {
 			value.markAsLogicalOneToOne();

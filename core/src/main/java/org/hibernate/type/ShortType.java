@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,77 +20,72 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.type;
 
 import java.io.Serializable;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Types;
 import java.util.Comparator;
 
-import org.hibernate.util.ComparableComparator;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.SessionImplementor;
+import org.hibernate.type.descriptor.java.ShortTypeDescriptor;
+import org.hibernate.type.descriptor.sql.SmallIntTypeDescriptor;
 
 /**
- * <tt>short</tt>: A type that maps an SQL SMALLINT to a Java Short.
+ * A type that maps between {@link java.sql.Types#SMALLINT SMALLINT} and {@link Short}
+ *
  * @author Gavin King
+ * @author Steve Ebersole
  */
-public class ShortType extends PrimitiveType  implements DiscriminatorType, VersionType {
+public class ShortType
+		extends AbstractSingleColumnStandardBasicType<Short>
+		implements PrimitiveType<Short>, DiscriminatorType<Short>, VersionType<Short> {
 
-	private static final Short ZERO = new Short( (short) 0 );
+	public static final ShortType INSTANCE = new ShortType();
+
+	@SuppressWarnings({ "UnnecessaryBoxing" })
+	private static final Short ZERO = Short.valueOf( (short) 0 );
+
+	public ShortType() {
+		super( SmallIntTypeDescriptor.INSTANCE, ShortTypeDescriptor.INSTANCE );
+	}
+
+	public String getName() {
+		return "short";
+	}
+
+	@Override
+	public String[] getRegistrationKeys() {
+		return new String[] { getName(), short.class.getName(), Short.class.getName() };
+	}
 
 	public Serializable getDefaultValue() {
 		return ZERO;
 	}
 	
-	public Object get(ResultSet rs, String name) throws SQLException {
-		return new Short( rs.getShort(name) );
-	}
-
 	public Class getPrimitiveClass() {
 		return short.class;
 	}
 
-	public Class getReturnedClass() {
-		return Short.class;
-	}
-
-	public void set(PreparedStatement st, Object value, int index) throws SQLException {
-		st.setShort( index, ( (Short) value ).shortValue() );
-	}
-
-	public int sqlType() {
-		return Types.SMALLINT;
-	}
-
-	public String getName() { return "short"; }
-
-	public String objectToSQLString(Object value, Dialect dialect) throws Exception {
+	public String objectToSQLString(Short value, Dialect dialect) throws Exception {
 		return value.toString();
 	}
 
-	public Object stringToObject(String xml) throws Exception {
+	public Short stringToObject(String xml) throws Exception {
 		return new Short(xml);
 	}
 
-	public Object next(Object current, SessionImplementor session) {
-		return new Short( (short) ( ( (Short) current ).shortValue() + 1 ) );
+	@SuppressWarnings({ "UnnecessaryBoxing", "UnnecessaryUnboxing" })
+	public Short next(Short current, SessionImplementor session) {
+		return Short.valueOf( (short) ( current.shortValue() + 1 ) );
 	}
 
-	public Object seed(SessionImplementor session) {
+	public Short seed(SessionImplementor session) {
 		return ZERO;
 	}
 
-	public Comparator getComparator() {
-		return ComparableComparator.INSTANCE;
-	}
-	
-	public Object fromStringValue(String xml) {
-		return new Short(xml);
+	public Comparator<Short> getComparator() {
+		return getJavaTypeDescriptor().getComparator();
 	}
 
 }

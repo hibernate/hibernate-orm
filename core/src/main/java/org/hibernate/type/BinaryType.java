@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,28 +20,62 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.type;
 
+import java.util.Comparator;
+
+import org.hibernate.engine.SessionImplementor;
+import org.hibernate.type.descriptor.java.PrimitiveByteArrayTypeDescriptor;
+import org.hibernate.type.descriptor.sql.VarbinaryTypeDescriptor;
+
 /**
- * <tt>binary</tt>: A type that maps an SQL VARBINARY to a Java byte[].
+ * A type that maps between a {@link java.sql.Types#NUMERIC NUMERIC} and {@code byte[]}
+ *
  * @author Gavin King
+ * @author Steve Ebersole
  */
-public class BinaryType extends AbstractBynaryType {
+public class BinaryType
+		extends AbstractSingleColumnStandardBasicType<byte[]>
+		implements VersionType<byte[]> {
 
-	protected Object toExternalFormat(byte[] bytes) {
-		return bytes;
+	public static final BinaryType INSTANCE = new BinaryType();
+
+	public String getName() {
+		return "binary";
 	}
 
-	protected byte[] toInternalFormat(Object bytes) {
-		return (byte[]) bytes;
+	public BinaryType() {
+		super( VarbinaryTypeDescriptor.INSTANCE, PrimitiveByteArrayTypeDescriptor.INSTANCE );
 	}
 
-	public Class getReturnedClass() {
-		return byte[].class;
+	@Override
+	public String[] getRegistrationKeys() {
+		return new String[] { getName(), "byte[]", byte[].class.getName() };
 	}
 
-	public String getName() { return "binary"; }
+	/**
+	 * {@inheritDoc}
+	 */
+	public byte[] seed(SessionImplementor session) {
+		// Note : simply returns null for seed() and next() as the only known
+		// 		application of binary types for versioning is for use with the
+		// 		TIMESTAMP datatype supported by Sybase and SQL Server, which
+		// 		are completely db-generated values...
+		return null;
+	}
 
+	/**
+	 * {@inheritDoc}
+	 */
+	public byte[] next(byte[] current, SessionImplementor session) {
+		return current;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public Comparator<byte[]> getComparator() {
+		return PrimitiveByteArrayTypeDescriptor.INSTANCE.getComparator();
+	}
 }

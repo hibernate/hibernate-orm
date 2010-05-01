@@ -44,6 +44,7 @@ import org.hibernate.mapping.TypeDef;
 import org.hibernate.mapping.AuxiliaryDatabaseObject;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.FetchProfile;
+import org.hibernate.type.TypeResolver;
 
 /**
  * A collection of mappings from classes and collections to relational database tables.  Represents a single
@@ -60,6 +61,12 @@ import org.hibernate.mapping.FetchProfile;
  * @author Steve Ebersole
  */
 public interface Mappings {
+	/**
+	 * Retrieve the type resolver in effect.
+	 *
+	 * @return The type resolver.
+	 */
+	public TypeResolver getTypeResolver();
 
 	/**
 	 * Get the current naming strategy.

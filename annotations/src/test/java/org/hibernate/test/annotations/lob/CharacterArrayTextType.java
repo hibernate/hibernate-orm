@@ -25,55 +25,24 @@
  */
 package org.hibernate.test.annotations.lob;
 
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-
-import org.hibernate.HibernateException;
+import org.hibernate.type.AbstractSingleColumnStandardBasicType;
+import org.hibernate.type.descriptor.java.CharacterArrayTypeDescriptor;
+import org.hibernate.type.descriptor.sql.LongVarcharTypeDescriptor;
 
 /**
- * A type that maps an SQL LONGVARCHAR to a Java Character [].
+ * A type that maps JDBC {@link java.sql.Types#LONGVARCHAR LONGVARCHAR} and {@code Character[]}.
  * 
  * @author Strong Liu
  */
-public class CharacterArrayTextType extends PrimitiveCharacterArrayTextType {
-	
-	public Class getReturnedClass() {
-		return Character[].class;
+public class CharacterArrayTextType extends AbstractSingleColumnStandardBasicType<Character[]> {
+	public static final CharacterArrayTextType INSTANCE = new CharacterArrayTextType();
+
+	public CharacterArrayTextType() {
+		super( LongVarcharTypeDescriptor.INSTANCE, CharacterArrayTypeDescriptor.INSTANCE );
 	}
 
-	@Override
-	public Object get(ResultSet rs, String name) throws HibernateException,
-			SQLException {
-		char[] text = (char[]) super.get(rs, name);
-		if (text == null)
-			return null;
-		return wrapPrimitive(text);
+	public String getName() {
+		// todo name these annotation types for addition to the registry
+		return null;
 	}
-
-	@Override
-	public void set(PreparedStatement st, Object value, int index)
-			throws HibernateException, SQLException {
-		Character[] cs = (Character[]) value;
-		super.set(st, unwrapNonPrimitive(cs), index);
-	}
-
-	private Character[] wrapPrimitive(char[] bytes) {
-		int length = bytes.length;
-		Character[] result = new Character[length];
-		for (int index = 0; index < length; index++) {
-			result[index] = Character.valueOf(bytes[index]);
-		}
-		return result;
-	}
-
-	private char[] unwrapNonPrimitive(Character[] bytes) {
-		int length = bytes.length;
-		char[] result = new char[length];
-		for (int i = 0; i < length; i++) {
-			result[i] = bytes[i].charValue();
-		}
-		return result;
-	}
-
 }

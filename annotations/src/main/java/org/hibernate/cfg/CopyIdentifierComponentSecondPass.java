@@ -82,7 +82,7 @@ public class CopyIdentifierComponentSecondPass implements SecondPass {
 				//property.setOptional( property.isOptional() );
 				property.setPersistentClass( component.getOwner() );
 				property.setPropertyAccessorName( referencedProperty.getPropertyAccessorName() );
-				SimpleValue value = new SimpleValue( component.getTable() );
+				SimpleValue value = new SimpleValue( mappings, component.getTable() );
 				property.setValue( value );
 				final SimpleValue referencedValue = (SimpleValue) referencedProperty.getValue();
 				value.setTypeName( referencedValue.getTypeName() );

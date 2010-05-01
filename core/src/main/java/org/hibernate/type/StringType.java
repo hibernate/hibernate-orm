@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,60 +20,47 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.type;
 
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Types;
-
 import org.hibernate.dialect.Dialect;
+import org.hibernate.type.descriptor.java.StringTypeDescriptor;
+import org.hibernate.type.descriptor.sql.VarcharTypeDescriptor;
 
 /**
- * <tt>string</tt>: A type that maps an SQL VARCHAR to a Java String.
+ * A type that maps between {@link java.sql.Types#VARCHAR VARCHAR} and {@link String}
+ *
  * @author Gavin King
+ * @author Steve Ebersole
  */
-public class StringType extends ImmutableType implements DiscriminatorType {
+public class StringType
+		extends AbstractSingleColumnStandardBasicType<String>
+		implements DiscriminatorType<String> {
 
-	public Object get(ResultSet rs, String name) throws SQLException {
-		return rs.getString(name);
+	public static final StringType INSTANCE = new StringType();
+
+	public StringType() {
+		super( VarcharTypeDescriptor.INSTANCE, StringTypeDescriptor.INSTANCE );
 	}
 
-	public Class getReturnedClass() {
-		return String.class;
+	public String getName() {
+		return "string";
 	}
 
-	public void set(PreparedStatement st, Object value, int index) throws SQLException {
-		st.setString(index, (String) value);
+	@Override
+	protected boolean registerUnderJavaType() {
+		return true;
 	}
 
-	public int sqlType() {
-		return Types.VARCHAR;
+	public String objectToSQLString(String value, Dialect dialect) throws Exception {
+		return '\'' + value + '\'';
 	}
 
-	public String getName() { return "string"; }
-
-	public String objectToSQLString(Object value, Dialect dialect) throws Exception {
-		return '\'' + (String) value + '\'';
-	}
-
-	public Object stringToObject(String xml) throws Exception {
+	public String stringToObject(String xml) throws Exception {
 		return xml;
 	}
 
-	public String toString(Object value) {
-		return (String) value;
+	public String toString(String value) {
+		return value;
 	}
-
-	public Object fromStringValue(String xml) {
-		return xml;
-	}
-
 }
-
-
-
-
-

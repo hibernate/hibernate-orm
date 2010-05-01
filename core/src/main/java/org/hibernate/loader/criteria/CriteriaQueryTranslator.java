@@ -56,8 +56,8 @@ import org.hibernate.persister.entity.Loadable;
 import org.hibernate.persister.entity.PropertyMapping;
 import org.hibernate.persister.entity.Queryable;
 import org.hibernate.type.AssociationType;
+import org.hibernate.type.StringRepresentableType;
 import org.hibernate.type.Type;
-import org.hibernate.type.NullableType;
 import org.hibernate.util.ArrayHelper;
 import org.hibernate.util.StringHelper;
 
@@ -548,8 +548,8 @@ public class CriteriaQueryTranslator implements CriteriaQuery {
 				}
 				
 				// Convert the string value into the proper type.
-				if ( type instanceof NullableType ) {
-					NullableType nullableType = ( NullableType ) type;
+				if ( type instanceof StringRepresentableType ) {
+					StringRepresentableType nullableType = (StringRepresentableType) type;
 					value = nullableType.fromStringValue( stringValue );
 				}
 				else {

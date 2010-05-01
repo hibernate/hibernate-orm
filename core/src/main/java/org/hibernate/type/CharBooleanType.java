@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,74 +20,42 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.type;
 
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Types;
-
-import org.hibernate.HibernateException;
-import org.hibernate.dialect.Dialect;
-
+import org.hibernate.type.descriptor.java.BooleanTypeDescriptor;
+import org.hibernate.type.descriptor.sql.CharTypeDescriptor;
 
 /**
  * Superclass for types that map Java boolean to SQL CHAR(1).
+ *
  * @author Gavin King
+ *
+ * @deprecated Use the {@link AbstractStandardBasicType} approach instead
  */
 public abstract class CharBooleanType extends BooleanType {
+	private final String stringValueTrue;
+	private final String stringValueFalse;
 
-	protected abstract String getTrueString();
-	protected abstract String getFalseString();
+	protected CharBooleanType(char characterValueTrue, char characterValueFalse) {
+		super( CharTypeDescriptor.INSTANCE, new BooleanTypeDescriptor( characterValueTrue, characterValueFalse ) );
 
-	public Object get(ResultSet rs, String name) throws SQLException {
-		String code = rs.getString(name);
-		if ( code==null || code.length()==0 ) {
-			return null;
-		}
-		else {
-			return getTrueString().equalsIgnoreCase( code.trim() ) ? 
-					Boolean.TRUE : Boolean.FALSE;
-		}
+		stringValueTrue = String.valueOf( characterValueTrue );
+		stringValueFalse = String.valueOf( characterValueFalse );
 	}
 
-	public void set(PreparedStatement st, Object value, int index)
-	throws SQLException {
-		st.setString( index, toCharacter(value) );
-
+	/**
+	 * @deprecated Pass the true/false values into constructor instead.
+	 */
+	protected final String getTrueString() {
+		return stringValueTrue;
 	}
 
-	public int sqlType() {
-		return Types.CHAR;
-	}
-
-	private String toCharacter(Object value) {
-		return ( (Boolean) value ).booleanValue() ? getTrueString() : getFalseString();
-	}
-
-	public String objectToSQLString(Object value, Dialect dialect) throws Exception {
-		return "'" + toCharacter(value) + "'";
-	}
-
-	public Object stringToObject(String xml) throws Exception {
-		if ( getTrueString().equalsIgnoreCase(xml) ) {
-			return Boolean.TRUE;
-		}
-		else if ( getFalseString().equalsIgnoreCase(xml) ) {
-			return Boolean.FALSE;
-		}
-		else {
-			throw new HibernateException("Could not interpret: " + xml);
-		}
+	/**
+	 * @deprecated Pass the true/false values into constructor instead.
+	 */
+	protected final String getFalseString() {
+		return stringValueFalse;
 	}
 
 }
-
-
-
-
-
-
-

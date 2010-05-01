@@ -24,18 +24,20 @@
  */
 package org.hibernate.util;
 
+import java.io.Serializable;
 import java.util.Comparator;
 
 /**
  * Delegates to Comparable
+ *
  * @author Gavin King
+ * @author Steve Ebersole
  */
-public class ComparableComparator implements Comparator {
-
-	public int compare(Object x, Object y) {
-		return ( (Comparable) x ).compareTo(y);
-	}
-	
+public class ComparableComparator implements Comparator<Comparable>, Serializable {
 	public static final Comparator INSTANCE = new ComparableComparator();
 
+	@SuppressWarnings({ "unchecked" })
+	public int compare(Comparable one, Comparable another) {
+		return one.compareTo( another );
+	}
 }

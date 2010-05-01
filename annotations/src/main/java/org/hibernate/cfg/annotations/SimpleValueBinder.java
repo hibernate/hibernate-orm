@@ -295,7 +295,7 @@ public class SimpleValueBinder {
 		if ( table == null ) {
 			table = columns[0].getTable();
 		}
-		simpleValue = new SimpleValue( table );
+		simpleValue = new SimpleValue( mappings, table );
 
 		linkWithValue();
 

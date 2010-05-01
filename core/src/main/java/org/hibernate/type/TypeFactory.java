@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,145 +20,146 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.type;
 
 import java.io.Serializable;
-import java.math.BigDecimal;
-import java.math.BigInteger;
-import java.sql.Blob;
-import java.sql.Clob;
-import java.sql.Time;
-import java.sql.Timestamp;
-import java.util.Calendar;
-import java.util.Collections;
 import java.util.Comparator;
-import java.util.GregorianCalendar;
-import java.util.HashMap;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
-import java.util.TimeZone;
 
-import org.hibernate.Hibernate;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.classic.Lifecycle;
+import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.SessionImplementor;
-import org.hibernate.intercept.LazyPropertyInitializer;
-import org.hibernate.property.BackrefPropertyAccessor;
 import org.hibernate.tuple.StandardProperty;
 import org.hibernate.usertype.CompositeUserType;
-import org.hibernate.usertype.UserType;
 import org.hibernate.usertype.ParameterizedType;
+import org.hibernate.usertype.UserType;
 import org.hibernate.util.ReflectHelper;
 
 /**
  * Used internally to obtain instances of <tt>Type</tt>. Applications should use static methods
  * and constants on <tt>org.hibernate.Hibernate</tt>.
  *
- * @see org.hibernate.Hibernate
  * @author Gavin King
+ * @author Steve Ebersole
  */
-public final class TypeFactory {
+@SuppressWarnings({ "unchecked" })
+public final class TypeFactory implements Serializable {
+	private static final Logger log = LoggerFactory.getLogger( TypeFactory.class );
 
-	private static final Map BASIC_TYPES;
+	private final TypeScopeImpl typeScope = new TypeScopeImpl();
 
-	static {
-		HashMap basics = new HashMap();
-		basics.put( boolean.class.getName(), Hibernate.BOOLEAN );
-		basics.put( long.class.getName(), Hibernate.LONG );
-		basics.put( short.class.getName(), Hibernate.SHORT );
-		basics.put( int.class.getName(), Hibernate.INTEGER );
-		basics.put( byte.class.getName(), Hibernate.BYTE );
-		basics.put( float.class.getName(), Hibernate.FLOAT );
-		basics.put( double.class.getName(), Hibernate.DOUBLE );
-		basics.put( char.class.getName(), Hibernate.CHARACTER );
-		basics.put( Hibernate.CHARACTER.getName(), Hibernate.CHARACTER );
-		basics.put( Hibernate.INTEGER.getName(), Hibernate.INTEGER );
-		basics.put( Hibernate.STRING.getName(), Hibernate.STRING );
-		basics.put( Hibernate.DATE.getName(), Hibernate.DATE );
-		basics.put( Hibernate.TIME.getName(), Hibernate.TIME );
-		basics.put( Hibernate.TIMESTAMP.getName(), Hibernate.TIMESTAMP );
-		basics.put( "dbtimestamp", new DbTimestampType() );
-		basics.put( Hibernate.LOCALE.getName(), Hibernate.LOCALE );
-		basics.put( Hibernate.CALENDAR.getName(), Hibernate.CALENDAR );
-		basics.put( Hibernate.CALENDAR_DATE.getName(), Hibernate.CALENDAR_DATE );
-		basics.put( Hibernate.CURRENCY.getName(), Hibernate.CURRENCY );
-		basics.put( Hibernate.TIMEZONE.getName(), Hibernate.TIMEZONE );
-		basics.put( Hibernate.CLASS.getName(), Hibernate.CLASS );
-		basics.put( Hibernate.TRUE_FALSE.getName(), Hibernate.TRUE_FALSE );
-		basics.put( Hibernate.YES_NO.getName(), Hibernate.YES_NO );
-		basics.put( Hibernate.BINARY.getName(), Hibernate.BINARY );
-		basics.put( Hibernate.IMAGE.getName(), Hibernate.IMAGE );
-		basics.put( Hibernate.TEXT.getName(), Hibernate.TEXT );
-		basics.put( Hibernate.MATERIALIZED_BLOB.getName(), Hibernate.MATERIALIZED_BLOB );
-		basics.put( Hibernate.MATERIALIZED_CLOB.getName(), Hibernate.MATERIALIZED_CLOB );
-		basics.put( Hibernate.BLOB.getName(), Hibernate.BLOB );
-		basics.put( Hibernate.CLOB.getName(), Hibernate.CLOB );
-		basics.put( Hibernate.BIG_DECIMAL.getName(), Hibernate.BIG_DECIMAL );
-		basics.put( Hibernate.BIG_INTEGER.getName(), Hibernate.BIG_INTEGER );
-		basics.put( Hibernate.SERIALIZABLE.getName(), Hibernate.SERIALIZABLE );
-		basics.put( Hibernate.OBJECT.getName(), Hibernate.OBJECT );
-		basics.put( Boolean.class.getName(), Hibernate.BOOLEAN );
-		basics.put( Long.class.getName(), Hibernate.LONG );
-		basics.put( Short.class.getName(), Hibernate.SHORT );
-		basics.put( Integer.class.getName(), Hibernate.INTEGER );
-		basics.put( Byte.class.getName(), Hibernate.BYTE );
-		basics.put( Float.class.getName(), Hibernate.FLOAT );
-		basics.put( Double.class.getName(), Hibernate.DOUBLE );
-		basics.put( Character.class.getName(), Hibernate.CHARACTER );
-		basics.put( String.class.getName(), Hibernate.STRING );
-		basics.put( java.util.Date.class.getName(), Hibernate.TIMESTAMP );
-		basics.put( Time.class.getName(), Hibernate.TIME );
-		basics.put( Timestamp.class.getName(), Hibernate.TIMESTAMP );
-		basics.put( java.sql.Date.class.getName(), Hibernate.DATE );
-		basics.put( BigDecimal.class.getName(), Hibernate.BIG_DECIMAL );
-		basics.put( BigInteger.class.getName(), Hibernate.BIG_INTEGER );
-		basics.put( Locale.class.getName(), Hibernate.LOCALE );
-		basics.put( Calendar.class.getName(), Hibernate.CALENDAR );
-		basics.put( GregorianCalendar.class.getName(), Hibernate.CALENDAR );
-		if ( CurrencyType.CURRENCY_CLASS != null ) {
-			basics.put( CurrencyType.CURRENCY_CLASS.getName(), Hibernate.CURRENCY );
+	public static interface TypeScope extends Serializable {
+		public SessionFactoryImplementor resolveFactory();
+	}
+
+	private static class TypeScopeImpl implements TypeFactory.TypeScope {
+		private SessionFactoryImplementor factory;
+
+		public void injectSessionFactory(SessionFactoryImplementor factory) {
+			if ( factory != null ) {
+				log.warn( "Scoping types to session factory7 after already scoped" );
+			}
+			this.factory = factory;
 		}
-		basics.put( TimeZone.class.getName(), Hibernate.TIMEZONE );
-		basics.put( Object.class.getName(), Hibernate.OBJECT );
-		basics.put( Class.class.getName(), Hibernate.CLASS );
-		basics.put( byte[].class.getName(), Hibernate.BINARY );
-		basics.put( "byte[]", Hibernate.BINARY );
-		basics.put( Byte[].class.getName(), Hibernate.WRAPPER_BINARY );
-		basics.put( "Byte[]", Hibernate.WRAPPER_BINARY );
-		basics.put( char[].class.getName(), Hibernate.CHAR_ARRAY );
-		basics.put( "char[]", Hibernate.CHAR_ARRAY );
-		basics.put( Character[].class.getName(), Hibernate.CHARACTER_ARRAY );
-		basics.put( "Character[]", Hibernate.CHARACTER_ARRAY );
-		basics.put( Blob.class.getName(), Hibernate.BLOB );
-		basics.put( Clob.class.getName(), Hibernate.CLOB );
-		basics.put( Serializable.class.getName(), Hibernate.SERIALIZABLE );
 
-		Type type = new AdaptedImmutableType(Hibernate.DATE);
-		basics.put( type.getName(), type );
-		type = new AdaptedImmutableType(Hibernate.TIME);
-		basics.put( type.getName(), type );
-		type = new AdaptedImmutableType(Hibernate.TIMESTAMP);
-		basics.put( type.getName(), type );
-		type = new AdaptedImmutableType( new DbTimestampType() );
-		basics.put( type.getName(), type );
-		type = new AdaptedImmutableType(Hibernate.CALENDAR);
-		basics.put( type.getName(), type );
-		type = new AdaptedImmutableType(Hibernate.CALENDAR_DATE);
-		basics.put( type.getName(), type );
-		type = new AdaptedImmutableType(Hibernate.SERIALIZABLE);
-		basics.put( type.getName(), type );
-		type = new AdaptedImmutableType(Hibernate.BINARY);
-		basics.put( type.getName(), type );
-
-		BASIC_TYPES = Collections.unmodifiableMap( basics );
+		public SessionFactoryImplementor resolveFactory() {
+			if ( factory == null ) {
+				throw new HibernateException( "SessionFactory for type scoping not yet known" );
+			}
+			return factory;
+		}
 	}
 
-	private TypeFactory() {
-		throw new UnsupportedOperationException();
+	public void injectSessionFactory(SessionFactoryImplementor factory) {
+		typeScope.injectSessionFactory( factory );
 	}
+
+	public Type byClass(Class clazz, Properties parameters) {
+		if ( Type.class.isAssignableFrom( clazz ) ) {
+			return type( (Class<Type>) clazz, parameters );
+		}
+
+		if ( CompositeUserType.class.isAssignableFrom( clazz ) ) {
+			return customComponent( (Class<CompositeUserType>) clazz, parameters );
+		}
+
+		if ( UserType.class.isAssignableFrom( clazz ) ) {
+			return custom( (Class<UserType>) clazz, parameters );
+		}
+
+		if ( Lifecycle.class.isAssignableFrom( clazz ) ) {
+			// not really a many-to-one association *necessarily*
+			return new ManyToOneType( clazz.getName() );
+		}
+
+		if ( Serializable.class.isAssignableFrom( clazz ) ) {
+			return serializable( clazz );
+		}
+
+		return null;
+	}
+
+	public Type type(Class<Type> typeClass, Properties parameters) {
+		try {
+			Type type = typeClass.newInstance();
+			injectParameters( type, parameters );
+			return type;
+		}
+		catch (Exception e) {
+			throw new MappingException( "Could not instantiate Type: " + typeClass.getName(), e );
+		}
+	}
+
+	public static void injectParameters(Object type, Properties parameters) {
+		if ( ParameterizedType.class.isInstance( type ) ) {
+			( (ParameterizedType) type ).setParameterValues(parameters);
+		}
+		else if ( parameters!=null && !parameters.isEmpty() ) {
+			throw new MappingException( "type is not parameterized: " + type.getClass().getName() );
+		}
+	}
+
+	public static CompositeCustomType customComponent(Class<CompositeUserType> typeClass, Properties parameters) {
+		try {
+			CompositeUserType userType = typeClass.newInstance();
+			injectParameters( userType, parameters );
+			return new CompositeCustomType( userType );
+		}
+		catch ( Exception e ) {
+			throw new MappingException( "Unable to instantiate custom type: " + typeClass.getName(), e );
+		}
+	}
+
+	public static CustomType custom(Class<UserType> typeClass, Properties parameters) {
+		try {
+			UserType userType = typeClass.newInstance();
+			injectParameters( userType, parameters );
+			return new CustomType( userType );
+		}
+		catch ( Exception e ) {
+			throw new MappingException( "Unable to instantiate custom type: " + typeClass.getName(), e );
+		}
+	}
+
+	/**
+	 * Build a {@link SerializableType} from the given {@link Serializable} class.
+	 *
+	 * @param serializableClass The {@link Serializable} class.
+	 * @param <T> The actual class type (extends Serializable)
+	 *
+	 * @return The built {@link SerializableType}
+	 */
+	public static <T extends Serializable> SerializableType<T> serializable(Class<T> serializableClass) {
+		return new SerializableType<T>( serializableClass );
+	}
+
 
 	/**
 	 * A one-to-one association type for the given class
@@ -245,68 +246,6 @@ public final class TypeFactory {
 	}
 
 	/**
-	 * Given the name of a Hibernate basic type, return an instance of
-	 * <tt>org.hibernate.type.Type</tt>.
-	 */
-	public static Type basic(String name) {
-		return (Type) BASIC_TYPES.get( name );
-	}
-
-	/**
-	 * Uses heuristics to deduce a Hibernate type given a string naming the type or Java class.
-	 * Return an instance of <tt>org.hibernate.type.Type</tt>.
-	 */
-	public static Type heuristicType(String typeName) throws MappingException {
-		return heuristicType( typeName, null );
-	}
-
-	/**
-	 * Uses heuristics to deduce a Hibernate type given a string naming the type or Java class.
-	 * Return an instance of <tt>org.hibernate.type.Type</tt>.
-	 */
-	public static Type heuristicType(String typeName, Properties parameters)
-			throws MappingException {
-		Type type = TypeFactory.basic( typeName );
-		if ( type == null ) {
-			Class typeClass;
-			try {
-				typeClass = ReflectHelper.classForName( typeName );
-			}
-			catch (ClassNotFoundException cnfe) {
-				typeClass = null;
-			}
-			if ( typeClass != null ) {
-				if ( Type.class.isAssignableFrom( typeClass ) ) {
-					try {
-						type = (Type) typeClass.newInstance();
-					}
-					catch (Exception e) {
-						throw new MappingException(
-								"Could not instantiate Type: " + typeClass.getName(),
-								e
-							);
-					}
-					injectParameters(type, parameters);
-				}
-				else if ( CompositeUserType.class.isAssignableFrom( typeClass ) ) {
-					type = new CompositeCustomType( typeClass, parameters );
-				}
-				else if ( UserType.class.isAssignableFrom( typeClass ) ) {
-					type = new CustomType( typeClass, parameters );
-				}
-				else if ( Lifecycle.class.isAssignableFrom( typeClass ) ) {
-					type = Hibernate.entity( typeClass );
-				}
-				else if ( Serializable.class.isAssignableFrom( typeClass ) ) {
-					type = Hibernate.serializable( typeClass );
-				}
-			}
-		}
-		return type;
-
-	}
-
-	/**
 	 * The legacy contract.
 	 *
 	 * @deprecated Use {@link #customCollection(String, java.util.Properties, String, String, boolean)} instead
@@ -384,20 +323,8 @@ public final class TypeFactory {
 		return new SortedSetType( role, propertyRef, comparator, embedded );
 	}
 
-	public static void injectParameters(Object type, Properties parameters) {
-		if (type instanceof ParameterizedType) {
-			( (ParameterizedType) type ).setParameterValues(parameters);
-		}
-		else if ( parameters!=null && !parameters.isEmpty() ) {
-			throw new MappingException(
-					"type is not parameterized: " +
-					type.getClass().getName()
-				);
-		}
-	}
 
-
-	// convenience methods relating to operations across arrays of types...
+	// convenience methods relating to operations across arrays of types ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	/**
 	 * Deep copy a series of values from one array to another...
@@ -406,7 +333,9 @@ public final class TypeFactory {
 	 * @param types The value types
 	 * @param copy an array indicating which values to include in the copy
 	 * @param target The array into which to copy the values
-	 * @param session The orginating session
+	 * @param session The originating session
+	 *
+	 * @deprecated Use {@link TypeHelper#deepCopy} instead
 	 */
 	public static void deepCopy(
 			final Object[] values,
@@ -414,18 +343,7 @@ public final class TypeFactory {
 			final boolean[] copy,
 			final Object[] target,
 			final SessionImplementor session) {
-		for ( int i = 0; i < types.length; i++ ) {
-			if ( copy[i] ) {
-				if ( values[i] == LazyPropertyInitializer.UNFETCHED_PROPERTY
-					|| values[i] == BackrefPropertyAccessor.UNKNOWN ) {
-					target[i] = values[i];
-				}
-				else {
-					target[i] = types[i].deepCopy( values[i], session.getEntityMode(), session
-						.getFactory() );
-				}
-			}
-		}
+		TypeHelper.deepCopy( values, types, copy, target, session );
 	}
 
 	/**
@@ -433,18 +351,15 @@ public final class TypeFactory {
 	 *
 	 * @param row The values
 	 * @param types The value types
-	 * @param session The orginating session
+	 * @param session The originating session
+	 *
+	 * @deprecated Use {@link TypeHelper#beforeAssemble} instead
 	 */
 	public static void beforeAssemble(
 			final Serializable[] row,
 			final Type[] types,
 			final SessionImplementor session) {
-		for ( int i = 0; i < types.length; i++ ) {
-			if ( row[i] != LazyPropertyInitializer.UNFETCHED_PROPERTY
-				&& row[i] != BackrefPropertyAccessor.UNKNOWN ) {
-				types[i].beforeAssemble( row[i], session );
-			}
-		}
+		TypeHelper.beforeAssemble( row, types, session );
 	}
 
 	/**
@@ -452,25 +367,19 @@ public final class TypeFactory {
 	 *
 	 * @param row The values
 	 * @param types The value types
-	 * @param session The orginating session
+	 * @param session The originating session
 	 * @param owner The entity "owning" the values
+	 *
 	 * @return The assembled state
+	 *
+	 * @deprecated Use {@link TypeHelper#assemble} instead
 	 */
 	public static Object[] assemble(
 			final Serializable[] row,
 			final Type[] types,
 			final SessionImplementor session,
 			final Object owner) {
-		Object[] assembled = new Object[row.length];
-		for ( int i = 0; i < types.length; i++ ) {
-			if ( row[i] == LazyPropertyInitializer.UNFETCHED_PROPERTY || row[i] == BackrefPropertyAccessor.UNKNOWN ) {
-				assembled[i] = row[i];
-			}
-			else {
-				assembled[i] = types[i].assemble( row[i], session, owner );
-			}
-		}
-		return assembled;
+		return TypeHelper.assemble( row, types, session, owner );
 	}
 
 	/**
@@ -478,10 +387,13 @@ public final class TypeFactory {
 	 *
 	 * @param row The values
 	 * @param types The value types
-	 * @param nonCacheable An array indicating which values to include in the disassemled state
-	 * @param session The orginating session
+	 * @param nonCacheable An array indicating which values to include in the disassembled state
+	 * @param session The originating session
 	 * @param owner The entity "owning" the values
+	 *
 	 * @return The disassembled state
+	 *
+	 * @deprecated Use {@link TypeHelper#disassemble} instead
 	 */
 	public static Serializable[] disassemble(
 			final Object[] row,
@@ -489,19 +401,7 @@ public final class TypeFactory {
 			final boolean[] nonCacheable,
 			final SessionImplementor session,
 			final Object owner) {
-		Serializable[] disassembled = new Serializable[row.length];
-		for ( int i = 0; i < row.length; i++ ) {
-			if ( nonCacheable!=null && nonCacheable[i] ) {
-				disassembled[i] = LazyPropertyInitializer.UNFETCHED_PROPERTY;
-			}
-			else if ( row[i] == LazyPropertyInitializer.UNFETCHED_PROPERTY || row[i] == BackrefPropertyAccessor.UNKNOWN ) {
-				disassembled[i] = (Serializable) row[i];
-			}
-			else {
-				disassembled[i] = types[i].disassemble( row[i], session, owner );
-			}
-		}
-		return disassembled;
+		return TypeHelper.disassemble( row, types, nonCacheable, session, owner );
 	}
 
 	/**
@@ -510,10 +410,13 @@ public final class TypeFactory {
 	 * @param original The source of the state
 	 * @param target The target into which to replace the source values.
 	 * @param types The value types
-	 * @param session The orginating session
+	 * @param session The originating session
 	 * @param owner The entity "owning" the values
 	 * @param copyCache A map representing a cache of already replaced state
+	 *
 	 * @return The replaced state
+	 *
+	 * @deprecated Use {@link TypeHelper#replace} instead
 	 */
 	public static Object[] replace(
 			final Object[] original,
@@ -522,17 +425,7 @@ public final class TypeFactory {
 			final SessionImplementor session,
 			final Object owner,
 			final Map copyCache) {
-		Object[] copied = new Object[original.length];
-		for ( int i = 0; i < types.length; i++ ) {
-			if ( original[i] == LazyPropertyInitializer.UNFETCHED_PROPERTY
-				|| original[i] == BackrefPropertyAccessor.UNKNOWN ) {
-				copied[i] = target[i];
-			}
-			else {
-				copied[i] = types[i].replace( original[i], target[i], session, owner, copyCache );
-			}
-		}
-		return copied;
+		return TypeHelper.replace( original, target, types, session, owner, copyCache );
 	}
 
 	/**
@@ -541,11 +434,14 @@ public final class TypeFactory {
 	 * @param original The source of the state
 	 * @param target The target into which to replace the source values.
 	 * @param types The value types
-	 * @param session The orginating session
+	 * @param session The originating session
 	 * @param owner The entity "owning" the values
 	 * @param copyCache A map representing a cache of already replaced state
 	 * @param foreignKeyDirection FK directionality to be applied to the replacement
+	 *
 	 * @return The replaced state
+	 *
+	 * @deprecated Use {@link TypeHelper#replace} instead
 	 */
 	public static Object[] replace(
 			final Object[] original,
@@ -555,34 +451,27 @@ public final class TypeFactory {
 			final Object owner,
 			final Map copyCache,
 			final ForeignKeyDirection foreignKeyDirection) {
-		Object[] copied = new Object[original.length];
-		for ( int i = 0; i < types.length; i++ ) {
-			if ( original[i] == LazyPropertyInitializer.UNFETCHED_PROPERTY
-				|| original[i] == BackrefPropertyAccessor.UNKNOWN ) {
-				copied[i] = target[i];
-			}
-			else {
-				copied[i] = types[i].replace( original[i], target[i], session, owner, copyCache, foreignKeyDirection );
-			}
-		}
-		return copied;
+		return TypeHelper.replace( original, target, types, session, owner, copyCache, foreignKeyDirection );
 	}
 
 	/**
 	 * Apply the {@link Type#replace} operation across a series of values, as
 	 * long as the corresponding {@link Type} is an association.
 	 * <p/>
-	 * If the corresponding type is a component type, then apply {@link #replaceAssociations}
-	 * accross the component subtypes but do not replace the component value itself.
+	 * If the corresponding type is a component type, then apply {@link Type#replace}
+	 * across the component subtypes but do not replace the component value itself.
 	 *
 	 * @param original The source of the state
 	 * @param target The target into which to replace the source values.
 	 * @param types The value types
-	 * @param session The orginating session
+	 * @param session The originating session
 	 * @param owner The entity "owning" the values
 	 * @param copyCache A map representing a cache of already replaced state
 	 * @param foreignKeyDirection FK directionality to be applied to the replacement
+	 *
 	 * @return The replaced state
+	 *
+	 * @deprecated Use {@link TypeHelper#replaceAssociations} instead
 	 */
 	public static Object[] replaceAssociations(
 			final Object[] original,
@@ -592,29 +481,7 @@ public final class TypeFactory {
 			final Object owner,
 			final Map copyCache,
 			final ForeignKeyDirection foreignKeyDirection) {
-		Object[] copied = new Object[original.length];
-		for ( int i = 0; i < types.length; i++ ) {
-			if ( original[i] == LazyPropertyInitializer.UNFETCHED_PROPERTY
-					|| original[i] == BackrefPropertyAccessor.UNKNOWN ) {
-				copied[i] = target[i];
-			}
-			else if ( types[i].isComponentType() ) {
-				// need to extract the component values and check for subtype replacements...
-				AbstractComponentType componentType = ( AbstractComponentType ) types[i];
-				Type[] subtypes = componentType.getSubtypes();
-				Object[] origComponentValues = original[i] == null ? new Object[subtypes.length] : componentType.getPropertyValues( original[i], session );
-				Object[] targetComponentValues = target[i] == null ? new Object[subtypes.length] : componentType.getPropertyValues( target[i], session );
-				replaceAssociations( origComponentValues, targetComponentValues, subtypes, session, null, copyCache, foreignKeyDirection );
-				copied[i] = target[i];
-			}
-			else if ( !types[i].isAssociationType() ) {
-				copied[i] = target[i];
-			}
-			else {
-				copied[i] = types[i].replace( original[i], target[i], session, owner, copyCache, foreignKeyDirection );
-			}
-		}
-		return copied;
+		return TypeHelper.replaceAssociations( original, target, types, session, owner, copyCache, foreignKeyDirection );
 	}
 
 	/**
@@ -629,7 +496,10 @@ public final class TypeFactory {
 	 * @param includeColumns Columns to be included in the dirty checking, per property
 	 * @param anyUninitializedProperties Does the entity currently hold any uninitialized property values?
 	 * @param session The session from which the dirty check request originated.
+	 *
 	 * @return Array containing indices of the dirty properties, or null if no properties considered dirty.
+	 *
+	 * @deprecated Use {@link TypeHelper#findDirty} instead
 	 */
 	public static int[] findDirty(
 			final StandardProperty[] properties,
@@ -638,30 +508,8 @@ public final class TypeFactory {
 			final boolean[][] includeColumns,
 			final boolean anyUninitializedProperties,
 			final SessionImplementor session) {
-		int[] results = null;
-		int count = 0;
-		int span = properties.length;
-
-		for ( int i = 0; i < span; i++ ) {
-			final boolean dirty = currentState[i] != LazyPropertyInitializer.UNFETCHED_PROPERTY
-					&& properties[i].isDirtyCheckable( anyUninitializedProperties )
-					&& properties[i].getType().isDirty( previousState[i], currentState[i], includeColumns[i], session );
-			if ( dirty ) {
-				if ( results == null ) {
-					results = new int[span];
-				}
-				results[count++] = i;
-			}
-		}
-
-		if ( count == 0 ) {
-			return null;
-		}
-		else {
-			int[] trimmed = new int[count];
-			System.arraycopy( results, 0, trimmed, 0, count );
-			return trimmed;
-		}
+		return TypeHelper.findDirty( properties, currentState, previousState,
+				includeColumns, anyUninitializedProperties, session );
 	}
 
 	/**
@@ -676,7 +524,10 @@ public final class TypeFactory {
 	 * @param includeColumns Columns to be included in the mod checking, per property
 	 * @param anyUninitializedProperties Does the entity currently hold any uninitialized property values?
 	 * @param session The session from which the dirty check request originated.
+	 *
 	 * @return Array containing indices of the modified properties, or null if no properties considered modified.
+	 *
+	 * @deprecated Use {@link TypeHelper#findModified} instead
 	 */
 	public static int[] findModified(
 			final StandardProperty[] properties, 
@@ -685,31 +536,8 @@ public final class TypeFactory {
 			final boolean[][] includeColumns,
 			final boolean anyUninitializedProperties,
 			final SessionImplementor session) {
-		int[] results = null;
-		int count = 0;
-		int span = properties.length;
-
-		for ( int i = 0; i < span; i++ ) {
-			final boolean modified = currentState[i]!=LazyPropertyInitializer.UNFETCHED_PROPERTY
-					&& properties[i].isDirtyCheckable(anyUninitializedProperties)
-					&& properties[i].getType().isModified( previousState[i], currentState[i], includeColumns[i], session );
-
-			if ( modified ) {
-				if ( results == null ) {
-					results = new int[span];
-				}
-				results[count++] = i;
-			}
-		}
-
-		if ( count == 0 ) {
-			return null;
-		}
-		else {
-			int[] trimmed = new int[count];
-			System.arraycopy( results, 0, trimmed, 0, count );
-			return trimmed;
-		}
+		return TypeHelper.findModified( properties, currentState, previousState,
+				includeColumns, anyUninitializedProperties, session );
 	}
 
 }

@@ -20,7 +20,7 @@ public class CustomBlobType implements UserType {
 	 */
 	public Object nullSafeGet(ResultSet rs, String names[], Object owner) throws SQLException {
 		// cast just to make sure...
-		return ( byte[] ) Hibernate.BINARY.nullSafeGet( rs, names );
+		return ( byte[] ) Hibernate.BINARY.nullSafeGet( rs, names[0] );
 	}
 
 	/**

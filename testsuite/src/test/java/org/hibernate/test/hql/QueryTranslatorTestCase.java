@@ -477,7 +477,7 @@ public abstract class QueryTranslatorTestCase extends FunctionalTestCase {
 				assertEquals( "Column names were different", oldmeta.getColumnName(i), newmeta.getColumnName(i) );
 				assertEquals( "Column types were different", oldmeta.getColumnType(i), newmeta.getColumnType(i) );
 				assertEquals( "Java types were different", oldmeta.getColumnClassName(i), newmeta.getColumnClassName(i) );
-				types[i] = TypeFactory.basic( oldmeta.getColumnClassName(i) );
+				types[i] = sfi().getTypeResolver().basic( oldmeta.getColumnClassName(i) );
 			}
 		}
 		catch( Throwable t ) {

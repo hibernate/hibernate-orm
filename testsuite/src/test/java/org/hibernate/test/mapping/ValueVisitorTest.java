@@ -7,6 +7,8 @@ package org.hibernate.test.mapping;
 import junit.framework.Test;
 import junit.framework.TestSuite;
 
+import org.hibernate.cfg.Configuration;
+import org.hibernate.cfg.Mappings;
 import org.hibernate.mapping.Any;
 import org.hibernate.mapping.Array;
 import org.hibernate.mapping.Bag;
@@ -170,23 +172,26 @@ public class ValueVisitorTest extends UnitTestCase {
 	};
 
 	public void testProperCallbacks() {
+		final Mappings mappings = new Configuration().createMappings();
+		final Table tbl = new Table();
+		final RootClass rootClass = new RootClass();
 
 		ValueVisitor vv = new ValueVisitorValidator();
 		
-		new Any(new Table()).accept(vv);
-		new Array(new RootClass()).accept(vv);
-		new Bag(new RootClass()).accept(vv);
-		new Component(new RootClass()).accept(vv);
-		new DependantValue(null,null).accept(vv);
-		new IdentifierBag(null).accept(vv);
-		new List(null).accept(vv);
-		new ManyToOne(null).accept(vv);
-		new Map(null).accept(vv);
-		new OneToMany(null).accept(vv);
-		new OneToOne(null, new RootClass() ).accept(vv);
-		new PrimitiveArray(null).accept(vv);
-		new Set(null).accept(vv);
-		new SimpleValue().accept(vv);
+		new Any(mappings, tbl).accept(vv);
+		new Array( rootClass ).accept(vv);
+		new Bag( rootClass ).accept(vv);
+		new Component( mappings, rootClass ).accept(vv);
+		new DependantValue( mappings, tbl, null ).accept(vv);
+		new IdentifierBag( rootClass ).accept(vv);
+		new List( rootClass ).accept(vv);
+		new ManyToOne( mappings, tbl ).accept(vv);
+		new Map( rootClass ).accept(vv);
+		new OneToMany( rootClass ).accept(vv);
+		new OneToOne( mappings, tbl, rootClass ).accept(vv);
+		new PrimitiveArray( rootClass ).accept(vv);
+		new Set( rootClass ).accept(vv);
+		new SimpleValue( mappings ).accept(vv);
 	
 		
 	}

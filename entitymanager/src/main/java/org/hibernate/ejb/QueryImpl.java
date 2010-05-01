@@ -55,6 +55,7 @@ import org.hibernate.QueryParameterException;
 import org.hibernate.TypeMismatchException;
 import org.hibernate.SQLQuery;
 import org.hibernate.ejb.util.LockModeTypeHelper;
+import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.query.NamedParameterDescriptor;
 import org.hibernate.engine.query.OrdinalParameterDescriptor;
 import org.hibernate.hql.QueryExecutionRequestException;
@@ -104,7 +105,7 @@ public class QueryImpl<X> extends org.hibernate.ejb.AbstractQueryImpl<X> impleme
 			Class javaType = namedParameterTypeRedefinition.get( name );
 			if ( javaType != null && mightNeedRedefinition( javaType ) ) {
 				descriptor.resetExpectedType(
-						TypeFactory.heuristicType( javaType.getName() )
+						sfi().getTypeResolver().heuristicType( javaType.getName() )
 				);
 			}
 			else if ( descriptor.getExpectedType() != null ) {
@@ -138,6 +139,10 @@ public class QueryImpl<X> extends org.hibernate.ejb.AbstractQueryImpl<X> impleme
 		}
 
 		this.parameters = java.util.Collections.unmodifiableSet( parameters );
+	}
+
+	private SessionFactoryImplementor sfi() {
+		return (SessionFactoryImplementor) getEntityManager().getFactory().getSessionFactory();
 	}
 
 	private boolean mightNeedRedefinition(Class javaType) {

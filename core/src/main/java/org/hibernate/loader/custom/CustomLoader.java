@@ -583,7 +583,7 @@ public class CustomLoader extends Loader {
 			int columnType = resultSetMetaData.getColumnType( columnPos );
 			int scale = resultSetMetaData.getScale( columnPos );
 			int precision = resultSetMetaData.getPrecision( columnPos );
-			return TypeFactory.heuristicType(
+			return factory.getTypeResolver().heuristicType(
 					factory.getDialect().getHibernateTypeName(
 							columnType,
 							precision,

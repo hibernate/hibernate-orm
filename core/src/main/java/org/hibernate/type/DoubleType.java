@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,62 +20,48 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.type;
 
 import java.io.Serializable;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Types;
 
 import org.hibernate.dialect.Dialect;
+import org.hibernate.type.descriptor.java.DoubleTypeDescriptor;
 
 /**
- * <tt>double</tt>: A type that maps an SQL DOUBLE to a Java Double.
+ * A type that maps between {@link java.sql.Types#DOUBLE DOUBLE} and {@link Double}
+ *
  * @author Gavin King
+ * @author Steve Ebersole
  */
-public class DoubleType extends PrimitiveType {
+public class DoubleType extends AbstractSingleColumnStandardBasicType<Double> implements PrimitiveType<Double> {
+	public static final DoubleType INSTANCE = new DoubleType();
+
+	@SuppressWarnings({ "UnnecessaryBoxing" })
+	public static final Double ZERO = Double.valueOf( 0.0 );
+
+	public DoubleType() {
+		super( org.hibernate.type.descriptor.sql.DoubleTypeDescriptor.INSTANCE, DoubleTypeDescriptor.INSTANCE );
+	}
+
+	public String getName() {
+		return "double";
+	}
+
+	@Override
+	public String[] getRegistrationKeys() {
+		return new String[] { getName(), double.class.getName(), Double.class.getName() };
+	}
 
 	public Serializable getDefaultValue() {
-		return new Double(0.0);
-	}
-	
-	public Object get(ResultSet rs, String name) throws SQLException {
-		return new Double( rs.getDouble(name) );
+		return ZERO;
 	}
 
 	public Class getPrimitiveClass() {
 		return double.class;
 	}
 
-	public Class getReturnedClass() {
-		return Double.class;
+	public String objectToSQLString(Double value, Dialect dialect) throws Exception {
+		return toString( value );
 	}
-
-	public void set(PreparedStatement st, Object value, int index)
-		throws SQLException {
-
-		st.setDouble( index, ( (Double) value ).doubleValue() );
-	}
-
-	public int sqlType() {
-		return Types.DOUBLE;
-	}
-	public String getName() { return "double"; }
-
-	public String objectToSQLString(Object value, Dialect dialect) throws Exception {
-		return value.toString();
-	}
-
-	public Object fromStringValue(String xml) {
-		return new Double(xml);
-	}
-
 }
-
-
-
-
-

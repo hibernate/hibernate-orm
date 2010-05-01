@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 
 import org.hibernate.MappingException;
+import org.hibernate.cfg.Mappings;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.ForeignKeyDirection;
 import org.hibernate.type.SpecialOneToOneType;
@@ -46,8 +47,8 @@ public class OneToOne extends ToOne {
 	private String propertyName;
 	private String entityName;
 
-	public OneToOne(Table table, PersistentClass owner) throws MappingException {
-		super(table);
+	public OneToOne(Mappings mappings, Table table, PersistentClass owner) throws MappingException {
+		super( mappings, table );
 		this.identifier = owner.getKey();
 		this.entityName = owner.getEntityName();
 	}

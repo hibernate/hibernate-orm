@@ -185,7 +185,7 @@ public class LiteralProcessor implements HqlSqlTokenTypes {
 		}
 		Type type;
 		try {
-			type = TypeFactory.heuristicType( value.getClass().getName() );
+			type = walker.getSessionFactoryHelper().getFactory().getTypeResolver().heuristicType( value.getClass().getName() );
 		}
 		catch ( MappingException me ) {
 			throw new QueryException( me );

@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,111 +20,48 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.type;
 
-import java.sql.Date;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Types;
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
+import java.util.Date;
 
-import org.hibernate.EntityMode;
-import org.hibernate.Hibernate;
-import org.hibernate.HibernateException;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.type.descriptor.java.JdbcDateTypeDescriptor;
 
 /**
- * <tt>date</tt>: A type that maps an SQL DATE to a Java Date.
+ * A type that maps between {@link java.sql.Types#DATE DATE} and {@link java.sql.Date}
+ *
  * @author Gavin King
+ * @author Steve Ebersole
  */
-public class DateType extends MutableType implements IdentifierType, LiteralType {
+public class DateType
+		extends AbstractSingleColumnStandardBasicType<Date>
+		implements IdentifierType<Date>, LiteralType<Date> {
 
-	private static final String DATE_FORMAT = "dd MMMM yyyy";
+	public static final DateType INSTANCE = new DateType();
 
-	public Object get(ResultSet rs, String name) throws SQLException {
-		return rs.getDate(name);
+	public DateType() {
+		super( org.hibernate.type.descriptor.sql.DateTypeDescriptor.INSTANCE, JdbcDateTypeDescriptor.INSTANCE );
 	}
 
-	public Class getReturnedClass() {
-		return java.util.Date.class;
+	public String getName() {
+		return "date";
 	}
 
-	public void set(PreparedStatement st, Object value, int index) throws SQLException {
-
-		Date sqlDate;
-		if ( value instanceof Date) {
-			sqlDate = (Date) value;
-		}
-		else {
-			sqlDate = new Date( ( (java.util.Date) value ).getTime() );
-		}
-		st.setDate(index, sqlDate);
+	@Override
+	protected boolean registerUnderJavaType() {
+		return true;
 	}
 
-	public int sqlType() {
-		return Types.DATE;
+	public String objectToSQLString(Date value, Dialect dialect) throws Exception {
+		final java.sql.Date jdbcDate = java.sql.Date.class.isInstance( value )
+				? ( java.sql.Date ) value
+				: new java.sql.Date( value.getTime() );
+		// TODO : use JDBC date literal escape syntax? -> {d 'date-string'} in yyyy-mm-dd format
+		return StringType.INSTANCE.objectToSQLString( jdbcDate.toString(), dialect );
 	}
 
-	public boolean isEqual(Object x, Object y) {
-
-		if (x==y) return true;
-		if (x==null || y==null) return false;
-
-		java.util.Date xdate = (java.util.Date) x;
-		java.util.Date ydate = (java.util.Date) y;
-		
-		if ( xdate.getTime()==ydate.getTime() ) return true;
-		
-		Calendar calendar1 = java.util.Calendar.getInstance();
-		Calendar calendar2 = java.util.Calendar.getInstance();
-		calendar1.setTime( xdate );
-		calendar2.setTime( ydate );
-
-		return Hibernate.CALENDAR_DATE.isEqual(calendar1, calendar2);
+	public Date stringToObject(String xml) {
+		return fromString( xml );
 	}
-
-	public int getHashCode(Object x, EntityMode entityMode) {
-		Calendar calendar = java.util.Calendar.getInstance();
-		calendar.setTime( (java.util.Date) x );
-		return Hibernate.CALENDAR_DATE.getHashCode(calendar, entityMode);
-	}
-	
-	public String getName() { return "date"; }
-
-	public String toString(Object val) {
-		return new SimpleDateFormat(DATE_FORMAT).format( (java.util.Date) val );
-	}
-
-	public Object deepCopyNotNull(Object value) {
-		return new Date( ( (java.util.Date) value ).getTime() );
-	}
-
-	public Object stringToObject(String xml) throws Exception {
-		return DateFormat.getDateInstance().parse(xml);
-	}
-
-	public String objectToSQLString(Object value, Dialect dialect) throws Exception {
-		return '\'' + new Date( ( (java.util.Date) value ).getTime() ).toString() + '\'';
-	}
-
-	public Object fromStringValue(String xml) throws HibernateException {
-		try {
-			return new SimpleDateFormat(DATE_FORMAT).parse(xml);
-		}
-		catch (ParseException pe) {
-			throw new HibernateException("could not parse XML", pe);
-		}
-	}
-	
 }
-
-
-
-
-

@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,7 +20,6 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.type;
 
@@ -31,9 +30,9 @@ import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Map;
-import java.util.Properties;
 
 import org.dom4j.Node;
+
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
@@ -42,9 +41,9 @@ import org.hibernate.engine.Mapping;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.usertype.EnhancedUserType;
+import org.hibernate.usertype.LoggableUserType;
 import org.hibernate.usertype.UserType;
 import org.hibernate.usertype.UserVersionType;
-import org.hibernate.usertype.LoggableUserType;
 
 /**
  * Adapts {@link UserType} to the generic {@link Type} interface, in order
@@ -60,37 +59,11 @@ public class CustomType extends AbstractType implements IdentifierType, Discrimi
 	private final int[] types;
 	private final boolean customLogging;
 
-	public CustomType(Class userTypeClass, Properties parameters) throws MappingException {
-
-		if ( !UserType.class.isAssignableFrom( userTypeClass ) ) {
-			throw new MappingException(
-					"Custom type does not implement UserType: " +
-					userTypeClass.getName()
-				);
-		}
-
-		name = userTypeClass.getName();
-
-		try {
-			userType = ( UserType ) userTypeClass.newInstance();
-		}
-		catch ( InstantiationException ie ) {
-			throw new MappingException(
-					"Cannot instantiate custom type: " +
-					userTypeClass.getName()
-				);
-		}
-		catch ( IllegalAccessException iae ) {
-			throw new MappingException(
-					"IllegalAccessException trying to instantiate custom type: " +
-					userTypeClass.getName()
-				);
-		}
-
-        TypeFactory.injectParameters( userType, parameters );
-		types = userType.sqlTypes();
-
-		customLogging = LoggableUserType.class.isAssignableFrom( userTypeClass );
+	public CustomType(UserType userType) throws MappingException {
+		this.userType = userType;
+		this.name = userType.getClass().getName();
+		this.types = userType.sqlTypes();
+		this.customLogging = LoggableUserType.class.isInstance( userType );
 	}
 
 	public UserType getUserType() {

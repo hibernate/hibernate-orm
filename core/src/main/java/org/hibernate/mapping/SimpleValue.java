@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,7 +20,6 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.mapping;
 
@@ -31,6 +30,7 @@ import java.util.Properties;
 
 import org.hibernate.FetchMode;
 import org.hibernate.MappingException;
+import org.hibernate.cfg.Mappings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.Mapping;
 import org.hibernate.id.IdentifierGenerator;
@@ -48,6 +48,8 @@ import org.hibernate.util.ReflectHelper;
 public class SimpleValue implements KeyValue {
 	public static final String DEFAULT_ID_GEN_STRATEGY = "assigned";
 
+	private final Mappings mappings;
+
 	private final List columns = new ArrayList();
 	private String typeName;
 	private Properties identifierGeneratorProperties;
@@ -58,6 +60,19 @@ public class SimpleValue implements KeyValue {
 	private boolean alternateUniqueKey;
 	private Properties typeParameters;
 	private boolean cascadeDeleteEnabled;
+
+	public SimpleValue(Mappings mappings) {
+		this.mappings = mappings;
+	}
+
+	public SimpleValue(Mappings mappings, Table table) {
+		this( mappings );
+		this.table = table;
+	}
+
+	public Mappings getMappings() {
+		return mappings;
+	}
 
 	public boolean isCascadeDeleteEnabled() {
 		return cascadeDeleteEnabled;
@@ -104,12 +119,6 @@ public class SimpleValue implements KeyValue {
 	public void setTable(Table table) {
 		this.table = table;
 	}
-	
-	public SimpleValue(Table table) {
-		this.table = table;
-	}
-
-	public SimpleValue() {}
 
 	public void createForeignKey() throws MappingException {}
 
@@ -278,7 +287,7 @@ public class SimpleValue implements KeyValue {
 		if (typeName==null) {
 			throw new MappingException("No type name");
 		}
-		Type result = TypeFactory.heuristicType(typeName, typeParameters);
+		Type result = mappings.getTypeResolver().heuristicType(typeName, typeParameters);
 		if (result==null) {
 			String msg = "Could not determine type for: " + typeName;
 			if(table != null){

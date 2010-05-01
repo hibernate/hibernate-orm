@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,72 +20,54 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.type;
 
 import java.io.Serializable;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Types;
 
-import org.hibernate.MappingException;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.type.descriptor.java.CharacterTypeDescriptor;
+import org.hibernate.type.descriptor.sql.CharTypeDescriptor;
 
 /**
- * <tt>character</tt>: A type that maps an SQL CHAR(1) to a Java Character.
+ * A type that maps between {@link java.sql.Types#CHAR CHAR(1)} and {@link Character}
+ *
  * @author Gavin King
+ * @author Steve Ebersole
  */
-public class CharacterType extends PrimitiveType implements DiscriminatorType {
+public class CharacterType
+		extends AbstractSingleColumnStandardBasicType<Character>
+		implements PrimitiveType<Character>, DiscriminatorType<Character> {
+
+	public static final CharacterType INSTANCE = new CharacterType();
+
+	public CharacterType() {
+		super( CharTypeDescriptor.INSTANCE, CharacterTypeDescriptor.INSTANCE );
+	}
+
+	public String getName() {
+		return "character";
+	}
+
+	@Override
+	public String[] getRegistrationKeys() {
+		return new String[] { getName(), char.class.getName(), Character.class.getName() };
+	}
 
 	public Serializable getDefaultValue() {
-		throw new UnsupportedOperationException("not a valid id type");
-	}
-	
-	public Object get(ResultSet rs, String name) throws SQLException {
-		String str = rs.getString(name);
-		if (str==null) {
-			return null;
-		}
-		else {
-			return new Character( str.charAt(0) );
-		}
+		throw new UnsupportedOperationException( "not a valid id type" );
 	}
 
 	public Class getPrimitiveClass() {
 		return char.class;
 	}
 
-	public Class getReturnedClass() {
-		return Character.class;
+	public String objectToSQLString(Character value, Dialect dialect) {
+		return '\'' + toString( value ) + '\'';
 	}
 
-	public void set(PreparedStatement st, Object value, int index) throws SQLException {
-		st.setString( index, (value).toString() );
-	}
-
-	public int sqlType() {
-		return Types.CHAR;
-	}
-	public String getName() { return "character"; }
-
-	public String objectToSQLString(Object value, Dialect dialect) throws Exception {
-		return '\'' + value.toString() + '\'';
-	}
-
-	public Object stringToObject(String xml) throws Exception {
-		if ( xml.length() != 1 ) throw new MappingException("multiple or zero characters found parsing string");
-		return new Character( xml.charAt(0) );
-	}
-
-	public Object fromStringValue(String xml) {
-		return new Character( xml.charAt(0) );
+	public Character stringToObject(String xml) {
+		return fromString( xml );
 	}
 
 }
-
-
-
-
-

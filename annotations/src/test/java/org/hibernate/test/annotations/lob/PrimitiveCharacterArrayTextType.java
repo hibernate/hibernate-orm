@@ -25,44 +25,24 @@
  */
 package org.hibernate.test.annotations.lob;
 
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-
-import org.hibernate.HibernateException;
-import org.hibernate.type.TextType;
+import org.hibernate.type.AbstractSingleColumnStandardBasicType;
+import org.hibernate.type.descriptor.java.PrimitiveCharacterArrayTypeDescriptor;
+import org.hibernate.type.descriptor.sql.LongVarcharTypeDescriptor;
 
 /**
- * A type that maps an SQL LONGVARCHAR to a Java char [].
+ * A type that maps JDBC {@link java.sql.Types#LONGVARCHAR LONGVARCHAR} and {@code char[]}.
  * 
  * @author Strong Liu
  */
-public class PrimitiveCharacterArrayTextType extends TextType {
-	public Class getReturnedClass() {
-		return char[].class;
+public class PrimitiveCharacterArrayTextType extends AbstractSingleColumnStandardBasicType<char[]> {
+	public static final PrimitiveCharacterArrayTextType INSTANCE = new PrimitiveCharacterArrayTextType();
+
+	public PrimitiveCharacterArrayTextType() {
+		super( LongVarcharTypeDescriptor.INSTANCE, PrimitiveCharacterArrayTypeDescriptor.INSTANCE );
 	}
 
-	@Override
-	public Object get(ResultSet rs, String name) throws HibernateException,
-			SQLException {
-		String text = (String) super.get(rs, name);
-		if (text == null)
-			return null;
-		return text.toCharArray();
+	public String getName() {
+		// todo name these annotation types for addition to the registry
+		return null;
 	}
-
-	@Override
-	public void set(PreparedStatement st, Object value, int index)
-			throws HibernateException, SQLException {
-		char[] cs = (char[]) value;
-		String text = String.valueOf(cs);
-
-		super.set(st, text, index);
-	}
-
-	@Override
-	public String toString(Object val) {
-		return String.valueOf(val);
-	}
-
 }

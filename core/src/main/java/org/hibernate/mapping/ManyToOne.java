@@ -29,6 +29,7 @@ import java.util.Iterator;
 import java.util.Map;
 
 import org.hibernate.MappingException;
+import org.hibernate.cfg.Mappings;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeFactory;
@@ -41,8 +42,8 @@ public class ManyToOne extends ToOne {
 	private boolean ignoreNotFound;
 	private boolean isLogicalOneToOne;
 	
-	public ManyToOne(Table table) {
-		super(table);
+	public ManyToOne(Mappings mappings, Table table) {
+		super( mappings, table );
 	}
 
 	public Type getType() throws MappingException {

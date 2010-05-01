@@ -44,6 +44,7 @@ import java.io.IOException;
 public class ClobProxy implements InvocationHandler {
 	private static final Class[] PROXY_INTERFACES = new Class[] { Clob.class, ClobImplementer.class };
 
+	private String string;
 	private Reader reader;
 	private long length;
 	private boolean needsReset = false;
@@ -56,6 +57,7 @@ public class ClobProxy implements InvocationHandler {
 	 * @see #generateProxy(String)
 	 */
 	protected ClobProxy(String string) {
+		this.string = string;
 		reader = new StringReader(string);
 		length = string.length();
 	}
@@ -86,21 +88,33 @@ public class ClobProxy implements InvocationHandler {
 		return reader;
 	}
 
+	protected String getSubString(long pos, int length) {
+		if ( string == null ) {
+			throw new UnsupportedOperationException( "Clob was not created from string; cannot substring" );
+		}
+		// naive impl...
+		return string.substring( (int)pos-1, (int)(pos+length-1) );
+	}
+
 	/**
 	 * {@inheritDoc}
 	 *
 	 * @throws UnsupportedOperationException if any methods other than {@link Clob#length()},
 	 * {@link Clob#getAsciiStream()}, or {@link Clob#getCharacterStream()} are invoked.
 	 */
+	@SuppressWarnings({ "UnnecessaryBoxing" })
 	public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
 		if ( "length".equals( method.getName() ) ) {
-			return new Long( getLength() );
+			return Long.valueOf( getLength() );
 		}
 		if ( "getAsciiStream".equals( method.getName() ) ) {
 			return getAsciiStream();
 		}
 		if ( "getCharacterStream".equals( method.getName() ) ) {
 			return getCharacterStream();
+		}
+		if ( "getSubString".equals( method.getName() ) ) {
+			return getSubString( (Long)args[0], (Integer)args[1] );
 		}
 		if ( "free".equals( method.getName() ) ) {
 			reader.close();

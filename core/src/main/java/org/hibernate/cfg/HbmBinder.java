@@ -411,7 +411,7 @@ public final class HbmBinder {
 			java.util.Map inheritedMetas) throws MappingException {
 		String propertyName = idNode.attributeValue( "name" );
 
-		SimpleValue id = new SimpleValue( entity.getTable() );
+		SimpleValue id = new SimpleValue( mappings, entity.getTable() );
 		entity.setIdentifier( id );
 
 		// if ( propertyName == null || entity.getPojoRepresentation() == null ) {
@@ -467,7 +467,7 @@ public final class HbmBinder {
 	private static void bindCompositeId(Element idNode, RootClass entity, Mappings mappings,
 			java.util.Map inheritedMetas) throws MappingException {
 		String propertyName = idNode.attributeValue( "name" );
-		Component id = new Component( entity );
+		Component id = new Component( mappings, entity );
 		entity.setIdentifier( id );
 		bindCompositeId( idNode, id, entity, propertyName, mappings, inheritedMetas );
 		if ( propertyName == null ) {
@@ -497,7 +497,7 @@ public final class HbmBinder {
 			String name, RootClass entity, java.util.Map inheritedMetas) {
 
 		String propertyName = subnode.attributeValue( "name" );
-		SimpleValue val = new SimpleValue( table );
+		SimpleValue val = new SimpleValue( mappings, table );
 		bindSimpleValue( subnode, val, false, propertyName, mappings );
 		if ( !val.isTypeSpecified() ) {
 			// this is either a <version/> tag with no type attribute,
@@ -530,7 +530,7 @@ public final class HbmBinder {
 
 	private static void bindDiscriminatorProperty(Table table, RootClass entity, Element subnode,
 			Mappings mappings) {
-		SimpleValue discrim = new SimpleValue( table );
+		SimpleValue discrim = new SimpleValue( mappings, table );
 		entity.setDiscriminator( discrim );
 		bindSimpleValue(
 				subnode,
@@ -930,7 +930,7 @@ public final class HbmBinder {
 
 		// KEY
 		Element keyNode = node.element( "key" );
-		SimpleValue key = new DependantValue( mytable, joinedSubclass.getIdentifier() );
+		SimpleValue key = new DependantValue( mappings, mytable, joinedSubclass.getIdentifier() );
 		joinedSubclass.setKey( key );
 		key.setCascadeDeleteEnabled( "cascade".equals( keyNode.attributeValue( "on-delete" ) ) );
 		bindSimpleValue( keyNode, key, false, joinedSubclass.getEntityName(), mappings );
@@ -995,7 +995,7 @@ public final class HbmBinder {
 
 		// KEY
 		Element keyNode = node.element( "key" );
-		SimpleValue key = new DependantValue( table, persistentClass.getIdentifier() );
+		SimpleValue key = new DependantValue( mappings, table, persistentClass.getIdentifier() );
 		join.setKey( key );
 		key.setCascadeDeleteEnabled( "cascade".equals( keyNode.attributeValue( "on-delete" ) ) );
 		bindSimpleValue( keyNode, key, false, persistentClass.getEntityName(), mappings );
@@ -1013,20 +1013,20 @@ public final class HbmBinder {
 
 			Value value = null;
 			if ( "many-to-one".equals( name ) ) {
-				value = new ManyToOne( table );
+				value = new ManyToOne( mappings, table );
 				bindManyToOne( subnode, (ManyToOne) value, propertyName, true, mappings );
 			}
 			else if ( "any".equals( name ) ) {
-				value = new Any( table );
+				value = new Any( mappings, table );
 				bindAny( subnode, (Any) value, true, mappings );
 			}
 			else if ( "property".equals( name ) ) {
-				value = new SimpleValue( table );
+				value = new SimpleValue( mappings, table );
 				bindSimpleValue( subnode, (SimpleValue) value, true, propertyName, mappings );
 			}
 			else if ( "component".equals( name ) || "dynamic-component".equals( name ) ) {
 				String subpath = StringHelper.qualify( path, propertyName );
-				value = new Component( join );
+				value = new Component( mappings, join );
 				bindComponent(
 						subnode,
 						(Component) value,
@@ -1648,7 +1648,7 @@ public final class HbmBinder {
 			Iterator iter = node.elementIterator( "meta-value" );
 			if ( iter.hasNext() ) {
 				HashMap values = new HashMap();
-				org.hibernate.type.Type metaType = TypeFactory.heuristicType( any.getMetaType() );
+				org.hibernate.type.Type metaType = mappings.getTypeResolver().heuristicType( any.getMetaType() );
 				while ( iter.hasNext() ) {
 					Element metaValue = (Element) iter.next();
 					try {
@@ -1820,7 +1820,7 @@ public final class HbmBinder {
 			if ( propertyName!=null ) {
 				throw new MappingException("cannot combine mapped=\"true\" with specified name");
 			}
-			Component mapper = new Component(persistentClass);
+			Component mapper = new Component( mappings, persistentClass );
 			bindComponent(
 					node,
 					mapper,
@@ -1921,7 +1921,7 @@ public final class HbmBinder {
 				value = collection;
 			}
 			else if ( "many-to-one".equals( name ) || "key-many-to-one".equals( name ) ) {
-				value = new ManyToOne( component.getTable() );
+				value = new ManyToOne( mappings, component.getTable() );
 				String relativePath;
 				if (isEmbedded) {
 					relativePath = propertyName;
@@ -1932,7 +1932,7 @@ public final class HbmBinder {
 				bindManyToOne( subnode, (ManyToOne) value, relativePath, isNullable, mappings );
 			}
 			else if ( "one-to-one".equals( name ) ) {
-				value = new OneToOne( component.getTable(), component.getOwner() );
+				value = new OneToOne( mappings, component.getTable(), component.getOwner() );
 				String relativePath;
 				if (isEmbedded) {
 					relativePath = propertyName;
@@ -1943,11 +1943,11 @@ public final class HbmBinder {
 				bindOneToOne( subnode, (OneToOne) value, relativePath, isNullable, mappings );
 			}
 			else if ( "any".equals( name ) ) {
-				value = new Any( component.getTable() );
+				value = new Any( mappings, component.getTable() );
 				bindAny( subnode, (Any) value, isNullable, mappings );
 			}
 			else if ( "property".equals( name ) || "key-property".equals( name ) ) {
-				value = new SimpleValue( component.getTable() );
+				value = new SimpleValue( mappings, component.getTable() );
 				String relativePath;
 				if (isEmbedded) {
 					relativePath = propertyName;
@@ -1960,7 +1960,7 @@ public final class HbmBinder {
 			else if ( "component".equals( name )
 				|| "dynamic-component".equals( name )
 				|| "nested-composite-element".equals( name ) ) {
-				value = new Component( component ); // a nested composite element
+				value = new Component( mappings, component ); // a nested composite element
 				bindComponent(
 						subnode,
 						(Component) value,
@@ -2155,26 +2155,26 @@ public final class HbmBinder {
 				value = collection;
 			}
 			else if ( "many-to-one".equals( name ) ) {
-				value = new ManyToOne( table );
+				value = new ManyToOne( mappings, table );
 				bindManyToOne( subnode, (ManyToOne) value, propertyName, nullable, mappings );
 			}
 			else if ( "any".equals( name ) ) {
-				value = new Any( table );
+				value = new Any( mappings, table );
 				bindAny( subnode, (Any) value, nullable, mappings );
 			}
 			else if ( "one-to-one".equals( name ) ) {
-				value = new OneToOne( table, persistentClass );
+				value = new OneToOne( mappings, table, persistentClass );
 				bindOneToOne( subnode, (OneToOne) value, propertyName, true, mappings );
 			}
 			else if ( "property".equals( name ) ) {
-				value = new SimpleValue( table );
+				value = new SimpleValue( mappings, table );
 				bindSimpleValue( subnode, (SimpleValue) value, nullable, propertyName, mappings );
 			}
 			else if ( "component".equals( name )
 				|| "dynamic-component".equals( name )
 				|| "properties".equals( name ) ) {
 				String subpath = StringHelper.qualify( entityName, propertyName );
-				value = new Component( persistentClass );
+				value = new Component( mappings, persistentClass );
 
 				bindComponent(
 						subnode,
@@ -2320,7 +2320,7 @@ public final class HbmBinder {
 
 		Element subnode = node.element( "list-index" );
 		if ( subnode == null ) subnode = node.element( "index" );
-		SimpleValue iv = new SimpleValue( list.getCollectionTable() );
+		SimpleValue iv = new SimpleValue( mappings, list.getCollectionTable() );
 		bindSimpleValue(
 				subnode,
 				iv,
@@ -2357,7 +2357,7 @@ public final class HbmBinder {
 		bindCollectionSecondPass( node, collection, persistentClasses, mappings, inheritedMetas );
 
 		Element subnode = node.element( "collection-id" );
-		SimpleValue id = new SimpleValue( collection.getCollectionTable() );
+		SimpleValue id = new SimpleValue( mappings, collection.getCollectionTable() );
 		bindSimpleValue(
 				subnode,
 				id,
@@ -2384,7 +2384,7 @@ public final class HbmBinder {
 			String name = subnode.getName();
 
 			if ( "index".equals( name ) || "map-key".equals( name ) ) {
-				SimpleValue value = new SimpleValue( map.getCollectionTable() );
+				SimpleValue value = new SimpleValue( mappings, map.getCollectionTable() );
 				bindSimpleValue(
 						subnode,
 						value,
@@ -2400,7 +2400,7 @@ public final class HbmBinder {
 				map.setIndexNodeName( subnode.attributeValue("node") );
 			}
 			else if ( "index-many-to-many".equals( name ) || "map-key-many-to-many".equals( name ) ) {
-				ManyToOne mto = new ManyToOne( map.getCollectionTable() );
+				ManyToOne mto = new ManyToOne( mappings, map.getCollectionTable() );
 				bindManyToOne(
 						subnode,
 						mto,
@@ -2412,7 +2412,7 @@ public final class HbmBinder {
 
 			}
 			else if ( "composite-index".equals( name ) || "composite-map-key".equals( name ) ) {
-				Component component = new Component( map );
+				Component component = new Component( mappings, map );
 				bindComposite(
 						subnode,
 						component,
@@ -2424,7 +2424,7 @@ public final class HbmBinder {
 				map.setIndex( component );
 			}
 			else if ( "index-many-to-any".equals( name ) ) {
-				Any any = new Any( map.getCollectionTable() );
+				Any any = new Any( mappings, map.getCollectionTable() );
 				bindAny( subnode, any, map.isOneToMany(), mappings );
 				map.setIndex( any );
 			}
@@ -2497,7 +2497,7 @@ public final class HbmBinder {
 				else {
 					keyVal = (KeyValue) collection.getOwner().getRecursiveProperty( propRef ).getValue();
 				}
-				SimpleValue key = new DependantValue( collection.getCollectionTable(), keyVal );
+				SimpleValue key = new DependantValue( mappings, collection.getCollectionTable(), keyVal );
 				key.setCascadeDeleteEnabled( "cascade"
 					.equals( subnode.attributeValue( "on-delete" ) ) );
 				bindSimpleValue(
@@ -2518,7 +2518,7 @@ public final class HbmBinder {
 
 			}
 			else if ( "element".equals( name ) ) {
-				SimpleValue elt = new SimpleValue( collection.getCollectionTable() );
+				SimpleValue elt = new SimpleValue( mappings, collection.getCollectionTable() );
 				collection.setElement( elt );
 				bindSimpleValue(
 						subnode,
@@ -2529,7 +2529,7 @@ public final class HbmBinder {
 					);
 			}
 			else if ( "many-to-many".equals( name ) ) {
-				ManyToOne element = new ManyToOne( collection.getCollectionTable() );
+				ManyToOne element = new ManyToOne( mappings, collection.getCollectionTable() );
 				collection.setElement( element );
 				bindManyToOne(
 						subnode,
@@ -2541,7 +2541,7 @@ public final class HbmBinder {
 				bindManyToManySubelements( collection, subnode, mappings );
 			}
 			else if ( "composite-element".equals( name ) ) {
-				Component element = new Component( collection );
+				Component element = new Component( mappings, collection );
 				collection.setElement( element );
 				bindComposite(
 						subnode,
@@ -2553,7 +2553,7 @@ public final class HbmBinder {
 					);
 			}
 			else if ( "many-to-any".equals( name ) ) {
-				Any element = new Any( collection.getCollectionTable() );
+				Any element = new Any( mappings, collection.getCollectionTable() );
 				collection.setElement( element );
 				bindAny( subnode, element, true, mappings );
 			}
@@ -3001,7 +3001,7 @@ public final class HbmBinder {
 			final String paramName = param.attributeValue( "name" );
 			final String paramType = param.attributeValue( "type" );
 			log.debug( "adding filter parameter : " + paramName + " -> " + paramType );
-			final Type heuristicType = TypeFactory.heuristicType( paramType );
+			final Type heuristicType = mappings.getTypeResolver().heuristicType( paramType );
 			log.debug( "parameter heuristic type : " + heuristicType );
 			paramMappings.put( paramName, heuristicType );
 		}

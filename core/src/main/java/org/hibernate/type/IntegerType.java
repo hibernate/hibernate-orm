@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,78 +20,69 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.type;
 
 import java.io.Serializable;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Types;
 import java.util.Comparator;
 
-import org.hibernate.util.ComparableComparator;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.SessionImplementor;
+import org.hibernate.type.descriptor.java.IntegerTypeDescriptor;
 
 /**
- * <tt>integer</tt>: A type that maps an SQL INT to a Java Integer.
+ * A type that maps between {@link java.sql.Types#INTEGER INTEGER} and @link Integer}
+ *
  * @author Gavin King
+ * @author Steve Ebersole
  */
-public class IntegerType extends PrimitiveType implements DiscriminatorType, VersionType {
+public class IntegerType extends AbstractSingleColumnStandardBasicType<Integer>
+		implements PrimitiveType<Integer>, DiscriminatorType<Integer>, VersionType<Integer> {
 
-	private static final Integer ZERO = new Integer(0);
+	public static final IntegerType INSTANCE = new IntegerType();
+
+	@SuppressWarnings({ "UnnecessaryBoxing" })
+	public static final Integer ZERO = Integer.valueOf( 0 );
+
+	public IntegerType() {
+		super( org.hibernate.type.descriptor.sql.IntegerTypeDescriptor.INSTANCE, IntegerTypeDescriptor.INSTANCE );
+	}
+
+	public String getName() {
+		return "integer";
+	}
+
+	@Override
+	public String[] getRegistrationKeys() {
+		return new String[] { getName(), int.class.getName(), Integer.class.getName() };
+	}
 
 	public Serializable getDefaultValue() {
 		return ZERO;
-	}
-	
-	public Object get(ResultSet rs, String name) throws SQLException {
-		return new Integer( rs.getInt(name) );
 	}
 
 	public Class getPrimitiveClass() {
 		return int.class;
 	}
 
-	public Class getReturnedClass() {
-		return Integer.class;
+	public String objectToSQLString(Integer value, Dialect dialect) throws Exception {
+		return toString( value );
 	}
 
-	public void set(PreparedStatement st, Object value, int index)
-	throws SQLException {
-		st.setInt( index, ( (Integer) value ).intValue() );
+	public Integer stringToObject(String xml) {
+		return fromString( xml );
 	}
 
-	public int sqlType() {
-		return Types.INTEGER;
-	}
-
-	public String getName() { return "integer"; }
-
-	public String objectToSQLString(Object value, Dialect dialect) throws Exception {
-		return value.toString();
-	}
-
-	public Object stringToObject(String xml) throws Exception {
-		return new Integer(xml);
-	}
-
-	public Object next(Object current, SessionImplementor session) {
-		return new Integer( ( (Integer) current ).intValue() + 1 );
-	}
-
-	public Object seed(SessionImplementor session) {
+	public Integer seed(SessionImplementor session) {
 		return ZERO;
 	}
 
-	public Comparator getComparator() {
-		return ComparableComparator.INSTANCE;
-	}
-	
-	public Object fromStringValue(String xml) {
-		return new Integer(xml);
+	@SuppressWarnings({ "UnnecessaryBoxing", "UnnecessaryUnboxing" })
+	public Integer next(Integer current, SessionImplementor session) {
+		return Integer.valueOf( current.intValue() + 1 );
 	}
 
+	public Comparator<Integer> getComparator() {
+		return getJavaTypeDescriptor().getComparator();
+	}
 }

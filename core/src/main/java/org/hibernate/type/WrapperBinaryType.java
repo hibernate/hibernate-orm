@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,41 +20,28 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.type;
 
-import org.hibernate.HibernateException;
+import org.hibernate.type.descriptor.java.ByteArrayTypeDescriptor;
+import org.hibernate.type.descriptor.sql.VarbinaryTypeDescriptor;
 
 /**
+ * A type mapping {@link java.sql.Types#VARBINARY VARBINARY} and {@link Byte Byte[]}
+ * 
  * @author Emmanuel Bernard
+ * @author Steve Ebersole
  */
-public class WrapperBinaryType extends AbstractBynaryType {
-	protected Object toExternalFormat(byte[] bytes) {
-		if (bytes == null) return null;
-		int length = bytes.length;
-		Byte[] result = new Byte[length];
-		for ( int index = 0; index < length ; index++ ) {
-			result[index] = new Byte( bytes[index] );
-		}
-		return result;
+public class WrapperBinaryType extends AbstractSingleColumnStandardBasicType<Byte[]> {
+	public static final WrapperBinaryType INSTANCE = new WrapperBinaryType();
+
+	public WrapperBinaryType() {
+		super( VarbinaryTypeDescriptor.INSTANCE, ByteArrayTypeDescriptor.INSTANCE );
 	}
 
-	protected byte[] toInternalFormat(Object val) {
-		if (val == null) return null;
-		Byte[] bytes = (Byte[]) val;
-		int length = bytes.length;
-		byte[] result = new byte[length];
-		for ( int i = 0; i < length ; i++ ) {
-			if (bytes[i] == null)
-				throw new HibernateException("Unable to store an Byte[] when one of its element is null");
-			result[i] = bytes[i].byteValue();
-		}
-		return result;
-	}
-
-	public Class getReturnedClass() {
-		return Byte[].class;
+	@Override
+	public String[] getRegistrationKeys() {
+		return new String[] { getName(), "Byte[]", Byte[].class.getName() };
 	}
 
 	public String getName() {

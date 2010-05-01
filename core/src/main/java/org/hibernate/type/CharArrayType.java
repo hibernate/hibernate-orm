@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,27 +20,31 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.type;
 
+import org.hibernate.type.descriptor.java.PrimitiveCharacterArrayTypeDescriptor;
+import org.hibernate.type.descriptor.sql.VarcharTypeDescriptor;
+
 /**
- * put char[] into VARCHAR
+ * A type that maps between {@link java.sql.Types#VARCHAR VARCHAR} and {@code char[]}
+ *
  * @author Emmanuel Bernard
+ * @author Steve Ebersole
  */
-public class CharArrayType extends AbstractCharArrayType {
+public class CharArrayType extends AbstractSingleColumnStandardBasicType<char[]> {
+	public static final CharArrayType INSTANCE = new CharArrayType();
 
-	protected Object toExternalFormat(char[] chars) {
-		return chars;
+	public CharArrayType() {
+		super( VarcharTypeDescriptor.INSTANCE, PrimitiveCharacterArrayTypeDescriptor.INSTANCE );
 	}
 
-	protected char[] toInternalFormat(Object chars) {
-		return (char[]) chars;
+	public String getName() {
+		return "characters"; 
 	}
 
-	public Class getReturnedClass() {
-		return char[].class;
+	@Override
+	public String[] getRegistrationKeys() {
+		return new String[] { getName(), "char[]", char[].class.getName() };
 	}
-
-	public String getName() { return "characters"; }
 }

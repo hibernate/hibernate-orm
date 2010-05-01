@@ -427,7 +427,7 @@ public class WhereParser implements Parser {
 				) {
 					Type type;
 					try {
-						type = TypeFactory.heuristicType( constant.getClass().getName() );
+						type = q.getFactory().getTypeResolver().heuristicType( constant.getClass().getName() );
 					}
 					catch ( MappingException me ) {
 						throw new QueryException( me );

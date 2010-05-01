@@ -31,8 +31,8 @@ import org.dom4j.Element;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
-import org.hibernate.type.NullableType;
 import org.hibernate.type.Type;
+import org.hibernate.type.XmlRepresentableType;
 
 /**
  * @author Gavin King
@@ -64,7 +64,7 @@ public class PersistentMapElementHolder extends PersistentIndexedElementHolder {
 			Element subelement = element.addElement( persister.getElementNodeName() );
 			elementType.setToXMLNode( subelement, object, persister.getFactory() );
 			
-			String indexString = ( (NullableType) indexType ).toXMLString( index, persister.getFactory() );
+			String indexString = ( (XmlRepresentableType) indexType ).toXMLString( index, persister.getFactory() );
 			setIndex( subelement, indexNodeName, indexString );
 		}
 		
@@ -83,12 +83,10 @@ public class PersistentMapElementHolder extends PersistentIndexedElementHolder {
 			Element elem = (Element) elements.get(i/2);
 			Object object = elementType.fromXMLNode( elem, persister.getFactory() );
 			final String indexString = getIndex(elem, indexNodeName, i);
-			Object index = ( (NullableType) indexType ).fromXMLString( indexString, persister.getFactory() );
+			Object index = ( (XmlRepresentableType) indexType ).fromXMLString( indexString, persister.getFactory() );
 			result[i++] = indexType.disassemble( index, getSession(), null );
 			result[i++] = elementType.disassemble( object, getSession(), null );
 		}
 		return result;
 	}
-
-
 }

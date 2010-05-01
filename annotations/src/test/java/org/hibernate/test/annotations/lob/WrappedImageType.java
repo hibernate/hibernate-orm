@@ -1,11 +1,10 @@
-//$Id: $
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2009, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -21,46 +20,27 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.test.annotations.lob;
 
-import org.hibernate.type.ImageType;
+import org.hibernate.type.AbstractSingleColumnStandardBasicType;
+import org.hibernate.type.descriptor.java.ByteArrayTypeDescriptor;
+import org.hibernate.type.descriptor.sql.LongVarbinaryTypeDescriptor;
 
 /**
- * A type that maps an SQL LONGVARBINARY to Java Byte[].
+ * A type that maps JDBC {@link java.sql.Types#LONGVARBINARY LONGVARBINARY} and {@code Byte[]}
  * 
  * @author Strong Liu
  */
-public class WrappedImageType extends ImageType{
-	public Class getReturnedClass() {
-		return Byte[].class;
+public class WrappedImageType extends AbstractSingleColumnStandardBasicType<Byte[]> {
+	public static final WrappedImageType INSTANCE = new WrappedImageType();
+
+	public WrappedImageType() {
+		super( LongVarbinaryTypeDescriptor.INSTANCE, ByteArrayTypeDescriptor.INSTANCE );
 	}
 
-	protected Object toExternalFormat(byte[] bytes) {
-		if(bytes==null)return null;
-		return wrapPrimitive(bytes);
-	}
-
-	protected byte[] toInternalFormat(Object bytes) {
-		if(bytes==null)return null;
-		return unwrapNonPrimitive(( Byte[] ) bytes);
-	}
-	private Byte[] wrapPrimitive(byte[] bytes) {
-		int length = bytes.length;
-		Byte[] result = new Byte[length];
-		for ( int index = 0; index < length ; index++ ) {
-			result[index] = Byte.valueOf( bytes[index] );
-		}
-		return result;
-	}
-	
-	private byte[] unwrapNonPrimitive(Byte[] bytes) {
-		int length = bytes.length;
-		byte[] result = new byte[length];
-		for ( int i = 0; i < length ; i++ ) {
-			result[i] = bytes[i].byteValue();
-		}
-		return result;
+	public String getName() {
+		// todo name these annotation types for addition to the registry
+		return null;
 	}
 }

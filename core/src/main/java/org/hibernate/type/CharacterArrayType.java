@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,41 +20,31 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.type;
 
-import org.hibernate.HibernateException;
+import org.hibernate.type.descriptor.java.CharacterArrayTypeDescriptor;
+import org.hibernate.type.descriptor.sql.VarcharTypeDescriptor;
 
 /**
- * Bridge Character[] and VARCHAR
+ * A type that maps between {@link java.sql.Types#VARCHAR VARCHAR} and {@link Character Character[]}
+ *
  * @author Emmanuel Bernard
+ * @author Steve Ebersole
  */
-public class CharacterArrayType extends AbstractCharArrayType {
-	protected Object toExternalFormat(char[] chars) {
-		if (chars == null) return null;
-		Character[] characters = new Character[chars.length];
-		for (int i = 0 ; i < chars.length ; i++) {
-			characters[i] = new Character( chars[i] );
-		}
-		return characters;
+public class CharacterArrayType extends AbstractSingleColumnStandardBasicType<Character[]> {
+	public static final CharacterArrayType INSTANCE = new CharacterArrayType();
+
+	public CharacterArrayType() {
+		super( VarcharTypeDescriptor.INSTANCE, CharacterArrayTypeDescriptor.INSTANCE );
 	}
 
-	protected char[] toInternalFormat(Object value) {
-		if (value == null) return null;
-		Character[] characters = (Character[]) value;
-		char[] chars = new char[characters.length];
-		for (int i = 0 ; i < characters.length ; i++) {
-			if (characters[i] == null)
-				throw new HibernateException("Unable to store an Character[] when one of its element is null");
-			chars[i] = characters[i].charValue();
-		}
-		return chars;
+	public String getName() {
+		return "wrapper-characters";
 	}
 
-	public Class getReturnedClass() {
-		return Character[].class;
+	@Override
+	public String[] getRegistrationKeys() {
+		return new String[] { getName(), Character[].class.getName(), "Character[]" };
 	}
-
-	public String getName() { return "wrapper-characters"; }
 }

@@ -122,6 +122,7 @@ import org.hibernate.tool.hbm2ddl.SchemaValidator;
 import org.hibernate.transaction.TransactionFactory;
 import org.hibernate.type.AssociationType;
 import org.hibernate.type.Type;
+import org.hibernate.type.TypeResolver;
 import org.hibernate.util.CollectionHelper;
 import org.hibernate.util.ReflectHelper;
 import org.hibernate.util.EmptyIterator;
@@ -189,6 +190,7 @@ public final class SessionFactoryImpl implements SessionFactory, SessionFactoryI
 	private final transient QueryPlanCache queryPlanCache = new QueryPlanCache( this );
 	private final transient Cache cacheAccess = new CacheImpl();
 	private transient boolean isClosed = false;
+	private final transient TypeResolver typeResolver;
 
 	public SessionFactoryImpl(
 			Configuration cfg,
@@ -230,6 +232,8 @@ public final class SessionFactoryImpl implements SessionFactory, SessionFactoryI
 			public void sessionFactoryClosed(SessionFactory factory) {
 			}
 		};
+
+		this.typeResolver = cfg.getTypeResolver().scope( this );
 
 		this.filters = new HashMap();
 		this.filters.putAll( cfg.getFilterDefinitions() );
@@ -496,6 +500,10 @@ public final class SessionFactoryImpl implements SessionFactory, SessionFactoryI
 
 	public IdentifierGeneratorFactory getIdentifierGeneratorFactory() {
 		return null;
+	}
+
+	public TypeResolver getTypeResolver() {
+		return typeResolver;
 	}
 
 	private void registerEntityNameResolvers(EntityPersister persister) {

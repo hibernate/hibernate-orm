@@ -480,7 +480,7 @@ public abstract class AbstractQueryImpl implements Query {
 
 	private Type guessType(Class clazz) throws HibernateException {
 		String typename = clazz.getName();
-		Type type = TypeFactory.heuristicType(typename);
+		Type type = session.getFactory().getTypeResolver().heuristicType(typename);
 		boolean serializable = type!=null && type instanceof SerializableType;
 		if (type==null || serializable) {
 			try {

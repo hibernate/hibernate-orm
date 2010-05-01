@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,7 +20,6 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.type;
 
@@ -48,39 +47,13 @@ import org.hibernate.usertype.CompositeUserType;
  * Adapts <tt>CompositeUserType</tt> to <tt>Type</tt> interface
  * @author Gavin King
  */
-public class CompositeCustomType extends AbstractType
-	implements AbstractComponentType {
-
+public class CompositeCustomType extends AbstractType implements AbstractComponentType {
 	private final CompositeUserType userType;
 	private final String name;
 
-	public CompositeCustomType(Class userTypeClass, Properties parameters) 
-	throws MappingException {
-		name = userTypeClass.getName();
-
-		if ( !CompositeUserType.class.isAssignableFrom(userTypeClass) ) {
-			throw new MappingException( 
-					"Custom type does not implement CompositeUserType: " + 
-					userTypeClass.getName() 
-				);
-		}
-		
-		try {
-			userType = (CompositeUserType) userTypeClass.newInstance();
-		}
-		catch (InstantiationException ie) {
-			throw new MappingException( 
-					"Cannot instantiate custom type: " + 
-					userTypeClass.getName() 
-				);
-		}
-		catch (IllegalAccessException iae) {
-			throw new MappingException( 
-					"IllegalAccessException trying to instantiate custom type: " + 
-					userTypeClass.getName() 
-				);
-		}
-		TypeFactory.injectParameters(userType, parameters);
+	public CompositeCustomType(CompositeUserType userType) {
+		this.userType = userType;
+		this.name = userType.getClass().getName();
 	}
 	
 	public boolean isMethodOf(Method method) {

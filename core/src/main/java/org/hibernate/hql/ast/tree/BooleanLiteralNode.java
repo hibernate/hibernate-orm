@@ -74,5 +74,6 @@ public class BooleanLiteralNode extends LiteralNode implements ExpectedTypeAware
 
 	private LiteralType typeAsLiteralType() {
 		return (LiteralType) getDataType();
+
 	}
 }

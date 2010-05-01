@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,7 +20,6 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.type;
 
@@ -39,170 +38,242 @@ import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.SessionImplementor;
 
 /**
- * Defines a mapping from a Java type to an JDBC datatype. This interface is intended to
- * be implemented by applications that need custom types.<br>
- * <br>
- * Implementors should usually be immutable and <b>must</b> certainly be threadsafe.
+ * Defines a mapping between a Java type and one or more JDBC {@linkplain java.sql.Types types}, as well
+ * as describing the in-memory semantics of the given java type (how do we check it for 'dirtiness', how do
+ * we copy values, etc).
+ * <p/>
+ * Application developers needing custom types can implement this interface (either directly or via subclassing an
+ * existing impl) or by the (slightly more stable, though more limited) {@link org.hibernate.usertype.UserType}
+ * interface.
+ * <p/>
+ * Implementations of this interface must certainly be thread-safe.  It is recommended that they be immutable as
+ * well, though that is difficult to achieve completely given the no-arg constructor requirement for custom types.
  *
  * @author Gavin King
+ * @author Steve Ebersole
  */
 public interface Type extends Serializable {
-
 	/**
-	 * Return true if the implementation is castable to
-	 * <tt>AssociationType</tt>. This does not necessarily imply that
-	 * the type actually represents an association.
-	 * @see AssociationType
-	 * @return boolean
+	 * Return true if the implementation is castable to {@link AssociationType}. This does not necessarily imply that
+	 * the type actually represents an association.  Essentially a polymorphic version of
+	 * {@code (type instanceof AssociationType.class)}
+	 *
+	 * @return True if this type is also an {@link AssociationType} implementor; false otherwise.
 	 */
 	public boolean isAssociationType();
+
 	/**
-	 * Is this type a collection type.
+	 * Return true if the implementation is castable to {@link CollectionType}. Essentially a polymorphic version of
+	 * {@code (type instanceof CollectionType.class)}
+	 * <p/>
+	 * A {@link CollectionType} is additionally an {@link AssociationType}; so if this method returns true,
+	 * {@link #isAssociationType()} should also return true.
+	 *
+	 * @return True if this type is also an {@link CollectionType} implementor; false otherwise.
 	 */
 	public boolean isCollectionType();
 
 	/**
-	 * Is this type a component type. If so, the implementation
-	 * must be castable to <tt>AbstractComponentType</tt>. A component
-	 * type may own collections or associations and hence must provide
-	 * certain extra functionality.
-	 * @see AbstractComponentType
-	 * @return boolean
-	 */
-	public boolean isComponentType();
-
-	/**
-	 * Is this type an entity type?
-	 * @return boolean
+	 * Return true if the implementation is castable to {@link EntityType}. Essentially a polymorphic
+	 * version of {@code (type instanceof EntityType.class)}.
+	 * <p/>
+	 * An {@link EntityType} is additionally an {@link AssociationType}; so if this method returns true,
+	 * {@link #isAssociationType()} should also return true.
+	 *
+	 * @return True if this type is also an {@link EntityType} implementor; false otherwise.
 	 */
 	public boolean isEntityType();
 
 	/**
-	 * Is this an "any" type.
+	 * Return true if the implementation is castable to {@link AnyType}. Essentially a polymorphic
+	 * version of {@code (type instanceof AnyType.class)}.
+	 * <p/>
+	 * An {@link AnyType} is additionally an {@link AssociationType}; so if this method returns true,
+	 * {@link #isAssociationType()} should also return true.
 	 *
-	 * i.e. a reference to a persistent entity
-	 * that is not modelled as a (foreign key) association.
+	 * @return True if this type is also an {@link AnyType} implementor; false otherwise.
 	 */
 	public boolean isAnyType();
-	
-	public boolean isXMLElement();
 
 	/**
-	 * Return the SQL type codes for the columns mapped by this type. The codes
-	 * are defined on <tt>java.sql.Types</tt>.
-	 * @see java.sql.Types
-	 * @return the typecodes
-	 * @throws MappingException
+	 * Return true if the implementation is castable to {@link AbstractComponentType}. Essentially a polymorphic
+	 * version of {@code (type instanceof AbstractComponentType.class)}.  A component type may own collections or
+	 * associations and hence must provide certain extra functionality.
+	 *
+	 * @return True if this type is also an {@link CollectionType} implementor; false otherwise.
+	 */
+	public boolean isComponentType();
+
+	/**
+	 * Return the JDBC types codes (per {@link java.sql.Types}) for the columns mapped by this type.
+	 *
+	 * @param mapping The mapping object :/
+	 *
+	 * @return The JDBC type codes.
+	 *
+	 * @throws MappingException Generally indicates an issue accessing the passed mapping object.
 	 */
 	public int[] sqlTypes(Mapping mapping) throws MappingException;
 
 	/**
-	 * How many columns are used to persist this type.
+	 * How many columns are used to persist this type.  Always the same as {@code sqlTypes(mapping).length}
+	 *
+	 * @param mapping The mapping object :/
+	 *
+	 * @return The number of columns
+	 *
+	 * @throws MappingException Generally indicates an issue accessing the passed mapping object.
 	 */
 	public int getColumnSpan(Mapping mapping) throws MappingException;
 
 	/**
-	 * The class returned by <tt>nullSafeGet()</tt> methods. This is used to 
-	 * establish the class of an array of this type.
+	 * The class returned by {@link #nullSafeGet} methods. This is used to  establish the class of an array of
+	 * this type.
 	 *
-	 * @return Class
+	 * @return The java type class handled by this type.
 	 */
 	public Class getReturnedClass();
+	
+	public boolean isXMLElement();
 
 	/**
-	 * Compare two instances of the class mapped by this type for persistence
-	 * "equality" - equality of persistent state - taking a shortcut for
-	 * entity references.
-	 * @param x
-	 * @param y
-	 * @param entityMode
+	 * Compare two instances of the class mapped by this type for persistence "equality" (equality of persistent
+	 * state) taking a shortcut for entity references.
+	 * <p/>
+	 * For most types this should equate to {@link #equals} check on the values.  For associations the implication
+	 * is a bit different.  For most types it is conceivable to simply delegate to {@link #isEqual}
 	 *
-	 * @return boolean
-	 * @throws HibernateException
+	 * @param x The first value
+	 * @param y The second value
+	 * @param entityMode The entity mode of the values.
+	 *
+	 * @return True if there are considered the same (see discussion above).
+	 *
+	 * @throws HibernateException A problem occurred performing the comparison
 	 */
 	public boolean isSame(Object x, Object y, EntityMode entityMode) throws HibernateException;
 
 	/**
-	 * Compare two instances of the class mapped by this type for persistence
-	 * "equality" - equality of persistent state.
-	 * @param x
-	 * @param y
-	 * @param entityMode 
+	 * Compare two instances of the class mapped by this type for persistence "equality" (equality of persistent
+	 * state).
+	 * <p/>
+	 * This should always equate to some form of comparison of the value's internal state.  As an example, for
+	 * something like a date the comparison should be based on its internal "time" state based on the specific portion
+	 * it is meant to represent (timestamp, date, time).
 	 *
-	 * @return boolean
-	 * @throws HibernateException
+	 * @param x The first value
+	 * @param y The second value
+	 * @param entityMode The entity mode of the values.
+	 *
+	 * @return True if there are considered equal (see discussion above).
+	 *
+	 * @throws HibernateException A problem occurred performing the comparison
 	 */
 	public boolean isEqual(Object x, Object y, EntityMode entityMode) throws HibernateException;
 
 	/**
-	 * Compare two instances of the class mapped by this type for persistence
-	 * "equality" - equality of persistent state.
-	 * @param x
-	 * @param y
-	 * @param entityMode 
+	 * Compare two instances of the class mapped by this type for persistence "equality" (equality of persistent
+	 * state).
+	 * <p/>
+	 * This should always equate to some form of comparison of the value's internal state.  As an example, for
+	 * something like a date the comparison should be based on its internal "time" state based on the specific portion
+	 * it is meant to represent (timestamp, date, time).
 	 *
-	 * @return boolean
-	 * @throws HibernateException
+	 * @param x The first value
+	 * @param y The second value
+	 * @param entityMode The entity mode of the values.
+	 * @param factory The session factory
+	 *
+	 * @return True if there are considered equal (see discussion above).
+	 *
+	 * @throws HibernateException A problem occurred performing the comparison
 	 */
-	public boolean isEqual(Object x, Object y, EntityMode entityMode, SessionFactoryImplementor factory) 
-	throws HibernateException;
+	public boolean isEqual(Object x, Object y, EntityMode entityMode, SessionFactoryImplementor factory)
+			throws HibernateException;
 
 	/**
-	 * Get a hashcode, consistent with persistence "equality"
-	 * @param x
-	 * @param entityMode 
+	 * Get a hash code, consistent with persistence "equality".  Again for most types the normal usage is to
+	 * delegate to the value's {@link #hashCode}.
+	 *
+	 * @param x The value for which to retrieve a hash code
+	 * @param entityMode The entity mode of the value.
+	 *
+	 * @return The hash code
+	 *
+	 * @throws HibernateException A problem occurred calculating the hash code
 	 */
 	public int getHashCode(Object x, EntityMode entityMode) throws HibernateException;
 
 	/**
-	 * Get a hashcode, consistent with persistence "equality"
-	 * @param x
-	 * @param entityMode 
-	 * @param factory
+	 * Get a hash code, consistent with persistence "equality".  Again for most types the normal usage is to
+	 * delegate to the value's {@link #hashCode}.
+	 *
+	 * @param x The value for which to retrieve a hash code
+	 * @param entityMode The entity mode of the value.
+	 * @param factory The session factory
+	 *
+	 * @return The hash code
+	 *
+	 * @throws HibernateException A problem occurred calculating the hash code
 	 */
-	public int getHashCode(Object x, EntityMode entityMode, SessionFactoryImplementor factory) 
-	throws HibernateException;
+	public int getHashCode(Object x, EntityMode entityMode, SessionFactoryImplementor factory) throws HibernateException;
 	
 	/**
-	 * compare two instances of the type
-	 * @param entityMode 
+	 * Perform a {@link java.util.Comparator} style comparison between values
+	 *
+	 * @param x The first value
+	 * @param y The second value
+	 * @param entityMode The entity mode of the values.
+	 *
+	 * @return The comparison result.  See {@link java.util.Comparator#compare} for a discussion.
 	 */
 	public int compare(Object x, Object y, EntityMode entityMode);
 
 	/**
-	 * Should the parent be considered dirty, given both the old and current field or 
-	 * element value?
+	 * Should the parent be considered dirty, given both the old and current value?
 	 * 
 	 * @param old the old value
 	 * @param current the current value
-	 * @param session
+	 * @param session The session from which the request originated.
+	 *
 	 * @return true if the field is dirty
+	 *
+	 * @throws HibernateException A problem occurred performing the checking
 	 */
-	public boolean isDirty(Object old, Object current, SessionImplementor session)
-	throws HibernateException;
-	/**
-	 * Should the parent be considered dirty, given both the old and current field or 
-	 * element value?
-	 * 
-	 * @param old the old value
-	 * @param current the current value
-	 * @param checkable which columns are actually updatable
-	 * @param session
-	 * @return true if the field is dirty
-	 */
-	public boolean isDirty(Object old, Object current, boolean[] checkable, SessionImplementor session)
-	throws HibernateException;
+	public boolean isDirty(Object old, Object current, SessionImplementor session) throws HibernateException;
 
 	/**
-	 * Has the parent object been modified, compared to the current database state?
-	 * @param oldHydratedState the database state, in a "hydrated" form, with identifiers unresolved
+	 * Should the parent be considered dirty, given both the old and current value?
+	 *
+	 * @param oldState the old value
+	 * @param currentState the current value
+	 * @param checkable An array of booleans indicating which columns making up the value are actually checkable
+	 * @param session The session from which the request originated.
+	 *
+	 * @return true if the field is dirty
+	 *
+	 * @throws HibernateException A problem occurred performing the checking
+	 */
+	public boolean isDirty(Object oldState, Object currentState, boolean[] checkable, SessionImplementor session)
+			throws HibernateException;
+
+	/**
+	 * Has the value been modified compared to the current database state?  The difference between this
+	 * and the {@link #isDirty} methods is that here we need to account for "partially" built values.  This is really
+	 * only an issue with association types.  For most type implementations it is enough to simply delegate to
+	 * {@link #isDirty} here/
+	 *
+	 * @param dbState the database state, in a "hydrated" form, with identifiers unresolved
 	 * @param currentState the current state of the object
 	 * @param checkable which columns are actually updatable
-	 * @param session
+	 * @param session The session from which the request originated.
+	 *
 	 * @return true if the field has been modified
+	 *
+	 * @throws HibernateException A problem occurred performing the checking
 	 */
-	public boolean isModified(Object oldHydratedState, Object currentState, boolean[] checkable, SessionImplementor session)
-	throws HibernateException;
+	public boolean isModified(Object dbState, Object currentState, boolean[] checkable, SessionImplementor session)
+			throws HibernateException;
 
 	/**
 	 * Retrieve an instance of the mapped class from a JDBC resultset. Implementors

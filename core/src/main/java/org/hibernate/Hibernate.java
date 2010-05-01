@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,7 +20,6 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate;
 
@@ -67,7 +66,7 @@ import org.hibernate.type.IntegerType;
 import org.hibernate.type.LocaleType;
 import org.hibernate.type.LongType;
 import org.hibernate.type.ManyToOneType;
-import org.hibernate.type.NullableType;
+import org.hibernate.type.ObjectType;
 import org.hibernate.type.SerializableType;
 import org.hibernate.type.ShortType;
 import org.hibernate.type.StringType;
@@ -77,6 +76,7 @@ import org.hibernate.type.TimeZoneType;
 import org.hibernate.type.TimestampType;
 import org.hibernate.type.TrueFalseType;
 import org.hibernate.type.Type;
+import org.hibernate.type.TypeFactory;
 import org.hibernate.type.YesNoType;
 import org.hibernate.type.CharArrayType;
 import org.hibernate.type.WrapperBinaryType;
@@ -101,145 +101,6 @@ import org.hibernate.usertype.CompositeUserType;
  */
 
 public final class Hibernate {
-
-	/**
-	 * Hibernate <tt>long</tt> type.
-	 */
-	public static final NullableType LONG = new LongType();
-	/**
-	 * Hibernate <tt>short</tt> type.
-	 */
-	public static final NullableType SHORT = new ShortType();
-	/**
-	 * Hibernate <tt>integer</tt> type.
-	 */
-	public static final NullableType INTEGER = new IntegerType();
-	/**
-	 * Hibernate <tt>byte</tt> type.
-	 */
-	public static final NullableType BYTE = new ByteType();
-	/**
-	 * Hibernate <tt>float</tt> type.
-	 */
-	public static final NullableType FLOAT = new FloatType();
-	/**
-	 * Hibernate <tt>double</tt> type.
-	 */
-	public static final NullableType DOUBLE = new DoubleType();
-	/**
-	 * Hibernate <tt>character</tt> type.
-	 */
-	public static final NullableType CHARACTER = new CharacterType();
-	/**
-	 * Hibernate <tt>string</tt> type.
-	 */
-	public static final NullableType STRING = new StringType();
-	/**
-	 * Hibernate <tt>time</tt> type.
-	 */
-	public static final NullableType TIME = new TimeType();
-	/**
-	 * Hibernate <tt>date</tt> type.
-	 */
-	public static final NullableType DATE = new DateType();
-	/**
-	 * Hibernate <tt>timestamp</tt> type.
-	 */
-	public static final NullableType TIMESTAMP = new TimestampType();
-	/**
-	 * Hibernate <tt>boolean</tt> type.
-	 */
-	public static final NullableType BOOLEAN = new BooleanType();
-	/**
-	 * Hibernate <tt>true_false</tt> type.
-	 */
-	public static final NullableType TRUE_FALSE = new TrueFalseType();
-	/**
-	 * Hibernate <tt>yes_no</tt> type.
-	 */
-	public static final NullableType YES_NO = new YesNoType();
-	/**
-	 * Hibernate <tt>big_decimal</tt> type.
-	 */
-	public static final NullableType BIG_DECIMAL = new BigDecimalType();
-	/**
-	 * Hibernate <tt>big_integer</tt> type.
-	 */
-	public static final NullableType BIG_INTEGER = new BigIntegerType();
-	/**
-	 * Hibernate <tt>binary</tt> type.
-	 */
-	public static final NullableType BINARY = new BinaryType();
-	/**
-	 * Hibernate <tt>wrapper-binary</tt> type.
-	 */
-	public static final NullableType WRAPPER_BINARY = new WrapperBinaryType();
-	/**
-	 * Hibernate char[] type.
-	 */
-	public static final NullableType CHAR_ARRAY = new CharArrayType();
-	/**
-	 * Hibernate Character[] type.
-	 */
-	public static final NullableType CHARACTER_ARRAY = new CharacterArrayType();
-	/**
-	 * Hibernate <tt>image</tt> type.
-	 */
-	public static final NullableType IMAGE = new ImageType();
-	/**
-	 * Hibernate <tt>text</tt> type.
-	 */
-	public static final NullableType TEXT = new TextType();
-	/**
-	 * Hibernate <tt>materialized_blob</tt> type.
-	 */
-	public static final NullableType MATERIALIZED_BLOB = new MaterializedBlobType();
-	/**
-	 * Hibernate <tt>materialized_clob</tt> type.
-	 */
-	public static final NullableType MATERIALIZED_CLOB = new MaterializedClobType();
-	/**
-	 * Hibernate <tt>blob</tt> type.
-	 */
-	public static final Type BLOB = new BlobType();
-	/**
-	 * Hibernate <tt>clob</tt> type.
-	 */
-	public static final Type CLOB = new ClobType();
-	/**
-	 * Hibernate <tt>calendar</tt> type.
-	 */
-	public static final NullableType CALENDAR = new CalendarType();
-	/**
-	 * Hibernate <tt>calendar_date</tt> type.
-	 */
-	public static final NullableType CALENDAR_DATE = new CalendarDateType();
-	/**
-	 * Hibernate <tt>locale</tt> type.
-	 */
-	public static final NullableType LOCALE = new LocaleType();
-	/**
-	 * Hibernate <tt>currency</tt> type.
-	 */
-	public static final NullableType CURRENCY = new CurrencyType();
-	/**
-	 * Hibernate <tt>timezone</tt> type.
-	 */
-	public static final NullableType TIMEZONE = new TimeZoneType();
-	/**
-	 * Hibernate <tt>class</tt> type.
-	 */
-	public static final NullableType CLASS = new ClassType();
-	/**
-	 * Hibernate <tt>serializable</tt> type.
-	 */
-	public static final NullableType SERIALIZABLE = new SerializableType( Serializable.class );
-	/**
-	 * Hibernate <tt>object</tt> type.
-	 */
-	public static final Type OBJECT = new AnyType();
-
-
 	/**
 	 * Cannot be instantiated.
 	 */
@@ -248,7 +109,179 @@ public final class Hibernate {
 	}
 
 	/**
+	 * Hibernate <tt>long</tt> type.
+	 * @deprecated Use {@link LongType#INSTANCE} instead.
+	 */
+	public static final LongType LONG = LongType.INSTANCE;
+	/**
+	 * Hibernate <tt>short</tt> type.
+	 * @deprecated Use {@link ShortType#INSTANCE} instead.
+	 */
+	public static final ShortType SHORT = ShortType.INSTANCE;
+	/**
+	 * Hibernate <tt>integer</tt> type.
+	 * @deprecated Use {@link IntegerType#INSTANCE} instead.
+	 */
+	public static final IntegerType INTEGER = IntegerType.INSTANCE;
+	/**
+	 * Hibernate <tt>byte</tt> type.
+	 * @deprecated Use {@link ByteType#INSTANCE} instead.
+	 */
+	public static final ByteType BYTE = ByteType.INSTANCE;
+	/**
+	 * Hibernate <tt>float</tt> type.
+	 * @deprecated Use {@link FloatType#INSTANCE} instead.
+	 */
+	public static final FloatType FLOAT = FloatType.INSTANCE;
+	/**
+	 * Hibernate <tt>double</tt> type.
+	 * @deprecated Use {@link DoubleType#INSTANCE} instead.
+	 */
+	public static final DoubleType DOUBLE = DoubleType.INSTANCE;
+	/**
+	 * Hibernate <tt>character</tt> type.
+	 * @deprecated Use {@link CharacterType#INSTANCE} instead.
+	 */
+	public static final CharacterType CHARACTER = CharacterType.INSTANCE;
+	/**
+	 * Hibernate <tt>string</tt> type.
+	 * @deprecated Use {@link StringType#INSTANCE} instead.
+	 */
+	public static final StringType STRING = StringType.INSTANCE;
+	/**
+	 * Hibernate <tt>time</tt> type.
+	 * @deprecated Use {@link TimeType#INSTANCE} instead.
+	 */
+	public static final TimeType TIME = TimeType.INSTANCE;
+	/**
+	 * Hibernate <tt>date</tt> type.
+	 * @deprecated Use {@link DateType#INSTANCE} instead.
+	 */
+	public static final DateType DATE = DateType.INSTANCE;
+	/**
+	 * Hibernate <tt>timestamp</tt> type.
+	 * @deprecated Use {@link TimestampType#INSTANCE} instead.
+	 */
+	public static final TimestampType TIMESTAMP = TimestampType.INSTANCE;
+	/**
+	 * Hibernate <tt>boolean</tt> type.
+	 * @deprecated Use {@link BooleanType#INSTANCE} instead.
+	 */
+	public static final BooleanType BOOLEAN = BooleanType.INSTANCE;
+	/**
+	 * Hibernate <tt>true_false</tt> type.
+	 * @deprecated Use {@link TrueFalseType#INSTANCE} instead.
+	 */
+	public static final TrueFalseType TRUE_FALSE = TrueFalseType.INSTANCE;
+	/**
+	 * Hibernate <tt>yes_no</tt> type.
+	 * @deprecated Use {@link YesNoType#INSTANCE} instead.
+	 */
+	public static final YesNoType YES_NO = YesNoType.INSTANCE;
+	/**
+	 * Hibernate <tt>big_decimal</tt> type.
+	 * @deprecated Use {@link BigDecimalType#INSTANCE} instead.
+	 */
+	public static final BigDecimalType BIG_DECIMAL = BigDecimalType.INSTANCE;
+	/**
+	 * Hibernate <tt>big_integer</tt> type.
+	 * @deprecated Use {@link BigIntegerType#INSTANCE} instead.
+	 */
+	public static final BigIntegerType BIG_INTEGER = BigIntegerType.INSTANCE;
+	/**
+	 * Hibernate <tt>binary</tt> type.
+	 * @deprecated Use {@link BinaryType#INSTANCE} instead.
+	 */
+	public static final BinaryType BINARY = BinaryType.INSTANCE;
+	/**
+	 * Hibernate <tt>wrapper-binary</tt> type.
+	 * @deprecated Use {@link WrapperBinaryType#INSTANCE} instead.
+	 */
+	public static final WrapperBinaryType WRAPPER_BINARY = WrapperBinaryType.INSTANCE;
+	/**
+	 * Hibernate char[] type.
+	 * @deprecated Use {@link CharArrayType#INSTANCE} instead.
+	 */
+	public static final CharArrayType CHAR_ARRAY = CharArrayType.INSTANCE;
+	/**
+	 * Hibernate Character[] type.
+	 * @deprecated Use {@link CharacterArrayType#INSTANCE} instead.
+	 */
+	public static final CharacterArrayType CHARACTER_ARRAY = CharacterArrayType.INSTANCE;
+	/**
+	 * Hibernate <tt>image</tt> type.
+	 * @deprecated Use {@link ImageType#INSTANCE} instead.
+	 */
+	public static final ImageType IMAGE = ImageType.INSTANCE;
+	/**
+	 * Hibernate <tt>text</tt> type.
+	 * @deprecated Use {@link TextType#INSTANCE} instead.
+	 */
+	public static final TextType TEXT = TextType.INSTANCE;
+	/**
+	 * Hibernate <tt>materialized_blob</tt> type.
+	 * @deprecated Use {@link MaterializedBlobType#INSTANCE} instead.
+	 */
+	public static final MaterializedBlobType MATERIALIZED_BLOB = MaterializedBlobType.INSTANCE;
+	/**
+	 * Hibernate <tt>materialized_clob</tt> type.
+	 * @deprecated Use {@link MaterializedClobType#INSTANCE} instead.
+	 */
+	public static final MaterializedClobType MATERIALIZED_CLOB = MaterializedClobType.INSTANCE;
+	/**
+	 * Hibernate <tt>blob</tt> type.
+	 * @deprecated Use {@link BlobType#INSTANCE} instead.
+	 */
+	public static final BlobType BLOB = BlobType.INSTANCE;
+	/**
+	 * Hibernate <tt>clob</tt> type.
+	 * @deprecated Use {@link ClobType#INSTANCE} instead.
+	 */
+	public static final ClobType CLOB = ClobType.INSTANCE;
+	/**
+	 * Hibernate <tt>calendar</tt> type.
+	 * @deprecated Use {@link CalendarType#INSTANCE} instead.
+	 */
+	public static final CalendarType CALENDAR = CalendarType.INSTANCE;
+	/**
+	 * Hibernate <tt>calendar_date</tt> type.
+	 * @deprecated Use {@link CalendarDateType#INSTANCE} instead.
+	 */
+	public static final CalendarDateType CALENDAR_DATE = CalendarDateType.INSTANCE;
+	/**
+	 * Hibernate <tt>locale</tt> type.
+	 * @deprecated Use {@link LocaleType#INSTANCE} instead.
+	 */
+	public static final LocaleType LOCALE = LocaleType.INSTANCE;
+	/**
+	 * Hibernate <tt>currency</tt> type.
+	 * @deprecated Use {@link CurrencyType#INSTANCE} instead.
+	 */
+	public static final CurrencyType CURRENCY = CurrencyType.INSTANCE;
+	/**
+	 * Hibernate <tt>timezone</tt> type.
+	 * @deprecated Use {@link TimeZoneType#INSTANCE} instead.
+	 */
+	public static final TimeZoneType TIMEZONE = TimeZoneType.INSTANCE;
+	/**
+	 * Hibernate <tt>class</tt> type.
+	 * @deprecated Use {@link ClassType#INSTANCE} instead.
+	 */
+	public static final ClassType CLASS = ClassType.INSTANCE;
+	/**
+	 * Hibernate <tt>serializable</tt> type.
+	 * @deprecated Use {@link SerializableType#INSTANCE} instead.
+	 */
+	public static final SerializableType SERIALIZABLE = SerializableType.INSTANCE;
+	/**
+	 * Hibernate <tt>object</tt> type.
+	 * @deprecated Use {@link ObjectType#INSTANCE} instead.
+	 */
+	public static final ObjectType OBJECT = ObjectType.INSTANCE;
+
+	/**
 	 * A Hibernate <tt>serializable</tt> type.
+	 * @deprecated Use {@link SerializableType#SerializableType} instead.
 	 */
 	public static Type serializable(Class serializableClass) {
 		return new SerializableType( serializableClass );
@@ -320,12 +353,10 @@ public final class Hibernate {
 	public static Type custom(Class userTypeClass, Properties parameters)
 			throws HibernateException {
 		if ( CompositeUserType.class.isAssignableFrom( userTypeClass ) ) {
-			CompositeCustomType type = new CompositeCustomType( userTypeClass, parameters );
-			return type;
+			return TypeFactory.customComponent( userTypeClass, parameters );
 		}
 		else {
-			CustomType type = new CustomType( userTypeClass, parameters );
-			return type;
+			return TypeFactory.custom( userTypeClass, parameters );
 		}
 	}
 

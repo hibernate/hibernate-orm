@@ -52,6 +52,7 @@ import org.hibernate.exception.SQLExceptionConverter;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.stat.StatisticsImplementor;
 import org.hibernate.type.Type;
+import org.hibernate.type.TypeResolver;
 
 /**
  * Defines the internal contract between the <tt>SessionFactory</tt> and other parts of
@@ -62,6 +63,12 @@ import org.hibernate.type.Type;
  * @author Gavin King
  */
 public interface SessionFactoryImplementor extends Mapping, SessionFactory {
+	/**
+	 * Retrieve the {@link Type} resolver associated with this factory.
+	 *
+	 * @return The type resolver
+	 */
+	public TypeResolver getTypeResolver();
 
 	/**
 	 * Get a copy of the Properties used to configure this session factory.

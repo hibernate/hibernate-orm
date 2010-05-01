@@ -67,7 +67,7 @@ public class NativeSQLQueryPlanEqualsTest extends FunctionalTestCase {
 		String blah = "blah";
 		String select = "select blah from blah";
 		NativeSQLQueryReturn[] queryReturns = 
-			new NativeSQLQueryScalarReturn[] {new NativeSQLQueryScalarReturn(blah, TypeFactory.basic( "int" ) ) };
+			new NativeSQLQueryScalarReturn[] {new NativeSQLQueryScalarReturn(blah, sfi().getTypeResolver().basic( "int" ) ) };
 		NativeSQLQuerySpecification spec = new NativeSQLQuerySpecification(select,
 			queryReturns, null);
 		return spec;

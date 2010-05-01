@@ -1,11 +1,10 @@
-//$Id: $
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -21,22 +20,27 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.type;
 
-import java.sql.Types;
+import org.hibernate.type.descriptor.java.StringTypeDescriptor;
+import org.hibernate.type.descriptor.sql.ClobTypeDescriptor;
 
 /**
- * <tt>materialized_clob</tt>: A type that maps an SQL CLOB to a Java String.
+ * A type that maps between {@link java.sql.Types#CLOB CLOB} and {@link String}
  *
+ * @author Gavin King
  * @author Gail Badner
+ * @author Steve Ebersole
  */
-public class MaterializedClobType extends AbstractLongStringType {
+public class MaterializedClobType extends AbstractSingleColumnStandardBasicType<String> {
+	public static final MaterializedClobType INSTANCE = new MaterializedClobType();
 
-	public int sqlType() {
-		return Types.CLOB;
+	public MaterializedClobType() {
+		super( ClobTypeDescriptor.INSTANCE, StringTypeDescriptor.INSTANCE );
 	}
 
-	public String getName() { return "materialized_clob"; }
+	public String getName() {
+		return "materialized_clob";
+	}
 }

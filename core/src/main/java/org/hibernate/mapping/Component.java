@@ -31,6 +31,7 @@ import java.util.Map;
 
 import org.hibernate.EntityMode;
 import org.hibernate.MappingException;
+import org.hibernate.cfg.Mappings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.id.CompositeNestedGeneratedValueGenerator;
@@ -66,23 +67,23 @@ public class Component extends SimpleValue implements MetaAttributable {
 
 	private java.util.Map tuplizerImpls;
 
-	public Component(PersistentClass owner) throws MappingException {
-		super( owner.getTable() );
+	public Component(Mappings mappings, PersistentClass owner) throws MappingException {
+		super( mappings, owner.getTable() );
 		this.owner = owner;
 	}
 
-	public Component(Component component) throws MappingException {
-		super( component.getTable() );
+	public Component(Mappings mappings, Component component) throws MappingException {
+		super( mappings, component.getTable() );
 		this.owner = component.getOwner();
 	}
 
-	public Component(Join join) throws MappingException {
-		super( join.getTable() );
+	public Component(Mappings mappings, Join join) throws MappingException {
+		super( mappings, join.getTable() );
 		this.owner = join.getPersistentClass();
 	}
 
-	public Component(Collection collection) throws MappingException {
-		super( collection.getCollectionTable() );
+	public Component(Mappings mappings, Collection collection) throws MappingException {
+		super( mappings, collection.getCollectionTable() );
 		this.owner = collection.getOwner();
 	}
 

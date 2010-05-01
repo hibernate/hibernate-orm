@@ -133,7 +133,7 @@ public class MapBinder extends CollectionBinder {
 				);
 			}
 			org.hibernate.mapping.Map map = (org.hibernate.mapping.Map) this.collection;
-			Value indexValue = createFormulatedValue( mapProperty.getValue(), map, targetPropertyName, associatedClass );
+			Value indexValue = createFormulatedValue( mapProperty.getValue(), map, targetPropertyName, associatedClass, mappings );
 			map.setIndex( indexValue );
 		}
 		else {
@@ -165,7 +165,7 @@ public class MapBinder extends CollectionBinder {
 			ManyToOne element = null;
 			org.hibernate.mapping.Map mapValue = (org.hibernate.mapping.Map) this.collection;
 			if ( isIndexOfEntities ) {
-				element = new ManyToOne( mapValue.getCollectionTable() );
+				element = new ManyToOne( mappings, mapValue.getCollectionTable() );
 				mapValue.setIndex( element );
 				element.setReferencedEntityName( mapKeyType );
 				//element.setFetchMode( fetchMode );
@@ -301,8 +301,11 @@ public class MapBinder extends CollectionBinder {
 	}
 
 	protected Value createFormulatedValue(
-			Value value, Collection collection, String targetPropertyName, PersistentClass associatedClass
-	) {
+			Value value,
+			Collection collection,
+			String targetPropertyName,
+			PersistentClass associatedClass,
+			ExtendedMappings mappings) {
 		Value element = collection.getElement();
 		String fromAndWhere = null;
 		if ( !( element instanceof OneToMany ) ) {
@@ -346,7 +349,7 @@ public class MapBinder extends CollectionBinder {
 		if ( value instanceof Component ) {
 			Component component = (Component) value;
 			Iterator properties = component.getPropertyIterator();
-			Component indexComponent = new Component( collection );
+			Component indexComponent = new Component( mappings, collection );
 			indexComponent.setComponentClassName( component.getComponentClassName() );
 			//TODO I don't know if this is appropriate
 			indexComponent.setNodeName( "index" );
@@ -366,9 +369,11 @@ public class MapBinder extends CollectionBinder {
 				newProperty.setPersistentClass( current.getPersistentClass() );
 				newProperty.setPropertyAccessorName( current.getPropertyAccessorName() );
 				newProperty.setSelectable( current.isSelectable() );
-				newProperty.setValue( createFormulatedValue( current.getValue(), collection, targetPropertyName,
-						associatedClass
-				) );
+				newProperty.setValue(
+						createFormulatedValue(
+								current.getValue(), collection, targetPropertyName, associatedClass, mappings
+						)
+				);
 				indexComponent.addProperty( newProperty );
 			}
 			return indexComponent;
@@ -378,7 +383,7 @@ public class MapBinder extends CollectionBinder {
 			SimpleValue targetValue;
 			if ( value instanceof ManyToOne ) {
 				ManyToOne sourceManyToOne = (ManyToOne) sourceValue;
-				ManyToOne targetManyToOne = new ManyToOne( collection.getCollectionTable() );
+				ManyToOne targetManyToOne = new ManyToOne( mappings, collection.getCollectionTable() );
 				targetManyToOne.setFetchMode( FetchMode.DEFAULT );
 				targetManyToOne.setLazy( true );
 				//targetValue.setIgnoreNotFound( ); does not make sense for a map key
@@ -386,7 +391,7 @@ public class MapBinder extends CollectionBinder {
 				targetValue = targetManyToOne;
 			}
 			else {
-				targetValue = new SimpleValue( collection.getCollectionTable() );
+				targetValue = new SimpleValue( mappings, collection.getCollectionTable() );
 				targetValue.setTypeName( sourceValue.getTypeName() );
 				targetValue.setTypeParameters( sourceValue.getTypeParameters() );
 			}

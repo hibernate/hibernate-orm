@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,73 +20,32 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.type;
 
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-
-import org.hibernate.Hibernate;
-import org.hibernate.HibernateException;
-import org.hibernate.util.ReflectHelper;
+import org.hibernate.type.descriptor.java.ClassTypeDescriptor;
+import org.hibernate.type.descriptor.sql.VarcharTypeDescriptor;
 
 /**
- * <tt>class</tt>: A type that maps an SQL VARCHAR to a Java Class.
+ * A type that maps between {@link java.sql.Types#VARCHAR VARCHAR} and {@link Class}
+ *
  * @author Gavin King
+ * @author Steve Ebersole
  */
-public class ClassType extends ImmutableType {
+public class ClassType extends AbstractSingleColumnStandardBasicType<Class> {
+	public static final ClassType INSTANCE = new ClassType();
 
-	public Object get(ResultSet rs, String name) throws HibernateException, SQLException {
-		String str = (String) Hibernate.STRING.get(rs, name);
-		if (str == null) {
-			return null;
-		}
-		else {
-			try {
-				return ReflectHelper.classForName(str);
-			}
-			catch (ClassNotFoundException cnfe) {
-				throw new HibernateException("Class not found: " + str);
-			}
-		}
-	}
-
-	public void set(PreparedStatement st, Object value, int index) throws HibernateException, SQLException {
-		//TODO: would be nice to handle proxy classes elegantly!
-		Hibernate.STRING.set(st, ( (Class) value ).getName(), index);
-	}
-
-	public int sqlType() {
-		return Hibernate.STRING.sqlType();
-	}
-
-	public String toString(Object value) throws HibernateException {
-		return ( (Class) value ).getName();
-	}
-
-	public Class getReturnedClass() {
-		return Class.class;
+	public ClassType() {
+		super( VarcharTypeDescriptor.INSTANCE, ClassTypeDescriptor.INSTANCE );
 	}
 
 	public String getName() {
 		return "class";
 	}
 
-	public Object fromStringValue(String xml) throws HibernateException {
-		try {
-			return ReflectHelper.classForName(xml);
-		}
-		catch (ClassNotFoundException cnfe) {
-			throw new HibernateException("could not parse xml", cnfe);
-		}
+	@Override
+	protected boolean registerUnderJavaType() {
+		return true;
 	}
 
 }
-
-
-
-
-
-

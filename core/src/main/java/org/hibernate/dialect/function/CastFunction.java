@@ -56,7 +56,7 @@ public class CastFunction implements SQLFunction {
 			throw new QueryException("cast() requires two arguments");
 		}
 		String type = (String) args.get(1);
-		int[] sqlTypeCodes = TypeFactory.heuristicType(type).sqlTypes(factory);
+		int[] sqlTypeCodes = factory.getTypeResolver().heuristicType(type).sqlTypes(factory);
 		if ( sqlTypeCodes.length!=1 ) {
 			throw new QueryException("invalid Hibernate type for cast()");
 		}

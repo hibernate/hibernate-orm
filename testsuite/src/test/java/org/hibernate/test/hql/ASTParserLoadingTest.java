@@ -511,7 +511,7 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 		list.add( new Id("123456789", order.getId().getOrderNumber(), "1234") );
 		query.setParameterList( "idList", list );
 		assertEquals( 2, query.list().size() );
-		s.getTransaction().commit();
+		s.getTransaction().rollback();
 		s.close();
 		
 	}

@@ -614,7 +614,7 @@
 
         <!-- The MySQL 5 test envionment -->
         <profile>
-            <id>mysql5</id>
+            <id>mysql-5.0</id>
             <dependencies>
                 <dependency>
                     <groupId>mysql</groupId>
@@ -635,7 +635,7 @@
 
         <!-- The MySQL 5.1 test envionment -->
         <profile>
-            <id>mysql51</id>
+            <id>mysql-5.1</id>
             <dependencies>
                 <dependency>
                     <groupId>mysql</groupId>
@@ -678,7 +678,7 @@
 
         <!-- The PostgreSQL 8.2.4 test envionment -->
         <profile>
-            <id>postgresql824</id>
+            <id>postgresql-8.2</id>
             <dependencies>
                 <dependency>
                     <groupId>postgresql</groupId>
@@ -699,7 +699,7 @@
 
         <!-- The PostgreSQL 8.3.7 test envionment -->
         <profile>
-            <id>postgresql837</id>
+            <id>postgresql-8.3</id>
             <dependencies>
                 <dependency>
                     <groupId>postgresql</groupId>
@@ -752,7 +752,7 @@
 
         <!-- The DB2 9.1 test envionment (using 9x drivers)-->
         <profile>
-            <id>db2v91</id>
+            <id>db2-9.1</id>
             <dependencies>
                 <dependency>
                     <groupId>com.ibm</groupId>
@@ -778,7 +778,7 @@
 
         <!-- The DB2 9.7 test envionment (using 9x drivers)-->
         <profile>
-            <id>db2v97</id>
+            <id>db2-9.7</id>
             <dependencies>
                 <dependency>
                     <groupId>com.ibm</groupId>
@@ -804,7 +804,7 @@
 
         <!-- The Oracle9i test envionment -->
         <profile>
-            <id>oracle9i</id>
+            <id>oracle-9</id>
             <dependencies>
                 <dependency>
                     <groupId>com.oracle</groupId>
@@ -826,7 +826,7 @@
 
         <!-- The Oracle10g test envionment -->
         <profile>
-            <id>oracle10g</id>
+            <id>oracle1-10</id>
             <dependencies>
                 <dependency>
                     <groupId>com.oracle</groupId>
@@ -848,7 +848,7 @@
 
         <!-- The Oracle11g test envionment -->
         <profile>
-            <id>oracle11g</id>
+            <id>oracle-11</id>
             <dependencies>
                 <dependency>
                     <groupId>com.oracle</groupId>
@@ -869,7 +869,7 @@
 
         <!-- The Oracle11gRAC test envionment -->
         <profile>
-            <id>oracle11gRAC</id>
+            <id>oracle-11rac</id>
             <dependencies>
                 <dependency>
                     <groupId>com.oracle</groupId>
@@ -892,7 +892,7 @@
 
         <!-- The Sybase 15 test envionment -->
         <profile>
-            <id>sybase15</id>
+            <id>sybase-15</id>
             <dependencies>
                 <dependency>
                     <groupId>com.sybase</groupId>
@@ -913,7 +913,7 @@
 
         <!-- The SQLServer2005 (MS JDBC) test envionment -->
         <profile>
-            <id>mssql2005</id>
+            <id>mssql-2005</id>
             <dependencies>
                 <dependency>
                     <groupId>com.microsoft.sqlserver</groupId>
@@ -934,7 +934,7 @@
 
         <!-- The SQLServer2005 (MS JDBC) test envionment -->
         <profile>
-            <id>mssql2008</id>
+            <id>mssql-2008</id>
             <dependencies>
                 <dependency>
                     <groupId>com.microsoft.sqlserver</groupId>

@@ -23,6 +23,8 @@
  */
 package org.hibernate.type.descriptor.java;
 
+import org.hibernate.type.descriptor.WrapperOptions;
+
 /**
  * Descriptor for {@link Short} handling.
  *

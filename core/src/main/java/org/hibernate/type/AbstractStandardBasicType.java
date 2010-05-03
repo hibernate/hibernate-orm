@@ -40,9 +40,9 @@ import org.hibernate.engine.Mapping;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.engine.jdbc.LobCreator;
+import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
-import org.hibernate.type.descriptor.java.WrapperOptions;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 import org.hibernate.util.ArrayHelper;
 

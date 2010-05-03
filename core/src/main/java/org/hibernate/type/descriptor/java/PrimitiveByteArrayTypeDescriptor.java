@@ -30,6 +30,8 @@ import java.sql.SQLException;
 import java.util.Arrays;
 
 import org.hibernate.HibernateException;
+import org.hibernate.type.descriptor.BinaryStream;
+import org.hibernate.type.descriptor.WrapperOptions;
 
 /**
  * Descriptor for {@code byte[]} handling.
@@ -96,6 +98,9 @@ public class PrimitiveByteArrayTypeDescriptor extends AbstractTypeDescriptor<byt
 		}
 		if ( InputStream.class.isAssignableFrom( type ) ) {
 			return (X) new ByteArrayInputStream( value );
+		}
+		if ( BinaryStream.class.isAssignableFrom( type ) ) {
+			return (X) new BinaryStreamImpl( value );
 		}
 		if ( Blob.class.isAssignableFrom( type ) ) {
 			return (X) options.getLobCreator().createBlob( value );

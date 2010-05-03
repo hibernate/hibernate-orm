@@ -21,50 +21,27 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.type.descriptor.java;
+package org.hibernate.type.descriptor;
 
-import java.util.Currency;
-
-import org.hibernate.type.descriptor.WrapperOptions;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 
 /**
- * TODO : javadoc
+ * Contract for extracting a value from a {@link ResultSet}.
  *
  * @author Steve Ebersole
  */
-public class CurrencyTypeDescriptor extends AbstractTypeDescriptor<Currency> {
-	public static final CurrencyTypeDescriptor INSTANCE = new CurrencyTypeDescriptor();
-
-	public CurrencyTypeDescriptor() {
-		super( Currency.class );
-	}
-
-	public String toString(Currency value) {
-		return value.getCurrencyCode();
-	}
-
-	public Currency fromString(String string) {
-		return Currency.getInstance( string );
-	}
-
-	@SuppressWarnings({ "unchecked" })
-	public <X> X unwrap(Currency value, Class<X> type, WrapperOptions options) {
-		if ( value == null ) {
-			return null;
-		}
-		if ( String.class.isAssignableFrom( type ) ) {
-			return (X) value.getCurrencyCode();
-		}
-		throw unknownUnwrap( type );
-	}
-
-	public <X> Currency wrap(X value, WrapperOptions options) {
-		if ( value == null ) {
-			return null;
-		}
-		if ( String.class.isInstance( value ) ) {
-			return Currency.getInstance( (String) value );
-		}
-		throw unknownWrap( value.getClass() );
-	}
+public interface ValueExtractor<X> {
+	/**
+	 * Extract value from result set
+	 *
+	 * @param rs The result set from which to extract the value
+	 * @param name The name by which to extract the value from the result set
+	 * @param options The options
+	 *
+	 * @return The extracted value
+	 *
+	 * @throws SQLException Indicates a JDBC error occurred.
+	 */
+	public X extract(ResultSet rs, String name, WrapperOptions options) throws SQLException;
 }

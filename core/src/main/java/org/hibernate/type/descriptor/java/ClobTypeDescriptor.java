@@ -31,6 +31,7 @@ import java.util.Comparator;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.jdbc.ClobProxy;
 import org.hibernate.engine.jdbc.WrappedClob;
+import org.hibernate.type.descriptor.WrapperOptions;
 
 /**
  * Descriptor for {@link Clob} handling.

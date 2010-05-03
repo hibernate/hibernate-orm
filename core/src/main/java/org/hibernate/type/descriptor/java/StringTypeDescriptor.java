@@ -29,6 +29,8 @@ import java.sql.Clob;
 import java.sql.SQLException;
 
 import org.hibernate.HibernateException;
+import org.hibernate.type.descriptor.CharacterStream;
+import org.hibernate.type.descriptor.WrapperOptions;
 
 /**
  * Descriptor for {@link String} handling.
@@ -60,6 +62,9 @@ public class StringTypeDescriptor extends AbstractTypeDescriptor<String> {
 		}
 		if ( Reader.class.isAssignableFrom( type ) ) {
 			return (X) new StringReader( (String) value );
+		}
+		if ( CharacterStream.class.isAssignableFrom( type ) ) {
+			return (X) new CharacterStreamImpl( (String) value );
 		}
 		if ( Clob.class.isAssignableFrom( type ) ) {
 			return (X) options.getLobCreator().createClob( value );

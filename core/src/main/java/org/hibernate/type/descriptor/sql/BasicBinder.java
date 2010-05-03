@@ -29,17 +29,16 @@ import java.sql.SQLException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.hibernate.type.descriptor.ValueBinder;
+import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
-import org.hibernate.type.descriptor.java.WrapperOptions;
-
-import static org.hibernate.type.descriptor.sql.SqlTypeDescriptor.Binder;
 
 /**
- * Convenience base implementation of {@link Binder}
+ * Convenience base implementation of {@link ValueBinder}
  *
  * @author Steve Ebersole
  */
-public abstract class BasicBinder<J> implements Binder<J> {
+public abstract class BasicBinder<J> implements ValueBinder<J> {
 	private static final Logger log = LoggerFactory.getLogger( BasicBinder.class );
 
 	private final JavaTypeDescriptor<J> javaDescriptor;

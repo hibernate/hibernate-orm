@@ -23,6 +23,8 @@
  */
 package org.hibernate.type.descriptor.java;
 
+import org.hibernate.type.descriptor.WrapperOptions;
+
 import static java.lang.Boolean.TRUE;
 import static java.lang.Boolean.FALSE;
 

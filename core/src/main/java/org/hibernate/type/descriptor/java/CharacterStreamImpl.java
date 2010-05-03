@@ -23,14 +23,30 @@
  */
 package org.hibernate.type.descriptor.java;
 
-import org.hibernate.engine.jdbc.LobCreator;
+import java.io.Reader;
+import java.io.StringReader;
+
+import org.hibernate.type.descriptor.CharacterStream;
 
 /**
- * TODO : javadoc
+ * Implementation of {@link CharacterStream}
  *
  * @author Steve Ebersole
  */
-public interface WrapperOptions {
-	public boolean useStreamForLobBinding();
-	public LobCreator getLobCreator();
+public class CharacterStreamImpl implements CharacterStream {
+	private final StringReader reader;
+	private final int length;
+
+	public CharacterStreamImpl(String chars) {
+		reader = new StringReader( chars );
+		length = chars.length();
+	}
+
+	public Reader getReader() {
+		return reader;
+	}
+
+	public int getLength() {
+		return length;
+	}
 }

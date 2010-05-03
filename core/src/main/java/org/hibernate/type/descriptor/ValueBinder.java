@@ -21,50 +21,26 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.type.descriptor.java;
+package org.hibernate.type.descriptor;
 
-import java.util.Currency;
-
-import org.hibernate.type.descriptor.WrapperOptions;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 
 /**
- * TODO : javadoc
+ * Contract for binding values to a {@link PreparedStatement}.
  *
  * @author Steve Ebersole
  */
-public class CurrencyTypeDescriptor extends AbstractTypeDescriptor<Currency> {
-	public static final CurrencyTypeDescriptor INSTANCE = new CurrencyTypeDescriptor();
-
-	public CurrencyTypeDescriptor() {
-		super( Currency.class );
-	}
-
-	public String toString(Currency value) {
-		return value.getCurrencyCode();
-	}
-
-	public Currency fromString(String string) {
-		return Currency.getInstance( string );
-	}
-
-	@SuppressWarnings({ "unchecked" })
-	public <X> X unwrap(Currency value, Class<X> type, WrapperOptions options) {
-		if ( value == null ) {
-			return null;
-		}
-		if ( String.class.isAssignableFrom( type ) ) {
-			return (X) value.getCurrencyCode();
-		}
-		throw unknownUnwrap( type );
-	}
-
-	public <X> Currency wrap(X value, WrapperOptions options) {
-		if ( value == null ) {
-			return null;
-		}
-		if ( String.class.isInstance( value ) ) {
-			return Currency.getInstance( (String) value );
-		}
-		throw unknownWrap( value.getClass() );
-	}
+public interface ValueBinder<X> {
+	/**
+	 * Bind a value to a prepared statement.
+	 *
+	 * @param st The prepared statement to which to bind the value.
+	 * @param value The value to bind.
+	 * @param index The position at which to bind the value within the prepared statement
+	 * @param options The options.
+	 *
+	 * @throws SQLException Indicates a JDBC error occurred.
+	 */
+	public void bind(PreparedStatement st, X value, int index, WrapperOptions options) throws SQLException;
 }

@@ -29,6 +29,7 @@ import java.util.Date;
 import java.util.GregorianCalendar;
 
 import org.hibernate.cfg.Environment;
+import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.util.CalendarComparator;
 
 /**

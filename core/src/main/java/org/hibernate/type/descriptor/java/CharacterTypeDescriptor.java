@@ -24,7 +24,7 @@
 package org.hibernate.type.descriptor.java;
 
 import org.hibernate.HibernateException;
-import org.hibernate.MappingException;
+import org.hibernate.type.descriptor.WrapperOptions;
 
 /**
  * Descriptor for {@link Character} handling.

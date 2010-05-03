@@ -27,6 +27,8 @@ import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.Serializable;
 
+import org.hibernate.type.descriptor.BinaryStream;
+import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.util.SerializationHelper;
 
 /**
@@ -84,6 +86,9 @@ public class SerializableTypeDescriptor<T extends Serializable> extends Abstract
 		}
 		if ( InputStream.class.isAssignableFrom( type ) ) {
 			return (X) new ByteArrayInputStream( toBytes( value ) );
+		}
+		if ( BinaryStream.class.isAssignableFrom( type ) ) {
+			return (X) new BinaryStreamImpl( toBytes( value ) );
 		}
 		throw unknownUnwrap( type );
 	}

@@ -26,6 +26,8 @@ package org.hibernate.type.descriptor.java;
 import java.util.Comparator;
 import java.util.TimeZone;
 
+import org.hibernate.type.descriptor.WrapperOptions;
+
 /**
  * TODO : javadoc
  *

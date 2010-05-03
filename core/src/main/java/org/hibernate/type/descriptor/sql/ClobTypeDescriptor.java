@@ -30,8 +30,11 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 
+import org.hibernate.type.descriptor.CharacterStream;
+import org.hibernate.type.descriptor.ValueBinder;
+import org.hibernate.type.descriptor.ValueExtractor;
+import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
-import org.hibernate.type.descriptor.java.WrapperOptions;
 
 /**
  * Descriptor for {@link Types#CLOB CLOB} handling.
@@ -45,12 +48,13 @@ public class ClobTypeDescriptor implements SqlTypeDescriptor {
 		return Types.CLOB;
 	}
 
-	public <X> Binder<X> getBinder(final JavaTypeDescriptor<X> javaTypeDescriptor) {
+	public <X> ValueBinder<X> getBinder(final JavaTypeDescriptor<X> javaTypeDescriptor) {
 		return new BasicBinder<X>( javaTypeDescriptor, this ) {
 			@Override
 			protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options) throws SQLException {
 				if ( options.useStreamForLobBinding() ) {
-					st.setCharacterStream( index, getJavaDescriptor().unwrap( value, Reader.class, options ) );
+					final CharacterStream characterStream = javaTypeDescriptor.unwrap( value, CharacterStream.class, options );
+					st.setCharacterStream( index, characterStream.getReader(), characterStream.getLength() );
 				}
 				else {
 					st.setClob( index, javaTypeDescriptor.unwrap( value, Clob.class, options ) );
@@ -59,7 +63,7 @@ public class ClobTypeDescriptor implements SqlTypeDescriptor {
 		};
 	}
 
-	public <X> Extractor<X> getExtractor(final JavaTypeDescriptor<X> javaTypeDescriptor) {
+	public <X> ValueExtractor<X> getExtractor(final JavaTypeDescriptor<X> javaTypeDescriptor) {
 		return new BasicExtractor<X>( javaTypeDescriptor, this ) {
 			@Override
 			protected X doExtract(ResultSet rs, String name, WrapperOptions options) throws SQLException {

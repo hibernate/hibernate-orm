@@ -32,10 +32,11 @@ import junit.framework.TestCase;
 
 import org.hibernate.engine.jdbc.LobCreator;
 import org.hibernate.engine.jdbc.NonContextualLobCreator;
+import org.hibernate.type.descriptor.ValueBinder;
+import org.hibernate.type.descriptor.ValueExtractor;
+import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.StringTypeDescriptor;
-import org.hibernate.type.descriptor.java.WrapperOptions;
 import org.hibernate.type.descriptor.sql.ClobTypeDescriptor;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 import org.hibernate.type.descriptor.sql.VarcharTypeDescriptor;
 
 /**
@@ -63,8 +64,8 @@ public class StringValueMappingTest extends TestCase {
 	public static final int BIND_POSITION = -1;
 
 	public void testNormalVarcharHandling() throws SQLException {
-		final SqlTypeDescriptor.Extractor<String> extractor = varcharSqlDescriptor.getExtractor( stringJavaDescriptor );
-		final SqlTypeDescriptor.Binder<String> binder = varcharSqlDescriptor.getBinder( stringJavaDescriptor );
+		final ValueExtractor<String> extractor = varcharSqlDescriptor.getExtractor( stringJavaDescriptor );
+		final ValueBinder<String> binder = varcharSqlDescriptor.getBinder( stringJavaDescriptor );
 
 		final String fixture = "string value";
 
@@ -77,8 +78,8 @@ public class StringValueMappingTest extends TestCase {
 	}
 
 	public void testNullVarcharHandling() throws SQLException {
-		final SqlTypeDescriptor.Extractor<String> extractor = varcharSqlDescriptor.getExtractor( stringJavaDescriptor );
-		final SqlTypeDescriptor.Binder<String> binder = varcharSqlDescriptor.getBinder( stringJavaDescriptor );
+		final ValueExtractor<String> extractor = varcharSqlDescriptor.getExtractor( stringJavaDescriptor );
+		final ValueBinder<String> binder = varcharSqlDescriptor.getBinder( stringJavaDescriptor );
 
 		final String fixture = null;
 
@@ -91,8 +92,8 @@ public class StringValueMappingTest extends TestCase {
 	}
 
 	public void testNormalClobHandling() throws SQLException {
-		final SqlTypeDescriptor.Extractor<String> extractor = clobSqlDescriptor.getExtractor( stringJavaDescriptor );
-		final SqlTypeDescriptor.Binder<String> binder = clobSqlDescriptor.getBinder( stringJavaDescriptor );
+		final ValueExtractor<String> extractor = clobSqlDescriptor.getExtractor( stringJavaDescriptor );
+		final ValueBinder<String> binder = clobSqlDescriptor.getBinder( stringJavaDescriptor );
 
 		final String fixture = "clob string";
 		final Clob clob = new StringClobImpl( fixture );
@@ -106,8 +107,8 @@ public class StringValueMappingTest extends TestCase {
 	}
 
 	public void testNullClobHandling() throws SQLException {
-		final SqlTypeDescriptor.Extractor<String> extractor = clobSqlDescriptor.getExtractor( stringJavaDescriptor );
-		final SqlTypeDescriptor.Binder<String> binder = clobSqlDescriptor.getBinder( stringJavaDescriptor );
+		final ValueExtractor<String> extractor = clobSqlDescriptor.getExtractor( stringJavaDescriptor );
+		final ValueBinder<String> binder = clobSqlDescriptor.getBinder( stringJavaDescriptor );
 
 		final String fixture = null;
 		final Clob clob = null;

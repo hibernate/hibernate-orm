@@ -29,6 +29,8 @@ import java.sql.Blob;
 import java.sql.SQLException;
 
 import org.hibernate.HibernateException;
+import org.hibernate.type.descriptor.BinaryStream;
+import org.hibernate.type.descriptor.WrapperOptions;
 
 /**
  * TODO : javadoc
@@ -85,6 +87,9 @@ public class ByteArrayTypeDescriptor extends AbstractTypeDescriptor<Byte[]> {
 		}
 		if ( InputStream.class.isAssignableFrom( type ) ) {
 			return (X) new ByteArrayInputStream( unwrapBytes( value ) );
+		}
+		if ( BinaryStream.class.isAssignableFrom( type ) ) {
+			return (X) new BinaryStreamImpl( unwrapBytes( value ) );
 		}
 		if ( Blob.class.isAssignableFrom( type ) ) {
 			return (X) options.getLobCreator().createBlob( unwrapBytes( value ) );

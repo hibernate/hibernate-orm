@@ -30,6 +30,8 @@ import java.sql.SQLException;
 import java.util.Arrays;
 
 import org.hibernate.HibernateException;
+import org.hibernate.type.descriptor.CharacterStream;
+import org.hibernate.type.descriptor.WrapperOptions;
 
 /**
  * TODO : javadoc
@@ -83,6 +85,9 @@ public class PrimitiveCharacterArrayTypeDescriptor extends AbstractTypeDescripto
 		}
 		if ( Reader.class.isAssignableFrom( type ) ) {
 			return (X) new StringReader( new String( value ) );
+		}
+		if ( CharacterStream.class.isAssignableFrom( type ) ) {
+			return (X) new CharacterStreamImpl( new String( value ) );
 		}
 		throw unknownUnwrap( type );
 	}

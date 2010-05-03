@@ -31,6 +31,7 @@ import java.util.Comparator;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.jdbc.BlobProxy;
 import org.hibernate.engine.jdbc.WrappedBlob;
+import org.hibernate.type.descriptor.WrapperOptions;
 
 /**
  * Descriptor for {@link Blob} handling.

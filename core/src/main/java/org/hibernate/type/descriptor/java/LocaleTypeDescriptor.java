@@ -27,6 +27,8 @@ import java.util.Comparator;
 import java.util.Locale;
 import java.util.StringTokenizer;
 
+import org.hibernate.type.descriptor.WrapperOptions;
+
 /**
  * TODO : javadoc
  *

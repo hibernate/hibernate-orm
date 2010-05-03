@@ -26,6 +26,8 @@ package org.hibernate.type.descriptor.java;
 import java.io.Serializable;
 import java.util.Comparator;
 
+import org.hibernate.type.descriptor.WrapperOptions;
+
 /**
  * Descriptor for the Java side of a value mapping.
  *

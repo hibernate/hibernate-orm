@@ -23,48 +23,30 @@
  */
 package org.hibernate.type.descriptor.java;
 
-import java.util.Currency;
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
 
-import org.hibernate.type.descriptor.WrapperOptions;
+import org.hibernate.type.descriptor.BinaryStream;
 
 /**
- * TODO : javadoc
+ * Implementation of {@link BinaryStream}
  *
  * @author Steve Ebersole
  */
-public class CurrencyTypeDescriptor extends AbstractTypeDescriptor<Currency> {
-	public static final CurrencyTypeDescriptor INSTANCE = new CurrencyTypeDescriptor();
+public class BinaryStreamImpl implements BinaryStream {
+	private final ByteArrayInputStream stream;
+	private final int length;
 
-	public CurrencyTypeDescriptor() {
-		super( Currency.class );
+	public BinaryStreamImpl(byte[] bytes) {
+		this.stream = new ByteArrayInputStream( bytes );
+		this.length = bytes.length;
 	}
 
-	public String toString(Currency value) {
-		return value.getCurrencyCode();
+	public InputStream getInputStream() {
+		return stream;
 	}
 
-	public Currency fromString(String string) {
-		return Currency.getInstance( string );
-	}
-
-	@SuppressWarnings({ "unchecked" })
-	public <X> X unwrap(Currency value, Class<X> type, WrapperOptions options) {
-		if ( value == null ) {
-			return null;
-		}
-		if ( String.class.isAssignableFrom( type ) ) {
-			return (X) value.getCurrencyCode();
-		}
-		throw unknownUnwrap( type );
-	}
-
-	public <X> Currency wrap(X value, WrapperOptions options) {
-		if ( value == null ) {
-			return null;
-		}
-		if ( String.class.isInstance( value ) ) {
-			return Currency.getInstance( (String) value );
-		}
-		throw unknownWrap( value.getClass() );
+	public int getLength() {
+		return length;
 	}
 }

@@ -29,17 +29,16 @@ import java.sql.SQLException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.hibernate.type.descriptor.ValueExtractor;
+import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
-import org.hibernate.type.descriptor.java.WrapperOptions;
-
-import static org.hibernate.type.descriptor.sql.SqlTypeDescriptor.Extractor;
 
 /**
- * Convenience base implementation of {@link Extractor}
+ * Convenience base implementation of {@link org.hibernate.type.descriptor.ValueExtractor}
  *
  * @author Steve Ebersole
  */
-public abstract class BasicExtractor<J> implements Extractor<J> {
+public abstract class BasicExtractor<J> implements ValueExtractor<J> {
 	private static final Logger log = LoggerFactory.getLogger( BasicExtractor.class );
 
 	private final JavaTypeDescriptor<J> javaDescriptor;

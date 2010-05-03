@@ -826,7 +826,7 @@
 
         <!-- The Oracle10g test envionment -->
         <profile>
-            <id>oracle110g</id>
+            <id>oracle10g</id>
             <dependencies>
                 <dependency>
                     <groupId>com.oracle</groupId>
@@ -869,7 +869,7 @@
 
         <!-- The Oracle11gRAC test envionment -->
         <profile>
-            <id>oracle-11RAC</id>
+            <id>oracle11gRAC</id>
             <dependencies>
                 <dependency>
                     <groupId>com.oracle</groupId>

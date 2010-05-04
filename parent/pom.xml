@@ -61,7 +61,7 @@
 
     <ciManagement>
         <system>hudson</system>
-        <url>http://hudson.jboss.org/hudson/job/hibernate-testsuite/</url>
+        <url>http://hudson.jboss.org/hudson/job/hibernate-core-trunk/</url>
         <notifiers>
             <notifier>
                 <type>mail</type>

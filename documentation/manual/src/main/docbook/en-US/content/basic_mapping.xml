@@ -455,20 +455,20 @@ public class Flight implements Serializable {
         </listitem>
 
         <listitem>
-          <para><literal>polymorphism</literal> (defaults to
+          <para><literal>polymorphisms</literal> (defaults to
           <literal>IMPLICIT</literal>): determines whether implicit or
-          explicit query polymorphism is used. <emphasis>Implicit</emphasis>
-          polymorphism means that instances of the class will be returned by a
-          query that names any superclass or implemented interface or class,
+          explicit query polymorphisms is used. <emphasis>Implicit</emphasis>
+          polymorphisms means that instances of the class will be returned by
+          a query that names any superclass or implemented interface or class,
           and that instances of any subclass of the class will be returned by
           a query that names the class itself. <emphasis>Explicit</emphasis>
-          polymorphism means that class instances will be returned only by
+          polymorphisms means that class instances will be returned only by
           queries that explicitly name that class. Queries that name the class
           will return only instances of subclasses mapped. For most purposes,
-          the default <literal>polymorphism=IMPLICIT</literal> is appropriate.
-          Explicit polymorphism is useful when two different classes are
-          mapped to the same table This allows a "lightweight" class that
-          contains a subset of the table columns.</para>
+          the default <literal>polymorphisms=IMPLICIT</literal> is
+          appropriate. Explicit polymorphisms is useful when two different
+          classes are mapped to the same table This allows a "lightweight"
+          class that contains a subset of the table columns.</para>
         </listitem>
 
         <listitem>
@@ -727,9 +727,9 @@ public class Summary {
           </callout>
 
           <callout arearefs="class11">
-            <para><literal>polymorphism</literal> (optional - defaults to
+            <para><literal>polymorphisms</literal> (optional - defaults to
             <literal>implicit</literal>): determines whether implicit or
-            explicit query polymorphism is used.</para>
+            explicit query polymorphisms is used.</para>
           </callout>
 
           <callout arearefs="class12">
@@ -2154,34 +2154,179 @@ public class Customer implements Serializable {
       </section>
     </section>
 
-    <section id="mapping-declaration-discriminator" revision="3">
-      <title>Discriminator</title>
+    <section>
+      <title>Inheritance strategy</title>
 
-      <para>The <literal>&lt;discriminator&gt;</literal> element is required
-      for polymorphic persistence using the table-per-class-hierarchy mapping
-      strategy. It declares a discriminator column of the table. The
-      discriminator column contains marker values that tell the persistence
-      layer what subclass to instantiate for a particular row. A restricted
-      set of types can be used: <literal>string</literal>,
-      <literal>character</literal>, <literal>integer</literal>,
-      <literal>byte</literal>, <literal>short</literal>,
-      <literal>boolean</literal>, <literal>yes_no</literal>,
-      <literal>true_false</literal>.</para>
+      <para>Java is a language supporting polymorphism: a class can inherit
+      from another. Several strategies are possible to persist a class
+      hierarchy:</para>
 
-      <programlistingco role="XML">
-        <areaspec>
-          <area coords="2" id="discriminator1" />
+      <itemizedlist>
+        <listitem>
+          <para>Single table per class hierarchy strategy: a single table
+          hosts all the instances of a class hierarchy</para>
+        </listitem>
 
-          <area coords="3" id="discriminator2" />
+        <listitem>
+          <para>Joined subclass strategy: one table per class and subclass is
+          present and each table persist the properties specific to a given
+          subclass. The state of the entity is then stored in its
+          corresponding class table and all its superclasses</para>
+        </listitem>
 
-          <area coords="4" id="discriminator3" />
+        <listitem>
+          <para>Table per class strategy: one table per concrete class and
+          subclass is present and each table persist the properties of the
+          class and its superclasses. The state of the entity is then stored
+          entirely in the dedicated table for its class.</para>
+        </listitem>
+      </itemizedlist>
 
-          <area coords="5" id="discriminator4" />
+      <section id="mapping-declaration-subclass" revision="4">
+        <title>Single table per class hierarchy strategy</title>
 
-          <area coords="6" id="discriminator5" />
-        </areaspec>
+        <para>With this approach the properties of all the subclasses in a
+        given mapped class hierarchy are stored in a single table.</para>
 
-        <programlisting>&lt;discriminator
+        <para>Each subclass declares its own persistent properties and
+        subclasses. Version and id properties are assumed to be inherited from
+        the root class. Each subclass in a hierarchy must define a unique
+        discriminator value. If this is not specified, the fully qualified
+        Java class name is used.</para>
+
+        <programlisting language="JAVA" role="JAVA">@Entity
+@Inheritance(strategy=InheritanceType.SINGLE_TABLE)
+@DiscriminatorColumn(
+    name="planetype",
+    discriminatorType=DiscriminatorType.STRING
+)
+@DiscriminatorValue("Plane")
+public class Plane { ... }
+
+@Entity
+@DiscriminatorValue("A320")
+public class A320 extends Plane { ... }          </programlisting>
+
+        <para>In hbm.xml, for the table-per-class-hierarchy mapping strategy,
+        the <literal>&lt;subclass&gt;</literal> declaration is used. For
+        example:</para>
+
+        <programlistingco role="XML">
+          <areaspec>
+            <area coords="2" id="subclass1" />
+
+            <area coords="3" id="subclass2" />
+
+            <area coords="4" id="subclass3" />
+
+            <area coords="5" id="subclass4" />
+          </areaspec>
+
+          <programlisting>&lt;subclass
+        name="ClassName"
+        discriminator-value="discriminator_value"
+        proxy="ProxyInterface"
+        lazy="true|false"
+        dynamic-update="true|false"
+        dynamic-insert="true|false"
+        entity-name="EntityName"
+        node="element-name"
+        extends="SuperclassName"&gt;
+
+        &lt;property .... /&gt;
+        .....
+&lt;/subclass&gt;</programlisting>
+
+          <calloutlist>
+            <callout arearefs="subclass1">
+              <para><literal>name</literal>: the fully qualified class name of
+              the subclass.</para>
+            </callout>
+
+            <callout arearefs="subclass2">
+              <para><literal>discriminator-value</literal> (optional -
+              defaults to the class name): a value that distinguishes
+              individual subclasses.</para>
+            </callout>
+
+            <callout arearefs="subclass3">
+              <para><literal>proxy</literal> (optional): specifies a class or
+              interface used for lazy initializing proxies.</para>
+            </callout>
+
+            <callout arearefs="subclass4">
+              <para><literal>lazy</literal> (optional - defaults to
+              <literal>true</literal>): setting
+              <literal>lazy="false"</literal> disables the use of lazy
+              fetching.</para>
+            </callout>
+          </calloutlist>
+        </programlistingco>
+
+        <para>For information about inheritance mappings see <xref
+        linkend="inheritance" />.</para>
+
+        <section id="mapping-declaration-discriminator" revision="3">
+          <title>Discriminator</title>
+
+          <para>Discriminators are required for polymorphic persistence using
+          the table-per-class-hierarchy mapping strategy. It declares a
+          discriminator column of the table. The discriminator column contains
+          marker values that tell the persistence layer what subclass to
+          instantiate for a particular row. A restricted set of types can be
+          used: <literal>string</literal>, <literal>character</literal>,
+          <literal>integer</literal>, <literal>byte</literal>,
+          <literal>short</literal>, <literal>boolean</literal>,
+          <literal>yes_no</literal>, <literal>true_false</literal>.</para>
+
+          <para>Use the <classname>@DiscriminatorColumn</classname> to define
+          the discriminator column as well as the discriminator type.
+          Alternatively, you can also use
+          <classname>@DiscriminatorFormula</classname> to express in SQL what
+          would be in a virtual discriminator column. This is particularly
+          handy when the discriminator value can be extracted from one or more
+          columns of the table. Both
+          <classname>@DiscriminatorColumn</classname> and
+          <classname>@DiscriminatorFormula</classname> are to be set on the
+          root entity (once per persisted hierarchy).</para>
+
+          <para>Finally, use <classname>@DiscriminatorValue</classname> on
+          each class of the hierarchy to specify the value stored in the
+          discriminator column for a given entity. If you do not set
+          <classname>@DiscriminatorValue</classname> on a class, the fully
+          qualified class name is used.</para>
+
+          <programlisting language="JAVA" role="JAVA">@Entity
+@Inheritance(strategy=InheritanceType.SINGLE_TABLE)
+@DiscriminatorColumn(
+    name="planetype",
+    discriminatorType=DiscriminatorType.STRING
+)
+@DiscriminatorValue("Plane")
+public class Plane { ... }
+
+@Entity
+@DiscriminatorValue("A320")
+public class A320 extends Plane { ... }          </programlisting>
+
+          <para>In hbm.xml, the <literal>&lt;discriminator&gt;</literal>
+          element is used to define the discriminator column or
+          formula:</para>
+
+          <programlistingco role="XML">
+            <areaspec>
+              <area coords="2" id="discriminator1" />
+
+              <area coords="3" id="discriminator2" />
+
+              <area coords="4" id="discriminator3" />
+
+              <area coords="5" id="discriminator4" />
+
+              <area coords="6" id="discriminator5" />
+            </areaspec>
+
+            <programlisting>&lt;discriminator
         column="discriminator_column"
         type="discriminator_type"
         force="true|false"
@@ -2189,58 +2334,548 @@ public class Customer implements Serializable {
         formula="arbitrary sql expression"
 /&gt;</programlisting>
 
-        <calloutlist>
-          <callout arearefs="discriminator1">
-            <para><literal>column</literal> (optional - defaults to
-            <literal>class</literal>): the name of the discriminator
-            column.</para>
-          </callout>
+            <calloutlist>
+              <callout arearefs="discriminator1">
+                <para><literal>column</literal> (optional - defaults to
+                <literal>class</literal>): the name of the discriminator
+                column.</para>
+              </callout>
 
-          <callout arearefs="discriminator2">
-            <para><literal>type</literal> (optional - defaults to
-            <literal>string</literal>): a name that indicates the Hibernate
-            type</para>
-          </callout>
+              <callout arearefs="discriminator2">
+                <para><literal>type</literal> (optional - defaults to
+                <literal>string</literal>): a name that indicates the
+                Hibernate type</para>
+              </callout>
 
-          <callout arearefs="discriminator3">
-            <para><literal>force</literal> (optional - defaults to
-            <literal>false</literal>): "forces" Hibernate to specify the
-            allowed discriminator values, even when retrieving all instances
-            of the root class.</para>
-          </callout>
+              <callout arearefs="discriminator3">
+                <para><literal>force</literal> (optional - defaults to
+                <literal>false</literal>): "forces" Hibernate to specify the
+                allowed discriminator values, even when retrieving all
+                instances of the root class.</para>
+              </callout>
 
-          <callout arearefs="discriminator4">
-            <para><literal>insert</literal> (optional - defaults to
-            <literal>true</literal>): set this to <literal>false</literal> if
-            your discriminator column is also part of a mapped composite
-            identifier. It tells Hibernate not to include the column in SQL
-            <literal>INSERTs</literal>.</para>
-          </callout>
+              <callout arearefs="discriminator4">
+                <para><literal>insert</literal> (optional - defaults to
+                <literal>true</literal>): set this to <literal>false</literal>
+                if your discriminator column is also part of a mapped
+                composite identifier. It tells Hibernate not to include the
+                column in SQL <literal>INSERTs</literal>.</para>
+              </callout>
 
-          <callout arearefs="discriminator5">
-            <para><literal>formula</literal> (optional): an arbitrary SQL
-            expression that is executed when a type has to be evaluated. It
-            allows content-based discrimination.</para>
-          </callout>
-        </calloutlist>
-      </programlistingco>
+              <callout arearefs="discriminator5">
+                <para><literal>formula</literal> (optional): an arbitrary SQL
+                expression that is executed when a type has to be evaluated.
+                It allows content-based discrimination.</para>
+              </callout>
+            </calloutlist>
+          </programlistingco>
 
-      <para>Actual values of the discriminator column are specified by the
-      <literal>discriminator-value</literal> attribute of the
-      <literal>&lt;class&gt;</literal> and <literal>&lt;subclass&gt;</literal>
-      elements.</para>
+          <para>Actual values of the discriminator column are specified by the
+          <literal>discriminator-value</literal> attribute of the
+          <literal>&lt;class&gt;</literal> and
+          <literal>&lt;subclass&gt;</literal> elements.</para>
 
-      <para>The <literal>force</literal> attribute is only useful if the table
-      contains rows with "extra" discriminator values that are not mapped to a
-      persistent class. This will not usually be the case.</para>
+          <para>The <literal>force</literal> attribute is only useful if the
+          table contains rows with "extra" discriminator values that are not
+          mapped to a persistent class. This will not usually be the
+          case.</para>
 
-      <para>The <literal>formula</literal> attribute allows you to declare an
-      arbitrary SQL expression that will be used to evaluate the type of a
-      row. For example:</para>
+          <para>The <literal>formula</literal> attribute allows you to declare
+          an arbitrary SQL expression that will be used to evaluate the type
+          of a row. For example:</para>
 
-      <programlisting role="XML">&lt;discriminator
+          <programlisting role="XML">&lt;discriminator
     formula="case when CLASS_TYPE in ('a', 'b', 'c') then 0 else 1 end"
     type="integer"/&gt;</programlisting>
+        </section>
+      </section>
+
+      <section id="mapping-declaration-joinedsubclass" revision="3">
+        <title>Joined subclass strategy</title>
+
+        <para>Each subclass can also be mapped to its own table. This is
+        called the table-per-subclass mapping strategy. An inherited state is
+        retrieved by joining with the table of the superclass. A discriminator
+        column is not required for this mapping strategy. Each subclass must,
+        however, declare a table column holding the object identifier. The
+        primary key of this table is also a foreign key to the superclass
+        table and described by the
+        <classname>@PrimaryKeyJoinColumn</classname>s or the
+        <literal>&lt;key&gt;</literal> element.</para>
+
+        <programlisting language="JAVA" role="JAVA">@Entity @Table(name="CATS")
+@Inheritance(strategy=InheritanceType.JOINED)
+public class Cat implements Serializable { 
+    @Id @GeneratedValue(generator="cat-uuid") 
+    @GenericGenerator(name="cat-uuid", strategy="uuid")
+    String getId() { return id; }
+
+    ...
+}
+
+@Entity @Table(name="DOMESTIC_CATS")
+@PrimaryKeyJoinColumn(name="CAT")
+public class DomesticCat extends Cat { 
+    public String getName() { return name; }
+}            </programlisting>
+
+        <note>
+          <para>The table name still defaults to the non qualified class name.
+          Also if <classname>@PrimaryKeyJoinColumn</classname> is not set, the
+          primary key / foreign key columns are assumed to have the same names
+          as the primary key columns of the primary table of the
+          superclass.</para>
+        </note>
+
+        <para>In hbm.xml, use the <literal>&lt;joined-subclass&gt;</literal>
+        element. For example:</para>
+
+        <programlistingco role="XML">
+          <areaspec>
+            <area coords="2" id="joinedsubclass1" />
+
+            <area coords="3" id="joinedsubclass2" />
+
+            <area coords="4" id="joinedsubclass3" />
+
+            <area coords="5" id="joinedsubclass4" />
+          </areaspec>
+
+          <programlisting>&lt;joined-subclass
+        name="ClassName"
+        table="tablename"
+        proxy="ProxyInterface"
+        lazy="true|false"
+        dynamic-update="true|false"
+        dynamic-insert="true|false"
+        schema="schema"
+        catalog="catalog"
+        extends="SuperclassName"
+        persister="ClassName"
+        subselect="SQL expression"
+        entity-name="EntityName"
+        node="element-name"&gt;
+
+        &lt;key .... &gt;
+
+        &lt;property .... /&gt;
+        .....
+&lt;/joined-subclass&gt;</programlisting>
+
+          <calloutlist>
+            <callout arearefs="joinedsubclass1">
+              <para><literal>name</literal>: the fully qualified class name of
+              the subclass.</para>
+            </callout>
+
+            <callout arearefs="joinedsubclass2">
+              <para><literal>table</literal>: the name of the subclass
+              table.</para>
+            </callout>
+
+            <callout arearefs="joinedsubclass3">
+              <para><literal>proxy</literal> (optional): specifies a class or
+              interface to use for lazy initializing proxies.</para>
+            </callout>
+
+            <callout arearefs="joinedsubclass4">
+              <para><literal>lazy</literal> (optional, defaults to
+              <literal>true</literal>): setting
+              <literal>lazy="false"</literal> disables the use of lazy
+              fetching.</para>
+            </callout>
+          </calloutlist>
+        </programlistingco>
+
+        <para>Use the <literal>&lt;key&gt;</literal> element to declare the
+        primary key / foreign key column. The mapping at the start of the
+        chapter would then be re-written as:</para>
+
+        <programlisting role="XML">&lt;?xml version="1.0"?&gt;
+&lt;!DOCTYPE hibernate-mapping PUBLIC
+        "-//Hibernate/Hibernate Mapping DTD//EN"
+        "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd"&gt;
+
+&lt;hibernate-mapping package="eg"&gt;
+
+        &lt;class name="Cat" table="CATS"&gt;
+                &lt;id name="id" column="uid" type="long"&gt;
+                        &lt;generator class="hilo"/&gt;
+                &lt;/id&gt;
+                &lt;property name="birthdate" type="date"/&gt;
+                &lt;property name="color" not-null="true"/&gt;
+                &lt;property name="sex" not-null="true"/&gt;
+                &lt;property name="weight"/&gt;
+                &lt;many-to-one name="mate"/&gt;
+                &lt;set name="kittens"&gt;
+                        &lt;key column="MOTHER"/&gt;
+                        &lt;one-to-many class="Cat"/&gt;
+                &lt;/set&gt;
+                &lt;joined-subclass name="DomesticCat" table="DOMESTIC_CATS"&gt;
+                    &lt;key column="CAT"/&gt;
+                    &lt;property name="name" type="string"/&gt;
+                &lt;/joined-subclass&gt;
+        &lt;/class&gt;
+
+        &lt;class name="eg.Dog"&gt;
+                &lt;!-- mapping for Dog could go here --&gt;
+        &lt;/class&gt;
+
+&lt;/hibernate-mapping&gt;</programlisting>
+
+        <para>For information about inheritance mappings see <xref
+        linkend="inheritance" />.</para>
+      </section>
+
+      <section id="mapping-declaration-unionsubclass" revision="2">
+        <title>Table per class strategy</title>
+
+        <para>A third option is to map only the concrete classes of an
+        inheritance hierarchy to tables. This is called the
+        table-per-concrete-class strategy. Each table defines all persistent
+        states of the class, including the inherited state. In Hibernate, it
+        is not necessary to explicitly map such inheritance hierarchies. You
+        can map each class as a separate entity root. However, if you wish use
+        polymorphic associations (e.g. an association to the superclass of
+        your hierarchy), you need to use the union subclass mapping.</para>
+
+        <programlisting language="JAVA" role="JAVA">@Entity
+@Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
+public class Flight implements Serializable { ... }            </programlisting>
+
+        <para>Or in hbm.xml:</para>
+
+        <programlistingco role="XML">
+          <areaspec>
+            <area coords="2" id="unionsubclass1" />
+
+            <area coords="3" id="unionsubclass2" />
+
+            <area coords="4" id="unionsubclass3" />
+
+            <area coords="5" id="unionsubclass4" />
+          </areaspec>
+
+          <programlisting>&lt;union-subclass
+        name="ClassName"
+        table="tablename"
+        proxy="ProxyInterface"
+        lazy="true|false"
+        dynamic-update="true|false"
+        dynamic-insert="true|false"
+        schema="schema"
+        catalog="catalog"
+        extends="SuperclassName"
+        abstract="true|false"
+        persister="ClassName"
+        subselect="SQL expression"
+        entity-name="EntityName"
+        node="element-name"&gt;
+
+        &lt;property .... /&gt;
+        .....
+&lt;/union-subclass&gt;</programlisting>
+
+          <calloutlist>
+            <callout arearefs="unionsubclass1">
+              <para><literal>name</literal>: the fully qualified class name of
+              the subclass.</para>
+            </callout>
+
+            <callout arearefs="unionsubclass2">
+              <para><literal>table</literal>: the name of the subclass
+              table.</para>
+            </callout>
+
+            <callout arearefs="unionsubclass3">
+              <para><literal>proxy</literal> (optional): specifies a class or
+              interface to use for lazy initializing proxies.</para>
+            </callout>
+
+            <callout arearefs="unionsubclass4">
+              <para><literal>lazy</literal> (optional, defaults to
+              <literal>true</literal>): setting
+              <literal>lazy="false"</literal> disables the use of lazy
+              fetching.</para>
+            </callout>
+          </calloutlist>
+        </programlistingco>
+
+        <para>No discriminator column or key column is required for this
+        mapping strategy.</para>
+
+        <para>For information about inheritance mappings see <xref
+        linkend="inheritance" />.</para>
+      </section>
+
+      <section>
+        <title>Inherit properties from superclasses</title>
+
+        <para>This is sometimes useful to share common properties through a
+        technical or a business superclass without including it as a regular
+        mapped entity (ie no specific table for this entity). For that purpose
+        you can map them as <literal>@MappedSuperclass</literal>.</para>
+
+        <programlisting language="JAVA" role="JAVA">@MappedSuperclass
+public class BaseEntity {
+    @Basic
+    @Temporal(TemporalType.TIMESTAMP)
+    public Date getLastUpdate() { ... }
+    public String getLastUpdater() { ... }
+    ...
+}
+
+@Entity class Order extends BaseEntity {
+    @Id public Integer getId() { ... }
+    ...
+}</programlisting>
+
+        <para>In database, this hierarchy will be represented as an
+        <literal>Order</literal> table having the <literal>id</literal>,
+        <literal>lastUpdate</literal> and <literal>lastUpdater</literal>
+        columns. The embedded superclass property mappings are copied into
+        their entity subclasses. Remember that the embeddable superclass is
+        not the root of the hierarchy though.</para>
+
+        <note>
+          <para>Properties from superclasses not mapped as
+          <literal>@MappedSuperclass</literal> are ignored.</para>
+        </note>
+
+        <note>
+          <para>The default access type (field or methods) is used, unless you
+          use the <literal>@Access</literal> annotation.</para>
+        </note>
+
+        <note>
+          <para>The same notion can be applied to
+          <literal>@Embeddable</literal> objects to persist properties from
+          their superclasses. You also need to use
+          <literal>@MappedSuperclass</literal> to do that (this should not be
+          considered as a standard EJB3 feature though)</para>
+        </note>
+
+        <note>
+          <para>It is allowed to mark a class as
+          <literal>@MappedSuperclass</literal> in the middle of the mapped
+          inheritance hierarchy.</para>
+        </note>
+
+        <note>
+          <para>Any class in the hierarchy non annotated with
+          <literal>@MappedSuperclass</literal> nor <literal>@Entity</literal>
+          will be ignored.</para>
+        </note>
+
+        <para>You can override columns defined in entity superclasses at the
+        root entity level using the <literal>@AttributeOverride</literal>
+        annotation.</para>
+
+        <programlisting language="JAVA" role="JAVA">@MappedSuperclass
+public class FlyingObject implements Serializable {
+
+    public int getAltitude() {
+        return altitude;
+    }
+
+    @Transient
+    public int getMetricAltitude() {
+        return metricAltitude;
+    }
+
+    @ManyToOne
+    public PropulsionType getPropulsion() {
+        return metricAltitude;
+    }
+    ...
+}
+
+@Entity
+@AttributeOverride( name="altitude", column = @Column(name="fld_altitude") )
+@AssociationOverride( 
+   name="propulsion", 
+   joinColumns = @JoinColumn(name="fld_propulsion_fk") 
+)
+public class Plane extends FlyingObject {
+    ...
+}</programlisting>
+
+        <para>The <literal>altitude</literal> property will be persisted in an
+        <literal>fld_altitude</literal> column of table
+        <literal>Plane</literal> and the propulsion association will be
+        materialized in a <literal>fld_propulsion_fk</literal> foreign key
+        column.</para>
+
+        <para>You can define <literal>@AttributeOverride</literal>(s) and
+        <literal>@AssociationOverride</literal>(s) on
+        <literal>@Entity</literal> classes,
+        <literal>@MappedSuperclass</literal> classes and properties pointing
+        to an <literal>@Embeddable</literal> object.</para>
+
+        <para>In hbm.xml, simply map the properties of the superclass in the
+        <literal>&lt;class&gt;</literal> element of the entity that needs to
+        inherit them.</para>
+      </section>
+
+      <section id="mapping-declaration-join" revision="3">
+        <title>Mapping one entity to several tables</title>
+
+        <para>While not recommended for a fresh schema, some legacy databases
+        force your to map a single entity on several tables. </para>
+
+        <para>Using the <literal>@SecondaryTable</literal> or
+        <literal>@SecondaryTables</literal> class level annotations. To
+        express that a column is in a particular table, use the
+        <literal>table</literal> parameter of <literal>@Column</literal> or
+        <literal>@JoinColumn</literal>.</para>
+
+        <programlisting language="JAVA" role="JAVA">@Entity
+@Table(name="MainCat")
+@SecondaryTables({
+    @SecondaryTable(name="Cat1", pkJoinColumns={
+        @PrimaryKeyJoinColumn(name="cat_id", referencedColumnName="id")
+    ),
+    @SecondaryTable(name="Cat2", uniqueConstraints={@UniqueConstraint(columnNames={"storyPart2"})})
+})
+public class Cat implements Serializable {
+
+    private Integer id;
+    private String name;
+    private String storyPart1;
+    private String storyPart2;
+
+    @Id @GeneratedValue
+    public Integer getId() {
+        return id;
+    }
+
+    public String getName() {
+        return name;
+    }
+    
+    @Column(table="Cat1")
+    public String getStoryPart1() {
+        return storyPart1;
+    }
+
+    @Column(table="Cat2")
+    public String getStoryPart2() {
+        return storyPart2;
+    }
+}</programlisting>
+
+        <para>In this example, <literal>name</literal> will be in
+        <literal>MainCat</literal>. <literal>storyPart1</literal> will be in
+        <literal>Cat1</literal> and <literal>storyPart2</literal> will be in
+        <literal>Cat2</literal>. <literal>Cat1</literal> will be joined to
+        <literal>MainCat</literal> using the <literal>cat_id</literal> as a
+        foreign key, and <literal>Cat2</literal> using <literal>id</literal>
+        (ie the same column name, the <literal>MainCat</literal> id column
+        has). Plus a unique constraint on <literal>storyPart2</literal> has
+        been set.</para>
+
+        <para>In hbm.xml, use the <literal>&lt;join&gt;</literal>
+        element.</para>
+
+        <programlistingco role="XML">
+          <areaspec>
+            <area coords="2" id="join1" />
+
+            <area coords="3" id="join2" />
+
+            <area coords="4" id="join3" />
+
+            <area coords="5" id="join4" />
+
+            <area coords="6" id="join5" />
+
+            <area coords="7" id="join6" />
+          </areaspec>
+
+          <programlisting>&lt;join
+        table="tablename"
+        schema="owner"
+        catalog="catalog"
+        fetch="join|select"
+        inverse="true|false"
+        optional="true|false"&gt;
+
+        &lt;key ... /&gt;
+
+        &lt;property ... /&gt;
+        ...
+&lt;/join&gt;</programlisting>
+
+          <calloutlist>
+            <callout arearefs="join1">
+              <para><literal>table</literal>: the name of the joined
+              table.</para>
+            </callout>
+
+            <callout arearefs="join2">
+              <para><literal>schema</literal> (optional): overrides the schema
+              name specified by the root
+              <literal>&lt;hibernate-mapping&gt;</literal> element.</para>
+            </callout>
+
+            <callout arearefs="join3">
+              <para><literal>catalog</literal> (optional): overrides the
+              catalog name specified by the root
+              <literal>&lt;hibernate-mapping&gt;</literal> element.</para>
+            </callout>
+
+            <callout arearefs="join4">
+              <para><literal>fetch</literal> (optional - defaults to
+              <literal>join</literal>): if set to <literal>join</literal>, the
+              default, Hibernate will use an inner join to retrieve a
+              <literal>&lt;join&gt;</literal> defined by a class or its
+              superclasses. It will use an outer join for a
+              <literal>&lt;join&gt;</literal> defined by a subclass. If set to
+              <literal>select</literal> then Hibernate will use a sequential
+              select for a <literal>&lt;join&gt;</literal> defined on a
+              subclass. This will be issued only if a row represents an
+              instance of the subclass. Inner joins will still be used to
+              retrieve a <literal>&lt;join&gt;</literal> defined by the class
+              and its superclasses.</para>
+            </callout>
+
+            <callout arearefs="join5">
+              <para><literal>inverse</literal> (optional - defaults to
+              <literal>false</literal>): if enabled, Hibernate will not insert
+              or update the properties defined by this join.</para>
+            </callout>
+
+            <callout arearefs="join6">
+              <para><literal>optional</literal> (optional - defaults to
+              <literal>false</literal>): if enabled, Hibernate will insert a
+              row only if the properties defined by this join are non-null. It
+              will always use an outer join to retrieve the properties.</para>
+            </callout>
+          </calloutlist>
+        </programlistingco>
+
+        <para>For example, address information for a person can be mapped to a
+        separate table while preserving value type semantics for all
+        properties:</para>
+
+        <programlisting role="XML">&lt;class name="Person"
+    table="PERSON"&gt;
+
+    &lt;id name="id" column="PERSON_ID"&gt;...&lt;/id&gt;
+
+    &lt;join table="ADDRESS"&gt;
+        &lt;key column="ADDRESS_ID"/&gt;
+        &lt;property name="address"/&gt;
+        &lt;property name="zip"/&gt;
+        &lt;property name="country"/&gt;
+    &lt;/join&gt;
+    ...</programlisting>
+
+        <para>This feature is often only useful for legacy data models. We
+        recommend fewer tables than classes and a fine-grained domain model.
+        However, it is useful for switching between inheritance mapping
+        strategies in a single hierarchy, as explained later.</para>
+      </section>
     </section>
 
     <section id="mapping-declaration-version" revision="4">
@@ -3268,363 +3903,6 @@ public class Customer implements Serializable {
 
       <para>The use of this outside the context of mapping legacy data is not
       recommended.</para>
-    </section>
-
-    <section id="mapping-declaration-subclass" revision="4">
-      <title>Subclass</title>
-
-      <para>Polymorphic persistence requires the declaration of each subclass
-      of the root persistent class. For the table-per-class-hierarchy mapping
-      strategy, the <literal>&lt;subclass&gt;</literal> declaration is used.
-      For example:</para>
-
-      <programlistingco role="XML">
-        <areaspec>
-          <area coords="2" id="subclass1" />
-
-          <area coords="3" id="subclass2" />
-
-          <area coords="4" id="subclass3" />
-
-          <area coords="5" id="subclass4" />
-        </areaspec>
-
-        <programlisting>&lt;subclass
-        name="ClassName"
-        discriminator-value="discriminator_value"
-        proxy="ProxyInterface"
-        lazy="true|false"
-        dynamic-update="true|false"
-        dynamic-insert="true|false"
-        entity-name="EntityName"
-        node="element-name"
-        extends="SuperclassName"&gt;
-
-        &lt;property .... /&gt;
-        .....
-&lt;/subclass&gt;</programlisting>
-
-        <calloutlist>
-          <callout arearefs="subclass1">
-            <para><literal>name</literal>: the fully qualified class name of
-            the subclass.</para>
-          </callout>
-
-          <callout arearefs="subclass2">
-            <para><literal>discriminator-value</literal> (optional - defaults
-            to the class name): a value that distinguishes individual
-            subclasses.</para>
-          </callout>
-
-          <callout arearefs="subclass3">
-            <para><literal>proxy</literal> (optional): specifies a class or
-            interface used for lazy initializing proxies.</para>
-          </callout>
-
-          <callout arearefs="subclass4">
-            <para><literal>lazy</literal> (optional - defaults to
-            <literal>true</literal>): setting <literal>lazy="false"</literal>
-            disables the use of lazy fetching.</para>
-          </callout>
-        </calloutlist>
-      </programlistingco>
-
-      <para>Each subclass declares its own persistent properties and
-      subclasses. <literal>&lt;version&gt;</literal> and
-      <literal>&lt;id&gt;</literal> properties are assumed to be inherited
-      from the root class. Each subclass in a hierarchy must define a unique
-      <literal>discriminator-value</literal>. If this is not specified, the
-      fully qualified Java class name is used.</para>
-
-      <para>For information about inheritance mappings see <xref
-      linkend="inheritance" />.</para>
-    </section>
-
-    <section id="mapping-declaration-joinedsubclass" revision="3">
-      <title>Joined-subclass</title>
-
-      <para>Each subclass can also be mapped to its own table. This is called
-      the table-per-subclass mapping strategy. An inherited state is retrieved
-      by joining with the table of the superclass. To do this you use the
-      <literal>&lt;joined-subclass&gt;</literal> element. For example:</para>
-
-      <programlistingco role="XML">
-        <areaspec>
-          <area coords="2" id="joinedsubclass1" />
-
-          <area coords="3" id="joinedsubclass2" />
-
-          <area coords="4" id="joinedsubclass3" />
-
-          <area coords="5" id="joinedsubclass4" />
-        </areaspec>
-
-        <programlisting>&lt;joined-subclass
-        name="ClassName"
-        table="tablename"
-        proxy="ProxyInterface"
-        lazy="true|false"
-        dynamic-update="true|false"
-        dynamic-insert="true|false"
-        schema="schema"
-        catalog="catalog"
-        extends="SuperclassName"
-        persister="ClassName"
-        subselect="SQL expression"
-        entity-name="EntityName"
-        node="element-name"&gt;
-
-        &lt;key .... &gt;
-
-        &lt;property .... /&gt;
-        .....
-&lt;/joined-subclass&gt;</programlisting>
-
-        <calloutlist>
-          <callout arearefs="joinedsubclass1">
-            <para><literal>name</literal>: the fully qualified class name of
-            the subclass.</para>
-          </callout>
-
-          <callout arearefs="joinedsubclass2">
-            <para><literal>table</literal>: the name of the subclass
-            table.</para>
-          </callout>
-
-          <callout arearefs="joinedsubclass3">
-            <para><literal>proxy</literal> (optional): specifies a class or
-            interface to use for lazy initializing proxies.</para>
-          </callout>
-
-          <callout arearefs="joinedsubclass4">
-            <para><literal>lazy</literal> (optional, defaults to
-            <literal>true</literal>): setting <literal>lazy="false"</literal>
-            disables the use of lazy fetching.</para>
-          </callout>
-        </calloutlist>
-      </programlistingco>
-
-      <para>A discriminator column is not required for this mapping strategy.
-      Each subclass must, however, declare a table column holding the object
-      identifier using the <literal>&lt;key&gt;</literal> element. The mapping
-      at the start of the chapter would then be re-written as:</para>
-
-      <programlisting role="XML">&lt;?xml version="1.0"?&gt;
-&lt;!DOCTYPE hibernate-mapping PUBLIC
-        "-//Hibernate/Hibernate Mapping DTD//EN"
-        "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd"&gt;
-
-&lt;hibernate-mapping package="eg"&gt;
-
-        &lt;class name="Cat" table="CATS"&gt;
-                &lt;id name="id" column="uid" type="long"&gt;
-                        &lt;generator class="hilo"/&gt;
-                &lt;/id&gt;
-                &lt;property name="birthdate" type="date"/&gt;
-                &lt;property name="color" not-null="true"/&gt;
-                &lt;property name="sex" not-null="true"/&gt;
-                &lt;property name="weight"/&gt;
-                &lt;many-to-one name="mate"/&gt;
-                &lt;set name="kittens"&gt;
-                        &lt;key column="MOTHER"/&gt;
-                        &lt;one-to-many class="Cat"/&gt;
-                &lt;/set&gt;
-                &lt;joined-subclass name="DomesticCat" table="DOMESTIC_CATS"&gt;
-                    &lt;key column="CAT"/&gt;
-                    &lt;property name="name" type="string"/&gt;
-                &lt;/joined-subclass&gt;
-        &lt;/class&gt;
-
-        &lt;class name="eg.Dog"&gt;
-                &lt;!-- mapping for Dog could go here --&gt;
-        &lt;/class&gt;
-
-&lt;/hibernate-mapping&gt;</programlisting>
-
-      <para>For information about inheritance mappings see <xref
-      linkend="inheritance" />.</para>
-    </section>
-
-    <section id="mapping-declaration-unionsubclass" revision="2">
-      <title>Union-subclass</title>
-
-      <para>A third option is to map only the concrete classes of an
-      inheritance hierarchy to tables. This is called the
-      table-per-concrete-class strategy. Each table defines all persistent
-      states of the class, including the inherited state. In Hibernate, it is
-      not necessary to explicitly map such inheritance hierarchies. You can
-      map each class with a separate <literal>&lt;class&gt;</literal>
-      declaration. However, if you wish use polymorphic associations (e.g. an
-      association to the superclass of your hierarchy), you need to use the
-      <literal>&lt;union-subclass&gt;</literal> mapping. For example:</para>
-
-      <programlistingco role="XML">
-        <areaspec>
-          <area coords="2" id="unionsubclass1" />
-
-          <area coords="3" id="unionsubclass2" />
-
-          <area coords="4" id="unionsubclass3" />
-
-          <area coords="5" id="unionsubclass4" />
-        </areaspec>
-
-        <programlisting>&lt;union-subclass
-        name="ClassName"
-        table="tablename"
-        proxy="ProxyInterface"
-        lazy="true|false"
-        dynamic-update="true|false"
-        dynamic-insert="true|false"
-        schema="schema"
-        catalog="catalog"
-        extends="SuperclassName"
-        abstract="true|false"
-        persister="ClassName"
-        subselect="SQL expression"
-        entity-name="EntityName"
-        node="element-name"&gt;
-
-        &lt;property .... /&gt;
-        .....
-&lt;/union-subclass&gt;</programlisting>
-
-        <calloutlist>
-          <callout arearefs="unionsubclass1">
-            <para><literal>name</literal>: the fully qualified class name of
-            the subclass.</para>
-          </callout>
-
-          <callout arearefs="unionsubclass2">
-            <para><literal>table</literal>: the name of the subclass
-            table.</para>
-          </callout>
-
-          <callout arearefs="unionsubclass3">
-            <para><literal>proxy</literal> (optional): specifies a class or
-            interface to use for lazy initializing proxies.</para>
-          </callout>
-
-          <callout arearefs="unionsubclass4">
-            <para><literal>lazy</literal> (optional, defaults to
-            <literal>true</literal>): setting <literal>lazy="false"</literal>
-            disables the use of lazy fetching.</para>
-          </callout>
-        </calloutlist>
-      </programlistingco>
-
-      <para>No discriminator column or key column is required for this mapping
-      strategy.</para>
-
-      <para>For information about inheritance mappings see <xref
-      linkend="inheritance" />.</para>
-    </section>
-
-    <section id="mapping-declaration-join" revision="3">
-      <title>Join</title>
-
-      <para>Using the <literal>&lt;join&gt;</literal> element, it is possible
-      to map properties of one class to several tables that have a one-to-one
-      relationship. For example:</para>
-
-      <programlistingco role="XML">
-        <areaspec>
-          <area coords="2" id="join1" />
-
-          <area coords="3" id="join2" />
-
-          <area coords="4" id="join3" />
-
-          <area coords="5" id="join4" />
-
-          <area coords="6" id="join5" />
-
-          <area coords="7" id="join6" />
-        </areaspec>
-
-        <programlisting>&lt;join
-        table="tablename"
-        schema="owner"
-        catalog="catalog"
-        fetch="join|select"
-        inverse="true|false"
-        optional="true|false"&gt;
-
-        &lt;key ... /&gt;
-
-        &lt;property ... /&gt;
-        ...
-&lt;/join&gt;</programlisting>
-
-        <calloutlist>
-          <callout arearefs="join1">
-            <para><literal>table</literal>: the name of the joined
-            table.</para>
-          </callout>
-
-          <callout arearefs="join2">
-            <para><literal>schema</literal> (optional): overrides the schema
-            name specified by the root
-            <literal>&lt;hibernate-mapping&gt;</literal> element.</para>
-          </callout>
-
-          <callout arearefs="join3">
-            <para><literal>catalog</literal> (optional): overrides the catalog
-            name specified by the root
-            <literal>&lt;hibernate-mapping&gt;</literal> element.</para>
-          </callout>
-
-          <callout arearefs="join4">
-            <para><literal>fetch</literal> (optional - defaults to
-            <literal>join</literal>): if set to <literal>join</literal>, the
-            default, Hibernate will use an inner join to retrieve a
-            <literal>&lt;join&gt;</literal> defined by a class or its
-            superclasses. It will use an outer join for a
-            <literal>&lt;join&gt;</literal> defined by a subclass. If set to
-            <literal>select</literal> then Hibernate will use a sequential
-            select for a <literal>&lt;join&gt;</literal> defined on a
-            subclass. This will be issued only if a row represents an instance
-            of the subclass. Inner joins will still be used to retrieve a
-            <literal>&lt;join&gt;</literal> defined by the class and its
-            superclasses.</para>
-          </callout>
-
-          <callout arearefs="join5">
-            <para><literal>inverse</literal> (optional - defaults to
-            <literal>false</literal>): if enabled, Hibernate will not insert
-            or update the properties defined by this join.</para>
-          </callout>
-
-          <callout arearefs="join6">
-            <para><literal>optional</literal> (optional - defaults to
-            <literal>false</literal>): if enabled, Hibernate will insert a row
-            only if the properties defined by this join are non-null. It will
-            always use an outer join to retrieve the properties.</para>
-          </callout>
-        </calloutlist>
-      </programlistingco>
-
-      <para>For example, address information for a person can be mapped to a
-      separate table while preserving value type semantics for all
-      properties:</para>
-
-      <programlisting role="XML">&lt;class name="Person"
-    table="PERSON"&gt;
-
-    &lt;id name="id" column="PERSON_ID"&gt;...&lt;/id&gt;
-
-    &lt;join table="ADDRESS"&gt;
-        &lt;key column="ADDRESS_ID"/&gt;
-        &lt;property name="address"/&gt;
-        &lt;property name="zip"/&gt;
-        &lt;property name="country"/&gt;
-    &lt;/join&gt;
-    ...</programlisting>
-
-      <para>This feature is often only useful for legacy data models. We
-      recommend fewer tables than classes and a fine-grained domain model.
-      However, it is useful for switching between inheritance mapping
-      strategies in a single hierarchy, as explained later.</para>
     </section>
 
     <section id="mapping-declaration-key">

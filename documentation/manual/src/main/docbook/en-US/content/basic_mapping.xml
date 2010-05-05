@@ -2721,7 +2721,7 @@ public class Plane extends FlyingObject {
         <title>Mapping one entity to several tables</title>
 
         <para>While not recommended for a fresh schema, some legacy databases
-        force your to map a single entity on several tables. </para>
+        force your to map a single entity on several tables.</para>
 
         <para>Using the <literal>@SecondaryTable</literal> or
         <literal>@SecondaryTables</literal> class level annotations. To
@@ -2773,6 +2773,79 @@ public class Cat implements Serializable {
         (ie the same column name, the <literal>MainCat</literal> id column
         has). Plus a unique constraint on <literal>storyPart2</literal> has
         been set.</para>
+
+        <para>There is also additional tuning accessible via the
+        <classname>@org.hibernate.annotations.Table</classname>
+        annotation:</para>
+
+        <itemizedlist>
+          <listitem>
+            <para><literal>fetch</literal>: If set to JOIN, the default,
+            Hibernate will use an inner join to retrieve a secondary table
+            defined by a class or its superclasses and an outer join for a
+            secondary table defined by a subclass. If set to
+            <classname>SELECT</classname> then Hibernate will use a sequential
+            select for a secondary table defined on a subclass, which will be
+            issued only if a row turns out to represent an instance of the
+            subclass. Inner joins will still be used to retrieve a secondary
+            defined by the class and its superclasses.</para>
+          </listitem>
+
+          <listitem>
+            <para><literal>inverse</literal>: If true, Hibernate will not try
+            to insert or update the properties defined by this join. Default
+            to false.</para>
+          </listitem>
+
+          <listitem>
+            <para><literal>optional</literal>: If enabled (the default),
+            Hibernate will insert a row only if the properties defined by this
+            join are non-null and will always use an outer join to retrieve
+            the properties.</para>
+          </listitem>
+
+          <listitem>
+            <para><literal>foreignKey</literal>: defines the Foreign Key name
+            of a secondary table pointing back to the primary table.</para>
+          </listitem>
+        </itemizedlist>
+
+        <para>Make sure to use the secondary table name in the
+        <methodname>appliesto</methodname> property</para>
+
+        <programlisting language="JAVA" role="JAVA">@Entity
+@Table(name="MainCat")
+@SecondaryTable(name="Cat1")
+@org.hibernate.annotations.Table(
+   appliesTo="Cat1",
+   fetch=FetchMode.SELECT,
+   optional=true)
+public class Cat implements Serializable {
+
+    private Integer id;
+    private String name;
+    private String storyPart1;
+    private String storyPart2;
+
+    @Id @GeneratedValue
+    public Integer getId() {
+        return id;
+    }
+
+    public String getName() {
+        return name;
+    }
+    
+    @Column(table="Cat1")
+    public String getStoryPart1() {
+        return storyPart1;
+    }
+
+    @Column(table="Cat2")
+    public String getStoryPart2() {
+        return storyPart2;
+    }
+}</programlisting>
 
         <para>In hbm.xml, use the <literal>&lt;join&gt;</literal>
         element.</para>
@@ -2878,32 +2951,74 @@ public class Cat implements Serializable {
       </section>
     </section>
 
-    <section id="mapping-declaration-version" revision="4">
-      <title>Version (optional)</title>
+    <section>
+      <title>Optimistic locking properties (optional)</title>
 
-      <para>The <literal>&lt;version&gt;</literal> element is optional and
-      indicates that the table contains versioned data. This is particularly
-      useful if you plan to use <emphasis>long transactions</emphasis>. See
-      below for more information:</para>
+      <para>When using long transactions or conversations that span several
+      database transactions, it is useful to store versioning data to ensure
+      that if the same entity is updated by two conversations, the last to
+      commit changes will be informed and not override the other
+      conversation's work. It guarantees some isolation while still allowing
+      for good scalability and works particularly well in read-often
+      write-sometimes situations.</para>
 
-      <programlistingco role="XML">
-        <areaspec>
-          <area coords="2" id="version1" />
+      <section id="entity-mapping-entity-version">
+        <title>Versioning for optimistic locking</title>
 
-          <area coords="3" id="version2" />
+        <para>You can add optimistic locking capability to an entity using the
+        <literal>@Version</literal> annotation:</para>
 
-          <area coords="4" id="version3" />
+        <programlisting language="JAVA" role="JAVA">@Entity
+public class Flight implements Serializable {
+...
+    @Version
+    @Column(name="OPTLOCK")
+    public Integer getVersion() { ... }
+}           </programlisting>
 
-          <area coords="5" id="version4" />
+        <para>The version property will be mapped to the
+        <literal>OPTLOCK</literal> column, and the entity manager will use it
+        to detect conflicting updates (preventing lost updates you might
+        otherwise see with the last-commit-wins strategy).</para>
 
-          <area coords="6" id="version5" />
+        <para>The version column may be a numeric (the recommended solution)
+        or a timestamp. Hibernate supports any kind of type provided that you
+        define and implement the appropriate
+        <classname>UserVersionType</classname>.</para>
 
-          <area coords="7" id="version6" />
+        <para>The application must not alter the version number set up by
+        Hibernate in any way. To artificially increase the version number,
+        check in Hibernate Entity Manager's reference documentation
+        <literal>LockModeType.OPTIMISTIC_FORCE_INCREMENT</literal> or
+        <literal>LockModeType.PESSIMISTIC_FORCE_INCREMENT</literal>.</para>
+      </section>
 
-          <area coords="8" id="version7" />
-        </areaspec>
+      <section id="mapping-declaration-version" revision="4">
+        <title>Version</title>
 
-        <programlisting>&lt;version
+        <para>The <literal>&lt;version&gt;</literal> element is optional and
+        indicates that the table contains versioned data. This is particularly
+        useful if you plan to use <emphasis>long transactions</emphasis>. See
+        below for more information:</para>
+
+        <programlistingco role="XML">
+          <areaspec>
+            <area coords="2" id="version1" />
+
+            <area coords="3" id="version2" />
+
+            <area coords="4" id="version3" />
+
+            <area coords="5" id="version4" />
+
+            <area coords="6" id="version5" />
+
+            <area coords="7" id="version6" />
+
+            <area coords="8" id="version7" />
+          </areaspec>
+
+          <programlisting>&lt;version
         column="version_column"
         name="propertyName"
         type="typename"
@@ -2914,97 +3029,98 @@ public class Cat implements Serializable {
         node="element-name|@attribute-name|element/@attribute|."
 /&gt;</programlisting>
 
-        <calloutlist>
-          <callout arearefs="version1">
-            <para><literal>column</literal> (optional - defaults to the
-            property name): the name of the column holding the version
-            number.</para>
-          </callout>
+          <calloutlist>
+            <callout arearefs="version1">
+              <para><literal>column</literal> (optional - defaults to the
+              property name): the name of the column holding the version
+              number.</para>
+            </callout>
 
-          <callout arearefs="version2">
-            <para><literal>name</literal>: the name of a property of the
-            persistent class.</para>
-          </callout>
+            <callout arearefs="version2">
+              <para><literal>name</literal>: the name of a property of the
+              persistent class.</para>
+            </callout>
 
-          <callout arearefs="version3">
-            <para><literal>type</literal> (optional - defaults to
-            <literal>integer</literal>): the type of the version
-            number.</para>
-          </callout>
+            <callout arearefs="version3">
+              <para><literal>type</literal> (optional - defaults to
+              <literal>integer</literal>): the type of the version
+              number.</para>
+            </callout>
 
-          <callout arearefs="version4">
-            <para><literal>access</literal> (optional - defaults to
-            <literal>property</literal>): the strategy Hibernate uses to
-            access the property value.</para>
-          </callout>
+            <callout arearefs="version4">
+              <para><literal>access</literal> (optional - defaults to
+              <literal>property</literal>): the strategy Hibernate uses to
+              access the property value.</para>
+            </callout>
 
-          <callout arearefs="version5">
-            <para><literal>unsaved-value</literal> (optional - defaults to
-            <literal>undefined</literal>): a version property value that
-            indicates that an instance is newly instantiated (unsaved),
-            distinguishing it from detached instances that were saved or
-            loaded in a previous session. <literal>Undefined</literal>
-            specifies that the identifier property value should be
-            used.</para>
-          </callout>
+            <callout arearefs="version5">
+              <para><literal>unsaved-value</literal> (optional - defaults to
+              <literal>undefined</literal>): a version property value that
+              indicates that an instance is newly instantiated (unsaved),
+              distinguishing it from detached instances that were saved or
+              loaded in a previous session. <literal>Undefined</literal>
+              specifies that the identifier property value should be
+              used.</para>
+            </callout>
 
-          <callout arearefs="version6">
-            <para><literal>generated</literal> (optional - defaults to
-            <literal>never</literal>): specifies that this version property
-            value is generated by the database. See the discussion of <link
-            linkend="mapping-generated">generated properties</link> for more
-            information.</para>
-          </callout>
+            <callout arearefs="version6">
+              <para><literal>generated</literal> (optional - defaults to
+              <literal>never</literal>): specifies that this version property
+              value is generated by the database. See the discussion of <link
+              linkend="mapping-generated">generated properties</link> for more
+              information.</para>
+            </callout>
 
-          <callout arearefs="version7">
-            <para><literal>insert</literal> (optional - defaults to
-            <literal>true</literal>): specifies whether the version column
-            should be included in SQL insert statements. It can be set to
-            <literal>false</literal> if the database column is defined with a
-            default value of <literal>0</literal>.</para>
-          </callout>
-        </calloutlist>
-      </programlistingco>
+            <callout arearefs="version7">
+              <para><literal>insert</literal> (optional - defaults to
+              <literal>true</literal>): specifies whether the version column
+              should be included in SQL insert statements. It can be set to
+              <literal>false</literal> if the database column is defined with
+              a default value of <literal>0</literal>.</para>
+            </callout>
+          </calloutlist>
+        </programlistingco>
 
-      <para>Version numbers can be of Hibernate type <literal>long</literal>,
-      <literal>integer</literal>, <literal>short</literal>,
-      <literal>timestamp</literal> or <literal>calendar</literal>.</para>
+        <para>Version numbers can be of Hibernate type
+        <literal>long</literal>, <literal>integer</literal>,
+        <literal>short</literal>, <literal>timestamp</literal> or
+        <literal>calendar</literal>.</para>
 
-      <para>A version or timestamp property should never be null for a
-      detached instance. Hibernate will detect any instance with a null
-      version or timestamp as transient, irrespective of what other
-      <literal>unsaved-value</literal> strategies are specified.
-      <emphasis>Declaring a nullable version or timestamp property is an easy
-      way to avoid problems with transitive reattachment in Hibernate. It is
-      especially useful for people using assigned identifiers or composite
-      keys</emphasis>.</para>
-    </section>
+        <para>A version or timestamp property should never be null for a
+        detached instance. Hibernate will detect any instance with a null
+        version or timestamp as transient, irrespective of what other
+        <literal>unsaved-value</literal> strategies are specified.
+        <emphasis>Declaring a nullable version or timestamp property is an
+        easy way to avoid problems with transitive reattachment in Hibernate.
+        It is especially useful for people using assigned identifiers or
+        composite keys</emphasis>.</para>
+      </section>
 
-    <section id="mapping-declaration-timestamp" revision="4">
-      <title>Timestamp (optional)</title>
+      <section id="mapping-declaration-timestamp" revision="4">
+        <title>Timestamp (optional)</title>
 
-      <para>The optional <literal>&lt;timestamp&gt;</literal> element
-      indicates that the table contains timestamped data. This provides an
-      alternative to versioning. Timestamps are a less safe implementation of
-      optimistic locking. However, sometimes the application might use the
-      timestamps in other ways.</para>
+        <para>The optional <literal>&lt;timestamp&gt;</literal> element
+        indicates that the table contains timestamped data. This provides an
+        alternative to versioning. Timestamps are a less safe implementation
+        of optimistic locking. However, sometimes the application might use
+        the timestamps in other ways.</para>
 
-      <programlistingco role="XML">
-        <areaspec>
-          <area coords="2" id="timestamp1" />
+        <programlistingco role="XML">
+          <areaspec>
+            <area coords="2" id="timestamp1" />
 
-          <area coords="3" id="timestamp2" />
+            <area coords="3" id="timestamp2" />
 
-          <area coords="4" id="timestamp3" />
+            <area coords="4" id="timestamp3" />
 
-          <area coords="5" id="timestamp4" />
+            <area coords="5" id="timestamp4" />
 
-          <area coords="6" id="timestamp5" />
+            <area coords="6" id="timestamp5" />
 
-          <area coords="7" id="timestamp6" />
-        </areaspec>
+            <area coords="7" id="timestamp6" />
+          </areaspec>
 
-        <programlisting>&lt;timestamp
+          <programlisting>&lt;timestamp
         column="timestamp_column"
         name="propertyName"
         access="field|property|ClassName"
@@ -3014,64 +3130,67 @@ public class Cat implements Serializable {
         node="element-name|@attribute-name|element/@attribute|."
 /&gt;</programlisting>
 
-        <calloutlist>
-          <callout arearefs="timestamp1">
-            <para><literal>column</literal> (optional - defaults to the
-            property name): the name of a column holding the timestamp.</para>
-          </callout>
+          <calloutlist>
+            <callout arearefs="timestamp1">
+              <para><literal>column</literal> (optional - defaults to the
+              property name): the name of a column holding the
+              timestamp.</para>
+            </callout>
 
-          <callout arearefs="timestamp2">
-            <para><literal>name</literal>: the name of a JavaBeans style
-            property of Java type <literal>Date</literal> or
-            <literal>Timestamp</literal> of the persistent class.</para>
-          </callout>
+            <callout arearefs="timestamp2">
+              <para><literal>name</literal>: the name of a JavaBeans style
+              property of Java type <literal>Date</literal> or
+              <literal>Timestamp</literal> of the persistent class.</para>
+            </callout>
 
-          <callout arearefs="timestamp3">
-            <para><literal>access</literal> (optional - defaults to
-            <literal>property</literal>): the strategy Hibernate uses for
-            accessing the property value.</para>
-          </callout>
+            <callout arearefs="timestamp3">
+              <para><literal>access</literal> (optional - defaults to
+              <literal>property</literal>): the strategy Hibernate uses for
+              accessing the property value.</para>
+            </callout>
 
-          <callout arearefs="timestamp4">
-            <para><literal>unsaved-value</literal> (optional - defaults to
-            <literal>null</literal>): a version property value that indicates
-            that an instance is newly instantiated (unsaved), distinguishing
-            it from detached instances that were saved or loaded in a previous
-            session. <literal>Undefined</literal> specifies that the
-            identifier property value should be used.</para>
-          </callout>
+            <callout arearefs="timestamp4">
+              <para><literal>unsaved-value</literal> (optional - defaults to
+              <literal>null</literal>): a version property value that
+              indicates that an instance is newly instantiated (unsaved),
+              distinguishing it from detached instances that were saved or
+              loaded in a previous session. <literal>Undefined</literal>
+              specifies that the identifier property value should be
+              used.</para>
+            </callout>
 
-          <callout arearefs="timestamp5">
-            <para><literal>source</literal> (optional - defaults to
-            <literal>vm</literal>): Where should Hibernate retrieve the
-            timestamp value from? From the database, or from the current JVM?
-            Database-based timestamps incur an overhead because Hibernate must
-            hit the database in order to determine the "next value". It is
-            safer to use in clustered environments. Not all
-            <literal>Dialects</literal> are known to support the retrieval of
-            the database's current timestamp. Others may also be unsafe for
-            usage in locking due to lack of precision (Oracle 8, for
-            example).</para>
-          </callout>
+            <callout arearefs="timestamp5">
+              <para><literal>source</literal> (optional - defaults to
+              <literal>vm</literal>): Where should Hibernate retrieve the
+              timestamp value from? From the database, or from the current
+              JVM? Database-based timestamps incur an overhead because
+              Hibernate must hit the database in order to determine the "next
+              value". It is safer to use in clustered environments. Not all
+              <literal>Dialects</literal> are known to support the retrieval
+              of the database's current timestamp. Others may also be unsafe
+              for usage in locking due to lack of precision (Oracle 8, for
+              example).</para>
+            </callout>
 
-          <callout arearefs="timestamp6">
-            <para><literal>generated</literal> (optional - defaults to
-            <literal>never</literal>): specifies that this timestamp property
-            value is actually generated by the database. See the discussion of
-            <link linkend="mapping-generated">generated properties</link> for
-            more information.</para>
-          </callout>
-        </calloutlist>
-      </programlistingco>
+            <callout arearefs="timestamp6">
+              <para><literal>generated</literal> (optional - defaults to
+              <literal>never</literal>): specifies that this timestamp
+              property value is actually generated by the database. See the
+              discussion of <link linkend="mapping-generated">generated
+              properties</link> for more information.</para>
+            </callout>
+          </calloutlist>
+        </programlistingco>
 
-      <note>
-        <title>Note</title>
+        <note>
+          <title>Note</title>
 
-        <para><literal>&lt;Timestamp&gt;</literal> is equivalent to
-        <literal>&lt;version type="timestamp"&gt;</literal>. And
-        <literal>&lt;timestamp source="db"&gt;</literal> is equivalent to
-        <literal>&lt;version type="dbtimestamp"&gt;</literal></para>
-      </note>
+          <para><literal>&lt;Timestamp&gt;</literal> is equivalent to
+          <literal>&lt;version type="timestamp"&gt;</literal>. And
+          <literal>&lt;timestamp source="db"&gt;</literal> is equivalent to
+          <literal>&lt;version type="dbtimestamp"&gt;</literal></para>
+        </note>
+      </section>
     </section>
 
     <section id="mapping-declaration-property" revision="4">

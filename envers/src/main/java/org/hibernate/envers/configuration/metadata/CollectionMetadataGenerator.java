@@ -80,6 +80,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Generates metadata for a collection-valued property.
  * @author Adam Warski (adam at warski dot org)
+ * @author Hern�n Chanfreau
  */
 public final class CollectionMetadataGenerator {
     private static final Logger log = LoggerFactory.getLogger(CollectionMetadataGenerator.class);
@@ -533,7 +534,6 @@ public final class CollectionMetadataGenerator {
         return middleEntityXmlId;
     }
 
-    @SuppressWarnings({"unchecked"})
     private String getMappedBy(Collection collectionValue) {
         PersistentClass referencedClass = ((OneToMany) collectionValue.getElement()).getAssociatedClass();
 
@@ -543,8 +543,31 @@ public final class CollectionMetadataGenerator {
             return auditMappedBy;
         }
 
-        Iterator<Property> assocClassProps = referencedClass.getPropertyIterator();
+        // searching in referenced class
+        String mappedBy = this.searchMappedBy(referencedClass, collectionValue);
+        
+        if(mappedBy == null) {
+            log.debug("Going to search the mapped by attribute for " + propertyName + " in superclasses of entity: " + referencedClass.getClassName());
+            
+            PersistentClass tempClass = referencedClass;
+			while ((mappedBy == null) && (tempClass.getSuperclass() != null)) {
+	            log.debug("Searching in superclass: " + tempClass.getSuperclass().getClassName());
+				mappedBy = this.searchMappedBy(tempClass.getSuperclass(), collectionValue);
+				tempClass = tempClass.getSuperclass();
+			}
+        }
 
+        if(mappedBy == null) { 
+	        throw new MappingException("Unable to read the mapped by attribute for " + propertyName + " in "
+	                + referencedClass.getClassName() + "!");
+        }
+        
+        return mappedBy;
+    }        
+
+    @SuppressWarnings({"unchecked"})
+    private String searchMappedBy(PersistentClass referencedClass, Collection collectionValue) {
+        Iterator<Property> assocClassProps = referencedClass.getPropertyIterator();
         while (assocClassProps.hasNext()) {
             Property property = assocClassProps.next();
 
@@ -552,13 +575,10 @@ public final class CollectionMetadataGenerator {
                     collectionValue.getKey().getColumnIterator())) {
                 return property.getName();
             }
-        }
-
-        throw new MappingException("Unable to read the mapped by attribute for " + propertyName + " in "
-                + referencingEntityName + "!");
+        }    	
+        return null;
     }
 
-    @SuppressWarnings({"unchecked"})
     private String getMappedBy(Table collectionTable, PersistentClass referencedClass) {
         // If there's an @AuditMappedBy specified, returning it directly.
         String auditMappedBy = propertyAuditingData.getAuditMappedBy();
@@ -566,6 +586,31 @@ public final class CollectionMetadataGenerator {
             return auditMappedBy;
         }
 
+        // searching in referenced class
+        String mappedBy = this.searchMappedBy(referencedClass, collectionTable);
+
+        // not found on referenced class, searching on superclasses
+        if(mappedBy == null) { 
+            log.debug("Going to search the mapped by attribute for " + propertyName + " in superclases of entity: " + referencedClass.getClassName());
+
+            PersistentClass tempClass = referencedClass;
+			while ((mappedBy == null) && (tempClass.getSuperclass() != null)) {
+	            log.debug("Searching in superclass: " + tempClass.getSuperclass().getClassName());
+				mappedBy = this.searchMappedBy(tempClass.getSuperclass(), collectionTable);
+				tempClass = tempClass.getSuperclass();
+			}
+        }
+
+        if(mappedBy == null) { 
+	        throw new MappingException("Unable to read the mapped by attribute for " + propertyName + " in "
+	                + referencedClass.getClassName() + "!");
+        }
+        
+        return mappedBy;
+    }
+    
+    @SuppressWarnings({"unchecked"})
+    private String searchMappedBy(PersistentClass referencedClass, Table collectionTable) {
         Iterator<Property> properties = referencedClass.getPropertyIterator();
         while (properties.hasNext()) {
             Property property = properties.next();
@@ -576,9 +621,8 @@ public final class CollectionMetadataGenerator {
                     return property.getName();
                 }
             }
-        }
-
-        throw new MappingException("Unable to read the mapped by attribute for " + propertyName + " in "
-                + referencingEntityName + "!");
+        }   
+        return null;
     }
+   
 }

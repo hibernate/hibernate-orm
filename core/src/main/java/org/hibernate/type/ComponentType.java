@@ -56,6 +56,7 @@ import org.hibernate.util.StringHelper;
  */
 public class ComponentType extends AbstractType implements AbstractComponentType {
 
+	private final TypeFactory.TypeScope typeScope;
 	private final String[] propertyNames;
 	private final Type[] propertyTypes;
 	private final boolean[] propertyNullability;
@@ -66,7 +67,8 @@ public class ComponentType extends AbstractType implements AbstractComponentType
 
 	protected final EntityModeToTuplizerMapping tuplizerMapping;
 
-	public ComponentType(ComponentMetamodel metamodel) {
+	public ComponentType(TypeFactory.TypeScope typeScope, ComponentMetamodel metamodel) {
+		this.typeScope = typeScope;
 		// for now, just "re-flatten" the metamodel since this is temporary stuff anyway (HHH-1907)
 		this.isKey = metamodel.isKey();
 		this.propertySpan = metamodel.getPropertySpan();
@@ -456,7 +458,7 @@ public class ComponentType extends AbstractType implements AbstractComponentType
 				: target;
 
 		final EntityMode entityMode = session.getEntityMode();
-		Object[] values = TypeFactory.replace(
+		Object[] values = TypeHelper.replace(
 				getPropertyValues( original, entityMode ),
 				getPropertyValues( result, entityMode ),
 				propertyTypes,
@@ -488,7 +490,7 @@ public class ComponentType extends AbstractType implements AbstractComponentType
 				target;
 
 		final EntityMode entityMode = session.getEntityMode();
-		Object[] values = TypeFactory.replace(
+		Object[] values = TypeHelper.replace(
 				getPropertyValues( original, entityMode ),
 				getPropertyValues( result, entityMode ),
 				propertyTypes,

@@ -41,8 +41,8 @@ public class SortedMapType extends MapType {
 
 	private final Comparator comparator;
 
-	public SortedMapType(String role, String propertyRef, Comparator comparator, boolean isEmbeddedInXML) {
-		super(role, propertyRef, isEmbeddedInXML);
+	public SortedMapType(TypeFactory.TypeScope typeScope, String role, String propertyRef, Comparator comparator, boolean isEmbeddedInXML) {
+		super( typeScope, role, propertyRef, isEmbeddedInXML );
 		this.comparator = comparator;
 	}
 

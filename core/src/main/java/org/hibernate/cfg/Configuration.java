@@ -132,6 +132,7 @@ import org.hibernate.secure.JACCConfiguration;
 import org.hibernate.tool.hbm2ddl.DatabaseMetadata;
 import org.hibernate.tool.hbm2ddl.TableMetadata;
 import org.hibernate.tool.hbm2ddl.IndexMetadata;
+import org.hibernate.type.BasicType;
 import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.SerializationException;
 import org.hibernate.type.Type;
@@ -2284,6 +2285,10 @@ public class Configuration implements Serializable {
 
 	public TypeResolver getTypeResolver() {
 		return typeResolver;
+	}
+
+	public void registerTypeOverride(BasicType type) {
+		getTypeResolver().registerTypeOverride( type );
 	}
 
 	public SessionFactoryObserver getSessionFactoryObserver() {

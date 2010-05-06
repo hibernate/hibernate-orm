@@ -34,12 +34,13 @@ public class OrderedSetType extends SetType {
 	 * Constructs a set type capable of creating ordered sets of the given
 	 * role.
 	 *
+	 * @param typeScope The scope for this type instance.
 	 * @param role The collection role name.
 	 * @param propertyRef The property ref name.
 	 * @param isEmbeddedInXML Is this collection to embed itself in xml
 	 */
-	public OrderedSetType(String role, String propertyRef, boolean isEmbeddedInXML) {
-		super( role, propertyRef, isEmbeddedInXML );
+	public OrderedSetType(TypeFactory.TypeScope typeScope, String role, String propertyRef, boolean isEmbeddedInXML) {
+		super( typeScope, role, propertyRef, isEmbeddedInXML );
 	}
 
 	/**

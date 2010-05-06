@@ -43,15 +43,16 @@ import org.hibernate.engine.SessionImplementor;
 public class SpecialOneToOneType extends OneToOneType {
 	
 	public SpecialOneToOneType(
+			TypeFactory.TypeScope scope,
 			String referencedEntityName,
 			ForeignKeyDirection foreignKeyType, 
 			String uniqueKeyPropertyName,
 			boolean lazy,
 			boolean unwrapProxy,
 			String entityName,
-			String propertyName
-	) {
+			String propertyName) {
 		super(
+				scope,
 				referencedEntityName, 
 				foreignKeyType, 
 				uniqueKeyPropertyName, 

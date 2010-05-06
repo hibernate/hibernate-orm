@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,7 +20,6 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.cache.entry;
 
@@ -34,7 +33,7 @@ import org.hibernate.event.EventSource;
 import org.hibernate.event.PreLoadEvent;
 import org.hibernate.event.PreLoadEventListener;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.type.TypeFactory;
+import org.hibernate.type.TypeHelper;
 import org.hibernate.util.ArrayHelper;
 
 /**
@@ -66,7 +65,7 @@ public final class CacheEntry implements Serializable {
 			final Object owner) 
 	throws HibernateException {
 		//disassembled state gets put in a new array (we write to cache by value!)
-		this.disassembledState = TypeFactory.disassemble( 
+		this.disassembledState = TypeHelper.disassemble(
 				state, 
 				persister.getPropertyTypes(), 
 				persister.isLazyPropertiesCacheable() ? 
@@ -112,11 +111,10 @@ public final class CacheEntry implements Serializable {
 			final Serializable id, 
 			final EntityPersister persister, 
 			final Interceptor interceptor, 
-			final EventSource session) 
-	throws HibernateException {
+			final EventSource session) throws HibernateException {
 			
 		//assembled state gets put in a new array (we read from cache by value!)
-		Object[] assembledProps = TypeFactory.assemble( 
+		Object[] assembledProps = TypeHelper.assemble(
 				values, 
 				persister.getPropertyTypes(), 
 				session, result 
@@ -132,8 +130,8 @@ public final class CacheEntry implements Serializable {
 				.setPersister(persister);
 		
 		PreLoadEventListener[] listeners = session.getListeners().getPreLoadEventListeners();
-		for ( int i = 0; i < listeners.length; i++ ) {
-			listeners[i].onPreLoad(preLoadEvent);
+		for ( PreLoadEventListener listener : listeners ) {
+			listener.onPreLoad( preLoadEvent );
 		}
 		
 		persister.setPropertyValues( 

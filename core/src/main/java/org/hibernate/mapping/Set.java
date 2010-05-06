@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,13 +20,13 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.mapping;
 
 import java.util.Iterator;
 
 import org.hibernate.MappingException;
+import org.hibernate.cfg.Mappings;
 import org.hibernate.engine.Mapping;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.TypeFactory;
@@ -51,12 +51,8 @@ public class Set extends Collection {
 		throw new MappingException("set element mappings must have at least one non-nullable column: " + getRole() );*/
 	}
 
-	/**
-	 * Constructor for Set.
-	 * @param owner
-	 */
-	public Set(PersistentClass owner) {
-		super(owner);
+	public Set(Mappings mappings, PersistentClass owner) {
+		super( mappings, owner );
 	}
 
 	public boolean isSet() {
@@ -65,13 +61,19 @@ public class Set extends Collection {
 
 	public CollectionType getDefaultCollectionType() {
 		if ( isSorted() ) {
-			return TypeFactory.sortedSet( getRole(), getReferencedPropertyName(), isEmbedded(), getComparator() );
+			return getMappings().getTypeResolver()
+					.getTypeFactory()
+					.sortedSet( getRole(), getReferencedPropertyName(), isEmbedded(), getComparator() );
 		}
 		else if ( hasOrder() ) {
-			return TypeFactory.orderedSet( getRole(), getReferencedPropertyName(), isEmbedded() );
+			return getMappings().getTypeResolver()
+					.getTypeFactory()
+					.orderedSet( getRole(), getReferencedPropertyName(), isEmbedded() );
 		}
 		else {
-			return TypeFactory.set( getRole(), getReferencedPropertyName(), isEmbedded() );
+			return getMappings().getTypeResolver()
+					.getTypeFactory()
+					.set( getRole(), getReferencedPropertyName(), isEmbedded() );
 		}
 	}
 

@@ -50,38 +50,27 @@ public class ManyToOneType extends EntityType {
 	/**
 	 * Creates a many-to-one association type with the given referenced entity.
 	 *
+	 * @param scope The scope for this instance.
 	 * @param referencedEntityName The name iof the referenced entity
 	 */
-	public ManyToOneType(String referencedEntityName) {
-		this( referencedEntityName, false );
+	public ManyToOneType(TypeFactory.TypeScope scope, String referencedEntityName) {
+		this( scope, referencedEntityName, false );
 	}
 
 	/**
 	 * Creates a many-to-one association type with the given referenced entity and the
 	 * given laziness characteristic
 	 *
+	 * @param scope The scope for this instance.
 	 * @param referencedEntityName The name iof the referenced entity
 	 * @param lazy Should the association be handled lazily
 	 */
-	public ManyToOneType(String referencedEntityName, boolean lazy) {
-		this( referencedEntityName, null, lazy, true, false, false );
-	}
-
-	/**
-	 * @deprecated use {@link #ManyToOneType(String, String, boolean, boolean, boolean, boolean, boolean)}
-	 * @noinspection JavaDoc
-	 */
-	public ManyToOneType(
-			String referencedEntityName,
-			String uniqueKeyPropertyName,
-			boolean lazy,
-			boolean unwrapProxy,
-			boolean isEmbeddedInXML,
-			boolean ignoreNotFound) {
-		this( referencedEntityName, uniqueKeyPropertyName, lazy, unwrapProxy, isEmbeddedInXML, ignoreNotFound, false );
+	public ManyToOneType(TypeFactory.TypeScope scope, String referencedEntityName, boolean lazy) {
+		this( scope, referencedEntityName, null, lazy, true, false, false, false );
 	}
 
 	public ManyToOneType(
+			TypeFactory.TypeScope scope,
 			String referencedEntityName,
 			String uniqueKeyPropertyName,
 			boolean lazy,
@@ -89,7 +78,7 @@ public class ManyToOneType extends EntityType {
 			boolean isEmbeddedInXML,
 			boolean ignoreNotFound,
 			boolean isLogicalOneToOne) {
-		super( referencedEntityName, uniqueKeyPropertyName, !lazy, isEmbeddedInXML, unwrapProxy );
+		super( scope, referencedEntityName, uniqueKeyPropertyName, !lazy, isEmbeddedInXML, unwrapProxy );
 		this.ignoreNotFound = ignoreNotFound;
 		this.isLogicalOneToOne = isLogicalOneToOne;
 	}
@@ -162,17 +151,14 @@ public class ManyToOneType extends EntityType {
 	/**
 	 * Register the entity as batch loadable, if enabled
 	 */
-	private void scheduleBatchLoadIfNeeded(
-			Serializable id,
-			SessionImplementor session) throws MappingException {
+	@SuppressWarnings({ "JavaDoc" })
+	private void scheduleBatchLoadIfNeeded(Serializable id, SessionImplementor session) throws MappingException {
 		//cannot batch fetch by unique key (property-ref associations)
 		if ( uniqueKeyPropertyName == null && id != null ) {
 			EntityPersister persister = session.getFactory().getEntityPersister( getAssociatedEntityName() );
 			EntityKey entityKey = new EntityKey( id, persister, session.getEntityMode() );
 			if ( !session.getPersistenceContext().containsEntity( entityKey ) ) {
-				session.getPersistenceContext()
-						.getBatchFetchQueue()
-						.addBatchLoadableEntityKey( entityKey );
+				session.getPersistenceContext().getBatchFetchQueue().addBatchLoadableEntityKey( entityKey );
 			}
 		}
 	}

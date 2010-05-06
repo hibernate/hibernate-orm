@@ -26,7 +26,6 @@ package org.hibernate;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
-import java.io.Serializable;
 import java.io.ByteArrayOutputStream;
 import java.sql.Blob;
 import java.sql.Clob;
@@ -44,7 +43,6 @@ import org.hibernate.intercept.FieldInterceptionHelper;
 import org.hibernate.intercept.FieldInterceptor;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
-import org.hibernate.type.AnyType;
 import org.hibernate.type.BigDecimalType;
 import org.hibernate.type.BigIntegerType;
 import org.hibernate.type.BinaryType;
@@ -56,16 +54,13 @@ import org.hibernate.type.CalendarType;
 import org.hibernate.type.CharacterType;
 import org.hibernate.type.ClassType;
 import org.hibernate.type.ClobType;
-import org.hibernate.type.CompositeCustomType;
 import org.hibernate.type.CurrencyType;
-import org.hibernate.type.CustomType;
 import org.hibernate.type.DateType;
 import org.hibernate.type.DoubleType;
 import org.hibernate.type.FloatType;
 import org.hibernate.type.IntegerType;
 import org.hibernate.type.LocaleType;
 import org.hibernate.type.LongType;
-import org.hibernate.type.ManyToOneType;
 import org.hibernate.type.ObjectType;
 import org.hibernate.type.SerializableType;
 import org.hibernate.type.ShortType;
@@ -76,7 +71,6 @@ import org.hibernate.type.TimeZoneType;
 import org.hibernate.type.TimestampType;
 import org.hibernate.type.TrueFalseType;
 import org.hibernate.type.Type;
-import org.hibernate.type.TypeFactory;
 import org.hibernate.type.YesNoType;
 import org.hibernate.type.CharArrayType;
 import org.hibernate.type.WrapperBinaryType;
@@ -84,7 +78,6 @@ import org.hibernate.type.CharacterArrayType;
 import org.hibernate.type.MaterializedBlobType;
 import org.hibernate.type.ImageType;
 import org.hibernate.type.MaterializedClobType;
-import org.hibernate.usertype.CompositeUserType;
 
 /**
  * <ul>
@@ -281,83 +274,76 @@ public final class Hibernate {
 
 	/**
 	 * A Hibernate <tt>serializable</tt> type.
+	 *
+	 * @param serializableClass The {@link java.io.Serializable} implementor class.
+	 *
+	 * @return
+	 *
 	 * @deprecated Use {@link SerializableType#SerializableType} instead.
 	 */
+	@SuppressWarnings({ "unchecked" })
 	public static Type serializable(Class serializableClass) {
 		return new SerializableType( serializableClass );
 	}
 
 	/**
-	 * A Hibernate <tt>any</tt> type.
+	 * DO NOT USE!
 	 *
-	 * @param metaType       a type mapping <tt>java.lang.Class</tt> to a single column
-	 * @param identifierType the entity identifier type
-	 * @return the Type
+	 * @deprecated Use {@link TypeHelper#any} instead.
 	 */
+	@SuppressWarnings({ "JavaDoc", "UnusedDeclaration" })
 	public static Type any(Type metaType, Type identifierType) {
-		return new AnyType( metaType, identifierType );
+		throw new HibernateException( "Not supported" );
 	}
 
 	/**
-	 * A Hibernate persistent object (entity) type.
+	 * DO NOT USE!
 	 *
-	 * @param persistentClass a mapped entity class
+	 * @deprecated Use {@link TypeHelper#entity} instead; see http://opensource.atlassian.com/projects/hibernate/browse/HHH-5182
 	 */
+	@SuppressWarnings({ "JavaDoc", "UnusedDeclaration" })
 	public static Type entity(Class persistentClass) {
-		// not really a many-to-one association *necessarily*
-		return new ManyToOneType( persistentClass.getName() );
+		throw new HibernateException( "Not supported" );
 	}
 
 	/**
-	 * A Hibernate persistent object (entity) type.
+	 * DO NOT USE!
 	 *
-	 * @param entityName a mapped entity class
+	 * @deprecated Use {@link TypeHelper#entity} instead; see http://opensource.atlassian.com/projects/hibernate/browse/HHH-5182
 	 */
+	@SuppressWarnings({ "JavaDoc", "UnusedDeclaration" })
 	public static Type entity(String entityName) {
-		// not really a many-to-one association *necessarily*
-		return new ManyToOneType( entityName );
+		throw new HibernateException( "Not supported" );
 	}
 
 	/**
-	 * A Hibernate custom type.
+	 * DO NOT USE!
 	 *
-	 * @param userTypeClass a class that implements <tt>UserType</tt>
+	 * @deprecated Use {@link TypeHelper#custom} instead; see http://opensource.atlassian.com/projects/hibernate/browse/HHH-5182
 	 */
-	public static Type custom(Class userTypeClass) throws HibernateException {
-		return custom( userTypeClass, null );
+	@SuppressWarnings({ "JavaDoc", "UnusedDeclaration" })
+	public static Type custom(Class userTypeClass) {
+		throw new HibernateException( "Not supported" );
 	}
 
 	/**
-	 * A Hibernate parameterizable custom type.
+	 * DO NOT USE!
 	 *
-	 * @param userTypeClass   a class that implements <tt>UserType and ParameterizableType</tt>
-	 * @param parameterNames  the names of the parameters passed to the type
-	 * @param parameterValues the values of the parameters passed to the type. They must match
-	 *                        up with the order and length of the parameterNames array.
+	 * @deprecated Use {@link TypeHelper#custom} instead; see http://opensource.atlassian.com/projects/hibernate/browse/HHH-5182
 	 */
-	public static Type custom(Class userTypeClass, String[] parameterNames, String[] parameterValues)
-			throws HibernateException {
-		Properties parameters = new Properties();
-		for ( int i = 0; i < parameterNames.length; i++ ) {
-			parameters.setProperty( parameterNames[i], parameterValues[i] );
-		}
-		return custom( userTypeClass, parameters );
+	@SuppressWarnings({ "JavaDoc", "UnusedDeclaration" })
+	public static Type custom(Class userTypeClass, String[] parameterNames, String[] parameterValues) {
+		throw new HibernateException( "Not supported" );
 	}
 
 	/**
-	 * A Hibernate parameterizable custom type.
+	 * DO NOT USE!
 	 *
-	 * @param userTypeClass a class that implements <tt>UserType and ParameterizableType</tt>
-	 * @param parameters    the parameters as a collection of name/value pairs
+	 * @deprecated Use {@link TypeHelper#custom} instead; see http://opensource.atlassian.com/projects/hibernate/browse/HHH-5182
 	 */
-	public static Type custom(Class userTypeClass, Properties parameters)
-			throws HibernateException {
-		if ( CompositeUserType.class.isAssignableFrom( userTypeClass ) ) {
-			return TypeFactory.customComponent( userTypeClass, parameters );
-		}
-		else {
-			return TypeFactory.custom( userTypeClass, parameters );
-		}
+	@SuppressWarnings({ "JavaDoc", "UnusedDeclaration" })
+	public static Type custom(Class userTypeClass, Properties parameters) {
+		throw new HibernateException( "Not supported" );
 	}
 
 	/**

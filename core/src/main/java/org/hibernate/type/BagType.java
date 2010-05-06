@@ -38,8 +38,8 @@ import org.hibernate.persister.collection.CollectionPersister;
 
 public class BagType extends CollectionType {
 
-	public BagType(String role, String propertyRef, boolean isEmbeddedInXML) {
-		super(role, propertyRef, isEmbeddedInXML);
+	public BagType(TypeFactory.TypeScope typeScope, String role, String propertyRef, boolean isEmbeddedInXML) {
+		super( typeScope, role, propertyRef, isEmbeddedInXML );
 	}
 
 	public PersistentCollection instantiate(SessionImplementor session, CollectionPersister persister, Serializable key)

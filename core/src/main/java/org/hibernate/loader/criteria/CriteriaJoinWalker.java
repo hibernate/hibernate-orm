@@ -109,7 +109,7 @@ public class CriteriaJoinWalker extends AbstractEntityJoinWalker {
 				);
 		}
 		else {
-			resultTypes = new Type[] { TypeFactory.manyToOne( persister.getEntityName() ) };
+			resultTypes = new Type[] { factory.getTypeResolver().getTypeFactory().manyToOne( persister.getEntityName() ) };
 
 			initAll( translator.getWhereCondition(), translator.getOrderBy(), LockOptions.NONE );
 		}

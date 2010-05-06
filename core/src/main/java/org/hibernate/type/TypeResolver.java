@@ -56,8 +56,16 @@ public class TypeResolver implements Serializable {
 		return new TypeResolver( basicTypeRegistry.shallowCopy(), typeFactory );
 	}
 
+	public void registerTypeOverride(BasicType type) {
+		basicTypeRegistry.register( type );
+	}
+
+	public TypeFactory getTypeFactory() {
+		return typeFactory;
+	}
+
 	/**
-	 * Locate a Hibernate {@linkplain BasicType basic type} given (one of) its registration name(s).
+	 * Locate a Hibernate {@linkplain BasicType basic type} given (one of) its registration names.
 	 *
 	 * @param name The registration name
 	 *

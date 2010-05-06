@@ -163,6 +163,10 @@ public abstract class CollectionBinder {
 	private AccessType accessType;
 	private boolean hibernateExtensionMapping;
 
+	protected ExtendedMappings getMappings() {
+		return mappings;
+	}
+
 	public boolean isMap() {
 		return false;
 	}
@@ -700,7 +704,7 @@ public abstract class CollectionBinder {
 	) {
 
 		log.debug("Binding a OneToMany: {}.{} through a foreign key", propertyHolder.getEntityName(), propertyName);
-		org.hibernate.mapping.OneToMany oneToMany = new org.hibernate.mapping.OneToMany( collection.getOwner() );
+		org.hibernate.mapping.OneToMany oneToMany = new org.hibernate.mapping.OneToMany( extendedMappings, collection.getOwner() );
 		collection.setElement( oneToMany );
 		oneToMany.setReferencedEntityName( collectionType.getName() );
 		oneToMany.setIgnoreNotFound( ignoreNotFound );

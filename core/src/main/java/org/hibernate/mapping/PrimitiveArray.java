@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,18 +20,18 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.mapping;
 
+import org.hibernate.cfg.Mappings;
+
 /**
- * A primitive array has a primary key consisting
- * of the key columns + index column.
+ * A primitive array has a primary key consisting of the key columns + index column.
  */
 public class PrimitiveArray extends Array {
 
-	public PrimitiveArray(PersistentClass owner) {
-		super(owner);
+	public PrimitiveArray(Mappings mappings, PersistentClass owner) {
+		super( mappings, owner );
 	}
 
 	public boolean isPrimitiveArray() {
@@ -42,10 +42,3 @@ public class PrimitiveArray extends Array {
 		return visitor.accept(this);
 	}
 }
-
-
-
-
-
-
-

@@ -48,8 +48,8 @@ public class ArrayType extends CollectionType {
 	private final Class elementClass;
 	private final Class arrayClass;
 
-	public ArrayType(String role, String propertyRef, Class elementClass, boolean isEmbeddedInXML) {
-		super(role, propertyRef, isEmbeddedInXML);
+	public ArrayType(TypeFactory.TypeScope typeScope, String role, String propertyRef, Class elementClass, boolean isEmbeddedInXML) {
+		super( typeScope, role, propertyRef, isEmbeddedInXML );
 		this.elementClass = elementClass;
 		arrayClass = Array.newInstance(elementClass, 0).getClass();
 	}

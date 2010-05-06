@@ -662,7 +662,9 @@ public class QueryTranslatorImpl extends BasicLoader implements FilterTranslator
 			int j = 0;
 			for ( int i = 0; i < persisters.length; i++ ) {
 				if ( includeInSelect[i] ) {
-					actualReturnTypes[j++] = TypeFactory.manyToOne( persisters[i].getEntityName(), shallowQuery );
+					actualReturnTypes[j++] = getFactory().getTypeResolver()
+							.getTypeFactory()
+							.manyToOne( persisters[i].getEntityName(), shallowQuery );
 				}
 			}
 		}
@@ -719,7 +721,9 @@ public class QueryTranslatorImpl extends BasicLoader implements FilterTranslator
 			int size = returnedTypes.size();
 			for ( int k = 0; k < size; k++ ) {
 
-				scalarTypes.add( TypeFactory.manyToOne( persisters[k].getEntityName(), shallowQuery ) );
+				scalarTypes.add(
+						getFactory().getTypeResolver().getTypeFactory().manyToOne( persisters[k].getEntityName(), shallowQuery ) 
+				);
 
 				String[] idColumnNames = persisters[k].getIdentifierColumnNames();
 				for ( int i = 0; i < idColumnNames.length; i++ ) {

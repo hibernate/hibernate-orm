@@ -48,8 +48,13 @@ public class CustomCollectionType extends CollectionType {
 	private final UserCollectionType userType;
 	private final boolean customLogging;
 
-	public CustomCollectionType(Class userTypeClass, String role, String foreignKeyPropertyName, boolean isEmbeddedInXML) {
-		super(role, foreignKeyPropertyName, isEmbeddedInXML);
+	public CustomCollectionType(
+			TypeFactory.TypeScope typeScope,
+			Class userTypeClass,
+			String role,
+			String foreignKeyPropertyName,
+			boolean isEmbeddedInXML) {
+		super( typeScope, role, foreignKeyPropertyName, isEmbeddedInXML );
 
 		if ( !UserCollectionType.class.isAssignableFrom( userTypeClass ) ) {
 			throw new MappingException( "Custom type does not implement UserCollectionType: " + userTypeClass.getName() );

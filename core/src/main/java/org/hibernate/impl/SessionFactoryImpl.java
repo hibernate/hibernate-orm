@@ -62,6 +62,7 @@ import org.hibernate.StatelessSession;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.EntityNameResolver;
 import org.hibernate.Cache;
+import org.hibernate.TypeHelper;
 import org.hibernate.tuple.entity.EntityTuplizer;
 import org.hibernate.cache.CacheKey;
 import org.hibernate.cache.CollectionRegion;
@@ -114,7 +115,6 @@ import org.hibernate.pretty.MessageHelper;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.stat.Statistics;
 import org.hibernate.stat.StatisticsImpl;
-import org.hibernate.stat.ConcurrentStatisticsImpl;
 import org.hibernate.stat.StatisticsImplementor;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.hbm2ddl.SchemaUpdate;
@@ -191,6 +191,7 @@ public final class SessionFactoryImpl implements SessionFactory, SessionFactoryI
 	private final transient Cache cacheAccess = new CacheImpl();
 	private transient boolean isClosed = false;
 	private final transient TypeResolver typeResolver;
+	private final transient TypeHelper typeHelper;
 
 	public SessionFactoryImpl(
 			Configuration cfg,
@@ -234,6 +235,7 @@ public final class SessionFactoryImpl implements SessionFactory, SessionFactoryI
 		};
 
 		this.typeResolver = cfg.getTypeResolver().scope( this );
+		this.typeHelper = new TypeLocatorImpl( typeResolver );
 
 		this.filters = new HashMap();
 		this.filters.putAll( cfg.getFilterDefinitions() );
@@ -1300,6 +1302,10 @@ public final class SessionFactoryImpl implements SessionFactory, SessionFactoryI
 
 	public FetchProfile getFetchProfile(String name) {
 		return ( FetchProfile ) fetchProfiles.get( name );
+	}
+
+	public TypeHelper getTypeHelper() {
+		return typeHelper;
 	}
 
 	/**

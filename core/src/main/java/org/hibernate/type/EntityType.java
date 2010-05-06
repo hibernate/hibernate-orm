@@ -55,6 +55,7 @@ import org.hibernate.util.ReflectHelper;
  */
 public abstract class EntityType extends AbstractType implements AssociationType {
 
+	private final TypeFactory.TypeScope scope;
 	private final String associatedEntityName;
 	protected final String uniqueKeyPropertyName;
 	protected final boolean isEmbeddedInXML;
@@ -66,6 +67,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	/**
 	 * Constructs the requested entity type mapping.
 	 *
+	 * @param scope The type scope
 	 * @param entityName The name of the associated entity.
 	 * @param uniqueKeyPropertyName The property-ref name, or null if we
 	 * reference the PK of the associated entity.
@@ -76,16 +78,22 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	 * with lazy="no-proxy".
 	 */
 	protected EntityType(
+			TypeFactory.TypeScope scope,
 			String entityName,
 			String uniqueKeyPropertyName,
 			boolean eager,
 			boolean isEmbeddedInXML,
 			boolean unwrapProxy) {
+		this.scope = scope;
 		this.associatedEntityName = entityName;
 		this.uniqueKeyPropertyName = uniqueKeyPropertyName;
 		this.isEmbeddedInXML = isEmbeddedInXML;
 		this.eager = eager;
 		this.unwrapProxy = unwrapProxy;
+	}
+
+	protected TypeFactory.TypeScope scope() {
+		return scope;
 	}
 
 	/**

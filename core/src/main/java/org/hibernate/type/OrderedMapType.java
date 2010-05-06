@@ -38,8 +38,8 @@ public class OrderedMapType extends MapType {
 	 * @param propertyRef The property ref name.
 	 * @param isEmbeddedInXML Is this collection to embed itself in xml
 	 */
-	public OrderedMapType(String role, String propertyRef, boolean isEmbeddedInXML) {
-		super( role, propertyRef, isEmbeddedInXML );
+	public OrderedMapType(TypeFactory.TypeScope typeScope, String role, String propertyRef, boolean isEmbeddedInXML) {
+		super( typeScope, role, propertyRef, isEmbeddedInXML );
 	}
 
 	/**

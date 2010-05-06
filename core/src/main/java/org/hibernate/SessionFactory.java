@@ -386,4 +386,11 @@ public interface SessionFactory extends Referenceable, Serializable {
 	 * @return True if there is such a fetch profile; false otherwise.
 	 */
 	public boolean containsFetchProfileDefinition(String name);
+
+	/**
+	 * Retrieve this factory's {@link TypeHelper}
+	 *
+	 * @return The factory's {@link TypeHelper}
+	 */
+	public TypeHelper getTypeHelper();
 }

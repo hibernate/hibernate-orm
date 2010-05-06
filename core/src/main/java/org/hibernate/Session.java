@@ -995,20 +995,26 @@ public interface Session extends Serializable {
 	 */
 	public void disableFetchProfile(String name) throws UnknownProfileException;
 
+	/**
+	 * Convenience access to the {@link TypeHelper} associated with this session's {@link SessionFactory}.
+	 * <p/>
+	 * Equivalent to calling {@link #getSessionFactory()}.{@link SessionFactory#getTypeHelper getTypeHelper()}
+	 *
+	 * @return The {@link TypeHelper} associated with this session's {@link SessionFactory}
+	 */
+	public TypeHelper getTypeHelper();
 
 
-/**
- * Contains locking details (LockMode, Timeout and Scope).
- *
- */
-	public interface LockRequest
-	{
-
+	/**
+	 * Contains locking details (LockMode, Timeout and Scope).
+	 */
+	public interface LockRequest {
 		static final int PESSIMISTIC_NO_WAIT = 0;
 		static final int PESSIMISTIC_WAIT_FOREVER = -1;
-	
+
 		/**
 		 * Get the lock mode.
+		 *
 		 * @return the lock mode.
 		 */
 		LockMode getLockMode();
@@ -1017,6 +1023,7 @@ public interface Session extends Serializable {
 		 * Specify the LockMode to be used.  The default is LockMode.none.
 		 *
 		 * @param lockMode
+		 *
 		 * @return this LockRequest instance for operation chaining.
 		 */
 		LockRequest setLockMode(LockMode lockMode);
@@ -1033,12 +1040,14 @@ public interface Session extends Serializable {
 		 * The default pessimistic lock behavior is to wait forever for the lock.
 		 *
 		 * @param timeout is time in milliseconds to wait for lock.  -1 means wait forever and 0 means no wait.
+		 *
 		 * @return this LockRequest instance for operation chaining.
 		 */
 		LockRequest setTimeOut(int timeout);
 
 		/**
 		 * Check if locking is cascaded to owned collections and relationships.
+		 *
 		 * @return true if locking will be extended to owned collections and relationships.
 		 */
 		boolean getScope();
@@ -1048,6 +1057,7 @@ public interface Session extends Serializable {
 		 * The association must be mapped with <tt>cascade="lock" for scope=true to work.
 		 *
 		 * @param scope
+		 *
 		 * @return
 		 */
 		LockRequest setScope(boolean scope);
@@ -1055,7 +1065,5 @@ public interface Session extends Serializable {
 		void lock(String entityName, Object object) throws HibernateException;
 
 		public void lock(Object object) throws HibernateException;
-	
 	}
-
 }

@@ -183,10 +183,10 @@ public class Component extends SimpleValue implements MetaAttributable {
 		// TODO : temporary initial step towards HHH-1907
 		ComponentMetamodel metamodel = new ComponentMetamodel( this );
 		if ( isEmbedded() ) {
-			return new EmbeddedComponentType( metamodel );
+			return getMappings().getTypeResolver().getTypeFactory().embeddedComponent( metamodel );
 		}
 		else {
-			return new ComponentType( metamodel );
+			return getMappings().getTypeResolver().getTypeFactory().component( metamodel );
 		}
 	}
 

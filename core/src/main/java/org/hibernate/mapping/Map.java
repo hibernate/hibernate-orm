@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,11 +20,11 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.mapping;
 
 import org.hibernate.MappingException;
+import org.hibernate.cfg.Mappings;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.TypeFactory;
 
@@ -34,8 +34,8 @@ import org.hibernate.type.TypeFactory;
  */
 public class Map extends IndexedCollection {
 
-	public Map(PersistentClass owner) {
-		super(owner);
+	public Map(Mappings mappings, PersistentClass owner) {
+		super( mappings, owner );
 	}
 	
 	public boolean isMap() {
@@ -44,13 +44,19 @@ public class Map extends IndexedCollection {
 
 	public CollectionType getDefaultCollectionType() {
 		if ( isSorted() ) {
-			return TypeFactory.sortedMap( getRole(), getReferencedPropertyName(), isEmbedded(), getComparator() );
+			return getMappings().getTypeResolver()
+					.getTypeFactory()
+					.sortedMap( getRole(), getReferencedPropertyName(), isEmbedded(), getComparator() );
 		}
 		else if ( hasOrder() ) {
-			return TypeFactory.orderedMap( getRole(), getReferencedPropertyName(), isEmbedded() );
+			return getMappings().getTypeResolver()
+					.getTypeFactory()
+					.orderedMap( getRole(), getReferencedPropertyName(), isEmbedded() );
 		}
 		else {
-			return TypeFactory.map( getRole(), getReferencedPropertyName(), isEmbedded() );
+			return getMappings().getTypeResolver()
+					.getTypeFactory()
+					.map( getRole(), getReferencedPropertyName(), isEmbedded() );
 		}
 	}
 

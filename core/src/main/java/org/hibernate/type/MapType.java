@@ -40,8 +40,8 @@ import org.hibernate.persister.collection.CollectionPersister;
 
 public class MapType extends CollectionType {
 
-	public MapType(String role, String propertyRef, boolean isEmbeddedInXML) {
-		super(role, propertyRef, isEmbeddedInXML);
+	public MapType(TypeFactory.TypeScope typeScope, String role, String propertyRef, boolean isEmbeddedInXML) {
+		super( typeScope, role, propertyRef, isEmbeddedInXML );
 	}
 
 	public PersistentCollection instantiate(SessionImplementor session, CollectionPersister persister, Serializable key) {

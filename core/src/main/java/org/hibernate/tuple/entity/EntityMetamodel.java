@@ -131,7 +131,7 @@ public class EntityMetamodel implements Serializable {
 
 		name = persistentClass.getEntityName();
 		rootName = persistentClass.getRootClass().getEntityName();
-		entityType = TypeFactory.manyToOne( name );
+		entityType = sessionFactory.getTypeResolver().getTypeFactory().manyToOne( name );
 
 		identifierProperty = PropertyFactory.buildIdentifierProperty(
 		        persistentClass,

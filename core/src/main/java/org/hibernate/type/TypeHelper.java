@@ -122,9 +122,10 @@ public class TypeHelper {
 	 *
 	 * @param row The values
 	 * @param types The value types
-	 * @param nonCacheable An array indicating which values to include in the disassemled state
+	 * @param nonCacheable An array indicating which values to include in the disassembled state
 	 * @param session The originating session
 	 * @param owner The entity "owning" the values
+	 *
 	 * @return The disassembled state
 	 */
 	public static Serializable[] disassemble(
@@ -157,6 +158,7 @@ public class TypeHelper {
 	 * @param session The originating session
 	 * @param owner The entity "owning" the values
 	 * @param copyCache A map representing a cache of already replaced state
+	 *
 	 * @return The replaced state
 	 */
 	public static Object[] replace(
@@ -189,6 +191,7 @@ public class TypeHelper {
 	 * @param owner The entity "owning" the values
 	 * @param copyCache A map representing a cache of already replaced state
 	 * @param foreignKeyDirection FK directionality to be applied to the replacement
+	 *
 	 * @return The replaced state
 	 */
 	public static Object[] replace(
@@ -213,11 +216,11 @@ public class TypeHelper {
 	}
 
 	/**
-	 * Apply the {@link Type#replace} operation across a series of values, as
-	 * long as the corresponding {@link Type} is an association.
+	 * Apply the {@link Type#replace} operation across a series of values, as long as the corresponding
+	 * {@link Type} is an association.
 	 * <p/>
-	 * If the corresponding type is a component type, then apply {@link Type#replace}
-	 * across the component subtypes but do not replace the component value itself.
+	 * If the corresponding type is a component type, then apply {@link Type#replace} across the component
+	 * subtypes but do not replace the component value itself.
 	 *
 	 * @param original The source of the state
 	 * @param target The target into which to replace the source values.
@@ -274,6 +277,7 @@ public class TypeHelper {
 	 * @param includeColumns Columns to be included in the dirty checking, per property
 	 * @param anyUninitializedProperties Does the entity currently hold any uninitialized property values?
 	 * @param session The session from which the dirty check request originated.
+	 * 
 	 * @return Array containing indices of the dirty properties, or null if no properties considered dirty.
 	 */
 	public static int[] findDirty(
@@ -321,6 +325,7 @@ public class TypeHelper {
 	 * @param includeColumns Columns to be included in the mod checking, per property
 	 * @param anyUninitializedProperties Does the entity currently hold any uninitialized property values?
 	 * @param session The session from which the dirty check request originated.
+	 *
 	 * @return Array containing indices of the modified properties, or null if no properties considered modified.
 	 */
 	public static int[] findModified(

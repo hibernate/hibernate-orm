@@ -107,7 +107,7 @@ import org.hibernate.type.AbstractComponentType;
 import org.hibernate.type.AssociationType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
-import org.hibernate.type.TypeFactory;
+import org.hibernate.type.TypeHelper;
 import org.hibernate.type.VersionType;
 import org.hibernate.util.ArrayHelper;
 import org.hibernate.util.FilterHelper;
@@ -3377,7 +3377,7 @@ public abstract class AbstractEntityPersister
 	 */
 	public int[] findDirty(Object[] currentState, Object[] previousState, Object entity, SessionImplementor session)
 	throws HibernateException {
-		int[] props = TypeFactory.findDirty(
+		int[] props = TypeHelper.findDirty(
 				entityMetamodel.getProperties(),
 				currentState,
 				previousState,
@@ -3406,7 +3406,7 @@ public abstract class AbstractEntityPersister
 	 */
 	public int[] findModified(Object[] old, Object[] current, Object entity, SessionImplementor session)
 	throws HibernateException {
-		int[] props = TypeFactory.findModified(
+		int[] props = TypeHelper.findModified(
 				entityMetamodel.getProperties(),
 				current,
 				old,

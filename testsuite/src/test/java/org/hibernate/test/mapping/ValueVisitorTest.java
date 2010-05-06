@@ -178,19 +178,19 @@ public class ValueVisitorTest extends UnitTestCase {
 
 		ValueVisitor vv = new ValueVisitorValidator();
 		
-		new Any(mappings, tbl).accept(vv);
-		new Array( rootClass ).accept(vv);
-		new Bag( rootClass ).accept(vv);
+		new Any( mappings, tbl ).accept(vv);
+		new Array( mappings, rootClass ).accept(vv);
+		new Bag( mappings, rootClass ).accept(vv);
 		new Component( mappings, rootClass ).accept(vv);
 		new DependantValue( mappings, tbl, null ).accept(vv);
-		new IdentifierBag( rootClass ).accept(vv);
-		new List( rootClass ).accept(vv);
+		new IdentifierBag( mappings, rootClass ).accept(vv);
+		new List( mappings, rootClass ).accept(vv);
 		new ManyToOne( mappings, tbl ).accept(vv);
-		new Map( rootClass ).accept(vv);
-		new OneToMany( rootClass ).accept(vv);
+		new Map( mappings, rootClass ).accept(vv);
+		new OneToMany( mappings, rootClass ).accept(vv);
 		new OneToOne( mappings, tbl, rootClass ).accept(vv);
-		new PrimitiveArray( rootClass ).accept(vv);
-		new Set( rootClass ).accept(vv);
+		new PrimitiveArray( mappings, rootClass ).accept(vv);
+		new Set( mappings, rootClass ).accept(vv);
 		new SimpleValue( mappings ).accept(vv);
 	
 		

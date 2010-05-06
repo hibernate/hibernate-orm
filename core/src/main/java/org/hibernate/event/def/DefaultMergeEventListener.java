@@ -55,8 +55,8 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.type.ForeignKeyDirection;
-import org.hibernate.type.TypeFactory;
 import org.hibernate.type.Type;
+import org.hibernate.type.TypeHelper;
 
 /**
  * Defines the default copy event listener used by hibernate for copying entities
@@ -492,7 +492,7 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener
 		final SessionImplementor source,
 		final Map copyCache
 	) {
-		final Object[] copiedValues = TypeFactory.replace(
+		final Object[] copiedValues = TypeHelper.replace(
 				persister.getPropertyValues( entity, source.getEntityMode() ),
 				persister.getPropertyValues( target, source.getEntityMode() ),
 				persister.getPropertyTypes(),
@@ -518,7 +518,7 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener
 			// this is the second pass through on a merge op, so here we limit the
 			// replacement to associations types (value types were already replaced
 			// during the first pass)
-			copiedValues = TypeFactory.replaceAssociations(
+			copiedValues = TypeHelper.replaceAssociations(
 					persister.getPropertyValues( entity, source.getEntityMode() ),
 					persister.getPropertyValues( target, source.getEntityMode() ),
 					persister.getPropertyTypes(),
@@ -529,7 +529,7 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener
 			);
 		}
 		else {
-			copiedValues = TypeFactory.replace(
+			copiedValues = TypeHelper.replace(
 					persister.getPropertyValues( entity, source.getEntityMode() ),
 					persister.getPropertyValues( target, source.getEntityMode() ),
 					persister.getPropertyTypes(),

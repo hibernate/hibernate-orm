@@ -55,7 +55,8 @@ public class Any extends SimpleValue {
 
 	public Type getType() throws MappingException {
 		final Type metaType = getMappings().getTypeResolver().heuristicType( metaTypeName );
-		return new AnyType(
+
+		return getMappings().getTypeResolver().getTypeFactory().any(
 				metaValues == null ? metaType : new MetaType( metaValues, metaType ),
 				getMappings().getTypeResolver().heuristicType( identifierTypeName )
 		);

@@ -66,6 +66,7 @@ import org.hibernate.SessionException;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
 import org.hibernate.TransientObjectException;
+import org.hibernate.TypeHelper;
 import org.hibernate.UnresolvableObjectException;
 import org.hibernate.UnknownProfileException;
 import org.hibernate.EntityNameResolver;
@@ -2211,6 +2212,13 @@ public final class SessionImpl extends AbstractSessionImpl
 		finally {
 			jdbcContext.getConnectionManager().afterStatement();
 		}
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public TypeHelper getTypeHelper() {
+		return getSessionFactory().getTypeHelper();
 	}
 
 	private class CoordinatingEntityNameResolver implements EntityNameResolver {

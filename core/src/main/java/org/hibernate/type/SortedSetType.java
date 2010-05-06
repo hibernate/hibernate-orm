@@ -39,8 +39,8 @@ public class SortedSetType extends SetType {
 
 	private final Comparator comparator;
 
-	public SortedSetType(String role, String propertyRef, Comparator comparator, boolean isEmbeddedInXML) {
-		super(role, propertyRef, isEmbeddedInXML);
+	public SortedSetType(TypeFactory.TypeScope typeScope, String role, String propertyRef, Comparator comparator, boolean isEmbeddedInXML) {
+		super( typeScope, role, propertyRef, isEmbeddedInXML );
 		this.comparator = comparator;
 	}
 

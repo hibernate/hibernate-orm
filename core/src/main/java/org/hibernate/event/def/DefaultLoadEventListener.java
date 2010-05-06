@@ -56,7 +56,7 @@ import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.type.EmbeddedComponentType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
-import org.hibernate.type.TypeFactory;
+import org.hibernate.type.TypeHelper;
 
 /**
  * Defines the default load event listeners used by hibernate for loading entities
@@ -648,13 +648,13 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 
 		Type[] types = subclassPersister.getPropertyTypes();
 		Object[] values = entry.assemble( result, id, subclassPersister, session.getInterceptor(), session ); // intializes result by side-effect
-		TypeFactory.deepCopy(
+		TypeHelper.deepCopy(
 				values,
 				types,
 				subclassPersister.getPropertyUpdateability(),
 				values,
 				session
-			);
+		);
 
 		Object version = Versioning.getVersion( values, subclassPersister );
 		if ( log.isTraceEnabled() ) log.trace( "Cached Version: " + version );

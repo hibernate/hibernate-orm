@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,7 +20,6 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.cache;
 
@@ -38,7 +37,7 @@ import org.hibernate.UnresolvableObjectException;
 import org.hibernate.cfg.Settings;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.type.Type;
-import org.hibernate.type.TypeFactory;
+import org.hibernate.type.TypeHelper;
 
 /**
  * The standard implementation of the Hibernate QueryCache interface.  This
@@ -78,6 +77,7 @@ public class StandardQueryCache implements QueryCache {
 		this.updateTimestampsCache = updateTimestampsCache;
 	}
 
+	@SuppressWarnings({ "UnnecessaryBoxing", "unchecked" })
 	public boolean put(
 			QueryKey key,
 			Type[] returnTypes,
@@ -88,7 +88,7 @@ public class StandardQueryCache implements QueryCache {
 			return false;
 		}
 		else {
-			Long ts = new Long( session.getTimestamp() );
+			Long ts = Long.valueOf( session.getTimestamp() );
 
 			if ( log.isDebugEnabled() ) {
 				log.debug( "caching query results in region: " + cacheRegion.getName() + "; timestamp=" + ts );
@@ -96,27 +96,23 @@ public class StandardQueryCache implements QueryCache {
 
 			List cacheable = new ArrayList( result.size() + 1 );
 			cacheable.add( ts );
-			for ( int i = 0; i < result.size(); i++ ) {
+			for ( Object aResult : result ) {
 				if ( returnTypes.length == 1 ) {
-					cacheable.add( returnTypes[0].disassemble( result.get( i ), session, null ) );
+					cacheable.add( returnTypes[0].disassemble( aResult, session, null ) );
 				}
 				else {
 					cacheable.add(
-							TypeFactory.disassemble(
-									( Object[] ) result.get( i ), returnTypes, null, session, null
-							)
+							TypeHelper.disassemble( (Object[]) aResult, returnTypes, null, session, null )
 					);
 				}
 			}
 
 			cacheRegion.put( key, cacheable );
-
 			return true;
-
 		}
-
 	}
 
+	@SuppressWarnings({ "unchecked" })
 	public List get(
 			QueryKey key,
 			Type[] returnTypes,
@@ -145,7 +141,7 @@ public class StandardQueryCache implements QueryCache {
 				returnTypes[0].beforeAssemble( ( Serializable ) cacheable.get( i ), session );
 			}
 			else {
-				TypeFactory.beforeAssemble( ( Serializable[] ) cacheable.get( i ), returnTypes, session );
+				TypeHelper.beforeAssemble( ( Serializable[] ) cacheable.get( i ), returnTypes, session );
 			}
 		}
 		List result = new ArrayList( cacheable.size() - 1 );
@@ -156,9 +152,7 @@ public class StandardQueryCache implements QueryCache {
 				}
 				else {
 					result.add(
-							TypeFactory.assemble(
-									( Serializable[] ) cacheable.get( i ), returnTypes, session, null
-							)
+							TypeHelper.assemble( ( Serializable[] ) cacheable.get( i ), returnTypes, session, null )
 					);
 				}
 			}

@@ -40,8 +40,8 @@ public class EmbeddedComponentType extends ComponentType {
 		return true;
 	}
 
-	public EmbeddedComponentType(ComponentMetamodel metamodel) {
-		super( metamodel );
+	public EmbeddedComponentType(TypeFactory.TypeScope typeScope, ComponentMetamodel metamodel) {
+		super( typeScope, metamodel );
 	}
 
 	public boolean isMethodOf(Method method) {

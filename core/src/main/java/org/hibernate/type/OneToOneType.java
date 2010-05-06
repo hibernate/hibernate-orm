@@ -45,6 +45,22 @@ public class OneToOneType extends EntityType {
 	private final ForeignKeyDirection foreignKeyType;
 	private final String propertyName;
 	private final String entityName;
+
+	public OneToOneType(
+			TypeFactory.TypeScope scope,
+			String referencedEntityName,
+			ForeignKeyDirection foreignKeyType,
+			String uniqueKeyPropertyName,
+			boolean lazy,
+			boolean unwrapProxy,
+			boolean isEmbeddedInXML,
+			String entityName,
+			String propertyName) {
+		super( scope, referencedEntityName, uniqueKeyPropertyName, !lazy, isEmbeddedInXML, unwrapProxy );
+		this.foreignKeyType = foreignKeyType;
+		this.propertyName = propertyName;
+		this.entityName = entityName;
+	}
 	
 	public String getPropertyName() {
 		return propertyName;
@@ -80,28 +96,6 @@ public class OneToOneType extends EntityType {
 
 	public boolean[] toColumnNullness(Object value, Mapping mapping) {
 		return ArrayHelper.EMPTY_BOOLEAN_ARRAY;
-	}
-
-	public OneToOneType(
-			String referencedEntityName, 
-			ForeignKeyDirection foreignKeyType, 
-			String uniqueKeyPropertyName,
-			boolean lazy,
-			boolean unwrapProxy,
-			boolean isEmbeddedInXML,
-			String entityName,
-			String propertyName
-	) {
-		super(
-				referencedEntityName, 
-				uniqueKeyPropertyName, 
-				!lazy, 
-				isEmbeddedInXML, 
-				unwrapProxy
-			);
-		this.foreignKeyType = foreignKeyType;
-		this.propertyName = propertyName;
-		this.entityName = entityName;
 	}
 
 	public void nullSafeSet(PreparedStatement st, Object value, int index, boolean[] settable, SessionImplementor session) {

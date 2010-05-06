@@ -20,6 +20,7 @@ import org.hibernate.Interceptor;
 import org.hibernate.SessionFactory;
 import org.hibernate.StatelessSession;
 import org.hibernate.Cache;
+import org.hibernate.TypeHelper;
 import org.hibernate.engine.FilterDefinition;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.UUIDHexGenerator;
@@ -206,5 +207,9 @@ public class SessionFactoryStub implements SessionFactory {
 
 	public boolean containsFetchProfileDefinition(String name) {
 		return getImpl().containsFetchProfileDefinition( name );
+	}
+
+	public TypeHelper getTypeHelper() {
+		return getImpl().getTypeHelper();
 	}
 }

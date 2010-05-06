@@ -33,6 +33,6 @@ import org.hibernate.mapping.PrimitiveArray;
 public class PrimitiveArrayBinder extends ArrayBinder {
 	@Override
 	protected Collection createCollection(PersistentClass persistentClass) {
-		return new PrimitiveArray( persistentClass );
+		return new PrimitiveArray( getMappings(), persistentClass );
 	}
 }

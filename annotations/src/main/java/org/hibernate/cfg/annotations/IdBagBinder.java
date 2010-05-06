@@ -50,7 +50,7 @@ import org.hibernate.util.StringHelper;
  */
 public class IdBagBinder extends BagBinder {
 	protected Collection createCollection(PersistentClass persistentClass) {
-		return new org.hibernate.mapping.IdentifierBag( persistentClass );
+		return new org.hibernate.mapping.IdentifierBag( getMappings(), persistentClass );
 	}
 
 	@Override

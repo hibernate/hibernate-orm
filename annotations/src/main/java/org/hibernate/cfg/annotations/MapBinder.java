@@ -88,7 +88,7 @@ public class MapBinder extends CollectionBinder {
 	}
 
 	protected Collection createCollection(PersistentClass persistentClass) {
-		return new org.hibernate.mapping.Map( persistentClass );
+		return new org.hibernate.mapping.Map( getMappings(), persistentClass );
 	}
 
 	@Override

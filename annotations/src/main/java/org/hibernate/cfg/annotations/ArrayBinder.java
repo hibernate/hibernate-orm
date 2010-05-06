@@ -38,6 +38,6 @@ public class ArrayBinder extends ListBinder {
 	}
 
 	protected Collection createCollection(PersistentClass persistentClass) {
-		return new Array( persistentClass );
+		return new Array( getMappings(), persistentClass );
 	}
 }

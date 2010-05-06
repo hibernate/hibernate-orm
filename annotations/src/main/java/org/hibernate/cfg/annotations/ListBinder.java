@@ -63,7 +63,7 @@ public class ListBinder extends CollectionBinder {
 	}
 
 	protected Collection createCollection(PersistentClass persistentClass) {
-		return new org.hibernate.mapping.List( persistentClass );
+		return new org.hibernate.mapping.List( getMappings(), persistentClass );
 	}
 
 	public void setSqlOrderBy(OrderBy orderByAnn) {

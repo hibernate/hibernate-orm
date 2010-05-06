@@ -225,7 +225,9 @@ public abstract class CollectionBinder {
 
 	public void setSqlOrderBy(OrderBy orderByAnn) {
 		if ( orderByAnn != null ) {
-			if ( !BinderHelper.isDefault( orderByAnn.clause() ) ) orderBy = orderByAnn.clause();
+			if ( !BinderHelper.isDefault( orderByAnn.clause() ) ) {
+				orderBy = orderByAnn.clause();
+			}
 		}
 	}
 

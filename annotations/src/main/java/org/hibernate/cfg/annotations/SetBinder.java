@@ -46,10 +46,11 @@ public class SetBinder extends CollectionBinder {
 	}
 
 	protected Collection createCollection(PersistentClass persistentClass) {
-		return new org.hibernate.mapping.Set( persistentClass );
+		return new org.hibernate.mapping.Set( getMappings(), persistentClass );
 	}
 
 	public void setSqlOrderBy(OrderBy orderByAnn) {
+		// *annotation* binder, jdk 1.5, ... am i missing something?
 		if ( orderByAnn != null ) {
 			if ( Environment.jvmSupportsLinkedHashCollections() ) {
 				super.setSqlOrderBy( orderByAnn );

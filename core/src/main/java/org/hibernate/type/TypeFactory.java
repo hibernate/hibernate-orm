@@ -122,7 +122,7 @@ public final class TypeFactory implements Serializable {
 		}
 	}
 
-	public void injectParameters(Object type, Properties parameters) {
+	public static void injectParameters(Object type, Properties parameters) {
 		if ( ParameterizedType.class.isInstance( type ) ) {
 			( (ParameterizedType) type ).setParameterValues(parameters);
 		}
@@ -132,6 +132,14 @@ public final class TypeFactory implements Serializable {
 	}
 
 	public CompositeCustomType customComponent(Class<CompositeUserType> typeClass, Properties parameters) {
+		return customComponent( typeClass, parameters, typeScope );
+	}
+
+	/**
+	 * @deprecated Only for use temporary use by {@link org.hibernate.Hibernate}
+	 */
+	@SuppressWarnings({ "JavaDoc" })
+	public static CompositeCustomType customComponent(Class<CompositeUserType> typeClass, Properties parameters, TypeScope scope) {
 		try {
 			CompositeUserType userType = typeClass.newInstance();
 			injectParameters( userType, parameters );
@@ -163,6 +171,13 @@ public final class TypeFactory implements Serializable {
 	}
 
 	public CustomType custom(Class<UserType> typeClass, Properties parameters) {
+		return custom( typeClass, parameters, typeScope );
+	}
+
+	/**
+	 * @deprecated Only for use temporary use by {@link org.hibernate.Hibernate}
+	 */
+	public static CustomType custom(Class<UserType> typeClass, Properties parameters, TypeScope scope) {
 		try {
 			UserType userType = typeClass.newInstance();
 			injectParameters( userType, parameters );

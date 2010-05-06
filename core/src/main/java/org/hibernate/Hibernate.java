@@ -34,6 +34,7 @@ import java.util.Properties;
 
 import org.hibernate.collection.PersistentCollection;
 import org.hibernate.engine.HibernateIterator;
+import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.engine.jdbc.NonContextualLobCreator;
 import org.hibernate.engine.jdbc.LobCreationContext;
@@ -41,8 +42,10 @@ import org.hibernate.engine.jdbc.LobCreator;
 import org.hibernate.engine.jdbc.StreamUtils;
 import org.hibernate.intercept.FieldInterceptionHelper;
 import org.hibernate.intercept.FieldInterceptor;
+import org.hibernate.mapping.ManyToOne;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
+import org.hibernate.type.AnyType;
 import org.hibernate.type.BigDecimalType;
 import org.hibernate.type.BigIntegerType;
 import org.hibernate.type.BinaryType;
@@ -61,6 +64,7 @@ import org.hibernate.type.FloatType;
 import org.hibernate.type.IntegerType;
 import org.hibernate.type.LocaleType;
 import org.hibernate.type.LongType;
+import org.hibernate.type.ManyToOneType;
 import org.hibernate.type.ObjectType;
 import org.hibernate.type.SerializableType;
 import org.hibernate.type.ShortType;
@@ -71,6 +75,7 @@ import org.hibernate.type.TimeZoneType;
 import org.hibernate.type.TimestampType;
 import org.hibernate.type.TrueFalseType;
 import org.hibernate.type.Type;
+import org.hibernate.type.TypeFactory;
 import org.hibernate.type.YesNoType;
 import org.hibernate.type.CharArrayType;
 import org.hibernate.type.WrapperBinaryType;
@@ -78,6 +83,7 @@ import org.hibernate.type.CharacterArrayType;
 import org.hibernate.type.MaterializedBlobType;
 import org.hibernate.type.ImageType;
 import org.hibernate.type.MaterializedClobType;
+import org.hibernate.usertype.CompositeUserType;
 
 /**
  * <ul>
@@ -293,7 +299,7 @@ public final class Hibernate {
 	 */
 	@SuppressWarnings({ "JavaDoc", "UnusedDeclaration" })
 	public static Type any(Type metaType, Type identifierType) {
-		throw new HibernateException( "Not supported" );
+		return new AnyType( metaType, identifierType );
 	}
 
 	/**
@@ -301,9 +307,17 @@ public final class Hibernate {
 	 *
 	 * @deprecated Use {@link TypeHelper#entity} instead; see http://opensource.atlassian.com/projects/hibernate/browse/HHH-5182
 	 */
-	@SuppressWarnings({ "JavaDoc", "UnusedDeclaration" })
+	@SuppressWarnings({ "JavaDoc", "UnusedDeclaration", "deprecation" })
 	public static Type entity(Class persistentClass) {
-		throw new HibernateException( "Not supported" );
+		return entity( persistentClass.getName() );
+	}
+
+	private static class NoScope implements TypeFactory.TypeScope {
+		public static final NoScope INSTANCE = new NoScope();
+
+		public SessionFactoryImplementor resolveFactory() {
+			throw new HibernateException( "Cannot access SessionFactory from here" );
+		}
 	}
 
 	/**
@@ -313,7 +327,7 @@ public final class Hibernate {
 	 */
 	@SuppressWarnings({ "JavaDoc", "UnusedDeclaration" })
 	public static Type entity(String entityName) {
-		throw new HibernateException( "Not supported" );
+		return new ManyToOneType( NoScope.INSTANCE, entityName );
 	}
 
 	/**
@@ -323,7 +337,7 @@ public final class Hibernate {
 	 */
 	@SuppressWarnings({ "JavaDoc", "UnusedDeclaration" })
 	public static Type custom(Class userTypeClass) {
-		throw new HibernateException( "Not supported" );
+		return custom( userTypeClass, null );
 	}
 
 	/**
@@ -333,7 +347,17 @@ public final class Hibernate {
 	 */
 	@SuppressWarnings({ "JavaDoc", "UnusedDeclaration" })
 	public static Type custom(Class userTypeClass, String[] parameterNames, String[] parameterValues) {
-		throw new HibernateException( "Not supported" );
+		return custom( userTypeClass, toProperties( parameterNames, parameterValues ) );	}
+
+	private static Properties toProperties(String[] parameterNames, String[] parameterValues) {
+		if ( parameterNames == null || parameterNames.length == 0 ) {
+			return null;
+		}
+		Properties parameters = new Properties();
+		for ( int i = 0; i < parameterNames.length; i ++ ) {
+			parameters.put( parameterNames[i], parameterValues[i] );
+		}
+		return parameters;
 	}
 
 	/**
@@ -341,9 +365,14 @@ public final class Hibernate {
 	 *
 	 * @deprecated Use {@link TypeHelper#custom} instead; see http://opensource.atlassian.com/projects/hibernate/browse/HHH-5182
 	 */
-	@SuppressWarnings({ "JavaDoc", "UnusedDeclaration" })
+	@SuppressWarnings({ "JavaDoc", "UnusedDeclaration", "unchecked" })
 	public static Type custom(Class userTypeClass, Properties parameters) {
-		throw new HibernateException( "Not supported" );
+		if ( CompositeUserType.class.isAssignableFrom( userTypeClass ) ) {
+			return TypeFactory.customComponent( userTypeClass, parameters, NoScope.INSTANCE );
+		}
+		else {
+			return TypeFactory.custom( userTypeClass, parameters, NoScope.INSTANCE );
+		}
 	}
 
 	/**

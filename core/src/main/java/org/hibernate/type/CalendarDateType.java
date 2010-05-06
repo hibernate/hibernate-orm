@@ -25,7 +25,7 @@ package org.hibernate.type;
 
 import java.util.Calendar;
 
-import org.hibernate.type.descriptor.java.CalendarTypeDescriptor;
+import org.hibernate.type.descriptor.java.CalendarDateTypeDescriptor;
 import org.hibernate.type.descriptor.sql.DateTypeDescriptor;
 
 /**
@@ -38,7 +38,7 @@ public class CalendarDateType extends AbstractSingleColumnStandardBasicType<Cale
 	public static final CalendarDateType INSTANCE = new CalendarDateType();
 
 	public CalendarDateType() {
-		super( DateTypeDescriptor.INSTANCE, CalendarTypeDescriptor.INSTANCE );
+		super( DateTypeDescriptor.INSTANCE, CalendarDateTypeDescriptor.INSTANCE );
 	}
 
 	public String getName() {

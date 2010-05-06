@@ -29,6 +29,8 @@ package org.hibernate.type;
  * An abstract type for mapping long binary SQL types to Java byte[].
  *
  * @author Gail Badner
+ *
+ * @deprecated see http://opensource.atlassian.com/projects/hibernate/browse/HHH-5138
  */
 public abstract class AbstractLongBinaryType extends AbstractBynaryType {
 

@@ -45,6 +45,8 @@ import org.hibernate.util.StringHelper;
  * Superclass of single-column nullable types.
  * 
  * @author Gavin King
+ *
+ * @deprecated see http://opensource.atlassian.com/projects/hibernate/browse/HHH-5138
  */
 public abstract class NullableType extends AbstractType {
 

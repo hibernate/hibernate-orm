@@ -44,6 +44,8 @@ import org.hibernate.cfg.Environment;
  *
  * @author Gavin King
  * @author Emmanuel Bernard
+ *
+ * @deprecated see http://opensource.atlassian.com/projects/hibernate/browse/HHH-5138
  */
 public abstract class AbstractBynaryType extends MutableType implements VersionType, Comparator {
 

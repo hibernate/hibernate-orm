@@ -28,6 +28,7 @@ import java.util.HashSet;
 import java.util.StringTokenizer;
 
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.dialect.function.SQLFunctionRegistry;
 import org.hibernate.util.StringHelper;
 import org.hibernate.sql.ordering.antlr.ColumnMapper;
@@ -317,9 +318,27 @@ public final class Template {
 	private static boolean isFunctionOrKeyword(String lcToken, String nextToken, Dialect dialect, SQLFunctionRegistry functionRegistry) {
 		return "(".equals(nextToken) ||
 			KEYWORDS.contains(lcToken) ||
-			functionRegistry.hasFunction(lcToken) ||
+			isFunction(lcToken, nextToken, functionRegistry ) ||
 			dialect.getKeywords().contains(lcToken) ||
 			FUNCTION_KEYWORDS.contains(lcToken);
+	}
+
+	private static boolean isFunction(String lcToken, String nextToken, SQLFunctionRegistry functionRegistry) {
+		// checking for "(" is currently redundant because it is checked before getting here;
+		// doing the check anyhow, in case that earlier check goes away;
+		if ( "(".equals( nextToken ) ) {
+			return true;
+		}
+		SQLFunction function = functionRegistry.findSQLFunction(lcToken);
+		if ( function == null ) {
+			// lcToken does not refer to a function
+			return false;
+		}
+		// if function.hasArguments() and function.hasParenthesesIfNoArguments() is true,
+		// then assume that lcToken is not a function, since it is not followed by "(";
+		// can't seem to use function.hasParenthesesIfNoArguments() alone because
+		// function definitions may return true if "()" is optional when there are no arguments.
+		return function.hasArguments() && function.hasParenthesesIfNoArguments() ? false : true;
 	}
 
 	private static boolean isIdentifier(String token, Dialect dialect) {

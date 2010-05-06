@@ -36,6 +36,8 @@ import org.hibernate.dialect.Dialect;
 /**
  * Superclass for types that map Java boolean to SQL CHAR(1).
  * @author Gavin King
+ *
+ * @deprecated see http://opensource.atlassian.com/projects/hibernate/browse/HHH-5138
  */
 public abstract class CharBooleanType extends BooleanType {
 

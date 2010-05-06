@@ -61,7 +61,7 @@
 
     <ciManagement>
         <system>hudson</system>
-        <url>http://hudson.jboss.org/hudson/job/hibernate-testsuite/</url>
+        <url>http://hudson.jboss.org/hudson/job/hibernate-core-branch35/</url>
         <notifiers>
             <notifier>
                 <type>mail</type>
@@ -549,7 +549,7 @@
             <url>https://repository.jboss.org/nexus/service/local/staging/deploy/maven2/</url>
         </repository>
         <snapshotRepository>
-            <id>jboss-snapshots-repositor</id>
+            <id>jboss-snapshots-repository</id>
             <name>JBoss Snapshot Repository</name>
             <url>https://repository.jboss.org/nexus/content/repositories/snapshots/</url>
         </snapshotRepository>
@@ -614,7 +614,7 @@
 
         <!-- The MySQL 5 test envionment -->
         <profile>
-            <id>mysql5</id>
+            <id>mysql50</id>
             <dependencies>
                 <dependency>
                     <groupId>mysql</groupId>
@@ -678,7 +678,7 @@
 
         <!-- The PostgreSQL 8.2.4 test envionment -->
         <profile>
-            <id>postgresql824</id>
+            <id>postgresql82</id>
             <dependencies>
                 <dependency>
                     <groupId>postgresql</groupId>
@@ -699,7 +699,7 @@
 
         <!-- The PostgreSQL 8.3.7 test envionment -->
         <profile>
-            <id>postgresql837</id>
+            <id>postgresql83</id>
             <dependencies>
                 <dependency>
                     <groupId>postgresql</groupId>
@@ -752,7 +752,7 @@
 
         <!-- The DB2 9.1 test envionment (using 9x drivers)-->
         <profile>
-            <id>db2v91</id>
+            <id>db2-91</id>
             <dependencies>
                 <dependency>
                     <groupId>com.ibm</groupId>
@@ -778,7 +778,7 @@
 
         <!-- The DB2 9.7 test envionment (using 9x drivers)-->
         <profile>
-            <id>db2v97</id>
+            <id>db2-97</id>
             <dependencies>
                 <dependency>
                     <groupId>com.ibm</groupId>

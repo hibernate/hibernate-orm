@@ -37,6 +37,8 @@ import org.hibernate.HibernateException;
 /**
  * An abstract type for mapping long string SQL types to a Java String.
  * @author Gavin King, Bertrand Renuart (from TextType)
+ *
+ * @deprecated see http://opensource.atlassian.com/projects/hibernate/browse/HHH-5138
  */
 public abstract class AbstractLongStringType extends ImmutableType {
 

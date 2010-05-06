@@ -247,6 +247,8 @@ public final class TypeFactory {
 	/**
 	 * Given the name of a Hibernate basic type, return an instance of
 	 * <tt>org.hibernate.type.Type</tt>.
+	 *
+	 * @deprecated see http://opensource.atlassian.com/projects/hibernate/browse/HHH-5138
 	 */
 	public static Type basic(String name) {
 		return (Type) BASIC_TYPES.get( name );
@@ -255,6 +257,8 @@ public final class TypeFactory {
 	/**
 	 * Uses heuristics to deduce a Hibernate type given a string naming the type or Java class.
 	 * Return an instance of <tt>org.hibernate.type.Type</tt>.
+	 *
+	 * @deprecated see http://opensource.atlassian.com/projects/hibernate/browse/HHH-5138
 	 */
 	public static Type heuristicType(String typeName) throws MappingException {
 		return heuristicType( typeName, null );
@@ -263,6 +267,8 @@ public final class TypeFactory {
 	/**
 	 * Uses heuristics to deduce a Hibernate type given a string naming the type or Java class.
 	 * Return an instance of <tt>org.hibernate.type.Type</tt>.
+	 *
+	 * @deprecated see http://opensource.atlassian.com/projects/hibernate/browse/HHH-5138
 	 */
 	public static Type heuristicType(String typeName, Properties parameters)
 			throws MappingException {
@@ -407,6 +413,8 @@ public final class TypeFactory {
 	 * @param copy an array indicating which values to include in the copy
 	 * @param target The array into which to copy the values
 	 * @param session The orginating session
+	 *
+	 * @deprecated see http://opensource.atlassian.com/projects/hibernate/browse/HHH-5138
 	 */
 	public static void deepCopy(
 			final Object[] values,
@@ -434,6 +442,8 @@ public final class TypeFactory {
 	 * @param row The values
 	 * @param types The value types
 	 * @param session The orginating session
+	 *
+	 * @deprecated see http://opensource.atlassian.com/projects/hibernate/browse/HHH-5138
 	 */
 	public static void beforeAssemble(
 			final Serializable[] row,
@@ -455,6 +465,8 @@ public final class TypeFactory {
 	 * @param session The orginating session
 	 * @param owner The entity "owning" the values
 	 * @return The assembled state
+	 *
+	 * @deprecated see http://opensource.atlassian.com/projects/hibernate/browse/HHH-5138
 	 */
 	public static Object[] assemble(
 			final Serializable[] row,
@@ -482,6 +494,8 @@ public final class TypeFactory {
 	 * @param session The orginating session
 	 * @param owner The entity "owning" the values
 	 * @return The disassembled state
+	 *
+	 * @deprecated see http://opensource.atlassian.com/projects/hibernate/browse/HHH-5138
 	 */
 	public static Serializable[] disassemble(
 			final Object[] row,
@@ -514,6 +528,8 @@ public final class TypeFactory {
 	 * @param owner The entity "owning" the values
 	 * @param copyCache A map representing a cache of already replaced state
 	 * @return The replaced state
+	 *
+	 * @deprecated see http://opensource.atlassian.com/projects/hibernate/browse/HHH-5138
 	 */
 	public static Object[] replace(
 			final Object[] original,
@@ -546,6 +562,8 @@ public final class TypeFactory {
 	 * @param copyCache A map representing a cache of already replaced state
 	 * @param foreignKeyDirection FK directionality to be applied to the replacement
 	 * @return The replaced state
+	 *
+	 * @deprecated see http://opensource.atlassian.com/projects/hibernate/browse/HHH-5138
 	 */
 	public static Object[] replace(
 			final Object[] original,
@@ -583,6 +601,8 @@ public final class TypeFactory {
 	 * @param copyCache A map representing a cache of already replaced state
 	 * @param foreignKeyDirection FK directionality to be applied to the replacement
 	 * @return The replaced state
+	 *
+	 * @deprecated see http://opensource.atlassian.com/projects/hibernate/browse/HHH-5138
 	 */
 	public static Object[] replaceAssociations(
 			final Object[] original,
@@ -630,6 +650,8 @@ public final class TypeFactory {
 	 * @param anyUninitializedProperties Does the entity currently hold any uninitialized property values?
 	 * @param session The session from which the dirty check request originated.
 	 * @return Array containing indices of the dirty properties, or null if no properties considered dirty.
+	 *
+	 * @deprecated see http://opensource.atlassian.com/projects/hibernate/browse/HHH-5138
 	 */
 	public static int[] findDirty(
 			final StandardProperty[] properties,
@@ -677,6 +699,8 @@ public final class TypeFactory {
 	 * @param anyUninitializedProperties Does the entity currently hold any uninitialized property values?
 	 * @param session The session from which the dirty check request originated.
 	 * @return Array containing indices of the modified properties, or null if no properties considered modified.
+	 *
+	 * @deprecated see http://opensource.atlassian.com/projects/hibernate/browse/HHH-5138
 	 */
 	public static int[] findModified(
 			final StandardProperty[] properties, 

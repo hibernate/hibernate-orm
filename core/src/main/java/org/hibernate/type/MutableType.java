@@ -34,6 +34,8 @@ import org.hibernate.engine.SessionImplementor;
 /**
  * Superclass for mutable nullable types
  * @author Gavin King
+ *
+ * @deprecated see http://opensource.atlassian.com/projects/hibernate/browse/HHH-5138
  */
 public abstract class MutableType extends NullableType {
 

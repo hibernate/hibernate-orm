@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2010, Red Hat Middleware LLC or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Middleware LLC.
@@ -22,40 +22,35 @@
  * Boston, MA  02110-1301  USA
  *
  */
-package org.hibernate.type;
-
-import java.util.Map;
-
-import org.hibernate.EntityMode;
-import org.hibernate.HibernateException;
-import org.hibernate.engine.SessionFactoryImplementor;
-import org.hibernate.engine.SessionImplementor;
+package org.hibernate.test.hql;
 
 /**
- * Superclass of nullable immutable types.
- * @author Gavin King
  *
- * @deprecated see http://opensource.atlassian.com/projects/hibernate/browse/HHH-5138
+ * @author Gail Badner
  */
-public abstract class ImmutableType extends NullableType {
+public class EntityWithNoArgFunctionAsColumn {
+	private long id;
+	private String user;
+	private String currentDate;
 
-	public final Object deepCopy(Object value, EntityMode entityMode, SessionFactoryImplementor factory) {
-		return value;
+	public long getId() {
+		return id;
+	}
+	public void setId(long id) {
+		this.id = id;
 	}
 
-	public final boolean isMutable() {
-		return false;
+	public String getUser() {
+		return user;
+	}
+	public void setUser(String user) {
+		this.user = user;
 	}
 
-	public Object replace(
-		Object original,
-		Object target,
-		SessionImplementor session,
-		Object owner, 
-		Map copyCache)
-	throws HibernateException {
-		return original;
+	public String getCurrentDate() {
+		return currentDate;
 	}
-
-
+	public void setCurrentDate(String currentDate) {
+		this.currentDate = currentDate;
+	}
 }

@@ -40,6 +40,8 @@ import org.hibernate.dialect.Dialect;
  * Logic to bind stream of char into a VARCHAR
  *
  * @author Emmanuel Bernard
+ *
+ * @deprecated see http://opensource.atlassian.com/projects/hibernate/browse/HHH-5138
  */
 public abstract class AbstractCharArrayType extends MutableType {
 

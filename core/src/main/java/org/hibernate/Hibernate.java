@@ -104,138 +104,206 @@ public final class Hibernate {
 
 	/**
 	 * Hibernate <tt>long</tt> type.
+	 *
+	 * @deprecated see http://opensource.atlassian.com/projects/hibernate/browse/HHH-5138
 	 */
 	public static final NullableType LONG = new LongType();
 	/**
 	 * Hibernate <tt>short</tt> type.
+	 *
+	 * @deprecated see http://opensource.atlassian.com/projects/hibernate/browse/HHH-5138
 	 */
 	public static final NullableType SHORT = new ShortType();
 	/**
 	 * Hibernate <tt>integer</tt> type.
+	 *
+	 * @deprecated see http://opensource.atlassian.com/projects/hibernate/browse/HHH-5138
 	 */
 	public static final NullableType INTEGER = new IntegerType();
 	/**
 	 * Hibernate <tt>byte</tt> type.
+	 *
+	 * @deprecated see http://opensource.atlassian.com/projects/hibernate/browse/HHH-5138
 	 */
 	public static final NullableType BYTE = new ByteType();
 	/**
 	 * Hibernate <tt>float</tt> type.
+	 *
+	 * @deprecated see http://opensource.atlassian.com/projects/hibernate/browse/HHH-5138
 	 */
 	public static final NullableType FLOAT = new FloatType();
 	/**
 	 * Hibernate <tt>double</tt> type.
+	 *
+	 * @deprecated see http://opensource.atlassian.com/projects/hibernate/browse/HHH-5138
 	 */
 	public static final NullableType DOUBLE = new DoubleType();
 	/**
 	 * Hibernate <tt>character</tt> type.
+	 *
+	 * @deprecated see http://opensource.atlassian.com/projects/hibernate/browse/HHH-5138
 	 */
 	public static final NullableType CHARACTER = new CharacterType();
 	/**
 	 * Hibernate <tt>string</tt> type.
+	 *
+	 * @deprecated see http://opensource.atlassian.com/projects/hibernate/browse/HHH-5138
 	 */
 	public static final NullableType STRING = new StringType();
 	/**
 	 * Hibernate <tt>time</tt> type.
+	 *
+	 * @deprecated see http://opensource.atlassian.com/projects/hibernate/browse/HHH-5138
 	 */
 	public static final NullableType TIME = new TimeType();
 	/**
 	 * Hibernate <tt>date</tt> type.
+	 *
+	 * @deprecated see http://opensource.atlassian.com/projects/hibernate/browse/HHH-5138
 	 */
 	public static final NullableType DATE = new DateType();
 	/**
 	 * Hibernate <tt>timestamp</tt> type.
+	 *
+	 * @deprecated see http://opensource.atlassian.com/projects/hibernate/browse/HHH-5138
 	 */
 	public static final NullableType TIMESTAMP = new TimestampType();
 	/**
 	 * Hibernate <tt>boolean</tt> type.
+	 *
+	 * @deprecated see http://opensource.atlassian.com/projects/hibernate/browse/HHH-5138
 	 */
 	public static final NullableType BOOLEAN = new BooleanType();
 	/**
 	 * Hibernate <tt>true_false</tt> type.
+	 *
+	 * @deprecated see http://opensource.atlassian.com/projects/hibernate/browse/HHH-5138
 	 */
 	public static final NullableType TRUE_FALSE = new TrueFalseType();
 	/**
 	 * Hibernate <tt>yes_no</tt> type.
+	 *
+	 * @deprecated see http://opensource.atlassian.com/projects/hibernate/browse/HHH-5138
 	 */
 	public static final NullableType YES_NO = new YesNoType();
 	/**
 	 * Hibernate <tt>big_decimal</tt> type.
+	 *
+	 * @deprecated see http://opensource.atlassian.com/projects/hibernate/browse/HHH-5138
 	 */
 	public static final NullableType BIG_DECIMAL = new BigDecimalType();
 	/**
 	 * Hibernate <tt>big_integer</tt> type.
+	 *
+	 * @deprecated see http://opensource.atlassian.com/projects/hibernate/browse/HHH-5138
 	 */
 	public static final NullableType BIG_INTEGER = new BigIntegerType();
 	/**
 	 * Hibernate <tt>binary</tt> type.
+	 *
+	 * @deprecated see http://opensource.atlassian.com/projects/hibernate/browse/HHH-5138
 	 */
 	public static final NullableType BINARY = new BinaryType();
 	/**
 	 * Hibernate <tt>wrapper-binary</tt> type.
+	 *
+	 * @deprecated see http://opensource.atlassian.com/projects/hibernate/browse/HHH-5138
 	 */
 	public static final NullableType WRAPPER_BINARY = new WrapperBinaryType();
 	/**
 	 * Hibernate char[] type.
+	 *
+	 * @deprecated see http://opensource.atlassian.com/projects/hibernate/browse/HHH-5138
 	 */
 	public static final NullableType CHAR_ARRAY = new CharArrayType();
 	/**
 	 * Hibernate Character[] type.
+	 *
+	 * @deprecated see http://opensource.atlassian.com/projects/hibernate/browse/HHH-5138
 	 */
 	public static final NullableType CHARACTER_ARRAY = new CharacterArrayType();
 	/**
 	 * Hibernate <tt>image</tt> type.
+	 *
+	 * @deprecated see http://opensource.atlassian.com/projects/hibernate/browse/HHH-5138
 	 */
 	public static final NullableType IMAGE = new ImageType();
 	/**
 	 * Hibernate <tt>text</tt> type.
+	 *
+	 * @deprecated see http://opensource.atlassian.com/projects/hibernate/browse/HHH-5138
 	 */
 	public static final NullableType TEXT = new TextType();
 	/**
 	 * Hibernate <tt>materialized_blob</tt> type.
+	 *
+	 * @deprecated see http://opensource.atlassian.com/projects/hibernate/browse/HHH-5138
 	 */
 	public static final NullableType MATERIALIZED_BLOB = new MaterializedBlobType();
 	/**
 	 * Hibernate <tt>materialized_clob</tt> type.
+	 *
+	 * @deprecated see http://opensource.atlassian.com/projects/hibernate/browse/HHH-5138
 	 */
 	public static final NullableType MATERIALIZED_CLOB = new MaterializedClobType();
 	/**
 	 * Hibernate <tt>blob</tt> type.
+	 *
+	 * @deprecated see http://opensource.atlassian.com/projects/hibernate/browse/HHH-5138
 	 */
 	public static final Type BLOB = new BlobType();
 	/**
 	 * Hibernate <tt>clob</tt> type.
+	 *
+	 * @deprecated see http://opensource.atlassian.com/projects/hibernate/browse/HHH-5138
 	 */
 	public static final Type CLOB = new ClobType();
 	/**
 	 * Hibernate <tt>calendar</tt> type.
+	 *
+	 * @deprecated see http://opensource.atlassian.com/projects/hibernate/browse/HHH-5138
 	 */
 	public static final NullableType CALENDAR = new CalendarType();
 	/**
 	 * Hibernate <tt>calendar_date</tt> type.
+	 *
+	 * @deprecated see http://opensource.atlassian.com/projects/hibernate/browse/HHH-5138
 	 */
 	public static final NullableType CALENDAR_DATE = new CalendarDateType();
 	/**
 	 * Hibernate <tt>locale</tt> type.
+	 *
+	 * @deprecated see http://opensource.atlassian.com/projects/hibernate/browse/HHH-5138
 	 */
 	public static final NullableType LOCALE = new LocaleType();
 	/**
 	 * Hibernate <tt>currency</tt> type.
+	 *
+	 * @deprecated see http://opensource.atlassian.com/projects/hibernate/browse/HHH-5138
 	 */
 	public static final NullableType CURRENCY = new CurrencyType();
 	/**
 	 * Hibernate <tt>timezone</tt> type.
+	 *
+	 * @deprecated see http://opensource.atlassian.com/projects/hibernate/browse/HHH-5138
 	 */
 	public static final NullableType TIMEZONE = new TimeZoneType();
 	/**
 	 * Hibernate <tt>class</tt> type.
+	 *
+	 * @deprecated see http://opensource.atlassian.com/projects/hibernate/browse/HHH-5138
 	 */
 	public static final NullableType CLASS = new ClassType();
 	/**
 	 * Hibernate <tt>serializable</tt> type.
+	 *
+	 * @deprecated see http://opensource.atlassian.com/projects/hibernate/browse/HHH-5138
 	 */
 	public static final NullableType SERIALIZABLE = new SerializableType( Serializable.class );
 	/**
 	 * Hibernate <tt>object</tt> type.
+	 *
+	 * @deprecated see http://opensource.atlassian.com/projects/hibernate/browse/HHH-5138
 	 */
 	public static final Type OBJECT = new AnyType();
 
@@ -249,6 +317,8 @@ public final class Hibernate {
 
 	/**
 	 * A Hibernate <tt>serializable</tt> type.
+	 *
+	 * @deprecated see http://opensource.atlassian.com/projects/hibernate/browse/HHH-5138
 	 */
 	public static Type serializable(Class serializableClass) {
 		return new SerializableType( serializableClass );
@@ -260,6 +330,8 @@ public final class Hibernate {
 	 * @param metaType       a type mapping <tt>java.lang.Class</tt> to a single column
 	 * @param identifierType the entity identifier type
 	 * @return the Type
+	 *
+	 * @deprecated see http://opensource.atlassian.com/projects/hibernate/browse/HHH-5182
 	 */
 	public static Type any(Type metaType, Type identifierType) {
 		return new AnyType( metaType, identifierType );
@@ -269,6 +341,8 @@ public final class Hibernate {
 	 * A Hibernate persistent object (entity) type.
 	 *
 	 * @param persistentClass a mapped entity class
+	 *
+	 * @deprecated see http://opensource.atlassian.com/projects/hibernate/browse/HHH-5182
 	 */
 	public static Type entity(Class persistentClass) {
 		// not really a many-to-one association *necessarily*
@@ -279,6 +353,8 @@ public final class Hibernate {
 	 * A Hibernate persistent object (entity) type.
 	 *
 	 * @param entityName a mapped entity class
+	 *
+	 * @deprecated see http://opensource.atlassian.com/projects/hibernate/browse/HHH-5182
 	 */
 	public static Type entity(String entityName) {
 		// not really a many-to-one association *necessarily*
@@ -289,6 +365,8 @@ public final class Hibernate {
 	 * A Hibernate custom type.
 	 *
 	 * @param userTypeClass a class that implements <tt>UserType</tt>
+	 *
+	 * @deprecated see http://opensource.atlassian.com/projects/hibernate/browse/HHH-5182
 	 */
 	public static Type custom(Class userTypeClass) throws HibernateException {
 		return custom( userTypeClass, null );
@@ -301,6 +379,8 @@ public final class Hibernate {
 	 * @param parameterNames  the names of the parameters passed to the type
 	 * @param parameterValues the values of the parameters passed to the type. They must match
 	 *                        up with the order and length of the parameterNames array.
+	 *
+	 * @deprecated see http://opensource.atlassian.com/projects/hibernate/browse/HHH-5182
 	 */
 	public static Type custom(Class userTypeClass, String[] parameterNames, String[] parameterValues)
 			throws HibernateException {
@@ -316,6 +396,8 @@ public final class Hibernate {
 	 *
 	 * @param userTypeClass a class that implements <tt>UserType and ParameterizableType</tt>
 	 * @param parameters    the parameters as a collection of name/value pairs
+	 *
+	 * @deprecated see http://opensource.atlassian.com/projects/hibernate/browse/HHH-5182
 	 */
 	public static Type custom(Class userTypeClass, Properties parameters)
 			throws HibernateException {

@@ -382,7 +382,9 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 			return getDefaultCollectionType();
 		}
 		else {
-			return TypeFactory.customCollection( typeName, typeParameters, role, referencedPropertyName, isEmbedded() );
+			return mappings.getTypeResolver()
+					.getTypeFactory()
+					.customCollection( typeName, typeParameters, role, referencedPropertyName, isEmbedded() );
 		}
 	}
 

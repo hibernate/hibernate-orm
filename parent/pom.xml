@@ -598,7 +598,7 @@
             <properties>
                 <db.dialect>org.hibernate.dialect.H2Dialect</db.dialect>
                 <jdbc.driver>org.h2.Driver</jdbc.driver>
-                <jdbc.url>jdbc:h2:mem:db1</jdbc.url>
+                <jdbc.url>jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1</jdbc.url>
                 <jdbc.user>sa</jdbc.user>
                 <jdbc.pass />
                 <jdbc.isolation />

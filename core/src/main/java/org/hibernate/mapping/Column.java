@@ -61,7 +61,8 @@ public class Column implements Selectable, Serializable, Cloneable {
 	private String customWrite;
 	private String customRead;
 
-	public Column() { };
+	public Column() {
+	}
 
 	public Column(String columnName) {
 		setName(columnName);
@@ -262,12 +263,17 @@ public class Column implements Selectable, Serializable, Cloneable {
 	}
 
 	public String getTemplate(Dialect dialect, SQLFunctionRegistry functionRegistry) {
-		String expr = getReadExpr(dialect);
-		return Template.renderWhereStringTemplate(expr, dialect, functionRegistry);
+		return hasCustomRead()
+				? Template.renderWhereStringTemplate( customRead, dialect, functionRegistry )
+				: Template.TEMPLATE + '.' + getQuotedName( dialect );
+	}
+
+	public boolean hasCustomRead() {
+		return ( customRead != null && customRead.length() > 0 );
 	}
 
 	public String getReadExpr(Dialect dialect) {
-		return ( customRead != null && customRead.length() > 0 ) ? customRead : getQuotedName(dialect);
+		return hasCustomRead() ? customRead : getQuotedName( dialect );
 	}
 	
 	public String getWriteExpr() {

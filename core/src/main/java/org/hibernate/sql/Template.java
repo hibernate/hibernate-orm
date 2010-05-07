@@ -24,9 +24,13 @@
  */
 package org.hibernate.sql;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.StringTokenizer;
 
+import org.hibernate.HibernateException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.dialect.function.SQLFunctionRegistry;
@@ -43,9 +47,9 @@ import org.hibernate.engine.SessionFactoryImplementor;
  */
 public final class Template {
 
-	private static final java.util.Set KEYWORDS = new HashSet();
-	private static final java.util.Set BEFORE_TABLE_KEYWORDS = new HashSet();
-	private static final java.util.Set FUNCTION_KEYWORDS = new HashSet();
+	private static final Set<String> KEYWORDS = new HashSet<String>();
+	private static final Set<String> BEFORE_TABLE_KEYWORDS = new HashSet<String>();
+	private static final Set<String> FUNCTION_KEYWORDS = new HashSet<String>();
 	static {
 		KEYWORDS.add("and");
 		KEYWORDS.add("or");
@@ -109,13 +113,14 @@ public final class Template {
 	 *
 	 * @deprecated Only intended for annotations usage; use {@link #renderWhereStringTemplate(String, String, Dialect, SQLFunctionRegistry)} instead
 	 */
+	@SuppressWarnings({ "JavaDoc" })
 	public static String renderWhereStringTemplate(String sqlWhereString, String placeholder, Dialect dialect) {
 		return renderWhereStringTemplate( sqlWhereString, placeholder, dialect, new SQLFunctionRegistry( dialect, java.util.Collections.EMPTY_MAP ) );
 	}
 
 	/**
-	 * Takes the where condition provided in the mapping attribute and interpolates the alias. 
-	 * Handles subselects, quoted identifiers, quoted strings, expressions, SQL functions, 
+	 * Takes the where condition provided in the mapping attribute and interpolates the alias.
+	 * Handles sub-selects, quoted identifiers, quoted strings, expressions, SQL functions,
 	 * named parameters.
 	 *
 	 * @param sqlWhereString The string into which to interpolate the placeholder value
@@ -125,51 +130,55 @@ public final class Template {
 	 * @return The rendered sql fragment
 	 */
 	public static String renderWhereStringTemplate(String sqlWhereString, String placeholder, Dialect dialect, SQLFunctionRegistry functionRegistry ) {
-		//TODO: make this a bit nicer
+
+		// IMPL NOTE : The basic process here is to tokenize the incoming string and to iterate over each token
+		//		in turn.  As we process each token, we set a series of flags used to indicate the type of context in
+		// 		which the tokens occur.  Depending on the state of those flags we decide whether we need to qualify
+		//		identifier references.
+
 		String symbols = new StringBuffer()
-			.append("=><!+-*/()',|&`")
-			.append(StringHelper.WHITESPACE)
-			.append( dialect.openQuote() )
-			.append( dialect.closeQuote() )
-			.toString();
-		StringTokenizer tokens = new StringTokenizer(sqlWhereString, symbols, true);
-		
+				.append( "=><!+-*/()',|&`" )
+				.append( StringHelper.WHITESPACE )
+				.append( dialect.openQuote() )
+				.append( dialect.closeQuote() )
+				.toString();
+		StringTokenizer tokens = new StringTokenizer( sqlWhereString, symbols, true );
 		StringBuffer result = new StringBuffer();
+
 		boolean quoted = false;
 		boolean quotedIdentifier = false;
 		boolean beforeTable = false;
 		boolean inFromClause = false;
 		boolean afterFromTable = false;
-		
+
 		boolean hasMore = tokens.hasMoreTokens();
 		String nextToken = hasMore ? tokens.nextToken() : null;
-		while (hasMore) {
+		while ( hasMore ) {
 			String token = nextToken;
 			String lcToken = token.toLowerCase();
 			hasMore = tokens.hasMoreTokens();
 			nextToken = hasMore ? tokens.nextToken() : null;
-			
+
 			boolean isQuoteCharacter = false;
-			
+
 			if ( !quotedIdentifier && "'".equals(token) ) {
 				quoted = !quoted;
 				isQuoteCharacter = true;
 			}
-			
+
 			if ( !quoted ) {
-				
 				boolean isOpenQuote;
 				if ( "`".equals(token) ) {
 					isOpenQuote = !quotedIdentifier;
-					token = lcToken = isOpenQuote ? 
-						new Character( dialect.openQuote() ).toString() :
-						new Character( dialect.closeQuote() ).toString();
-					quotedIdentifier = isOpenQuote;	
+					token = lcToken = isOpenQuote
+							? Character.toString( dialect.openQuote() )
+							: Character.toString( dialect.closeQuote() );
+					quotedIdentifier = isOpenQuote;
 					isQuoteCharacter = true;
 				}
 				else if ( !quotedIdentifier && ( dialect.openQuote()==token.charAt(0) ) ) {
 					isOpenQuote = true;
-					quotedIdentifier = true;	
+					quotedIdentifier = true;
 					isQuoteCharacter = true;
 				}
 				else if ( quotedIdentifier && ( dialect.closeQuote()==token.charAt(0) ) ) {
@@ -180,40 +189,120 @@ public final class Template {
 				else {
 					isOpenQuote = false;
 				}
-				
-				if (isOpenQuote) {
-					result.append(placeholder).append('.');
+
+				if ( isOpenQuote ) {
+					result.append( placeholder ).append( '.' );
 				}
-				
 			}
-	
-			boolean quotedOrWhitespace = quoted || 
-				quotedIdentifier || 
-				isQuoteCharacter || 
-				Character.isWhitespace( token.charAt(0) );
-			
-			if (quotedOrWhitespace) {
-				result.append(token);
+
+			// Special processing for ANSI SQL EXTRACT function
+			if ( "extract".equals( lcToken ) && "(".equals( nextToken ) ) {
+				final String field = extractUntil( tokens, "from" );
+				final String source = renderWhereStringTemplate(
+						extractUntil( tokens, ")" ),
+						placeholder,
+						dialect,
+						functionRegistry
+				);
+				result.append( "extract(" ).append( field ).append( " from " ).append( source ).append( ')' );
+
+				hasMore = tokens.hasMoreTokens();
+				nextToken = hasMore ? tokens.nextToken() : null;
+
+				continue;
 			}
-			else if (beforeTable) {
-				result.append(token);
+
+			// Special processing for ANSI SQL TRIM function
+			if ( "trim".equals( lcToken ) && "(".equals( nextToken ) ) {
+				List<String> operands = new ArrayList<String>();
+				StringBuilder builder = new StringBuilder();
+
+				boolean hasMoreOperands = true;
+				String operandToken = tokens.nextToken();
+				boolean quotedOperand = false;
+				while ( hasMoreOperands ) {
+					final boolean isQuote = "'".equals( operandToken );
+					if ( isQuote ) {
+						quotedOperand = !quotedOperand;
+						if ( !quotedOperand ) {
+							operands.add( builder.append( '\'' ).toString() );
+							builder.setLength( 0 );
+						}
+						else {
+							builder.append( '\'' );
+						}
+					}
+					else if ( quotedOperand ) {
+						builder.append( operandToken );
+					}
+					else if ( operandToken.length() == 1 && Character.isWhitespace( operandToken.charAt( 0 ) ) ) {
+						// do nothing
+					}
+					else {
+						operands.add( operandToken );
+					}
+					operandToken = tokens.nextToken();
+					hasMoreOperands = tokens.hasMoreTokens() && ! ")".equals( operandToken );
+				}
+
+				TrimOperands trimOperands = new TrimOperands( operands );
+				result.append( "trim(" );
+				if ( trimOperands.trimSpec != null ) {
+					result.append( trimOperands.trimSpec ).append( ' ' );
+				}
+				if ( trimOperands.trimChar != null ) {
+					if ( trimOperands.trimChar.startsWith( "'" ) && trimOperands.trimChar.endsWith( "'" ) ) {
+						result.append( trimOperands.trimChar );
+					}
+					else {
+						result.append(
+								renderWhereStringTemplate( trimOperands.trimSpec, placeholder, dialect, functionRegistry )
+						);
+					}
+					result.append( ' ' );
+				}
+				if ( trimOperands.from != null ) {
+					result.append( trimOperands.from ).append( ' ' );
+				}
+				else if ( trimOperands.trimSpec != null || trimOperands.trimChar != null ) {
+					// I think ANSI SQL says that the 'from' is not optional if either trim-spec or trim-char are specified
+					result.append( "from " );
+				}
+
+				result.append( renderWhereStringTemplate( trimOperands.trimSource, placeholder, dialect, functionRegistry ) )
+						.append( ')' );
+
+				hasMore = tokens.hasMoreTokens();
+				nextToken = hasMore ? tokens.nextToken() : null;
+
+				continue;
+			}
+
+			boolean quotedOrWhitespace = quoted || quotedIdentifier || isQuoteCharacter
+					|| Character.isWhitespace( token.charAt(0) );
+
+			if ( quotedOrWhitespace ) {
+				result.append( token );
+			}
+			else if ( beforeTable ) {
+				result.append( token );
 				beforeTable = false;
 				afterFromTable = true;
 			}
-			else if (afterFromTable) {
-				if ( !"as".equals(lcToken) ) afterFromTable = false;
+			else if ( afterFromTable ) {
+				if ( !"as".equals(lcToken) ) {
+					afterFromTable = false;
+				}
 				result.append(token);
 			}
 			else if ( isNamedParameter(token) ) {
 				result.append(token);
 			}
-			else if (
-				isIdentifier(token, dialect) &&
-				!isFunctionOrKeyword(lcToken, nextToken, dialect , functionRegistry)
-			) {
+			else if ( isIdentifier(token, dialect)
+					&& !isFunctionOrKeyword(lcToken, nextToken, dialect , functionRegistry) ) {
 				result.append(placeholder)
-					.append('.')
-					.append( dialect.quote(token) );
+						.append('.')
+						.append( dialect.quote(token) );
 			}
 			else {
 				if ( BEFORE_TABLE_KEYWORDS.contains(lcToken) ) {
@@ -225,17 +314,311 @@ public final class Template {
 				}
 				result.append(token);
 			}
-			
-			if ( //Yuck:
-					inFromClause && 
-					KEYWORDS.contains(lcToken) && //"as" is not in KEYWORDS
-					!BEFORE_TABLE_KEYWORDS.contains(lcToken)
-			) { 
+
+			//Yuck:
+			if ( inFromClause
+					&& KEYWORDS.contains( lcToken ) //"as" is not in KEYWORDS
+					&& !BEFORE_TABLE_KEYWORDS.contains( lcToken ) ) {
 				inFromClause = false;
 			}
-
 		}
+
 		return result.toString();
+	}
+
+//	/**
+//	 * Takes the where condition provided in the mapping attribute and interpolates the alias.
+//	 * Handles sub-selects, quoted identifiers, quoted strings, expressions, SQL functions,
+//	 * named parameters.
+//	 *
+//	 * @param sqlWhereString The string into which to interpolate the placeholder value
+//	 * @param placeholder The value to be interpolated into the the sqlWhereString
+//	 * @param dialect The dialect to apply
+//	 * @param functionRegistry The registry of all sql functions
+//	 *
+//	 * @return The rendered sql fragment
+//	 */
+//	public static String renderWhereStringTemplate(
+//			String sqlWhereString,
+//			String placeholder,
+//			Dialect dialect,
+//			SQLFunctionRegistry functionRegistry) {
+//
+//		// IMPL NOTE : The basic process here is to tokenize the incoming string and to iterate over each token
+//		//		in turn.  As we process each token, we set a series of flags used to indicate the type of context in
+//		// 		which the tokens occur.  Depending on the state of those flags we decide whether we need to qualify
+//		//		identifier references.
+//
+//		final String dialectOpenQuote = Character.toString( dialect.openQuote() );
+//		final String dialectCloseQuote = Character.toString( dialect.closeQuote() );
+//
+//		String symbols = new StringBuilder()
+//				.append( "=><!+-*/()',|&`" )
+//				.append( StringHelper.WHITESPACE )
+//				.append( dialect.openQuote() )
+//				.append( dialect.closeQuote() )
+//				.toString();
+//		StringTokenizer tokens = new StringTokenizer( sqlWhereString, symbols, true );
+//		ProcessingState state = new ProcessingState();
+//
+//		StringBuilder quotedBuffer = new StringBuilder();
+//		StringBuilder result = new StringBuilder();
+//
+//		boolean hasMore = tokens.hasMoreTokens();
+//		String nextToken = hasMore ? tokens.nextToken() : null;
+//		while ( hasMore ) {
+//			String token = nextToken;
+//			String lcToken = token.toLowerCase();
+//			hasMore = tokens.hasMoreTokens();
+//			nextToken = hasMore ? tokens.nextToken() : null;
+//
+//			// First, determine quoting which might be based on either:
+//			// 		1) back-tick
+//			// 		2) single quote (ANSI SQL standard)
+//			// 		3) or dialect defined quote character(s)
+//			QuotingCharacterDisposition quotingCharacterDisposition = QuotingCharacterDisposition.NONE;
+//			if ( "`".equals( token ) ) {
+//				state.quoted = !state.quoted;
+//				quotingCharacterDisposition = state.quoted
+//						? QuotingCharacterDisposition.OPEN
+//						: QuotingCharacterDisposition.CLOSE;
+//				// replace token with the appropriate dialect quoting char
+//				token = lcToken = ( quotingCharacterDisposition == QuotingCharacterDisposition.OPEN )
+//						? dialectOpenQuote
+//						: dialectCloseQuote;
+//			}
+//			else if ( "'".equals( token ) ) {
+//				state.quoted = !state.quoted;
+//				quotingCharacterDisposition = state.quoted
+//						? QuotingCharacterDisposition.OPEN
+//						: QuotingCharacterDisposition.CLOSE;
+//			}
+//			else if ( !state.quoted && dialectOpenQuote.equals( token ) ) {
+//				state.quoted = true;
+//				quotingCharacterDisposition = QuotingCharacterDisposition.OPEN;
+//			}
+//			else if ( state.quoted && dialectCloseQuote.equals( token ) ) {
+//				state.quoted = false;
+//				quotingCharacterDisposition = QuotingCharacterDisposition.CLOSE;
+//			}
+//
+//			if ( state.quoted ) {
+//				quotedBuffer.append( token );
+//				continue;
+//			}
+//
+//			// if we were previously processing quoted state and just encountered the close quote, then handle that
+//			// quoted text
+//			if ( quotingCharacterDisposition == QuotingCharacterDisposition.CLOSE ) {
+//				token = quotedBuffer.toString();
+//				quotedBuffer.setLength( 0 );
+//				result.append( placeholder ).append( '.' )
+//						.append( dialectOpenQuote ).append( token ).append( dialectCloseQuote );
+//				continue;
+//			}
+//
+//			// Special processing for ANSI SQL EXTRACT function
+//			if ( "extract".equals( lcToken ) && "(".equals( nextToken ) ) {
+//				final String field = extractUntil( tokens, "from" );
+//				final String source = renderWhereStringTemplate(
+//						extractUntil( tokens, ")" ),
+//						placeholder,
+//						dialect,
+//						functionRegistry
+//				);
+//				result.append( "extract(" ).append( field ).append( " from " ).append( source ).append( ')' );
+//
+//				hasMore = tokens.hasMoreTokens();
+//				nextToken = hasMore ? tokens.nextToken() : null;
+//
+//				continue;
+//			}
+//
+//			// Special processing for ANSI SQL TRIM function
+//			if ( "trim".equals( lcToken ) && "(".equals( nextToken ) ) {
+//				List<String> operands = new ArrayList<String>();
+//				StringBuilder builder = new StringBuilder();
+//
+//				boolean hasMoreOperands = true;
+//				String operandToken = tokens.nextToken();
+//				boolean quoted = false;
+//				while ( hasMoreOperands ) {
+//					final boolean isQuote = "'".equals( operandToken );
+//					if ( isQuote ) {
+//						quoted = !quoted;
+//						if ( !quoted ) {
+//							operands.add( builder.append( '\'' ).toString() );
+//							builder.setLength( 0 );
+//						}
+//						else {
+//							builder.append( '\'' );
+//						}
+//					}
+//					else if ( quoted ) {
+//						builder.append( operandToken );
+//					}
+//					else if ( operandToken.length() == 1 && Character.isWhitespace( operandToken.charAt( 0 ) ) ) {
+//						// do nothing
+//					}
+//					else {
+//						operands.add( operandToken );
+//					}
+//					operandToken = tokens.nextToken();
+//					hasMoreOperands = tokens.hasMoreTokens() && ! ")".equals( operandToken );
+//				}
+//
+//				TrimOperands trimOperands = new TrimOperands( operands );
+//				result.append( "trim(" );
+//				if ( trimOperands.trimSpec != null ) {
+//					result.append( trimOperands.trimSpec ).append( ' ' );
+//				}
+//				if ( trimOperands.trimChar != null ) {
+//					if ( trimOperands.trimChar.startsWith( "'" ) && trimOperands.trimChar.endsWith( "'" ) ) {
+//						result.append( trimOperands.trimChar );
+//					}
+//					else {
+//						result.append(
+//								renderWhereStringTemplate( trimOperands.trimSpec, placeholder, dialect, functionRegistry )
+//						);
+//					}
+//					result.append( ' ' );
+//				}
+//				if ( trimOperands.from != null ) {
+//					result.append( trimOperands.from ).append( ' ' );
+//				}
+//				else if ( trimOperands.trimSpec != null || trimOperands.trimChar != null ) {
+//					// I think ANSI SQL says that the 'from' is not optional if either trim-spec or trim-char are specified
+//					result.append( "from " );
+//				}
+//
+//				result.append( renderWhereStringTemplate( trimOperands.trimSource, placeholder, dialect, functionRegistry ) )
+//						.append( ')' );
+//
+//				hasMore = tokens.hasMoreTokens();
+//				nextToken = hasMore ? tokens.nextToken() : null;
+//
+//				continue;
+//			}
+//
+//
+//			// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+//
+//			if ( Character.isWhitespace( token.charAt( 0 ) ) ) {
+//				result.append( token );
+//			}
+//			else if ( state.beforeTable ) {
+//				result.append( token );
+//				state.beforeTable = false;
+//				state.afterFromTable = true;
+//			}
+//			else if ( state.afterFromTable ) {
+//				if ( !"as".equals(lcToken) ) {
+//					state.afterFromTable = false;
+//				}
+//				result.append(token);
+//			}
+//			else if ( isNamedParameter(token) ) {
+//				result.append(token);
+//			}
+//			else if ( isIdentifier(token, dialect)
+//					&& !isFunctionOrKeyword(lcToken, nextToken, dialect , functionRegistry) ) {
+//				result.append(placeholder)
+//						.append('.')
+//						.append( dialect.quote(token) );
+//			}
+//			else {
+//				if ( BEFORE_TABLE_KEYWORDS.contains(lcToken) ) {
+//					state.beforeTable = true;
+//					state.inFromClause = true;
+//				}
+//				else if ( state.inFromClause && ",".equals(lcToken) ) {
+//					state.beforeTable = true;
+//				}
+//				result.append(token);
+//			}
+//
+//			//Yuck:
+//			if ( state.inFromClause
+//					&& KEYWORDS.contains( lcToken ) //"as" is not in KEYWORDS
+//					&& !BEFORE_TABLE_KEYWORDS.contains( lcToken ) ) {
+//				state.inFromClause = false;
+//			}
+//		}
+//
+//		return result.toString();
+//	}
+//
+//	private static class ProcessingState {
+//		boolean quoted = false;
+//		boolean quotedIdentifier = false;
+//		boolean beforeTable = false;
+//		boolean inFromClause = false;
+//		boolean afterFromTable = false;
+//	}
+//
+//	private static enum QuotingCharacterDisposition { NONE, OPEN, CLOSE }
+
+	private static class TrimOperands {
+		private final String trimSpec;
+		private final String trimChar;
+		private final String from;
+		private final String trimSource;
+
+		private TrimOperands(List<String> operands) {
+			if ( operands.size() == 1 ) {
+				trimSpec = null;
+				trimChar = null;
+				from = null;
+				trimSource = operands.get(0);
+			}
+			else if ( operands.size() == 4 ) {
+				trimSpec = operands.get(0);
+				trimChar = operands.get(1);
+				from = operands.get(2);
+				trimSource = operands.get(3);
+			}
+			else {
+				if ( operands.size() < 1 || operands.size() > 4 ) {
+					throw new HibernateException( "Unexpected number of trim function operands : " + operands.size() );
+				}
+
+				// trim-source will always be the last operand
+				trimSource = operands.get( operands.size() - 1 );
+
+				// ANSI SQL says that more than one operand means that the FROM is required
+				if ( ! "from".equals( operands.get( operands.size() - 2 ) ) ) {
+					throw new HibernateException( "Expecting FROM, found : " + operands.get( operands.size() - 2 ) );
+				}
+				from = operands.get( operands.size() - 2 );
+
+				// trim-spec, if there is one will always be the first operand
+				if ( "leading".equalsIgnoreCase( operands.get(0) )
+						|| "trailing".equalsIgnoreCase( operands.get(0) )
+						|| "both".equalsIgnoreCase( operands.get(0) ) ) {
+					trimSpec = operands.get(0);
+					trimChar = null;
+				}
+				else {
+					trimSpec = null;
+					if ( operands.size() - 2 == 0 ) {
+						trimChar = null;
+					}
+					else {
+						trimChar = operands.get( 0 );
+					}
+				}
+			}
+		}
+	}
+
+	private static String extractUntil(StringTokenizer tokens, String delimiter) {
+		StringBuilder valueBuilder = new StringBuilder();
+		String token = tokens.nextToken();
+		while ( ! delimiter.equalsIgnoreCase( token ) ) {
+			valueBuilder.append( token );
+			token = tokens.nextToken();
+		}
+		return valueBuilder.toString().trim();
 	}
 
 	public static class NoOpColumnMapper implements ColumnMapper {
@@ -254,8 +637,8 @@ public final class Template {
 	 * @param functionRegistry The SQL function registry
 	 *
 	 * @return The rendered <tt>ORDER BY</tt> template.
-	 * 
-	 * @see #renderOrderByStringTemplate(String,ColumnMapper,SessionFactoryImplementor,Dialect,SQLFunctionRegistry)
+	 *
+	 * @deprecated Use {@link #renderOrderByStringTemplate(String,ColumnMapper,SessionFactoryImplementor,Dialect,SQLFunctionRegistry)} instead
 	 */
 	public static String renderOrderByStringTemplate(
 			String orderByFragment,
@@ -348,5 +731,4 @@ public final class Template {
 		);
 	}
 
-	
 }

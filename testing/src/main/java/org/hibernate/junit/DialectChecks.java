@@ -24,22 +24,36 @@
  */
 package org.hibernate.junit;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import org.hibernate.dialect.Dialect;
 
 /**
- * Annotation used to indicate that a test should be run only when the current dialect suppports the
- * specified feature.
+ * Container class for different implementation of the {@code DialectCheck} interface.
  *
  * @author Hardy Ferentschik
  */
-@Target({ ElementType.METHOD, ElementType.TYPE })
-@Retention(RetentionPolicy.RUNTIME)
-public @interface RequiresDialectFeature {
-	/**
-	 * @return The name of the dialect feature.
-	 */
-	Class<? extends DialectChecks> value();
+abstract public class DialectChecks {
+
+	abstract public boolean include(Dialect dialect);
+
+	public static class SupportsSequences extends DialectChecks {
+		public boolean include(Dialect dialect) {
+			return dialect.supportsSequences();
+		}
+	}
+
+	public static class SupportsExpectedLobUsagePattern extends DialectChecks {
+		public boolean include(Dialect dialect) {
+			return dialect.supportsExpectedLobUsagePattern();
+		}
+	}
+
+	public static class SupportsIdentityColumns extends DialectChecks {
+		public boolean include(Dialect dialect) {
+			return dialect.supportsIdentityColumns();
+		}
+	}
+
+
 }
+
+

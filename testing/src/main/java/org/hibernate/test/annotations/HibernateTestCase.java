@@ -38,6 +38,7 @@ import org.slf4j.LoggerFactory;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.jdbc.Work;
+import org.hibernate.junit.DialectChecks;
 import org.hibernate.junit.FailureExpected;
 import org.hibernate.junit.RequiresDialect;
 import org.hibernate.junit.RequiresDialectFeature;
@@ -192,15 +193,9 @@ public abstract class HibernateTestCase extends TestCase {
 		// then check against a dialect feature
 		RequiresDialectFeature requiresDialectFeatureAnn = locateAnnotation( RequiresDialectFeature.class, runMethod );
 		if ( requiresDialectFeatureAnn != null ) {
-			String feature = requiresDialectFeatureAnn.value();
-			boolean skip = false;
-			try {
-				Method m = dialect.getClass().getMethod( feature );
-				skip = (Boolean) m.invoke( dialect );
-			}
-			catch ( NoSuchMethodException e ) {
-				fail( "Dialect does not have a method: " + feature );
-			}
+			Class<? extends DialectChecks> checkClass = requiresDialectFeatureAnn.value();
+			DialectChecks check = checkClass.newInstance();
+			boolean skip = check.include( dialect );
 			if ( skip ) {
 				return buildSkip( dialect, null, null );
 			}

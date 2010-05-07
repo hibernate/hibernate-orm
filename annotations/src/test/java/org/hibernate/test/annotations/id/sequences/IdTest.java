@@ -5,6 +5,7 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.cfg.AnnotationConfiguration;
 import org.hibernate.cfg.Configuration;
+import org.hibernate.junit.RequiresDialectFeature;
 import org.hibernate.mapping.Column;
 import org.hibernate.test.annotations.TestCase;
 import org.hibernate.test.annotations.id.sequences.entities.Ball;
@@ -29,27 +30,28 @@ import org.hibernate.test.annotations.id.sequences.entities.Tree;
  * @author Emmanuel Bernard
  */
 @SuppressWarnings("unchecked")
+@RequiresDialectFeature("supportsSequences")
 public class IdTest extends TestCase {
 	public void testGenericGenerator() throws Exception {
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
 		SoundSystem system = new SoundSystem();
-		system.setBrand("Genelec");
-		system.setModel("T234");
+		system.setBrand( "Genelec" );
+		system.setModel( "T234" );
 		Furniture fur = new Furniture();
-		s.persist(system);
-		s.persist(fur);
+		s.persist( system );
+		s.persist( fur );
 		tx.commit();
 		s.close();
 
 		s = openSession();
 		tx = s.beginTransaction();
-		system = (SoundSystem) s.get(SoundSystem.class, system.getId());
-		fur = (Furniture) s.get(Furniture.class, fur.getId());
-		assertNotNull(system);
-		assertNotNull(fur);
-		s.delete(system);
-		s.delete(fur);
+		system = ( SoundSystem ) s.get( SoundSystem.class, system.getId() );
+		fur = ( Furniture ) s.get( Furniture.class, fur.getId() );
+		assertNotNull( system );
+		assertNotNull( fur );
+		s.delete( system );
+		s.delete( fur );
 		tx.commit();
 		s.close();
 
@@ -59,13 +61,14 @@ public class IdTest extends TestCase {
 	 * Ensures that GenericGenerator annotations wrapped inside a
 	 * GenericGenerators holder are bound correctly
 	 */
+
 	public void testGenericGenerators() throws Exception {
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
 		Monkey monkey = new Monkey();
-		s.persist(monkey);
+		s.persist( monkey );
 		s.flush();
-		assertNotNull(monkey.getId());
+		assertNotNull( monkey.getId() );
 		tx.rollback();
 		s.close();
 	}
@@ -77,21 +80,23 @@ public class IdTest extends TestCase {
 		Ball b = new Ball();
 		Dog d = new Dog();
 		Computer c = new Computer();
-		s.persist(b);
-		s.persist(d);
-		s.persist(c);
+		s.persist( b );
+		s.persist( d );
+		s.persist( c );
 		tx.commit();
 		s.close();
-		assertEquals("table id not generated", new Integer(1), b.getId());
-		assertEquals("generator should not be shared", new Integer(1), d
-				.getId());
-		assertEquals("default value should work", new Long(1), c.getId());
+		assertEquals( "table id not generated", new Integer( 1 ), b.getId() );
+		assertEquals(
+				"generator should not be shared", new Integer( 1 ), d
+						.getId()
+		);
+		assertEquals( "default value should work", new Long( 1 ), c.getId() );
 
 		s = openSession();
 		tx = s.beginTransaction();
-		s.delete(s.get(Ball.class, new Integer(1)));
-		s.delete(s.get(Dog.class, new Integer(1)));
-		s.delete(s.get(Computer.class, new Long(1)));
+		s.delete( s.get( Ball.class, new Integer( 1 ) ) );
+		s.delete( s.get( Dog.class, new Integer( 1 ) ) );
+		s.delete( s.get( Computer.class, new Long( 1 ) ) );
 		tx.commit();
 		s.close();
 	}
@@ -100,14 +105,14 @@ public class IdTest extends TestCase {
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
 		Shoe b = new Shoe();
-		s.persist(b);
+		s.persist( b );
 		tx.commit();
 		s.close();
-		assertNotNull(b.getId());
+		assertNotNull( b.getId() );
 
 		s = openSession();
 		tx = s.beginTransaction();
-		s.delete(s.get(Shoe.class, b.getId()));
+		s.delete( s.get( Shoe.class, b.getId() ) );
 		tx.commit();
 		s.close();
 	}
@@ -116,14 +121,14 @@ public class IdTest extends TestCase {
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
 		Store b = new Store();
-		s.persist(b);
+		s.persist( b );
 		tx.commit();
 		s.close();
-		assertNotNull(b.getId());
+		assertNotNull( b.getId() );
 
 		s = openSession();
 		tx = s.beginTransaction();
-		s.delete(s.get(Store.class, b.getId()));
+		s.delete( s.get( Store.class, b.getId() ) );
 		tx.commit();
 		s.close();
 	}
@@ -132,14 +137,14 @@ public class IdTest extends TestCase {
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
 		Department b = new Department();
-		s.persist(b);
+		s.persist( b );
 		tx.commit();
 		s.close();
-		assertNotNull(b.getId());
+		assertNotNull( b.getId() );
 
 		s = openSession();
 		tx = s.beginTransaction();
-		s.delete(s.get(Department.class, b.getId()));
+		s.delete( s.get( Department.class, b.getId() ) );
 		tx.commit();
 		s.close();
 	}
@@ -150,16 +155,16 @@ public class IdTest extends TestCase {
 		s = openSession();
 		tx = s.beginTransaction();
 		Home h = new Home();
-		s.persist(h);
+		s.persist( h );
 		tx.commit();
 		s.close();
-		assertNotNull(h.getId());
+		assertNotNull( h.getId() );
 
 		s = openSession();
 		tx = s.beginTransaction();
-		Home reloadedHome = (Home) s.get(Home.class, h.getId());
-		assertEquals(h.getId(), reloadedHome.getId());
-		s.delete(reloadedHome);
+		Home reloadedHome = ( Home ) s.get( Home.class, h.getId() );
+		assertEquals( h.getId(), reloadedHome.getId() );
+		s.delete( reloadedHome );
 		tx.commit();
 		s.close();
 	}
@@ -170,16 +175,16 @@ public class IdTest extends TestCase {
 		s = openSession();
 		tx = s.beginTransaction();
 		Home h = new Home();
-		s.persist(h);
+		s.persist( h );
 		tx.commit();
 		s.close();
-		assertNotNull(h.getId());
+		assertNotNull( h.getId() );
 
 		s = openSession();
 		tx = s.beginTransaction();
-		Home reloadedHome = (Home) s.get(Home.class, h.getId());
-		assertEquals(h.getId(), reloadedHome.getId());
-		s.delete(reloadedHome);
+		Home reloadedHome = ( Home ) s.get( Home.class, h.getId() );
+		assertEquals( h.getId(), reloadedHome.getId() );
+		s.delete( reloadedHome );
 		tx.commit();
 		s.close();
 	}
@@ -190,13 +195,13 @@ public class IdTest extends TestCase {
 		s = openSession();
 		tx = s.beginTransaction();
 		FirTree chrismasTree = new FirTree();
-		s.persist(chrismasTree);
+		s.persist( chrismasTree );
 		tx.commit();
 		s.clear();
 		tx = s.beginTransaction();
-		chrismasTree = (FirTree) s.get(FirTree.class, chrismasTree.getId());
-		assertNotNull(chrismasTree);
-		s.delete(chrismasTree);
+		chrismasTree = ( FirTree ) s.get( FirTree.class, chrismasTree.getId() );
+		assertNotNull( chrismasTree );
+		s.delete( chrismasTree );
 		tx.commit();
 		s.close();
 	}
@@ -206,55 +211,58 @@ public class IdTest extends TestCase {
 		Transaction tx;
 		s = openSession();
 		tx = s.beginTransaction();
-		Footballer fb = new Footballer("David", "Beckam", "Arsenal");
-		GoalKeeper keeper = new GoalKeeper("Fabien", "Bartez", "OM");
-		s.persist(fb);
-		s.persist(keeper);
+		Footballer fb = new Footballer( "David", "Beckam", "Arsenal" );
+		GoalKeeper keeper = new GoalKeeper( "Fabien", "Bartez", "OM" );
+		s.persist( fb );
+		s.persist( keeper );
 		tx.commit();
 		s.clear();
 
 		// lookup by id
 		tx = s.beginTransaction();
-		FootballerPk fpk = new FootballerPk("David", "Beckam");
-		fb = (Footballer) s.get(Footballer.class, fpk);
-		FootballerPk fpk2 = new FootballerPk("Fabien", "Bartez");
-		keeper = (GoalKeeper) s.get(GoalKeeper.class, fpk2);
-		assertNotNull(fb);
-		assertNotNull(keeper);
-		assertEquals("Beckam", fb.getLastname());
-		assertEquals("Arsenal", fb.getClub());
-		assertEquals(1, s.createQuery(
-				"from Footballer f where f.firstname = 'David'").list().size());
+		FootballerPk fpk = new FootballerPk( "David", "Beckam" );
+		fb = ( Footballer ) s.get( Footballer.class, fpk );
+		FootballerPk fpk2 = new FootballerPk( "Fabien", "Bartez" );
+		keeper = ( GoalKeeper ) s.get( GoalKeeper.class, fpk2 );
+		assertNotNull( fb );
+		assertNotNull( keeper );
+		assertEquals( "Beckam", fb.getLastname() );
+		assertEquals( "Arsenal", fb.getClub() );
+		assertEquals(
+				1, s.createQuery(
+						"from Footballer f where f.firstname = 'David'"
+				).list().size()
+		);
 		tx.commit();
 
 		// reattach by merge
 		tx = s.beginTransaction();
-		fb.setClub("Bimbo FC");
-		s.merge(fb);
+		fb.setClub( "Bimbo FC" );
+		s.merge( fb );
 		tx.commit();
 
 		// reattach by saveOrUpdate
 		tx = s.beginTransaction();
-		fb.setClub("Bimbo FC SA");
-		s.saveOrUpdate(fb);
+		fb.setClub( "Bimbo FC SA" );
+		s.saveOrUpdate( fb );
 		tx.commit();
 
 		// clean up
 		s.clear();
 		tx = s.beginTransaction();
-		fpk = new FootballerPk("David", "Beckam");
-		fb = (Footballer) s.get(Footballer.class, fpk);
-		assertEquals("Bimbo FC SA", fb.getClub());
-		s.delete(fb);
-		s.delete(keeper);
+		fpk = new FootballerPk( "David", "Beckam" );
+		fb = ( Footballer ) s.get( Footballer.class, fpk );
+		assertEquals( "Bimbo FC SA", fb.getClub() );
+		s.delete( fb );
+		s.delete( keeper );
 		tx.commit();
 		s.close();
 	}
 
 	public void testColumnDefinition() {
-		Column idCol = (Column) getCfg().getClassMapping(Ball.class.getName())
+		Column idCol = ( Column ) getCfg().getClassMapping( Ball.class.getName() )
 				.getIdentifierProperty().getValue().getColumnIterator().next();
-		assertEquals("ball_id", idCol.getName());
+		assertEquals( "ball_id", idCol.getName() );
 	}
 
 	public void testLowAllocationSize() throws Exception {
@@ -264,42 +272,39 @@ public class IdTest extends TestCase {
 		tx = s.beginTransaction();
 		int size = 4;
 		BreakDance[] bds = new BreakDance[size];
-		for (int i = 0; i < size; i++) {
+		for ( int i = 0; i < size; i++ ) {
 			bds[i] = new BreakDance();
-			s.persist(bds[i]);
+			s.persist( bds[i] );
 		}
 		s.flush();
-		for (int i = 0; i < size; i++) {
-			assertEquals(i + 1, bds[i].id.intValue());
+		for ( int i = 0; i < size; i++ ) {
+			assertEquals( i + 1, bds[i].id.intValue() );
 		}
 		tx.rollback();
 		s.close();
-	}
-	
-	
-	
-	@Override
-	protected boolean runForCurrentDialect() {
-		return super.runForCurrentDialect() && getDialect().supportsSequences();
 	}
 
 	/**
 	 * @see org.hibernate.test.annotations.TestCase#getAnnotatedClasses()
 	 */
 	protected Class[] getAnnotatedClasses() {
-		return new Class[] { Ball.class, Shoe.class, Store.class,
+		return new Class[] {
+				Ball.class, Shoe.class, Store.class,
 				Department.class, Dog.class, Computer.class, Home.class,
 				Phone.class, Tree.class, FirTree.class, Footballer.class,
 				SoundSystem.class, Furniture.class, GoalKeeper.class,
-				BreakDance.class, Monkey.class};
+				BreakDance.class, Monkey.class
+		};
 	}
-	
+
 	/**
 	 * @see org.hibernate.test.annotations.TestCase#getAnnotatedPackages()
 	 */
 	protected String[] getAnnotatedPackages() {
-		return new String[] { "org.hibernate.test.annotations",
-				"org.hibernate.test.annotations.id" };
+		return new String[] {
+				"org.hibernate.test.annotations",
+				"org.hibernate.test.annotations.id"
+		};
 	}
 
 	@Override

@@ -2,6 +2,7 @@
 package org.hibernate.test.annotations.xml.hbm;
 
 import org.hibernate.Session;
+import org.hibernate.junit.RequiresDialectFeature;
 import org.hibernate.test.annotations.TestCase;
 
 /**
@@ -9,6 +10,7 @@ import org.hibernate.test.annotations.TestCase;
  */
 public class HbmWithIdentityTest extends TestCase {
 
+	@RequiresDialectFeature("supportsIdentityColumns")
 	public void testManyToOneAndInterface() throws Exception {
 		Session s = openSession();
 		s.getTransaction().begin();
@@ -21,11 +23,6 @@ public class HbmWithIdentityTest extends TestCase {
 		s.flush();
 		s.getTransaction().rollback();
 		s.close();
-	}
-
-	@Override
-	protected boolean runForCurrentDialect() {
-		return super.runForCurrentDialect() && getDialect().supportsIdentityColumns();
 	}
 
 	protected Class[] getAnnotatedClasses() {

@@ -1,4 +1,4 @@
-// $Id:$
+// $Id$
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
@@ -30,8 +30,6 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.HashSet;
-import java.util.Set;
 
 import junit.framework.TestCase;
 import org.slf4j.Logger;
@@ -42,6 +40,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.jdbc.Work;
 import org.hibernate.junit.FailureExpected;
 import org.hibernate.junit.RequiresDialect;
+import org.hibernate.junit.RequiresDialectFeature;
 import org.hibernate.junit.SkipForDialect;
 import org.hibernate.junit.SkipLog;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
@@ -59,23 +58,6 @@ public abstract class HibernateTestCase extends TestCase {
 
 	protected static Configuration cfg;
 	private static Class<?> lastTestClass;
-
-
-	/**
-	 * Flag indicating whether the test should be run or skipped.
-	 */
-	private boolean runTest = true;
-
-	/**
-	 * List of required dialect for the current {@code runMethod}. If the list is empty any dialect is allowed.
-	 * Otherwise the current dialect or a superclass of the current dialect must be in the list.
-	 */
-	private final Set<Class<? extends Dialect>> requiredDialectList = new HashSet<Class<? extends Dialect>>();
-
-	/**
-	 * List of dialects for which the current {@code runMethod} should be skipped.
-	 */
-	private final Set<Class<? extends Dialect>> skipForDialectList = new HashSet<Class<? extends Dialect>>();
 
 	public HibernateTestCase() {
 		super();
@@ -172,7 +154,7 @@ public abstract class HibernateTestCase extends TestCase {
 		}
 	}
 
-	protected final Skip determineSkipByDialect(Dialect dialect, Method runMethod) {
+	protected final Skip determineSkipByDialect(Dialect dialect, Method runMethod) throws Exception {
 		// skips have precedence, so check them first
 		SkipForDialect skipForDialectAnn = locateAnnotation( SkipForDialect.class, runMethod );
 		if ( skipForDialectAnn != null ) {
@@ -195,18 +177,34 @@ public abstract class HibernateTestCase extends TestCase {
 		if ( requiresDialectAnn != null ) {
 			for ( Class<? extends Dialect> dialectClass : requiresDialectAnn.value() ) {
 				if ( requiresDialectAnn.strictMatching() ) {
-					if ( dialectClass.equals( dialect.getClass() ) ) {
+					if ( !dialectClass.equals( dialect.getClass() ) ) {
 						return buildSkip( dialect, null, null );
 					}
 				}
 				else {
-					if ( dialectClass.isInstance( dialect ) ) {
+					if ( !dialectClass.isInstance( dialect ) ) {
 						return buildSkip( dialect, null, null );
 					}
 				}
 			}
 		}
 
+		// then check against a dialect feature
+		RequiresDialectFeature requiresDialectFeatureAnn = locateAnnotation( RequiresDialectFeature.class, runMethod );
+		if ( requiresDialectFeatureAnn != null ) {
+			String feature = requiresDialectFeatureAnn.value();
+			boolean skip = false;
+			try {
+				Method m = dialect.getClass().getMethod( feature );
+				skip = (Boolean) m.invoke( dialect );
+			}
+			catch ( NoSuchMethodException e ) {
+				fail( "Dialect does not have a method: " + feature );
+			}
+			if ( skip ) {
+				return buildSkip( dialect, null, null );
+			}
+		}
 		return null;
 	}
 
@@ -244,30 +242,6 @@ public abstract class HibernateTestCase extends TestCase {
 		return this.getClass().getName() + "#" + this.getName();
 	}
 
-	protected boolean runForCurrentDialect() {
-		boolean runTestForCurrentDialect = true;
-
-		// check whether the current dialect is assignableFrom from any of the specified required dialects.
-		for ( Class<? extends Dialect> dialect : requiredDialectList ) {
-			if ( dialect.isAssignableFrom( Dialect.getDialect().getClass() ) ) {
-				runTestForCurrentDialect = true;
-				break;
-			}
-			runTestForCurrentDialect = false;
-		}
-
-		// check whether the current dialect is assignableFrom from any of the specified skip for dialects.
-		for ( Class<? extends Dialect> dialect : skipForDialectList ) {
-			if ( dialect.isAssignableFrom( Dialect.getDialect().getClass() ) ) {
-				runTestForCurrentDialect = false;
-				break;
-			}
-			runTestForCurrentDialect = true;
-		}
-
-		return runTestForCurrentDialect;
-	}
-
 	private Method findTestMethod() {
 		String fName = getName();
 		assertNotNull( fName );
@@ -289,7 +263,7 @@ public abstract class HibernateTestCase extends TestCase {
 	protected abstract Class<?>[] getAnnotatedClasses();
 
 	protected String[] getMappings() {
-		return new String[]{};
+		return new String[] { };
 	}
 
 	protected abstract void handleUnclosedResources();

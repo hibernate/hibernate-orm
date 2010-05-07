@@ -3,12 +3,13 @@ package org.hibernate.test.annotations.lob;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.dialect.Dialect;
+import org.hibernate.junit.RequiresDialectFeature;
 import org.hibernate.test.annotations.TestCase;
 
 /**
  * @author Emmanuel Bernard
  */
+@RequiresDialectFeature("supportsExpectedLobUsagePattern")
 public class LobTest extends TestCase {
 	public void testSerializableToBlob() throws Exception {
 		Book book = new Book();
@@ -116,11 +117,6 @@ public class LobTest extends TestCase {
 
 	public LobTest(String x) {
 		super( x );
-	}
-
-	@Override
-	protected boolean runForCurrentDialect() {
-		return super.runForCurrentDialect() && getDialect().supportsExpectedLobUsagePattern();
 	}
 
 	protected Class[] getAnnotatedClasses() {

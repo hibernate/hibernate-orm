@@ -90,6 +90,7 @@ public class CompositeElementTest extends FunctionalTestCase {
 	public void testCustomColumnReadAndWrite() {
 		final double HEIGHT_INCHES = 49;
 		final double HEIGHT_CENTIMETERS = HEIGHT_INCHES * 2.54d;
+
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
 		Child c = new Child( "Child One" );
@@ -99,8 +100,8 @@ public class CompositeElementTest extends FunctionalTestCase {
 		c.setParent( p );
 		s.save( p );
 		s.flush();
-		
-		// Test value conversion during insert		
+
+		// Test value conversion during insert
 		Double heightViaSql = (Double)s.createSQLQuery("select height_centimeters from parentchild c where c.name='Child One'")
 			.uniqueResult();
 		assertEquals(HEIGHT_CENTIMETERS, heightViaSql, 0.01d);

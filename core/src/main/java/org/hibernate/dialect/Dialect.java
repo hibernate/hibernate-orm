@@ -2015,4 +2015,23 @@ public abstract class Dialect {
 	public boolean supportsBindAsCallableArgument() {
 		return true;
 	}
+
+	/**
+	 * Does this dialect support `count(a,b)`?
+	 *
+	 * @return True if the database supports counting tuples; false otherwise.
+	 */
+	public boolean supportsTupleCounts() {
+		return false;
+	}
+
+	/**
+	 * Does this dialect support `count(distinct a,b)`?
+	 *
+	 * @return True if the database supports counting disintct tuples; false otherwise.
+	 */
+	public boolean supportsTupleDistinctCounts() {
+		// oddly most database in fact seem to, so true is the default.
+		return true;
+	}
 }

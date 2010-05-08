@@ -230,11 +230,16 @@ public class CriteriaHQLAlignmentTest extends QueryTranslatorTestCase {
 		t = s.beginTransaction();
 		try {
 			count = ( Long ) s.createQuery( "select count( distinct name ) from Human" ).uniqueResult();
+			if ( ! getDialect().supportsTupleDistinctCounts() ) {
+				fail( "expected SQLGrammarException" );
+			}
 			assertEquals( 2, count.longValue() );
 		}
 		catch ( SQLGrammarException ex ) {
-			// HSQLDB's cannot handle more than 1 argument in SELECT COUNT( DISTINCT ... ) )
-			if ( ! ( getDialect() instanceof HSQLDialect ) )  {
+			if ( ! getDialect().supportsTupleDistinctCounts() ) {
+				// expected
+			}
+			else {
 				throw ex;
 			}
 		}
@@ -247,13 +252,18 @@ public class CriteriaHQLAlignmentTest extends QueryTranslatorTestCase {
 		t = s.beginTransaction();
 		try {
 			count = ( Long ) s.createCriteria( Human.class )
-				.setProjection( Projections.count( "name" ).setDistinct() )
-				.uniqueResult();
+					.setProjection( Projections.count( "name" ).setDistinct() )
+					.uniqueResult();
+			if ( ! getDialect().supportsTupleDistinctCounts() ) {
+				fail( "expected SQLGrammarException" );
+			}
 			assertEquals( 2, count.longValue() );
 		}
 		catch ( SQLGrammarException ex ) {
-			// HSQLDB's cannot handle more than 1 argument in SELECT COUNT( DISTINCT ... ) )
-			if ( ! ( getDialect() instanceof HSQLDialect ) )  {
+			if ( ! getDialect().supportsTupleDistinctCounts() ) {
+				// expected
+			}
+			else {
 				throw ex;
 			}
 		}
@@ -278,10 +288,18 @@ public class CriteriaHQLAlignmentTest extends QueryTranslatorTestCase {
 		t = s.beginTransaction();
 		try {
 			count = ( Long ) s.createQuery( "select count( name ) from Human" ).uniqueResult();
-			fail( "should have failed due to SQLGrammarException" );
+			if ( ! getDialect().supportsTupleCounts() ) {
+				fail( "expected SQLGrammarException" );
+			}
+			assertEquals( 1, count.longValue() );
 		}
 		catch ( SQLGrammarException ex ) {
-			// expected
+			if ( ! getDialect().supportsTupleCounts() ) {
+				// expected
+			}
+			else {
+				throw ex;
+			}
 		}
 		finally {
 			t.rollback();
@@ -292,12 +310,20 @@ public class CriteriaHQLAlignmentTest extends QueryTranslatorTestCase {
 		t = s.beginTransaction();
 		try {
 			count = ( Long ) s.createCriteria( Human.class )
-				.setProjection( Projections.count( "name" ) )
-				.uniqueResult();
-			fail( "should have failed due to SQLGrammarException" );
+					.setProjection( Projections.count( "name" ) )
+					.uniqueResult();
+			if ( ! getDialect().supportsTupleCounts() ) {
+				fail( "expected SQLGrammarException" );
+			}
+			assertEquals( 1, count.longValue() );
 		}
 		catch ( SQLGrammarException ex ) {
-			// expected
+			if ( ! getDialect().supportsTupleCounts() ) {
+				// expected
+			}
+			else {
+				throw ex;
+			}
 		}
 		finally {
 			t.rollback();

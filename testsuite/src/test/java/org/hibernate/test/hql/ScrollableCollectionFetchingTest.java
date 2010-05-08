@@ -53,16 +53,14 @@ public class ScrollableCollectionFetchingTest extends FunctionalTestCase {
 		Session s = openSession();
 		Transaction txn = s.beginTransaction();
 
-		assertTrue(s
-		        .createQuery( "from Animal a left join fetch a.offspring where a.description like :desc order by a.id" )
-		        .setString( "desc", "root%" )
-		        .list()
-				.isEmpty() );
+		final String query = "from Animal a left join fetch a.offspring where a.description like :desc order by a.id";
 
-		ScrollableResults results = s
-		        .createQuery( "from Animal a left join fetch a.offspring where a.description like :desc order by a.id" )
-		        .setString( "desc", "root%" )
-		        .scroll();
+		// first, as a control, make sure there are no results
+		int size = s.createQuery( query ).setString( "desc", "root%" ).list().size();
+		assertEquals( 0, size );
+
+		// now get the scrollable results
+		ScrollableResults results = s.createQuery( query ).setString( "desc", "root%" ).scroll();
 
 		assertFalse( results.isFirst() );
 		assertFalse( results.isLast() );

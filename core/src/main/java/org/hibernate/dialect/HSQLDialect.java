@@ -331,4 +331,9 @@ public class HSQLDialect extends Dialect {
 	public boolean supportsLobValueChangePropogation() {
 		return false;
 	}
+
+	@Override
+	public boolean supportsTupleDistinctCounts() {
+		return false;
+	}
 }

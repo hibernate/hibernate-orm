@@ -985,10 +985,18 @@ public class CriteriaQueryTest extends FunctionalTestCase {
 			result = s.createCriteria( Student.class )
 				.setProjection( Projections.count( "cityState" ) )
 				.uniqueResult();
-			fail( "expected SQLGrammarException" );
+			if ( ! getDialect().supportsTupleCounts() ) {
+				fail( "expected SQLGrammarException" );
+			}
+			assertEquals( 1, ( ( Long ) result ).longValue() );
 		}
 		catch ( SQLGrammarException ex ) {
-			// expected
+			if ( ! getDialect().supportsTupleCounts() ) {
+				// expected
+			}
+			else {
+				throw ex;
+			}
 		}
 		finally {
 			t.rollback();
@@ -999,13 +1007,18 @@ public class CriteriaQueryTest extends FunctionalTestCase {
 		t = s.beginTransaction();
 		try {
 			result = s.createCriteria( Student.class )
-				.setProjection( Projections.countDistinct( "cityState" ) )
-				.uniqueResult();
+					.setProjection( Projections.countDistinct( "cityState" ) )
+					.uniqueResult();
+			if ( ! getDialect().supportsTupleDistinctCounts() ) {
+				fail( "expected SQLGrammarException" );
+			}
 			assertEquals( 1, ( ( Long ) result ).longValue() );
 		}
 		catch ( SQLGrammarException ex ) {
-			// HSQLDB's cannot handle more than 1 argument in SELECT COUNT( DISTINCT ... ) )
-			if ( ! ( getDialect() instanceof HSQLDialect ) )  {
+			if ( ! getDialect().supportsTupleDistinctCounts() ) {
+				// expected
+			}
+			else {
 				throw ex;
 			}
 		}
@@ -1276,11 +1289,16 @@ public class CriteriaQueryTest extends FunctionalTestCase {
 		s = openSession();
 		t = s.beginTransaction();
 		try {
-			Object result = s.createCriteria( CourseMeeting.class).setProjection( Projections.countDistinct( "id" ) ).list();
+			s.createCriteria( CourseMeeting.class).setProjection( Projections.countDistinct( "id" ) ).list();
+			if ( ! getDialect().supportsTupleDistinctCounts() ) {
+				fail( "expected SQLGrammarException" );
+			}
 		}
 		catch ( SQLGrammarException ex ) {
-			// HSQLDB's cannot handle more than 1 argument in SELECT COUNT( DISTINCT ... ) )
-			if ( ! ( getDialect() instanceof HSQLDialect ) )  {
+			if ( ! getDialect().supportsTupleDistinctCounts() ) {
+				// expected
+			}
+			else {
 				throw ex;
 			}
 		}

@@ -14,6 +14,7 @@ import junit.framework.Test;
 import org.hibernate.Hibernate;
 import org.hibernate.QueryException;
 import org.hibernate.dialect.DB2Dialect;
+import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.IngresDialect;
 import org.hibernate.dialect.MySQLDialect;
@@ -726,9 +727,12 @@ public class HQLTest extends QueryTranslatorTestCase {
 	public void testGroupByFunction() {
 		if ( getDialect() instanceof Oracle8iDialect ) return; // the new hiearchy...
 		if ( getDialect() instanceof PostgreSQLDialect ) return;
-		assertTranslation( "select count(*) from Human h group by year(h.birthdate)" );
+		if ( ! H2Dialect.class.isInstance( getDialect() ) ) {
+			// H2 has no year function
+			assertTranslation( "select count(*) from Human h group by year(h.birthdate)" );
+			assertTranslation( "select count(*) from Human h group by year(sysdate)" );
+		}
 		assertTranslation( "select count(*) from Human h group by trunc( sqrt(h.bodyWeight*4)/2 )" );
-		assertTranslation( "select count(*) from Human h group by year(sysdate)" );
 	}
 
 

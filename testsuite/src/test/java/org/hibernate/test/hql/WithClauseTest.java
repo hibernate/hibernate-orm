@@ -185,12 +185,14 @@ public class WithClauseTest extends FunctionalTestCase {
 		public void cleanup() {
 			Session session = openSession();
 			Transaction txn = session.beginTransaction();
-			session.createQuery( "delete Animal where mother is not null" ).executeUpdate();
-			List humansWithFriends = session.createQuery( "from Human h where exists(from h.friends)" ).list();
-			Iterator itr = humansWithFriends.iterator();
-			while ( itr.hasNext() ) {
-				session.delete( itr.next() );
-			}
+			Human father = (Human) session.createQuery( "from Human where description = 'father'" ).uniqueResult();
+			father.getFriends().clear();
+			session.flush();
+			session.delete( session.createQuery( "from Human where description = 'friend'" ).uniqueResult() );
+			session.delete( session.createQuery( "from Human where description = 'child1'" ).uniqueResult() );
+			session.delete( session.createQuery( "from Human where description = 'child2'" ).uniqueResult() );
+			session.delete( session.createQuery( "from Human where description = 'mother'" ).uniqueResult() );
+			session.delete( father );
 			session.createQuery( "delete Animal" ).executeUpdate();
 			txn.commit();
 			session.close();

@@ -74,7 +74,7 @@ public class JPALockTest extends AbstractJPATest {
 
 		Long itemId = item.getId();
 
-		// doAfterTransactionCompletion the isolated update
+		// do the isolated update
 		s1 = getSessions().openSession();
 		t1 = s1.beginTransaction();
 		item = (Item) s1.get( Item.class, itemId );

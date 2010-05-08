@@ -8,6 +8,7 @@ import java.util.List;
 import junit.framework.Test;
 
 import org.hibernate.HibernateException;
+import org.hibernate.id.PostInsertIdentifierGenerator;
 import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
 import org.hibernate.classic.Session;
 import org.hibernate.dialect.HSQLDialect;
@@ -31,11 +32,16 @@ public class CustomSQLTest extends LegacyTestCase {
 		return new FunctionalTestClassTestSuite( CustomSQLTest.class );
 	}
 
-	public void testInsert() throws HibernateException, SQLException {
+	private boolean isUsingIdentity() {
+		return PostInsertIdentifierGenerator.class.isAssignableFrom( getDialect().getNativeIdentifierGeneratorClass() );
+	}
 
-		if ( getDialect() instanceof HSQLDialect ) return;
-		if ( getDialect() instanceof MySQLDialect ) return;
-		
+	public void testInsert() throws HibernateException, SQLException {
+		if ( isUsingIdentity() ) {
+			reportSkip( "hand sql expecting non-identity id gen", "Custom SQL" );
+			return;
+		}
+
 		Role p = new Role();
 
 		p.setName("Patient");
@@ -93,10 +99,11 @@ public class CustomSQLTest extends LegacyTestCase {
 	}
 
 	public void testCollectionCUD() throws HibernateException, SQLException {
-		
-		if ( getDialect() instanceof HSQLDialect ) return;
-		if ( getDialect() instanceof MySQLDialect ) return;
-		
+		if ( isUsingIdentity() ) {
+			reportSkip( "hand sql expecting non-identity id gen", "Custom SQL" );
+			return;
+		}
+
 		Role role = new Role();
 
 		role.setName("Jim Flanders");
@@ -155,9 +162,10 @@ public class CustomSQLTest extends LegacyTestCase {
 	}
 
 	public void testCRUD() throws HibernateException, SQLException {
-
-		if ( getDialect() instanceof HSQLDialect ) return;
-		if ( getDialect() instanceof MySQLDialect ) return;
+		if ( isUsingIdentity() ) {
+			reportSkip( "hand sql expecting non-identity id gen", "Custom SQL" );
+			return;
+		}
 
 		Person p = new Person();
 
@@ -206,7 +214,5 @@ public class CustomSQLTest extends LegacyTestCase {
 
 		s.connection().commit();
 		s.close();
-
-
 	}
 }

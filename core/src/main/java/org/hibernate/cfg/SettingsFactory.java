@@ -114,8 +114,18 @@ public class SettingsFactory implements Serializable {
 				Connection conn = connections.getConnection();
 				try {
 					DatabaseMetaData meta = conn.getMetaData();
-					log.info( "RDBMS: " + meta.getDatabaseProductName() + ", version: " + meta.getDatabaseProductVersion() );
-					log.info( "JDBC driver: " + meta.getDriverName() + ", version: " + meta.getDriverVersion() );
+					log.info( "Database ->\n" +
+							"       name : " + meta.getDatabaseProductName() + '\n' +
+							"    version : " +  meta.getDatabaseProductVersion() + '\n' +
+							"      major : " + meta.getDatabaseMajorVersion() + '\n' +
+							"      minor : " + meta.getDatabaseMinorVersion()
+					);
+					log.info( "Driver ->\n" +
+							"       name : " + meta.getDriverName() + '\n' +
+							"    version : " + meta.getDriverVersion() + '\n' +
+							"      major : " + meta.getDriverMajorVersion() + '\n' +
+							"      minor : " + meta.getDriverMinorVersion()
+					);
 
 					dialect = DialectFactory.buildDialect( props, conn );
 					jdbcSupport = JdbcSupportLoader.loadJdbcSupport( conn );

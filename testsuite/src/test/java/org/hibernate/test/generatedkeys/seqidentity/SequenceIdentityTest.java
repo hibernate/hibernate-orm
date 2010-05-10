@@ -43,7 +43,7 @@ public class SequenceIdentityTest extends DatabaseSpecificFunctionalTestCase {
 		session.save( e );
 
 		// this insert should happen immediately!
-		assertEquals( "id not generated through forced insertion", new Long(1), e.getId() );
+		assertNotNull( "id not generated through forced insertion", e.getId() );
 
 		session.delete( e );
 		session.getTransaction().commit();

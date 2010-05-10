@@ -63,7 +63,7 @@ public class ExpressionsTest extends AbstractMetamodelSpecificTest {
 	@Override
 	public void tearDown() throws Exception {
 		EntityManager em = getOrCreateEntityManager();
-		em.getTransaction().begin();
+ 		em.getTransaction().begin();
 		em.createQuery( "delete Product" ).executeUpdate();
 		em.getTransaction().commit();
 		em.close();
@@ -153,4 +153,78 @@ public class ExpressionsTest extends AbstractMetamodelSpecificTest {
 		em.getTransaction().commit();
 		em.close();
 	}
+
+	public void testDiffWithQuotient() {
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		CriteriaQuery<Number> criteria = builder.createQuery( Number.class );
+		criteria.from( Product.class );
+		criteria.select(
+				builder.quot(
+						builder.diff(
+								builder.literal( BigDecimal.valueOf( 2.0 ) ),
+								builder.literal( BigDecimal.valueOf( 1.0 ) )
+						),
+						BigDecimal.valueOf( 2.0 )
+				)
+		);
+		Number result = em.createQuery( criteria ).getSingleResult();
+		assertEquals(0.5d, result.doubleValue(), 0.1d);
+		em.getTransaction().commit();
+		em.close();
+	}
+
+	public void testSumWithQuotient() {
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		CriteriaQuery<Number> criteria = builder.createQuery( Number.class );
+		criteria.from( Product.class );
+		criteria.select(
+				builder.quot(
+						builder.sum(
+								builder.literal( BigDecimal.valueOf( 0.0 ) ),
+								builder.literal( BigDecimal.valueOf( 1.0 ) )
+						),
+						BigDecimal.valueOf( 2.0 )
+				)
+		);
+		Number result = em.createQuery( criteria ).getSingleResult();
+		assertEquals(0.5d, result.doubleValue(), 0.1d);
+		em.getTransaction().commit();
+		em.close();
+	}
+
+	public void testQuotientAndMultiply() {
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		CriteriaQuery<Number> criteria = builder.createQuery( Number.class );
+		criteria.from( Product.class );
+		criteria.select(
+				builder.quot(
+						builder.prod(
+								builder.literal( BigDecimal.valueOf( 10.0 ) ),
+								builder.literal( BigDecimal.valueOf( 5.0 ) )
+						),
+						BigDecimal.valueOf( 2.0 )
+				)
+		);
+		Number result = em.createQuery( criteria ).getSingleResult();
+		assertEquals(25.0d, result.doubleValue(), 0.1d);
+
+		criteria.select(
+				builder.prod(
+						builder.quot(
+								builder.literal( BigDecimal.valueOf( 10.0 ) ),
+								builder.literal( BigDecimal.valueOf( 5.0 ) )
+						),
+						BigDecimal.valueOf( 2.0 )
+				)
+		);
+		result = em.createQuery( criteria ).getSingleResult();
+		assertEquals(4.0d, result.doubleValue(), 0.1d);
+
+		em.getTransaction().commit();
+		em.close();
+	}
+
 }

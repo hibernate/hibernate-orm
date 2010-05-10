@@ -43,27 +43,27 @@ public class BinaryArithmeticOperation<N extends Number>
 	public static enum Operation {
 		ADD {
 			String apply(String lhs, String rhs) {
-				return lhs + " + " + rhs;
+				return applyPrimitive( lhs, '+', rhs );
 			}
 		},
 		SUBTRACT {
 			String apply(String lhs, String rhs) {
-				return lhs + " - " + rhs;
+				return applyPrimitive( lhs, '-', rhs );
 			}
 		},
 		MULTIPLY {
 			String apply(String lhs, String rhs) {
-				return lhs + " * " + rhs;
+				return applyPrimitive( lhs, '*', rhs );
 			}
 		},
 		DIVIDE {
 			String apply(String lhs, String rhs) {
-				return lhs + " / " + rhs;
+				return applyPrimitive( lhs, '/', rhs );
 			}
 		},
 		QUOT {
 			String apply(String lhs, String rhs) {
-				return lhs + " / " + rhs;
+				return applyPrimitive( lhs, '/', rhs );
 			}
 		},
 		MOD {
@@ -73,6 +73,18 @@ public class BinaryArithmeticOperation<N extends Number>
 			}
 		};
 		abstract String apply(String lhs, String rhs);
+
+		private static final char LEFT_PAREN = '(';
+		private static final char RIGHT_PAREN = ')';
+		private static String applyPrimitive(String lhs, char operator, String rhs) {
+			return new StringBuffer( lhs.length() + rhs.length() + 3 )
+					.append( LEFT_PAREN )
+					.append( lhs )
+					.append( operator )
+					.append( rhs )
+					.append( RIGHT_PAREN )
+					.toString();
+		}
 	}
 
 	private final Operation operator;

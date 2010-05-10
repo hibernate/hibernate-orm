@@ -32,6 +32,7 @@ import java.util.Arrays;
 import antlr.RecognitionException;
 import antlr.collections.AST;
 import org.hibernate.QueryException;
+import org.hibernate.hql.ast.tree.FunctionNode;
 import org.hibernate.util.StringHelper;
 import org.hibernate.param.ParameterSpecification;
 import org.hibernate.dialect.function.SQLFunction;
@@ -71,7 +72,7 @@ public class SqlGenerator extends SqlGeneratorBase implements ErrorReporter {
 
 	private ParseErrorHandler parseErrorHandler;
 	private SessionFactoryImplementor sessionFactory;
-	private LinkedList outputStack = new LinkedList();
+	private LinkedList<SqlWriter> outputStack = new LinkedList<SqlWriter>();
 	private final ASTPrinter printer = new ASTPrinter( SqlTokenTypes.class );
 	private List collectedParameters = new ArrayList();
 
@@ -178,31 +179,33 @@ public class SqlGenerator extends SqlGeneratorBase implements ErrorReporter {
 		}
 	}
 
-	protected void beginFunctionTemplate(AST m, AST i) {
-		MethodNode methodNode = ( MethodNode ) m;
-		SQLFunction template = methodNode.getSQLFunction();
-		if ( template == null ) {
-			// if template is null we just write the function out as it appears in the hql statement
-			super.beginFunctionTemplate( m, i );
+	protected void beginFunctionTemplate(AST node, AST nameNode) {
+		// NOTE for AGGREGATE both nodes are the same; for METHOD the first is the METHOD, the second is the
+		// 		METHOD_NAME
+		FunctionNode functionNode = ( FunctionNode ) node;
+		SQLFunction sqlFunction = functionNode.getSQLFunction();
+		if ( sqlFunction == null ) {
+			// if SQLFunction is null we just write the function out as it appears in the hql statement
+			super.beginFunctionTemplate( node, nameNode );
 		}
 		else {
-			// this function has a template -> redirect output and catch the arguments
+			// this function has a registered SQLFunction -> redirect output and catch the arguments
 			outputStack.addFirst( writer );
 			writer = new FunctionArguments();
 		}
 	}
 
-	protected void endFunctionTemplate(AST m) {
-		MethodNode methodNode = ( MethodNode ) m;
-		SQLFunction template = methodNode.getSQLFunction();
-		if ( template == null ) {
-			super.endFunctionTemplate( m );
+	protected void endFunctionTemplate(AST node) {
+		FunctionNode functionNode = ( FunctionNode ) node;
+		SQLFunction sqlFunction = functionNode.getSQLFunction();
+		if ( sqlFunction == null ) {
+			super.endFunctionTemplate( node );
 		}
 		else {
-			// this function has a template -> restore output, apply the template and write the result out
-			FunctionArguments functionArguments = ( FunctionArguments ) writer;   // TODO: Downcast to avoid using an interface?  Yuck.
-			writer = ( SqlWriter ) outputStack.removeFirst();
-			out( template.render( functionArguments.getArgs(), sessionFactory ) );
+			// this function has a registered SQLFunction -> redirect output and catch the arguments
+			FunctionArguments functionArguments = ( FunctionArguments ) writer;
+			writer = outputStack.removeFirst();
+			out( sqlFunction.render( functionArguments.getArgs(), sessionFactory ) );
 		}
 	}
 
@@ -230,7 +233,7 @@ public class SqlGenerator extends SqlGeneratorBase implements ErrorReporter {
 	 */
 	class FunctionArguments implements SqlWriter {
 		private int argInd;
-		private final List args = new ArrayList( 3 );
+		private final List<String> args = new ArrayList<String>(3);
 
 		public void clause(String clause) {
 			if ( argInd == args.size() ) {

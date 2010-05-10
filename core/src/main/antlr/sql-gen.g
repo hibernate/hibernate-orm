@@ -406,9 +406,12 @@ caseExpr
 	;
 
 aggregate
-	: #(a:AGGREGATE { out(a); out("("); }  expr { out(")"); } )
+	: #(
+	    a:AGGREGATE { beginFunctionTemplate( a, a ); }
+	    expr
+	    { endFunctionTemplate( a ); }
+	)
 	;
-
 
 methodCall
 	: #(m:METHOD_CALL i:METHOD_NAME { beginFunctionTemplate(m,i); }

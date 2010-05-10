@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,7 +20,6 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.dialect.function;
 
@@ -29,7 +28,6 @@ import org.hibernate.engine.Mapping;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.type.Type;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -45,12 +43,8 @@ import java.util.List;
  */
 public class SQLFunctionTemplate implements SQLFunction {
 	private final Type type;
-	private final boolean hasArguments;
+	private final TemplateRenderer renderer;
 	private final boolean hasParenthesesIfNoArgs;
-
-	private final String template;
-	private final String[] chunks;
-	private final int[] paramIndexes;
 
 	public SQLFunctionTemplate(Type type, String template) {
 		this( type, template, true );
@@ -58,89 +52,42 @@ public class SQLFunctionTemplate implements SQLFunction {
 
 	public SQLFunctionTemplate(Type type, String template, boolean hasParenthesesIfNoArgs) {
 		this.type = type;
-		this.template = template;
-
-		List chunkList = new ArrayList();
-		List paramList = new ArrayList();
-		StringBuffer chunk = new StringBuffer( 10 );
-		StringBuffer index = new StringBuffer( 2 );
-
-		for ( int i = 0; i < template.length(); ++i ) {
-			char c = template.charAt( i );
-			if ( c == '?' ) {
-				chunkList.add( chunk.toString() );
-				chunk.delete( 0, chunk.length() );
-
-				while ( ++i < template.length() ) {
-					c = template.charAt( i );
-					if ( Character.isDigit( c ) ) {
-						index.append( c );
-					}
-					else {
-						chunk.append( c );
-						break;
-					}
-				}
-
-				paramList.add( new Integer( Integer.parseInt( index.toString() ) - 1 ) );
-				index.delete( 0, index.length() );
-			}
-			else {
-				chunk.append( c );
-			}
-		}
-
-		if ( chunk.length() > 0 ) {
-			chunkList.add( chunk.toString() );
-		}
-
-		chunks = ( String[] ) chunkList.toArray( new String[chunkList.size()] );
-		paramIndexes = new int[paramList.size()];
-		for ( int i = 0; i < paramIndexes.length; ++i ) {
-			paramIndexes[i] = ( ( Integer ) paramList.get( i ) ).intValue();
-		}
-
-		hasArguments = paramIndexes.length > 0;
+		this.renderer = new TemplateRenderer( template );
 		this.hasParenthesesIfNoArgs = hasParenthesesIfNoArgs;
 	}
 
 	/**
-	 * Applies the template to passed in arguments.
-	 * @param args function arguments
-	 *
-	 * @return generated SQL function call
+	 * {@inheritDoc}
 	 */
 	public String render(List args, SessionFactoryImplementor factory) {
-		StringBuffer buf = new StringBuffer();
-		for ( int i = 0; i < chunks.length; ++i ) {
-			if ( i < paramIndexes.length ) {
-				Object arg = paramIndexes[i] < args.size() ? args.get( paramIndexes[i] ) : null;
-				if ( arg != null ) {
-					buf.append( chunks[i] ).append( arg );
-				}
-			}
-			else {
-				buf.append( chunks[i] );
-			}
-		}
-		return buf.toString();
+		return renderer.render( args, factory );
 	}
 
-	// SQLFunction implementation
-
+	/**
+	 * {@inheritDoc}
+	 */
 	public Type getReturnType(Type columnType, Mapping mapping) throws QueryException {
 		return type;
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	public boolean hasArguments() {
-		return hasArguments;
+		return renderer.getAnticipatedNumberOfArguments() > 0;
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	public boolean hasParenthesesIfNoArguments() {
 		return hasParenthesesIfNoArgs;
 	}
 	
+	/**
+	 * {@inheritDoc}
+	 */
 	public String toString() {
-		return template;
+		return renderer.getTemplate();
 	}
 }

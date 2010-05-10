@@ -388,17 +388,19 @@ public class SessionFactoryHelper {
 	 * @return the function return type given the function name and the first argument expression node.
 	 */
 	public Type findFunctionReturnType(String functionName, AST first) {
-		// locate the registered function by the given name
 		SQLFunction sqlFunction = requireSQLFunction( functionName );
+		return findFunctionReturnType( functionName, sqlFunction, first );
+	}
 
+	public Type findFunctionReturnType(String functionName, SQLFunction sqlFunction, AST firstArgument) {
 		// determine the type of the first argument...
 		Type argumentType = null;
-		if ( first != null ) {
+		if ( firstArgument != null ) {
 			if ( "cast".equals(functionName) ) {
-				argumentType = sfi.getTypeResolver().heuristicType( first.getNextSibling().getText() );
+				argumentType = sfi.getTypeResolver().heuristicType( firstArgument.getNextSibling().getText() );
 			}
-			else if ( first instanceof SqlNode ) {
-				argumentType = ( (SqlNode) first ).getDataType();
+			else if ( SqlNode.class.isInstance( firstArgument ) ) {
+				argumentType = ( (SqlNode) firstArgument ).getDataType();
 			}
 		}
 

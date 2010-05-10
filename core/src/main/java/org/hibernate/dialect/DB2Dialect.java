@@ -31,6 +31,7 @@ import java.sql.Types;
 
 import org.hibernate.Hibernate;
 import org.hibernate.cfg.Environment;
+import org.hibernate.dialect.function.AvgWithArgumentCastFunction;
 import org.hibernate.dialect.function.NoArgSQLFunction;
 import org.hibernate.dialect.function.SQLFunctionTemplate;
 import org.hibernate.dialect.function.StandardSQLFunction;
@@ -63,6 +64,8 @@ public class DB2Dialect extends Dialect {
 		registerColumnType( Types.CLOB, "clob($l)" );
 		registerColumnType( Types.LONGVARCHAR, "long varchar" );
 		registerColumnType( Types.LONGVARBINARY, "long varchar for bit data" );
+
+		registerFunction( "avg", new AvgWithArgumentCastFunction( "double" ) );
 
 		registerFunction("abs", new StandardSQLFunction("abs") );
 		registerFunction("absval", new StandardSQLFunction("absval") );

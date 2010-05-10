@@ -197,6 +197,8 @@ tokens
 
 	protected void processFunction(AST functionCall,boolean inSelect) throws SemanticException { }
 
+	protected void processAggregation(AST node, boolean inSelect) throws SemanticException { }
+
 	protected void processConstructor(AST constructor) throws SemanticException { }
 
 	protected AST generateNamedParameter(AST delimiterNode, AST nameNode) throws SemanticException {

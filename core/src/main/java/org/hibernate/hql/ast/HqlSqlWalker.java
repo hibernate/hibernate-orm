@@ -47,6 +47,7 @@ import org.hibernate.hql.antlr.HqlSqlBaseWalker;
 import org.hibernate.hql.antlr.HqlSqlTokenTypes;
 import org.hibernate.hql.antlr.HqlTokenTypes;
 import org.hibernate.hql.antlr.SqlTokenTypes;
+import org.hibernate.hql.ast.tree.AggregateNode;
 import org.hibernate.hql.ast.tree.AssignmentSpecification;
 import org.hibernate.hql.ast.tree.CollectionFunction;
 import org.hibernate.hql.ast.tree.ConstructorNode;
@@ -975,6 +976,11 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 	protected void processFunction(AST functionCall, boolean inSelect) throws SemanticException {
 		MethodNode methodNode = ( MethodNode ) functionCall;
 		methodNode.resolve( inSelect );
+	}
+
+	protected void processAggregation(AST node, boolean inSelect) throws SemanticException {
+		AggregateNode aggregateNode = ( AggregateNode ) node;
+		aggregateNode.resolve();
 	}
 
 	protected void processConstructor(AST constructor) throws SemanticException {

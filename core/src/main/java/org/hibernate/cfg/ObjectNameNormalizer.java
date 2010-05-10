@@ -98,7 +98,7 @@ public abstract class ObjectNameNormalizer {
 	 * @return The identifier accounting for any quoting that need be applied.
 	 */
 	public String normalizeIdentifierQuoting(String identifier) {
-		if ( identifier == null ) {
+		if ( StringHelper.isEmpty( identifier ) ) {
 			return null;
 		}
 

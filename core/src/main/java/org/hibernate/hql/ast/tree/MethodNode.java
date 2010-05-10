@@ -47,7 +47,7 @@ import org.slf4j.LoggerFactory;
  *
  * @author josh
  */
-public class MethodNode extends AbstractSelectExpression implements SelectExpression {
+public class MethodNode extends AbstractSelectExpression implements SelectExpression, FunctionNode {
 
 	private static final Logger log = LoggerFactory.getLogger( MethodNode.class );
 

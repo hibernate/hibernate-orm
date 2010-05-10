@@ -32,6 +32,7 @@ import org.hibernate.Hibernate;
 import org.hibernate.LockMode;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.JDBCException;
+import org.hibernate.dialect.function.AvgWithArgumentCastFunction;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.persister.entity.Lockable;
 import org.hibernate.cfg.Environment;
@@ -82,6 +83,8 @@ public class HSQLDialect extends Dialect {
 		registerColumnType( Types.CLOB, "longvarchar" );
 		registerColumnType( Types.LONGVARBINARY, "longvarbinary" );
 		registerColumnType( Types.LONGVARCHAR, "longvarchar" );
+
+		registerFunction( "avg", new AvgWithArgumentCastFunction( "double" ) );
 
 		registerFunction( "ascii", new StandardSQLFunction( "ascii", Hibernate.INTEGER ) );
 		registerFunction( "char", new StandardSQLFunction( "char", Hibernate.CHARACTER ) );

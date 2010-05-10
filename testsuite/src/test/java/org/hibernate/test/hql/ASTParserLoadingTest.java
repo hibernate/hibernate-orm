@@ -1567,7 +1567,7 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 
 	public void testAggregation() {
 		Session s = openSession();
-		Transaction t = s.beginTransaction();
+		s.beginTransaction();
 		Human h = new Human();
 		h.setBodyWeight( (float) 74.0 );
 		h.setHeightInches(120.5);
@@ -1580,8 +1580,38 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 		assertEquals(sum.floatValue(), 74.0, 0.01);
 		assertEquals(avg.doubleValue(), 120.5, 0.01);
 		Long id = (Long) s.createQuery("select max(a.id) from Animal a").uniqueResult();
+		assertNotNull( id );
+		s.delete( h );
+		s.getTransaction().commit();
+		s.close();
+
+		s = openSession();
+		s.beginTransaction();
+		h = new Human();
+		h.setFloatValue( 2.5F );
+		h.setIntValue( 1 );
+		s.persist( h );
+		Human h2 = new Human();
+		h2.setFloatValue( 2.5F );
+		h2.setIntValue( 2 );
+		s.persist( h2 );
+		Object[] results = (Object[]) s.createQuery( "select sum(h.floatValue), avg(h.floatValue), sum(h.intValue), avg(h.intValue) from Human h" )
+				.uniqueResult();
+		// spec says sum() on a float or double value should result in double
+		assertTrue( Double.class.isInstance( results[0] ) );
+		assertEquals( 5D, results[0] );
+		// avg() should return a double
+		assertTrue( Double.class.isInstance( results[1] ) );
+		assertEquals( 2.5D, results[1] );
+		// spec says sum() on short, int or long should result in long
+		assertTrue( Long.class.isInstance( results[2] ) );
+		assertEquals( 3L, results[2] );
+		// avg() should return a double
+		assertTrue( Double.class.isInstance( results[3] ) );
+		assertEquals( 1.5D, results[3] );
 		s.delete(h);
-		t.commit();
+		s.delete(h2);
+		s.getTransaction().commit();
 		s.close();
 	}
 

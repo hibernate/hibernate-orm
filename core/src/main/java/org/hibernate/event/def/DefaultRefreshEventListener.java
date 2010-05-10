@@ -152,7 +152,13 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 		// Keep the same read-only/modifiable setting for the entity that it had before refreshing;
 		// If it was transient, then set it to the default for the source.
 		if ( result != null ) {
-			source.setReadOnly( result, ( e == null ? source.isDefaultReadOnly() : e.isReadOnly() ) );
+			if ( ! persister.isMutable() ) {
+				// this is probably redundant; it should already be read-only
+				source.setReadOnly( result, true );
+			}
+			else {
+				source.setReadOnly( result, ( e == null ? source.isDefaultReadOnly() : e.isReadOnly() ) );
+			}
 		}
 		source.setFetchProfile(previousFetchProfile);
 		

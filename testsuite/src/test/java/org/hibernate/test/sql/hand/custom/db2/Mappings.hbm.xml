@@ -180,19 +180,19 @@
 	<sql-query name="simpleScalar" callable="true">
 		<return-scalar column="name" type="string"/>
 		<return-scalar column="value" type="long"/>
-		{ call HIBDB2TST.simpleScalar(:number) }
+		{ call simpleScalar(:number) }
 	</sql-query>
 
 	<sql-query name="paramhandling" callable="true">
 		<return-scalar column="value" type="long"/>
 		<return-scalar column="value2" type="long"/>
-		{ call HIBDB2TST.paramHandling(?,?) }
+		{ call paramHandling(?,?) }
 	</sql-query>
 
 	<sql-query name="paramhandling_mixed" callable="true">
 		<return-scalar column="value" type="long" />
 		<return-scalar column="value2" type="long" />
-		{ call HIBDB2TST.paramHandling(?,:second) }
+		{ call paramHandling(?,:second) }
 	</sql-query>
 	
 	<sql-query name="selectAllEmployments" callable="true">
@@ -210,7 +210,7 @@
 				<return-column name="CURRENCY"/>			
 			</return-property>
 		</return>
-		{ call HIBDB2TST.selectAllEmployments() }
+		{ call selectAllEmployments() }
 	</sql-query>
 
     <sql-query name="textholder">
@@ -223,15 +223,10 @@
         SELECT ID AS {h.id}, PHOTO AS {h.photo} FROM IMAGEHOLDER WHERE ID=? /*FOR UPDATE*/
     </sql-query>
 
-	<!-- DB2 seem to *require* users to specify explicit schema/location when executing a stored procedure *stupid* -->
-	<database-object>
-	  <create>CREATE SCHEMA HIBDB2TST</create>
-	  <drop>DROP SCHEMA HIBDB2TST RESTRICT</drop>
-	</database-object>
 	
 	<database-object>
 		<create>
-		CREATE PROCEDURE HIBDB2TST.selectAllEmployments () RESULT SETS 1
+		CREATE PROCEDURE selectAllEmployments () RESULT SETS 1
         P1: BEGIN
          DECLARE C1 CURSOR WITH RETURN FOR
 			SELECT EMPLOYEE, EMPLOYER, STARTDATE, ENDDATE, 
@@ -241,14 +236,14 @@
         END P1
 		</create>
 		<drop>
-		DROP PROCEDURE HIBDB2TST.selectAllEmployments
+		DROP PROCEDURE selectAllEmployments
 		</drop>
 	</database-object>
 
 	
 	<database-object>
 		<create>
-		CREATE PROCEDURE HIBDB2TST.paramHandling (IN j SMALLINT, IN i SMALLINT) RESULT SETS 1
+		CREATE PROCEDURE paramHandling (IN j SMALLINT, IN i SMALLINT) RESULT SETS 1
         P1: BEGIN
          DECLARE C1 CURSOR WITH RETURN FOR
     		SELECT j as value, i as value2 from sysibm.sysdummy1;
@@ -256,13 +251,13 @@
         END P1
 		</create>
 		<drop>
-		DROP PROCEDURE HIBDB2TST.paramHandling
+		DROP PROCEDURE paramHandling
 		</drop>
 	</database-object>
 	
     <database-object>
 	 <create>
-		CREATE PROCEDURE HIBDB2TST.simpleScalar (IN j SMALLINT) RESULT SETS 1
+		CREATE PROCEDURE simpleScalar (IN j SMALLINT) RESULT SETS 1
         P1: BEGIN
          DECLARE C1 CURSOR WITH RETURN FOR
     		SELECT j as value, 'getAll' as name from sysibm.sysdummy1;
@@ -270,7 +265,7 @@
         END P1
 	 </create>
 	 <drop>
-		DROP PROCEDURE HIBDB2TST.simpleScalar
+		DROP PROCEDURE simpleScalar
 	 </drop>
 	</database-object>	
 </hibernate-mapping>

@@ -69,22 +69,7 @@ public class LiteralExpression<T> extends ExpressionImpl<T> implements Serializa
 		}
 
 		// else...
-		final String parameterName = renderingContext.generateParameterName();
-		renderingContext.registerImplicitParameterBinding(
-				new CriteriaQueryCompiler.ImplicitParameterBinding() {
-					public String getParameterName() {
-						return parameterName;
-					}
-
-					public Class getJavaType() {
-						return LiteralExpression.this.getJavaType();
-					}
-
-					public void bind(TypedQuery typedQuery) {
-						typedQuery.setParameter( parameterName, getLiteral() );
-					}
-				}
-		);
+		final String parameterName = renderingContext.registerLiteralParameterBinding( getLiteral(), getJavaType() );
 		return ':' + parameterName;
 	}
 

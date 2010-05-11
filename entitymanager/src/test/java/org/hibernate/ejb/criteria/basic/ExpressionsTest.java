@@ -27,11 +27,18 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.List;
 import javax.persistence.EntityManager;
+import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.ParameterExpression;
+import javax.persistence.criteria.Predicate;
+import javax.persistence.criteria.Root;
 
+import org.hibernate.Query;
 import org.hibernate.ejb.metamodel.AbstractMetamodelSpecificTest;
 import org.hibernate.ejb.metamodel.Product;
+import org.hibernate.ejb.metamodel.Product_;
+import org.hibernate.impl.AbstractQueryImpl;
 
 /**
  * Tests that various expressions operate as expected
@@ -58,16 +65,6 @@ public class ExpressionsTest extends AbstractMetamodelSpecificTest {
 		em.persist( product );
 		em.getTransaction().commit();
 		em.close();
-	}
-
-	@Override
-	public void tearDown() throws Exception {
-		EntityManager em = getOrCreateEntityManager();
- 		em.getTransaction().begin();
-		em.createQuery( "delete Product" ).executeUpdate();
-		em.getTransaction().commit();
-		em.close();
-		super.tearDown();
 	}
 
 	public void testEmptyConjunction() {
@@ -225,6 +222,30 @@ public class ExpressionsTest extends AbstractMetamodelSpecificTest {
 
 		em.getTransaction().commit();
 		em.close();
+	}
+
+
+	public void testParameterReuse() {
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		CriteriaQuery<Product> criteria = em.getCriteriaBuilder().createQuery( Product.class );
+		Root<Product> from = criteria.from( Product.class );
+		ParameterExpression<String> param = em.getCriteriaBuilder().parameter( String.class );
+		Predicate predicate = em.getCriteriaBuilder().equal( from.get( Product_.id ), param );
+		Predicate predicate2 = em.getCriteriaBuilder().equal( from.get( Product_.name ), param );
+		criteria.where( em.getCriteriaBuilder().or( predicate, predicate2 ) );
+		assertEquals( 1, criteria.getParameters().size() );
+		TypedQuery<Product> query = em.createQuery( criteria );
+		int hqlParamCount = countGeneratedParameters( query.unwrap( Query.class ) );
+		assertEquals( 1, hqlParamCount );
+		query.setParameter( param, "abc" ).getResultList();
+		em.getTransaction().commit();
+		em.close();
+	}
+
+	private int countGeneratedParameters(Query query) {
+		AbstractQueryImpl hqlQueryImpl = (AbstractQueryImpl) query;
+		return hqlQueryImpl.getParameterMetadata().getNamedParameterNames().size();
 	}
 
 }

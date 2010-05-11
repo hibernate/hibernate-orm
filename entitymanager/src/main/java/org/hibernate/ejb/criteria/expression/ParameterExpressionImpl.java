@@ -85,8 +85,7 @@ public class ParameterExpressionImpl<T>
 	}
 
 	public String render(CriteriaQueryCompiler.RenderingContext renderingContext) {
-		final String jpaqlParamName = renderingContext.generateParameterName();
-		renderingContext.registerExplicitParameter( this, jpaqlParamName );
+		final String jpaqlParamName = renderingContext.registerExplicitParameter( this );
 		return ':' + jpaqlParamName;
 	}
 

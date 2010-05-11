@@ -100,26 +100,23 @@ public class CriteriaQueryCompiler implements Serializable {
 		public String generateAlias();
 
 		/**
-		 * Generate a name for a parameter into the JPAQL query.
-		 *
-		 * @return The generated para name
-		 */
-		public String generateParameterName();
-
-		/**
 		 * Register parameters explicitly encountered in the criteria query.
 		 *
 		 * @param criteriaQueryParameter The parameter expression
-		 * @param jpaqlParameterName The generated name for the parameter
+		 *
+		 * @return The JPA-QL parameter name
 		 */
-		public void registerExplicitParameter(ParameterExpression<?> criteriaQueryParameter, String jpaqlParameterName);
+		public String registerExplicitParameter(ParameterExpression<?> criteriaQueryParameter);
 
 		/**
 		 * Register a parameter that was not part of the criteria query (at least not as a parameter).
 		 *
-		 * @param binding The parameter description.
+		 * @param literal The literal value
+		 * @param javaType The java type as whcih to handle the literal value.
+		 *
+		 * @return The JPA-QL parameter name
 		 */
-		public void registerImplicitParameterBinding(ImplicitParameterBinding binding);
+		public String registerLiteralParameterBinding(Object literal, Class javaType);
 
 		/**
 		 * Given a java type, determine the proper cast type name.
@@ -164,22 +161,43 @@ public class CriteriaQueryCompiler implements Serializable {
 				return "param" + explicitParameterCount++;
 			}
 
-			public void registerExplicitParameter(ParameterExpression<?> criteriaQueryParameter, String jpaqlParameterName) {
-				explicitParameterMapping.put( criteriaQueryParameter, jpaqlParameterName );
+			public String registerExplicitParameter(ParameterExpression<?> criteriaQueryParameter) {
+				final String jpaqlParameterName;
+				if ( explicitParameterMapping.containsKey( criteriaQueryParameter ) ) {
+					jpaqlParameterName = explicitParameterMapping.get( criteriaQueryParameter );
+				}
+				else {
+					jpaqlParameterName = generateParameterName();
+					explicitParameterMapping.put( criteriaQueryParameter, jpaqlParameterName );
+				}
 				if ( StringHelper.isNotEmpty( criteriaQueryParameter.getName() ) ) {
 					explicitParameterNameMapping.put(
 							criteriaQueryParameter.getName(),
 							criteriaQueryParameter
 					);
 				}
+				return jpaqlParameterName;
 			}
 
-			public void registerImplicitParameterBinding(ImplicitParameterBinding binding) {
+			public String registerLiteralParameterBinding(final Object literal, final Class javaType) {
+				final String parameterName = generateParameterName();
+				final ImplicitParameterBinding binding = new CriteriaQueryCompiler.ImplicitParameterBinding() {
+					public String getParameterName() {
+						return parameterName;
+					}
+
+					public Class getJavaType() {
+						return javaType;
+					}
+
+					public void bind(TypedQuery typedQuery) {
+						typedQuery.setParameter( parameterName, literal );
+					}
+				};
+
 				implicitParameterBindings.add( binding );
-				implicitParameterTypes.put(
-						binding.getParameterName(),
-						binding.getJavaType()
-				);
+				implicitParameterTypes.put( parameterName, javaType );
+				return parameterName;
 			}
 
 			public String getCastType(Class javaType) {

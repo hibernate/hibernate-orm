@@ -593,6 +593,7 @@
                     <groupId>com.h2database</groupId>
                     <artifactId>h2</artifactId>
                     <version>1.2.134</version>
+                    <scope>test</scope>
                 </dependency>
             </dependencies>
             <properties>
@@ -738,6 +739,7 @@
                     <groupId>com.ibm</groupId>
                     <artifactId>db2jcc_license_cu</artifactId>
                     <version>3.1.57</version>
+                    <scope>test</scope>
                 </dependency>
             </dependencies>
             <properties>
@@ -764,6 +766,7 @@
                     <groupId>com.ibm</groupId>
                     <artifactId>db2jcc_license_cu</artifactId>
                     <version>3.8.47</version>
+                    <scope>test</scope>
                 </dependency>
             </dependencies>
             <properties>
@@ -790,6 +793,7 @@
                     <groupId>com.ibm</groupId>
                     <artifactId>db2jcc_license_cu</artifactId>
                     <version>3.57.86</version>
+                    <scope>test</scope>
                 </dependency>
             </dependencies>
             <properties>

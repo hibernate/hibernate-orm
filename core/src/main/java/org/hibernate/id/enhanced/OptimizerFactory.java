@@ -48,6 +48,7 @@ public class OptimizerFactory {
 
 	private static Class[] CTOR_SIG = new Class[] { Class.class, int.class };
 
+	@SuppressWarnings({ "UnnecessaryBoxing" })
 	public static Optimizer buildOptimizer(String type, Class returnClass, int incrementSize) {
 		String optimizerClassName;
 		if ( NONE.equals( type ) ) {
@@ -66,7 +67,7 @@ public class OptimizerFactory {
 		try {
 			Class optimizerClass = ReflectHelper.classForName( optimizerClassName );
 			Constructor ctor = optimizerClass.getConstructor( CTOR_SIG );
-			return ( Optimizer ) ctor.newInstance( new Object[] { returnClass, new Integer( incrementSize ) } );
+			return ( Optimizer ) ctor.newInstance( returnClass, Integer.valueOf( incrementSize ) );
 		}
 		catch( Throwable ignore ) {
 			// intentionally empty
@@ -262,6 +263,67 @@ public class OptimizerFactory {
 		 */
 		public IntegralDataTypeHolder getHiValue() {
 			return upperLimit;
+		}
+	}
+
+	public static class LegacyHiLoAlgorithmOptimizer extends OptimizerSupport {
+		private long maxLo;
+		private long lo;
+		private IntegralDataTypeHolder hi;
+
+		private IntegralDataTypeHolder lastSourceValue;
+		private IntegralDataTypeHolder value;
+
+
+		public LegacyHiLoAlgorithmOptimizer(Class returnClass, int incrementSize) {
+			super( returnClass, incrementSize );
+			if ( incrementSize < 1 ) {
+				throw new HibernateException( "increment size cannot be less than 1" );
+			}
+			if ( log.isTraceEnabled() ) {
+				log.trace( "creating hilo optimizer (legacy) with [incrementSize=" + incrementSize + "; returnClass="  + returnClass.getName() + "]" );
+			}
+
+			maxLo = incrementSize;
+			lo = maxLo+1;
+		}
+
+		/**
+		 * {@inheritDoc}
+		 */
+		public synchronized Serializable generate(AccessCallback callback) {
+			if ( lo > maxLo ) {
+				lastSourceValue = callback.getNextValue();
+				lo = lastSourceValue.eq( 0 ) ? 1 : 0;
+				hi = lastSourceValue.copy().multiplyBy( maxLo+1 );
+			}
+			value = hi.copy().add( lo++ );
+			return value.makeValue();
+		}
+
+		/**
+		 * {@inheritDoc}
+		 */
+		public IntegralDataTypeHolder getLastSourceValue() {
+			return lastSourceValue.copy();
+		}
+
+		/**
+		 * {@inheritDoc}
+		 */
+		public boolean applyIncrementSizeToSourceValues() {
+			return false;
+		}
+
+		/**
+		 * Getter for property 'lastValue'.
+		 * <p/>
+		 * Exposure intended for testing purposes.
+		 *
+		 * @return Value for property 'lastValue'.
+		 */
+		public IntegralDataTypeHolder getLastValue() {
+			return value;
 		}
 	}
 

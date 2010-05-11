@@ -26,11 +26,11 @@ package org.hibernate.id;
 import java.io.Serializable;
 import java.util.Properties;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.hibernate.MappingException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.SessionImplementor;
+import org.hibernate.id.enhanced.AccessCallback;
+import org.hibernate.id.enhanced.OptimizerFactory;
 import org.hibernate.type.Type;
 import org.hibernate.util.PropertiesHelper;
 
@@ -50,23 +50,24 @@ import org.hibernate.util.PropertiesHelper;
  * @author Gavin King
  */
 public class SequenceHiLoGenerator extends SequenceGenerator {
-
 	public static final String MAX_LO = "max_lo";
 
-	private static final Logger log = LoggerFactory.getLogger(SequenceHiLoGenerator.class);
-
 	private int maxLo;
-	private int lo;
 
-	private IntegralDataTypeHolder value;
+	private OptimizerFactory.LegacyHiLoAlgorithmOptimizer hiloOptimizer;
 
 	public void configure(Type type, Properties params, Dialect d) throws MappingException {
 		super.configure(type, params, d);
-		maxLo = PropertiesHelper.getInt(MAX_LO, params, 9);
-		lo = maxLo + 1; // so we "clock over" on the first invocation
+
+		maxLo = PropertiesHelper.getInt( MAX_LO, params, 9 );
+
+		hiloOptimizer = new OptimizerFactory.LegacyHiLoAlgorithmOptimizer(
+				getIdentifierType().getReturnedClass(),
+				maxLo
+		);
 	}
 
-	public synchronized Serializable generate(SessionImplementor session, Object obj) {
+	public synchronized Serializable generate(final SessionImplementor session, Object obj) {
 		// maxLo < 1 indicates a hilo generator with no hilo :?
 		if ( maxLo < 1 ) {
 			//keep the behavior consistent even for boundary usages
@@ -77,16 +78,21 @@ public class SequenceHiLoGenerator extends SequenceGenerator {
 			return value.makeValue();
 		}
 
-		if ( lo > maxLo ) {
-			IntegralDataTypeHolder hiVal = generateHolder( session );
-			lo = ( hiVal.eq( 0 ) ) ? 1 : 0;
-			value = hiVal.copy().multiplyBy( maxLo+1 ).add( lo );
-			if ( log.isDebugEnabled() ) {
-				log.debug("new hi value: " + hiVal);
-			}
-		}
-
-		return value.makeValueThenIncrement();
+		return hiloOptimizer.generate(
+				new AccessCallback() {
+					public IntegralDataTypeHolder getNextValue() {
+						return generateHolder( session );
+					}
+				}
+		);
 	}
 
+	/**
+	 * For testing/assertion purposes
+	 *
+	 * @return The optimizer
+	 */
+	OptimizerFactory.LegacyHiLoAlgorithmOptimizer getHiloOptimizer() {
+		return hiloOptimizer;
+	}
 }

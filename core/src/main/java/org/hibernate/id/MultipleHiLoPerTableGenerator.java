@@ -37,6 +37,8 @@ import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.MappingException;
 import org.hibernate.cfg.ObjectNameNormalizer;
+import org.hibernate.id.enhanced.AccessCallback;
+import org.hibernate.id.enhanced.OptimizerFactory;
 import org.hibernate.jdbc.util.FormatStyle;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.SessionImplementor;
@@ -104,8 +106,7 @@ public class MultipleHiLoPerTableGenerator
 	public static final String MAX_LO = "max_lo";
 
 	private int maxLo;
-	private int lo;
-	private IntegralDataTypeHolder value;
+	private OptimizerFactory.LegacyHiLoAlgorithmOptimizer hiloOptimizer;
 
 	private Class returnClass;
 	private int keySize;
@@ -149,19 +150,15 @@ public class MultipleHiLoPerTableGenerator
 		IntegralDataTypeHolder value = IdentifierGeneratorHelper.getIntegralDataTypeHolder( returnClass );
 		int rows;
 		do {
-			// The loop ensures atomicity of the
-			// select + update even for no transaction
-			// or read committed isolation level
-
-			//sql = query;
-			SQL_STATEMENT_LOGGER.logStatement( sql, FormatStyle.BASIC );
-			PreparedStatement qps = conn.prepareStatement(query);
+			SQL_STATEMENT_LOGGER.logStatement( query, FormatStyle.BASIC );
+			PreparedStatement qps = conn.prepareStatement( query );
 			PreparedStatement ips = null;
 			try {
 				ResultSet rs = qps.executeQuery();
 				boolean isInitialized = rs.next();
 				if ( !isInitialized ) {
 					value.initialize( 0 );
+					SQL_STATEMENT_LOGGER.logStatement( insert, FormatStyle.BASIC );
 					ips = conn.prepareStatement( insert );
 					value.bind( ips, 1 );
 					ips.execute();
@@ -182,7 +179,8 @@ public class MultipleHiLoPerTableGenerator
 				qps.close();
 			}
 
-			PreparedStatement ups = conn.prepareStatement(update);
+			SQL_STATEMENT_LOGGER.logStatement( update, FormatStyle.BASIC );
+			PreparedStatement ups = conn.prepareStatement( update );
 			try {
 				value.copy().increment().bind( ups, 1 );
 				value.bind( ups, 2 );
@@ -195,12 +193,12 @@ public class MultipleHiLoPerTableGenerator
 			finally {
 				ups.close();
 			}
-		}
-		while (rows==0);
+		} while ( rows==0 );
+
 		return value;
 	}
 
-	public synchronized Serializable generate(SessionImplementor session, Object obj)
+	public synchronized Serializable generate(final SessionImplementor session, Object obj)
 		throws HibernateException {
 		// maxLo < 1 indicates a hilo generator with no hilo :?
 		if ( maxLo < 1 ) {
@@ -212,15 +210,13 @@ public class MultipleHiLoPerTableGenerator
 			return value.makeValue();
 		}
 
-		if ( lo > maxLo ) {
-			IntegralDataTypeHolder hiVal = (IntegralDataTypeHolder) doWorkInNewTransaction( session );
-			lo = ( hiVal.eq( 0 ) ) ? 1 : 0;
-			value = hiVal.copy().multiplyBy( maxLo+1 ).add( lo );
-			if ( log.isDebugEnabled() ) {
-				log.debug("new hi value: " + hiVal);
-			}
-		}
-		return value.makeValueThenIncrement();
+		return hiloOptimizer.generate(
+				new AccessCallback() {
+					public IntegralDataTypeHolder getNextValue() {
+						return (IntegralDataTypeHolder) doWorkInNewTransaction( session );
+					}
+				}
+		);
 	}
 
 	public void configure(Type type, Properties params, Dialect dialect) throws MappingException {
@@ -281,7 +277,8 @@ public class MultipleHiLoPerTableGenerator
 
 		//hilo config
 		maxLo = PropertiesHelper.getInt(MAX_LO, params, Short.MAX_VALUE);
-		lo = maxLo + 1; // so we "clock over" on the first invocation
 		returnClass = type.getReturnedClass();
+
+		hiloOptimizer = new OptimizerFactory.LegacyHiLoAlgorithmOptimizer( returnClass, maxLo );
 	}
 }

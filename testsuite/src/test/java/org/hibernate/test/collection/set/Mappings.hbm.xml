@@ -32,6 +32,7 @@
     <class name="Child">
         <id name="name" column="NAME" type="string"/>
         <many-to-one name="parent" class="Parent" cascade="none" />
+        <property name="description" type="string"/>
     </class>
 
     <class name="Container">

@@ -88,7 +88,7 @@ public class StandardQueryCache implements QueryCache {
 			return false;
 		}
 		else {
-			Long ts = Long.valueOf( session.getTimestamp() );
+			Long ts = new Long( session.getFactory().getSettings().getRegionFactory().nextTimestamp());
 
 			if ( log.isDebugEnabled() ) {
 				log.debug( "caching query results in region: " + cacheRegion.getName() + "; timestamp=" + ts );

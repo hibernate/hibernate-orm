@@ -265,6 +265,67 @@ public class OptimizerFactory {
 		}
 	}
 
+	public static class LegacyHiLoAlgorithmOptimizer extends OptimizerSupport {
+		private long maxLo;
+		private long lo;
+		private IntegralDataTypeHolder hi;
+
+		private IntegralDataTypeHolder lastSourceValue;
+		private IntegralDataTypeHolder value;
+
+
+		public LegacyHiLoAlgorithmOptimizer(Class returnClass, int incrementSize) {
+			super( returnClass, incrementSize );
+			if ( incrementSize < 1 ) {
+				throw new HibernateException( "increment size cannot be less than 1" );
+			}
+			if ( log.isTraceEnabled() ) {
+				log.trace( "creating hilo optimizer (legacy) with [incrementSize=" + incrementSize + "; returnClass="  + returnClass.getName() + "]" );
+			}
+
+			maxLo = incrementSize;
+			lo = maxLo+1;
+		}
+
+		/**
+		 * {@inheritDoc}
+		 */
+		public synchronized Serializable generate(AccessCallback callback) {
+			if ( lo > maxLo ) {
+				lastSourceValue = callback.getNextValue();
+				lo = lastSourceValue.eq( 0 ) ? 1 : 0;
+				hi = lastSourceValue.copy().multiplyBy( maxLo+1 );
+			}
+			value = hi.copy().add( lo++ );
+			return value.makeValue();
+		}
+
+		/**
+		 * {@inheritDoc}
+		 */
+		public IntegralDataTypeHolder getLastSourceValue() {
+			return lastSourceValue.copy();
+		}
+
+		/**
+		 * {@inheritDoc}
+		 */
+		public boolean applyIncrementSizeToSourceValues() {
+			return false;
+		}
+
+		/**
+		 * Getter for property 'lastValue'.
+		 * <p/>
+		 * Exposure intended for testing purposes.
+		 *
+		 * @return Value for property 'lastValue'.
+		 */
+		public IntegralDataTypeHolder getLastValue() {
+			return value;
+		}
+	}
+
 	/**
 	 * Optimizer which uses a pool of values, storing the next low value of the
 	 * range in the database.

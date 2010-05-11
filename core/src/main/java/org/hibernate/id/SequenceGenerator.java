@@ -72,6 +72,10 @@ public class SequenceGenerator implements PersistentIdentifierGenerator, Configu
 	private Type identifierType;
 	private String sql;
 
+	public Type getIdentifierType() {
+		return identifierType;
+	}
+
 	public void configure(Type type, Properties params, Dialect dialect) throws MappingException {
 		ObjectNameNormalizer normalizer = ( ObjectNameNormalizer ) params.get( IDENTIFIER_NORMALIZER );
 		sequenceName = normalizer.normalizeIdentifierQuoting(

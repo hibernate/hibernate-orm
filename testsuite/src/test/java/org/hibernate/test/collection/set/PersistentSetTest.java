@@ -4,10 +4,12 @@ import java.util.HashSet;
 
 import junit.framework.Test;
 
+import org.hibernate.CacheMode;
 import org.hibernate.Session;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.collection.PersistentSet;
+import org.hibernate.criterion.Restrictions;
 import org.hibernate.junit.functional.FunctionalTestCase;
 import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
 import org.hibernate.stat.CollectionStatistics;
@@ -270,6 +272,112 @@ public class PersistentSetTest extends FunctionalTestCase {
 		container = ( Container ) session.get( Container.class, container.getId() );
 		assertEquals( 1, container.getContents().size() );
 		session.delete( container );
+		session.getTransaction().commit();
+		session.close();
+	}
+
+	public void testLoadChildCheckParentContainsChildCache() {
+		Parent parent = new Parent( "p1" );
+		Child child = new Child( "c1" );
+		child.setDescription( "desc1" );
+		parent.getChildren().add( child );
+		child.setParent( parent );
+		Child otherChild = new Child( "c2" );
+		otherChild.setDescription( "desc2" );
+		parent.getChildren().add( otherChild );
+		otherChild.setParent( parent );
+
+		Session session = openSession();
+		session.beginTransaction();
+		session.save( parent );
+		session.getTransaction().commit();
+
+		session = openSession();
+		session.beginTransaction();
+		parent = ( Parent ) session.get( Parent.class, parent.getName() );
+		assertTrue( parent.getChildren().contains( child ) );
+		assertTrue( parent.getChildren().contains( otherChild ) );
+		session.getTransaction().commit();
+
+		session = openSession();
+		session.beginTransaction();
+
+		child = ( Child ) session.get( Child.class, child.getName() );
+		assertTrue( child.getParent().getChildren().contains( child ) );
+		session.clear();
+
+		child = ( Child ) session.createCriteria( Child.class, child.getName() )
+				.setCacheable( true )
+				.add( Restrictions.idEq( "c1" ) )
+				.uniqueResult();
+		assertTrue( child.getParent().getChildren().contains( child ) );
+		assertTrue( child.getParent().getChildren().contains( otherChild ) );
+		session.clear();
+
+		child = ( Child ) session.createCriteria( Child.class, child.getName() )
+				.setCacheable( true )
+				.add( Restrictions.idEq( "c1" ) )
+				.uniqueResult();
+		assertTrue( child.getParent().getChildren().contains( child ) );
+		assertTrue( child.getParent().getChildren().contains( otherChild ) );
+		session.clear();
+
+		child = ( Child ) session.createQuery( "from Child where name = 'c1'" )
+				.setCacheable( true )
+				.uniqueResult();
+		assertTrue( child.getParent().getChildren().contains( child ) );
+
+		child = ( Child ) session.createQuery( "from Child where name = 'c1'" )
+				.setCacheable( true )
+				.uniqueResult();
+		assertTrue( child.getParent().getChildren().contains( child ) );
+
+		session.delete( child.getParent() );
+		session.getTransaction().commit();
+		session.close();
+	}
+
+	public void testLoadChildCheckParentContainsChildNoCache() {
+		Parent parent = new Parent( "p1" );
+		Child child = new Child( "c1" );
+		parent.getChildren().add( child );
+		child.setParent( parent );
+		Child otherChild = new Child( "c2" );
+		parent.getChildren().add( otherChild );
+		otherChild.setParent( parent );
+
+		Session session = openSession();
+		session.beginTransaction();
+		session.save( parent );
+		session.getTransaction().commit();
+
+		session = openSession();
+		session.beginTransaction();
+		session.setCacheMode( CacheMode.IGNORE );
+		parent = ( Parent ) session.get( Parent.class, parent.getName() );
+		assertTrue( parent.getChildren().contains( child ) );
+		assertTrue( parent.getChildren().contains( otherChild ) );
+		session.getTransaction().commit();
+
+		session = openSession();
+		session.beginTransaction();
+		session.setCacheMode( CacheMode.IGNORE );
+
+		child = ( Child ) session.get( Child.class, child.getName() );
+		assertTrue( child.getParent().getChildren().contains( child ) );
+		session.clear();
+
+		child = ( Child ) session.createCriteria( Child.class, child.getName() )
+				.add( Restrictions.idEq( "c1" ) )
+				.uniqueResult();
+		assertTrue( child.getParent().getChildren().contains( child ) );
+		assertTrue( child.getParent().getChildren().contains( otherChild ) );
+		session.clear();
+
+		child = ( Child ) session.createQuery( "from Child where name = 'c1'" ).uniqueResult();
+		assertTrue( child.getParent().getChildren().contains( child ) );
+
+		session.delete( child.getParent() );
 		session.getTransaction().commit();
 		session.close();
 	}

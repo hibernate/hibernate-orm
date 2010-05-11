@@ -23,7 +23,7 @@
     <class name="Parent">
 		<id name="name" column="NAME" type="string" />
 
-        <set name="children" inverse="true" cascade="all">
+        <set name="children" inverse="true" cascade="all" lazy="false">
             <key column="PARENT" />
             <one-to-many class="Child" />
         </set>
@@ -31,7 +31,7 @@
 
     <class name="Child">
         <id name="name" column="NAME" type="string"/>
-        <many-to-one name="parent" class="Parent" cascade="none" />
+        <many-to-one name="parent" class="Parent" cascade="none" lazy="false" />
         <property name="description" type="string"/>
     </class>
 
@@ -40,7 +40,7 @@
             <generator class="increment"/>
         </id>
         <property name="name" column="NAME" type="string"/>
-        <set name="contents" table="CONTENTS">
+        <set name="contents" table="CONTENTS" lazy="false">
             <key column="CONTAINER_ID"/>
             <composite-element class="Container$Content">
                 <property name="name" column="NAME" type="string"/>

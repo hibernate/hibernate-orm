@@ -187,8 +187,12 @@ public class SequenceStyleGenerator implements PersistentIdentifierGenerator, Co
 				initialValue,
 				incrementSize
 		);
-
-		this.optimizer = OptimizerFactory.buildOptimizer( optimizationStrategy, identifierType.getReturnedClass(), incrementSize );
+		this.optimizer = OptimizerFactory.buildOptimizer(
+				optimizationStrategy,
+				identifierType.getReturnedClass(),
+				incrementSize,
+				PropertiesHelper.getInt( INITIAL_PARAM, params, -1 )
+		);
 		this.databaseStructure.prepare( optimizer );
 	}
 
@@ -305,7 +309,9 @@ public class SequenceStyleGenerator implements PersistentIdentifierGenerator, Co
 	 * @param forceTableUse Should a table be used even if the dialect supports sequences?
 	 * @param sequenceName The name to use for the sequence or table.
 	 * @param initialValue The initial value.
-	 * @param incrementSize the increment size to use (after any adjustments).       @return The db structure representation
+	 * @param incrementSize the increment size to use (after any adjustments).
+	 *
+	 * @return An abstraction for the actual database structure in use (table vs. sequence).
 	 */
 	protected DatabaseStructure buildDatabaseStructure(
 			Type type,

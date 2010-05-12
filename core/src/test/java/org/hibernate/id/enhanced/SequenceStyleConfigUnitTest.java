@@ -1,35 +1,40 @@
-package org.hibernate.test.idgen.enhanced;
+package org.hibernate.id.enhanced;
 
 import java.util.Properties;
 
+import junit.framework.Assert;
 import junit.framework.Test;
+import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
-import org.hibernate.junit.UnitTestCase;
-import org.hibernate.dialect.Dialect;
-import org.hibernate.id.enhanced.SequenceStyleGenerator;
-import org.hibernate.id.enhanced.SequenceStructure;
-import org.hibernate.id.enhanced.OptimizerFactory;
-import org.hibernate.id.enhanced.TableStructure;
-import org.hibernate.id.PersistentIdentifierGenerator;
 import org.hibernate.Hibernate;
 import org.hibernate.MappingException;
-import org.hibernate.cfg.ObjectNameNormalizer;
 import org.hibernate.cfg.NamingStrategy;
+import org.hibernate.cfg.ObjectNameNormalizer;
+import org.hibernate.dialect.Dialect;
+import org.hibernate.id.PersistentIdentifierGenerator;
 
 /**
  * Tests that SequenceStyleGenerator configures itself as expected
  * in various scenarios
  *
  * @author Steve Ebersole
+ * @noinspection deprecation
  */
-public class SequenceStyleConfigUnitTest extends UnitTestCase {
+public class SequenceStyleConfigUnitTest extends TestCase {
 	public SequenceStyleConfigUnitTest(String string) {
 		super( string );
 	}
 
 	public static Test suite() {
 		return new TestSuite( SequenceStyleConfigUnitTest.class );
+	}
+
+
+	private void assertClassAssignability(Class expected, Class actual) {
+		if ( ! expected.isAssignableFrom( actual ) ) {
+			fail( "Actual type [" + actual.getName() + "] is not assignable to expected type [" + expected.getName() + "]" );
+		}
 	}
 
 	/**
@@ -43,7 +48,7 @@ public class SequenceStyleConfigUnitTest extends UnitTestCase {
 
 		assertClassAssignability( SequenceStructure.class, generator.getDatabaseStructure().getClass() );
 		assertClassAssignability( OptimizerFactory.NoopOptimizer.class, generator.getOptimizer().getClass() );
-		assertEquals( SequenceStyleGenerator.DEF_SEQUENCE_NAME, generator.getDatabaseStructure().getName() );
+		Assert.assertEquals( SequenceStyleGenerator.DEF_SEQUENCE_NAME, generator.getDatabaseStructure().getName() );
 	}
 
 	private Properties buildGeneratorPropertiesBase() {
@@ -74,7 +79,7 @@ public class SequenceStyleConfigUnitTest extends UnitTestCase {
 
 		assertClassAssignability( TableStructure.class, generator.getDatabaseStructure().getClass() );
 		assertClassAssignability( OptimizerFactory.NoopOptimizer.class, generator.getOptimizer().getClass() );
-		assertEquals( SequenceStyleGenerator.DEF_SEQUENCE_NAME, generator.getDatabaseStructure().getName() );
+		Assert.assertEquals( SequenceStyleGenerator.DEF_SEQUENCE_NAME, generator.getDatabaseStructure().getName() );
 	}
 
 	/**
@@ -92,7 +97,7 @@ public class SequenceStyleConfigUnitTest extends UnitTestCase {
 		generator.configure( Hibernate.LONG, props, dialect );
 		assertClassAssignability( TableStructure.class, generator.getDatabaseStructure().getClass() );
 		assertClassAssignability( OptimizerFactory.PooledOptimizer.class, generator.getOptimizer().getClass() );
-		assertEquals( SequenceStyleGenerator.DEF_SEQUENCE_NAME, generator.getDatabaseStructure().getName() );
+		Assert.assertEquals( SequenceStyleGenerator.DEF_SEQUENCE_NAME, generator.getDatabaseStructure().getName() );
 
 		// for dialects which do support pooled sequences, we default to pooled+sequence
 		dialect = new PooledSequenceDialect();
@@ -100,7 +105,7 @@ public class SequenceStyleConfigUnitTest extends UnitTestCase {
 		generator.configure( Hibernate.LONG, props, dialect );
 		assertClassAssignability( SequenceStructure.class, generator.getDatabaseStructure().getClass() );
 		assertClassAssignability( OptimizerFactory.PooledOptimizer.class, generator.getOptimizer().getClass() );
-		assertEquals( SequenceStyleGenerator.DEF_SEQUENCE_NAME, generator.getDatabaseStructure().getName() );
+		Assert.assertEquals( SequenceStyleGenerator.DEF_SEQUENCE_NAME, generator.getDatabaseStructure().getName() );
 	}
 
 	/**
@@ -116,7 +121,7 @@ public class SequenceStyleConfigUnitTest extends UnitTestCase {
 		generator.configure( Hibernate.LONG, props, dialect );
 		assertClassAssignability( TableStructure.class, generator.getDatabaseStructure().getClass() );
 		assertClassAssignability( OptimizerFactory.PooledOptimizer.class, generator.getOptimizer().getClass() );
-		assertEquals( SequenceStyleGenerator.DEF_SEQUENCE_NAME, generator.getDatabaseStructure().getName() );
+		Assert.assertEquals( SequenceStyleGenerator.DEF_SEQUENCE_NAME, generator.getDatabaseStructure().getName() );
 	}
 
 	/**
@@ -130,7 +135,7 @@ public class SequenceStyleConfigUnitTest extends UnitTestCase {
 		generator.configure( Hibernate.LONG, props, dialect );
 		assertClassAssignability( TableStructure.class, generator.getDatabaseStructure().getClass() );
 		assertClassAssignability( OptimizerFactory.NoopOptimizer.class, generator.getOptimizer().getClass() );
-		assertEquals( SequenceStyleGenerator.DEF_SEQUENCE_NAME, generator.getDatabaseStructure().getName() );
+		Assert.assertEquals( SequenceStyleGenerator.DEF_SEQUENCE_NAME, generator.getDatabaseStructure().getName() );
 	}
 
 	/**
@@ -148,8 +153,8 @@ public class SequenceStyleConfigUnitTest extends UnitTestCase {
 		generator.configure( Hibernate.LONG, props, dialect );
 		assertClassAssignability( SequenceStructure.class, generator.getDatabaseStructure().getClass() );
 		assertClassAssignability( OptimizerFactory.NoopOptimizer.class, generator.getOptimizer().getClass() );
-		assertEquals( 1, generator.getOptimizer().getIncrementSize() );
-		assertEquals( 1, generator.getDatabaseStructure().getIncrementSize() );
+		Assert.assertEquals( 1, generator.getOptimizer().getIncrementSize() );
+		Assert.assertEquals( 1, generator.getDatabaseStructure().getIncrementSize() );
 
 		// optimizer=hilo w/ increment > 1 => hilo
 		props = buildGeneratorPropertiesBase();
@@ -159,8 +164,8 @@ public class SequenceStyleConfigUnitTest extends UnitTestCase {
 		generator.configure( Hibernate.LONG, props, dialect );
 		assertClassAssignability( SequenceStructure.class, generator.getDatabaseStructure().getClass() );
 		assertClassAssignability( OptimizerFactory.HiLoOptimizer.class, generator.getOptimizer().getClass() );
-		assertEquals( 20, generator.getOptimizer().getIncrementSize() );
-		assertEquals( 20, generator.getDatabaseStructure().getIncrementSize() );
+		Assert.assertEquals( 20, generator.getOptimizer().getIncrementSize() );
+		Assert.assertEquals( 20, generator.getDatabaseStructure().getIncrementSize() );
 
 		// optimizer=pooled w/ increment > 1 => hilo
 		props = buildGeneratorPropertiesBase();
@@ -172,8 +177,8 @@ public class SequenceStyleConfigUnitTest extends UnitTestCase {
 		// use a table for the backing structure...
 		assertClassAssignability( TableStructure.class, generator.getDatabaseStructure().getClass() );
 		assertClassAssignability( OptimizerFactory.PooledOptimizer.class, generator.getOptimizer().getClass() );
-		assertEquals( 20, generator.getOptimizer().getIncrementSize() );
-		assertEquals( 20, generator.getDatabaseStructure().getIncrementSize() );
+		Assert.assertEquals( 20, generator.getOptimizer().getIncrementSize() );
+		Assert.assertEquals( 20, generator.getDatabaseStructure().getIncrementSize() );
 
 	}
 

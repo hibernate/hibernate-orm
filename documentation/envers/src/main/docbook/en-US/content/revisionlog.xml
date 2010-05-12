@@ -40,6 +40,10 @@
     </para>
 
     <para>
+        Please note that the revision entity must be a mapped Hibernate entity.
+    </para>
+
+    <para>
         This entity must have at least two properties:
     </para>
 

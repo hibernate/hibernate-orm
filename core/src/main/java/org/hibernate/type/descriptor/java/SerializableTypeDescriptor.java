@@ -37,18 +37,33 @@ import org.hibernate.util.SerializationHelper;
  * @author Steve Ebersole
  */
 public class SerializableTypeDescriptor<T extends Serializable> extends AbstractTypeDescriptor<T> {
+
 	// unfortunately the param types cannot be the same so use something other than 'T' here to make that obvious
 	public static class SerializableMutabilityPlan<S extends Serializable> extends MutableMutabilityPlan<S> {
-		public static final SerializableMutabilityPlan INSTANCE = new SerializableMutabilityPlan();
+		private final Class<S> type;
+
+		public static final SerializableMutabilityPlan<Serializable> INSTANCE
+				= new SerializableMutabilityPlan<Serializable>( Serializable.class );
+
+		public SerializableMutabilityPlan(Class<S> type) {
+			this.type = type;
+		}
+
 		@SuppressWarnings({ "unchecked" })
 		public S deepCopyNotNull(S value) {
 			return (S) SerializationHelper.clone( value );
 		}
+
 	}
 
 	@SuppressWarnings({ "unchecked" })
 	public SerializableTypeDescriptor(Class<T> type) {
-		super( type, SerializableMutabilityPlan.INSTANCE );
+		super(
+				type,
+				Serializable.class.equals( type )
+						? (MutabilityPlan<T>) SerializableMutabilityPlan.INSTANCE
+						: new SerializableMutabilityPlan<T>( type )
+		);
 	}
 
 	public String toString(T value) {

@@ -6,6 +6,53 @@ refer to the particular case on JIRA using the issue tracking number to learn
 more about each case.
 
 
+Changes in version 3.5.2 (2010.05.12)
+-------------------------------------------
+http://opensource.atlassian.com/projects/hibernate/browse/HHH/fixforversion/11040
+
+** Bug
+    * [HHH-3096] - COUNT DISTINCT operator with idenfication variable w/ composite primary key produces bad sql
+    * [HHH-3377] - Update H2Dialect to use DECIMAL SQL type instead of NUMERIC
+    * [HHH-3478] - StandardQueryCache.get() does not handle EntityNotFoundException for natural key lookups
+    * [HHH-4290] - Projection of composite key causes invalid SQL
+    * [HHH-4773] - @CollectionId does not force the id column to not-null
+    * [HHH-4952] - jDocBook injections no longer working on core reference manual
+    * [HHH-4957] - Criteria Projections.countDistinct() function broken
+    * [HHH-4966] - Entity Manager bug with ParameterExpressionImpl
+    * [HHH-4991] - ManyToMany table not joined due to max_fetch_depth parameter, results to SQL exceptions
+    * [HHH-5006] - hibernate.globally_quoted_identifiers=true and Annotations tests
+    * [HHH-5032] - Setting LockModeType.OPTIMISTIC_FORCE_INCREMENT defaults to only OPTIMISTIC
+    * [HHH-5042] - TableGenerator does not increment hibernate_sequences.next_hi_value anymore after having exhausted the current lo-range
+    * [HHH-5063] - Projections that have aliases same as the property name result in invalid sql
+    * [HHH-5069] - Fix annotation documentation wrt setup
+    * [HHH-5125] - The annotations @Entity and @MappedSuperclass used in one class produce a nullpointerexception
+    * [HHH-5131] - SchemaExport drop fails if constraint names change
+    * [HHH-5135] - "Ambiguous column" exception thrown with columns having the same name as a function registered with the dialect (e.g. to_date, floor)
+    * [HHH-5140] - quoted column doesn't be quoted in sub-query
+    * [HHH-5173] - hql - average returns double but looses the decimal part
+    * [HHH-5178] - Unit tests in org.hibernate.test.immutable fail on mssql and sybase due to keyword used for table and column name
+    * [HHH-5191] - CollectionMetadataGenerator fails to obtain mappedBy attribute when is defined on superclasses
+    * [HHH-5207] - Unexpected exception occurs during refresh of a transient immutable business object.
+    * [HHH-5208] - Oracle 11g R2 RAC - Test SequenceIdentityTest fails because first value of sequence is "2"
+    * [HHH-5210] - Query Cache effective only after closing the session that created the cache
+    * [HHH-5211] - no need to create a schema first when run this test org.hibernate.test.sql.hand.custom.db2.DB2CustomSQLTest
+
+** Improvement
+    * [HHH-5144] - Dont restrict on jdk5 in hibernate core development
+    * [HHH-5217] - Minimize double sequence value reads in PooledOptimizer
+    * [HHH-5218] - Provide a new "pooled value" based optimizer which interprets the database value as the low boundary instead of upper boundary
+
+** Patch
+    * [HHH-1574] - AbstractEntityPersister.getNaturalIdentifierSnapshot doesn't work with many-to-one ids (Alex Burgel)
+    * [HHH-5064] - OrderBy string getting dumped to console on session factory creation (Shawn Clowater)
+    * [HHH-5078] - JPA criteria query numeric expressions produce wrong result (due to wrong bracketing)
+
+** Task
+    * [HHH-5145] - Update pom to use the new distributationManagement information
+    * [HHH-5186] - update db profiles id and jdbc properties' name to use dballocator
+    * [HHH-5196] - Deprecate Type methods on org.hibernate.Hibernate
+
+
 Changes in version 3.5.1 (2010.04.14)
 -------------------------------------------
 http://opensource.atlassian.com/projects/hibernate/browse/HHH/fixforversion/11021

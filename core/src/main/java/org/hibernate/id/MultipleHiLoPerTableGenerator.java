@@ -279,6 +279,8 @@ public class MultipleHiLoPerTableGenerator
 		maxLo = PropertiesHelper.getInt(MAX_LO, params, Short.MAX_VALUE);
 		returnClass = type.getReturnedClass();
 
-		hiloOptimizer = new OptimizerFactory.LegacyHiLoAlgorithmOptimizer( returnClass, maxLo );
+		if ( maxLo >= 1 ) {
+			hiloOptimizer = new OptimizerFactory.LegacyHiLoAlgorithmOptimizer( returnClass, maxLo );
+		}
 	}
 }

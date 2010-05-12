@@ -1,4 +1,6 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
     <modelVersion>4.0.0</modelVersion>
 
@@ -89,6 +91,27 @@
         </resources>
 
         <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-enforcer-plugin</artifactId>
+                <version>1.0-beta-1</version>
+                <executions>
+                    <execution>
+                        <id>enforce-java</id>
+                        <goals>
+                            <goal>enforce</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <rules>
+                        <requireJavaVersion>
+                            <!-- require JDK 1.6 to run the build -->
+                            <version>[1.6,)</version>
+                        </requireJavaVersion>
+                    </rules>
+                </configuration>
+            </plugin>
             <plugin>
                 <groupId>org.jboss.maven.plugins</groupId>
                 <artifactId>maven-injection-plugin</artifactId>
@@ -202,7 +225,7 @@
                 <configuration>
                     <archive>
                         <manifestEntries>
-	                        <Created-By>${java.version} (${java.vendor})</Created-By>
+                            <Created-By>${java.version} (${java.vendor})</Created-By>
                             <Implementation-Title>${pom.name}</Implementation-Title>
                             <Implementation-URL>http://www.jboss.org/</Implementation-URL>
                             <Implementation-Version>${pom.version}</Implementation-Version>
@@ -243,7 +266,9 @@
                     <autoVersionSubmodules>true</autoVersionSubmodules>
                     <allowTimestampedSnapshots>true</allowTimestampedSnapshots>
                     <remoteTagging>true</remoteTagging>
-                    <goals>package deploy javadoc:javadoc org.jboss.maven.plugins:maven-jdocbook-plugin:2.2.1:resources org.jboss.maven.plugins:maven-jdocbook-plugin:2.2.1:generate assembly:assembly</goals>
+                    <goals>package deploy javadoc:javadoc org.jboss.maven.plugins:maven-jdocbook-plugin:2.2.1:resources
+                        org.jboss.maven.plugins:maven-jdocbook-plugin:2.2.1:generate assembly:assembly
+                    </goals>
                 </configuration>
             </plugin>
             <plugin>

@@ -35,6 +35,7 @@ import javax.lang.model.type.ExecutableType;
 import javax.lang.model.type.PrimitiveType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
+import javax.lang.model.type.TypeVariable;
 import javax.lang.model.util.ElementFilter;
 import javax.lang.model.util.SimpleTypeVisitor6;
 import javax.persistence.AccessType;
@@ -213,6 +214,15 @@ public class AnnotationMetaEntity implements MetaEntity {
 //			}
 //			return attribute;
 			return new AnnotationMetaSingleAttribute( parent, element, TypeUtils.toTypeString( t ) );
+		}
+
+		public AnnotationMetaAttribute visitTypeVariable(TypeVariable t, Element element) {
+			// METAGEN-29 - for a type variable we use the upper bound
+			TypeMirror mirror = t.getUpperBound();
+			TypeMirror erasedType = context.getTypeUtils().erasure( mirror );
+			return new AnnotationMetaSingleAttribute(
+					parent, element, erasedType.toString()
+			);
 		}
 
 		@Override

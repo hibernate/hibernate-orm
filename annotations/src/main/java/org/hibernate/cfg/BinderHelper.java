@@ -434,9 +434,7 @@ public class BinderHelper {
 	 * Find the column owner (ie PersistentClass or Join) of columnName.
 	 * If columnName is null or empty, persistentClass is returned
 	 */
-	public static Object findColumnOwner(
-			PersistentClass persistentClass, String columnName, ExtendedMappings mappings
-	) {
+	public static Object findColumnOwner(PersistentClass persistentClass, String columnName, ExtendedMappings mappings) {
 		if ( StringHelper.isEmpty( columnName ) ) {
 			return persistentClass; //shortcut for implicit referenced column names
 		}
@@ -475,9 +473,11 @@ public class BinderHelper {
 	 * apply an id generator to a SimpleValue
 	 */
 	public static void makeIdGenerator(
-			SimpleValue id, String generatorType, String generatorName, ExtendedMappings mappings,
-			Map<String, IdGenerator> localGenerators
-	) {
+			SimpleValue id,
+			String generatorType,
+			String generatorName,
+			ExtendedMappings mappings,
+			Map<String, IdGenerator> localGenerators) {
 		Table table = id.getTable();
 		table.setIdentifierValue( id );
 		//generator settings
@@ -520,7 +520,16 @@ public class BinderHelper {
 				params.setProperty( (String) elt.getKey(), (String) elt.getValue() );
 			}
 		}
-		if ( "assigned".equals( generatorType ) ) id.setNullValue( "undefined" );
+
+		if ( "assigned".equals( generatorType ) ) {
+			id.setNullValue( "undefined" );
+		}
+
+		final String pooledOptPreference = mappings.getConfigurationProperties().getProperty( Environment.PREFER_POOLED_VALUES_LO );
+		if ( pooledOptPreference != null ) {
+			params.setProperty( Environment.PREFER_POOLED_VALUES_LO, pooledOptPreference );
+		}
+
 		id.setIdentifierGeneratorProperties( params );
 	}
 

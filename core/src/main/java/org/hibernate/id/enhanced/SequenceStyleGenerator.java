@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,7 +20,6 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.id.enhanced;
 
@@ -30,6 +29,7 @@ import java.io.Serializable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.hibernate.cfg.Environment;
 import org.hibernate.id.PersistentIdentifierGenerator;
 import org.hibernate.id.Configurable;
 import org.hibernate.HibernateException;
@@ -280,8 +280,13 @@ public class SequenceStyleGenerator implements PersistentIdentifierGenerator, Co
 	 * @return The optimizer strategy (name)
 	 */
 	protected String determineOptimizationStrategy(Properties params, int incrementSize) {
-		String defOptStrategy = incrementSize <= 1 ? OptimizerFactory.NONE : OptimizerFactory.POOL;
-		return PropertiesHelper.getString( OPT_PARAM, params, defOptStrategy );
+		// if the increment size is greater than one, we prefer pooled optimization; but we
+		// need to see if the user prefers POOL or POOL_LO...
+		String defaultPooledOptimizerStrategy = PropertiesHelper.getBoolean( Environment.PREFER_POOLED_VALUES_LO, params, false )
+				? OptimizerFactory.POOL_LO
+				: OptimizerFactory.POOL;
+		String defaultOptimizerStrategy = incrementSize <= 1 ? OptimizerFactory.NONE : defaultPooledOptimizerStrategy;
+		return PropertiesHelper.getString( OPT_PARAM, params, defaultOptimizerStrategy );
 	}
 
 	/**

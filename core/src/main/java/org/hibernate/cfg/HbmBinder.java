@@ -2091,6 +2091,11 @@ public final class HbmBinder {
 				params.setProperty( childNode.attributeValue( "name" ), childNode.getTextTrim() );
 			}
 
+			final String pooledOptPreference = mappings.getConfigurationProperties().getProperty( Environment.PREFER_POOLED_VALUES_LO );
+			if ( pooledOptPreference != null ) {
+				params.setProperty( Environment.PREFER_POOLED_VALUES_LO, pooledOptPreference );
+			}
+
 			model.setIdentifierGeneratorProperties( params );
 		}
 

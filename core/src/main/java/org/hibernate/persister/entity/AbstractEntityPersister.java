@@ -4084,8 +4084,13 @@ public abstract class AbstractEntityPersister
 						return null;
 					}
 
+					final EntityKey key = new EntityKey( id, this, session.getEntityMode() );
+					Object owner = session.getPersistenceContext().getEntity( key );
 					for ( int i = 0; i < naturalIdPropertyCount; i++ ) {
 						snapshot[i] = extractionTypes[i].hydrate( rs, getPropertyAliases( "", naturalIdPropertyIndexes[i] ), session, null );
+						if (extractionTypes[i].isEntityType()) {
+							snapshot[i] = extractionTypes[i].resolve(snapshot[i], session, owner);
+						}
 					}
 					return snapshot;
 				}

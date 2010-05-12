@@ -21,6 +21,8 @@ import org.testng.annotations.Test;
 
 import org.hibernate.jpamodelgen.test.util.CompilationTest;
 
+import static org.hibernate.jpamodelgen.test.util.TestUtil.assertAttributeTypeInMetaModelFor;
+import static org.hibernate.jpamodelgen.test.util.TestUtil.assertPresenceOfFieldInMetamodelFor;
 import static org.hibernate.jpamodelgen.test.util.TestUtil.assertSuperClassRelationShipInMetamodel;
 
 /**
@@ -29,14 +31,22 @@ import static org.hibernate.jpamodelgen.test.util.TestUtil.assertSuperClassRelat
  */
 public class InheritanceTest extends CompilationTest {
 	@Test
-	public void testSuperEntity() throws Exception {
-		assertSuperClassRelationShipInMetamodel( Customer.class, User.class );
-	}
+	public void testInheritance() throws Exception {
 
-	@Test
-	public void testMappedSuperclass() throws Exception {
+		// entity inheritance
+		assertSuperClassRelationShipInMetamodel( Customer.class, User.class );
+
+
+		// mapped super class
 		assertSuperClassRelationShipInMetamodel( House.class, Building.class );
 		assertSuperClassRelationShipInMetamodel( Building.class, Area.class );
+
+		// METAGEN-29
+		assertSuperClassRelationShipInMetamodel( Person.class, AbstractEntity.class );
+		assertPresenceOfFieldInMetamodelFor( AbstractEntity.class, "foo", "Property should exist - METAGEN-29" );
+		assertAttributeTypeInMetaModelFor(
+				AbstractEntity.class, "foo", Object.class, "Object is the upper bound of foo "
+		);
 	}
 
 	@Override

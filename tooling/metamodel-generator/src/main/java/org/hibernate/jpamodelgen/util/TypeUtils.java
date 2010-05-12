@@ -206,7 +206,7 @@ public class TypeUtils {
 		if ( accessTypeInfo != null && accessTypeInfo.isAccessTypeResolved() ) {
 			context.logMessage(
 					Diagnostic.Kind.OTHER,
-					"AccessType for " + searchedElement.toString() + "found in cache: " + accessTypeInfo
+					"AccessType for " + searchedElement.toString() + " found in cache: " + accessTypeInfo
 			);
 			return;
 		}

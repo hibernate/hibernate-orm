@@ -1,21 +1,42 @@
-package org.hibernate.test.idgen.enhanced;
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Inc.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ */
+package org.hibernate.id.enhanced;
 
 import junit.framework.Test;
+import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
 import org.hibernate.id.IdentifierGeneratorHelper;
 import org.hibernate.id.IntegralDataTypeHolder;
-import org.hibernate.junit.UnitTestCase;
-import org.hibernate.id.enhanced.Optimizer;
-import org.hibernate.id.enhanced.OptimizerFactory;
-import org.hibernate.id.enhanced.AccessCallback;
 
 /**
  * {@inheritDoc}
  *
  * @author Steve Ebersole
  */
-public class OptimizerUnitTest extends UnitTestCase {
+@SuppressWarnings({ "deprecation" })
+public class OptimizerUnitTest extends TestCase {
 	public OptimizerUnitTest(String string) {
 		super( string );
 	}
@@ -99,8 +120,41 @@ public class OptimizerUnitTest extends UnitTestCase {
 		assertEquals( 21, sequence.getCurrentValue() );
 	}
 
+	public void testSubsequentPooledOptimizerUsage() {
+		// test the pooled optimizer in situation where the sequence is already beyond its initial value on init.
+		//		cheat by telling the sequence to start with 1000
+		final SourceMock sequence = new SourceMock( 1000, 3, 5 );
+		//		but tell the optimizer the start-with is 1
+		final Optimizer optimizer = OptimizerFactory.buildOptimizer( OptimizerFactory.POOL, Long.class, 3, 1 );
+
+		assertEquals( 5, sequence.getTimesCalled() );
+		assertEquals( 1000, sequence.getCurrentValue() );
+
+		Long next = (Long) optimizer.generate( sequence );
+		assertEquals( 1000, next.intValue() );
+		assertEquals( (5+1), sequence.getTimesCalled() );
+		assertEquals( (1000+3), sequence.getCurrentValue() );
+
+		next = (Long) optimizer.generate( sequence );
+		assertEquals( 1001, next.intValue() );
+		assertEquals( (5+1), sequence.getTimesCalled() );
+		assertEquals( (1000+3), sequence.getCurrentValue() );
+
+		next = (Long) optimizer.generate( sequence );
+		assertEquals( 1002, next.intValue() );
+		assertEquals( (5+1), sequence.getTimesCalled() );
+		assertEquals( (1000+3), sequence.getCurrentValue() );
+
+		// force a "clock over"
+		next = (Long) optimizer.generate( sequence );
+		assertEquals( 1003, next.intValue() );
+		assertEquals( (5+2), sequence.getTimesCalled() );
+		assertEquals( (1000+6), sequence.getCurrentValue() );
+	}
+
 	private static class SourceMock implements AccessCallback {
 		private IdentifierGeneratorHelper.BasicHolder value = new IdentifierGeneratorHelper.BasicHolder( Long.class );
+		private long initialValue;
 		private int increment;
 		private int timesCalled = 0;
 
@@ -109,13 +163,38 @@ public class OptimizerUnitTest extends UnitTestCase {
 		}
 
 		public SourceMock(long initialValue, int increment) {
+			this( initialValue, increment, 0 );
+		}
+
+		public SourceMock(long initialValue, int increment, int timesCalled) {
 			this.increment = increment;
-			this.value.initialize( initialValue - increment );
+			this.timesCalled = timesCalled;
+			if ( timesCalled != 0 ) {
+				this.value.initialize( initialValue );
+				this.initialValue = 1;
+			}
+			else {
+				this.initialValue = initialValue;
+			}
 		}
 
 		public IntegralDataTypeHolder getNextValue() {
-			timesCalled++;
-			return value.add( increment ).copy();
+			try {
+				if ( timesCalled == 0 ) {
+					initValue();
+					return value.copy();
+				}
+				else {
+					return value.add( increment ).copy();
+				}
+			}
+			finally {
+				timesCalled++;
+			}
+		}
+
+		private void initValue() {
+			this.value.initialize( initialValue );
 		}
 
 		public int getTimesCalled() {
@@ -123,7 +202,7 @@ public class OptimizerUnitTest extends UnitTestCase {
 		}
 
 		public long getCurrentValue() {
-			return value.getActualLongValue();
+			return value == null ? -1 : value.getActualLongValue();
 		}
 	}
 

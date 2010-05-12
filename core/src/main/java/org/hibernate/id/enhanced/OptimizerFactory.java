@@ -44,10 +44,40 @@ public class OptimizerFactory {
 
 	public static final String NONE = "none";
 	public static final String HILO = "hilo";
+	public static final String LEGACY_HILO = "legacy-hilo";
 	public static final String POOL = "pooled";
 
 	private static Class[] CTOR_SIG = new Class[] { Class.class, int.class };
 
+	/**
+	 * Marker interface for optimizer which wish to know the user-specified initial value.
+	 * <p/>
+	 * Used instead of constructor injection since that is already a public understanding and
+	 * because not all optimizers care.
+	 */
+	public static interface InitialValueAwareOptimizer {
+		/**
+		 * Reports the user specified initial value to the optimizer.
+		 * <p/>
+		 * <tt>-1</tt> is used to indicate that the user did not specify.
+		 *
+		 * @param initialValue The initial value specified by the user, or <tt>-1</tt> to indicate that the
+		 * user did not specify.
+		 */
+		public void injectInitialValue(long initialValue);
+	}
+
+	/**
+	 * Builds an optimizer
+	 *
+	 * @param type The optimizer type, either a short-hand name or the {@link Optimizer} class name.
+	 * @param returnClass The generated value java type
+	 * @param incrementSize The increment size.
+	 *
+	 * @return The built optimizer
+	 *
+	 * @deprecated Use {@link #buildOptimizer(String, Class, int, long)} instead
+	 */
 	@SuppressWarnings({ "UnnecessaryBoxing" })
 	public static Optimizer buildOptimizer(String type, Class returnClass, int incrementSize) {
 		String optimizerClassName;
@@ -56,6 +86,9 @@ public class OptimizerFactory {
 		}
 		else if ( HILO.equals( type ) ) {
 			optimizerClassName = HiLoOptimizer.class.getName();
+		}
+		else if ( LEGACY_HILO.equals( type ) ) {
+			optimizerClassName = LegacyHiLoAlgorithmOptimizer.class.getName();
 		}
 		else if ( POOL.equals( type ) ) {
 			optimizerClassName = PooledOptimizer.class.getName();
@@ -70,11 +103,31 @@ public class OptimizerFactory {
 			return ( Optimizer ) ctor.newInstance( returnClass, Integer.valueOf( incrementSize ) );
 		}
 		catch( Throwable ignore ) {
-			// intentionally empty
+			log.warn( "Unable to instantiate specified optimizer [{}], falling back to noop", type );
 		}
 
 		// the default...
 		return new NoopOptimizer( returnClass, incrementSize );
+	}
+
+
+	/**
+	 * Builds an optimizer
+	 *
+	 * @param type The optimizer type, either a short-hand name or the {@link Optimizer} class name.
+	 * @param returnClass The generated value java type
+	 * @param incrementSize The increment size.
+	 * @param explicitInitialValue The user supplied initial-value (-1 indicates the user did not specify).
+	 *
+	 * @return The built optimizer
+	 */
+	@SuppressWarnings({ "UnnecessaryBoxing", "deprecation" })
+	public static Optimizer buildOptimizer(String type, Class returnClass, int incrementSize, long explicitInitialValue) {
+		final Optimizer optimizer = buildOptimizer( type, returnClass, incrementSize );
+		if ( InitialValueAwareOptimizer.class.isInstance( optimizer ) ) {
+			( (InitialValueAwareOptimizer) optimizer ).injectInitialValue( explicitInitialValue );
+		}
+		return optimizer;
 	}
 
 	/**
@@ -335,9 +388,10 @@ public class OptimizerFactory {
 	 * {@link HiLoOptimizer} except that here the bucket ranges are actually
 	 * encoded into the database structures.
 	 */
-	public static class PooledOptimizer extends OptimizerSupport {
+	public static class PooledOptimizer extends OptimizerSupport implements InitialValueAwareOptimizer {
 		private IntegralDataTypeHolder hiValue;
 		private IntegralDataTypeHolder value;
+		private long initialValue = -1;
 
 		public PooledOptimizer(Class returnClass, int incrementSize) {
 			super( returnClass, incrementSize );
@@ -362,7 +416,14 @@ public class OptimizerFactory {
 					// we are using a sequence...
 					log.info( "pooled optimizer source reported [" + value + "] as the initial value; use of 1 or greater highly recommended" );
 				}
-				hiValue = callback.getNextValue();
+				if ( ( initialValue == -1 && value.lt( incrementSize ) ) || value.eq( initialValue ) ) {
+					// the call to obtain next-value just gave us the initialValue
+					hiValue = callback.getNextValue();
+				}
+				else {
+					hiValue = value;
+					value = hiValue.copy().subtract( incrementSize );
+				}
 			}
 			else if ( ! hiValue.gt( value ) ) {
 				hiValue = callback.getNextValue();
@@ -394,6 +455,13 @@ public class OptimizerFactory {
 		 */
 		public IntegralDataTypeHolder getLastValue() {
 			return value.copy().decrement();
+		}
+
+		/**
+		 * {@inheritDoc}
+		 */
+		public void injectInitialValue(long initialValue) {
+			this.initialValue = initialValue;
 		}
 	}
 }

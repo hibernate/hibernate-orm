@@ -303,9 +303,14 @@ public class TableGenerator extends TransactionHelper implements PersistentIdent
 		this.updateQuery = buildUpdateQuery();
 		this.insertQuery = buildInsertQuery();
 
-		String defOptStrategy = incrementSize <= 1 ? OptimizerFactory.NONE : OptimizerFactory.POOL;
-		String optimizationStrategy = PropertiesHelper.getString( OPT_PARAM, params, defOptStrategy );
-		optimizer = OptimizerFactory.buildOptimizer( optimizationStrategy, identifierType.getReturnedClass(), incrementSize );
+		final String defOptStrategy = incrementSize <= 1 ? OptimizerFactory.NONE : OptimizerFactory.POOL;
+		final String optimizationStrategy = PropertiesHelper.getString( OPT_PARAM, params, defOptStrategy );
+		optimizer = OptimizerFactory.buildOptimizer(
+				optimizationStrategy,
+				identifierType.getReturnedClass(),
+				incrementSize,
+				PropertiesHelper.getInt( INITIAL_PARAM, params, -1 )
+		);
 	}
 
 	/**
@@ -430,8 +435,8 @@ public class TableGenerator extends TransactionHelper implements PersistentIdent
 		String query = "select " + StringHelper.qualify( alias, valueColumnName ) +
 				" from " + tableName + ' ' + alias +
 				" where " + StringHelper.qualify( alias, segmentColumnName ) + "=?";
-		LockOptions lockOptions = new LockOptions(LockMode.UPGRADE);
-		lockOptions.setAliasSpecificLockMode( alias, LockMode.UPGRADE );
+		LockOptions lockOptions = new LockOptions( LockMode.PESSIMISTIC_WRITE );
+		lockOptions.setAliasSpecificLockMode( alias, LockMode.PESSIMISTIC_WRITE );
 		Map updateTargetColumnsMap = Collections.singletonMap( alias, new String[] { valueColumnName } );
 		return dialect.applyLocksToSql( query, lockOptions, updateTargetColumnsMap );
 	}

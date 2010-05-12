@@ -1,16 +1,12 @@
-package org.hibernate.test.idgen.enhanced;
+package org.hibernate.id.enhanced;
 
 import java.util.Properties;
 
 import junit.framework.Test;
+import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
-import org.hibernate.junit.UnitTestCase;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.id.enhanced.SequenceStyleGenerator;
-import org.hibernate.id.enhanced.SequenceStructure;
-import org.hibernate.id.enhanced.OptimizerFactory;
-import org.hibernate.id.enhanced.TableStructure;
 import org.hibernate.id.PersistentIdentifierGenerator;
 import org.hibernate.Hibernate;
 import org.hibernate.MappingException;
@@ -23,7 +19,8 @@ import org.hibernate.cfg.NamingStrategy;
  *
  * @author Steve Ebersole
  */
-public class SequenceStyleConfigUnitTest extends UnitTestCase {
+@SuppressWarnings({ "deprecation" })
+public class SequenceStyleConfigUnitTest extends TestCase {
 	public SequenceStyleConfigUnitTest(String string) {
 		super( string );
 	}
@@ -31,6 +28,13 @@ public class SequenceStyleConfigUnitTest extends UnitTestCase {
 	public static Test suite() {
 		return new TestSuite( SequenceStyleConfigUnitTest.class );
 	}
+
+	private void assertClassAssignability(Class expected, Class actual) {
+		if ( ! expected.isAssignableFrom( actual ) ) {
+			fail( "Actual type [" + actual.getName() + "] is not assignable to expected type [" + expected.getName() + "]" );
+		}
+	}
+
 
 	/**
 	 * Test all params defaulted with a dialect supporting sequences

@@ -226,11 +226,12 @@ public class TypeTest extends TestCase {
 		}
 	}
 	public void testSerializableType() {
-		final Serializable original = new SerializableImpl(1);
-		final Serializable copy = new SerializableImpl(1);
-		final Serializable different = new SerializableImpl(2);
+		final SerializableImpl original = new SerializableImpl(1);
+		final SerializableImpl copy = new SerializableImpl(1);
+		final SerializableImpl different = new SerializableImpl(2);
 
 		runBasicTests( SerializableType.INSTANCE, original, copy, different );
+		runBasicTests( new SerializableType<SerializableImpl>( SerializableImpl.class ), original, copy, different );
 	}
 
 	public void testShortType() {

@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,7 +20,6 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.id.enhanced;
 
@@ -46,6 +45,7 @@ public class OptimizerFactory {
 	public static final String HILO = "hilo";
 	public static final String LEGACY_HILO = "legacy-hilo";
 	public static final String POOL = "pooled";
+	public static final String POOL_LO = "pooled-lo";
 
 	private static Class[] CTOR_SIG = new Class[] { Class.class, int.class };
 
@@ -92,6 +92,9 @@ public class OptimizerFactory {
 		}
 		else if ( POOL.equals( type ) ) {
 			optimizerClassName = PooledOptimizer.class.getName();
+		}
+		else if ( POOL_LO.equals( type ) ) {
+			optimizerClassName = PooledLoOptimizer.class.getName();
 		}
 		else {
 			optimizerClassName = type;
@@ -387,6 +390,9 @@ public class OptimizerFactory {
 	 * Note that this optimizer works essentially the same as the
 	 * {@link HiLoOptimizer} except that here the bucket ranges are actually
 	 * encoded into the database structures.
+	 * <p/>
+	 * Note if you prefer that the database value be interpreted as the bottom end of our current range,
+	 * then use the {@link PooledLoOptimizer} strategy
 	 */
 	public static class PooledOptimizer extends OptimizerSupport implements InitialValueAwareOptimizer {
 		private IntegralDataTypeHolder hiValue;
@@ -462,6 +468,41 @@ public class OptimizerFactory {
 		 */
 		public void injectInitialValue(long initialValue) {
 			this.initialValue = initialValue;
+		}
+	}
+
+	public static class PooledLoOptimizer extends OptimizerSupport {
+		private IntegralDataTypeHolder lastSourceValue; // last value read from db source
+		private IntegralDataTypeHolder value; // the current generator value
+
+		public PooledLoOptimizer(Class returnClass, int incrementSize) {
+			super( returnClass, incrementSize );
+			if ( incrementSize < 1 ) {
+				throw new HibernateException( "increment size cannot be less than 1" );
+			}
+			if ( log.isTraceEnabled() ) {
+				log.trace( "creating pooled optimizer (lo) with [incrementSize=" + incrementSize + "; returnClass="  + returnClass.getName() + "]" );
+			}
+		}
+
+		public Serializable generate(AccessCallback callback) {
+			if ( lastSourceValue == null || ! value.lt( lastSourceValue.copy().add( incrementSize ) ) ) {
+				lastSourceValue = callback.getNextValue();
+				value = lastSourceValue.copy();
+				// handle cases where initial-value is less that one (hsqldb for instance).
+				while ( value.lt( 1 ) ) {
+					value.increment();
+				}
+			}
+			return value.makeValueThenIncrement();
+		}
+
+		public IntegralDataTypeHolder getLastSourceValue() {
+			return lastSourceValue;
+		}
+
+		public boolean applyIncrementSizeToSourceValues() {
+			return true;
 		}
 	}
 }

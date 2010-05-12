@@ -30,6 +30,7 @@ import java.util.Properties;
 
 import org.hibernate.FetchMode;
 import org.hibernate.MappingException;
+import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.Mappings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.Mapping;
@@ -181,6 +182,12 @@ public class SimpleValue implements KeyValue {
 		if (identifierGeneratorProperties!=null) {
 			params.putAll(identifierGeneratorProperties);
 		}
+
+		// TODO : we should pass along all settings once "config lifecycle" is hashed out...
+		params.put(
+				Environment.PREFER_POOLED_VALUES_LO,
+				mappings.getConfigurationProperties().getProperty( Environment.PREFER_POOLED_VALUES_LO, "false" )
+		);
 
 		identifierGeneratorFactory.setDialect( dialect );
 		return identifierGeneratorFactory.createIdentifierGenerator( identifierGeneratorStrategy, getType(), params );

@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,7 +20,6 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.id.enhanced;
 
@@ -37,6 +36,7 @@ import java.io.Serializable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.hibernate.cfg.Environment;
 import org.hibernate.engine.TransactionHelper;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.id.IdentifierGeneratorHelper;
@@ -65,14 +65,14 @@ import org.hibernate.util.StringHelper;
  * performing generation, which would mean that we would have a row in the generator
  * table for each entity name.  Or any configuration really; the setup is very flexible.
  * <p/>
- * In this respect it is very simliar to the legacy
+ * In this respect it is very similar to the legacy
  * {@link org.hibernate.id.MultipleHiLoPerTableGenerator} in terms of the
  * underlying storage structure (namely a single table capable of holding
  * multiple generator values).  The differentiator is, as with
  * {@link SequenceStyleGenerator} as well, the externalized notion
  * of an optimizer.
  * <p/>
- * <b>NOTE</b> that by default we use a single row for all genertators (based
+ * <b>NOTE</b> that by default we use a single row for all generators (based
  * on {@link #DEF_SEGMENT_VALUE}).  The configuration parameter
  * {@link #CONFIG_PREFER_SEGMENT_PER_ENTITY} can be used to change that to
  * instead default to using a row for each entity name.
@@ -303,8 +303,13 @@ public class TableGenerator extends TransactionHelper implements PersistentIdent
 		this.updateQuery = buildUpdateQuery();
 		this.insertQuery = buildInsertQuery();
 
-		final String defOptStrategy = incrementSize <= 1 ? OptimizerFactory.NONE : OptimizerFactory.POOL;
-		final String optimizationStrategy = PropertiesHelper.getString( OPT_PARAM, params, defOptStrategy );
+		// if the increment size is greater than one, we prefer pooled optimization; but we
+		// need to see if the user prefers POOL or POOL_LO...
+		String defaultPooledOptimizerStrategy = PropertiesHelper.getBoolean( Environment.PREFER_POOLED_VALUES_LO, params, false )
+				? OptimizerFactory.POOL_LO
+				: OptimizerFactory.POOL;
+		final String defaultOptimizerStrategy = incrementSize <= 1 ? OptimizerFactory.NONE : defaultPooledOptimizerStrategy;
+		final String optimizationStrategy = PropertiesHelper.getString( OPT_PARAM, params, defaultOptimizerStrategy );
 		optimizer = OptimizerFactory.buildOptimizer(
 				optimizationStrategy,
 				identifierType.getReturnedClass(),

@@ -519,6 +519,12 @@ public final class Environment {
 
 	public static final String JPAQL_STRICT_COMPLIANCE= "hibernate.query.jpaql_strict_compliance";
 
+	/**
+	 * When using pooled {@link org.hibernate.id.enhanced.Optimizer optimizers}, prefer interpreting the 
+	 * database value as the lower (lo) boundary.  The default is to interpret it as the high boundary.
+	 */
+	public static final String PREFER_POOLED_VALUES_LO = "hibernate.id.optimizer.pooled.prefer_lo";
+
 	private static final BytecodeProvider BYTECODE_PROVIDER_INSTANCE;
 	private static final boolean ENABLE_BINARY_STREAMS;
 	private static final boolean ENABLE_REFLECTION_OPTIMIZER;

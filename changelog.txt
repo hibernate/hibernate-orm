@@ -6,7 +6,7 @@ refer to the particular case on JIRA using the issue tracking number to learn
 more about each case.
 
 
-Changes in version 3.5.2 (2010.05.12)
+Changes in version 3.5.2 (2010.05.13)
 -------------------------------------------
 http://opensource.atlassian.com/projects/hibernate/browse/HHH/fixforversion/11040
 
@@ -31,7 +31,6 @@ http://opensource.atlassian.com/projects/hibernate/browse/HHH/fixforversion/1104
     * [HHH-5140] - quoted column doesn't be quoted in sub-query
     * [HHH-5173] - hql - average returns double but looses the decimal part
     * [HHH-5178] - Unit tests in org.hibernate.test.immutable fail on mssql and sybase due to keyword used for table and column name
-    * [HHH-5191] - CollectionMetadataGenerator fails to obtain mappedBy attribute when is defined on superclasses
     * [HHH-5207] - Unexpected exception occurs during refresh of a transient immutable business object.
     * [HHH-5208] - Oracle 11g R2 RAC - Test SequenceIdentityTest fails because first value of sequence is "2"
     * [HHH-5210] - Query Cache effective only after closing the session that created the cache

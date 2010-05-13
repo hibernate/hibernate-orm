@@ -28,10 +28,9 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.SessionImplementor;
-import org.hibernate.type.IntegerType;
-import org.hibernate.type.StringType;
 import org.hibernate.type.Type;
 import org.hibernate.usertype.CompositeUserType;
 
@@ -45,7 +44,7 @@ public class CompositeTestUserType implements CompositeUserType {
     }
 
     public Type[] getPropertyTypes() {
-        return new Type[] { StringType.INSTANCE, IntegerType.INSTANCE };
+        return new Type[] { Hibernate.STRING, Hibernate.INTEGER };
     }
 
     public Object getPropertyValue(final Object component, final int property) throws HibernateException {
@@ -107,8 +106,8 @@ public class CompositeTestUserType implements CompositeUserType {
             throws HibernateException, SQLException
     {
         if (value == null) {
-            st.setNull(index, StringType.INSTANCE.sqlType());
-            st.setNull(index + 1, IntegerType.INSTANCE.sqlType());
+            st.setNull(index, Hibernate.STRING.sqlType());
+            st.setNull(index + 1, Hibernate.INTEGER.sqlType());
         } else {
             final Component comp = (Component) value;
             st.setString(index, comp.getProp1());

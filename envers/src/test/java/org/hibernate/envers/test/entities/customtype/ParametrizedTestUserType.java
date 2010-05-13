@@ -32,7 +32,6 @@ import java.util.Properties;
 
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
-import org.hibernate.type.StringType;
 import org.hibernate.usertype.ParameterizedType;
 import org.hibernate.usertype.UserType;
 
@@ -55,7 +54,7 @@ public class ParametrizedTestUserType implements UserType, ParameterizedType {
     }
 
     public Object nullSafeGet(ResultSet rs, String[] names, Object owner) throws HibernateException, SQLException {
-        return StringType.INSTANCE.nullSafeGet( rs, names[0] );
+        return Hibernate.STRING.nullSafeGet(rs, names[0]);
     }
 
     public void nullSafeSet(PreparedStatement st, Object value, int index) throws HibernateException, SQLException {
@@ -67,10 +66,9 @@ public class ParametrizedTestUserType implements UserType, ParameterizedType {
             if (!v.endsWith(param2)) {
                 v = v + param2;
             }
-            StringType.INSTANCE.nullSafeSet(st, v, index);
-        }
-		else {
-            StringType.INSTANCE.nullSafeSet( st, null, index );
+            Hibernate.STRING.nullSafeSet(st, v, index);
+        } else {
+            Hibernate.STRING.nullSafeSet(st, value, index);
         }
     }
 

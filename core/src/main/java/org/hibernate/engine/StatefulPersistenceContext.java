@@ -1094,6 +1094,10 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	public void afterLoad() {
 		loadCounter--;
 	}
+	
+	public boolean isLoadFinished() {
+		return loadCounter == 0;
+	}
 
 	/**
 	 * Returns a string representation of the object.

@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC 
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping package="org.hibernate.test.stateless">
+
+	<class name="Contact">
+		<id name="id">
+			<generator class="native" />
+		</id>
+		<many-to-one name="org" lazy="false" fetch="join" />
+	</class>
+
+	<class name="Org">
+		<id name="id">
+			<generator class="native" />
+		</id>
+		<many-to-one name="country" lazy="false" fetch="join" />
+	</class>
+
+	<class name="Country">
+		<id name="id">
+			<generator class="native" />
+		</id>
+	</class>
+
+</hibernate-mapping>

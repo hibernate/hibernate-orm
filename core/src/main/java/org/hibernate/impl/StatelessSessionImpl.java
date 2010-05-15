@@ -179,7 +179,9 @@ public class StatelessSessionImpl extends AbstractSessionImpl
 		errorIfClosed();
 		Object result = getFactory().getEntityPersister(entityName)
 				.load(id, null, lockMode, this);
-		temporaryPersistenceContext.clear();
+		if ( temporaryPersistenceContext.isLoadFinished() ) {
+			temporaryPersistenceContext.clear();
+		}
 		return result;
 	}
 

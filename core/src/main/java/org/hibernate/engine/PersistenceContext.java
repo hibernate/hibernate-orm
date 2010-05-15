@@ -445,7 +445,11 @@ public interface PersistenceContext {
 	 * Call this after finishing a two-phase load
 	 */
 	public void afterLoad();
-
+	
+	/**
+	 * Is in a two-phase load? 
+	 */
+	public boolean isLoadFinished();
 	/**
 	 * Returns a string representation of the object.
 	 *

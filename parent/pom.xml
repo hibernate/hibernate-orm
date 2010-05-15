@@ -539,6 +539,11 @@
                 <artifactId>hibernate-validator</artifactId>
                 <version>4.0.2.GA</version>
             </dependency>
+            <dependency>
+                <groupId>com.h2database</groupId>
+                <artifactId>h2</artifactId>
+                <version>1.2.134</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
@@ -592,7 +597,6 @@
                 <dependency>
                     <groupId>com.h2database</groupId>
                     <artifactId>h2</artifactId>
-                    <version>1.2.134</version>
                     <scope>test</scope>
                 </dependency>
             </dependencies>

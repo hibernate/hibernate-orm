@@ -43,6 +43,7 @@
             <package name="org.hibernate.envers.test.integration.interfaces.hbm.propertiesAudited2.union" />
             <package name="org.hibernate.envers.test.integration.manytomany" />
             <package name="org.hibernate.envers.test.integration.manytomany.biowned" />
+            <package name="org.hibernate.envers.test.integration.manytomany.inverseToSuperclass" />
             <package name="org.hibernate.envers.test.integration.manytomany.sametable" />
             <package name="org.hibernate.envers.test.integration.manytomany.ternary" />
             <package name="org.hibernate.envers.test.integration.manytomany.unidirectional" />
@@ -53,6 +54,7 @@
             <package name="org.hibernate.envers.test.integration.notinsertable.manytoone" />
             <package name="org.hibernate.envers.test.integration.onetomany" />
             <package name="org.hibernate.envers.test.integration.onetomany.detached" />
+            <package name="org.hibernate.envers.test.integration.onetomany.inverseToSuperclass" />
             <package name="org.hibernate.envers.test.integration.onetoone.bidirectional" />
             <package name="org.hibernate.envers.test.integration.onetoone.bidirectional.ids" />
             <package name="org.hibernate.envers.test.integration.onetoone.unidirectional" />

@@ -71,7 +71,7 @@ public class SubselectTest extends TestCase {
 		HighestBid highestBid = (HighestBid) query.list().iterator().next();
 		
 		assertEquals(200.0, highestBid.getAmount());
-		
+		tx.rollback();		
 		s.close();	
 		
 		

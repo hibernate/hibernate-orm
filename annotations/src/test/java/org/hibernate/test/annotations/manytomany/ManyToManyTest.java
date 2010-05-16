@@ -99,9 +99,11 @@ public class ManyToManyTest extends TestCase {
 		s.close();
 
 		s = openSession();
+		tx = s.beginTransaction();
 		List result = s.createCriteria( Supplier.class ).createAlias( "suppStores", "s" ).add(
 				Restrictions.eq( "s.name", "Fnac" ) ).list();
 		assertEquals( 1, result.size() );
+		tx.commit();
 		s.close();
 	}
 	public void testDefaultCompositePk() throws Exception {

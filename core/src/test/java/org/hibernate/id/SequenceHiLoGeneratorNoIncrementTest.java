@@ -23,21 +23,27 @@
  */
 package org.hibernate.id;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.Properties;
 
 import junit.framework.TestCase;
 
 import org.hibernate.Hibernate;
-import org.hibernate.TestingDatabaseInfo;
+import org.hibernate.Session;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.cfg.ObjectNameNormalizer;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.HSQLDialect;
+import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.impl.SessionImpl;
+import org.hibernate.jdbc.Work;
 import org.hibernate.mapping.SimpleAuxiliaryDatabaseObject;
+import org.hibernate.TestingDatabaseInfo;
 
 /**
  * I went back to 3.3 source and grabbed the code/logic as it existed back then and crafted this
@@ -45,7 +51,7 @@ import org.hibernate.mapping.SimpleAuxiliaryDatabaseObject;
  *
  * @author Steve Ebersole
  */
-public class SequenceHiLoGeneratorTest extends TestCase {
+public class SequenceHiLoGeneratorNoIncrementTest extends TestCase {
 	private static final String TEST_SEQUENCE = "test_sequence";
 
 	private Configuration cfg;
@@ -57,7 +63,7 @@ public class SequenceHiLoGeneratorTest extends TestCase {
 
 		Properties properties = new Properties();
 		properties.setProperty( SequenceGenerator.SEQUENCE, TEST_SEQUENCE );
-		properties.setProperty( SequenceHiLoGenerator.MAX_LO, "3" );
+		properties.setProperty( SequenceHiLoGenerator.MAX_LO, "0" ); // JPA allocationSize of 1
 		properties.setProperty( SequenceGenerator.PARAMETERS, "start with 1" );  // hsqldb sequences start with 0 by default :?
 		properties.put(
 				PersistentIdentifierGenerator.IDENTIFIER_NORMALIZER,
@@ -72,10 +78,9 @@ public class SequenceHiLoGeneratorTest extends TestCase {
 				}
 		);
 
-		Dialect dialect = new HSQLDialect();
+		Dialect dialect = new H2Dialect();
 
 		generator = new SequenceHiLoGenerator();
-		//noinspection deprecation
 		generator.configure( Hibernate.LONG, properties, dialect );
 
 		cfg = TestingDatabaseInfo.buildBaseConfiguration()
@@ -104,7 +109,6 @@ public class SequenceHiLoGeneratorTest extends TestCase {
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// initially sequence should be uninitialized
-//		assertEquals( 1L, generator.getHiloOptimizer().getLastSourceValue().makeValue().longValue() );
 // we have to assume here since in this branch we are testing with hsqldb which does not allow access to the
 // current sequence value and the optimizer does not yet know the value.  On trunk (3.6), against H2, we physically
 // check the sequence value in the database
@@ -113,32 +117,23 @@ public class SequenceHiLoGeneratorTest extends TestCase {
 		// historically the hilo generators skipped the initial block of values;
 		// 		so the first generated id value is maxlo + 1, here be 4
 		Long generatedValue = (Long) generator.generate( session, null );
+		assertEquals( 1L, generatedValue.longValue() );
+
+		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+		generatedValue = (Long) generator.generate( session, null );
+		assertEquals( 2L, generatedValue.longValue() );
+
+		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+		generatedValue = (Long) generator.generate( session, null );
+		assertEquals( 3L, generatedValue.longValue() );
+
+		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+		generatedValue = (Long) generator.generate( session, null );
 		assertEquals( 4L, generatedValue.longValue() );
-		// which should also perform the first read on the sequence which should set it to its "start with" value (1)
-		assertEquals( 1L, generator.getHiloOptimizer().getLastSourceValue().makeValue().longValue() );
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		generatedValue = (Long) generator.generate( session, null );
 		assertEquals( 5L, generatedValue.longValue() );
-		assertEquals( 1L, generator.getHiloOptimizer().getLastSourceValue().makeValue().longValue() );
-
-		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		generatedValue = (Long) generator.generate( session, null );
-		assertEquals( 6L, generatedValue.longValue() );
-		assertEquals( 1L, generator.getHiloOptimizer().getLastSourceValue().makeValue().longValue() );
-
-		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		generatedValue = (Long) generator.generate( session, null );
-		assertEquals( 7L, generatedValue.longValue() );
-		// unlike the newer strategies, the db value will not get update here.  It gets updated on the next invocation
-		// 	after a clock over
-		assertEquals( 1L, generator.getHiloOptimizer().getLastSourceValue().makeValue().longValue() );
-
-		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		generatedValue = (Long) generator.generate( session, null );
-		assertEquals( 8L, generatedValue.longValue() );
-		// this should force an increment in the sequence value
-		assertEquals( 2L, generator.getHiloOptimizer().getLastSourceValue().makeValue().longValue() );
 
 		session.getTransaction().commit();
 		session.close();

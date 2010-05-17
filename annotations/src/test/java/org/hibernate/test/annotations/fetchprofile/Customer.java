@@ -49,8 +49,6 @@ import org.hibernate.annotations.FetchProfiles;
 		@FetchProfile(name = "customer-with-orders-and-country",
 				fetchOverrides = {
 			@FetchProfile.FetchOverride(entity = Customer.class, association = "orders", mode = FetchMode.JOIN),
-			//The following does not work
-			//@FetchProfile.FetchOverride(entity = Customer.class, association = "orders.country", mode = FetchMode.JOIN),
 			@FetchProfile.FetchOverride(entity = Customer.class, association = "lastOrder", mode = FetchMode.JOIN)
 		})
 })

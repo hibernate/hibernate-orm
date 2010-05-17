@@ -1,4 +1,4 @@
-// $Id:$
+// $Id$
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
@@ -27,13 +27,17 @@ package org.hibernate.test.annotations.fetchprofile;
 
 import java.util.Date;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.ManyToOne;
+import javax.persistence.Table;
 
 /**
  * @author Hardy Ferentschik
  */
 @Entity
+@Table(name="C_ORDER")
 public class Order {
 	@Id
 	@GeneratedValue
@@ -42,6 +46,17 @@ public class Order {
 	private long orderNumber;
 
 	private Date deliveryDate;
+
+	@ManyToOne(fetch = FetchType.LAZY)
+	private Country country;
+
+	public Country getCountry() {
+		return country;
+	}
+
+	public void setCountry(Country country) {
+		this.country = country;
+	}
 
 	public Date getDeliveryDate() {
 		return deliveryDate;

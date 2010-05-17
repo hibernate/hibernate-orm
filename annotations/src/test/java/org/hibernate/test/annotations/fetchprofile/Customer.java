@@ -1,4 +1,4 @@
-// $Id:$
+// $Id$
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
@@ -25,21 +25,34 @@
  */
 package org.hibernate.test.annotations.fetchprofile;
 
+import java.util.HashSet;
 import java.util.Set;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 
 import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.FetchProfile;
+import org.hibernate.annotations.FetchProfiles;
 
 /**
  * @author Hardy Ferentschik
  */
 @Entity
-@FetchProfile(name = "customer-with-orders", fetchOverrides = {
-		@FetchProfile.FetchOverride(entity = Customer.class, association = "orders", mode = FetchMode.JOIN)
+@FetchProfiles( {
+		@FetchProfile(name = "customer-with-orders", fetchOverrides = {
+				@FetchProfile.FetchOverride(entity = Customer.class, association = "orders", mode = FetchMode.JOIN)
+		}),
+		@FetchProfile(name = "customer-with-orders-and-country",
+				fetchOverrides = {
+			@FetchProfile.FetchOverride(entity = Customer.class, association = "orders", mode = FetchMode.JOIN),
+			//The following does not work
+			//@FetchProfile.FetchOverride(entity = Customer.class, association = "orders.country", mode = FetchMode.JOIN),
+			@FetchProfile.FetchOverride(entity = Customer.class, association = "lastOrder", mode = FetchMode.JOIN)
+		})
 })
 public class Customer {
 	@Id
@@ -51,7 +64,26 @@ public class Customer {
 	private long customerNumber;
 
 	@OneToMany
-	private Set<Order> orders;
+	private Set<Order> orders = new HashSet<Order>();
+
+	@ManyToOne(fetch = FetchType.LAZY)
+	private Order lastOrder;
+
+	public Order getLastOrder() {
+		return lastOrder;
+	}
+
+	public void setLastOrder(Order lastOrder) {
+		this.lastOrder = lastOrder;
+	}
+
+	public Set<SupportTickets> getTickets() {
+		return tickets;
+	}
+
+	public void setTickets(Set<SupportTickets> tickets) {
+		this.tickets = tickets;
+	}
 
 	@OneToMany
 	private Set<SupportTickets> tickets;

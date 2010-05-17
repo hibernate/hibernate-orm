@@ -1,4 +1,4 @@
-// $Id:$
+// $Id$
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
@@ -49,6 +49,7 @@ public class FetchProfileTest extends TestCase {
 		config.addAnnotatedClass( Customer.class );
 		config.addAnnotatedClass( Order.class );
 		config.addAnnotatedClass( SupportTickets.class );
+		config.addAnnotatedClass( Country.class );
 		SessionFactoryImplementor sessionImpl = ( SessionFactoryImplementor ) config.buildSessionFactory();
 
 		assertTrue(
@@ -65,6 +66,7 @@ public class FetchProfileTest extends TestCase {
 		AnnotationConfiguration config = new AnnotationConfiguration();
 		config.addAnnotatedClass( Customer2.class );
 		config.addAnnotatedClass( Order.class );
+		config.addAnnotatedClass( Country.class );
 
 		try {
 			config.buildSessionFactory();
@@ -79,6 +81,7 @@ public class FetchProfileTest extends TestCase {
 		AnnotationConfiguration config = new AnnotationConfiguration();
 		config.addAnnotatedClass( Customer3.class );
 		config.addAnnotatedClass( Order.class );
+		config.addAnnotatedClass( Country.class );
 
 		try {
 			config.buildSessionFactory();
@@ -93,6 +96,7 @@ public class FetchProfileTest extends TestCase {
 		AnnotationConfiguration config = new AnnotationConfiguration();
 		config.addAnnotatedClass( Customer4.class );
 		config.addAnnotatedClass( Order.class );
+		config.addAnnotatedClass( Country.class );
 
 		try {
 			config.buildSessionFactory();
@@ -107,6 +111,7 @@ public class FetchProfileTest extends TestCase {
 		AnnotationConfiguration config = new AnnotationConfiguration();
 		config.addAnnotatedClass( Customer5.class );
 		config.addAnnotatedClass( Order.class );
+		config.addAnnotatedClass( Country.class );
 		InputStream is = Thread.currentThread()
 				.getContextClassLoader()
 				.getResourceAsStream( "org/hibernate/test/annotations/fetchprofile/mappings.hbm.xml" );
@@ -122,6 +127,7 @@ public class FetchProfileTest extends TestCase {
 		config = new AnnotationConfiguration();
 		config.addAnnotatedClass( Customer5.class );
 		config.addAnnotatedClass( Order.class );
+		config.addAnnotatedClass( Country.class );
 		try {
 			config.buildSessionFactory();
 			fail();
@@ -136,6 +142,7 @@ public class FetchProfileTest extends TestCase {
 		config.addAnnotatedClass( Customer.class );
 		config.addAnnotatedClass( Order.class );
 		config.addAnnotatedClass( SupportTickets.class );
+		config.addAnnotatedClass( Country.class );
 		config.addPackage( Customer.class.getPackage().getName() );
 		SessionFactoryImplementor sessionImpl = ( SessionFactoryImplementor ) config.buildSessionFactory();
 

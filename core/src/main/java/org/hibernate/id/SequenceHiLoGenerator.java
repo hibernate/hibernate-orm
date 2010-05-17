@@ -61,10 +61,12 @@ public class SequenceHiLoGenerator extends SequenceGenerator {
 
 		maxLo = PropertiesHelper.getInt( MAX_LO, params, 9 );
 
-		hiloOptimizer = new OptimizerFactory.LegacyHiLoAlgorithmOptimizer(
-				getIdentifierType().getReturnedClass(),
-				maxLo
-		);
+		if ( maxLo >= 1 ) {
+			hiloOptimizer = new OptimizerFactory.LegacyHiLoAlgorithmOptimizer(
+					getIdentifierType().getReturnedClass(),
+					maxLo
+			);
+		}
 	}
 
 	public synchronized Serializable generate(final SessionImplementor session, Object obj) {

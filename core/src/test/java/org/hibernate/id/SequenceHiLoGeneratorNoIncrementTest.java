@@ -33,7 +33,6 @@ import junit.framework.TestCase;
 
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
-import org.hibernate.TestingDatabaseInfo;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.NamingStrategy;
@@ -44,7 +43,8 @@ import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.impl.SessionImpl;
 import org.hibernate.jdbc.Work;
 import org.hibernate.mapping.SimpleAuxiliaryDatabaseObject;
-
+import org.hibernate.TestingDatabaseInfo;
+		
 /**
  * I went back to 3.3 source and grabbed the code/logic as it existed back then and crafted this
  * unit test so that we can make sure the value keep being generated in the expected manner
@@ -52,7 +52,7 @@ import org.hibernate.mapping.SimpleAuxiliaryDatabaseObject;
  * @author Steve Ebersole
  */
 @SuppressWarnings({ "deprecation" })
-public class SequenceHiLoGeneratorTest extends TestCase {
+public class SequenceHiLoGeneratorNoIncrementTest extends TestCase {
 	private static final String TEST_SEQUENCE = "test_sequence";
 
 	private Configuration cfg;
@@ -65,7 +65,7 @@ public class SequenceHiLoGeneratorTest extends TestCase {
 
 		Properties properties = new Properties();
 		properties.setProperty( SequenceGenerator.SEQUENCE, TEST_SEQUENCE );
-		properties.setProperty( SequenceHiLoGenerator.MAX_LO, "3" );
+		properties.setProperty( SequenceHiLoGenerator.MAX_LO, "0" ); // JPA allocationSize of 1
 		properties.put(
 				PersistentIdentifierGenerator.IDENTIFIER_NORMALIZER,
 				new ObjectNameNormalizer() {
@@ -119,32 +119,29 @@ public class SequenceHiLoGeneratorTest extends TestCase {
 		// historically the hilo generators skipped the initial block of values;
 		// 		so the first generated id value is maxlo + 1, here be 4
 		Long generatedValue = (Long) generator.generate( session, null );
-		assertEquals( 4L, generatedValue.longValue() );
+		assertEquals( 1L, generatedValue.longValue() );
 		// which should also perform the first read on the sequence which should set it to its "start with" value (1)
 		assertEquals( 1L, extractSequenceValue( session ) );
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		generatedValue = (Long) generator.generate( session, null );
-		assertEquals( 5L, generatedValue.longValue() );
-		assertEquals( 1L, extractSequenceValue( session ) );
-
-		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		generatedValue = (Long) generator.generate( session, null );
-		assertEquals( 6L, generatedValue.longValue() );
-		assertEquals( 1L, extractSequenceValue( session ) );
-
-		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		generatedValue = (Long) generator.generate( session, null );
-		assertEquals( 7L, generatedValue.longValue() );
-		// unlike the newer strategies, the db value will not get update here.  It gets updated on the next invocation
-		// 	after a clock over
-		assertEquals( 1L, extractSequenceValue( session ) );
-
-		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		generatedValue = (Long) generator.generate( session, null );
-		assertEquals( 8L, generatedValue.longValue() );
-		// this should force an increment in the sequence value
+		assertEquals( 2L, generatedValue.longValue() );
 		assertEquals( 2L, extractSequenceValue( session ) );
+
+		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+		generatedValue = (Long) generator.generate( session, null );
+		assertEquals( 3L, generatedValue.longValue() );
+		assertEquals( 3L, extractSequenceValue( session ) );
+
+		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+		generatedValue = (Long) generator.generate( session, null );
+		assertEquals( 4L, generatedValue.longValue() );
+		assertEquals( 4L, extractSequenceValue( session ) );
+
+		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+		generatedValue = (Long) generator.generate( session, null );
+		assertEquals( 5L, generatedValue.longValue() );
+		assertEquals( 5L, extractSequenceValue( session ) );
 
 		session.getTransaction().commit();
 		session.close();

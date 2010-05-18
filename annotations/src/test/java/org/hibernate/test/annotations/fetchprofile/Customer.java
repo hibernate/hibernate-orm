@@ -49,7 +49,8 @@ import org.hibernate.annotations.FetchProfiles;
 		@FetchProfile(name = "customer-with-orders-and-country",
 				fetchOverrides = {
 			@FetchProfile.FetchOverride(entity = Customer.class, association = "orders", mode = FetchMode.JOIN),
-			@FetchProfile.FetchOverride(entity = Customer.class, association = "lastOrder", mode = FetchMode.JOIN)
+			@FetchProfile.FetchOverride(entity = Customer.class, association = "lastOrder", mode = FetchMode.JOIN),
+			@FetchProfile.FetchOverride(entity = Order.class, association = "country", mode = FetchMode.JOIN)
 		})
 })
 public class Customer {

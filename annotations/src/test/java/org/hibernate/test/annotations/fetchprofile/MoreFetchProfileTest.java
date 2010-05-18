@@ -13,7 +13,7 @@ import org.hibernate.test.annotations.TestCase;
  */
 public class MoreFetchProfileTest extends TestCase{
 
-	@FailureExpected( jiraKey = "HHH-5233")
+	//@FailureExpected( jiraKey = "HHH-5233")
 	public void testFetchWithTwoOverrides() throws Exception {
 		Session s = openSession(  );
 		s.enableFetchProfile( "customer-with-orders-and-country" );
@@ -47,7 +47,7 @@ public class MoreFetchProfileTest extends TestCase{
 		assertTrue( Hibernate.isInitialized( c.getLastOrder() ) );
 		assertTrue( Hibernate.isInitialized( c.getOrders() ) );
 		for(Order so : c.getOrders() ) {
-			//assertTrue( Hibernate.isInitialized( so.getCountry() ) );
+			assertTrue( Hibernate.isInitialized( so.getCountry() ) );
 		}
 		final Order order = c.getOrders().iterator().next();
 		c.getOrders().remove( order );

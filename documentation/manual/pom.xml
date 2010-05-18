@@ -40,15 +40,15 @@
                 <configuration>
                     <sourceDocumentName>HIBERNATE_-_Relational_Persistence_for_Idiomatic_Java.xml</sourceDocumentName>
                     <masterTranslation>en-US</masterTranslation>
-                    <!-- translations>
+                    <translations>
                         <translation>de-DE</translation>
                         <translation>es-ES</translation>
                         <translation>fr-FR</translation>
                         <translation>ja-JP</translation>
-                        <!- - <translation>ko-KR</translation> - ->
+                        <!-- <translation>ko-KR</translation> -->
                         <translation>pt-BR</translation>
                         <translation>zh-CN</translation>
-                    </translations -->
+                    </translations>
                     <imageResource>
                         <directory>${basedir}/src/main/docbook/en-US</directory>
                         <excludes>

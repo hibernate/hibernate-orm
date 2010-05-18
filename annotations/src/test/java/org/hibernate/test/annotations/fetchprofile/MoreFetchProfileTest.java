@@ -13,7 +13,7 @@ import org.hibernate.test.annotations.TestCase;
  */
 public class MoreFetchProfileTest extends TestCase{
 
-	//@FailureExpected( jiraKey = "HHH-5233")
+	@FailureExpected( jiraKey = "HHH-5233")
 	public void testFetchWithTwoOverrides() throws Exception {
 		Session s = openSession(  );
 		s.enableFetchProfile( "customer-with-orders-and-country" );
